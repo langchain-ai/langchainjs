@@ -125,21 +125,21 @@ export class RunnableWithMessageHistory<
     );
   }
 
-  _enterHistory(
+  async _enterHistory(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     input: any,
     kwargs?: { config?: RunnableConfig }
-  ): Array<BaseMessage> {
+  ): Promise<BaseMessage[]> {
     const history = kwargs?.config?.configurable?.messageHistory;
 
     if (this.historyMessagesKey) {
-      return history.messages;
+      return history.getMessages();
     }
 
     const inputVal =
       input ||
       (this.inputMessagesKey ? input[this.inputMessagesKey] : undefined);
-    const historyMessages = history ? history.messages : [];
+    const historyMessages = history ? await history.getMessages() : [];
     const returnType = [
       ...historyMessages,
       ...this._getInputMessages(inputVal),

@@ -124,6 +124,15 @@ export abstract class Runnable<
 {
   protected lc_runnable = true;
 
+  name?: string;
+
+  getName(suffix?: string): string {
+    const name =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      this.name ?? (this.constructor as any).lc_name() ?? this.constructor.name;
+    return suffix ? `${name}${suffix}` : name;
+  }
+
   abstract invoke(
     input: RunInput,
     options?: Partial<CallOptions>
@@ -337,7 +346,7 @@ export abstract class Runnable<
       options?.runType,
       undefined,
       undefined,
-      options?.runName
+      options?.runName ?? this.getName()
     );
     let output;
     try {
@@ -385,7 +394,7 @@ export abstract class Runnable<
           optionsList[i].runType,
           undefined,
           undefined,
-          optionsList[i].runName
+          optionsList[i].runName ?? this.getName()
         )
       )
     );
@@ -436,7 +445,7 @@ export abstract class Runnable<
       options?.runType,
       undefined,
       undefined,
-      options?.runName
+      options?.runName ?? this.getName()
     );
     async function* wrapInputForTracing() {
       for await (const chunk of inputGenerator) {
@@ -529,6 +538,29 @@ export abstract class Runnable<
       first: this,
       last: _coerceToRunnable(coerceable),
     });
+  }
+
+  /**
+   * Pick keys from the dict output of this runnable. Returns a new runnable.
+   */
+  pick(keys: string | string[]): RunnableSequence {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    return this.pipe(new RunnablePick(keys) as Runnable);
+  }
+
+  /**
+   * Assigns new fields to the dict output of this runnable. Returns a new runnable.
+   */
+  assign(
+    mapping: RunnableMapLike<Record<string, unknown>, Record<string, unknown>>
+  ): RunnableSequence {
+    return this.pipe(
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      new RunnableAssign(
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        new RunnableMap<Record<string, unknown>>({ steps: mapping })
+      ) as Runnable
+    );
   }
 
   /**
@@ -704,6 +736,10 @@ export class RunnableBinding<
     this.kwargs = fields.kwargs;
     this.config = fields.config;
     this.configFactories = fields.configFactories;
+  }
+
+  getName(suffix?: string | undefined): string {
+    return this.bound.getName(suffix);
   }
 
   async _mergeConfig(
@@ -1183,11 +1219,13 @@ export class RunnableSequence<
     middle?: Runnable[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     last: Runnable<any, RunOutput>;
+    name?: string;
   }) {
     super(fields);
     this.first = fields.first;
     this.middle = fields.middle ?? this.middle;
     this.last = fields.last;
+    this.name = fields.name;
   }
 
   get steps() {
@@ -1381,12 +1419,14 @@ export class RunnableSequence<
           ...coerceable.middle,
         ]),
         last: coerceable.last,
+        name: this.name ?? coerceable.name,
       });
     } else {
       return new RunnableSequence({
         first: this.first,
         middle: [...this.middle, this.last],
         last: _coerceToRunnable(coerceable),
+        name: this.name,
       });
     }
   }
@@ -1397,16 +1437,20 @@ export class RunnableSequence<
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  static from<RunInput = any, RunOutput = any>([first, ...runnables]: [
-    RunnableLike<RunInput>,
-    ...RunnableLike[],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunnableLike<any, RunOutput>
-  ]) {
+  static from<RunInput = any, RunOutput = any>(
+    [first, ...runnables]: [
+      RunnableLike<RunInput>,
+      ...RunnableLike[],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      RunnableLike<any, RunOutput>
+    ],
+    name?: string
+  ) {
     return new RunnableSequence<RunInput, Exclude<RunOutput, Error>>({
       first: _coerceToRunnable(first),
       middle: runnables.slice(0, -1).map(_coerceToRunnable),
       last: _coerceToRunnable(runnables[runnables.length - 1]),
+      name,
     });
   }
 }
@@ -1615,6 +1659,70 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
   ): Promise<RunOutput> {
     return this._callWithConfig(this._invoke, input, options);
   }
+
+  async *_transform(
+    generator: AsyncGenerator<RunInput>,
+    runManager?: CallbackManagerForChainRun,
+    config?: Partial<RunnableConfig>
+  ): AsyncGenerator<RunOutput> {
+    let finalChunk;
+    for await (const chunk of generator) {
+      if (finalChunk === undefined) {
+        finalChunk = chunk;
+      } else {
+        // Make a best effort to gather, for any type that supports concat.
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          finalChunk = concat(finalChunk, chunk as any);
+        } catch (e) {
+          finalChunk = chunk;
+        }
+      }
+    }
+
+    const output = this.func(finalChunk, { config });
+    if (output && Runnable.isRunnable(output)) {
+      if (config?.recursionLimit === 0) {
+        throw new Error("Recursion limit reached.");
+      }
+      const stream = await output.stream(
+        finalChunk,
+        this._patchConfig(
+          config,
+          runManager?.getChild(),
+          (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1
+        )
+      );
+      for await (const chunk of stream) {
+        yield chunk;
+      }
+    } else {
+      yield output;
+    }
+  }
+
+  transform(
+    generator: AsyncGenerator<RunInput>,
+    options?: Partial<RunnableConfig>
+  ): AsyncGenerator<RunOutput> {
+    return this._transformStreamWithConfig(
+      generator,
+      this._transform.bind(this),
+      options
+    );
+  }
+
+  async stream(
+    input: RunInput,
+    options?: Partial<RunnableConfig>
+  ): Promise<IterableReadableStream<RunOutput>> {
+    async function* generator() {
+      yield input;
+    }
+    return IterableReadableStream.fromAsyncGenerator(
+      this.transform(generator(), options)
+    );
+  }
 }
 
 export class RunnableParallel<RunInput> extends RunnableMap<RunInput> {}
@@ -1803,6 +1911,205 @@ export function _coerceToRunnable<RunInput, RunOutput>(
   } else {
     throw new Error(
       `Expected a Runnable, function or object.\nInstead got an unsupported type.`
+    );
+  }
+}
+
+export interface RunnableAssignFields<RunInput> {
+  mapper: RunnableMap<RunInput>;
+}
+
+/**
+ * A runnable that assigns key-value pairs to inputs of type `Record<string, unknown>`.
+ */
+export class RunnableAssign<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunInput extends Record<string, any> = Record<string, any>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
+    CallOptions extends RunnableConfig = RunnableConfig
+  >
+  extends Runnable<RunInput, RunOutput>
+  implements RunnableAssignFields<RunInput>
+{
+  static lc_name() {
+    return "RunnableAssign";
+  }
+
+  lc_namespace = ["langchain_core", "runnables"];
+
+  lc_serializable = true;
+
+  mapper: RunnableMap<RunInput>;
+
+  constructor(fields: RunnableMap<RunInput> | RunnableAssignFields<RunInput>) {
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    if (fields instanceof RunnableMap) {
+      // eslint-disable-next-line no-param-reassign
+      fields = { mapper: fields };
+    }
+    super(fields);
+    this.mapper = fields.mapper;
+  }
+
+  async invoke(
+    input: RunInput,
+    options?: Partial<CallOptions>
+  ): Promise<RunOutput> {
+    const mapperResult = await this.mapper.invoke(input, options);
+
+    return {
+      ...input,
+      ...mapperResult,
+    } as RunOutput;
+  }
+
+  async *_transform(
+    generator: AsyncGenerator<RunInput>,
+    runManager?: CallbackManagerForChainRun,
+    options?: Partial<RunnableConfig>
+  ): AsyncGenerator<RunOutput> {
+    // collect mapper keys
+    const mapperKeys = this.mapper.getStepsKeys();
+    // create two input gens, one for the mapper, one for the input
+    const [forPassthrough, forMapper] = atee(generator, 2);
+    // create mapper output gen
+    const mapperOutput = this.mapper.transform(
+      forMapper,
+      this._patchConfig(options, runManager?.getChild())
+    );
+    // start the mapper
+    const firstMapperChunkPromise = mapperOutput.next();
+    // yield the passthrough
+    for await (const chunk of forPassthrough) {
+      if (typeof chunk !== "object" || Array.isArray(chunk)) {
+        throw new Error(
+          `RunnableAssign can only be used with objects as input, got ${typeof chunk}`
+        );
+      }
+      const filtered = Object.fromEntries(
+        Object.entries(chunk).filter(([key]) => !mapperKeys.includes(key))
+      );
+      if (Object.keys(filtered).length > 0) {
+        yield filtered as unknown as RunOutput;
+      }
+    }
+    // yield the mapper output
+    yield (await firstMapperChunkPromise).value;
+    for await (const chunk of mapperOutput) {
+      yield chunk as unknown as RunOutput;
+    }
+  }
+
+  transform(
+    generator: AsyncGenerator<RunInput>,
+    options?: Partial<RunnableConfig>
+  ): AsyncGenerator<RunOutput> {
+    return this._transformStreamWithConfig(
+      generator,
+      this._transform.bind(this),
+      options
+    );
+  }
+
+  async stream(
+    input: RunInput,
+    options?: Partial<RunnableConfig>
+  ): Promise<IterableReadableStream<RunOutput>> {
+    async function* generator() {
+      yield input;
+    }
+    return IterableReadableStream.fromAsyncGenerator(
+      this.transform(generator(), options)
+    );
+  }
+}
+
+export interface RunnablePickFields {
+  keys: string | string[];
+}
+
+/**
+ * A runnable that assigns key-value pairs to inputs of type `Record<string, unknown>`.
+ */
+export class RunnablePick<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunInput extends Record<string, any> = Record<string, any>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> | any = Record<string, any> | any,
+    CallOptions extends RunnableConfig = RunnableConfig
+  >
+  extends Runnable<RunInput, RunOutput>
+  implements RunnablePickFields
+{
+  static lc_name() {
+    return "RunnablePick";
+  }
+
+  lc_namespace = ["langchain_core", "runnables"];
+
+  lc_serializable = true;
+
+  keys: string | string[];
+
+  constructor(fields: string | string[] | RunnablePickFields) {
+    if (typeof fields === "string" || Array.isArray(fields)) {
+      // eslint-disable-next-line no-param-reassign
+      fields = { keys: fields };
+    }
+    super(fields);
+    this.keys = fields.keys;
+  }
+
+  async _pick(input: RunInput): Promise<RunOutput> {
+    if (typeof this.keys === "string") {
+      return input[this.keys];
+    } else {
+      const picked = this.keys
+        .map((key) => [key, input[key]])
+        .filter((v) => v[1] !== undefined);
+      return picked.length === 0 ? undefined : Object.fromEntries(picked);
+    }
+  }
+
+  async invoke(
+    input: RunInput,
+    options?: Partial<CallOptions>
+  ): Promise<RunOutput> {
+    return this._callWithConfig(this._pick.bind(this), input, options);
+  }
+
+  async *_transform(
+    generator: AsyncGenerator<RunInput>
+  ): AsyncGenerator<RunOutput> {
+    for await (const chunk of generator) {
+      const picked = await this._pick(chunk);
+      if (picked !== undefined) {
+        yield picked;
+      }
+    }
+  }
+
+  transform(
+    generator: AsyncGenerator<RunInput>,
+    options?: Partial<RunnableConfig>
+  ): AsyncGenerator<RunOutput> {
+    return this._transformStreamWithConfig(
+      generator,
+      this._transform.bind(this),
+      options
+    );
+  }
+
+  async stream(
+    input: RunInput,
+    options?: Partial<RunnableConfig>
+  ): Promise<IterableReadableStream<RunOutput>> {
+    async function* generator() {
+      yield input;
+    }
+    return IterableReadableStream.fromAsyncGenerator(
+      this.transform(generator(), options)
     );
   }
 }
