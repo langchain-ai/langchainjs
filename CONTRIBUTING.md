@@ -283,6 +283,17 @@ yarn create-notebook your_notebook_name
 ```
 Replace `your_notebook_name` with the desired name for your notebook. This will create a `.ipynb` file in the current directory the script was invoked from.
 
+When adding new dependencies inside the notebook you must update the import map inside `docs/core_docs/docs/deno.json`.
+This is required because the notebooks use the Deno runtime, and Deno formats imports differently than Node.js.
+Example:
+
+```typescript
+// Import in Node:
+import { z } from "zod";
+// Import in Deno:
+import { z } from "npm:/zod";
+```
+
 ### Running examples
 
 If you add a new major piece of functionality, it is helpful to add an
