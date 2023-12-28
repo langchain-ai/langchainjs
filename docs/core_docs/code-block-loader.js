@@ -90,7 +90,7 @@ async function webpackLoader(content, map, meta) {
       let modulePath;
       CATEGORIES.forEach((category) => {
         // from langchain/src
-        const componentPathLangChain = `${category}/langchain_${moduleName}.${imported}.html`;
+        const componentPathLangChain = `${category}/langchain_${moduleName.startsWith("core_") ? moduleName.replace("core_", "") : moduleName}.${imported}.html`;
         const docsPathLangChain = getDocsPath(componentPathLangChain);
 
         // from packages
