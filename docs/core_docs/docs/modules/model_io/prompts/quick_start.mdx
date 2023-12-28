@@ -21,7 +21,7 @@ A prompt template can contain:
 Here's a simple example:
 
 ```typescript
-import { PromptTemplate } from "langchain/prompts";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 // If a template is passed in, the input variables are inferred automatically from the template.
 const prompt = PromptTemplate.fromTemplate(
@@ -44,7 +44,7 @@ const formattedPrompt = await prompt.format({
 You can create simple hardcoded prompts using the `PromptTemplate` class. Prompt templates can take any number of input variables, and can be formatted to generate a prompt.
 
 ```typescript
-import { PromptTemplate } from "langchain/prompts";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 // An example prompt with no input variables
 const noInputPrompt = new PromptTemplate({
@@ -85,7 +85,7 @@ console.log(formattedMultipleInputPrompt);
 If you do not wish to specify `inputVariables` manually, you can also create a `PromptTemplate` using the `fromTemplate` class method. LangChain will automatically infer the `inputVariables` based on the `template` passed.
 
 ```typescript
-import { PromptTemplate } from "langchain/prompts";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const template = "Tell me a {adjective} joke about {content}.";
 
@@ -104,7 +104,7 @@ You can create custom prompt templates that format the prompt in any way you wan
 
 ## Chat prompt template
 
-[Chat Models](/docs/modules/model_io/models/chat) take a list of chat messages as input - this list commonly referred to as a `prompt`.
+[Chat Models](/docs/modules/model_io/models/chat) take a list of chat messages as input - this list is commonly referred to as a `prompt`.
 These chat messages differ from raw string (which you would pass into a [LLM](/docs/modules/model_io/models/llms) model) in that every message is associated with a `role`.
 
 For example, in OpenAI [Chat Completion API](https://platform.openai.com/docs/guides/chat/introduction), a chat message can be associated with an AI, human or system role. The model is supposed to follow instruction from system chat message more closely.
@@ -118,8 +118,12 @@ import {
   SystemMessagePromptTemplate,
   AIMessagePromptTemplate,
   HumanMessagePromptTemplate,
-} from "langchain/prompts";
-import { AIMessage, HumanMessage, SystemMessage } from "langchain/schema";
+} from "@langchain/core/prompts";
+import {
+  AIMessage,
+  HumanMessage,
+  SystemMessage,
+} from "@langchain/core/messages";
 ```
 
 To create a message template associated with a role, you would use the corresponding `<ROLE>MessagePromptTemplate`.
