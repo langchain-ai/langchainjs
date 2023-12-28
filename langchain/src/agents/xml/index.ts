@@ -139,8 +139,8 @@ export async function createXmlAgent({
   tools,
   prompt,
 }: CreateXmlAgentParams) {
-  const missingVariables = ["tools", "agent_scratchpad"].filter((v) =>
-    prompt.inputVariables.includes(v)
+  const missingVariables = ["tools", "agent_scratchpad"].filter(
+    (v) => !prompt.inputVariables.includes(v)
   );
   if (missingVariables.length > 0) {
     throw new Error(
@@ -154,7 +154,7 @@ export async function createXmlAgent({
   });
   // TODO: Add .bind to core runnable interface.
   const llmWithStop = (llm as BaseLanguageModel).bind({
-    stop: ["</tool_input>"],
+    stop: ["</tool_input>", "</final_answer>"],
   });
   const agent = RunnableSequence.from([
     RunnablePassthrough.assign({

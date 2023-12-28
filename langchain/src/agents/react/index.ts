@@ -25,7 +25,7 @@ export async function createReactAgent({
   prompt,
 }: CreateReactAgentParams) {
   const missingVariables = ["tools", "tool_names", "agent_scratchpad"].filter(
-    (v) => prompt.inputVariables.includes(v)
+    (v) => !prompt.inputVariables.includes(v)
   );
   if (missingVariables.length > 0) {
     throw new Error(

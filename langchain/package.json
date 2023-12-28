@@ -79,6 +79,9 @@
     "tools/render.cjs",
     "tools/render.js",
     "tools/render.d.ts",
+    "tools/retriever.cjs",
+    "tools/retriever.js",
+    "tools/retriever.d.ts",
     "tools/sql.cjs",
     "tools/sql.js",
     "tools/sql.d.ts",
@@ -1328,6 +1331,11 @@
       "types": "./tools/render.d.ts",
       "import": "./tools/render.js",
       "require": "./tools/render.cjs"
+    },
+    "./tools/retriever": {
+      "types": "./tools/retriever.d.ts",
+      "import": "./tools/retriever.js",
+      "require": "./tools/retriever.cjs"
     },
     "./tools/sql": {
       "types": "./tools/sql.d.ts",

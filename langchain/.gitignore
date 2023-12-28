@@ -67,6 +67,9 @@ tools/connery.d.ts
 tools/render.cjs
 tools/render.js
 tools/render.d.ts
+tools/retriever.cjs
+tools/retriever.js
+tools/retriever.d.ts
 tools/sql.cjs
 tools/sql.js
 tools/sql.d.ts

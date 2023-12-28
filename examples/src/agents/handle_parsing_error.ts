@@ -1,7 +1,8 @@
 import { z } from "zod";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { initializeAgentExecutorWithOptions } from "langchain/agents";
+import { ChatOpenAI } from "@langchain/openai";
 import { DynamicStructuredTool } from "langchain/tools";
+import { AgentExecutor, createOpenAIFunctionsAgent } from "langchain/agents";
+import { pull } from "langchain/hub";
 
 const model = new ChatOpenAI({ temperature: 0.1 });
 const tools = [
@@ -40,25 +41,37 @@ const tools = [
   }),
 ];
 
-const executor = await initializeAgentExecutorWithOptions(tools, model, {
-  agentType: "openai-functions",
+// Get the prompt to use - you can modify this!
+const prompt = await pull("hwchase17/openai-functions-agent");
+
+const agent = await createOpenAIFunctionsAgent({
+  llm: model,
+  tools,
+  prompt,
+});
+
+const agentExecutor = new AgentExecutor({
+  agent,
+  tools,
   verbose: true,
   handleParsingErrors:
     "Please try again, paying close attention to the allowed enum values",
 });
+
 console.log("Loaded agent.");
 
 const input = `Set a reminder to renew our online property ads next week.`;
 
 console.log(`Executing with input "${input}"...`);
 
-const result = await executor.invoke({ input });
+const result = await agentExecutor.invoke({ input });
 
 console.log({ result });
 
 /*
   {
     result: {
+      input: 'Set a reminder to renew our online property ads next week.',
       output: 'I have set a reminder for you to renew your online property ads on October 10th, 2022.'
     }
   }
