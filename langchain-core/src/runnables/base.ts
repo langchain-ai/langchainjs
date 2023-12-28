@@ -762,6 +762,7 @@ export class RunnableBinding<
   bind(
     kwargs: Partial<CallOptions>
   ): RunnableBinding<RunInput, RunOutput, CallOptions> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return new (this.constructor as any)({
       bound: this.bound,
       kwargs: { ...this.kwargs, ...kwargs },
@@ -772,6 +773,7 @@ export class RunnableBinding<
   withConfig(
     config: RunnableConfig
   ): RunnableBinding<RunInput, RunOutput, CallOptions> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return new (this.constructor as any)({
       bound: this.bound,
       kwargs: this.kwargs,
@@ -783,6 +785,7 @@ export class RunnableBinding<
     stopAfterAttempt?: number;
     onFailedAttempt?: RunnableRetryFailedAttemptHandler;
   }): RunnableRetry<RunInput, RunOutput, CallOptions> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return new (this.constructor as any)({
       bound: this.bound.withRetry(fields),
       kwargs: this.kwargs,
