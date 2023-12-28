@@ -7,7 +7,6 @@ import {
   loadQARefineChain,
 } from "../question_answering/load.js";
 import { createStuffDocumentsChain } from "../combine_documents/stuff.js";
-import { createRefineDocumentsChain } from "../combine_documents/refine.js";
 
 test("Test StuffDocumentsChain", async () => {
   const llm = new OpenAI({ modelName: "text-ada-001" });
@@ -37,12 +36,8 @@ test("Test MapReduceDocumentsChain with QA chain", async () => {
 });
 
 test("Test RefineDocumentsChain with QA chain", async () => {
-  const llm = new OpenAI({ temperature: 0, modelName: "text-ada-001" });
-  const chain = await createRefineDocumentsChain({
-    llm,
-    initialPrompt: PromptTemplate.fromTemplate("Print {context}"),
-    refinePrompt: PromptTemplate.fromTemplate("Print {output} {context}"),
-  });
+  const model = new OpenAI({ temperature: 0, modelName: "text-ada-001" });
+  const chain = loadQARefineChain(model);
   const docs = [
     new Document({ pageContent: "harrison went to harvard" }),
     new Document({ pageContent: "ankush went to princeton" }),
