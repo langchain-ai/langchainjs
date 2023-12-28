@@ -541,6 +541,29 @@ export abstract class Runnable<
   }
 
   /**
+   * Pick keys from the dict output of this runnable. Returns a new runnable.
+   */
+  pick(keys: string | string[]): RunnableSequence {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    return this.pipe(new RunnablePick(keys) as Runnable);
+  }
+
+  /**
+   * Assigns new fields to the dict output of this runnable. Returns a new runnable.
+   */
+  assign(
+    mapping: RunnableMapLike<Record<string, unknown>, Record<string, unknown>>
+  ): RunnableSequence {
+    return this.pipe(
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      new RunnableAssign(
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        new RunnableMap<Record<string, unknown>>({ steps: mapping })
+      ) as Runnable
+    );
+  }
+
+  /**
    * Default implementation of transform, which buffers input and then calls stream.
    * Subclasses should override this method if they can start producing output while
    * input is still being generated.
@@ -739,7 +762,8 @@ export class RunnableBinding<
   bind(
     kwargs: Partial<CallOptions>
   ): RunnableBinding<RunInput, RunOutput, CallOptions> {
-    return this.constructor({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return new (this.constructor as any)({
       bound: this.bound,
       kwargs: { ...this.kwargs, ...kwargs },
       config: this.config,
@@ -749,7 +773,8 @@ export class RunnableBinding<
   withConfig(
     config: RunnableConfig
   ): RunnableBinding<RunInput, RunOutput, CallOptions> {
-    return this.constructor({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return new (this.constructor as any)({
       bound: this.bound,
       kwargs: this.kwargs,
       config: { ...this.config, ...config },
@@ -760,7 +785,8 @@ export class RunnableBinding<
     stopAfterAttempt?: number;
     onFailedAttempt?: RunnableRetryFailedAttemptHandler;
   }): RunnableRetry<RunInput, RunOutput, CallOptions> {
-    return this.constructor({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return new (this.constructor as any)({
       bound: this.bound.withRetry(fields),
       kwargs: this.kwargs,
       config: this.config,
@@ -1888,6 +1914,205 @@ export function _coerceToRunnable<RunInput, RunOutput>(
   } else {
     throw new Error(
       `Expected a Runnable, function or object.\nInstead got an unsupported type.`
+    );
+  }
+}
+
+export interface RunnableAssignFields<RunInput> {
+  mapper: RunnableMap<RunInput>;
+}
+
+/**
+ * A runnable that assigns key-value pairs to inputs of type `Record<string, unknown>`.
+ */
+export class RunnableAssign<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunInput extends Record<string, any> = Record<string, any>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
+    CallOptions extends RunnableConfig = RunnableConfig
+  >
+  extends Runnable<RunInput, RunOutput>
+  implements RunnableAssignFields<RunInput>
+{
+  static lc_name() {
+    return "RunnableAssign";
+  }
+
+  lc_namespace = ["langchain_core", "runnables"];
+
+  lc_serializable = true;
+
+  mapper: RunnableMap<RunInput>;
+
+  constructor(fields: RunnableMap<RunInput> | RunnableAssignFields<RunInput>) {
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    if (fields instanceof RunnableMap) {
+      // eslint-disable-next-line no-param-reassign
+      fields = { mapper: fields };
+    }
+    super(fields);
+    this.mapper = fields.mapper;
+  }
+
+  async invoke(
+    input: RunInput,
+    options?: Partial<CallOptions>
+  ): Promise<RunOutput> {
+    const mapperResult = await this.mapper.invoke(input, options);
+
+    return {
+      ...input,
+      ...mapperResult,
+    } as RunOutput;
+  }
+
+  async *_transform(
+    generator: AsyncGenerator<RunInput>,
+    runManager?: CallbackManagerForChainRun,
+    options?: Partial<RunnableConfig>
+  ): AsyncGenerator<RunOutput> {
+    // collect mapper keys
+    const mapperKeys = this.mapper.getStepsKeys();
+    // create two input gens, one for the mapper, one for the input
+    const [forPassthrough, forMapper] = atee(generator, 2);
+    // create mapper output gen
+    const mapperOutput = this.mapper.transform(
+      forMapper,
+      this._patchConfig(options, runManager?.getChild())
+    );
+    // start the mapper
+    const firstMapperChunkPromise = mapperOutput.next();
+    // yield the passthrough
+    for await (const chunk of forPassthrough) {
+      if (typeof chunk !== "object" || Array.isArray(chunk)) {
+        throw new Error(
+          `RunnableAssign can only be used with objects as input, got ${typeof chunk}`
+        );
+      }
+      const filtered = Object.fromEntries(
+        Object.entries(chunk).filter(([key]) => !mapperKeys.includes(key))
+      );
+      if (Object.keys(filtered).length > 0) {
+        yield filtered as unknown as RunOutput;
+      }
+    }
+    // yield the mapper output
+    yield (await firstMapperChunkPromise).value;
+    for await (const chunk of mapperOutput) {
+      yield chunk as unknown as RunOutput;
+    }
+  }
+
+  transform(
+    generator: AsyncGenerator<RunInput>,
+    options?: Partial<RunnableConfig>
+  ): AsyncGenerator<RunOutput> {
+    return this._transformStreamWithConfig(
+      generator,
+      this._transform.bind(this),
+      options
+    );
+  }
+
+  async stream(
+    input: RunInput,
+    options?: Partial<RunnableConfig>
+  ): Promise<IterableReadableStream<RunOutput>> {
+    async function* generator() {
+      yield input;
+    }
+    return IterableReadableStream.fromAsyncGenerator(
+      this.transform(generator(), options)
+    );
+  }
+}
+
+export interface RunnablePickFields {
+  keys: string | string[];
+}
+
+/**
+ * A runnable that assigns key-value pairs to inputs of type `Record<string, unknown>`.
+ */
+export class RunnablePick<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunInput extends Record<string, any> = Record<string, any>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> | any = Record<string, any> | any,
+    CallOptions extends RunnableConfig = RunnableConfig
+  >
+  extends Runnable<RunInput, RunOutput>
+  implements RunnablePickFields
+{
+  static lc_name() {
+    return "RunnablePick";
+  }
+
+  lc_namespace = ["langchain_core", "runnables"];
+
+  lc_serializable = true;
+
+  keys: string | string[];
+
+  constructor(fields: string | string[] | RunnablePickFields) {
+    if (typeof fields === "string" || Array.isArray(fields)) {
+      // eslint-disable-next-line no-param-reassign
+      fields = { keys: fields };
+    }
+    super(fields);
+    this.keys = fields.keys;
+  }
+
+  async _pick(input: RunInput): Promise<RunOutput> {
+    if (typeof this.keys === "string") {
+      return input[this.keys];
+    } else {
+      const picked = this.keys
+        .map((key) => [key, input[key]])
+        .filter((v) => v[1] !== undefined);
+      return picked.length === 0 ? undefined : Object.fromEntries(picked);
+    }
+  }
+
+  async invoke(
+    input: RunInput,
+    options?: Partial<CallOptions>
+  ): Promise<RunOutput> {
+    return this._callWithConfig(this._pick.bind(this), input, options);
+  }
+
+  async *_transform(
+    generator: AsyncGenerator<RunInput>
+  ): AsyncGenerator<RunOutput> {
+    for await (const chunk of generator) {
+      const picked = await this._pick(chunk);
+      if (picked !== undefined) {
+        yield picked;
+      }
+    }
+  }
+
+  transform(
+    generator: AsyncGenerator<RunInput>,
+    options?: Partial<RunnableConfig>
+  ): AsyncGenerator<RunOutput> {
+    return this._transformStreamWithConfig(
+      generator,
+      this._transform.bind(this),
+      options
+    );
+  }
+
+  async stream(
+    input: RunInput,
+    options?: Partial<RunnableConfig>
+  ): Promise<IterableReadableStream<RunOutput>> {
+    async function* generator() {
+      yield input;
+    }
+    return IterableReadableStream.fromAsyncGenerator(
+      this.transform(generator(), options)
     );
   }
 }

@@ -45,10 +45,12 @@ const entrypoints = {
   // chains
   chains: "chains/index",
   "chains/combine_documents/reduce": "chains/combine_documents/reduce",
+  "chains/history_aware_retriever": "chains/history_aware_retriever",
   "chains/load": "chains/load",
   "chains/openai_functions": "chains/openai_functions/index",
   "chains/query_constructor": "chains/query_constructor/index",
   "chains/query_constructor/ir": "chains/query_constructor/ir",
+  "chains/retrieval": "chains/retrieval",
   "chains/sql_db": "chains/sql_db/index",
   "chains/graph_qa/cypher": "chains/graph_qa/cypher",
   // embeddings

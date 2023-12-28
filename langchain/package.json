@@ -103,6 +103,9 @@
     "chains/combine_documents/reduce.cjs",
     "chains/combine_documents/reduce.js",
     "chains/combine_documents/reduce.d.ts",
+    "chains/history_aware_retriever.cjs",
+    "chains/history_aware_retriever.js",
+    "chains/history_aware_retriever.d.ts",
     "chains/load.cjs",
     "chains/load.js",
     "chains/load.d.ts",
@@ -115,6 +118,9 @@
     "chains/query_constructor/ir.cjs",
     "chains/query_constructor/ir.js",
     "chains/query_constructor/ir.d.ts",
+    "chains/retrieval.cjs",
+    "chains/retrieval.js",
+    "chains/retrieval.d.ts",
     "chains/sql_db.cjs",
     "chains/sql_db.js",
     "chains/sql_db.d.ts",
@@ -1372,6 +1378,11 @@
       "import": "./chains/combine_documents/reduce.js",
       "require": "./chains/combine_documents/reduce.cjs"
     },
+    "./chains/history_aware_retriever": {
+      "types": "./chains/history_aware_retriever.d.ts",
+      "import": "./chains/history_aware_retriever.js",
+      "require": "./chains/history_aware_retriever.cjs"
+    },
     "./chains/load": {
       "types": "./chains/load.d.ts",
       "import": "./chains/load.js",
@@ -1391,6 +1402,11 @@
       "types": "./chains/query_constructor/ir.d.ts",
       "import": "./chains/query_constructor/ir.js",
       "require": "./chains/query_constructor/ir.cjs"
+    },
+    "./chains/retrieval": {
+      "types": "./chains/retrieval.d.ts",
+      "import": "./chains/retrieval.js",
+      "require": "./chains/retrieval.cjs"
     },
     "./chains/sql_db": {
       "types": "./chains/sql_db.d.ts",
