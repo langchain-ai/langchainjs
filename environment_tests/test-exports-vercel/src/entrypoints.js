@@ -18,6 +18,7 @@ export * from "langchain/tools/render";
 export * from "langchain/tools/retriever";
 export * from "langchain/tools/google_places";
 export * from "langchain/chains";
+export * from "langchain/chains/combine_documents";
 export * from "langchain/chains/combine_documents/reduce";
 export * from "langchain/chains/history_aware_retriever";
 export * from "langchain/chains/openai_functions";

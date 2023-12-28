@@ -44,6 +44,7 @@ const entrypoints = {
   "tools/google_places": "tools/google_places",
   // chains
   chains: "chains/index",
+  "chains/combine_documents": "chains/combine_documents/index",
   "chains/combine_documents/reduce": "chains/combine_documents/reduce",
   "chains/history_aware_retriever": "chains/history_aware_retriever",
   "chains/load": "chains/load",

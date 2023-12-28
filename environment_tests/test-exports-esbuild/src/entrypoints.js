@@ -18,6 +18,7 @@ import * as tools_render from "langchain/tools/render";
 import * as tools_retriever from "langchain/tools/retriever";
 import * as tools_google_places from "langchain/tools/google_places";
 import * as chains from "langchain/chains";
+import * as chains_combine_documents from "langchain/chains/combine_documents";
 import * as chains_combine_documents_reduce from "langchain/chains/combine_documents/reduce";
 import * as chains_history_aware_retriever from "langchain/chains/history_aware_retriever";
 import * as chains_openai_functions from "langchain/chains/openai_functions";
