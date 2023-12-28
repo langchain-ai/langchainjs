@@ -57,6 +57,10 @@
       "destination": "/docs/modules/data_connection/text_embedding/"
     },
     {
+      "source": "/docs/modules/data_connection/text_embedding/how_to/:path*(/?)",
+      "destination": "/docs/modules/data_connection/text_embedding/:path/"
+    },
+    {
       "source": "/docs/modules/models/llms(/?)",
       "destination": "/docs/modules/model_io/llms/"
     },
@@ -98,7 +102,7 @@
     },
     {
       "source": "/docs/modules/prompts/example_selectors(/?)",
-      "destination": "/docs/modules/model_io/prompts/example_selector/"
+      "destination": "/docs/modules/model_io/prompts/example_selector_types/"
     },
     {
       "source": "/docs/modules/model_io/prompts/example_selector(/?)",
@@ -117,12 +121,16 @@
       "destination": "/docs/modules/data_connection/document_loaders/"
     },
     {
+      "source": "/docs/modules/data_connection/document_loaders/how_to/:path*(/?)",
+      "destination": "/docs/modules/data_connection/document_loaders/:path*/"
+    },
+    {
       "source": "/docs/modules/indexes/document_loaders/examples/file_loaders/:path*(/?)",
-      "destination": "docs/modules/data_connection/document_loaders/integrations/file_loaders/:path*/"
+      "destination": "docs/integrations/document_loaders/file_loaders/:path*/"
     },
     {
       "source": "/docs/modules/indexes/document_loaders/examples/web_loaders/:path*(/?)",
-      "destination": "/docs/modules/data_connection/document_loaders/integrations/web_loaders/:path*/"
+      "destination": "/docs/integrations/document_loaders/web_loaders/:path*/"
     },
     {
       "source": "/docs/modules/indexes/document_transformers(/?)",
@@ -134,7 +142,11 @@
     },
     {
       "source": "/docs/modules/indexes/text_splitters/examples/:path*(/?)",
-      "destination": "/docs/modules/data_connection/document_transformers/text_splitters/:path*/"
+      "destination": "/docs/modules/data_connection/document_transformers/:path*/"
+    },
+    {
+      "source": "/docs/modules/data_connection/document_transformers/text_splitters/:path*/",
+      "destination": "/docs/modules/data_connection/document_transformers/:path*/"
     },
     {
       "source": "/docs/modules/indexes/vector_stores(/?)",
@@ -142,7 +154,7 @@
     },
     {
       "source": "/docs/modules/indexes/vector_stores/integrations/:path*(/?)",
-      "destination": "/docs/modules/data_connection/vectorstores/integrations/:path*/"
+      "destination": "/docs/integrations/vectorstores/:path*/"
     },
     {
       "source": "/docs/modules/indexes/retrievers(/?)",
@@ -150,19 +162,27 @@
     },
     {
       "source": "/docs/modules/indexes/retrievers/self_query(/?)",
-      "destination": "/docs/modules/data_connection/retrievers/how_to/self_query/"
+      "destination": "/docs/modules/data_connection/retrievers/self_query/"
     },
     {
       "source": "/docs/modules/indexes/retrievers/self_query/examples/:path*(/?)",
-      "destination": "/docs/modules/data_connection/retrievers/how_to/self_query/:path*/"
+      "destination": "/docs/modules/data_connection/retrievers/self_query/:path*/"
+    },
+    {
+      "source": "/docs/modules/data_connection/retrievers/how_to/self_query(/?)",
+      "destination": "/docs/modules/data_connection/retrievers/self_query/"
+    },
+    {
+      "source": "/docs/modules/data_connection/retrievers/how_to/self_query/:path*(/?)",
+      "destination": "/docs/modules/data_connection/retrievers/self_query/:path*/"
     },
     {
       "source": "/docs/modules/indexes/retrievers/:path*(/?)",
-      "destination": "/docs/modules/data_connection/retrievers/integrations/:path*/"
+      "destination": "/docs/integrations/retrievers/:path*/"
     },
     {
       "source": "/docs/modules/memory/examples/:path*(/?)",
-      "destination": "/docs/modules/memory/integrations/:path*/"
+      "destination": "/docs/integrations/memory/:path*/"
     },
     {
       "source": "/docs/modules/chains/llm_chain(/?)",
