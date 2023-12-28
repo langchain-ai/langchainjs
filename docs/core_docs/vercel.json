@@ -397,6 +397,10 @@
       "destination": "/docs/integrations/tools$1"
     },
     {
+      "source": "/docs/modules/agents/toolkits(/.*)?",
+      "destination": "/docs/integrations/toolkits$1"
+    },
+    {
       "source": "/docs/api/:slug",
       "destination": "https://api.js.langchain.com/modules/:slug.html"
     },
