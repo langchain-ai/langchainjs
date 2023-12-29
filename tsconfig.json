@@ -22,23 +22,13 @@
   },
   "include": [
     "langchain/src/**/*",
-    "libs/langchain-community/src/**/*",
-    "libs/langchain-anthropic/src/**/*",
-    "libs/langchain-google-genai/src/**/*",
-    "libs/langchain-openai/src/**/*",
-    "libs/langchain-mistralai/src/**/*",
-    "libs/langchain-yandex/src/**/*",
+    "libs/*/src/**/*",
   ],
   "exclude": [
     "node_modules",
     "dist",
     "docs",
     "langchain/dist/**/*",
-    "libs/langchain-community/dist/**/*",
-    "libs/langchain-anthropic/dist/**/*",
-    "libs/langchain-google-genai/dist/**/*",
-    "libs/langchain-openai/dist/**/*",
-    "libs/langchain-mistralai/dist/**/*",
-    "libs/langchain-yandex/dist/**/*",
+    "libs/*/dist/**/*",
   ]
 }

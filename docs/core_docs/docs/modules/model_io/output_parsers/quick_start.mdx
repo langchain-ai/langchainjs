@@ -1,0 +1,50 @@
+---
+sidebar_position: 0
+---
+
+# Quick Start
+
+import CodeBlock from "@theme/CodeBlock";
+
+Language models output text. But you may often want to get more structured information than just text back. This is where output parsers come in.
+
+Output parsers are classes that help structure language model responses. There are two main methods an output parser must implement:
+
+- `getFormatInstructions()`: A method which returns a string containing instructions for how the output of a language model should be formatted. You can inject this into your prompt if necessary.
+- `parse()`: A method which takes in a string (assumed to be the response from a language model) and parses it into some structure.
+
+And then one optional one:
+
+`parseWithPrompt()`: A method which takes in a string (assumed to be the response from a language model) and a prompt (assumed to be the prompt that generated such a response) and parses it into some structure. The prompt is largely provided in the event the OutputParser wants to retry or fix the output in some way, and needs information from the prompt to do so.
+
+## Get started
+
+Below we go over one useful type of output parser, the `StructuredOutputParser`.
+
+This output parser can be used when you want to return multiple fields.
+
+**Note:** If you want complex schema returned (i.e. a JSON object with arrays of strings), you can use [Zod Schema](https://zod.dev/) as [detailed here](/docs/modules/model_io/output_parsers/types/structured#structured-output-parser-with-zod-schema).
+
+import Structured from "@examples/prompts/structured_parser_sequence.ts";
+
+<CodeBlock language="typescript">{Structured}</CodeBlock>
+
+## LCEL
+
+Output parsers implement the [Runnable interface](/docs/expression_language/interface), the basic building block of the LangChain Expression Language (LCEL).
+This means they support `invoke`, `stream`, `batch`, and `streamLog` calls.
+
+Output parsers accept model outputs (a string or `BaseMessage`) as input and can return an arbitrary type. This is convenient for chaining as shown above.
+
+```ts
+await parser.invoke(`
+\`\`\`json
+{ answer: 'Paris', sources: [ 'https://en.wikipedia.org/wiki/Paris' ] }
+\`\`\`
+`);
+
+// { answer: 'Paris', sources: [ 'https://en.wikipedia.org/wiki/Paris' ] }
+```
+
+While all parsers support the streaming interface, only certain parsers can stream through partially parsed objects as the model generates them, since this is highly dependent on the output type.
+Parsers which cannot construct partial objects will simply yield the fully parsed output.

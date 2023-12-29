@@ -29,6 +29,7 @@
     "@gomomento/sdk": "^1.51.1",
     "@google/generative-ai": "^0.1.0",
     "@langchain/anthropic": "workspace:*",
+    "@langchain/cohere": "workspace:*",
     "@langchain/community": "workspace:*",
     "@langchain/core": "workspace:*",
     "@langchain/google-genai": "workspace:*",

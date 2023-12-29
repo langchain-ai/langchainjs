@@ -36,6 +36,8 @@ export class JsonToolkit extends Toolkit {
 }
 
 /**
+ * @deprecated Create a specific agent with a custom tool instead.
+ *
  * Creates a JSON agent using a language model, a JSON toolkit, and
  * optional prompt arguments. It creates a prompt for the agent using the
  * JSON tools and the provided prefix and suffix. It then creates a

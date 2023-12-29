@@ -1,5 +1,13 @@
-import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import type {
+  BaseLanguageModel,
+  BaseLanguageModelInterface,
+} from "@langchain/core/language_models/base";
 import type { ToolInterface } from "@langchain/core/tools";
+import {
+  RunnablePassthrough,
+  RunnableSequence,
+} from "@langchain/core/runnables";
+import type { BasePromptTemplate } from "@langchain/core/prompts";
 import { LLMChain } from "../../chains/llm_chain.js";
 import {
   AgentStep,
@@ -16,6 +24,8 @@ import { AgentArgs, BaseSingleActionAgent } from "../agent.js";
 import { AGENT_INSTRUCTIONS } from "./prompt.js";
 import { CallbackManager } from "../../callbacks/manager.js";
 import { XMLAgentOutputParser } from "./output_parser.js";
+import { renderTextDescription } from "../../tools/render.js";
+import { formatXml } from "../format_scratchpad/xml.js";
 
 /**
  * Interface for the input to the XMLAgent class.
@@ -116,4 +126,103 @@ export class XMLAgent extends BaseSingleActionAgent implements XMLAgentInput {
       tools,
     });
   }
+}
+
+/**
+ * Params used by the createXmlAgent function.
+ */
+export type CreateXmlAgentParams = {
+  /** LLM to use for the agent. */
+  llm: BaseLanguageModelInterface;
+  /** Tools this agent has access to. */
+  tools: ToolInterface[];
+  /**
+   * The prompt to use. Must have input keys for
+   * `tools` and `agent_scratchpad`.
+   */
+  prompt: BasePromptTemplate;
+};
+
+/**
+ * Create an agent that uses XML to format its logic.
+ * @param params Params required to create the agent. Includes an LLM, tools, and prompt.
+ * @returns A runnable sequence representing an agent. It takes as input all the same input
+ *     variables as the prompt passed in does. It returns as output either an
+ *     AgentAction or AgentFinish.
+ *
+ * @example
+ * ```typescript
+ * import { AgentExecutor, createXmlAgent } from "langchain/agents";
+ * import { pull } from "langchain/hub";
+ * import type { PromptTemplate } from "@langchain/core/prompts";
+ *
+ * import { ChatAnthropic } from "@langchain/anthropic";
+ *
+ * // Define the tools the agent will have access to.
+ * const tools = [...];
+ *
+ * // Get the prompt to use - you can modify this!
+ * // If you want to see the prompt in full, you can at:
+ * // https://smith.langchain.com/hub/hwchase17/xml-agent-convo
+ * const prompt = await pull<PromptTemplate>("hwchase17/xml-agent-convo");
+ *
+ * const llm = new ChatAnthropic({
+ *   temperature: 0,
+ * });
+ *
+ * const agent = await createXmlAgent({
+ *   llm,
+ *   tools,
+ *   prompt,
+ * });
+ *
+ * const agentExecutor = new AgentExecutor({
+ *   agent,
+ *   tools,
+ * });
+ *
+ * const result = await agentExecutor.invoke({
+ *   input: "what is LangChain?",
+ * });
+ *
+ * // With chat history
+ * const result2 = await agentExecutor.invoke({
+ *   input: "what's my name?",
+ *   // Notice that chat_history is a string, since this prompt is aimed at LLMs, not chat models
+ *   chat_history: "Human: Hi! My name is Cob\nAI: Hello Cob! Nice to meet you",
+ * });
+ * ```
+ */
+export async function createXmlAgent({
+  llm,
+  tools,
+  prompt,
+}: CreateXmlAgentParams) {
+  const missingVariables = ["tools", "agent_scratchpad"].filter(
+    (v) => !prompt.inputVariables.includes(v)
+  );
+  if (missingVariables.length > 0) {
+    throw new Error(
+      `Provided prompt is missing required input variables: ${JSON.stringify(
+        missingVariables
+      )}`
+    );
+  }
+  const partialedPrompt = await prompt.partial({
+    tools: renderTextDescription(tools),
+  });
+  // TODO: Add .bind to core runnable interface.
+  const llmWithStop = (llm as BaseLanguageModel).bind({
+    stop: ["</tool_input>", "</final_answer>"],
+  });
+  const agent = RunnableSequence.from([
+    RunnablePassthrough.assign({
+      agent_scratchpad: (input: { steps: AgentStep[] }) =>
+        formatXml(input.steps),
+    }),
+    partialedPrompt,
+    llmWithStop,
+    new XMLAgentOutputParser(),
+  ]);
+  return agent;
 }
