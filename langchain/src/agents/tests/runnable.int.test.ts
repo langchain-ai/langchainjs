@@ -15,7 +15,7 @@ import { formatToOpenAIFunction } from "../../tools/convert_to_openai.js";
 import { Calculator } from "../../tools/calculator.js";
 import { OpenAIFunctionsAgentOutputParser } from "../openai/output_parser.js";
 import { LLMChain } from "../../chains/llm_chain.js";
-import { OpenAIAgent } from "../openai/index.js";
+import { OpenAIAgent } from "../openai_functions/index.js";
 
 test("Runnable variant", async () => {
   const tools = [new Calculator(), new SerpAPI()];

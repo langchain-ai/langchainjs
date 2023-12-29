@@ -1,11 +1,17 @@
 import type {
   BaseLanguageModelInterface,
   BaseLanguageModelInput,
+  BaseFunctionCallOptions,
 } from "@langchain/core/language_models/base";
 import type { StructuredToolInterface } from "@langchain/core/tools";
+import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
+import {
+  RunnablePassthrough,
+  RunnableSequence,
+} from "@langchain/core/runnables";
 import { CallbackManager } from "../../callbacks/manager.js";
 import { ChatOpenAI, ChatOpenAICallOptions } from "../../chat_models/openai.js";
-import { BasePromptTemplate } from "../../prompts/base.js";
+import type { BasePromptTemplate } from "../../prompts/base.js";
 import {
   AIMessage,
   AgentAction,
@@ -30,9 +36,10 @@ import { LLMChain } from "../../chains/llm_chain.js";
 import {
   FunctionsAgentAction,
   OpenAIFunctionsAgentOutputParser,
-} from "./output_parser.js";
+} from "../openai/output_parser.js";
 import { formatToOpenAIFunction } from "../../tools/convert_to_openai.js";
 import { Runnable } from "../../schema/runnable/base.js";
+import { formatToOpenAIFunctionMessages } from "../format_scratchpad/openai_functions.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type CallOptionsIfAvailable<T> = T extends { CallOptions: infer CO } ? CO : any;
@@ -245,4 +252,101 @@ export class OpenAIAgent extends Agent {
     });
     return this.outputParser.parseAIMessage(message);
   }
+}
+
+/**
+ * Params used by the createOpenAIFunctionsAgent function.
+ */
+export type CreateOpenAIFunctionsAgentParams = {
+  /**
+   * LLM to use as the agent. Should work with OpenAI function calling,
+   * so must either be an OpenAI model that supports that or a wrapper of
+   * a different model that adds in equivalent support.
+   */
+  llm: BaseChatModel<BaseFunctionCallOptions>;
+  /** Tools this agent has access to. */
+  tools: StructuredToolInterface[];
+  /** The prompt to use, must have an input key for `agent_scratchpad`. */
+  prompt: ChatPromptTemplate;
+};
+
+/**
+ * Create an agent that uses OpenAI-style function calling.
+ * @param params Params required to create the agent. Includes an LLM, tools, and prompt.
+ * @returns A runnable sequence representing an agent. It takes as input all the same input
+ *     variables as the prompt passed in does. It returns as output either an
+ *     AgentAction or AgentFinish.
+ *
+ * @example
+ * ```typescript
+ * import { AgentExecutor, createOpenAIFunctionsAgent } from "langchain/agents";
+ * import { pull } from "langchain/hub";
+ * import type { ChatPromptTemplate } from "@langchain/core/prompts";
+ * import { AIMessage, HumanMessage } from "@langchain/core/messages";
+ *
+ * import { ChatOpenAI } from "@langchain/openai";
+ *
+ * // Define the tools the agent will have access to.
+ * const tools = [...];
+ *
+ * // Get the prompt to use - you can modify this!
+ * const prompt = await pull<ChatPromptTemplate>(
+ *   "hwchase17/openai-functions-agent"
+ * );
+ *
+ * const llm = new ChatOpenAI({
+ *   temperature: 0,
+ * });
+ *
+ * const agent = await createOpenAIFunctionsAgent({
+ *   llm,
+ *   tools,
+ *   prompt,
+ * });
+ *
+ * const agentExecutor = new AgentExecutor({
+ *   agent,
+ *   tools,
+ * });
+ *
+ * const result = await agentExecutor.invoke({
+ *   input: "what is LangChain?",
+ * });
+ *
+ * // With chat history
+ * const result2 = await agentExecutor.invoke({
+ *   input: "what's my name?",
+ *   chat_history: [
+ *     new HumanMessage("hi! my name is cob"),
+ *     new AIMessage("Hello Cob! How can I assist you today?"),
+ *   ],
+ * });
+ * ```
+ */
+export async function createOpenAIFunctionsAgent({
+  llm,
+  tools,
+  prompt,
+}: CreateOpenAIFunctionsAgentParams) {
+  if (!prompt.inputVariables.includes("agent_scratchpad")) {
+    throw new Error(
+      [
+        `Prompt must have an input variable named "agent_scratchpad".`,
+        `Found ${JSON.stringify(prompt.inputVariables)} instead.`,
+      ].join("\n")
+    );
+  }
+  const llmWithTools = llm.bind({
+    functions: tools.map(formatToOpenAIFunction),
+  });
+  const agent = RunnableSequence.from([
+    RunnablePassthrough.assign({
+      agent_scratchpad: (input: { steps: AgentStep[] }) =>
+        formatToOpenAIFunctionMessages(input.steps),
+    }),
+    prompt,
+    llmWithTools,
+    new OpenAIFunctionsAgentOutputParser(),
+  ]);
+  return agent;
 }

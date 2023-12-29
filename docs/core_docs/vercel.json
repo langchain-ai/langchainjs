@@ -507,6 +507,10 @@
     {
       "source": "/docs/modules/model_io/output_parsers/structured(/.*)?",
       "destination": "/docs/modules/model_io/output_parsers/types/structured/"
+    },
+    {
+      "source": "/docs/modules/agents/tools/how_to/dynamic(/?)",
+      "destination": "/docs/modules/agents/tools/dynamic/"
     }
   ]
 }

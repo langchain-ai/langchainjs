@@ -11,7 +11,7 @@ import {
   BaseChatMemory,
   BaseChatMemoryInput,
 } from "../../../memory/chat_memory.js";
-import { _formatIntermediateSteps } from "../../openai/index.js";
+import { _formatIntermediateSteps } from "../../openai_functions/index.js";
 
 /**
  * Type definition for the fields required to initialize an instance of

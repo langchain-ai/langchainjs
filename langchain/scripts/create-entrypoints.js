@@ -36,6 +36,7 @@ const entrypoints = {
   "tools/calculator": "tools/calculator",
   "tools/connery": "tools/connery",
   "tools/render": "tools/render",
+  "tools/retriever": "tools/retriever",
   "tools/sql": "tools/sql",
   "tools/webbrowser": "tools/webbrowser",
   "tools/gmail": "tools/gmail/index",
@@ -43,6 +44,7 @@ const entrypoints = {
   "tools/google_places": "tools/google_places",
   // chains
   chains: "chains/index",
+  "chains/combine_documents": "chains/combine_documents/index",
   "chains/combine_documents/reduce": "chains/combine_documents/reduce",
   "chains/history_aware_retriever": "chains/history_aware_retriever",
   "chains/load": "chains/load",
