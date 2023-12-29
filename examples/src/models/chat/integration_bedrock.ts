@@ -1,4 +1,4 @@
-import { BedrockChat } from "langchain/chat_models/bedrock";
+import { BedrockChat } from "@langchain/community/chat_models/bedrock";
 // Or, from web environments:
 // import { BedrockChat } from "@langchain/community/chat_models/bedrock/web";
 

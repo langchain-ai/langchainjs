@@ -1,4 +1,4 @@
-import { Bedrock } from "langchain/llms/bedrock";
+import { Bedrock } from "@langchain/community/llms/bedrock";
 // Or, from web environments:
 // import { Bedrock } from "@langchain/community/llms/bedrock/web";
 

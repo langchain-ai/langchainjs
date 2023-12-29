@@ -1,4 +1,4 @@
-import { CohereEmbeddings } from "langchain/embeddings/cohere";
+import { CohereEmbeddings } from "@langchain/cohere";
 import { VercelPostgres } from "@langchain/community/vectorstores/vercel_postgres";
 
 // Config is only required if you want to override default values.

@@ -1,4 +1,4 @@
-import { GoogleVertexAI } from "langchain/llms/googlevertexai";
+import { GoogleVertexAI } from "@langchain/community/llms/googlevertexai";
 // Or, if using the web entrypoint:
 // import { GoogleVertexAI } from "@langchain/community/llms/googlevertexai/web";
 
