@@ -18,17 +18,17 @@ You can do so by adding appropriate field to your project's `package.json` like 
   "version": "0.0.0",
   "dependencies": {
     "@langchain/cohere": "^0.0.1",
-    "langchain": "0.0.207"
+    "langchain": "0.0.213"
   },
   "resolutions": {
-    "@langchain/core": "0.1.2"
+    "@langchain/core": "0.1.5"
   },
   "overrides": {
-    "@langchain/core": "0.1.2"
+    "@langchain/core": "0.1.5"
   },
   "pnpm": {
     "overrides": {
-      "@langchain/core": "0.1.2"
+      "@langchain/core": "0.1.5"
     }
   }
 }

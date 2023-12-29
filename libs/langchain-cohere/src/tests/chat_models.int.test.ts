@@ -1,6 +1,7 @@
+/* eslint-disable no-promise-executor-return */
 import { test, expect } from "@jest/globals";
 import { HumanMessage } from "@langchain/core/messages";
-import { ChatCohere } from "../chat_model.js";
+import { ChatCohere } from "../chat_models.js";
 
 test("ChatCohere can invoke", async () => {
   const model = new ChatCohere();
@@ -40,4 +41,20 @@ test("ChatCohere can stream", async () => {
     console.log(tokens);
   }
   expect(streamIters).toBeGreaterThan(1);
+});
+
+test("should abort the request", async () => {
+  const cohere = new ChatCohere({
+    model: "command-light",
+  });
+  const controller = new AbortController();
+
+  await expect(async () => {
+    const ret = cohere.invoke("Respond with an verbose response", {
+      signal: controller.signal,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    controller.abort();
+    return ret;
+  }).rejects.toThrow("AbortError");
 });

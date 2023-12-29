@@ -1,6 +1,9 @@
+import { CohereClient, Cohere as CohereTypes } from "cohere-ai";
+
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { LLM, type BaseLLMParams } from "@langchain/core/language_models/llms";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 
 /**
  * Interface for the input parameters specific to the Cohere model.
@@ -20,6 +23,10 @@ export interface CohereInput extends BaseLLMParams {
   apiKey?: string;
 }
 
+interface CohereCallOptions
+  extends BaseLanguageModelCallOptions,
+    Partial<Omit<CohereTypes.GenerateRequest, "message">> {}
+
 /**
  * Class representing a Cohere Large Language Model (LLM). It interacts
  * with the Cohere API to generate text completions.
@@ -37,7 +44,7 @@ export interface CohereInput extends BaseLLMParams {
  * console.log({ res });
  * ```
  */
-export class Cohere extends LLM implements CohereInput {
+export class Cohere extends LLM<CohereCallOptions> implements CohereInput {
   static lc_name() {
     return "Cohere";
   }
@@ -66,6 +73,8 @@ export class Cohere extends LLM implements CohereInput {
 
   apiKey: string;
 
+  client: CohereClient;
+
   constructor(fields?: CohereInput) {
     super(fields ?? {});
 
@@ -77,7 +86,9 @@ export class Cohere extends LLM implements CohereInput {
       );
     }
 
-    this.apiKey = apiKey;
+    this.client = new CohereClient({
+      token: apiKey,
+    });
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
     this.temperature = fields?.temperature ?? this.temperature;
     this.model = fields?.model ?? this.model;
@@ -87,28 +98,50 @@ export class Cohere extends LLM implements CohereInput {
     return "cohere";
   }
 
+  invocationParams(options: this["ParsedCallOptions"]) {
+    const params = {
+      model: this.model,
+      numGenerations: options.numGenerations,
+      maxTokens: options.maxTokens ?? this.maxTokens,
+      truncate: options.truncate,
+      temperature: options.temperature ?? this.temperature,
+      preset: options.preset,
+      endSequences: options.endSequences,
+      stopSequences: options.stop ?? options.stopSequences,
+      k: options.k,
+      p: options.p,
+      frequencyPenalty: options.frequencyPenalty,
+      presencePenalty: options.presencePenalty,
+      returnLikelihoods: options.returnLikelihoods,
+      logitBias: options.logitBias,
+    };
+    // Filter undefined entries
+    return Object.fromEntries(
+      Object.entries(params).filter(([, value]) => value !== undefined)
+    );
+  }
+
   /** @ignore */
   async _call(
     prompt: string,
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
-    const { CohereClient } = await Cohere.imports();
-
-    const cohere = new CohereClient({
-      token: this.apiKey,
-    });
-
-    // Hit the `generate` endpoint on the `large` model
     const generateResponse = await this.caller.callWithOptions(
       { signal: options.signal },
-      cohere.generate.bind(cohere),
-      {
-        prompt,
-        model: this.model,
-        maxTokens: this.maxTokens,
-        temperature: this.temperature,
-        endSequences: options.stop,
+      async () => {
+        let response;
+        try {
+          response = await this.client.generate({
+            prompt,
+            ...this.invocationParams(options),
+          });
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (e: any) {
+          e.status = e.status ?? e.statusCode;
+          throw e;
+        }
+        return response;
       }
     );
     try {
@@ -117,20 +150,6 @@ export class Cohere extends LLM implements CohereInput {
     } catch {
       console.log(generateResponse);
       throw new Error("Could not parse response.");
-    }
-  }
-
-  /** @ignore */
-  static async imports(): Promise<{
-    CohereClient: typeof import("cohere-ai").CohereClient;
-  }> {
-    try {
-      const { CohereClient } = await import("cohere-ai");
-      return { CohereClient };
-    } catch (e) {
-      throw new Error(
-        "Please install cohere-ai as a dependency with, e.g. `yarn add cohere-ai`"
-      );
     }
   }
 }

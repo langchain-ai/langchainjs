@@ -1,3 +1,5 @@
+import { CohereClient, Cohere } from "cohere-ai";
+
 import {
   MessageType,
   type BaseMessage,
@@ -5,7 +7,6 @@ import {
   AIMessage,
 } from "@langchain/core/messages";
 import { type BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
-
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   type BaseChatModelParams,
@@ -17,7 +18,6 @@ import {
   ChatResult,
 } from "@langchain/core/outputs";
 import { AIMessageChunk } from "@langchain/core/messages";
-import { CohereClient, Cohere } from "cohere-ai";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 
@@ -34,7 +34,7 @@ export interface ChatCohereInput extends BaseChatModelParams {
    * The name of the model to use.
    * @default {"command"}
    */
-  modelName?: string;
+  model?: string;
   /**
    * What sampling temperature to use, between 0.0 and 2.0.
    * Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
@@ -56,8 +56,8 @@ interface TokenUsage {
 
 interface CohereChatCallOptions
   extends BaseLanguageModelCallOptions,
-    Omit<Cohere.ChatRequest, "message">,
-    Omit<Cohere.ChatStreamRequest, "message"> {}
+    Partial<Omit<Cohere.ChatRequest, "message">>,
+    Partial<Omit<Cohere.ChatStreamRequest, "message">> {}
 
 function convertMessagesToCohereMessages(
   messages: Array<BaseMessage>
@@ -100,7 +100,7 @@ function convertMessagesToCohereMessages(
  * ```typescript
  * const model = new ChatCohere({
  *   apiKey: process.env.COHERE_API_KEY, // Default
- *   modelName: "command" // Default
+ *   model: "command" // Default
  * });
  * const response = await model.invoke([
  *   new HumanMessage("How tall are the largest pengiuns?")
@@ -121,7 +121,7 @@ export class ChatCohere<
 
   client: CohereClient;
 
-  modelName = "command";
+  model = "command";
 
   temperature = 0.3;
 
@@ -138,29 +138,31 @@ export class ChatCohere<
     this.client = new CohereClient({
       token,
     });
-    this.modelName = fields?.modelName ?? this.modelName;
+    this.model = fields?.model ?? this.model;
     this.temperature = fields?.temperature ?? this.temperature;
     this.streaming = fields?.streaming ?? this.streaming;
   }
 
   _llmType() {
-    return "chat_cohere";
+    return "cohere";
   }
 
   invocationParams(options: this["ParsedCallOptions"]) {
-    const cohereOptions = { ...options };
-
-    // Delete BaseLanguageModelCallOptions
-    delete cohereOptions.stop;
-    delete cohereOptions.timeout;
-    delete cohereOptions.signal;
-    delete cohereOptions.runName;
-    delete cohereOptions.tags;
-    delete cohereOptions.metadata;
-    delete cohereOptions.callbacks;
-    delete cohereOptions.configurable;
-
-    return cohereOptions;
+    const params = {
+      model: this.model,
+      preambleOverride: options.preambleOverride,
+      conversationId: options.conversationId,
+      promptTruncation: options.promptTruncation,
+      connectors: options.connectors,
+      searchQueriesOnly: options.searchQueriesOnly,
+      documents: options.documents,
+      citationQuality: options.citationQuality,
+      temperature: options.temperature ?? this.temperature,
+    };
+    // Filter undefined entries
+    return Object.fromEntries(
+      Object.entries(params).filter(([, value]) => value !== undefined)
+    );
   }
 
   /** @ignore */
@@ -207,8 +209,19 @@ export class ChatCohere<
 
     // Not streaming, so we can just call the API once.
     const response: Cohere.NonStreamedChatResponse =
-      await this.caller.callWithOptions({ signal: options.signal }, async () =>
-        this.client.chat(input)
+      await this.caller.callWithOptions(
+        { signal: options.signal },
+        async () => {
+          let response;
+          try {
+            response = await this.client.chat(input);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          } catch (e: any) {
+            e.status = e.status ?? e.statusCode;
+            throw e;
+          }
+          return response;
+        }
       );
 
     if ("token_count" in response) {
@@ -272,9 +285,17 @@ export class ChatCohere<
     };
 
     // All models have a built in `this.caller` property for retries
-    const stream = await this.caller.call(async () =>
-      this.client.chatStream(input)
-    );
+    const stream = await this.caller.call(async () => {
+      let stream;
+      try {
+        stream = await this.client.chatStream(input);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (e: any) {
+        e.status = e.status ?? e.statusCode;
+        throw e;
+      }
+      return stream;
+    });
     for await (const chunk of stream) {
       if (chunk.eventType === "text-generation") {
         yield new ChatGenerationChunk({

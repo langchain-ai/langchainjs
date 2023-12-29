@@ -1,7 +1,8 @@
+/* eslint-disable no-promise-executor-return */
 import { test } from "@jest/globals";
-import { Cohere } from "../llm.js";
+import { Cohere } from "../llms.js";
 
-test.skip("test call", async () => {
+test("test invoke", async () => {
   const cohere = new Cohere({});
   const result = await cohere.invoke(
     "What is a good name for a company that makes colorful socks?"
@@ -9,7 +10,7 @@ test.skip("test call", async () => {
   console.log({ result });
 });
 
-test.skip("test call with callback", async () => {
+test("test invoke with callback", async () => {
   const cohere = new Cohere({
     model: "command-light",
   });
@@ -37,11 +38,12 @@ test("should abort the request", async () => {
   });
   const controller = new AbortController();
 
-  await expect(() => {
-    const ret = cohere.invoke("Respond with an extremely verbose response", {
+  await expect(async () => {
+    const ret = cohere.invoke("Respond with an verbose response", {
       signal: controller.signal,
     });
+    await new Promise((resolve) => setTimeout(resolve, 100));
     controller.abort();
     return ret;
-  }).rejects.toThrow("This operation was aborted");
+  }).rejects.toThrow("AbortError");
 });

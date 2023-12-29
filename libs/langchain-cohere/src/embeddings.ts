@@ -1,3 +1,5 @@
+import { CohereClient } from "cohere-ai";
+
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
@@ -7,7 +9,7 @@ import { chunkArray } from "@langchain/core/utils/chunk_array";
  * parameters specific to the CohereEmbeddings class.
  */
 export interface CohereEmbeddingsParams extends EmbeddingsParams {
-  modelName: string;
+  model: string;
 
   /**
    * The maximum number of documents to embed in a single request. This is
@@ -35,15 +37,13 @@ export class CohereEmbeddings
   extends Embeddings
   implements CohereEmbeddingsParams
 {
-  modelName = "small";
+  model = "small";
 
   batchSize = 48;
 
   inputType: string | undefined;
 
-  private apiKey: string;
-
-  private client: import("cohere-ai").CohereClient;
+  private client: CohereClient;
 
   /**
    * Constructor for the CohereEmbeddings class.
@@ -66,10 +66,12 @@ export class CohereEmbeddings
       throw new Error("Cohere API key not found");
     }
 
-    this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
+    this.client = new CohereClient({
+      token: apiKey,
+    });
+    this.model = fieldsWithDefaults?.model ?? this.model;
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
     this.inputType = fieldsWithDefaults?.inputType;
-    this.apiKey = apiKey;
   }
 
   /**
@@ -78,13 +80,11 @@ export class CohereEmbeddings
    * @returns A Promise that resolves to an array of embeddings.
    */
   async embedDocuments(texts: string[]): Promise<number[][]> {
-    await this.maybeInitClient();
-
     const batches = chunkArray(texts, this.batchSize);
 
     const batchRequests = batches.map((batch) =>
       this.embeddingWithRetry({
-        model: this.modelName,
+        model: this.model,
         texts: batch,
         inputType: this.inputType,
       })
@@ -115,10 +115,8 @@ export class CohereEmbeddings
    * @returns A Promise that resolves to an array of numbers representing the embedding.
    */
   async embedQuery(text: string): Promise<number[]> {
-    await this.maybeInitClient();
-
     const { embeddings } = await this.embeddingWithRetry({
-      model: this.modelName,
+      model: this.model,
       texts: [text],
     });
     if ("float" in embeddings && embeddings.float) {
@@ -144,36 +142,17 @@ export class CohereEmbeddings
   private async embeddingWithRetry(
     request: Parameters<typeof this.client.embed>[0]
   ) {
-    await this.maybeInitClient();
-
-    return this.caller.call(this.client.embed.bind(this.client), request);
-  }
-
-  /**
-   * Initializes the Cohere client if it hasn't been initialized already.
-   */
-  private async maybeInitClient() {
-    if (!this.client) {
-      const { CohereClient } = await CohereEmbeddings.imports();
-
-      this.client = new CohereClient({
-        token: this.apiKey,
-      });
-    }
-  }
-
-  /** @ignore */
-  static async imports(): Promise<{
-    CohereClient: typeof import("cohere-ai").CohereClient;
-  }> {
-    try {
-      const { CohereClient } = await import("cohere-ai");
-      return { CohereClient };
-    } catch (e) {
-      throw new Error(
-        "Please install cohere-ai as a dependency with, e.g. `yarn add cohere-ai`"
-      );
-    }
+    return this.caller.call(async () => {
+      let response;
+      try {
+        response = await this.client.embed(request);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (e: any) {
+        e.status = e.status ?? e.statusCode;
+        throw e;
+      }
+      return response;
+    });
   }
 
   get lc_secrets(): { [key: string]: string } | undefined {
