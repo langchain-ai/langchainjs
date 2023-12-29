@@ -1,0 +1,97 @@
+---
+sidebar_label: Cohere
+sidebar_class_name: beta
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# ChatCohere
+
+:::info
+The Cohere Chat API is still in beta. This means Cohere may make breaking changes at any time.
+:::
+
+## Setup
+
+In order to use the LangChain.js Cohere integration you'll need an API key.
+You can sign up for a Cohere account and create an API key [here](https://dashboard.cohere.com/welcome/register).
+
+You'll first need to install the [`@langchain/cohere`](https://www.npmjs.com/package/@langchain/cohere) package:
+
+:::tip
+See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
+:::
+
+```bash npm2yarn
+npm install @langchain/cohere
+```
+
+## Usage
+
+import BasicExample from "@examples/models/chat/cohere/chat_cohere.ts";
+
+<CodeBlock language="typescript">{BasicExample}</CodeBlock>
+
+:::info
+You can see a LangSmith trace of this example [here](https://smith.langchain.com/public/69ccd2aa-b651-4f07-9223-ecc0b77e645e/r)
+:::
+
+### Streaming
+
+Cohere's API also supports streaming token responses. The example below demonstrates how to use this feature.
+
+import ChatStreamExample from "@examples/models/chat/cohere/chat_stream_cohere.ts";
+
+<CodeBlock language="typescript">{ChatStreamExample}</CodeBlock>
+
+:::info
+You can see a LangSmith trace of this example [here](https://smith.langchain.com/public/36ae0564-b096-4ec1-9318-1f82fe705fe8/r)
+:::
+
+### Stateful conversation API
+
+Cohere's chat API supports stateful conversations.
+This means the API stores previous chat messages which can be accessed by passing in a `conversation_id` field.
+The example below demonstrates how to use this feature.
+
+import StatefulChatExample from "@examples/models/chat/cohere/stateful_conversation.ts";
+
+<CodeBlock language="typescript">{StatefulChatExample}</CodeBlock>
+
+:::info
+You can see the LangSmith traces from this example [here](https://smith.langchain.com/public/8e67b05a-4e63-414e-ac91-a91acf21b262/r) and [here](https://smith.langchain.com/public/50fabc25-46fe-4727-a59c-7e4eb0de8e70/r)
+:::
+
+### RAG
+
+Cohere also comes out of the box with RAG support.
+You can pass in documents as context to the API request and Cohere's models will use them when generating responses.
+
+import RAGExample from "@examples/models/chat/cohere/rag.ts";
+
+<CodeBlock language="typescript">{RAGExample}</CodeBlock>
+
+:::info
+You can see a LangSmith trace of this example [here](https://smith.langchain.com/public/de71fffe-6f01-4c36-9b49-40d1bc87dea3/r)
+:::
+
+### Connectors
+
+The API also allows for other connections which are not static documents.
+An example of this is their `web-search` connector which allows you to pass in a query and the API will search the web for relevant documents.
+The example below demonstrates how to use this feature.
+
+import ConnectorsExample from "@examples/models/chat/cohere/connectors.ts";
+
+<CodeBlock language="typescript">{ConnectorsExample}</CodeBlock>
+
+:::info
+You can see a LangSmith trace of this example [here](https://smith.langchain.com/public/9a6f996b-cff2-4f3f-916a-640469a5a963/r)
+:::
+
+We can see in the `kwargs` object that the API request did a few things:
+
+- Performed a search query, storing the result data in the `searchQueries` and `searchResults` fields. In the `searchQueries` field we see they rephrased our query to `largest penguin species height` for better results.
+- Generated three documents from the search query.
+- Generated a list of citations
+- Generated a final response based on the above actions & content.
