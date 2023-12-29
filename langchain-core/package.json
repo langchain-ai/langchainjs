@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
