@@ -64,12 +64,6 @@ This video may also be helpful:
 https://www.youtube.com/watch?v=NAtiNpwnivI&t=309s
 
 
-     OUTLOOK_ACCESS_TOKEN=your_access_token
-     // for AuthFlowToken
-     OUTLOOK_REFRESH_TOKEN=your_refresh_token
-
-     ```
-
 ### Get an accessToken
 
 Now you are able to use the above credentials to get an `accessToken`.
@@ -78,60 +72,73 @@ The `AuthFlowREST` class implements the OAuth 2.0 authorization code flow.
 You can use the `getAccessToken()` which will open a temporary server on 
 your `redirectUri` and you need to manually open the printed link to login 
 on behalf of the user. For every `AuthFlowREST` instance, you only need to 
-login once. The next time you can run the `refreshAccessToken()` method, it will
+login once. The next time you can run the `getAccessToken()` method, it will
 make use of the `refreshToken` obtained together with the first `accessToken`
- to get a new `accessToken` without the need of the server and login.
+to get a new `accessToken` without the need of the server and login.
 
 Having the above credentials, you can either pass them to the constructor 
 or put them in the environment.
 
 ```typescript
+import { AuthFlowREST } from '@langchain/community/tools/outlook';
+
 const authFlow = new AuthFlowREST();
 const authFlow = new AuthFlowREST(clientId, clientSecret, redirectUri);
 // Get accessToken
 const accessToken = await authFlow.getAccessToken();
 // After the above line, you can get the refreshToken
 const refreshToken = authFlow.getRefreshToken();
-// Refresh accessToken
-const accessToken = await authFlow.refreshAccessToken();
+// Get accessToken again without login
+const accessToken = await authFlow.getAccessToken();
+```
+
+Now you can set the `accessToken` and `refreshToken` as environment variable:
+
+```env
+OUTLOOK_ACCESS_TOKEN=your_access_token
+OUTLOOK_REFRESH_TOKEN=your_refresh_token
 ```
 
 ### Provide accessToken to Outlook Toolkit
 
-The Outlook Toolkit needs `AuthFlow` abstarct class to provide accessToken.
+The Outlook Toolkit needs `AuthFlowBase` abstarct class to provide accessToken.
 
 ```typescript
 const authFlow = new AuthFlowREST();
-const outlookReadMail = new OutlookReadMailTool(authFlow=authFlow);
+const outlookReadMail = new OutlookReadMailTool(authFlow);
 // or simply this when you have the credentials in .env
-const outlookReadMail = new OutlookReadMailTool(choice="rest");
+const outlookReadMail = new OutlookReadMailTool(undefined, "rest");
 ```
 
 ### Other classes to provide accessToken
 
-If you only have a valid `accessToken` in your env:
+If you only have a valid `accessToken` in your env, you can use `AuthFlowToken`:
 
 ```typescript
 const authFlow = new AuthFlowToken(accessToken);
 // if you have accessToken stored in .env
 const authFlow = new AuthFlowToken();
-const outlookReadMail = new OutlookReadMailTool(authFlow=authFlow);
+const outlookReadMail = new OutlookReadMailTool(authFlow);
 // or simply this when you have accessToken in .env
-const outlookReadMail = new OutlookReadMailTool(choice="token");
+const outlookReadMail = new OutlookReadMailTool(undefined, "token");
 ```
 
 Usually when you obtain a accessToken you also get a refreshToken 
-used to refresh expired accessToken. The `AuthFlowREST` class needs 
+used to refresh expired accessToken. The `AuthFlowRefresh` class needs 
 the following credentials: `clientId`, `clientSecret`, `redirectUri` 
 and `refreshToken`. In this way you won't need to login, no server 
 will be open.
 
 ```typescript
 const authFlow = new AuthFlowRefresh();
-const outlookReadMail = new OutlookReadMailTool(authFlow=authFlow);
+const outlookReadMail = new OutlookReadMailTool(authFlow);
 // or simply this when you have the credentials in .env
-const outlookReadMail = new OutlookReadMailTool(choice="refresh");
+const outlookReadMail = new OutlookReadMailTool(undefined, "refresh");
 ```
+
+### Customize your own authentication flow
+
+Inherit from `AuthFlowBase` and implement the `getAccessToken()` method.
 
 ## Usage
 
