@@ -146,6 +146,18 @@ test("RunnableLambda that returns a runnable should invoke the runnable", async 
   expect(result).toEqual("testing");
 });
 
+test("RunnableLambda that returns a streaming runnable should stream output from the inner runnable", async () => {
+  const runnable = new RunnableLambda({
+    func: () => new FakeStreamingLLM({}),
+  });
+  const stream = await runnable.stream("hello");
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+  expect(chunks).toEqual(["h", "e", "l", "l", "o"]);
+});
+
 test("RunnableEach", async () => {
   const parser = new FakeSplitIntoListParser();
   expect(await parser.invoke("first item, second item")).toEqual([
