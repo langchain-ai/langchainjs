@@ -1,3 +1,5 @@
+import { CohereClient } from "cohere-ai";
+
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
@@ -5,42 +7,43 @@ import { chunkArray } from "@langchain/core/utils/chunk_array";
 /**
  * Interface that extends EmbeddingsParams and defines additional
  * parameters specific to the CohereEmbeddings class.
- * @deprecated Use `CohereEmbeddingsParams` from `@langchain/cohere` instead.
  */
 export interface CohereEmbeddingsParams extends EmbeddingsParams {
-  modelName: string;
+  model: string;
 
   /**
    * The maximum number of documents to embed in a single request. This is
    * limited by the Cohere API to a maximum of 96.
    */
   batchSize?: number;
+
+  /**
+   * Specifies the type of input you're giving to the model.
+   * Not required for older versions of the embedding models (i.e. anything lower than v3),
+   * but is required for more recent versions (i.e. anything bigger than v2).
+   *
+   * * `search_document` - Use this when you encode documents for embeddings that you store in a vector database for search use-cases.
+   * * `search_query` - Use this when you query your vector DB to find relevant documents.
+   * * `classification` - Use this when you use the embeddings as an input to a text classifier.
+   * * `clustering` - Use this when you want to cluster the embeddings.
+   */
+  inputType?: string;
 }
 
 /**
  * A class for generating embeddings using the Cohere API.
- * @example
- * ```typescript
- * // Embed a query using the CohereEmbeddings class
- * const model = new ChatOpenAI();
- * const res = await model.embedQuery(
- *   "What would be a good company name for a company that makes colorful socks?",
- * );
- * console.log({ res });
- * ```
- * @deprecated Use `CohereEmbeddings` from `@langchain/cohere` instead.
  */
 export class CohereEmbeddings
   extends Embeddings
   implements CohereEmbeddingsParams
 {
-  modelName = "small";
+  model = "small";
 
   batchSize = 48;
 
-  private apiKey: string;
+  inputType: string | undefined;
 
-  private client: typeof import("cohere-ai");
+  private client: CohereClient;
 
   /**
    * Constructor for the CohereEmbeddings class.
@@ -63,9 +66,12 @@ export class CohereEmbeddings
       throw new Error("Cohere API key not found");
     }
 
-    this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
+    this.client = new CohereClient({
+      token: apiKey,
+    });
+    this.model = fieldsWithDefaults?.model ?? this.model;
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
-    this.apiKey = apiKey;
+    this.inputType = fieldsWithDefaults?.inputType;
   }
 
   /**
@@ -74,14 +80,13 @@ export class CohereEmbeddings
    * @returns A Promise that resolves to an array of embeddings.
    */
   async embedDocuments(texts: string[]): Promise<number[][]> {
-    await this.maybeInitClient();
-
     const batches = chunkArray(texts, this.batchSize);
 
     const batchRequests = batches.map((batch) =>
       this.embeddingWithRetry({
-        model: this.modelName,
+        model: this.model,
         texts: batch,
+        inputType: this.inputType,
       })
     );
 
@@ -91,9 +96,13 @@ export class CohereEmbeddings
 
     for (let i = 0; i < batchResponses.length; i += 1) {
       const batch = batches[i];
-      const { body: batchResponse } = batchResponses[i];
+      const { embeddings: batchResponse } = batchResponses[i];
       for (let j = 0; j < batch.length; j += 1) {
-        embeddings.push(batchResponse.embeddings[j]);
+        if ("float" in batchResponse && batchResponse.float) {
+          embeddings.push(batchResponse.float[j]);
+        } else if (Array.isArray(batchResponse)) {
+          embeddings.push(batchResponse[j as number]);
+        }
       }
     }
 
@@ -106,13 +115,23 @@ export class CohereEmbeddings
    * @returns A Promise that resolves to an array of numbers representing the embedding.
    */
   async embedQuery(text: string): Promise<number[]> {
-    await this.maybeInitClient();
-
-    const { body } = await this.embeddingWithRetry({
-      model: this.modelName,
+    const { embeddings } = await this.embeddingWithRetry({
+      model: this.model,
       texts: [text],
     });
-    return body.embeddings[0];
+    if ("float" in embeddings && embeddings.float) {
+      return embeddings.float[0];
+    } else if (Array.isArray(embeddings)) {
+      return embeddings[0];
+    } else {
+      throw new Error(
+        `Invalid response from Cohere API. Received: ${JSON.stringify(
+          embeddings,
+          null,
+          2
+        )}`
+      );
+    }
   }
 
   /**
@@ -123,34 +142,30 @@ export class CohereEmbeddings
   private async embeddingWithRetry(
     request: Parameters<typeof this.client.embed>[0]
   ) {
-    await this.maybeInitClient();
-
-    return this.caller.call(this.client.embed.bind(this.client), request);
+    return this.caller.call(async () => {
+      let response;
+      try {
+        response = await this.client.embed(request);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (e: any) {
+        e.status = e.status ?? e.statusCode;
+        throw e;
+      }
+      return response;
+    });
   }
 
-  /**
-   * Initializes the Cohere client if it hasn't been initialized already.
-   */
-  private async maybeInitClient() {
-    if (!this.client) {
-      const { cohere } = await CohereEmbeddings.imports();
-
-      this.client = cohere;
-      this.client.init(this.apiKey);
-    }
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      apiKey: "COHERE_API_KEY",
+      api_key: "COHERE_API_KEY",
+    };
   }
 
-  /** @ignore */
-  static async imports(): Promise<{
-    cohere: typeof import("cohere-ai");
-  }> {
-    try {
-      const { default: cohere } = await import("cohere-ai");
-      return { cohere };
-    } catch (e) {
-      throw new Error(
-        "Please install cohere-ai as a dependency with, e.g. `yarn add cohere-ai`"
-      );
-    }
+  get lc_aliases(): { [key: string]: string } | undefined {
+    return {
+      apiKey: "cohere_api_key",
+      api_key: "cohere_api_key",
+    };
   }
 }
