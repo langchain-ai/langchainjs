@@ -10,7 +10,7 @@ test("similaritySearchVectorWithScore", async () => {
 
   const store = new TurbopufferVectorStore(embeddings, {
     apiKey: getEnvironmentVariable("TURBOPUFFER_API_KEY"),
-    namespace: "langchain-js-testing",
+    namespace: "langchain-js-testing"
   });
 
   expect(store).toBeDefined();
@@ -21,9 +21,9 @@ test("similaritySearchVectorWithScore", async () => {
     { pageContent: createdAt.toString(), metadata: { a: createdAt } },
     { pageContent: "hi", metadata: { a: createdAt } },
     { pageContent: "bye", metadata: { a: createdAt } },
-    { pageContent: "what's this", metadata: { a: createdAt } },
+    { pageContent: "what's this", metadata: { a: createdAt } }
   ]);
-
+  console.log("added docs");
   const results = await store.similaritySearch(createdAt.toString(), 1);
 
   expect(results).toHaveLength(1);
@@ -31,17 +31,17 @@ test("similaritySearchVectorWithScore", async () => {
   expect(results).toEqual([
     new Document({
       metadata: { a: createdAt },
-      pageContent: createdAt.toString(),
-    }),
+      pageContent: createdAt.toString()
+    })
   ]);
 });
 
-test("similaritySearchVectorWithScore with a passed filter", async () => {
+test.only("similaritySearchVectorWithScore with a passed filter", async () => {
   const embeddings = new OpenAIEmbeddings();
 
   const store = new TurbopufferVectorStore(embeddings, {
     apiKey: getEnvironmentVariable("TURBOPUFFER_API_KEY"),
-    namespace: "langchain-js-testing",
+    namespace: "langchain-js-testing"
   });
 
   expect(store).toBeDefined();
@@ -52,11 +52,11 @@ test("similaritySearchVectorWithScore with a passed filter", async () => {
     { pageContent: "hello 0", metadata: { created_at: createdAt } },
     { pageContent: "hello 1", metadata: { created_at: createdAt + 1 } },
     { pageContent: "hello 2", metadata: { created_at: createdAt + 2 } },
-    { pageContent: "hello 3", metadata: { created_at: createdAt + 3 } },
+    { pageContent: "hello 3", metadata: { created_at: createdAt + 3 } }
   ]);
 
   const results = await store.similaritySearch("hello", 1, {
-    created_at: (createdAt + 2).toString(),
+    metadata: [["Eq", `{"created_at": ${createdAt}}`]]
   });
 
   expect(results).toHaveLength(1);
@@ -64,7 +64,7 @@ test("similaritySearchVectorWithScore with a passed filter", async () => {
   expect(results).toEqual([
     new Document({
       metadata: { created_at: (createdAt + 2).toString() },
-      pageContent: "hello 2",
-    }),
+      pageContent: "hello 2"
+    })
   ]);
 });

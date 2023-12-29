@@ -1,6 +1,9 @@
 import { type DocumentInterface, Document } from "@langchain/core/documents";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
-import { AsyncCaller } from "@langchain/core/utils/async_caller";
+import {
+  AsyncCaller,
+  AsyncCallerParams
+} from "@langchain/core/utils/async_caller";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { VectorStore } from "@langchain/core/vectorstores";
@@ -14,9 +17,9 @@ export interface TurbopufferHeaders {
 
 export type TurbopufferDistanceMetric = "cosine_distance" | "euclidean_squared";
 
-export type TurbopufferFilterType = Record<string, string>;
+export type TurbopufferFilterType = Record<string, Array<[string, string[] | string]>>;
 
-export interface TurbopufferParams {
+export interface TurbopufferParams extends AsyncCallerParams {
   apiKey?: string;
   namespace?: string;
   distanceMetric?: TurbopufferDistanceMetric;
@@ -27,8 +30,8 @@ export interface TurbopufferParams {
 export interface TurbopufferQueryResult {
   dist: number;
   id: number;
-  vector: number[];
-  attributes: TurbopufferFilterType;
+  vector?: number[];
+  attributes: Record<string, string>;
 }
 
 export class TurbopufferVectorStore extends VectorStore {
@@ -36,13 +39,13 @@ export class TurbopufferVectorStore extends VectorStore {
 
   get lc_secrets(): { [key: string]: string } {
     return {
-      apiKey: "TURBOPUFFER_API_KEY",
+      apiKey: "TURBOPUFFER_API_KEY"
     };
   }
 
   get lc_aliases(): { [key: string]: string } {
     return {
-      apiKey: "TURBOPUFFER_API_KEY",
+      apiKey: "TURBOPUFFER_API_KEY"
     };
   }
 
@@ -70,25 +73,39 @@ export class TurbopufferVectorStore extends VectorStore {
   constructor(embeddings: EmbeddingsInterface, args: TurbopufferParams) {
     super(embeddings, args);
 
-    const apiKey = args.apiKey ?? getEnvironmentVariable("TURBOPUFFER_API_KEY");
+    const {
+      apiKey: argsApiKey,
+      namespace,
+      distanceMetric,
+      apiUrl,
+      batchSize,
+      ...asyncCallerArgs
+    } = args;
+
+    const apiKey = argsApiKey ?? getEnvironmentVariable("TURBOPUFFER_API_KEY");
     if (!apiKey) {
       throw new Error(
         `Turbopuffer API key not found.\nPlease pass it in as "apiKey" or set it as an environment variable called "TURBOPUFFER_API_KEY"`
       );
     }
     this.apiKey = apiKey;
-    this.namespace = args.namespace ?? this.namespace;
-    this.distanceMetric = args.distanceMetric ?? this.distanceMetric;
-    this.apiUrl = args.apiUrl ?? this.apiUrl;
-    this.batchSize = args.batchSize ?? this.batchSize;
+    this.namespace = namespace ?? this.namespace;
+    this.distanceMetric = distanceMetric ?? this.distanceMetric;
+    this.apiUrl = apiUrl ?? this.apiUrl;
+    this.batchSize = batchSize ?? this.batchSize;
+    this.caller = new AsyncCaller({
+      maxConcurrency: 6,
+      maxRetries: 0,
+      ...asyncCallerArgs
+    });
   }
 
   getJsonHeader(): TurbopufferHeaders {
     return {
       headers: {
         Authorization: `Bearer ${this.apiKey}`,
-        "Content-Type": "application/json",
-      },
+        "Content-Type": "application/json"
+      }
     };
   }
 
@@ -97,7 +114,7 @@ export class TurbopufferVectorStore extends VectorStore {
       fetch(fetchUrl, {
         method: "POST",
         headers: this.getJsonHeader().headers,
-        body: stringifiedBody,
+        body: stringifiedBody
       })
     );
     return response;
@@ -137,15 +154,21 @@ export class TurbopufferVectorStore extends VectorStore {
         const batchDocs = batchedDocuments[index];
         const batchIds = batchedIds[index];
 
+        if (batchIds.length !== batchVectors.length) {
+          throw new Error(
+            "Number of ids provided does not match number of vectors"
+          );
+        }
+
         const attributes = {
-          source: batchDocs.map((doc) => doc.metadata.source),
           pageContent: batchDocs.map((doc) => doc.pageContent),
+          metadata: batchDocs.map((doc) => JSON.stringify(doc.metadata ?? {}))
         };
 
         const data = {
-          docIds: batchIds,
+          ids: batchIds,
           vectors: batchVectors,
-          attributes,
+          attributes
         };
 
         const response = await this.callWithRetry(
@@ -190,12 +213,12 @@ export class TurbopufferVectorStore extends VectorStore {
     filter?: TurbopufferFilterType
   ): Promise<TurbopufferQueryResult[]> {
     const data = {
-      query,
-      k,
-      distanceMetric: this.distanceMetric,
+      vector: query,
+      top_k: k,
+      distance_metric: this.distanceMetric,
       filters: filter,
-      includeAttributes,
-      includeVector,
+      include_attributes: includeAttributes,
+      include_vectors: includeVector
     };
 
     const response = await this.callWithRetry(
@@ -211,8 +234,8 @@ export class TurbopufferVectorStore extends VectorStore {
     }
 
     const json = await response.json();
-
-    return json.results;
+    console.log(json);
+    return json;
   }
 
   async similaritySearchVectorWithScore(
@@ -220,22 +243,23 @@ export class TurbopufferVectorStore extends VectorStore {
     k: number,
     filter?: this["FilterType"]
   ): Promise<[DocumentInterface, number][]> {
+    const includeAttributes = ["pageContent", "metadata"];
     const search = await this.queryVectors(
       query,
       k,
-      ["source", "pageContent"],
+      includeAttributes,
       false,
       filter
     );
-
+    console.log("search", JSON.stringify(search, null, 2));
     const result: [DocumentInterface, number][] = search.map((res) => [
       new Document({
         pageContent: res.attributes.pageContent,
-        metadata: {
-          source: res.attributes.source,
-        },
+        metadata: res.attributes.metadata
+          ? JSON.parse(res.attributes.metadata)
+          : undefined
       }),
-      res.dist,
+      res.dist
     ]);
 
     return result;
