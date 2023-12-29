@@ -35,7 +35,7 @@ export class OutlookSendMailTool extends OutlookBase {
    */
   async _call(message: string): Promise<string> {
     try {
-      await this.getAuth();
+      this.accessToken = await this.authFlow.getAccessToken();
     } catch (error) {
       return `Failed to get access token: ${error}`;
     }

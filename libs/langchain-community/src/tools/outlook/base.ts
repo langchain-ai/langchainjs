@@ -57,22 +57,4 @@ export abstract class OutlookBase extends Tool {
       }
     }
   }
-
-  /**
-   * Retrieves and returns the authentication token.
-   * If the token is not available, it first attempts to refresh the token, and if that fails, it obtains a new token.
-   * @returns {Promise<string>} A promise that resolves to the authentication token.
-   */
-  async getAuth() {
-    if (!this.accessToken) {
-      this.accessToken = await this.authFlow.getAccessToken();
-    } else {
-      try {
-        this.accessToken = await this.authFlow.refreshAccessToken();
-      } catch (error) {
-        this.accessToken = await this.authFlow.getAccessToken();
-      }
-    }
-    return this.accessToken;
-  }
 }

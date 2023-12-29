@@ -40,7 +40,7 @@ export class OutlookReadMailTool extends OutlookBase {
   async _call(query: string): Promise<string> {
     try {
       // Ensure authentication is completed before making the API call.
-      await this.getAuth();
+      this.accessToken = await this.authFlow.getAccessToken();
     } catch (error) {
       // Handle authentication error.
       return `Failed to get access token: ${error}`;

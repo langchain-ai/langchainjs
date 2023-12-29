@@ -40,13 +40,4 @@ export abstract class AuthFlowBase {
    * @memberof AuthFlowBase
    */
   public abstract getAccessToken(): Promise<string>;
-
-  /**
-   * Abstract method to refresh the access token.
-   *
-   * @abstract
-   * @returns {Promise<string>} A promise that resolves to the refreshed access token.
-   * @memberof AuthFlowBase
-   */
-  public abstract refreshAccessToken(): Promise<string>;
 }

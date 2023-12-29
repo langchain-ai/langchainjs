@@ -140,19 +140,20 @@ This example shows how to read emails by using agent.
 ```typescript
 import { ChatOpenAI } from 'langchain/chat_models/openai';
 import { initializeAgentExecutorWithOptions } from 'langchain/agents';
-import { OutlookReadMailTool, AuthFlowREST, AuthFlowToken} from 'langchain_community/tools/outlook';
+import { OutlookReadMailTool } from '@langchain/community/tools/outlook';
+require('dotenv').config();
 
 async function createAndRunAgent() {
-  const gpt4 = new ChatOpenAI({ modelName: 'gpt-4', openAIApiKey: getEnvironmentVariable("OPENAI_API_KEY")});
+  const gpt4 = new ChatOpenAI({ modelName: 'gpt-3.5-turbo-1106', openAIApiKey: process.env.OPENAI_API_KEY});
 
-  const outlookReadMail = new OutlookReadMailTool("token");
+  const outlookReadMail = new OutlookReadMailTool(undefined, "token");
 
   const executor = await initializeAgentExecutorWithOptions([outlookReadMail], gpt4, {
     agentType: "openai-functions",
     verbose: true,
   });
 
-  const input = 'show emails sent to YOUR_EMAIL';
+  const input = 'show my emails';
   const result = await executor.invoke({ input });
 
   console.log(result);
@@ -166,20 +167,20 @@ This example shows how to send emails by using agent.
 ```typescript
 import { ChatOpenAI } from 'langchain/chat_models/openai';
 import { initializeAgentExecutorWithOptions } from 'langchain/agents';
-import { OutlookSendMailTool, AuthFlowREST } from 'langchain_community/tools/outlook';
-
+import { OutlookSendMailTool } from '@langchain/community/tools/outlook';
+require('dotenv').config();
 
 async function createAndRunAgent() {
-  const gpt4 = new ChatOpenAI({ modelName: 'gpt-4', openAIApiKey: getEnvironmentVariable("OPENAI_API_KEY")});
+  const gpt4 = new ChatOpenAI({ modelName: 'gpt-4', openAIApiKey: process.env.OPENAI_API_KEY});
 
-  const sendMailTool = new OutlookSendMailTool("token");
+  const sendMailTool = new OutlookSendMailTool(undefined, "token");
 
   const executor = await initializeAgentExecutorWithOptions([sendMailTool], gpt4, {
     agentType: "openai-functions",
     verbose: true,
   });
 
-  const input = 'send an email to YOUR_EMAIL and say Hello';
+  const input = 'send an email to YOUR_EMAIL and invite him to a meeting at 3pm tomorrow';
   const result = await executor.invoke({ input });
 
   console.log(result);

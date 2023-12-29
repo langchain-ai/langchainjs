@@ -35,15 +35,6 @@ export class AuthFlowToken extends AuthFlowBase {
   }
 
   /**
-   * Refreshes the access token.
-   * @async
-   * @returns {Promise<string>} - The refreshed access token.
-   */
-  public async refreshAccessToken(): Promise<string> {
-    return this.accessToken;
-  }
-
-  /**
    * Gets the access token.
    * @async
    * @returns {Promise<string>} - The access token.

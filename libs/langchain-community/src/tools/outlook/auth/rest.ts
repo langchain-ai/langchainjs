@@ -188,11 +188,11 @@ export class AuthFlowREST extends AuthFlowBase {
   }
 
   /**
-   * Gets the access token using the authorization code and client credentials.
+   * Login to get the access and refresh token by user login.
    * @public
-   * @returns {Promise<string>} A Promise resolving to the access token.
+   * @returns {Promise<{ accessToken: string; refreshToken: string }>} A Promise resolving to the access and refresh tokens.
    */
-  public async getAccessToken(): Promise<string> {
+  public async getTokens(): Promise<{ accessToken: string; refreshToken: string }> {
     // fetch auth code from user login
     const code = await this.getCode();
     // fetch access token using auth code
@@ -225,7 +225,7 @@ export class AuthFlowREST extends AuthFlowBase {
     const json = (await response.json()) as AccessTokenResponse;
     this.accessToken = json.access_token;
     this.refreshToken = json.refresh_token;
-    return this.accessToken;
+    return { accessToken: this.accessToken, refreshToken: this.refreshToken };
   }
 
   /**
@@ -272,6 +272,28 @@ export class AuthFlowREST extends AuthFlowBase {
     // save new access token
     const json = (await response.json()) as AccessTokenResponse;
     this.accessToken = json.access_token;
+    return this.accessToken;
+  }
+
+  /**
+   * returns a valid access token.
+   * @public
+   * @returns {Promise<string>} A Promise resolving to the access token.
+   */
+  public async getAccessToken(): Promise<string> {
+    if (!this.accessToken) {
+      const { accessToken, refreshToken } = await this.getTokens();
+      this.accessToken = accessToken;
+      this.refreshToken = refreshToken;
+    } else {
+      try {
+        this.accessToken = await this.refreshAccessToken();
+      } catch (error) {
+        const { accessToken, refreshToken } = await this.getTokens();
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
+      }
+    }
     return this.accessToken;
   }
 }
