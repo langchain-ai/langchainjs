@@ -1,7 +1,7 @@
 {
   "name": "@langchain/community",
-  "version": "0.0.11",
-  "description": "Sample integration for LangChain.js",
+  "version": "0.0.12",
+  "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
     "node": ">=18"
@@ -33,8 +33,8 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1.3",
-    "@langchain/openai": "~0.0.7",
+    "@langchain/core": "~0.1.5",
+    "@langchain/openai": "~0.0.9",
     "flat": "^5.0.2",
     "langsmith": "~0.0.48",
     "uuid": "^9.0.0",
@@ -574,6 +574,11 @@
       "types": "./tools/serper.d.ts",
       "import": "./tools/serper.js",
       "require": "./tools/serper.cjs"
+    },
+    "./tools/tavily_search": {
+      "types": "./tools/tavily_search.d.ts",
+      "import": "./tools/tavily_search.js",
+      "require": "./tools/tavily_search.cjs"
     },
     "./tools/wikipedia_query_run": {
       "types": "./tools/wikipedia_query_run.d.ts",
@@ -1314,6 +1319,9 @@
     "tools/serper.cjs",
     "tools/serper.js",
     "tools/serper.d.ts",
+    "tools/tavily_search.cjs",
+    "tools/tavily_search.js",
+    "tools/tavily_search.d.ts",
     "tools/wikipedia_query_run.cjs",
     "tools/wikipedia_query_run.js",
     "tools/wikipedia_query_run.d.ts",

@@ -1,15 +1,150 @@
 import CodeBlock from "@theme/CodeBlock";
-import StreamingExample from "@examples/agents/stream.ts";
+import StreamIntermediateStepsExample from "@examples/agents/stream_intermediate_steps.ts";
+import StreamLogExample from "@examples/agents/stream_log.ts";
 
 # Streaming
 
-Agents have the ability to stream iterations and actions back while they're still working.
-This can be very useful for any realtime application where you have users who need insights on the agent's progress while is has yet to finish.
+Streaming is an important UX consideration for LLM apps, and agents are no exception. Streaming with agents is made more complicated by the fact that it’s not just tokens that you will want to stream, but you may also want to stream back the intermediate steps an agent takes.
 
-Setting up streaming with agents is very simple, even with existing agents. The only change required is switching your `executor.invoke({})` to be `executor.stream({})`.
+Let’s take a look at how to do this.
 
-Below is a simple example of streaming with an agent.
+## Streaming intermediate steps
 
-You can find the [LangSmith](https://smith.langchain.com/) trace for this example by clicking [here](https://smith.langchain.com/public/08978fa7-bb99-427b-850e-35773cae1453/r).
+Let’s look at how to stream intermediate steps. We can do this by using the default `.stream()` method on the AgentExecutor.
 
-<CodeBlock language="typescript">{StreamingExample}</CodeBlock>
+<CodeBlock language="typescript">{StreamIntermediateStepsExample}</CodeBlock>
+
+You can see that we get back a bunch of different information. There are two ways to work with this information:
+
+1. By using the AgentAction or observation directly
+2. By using the messages object
+
+## Streaming tokens
+
+In addition to streaming the final result, you can also stream tokens from each individual step. This will require more complex parsing of the logs.
+
+Note: You will also need to make sure you set the LLM to return streaming output to get the maximum amount of data possible.
+
+<CodeBlock language="typescript">{StreamLogExample}</CodeBlock>
+
+With some creative parsing, this can be useful for e.g. streaming back just the final response from the agent:
+
+```typescript
+const logStream = await agentExecutor.streamLog({
+  input: "what is the weather in SF",
+});
+
+/*
+  Final streamed output from the OpenAI functions agent will look similar to the below chunk
+  since intermediate steps are streamed functions rather than strings:
+
+  {
+    "ops": [
+      {
+        "op": "add",
+        "path": "/logs/ChatOpenAI:2/streamed_output_str/-",
+        "value": "anc"
+      }
+    ]
+  }
+*/
+
+for await (const chunk of logStream) {
+  if (chunk.ops?.length > 0 && chunk.ops[0].op === "add") {
+    const addOp = chunk.ops[0];
+    if (
+      addOp.path.startsWith("/logs/ChatOpenAI") &&
+      typeof addOp.value === "string" &&
+      addOp.value.length
+    ) {
+      console.log(addOp.value);
+    }
+  }
+}
+
+/*
+  The
+  current
+  weather
+  in
+  San
+  Francisco
+  is
+  
+  52
+  °F
+  with
+  broken
+  clouds
+  .
+  There
+  is
+  a
+  chance
+  of
+  rain
+  showers
+  with
+  a
+  low
+  of
+  
+  54
+  °F
+  .
+  Winds
+  are
+  expected
+  to
+  be
+  from
+  the
+  SSE
+  at
+  
+  5
+  to
+  
+  10
+  mph
+  .
+  For
+  more
+  detailed
+  information
+  ,
+  you
+  can
+  visit
+  [
+  Weather
+  Underground
+  ](
+  https
+  ://
+  www
+  .w
+  under
+  ground
+  .com
+  /h
+  our
+  ly
+  /us
+  /ca
+  /s
+  an
+  -fr
+  anc
+  isco
+  /date
+  /
+  202
+  3
+  -
+  12
+  -
+  27
+  ).
+*/
+```

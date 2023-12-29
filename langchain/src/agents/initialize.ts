@@ -10,7 +10,7 @@ import { ChatConversationalAgent } from "./chat_convo/index.js";
 import { StructuredChatAgent } from "./structured_chat/index.js";
 import { AgentExecutor, AgentExecutorInput } from "./executor.js";
 import { ZeroShotAgent } from "./mrkl/index.js";
-import { OpenAIAgent } from "./openai/index.js";
+import { OpenAIAgent } from "./openai_functions/index.js";
 import { XMLAgent } from "./xml/index.js";
 
 /**

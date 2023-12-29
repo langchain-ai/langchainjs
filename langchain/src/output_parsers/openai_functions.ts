@@ -101,9 +101,9 @@ export class JsonOutputFunctionsParser extends BaseCumulativeTransformOutputPars
   }
 
   protected _diff(
-    prev: JSONPatchOperation | undefined,
-    next: JSONPatchOperation
-  ): object | undefined {
+    prev: unknown | undefined,
+    next: unknown
+  ): JSONPatchOperation[] | undefined {
     if (!next) {
       return undefined;
     }

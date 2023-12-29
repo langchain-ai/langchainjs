@@ -31,4 +31,6 @@ export abstract class BaseListChatMessageHistory extends Serializable {
   public addAIChatMessage(message: string): Promise<void> {
     return this.addMessage(new AIMessage(message));
   }
+
+  public abstract getMessages(): Promise<BaseMessage[]>;
 }

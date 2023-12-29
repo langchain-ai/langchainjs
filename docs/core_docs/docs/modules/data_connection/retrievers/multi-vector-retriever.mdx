@@ -1,0 +1,48 @@
+---
+hide_table_of_contents: true
+---
+
+# MultiVector Retriever
+
+It can often be beneficial to store multiple vectors per document.
+LangChain has a base MultiVectorRetriever which makes querying this type of setup easier!
+
+A lot of the complexity lies in how to create the multiple vectors per document.
+This notebook covers some of the common ways to create those vectors and use the MultiVectorRetriever.
+
+Some methods to create multiple vectors per document include:
+
+- smaller chunks: split a document into smaller chunks, and embed those (e.g. the [ParentDocumentRetriever](/docs/modules/data_connection/retrievers/parent-document-retriever))
+- summary: create a summary for each document, embed that along with (or instead of) the document
+- hypothetical questions: create hypothetical questions that each document would be appropriate to answer, embed those along with (or instead of) the document
+
+Note that this also enables another method of adding embeddings - manually. This is great because you can explicitly add questions or queries that should lead to a document being recovered, giving you more control.
+
+## Smaller chunks
+
+Often times it can be useful to retrieve larger chunks of information, but embed smaller chunks.
+This allows for embeddings to capture the semantic meaning as closely as possible, but for as much context as possible to be passed downstream.
+NOTE: this is what the ParentDocumentRetriever does. Here we show what is going on under the hood.
+
+import CodeBlock from "@theme/CodeBlock";
+import SmallChunksExample from "@examples/retrievers/multi_vector_small_chunks.ts";
+
+<CodeBlock language="typescript">{SmallChunksExample}</CodeBlock>
+
+## Summary
+
+Oftentimes a summary may be able to distill more accurately what a chunk is about, leading to better retrieval.
+Here we show how to create summaries, and then embed those.
+
+import SummaryExample from "@examples/retrievers/multi_vector_summary.ts";
+
+<CodeBlock language="typescript">{SummaryExample}</CodeBlock>
+
+## Hypothetical queries
+
+An LLM can also be used to generate a list of hypothetical questions that could be asked of a particular document.
+These questions can then be embedded and used to retrieve the original document:
+
+import HypotheticalExample from "@examples/retrievers/multi_vector_hypothetical.ts";
+
+<CodeBlock language="typescript">{HypotheticalExample}</CodeBlock>
