@@ -27,6 +27,7 @@
     "libs/langchain-google-genai/src/**/*",
     "libs/langchain-openai/src/**/*",
     "libs/langchain-mistralai/src/**/*",
+    "libs/langchain-yandex/src/**/*",
   ],
   "exclude": [
     "node_modules",
@@ -38,5 +39,6 @@
     "libs/langchain-google-genai/dist/**/*",
     "libs/langchain-openai/dist/**/*",
     "libs/langchain-mistralai/dist/**/*",
+    "libs/langchain-yandex/dist/**/*",
   ]
 }
