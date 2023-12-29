@@ -212,6 +212,7 @@ const entrypoints = {
   "chat_models/googlevertexai/web": "chat_models/googlevertexai/web",
   "chat_models/googlepalm": "chat_models/googlepalm",
   "chat_models/fireworks": "chat_models/fireworks",
+  "chat_models/alitongyi": "chat_models/alitongyi",
   "chat_models/baiduwenxin": "chat_models/baiduwenxin",
   "chat_models/iflytek_xinghuo": "chat_models/iflytek_xinghuo/index",
   "chat_models/iflytek_xinghuo/web": "chat_models/iflytek_xinghuo/web",

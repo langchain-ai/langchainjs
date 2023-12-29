@@ -114,6 +114,7 @@ const entrypoints = {
   "vectorstores/xata": "vectorstores/xata",
   "vectorstores/zep": "vectorstores/zep",
   // chat_models
+  "chat_models/alitongyi": "chat_models/alitongyi",
   "chat_models/baiduwenxin": "chat_models/baiduwenxin",
   "chat_models/bedrock": "chat_models/bedrock/index",
   "chat_models/bedrock/web": "chat_models/bedrock/web",
