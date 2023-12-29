@@ -4,7 +4,7 @@ import { StringOutputParser } from "langchain/schema/output_parser";
 
 const model = new ChatCohere({
   apiKey: process.env.COHERE_API_KEY, // Default
-  modelName: "command", // Default
+  model: "command", // Default
 });
 const prompt = ChatPromptTemplate.fromMessages([
   ["ai", "You are a helpful assistant"],
