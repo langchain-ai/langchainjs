@@ -85,6 +85,14 @@ export class YandexGPTEmbeddings
     }
   }
 
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      apiKey: "YC_API_KEY",
+      iamToken: "YC_IAM_TOKEN",
+      folderID: "YC_FOLDER_ID",
+    };
+  }
+
   /**
    * Method to generate embeddings for an array of documents.
    * @param texts Array of documents to generate embeddings for.

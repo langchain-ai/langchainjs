@@ -42,13 +42,12 @@ function _parseChatHistory(history: BaseMessage[]): ParsedMessage[] {
  * ```typescript
  * const chat = new ChatYandexGPT({});
  * // The assistant is set to translate English to French.
- * const res = await chat.call([
+ * const res = await chat.invoke([
  *   new SystemMessage(
  *     "You are a helpful assistant that translates English to French."
  *   ),
  *   new HumanMessage("I love programming."),
  * ]);
- * console.log(res);
  * ```
  */
 export class ChatYandexGPT extends BaseChatModel {
@@ -111,11 +110,19 @@ export class ChatYandexGPT extends BaseChatModel {
     return {};
   }
 
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      apiKey: "YC_API_KEY",
+      iamToken: "YC_IAM_TOKEN",
+      folderID: "YC_FOLDER_ID",
+    };
+  }
+
   /** @ignore */
   async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    _?: CallbackManagerForLLMRun | undefined
+    _runManager?: CallbackManagerForLLMRun | undefined
   ): Promise<ChatResult> {
     const messageHistory = _parseChatHistory(messages);
     const headers = {

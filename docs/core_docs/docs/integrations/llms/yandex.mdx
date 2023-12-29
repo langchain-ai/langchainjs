@@ -1,8 +1,5 @@
 # YandexGPT
 
-This integration uses the deprecated [API v1alpha](https://cloud.yandex.ru/ru/docs/yandexgpt/api-ref/v1alpha/). Please use the `@langchain/yandex` integration."
-:::
-
 LangChain.js supports calling [YandexGPT](https://cloud.yandex.com/en/services/yandexgpt) LLMs.
 
 ## Setup
@@ -17,6 +14,16 @@ Next, you have two authentication options:
   You can specify the key in a constructor parameter `api_key` or in an environment variable `YC_API_KEY`.
 
 ## Usage
+
+You'll first need to install the `@langchain/yandex` package:
+
+:::tip
+See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
+:::
+
+```bash npm2yarn
+npm install @langchain/yandex
+```
 
 import CodeBlock from "@theme/CodeBlock";
 import YandexGPTExample from "@examples/models/llm/yandex.ts";

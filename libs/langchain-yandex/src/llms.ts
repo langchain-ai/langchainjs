@@ -48,7 +48,7 @@ export class YandexGPT extends LLM implements YandexGPTInputs {
   lc_serializable = true;
 
   static lc_name() {
-    return "Yandex GPT";
+    return "YandexGPT";
   }
 
   get lc_secrets(): { [key: string]: string } | undefined {

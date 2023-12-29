@@ -1,6 +1,6 @@
 # @langchain/yandex
 
-This package contains the LangChainJS integrations for YandexGPT through their [Foundation Models REST API](https://cloud.yandex.ru/en/docs/yandexgpt/api-ref/v1/).
+This package contains the LangChain.js integrations for YandexGPT through their [Foundation Models REST API](https://cloud.yandex.ru/en/docs/yandexgpt/api-ref/v1/).
 
 ## Installation
 
@@ -30,32 +30,26 @@ By default, the latest version of `yandexgpt-lite` is used from the folder speci
 
 ```typescript
 import { ChatYandexGPT } from "@langchain/yandex";
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
 const chat = new ChatYandexGPT();
 const response = await chat.invoke([
-    new SystemMessage(
-        "You are a helpful assistant that translates English to French."
-    ),
-    new HumanMessage("I love programming."),
+  new SystemMessage(
+    "You are a helpful assistant that translates English to French."
+  ),
+  new HumanMessage("I love programming."),
 ]);
-console.log(response)
 ```
 
 ```typescript
 import { YandexGPT } from "@langchain/yandex";
-
 const model = new YandexGPT();
-
-const res = await model.invoke(["Translate "I love programming" into French."]);
-
-console.log({ res });
+const res = await model.invoke([`Translate "I love programming" into French.`]);
 ```
 
 ## Embeddings
 
 This package also adds support for YandexGPT embeddings models.
-
 
 To specify the model you can use `model_uri` parameter, see [the documentation](https://cloud.yandex.com/en/docs/yandexgpt/concepts/models#yandexgpt-embeddings) for more details.
 
@@ -70,12 +64,10 @@ const model = new YandexGPTEmbeddings({});
 
 /* Embed queries */
 const res = await model.embedQuery(
-    "This is a test document."
+  "This is a test document."
 );
-console.log({ res });
 /* Embed documents */
 const documentRes = await model.embedDocuments(["This is a test document."]);
-console.log({ documentRes });
 ```
 
 ## Development
