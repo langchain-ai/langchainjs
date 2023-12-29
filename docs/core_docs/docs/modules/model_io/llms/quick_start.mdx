@@ -1,0 +1,162 @@
+---
+sidebar_position: 0
+---
+
+# Quick Start
+
+Large Language Models (LLMs) are a core component of LangChain.
+LangChain does not serve its own LLMs, but rather provides a standard interface for interacting with many different LLMs.
+
+There are lots of LLM providers (OpenAI, Cohere, Hugging Face, etc) - the `LLM` class is designed to provide a standard interface for all of them.
+
+In this walkthrough we'll work with an OpenAI LLM wrapper, although the functionalities highlighted are generic for all LLM types.
+
+## Setup
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import CodeBlock from "@theme/CodeBlock";
+
+<Tabs>
+  <TabItem value="openai" label="OpenAI" default>
+  
+First we'll need to install the LangChain OpenAI integration package:
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
+:::tip
+See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
+:::
+
+Accessing the API requires an API key, which you can get by creating an account and heading [here](https://platform.openai.com/account/api-keys). Once we have a key we'll want to set it as an environment variable by running:
+
+```bash
+export OPENAI_API_KEY="..."
+```
+
+If you'd prefer not to set an environment variable you can pass the key in directly via the `openAIApiKey` named parameter when initiating the OpenAI Chat Model class:
+
+```typescript
+import { OpenAI } from "@langchain/openai";
+
+const llm = new OpenAI({
+  openAIApiKey: "YOUR_KEY_HERE",
+});
+```
+
+otherwise you can initialize with an empty object:
+
+```typescript
+import { OpenAI } from "langchain/llms/openai";
+
+const llm = new OpenAI({});
+```
+
+  </TabItem>
+  <TabItem value="local" label="Local">
+
+[Ollama](https://ollama.ai/) allows you to run open-source large language models, such as Llama 2 and Mistral, locally.
+
+First, follow [these instructions](https://github.com/jmorganca/ollama) to set up and run a local Ollama instance:
+
+- [Download](https://ollama.ai/download)
+- Fetch a model via e.g. `ollama pull mistral`
+
+Then, make sure the Ollama server is running. Next, you'll need to install the LangChain community package:
+
+:::tip
+See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
+:::
+
+```bash npm2yarn
+npm install @langchain/community
+```
+
+And then you can do:
+
+```typescript
+import { Ollama } from "@langchain/community/llms/ollama";
+
+const llm = new Ollama({
+  baseUrl: "http://localhost:11434", // Default value
+  model: "mistral",
+});
+```
+
+  </TabItem>
+</Tabs>
+
+## LCEL
+
+LLMs implement the [Runnable interface](/docs/expression_language/interface), the basic building block of the [LangChain Expression Language (LCEL)](/docs/expression_language/). This means they support `invoke`, `stream`, `batch`, and `streamLog` calls.
+
+LLMs accept **strings** as inputs, or objects which can be coerced to string prompts, including `BaseMessage[]` and `PromptValue`.
+
+```typescript
+await llm.invoke(
+  "What are some theories about the relationship between unemployment and inflation?"
+);
+```
+
+```
+'\n\n1. The Phillips Curve Theory: This suggests that there is an inverse relationship between unemployment and inflation, meaning that when unemployment is low, inflation will be higher, and when unemployment is high, inflation will be lower.\n\n2. The Monetarist Theory: This theory suggests that the relationship between unemployment and inflation is weak, and that changes in the money supply are more important in determining inflation.\n\n3. The Resource Utilization Theory: This suggests that when unemployment is low, firms are able to raise wages and prices in order to take advantage of the increased demand for their products and services. This leads to higher inflation.'
+```
+
+See the [Runnable interface](/docs/expression_language/interface) for more details on the available methods.
+
+## [Lgeacy] `generate`: batch calls, richer outputs
+
+`generate` lets you can call the model with a list of strings, getting back a more complete response than just the text. This complete response can include things like multiple top responses and other LLM provider-specific information:
+
+```typescript
+const llmResult = await llm.generate(
+  ["Tell me a joke", "Tell me a poem"],
+  ["Tell me a joke", "Tell me a poem"]
+);
+
+console.log(llmResult.generations.length);
+
+// 30
+
+console.log(llmResult.generations[0]);
+
+/*
+  [
+    {
+      text: "\n\nQ: What did the fish say when it hit the wall?\nA: Dam!",
+      generationInfo: { finishReason: "stop", logprobs: null }
+    }
+  ]
+*/
+
+console.log(llmResult.generations[1]);
+
+/*
+  [
+    {
+      text: "\n\nRoses are red,\nViolets are blue,\nSugar is sweet,\nAnd so are you.",
+      generationInfo: { finishReason: "stop", logprobs: null }
+    }
+  ]
+*/
+```
+
+You can also access provider specific information that is returned. This information is NOT standardized across providers.
+
+```typescript
+console.log(llmResult.llmOutput);
+
+/*
+  {
+    tokenUsage: { completionTokens: 46, promptTokens: 8, totalTokens: 54 }
+  }
+*/
+```
+
+import AdvancedExample from "@examples/models/llm/llm_advanced.ts";
+
+Here's an example with additional parameters, which sets `-1` for `max_tokens` to turn on token size calculations:
+
+<CodeBlock language="typescript">{AdvancedExample}</CodeBlock>

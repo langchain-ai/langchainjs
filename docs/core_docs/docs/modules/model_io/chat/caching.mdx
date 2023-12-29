@@ -1,6 +1,6 @@
 # Caching
 
-LangChain provides an optional caching layer for LLMs. This is useful for two reasons:
+LangChain provides an optional caching layer for chat models. This is useful for two reasons:
 
 It can save you money by reducing the number of API calls you make to the LLM provider, if you're often requesting the same completion multiple times.
 It can speed up your application by reducing the number of API calls you make to the LLM provider.
@@ -8,14 +8,12 @@ It can speed up your application by reducing the number of API calls you make to
 import CodeBlock from "@theme/CodeBlock";
 
 ```typescript
-import { OpenAI } from "langchain/llms/openai";
+import { ChatOpenAI } from "@langchain/openai";
 
 // To make the caching really obvious, lets use a slower model.
-const model = new OpenAI({
-  modelName: "text-davinci-002",
+const model = new ChatOpenAI({
+  modelName: "gpt-4",
   cache: true,
-  n: 2,
-  bestOf: 2,
 });
 ```
 
@@ -24,52 +22,65 @@ const model = new OpenAI({
 The default cache is stored in-memory. This means that if you restart your application, the cache will be cleared.
 
 ```typescript
+console.time();
+
 // The first time, it is not yet in cache, so it should take longer
-const res = await model.predict("Tell me a joke");
+const res = await model.invoke("Tell me a joke!");
 console.log(res);
 
+console.timeEnd();
+
 /*
-  CPU times: user 35.9 ms, sys: 28.6 ms, total: 64.6 ms
-  Wall time: 4.83 s
-
-
-  "\n\nWhy did the chicken cross the road?\n\nTo get to the other side."
+  AIMessage {
+    lc_serializable: true,
+    lc_kwargs: {
+      content: "Why don't scientists trust atoms?\n\nBecause they make up everything!",
+      additional_kwargs: { function_call: undefined, tool_calls: undefined }
+    },
+    lc_namespace: [ 'langchain_core', 'messages' ],
+    content: "Why don't scientists trust atoms?\n\nBecause they make up everything!",
+    name: undefined,
+    additional_kwargs: { function_call: undefined, tool_calls: undefined }
+  }
+  default: 2.224s
 */
 ```
 
 ```typescript
+console.time();
+
 // The second time it is, so it goes faster
-const res2 = await model.predict("Tell me a joke");
+const res2 = await model.invoke("Tell me a joke!");
 console.log(res2);
 
+console.timeEnd();
 /*
-  CPU times: user 238 µs, sys: 143 µs, total: 381 µs
-  Wall time: 1.76 ms
-
-
-  "\n\nWhy did the chicken cross the road?\n\nTo get to the other side."
+  AIMessage {
+    lc_serializable: true,
+    lc_kwargs: {
+      content: "Why don't scientists trust atoms?\n\nBecause they make up everything!",
+      additional_kwargs: { function_call: undefined, tool_calls: undefined }
+    },
+    lc_namespace: [ 'langchain_core', 'messages' ],
+    content: "Why don't scientists trust atoms?\n\nBecause they make up everything!",
+    name: undefined,
+    additional_kwargs: { function_call: undefined, tool_calls: undefined }
+  }
+  default: 181.98ms
 */
 ```
 
 ## Caching with Momento
 
-LangChain also provides a Momento-based cache. [Momento](https://gomomento.com) is a distributed, serverless cache that requires zero setup or infrastructure maintenance. Given Momento's compatibility with Node.js, browser, and edge environments, ensure you install the relevant package.
-
-To install for **Node.js**:
+LangChain also provides a Momento-based cache. [Momento](https://gomomento.com) is a distributed, serverless cache that requires zero setup or infrastructure maintenance. To use it, you'll need to install the `@gomomento/sdk` package:
 
 ```bash npm2yarn
 npm install @gomomento/sdk
 ```
 
-To install for **browser/edge workers**:
-
-```bash npm2yarn
-npm install @gomomento/sdk-web
-```
-
 Next you'll need to sign up and create an API key. Once you've done that, pass a `cache` option when you instantiate the LLM like this:
 
-import MomentoCacheExample from "@examples/cache/momento.ts";
+import MomentoCacheExample from "@examples/cache/chat_models/momento.ts";
 
 <CodeBlock language="typescript">{MomentoCacheExample}</CodeBlock>
 
@@ -83,18 +94,9 @@ npm install ioredis
 
 Then, you can pass a `cache` option when you instantiate the LLM. For example:
 
-```typescript
-import { OpenAI } from "langchain/llms/openai";
-import { RedisCache } from "langchain/cache/ioredis";
-import { Redis } from "ioredis";
+import RedisCacheExample from "@examples/cache/chat_models/redis.ts";
 
-// See https://github.com/redis/ioredis for connection options
-const client = new Redis({});
-
-const cache = new RedisCache(client);
-
-const model = new OpenAI({ cache });
-```
+<CodeBlock language="typescript">{RedisCacheExample}</CodeBlock>
 
 ## Caching with Upstash Redis
 
@@ -108,13 +110,13 @@ You'll also need an [Upstash account](https://docs.upstash.com/redis#create-acco
 
 Then, you can pass a `cache` option when you instantiate the LLM. For example:
 
-import UpstashRedisCacheExample from "@examples/cache/upstash_redis.ts";
+import UpstashRedisCacheExample from "@examples/cache/chat_models/upstash_redis.ts";
 
 <CodeBlock language="typescript">{UpstashRedisCacheExample}</CodeBlock>
 
 You can also directly pass in a previously created [@upstash/redis](https://docs.upstash.com/redis/sdks/javascriptsdk/overview) client instance:
 
-import AdvancedUpstashRedisCacheExample from "@examples/cache/upstash_redis_advanced.ts";
+import AdvancedUpstashRedisCacheExample from "@examples/cache/chat_models/upstash_redis_advanced.ts";
 
 <CodeBlock language="typescript">{AdvancedUpstashRedisCacheExample}</CodeBlock>
 
@@ -134,7 +136,7 @@ For information on how to set up KV in Cloudflare, see [the official documentati
 npm install -S @cloudflare/workers-types
 ```
 
-import CloudflareExample from "@examples/cache/cloudflare_kv.ts";
+import CloudflareExample from "@examples/cache/chat_models/cloudflare_kv.ts";
 
 <CodeBlock language="typescript">{CloudflareExample}</CodeBlock>
 

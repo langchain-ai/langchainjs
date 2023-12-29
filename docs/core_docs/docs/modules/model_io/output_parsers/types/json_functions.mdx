@@ -1,10 +1,14 @@
-# JSON Functions Output Parser
+---
+sidebar_position: 2
+---
+
+# JSON Output Functions Parser
 
 import CodeBlock from "@theme/CodeBlock";
 import JSONFunctions from "@examples/prompts/json_structured_output_parser.ts";
 import StreamingJSONFunctions from "@examples/prompts/json_structured_output_parser_streaming.ts";
 
-The JSON Functions Output Parser is a useful tool for parsing structured JSON function responses, such as those from [OpenAI functions](/docs/modules/model_io/models/chat/how_to/function_calling). This parser is particularly useful when you need to extract specific information from complex JSON responses.
+The JSON Output Functions Parser is a useful tool for parsing structured JSON function responses, such as those from [OpenAI functions](/docs/modules/model_io/chat/function_calling). This parser is particularly useful when you need to extract specific information from complex JSON responses.
 
 Here's how it works:
 
@@ -12,7 +16,7 @@ Here's how it works:
 
 2. **Default Behavior**: If the default `OutputFunctionsParser` is used, it extracts the function call from the response generation and applies `JSON.stringify` to it.
 
-3. **ArgsOnly Parameter**: If the `argsOnly` parameter is set to true, the parser will only return the arguments of the function call, without applying `JSON.stringify` to the response.
+3. **argsOnly Parameter**: If the `argsOnly` parameter is set to true, the parser will only return the arguments of the function call, without applying `JSON.stringify` to the response.
 
 4. **Response Parsing**: The response from the output parser is then parsed again, and the result is returned.
 
