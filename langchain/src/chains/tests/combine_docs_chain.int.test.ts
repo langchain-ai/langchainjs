@@ -43,7 +43,7 @@ test("Test RefineDocumentsChain with QA chain", async () => {
     new Document({ pageContent: "ankush went to princeton" }),
   ];
   const res = await chain.invoke({
-    context: docs,
+    input_documents: docs,
     question: "Where did harrison go to college",
   });
   console.log({ res });
