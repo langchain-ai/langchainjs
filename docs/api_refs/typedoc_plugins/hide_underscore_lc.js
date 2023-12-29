@@ -115,7 +115,6 @@ function load(application) {
   }
 
   /**
-   * 
    * @param {Context} context 
    */
   function onEndRenderEvent(context) {
