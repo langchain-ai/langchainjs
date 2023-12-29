@@ -97,16 +97,6 @@ async function webpackLoader(content, map, meta) {
         }.${imported}.html`;
         const docsPathLangChain = getDocsPath(componentPathLangChain);
 
-        let componentPathWithoutCore = "";
-        let docsPathWithoutCore = "";
-        if (moduleName.startsWith("core")) {
-          componentPathWithoutCore = `${category}/langchain${moduleName.replace(
-            "core",
-            ""
-          )}.${imported}.html`;
-          docsPathWithoutCore = getDocsPath(componentPathWithoutCore);
-        }
-
         // from packages
         const componentPathPackage = getPackageModuleName(
           moduleName,
@@ -133,11 +123,6 @@ async function webpackLoader(content, map, meta) {
           modulePath = componentPathWithSchema;
         } else if (docsPathPackage && fs.existsSync(docsPathPackage)) {
           modulePath = componentPathPackage;
-        } else if (
-          componentPathWithoutCore &&
-          fs.existsSync(docsPathWithoutCore)
-        ) {
-          modulePath = componentPathWithoutCore;
         }
       });
       return modulePath;
