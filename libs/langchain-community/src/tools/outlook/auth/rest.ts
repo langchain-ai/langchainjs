@@ -192,7 +192,10 @@ export class AuthFlowREST extends AuthFlowBase {
    * @public
    * @returns {Promise<{ accessToken: string; refreshToken: string }>} A Promise resolving to the access and refresh tokens.
    */
-  public async getTokens(): Promise<{ accessToken: string; refreshToken: string }> {
+  public async getTokens(): Promise<{
+    accessToken: string;
+    refreshToken: string;
+  }> {
     // fetch auth code from user login
     const code = await this.getCode();
     // fetch access token using auth code
