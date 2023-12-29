@@ -1619,15 +1619,20 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
 
   lc_namespace = ["langchain_core", "runnables"];
 
-  protected func: RunnableFunc<RunInput, RunOutput>;
+  protected func: RunnableFunc<
+    RunInput,
+    RunOutput | Runnable<RunInput, RunOutput>
+  >;
 
-  constructor(fields: { func: RunnableFunc<RunInput, RunOutput> }) {
+  constructor(fields: {
+    func: RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>;
+  }) {
     super(fields);
     this.func = fields.func;
   }
 
   static from<RunInput, RunOutput>(
-    func: RunnableFunc<RunInput, RunOutput>
+    func: RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
   ): RunnableLambda<RunInput, RunOutput> {
     return new RunnableLambda({
       func,
@@ -1683,7 +1688,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
       }
     }
 
-    const output = this.func(finalChunk, { config });
+    const output = await this.func(finalChunk, { config });
     if (output && Runnable.isRunnable(output)) {
       if (config?.recursionLimit === 0) {
         throw new Error("Recursion limit reached.");
