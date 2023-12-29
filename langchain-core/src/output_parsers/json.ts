@@ -7,7 +7,7 @@ import { ChatGeneration, Generation } from "../outputs.js";
  */
 export class JsonOutputParser extends BaseCumulativeTransformOutputParser<object> {
   static lc_name() {
-    return "JsonFunctionsParser";
+    return "JsonOutputParser";
   }
 
   lc_namespace = ["langchain_core", "output_parsers"];
