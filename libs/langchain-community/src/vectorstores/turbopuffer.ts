@@ -2,7 +2,7 @@ import { type DocumentInterface, Document } from "@langchain/core/documents";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import {
   AsyncCaller,
-  AsyncCallerParams
+  AsyncCallerParams,
 } from "@langchain/core/utils/async_caller";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
@@ -17,7 +17,10 @@ export interface TurbopufferHeaders {
 
 export type TurbopufferDistanceMetric = "cosine_distance" | "euclidean_squared";
 
-export type TurbopufferFilterType = Record<string, Array<[string, string[] | string]>>;
+export type TurbopufferFilterType = Record<
+  string,
+  Array<[string, string[] | string]>
+>;
 
 export interface TurbopufferParams extends AsyncCallerParams {
   apiKey?: string;
@@ -39,13 +42,13 @@ export class TurbopufferVectorStore extends VectorStore {
 
   get lc_secrets(): { [key: string]: string } {
     return {
-      apiKey: "TURBOPUFFER_API_KEY"
+      apiKey: "TURBOPUFFER_API_KEY",
     };
   }
 
   get lc_aliases(): { [key: string]: string } {
     return {
-      apiKey: "TURBOPUFFER_API_KEY"
+      apiKey: "TURBOPUFFER_API_KEY",
     };
   }
 
@@ -96,7 +99,7 @@ export class TurbopufferVectorStore extends VectorStore {
     this.caller = new AsyncCaller({
       maxConcurrency: 6,
       maxRetries: 0,
-      ...asyncCallerArgs
+      ...asyncCallerArgs,
     });
   }
 
@@ -104,8 +107,8 @@ export class TurbopufferVectorStore extends VectorStore {
     return {
       headers: {
         Authorization: `Bearer ${this.apiKey}`,
-        "Content-Type": "application/json"
-      }
+        "Content-Type": "application/json",
+      },
     };
   }
 
@@ -114,7 +117,7 @@ export class TurbopufferVectorStore extends VectorStore {
       fetch(fetchUrl, {
         method: "POST",
         headers: this.getJsonHeader().headers,
-        body: stringifiedBody
+        body: stringifiedBody,
       })
     );
     return response;
@@ -162,13 +165,13 @@ export class TurbopufferVectorStore extends VectorStore {
 
         const attributes = {
           pageContent: batchDocs.map((doc) => doc.pageContent),
-          metadata: batchDocs.map((doc) => JSON.stringify(doc.metadata ?? {}))
+          metadata: batchDocs.map((doc) => JSON.stringify(doc.metadata ?? {})),
         };
 
         const data = {
           ids: batchIds,
           vectors: batchVectors,
-          attributes
+          attributes,
         };
 
         const response = await this.callWithRetry(
@@ -218,7 +221,7 @@ export class TurbopufferVectorStore extends VectorStore {
       distance_metric: this.distanceMetric,
       filters: filter,
       include_attributes: includeAttributes,
-      include_vectors: includeVector
+      include_vectors: includeVector,
     };
 
     const response = await this.callWithRetry(
@@ -257,9 +260,9 @@ export class TurbopufferVectorStore extends VectorStore {
         pageContent: res.attributes.pageContent,
         metadata: res.attributes.metadata
           ? JSON.parse(res.attributes.metadata)
-          : undefined
+          : undefined,
       }),
-      res.dist
+      res.dist,
     ]);
 
     return result;
