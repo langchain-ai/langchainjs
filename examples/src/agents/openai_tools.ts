@@ -10,6 +10,8 @@ import { AgentExecutor, createOpenAIToolsAgent } from "langchain/agents";
 const tools = [new TavilySearchResults({ maxResults: 1 })];
 
 // Get the prompt to use - you can modify this!
+// If you want to see the prompt in full, you can at:
+// https://smith.langchain.com/hub/hwchase17/openai-tools-agent
 const prompt = await pull<ChatPromptTemplate>("hwchase17/openai-tools-agent");
 
 const llm = new ChatOpenAI({

@@ -43,6 +43,8 @@ const tools = [
 ];
 
 // Get the prompt to use - you can modify this!
+// If you want to see the prompt in full, you can at:
+// https://smith.langchain.com/hub/hwchase17/openai-functions-agent
 const prompt = await pull<ChatPromptTemplate>(
   "hwchase17/openai-functions-agent"
 );

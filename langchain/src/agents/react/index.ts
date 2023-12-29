@@ -47,6 +47,8 @@ export type CreateReactAgentParams = {
  * const tools = [...];
  *
  * // Get the prompt to use - you can modify this!
+ * // If you want to see the prompt in full, you can at:
+ * // https://smith.langchain.com/hub/hwchase17/react
  * const prompt = await pull<PromptTemplate>("hwchase17/react");
  *
  * const llm = new OpenAI({

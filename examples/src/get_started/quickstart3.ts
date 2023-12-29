@@ -83,6 +83,8 @@ import { createOpenAIFunctionsAgent, AgentExecutor } from "langchain/agents";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
 // Get the prompt to use - you can modify this!
+// If you want to see the prompt in full, you can at:
+// https://smith.langchain.com/hub/hwchase17/openai-functions-agent
 const agentPrompt = await pull<ChatPromptTemplate>(
   "hwchase17/openai-functions-agent"
 );

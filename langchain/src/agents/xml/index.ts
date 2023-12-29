@@ -162,6 +162,8 @@ export type CreateXmlAgentParams = {
  * const tools = [...];
  *
  * // Get the prompt to use - you can modify this!
+ * // If you want to see the prompt in full, you can at:
+ * // https://smith.langchain.com/hub/hwchase17/xml-agent-convo
  * const prompt = await pull<PromptTemplate>("hwchase17/xml-agent-convo");
  *
  * const llm = new ChatAnthropic({

@@ -14,6 +14,8 @@ const llm = new OpenAI({
 });
 
 // Get the prompt to use - you can modify this!
+// If you want to see the prompt in full, you can at:
+// https://smith.langchain.com/hub/hwchase17/react
 const prompt = await pull<PromptTemplate>("hwchase17/react");
 
 const agent = await createReactAgent({
@@ -35,6 +37,8 @@ const result = await agentExecutor.invoke({
 console.log(result);
 
 // Get the prompt to use - you can modify this!
+// If you want to see the prompt in full, you can at:
+// https://smith.langchain.com/hub/hwchase17/react-chat
 const promptWithChat = await pull<PromptTemplate>("hwchase17/react-chat");
 
 const agentWithChat = await createReactAgent({
