@@ -90,7 +90,11 @@ async function webpackLoader(content, map, meta) {
       let modulePath;
       CATEGORIES.forEach((category) => {
         // from langchain/src
-        const componentPathLangChain = `${category}/langchain_${moduleName}.${imported}.html`;
+        const componentPathLangChain = `${category}/langchain_${
+          moduleName.startsWith("core_")
+            ? moduleName.replace("core_", "")
+            : moduleName
+        }.${imported}.html`;
         const docsPathLangChain = getDocsPath(componentPathLangChain);
 
         // from packages
@@ -131,8 +135,9 @@ async function webpackLoader(content, map, meta) {
       if (exactPath) {
         imp.docs = BASE_URL + "/" + exactPath;
       } else {
-        throw new Error(
-          `Could not find docs for ${moduleName}.${imported} or schema_${moduleName}.${imported} in api_refs/public/`
+        // eslint-disable-next-line no-console
+        console.warn(
+          `${this.resourcePath}: Could not find docs for ${moduleName}.${imported} or schema_${moduleName}.${imported} in api_refs/public/`
         );
       }
     });

@@ -7,6 +7,7 @@ import {
 } from "../../../tools/dynamic.js";
 import { formatDocumentsAsString } from "../../../util/document.js";
 
+/** @deprecated Use "langchain/tools/retriever" instead. */
 export function createRetrieverTool(
   retriever: BaseRetrieverInterface,
   input: Omit<DynamicStructuredToolInput, "func" | "schema">

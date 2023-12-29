@@ -16,6 +16,8 @@ LangChain is written in TypeScript and can be used in:
 - Deno
 - Bun
 
+However, note that individual integrations may not be supported in all environments.
+
 ## Installation
 
 To get started, install LangChain with the following command:
@@ -39,6 +41,98 @@ import CodeBlock from "@theme/CodeBlock";
 ### TypeScript
 
 LangChain is written in TypeScript and provides type definitions for all of its public APIs.
+
+## Installing integration packages
+
+LangChain supports packages that contain specific module integrations with third-party providers.
+They can be as specific as [`@langchain/google-genai`](/docs/integrations/platforms/google#chatgooglegenerativeai), which contains integrations just for Google AI Studio models,
+or as broad as [`@langchain/community`](https://www.npmjs.com/package/@langchain/community), which contains broader variety of community contributed integrations.
+
+These packages, as well as the main LangChain package, all depend on [`@langchain/core`](https://www.npmjs.com/package/@langchain/core), which contains the base abstractions
+that these integration packages extend.
+
+To ensure that all integrations and their types interact with each other properly, it is important that they all use the same version of `@langchain/core`.
+The best way to guarantee this is to add a `"resolutions"` or `"overrides"` field like the following in your project's `package.json`. The name will depend on your package manager:
+
+If you are using `yarn`:
+
+```json title="yarn package.json"
+{
+  "name": "your-project",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@langchain/google-genai": "^0.0.2",
+    "langchain": "0.0.207"
+  },
+  "resolutions": {
+    "@langchain/core": "0.1.5"
+  }
+}
+```
+
+Or for `npm`:
+
+```json title="npm package.json"
+{
+  "name": "your-project",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@langchain/google-genai": "^0.0.2",
+    "langchain": "0.0.207"
+  },
+  "overrides": {
+    "@langchain/core": "0.1.5"
+  }
+}
+```
+
+Or for `pnpm`:
+
+```json title="pnpm package.json"
+{
+  "name": "your-project",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@langchain/google-genai": "^0.0.2",
+    "langchain": "0.0.207"
+  },
+  "pnpm": {
+    "overrides": {
+      "@langchain/core": "0.1.5"
+    }
+  }
+}
+```
+
+### @langchain/community
+
+The [@langchain/community](https://www.npmjs.com/package/@langchain/community) package contains third-party integrations.
+It is automatically installed along with `langchain`, but can also be used separately with just `@langchain/core`. Install with:
+
+```bash npm2yarn
+npm install @langchain/community
+```
+
+### @langchain/core
+
+The [@langchain/core](https://www.npmjs.com/package/@langchain/core) package contains base abstractions that the rest of the LangChain ecosystem uses, along with the LangChain Expression Language.
+It is automatically installed along with `langchain`, but can also be used separately. Install with:
+
+```bash npm2yarn
+npm install @langchain/core
+```
 
 ## Loading the library
 
@@ -94,6 +188,12 @@ LangChain can be used in Deno / Supabase Edge Functions. You can import it using
 import { OpenAI } from "https://esm.sh/langchain/llms/openai";
 ```
 
+or
+
+```typescript
+import { OpenAI } from "npm:langchain/llms/openai";
+```
+
 We recommend looking at our [Supabase Template](https://github.com/langchain-ai/langchain-template-supabase) for an example of how to use LangChain in Supabase Edge Functions.
 
 ### Browser
@@ -102,80 +202,6 @@ LangChain can be used in the browser. In our CI we test bundling LangChain with 
 
 ```typescript
 import { OpenAI } from "langchain/llms/openai";
-```
-
-## Installing integration packages
-
-LangChain supports packages that contain specific module integrations with third-party providers.
-They can be as specific as [`@langchain/google-genai`](/docs/integrations/platforms/google#chatgooglegenerativeai), which contains integrations just for Google AI Studio models,
-or as broad as [`@langchain/community`](https://www.npmjs.com/package/@langchain/community), which contains broader variety of community contributed integrations.
-
-These packages, as well as the main LangChain package, all depend on [`@langchain/core`](https://www.npmjs.com/package/@langchain/core), which contains the base abstractions
-that these integration packages extend.
-
-To ensure that all integrations and their types interact with each other properly, it is important that they all use the same version of `@langchain/core`.
-The best way to guarantee this is to add a `"resolutions"` or `"overrides"` field like the following in your project's `package.json`. The name will depend on your package manager:
-
-If you are using `yarn`:
-
-```json title="yarn package.json"
-{
-  "name": "your-project",
-  "version": "0.0.0",
-  "private": true,
-  "engines": {
-    "node": ">=18"
-  },
-  "dependencies": {
-    "@langchain/google-genai": "^0.0.2",
-    "langchain": "0.0.207"
-  },
-  "resolutions": {
-    "@langchain/core": "0.1.2"
-  }
-}
-```
-
-Or for `npm`:
-
-```json title="npm package.json"
-{
-  "name": "your-project",
-  "version": "0.0.0",
-  "private": true,
-  "engines": {
-    "node": ">=18"
-  },
-  "dependencies": {
-    "@langchain/google-genai": "^0.0.2",
-    "langchain": "0.0.207"
-  },
-  "overrides": {
-    "@langchain/core": "0.1.2"
-  }
-}
-```
-
-Or for `pnpm`:
-
-```json title="pnpm package.json"
-{
-  "name": "your-project",
-  "version": "0.0.0",
-  "private": true,
-  "engines": {
-    "node": ">=18"
-  },
-  "dependencies": {
-    "@langchain/google-genai": "^0.0.2",
-    "langchain": "0.0.207"
-  },
-  "pnpm": {
-    "overrides": {
-      "@langchain/core": "0.1.2"
-    }
-  }
-}
 ```
 
 ## Unsupported: Node.js 16

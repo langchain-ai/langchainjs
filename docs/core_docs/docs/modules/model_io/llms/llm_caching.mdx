@@ -1,0 +1,187 @@
+---
+sidebar_position: 2
+---
+
+# Caching
+
+LangChain provides an optional caching layer for LLMs. This is useful for two reasons:
+
+It can save you money by reducing the number of API calls you make to the LLM provider, if you're often requesting the same completion multiple times.
+It can speed up your application by reducing the number of API calls you make to the LLM provider.
+
+import CodeBlock from "@theme/CodeBlock";
+
+```typescript
+import { OpenAI } from "@langchain/openai";
+
+const model = new OpenAI({
+  modelName: "gpt-3.5-turbo-instruct",
+  cache: true,
+});
+```
+
+## In Memory Cache
+
+The default cache is stored in-memory. This means that if you restart your application, the cache will be cleared.
+
+```typescript
+console.time();
+
+// The first time, it is not yet in cache, so it should take longer
+const res = await model.invoke("Tell me a long joke");
+
+console.log(res);
+
+console.timeEnd();
+
+/*
+  A man walks into a bar and sees a jar filled with money on the counter. Curious, he asks the bartender about it.
+
+  The bartender explains, "We have a challenge for our customers. If you can complete three tasks, you win all the money in the jar."
+
+  Intrigued, the man asks what the tasks are.
+
+  The bartender replies, "First, you have to drink a whole bottle of tequila without making a face. Second, there's a pitbull out back with a sore tooth. You have to pull it out. And third, there's an old lady upstairs who has never had an orgasm. You have to give her one."
+
+  The man thinks for a moment and then confidently says, "I'll do it."
+
+  He grabs the bottle of tequila and downs it in one gulp, without flinching. He then heads to the back and after a few minutes of struggling, emerges with the pitbull's tooth in hand.
+
+  The bar erupts in cheers and the bartender leads the man upstairs to the old lady's room. After a few minutes, the man walks out with a big smile on his face and the old lady is giggling with delight.
+
+  The bartender hands the man the jar of money and asks, "How
+
+  default: 4.187s
+*/
+```
+
+```typescript
+console.time();
+
+// The second time it is, so it goes faster
+const res2 = await model.invoke("Tell me a joke");
+
+console.log(res2);
+
+console.timeEnd();
+
+/*
+  A man walks into a bar and sees a jar filled with money on the counter. Curious, he asks the bartender about it.
+
+  The bartender explains, "We have a challenge for our customers. If you can complete three tasks, you win all the money in the jar."
+
+  Intrigued, the man asks what the tasks are.
+
+  The bartender replies, "First, you have to drink a whole bottle of tequila without making a face. Second, there's a pitbull out back with a sore tooth. You have to pull it out. And third, there's an old lady upstairs who has never had an orgasm. You have to give her one."
+
+  The man thinks for a moment and then confidently says, "I'll do it."
+
+  He grabs the bottle of tequila and downs it in one gulp, without flinching. He then heads to the back and after a few minutes of struggling, emerges with the pitbull's tooth in hand.
+
+  The bar erupts in cheers and the bartender leads the man upstairs to the old lady's room. After a few minutes, the man walks out with a big smile on his face and the old lady is giggling with delight.
+
+  The bartender hands the man the jar of money and asks, "How
+
+  default: 175.74ms
+*/
+```
+
+## Caching with Momento
+
+LangChain also provides a Momento-based cache. [Momento](https://gomomento.com) is a distributed, serverless cache that requires zero setup or infrastructure maintenance. Given Momento's compatibility with Node.js, browser, and edge environments, ensure you install the relevant package.
+
+To install for **Node.js**:
+
+```bash npm2yarn
+npm install @gomomento/sdk
+```
+
+To install for **browser/edge workers**:
+
+```bash npm2yarn
+npm install @gomomento/sdk-web
+```
+
+Next you'll need to sign up and create an API key. Once you've done that, pass a `cache` option when you instantiate the LLM like this:
+
+import MomentoCacheExample from "@examples/cache/momento.ts";
+
+<CodeBlock language="typescript">{MomentoCacheExample}</CodeBlock>
+
+## Caching with Redis
+
+LangChain also provides a Redis-based cache. This is useful if you want to share the cache across multiple processes or servers. To use it, you'll need to install the `redis` package:
+
+```bash npm2yarn
+npm install ioredis
+```
+
+Then, you can pass a `cache` option when you instantiate the LLM. For example:
+
+```typescript
+import { OpenAI } from "langchain/llms/openai";
+import { RedisCache } from "langchain/cache/ioredis";
+import { Redis } from "ioredis";
+
+// See https://github.com/redis/ioredis for connection options
+const client = new Redis({});
+
+const cache = new RedisCache(client);
+
+const model = new OpenAI({ cache });
+```
+
+## Caching with Upstash Redis
+
+LangChain provides an Upstash Redis-based cache. Like the Redis-based cache, this cache is useful if you want to share the cache across multiple processes or servers. The Upstash Redis client uses HTTP and supports edge environments. To use it, you'll need to install the `@upstash/redis` package:
+
+```bash npm2yarn
+npm install @upstash/redis
+```
+
+You'll also need an [Upstash account](https://docs.upstash.com/redis#create-account) and a [Redis database](https://docs.upstash.com/redis#create-a-database) to connect to. Once you've done that, retrieve your REST URL and REST token.
+
+Then, you can pass a `cache` option when you instantiate the LLM. For example:
+
+import UpstashRedisCacheExample from "@examples/cache/upstash_redis.ts";
+
+<CodeBlock language="typescript">{UpstashRedisCacheExample}</CodeBlock>
+
+You can also directly pass in a previously created [@upstash/redis](https://docs.upstash.com/redis/sdks/javascriptsdk/overview) client instance:
+
+import AdvancedUpstashRedisCacheExample from "@examples/cache/upstash_redis_advanced.ts";
+
+<CodeBlock language="typescript">{AdvancedUpstashRedisCacheExample}</CodeBlock>
+
+## Caching with Cloudflare KV
+
+:::info
+This integration is only supported in Cloudflare Workers.
+:::
+
+If you're deploying your project as a Cloudflare Worker, you can use LangChain's Cloudflare KV-powered LLM cache.
+
+For information on how to set up KV in Cloudflare, see [the official documentation](https://developers.cloudflare.com/kv/).
+
+**Note:** If you are using TypeScript, you may need to install types if they aren't already present:
+
+```bash npm2yarn
+npm install -S @cloudflare/workers-types
+```
+
+import CloudflareExample from "@examples/cache/cloudflare_kv.ts";
+
+<CodeBlock language="typescript">{CloudflareExample}</CodeBlock>
+
+## Caching on the File System
+
+:::warning
+This cache is not recommended for production use. It is only intended for local development.
+:::
+
+LangChain provides a simple file system cache.
+By default the cache is stored a temporary directory, but you can specify a custom directory if you want.
+
+```typescript
+const cache = await LocalFileCache.create();
+```
