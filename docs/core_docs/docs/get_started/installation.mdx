@@ -16,6 +16,8 @@ LangChain is written in TypeScript and can be used in:
 - Deno
 - Bun
 
+However, note that individual integrations may not be supported in all environments.
+
 ## Installation
 
 To get started, install LangChain with the following command:
@@ -39,70 +41,6 @@ import CodeBlock from "@theme/CodeBlock";
 ### TypeScript
 
 LangChain is written in TypeScript and provides type definitions for all of its public APIs.
-
-## Loading the library
-
-### ESM
-
-LangChain provides an ESM build targeting Node.js environments. You can import it using the following syntax:
-
-```typescript
-import { OpenAI } from "langchain/llms/openai";
-```
-
-If you are using TypeScript in an ESM project we suggest updating your `tsconfig.json` to include the following:
-
-```json title="tsconfig.json"
-{
-  "compilerOptions": {
-    ...
-    "target": "ES2020", // or higher
-    "module": "nodenext",
-  }
-}
-```
-
-### CommonJS
-
-LangChain provides a CommonJS build targeting Node.js environments. You can import it using the following syntax:
-
-```typescript
-const { OpenAI } = require("langchain/llms/openai");
-```
-
-### Cloudflare Workers
-
-LangChain can be used in Cloudflare Workers. You can import it using the following syntax:
-
-```typescript
-import { OpenAI } from "langchain/llms/openai";
-```
-
-### Vercel / Next.js
-
-LangChain can be used in Vercel / Next.js. We support using LangChain in frontend components, in Serverless functions and in Edge functions. You can import it using the following syntax:
-
-```typescript
-import { OpenAI } from "langchain/llms/openai";
-```
-
-### Deno / Supabase Edge Functions
-
-LangChain can be used in Deno / Supabase Edge Functions. You can import it using the following syntax:
-
-```typescript
-import { OpenAI } from "https://esm.sh/langchain/llms/openai";
-```
-
-We recommend looking at our [Supabase Template](https://github.com/langchain-ai/langchain-template-supabase) for an example of how to use LangChain in Supabase Edge Functions.
-
-### Browser
-
-LangChain can be used in the browser. In our CI we test bundling LangChain with Webpack and Vite, but other bundlers should work too. You can import it using the following syntax:
-
-```typescript
-import { OpenAI } from "langchain/llms/openai";
-```
 
 ## Installing integration packages
 
@@ -176,6 +114,94 @@ Or for `pnpm`:
     }
   }
 }
+```
+
+### @langchain/community
+
+The [@langchain/community](https://www.npmjs.com/package/@langchain/community) package contains third-party integrations.
+It is automatically installed along with `langchain`, but can also be used separately with just `@langchain/core`. Install with:
+
+```bash npm2yarn
+npm install @langchain/community
+```
+
+### @langchain/core
+
+The [@langchain/core](https://www.npmjs.com/package/@langchain/core) package contains base abstractions that the rest of the LangChain ecosystem uses, along with the LangChain Expression Language.
+It is automatically installed along with `langchain`, but can also be used separately. Install with:
+
+```bash npm2yarn
+npm install @langchain/core
+```
+
+## Loading the library
+
+### ESM
+
+LangChain provides an ESM build targeting Node.js environments. You can import it using the following syntax:
+
+```typescript
+import { OpenAI } from "langchain/llms/openai";
+```
+
+If you are using TypeScript in an ESM project we suggest updating your `tsconfig.json` to include the following:
+
+```json title="tsconfig.json"
+{
+  "compilerOptions": {
+    ...
+    "target": "ES2020", // or higher
+    "module": "nodenext",
+  }
+}
+```
+
+### CommonJS
+
+LangChain provides a CommonJS build targeting Node.js environments. You can import it using the following syntax:
+
+```typescript
+const { OpenAI } = require("langchain/llms/openai");
+```
+
+### Cloudflare Workers
+
+LangChain can be used in Cloudflare Workers. You can import it using the following syntax:
+
+```typescript
+import { OpenAI } from "langchain/llms/openai";
+```
+
+### Vercel / Next.js
+
+LangChain can be used in Vercel / Next.js. We support using LangChain in frontend components, in Serverless functions and in Edge functions. You can import it using the following syntax:
+
+```typescript
+import { OpenAI } from "langchain/llms/openai";
+```
+
+### Deno / Supabase Edge Functions
+
+LangChain can be used in Deno / Supabase Edge Functions. You can import it using the following syntax:
+
+```typescript
+import { OpenAI } from "https://esm.sh/langchain/llms/openai";
+```
+
+or
+
+```typescript
+import { OpenAI } from "npm:langchain/llms/openai";
+```
+
+We recommend looking at our [Supabase Template](https://github.com/langchain-ai/langchain-template-supabase) for an example of how to use LangChain in Supabase Edge Functions.
+
+### Browser
+
+LangChain can be used in the browser. In our CI we test bundling LangChain with Webpack and Vite, but other bundlers should work too. You can import it using the following syntax:
+
+```typescript
+import { OpenAI } from "langchain/llms/openai";
 ```
 
 ## Unsupported: Node.js 16

@@ -575,6 +575,11 @@
       "import": "./tools/serper.js",
       "require": "./tools/serper.cjs"
     },
+    "./tools/tavily_search": {
+      "types": "./tools/tavily_search.d.ts",
+      "import": "./tools/tavily_search.js",
+      "require": "./tools/tavily_search.cjs"
+    },
     "./tools/wikipedia_query_run": {
       "types": "./tools/wikipedia_query_run.d.ts",
       "import": "./tools/wikipedia_query_run.js",
@@ -1314,6 +1319,9 @@
     "tools/serper.cjs",
     "tools/serper.js",
     "tools/serper.d.ts",
+    "tools/tavily_search.cjs",
+    "tools/tavily_search.js",
+    "tools/tavily_search.d.ts",
     "tools/wikipedia_query_run.cjs",
     "tools/wikipedia_query_run.js",
     "tools/wikipedia_query_run.d.ts",

@@ -36,6 +36,7 @@ const entrypoints = {
   "tools/calculator": "tools/calculator",
   "tools/connery": "tools/connery",
   "tools/render": "tools/render",
+  "tools/retriever": "tools/retriever",
   "tools/sql": "tools/sql",
   "tools/webbrowser": "tools/webbrowser",
   "tools/gmail": "tools/gmail/index",

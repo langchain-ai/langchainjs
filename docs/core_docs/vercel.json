@@ -423,6 +423,10 @@
     {
       "source": "/docs/api/:slug1/variables/:slug2",
       "destination": "https://api.js.langchain.com/variables/:slug1.:slug2.html"
+    },
+    {
+      "source": "/docs/modules/agents/tools/how_to/dynamic(/?)",
+      "destination": "/docs/modules/agents/tools/dynamic/"
     }
   ]
 }
