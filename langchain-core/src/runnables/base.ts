@@ -15,7 +15,6 @@ import {
   concat,
   type IterableReadableStreamInterface,
   atee,
-  AsyncGeneratorWithSetup,
   pipeGeneratorWithSetup,
 } from "../utils/stream.js";
 import {
