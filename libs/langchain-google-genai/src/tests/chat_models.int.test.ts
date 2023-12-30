@@ -129,6 +129,6 @@ test("Test Google AI in streaming mode", async () => {
     ],
   });
   console.log({ tokens, nrNewTokens });
-  expect(nrNewTokens > 0).toBe(true);
+  expect(nrNewTokens > 1).toBe(true);
   expect(res.content).toBe(tokens);
 });
