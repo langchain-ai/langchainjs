@@ -71,27 +71,30 @@ export class FunctionCallStructuredOutputParser<
       }
       return value;
     });
-    const maybeZodParsedResult = this.zodSchema
-      ? this.zodSchema.safeParse(parsedResult)
-      : { success: true as true, data: parsedResult };
-    if (maybeZodParsedResult.success === false) {
-      throw new OutputParserException(
-        `Failed to parse. Text: "${initialResult}". Error: ${JSON.stringify(
-          maybeZodParsedResult.error.errors
-        )}`,
-        initialResult
-      );
-    }
-    const result = this.jsonSchemaValidator.validate(maybeZodParsedResult.data);
-    if (result.valid) {
-      return parsedResult;
+    if (this.zodSchema) {
+      const zodParsedResult = this.zodSchema.safeParse(parsedResult);
+      if (zodParsedResult.success) {
+        zodParsedResult.data;
+      } else {
+        throw new OutputParserException(
+          `Failed to parse. Text: "${initialResult}". Error: ${JSON.stringify(
+            zodParsedResult.error.errors
+          )}`,
+          initialResult
+        );
+      }
     } else {
-      throw new OutputParserException(
-        `Failed to parse. Text: "${initialResult}". Error: ${JSON.stringify(
-          result.errors
-        )}`,
-        initialResult
-      );
+      const result = this.jsonSchemaValidator.validate(parsedResult);
+      if (result.valid) {
+        return parsedResult;
+      } else {
+        throw new OutputParserException(
+          `Failed to parse. Text: "${initialResult}". Error: ${JSON.stringify(
+            result.errors
+          )}`,
+          initialResult
+        );
+      }
     }
   }
 }
