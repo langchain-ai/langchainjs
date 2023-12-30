@@ -113,3 +113,22 @@ test("Test Google AI handleLLMNewToken callback with streaming", async () => {
   console.log({ tokens });
   expect(tokens).toBe(responseContent);
 });
+
+test("Test Google AI in streaming mode", async () => {
+  const model = new ChatGoogleGenerativeAI({ streaming: true });
+  let tokens = "";
+  let nrNewTokens = 0;
+  const res = await model.call([new HumanMessage("Write a haiku?")], {
+    callbacks: [
+      {
+        handleLLMNewToken(token: string) {
+          nrNewTokens += 1;
+          tokens += token;
+        },
+      },
+    ],
+  });
+  console.log({ tokens, nrNewTokens });
+  expect(nrNewTokens > 0).toBe(true);
+  expect(res.content).toBe(tokens);
+});
