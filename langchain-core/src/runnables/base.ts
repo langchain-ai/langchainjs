@@ -16,6 +16,7 @@ import {
   type IterableReadableStreamInterface,
   atee,
   AsyncGeneratorWithSetup,
+  pipeGeneratorWithSetup,
 } from "../utils/stream.js";
 import {
   DEFAULT_RECURSION_LIMIT,
@@ -428,7 +429,7 @@ export abstract class Runnable<
     inputGenerator: AsyncGenerator<I>,
     transformer: (
       generator: AsyncGenerator<I>,
-      runManager?: Promise<CallbackManagerForChainRun | undefined>,
+      runManager?: CallbackManagerForChainRun,
       options?: Partial<CallOptions>
     ) => AsyncGenerator<O>,
     options?: CallOptions & { runType?: string }
@@ -439,21 +440,8 @@ export abstract class Runnable<
     let finalOutputSupported = true;
 
     const callbackManager_ = await getCallbackManagerForConfig(options);
-    const inputGeneratorWithSetup = new AsyncGeneratorWithSetup(
-      inputGenerator,
-      async () =>
-        callbackManager_?.handleChainStart(
-          this.toJSON(),
-          { input: "" },
-          undefined,
-          options?.runType,
-          undefined,
-          undefined,
-          options?.runName ?? this.getName()
-        )
-    );
     async function* wrapInputForTracing() {
-      for await (const chunk of inputGeneratorWithSetup) {
+      for await (const chunk of inputGenerator) {
         if (finalInputSupported) {
           if (finalInput === undefined) {
             finalInput = chunk;
@@ -471,13 +459,25 @@ export abstract class Runnable<
       }
     }
 
+    let runManager: CallbackManagerForChainRun | undefined;
     try {
-      const outputIterator = transformer(
+      const pipe = await pipeGeneratorWithSetup(
+        transformer,
         wrapInputForTracing(),
-        inputGeneratorWithSetup.setup,
+        async () =>
+          callbackManager_?.handleChainStart(
+            this.toJSON(),
+            { input: "" },
+            undefined,
+            options?.runType,
+            undefined,
+            undefined,
+            options?.runName ?? this.getName()
+          ),
         options
       );
-      for await (const chunk of outputIterator) {
+      runManager = pipe.setup;
+      for await (const chunk of pipe.output) {
         yield chunk;
         if (finalOutputSupported) {
           if (finalOutput === undefined) {
@@ -494,13 +494,11 @@ export abstract class Runnable<
         }
       }
     } catch (e) {
-      const runManager = await inputGeneratorWithSetup.setup;
       await runManager?.handleChainError(e, undefined, undefined, undefined, {
         inputs: _coerceToDict(finalInput, "input"),
       });
       throw e;
     }
-    const runManager = await inputGeneratorWithSetup.setup;
     await runManager?.handleChainEnd(
       finalOutput ?? {},
       undefined,
@@ -1555,14 +1553,13 @@ export class RunnableMap<
 
   async *_transform(
     generator: AsyncGenerator<RunInput>,
-    runManagerPromise?: Promise<CallbackManagerForChainRun | undefined>,
+    runManager?: CallbackManagerForChainRun,
     options?: Partial<RunnableConfig>
   ): AsyncGenerator<RunOutput> {
     // shallow copy steps to ignore changes while iterating
     const steps = { ...this.steps };
     // each step gets a copy of the input iterator
     const inputCopies = atee(generator, Object.keys(steps).length);
-    const runManager = await runManagerPromise;
     // start the first iteration of each output iterator
     const tasks = new Map(
       Object.entries(steps).map(([key, runnable], i) => {
@@ -1677,7 +1674,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
 
   async *_transform(
     generator: AsyncGenerator<RunInput>,
-    runManagerPromise?: Promise<CallbackManagerForChainRun | undefined>,
+    runManager?: CallbackManagerForChainRun,
     config?: Partial<RunnableConfig>
   ): AsyncGenerator<RunOutput> {
     let finalChunk;
@@ -1700,7 +1697,6 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
       if (config?.recursionLimit === 0) {
         throw new Error("Recursion limit reached.");
       }
-      const runManager = await runManagerPromise;
       const stream = await output.stream(
         finalChunk,
         this._patchConfig(
@@ -1982,14 +1978,13 @@ export class RunnableAssign<
 
   async *_transform(
     generator: AsyncGenerator<RunInput>,
-    runManagerPromise?: Promise<CallbackManagerForChainRun | undefined>,
+    runManager?: CallbackManagerForChainRun,
     options?: Partial<RunnableConfig>
   ): AsyncGenerator<RunOutput> {
     // collect mapper keys
     const mapperKeys = this.mapper.getStepsKeys();
     // create two input gens, one for the mapper, one for the input
     const [forPassthrough, forMapper] = atee(generator);
-    const runManager = await runManagerPromise;
     // create mapper output gen
     const mapperOutput = this.mapper.transform(
       forMapper,
