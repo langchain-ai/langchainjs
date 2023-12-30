@@ -158,3 +158,50 @@ export function concat<
     throw new Error(`Cannot concat ${typeof first} and ${typeof second}`);
   }
 }
+
+export class AsyncGeneratorWithSetup<
+  S = unknown,
+  T = unknown,
+  TReturn = unknown,
+  TNext = unknown
+> implements AsyncGenerator<T, TReturn, TNext>
+{
+  private generator: AsyncGenerator<T>;
+
+  public setup: Promise<S>;
+
+  private firstResult: Promise<IteratorResult<T>>;
+
+  private firstResultUsed = false;
+
+  constructor(generator: AsyncGenerator<T>, startSetup: () => Promise<S>) {
+    this.generator = generator;
+    this.setup = new Promise((resolve, reject) => {
+      this.firstResult = generator.next();
+      this.firstResult.then(startSetup).then(resolve, reject);
+    });
+  }
+
+  async next(...args: [] | [TNext]): Promise<IteratorResult<T>> {
+    if (!this.firstResultUsed) {
+      this.firstResultUsed = true;
+      return this.firstResult;
+    }
+
+    return this.generator.next(...args);
+  }
+
+  async return(
+    value: TReturn | PromiseLike<TReturn>
+  ): Promise<IteratorResult<T>> {
+    return this.generator.return(value);
+  }
+
+  async throw(e: Error): Promise<IteratorResult<T>> {
+    return this.generator.throw(e);
+  }
+
+  [Symbol.asyncIterator]() {
+    return this;
+  }
+}

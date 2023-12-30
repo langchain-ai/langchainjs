@@ -15,6 +15,7 @@ import {
   concat,
   type IterableReadableStreamInterface,
   atee,
+  AsyncGeneratorWithSetup,
 } from "../utils/stream.js";
 import {
   DEFAULT_RECURSION_LIMIT,
@@ -438,31 +439,21 @@ export abstract class Runnable<
     let finalOutputSupported = true;
 
     const callbackManager_ = await getCallbackManagerForConfig(options);
-    let resolveRunManager: (
-      value: CallbackManagerForChainRun | undefined
-    ) => void;
-    let hasInitializedRunManager = false;
-    const serializedRepresentation = this.toJSON();
-    const defaultRunName = this.getName();
-    const runManagerPromise: Promise<CallbackManagerForChainRun | undefined> =
-      new Promise((resolve) => {
-        resolveRunManager = resolve;
-      });
+    const inputGeneratorWithSetup = new AsyncGeneratorWithSetup(
+      inputGenerator,
+      async () =>
+        callbackManager_?.handleChainStart(
+          this.toJSON(),
+          { input: "" },
+          undefined,
+          options?.runType,
+          undefined,
+          undefined,
+          options?.runName ?? this.getName()
+        )
+    );
     async function* wrapInputForTracing() {
-      for await (const chunk of inputGenerator) {
-        if (!hasInitializedRunManager) {
-          const runManager = await callbackManager_?.handleChainStart(
-            serializedRepresentation,
-            { input: "" },
-            undefined,
-            options?.runType,
-            undefined,
-            undefined,
-            options?.runName ?? defaultRunName
-          );
-          hasInitializedRunManager = true;
-          resolveRunManager(runManager);
-        }
+      for await (const chunk of inputGeneratorWithSetup) {
         if (finalInputSupported) {
           if (finalInput === undefined) {
             finalInput = chunk;
@@ -480,11 +471,10 @@ export abstract class Runnable<
       }
     }
 
-    const wrappedInputGenerator = wrapInputForTracing();
     try {
       const outputIterator = transformer(
-        wrappedInputGenerator,
-        runManagerPromise,
+        wrapInputForTracing(),
+        inputGeneratorWithSetup.setup,
         options
       );
       for await (const chunk of outputIterator) {
@@ -504,13 +494,13 @@ export abstract class Runnable<
         }
       }
     } catch (e) {
-      const runManager = await runManagerPromise;
+      const runManager = await inputGeneratorWithSetup.setup;
       await runManager?.handleChainError(e, undefined, undefined, undefined, {
         inputs: _coerceToDict(finalInput, "input"),
       });
       throw e;
     }
-    const runManager = await runManagerPromise;
+    const runManager = await inputGeneratorWithSetup.setup;
     await runManager?.handleChainEnd(
       finalOutput ?? {},
       undefined,
@@ -1570,16 +1560,8 @@ export class RunnableMap<
   ): AsyncGenerator<RunOutput> {
     // shallow copy steps to ignore changes while iterating
     const steps = { ...this.steps };
-    // each step gets a copy of the input iterator + the hack below
-    const streamCopies = atee(generator, Object.keys(steps).length + 1);
-    // HACK: The default runnable `transformStreamWithConfig` method waits
-    // until the first yielded chunk from the generator before starting the runManager
-    // and resolving the passed promise in order to preserve run order.
-    // Therefore, we copy an additional generator and start it in order to
-    // make sure the promise resolves.
-    const inputCopies = streamCopies.slice(0, -1);
-    const forHack = streamCopies[streamCopies.length - 1];
-    await forHack.next();
+    // each step gets a copy of the input iterator
+    const inputCopies = atee(generator, Object.keys(steps).length);
     const runManager = await runManagerPromise;
     // start the first iteration of each output iterator
     const tasks = new Map(
@@ -2005,14 +1987,8 @@ export class RunnableAssign<
   ): AsyncGenerator<RunOutput> {
     // collect mapper keys
     const mapperKeys = this.mapper.getStepsKeys();
-    // create three input gens, one for the mapper, one for the input and one for a hack
-    const [forPassthrough, forMapper, forHack] = atee(generator, 3);
-    // HACK: The default runnable `transformStreamWithConfig` method waits
-    // until the first yielded chunk from the generator before starting the runManager
-    // and resolving the passed promise in order to preserve run order.
-    // Therefore, we copy an additional generator and start it in order to
-    // make sure the promise resolves.
-    await forHack.next();
+    // create two input gens, one for the mapper, one for the input
+    const [forPassthrough, forMapper] = atee(generator);
     const runManager = await runManagerPromise;
     // create mapper output gen
     const mapperOutput = this.mapper.transform(
