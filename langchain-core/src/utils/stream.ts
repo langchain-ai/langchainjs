@@ -209,3 +209,27 @@ export class AsyncGeneratorWithSetup<
     return this;
   }
 }
+
+export async function pipeGeneratorWithSetup<
+  S,
+  A extends unknown[],
+  T,
+  TReturn,
+  TNext,
+  U,
+  UReturn,
+  UNext
+>(
+  to: (
+    g: AsyncGenerator<T, TReturn, TNext>,
+    s: S,
+    ...args: A
+  ) => AsyncGenerator<U, UReturn, UNext>,
+  generator: AsyncGenerator<T, TReturn, TNext>,
+  startSetup: () => Promise<S>,
+  ...args: A
+) {
+  const gen = new AsyncGeneratorWithSetup(generator, startSetup);
+  const setup = await gen.setup;
+  return { output: to(gen, setup, ...args), setup };
+}
