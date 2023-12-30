@@ -38,6 +38,7 @@ try {
     )
   ));
 } catch (e) {
+  console.log(e);
   throw new Error(`Could not load example ${exampleName}: ${e}`);
 }
 

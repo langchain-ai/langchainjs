@@ -11,7 +11,7 @@ import type { DocumentInterface } from "@langchain/core/documents";
 /**
  * Parameters for the createRetrievalChain method.
  */
-export type CreateRetrievalChainParams = {
+export type CreateRetrievalChainParams<RunOutput> = {
   /**
    * Retriever-like object that returns list of documents. Should
    * either be a subclass of BaseRetriever or a Runnable that returns
@@ -34,7 +34,7 @@ export type CreateRetrievalChainParams = {
    * retrieval).
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  combineDocsChain: RunnableInterface<Record<string, any>, string>;
+  combineDocsChain: RunnableInterface<Record<string, any>, RunOutput>;
 };
 
 function isBaseRetriever(x: unknown): x is BaseRetrieverInterface {
@@ -70,15 +70,15 @@ function isBaseRetriever(x: unknown): x is BaseRetrieverInterface {
  * const response = await chain.invoke({ input: "..." });
  * ```
  */
-export async function createRetrievalChain({
+export async function createRetrievalChain<RunOutput>({
   retriever,
   combineDocsChain,
-}: CreateRetrievalChainParams): Promise<
+}: CreateRetrievalChainParams<RunOutput>): Promise<
   RunnableInterface<
     { input: string; chat_history?: BaseMessage[] | string } & {
       [key: string]: unknown;
     },
-    { context: string; answer: string } & { [key: string]: unknown }
+    { context: string; answer: RunOutput } & { [key: string]: unknown }
   >
 > {
   let retrieveDocumentsChain: Runnable<{ input: string }, DocumentInterface[]>;

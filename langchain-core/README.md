@@ -121,7 +121,7 @@ Because all used packages must share the same version of core, we suggest using 
   "license": "MIT",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.10.0",
-    "@langchain/core": "~0.1.2"
+    "@langchain/core": "~0.1.5"
   }
 }
 ```

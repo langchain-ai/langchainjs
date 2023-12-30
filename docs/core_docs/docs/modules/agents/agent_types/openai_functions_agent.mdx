@@ -5,155 +5,129 @@ sidebar_position: 0
 
 # OpenAI functions
 
-Certain OpenAI models (like `gpt-3.5-turbo` and `gpt-4`) have been fine-tuned to detect when a function should be called and respond with the inputs that should be passed to the function.
+Certain models (like OpenAI's gpt-3.5-turbo and gpt-4) have been fine-tuned to detect when a function should be called and respond with the inputs that should be passed to the function.
 In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call those functions.
-The goal of the OpenAI Function APIs is to more reliably return valid and useful function calls than a generic text completion or chat API.
 
 The OpenAI Functions Agent is designed to work with these models.
 
-import CodeBlock from "@theme/CodeBlock";
-import Example from "@examples/agents/openai.ts";
-import CustomPromptExample from "@examples/agents/openai_custom_prompt.ts";
-import RunnableExample from "@examples/agents/openai_runnable.ts";
-import RunnableStreamExample from "@examples/agents/openai_runnable_stream.ts";
-import RunnableStreamLogExample from "@examples/agents/openai_runnable_stream_log.ts";
+## Setup
 
-:::tip Compatibility
-Must be used with an [OpenAI Functions](https://platform.openai.com/docs/guides/gpt/function-calling) model.
+Install the OpenAI integration package, retrieve your key, and store it as an environment variable named `OPENAI_API_KEY`:
+
+:::tip
+See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
 :::
 
-# With LCEL
-
-In this example we'll use LCEL to construct a customizable agent that is given two tools: search and calculator.
-We'll then pull in a prompt template from the [LangChainHub](https://smith.langchain.com/hub) and pass that to our runnable agent.
-Lastly we'll use the default OpenAI functions output parser `OpenAIFunctionsAgentOutputParser`.
-This output parser contains a method `parseAIMessage` which when provided with a message, either returns an instance of `FunctionsAgentAction` if there is another action to be taken my the agent, or `AgentFinish` if the agent has completed its objective.
-
-<CodeBlock language="typescript">{RunnableExample}</CodeBlock>
-
-## Adding memory
-
-We can also use memory to save our previous agent input/outputs, and pass it through to each agent iteration.
-Using memory can help give the agent better context on past interactions, which can lead to more accurate responses beyond what the `agent_scratchpad` can do.
-
-Adding memory only requires a few changes to the above example.
-
-First, import and instantiate your memory class, in this example we'll use `BufferMemory`.
-
-```typescript
-import { BufferMemory } from "langchain/memory";
+```bash npm2yarn
+npm install @langchain/openai
 ```
 
+This demo also uses [Tavily](https://app.tavily.com), but you can also swap in another [built in tool](/docs/integrations/platforms).
+You'll need to sign up for an API key and set it as `TAVILY_API_KEY`.
+
+## Initialize Tools
+
+We will first create a tool:
+
 ```typescript
-const memory = new BufferMemory({
-  memoryKey: "history", // The object key to store the memory under
-  inputKey: "question", // The object key for the input
-  outputKey: "answer", // The object key for the output
-  returnMessages: true,
-});
+import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
+
+// Define the tools the agent will have access to.
+const tools = [new TavilySearchResults({ maxResults: 1 })];
 ```
 
-Then, update your prompt to include another `MessagesPlaceholder`. This time we'll be passing in the `chat_history` variable from memory.
+## Create Agent
 
 ```typescript
-const prompt = ChatPromptTemplate.fromMessages([
-  ["ai", "You are a helpful assistant."],
-  new MessagesPlaceholder("chat_history"),
-  ["human", "{input}"],
-  new MessagesPlaceholder("agent_scratchpad"),
-]);
-```
+import { AgentExecutor, createOpenAIFunctionsAgent } from "langchain/agents";
+import { pull } from "langchain/hub";
+import { ChatOpenAI } from "@langchain/openai";
+import type { ChatPromptTemplate } from "@langchain/core/prompts";
 
-Next, inside your `RunnableSequence` add a field for loading the `chat_history` from memory.
-
-```typescript
-const runnableAgent = RunnableSequence.from([
-  {
-    input: (i: { input: string; steps: AgentStep[] }) => i.input,
-    agent_scratchpad: (i: { input: string; steps: AgentStep[] }) =>
-      formatAgentSteps(i.steps),
-    // Load memory here
-    chat_history: async (_: { input: string; steps: AgentStep[] }) => {
-      const { history } = await memory.loadMemoryVariables({});
-      return history;
-    },
-  },
-  prompt,
-  modelWithFunctions,
-  new OpenAIFunctionsAgentOutputParser(),
-]);
-
-const executor = AgentExecutor.fromAgentAndTools({
-  agent: runnableAgent,
-  tools,
-});
-```
-
-Finally we can call the agent, and save the output after the response is returned.
-
-```typescript
-const query = "What is the weather in New York?";
-console.log(`Calling agent executor with query: ${query}`);
-const result = await executor.invoke({
-  input: query,
-});
-console.log(result);
-/*
-Calling agent executor with query: What is the weather in New York?
-{
-  output: 'The current weather in New York is sunny with a temperature of 66 degrees Fahrenheit. The humidity is at 54% and the wind is blowing at 6 mph. There is 0% chance of precipitation.'
-}
-*/
-
-// Save the result and initial input to memory
-await memory.saveContext(
-  {
-    question: query,
-  },
-  {
-    answer: result.output,
-  }
+// Get the prompt to use - you can modify this!
+// If you want to see the prompt in full, you can at:
+// https://smith.langchain.com/hub/hwchase17/openai-functions-agent
+const prompt = await pull<ChatPromptTemplate>(
+  "hwchase17/openai-functions-agent"
 );
 
-const query2 = "Do I need a jacket?";
-const result2 = await executor.invoke({
-  input: query2,
+const llm = new ChatOpenAI({
+  modelName: "gpt-3.5-turbo-1106",
+  temperature: 0,
 });
-console.log(result2);
-/*
-{
-  output: 'Based on the current weather in New York, you may not need a jacket. However, if you feel cold easily or will be outside for a long time, you might want to bring a light jacket just in case.'
-}
- */
+
+const agent = await createOpenAIFunctionsAgent({
+  llm,
+  tools,
+  prompt,
+});
 ```
 
-You may also inspect the LangSmith traces for both agent calls here:
+## Run Agent
 
-- [Question 1](https://smith.langchain.com/public/c1136951-f3f0-4ff5-a862-8db5d6bc8d04/r)
-- [Question 2](https://smith.langchain.com/public/b536cdc0-9bc9-4bdf-9298-4d6d7f88556b/r)
+Now, let's run our agent!
 
-## Streaming
+:::tip
+[LangSmith trace](https://smith.langchain.com/public/28e915bc-a200-48b8-81a4-4b0f1739524b/r)
+:::
 
-For agents, the base LCEL `.stream()` method will stream back intermediate steps as they are completed. Here's an example with the tools defined above:
+```typescript
+const agentExecutor = new AgentExecutor({
+  agent,
+  tools,
+});
 
-<CodeBlock language="typescript">{RunnableStreamExample}</CodeBlock>
+const result = await agentExecutor.invoke({
+  input: "what is LangChain?",
+});
 
-## Advanced streaming
+console.log(result);
 
-To get as much streamed information as possible, you can use the `.streamLog()` method to stream back [JSON patch](https://jsonpatch.com/) chunks.
-You can parse the `path` property of a chunk to do things like return intermediate steps or stream back the final output early.
+/*
+  {
+    input: 'what is LangChain?',
+    output: 'LangChain is an open source project that was launched in October 2022 by Harrison Chase, while working at machine learning startup Robust Intelligence. It is a deployment tool designed to facilitate the transition from LCEL (LangChain Expression Language) prototypes to production-ready applications. LangChain has integrations with systems including Amazon, Google, and Microsoft Azure cloud storage, API wrappers for news, movie information, and weather, Bash for summarization, syntax and semantics checking, and execution of shell scripts, multiple web scraping subsystems and templates, few-shot learning prompt generation support, and more.\n' +
+      '\n' +
+      "In April 2023, LangChain incorporated as a new startup and raised over $20 million in funding at a valuation of at least $200 million from venture firm Sequoia Capital, a week after announcing a $10 million seed investment from Benchmark. The project quickly garnered popularity, with improvements from hundreds of contributors on GitHub, trending discussions on Twitter, lively activity on the project's Discord server, many YouTube tutorials, and meetups in San Francisco and London.\n" +
+      '\n' +
+      'For more detailed information, you can visit the [LangChain Wikipedia page](https://en.wikipedia.org/wiki/LangChain).'
+  }
+*/
+```
 
-Note that we set `streaming: true` on the `ChatOpenAI` class to ensure the OpenAI model always returns chunks in streaming mode even
-when invoked with `.invoke` internally to get the most data as quickly as possible:
+## Using with chat history
 
-<CodeBlock language="typescript">{RunnableStreamLogExample}</CodeBlock>
+For more details, see [this section of the agent quickstart](/docs/modules/agents/quick_start#adding-in-memory).
 
-# With `initializeAgentExecutorWithOptions` (Legacy)
+```ts
+import { AIMessage, HumanMessage } from "@langchain/core/messages";
 
-<CodeBlock language="typescript">{Example}</CodeBlock>
+const result2 = await agentExecutor.invoke({
+  input: "what's my name?",
+  chat_history: [
+    new HumanMessage("hi! my name is cob"),
+    new AIMessage("Hello Cob! How can I assist you today?"),
+  ],
+});
 
-## Prompt customization
+console.log(result2);
 
-You can pass in a custom string to be used as the system message of the prompt as follows:
-
-<CodeBlock language="typescript">{CustomPromptExample}</CodeBlock>
+/*
+  {
+    input: "what's my name?",
+    chat_history: [
+      HumanMessage {
+        content: 'hi! my name is cob',
+        name: undefined,
+        additional_kwargs: {}
+      },
+      AIMessage {
+        content: 'Hello Cob! How can I assist you today?',
+        name: undefined,
+        additional_kwargs: {}
+      }
+    ],
+    output: 'Your name is Cob. How can I assist you today, Cob?'
+  }
+*/
+```

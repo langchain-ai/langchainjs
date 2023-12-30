@@ -1,13 +1,111 @@
-# XML Agent
+---
+hide_table_of_contents: true
+sidebar_position: 2
+---
 
-:::info
-Looking for the non LCEL version of this chain? Click [here](/docs/modules/agents/agent_types/xml_legacy) to view the legacy doc.
-:::
+# XML Agent
 
 Some language models (like Anthropic's Claude) are particularly good at reasoning/writing XML.
 The below example shows how to use an agent that uses XML when prompting.
 
-import CodeBlock from "@theme/CodeBlock";
-import XMLExample from "@examples/agents/xml_runnable.ts";
+## Setup
 
-<CodeBlock language="typescript">{XMLExample}</CodeBlock>
+Install the Anthropic integration package, retrieve your key, and store it as an environment variable named `ANTHROPIC_API_KEY`:
+
+:::tip
+See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
+:::
+
+```bash npm2yarn
+npm install @langchain/anthropic
+```
+
+This demo also uses [Tavily](https://app.tavily.com), but you can also swap in another [built in tool](/docs/integrations/platforms).
+You'll need to sign up for an API key and set it as `TAVILY_API_KEY`.
+
+## Initialize Tools
+
+We will first create a tool:
+
+```typescript
+import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
+
+// Define the tools the agent will have access to.
+const tools = [new TavilySearchResults({ maxResults: 1 })];
+```
+
+## Create Agent
+
+```typescript
+import { AgentExecutor, createXmlAgent } from "langchain/agents";
+import { pull } from "langchain/hub";
+import { ChatAnthropic } from "@langchain/anthropic";
+import type { PromptTemplate } from "@langchain/core/prompts";
+
+// Get the prompt to use - you can modify this!
+// If you want to see the prompt in full, you can at:
+// https://smith.langchain.com/hub/hwchase17/xml-agent-convo
+const prompt = await pull<PromptTemplate>("hwchase17/xml-agent-convo");
+
+const llm = new ChatAnthropic({
+  modelName: "claude-2.1",
+  temperature: 0,
+});
+
+const agent = await createXmlAgent({
+  llm,
+  tools,
+  prompt,
+});
+```
+
+## Run Agent
+
+Now, let's run our agent!
+
+:::tip
+[LangSmith trace](https://smith.langchain.com/public/dacd12d2-f952-44fd-9b0a-7b2be88a171d/r)
+:::
+
+```ts
+const agentExecutor = new AgentExecutor({
+  agent,
+  tools,
+});
+
+const result = await agentExecutor.invoke({
+  input: "what is LangChain?",
+});
+
+console.log(result);
+
+/*
+  {
+    input: 'what is LangChain?',
+    output: '\n' +
+      'LangChain is a platform that links large language models like GPT-3.5 and GPT-4 to external data sources to build natural language processing (NLP) applications. It provides modules and integrations to help create NLP apps more easily across various industries and use cases. Some key capabilities LangChain offers include connecting to LLMs, integrating external data sources, and enabling the development of custom NLP solutions.\n'
+  }
+*/
+```
+
+## Using with chat history
+
+For more details, see [this section of the agent quickstart](/docs/modules/agents/quick_start#adding-in-memory).
+
+```ts
+const result2 = await agentExecutor.invoke({
+  input: "what's my name?",
+  // Notice that chat_history is a string, since this prompt is aimed at LLMs, not chat models
+  chat_history: "Human: Hi! My name is Cob\nAI: Hello Cob! Nice to meet you",
+});
+
+console.log(result2);
+
+/*
+  {
+    input: "what's my name?",
+    chat_history: 'Human: Hi! My name is Cob\nAI: Hello Cob! Nice to meet you',
+    output: 'Based on our previous conversation, your name is Cob.'
+  }
+*/
+```
