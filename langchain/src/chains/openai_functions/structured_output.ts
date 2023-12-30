@@ -83,18 +83,17 @@ export class FunctionCallStructuredOutputParser<
           initialResult
         );
       }
+    }
+    const result = this.jsonSchemaValidator.validate(parsedResult);
+    if (result.valid) {
+      return parsedResult;
     } else {
-      const result = this.jsonSchemaValidator.validate(parsedResult);
-      if (result.valid) {
-        return parsedResult;
-      } else {
-        throw new OutputParserException(
-          `Failed to parse. Text: "${initialResult}". Error: ${JSON.stringify(
-            result.errors
-          )}`,
-          initialResult
-        );
-      }
+      throw new OutputParserException(
+        `Failed to parse. Text: "${initialResult}". Error: ${JSON.stringify(
+          result.errors
+        )}`,
+        initialResult
+      );
     }
   }
 }
