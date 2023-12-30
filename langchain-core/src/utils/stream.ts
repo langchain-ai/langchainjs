@@ -176,6 +176,10 @@ export class AsyncGeneratorWithSetup<
 
   constructor(generator: AsyncGenerator<T>, startSetup: () => Promise<S>) {
     this.generator = generator;
+    // setup is a promise that resolves only after the first iterator value
+    // is available. this is useful when setup of several piped generators
+    // needs to happen in logical order, ie. in the order in which input to
+    // to each generator is available.
     this.setup = new Promise((resolve, reject) => {
       this.firstResult = generator.next();
       this.firstResult.then(startSetup).then(resolve, reject);
