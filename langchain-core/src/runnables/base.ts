@@ -15,11 +15,12 @@ import {
   concat,
   type IterableReadableStreamInterface,
   atee,
+  AsyncGeneratorWithSetup,
 } from "../utils/stream.js";
 import {
   DEFAULT_RECURSION_LIMIT,
   RunnableConfig,
-  getCallbackMangerForConfig,
+  getCallbackManagerForConfig,
   mergeConfigs,
 } from "./config.js";
 import { AsyncCaller } from "../utils/async_caller.js";
@@ -338,7 +339,7 @@ export abstract class Runnable<
     input: T,
     options?: Partial<CallOptions> & { runType?: string }
   ) {
-    const callbackManager_ = await getCallbackMangerForConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(options);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
@@ -383,7 +384,7 @@ export abstract class Runnable<
   ): Promise<(RunOutput | Error)[]> {
     const optionsList = this._getOptionsList(options ?? {}, inputs.length);
     const callbackManagers = await Promise.all(
-      optionsList.map(getCallbackMangerForConfig)
+      optionsList.map(getCallbackManagerForConfig)
     );
     const runManagers = await Promise.all(
       callbackManagers.map((callbackManager, i) =>
@@ -427,7 +428,7 @@ export abstract class Runnable<
     inputGenerator: AsyncGenerator<I>,
     transformer: (
       generator: AsyncGenerator<I>,
-      runManager?: CallbackManagerForChainRun,
+      runManager?: Promise<CallbackManagerForChainRun | undefined>,
       options?: Partial<CallOptions>
     ) => AsyncGenerator<O>,
     options?: CallOptions & { runType?: string }
@@ -437,18 +438,22 @@ export abstract class Runnable<
     let finalOutput: O | undefined;
     let finalOutputSupported = true;
 
-    const callbackManager_ = await getCallbackMangerForConfig(options);
-    const runManager = await callbackManager_?.handleChainStart(
-      this.toJSON(),
-      { input: "" },
-      undefined,
-      options?.runType,
-      undefined,
-      undefined,
-      options?.runName ?? this.getName()
+    const callbackManager_ = await getCallbackManagerForConfig(options);
+    const inputGeneratorWithSetup = new AsyncGeneratorWithSetup(
+      inputGenerator,
+      async () =>
+        callbackManager_?.handleChainStart(
+          this.toJSON(),
+          { input: "" },
+          undefined,
+          options?.runType,
+          undefined,
+          undefined,
+          options?.runName ?? this.getName()
+        )
     );
     async function* wrapInputForTracing() {
-      for await (const chunk of inputGenerator) {
+      for await (const chunk of inputGeneratorWithSetup) {
         if (finalInputSupported) {
           if (finalInput === undefined) {
             finalInput = chunk;
@@ -466,11 +471,10 @@ export abstract class Runnable<
       }
     }
 
-    const wrappedInputGenerator = wrapInputForTracing();
     try {
       const outputIterator = transformer(
-        wrappedInputGenerator,
-        runManager,
+        wrapInputForTracing(),
+        inputGeneratorWithSetup.setup,
         options
       );
       for await (const chunk of outputIterator) {
@@ -490,11 +494,13 @@ export abstract class Runnable<
         }
       }
     } catch (e) {
+      const runManager = await inputGeneratorWithSetup.setup;
       await runManager?.handleChainError(e, undefined, undefined, undefined, {
         inputs: _coerceToDict(finalInput, "input"),
       });
       throw e;
     }
+    const runManager = await inputGeneratorWithSetup.setup;
     await runManager?.handleChainEnd(
       finalOutput ?? {},
       undefined,
@@ -1236,7 +1242,7 @@ export class RunnableSequence<
   }
 
   async invoke(input: RunInput, options?: RunnableConfig): Promise<RunOutput> {
-    const callbackManager_ = await getCallbackMangerForConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(options);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
@@ -1298,7 +1304,7 @@ export class RunnableSequence<
   ): Promise<(RunOutput | Error)[]> {
     const configList = this._getOptionsList(options ?? {}, inputs.length);
     const callbackManagers = await Promise.all(
-      configList.map(getCallbackMangerForConfig)
+      configList.map(getCallbackManagerForConfig)
     );
     const runManagers = await Promise.all(
       callbackManagers.map((callbackManager, i) =>
@@ -1359,7 +1365,7 @@ export class RunnableSequence<
     input: RunInput,
     options?: RunnableConfig
   ): AsyncGenerator<RunOutput> {
-    const callbackManager_ = await getCallbackMangerForConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(options);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
@@ -1516,7 +1522,7 @@ export class RunnableMap<
     input: RunInput,
     options?: Partial<RunnableConfig>
   ): Promise<RunOutput> {
-    const callbackManager_ = await getCallbackMangerForConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(options);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       {
@@ -1549,13 +1555,14 @@ export class RunnableMap<
 
   async *_transform(
     generator: AsyncGenerator<RunInput>,
-    runManager?: CallbackManagerForChainRun,
+    runManagerPromise?: Promise<CallbackManagerForChainRun | undefined>,
     options?: Partial<RunnableConfig>
   ): AsyncGenerator<RunOutput> {
     // shallow copy steps to ignore changes while iterating
     const steps = { ...this.steps };
     // each step gets a copy of the input iterator
     const inputCopies = atee(generator, Object.keys(steps).length);
+    const runManager = await runManagerPromise;
     // start the first iteration of each output iterator
     const tasks = new Map(
       Object.entries(steps).map(([key, runnable], i) => {
@@ -1670,7 +1677,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
 
   async *_transform(
     generator: AsyncGenerator<RunInput>,
-    runManager?: CallbackManagerForChainRun,
+    runManagerPromise?: Promise<CallbackManagerForChainRun | undefined>,
     config?: Partial<RunnableConfig>
   ): AsyncGenerator<RunOutput> {
     let finalChunk;
@@ -1693,6 +1700,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
       if (config?.recursionLimit === 0) {
         throw new Error("Recursion limit reached.");
       }
+      const runManager = await runManagerPromise;
       const stream = await output.stream(
         finalChunk,
         this._patchConfig(
@@ -1974,13 +1982,14 @@ export class RunnableAssign<
 
   async *_transform(
     generator: AsyncGenerator<RunInput>,
-    runManager?: CallbackManagerForChainRun,
+    runManagerPromise?: Promise<CallbackManagerForChainRun | undefined>,
     options?: Partial<RunnableConfig>
   ): AsyncGenerator<RunOutput> {
     // collect mapper keys
     const mapperKeys = this.mapper.getStepsKeys();
     // create two input gens, one for the mapper, one for the input
-    const [forPassthrough, forMapper] = atee(generator, 2);
+    const [forPassthrough, forMapper] = atee(generator);
+    const runManager = await runManagerPromise;
     // create mapper output gen
     const mapperOutput = this.mapper.transform(
       forMapper,
