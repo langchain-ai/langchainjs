@@ -2005,7 +2005,7 @@ export class RunnableAssign<
   ): AsyncGenerator<RunOutput> {
     // collect mapper keys
     const mapperKeys = this.mapper.getStepsKeys();
-    // create two input gens, one for the mapper, one for the input and one for a hack
+    // create three input gens, one for the mapper, one for the input and one for a hack
     const [forPassthrough, forMapper, forHack] = atee(generator, 3);
     // HACK: The default runnable `transformStreamWithConfig` method waits
     // until the first yielded chunk from the generator before starting the runManager
