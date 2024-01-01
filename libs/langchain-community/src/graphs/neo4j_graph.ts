@@ -118,8 +118,8 @@ export class Neo4jGraph {
       ) {
         throw new Error("Procedure not found in Neo4j.");
       }
+      throw new Error(error.message);
     }
-    return undefined;
   }
 
   async verifyConnectivity() {

@@ -53,4 +53,17 @@ describe.skip("Neo4j Graph Tests", () => {
     await graph.close();
     expect(res).toEqual(expectedOutput);
   });
+  test("Test that query errors are correctly propagated", async () => {
+    expect(url).toBeDefined();
+    expect(username).toBeDefined();
+    expect(password).toBeDefined();
+
+    // Integers are casted to strings in the output
+    const expectedOutput = "Error";
+    try {
+      await graph.query("SELECT *");
+    } catch (error: any) {
+      expect(error.name).toEqual(expectedOutput);
+    }
+  });
 });
