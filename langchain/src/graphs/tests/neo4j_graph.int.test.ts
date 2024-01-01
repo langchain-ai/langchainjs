@@ -59,7 +59,7 @@ describe.skip("Neo4j Graph Tests", () => {
     expect(password).toBeDefined();
 
     // Integers are casted to strings in the output
-    const expectedOutput = "Error";
+    const expectedOutput = "Neo4jError";
     try {
       await graph.query("SELECT *");
     } catch (error: any) {
