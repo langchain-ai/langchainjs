@@ -1,6 +1,6 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import type { BaseRetrieverInterface } from "@langchain/core/retrievers";
-import { PromptTemplate } from "../prompts/prompt.js";
+import { PromptTemplate } from "@langchain/core/prompts";
 import { SerializedChatVectorDBQAChain } from "./serde.js";
 import {
   ChainValues,

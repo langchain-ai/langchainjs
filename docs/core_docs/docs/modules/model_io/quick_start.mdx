@@ -1,0 +1,239 @@
+---
+sidebar_position: 0
+---
+
+# Quickstart
+
+The quick start will cover the basics of working with language models.
+It will introduce the two different types of models - LLMs and ChatModels.
+It will then cover how to use PromptTemplates to format the inputs to these models, and how to use Output Parsers to work with the outputs.
+For a deeper conceptual guide into these topics - please see [this page](/docs/modules/model_io/concepts).
+
+## Models
+
+For this getting started guide, we will provide two options: using OpenAI (a popular model available via API) or using a locally running open source model.
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import CodeBlock from "@theme/CodeBlock";
+
+<Tabs>
+  <TabItem value="openai" label="OpenAI" default>
+
+First we'll need to install the LangChain OpenAI integration package:
+
+:::tip
+See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
+:::
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
+Accessing the API requires an API key, which you can get by creating an account and heading [here](https://platform.openai.com/account/api-keys). Once we have a key we'll want to set it as an environment variable by running:
+
+```shell
+export OPENAI_API_KEY="..."
+```
+
+We can then initialize the model:
+
+```typescript
+import { OpenAI, ChatOpenAI } from "@langchain/openai";
+
+const llm = new OpenAI({
+  modelName: "gpt-3.5-turbo-instruct",
+});
+const chatModel = new ChatOpenAI({
+  modelName: "gpt-3.5-turbo",
+});
+```
+
+If you can't or would prefer not to set an environment variable, you can pass the key in directly via the `openAIApiKey` named parameter when initiating the OpenAI LLM class:
+
+```typescript
+const model = new ChatOpenAI({
+  openAIApiKey: "<your key here>",
+});
+```
+
+  </TabItem>
+  <TabItem value="local" label="Local">
+
+[Ollama](https://ollama.ai/) allows you to run open-source large language models, such as Llama 2 and Mistral, locally.
+
+First, follow [these instructions](https://github.com/jmorganca/ollama) to set up and run a local Ollama instance:
+
+- [Download](https://ollama.ai/download)
+- Fetch a model via e.g. `ollama pull mistral`
+
+Then, make sure the Ollama server is running. Next, you'll need to install the LangChain community package:
+
+:::tip
+See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
+:::
+
+```bash npm2yarn
+npm install @langchain/community
+```
+
+And then you can do:
+
+```typescript
+import { Ollama } from "@langchain/community/llms/ollama";
+import { ChatOllama } from "@langchain/community/chat_models/ollama";
+
+const llm = new Ollama({
+  baseUrl: "http://localhost:11434", // Default value
+  model: "mistral",
+});
+const chatModel = new ChatOllama({
+  baseUrl: "http://localhost:11434", // Default value
+  model: "mistral",
+});
+```
+
+  </TabItem>
+</Tabs>
+
+Both `llm` and `chatModel` are objects that represent configuration for a particular model.
+You can initialize them with parameters like `temperature` and others, and pass them around.
+The main difference between them is their input and output schemas.
+
+- The LLM class takes a string as input and outputs a string.
+- The ChatModel class takes a list of messages as input and outputs a message.
+
+For a deeper conceptual explanation of this difference please see [this documentation](/docs/modules/model_io/concepts#models)
+
+We can see the difference between an LLM and a ChatModel when we invoke it.
+
+```ts
+import { HumanMessage } from "@langchain/core/messages";
+
+const text =
+  "What would be a good company name for a company that makes colorful socks?";
+const messages = [new HumanMessage(text)];
+
+await llm.invoke(text);
+// Feetful of Fun
+
+await chatModel.invoke(messages);
+/*
+  AIMessage {
+    content: 'Socks O'Color',
+    additional_kwargs: {}
+  }
+*/
+```
+
+The LLM returns a string, while the ChatModel returns a message.
+
+## Prompt Templates
+
+Most LLM applications do not pass user input directly into an LLM. Usually they will add the user input to a larger piece of text, called a prompt template, that provides additional context on the specific task at hand.
+
+In the previous example, the text we passed to the model contained instructions to generate a company name. For our application, it would be great if the user only had to provide the description of a company/product without worrying about giving the model instructions.
+
+PromptTemplates help with exactly this!
+They bundle up all the logic for going from user input into a fully formatted prompt.
+This can start off very simple - for example, a prompt to produce the above string would just be:
+
+```typescript
+import { PromptTemplate } from "@langchain/core/prompts";
+
+const prompt = PromptTemplate.fromTemplate(
+  "What is a good name for a company that makes {product}?"
+);
+await prompt.format({ product: "colorful socks" });
+
+// What is a good name for a company that makes colorful socks?
+```
+
+However, the advantages of using these over raw string formatting are several.
+You can "partial" out variables - e.g. you can format only some of the variables at a time.
+You can compose them together, easily combining different templates into a single prompt.
+For explanations of these functionalities, see the [section on prompts](/docs/modules/model_io/prompts) for more detail.
+
+`PromptTemplate`s can also be used to produce a list of messages.
+In this case, the prompt not only contains information about the content, but also each message (its role, its position in the list, etc.).
+We can use a `ChatPromptTemplate` created from a list of `ChatMessageTemplates`.
+Each `ChatMessageTemplate` contains instructions for how to format that `ChatMessage` - its role, and then also its content.
+Let's take a look at this below:
+
+```typescript
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+
+const template =
+  "You are a helpful assistant that translates {input_language} to {output_language}.";
+const humanTemplate = "{text}";
+
+const chatPrompt = ChatPromptTemplate.fromMessages([
+  ["system", template],
+  ["human", humanTemplate],
+]);
+
+await chatPrompt.formatMessages({
+  input_language: "English",
+  output_language: "French",
+  text: "I love programming.",
+});
+```
+
+```typescript
+[
+  SystemMessage {
+    content: 'You are a helpful assistant that translates English to French.'
+  },
+  HumanMessage {
+    content: 'I love programming.'
+  }
+]
+```
+
+ChatPromptTemplates can also be constructed in other ways - see the [section on prompts](/docs/modules/model_io/prompts) for more detail.
+
+## Output parsers
+
+`OutputParser`s convert the raw output of a language model into a format that can be used downstream.
+There are a few main types of `OutputParser`s, including:
+
+- Convert text from `LLM` into structured information (e.g. JSON)
+- Convert a `ChatMessage` into just a string
+- Convert the extra information returned from a call besides the message (like OpenAI function invocation) into a string.
+
+For full information on this, see the [section on output parsers](/docs/modules/model_io/output_parsers).
+
+```typescript
+import { CommaSeparatedListOutputParser } from "langchain/output_parsers";
+
+const parser = new CommaSeparatedListOutputParser();
+await parser.invoke("hi, bye");
+// ['hi', 'bye']
+```
+
+## Composing with LCEL
+
+We can now combine all these into one chain.
+This chain will take input variables, pass those to a prompt template to create a prompt, pass the prompt to a language model, and then pass the output through an (optional) output parser.
+This is a convenient way to bundle up a modular piece of logic.
+Let's see it in action!
+
+```typescript
+const chain = chatPrompt.pipe(chatModel).pipe(parser);
+await chain.invoke({ text: "colors" });
+// ['red', 'blue', 'green', 'yellow', 'orange']
+```
+
+Note that we are using the `.pipe()` method to join these components together.
+This `.pipe()` method is powered by the LangChain Expression Language (LCEL) and relies on the universal `Runnable` interface that all of these objects implement.
+To learn more about LCEL, read the documentation [here](/docs/expression_language).
+
+## Conclusion
+
+That's it for getting started with prompts, models, and output parsers! This just covered the surface of what there is to learn. For more information, check out:
+
+- The [conceptual guide](./concepts) for information about the concepts presented here
+- The [prompt section](./prompts) for information on how to work with prompt templates
+- The [LLM section](./llms) for more information on the LLM interface
+- The [ChatModel section](./chat) for more information on the ChatModel interface
+- The [output parser section](./output_parsers) for information about the different types of output parsers.

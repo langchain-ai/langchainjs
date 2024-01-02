@@ -7,4 +7,8 @@ import { ToolInterface } from "@langchain/core/tools";
  */
 export abstract class Toolkit {
   abstract tools: ToolInterface[];
+
+  getTools(): ToolInterface[] {
+    return this.tools;
+  }
 }

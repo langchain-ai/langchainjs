@@ -14,7 +14,7 @@ Source code analysis is one of the most popular LLM applications (e.g., [GitHub 
 
 The pipeline for QA over code follows the [steps we do for document question answering](/docs/use_cases/question_answering/), with some differences:
 
-In particular, we can employ a [splitting strategy](/docs/modules/data_connection/document_transformers/text_splitters/code_splitter) that does a few things:
+In particular, we can employ a [splitting strategy](/docs/modules/data_connection/document_transformers/code_splitter) that does a few things:
 
 - Keeps each top-level function and class in the code is loaded into separate documents.
 - Puts remaining into a separate document.
@@ -41,7 +41,7 @@ import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 ```
 
 ```typescript
-// Define the path to the repo to preform RAG on.
+// Define the path to the repo to perform RAG on.
 const REPO_PATH = "/tmp/test_repo";
 ```
 

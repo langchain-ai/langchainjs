@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.212",
+  "version": "0.0.213",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -79,6 +79,9 @@
     "tools/render.cjs",
     "tools/render.js",
     "tools/render.d.ts",
+    "tools/retriever.cjs",
+    "tools/retriever.js",
+    "tools/retriever.d.ts",
     "tools/sql.cjs",
     "tools/sql.js",
     "tools/sql.d.ts",
@@ -97,9 +100,15 @@
     "chains.cjs",
     "chains.js",
     "chains.d.ts",
+    "chains/combine_documents.cjs",
+    "chains/combine_documents.js",
+    "chains/combine_documents.d.ts",
     "chains/combine_documents/reduce.cjs",
     "chains/combine_documents/reduce.js",
     "chains/combine_documents/reduce.d.ts",
+    "chains/history_aware_retriever.cjs",
+    "chains/history_aware_retriever.js",
+    "chains/history_aware_retriever.d.ts",
     "chains/load.cjs",
     "chains/load.js",
     "chains/load.d.ts",
@@ -112,6 +121,9 @@
     "chains/query_constructor/ir.cjs",
     "chains/query_constructor/ir.js",
     "chains/query_constructor/ir.d.ts",
+    "chains/retrieval.cjs",
+    "chains/retrieval.js",
+    "chains/retrieval.d.ts",
     "chains/sql_db.cjs",
     "chains/sql_db.js",
     "chains/sql_db.d.ts",
@@ -1178,9 +1190,9 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.9.1",
-    "@langchain/community": "~0.0.8",
-    "@langchain/core": "~0.1.3",
-    "@langchain/openai": "~0.0.7",
+    "@langchain/community": "~0.0.12",
+    "@langchain/core": "~0.1.5",
+    "@langchain/openai": "~0.0.9",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
     "js-tiktoken": "^1.0.7",
@@ -1329,6 +1341,11 @@
       "import": "./tools/render.js",
       "require": "./tools/render.cjs"
     },
+    "./tools/retriever": {
+      "types": "./tools/retriever.d.ts",
+      "import": "./tools/retriever.js",
+      "require": "./tools/retriever.cjs"
+    },
     "./tools/sql": {
       "types": "./tools/sql.d.ts",
       "import": "./tools/sql.js",
@@ -1359,10 +1376,20 @@
       "import": "./chains.js",
       "require": "./chains.cjs"
     },
+    "./chains/combine_documents": {
+      "types": "./chains/combine_documents.d.ts",
+      "import": "./chains/combine_documents.js",
+      "require": "./chains/combine_documents.cjs"
+    },
     "./chains/combine_documents/reduce": {
       "types": "./chains/combine_documents/reduce.d.ts",
       "import": "./chains/combine_documents/reduce.js",
       "require": "./chains/combine_documents/reduce.cjs"
+    },
+    "./chains/history_aware_retriever": {
+      "types": "./chains/history_aware_retriever.d.ts",
+      "import": "./chains/history_aware_retriever.js",
+      "require": "./chains/history_aware_retriever.cjs"
     },
     "./chains/load": {
       "types": "./chains/load.d.ts",
@@ -1383,6 +1410,11 @@
       "types": "./chains/query_constructor/ir.d.ts",
       "import": "./chains/query_constructor/ir.js",
       "require": "./chains/query_constructor/ir.cjs"
+    },
+    "./chains/retrieval": {
+      "types": "./chains/retrieval.d.ts",
+      "import": "./chains/retrieval.js",
+      "require": "./chains/retrieval.cjs"
     },
     "./chains/sql_db": {
       "types": "./chains/sql_db.d.ts",
