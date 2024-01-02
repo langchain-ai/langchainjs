@@ -350,6 +350,8 @@
     "../../langchain-core/src/utils/tiktoken.ts",
     "../../langchain-core/src/utils/types.ts",
     "../../langchain-core/src/vectorstores.ts",
+    "../../libs/langchain-anthropic/src/index.ts",
+    "../../libs/langchain-cohere/src/index.ts",
     "../../libs/langchain-community/src/load/index.ts",
     "../../libs/langchain-community/src/load/serializable.ts",
     "../../libs/langchain-community/src/tools/aiplugin.ts",
@@ -506,9 +508,8 @@
     "../../libs/langchain-community/src/memory/motorhead_memory.ts",
     "../../libs/langchain-community/src/memory/zep.ts",
     "../../libs/langchain-community/src/utils/convex.ts",
-    "../../libs/langchain-anthropic/src/index.ts",
     "../../libs/langchain-google-genai/src/index.ts",
-    "../../libs/langchain-openai/src/index.ts",
-    "../../libs/langchain-mistralai/src/index.ts"
+    "../../libs/langchain-mistralai/src/index.ts",
+    "../../libs/langchain-openai/src/index.ts"
   ]
 }
