@@ -1,0 +1,130 @@
+---
+sidebar_position: 3
+---
+
+# Custom chat models
+
+This notebook goes over how to create a custom chat model wrapper, in case you want to use your own chat model or a different wrapper than one that is directly supported in LangChain.
+
+There are a few required things that a chat model needs to implement:
+
+- A `_call` method that takes in a list of messages and call options (which includes things like `stop` sequences), and returns a string.
+- A `_llmType` method that returns a string. Used for logging purposes only.
+- A legacy `_combineLLMOutput` method that will be unnecessary in a future release.
+
+You can also implement the following optional method:
+
+- A `_streamResponseChunks` method that returns an `AsyncIterator` and yields `ChatGenerationChunks`. This allows the LLM to support streaming outputs.
+
+Let’s implement a very simple custom chat model that just echoes back the first `n` characters of the input.
+
+```typescript
+import {
+  SimpleChatModel,
+  type BaseChatModelParams,
+} from "@langchain/core/language_models/chat_models";
+import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import { AIMessageChunk, type BaseMessage } from "@langchain/core/messages";
+import { ChatGenerationChunk } from "@langchain/core/outputs";
+
+export interface CustomChatModelInput extends BaseChatModelParams {
+  n: number;
+}
+
+export class CustomChatModel extends SimpleChatModel {
+  n: number;
+
+  constructor(fields: CustomChatModelInput) {
+    super(fields);
+    this.n = fields.n;
+  }
+
+  _llmType() {
+    return "custom";
+  }
+
+  async _call(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): Promise<string> {
+    if (!messages.length) {
+      throw new Error("No messages provided.");
+    }
+    if (typeof messages[0].content !== "string") {
+      throw new Error("Multimodal messages are not supported.");
+    }
+    return messages[0].content.slice(0, this.n);
+  }
+
+  async *_streamResponseChunks(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    if (!messages.length) {
+      throw new Error("No messages provided.");
+    }
+    if (typeof messages[0].content !== "string") {
+      throw new Error("Multimodal messages are not supported.");
+    }
+    for (const letter of messages[0].content.slice(0, this.n)) {
+      yield new ChatGenerationChunk({
+        message: new AIMessageChunk({
+          content: letter,
+        }),
+        text: letter,
+      });
+      await runManager?.handleLLMNewToken(letter);
+    }
+  }
+
+  _combineLLMOutput() {
+    return {};
+  }
+}
+```
+
+We can now use this as any other chat model:
+
+```typescript
+const chatModel = new CustomChatModel({ n: 4 });
+
+await chatModel.invoke([["human", "I am an LLM"]]);
+```
+
+```
+AIMessage {
+  content: 'I am',
+  additional_kwargs: {}
+}
+```
+
+And support streaming:
+
+```typescript
+const stream = await chatModel.stream([["human", "I am an LLM"]]);
+
+for await (const chunk of stream) {
+  console.log(chunk);
+}
+```
+
+```
+AIMessageChunk {
+  content: 'I',
+  additional_kwargs: {}
+}
+AIMessageChunk {
+  content: ' ',
+  additional_kwargs: {}
+}
+AIMessageChunk {
+  content: 'a',
+  additional_kwargs: {}
+}
+AIMessageChunk {
+  content: 'm',
+  additional_kwargs: {}
+}
+```

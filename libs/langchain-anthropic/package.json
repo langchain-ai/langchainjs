@@ -1,6 +1,6 @@
 {
   "name": "@langchain/anthropic",
-  "version": "0.0.4",
+  "version": "0.0.9",
   "description": "Anthropic integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -25,7 +25,6 @@
     "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
     "clean": "rimraf .turbo/ dist/ && NODE_OPTIONS=--max-old-space-size=4096 node scripts/create-entrypoints.js pre",
     "prepack": "yarn build",
-    "release": "release-it --only-version --config .release-it.json",
     "test": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
     "test:watch": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
     "test:single": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 100000",
@@ -35,8 +34,8 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.10.0",
-    "@langchain/core": "~0.1.0"
+    "@anthropic-ai/sdk": "^0.12.0",
+    "@langchain/core": "~0.1.5"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",

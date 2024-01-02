@@ -1,6 +1,6 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { BaseChain, LLMChain, LLMChainInput } from "../chains/index.js";
 import { AgentStep, ChainValues } from "../schema/index.js";
-import { BaseLanguageModel } from "../base_language/index.js";
 import { Callbacks } from "../callbacks/index.js";
 import { BaseCallbackConfig } from "../callbacks/manager.js";
 
@@ -9,7 +9,7 @@ import { BaseCallbackConfig } from "../callbacks/manager.js";
  */
 export interface LLMEvalChainInput<
   T extends EvalOutputType = EvalOutputType,
-  L extends BaseLanguageModel = BaseLanguageModel
+  L extends BaseLanguageModelInterface = BaseLanguageModelInterface
 > extends LLMChainInput<T, L> {}
 
 /**
@@ -31,7 +31,7 @@ export type EvalOutputType = Record<string, string | number | boolean>;
  */
 export abstract class LLMEvalChain<
   T extends EvalOutputType = EvalOutputType,
-  L extends BaseLanguageModel = BaseLanguageModel
+  L extends BaseLanguageModelInterface = BaseLanguageModelInterface
 > extends LLMChain<T, L> {
   requiresInput?: boolean = false;
 
@@ -149,7 +149,7 @@ export interface LLMTrajectoryEvaluatorArgs {
  */
 export abstract class LLMStringEvaluator<
   T extends EvalOutputType = EvalOutputType,
-  L extends BaseLanguageModel = BaseLanguageModel
+  L extends BaseLanguageModelInterface = BaseLanguageModelInterface
 > extends LLMEvalChain<T, L> {
   /**
    * The name of the evaluation.

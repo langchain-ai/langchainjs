@@ -1,14 +1,14 @@
+import type { VectorStoreRetrieverInterface } from "@langchain/core/vectorstores";
 import { BaseChatPromptTemplate } from "../../prompts/chat.js";
+import { SerializedBasePromptTemplate } from "../../prompts/serde.js";
 import {
   BaseMessage,
   HumanMessage,
   PartialValues,
   SystemMessage,
 } from "../../schema/index.js";
-import { VectorStoreRetriever } from "../../vectorstores/base.js";
-import { ObjectTool } from "./schema.js";
 import { getPrompt } from "./prompt_generator.js";
-import { SerializedBasePromptTemplate } from "../../prompts/serde.js";
+import { ObjectTool } from "./schema.js";
 
 /**
  * Interface for the input parameters of the AutoGPTPrompt class.
@@ -90,7 +90,7 @@ export class AutoGPTPrompt
     user_input,
   }: {
     goals: string[];
-    memory: VectorStoreRetriever;
+    memory: VectorStoreRetrieverInterface;
     messages: BaseMessage[];
     user_input: string;
   }) {
@@ -110,16 +110,20 @@ export class AutoGPTPrompt
     const relevantDocs = await memory.getRelevantDocuments(
       JSON.stringify(previousMessages.slice(-10))
     );
-    const relevantMemory = relevantDocs.map((d) => d.pageContent);
+    const relevantMemory = relevantDocs.map(
+      (d: { pageContent: string }) => d.pageContent
+    );
     let relevantMemoryTokens = await relevantMemory.reduce(
-      async (acc, doc) => (await acc) + (await this.tokenCounter(doc)),
+      async (acc: Promise<number>, doc: string) =>
+        (await acc) + (await this.tokenCounter(doc)),
       Promise.resolve(0)
     );
 
     while (usedTokens + relevantMemoryTokens > 2500) {
       relevantMemory.pop();
       relevantMemoryTokens = await relevantMemory.reduce(
-        async (acc, doc) => (await acc) + (await this.tokenCounter(doc)),
+        async (acc: Promise<number>, doc: string) =>
+          (await acc) + (await this.tokenCounter(doc)),
         Promise.resolve(0)
       );
     }
@@ -132,7 +136,7 @@ export class AutoGPTPrompt
       throw new Error("Non-string message content is not supported.");
     }
     const usedTokensWithMemory =
-      (await usedTokens) + (await this.tokenCounter(memoryMessage.content));
+      usedTokens + (await this.tokenCounter(memoryMessage.content));
     const historicalMessages: BaseMessage[] = [];
 
     for (const message of previousMessages.slice(-10).reverse()) {

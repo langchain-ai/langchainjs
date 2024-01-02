@@ -1,7 +1,10 @@
 import * as uuid from "uuid";
 
+import {
+  type VectorStoreInterface,
+  type VectorStoreRetrieverInterface,
+} from "@langchain/core/vectorstores";
 import { Document } from "../document.js";
-import { VectorStore, VectorStoreRetriever } from "../vectorstores/base.js";
 import { TextSplitter } from "../text_splitter.js";
 import {
   MultiVectorRetriever,
@@ -19,7 +22,7 @@ export type ParentDocumentRetrieverFields = MultiVectorRetrieverInput & {
    * A custom retriever to use when retrieving instead of
    * the `.similaritySearch` method of the vectorstore.
    */
-  childDocumentRetriever?: VectorStoreRetriever<VectorStore>;
+  childDocumentRetriever?: VectorStoreRetrieverInterface<VectorStoreInterface>;
 };
 
 /**
@@ -59,7 +62,7 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
 
   lc_namespace = ["langchain", "retrievers", "parent_document"];
 
-  vectorstore: VectorStore;
+  vectorstore: VectorStoreInterface;
 
   protected childSplitter: TextSplitter;
 
@@ -71,7 +74,9 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
 
   protected parentK?: number;
 
-  childDocumentRetriever: VectorStoreRetriever<VectorStore> | undefined;
+  childDocumentRetriever:
+    | VectorStoreRetrieverInterface<VectorStoreInterface>
+    | undefined;
 
   constructor(fields: ParentDocumentRetrieverFields) {
     super(fields);

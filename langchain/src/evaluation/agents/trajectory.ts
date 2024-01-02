@@ -1,3 +1,4 @@
+import type { StructuredToolInterface } from "@langchain/core/tools";
 import { BaseLLMOutputParser } from "../../schema/output_parser.js";
 import {
   AgentTrajectoryEvaluator,
@@ -16,7 +17,6 @@ import {
 import { Callbacks } from "../../callbacks/index.js";
 import { BaseCallbackConfig } from "../../callbacks/manager.js";
 import { BasePromptTemplate } from "../../prompts/index.js";
-import { StructuredTool } from "../../tools/index.js";
 import { EVAL_CHAT_PROMPT, TOOL_FREE_EVAL_CHAT_PROMPT } from "./prompt.js";
 import { BaseChatModel } from "../../chat_models/base.js";
 
@@ -94,7 +94,7 @@ export class TrajectoryEvalChain extends AgentTrajectoryEvaluator {
 
   static resolveTrajectoryPrompt(
     prompt?: BasePromptTemplate | undefined,
-    agentTools?: StructuredTool[]
+    agentTools?: StructuredToolInterface[]
   ) {
     let _prompt;
     if (prompt) {
@@ -113,7 +113,7 @@ export class TrajectoryEvalChain extends AgentTrajectoryEvaluator {
    *
    * @returns The description of the agent tools.
    */
-  static toolsDescription(agentTools: StructuredTool[]): string {
+  static toolsDescription(agentTools: StructuredToolInterface[]): string {
     return agentTools
       .map(
         (tool, i) =>
@@ -130,7 +130,7 @@ export class TrajectoryEvalChain extends AgentTrajectoryEvaluator {
    */
   static async fromLLM(
     llm: BaseChatModel,
-    agentTools?: StructuredTool[],
+    agentTools?: StructuredToolInterface[],
     chainOptions?: Partial<Omit<LLMEvalChainInput, "llm">>
   ) {
     let prompt = this.resolveTrajectoryPrompt(chainOptions?.prompt, agentTools);

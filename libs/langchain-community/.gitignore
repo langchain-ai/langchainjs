@@ -58,6 +58,9 @@ tools/serpapi.d.ts
 tools/serper.cjs
 tools/serper.js
 tools/serper.d.ts
+tools/tavily_search.cjs
+tools/tavily_search.js
+tools/tavily_search.d.ts
 tools/wikipedia_query_run.cjs
 tools/wikipedia_query_run.js
 tools/wikipedia_query_run.d.ts
@@ -109,6 +112,9 @@ embeddings/ollama.d.ts
 embeddings/tensorflow.cjs
 embeddings/tensorflow.js
 embeddings/tensorflow.d.ts
+embeddings/togetherai.cjs
+embeddings/togetherai.js
+embeddings/togetherai.d.ts
 embeddings/voyage.cjs
 embeddings/voyage.js
 embeddings/voyage.d.ts
@@ -181,6 +187,12 @@ llms/yandex.d.ts
 vectorstores/analyticdb.cjs
 vectorstores/analyticdb.js
 vectorstores/analyticdb.d.ts
+vectorstores/astradb.cjs
+vectorstores/astradb.js
+vectorstores/astradb.d.ts
+vectorstores/azure_cosmosdb.cjs
+vectorstores/azure_cosmosdb.js
+vectorstores/azure_cosmosdb.d.ts
 vectorstores/cassandra.cjs
 vectorstores/cassandra.js
 vectorstores/cassandra.d.ts
@@ -355,6 +367,9 @@ retrievers/supabase.d.ts
 retrievers/tavily_search_api.cjs
 retrievers/tavily_search_api.js
 retrievers/tavily_search_api.d.ts
+retrievers/vectara_summary.cjs
+retrievers/vectara_summary.js
+retrievers/vectara_summary.d.ts
 retrievers/zep.cjs
 retrievers/zep.js
 retrievers/zep.d.ts

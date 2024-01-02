@@ -1,4 +1,8 @@
-import { BaseLanguageModel } from "../base_language/index.js";
+import type {
+  StructuredToolInterface,
+  ToolInterface,
+} from "@langchain/core/tools";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { CallbackManager, Callbacks } from "../callbacks/manager.js";
 import { LLMChain } from "../chains/llm_chain.js";
 import { BasePromptTemplate } from "../prompts/base.js";
@@ -10,7 +14,6 @@ import {
   ChainValues,
 } from "../schema/index.js";
 import { Serializable } from "../load/serializable.js";
-import { StructuredTool, Tool } from "../tools/base.js";
 import {
   AgentActionOutputParser,
   AgentInput,
@@ -44,7 +47,7 @@ class ParseError extends Error {
  * functionality for agents, such as handling inputs and outputs.
  */
 export abstract class BaseAgent extends Serializable {
-  declare ToolType: StructuredTool;
+  declare ToolType: StructuredToolInterface;
 
   abstract get inputKeys(): string[];
 
@@ -164,6 +167,7 @@ export class RunnableAgent extends BaseMultiActionAgent {
 
   lc_namespace = ["langchain", "agents", "runnable"];
 
+  // TODO: Rename input to "intermediate_steps"
   runnable: Runnable<
     ChainValues & { steps: AgentStep[] },
     AgentAction[] | AgentAction | AgentFinish
@@ -365,7 +369,7 @@ export abstract class Agent extends BaseSingleActionAgent {
    * @returns A PromptTemplate assembled from the given tools and fields.
    * */
   static createPrompt(
-    _tools: StructuredTool[],
+    _tools: StructuredToolInterface[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     _fields?: Record<string, any>
   ): BasePromptTemplate {
@@ -374,8 +378,8 @@ export abstract class Agent extends BaseSingleActionAgent {
 
   /** Construct an agent from an LLM and a list of tools */
   static fromLLMAndTools(
-    _llm: BaseLanguageModel,
-    _tools: StructuredTool[],
+    _llm: BaseLanguageModelInterface,
+    _tools: StructuredToolInterface[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     _args?: AgentArgs
   ): Agent {
@@ -385,7 +389,7 @@ export abstract class Agent extends BaseSingleActionAgent {
   /**
    * Validate that appropriate tools are passed in
    */
-  static validateTools(_tools: StructuredTool[]): void {}
+  static validateTools(_tools: StructuredToolInterface[]): void {}
 
   _stop(): string[] {
     return [`\n${this.observationPrefix()}`];
@@ -502,7 +506,10 @@ export abstract class Agent extends BaseSingleActionAgent {
    * Load an agent from a json-like object describing it.
    */
   static async deserialize(
-    data: SerializedAgent & { llm?: BaseLanguageModel; tools?: Tool[] }
+    data: SerializedAgent & {
+      llm?: BaseLanguageModelInterface;
+      tools?: ToolInterface[];
+    }
   ): Promise<Agent> {
     switch (data._type) {
       case "zero-shot-react-description": {

@@ -1,0 +1,10 @@
+# Access intermediate steps
+
+In order to get more visibility into what an agent is doing, we can also return intermediate steps. This comes in the form of an extra key in the return value.
+
+All you need to do is initialize the AgentExecutor with `return_intermediate_steps=True`:
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/agents/intermediate_steps.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>

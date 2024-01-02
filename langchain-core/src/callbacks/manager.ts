@@ -21,7 +21,7 @@ import {
 } from "../tracers/tracer_langchain.js";
 import { consumeCallback } from "./promises.js";
 import { Serialized } from "../load/serializable.js";
-import { Document } from "../documents/document.js";
+import type { DocumentInterface } from "../documents/document.js";
 
 type BaseCallbackManagerMethods = {
   [K in keyof CallbackHandlerMethods]?: (
@@ -61,13 +61,6 @@ export interface BaseCallbackConfig {
    * Tags are passed to all callbacks, metadata is passed to handle*Start callbacks.
    */
   callbacks?: Callbacks;
-
-  /**
-   * Runtime values for attributes previously made configurable on this Runnable,
-   * or sub-Runnables.
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  configurable?: Record<string, any>;
 }
 
 export function parseCallbackConfigArg(
@@ -153,7 +146,7 @@ export class CallbackManagerForRetrieverRun
     return manager;
   }
 
-  async handleRetrieverEnd(documents: Document[]): Promise<void> {
+  async handleRetrieverEnd(documents: DocumentInterface[]): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>
         consumeCallback(async () => {

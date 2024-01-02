@@ -1,10 +1,61 @@
-import { BaseOutputParser, OutputParserException } from "./base.js";
+import { BaseMessage } from "../messages/index.js";
+import { OutputParserException } from "./base.js";
+import { BaseTransformOutputParser } from "./transform.js";
 
 /**
  * Class to parse the output of an LLM call to a list.
  * @augments BaseOutputParser
  */
-export abstract class ListOutputParser extends BaseOutputParser<string[]> {}
+export abstract class ListOutputParser extends BaseTransformOutputParser<
+  string[]
+> {
+  re?: RegExp;
+
+  async *_transform(
+    inputGenerator: AsyncGenerator<string | BaseMessage>
+  ): AsyncGenerator<string[]> {
+    let buffer = "";
+    for await (const input of inputGenerator) {
+      if (typeof input === "string") {
+        // add current chunk to buffer
+        buffer += input;
+      } else {
+        // extract message content and add to buffer
+        buffer += input.content;
+      }
+      // get parts in buffer
+      if (!this.re) {
+        const parts = await this.parse(buffer);
+        if (parts.length > 1) {
+          // if there are multiple parts, yield all but the last one
+          for (const part of parts.slice(0, -1)) {
+            yield [part];
+          }
+          // keep the last part in the buffer
+          buffer = parts[parts.length - 1];
+        }
+      } else {
+        // if there is a regex, get all matches
+        const matches = [...buffer.matchAll(this.re)];
+        if (matches.length > 1) {
+          let doneIdx = 0;
+          // if there are multiple matches, yield all but the last one
+          for (const match of matches.slice(0, -1)) {
+            yield [match[1]];
+            doneIdx += (match.index ?? 0) + match[0].length;
+          }
+          // keep the last match in the buffer
+          buffer = buffer.slice(doneIdx);
+        }
+      }
+    }
+
+    // yield the last part
+    for (const part of await this.parse(buffer)) {
+      yield [part];
+    }
+  }
+}
 
 /**
  * Class to parse the output of an LLM call as a comma-separated list.
@@ -102,5 +153,45 @@ export class CustomListOutputParser extends ListOutputParser {
     }items separated by "${this.separator}" (eg: \`foo${this.separator} bar${
       this.separator
     } baz\`)`;
+  }
+}
+
+export class NumberedListOutputParser extends ListOutputParser {
+  static lc_name() {
+    return "NumberedListOutputParser";
+  }
+
+  lc_namespace = ["langchain_core", "output_parsers", "list"];
+
+  lc_serializable = true;
+
+  getFormatInstructions(): string {
+    return `Your response should be a numbered list with each item on a new line. For example: \n\n1. foo\n\n2. bar\n\n3. baz`;
+  }
+
+  re = /\d+\.\s([^\n]+)/g;
+
+  async parse(text: string): Promise<string[]> {
+    return [...(text.matchAll(this.re) ?? [])].map((m) => m[1]);
+  }
+}
+
+export class MarkdownListOutputParser extends ListOutputParser {
+  static lc_name() {
+    return "NumberedListOutputParser";
+  }
+
+  lc_namespace = ["langchain_core", "output_parsers", "list"];
+
+  lc_serializable = true;
+
+  getFormatInstructions(): string {
+    return `Your response should be a numbered list with each item on a new line. For example: \n\n1. foo\n\n2. bar\n\n3. baz`;
+  }
+
+  re = /^\s*[-*]\s([^\n]+)$/gm;
+
+  async parse(text: string): Promise<string[]> {
+    return [...(text.matchAll(this.re) ?? [])].map((m) => m[1]);
   }
 }

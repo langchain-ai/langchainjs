@@ -73,3 +73,62 @@ test("Test Google AI multimodal generation", async () => {
   console.log(JSON.stringify(res, null, 2));
   expect(res).toBeTruthy();
 });
+
+test("Test Google AI handleLLMNewToken callback", async () => {
+  const model = new ChatGoogleGenerativeAI({});
+  let tokens = "";
+  const res = await model.call(
+    [new HumanMessage("what is 1 + 1?")],
+    undefined,
+    [
+      {
+        handleLLMNewToken(token: string) {
+          tokens += token;
+        },
+      },
+    ]
+  );
+  console.log({ tokens });
+  const responseContent = typeof res.content === "string" ? res.content : "";
+  expect(tokens).toBe(responseContent);
+});
+
+test("Test Google AI handleLLMNewToken callback with streaming", async () => {
+  const model = new ChatGoogleGenerativeAI({});
+  let tokens = "";
+  const res = await model.stream([new HumanMessage("what is 1 + 1?")], {
+    callbacks: [
+      {
+        handleLLMNewToken(token: string) {
+          tokens += token;
+        },
+      },
+    ],
+  });
+  console.log({ tokens });
+  let responseContent = "";
+  for await (const streamItem of res) {
+    responseContent += streamItem.content;
+  }
+  console.log({ tokens });
+  expect(tokens).toBe(responseContent);
+});
+
+test("Test Google AI in streaming mode", async () => {
+  const model = new ChatGoogleGenerativeAI({ streaming: true });
+  let tokens = "";
+  let nrNewTokens = 0;
+  const res = await model.call([new HumanMessage("Write a haiku?")], {
+    callbacks: [
+      {
+        handleLLMNewToken(token: string) {
+          nrNewTokens += 1;
+          tokens += token;
+        },
+      },
+    ],
+  });
+  console.log({ tokens, nrNewTokens });
+  expect(nrNewTokens > 1).toBe(true);
+  expect(res.content).toBe(tokens);
+});

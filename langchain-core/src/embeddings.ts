@@ -6,11 +6,30 @@ import { AsyncCaller, AsyncCallerParams } from "./utils/async_caller.js";
  */
 export type EmbeddingsParams = AsyncCallerParams;
 
+export interface EmbeddingsInterface {
+  /**
+   * An abstract method that takes an array of documents as input and
+   * returns a promise that resolves to an array of vectors for each
+   * document.
+   * @param documents An array of documents to be embedded.
+   * @returns A promise that resolves to an array of vectors for each document.
+   */
+  embedDocuments(documents: string[]): Promise<number[][]>;
+
+  /**
+   * An abstract method that takes a single document as input and returns a
+   * promise that resolves to a vector for the query document.
+   * @param document A single document to be embedded.
+   * @returns A promise that resolves to a vector for the query document.
+   */
+  embedQuery(document: string): Promise<number[]>;
+}
+
 /**
  * An abstract class that provides methods for embedding documents and
  * queries using LangChain.
  */
-export abstract class Embeddings {
+export abstract class Embeddings implements EmbeddingsInterface {
   /**
    * The async caller should be used by subclasses to make any async calls,
    * which will thus benefit from the concurrency and retry logic.

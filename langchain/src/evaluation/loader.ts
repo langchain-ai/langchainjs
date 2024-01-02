@@ -1,4 +1,5 @@
-import { BaseLanguageModel } from "../base_language/index.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import type { StructuredToolInterface } from "@langchain/core/tools";
 import {
   CriteriaLike,
   CriteriaEvalChain,
@@ -6,7 +7,6 @@ import {
 } from "./criteria/index.js";
 import { ChatOpenAI } from "../chat_models/openai.js";
 import type { EvaluatorType } from "./types.js";
-import { StructuredTool } from "../tools/index.js";
 import { LLMEvalChainInput } from "./base.js";
 import {
   LabeledPairwiseStringEvalChain,
@@ -21,7 +21,7 @@ import { TrajectoryEvalChain } from "./agents/index.js";
 import { BaseChatModel } from "../chat_models/base.js";
 
 export type LoadEvaluatorOptions = EmbeddingDistanceEvalChainInput & {
-  llm?: BaseLanguageModel;
+  llm?: BaseLanguageModelInterface;
 
   chainOptions?: Partial<Omit<LLMEvalChainInput, "llm">>;
   /**
@@ -32,7 +32,7 @@ export type LoadEvaluatorOptions = EmbeddingDistanceEvalChainInput & {
   /**
    * A list of tools available to the agent, for TrajectoryEvalChain.
    */
-  agentTools?: StructuredTool[];
+  agentTools?: StructuredToolInterface[];
 };
 
 /**

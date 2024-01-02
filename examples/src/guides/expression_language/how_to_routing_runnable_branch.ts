@@ -15,7 +15,7 @@ Do not respond with more than one word.
 Classification:`);
 
 const model = new ChatAnthropic({
-  modelName: "claude-2",
+  modelName: "claude-2.1",
 });
 
 const classificationChain = RunnableSequence.from([

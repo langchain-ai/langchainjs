@@ -1,6 +1,6 @@
 {
   "name": "@langchain/openai",
-  "version": "0.0.5",
+  "version": "0.0.9",
   "description": "OpenAI integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -25,17 +25,17 @@
     "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
     "clean": "rimraf .turbo/ dist/ && NODE_OPTIONS=--max-old-space-size=4096 node scripts/create-entrypoints.js pre",
     "prepack": "yarn build",
-    "release": "release-it --only-version --config .release-it.json",
     "test": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
     "test:watch": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
     "test:single": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 100000",
+    "test:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
     "format": "prettier --write \"src\"",
     "format:check": "prettier --check \"src\""
   },
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1.0",
+    "@langchain/core": "~0.1.5",
     "js-tiktoken": "^1.0.7",
     "openai": "^4.19.0",
     "zod": "^3.22.3",

@@ -3,7 +3,7 @@ import {
   MaxMarginalRelevanceSearchOptions,
   VectorStore,
 } from "@langchain/core/vectorstores";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 
@@ -52,7 +52,10 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     return "mongodb_atlas";
   }
 
-  constructor(embeddings: Embeddings, args: MongoDBAtlasVectorSearchLibArgs) {
+  constructor(
+    embeddings: EmbeddingsInterface,
+    args: MongoDBAtlasVectorSearchLibArgs
+  ) {
     super(embeddings, args);
     this.collection = args.collection;
     this.indexName = args.indexName ?? "default";
@@ -225,7 +228,7 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: MongoDBAtlasVectorSearchLibArgs
   ): Promise<MongoDBAtlasVectorSearch> {
     const docs: Document[] = [];
@@ -251,7 +254,7 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: MongoDBAtlasVectorSearchLibArgs
   ): Promise<MongoDBAtlasVectorSearch> {
     const instance = new this(embeddings, dbConfig);

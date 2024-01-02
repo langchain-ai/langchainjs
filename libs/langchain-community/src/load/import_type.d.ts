@@ -94,6 +94,12 @@ export interface OptionalImportMap {
   "@langchain/community/vectorstores/analyticdb"?:
     | typeof import("../vectorstores/analyticdb.js")
     | Promise<typeof import("../vectorstores/analyticdb.js")>;
+  "@langchain/community/vectorstores/astradb"?:
+    | typeof import("../vectorstores/astradb.js")
+    | Promise<typeof import("../vectorstores/astradb.js")>;
+  "@langchain/community/vectorstores/azure_cosmosdb"?:
+    | typeof import("../vectorstores/azure_cosmosdb.js")
+    | Promise<typeof import("../vectorstores/azure_cosmosdb.js")>;
   "@langchain/community/vectorstores/cassandra"?:
     | typeof import("../vectorstores/cassandra.js")
     | Promise<typeof import("../vectorstores/cassandra.js")>;
@@ -235,6 +241,9 @@ export interface OptionalImportMap {
   "@langchain/community/retrievers/supabase"?:
     | typeof import("../retrievers/supabase.js")
     | Promise<typeof import("../retrievers/supabase.js")>;
+  "@langchain/community/retrievers/vectara_summary"?:
+    | typeof import("../retrievers/vectara_summary.js")
+    | Promise<typeof import("../retrievers/vectara_summary.js")>;
   "@langchain/community/retrievers/zep"?:
     | typeof import("../retrievers/zep.js")
     | Promise<typeof import("../retrievers/zep.js")>;
@@ -311,6 +320,7 @@ export interface SecretMap {
   AWS_SECRETE_ACCESS_KEY?: string;
   AWS_SECRET_ACCESS_KEY?: string;
   AWS_SESSION_TOKEN?: string;
+  AZURE_COSMOSDB_CONNECTION_STRING?: string;
   BAIDU_API_KEY?: string;
   BAIDU_SECRET_KEY?: string;
   BEDROCK_AWS_ACCESS_KEY_ID?: string;
