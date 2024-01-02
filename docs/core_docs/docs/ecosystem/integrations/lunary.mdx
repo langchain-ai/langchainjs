@@ -8,8 +8,8 @@ This page covers how to use [Lunary](https://lunary.ai?utm_source=langchain&utm_
 
 Lunary is an [open-source](https://github.com/lunary-ai/lunary) platform that provides observability (tracing, analytics, feedback tracking), prompt templates management and evaluation for AI apps.
 
-<video controls width='100%' >
-  <source src='https://lunary.ai/videos/demo-annotated.mp4'/>
+<video controls width="100%">
+  <source src="https://lunary.ai/videos/demo-annotated.mp4" />
 </video>
 
 ## Installation
@@ -35,7 +35,7 @@ LUNARY_APP_ID="..."
 
 If you prefer not to use environment variables, you can set your app ID explictly like this:
 
-import LunaryCustomAppId from "@examples/callbacks/lunary_custom_app_id.ts"
+import LunaryCustomAppId from "@examples/callbacks/lunary_custom_app_id.ts";
 
 <CodeBlock language="typescript">{LunaryCustomAppId}</CodeBlock>
 
@@ -43,17 +43,15 @@ You can now use the callback handler with LLM calls, chains and agents.
 
 ## Quick Start
 
-
-import LunaryQuickstart from "@examples/callbacks/lunary_quickstart.ts"
+import LunaryQuickstart from "@examples/callbacks/lunary_quickstart.ts";
 
 <CodeBlock language="typescript">{LunaryQuickstart}</CodeBlock>
-
 
 ## LangChain Agent Tracing
 
 When tracing chains or agents, make sure to include the callback at the run level so that all sub LLM calls & chain runs are reported as well.
 
-import LunaryLangchainAgent from "@examples/callbacks/lunary_langchain_agent.ts"
+import LunaryLangchainAgent from "@examples/callbacks/lunary_langchain_agent.ts";
 
 <CodeBlock language="typescript">{LunaryLangchainAgent}</CodeBlock>
 
@@ -61,7 +59,7 @@ import LunaryLangchainAgent from "@examples/callbacks/lunary_langchain_agent.ts"
 
 You can track users by adding `userId` and `userProps` to the metadata of your calls:
 
-import LunaryUsers from "@examples/callbacks/lunary_users.ts"
+import LunaryUsers from "@examples/callbacks/lunary_users.ts";
 
 <CodeBlock language="typescript">{LunaryUsers}</CodeBlock>
 
@@ -69,19 +67,17 @@ import LunaryUsers from "@examples/callbacks/lunary_users.ts"
 
 You can tag calls with `tags`:
 
-import LunaryTags from "@examples/callbacks/lunary_tags.ts"
+import LunaryTags from "@examples/callbacks/lunary_tags.ts";
 
 <CodeBlock language="typescript">{LunaryTags}</CodeBlock>
-
 
 ## Usage with custom agents
 
 You can use the callback handler combined with the `lunary` module to track custom agents that partially use LangChain:
 
-import LunaryCustomAgent from "@examples/callbacks/lunary_custom_agent"
+import LunaryCustomAgent from "@examples/callbacks/lunary_custom_agent";
 
 <CodeBlock language="typescript">{LunaryCustomAgent}</CodeBlock>
-
 
 ## Full documentation
 
