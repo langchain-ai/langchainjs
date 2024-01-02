@@ -17,7 +17,9 @@ export function logVersion010MigrationWarning({
       `and import from "${newPackageName}${
         newEntrypointName === undefined
           ? `/${oldEntrypointName}`
-          : newEntrypointName
+          : newEntrypointName.length > 0
+          ? `/${newEntrypointName}`
+          : ""
       }".`,
       ``,
       `This will be mandatory after the next "langchain" minor version bump to 0.2.`,

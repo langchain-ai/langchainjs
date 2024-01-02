@@ -35,6 +35,7 @@ export interface ZapierNLAWrapperParams extends AsyncCallerParams {
 }
 
 /**
+ * @deprecated Zapier has sunsetted the NLA API.
  * A wrapper class for Zapier's Natural Language Actions (NLA). It
  * provides an interface to interact with the 5k+ apps and 20k+ actions on
  * Zapier's platform through a natural language API interface. This
@@ -246,6 +247,7 @@ export class ZapierNLAWrapper extends Serializable {
 }
 
 /**
+ * @deprecated Zapier has sunsetted the NLA API.
  * A tool that uses the `ZapierNLAWrapper` to run a specific action. It
  * takes in the `ZapierNLAWrapper` instance, an action ID, a description,
  * a schema for the parameters, and optionally the parameters themselves.
