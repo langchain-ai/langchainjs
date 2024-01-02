@@ -17,6 +17,14 @@ The `RetrievalQAChain` is a chain that combines a `Retriever` and a QA chain (de
 
 In the below example, we are using a `VectorStore` as the `Retriever`. By default, the `StuffDocumentsChain` is used as the `QA` chain.
 
+:::tip
+See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
+:::
+
+```bash npm2yarn
+npm install @langchain/community
+```
+
 <CodeBlock language="typescript">{RetrievalQAExample}</CodeBlock>
 
 ## Custom `QA` chain

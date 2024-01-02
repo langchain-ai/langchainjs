@@ -18,6 +18,14 @@ Looking for the older, non-LCEL version? Click [here](/docs/modules/chains/popul
 
 ## Usage
 
+:::tip
+See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
+:::
+
+```bash npm2yarn
+npm install @langchain/community
+```
+
 In the below example, we are using a `VectorStore` as the `Retriever`, along with a `RunnableSequence` to do question answering.
 We create a `ChatPromptTemplate` which contains our base system prompt and an input variable for the `question`.
 

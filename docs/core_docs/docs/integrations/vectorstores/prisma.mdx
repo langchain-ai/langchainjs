@@ -71,6 +71,14 @@ npx prisma migrate dev
 
 ## Usage
 
+:::tip
+See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
+:::
+
+```bash npm2yarn
+npm install @langchain/community
+```
+
 :::warning
 Table names and column names (in fields such as `tableName`, `vectorColumnName`, `columns` and `filter`) are passed into SQL queries directly without parametrisation.
 These fields must be sanitized beforehand to avoid SQL injection.

@@ -70,21 +70,15 @@ This assumes you're using Node, but you can swap in another integration if neces
 
 First, install the required dependency:
 
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
 import CodeBlock from "@theme/CodeBlock";
 
-<Tabs>
-  <TabItem value="npm" label="npm" default>
-    <CodeBlock language="bash">npm install -S hnswlib-node</CodeBlock>
-  </TabItem>
-  <TabItem value="yarn" label="Yarn">
-    <CodeBlock language="bash">yarn add hnswlib-node</CodeBlock>
-  </TabItem>
-  <TabItem value="pnpm" label="pnpm">
-    <CodeBlock language="bash">pnpm add hnswlib-node</CodeBlock>
-  </TabItem>
-</Tabs>
+:::tip
+See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
+:::
+
+```bash npm2yarn
+npm install hnswlib-node @langchain/community
+```
 
 You can download the `state_of_the_union.txt` file [here](https://github.com/langchain-ai/langchain/blob/master/docs/docs/modules/state_of_the_union.txt).
 
