@@ -1,7 +1,7 @@
 {
   "imports": {
     "langchain/": "npm:langchain/",
-    "@langchain/core/": "npm:langchain/core/",
+    "@langchain/core/": "npm:@langchain/core/",
     "@langchain/community/": "npm:@langchain/community/",
     "langchain/openai": "npm:@langchain/openai",
     "langchain/openai/": "npm:@langchain/openai/",
