@@ -3,17 +3,17 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 import { JsonSchema7Type } from "zod-to-json-schema/src/parseDef.js";
 
 import { Validator } from "@langchain/core/utils/json_schema";
-import { LLMChain, LLMChainInput } from "../llm_chain.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
-import { BasePromptTemplate } from "../../prompts/index.js";
+import { ChatOpenAI } from "@langchain/openai";
+import { BasePromptTemplate } from "@langchain/core/prompts";
 import {
   BaseLLMOutputParser,
   OutputParserException,
-} from "../../schema/output_parser.js";
+} from "@langchain/core/output_parsers";
+import { ChatGeneration } from "@langchain/core/outputs";
+import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
+import type { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
+import { LLMChain, type LLMChainInput } from "../llm_chain.js";
 import { OutputFunctionsParser } from "../../output_parsers/openai_functions.js";
-import { ChatGeneration } from "../../schema/index.js";
-import { BaseChatModel } from "../../chat_models/base.js";
-import { BaseFunctionCallOptions } from "../../base_language/index.js";
 
 /**
  * Type representing the input for creating a structured output chain. It
@@ -24,11 +24,27 @@ import { BaseFunctionCallOptions } from "../../base_language/index.js";
 export type StructuredOutputChainInput<
   T extends z.AnyZodObject = z.AnyZodObject
 > = Omit<LLMChainInput, "outputParser" | "llm"> & {
-  outputSchema: JsonSchema7Type;
+  outputSchema?: JsonSchema7Type;
   prompt: BasePromptTemplate;
   llm?: BaseChatModel<BaseFunctionCallOptions>;
   zodSchema?: T;
 };
+
+export type FunctionCallStructuredOutputParserFields<
+  T extends z.AnyZodObject = z.AnyZodObject
+> = {
+  jsonSchema?: JsonSchema7Type;
+  zodSchema?: T;
+};
+
+function isJsonSchema7Type(
+  x: JsonSchema7Type | FunctionCallStructuredOutputParserFields
+): x is JsonSchema7Type {
+  return (
+    (x as FunctionCallStructuredOutputParserFields).jsonSchema === undefined &&
+    (x as FunctionCallStructuredOutputParserFields).zodSchema === undefined
+  );
+}
 
 /**
  * Class that extends the BaseLLMOutputParser class. It provides
@@ -41,11 +57,34 @@ export class FunctionCallStructuredOutputParser<
 
   protected functionOutputParser = new OutputFunctionsParser();
 
-  protected jsonSchemaValidator: Validator;
+  protected jsonSchemaValidator?: Validator;
 
-  constructor(public schema: JsonSchema7Type, public zodSchema?: T) {
-    super();
-    this.jsonSchemaValidator = new Validator(schema, "7");
+  protected zodSchema?: T;
+
+  constructor(fieldsOrSchema: JsonSchema7Type);
+
+  constructor(fieldsOrSchema: FunctionCallStructuredOutputParserFields<T>);
+
+  constructor(
+    fieldsOrSchema:
+      | JsonSchema7Type
+      | FunctionCallStructuredOutputParserFields<T>
+  ) {
+    let fields;
+    if (isJsonSchema7Type(fieldsOrSchema)) {
+      fields = { jsonSchema: fieldsOrSchema };
+    } else {
+      fields = fieldsOrSchema;
+    }
+    if (fields.jsonSchema === undefined && fields.zodSchema === undefined) {
+      throw new Error(`Must provide one of "jsonSchema" or "zodSchema".`);
+    }
+    super(fields);
+    if (fields.jsonSchema !== undefined) {
+      this.jsonSchemaValidator = new Validator(fields.jsonSchema, "7");
+    } else {
+      this.zodSchema = fields.zodSchema;
+    }
   }
 
   /**
@@ -80,16 +119,21 @@ export class FunctionCallStructuredOutputParser<
           initialResult
         );
       }
-    }
-    const result = this.jsonSchemaValidator.validate(parsedResult);
-    if (result.valid) {
-      return parsedResult;
+    } else if (this.jsonSchemaValidator !== undefined) {
+      const result = this.jsonSchemaValidator.validate(parsedResult);
+      if (result.valid) {
+        return parsedResult;
+      } else {
+        throw new OutputParserException(
+          `Failed to parse. Text: "${initialResult}". Error: ${JSON.stringify(
+            result.errors
+          )}`,
+          initialResult
+        );
+      }
     } else {
-      throw new OutputParserException(
-        `Failed to parse. Text: "${initialResult}". Error: ${JSON.stringify(
-          result.errors
-        )}`,
-        initialResult
+      throw new Error(
+        "This parser requires an input JSON Schema or an input Zod schema."
       );
     }
   }
@@ -112,6 +156,9 @@ export function createStructuredOutputChain<
     zodSchema,
     ...rest
   } = input;
+  if (outputSchema === undefined && zodSchema === undefined) {
+    throw new Error(`Must provide one of "outputSchema" or "zodSchema".`);
+  }
   const functionName = "output_formatter";
   return new LLMChain({
     llm,
@@ -129,10 +176,10 @@ export function createStructuredOutputChain<
       },
     },
     outputKey,
-    outputParser: new FunctionCallStructuredOutputParser<T>(
-      outputSchema,
-      zodSchema
-    ),
+    outputParser: new FunctionCallStructuredOutputParser<T>({
+      jsonSchema: outputSchema,
+      zodSchema,
+    }),
     ...rest,
   });
 }
