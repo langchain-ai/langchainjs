@@ -7,7 +7,7 @@ export function logVersion010MigrationWarning({
   newEntrypointName?: string;
   newPackageName?: string;
 }) {
-  /*#__PURE__*/ console.warn(
+  /* #__PURE__ */ console.warn(
     [
       `[WARNING]: Importing from "langchain/${oldEntrypointName}" is deprecated.\n`,
       `Instead, please add the "${newPackageName}" package to your project with e.g.`,
