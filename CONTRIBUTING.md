@@ -276,12 +276,7 @@ Documentation and the skeleton lives under the `docs/` folder. Example code is i
 
 1. [Quarto](https://quarto.org/) - package that converts Jupyter notebooks (.ipynb files) into mdx files for serving in Docusaurus (only necessary if building docs site locally).
 2. Navigate to the `docs/core_docs/docs/` directory.
-3. Use the provided yarn script to create a new Jupyter notebook:
-```shell
-# Create the notebook, passing the name of the file as the second arg.
-yarn create-notebook your_notebook_name
-```
-Replace `your_notebook_name` with the desired name for your notebook. This will create a `.ipynb` file in the current directory the script was invoked from.
+3. Create a new `.ipynb` file in the `docs/core_docs/docs/` directory.
 
 When adding new dependencies inside the notebook you must update the import map inside `docs/core_docs/docs/deno.json`.
 This is required because the notebooks use the Deno runtime, and Deno formats imports differently than Node.js.
