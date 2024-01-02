@@ -34,4 +34,4 @@ yarn-error.log*
 
 
 # notebooks
-docs/modules/agents/agent_types/openai_assistant_2.md
+docs/**/*.md
