@@ -4,6 +4,8 @@
     "langchain/": "npm:/file:../../../langchain/",
     "@langchain/core": "npm:/file:../../../langchain-core",
     "@langchain/core/": "npm:/file:../../../langchain-core/",
+    "@langchain/community": "npm:/file:../../../libs/langchain-community",
+    "@langchain/community/": "npm:/file:../../../libs/langchain-community/",
     "@langchain/openai": "npm:/file:../../../libs/langchain-openai",
     "@langchain/openai/": "npm:/file:../../../libs/langchain-openai/",
     "@langchain/mistralai": "npm:/file:../../../libs/langchain-mistralai",
