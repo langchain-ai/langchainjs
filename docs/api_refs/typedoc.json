@@ -45,12 +45,14 @@
     "../../langchain/src/tools/calculator.ts",
     "../../langchain/src/tools/connery.ts",
     "../../langchain/src/tools/render.ts",
+    "../../langchain/src/tools/retriever.ts",
     "../../langchain/src/tools/sql.ts",
     "../../langchain/src/tools/webbrowser.ts",
     "../../langchain/src/tools/gmail/index.ts",
     "../../langchain/src/tools/google_calendar/index.ts",
     "../../langchain/src/tools/google_places.ts",
     "../../langchain/src/chains/index.ts",
+    "../../langchain/src/chains/combine_documents/index.ts",
     "../../langchain/src/chains/combine_documents/reduce.ts",
     "../../langchain/src/chains/history_aware_retriever.ts",
     "../../langchain/src/chains/load.ts",
@@ -348,6 +350,8 @@
     "../../langchain-core/src/utils/tiktoken.ts",
     "../../langchain-core/src/utils/types.ts",
     "../../langchain-core/src/vectorstores.ts",
+    "../../libs/langchain-anthropic/src/index.ts",
+    "../../libs/langchain-cohere/src/index.ts",
     "../../libs/langchain-community/src/load/index.ts",
     "../../libs/langchain-community/src/load/serializable.ts",
     "../../libs/langchain-community/src/tools/aiplugin.ts",
@@ -368,6 +372,7 @@
     "../../libs/langchain-community/src/tools/searxng_search.ts",
     "../../libs/langchain-community/src/tools/serpapi.ts",
     "../../libs/langchain-community/src/tools/serper.ts",
+    "../../libs/langchain-community/src/tools/tavily_search.ts",
     "../../libs/langchain-community/src/tools/wikipedia_query_run.ts",
     "../../libs/langchain-community/src/tools/wolframalpha.ts",
     "../../libs/langchain-community/src/agents/toolkits/aws_sfn.ts",
@@ -503,9 +508,8 @@
     "../../libs/langchain-community/src/memory/motorhead_memory.ts",
     "../../libs/langchain-community/src/memory/zep.ts",
     "../../libs/langchain-community/src/utils/convex.ts",
-    "../../libs/langchain-anthropic/src/index.ts",
     "../../libs/langchain-google-genai/src/index.ts",
-    "../../libs/langchain-openai/src/index.ts",
-    "../../libs/langchain-mistralai/src/index.ts"
+    "../../libs/langchain-mistralai/src/index.ts",
+    "../../libs/langchain-openai/src/index.ts"
   ]
 }

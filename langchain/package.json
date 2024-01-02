@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.212",
+  "version": "0.0.213",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -79,6 +79,9 @@
     "tools/render.cjs",
     "tools/render.js",
     "tools/render.d.ts",
+    "tools/retriever.cjs",
+    "tools/retriever.js",
+    "tools/retriever.d.ts",
     "tools/sql.cjs",
     "tools/sql.js",
     "tools/sql.d.ts",
@@ -1187,9 +1190,9 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.9.1",
-    "@langchain/community": "~0.0.8",
-    "@langchain/core": "~0.1.3",
-    "@langchain/openai": "~0.0.7",
+    "@langchain/community": "~0.0.12",
+    "@langchain/core": "~0.1.5",
+    "@langchain/openai": "~0.0.9",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
     "js-tiktoken": "^1.0.7",
@@ -1337,6 +1340,11 @@
       "types": "./tools/render.d.ts",
       "import": "./tools/render.js",
       "require": "./tools/render.cjs"
+    },
+    "./tools/retriever": {
+      "types": "./tools/retriever.d.ts",
+      "import": "./tools/retriever.js",
+      "require": "./tools/retriever.cjs"
     },
     "./tools/sql": {
       "types": "./tools/sql.d.ts",

@@ -34,16 +34,16 @@ import {
     the "context" key.
     Return type depends on the `output_parser` used.
  */
-export async function createStuffDocumentsChain({
+export async function createStuffDocumentsChain<RunOutput = string>({
   llm,
   prompt,
-  outputParser = new StringOutputParser(),
+  outputParser = new StringOutputParser() as unknown as BaseOutputParser<RunOutput>,
   documentPrompt = DEFAULT_DOCUMENT_PROMPT,
   documentSeparator = DEFAULT_DOCUMENT_SEPARATOR,
 }: {
   llm: LanguageModelLike;
   prompt: BasePromptTemplate;
-  outputParser?: BaseOutputParser;
+  outputParser?: BaseOutputParser<RunOutput>;
   documentPrompt?: BasePromptTemplate;
   documentSeparator?: string;
 }) {
@@ -55,7 +55,13 @@ export async function createStuffDocumentsChain({
     [
       RunnablePassthrough.assign({
         [DOCUMENTS_KEY]: new RunnablePick(DOCUMENTS_KEY).pipe(
-          formatDocuments.bind(null, documentPrompt, documentSeparator)
+          (documents, metadata) =>
+            formatDocuments({
+              documents,
+              documentPrompt,
+              documentSeparator,
+              config: metadata?.config,
+            })
         ),
       }),
       prompt,

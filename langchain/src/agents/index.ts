@@ -64,6 +64,8 @@ export {
   StructuredChatAgent,
   type StructuredChatAgentInput,
   type StructuredChatCreatePromptArgs,
+  type CreateStructuredChatAgentParams,
+  createStructuredChatAgent,
 } from "./structured_chat/index.js";
 export {
   StructuredChatOutputParser,
@@ -74,5 +76,21 @@ export {
   OpenAIAgent,
   type OpenAIAgentInput,
   type OpenAIAgentCreatePromptArgs,
-} from "./openai/index.js";
-export { XMLAgent, type XMLAgentInput } from "./xml/index.js";
+  type CreateOpenAIFunctionsAgentParams,
+  createOpenAIFunctionsAgent,
+} from "./openai_functions/index.js";
+export {
+  type CreateOpenAIToolsAgentParams,
+  createOpenAIToolsAgent,
+} from "./openai_tools/index.js";
+export {
+  XMLAgent,
+  type XMLAgentInput,
+  type CreateXmlAgentParams,
+  createXmlAgent,
+} from "./xml/index.js";
+export {
+  type CreateReactAgentParams,
+  createReactAgent,
+} from "./react/index.js";
+export type { AgentAction, AgentFinish, AgentStep } from "../schema/index.js";

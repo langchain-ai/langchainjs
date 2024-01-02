@@ -78,6 +78,8 @@ export class OpenApiToolkit extends RequestsToolkit {
 }
 
 /**
+ * @deprecated Create a specific agent with a custom tool instead.
+ *
  * Creates an OpenAPI agent using a language model, an OpenAPI toolkit,
  * and optional prompt arguments. It creates a prompt for the agent using
  * the OpenAPI tools and the provided prefix and suffix. It then creates a
