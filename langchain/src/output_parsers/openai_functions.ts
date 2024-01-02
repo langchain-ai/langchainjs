@@ -79,7 +79,9 @@ export class OutputFunctionsParser extends BaseLLMOutputParser<string> {
  * Class for parsing the output of an LLM into a JSON object. Uses an
  * instance of `OutputFunctionsParser` to parse the output.
  */
-export class JsonOutputFunctionsParser extends BaseCumulativeTransformOutputParser<object> {
+export class JsonOutputFunctionsParser<
+  T = object
+> extends BaseCumulativeTransformOutputParser<T> {
   static lc_name() {
     return "JsonOutputFunctionsParser";
   }
@@ -113,7 +115,7 @@ export class JsonOutputFunctionsParser extends BaseCumulativeTransformOutputPars
 
   async parsePartialResult(
     generations: ChatGeneration[]
-  ): Promise<object | undefined> {
+  ): Promise<T | undefined> {
     const generation = generations[0];
     if (!generation.message) {
       return undefined;
@@ -130,7 +132,7 @@ export class JsonOutputFunctionsParser extends BaseCumulativeTransformOutputPars
     return {
       ...functionCall,
       arguments: parsePartialJson(functionCall.arguments),
-    };
+    } as T;
   }
 
   /**
@@ -139,9 +141,7 @@ export class JsonOutputFunctionsParser extends BaseCumulativeTransformOutputPars
    * @param generations The output of the LLM to parse.
    * @returns A JSON object representation of the function call or its arguments.
    */
-  async parseResult(
-    generations: Generation[] | ChatGeneration[]
-  ): Promise<object> {
+  async parseResult(generations: Generation[] | ChatGeneration[]): Promise<T> {
     const result = await this.outputParser.parseResult(generations);
     if (!result) {
       throw new Error(
@@ -151,7 +151,7 @@ export class JsonOutputFunctionsParser extends BaseCumulativeTransformOutputPars
     return this.parse(result);
   }
 
-  async parse(text: string): Promise<object> {
+  async parse(text: string): Promise<T> {
     const parsedResult = JSON.parse(text);
     if (this.argsOnly) {
       return parsedResult;

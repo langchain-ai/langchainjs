@@ -34,7 +34,9 @@ test("Streaming JSON patch", async () => {
     temperature: 0,
   }).bind(modelParams);
 
-  const parser = new JsonOutputFunctionsParser({ diff: true });
+  const parser = new JsonOutputFunctionsParser<z.infer<typeof schema>>({
+    diff: true,
+  });
   const chain = prompt.pipe(model).pipe(parser);
 
   const stream = await chain.stream({
@@ -46,7 +48,10 @@ test("Streaming JSON patch", async () => {
   for await (const chunk of stream) {
     console.log(chunk);
     chunks.push(chunk);
-    aggregate = applyPatch(aggregate, chunk as Operation[]).newDocument;
+    aggregate = applyPatch(
+      aggregate,
+      chunk as unknown as Operation[]
+    ).newDocument;
   }
 
   expect(chunks.length).toBeGreaterThan(1);
@@ -63,7 +68,9 @@ test("Streaming JSON patch with an event stream output parser", async () => {
     temperature: 0,
   }).bind(modelParams);
 
-  const jsonParser = new JsonOutputFunctionsParser({ diff: true });
+  const jsonParser = new JsonOutputFunctionsParser<z.infer<typeof schema>>({
+    diff: true,
+  });
   const parser = new HttpResponseOutputParser({
     outputParser: jsonParser,
     contentType: "text/event-stream",
@@ -92,7 +99,7 @@ test("Streaming aggregated JSON", async () => {
     temperature: 0,
   }).bind(modelParams);
 
-  const parser = new JsonOutputFunctionsParser();
+  const parser = new JsonOutputFunctionsParser<z.infer<typeof schema>>();
   const chain = prompt.pipe(model).pipe(parser);
 
   const stream = await chain.stream({
