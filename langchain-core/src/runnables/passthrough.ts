@@ -94,11 +94,12 @@ export class RunnablePassthrough<RunInput> extends Runnable<
    * });
    * ```
    */
-  static assign<RunInput extends Record<string, unknown>, RunOutput extends Record<string, unknown>>(
+  static assign<
+    RunInput extends Record<string, unknown>,
+    RunOutput extends Record<string, unknown>
+  >(
     mapping: RunnableMapLike<RunInput, RunOutput>
   ): RunnableAssign<RunInput, RunInput & RunOutput> {
-    return new RunnableAssign(
-      new RunnableMap({ steps: mapping })
-    );
+    return new RunnableAssign(new RunnableMap({ steps: mapping }));
   }
 }
