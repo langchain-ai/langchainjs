@@ -162,7 +162,7 @@ const config = {
           },
           {
             href: "https://api.js.langchain.com",
-            label: "API",
+            label: "API Reference",
             position: "left",
           },
           {

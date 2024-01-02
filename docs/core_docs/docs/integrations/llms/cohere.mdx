@@ -1,20 +1,19 @@
 # Cohere
 
+import CodeBlock from "@theme/CodeBlock";
+
 LangChain.js supports Cohere LLMs. Here's an example:
 
+You'll first need to install the [`@langchain/cohere`](https://www.npmjs.com/package/@langchain/cohere) package.
+
+:::tip
+See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
+:::
+
 ```bash npm2yarn
-npm install cohere-ai
+npm install @langchain/cohere
 ```
 
-```typescript
-import { Cohere } from "langchain/llms/cohere";
+import BasicExample from "@examples/models/llm/cohere.ts";
 
-const model = new Cohere({
-  maxTokens: 20,
-  apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.COHERE_API_KEY
-});
-const res = await model.call(
-  "What would be a good company name a company that makes colorful socks?"
-);
-console.log({ res });
-```
+<CodeBlock language="typescript">{BasicExample}</CodeBlock>

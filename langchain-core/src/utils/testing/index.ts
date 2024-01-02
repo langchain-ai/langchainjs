@@ -99,6 +99,13 @@ export class FakeLLM extends LLM {
 }
 
 export class FakeStreamingLLM extends LLM {
+  sleep?: number = 50;
+
+  constructor(fields: { sleep?: number } & BaseLLMParams) {
+    super(fields);
+    this.sleep = fields.sleep ?? this.sleep;
+  }
+
   _llmType() {
     return "fake";
   }
@@ -109,7 +116,7 @@ export class FakeStreamingLLM extends LLM {
 
   async *_streamResponseChunks(input: string) {
     for (const c of input) {
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, this.sleep));
       yield { text: c, generationInfo: {} } as GenerationChunk;
     }
   }
@@ -343,7 +350,11 @@ export class FakeListChatMessageHistory extends BaseListChatMessageHistory {
     super();
   }
 
-  public async addMessage(message: BaseMessage): Promise<void> {
+  async addMessage(message: BaseMessage): Promise<void> {
     this.messages.push(message);
+  }
+
+  async getMessages(): Promise<BaseMessage[]> {
+    return this.messages;
   }
 }

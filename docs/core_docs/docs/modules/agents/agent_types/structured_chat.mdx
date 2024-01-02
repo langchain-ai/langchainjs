@@ -1,32 +1,126 @@
-# Structured tool chat
+# Structured chat
 
 :::info
 If you are using a functions-capable model like ChatOpenAI, we currently recommend that you use the [OpenAI Functions agent](/docs/modules/agents/agent_types/openai_functions_agent)
 for more complex tool calling.
 :::
 
-The structured tool chat agent is capable of using multi-input tools.
+The structured chat agent is capable of using multi-input tools.
 
-Older agents are configured to specify an action input as a single string, but this agent can use the provided tools' `args_schema` to populate the action input.
+Older agents are configured to specify an action input as a single string, but this agent can use the provided tools' `schema` to populate the action input.
 
-import CodeBlock from "@theme/CodeBlock";
-import Example from "@examples/agents/structured_chat.ts";
-import RunnableExample from "@examples/agents/structured_chat_runnable.ts";
-import MemoryExample from "@examples/agents/structured_chat_with_memory.ts";
+## Setup
 
-This makes it easier to create and use tools that require multiple input values - rather than prompting for a stringified object or comma separated list, you can specify an object with multiple keys.
-Here's an example with a `DynamicStructuredTool`:
+Install the OpenAI integration package, retrieve your key, and store it as an environment variable named `OPENAI_API_KEY`:
 
-# With LCEL
+:::tip
+See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
+:::
 
-<CodeBlock language="typescript">{RunnableExample}</CodeBlock>
+```bash npm2yarn
+npm install @langchain/openai
+```
 
-# With `initializeAgentExecutorWithOptions`
+This demo also uses [Tavily](https://app.tavily.com), but you can also swap in another [built in tool](/docs/integrations/platforms).
+You'll need to sign up for an API key and set it as `TAVILY_API_KEY`.
 
-<CodeBlock language="typescript">{Example}</CodeBlock>
+## Initialize Tools
 
-## Adding Memory
+We will first create a tool:
 
-You can add memory to this agent like this:
+```typescript
+import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
 
-<CodeBlock language="typescript">{MemoryExample}</CodeBlock>
+// Define the tools the agent will have access to.
+const tools = [new TavilySearchResults({ maxResults: 1 })];
+```
+
+## Create Agent
+
+```typescript
+import { AgentExecutor, createOpenAIToolsAgent } from "langchain/agents";
+import { pull } from "langchain/hub";
+import { ChatOpenAI } from "@langchain/openai";
+import type { ChatPromptTemplate } from "@langchain/core/prompts";
+
+// Get the prompt to use - you can modify this!
+// If you want to see the prompt in full, you can at:
+// https://smith.langchain.com/hub/hwchase17/structured-chat-agent
+const prompt = await pull<ChatPromptTemplate>(
+  "hwchase17/structured-chat-agent"
+);
+
+const llm = new ChatOpenAI({
+  modelName: "gpt-3.5-turbo-1106",
+  temperature: 0,
+});
+
+const agent = await createStructuredChatAgent({
+  llm,
+  tools,
+  prompt,
+});
+```
+
+## Run Agent
+
+Now, let's run our agent!
+
+:::tip
+[LangSmith trace](https://smith.langchain.com/public/fe1b0993-4905-4e21-91d2-ff5fc16fdebd/r)
+:::
+
+```ts
+const agentExecutor = new AgentExecutor({
+  agent,
+  tools,
+});
+
+const result = await agentExecutor.invoke({
+  input: "what is LangChain?",
+});
+
+console.log(result);
+
+/*
+  {
+    input: 'what is LangChain?',
+    output: 'LangChain is a project on GitHub that focuses on building applications with LLMs (Large Language Models) through composability. It offers resources, documentation, and encourages contributions to the project. LangChain can be used for tasks such as retrieval augmented generation, analyzing structured data, and creating chatbots.'
+  }
+*/
+```
+
+## Using with chat history
+
+For more details, see [this section of the agent quickstart](/docs/modules/agents/quick_start#adding-in-memory).
+
+```ts
+import { AIMessage, HumanMessage } from "@langchain/core/messages";
+
+const result2 = await agentExecutor.invoke({
+  input: "what's my name?",
+  chat_history: [
+    new HumanMessage("hi! my name is cob"),
+    new AIMessage("Hello Cob! How can I assist you today?"),
+  ],
+});
+
+console.log(result2);
+
+/*
+  {
+    input: "what's my name?",
+    chat_history: [
+      HumanMessage {
+        content: 'hi! my name is cob',
+        additional_kwargs: {}
+      },
+      AIMessage {
+        content: 'Hello Cob! How can I assist you today?',
+        additional_kwargs: {}
+      }
+    ],
+    output: 'Your name is Cob.'
+  }
+*/
+```

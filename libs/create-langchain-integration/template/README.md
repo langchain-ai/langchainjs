@@ -21,14 +21,14 @@ You can do so by adding appropriate field to your project's `package.json` like 
     "langchain": "0.0.207"
   },
   "resolutions": {
-    "@langchain/core": "0.1.2"
+    "@langchain/core": "0.1.5"
   },
   "overrides": {
-    "@langchain/core": "0.1.2"
+    "@langchain/core": "0.1.5"
   },
   "pnpm": {
     "overrides": {
-      "@langchain/core": "0.1.2"
+      "@langchain/core": "0.1.5"
     }
   }
 }

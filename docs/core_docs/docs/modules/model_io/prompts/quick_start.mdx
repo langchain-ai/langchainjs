@@ -1,0 +1,200 @@
+---
+sidebar_position: 0
+---
+
+# Quick Start
+
+Language models take text as input - that text is commonly referred to as a prompt.
+Typically this is not simply a hardcoded string but rather a combination of a template, some examples, and user input.
+LangChain provides several classes and functions to make constructing and working with prompts easy.
+
+## What is a prompt template?
+
+A prompt template refers to a reproducible way to generate a prompt. It contains a text string ("the template"), that can take in a set of parameters from the end user and generates a prompt.
+
+A prompt template can contain:
+
+- instructions to the language model,
+- a set of few shot examples to help the language model generate a better response,
+- a question to the language model.
+
+Here's a simple example:
+
+```typescript
+import { PromptTemplate } from "@langchain/core/prompts";
+
+// If a template is passed in, the input variables are inferred automatically from the template.
+const prompt = PromptTemplate.fromTemplate(
+  `You are a naming consultant for new companies.
+What is a good name for a company that makes {product}?`
+);
+
+const formattedPrompt = await prompt.format({
+  product: "colorful socks",
+});
+
+/*
+  You are a naming consultant for new companies.
+  What is a good name for a company that makes colorful socks?
+*/
+```
+
+## Create a prompt template
+
+You can create simple hardcoded prompts using the `PromptTemplate` class. Prompt templates can take any number of input variables, and can be formatted to generate a prompt.
+
+```typescript
+import { PromptTemplate } from "@langchain/core/prompts";
+
+// An example prompt with no input variables
+const noInputPrompt = new PromptTemplate({
+  inputVariables: [],
+  template: "Tell me a joke.",
+});
+const formattedNoInputPrompt = await noInputPrompt.format();
+
+console.log(formattedNoInputPrompt);
+// "Tell me a joke."
+
+// An example prompt with one input variable
+const oneInputPrompt = new PromptTemplate({
+  inputVariables: ["adjective"],
+  template: "Tell me a {adjective} joke.",
+});
+const formattedOneInputPrompt = await oneInputPrompt.format({
+  adjective: "funny",
+});
+
+console.log(formattedOneInputPrompt);
+// "Tell me a funny joke."
+
+// An example prompt with multiple input variables
+const multipleInputPrompt = new PromptTemplate({
+  inputVariables: ["adjective", "content"],
+  template: "Tell me a {adjective} joke about {content}.",
+});
+const formattedMultipleInputPrompt = await multipleInputPrompt.format({
+  adjective: "funny",
+  content: "chickens",
+});
+
+console.log(formattedMultipleInputPrompt);
+// "Tell me a funny joke about chickens."
+```
+
+If you do not wish to specify `inputVariables` manually, you can also create a `PromptTemplate` using the `fromTemplate` class method. LangChain will automatically infer the `inputVariables` based on the `template` passed.
+
+```typescript
+import { PromptTemplate } from "@langchain/core/prompts";
+
+const template = "Tell me a {adjective} joke about {content}.";
+
+const promptTemplate = PromptTemplate.fromTemplate(template);
+console.log(promptTemplate.inputVariables);
+// ['adjective', 'content']
+const formattedPromptTemplate = await promptTemplate.format({
+  adjective: "funny",
+  content: "chickens",
+});
+console.log(formattedPromptTemplate);
+// "Tell me a funny joke about chickens."
+```
+
+You can create custom prompt templates that format the prompt in any way you want.
+
+## Chat prompt template
+
+[Chat Models](/docs/modules/model_io/chat) take a list of chat messages as input - this list is commonly referred to as a `prompt`.
+These chat messages differ from raw string (which you would pass into a [LLM](/docs/modules/model_io/llms)) in that every message is associated with a `role`.
+
+For example, in OpenAI [Chat Completion API](https://platform.openai.com/docs/guides/chat/introduction), a chat message can be associated with an AI, human or system role. The model is supposed to follow instruction from system chat message more closely.
+
+LangChain provides several prompt templates to make constructing and working with prompts easily. You are encouraged to use these chat related prompt templates instead of `PromptTemplate` when invoking chat models to fully explore the model's potential.
+
+```typescript
+import {
+  ChatPromptTemplate,
+  PromptTemplate,
+  SystemMessagePromptTemplate,
+  AIMessagePromptTemplate,
+  HumanMessagePromptTemplate,
+} from "@langchain/core/prompts";
+import {
+  AIMessage,
+  HumanMessage,
+  SystemMessage,
+} from "@langchain/core/messages";
+```
+
+To create a message template associated with a role, you would use the corresponding `<ROLE>MessagePromptTemplate`.
+
+For convenience, you can also declare message prompt templates as tuples. These will be coerced to the proper prompt template types:
+
+```typescript
+const systemTemplate =
+  "You are a helpful assistant that translates {input_language} to {output_language}.";
+const humanTemplate = "{text}";
+
+const chatPrompt = ChatPromptTemplate.fromMessages([
+  ["system", systemTemplate],
+  ["human", humanTemplate],
+]);
+
+// Format the messages
+const formattedChatPrompt = await chatPrompt.formatMessages({
+  input_language: "English",
+  output_language: "French",
+  text: "I love programming.",
+});
+
+console.log(formattedChatPrompt);
+
+/*
+  [
+    SystemMessage {
+      content: 'You are a helpful assistant that translates English to French.'
+    },
+    HumanMessage {
+      content: 'I love programming.'
+    }
+  ]
+*/
+```
+
+You can also use `ChatPromptTemplate`'s `.formatPrompt()` method -- this returns a `PromptValue`, which you can convert to a string or Message object,
+depending on whether you want to use the formatted value as input to an LLM or chat model.
+
+If you prefer to use the message classes, there is a `fromTemplate` method exposed on these classes.
+This is what it would look like:
+
+```typescript
+const template =
+  "You are a helpful assistant that translates {input_language} to {output_language}.";
+const systemMessagePrompt = SystemMessagePromptTemplate.fromTemplate(template);
+const humanTemplate = "{text}";
+const humanMessagePrompt =
+  HumanMessagePromptTemplate.fromTemplate(humanTemplate);
+```
+
+If you wanted to construct the `MessagePromptTemplate` more directly, you could create a PromptTemplate externally and then pass it in, e.g.:
+
+```typescript
+const prompt = new PromptTemplate({
+  template:
+    "You are a helpful assistant that translates {input_language} to {output_language}.",
+  inputVariables: ["input_language", "output_language"],
+});
+const systemMessagePrompt2 = new SystemMessagePromptTemplate({
+  prompt,
+});
+```
+
+**Note:** If using TypeScript, you can add typing to prompts created with `.fromMessages` by passing a type parameter like this:
+
+```typescript
+const chatPrompt = ChatPromptTemplate.fromMessages<{
+  input_language: string;
+  output_language: string;
+  text: string;
+}>([systemMessagePrompt, humanMessagePrompt]);
+```

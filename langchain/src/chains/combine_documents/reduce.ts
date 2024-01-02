@@ -55,6 +55,10 @@ export async function collapseDocs(
   combineDocumentFunc: (docs: Document[]) => Promise<string>
 ): Promise<Document> {
   const result = await combineDocumentFunc(docs);
+  return { pageContent: result, metadata: collapseDocsMetadata(docs) };
+}
+
+function collapseDocsMetadata(docs: Document[]): Document["metadata"] {
   const combinedMetadata: Record<string, string> = {};
   for (const key in docs[0].metadata) {
     if (key in docs[0].metadata) {
@@ -70,5 +74,5 @@ export async function collapseDocs(
       }
     }
   }
-  return { pageContent: result, metadata: combinedMetadata };
+  return combinedMetadata;
 }
