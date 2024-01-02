@@ -118,13 +118,15 @@ function load(application) {
    * @param {Context} context 
    */
   function onEndRenderEvent(context) {
-    const rootIndex = context.urls[0].url;
-    const indexFilePath = path.join(BASE_OUTPUT_DIR, rootIndex);
-    const htmlToSplit = `<div class="tsd-toolbar-contents container">`;
-    const htmlFileContent = fs.readFileSync(indexFilePath, "utf-8");
-    const [part1, part2] = htmlFileContent.split(htmlToSplit);
-    const htmlWithScript = part1 + SCRIPT_HTML + part2;
-    fs.writeFileSync(indexFilePath, htmlWithScript);
+    const htmlToSplitAt = `<div class="tsd-toolbar-contents container">`;
+    const { urls } = context;
+    urls.forEach(({ url }) => {
+      const indexFilePath = path.join(BASE_OUTPUT_DIR, url);
+      const htmlFileContent = fs.readFileSync(indexFilePath, "utf-8");
+      const [part1, part2] = htmlFileContent.split(htmlToSplitAt);
+      const htmlWithScript = part1 + SCRIPT_HTML + part2;
+      fs.writeFileSync(indexFilePath, htmlWithScript);
+    })
   }
 }
 
