@@ -11,11 +11,18 @@ import {
   BaseChatModel,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
+import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import {
   convertBaseMessagesToContent,
   convertResponseContentToChatGenerationChunk,
   mapGenerateContentResultToChatResult,
 } from "./utils.js";
+
+interface TokenUsage {
+  completionTokens?: number;
+  promptTokens?: number;
+  totalTokens?: number;
+}
 
 export type BaseMessageExamplePair = {
   input: BaseMessage;
@@ -98,6 +105,9 @@ export interface GoogleGenerativeAIChatInput extends BaseChatModelParams {
    * Google API key to use
    */
   apiKey?: string;
+
+  /** Whether to stream the results or not */
+  streaming?: boolean;
 }
 
 /**
@@ -161,6 +171,8 @@ export class ChatGoogleGenerativeAI
 
   apiKey?: string;
 
+  streaming = false;
+
   private client: GenerativeModel;
 
   get _isMultimodalModel() {
@@ -222,6 +234,8 @@ export class ChatGoogleGenerativeAI
       }
     }
 
+    this.streaming = fields?.streaming ?? this.streaming;
+
     this.client = new GenerativeAI(this.apiKey).getGenerativeModel({
       model: this.modelName,
       safetySettings: this.safetySettings as SafetySetting[],
@@ -253,6 +267,28 @@ export class ChatGoogleGenerativeAI
       messages,
       this._isMultimodalModel
     );
+
+    // Handle streaming
+    if (this.streaming) {
+      const tokenUsage: TokenUsage = {};
+      const stream = this._streamResponseChunks(messages, options, runManager);
+      const finalChunks: Record<number, ChatGenerationChunk> = {};
+      for await (const chunk of stream) {
+        const index =
+          (chunk.generationInfo as NewTokenIndices)?.completion ?? 0;
+        if (finalChunks[index] === undefined) {
+          finalChunks[index] = chunk;
+        } else {
+          finalChunks[index] = finalChunks[index].concat(chunk);
+        }
+      }
+      const generations = Object.entries(finalChunks)
+        .sort(([aKey], [bKey]) => parseInt(aKey, 10) - parseInt(bKey, 10))
+        .map(([_, value]) => value);
+
+      return { generations, llmOutput: { estimatedTokenUsage: tokenUsage } };
+    }
+
     const res = await this.caller.callWithOptions(
       { signal: options?.signal },
       async () => {
