@@ -94,8 +94,7 @@ export class RunnablePassthrough<RunInput> extends Runnable<
    * });
    * ```
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  static assign<RunInput extends Record<string, any>, RunOutput extends Record<string, any>>(
+  static assign<RunInput extends Record<string, unknown>, RunOutput extends Record<string, unknown>>(
     mapping: RunnableMapLike<RunInput, RunOutput>
   ): RunnableAssign<RunInput, RunInput & RunOutput> {
     return new RunnableAssign(
