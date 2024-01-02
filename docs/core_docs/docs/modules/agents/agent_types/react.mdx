@@ -2,22 +2,119 @@
 
 This walkthrough showcases using an agent to implement the [ReAct](https://react-lm.github.io/) logic.
 
-import CodeBlock from "@theme/CodeBlock";
-import Example from "@examples/agents/mrkl.ts";
-import RunnableExample from "@examples/agents/mrkl_runnable.ts";
+## Setup
 
-# With LCEL
+Install the OpenAI integration package, retrieve your key, and store it as an environment variable named `OPENAI_API_KEY`:
 
-<CodeBlock language="typescript">{RunnableExample}</CodeBlock>
+:::tip
+See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
+:::
 
-# With `initializeAgentExecutorWithOptions`
+```bash npm2yarn
+npm install @langchain/openai
+```
 
-<CodeBlock language="typescript">{Example}</CodeBlock>
+This demo also uses [Tavily](https://app.tavily.com), but you can also swap in another [built in tool](/docs/integrations/platforms).
+You'll need to sign up for an API key and set it as `TAVILY_API_KEY`.
 
-## Using chat models
+## Initialize Tools
 
-You can also create ReAct agents that use chat models instead of LLMs as the agent driver.
+We will first create a tool:
 
-import ChatExample from "@examples/agents/chat_mrkl.ts";
+```typescript
+import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
 
-<CodeBlock language="typescript">{ChatExample}</CodeBlock>
+// Define the tools the agent will have access to.
+const tools = [new TavilySearchResults({ maxResults: 1 })];
+```
+
+## Create Agent
+
+```typescript
+import { AgentExecutor, createReactAgent } from "langchain/agents";
+import { pull } from "langchain/hub";
+import { OpenAI } from "@langchain/openai";
+import type { PromptTemplate } from "@langchain/core/prompts";
+
+// Get the prompt to use - you can modify this!
+// If you want to see the prompt in full, you can at:
+// https://smith.langchain.com/hub/hwchase17/react
+const prompt = await pull<PromptTemplate>("hwchase17/react");
+
+const llm = new OpenAI({
+  modelName: "gpt-3.5-turbo-instruct",
+  temperature: 0,
+});
+
+const agent = await createReactAgent({
+  llm,
+  tools,
+  prompt,
+});
+```
+
+## Run Agent
+
+Now, let's run our agent!
+
+:::tip
+[LangSmith trace](https://smith.langchain.com/public/44989da5-8742-429f-9ab1-2377d773b0d2/r)
+:::
+
+```ts
+const agentExecutor = new AgentExecutor({
+  agent,
+  tools,
+});
+
+const result = await agentExecutor.invoke({
+  input: "what is LangChain?",
+});
+
+console.log(result);
+
+/*
+  {
+    input: 'what is LangChain?',
+    output: 'LangChain is a platform for building applications using LLMs (Language Model Microservices) through composability. It can be used for tasks such as retrieval augmented generation, analyzing structured data, and creating chatbots.'
+  }
+*/
+```
+
+## Using with chat history
+
+For more details, see [this section of the agent quickstart](/docs/modules/agents/quick_start#adding-in-memory).
+
+```ts
+// Get the prompt to use - you can modify this!
+// If you want to see the prompt in full, you can at:
+// https://smith.langchain.com/hub/hwchase17/react-chat
+const promptWithChat = await pull<PromptTemplate>("hwchase17/react-chat");
+
+const agentWithChat = await createReactAgent({
+  llm,
+  tools,
+  prompt: promptWithChat,
+});
+
+const agentExecutorWithChat = new AgentExecutor({
+  agent: agentWithChat,
+  tools,
+});
+
+const result2 = await agentExecutorWithChat.invoke({
+  input: "what's my name?",
+  // Notice that chat_history is a string, since this prompt is aimed at LLMs, not chat models
+  chat_history: "Human: Hi! My name is Cob\nAI: Hello Cob! Nice to meet you",
+});
+
+console.log(result2);
+
+/*
+  {
+    input: "what's my name?",
+    chat_history: 'Human: Hi! My name is Cob\nAI: Hello Cob! Nice to meet you',
+    output: 'Your name is Cob.'
+  }
+*/
+```

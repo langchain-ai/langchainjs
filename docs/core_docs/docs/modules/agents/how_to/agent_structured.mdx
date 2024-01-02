@@ -1,85 +1,65 @@
-# Returning Structured Output
+# Returning structured output
 
-Here is a simple example of an agent which uses `Runnables`, a retriever and a structured output parser to create an OpenAI functions agent that finds specific information in a large text document.
+Here is a simple example of an agent which uses LCEL, a web search tool (Tavily) and a structured output parser to create an OpenAI functions agent that returns source chunks.
 
 The first step is to import necessary modules
 
 ```typescript
 import { zodToJsonSchema } from "zod-to-json-schema";
-import fs from "fs";
 import { z } from "zod";
-import type {
-  AIMessage,
-  AgentAction,
-  AgentFinish,
-  AgentStep,
-} from "langchain/schema/index";
-import { RunnableSequence } from "langchain/schema/runnable/base";
 import {
-  ChatPromptTemplate,
-  MessagesPlaceholder,
-} from "langchain/prompts/chat";
+  type BaseMessage,
+  AIMessage,
+  FunctionMessage,
+  type AgentFinish,
+  type AgentStep,
+} from "langchain/schema";
+import { RunnableSequence } from "langchain/runnables";
+import { ChatPromptTemplate, MessagesPlaceholder } from "langchain/prompts";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { createRetrieverTool } from "langchain/agents/toolkits/index";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { HNSWLib } from "langchain/vectorstores/hnswlib";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { formatToOpenAIFunction } from "langchain/tools/convert_to_openai";
-import { AgentExecutor } from "langchain/agents/executor";
-import { formatForOpenAIFunctions } from "langchain/agents/format_scratchpad";
+import { AgentExecutor } from "langchain/agents";
+import { formatToOpenAIFunction, DynamicTool } from "langchain/tools";
+import type { FunctionsAgentAction } from "langchain/agents/openai/output_parser";
+
+import { TavilySearchAPIRetriever } from "@langchain/community/retrievers/tavily_search_api";
 ```
 
-Next, we load the text document and embed it using the OpenAI embeddings model.
+Next, we initialize an LLM and a search tool that wraps our web search retriever. We will later bind this as an OpenAI function:
 
 ```typescript
-// Read text file & embed documents
-const text = fs.readFileSync("examples/state_of_the_union.txt", "utf8");
-const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });
-let docs = await textSplitter.createDocuments([text]);
-// Add fake document source information to the metadata
-docs = docs.map((doc, i) => ({
-  ...doc,
-  metadata: {
-    page_chunk: i,
+const llm = new ChatOpenAI({
+  modelName: "gpt-4-1106-preview",
+});
+
+const searchTool = new DynamicTool({
+  name: "web-search-tool",
+  description: "Tool for getting the latest information from the web",
+  func: async (searchQuery: string, runManager) => {
+    const retriever = new TavilySearchAPIRetriever();
+    const docs = await retriever.invoke(searchQuery, runManager?.getChild());
+    return docs.map((doc) => doc.pageContent).join("\n-----\n");
   },
-}));
-// Initialize docs & create retriever
-const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
-```
-
-Since we're going to want to retrieve the embeddings inside the agent, we need to instantiate the vector store as a retriever.
-We also need an LLM to preform the calls with.
-
-```typescript
-const retriever = vectorStore.asRetriever();
-const llm = new ChatOpenAI({});
-```
-
-In order to use our retriever with the LLM as an OpenAI function, we need to convert the retriever to a tool
-
-```typescript
-const retrieverTool = createRetrieverTool(retriever, {
-  name: "state-of-union-retriever",
-  description:
-    "Query a retriever to get information about state of the union address",
 });
 ```
 
-Now we can define our prompt template. We'll use a simple `ChatPromptTemplate` with placeholders for the user's question, and the agent scratchpad (this will be very helpful in the future).
+Now we can define our prompt template. We'll use a simple `ChatPromptTemplate` with placeholders for the user's question, and the agent scratchpad.
 
 ```typescript
 const prompt = ChatPromptTemplate.fromMessages([
-  ["system", "You are a helpful assistant"],
-  new MessagesPlaceholder("agent_scratchpad"),
+  [
+    "system",
+    "You are a helpful assistant. You must always call one of the provided tools.",
+  ],
   ["user", "{input}"],
+  new MessagesPlaceholder("agent_scratchpad"),
 ]);
 ```
 
-After that, we define our structured response schema using zod. This schema defines the structure of the final response from the agent.
+After that, we define our structured response schema using [Zod](https://zod.dev). This schema defines the structure of the final response from the agent.
 
 ```typescript
 const responseSchema = z.object({
-  answer: z.string().describe("The final answer to respond to the user"),
+  answer: z.string().describe("The final answer to return to the user"),
   sources: z
     .array(z.string())
     .describe(
@@ -99,34 +79,47 @@ const responseOpenAIFunction = {
 };
 ```
 
-Next, we can construct the custom structured output parser.
+Next, we construct a custom structured output parsing function that can detect when the model has called our final response function.
+This is similar to the method in the stock [JSONFunctionsOutputParser](https://api.js.langchain.com/classes/langchain_output_parsers.JsonOutputFunctionsParser.html),
+but with a change to directly return a response when the final response function is called.
 
 ```typescript
 const structuredOutputParser = (
-  output: AIMessage
-): AgentAction | AgentFinish => {
-  // If no function call is passed, return the output as an instance of `AgentFinish`
-  if (!("function_call" in output.additional_kwargs)) {
-    return { returnValues: { output: output.content }, log: output.content };
+  message: AIMessage
+): FunctionsAgentAction | AgentFinish => {
+  if (message.content && typeof message.content !== "string") {
+    throw new Error("This agent cannot parse non-string model responses.");
   }
-  // Extract the function call name and arguments
-  const functionCall = output.additional_kwargs.function_call;
-  const name = functionCall?.name as string;
-  const inputs = functionCall?.arguments as string;
-  // Parse the arguments as JSON
-  const jsonInput = JSON.parse(inputs);
-  // If the function call name is `response` then we know it's used our final
-  // response function and can return an instance of `AgentFinish`
-  if (name === "response") {
-    return { returnValues: { ...jsonInput }, log: output.content };
+  if (message.additional_kwargs.function_call) {
+    const { function_call } = message.additional_kwargs;
+    try {
+      const toolInput = function_call.arguments
+        ? JSON.parse(function_call.arguments)
+        : {};
+      // If the function call name is `response` then we know it's used our final
+      // response function and can return an instance of `AgentFinish`
+      if (function_call.name === "response") {
+        return { returnValues: { ...toolInput }, log: message.content };
+      }
+      return {
+        tool: function_call.name,
+        toolInput,
+        log: `Invoking "${function_call.name}" with ${
+          function_call.arguments ?? "{}"
+        }\n${message.content}`,
+        messageLog: [message],
+      };
+    } catch (error) {
+      throw new Error(
+        `Failed to parse function arguments from chat model response. Text: "${function_call.arguments}". ${error}`
+      );
+    }
+  } else {
+    return {
+      returnValues: { output: message.content },
+      log: message.content,
+    };
   }
-  // If none of the above are true, the agent is not yet finished and we return
-  // an instance of `AgentAction`
-  return {
-    tool: name,
-    toolInput: jsonInput,
-    log: output.content,
-  };
 };
 ```
 
@@ -134,18 +127,30 @@ After this, we can bind our two functions to the LLM, and create a runnable sequ
 
 **Important** - note here we pass in `agent_scratchpad` as an input variable, which formats all the previous steps using the `formatForOpenAIFunctions` function.
 This is very important as it contains all the context history the model needs to preform accurate tasks. Without this, the model would have no context on the previous steps taken.
-The `formatForOpenAIFunctions` function returns the steps as an array of `BaseMessage`. This is necessary as the `MessagesPlaceholder` class expects this type as the input.
+The `formatForOpenAIFunctions` function returns the steps as an array of `BaseMessage`s. This is necessary as the `MessagesPlaceholder` class expects this type as the input.
 
 ```typescript
+const formatAgentSteps = (steps: AgentStep[]): BaseMessage[] =>
+  steps.flatMap(({ action, observation }) => {
+    if ("messageLog" in action && action.messageLog !== undefined) {
+      const log = action.messageLog as BaseMessage[];
+      return log.concat(new FunctionMessage(observation, action.tool));
+    } else {
+      return [new AIMessage(action.log)];
+    }
+  });
+
 const llmWithTools = llm.bind({
-  functions: [formatToOpenAIFunction(retrieverTool), responseOpenAIFunction],
+  functions: [formatToOpenAIFunction(searchTool), responseOpenAIFunction],
 });
 /** Create the runnable */
-const runnableAgent = RunnableSequence.from([
+const runnableAgent = RunnableSequence.from<{
+  input: string;
+  steps: Array<AgentStep>;
+}>([
   {
-    input: (i: { input: string }) => i.input,
-    agent_scratchpad: (i: { input: string; steps: Array<AgentStep> }) =>
-      formatForOpenAIFunctions(i.steps),
+    input: (i) => i.input,
+    agent_scratchpad: (i) => formatAgentSteps(i.steps),
   },
   prompt,
   llmWithTools,
@@ -158,11 +163,11 @@ Finally, we can create an instance of `AgentExecutor` and run the agent.
 ```typescript
 const executor = AgentExecutor.fromAgentAndTools({
   agent: runnableAgent,
-  tools: [retrieverTool],
+  tools: [searchTool],
 });
 /** Call invoke on the agent */
 const res = await executor.invoke({
-  input: "what did the president say about kentaji brown jackson",
+  input: "what is the current weather in honolulu?",
 });
 console.log({
   res,
@@ -174,9 +179,9 @@ The output will look something like this
 ```typescript
 {
   res: {
-    answer: 'President mentioned that he nominated Circuit Court of Appeals Judge Ketanji Brown Jackson. He described her as one of our nation’s top legal minds and stated that she will continue Justice Breyer’s legacy of excellence.',
+    answer: 'The current weather in Honolulu is 71 \bF with light rain and broken clouds.',
     sources: [
-      'And I did that 4 days ago, when I nominated Circuit Court of Appeals Judge Ketanji Brown Jackson. One of our nation’s top legal minds, who will continue Justice Breyer’s legacy of excellence. A former top litigator in private practice. A former federal public defender. And from a family of public school educators and police officers. A consensus builder. Since she’s been nominated, she’s received a broad range of support—from the Fraternal Order of Police to former judges appointed by Democrats and Republicans.'
+      'Currently: 71 \bF. Light rain. Broken clouds. (Weather station: Honolulu International Airport, USA). See more current weather'
     ]
   }
 }

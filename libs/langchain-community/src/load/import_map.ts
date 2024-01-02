@@ -15,6 +15,7 @@ export * as tools__searchapi from "../tools/searchapi.js";
 export * as tools__searxng_search from "../tools/searxng_search.js";
 export * as tools__serpapi from "../tools/serpapi.js";
 export * as tools__serper from "../tools/serper.js";
+export * as tools__tavily_search from "../tools/tavily_search.js";
 export * as tools__wikipedia_query_run from "../tools/wikipedia_query_run.js";
 export * as tools__wolframalpha from "../tools/wolframalpha.js";
 export * as agents__toolkits__base from "../agents/toolkits/base.js";

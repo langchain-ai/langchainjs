@@ -79,6 +79,40 @@ test("Stream the entire way through", async () => {
   expect(chunks.join("")).toEqual("Hi there!");
 });
 
+test("Callback order with transform streaming", async () => {
+  const prompt = ChatPromptTemplate.fromTemplate(`{input}`);
+  const llm = new FakeStreamingLLM({});
+  const order: string[] = [];
+  const stream = await prompt
+    .pipe(llm)
+    .pipe(new StringOutputParser())
+    .stream(
+      { input: "Hi there!" },
+      {
+        callbacks: [
+          {
+            handleChainStart: (chain) =>
+              order.push(chain.id[chain.id.length - 1]),
+            handleLLMStart: (llm) => order.push(llm.id[llm.id.length - 1]),
+          },
+        ],
+      }
+    );
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+    console.log(chunk);
+  }
+  expect(order).toEqual([
+    "RunnableSequence",
+    "ChatPromptTemplate",
+    "FakeStreamingLLM",
+    "StrOutputParser",
+  ]);
+  expect(chunks.length).toEqual("Human: Hi there!".length);
+  expect(chunks.join("")).toEqual("Human: Hi there!");
+});
+
 test("Don't use intermediate streaming", async () => {
   const llm = new FakeStreamingLLM({});
   const stream = await llm
@@ -144,6 +178,18 @@ test("RunnableLambda that returns a runnable should invoke the runnable", async 
   });
   const result = await runnable.invoke({});
   expect(result).toEqual("testing");
+});
+
+test("RunnableLambda that returns a streaming runnable should stream output from the inner runnable", async () => {
+  const runnable = new RunnableLambda({
+    func: () => new FakeStreamingLLM({}),
+  });
+  const stream = await runnable.stream("hello");
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+  expect(chunks).toEqual(["h", "e", "l", "l", "o"]);
 });
 
 test("RunnableEach", async () => {

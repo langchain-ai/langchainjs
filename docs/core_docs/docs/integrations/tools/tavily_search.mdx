@@ -1,0 +1,29 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# Tavily Search
+
+Tavily Search is a robust search API tailored specifically for LLM Agents. It seamlessly integrates with diverse data sources to ensure a superior, relevant search experience.
+
+## Setup
+
+Set up an API key [here](https://app.tavily.com) and set it as an environment variable named `TAVILY_API_KEY`.
+
+You'll also need to install the `@langchain/community` package:
+
+:::tip
+See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
+:::
+
+```bash npm2yarn
+npm install @langchain/community
+```
+
+## Usage
+
+import ToolExample from "@examples/tools/tavily_search.ts";
+
+<CodeBlock language="typescript">{ToolExample}</CodeBlock>

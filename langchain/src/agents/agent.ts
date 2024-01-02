@@ -167,6 +167,7 @@ export class RunnableAgent extends BaseMultiActionAgent {
 
   lc_namespace = ["langchain", "agents", "runnable"];
 
+  // TODO: Rename input to "intermediate_steps"
   runnable: Runnable<
     ChainValues & { steps: AgentStep[] },
     AgentAction[] | AgentAction | AgentFinish
