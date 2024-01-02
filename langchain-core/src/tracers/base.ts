@@ -28,6 +28,8 @@ export interface Run extends BaseRun {
     time: string;
     kwargs?: Record<string, unknown>;
   }>;
+  trace_id?: string;
+  dotted_order?: string;
 }
 
 export interface AgentRun extends Run {
@@ -39,6 +41,14 @@ function _coerceToDict(value: any, defaultKey: string) {
   return value && !Array.isArray(value) && typeof value === "object"
     ? value
     : { [defaultKey]: value };
+}
+
+function stripNonAlphanumeric(input: string) {
+  return input.replace(/[-:.]/g, "");
+}
+
+function convertToDottedOrderFormat(epoch: number, runId: string) {
+  return stripNonAlphanumeric(new Date(epoch).toISOString()) + runId;
 }
 
 export abstract class BaseTracer extends BaseCallbackHandler {
@@ -59,6 +69,10 @@ export abstract class BaseTracer extends BaseCallbackHandler {
   }
 
   protected async _startTrace(run: Run) {
+    const currentDottedOrder = convertToDottedOrderFormat(
+      run.start_time,
+      run.id
+    );
     if (run.parent_run_id !== undefined) {
       const parentRun = this.runMap.get(run.parent_run_id);
       if (parentRun) {
@@ -67,7 +81,18 @@ export abstract class BaseTracer extends BaseCallbackHandler {
           parentRun.child_execution_order,
           run.child_execution_order
         );
+        run.trace_id = parentRun.trace_id;
+        if (parentRun.dotted_order !== undefined) {
+          run.dotted_order = [parentRun.dotted_order, currentDottedOrder].join(
+            "."
+          );
+        } else {
+          console.warn(`Parent run with UUID ${run.parent_run_id} not found.`);
+        }
       }
+    } else {
+      run.trace_id = run.id;
+      run.dotted_order = currentDottedOrder;
     }
     this.runMap.set(run.id, run);
     await this.onRunCreate?.(run);
