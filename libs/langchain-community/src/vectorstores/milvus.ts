@@ -491,7 +491,7 @@ export class Milvus extends VectorStore {
     dbConfig?: MilvusLibArgs
   ): Promise<Milvus> {
     const args: MilvusLibArgs = {
-      ...(dbConfig ? dbConfig : {}),
+      ...dbConfig,
       collectionName: dbConfig?.collectionName ?? genCollectionName(),
     };
     const instance = new this(embeddings, args);
