@@ -23,10 +23,7 @@ import { BaseFunctionCallOptions } from "../../base_language/index.js";
  */
 export type StructuredOutputChainInput<
   T extends z.AnyZodObject = z.AnyZodObject
-> = Omit<
-  LLMChainInput,
-  "outputParser" | "llm"
-> & {
+> = Omit<LLMChainInput, "outputParser" | "llm"> & {
   outputSchema: JsonSchema7Type;
   prompt: BasePromptTemplate;
   llm?: BaseChatModel<BaseFunctionCallOptions>;
@@ -74,7 +71,7 @@ export class FunctionCallStructuredOutputParser<
     if (this.zodSchema) {
       const zodParsedResult = this.zodSchema.safeParse(parsedResult);
       if (zodParsedResult.success) {
-        zodParsedResult.data;
+        return zodParsedResult.data;
       } else {
         throw new OutputParserException(
           `Failed to parse. Text: "${initialResult}". Error: ${JSON.stringify(
@@ -132,7 +129,10 @@ export function createStructuredOutputChain<
       },
     },
     outputKey,
-    outputParser: new FunctionCallStructuredOutputParser<T>(outputSchema, zodSchema),
+    outputParser: new FunctionCallStructuredOutputParser<T>(
+      outputSchema,
+      zodSchema
+    ),
     ...rest,
   });
 }
