@@ -63,7 +63,7 @@ This library aims to assist in the development of those types of applications. C
 
 **💬 Chatbots**
 
-- [Documentation](https://js.langchain.com/docs/modules/model_io/models/chat/)
+- [Documentation](https://js.langchain.com/docs/modules/models/chat/)
 - End-to-end Example: [Chat-LangChain](https://github.com/langchain-ai/chat-langchain)
 
 ## 🚀 How does LangChain help?

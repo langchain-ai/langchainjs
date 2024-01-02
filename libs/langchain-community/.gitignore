@@ -58,6 +58,9 @@ tools/serpapi.d.ts
 tools/serper.cjs
 tools/serper.js
 tools/serper.d.ts
+tools/tavily_search.cjs
+tools/tavily_search.js
+tools/tavily_search.d.ts
 tools/wikipedia_query_run.cjs
 tools/wikipedia_query_run.js
 tools/wikipedia_query_run.d.ts
