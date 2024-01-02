@@ -119,7 +119,7 @@ export class Neo4jGraph {
         throw new Error("Procedure not found in Neo4j.");
       }
     }
-    //@TODO Propagate error instead of returning undefined
+    /** @TODO Propagate error instead of returning undefined */
     return undefined;
   }
 
