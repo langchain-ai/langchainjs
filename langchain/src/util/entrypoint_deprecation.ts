@@ -1,13 +1,12 @@
-export function logVersion010MigrationWarning(
-  {
-    oldEntrypointName,
-    newEntrypointName,
-    newPackageName = "@langchain/community",
-  }: {
-    oldEntrypointName: string,
-    newEntrypointName?: string,
-    newPackageName?: string,
-  }) {
+export function logVersion010MigrationWarning({
+  oldEntrypointName,
+  newEntrypointName,
+  newPackageName = "@langchain/community",
+}: {
+  oldEntrypointName: string;
+  newEntrypointName?: string;
+  newPackageName?: string;
+}) {
   /*#__PURE__*/ console.warn(
     [
       `[WARNING]: Importing from "langchain/${oldEntrypointName}" is deprecated.\n`,
@@ -15,9 +14,13 @@ export function logVersion010MigrationWarning(
       ``,
       `    $ npm install ${newPackageName}`,
       ``,
-      `and import from "${newPackageName}${newEntrypointName === undefined ? `/${oldEntrypointName}` : ""}".`,
+      `and import from "${newPackageName}${
+        newEntrypointName === undefined
+          ? `/${oldEntrypointName}`
+          : newEntrypointName
+      }".`,
       ``,
       `This will be mandatory after the next "langchain" minor version bump to 0.2.`,
     ].join("\n")
-  ); 
+  );
 }
