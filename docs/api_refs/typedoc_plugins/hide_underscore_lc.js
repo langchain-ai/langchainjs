@@ -7,6 +7,7 @@ const {
   RendererEvent,
 } = require("typedoc");
 const fs = require("fs");
+const fsPromises = require("fs/promises");
 const path = require("path")
 
 const PATH_TO_LANGCHAIN_PKG_JSON = "../../langchain/package.json";
@@ -117,16 +118,18 @@ function load(application) {
   /**
    * @param {Context} context 
    */
-  function onEndRenderEvent(context) {
+  async function onEndRenderEvent(context) {
     const htmlToSplitAt = `<div class="tsd-toolbar-contents container">`;
     const { urls } = context;
-    urls.forEach(({ url }) => {
+    // We want async. If not then it can load lots of very large
+    // `.html` files into memory at one time, which we don't want.
+    for await (const { url } of urls) {
       const indexFilePath = path.join(BASE_OUTPUT_DIR, url);
       const htmlFileContent = fs.readFileSync(indexFilePath, "utf-8");
       const [part1, part2] = htmlFileContent.split(htmlToSplitAt);
       const htmlWithScript = part1 + SCRIPT_HTML + part2;
-      fs.writeFileSync(indexFilePath, htmlWithScript);
-    })
+      await fsPromises.writeFile(indexFilePath, htmlWithScript);
+    }
   }
 }
 
