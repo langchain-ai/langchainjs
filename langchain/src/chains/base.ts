@@ -80,7 +80,53 @@ export abstract class BaseChain<
    * @returns Promise that resolves with the output of the chain run.
    */
   async invoke(input: RunInput, config?: RunnableConfig): Promise<RunOutput> {
-    return this.call(input, config);
+    const callbackManager_ = await CallbackManager.configure(
+      config.callbacks,
+      this.callbacks,
+      config.tags,
+      this.tags,
+      config.metadata,
+      this.metadata,
+      { verbose: this.verbose }
+    );
+    const runManager = await callbackManager_?.handleChainStart(
+      this.toJSON(),
+      input,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      config.runName
+    );
+    let outputValues: RunOutput;
+    try {
+      outputValues = await (input.signal
+        ? (Promise.race([
+            this._call(input as RunInput, runManager),
+            new Promise((_, reject) => {
+              input.signal?.addEventListener("abort", () => {
+                reject(new Error("AbortError"));
+              });
+            }),
+          ]) as Promise<RunOutput>)
+        : this._call(input as RunInput, runManager));
+    } catch (e) {
+      await runManager?.handleChainError(e);
+      throw e;
+    }
+    if (!(this.memory == null)) {
+      await this.memory.saveContext(
+        this._selectMemoryInputs(input),
+        outputValues
+      );
+    }
+    await runManager?.handleChainEnd(outputValues);
+    // add the runManager's currentRunId to the outputValues
+    Object.defineProperty(outputValues, RUN_KEY, {
+      value: runManager ? { runId: runManager?.runId } : undefined,
+      configurable: true,
+    });
+    return outputValues;
   }
 
   private _validateOutputs(outputs: Record<string, unknown>): void {
@@ -133,6 +179,7 @@ export abstract class BaseChain<
 
   abstract get outputKeys(): string[];
 
+  /** @deprecated Use .invoke() instead. Will be removed in 0.2.0. */
   async run(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     input: any,
@@ -180,6 +227,8 @@ export abstract class BaseChain<
   }
 
   /**
+   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
+   *
    * Run the core logic of this chain and add to output if desired.
    *
    * Wraps _call and handles memory.
@@ -191,57 +240,13 @@ export abstract class BaseChain<
     tags?: string[]
   ): Promise<RunOutput> {
     const fullValues = await this._formatValues(values);
-    const parsedConfig = parseCallbackConfigArg(config);
-    const callbackManager_ = await CallbackManager.configure(
-      parsedConfig.callbacks,
-      this.callbacks,
-      parsedConfig.tags || tags,
-      this.tags,
-      parsedConfig.metadata,
-      this.metadata,
-      { verbose: this.verbose }
-    );
-    const runManager = await callbackManager_?.handleChainStart(
-      this.toJSON(),
-      fullValues,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      parsedConfig.runName
-    );
-    let outputValues: RunOutput;
-    try {
-      outputValues = await (values.signal
-        ? (Promise.race([
-            this._call(fullValues as RunInput, runManager),
-            new Promise((_, reject) => {
-              values.signal?.addEventListener("abort", () => {
-                reject(new Error("AbortError"));
-              });
-            }),
-          ]) as Promise<RunOutput>)
-        : this._call(fullValues as RunInput, runManager));
-    } catch (e) {
-      await runManager?.handleChainError(e);
-      throw e;
-    }
-    if (!(this.memory == null)) {
-      await this.memory.saveContext(
-        this._selectMemoryInputs(values),
-        outputValues
-      );
-    }
-    await runManager?.handleChainEnd(outputValues);
-    // add the runManager's currentRunId to the outputValues
-    Object.defineProperty(outputValues, RUN_KEY, {
-      value: runManager ? { runId: runManager?.runId } : undefined,
-      configurable: true,
-    });
-    return outputValues;
+    const parsedConfig = { tags, ...parseCallbackConfigArg(config) };
+    return this.invoke(fullValues, parsedConfig);
   }
 
   /**
+   * @deprecated Use .batch() instead. Will be removed in 0.2.0.
+   *
    * Call the chain on all inputs in the list
    */
   async apply(
