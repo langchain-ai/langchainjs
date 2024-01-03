@@ -18,9 +18,9 @@ npm install @aws-crypto/sha256-js @aws-sdk/credential-provider-node @smithy/prot
 You can also use BedrockChat in web environments such as Edge functions or Cloudflare Workers by omitting the `@aws-sdk/credential-provider-node` dependency
 and using the `web` entrypoint:
 
-:::tip
-See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
-:::
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
 npm install @aws-crypto/sha256-js @smithy/protocol-http @smithy/signature-v4 @smithy/eventstream-codec @smithy/util-utf8 @aws-sdk/types @langchain/community
