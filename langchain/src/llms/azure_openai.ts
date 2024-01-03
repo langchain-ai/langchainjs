@@ -162,8 +162,18 @@ export class AzureOpenAI<
       this.azureOpenAIApiKey
     );
     this.client = new AzureOpenAIClient(
-      this.azureOpenAIEndpoint ?? "",
-      azureKeyCredential
+      this.azureOpenAIEndpoint ?? "", azureKeyCredential,
+      {
+        additionalPolicies: [{
+          policy: {
+            name: "disableKeepAlive",
+            sendRequest: (request, next) => {
+              request.disableKeepAlive = true;
+              return next(request);
+            }
+          }, position: "perCall"
+        }]
+    }
     );
   }
 
@@ -176,7 +186,7 @@ export class AzureOpenAI<
       throw new Error("Azure OpenAI Completion Deployment name not found");
     }
 
-    const stream = await this.client.listCompletions(
+    const stream = await this.client.streamCompletions(
       this.azureOpenAIApiDeploymentName,
       [input],
       {
@@ -192,8 +202,6 @@ export class AzureOpenAI<
         presencePenalty: this.presencePenalty,
         frequencyPenalty: this.frequencyPenalty,
         bestOf: this.bestOf,
-        stream: this.streaming,
-        model: this.modelName,
         requestOptions: {
           timeout: options?.timeout,
         },
@@ -253,7 +261,7 @@ export class AzureOpenAI<
       for (let i = 0; i < subPrompts.length; i += 1) {
         let response: Omit<Completions, "choices" | "usage"> | undefined;
 
-        const stream = await this.client.listCompletions(
+        const stream = await this.client.streamCompletions(
           this.azureOpenAIApiDeploymentName,
           subPrompts[i],
           {
@@ -269,8 +277,6 @@ export class AzureOpenAI<
             presencePenalty: this.presencePenalty,
             frequencyPenalty: this.frequencyPenalty,
             bestOf: this.bestOf,
-            stream: this.streaming,
-            model: this.modelName,
             requestOptions: {
               timeout: options?.timeout,
             },
@@ -348,8 +354,6 @@ export class AzureOpenAI<
             presencePenalty: this.presencePenalty,
             frequencyPenalty: this.frequencyPenalty,
             bestOf: this.bestOf,
-            stream: this.streaming,
-            model: this.modelName,
             requestOptions: {
               timeout: options?.timeout,
             },

@@ -217,7 +217,18 @@ import {
       );
       this.client = new AzureOpenAIClient(
         this.azureOpenAIEndpoint ?? "",
-        azureKeyCredential
+        azureKeyCredential,
+        {
+          additionalPolicies: [{
+            policy: {
+              name: "disableKeepAlive",
+              sendRequest: (request, next) => {
+                request.disableKeepAlive = true;
+                return next(request);
+              }
+            }, position: "perCall"
+          }]
+      }
       );
     }
   
@@ -230,7 +241,7 @@ import {
         throw new Error("Azure OpenAI Completion Deployment name not found");
       }
   
-      const streams = await this.client.listChatCompletions(
+      const streams = await this.client.streamChatCompletions(
         this.azureOpenAIApiCompletionsDeploymentName,
         [{
           content,
@@ -248,8 +259,6 @@ import {
           stop: this.stop,
           presencePenalty: this.presencePenalty,
           frequencyPenalty: this.frequencyPenalty,
-          stream: this.streaming,
-          model: this.modelName,
           azureExtensionOptions: this.azureExtensionOptions,
           requestOptions: {
               timeout: options?.timeout
@@ -312,8 +321,6 @@ import {
             stop: this.stop,
             presencePenalty: this.presencePenalty,
             frequencyPenalty: this.frequencyPenalty,
-            stream: this.streaming,
-            model: this.modelName,
             azureExtensionOptions: this.azureExtensionOptions,
             requestOptions: {
                 timeout: options?.timeout
@@ -338,7 +345,7 @@ import {
   
         return data.choices[0].message?.content?? "";
       } else {
-        const streams = await this.client.listChatCompletions(
+        const streams = await this.client.streamChatCompletions(
           this.azureOpenAIApiCompletionsDeploymentName,
           [{
             content,
@@ -356,8 +363,6 @@ import {
             stop: this.stop,
             presencePenalty: this.presencePenalty,
             frequencyPenalty: this.frequencyPenalty,
-            stream: this.streaming,
-            model: this.modelName,
             azureExtensionOptions: this.azureExtensionOptions,
             requestOptions: {
                 timeout: options?.timeout

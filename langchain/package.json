@@ -1438,7 +1438,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.9.1",
-    "@azure/openai": "^1.0.0-beta.7",
+    "@azure/openai": "^1.0.0-beta.9",
     "@langchain/core": "~0.0.10",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
