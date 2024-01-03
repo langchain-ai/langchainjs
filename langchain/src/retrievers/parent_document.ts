@@ -2,15 +2,14 @@ import * as uuid from "uuid";
 
 import {
   type VectorStoreInterface,
-  type VectorStoreRetrieverInterface,
+  type VectorStoreRetrieverInterface
 } from "@langchain/core/vectorstores";
 import { Document } from "../document.js";
 import { TextSplitter } from "../text_splitter.js";
 import {
   MultiVectorRetriever,
-  type MultiVectorRetrieverInput,
+  type MultiVectorRetrieverInput
 } from "./multi_vector.js";
-import { createDocumentStoreFromByteStore } from "../storage/encoder_backed.js";
 
 /**
  * Interface for the fields required to initialize a
@@ -38,7 +37,7 @@ export type ParentDocumentRetrieverFields = MultiVectorRetrieverInput & {
  * ```typescript
  * const retriever = new ParentDocumentRetriever({
  *   vectorstore: new MemoryVectorStore(new OpenAIEmbeddings()),
- *   docstore: new InMemoryStore(),
+ *   byteStore: new InMemoryStore<Uint8Array>(),
  *   parentSplitter: new RecursiveCharacterTextSplitter({
  *     chunkOverlap: 0,
  *     chunkSize: 500,
@@ -82,15 +81,6 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
   constructor(fields: ParentDocumentRetrieverFields) {
     super(fields);
     this.vectorstore = fields.vectorstore;
-    if (fields.byteStore) {
-      this.docstore = createDocumentStoreFromByteStore(fields.byteStore);
-    } else if (fields.docstore) {
-      this.docstore = fields.docstore;
-    } else {
-      throw new Error(
-        "byteStore and docstore are undefined. Please provide at least one."
-      );
-    }
     this.childSplitter = fields.childSplitter;
     this.parentSplitter = fields.parentSplitter;
     this.idKey = fields.idKey ?? this.idKey;

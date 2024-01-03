@@ -14,7 +14,7 @@ import { createDocumentStoreFromByteStore } from "../storage/encoder_backed.js";
  */
 export interface MultiVectorRetrieverInput extends BaseRetrieverInput {
   vectorstore: VectorStoreInterface;
-  /** @deprecated Prefer `baseStore`. */
+  /** @deprecated Prefer `byteStore`. */
   docstore?: BaseStoreInterface<string, Document>;
   byteStore?: BaseStore<string, Uint8Array>;
   idKey?: string;
