@@ -52,6 +52,7 @@
     "typescript": "~5.1.6"
   },
   "dependencies": {
+    "glob": "^10.3.10",
     "turbo": "latest"
   },
   "resolutions": {

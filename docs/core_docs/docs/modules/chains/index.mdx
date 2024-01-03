@@ -13,6 +13,14 @@ LangChain provides the **Chain** interface for such "chained" applications. We d
 import CodeBlock from "@theme/CodeBlock";
 import BaseClassExample from "@examples/chains/advanced_subclass.ts";
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 <CodeBlock language="typescript">{BaseClassExample}</CodeBlock>
 
 This idea of composing components together in a chain is simple but powerful. It drastically simplifies and makes more modular the implementation of complex applications, which in turn makes it much easier to debug, maintain, and improve your applications.
