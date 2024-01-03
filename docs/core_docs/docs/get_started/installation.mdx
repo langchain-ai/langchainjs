@@ -169,7 +169,7 @@ If you are using TypeScript in an ESM project we suggest updating your `tsconfig
 LangChain provides a CommonJS build targeting Node.js environments. You can import it using the following syntax:
 
 ```typescript
-const { OpenAI } = require("langchain/llms/openai");
+const { OpenAI } = require("@langchain/openai");
 ```
 
 ### Cloudflare Workers
@@ -193,13 +193,13 @@ import { OpenAI } from "@langchain/openai";
 LangChain can be used in Deno / Supabase Edge Functions. You can import it using the following syntax:
 
 ```typescript
-import { OpenAI } from "https://esm.sh/langchain/llms/openai";
+import { OpenAI } from "https://esm.sh/@langchain/openai";
 ```
 
 or
 
 ```typescript
-import { OpenAI } from "npm:langchain/llms/openai";
+import { OpenAI } from "npm:@langchain/openai";
 ```
 
 We recommend looking at our [Supabase Template](https://github.com/langchain-ai/langchain-template-supabase) for an example of how to use LangChain in Supabase Edge Functions.
