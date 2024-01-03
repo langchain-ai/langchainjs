@@ -204,11 +204,6 @@
       "import": "./tools.js",
       "require": "./tools.cjs"
     },
-    "./token_usage": {
-      "types": "./token_usage.d.ts",
-      "import": "./token_usage.js",
-      "require": "./token_usage.cjs"
-    },
     "./tracers/base": {
       "types": "./tracers/base.d.ts",
       "import": "./tracers/base.js",
@@ -375,9 +370,6 @@
     "tools.cjs",
     "tools.js",
     "tools.d.ts",
-    "token_usage.cjs",
-    "token_usage.js",
-    "token_usage.d.ts",
     "tracers/base.cjs",
     "tracers/base.js",
     "tracers/base.d.ts",
