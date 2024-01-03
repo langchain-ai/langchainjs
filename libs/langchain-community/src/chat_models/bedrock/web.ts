@@ -25,6 +25,8 @@ import {
 } from "../../utils/bedrock.js";
 import type { SerializedFields } from "../../load/map_keys.js";
 
+const PRELUDE_TOTAL_LENGTH_BYTES = 4;
+
 function convertOneMessageToText(
   message: BaseMessage,
   humanPrompt: string,
@@ -389,8 +391,6 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
       newBuffer.set(b, a.length);
       return newBuffer;
     }
-
-    const PRELUDE_TOTAL_LENGTH_BYTES = 4;
 
     function getMessageLength(buffer: Uint8Array) {
       if (buffer.byteLength < PRELUDE_TOTAL_LENGTH_BYTES) return 0;
