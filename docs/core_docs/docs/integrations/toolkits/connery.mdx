@@ -1,5 +1,6 @@
 import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/agents/connery_mrkl.ts";
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
 
 # Connery Toolkit
 
@@ -34,6 +35,18 @@ To use Connery Actions in your LangChain agent, you need to do some preparation:
 
 ## Example of using Connery Toolkit
 
+### Setup
+
+To use the Connery Toolkit you need to install the following official peer dependency:
+
+```bash npm2yarn
+npm install @langchain/community
+```
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+### Usage
+
 In the example below, we create an agent that uses two Connery Actions to summarize a public webpage and send the summary by email:
 
 1. **Summarize public webpage** action from the [Summarization](https://github.com/connery-io/summarization-plugin) plugin.
@@ -42,14 +55,6 @@ In the example below, we create an agent that uses two Connery Actions to summar
 :::info
 You can see a LangSmith trace of this example [here](https://smith.langchain.com/public/5485cb37-b73d-458f-8162-43639f2b49e1/r).
 :::
-
-import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
-
-<IntegrationInstallTooltip></IntegrationInstallTooltip>
-
-```bash npm2yarn
-npm install @langchain/community
-```
 
 <CodeBlock language="typescript">{Example}</CodeBlock>
 
