@@ -1,4 +1,4 @@
-import { MyScaleStore } from "langchain/vectorstores/myscale";
+import { MyScaleStore } from "@langchain/community/vectorstores/myscale";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
 const vectorStore = await MyScaleStore.fromTexts(

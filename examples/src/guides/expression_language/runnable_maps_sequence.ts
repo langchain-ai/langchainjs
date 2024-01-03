@@ -6,7 +6,7 @@ import {
   RunnablePassthrough,
   RunnableSequence,
 } from "langchain/schema/runnable";
-import { HNSWLib } from "langchain/vectorstores/hnswlib";
+import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import type { Document } from "langchain/document";
 
 const model = new ChatAnthropic();

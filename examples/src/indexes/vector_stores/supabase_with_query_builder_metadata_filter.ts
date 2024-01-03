@@ -1,7 +1,7 @@
 import {
   SupabaseFilterRPCCall,
   SupabaseVectorStore,
-} from "langchain/vectorstores/supabase";
+} from "@langchain/community/vectorstores/supabase";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { createClient } from "@supabase/supabase-js";
 

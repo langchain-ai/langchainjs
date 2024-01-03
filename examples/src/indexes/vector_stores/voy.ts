@@ -1,4 +1,4 @@
-import { VoyVectorStore } from "langchain/vectorstores/voy";
+import { VoyVectorStore } from "@langchain/community/vectorstores/voy";
 import { Voy as VoyClient } from "voy-search";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { Document } from "langchain/document";

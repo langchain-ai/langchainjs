@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import weaviate from "weaviate-ts-client";
-import { WeaviateStore } from "langchain/vectorstores/weaviate";
+import { WeaviateStore } from "@langchain/community/vectorstores/weaviate";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
 export async function run() {

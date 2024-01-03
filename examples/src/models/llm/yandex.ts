@@ -1,4 +1,4 @@
-import { YandexGPT } from "langchain/llms/yandex";
+import { YandexGPT } from "@langchain/community/llms/yandex";
 
 const model = new YandexGPT();
 

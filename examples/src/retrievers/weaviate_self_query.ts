@@ -5,7 +5,7 @@ import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { SelfQueryRetriever } from "langchain/retrievers/self_query";
 import { OpenAI } from "langchain/llms/openai";
-import { WeaviateStore } from "langchain/vectorstores/weaviate";
+import { WeaviateStore } from "@langchain/community/vectorstores/weaviate";
 import { WeaviateTranslator } from "langchain/retrievers/self_query/weaviate";
 
 /**

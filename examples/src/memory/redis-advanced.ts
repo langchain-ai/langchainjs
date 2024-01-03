@@ -1,6 +1,6 @@
 import { Redis } from "ioredis";
 import { BufferMemory } from "langchain/memory";
-import { RedisChatMessageHistory } from "langchain/stores/message/ioredis";
+import { RedisChatMessageHistory } from "@langchain/community/stores/message/ioredis";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { ConversationChain } from "langchain/chains";
 

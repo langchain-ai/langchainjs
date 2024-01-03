@@ -1,5 +1,5 @@
-import { MongoDBAtlasVectorSearch } from "langchain/vectorstores/mongodb_atlas";
-import { CohereEmbeddings } from "langchain/embeddings/cohere";
+import { MongoDBAtlasVectorSearch } from "@langchain/community/vectorstores/mongodb_atlas";
+import { CohereEmbeddings } from "@langchain/cohere";
 import { MongoClient } from "mongodb";
 
 const client = new MongoClient(process.env.MONGODB_ATLAS_URI || "");
