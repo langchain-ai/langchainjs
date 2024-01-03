@@ -48,7 +48,10 @@ function stripNonAlphanumeric(input: string) {
 }
 
 function convertToDottedOrderFormat(epoch: number, runId: string) {
-  return stripNonAlphanumeric(new Date(epoch).toISOString()) + runId;
+  return (
+    stripNonAlphanumeric(`${new Date(epoch).toISOString().slice(0, -1)}000Z`) +
+    runId
+  );
 }
 
 export abstract class BaseTracer extends BaseCallbackHandler {
@@ -73,29 +76,33 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       run.start_time,
       run.id
     );
-    if (run.parent_run_id !== undefined) {
-      const parentRun = this.runMap.get(run.parent_run_id);
+    const storedRun = { ...run };
+    if (storedRun.parent_run_id !== undefined) {
+      const parentRun = this.runMap.get(storedRun.parent_run_id);
       if (parentRun) {
-        this._addChildRun(parentRun, run);
+        this._addChildRun(parentRun, storedRun);
         parentRun.child_execution_order = Math.max(
           parentRun.child_execution_order,
-          run.child_execution_order
+          storedRun.child_execution_order
         );
-        run.trace_id = parentRun.trace_id;
+        storedRun.trace_id = parentRun.trace_id;
         if (parentRun.dotted_order !== undefined) {
-          run.dotted_order = [parentRun.dotted_order, currentDottedOrder].join(
-            "."
-          );
+          storedRun.dotted_order = [
+            parentRun.dotted_order,
+            currentDottedOrder,
+          ].join(".");
         } else {
-          console.warn(`Parent run with UUID ${run.parent_run_id} not found.`);
+          console.warn(
+            `Parent run with UUID ${storedRun.parent_run_id} not found.`
+          );
         }
       }
     } else {
-      run.trace_id = run.id;
-      run.dotted_order = currentDottedOrder;
+      storedRun.trace_id = storedRun.id;
+      storedRun.dotted_order = currentDottedOrder;
     }
-    this.runMap.set(run.id, run);
-    await this.onRunCreate?.(run);
+    this.runMap.set(storedRun.id, storedRun);
+    await this.onRunCreate?.(storedRun);
   }
 
   protected async _endTrace(run: Run): Promise<void> {
