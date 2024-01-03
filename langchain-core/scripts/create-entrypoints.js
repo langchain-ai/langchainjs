@@ -32,6 +32,7 @@ const entrypoints = {
   "retrievers": "retrievers",
   "stores": "stores",
   "tools": "tools",
+  "token_usage": "token_usage",
   "tracers/base": "tracers/base",
   "tracers/console": "tracers/console",
   "tracers/initialize": "tracers/initialize",
