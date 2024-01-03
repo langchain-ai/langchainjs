@@ -37,6 +37,9 @@ tools/dataforseo_api_search.d.ts
 tools/gmail.cjs
 tools/gmail.js
 tools/gmail.d.ts
+tools/google_calendar.cjs
+tools/google_calendar.js
+tools/google_calendar.d.ts
 tools/google_custom_search.cjs
 tools/google_custom_search.js
 tools/google_custom_search.d.ts

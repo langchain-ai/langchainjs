@@ -1,11 +1,11 @@
 import { google, calendar_v3 } from "googleapis";
 import type { JWT, GaxiosResponse } from "googleapis-common";
-import { PromptTemplate } from "../../../prompts/index.js";
-import { LLMChain } from "../../../chains/index.js";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
+import { BaseLLM } from "@langchain/core/language_models/llms";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 import { CREATE_EVENT_PROMPT } from "../prompts/index.js";
 import { getTimezoneOffsetInHours } from "../utils/get-timezone-offset-in-hours.js";
-import { BaseLLM } from "../../../llms/base.js";
-import { CallbackManagerForToolRun } from "../../../callbacks/manager.js";
 
 type CreateEventParams = {
   eventSummary: string;
@@ -73,16 +73,13 @@ const runCreateEvent = async (
     template: CREATE_EVENT_PROMPT,
     inputVariables: ["date", "query", "u_timezone", "dayName"],
   });
-  const createEventChain = new LLMChain({
-    llm: model,
-    prompt,
-  });
+  const createEventChain = prompt.pipe(model).pipe(new StringOutputParser());
 
   const date = new Date().toISOString();
   const u_timezone = getTimezoneOffsetInHours();
   const dayName = new Date().toLocaleString("en-us", { weekday: "long" });
 
-  const output = await createEventChain.call(
+  const output = await createEventChain.invoke(
     {
       query,
       date,
@@ -91,7 +88,7 @@ const runCreateEvent = async (
     },
     runManager?.getChild()
   );
-  const loaded = JSON.parse(output.text);
+  const loaded = JSON.parse(output);
 
   const [
     eventSummary,

@@ -1,7 +1,7 @@
 import { google } from "googleapis";
-import { Tool } from "../base.js";
-import { getEnvironmentVariable } from "../../util/env.js";
-import { BaseLLM } from "../../llms/base.js";
+import { Tool } from "@langchain/core/tools";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { BaseLLM } from "@langchain/core/language_models/llms";
 
 export interface GoogleCalendarAgentParams {
   credentials?: {

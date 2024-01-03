@@ -1,11 +1,12 @@
 import { calendar_v3 } from "googleapis";
 import type { JWT } from "googleapis-common";
-import { PromptTemplate } from "../../../prompts/index.js";
-import { LLMChain } from "../../../chains/index.js";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { BaseLLM } from "@langchain/core/language_models/llms";
+import { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+
 import { VIEW_EVENTS_PROMPT } from "../prompts/index.js";
 import { getTimezoneOffsetInHours } from "../utils/get-timezone-offset-in-hours.js";
-import { BaseLLM } from "../../../llms/base.js";
-import { CallbackManagerForToolRun } from "../../../callbacks/manager.js";
 
 type RunViewEventParams = {
   calendarId: string;
@@ -25,16 +26,13 @@ const runViewEvents = async (
     inputVariables: ["date", "query", "u_timezone", "dayName"],
   });
 
-  const viewEventsChain = new LLMChain({
-    llm: model,
-    prompt,
-  });
+  const viewEventsChain = prompt.pipe(model).pipe(new StringOutputParser());
 
   const date = new Date().toISOString();
   const u_timezone = getTimezoneOffsetInHours();
   const dayName = new Date().toLocaleString("en-us", { weekday: "long" });
 
-  const output = await viewEventsChain.call(
+  const output = await viewEventsChain.invoke(
     {
       query,
       date,
@@ -43,7 +41,7 @@ const runViewEvents = async (
     },
     runManager?.getChild()
   );
-  const loaded = JSON.parse(output.text);
+  const loaded = JSON.parse(output);
 
   try {
     const response = await calendar.events.list({
