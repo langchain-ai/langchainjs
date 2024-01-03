@@ -20,6 +20,14 @@ Embeddings can be used to create a numerical representation of textual data. Thi
 
 Below is an example of how to use the OpenAI embeddings. Embeddings occasionally have different embedding methods for queries versus documents, so the embedding class exposes a `embedQuery` and `embedDocuments` method.
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 ```typescript
 import { OpenAIEmbeddings } from "@langchain/openai";
 

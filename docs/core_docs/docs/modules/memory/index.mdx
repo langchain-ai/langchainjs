@@ -92,6 +92,14 @@ If you deploy your LangChain app on a serverless environment do not store memory
 
 We now show how to use this simple concept in a chain. We first showcase `BufferMemory`, a wrapper around ChatMessageHistory that extracts the messages into an input variable.
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 ```typescript
 import { OpenAI } from "@langchain/openai";
 import { BufferMemory } from "langchain/memory";

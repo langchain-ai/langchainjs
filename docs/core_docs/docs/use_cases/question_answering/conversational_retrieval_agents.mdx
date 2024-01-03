@@ -12,6 +12,14 @@ Finally, we will walk through how to construct a conversational retrieval agent 
 
 To start, we need a retriever to use! The code here is mostly just example code. Feel free to use your own retriever and skip to the next section on creating a retriever tool.
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 ```typescript
 import { FaissStore } from "langchain/vectorstores/faiss";
 import { OpenAIEmbeddings } from "@langchain/openai";

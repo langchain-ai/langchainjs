@@ -134,11 +134,19 @@ It is automatically installed along with `langchain`, but can also be used separ
 npm install @langchain/core
 ```
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
 ## Loading the library
 
 ### ESM
 
 LangChain provides an ESM build targeting Node.js environments. You can import it using the following syntax:
+
+```bash npm2yarn
+npm install @langchain/openai
+```
 
 ```typescript
 import { OpenAI } from "@langchain/openai";

@@ -86,6 +86,14 @@ When setting up the vector store retriever:
 
 In this example we'll be using Supabase, however you can pick any vector store with MMR search you'd like from [our large list of integrations](/docs/integrations/vectorstores/).
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 ```typescript
 import { createClient } from "@supabase/supabase-js";
 import { OpenAIEmbeddings } from "@langchain/openai";
