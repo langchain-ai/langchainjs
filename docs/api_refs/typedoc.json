@@ -331,7 +331,6 @@
     "../../langchain-core/src/retrievers.ts",
     "../../langchain-core/src/stores.ts",
     "../../langchain-core/src/tools.ts",
-    "../../langchain-core/src/token_usage.ts",
     "../../langchain-core/src/tracers/base.ts",
     "../../langchain-core/src/tracers/console.ts",
     "../../langchain-core/src/tracers/initialize.ts",
