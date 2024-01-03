@@ -336,7 +336,6 @@
     "../../langchain-core/src/tracers/initialize.ts",
     "../../langchain-core/src/tracers/log_stream.ts",
     "../../langchain-core/src/tracers/run_collector.ts",
-    "../../langchain-core/src/tracers/tracer_langchain_v1.ts",
     "../../langchain-core/src/tracers/tracer_langchain.ts",
     "../../langchain-core/src/utils/async_caller.ts",
     "../../langchain-core/src/utils/chunk_array.ts",
