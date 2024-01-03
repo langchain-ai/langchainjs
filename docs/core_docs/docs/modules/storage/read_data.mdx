@@ -18,7 +18,7 @@ const store = new InMemoryStore<string>();
 Next we can call `.mset()` to write multiple values at once.
 
 ```typescript
-const data = [
+const data: [string, string][] = [
   ["key1", "value1"],
   ["key2", "value2"],
 ];
@@ -51,10 +51,17 @@ const pathToStore = "./my-store-directory";
 const store = await LocalFileStore.fromPath(pathToStore);
 ```
 
+To do this we can define an encoder for initially setting our data, and a decoder for when we retrieve data.
+
 ```typescript
-const data = [
-  ["key1", "value1"],
-  ["key2", "value2"],
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
+```
+
+```typescript
+const data: [string, Uint8Array][] = [
+  ["key1", encoder.encode(new Date().toDateString())],
+  ["key2", encoder.encode(new Date().toDateString())],
 ];
 
 await store.mset(data);
@@ -63,8 +70,8 @@ await store.mset(data);
 ```typescript
 const data = await store.mget(["key1", "key2"]);
 
-console.log(data);
+console.log(data.map((v) => decoder.decode(v)));
 /**
- * ["value1", "value2"]
+ * [ 'Wed Jan 03 2024', 'Wed Jan 03 2024' ]
  */
 ```
