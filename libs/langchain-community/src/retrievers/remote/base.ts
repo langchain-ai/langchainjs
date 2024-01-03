@@ -2,7 +2,10 @@ import {
   BaseRetriever,
   type BaseRetrieverInput,
 } from "@langchain/core/retrievers";
-import { AsyncCaller, type AsyncCallerParams } from "@langchain/core/utils/async_caller";
+import {
+  AsyncCaller,
+  type AsyncCallerParams,
+} from "@langchain/core/utils/async_caller";
 import type { DocumentInterface } from "@langchain/core/documents";
 
 /**
@@ -89,7 +92,9 @@ export abstract class RemoteRetriever
    * @param json The JSON response from the server.
    * @returns An array of Document instances.
    */
-  abstract processJsonResponse(json: RemoteRetrieverValues): DocumentInterface[];
+  abstract processJsonResponse(
+    json: RemoteRetrieverValues
+  ): DocumentInterface[];
 
   async _getRelevantDocuments(query: string): Promise<DocumentInterface[]> {
     const body = this.createJsonBody(query);

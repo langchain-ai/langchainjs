@@ -1,9 +1,9 @@
-import { Document } from "../../document.js";
 import {
   RemoteRetriever,
   RemoteRetrieverParams,
   RemoteRetrieverValues,
 } from "@langchain/community/retrievers/remote";
+import { Document } from "../../document.js";
 
 /** @deprecated */
 export interface RemoteLangChainRetrieverParams extends RemoteRetrieverParams {
