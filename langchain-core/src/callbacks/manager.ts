@@ -9,10 +9,7 @@ import {
   NewTokenIndices,
 } from "./base.js";
 import { ConsoleCallbackHandler } from "../tracers/console.js";
-import {
-  getTracingCallbackHandler,
-  getTracingV2CallbackHandler,
-} from "../tracers/initialize.js";
+import { getTracingV2CallbackHandler } from "../tracers/initialize.js";
 import { type BaseMessage, getBufferString } from "../messages/index.js";
 import { getEnvironmentVariable } from "../utils/env.js";
 import {
@@ -931,14 +928,6 @@ export class CallbackManager
       ) {
         if (tracingV2Enabled) {
           callbackManager.addHandler(await getTracingV2CallbackHandler(), true);
-        } else {
-          const session =
-            getEnvironmentVariable("LANGCHAIN_PROJECT") &&
-            getEnvironmentVariable("LANGCHAIN_SESSION");
-          callbackManager.addHandler(
-            await getTracingCallbackHandler(session),
-            true
-          );
         }
       }
     }

@@ -1,4 +1,4 @@
-import { GooglePaLM } from "langchain/llms/googlepalm";
+import { GooglePaLM } from "@langchain/community/llms/googlepalm";
 
 export const run = async () => {
   const model = new GooglePaLM({

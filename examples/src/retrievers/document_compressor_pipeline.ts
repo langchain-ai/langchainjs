@@ -2,7 +2,7 @@ import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { ContextualCompressionRetriever } from "langchain/retrievers/contextual_compression";
 import { EmbeddingsFilter } from "langchain/retrievers/document_compressors/embeddings_filter";
-import { TavilySearchAPIRetriever } from "langchain/retrievers/tavily_search_api";
+import { TavilySearchAPIRetriever } from "@langchain/community/retrievers/tavily_search_api";
 import { DocumentCompressorPipeline } from "langchain/retrievers/document_compressors";
 
 const embeddingsFilter = new EmbeddingsFilter({

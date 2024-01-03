@@ -4,7 +4,7 @@ import {
   PromptTemplate,
   FewShotPromptTemplate,
 } from "langchain/prompts";
-import { HNSWLib } from "langchain/vectorstores/hnswlib";
+import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 
 // Create a prompt template that will be used to format the examples.
 const examplePrompt = PromptTemplate.fromTemplate(

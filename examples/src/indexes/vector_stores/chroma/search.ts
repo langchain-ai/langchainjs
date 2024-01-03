@@ -1,4 +1,4 @@
-import { Chroma } from "langchain/vectorstores/chroma";
+import { Chroma } from "@langchain/community/vectorstores/chroma";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
 const vectorStore = await Chroma.fromExistingCollection(

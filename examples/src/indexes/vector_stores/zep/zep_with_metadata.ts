@@ -1,4 +1,4 @@
-import { ZepVectorStore } from "langchain/vectorstores/zep";
+import { ZepVectorStore } from "@langchain/community/vectorstores/zep";
 import { Document } from "langchain/document";
 import { FakeEmbeddings } from "langchain/embeddings/fake";
 import { randomUUID } from "crypto";

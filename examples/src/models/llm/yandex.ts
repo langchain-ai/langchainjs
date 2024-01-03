@@ -1,4 +1,4 @@
-import { YandexGPT } from "@langchain/yandex";
+import { YandexGPT } from "@langchain/community/llms/yandex";
 
 const model = new YandexGPT();
 const res = await model.invoke(['Translate "I love programming" into French.']);

@@ -54,6 +54,14 @@ Here's a customization example using a faster LLM to generate questions and a sl
 Because we have `returnSourceDocuments` set and are thus returning multiple values from the chain, we must set `inputKey` and `outputKey` on the memory instance
 to let it know which values to store.
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/community
+```
+
 import ConvoQABuiltInExample from "@examples/chains/conversational_qa_built_in_memory_legacy.ts";
 
 <CodeBlock language="typescript">{ConvoQABuiltInExample}</CodeBlock>

@@ -8,7 +8,7 @@ import {
   RunnablePassthrough,
 } from "langchain/runnables";
 import { StringOutputParser } from "langchain/schema/output_parser";
-import { HNSWLib } from "langchain/vectorstores/hnswlib";
+import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 
 const vectorStore = await HNSWLib.fromDocuments(
   [

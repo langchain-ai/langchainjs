@@ -8,7 +8,7 @@ import {
   MatchingEngine,
   IdDocument,
   Restriction,
-} from "langchain/vectorstores/googlevertexai";
+} from "@langchain/community/vectorstores/googlevertexai";
 
 export const run = async () => {
   if (
