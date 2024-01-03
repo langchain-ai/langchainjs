@@ -40,7 +40,7 @@ jobs:
           SKIP_API_DOCS: true
 
       - name: Test esbuild exports
-        run: docker compose -f docker-compose.yml run test-exports-esbuild
+        run: docker compose -f environment_tests/docker-compose.yml run test-exports-esbuild
 
   exports-esm:
     runs-on: ubuntu-latest
@@ -60,7 +60,7 @@ jobs:
           SKIP_API_DOCS: true
 
       - name: Test esm exports
-        run: docker compose -f docker-compose.yml run test-exports-esm
+        run: docker compose -f environment_tests/docker-compose.yml run test-exports-esm
 
   exports-cjs:
     runs-on: ubuntu-latest
@@ -80,7 +80,7 @@ jobs:
           SKIP_API_DOCS: true
 
       - name: Test cjs exports
-        run: docker compose -f docker-compose.yml run test-exports-cjs
+        run: docker compose -f environment_tests/docker-compose.yml run test-exports-cjs
 
   exports-cf:
     runs-on: ubuntu-latest
@@ -100,7 +100,7 @@ jobs:
           SKIP_API_DOCS: true
 
       - name: Test cf exports
-        run: docker compose -f docker-compose.yml run test-exports-cf
+        run: docker compose -f environment_tests/docker-compose.yml run test-exports-cf
 
   exports-vercel:
     runs-on: ubuntu-latest
@@ -120,7 +120,7 @@ jobs:
           SKIP_API_DOCS: true
 
       - name: Test vercel exports
-        run: docker compose -f docker-compose.yml run test-exports-vercel
+        run: docker compose -f environment_tests/docker-compose.yml run test-exports-vercel
 
   exports-vite:
     runs-on: ubuntu-latest
@@ -140,7 +140,7 @@ jobs:
           SKIP_API_DOCS: true
 
       - name: Test vite exports
-        run: docker compose -f docker-compose.yml run test-exports-vite
+        run: docker compose -f environment_tests/docker-compose.yml run test-exports-vite
 
   # exports-bun:
   #   runs-on: ubuntu-latest
@@ -160,4 +160,4 @@ jobs:
   #         SKIP_API_DOCS: true
 
   #     - name: Test bun exports
-  #       run: docker compose -f docker-compose.yml run test-exports-bun
+  #       run: docker compose -f environment_tests/docker-compose.yml run test-exports-bun

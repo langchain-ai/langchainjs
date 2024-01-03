@@ -23706,7 +23706,7 @@ __metadata:
     rimraf: ^5.0.1
     rollup: ^3.19.1
     sonix-speech-recognition: ^2.1.1
-    srt-parser-2: ^1.2.2
+    srt-parser-2: ^1.2.3
     ts-jest: ^29.1.0
     typeorm: ^0.3.12
     typescript: ~5.1.6
@@ -23762,7 +23762,7 @@ __metadata:
     pyodide: ^0.24.1
     redis: ^4.6.4
     sonix-speech-recognition: ^2.1.1
-    srt-parser-2: ^1.2.2
+    srt-parser-2: ^1.2.3
     typeorm: ^0.3.12
     vectordb: ^0.1.4
     weaviate-ts-client: ^1.4.0
@@ -30309,12 +30309,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"srt-parser-2@npm:^1.2.2":
-  version: 1.2.2
-  resolution: "srt-parser-2@npm:1.2.2"
+"srt-parser-2@npm:^1.2.3":
+  version: 1.2.3
+  resolution: "srt-parser-2@npm:1.2.3"
   bin:
     srt-parser-2: bin/index.js
-  checksum: b0c3e4dcd9e6e07d92002ac4f045f25534f14d3501a31043273463d6c6967fa125018ca5a1761fd23942815cc7958199f53117e939b600cf15e87bac4b60f558
+  checksum: 2d61a26bf128439c61693311b0f280ee991832c478c893647c02fb47e120f3ede515adaa7c53e0dcdc21ef20aa0557ebecefa732292d3f03f1104f47670eea13
   languageName: node
   linkType: hard
 
