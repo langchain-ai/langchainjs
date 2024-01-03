@@ -1,0 +1,8 @@
+{
+  "unstable": [
+    "bare-node-builtins",
+    "byonm",
+    "sloppy-imports",
+    "unsafe-proto"
+  ]
+}
