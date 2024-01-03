@@ -52,14 +52,8 @@ const summaryDocs = summaries.map((summary, i) => {
   return summaryDoc;
 });
 
-const keyValuePairs: [string, Document][] = docs.map((originalDoc, i) => [
-  docIds[i],
-  originalDoc,
-]);
-
-// The docstore to use to store the original chunks
-const docstore = new InMemoryStore();
-await docstore.mset(keyValuePairs);
+// The byteStore to use to store the original chunks
+const byteStore = new InMemoryStore<Uint8Array>();
 
 // The vectorstore to use to index the child chunks
 const vectorstore = await FaissStore.fromDocuments(
@@ -69,9 +63,17 @@ const vectorstore = await FaissStore.fromDocuments(
 
 const retriever = new MultiVectorRetriever({
   vectorstore,
-  docstore,
+  byteStore,
   idKey,
 });
+
+const keyValuePairs: [string, Document][] = docs.map((originalDoc, i) => [
+  docIds[i],
+  originalDoc,
+]);
+
+// Use the retriever to add the original chunks to the document store
+await retriever.docstore.mset(keyValuePairs);
 
 // We could also add the original chunks to the vectorstore if we wish
 // const taggedOriginalDocs = docs.map((doc, i) => {
