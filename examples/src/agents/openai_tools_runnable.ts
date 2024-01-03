@@ -61,7 +61,6 @@ const runnableAgent = RunnableSequence.from([
 ]).withConfig({ runName: "OpenAIToolsAgent" });
 
 const executor = AgentExecutor.fromAgentAndTools({
-  // @ts-expect-error - OpenAIToolsAgentOutputParser outputs ToolsAgentAction[], not AgentAction[]
   agent: runnableAgent,
   tools,
 });
