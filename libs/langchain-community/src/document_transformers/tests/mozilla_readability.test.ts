@@ -1,6 +1,6 @@
 import { expect, test } from "@jest/globals";
+import { Document } from "@langchain/core/documents";
 
-import { Document } from "../../document.js";
 import { MozillaReadabilityTransformer } from "../mozilla_readability.js";
 
 test("Test HTML to text transformer", async () => {

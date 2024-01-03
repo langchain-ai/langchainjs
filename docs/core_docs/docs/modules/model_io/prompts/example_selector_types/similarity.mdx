@@ -8,6 +8,14 @@ import ExampleSimilarity from "@examples/prompts/semantic_similarity_example_sel
 The fields of the examples object will be used as parameters to format the `examplePrompt` passed to the `FewShotPromptTemplate`.
 Each example should therefore contain all required fields for the example prompt you are using.
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/community
+```
+
 <CodeBlock language="typescript">{ExampleSimilarity}</CodeBlock>
 
 By default, each field in the examples object is concatenated together, embedded, and stored in the vectorstore for

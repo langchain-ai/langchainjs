@@ -2,8 +2,11 @@ import {
   BaseRetriever,
   type BaseRetrieverInput,
 } from "@langchain/core/retrievers";
-import { AsyncCaller, AsyncCallerParams } from "../../util/async_caller.js";
-import { Document } from "../../document.js";
+import {
+  AsyncCaller,
+  type AsyncCallerParams,
+} from "@langchain/core/utils/async_caller";
+import type { DocumentInterface } from "@langchain/core/documents";
 
 /**
  * Type for the authentication method used by the RemoteRetriever. It can
@@ -89,9 +92,11 @@ export abstract class RemoteRetriever
    * @param json The JSON response from the server.
    * @returns An array of Document instances.
    */
-  abstract processJsonResponse(json: RemoteRetrieverValues): Document[];
+  abstract processJsonResponse(
+    json: RemoteRetrieverValues
+  ): DocumentInterface[];
 
-  async _getRelevantDocuments(query: string): Promise<Document[]> {
+  async _getRelevantDocuments(query: string): Promise<DocumentInterface[]> {
     const body = this.createJsonBody(query);
     const response = await this.asyncCaller.call(() =>
       fetch(this.url, {

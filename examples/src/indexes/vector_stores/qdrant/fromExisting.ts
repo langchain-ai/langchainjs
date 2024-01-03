@@ -1,4 +1,4 @@
-import { QdrantVectorStore } from "langchain/vectorstores/qdrant";
+import { QdrantVectorStore } from "@langchain/community/vectorstores/qdrant";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
 const vectorStore = await QdrantVectorStore.fromExistingCollection(

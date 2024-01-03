@@ -7,7 +7,7 @@ import {
   GmailGetThread,
   GmailSearch,
   GmailSendMessage,
-} from "langchain/tools/gmail";
+} from "@langchain/community/tools/gmail";
 
 export async function run() {
   const model = new OpenAI({

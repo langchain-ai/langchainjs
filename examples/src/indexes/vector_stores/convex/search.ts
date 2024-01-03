@@ -1,6 +1,6 @@
 "use node";
 
-import { ConvexVectorStore } from "langchain/vectorstores/convex";
+import { ConvexVectorStore } from "@langchain/community/vectorstores/convex";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { v } from "convex/values";
 import { action } from "./_generated/server.js";

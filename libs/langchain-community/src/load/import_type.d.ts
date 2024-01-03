@@ -353,6 +353,7 @@ export interface SecretMap {
   REDIS_PASSWORD?: string;
   REDIS_URL?: string;
   REDIS_USERNAME?: string;
+  REMOTE_RETRIEVER_AUTH_BEARER?: string;
   REPLICATE_API_TOKEN?: string;
   SEARXNG_API_BASE?: string;
   UPSTASH_REDIS_REST_TOKEN?: string;

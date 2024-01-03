@@ -1,5 +1,5 @@
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { PGVectorStore } from "langchain/vectorstores/pgvector";
+import { PGVectorStore } from "@langchain/community/vectorstores/pgvector";
 import { PoolConfig } from "pg";
 
 // First, follow set-up instructions at

@@ -1,4 +1,4 @@
-import { CloudflareWorkersAI } from "langchain/llms/cloudflare_workersai";
+import { CloudflareWorkersAI } from "@langchain/community/llms/cloudflare_workersai";
 
 const model = new CloudflareWorkersAI({
   model: "@cf/meta/llama-2-7b-chat-int8", // Default value
