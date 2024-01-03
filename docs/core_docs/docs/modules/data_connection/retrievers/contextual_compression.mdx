@@ -21,6 +21,14 @@ Let's start by initializing a simple vector store retriever and storing the 2023
 Given an example question, our retriever returns one or two relevant docs and a few irrelevant docs, and even the relevant docs have a lot of irrelevant information in them.
 To extract all the context we can, we use an `LLMChainExtractor`, which will iterate over the initially returned documents and extract from each only the content that is relevant to the query.
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/community
+```
+
 import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/retrievers/contextual_compression.ts";
 

@@ -3,6 +3,7 @@ import { LLM, type BaseLLMParams } from "@langchain/core/language_models/llms";
 
 const apiUrl = "https://llm.api.cloud.yandex.net/llm/v1alpha/instruct";
 
+/** @deprecated Prefer @langchain/yandex */
 export interface YandexGPTInputs extends BaseLLMParams {
   /**
    * What sampling temperature to use.
@@ -32,6 +33,7 @@ export interface YandexGPTInputs extends BaseLLMParams {
   iamToken?: string;
 }
 
+/** @deprecated Prefer @langchain/yandex */
 export class YandexGPT extends LLM implements YandexGPTInputs {
   lc_serializable = true;
 

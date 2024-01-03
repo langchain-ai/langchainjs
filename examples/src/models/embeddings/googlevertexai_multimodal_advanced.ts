@@ -1,6 +1,6 @@
 import fs from "fs";
 import { GoogleVertexAIMultimodalEmbeddings } from "langchain/experimental/multimodal_embeddings/googlevertexai";
-import { FaissStore } from "langchain/vectorstores/faiss";
+import { FaissStore } from "@langchain/community/vectorstores/faiss";
 import { Document } from "langchain/document";
 
 const embeddings = new GoogleVertexAIMultimodalEmbeddings();

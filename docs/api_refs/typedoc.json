@@ -336,7 +336,6 @@
     "../../langchain-core/src/tracers/initialize.ts",
     "../../langchain-core/src/tracers/log_stream.ts",
     "../../langchain-core/src/tracers/run_collector.ts",
-    "../../langchain-core/src/tracers/tracer_langchain_v1.ts",
     "../../langchain-core/src/tracers/tracer_langchain.ts",
     "../../langchain-core/src/utils/async_caller.ts",
     "../../langchain-core/src/utils/chunk_array.ts",
@@ -473,9 +472,11 @@
     "../../libs/langchain-community/src/retrievers/chaindesk.ts",
     "../../libs/langchain-community/src/retrievers/databerry.ts",
     "../../libs/langchain-community/src/retrievers/metal.ts",
+    "../../libs/langchain-community/src/retrievers/remote/index.ts",
     "../../libs/langchain-community/src/retrievers/supabase.ts",
     "../../libs/langchain-community/src/retrievers/tavily_search_api.ts",
     "../../libs/langchain-community/src/retrievers/vectara_summary.ts",
+    "../../libs/langchain-community/src/retrievers/vespa.ts",
     "../../libs/langchain-community/src/retrievers/zep.ts",
     "../../libs/langchain-community/src/caches/cloudflare_kv.ts",
     "../../libs/langchain-community/src/caches/ioredis.ts",
@@ -510,6 +511,10 @@
     "../../libs/langchain-community/src/utils/convex.ts",
     "../../libs/langchain-google-genai/src/index.ts",
     "../../libs/langchain-mistralai/src/index.ts",
-    "../../libs/langchain-openai/src/index.ts"
+    "../../libs/langchain-openai/src/index.ts",
+    "../../libs/langchain-yandex/src/chat_models.ts",
+    "../../libs/langchain-yandex/src/embeddings.ts",
+    "../../libs/langchain-yandex/src/index.ts",
+    "../../libs/langchain-yandex/src/llms.ts"
   ]
 }

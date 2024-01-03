@@ -1,4 +1,4 @@
-import { Neo4jGraph } from "langchain/graphs/neo4j_graph";
+import { Neo4jGraph } from "@langchain/community/graphs/neo4j_graph";
 import { OpenAI } from "langchain/llms/openai";
 import { GraphCypherQAChain } from "langchain/chains/graph_qa/cypher";
 

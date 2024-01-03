@@ -1,4 +1,4 @@
-import { ChatIflytekXinghuo } from "langchain/chat_models/iflytek_xinghuo";
+import { ChatIflytekXinghuo } from "@langchain/community/chat_models/iflytek_xinghuo";
 import { HumanMessage } from "langchain/schema";
 
 const model = new ChatIflytekXinghuo();

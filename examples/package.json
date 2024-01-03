@@ -35,6 +35,7 @@
     "@langchain/google-genai": "workspace:*",
     "@langchain/mistralai": "workspace:*",
     "@langchain/openai": "workspace:*",
+    "@langchain/yandex": "workspace:*",
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^1.1.0",
     "@planetscale/database": "^1.8.0",

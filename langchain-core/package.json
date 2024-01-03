@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -229,11 +229,6 @@
       "import": "./tracers/run_collector.js",
       "require": "./tracers/run_collector.cjs"
     },
-    "./tracers/tracer_langchain_v1": {
-      "types": "./tracers/tracer_langchain_v1.d.ts",
-      "import": "./tracers/tracer_langchain_v1.js",
-      "require": "./tracers/tracer_langchain_v1.cjs"
-    },
     "./tracers/tracer_langchain": {
       "types": "./tracers/tracer_langchain.d.ts",
       "import": "./tracers/tracer_langchain.js",
@@ -390,9 +385,6 @@
     "tracers/run_collector.cjs",
     "tracers/run_collector.js",
     "tracers/run_collector.d.ts",
-    "tracers/tracer_langchain_v1.cjs",
-    "tracers/tracer_langchain_v1.js",
-    "tracers/tracer_langchain_v1.d.ts",
     "tracers/tracer_langchain.cjs",
     "tracers/tracer_langchain.js",
     "tracers/tracer_langchain.d.ts",

@@ -1,4 +1,4 @@
-import { SingleStoreVectorStore } from "langchain/vectorstores/singlestore";
+import { SingleStoreVectorStore } from "@langchain/community/vectorstores/singlestore";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
 export const run = async () => {
