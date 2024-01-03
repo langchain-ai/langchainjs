@@ -14,7 +14,7 @@ To start, we need a retriever to use! The code here is mostly just example code.
 
 ```typescript
 import { FaissStore } from "langchain/vectorstores/faiss";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 
@@ -58,7 +58,7 @@ Under the hood, this agent is using the OpenAIFunctionsAgent, so we need to use 
 
 ```typescript
 import { createConversationalRetrievalAgent } from "langchain/agents/toolkits";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 
 const model = new ChatOpenAI({
   temperature: 0,
@@ -157,7 +157,7 @@ This memory also has `returnMessages` set to `true` by default.
 You can also load messages from prior conversations into this memory by initializing it with a pre-loaded chat history:
 
 ```typescript
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { OpenAIAgentTokenBufferMemory } from "langchain/agents/toolkits";
 import { HumanMessage, AIMessage } from "langchain/schema";
 import { ChatMessageHistory } from "langchain/memory";

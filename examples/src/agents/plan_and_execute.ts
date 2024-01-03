@@ -1,6 +1,6 @@
 import { Calculator } from "langchain/tools/calculator";
 import { SerpAPI } from "langchain/tools";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { PlanAndExecuteAgentExecutor } from "langchain/experimental/plan_and_execute";
 
 const tools = [new Calculator(), new SerpAPI()];

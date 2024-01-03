@@ -7,7 +7,7 @@ For example, if you set `maxConcurrency: 5`, then LangChain will only send 5 req
 To use this feature, simply pass `maxConcurrency: <number>` when you instantiate the LLM. For example:
 
 ```typescript
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 
 const model = new OpenAI({ maxConcurrency: 5 });
 ```

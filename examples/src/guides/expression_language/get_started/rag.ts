@@ -1,6 +1,5 @@
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "langchain/document";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { ChatPromptTemplate } from "langchain/prompts";
 import {
   RunnableLambda,

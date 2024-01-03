@@ -3,7 +3,7 @@ import {
   ConstitutionalChain,
   LLMChain,
 } from "langchain/chains";
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import { PromptTemplate } from "langchain/prompts";
 
 // LLMs can produce harmful, toxic, or otherwise undesirable outputs. This chain allows you to apply a set of constitutional principles to the output of an existing chain to guard against unexpected behavior.

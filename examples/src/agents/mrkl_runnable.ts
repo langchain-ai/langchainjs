@@ -1,6 +1,6 @@
 import { AgentExecutor, ChatAgentOutputParser } from "langchain/agents";
 import { formatLogToString } from "langchain/agents/format_scratchpad/log";
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import { ChatPromptTemplate, PromptTemplate } from "langchain/prompts";
 import { AgentStep } from "langchain/schema";
 import { RunnableSequence } from "langchain/schema/runnable";

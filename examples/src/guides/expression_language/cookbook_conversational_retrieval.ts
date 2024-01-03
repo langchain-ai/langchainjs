@@ -3,9 +3,8 @@ import {
   RunnableSequence,
   RunnablePassthrough,
 } from "langchain/schema/runnable";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { StringOutputParser } from "langchain/schema/output_parser";
 import { formatDocumentsAsString } from "langchain/util/document";
 

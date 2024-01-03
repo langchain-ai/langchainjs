@@ -1,5 +1,5 @@
 import { SearxngSearch } from "langchain/tools";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { AgentExecutor } from "langchain/agents";
 import { BaseMessageChunk, AgentAction, AgentFinish } from "langchain/schema";
 import { RunnableSequence } from "langchain/schema/runnable";

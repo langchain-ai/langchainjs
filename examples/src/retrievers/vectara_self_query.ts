@@ -2,7 +2,7 @@ import { AttributeInfo } from "langchain/schema/query_constructor";
 import { Document } from "langchain/document";
 import { SelfQueryRetriever } from "langchain/retrievers/self_query";
 
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import { VectaraStore } from "@langchain/community/vectorstores/vectara";
 import { VectaraTranslator } from "langchain/retrievers/self_query/vectara";
 import { FakeEmbeddings } from "langchain/embeddings/fake";

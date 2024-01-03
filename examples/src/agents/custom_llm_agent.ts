@@ -4,7 +4,7 @@ import {
   AgentExecutor,
 } from "langchain/agents";
 import { LLMChain } from "langchain/chains";
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import {
   BaseStringPromptTemplate,
   SerializedBasePromptTemplate,

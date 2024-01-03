@@ -88,7 +88,7 @@ In this example we'll be using Supabase, however you can pick any vector store w
 
 ```typescript
 import { createClient } from "@supabase/supabase-js";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { SupabaseVectorStore } from "langchain/vectorstores/supabase";
 ```
 
@@ -130,7 +130,7 @@ const retriever = vectorStore.asRetriever({
 We'll setup our model and memory system just as we'd do for any other chatbot application.
 
 ```typescript
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 ```
 
 Pipe the `StringOutputParser` through since both chains which use this model will also need this output parser.
@@ -277,7 +277,7 @@ The steps to initialize a ReAct agent are:
 1. Import the necessary modules from their respective packages. 
     \```
     import { initializeAgentExecutorWithOptions } from "langchain/agents";
-    import { OpenAI } from "langchain/llms/openai";
+    import { OpenAI } from "@langchain/openai";
     import { SerpAPI } from "langchain/tools";
     import { Calculator } from "langchain/tools/calculator";
     \```

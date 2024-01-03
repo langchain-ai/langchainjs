@@ -1,4 +1,4 @@
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { ToolMessage } from "langchain/schema";
 
 // Mocked out function, could be a database/API call in production

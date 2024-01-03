@@ -1,7 +1,6 @@
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { RetrievalQAChain, loadQAStuffChain } from "langchain/chains";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { PromptTemplate } from "langchain/prompts";
 import * as fs from "fs";

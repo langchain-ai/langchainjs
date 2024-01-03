@@ -6,7 +6,7 @@ For example, if your Azure instance is hosted under `https://{MY_INSTANCE_NAME}.
 could initialize your instance like this:
 
 ```typescript
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 
 const model = new OpenAI({
   temperature: 0.9,
@@ -25,7 +25,7 @@ If your instance is hosted under a domain other than the default `openai.azure.c
 For example, here's how you would connect to the domain `https://westeurope.api.microsoft.com/openai/deployments/{DEPLOYMENT_NAME}`:
 
 ```typescript
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 
 const model = new OpenAI({
   temperature: 0.9,

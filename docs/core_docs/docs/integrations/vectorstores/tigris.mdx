@@ -39,7 +39,7 @@ import FromDocs from "@examples/indexes/vector_stores/tigris/fromDocs.ts";
 ```typescript
 import { VectorDocumentStore } from "@tigrisdata/vector";
 import { Document } from "langchain/document";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { TigrisVectorStore } from "langchain/vectorstores/tigris";
 
 const index = new VectorDocumentStore({
@@ -81,7 +81,7 @@ import Search from "@examples/indexes/vector_stores/tigris/search.ts";
 
 ```typescript
 import { VectorDocumentStore } from "@tigrisdata/vector";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { TigrisVectorStore } from "langchain/vectorstores/tigris";
 
 const index = new VectorDocumentStore({

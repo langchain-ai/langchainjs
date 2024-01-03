@@ -19,7 +19,7 @@ npm install -S @pinecone-database/pinecone
 ```typescript
 import { Pinecone } from "@pinecone-database/pinecone";
 import { Document } from "langchain/document";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { PineconeStore } from "langchain/vectorstores/pinecone";
 
 // Instantiate a new Pinecone client, which will automatically read the
@@ -60,8 +60,8 @@ await PineconeStore.fromDocuments(docs, new OpenAIEmbeddings(), {
 ```typescript
 import { Pinecone } from "@pinecone-database/pinecone";
 import { VectorDBQAChain } from "langchain/chains";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { OpenAI } from "@langchain/openai";
 import { PineconeStore } from "langchain/vectorstores/pinecone";
 
 // Instantiate a new Pinecone client, which will automatically read the
@@ -117,7 +117,7 @@ console.log(response);
 ```typescript
 import { Pinecone } from "@pinecone-database/pinecone";
 import { Document } from "langchain/document";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { PineconeStore } from "langchain/vectorstores/pinecone";
 
 // Instantiate a new Pinecone client, which will automatically read the
@@ -192,8 +192,8 @@ that are most similar to the inputs, then reranks and optimizes for diversity.
 ```typescript
 import { Pinecone } from "@pinecone-database/pinecone";
 import { VectorDBQAChain } from "langchain/chains";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { OpenAI } from "@langchain/openai";
 import { PineconeStore } from "langchain/vectorstores/pinecone";
 
 // Instantiate a new Pinecone client, which will automatically read the

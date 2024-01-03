@@ -10,7 +10,7 @@ For example, if your Azure instance is hosted under `https://{MY_INSTANCE_NAME}.
 could initialize your instance like this:
 
 ```typescript
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 
 const embeddings = new OpenAIEmbeddings({
   azureOpenAIApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.AZURE_OPENAI_API_KEY
@@ -28,7 +28,7 @@ If your instance is hosted under a domain other than the default `openai.azure.c
 For example, here's how you would connect to the domain `https://westeurope.api.microsoft.com/openai/deployments/{DEPLOYMENT_NAME}`:
 
 ```typescript
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 
 const embeddings = new OpenAIEmbeddings({
   azureOpenAIApiKey: "YOUR-API-KEY",

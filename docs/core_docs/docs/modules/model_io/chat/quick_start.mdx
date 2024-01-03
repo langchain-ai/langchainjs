@@ -36,7 +36,7 @@ export OPENAI_API_KEY="..."
 If you'd prefer not to set an environment variable you can pass the key in directly via the `openAIApiKey` named parameter when initiating the OpenAI Chat Model class:
 
 ```typescript
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 
 const chatModel = new ChatOpenAI({
   openAIApiKey: "...",
@@ -46,7 +46,7 @@ const chatModel = new ChatOpenAI({
 Otherwise you can initialize without any params:
 
 ```typescript
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 
 const chatModel = new ChatOpenAI();
 ```

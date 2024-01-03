@@ -1,5 +1,5 @@
 import { PromptTemplate } from "langchain/prompts";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 
 const controller = new AbortController();
 

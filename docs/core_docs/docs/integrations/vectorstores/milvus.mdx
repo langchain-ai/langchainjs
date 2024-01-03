@@ -45,7 +45,7 @@ Only available on Node.js.
 
 ```typescript
 import { Milvus } from "langchain/vectorstores/milvus";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 
 // text sample from Godel, Escher, Bach
 const vectorStore = await Milvus.fromTexts(
@@ -80,7 +80,7 @@ const response = await vectorStore.similaritySearch("scared", 2);
 
 ```typescript
 import { Milvus } from "langchain/vectorstores/milvus";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 
 const vectorStore = await Milvus.fromExistingCollection(
   new OpenAIEmbeddings(),

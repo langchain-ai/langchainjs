@@ -141,7 +141,7 @@ npm install @langchain/core
 LangChain provides an ESM build targeting Node.js environments. You can import it using the following syntax:
 
 ```typescript
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 ```
 
 If you are using TypeScript in an ESM project we suggest updating your `tsconfig.json` to include the following:
@@ -169,7 +169,7 @@ const { OpenAI } = require("langchain/llms/openai");
 LangChain can be used in Cloudflare Workers. You can import it using the following syntax:
 
 ```typescript
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 ```
 
 ### Vercel / Next.js
@@ -177,7 +177,7 @@ import { OpenAI } from "langchain/llms/openai";
 LangChain can be used in Vercel / Next.js. We support using LangChain in frontend components, in Serverless functions and in Edge functions. You can import it using the following syntax:
 
 ```typescript
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 ```
 
 ### Deno / Supabase Edge Functions
@@ -201,7 +201,7 @@ We recommend looking at our [Supabase Template](https://github.com/langchain-ai/
 LangChain can be used in the browser. In our CI we test bundling LangChain with Webpack and Vite, but other bundlers should work too. You can import it using the following syntax:
 
 ```typescript
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 ```
 
 ## Unsupported: Node.js 16
