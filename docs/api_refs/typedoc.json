@@ -512,6 +512,10 @@
     "../../libs/langchain-community/src/utils/convex.ts",
     "../../libs/langchain-google-genai/src/index.ts",
     "../../libs/langchain-mistralai/src/index.ts",
-    "../../libs/langchain-openai/src/index.ts"
+    "../../libs/langchain-openai/src/index.ts",
+    "../../libs/langchain-yandex/src/chat_models.ts",
+    "../../libs/langchain-yandex/src/embeddings.ts",
+    "../../libs/langchain-yandex/src/index.ts",
+    "../../libs/langchain-yandex/src/llms.ts"
   ]
 }
