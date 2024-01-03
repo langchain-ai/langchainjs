@@ -1,7 +1,7 @@
 import { expect, test } from "@jest/globals";
+import { Document } from "@langchain/core/documents";
 
 import { HtmlToTextTransformer } from "../html_to_text.js";
-import { Document } from "../../document.js";
 
 test("Test HTML to text transformer", async () => {
   const webpageText = `<!DOCTYPE html>
