@@ -6,6 +6,7 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { InMemoryStore } from "langchain/storage/in_memory";
 import { TextLoader } from "langchain/document_loaders/fs/text";
+import { Document } from "langchain/document";
 
 const textLoader = new TextLoader("../examples/state_of_the_union.txt");
 const parentDocuments = await textLoader.load();
@@ -58,8 +59,13 @@ const retriever = new MultiVectorRetriever({
   parentK: 5,
 });
 
+const keyValuePairs: [string, Document][] = docs.map((originalDoc, i) => [
+  docIds[i],
+  originalDoc,
+]);
+
 // Use the retriever to add the original chunks to the document store
-await retriever.addDocuments(docs, { ids: docIds });
+await retriever.docstore.mset(keyValuePairs);
 
 // Vectorstore alone retrieves the small chunks
 const vectorstoreResult = await retriever.vectorstore.similaritySearch(

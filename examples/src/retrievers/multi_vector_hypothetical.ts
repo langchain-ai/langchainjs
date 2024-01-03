@@ -99,8 +99,13 @@ const retriever = new MultiVectorRetriever({
   idKey,
 });
 
+const keyValuePairs: [string, Document][] = docs.map((originalDoc, i) => [
+  docIds[i],
+  originalDoc,
+]);
+
 // Use the retriever to add the original chunks to the document store
-await retriever.addDocuments(docs, { ids: docIds });
+await retriever.docstore.mset(keyValuePairs);
 
 // We could also add the original chunks to the vectorstore if we wish
 // const taggedOriginalDocs = docs.map((doc, i) => {
