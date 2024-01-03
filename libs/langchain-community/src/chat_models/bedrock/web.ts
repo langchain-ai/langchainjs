@@ -393,7 +393,7 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
     const PRELUDE_TOTAL_LENGTH_BYTES = 4;
 
     function getMessageLength(buffer: Uint8Array) {
-      if (buffer.byteLength < PRELUDE_TOTAL_LENGTH_BYTES ) return 0;
+      if (buffer.byteLength < PRELUDE_TOTAL_LENGTH_BYTES) return 0;
       const view = new DataView(
         buffer.buffer,
         buffer.byteOffset,
@@ -414,7 +414,10 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
           buffer = _concatChunks(buffer, chunk);
           let messageLength = getMessageLength(buffer);
 
-          while (buffer.byteLength >= PRELUDE_TOTAL_LENGTH_BYTES && buffer.byteLength >= messageLength) {
+          while (
+            buffer.byteLength >= PRELUDE_TOTAL_LENGTH_BYTES &&
+            buffer.byteLength >= messageLength
+          ) {
             yield buffer.slice(0, messageLength);
             buffer = buffer.slice(messageLength);
             messageLength = getMessageLength(buffer);
