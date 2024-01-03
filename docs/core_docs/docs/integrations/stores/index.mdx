@@ -25,8 +25,8 @@ It's that simple!
 
 So far LangChain.js has two base integrations for `BaseStore`:
 
-- [`InMemoryStore`](/docs/integrations/storage/in_memory)
-- [`LocalFileStore`](/docs/integrations/storage/file_system) (Node.js only)
+- [`InMemoryStore`](/docs/integrations/stores/in_memory)
+- [`LocalFileStore`](/docs/integrations/stores/file_system) (Node.js only)
 
 ## Use Cases
 
@@ -37,19 +37,18 @@ If you're building web apps with chat, the `BaseStore` family of integrations ca
 ### Caching
 
 The `BaseStore` family can be a useful alternative to our other caching integrations.
-For example the [`LocalFileStore`](/docs/integrations/storage/file_system) allows for persisting data through the file system. It also is incredibly fast, so your users will be able to access cached data in a snap.
+For example the [`LocalFileStore`](/docs/integrations/stores/file_system) allows for persisting data through the file system. It also is incredibly fast, so your users will be able to access cached data in a snap.
 
 See the individual sections for deeper dives on specific storage providers.
-
 
 ## Reading Data
 
 ### In Memory
 
-Reading data is simple with KV stores. Below is an example using the `InMemoryStore` and the `.mget()` method.
+Reading data is simple with KV stores. Below is an example using the [`InMemoryStore`](/docs/integrations/stores/in_memory) and the `.mget()` method.
 We'll also set our generic value type to `string` so we can have type safety setting our strings.
 
-Import the `InMemoryStore` class.
+Import the [`InMemoryStore`](/docs/integrations/stores/in_memory) class.
 
 ```typescript
 import { InMemoryStore } from "langchain/storage/in_memory";
@@ -86,7 +85,7 @@ console.log(data);
 ### File System
 
 When using the file system integration we need to instantiate via the `fromPath` method. This is required because it needs to preform checks to ensure the directory exists and is readable/writable.
-You also must use a directory when using `LocalFileStore` because each entry is stored as a unique file in the directory.
+You also must use a directory when using [`LocalFileStore`](/docs/integrations/stores/file_system) because each entry is stored as a unique file in the directory.
 
 ```typescript
 import { LocalFileStore } from "langchain/storage/file_system";
@@ -126,10 +125,10 @@ console.log(data.map((v) => decoder.decode(v)));
 
 ### In Memory
 
-Writing data is simple with KV stores. Below is an example using the `InMemoryStore` and the `.mset()` method.
+Writing data is simple with KV stores. Below is an example using the [`InMemoryStore`](/docs/integrations/stores/in_memory) and the `.mset()` method.
 We'll also set our generic value type to `Date` so we can have type safety setting our dates.
 
-Import the `InMemoryStore` class.
+Import the [`InMemoryStore`](/docs/integrations/stores/in_memory) class.
 
 ```typescript
 import { InMemoryStore } from "langchain/storage/in_memory";
@@ -155,7 +154,7 @@ await store.mset(data);
 ### File System
 
 When using the file system integration we need to instantiate via the `fromPath` method. This is required because it needs to preform checks to ensure the directory exists and is readable/writable.
-You also must use a directory when using `LocalFileStore` because each entry is stored as a unique file in the directory.
+You also must use a directory when using [`LocalFileStore`](/docs/integrations/stores/file_system) because each entry is stored as a unique file in the directory.
 
 ```typescript
 import { LocalFileStore } from "langchain/storage/file_system";
