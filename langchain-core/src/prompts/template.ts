@@ -1,17 +1,16 @@
-import Handlebars from "handlebars";
 import type { InputValues } from "../utils/types.js";
 
 /**
  * Type that specifies the format of a template. Only
  * "f-string" is supported currently.
  */
-export type TemplateFormat = "f-string" | "handlebars";
+export type TemplateFormat = "f-string";
 
 /**
  * Type that represents a node in a parsed format string. It can be either
  * a literal text or a variable name.
  */
-type ParsedFStringNode =
+export type ParsedFStringNode =
   | { type: "literal"; text: string }
   | { type: "variable"; name: string };
 
@@ -65,40 +64,6 @@ export const parseFString = (template: string): ParsedFStringNode[] => {
   return nodes;
 };
 
-export const parseHandlebars = (template: string): ParsedFStringNode[] => {
-  const parsed: ParsedFStringNode[] = [];
-  const nodes: { type: string }[] = [...Handlebars.parse(template).body];
-  while (nodes.length) {
-    const node = nodes.pop()!;
-    if (node.type === "ContentStatement") {
-      // @ts-expect-error - handlebars' hbs.AST.ContentStatement isn't exported
-      const text = node.value;
-      parsed.push({ type: "literal", text });
-    } else if (node.type === "MustacheStatement") {
-      // @ts-expect-error - handlebars' hbs.AST.MustacheStatement isn't exported
-      const name: string = node.path.parts[0];
-      // @ts-expect-error - handlebars' hbs.AST.MustacheStatement isn't exported
-      const { original } = node.path as { original: string };
-      if (!!name && !original.startsWith("this.") && !original.startsWith("@")) {
-        parsed.push({ type: "variable", name });
-      }
-    } else if (node.type === "PathExpression") {
-      // @ts-expect-error - handlebars' hbs.AST.PathExpression isn't exported
-      const name: string = node.parts[0];
-      // @ts-expect-error - handlebars' hbs.AST.PathExpression isn't exported
-      const original = node.original;
-      if (!!name && !original.startsWith("this.") && !original.startsWith("@")) {
-          parsed.push({ type: "variable", name });
-      }
-    } else if (node.type === "BlockStatement") {
-      // @ts-expect-error - handlebars' hbs.AST.BlockStatement isn't exported
-      nodes.push([...node.params, ...node.program.body]);
-    }
-  }
-
-  return parsed;
-};
-
 export const interpolateFString = (template: string, values: InputValues) =>
   parseFString(template).reduce((res, node) => {
     if (node.type === "variable") {
@@ -110,14 +75,6 @@ export const interpolateFString = (template: string, values: InputValues) =>
 
     return res + node.text;
   }, "");
-
-export const interpolateHandlebars = (
-  template: string,
-  values: InputValues
-) => {
-  const compiled = Handlebars.compile(template, { noEscape: true });
-  return compiled(values);
-};
 
 /**
  * Type that represents a function that takes a template string and a set
@@ -134,12 +91,10 @@ type Parser = (template: string) => ParsedFStringNode[];
 
 export const DEFAULT_FORMATTER_MAPPING: Record<TemplateFormat, Interpolator> = {
   "f-string": interpolateFString,
-  handlebars: interpolateHandlebars,
 };
 
 export const DEFAULT_PARSER_MAPPING: Record<TemplateFormat, Parser> = {
   "f-string": parseFString,
-  handlebars: parseHandlebars,
 };
 
 export const renderTemplate = (
