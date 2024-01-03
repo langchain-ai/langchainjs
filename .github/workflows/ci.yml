@@ -72,11 +72,6 @@ jobs:
       ./.github/workflows/test-exports.yml
     secrets: inherit
 
-  test-dependency-compatibility:
-    uses:
-      ./.github/workflows/compatibility.yml
-    secrets: inherit
-
   examples-build:
     name: Build examples
     runs-on: ubuntu-latest

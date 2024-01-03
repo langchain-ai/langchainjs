@@ -1,8 +1,13 @@
 name: Dependency compatibility tests
 
 on:
-  workflow_dispatch: # Allows triggering the workflow manually in GitHub UI
-  workflow_call: # Allows triggering the workflow from another workflow
+  push:
+    branches: ["main"]
+  pull_request:
+    # Do not run this workflow if only docs changed.
+    paths-ignore:
+      - 'docs/**'
+  workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
 
 # If another push to the same PR or branch happens while this workflow is still running,
 # cancel the earlier run in favor of the next run.
