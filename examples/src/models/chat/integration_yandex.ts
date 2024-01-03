@@ -3,7 +3,7 @@ import { HumanMessage, SystemMessage } from "langchain/schema";
 
 const chat = new ChatYandexGPT();
 
-const res = await chat.call([
+const res = await chat.invoke([
   new SystemMessage(
     "You are a helpful assistant that translates English to French."
   ),
