@@ -853,6 +853,12 @@
     "experimental/masking.cjs",
     "experimental/masking.js",
     "experimental/masking.d.ts",
+    "experimental/prompts/custom_format.cjs",
+    "experimental/prompts/custom_format.js",
+    "experimental/prompts/custom_format.d.ts",
+    "experimental/prompts/handlebars.cjs",
+    "experimental/prompts/handlebars.js",
+    "experimental/prompts/handlebars.d.ts",
     "experimental/tools/pyinterpreter.cjs",
     "experimental/tools/pyinterpreter.js",
     "experimental/tools/pyinterpreter.d.ts",
@@ -2636,6 +2642,16 @@
       "types": "./experimental/masking.d.ts",
       "import": "./experimental/masking.js",
       "require": "./experimental/masking.cjs"
+    },
+    "./experimental/prompts/custom_format": {
+      "types": "./experimental/prompts/custom_format.d.ts",
+      "import": "./experimental/prompts/custom_format.js",
+      "require": "./experimental/prompts/custom_format.cjs"
+    },
+    "./experimental/prompts/handlebars": {
+      "types": "./experimental/prompts/handlebars.d.ts",
+      "import": "./experimental/prompts/handlebars.js",
+      "require": "./experimental/prompts/handlebars.cjs"
     },
     "./experimental/tools/pyinterpreter": {
       "types": "./experimental/tools/pyinterpreter.d.ts",
