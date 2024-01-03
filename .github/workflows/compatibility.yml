@@ -31,6 +31,5 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "yarn"
-
       - name: Test LangChain with latest deps
         run: docker compose -f dependency_range_tests/docker-compose.yml run test-langchain-with-latest-deps
