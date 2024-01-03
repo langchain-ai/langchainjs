@@ -4,7 +4,7 @@ import { BaseCallbackHandler } from "langchain/callbacks";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { Calculator } from "langchain/tools/calculator";
 import { AgentAction } from "langchain/schema";
-import { Serialized } from "langchain/load/serializable";
+import { Serialized } from "@langchain/core/load/serializable";
 
 export const run = async () => {
   // You can implement your own callback handler by extending BaseCallbackHandler

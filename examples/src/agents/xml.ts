@@ -1,25 +1,44 @@
-import { ChatAnthropic } from "langchain/chat_models/anthropic";
-import { initializeAgentExecutorWithOptions } from "langchain/agents";
-import { SerpAPI } from "langchain/tools";
+import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
+import { AgentExecutor, createXmlAgent } from "langchain/agents";
+import { pull } from "langchain/hub";
+import type { PromptTemplate } from "@langchain/core/prompts";
 
-const model = new ChatAnthropic({ modelName: "claude-2.1", temperature: 0.1 });
-const tools = [new SerpAPI()];
+import { ChatAnthropic } from "@langchain/anthropic";
 
-const executor = await initializeAgentExecutorWithOptions(tools, model, {
-  agentType: "xml",
-  verbose: true,
+// Define the tools the agent will have access to.
+const tools = [new TavilySearchResults({ maxResults: 1 })];
+
+// Get the prompt to use - you can modify this!
+// If you want to see the prompt in full, you can at:
+// https://smith.langchain.com/hub/hwchase17/xml-agent-convo
+const prompt = await pull<PromptTemplate>("hwchase17/xml-agent-convo");
+
+const llm = new ChatAnthropic({
+  modelName: "claude-2.1",
+  temperature: 0,
 });
-console.log("Loaded agent.");
 
-const input = `What is the weather in Honolulu?`;
+const agent = await createXmlAgent({
+  llm,
+  tools,
+  prompt,
+});
 
-const result = await executor.invoke({ input });
+const agentExecutor = new AgentExecutor({
+  agent,
+  tools,
+});
+
+const result = await agentExecutor.invoke({
+  input: "what is LangChain?",
+});
 
 console.log(result);
 
-/*
-  https://smith.langchain.com/public/d0acd50a-f99d-4af0-ae66-9009de319fb5/r
-  {
-    output: 'The weather in Honolulu is currently 75 degrees Fahrenheit with a small craft advisory in effect. The forecast calls for generally clear skies tonight with a low of 75 degrees.'
-  }
-*/
+const result2 = await agentExecutor.invoke({
+  input: "what's my name?",
+  // Notice that chat_history is a string, since this prompt is aimed at LLMs, not chat models
+  chat_history: "Human: Hi! My name is Cob\nAI: Hello Cob! Nice to meet you",
+});
+
+console.log(result2);

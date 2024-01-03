@@ -4,7 +4,7 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { SelfQueryRetriever } from "langchain/retrievers/self_query";
 import { ChromaTranslator } from "langchain/retrievers/self_query/chroma";
 import { OpenAI } from "langchain/llms/openai";
-import { Chroma } from "langchain/vectorstores/chroma";
+import { Chroma } from "@langchain/community/vectorstores/chroma";
 
 /**
  * First, we create a bunch of documents. You can load your own documents here instead.

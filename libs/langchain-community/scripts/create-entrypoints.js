@@ -29,6 +29,7 @@ const entrypoints = {
   "tools/searxng_search": "tools/searxng_search",
   "tools/serpapi": "tools/serpapi",
   "tools/serper": "tools/serper",
+  "tools/tavily_search": "tools/tavily_search",
   "tools/wikipedia_query_run": "tools/wikipedia_query_run",
   "tools/wolframalpha": "tools/wolframalpha",
   // toolkits
@@ -136,9 +137,11 @@ const entrypoints = {
   "retrievers/chaindesk": "retrievers/chaindesk",
   "retrievers/databerry": "retrievers/databerry",
   "retrievers/metal": "retrievers/metal",
+  "retrievers/remote": "retrievers/remote/index",
   "retrievers/supabase": "retrievers/supabase",
   "retrievers/tavily_search_api": "retrievers/tavily_search_api",
   "retrievers/vectara_summary": "retrievers/vectara_summary",
+  "retrievers/vespa": "retrievers/vespa",
   "retrievers/zep": "retrievers/zep",
   // cache
   "caches/cloudflare_kv": "caches/cloudflare_kv",

@@ -350,6 +350,9 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
 
   earlyStoppingMethod: StoppingMethod = "force";
 
+  // TODO: Update BaseChain implementation on breaking change to include this
+  returnOnlyOutputs = true;
+
   /**
    * How to handle errors raised by the agent's output parser.
     Defaults to `False`, which raises the error.
@@ -376,8 +379,11 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
 
   constructor(input: AgentExecutorInput) {
     let agent: BaseSingleActionAgent | BaseMultiActionAgent;
+    let returnOnlyOutputs = true;
     if (Runnable.isRunnable(input.agent)) {
       agent = new RunnableAgent({ runnable: input.agent });
+      // TODO: Update BaseChain implementation on breaking change
+      returnOnlyOutputs = false;
     } else {
       agent = input.agent;
     }
@@ -387,6 +393,7 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
     this.tools = input.tools;
     this.handleParsingErrors =
       input.handleParsingErrors ?? this.handleParsingErrors;
+    this.returnOnlyOutputs = returnOnlyOutputs;
     if (this.agent._agentActionType() === "multi") {
       for (const tool of this.tools) {
         if (tool.returnDirect) {
@@ -439,11 +446,19 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
       const { returnValues } = finishStep;
       const additional = await this.agent.prepareForOutput(returnValues, steps);
 
-      if (this.returnIntermediateSteps) {
-        return { ...returnValues, intermediateSteps: steps, ...additional };
-      }
       await runManager?.handleAgentEnd(finishStep);
-      return { ...returnValues, ...additional };
+
+      let response;
+
+      if (this.returnIntermediateSteps) {
+        response = { ...returnValues, intermediateSteps: steps, ...additional };
+      } else {
+        response = { ...returnValues, ...additional };
+      }
+      if (!this.returnOnlyOutputs) {
+        response = { ...inputs, ...response };
+      }
+      return response;
     };
 
     while (this.shouldContinue(iterations)) {

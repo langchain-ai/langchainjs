@@ -1,7 +1,7 @@
 import { AutoGPT } from "langchain/experimental/autogpt";
 import { ReadFileTool, WriteFileTool, SerpAPI } from "langchain/tools";
 import { NodeFileStore } from "langchain/stores/file/node";
-import { HNSWLib } from "langchain/vectorstores/hnswlib";
+import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 

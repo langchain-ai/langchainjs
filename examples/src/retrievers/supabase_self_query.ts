@@ -6,7 +6,7 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { SelfQueryRetriever } from "langchain/retrievers/self_query";
 import { SupabaseTranslator } from "langchain/retrievers/self_query/supabase";
 import { OpenAI } from "langchain/llms/openai";
-import { SupabaseVectorStore } from "langchain/vectorstores/supabase";
+import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
 
 /**
  * First, we create a bunch of documents. You can load your own documents here instead.

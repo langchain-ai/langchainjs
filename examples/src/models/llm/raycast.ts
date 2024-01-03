@@ -1,4 +1,4 @@
-import { RaycastAI } from "langchain/llms/raycast";
+import { RaycastAI } from "@langchain/community/llms/raycast";
 
 import { showHUD } from "@raycast/api";
 import { Tool } from "langchain/tools";

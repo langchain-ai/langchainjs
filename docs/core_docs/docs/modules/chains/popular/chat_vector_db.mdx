@@ -20,6 +20,14 @@ To create a conversational question-answering chain, you will need a retriever. 
 import CodeBlock from "@theme/CodeBlock";
 import ConvoRetrievalQAExample from "@examples/chains/conversational_qa.ts";
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/community
+```
+
 <CodeBlock language="typescript">{ConvoRetrievalQAExample}</CodeBlock>
 
 Here's an explanation of each step in the `RunnableSequence.from()` call above:

@@ -77,6 +77,7 @@
   "langchain/schema/runnable/RunnableConfigurableAlternatives": "langchain_core/runnables/configurable/RunnableConfigurableAlternatives",
   "langchain/schema/runnable/RunnableConfigurableFields": "langchain_core/runnables/configurable/RunnableConfigurableFields",
   "langchain/schema/runnable/RunnableWithMessageHistory": "langchain_core/runnables/history/RunnableWithMessageHistory",
-  "langchain/schema/runnable/RunnableAssign": "langchain_core/runnables/passthrough/RunnableAssign",
+  "langchain/schema/runnable/RunnableAssign": "langchain_core/runnables/base/RunnableAssign",
+  "langchain/schema/runnable/RunnablePick": "langchain_core/runnables/base/RunnablePick",
   "langchain/schema/runnable/RunnableRetry": "langchain_core/runnables/retry/RunnableRetry"
 }
