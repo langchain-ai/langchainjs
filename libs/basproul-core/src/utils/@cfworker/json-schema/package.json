@@ -1,0 +1,49 @@
+{
+  "name": "@cfworker/json-schema",
+  "type": "module",
+  "version": "1.12.5",
+  "description": "A JSON schema validator that will run on Cloudflare workers. Supports drafts 4, 7, 2019-09, and 2020-12.",
+  "keywords": [
+    "json-schema",
+    "jsonschema",
+    "json",
+    "schema",
+    "cloudflare",
+    "worker",
+    "workers",
+    "service-worker"
+  ],
+  "sideEffects": false,
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*",
+    "src/**/*",
+    "tsconfig.json",
+    "README.md",
+    "package.json"
+  ],
+  "repository": "https://github.com/cfworker/cfworker",
+  "author": "Jeremy Danyow <jdanyow@gmail.com>",
+  "homepage": "https://github.com/cfworker/cfworker/tree/master/packages/json-schema/README.md",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "clean": "tsc --build --clean",
+    "pretest": "node --experimental-import-meta-resolve suite-gen.js",
+    "test": "cfworker test test/**/*.spec.ts --nocheck"
+  },
+  "devDependencies": {
+    "@cfworker/dev": "^1.14.2",
+    "@types/chai": "^4.3.3",
+    "@types/mocha": "^10.0.0",
+    "chai": "^4.3.6",
+    "json-schema-test-suite": "git+https://github.com/json-schema-org/JSON-Schema-Test-Suite#76b529f",
+    "mocha": "^10.0.0",
+    "typescript": "^4.8.4"
+  }
+}
