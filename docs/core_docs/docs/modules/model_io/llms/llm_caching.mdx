@@ -11,12 +11,12 @@ It can speed up your application by reducing the number of API calls you make to
 
 import CodeBlock from "@theme/CodeBlock";
 
-import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";	
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
 
-<IntegrationInstallTooltip></IntegrationInstallTooltip>	
+<IntegrationInstallTooltip></IntegrationInstallTooltip>{" "}
 
-```bash npm2yarn	
-npm install @langchain/openai	
+```bash npm2yarn
+npm install @langchain/openai
 ```
 
 ```typescript
@@ -127,7 +127,7 @@ npm install ioredis
 Then, you can pass a `cache` option when you instantiate the LLM. For example:
 
 ```typescript
-import { OpenAI } from "@langchain/openai";;
+import { OpenAI } from "@langchain/openai";
 import { RedisCache } from "@langchain/community/caches/ioredis";
 import { Redis } from "ioredis";
 
