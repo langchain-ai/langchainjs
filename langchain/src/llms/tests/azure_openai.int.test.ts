@@ -291,7 +291,7 @@ test("Test OpenAI stream method with abort", async () => {
   }).rejects.toThrow();
 });
 
-test.skip("Test OpenAI stream method with early break", async () => {
+test("Test OpenAI stream method with early break", async () => {
   const model = new AzureOpenAI({
     maxTokens: 50,
     modelName: "gpt-3.5-turbo-instruct",

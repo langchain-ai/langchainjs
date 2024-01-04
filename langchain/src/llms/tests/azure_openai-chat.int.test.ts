@@ -126,7 +126,7 @@ test("Test OpenAIChat stream method with abort", async () => {
   }).rejects.toThrow();
 });
 
-test.skip("Test OpenAIChat stream method with early break", async () => {
+test("Test OpenAIChat stream method with early break", async () => {
   const model = new AzureOpenAIChat({ maxTokens: 50, modelName: "gpt-3.5-turbo" });
   const stream = await model.stream(
     "How is your day going? Be extremely verbose."
