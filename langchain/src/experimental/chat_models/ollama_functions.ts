@@ -65,6 +65,14 @@ export class OllamaFunctions extends BaseChatModel<ChatOllamaFunctionsCallOption
     return this.llm._identifyingParams();
   }
 
+  async *_streamResponseChunks(
+    messages: BaseMessage[],
+    options: this['ParsedCallOptions'],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    yield* this.llm._streamResponseChunks(messages, options, runManager);
+  }
+
   async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
