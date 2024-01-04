@@ -1,5 +1,5 @@
 import { ChatCohere } from "@langchain/cohere";
-import { HumanMessage } from "langchain/schema";
+import { HumanMessage } from "@langchain/core/messages";
 
 const model = new ChatCohere({
   apiKey: process.env.COHERE_API_KEY, // Default

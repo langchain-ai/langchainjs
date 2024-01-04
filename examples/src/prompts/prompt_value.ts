@@ -1,9 +1,4 @@
-import {
-  ChatPromptTemplate,
-  HumanMessagePromptTemplate,
-  PromptTemplate,
-  SystemMessagePromptTemplate,
-} from "langchain/prompts";
+import { ChatPromptTemplate , HumanMessagePromptTemplate , PromptTemplate , SystemMessagePromptTemplate } from "@langchain/core/prompts";
 
 export const run = async () => {
   const template = "What is a good name for a company that makes {product}?";

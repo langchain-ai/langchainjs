@@ -1,12 +1,7 @@
 import { OpenAI, ChatOpenAI } from "@langchain/openai";
 import { ConversationSummaryBufferMemory } from "langchain/memory";
 import { ConversationChain } from "langchain/chains";
-import {
-  ChatPromptTemplate,
-  HumanMessagePromptTemplate,
-  MessagesPlaceholder,
-  SystemMessagePromptTemplate,
-} from "langchain/prompts";
+import { ChatPromptTemplate , HumanMessagePromptTemplate , MessagesPlaceholder , SystemMessagePromptTemplate } from "@langchain/core/prompts";
 
 // summary buffer memory
 const memory = new ConversationSummaryBufferMemory({

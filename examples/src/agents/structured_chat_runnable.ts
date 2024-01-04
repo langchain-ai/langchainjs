@@ -6,16 +6,11 @@ import {
 } from "langchain/agents";
 import { Calculator } from "langchain/tools/calculator";
 import { DynamicStructuredTool } from "langchain/tools";
-import {
-  ChatPromptTemplate,
-  HumanMessagePromptTemplate,
-  PromptTemplate,
-  SystemMessagePromptTemplate,
-} from "langchain/prompts";
 import { renderTextDescriptionAndArgs } from "langchain/tools/render";
-import { RunnableSequence } from "langchain/schema/runnable";
-import { AgentStep } from "langchain/schema";
 import { formatLogToString } from "langchain/agents/format_scratchpad/log";
+import { ChatPromptTemplate , HumanMessagePromptTemplate , PromptTemplate , SystemMessagePromptTemplate } from "@langchain/core/prompts";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { AgentStep } from "@langchain/core/agents";
 
 /**
  * Need:

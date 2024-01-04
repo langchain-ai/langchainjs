@@ -1,6 +1,6 @@
 import { OpenAI } from "@langchain/openai";
 import { loadQAMapReduceChain } from "langchain/chains";
-import { Document } from "langchain/document";
+import { Document } from "@langchain/core/documents";
 
 // Optionally limit the number of concurrent requests to the language model.
 const model = new OpenAI({ temperature: 0, maxConcurrency: 10 });

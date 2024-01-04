@@ -1,6 +1,6 @@
-import { AIMessage, HumanMessage, SystemMessage } from "langchain/schema";
-
 import { ChatGoogleVertexAI } from "@langchain/community/chat_models/googlevertexai";
+import { AIMessage , HumanMessage , SystemMessage } from "@langchain/core/messages";
+
 // Or, if using the web entrypoint:
 // import { ChatGoogleVertexAI } from "@langchain/community/chat_models/googlevertexai/web";
 

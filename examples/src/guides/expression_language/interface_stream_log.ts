@@ -1,13 +1,9 @@
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
-import { StringOutputParser } from "langchain/schema/output_parser";
-import { RunnablePassthrough, RunnableSequence } from "langchain/runnables";
-import {
-  ChatPromptTemplate,
-  HumanMessagePromptTemplate,
-  SystemMessagePromptTemplate,
-} from "langchain/prompts";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { formatDocumentsAsString } from "langchain/util/document";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { RunnablePassthrough , RunnableSequence } from "@langchain/core/runnables";
+import { ChatPromptTemplate , HumanMessagePromptTemplate , SystemMessagePromptTemplate } from "@langchain/core/prompts";
 
 // Initialize the LLM to use to answer the question.
 const model = new ChatOpenAI({});

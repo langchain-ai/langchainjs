@@ -1,7 +1,7 @@
 import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { HydeRetriever } from "langchain/retrievers/hyde";
-import { Document } from "langchain/document";
+import { Document } from "@langchain/core/documents";
 
 const embeddings = new OpenAIEmbeddings();
 const vectorStore = new MemoryVectorStore(embeddings);

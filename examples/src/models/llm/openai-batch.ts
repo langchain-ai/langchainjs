@@ -1,6 +1,6 @@
 import { OpenAI, ChatOpenAI } from "@langchain/openai";
-import { HumanMessage } from "langchain/schema";
 import process from "process";
+import { HumanMessage } from "@langchain/core/messages";
 
 process.env.LANGCHAIN_TRACING_V2 = "true";
 
