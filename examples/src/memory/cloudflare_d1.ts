@@ -5,8 +5,7 @@ import { BufferMemory } from "langchain/memory";
 import { CloudflareD1MessageHistory } from "@langchain/community/stores/message/cloudflare_d1";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { StringOutputParser } from "@langchain/core/output_parsers";
-import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { MessagesPlaceholder } from "@langchain/core/prompts";
+import { ChatPromptTemplate , MessagesPlaceholder } from "@langchain/core/prompts";
 
 export interface Env {
   DB: D1Database;

@@ -1,6 +1,5 @@
 import { ChatMinimax } from "@langchain/community/chat_models/minimax";
-import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { HumanMessagePromptTemplate } from "@langchain/core/prompts";
+import { ChatPromptTemplate , HumanMessagePromptTemplate } from "@langchain/core/prompts";
 import { HumanMessage } from "@langchain/core/messages";
 
 const model = new ChatMinimax({

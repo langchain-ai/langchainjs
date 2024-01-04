@@ -1,8 +1,6 @@
 import { LLMChain } from "langchain/chains";
 import { ChatMinimax } from "@langchain/community/chat_models/minimax";
-import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { HumanMessagePromptTemplate } from "@langchain/core/prompts";
-import { SystemMessagePromptTemplate } from "@langchain/core/prompts";
+import { ChatPromptTemplate , HumanMessagePromptTemplate , SystemMessagePromptTemplate } from "@langchain/core/prompts";
 
 // We can also construct an LLMChain from a ChatPromptTemplate and a chat model.
 const chat = new ChatMinimax({ temperature: 0.01 });

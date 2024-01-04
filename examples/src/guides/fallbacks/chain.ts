@@ -1,8 +1,7 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { OpenAI } from "langchain/llms/openai";
 import { StringOutputParser } from "@langchain/core/output_parsers";
-import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { PromptTemplate } from "@langchain/core/prompts";
+import { ChatPromptTemplate , PromptTemplate } from "@langchain/core/prompts";
 
 const chatPrompt = ChatPromptTemplate.fromMessages<{ animal: string }>([
   [

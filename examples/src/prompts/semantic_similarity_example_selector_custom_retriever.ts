@@ -8,8 +8,7 @@ import {
   SemanticSimilarityExampleSelector
 } from "langchain/prompts";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { PromptTemplate } from "@langchain/core/prompts";
-import { FewShotPromptTemplate } from "@langchain/core/prompts";
+import { PromptTemplate , FewShotPromptTemplate } from "@langchain/core/prompts";
 
 const pinecone = new Pinecone();
 

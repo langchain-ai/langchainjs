@@ -3,8 +3,7 @@ import {
   SemanticSimilarityExampleSelector
 } from "langchain/prompts";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
-import { PromptTemplate } from "@langchain/core/prompts";
-import { FewShotPromptTemplate } from "@langchain/core/prompts";
+import { PromptTemplate , FewShotPromptTemplate } from "@langchain/core/prompts";
 
 // Create a prompt template that will be used to format the examples.
 const examplePrompt = PromptTemplate.fromTemplate(

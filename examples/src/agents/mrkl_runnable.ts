@@ -5,8 +5,7 @@ import { RunnableSequence } from "@langchain/core/runnables";
 import { SerpAPI } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 import { renderTextDescription } from "langchain/tools/render";
-import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { PromptTemplate } from "@langchain/core/prompts";
+import { ChatPromptTemplate , PromptTemplate } from "@langchain/core/prompts";
 import { AgentStep } from "@langchain/core/agents";
 
 /** Define the model to be used */

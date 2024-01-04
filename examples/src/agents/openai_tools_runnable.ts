@@ -9,8 +9,7 @@ import {
   OpenAIToolsAgentOutputParser,
   type ToolsAgentStep
 } from "langchain/agents/openai/output_parser";
-import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { MessagesPlaceholder } from "@langchain/core/prompts";
+import { ChatPromptTemplate , MessagesPlaceholder } from "@langchain/core/prompts";
 
 const model = new ChatOpenAI({
   modelName: "gpt-3.5-turbo-1106",

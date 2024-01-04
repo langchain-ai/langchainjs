@@ -1,8 +1,7 @@
 import { ChatAnthropic } from "langchain/chat_models/anthropic";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { BufferMemory } from "langchain/memory";
-import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { MessagesPlaceholder } from "@langchain/core/prompts";
+import { ChatPromptTemplate , MessagesPlaceholder } from "@langchain/core/prompts";
 
 const model = new ChatAnthropic();
 const prompt = ChatPromptTemplate.fromMessages([

@@ -1,5 +1,4 @@
-import { PromptTemplate } from "@langchain/core/prompts";
-import { PipelinePromptTemplate } from "@langchain/core/prompts";
+import { PromptTemplate , PipelinePromptTemplate } from "@langchain/core/prompts";
 
 const fullPrompt = PromptTemplate.fromTemplate(`{introduction}
 

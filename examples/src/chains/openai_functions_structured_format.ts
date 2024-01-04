@@ -3,9 +3,7 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { JsonOutputFunctionsParser } from "langchain/output_parsers";
-import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { SystemMessagePromptTemplate } from "@langchain/core/prompts";
-import { HumanMessagePromptTemplate } from "@langchain/core/prompts";
+import { ChatPromptTemplate , SystemMessagePromptTemplate , HumanMessagePromptTemplate } from "@langchain/core/prompts";
 
 const zodSchema = z.object({
   foods: z

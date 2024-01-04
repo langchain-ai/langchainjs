@@ -1,6 +1,5 @@
 import { ChatYandexGPT } from "@langchain/yandex/chat_models";
-import { HumanMessage } from "@langchain/core/messages";
-import { SystemMessage } from "@langchain/core/messages";
+import { HumanMessage , SystemMessage } from "@langchain/core/messages";
 
 const chat = new ChatYandexGPT();
 

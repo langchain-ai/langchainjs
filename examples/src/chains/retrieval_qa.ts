@@ -9,9 +9,7 @@ import {
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { formatDocumentsAsString } from "langchain/util/document";
-import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { HumanMessagePromptTemplate } from "@langchain/core/prompts";
-import { SystemMessagePromptTemplate } from "@langchain/core/prompts";
+import { ChatPromptTemplate , HumanMessagePromptTemplate , SystemMessagePromptTemplate } from "@langchain/core/prompts";
 
 // Initialize the LLM to use to answer the question.
 const model = new ChatOpenAI({});

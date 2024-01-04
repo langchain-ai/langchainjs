@@ -2,9 +2,7 @@ import { LLMChain } from "langchain/chains";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { ZeroShotAgent, AgentExecutor } from "langchain/agents";
 import { SerpAPI } from "langchain/tools";
-import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { SystemMessagePromptTemplate } from "@langchain/core/prompts";
-import { HumanMessagePromptTemplate } from "@langchain/core/prompts";
+import { ChatPromptTemplate , SystemMessagePromptTemplate , HumanMessagePromptTemplate } from "@langchain/core/prompts";
 
 export const run = async () => {
   const tools = [

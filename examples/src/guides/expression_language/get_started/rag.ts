@@ -4,9 +4,7 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { Document } from "@langchain/core/documents";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { RunnableLambda } from "@langchain/core/runnables";
-import { RunnableMap } from "@langchain/core/runnables";
-import { RunnablePassthrough } from "@langchain/core/runnables";
+import { RunnableLambda , RunnableMap , RunnablePassthrough } from "@langchain/core/runnables";
 
 const vectorStore = await HNSWLib.fromDocuments(
   [

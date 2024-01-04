@@ -3,11 +3,8 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { formatDocumentsAsString } from "langchain/util/document";
-import { RunnablePassthrough } from "@langchain/core/runnables";
-import { RunnableSequence } from "@langchain/core/runnables";
-import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { HumanMessagePromptTemplate } from "@langchain/core/prompts";
-import { SystemMessagePromptTemplate } from "@langchain/core/prompts";
+import { RunnablePassthrough , RunnableSequence } from "@langchain/core/runnables";
+import { ChatPromptTemplate , HumanMessagePromptTemplate , SystemMessagePromptTemplate } from "@langchain/core/prompts";
 
 // Initialize the LLM to use to answer the question.
 const model = new ChatOpenAI({});

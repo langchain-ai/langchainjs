@@ -6,9 +6,7 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { formatDocumentsAsString } from "langchain/util/document";
-import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { HumanMessagePromptTemplate } from "@langchain/core/prompts";
-import { SystemMessagePromptTemplate } from "@langchain/core/prompts";
+import { ChatPromptTemplate , HumanMessagePromptTemplate , SystemMessagePromptTemplate } from "@langchain/core/prompts";
 
 const text = fs.readFileSync("state_of_the_union.txt", "utf8");
 
