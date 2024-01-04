@@ -1,6 +1,6 @@
 import { OpenAI, ChatOpenAI } from "@langchain/openai";
-import { SystemMessage, HumanMessage } from "langchain/schema";
 import * as process from "process";
+import { SystemMessage, HumanMessage } from "@langchain/core/messages";
 
 export const run = async () => {
   process.env.LANGCHAIN_HANDLER = "langchain";

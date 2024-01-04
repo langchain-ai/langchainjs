@@ -492,7 +492,7 @@ export class CustomPromptTemplateForTools extends BaseStringPromptTemplate {
  */
 import { AgentActionOutputParser } from "langchain/agents";
 import { AgentAction, AgentFinish } from "langchain/schema";
-import { FormatInstructionsOptions } from "langchain/schema/output_parser";
+import { FormatInstructionsOptions } from "@langchain/core/output_parsers";
 
 export class SalesConvoOutputParser extends AgentActionOutputParser {
   ai_prefix: string;

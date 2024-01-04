@@ -1,17 +1,20 @@
 import { AgentExecutor } from "langchain/agents";
 import { ChatOpenAI } from "@langchain/openai";
-import { ChatPromptTemplate, MessagesPlaceholder } from "langchain/prompts";
-import {
-  AIMessage,
-  AgentStep,
-  BaseMessage,
-  FunctionMessage,
-} from "langchain/schema";
-import { RunnableSequence } from "langchain/schema/runnable";
 import { SerpAPI, formatToOpenAIFunction } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 import { OpenAIFunctionsAgentOutputParser } from "langchain/agents/openai/output_parser";
 import { BufferMemory } from "langchain/memory";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
+import {
+  AIMessage,
+  BaseMessage,
+  FunctionMessage,
+} from "@langchain/core/messages";
+import { AgentStep } from "@langchain/core/agents";
+import { RunnableSequence } from "@langchain/core/runnables";
 
 /** Define your list of tools. */
 const tools = [new Calculator(), new SerpAPI()];

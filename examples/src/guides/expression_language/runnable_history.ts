@@ -1,10 +1,13 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatMessageHistory } from "langchain/memory";
-import { ChatPromptTemplate, MessagesPlaceholder } from "langchain/prompts";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
 import {
   RunnableConfig,
   RunnableWithMessageHistory,
-} from "langchain/runnables";
+} from "@langchain/core/runnables";
 
 // Instantiate your model and prompt.
 const model = new ChatOpenAI({});

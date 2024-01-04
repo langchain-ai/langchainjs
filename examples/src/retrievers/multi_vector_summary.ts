@@ -1,16 +1,15 @@
 import * as uuid from "uuid";
 
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
-import { PromptTemplate } from "langchain/prompts";
-import { StringOutputParser } from "langchain/schema/output_parser";
-import { RunnableSequence } from "langchain/schema/runnable";
-
 import { MultiVectorRetriever } from "langchain/retrievers/multi_vector";
 import { FaissStore } from "@langchain/community/vectorstores/faiss";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { InMemoryStore } from "langchain/storage/in_memory";
 import { TextLoader } from "langchain/document_loaders/fs/text";
-import { Document } from "langchain/document";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { Document } from "@langchain/core/documents";
 
 const textLoader = new TextLoader("../examples/state_of_the_union.txt");
 const parentDocuments = await textLoader.load();

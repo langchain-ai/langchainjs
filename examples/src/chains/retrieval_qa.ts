@@ -2,17 +2,17 @@ import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import * as fs from "fs";
+import { formatDocumentsAsString } from "langchain/util/document";
 import {
   RunnablePassthrough,
   RunnableSequence,
-} from "langchain/schema/runnable";
-import { StringOutputParser } from "langchain/schema/output_parser";
+} from "@langchain/core/runnables";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
-} from "langchain/prompts";
-import { formatDocumentsAsString } from "langchain/util/document";
+} from "@langchain/core/prompts";
 
 // Initialize the LLM to use to answer the question.
 const model = new ChatOpenAI({});

@@ -6,7 +6,7 @@ import {
   ChatPromptTemplate,
   SystemMessagePromptTemplate,
   HumanMessagePromptTemplate,
-} from "langchain/prompts";
+} from "@langchain/core/prompts";
 
 export const run = async () => {
   const tools = [

@@ -171,10 +171,10 @@ import {
   AIMessagePromptTemplate,
   HumanMessagePromptTemplate,
 } from "langchain/prompts";
-import { RunnableSequence } from "langchain/schema/runnable";
+import { RunnableSequence } from "@langchain/core/runnables";
 import { formatDocumentsAsString } from "langchain/util/document";
 import { BaseMessage } from "langchain/schema";
-import { StringOutputParser } from "langchain/schema/output_parser";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 ```
 
 ## Construct the chain

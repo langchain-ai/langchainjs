@@ -2,12 +2,12 @@ import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
 import { ChatOpenAI } from "@langchain/openai";
+import { JsonOutputFunctionsParser } from "langchain/output_parsers";
 import {
   ChatPromptTemplate,
   SystemMessagePromptTemplate,
   HumanMessagePromptTemplate,
-} from "langchain/prompts";
-import { JsonOutputFunctionsParser } from "langchain/output_parsers";
+} from "@langchain/core/prompts";
 
 const zodSchema = z.object({
   foods: z

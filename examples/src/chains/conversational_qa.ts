@@ -2,10 +2,10 @@ import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import * as fs from "fs";
-import { PromptTemplate } from "langchain/prompts";
-import { RunnableSequence } from "langchain/schema/runnable";
-import { StringOutputParser } from "langchain/schema/output_parser";
 import { formatDocumentsAsString } from "langchain/util/document";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 
 /* Initialize the LLM to use to answer the question */
 const model = new ChatOpenAI({});

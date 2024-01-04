@@ -1,6 +1,6 @@
 import { LLMChain } from "langchain/chains";
 import { ChatOpenAI } from "@langchain/openai";
-import { ChatPromptTemplate } from "langchain/prompts";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
 
 export const run = async () => {
   const chat = new ChatOpenAI({ temperature: 0 });
