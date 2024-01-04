@@ -12,7 +12,7 @@ test("Invoke local langserve", async () => {
   let aggregate: any = {};
   for await (const chunk of result) {
     const jsonString = JSON.stringify(chunk);
-    aggregate = applyPatch(aggregate, chunk as Operation[]).newDocument;
+    aggregate = applyPatch(aggregate, chunk as unknown as Operation[]).newDocument;
     const byteSize = Buffer.byteLength(jsonString, "utf-8");
     totalByteSize += byteSize;
     console.log(chunk);
