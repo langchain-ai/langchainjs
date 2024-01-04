@@ -2,8 +2,8 @@ import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
 import { OllamaFunctions } from "langchain/experimental/chat_models/ollama_functions";
-import { PromptTemplate } from "langchain/prompts";
 import { JsonOutputFunctionsParser } from "langchain/output_parsers";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const EXTRACTION_TEMPLATE = `Extract and save the relevant entities mentioned in the following passage together with their properties.
 

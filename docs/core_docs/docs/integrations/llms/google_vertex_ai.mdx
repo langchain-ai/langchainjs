@@ -42,8 +42,16 @@ GOOGLE_VERTEX_AI_WEB_CREDENTIALS={"type":"service_account","project_id":"YOUR_PR
 
 You can also pass your credentials directly in code like this:
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/community
+```
+
 ```typescript
-import { GoogleVertexAI } from "langchain/llms/googlevertexai/web";
+import { GoogleVertexAI } from "@langchain/community/llms/googlevertexai";
 
 const model = new GoogleVertexAI({
   authOptions: {
@@ -61,14 +69,6 @@ in the constructor. These include:
 - text-bison-32k
 - code-gecko
 - code-bison
-
-import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
-
-<IntegrationInstallTooltip></IntegrationInstallTooltip>
-
-```bash npm2yarn
-npm install @langchain/community
-```
 
 import CodeBlock from "@theme/CodeBlock";
 import GoogleVertexAIExample from "@examples/llms/googlevertexai.ts";

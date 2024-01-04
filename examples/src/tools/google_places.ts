@@ -1,5 +1,5 @@
 import { GooglePlacesAPI } from "@langchain/community/tools/google_places";
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
 
 export async function run() {

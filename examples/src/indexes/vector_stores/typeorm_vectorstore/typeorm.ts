@@ -1,5 +1,5 @@
 import { DataSourceOptions } from "typeorm";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { TypeORMVectorStore } from "@langchain/community/vectorstores/typeorm";
 
 // First, follow set-up instructions at

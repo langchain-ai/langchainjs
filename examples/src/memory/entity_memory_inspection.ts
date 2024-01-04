@@ -1,4 +1,4 @@
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import {
   EntityMemory,
   ENTITY_MEMORY_CONVERSATION_TEMPLATE,

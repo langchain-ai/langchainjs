@@ -21,6 +21,14 @@ An `SimpleSequentialChain` is a chain that allows you to join multiple single-in
 
 The example below shows a sample usecase. In the first step, given a title, a synopsis of a play is generated. In the second step, based on the generated synopsis, a review of the play is generated.
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 <CodeBlock language="typescript">{SimpleSequentialChainExample}</CodeBlock>
 
 ## `SequentialChain`

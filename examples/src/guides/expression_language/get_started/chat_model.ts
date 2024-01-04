@@ -1,4 +1,4 @@
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 
 const model = new ChatOpenAI({});
 const promptAsString = "Human: Tell me a short joke about ice cream";

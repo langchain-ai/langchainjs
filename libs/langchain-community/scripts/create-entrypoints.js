@@ -22,6 +22,7 @@ const entrypoints = {
   "tools/dynamic": "tools/dynamic",
   "tools/dataforseo_api_search": "tools/dataforseo_api_search",
   "tools/gmail": "tools/gmail/index",
+  "tools/google_calendar": "tools/google_calendar/index",
   "tools/google_custom_search": "tools/google_custom_search",
   "tools/google_places": "tools/google_places",
   "tools/ifttt": "tools/ifttt",
@@ -132,6 +133,7 @@ const entrypoints = {
   "chat_models/yandex": "chat_models/yandex",
   // callbacks
   "callbacks/handlers/llmonitor": "callbacks/handlers/llmonitor",
+  "callbacks/handlers/lunary": "callbacks/handlers/lunary",
   // retrievers
   "retrievers/amazon_kendra": "retrievers/amazon_kendra",
   "retrievers/chaindesk": "retrievers/chaindesk",
@@ -195,8 +197,10 @@ const requiresOptionalDependency = [
   "tools/aws_lambda",
   "tools/discord",
   "tools/gmail",
+  "tools/google_calendar",
   "agents/toolkits/aws_sfn",
   "callbacks/handlers/llmonitor",
+  "callbacks/handlers/lunary",
   "embeddings/bedrock",
   "embeddings/cloudflare_workersai",
   "embeddings/cohere",

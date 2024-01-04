@@ -13,6 +13,9 @@ export interface OptionalImportMap {
   "@langchain/community/tools/gmail"?:
     | typeof import("../tools/gmail/index.js")
     | Promise<typeof import("../tools/gmail/index.js")>;
+  "@langchain/community/tools/google_calendar"?:
+    | typeof import("../tools/google_calendar/index.js")
+    | Promise<typeof import("../tools/google_calendar/index.js")>;
   "@langchain/community/agents/toolkits/aws_sfn"?:
     | typeof import("../agents/toolkits/aws_sfn.js")
     | Promise<typeof import("../agents/toolkits/aws_sfn.js")>;
@@ -232,6 +235,9 @@ export interface OptionalImportMap {
   "@langchain/community/callbacks/handlers/llmonitor"?:
     | typeof import("../callbacks/handlers/llmonitor.js")
     | Promise<typeof import("../callbacks/handlers/llmonitor.js")>;
+  "@langchain/community/callbacks/handlers/lunary"?:
+    | typeof import("../callbacks/handlers/lunary.js")
+    | Promise<typeof import("../callbacks/handlers/lunary.js")>;
   "@langchain/community/retrievers/amazon_kendra"?:
     | typeof import("../retrievers/amazon_kendra.js")
     | Promise<typeof import("../retrievers/amazon_kendra.js")>;

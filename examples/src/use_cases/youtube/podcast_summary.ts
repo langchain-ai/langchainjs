@@ -1,8 +1,8 @@
 import { ChatAnthropic } from "langchain/chat_models/anthropic";
 import { loadSummarizationChain } from "langchain/chains";
 import { SearchApiLoader } from "langchain/document_loaders/web/searchapi";
-import { PromptTemplate } from "langchain/prompts";
 import { TokenTextSplitter } from "langchain/text_splitter";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const loader = new SearchApiLoader({
   engine: "youtube_transcripts",

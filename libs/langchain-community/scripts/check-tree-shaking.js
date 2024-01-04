@@ -36,6 +36,7 @@ export function listExternals() {
     "web-auth-library/google",
     "firebase-admin/app",
     "firebase-admin/firestore",
+    "lunary/langchain",
   ];
 }
 

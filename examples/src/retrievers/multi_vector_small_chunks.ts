@@ -2,11 +2,11 @@ import * as uuid from "uuid";
 
 import { MultiVectorRetriever } from "langchain/retrievers/multi_vector";
 import { FaissStore } from "@langchain/community/vectorstores/faiss";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { InMemoryStore } from "langchain/storage/in_memory";
 import { TextLoader } from "langchain/document_loaders/fs/text";
-import { Document } from "langchain/document";
+import { Document } from "@langchain/core/documents";
 
 const textLoader = new TextLoader("../examples/state_of_the_union.txt");
 const parentDocuments = await textLoader.load();
