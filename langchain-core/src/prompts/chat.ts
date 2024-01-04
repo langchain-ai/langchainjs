@@ -800,17 +800,20 @@ export class ChatPromptTemplate<
         if (
           item.type !== "image_url" ||
           typeof item.image_url === "string" ||
-          !item.image_url?.url
+          !("url" in item.image_url || "path" in item.image_url)
         ) {
           return item;
         }
-        const imageUrl = item.image_url.url;
+        const imageUrl =
+          "url" in item.image_url ? item.image_url.url : item.image_url.path;
         const promptTemplatePlaceholder = PromptTemplate.fromTemplate(imageUrl);
         const formattedUrl = await promptTemplatePlaceholder.format(
           inputValues
         );
-        // eslint-disable-next-line no-param-reassign
-        item.image_url.url = formattedUrl;
+        if ("url" in item.image_url) {
+          // eslint-disable-next-line no-param-reassign
+          item.image_url.url = formattedUrl;
+        }
         return item;
       })
     );

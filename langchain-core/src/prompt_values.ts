@@ -111,6 +111,14 @@ export class ChatPromptValue
   }
 }
 
+export interface ImagePath {
+  /** Specifies the detail level of the image. */
+  detail?: "auto" | "low" | "high";
+
+  /** A path to the image on your local machine. */
+  path: string;
+}
+
 export interface ImageURL {
   /** Specifies the detail level of the image. */
   detail?: "auto" | "low" | "high";
@@ -119,8 +127,10 @@ export interface ImageURL {
   url: string;
 }
 
+export type ImageContent = ImagePath | ImageURL;
+
 export interface ImagePromptValueFields {
-  imageUrl: ImageURL;
+  imageUrl: ImageContent;
 }
 
 /**
@@ -136,16 +146,18 @@ export class ImagePromptValue extends BasePromptValue {
     return "ImagePromptValue";
   }
 
-  imageUrl: ImageURL;
+  imageUrl: ImageContent;
 
   /** @ignore */
   value: string;
 
   constructor(imageUrl: ImageURL);
 
+  constructor(imagePath: ImagePath);
+
   constructor(fields: ImagePromptValueFields);
 
-  constructor(fields: ImageURL | ImagePromptValueFields) {
+  constructor(fields: ImageContent | ImagePromptValueFields) {
     if (!("imageUrl" in fields)) {
       // eslint-disable-next-line no-param-reassign
       fields = { imageUrl: fields };
@@ -156,7 +168,7 @@ export class ImagePromptValue extends BasePromptValue {
   }
 
   toString() {
-    return this.imageUrl.url;
+    return "url" in this.imageUrl ? this.imageUrl.url : this.imageUrl.path;
   }
 
   toChatMessages() {
@@ -167,7 +179,8 @@ export class ImagePromptValue extends BasePromptValue {
             type: "image_url",
             image_url: {
               detail: this.imageUrl.detail,
-              url: this.imageUrl.url,
+              url:
+                "url" in this.imageUrl ? this.imageUrl.url : this.imageUrl.path,
             },
           },
         ],

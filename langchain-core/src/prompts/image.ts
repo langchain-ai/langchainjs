@@ -71,7 +71,9 @@ export class ImagePromptTemplate<
         );
       }
       checkValidTemplate(
-        [{ type: "image_url", image_url: this.template }] as MessageContent,
+        [
+          { type: "image_url", image_url: this.template },
+        ] as unknown as MessageContent,
         this.templateFormat,
         totalInputVariables
       );

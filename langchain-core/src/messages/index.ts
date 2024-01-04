@@ -34,6 +34,8 @@ export type MessageType =
   | "function"
   | "tool";
 
+type ImageDetail = "auto" | "low" | "high";
+
 export type MessageContent =
   | string
   | (
@@ -43,7 +45,10 @@ export type MessageContent =
         }
       | {
           type: "image_url";
-          image_url: string | { url: string; detail?: "auto" | "low" | "high" };
+          image_url:
+            | string
+            | { url: string; detail?: ImageDetail }
+            | { path: string; detail?: ImageDetail };
         }
     )[];
 
@@ -183,8 +188,7 @@ export abstract class BaseMessage
   toDict(): StoredMessage {
     return {
       type: this._getType(),
-      data: (this.toJSON() as SerializedConstructor)
-        .kwargs as StoredMessageData,
+      data: (this.toJSON() as SerializedConstructor).kwargs as StoredMessageData
     };
   }
 
@@ -274,8 +278,8 @@ export abstract class BaseMessageChunk extends BaseMessage {
                   name: toolCall.function.name ?? value.function.name,
                   arguments:
                     (value.function.arguments ?? "") +
-                    (toolCall.function.arguments ?? ""),
-                },
+                    (toolCall.function.arguments ?? "")
+                }
               };
             });
           } else {
@@ -324,7 +328,7 @@ export class HumanMessageChunk extends BaseMessageChunk {
       additional_kwargs: HumanMessageChunk._mergeAdditionalKwargs(
         this.additional_kwargs,
         chunk.additional_kwargs
-      ),
+      )
     });
   }
 }
@@ -361,7 +365,7 @@ export class AIMessageChunk extends BaseMessageChunk {
       additional_kwargs: AIMessageChunk._mergeAdditionalKwargs(
         this.additional_kwargs,
         chunk.additional_kwargs
-      ),
+      )
     });
   }
 }
@@ -398,7 +402,7 @@ export class SystemMessageChunk extends BaseMessageChunk {
       additional_kwargs: SystemMessageChunk._mergeAdditionalKwargs(
         this.additional_kwargs,
         chunk.additional_kwargs
-      ),
+      )
     });
   }
 }
@@ -456,7 +460,7 @@ export class FunctionMessageChunk extends BaseMessageChunk {
         this.additional_kwargs,
         chunk.additional_kwargs
       ),
-      name: this.name ?? "",
+      name: this.name ?? ""
     });
   }
 }
@@ -529,7 +533,7 @@ export class ToolMessageChunk extends BaseMessageChunk {
         this.additional_kwargs,
         chunk.additional_kwargs
       ),
-      tool_call_id: this.tool_call_id,
+      tool_call_id: this.tool_call_id
     });
   }
 }
@@ -648,7 +652,7 @@ export class ChatMessageChunk extends BaseMessageChunk {
         this.additional_kwargs,
         chunk.additional_kwargs
       ),
-      role: this.role,
+      role: this.role
     });
   }
 }
@@ -707,8 +711,8 @@ function mapV1MessageToStoredMessage(
         content: v1Message.text,
         role: v1Message.role,
         name: undefined,
-        tool_call_id: undefined,
-      },
+        tool_call_id: undefined
+      }
     };
   }
 }

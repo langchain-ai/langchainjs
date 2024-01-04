@@ -132,7 +132,11 @@ export const checkValidTemplate = (
           if (typeof message.image_url === "string") {
             renderTemplate(message.image_url, templateFormat, dummyInputs);
           } else {
-            renderTemplate(message.image_url.url, templateFormat, dummyInputs);
+            const imageUrl =
+              "url" in message.image_url
+                ? message.image_url.url
+                : message.image_url.path;
+            renderTemplate(imageUrl, templateFormat, dummyInputs);
           }
         } else {
           throw new Error(
