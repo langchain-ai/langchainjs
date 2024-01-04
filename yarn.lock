@@ -8244,6 +8244,7 @@ __metadata:
     langsmith: ~0.0.48
     llmonitor: ^0.5.9
     lodash: ^4.17.21
+    lunary: ^0.6.11
     mongodb: ^5.2.0
     mysql2: ^3.3.3
     neo4j-driver: ^5.12.0
@@ -8329,6 +8330,7 @@ __metadata:
     jsdom: "*"
     llmonitor: ^0.5.9
     lodash: ^4.17.21
+    lunary: ^0.6.11
     mongodb: ^5.2.0
     mysql2: ^3.3.3
     neo4j-driver: "*"
@@ -8467,6 +8469,8 @@ __metadata:
     llmonitor:
       optional: true
     lodash:
+      optional: true
+    lunary:
       optional: true
     mongodb:
       optional: true
@@ -24573,6 +24577,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"lunary@npm:^0.6.11":
+  version: 0.6.11
+  resolution: "lunary@npm:0.6.11"
+  dependencies:
+    mustache: ^4.2.0
+    unctx: ^2.3.1
+  peerDependencies:
+    openai: ^4.0.0
+    react: ">=17.0.0"
+  peerDependenciesMeta:
+    openai:
+      optional: true
+    react:
+      optional: true
+  checksum: 71e012f8e0b46567557984ebe9fe362eea49899d3f6cd8be8f7e24a4ea9820fea0087d759d1fd98b456bf241b98aeca9e2524a0409620cd6eb1ed3c42b4387a0
+  languageName: node
+  linkType: hard
+
 "lunr@npm:^2.3.9":
   version: 2.3.9
   resolution: "lunr@npm:2.3.9"
@@ -25398,6 +25420,15 @@ __metadata:
   bin:
     multicast-dns: cli.js
   checksum: 00b8a57df152d4cd0297946320a94b7c3cdf75a46a2247f32f958a8927dea42958177f9b7fdae69fab2e4e033fb3416881af1f5e9055a3e1542888767139e2fb
+  languageName: node
+  linkType: hard
+
+"mustache@npm:^4.2.0":
+  version: 4.2.0
+  resolution: "mustache@npm:4.2.0"
+  bin:
+    mustache: bin/mustache
+  checksum: 928fcb63e3aa44a562bfe9b59ba202cccbe40a46da50be6f0dd831b495be1dd7e38ca4657f0ecab2c1a89dc7bccba0885eab7ee7c1b215830da765758c7e0506
   languageName: node
   linkType: hard
 

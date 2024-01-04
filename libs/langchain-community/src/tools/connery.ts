@@ -3,7 +3,8 @@ import {
   AsyncCallerParams,
 } from "@langchain/core/utils/async_caller";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { Tool } from "@langchain/core/tools";
+import { StructuredTool } from "@langchain/core/tools";
+import { ZodOptional, ZodString, z } from "zod";
 
 /**
  * An object containing configuration parameters for the ConneryService class.
@@ -47,13 +48,9 @@ type Action = {
   pluginId: string;
 };
 
-type Input = {
-  [key: string]: string;
-};
+type Input = Record<string, string | undefined>;
 
-type Output = {
-  [key: string]: string;
-};
+type Output = Record<string, string>;
 
 type RunActionResult = {
   output: Output;
@@ -65,127 +62,71 @@ type RunActionResult = {
 
 /**
  * A LangChain Tool object wrapping a Connery action.
- * @extends Tool
+ * ConneryAction is a structured tool that can be used only in the agents supporting structured tools.
+ * @extends StructuredTool
  */
-export class ConneryAction extends Tool {
+export class ConneryAction extends StructuredTool {
   name: string;
 
   description: string;
 
+  schema: z.ZodObject<Record<string, ZodString | ZodOptional<ZodString>>>;
+
   /**
-   * Creates a ConneryAction instance based on the provided Connery action.
-   * @param _action The Connery action.
+   * Creates a ConneryAction instance based on the provided Connery Action.
+   * @param _action The Connery Action.
    * @param _service The ConneryService instance.
    * @returns A ConneryAction instance.
    */
   constructor(protected _action: Action, protected _service: ConneryService) {
     super();
 
-    this.name = this._action.title;
-    this.description = this.getDescription();
+    this.name = this._action.id;
+    this.description =
+      this._action.title +
+      (this._action.description ? `: ${this._action.description}` : "");
+    this.schema = this.createInputSchema();
   }
 
   /**
-   * Runs the Connery action.
-   * @param prompt This is a plain English prompt with all the information needed to run the action.
+   * Runs the Connery Action with the provided input.
+   * @param arg The input object expected by the action.
    * @returns A promise that resolves to a JSON string containing the output of the action.
    */
-  protected _call(prompt: string): Promise<string> {
-    return this._service.runAction(this._action.id, prompt);
+  protected _call(arg: z.output<typeof this.schema>): Promise<string> {
+    return this._service.runAction(this._action.id, arg);
   }
 
   /**
-   * Returns the description of the Connery action.
-   * @returns A string containing the description of the Connery action together with the instructions on how to use it.
+   * Creates a Zod schema for the input object expected by the Connery action.
+   * @returns A Zod schema for the input object expected by the Connery action.
    */
-  protected getDescription(): string {
-    const { title, description } = this._action;
-    const inputParameters = this.prepareJsonForTemplate(
-      this._action.inputParameters
-    );
-    const example1InputParametersSchema = this.prepareJsonForTemplate([
-      {
-        key: "recipient",
-        title: "Email Recipient",
-        description: "Email address of the email recipient.",
-        type: "string",
-        validation: {
-          required: true,
-        },
-      },
-      {
-        key: "subject",
-        title: "Email Subject",
-        description: "Subject of the email.",
-        type: "string",
-        validation: {
-          required: true,
-        },
-      },
-      {
-        key: "body",
-        title: "Email Body",
-        description: "Body of the email.",
-        type: "string",
-        validation: {
-          required: true,
-        },
-      },
-    ]);
+  protected createInputSchema(): z.ZodObject<
+    Record<string, ZodString | ZodOptional<ZodString>>
+  > {
+    const dynamicInputFields: Record<
+      string,
+      ZodString | ZodOptional<ZodString>
+    > = {};
 
-    const descriptionTemplate =
-      "# Instructions about tool input:\n" +
-      "The input to this tool is a plain English prompt with all the input parameters needed to call it. " +
-      "The input parameters schema of this tool is provided below. " +
-      "Use the input parameters schema to construct the prompt for the tool. " +
-      "If the input parameter is required in the schema, it must be provided in the prompt. " +
-      "Do not come up with the values for the input parameters yourself. " +
-      "If you do not have enough information to fill in the input parameter, ask the user to provide it. " +
-      "See examples below on how to construct the prompt based on the provided tool information. " +
-      "\n\n" +
-      "# Instructions about tool output:\n" +
-      "The output of this tool is a JSON string. " +
-      "Retrieve the output parameters from the JSON string and use them in the next tool. " +
-      "Do not return the JSON string as the output of the tool. " +
-      "\n\n" +
-      "# Example:\n" +
-      "Tool information:\n" +
-      "- Title: Send email\n" +
-      "- Description: Send an email to a recipient.\n" +
-      `- Input parameters schema in JSON fromat: ${example1InputParametersSchema}\n` +
-      "The tool input prompt:\n" +
-      "recipient: test@example.com, subject: 'Test email', body: 'This is a test email sent from Langchain Connery tool.'\n" +
-      "\n\n" +
-      "# The tool information\n" +
-      `- Title: ${title}\n` +
-      `- Description: ${description}\n` +
-      `- Input parameters schema in JSON fromat: ${inputParameters}\n`;
+    this._action.inputParameters.forEach((param) => {
+      const isRequired = param.validation?.required ?? false;
+      let fieldSchema: ZodString | ZodOptional<ZodString> = z.string();
+      fieldSchema = isRequired ? fieldSchema : fieldSchema.optional();
 
-    return descriptionTemplate;
-  }
+      const fieldDescription =
+        param.title + (param.description ? `: ${param.description}` : "");
+      fieldSchema = fieldSchema.describe(fieldDescription);
 
-  /**
-   * Converts the provided object to a JSON string and escapes '{' and '}' characters.
-   * @param obj The object to convert to a JSON string.
-   * @returns A string containing the JSON representation of the provided object with '{' and '}' characters escaped.
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  protected prepareJsonForTemplate(obj: any): string {
-    // Convert the object to a JSON string
-    const jsonString = JSON.stringify(obj);
+      dynamicInputFields[param.key] = fieldSchema;
+    });
 
-    // Replace '{' with '{{' and '}' with '}}'
-    const escapedJSON = jsonString.replace(/{/g, "{{").replace(/}/g, "}}");
-
-    return escapedJSON;
+    return z.object(dynamicInputFields);
   }
 }
 
 /**
- * A service for working with Connery actions.
- *
- * Connery is an open-source plugin infrastructure for AI.
- * Source code: https://github.com/connery-io/connery-platform
+ * A service for working with Connery Actions.
  */
 export class ConneryService {
   protected runnerUrl: string;
@@ -220,7 +161,7 @@ export class ConneryService {
   }
 
   /**
-   * Returns the list of Connery actions wrapped as a LangChain Tool objects.
+   * Returns the list of Connery Actions wrapped as a LangChain StructuredTool objects.
    * @returns A promise that resolves to an array of ConneryAction objects.
    */
   async listActions(): Promise<ConneryAction[]> {
@@ -229,7 +170,7 @@ export class ConneryService {
   }
 
   /**
-   * Returns the specified Connery action wrapped as a LangChain Tool object.
+   * Returns the specified Connery action wrapped as a LangChain StructuredTool object.
    * @param actionId The ID of the action to return.
    * @returns A promise that resolves to a ConneryAction object.
    */
@@ -241,17 +182,11 @@ export class ConneryService {
   /**
    * Runs the specified Connery action with the provided input.
    * @param actionId The ID of the action to run.
-   * @param prompt This is a plain English prompt with all the information needed to run the action.
-   * @param input The input expected by the action.
-   * If provided together with the prompt, the input takes precedence over the input specified in the prompt.
+   * @param input The input object expected by the action.
    * @returns A promise that resolves to a JSON string containing the output of the action.
    */
-  async runAction(
-    actionId: string,
-    prompt?: string,
-    input?: Input
-  ): Promise<string> {
-    const result = await this._runAction(actionId, prompt, input);
+  async runAction(actionId: string, input: Input = {}): Promise<string> {
+    const result = await this._runAction(actionId, input);
     return JSON.stringify(result);
   }
 
@@ -294,15 +229,12 @@ export class ConneryService {
   /**
    * Runs the specified Connery action with the provided input.
    * @param actionId The ID of the action to run.
-   * @param prompt This is a plain English prompt with all the information needed to run the action.
    * @param input The input object expected by the action.
-   * If provided together with the prompt, the input takes precedence over the input specified in the prompt.
    * @returns A promise that resolves to a RunActionResult object.
    */
   protected async _runAction(
     actionId: string,
-    prompt?: string,
-    input?: Input
+    input: Input = {}
   ): Promise<Output> {
     const response = await this.asyncCaller.call(
       fetch,
@@ -311,7 +243,6 @@ export class ConneryService {
         method: "POST",
         headers: this._getHeaders(),
         body: JSON.stringify({
-          prompt,
           input,
         }),
       }

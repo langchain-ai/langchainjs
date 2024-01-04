@@ -352,6 +352,9 @@ chat_models/yandex.d.ts
 callbacks/handlers/llmonitor.cjs
 callbacks/handlers/llmonitor.js
 callbacks/handlers/llmonitor.d.ts
+callbacks/handlers/lunary.cjs
+callbacks/handlers/lunary.js
+callbacks/handlers/lunary.d.ts
 retrievers/amazon_kendra.cjs
 retrievers/amazon_kendra.js
 retrievers/amazon_kendra.d.ts
