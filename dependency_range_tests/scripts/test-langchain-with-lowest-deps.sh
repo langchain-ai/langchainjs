@@ -10,6 +10,17 @@ shopt -s extglob
 # avoid copying build artifacts from the host
 cp -r ../langchain/!(node_modules|dist|dist-cjs|dist-esm|build|.next|.turbo) ./
 
+mkdir -p /updater_script
+cp -r /scripts/node/!(node_modules|dist|dist-cjs|dist-esm|build|.next|.turbo) /updater_script/
+
+cd /updater_script
+
+yarn
+
+cd /app
+
+node /updater_script/update_resolutions_lowest.js
+
 yarn
 
 # Check the test command completes successfully
