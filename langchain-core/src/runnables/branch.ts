@@ -121,7 +121,7 @@ export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
     const coercedBranches: Branch<RunInput, RunOutput>[] = branchLikes.map(
       ([condition, runnable]) => [
         _coerceToRunnable(condition),
-        _coerceToRunnable(runnable)
+        _coerceToRunnable(runnable),
       ]
     );
     const defaultBranch = _coerceToRunnable(
@@ -129,7 +129,7 @@ export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
     );
     return new this({
       branches: coercedBranches,
-      default: defaultBranch
+      default: defaultBranch,
     });
   }
 

@@ -1,7 +1,10 @@
 import { DataSource } from "typeorm";
 import { SqlDatabase } from "langchain/sql_db";
 import { ChatOpenAI } from "@langchain/openai";
-import { RunnablePassthrough , RunnableSequence } from "@langchain/core/runnables";
+import {
+  RunnablePassthrough,
+  RunnableSequence,
+} from "@langchain/core/runnables";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 

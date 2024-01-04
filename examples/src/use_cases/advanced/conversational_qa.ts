@@ -5,7 +5,7 @@ import { BufferMemory } from "langchain/memory";
 import * as fs from "fs";
 import { LLMChain } from "langchain/chains";
 import { formatDocumentsAsString } from "langchain/util/document";
-import { RunnableBranch , RunnableSequence } from "@langchain/core/runnables";
+import { RunnableBranch, RunnableSequence } from "@langchain/core/runnables";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 

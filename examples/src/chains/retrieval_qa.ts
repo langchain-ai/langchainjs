@@ -3,9 +3,16 @@ import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import * as fs from "fs";
 import { formatDocumentsAsString } from "langchain/util/document";
-import { RunnablePassthrough , RunnableSequence } from "@langchain/core/runnables";
+import {
+  RunnablePassthrough,
+  RunnableSequence,
+} from "@langchain/core/runnables";
 import { StringOutputParser } from "@langchain/core/output_parsers";
-import { ChatPromptTemplate , HumanMessagePromptTemplate , SystemMessagePromptTemplate } from "@langchain/core/prompts";
+import {
+  ChatPromptTemplate,
+  HumanMessagePromptTemplate,
+  SystemMessagePromptTemplate,
+} from "@langchain/core/prompts";
 
 // Initialize the LLM to use to answer the question.
 const model = new ChatOpenAI({});

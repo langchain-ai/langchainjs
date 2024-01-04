@@ -1,6 +1,10 @@
 import { LLMChain } from "langchain/chains";
 import { OpenAI } from "@langchain/openai";
-import { CallbackManager , traceAsGroup , TraceGroup } from "@langchain/core/callbacks/manager";
+import {
+  CallbackManager,
+  traceAsGroup,
+  TraceGroup,
+} from "@langchain/core/callbacks/manager";
 import { PromptTemplate } from "@langchain/core/prompts";
 
 export const run = async () => {

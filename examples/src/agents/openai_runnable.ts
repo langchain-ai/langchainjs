@@ -3,8 +3,15 @@ import { ChatOpenAI } from "@langchain/openai";
 import { SerpAPI, formatToOpenAIFunction } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 import { OpenAIFunctionsAgentOutputParser } from "langchain/agents/openai/output_parser";
-import { ChatPromptTemplate , MessagesPlaceholder } from "@langchain/core/prompts";
-import { AIMessage , BaseMessage , FunctionMessage } from "@langchain/core/messages";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
+import {
+  AIMessage,
+  BaseMessage,
+  FunctionMessage,
+} from "@langchain/core/messages";
 import { AgentStep } from "@langchain/core/agents";
 import { RunnableSequence } from "@langchain/core/runnables";
 

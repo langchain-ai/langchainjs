@@ -2,7 +2,11 @@ import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { Document } from "@langchain/core/documents";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { RunnableLambda , RunnableMap , RunnablePassthrough } from "@langchain/core/runnables";
+import {
+  RunnableLambda,
+  RunnableMap,
+  RunnablePassthrough,
+} from "@langchain/core/runnables";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 
 const vectorStore = await HNSWLib.fromDocuments(

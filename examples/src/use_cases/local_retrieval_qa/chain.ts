@@ -5,7 +5,10 @@ import { Ollama } from "@langchain/community/llms/ollama";
 import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/hf_transformers";
 import { formatDocumentsAsString } from "langchain/util/document";
 import { PromptTemplate } from "@langchain/core/prompts";
-import { RunnableSequence , RunnablePassthrough } from "@langchain/core/runnables";
+import {
+  RunnableSequence,
+  RunnablePassthrough,
+} from "@langchain/core/runnables";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 
 const loader = new CheerioWebBaseLoader(

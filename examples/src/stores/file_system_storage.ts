@@ -1,6 +1,6 @@
 import fs from "fs";
 import { LocalFileStore } from "langchain/storage/file_system";
-import { AIMessage , HumanMessage } from "@langchain/core/messages";
+import { AIMessage, HumanMessage } from "@langchain/core/messages";
 
 // Instantiate the store using the `fromPath` method.
 const store = await LocalFileStore.fromPath("./messages");

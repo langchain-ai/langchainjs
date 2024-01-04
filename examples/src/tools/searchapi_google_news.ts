@@ -3,7 +3,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { AgentExecutor } from "langchain/agents";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
-import { AgentFinish , AgentAction } from "@langchain/core/agents";
+import { AgentFinish, AgentAction } from "@langchain/core/agents";
 import { BaseMessageChunk } from "@langchain/core/messages";
 
 const model = new ChatOpenAI({
