@@ -1,6 +1,6 @@
 import { LunaryHandler } from "@langchain/community/callbacks/handlers/lunary";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { Calculator } from "langchain/tools/calculator";
 
 const tools = [new Calculator()];

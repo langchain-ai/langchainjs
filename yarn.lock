@@ -8330,7 +8330,7 @@ __metadata:
     jsdom: "*"
     llmonitor: ^0.5.9
     lodash: ^4.17.21
-    lunary: ^0.6.4
+    lunary: ^0.6.11
     mongodb: ^5.2.0
     mysql2: ^3.3.3
     neo4j-driver: "*"
@@ -8469,6 +8469,8 @@ __metadata:
     llmonitor:
       optional: true
     lodash:
+      optional: true
+    lunary:
       optional: true
     mongodb:
       optional: true
