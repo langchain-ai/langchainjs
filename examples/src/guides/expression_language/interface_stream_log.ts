@@ -4,12 +4,12 @@ import { formatDocumentsAsString } from "langchain/util/document";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import {
   RunnablePassthrough,
-  RunnableSequence
+  RunnableSequence,
 } from "@langchain/core/runnables";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
-  SystemMessagePromptTemplate
+  SystemMessagePromptTemplate,
 } from "@langchain/core/prompts";
 import { applyPatch } from "@langchain/core/utils/json_patch";
 
@@ -19,7 +19,7 @@ const model = new ChatOpenAI({});
 const vectorStore = await HNSWLib.fromTexts(
   [
     "mitochondria is the powerhouse of the cell",
-    "mitochondria is made of lipids"
+    "mitochondria is made of lipids",
   ],
   [{ id: 1 }, { id: 2 }],
   new OpenAIEmbeddings()
@@ -35,18 +35,18 @@ If you don't know the answer, just say that you don't know, don't try to make up
 {context}`;
 const messages = [
   SystemMessagePromptTemplate.fromTemplate(SYSTEM_TEMPLATE),
-  HumanMessagePromptTemplate.fromTemplate("{question}")
+  HumanMessagePromptTemplate.fromTemplate("{question}"),
 ];
 const prompt = ChatPromptTemplate.fromMessages(messages);
 
 const chain = RunnableSequence.from([
   {
     context: vectorStoreRetriever.pipe(formatDocumentsAsString),
-    question: new RunnablePassthrough()
+    question: new RunnablePassthrough(),
   },
   prompt,
   model,
-  new StringOutputParser()
+  new StringOutputParser(),
 ]);
 
 const stream = chain.streamLog("What is the powerhouse of the cell?");

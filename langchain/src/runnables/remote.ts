@@ -1,8 +1,6 @@
 import { Runnable, RunnableBatchOptions } from "../schema/runnable/index.js";
 import { RunnableConfig } from "../schema/runnable/config.js";
-import {
-  CallbackManagerForChainRun,
-} from "../callbacks/manager.js";
+import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 import {
   convertEventStreamToIterableReadableDataStream,
   getBytes,
