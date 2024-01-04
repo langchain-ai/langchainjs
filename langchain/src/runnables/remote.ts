@@ -1,7 +1,6 @@
 import { Runnable, RunnableBatchOptions } from "../schema/runnable/index.js";
 import { RunnableConfig } from "../schema/runnable/config.js";
 import {
-  BaseCallbackConfig,
   CallbackManagerForChainRun,
 } from "../callbacks/manager.js";
 import {
@@ -369,7 +368,7 @@ export class RemoteRunnable<
     const response = await this.post<{
       input: RunInput;
       config?: RunnableConfig;
-      kwargs?: Omit<Partial<CallOptions>, keyof BaseCallbackConfig>;
+      kwargs?: Omit<Partial<CallOptions>, keyof RunnableConfig>;
       diff: false;
     }>("/stream_log", {
       input,
