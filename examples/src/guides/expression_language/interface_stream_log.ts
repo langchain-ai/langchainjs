@@ -4,13 +4,14 @@ import { formatDocumentsAsString } from "langchain/util/document";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import {
   RunnablePassthrough,
-  RunnableSequence,
+  RunnableSequence
 } from "@langchain/core/runnables";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
-  SystemMessagePromptTemplate,
+  SystemMessagePromptTemplate
 } from "@langchain/core/prompts";
+import { applyPatch } from "@langchain/core/utils/json_patch";
 
 // Initialize the LLM to use to answer the question.
 const model = new ChatOpenAI({});
@@ -18,7 +19,7 @@ const model = new ChatOpenAI({});
 const vectorStore = await HNSWLib.fromTexts(
   [
     "mitochondria is the powerhouse of the cell",
-    "mitochondria is made of lipids",
+    "mitochondria is made of lipids"
   ],
   [{ id: 1 }, { id: 2 }],
   new OpenAIEmbeddings()
@@ -34,27 +35,32 @@ If you don't know the answer, just say that you don't know, don't try to make up
 {context}`;
 const messages = [
   SystemMessagePromptTemplate.fromTemplate(SYSTEM_TEMPLATE),
-  HumanMessagePromptTemplate.fromTemplate("{question}"),
+  HumanMessagePromptTemplate.fromTemplate("{question}")
 ];
 const prompt = ChatPromptTemplate.fromMessages(messages);
 
 const chain = RunnableSequence.from([
   {
     context: vectorStoreRetriever.pipe(formatDocumentsAsString),
-    question: new RunnablePassthrough(),
+    question: new RunnablePassthrough()
   },
   prompt,
   model,
-  new StringOutputParser(),
+  new StringOutputParser()
 ]);
 
-const stream = await chain.streamLog("What is the powerhouse of the cell?");
+const stream = chain.streamLog("What is the powerhouse of the cell?");
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let aggregate: any = {};
 
 for await (const chunk of stream) {
   console.log(JSON.stringify(chunk));
+  // You can also reconstruct the log using the `applyPatch` function.
+  aggregate = applyPatch(aggregate, chunk.ops).newDocument;
   console.log();
 }
-
+console.log("aggregate", aggregate);
 /*
   {"ops":[{"op":"replace","path":"","value":{"id":"5a79d2e7-171a-4034-9faa-63af88e5a451","streamed_output":[],"logs":{}}}]}
 
@@ -140,3 +146,109 @@ for await (const chunk of stream) {
 
   {"ops":[{"op":"replace","path":"/final_output","value":{"output":"The mitochondria is the powerhouse of the cell."}}]}
 */
+
+// Aggregate
+/**
+aggregate {
+  id: '1ed678b9-e1cf-4ef9-bb8b-2fa083b81725',
+  streamed_output: [
+    '',            'The',
+    ' powerhouse', ' of',
+    ' the',        ' cell',
+    ' is',         ' the',
+    ' mitochond',  'ria',
+    '.',           ''
+  ],
+  final_output: { output: 'The powerhouse of the cell is the mitochondria.' },
+  logs: {
+    RunnableMap: {
+      id: 'ff268fa1-a621-41b5-a832-4f23eae99d8e',
+      name: 'RunnableMap',
+      type: 'chain',
+      tags: [Array],
+      metadata: {},
+      start_time: '2024-01-04T20:21:33.851Z',
+      streamed_output_str: [],
+      final_output: [Object],
+      end_time: '2024-01-04T20:21:35.000Z'
+    },
+    RunnablePassthrough: {
+      id: '62b54982-edb3-4101-a53e-1d4201230668',
+      name: 'RunnablePassthrough',
+      type: 'chain',
+      tags: [Array],
+      metadata: {},
+      start_time: '2024-01-04T20:21:34.073Z',
+      streamed_output_str: [],
+      final_output: [Object],
+      end_time: '2024-01-04T20:21:34.226Z'
+    },
+    RunnableSequence: {
+      id: 'a8893fb5-63ec-4b13-bb49-e6d4435cc5e4',
+      name: 'RunnableSequence',
+      type: 'chain',
+      tags: [Array],
+      metadata: {},
+      start_time: '2024-01-04T20:21:34.074Z',
+      streamed_output_str: [],
+      final_output: [Object],
+      end_time: '2024-01-04T20:21:34.893Z'
+    },
+    VectorStoreRetriever: {
+      id: 'd145704c-64bb-491d-9a2c-814ee3d1e6a2',
+      name: 'VectorStoreRetriever',
+      type: 'retriever',
+      tags: [Array],
+      metadata: {},
+      start_time: '2024-01-04T20:21:34.234Z',
+      streamed_output_str: [],
+      final_output: [Object],
+      end_time: '2024-01-04T20:21:34.518Z'
+    },
+    RunnableLambda: {
+      id: 'a23a552a-b96f-4c07-a45d-c5f3861fad5d',
+      name: 'RunnableLambda',
+      type: 'chain',
+      tags: [Array],
+      metadata: {},
+      start_time: '2024-01-04T20:21:34.610Z',
+      streamed_output_str: [],
+      final_output: [Object],
+      end_time: '2024-01-04T20:21:34.785Z'
+    },
+    ChatPromptTemplate: {
+      id: 'a5e8439e-a6e4-4cf3-ba17-c223ea874a0a',
+      name: 'ChatPromptTemplate',
+      type: 'prompt',
+      tags: [Array],
+      metadata: {},
+      start_time: '2024-01-04T20:21:35.097Z',
+      streamed_output_str: [],
+      final_output: [ChatPromptValue],
+      end_time: '2024-01-04T20:21:35.193Z'
+    },
+    ChatOpenAI: {
+      id: 'd9c9d340-ea38-4ef4-a8a8-60f52da4e838',
+      name: 'ChatOpenAI',
+      type: 'llm',
+      tags: [Array],
+      metadata: {},
+      start_time: '2024-01-04T20:21:35.282Z',
+      streamed_output_str: [Array],
+      final_output: [Object],
+      end_time: '2024-01-04T20:21:36.059Z'
+    },
+    StrOutputParser: {
+      id: 'c55f9f3f-048b-43d5-ba48-02f3b24b8f96',
+      name: 'StrOutputParser',
+      type: 'parser',
+      tags: [Array],
+      metadata: {},
+      start_time: '2024-01-04T20:21:35.842Z',
+      streamed_output_str: [],
+      final_output: [Object],
+      end_time: '2024-01-04T20:21:36.157Z'
+    }
+  }
+}
+ */

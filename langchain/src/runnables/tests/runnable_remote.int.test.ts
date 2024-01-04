@@ -1,4 +1,4 @@
-import { Operation, applyPatch } from "@langchain/core/utils/json_patch";
+import { applyPatch } from "@langchain/core/utils/json_patch";
 import { RemoteRunnable } from "../remote.js";
 
 test("Invoke local langserve", async () => {
@@ -9,10 +9,11 @@ test("Invoke local langserve", async () => {
     question: "What is this?"
   });
   let totalByteSize = 0;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let aggregate: any = {};
   for await (const chunk of result) {
     const jsonString = JSON.stringify(chunk);
-    aggregate = applyPatch(aggregate, chunk as unknown as Operation[]).newDocument;
+    aggregate = applyPatch(aggregate, chunk.ops).newDocument;
     const byteSize = Buffer.byteLength(jsonString, "utf-8");
     totalByteSize += byteSize;
     console.log(chunk);
