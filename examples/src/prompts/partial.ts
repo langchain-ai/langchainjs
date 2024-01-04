@@ -1,4 +1,4 @@
-import { PromptTemplate } from "langchain/prompts";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 export const run = async () => {
   // The `partial` method returns a new `PromptTemplate` object that can be used to format the prompt with only some of the input variables.

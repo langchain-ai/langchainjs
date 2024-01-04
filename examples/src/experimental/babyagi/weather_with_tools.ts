@@ -1,11 +1,11 @@
 import { BabyAGI } from "langchain/experimental/babyagi";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { OpenAI } from "langchain/llms/openai";
-import { PromptTemplate } from "langchain/prompts";
+import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
 import { LLMChain } from "langchain/chains";
-import { ChainTool, SerpAPI, Tool } from "langchain/tools";
+import { ChainTool, SerpAPI } from "langchain/tools";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { Tool } from "@langchain/core/tools";
 
 // First, we create a custom agent which will serve as execution chain.
 const todoPrompt = PromptTemplate.fromTemplate(

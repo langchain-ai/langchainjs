@@ -1,4 +1,4 @@
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 
 // Use a model with a shorter context window
 const shorterLlm = new ChatOpenAI({

@@ -47,6 +47,14 @@ import CodeBlock from "@theme/CodeBlock";
 
 ### Create a new index from texts
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai @langchain/community
+```
+
 import TextsExample from "@examples/indexes/vector_stores/qdrant/fromTexts.ts";
 
 <CodeBlock language="typescript">{TextsExample}</CodeBlock>

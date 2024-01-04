@@ -14,12 +14,20 @@ LangChain.js accepts [@pinecone-database/pinecone](https://docs.pinecone.io/docs
 npm install -S @pinecone-database/pinecone
 ```
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install -S @langchain/openai
+```
+
 ## Index docs
 
 ```typescript
 import { Pinecone } from "@pinecone-database/pinecone";
 import { Document } from "langchain/document";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { PineconeStore } from "langchain/vectorstores/pinecone";
 
 // Instantiate a new Pinecone client, which will automatically read the
@@ -60,8 +68,8 @@ await PineconeStore.fromDocuments(docs, new OpenAIEmbeddings(), {
 ```typescript
 import { Pinecone } from "@pinecone-database/pinecone";
 import { VectorDBQAChain } from "langchain/chains";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { OpenAI } from "@langchain/openai";
 import { PineconeStore } from "langchain/vectorstores/pinecone";
 
 // Instantiate a new Pinecone client, which will automatically read the
@@ -117,7 +125,7 @@ console.log(response);
 ```typescript
 import { Pinecone } from "@pinecone-database/pinecone";
 import { Document } from "langchain/document";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { PineconeStore } from "langchain/vectorstores/pinecone";
 
 // Instantiate a new Pinecone client, which will automatically read the
@@ -192,8 +200,8 @@ that are most similar to the inputs, then reranks and optimizes for diversity.
 ```typescript
 import { Pinecone } from "@pinecone-database/pinecone";
 import { VectorDBQAChain } from "langchain/chains";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { OpenAI } from "@langchain/openai";
 import { PineconeStore } from "langchain/vectorstores/pinecone";
 
 // Instantiate a new Pinecone client, which will automatically read the

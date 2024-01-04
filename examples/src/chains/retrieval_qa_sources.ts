@@ -1,16 +1,15 @@
-import { HNSWLib } from "langchain/vectorstores/hnswlib";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
+import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import * as fs from "fs";
+import { formatDocumentsAsString } from "langchain/util/document";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
-} from "langchain/prompts";
-import { StringOutputParser } from "langchain/schema/output_parser";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { RunnableSequence } from "langchain/schema/runnable";
-import { formatDocumentsAsString } from "langchain/util/document";
+} from "@langchain/core/prompts";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { RunnableSequence } from "@langchain/core/runnables";
 
 const text = fs.readFileSync("state_of_the_union.txt", "utf8");
 

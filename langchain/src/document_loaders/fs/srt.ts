@@ -1,4 +1,4 @@
-import type SRTParserT from "srt-parser-2";
+import srtParser2 from "srt-parser-2";
 import { TextLoader } from "./text.js";
 
 /**
@@ -32,8 +32,8 @@ export class SRTLoader extends TextLoader {
    * @returns A promise that resolves to an array of strings representing the text content of each subtitle.
    */
   protected async parse(raw: string): Promise<string[]> {
-    const { SRTParser2 } = await SRTLoaderImports();
-    const parser = new SRTParser2();
+    // eslint-disable-next-line new-cap
+    const parser = new srtParser2();
     const srts = parser.fromSrt(raw);
     return [
       srts
@@ -41,18 +41,5 @@ export class SRTLoader extends TextLoader {
         .filter(Boolean)
         .join(" "),
     ];
-  }
-}
-
-async function SRTLoaderImports(): Promise<{
-  SRTParser2: typeof SRTParserT.default;
-}> {
-  try {
-    const SRTParser2 = (await import("srt-parser-2")).default.default;
-    return { SRTParser2 };
-  } catch (e) {
-    throw new Error(
-      "Please install srt-parser-2 as a dependency with, e.g. `yarn add srt-parser-2`"
-    );
   }
 }

@@ -1,18 +1,13 @@
 import { AgentExecutor } from "langchain/agents";
 import { formatLogToString } from "langchain/agents/format_scratchpad/log";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { PromptTemplate } from "langchain/prompts";
-import {
-  AgentAction,
-  AgentFinish,
-  AgentStep,
-  BaseMessage,
-  HumanMessage,
-  InputValues,
-} from "langchain/schema";
-import { RunnableSequence } from "langchain/schema/runnable";
+import { ChatOpenAI } from "@langchain/openai";
 import { SerpAPI } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { AgentAction, AgentFinish, AgentStep } from "@langchain/core/agents";
+import { BaseMessage, HumanMessage } from "@langchain/core/messages";
+import { InputValues } from "@langchain/core/memory";
+import { RunnableSequence } from "@langchain/core/runnables";
 
 /**
  * Instantiate the chat model and bind the stop token

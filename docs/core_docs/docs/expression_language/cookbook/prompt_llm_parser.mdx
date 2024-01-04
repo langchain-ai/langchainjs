@@ -31,6 +31,14 @@ import CodeBlock from "@theme/CodeBlock";
 
 import BasicExample from "@examples/guides/expression_language/cookbook_basic.ts";
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 <CodeBlock language="typescript">{BasicExample}</CodeBlock>
 
 Often times we want to attach kwargs to the model that's passed in. To do this, runnables contain a `.bind` method. Here's how you can use it:

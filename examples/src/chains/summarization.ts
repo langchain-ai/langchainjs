@@ -1,6 +1,6 @@
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import { loadSummarizationChain } from "langchain/chains";
-import { Document } from "langchain/document";
+import { Document } from "@langchain/core/documents";
 
 export const run = async () => {
   const model = new OpenAI({});

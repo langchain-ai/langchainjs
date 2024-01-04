@@ -1,6 +1,6 @@
 import { LLM, type BaseLLMParams } from "@langchain/core/language_models/llms";
-import type { CallbackManagerForLLMRun } from "langchain/callbacks";
-import { GenerationChunk } from "langchain/schema";
+import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import { GenerationChunk } from "@langchain/core/outputs";
 
 export interface CustomLLMInput extends BaseLLMParams {
   n: number;
