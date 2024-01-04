@@ -1,11 +1,10 @@
 /* eslint-disable no-process-env */
 import { test } from "@jest/globals";
 import weaviate from "weaviate-ts-client";
-import { Document } from "../../../document.js";
+import { Document } from "@langchain/core/documents";
+import { OpenAIEmbeddings , OpenAI } from "@langchain/openai";
 import { AttributeInfo } from "../../../schema/query_constructor.js";
-import { OpenAIEmbeddings } from "../../../embeddings/openai.js";
 import { SelfQueryRetriever } from "../index.js";
-import { OpenAI } from "../../../llms/openai.js";
 import { WeaviateStore } from "../../../vectorstores/weaviate.js";
 import { WeaviateTranslator } from "../weaviate.js";
 

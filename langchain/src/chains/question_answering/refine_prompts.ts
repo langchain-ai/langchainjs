@@ -5,7 +5,7 @@ import {
   SystemMessagePromptTemplate,
   HumanMessagePromptTemplate,
   AIMessagePromptTemplate,
-} from "../../prompts/index.js";
+} from "@langchain/core/prompts";
 import {
   ConditionalPromptSelector,
   isChatModel,

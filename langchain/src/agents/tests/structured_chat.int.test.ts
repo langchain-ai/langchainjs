@@ -1,12 +1,12 @@
 import { test } from "@jest/globals";
 import { z } from "zod";
 
-import { ChatOpenAI } from "../../chat_models/openai.js";
+import { ChatOpenAI } from "@langchain/openai";
+import { StructuredTool } from "@langchain/core/tools";
+import { MessagesPlaceholder } from "@langchain/core/prompts";
 import { Calculator } from "../../tools/calculator.js";
-import { StructuredTool } from "../../tools/base.js";
 import { initializeAgentExecutorWithOptions } from "../initialize.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
-import { MessagesPlaceholder } from "../../prompts/chat.js";
 
 class FakeWebSearchTool extends StructuredTool {
   schema = z.object({

@@ -1,6 +1,7 @@
 import type { createCluster, createClient } from "redis";
 
-import { BaseCache, Generation } from "../schema/index.js";
+import { BaseCache } from "@langchain/core/caches";
+import { Generation } from "@langchain/core/outputs";
 import {
   deserializeStoredGeneration,
   getCacheKey,

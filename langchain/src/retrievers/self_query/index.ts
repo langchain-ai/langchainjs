@@ -2,13 +2,13 @@ import {
   BaseRetriever,
   type BaseRetrieverInput,
 } from "@langchain/core/retrievers";
+import { Document } from "@langchain/core/documents";
 import { LLMChain } from "../../chains/llm_chain.js";
 import {
   QueryConstructorChainOptions,
   loadQueryConstructorChain,
 } from "../../chains/query_constructor/index.js";
 import { StructuredQuery } from "../../chains/query_constructor/ir.js";
-import { Document } from "../../document.js";
 import { VectorStore } from "../../vectorstores/base.js";
 import { FunctionalTranslator } from "./functional.js";
 import { BaseTranslator, BasicTranslator } from "./base.js";

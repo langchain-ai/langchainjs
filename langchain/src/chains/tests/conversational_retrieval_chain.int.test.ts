@@ -1,10 +1,8 @@
 import { expect, test } from "@jest/globals";
-import { OpenAI } from "../../llms/openai.js";
+import { OpenAI , OpenAIEmbeddings , ChatOpenAI } from "@langchain/openai";
+import { PromptTemplate } from "@langchain/core/prompts";
 import { ConversationalRetrievalQAChain } from "../conversational_retrieval_chain.js";
 import { HNSWLib } from "../../vectorstores/hnswlib.js";
-import { OpenAIEmbeddings } from "../../embeddings/openai.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
-import { PromptTemplate } from "../../prompts/index.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
 
 test("Test ConversationalRetrievalQAChain from LLM", async () => {

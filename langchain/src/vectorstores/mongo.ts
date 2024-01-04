@@ -4,8 +4,8 @@ import type {
   Collection,
   Document as MongoDocument,
 } from "mongodb";
+import { Document } from "@langchain/core/documents";
 import { VectorStore } from "./base.js";
-import { Document } from "../document.js";
 
 /** @deprecated use `MongoDBAtlasVectorSearch` instead. */
 export type MongoLibArgs = {

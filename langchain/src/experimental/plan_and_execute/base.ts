@@ -1,7 +1,7 @@
-import { BaseOutputParser } from "../../schema/output_parser.js";
+import { BaseOutputParser } from "@langchain/core/output_parsers";
+import { ChainValues } from "@langchain/core/utils/types";
 import { BaseChain } from "../../chains/base.js";
 import { LLMChain } from "../../chains/llm_chain.js";
-import { ChainValues } from "../../schema/index.js";
 import { CallbackManager } from "../../callbacks/manager.js";
 
 /**

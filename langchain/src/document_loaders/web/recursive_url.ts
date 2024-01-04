@@ -1,5 +1,5 @@
 import { JSDOM } from "jsdom";
-import { Document } from "../../document.js";
+import { Document } from "@langchain/core/documents";
 import { AsyncCaller } from "../../util/async_caller.js";
 import { BaseDocumentLoader, DocumentLoader } from "../base.js";
 

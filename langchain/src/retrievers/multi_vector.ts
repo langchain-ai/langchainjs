@@ -3,8 +3,8 @@ import {
   type BaseRetrieverInput,
 } from "@langchain/core/retrievers";
 import type { VectorStoreInterface } from "@langchain/core/vectorstores";
+import { Document } from "@langchain/core/documents";
 import { BaseStore, BaseStoreInterface } from "../schema/storage.js";
-import { Document } from "../document.js";
 import { createDocumentStoreFromByteStore } from "../storage/encoder_backed.js";
 
 /**

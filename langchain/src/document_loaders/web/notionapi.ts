@@ -16,7 +16,7 @@ import type {
 } from "notion-to-md/build/types";
 import yaml from "js-yaml";
 
-import { Document } from "../../document.js";
+import { Document } from "@langchain/core/documents";
 import { BaseDocumentLoader } from "../base.js";
 import { AsyncCaller } from "../../util/async_caller.js";
 

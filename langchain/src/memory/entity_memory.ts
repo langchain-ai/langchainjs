@@ -1,7 +1,11 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
-import { BaseEntityStore } from "../schema/index.js";
+import {
+  BaseChatMemory,
+  BaseChatMemoryInput,
+} from "@langchain/community/memory/chat_memory";
+import { PromptTemplate } from "@langchain/core/prompts";
 
-import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
+import { BaseEntityStore } from "./stores/entity/base.js";
 import {
   ENTITY_EXTRACTION_PROMPT,
   ENTITY_SUMMARIZATION_PROMPT,
@@ -14,7 +18,6 @@ import {
   getPromptInputKey,
 } from "./base.js";
 import { LLMChain } from "../chains/llm_chain.js";
-import { PromptTemplate } from "../prompts/prompt.js";
 import { InMemoryEntityStore } from "./stores/entity/in_memory.js";
 
 /**

@@ -9,29 +9,31 @@ import {
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
-import { CallbackManager } from "../../callbacks/manager.js";
-import { ChatOpenAI, ChatOpenAICallOptions } from "../../chat_models/openai.js";
-import type { BasePromptTemplate } from "../../prompts/base.js";
-import {
-  AIMessage,
+import { ChatOpenAI, ChatOpenAICallOptions } from "@langchain/openai";
+import type {
   AgentAction,
   AgentFinish,
   AgentStep,
+} from "@langchain/core/agents";
+import {
+  AIMessage,
   BaseMessage,
   FunctionMessage,
-  ChainValues,
   SystemMessage,
   BaseMessageChunk,
-} from "../../schema/index.js";
-import { Agent, AgentArgs } from "../agent.js";
-import { AgentInput } from "../types.js";
-import { PREFIX } from "./prompt.js";
+} from "@langchain/core/messages";
+import { ChainValues } from "@langchain/core/utils/types";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   MessagesPlaceholder,
   SystemMessagePromptTemplate,
-} from "../../prompts/chat.js";
+} from "@langchain/core/prompts";
+import { CallbackManager } from "../../callbacks/manager.js";
+import type { BasePromptTemplate } from "../../prompts/base.js";
+import { Agent, AgentArgs } from "../agent.js";
+import { AgentInput } from "../types.js";
+import { PREFIX } from "./prompt.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import {
   FunctionsAgentAction,

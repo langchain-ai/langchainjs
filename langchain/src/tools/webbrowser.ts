@@ -3,6 +3,10 @@ import { Document } from "@langchain/core/documents";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import axiosMod, { AxiosRequestConfig, AxiosStatic } from "axios";
 import * as cheerio from "cheerio";
+import {
+  CallbackManager,
+  CallbackManagerForToolRun,
+} from "@langchain/core/callbacks/manager";
 import { isNode } from "../util/env.js";
 import {
   RecursiveCharacterTextSplitter,
@@ -10,10 +14,6 @@ import {
 } from "../text_splitter.js";
 import { MemoryVectorStore } from "../vectorstores/memory.js";
 import { Tool, ToolParams } from "./base.js";
-import {
-  CallbackManager,
-  CallbackManagerForToolRun,
-} from "../callbacks/manager.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { formatDocumentsAsString } from "../util/document.js";
 

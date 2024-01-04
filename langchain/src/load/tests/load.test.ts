@@ -5,19 +5,17 @@ import { RunnableSequence } from "@langchain/core/runnables";
 import { Cohere } from "@langchain/community/llms/cohere";
 import { OpenAI, ChatOpenAI } from "@langchain/openai";
 
-import { load } from "../index.js";
-import { PromptTemplate } from "../../prompts/prompt.js";
-import { LLMChain } from "../../chains/llm_chain.js";
 import {
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
   ChatPromptTemplate,
-} from "../../prompts/chat.js";
-import { LangChainTracer } from "../../callbacks/index.js";
-import {
   FewShotPromptTemplate,
-  LengthBasedExampleSelector,
-} from "../../prompts/index.js";
+} from "@langchain/core/prompts";
+import { LengthBasedExampleSelector } from "@langchain/core/example_selectors";
+import { load } from "../index.js";
+import { PromptTemplate } from "../../prompts/prompt.js";
+import { LLMChain } from "../../chains/llm_chain.js";
+import { LangChainTracer } from "../../callbacks/index.js";
 import { initializeAgentExecutorWithOptions } from "../../agents/initialize.js";
 import { Calculator } from "../../tools/calculator.js";
 import { RequestsGetTool } from "../../tools/requests.js";

@@ -2,8 +2,8 @@ import fs from "fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { test, expect } from "@jest/globals";
+import { Document } from "@langchain/core/documents";
 import { GoogleVertexAIMultimodalEmbeddings } from "../googlevertexai.js";
-import { Document } from "../../../document.js";
 import { FaissStore } from "../../../vectorstores/faiss.js";
 
 test.skip("embedding text", async () => {

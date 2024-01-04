@@ -1,9 +1,8 @@
 import { test } from "@jest/globals";
+import { OpenAIEmbeddings , ChatOpenAI } from "@langchain/openai";
 import { HNSWLib } from "../../../vectorstores/hnswlib.js";
-import { OpenAIEmbeddings } from "../../../embeddings/openai.js";
 import { createConversationalRetrievalAgent } from "../conversational_retrieval/openai_functions.js";
 import { createRetrieverTool } from "../conversational_retrieval/tool.js";
-import { ChatOpenAI } from "../../../chat_models/openai.js";
 
 test("Test ConversationalRetrievalAgent", async () => {
   const vectorStore = await HNSWLib.fromTexts(

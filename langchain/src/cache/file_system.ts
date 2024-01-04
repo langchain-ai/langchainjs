@@ -1,7 +1,8 @@
 import path from "node:path";
 import fs from "node:fs/promises";
 
-import { BaseCache, Generation } from "../schema/index.js";
+import { BaseCache } from "@langchain/core/caches";
+import { Generation } from "@langchain/core/outputs";
 import {
   getCacheKey,
   serializeGeneration,

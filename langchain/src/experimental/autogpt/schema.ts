@@ -1,4 +1,4 @@
-import { StructuredTool } from "../../tools/base.js";
+import { StructuredTool } from "@langchain/core/tools";
 
 /**
  * Type alias for StructuredTool. It is part of the tools module in

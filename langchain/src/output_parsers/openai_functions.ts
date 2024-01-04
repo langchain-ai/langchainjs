@@ -4,13 +4,13 @@ import {
   type Operation as JSONPatchOperation,
 } from "@langchain/core/utils/json_patch";
 
-import { ChatGeneration, Generation } from "../schema/index.js";
-import { Optional } from "../types/type-utils.js";
+import { ChatGeneration, Generation } from "@langchain/core/outputs";
 import {
   BaseCumulativeTransformOutputParser,
   type BaseCumulativeTransformOutputParserInput,
   BaseLLMOutputParser,
-} from "../schema/output_parser.js";
+} from "@langchain/core/output_parsers";
+import { Optional } from "../types/type-utils.js";
 import { parsePartialJson } from "./json.js";
 
 /**

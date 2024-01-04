@@ -4,17 +4,17 @@ import { JsonSchema7ArrayType } from "zod-to-json-schema/src/parsers/array.js";
 import { JsonSchema7Type } from "zod-to-json-schema/src/parseDef.js";
 import type { OpenAPIV3_1 } from "openapi-types";
 
-import { OpenAPISpec } from "../../util/openapi.js";
-import { ChainValues } from "../../schema/index.js";
-import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
-import { BaseChain } from "../base.js";
-import { LLMChain, LLMChainInput } from "../llm_chain.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
-import { BasePromptTemplate } from "../../prompts/base.js";
+import { ChainValues } from "@langchain/core/utils/types";
+import { ChatOpenAI } from "@langchain/openai";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
-} from "../../prompts/chat.js";
+} from "@langchain/core/prompts";
+import { OpenAPISpec } from "../../util/openapi.js";
+import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
+import { BaseChain } from "../base.js";
+import { LLMChain, LLMChainInput } from "../llm_chain.js";
+import { BasePromptTemplate } from "../../prompts/base.js";
 import { SequentialChain } from "../sequential_chain.js";
 import { JsonOutputFunctionsParser } from "../../output_parsers/openai_functions.js";
 import { BaseChatModel } from "../../chat_models/base.js";

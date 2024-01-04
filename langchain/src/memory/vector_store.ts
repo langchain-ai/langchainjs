@@ -1,5 +1,5 @@
 import type { VectorStoreRetrieverInterface } from "@langchain/core/vectorstores";
-import { Document } from "../document.js";
+import { Document } from "@langchain/core/documents";
 import { formatDocumentsAsString } from "../util/document.js";
 import {
   BaseMemory,

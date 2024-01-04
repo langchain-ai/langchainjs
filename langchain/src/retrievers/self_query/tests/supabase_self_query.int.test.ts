@@ -1,11 +1,10 @@
 /* eslint-disable no-process-env */
 import { test } from "@jest/globals";
 import { createClient } from "@supabase/supabase-js";
-import { Document } from "../../../document.js";
+import { Document } from "@langchain/core/documents";
+import { OpenAIEmbeddings , OpenAI } from "@langchain/openai";
 import { AttributeInfo } from "../../../schema/query_constructor.js";
-import { OpenAIEmbeddings } from "../../../embeddings/openai.js";
 import { SelfQueryRetriever } from "../index.js";
-import { OpenAI } from "../../../llms/openai.js";
 import { SupabaseTranslator } from "../supabase.js";
 import {
   SupabaseFilter,

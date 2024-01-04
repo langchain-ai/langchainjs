@@ -1,4 +1,4 @@
-import type { SerializedLLM } from "../llms/base.js";
+import type { SerializedLLM } from "@langchain/core/language_models/llms";
 import type { SerializedBasePromptTemplate } from "../prompts/serde.js";
 
 /**

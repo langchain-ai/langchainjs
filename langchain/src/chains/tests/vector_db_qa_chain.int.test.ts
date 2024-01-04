@@ -1,12 +1,11 @@
 import { test } from "@jest/globals";
-import { OpenAI } from "../../llms/openai.js";
-import { PromptTemplate } from "../../prompts/index.js";
+import { OpenAI , OpenAIEmbeddings } from "@langchain/openai";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { Document } from "@langchain/core/documents";
 import { LLMChain } from "../llm_chain.js";
 import { StuffDocumentsChain } from "../combine_docs_chain.js";
 import { VectorDBQAChain } from "../vector_db_qa.js";
 import { MemoryVectorStore } from "../../vectorstores/memory.js";
-import { OpenAIEmbeddings } from "../../embeddings/openai.js";
-import { Document } from "../../document.js";
 
 test("Test VectorDBQAChain", async () => {
   const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });

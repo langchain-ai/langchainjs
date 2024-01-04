@@ -1,7 +1,7 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import { BaseMessage, SystemMessage } from "@langchain/core/messages";
 import { LLMChain } from "../chains/llm_chain.js";
 import { BasePromptTemplate } from "../prompts/base.js";
-import { BaseMessage, SystemMessage } from "../schema/index.js";
 import {
   getBufferString,
   InputValues,

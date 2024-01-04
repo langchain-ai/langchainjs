@@ -1,18 +1,17 @@
 /* eslint-disable no-process-env */
 import { expect, test } from "@jest/globals";
-import { OpenAI } from "../../llms/openai.js";
-import { OpenAIEmbeddings } from "../../embeddings/openai.js";
+import { OpenAI , OpenAIEmbeddings , ChatOpenAI } from "@langchain/openai";
+import { Tool } from "@langchain/core/tools";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { OutputParserException } from "@langchain/core/output_parsers";
+import { AIMessage } from "@langchain/core/messages";
+import { AgentStep } from "@langchain/core/agents";
 import { loadAgent } from "../load.js";
 import { AgentExecutor, ZeroShotAgent } from "../index.js";
 import { SerpAPI } from "../../tools/serpapi.js";
 import { Calculator } from "../../tools/calculator.js";
 import { initializeAgentExecutorWithOptions } from "../initialize.js";
 import { WebBrowser } from "../../tools/webbrowser.js";
-import { Tool } from "../../tools/base.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
-import { RunnableSequence } from "../../schema/runnable/base.js";
-import { OutputParserException } from "../../schema/output_parser.js";
-import { AIMessage, AgentStep } from "../../schema/index.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
 import { ChatMessageHistory } from "../../memory/index.js";
 

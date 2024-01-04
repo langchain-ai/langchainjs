@@ -1,10 +1,10 @@
 import type { basename as BasenameT } from "node:path";
 import type { readFile as ReadFileT, stat as StatT } from "node:fs/promises";
 import yaml from "js-yaml";
+import { Document } from "@langchain/core/documents";
 import { getEnv } from "../../util/env.js";
 import { DirectoryLoader, UnknownHandling } from "./directory.js";
 import { BaseDocumentLoader } from "../base.js";
-import { Document } from "../../document.js";
 
 export type FrontMatter = {
   title?: string;

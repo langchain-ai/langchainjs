@@ -1,15 +1,14 @@
 import { XMLParser } from "fast-xml-parser";
 import type { StructuredToolInterface } from "@langchain/core/tools";
 
-import { BaseChatModel, BaseChatModelParams } from "../../chat_models/base.js";
-import { CallbackManagerForLLMRun } from "../../callbacks/manager.js";
 import {
   AIMessage,
   BaseMessage,
-  ChatGenerationChunk,
-  ChatResult,
   SystemMessage,
-} from "../../schema/index.js";
+} from "@langchain/core/messages";
+import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
+import { BaseChatModel, BaseChatModelParams } from "../../chat_models/base.js";
+import { CallbackManagerForLLMRun } from "../../callbacks/manager.js";
 import {
   ChatAnthropic,
   DEFAULT_STOP_SEQUENCES,

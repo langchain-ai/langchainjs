@@ -8,18 +8,14 @@ import {
   RunnableSequence,
 } from "@langchain/core/runnables";
 import type { BasePromptTemplate } from "@langchain/core/prompts";
-import { LLMChain } from "../../chains/llm_chain.js";
-import {
-  AgentStep,
-  AgentAction,
-  AgentFinish,
-  ChainValues,
-} from "../../schema/index.js";
+import { AgentStep, AgentAction, AgentFinish } from "@langchain/core/agents";
+import { ChainValues } from "@langchain/core/utils/types";
 import {
   AIMessagePromptTemplate,
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
-} from "../../prompts/chat.js";
+} from "@langchain/core/prompts";
+import { LLMChain } from "../../chains/llm_chain.js";
 import { AgentArgs, BaseSingleActionAgent } from "../agent.js";
 import { AGENT_INSTRUCTIONS } from "./prompt.js";
 import { CallbackManager } from "../../callbacks/manager.js";

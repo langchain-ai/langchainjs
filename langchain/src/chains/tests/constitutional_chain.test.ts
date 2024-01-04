@@ -1,10 +1,10 @@
 import { test, expect } from "@jest/globals";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { BaseLLM } from "@langchain/core/language_models/llms";
+import { LLMResult } from "@langchain/core/outputs";
 import { ConstitutionalChain } from "../constitutional_ai/constitutional_chain.js";
 import { ConstitutionalPrinciple } from "../constitutional_ai/constitutional_principle.js";
 import { LLMChain } from "../llm_chain.js";
-import { PromptTemplate } from "../../prompts/index.js";
-import { BaseLLM } from "../../llms/base.js";
-import { LLMResult } from "../../schema/index.js";
 
 class FakeLLM extends BaseLLM {
   nrMapCalls = 0;

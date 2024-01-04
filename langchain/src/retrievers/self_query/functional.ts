@@ -1,3 +1,4 @@
+import { Document } from "@langchain/core/documents";
 import {
   Comparator,
   Comparators,
@@ -7,7 +8,6 @@ import {
   Operators,
   StructuredQuery,
 } from "../../chains/query_constructor/ir.js";
-import { Document } from "../../document.js";
 import { BaseTranslator } from "./base.js";
 import { castValue, isFilterEmpty } from "./utils.js";
 

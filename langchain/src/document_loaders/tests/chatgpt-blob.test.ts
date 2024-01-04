@@ -2,7 +2,7 @@ import * as url from "node:url";
 import * as path from "node:path";
 import * as fs from "node:fs/promises";
 import { test, expect } from "@jest/globals";
-import { Document } from "../../document.js";
+import { Document } from "@langchain/core/documents";
 import { ChatGPTLoader } from "../fs/chatgpt.js";
 
 test("Test ChatGPT loader from blob to load all documents", async () => {

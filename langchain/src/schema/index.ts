@@ -1,3 +1,11 @@
+import type { OpenAIClient } from "@langchain/openai";
+import {
+  BaseMessage,
+  HumanMessage,
+  AIMessage,
+  SystemMessage,
+} from "@langchain/core/messages";
+
 /* #__PURE__ */ console.warn(
   [
     `[WARNING]: Importing from "langchain/schema" is deprecated.`,
@@ -7,14 +15,6 @@
     `This will be mandatory after the next "langchain" minor version bump to 0.2.`,
   ].join("\n")
 );
-
-import type { OpenAIClient } from "@langchain/openai";
-import {
-  BaseMessage,
-  HumanMessage,
-  AIMessage,
-  SystemMessage,
-} from "@langchain/core/messages";
 
 export {
   type AgentAction,

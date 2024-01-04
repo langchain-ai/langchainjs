@@ -1,7 +1,7 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { test } from "@jest/globals";
-import { BaseMessageChunk, HumanMessage } from "../../../schema/index.js";
+import { BaseMessageChunk, HumanMessage } from "@langchain/core/messages";
 import { AnthropicFunctions } from "../anthropic_functions.js";
 import { ChatBedrock } from "../../../chat_models/bedrock/web.js";
 

@@ -2,9 +2,9 @@ import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
-} from "../../prompts/chat.js";
+} from "@langchain/core/prompts";
 
-import { Tool } from "../../tools/base.js";
+import { Tool } from "@langchain/core/tools";
 import { DynamicStructuredTool } from "../../tools/dynamic.js";
 
 export const PLANNER_SYSTEM_PROMPT_MESSAGE_TEMPLATE = [

@@ -4,10 +4,10 @@ import {
   type BaseRetrieverInput,
   type BaseRetrieverInterface,
 } from "@langchain/core/retrievers";
+import { Document } from "@langchain/core/documents";
+import { BaseOutputParser } from "@langchain/core/output_parsers";
 import { LLMChain } from "../chains/llm_chain.js";
 import { PromptTemplate } from "../prompts/prompt.js";
-import { Document } from "../document.js";
-import { BaseOutputParser } from "../schema/output_parser.js";
 import { CallbackManagerForRetrieverRun } from "../callbacks/index.js";
 import { BasePromptTemplate } from "../prompts/base.js";
 
