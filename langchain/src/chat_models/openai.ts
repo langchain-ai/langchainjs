@@ -1,11 +1,3 @@
-import { logVersion010MigrationWarning } from "../util/entrypoint_deprecation.js";
-
-/* #__PURE__ */ logVersion010MigrationWarning({
-  oldEntrypointName: "chat_models/openai",
-  newEntrypointName: "",
-  newPackageName: "@langchain/openai",
-});
-
 import {
   ChatOpenAI,
   type ChatOpenAICallOptions,
@@ -15,6 +7,13 @@ import {
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { BaseMessage, ChatMessage, ChatResult } from "../schema/index.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
+import { logVersion010MigrationWarning } from "../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion010MigrationWarning({
+  oldEntrypointName: "chat_models/openai",
+  newEntrypointName: "",
+  newPackageName: "@langchain/openai",
+});
 
 export {
   type AzureOpenAIInput,
