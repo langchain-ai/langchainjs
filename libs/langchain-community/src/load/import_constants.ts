@@ -79,6 +79,7 @@ export const optionalImportEntrypoints = [
   "langchain_community/chat_models/llama_cpp",
   "langchain_community/chat_models/portkey",
   "langchain_community/callbacks/handlers/llmonitor",
+  "langchain_community/callbacks/handlers/lunary",
   "langchain_community/retrievers/amazon_kendra",
   "langchain_community/retrievers/metal",
   "langchain_community/retrievers/supabase",

@@ -235,6 +235,9 @@ export interface OptionalImportMap {
   "@langchain/community/callbacks/handlers/llmonitor"?:
     | typeof import("../callbacks/handlers/llmonitor.js")
     | Promise<typeof import("../callbacks/handlers/llmonitor.js")>;
+  "@langchain/community/callbacks/handlers/lunary"?:
+    | typeof import("../callbacks/handlers/lunary.js")
+    | Promise<typeof import("../callbacks/handlers/lunary.js")>;
   "@langchain/community/retrievers/amazon_kendra"?:
     | typeof import("../retrievers/amazon_kendra.js")
     | Promise<typeof import("../retrievers/amazon_kendra.js")>;
