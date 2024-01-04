@@ -13,13 +13,13 @@ import IntegrationInstallTooltip from "@mdx_components/integration_install_toolt
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm install @langchain/openai @langchain/community
+npm install @langchain/community
 ```
 
 ```typescript
-import { ChatOpenAI } from "@langchain/openai";
+import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
-import { OpenAIEmbeddings } from "@langchain/openai";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { BufferMemory } from "langchain/memory";
 import * as fs from "fs";
@@ -103,8 +103,8 @@ Now we can start writing our main question answering sequence. For this, we'll p
 that abstracts the last processing step.
 
 ```typescript
-import { RunnableSequence } from "langchain/schema/runnable";
-import { StringOutputParser } from "langchain/schema/output_parser";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 import { LLMChain } from "langchain/chains";
 import { formatDocumentsAsString } from "langchain/util/document";
 
@@ -211,7 +211,7 @@ Now that we have our two main operations defined, we can create a `RunnableBranc
 We also have to pass a fallback `Runnable` for cases where all checks return false (this should never occur in practice with our specific example).
 
 ```typescript
-import { RunnableBranch } from "langchain/schema/runnable";
+import { RunnableBranch } from "@langchain/core/runnables";
 
 const branch = RunnableBranch.from([
   [

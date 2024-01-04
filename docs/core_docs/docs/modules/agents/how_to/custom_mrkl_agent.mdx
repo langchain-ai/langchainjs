@@ -29,17 +29,9 @@ We will also do something similar with the output parser, ensuring our input pro
 
 The first step is to import all the necessary modules.
 
-import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
-
-<IntegrationInstallTooltip></IntegrationInstallTooltip>
-
-```bash npm2yarn
-npm install @langchain/openai
-```
-
 ```typescript
 import { AgentExecutor } from "langchain/agents";
-import { ChatOpenAI } from "@langchain/openai";
+import { ChatOpenAI } from "langchain/chat_models/openai";
 import { PromptTemplate } from "langchain/prompts";
 import {
   AgentAction,
@@ -49,7 +41,7 @@ import {
   InputValues,
   SystemMessage,
 } from "langchain/schema";
-import { RunnableSequence } from "langchain/schema/runnable";
+import { RunnableSequence } from "@langchain/core/runnables";
 import { SerpAPI } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 ```
