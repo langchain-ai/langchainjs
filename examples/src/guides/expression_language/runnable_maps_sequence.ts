@@ -1,4 +1,3 @@
-import { ChatAnthropic } from "langchain/chat_models/anthropic";
 import { CohereEmbeddings } from "@langchain/cohere";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { PromptTemplate } from "@langchain/core/prompts";
@@ -8,6 +7,7 @@ import {
   RunnableSequence,
 } from "@langchain/core/runnables";
 import { Document } from "@langchain/core/documents";
+import { ChatAnthropic } from "@langchain/anthropic";
 
 const model = new ChatAnthropic();
 const vectorstore = await HNSWLib.fromDocuments(

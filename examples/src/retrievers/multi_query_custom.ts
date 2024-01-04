@@ -1,4 +1,3 @@
-import { ChatAnthropic } from "langchain/chat_models/anthropic";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { CohereEmbeddings } from "@langchain/community/embeddings/cohere";
 import { MultiQueryRetriever } from "langchain/retrievers/multi_query";
@@ -6,6 +5,7 @@ import { LLMChain } from "langchain/chains";
 import { pull } from "langchain/hub";
 import { BaseOutputParser } from "@langchain/core/output_parsers";
 import { PromptTemplate } from "@langchain/core/prompts";
+import { ChatAnthropic } from "@langchain/anthropic";
 
 type LineList = {
   lines: string[];
