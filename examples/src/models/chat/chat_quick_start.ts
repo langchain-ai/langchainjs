@@ -1,5 +1,5 @@
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanMessage } from "langchain/schema";
+import { ChatOpenAI } from "@langchain/openai";
+import { HumanMessage } from "@langchain/core/messages";
 
 const chat = new ChatOpenAI({});
 // Pass in a list of messages to `call` to start a conversation. In this simple example, we only pass in one message.

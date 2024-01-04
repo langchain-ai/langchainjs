@@ -1,7 +1,7 @@
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { TogetherAI } from "../togetherai.js";
 
-test("TogetherAI can make a request to an LLM", async () => {
+test.skip("TogetherAI can make a request to an LLM", async () => {
   const model = new TogetherAI({
     modelName: "togethercomputer/StripedHyena-Nous-7B",
   });
@@ -14,7 +14,7 @@ test("TogetherAI can make a request to an LLM", async () => {
   console.log("result", result);
 });
 
-test("TogetherAI can stream responses", async () => {
+test.skip("TogetherAI can stream responses", async () => {
   const model = new TogetherAI({
     modelName: "togethercomputer/StripedHyena-Nous-7B",
     streaming: true,

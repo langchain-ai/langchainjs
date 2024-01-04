@@ -9,8 +9,16 @@ The `OpenAIEmbeddings` class can also use the OpenAI API on Azure to generate em
 For example, if your Azure instance is hosted under `https://{MY_INSTANCE_NAME}.openai.azure.com/openai/deployments/{DEPLOYMENT_NAME}`, you
 could initialize your instance like this:
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 ```typescript
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 
 const embeddings = new OpenAIEmbeddings({
   azureOpenAIApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.AZURE_OPENAI_API_KEY
@@ -24,11 +32,11 @@ If you'd like to initialize using environment variable defaults, the `process.en
 will be used first, then `process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME`. This can be useful if you're using these embeddings
 with another Azure OpenAI model.
 
-If your instance is hosted under a domain other than the default `openai.azure.com`, you'll need to use the alternate `AZURE_OPENAI_BASE_PATH` environemnt variable.
+If your instance is hosted under a domain other than the default `openai.azure.com`, you'll need to use the alternate `AZURE_OPENAI_BASE_PATH` environment variable.
 For example, here's how you would connect to the domain `https://westeurope.api.microsoft.com/openai/deployments/{DEPLOYMENT_NAME}`:
 
 ```typescript
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 
 const embeddings = new OpenAIEmbeddings({
   azureOpenAIApiKey: "YOUR-API-KEY",

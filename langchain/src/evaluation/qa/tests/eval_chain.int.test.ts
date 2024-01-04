@@ -4,7 +4,7 @@ import { PromptTemplate } from "../../../prompts/index.js";
 import { QAEvalChain } from "../eval_chain.js";
 
 test("Test QAEvalChain", async () => {
-  const model = new OpenAI({ modelName: "text-ada-001" });
+  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
   const prompt = new PromptTemplate({
     template: "{query} {answer} {result}",
     inputVariables: ["query", "answer", "result"],
@@ -22,7 +22,7 @@ test("Test QAEvalChain", async () => {
 });
 
 test("Test QAEvalChain with incorrect input variables", async () => {
-  const model = new OpenAI({ modelName: "text-ada-001" });
+  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
   const prompt = new PromptTemplate({
     template: "{foo} {bar} {baz}",
     inputVariables: ["foo", "bar", "baz"],

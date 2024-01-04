@@ -1,4 +1,4 @@
-import { VespaRetriever } from "langchain/retrievers/vespa";
+import { VespaRetriever } from "@langchain/community/retrievers/vespa";
 
 export const run = async () => {
   const url = "https://doc-search.vespa.oath.cloud";

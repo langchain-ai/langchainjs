@@ -200,7 +200,7 @@ export class RemoteRunnable<
     const response = await this.post<{
       input: RunInput;
       config?: RunnableConfig;
-      kwargs?: Omit<Partial<CallOptions>, keyof BaseCallbackConfig>;
+      kwargs?: Omit<Partial<CallOptions>, keyof RunnableConfig>;
     }>("/invoke", {
       input,
       config: removeCallbacks(config),
@@ -228,17 +228,17 @@ export class RemoteRunnable<
           [...pk, k],
         ] as [
           RunnableConfig[],
-          Omit<Partial<CallOptions>, keyof BaseCallbackConfig>[]
+          Omit<Partial<CallOptions>, keyof RunnableConfig>[]
         ],
       [[], []] as [
         RunnableConfig[],
-        Omit<Partial<CallOptions>, keyof BaseCallbackConfig>[]
+        Omit<Partial<CallOptions>, keyof RunnableConfig>[]
       ]
     ) ?? [undefined, undefined];
     const response = await this.post<{
       inputs: RunInput[];
       config?: (RunnableConfig & RunnableBatchOptions)[];
-      kwargs?: Omit<Partial<CallOptions>, keyof BaseCallbackConfig>[];
+      kwargs?: Omit<Partial<CallOptions>, keyof RunnableConfig>[];
     }>("/batch", {
       inputs,
       config: (configs ?? [])
@@ -296,7 +296,7 @@ export class RemoteRunnable<
     const response = await this.post<{
       input: RunInput;
       config?: RunnableConfig;
-      kwargs?: Omit<Partial<CallOptions>, keyof BaseCallbackConfig>;
+      kwargs?: Omit<Partial<CallOptions>, keyof RunnableConfig>;
     }>("/stream", {
       input,
       config,

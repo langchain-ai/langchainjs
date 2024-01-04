@@ -1,38 +1,13 @@
----
-sidebar_position: 2
----
+# Output Parsers
 
-# Output parsers
+Output parsers are responsible for taking the output of an LLM and transforming it to a more suitable format. This is very useful when you are asing LLMs to generate any form of structured data.
 
-Language models output text. But many times you may want to get more structured information than just text back. This is where output parsers come in.
+Besides having a large collection of different types of output parsers, one distinguishing benefit of LangChain OutputParsers is that many of them support streaming.
 
-Output parsers are classes that help structure language model responses. There are two main methods an output parser must implement:
+## [Quick Start](./quick_start)
 
-- "Get format instructions": A method which returns a string containing instructions for how the output of a language model should be formatted.
-- "Parse": A method which takes in a string (assumed to be the response from a language model) and parses it into some structure.
+See [this quick-start guide](./quick_start) for an introduction to output parsers and how to work with them.
 
-And then one optional one:
+## [Output Parser Types](./types)
 
-- "Parse with prompt": A method which takes in a string (assumed to be the response from a language model) and a prompt (assumed to the prompt that generated such a response) and parses it into some structure. The prompt is largely provided in the event the OutputParser wants to retry or fix the output in some way, and needs information from the prompt to do so.
-
-## Get started
-
-import CodeBlock from "@theme/CodeBlock";
-
-Below we go over one useful type of output parser, the `StructuredOutputParser`.
-
-## Structured Output Parser
-
-This output parser can be used when you want to return multiple fields. If you want complex schema returned (i.e. a JSON object with arrays of strings), use the Zod Schema detailed below.
-
-import Structured from "@examples/prompts/structured_parser_sequence.ts";
-
-<CodeBlock language="typescript">{Structured}</CodeBlock>
-
-## Structured Output Parser with Zod Schema
-
-This output parser can be also be used when you want to define the output schema using Zod, a TypeScript validation library. The Zod schema passed in needs be parseable from a JSON string, so eg. `z.date()` is not allowed.
-
-import StructuredZod from "@examples/prompts/structured_parser_zod_sequence.ts";
-
-<CodeBlock language="typescript">{StructuredZod}</CodeBlock>
+LangChain has lots of different types of output parsers. See [this table](./types) for a breakdown of what types exist and when to use them.

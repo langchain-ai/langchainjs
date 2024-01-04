@@ -4,23 +4,24 @@ anInt: 15
 aBool: true
 aString: string value
 anArray:
-- one
-- two
-- three
+  - one
+  - two
+  - three
 aDict:
-  dictId1: '58417'
+  dictId1: "58417"
   dictId2: 1500
-tags: [ 'onetag', 'twotag' ]
+tags: ["onetag", "twotag"]
 ---
 
 # Tags
 
- ()#notatag
+()#notatag
 #12345
- #read
+#read
 something #tagWithCases
+
 - #tag-with-dash
-#tag_with_underscore #tag/with/nesting
+  #tag_with_underscore #tag/with/nesting
 
 # Dataview
 

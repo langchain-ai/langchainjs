@@ -4,8 +4,16 @@
 
 Let's first explore the basic functionality of this type of memory.
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 ```typescript
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import { BufferWindowMemory } from "langchain/memory";
 import { ConversationChain } from "langchain/chains";
 

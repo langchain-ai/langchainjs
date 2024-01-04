@@ -1,8 +1,8 @@
 // If you want to import the browser version, use the following line instead:
-// import { CloseVectorWeb } from "langchain/vectorstores/closevector/web";
-import { CloseVectorNode } from "langchain/vectorstores/closevector/node";
-import { CloseVectorWeb } from "langchain/vectorstores/closevector/web";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+// import { CloseVectorWeb } from "@langchain/community/vectorstores/closevector/web";
+import { CloseVectorNode } from "@langchain/community/vectorstores/closevector/node";
+import { CloseVectorWeb } from "@langchain/community/vectorstores/closevector/web";
+import { OpenAIEmbeddings } from "@langchain/openai";
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { createPublicGetFileOperationUrl } from "closevector-web";
 

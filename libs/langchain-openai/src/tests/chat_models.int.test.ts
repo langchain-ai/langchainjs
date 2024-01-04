@@ -262,7 +262,10 @@ test("Test OpenAI with signal in call options", async () => {
 }, 5000);
 
 test("Test OpenAI with signal in call options and node adapter", async () => {
-  const model = new ChatOpenAI({ maxTokens: 5, modelName: "text-ada-001" });
+  const model = new ChatOpenAI({
+    maxTokens: 5,
+    modelName: "gpt-3.5-turbo-instruct",
+  });
   const controller = new AbortController();
   await expect(() => {
     const ret = model.call([new HumanMessage("Print hello world")], {

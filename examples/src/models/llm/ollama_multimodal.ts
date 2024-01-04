@@ -1,4 +1,4 @@
-import { Ollama } from "langchain/llms/ollama";
+import { Ollama } from "@langchain/community/llms/ollama";
 import * as fs from "node:fs/promises";
 
 const imageData = await fs.readFile("./hotdog.jpg");

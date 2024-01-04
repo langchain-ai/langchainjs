@@ -37,6 +37,9 @@ tools/dataforseo_api_search.d.ts
 tools/gmail.cjs
 tools/gmail.js
 tools/gmail.d.ts
+tools/google_calendar.cjs
+tools/google_calendar.js
+tools/google_calendar.d.ts
 tools/google_custom_search.cjs
 tools/google_custom_search.js
 tools/google_custom_search.d.ts
@@ -58,6 +61,9 @@ tools/serpapi.d.ts
 tools/serper.cjs
 tools/serper.js
 tools/serper.d.ts
+tools/tavily_search.cjs
+tools/tavily_search.js
+tools/tavily_search.d.ts
 tools/wikipedia_query_run.cjs
 tools/wikipedia_query_run.js
 tools/wikipedia_query_run.d.ts
@@ -184,6 +190,9 @@ llms/yandex.d.ts
 vectorstores/analyticdb.cjs
 vectorstores/analyticdb.js
 vectorstores/analyticdb.d.ts
+vectorstores/astradb.cjs
+vectorstores/astradb.js
+vectorstores/astradb.d.ts
 vectorstores/azure_cosmosdb.cjs
 vectorstores/azure_cosmosdb.js
 vectorstores/azure_cosmosdb.d.ts
@@ -343,6 +352,9 @@ chat_models/yandex.d.ts
 callbacks/handlers/llmonitor.cjs
 callbacks/handlers/llmonitor.js
 callbacks/handlers/llmonitor.d.ts
+callbacks/handlers/lunary.cjs
+callbacks/handlers/lunary.js
+callbacks/handlers/lunary.d.ts
 retrievers/amazon_kendra.cjs
 retrievers/amazon_kendra.js
 retrievers/amazon_kendra.d.ts
@@ -355,6 +367,9 @@ retrievers/databerry.d.ts
 retrievers/metal.cjs
 retrievers/metal.js
 retrievers/metal.d.ts
+retrievers/remote.cjs
+retrievers/remote.js
+retrievers/remote.d.ts
 retrievers/supabase.cjs
 retrievers/supabase.js
 retrievers/supabase.d.ts
@@ -364,6 +379,9 @@ retrievers/tavily_search_api.d.ts
 retrievers/vectara_summary.cjs
 retrievers/vectara_summary.js
 retrievers/vectara_summary.d.ts
+retrievers/vespa.cjs
+retrievers/vespa.js
+retrievers/vespa.d.ts
 retrievers/zep.cjs
 retrievers/zep.js
 retrievers/zep.d.ts
