@@ -143,7 +143,7 @@ const cleanGenerated = () => {
 // [package name, import statement, import map path]
 // This will not include entrypoints deprecated or requiring optional deps.
 const importMap = [
-  "langchain-core",
+  "basproul-core",
   (k, p) => `export * as ${k.replace(/\//g, "__")} from "../${p}.js";`,
   "src/load/import_map.ts",
 ];
@@ -167,7 +167,7 @@ const generateImportMap = () => {
 };
 
 const importTypes = [
-  "langchain-core",
+  "basproul-core",
   (k, p) =>
     `  "@langchain/core/${k}"?:
     | typeof import("../${p}.js")
@@ -201,7 +201,7 @@ ${[...identifySecrets()]
 };
 
 const importConstants = [
-  "langchain-core",
+  "basproul-core",
   (k) => `  "langchain/${k}"`,
   "src/load/import_constants.ts",
 ];
