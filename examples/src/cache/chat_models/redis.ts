@@ -1,4 +1,4 @@
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { RedisCache } from "langchain/cache/ioredis";
 import { Redis } from "ioredis";
 

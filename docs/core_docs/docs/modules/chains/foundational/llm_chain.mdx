@@ -14,6 +14,14 @@ import ExampleCancellation from "@examples/chains/llm_chain_cancellation.ts";
 
 We can construct an LLMChain which takes user input, formats it with a PromptTemplate, and then passes the formatted response to an LLM:
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 <CodeBlock language="typescript">{ExampleLLM}</CodeBlock>
 
 ## Usage with Chat Models

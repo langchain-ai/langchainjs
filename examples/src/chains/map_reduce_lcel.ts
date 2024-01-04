@@ -3,7 +3,7 @@ import {
   collapseDocs,
   splitListOfDocs,
 } from "langchain/chains/combine_documents/reduce";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { Document } from "langchain/document";
 import { PromptTemplate } from "langchain/prompts";
 import { StringOutputParser } from "langchain/schema/output_parser";

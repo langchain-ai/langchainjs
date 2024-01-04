@@ -39,6 +39,14 @@ Postgres, SQLite, Microsoft SQL Server, MySQL, and SAP HANA.
 
 Finally follow the instructions on https://database.guide/2-sample-databases-sqlite/ to get the sample database for this example.
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 <CodeBlock language="typescript">{SqlDBExample}</CodeBlock>
 
 You can include or exclude tables when creating the `SqlDatabase` object to help the chain focus on the tables you want.

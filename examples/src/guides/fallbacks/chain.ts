@@ -1,5 +1,4 @@
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { OpenAI } from "langchain/llms/openai";
+import { ChatOpenAI, OpenAI } from "@langchain/openai";
 import { StringOutputParser } from "langchain/schema/output_parser";
 import { ChatPromptTemplate, PromptTemplate } from "langchain/prompts";
 

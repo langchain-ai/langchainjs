@@ -2,9 +2,8 @@ import weaviate from "weaviate-ts-client";
 
 import { AttributeInfo } from "langchain/schema/query_constructor";
 import { Document } from "langchain/document";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
 import { SelfQueryRetriever } from "langchain/retrievers/self_query";
-import { OpenAI } from "langchain/llms/openai";
 import { WeaviateStore } from "@langchain/community/vectorstores/weaviate";
 import { WeaviateTranslator } from "langchain/retrievers/self_query/weaviate";
 

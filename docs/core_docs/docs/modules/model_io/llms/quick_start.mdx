@@ -22,13 +22,13 @@ import CodeBlock from "@theme/CodeBlock";
   
 First we'll need to install the LangChain OpenAI integration package:
 
-```bash npm2yarn
-npm install @langchain/openai
-```
-
 import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
 
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
 
 Accessing the API requires an API key, which you can get by creating an account and heading [here](https://platform.openai.com/account/api-keys). Once we have a key we'll want to set it as an environment variable by running:
 
@@ -49,7 +49,7 @@ const llm = new OpenAI({
 otherwise you can initialize with an empty object:
 
 ```typescript
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 
 const llm = new OpenAI({});
 ```
