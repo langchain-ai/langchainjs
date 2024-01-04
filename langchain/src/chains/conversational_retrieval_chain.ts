@@ -1,5 +1,6 @@
-import { PromptTemplate } from "../prompts/prompt.js";
-import { BaseLanguageModel } from "../base_language/index.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import type { BaseRetrieverInterface } from "@langchain/core/retrievers";
+import { PromptTemplate } from "@langchain/core/prompts";
 import { SerializedChatVectorDBQAChain } from "./serde.js";
 import {
   ChainValues,
@@ -7,7 +8,6 @@ import {
   HumanMessage,
   AIMessage,
 } from "../schema/index.js";
-import { BaseRetriever } from "../schema/retriever.js";
 import { BaseChain, ChainInputs } from "./base.js";
 import { LLMChain } from "./llm_chain.js";
 import { QAChainParams, loadQAChain } from "./question_answering/load.js";
@@ -28,7 +28,7 @@ Standalone question:`;
  * ConversationalRetrievalQAChain class.
  */
 export interface ConversationalRetrievalQAChainInput extends ChainInputs {
-  retriever: BaseRetriever;
+  retriever: BaseRetrieverInterface;
   combineDocumentsChain: BaseChain;
   questionGeneratorChain: LLMChain;
   returnSourceDocuments?: boolean;
@@ -92,7 +92,7 @@ export class ConversationalRetrievalQAChain
     );
   }
 
-  retriever: BaseRetriever;
+  retriever: BaseRetrieverInterface;
 
   combineDocumentsChain: BaseChain;
 
@@ -238,16 +238,16 @@ export class ConversationalRetrievalQAChain
   /**
    * Static method to create a new ConversationalRetrievalQAChain from a
    * BaseLanguageModel and a BaseRetriever.
-   * @param llm {@link BaseLanguageModel} instance used to generate a new question.
-   * @param retriever {@link BaseRetriever} instance used to retrieve relevant documents.
+   * @param llm {@link BaseLanguageModelInterface} instance used to generate a new question.
+   * @param retriever {@link BaseRetrieverInterface} instance used to retrieve relevant documents.
    * @param options.returnSourceDocuments Whether to return source documents in the final output
    * @param options.questionGeneratorChainOptions Options to initialize the standalone question generation chain used as the first internal step
    * @param options.qaChainOptions {@link QAChainParams} used to initialize the QA chain used as the second internal step
    * @returns A new instance of ConversationalRetrievalQAChain.
    */
   static fromLLM(
-    llm: BaseLanguageModel,
-    retriever: BaseRetriever,
+    llm: BaseLanguageModelInterface,
+    retriever: BaseRetrieverInterface,
     options: {
       outputKey?: string; // not used
       returnSourceDocuments?: boolean;
@@ -256,7 +256,7 @@ export class ConversationalRetrievalQAChain
       /** @deprecated Pass in qaChainOptions.prompt instead */
       qaTemplate?: string;
       questionGeneratorChainOptions?: {
-        llm?: BaseLanguageModel;
+        llm?: BaseLanguageModelInterface;
         template?: string;
       };
       qaChainOptions?: QAChainParams;

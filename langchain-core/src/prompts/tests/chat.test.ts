@@ -275,6 +275,37 @@ test("Test SimpleMessagePromptTemplate", async () => {
   expect(messages).toEqual([new HumanMessage("Hello Foo, I'm Bar")]);
 });
 
+test("Test MessagesPlaceholder optional", async () => {
+  const prompt = new MessagesPlaceholder({
+    variableName: "foo",
+    optional: true,
+  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const messages = await prompt.formatMessages({} as any);
+  expect(messages).toEqual([]);
+});
+
+test("Test MessagesPlaceholder optional in a chat prompt template", async () => {
+  const prompt = ChatPromptTemplate.fromMessages([
+    new MessagesPlaceholder({
+      variableName: "foo",
+      optional: true,
+    }),
+  ]);
+  const messages = await prompt.formatMessages({});
+  expect(messages).toEqual([]);
+});
+
+test("Test MessagesPlaceholder not optional", async () => {
+  const prompt = new MessagesPlaceholder({
+    variableName: "foo",
+  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await expect(prompt.formatMessages({} as any)).rejects.toThrow(
+    'Error: Field "foo" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages as an input value. Received: undefined'
+  );
+});
+
 test("Test using partial", async () => {
   const userPrompt = new PromptTemplate({
     template: "{foo}{bar}",

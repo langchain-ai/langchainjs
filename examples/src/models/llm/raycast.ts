@@ -1,8 +1,8 @@
-import { RaycastAI } from "langchain/llms/raycast";
+import { RaycastAI } from "@langchain/community/llms/raycast";
 
 import { showHUD } from "@raycast/api";
-import { Tool } from "langchain/tools";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
+import { Tool } from "@langchain/core/tools";
 
 const model = new RaycastAI({
   rateLimitPerMinute: 10, // It is 10 by default so you can omit this line

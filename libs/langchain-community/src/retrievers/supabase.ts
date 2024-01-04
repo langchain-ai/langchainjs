@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
 import {
   BaseRetriever,
@@ -86,9 +86,9 @@ export class SupabaseHybridSearch extends BaseRetriever {
 
   keywordQueryName: string;
 
-  embeddings: Embeddings;
+  embeddings: EmbeddingsInterface;
 
-  constructor(embeddings: Embeddings, args: SupabaseLibArgs) {
+  constructor(embeddings: EmbeddingsInterface, args: SupabaseLibArgs) {
     super(args);
     this.embeddings = embeddings;
     this.client = args.client;

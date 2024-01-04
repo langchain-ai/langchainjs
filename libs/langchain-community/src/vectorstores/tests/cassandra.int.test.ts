@@ -38,8 +38,13 @@ const noPartitionConfig = {
   ],
 };
 
-// yarn test:single /langchain/src/vectorstores/tests/cassandra.int.test.ts
 // Note there are multiple describe functions that need to be un-skipped for internal testing
+//   1. switch "describe.skip(" to "describe("
+//   2. Copy the SCB into the dev container (if using it)
+//   3. Export OPENAI_API_KEY, CASSANDRA_SCB, and CASSANDRA_TOKEN
+//   4. cd langchainjs/libs/langchain-community
+//   5. yarn test:single src/vectorstores/tests/cassandra.int.test.ts
+// Once manual testing is complete, re-instate the ".skip"
 describe.skip("CassandraStore - no explicit partition key", () => {
   beforeAll(async () => {
     await client.execute("DROP TABLE IF EXISTS test.test;");
@@ -275,6 +280,82 @@ describe.skip("CassandraStore - no explicit partition key", () => {
   });
 });
 
+describe.skip("CassandraStore - no explicit partition key", () => {
+  beforeAll(async () => {
+    await client.execute("DROP TABLE IF EXISTS test.test;");
+  });
+
+  test("CassandraStore.fromExistingIndex (with geo_distance filter)", async () => {
+    const testConfig = {
+      ...noPartitionConfig,
+      metadataColumns: [
+        {
+          name: "name",
+          type: "text",
+        },
+        {
+          name: "coord",
+          type: "VECTOR<FLOAT,2>",
+        },
+      ],
+      indices: [
+        {
+          name: "coord",
+          value: "(coord)",
+          options: "{'similarity_function': 'euclidean' }",
+        },
+      ],
+    };
+
+    await CassandraStore.fromTexts(
+      // This is a little Easter Egg for you physics people!
+      ["Heavy", "Complex", "Intertwined"],
+      [
+        {
+          id: 1,
+          name: "Newton",
+          coord: new Float32Array([51.5080181, -0.0776972]),
+        },
+        {
+          id: 3,
+          name: "Hamilton",
+          coord: new Float32Array([53.3870814, -6.3375127]),
+        },
+        {
+          id: 2,
+          name: "Maxwell",
+          coord: new Float32Array([52.2069212, 0.116913]),
+        },
+      ],
+      new OpenAIEmbeddings(),
+      testConfig
+    );
+
+    const vectorStore = await CassandraStore.fromExistingIndex(
+      new OpenAIEmbeddings(),
+      testConfig
+    );
+
+    const results = await vectorStore.similaritySearch("Heavy", 1, [
+      {
+        name: "GEO_DISTANCE(coord, ?)",
+        operator: "<",
+        value: [new Float32Array([53.3730617, -6.3000515]), 10000],
+      },
+    ]);
+    expect(results).toEqual([
+      new Document({
+        pageContent: "Complex",
+        metadata: {
+          id: 3,
+          name: "Hamilton",
+          coord: new Float32Array([53.3870814, -6.3375127]),
+        },
+      }),
+    ]);
+  });
+});
+
 const partitionConfig = {
   ...noPartitionConfig,
   primaryKey: [
@@ -330,8 +411,7 @@ describe.skip("CassandraStore - with explicit partition key", () => {
     ]);
   });
 
-  // Test needs to be skipped until https://github.com/datastax/cassandra/pull/839
-  test.skip("CassandraStore.partition with cluster filter", async () => {
+  test("CassandraStore.partition with cluster filter", async () => {
     const vectorStore = await CassandraStore.fromTexts(
       ["Apple", "Banana", "Cherry", "Date", "Elderberry"],
       [
@@ -352,7 +432,7 @@ describe.skip("CassandraStore - with explicit partition key", () => {
       ])
     ).rejects.toThrow();
 
-    // Once Cassandra supports filtering against cluster columns, the following should work
+    // Once Cassandra supports filtering against non-indexed cluster columns, the following should work
     // expect(results).toEqual([
     //   new Document({
     //     pageContent: "Elderberry",

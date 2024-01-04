@@ -36,6 +36,7 @@ const entrypoints = {
   "tools/calculator": "tools/calculator",
   "tools/connery": "tools/connery",
   "tools/render": "tools/render",
+  "tools/retriever": "tools/retriever",
   "tools/sql": "tools/sql",
   "tools/webbrowser": "tools/webbrowser",
   "tools/gmail": "tools/gmail/index",
@@ -43,11 +44,14 @@ const entrypoints = {
   "tools/google_places": "tools/google_places",
   // chains
   chains: "chains/index",
+  "chains/combine_documents": "chains/combine_documents/index",
   "chains/combine_documents/reduce": "chains/combine_documents/reduce",
+  "chains/history_aware_retriever": "chains/history_aware_retriever",
   "chains/load": "chains/load",
   "chains/openai_functions": "chains/openai_functions/index",
   "chains/query_constructor": "chains/query_constructor/index",
   "chains/query_constructor/ir": "chains/query_constructor/ir",
+  "chains/retrieval": "chains/retrieval",
   "chains/sql_db": "chains/sql_db/index",
   "chains/graph_qa/cypher": "chains/graph_qa/cypher",
   // embeddings
@@ -247,6 +251,7 @@ const entrypoints = {
   "retrievers/multi_query": "retrievers/multi_query",
   "retrievers/multi_vector": "retrievers/multi_vector",
   "retrievers/parent_document": "retrievers/parent_document",
+  "retrievers/vectara_summary": "retrievers/vectara_summary",
   "retrievers/tavily_search_api": "retrievers/tavily_search_api",
   "retrievers/time_weighted": "retrievers/time_weighted",
   "retrievers/document_compressors/chain_extract":
@@ -478,6 +483,7 @@ const requiresOptionalDependency = [
   "retrievers/supabase",
   "retrievers/zep",
   "retrievers/metal",
+  "retrievers/vectara_summary",
   "retrievers/self_query",
   "retrievers/self_query/chroma",
   "retrievers/self_query/functional",
@@ -573,14 +579,6 @@ const generateFiles = () => {
 };
 
 const updateConfig = () => {
-  // Update typedoc.json entryPoints field
-  updateJsonFile("../docs/api_refs/typedoc.json", (json) => ({
-    ...json,
-    entryPoints: [...Object.keys(entrypoints)]
-      .filter((key) => !deprecatedNodeOnly.includes(key))
-      .map((key) => `../../langchain/src/${entrypoints[key]}.ts`),
-  }));
-
   const generatedFiles = generateFiles();
   const filenames = Object.keys(generatedFiles);
 

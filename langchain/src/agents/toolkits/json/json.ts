@@ -1,5 +1,5 @@
-import { BaseLanguageModel } from "../../../base_language/index.js";
-import { Tool } from "../../../tools/base.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import type { ToolInterface } from "@langchain/core/tools";
 import {
   JsonGetValueTool,
   JsonListKeysTool,
@@ -24,7 +24,7 @@ import { AgentExecutor } from "../../executor.js";
  * ```
  */
 export class JsonToolkit extends Toolkit {
-  tools: Tool[];
+  tools: ToolInterface[];
 
   constructor(public jsonSpec: JsonSpec) {
     super();
@@ -36,6 +36,8 @@ export class JsonToolkit extends Toolkit {
 }
 
 /**
+ * @deprecated Create a specific agent with a custom tool instead.
+ *
  * Creates a JSON agent using a language model, a JSON toolkit, and
  * optional prompt arguments. It creates a prompt for the agent using the
  * JSON tools and the provided prefix and suffix. It then creates a
@@ -47,7 +49,7 @@ export class JsonToolkit extends Toolkit {
  * @returns An AgentExecutor for executing the created JSON agent with the tools.
  */
 export function createJsonAgent(
-  llm: BaseLanguageModel,
+  llm: BaseLanguageModelInterface,
   toolkit: JsonToolkit,
   args?: ZeroShotCreatePromptArgs
 ) {

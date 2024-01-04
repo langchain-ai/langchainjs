@@ -1,5 +1,6 @@
 ---
 sidebar_position: 3
+keywords: [similaritySearchWithScore]
 ---
 
 # Vector stores
@@ -25,6 +26,14 @@ This walkthrough uses a basic, unoptimized implementation called MemoryVectorSto
 
 import CodeBlock from "@theme/CodeBlock";
 import ExampleTexts from "@examples/indexes/vector_stores/memory.ts";
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
 
 <CodeBlock language="typescript">{ExampleTexts}</CodeBlock>
 
@@ -108,13 +117,13 @@ abstract class BaseVectorStore implements VectorStore {
   static fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: Record<string, any>
   ): Promise<VectorStore>;
 
   static fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: Record<string, any>
   ): Promise<VectorStore>;
 }

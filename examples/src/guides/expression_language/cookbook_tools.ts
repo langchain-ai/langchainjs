@@ -1,7 +1,7 @@
-import { SerpAPI } from "langchain/tools";
 import { ChatAnthropic } from "langchain/chat_models/anthropic";
-import { PromptTemplate } from "langchain/prompts";
-import { StringOutputParser } from "langchain/schema/output_parser";
+import { SerpAPI } from "langchain/tools";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 
 const search = new SerpAPI();
 

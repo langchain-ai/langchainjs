@@ -4,7 +4,7 @@ import type {
   SearchResponseHit,
   DocumentSchema,
 } from "typesense/lib/Typesense/Documents.js";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 import {
@@ -98,7 +98,7 @@ export class Typesense extends VectorStore {
     return "typesense";
   }
 
-  constructor(embeddings: Embeddings, config: TypesenseConfig) {
+  constructor(embeddings: EmbeddingsInterface, config: TypesenseConfig) {
     super(embeddings, config);
 
     // Assign config values to class properties.
@@ -288,7 +288,7 @@ export class Typesense extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     config: TypesenseConfig
   ): Promise<Typesense> {
     const instance = new Typesense(embeddings, config);
@@ -308,7 +308,7 @@ export class Typesense extends VectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     config: TypesenseConfig
   ) {
     const instance = new Typesense(embeddings, config);

@@ -13,7 +13,7 @@ import {
 import { ChatResult, ChatGeneration } from "@langchain/core/outputs";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { StructuredTool } from "@langchain/core/tools";
+import type { StructuredToolInterface } from "@langchain/core/tools";
 import { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
 import { formatToOpenAIFunction } from "@langchain/openai";
 
@@ -259,7 +259,7 @@ function messageToMinimaxRole(message: BaseMessage): MinimaxMessageRole {
 }
 
 export interface ChatMinimaxCallOptions extends BaseFunctionCallOptions {
-  tools?: StructuredTool[];
+  tools?: StructuredToolInterface[];
   defaultUserName?: string;
   defaultBotName?: string;
   plugins?: string[];

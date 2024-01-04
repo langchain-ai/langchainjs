@@ -1,13 +1,16 @@
-import { BaseLanguageModel } from "../base_language/index.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import type {
+  StructuredToolInterface,
+  ToolInterface,
+} from "@langchain/core/tools";
 import { CallbackManager } from "../callbacks/manager.js";
 import { BufferMemory } from "../memory/buffer_memory.js";
-import { StructuredTool, Tool } from "../tools/base.js";
 import { ChatAgent } from "./chat/index.js";
 import { ChatConversationalAgent } from "./chat_convo/index.js";
 import { StructuredChatAgent } from "./structured_chat/index.js";
 import { AgentExecutor, AgentExecutorInput } from "./executor.js";
 import { ZeroShotAgent } from "./mrkl/index.js";
-import { OpenAIAgent } from "./openai/index.js";
+import { OpenAIAgent } from "./openai_functions/index.js";
 import { XMLAgent } from "./xml/index.js";
 
 /**
@@ -24,8 +27,8 @@ type AgentType =
  * @deprecated use initializeAgentExecutorWithOptions instead
  */
 export const initializeAgentExecutor = async (
-  tools: Tool[],
-  llm: BaseLanguageModel,
+  tools: ToolInterface[],
+  llm: BaseLanguageModelInterface,
   _agentType?: AgentType,
   _verbose?: boolean,
   _callbackManager?: CallbackManager
@@ -106,18 +109,18 @@ export type InitializeAgentExecutorOptionsStructured =
  * @returns AgentExecutor
  */
 export async function initializeAgentExecutorWithOptions(
-  tools: StructuredTool[],
-  llm: BaseLanguageModel,
+  tools: StructuredToolInterface[],
+  llm: BaseLanguageModelInterface,
   options: InitializeAgentExecutorOptionsStructured
 ): Promise<AgentExecutor>;
 export async function initializeAgentExecutorWithOptions(
-  tools: Tool[],
-  llm: BaseLanguageModel,
+  tools: ToolInterface[],
+  llm: BaseLanguageModelInterface,
   options?: InitializeAgentExecutorOptions
 ): Promise<AgentExecutor>;
 export async function initializeAgentExecutorWithOptions(
-  tools: StructuredTool[] | Tool[],
-  llm: BaseLanguageModel,
+  tools: StructuredToolInterface[] | ToolInterface[],
+  llm: BaseLanguageModelInterface,
   options:
     | InitializeAgentExecutorOptions
     | InitializeAgentExecutorOptionsStructured = {
@@ -135,7 +138,11 @@ export async function initializeAgentExecutorWithOptions(
       const { agentArgs, tags, ...rest } = options;
       return AgentExecutor.fromAgentAndTools({
         tags: [...(tags ?? []), "zero-shot-react-description"],
-        agent: ZeroShotAgent.fromLLMAndTools(llm, tools as Tool[], agentArgs),
+        agent: ZeroShotAgent.fromLLMAndTools(
+          llm,
+          tools as ToolInterface[],
+          agentArgs
+        ),
         tools,
         ...rest,
       });
@@ -144,7 +151,11 @@ export async function initializeAgentExecutorWithOptions(
       const { agentArgs, tags, ...rest } = options;
       return AgentExecutor.fromAgentAndTools({
         tags: [...(tags ?? []), "chat-zero-shot-react-description"],
-        agent: ChatAgent.fromLLMAndTools(llm, tools as Tool[], agentArgs),
+        agent: ChatAgent.fromLLMAndTools(
+          llm,
+          tools as ToolInterface[],
+          agentArgs
+        ),
         tools,
         ...rest,
       });
@@ -155,7 +166,7 @@ export async function initializeAgentExecutorWithOptions(
         tags: [...(tags ?? []), "chat-conversational-react-description"],
         agent: ChatConversationalAgent.fromLLMAndTools(
           llm,
-          tools as Tool[],
+          tools as ToolInterface[],
           agentArgs
         ),
         tools,
@@ -175,7 +186,11 @@ export async function initializeAgentExecutorWithOptions(
       const { agentArgs, tags, ...rest } = options;
       const executor = AgentExecutor.fromAgentAndTools({
         tags: [...(tags ?? []), "xml"],
-        agent: XMLAgent.fromLLMAndTools(llm, tools as Tool[], agentArgs),
+        agent: XMLAgent.fromLLMAndTools(
+          llm,
+          tools as ToolInterface[],
+          agentArgs
+        ),
         tools,
         ...rest,
       });

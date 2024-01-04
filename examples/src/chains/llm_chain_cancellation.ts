@@ -1,6 +1,6 @@
-import { OpenAI } from "langchain/llms/openai";
-import { PromptTemplate } from "langchain/prompts";
+import { OpenAI } from "@langchain/openai";
 import { LLMChain } from "langchain/chains";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 // Create a new LLMChain from a PromptTemplate and an LLM in streaming mode.
 const model = new OpenAI({ temperature: 0.9, streaming: true });

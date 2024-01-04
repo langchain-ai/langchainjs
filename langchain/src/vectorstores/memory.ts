@@ -1,6 +1,6 @@
 import { similarity as ml_distance_similarity } from "ml-distance";
 import { VectorStore } from "@langchain/core/vectorstores";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
 
 /**
@@ -41,7 +41,7 @@ export class MemoryVectorStore extends VectorStore {
   }
 
   constructor(
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     { similarity, ...rest }: MemoryVectorStoreArgs = {}
   ) {
     super(embeddings, rest);
@@ -141,7 +141,7 @@ export class MemoryVectorStore extends VectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig?: MemoryVectorStoreArgs
   ): Promise<MemoryVectorStore> {
     const docs: Document[] = [];
@@ -166,7 +166,7 @@ export class MemoryVectorStore extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig?: MemoryVectorStoreArgs
   ): Promise<MemoryVectorStore> {
     const instance = new this(embeddings, dbConfig);
@@ -183,7 +183,7 @@ export class MemoryVectorStore extends VectorStore {
    * @returns Promise that resolves with a new `MemoryVectorStore` instance.
    */
   static async fromExistingIndex(
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig?: MemoryVectorStoreArgs
   ): Promise<MemoryVectorStore> {
     const instance = new this(embeddings, dbConfig);

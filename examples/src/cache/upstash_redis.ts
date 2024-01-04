@@ -1,4 +1,4 @@
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import { UpstashRedisCache } from "langchain/cache/upstash_redis";
 
 // See https://docs.upstash.com/redis/howto/connectwithupstashredis#quick-start for connection options

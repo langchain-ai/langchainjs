@@ -1,3 +1,4 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import type { TiktokenModel } from "js-tiktoken/lite";
 import { DEFAULT_SQL_DATABASE_PROMPT } from "./sql_db_prompt.js";
 import { BaseChain, ChainInputs } from "../base.js";
@@ -5,7 +6,6 @@ import type { OpenAI } from "../../llms/openai.js";
 import { LLMChain } from "../llm_chain.js";
 import type { SqlDatabase } from "../../sql_db.js";
 import { ChainValues } from "../../schema/index.js";
-import { BaseLanguageModel } from "../../base_language/index.js";
 import {
   calculateMaxTokens,
   getModelContextSize,
@@ -20,7 +20,7 @@ import { PromptTemplate } from "../../prompts/index.js";
  * for a SQL database chain.
  */
 export interface SqlDatabaseChainInput extends ChainInputs {
-  llm: BaseLanguageModel;
+  llm: BaseLanguageModelInterface;
   database: SqlDatabase;
   topK?: number;
   inputKey?: string;
@@ -60,7 +60,7 @@ export class SqlDatabaseChain extends BaseChain {
   }
 
   // LLM wrapper to use
-  llm: BaseLanguageModel;
+  llm: BaseLanguageModelInterface;
 
   // SQL Database to connect to.
   database: SqlDatabase;

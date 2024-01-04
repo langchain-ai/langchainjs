@@ -1,6 +1,6 @@
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanMessage } from "langchain/schema";
+import { ChatOpenAI } from "@langchain/openai";
 import { SerpAPI } from "langchain/tools";
+import { HumanMessage } from "@langchain/core/messages";
 
 const model = new ChatOpenAI({
   temperature: 0.9,

@@ -1,5 +1,5 @@
+import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { FileLoader, loadFromFile } from "../util/load.js";
-import { BaseLanguageModel } from "../base_language/index.js";
 import { parseFileConfig } from "../util/parse.js";
 
 /**

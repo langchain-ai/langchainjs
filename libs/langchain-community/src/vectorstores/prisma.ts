@@ -1,4 +1,4 @@
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 import { Callbacks } from "@langchain/core/callbacks/manager";
@@ -136,7 +136,7 @@ export class PrismaVectorStore<
   }
 
   constructor(
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     config: {
       db: PrismaClient;
       prisma: PrismaNamespace;
@@ -186,7 +186,7 @@ export class PrismaVectorStore<
       TColumns extends ModelColumns<TModel>,
       TFilters extends PrismaSqlFilter<TModel>
     >(
-      embeddings: Embeddings,
+      embeddings: EmbeddingsInterface,
       config: {
         prisma: TPrisma;
         tableName: keyof TPrisma["ModelName"] & string;
@@ -208,7 +208,7 @@ export class PrismaVectorStore<
     >(
       texts: string[],
       metadatas: TModel[],
-      embeddings: Embeddings,
+      embeddings: EmbeddingsInterface,
       dbConfig: {
         prisma: TPrisma;
         tableName: keyof TPrisma["ModelName"] & string;
@@ -238,7 +238,7 @@ export class PrismaVectorStore<
       TFilters extends PrismaSqlFilter<TModel>
     >(
       docs: Document<TModel>[],
-      embeddings: Embeddings,
+      embeddings: EmbeddingsInterface,
       dbConfig: {
         prisma: TPrisma;
         tableName: keyof TPrisma["ModelName"] & string;
@@ -464,7 +464,7 @@ export class PrismaVectorStore<
   static async fromTexts(
     texts: string[],
     metadatas: object[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: {
       db: PrismaClient;
       prisma: PrismaNamespace;
@@ -495,7 +495,7 @@ export class PrismaVectorStore<
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: {
       db: PrismaClient;
       prisma: PrismaNamespace;

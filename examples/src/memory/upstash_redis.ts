@@ -1,6 +1,6 @@
 import { BufferMemory } from "langchain/memory";
-import { UpstashRedisChatMessageHistory } from "langchain/stores/message/upstash_redis";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { UpstashRedisChatMessageHistory } from "@langchain/community/stores/message/upstash_redis";
+import { ChatOpenAI } from "@langchain/openai";
 import { ConversationChain } from "langchain/chains";
 
 const memory = new BufferMemory({

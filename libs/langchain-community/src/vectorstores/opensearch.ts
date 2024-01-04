@@ -1,6 +1,6 @@
 import { Client, RequestParams, errors } from "@opensearch-project/opensearch";
 import * as uuid from "uuid";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 
@@ -65,7 +65,7 @@ export class OpenSearchVectorStore extends VectorStore {
     return "opensearch";
   }
 
-  constructor(embeddings: Embeddings, args: OpenSearchClientArgs) {
+  constructor(embeddings: EmbeddingsInterface, args: OpenSearchClientArgs) {
     super(embeddings, args);
 
     this.spaceType = args.vectorSearchOptions?.spaceType ?? "l2";
@@ -189,7 +189,7 @@ export class OpenSearchVectorStore extends VectorStore {
   static fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     args: OpenSearchClientArgs
   ): Promise<OpenSearchVectorStore> {
     const documents = texts.map((text, idx) => {
@@ -210,7 +210,7 @@ export class OpenSearchVectorStore extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: OpenSearchClientArgs
   ): Promise<OpenSearchVectorStore> {
     const store = new OpenSearchVectorStore(embeddings, dbConfig);
@@ -226,7 +226,7 @@ export class OpenSearchVectorStore extends VectorStore {
    * @returns Promise resolving to a new instance of OpenSearchVectorStore.
    */
   static async fromExistingIndex(
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: OpenSearchClientArgs
   ): Promise<OpenSearchVectorStore> {
     const store = new OpenSearchVectorStore(embeddings, dbConfig);
