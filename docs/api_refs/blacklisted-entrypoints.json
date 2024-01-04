@@ -128,5 +128,8 @@
   "../../langchain/src/util/convex.ts",
   "../../langchain/src/runnables.ts",
   "../../libs/langchain-community/src/chat_models/yandex.ts",
-  "../../libs/langchain-community/src/llms/yandex.ts"
+  "../../libs/langchain-community/src/llms/yandex.ts",
+  "../../langchain/src/schema/output_parser.ts",
+  "../../langchain/src/document.ts",
+  "../../langchain/src/callbacks/index.ts"
 ]

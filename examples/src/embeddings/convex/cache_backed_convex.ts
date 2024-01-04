@@ -5,7 +5,7 @@ import { CacheBackedEmbeddings } from "langchain/embeddings/cache_backed";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { ConvexKVStore } from "@langchain/community/storage/convex";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { ConvexVectorStore } from "langchain/vectorstores/convex";
+import { ConvexVectorStore } from "@langchain/community/vectorstores/convex";
 import { action } from "./_generated/server.js";
 
 export const ask = action({

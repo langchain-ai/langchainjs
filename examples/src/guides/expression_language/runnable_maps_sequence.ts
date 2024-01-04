@@ -1,5 +1,5 @@
 import { ChatAnthropic } from "langchain/chat_models/anthropic";
-import { CohereEmbeddings } from "langchain/embeddings/cohere";
+import { CohereEmbeddings } from "@langchain/cohere";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";

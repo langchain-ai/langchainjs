@@ -1,8 +1,8 @@
 import { CheerioWebBaseLoader } from "langchain/document_loaders/web/cheerio";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
-import { Ollama } from "langchain/llms/ollama";
-import { HuggingFaceTransformersEmbeddings } from "langchain/embeddings/hf_transformers";
+import { Ollama } from "@langchain/community/llms/ollama";
+import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/hf_transformers";
 import { formatDocumentsAsString } from "langchain/util/document";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence , RunnablePassthrough } from "@langchain/core/runnables";
