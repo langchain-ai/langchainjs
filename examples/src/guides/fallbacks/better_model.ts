@@ -9,7 +9,7 @@ const prompt = PromptTemplate.fromTemplate(
 
 const badModel = new OpenAI({
   maxRetries: 0,
-  modelName: "text-ada-001",
+  modelName: "gpt-3.5-turbo-instruct",
 });
 
 const normalModel = new ChatOpenAI({

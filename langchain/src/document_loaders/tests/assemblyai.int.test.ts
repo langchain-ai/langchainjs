@@ -9,7 +9,6 @@ import {
 // eslint-disable-next-line no-process-env
 const transcriptId = process.env.ASSEMBLYAI_TRANSCRIPT_ID;
 console.log(transcriptId);
-if (!transcriptId) throw new Error("ASSEMBLYAI_TRANSCRIPT_ID not set");
 
 describe.skip("AssemblyAI", () => {
   test("Invalid API key", async () => {
