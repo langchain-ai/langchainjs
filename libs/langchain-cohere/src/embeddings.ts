@@ -118,6 +118,7 @@ export class CohereEmbeddings
     const { embeddings } = await this.embeddingWithRetry({
       model: this.model,
       texts: [text],
+      inputType: this.inputType,
     });
     if ("float" in embeddings && embeddings.float) {
       return embeddings.float[0];
