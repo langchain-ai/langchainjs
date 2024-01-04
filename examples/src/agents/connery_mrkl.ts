@@ -1,7 +1,7 @@
 import { ConneryService } from "@langchain/community/tools/connery";
 import { ConneryToolkit } from "@langchain/community/agents/toolkits/connery";
+import { ChatOpenAI } from "@langchain/openai";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
-import { ChatOpenAI } from "langchain/chat_models/openai";
 
 // Specify your Connery Runner credentials.
 process.env.CONNERY_RUNNER_URL = "";
