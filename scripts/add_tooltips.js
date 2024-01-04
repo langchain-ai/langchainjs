@@ -2,12 +2,12 @@ const fs = require("fs/promises");
 const path = require("path");
 const { glob } = require("glob");
 
-const TOOLTIP_CODE = `import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+const TOOLTIP_CODE = (packageName) => `import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
 
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 \`\`\`bash npm2yarn
-npm install @langchain/anthropic
+npm install ${packageName}
 \`\`\`
 `;
 
@@ -122,7 +122,7 @@ async function main(packageName) {
     const contentBeforeCodeBlock = fileContents.substring(0, codeBlockIndex);
     const contentAfterCodeBlock = fileContents.substring(codeBlockIndex);
 
-    const updatedFileContents = `${contentBeforeCodeBlock}${TOOLTIP_CODE}\n${contentAfterCodeBlock}`;
+    const updatedFileContents = `${contentBeforeCodeBlock}${TOOLTIP_CODE(packageName)}\n${contentAfterCodeBlock}`;
     await fs.writeFile(MDXFilePath, updatedFileContents);
   }
 
