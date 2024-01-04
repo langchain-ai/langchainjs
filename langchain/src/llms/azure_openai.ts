@@ -162,18 +162,7 @@ export class AzureOpenAI<
       this.azureOpenAIApiKey
     );
     this.client = new AzureOpenAIClient(
-      this.azureOpenAIEndpoint ?? "", azureKeyCredential,
-      {
-        additionalPolicies: [{
-          policy: {
-            name: "disableKeepAlive",
-            sendRequest: (request, next) => {
-              request.disableKeepAlive = true;
-              return next(request);
-            }
-          }, position: "perCall"
-        }]
-    }
+      this.azureOpenAIEndpoint ?? "", azureKeyCredential
     );
   }
 

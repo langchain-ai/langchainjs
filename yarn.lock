@@ -4235,9 +4235,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/openai@npm:^1.0.0-beta.9":
-  version: 1.0.0-beta.9
-  resolution: "@azure/openai@npm:1.0.0-beta.9"
+"@azure/openai@npm:^1.0.0-beta.10":
+  version: 1.0.0-beta.10
+  resolution: "@azure/openai@npm:1.0.0-beta.10"
   dependencies:
     "@azure-rest/core-client": ^1.1.7
     "@azure/core-auth": ^1.4.0
@@ -4246,7 +4246,7 @@ __metadata:
     "@azure/core-util": ^1.4.0
     "@azure/logger": ^1.0.3
     tslib: ^2.4.0
-  checksum: a149f88efdc467262d015609c8da3b1afaed79261bf855453f20c32d657198f1b9a0091c3ada4d95c693f9ffdb79dd2d90590353adcffd3bb96f30d3cafca6b8
+  checksum: 233346dd310476e98aa321031d18d185b4a4b3150f65f0148937989bdbce09601dcbffd976c5df2a9adda490b407a3cfe51c6ded7adba6a10aac94b5673fca44
   languageName: node
   linkType: hard
 
@@ -22735,7 +22735,7 @@ __metadata:
     "@aws-sdk/client-sfn": ^3.362.0
     "@aws-sdk/credential-provider-node": ^3.388.0
     "@aws-sdk/types": ^3.357.0
-    "@azure/openai": ^1.0.0-beta.9
+    "@azure/openai": ^1.0.0-beta.10
     "@azure/storage-blob": ^12.15.0
     "@clickhouse/client": ^0.2.5
     "@cloudflare/ai": ^1.0.12
