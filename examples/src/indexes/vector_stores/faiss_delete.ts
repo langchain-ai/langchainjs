@@ -1,6 +1,6 @@
-import { FaissStore } from "langchain/vectorstores/faiss";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { Document } from "langchain/document";
+import { FaissStore } from "@langchain/community/vectorstores/faiss";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { Document } from "@langchain/core/documents";
 
 const vectorStore = new FaissStore(new OpenAIEmbeddings(), {});
 const ids = ["2", "1", "4"];

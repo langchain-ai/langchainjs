@@ -8,7 +8,7 @@ import { PromptTemplate } from "../../prompts/index.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
 
 test("Test ConversationalRetrievalQAChain from LLM", async () => {
-  const model = new OpenAI({ modelName: "text-ada-001" });
+  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
@@ -23,7 +23,7 @@ test("Test ConversationalRetrievalQAChain from LLM", async () => {
 });
 
 test("Test ConversationalRetrievalQAChain from LLM with flag option to return source", async () => {
-  const model = new OpenAI({ modelName: "text-ada-001" });
+  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
@@ -54,7 +54,7 @@ test("Test ConversationalRetrievalQAChain from LLM with flag option to return so
 });
 
 test("Test ConversationalRetrievalQAChain from LLM with flag option to return source and memory set", async () => {
-  const model = new OpenAI({ modelName: "text-ada-001" });
+  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
@@ -90,7 +90,10 @@ test("Test ConversationalRetrievalQAChain from LLM with flag option to return so
 });
 
 test("Test ConversationalRetrievalQAChain from LLM with override default prompts", async () => {
-  const model = new OpenAI({ modelName: "text-ada-001", temperature: 0 });
+  const model = new OpenAI({
+    modelName: "gpt-3.5-turbo-instruct",
+    temperature: 0,
+  });
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],

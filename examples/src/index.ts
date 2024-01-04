@@ -1,6 +1,6 @@
-import { awaitAllCallbacks } from "langchain/callbacks";
 import path from "path";
 import url from "url";
+import { awaitAllCallbacks } from "@langchain/core/callbacks/promises";
 
 const [exampleName, ...args] = process.argv.slice(2);
 
@@ -38,6 +38,7 @@ try {
     )
   ));
 } catch (e) {
+  console.log(e);
   throw new Error(`Could not load example ${exampleName}: ${e}`);
 }
 

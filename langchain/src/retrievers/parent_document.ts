@@ -37,7 +37,7 @@ export type ParentDocumentRetrieverFields = MultiVectorRetrieverInput & {
  * ```typescript
  * const retriever = new ParentDocumentRetriever({
  *   vectorstore: new MemoryVectorStore(new OpenAIEmbeddings()),
- *   docstore: new InMemoryStore(),
+ *   byteStore: new InMemoryStore<Uint8Array>(),
  *   parentSplitter: new RecursiveCharacterTextSplitter({
  *     chunkOverlap: 0,
  *     chunkSize: 500,
@@ -81,7 +81,6 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
   constructor(fields: ParentDocumentRetrieverFields) {
     super(fields);
     this.vectorstore = fields.vectorstore;
-    this.docstore = fields.docstore;
     this.childSplitter = fields.childSplitter;
     this.parentSplitter = fields.parentSplitter;
     this.idKey = fields.idKey ?? this.idKey;

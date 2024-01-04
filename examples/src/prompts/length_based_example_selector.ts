@@ -1,8 +1,5 @@
-import {
-  LengthBasedExampleSelector,
-  PromptTemplate,
-  FewShotPromptTemplate,
-} from "langchain/prompts";
+import { LengthBasedExampleSelector } from "langchain/prompts";
+import { PromptTemplate, FewShotPromptTemplate } from "@langchain/core/prompts";
 
 export async function run() {
   // Create a prompt template that will be used to format the examples.

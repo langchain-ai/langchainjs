@@ -1,6 +1,6 @@
 import { BufferMemory } from "langchain/memory";
-import { CassandraChatMessageHistory } from "langchain/stores/message/cassandra";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { CassandraChatMessageHistory } from "@langchain/community/stores/message/cassandra";
+import { ChatOpenAI } from "@langchain/openai";
 import { ConversationChain } from "langchain/chains";
 
 const memory = new BufferMemory({

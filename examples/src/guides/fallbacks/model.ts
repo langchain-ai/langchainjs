@@ -1,5 +1,5 @@
 import { ChatAnthropic } from "langchain/chat_models/anthropic";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 
 // Use a fake model name that will always throw an error
 const fakeOpenAIModel = new ChatOpenAI({

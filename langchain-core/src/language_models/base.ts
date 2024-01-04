@@ -281,6 +281,13 @@ export interface BaseLanguageModelInterface<
   serialize(): SerializedLLM;
 }
 
+export type LanguageModelOutput = BaseMessage | string;
+
+export type LanguageModelLike = Runnable<
+  BaseLanguageModelInput,
+  LanguageModelOutput
+>;
+
 /**
  * Base class for language models.
  */
@@ -455,4 +462,14 @@ export abstract class BaseLanguageModel<
   static async deserialize(_data: SerializedLLM): Promise<BaseLanguageModel> {
     throw new Error("Use .toJSON() instead");
   }
+}
+
+/**
+ * Shared interface for token usage
+ * return type from LLM calls.
+ */
+export interface TokenUsage {
+  completionTokens?: number;
+  promptTokens?: number;
+  totalTokens?: number;
 }

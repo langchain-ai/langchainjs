@@ -1,35 +1,47 @@
 ---
-sidebar_position: 0
+sidebar_position: 2
 ---
 
-# Agent types
+# Agent Types
 
-## Action agents
+This categorizes all the available agents along a few dimensions.
 
-Agents use an LLM to determine which actions to take and in what order.
-An action can either be using a tool and observing its output, or returning a response to the user.
-Here are the agents available in LangChain.
+**Intended Model Type**
 
-### [Zero-shot ReAct](/docs/modules/agents/agent_types/react)
+Whether this agent is intended for Chat Models (takes in messages, outputs message) or LLMs (takes in string, outputs string).
+The main thing this affects is the prompting strategy used. You can use an agent with a different type of model than it is intended for,
+but it likely won't produce results of the same quality.
 
-This agent uses the [ReAct](https://arxiv.org/pdf/2205.00445.pdf) framework to determine which tool to use
-based solely on the tool's description. Any number of tools can be provided.
-This agent requires that a description is provided for each tool.
+**Supports Chat History**
 
-**Note**: This is the most general purpose action agent.
+Whether or not these agent types support chat history. If it does, that means it can be used as a chatbot.
+If it does not, then that means it's more suited for single tasks. Supporting chat history generally requires better models,
+so earlier agent types aimed at worse models may not support it.
 
-### [OpenAI Functions](/docs/modules/agents/agent_types/openai_functions_agent)
+**Supports Multi-Input Tools**
 
-Certain OpenAI models (like gpt-3.5-turbo-0613 and gpt-4-0613) have been explicitly fine-tuned to detect when a
-function should be called and respond with the inputs that should be passed to the function.
-The OpenAI Functions Agent is designed to work with these models.
+Whether or not these agent types support tools with multiple inputs. If a tool only requires a single input,
+it is generally easier for an LLM to know how to invoke it. Therefore, several earlier agent types aimed at worse models may not support them.
 
-### [Conversational](/docs/modules/agents/agent_types/chat_conversation_agent)
+**Supports Parallel Function Calling**
 
-This agent is designed to be used in conversational settings.
-The prompt is designed to make the agent helpful and conversational.
-It uses the ReAct framework to decide which tool to use, and uses memory to remember the previous conversation interactions.
+Having an LLM call multiple tools at the same time can greatly speed up agents whether there are tasks that are assisted by doing so.
+However, it is much more challenging for LLMs to do this, so some agent types do not support this.
 
-### [Plan-and-execute agents](/docs/modules/agents/agent_types/plan_and_execute)
+**Required Model Params**
 
-Plan and execute agents accomplish an objective by first planning what to do, then executing the sub tasks. This idea is largely inspired by [BabyAGI](https://github.com/yoheinakajima/babyagi) and then the ["Plan-and-Solve" paper](https://arxiv.org/abs/2305.04091).
+Whether this agent requires the model to support any additional parameters.
+Some agent types take advantage of things like OpenAI function calling, which require other model parameters.
+If none are required, then that means that everything is done via prompting.
+
+**When to Use**
+
+Our commentary on when you should consider using this agent type.
+
+| Agent Type                                                                  | Intended Model Type | Supports Chat History | Supports Multi-Input Tools | Supports Parallel Function Calling | Required Model Params | When to Use                                                                                                                                                  |
+| --------------------------------------------------------------------------- | ------------------- | --------------------- | -------------------------- | ---------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [OpenAI Tools](/docs/modules/agents/agent_types/openai_tools_agent)         | Chat                | ✅                    | ✅                         | ✅                                 | `tools`               | If you are using a recent OpenAI model (`1106` onwards)                                                                                                      |
+| [OpenAI Functions](/docs/modules/agents/agent_types/openai_functions_agent) | Chat                | ✅                    | ✅                         |                                    | `functions`           | If you are using an OpenAI model, or an open-source model that has been finetuned for function calling and exposes the same `functions` parameters as OpenAI |
+| [XML](/docs/modules/agents/agent_types/xml)                                 | LLM                 | ✅                    |                            |                                    |                       | If you are using Anthropic models, or other models good at XML                                                                                               |
+| [Structured Chat](/docs/modules/agents/agent_types/structured_chat)         | Chat                | ✅                    | ✅                         |                                    |                       | If you need to support tools with multiple inputs and are using a model that does not support function calling                                               |
+| [ReAct](/docs/modules/agents/agent_types/react)                             | LLM                 | ✅                    |                            |                                    |                       | If you are using a simpler model                                                                                                                             |

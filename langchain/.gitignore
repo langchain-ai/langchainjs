@@ -67,6 +67,9 @@ tools/connery.d.ts
 tools/render.cjs
 tools/render.js
 tools/render.d.ts
+tools/retriever.cjs
+tools/retriever.js
+tools/retriever.d.ts
 tools/sql.cjs
 tools/sql.js
 tools/sql.d.ts
@@ -85,9 +88,15 @@ tools/google_places.d.ts
 chains.cjs
 chains.js
 chains.d.ts
+chains/combine_documents.cjs
+chains/combine_documents.js
+chains/combine_documents.d.ts
 chains/combine_documents/reduce.cjs
 chains/combine_documents/reduce.js
 chains/combine_documents/reduce.d.ts
+chains/history_aware_retriever.cjs
+chains/history_aware_retriever.js
+chains/history_aware_retriever.d.ts
 chains/load.cjs
 chains/load.js
 chains/load.d.ts
@@ -100,6 +109,9 @@ chains/query_constructor.d.ts
 chains/query_constructor/ir.cjs
 chains/query_constructor/ir.js
 chains/query_constructor/ir.d.ts
+chains/retrieval.cjs
+chains/retrieval.js
+chains/retrieval.d.ts
 chains/sql_db.cjs
 chains/sql_db.js
 chains/sql_db.d.ts
