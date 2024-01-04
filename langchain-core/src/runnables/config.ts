@@ -19,7 +19,7 @@ export interface RunnableConfig extends BaseCallbackConfig {
   recursionLimit?: number;
 }
 
-export async function getCallbackMangerForConfig(config?: RunnableConfig) {
+export async function getCallbackManagerForConfig(config?: RunnableConfig) {
   return CallbackManager.configure(
     config?.callbacks,
     undefined,

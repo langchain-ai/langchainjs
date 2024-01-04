@@ -1,6 +1,6 @@
 import { DataSourceOptions } from "typeorm";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { TypeORMVectorStore } from "langchain/vectorstores/typeorm";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { TypeORMVectorStore } from "@langchain/community/vectorstores/typeorm";
 
 // First, follow set-up instructions at
 // https://js.langchain.com/docs/modules/indexes/vector_stores/integrations/typeorm

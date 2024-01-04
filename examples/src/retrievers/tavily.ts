@@ -1,4 +1,4 @@
-import { TavilySearchAPIRetriever } from "langchain/retrievers/tavily_search_api";
+import { TavilySearchAPIRetriever } from "@langchain/community/retrievers/tavily_search_api";
 
 const retriever = new TavilySearchAPIRetriever({
   k: 3,

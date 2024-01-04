@@ -22,6 +22,14 @@ Let's now look at adding in a retrieval step to a prompt and an LLM, which adds 
 import CodeBlock from "@theme/CodeBlock";
 import RetrieverExample from "@examples/guides/expression_language/cookbook_retriever.ts";
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 <CodeBlock language="typescript">{RetrieverExample}</CodeBlock>
 
 ## Conversational Retrieval Chain

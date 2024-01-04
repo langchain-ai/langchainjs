@@ -1,6 +1,6 @@
-import { Bedrock } from "langchain/llms/bedrock";
+import { Bedrock } from "@langchain/community/llms/bedrock";
 // Or, from web environments:
-// import { Bedrock } from "langchain/llms/bedrock/web";
+// import { Bedrock } from "@langchain/community/llms/bedrock/web";
 
 // If no credentials are provided, the default credentials from
 // @aws-sdk/credential-provider-node will be used.

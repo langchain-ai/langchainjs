@@ -16,6 +16,14 @@ First, install the AWS DynamoDB client in your project:
 npm install @aws-sdk/client-dynamodb
 ```
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai @langchain/community
+```
+
 Next, sign into your AWS account and create a DynamoDB table. Name the table `langchain`, and name your partition key `id`. Make sure your partition key is a string. You can leave sort key and the other settings alone.
 
 You'll also need to retrieve an AWS access key and secret key for a role or user that has access to the table and add them to your environment variables.

@@ -1,15 +1,18 @@
 import { z } from "zod";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { DynamicStructuredTool, formatToOpenAITool } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
-import { ChatPromptTemplate, MessagesPlaceholder } from "langchain/prompts";
-import { RunnableSequence } from "langchain/schema/runnable";
 import { AgentExecutor } from "langchain/agents";
 import { formatToOpenAIToolMessages } from "langchain/agents/format_scratchpad/openai_tools";
 import {
   OpenAIToolsAgentOutputParser,
   type ToolsAgentStep,
 } from "langchain/agents/openai/output_parser";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
+import { RunnableSequence } from "@langchain/core/runnables";
 
 const model = new ChatOpenAI({
   modelName: "gpt-3.5-turbo-1106",

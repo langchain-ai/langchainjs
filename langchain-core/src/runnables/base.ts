@@ -15,11 +15,12 @@ import {
   concat,
   type IterableReadableStreamInterface,
   atee,
+  pipeGeneratorWithSetup,
 } from "../utils/stream.js";
 import {
   DEFAULT_RECURSION_LIMIT,
   RunnableConfig,
-  getCallbackMangerForConfig,
+  getCallbackManagerForConfig,
   mergeConfigs,
 } from "./config.js";
 import { AsyncCaller } from "../utils/async_caller.js";
@@ -338,7 +339,7 @@ export abstract class Runnable<
     input: T,
     options?: Partial<CallOptions> & { runType?: string }
   ) {
-    const callbackManager_ = await getCallbackMangerForConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(options);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
@@ -383,7 +384,7 @@ export abstract class Runnable<
   ): Promise<(RunOutput | Error)[]> {
     const optionsList = this._getOptionsList(options ?? {}, inputs.length);
     const callbackManagers = await Promise.all(
-      optionsList.map(getCallbackMangerForConfig)
+      optionsList.map(getCallbackManagerForConfig)
     );
     const runManagers = await Promise.all(
       callbackManagers.map((callbackManager, i) =>
@@ -437,16 +438,7 @@ export abstract class Runnable<
     let finalOutput: O | undefined;
     let finalOutputSupported = true;
 
-    const callbackManager_ = await getCallbackMangerForConfig(options);
-    const runManager = await callbackManager_?.handleChainStart(
-      this.toJSON(),
-      { input: "" },
-      undefined,
-      options?.runType,
-      undefined,
-      undefined,
-      options?.runName ?? this.getName()
-    );
+    const callbackManager_ = await getCallbackManagerForConfig(options);
     async function* wrapInputForTracing() {
       for await (const chunk of inputGenerator) {
         if (finalInputSupported) {
@@ -466,14 +458,25 @@ export abstract class Runnable<
       }
     }
 
-    const wrappedInputGenerator = wrapInputForTracing();
+    let runManager: CallbackManagerForChainRun | undefined;
     try {
-      const outputIterator = transformer(
-        wrappedInputGenerator,
-        runManager,
+      const pipe = await pipeGeneratorWithSetup(
+        transformer,
+        wrapInputForTracing(),
+        async () =>
+          callbackManager_?.handleChainStart(
+            this.toJSON(),
+            { input: "" },
+            undefined,
+            options?.runType,
+            undefined,
+            undefined,
+            options?.runName ?? this.getName()
+          ),
         options
       );
-      for await (const chunk of outputIterator) {
+      runManager = pipe.setup;
+      for await (const chunk of pipe.output) {
         yield chunk;
         if (finalOutputSupported) {
           if (finalOutput === undefined) {
@@ -1236,7 +1239,7 @@ export class RunnableSequence<
   }
 
   async invoke(input: RunInput, options?: RunnableConfig): Promise<RunOutput> {
-    const callbackManager_ = await getCallbackMangerForConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(options);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
@@ -1298,7 +1301,7 @@ export class RunnableSequence<
   ): Promise<(RunOutput | Error)[]> {
     const configList = this._getOptionsList(options ?? {}, inputs.length);
     const callbackManagers = await Promise.all(
-      configList.map(getCallbackMangerForConfig)
+      configList.map(getCallbackManagerForConfig)
     );
     const runManagers = await Promise.all(
       callbackManagers.map((callbackManager, i) =>
@@ -1359,7 +1362,7 @@ export class RunnableSequence<
     input: RunInput,
     options?: RunnableConfig
   ): AsyncGenerator<RunOutput> {
-    const callbackManager_ = await getCallbackMangerForConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(options);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
@@ -1516,7 +1519,7 @@ export class RunnableMap<
     input: RunInput,
     options?: Partial<RunnableConfig>
   ): Promise<RunOutput> {
-    const callbackManager_ = await getCallbackMangerForConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(options);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       {
@@ -1980,7 +1983,7 @@ export class RunnableAssign<
     // collect mapper keys
     const mapperKeys = this.mapper.getStepsKeys();
     // create two input gens, one for the mapper, one for the input
-    const [forPassthrough, forMapper] = atee(generator, 2);
+    const [forPassthrough, forMapper] = atee(generator);
     // create mapper output gen
     const mapperOutput = this.mapper.transform(
       forMapper,
