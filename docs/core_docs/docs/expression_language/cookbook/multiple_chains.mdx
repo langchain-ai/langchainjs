@@ -23,6 +23,14 @@ import CodeBlock from "@theme/CodeBlock";
 
 import MultipleChainExample from "@examples/guides/expression_language/cookbook_multiple_chains.ts";
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/core
+```
+
 <CodeBlock language="typescript">{MultipleChainExample}</CodeBlock>
 
 The `RunnableSequence` above coerces the object into a `RunnableMap`.
