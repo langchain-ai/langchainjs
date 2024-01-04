@@ -90,7 +90,7 @@ async function main() {
         }
         if (matchingAnthropicEntrypoint) {
           // The core entrypoint matches the lc proper entrypoint
-          const hasMatchingExportedSymbol = matchingCoreEntrypoint.exportedSymbols.find((symbolName) => symbolName === namedImportText);
+          const hasMatchingExportedSymbol = matchingAnthropicEntrypoint.exportedSymbols.find((symbolName) => symbolName === namedImportText);
           if (hasMatchingExportedSymbol) {
             // the core entrypoint has a matching symbol.
             // all that is needed is to replace langchain/ with @langchain/core/
