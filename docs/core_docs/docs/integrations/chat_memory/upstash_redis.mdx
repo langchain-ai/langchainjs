@@ -15,8 +15,12 @@ For longer-term persistence across chat sessions, you can swap out the default i
 
 You will need to install [@upstash/redis](https://github.com/upstash/upstash-redis) in your project:
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
 ```bash npm2yarn
-npm install @upstash/redis
+npm install @langchain/openai @upstash/redis @langchain/community
 ```
 
 You will also need an Upstash Account and a Redis database to connect to. See instructions on [Upstash Docs](https://docs.upstash.com/redis) on how to create a HTTP client.

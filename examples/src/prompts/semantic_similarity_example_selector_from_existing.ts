@@ -5,8 +5,7 @@ import {
   PromptTemplate,
   FewShotPromptTemplate,
 } from "langchain/prompts";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
 
 const embeddings = new OpenAIEmbeddings();
 

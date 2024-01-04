@@ -10,4 +10,12 @@ In it, we leverage a time-weighted Memory object backed by a LangChain retriever
 The script below creates two instances of Generative Agents, Tommie and Eve, and runs a simulation of their interaction with their observations.
 Tommie takes on the role of a person moving to a new town who is looking for a job, and Eve takes on the role of a career counselor.
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 <CodeBlock language="typescript">{GenerativeAgentsScript}</CodeBlock>

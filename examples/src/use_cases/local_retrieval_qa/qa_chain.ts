@@ -1,7 +1,7 @@
 import { RetrievalQAChain, loadQAStuffChain } from "langchain/chains";
 import { CheerioWebBaseLoader } from "langchain/document_loaders/web/cheerio";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { HNSWLib } from "langchain/vectorstores/hnswlib";
+import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { Ollama } from "langchain/llms/ollama";
 import { PromptTemplate } from "langchain/prompts";
 import { HuggingFaceTransformersEmbeddings } from "langchain/embeddings/hf_transformers";

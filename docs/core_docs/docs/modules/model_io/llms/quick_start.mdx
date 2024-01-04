@@ -22,13 +22,13 @@ import CodeBlock from "@theme/CodeBlock";
   
 First we'll need to install the LangChain OpenAI integration package:
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
 ```bash npm2yarn
 npm install @langchain/openai
 ```
-
-:::tip
-See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
-:::
 
 Accessing the API requires an API key, which you can get by creating an account and heading [here](https://platform.openai.com/account/api-keys). Once we have a key we'll want to set it as an environment variable by running:
 
@@ -49,7 +49,7 @@ const llm = new OpenAI({
 otherwise you can initialize with an empty object:
 
 ```typescript
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 
 const llm = new OpenAI({});
 ```
@@ -66,9 +66,7 @@ First, follow [these instructions](https://github.com/jmorganca/ollama) to set u
 
 Then, make sure the Ollama server is running. Next, you'll need to install the LangChain community package:
 
-:::tip
-See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
-:::
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
 npm install @langchain/community
@@ -106,7 +104,7 @@ await llm.invoke(
 
 See the [Runnable interface](/docs/expression_language/interface) for more details on the available methods.
 
-## [Lgeacy] `generate`: batch calls, richer outputs
+## [Legacy] `generate`: batch calls, richer outputs
 
 `generate` lets you can call the model with a list of strings, getting back a more complete response than just the text. This complete response can include things like multiple top responses and other LLM provider-specific information:
 

@@ -1,6 +1,6 @@
 import "@tensorflow/tfjs-backend-cpu";
 import { Document } from "langchain/document";
-import { TensorFlowEmbeddings } from "langchain/embeddings/tensorflow";
+import { TensorFlowEmbeddings } from "@langchain/community/embeddings/tensorflow";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 
 const embeddings = new TensorFlowEmbeddings();

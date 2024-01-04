@@ -1,4 +1,4 @@
-import { ChatFireworks } from "langchain/chat_models/fireworks";
+import { ChatFireworks } from "@langchain/community/chat_models/fireworks";
 
 const model = new ChatFireworks({
   temperature: 0.9,

@@ -1,4 +1,4 @@
-import { ChatOllama } from "langchain/chat_models/ollama";
+import { ChatOllama } from "@langchain/community/chat_models/ollama";
 import { StringOutputParser } from "langchain/schema/output_parser";
 
 const model = new ChatOllama({

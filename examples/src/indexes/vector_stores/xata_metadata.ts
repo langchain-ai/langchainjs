@@ -1,5 +1,5 @@
-import { XataVectorSearch } from "langchain/vectorstores/xata";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { XataVectorSearch } from "@langchain/community/vectorstores/xata";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { BaseClient } from "@xata.io/client";
 import { Document } from "langchain/document";
 

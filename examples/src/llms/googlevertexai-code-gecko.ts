@@ -1,4 +1,4 @@
-import { GoogleVertexAI } from "langchain/llms/googlevertexai";
+import { GoogleVertexAI } from "@langchain/community/llms/googlevertexai";
 
 /*
  * Before running this, you should make sure you have created a

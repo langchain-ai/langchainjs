@@ -1,11 +1,11 @@
 import { Redis } from "ioredis";
 
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { CacheBackedEmbeddings } from "langchain/embeddings/cache_backed";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { FaissStore } from "langchain/vectorstores/faiss";
 import { TextLoader } from "langchain/document_loaders/fs/text";
-import { RedisByteStore } from "langchain/storage/ioredis";
+import { RedisByteStore } from "@langchain/community/storage/ioredis";
 
 const underlyingEmbeddings = new OpenAIEmbeddings();
 

@@ -1,4 +1,4 @@
-import { ChatMinimax } from "langchain/chat_models/minimax";
+import { ChatMinimax } from "@langchain/community/chat_models/minimax";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,

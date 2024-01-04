@@ -1,6 +1,6 @@
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
-import { ConneryToolkit } from "langchain/agents/toolkits/connery";
+import { ConneryToolkit } from "@langchain/community/agents/toolkits/connery";
 import { ConneryService } from "langchain/tools/connery";
 
 /**

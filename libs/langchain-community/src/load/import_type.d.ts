@@ -13,6 +13,9 @@ export interface OptionalImportMap {
   "@langchain/community/tools/gmail"?:
     | typeof import("../tools/gmail/index.js")
     | Promise<typeof import("../tools/gmail/index.js")>;
+  "@langchain/community/tools/google_calendar"?:
+    | typeof import("../tools/google_calendar/index.js")
+    | Promise<typeof import("../tools/google_calendar/index.js")>;
   "@langchain/community/agents/toolkits/aws_sfn"?:
     | typeof import("../agents/toolkits/aws_sfn.js")
     | Promise<typeof import("../agents/toolkits/aws_sfn.js")>;
@@ -356,6 +359,7 @@ export interface SecretMap {
   REDIS_PASSWORD?: string;
   REDIS_URL?: string;
   REDIS_USERNAME?: string;
+  REMOTE_RETRIEVER_AUTH_BEARER?: string;
   REPLICATE_API_TOKEN?: string;
   SEARXNG_API_BASE?: string;
   UPSTASH_REDIS_REST_TOKEN?: string;

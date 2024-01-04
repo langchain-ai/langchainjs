@@ -1,4 +1,4 @@
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { BytesOutputParser } from "langchain/schema/output_parser";
 
 const handler = async () => {

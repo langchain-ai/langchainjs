@@ -1,6 +1,6 @@
 import { test, expect } from "@jest/globals";
 
-import { InMemoryCache } from "../index.js";
+import { InMemoryCache } from "@langchain/core/caches";
 
 test("InMemoryCache", async () => {
   const cache = new InMemoryCache();

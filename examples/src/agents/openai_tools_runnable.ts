@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { DynamicStructuredTool, formatToOpenAITool } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 import { ChatPromptTemplate, MessagesPlaceholder } from "langchain/prompts";

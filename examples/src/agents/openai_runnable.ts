@@ -1,5 +1,5 @@
 import { AgentExecutor } from "langchain/agents";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { ChatPromptTemplate, MessagesPlaceholder } from "langchain/prompts";
 import {
   AIMessage,

@@ -1,4 +1,4 @@
-import { WatsonxAI } from "langchain/llms/watsonx_ai";
+import { WatsonxAI } from "@langchain/community/llms/watsonx_ai";
 
 // Note that modelParameters are optional
 const model = new WatsonxAI({
