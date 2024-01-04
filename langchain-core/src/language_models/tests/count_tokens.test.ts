@@ -1,5 +1,5 @@
 import { test, expect } from "@jest/globals";
-import { calculateMaxTokens, getModelContextSize } from "../count_tokens.js";
+import { calculateMaxTokens, getModelContextSize } from "../base.js";
 
 test("properly calculates correct max tokens", async () => {
   expect(
