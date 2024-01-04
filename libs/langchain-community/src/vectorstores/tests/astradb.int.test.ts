@@ -7,14 +7,15 @@ import { OpenAIEmbeddings } from "@langchain/openai";
 import { AstraDBVectorStore, AstraLibArgs } from "../astradb.js";
 
 const clientConfig = {
-  token: process.env.ASTRA_DB_APPLICATION_TOKEN as string,
-  endpoint: process.env.ASTRA_DB_ENDPOINT as string,
+  token: process.env.ASTRA_DB_APPLICATION_TOKEN ?? "dummy",
+  endpoint: process.env.ASTRA_DB_ENDPOINT ?? "dummy",
 };
+
 const client = new AstraDB(clientConfig.token, clientConfig.endpoint);
 
 const astraConfig: AstraLibArgs = {
   ...clientConfig,
-  collection: (process.env.ASTRA_DB_COLLECTION as string) ?? "langchain_test",
+  collection: process.env.ASTRA_DB_COLLECTION ?? "langchain_test",
   collectionOptions: {
     vector: {
       dimension: 1536,

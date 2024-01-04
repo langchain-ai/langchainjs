@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { expect, test } from "@jest/globals";
 import {
   AudioSubtitleLoader,
@@ -6,8 +7,7 @@ import {
   AudioTranscriptSentencesLoader,
 } from "../web/assemblyai.js";
 
-// eslint-disable-next-line no-process-env
-const transcriptId = process.env.ASSEMBLYAI_TRANSCRIPT_ID;
+const transcriptId = process.env.ASSEMBLYAI_TRANSCRIPT_ID!;
 console.log(transcriptId);
 
 describe.skip("AssemblyAI", () => {
