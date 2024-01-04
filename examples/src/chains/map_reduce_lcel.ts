@@ -1,17 +1,17 @@
-import { BaseCallbackConfig } from "langchain/callbacks";
 import {
   collapseDocs,
   splitListOfDocs,
 } from "langchain/chains/combine_documents/reduce";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { Document } from "langchain/document";
-import { PromptTemplate } from "langchain/prompts";
-import { StringOutputParser } from "langchain/schema/output_parser";
+import { ChatOpenAI } from "@langchain/openai";
 import { formatDocument } from "langchain/schema/prompt_template";
 import {
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
+import { BaseCallbackConfig } from "@langchain/core/callbacks/manager";
+import { Document } from "@langchain/core/documents";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 
 // Initialize the OpenAI model
 const model = new ChatOpenAI({});

@@ -1,7 +1,7 @@
 import {
   SageMakerEndpoint,
   SageMakerLLMContentHandler,
-} from "langchain/llms/sagemaker_endpoint";
+} from "@langchain/community/llms/sagemaker_endpoint";
 
 interface ResponseJsonInterface {
   generation: {

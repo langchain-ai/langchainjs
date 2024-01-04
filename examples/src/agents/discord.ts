@@ -1,4 +1,4 @@
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { DadJokeAPI } from "langchain/tools";
 import { DiscordSendMessagesTool } from "@langchain/community/tools/discord";

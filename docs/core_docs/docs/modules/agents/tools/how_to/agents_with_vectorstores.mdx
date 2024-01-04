@@ -1,7 +1,3 @@
----
-sidebar_class_name: hidden
----
-
 # Vector stores as tools
 
 This notebook covers how to combine agents and vector stores. The use case for this is that you’ve ingested your data into a vector store and want to interact with it in an agentic manner.
@@ -10,14 +6,21 @@ The recommended method for doing so is to create a VectorDBQAChain and then use 
 
 First, you'll want to import the relevant modules:
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 ```typescript
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { SerpAPI, ChainTool } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 import { VectorDBQAChain } from "langchain/chains";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import * as fs from "fs";
 ```

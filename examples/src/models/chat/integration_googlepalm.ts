@@ -1,5 +1,9 @@
-import { ChatGooglePaLM } from "langchain/chat_models/googlepalm";
-import { AIMessage, HumanMessage, SystemMessage } from "langchain/schema";
+import { ChatGooglePaLM } from "@langchain/community/chat_models/googlepalm";
+import {
+  AIMessage,
+  HumanMessage,
+  SystemMessage,
+} from "@langchain/core/messages";
 
 export const run = async () => {
   const model = new ChatGooglePaLM({

@@ -1,8 +1,8 @@
 import { MongoClient, ObjectId } from "mongodb";
 import { BufferMemory } from "langchain/memory";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { ConversationChain } from "langchain/chains";
-import { MongoDBChatMessageHistory } from "langchain/stores/message/mongodb";
+import { MongoDBChatMessageHistory } from "@langchain/community/stores/message/mongodb";
 
 const client = new MongoClient(process.env.MONGODB_ATLAS_URI || "");
 await client.connect();
