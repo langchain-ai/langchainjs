@@ -2,18 +2,17 @@ import { test, expect } from "@jest/globals";
 import { stringify } from "yaml";
 import { z } from "zod";
 import { RunnableSequence } from "@langchain/core/runnables";
+import { Cohere } from "@langchain/community/llms/cohere";
+import { OpenAI, ChatOpenAI } from "@langchain/openai";
 
 import { load } from "../index.js";
-import { OpenAI } from "../../llms/openai.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { LLMChain } from "../../chains/llm_chain.js";
-import { Cohere } from "../../llms/cohere.js";
 import {
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
   ChatPromptTemplate,
 } from "../../prompts/chat.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
 import { LangChainTracer } from "../../callbacks/index.js";
 import {
   FewShotPromptTemplate,

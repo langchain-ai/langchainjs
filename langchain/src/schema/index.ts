@@ -1,3 +1,13 @@
+/* #__PURE__ */ console.warn(
+  [
+    `[WARNING]: Importing from "langchain/schema" is deprecated.`,
+    ``,
+    `Instead, please import from the appropriate entrypoint in "@langchain/core" or "langchain".`,
+    ``,
+    `This will be mandatory after the next "langchain" minor version bump to 0.2.`,
+  ].join("\n")
+);
+
 import type { OpenAIClient } from "@langchain/openai";
 import {
   BaseMessage,
@@ -5,7 +15,6 @@ import {
   AIMessage,
   SystemMessage,
 } from "@langchain/core/messages";
-import { Serializable } from "../load/serializable.js";
 
 export {
   type AgentAction,
@@ -99,31 +108,5 @@ export {
 } from "@langchain/core/chat_history";
 
 export { BaseCache } from "@langchain/core/caches";
-
-/**
- * Base class for all file stores. All file stores should extend this
- * class.
- */
-export abstract class BaseFileStore extends Serializable {
-  abstract readFile(path: string): Promise<string>;
-
-  abstract writeFile(path: string, contents: string): Promise<void>;
-}
-
-/**
- * Base class for all entity stores. All entity stores should extend this
- * class.
- */
-export abstract class BaseEntityStore extends Serializable {
-  abstract get(key: string, defaultValue?: string): Promise<string | undefined>;
-
-  abstract set(key: string, value?: string): Promise<void>;
-
-  abstract delete(key: string): Promise<void>;
-
-  abstract exists(key: string): Promise<boolean>;
-
-  abstract clear(): Promise<void>;
-}
 
 export { Docstore } from "@langchain/community/stores/doc/base";
