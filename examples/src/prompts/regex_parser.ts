@@ -1,4 +1,4 @@
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import { RegexParser } from "langchain/output_parsers";
 import { PromptTemplate } from "langchain/prompts";
 

@@ -1,7 +1,6 @@
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { RetrievalQAChain } from "langchain/chains";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { SerpAPILoader } from "langchain/document_loaders/web/serpapi";
 
 // Initialize the necessary components

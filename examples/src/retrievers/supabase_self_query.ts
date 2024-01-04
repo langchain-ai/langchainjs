@@ -2,10 +2,9 @@ import { createClient } from "@supabase/supabase-js";
 
 import { AttributeInfo } from "langchain/schema/query_constructor";
 import { Document } from "langchain/document";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
 import { SelfQueryRetriever } from "langchain/retrievers/self_query";
 import { SupabaseTranslator } from "langchain/retrievers/self_query/supabase";
-import { OpenAI } from "langchain/llms/openai";
 import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
 
 /**

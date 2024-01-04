@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import { PromptTemplate } from "langchain/prompts";
 import { StructuredOutputParser } from "langchain/output_parsers";
 

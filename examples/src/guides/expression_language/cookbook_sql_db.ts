@@ -6,7 +6,7 @@ import {
 } from "langchain/schema/runnable";
 import { PromptTemplate } from "langchain/prompts";
 import { StringOutputParser } from "langchain/schema/output_parser";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 
 const datasource = new DataSource({
   type: "sqlite",

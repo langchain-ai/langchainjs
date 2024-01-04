@@ -1,5 +1,5 @@
 import { SequentialChain, LLMChain } from "langchain/chains";
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import { PromptTemplate } from "langchain/prompts";
 
 // This is an LLMChain to write a synopsis given a title of a play and the era it is set in.

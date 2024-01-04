@@ -12,6 +12,14 @@ Let’s take a look at how to do this.
 
 Let’s look at how to stream intermediate steps. We can do this by using the default `.stream()` method on the AgentExecutor.
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 <CodeBlock language="typescript">{StreamIntermediateStepsExample}</CodeBlock>
 
 You can see that we get back a bunch of different information. There are two ways to work with this information:

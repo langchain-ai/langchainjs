@@ -1,5 +1,5 @@
 import { Run } from "langchain/callbacks";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { ChatPromptTemplate } from "langchain/prompts";
 
 const prompt = ChatPromptTemplate.fromMessages([

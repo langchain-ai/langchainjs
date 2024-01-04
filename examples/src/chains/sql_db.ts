@@ -2,7 +2,7 @@ import { DataSource } from "typeorm";
 import { SqlDatabase } from "langchain/sql_db";
 import { PromptTemplate } from "langchain/prompts";
 import { RunnableSequence } from "langchain/schema/runnable";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { StringOutputParser } from "langchain/schema/output_parser";
 
 /**

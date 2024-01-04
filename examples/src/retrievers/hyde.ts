@@ -1,5 +1,4 @@
-import { OpenAI } from "langchain/llms/openai";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { HydeRetriever } from "langchain/retrievers/hyde";
 import { Document } from "langchain/document";

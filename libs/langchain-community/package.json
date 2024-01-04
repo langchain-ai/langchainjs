@@ -540,6 +540,11 @@
       "import": "./tools/gmail.js",
       "require": "./tools/gmail.cjs"
     },
+    "./tools/google_calendar": {
+      "types": "./tools/google_calendar.d.ts",
+      "import": "./tools/google_calendar.js",
+      "require": "./tools/google_calendar.cjs"
+    },
     "./tools/google_custom_search": {
       "types": "./tools/google_custom_search.d.ts",
       "import": "./tools/google_custom_search.js",
@@ -1308,6 +1313,9 @@
     "tools/gmail.cjs",
     "tools/gmail.js",
     "tools/gmail.d.ts",
+    "tools/google_calendar.cjs",
+    "tools/google_calendar.js",
+    "tools/google_calendar.d.ts",
     "tools/google_custom_search.cjs",
     "tools/google_custom_search.js",
     "tools/google_custom_search.d.ts",

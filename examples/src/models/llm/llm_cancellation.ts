@@ -1,4 +1,4 @@
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 
 const model = new OpenAI({ temperature: 1 });
 const controller = new AbortController();
