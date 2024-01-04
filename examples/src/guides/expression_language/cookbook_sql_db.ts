@@ -2,19 +2,19 @@ import { DataSource } from "typeorm";
 import { SqlDatabase } from "langchain/sql_db";
 import {
   RunnablePassthrough,
-  RunnableSequence,
-} from "langchain/schema/runnable";
-import { PromptTemplate } from "langchain/prompts";
-import { StringOutputParser } from "langchain/schema/output_parser";
+  RunnableSequence
+} from "@langchain/core/runnables";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 import { ChatOpenAI } from "langchain/chat_models/openai";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const datasource = new DataSource({
   type: "sqlite",
-  database: "Chinook.db",
+  database: "Chinook.db"
 });
 
 const db = await SqlDatabase.fromDataSourceParams({
-  appDataSource: datasource,
+  appDataSource: datasource
 });
 
 const prompt =
@@ -31,19 +31,19 @@ const model = new ChatOpenAI();
 // In this case, we're passing the schema.
 const sqlQueryGeneratorChain = RunnableSequence.from([
   RunnablePassthrough.assign({
-    schema: async () => db.getTableInfo(),
+    schema: async () => db.getTableInfo()
   }),
   prompt,
   model.bind({ stop: ["\nSQLResult:"] }),
-  new StringOutputParser(),
+  new StringOutputParser()
 ]);
 
 const result = await sqlQueryGeneratorChain.invoke({
-  question: "How many employees are there?",
+  question: "How many employees are there?"
 });
 
 console.log({
-  result,
+  result
 });
 
 /*
@@ -62,20 +62,20 @@ SQL Response: {response}`);
 
 const fullChain = RunnableSequence.from([
   RunnablePassthrough.assign({
-    query: sqlQueryGeneratorChain,
+    query: sqlQueryGeneratorChain
   }),
   {
     schema: async () => db.getTableInfo(),
     question: (input) => input.question,
     query: (input) => input.query,
-    response: (input) => db.run(input.query),
+    response: (input) => db.run(input.query)
   },
   finalResponsePrompt,
-  model,
+  model
 ]);
 
 const finalResponse = await fullChain.invoke({
-  question: "How many employees are there?",
+  question: "How many employees are there?"
 });
 
 console.log(finalResponse);

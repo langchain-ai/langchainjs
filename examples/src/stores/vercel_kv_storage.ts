@@ -1,6 +1,7 @@
 import { createClient } from "@vercel/kv";
-import { AIMessage, HumanMessage } from "langchain/schema";
 import { VercelKVStore } from "@langchain/community/storage/vercel_kv";
+import { AIMessage } from "@langchain/core/messages";
+import { HumanMessage } from "@langchain/core/messages";
 
 // Pro tip: define a helper function for getting your client
 // along with handling the case where your environment variables

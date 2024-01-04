@@ -1,8 +1,7 @@
 import * as uuid from "uuid";
 
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { PromptTemplate } from "langchain/prompts";
-import { RunnableSequence } from "langchain/schema/runnable";
+import { RunnableSequence } from "@langchain/core/runnables";
 
 import { MultiVectorRetriever } from "langchain/retrievers/multi_vector";
 import { FaissStore } from "@langchain/community/vectorstores/faiss";
@@ -10,15 +9,16 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { InMemoryStore } from "langchain/storage/in_memory";
 import { TextLoader } from "langchain/document_loaders/fs/text";
-import { Document } from "langchain/document";
 import { JsonKeyOutputFunctionsParser } from "langchain/output_parsers";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { Document } from "@langchain/core/documents";
 
 const textLoader = new TextLoader("../examples/state_of_the_union.txt");
 const parentDocuments = await textLoader.load();
 
 const splitter = new RecursiveCharacterTextSplitter({
   chunkSize: 10000,
-  chunkOverlap: 20,
+  chunkOverlap: 20
 });
 
 const docs = await splitter.splitDocuments(parentDocuments);
@@ -33,21 +33,21 @@ const functionsSchema = [
         questions: {
           type: "array",
           items: {
-            type: "string",
-          },
-        },
+            type: "string"
+          }
+        }
       },
-      required: ["questions"],
-    },
-  },
+      required: ["questions"]
+    }
+  }
 ];
 
 const functionCallingModel = new ChatOpenAI({
   maxRetries: 0,
-  modelName: "gpt-4",
+  modelName: "gpt-4"
 }).bind({
   functions: functionsSchema,
-  function_call: { name: "hypothetical_questions" },
+  function_call: { name: "hypothetical_questions" }
 });
 
 const chain = RunnableSequence.from([
@@ -56,14 +56,14 @@ const chain = RunnableSequence.from([
     `Generate a list of 3 hypothetical questions that the below document could be used to answer:\n\n{content}`
   ),
   functionCallingModel,
-  new JsonKeyOutputFunctionsParser<string[]>({ attrName: "questions" }),
+  new JsonKeyOutputFunctionsParser<string[]>({ attrName: "questions" })
 ]);
 
 const hypotheticalQuestions = await chain.batch(
   docs,
   {},
   {
-    maxConcurrency: 5,
+    maxConcurrency: 5
   }
 );
 
@@ -75,8 +75,8 @@ const hypotheticalQuestionDocs = hypotheticalQuestions
       const questionDocument = new Document({
         pageContent: question,
         metadata: {
-          [idKey]: docIds[i],
-        },
+          [idKey]: docIds[i]
+        }
       });
       return questionDocument;
     });
@@ -96,12 +96,12 @@ const vectorstore = await FaissStore.fromDocuments(
 const retriever = new MultiVectorRetriever({
   vectorstore,
   byteStore,
-  idKey,
+  idKey
 });
 
 const keyValuePairs: [string, Document][] = docs.map((originalDoc, i) => [
   docIds[i],
-  originalDoc,
+  originalDoc
 ]);
 
 // Use the retriever to add the original chunks to the document store

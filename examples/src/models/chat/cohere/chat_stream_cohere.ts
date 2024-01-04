@@ -1,19 +1,19 @@
 import { ChatCohere } from "@langchain/cohere";
-import { ChatPromptTemplate } from "langchain/prompts";
-import { StringOutputParser } from "langchain/schema/output_parser";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
 
 const model = new ChatCohere({
   apiKey: process.env.COHERE_API_KEY, // Default
-  model: "command", // Default
+  model: "command" // Default
 });
 const prompt = ChatPromptTemplate.fromMessages([
   ["ai", "You are a helpful assistant"],
-  ["human", "{input}"],
+  ["human", "{input}"]
 ]);
 const outputParser = new StringOutputParser();
 const chain = prompt.pipe(model).pipe(outputParser);
 const response = await chain.stream({
-  input: "Why is the sky blue? Be concise with your answer.",
+  input: "Why is the sky blue? Be concise with your answer."
 });
 let streamTokens = "";
 let streamIters = 0;

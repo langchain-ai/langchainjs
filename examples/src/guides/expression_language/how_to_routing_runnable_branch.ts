@@ -1,7 +1,7 @@
 import { ChatAnthropic } from "langchain/chat_models/anthropic";
-import { PromptTemplate } from "langchain/prompts";
-import { StringOutputParser } from "langchain/schema/output_parser";
-import { RunnableBranch, RunnableSequence } from "langchain/schema/runnable";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { RunnableBranch, RunnableSequence } from "@langchain/core/runnables";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const promptTemplate =
   PromptTemplate.fromTemplate(`Given the user question below, classify it as either being about \`LangChain\`, \`Anthropic\`, or \`Other\`.
@@ -15,17 +15,17 @@ Do not respond with more than one word.
 Classification:`);
 
 const model = new ChatAnthropic({
-  modelName: "claude-2.1",
+  modelName: "claude-2.1"
 });
 
 const classificationChain = RunnableSequence.from([
   promptTemplate,
   model,
-  new StringOutputParser(),
+  new StringOutputParser()
 ]);
 
 const classificationChainResult = await classificationChain.invoke({
-  question: "how do I call Anthropic?",
+  question: "how do I call Anthropic?"
 });
 console.log(classificationChainResult);
 
@@ -62,26 +62,26 @@ const branch = RunnableBranch.from([
   [
     (x: { topic: string; question: string }) =>
       x.topic.toLowerCase().includes("anthropic"),
-    anthropicChain,
+    anthropicChain
   ],
   [
     (x: { topic: string; question: string }) =>
       x.topic.toLowerCase().includes("langchain"),
-    langChainChain,
+    langChainChain
   ],
-  generalChain,
+  generalChain
 ]);
 
 const fullChain = RunnableSequence.from([
   {
     topic: classificationChain,
-    question: (input: { question: string }) => input.question,
+    question: (input: { question: string }) => input.question
   },
-  branch,
+  branch
 ]);
 
 const result1 = await fullChain.invoke({
-  question: "how do I use Anthropic?",
+  question: "how do I use Anthropic?"
 });
 
 console.log(result1);
@@ -104,7 +104,7 @@ console.log(result1);
 */
 
 const result2 = await fullChain.invoke({
-  question: "how do I use LangChain?",
+  question: "how do I use LangChain?"
 });
 
 console.log(result2);
@@ -129,7 +129,7 @@ console.log(result2);
 */
 
 const result3 = await fullChain.invoke({
-  question: "what is 2 + 2?",
+  question: "what is 2 + 2?"
 });
 
 console.log(result3);

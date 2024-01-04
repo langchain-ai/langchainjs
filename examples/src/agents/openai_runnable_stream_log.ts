@@ -1,16 +1,15 @@
 import { AgentExecutor } from "langchain/agents";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { ChatPromptTemplate, MessagesPlaceholder } from "langchain/prompts";
-import {
-  AIMessage,
-  AgentStep,
-  BaseMessage,
-  FunctionMessage,
-} from "langchain/schema";
-import { RunnableSequence } from "langchain/schema/runnable";
+import { RunnableSequence } from "@langchain/core/runnables";
 import { SerpAPI, formatToOpenAIFunction } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 import { OpenAIFunctionsAgentOutputParser } from "langchain/agents/openai/output_parser";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { MessagesPlaceholder } from "@langchain/core/prompts";
+import { AIMessage } from "@langchain/core/messages";
+import { AgentStep } from "@langchain/core/agents";
+import { BaseMessage } from "@langchain/core/messages";
+import { FunctionMessage } from "@langchain/core/messages";
 
 /** Define your list of tools. */
 const tools = [new Calculator(), new SerpAPI()];
@@ -18,17 +17,17 @@ const tools = [new Calculator(), new SerpAPI()];
 const model = new ChatOpenAI({
   modelName: "gpt-4",
   streaming: true,
-  temperature: 0,
+  temperature: 0
 });
 
 const prompt = ChatPromptTemplate.fromMessages([
   ["ai", "You are a helpful assistant"],
   ["human", "{input}"],
-  new MessagesPlaceholder("agent_scratchpad"),
+  new MessagesPlaceholder("agent_scratchpad")
 ]);
 
 const modelWithFunctions = model.bind({
-  functions: [...tools.map((tool) => formatToOpenAIFunction(tool))],
+  functions: [...tools.map((tool) => formatToOpenAIFunction(tool))]
 });
 
 const formatAgentSteps = (steps: AgentStep[]): BaseMessage[] =>
@@ -45,20 +44,20 @@ const runnableAgent = RunnableSequence.from([
   {
     input: (i: { input: string; steps: AgentStep[] }) => i.input,
     agent_scratchpad: (i: { input: string; steps: AgentStep[] }) =>
-      formatAgentSteps(i.steps),
+      formatAgentSteps(i.steps)
   },
   prompt,
   modelWithFunctions,
-  new OpenAIFunctionsAgentOutputParser(),
+  new OpenAIFunctionsAgentOutputParser()
 ]);
 
 const executor = AgentExecutor.fromAgentAndTools({
   agent: runnableAgent,
-  tools,
+  tools
 });
 
 const stream = await executor.streamLog({
-  input: "What is the weather in New York?",
+  input: "What is the weather in New York?"
 });
 
 for await (const chunk of stream) {

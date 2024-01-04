@@ -1,16 +1,15 @@
 import { ChatAnthropic } from "langchain/chat_models/anthropic";
 import { AgentExecutor } from "langchain/agents";
-import { SerpAPI, Tool } from "langchain/tools";
-import {
-  ChatPromptTemplate,
-  HumanMessagePromptTemplate,
-  MessagesPlaceholder,
-} from "langchain/prompts";
-import { RunnableSequence } from "langchain/schema/runnable";
-import { AgentStep } from "langchain/schema";
+import { SerpAPI } from "langchain/tools";
+import { RunnableSequence } from "@langchain/core/runnables";
 import { XMLAgentOutputParser } from "langchain/agents/xml/output_parser";
 import { renderTextDescription } from "langchain/tools/render";
 import { formatLogToMessage } from "langchain/agents/format_scratchpad/log_to_message";
+import { Tool } from "@langchain/core/tools";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { HumanMessagePromptTemplate } from "@langchain/core/prompts";
+import { MessagesPlaceholder } from "@langchain/core/prompts";
+import { AgentStep } from "@langchain/core/agents";
 
 /**
  * Define your chat model.
@@ -18,9 +17,9 @@ import { formatLogToMessage } from "langchain/agents/format_scratchpad/log_to_me
  */
 const model = new ChatAnthropic({
   modelName: "claude-2.1",
-  temperature: 0,
+  temperature: 0
 }).bind({
-  stop: ["</tool_input>", "</final_answer>"],
+  stop: ["</tool_input>", "</final_answer>"]
 });
 /** Define your list of tools. */
 const tools = [new SerpAPI()];
@@ -53,7 +52,7 @@ Begin!
 Question: {input}`;
 const prompt = ChatPromptTemplate.fromMessages([
   HumanMessagePromptTemplate.fromTemplate(AGENT_INSTRUCTIONS),
-  new MessagesPlaceholder("agent_scratchpad"),
+  new MessagesPlaceholder("agent_scratchpad")
 ]);
 
 /**
@@ -74,11 +73,11 @@ const runnableAgent = RunnableSequence.from([
       steps: AgentStep[];
     }) => formatLogToMessage(i.steps),
     tools: (i: { input: string; tools: Tool[]; steps: AgentStep[] }) =>
-      renderTextDescription(i.tools),
+      renderTextDescription(i.tools)
   },
   prompt,
   model,
-  new XMLAgentOutputParser(),
+  new XMLAgentOutputParser()
 ]);
 
 /**
@@ -86,7 +85,7 @@ const runnableAgent = RunnableSequence.from([
  */
 const executor = AgentExecutor.fromAgentAndTools({
   agent: runnableAgent,
-  tools,
+  tools
 });
 
 console.log("Loaded agent.");

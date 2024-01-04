@@ -1,6 +1,7 @@
 import { Redis } from "@upstash/redis";
-import { AIMessage, HumanMessage } from "langchain/schema";
 import { UpstashRedisStore } from "@langchain/community/storage/upstash_redis";
+import { AIMessage } from "@langchain/core/messages";
+import { HumanMessage } from "@langchain/core/messages";
 
 // Pro tip: define a helper function for getting your client
 // along with handling the case where your environment variables

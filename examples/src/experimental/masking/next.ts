@@ -2,11 +2,11 @@
 
 import {
   MaskingParser,
-  RegexMaskingTransformer,
+  RegexMaskingTransformer
 } from "langchain/experimental/masking";
-import { PromptTemplate } from "langchain/prompts";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { BytesOutputParser } from "langchain/schema/output_parser";
+import { BytesOutputParser } from "@langchain/core/output_parsers";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 export const runtime = "edge";
 
@@ -24,7 +24,7 @@ const maskingParser = new MaskingParser();
 // Define transformations for masking emails and phone numbers using regular expressions
 const piiMaskingTransformer = new RegexMaskingTransformer({
   email: { regex: /\S+@\S+\.\S+/g }, // If a regex is provided without a mask we fallback to a simple default hashing function
-  phone: { regex: /\d{3}-\d{3}-\d{4}/g },
+  phone: { regex: /\d{3}-\d{3}-\d{4}/g }
 });
 
 maskingParser.addTransformer(piiMaskingTransformer);
@@ -57,18 +57,18 @@ export async function POST(req: Request) {
     // Stream the AI response based on the masked chat history and current message
     const stream = await chain.stream({
       chat_history: guardedHistory,
-      input: guardedMessageContent,
+      input: guardedMessageContent
     });
 
     return new Response(stream, {
-      headers: { "content-type": "text/plain; charset=utf-8" },
+      headers: { "content-type": "text/plain; charset=utf-8" }
     });
   } catch (e: any) {
     return new Response(JSON.stringify({ error: e.message }), {
       status: 500,
       headers: {
-        "content-type": "application/json",
-      },
+        "content-type": "application/json"
+      }
     });
   }
 }

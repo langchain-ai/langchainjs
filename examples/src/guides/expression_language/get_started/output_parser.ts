@@ -1,5 +1,5 @@
-import { AIMessage } from "langchain/schema";
-import { StringOutputParser } from "langchain/schema/output_parser";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { AIMessage } from "@langchain/core/messages";
 
 const outputParser = new StringOutputParser();
 const message = new AIMessage(

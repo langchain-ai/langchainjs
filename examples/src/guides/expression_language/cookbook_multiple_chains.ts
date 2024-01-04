@@ -1,7 +1,7 @@
 import { ChatAnthropic } from "langchain/chat_models/anthropic";
-import { PromptTemplate } from "langchain/prompts";
-import { RunnableSequence } from "langchain/schema/runnable";
-import { StringOutputParser } from "langchain/schema/output_parser";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const prompt1 = PromptTemplate.fromTemplate(
   `What is the city {person} is from? Only respond with the name of the city.`
@@ -17,16 +17,16 @@ const chain = prompt1.pipe(model).pipe(new StringOutputParser());
 const combinedChain = RunnableSequence.from([
   {
     city: chain,
-    language: (input) => input.language,
+    language: (input) => input.language
   },
   prompt2,
   model,
-  new StringOutputParser(),
+  new StringOutputParser()
 ]);
 
 const result = await combinedChain.invoke({
   person: "Obama",
-  language: "German",
+  language: "German"
 });
 
 console.log(result);

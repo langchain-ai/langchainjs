@@ -1,7 +1,7 @@
 import * as fs from "node:fs/promises";
 
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanMessage } from "langchain/schema";
+import { HumanMessage } from "@langchain/core/messages";
 
 const imageData = await fs.readFile("./hotdog.jpg");
 const chat = new ChatOpenAI({

@@ -4,7 +4,7 @@ import {
   LLMChain,
 } from "langchain/chains";
 import { OpenAI } from "langchain/llms/openai";
-import { PromptTemplate } from "langchain/prompts";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 // LLMs can produce harmful, toxic, or otherwise undesirable outputs. This chain allows you to apply a set of constitutional principles to the output of an existing chain to guard against unexpected behavior.
 const evilQAPrompt = new PromptTemplate({

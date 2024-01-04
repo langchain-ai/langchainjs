@@ -1,6 +1,6 @@
 import { ChatAnthropic } from "langchain/chat_models/anthropic";
-import { PromptTemplate } from "langchain/prompts";
-import { RunnableMap } from "langchain/schema/runnable";
+import { RunnableMap } from "@langchain/core/runnables";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const model = new ChatAnthropic({});
 const jokeChain = PromptTemplate.fromTemplate(
@@ -12,7 +12,7 @@ const poemChain = PromptTemplate.fromTemplate(
 
 const mapChain = RunnableMap.from({
   joke: jokeChain,
-  poem: poemChain,
+  poem: poemChain
 });
 
 const result = await mapChain.invoke({ topic: "bear" });

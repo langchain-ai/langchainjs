@@ -2,10 +2,10 @@ import { ChatAnthropic } from "langchain/chat_models/anthropic";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { CohereEmbeddings } from "@langchain/community/embeddings/cohere";
 import { MultiQueryRetriever } from "langchain/retrievers/multi_query";
-import { BaseOutputParser } from "langchain/schema/output_parser";
-import { PromptTemplate } from "langchain/prompts";
+import { BaseOutputParser } from "@langchain/core/output_parsers";
 import { LLMChain } from "langchain/chains";
 import { pull } from "langchain/hub";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 type LineList = {
   lines: string[];
@@ -50,7 +50,7 @@ const vectorstore = await MemoryVectorStore.fromTexts(
     "Autos werden aus Metall hergestellt",
     "Autos werden aus Kunststoff hergestellt",
     "Mitochondrien sind die Energiekraftwerke der Zelle",
-    "Mitochondrien bestehen aus Lipiden",
+    "Mitochondrien bestehen aus Lipiden"
   ],
   [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }],
   new CohereEmbeddings()
@@ -59,12 +59,12 @@ const model = new ChatAnthropic({});
 const llmChain = new LLMChain({
   llm: model,
   prompt,
-  outputParser: new LineListOutputParser(),
+  outputParser: new LineListOutputParser()
 });
 const retriever = new MultiQueryRetriever({
   retriever: vectorstore.asRetriever(),
   llmChain,
-  verbose: true,
+  verbose: true
 });
 
 const query = "What are mitochondria made of?";

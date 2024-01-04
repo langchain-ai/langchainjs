@@ -3,10 +3,10 @@ import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import * as fs from "fs";
-import { PromptTemplate } from "langchain/prompts";
-import { RunnableSequence } from "langchain/schema/runnable";
-import { StringOutputParser } from "langchain/schema/output_parser";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 import { formatDocumentsAsString } from "langchain/util/document";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 /* Initialize the LLM to use to answer the question */
 const model = new ChatOpenAI({});
@@ -61,17 +61,17 @@ const chain = RunnableSequence.from([
       const relevantDocs = await retriever.getRelevantDocuments(input.question);
       const serialized = formatDocumentsAsString(relevantDocs);
       return serialized;
-    },
+    }
   },
   questionPrompt,
   model,
-  new StringOutputParser(),
+  new StringOutputParser()
 ]);
 
 const questionOne = "What did the president say about Justice Breyer?";
 
 const resultOne = await chain.invoke({
-  question: questionOne,
+  question: questionOne
 });
 
 console.log({ resultOne });
@@ -83,7 +83,7 @@ console.log({ resultOne });
 
 const resultTwo = await chain.invoke({
   chatHistory: formatChatHistory(resultOne, questionOne),
-  question: "Was it nice?",
+  question: "Was it nice?"
 });
 
 console.log({ resultTwo });

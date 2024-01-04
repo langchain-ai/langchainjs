@@ -4,16 +4,14 @@ import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import * as fs from "fs";
 import {
   RunnablePassthrough,
-  RunnableSequence,
-} from "langchain/schema/runnable";
-import { StringOutputParser } from "langchain/schema/output_parser";
-import {
-  ChatPromptTemplate,
-  HumanMessagePromptTemplate,
-  SystemMessagePromptTemplate,
-} from "langchain/prompts";
+  RunnableSequence
+} from "@langchain/core/runnables";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { formatDocumentsAsString } from "langchain/util/document";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { HumanMessagePromptTemplate } from "@langchain/core/prompts";
+import { SystemMessagePromptTemplate } from "@langchain/core/prompts";
 
 // Initialize the LLM to use to answer the question.
 const model = new ChatOpenAI({});
@@ -33,18 +31,18 @@ If you don't know the answer, just say that you don't know, don't try to make up
 {context}`;
 const messages = [
   SystemMessagePromptTemplate.fromTemplate(SYSTEM_TEMPLATE),
-  HumanMessagePromptTemplate.fromTemplate("{question}"),
+  HumanMessagePromptTemplate.fromTemplate("{question}")
 ];
 const prompt = ChatPromptTemplate.fromMessages(messages);
 
 const chain = RunnableSequence.from([
   {
     context: vectorStoreRetriever.pipe(formatDocumentsAsString),
-    question: new RunnablePassthrough(),
+    question: new RunnablePassthrough()
   },
   prompt,
   model,
-  new StringOutputParser(),
+  new StringOutputParser()
 ]);
 
 const answer = await chain.invoke(

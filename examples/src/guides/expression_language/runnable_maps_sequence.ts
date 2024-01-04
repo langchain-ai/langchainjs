@@ -1,13 +1,13 @@
 import { ChatAnthropic } from "langchain/chat_models/anthropic";
-import { CohereEmbeddings } from "langchain/embeddings/cohere";
-import { PromptTemplate } from "langchain/prompts";
-import { StringOutputParser } from "langchain/schema/output_parser";
+import { CohereEmbeddings } from "@langchain/cohere";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 import {
   RunnablePassthrough,
-  RunnableSequence,
-} from "langchain/schema/runnable";
+  RunnableSequence
+} from "@langchain/core/runnables";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
-import type { Document } from "langchain/document";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { Document } from "@langchain/core/documents";
 
 const model = new ChatAnthropic();
 const vectorstore = await HNSWLib.fromDocuments(
@@ -28,7 +28,7 @@ const retrievalChain = RunnableSequence.from([
   { context: retriever.pipe(formatDocs), question: new RunnablePassthrough() },
   prompt,
   model,
-  new StringOutputParser(),
+  new StringOutputParser()
 ]);
 
 const result = await retrievalChain.invoke(

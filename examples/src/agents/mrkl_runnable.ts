@@ -1,12 +1,13 @@
 import { AgentExecutor, ChatAgentOutputParser } from "langchain/agents";
 import { formatLogToString } from "langchain/agents/format_scratchpad/log";
 import { OpenAI } from "langchain/llms/openai";
-import { ChatPromptTemplate, PromptTemplate } from "langchain/prompts";
-import { AgentStep } from "langchain/schema";
-import { RunnableSequence } from "langchain/schema/runnable";
+import { RunnableSequence } from "@langchain/core/runnables";
 import { SerpAPI } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 import { renderTextDescription } from "langchain/tools/render";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { AgentStep } from "@langchain/core/agents";
 
 /** Define the model to be used */
 const model = new OpenAI({ temperature: 0 });
@@ -16,9 +17,9 @@ const tools = [
   new SerpAPI(process.env.SERPAPI_API_KEY, {
     location: "Austin,Texas,United States",
     hl: "en",
-    gl: "us",
+    gl: "us"
   }),
-  new Calculator(),
+  new Calculator()
 ];
 
 /**
@@ -76,7 +77,7 @@ const template = [formattedPrefix, FORMAT_INSTRUCTIONS, SUFFIX].join("\n\n");
 // Add the template, and human message template to an array of messages.
 const prompt = ChatPromptTemplate.fromMessages([
   ["ai", template],
-  ["human", DEFAULT_HUMAN_MESSAGE_TEMPLATE],
+  ["human", DEFAULT_HUMAN_MESSAGE_TEMPLATE]
 ]);
 
 /**
@@ -89,12 +90,12 @@ const runnableAgent = RunnableSequence.from([
   {
     input: (i: { input: string; steps: AgentStep[] }) => i.input,
     agent_scratchpad: (i: { input: string; steps: AgentStep[] }) =>
-      formatLogToString(i.steps),
+      formatLogToString(i.steps)
   },
   prompt,
   // Important, otherwise the answer is only hallucinated
   model.bind({ stop: ["\nObservation"] }),
-  outputParser,
+  outputParser
 ]);
 
 /**
@@ -105,7 +106,7 @@ const runnableAgent = RunnableSequence.from([
  */
 const executor = AgentExecutor.fromAgentAndTools({
   agent: runnableAgent,
-  tools,
+  tools
 });
 
 console.log("Loaded agent executor");

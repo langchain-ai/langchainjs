@@ -1,5 +1,4 @@
 import { Client, ClientOptions } from "@elastic/elasticsearch";
-import { Document } from "langchain/document";
 import { OpenAI } from "langchain/llms/openai";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { VectorDBQAChain } from "langchain/chains";
@@ -8,6 +7,7 @@ import {
   ElasticClientArgs,
   ElasticVectorSearch,
 } from "@langchain/community/vectorstores/elasticsearch";
+import { Document } from "@langchain/core/documents";
 
 // to run this first run Elastic's docker-container with `docker-compose up -d --build`
 export async function run() {

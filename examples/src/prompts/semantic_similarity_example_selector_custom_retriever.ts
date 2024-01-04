@@ -5,11 +5,11 @@ import { Pinecone } from "@pinecone-database/pinecone";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { PineconeStore } from "@langchain/community/vectorstores/pinecone";
 import {
-  SemanticSimilarityExampleSelector,
-  PromptTemplate,
-  FewShotPromptTemplate,
+  SemanticSimilarityExampleSelector
 } from "langchain/prompts";
 import { ChatOpenAI } from "langchain/chat_models/openai";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { FewShotPromptTemplate } from "@langchain/core/prompts";
 
 const pinecone = new Pinecone();
 

@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { BytesOutputParser } from "langchain/schema/output_parser";
+import { BytesOutputParser } from "@langchain/core/output_parsers";
 
 const handler = async () => {
   const parser = new BytesOutputParser();
@@ -10,8 +10,8 @@ const handler = async () => {
 
   const httpResponse = new Response(stream, {
     headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-    },
+      "Content-Type": "text/plain; charset=utf-8"
+    }
   });
 
   return httpResponse;

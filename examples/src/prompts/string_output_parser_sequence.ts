@@ -1,10 +1,10 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { StringOutputParser } from "langchain/schema/output_parser";
-import { RunnableSequence } from "langchain/schema/runnable";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { RunnableSequence } from "@langchain/core/runnables";
 
 const chain = RunnableSequence.from([
   new ChatOpenAI({ temperature: 0 }),
-  new StringOutputParser(),
+  new StringOutputParser()
 ]);
 
 const stream = await chain.stream("Hello there!");

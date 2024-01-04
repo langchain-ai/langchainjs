@@ -4,11 +4,11 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { BufferMemory } from "langchain/memory";
 import * as fs from "fs";
-import { RunnableBranch, RunnableSequence } from "langchain/schema/runnable";
-import { PromptTemplate } from "langchain/prompts";
-import { StringOutputParser } from "langchain/schema/output_parser";
+import { RunnableBranch, RunnableSequence } from "@langchain/core/runnables";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 import { LLMChain } from "langchain/chains";
 import { formatDocumentsAsString } from "langchain/util/document";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 export const run = async () => {
   /* Initialize the LLM to use to answer the question */
@@ -30,7 +30,7 @@ export const run = async () => {
   };
 
   const memory = new BufferMemory({
-    memoryKey: "chatHistory",
+    memoryKey: "chatHistory"
   });
 
   /**
@@ -76,20 +76,20 @@ Standalone question:`);
     const chain = new LLMChain({
       llm: model,
       prompt: questionPrompt,
-      outputParser: new StringOutputParser(),
+      outputParser: new StringOutputParser()
     });
 
     const { text } = await chain.call({
       ...input,
-      chatHistory: serializeChatHistory(input.chatHistory ?? ""),
+      chatHistory: serializeChatHistory(input.chatHistory ?? "")
     });
 
     await memory.saveContext(
       {
-        human: input.question,
+        human: input.question
       },
       {
-        ai: text,
+        ai: text
       }
     );
 
@@ -101,7 +101,7 @@ Standalone question:`);
       question: (input: {
         question: string;
         chatHistory?: string | Array<string>;
-      }) => input.question,
+      }) => input.question
     },
     {
       question: (previousStepResult: {
@@ -122,9 +122,9 @@ Standalone question:`);
         );
         const serialized = formatDocumentsAsString(relevantDocs);
         return serialized;
-      },
+      }
     },
-    handleProcessQuery,
+    handleProcessQuery
   ]);
 
   const generateQuestionChain = RunnableSequence.from([
@@ -136,7 +136,7 @@ Standalone question:`);
       chatHistory: async () => {
         const memoryResult = await memory.loadMemoryVariables({});
         return serializeChatHistory(memoryResult.chatHistory ?? "");
-      },
+      }
     },
     questionGeneratorTemplate,
     model,
@@ -144,9 +144,9 @@ Standalone question:`);
     // next RunnableSequence chain which will answer the question
     {
       question: (previousStepResult: { text: string }) =>
-        previousStepResult.text,
+        previousStepResult.text
     },
-    answerQuestionChain,
+    answerQuestionChain
   ]);
 
   const branch = RunnableBranch.from([
@@ -157,7 +157,7 @@ Standalone question:`);
 
         return isChatHistoryPresent;
       },
-      answerQuestionChain,
+      answerQuestionChain
     ],
     [
       async () => {
@@ -167,20 +167,20 @@ Standalone question:`);
 
         return isChatHistoryPresent;
       },
-      generateQuestionChain,
+      generateQuestionChain
     ],
-    answerQuestionChain,
+    answerQuestionChain
   ]);
 
   const fullChain = RunnableSequence.from([
     {
-      question: (input: { question: string }) => input.question,
+      question: (input: { question: string }) => input.question
     },
-    branch,
+    branch
   ]);
 
   const resultOne = await fullChain.invoke({
-    question: "What did the president say about Justice Breyer?",
+    question: "What did the president say about Justice Breyer?"
   });
 
   console.log({ resultOne });
@@ -191,7 +191,7 @@ Standalone question:`);
    */
 
   const resultTwo = await fullChain.invoke({
-    question: "Was it nice?",
+    question: "Was it nice?"
   });
 
   console.log({ resultTwo });

@@ -1,13 +1,13 @@
-import { FakeListChatModel } from "langchain/chat_models/fake";
-import { HumanMessage } from "langchain/schema";
-import { StringOutputParser } from "langchain/schema/output_parser";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { FakeListChatModel } from "@langchain/core/utils/testing";
+import { HumanMessage } from "@langchain/core/messages";
 
 /**
  * The FakeListChatModel can be used to simulate ordered predefined responses.
  */
 
 const chat = new FakeListChatModel({
-  responses: ["I'll callback later.", "You 'console' them!"],
+  responses: ["I'll callback later.", "You 'console' them!"]
 });
 
 const firstMessage = new HumanMessage("You want to hear a JavasSript joke?");
@@ -40,7 +40,7 @@ console.log(chunks.join(""));
 
 const slowChat = new FakeListChatModel({
   responses: ["Because Oct 31 equals Dec 25", "You 'console' them!"],
-  sleep: 1000,
+  sleep: 1000
 });
 
 const thirdMessage = new HumanMessage(

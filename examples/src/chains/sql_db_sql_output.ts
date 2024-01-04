@@ -1,9 +1,9 @@
 import { DataSource } from "typeorm";
 import { SqlDatabase } from "langchain/sql_db";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { PromptTemplate } from "langchain/prompts";
-import { RunnableSequence } from "langchain/schema/runnable";
-import { StringOutputParser } from "langchain/schema/output_parser";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 /**
  * This example uses Chinook database, which is a sample database available for SQL Server, Oracle, MySQL, etc.
@@ -12,11 +12,11 @@ import { StringOutputParser } from "langchain/schema/output_parser";
  */
 const datasource = new DataSource({
   type: "sqlite",
-  database: "Chinook.db",
+  database: "Chinook.db"
 });
 
 const db = await SqlDatabase.fromDataSourceParams({
-  appDataSource: datasource,
+  appDataSource: datasource
 });
 
 const llm = new ChatOpenAI();
@@ -42,11 +42,11 @@ SQL QUERY:`);
 const sqlQueryChain = RunnableSequence.from([
   {
     schema: async () => db.getTableInfo(),
-    question: (input: { question: string }) => input.question,
+    question: (input: { question: string }) => input.question
   },
   prompt,
   llm.bind({ stop: ["\nSQLResult:"] }),
-  new StringOutputParser(),
+  new StringOutputParser()
 ]);
 
 /**
@@ -77,23 +77,23 @@ NATURAL LANGUAGE RESPONSE:`);
 const finalChain = RunnableSequence.from([
   {
     question: (input) => input.question,
-    query: sqlQueryChain,
+    query: sqlQueryChain
   },
   {
     schema: async () => db.getTableInfo(),
     question: (input) => input.question,
     query: (input) => input.query,
-    response: (input) => db.run(input.query),
+    response: (input) => db.run(input.query)
   },
   {
     result: finalResponsePrompt.pipe(llm).pipe(new StringOutputParser()),
     // Pipe the query through here unchanged so it gets logged alongside the result.
-    sql: (previousStepResult) => previousStepResult.query,
-  },
+    sql: (previousStepResult) => previousStepResult.query
+  }
 ]);
 
 const finalResponse = await finalChain.invoke({
-  question: "How many employees are there?",
+  question: "How many employees are there?"
 });
 
 console.log({ finalResponse });

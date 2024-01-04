@@ -1,15 +1,15 @@
 import { CheerioWebBaseLoader } from "langchain/document_loaders/web/cheerio";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
-import { Ollama } from "langchain/llms/ollama";
-import { PromptTemplate } from "langchain/prompts";
+import { Ollama } from "@langchain/community/llms/ollama";
 import {
   RunnableSequence,
-  RunnablePassthrough,
-} from "langchain/schema/runnable";
-import { StringOutputParser } from "langchain/schema/output_parser";
-import { HuggingFaceTransformersEmbeddings } from "langchain/embeddings/hf_transformers";
+  RunnablePassthrough
+} from "@langchain/core/runnables";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/hf_transformers";
 import { formatDocumentsAsString } from "langchain/util/document";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const loader = new CheerioWebBaseLoader(
   "https://lilianweng.github.io/posts/2023-06-23-agent/"
@@ -18,7 +18,7 @@ const docs = await loader.load();
 
 const splitter = new RecursiveCharacterTextSplitter({
   chunkOverlap: 0,
-  chunkSize: 500,
+  chunkSize: 500
 });
 
 const splitDocuments = await splitter.splitDocuments(docs);
@@ -40,17 +40,17 @@ Question: {question}`);
 // Llama 2 7b wrapped by Ollama
 const model = new Ollama({
   baseUrl: "http://localhost:11434",
-  model: "llama2",
+  model: "llama2"
 });
 
 const chain = RunnableSequence.from([
   {
     context: retriever.pipe(formatDocumentsAsString),
-    question: new RunnablePassthrough(),
+    question: new RunnablePassthrough()
   },
   prompt,
   model,
-  new StringOutputParser(),
+  new StringOutputParser()
 ]);
 
 const result = await chain.invoke(

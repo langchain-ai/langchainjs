@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { MomentoCache } from "langchain/cache/momento";
+import { MomentoCache } from "@langchain/community/caches/momento";
 import {
   CacheClient,
   Configurations,

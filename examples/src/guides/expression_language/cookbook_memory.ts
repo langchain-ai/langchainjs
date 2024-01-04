@@ -1,13 +1,14 @@
 import { ChatAnthropic } from "langchain/chat_models/anthropic";
-import { ChatPromptTemplate, MessagesPlaceholder } from "langchain/prompts";
-import { RunnableSequence } from "langchain/schema/runnable";
+import { RunnableSequence } from "@langchain/core/runnables";
 import { BufferMemory } from "langchain/memory";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { MessagesPlaceholder } from "@langchain/core/prompts";
 
 const model = new ChatAnthropic();
 const prompt = ChatPromptTemplate.fromMessages([
   ["system", "You are a helpful chatbot"],
   new MessagesPlaceholder("history"),
-  ["human", "{input}"],
+  ["human", "{input}"]
 ]);
 
 // Default "inputKey", "outputKey", and "memoryKey values would work here
@@ -16,7 +17,7 @@ const memory = new BufferMemory({
   returnMessages: true,
   inputKey: "input",
   outputKey: "output",
-  memoryKey: "history",
+  memoryKey: "history"
 });
 
 console.log(await memory.loadMemoryVariables({}));
@@ -28,18 +29,18 @@ console.log(await memory.loadMemoryVariables({}));
 const chain = RunnableSequence.from([
   {
     input: (initialInput) => initialInput.input,
-    memory: () => memory.loadMemoryVariables({}),
+    memory: () => memory.loadMemoryVariables({})
   },
   {
     input: (previousOutput) => previousOutput.input,
-    history: (previousOutput) => previousOutput.memory.history,
+    history: (previousOutput) => previousOutput.memory.history
   },
   prompt,
-  model,
+  model
 ]);
 
 const inputs = {
-  input: "Hey, I'm Bob!",
+  input: "Hey, I'm Bob!"
 };
 
 const response = await chain.invoke(inputs);
@@ -54,7 +55,7 @@ console.log(response);
 */
 
 await memory.saveContext(inputs, {
-  output: response.content,
+  output: response.content
 });
 
 console.log(await memory.loadMemoryVariables({}));
@@ -75,7 +76,7 @@ console.log(await memory.loadMemoryVariables({}));
 */
 
 const inputs2 = {
-  input: "What's my name?",
+  input: "What's my name?"
 };
 
 const response2 = await chain.invoke(inputs2);

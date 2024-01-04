@@ -1,6 +1,7 @@
 import { Redis } from "ioredis";
-import { AIMessage, HumanMessage } from "langchain/schema";
 import { RedisByteStore } from "@langchain/community/storage/ioredis";
+import { AIMessage } from "@langchain/core/messages";
+import { HumanMessage } from "@langchain/core/messages";
 
 // Define the client and store
 const client = new Redis({});

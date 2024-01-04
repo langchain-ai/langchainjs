@@ -3,28 +3,29 @@ import { AgentExecutor } from "langchain/agents";
 import { SerpAPI } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 import { pull } from "langchain/hub";
-import { PromptTemplate } from "langchain/prompts";
-import { RunnableSequence } from "langchain/schema/runnable";
-import { AgentStep, BaseMessage } from "langchain/schema";
+import { RunnableSequence } from "@langchain/core/runnables";
 import { BufferMemory } from "langchain/memory";
 import { formatLogToString } from "langchain/agents/format_scratchpad/log";
 import { renderTextDescription } from "langchain/tools/render";
 import { ReActSingleInputOutputParser } from "langchain/agents/react/output_parser";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { AgentStep } from "@langchain/core/agents";
+import { BaseMessage } from "@langchain/core/messages";
 
 /** Define your chat model */
 const model = new ChatOpenAI({ modelName: "gpt-4" });
 /** Bind a stop token to the model */
 const modelWithStop = model.bind({
-  stop: ["\nObservation"],
+  stop: ["\nObservation"]
 });
 /** Define your list of tools */
 const tools = [
   new SerpAPI(process.env.SERPAPI_API_KEY, {
     location: "Austin,Texas,United States",
     hl: "en",
-    gl: "us",
+    gl: "us"
   }),
-  new Calculator(),
+  new Calculator()
 ];
 /**
  * Pull a prompt from LangChain Hub
@@ -35,7 +36,7 @@ const prompt = await pull<PromptTemplate>("hwchase17/react-chat");
 const toolNames = tools.map((tool) => tool.name);
 const promptWithInputs = await prompt.partial({
   tools: renderTextDescription(tools),
-  tool_names: toolNames.join(","),
+  tool_names: toolNames.join(",")
 });
 
 const runnableAgent = RunnableSequence.from([
@@ -54,11 +55,11 @@ const runnableAgent = RunnableSequence.from([
       input: string;
       steps: AgentStep[];
       chat_history: BaseMessage[];
-    }) => i.chat_history,
+    }) => i.chat_history
   },
   promptWithInputs,
   modelWithStop,
-  new ReActSingleInputOutputParser({ toolNames }),
+  new ReActSingleInputOutputParser({ toolNames })
 ]);
 /**
  * Define your memory store
@@ -70,7 +71,7 @@ const memory = new BufferMemory({ memoryKey: "chat_history" });
 const executor = AgentExecutor.fromAgentAndTools({
   agent: runnableAgent,
   tools,
-  memory,
+  memory
 });
 
 console.log("Loaded agent.");

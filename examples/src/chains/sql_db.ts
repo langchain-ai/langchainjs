@@ -1,9 +1,9 @@
 import { DataSource } from "typeorm";
 import { SqlDatabase } from "langchain/sql_db";
-import { PromptTemplate } from "langchain/prompts";
-import { RunnableSequence } from "langchain/schema/runnable";
+import { RunnableSequence } from "@langchain/core/runnables";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { StringOutputParser } from "langchain/schema/output_parser";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 /**
  * This example uses Chinook database, which is a sample database available for SQL Server, Oracle, MySQL, etc.
@@ -12,11 +12,11 @@ import { StringOutputParser } from "langchain/schema/output_parser";
  */
 const datasource = new DataSource({
   type: "sqlite",
-  database: "Chinook.db",
+  database: "Chinook.db"
 });
 
 const db = await SqlDatabase.fromDataSourceParams({
-  appDataSource: datasource,
+  appDataSource: datasource
 });
 
 const llm = new ChatOpenAI();
@@ -55,15 +55,15 @@ SQL QUERY:`);
 const sqlQueryChain = RunnableSequence.from([
   {
     schema: async () => db.getTableInfo(),
-    question: (input: { question: string }) => input.question,
+    question: (input: { question: string }) => input.question
   },
   prompt,
   llm.bind({ stop: ["\nSQLResult:"] }),
-  new StringOutputParser(),
+  new StringOutputParser()
 ]);
 
 const res = await sqlQueryChain.invoke({
-  question: "How many employees are there?",
+  question: "How many employees are there?"
 });
 console.log({ res });
 
@@ -95,21 +95,21 @@ NATURAL LANGUAGE RESPONSE:`);
 const finalChain = RunnableSequence.from([
   {
     question: (input) => input.question,
-    query: sqlQueryChain,
+    query: sqlQueryChain
   },
   {
     schema: async () => db.getTableInfo(),
     question: (input) => input.question,
     query: (input) => input.query,
-    response: (input) => db.run(input.query),
+    response: (input) => db.run(input.query)
   },
   finalResponsePrompt,
   llm,
-  new StringOutputParser(),
+  new StringOutputParser()
 ]);
 
 const finalResponse = await finalChain.invoke({
-  question: "How many employees are there?",
+  question: "How many employees are there?"
 });
 
 console.log({ finalResponse });

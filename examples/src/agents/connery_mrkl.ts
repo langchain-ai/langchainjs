@@ -1,7 +1,7 @@
 import { OpenAI } from "langchain/llms/openai";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { ConneryToolkit } from "@langchain/community/agents/toolkits/connery";
-import { ConneryService } from "langchain/tools/connery";
+import { ConneryService } from "@langchain/community/tools/connery";
 
 /**
  * This example shows how to create an agent with Connery actions using the Connery Actions Toolkit.

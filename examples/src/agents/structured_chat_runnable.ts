@@ -2,20 +2,18 @@ import { z } from "zod";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import {
   AgentExecutor,
-  StructuredChatOutputParserWithRetries,
+  StructuredChatOutputParserWithRetries
 } from "langchain/agents";
 import { Calculator } from "langchain/tools/calculator";
 import { DynamicStructuredTool } from "langchain/tools";
-import {
-  ChatPromptTemplate,
-  HumanMessagePromptTemplate,
-  PromptTemplate,
-  SystemMessagePromptTemplate,
-} from "langchain/prompts";
 import { renderTextDescriptionAndArgs } from "langchain/tools/render";
-import { RunnableSequence } from "langchain/schema/runnable";
-import { AgentStep } from "langchain/schema";
+import { RunnableSequence } from "@langchain/core/runnables";
 import { formatLogToString } from "langchain/agents/format_scratchpad/log";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { HumanMessagePromptTemplate } from "@langchain/core/prompts";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { SystemMessagePromptTemplate } from "@langchain/core/prompts";
+import { AgentStep } from "@langchain/core/agents";
 
 /**
  * Need:
@@ -25,7 +23,7 @@ import { formatLogToString } from "langchain/agents/format_scratchpad/log";
 
 /** Define the chat model. */
 const model = new ChatOpenAI({ temperature: 0 }).bind({
-  stop: ["\nObservation:"],
+  stop: ["\nObservation:"]
 });
 /** Define your list of tools, including the `DynamicStructuredTool` */
 const tools = [
@@ -35,12 +33,12 @@ const tools = [
     description: "generates a random number between two input numbers",
     schema: z.object({
       low: z.number().describe("The lower bound of the generated number"),
-      high: z.number().describe("The upper bound of the generated number"),
+      high: z.number().describe("The upper bound of the generated number")
     }),
     func: async ({ low, high }) =>
       (Math.random() * (high - low) + low).toString(), // Outputs still must be strings
-    returnDirect: false, // This is an option that allows the tool to return the output directly
-  }),
+    returnDirect: false // This is an option that allows the tool to return the output directly
+  })
 ];
 const toolNames = tools.map((tool) => tool.name);
 
@@ -113,7 +111,7 @@ const template = [
   PREFIX,
   FORMAT_INSTRUCTIONS,
   SUFFIX,
-  `Thoughts: {agent_scratchpad}`,
+  `Thoughts: {agent_scratchpad}`
 ].join("\n\n");
 const humanMessageTemplate = "{input}";
 const messages = [
@@ -123,16 +121,16 @@ const messages = [
       inputVariables,
       partialVariables: {
         tool_schemas: renderTextDescriptionAndArgs(tools),
-        tool_names: toolNames.join(", "),
-      },
+        tool_names: toolNames.join(", ")
+      }
     })
   ),
   new HumanMessagePromptTemplate(
     new PromptTemplate({
       template: humanMessageTemplate,
-      inputVariables,
+      inputVariables
     })
-  ),
+  )
 ];
 const prompt = ChatPromptTemplate.fromMessages(messages);
 
@@ -151,7 +149,7 @@ const prompt = ChatPromptTemplate.fromMessages(messages);
 const outputParser = StructuredChatOutputParserWithRetries.fromLLM(
   new ChatOpenAI({ temperature: 0 }),
   {
-    toolNames,
+    toolNames
   }
 );
 
@@ -163,16 +161,16 @@ const runnableAgent = RunnableSequence.from([
   {
     input: (i: { input: string; steps: AgentStep[] }) => i.input,
     agent_scratchpad: (i: { input: string; steps: AgentStep[] }) =>
-      formatLogToString(i.steps),
+      formatLogToString(i.steps)
   },
   prompt,
   model,
-  outputParser,
+  outputParser
 ]);
 
 const executor = AgentExecutor.fromAgentAndTools({
   agent: runnableAgent,
-  tools,
+  tools
 });
 
 console.log("Loaded agent.");

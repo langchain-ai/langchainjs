@@ -1,0 +1,94 @@
+[
+  {
+    "langchainEntry": "embeddings/base",
+    "libEntry": "embeddings",
+    "lib": "core"
+  },
+  {
+    "langchainEntry": "llms/base",
+    "libEntry": "language_models/llms",
+    "lib": "core"
+  },
+  {
+    "langchainEntry": "llms/googlevertexai/web",
+    "libEntry": "llms/googlevertexai",
+    "lib": "community"
+  },
+  {
+    "langchainEntry": "llms/bedrock/web",
+    "libEntry": "llms/bedrock",
+    "lib": "community"
+  },
+  {
+    "langchainEntry": "vectorstores/base",
+    "libEntry": "vectorstores",
+    "lib": "core"
+  },
+  {
+    "langchainEntry": "chat_models/base",
+    "libEntry": "language_models/chat_models",
+    "lib": "core"
+  },
+  {
+    "langchainEntry": "chat_models/bedrock/web",
+    "libEntry": "chat_models/bedrock",
+    "lib": "community"
+  },
+  {
+    "langchainEntry": "chat_models/googlevertexai/web",
+    "libEntry": "chat_models/googlevertexai",
+    "lib": "community"
+  },
+  {
+    "langchainEntry": "chat_models/iflytek_xinghuo/web",
+    "libEntry": "chat_models/iflytek_xinghuo",
+    "lib": "community"
+  },
+  {
+    "langchainEntry": "schema/output_parser",
+    "libEntry": "output_parsers",
+    "lib": "core"
+  },
+  {
+    "langchainEntry": "schema/retriever",
+    "libEntry": "retrievers",
+    "lib": "core"
+  },
+  {
+    "langchainEntry": "schema/runnable",
+    "libEntry": "runnables",
+    "lib": "core"
+  },
+  { "langchainEntry": "schema/storage", "libEntry": "stores", "lib": "core" },
+  {
+    "langchainEntry": "cache/cloudflare_kv",
+    "libEntry": "caches/cloudflare_kv",
+    "lib": "community"
+  },
+  {
+    "langchainEntry": "cache/momento",
+    "libEntry": "caches/momento",
+    "lib": "community"
+  },
+  {
+    "langchainEntry": "cache/redis",
+    "libEntry": "caches/ioredis",
+    "lib": "community"
+  },
+  {
+    "langchainEntry": "cache/ioredis",
+    "libEntry": "caches/ioredis",
+    "lib": "community"
+  },
+  {
+    "langchainEntry": "cache/upstash_redis",
+    "libEntry": "caches/upstash_redis",
+    "lib": "community"
+  },
+  {
+    "langchainEntry": "stores/message/redis",
+    "libEntry": "stores/message/ioredis",
+    "lib": "community"
+  },
+  { "langchainEntry": "util/math", "libEntry": "utils/math", "lib": "core" }
+]

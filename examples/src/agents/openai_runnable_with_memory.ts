@@ -1,17 +1,16 @@
 import { AgentExecutor } from "langchain/agents";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { ChatPromptTemplate, MessagesPlaceholder } from "langchain/prompts";
-import {
-  AIMessage,
-  AgentStep,
-  BaseMessage,
-  FunctionMessage,
-} from "langchain/schema";
-import { RunnableSequence } from "langchain/schema/runnable";
+import { RunnableSequence } from "@langchain/core/runnables";
 import { SerpAPI, formatToOpenAIFunction } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 import { OpenAIFunctionsAgentOutputParser } from "langchain/agents/openai/output_parser";
 import { BufferMemory } from "langchain/memory";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { MessagesPlaceholder } from "@langchain/core/prompts";
+import { AIMessage } from "@langchain/core/messages";
+import { AgentStep } from "@langchain/core/agents";
+import { BaseMessage } from "@langchain/core/messages";
+import { FunctionMessage } from "@langchain/core/messages";
 
 /** Define your list of tools. */
 const tools = [new Calculator(), new SerpAPI()];
@@ -28,21 +27,21 @@ const model = new ChatOpenAI({ modelName: "gpt-4", temperature: 0 });
  * to format our tools into the proper schema for OpenAI functions.
  */
 const modelWithFunctions = model.bind({
-  functions: [...tools.map((tool) => formatToOpenAIFunction(tool))],
+  functions: [...tools.map((tool) => formatToOpenAIFunction(tool))]
 });
 
 const memory = new BufferMemory({
   memoryKey: "history", // The object key to store the memory under
   inputKey: "question", // The object key for the input
   outputKey: "answer", // The object key for the output
-  returnMessages: true,
+  returnMessages: true
 });
 
 const prompt = ChatPromptTemplate.fromMessages([
   ["ai", "You are a helpful assistant."],
   new MessagesPlaceholder("chat_history"),
   ["human", "{input}"],
-  new MessagesPlaceholder("agent_scratchpad"),
+  new MessagesPlaceholder("agent_scratchpad")
 ]);
 
 const formatAgentSteps = (steps: AgentStep[]): BaseMessage[] =>
@@ -64,22 +63,22 @@ const runnableAgent = RunnableSequence.from([
     chat_history: async (_: { input: string; steps: AgentStep[] }) => {
       const { history } = await memory.loadMemoryVariables({});
       return history;
-    },
+    }
   },
   prompt,
   modelWithFunctions,
-  new OpenAIFunctionsAgentOutputParser(),
+  new OpenAIFunctionsAgentOutputParser()
 ]);
 
 const executor = AgentExecutor.fromAgentAndTools({
   agent: runnableAgent,
-  tools,
+  tools
 });
 
 const query = "What is the weather in New York?";
 console.log(`Calling agent executor with query: ${query}`);
 const result = await executor.invoke({
-  input: query,
+  input: query
 });
 console.log(result);
 /*
@@ -92,16 +91,16 @@ Calling agent executor with query: What is the weather in New York?
 // Save the result and initial input to memory
 await memory.saveContext(
   {
-    question: query,
+    question: query
   },
   {
-    answer: result.output,
+    answer: result.output
   }
 );
 
 const query2 = "Do I need a jacket?";
 const result2 = await executor.invoke({
-  input: query2,
+  input: query2
 });
 console.log(result2);
 /*

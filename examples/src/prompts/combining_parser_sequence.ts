@@ -1,15 +1,15 @@
 import { OpenAI } from "langchain/llms/openai";
-import { PromptTemplate } from "langchain/prompts";
 import {
   StructuredOutputParser,
   RegexParser,
-  CombiningOutputParser,
+  CombiningOutputParser
 } from "langchain/output_parsers";
-import { RunnableSequence } from "langchain/schema/runnable";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const answerParser = StructuredOutputParser.fromNamesAndDescriptions({
   answer: "answer to the user's question",
-  source: "source used to answer the user's question, should be a website.",
+  source: "source used to answer the user's question, should be a website."
 });
 
 const confidenceParser = new RegexParser(
@@ -25,7 +25,7 @@ const chain = RunnableSequence.from([
     "Answer the users question as best as possible.\n{format_instructions}\n{question}"
   ),
   new OpenAI({ temperature: 0 }),
-  parser,
+  parser
 ]);
 
 /*
@@ -51,7 +51,7 @@ What is the capital of France?
 
 const response = await chain.invoke({
   question: "What is the capital of France?",
-  format_instructions: parser.getFormatInstructions(),
+  format_instructions: parser.getFormatInstructions()
 });
 
 console.log(response);

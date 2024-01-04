@@ -1,7 +1,7 @@
 import { OpenAI } from "langchain/llms/openai";
-import { PromptTemplate } from "langchain/prompts";
-import { CustomListOutputParser } from "langchain/output_parsers";
-import { RunnableSequence } from "langchain/schema/runnable";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { CustomListOutputParser } from "@langchain/core/output_parsers";
 
 // With a `CustomListOutputParser`, we can parse a list with a specific length and separator.
 const parser = new CustomListOutputParser({ length: 3, separator: "\n" });
@@ -11,7 +11,7 @@ const chain = RunnableSequence.from([
     "Provide a list of {subject}.\n{format_instructions}"
   ),
   new OpenAI({ temperature: 0 }),
-  parser,
+  parser
 ]);
 
 /*
@@ -20,7 +20,7 @@ Your response should be a list of 3 items separated by "\n" (eg: `foo\n bar\n ba
 */
 const response = await chain.invoke({
   subject: "great fiction books (book, author)",
-  format_instructions: parser.getFormatInstructions(),
+  format_instructions: parser.getFormatInstructions()
 });
 
 console.log(response);

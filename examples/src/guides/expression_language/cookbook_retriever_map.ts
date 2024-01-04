@@ -1,10 +1,10 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { PromptTemplate } from "langchain/prompts";
-import { RunnableSequence } from "langchain/schema/runnable";
-import { StringOutputParser } from "langchain/schema/output_parser";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 import { formatDocumentsAsString } from "langchain/util/document";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const model = new ChatOpenAI({});
 
@@ -36,19 +36,19 @@ const languageChain = RunnableSequence.from([
     context: RunnableSequence.from([
       (input: LanguageChainInput) => input.question,
       retriever,
-      formatDocumentsAsString,
+      formatDocumentsAsString
     ]),
     question: (input: LanguageChainInput) => input.question,
-    language: (input: LanguageChainInput) => input.language,
+    language: (input: LanguageChainInput) => input.language
   },
   languagePrompt,
   model,
-  new StringOutputParser(),
+  new StringOutputParser()
 ]);
 
 const result = await languageChain.invoke({
   question: "What is the powerhouse of the cell?",
-  language: "German",
+  language: "German"
 });
 
 console.log(result);

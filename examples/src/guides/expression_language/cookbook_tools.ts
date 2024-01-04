@@ -1,7 +1,7 @@
 import { ChatAnthropic } from "langchain/chat_models/anthropic";
 import { SerpAPI } from "langchain/tools";
-import { PromptTemplate } from "langchain/prompts";
-import { StringOutputParser } from "langchain/schema/output_parser";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const search = new SerpAPI();
 
@@ -15,7 +15,7 @@ const model = new ChatAnthropic({});
 const chain = prompt.pipe(model).pipe(new StringOutputParser()).pipe(search);
 
 const result = await chain.invoke({
-  input: "Who is the current prime minister of Malaysia?",
+  input: "Who is the current prime minister of Malaysia?"
 });
 
 console.log(result);

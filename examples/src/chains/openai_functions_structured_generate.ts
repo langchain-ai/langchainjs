@@ -1,11 +1,9 @@
 import { z } from "zod";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import {
-  ChatPromptTemplate,
-  SystemMessagePromptTemplate,
-  HumanMessagePromptTemplate,
-} from "langchain/prompts";
 import { createStructuredOutputChainFromZod } from "langchain/chains/openai_functions";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { SystemMessagePromptTemplate } from "@langchain/core/prompts";
+import { HumanMessagePromptTemplate } from "@langchain/core/prompts";
 
 const zodSchema = z.object({
   name: z.string().describe("Human name"),

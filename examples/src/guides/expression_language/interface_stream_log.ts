@@ -1,14 +1,13 @@
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
-import { StringOutputParser } from "langchain/schema/output_parser";
-import { RunnablePassthrough, RunnableSequence } from "langchain/runnables";
-import {
-  ChatPromptTemplate,
-  HumanMessagePromptTemplate,
-  SystemMessagePromptTemplate,
-} from "langchain/prompts";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { formatDocumentsAsString } from "langchain/util/document";
+import { RunnablePassthrough } from "@langchain/core/runnables";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { HumanMessagePromptTemplate } from "@langchain/core/prompts";
+import { SystemMessagePromptTemplate } from "@langchain/core/prompts";
 
 // Initialize the LLM to use to answer the question.
 const model = new ChatOpenAI({});
@@ -16,7 +15,7 @@ const model = new ChatOpenAI({});
 const vectorStore = await HNSWLib.fromTexts(
   [
     "mitochondria is the powerhouse of the cell",
-    "mitochondria is made of lipids",
+    "mitochondria is made of lipids"
   ],
   [{ id: 1 }, { id: 2 }],
   new OpenAIEmbeddings()
@@ -32,18 +31,18 @@ If you don't know the answer, just say that you don't know, don't try to make up
 {context}`;
 const messages = [
   SystemMessagePromptTemplate.fromTemplate(SYSTEM_TEMPLATE),
-  HumanMessagePromptTemplate.fromTemplate("{question}"),
+  HumanMessagePromptTemplate.fromTemplate("{question}")
 ];
 const prompt = ChatPromptTemplate.fromMessages(messages);
 
 const chain = RunnableSequence.from([
   {
     context: vectorStoreRetriever.pipe(formatDocumentsAsString),
-    question: new RunnablePassthrough(),
+    question: new RunnablePassthrough()
   },
   prompt,
   model,
-  new StringOutputParser(),
+  new StringOutputParser()
 ]);
 
 const stream = await chain.streamLog("What is the powerhouse of the cell?");

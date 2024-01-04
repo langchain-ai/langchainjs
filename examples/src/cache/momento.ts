@@ -1,5 +1,5 @@
 import { OpenAI } from "langchain/llms/openai";
-import { MomentoCache } from "langchain/cache/momento";
+import { MomentoCache } from "@langchain/community/caches/momento";
 import {
   CacheClient,
   Configurations,

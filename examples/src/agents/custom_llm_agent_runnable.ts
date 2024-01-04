@@ -1,34 +1,32 @@
 import { AgentExecutor } from "langchain/agents";
 import { formatLogToString } from "langchain/agents/format_scratchpad/log";
 import { OpenAI } from "langchain/llms/openai";
-import { PromptTemplate } from "langchain/prompts";
-import {
-  AgentAction,
-  AgentFinish,
-  AgentStep,
-  BaseMessage,
-  HumanMessage,
-  InputValues,
-} from "langchain/schema";
-import { RunnableSequence } from "langchain/schema/runnable";
+import { RunnableSequence } from "@langchain/core/runnables";
 import { SerpAPI } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { AgentAction } from "@langchain/core/agents";
+import { AgentFinish } from "@langchain/core/agents";
+import { AgentStep } from "@langchain/core/agents";
+import { BaseMessage } from "@langchain/core/messages";
+import { HumanMessage } from "@langchain/core/messages";
+import { InputValues } from "@langchain/core/memory";
 
 /**
  * Instantiate the LLM and bind the stop token
  * @important The stop token must be set, if not the LLM will happily continue generating text forever.
  */
 const model = new OpenAI({ temperature: 0 }).bind({
-  stop: ["\nObservation"],
+  stop: ["\nObservation"]
 });
 /** Define the tools */
 const tools = [
   new SerpAPI(process.env.SERPAPI_API_KEY, {
     location: "Austin,Texas,United States",
     hl: "en",
-    gl: "us",
+    gl: "us"
   }),
-  new Calculator(),
+  new Calculator()
 ];
 /** Create the prefix prompt */
 const PREFIX = `Answer the following questions as best you can. You have access to the following tools:
@@ -71,32 +69,32 @@ async function formatMessages(
   /** Create templates and format the instructions and suffix prompts */
   const prefixTemplate = new PromptTemplate({
     template: PREFIX,
-    inputVariables: ["tools"],
+    inputVariables: ["tools"]
   });
   const instructionsTemplate = new PromptTemplate({
     template: TOOL_INSTRUCTIONS_TEMPLATE,
-    inputVariables: ["tool_names"],
+    inputVariables: ["tool_names"]
   });
   const suffixTemplate = new PromptTemplate({
     template: SUFFIX,
-    inputVariables: ["input"],
+    inputVariables: ["input"]
   });
   /** Format both templates by passing in the input variables */
   const formattedPrefix = await prefixTemplate.format({
-    tools: toolStrings,
+    tools: toolStrings
   });
   const formattedInstructions = await instructionsTemplate.format({
-    tool_names: toolNames,
+    tool_names: toolNames
   });
   const formattedSuffix = await suffixTemplate.format({
-    input: values.input,
+    input: values.input
   });
   /** Construct the final prompt string */
   const formatted = [
     formattedPrefix,
     formattedInstructions,
     formattedSuffix,
-    agentScratchpad,
+    agentScratchpad
   ].join("\n");
   /** Return the message as a HumanMessage. */
   return [new HumanMessage(formatted)];
@@ -120,7 +118,7 @@ function customOutputParser(text: string): AgentAction | AgentFinish {
   return {
     tool: match[1].trim(),
     toolInput: match[2].trim().replace(/^"+|"+$/g, ""),
-    log: text,
+    log: text
   };
 }
 
@@ -128,16 +126,16 @@ function customOutputParser(text: string): AgentAction | AgentFinish {
 const runnable = RunnableSequence.from([
   {
     input: (values: InputValues) => values.input,
-    intermediate_steps: (values: InputValues) => values.steps,
+    intermediate_steps: (values: InputValues) => values.steps
   },
   formatMessages,
   model,
-  customOutputParser,
+  customOutputParser
 ]);
 /** Pass the runnable to the `AgentExecutor` class as the agent */
 const executor = new AgentExecutor({
   agent: runnable,
-  tools,
+  tools
 });
 console.log("Loaded agent.");
 

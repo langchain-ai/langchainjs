@@ -135,6 +135,7 @@ async function webpackLoader(content, map, meta) {
       if (exactPath) {
         imp.docs = BASE_URL + "/" + exactPath;
       } else {
+        throw new Error(`${this.resourcePath}: Could not find docs for module: ${moduleName}, imported: ${imported}`);
         // eslint-disable-next-line no-console
         console.warn(
           `${this.resourcePath}: Could not find docs for ${moduleName}.${imported} or schema_${moduleName}.${imported} in api_refs/public/`

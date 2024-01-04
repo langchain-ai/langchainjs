@@ -1,19 +1,17 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { ChatPromptTemplate } from "langchain/prompts";
-import {
-  RunnableLambda,
-  RunnableMap,
-  RunnablePassthrough,
-} from "langchain/runnables";
-import { StringOutputParser } from "langchain/schema/output_parser";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
+import { Document } from "@langchain/core/documents";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { RunnableLambda } from "@langchain/core/runnables";
+import { RunnableMap } from "@langchain/core/runnables";
+import { RunnablePassthrough } from "@langchain/core/runnables";
 
 const vectorStore = await HNSWLib.fromDocuments(
   [
     new Document({ pageContent: "Harrison worked at Kensho" }),
-    new Document({ pageContent: "Bears like to eat honey." }),
+    new Document({ pageContent: "Bears like to eat honey." })
   ],
   new OpenAIEmbeddings()
 );
@@ -24,9 +22,9 @@ const prompt = ChatPromptTemplate.fromMessages([
     "ai",
     `Answer the question based on only the following context:
   
-{context}`,
+{context}`
   ],
-  ["human", "{question}"],
+  ["human", "{question}"]
 ]);
 const model = new ChatOpenAI({});
 const outputParser = new StringOutputParser();
@@ -34,9 +32,9 @@ const outputParser = new StringOutputParser();
 const setupAndRetrieval = RunnableMap.from({
   context: new RunnableLambda({
     func: (input: string) =>
-      retriever.invoke(input).then((response) => response[0].pageContent),
+      retriever.invoke(input).then((response) => response[0].pageContent)
   }).withConfig({ runName: "contextRetriever" }),
-  question: new RunnablePassthrough(),
+  question: new RunnablePassthrough()
 });
 const chain = setupAndRetrieval.pipe(prompt).pipe(model).pipe(outputParser);
 

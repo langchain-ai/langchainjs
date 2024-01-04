@@ -1,4 +1,3 @@
-import { Document } from "langchain/document";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { LLMChain } from "langchain/chains";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
@@ -6,10 +5,11 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { BufferMemory } from "langchain/memory";
 import * as fs from "fs";
-import { PromptTemplate } from "langchain/prompts";
-import { RunnableSequence } from "langchain/schema/runnable";
-import { BaseMessage } from "langchain/schema";
+import { RunnableSequence } from "@langchain/core/runnables";
 import { formatDocumentsAsString } from "langchain/util/document";
+import { Document } from "@langchain/core/documents";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { BaseMessage } from "@langchain/core/messages";
 
 const text = fs.readFileSync("state_of_the_union.txt", "utf8");
 
@@ -23,7 +23,7 @@ const memory = new BufferMemory({
   memoryKey: "chatHistory",
   inputKey: "question", // The key for the input to the chain
   outputKey: "text", // The key for the final conversational output of the chain
-  returnMessages: true, // If using with a chat model (e.g. gpt-3.5 or gpt-4)
+  returnMessages: true // If using with a chat model (e.g. gpt-3.5 or gpt-4)
 });
 
 const serializeChatHistory = (chatHistory: Array<BaseMessage>): string =>
@@ -66,19 +66,19 @@ Standalone question:`
 
 // Initialize fast and slow LLMs, along with chains for each
 const fasterModel = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo",
+  modelName: "gpt-3.5-turbo"
 });
 const fasterChain = new LLMChain({
   llm: fasterModel,
-  prompt: questionGeneratorTemplate,
+  prompt: questionGeneratorTemplate
 });
 
 const slowerModel = new ChatOpenAI({
-  modelName: "gpt-4",
+  modelName: "gpt-4"
 });
 const slowerChain = new LLMChain({
   llm: slowerModel,
-  prompt: questionPrompt,
+  prompt: questionPrompt
 });
 
 const performQuestionAnswering = async (input: {
@@ -98,7 +98,7 @@ const performQuestionAnswering = async (input: {
     const { text } = await fasterChain.invoke({
       chatHistory: chatHistoryString,
       context: serializedDocs,
-      question: input.question,
+      question: input.question
     });
 
     newQuestion = text;
@@ -107,22 +107,22 @@ const performQuestionAnswering = async (input: {
   const response = await slowerChain.invoke({
     chatHistory: chatHistoryString ?? "",
     context: serializedDocs,
-    question: newQuestion,
+    question: newQuestion
   });
 
   // Save the chat history to memory
   await memory.saveContext(
     {
-      question: input.question,
+      question: input.question
     },
     {
-      text: response.text,
+      text: response.text
     }
   );
 
   return {
     result: response.text,
-    sourceDocuments: input.context,
+    sourceDocuments: input.context
   };
 };
 
@@ -138,13 +138,13 @@ const chain = RunnableSequence.from([
     },
     // Fetch relevant context based on the question
     context: async (input: { question: string }) =>
-      retriever.getRelevantDocuments(input.question),
+      retriever.getRelevantDocuments(input.question)
   },
-  performQuestionAnswering,
+  performQuestionAnswering
 ]);
 
 const resultOne = await chain.invoke({
-  question: "What did the president say about Justice Breyer?",
+  question: "What did the president say about Justice Breyer?"
 });
 console.log({ resultOne });
 /**
@@ -157,7 +157,7 @@ console.log({ resultOne });
  */
 
 const resultTwo = await chain.invoke({
-  question: "Was he nice?",
+  question: "Was he nice?"
 });
 console.log({ resultTwo });
 /**

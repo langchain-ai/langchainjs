@@ -3,14 +3,14 @@ import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import * as fs from "fs";
-import { PromptTemplate } from "langchain/prompts";
-import { StringOutputParser } from "langchain/schema/output_parser";
-import { RunnableSequence } from "langchain/schema/runnable";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { RunnableSequence } from "@langchain/core/runnables";
 import { formatDocumentsAsString } from "langchain/util/document";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 /* Initialize the LLM & set streaming to true */
 const model = new ChatOpenAI({
-  streaming: true,
+  streaming: true
 });
 /* Load in the file we want to do question answering over */
 const text = fs.readFileSync("state_of_the_union.txt", "utf8");
@@ -51,15 +51,15 @@ const chain = RunnableSequence.from([
       const relevantDocs = await retriever.getRelevantDocuments(input.question);
       const serialized = formatDocumentsAsString(relevantDocs);
       return serialized;
-    },
+    }
   },
   questionPrompt,
   model,
-  new StringOutputParser(),
+  new StringOutputParser()
 ]);
 
 const stream = await chain.stream({
-  question: "What did the president say about Justice Breyer?",
+  question: "What did the president say about Justice Breyer?"
 });
 
 let streamedResult = "";

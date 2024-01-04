@@ -3,9 +3,10 @@ import type { D1Database } from "@cloudflare/workers-types";
 import { ChatAnthropic } from "langchain/chat_models/anthropic";
 import { BufferMemory } from "langchain/memory";
 import { CloudflareD1MessageHistory } from "@langchain/community/stores/message/cloudflare_d1";
-import { ChatPromptTemplate, MessagesPlaceholder } from "langchain/prompts";
-import { RunnableSequence } from "langchain/schema/runnable";
-import { StringOutputParser } from "langchain/schema/output_parser";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { MessagesPlaceholder } from "@langchain/core/prompts";
 
 export interface Env {
   DB: D1Database;
@@ -26,45 +27,45 @@ export default {
         chatHistory: new CloudflareD1MessageHistory({
           tableName: "stored_message",
           sessionId: "example",
-          database: env.DB,
-        }),
+          database: env.DB
+        })
       });
       const prompt = ChatPromptTemplate.fromPromptMessages([
         ["system", "You are a helpful chatbot"],
         new MessagesPlaceholder("history"),
-        ["human", "{input}"],
+        ["human", "{input}"]
       ]);
       const model = new ChatAnthropic({
-        anthropicApiKey: env.ANTHROPIC_API_KEY,
+        anthropicApiKey: env.ANTHROPIC_API_KEY
       });
 
       const chain = RunnableSequence.from([
         {
           input: (initialInput) => initialInput.input,
-          memory: () => memory.loadMemoryVariables({}),
+          memory: () => memory.loadMemoryVariables({})
         },
         {
           input: (previousOutput) => previousOutput.input,
-          history: (previousOutput) => previousOutput.memory.history,
+          history: (previousOutput) => previousOutput.memory.history
         },
         prompt,
         model,
-        new StringOutputParser(),
+        new StringOutputParser()
       ]);
 
       const chainInput = { input };
 
       const res = await chain.invoke(chainInput);
       await memory.saveContext(chainInput, {
-        output: res,
+        output: res
       });
 
       return new Response(JSON.stringify(res), {
-        headers: { "content-type": "application/json" },
+        headers: { "content-type": "application/json" }
       });
     } catch (err: any) {
       console.log(err.message);
       return new Response(err.message, { status: 500 });
     }
-  },
+  }
 };

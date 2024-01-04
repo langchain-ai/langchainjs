@@ -1,13 +1,13 @@
-import { PromptTemplate } from "langchain/prompts";
 import {
   RunnableSequence,
-  RunnablePassthrough,
-} from "langchain/schema/runnable";
+  RunnablePassthrough
+} from "@langchain/core/runnables";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { StringOutputParser } from "langchain/schema/output_parser";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 import { formatDocumentsAsString } from "langchain/util/document";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const model = new ChatOpenAI({});
 
@@ -38,7 +38,7 @@ const formatChatHistory = (chatHistory: [string, string][]) => {
 const vectorStore = await HNSWLib.fromTexts(
   [
     "mitochondria is the powerhouse of the cell",
-    "mitochondria is made of lipids",
+    "mitochondria is made of lipids"
   ],
   [{ id: 1 }, { id: 2 }],
   new OpenAIEmbeddings()
@@ -54,20 +54,20 @@ const standaloneQuestionChain = RunnableSequence.from([
   {
     question: (input: ConversationalRetrievalQAChainInput) => input.question,
     chat_history: (input: ConversationalRetrievalQAChainInput) =>
-      formatChatHistory(input.chat_history),
+      formatChatHistory(input.chat_history)
   },
   CONDENSE_QUESTION_PROMPT,
   model,
-  new StringOutputParser(),
+  new StringOutputParser()
 ]);
 
 const answerChain = RunnableSequence.from([
   {
     context: retriever.pipe(formatDocumentsAsString),
-    question: new RunnablePassthrough(),
+    question: new RunnablePassthrough()
   },
   ANSWER_PROMPT,
-  model,
+  model
 ]);
 
 const conversationalRetrievalQAChain =
@@ -75,7 +75,7 @@ const conversationalRetrievalQAChain =
 
 const result1 = await conversationalRetrievalQAChain.invoke({
   question: "What is the powerhouse of the cell?",
-  chat_history: [],
+  chat_history: []
 });
 console.log(result1);
 /*
@@ -87,9 +87,9 @@ const result2 = await conversationalRetrievalQAChain.invoke({
   chat_history: [
     [
       "What is the powerhouse of the cell?",
-      "The powerhouse of the cell is the mitochondria.",
-    ],
-  ],
+      "The powerhouse of the cell is the mitochondria."
+    ]
+  ]
 });
 console.log(result2);
 /*

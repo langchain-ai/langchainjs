@@ -1,13 +1,13 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { PromptTemplate } from "langchain/prompts";
 import {
   RunnableSequence,
-  RunnablePassthrough,
-} from "langchain/schema/runnable";
-import { StringOutputParser } from "langchain/schema/output_parser";
+  RunnablePassthrough
+} from "@langchain/core/runnables";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 import { formatDocumentsAsString } from "langchain/util/document";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const model = new ChatOpenAI({});
 
@@ -27,11 +27,11 @@ Question: {question}`);
 const chain = RunnableSequence.from([
   {
     context: retriever.pipe(formatDocumentsAsString),
-    question: new RunnablePassthrough(),
+    question: new RunnablePassthrough()
   },
   prompt,
   model,
-  new StringOutputParser(),
+  new StringOutputParser()
 ]);
 
 const result = await chain.invoke("What is the powerhouse of the cell?");

@@ -3,7 +3,7 @@ import { Redis } from "ioredis";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { CacheBackedEmbeddings } from "langchain/embeddings/cache_backed";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { FaissStore } from "langchain/vectorstores/faiss";
+import { FaissStore } from "@langchain/community/vectorstores/faiss";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { RedisByteStore } from "@langchain/community/storage/ioredis";
 
