@@ -6,6 +6,8 @@ import type { OpenAPIV3_1 } from "openapi-types";
 
 import { ChainValues } from "@langchain/core/utils/types";
 import { ChatOpenAI } from "@langchain/openai";
+import { BaseChatModel } from "@langchain/core/language_models/chat_models";
+import { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
@@ -17,8 +19,6 @@ import { LLMChain, LLMChainInput } from "../llm_chain.js";
 import { BasePromptTemplate } from "../../prompts/base.js";
 import { SequentialChain } from "../sequential_chain.js";
 import { JsonOutputFunctionsParser } from "../../output_parsers/openai_functions.js";
-import { BaseChatModel } from "../../chat_models/base.js";
-import { BaseFunctionCallOptions } from "../../base_language/index.js";
 
 /**
  * Type representing a function for executing OpenAPI requests.

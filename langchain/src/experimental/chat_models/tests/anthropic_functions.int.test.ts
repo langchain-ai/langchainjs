@@ -2,8 +2,8 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { test } from "@jest/globals";
 import { BaseMessageChunk, HumanMessage } from "@langchain/core/messages";
+import { BedrockChat } from "@langchain/community/chat_models/bedrock/web";
 import { AnthropicFunctions } from "../anthropic_functions.js";
-import { ChatBedrock } from "../../../chat_models/bedrock/web.js";
 
 test("Test AnthropicFunctions", async () => {
   const chat = new AnthropicFunctions({ modelName: "claude-2", maxRetries: 0 });
@@ -96,7 +96,7 @@ test("Test AnthropicFunctions with a forced function call", async () => {
 });
 
 test("Test AnthropicFunctions with a Bedrock model", async () => {
-  const chatBedrock = new ChatBedrock({
+  const chatBedrock = new BedrockChat({
     region: process.env.BEDROCK_AWS_REGION ?? "us-east-1",
     model: "anthropic.claude-v2",
     temperature: 0.1,

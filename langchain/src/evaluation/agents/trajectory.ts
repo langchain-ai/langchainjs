@@ -9,6 +9,7 @@ import {
   Callbacks,
   BaseCallbackConfig,
 } from "@langchain/core/callbacks/manager";
+import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import {
   AgentTrajectoryEvaluator,
   EvalOutputType,
@@ -16,7 +17,6 @@ import {
   LLMTrajectoryEvaluatorArgs,
 } from "../base.js";
 import { EVAL_CHAT_PROMPT, TOOL_FREE_EVAL_CHAT_PROMPT } from "./prompt.js";
-import { BaseChatModel } from "../../chat_models/base.js";
 
 /**
  * A parser for the output of the TrajectoryEvalChain.

@@ -1,6 +1,9 @@
 import { BaseMessage, ChatMessage } from "@langchain/core/messages";
 import { ChatResult, ChatGeneration } from "@langchain/core/outputs";
-import { BaseChatModel, BaseChatModelParams } from "../../chat_models/base.js";
+import {
+  BaseChatModel,
+  BaseChatModelParams,
+} from "@langchain/core/language_models/chat_models";
 
 export interface BittensorInput extends BaseChatModelParams {
   systemPrompt?: string | null | undefined;

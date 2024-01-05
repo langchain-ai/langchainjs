@@ -2,10 +2,10 @@
 import { test } from "@jest/globals";
 import weaviate from "weaviate-ts-client";
 import { Document } from "@langchain/core/documents";
-import { OpenAIEmbeddings , OpenAI } from "@langchain/openai";
+import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
+import { WeaviateStore } from "@langchain/community/vectorstores/weaviate";
 import { AttributeInfo } from "../../../schema/query_constructor.js";
 import { SelfQueryRetriever } from "../index.js";
-import { WeaviateStore } from "../../../vectorstores/weaviate.js";
 import { WeaviateTranslator } from "../weaviate.js";
 
 test.skip("Weaviate Self Query Retriever Test", async () => {

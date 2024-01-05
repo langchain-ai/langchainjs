@@ -1,7 +1,7 @@
 import { expect, test } from "@jest/globals";
 import { z } from "zod";
 
-import { OpenAI , ChatOpenAI } from "@langchain/openai";
+import { OpenAI, ChatOpenAI } from "@langchain/openai";
 import {
   ChatPromptTemplate,
   PromptTemplate,

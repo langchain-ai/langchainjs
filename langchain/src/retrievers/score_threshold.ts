@@ -3,7 +3,7 @@ import {
   VectorStore,
   VectorStoreRetriever,
   VectorStoreRetrieverInput,
-} from "../vectorstores/base.js";
+} from "@langchain/core/vectorstores";
 
 export type ScoreThresholdRetrieverInput<V extends VectorStore> = Omit<
   VectorStoreRetrieverInput<V>,

@@ -14,7 +14,7 @@ import {
 import { CRITERIA_PROMPT, PROMPT_WITH_REFERENCES } from "./prompt.js";
 import { Callbacks } from "../../callbacks/index.js";
 import { BaseCallbackConfig } from "../../callbacks/manager.js";
-import { ConstitutionalPrinciple } from "../../chains/index.js";
+import { ConstitutionalPrinciple } from "../../chains/constitutional_ai/constitutional_principle.js";
 
 /**
  * A Criteria to evaluate.

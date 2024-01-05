@@ -1,3 +1,4 @@
+// TODO: Deprecate in favor of new Anthropic package once out of beta
 import {
   Anthropic,
   AI_PROMPT,
@@ -25,13 +26,6 @@ import {
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
 import { type BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
-import { logVersion010MigrationWarning } from "../util/entrypoint_deprecation.js";
-
-/* #__PURE__ */ logVersion010MigrationWarning({
-  oldEntrypointName: "chat_models/anthropic",
-  newEntrypointName: "",
-  newPackageName: "@langchain/anthropic",
-});
 
 export { AI_PROMPT, HUMAN_PROMPT };
 

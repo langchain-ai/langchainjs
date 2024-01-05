@@ -6,7 +6,6 @@ import {
   CustomListOutputParser,
 } from "../list.js";
 
-
 test("CommaSeparatedListOutputParser", async () => {
   const parser = new CommaSeparatedListOutputParser();
 

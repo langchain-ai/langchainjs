@@ -6,6 +6,7 @@ import type {
 import type { StructuredToolInterface } from "@langchain/core/tools";
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import {
+  Runnable,
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
@@ -40,7 +41,6 @@ import {
   OpenAIFunctionsAgentOutputParser,
 } from "../openai/output_parser.js";
 import { formatToOpenAIFunction } from "../../tools/convert_to_openai.js";
-import { Runnable } from "../../schema/runnable/base.js";
 import { formatToOpenAIFunctionMessages } from "../format_scratchpad/openai_functions.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

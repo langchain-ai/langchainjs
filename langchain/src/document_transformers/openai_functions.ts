@@ -2,7 +2,10 @@ import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import type { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
 
-import { Document , MappingDocumentTransformer } from "@langchain/core/documents";
+import {
+  Document,
+  MappingDocumentTransformer,
+} from "@langchain/core/documents";
 import { ChatOpenAI } from "@langchain/openai";
 import { BaseChain } from "../chains/base.js";
 import {

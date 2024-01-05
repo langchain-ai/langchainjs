@@ -1,5 +1,5 @@
 import { test } from "@jest/globals";
-import { OpenAI , OpenAIEmbeddings } from "@langchain/openai";
+import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { Document } from "@langchain/core/documents";
 import { LLMChain } from "../llm_chain.js";

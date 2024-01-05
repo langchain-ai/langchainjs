@@ -2,14 +2,14 @@
 import { test } from "@jest/globals";
 import { createClient } from "@supabase/supabase-js";
 import { Document } from "@langchain/core/documents";
-import { OpenAIEmbeddings , OpenAI } from "@langchain/openai";
-import { AttributeInfo } from "../../../schema/query_constructor.js";
-import { SelfQueryRetriever } from "../index.js";
-import { SupabaseTranslator } from "../supabase.js";
+import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
 import {
   SupabaseFilter,
   SupabaseVectorStore,
-} from "../../../vectorstores/supabase.js";
+} from "@langchain/community/vectorstores/supabase";
+import { AttributeInfo } from "../../../schema/query_constructor.js";
+import { SelfQueryRetriever } from "../index.js";
+import { SupabaseTranslator } from "../supabase.js";
 
 test("Supabase Store Self Query Retriever Test", async () => {
   const docs = [

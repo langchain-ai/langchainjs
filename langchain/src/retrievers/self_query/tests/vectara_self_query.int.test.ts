@@ -2,11 +2,11 @@
 import { test } from "@jest/globals";
 import { Document } from "@langchain/core/documents";
 import { OpenAI } from "@langchain/openai";
+import { VectaraStore } from "@langchain/community/vectorstores/vectara";
 import { AttributeInfo } from "../../../schema/query_constructor.js";
 import { SelfQueryRetriever } from "../index.js";
 import { VectaraTranslator } from "../vectara.js";
 import { FakeEmbeddings } from "../../../embeddings/fake.js";
-import { VectaraStore } from "../../../vectorstores/vectara.js";
 
 test.skip("Vectara Self Query Retriever Test", async () => {
   const docs = [

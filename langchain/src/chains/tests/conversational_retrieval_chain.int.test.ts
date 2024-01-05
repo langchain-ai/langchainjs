@@ -1,13 +1,13 @@
 import { expect, test } from "@jest/globals";
-import { OpenAI , OpenAIEmbeddings , ChatOpenAI } from "@langchain/openai";
+import { OpenAI, OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { ConversationalRetrievalQAChain } from "../conversational_retrieval_chain.js";
-import { HNSWLib } from "../../vectorstores/hnswlib.js";
+import { MemoryVectorStore } from "../../vectorstores/memory.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
 
 test("Test ConversationalRetrievalQAChain from LLM", async () => {
   const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
-  const vectorStore = await HNSWLib.fromTexts(
+  const vectorStore = await MemoryVectorStore.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
     new OpenAIEmbeddings()
@@ -22,7 +22,7 @@ test("Test ConversationalRetrievalQAChain from LLM", async () => {
 
 test("Test ConversationalRetrievalQAChain from LLM with flag option to return source", async () => {
   const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
-  const vectorStore = await HNSWLib.fromTexts(
+  const vectorStore = await MemoryVectorStore.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
     new OpenAIEmbeddings()
@@ -53,7 +53,7 @@ test("Test ConversationalRetrievalQAChain from LLM with flag option to return so
 
 test("Test ConversationalRetrievalQAChain from LLM with flag option to return source and memory set", async () => {
   const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
-  const vectorStore = await HNSWLib.fromTexts(
+  const vectorStore = await MemoryVectorStore.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
     new OpenAIEmbeddings()
@@ -92,7 +92,7 @@ test("Test ConversationalRetrievalQAChain from LLM with override default prompts
     modelName: "gpt-3.5-turbo-instruct",
     temperature: 0,
   });
-  const vectorStore = await HNSWLib.fromTexts(
+  const vectorStore = await MemoryVectorStore.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
     new OpenAIEmbeddings()
@@ -124,7 +124,7 @@ test("Test ConversationalRetrievalQAChain from LLM with a chat model", async () 
     modelName: "gpt-3.5-turbo",
     temperature: 0,
   });
-  const vectorStore = await HNSWLib.fromTexts(
+  const vectorStore = await MemoryVectorStore.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
     new OpenAIEmbeddings()
@@ -158,7 +158,7 @@ test("Test ConversationalRetrievalQAChain from LLM with a map reduce chain", asy
     modelName: "gpt-3.5-turbo",
     temperature: 0,
   });
-  const vectorStore = await HNSWLib.fromTexts(
+  const vectorStore = await MemoryVectorStore.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
     new OpenAIEmbeddings()
@@ -185,7 +185,7 @@ test("Test ConversationalRetrievalQAChain from LLM without memory", async () => 
   const model = new OpenAI({
     temperature: 0,
   });
-  const vectorStore = await HNSWLib.fromTexts(
+  const vectorStore = await MemoryVectorStore.fromTexts(
     [
       "Mitochondria are the powerhouse of the cell",
       "Foo is red",
@@ -222,7 +222,7 @@ test("Test ConversationalRetrievalQAChain from LLM with a chat model without mem
     modelName: "gpt-3.5-turbo",
     temperature: 0,
   });
-  const vectorStore = await HNSWLib.fromTexts(
+  const vectorStore = await MemoryVectorStore.fromTexts(
     [
       "Mitochondria are the powerhouse of the cell",
       "Foo is red",
@@ -258,7 +258,7 @@ test("Test ConversationalRetrievalQAChain from LLM with memory", async () => {
   const model = new OpenAI({
     temperature: 0,
   });
-  const vectorStore = await HNSWLib.fromTexts(
+  const vectorStore = await MemoryVectorStore.fromTexts(
     [
       "Mitochondria are the powerhouse of the cell",
       "Foo is red",
@@ -297,7 +297,7 @@ test("Test ConversationalRetrievalQAChain from LLM with a chat model and memory"
     modelName: "gpt-3.5-turbo",
     temperature: 0,
   });
-  const vectorStore = await HNSWLib.fromTexts(
+  const vectorStore = await MemoryVectorStore.fromTexts(
     [
       "Mitochondria are the powerhouse of the cell",
       "Foo is red",
@@ -336,7 +336,7 @@ test("Test ConversationalRetrievalQAChain from LLM with deprecated history synta
   const model = new OpenAI({
     temperature: 0,
   });
-  const vectorStore = await HNSWLib.fromTexts(
+  const vectorStore = await MemoryVectorStore.fromTexts(
     [
       "Mitochondria are the powerhouse of the cell",
       "Foo is red",

@@ -1,5 +1,9 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { BaseMessage, SystemMessage } from "@langchain/core/messages";
+import {
+  BaseChatMemory,
+  BaseChatMemoryInput,
+} from "@langchain/community/memory/chat_memory";
 import { LLMChain } from "../chains/llm_chain.js";
 import { BasePromptTemplate } from "../prompts/base.js";
 import {
@@ -8,7 +12,6 @@ import {
   MemoryVariables,
   OutputValues,
 } from "./base.js";
-import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 import { SUMMARY_PROMPT } from "./prompt.js";
 
 /**

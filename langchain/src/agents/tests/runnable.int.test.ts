@@ -10,10 +10,10 @@ import {
   BaseMessage,
   FunctionMessage,
 } from "@langchain/core/messages";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 import { AgentStep } from "@langchain/core/agents";
+import { RunnableSequence } from "@langchain/core/runnables";
 import { AgentExecutor } from "../executor.js";
-import { RunnableSequence } from "../../schema/runnable/base.js";
-import { SerpAPI } from "../../tools/serpapi.js";
 import { formatToOpenAIFunction } from "../../tools/convert_to_openai.js";
 import { Calculator } from "../../tools/calculator.js";
 import { OpenAIFunctionsAgentOutputParser } from "../openai/output_parser.js";

@@ -2,7 +2,7 @@
 import { expect, test } from "@jest/globals";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage } from "@langchain/core/messages";
-import { SerpAPI } from "../../tools/serpapi.js";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 import { Calculator } from "../../tools/calculator.js";
 import { initializeAgentExecutorWithOptions } from "../initialize.js";
 

@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { describe } from "@jest/globals";
 import { Tool } from "@langchain/core/tools";
-import { ChatOpenAI , OpenAI } from "@langchain/openai";
+import { ChatOpenAI, OpenAI } from "@langchain/openai";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
+import { AIPluginTool } from "@langchain/community/tools/aiplugin";
 import { initializeAgentExecutorWithOptions } from "../initialize.js";
-import { SerpAPI } from "../../tools/serpapi.js";
 import { Calculator } from "../../tools/calculator.js";
 import { RequestsGetTool, RequestsPostTool } from "../../tools/requests.js";
-import { AIPluginTool } from "../../tools/aiplugin.js";
 
 const agents = [
   (tools) =>

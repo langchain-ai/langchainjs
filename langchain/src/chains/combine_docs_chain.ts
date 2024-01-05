@@ -9,7 +9,6 @@ import type {
 import { BaseChain, ChainInputs } from "./base.js";
 import { LLMChain } from "./llm_chain.js";
 
-
 import { BasePromptTemplate } from "../prompts/base.js";
 import { PromptTemplate } from "../prompts/prompt.js";
 

@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
 import { ChatOpenAI } from "@langchain/openai";
-import { SerpAPI } from "../../tools/serpapi.js";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 import { Calculator } from "../../tools/calculator.js";
 import { initializeAgentExecutorWithOptions } from "../initialize.js";
 import { DynamicTool } from "../../tools/dynamic.js";

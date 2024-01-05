@@ -1,7 +1,10 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { Document } from "@langchain/core/documents";
 import { PromptTemplate, BasePromptTemplate } from "@langchain/core/prompts";
-import { StringPromptValue , BasePromptValue } from "@langchain/core/prompt_values";
+import {
+  StringPromptValue,
+  BasePromptValue,
+} from "@langchain/core/prompt_values";
 import {
   VectorStore,
   VectorStoreRetriever,

@@ -1,5 +1,5 @@
 import type * as tiktoken from "js-tiktoken";
-import { Document , BaseDocumentTransformer } from "@langchain/core/documents";
+import { Document, BaseDocumentTransformer } from "@langchain/core/documents";
 import { getEncoding } from "./util/tiktoken.js";
 
 export interface TextSplitterParams {

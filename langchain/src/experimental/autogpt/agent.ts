@@ -6,8 +6,8 @@ import {
   HumanMessage,
   SystemMessage,
 } from "@langchain/core/messages";
+import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { LLMChain } from "../../chains/llm_chain.js";
-import { BaseChatModel } from "../../chat_models/base.js";
 
 import { AutoGPTOutputParser } from "./output_parser.js";
 import { AutoGPTPrompt } from "./prompt.js";

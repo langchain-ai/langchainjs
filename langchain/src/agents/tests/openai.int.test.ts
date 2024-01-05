@@ -2,9 +2,9 @@
 import { test } from "@jest/globals";
 import { z } from "zod";
 import { ChatOpenAI } from "@langchain/openai";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 import { initializeAgentExecutorWithOptions } from "../initialize.js";
 import { Calculator } from "../../tools/calculator.js";
-import { SerpAPI } from "../../tools/serpapi.js";
 import { DynamicStructuredTool } from "../../tools/dynamic.js";
 
 test("OpenAIAgent", async () => {
