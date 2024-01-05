@@ -1,8 +1,14 @@
+import { FunctionDefinition } from "@langchain/core/language_models/base";
 import { BaseChatModel, BaseChatModelParams } from "../../chat_models/base.js";
 import { CallbackManagerForLLMRun } from "../../callbacks/manager.js";
-import { AIMessage, BaseMessage, ChatGenerationChunk, ChatResult } from "../../schema/index.js";
+import {
+  AIMessage,
+  BaseMessage,
+  ChatGenerationChunk,
+  ChatResult,
+} from "../../schema/index.js";
 import { ChatOllama, type ChatOllamaInput } from "../../chat_models/ollama.js";
-import { BaseFunctionCallOptions, FunctionDefinition } from "../../base_language/index.js";
+import { BaseFunctionCallOptions } from "../../base_language/index.js";
 import { SystemMessagePromptTemplate } from "../../prompts/chat.js";
 
 const DEFAULT_TOOL_SYSTEM_TEMPLATE = `You have access to the following tools:
@@ -67,12 +73,16 @@ export class OllamaFunctions extends BaseChatModel<ChatOllamaFunctionsCallOption
 
   async *_streamResponseChunks(
     messages: BaseMessage[],
-    options: this['ParsedCallOptions'],
+    options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const functions = this._prepareFunctions(options);
     const systemMessage = await this._prepareSystemMessage(functions);
-    yield* this.llm._streamResponseChunks([systemMessage, ...messages], options, runManager);
+    yield* this.llm._streamResponseChunks(
+      [systemMessage, ...messages],
+      options,
+      runManager
+    );
   }
 
   async _generate(
@@ -137,12 +147,16 @@ export class OllamaFunctions extends BaseChatModel<ChatOllamaFunctionsCallOption
     };
   }
 
-  _prepareFunctions(options: this['ParsedCallOptions']): FunctionDefinition[] {
+  _prepareFunctions(options: this["ParsedCallOptions"]): FunctionDefinition[] {
     let functions = options.functions ?? [];
     if (options.function_call !== undefined) {
-      functions = functions.filter((fn) => fn.name === options.function_call?.name);
+      functions = functions.filter(
+        (fn) => fn.name === options.function_call?.name
+      );
       if (!functions.length) {
-        throw new Error(`If "function_call" is specified, you must also pass a matching function in "functions".`);
+        throw new Error(
+          `If "function_call" is specified, you must also pass a matching function in "functions".`
+        );
       }
     } else if (functions.length === 0) {
       functions.push(this.defaultResponseFunction);
@@ -150,8 +164,12 @@ export class OllamaFunctions extends BaseChatModel<ChatOllamaFunctionsCallOption
     return functions;
   }
 
-  async _prepareSystemMessage(functions: FunctionDefinition[]): Promise<BaseMessage> {
-    const systemPromptTemplate = SystemMessagePromptTemplate.fromTemplate(this.toolSystemPromptTemplate);
+  async _prepareSystemMessage(
+    functions: FunctionDefinition[]
+  ): Promise<BaseMessage> {
+    const systemPromptTemplate = SystemMessagePromptTemplate.fromTemplate(
+      this.toolSystemPromptTemplate
+    );
     const systemMessage = await systemPromptTemplate.format({
       tools: JSON.stringify(functions, null, 2),
     });

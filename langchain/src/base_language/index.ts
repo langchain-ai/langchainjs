@@ -8,7 +8,6 @@ export {
   type BaseLanguageModelInput,
   type BaseLanguageModelInterface,
   BaseLanguageModel,
-  type FunctionDefinition,
 } from "@langchain/core/language_models/base";
 
 /*
