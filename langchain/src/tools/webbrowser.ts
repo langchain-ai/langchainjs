@@ -274,7 +274,7 @@ export class WebBrowser extends Tool {
       doSummary ? "a summary" : task
     } from the above text, also provide up to 5 markdown links from within that would be of interest (always including URL and text). Links should be provided, if present, in markdown syntax as a list under the heading "Relevant Links:".`;
 
-    return this.model.predict(input, undefined, runManager?.getChild());
+    return this.model.invoke(input, runManager?.getChild());
   }
 
   name = "web-browser";

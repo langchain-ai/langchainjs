@@ -254,12 +254,18 @@ export interface BaseLanguageModelInterface<
     callbacks?: Callbacks
   ): Promise<LLMResult>;
 
+  /**
+   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
+   */
   predict(
     text: string,
     options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<string>;
 
+  /**
+   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
+   */
   predictMessages(
     messages: BaseMessage[],
     options?: string[] | CallOptions,
@@ -343,12 +349,18 @@ export abstract class BaseLanguageModel<
     callbacks?: Callbacks
   ): Promise<LLMResult>;
 
+  /**
+   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
+   */
   abstract predict(
     text: string,
     options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<string>;
 
+  /**
+   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
+   */
   abstract predictMessages(
     messages: BaseMessage[],
     options?: string[] | CallOptions,

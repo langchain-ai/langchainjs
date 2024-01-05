@@ -308,6 +308,8 @@ export interface AgentArgs {
  * @remarks This is driven by an LLMChain. The prompt in the LLMChain *must*
  * include a variable called "agent_scratchpad" where the agent can put its
  * intermediary work.
+ *
+ * @deprecated Use {@link https://js.langchain.com/docs/modules/agents/agent_types/ | new agent creation methods}.
  */
 export abstract class Agent extends BaseSingleActionAgent {
   llmChain: LLMChain;
