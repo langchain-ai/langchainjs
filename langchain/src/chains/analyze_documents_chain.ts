@@ -42,6 +42,8 @@ export interface AnalyzeDocumentChainInput extends Omit<ChainInputs, "memory"> {
  *
  * console.log({ res });
  * ```
+ *
+ * @deprecated Use {@link https://api.js.langchain.com/functions/langchain_chains_combine_documents.createStuffDocumentsChain.html | createStuffDocumentsChain } instead.
  */
 export class AnalyzeDocumentChain
   extends BaseChain

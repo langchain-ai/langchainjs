@@ -14,6 +14,10 @@ export type LoadValues = Record<string, any>;
  * input fields required for a VectorDBQAChain. It includes properties
  * such as `vectorstore`, `combineDocumentsChain`,
  * `returnSourceDocuments`, `k`, and `inputKey`.
+ *
+ * @deprecated
+ * Switch to {@link https://js.langchain.com/docs/modules/chains/ | createRetrievalChain}
+ * Will be removed in 0.2.0
  */
 export interface VectorDBQAChainInput extends Omit<ChainInputs, "memory"> {
   vectorstore: VectorStoreInterface;
@@ -28,6 +32,10 @@ export interface VectorDBQAChainInput extends Omit<ChainInputs, "memory"> {
  * class and implements the `VectorDBQAChainInput` interface. It performs
  * a similarity search using a vector store and combines the search
  * results using a specified combine documents chain.
+ *
+ * @deprecated
+ * Switch to {@link https://js.langchain.com/docs/modules/chains/ | createRetrievalChain}
+ * Will be removed in 0.2.0
  */
 export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
   static lc_name() {
