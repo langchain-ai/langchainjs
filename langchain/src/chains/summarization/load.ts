@@ -39,7 +39,6 @@ export type SummarizationChainParams = BaseParams &
       }
   );
 
-/** @deprecated */
 export const loadSummarizationChain = (
   llm: BaseLanguageModelInterface,
   params: SummarizationChainParams = { type: "map_reduce" }

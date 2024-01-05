@@ -26,10 +26,6 @@ AI:`;
  * const res2 = await chain.call({ input: "What's my name?" });
  * console.log({ res2 });
  * ```
- *
- * @deprecated
- * Use {@link https://api.js.langchain.com/classes/langchain_schema_runnable.RunnableWithMessageHistory.html | RunnableWithMessageHistory}
- * or add memory to an LLMChain.
  */
 export class ConversationChain extends LLMChain {
   static lc_name() {
