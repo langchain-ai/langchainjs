@@ -11,10 +11,10 @@ import {
 import { OpenAI as OpenAIClient } from "openai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { GenerationChunk } from "@langchain/core/outputs";
-import { AzureOpenAIInput, OpenAIChatInput } from "../types.js";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 // import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 import { LLM, type BaseLLMParams } from "@langchain/core/language_models/llms";
+import { AzureOpenAIInput, OpenAIChatInput } from "../types.js";
 import { OpenAIChatCallOptions } from "../legacy.js";
 
 export { type AzureOpenAIInput, type OpenAIChatInput };
@@ -206,21 +206,7 @@ export class AzureSDKChatOpenAI
     );
     this.client = new AzureOpenAIClient(
       this.azureOpenAIEndpoint ?? "",
-      azureKeyCredential,
-      {
-        additionalPolicies: [
-          {
-            policy: {
-              name: "disableKeepAlive",
-              sendRequest: (request, next) => {
-                request.disableKeepAlive = true;
-                return next(request);
-              },
-            },
-            position: "perCall",
-          },
-        ],
-      }
+      azureKeyCredential
     );
   }
 
