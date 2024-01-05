@@ -968,11 +968,11 @@ const generateImportMap = () => {
       exportedAliases: {}
     });
   const extraImportStatements = Object.entries(extraImportData.imports).map(([path, modules]) => {
-    return `import { ${modules.join(", ")} } from "${path}";`;
+    return `import {\n  ${modules.join(",\n  ")}\n} from "${path}";`;
   });
   const extraDeclarations = Object.entries(extraImportData.exportedAliases).map(([exportAlias, modules]) => {
     return [
-      `const ${exportAlias} = { ${modules.join(", ")} };`,
+      `const ${exportAlias} = {\n  ${modules.join(",\n  ")}\n};`,
       `export { ${exportAlias} };`,
     ].join("\n");
   });
