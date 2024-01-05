@@ -1,16 +1,15 @@
 import { test } from "@jest/globals";
-import { OpenAI } from "../../llms/openai.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
+import { OpenAI, ChatOpenAI } from "@langchain/openai";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   PromptTemplate,
-} from "../../prompts/index.js";
+} from "@langchain/core/prompts";
 import { LLMChain } from "../llm_chain.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
 
 test("Test OpenAI", async () => {
-  const model = new OpenAI({ modelName: "text-ada-001" });
+  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
   const prompt = new PromptTemplate({
     template: "Print {foo}",
     inputVariables: ["foo"],
@@ -21,7 +20,7 @@ test("Test OpenAI", async () => {
 });
 
 test("Test OpenAI with timeout", async () => {
-  const model = new OpenAI({ modelName: "text-ada-001" });
+  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
   const prompt = new PromptTemplate({
     template: "Print {foo}",
     inputVariables: ["foo"],
@@ -36,7 +35,7 @@ test("Test OpenAI with timeout", async () => {
 });
 
 test("Test run method", async () => {
-  const model = new OpenAI({ modelName: "text-ada-001" });
+  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
   const prompt = new PromptTemplate({
     template: "Print {foo}",
     inputVariables: ["foo"],
@@ -47,7 +46,7 @@ test("Test run method", async () => {
 });
 
 test("Test run method", async () => {
-  const model = new OpenAI({ modelName: "text-ada-001" });
+  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
   const prompt = new PromptTemplate({
     template: "{history} Print {foo}",
     inputVariables: ["foo", "history"],
@@ -62,7 +61,7 @@ test("Test run method", async () => {
 });
 
 test("Test memory + cancellation", async () => {
-  const model = new OpenAI({ modelName: "text-ada-001" });
+  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
   const prompt = new PromptTemplate({
     template: "{history} Print {foo}",
     inputVariables: ["foo", "history"],
@@ -81,7 +80,7 @@ test("Test memory + cancellation", async () => {
 });
 
 test("Test memory + timeout", async () => {
-  const model = new OpenAI({ modelName: "text-ada-001" });
+  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
   const prompt = new PromptTemplate({
     template: "{history} Print {foo}",
     inputVariables: ["foo", "history"],
@@ -100,7 +99,7 @@ test("Test memory + timeout", async () => {
 });
 
 test("Test apply", async () => {
-  const model = new OpenAI({ modelName: "text-ada-001" });
+  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
   const prompt = new PromptTemplate({
     template: "Print {foo}",
     inputVariables: ["foo"],

@@ -1,3 +1,13 @@
+import {
+  ChatOpenAI,
+  type ChatOpenAICallOptions,
+  messageToOpenAIRole,
+} from "@langchain/openai";
+
+import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import { BaseMessage, ChatMessage } from "@langchain/core/messages";
+import { ChatResult } from "@langchain/core/outputs";
+import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 import { logVersion010MigrationWarning } from "../util/entrypoint_deprecation.js";
 
 /* #__PURE__ */ logVersion010MigrationWarning({
@@ -5,16 +15,6 @@ import { logVersion010MigrationWarning } from "../util/entrypoint_deprecation.js
   newEntrypointName: "",
   newPackageName: "@langchain/openai",
 });
-
-import {
-  ChatOpenAI,
-  type ChatOpenAICallOptions,
-  messageToOpenAIRole,
-} from "@langchain/openai";
-
-import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
-import { BaseMessage, ChatMessage, ChatResult } from "../schema/index.js";
-import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 
 export {
   type AzureOpenAIInput,

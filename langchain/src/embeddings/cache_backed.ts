@@ -3,8 +3,8 @@ import {
   type EmbeddingsInterface,
   Embeddings,
 } from "@langchain/core/embeddings";
+import { BaseStore } from "@langchain/core/stores";
 
-import { BaseStore } from "../schema/storage.js";
 import { EncoderBackedStore } from "../storage/encoder_backed.js";
 import { AsyncCallerParams } from "../util/async_caller.js";
 

@@ -1,5 +1,5 @@
+import { Document } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "../../util/env.js";
-import { Document } from "../../document.js";
 import { BaseDocumentLoader } from "../base.js";
 
 type JSONPrimitive = string | number | boolean | null;

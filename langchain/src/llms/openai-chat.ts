@@ -1,8 +1,8 @@
 import { OpenAIChat } from "@langchain/openai";
 
-import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
-import type { Generation, LLMResult } from "../schema/index.js";
-import { getEnvironmentVariable } from "../util/env.js";
+import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { Generation, LLMResult } from "@langchain/core/outputs";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 
 export {

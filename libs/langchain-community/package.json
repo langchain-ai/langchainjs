@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -132,6 +132,7 @@
     "jsdom": "^22.1.0",
     "llmonitor": "^0.5.9",
     "lodash": "^4.17.21",
+    "lunary": "^0.6.11",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
     "neo4j-driver": "^5.12.0",
@@ -216,6 +217,7 @@
     "jsdom": "*",
     "llmonitor": "^0.5.9",
     "lodash": "^4.17.21",
+    "lunary": "^0.6.11",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
     "neo4j-driver": "*",
@@ -416,6 +418,9 @@
     "lodash": {
       "optional": true
     },
+    "lunary": {
+      "optional": true
+    },
     "mongodb": {
       "optional": true
     },
@@ -539,6 +544,11 @@
       "types": "./tools/gmail.d.ts",
       "import": "./tools/gmail.js",
       "require": "./tools/gmail.cjs"
+    },
+    "./tools/google_calendar": {
+      "types": "./tools/google_calendar.d.ts",
+      "import": "./tools/google_calendar.js",
+      "require": "./tools/google_calendar.cjs"
     },
     "./tools/google_custom_search": {
       "types": "./tools/google_custom_search.d.ts",
@@ -1060,6 +1070,11 @@
       "import": "./callbacks/handlers/llmonitor.js",
       "require": "./callbacks/handlers/llmonitor.cjs"
     },
+    "./callbacks/handlers/lunary": {
+      "types": "./callbacks/handlers/lunary.d.ts",
+      "import": "./callbacks/handlers/lunary.js",
+      "require": "./callbacks/handlers/lunary.cjs"
+    },
     "./retrievers/amazon_kendra": {
       "types": "./retrievers/amazon_kendra.d.ts",
       "import": "./retrievers/amazon_kendra.js",
@@ -1308,6 +1323,9 @@
     "tools/gmail.cjs",
     "tools/gmail.js",
     "tools/gmail.d.ts",
+    "tools/google_calendar.cjs",
+    "tools/google_calendar.js",
+    "tools/google_calendar.d.ts",
     "tools/google_custom_search.cjs",
     "tools/google_custom_search.js",
     "tools/google_custom_search.d.ts",
@@ -1620,6 +1638,9 @@
     "callbacks/handlers/llmonitor.cjs",
     "callbacks/handlers/llmonitor.js",
     "callbacks/handlers/llmonitor.d.ts",
+    "callbacks/handlers/lunary.cjs",
+    "callbacks/handlers/lunary.js",
+    "callbacks/handlers/lunary.d.ts",
     "retrievers/amazon_kendra.cjs",
     "retrievers/amazon_kendra.js",
     "retrievers/amazon_kendra.d.ts",

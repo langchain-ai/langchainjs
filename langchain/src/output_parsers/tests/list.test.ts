@@ -1,11 +1,10 @@
 import { test, expect } from "@jest/globals";
 
+import { OutputParserException } from "@langchain/core/output_parsers";
 import {
   CommaSeparatedListOutputParser,
   CustomListOutputParser,
 } from "../list.js";
-
-import { OutputParserException } from "../../schema/output_parser.js";
 
 test("CommaSeparatedListOutputParser", async () => {
   const parser = new CommaSeparatedListOutputParser();

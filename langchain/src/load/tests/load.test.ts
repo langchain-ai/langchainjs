@@ -2,23 +2,22 @@ import { test, expect } from "@jest/globals";
 import { stringify } from "yaml";
 import { z } from "zod";
 import { RunnableSequence } from "@langchain/core/runnables";
+import { Cohere } from "@langchain/community/llms/cohere";
+import { OpenAI, ChatOpenAI } from "@langchain/openai";
 
-import { load } from "../index.js";
-import { OpenAI } from "../../llms/openai.js";
-import { PromptTemplate } from "../../prompts/prompt.js";
-import { LLMChain } from "../../chains/llm_chain.js";
-import { Cohere } from "../../llms/cohere.js";
 import {
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
   ChatPromptTemplate,
-} from "../../prompts/chat.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
-import { LangChainTracer } from "../../callbacks/index.js";
-import {
   FewShotPromptTemplate,
-  LengthBasedExampleSelector,
-} from "../../prompts/index.js";
+} from "@langchain/core/prompts";
+import { LengthBasedExampleSelector } from "@langchain/core/example_selectors";
+import { Serializable } from "@langchain/core/load/serializable";
+import { LangChainTracer } from "@langchain/core/tracers/tracer_langchain";
+
+import { load } from "../index.js";
+import { PromptTemplate } from "../../prompts/prompt.js";
+import { LLMChain } from "../../chains/llm_chain.js";
 import { initializeAgentExecutorWithOptions } from "../../agents/initialize.js";
 import { Calculator } from "../../tools/calculator.js";
 import { RequestsGetTool } from "../../tools/requests.js";
@@ -26,7 +25,6 @@ import { JsonListKeysTool, JsonSpec } from "../../tools/json.js";
 import { AgentExecutor } from "../../agents/executor.js";
 import { CommaSeparatedListOutputParser } from "../../output_parsers/list.js";
 import { StructuredOutputParser } from "../../output_parsers/structured.js";
-import { Serializable } from "../serializable.js";
 import { RegexParser } from "../../output_parsers/regex.js";
 import { OutputFixingParser } from "../../output_parsers/fix.js";
 import { CombiningOutputParser } from "../../output_parsers/combining.js";

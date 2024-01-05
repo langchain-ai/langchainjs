@@ -1,15 +1,15 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { Document } from "@langchain/core/documents";
+import { ChainValues } from "@langchain/core/utils/types";
 import { LLMChain } from "../../chains/llm_chain.js";
-import { PromptTemplate } from "../../prompts/index.js";
 import { BaseChain } from "../../chains/base.js";
-import { Document } from "../../document.js";
 import { TimeWeightedVectorStoreRetriever } from "../../retrievers/time_weighted.js";
 import { BaseMemory, InputValues, OutputValues } from "../../memory/base.js";
 import {
   CallbackManagerForChainRun,
   Callbacks,
 } from "../../callbacks/manager.js";
-import { ChainValues } from "../../schema/index.js";
 
 export type GenerativeAgentMemoryConfig = {
   reflectionThreshold?: number;

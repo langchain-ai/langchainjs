@@ -1,3 +1,6 @@
+import { Document } from "@langchain/core/documents";
+import { ChainValues } from "@langchain/core/utils/types";
+import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
 import type {
   SerializedStuffDocumentsChain,
   SerializedMapReduceDocumentsChain,
@@ -6,12 +9,8 @@ import type {
 import { BaseChain, ChainInputs } from "./base.js";
 import { LLMChain } from "./llm_chain.js";
 
-import { Document } from "../document.js";
-
-import { ChainValues } from "../schema/index.js";
 import { BasePromptTemplate } from "../prompts/base.js";
 import { PromptTemplate } from "../prompts/prompt.js";
-import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
 /**
  * Interface for the input properties of the StuffDocumentsChain class.

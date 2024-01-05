@@ -1,16 +1,19 @@
 /* eslint-disable no-process-env */
 import { test } from "@jest/globals";
 import { z } from "zod";
+import { ChatOpenAI } from "@langchain/openai";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
+import { RunnableSequence } from "@langchain/core/runnables";
 import { Calculator } from "../../tools/calculator.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
 import { AgentExecutor } from "../executor.js";
 import { formatToOpenAIToolMessages } from "../format_scratchpad/openai_tools.js";
 import {
   OpenAIToolsAgentOutputParser,
   ToolsAgentStep,
 } from "../openai/output_parser.js";
-import { ChatPromptTemplate, MessagesPlaceholder } from "../../prompts/chat.js";
-import { RunnableSequence } from "../../schema/runnable/base.js";
 import { DynamicStructuredTool } from "../../tools/dynamic.js";
 import { formatToOpenAITool } from "../../tools/convert_to_openai.js";
 

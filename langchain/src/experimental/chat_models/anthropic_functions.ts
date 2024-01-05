@@ -1,21 +1,23 @@
 import { XMLParser } from "fast-xml-parser";
 import type { StructuredToolInterface } from "@langchain/core/tools";
 
-import { BaseChatModel, BaseChatModelParams } from "../../chat_models/base.js";
-import { CallbackManagerForLLMRun } from "../../callbacks/manager.js";
 import {
   AIMessage,
   BaseMessage,
-  ChatGenerationChunk,
-  ChatResult,
   SystemMessage,
-} from "../../schema/index.js";
+} from "@langchain/core/messages";
+import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
+import {
+  BaseChatModel,
+  BaseChatModelParams,
+} from "@langchain/core/language_models/chat_models";
+import { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
+import { CallbackManagerForLLMRun } from "../../callbacks/manager.js";
 import {
   ChatAnthropic,
   DEFAULT_STOP_SEQUENCES,
   type AnthropicInput,
 } from "../../chat_models/anthropic.js";
-import { BaseFunctionCallOptions } from "../../base_language/index.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { formatToOpenAIFunction } from "../../tools/convert_to_openai.js";
 

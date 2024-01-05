@@ -22,13 +22,13 @@ import CodeBlock from "@theme/CodeBlock";
   
 First we'll need to install the LangChain OpenAI integration package:
 
-```bash npm2yarn
-npm install @langchain/openai
-```
-
 import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
 
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
 
 Accessing the API requires an API key, which you can get by creating an account and heading [here](https://platform.openai.com/account/api-keys). Once we have a key we'll want to set it as an environment variable by running:
 
@@ -49,7 +49,7 @@ const llm = new OpenAI({
 otherwise you can initialize with an empty object:
 
 ```typescript
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 
 const llm = new OpenAI({});
 ```
@@ -104,7 +104,7 @@ await llm.invoke(
 
 See the [Runnable interface](/docs/expression_language/interface) for more details on the available methods.
 
-## [Lgeacy] `generate`: batch calls, richer outputs
+## [Legacy] `generate`: batch calls, richer outputs
 
 `generate` lets you can call the model with a list of strings, getting back a more complete response than just the text. This complete response can include things like multiple top responses and other LLM provider-specific information:
 

@@ -92,7 +92,7 @@ export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
    *
    * @example
    * ```ts
-   * import { RunnableBranch } from "langchain/schema/runnable";
+   * import { RunnableBranch } from "@langchain/core/runnables";
    *
    * const branch = RunnableBranch.from([
    *   [(x: number) => x > 0, (x: number) => x + 1],

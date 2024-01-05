@@ -1,12 +1,10 @@
 /* eslint-disable no-process-env */
 import { expect, test } from "@jest/globals";
-import { ChatOpenAI } from "../../chat_models/openai.js";
-import { SerpAPI } from "../../tools/serpapi.js";
+import { ChatOpenAI } from "@langchain/openai";
+import { HumanMessage } from "@langchain/core/messages";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 import { Calculator } from "../../tools/calculator.js";
 import { initializeAgentExecutorWithOptions } from "../initialize.js";
-import { HumanMessage } from "../../schema/index.js";
-import { RequestsGetTool, RequestsPostTool } from "../../tools/requests.js";
-import { AIPluginTool } from "../../tools/aiplugin.js";
 
 test("Run agent locally", async () => {
   const model = new ChatOpenAI({ temperature: 0 });
@@ -49,27 +47,6 @@ test("Run chat agent locally with an abort signal", async () => {
     controller.abort();
     return result;
   }).rejects.toThrow();
-});
-
-test("Run agent with klarna and requests tools", async () => {
-  const tools = [
-    new RequestsGetTool(),
-    new RequestsPostTool(),
-    await AIPluginTool.fromPluginUrl(
-      "https://www.klarna.com/.well-known/ai-plugin.json"
-    ),
-  ];
-  const agent = await initializeAgentExecutorWithOptions(
-    tools,
-    new ChatOpenAI({ temperature: 0 }),
-    { agentType: "chat-zero-shot-react-description", verbose: true }
-  );
-
-  const result = await agent.call({
-    input: "what t shirts are available in klarna?",
-  });
-
-  console.log({ result });
 });
 
 test("Run agent with incorrect api key should throw error", async () => {

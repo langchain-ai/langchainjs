@@ -1,8 +1,8 @@
 import { test } from "@jest/globals";
 
+import { Tool } from "@langchain/core/tools";
 import { ChatAnthropic } from "../../chat_models/anthropic.js";
 import { Calculator } from "../../tools/calculator.js";
-import { Tool } from "../../tools/base.js";
 import { initializeAgentExecutorWithOptions } from "../initialize.js";
 
 class FakeWebSearchTool extends Tool {

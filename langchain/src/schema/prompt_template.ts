@@ -1,4 +1,4 @@
-import { Document } from "../document.js";
+import { Document } from "@langchain/core/documents";
 import { BasePromptTemplate } from "../prompts/base.js";
 
 /**

@@ -12,20 +12,19 @@ Rather than using a "text in, text out" API, they use an interface where "chat m
 
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
-import CodeBlock from "@theme/CodeBlock";
 
 <Tabs>
   <TabItem value="openai" label="OpenAI" default>
 
 First we'll need to install the LangChain OpenAI integration package:
 
-```bash npm2yarn
-npm install @langchain/openai
-```
-
 import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
 
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
 
 Accessing the API requires an API key, which you can get by creating an account and heading [here](https://platform.openai.com/account/api-keys). Once we have a key we'll want to set it as an environment variable by running:
 
@@ -36,7 +35,7 @@ export OPENAI_API_KEY="..."
 If you'd prefer not to set an environment variable you can pass the key in directly via the `openAIApiKey` named parameter when initiating the OpenAI Chat Model class:
 
 ```typescript
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 
 const chatModel = new ChatOpenAI({
   openAIApiKey: "...",
@@ -46,7 +45,7 @@ const chatModel = new ChatOpenAI({
 Otherwise you can initialize without any params:
 
 ```typescript
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 
 const chatModel = new ChatOpenAI();
 ```

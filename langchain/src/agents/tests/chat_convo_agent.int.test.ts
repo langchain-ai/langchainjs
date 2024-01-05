@@ -1,6 +1,6 @@
 import { test } from "@jest/globals";
-import { ChatOpenAI } from "../../chat_models/openai.js";
-import { BufferMemory } from "../../memory/index.js";
+import { ChatOpenAI } from "@langchain/openai";
+import { BufferMemory } from "../../memory/buffer_memory.js";
 import { Calculator } from "../../tools/calculator.js";
 import { initializeAgentExecutorWithOptions } from "../initialize.js";
 

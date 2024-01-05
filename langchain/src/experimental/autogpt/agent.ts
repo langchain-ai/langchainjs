@@ -1,16 +1,16 @@
 import type { VectorStoreRetrieverInterface } from "@langchain/core/vectorstores";
-import { LLMChain } from "../../chains/llm_chain.js";
-import { BaseChatModel } from "../../chat_models/base.js";
-import { Tool } from "../../tools/base.js";
-
-import { AutoGPTOutputParser } from "./output_parser.js";
-import { AutoGPTPrompt } from "./prompt.js";
+import { Tool } from "@langchain/core/tools";
 import {
   AIMessage,
   BaseMessage,
   HumanMessage,
   SystemMessage,
-} from "../../schema/index.js";
+} from "@langchain/core/messages";
+import { BaseChatModel } from "@langchain/core/language_models/chat_models";
+import { LLMChain } from "../../chains/llm_chain.js";
+
+import { AutoGPTOutputParser } from "./output_parser.js";
+import { AutoGPTPrompt } from "./prompt.js";
 // import { HumanInputRun } from "./tools/human/tool"; // TODO
 import { ObjectTool, FINISH_NAME } from "./schema.js";
 import { TokenTextSplitter } from "../../text_splitter.js";

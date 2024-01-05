@@ -6,8 +6,16 @@ For example, if you set `maxConcurrency: 5`, then LangChain will only send 5 req
 
 To use this feature, simply pass `maxConcurrency: <number>` when you instantiate the LLM. For example:
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 ```typescript
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 
 const model = new ChatOpenAI({ maxConcurrency: 5 });
 ```

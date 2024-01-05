@@ -6,39 +6,41 @@ import type {
 import type { StructuredToolInterface } from "@langchain/core/tools";
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import {
+  Runnable,
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
-import { CallbackManager } from "../../callbacks/manager.js";
-import { ChatOpenAI, ChatOpenAICallOptions } from "../../chat_models/openai.js";
-import type { BasePromptTemplate } from "../../prompts/base.js";
-import {
-  AIMessage,
+import { ChatOpenAI, ChatOpenAICallOptions } from "@langchain/openai";
+import type {
   AgentAction,
   AgentFinish,
   AgentStep,
+} from "@langchain/core/agents";
+import {
+  AIMessage,
   BaseMessage,
   FunctionMessage,
-  ChainValues,
   SystemMessage,
   BaseMessageChunk,
-} from "../../schema/index.js";
-import { Agent, AgentArgs } from "../agent.js";
-import { AgentInput } from "../types.js";
-import { PREFIX } from "./prompt.js";
+} from "@langchain/core/messages";
+import { ChainValues } from "@langchain/core/utils/types";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   MessagesPlaceholder,
   SystemMessagePromptTemplate,
-} from "../../prompts/chat.js";
+} from "@langchain/core/prompts";
+import { CallbackManager } from "../../callbacks/manager.js";
+import type { BasePromptTemplate } from "../../prompts/base.js";
+import { Agent, AgentArgs } from "../agent.js";
+import { AgentInput } from "../types.js";
+import { PREFIX } from "./prompt.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import {
   FunctionsAgentAction,
   OpenAIFunctionsAgentOutputParser,
 } from "../openai/output_parser.js";
 import { formatToOpenAIFunction } from "../../tools/convert_to_openai.js";
-import { Runnable } from "../../schema/runnable/base.js";
 import { formatToOpenAIFunctionMessages } from "../format_scratchpad/openai_functions.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

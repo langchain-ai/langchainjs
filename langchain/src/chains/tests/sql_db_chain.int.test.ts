@@ -1,6 +1,6 @@
 import { expect, test } from "@jest/globals";
 import { DataSource } from "typeorm";
-import { OpenAI } from "../../llms/openai.js";
+import { OpenAI } from "@langchain/openai";
 import { SqlDatabaseChain } from "../sql_db/sql_db_chain.js";
 import { SqlDatabase } from "../../sql_db.js";
 import { SQL_SQLITE_PROMPT } from "../sql_db/sql_db_prompt.js";

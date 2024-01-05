@@ -14,6 +14,14 @@ The easiest way to stream is to use the `.stream()` method. This returns an read
 
 import StreamMethodExample from "@examples/models/llm/llm_streaming_stream_method.ts";
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 <CodeBlock language="typescript">{StreamMethodExample}</CodeBlock>
 
 For models that do not support streaming, the entire response will be returned as a single chunk.

@@ -1,5 +1,8 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
-import { BaseLLMOutputParser } from "../../schema/output_parser.js";
+import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
+import { ChainValues } from "@langchain/core/utils/types";
+import { ChatGeneration, Generation, RUN_KEY } from "@langchain/core/outputs";
+import { BasePromptTemplate } from "@langchain/core/prompts";
 import {
   eqSet,
   EvalOutputType,
@@ -8,17 +11,10 @@ import {
   StringEvaluatorArgs,
 } from "../base.js";
 
-import {
-  ChainValues,
-  ChatGeneration,
-  Generation,
-  RUN_KEY,
-} from "../../schema/index.js";
 import { CRITERIA_PROMPT, PROMPT_WITH_REFERENCES } from "./prompt.js";
 import { Callbacks } from "../../callbacks/index.js";
 import { BaseCallbackConfig } from "../../callbacks/manager.js";
-import { BasePromptTemplate } from "../../prompts/index.js";
-import { ConstitutionalPrinciple } from "../../chains/index.js";
+import { ConstitutionalPrinciple } from "../../chains/constitutional_ai/constitutional_principle.js";
 
 /**
  * A Criteria to evaluate.

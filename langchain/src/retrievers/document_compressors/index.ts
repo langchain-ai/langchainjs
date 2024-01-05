@@ -1,5 +1,5 @@
 import type { DocumentInterface } from "@langchain/core/documents";
-import { BaseDocumentTransformer } from "../../schema/document.js";
+import { BaseDocumentTransformer } from "@langchain/core/documents";
 import { Callbacks } from "../../callbacks/manager.js";
 
 /**

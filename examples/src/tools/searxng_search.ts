@@ -1,9 +1,10 @@
 import { SearxngSearch } from "langchain/tools";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { AgentExecutor } from "langchain/agents";
-import { BaseMessageChunk, AgentAction, AgentFinish } from "langchain/schema";
-import { RunnableSequence } from "langchain/schema/runnable";
-import { ChatPromptTemplate } from "langchain/prompts";
+import { BaseMessageChunk } from "@langchain/core/messages";
+import { AgentAction, AgentFinish } from "@langchain/core/agents";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
 
 const model = new ChatOpenAI({
   maxTokens: 1000,

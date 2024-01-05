@@ -1,5 +1,7 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { z } from "zod";
+import { Example } from "@langchain/core/prompts";
+import { InputValues } from "@langchain/core/utils/types";
 import { QueryTransformer, TraverseType } from "./parser.js";
 import {
   Comparator,
@@ -8,7 +10,6 @@ import {
   Operators,
   StructuredQuery,
 } from "./ir.js";
-import { Example, InputValues } from "../../schema/index.js";
 import {
   DEFAULT_EXAMPLES,
   DEFAULT_PREFIX,

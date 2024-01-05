@@ -22,6 +22,14 @@ Here's how it works:
 
 Let's look at an example:
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 <CodeBlock language="typescript">{JSONFunctions}</CodeBlock>
 
 In this example, we first define a function schema and instantiate the `ChatOpenAI` class. We then create a runnable by binding the function to the model and piping the output through the `JsonOutputFunctionsParser`. When we invoke the runnable with an input, the response is already parsed thanks to the output parser.

@@ -1,13 +1,13 @@
 import { distance, similarity } from "ml-distance";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
+import { ChainValues } from "@langchain/core/utils/types";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import {
   PairwiseStringEvaluator,
   PairwiseStringEvaluatorArgs,
   StringEvaluator,
   StringEvaluatorArgs,
 } from "../base.js";
-import { ChainValues } from "../../schema/index.js";
-import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import {
   CallbackManagerForChainRun,
   Callbacks,

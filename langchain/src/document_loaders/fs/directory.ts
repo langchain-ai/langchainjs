@@ -1,6 +1,6 @@
 import type { extname as ExtnameT, resolve as ResolveT } from "node:path";
 import type { readdir as ReaddirT } from "node:fs/promises";
-import { Document } from "../../document.js";
+import { Document } from "@langchain/core/documents";
 import { getEnv } from "../../util/env.js";
 import { BaseDocumentLoader } from "../base.js";
 

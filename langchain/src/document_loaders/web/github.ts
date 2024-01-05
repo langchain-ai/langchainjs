@@ -1,7 +1,7 @@
 import ignore, { Ignore } from "ignore";
 import binaryExtensions from "binary-extensions";
 
-import { Document } from "../../document.js";
+import { Document } from "@langchain/core/documents";
 import { BaseDocumentLoader } from "../base.js";
 import { UnknownHandling } from "../fs/directory.js";
 import { extname } from "../../util/extname.js";

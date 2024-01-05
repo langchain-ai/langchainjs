@@ -1,5 +1,5 @@
 import { AnthropicFunctions } from "langchain/experimental/chat_models/anthropic_functions";
-import { HumanMessage } from "langchain/schema";
+import { HumanMessage } from "@langchain/core/messages";
 
 const model = new AnthropicFunctions({
   temperature: 0.1,

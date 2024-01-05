@@ -1,10 +1,10 @@
 /* eslint-disable spaced-comment */
-import { PromptTemplate } from "../../prompts/prompt.js";
 import {
   ChatPromptTemplate,
   SystemMessagePromptTemplate,
   HumanMessagePromptTemplate,
-} from "../../prompts/chat.js";
+} from "@langchain/core/prompts";
+import { PromptTemplate } from "../../prompts/prompt.js";
 import {
   ConditionalPromptSelector,
   isChatModel,

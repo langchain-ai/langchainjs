@@ -1,19 +1,19 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import type { ToolInterface } from "@langchain/core/tools";
-import { LLMChain } from "../../chains/llm_chain.js";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   MessagesPlaceholder,
   SystemMessagePromptTemplate,
-} from "../../prompts/chat.js";
-import { renderTemplate } from "../../prompts/template.js";
+} from "@langchain/core/prompts";
+import type { AgentStep } from "@langchain/core/agents";
 import {
-  AIMessage,
-  AgentStep,
-  BaseMessage,
+  type BaseMessage,
   HumanMessage,
-} from "../../schema/index.js";
+  AIMessage,
+} from "@langchain/core/messages";
+import { renderTemplate } from "../../prompts/template.js";
+import { LLMChain } from "../../chains/llm_chain.js";
 import { Optional } from "../../types/type-utils.js";
 import { Agent, AgentArgs, OutputParserArgs } from "../agent.js";
 import { AgentActionOutputParser, AgentInput } from "../types.js";

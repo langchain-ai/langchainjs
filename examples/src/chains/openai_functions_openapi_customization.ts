@@ -1,5 +1,5 @@
 import { createOpenAPIChain } from "langchain/chains";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 
 const chatModel = new ChatOpenAI({ modelName: "gpt-4-0613", temperature: 0 });
 

@@ -90,12 +90,17 @@ async function webpackLoader(content, map, meta) {
       let modulePath;
       CATEGORIES.forEach((category) => {
         // from langchain/src
-        const componentPathLangChain = `${category}/langchain_${
+        const componentPathLangChain = `${category}/langchain_${moduleName}.${imported}.html`;
+        const docsPathLangChain = getDocsPath(componentPathLangChain);
+
+        const componentPathLangChainNoCore = `${category}/langchain_${
           moduleName.startsWith("core_")
             ? moduleName.replace("core_", "")
             : moduleName
         }.${imported}.html`;
-        const docsPathLangChain = getDocsPath(componentPathLangChain);
+        const docsPathLangChainNoCore = getDocsPath(
+          componentPathLangChainNoCore
+        );
 
         // from packages
         const componentPathPackage = getPackageModuleName(
@@ -123,6 +128,8 @@ async function webpackLoader(content, map, meta) {
           modulePath = componentPathWithSchema;
         } else if (docsPathPackage && fs.existsSync(docsPathPackage)) {
           modulePath = componentPathPackage;
+        } else if (fs.existsSync(docsPathLangChainNoCore)) {
+          modulePath = componentPathLangChainNoCore;
         }
       });
       return modulePath;

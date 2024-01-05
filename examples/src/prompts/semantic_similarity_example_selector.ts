@@ -1,10 +1,7 @@
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import {
-  SemanticSimilarityExampleSelector,
-  PromptTemplate,
-  FewShotPromptTemplate,
-} from "langchain/prompts";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { SemanticSimilarityExampleSelector } from "langchain/prompts";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
+import { PromptTemplate, FewShotPromptTemplate } from "@langchain/core/prompts";
 
 // Create a prompt template that will be used to format the examples.
 const examplePrompt = PromptTemplate.fromTemplate(

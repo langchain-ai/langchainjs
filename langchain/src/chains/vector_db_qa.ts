@@ -1,9 +1,9 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import type { VectorStoreInterface } from "@langchain/core/vectorstores";
+import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
+import { ChainValues } from "@langchain/core/utils/types";
 import { BaseChain, ChainInputs } from "./base.js";
 import { SerializedVectorDBQAChain } from "./serde.js";
-import { CallbackManagerForChainRun } from "../callbacks/manager.js";
-import { ChainValues } from "../schema/index.js";
 import { loadQAStuffChain } from "./question_answering/load.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -7,9 +7,9 @@ import {
   TaskCallOptions,
 } from "apify-client";
 
+import { Document } from "@langchain/core/documents";
 import { AsyncCaller, AsyncCallerParams } from "../../util/async_caller.js";
 import { BaseDocumentLoader, DocumentLoader } from "../base.js";
-import { Document } from "../../document.js";
 import { getEnvironmentVariable } from "../../util/env.js";
 
 /**

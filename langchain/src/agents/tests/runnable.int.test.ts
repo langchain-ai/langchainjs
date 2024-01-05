@@ -1,16 +1,19 @@
 /* eslint-disable no-process-env */
 import { test } from "@jest/globals";
-import { AgentExecutor } from "../executor.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
-import { ChatPromptTemplate, MessagesPlaceholder } from "../../prompts/chat.js";
+import { ChatOpenAI } from "@langchain/openai";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
 import {
   AIMessage,
-  AgentStep,
   BaseMessage,
   FunctionMessage,
-} from "../../schema/index.js";
-import { RunnableSequence } from "../../schema/runnable/base.js";
-import { SerpAPI } from "../../tools/serpapi.js";
+} from "@langchain/core/messages";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
+import { AgentStep } from "@langchain/core/agents";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { AgentExecutor } from "../executor.js";
 import { formatToOpenAIFunction } from "../../tools/convert_to_openai.js";
 import { Calculator } from "../../tools/calculator.js";
 import { OpenAIFunctionsAgentOutputParser } from "../openai/output_parser.js";
