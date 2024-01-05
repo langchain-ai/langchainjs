@@ -1,7 +1,6 @@
 import { test } from "@jest/globals";
-import { OpenAIEmbeddings } from "@langchain/openai";
+import { OpenAIEmbeddings, OpenAIChat } from "@langchain/openai";
 import { ConsoleCallbackHandler } from "@langchain/core/tracers/console";
-import { OpenAIChat } from "../../../llms/openai-chat.js";
 import { MultiRetrievalQAChain } from "../multi_retrieval_qa.js";
 import { MemoryVectorStore } from "../../../vectorstores/memory.js";
 

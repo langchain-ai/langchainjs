@@ -10,24 +10,23 @@ import {
   SystemMessagePromptTemplate,
   ChatPromptTemplate,
   FewShotPromptTemplate,
+  PromptTemplate,
 } from "@langchain/core/prompts";
 import { LengthBasedExampleSelector } from "@langchain/core/example_selectors";
 import { Serializable } from "@langchain/core/load/serializable";
 import { LangChainTracer } from "@langchain/core/tracers/tracer_langchain";
-
-import { load } from "../index.js";
-import { PromptTemplate } from "../../prompts/prompt.js";
+import { CommaSeparatedListOutputParser } from "@langchain/core/output_parsers";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { initializeAgentExecutorWithOptions } from "../../agents/initialize.js";
 import { Calculator } from "../../tools/calculator.js";
 import { RequestsGetTool } from "../../tools/requests.js";
 import { JsonListKeysTool, JsonSpec } from "../../tools/json.js";
 import { AgentExecutor } from "../../agents/executor.js";
-import { CommaSeparatedListOutputParser } from "../../output_parsers/list.js";
 import { StructuredOutputParser } from "../../output_parsers/structured.js";
 import { RegexParser } from "../../output_parsers/regex.js";
 import { OutputFixingParser } from "../../output_parsers/fix.js";
 import { CombiningOutputParser } from "../../output_parsers/combining.js";
+import { load } from "../index.js";
 
 test("serialize + deserialize custom classes", async () => {
   class Person extends Serializable {

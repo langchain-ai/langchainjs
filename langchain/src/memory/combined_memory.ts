@@ -7,7 +7,7 @@ import {
   MemoryVariables,
   BaseMemory,
   OutputValues,
-} from "./base.js";
+} from "@langchain/core/memory";
 
 /**
  * Interface that defines the shape of the input object that the

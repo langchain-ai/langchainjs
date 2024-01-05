@@ -23,8 +23,12 @@ import {
   ToolMessage,
   ToolMessageChunk,
 } from "@langchain/core/messages";
-import { getBytes, getLines, getMessages } from "../util/event-source-parse.js";
-import { IterableReadableStream } from "../util/stream.js";
+import {
+  getBytes,
+  getLines,
+  getMessages,
+} from "@langchain/community/utils/event_source_parse";
+import { IterableReadableStream } from "@langchain/core/utils/stream";
 
 type RemoteRunnableOptions = {
   timeout?: number;

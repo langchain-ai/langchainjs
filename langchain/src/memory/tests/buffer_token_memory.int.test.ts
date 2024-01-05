@@ -1,8 +1,8 @@
 import { test, expect } from "@jest/globals";
 import { OpenAI } from "@langchain/openai";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
+import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
 import { ConversationTokenBufferMemory } from "../buffer_token_memory.js";
-import { ChatMessageHistory } from "../../stores/message/in_memory.js";
 
 test("Test buffer token memory with LLM", async () => {
   const memory = new ConversationTokenBufferMemory({

@@ -1,5 +1,6 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import type { ToolInterface } from "@langchain/core/tools";
+import { Toolkit } from "@langchain/community/agents/toolkits/base";
 import {
   JsonGetValueTool,
   JsonListKeysTool,
@@ -8,7 +9,6 @@ import {
 import { JSON_PREFIX, JSON_SUFFIX } from "./prompt.js";
 import { LLMChain } from "../../../chains/llm_chain.js";
 import { ZeroShotCreatePromptArgs, ZeroShotAgent } from "../../mrkl/index.js";
-import { Toolkit } from "../base.js";
 import { AgentExecutor } from "../../executor.js";
 
 /**

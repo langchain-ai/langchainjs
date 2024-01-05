@@ -5,8 +5,8 @@ import {
 } from "@langchain/core/embeddings";
 import { BaseStore } from "@langchain/core/stores";
 
+import { AsyncCallerParams } from "@langchain/core/utils/async_caller";
 import { EncoderBackedStore } from "../storage/encoder_backed.js";
-import { AsyncCallerParams } from "../util/async_caller.js";
 
 /**
  * Interface for the fields required to initialize an instance of the

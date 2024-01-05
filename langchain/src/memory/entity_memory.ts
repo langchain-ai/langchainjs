@@ -5,20 +5,20 @@ import {
 } from "@langchain/community/memory/chat_memory";
 import { PromptTemplate } from "@langchain/core/prompts";
 
-import { BaseEntityStore } from "./stores/entity/base.js";
-import {
-  ENTITY_EXTRACTION_PROMPT,
-  ENTITY_SUMMARIZATION_PROMPT,
-} from "./prompt.js";
 import {
   InputValues,
   MemoryVariables,
   OutputValues,
-  getBufferString,
   getPromptInputKey,
-} from "./base.js";
-import { LLMChain } from "../chains/llm_chain.js";
+} from "@langchain/core/memory";
+import { getBufferString } from "@langchain/core/messages";
 import { InMemoryEntityStore } from "./stores/entity/in_memory.js";
+import { LLMChain } from "../chains/llm_chain.js";
+import {
+  ENTITY_EXTRACTION_PROMPT,
+  ENTITY_SUMMARIZATION_PROMPT,
+} from "./prompt.js";
+import { BaseEntityStore } from "./stores/entity/base.js";
 
 /**
  * Interface for the input parameters required by the EntityMemory class.

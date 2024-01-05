@@ -2,7 +2,7 @@ import { OpenAI } from "@langchain/openai";
 
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import type { LLMResult } from "@langchain/core/outputs";
-import { getEnvironmentVariable } from "../util/env.js";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 import { logVersion010MigrationWarning } from "../util/entrypoint_deprecation.js";
 

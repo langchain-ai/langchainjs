@@ -3,7 +3,11 @@ import fs from "fs";
 import { z } from "zod";
 import { AgentAction, AgentFinish, AgentStep } from "@langchain/core/agents";
 import { AIMessage } from "@langchain/core/messages";
-import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
+import {
+  OpenAIEmbeddings,
+  ChatOpenAI,
+  formatToOpenAIFunction,
+} from "@langchain/openai";
 import { RunnableSequence } from "@langchain/core/runnables";
 import {
   ChatPromptTemplate,
@@ -12,7 +16,6 @@ import {
 import { createRetrieverTool } from "../toolkits/index.js";
 import { RecursiveCharacterTextSplitter } from "../../text_splitter.js";
 import { MemoryVectorStore } from "../../vectorstores/memory.js";
-import { formatToOpenAIFunction } from "../../tools/convert_to_openai.js";
 import { AgentExecutor } from "../executor.js";
 import { formatForOpenAIFunctions } from "../format_scratchpad/openai_functions.js";
 

@@ -3,9 +3,9 @@
 import { test } from "@jest/globals";
 
 import { OpenAI } from "@langchain/openai";
-import { StartExecutionAWSSfnTool } from "../../tools/aws_sfn.js";
-
-import { AWSSfnToolkit, createAWSSfnAgent } from "../toolkits/aws_sfn.js";
+import { StartExecutionAWSSfnTool } from "@langchain/community/tools/aws_sfn";
+import { AWSSfnToolkit } from "@langchain/community/agents/toolkits/aws_sfn";
+import { createAWSSfnAgent } from "../toolkits/aws_sfn.js";
 
 test.skip("StartExecutionAWSSfnTool invokes the correct state machine and returns the executionArn", async () => {
   const sfn = new StartExecutionAWSSfnTool({

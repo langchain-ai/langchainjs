@@ -8,12 +8,12 @@ import { describe, test } from "@jest/globals";
 import { HumanMessage } from "@langchain/core/messages";
 import { ChatGooglePaLM } from "@langchain/community/chat_models/googlepalm";
 import { GooglePaLM } from "@langchain/community/llms/googlepalm";
+import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import {
   DriveFileReadConnection,
   MakerSuiteHub,
   MakerSuitePrompt,
 } from "../googlemakersuitehub.js";
-import { AsyncCaller } from "../../../../util/async_caller.js";
 
 describe.skip("Google Maker Suite Hub Integration", () => {
   describe("Prompt", () => {

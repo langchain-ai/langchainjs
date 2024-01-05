@@ -1,6 +1,10 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { z } from "zod";
-import { Example } from "@langchain/core/prompts";
+import {
+  Example,
+  interpolateFString,
+  FewShotPromptTemplate,
+} from "@langchain/core/prompts";
 import { InputValues } from "@langchain/core/utils/types";
 import { QueryTransformer, TraverseType } from "./parser.js";
 import {
@@ -17,9 +21,7 @@ import {
   DEFAULT_SUFFIX,
   EXAMPLE_PROMPT,
 } from "./prompt.js";
-import { interpolateFString } from "../../prompts/template.js";
 import { LLMChain } from "../llm_chain.js";
-import { FewShotPromptTemplate } from "../../prompts/few_shot.js";
 import { AsymmetricStructuredOutputParser } from "../../output_parsers/structured.js";
 import { AttributeInfo } from "../../schema/query_constructor.js";
 

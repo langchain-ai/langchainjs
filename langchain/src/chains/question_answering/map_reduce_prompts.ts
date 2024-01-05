@@ -3,12 +3,12 @@ import {
   ChatPromptTemplate,
   SystemMessagePromptTemplate,
   HumanMessagePromptTemplate,
+  PromptTemplate,
 } from "@langchain/core/prompts";
-import { PromptTemplate } from "../../prompts/prompt.js";
 import {
   ConditionalPromptSelector,
   isChatModel,
-} from "../../prompts/selectors/conditional.js";
+} from "@langchain/core/example_selectors";
 
 const qa_template = `Use the following portion of a long document to see if any of the text is relevant to answer the question. 
 Return any relevant text verbatim.

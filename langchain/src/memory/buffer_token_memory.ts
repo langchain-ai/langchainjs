@@ -3,13 +3,12 @@ import {
   BaseChatMemory,
   BaseChatMemoryInput,
 } from "@langchain/community/memory/chat_memory";
-
 import {
   InputValues,
   MemoryVariables,
-  getBufferString,
   OutputValues,
-} from "./base.js";
+} from "@langchain/core/memory";
+import { getBufferString } from "@langchain/core/messages";
 
 /**
  * Interface for the input parameters of the `BufferTokenMemory` class.

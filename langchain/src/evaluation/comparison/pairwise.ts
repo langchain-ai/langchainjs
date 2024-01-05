@@ -4,6 +4,10 @@ import { ChainValues } from "@langchain/core/utils/types";
 import { ChatGeneration, Generation, RUN_KEY } from "@langchain/core/outputs";
 import { BasePromptTemplate } from "@langchain/core/prompts";
 import {
+  Callbacks,
+  BaseCallbackConfig,
+} from "@langchain/core/callbacks/manager";
+import {
   eqSet,
   EvalOutputType,
   LLMEvalChainInput,
@@ -12,8 +16,6 @@ import {
 } from "../base.js";
 
 import { PROMPT, PROMPT_WITH_REFERENCES } from "./prompt.js";
-import { Callbacks } from "../../callbacks/index.js";
-import { BaseCallbackConfig } from "../../callbacks/manager.js";
 import { ConstitutionalPrinciple } from "../../chains/index.js";
 import { Criteria, CriteriaLike } from "../criteria/criteria.js";
 

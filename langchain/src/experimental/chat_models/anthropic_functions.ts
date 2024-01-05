@@ -12,14 +12,14 @@ import {
   BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
 import { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
-import { CallbackManagerForLLMRun } from "../../callbacks/manager.js";
+import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { formatToOpenAIFunction } from "@langchain/openai";
 import {
   ChatAnthropic,
   DEFAULT_STOP_SEQUENCES,
   type AnthropicInput,
 } from "../../chat_models/anthropic.js";
-import { PromptTemplate } from "../../prompts/prompt.js";
-import { formatToOpenAIFunction } from "../../tools/convert_to_openai.js";
 
 const TOOL_SYSTEM_PROMPT =
   /* #__PURE__ */

@@ -1,12 +1,12 @@
 import type { createCluster, createClient } from "redis";
 
-import { BaseCache } from "@langchain/core/caches";
-import { Generation } from "@langchain/core/outputs";
 import {
+  BaseCache,
   deserializeStoredGeneration,
   getCacheKey,
   serializeGeneration,
-} from "./base.js";
+} from "@langchain/core/caches";
+import { Generation } from "@langchain/core/outputs";
 
 /**
  * Represents the type of the Redis client used to interact with the Redis

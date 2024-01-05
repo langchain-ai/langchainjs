@@ -8,9 +8,12 @@ import {
 } from "apify-client";
 
 import { Document } from "@langchain/core/documents";
-import { AsyncCaller, AsyncCallerParams } from "../../util/async_caller.js";
+import {
+  AsyncCaller,
+  AsyncCallerParams,
+} from "@langchain/core/utils/async_caller";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { BaseDocumentLoader, DocumentLoader } from "../base.js";
-import { getEnvironmentVariable } from "../../util/env.js";
 
 /**
  * A type that represents a function that takes a single object (an Apify

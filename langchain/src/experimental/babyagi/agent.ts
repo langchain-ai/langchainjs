@@ -2,7 +2,7 @@ import type { BaseLanguageModelInterface } from "@langchain/core/language_models
 import type { VectorStoreInterface } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 import { ChainValues } from "@langchain/core/utils/types";
-import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
+import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
 import { BaseChain, ChainInputs } from "../../chains/base.js";
 import { SerializedBaseChain } from "../../chains/serde.js";
 import { Optional } from "../../types/type-utils.js";

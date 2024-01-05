@@ -6,9 +6,9 @@ import {
 } from "@langchain/core/language_models/chat_models";
 import { SystemMessagePromptTemplate } from "@langchain/core/prompts";
 import { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
-
-import { CallbackManagerForLLMRun } from "../../callbacks/manager.js";
-import { ChatOllama, type ChatOllamaInput } from "../../chat_models/ollama.js";
+import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import { ChatOllama } from "@langchain/community/chat_models/ollama";
+import { type ChatOllamaInput } from "../../chat_models/ollama.js";
 
 const DEFAULT_TOOL_SYSTEM_TEMPLATE = `You have access to the following tools:
 {tools}

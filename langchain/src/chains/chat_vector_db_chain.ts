@@ -2,7 +2,7 @@ import type { BaseLanguageModelInterface } from "@langchain/core/language_models
 import type { VectorStoreInterface } from "@langchain/core/vectorstores";
 import { ChainValues } from "@langchain/core/utils/types";
 import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
-import { PromptTemplate } from "../prompts/prompt.js";
+import { PromptTemplate } from "@langchain/core/prompts";
 import { SerializedChatVectorDBQAChain } from "./serde.js";
 import { BaseChain, ChainInputs } from "./base.js";
 import { LLMChain } from "./llm_chain.js";
