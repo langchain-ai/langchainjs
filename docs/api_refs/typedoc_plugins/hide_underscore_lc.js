@@ -138,6 +138,8 @@ function load(application) {
       let htmlFileContent = fs.readFileSync(indexFilePath, "utf-8");
 
       if (htmlFileContent.includes(deprecatedHTML)) {
+        // If any comments are added to the `@deprecated` JSDoc, they'll
+        // be inside the following <p> tag.
         const deprecationTextRegex = new RegExp(`${deprecatedHTML}<p>(.*?)</p>`);
         const deprecationTextMatch = htmlFileContent.match(deprecationTextRegex);
 
@@ -152,7 +154,8 @@ function load(application) {
           htmlFileContent = htmlFileContent.replace(deprecatedHTML, DEPRECATION_HTML(undefined));
         }
 
-        // There is only 1 h1 tag in the file, the symbol name. Eg AgentExecutor
+        // There is only 1 <h1> tag in the file, the symbol name. Eg AgentExecutor.
+        // We want to add the `deprecated` class to this tag so it has a strikethrough.
         htmlFileContent = htmlFileContent.replace(`<h1>`, `<h1 class="deprecated">`);
       }
 
