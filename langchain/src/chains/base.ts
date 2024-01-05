@@ -85,11 +85,11 @@ export abstract class BaseChain<
    */
   async invoke(input: RunInput, config?: RunnableConfig): Promise<RunOutput> {
     const callbackManager_ = await CallbackManager.configure(
-      config.callbacks,
+      config?.callbacks,
       this.callbacks,
-      config.tags,
+      config?.tags,
       this.tags,
-      config.metadata,
+      config?.metadata,
       this.metadata,
       { verbose: this.verbose }
     );
@@ -100,7 +100,7 @@ export abstract class BaseChain<
       undefined,
       undefined,
       undefined,
-      config.runName
+      config?.runName
     );
     let outputValues: RunOutput;
     try {
@@ -245,7 +245,7 @@ export abstract class BaseChain<
   ): Promise<RunOutput> {
     const fullValues = await this._formatValues(values);
     const parsedConfig = { tags, ...parseCallbackConfigArg(config) };
-    return this.invoke(fullValues, parsedConfig);
+    return this.invoke(fullValues as RunInput, parsedConfig);
   }
 
   /**
