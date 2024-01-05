@@ -1,7 +1,7 @@
-import { SimpleChatModel, BaseChatModelParams } from "../../../../langchain/src/chat_models/base.js";
+import { SimpleChatModel, BaseChatModelParams } from "@langchain/core/language_models/chat_models";
 import { AzureMLHttpClient } from "../llms/azure_ml.js";
-import { getEnvironmentVariable } from "../../../../langchain/src/util/env.js";
-import { BaseMessage } from "../../../../langchain/src/schema/index.js";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { BaseMessage } from "@langchain/core/messages";
 
 export interface ChatContentFormatter {
   /**
