@@ -7,8 +7,8 @@ import {
 } from "@langchain/core/messages";
 import { ChainValues } from "@langchain/core/utils/types";
 import { StringOutputParser } from "@langchain/core/output_parsers";
+import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
 import { JsonOutputFunctionsParser } from "../../../output_parsers/openai_functions.js";
-import { CallbackManagerForChainRun } from "../../../callbacks/manager.js";
 import { BaseChain, ChainInputs } from "../../../chains/base.js";
 import {
   GetPredictionViolationsResponse,

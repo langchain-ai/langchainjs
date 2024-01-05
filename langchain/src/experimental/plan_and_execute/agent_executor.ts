@@ -1,6 +1,8 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { ChainValues } from "@langchain/core/utils/types";
 import { Tool } from "@langchain/core/tools";
+import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
+import { DynamicStructuredTool } from "@langchain/community/tools/dynamic";
 import { BaseChain, ChainInputs } from "../../chains/base.js";
 import {
   BasePlanner,
@@ -15,10 +17,8 @@ import {
   DEFAULT_STEP_EXECUTOR_HUMAN_CHAT_MESSAGE_TEMPLATE,
   getPlannerChatPrompt,
 } from "./prompt.js";
-import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { PlanOutputParser } from "./outputParser.js";
-import { DynamicStructuredTool } from "../../tools/dynamic.js";
 import { ChatAgent } from "../../agents/chat/index.js";
 import { StructuredChatAgent } from "../../agents/index.js";
 import { SerializedLLMChain } from "../../chains/serde.js";

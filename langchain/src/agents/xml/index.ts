@@ -15,10 +15,10 @@ import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
 } from "@langchain/core/prompts";
+import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { AgentArgs, BaseSingleActionAgent } from "../agent.js";
 import { AGENT_INSTRUCTIONS } from "./prompt.js";
-import { CallbackManager } from "../../callbacks/manager.js";
 import { XMLAgentOutputParser } from "./output_parser.js";
 import { renderTextDescription } from "../../tools/render.js";
 import { formatXml } from "../format_scratchpad/xml.js";

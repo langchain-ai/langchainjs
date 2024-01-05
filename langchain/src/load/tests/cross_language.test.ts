@@ -2,7 +2,6 @@ import { test } from "@jest/globals";
 import { fileURLToPath } from "node:url";
 import { readFileSync } from "node:fs";
 import * as path from "node:path";
-
 import { load } from "../index.js";
 
 const IMPORTANT_IMPORTS = JSON.parse(

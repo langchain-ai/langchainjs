@@ -10,7 +10,11 @@ import {
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
-import { ChatOpenAI, ChatOpenAICallOptions } from "@langchain/openai";
+import {
+  ChatOpenAI,
+  ChatOpenAICallOptions,
+  formatToOpenAIFunction,
+} from "@langchain/openai";
 import type {
   AgentAction,
   AgentFinish,
@@ -29,9 +33,9 @@ import {
   HumanMessagePromptTemplate,
   MessagesPlaceholder,
   SystemMessagePromptTemplate,
+  BasePromptTemplate,
 } from "@langchain/core/prompts";
-import { CallbackManager } from "../../callbacks/manager.js";
-import type { BasePromptTemplate } from "../../prompts/base.js";
+import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { Agent, AgentArgs } from "../agent.js";
 import { AgentInput } from "../types.js";
 import { PREFIX } from "./prompt.js";
@@ -40,7 +44,6 @@ import {
   FunctionsAgentAction,
   OpenAIFunctionsAgentOutputParser,
 } from "../openai/output_parser.js";
-import { formatToOpenAIFunction } from "../../tools/convert_to_openai.js";
 import { formatToOpenAIFunctionMessages } from "../format_scratchpad/openai_functions.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

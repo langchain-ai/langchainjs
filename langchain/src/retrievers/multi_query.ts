@@ -6,10 +6,9 @@ import {
 } from "@langchain/core/retrievers";
 import { Document } from "@langchain/core/documents";
 import { BaseOutputParser } from "@langchain/core/output_parsers";
+import { PromptTemplate, BasePromptTemplate } from "@langchain/core/prompts";
+import { CallbackManagerForRetrieverRun } from "@langchain/core/callbacks/manager";
 import { LLMChain } from "../chains/llm_chain.js";
-import { PromptTemplate } from "../prompts/prompt.js";
-import { CallbackManagerForRetrieverRun } from "../callbacks/index.js";
-import { BasePromptTemplate } from "../prompts/base.js";
 
 interface LineList {
   lines: string[];

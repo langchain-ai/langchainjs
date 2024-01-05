@@ -3,16 +3,16 @@ import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { ChainValues } from "@langchain/core/utils/types";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import {
+  CallbackManagerForChainRun,
+  Callbacks,
+  BaseCallbackConfig,
+} from "@langchain/core/callbacks/manager";
+import {
   PairwiseStringEvaluator,
   PairwiseStringEvaluatorArgs,
   StringEvaluator,
   StringEvaluatorArgs,
 } from "../base.js";
-import {
-  CallbackManagerForChainRun,
-  Callbacks,
-} from "../../callbacks/index.js";
-import { BaseCallbackConfig } from "../../callbacks/manager.js";
 
 /**
  *

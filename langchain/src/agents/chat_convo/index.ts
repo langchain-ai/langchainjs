@@ -5,6 +5,7 @@ import {
   HumanMessagePromptTemplate,
   MessagesPlaceholder,
   SystemMessagePromptTemplate,
+  renderTemplate,
 } from "@langchain/core/prompts";
 import type { AgentStep } from "@langchain/core/agents";
 import {
@@ -12,7 +13,6 @@ import {
   HumanMessage,
   AIMessage,
 } from "@langchain/core/messages";
-import { renderTemplate } from "../../prompts/template.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { Optional } from "../../types/type-utils.js";
 import { Agent, AgentArgs, OutputParserArgs } from "../agent.js";

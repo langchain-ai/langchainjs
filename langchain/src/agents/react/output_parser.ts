@@ -1,5 +1,5 @@
 import { AgentAction, AgentFinish } from "@langchain/core/agents";
-import { renderTemplate } from "../../prompts/template.js";
+import { renderTemplate } from "@langchain/core/prompts";
 import { AgentActionOutputParser } from "../types.js";
 import { FORMAT_INSTRUCTIONS } from "./prompt.js";
 

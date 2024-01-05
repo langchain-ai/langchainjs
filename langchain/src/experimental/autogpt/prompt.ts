@@ -1,12 +1,14 @@
 import type { VectorStoreRetrieverInterface } from "@langchain/core/vectorstores";
-import { BaseChatPromptTemplate } from "@langchain/core/prompts";
+import {
+  BaseChatPromptTemplate,
+  SerializedBasePromptTemplate,
+} from "@langchain/core/prompts";
 import {
   BaseMessage,
   HumanMessage,
   SystemMessage,
 } from "@langchain/core/messages";
 import { PartialValues } from "@langchain/core/utils/types";
-import { SerializedBasePromptTemplate } from "../../prompts/serde.js";
 import { getPrompt } from "./prompt_generator.js";
 import { ObjectTool } from "./schema.js";
 

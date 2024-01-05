@@ -3,12 +3,12 @@ import {
   ChatPromptTemplate,
   SystemMessagePromptTemplate,
   HumanMessagePromptTemplate,
+  PromptTemplate,
 } from "@langchain/core/prompts";
-import { PromptTemplate } from "../../prompts/prompt.js";
 import {
   ConditionalPromptSelector,
   isChatModel,
-} from "../../prompts/selectors/conditional.js";
+} from "@langchain/core/example_selectors";
 
 export const DEFAULT_QA_PROMPT = /*#__PURE__*/ new PromptTemplate({
   template:

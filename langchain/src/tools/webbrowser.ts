@@ -7,15 +7,15 @@ import {
   CallbackManager,
   CallbackManagerForToolRun,
 } from "@langchain/core/callbacks/manager";
+import { isNode } from "@langchain/core/utils/env";
+import { Tool, ToolParams } from "@langchain/core/tools";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { StringOutputParser } from "@langchain/core/output_parsers";
-import { isNode } from "../util/env.js";
 import {
   RecursiveCharacterTextSplitter,
   TextSplitter,
 } from "../text_splitter.js";
 import { MemoryVectorStore } from "../vectorstores/memory.js";
-import { Tool, ToolParams } from "./base.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { formatDocumentsAsString } from "../util/document.js";
 
@@ -276,10 +276,7 @@ export class WebBrowser extends Tool {
       doSummary ? "a summary" : task
     } from the above text, also provide up to 5 markdown links from within that would be of interest (always including URL and text). Links should be provided, if present, in markdown syntax as a list under the heading "Relevant Links:".`;
 
-    const chain = RunnableSequence.from([
-      this.model,
-      new StringOutputParser(),
-    ]);
+    const chain = RunnableSequence.from([this.model, new StringOutputParser()]);
     return chain.invoke(input, runManager?.getChild());
   }
 
