@@ -579,8 +579,6 @@ export abstract class BaseChatModel<
    * @param options The call options or an array of stop sequences.
    * @param callbacks The callbacks for the language model.
    * @returns A Promise that resolves to a BaseMessage.
-   *
-   * @deprecated Use .invoke() instead.
    */
   async predictMessages(
     messages: BaseMessage[],
@@ -598,8 +596,6 @@ export abstract class BaseChatModel<
    * @param options The call options or an array of stop sequences.
    * @param callbacks The callbacks for the language model.
    * @returns A Promise that resolves to a string.
-   *
-   * @deprecated Use .invoke() instead.
    */
   async predict(
     text: string,
