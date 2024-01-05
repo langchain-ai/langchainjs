@@ -160,34 +160,31 @@ async function main() {
 
         if (matchingSymbolCore) {
           console.log("Found matching symbol in core", matchingSymbolCore);
-          iter += 1;
 
-          // namedImport.remove();
-          // lcFile.addImportDeclaration({
-          //   moduleSpecifier: `@langchain/core${matchingSymbolCore.entrypoint}`,
-          //   namedImports: [namedImportText],
-          // });
-          // didUpdate = true;
+          namedImport.remove();
+          lcFile.addImportDeclaration({
+            moduleSpecifier: `@langchain/core${matchingSymbolCore.entrypoint}`,
+            namedImports: [namedImportText],
+          });
+          didUpdate = true;
         } else if (matchingSymbolCommunity) {
           console.log("Found matching symbol in community", matchingSymbolCommunity);
-          iter += 1;
 
-          // namedImport.remove();
-          // lcFile.addImportDeclaration({
-          //   moduleSpecifier: `@langchain/community${matchingSymbolCommunity.entrypoint}`,
-          //   namedImports: [namedImportText],
-          // });
+          namedImport.remove();
+          lcFile.addImportDeclaration({
+            moduleSpecifier: `@langchain/community${matchingSymbolCommunity.entrypoint}`,
+            namedImports: [namedImportText],
+          });
           didUpdate = true;
         } else if (matchingSymbolOpenAI) {
           console.log("Found matching symbol in openai", matchingSymbolOpenAI);
-          iter += 1;
 
-          // namedImport.remove();
-          // lcFile.addImportDeclaration({
-          //   moduleSpecifier: `@langchain/openai${matchingSymbolOpenAI.entrypoint}`,
-          //   namedImports: [namedImportText],
-          // });
-          // didUpdate = true;
+          namedImport.remove();
+          lcFile.addImportDeclaration({
+            moduleSpecifier: `@langchain/openai${matchingSymbolOpenAI.entrypoint}`,
+            namedImports: [namedImportText],
+          });
+          didUpdate = true;
         }
       })
 
