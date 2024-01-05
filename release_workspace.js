@@ -6,7 +6,21 @@ const { spawn } = require("child_process");
 const readline = require("readline");
 const semver = require('semver')
 
-const INCREMENT_TYPES = ["major", "premajor", "minor", "preminor", "patch", "prepatch", "prerelease"];
+const PRIMARY_PROJECTS = ["langchain", "@langchain/core", "@langchain/community"];
+const RELEASE_BRANCH = "release";
+const MAIN_BRANCH = "main";
+
+/**
+ * Get the version of a workspace inside a directory.
+ * 
+ * @param {string} workspaceDirectory 
+ * @returns {string} The version of the workspace in the input directory.
+ */
+function getWorkspaceVersion(workspaceDirectory) {
+  const pkgJsonFile = fs.readFileSync(path.join(process.cwd(), workspaceDirectory, "package.json"));
+  const parsedJSONFile = JSON.parse(pkgJsonFile);
+  return parsedJSONFile.version;
+}
 
 /**
  * Finds all workspaces in the monorepo and returns an array of objects.
@@ -36,21 +50,6 @@ function getAllWorkspaces() {
     };
   });
   return allWorkspaces;
-}
-
-/**
- * Increments the last numeric character in a version string by 1.
- * If the last character is not numeric, it searches backwards
- * to find the last numeric character to increment.
- * 
- * @param {string} version
- * @param {"major" | "premajor" | "minor" | "preminor" | "patch" | "prepatch" | "prerelease"} incType The type of increment to perform.
- * @param {string | undefined} tag
- * @returns {string} The new version
- */
-function bumpVersion(version, incType = "patch", tag) {
-  let newVersion = tag ? semver.inc(version, "prerelease", undefined, tag) : semver.inc(version, incType);
-  return newVersion;
 }
 
 /**
@@ -88,16 +87,15 @@ function updateDependencies(workspaces, dependencyType, workspaceName, newVersio
  * release-it args.
  * 
  * @param {string} packageDirectory The directory to run yarn release in.
- * @param {string} newVersion The new version to bump to.
  * @param {string} npm2FACode The 2FA code for NPM.
  * @param {string | undefined} tag An optional tag to publish to.
  * @returns {Promise<void>}
  */
-async function runYarnRelease(packageDirectory, newVersion, npm2FACode, tag) {
+async function runYarnRelease(packageDirectory, npm2FACode, tag) {
   return new Promise((resolve, reject) => {
     const workingDirectory = path.join(process.cwd(), packageDirectory);
     const tagArg = tag ? `--npm.tag=${tag}` : "";
-    const args = ["release-it", "--ci", `--npm.otp=${npm2FACode}`, tagArg, "--config", ".release-it.json", newVersion];
+    const args = ["release-it", `--npm.otp=${npm2FACode}`, tagArg, "--config", ".release-it.json"];
     
     console.log(`Running command: "yarn ${args.join(" ")}"`);
 
@@ -123,22 +121,42 @@ async function runYarnRelease(packageDirectory, newVersion, npm2FACode, tag) {
  * commits the changes.
  * 
  * @param {string} workspaceName The name of the workspace to bump dependencies for.
- * @param {string} newVersion The new version to bump to.
+ * @param {string} workspaceDirectory The path to the workspace directory.
  * @param {Array<{ dir: string, packageJSON: Record<string, any>}>} allWorkspaces
  * @param {string | undefined} tag An optional tag to publish to.
+ * @param {string} preReleaseVersion The version of the workspace before it was released.
  * @returns {void}
  */
-function bumpDeps(workspaceName, newVersion, allWorkspaces, tag) {
-  console.log(`Bumping other packages which depend on ${workspaceName}.`);
-  console.log("Checking out main branch.");
-
-  // Separate variable for the branch name, incase it includes a tag.
-  let versionString = newVersion;
-  if (tag) {
-    versionString = `${newVersion}-${tag}`;
+function bumpDeps(workspaceName, workspaceDirectory, allWorkspaces, tag, preReleaseVersion) {
+  // Read workspace file, get version (edited by release-it), and bump pkgs to that version.
+  let updatedWorkspaceVersion = getWorkspaceVersion(workspaceDirectory);
+  if (!semver.valid(updatedWorkspaceVersion)) {
+    console.error("Invalid workspace version: ", updatedWorkspaceVersion);
+    process.exit(1);
   }
 
-  execSync(`git checkout main`);
+  // If the updated version is not greater than the pre-release version,
+  // the branch is out of sync. Pull from github and check again.
+  if (!semver.gt(updatedWorkspaceVersion, preReleaseVersion)) {
+    console.log("Updated version is not greater than the pre-release version. Pulling from github and checking again.");
+    execSync(`git pull origin ${RELEASE_BRANCH}`);
+    updatedWorkspaceVersion = getWorkspaceVersion(workspaceDirectory);
+    if (!semver.gt(updatedWorkspaceVersion, preReleaseVersion)) {
+      console.warn(`Workspace version has not changed in repo. Version in repo: ${updatedWorkspaceVersion}. Exiting.`);
+      process.exit(0);
+    }
+  }
+
+  console.log(`Bumping other packages which depend on ${workspaceName}.`);
+  console.log(`Checking out ${MAIN_BRANCH} branch.`);
+
+  // Separate variable for the branch name, incase it includes a tag.
+  let versionString = updatedWorkspaceVersion;
+  if (tag) {
+    versionString = `${updatedWorkspaceVersion}-${tag}`;
+  }
+
+  execSync(`git checkout ${MAIN_BRANCH}`);
   const newBranchName = `bump-${workspaceName}-to-${versionString}`;
   console.log(`Checking out new branch: ${newBranchName}`);
   execSync(`git checkout -b ${newBranchName}`);
@@ -166,15 +184,15 @@ Workspaces:
 - ${[...allWhichDependOn].map((name) => name).join("\n- ")}
 `);
     // Update packages which depend on the input workspace.
-    updateDependencies(allWorkspacesWhichDependOn, "dependencies", workspaceName, newVersion);
-    updateDependencies(allWorkspacesWhichDevDependOn, "devDependencies", workspaceName, newVersion);
-    updateDependencies(allWorkspacesWhichPeerDependOn, "peerDependencies", workspaceName, newVersion);
+    updateDependencies(allWorkspacesWhichDependOn, "dependencies", workspaceName, updatedWorkspaceVersion);
+    updateDependencies(allWorkspacesWhichDevDependOn, "devDependencies", workspaceName, updatedWorkspaceVersion);
+    updateDependencies(allWorkspacesWhichPeerDependOn, "peerDependencies", workspaceName, updatedWorkspaceVersion);
     console.log("Updated package.json's! Running yarn install.");
 
     try {
       execSync(`yarn install`);
     } catch (_) {
-      console.log("Yarn install failed. Likely because NPM did not auto-publish the new version of the workspace. Continuing.")
+      console.log("Yarn install failed. Likely because NPM has not finished publishing the new version. Continuing.")
     }
 
     // Add all current changes, commit, push and log branch URL.
@@ -183,7 +201,7 @@ Workspaces:
     execSync(`git commit -m "all[minor]: bump deps on ${workspaceName} to ${versionString}"`);
     console.log("Pushing changes.");
     execSync(`git push -u origin ${newBranchName}`);
-    console.log("🔗 Open %s and merge the release PR.", `\x1b[34mhttps://github.com/langchain-ai/langchainjs/compare/${newBranchName}?expand=1\x1b[0m`);
+    console.log("🔗 Open %s and merge the bump-deps PR.", `\x1b[34mhttps://github.com/langchain-ai/langchainjs/compare/${newBranchName}?expand=1\x1b[0m`);
   } else {
     console.log(`No workspaces depend on ${workspaceName}.`);
   }
@@ -198,12 +216,12 @@ Workspaces:
  */
 function checkoutReleaseBranch() {
   const currentBranch = execSync("git branch --show-current").toString().trim();
-  if (currentBranch === "main") {
-    console.log("Checking out 'release' branch.")
-    execSync("git checkout -B release");
-    execSync("git push -u origin release");
+  if (currentBranch === MAIN_BRANCH) {
+    console.log(`Checking out '${RELEASE_BRANCH}' branch.`);
+    execSync(`git checkout -B ${RELEASE_BRANCH}`);
+    execSync(`git push -u origin ${RELEASE_BRANCH}`);
   } else {
-    throw new Error(`Current branch is not main. Current branch: ${currentBranch}`);
+    throw new Error(`Current branch is not ${MAIN_BRANCH}. Current branch: ${currentBranch}`);
   }
 }
 
@@ -234,29 +252,17 @@ async function main() {
   program
     .description("Release a new workspace version to NPM.")
     .option("--workspace <workspace>", "Workspace name, eg @langchain/core")
-    .option("--version <version>", "Optionally override the version to bump to.")
     .option("--bump-deps", "Whether or not to bump other workspaces that depend on this one.")
-    .option("--tag <tag>", "Optionally specify a tag to publish to.")
-    .option("--inc <inc>", "Optionally specify the type to increment by.");
+    .option("--tag <tag>", "Optionally specify a tag to publish to.");
 
   program.parse();
 
   /**
-   * @type {{ workspace: string, version?: string, bumpDeps?: boolean, tag?: string }}
+   * @type {{ workspace: string, bumpDeps?: boolean, tag?: string }}
    */
   const options = program.opts();
   if (!options.workspace) {
     throw new Error("--workspace is a required flag.");
-  }
-
-  if (options.inc && !INCREMENT_TYPES.includes(options.inc)) {
-    throw new Error(`Invalid increment type. Must be one of: ${INCREMENT_TYPES.join(", ")}. Received: ${options.inc}`)
-  }
-
-  if (options.version) {
-    if (!semver.valid(options.version)) {
-      throw new Error(`Invalid version. Received: ${options.version}`);
-    }
   }
 
   // Find the workspace package.json's.
@@ -267,9 +273,6 @@ async function main() {
     throw new Error(`Could not find workspace ${options.workspace}`);
   }
 
-  // Bump version by 1 or use the version passed in.
-  const newVersion = options.version ?? bumpVersion(matchingWorkspace.packageJSON.version, options.inc, options.tag);
-
   // Checkout new "release" branch & push
   checkoutReleaseBranch();
 
@@ -278,26 +281,39 @@ async function main() {
   execSync(`yarn turbo:command run --filter ${options.workspace} build lint test --concurrency 1`);
   console.log("Successfully ran build, lint, and tests.");
 
-  // Run export tests.
-  // LangChain must be built before running export tests.
-  console.log("Building 'langchain' and running export tests.");
-  execSync(`yarn run turbo:command build --filter=langchain`);
-  execSync(`yarn run test:exports:docker`);
-  console.log("Successfully built langchain, and tested exports.");
+  // Only run export tests for primary projects.
+  if (PRIMARY_PROJECTS.includes(options.workspace.trim())) {
+    // Run export tests.
+    // LangChain must be built before running export tests.
+    console.log("Building 'langchain' and running export tests.");
+    execSync(`yarn run turbo:command build --filter=langchain`);
+    execSync(`yarn run test:exports:docker`);
+    console.log("Successfully built langchain, and tested exports.");
+  } else {
+    console.log("Skipping export tests for non primary project.");
+  }
 
   const npm2FACode = await getUserInput("Please enter your NPM 2FA authentication code:");
 
+  const preReleaseVersion = getWorkspaceVersion(matchingWorkspace.dir);
+
   // Run `release-it` on workspace
-  await runYarnRelease(matchingWorkspace.dir, newVersion, npm2FACode, options.tag);
+  await runYarnRelease(matchingWorkspace.dir, npm2FACode, options.tag);
   
   // Log release branch URL
-  console.log("\x1b[34m%s\x1b[0m", "🔗 Open https://github.com/langchain-ai/langchainjs/compare/release?expand=1 and merge the release PR.");
+  console.log("🔗 Open %s and merge the release PR.", `\x1b[34mhttps://github.com/langchain-ai/langchainjs/compare/release?expand=1\x1b[0m`);
 
   // If `bump-deps` flag is set, find all workspaces which depend on the input workspace.
   // Then, update their package.json to use the new version of the input workspace.
   // This will create a new branch, commit and push the changes and log the branch URL.
   if (options.bumpDeps) {
-    bumpDeps(options.workspace, newVersion, allWorkspaces, options.tag);
+    bumpDeps(
+      options.workspace,
+      matchingWorkspace.dir,
+      allWorkspaces,
+      options.tag,
+      preReleaseVersion
+    );
   }
 };
 

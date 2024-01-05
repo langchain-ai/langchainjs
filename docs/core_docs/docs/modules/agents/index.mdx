@@ -5,235 +5,31 @@ sidebar_class_name: hidden
 
 # Agents
 
-Some applications require a flexible chain of calls to LLMs and other tools based on user input. The **Agent** interface provides the flexibility for such applications. An agent has access to a suite of tools, and determines which ones to use depending on the user input. Agents can use multiple tools, and use the output of one tool as the input to the next.
+The core idea of agents is to use a language model to choose a sequence of actions to take.
+In chains, a sequence of actions is hardcoded (in code). In agents, a language model is used as a reasoning engine to determine which actions to take and in which order.
 
-There are two main types of agents:
+## [Quick Start](/docs/modules/agents/quick_start)
 
-- **Action agents**: at each timestep, decide on the next action using the outputs of all previous actions
-- **Plan-and-execute agents**: decide on the full sequence of actions up front, then execute them all without updating the plan
+For a quick start to working with agents, please check out this getting started guide. This covers basics like initializing an agent, creating tools, and adding memory.
 
-Action agents are suitable for small tasks, while plan-and-execute agents are better for complex or long-running tasks that require maintaining long-term objectives and focus. Often the best approach is to combine the dynamism of an action agent with the planning abilities of a plan-and-execute agent by letting the plan-and-execute agent use action agents to execute plans.
+## [Concepts](/docs/modules/agents/concepts)
 
-For a full list of agent types see [agent types](/docs/modules/agents/agent_types/). Additional abstractions involved in agents are:
+There are several key concepts to understand when building agents: Agents, AgentExecutor, Tools, Toolkits.
+For an in depth explanation, please check out [this conceptual guide](/docs/modules/agents/concepts).
 
-- [**Tools**](/docs/modules/agents/tools/): the actions an agent can take. What tools you give an agent highly depend on what you want the agent to do
-- [**Toolkits**](/docs/modules/agents/toolkits/): wrappers around collections of tools that can be used together a specific use case. For example, in order for an agent to
-  interact with a SQL database it will likely need one tool to execute queries and another to inspect tables
+## [Agent Types](/docs/modules/agents/agent_types/)
 
-## Action agents
+There are many different types of agents to use. For a overview of the different types and when to use them, please check out [this section](/docs/modules/agents/agent_types/).
 
-At a high-level an action agent:
+## [Tools](/docs/modules/agents/tools)
 
-1. Receives user input
-2. Decides which tool, if any, to use and the tool input
-3. Calls the tool and records the output (also known as an "observation")
-4. Decides the next step using the history of tools, tool inputs, and observations
-5. Repeats 3-4 until it determines it can respond directly to the user
+Agents are only as good as the tools they have. For a comprehensive guide on tools, please see [this section](/docs/modules/agents/tools).
 
-Action agents are wrapped in **agent executors**, chains which are responsible for calling the agent, getting back an action and action input, calling the tool that the action references with the generated input, getting the output of the tool, and then passing all that information back into the agent to get the next action it should take.
+## How To Guides
 
-Although an agent can be constructed in many ways, it typically involves these components:
+Agents have a lot of related functionality! Check out various guides including:
 
-- **Prompt template**: Responsible for taking the user input and previous steps and constructing a prompt
-  to send to the language model
-- **Language model**: Takes the prompt with user input and action history and decides what to do next
-- **Output parser**: Takes the output of the language model and parses it into the next action or a final answer
-
-## Plan-and-execute agents
-
-At a high-level a plan-and-execute agent:
-
-1. Receives user input
-2. Plans the full sequence of steps to take
-3. Executes the steps in order, passing the outputs of past steps as inputs to future steps
-
-The most typical implementation is to have the planner be a language model, and the executor be an action agent. Read more [here](/docs/modules/agents/agent_types/plan_and_execute).
-
-## Get started
-
-LangChain offers several types of agents. Here's an example using one powered by OpenAI functions:
-
-import CodeBlock from "@theme/CodeBlock";
-import Example from "@examples/agents/openai.ts";
-
-<CodeBlock language="typescript">{Example}</CodeBlock>
-
-And here is the logged verbose output:
-
-```shell
-[chain/start] [1:chain:AgentExecutor] Entering Chain run with input: {
-  "input": "What is the weather in New York?",
-  "chat_history": []
-}
-[llm/start] [1:chain:AgentExecutor > 2:llm:ChatOpenAI] Entering LLM run with input: {
-  "messages": [
-    [
-      {
-        "lc": 1,
-        "type": "constructor",
-        "id": [
-          "langchain",
-          "schema",
-          "SystemMessage"
-        ],
-        "kwargs": {
-          "content": "You are a helpful AI assistant.",
-          "additional_kwargs": {}
-        }
-      },
-      {
-        "lc": 1,
-        "type": "constructor",
-        "id": [
-          "langchain",
-          "schema",
-          "HumanMessage"
-        ],
-        "kwargs": {
-          "content": "What is the weather in New York?",
-          "additional_kwargs": {}
-        }
-      }
-    ]
-  ]
-}
-[llm/end] [1:chain:AgentExecutor > 2:llm:ChatOpenAI] [1.97s] Exiting LLM run with output: {
-  "generations": [
-    [
-      {
-        "text": "",
-        "message": {
-          "lc": 1,
-          "type": "constructor",
-          "id": [
-            "langchain",
-            "schema",
-            "AIMessage"
-          ],
-          "kwargs": {
-            "content": "",
-            "additional_kwargs": {
-              "function_call": {
-                "name": "search",
-                "arguments": "{\n  \"input\": \"current weather in New York\"\n}"
-              }
-            }
-          }
-        }
-      }
-    ]
-  ],
-  "llmOutput": {
-    "tokenUsage": {
-      "completionTokens": 18,
-      "promptTokens": 121,
-      "totalTokens": 139
-    }
-  }
-}
-[agent/action] [1:chain:AgentExecutor] Agent selected action: {
-  "tool": "search",
-  "toolInput": {
-    "input": "current weather in New York"
-  },
-  "log": ""
-}
-[tool/start] [1:chain:AgentExecutor > 3:tool:SerpAPI] Entering Tool run with input: "current weather in New York"
-[tool/end] [1:chain:AgentExecutor > 3:tool:SerpAPI] [1.90s] Exiting Tool run with output: "1 am · Feels Like72° · WindSSW 1 mph · Humidity89% · UV Index0 of 11 · Cloud Cover79% · Rain Amount0 in ..."
-[llm/start] [1:chain:AgentExecutor > 4:llm:ChatOpenAI] Entering LLM run with input: {
-  "messages": [
-    [
-      {
-        "lc": 1,
-        "type": "constructor",
-        "id": [
-          "langchain",
-          "schema",
-          "SystemMessage"
-        ],
-        "kwargs": {
-          "content": "You are a helpful AI assistant.",
-          "additional_kwargs": {}
-        }
-      },
-      {
-        "lc": 1,
-        "type": "constructor",
-        "id": [
-          "langchain",
-          "schema",
-          "HumanMessage"
-        ],
-        "kwargs": {
-          "content": "What is the weather in New York?",
-          "additional_kwargs": {}
-        }
-      },
-      {
-        "lc": 1,
-        "type": "constructor",
-        "id": [
-          "langchain",
-          "schema",
-          "AIMessage"
-        ],
-        "kwargs": {
-          "content": "",
-          "additional_kwargs": {
-            "function_call": {
-              "name": "search",
-              "arguments": "{\"input\":\"current weather in New York\"}"
-            }
-          }
-        }
-      },
-      {
-        "lc": 1,
-        "type": "constructor",
-        "id": [
-          "langchain",
-          "schema",
-          "FunctionMessage"
-        ],
-        "kwargs": {
-          "content": "1 am · Feels Like72° · WindSSW 1 mph · Humidity89% · UV Index0 of 11 · Cloud Cover79% · Rain Amount0 in ...",
-          "name": "search",
-          "additional_kwargs": {}
-        }
-      }
-    ]
-  ]
-}
-[llm/end] [1:chain:AgentExecutor > 4:llm:ChatOpenAI] [3.33s] Exiting LLM run with output: {
-  "generations": [
-    [
-      {
-        "text": "The current weather in New York is 72°F with a wind speed of 1 mph coming from the SSW. The humidity is at 89% and the UV index is 0 out of 11. The cloud cover is 79% and there has been no rain.",
-        "message": {
-          "lc": 1,
-          "type": "constructor",
-          "id": [
-            "langchain",
-            "schema",
-            "AIMessage"
-          ],
-          "kwargs": {
-            "content": "The current weather in New York is 72°F with a wind speed of 1 mph coming from the SSW. The humidity is at 89% and the UV index is 0 out of 11. The cloud cover is 79% and there has been no rain.",
-            "additional_kwargs": {}
-          }
-        }
-      }
-    ]
-  ],
-  "llmOutput": {
-    "tokenUsage": {
-      "completionTokens": 58,
-      "promptTokens": 180,
-      "totalTokens": 238
-    }
-  }
-}
-[chain/end] [1:chain:AgentExecutor] [7.73s] Exiting Chain run with output: {
-  "output": "The current weather in New York is 72°F with a wind speed of 1 mph coming from the SSW. The humidity is at 89% and the UV index is 0 out of 11. The cloud cover is 79% and there has been no rain."
-}
-```
+- [Building a custom agent](/docs/modules/agents/how_to/custom_agent)
+- [Streaming (of both intermediate steps and tokens)](/docs/modules/agents/how_to/streaming)
+- [Building an agent that returns structured output](/docs/modules/agents/how_to/agent_structured)
+- Lots of functionality around using AgentExecutor, including: [handling parsing errors](/docs/modules/agents/how_to/handle_parsing_errors), [returning intermediate steps](/docs/modules/agents/how_to/intermediate_steps), and [capping the max number of iterations](/docs/modules/agents/how_to/max_iterations).

@@ -1,0 +1,27 @@
+import { test } from "@jest/globals";
+
+import { ChatOpenAI } from "@langchain/openai";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+
+import { LLMonitorHandler } from "../handlers/llmonitor.js";
+
+test.skip("Test traced chat call with tags", async () => {
+  const chat = new ChatOpenAI({
+    callbacks: [new LLMonitorHandler({ verbose: true })],
+  });
+
+  const response = await chat.call([
+    new HumanMessage(
+      "What is a good name for a company that makes colorful socks?"
+    ),
+  ]);
+  console.log(response.content);
+
+  const response2 = await chat.call([
+    new SystemMessage(
+      "You are a helpful assistant that translates English to French."
+    ),
+    new HumanMessage("Translate: I love programming."),
+  ]);
+  console.log(response2.content);
+});

@@ -1,0 +1,21 @@
+---
+sidebar_position: 0
+---
+
+# Toolkits
+
+Toolkits are collections of tools that are designed to be used together for specific tasks and have convenient loading methods.
+For a complete list of these, visit the section in [Integrations](/docs/integrations/toolkits).
+
+All Toolkits expose a `getTools()` method which returns a list of tools. You could therefore do:
+
+```typescript
+// Initialize a toolkit
+const toolkit = new ExampleTookit(...);
+
+// Get list of tools
+const tools = toolkit.getTools();
+
+// Create agent
+const agent = createAgentMethod({ llm, tools, prompt });
+```

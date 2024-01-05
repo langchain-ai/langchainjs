@@ -1,0 +1,52 @@
+name: Dependency compatibility tests
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    # Do not run this workflow if only docs changed.
+    paths-ignore:
+      - 'docs/**'
+  workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
+
+# If another push to the same PR or branch happens while this workflow is still running,
+# cancel the earlier run in favor of the next run.
+#
+# There's no point in testing an outdated version of the code. GitHub only allows
+# a limited number of job runners to be active at the same time, so it's better to cancel
+# pointless jobs early so that more useful jobs can run sooner.
+concurrency:
+  group: exports-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PUPPETEER_SKIP_DOWNLOAD: "true"
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
+  NODE_VERSION: "18.x"
+
+# Run a separate job for each check in the docker-compose file,
+# so that they run in parallel instead of overwhelming the default 2 CPU runner.
+jobs:
+  test-langchain-with-latest-deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "yarn"
+      - name: Test LangChain with latest deps
+        run: docker compose -f dependency_range_tests/docker-compose.yml run test-langchain-with-latest-deps
+
+  test-langchain-with-lowest-deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "yarn"
+      - name: Test LangChain with lowest deps
+        run: docker compose -f dependency_range_tests/docker-compose.yml run test-langchain-with-lowest-deps

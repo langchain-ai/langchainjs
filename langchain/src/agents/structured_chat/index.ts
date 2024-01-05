@@ -2,7 +2,15 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
 
 import type { StructuredToolInterface } from "@langchain/core/tools";
-import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import type {
+  BaseLanguageModel,
+  BaseLanguageModelInterface,
+} from "@langchain/core/language_models/base";
+import {
+  RunnablePassthrough,
+  RunnableSequence,
+} from "@langchain/core/runnables";
+import type { BasePromptTemplate } from "@langchain/core/prompts";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import {
@@ -17,6 +25,8 @@ import { Agent, AgentArgs, OutputParserArgs } from "../agent.js";
 import { AgentInput } from "../types.js";
 import { StructuredChatOutputParserWithRetries } from "./outputParser.js";
 import { FORMAT_INSTRUCTIONS, PREFIX, SUFFIX } from "./prompt.js";
+import { renderTextDescriptionAndArgs } from "../../tools/render.js";
+import { formatLogToString } from "../format_scratchpad/log.js";
 
 /**
  * Interface for arguments used to create a prompt for a
@@ -219,4 +229,113 @@ export class StructuredChatAgent extends Agent {
       allowedTools: tools.map((t) => t.name),
     });
   }
+}
+
+/**
+ * Params used by the createStructuredChatAgent function.
+ */
+export type CreateStructuredChatAgentParams = {
+  /** LLM to use as the agent. */
+  llm: BaseLanguageModelInterface;
+  /** Tools this agent has access to. */
+  tools: StructuredToolInterface[];
+  /**
+   * The prompt to use. Must have input keys for
+   * `tools`, `tool_names`, and `agent_scratchpad`.
+   */
+  prompt: BasePromptTemplate;
+};
+
+/**
+ * Create an agent aimed at supporting tools with multiple inputs.
+ * @param params Params required to create the agent. Includes an LLM, tools, and prompt.
+ * @returns A runnable sequence representing an agent. It takes as input all the same input
+ *     variables as the prompt passed in does. It returns as output either an
+ *     AgentAction or AgentFinish.
+ *
+ * @example
+ * ```typescript
+ * import { AgentExecutor, createStructuredChatAgent } from "langchain/agents";
+ * import { pull } from "langchain/hub";
+ * import type { ChatPromptTemplate } from "@langchain/core/prompts";
+ * import { AIMessage, HumanMessage } from "@langchain/core/messages";
+ *
+ * import { ChatOpenAI } from "@langchain/openai";
+ *
+ * // Define the tools the agent will have access to.
+ * const tools = [...];
+ *
+ * // Get the prompt to use - you can modify this!
+ * // If you want to see the prompt in full, you can at:
+ * // https://smith.langchain.com/hub/hwchase17/structured-chat-agent
+ * const prompt = await pull<ChatPromptTemplate>(
+ *   "hwchase17/structured-chat-agent"
+ * );
+ *
+ * const llm = new ChatOpenAI({
+ *   temperature: 0,
+ *   modelName: "gpt-3.5-turbo-1106",
+ * });
+ *
+ * const agent = await createStructuredChatAgent({
+ *   llm,
+ *   tools,
+ *   prompt,
+ * });
+ *
+ * const agentExecutor = new AgentExecutor({
+ *   agent,
+ *   tools,
+ * });
+ *
+ * const result = await agentExecutor.invoke({
+ *   input: "what is LangChain?",
+ * });
+ *
+ * // With chat history
+ * const result2 = await agentExecutor.invoke({
+ *   input: "what's my name?",
+ *   chat_history: [
+ *     new HumanMessage("hi! my name is cob"),
+ *     new AIMessage("Hello Cob! How can I assist you today?"),
+ *   ],
+ * });
+ * ```
+ */
+export async function createStructuredChatAgent({
+  llm,
+  tools,
+  prompt,
+}: CreateStructuredChatAgentParams) {
+  const missingVariables = ["tools", "tool_names", "agent_scratchpad"].filter(
+    (v) => !prompt.inputVariables.includes(v)
+  );
+  if (missingVariables.length > 0) {
+    throw new Error(
+      `Provided prompt is missing required input variables: ${JSON.stringify(
+        missingVariables
+      )}`
+    );
+  }
+  const toolNames = tools.map((tool) => tool.name);
+  const partialedPrompt = await prompt.partial({
+    tools: renderTextDescriptionAndArgs(tools),
+    tool_names: toolNames.join(", "),
+  });
+  // TODO: Add .bind to core runnable interface.
+  const llmWithStop = (llm as BaseLanguageModel).bind({
+    stop: ["Observation"],
+  });
+  const agent = RunnableSequence.from([
+    RunnablePassthrough.assign({
+      agent_scratchpad: (input: { steps: AgentStep[] }) =>
+        formatLogToString(input.steps),
+    }),
+    partialedPrompt,
+    llmWithStop,
+    StructuredChatOutputParserWithRetries.fromLLM(llm, {
+      toolNames,
+    }),
+  ]);
+  return agent;
 }

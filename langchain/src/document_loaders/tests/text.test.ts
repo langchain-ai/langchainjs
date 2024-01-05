@@ -1,10 +1,14 @@
 import { test, expect } from "@jest/globals";
+import * as url from "node:url";
+import * as path from "node:path";
 import { TextLoader } from "../fs/text.js";
 
 test("Test Text loader from file", async () => {
-  const loader = new TextLoader(
-    "../examples/src/document_loaders/example_data/example.txt"
+  const filePath = path.resolve(
+    path.dirname(url.fileURLToPath(import.meta.url)),
+    "./example_data/example.txt"
   );
+  const loader = new TextLoader(filePath);
   const docs = await loader.load();
 
   expect(docs.length).toBe(1);
@@ -17,7 +21,7 @@ test("Test Text loader from file", async () => {
   `);
   expect(docs[0].metadata).toMatchInlineSnapshot(`
     {
-      "source": "../examples/src/document_loaders/example_data/example.txt",
+      "source": "${filePath}",
     }
   `);
 });

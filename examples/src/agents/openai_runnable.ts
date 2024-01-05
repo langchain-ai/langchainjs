@@ -1,16 +1,19 @@
 import { AgentExecutor } from "langchain/agents";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { ChatPromptTemplate, MessagesPlaceholder } from "langchain/prompts";
-import {
-  AIMessage,
-  AgentStep,
-  BaseMessage,
-  FunctionMessage,
-} from "langchain/schema";
-import { RunnableSequence } from "langchain/schema/runnable";
+import { ChatOpenAI } from "@langchain/openai";
 import { SerpAPI, formatToOpenAIFunction } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 import { OpenAIFunctionsAgentOutputParser } from "langchain/agents/openai/output_parser";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
+import {
+  AIMessage,
+  BaseMessage,
+  FunctionMessage,
+} from "@langchain/core/messages";
+import { AgentStep } from "@langchain/core/agents";
+import { RunnableSequence } from "@langchain/core/runnables";
 
 /** Define your list of tools. */
 const tools = [new Calculator(), new SerpAPI()];
@@ -27,7 +30,7 @@ const model = new ChatOpenAI({ modelName: "gpt-4", temperature: 0 });
  * steps into a list of `BaseMessages` which can be passed into `MessagesPlaceholder`
  */
 const prompt = ChatPromptTemplate.fromMessages([
-  ["ai", "You are a helpful assistant"],
+  ["system", "You are a helpful assistant"],
   ["human", "{input}"],
   new MessagesPlaceholder("agent_scratchpad"),
 ]);

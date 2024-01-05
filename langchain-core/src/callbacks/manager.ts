@@ -9,10 +9,7 @@ import {
   NewTokenIndices,
 } from "./base.js";
 import { ConsoleCallbackHandler } from "../tracers/console.js";
-import {
-  getTracingCallbackHandler,
-  getTracingV2CallbackHandler,
-} from "../tracers/initialize.js";
+import { getTracingV2CallbackHandler } from "../tracers/initialize.js";
 import { type BaseMessage, getBufferString } from "../messages/index.js";
 import { getEnvironmentVariable } from "../utils/env.js";
 import {
@@ -61,13 +58,6 @@ export interface BaseCallbackConfig {
    * Tags are passed to all callbacks, metadata is passed to handle*Start callbacks.
    */
   callbacks?: Callbacks;
-
-  /**
-   * Runtime values for attributes previously made configurable on this Runnable,
-   * or sub-Runnables.
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  configurable?: Record<string, any>;
 }
 
 export function parseCallbackConfigArg(
@@ -938,14 +928,6 @@ export class CallbackManager
       ) {
         if (tracingV2Enabled) {
           callbackManager.addHandler(await getTracingV2CallbackHandler(), true);
-        } else {
-          const session =
-            getEnvironmentVariable("LANGCHAIN_PROJECT") &&
-            getEnvironmentVariable("LANGCHAIN_SESSION");
-          callbackManager.addHandler(
-            await getTracingCallbackHandler(session),
-            true
-          );
         }
       }
     }

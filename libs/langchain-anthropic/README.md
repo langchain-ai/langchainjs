@@ -17,18 +17,18 @@ You can do so by adding appropriate fields to your project's `package.json` like
   "name": "your-project",
   "version": "0.0.0",
   "dependencies": {
-    "@langchain/anthropic": "^0.0.0",
+    "@langchain/anthropic": "^0.0.9",
     "langchain": "0.0.207"
   },
   "resolutions": {
-    "@langchain/core": "0.1.2"
+    "@langchain/core": "0.1.5"
   },
   "overrides": {
-    "@langchain/core": "0.1.2"
+    "@langchain/core": "0.1.5"
   },
   "pnpm": {
     "overrides": {
-      "@langchain/core": "0.1.2"
+      "@langchain/core": "0.1.5"
     }
   }
 }

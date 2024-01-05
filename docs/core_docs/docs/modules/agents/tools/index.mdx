@@ -1,38 +1,60 @@
 ---
-sidebar_position: 2
+sidebar_position: 4
 ---
 
 # Tools
 
 Tools are interfaces that an agent can use to interact with the world.
+They combine a few things:
 
-## Get started
+1. The name of the tool
+2. A description of what the tool is
+3. Schema of what the inputs to the tool are
+4. The function to call
+5. Whether the result of a tool should be returned directly to the user
 
-Tools are functions that agents can use to interact with the world.
-These tools can be generic utilities (e.g. search), other chains, or even other agents.
+It is useful to have all this information because this information can be used to build action-taking systems!
+The name, description, and Schema can be used the prompt the LLM so it knows how to specify what action to take, and then the function to call is equivalent to taking that action.
 
-Specifically, the interface of a tool has a single text input and a single text output. It includes a name and description that communicate to the model what the tool does and when to use it.
+The simpler the input to a tool is, the easier it is for an LLM to be able to use it.
+Many agents will only work with tools that have a single string input.
+For a list of agent types and which ones work with more complicated inputs, please see [this documentation](/docs/modules/agents/agent_types)
+
+Importantly, the name, description, and schema (if used) are all used in the prompt.
+Therefore, it is really important that they are clear and describe exactly how the tool should be used. You may need to change the default name, description, or schema if the LLM is not understanding how to use the tool.
+
+## Default Tools
+
+Let's take a look at how to work with tools. To do this, let's look at a built in tool that takes a simple string input:
 
 ```typescript
-interface Tool {
-  call(arg: string): Promise<string>;
+import { WikipediaQueryRun } from "@langchain/community/tools/wikipedia_query_run";
 
-  name: string;
+const tool = new WikipediaQueryRun({
+  topKResults: 1,
+  maxDocContentLength: 100,
+});
 
-  description: string;
-}
+console.log(tool.name);
+
+/* 
+  wikipedia-api
+*/
+
+console.log(tool.description);
+
+/* 
+  A tool for interacting with and fetching data from the Wikipedia API.
+*/
+
+const res = await tool.invoke("Langchain");
+
+console.log(res);
+
+/*
+  Page: LangChain
+  Summary: LangChain is a framework designed to simplify the creation of applications
+*/
 ```
 
-## Advanced
-
-To implement your own tool you can subclass the `Tool` class and implement the `_call` method. The `_call` method is called with the input text and should return the output text. The Tool superclass implements the `call` method, which takes care of calling the right CallbackManager methods before and after calling your `_call` method. When an error occurs, the `_call` method should when possible return a string representing an error, rather than throwing an error. This allows the error to be passed to the LLM and the LLM can decide how to handle it. If an error is thrown then execution of the agent will stop.
-
-```typescript
-abstract class Tool {
-  abstract _call(arg: string): Promise<string>;
-
-  abstract name: string;
-
-  abstract description: string;
-}
-```
+You can define more complex `StructuredTool`s as well that require object inputs with several different parameters.

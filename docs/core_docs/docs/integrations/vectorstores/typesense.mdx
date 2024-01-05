@@ -4,9 +4,17 @@ Vector store that utilizes the Typesense search engine.
 
 ### Basic Usage
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 ```typescript
 import { Typesense, TypesenseConfig } from "langchain/vectorstores/typesense";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { Client } from "typesense";
 import { Document } from "langchain/document";
 
