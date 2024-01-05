@@ -7,13 +7,13 @@ import { OutputParserException } from "@langchain/core/output_parsers";
 import { AIMessage } from "@langchain/core/messages";
 import { AgentStep } from "@langchain/core/agents";
 import { SerpAPI } from "@langchain/community/tools/serpapi";
+import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
 import { loadAgent } from "../load.js";
 import { AgentExecutor, ZeroShotAgent } from "../index.js";
 import { Calculator } from "../../tools/calculator.js";
 import { initializeAgentExecutorWithOptions } from "../initialize.js";
 import { WebBrowser } from "../../tools/webbrowser.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
-import { ChatMessageHistory } from "../../stores/message/in_memory.js";
 
 test("Run agent from hub", async () => {
   const model = new OpenAI({ temperature: 0, modelName: "text-babbage-001" });

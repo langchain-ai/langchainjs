@@ -16,10 +16,10 @@ import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
+  PromptTemplate,
 } from "@langchain/core/prompts";
 import { AgentStep } from "@langchain/core/agents";
 import { LLMChain } from "../../chains/llm_chain.js";
-import { PromptTemplate } from "../../prompts/prompt.js";
 import { Optional } from "../../types/type-utils.js";
 import { Agent, AgentArgs, OutputParserArgs } from "../agent.js";
 import { AgentInput } from "../types.js";

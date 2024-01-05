@@ -4,7 +4,7 @@ import {
   AIMessage,
   HumanMessage,
 } from "@langchain/core/messages";
-import { renderTemplate } from "../../prompts/template.js";
+import { renderTemplate } from "@langchain/core/prompts";
 
 export function formatLogToMessage(
   intermediateSteps: AgentStep[],

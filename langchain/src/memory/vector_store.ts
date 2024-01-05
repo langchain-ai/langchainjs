@@ -1,13 +1,13 @@
 import type { VectorStoreRetrieverInterface } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
-import { formatDocumentsAsString } from "../util/document.js";
 import {
   BaseMemory,
   getInputValue,
   InputValues,
   MemoryVariables,
   OutputValues,
-} from "./base.js";
+} from "@langchain/core/memory";
+import { formatDocumentsAsString } from "../util/document.js";
 
 /**
  * Interface for the parameters required to initialize a

@@ -7,13 +7,13 @@ import {
   CallbackManager,
   CallbackManagerForToolRun,
 } from "@langchain/core/callbacks/manager";
-import { isNode } from "../util/env.js";
+import { isNode } from "@langchain/core/utils/env";
+import { Tool, ToolParams } from "@langchain/core/tools";
 import {
   RecursiveCharacterTextSplitter,
   TextSplitter,
 } from "../text_splitter.js";
 import { MemoryVectorStore } from "../vectorstores/memory.js";
-import { Tool, ToolParams } from "./base.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { formatDocumentsAsString } from "../util/document.js";
 

@@ -1,9 +1,11 @@
 import { expect, test } from "@jest/globals";
-import { FakeEmbeddings } from "../../embeddings/fake.js";
-import { LengthBasedExampleSelector } from "../selectors/LengthBasedExampleSelector.js";
-import { SemanticSimilarityExampleSelector } from "../selectors/SemanticSimilarityExampleSelector.js";
+import {
+  LengthBasedExampleSelector,
+  SemanticSimilarityExampleSelector,
+} from "@langchain/core/example_selectors";
+import { PromptTemplate } from "@langchain/core/prompts";
 import { MemoryVectorStore } from "../../vectorstores/memory.js";
-import { PromptTemplate } from "../prompt.js";
+import { FakeEmbeddings } from "../../embeddings/fake.js";
 
 test("Test using LengthBasedExampleSelector", async () => {
   const prompt = new PromptTemplate({

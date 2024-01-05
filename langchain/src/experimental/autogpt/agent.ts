@@ -7,6 +7,10 @@ import {
   SystemMessage,
 } from "@langchain/core/messages";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
+import {
+  getEmbeddingContextSize,
+  getModelContextSize,
+} from "@langchain/core/language_models/base";
 import { LLMChain } from "../../chains/llm_chain.js";
 
 import { AutoGPTOutputParser } from "./output_parser.js";
@@ -14,10 +18,6 @@ import { AutoGPTPrompt } from "./prompt.js";
 // import { HumanInputRun } from "./tools/human/tool"; // TODO
 import { ObjectTool, FINISH_NAME } from "./schema.js";
 import { TokenTextSplitter } from "../../text_splitter.js";
-import {
-  getEmbeddingContextSize,
-  getModelContextSize,
-} from "../../base_language/count_tokens.js";
 
 /**
  * Interface for the input parameters of the AutoGPT class.

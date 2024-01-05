@@ -1,6 +1,6 @@
 import { Document } from "@langchain/core/documents";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { BaseDocumentLoader } from "../base.js";
-import { getEnvironmentVariable } from "../../util/env.js";
 
 const NOTION_BASE_URL = "https://api.notion.com/v1";
 

@@ -10,8 +10,8 @@ import {
   type BaseCumulativeTransformOutputParserInput,
   BaseLLMOutputParser,
 } from "@langchain/core/output_parsers";
+import { parsePartialJson } from "@langchain/core/output_parsers";
 import { Optional } from "../types/type-utils.js";
-import { parsePartialJson } from "./json.js";
 
 /**
  * Represents optional parameters for a function in a JSON Schema.

@@ -1,8 +1,11 @@
 import { Serializable } from "@langchain/core/load/serializable";
-import { Tool } from "./base.js";
-import { renderTemplate } from "../prompts/template.js";
-import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
-import { getEnvironmentVariable } from "../util/env.js";
+import { Tool } from "@langchain/core/tools";
+import { renderTemplate } from "@langchain/core/prompts";
+import {
+  AsyncCaller,
+  AsyncCallerParams,
+} from "@langchain/core/utils/async_caller";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 const zapierNLABaseDescription: string =
   "A wrapper around Zapier NLA actions. " +

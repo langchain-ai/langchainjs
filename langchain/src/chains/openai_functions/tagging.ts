@@ -3,8 +3,7 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
-
-import { PromptTemplate } from "../../prompts/prompt.js";
+import { PromptTemplate } from "@langchain/core/prompts";
 import {
   FunctionParameters,
   JsonOutputFunctionsParser,

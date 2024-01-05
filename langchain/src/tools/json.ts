@@ -1,6 +1,6 @@
 import jsonpointer from "jsonpointer";
 import { Serializable } from "@langchain/core/load/serializable";
-import { Tool, ToolParams } from "./base.js";
+import { Tool, ToolParams } from "@langchain/core/tools";
 
 export type Json =
   | string

@@ -1,8 +1,7 @@
 import { test, expect } from "@jest/globals";
-import { ChatOpenAI } from "@langchain/openai";
+import { ChatOpenAI, OpenAIChat } from "@langchain/openai";
 import { SystemMessage } from "@langchain/core/messages";
 import { ConversationSummaryMemory } from "../summary.js";
-import { OpenAIChat } from "../../llms/openai-chat.js";
 
 test("Test summary memory", async () => {
   const memory = new ConversationSummaryMemory({

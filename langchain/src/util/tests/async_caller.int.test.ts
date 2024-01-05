@@ -1,6 +1,6 @@
 import { test, expect } from "@jest/globals";
 import { OpenAI } from "@langchain/openai";
-import { AsyncCaller } from "../async_caller.js";
+import { AsyncCaller } from "@langchain/core/utils/async_caller";
 
 test("AsyncCaller.call passes on arguments and returns return value", async () => {
   const caller = new AsyncCaller({});
