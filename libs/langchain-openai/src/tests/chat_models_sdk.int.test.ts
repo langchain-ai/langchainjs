@@ -1,6 +1,6 @@
 import { expect, test } from "@jest/globals";
-import { AzureSDKChatOpenAI } from "../azure/chat_models_sdk.js";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
+import { AzureSDKChatOpenAI } from "../azure/chat_models_sdk.js";
 
 test("Test OpenAI", async () => {
   const model = new AzureSDKChatOpenAI({
