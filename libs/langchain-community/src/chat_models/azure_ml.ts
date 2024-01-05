@@ -1,4 +1,7 @@
-import { SimpleChatModel, BaseChatModelParams } from "@langchain/core/language_models/chat_models";
+import {
+  SimpleChatModel,
+  BaseChatModelParams,
+} from "@langchain/core/language_models/chat_models";
 import { AzureMLHttpClient } from "../llms/azure_ml.js";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { BaseMessage } from "@langchain/core/messages";
