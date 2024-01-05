@@ -131,9 +131,8 @@ function load(application) {
   async function onEndRenderEvent(context) {
     const htmlToSplitAt = `<div class="tsd-toolbar-contents container">`;
     const deprecatedHTML = "<h4>Deprecated</h4>"
+    
     const { urls } = context;
-    // We want async. If not then it can load lots of very large
-    // `.html` files into memory at one time, which we don't want.
     for (const { url } of urls) {
       const indexFilePath = path.join(BASE_OUTPUT_DIR, url);
       let htmlFileContent = fs.readFileSync(indexFilePath, "utf-8");
