@@ -84,6 +84,7 @@ export abstract class BaseChain<
    * @returns Promise that resolves with the output of the chain run.
    */
   async invoke(input: RunInput, config?: RunnableConfig): Promise<RunOutput> {
+    const fullValues = await this._formatValues(input);
     const callbackManager_ = await CallbackManager.configure(
       config?.callbacks,
       this.callbacks,
@@ -95,7 +96,7 @@ export abstract class BaseChain<
     );
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
-      input,
+      fullValues,
       undefined,
       undefined,
       undefined,
@@ -104,16 +105,16 @@ export abstract class BaseChain<
     );
     let outputValues: RunOutput;
     try {
-      outputValues = await (input.signal
+      outputValues = await (fullValues.signal
         ? (Promise.race([
-            this._call(input as RunInput, runManager),
+            this._call(fullValues as RunInput, runManager),
             new Promise((_, reject) => {
-              input.signal?.addEventListener("abort", () => {
+              fullValues.signal?.addEventListener("abort", () => {
                 reject(new Error("AbortError"));
               });
             }),
           ]) as Promise<RunOutput>)
-        : this._call(input as RunInput, runManager));
+        : this._call(fullValues as RunInput, runManager));
     } catch (e) {
       await runManager?.handleChainError(e);
       throw e;
@@ -243,9 +244,8 @@ export abstract class BaseChain<
     /** @deprecated */
     tags?: string[]
   ): Promise<RunOutput> {
-    const fullValues = await this._formatValues(values);
     const parsedConfig = { tags, ...parseCallbackConfigArg(config) };
-    return this.invoke(fullValues as RunInput, parsedConfig);
+    return this.invoke(values as RunInput, parsedConfig);
   }
 
   /**
