@@ -479,6 +479,8 @@ export abstract class BaseLLM<
    * @param options Options for the LLM call.
    * @param callbacks Callbacks for the LLM call.
    * @returns A prediction based on the input text.
+   *
+   * @deprecated Use .invoke() instead.
    */
   async predict(
     text: string,
@@ -497,6 +499,8 @@ export abstract class BaseLLM<
    * @param options Options for the LLM call.
    * @param callbacks Callbacks for the LLM call.
    * @returns A predicted message based on the list of messages.
+   *
+   * @deprecated Use .invoke() instead.
    */
   async predictMessages(
     messages: BaseMessage[],
