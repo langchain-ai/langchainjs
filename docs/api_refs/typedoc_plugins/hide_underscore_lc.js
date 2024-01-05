@@ -28,7 +28,7 @@ const SCRIPT_HTML = `<script>
 const DEPRECATION_HTML = (deprecationText) => `<div class="deprecation-warning">
 <h2>⚠️ Deprecated ⚠️</h2>
 ${deprecationText ? `<p>${deprecationText}</p>` : ""}
-<p>This method is deprecated and will be removed in the future.</p>
+<p>This feature is deprecated and will be removed in the future.</p>
 <p>It is not recommended for use.</p>
 </div>`;
 
