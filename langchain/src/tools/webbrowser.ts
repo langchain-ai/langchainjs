@@ -7,6 +7,8 @@ import {
   CallbackManager,
   CallbackManagerForToolRun,
 } from "@langchain/core/callbacks/manager";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 import { isNode } from "../util/env.js";
 import {
   RecursiveCharacterTextSplitter,
@@ -274,7 +276,11 @@ export class WebBrowser extends Tool {
       doSummary ? "a summary" : task
     } from the above text, also provide up to 5 markdown links from within that would be of interest (always including URL and text). Links should be provided, if present, in markdown syntax as a list under the heading "Relevant Links:".`;
 
-    return this.model.invoke(input, runManager?.getChild());
+    const chain = RunnableSequence.from([
+      this.model,
+      new StringOutputParser(),
+    ]);
+    return chain.invoke(input, runManager?.getChild());
   }
 
   name = "web-browser";
