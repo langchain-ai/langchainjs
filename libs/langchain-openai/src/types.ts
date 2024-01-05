@@ -1,7 +1,12 @@
-import type { OpenAI as OpenAIClient } from "openai";
-
-import { TiktokenModel } from "js-tiktoken/lite";
+import {
+  AzureExtensionsOptions,
+  FunctionCallPreset,
+  FunctionDefinition,
+  FunctionName,
+} from "@azure/openai";
 import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
+import { TiktokenModel } from "js-tiktoken/lite";
+import type { OpenAI as OpenAIClient } from "openai";
 
 // reexport this type from the included package so we can easily override and extend it if needed in the future
 // also makes it easier for folks to import this type without digging around into the dependent packages
@@ -61,6 +66,10 @@ export declare interface OpenAIBaseInput {
    * `OPENAI_API_KEY` environment variable.
    */
   openAIApiKey?: string;
+
+  logprobs?: number;
+
+  echo?: boolean;
 }
 
 // TODO use OpenAI.Core.RequestOptions when SDK is updated to make it available
@@ -115,6 +124,12 @@ export interface LegacyOpenAIInput {
 export interface OpenAIChatInput extends OpenAIBaseInput {
   /** ChatGPT messages to pass as a prefix to the prompt */
   prefixMessages?: OpenAIClient.Chat.CreateChatCompletionRequestMessage[];
+
+  functions?: FunctionDefinition[];
+
+  functionCall?: FunctionCallPreset | FunctionName;
+
+  azureExtensionOptions?: AzureExtensionsOptions;
 }
 
 export declare interface AzureOpenAIInput {
@@ -169,4 +184,6 @@ export declare interface AzureOpenAIInput {
    * will be result in the endpoint URL: https://westeurope.api.cognitive.microsoft.com/openai/deployments/{DeploymentName}/
    */
   azureOpenAIBasePath?: string;
+
+  azureOpenAIEndpoint?: string;
 }

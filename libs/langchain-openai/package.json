@@ -35,6 +35,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
+    "@azure/openai": "1.0.0-beta.10",
     "@langchain/core": "~0.1.5",
     "js-tiktoken": "^1.0.7",
     "openai": "^4.19.0",

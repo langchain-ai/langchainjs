@@ -83,6 +83,32 @@ const embeddings = new OpenAIEmbeddings({
 const res = await embeddings.embedQuery("Hello world");
 ```
 
+## Azure SDK for OpenAI
+
+This package also supports OpenAI through [Azure SDK for OpenAI](https://github.com/Azure/azure-sdk-for-js/tree/main/sdk/openai/openai) library. 
+
+To use, install the requirements, and configure your environment.
+
+```bash
+export AZURE_OPENAI_API_ENDPOINT=your-api-endpoint
+export AZURE_OPENAI_API_DEPLOYMENT_NAME=your-deployment
+export AZURE_OPENAI_API_KEY=your-api-key
+export AZURE_OPENAI_API_INSTANCE_NAME=your-api-instance-name
+export AZURE_OPENAI_API_VERSION=your-api-version
+```
+
+Then, you could initialize the `AzureSDKOpenAI` and make the calls
+
+```typescript
+import { AzureSDKOpenAI } from "@langchain/openai";
+
+const model = new AzureSDKOpenAI({
+  maxTokens: 5,
+  modelName: "gpt-3.5-turbo-instruct",
+});
+const res = await model.call("Print hello world");
+```
+
 ## Development
 
 To develop the OpenAI package, you'll need to follow these instructions:
