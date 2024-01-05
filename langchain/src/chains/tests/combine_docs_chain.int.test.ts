@@ -1,12 +1,12 @@
 import { test } from "@jest/globals";
-import { OpenAI } from "../../llms/openai.js";
-import { PromptTemplate } from "../../prompts/index.js";
-import { Document } from "../../document.js";
+import { OpenAI } from "@langchain/openai";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { Document } from "@langchain/core/documents";
+import { createStuffDocumentsChain } from "../combine_documents/stuff.js";
 import {
   loadQAMapReduceChain,
   loadQARefineChain,
 } from "../question_answering/load.js";
-import { createStuffDocumentsChain } from "../combine_documents/stuff.js";
 
 test("Test StuffDocumentsChain", async () => {
   const llm = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });

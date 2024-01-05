@@ -1,23 +1,22 @@
 import type { VectorStoreRetrieverInterface } from "@langchain/core/vectorstores";
-import { LLMChain } from "../../chains/llm_chain.js";
-import { BaseChatModel } from "../../chat_models/base.js";
-import { Tool } from "../../tools/base.js";
-
-import { AutoGPTOutputParser } from "./output_parser.js";
-import { AutoGPTPrompt } from "./prompt.js";
+// import { HumanInputRun } from "./tools/human/tool"; // TODO
+import { BaseChatModel } from "@langchain/core/language_models/chat_models";
+import { Tool } from "@langchain/core/tools";
 import {
   AIMessage,
   BaseMessage,
   HumanMessage,
   SystemMessage,
-} from "../../schema/index.js";
-// import { HumanInputRun } from "./tools/human/tool"; // TODO
-import { ObjectTool, FINISH_NAME } from "./schema.js";
-import { TokenTextSplitter } from "../../text_splitter.js";
+} from "@langchain/core/messages";
 import {
   getEmbeddingContextSize,
   getModelContextSize,
-} from "../../base_language/count_tokens.js";
+} from "@langchain/core/language_models/base";
+import { TokenTextSplitter } from "../../text_splitter.js";
+import { ObjectTool, FINISH_NAME } from "./schema.js";
+import { AutoGPTPrompt } from "./prompt.js";
+import { AutoGPTOutputParser } from "./output_parser.js";
+import { LLMChain } from "../../chains/llm_chain.js";
 
 /**
  * Interface for the input parameters of the AutoGPT class.

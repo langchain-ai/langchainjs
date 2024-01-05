@@ -1,29 +1,25 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import type { ToolInterface } from "@langchain/core/tools";
-import { LLMChain } from "../../chains/llm_chain.js";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   MessagesPlaceholder,
   SystemMessagePromptTemplate,
-} from "../../prompts/chat.js";
-import { renderTemplate } from "../../prompts/template.js";
-import {
-  AIMessage,
-  AgentStep,
-  BaseMessage,
-  HumanMessage,
-} from "../../schema/index.js";
-import { Optional } from "../../types/type-utils.js";
-import { Agent, AgentArgs, OutputParserArgs } from "../agent.js";
-import { AgentActionOutputParser, AgentInput } from "../types.js";
-import { ChatConversationalAgentOutputParserWithRetries } from "./outputParser.js";
+  renderTemplate,
+} from "@langchain/core/prompts";
+import { AIMessage, BaseMessage, HumanMessage } from "@langchain/core/messages";
+import { AgentStep } from "@langchain/core/agents";
 import {
   PREFIX_END,
   DEFAULT_PREFIX,
   DEFAULT_SUFFIX,
   TEMPLATE_TOOL_RESPONSE,
 } from "./prompt.js";
+import { ChatConversationalAgentOutputParserWithRetries } from "./outputParser.js";
+import { AgentActionOutputParser, AgentInput } from "../types.js";
+import { Agent, AgentArgs, OutputParserArgs } from "../agent.js";
+import { Optional } from "../../types/type-utils.js";
+import { LLMChain } from "../../chains/llm_chain.js";
 
 /**
  * Interface defining the structure of arguments used to create a prompt

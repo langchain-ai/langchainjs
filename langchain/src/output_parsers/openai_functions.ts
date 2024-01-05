@@ -3,15 +3,14 @@ import {
   compare,
   type Operation as JSONPatchOperation,
 } from "@langchain/core/utils/json_patch";
-
-import { ChatGeneration, Generation } from "../schema/index.js";
-import { Optional } from "../types/type-utils.js";
+import { ChatGeneration, Generation } from "@langchain/core/outputs";
 import {
   BaseCumulativeTransformOutputParser,
-  type BaseCumulativeTransformOutputParserInput,
   BaseLLMOutputParser,
-} from "../schema/output_parser.js";
-import { parsePartialJson } from "./json.js";
+  parsePartialJson,
+} from "@langchain/core/output_parsers";
+import { type BaseCumulativeTransformOutputParserInput } from "../schema/output_parser.js";
+import { Optional } from "../types/type-utils.js";
 
 /**
  * Represents optional parameters for a function in a JSON Schema.

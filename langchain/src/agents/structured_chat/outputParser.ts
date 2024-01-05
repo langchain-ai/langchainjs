@@ -1,14 +1,14 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
-import { AgentActionOutputParser } from "../types.js";
+import { AgentAction, AgentFinish } from "@langchain/core/agents";
+import { OutputParserException } from "@langchain/core/output_parsers";
+import { renderTemplate } from "@langchain/core/prompts";
+import { Callbacks } from "@langchain/core/callbacks/manager";
+import { OutputFixingParser } from "../../output_parsers/fix.js";
 import {
   AGENT_ACTION_FORMAT_INSTRUCTIONS,
   FORMAT_INSTRUCTIONS,
 } from "./prompt.js";
-import { OutputFixingParser } from "../../output_parsers/fix.js";
-import { AgentAction, AgentFinish } from "../../schema/index.js";
-import { OutputParserException } from "../../schema/output_parser.js";
-import { renderTemplate } from "../../prompts/index.js";
-import { Callbacks } from "../../callbacks/manager.js";
+import { AgentActionOutputParser } from "../types.js";
 
 /**
  * A class that provides a custom implementation for parsing the output of

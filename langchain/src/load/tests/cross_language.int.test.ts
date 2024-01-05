@@ -2,7 +2,6 @@ import { test } from "@jest/globals";
 import { fileURLToPath } from "node:url";
 import { readFileSync } from "node:fs";
 import * as path from "node:path";
-
 import { load } from "../index.js";
 
 const IMPORTANT_IMPORTS = JSON.parse(
@@ -60,7 +59,7 @@ const CURRENT_KNOWN_FAILURES = [
   "langchain/runnables/openai_functions/OpenAIFunctionsRouter",
   "langchain_core/runnables/base/RunnableEachBase",
   "langchain_core/runnables/configurable/RunnableConfigurableAlternatives",
-  "langchain_core/runnables/configurable/RunnableConfigurableFields",
+  "langchain_core/runnables/configurable/RunnableConfigurableFields"
 ];
 
 const CROSS_LANGUAGE_ENTRYPOINTS = Object.keys(IMPORTANT_IMPORTS)
@@ -77,7 +76,7 @@ describe("Test cross language serialization of important modules", () => {
         lc: 1,
         type: "constructor",
         id: idComponents,
-        kwargs: {},
+        kwargs: {}
       };
       try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

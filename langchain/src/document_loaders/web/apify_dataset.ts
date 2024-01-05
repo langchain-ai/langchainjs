@@ -6,11 +6,13 @@ import {
   ApifyClientOptions,
   TaskCallOptions,
 } from "apify-client";
-
-import { AsyncCaller, AsyncCallerParams } from "../../util/async_caller.js";
+import {
+  AsyncCaller,
+  AsyncCallerParams,
+} from "@langchain/core/utils/async_caller";
+import { Document } from "@langchain/core/documents";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { BaseDocumentLoader, DocumentLoader } from "../base.js";
-import { Document } from "../../document.js";
-import { getEnvironmentVariable } from "../../util/env.js";
 
 /**
  * A type that represents a function that takes a single object (an Apify

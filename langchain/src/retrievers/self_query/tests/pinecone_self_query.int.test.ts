@@ -3,13 +3,12 @@
 /* eslint-disable no-promise-executor-return */
 import { test } from "@jest/globals";
 import { Pinecone } from "@pinecone-database/pinecone";
-import { Document } from "../../../document.js";
-import { AttributeInfo } from "../../../schema/query_constructor.js";
-import { OpenAIEmbeddings } from "../../../embeddings/openai.js";
-import { SelfQueryRetriever } from "../index.js";
+import { Document } from "@langchain/core/documents";
+import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
+import { PineconeStore } from "@langchain/community/vectorstores/pinecone";
 import { PineconeTranslator } from "../pinecone.js";
-import { OpenAI } from "../../../llms/openai.js";
-import { PineconeStore } from "../../../vectorstores/pinecone.js";
+import { SelfQueryRetriever } from "../index.js";
+import { AttributeInfo } from "../../../schema/query_constructor.js";
 
 describe("Pinecone self query", () => {
   const testIndexName = process.env.PINECONE_INDEX!;

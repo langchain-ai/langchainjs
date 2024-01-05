@@ -3,17 +3,13 @@ import type {
   ToolInterface,
 } from "@langchain/core/tools";
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
-import { CallbackManager, Callbacks } from "../callbacks/manager.js";
-import { LLMChain } from "../chains/llm_chain.js";
-import { BasePromptTemplate } from "../prompts/base.js";
-import {
-  AgentAction,
-  AgentFinish,
-  AgentStep,
-  BaseMessage,
-  ChainValues,
-} from "../schema/index.js";
-import { Serializable } from "../load/serializable.js";
+import { CallbackManager, Callbacks } from "@langchain/core/callbacks/manager";
+import { BasePromptTemplate } from "@langchain/core/prompts";
+import { AgentAction, AgentFinish, AgentStep } from "@langchain/core/agents";
+import { BaseMessage } from "@langchain/core/messages";
+import { ChainValues } from "@langchain/core/utils/types";
+import { Serializable } from "@langchain/core/load/serializable";
+import { Runnable } from "@langchain/core/runnables";
 import {
   AgentActionOutputParser,
   AgentInput,
@@ -21,7 +17,7 @@ import {
   SerializedAgent,
   StoppingMethod,
 } from "./types.js";
-import { Runnable } from "../schema/runnable/base.js";
+import { LLMChain } from "../chains/llm_chain.js";
 
 /**
  * Record type for arguments passed to output parsers.

@@ -3,7 +3,7 @@ import type {
   StructuredToolInterface,
   ToolInterface,
 } from "@langchain/core/tools";
-import { CallbackManager } from "../callbacks/manager.js";
+import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { BufferMemory } from "../memory/buffer_memory.js";
 import { ChatAgent } from "./chat/index.js";
 import { ChatConversationalAgent } from "./chat_convo/index.js";

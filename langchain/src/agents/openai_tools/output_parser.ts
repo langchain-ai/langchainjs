@@ -1,14 +1,9 @@
 import type { OpenAIClient } from "@langchain/openai";
-import {
-  AgentAction,
-  AgentFinish,
-  AgentStep,
-  BaseMessage,
-  ChatGeneration,
-  isBaseMessage,
-} from "../../schema/index.js";
+import { AgentAction, AgentFinish, AgentStep } from "@langchain/core/agents";
+import { BaseMessage, isBaseMessage } from "@langchain/core/messages";
+import { ChatGeneration } from "@langchain/core/outputs";
+import { OutputParserException } from "@langchain/core/output_parsers";
 import { AgentMultiActionOutputParser } from "../types.js";
-import { OutputParserException } from "../../schema/output_parser.js";
 
 /**
  * Type that represents an agent action with an optional message log.

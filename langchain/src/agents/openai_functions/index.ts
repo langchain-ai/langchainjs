@@ -8,38 +8,39 @@ import type { BaseChatModel } from "@langchain/core/language_models/chat_models"
 import {
   RunnablePassthrough,
   RunnableSequence,
+  Runnable,
 } from "@langchain/core/runnables";
-import { CallbackManager } from "../../callbacks/manager.js";
-import { ChatOpenAI, ChatOpenAICallOptions } from "../../chat_models/openai.js";
-import type { BasePromptTemplate } from "../../prompts/base.js";
+import { CallbackManager } from "@langchain/core/callbacks/manager";
 import {
-  AIMessage,
-  AgentAction,
-  AgentFinish,
-  AgentStep,
-  BaseMessage,
-  FunctionMessage,
-  ChainValues,
-  SystemMessage,
-  BaseMessageChunk,
-} from "../../schema/index.js";
-import { Agent, AgentArgs } from "../agent.js";
-import { AgentInput } from "../types.js";
-import { PREFIX } from "./prompt.js";
+  ChatOpenAI,
+  ChatOpenAICallOptions,
+  formatToOpenAIFunction,
+} from "@langchain/openai";
 import {
+  BasePromptTemplate,
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   MessagesPlaceholder,
   SystemMessagePromptTemplate,
-} from "../../prompts/chat.js";
-import { LLMChain } from "../../chains/llm_chain.js";
+} from "@langchain/core/prompts";
+import {
+  AIMessage,
+  BaseMessage,
+  FunctionMessage,
+  SystemMessage,
+  BaseMessageChunk,
+} from "@langchain/core/messages";
+import { AgentAction, AgentFinish, AgentStep } from "@langchain/core/agents";
+import { ChainValues } from "@langchain/core/utils/types";
+import { formatToOpenAIFunctionMessages } from "../format_scratchpad/openai_functions.js";
 import {
   FunctionsAgentAction,
   OpenAIFunctionsAgentOutputParser,
 } from "../openai/output_parser.js";
-import { formatToOpenAIFunction } from "../../tools/convert_to_openai.js";
-import { Runnable } from "../../schema/runnable/base.js";
-import { formatToOpenAIFunctionMessages } from "../format_scratchpad/openai_functions.js";
+import { LLMChain } from "../../chains/llm_chain.js";
+import { PREFIX } from "./prompt.js";
+import { AgentInput } from "../types.js";
+import { Agent, AgentArgs } from "../agent.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type CallOptionsIfAvailable<T> = T extends { CallOptions: infer CO } ? CO : any;

@@ -1,22 +1,23 @@
 import { zodToJsonSchema } from "zod-to-json-schema";
 import fs from "fs";
 import { z } from "zod";
+import { AIMessage } from "@langchain/core/messages";
+import { AgentAction, AgentFinish, AgentStep } from "@langchain/core/agents";
+import { RunnableSequence } from "@langchain/core/runnables";
 import {
-  AIMessage,
-  AgentAction,
-  AgentFinish,
-  AgentStep,
-} from "../../schema/index.js";
-import { RunnableSequence } from "../../schema/runnable/base.js";
-import { ChatPromptTemplate, MessagesPlaceholder } from "../../prompts/chat.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
-import { createRetrieverTool } from "../toolkits/index.js";
-import { RecursiveCharacterTextSplitter } from "../../text_splitter.js";
-import { HNSWLib } from "../../vectorstores/hnswlib.js";
-import { OpenAIEmbeddings } from "../../embeddings/openai.js";
-import { formatToOpenAIFunction } from "../../tools/convert_to_openai.js";
-import { AgentExecutor } from "../executor.js";
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
+import {
+  ChatOpenAI,
+  OpenAIEmbeddings,
+  formatToOpenAIFunction,
+} from "@langchain/openai";
+import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { formatForOpenAIFunctions } from "../format_scratchpad/openai_functions.js";
+import { AgentExecutor } from "../executor.js";
+import { RecursiveCharacterTextSplitter } from "../../text_splitter.js";
+import { createRetrieverTool } from "../toolkits/index.js";
 
 /** Define a custom structured output parser. */
 const structuredOutputParser = (

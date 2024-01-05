@@ -1,9 +1,9 @@
 import { test, expect } from "@jest/globals";
+import { SystemMessage } from "@langchain/core/messages";
 import { PromptLayerOpenAI } from "../openai.js";
 import { PromptLayerOpenAIChat } from "../openai-chat.js";
 
 import { PromptLayerChatOpenAI } from "../../chat_models/openai.js";
-import { SystemMessage } from "../../schema/index.js";
 
 test("Test PromptLayerOpenAI returns promptLayerID if returnPromptLayerId=true", async () => {
   const model = new PromptLayerOpenAI({

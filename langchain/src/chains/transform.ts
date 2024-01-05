@@ -1,5 +1,8 @@
-import { CallbackManagerForChainRun, Callbacks } from "../callbacks/manager.js";
-import { ChainValues } from "../schema/index.js";
+import {
+  CallbackManagerForChainRun,
+  Callbacks,
+} from "@langchain/core/callbacks/manager";
+import { ChainValues } from "@langchain/core/utils/types";
 import { ChainInputs, BaseChain } from "./base.js";
 
 /**

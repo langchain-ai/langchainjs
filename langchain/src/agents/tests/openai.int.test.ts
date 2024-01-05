@@ -1,11 +1,11 @@
 /* eslint-disable no-process-env */
 import { test } from "@jest/globals";
 import { z } from "zod";
-import { initializeAgentExecutorWithOptions } from "../initialize.js";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
+import { ChatOpenAI } from "@langchain/openai";
+import { DynamicStructuredTool } from "@langchain/community/tools/dynamic";
 import { Calculator } from "../../tools/calculator.js";
-import { SerpAPI } from "../../tools/serpapi.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
-import { DynamicStructuredTool } from "../../tools/dynamic.js";
+import { initializeAgentExecutorWithOptions } from "../initialize.js";
 
 test("OpenAIAgent", async () => {
   const executor = await initializeAgentExecutorWithOptions(

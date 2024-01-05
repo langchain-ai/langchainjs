@@ -1,10 +1,10 @@
 /* eslint-disable no-process-env */
 import { expect, test } from "@jest/globals";
-import { ChatOpenAI } from "../../chat_models/openai.js";
-import { SerpAPI } from "../../tools/serpapi.js";
-import { Calculator } from "../../tools/calculator.js";
+import { ChatOpenAI } from "@langchain/openai";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
+import { HumanMessage } from "@langchain/core/messages";
 import { initializeAgentExecutorWithOptions } from "../initialize.js";
-import { HumanMessage } from "../../schema/index.js";
+import { Calculator } from "../../tools/calculator.js";
 
 test("Run agent locally", async () => {
   const model = new ChatOpenAI({ temperature: 0 });

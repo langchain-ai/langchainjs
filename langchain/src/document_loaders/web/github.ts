@@ -1,12 +1,14 @@
 import ignore, { Ignore } from "ignore";
 import binaryExtensions from "binary-extensions";
-
-import { Document } from "../../document.js";
-import { BaseDocumentLoader } from "../base.js";
-import { UnknownHandling } from "../fs/directory.js";
+import { Document } from "@langchain/core/documents";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import {
+  AsyncCaller,
+  AsyncCallerParams,
+} from "@langchain/core/utils/async_caller";
 import { extname } from "../../util/extname.js";
-import { getEnvironmentVariable } from "../../util/env.js";
-import { AsyncCaller, AsyncCallerParams } from "../../util/async_caller.js";
+import { UnknownHandling } from "../fs/directory.js";
+import { BaseDocumentLoader } from "../base.js";
 
 const extensions = new Set(binaryExtensions);
 

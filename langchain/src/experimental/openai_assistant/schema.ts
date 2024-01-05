@@ -1,5 +1,5 @@
 import type { OpenAIClient } from "@langchain/openai";
-import type { AgentFinish, AgentAction } from "../../schema/index.js";
+import { AgentFinish, AgentAction } from "@langchain/core/agents";
 
 export type OpenAIAssistantFinish = AgentFinish & {
   runId: string;

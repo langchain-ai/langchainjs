@@ -1,9 +1,9 @@
 /* eslint-disable no-process-env */
-import { ChatOpenAI } from "../../chat_models/openai.js";
-import { SerpAPI } from "../../tools/serpapi.js";
-import { Calculator } from "../../tools/calculator.js";
+import { ChatOpenAI } from "@langchain/openai";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
+import { DynamicTool } from "@langchain/community/tools/dynamic";
 import { initializeAgentExecutorWithOptions } from "../initialize.js";
-import { DynamicTool } from "../../tools/dynamic.js";
+import { Calculator } from "../../tools/calculator.js";
 
 test("Run agent locally with GPT-3.5", async () => {
   const model = new ChatOpenAI({ temperature: 0, modelName: "gpt-3.5-turbo" });

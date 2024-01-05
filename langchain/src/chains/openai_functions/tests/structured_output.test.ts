@@ -2,8 +2,8 @@ import { test, expect } from "@jest/globals";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
+import { AIMessage } from "@langchain/core/messages";
 import { FunctionCallStructuredOutputParser } from "../structured_output.js";
-import { AIMessage } from "../../../schema/index.js";
 
 test("structured output parser", async () => {
   const parser = new FunctionCallStructuredOutputParser(

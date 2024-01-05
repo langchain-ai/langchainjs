@@ -1,15 +1,15 @@
 import {
+  SupabaseFilter,
+  SupabaseFilterRPCCall,
+  SupabaseMetadata,
+} from "@langchain/community/vectorstores/supabase";
+import {
   Comparators,
   Comparison,
   Operation,
   Operators,
   StructuredQuery,
 } from "../../chains/query_constructor/ir.js";
-import type {
-  SupabaseFilter,
-  SupabaseFilterRPCCall,
-  SupabaseMetadata,
-} from "../../vectorstores/supabase.js";
 
 type SupabaseFilterProps = keyof SupabaseFilter;
 

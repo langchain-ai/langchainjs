@@ -1,10 +1,12 @@
 import { test, expect } from "@jest/globals";
-import { BaseLLM } from "../../llms/base.js";
-import { AIMessage, HumanMessage, LLMResult } from "../../schema/index.js";
-import { LLMChain } from "../llm_chain.js";
-import { PromptTemplate } from "../../prompts/index.js";
+import { BaseLLM } from "@langchain/core/language_models/llms";
+import { AIMessage, HumanMessage } from "@langchain/core/messages";
+import { LLMResult } from "@langchain/core/outputs";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
+import { BufferMemory } from "../../memory/index.js";
 import { SequentialChain } from "../sequential_chain.js";
-import { BufferMemory, ChatMessageHistory } from "../../memory/index.js";
+import { LLMChain } from "../llm_chain.js";
 
 class FakeLLM1 extends BaseLLM {
   nrMapCalls = 0;

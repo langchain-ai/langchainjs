@@ -1,20 +1,19 @@
 /* eslint-disable no-process-env */
 import { expect, test } from "@jest/globals";
-import { OpenAI } from "../../llms/openai.js";
-import { OpenAIEmbeddings } from "../../embeddings/openai.js";
-import { loadAgent } from "../load.js";
-import { AgentExecutor, ZeroShotAgent } from "../index.js";
-import { SerpAPI } from "../../tools/serpapi.js";
-import { Calculator } from "../../tools/calculator.js";
-import { initializeAgentExecutorWithOptions } from "../initialize.js";
-import { WebBrowser } from "../../tools/webbrowser.js";
-import { Tool } from "../../tools/base.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
-import { RunnableSequence } from "../../schema/runnable/base.js";
-import { OutputParserException } from "../../schema/output_parser.js";
-import { AIMessage, AgentStep } from "../../schema/index.js";
+import { OpenAI, OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
+import { Tool } from "@langchain/core/tools";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { OutputParserException } from "@langchain/core/output_parsers";
+import { AIMessage } from "@langchain/core/messages";
+import { AgentStep } from "@langchain/core/agents";
+import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
 import { BufferMemory } from "../../memory/buffer_memory.js";
-import { ChatMessageHistory } from "../../memory/index.js";
+import { WebBrowser } from "../../tools/webbrowser.js";
+import { initializeAgentExecutorWithOptions } from "../initialize.js";
+import { Calculator } from "../../tools/calculator.js";
+import { AgentExecutor, ZeroShotAgent } from "../index.js";
+import { loadAgent } from "../load.js";
 
 test("Run agent from hub", async () => {
   const model = new OpenAI({ temperature: 0, modelName: "text-babbage-001" });

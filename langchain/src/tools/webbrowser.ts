@@ -3,19 +3,19 @@ import { Document } from "@langchain/core/documents";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import axiosMod, { AxiosRequestConfig, AxiosStatic } from "axios";
 import * as cheerio from "cheerio";
-import { isNode } from "../util/env.js";
+import { isNode } from "@langchain/core/utils/env";
+import { Tool, ToolParams } from "@langchain/core/tools";
+import {
+  CallbackManager,
+  CallbackManagerForToolRun,
+} from "@langchain/core/callbacks/manager";
+import { formatDocumentsAsString } from "../util/document.js";
+import fetchAdapter from "../util/axios-fetch-adapter.js";
+import { MemoryVectorStore } from "../vectorstores/memory.js";
 import {
   RecursiveCharacterTextSplitter,
   TextSplitter,
 } from "../text_splitter.js";
-import { MemoryVectorStore } from "../vectorstores/memory.js";
-import { Tool, ToolParams } from "./base.js";
-import {
-  CallbackManager,
-  CallbackManagerForToolRun,
-} from "../callbacks/manager.js";
-import fetchAdapter from "../util/axios-fetch-adapter.js";
-import { formatDocumentsAsString } from "../util/document.js";
 
 export const parseInputs = (inputs: string): [string, string] => {
   const [baseUrl, task] = inputs.split(",").map((input) => {

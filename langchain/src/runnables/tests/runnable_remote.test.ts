@@ -2,8 +2,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { jest, test } from "@jest/globals";
 
+import { AIMessageChunk } from "@langchain/core/messages";
 import { RemoteRunnable } from "../remote.js";
-import { AIMessageChunk } from "../../schema/index.js";
 
 const BASE_URL = "http://my-langserve-endpoint";
 

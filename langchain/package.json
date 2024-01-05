@@ -1190,6 +1190,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.9.1",
+    "@langchain/anthropic": "~0.0.9",
     "@langchain/community": "~0.0.13",
     "@langchain/core": "~0.1.5",
     "@langchain/openai": "~0.0.9",

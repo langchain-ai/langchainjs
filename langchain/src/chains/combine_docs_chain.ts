@@ -1,17 +1,14 @@
+import { Document } from "@langchain/core/documents";
+import { ChainValues } from "@langchain/core/utils/types";
+import { BasePromptTemplate, PromptTemplate } from "@langchain/core/prompts";
+import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
+import { LLMChain } from "./llm_chain.js";
+import { BaseChain, ChainInputs } from "./base.js";
 import type {
   SerializedStuffDocumentsChain,
   SerializedMapReduceDocumentsChain,
   SerializedRefineDocumentsChain,
 } from "./serde.js";
-import { BaseChain, ChainInputs } from "./base.js";
-import { LLMChain } from "./llm_chain.js";
-
-import { Document } from "../document.js";
-
-import { ChainValues } from "../schema/index.js";
-import { BasePromptTemplate } from "../prompts/base.js";
-import { PromptTemplate } from "../prompts/prompt.js";
-import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
 /**
  * Interface for the input properties of the StuffDocumentsChain class.

@@ -1,5 +1,15 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
-import { BaseLLMOutputParser } from "../../schema/output_parser.js";
+import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
+import { ChainValues } from "@langchain/core/utils/types";
+import { ChatGeneration, Generation, RUN_KEY } from "@langchain/core/outputs";
+import {
+  Callbacks,
+  BaseCallbackConfig,
+} from "@langchain/core/callbacks/manager";
+import { BasePromptTemplate } from "@langchain/core/prompts";
+import { Criteria, CriteriaLike } from "../criteria/criteria.js";
+import { ConstitutionalPrinciple } from "../../chains/index.js";
+import { PROMPT, PROMPT_WITH_REFERENCES } from "./prompt.js";
 import {
   eqSet,
   EvalOutputType,
@@ -7,19 +17,6 @@ import {
   LLMPairwiseStringEvaluator,
   LLMPairwiseStringEvaluatorArgs,
 } from "../base.js";
-
-import {
-  ChainValues,
-  ChatGeneration,
-  Generation,
-  RUN_KEY,
-} from "../../schema/index.js";
-import { PROMPT, PROMPT_WITH_REFERENCES } from "./prompt.js";
-import { Callbacks } from "../../callbacks/index.js";
-import { BaseCallbackConfig } from "../../callbacks/manager.js";
-import { BasePromptTemplate } from "../../prompts/index.js";
-import { ConstitutionalPrinciple } from "../../chains/index.js";
-import { Criteria, CriteriaLike } from "../criteria/criteria.js";
 
 const SUPPORTED_CRITERIA: Record<Criteria, string> = /* #__PURE__ */ {
   conciseness: "Is the submission concise and to the point?",

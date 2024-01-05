@@ -3,7 +3,7 @@ import {
   type AWSSfnToolkitArgs,
   AWSSfnToolkit,
 } from "@langchain/community/agents/toolkits/aws_sfn";
-import { renderTemplate } from "../../prompts/template.js";
+import { renderTemplate } from "@langchain/core/prompts";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { ZeroShotAgent, ZeroShotCreatePromptArgs } from "../mrkl/index.js";
 import { AgentExecutor } from "../executor.js";

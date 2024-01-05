@@ -1,13 +1,9 @@
-/**
- * Prompt for trajectory evaluation chain.
- */
-
 import {
   AIMessagePromptTemplate,
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
-} from "../../prompts/index.js";
+} from "@langchain/core/prompts";
 
 const EVAL_TEMPLATE = `An AI language model has been given access to the following set of tools to help answer a user's question.
 

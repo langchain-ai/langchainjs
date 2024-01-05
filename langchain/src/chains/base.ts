@@ -1,14 +1,18 @@
-import { BaseMemory } from "../memory/base.js";
-import { ChainValues, RUN_KEY } from "../schema/index.js";
+import { BaseMemory } from "@langchain/core/memory";
+import { ChainValues } from "@langchain/core/utils/types";
+import { RUN_KEY } from "@langchain/core/outputs";
 import {
   CallbackManagerForChainRun,
   CallbackManager,
   Callbacks,
   parseCallbackConfigArg,
-} from "../callbacks/manager.js";
+} from "@langchain/core/callbacks/manager";
+import {
+  BaseLangChain,
+  BaseLangChainParams,
+} from "@langchain/core/language_models/base";
+import { RunnableConfig } from "@langchain/core/runnables";
 import { SerializedBaseChain } from "./serde.js";
-import { BaseLangChain, BaseLangChainParams } from "../base_language/index.js";
-import { RunnableConfig } from "../schema/runnable/config.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;

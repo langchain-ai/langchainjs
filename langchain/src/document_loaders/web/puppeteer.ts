@@ -5,8 +5,7 @@ import type {
   Browser,
   PuppeteerLaunchOptions,
 } from "puppeteer";
-
-import { Document } from "../../document.js";
+import { Document } from "@langchain/core/documents";
 import { BaseDocumentLoader } from "../base.js";
 import type { DocumentLoader } from "../base.js";
 

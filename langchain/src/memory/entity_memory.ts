@@ -1,21 +1,23 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
-import { BaseEntityStore } from "../schema/index.js";
-
-import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 import {
-  ENTITY_EXTRACTION_PROMPT,
-  ENTITY_SUMMARIZATION_PROMPT,
-} from "./prompt.js";
+  BaseChatMemory,
+  BaseChatMemoryInput,
+} from "@langchain/community/memory/chat_memory";
 import {
   InputValues,
   MemoryVariables,
   OutputValues,
-  getBufferString,
   getPromptInputKey,
-} from "./base.js";
-import { LLMChain } from "../chains/llm_chain.js";
-import { PromptTemplate } from "../prompts/prompt.js";
+} from "@langchain/core/memory";
+import { getBufferString } from "@langchain/core/messages";
+import { PromptTemplate } from "@langchain/core/prompts";
 import { InMemoryEntityStore } from "./stores/entity/in_memory.js";
+import { LLMChain } from "../chains/llm_chain.js";
+import {
+  ENTITY_EXTRACTION_PROMPT,
+  ENTITY_SUMMARIZATION_PROMPT,
+} from "./prompt.js";
+import { BaseEntityStore } from "../schema/index.js";
 
 /**
  * Interface for the input parameters required by the EntityMemory class.

@@ -1,8 +1,8 @@
 import { test, expect } from "@jest/globals";
 import { z } from "zod";
 
+import { StructuredTool } from "@langchain/core/tools";
 import { getPrompt } from "../prompt_generator.js";
-import { StructuredTool } from "../../../tools/base.js";
 import { Calculator } from "../../../tools/calculator.js";
 import { ReadFileTool, WriteFileTool } from "../../../tools/fs.js";
 import { InMemoryFileStore } from "../../../stores/file/in_memory.js";

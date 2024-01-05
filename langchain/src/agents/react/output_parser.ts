@@ -1,7 +1,7 @@
-import { renderTemplate } from "../../prompts/template.js";
-import { AgentActionOutputParser } from "../types.js";
+import { renderTemplate } from "@langchain/core/prompts";
+import { AgentAction, AgentFinish } from "@langchain/core/agents";
 import { FORMAT_INSTRUCTIONS } from "./prompt.js";
-import { AgentAction, AgentFinish } from "../../schema/index.js";
+import { AgentActionOutputParser } from "../types.js";
 
 const FINAL_ANSWER_ACTION = "Final Answer:";
 const FINAL_ANSWER_AND_PARSABLE_ACTION_ERROR_MESSAGE =

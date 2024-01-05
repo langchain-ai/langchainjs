@@ -1,9 +1,6 @@
+import { ToolMessage, AIMessage } from "@langchain/core/messages";
 import type { ToolsAgentStep } from "../openai/output_parser.js";
-import {
-  type BaseMessage,
-  ToolMessage,
-  AIMessage,
-} from "../../schema/index.js";
+import { type BaseMessage } from "../../schema/index.js";
 
 export function formatToOpenAIToolMessages(
   steps: ToolsAgentStep[]

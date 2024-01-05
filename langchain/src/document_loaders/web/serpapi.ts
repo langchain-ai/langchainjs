@@ -1,5 +1,5 @@
-import { getEnvironmentVariable } from "../../util/env.js";
-import { Document } from "../../document.js";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { Document } from "@langchain/core/documents";
 import { BaseDocumentLoader } from "../base.js";
 
 /**

@@ -7,7 +7,7 @@ import {
 import { type BasePromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import type { DocumentInterface } from "@langchain/core/documents";
-import type { BaseMessage } from "../schema/index.js";
+import { BaseMessage } from "@langchain/core/messages";
 
 /**
  * Params for the createHistoryAwareRetriever method.

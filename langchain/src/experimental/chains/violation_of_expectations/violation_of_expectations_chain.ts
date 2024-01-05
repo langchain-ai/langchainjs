@@ -1,15 +1,19 @@
 import type { BaseRetrieverInterface } from "@langchain/core/retrievers";
-import { CallbackManagerForChainRun } from "../../../callbacks/manager.js";
-import { ChatOpenAI } from "../../../chat_models/openai.js";
-import { JsonOutputFunctionsParser } from "../../../output_parsers/openai_functions.js";
+import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
+import { ChatOpenAI } from "@langchain/openai";
 import {
   BaseMessage,
-  ChainValues,
   HumanMessage,
   isBaseMessage,
-} from "../../../schema/index.js";
-import { StringOutputParser } from "../../../schema/output_parser.js";
-import { BaseChain, ChainInputs } from "../../../chains/base.js";
+} from "@langchain/core/messages";
+import { ChainValues } from "@langchain/core/utils/types";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import {
+  GENERATE_FACTS_PROMPT,
+  GENERATE_REVISED_PREDICTION_PROMPT,
+  PREDICTION_VIOLATIONS_PROMPT,
+  PREDICT_NEXT_USER_MESSAGE_PROMPT,
+} from "./violation_of_expectations_prompt.js";
 import {
   GetPredictionViolationsResponse,
   MessageChunkResult,
@@ -17,12 +21,8 @@ import {
   PREDICT_NEXT_USER_MESSAGE_FUNCTION,
   PredictNextUserMessageResponse,
 } from "./types.js";
-import {
-  GENERATE_FACTS_PROMPT,
-  GENERATE_REVISED_PREDICTION_PROMPT,
-  PREDICTION_VIOLATIONS_PROMPT,
-  PREDICT_NEXT_USER_MESSAGE_PROMPT,
-} from "./violation_of_expectations_prompt.js";
+import { BaseChain, ChainInputs } from "../../../chains/base.js";
+import { JsonOutputFunctionsParser } from "../../../output_parsers/openai_functions.js";
 
 /**
  * Interface for the input parameters of the ViolationOfExpectationsChain class.

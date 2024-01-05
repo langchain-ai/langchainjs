@@ -1,8 +1,7 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { ToolInterface } from "@langchain/core/tools";
+import { PromptTemplate, renderTemplate } from "@langchain/core/prompts";
 import { LLMChain } from "../../chains/llm_chain.js";
-import { PromptTemplate } from "../../prompts/prompt.js";
-import { renderTemplate } from "../../prompts/template.js";
 import { Optional } from "../../types/type-utils.js";
 import { Agent, AgentArgs, OutputParserArgs } from "../agent.js";
 import { deserializeHelper } from "../helpers.js";

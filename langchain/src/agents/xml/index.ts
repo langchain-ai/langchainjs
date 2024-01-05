@@ -8,24 +8,20 @@ import {
   RunnableSequence,
 } from "@langchain/core/runnables";
 import type { BasePromptTemplate } from "@langchain/core/prompts";
-import { LLMChain } from "../../chains/llm_chain.js";
-import {
-  AgentStep,
-  AgentAction,
-  AgentFinish,
-  ChainValues,
-} from "../../schema/index.js";
+import { AgentStep, AgentAction, AgentFinish } from "@langchain/core/agents";
+import { ChainValues } from "@langchain/core/utils/types";
 import {
   AIMessagePromptTemplate,
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
-} from "../../prompts/chat.js";
-import { AgentArgs, BaseSingleActionAgent } from "../agent.js";
-import { AGENT_INSTRUCTIONS } from "./prompt.js";
-import { CallbackManager } from "../../callbacks/manager.js";
-import { XMLAgentOutputParser } from "./output_parser.js";
-import { renderTextDescription } from "../../tools/render.js";
+} from "@langchain/core/prompts";
+import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { formatXml } from "../format_scratchpad/xml.js";
+import { renderTextDescription } from "../../tools/render.js";
+import { XMLAgentOutputParser } from "./output_parser.js";
+import { AGENT_INSTRUCTIONS } from "./prompt.js";
+import { AgentArgs, BaseSingleActionAgent } from "../agent.js";
+import { LLMChain } from "../../chains/llm_chain.js";
 
 /**
  * Interface for the input to the XMLAgent class.

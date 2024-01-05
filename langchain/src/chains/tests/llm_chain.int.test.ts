@@ -1,13 +1,12 @@
 import { test } from "@jest/globals";
-import { OpenAI } from "../../llms/openai.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
+import { OpenAI, ChatOpenAI } from "@langchain/openai";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   PromptTemplate,
-} from "../../prompts/index.js";
-import { LLMChain } from "../llm_chain.js";
+} from "@langchain/core/prompts";
 import { BufferMemory } from "../../memory/buffer_memory.js";
+import { LLMChain } from "../llm_chain.js";
 
 test("Test OpenAI", async () => {
   const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });

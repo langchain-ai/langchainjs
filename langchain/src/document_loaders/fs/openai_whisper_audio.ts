@@ -1,6 +1,5 @@
 import { type ClientOptions, OpenAIClient, toFile } from "@langchain/openai";
-
-import { Document } from "../../document.js";
+import { Document } from "@langchain/core/documents";
 import { BufferLoader } from "./buffer.js";
 
 const MODEL_NAME = "whisper-1";

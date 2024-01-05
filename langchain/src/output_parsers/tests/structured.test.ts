@@ -1,8 +1,7 @@
 import { z } from "zod";
 
 import { expect, test } from "@jest/globals";
-
-import { OutputParserException } from "../../schema/output_parser.js";
+import { OutputParserException } from "@langchain/core/output_parsers";
 import { StructuredOutputParser } from "../structured.js";
 
 test("StructuredOutputParser.fromNamesAndDescriptions", async () => {

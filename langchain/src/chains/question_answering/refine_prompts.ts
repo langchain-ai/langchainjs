@@ -1,15 +1,15 @@
 /* eslint-disable spaced-comment */
 import {
-  PromptTemplate,
-  ChatPromptTemplate,
-  SystemMessagePromptTemplate,
-  HumanMessagePromptTemplate,
-  AIMessagePromptTemplate,
-} from "../../prompts/index.js";
-import {
   ConditionalPromptSelector,
   isChatModel,
-} from "../../prompts/selectors/conditional.js";
+} from "@langchain/core/example_selectors";
+import {
+  PromptTemplate,
+  HumanMessagePromptTemplate,
+  AIMessagePromptTemplate,
+  ChatPromptTemplate,
+  SystemMessagePromptTemplate,
+} from "@langchain/core/prompts";
 
 export const DEFAULT_REFINE_PROMPT_TMPL = `The original question is as follows: {question}
 We have provided an existing answer: {existing_answer}

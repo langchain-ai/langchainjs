@@ -1,11 +1,9 @@
 import { expect, test } from "@jest/globals";
-import { OpenAI } from "../../llms/openai.js";
-import { ConversationalRetrievalQAChain } from "../conversational_retrieval_chain.js";
-import { HNSWLib } from "../../vectorstores/hnswlib.js";
-import { OpenAIEmbeddings } from "../../embeddings/openai.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
-import { PromptTemplate } from "../../prompts/index.js";
+import { OpenAI, OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
+import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
+import { PromptTemplate } from "@langchain/core/prompts";
 import { BufferMemory } from "../../memory/buffer_memory.js";
+import { ConversationalRetrievalQAChain } from "../conversational_retrieval_chain.js";
 
 test("Test ConversationalRetrievalQAChain from LLM", async () => {
   const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });

@@ -5,7 +5,7 @@ import {
   AIMessage,
   SystemMessage,
 } from "@langchain/core/messages";
-import { Serializable } from "../load/serializable.js";
+import { Serializable } from "@langchain/core/load/serializable";
 
 export {
   type AgentAction,

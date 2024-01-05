@@ -1,9 +1,13 @@
 import { test, expect } from "@jest/globals";
-import { BufferMemory } from "../buffer_memory.js";
-import { CombinedMemory } from "../combined_memory.js";
+import { OpenAI } from "@langchain/openai";
+import {
+  AIMessage,
+  HumanMessage,
+  SystemMessage,
+} from "@langchain/core/messages";
 import { ConversationSummaryMemory } from "../summary.js";
-import { OpenAI } from "../../llms/openai.js";
-import { AIMessage, HumanMessage, SystemMessage } from "../../schema/index.js";
+import { CombinedMemory } from "../combined_memory.js";
+import { BufferMemory } from "../buffer_memory.js";
 
 test("Test combined memory", async () => {
   // buffer memory

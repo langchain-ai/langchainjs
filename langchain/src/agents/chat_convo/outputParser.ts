@@ -2,12 +2,12 @@ import type { BaseLanguageModelInterface } from "@langchain/core/language_models
 import {
   FormatInstructionsOptions,
   OutputParserException,
-} from "../../schema/output_parser.js";
-import { renderTemplate } from "../../prompts/template.js";
-import { AgentActionOutputParser } from "../types.js";
-import { FORMAT_INSTRUCTIONS } from "./prompt.js";
-import { AgentAction, AgentFinish } from "../../schema/index.js";
+} from "@langchain/core/output_parsers";
+import { renderTemplate } from "@langchain/core/prompts";
+import { AgentAction, AgentFinish } from "@langchain/core/agents";
 import { OutputFixingParser } from "../../output_parsers/fix.js";
+import { FORMAT_INSTRUCTIONS } from "./prompt.js";
+import { AgentActionOutputParser } from "../types.js";
 
 export type ChatConversationalAgentOutputParserFormatInstructionsOptions =
   FormatInstructionsOptions & {

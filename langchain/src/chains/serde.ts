@@ -1,5 +1,5 @@
-import type { SerializedLLM } from "../llms/base.js";
-import type { SerializedBasePromptTemplate } from "../prompts/serde.js";
+import { SerializedLLM } from "@langchain/core/language_models/base";
+import { SerializedBasePromptTemplate } from "@langchain/core/prompts";
 
 /**
  * Represents the serialized form of an LLMChain. It includes properties

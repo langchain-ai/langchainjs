@@ -1,6 +1,6 @@
 import { z } from "zod";
+import { StructuredTool, ToolParams } from "@langchain/core/tools";
 import { BaseFileStore } from "../schema/index.js";
-import { StructuredTool, ToolParams } from "./base.js";
 
 /**
  * Interface for parameters required by the ReadFileTool class.

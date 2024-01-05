@@ -2,17 +2,17 @@
 
 import { expect, test } from "@jest/globals";
 import { HUMAN_PROMPT } from "@anthropic-ai/sdk";
-import { ChatMessage, HumanMessage } from "../../schema/index.js";
-import { ChatPromptValue } from "../../prompts/chat.js";
+import { ChatMessage, HumanMessage } from "@langchain/core/messages";
+import { ChatPromptValue } from "@langchain/core/prompt_values";
 import {
   PromptTemplate,
   ChatPromptTemplate,
   AIMessagePromptTemplate,
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
-} from "../../prompts/index.js";
-import { ChatAnthropic } from "../anthropic.js";
-import { CallbackManager } from "../../callbacks/index.js";
+} from "@langchain/core/prompts";
+import { ChatAnthropic } from "@langchain/anthropic";
+import { CallbackManager } from "@langchain/core/callbacks/manager";
 
 test("Test ChatAnthropic", async () => {
   const chat = new ChatAnthropic({

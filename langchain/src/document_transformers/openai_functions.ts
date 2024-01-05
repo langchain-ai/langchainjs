@@ -1,15 +1,16 @@
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import type { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
-
-import { Document } from "../document.js";
-import { BaseChain } from "../chains/base.js";
-import { MappingDocumentTransformer } from "../schema/document.js";
+import {
+  Document,
+  MappingDocumentTransformer,
+} from "@langchain/core/documents";
+import { ChatOpenAI } from "@langchain/openai";
 import {
   TaggingChainOptions,
   createTaggingChain,
 } from "../chains/openai_functions/index.js";
-import { ChatOpenAI } from "../chat_models/openai.js";
+import { BaseChain } from "../chains/base.js";
 
 /**
  * A transformer that tags metadata to a document using a tagging chain.
