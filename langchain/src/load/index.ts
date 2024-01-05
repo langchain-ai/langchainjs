@@ -1,6 +1,6 @@
 import {
   optionalImportEntrypoints,
-  OptionalImportMap
+  OptionalImportMap,
 } from "@langchain/community/load";
 import { load as coreLoad } from "@langchain/core/load";
 import * as importMap from "./import_map.js";
@@ -16,6 +16,6 @@ export async function load<T>(
     secretsMap,
     optionalImportsMap,
     optionalImportEntrypoints,
-    importMap
+    importMap,
   });
 }

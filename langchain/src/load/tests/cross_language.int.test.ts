@@ -59,7 +59,7 @@ const CURRENT_KNOWN_FAILURES = [
   "langchain/runnables/openai_functions/OpenAIFunctionsRouter",
   "langchain_core/runnables/base/RunnableEachBase",
   "langchain_core/runnables/configurable/RunnableConfigurableAlternatives",
-  "langchain_core/runnables/configurable/RunnableConfigurableFields"
+  "langchain_core/runnables/configurable/RunnableConfigurableFields",
 ];
 
 const CROSS_LANGUAGE_ENTRYPOINTS = Object.keys(IMPORTANT_IMPORTS)
@@ -76,7 +76,7 @@ describe("Test cross language serialization of important modules", () => {
         lc: 1,
         type: "constructor",
         id: idComponents,
-        kwargs: {}
+        kwargs: {},
       };
       try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
