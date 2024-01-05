@@ -47,9 +47,11 @@
     "@types/semver": "^7",
     "commander": "^11.1.0",
     "dotenv": "^16.0.3",
+    "glob": "^10.3.10",
     "lint-staged": "^13.1.1",
     "prettier": "^2.8.3",
     "semver": "^7.5.4",
+    "ts-morph": "^21.0.1",
     "typescript": "~5.1.6"
   },
   "dependencies": {
