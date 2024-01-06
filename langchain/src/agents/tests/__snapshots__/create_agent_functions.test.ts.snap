@@ -396,8 +396,8 @@ exports[`createOpenAIToolsAgent works 1`] = `
       "id": [
         "langchain",
         "agents",
-        "structured_chat",
-        "StructuredChatOutputParserWithRetries",
+        "openai",
+        "OpenAIToolsAgentOutputParser",
       ],
       "lc": 1,
       "type": "not_implemented",
@@ -412,6 +412,8 @@ exports[`createOpenAIToolsAgent works 1`] = `
         ],
         "kwargs": {
           "input_variables": [
+            "tools",
+            "tool_names",
             "input",
             "agent_scratchpad",
           ],
@@ -494,17 +496,33 @@ exports[`createOpenAIToolsAgent works 1`] = `
           "bound": {
             "id": [
               "langchain",
-              "llms",
+              "chat_models",
               "fake",
-              "FakeLLM",
+              "FakeChatModel",
             ],
             "lc": 1,
             "type": "not_implemented",
           },
           "config": {},
           "kwargs": {
-            "stop": [
-              "Observation",
+            "tools": [
+              {
+                "function": {
+                  "description": "Useful for getting the result of a math expression. The input to this tool should be a valid mathematical expression that could be executed by a simple calculator.",
+                  "name": "calculator",
+                  "parameters": {
+                    "$schema": "http://json-schema.org/draft-07/schema#",
+                    "additionalProperties": false,
+                    "properties": {
+                      "input": {
+                        "type": "string",
+                      },
+                    },
+                    "type": "object",
+                  },
+                },
+                "type": "function",
+              },
             ],
           },
         },
