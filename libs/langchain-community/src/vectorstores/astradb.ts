@@ -164,11 +164,9 @@ export class AstraDBVectorStore extends VectorStore {
 
     for (const id of params.ids) {
       console.debug(`Deleting document with id ${id}`);
-      await this.collection.deleteOne(
-        {
-          [this.idKey]: id,
-        }
-      );
+      await this.collection.deleteOne({
+        [this.idKey]: id,
+      });
     }
   }
 

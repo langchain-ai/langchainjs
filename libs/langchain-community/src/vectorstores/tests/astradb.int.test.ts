@@ -72,7 +72,9 @@ describe.skip("AstraDBVectorStore", () => {
     const results = await store.similaritySearch("Apache Cassandra", 1);
 
     expect(results.length).toEqual(1);
-    expect(results[0].pageContent).toEqual("AstraDB is built on Apache Cassandra");
+    expect(results[0].pageContent).toEqual(
+      "AstraDB is built on Apache Cassandra"
+    );
     expect(results[0].metadata.id).toEqual(123);
   });
 
@@ -96,10 +98,11 @@ describe.skip("AstraDBVectorStore", () => {
     const results = await store2.similaritySearch("Apache Cassandra", 1);
 
     expect(results.length).toEqual(1);
-    expect(results[0].pageContent).toEqual("AstraDB is built on Apache Cassandra");
+    expect(results[0].pageContent).toEqual(
+      "AstraDB is built on Apache Cassandra"
+    );
     expect(results[0].metadata.id).toEqual(123);
   });
-
 
   test("delete", async () => {
     const store = await AstraDBVectorStore.fromTexts(
@@ -116,13 +119,17 @@ describe.skip("AstraDBVectorStore", () => {
     const results = await store.similaritySearch("Apache Cassandra", 1);
 
     expect(results.length).toEqual(1);
-    expect(results[0].pageContent).toEqual("AstraDB is built on Apache Cassandra");
+    expect(results[0].pageContent).toEqual(
+      "AstraDB is built on Apache Cassandra"
+    );
     expect(results[0].metadata.id).toEqual(123);
 
     await store.delete({ ids: [results[0].metadata._id] });
 
     const results2 = await store.similaritySearch("Apache Cassandra", 1);
 
-    expect(results2[0].pageContent).not.toBe("AstraDB is built on Apache Cassandra");
+    expect(results2[0].pageContent).not.toBe(
+      "AstraDB is built on Apache Cassandra"
+    );
   });
 });
