@@ -1,4 +1,4 @@
-import { ChatOpenAI } from "@langchain/openai";
+import { ChatOpenAI, formatToOpenAIFunction } from "@langchain/openai";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { AgentExecutor, type AgentStep } from "langchain/agents";
 import { formatToOpenAIFunctionMessages } from "langchain/agents/format_scratchpad";
@@ -6,9 +6,9 @@ import {
   ChatPromptTemplate,
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
-import { formatToOpenAIFunction, DynamicTool } from "langchain/tools";
 import { OpenAIFunctionsAgentOutputParser } from "langchain/agents/openai/output_parser";
 import { AIMessage, BaseMessage, HumanMessage } from "@langchain/core/messages";
+import { DynamicTool } from "@langchain/community/tools/dynamic";
 
 /**
  * Define your chat model to use.

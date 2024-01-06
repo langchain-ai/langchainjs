@@ -2,7 +2,7 @@ import { Redis } from "@upstash/redis";
 import https from "https";
 
 import { OpenAI } from "@langchain/openai";
-import { UpstashRedisCache } from "langchain/cache/upstash_redis";
+import { UpstashRedisCache } from "@langchain/community/caches/upstash_redis";
 
 // const client = new Redis({
 //   url: process.env.UPSTASH_REDIS_REST_URL!,

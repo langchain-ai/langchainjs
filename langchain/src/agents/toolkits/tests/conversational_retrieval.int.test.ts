@@ -1,12 +1,11 @@
 import { test } from "@jest/globals";
-import { HNSWLib } from "../../../vectorstores/hnswlib.js";
-import { OpenAIEmbeddings } from "../../../embeddings/openai.js";
+import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
+import { MemoryVectorStore } from "../../../vectorstores/memory.js";
 import { createConversationalRetrievalAgent } from "../conversational_retrieval/openai_functions.js";
 import { createRetrieverTool } from "../conversational_retrieval/tool.js";
-import { ChatOpenAI } from "../../../chat_models/openai.js";
 
 test("Test ConversationalRetrievalAgent", async () => {
-  const vectorStore = await HNSWLib.fromTexts(
+  const vectorStore = await MemoryVectorStore.fromTexts(
     [
       "LangCo made $10000 in July",
       "LangCo made $20 in August",

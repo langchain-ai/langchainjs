@@ -1,4 +1,4 @@
-import { PromptTemplate } from "../../prompts/prompt.js";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const CYPHER_GENERATION_TEMPLATE = `Task:Generate Cypher statement to query a graph database.
 Instructions:

@@ -1,11 +1,12 @@
 import type { createCluster, createClient } from "redis";
 
-import { BaseCache, Generation } from "../schema/index.js";
 import {
+  BaseCache,
   deserializeStoredGeneration,
   getCacheKey,
   serializeGeneration,
-} from "./base.js";
+} from "@langchain/core/caches";
+import { Generation } from "@langchain/core/outputs";
 
 /**
  * Represents the type of the Redis client used to interact with the Redis
@@ -16,6 +17,7 @@ type RedisClientType =
   | ReturnType<typeof createCluster>;
 
 /**
+ * @deprecated Import from "@langchain/community/caches/ioredis" instead.
  * Represents a specific implementation of a caching mechanism using Redis
  * as the underlying storage system. It extends the `BaseCache` class and
  * overrides its methods to provide the Redis-specific logic.

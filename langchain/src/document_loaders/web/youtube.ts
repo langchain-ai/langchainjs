@@ -1,6 +1,6 @@
 import { TranscriptResponse, YoutubeTranscript } from "youtube-transcript";
 import { Innertube } from "youtubei.js";
-import { Document } from "../../document.js";
+import { Document } from "@langchain/core/documents";
 import { BaseDocumentLoader } from "../base.js";
 
 /**

@@ -1,6 +1,6 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { SerpAPI } from "langchain/tools";
 import { HumanMessage } from "@langchain/core/messages";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 const model = new ChatOpenAI({
   temperature: 0.9,
@@ -15,25 +15,7 @@ const modelForFunctionCalling = new ChatOpenAI({
   temperature: 0,
 });
 
-await modelForFunctionCalling.predictMessages(
-  [new HumanMessage("What is the weather in New York?")],
-  { tools: [new SerpAPI()] }
-  // Tools will be automatically formatted as functions in the OpenAI format
-);
-/*
-AIMessage {
-  text: '',
-  name: undefined,
-  additional_kwargs: {
-    function_call: {
-      name: 'search',
-      arguments: '{\n  "input": "current weather in New York"\n}'
-    }
-  }
-}
-*/
-
-await modelForFunctionCalling.predictMessages(
+await modelForFunctionCalling.invoke(
   [new HumanMessage("What is the weather in New York?")],
   {
     functions: [

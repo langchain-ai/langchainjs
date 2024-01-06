@@ -1,1 +1,2 @@
 src/load/import_type.d.ts
+src/load/import_map.ts

@@ -1,7 +1,7 @@
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import type { DocumentInterface } from "@langchain/core/documents";
+import { cosineSimilarity } from "@langchain/core/utils/math";
 import { BaseDocumentCompressor } from "./index.js";
-import { cosineSimilarity } from "../../util/math.js";
 
 /**
  * Interface for the parameters of the `EmbeddingsFilter` class.
