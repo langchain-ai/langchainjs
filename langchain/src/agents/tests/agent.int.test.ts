@@ -8,45 +8,11 @@ import { AIMessage } from "@langchain/core/messages";
 import { AgentStep } from "@langchain/core/agents";
 import { SerpAPI } from "@langchain/community/tools/serpapi";
 import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
-import { loadAgent } from "../load.js";
 import { AgentExecutor, ZeroShotAgent } from "../index.js";
 import { Calculator } from "../../tools/calculator.js";
 import { initializeAgentExecutorWithOptions } from "../initialize.js";
 import { WebBrowser } from "../../tools/webbrowser.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
-
-test("Run agent from hub", async () => {
-  const model = new OpenAI({ temperature: 0, modelName: "text-babbage-001" });
-  const tools: Tool[] = [
-    new SerpAPI(undefined, {
-      location: "Austin,Texas,United States",
-      hl: "en",
-      gl: "us",
-    }),
-    new Calculator(),
-  ];
-  const agent = await loadAgent(
-    "lc://agents/zero-shot-react-description/agent.json",
-    { llm: model, tools }
-  );
-  const executor = AgentExecutor.fromAgentAndTools({
-    agent,
-    tools,
-    returnIntermediateSteps: true,
-  });
-  const res = await executor.call({
-    input:
-      "Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?",
-  });
-  console.log(
-    {
-      res,
-    },
-    "Run agent from hub response"
-  );
-  expect(res.output).not.toEqual("");
-  expect(res.output).not.toEqual("Agent stopped due to max iterations.");
-});
 
 test("Pass runnable to agent executor", async () => {
   const model = new ChatOpenAI({ temperature: 0, modelName: "gpt-3.5-turbo" });
@@ -202,36 +168,6 @@ test("Add a fallback method", async () => {
   );
   expect(res.output).not.toEqual("");
   expect(res.output).not.toEqual("Agent stopped due to max iterations.");
-});
-
-test("Run agent locally", async () => {
-  const model = new OpenAI({ temperature: 0, modelName: "text-babbage-001" });
-  const tools = [
-    new SerpAPI(undefined, {
-      location: "Austin,Texas,United States",
-      hl: "en",
-      gl: "us",
-    }),
-    new Calculator(),
-  ];
-
-  const executor = await initializeAgentExecutorWithOptions(tools, model, {
-    agentType: "zero-shot-react-description",
-  });
-  console.log("Loaded agent.");
-
-  const input = `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`;
-  console.log(`Executing with input "${input}"...`);
-
-  const result = await executor.call({ input });
-  console.log(
-    {
-      result,
-    },
-    "Run agent locally"
-  );
-  expect(result.output).not.toEqual("");
-  expect(result.output).not.toEqual("Agent stopped due to max iterations.");
 });
 
 test("Run agent with an abort signal", async () => {
