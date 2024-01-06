@@ -1,29 +1,23 @@
 import { test, expect } from "@jest/globals";
-import { ChatOpenAI, OpenAI } from "@langchain/openai";
-import type {
-  ChatPromptTemplate,
-  PromptTemplate,
-} from "@langchain/core/prompts";
-import { pull } from "../../hub.js";
+import { FakeLLM, FakeChatModel } from "@langchain/core/utils/testing";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
 import {
   createOpenAIFunctionsAgent,
+  createOpenAIToolsAgent,
   createReactAgent,
   createStructuredChatAgent,
   createXmlAgent,
 } from "../index.js";
-import { ChatAnthropic } from "../../chat_models/anthropic.js";
 import { Calculator } from "../../tools/calculator.js";
 
 const tools = [new Calculator()];
 
-test("createStructuredChatAgent works", async () => {
-  const prompt = await pull<ChatPromptTemplate>(
-    "hwchase17/structured-chat-agent"
-  );
-  const llm = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
-    temperature: 0,
-  });
+test("can initialize createStructuredChatAgent", async () => {
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", `{tools} {tool_names}`],
+    ["human", "{input} {agent_scratchpad}"],
+  ]);
+  const llm = new FakeLLM({});
   const agent = await createStructuredChatAgent({
     llm,
     tools,
@@ -34,13 +28,11 @@ test("createStructuredChatAgent works", async () => {
 });
 
 test("createOpenAIFunctionsAgent works", async () => {
-  const prompt = await pull<ChatPromptTemplate>(
-    "hwchase17/openai-functions-agent"
-  );
-  const llm = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
-    temperature: 0,
-  });
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", `{tools} {tool_names}`],
+    ["human", "{input} {agent_scratchpad}"],
+  ]);
+  const llm = new FakeChatModel({});
   const agent = await createOpenAIFunctionsAgent({
     llm,
     tools,
@@ -51,14 +43,12 @@ test("createOpenAIFunctionsAgent works", async () => {
 });
 
 test("createOpenAIToolsAgent works", async () => {
-  const prompt = await pull<ChatPromptTemplate>(
-    "hwchase17/structured-chat-agent"
-  );
-  const llm = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
-    temperature: 0,
-  });
-  const agent = await createStructuredChatAgent({
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", `{tools} {tool_names}`],
+    ["human", "{input} {agent_scratchpad}"],
+  ]);
+  const llm = new FakeChatModel({});
+  const agent = await createOpenAIToolsAgent({
     llm,
     tools,
     prompt,
@@ -68,11 +58,11 @@ test("createOpenAIToolsAgent works", async () => {
 });
 
 test("createXmlAgent works", async () => {
-  const prompt = await pull<PromptTemplate>("hwchase17/xml-agent-convo");
-  const llm = new ChatAnthropic({
-    modelName: "claude-2.1",
-    temperature: 0,
-  });
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", `{tools} {tool_names}`],
+    ["human", "{input} {agent_scratchpad}"],
+  ]);
+  const llm = new FakeLLM({});
   const agent = await createXmlAgent({
     llm,
     tools,
@@ -83,11 +73,11 @@ test("createXmlAgent works", async () => {
 });
 
 test("createReactAgent works", async () => {
-  const prompt = await pull<PromptTemplate>("hwchase17/react");
-  const llm = new OpenAI({
-    modelName: "gpt-3.5-turbo-instruct",
-    temperature: 0,
-  });
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", `{tools} {tool_names}`],
+    ["human", "{input} {agent_scratchpad}"],
+  ]);
+  const llm = new FakeLLM({});
   const agent = await createReactAgent({
     llm,
     tools,
