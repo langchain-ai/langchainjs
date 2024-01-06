@@ -1,11 +1,11 @@
 import { test, expect } from "@jest/globals";
 import type { PromptTemplate } from "@langchain/core/prompts";
+import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
 import { pull } from "../../hub.js";
 import { AgentExecutor, createXmlAgent } from "../index.js";
 import { ChatAnthropic } from "../../chat_models/anthropic.js";
-import { Calculator } from "../../tools/calculator.js";
 
-const tools = [new Calculator()];
+const tools = [new TavilySearchResults({ maxResults: 1 })];
 
 test("createXmlAgent works", async () => {
   const prompt = await pull<PromptTemplate>("hwchase17/xml-agent-convo");
