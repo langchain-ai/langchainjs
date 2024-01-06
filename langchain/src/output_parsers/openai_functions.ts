@@ -79,7 +79,9 @@ export class OutputFunctionsParser extends BaseLLMOutputParser<string> {
  * Class for parsing the output of an LLM into a JSON object. Uses an
  * instance of `OutputFunctionsParser` to parse the output.
  */
-export class JsonOutputFunctionsParser<Output extends object = object> extends BaseCumulativeTransformOutputParser<Output> {
+export class JsonOutputFunctionsParser<
+  Output extends object = object
+> extends BaseCumulativeTransformOutputParser<Output> {
   static lc_name() {
     return "JsonOutputFunctionsParser";
   }

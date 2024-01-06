@@ -13,3 +13,7 @@ export {
   createStructuredOutputChain,
   createStructuredOutputChainFromZod,
 } from "./structured_output.js";
+export {
+  createStructuredOutputRunnable,
+  createOpenAIFnRunnable,
+} from "./base.js";
