@@ -1,0 +1,1004 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`createOpenAIFunctionsAgent works 1`] = `
+{
+  "id": [
+    "langchain_core",
+    "runnables",
+    "RunnableSequence",
+  ],
+  "kwargs": {
+    "first": {
+      "id": [
+        "langchain_core",
+        "runnables",
+        "RunnableAssign",
+      ],
+      "kwargs": {
+        "mapper": {
+          "id": [
+            "langchain_core",
+            "runnables",
+            "RunnableMap",
+          ],
+          "kwargs": {
+            "steps": {
+              "agent_scratchpad": {
+                "id": [
+                  "langchain_core",
+                  "runnables",
+                  "RunnableLambda",
+                ],
+                "lc": 1,
+                "type": "not_implemented",
+              },
+            },
+          },
+          "lc": 1,
+          "type": "constructor",
+        },
+      },
+      "lc": 1,
+      "type": "constructor",
+    },
+    "last": {
+      "id": [
+        "langchain",
+        "agents",
+        "openai",
+        "OpenAIFunctionsAgentOutputParser",
+      ],
+      "lc": 1,
+      "type": "not_implemented",
+    },
+    "middle": [
+      {
+        "id": [
+          "langchain_core",
+          "prompts",
+          "chat",
+          "ChatPromptTemplate",
+        ],
+        "kwargs": {
+          "input_variables": [
+            "agent_scratchpad",
+            "chat_history",
+            "input",
+          ],
+          "messages": [
+            {
+              "id": [
+                "langchain_core",
+                "prompts",
+                "chat",
+                "SystemMessagePromptTemplate",
+              ],
+              "kwargs": {
+                "prompt": {
+                  "id": [
+                    "langchain_core",
+                    "prompts",
+                    "prompt",
+                    "PromptTemplate",
+                  ],
+                  "kwargs": {
+                    "input_variables": [],
+                    "partial_variables": undefined,
+                    "template": "You are a helpful assistant",
+                    "template_format": "f-string",
+                  },
+                  "lc": 1,
+                  "type": "constructor",
+                },
+              },
+              "lc": 1,
+              "type": "constructor",
+            },
+            {
+              "id": [
+                "langchain_core",
+                "prompts",
+                "chat",
+                "MessagesPlaceholder",
+              ],
+              "kwargs": {
+                "optional": true,
+                "variable_name": "chat_history",
+              },
+              "lc": 1,
+              "type": "constructor",
+            },
+            {
+              "id": [
+                "langchain_core",
+                "prompts",
+                "chat",
+                "HumanMessagePromptTemplate",
+              ],
+              "kwargs": {
+                "prompt": {
+                  "id": [
+                    "langchain_core",
+                    "prompts",
+                    "prompt",
+                    "PromptTemplate",
+                  ],
+                  "kwargs": {
+                    "input_variables": [
+                      "input",
+                    ],
+                    "partial_variables": undefined,
+                    "template": "{input}",
+                    "template_format": "f-string",
+                  },
+                  "lc": 1,
+                  "type": "constructor",
+                },
+              },
+              "lc": 1,
+              "type": "constructor",
+            },
+            {
+              "id": [
+                "langchain_core",
+                "prompts",
+                "chat",
+                "MessagesPlaceholder",
+              ],
+              "kwargs": {
+                "optional": false,
+                "variable_name": "agent_scratchpad",
+              },
+              "lc": 1,
+              "type": "constructor",
+            },
+          ],
+          "partial_variables": undefined,
+        },
+        "lc": 1,
+        "type": "constructor",
+      },
+      {
+        "id": [
+          "langchain_core",
+          "runnables",
+          "RunnableBinding",
+        ],
+        "kwargs": {
+          "bound": {
+            "id": [
+              "langchain",
+              "chat_models",
+              "openai",
+              "ChatOpenAI",
+            ],
+            "kwargs": {
+              "callbacks": undefined,
+              "model": "gpt-3.5-turbo-1106",
+              "openai_api_key": {
+                "id": [
+                  "OPENAI_API_KEY",
+                ],
+                "lc": 1,
+                "type": "secret",
+              },
+              "temperature": 0,
+              "verbose": undefined,
+            },
+            "lc": 1,
+            "type": "constructor",
+          },
+          "config": {},
+          "kwargs": {
+            "functions": [
+              {
+                "description": "A search engine optimized for comprehensive, accurate, and trusted results. Useful for when you need to answer questions about current events. Input should be a search query.",
+                "name": "tavily_search_results_json",
+                "parameters": {
+                  "$schema": "http://json-schema.org/draft-07/schema#",
+                  "additionalProperties": false,
+                  "properties": {
+                    "input": {
+                      "type": "string",
+                    },
+                  },
+                  "type": "object",
+                },
+              },
+            ],
+          },
+        },
+        "lc": 1,
+        "type": "constructor",
+      },
+    ],
+    "name": undefined,
+  },
+  "lc": 1,
+  "type": "constructor",
+}
+`;
+
+exports[`createOpenAIToolsAgent works 1`] = `
+{
+  "id": [
+    "langchain_core",
+    "runnables",
+    "RunnableSequence",
+  ],
+  "kwargs": {
+    "first": {
+      "id": [
+        "langchain_core",
+        "runnables",
+        "RunnableAssign",
+      ],
+      "kwargs": {
+        "mapper": {
+          "id": [
+            "langchain_core",
+            "runnables",
+            "RunnableMap",
+          ],
+          "kwargs": {
+            "steps": {
+              "agent_scratchpad": {
+                "id": [
+                  "langchain_core",
+                  "runnables",
+                  "RunnableLambda",
+                ],
+                "lc": 1,
+                "type": "not_implemented",
+              },
+            },
+          },
+          "lc": 1,
+          "type": "constructor",
+        },
+      },
+      "lc": 1,
+      "type": "constructor",
+    },
+    "last": {
+      "id": [
+        "langchain",
+        "agents",
+        "structured_chat",
+        "StructuredChatOutputParserWithRetries",
+      ],
+      "lc": 1,
+      "type": "not_implemented",
+    },
+    "middle": [
+      {
+        "id": [
+          "langchain_core",
+          "prompts",
+          "chat",
+          "ChatPromptTemplate",
+        ],
+        "kwargs": {
+          "input_variables": [
+            "agent_scratchpad",
+            "chat_history",
+            "input",
+          ],
+          "messages": [
+            {
+              "id": [
+                "langchain_core",
+                "prompts",
+                "chat",
+                "SystemMessagePromptTemplate",
+              ],
+              "kwargs": {
+                "prompt": {
+                  "id": [
+                    "langchain_core",
+                    "prompts",
+                    "prompt",
+                    "PromptTemplate",
+                  ],
+                  "kwargs": {
+                    "input_variables": [
+                      "tool_names",
+                      "tools",
+                    ],
+                    "partial_variables": undefined,
+                    "template": "Respond to the human as helpfully and accurately as possible. You have access to the following tools:
+
+{tools}
+
+Use a json blob to specify a tool by providing an action key (tool name) and an action_input key (tool input).
+
+Valid "action" values: "Final Answer" or {tool_names}
+
+Provide only ONE action per $JSON_BLOB, as shown:
+
+\`\`\`
+{{
+  "action": $TOOL_NAME,
+  "action_input": $INPUT
+}}
+\`\`\`
+
+Follow this format:
+
+Question: input question to answer
+Thought: consider previous and subsequent steps
+Action:
+\`\`\`
+$JSON_BLOB
+\`\`\`
+Observation: action result
+... (repeat Thought/Action/Observation N times)
+Thought: I know what to respond
+Action:
+\`\`\`
+{{
+  "action": "Final Answer",
+  "action_input": "Final response to human"
+}}
+
+Begin! Reminder to ALWAYS respond with a valid json blob of a single action. Use tools if necessary. Respond directly if appropriate. Format is Action:\`\`\`$JSON_BLOB\`\`\`then Observation",
+                    "template_format": "f-string",
+                  },
+                  "lc": 1,
+                  "type": "constructor",
+                },
+              },
+              "lc": 1,
+              "type": "constructor",
+            },
+            {
+              "id": [
+                "langchain_core",
+                "prompts",
+                "chat",
+                "MessagesPlaceholder",
+              ],
+              "kwargs": {
+                "optional": true,
+                "variable_name": "chat_history",
+              },
+              "lc": 1,
+              "type": "constructor",
+            },
+            {
+              "id": [
+                "langchain_core",
+                "prompts",
+                "chat",
+                "HumanMessagePromptTemplate",
+              ],
+              "kwargs": {
+                "prompt": {
+                  "id": [
+                    "langchain_core",
+                    "prompts",
+                    "prompt",
+                    "PromptTemplate",
+                  ],
+                  "kwargs": {
+                    "input_variables": [
+                      "agent_scratchpad",
+                      "input",
+                    ],
+                    "partial_variables": undefined,
+                    "template": "{input}
+
+{agent_scratchpad}
+ (reminder to respond in a JSON blob no matter what)",
+                    "template_format": "f-string",
+                  },
+                  "lc": 1,
+                  "type": "constructor",
+                },
+              },
+              "lc": 1,
+              "type": "constructor",
+            },
+          ],
+          "partial_variables": undefined,
+        },
+        "lc": 1,
+        "type": "constructor",
+      },
+      {
+        "id": [
+          "langchain_core",
+          "runnables",
+          "RunnableBinding",
+        ],
+        "kwargs": {
+          "bound": {
+            "id": [
+              "langchain",
+              "chat_models",
+              "openai",
+              "ChatOpenAI",
+            ],
+            "kwargs": {
+              "callbacks": undefined,
+              "model": "gpt-3.5-turbo-1106",
+              "openai_api_key": {
+                "id": [
+                  "OPENAI_API_KEY",
+                ],
+                "lc": 1,
+                "type": "secret",
+              },
+              "temperature": 0,
+              "verbose": undefined,
+            },
+            "lc": 1,
+            "type": "constructor",
+          },
+          "config": {},
+          "kwargs": {
+            "stop": [
+              "Observation",
+            ],
+          },
+        },
+        "lc": 1,
+        "type": "constructor",
+      },
+    ],
+    "name": undefined,
+  },
+  "lc": 1,
+  "type": "constructor",
+}
+`;
+
+exports[`createReactAgent works 1`] = `
+{
+  "id": [
+    "langchain_core",
+    "runnables",
+    "RunnableSequence",
+  ],
+  "kwargs": {
+    "first": {
+      "id": [
+        "langchain_core",
+        "runnables",
+        "RunnableAssign",
+      ],
+      "kwargs": {
+        "mapper": {
+          "id": [
+            "langchain_core",
+            "runnables",
+            "RunnableMap",
+          ],
+          "kwargs": {
+            "steps": {
+              "agent_scratchpad": {
+                "id": [
+                  "langchain_core",
+                  "runnables",
+                  "RunnableLambda",
+                ],
+                "lc": 1,
+                "type": "not_implemented",
+              },
+            },
+          },
+          "lc": 1,
+          "type": "constructor",
+        },
+      },
+      "lc": 1,
+      "type": "constructor",
+    },
+    "last": {
+      "id": [
+        "langchain",
+        "agents",
+        "react",
+        "ReActSingleInputOutputParser",
+      ],
+      "lc": 1,
+      "type": "not_implemented",
+    },
+    "middle": [
+      {
+        "id": [
+          "langchain_core",
+          "prompts",
+          "prompt",
+          "PromptTemplate",
+        ],
+        "kwargs": {
+          "input_variables": [
+            "agent_scratchpad",
+            "input",
+          ],
+          "partial_variables": undefined,
+          "template": "Answer the following questions as best you can. You have access to the following tools:
+
+{tools}
+
+Use the following format:
+
+Question: the input question you must answer
+Thought: you should always think about what to do
+Action: the action to take, should be one of [{tool_names}]
+Action Input: the input to the action
+Observation: the result of the action
+... (this Thought/Action/Action Input/Observation can repeat N times)
+Thought: I now know the final answer
+Final Answer: the final answer to the original input question
+
+Begin!
+
+Question: {input}
+Thought:{agent_scratchpad}",
+          "template_format": "f-string",
+        },
+        "lc": 1,
+        "type": "constructor",
+      },
+      {
+        "id": [
+          "langchain_core",
+          "runnables",
+          "RunnableBinding",
+        ],
+        "kwargs": {
+          "bound": {
+            "id": [
+              "langchain",
+              "llms",
+              "openai",
+              "OpenAI",
+            ],
+            "kwargs": {
+              "callbacks": undefined,
+              "model": "gpt-3.5-turbo-instruct",
+              "openai_api_key": {
+                "id": [
+                  "OPENAI_API_KEY",
+                ],
+                "lc": 1,
+                "type": "secret",
+              },
+              "temperature": 0,
+              "verbose": undefined,
+            },
+            "lc": 1,
+            "type": "constructor",
+          },
+          "config": {},
+          "kwargs": {
+            "stop": [
+              "
+Observation:",
+            ],
+          },
+        },
+        "lc": 1,
+        "type": "constructor",
+      },
+    ],
+    "name": undefined,
+  },
+  "lc": 1,
+  "type": "constructor",
+}
+`;
+
+exports[`createStructuredChatAgent works 1`] = `
+{
+  "id": [
+    "langchain_core",
+    "runnables",
+    "RunnableSequence",
+  ],
+  "kwargs": {
+    "first": {
+      "id": [
+        "langchain_core",
+        "runnables",
+        "RunnableAssign",
+      ],
+      "kwargs": {
+        "mapper": {
+          "id": [
+            "langchain_core",
+            "runnables",
+            "RunnableMap",
+          ],
+          "kwargs": {
+            "steps": {
+              "agent_scratchpad": {
+                "id": [
+                  "langchain_core",
+                  "runnables",
+                  "RunnableLambda",
+                ],
+                "lc": 1,
+                "type": "not_implemented",
+              },
+            },
+          },
+          "lc": 1,
+          "type": "constructor",
+        },
+      },
+      "lc": 1,
+      "type": "constructor",
+    },
+    "last": {
+      "id": [
+        "langchain",
+        "agents",
+        "structured_chat",
+        "StructuredChatOutputParserWithRetries",
+      ],
+      "lc": 1,
+      "type": "not_implemented",
+    },
+    "middle": [
+      {
+        "id": [
+          "langchain_core",
+          "prompts",
+          "chat",
+          "ChatPromptTemplate",
+        ],
+        "kwargs": {
+          "input_variables": [
+            "agent_scratchpad",
+            "chat_history",
+            "input",
+          ],
+          "messages": [
+            {
+              "id": [
+                "langchain_core",
+                "prompts",
+                "chat",
+                "SystemMessagePromptTemplate",
+              ],
+              "kwargs": {
+                "prompt": {
+                  "id": [
+                    "langchain_core",
+                    "prompts",
+                    "prompt",
+                    "PromptTemplate",
+                  ],
+                  "kwargs": {
+                    "input_variables": [
+                      "tool_names",
+                      "tools",
+                    ],
+                    "partial_variables": undefined,
+                    "template": "Respond to the human as helpfully and accurately as possible. You have access to the following tools:
+
+{tools}
+
+Use a json blob to specify a tool by providing an action key (tool name) and an action_input key (tool input).
+
+Valid "action" values: "Final Answer" or {tool_names}
+
+Provide only ONE action per $JSON_BLOB, as shown:
+
+\`\`\`
+{{
+  "action": $TOOL_NAME,
+  "action_input": $INPUT
+}}
+\`\`\`
+
+Follow this format:
+
+Question: input question to answer
+Thought: consider previous and subsequent steps
+Action:
+\`\`\`
+$JSON_BLOB
+\`\`\`
+Observation: action result
+... (repeat Thought/Action/Observation N times)
+Thought: I know what to respond
+Action:
+\`\`\`
+{{
+  "action": "Final Answer",
+  "action_input": "Final response to human"
+}}
+
+Begin! Reminder to ALWAYS respond with a valid json blob of a single action. Use tools if necessary. Respond directly if appropriate. Format is Action:\`\`\`$JSON_BLOB\`\`\`then Observation",
+                    "template_format": "f-string",
+                  },
+                  "lc": 1,
+                  "type": "constructor",
+                },
+              },
+              "lc": 1,
+              "type": "constructor",
+            },
+            {
+              "id": [
+                "langchain_core",
+                "prompts",
+                "chat",
+                "MessagesPlaceholder",
+              ],
+              "kwargs": {
+                "optional": true,
+                "variable_name": "chat_history",
+              },
+              "lc": 1,
+              "type": "constructor",
+            },
+            {
+              "id": [
+                "langchain_core",
+                "prompts",
+                "chat",
+                "HumanMessagePromptTemplate",
+              ],
+              "kwargs": {
+                "prompt": {
+                  "id": [
+                    "langchain_core",
+                    "prompts",
+                    "prompt",
+                    "PromptTemplate",
+                  ],
+                  "kwargs": {
+                    "input_variables": [
+                      "agent_scratchpad",
+                      "input",
+                    ],
+                    "partial_variables": undefined,
+                    "template": "{input}
+
+{agent_scratchpad}
+ (reminder to respond in a JSON blob no matter what)",
+                    "template_format": "f-string",
+                  },
+                  "lc": 1,
+                  "type": "constructor",
+                },
+              },
+              "lc": 1,
+              "type": "constructor",
+            },
+          ],
+          "partial_variables": undefined,
+        },
+        "lc": 1,
+        "type": "constructor",
+      },
+      {
+        "id": [
+          "langchain_core",
+          "runnables",
+          "RunnableBinding",
+        ],
+        "kwargs": {
+          "bound": {
+            "id": [
+              "langchain",
+              "chat_models",
+              "openai",
+              "ChatOpenAI",
+            ],
+            "kwargs": {
+              "callbacks": undefined,
+              "model": "gpt-3.5-turbo-1106",
+              "openai_api_key": {
+                "id": [
+                  "OPENAI_API_KEY",
+                ],
+                "lc": 1,
+                "type": "secret",
+              },
+              "temperature": 0,
+              "verbose": undefined,
+            },
+            "lc": 1,
+            "type": "constructor",
+          },
+          "config": {},
+          "kwargs": {
+            "stop": [
+              "Observation",
+            ],
+          },
+        },
+        "lc": 1,
+        "type": "constructor",
+      },
+    ],
+    "name": undefined,
+  },
+  "lc": 1,
+  "type": "constructor",
+}
+`;
+
+exports[`createXmlAgent works 1`] = `
+{
+  "id": [
+    "langchain_core",
+    "runnables",
+    "RunnableSequence",
+  ],
+  "kwargs": {
+    "first": {
+      "id": [
+        "langchain_core",
+        "runnables",
+        "RunnableAssign",
+      ],
+      "kwargs": {
+        "mapper": {
+          "id": [
+            "langchain_core",
+            "runnables",
+            "RunnableMap",
+          ],
+          "kwargs": {
+            "steps": {
+              "agent_scratchpad": {
+                "id": [
+                  "langchain_core",
+                  "runnables",
+                  "RunnableLambda",
+                ],
+                "lc": 1,
+                "type": "not_implemented",
+              },
+            },
+          },
+          "lc": 1,
+          "type": "constructor",
+        },
+      },
+      "lc": 1,
+      "type": "constructor",
+    },
+    "last": {
+      "id": [
+        "langchain",
+        "agents",
+        "xml",
+        "XMLAgentOutputParser",
+      ],
+      "lc": 1,
+      "type": "not_implemented",
+    },
+    "middle": [
+      {
+        "id": [
+          "langchain_core",
+          "prompts",
+          "chat",
+          "ChatPromptTemplate",
+        ],
+        "kwargs": {
+          "input_types": {},
+          "input_variables": [
+            "agent_scratchpad",
+            "input",
+          ],
+          "messages": [
+            {
+              "id": [
+                "langchain_core",
+                "prompts",
+                "chat",
+                "HumanMessagePromptTemplate",
+              ],
+              "kwargs": {
+                "prompt": {
+                  "id": [
+                    "langchain_core",
+                    "prompts",
+                    "prompt",
+                    "PromptTemplate",
+                  ],
+                  "kwargs": {
+                    "input_variables": [
+                      "agent_scratchpad",
+                      "chat_history",
+                      "input",
+                      "tools",
+                    ],
+                    "partial_variables": undefined,
+                    "template": "You are a helpful assistant. Help the user answer any questions.
+
+You have access to the following tools:
+
+{tools}
+
+In order to use a tool, you can use <tool></tool> and <tool_input></tool_input> tags. You will then get back a response in the form <observation></observation>
+For example, if you have a tool called 'search' that could run a google search, in order to search for the weather in SF you would respond:
+
+<tool>search</tool><tool_input>weather in SF</tool_input>
+<observation>64 degrees</observation>
+
+When you are done, respond with a final answer between <final_answer></final_answer>. For example:
+
+<final_answer>The weather in SF is 64 degrees</final_answer>
+
+Begin!
+
+Previous Conversation:
+{chat_history}
+
+Question: {input}
+{agent_scratchpad}",
+                    "template_format": "f-string",
+                  },
+                  "lc": 1,
+                  "type": "constructor",
+                },
+              },
+              "lc": 1,
+              "type": "constructor",
+            },
+          ],
+          "output_parser": null,
+          "partial_variables": undefined,
+          "validate_template": false,
+        },
+        "lc": 1,
+        "type": "constructor",
+      },
+      {
+        "id": [
+          "langchain_core",
+          "runnables",
+          "RunnableBinding",
+        ],
+        "kwargs": {
+          "bound": {
+            "id": [
+              "langchain",
+              "chat_models",
+              "anthropic",
+              "ChatAnthropic",
+            ],
+            "kwargs": {
+              "anthropic_api_key": {
+                "id": [
+                  "ANTHROPIC_API_KEY",
+                ],
+                "lc": 1,
+                "type": "secret",
+              },
+              "callbacks": undefined,
+              "model": "claude-2.1",
+              "temperature": 0,
+              "verbose": undefined,
+            },
+            "lc": 1,
+            "type": "constructor",
+          },
+          "config": {},
+          "kwargs": {
+            "stop": [
+              "</tool_input>",
+              "</final_answer>",
+            ],
+          },
+        },
+        "lc": 1,
+        "type": "constructor",
+      },
+    ],
+    "name": undefined,
+  },
+  "lc": 1,
+  "type": "constructor",
+}
+`;
