@@ -4,8 +4,8 @@
 import { Pinecone } from "@pinecone-database/pinecone";
 import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
 import { PineconeStore } from "@langchain/community/vectorstores/pinecone";
-import { SemanticSimilarityExampleSelector } from "langchain/prompts";
 import { PromptTemplate, FewShotPromptTemplate } from "@langchain/core/prompts";
+import { SemanticSimilarityExampleSelector } from "@langchain/core/example_selectors";
 
 const pinecone = new Pinecone();
 

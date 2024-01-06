@@ -1,6 +1,5 @@
 import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
 import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
-import { ChatMessageHistory } from "langchain/stores/message/in_memory";
 import { RunnableWithMessageHistory } from "@langchain/core/runnables";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
@@ -11,6 +10,7 @@ import { AgentExecutor, createOpenAIFunctionsAgent } from "langchain/agents";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { CheerioWebBaseLoader } from "langchain/document_loaders/web/cheerio";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
+import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
 
 const searchTool = new TavilySearchResults();
 
