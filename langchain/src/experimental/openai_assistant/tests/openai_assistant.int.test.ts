@@ -3,8 +3,8 @@
 
 import { z } from "zod";
 import { OpenAIClient } from "@langchain/openai";
+import { StructuredTool } from "@langchain/core/tools";
 import { AgentExecutor } from "../../../agents/executor.js";
-import { StructuredTool } from "../../../tools/base.js";
 import { OpenAIAssistantRunnable } from "../index.js";
 
 function getCurrentWeather(location: string, _unit = "fahrenheit") {

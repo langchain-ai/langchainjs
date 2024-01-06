@@ -1,7 +1,6 @@
 import { test, expect, describe } from "@jest/globals";
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { WebBrowser } from "../webbrowser.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
-import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import fetchAdapter from "../../util/axios-fetch-adapter.js";
 
 describe("webbrowser Test suite", () => {

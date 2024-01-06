@@ -3,7 +3,7 @@ import type {
   StructuredToolInterface,
   ToolInterface,
 } from "@langchain/core/tools";
-import { CallbackManager } from "../callbacks/manager.js";
+import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { BufferMemory } from "../memory/buffer_memory.js";
 import { ChatAgent } from "./chat/index.js";
 import { ChatConversationalAgent } from "./chat_convo/index.js";
@@ -24,7 +24,7 @@ type AgentType =
   | "chat-conversational-react-description";
 
 /**
- * @deprecated use initializeAgentExecutorWithOptions instead
+ * @deprecated See {@link https://js.langchain.com/docs/modules/agents/agent_types/ | new agent creation docs}.
  */
 export const initializeAgentExecutor = async (
   tools: ToolInterface[],
@@ -102,7 +102,8 @@ export type InitializeAgentExecutorOptionsStructured =
     } & Omit<AgentExecutorInput, "agent" | "tools">);
 
 /**
- * Initialize an agent executor with options
+ * Initialize an agent executor with options.
+ * @deprecated See {@link https://js.langchain.com/docs/modules/agents/agent_types/ | new agent creation docs}.
  * @param tools Array of tools to use in the agent
  * @param llm LLM or ChatModel to use in the agent
  * @param options Options for the agent, including agentType, agentArgs, and other options for AgentExecutor.fromAgentAndTools
@@ -113,11 +114,13 @@ export async function initializeAgentExecutorWithOptions(
   llm: BaseLanguageModelInterface,
   options: InitializeAgentExecutorOptionsStructured
 ): Promise<AgentExecutor>;
+/** @deprecated See {@link https://js.langchain.com/docs/modules/agents/agent_types/ | new agent creation docs}. */
 export async function initializeAgentExecutorWithOptions(
   tools: ToolInterface[],
   llm: BaseLanguageModelInterface,
   options?: InitializeAgentExecutorOptions
 ): Promise<AgentExecutor>;
+/** @deprecated See {@link https://js.langchain.com/docs/modules/agents/agent_types/ | new agent creation docs}. */
 export async function initializeAgentExecutorWithOptions(
   tools: StructuredToolInterface[] | ToolInterface[],
   llm: BaseLanguageModelInterface,

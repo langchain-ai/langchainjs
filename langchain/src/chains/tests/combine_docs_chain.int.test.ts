@@ -1,7 +1,7 @@
 import { test } from "@jest/globals";
-import { OpenAI } from "../../llms/openai.js";
-import { PromptTemplate } from "../../prompts/index.js";
-import { Document } from "../../document.js";
+import { OpenAI } from "@langchain/openai";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { Document } from "@langchain/core/documents";
 import {
   loadQAMapReduceChain,
   loadQARefineChain,

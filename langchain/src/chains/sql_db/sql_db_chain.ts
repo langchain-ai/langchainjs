@@ -1,18 +1,18 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import type { TiktokenModel } from "js-tiktoken/lite";
-import { DEFAULT_SQL_DATABASE_PROMPT } from "./sql_db_prompt.js";
-import { BaseChain, ChainInputs } from "../base.js";
-import type { OpenAI } from "../../llms/openai.js";
-import { LLMChain } from "../llm_chain.js";
-import type { SqlDatabase } from "../../sql_db.js";
-import { ChainValues } from "../../schema/index.js";
+import type { OpenAI } from "@langchain/openai";
+import { ChainValues } from "@langchain/core/utils/types";
+import { PromptTemplate } from "@langchain/core/prompts";
 import {
   calculateMaxTokens,
   getModelContextSize,
-} from "../../base_language/count_tokens.js";
-import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
+} from "@langchain/core/language_models/base";
+import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
+import { DEFAULT_SQL_DATABASE_PROMPT } from "./sql_db_prompt.js";
+import { BaseChain, ChainInputs } from "../base.js";
+import { LLMChain } from "../llm_chain.js";
+import type { SqlDatabase } from "../../sql_db.js";
 import { getPromptTemplateFromDataSource } from "../../util/sql_utils.js";
-import { PromptTemplate } from "../../prompts/index.js";
 
 /**
  * Interface that extends the ChainInputs interface and defines additional

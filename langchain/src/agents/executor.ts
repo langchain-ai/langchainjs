@@ -5,27 +5,23 @@ import {
   Tool,
 } from "@langchain/core/tools";
 import { Runnable, type RunnableConfig } from "@langchain/core/runnables";
-import { BaseChain, ChainInputs } from "../chains/base.js";
+import { AgentAction, AgentFinish, AgentStep } from "@langchain/core/agents";
+import { ChainValues } from "@langchain/core/utils/types";
+import {
+  CallbackManager,
+  CallbackManagerForChainRun,
+  Callbacks,
+} from "@langchain/core/callbacks/manager";
+import { OutputParserException } from "@langchain/core/output_parsers";
+import { Serializable } from "@langchain/core/load/serializable";
+import { SerializedLLMChain } from "../chains/serde.js";
+import { StoppingMethod } from "./types.js";
 import {
   BaseMultiActionAgent,
   BaseSingleActionAgent,
   RunnableAgent,
 } from "./agent.js";
-import { StoppingMethod } from "./types.js";
-import { SerializedLLMChain } from "../chains/serde.js";
-import {
-  AgentAction,
-  ChainValues,
-  AgentFinish,
-  AgentStep,
-} from "../schema/index.js";
-import {
-  CallbackManager,
-  CallbackManagerForChainRun,
-  Callbacks,
-} from "../callbacks/manager.js";
-import { OutputParserException } from "../schema/output_parser.js";
-import { Serializable } from "../load/serializable.js";
+import { BaseChain, ChainInputs } from "../chains/base.js";
 
 interface AgentExecutorIteratorInput {
   agentExecutor: AgentExecutor;
