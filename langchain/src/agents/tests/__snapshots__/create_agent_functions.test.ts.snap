@@ -192,8 +192,8 @@ exports[`createOpenAIFunctionsAgent works 1`] = `
           "kwargs": {
             "functions": [
               {
-                "description": "A search engine optimized for comprehensive, accurate, and trusted results. Useful for when you need to answer questions about current events. Input should be a search query.",
-                "name": "tavily_search_results_json",
+                "description": "Useful for getting the result of a math expression. The input to this tool should be a valid mathematical expression that could be executed by a simple calculator.",
+                "name": "calculator",
                 "parameters": {
                   "$schema": "http://json-schema.org/draft-07/schema#",
                   "additionalProperties": false,

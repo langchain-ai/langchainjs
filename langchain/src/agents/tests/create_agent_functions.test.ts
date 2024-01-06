@@ -4,7 +4,6 @@ import type {
   ChatPromptTemplate,
   PromptTemplate,
 } from "@langchain/core/prompts";
-import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
 import { pull } from "../../hub.js";
 import {
   createOpenAIFunctionsAgent,
@@ -13,8 +12,9 @@ import {
   createXmlAgent,
 } from "../index.js";
 import { ChatAnthropic } from "../../chat_models/anthropic.js";
+import { Calculator } from "../../tools/calculator.js";
 
-const tools = [new TavilySearchResults({ maxResults: 1 })];
+const tools = [new Calculator()];
 
 test("createStructuredChatAgent works", async () => {
   const prompt = await pull<ChatPromptTemplate>(
