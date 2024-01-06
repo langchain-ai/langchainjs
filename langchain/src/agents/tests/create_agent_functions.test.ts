@@ -2,7 +2,7 @@ import { test, expect } from "@jest/globals";
 import { ChatOpenAI, OpenAI } from "@langchain/openai";
 import type {
   ChatPromptTemplate,
-  PromptTemplate
+  PromptTemplate,
 } from "@langchain/core/prompts";
 import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
 import { pull } from "../../hub.js";
@@ -10,7 +10,7 @@ import {
   createOpenAIFunctionsAgent,
   createReactAgent,
   createStructuredChatAgent,
-  createXmlAgent
+  createXmlAgent,
 } from "../index.js";
 import { ChatAnthropic } from "../../chat_models/anthropic.js";
 
@@ -22,12 +22,12 @@ test("createStructuredChatAgent works", async () => {
   );
   const llm = new ChatOpenAI({
     modelName: "gpt-3.5-turbo-1106",
-    temperature: 0
+    temperature: 0,
   });
   const agent = await createStructuredChatAgent({
     llm,
     tools,
-    prompt
+    prompt,
   });
   const serializedAgent = agent.toJSON();
   expect(serializedAgent).toMatchSnapshot();
@@ -39,12 +39,12 @@ test("createOpenAIFunctionsAgent works", async () => {
   );
   const llm = new ChatOpenAI({
     modelName: "gpt-3.5-turbo-1106",
-    temperature: 0
+    temperature: 0,
   });
   const agent = await createOpenAIFunctionsAgent({
     llm,
     tools,
-    prompt
+    prompt,
   });
   const serializedAgent = agent.toJSON();
   expect(serializedAgent).toMatchSnapshot();
@@ -56,12 +56,12 @@ test("createOpenAIToolsAgent works", async () => {
   );
   const llm = new ChatOpenAI({
     modelName: "gpt-3.5-turbo-1106",
-    temperature: 0
+    temperature: 0,
   });
   const agent = await createStructuredChatAgent({
     llm,
     tools,
-    prompt
+    prompt,
   });
   const serializedAgent = agent.toJSON();
   expect(serializedAgent).toMatchSnapshot();
@@ -71,12 +71,12 @@ test("createXmlAgent works", async () => {
   const prompt = await pull<PromptTemplate>("hwchase17/xml-agent-convo");
   const llm = new ChatAnthropic({
     modelName: "claude-2.1",
-    temperature: 0
+    temperature: 0,
   });
   const agent = await createXmlAgent({
     llm,
     tools,
-    prompt
+    prompt,
   });
   const serializedAgent = agent.toJSON();
   expect(serializedAgent).toMatchSnapshot();
