@@ -5,11 +5,11 @@ import {
   SystemMessagePromptTemplate,
   HumanMessagePromptTemplate,
   AIMessagePromptTemplate,
-} from "../../prompts/index.js";
+} from "@langchain/core/prompts";
 import {
   ConditionalPromptSelector,
   isChatModel,
-} from "../../prompts/selectors/conditional.js";
+} from "@langchain/core/example_selectors";
 
 export const DEFAULT_REFINE_PROMPT_TMPL = `The original question is as follows: {question}
 We have provided an existing answer: {existing_answer}

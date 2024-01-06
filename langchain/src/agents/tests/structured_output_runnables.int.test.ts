@@ -1,20 +1,21 @@
 import { zodToJsonSchema } from "zod-to-json-schema";
 import fs from "fs";
 import { z } from "zod";
+import { AgentAction, AgentFinish, AgentStep } from "@langchain/core/agents";
+import { AIMessage } from "@langchain/core/messages";
 import {
-  AIMessage,
-  AgentAction,
-  AgentFinish,
-  AgentStep,
-} from "../../schema/index.js";
-import { RunnableSequence } from "../../schema/runnable/base.js";
-import { ChatPromptTemplate, MessagesPlaceholder } from "../../prompts/chat.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
+  OpenAIEmbeddings,
+  ChatOpenAI,
+  formatToOpenAIFunction,
+} from "@langchain/openai";
+import { RunnableSequence } from "@langchain/core/runnables";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
 import { createRetrieverTool } from "../toolkits/index.js";
 import { RecursiveCharacterTextSplitter } from "../../text_splitter.js";
-import { HNSWLib } from "../../vectorstores/hnswlib.js";
-import { OpenAIEmbeddings } from "../../embeddings/openai.js";
-import { formatToOpenAIFunction } from "../../tools/convert_to_openai.js";
+import { MemoryVectorStore } from "../../vectorstores/memory.js";
 import { AgentExecutor } from "../executor.js";
 import { formatForOpenAIFunctions } from "../format_scratchpad/openai_functions.js";
 
@@ -59,7 +60,10 @@ test("Pass custom structured output parsers", async () => {
     },
   }));
   /** Initialize docs & create retriever */
-  const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
+  const vectorStore = await MemoryVectorStore.fromDocuments(
+    docs,
+    new OpenAIEmbeddings()
+  );
   const retriever = vectorStore.asRetriever();
   /** Instantiate the LLM */
   const llm = new ChatOpenAI({});

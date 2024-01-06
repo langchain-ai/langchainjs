@@ -14,7 +14,7 @@ const llamaPath = getEnvironmentVariable("LLAMA_PATH")!;
 test.skip("Test predict", async () => {
   const llamaCpp = new ChatLlamaCpp({ modelPath: llamaPath });
 
-  const response = await llamaCpp.predict("Where do Llamas come from?");
+  const response = await llamaCpp.invoke("Where do Llamas come from?");
   console.log({ response });
 });
 

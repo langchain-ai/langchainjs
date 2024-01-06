@@ -1,7 +1,7 @@
 import { test } from "@jest/globals";
+import { ConsoleCallbackHandler } from "@langchain/core/tracers/console";
+import { OpenAIChat } from "@langchain/openai";
 import { MultiPromptChain } from "../multi_prompt.js";
-import { OpenAIChat } from "../../../llms/openai-chat.js";
-import { ConsoleCallbackHandler } from "../../../callbacks/handlers/console.js";
 
 test("Test MultiPromptChain", async () => {
   const llm = new OpenAIChat({

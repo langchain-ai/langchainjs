@@ -1,6 +1,4 @@
-import { ChatAnthropic } from "langchain/chat_models/anthropic";
 import { AgentExecutor } from "langchain/agents";
-import { SerpAPI } from "langchain/tools";
 import { XMLAgentOutputParser } from "langchain/agents/xml/output_parser";
 import { renderTextDescription } from "langchain/tools/render";
 import { formatLogToMessage } from "langchain/agents/format_scratchpad/log_to_message";
@@ -12,6 +10,8 @@ import {
 } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { AgentStep } from "@langchain/core/agents";
+import { ChatAnthropic } from "@langchain/anthropic";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 /**
  * Define your chat model.

@@ -1,5 +1,5 @@
 import { ToolInterface } from "@langchain/core/tools";
-import { Toolkit } from "../base.js";
+import { Toolkit } from "@langchain/community/agents/toolkits/base";
 import { ZapierNLARunAction, ZapierNLAWrapper } from "../../../tools/zapier.js";
 
 /**

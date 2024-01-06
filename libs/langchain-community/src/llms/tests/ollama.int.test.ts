@@ -22,7 +22,7 @@ test.skip("test call with callback", async () => {
     baseUrl: "http://localhost:11434",
   });
   const tokens: string[] = [];
-  const result = await ollama.predict(
+  const result = await ollama.invoke(
     "What is a good name for a company that makes colorful socks?",
     {
       callbacks: [

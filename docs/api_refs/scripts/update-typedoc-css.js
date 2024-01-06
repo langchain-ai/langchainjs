@@ -11,7 +11,18 @@ async function main() {
 
 .page-menu {
     display: none;
-}\n`;
+}
+
+.deprecation-warning {
+  background-color: #ef4444;
+  border-radius: 0.375rem;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  text-align: left;
+}
+`;
+
 
   let file = await readFile("./public/assets/style.css", "utf-8");
   file += css;

@@ -1,5 +1,5 @@
+import { PineconeStore } from "@langchain/community/vectorstores/pinecone";
 import { Comparators, Operators } from "../../chains/query_constructor/ir.js";
-import { PineconeStore } from "../../vectorstores/pinecone.js";
 import { BasicTranslator } from "./base.js";
 
 /**

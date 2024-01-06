@@ -1,5 +1,9 @@
-import { InputValues, MemoryVariables, getBufferString } from "./base.js";
-import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
+import { InputValues, MemoryVariables } from "@langchain/core/memory";
+import { getBufferString } from "@langchain/core/messages";
+import {
+  BaseChatMemory,
+  BaseChatMemoryInput,
+} from "@langchain/community/memory/chat_memory";
 
 /**
  * Interface for the input parameters of the `BufferMemory` class.
