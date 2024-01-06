@@ -1,9 +1,5 @@
 /* eslint-disable no-process-env */
 import { expect, test } from "@jest/globals";
-<<<<<<< HEAD
-import { OpenAI } from "../../llms/openai.js";
-import { OpenAIEmbeddings } from "../../embeddings/openai.js";
-=======
 import { OpenAI, OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
 import { Tool } from "@langchain/core/tools";
 import { RunnableSequence } from "@langchain/core/runnables";
@@ -12,8 +8,6 @@ import { AIMessage } from "@langchain/core/messages";
 import { AgentStep } from "@langchain/core/agents";
 import { SerpAPI } from "@langchain/community/tools/serpapi";
 import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
-import { loadAgent } from "../load.js";
->>>>>>> 3c16c67fc723c5f1b3346a8f5fdb29e5c7b7ed6d
 import { AgentExecutor, ZeroShotAgent } from "../index.js";
 import { Calculator } from "../../tools/calculator.js";
 import { initializeAgentExecutorWithOptions } from "../initialize.js";
