@@ -4,7 +4,7 @@ import { expect, test } from "@jest/globals";
 import { JsonOutputFunctionsParser } from "../../../output_parsers/openai_functions.js";
 import {
   createOpenAIFnRunnable,
-  createStructuredOutputRunnable
+  createStructuredOutputRunnable,
 } from "../base.js";
 
 const personJSONSchema = {
@@ -17,16 +17,16 @@ const personJSONSchema = {
     fav_food: {
       title: "Fav Food",
       description: "The person's favorite food",
-      type: "string"
-    }
+      type: "string",
+    },
   },
-  required: ["name", "age"]
+  required: ["name", "age"],
 };
 
 const personDetailsFunction = {
   name: "get_person_details",
   description: "Get details about a person",
-  parameters: personJSONSchema
+  parameters: personJSONSchema,
 };
 
 const weatherFunction = {
@@ -40,27 +40,27 @@ const weatherFunction = {
       state: {
         title: "State",
         description: "The location's state",
-        type: "string"
+        type: "string",
       },
       city: {
         title: "City",
         description: "The location's city",
-        type: "string"
+        type: "string",
       },
       zip_code: {
         title: "Zip Code",
         description: "The locations's zip code",
-        type: "string"
-      }
+        type: "string",
+      },
     },
-    required: ["state", "city"]
-  }
+    required: ["state", "city"],
+  },
 };
 
 test("createStructuredOutputRunnable works", async () => {
   const model = new ChatOpenAI();
   const prompt = ChatPromptTemplate.fromMessages<{ description: string }>([
-    ["human", "Human description: {description}"]
+    ["human", "Human description: {description}"],
   ]);
 
   const outputParser = new JsonOutputFunctionsParser<{
@@ -75,7 +75,7 @@ test("createStructuredOutputRunnable works", async () => {
   >(personJSONSchema, model, prompt, outputParser);
   const response = await runnable.invoke({
     description:
-      "My name's John Doe and I'm 30 years old. My favorite kind of food are chocolate chip cookies."
+      "My name's John Doe and I'm 30 years old. My favorite kind of food are chocolate chip cookies.",
   });
   console.log(response);
   expect("name" in response).toBe(true);
@@ -85,7 +85,7 @@ test("createStructuredOutputRunnable works", async () => {
 test("createOpenAIFnRunnable works", async () => {
   const model = new ChatOpenAI();
   const prompt = ChatPromptTemplate.fromMessages<{ description: string }>([
-    ["human", "Human description: {description}"]
+    ["human", "Human description: {description}"],
   ]);
   const outputParser = new JsonOutputFunctionsParser<{
     name: string;
@@ -105,7 +105,7 @@ test("createOpenAIFnRunnable works", async () => {
   );
   const response = await runnable.invoke({
     description:
-      "My name's John Doe and I'm 30 years old. My favorite kind of food are chocolate chip cookies."
+      "My name's John Doe and I'm 30 years old. My favorite kind of food are chocolate chip cookies.",
   });
   console.log(response);
   expect("name" in response).toBe(true);
@@ -115,7 +115,7 @@ test("createOpenAIFnRunnable works", async () => {
 test("createOpenAIFnRunnable works with multiple functions", async () => {
   const model = new ChatOpenAI();
   const prompt = ChatPromptTemplate.fromMessages<{ question: string }>([
-    ["human", "Question: {question}"]
+    ["human", "Question: {question}"],
   ]);
   const outputParser = new JsonOutputFunctionsParser<{
     state: string;
@@ -134,7 +134,7 @@ test("createOpenAIFnRunnable works with multiple functions", async () => {
     outputParser
   );
   const response = await runnable.invoke({
-    question: "What's the weather like in Berkeley CA?"
+    question: "What's the weather like in Berkeley CA?",
   });
   console.log(response);
   expect("state" in response).toBe(true);

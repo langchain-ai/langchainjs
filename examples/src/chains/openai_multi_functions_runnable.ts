@@ -16,10 +16,10 @@ const personDetailsFunction = {
       fav_food: {
         title: "Fav Food",
         description: "The person's favorite food",
-        type: "string"
-      }
+        type: "string",
+      },
     },
-    required: ["name", "age"]
+    required: ["name", "age"],
   },
 };
 
@@ -31,21 +31,29 @@ const weatherFunction = {
     description: "The location to get the weather for.",
     type: "object",
     properties: {
-      state: { title: "State", description: "The location's state", type: "string" },
-      city: { title: "City", description: "The location's city", type: "string" },
+      state: {
+        title: "State",
+        description: "The location's state",
+        type: "string",
+      },
+      city: {
+        title: "City",
+        description: "The location's city",
+        type: "string",
+      },
       zip_code: {
         title: "Zip Code",
         description: "The locations's zip code",
-        type: "number"
-      }
+        type: "number",
+      },
     },
-    required: ["state", "city"]
+    required: ["state", "city"],
   },
 };
 
 const model = new ChatOpenAI();
 const prompt = ChatPromptTemplate.fromMessages([
-  ["human", "Question: {question}"]
+  ["human", "Question: {question}"],
 ]);
 const outputParser = new JsonOutputFunctionsParser();
 
@@ -57,8 +65,7 @@ const runnable = createOpenAIFnRunnable(
   outputParser
 );
 const response = await runnable.invoke({
-  question:
-    "What's the weather like in Berkeley CA?"
+  question: "What's the weather like in Berkeley CA?",
 });
 console.log(response);
 /**

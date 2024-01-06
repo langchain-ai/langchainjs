@@ -13,15 +13,15 @@ const JSONSchema = {
     fav_food: {
       title: "Fav Food",
       description: "The person's favorite food",
-      type: "string"
-    }
+      type: "string",
+    },
   },
-  required: ["name", "age"]
+  required: ["name", "age"],
 };
 
 const model = new ChatOpenAI();
 const prompt = ChatPromptTemplate.fromMessages([
-  ["human", "Human description: {description}"]
+  ["human", "Human description: {description}"],
 ]);
 const outputParser = new JsonOutputFunctionsParser();
 
@@ -32,7 +32,8 @@ const runnable = createStructuredOutputRunnable(
   outputParser
 );
 const response = await runnable.invoke({
-  description: "My name's John Doe and I'm 30 years old. My favorite kind of food are chocolate chip cookies."
+  description:
+    "My name's John Doe and I'm 30 years old. My favorite kind of food are chocolate chip cookies.",
 });
 console.log(response);
 /**
