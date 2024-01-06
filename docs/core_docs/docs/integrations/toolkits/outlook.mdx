@@ -2,20 +2,20 @@
 
 ## Overview
 
-Using this toolkit, you can integrate Microsoft Graph API functionalities into 
+Using this toolkit, you can integrate Microsoft Graph API functionalities into
 your applications to manage email interactions.
 
 ## Learn Microsoft Graph
 
-Microsoft Graph is a RESTful web API that enables you to access Microsoft 
-Cloud service resources. With Microsoft Graph, you can integrate various 
-Microsoft services and data, including users' emails, calendar, contacts, 
+Microsoft Graph is a RESTful web API that enables you to access Microsoft
+Cloud service resources. With Microsoft Graph, you can integrate various
+Microsoft services and data, including users' emails, calendar, contacts,
 and more, into your applications.
 
-After you register your app and get authentication tokens for a user or service, 
+After you register your app and get authentication tokens for a user or service,
 you can make requests to the Microsoft Graph API.
 
-How to get authentication tokens for a user:   
+How to get authentication tokens for a user:  
 https://learn.microsoft.com/en-us/graph/auth-v2-user
 
 ## Set up
@@ -28,21 +28,24 @@ necessary credentials.
 ### App register
 
 1. Register an Application:
+
    - Go to Azure Portal.
    - Navigate to Azure Active Directory -> App registrations.
    - Register a new application, note down the Client ID.
 
 2. Generate Client Secret:
+
    - In the application settings, go to Certificates & Secrets.
    - Create a new client secret and note down the Client Secret.
 
 3. Configure Redirect URI:
+
    - In the application settings, go to Authentication.
    - Add a Redirect URI and note down the Redirect URI.
 
 4. Permissions and Admin Consent:
-   - In API permissions, grant necessary permissions for Microsoft Graph API or 
-   Outlook API.
+   - In API permissions, grant necessary permissions for Microsoft Graph API or
+     Outlook API.
    - Grant admin consent for the added permissions.
 
 At this point, you should have these three credentials:
@@ -50,12 +53,13 @@ clientId, clientSecret, redirectUri
 
 Set them as environment variables:
 
-  ```env
-  OUTLOOK_CLIENT_ID=your_client_id
-  OUTLOOK_CLIENT_SECRET=your_client_secret
-  OUTLOOK_REDIRECT_URI=your_redirect_uri
-  ```
-  **Keep these values secure and avoid exposing them in public repositories.**
+```env
+OUTLOOK_CLIENT_ID=your_client_id
+OUTLOOK_CLIENT_SECRET=your_client_secret
+OUTLOOK_REDIRECT_URI=your_redirect_uri
+```
+
+**Keep these values secure and avoid exposing them in public repositories.**
 
 The following link from Microsoft is a good reference for the above steps:
 https://learn.microsoft.com/en-us/graph/auth-v2-user
@@ -63,24 +67,23 @@ https://learn.microsoft.com/en-us/graph/auth-v2-user
 This video may also be helpful:
 https://www.youtube.com/watch?v=NAtiNpwnivI&t=309s
 
-
 ### Get an accessToken
 
 Now you are able to use the above credentials to get an `accessToken`.
 
 The `AuthFlowREST` class implements the OAuth 2.0 authorization code flow.
-You can use the `getAccessToken()` which will open a temporary server on 
-your `redirectUri` and you need to manually open the printed link to login 
-on behalf of the user. For every `AuthFlowREST` instance, you only need to 
+You can use the `getAccessToken()` which will open a temporary server on
+your `redirectUri` and you need to manually open the printed link to login
+on behalf of the user. For every `AuthFlowREST` instance, you only need to
 login once. The next time you can run the `getAccessToken()` method, it will
 make use of the `refreshToken` obtained together with the first `accessToken`
 to get a new `accessToken` without the need of the server and login.
 
-Having the above credentials, you can either pass them to the constructor 
+Having the above credentials, you can either pass them to the constructor
 or put them in the environment.
 
 ```typescript
-import { AuthFlowREST } from '@langchain/community/tools/outlook';
+import { AuthFlowREST } from "@langchain/community/tools/outlook";
 
 const authFlow = new AuthFlowREST();
 const authFlow = new AuthFlowREST(clientId, clientSecret, redirectUri);
@@ -123,10 +126,10 @@ const outlookReadMail = new OutlookReadMailTool(authFlow);
 const outlookReadMail = new OutlookReadMailTool(undefined, "token");
 ```
 
-Usually when you obtain a accessToken you also get a refreshToken 
-used to refresh expired accessToken. The `AuthFlowRefresh` class needs 
-the following credentials: `clientId`, `clientSecret`, `redirectUri` 
-and `refreshToken`. In this way you won't need to login, no server 
+Usually when you obtain a accessToken you also get a refreshToken
+used to refresh expired accessToken. The `AuthFlowRefresh` class needs
+the following credentials: `clientId`, `clientSecret`, `redirectUri`
+and `refreshToken`. In this way you won't need to login, no server
 will be open.
 
 ```typescript
@@ -145,22 +148,29 @@ Inherit from `AuthFlowBase` and implement the `getAccessToken()` method.
 This example shows how to read emails by using agent.
 
 ```typescript
-import { ChatOpenAI } from 'langchain/chat_models/openai';
-import { initializeAgentExecutorWithOptions } from 'langchain/agents';
-import { OutlookReadMailTool } from '@langchain/community/tools/outlook';
-require('dotenv').config();
+import { ChatOpenAI } from "langchain/chat_models/openai";
+import { initializeAgentExecutorWithOptions } from "langchain/agents";
+import { OutlookReadMailTool } from "@langchain/community/tools/outlook";
+require("dotenv").config();
 
 async function createAndRunAgent() {
-  const gpt4 = new ChatOpenAI({ modelName: 'gpt-3.5-turbo-1106', openAIApiKey: process.env.OPENAI_API_KEY});
+  const gpt4 = new ChatOpenAI({
+    modelName: "gpt-3.5-turbo-1106",
+    openAIApiKey: process.env.OPENAI_API_KEY,
+  });
 
   const outlookReadMail = new OutlookReadMailTool(undefined, "token");
 
-  const executor = await initializeAgentExecutorWithOptions([outlookReadMail], gpt4, {
-    agentType: "openai-functions",
-    verbose: true,
-  });
+  const executor = await initializeAgentExecutorWithOptions(
+    [outlookReadMail],
+    gpt4,
+    {
+      agentType: "openai-functions",
+      verbose: true,
+    }
+  );
 
-  const input = 'show my emails';
+  const input = "show my emails";
   const result = await executor.invoke({ input });
 
   console.log(result);
@@ -172,22 +182,30 @@ createAndRunAgent();
 This example shows how to send emails by using agent.
 
 ```typescript
-import { ChatOpenAI } from 'langchain/chat_models/openai';
-import { initializeAgentExecutorWithOptions } from 'langchain/agents';
-import { OutlookSendMailTool } from '@langchain/community/tools/outlook';
-require('dotenv').config();
+import { ChatOpenAI } from "langchain/chat_models/openai";
+import { initializeAgentExecutorWithOptions } from "langchain/agents";
+import { OutlookSendMailTool } from "@langchain/community/tools/outlook";
+require("dotenv").config();
 
 async function createAndRunAgent() {
-  const gpt4 = new ChatOpenAI({ modelName: 'gpt-4', openAIApiKey: process.env.OPENAI_API_KEY});
+  const gpt4 = new ChatOpenAI({
+    modelName: "gpt-4",
+    openAIApiKey: process.env.OPENAI_API_KEY,
+  });
 
   const sendMailTool = new OutlookSendMailTool(undefined, "token");
 
-  const executor = await initializeAgentExecutorWithOptions([sendMailTool], gpt4, {
-    agentType: "openai-functions",
-    verbose: true,
-  });
+  const executor = await initializeAgentExecutorWithOptions(
+    [sendMailTool],
+    gpt4,
+    {
+      agentType: "openai-functions",
+      verbose: true,
+    }
+  );
 
-  const input = 'send an email to YOUR_EMAIL and invite him to a meeting at 3pm tomorrow';
+  const input =
+    "send an email to YOUR_EMAIL and invite him to a meeting at 3pm tomorrow";
   const result = await executor.invoke({ input });
 
   console.log(result);
