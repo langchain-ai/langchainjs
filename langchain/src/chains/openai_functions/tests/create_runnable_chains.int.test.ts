@@ -59,7 +59,7 @@ const weatherFunction = {
 
 test("createStructuredOutputRunnable works", async () => {
   const model = new ChatOpenAI();
-  const prompt = ChatPromptTemplate.fromMessages([
+  const prompt = ChatPromptTemplate.fromMessages<{ description: string }>([
     ["human", "Human description: {description}"]
   ]);
 
@@ -70,8 +70,7 @@ test("createStructuredOutputRunnable works", async () => {
   }>();
 
   const runnable = createStructuredOutputRunnable<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    any,
+    { description: string },
     { name: string; age: number; fav_food?: string }
   >(personJSONSchema, model, prompt, outputParser);
   const response = await runnable.invoke({
@@ -85,7 +84,7 @@ test("createStructuredOutputRunnable works", async () => {
 
 test("createOpenAIFnRunnable works", async () => {
   const model = new ChatOpenAI();
-  const prompt = ChatPromptTemplate.fromMessages([
+  const prompt = ChatPromptTemplate.fromMessages<{ description: string }>([
     ["human", "Human description: {description}"]
   ]);
   const outputParser = new JsonOutputFunctionsParser<{
@@ -115,7 +114,7 @@ test("createOpenAIFnRunnable works", async () => {
 
 test("createOpenAIFnRunnable works with multiple functions", async () => {
   const model = new ChatOpenAI();
-  const prompt = ChatPromptTemplate.fromMessages([
+  const prompt = ChatPromptTemplate.fromMessages<{ question: string }>([
     ["human", "Question: {question}"]
   ]);
   const outputParser = new JsonOutputFunctionsParser<{
