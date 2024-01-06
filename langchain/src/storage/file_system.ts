@@ -1,6 +1,6 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { BaseStore } from "../schema/storage.js";
+import { BaseStore } from "@langchain/core/stores";
 
 /**
  * File system implementation of the BaseStore using a dictionary. Used for

@@ -1,3 +1,8 @@
+import type {
+  SupabaseFilterRPCCall,
+  SupabaseMetadata,
+  SupabaseVectorStore,
+} from "@langchain/community/vectorstores/supabase";
 import {
   Comparator,
   Comparators,
@@ -7,11 +12,6 @@ import {
   Operators,
   StructuredQuery,
 } from "../../chains/query_constructor/ir.js";
-import type {
-  SupabaseFilterRPCCall,
-  SupabaseMetadata,
-  SupabaseVectorStore,
-} from "../../vectorstores/supabase.js";
 import { BaseTranslator } from "./base.js";
 import { isFilterEmpty, isFloat, isInt, isObject, isString } from "./utils.js";
 import {

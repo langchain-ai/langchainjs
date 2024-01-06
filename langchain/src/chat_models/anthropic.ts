@@ -1,3 +1,4 @@
+// TODO: Deprecate in favor of new Anthropic package once out of beta
 import {
   Anthropic,
   AI_PROMPT,

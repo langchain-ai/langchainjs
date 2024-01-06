@@ -1,8 +1,8 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import type { VectorStoreInterface } from "@langchain/core/vectorstores";
 import { ToolInterface } from "@langchain/core/tools";
+import { Toolkit } from "@langchain/community/agents/toolkits/base";
 import { VectorStoreQATool } from "../../../tools/vectorstore.js";
-import { Toolkit } from "../base.js";
 import { ZeroShotCreatePromptArgs, ZeroShotAgent } from "../../mrkl/index.js";
 import { VECTOR_PREFIX, VECTOR_ROUTER_PREFIX } from "./prompt.js";
 import { SUFFIX } from "../../mrkl/prompt.js";

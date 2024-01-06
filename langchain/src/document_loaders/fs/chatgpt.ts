@@ -1,5 +1,5 @@
+import { Document } from "@langchain/core/documents";
 import { TextLoader } from "./text.js";
-import { Document } from "../../document.js";
 
 interface ChatGPTMessage {
   author: {
