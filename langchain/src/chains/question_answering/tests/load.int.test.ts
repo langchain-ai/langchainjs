@@ -1,11 +1,11 @@
 import { test } from "@jest/globals";
-import { OpenAI } from "../../../llms/openai.js";
+import { OpenAI } from "@langchain/openai";
+import { Document } from "@langchain/core/documents";
 import {
   loadQAMapReduceChain,
   loadQARefineChain,
   loadQAStuffChain,
 } from "../load.js";
-import { Document } from "../../../document.js";
 
 test("Test loadQAStuffChain", async () => {
   const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });

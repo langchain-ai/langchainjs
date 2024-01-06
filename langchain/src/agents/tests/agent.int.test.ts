@@ -1,19 +1,24 @@
 /* eslint-disable no-process-env */
 import { expect, test } from "@jest/globals";
+<<<<<<< HEAD
 import { OpenAI } from "../../llms/openai.js";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
+=======
+import { OpenAI, OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
+import { Tool } from "@langchain/core/tools";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { OutputParserException } from "@langchain/core/output_parsers";
+import { AIMessage } from "@langchain/core/messages";
+import { AgentStep } from "@langchain/core/agents";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
+import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
+import { loadAgent } from "../load.js";
+>>>>>>> 3c16c67fc723c5f1b3346a8f5fdb29e5c7b7ed6d
 import { AgentExecutor, ZeroShotAgent } from "../index.js";
-import { SerpAPI } from "../../tools/serpapi.js";
 import { Calculator } from "../../tools/calculator.js";
 import { initializeAgentExecutorWithOptions } from "../initialize.js";
 import { WebBrowser } from "../../tools/webbrowser.js";
-import { Tool } from "../../tools/base.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
-import { RunnableSequence } from "../../schema/runnable/base.js";
-import { OutputParserException } from "../../schema/output_parser.js";
-import { AIMessage, AgentStep } from "../../schema/index.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
-import { ChatMessageHistory } from "../../memory/index.js";
 
 test("Pass runnable to agent executor", async () => {
   const model = new ChatOpenAI({ temperature: 0, modelName: "gpt-3.5-turbo" });

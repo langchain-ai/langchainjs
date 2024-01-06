@@ -1,5 +1,5 @@
 import type { AxiosRequestConfig } from "axios";
-import type { EventSourceMessage } from "./event-source-parse.js";
+import { EventSourceMessage } from "@langchain/community/utils/event_source_parse";
 
 export interface StreamingAxiosRequestConfig extends AxiosRequestConfig {
   responseType: "stream";

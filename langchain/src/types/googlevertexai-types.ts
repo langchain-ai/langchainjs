@@ -1,4 +1,4 @@
-import { BaseLLMParams } from "../llms/base.js";
+import { BaseLLMParams } from "@langchain/core/language_models/llms";
 
 export interface GoogleConnectionParams<AuthOptions> {
   authOptions?: AuthOptions;

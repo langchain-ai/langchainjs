@@ -1,12 +1,14 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import {
+  BaseChatMemory,
+  BaseChatMemoryInput,
+} from "@langchain/community/memory/chat_memory";
+import {
   InputValues,
   MemoryVariables,
-  getBufferString,
   OutputValues,
-} from "./base.js";
-
-import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
+} from "@langchain/core/memory";
+import { getBufferString } from "@langchain/core/messages";
 
 /**
  * Interface for the input parameters of the `BufferTokenMemory` class.

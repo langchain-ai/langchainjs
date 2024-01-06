@@ -1,11 +1,12 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import type { StructuredToolInterface } from "@langchain/core/tools";
+import { ChatOpenAI } from "@langchain/openai";
+import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import {
   CriteriaLike,
   CriteriaEvalChain,
   LabeledCriteriaEvalChain,
 } from "./criteria/index.js";
-import { ChatOpenAI } from "../chat_models/openai.js";
 import type { EvaluatorType } from "./types.js";
 import { LLMEvalChainInput } from "./base.js";
 import {
@@ -18,7 +19,6 @@ import {
   PairwiseEmbeddingDistanceEvalChain,
 } from "./embedding_distance/index.js";
 import { TrajectoryEvalChain } from "./agents/index.js";
-import { BaseChatModel } from "../chat_models/base.js";
 
 export type LoadEvaluatorOptions = EmbeddingDistanceEvalChainInput & {
   llm?: BaseLanguageModelInterface;

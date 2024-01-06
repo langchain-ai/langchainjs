@@ -31,8 +31,8 @@ test.skip("UpstashRedisCache does not parse non string cached values", async () 
   });
 
   const prompt = "is the sky blue";
-  const result1 = await chat.predict(prompt);
-  const result2 = await chat.predict(prompt);
+  const result1 = await chat.invoke(prompt);
+  const result2 = await chat.invoke(prompt);
 
   expect(result1).toEqual(result2);
 });

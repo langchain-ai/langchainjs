@@ -1,3 +1,4 @@
+import { VectorStore } from "@langchain/core/vectorstores";
 import {
   Comparator,
   Comparators,
@@ -12,7 +13,6 @@ import {
   VisitorResult,
   VisitorStructuredQueryResult,
 } from "../../chains/query_constructor/ir.js";
-import { VectorStore } from "../../vectorstores/base.js";
 import { isFilterEmpty, castValue } from "./utils.js";
 
 /**
