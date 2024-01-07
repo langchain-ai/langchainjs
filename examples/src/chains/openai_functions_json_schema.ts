@@ -29,7 +29,7 @@ const runnable = createStructuredOutputRunnable({
   outputSchema: jsonSchema,
   llm: model,
   prompt,
-  outputParser
+  outputParser,
 });
 const response = await runnable.invoke({
   description:

@@ -62,7 +62,7 @@ const runnable = createOpenAIFnRunnable({
   llm: model,
   prompt,
   enforceSingleFunctionUsage: false, // Default is true
-  outputParser
+  outputParser,
 });
 const response = await runnable.invoke({
   question: "What's the weather like in Berkeley CA?",

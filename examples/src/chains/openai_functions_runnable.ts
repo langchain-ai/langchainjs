@@ -34,7 +34,7 @@ const runnable = createOpenAIFnRunnable({
   llm: model,
   prompt,
   enforceSingleFunctionUsage: true, // Default is true
-  outputParser
+  outputParser,
 });
 const response = await runnable.invoke({
   description:
