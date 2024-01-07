@@ -37,11 +37,11 @@ export abstract class RecordManager
 
   abstract getTime(): Promise<number>;
 
-  abstract update(keys: string[], updateOptions: UpdateOptions): Promise<void>;
+  abstract update(keys: string[], updateOptions?: UpdateOptions): Promise<void>;
 
   abstract exists(keys: string[]): Promise<boolean[]>;
 
-  abstract listKeys(options: ListKeyOptions): Promise<string[]>;
+  abstract listKeys(options?: ListKeyOptions): Promise<string[]>;
 
   abstract deleteKeys(keys: string[]): Promise<void>;
 

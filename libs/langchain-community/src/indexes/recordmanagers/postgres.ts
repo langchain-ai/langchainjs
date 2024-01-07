@@ -25,7 +25,7 @@ export class PostgresRecordManager implements RecordManagerInterface {
     this.tableName = tableName || "upsertion_records";
   }
 
-  async _recordManagerType(): Promise<string> {
+  _recordManagerType(): string {
     return "postgres";
   }
 
@@ -81,19 +81,19 @@ export class PostgresRecordManager implements RecordManagerInterface {
       return;
     }
 
-    const updated_at = await this.getTime();
+    const updatedAt = await this.getTime();
     const { timeAtLeast } = updateOptions ?? {};
 
-    if (timeAtLeast && updated_at < timeAtLeast) {
+    if (timeAtLeast && updatedAt < timeAtLeast) {
       throw new Error(
-        `Time sync issue with database ${updated_at} < ${timeAtLeast}`
+        `Time sync issue with database ${updatedAt} < ${timeAtLeast}`
       );
     }
 
     const recordsToUpsert = keys.map((key) => [
       key,
       this.namespace,
-      updated_at,
+      updatedAt,
     ]);
 
     const valuesPlaceholders = recordsToUpsert
