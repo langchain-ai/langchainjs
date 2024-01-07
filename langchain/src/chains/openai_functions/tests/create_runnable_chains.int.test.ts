@@ -72,7 +72,7 @@ test("createStructuredOutputRunnable works", async () => {
   const runnable = createStructuredOutputRunnable<
     { description: string },
     { name: string; age: number; fav_food?: string }
-  >(personJSONSchema, model, prompt, outputParser);
+  >({ outputSchema: personJSONSchema, llm: model, prompt, outputParser });
   const response = await runnable.invoke({
     description:
       "My name's John Doe and I'm 30 years old. My favorite kind of food are chocolate chip cookies.",
@@ -96,13 +96,13 @@ test("createOpenAIFnRunnable works", async () => {
   const runnable = createOpenAIFnRunnable<
     { description: string },
     { name: string; age: number; fav_food?: string }
-  >(
-    [personDetailsFunction],
-    model,
+  >({
+    functions: [personDetailsFunction],
+    llm: model,
     prompt,
-    true, // Default is true
-    outputParser
-  );
+    enforceSingleFunctionUsage: true, // Default is true
+    outputParser,
+  });
   const response = await runnable.invoke({
     description:
       "My name's John Doe and I'm 30 years old. My favorite kind of food are chocolate chip cookies.",
@@ -126,13 +126,13 @@ test("createOpenAIFnRunnable works with multiple functions", async () => {
   const runnable = createOpenAIFnRunnable<
     { question: string },
     { state: string; city: number; zip?: number }
-  >(
-    [personDetailsFunction, weatherFunction],
-    model,
+  >({
+    functions: [personDetailsFunction, weatherFunction],
+    llm: model,
     prompt,
-    false, // Default is true
-    outputParser
-  );
+    enforceSingleFunctionUsage: false, // Default is true
+    outputParser,
+  });
   const response = await runnable.invoke({
     question: "What's the weather like in Berkeley CA?",
   });
