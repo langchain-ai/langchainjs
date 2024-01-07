@@ -153,10 +153,6 @@ function load(application) {
         } else {
           htmlFileContent = htmlFileContent.replace(deprecatedHTML, DEPRECATION_HTML(undefined));
         }
-
-        // There is only 1 <h1> tag in the file, the symbol name. Eg AgentExecutor.
-        // We want to add the `deprecated` class to this tag so it has a strikethrough.
-        htmlFileContent = htmlFileContent.replace(`<h1>`, `<h1 class="deprecated">`);
       }
 
       const [part1, part2] = htmlFileContent.split(htmlToSplitAt);
