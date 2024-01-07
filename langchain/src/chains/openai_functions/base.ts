@@ -44,26 +44,6 @@ export type CreateOpenAIFnRunnableConfig<
   outputParser?: BaseOutputParser<RunOutput>;
 };
 
-const openAIFunction = {
-  name: "get_person_details",
-  description: "Get details about a person",
-  parameters: {
-    title: "Person",
-    description: "Identifying information about a person.",
-    type: "object",
-    properties: {
-      name: { title: "Name", description: "The person's name", type: "string" },
-      age: { title: "Age", description: "The person's age", type: "integer" },
-      fav_food: {
-        title: "Fav Food",
-        description: "The person's favorite food",
-        type: "string",
-      },
-    },
-    required: ["name", "age"],
-  },
-};
-
 /**
  * Creates a runnable sequence that calls OpenAI functions.
  * @param config - The parameters required to create the runnable.
