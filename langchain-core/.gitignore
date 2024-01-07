@@ -25,6 +25,9 @@ embeddings.d.ts
 example_selectors.cjs
 example_selectors.js
 example_selectors.d.ts
+graphs.cjs
+graphs.js
+graphs.d.ts
 language_models/base.cjs
 language_models/base.js
 language_models/base.d.ts

@@ -303,6 +303,7 @@ const entrypoints = {
   "storage/upstash_redis": "storage/upstash_redis",
   "storage/file_system": "storage/file_system",
   // graphs
+  "graphs/base": "graphs/base",
   "graphs/neo4j_graph": "graphs/neo4j_graph",
   // hub
   hub: "hub",
@@ -401,6 +402,7 @@ const deprecatedOmitFromImportMap = [
   "embeddings/tensorflow",
   "embeddings/voyage",
   "experimental/chat_models/ollama_functions",
+  "graphs/base",
   "graphs/neo4j_graph",
   "llms/ai21",
   "llms/aleph_alpha",

@@ -1,6 +1,7 @@
 import neo4j, { Neo4jError } from "neo4j-driver";
+import { Graph, GraphParams } from "@langchain/core/graphs";
 
-interface Neo4jGraphConfig {
+interface Neo4jGraphConfig extends GraphParams {
   url: string;
   username: string;
   password: string;
@@ -37,7 +38,7 @@ type PathType = { start: string; type: string; end: string };
  *
  * @link See https://js.langchain.com/docs/security for more information.
  */
-export class Neo4jGraph {
+export class Neo4jGraph extends Graph{
   private driver: neo4j.Driver;
 
   private database: string;
@@ -56,6 +57,8 @@ export class Neo4jGraph {
     password,
     database = "neo4j",
   }: Neo4jGraphConfig) {
+    super({url, username, password, database});
+
     try {
       this.driver = neo4j.driver(url, neo4j.auth.basic(username, password));
       this.database = database;

@@ -81,6 +81,7 @@
     "ml",
     "openai",
     "embeddings",
+    "graphs",
     "vectorstores"
   ],
   "exports": {
@@ -128,6 +129,11 @@
       "types": "./example_selectors.d.ts",
       "import": "./example_selectors.js",
       "require": "./example_selectors.cjs"
+    },
+    "./graphs": {
+      "types": "./graphs.d.ts",
+      "import": "./graphs.js",
+      "require": "./graphs.cjs"
     },
     "./language_models/base": {
       "types": "./language_models/base.d.ts",
@@ -330,6 +336,9 @@
     "example_selectors.cjs",
     "example_selectors.js",
     "example_selectors.d.ts",
+    "graphs.cjs",
+    "graphs.js",
+    "graphs.d.ts",
     "language_models/base.cjs",
     "language_models/base.js",
     "language_models/base.d.ts",
