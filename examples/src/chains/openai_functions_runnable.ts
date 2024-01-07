@@ -29,18 +29,18 @@ const prompt = ChatPromptTemplate.fromMessages([
 ]);
 const outputParser = new JsonOutputFunctionsParser();
 
-const runnable = createOpenAIFnRunnable(
-  [openAIFunction],
-  model,
+const runnable = createOpenAIFnRunnable({
+  functions: [openAIFunction],
+  llm: model,
   prompt,
-  true, // Default is true
+  enforceSingleFunctionUsage: true, // Default is true
   outputParser
-);
+});
 const response = await runnable.invoke({
   description:
     "My name's John Doe and I'm 30 years old. My favorite kind of food are chocolate chip cookies.",
 });
 console.log(response);
-/**
-{ name: 'John Doe', age: 30, fav_food: 'chocolate chip cookies' }
- */
+/*
+  { name: 'John Doe', age: 30, fav_food: 'chocolate chip cookies' }
+*/

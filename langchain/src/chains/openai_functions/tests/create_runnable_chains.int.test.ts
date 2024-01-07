@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
 import { expect, test } from "@jest/globals";
@@ -57,7 +58,45 @@ const weatherFunction = {
   },
 };
 
-test("createStructuredOutputRunnable works", async () => {
+test("createStructuredOutputRunnable works with Zod", async () => {
+  const model = new ChatOpenAI();
+  const prompt = ChatPromptTemplate.fromMessages<{ description: string }>([
+    ["human", "Human description: {description}"],
+  ]);
+
+  const zodSchema = z.object({
+    person: z.object({
+      name: z.string(),
+      age: z.string(),
+      fav_food: z.optional(z.string()),
+    }),
+  });
+
+  const outputParser = new JsonOutputFunctionsParser<{
+    person: {
+      name: string;
+      age: number;
+      fav_food?: string;
+    };
+  }>();
+
+  const runnable = createStructuredOutputRunnable({
+    outputSchema: zodSchema,
+    llm: model,
+    prompt,
+    outputParser,
+  });
+  const response = await runnable.invoke({
+    description:
+      "My name's John Doe and I'm 30 years old. My favorite kind of food are chocolate chip cookies.",
+  });
+  console.log(response);
+  expect("person" in response).toBe(true);
+  expect("name" in response.person).toBe(true);
+  expect("age" in response.person).toBe(true);
+});
+
+test("createStructuredOutputRunnable works with JSON schema", async () => {
   const model = new ChatOpenAI();
   const prompt = ChatPromptTemplate.fromMessages<{ description: string }>([
     ["human", "Human description: {description}"],
@@ -69,10 +108,12 @@ test("createStructuredOutputRunnable works", async () => {
     fav_food?: string;
   }>();
 
-  const runnable = createStructuredOutputRunnable<
-    { description: string },
-    { name: string; age: number; fav_food?: string }
-  >({ outputSchema: personJSONSchema, llm: model, prompt, outputParser });
+  const runnable = createStructuredOutputRunnable({
+    outputSchema: personJSONSchema,
+    llm: model,
+    prompt,
+    outputParser,
+  });
   const response = await runnable.invoke({
     description:
       "My name's John Doe and I'm 30 years old. My favorite kind of food are chocolate chip cookies.",
@@ -93,10 +134,7 @@ test("createOpenAIFnRunnable works", async () => {
     fav_food?: string;
   }>();
 
-  const runnable = createOpenAIFnRunnable<
-    { description: string },
-    { name: string; age: number; fav_food?: string }
-  >({
+  const runnable = createOpenAIFnRunnable({
     functions: [personDetailsFunction],
     llm: model,
     prompt,
@@ -123,10 +161,7 @@ test("createOpenAIFnRunnable works with multiple functions", async () => {
     zip?: number;
   }>();
 
-  const runnable = createOpenAIFnRunnable<
-    { question: string },
-    { state: string; city: number; zip?: number }
-  >({
+  const runnable = createOpenAIFnRunnable({
     functions: [personDetailsFunction, weatherFunction],
     llm: model,
     prompt,

@@ -3,7 +3,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { createStructuredOutputRunnable } from "langchain/chains/openai_functions";
 import { JsonOutputFunctionsParser } from "langchain/output_parsers";
 
-const JSONSchema = {
+const jsonSchema = {
   title: "Person",
   description: "Identifying information about a person.",
   type: "object",
@@ -25,17 +25,17 @@ const prompt = ChatPromptTemplate.fromMessages([
 ]);
 const outputParser = new JsonOutputFunctionsParser();
 
-const runnable = createStructuredOutputRunnable(
-  JSONSchema,
-  model,
+const runnable = createStructuredOutputRunnable({
+  outputSchema: jsonSchema,
+  llm: model,
   prompt,
   outputParser
-);
+});
 const response = await runnable.invoke({
   description:
     "My name's John Doe and I'm 30 years old. My favorite kind of food are chocolate chip cookies.",
 });
 console.log(response);
-/**
-{ name: 'John Doe', age: 30, fav_food: 'chocolate chip cookies' }
- */
+/*
+  { name: 'John Doe', age: 30, fav_food: 'chocolate chip cookies' }
+*/

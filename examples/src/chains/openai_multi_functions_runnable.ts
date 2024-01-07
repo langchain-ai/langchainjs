@@ -57,17 +57,17 @@ const prompt = ChatPromptTemplate.fromMessages([
 ]);
 const outputParser = new JsonOutputFunctionsParser();
 
-const runnable = createOpenAIFnRunnable(
-  [personDetailsFunction, weatherFunction],
-  model,
+const runnable = createOpenAIFnRunnable({
+  functions: [personDetailsFunction, weatherFunction],
+  llm: model,
   prompt,
-  false, // Default is true
+  enforceSingleFunctionUsage: false, // Default is true
   outputParser
-);
+});
 const response = await runnable.invoke({
   question: "What's the weather like in Berkeley CA?",
 });
 console.log(response);
-/**
-{ state: 'CA', city: 'Berkeley' }
- */
+/*
+  { state: 'CA', city: 'Berkeley' }
+*/
