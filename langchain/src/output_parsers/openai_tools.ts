@@ -7,10 +7,10 @@ export type ParsedToolCall = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   args: Record<string, any>;
 
-  /** @deprecated Use `type` instead */
+  /** @deprecated Use `type` instead. Will be removed in 0.2.0. */
   name: string;
 
-  /** @deprecated Use `args` instead */
+  /** @deprecated Use `args` instead. Will be removed in 0.2.0. */
   arguments: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 };
 
