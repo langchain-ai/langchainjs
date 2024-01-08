@@ -1,8 +1,7 @@
 /* eslint-disable no-process-env */
 import { expect, test } from "@jest/globals";
+import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
 import { ConversationalRetrievalQAChain } from "../../chains/conversational_retrieval_chain.js";
-import { OpenAIEmbeddings } from "../../embeddings/openai.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
 import { MemoryVectorStore } from "../../vectorstores/memory.js";
 import { ScoreThresholdRetriever } from "../score_threshold.js";

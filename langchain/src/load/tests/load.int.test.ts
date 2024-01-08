@@ -1,6 +1,5 @@
 import { test, expect } from "@jest/globals";
 import { RunnableSequence } from "@langchain/core/runnables";
-
 import { load } from "../index.js";
 
 test("Should load and invoke real-world serialized chain", async () => {

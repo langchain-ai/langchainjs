@@ -1,5 +1,5 @@
 import { htmlToText } from "html-to-text";
-import { Document } from "../../document.js";
+import { Document } from "@langchain/core/documents";
 import { BaseDocumentLoader } from "../base.js";
 
 /**

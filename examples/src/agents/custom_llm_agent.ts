@@ -5,7 +5,6 @@ import {
 } from "langchain/agents";
 import { LLMChain } from "langchain/chains";
 import { OpenAI } from "@langchain/openai";
-import { SerpAPI } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 import {
   BaseStringPromptTemplate,
@@ -16,6 +15,7 @@ import { InputValues } from "@langchain/core/memory";
 import { PartialValues } from "@langchain/core/utils/types";
 import { AgentStep, AgentAction, AgentFinish } from "@langchain/core/agents";
 import { Tool } from "@langchain/core/tools";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 const PREFIX = `Answer the following questions as best you can. You have access to the following tools:`;
 const formatInstructions = (

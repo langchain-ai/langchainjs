@@ -1,14 +1,14 @@
 import type { BaseRetrieverInterface } from "@langchain/core/retrievers";
-import { CallbackManagerForChainRun } from "../../../callbacks/manager.js";
-import { ChatOpenAI } from "../../../chat_models/openai.js";
-import { JsonOutputFunctionsParser } from "../../../output_parsers/openai_functions.js";
+import { ChatOpenAI } from "@langchain/openai";
 import {
   BaseMessage,
-  ChainValues,
   HumanMessage,
   isBaseMessage,
-} from "../../../schema/index.js";
-import { StringOutputParser } from "../../../schema/output_parser.js";
+} from "@langchain/core/messages";
+import { ChainValues } from "@langchain/core/utils/types";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
+import { JsonOutputFunctionsParser } from "../../../output_parsers/openai_functions.js";
 import { BaseChain, ChainInputs } from "../../../chains/base.js";
 import {
   GetPredictionViolationsResponse,

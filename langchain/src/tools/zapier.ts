@@ -1,8 +1,11 @@
-import { Tool } from "./base.js";
-import { renderTemplate } from "../prompts/template.js";
-import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
-import { getEnvironmentVariable } from "../util/env.js";
-import { Serializable } from "../load/serializable.js";
+import { Serializable } from "@langchain/core/load/serializable";
+import { Tool } from "@langchain/core/tools";
+import { renderTemplate } from "@langchain/core/prompts";
+import {
+  AsyncCaller,
+  AsyncCallerParams,
+} from "@langchain/core/utils/async_caller";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 const zapierNLABaseDescription: string =
   "A wrapper around Zapier NLA actions. " +
@@ -35,6 +38,7 @@ export interface ZapierNLAWrapperParams extends AsyncCallerParams {
 }
 
 /**
+ * @deprecated Zapier has sunsetted the NLA API.
  * A wrapper class for Zapier's Natural Language Actions (NLA). It
  * provides an interface to interact with the 5k+ apps and 20k+ actions on
  * Zapier's platform through a natural language API interface. This
@@ -246,6 +250,7 @@ export class ZapierNLAWrapper extends Serializable {
 }
 
 /**
+ * @deprecated Zapier has sunsetted the NLA API.
  * A tool that uses the `ZapierNLAWrapper` to run a specific action. It
  * takes in the `ZapierNLAWrapper` instance, an action ID, a description,
  * a schema for the parameters, and optionally the parameters themselves.

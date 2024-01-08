@@ -12,7 +12,7 @@ import { ChatOllama } from "../ollama.js";
 
 test.skip("test call", async () => {
   const ollama = new ChatOllama({});
-  const result = await ollama.predict(
+  const result = await ollama.invoke(
     "What is a good name for a company that makes colorful socks?"
   );
   console.log({ result });
@@ -23,7 +23,7 @@ test.skip("test call with callback", async () => {
     baseUrl: "http://localhost:11434",
   });
   const tokens: string[] = [];
-  const result = await ollama.predict(
+  const result = await ollama.invoke(
     "What is a good name for a company that makes colorful socks?",
     {
       callbacks: [
@@ -60,7 +60,7 @@ test.skip("should abort the request", async () => {
   const controller = new AbortController();
 
   await expect(() => {
-    const ret = ollama.predict("Respond with an extremely verbose response", {
+    const ret = ollama.invoke("Respond with an extremely verbose response", {
       signal: controller.signal,
     });
     controller.abort();
