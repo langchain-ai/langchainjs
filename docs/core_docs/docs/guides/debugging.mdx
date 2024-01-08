@@ -18,7 +18,7 @@ For anyone building production-grade LLM applications, we highly recommend using
 
 ## `verbose`
 
-If you're prototyping in Jupyter Notebooks or running Node scripts, it can be helpful to print out the intermediate steps of a chain run. 
+If you're prototyping in Jupyter Notebooks or running Node scripts, it can be helpful to print out the intermediate steps of a chain run.
 
 There are a number of ways to enable printing at varying degrees of verbosity.
 
@@ -30,7 +30,8 @@ import SimpleAgent from "@examples/guides/debugging/simple_agent.ts";
 
 ```typescript
 const result = await agentExecutor.invoke({
-  input: "Who directed the 2023 film Oppenheimer and what is their age? What is their age in days (assume 365 days per year)?",
+  input:
+    "Who directed the 2023 film Oppenheimer and what is their age? What is their age in days (assume 365 days per year)?",
 });
 console.log(result);
 ```
@@ -57,7 +58,8 @@ import SimpleAgentVerbose from "@examples/guides/debugging/simple_agent_verbose.
 
 ```typescript
 const result = await agentExecutor.invoke({
-  input: "Who directed the 2023 film Oppenheimer and what is their age? What is their age in days (assume 365 days per year)?",
+  input:
+    "Who directed the 2023 film Oppenheimer and what is their age? What is their age in days (assume 365 days per year)?",
 });
 console.log(result);
 ```
@@ -3648,14 +3650,14 @@ console.log(result);
 
 You can also scope verbosity down to a single object, in which case only the inputs and outputs to that object are printed (along with any additional callbacks calls made specifically by that object).
 
-
 import SimpleAgentVerboseSome from "@examples/guides/debugging/simple_agent_verbose_some.ts";
 
 <CodeBlock language="typescript">{SimpleAgentVerboseSome}</CodeBlock>
 
 ```typescript
 const result = await agentExecutor.invoke({
-  input: "Who directed the 2023 film Oppenheimer and what is their age? What is their age in days (assume 365 days per year)?",
+  input:
+    "Who directed the 2023 film Oppenheimer and what is their age? What is their age in days (assume 365 days per year)?",
 });
 console.log(result);
 ```
