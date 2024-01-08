@@ -1,7 +1,7 @@
 import { expect, test } from "@jest/globals";
+import { PromptTemplate } from "@langchain/core/prompts";
 import { PRINCIPLES } from "../../../chains/index.js";
 import { ChatAnthropic } from "../../../chat_models/anthropic.js";
-import { PromptTemplate } from "../../../prompts/index.js";
 import { loadEvaluator } from "../../loader.js";
 
 test("Test CriteriaEvalChain", async () => {

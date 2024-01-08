@@ -1,9 +1,16 @@
 import { OpenAI } from "@langchain/openai";
 
-import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
-import type { LLMResult } from "../schema/index.js";
-import { getEnvironmentVariable } from "../util/env.js";
+import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { LLMResult } from "@langchain/core/outputs";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
+import { logVersion010MigrationWarning } from "../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion010MigrationWarning({
+  oldEntrypointName: "llms/openai",
+  newEntrypointName: "",
+  newPackageName: "@langchain/openai",
+});
 
 export {
   type AzureOpenAIInput,

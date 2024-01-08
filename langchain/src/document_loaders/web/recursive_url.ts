@@ -1,6 +1,6 @@
 import { JSDOM } from "jsdom";
-import { Document } from "../../document.js";
-import { AsyncCaller } from "../../util/async_caller.js";
+import { Document } from "@langchain/core/documents";
+import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { BaseDocumentLoader, DocumentLoader } from "../base.js";
 
 export interface RecursiveUrlLoaderOptions {
