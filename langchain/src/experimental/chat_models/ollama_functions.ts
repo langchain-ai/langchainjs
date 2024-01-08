@@ -1,4 +1,4 @@
-import { FunctionDefinition } from "@langchain/core/language_models/base";
+import { FunctionDefinition , BaseFunctionCallOptions } from "@langchain/core/language_models/base";
 import {
   AIMessage,
   BaseMessage,
@@ -11,7 +11,6 @@ import {
   BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
 import { SystemMessagePromptTemplate } from "@langchain/core/prompts";
-import { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { ChatOllama } from "@langchain/community/chat_models/ollama";
 import { type ChatOllamaInput } from "../../chat_models/ollama.js";
