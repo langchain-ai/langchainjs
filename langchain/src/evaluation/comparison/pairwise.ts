@@ -13,6 +13,7 @@ import {
   LLMEvalChainInput,
   LLMPairwiseStringEvaluator,
   LLMPairwiseStringEvaluatorArgs,
+  type ExtractLLMCallOptions,
 } from "../base.js";
 
 import { PROMPT, PROMPT_WITH_REFERENCES } from "./prompt.js";
@@ -217,7 +218,7 @@ To use references, use the LabeledPairwiseStringEvalChain instead.`;
 
   async _evaluateStringPairs(
     args: LLMPairwiseStringEvaluatorArgs,
-    callOptions: this["llm"]["CallOptions"],
+    callOptions: ExtractLLMCallOptions<this["llm"]>,
     config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues> {
     const result = await this.call({ ...args, ...callOptions }, config);
