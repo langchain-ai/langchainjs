@@ -68,6 +68,7 @@ export class OllamaEmbeddings extends Embeddings {
       numGpu: "num_gpu",
       numGqa: "num_gqa",
       numKeep: "num_keep",
+      numPredict: "num_predict",
       numThread: "num_thread",
       penalizeNewline: "penalize_newline",
       presencePenalty: "presence_penalty",

@@ -94,6 +94,8 @@ export class ChatOllama
 
   numKeep?: number;
 
+  numPredict?: number;
+
   numThread?: number;
 
   penalizeNewline?: boolean;
@@ -148,6 +150,7 @@ export class ChatOllama
     this.numGpu = fields.numGpu;
     this.numGqa = fields.numGqa;
     this.numKeep = fields.numKeep;
+    this.numPredict = fields.numPredict;
     this.numThread = fields.numThread;
     this.penalizeNewline = fields.penalizeNewline;
     this.presencePenalty = fields.presencePenalty;
@@ -196,6 +199,7 @@ export class ChatOllama
         num_gpu: this.numGpu,
         num_gqa: this.numGqa,
         num_keep: this.numKeep,
+        num_predict: this.numPredict,
         num_thread: this.numThread,
         penalize_newline: this.penalizeNewline,
         presence_penalty: this.presencePenalty,
