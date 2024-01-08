@@ -522,8 +522,7 @@ export class Milvus extends VectorStore {
     const args: MilvusLibArgs = {
       ...dbConfig,
       collectionName: dbConfig?.collectionName ?? genCollectionName(),
-      /* Vérifier si c'est nécessaire */
-      /* partitionName: dbConfig?.partitionName ?? 'Default partition', */
+      partitionName: dbConfig?.partitionName ?? 'Default partition',
     };
     const instance = new this(embeddings, args);
     await instance.addDocuments(docs);
