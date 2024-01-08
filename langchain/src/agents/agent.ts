@@ -159,7 +159,7 @@ function isAgentAction(input: unknown): input is AgentAction {
 
 /**
  * Class representing a single action agent which accepts runnables.
- * Extends the BaseSingleActionAgent class and provides methods for
+ * Extends the BaseMultiActionAgent class and provides methods for
  * planning agent actions with runnables.
  */
 export class RunnableAgent extends BaseMultiActionAgent {
