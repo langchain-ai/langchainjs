@@ -142,6 +142,26 @@ jobs:
       - name: Test vite exports
         run: docker compose -f environment_tests/docker-compose.yml run test-exports-vite
 
+  exports-tsc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build
+        run: yarn workspace langchain build
+        shell: bash
+        env:
+          SKIP_API_DOCS: true
+
+      - name: Test compiling exports with tsc
+        run: docker compose -f environment_tests/docker-compose.yml run test-exports-tsc
+
   # exports-bun:
   #   runs-on: ubuntu-latest
   #   steps:
