@@ -94,12 +94,12 @@ export class RunnablePassthrough<RunInput> extends Runnable<
    * });
    * ```
    */
-  static assign(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mapping: RunnableMapLike<Record<string, unknown>, Record<string, unknown>>
-  ): RunnableAssign<Record<string, unknown>, Record<string, unknown>> {
-    return new RunnableAssign(
-      new RunnableMap<Record<string, unknown>>({ steps: mapping })
-    );
+  static assign<
+    RunInput extends Record<string, unknown>,
+    RunOutput extends Record<string, unknown>
+  >(
+    mapping: RunnableMapLike<RunInput, RunOutput>
+  ): RunnableAssign<RunInput, RunInput & RunOutput> {
+    return new RunnableAssign(new RunnableMap({ steps: mapping }));
   }
 }

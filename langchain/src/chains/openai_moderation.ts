@@ -1,8 +1,11 @@
 import { type ClientOptions, OpenAIClient } from "@langchain/openai";
+import { ChainValues } from "@langchain/core/utils/types";
+import {
+  AsyncCaller,
+  AsyncCallerParams,
+} from "@langchain/core/utils/async_caller";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { BaseChain, ChainInputs } from "./base.js";
-import { ChainValues } from "../schema/index.js";
-import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
-import { getEnvironmentVariable } from "../util/env.js";
 
 /**
  * Interface for the input parameters of the OpenAIModerationChain class.

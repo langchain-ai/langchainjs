@@ -1,6 +1,6 @@
 import { OpenAI } from "@langchain/openai";
-import type { LLMResult } from "langchain/schema";
-import type { Serialized } from "langchain/load/serializable";
+import type { Serialized } from "@langchain/core/load/serializable";
+import { LLMResult } from "@langchain/core/outputs";
 
 // We can pass in a list of CallbackHandlers to the LLM constructor to get callbacks for various events.
 const model = new OpenAI({

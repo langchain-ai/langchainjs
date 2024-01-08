@@ -22,6 +22,17 @@ const SCRIPT_HTML = `<script>
 </script>`;
 
 /**
+ * @param {string | undefined} deprecationText 
+ * @returns {string}
+ */
+const DEPRECATION_HTML = (deprecationText) => `<div class="deprecation-warning">
+<h2>⚠️ Deprecated ⚠️</h2>
+${deprecationText ? `<p>${deprecationText}</p>` : ""}
+<p>This feature is deprecated and will be removed in the future.</p>
+<p>It is not recommended for use.</p>
+</div>`;
+
+/**
  * @param {Application} application 
  * @returns {void}
  */
@@ -117,14 +128,37 @@ function load(application) {
   /**
    * @param {Context} context 
    */
-  function onEndRenderEvent(context) {
-    const rootIndex = context.urls[0].url;
-    const indexFilePath = path.join(BASE_OUTPUT_DIR, rootIndex);
-    const htmlToSplit = `<div class="tsd-toolbar-contents container">`;
-    const htmlFileContent = fs.readFileSync(indexFilePath, "utf-8");
-    const [part1, part2] = htmlFileContent.split(htmlToSplit);
-    const htmlWithScript = part1 + SCRIPT_HTML + part2;
-    fs.writeFileSync(indexFilePath, htmlWithScript);
+  async function onEndRenderEvent(context) {
+    const htmlToSplitAt = `<div class="tsd-toolbar-contents container">`;
+    const deprecatedHTML = "<h4>Deprecated</h4>"
+    
+    const { urls } = context;
+    for (const { url } of urls) {
+      const indexFilePath = path.join(BASE_OUTPUT_DIR, url);
+      let htmlFileContent = fs.readFileSync(indexFilePath, "utf-8");
+
+      if (htmlFileContent.includes(deprecatedHTML)) {
+        // If any comments are added to the `@deprecated` JSDoc, they'll
+        // be inside the following <p> tag.
+        const deprecationTextRegex = new RegExp(`${deprecatedHTML}<p>(.*?)</p>`);
+        const deprecationTextMatch = htmlFileContent.match(deprecationTextRegex);
+
+        /** @type {string | undefined} */
+        let textInsidePTag;
+
+        if (deprecationTextMatch) {
+          textInsidePTag = deprecationTextMatch[1];
+          const newTextToReplace = `${deprecatedHTML}<p>${textInsidePTag}</p>`
+          htmlFileContent = htmlFileContent.replace(newTextToReplace, DEPRECATION_HTML(textInsidePTag));
+        } else {
+          htmlFileContent = htmlFileContent.replace(deprecatedHTML, DEPRECATION_HTML(undefined));
+        }
+      }
+
+      const [part1, part2] = htmlFileContent.split(htmlToSplitAt);
+      const htmlWithScript = part1 + SCRIPT_HTML + part2;
+      fs.writeFileSync(indexFilePath, htmlWithScript);
+    }
   }
 }
 

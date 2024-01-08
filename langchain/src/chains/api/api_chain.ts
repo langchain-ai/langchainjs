@@ -1,14 +1,14 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import { ChainValues } from "@langchain/core/utils/types";
+import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
+import { BasePromptTemplate } from "@langchain/core/prompts";
 import { BaseChain, ChainInputs } from "../base.js";
 import { SerializedAPIChain } from "../serde.js";
 import { LLMChain } from "../llm_chain.js";
-import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
-import { ChainValues } from "../../schema/index.js";
 import {
   API_URL_PROMPT_TEMPLATE,
   API_RESPONSE_PROMPT_TEMPLATE,
 } from "./prompts.js";
-import { BasePromptTemplate } from "../../prompts/base.js";
 
 /**
  * Interface that extends ChainInputs and defines additional input

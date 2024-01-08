@@ -1,4 +1,4 @@
-import { Writer } from "langchain/llms/writer";
+import { Writer } from "@langchain/community/llms/writer";
 
 const model = new Writer({
   maxTokens: 20,

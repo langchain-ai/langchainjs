@@ -8,21 +8,17 @@ import {
   RunnableSequence,
 } from "@langchain/core/runnables";
 import type { BasePromptTemplate } from "@langchain/core/prompts";
-import { LLMChain } from "../../chains/llm_chain.js";
-import {
-  AgentStep,
-  AgentAction,
-  AgentFinish,
-  ChainValues,
-} from "../../schema/index.js";
+import { AgentStep, AgentAction, AgentFinish } from "@langchain/core/agents";
+import { ChainValues } from "@langchain/core/utils/types";
 import {
   AIMessagePromptTemplate,
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
-} from "../../prompts/chat.js";
+} from "@langchain/core/prompts";
+import { CallbackManager } from "@langchain/core/callbacks/manager";
+import { LLMChain } from "../../chains/llm_chain.js";
 import { AgentArgs, BaseSingleActionAgent } from "../agent.js";
 import { AGENT_INSTRUCTIONS } from "./prompt.js";
-import { CallbackManager } from "../../callbacks/manager.js";
 import { XMLAgentOutputParser } from "./output_parser.js";
 import { renderTextDescription } from "../../tools/render.js";
 import { formatXml } from "../format_scratchpad/xml.js";
@@ -37,6 +33,8 @@ export interface XMLAgentInput {
 
 /**
  * Class that represents an agent that uses XML tags.
+ *
+ * @deprecated Use the {@link https://api.js.langchain.com/functions/langchain_agents.createXmlAgent.html | createXmlAgent method instead}.
  */
 export class XMLAgent extends BaseSingleActionAgent implements XMLAgentInput {
   static lc_name() {

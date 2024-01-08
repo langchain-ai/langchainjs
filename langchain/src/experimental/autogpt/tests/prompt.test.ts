@@ -1,4 +1,4 @@
-import { HumanMessage, SystemMessage } from "../../../schema/index.js";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { AutoGPTPrompt } from "../prompt.js";
 
 // Mock token counter function

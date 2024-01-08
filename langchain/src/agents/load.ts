@@ -5,6 +5,7 @@ import { loadFromHub } from "../util/hub.js";
 import { FileLoader, loadFromFile } from "../util/load.js";
 import { parseFileConfig } from "../util/parse.js";
 
+/** @deprecated */
 const loadAgentFromFile: FileLoader<Agent> = async (
   file: string,
   path: string,
@@ -14,6 +15,7 @@ const loadAgentFromFile: FileLoader<Agent> = async (
   return Agent.deserialize({ ...serialized, ...llmAndTools });
 };
 
+/** @deprecated */
 export const loadAgent = async (
   uri: string,
   llmAndTools?: { llm?: BaseLanguageModelInterface; tools?: ToolInterface[] }

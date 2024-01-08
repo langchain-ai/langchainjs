@@ -2,10 +2,18 @@
 
 This example shows how to load and use an agent with a OpenAPI toolkit.
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 ```typescript
 import * as fs from "fs";
 import * as yaml from "js-yaml";
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import { JsonSpec, JsonObject } from "langchain/tools";
 import { createOpenApiAgent, OpenApiToolkit } from "langchain/agents";
 

@@ -1,3 +1,7 @@
+---
+sidebar_position: 3
+---
+
 # Caching
 
 LangChain provides an optional caching layer for chat models. This is useful for two reasons:
@@ -81,6 +85,14 @@ npm install @gomomento/sdk
 Next you'll need to sign up and create an API key. Once you've done that, pass a `cache` option when you instantiate the LLM like this:
 
 import MomentoCacheExample from "@examples/cache/chat_models/momento.ts";
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
 
 <CodeBlock language="typescript">{MomentoCacheExample}</CodeBlock>
 

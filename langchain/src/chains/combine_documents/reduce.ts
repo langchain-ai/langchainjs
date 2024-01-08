@@ -1,4 +1,4 @@
-import { Document } from "../../document.js";
+import { Document } from "@langchain/core/documents";
 
 /**
  * Splits a list of documents into sublists based on a maximum token limit.

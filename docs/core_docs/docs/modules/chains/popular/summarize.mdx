@@ -1,3 +1,7 @@
+---
+sidebar_class_name: hidden
+---
+
 # Summarization
 
 A summarization chain can be used to summarize multiple documents. One way is to input multiple smaller documents, after they have been divided into chunks, and operate over them with a MapReduceDocumentsChain. You can also choose instead for the chain that does summarization to be a StuffDocumentsChain, or a RefineDocumentsChain.
@@ -6,6 +10,14 @@ import CodeBlock from "@theme/CodeBlock";
 import SummarizeExample from "@examples/chains/summarization_map_reduce.ts";
 import SummarizeExampleIntermediateSteps from "@examples/chains/summarization_map_reduce_intermediate_steps.ts";
 import SummarizeSeparateOutputLLMsExample from "@examples/chains/summarization_separate_output_llm.ts";
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/anthropic @langchain/openai
+```
 
 <CodeBlock language="typescript">{SummarizeExample}</CodeBlock>
 

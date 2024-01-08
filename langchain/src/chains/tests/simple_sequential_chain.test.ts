@@ -1,12 +1,12 @@
 import { test, expect } from "@jest/globals";
-import { BaseLLM } from "../../llms/base.js";
-import { LLMResult } from "../../schema/index.js";
+import { BaseLLM } from "@langchain/core/language_models/llms";
+import { LLMResult } from "@langchain/core/outputs";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { VectorStoreRetriever } from "@langchain/core/vectorstores";
 import { LLMChain } from "../llm_chain.js";
-import { PromptTemplate } from "../../prompts/index.js";
 import { SimpleSequentialChain } from "../sequential_chain.js";
 import { AnalyzeDocumentChain } from "../analyze_documents_chain.js";
 import { ConversationalRetrievalQAChain } from "../conversational_retrieval_chain.js";
-import { VectorStoreRetriever } from "../../vectorstores/base.js";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
 import { MemoryVectorStore } from "../../vectorstores/memory.js";
 

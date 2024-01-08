@@ -1,4 +1,4 @@
-import { GoogleVertexAIEmbeddings } from "langchain/embeddings/googlevertexai";
+import { GoogleVertexAIEmbeddings } from "@langchain/community/embeddings/googlevertexai";
 
 export const run = async () => {
   const model = new GoogleVertexAIEmbeddings();

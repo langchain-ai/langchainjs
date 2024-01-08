@@ -1,3 +1,7 @@
+---
+sidebar_class_name: hidden
+---
+
 # SQL
 
 This example demonstrates the use of `Runnables` with questions and more on a SQL database.
@@ -29,6 +33,14 @@ npm install sqlite3
 LangChain offers default prompts for: default SQL, Postgres, SQLite, Microsoft SQL Server, MySQL, and SAP HANA.
 
 Finally follow the instructions on https://database.guide/2-sample-databases-sqlite/ to get the sample database for this example.
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
 
 <CodeBlock language="typescript">{SqlDBExample}</CodeBlock>
 

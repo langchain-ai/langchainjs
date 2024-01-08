@@ -1,16 +1,15 @@
 import { test, expect } from "@jest/globals";
-import { OpenAI } from "../../llms/openai.js";
-import { PromptTemplate } from "../../prompts/index.js";
+import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
+import { PromptTemplate } from "@langchain/core/prompts";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { StuffDocumentsChain } from "../../chains/combine_docs_chain.js";
 import { ConversationalRetrievalQAChain } from "../../chains/conversational_retrieval_chain.js";
-import { HNSWLib } from "../../vectorstores/hnswlib.js";
-import { OpenAIEmbeddings } from "../../embeddings/openai.js";
+import { MemoryVectorStore } from "../../vectorstores/memory.js";
 import { ContextualCompressionRetriever } from "../contextual_compression.js";
 import { LLMChainExtractor } from "../document_compressors/chain_extract.js";
 
 test("Test LLMChainExtractor", async () => {
-  const model = new OpenAI({ modelName: "text-ada-001" });
+  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
   const prompt = PromptTemplate.fromTemplate(
     "Print {question}, and ignore {chat_history}"
   );
@@ -19,7 +18,7 @@ test("Test LLMChainExtractor", async () => {
 
   const retriever = new ContextualCompressionRetriever({
     baseCompressor,
-    baseRetriever: await HNSWLib.fromTexts(
+    baseRetriever: await MemoryVectorStore.fromTexts(
       ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
       [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
       new OpenAIEmbeddings()

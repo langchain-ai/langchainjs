@@ -1,5 +1,5 @@
-import { USearch } from "langchain/vectorstores/usearch";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { USearch } from "@langchain/community/vectorstores/usearch";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 
 // Create docs with a loader

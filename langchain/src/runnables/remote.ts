@@ -1,8 +1,14 @@
-import { Runnable, RunnableBatchOptions } from "../schema/runnable/index.js";
-import { RunnableConfig } from "../schema/runnable/config.js";
-import { CallbackManagerForChainRun } from "../callbacks/manager.js";
-import { getBytes, getLines, getMessages } from "../util/event-source-parse.js";
-import { Document } from "../document.js";
+import {
+  Runnable,
+  RunnableBatchOptions,
+  RunnableConfig,
+} from "@langchain/core/runnables";
+import { Document } from "@langchain/core/documents";
+import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
+import {
+  ChatPromptValue,
+  StringPromptValue,
+} from "@langchain/core/prompt_values";
 import {
   AIMessage,
   AIMessageChunk,
@@ -16,10 +22,13 @@ import {
   SystemMessageChunk,
   ToolMessage,
   ToolMessageChunk,
-} from "../schema/index.js";
-import { StringPromptValue } from "../prompts/base.js";
-import { ChatPromptValue } from "../prompts/chat.js";
-import { IterableReadableStream } from "../util/stream.js";
+} from "@langchain/core/messages";
+import {
+  getBytes,
+  getLines,
+  getMessages,
+} from "@langchain/community/utils/event_source_parse";
+import { IterableReadableStream } from "@langchain/core/utils/stream";
 
 type RemoteRunnableOptions = {
   timeout?: number;
