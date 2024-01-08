@@ -18,6 +18,7 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
  */
 export interface MilvusLibArgs {
   collectionName?: string;
+  partitionName?: string;
   primaryField?: string;
   vectorField?: string;
   textField?: string;
@@ -78,6 +79,8 @@ export class Milvus extends VectorStore {
 
   collectionName: string;
 
+  partitionName: string;
+
   numDimensions?: number;
 
   autoId?: boolean;
@@ -122,6 +125,7 @@ export class Milvus extends VectorStore {
     super(embeddings, args);
     this.embeddings = embeddings;
     this.collectionName = args.collectionName ?? genCollectionName();
+    this.partitionName = args.partitionName ?? 'Default partition';
     this.textField = args.textField ?? MILVUS_TEXT_FIELD_NAME;
 
     this.autoId = args.autoId ?? true;
@@ -179,6 +183,7 @@ export class Milvus extends VectorStore {
       return;
     }
     await this.ensureCollection(vectors, documents);
+    await this.ensurePartition();
 
     const insertDatas: InsertRow[] = [];
     // eslint-disable-next-line no-plusplus
@@ -226,6 +231,7 @@ export class Milvus extends VectorStore {
 
     const insertResp = await this.client.insert({
       collection_name: this.collectionName,
+      partition_name: this.partitionName,
       fields_data: insertDatas,
     });
     if (insertResp.status.error_code !== ErrorCode.SUCCESS) {
@@ -341,6 +347,29 @@ export class Milvus extends VectorStore {
       await this.createCollection(vectors, documents);
     } else {
       await this.grabCollectionFields();
+    }
+  }
+
+  /**
+   * Ensures that a partition exists in the Milvus collection.
+   * @returns Promise resolving to void.
+   */
+  async ensurePartition() {
+    const hasPartResp = await this.client.hasPartition({
+      collection_name: this.collectionName,
+      partition_name: this.partitionName,
+    });
+    if (hasPartResp.status.error_code !== ErrorCode.SUCCESS) {
+      throw new Error(
+        `Error checking partition: ${JSON.stringify(hasPartResp, null, 2)}`
+      );
+    }
+
+    if (hasPartResp.value === false) {
+      await this.client.createPartition({
+        collection_name: this.collectionName,
+        partition_name: this.partitionName,
+      });
     }
   }
 
@@ -493,6 +522,8 @@ export class Milvus extends VectorStore {
     const args: MilvusLibArgs = {
       ...dbConfig,
       collectionName: dbConfig?.collectionName ?? genCollectionName(),
+      /* Vérifier si c'est nécessaire */
+      /* partitionName: dbConfig?.partitionName ?? 'Default partition', */
     };
     const instance = new this(embeddings, args);
     await instance.addDocuments(docs);
