@@ -71,8 +71,10 @@ export let initialBaseURI =
   self.location &&
   self.location.origin !== "null"
     ? //@ts-ignore
-      new URL(self.location.origin + self.location.pathname + location.search)
-    : new URL("https://github.com/cfworker");
+      /* #__PURE__ */ new URL(
+        self.location.origin + self.location.pathname + location.search
+      )
+    : /* #__PURE__ */ new URL("https://github.com/cfworker");
 
 export function dereference(
   schema: Schema | boolean,
