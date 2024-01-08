@@ -1,7 +1,7 @@
 import { BlobServiceClient } from "@azure/storage-blob";
+import { Document } from "@langchain/core/documents";
 import { AzureBlobStorageFileLoader } from "./azure_blob_storage_file.js";
 import { BaseDocumentLoader } from "../base.js";
-import { Document } from "../../document.js";
 import { UnstructuredLoaderOptions } from "../fs/unstructured.js";
 
 /**

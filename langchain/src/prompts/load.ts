@@ -1,4 +1,4 @@
-import { BasePromptTemplate } from "./base.js";
+import { BasePromptTemplate } from "@langchain/core/prompts";
 import { loadFromHub } from "../util/hub.js";
 import { FileLoader, loadFromFile } from "../util/load.js";
 import { parseFileConfig } from "../util/parse.js";

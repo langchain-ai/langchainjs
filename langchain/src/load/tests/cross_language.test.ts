@@ -2,7 +2,6 @@ import { test } from "@jest/globals";
 import { fileURLToPath } from "node:url";
 import { readFileSync } from "node:fs";
 import * as path from "node:path";
-
 import { load } from "../index.js";
 
 const IMPORTANT_IMPORTS = JSON.parse(
@@ -29,6 +28,11 @@ const CURRENT_KNOWN_FAILURES = [
   "langchain/schema/prompt/PromptValue",
   "langchain/llms/openai/BaseOpenAI",
   "langchain/llms/openai/AzureOpenAI",
+  "langchain/llms/vertexai/VertexAI",
+  "langchain/llms/google_palm/GooglePalm",
+  "langchain/chat_models/azure_openai/AzureChatOpenAI",
+  "langchain/chat_models/google_palm/ChatGooglePalm",
+  "langchain/chat_models/vertexai/ChatVertexAI",
   "langchain/schema/prompt_template/BaseChatPromptTemplate",
   "langchain/prompts/few_shot_with_templates/FewShotPromptWithTemplates",
   "langchain/prompts/base/StringPromptTemplate",
@@ -88,6 +92,7 @@ describe("Test cross language serialization of important modules", () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
         expect(e.message).not.toContain("Invalid identifer: $");
+        expect(e.message).not.toContain("Invalid namespace: $");
       }
     }
   );

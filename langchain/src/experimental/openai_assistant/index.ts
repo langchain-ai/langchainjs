@@ -1,14 +1,13 @@
 import { type ClientOptions, OpenAIClient } from "@langchain/openai";
-import { Runnable } from "../../schema/runnable/base.js";
+import { StructuredTool } from "@langchain/core/tools";
+import { Runnable, RunnableConfig } from "@langchain/core/runnables";
+import { formatToOpenAIAssistantTool } from "@langchain/openai";
 import { sleep } from "../../util/time.js";
-import type { RunnableConfig } from "../../schema/runnable/config.js";
 import type {
   OpenAIAssistantFinish,
   OpenAIAssistantAction,
   OpenAIToolType,
 } from "./schema.js";
-import { StructuredTool } from "../../tools/base.js";
-import { formatToOpenAIAssistantTool } from "../../tools/convert_to_openai.js";
 
 type ThreadMessage = OpenAIClient.Beta.Threads.ThreadMessage;
 type RequiredActionFunctionToolCall =

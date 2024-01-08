@@ -7,7 +7,6 @@ const {
   RendererEvent,
 } = require("typedoc");
 const fs = require("fs");
-const fsPromises = require("fs/promises");
 const path = require("path")
 
 const PATH_TO_LANGCHAIN_PKG_JSON = "../../langchain/package.json";
@@ -21,6 +20,17 @@ const SCRIPT_HTML = `<script>
     }
   }, false); // Add event listener for keydown events
 </script>`;
+
+/**
+ * @param {string | undefined} deprecationText 
+ * @returns {string}
+ */
+const DEPRECATION_HTML = (deprecationText) => `<div class="deprecation-warning">
+<h2>⚠️ Deprecated ⚠️</h2>
+${deprecationText ? `<p>${deprecationText}</p>` : ""}
+<p>This feature is deprecated and will be removed in the future.</p>
+<p>It is not recommended for use.</p>
+</div>`;
 
 /**
  * @param {Application} application 
@@ -120,15 +130,34 @@ function load(application) {
    */
   async function onEndRenderEvent(context) {
     const htmlToSplitAt = `<div class="tsd-toolbar-contents container">`;
+    const deprecatedHTML = "<h4>Deprecated</h4>"
+    
     const { urls } = context;
-    // We want async. If not then it can load lots of very large
-    // `.html` files into memory at one time, which we don't want.
-    for await (const { url } of urls) {
+    for (const { url } of urls) {
       const indexFilePath = path.join(BASE_OUTPUT_DIR, url);
-      const htmlFileContent = fs.readFileSync(indexFilePath, "utf-8");
+      let htmlFileContent = fs.readFileSync(indexFilePath, "utf-8");
+
+      if (htmlFileContent.includes(deprecatedHTML)) {
+        // If any comments are added to the `@deprecated` JSDoc, they'll
+        // be inside the following <p> tag.
+        const deprecationTextRegex = new RegExp(`${deprecatedHTML}<p>(.*?)</p>`);
+        const deprecationTextMatch = htmlFileContent.match(deprecationTextRegex);
+
+        /** @type {string | undefined} */
+        let textInsidePTag;
+
+        if (deprecationTextMatch) {
+          textInsidePTag = deprecationTextMatch[1];
+          const newTextToReplace = `${deprecatedHTML}<p>${textInsidePTag}</p>`
+          htmlFileContent = htmlFileContent.replace(newTextToReplace, DEPRECATION_HTML(textInsidePTag));
+        } else {
+          htmlFileContent = htmlFileContent.replace(deprecatedHTML, DEPRECATION_HTML(undefined));
+        }
+      }
+
       const [part1, part2] = htmlFileContent.split(htmlToSplitAt);
       const htmlWithScript = part1 + SCRIPT_HTML + part2;
-      await fsPromises.writeFile(indexFilePath, htmlWithScript);
+      fs.writeFileSync(indexFilePath, htmlWithScript);
     }
   }
 }

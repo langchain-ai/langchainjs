@@ -10,7 +10,7 @@ import {
   BaseOutputParser,
   FormatInstructionsOptions,
   OutputParserException,
-} from "../schema/output_parser.js";
+} from "@langchain/core/output_parsers";
 
 export type JsonMarkdownStructuredOutputParserInput = {
   interpolationDepth?: number;

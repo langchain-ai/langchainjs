@@ -1,11 +1,11 @@
-import { renderTemplate } from "../../prompts/template.js";
 import {
   AIMessage,
-  AgentStep,
-  BaseMessage,
+  type BaseMessage,
   HumanMessage,
   FunctionMessage,
-} from "../../schema/index.js";
+} from "@langchain/core/messages";
+import type { AgentStep } from "@langchain/core/agents";
+import { renderTemplate } from "@langchain/core/prompts";
 import { TEMPLATE_TOOL_RESPONSE } from "../chat_convo/prompt.js";
 
 /**

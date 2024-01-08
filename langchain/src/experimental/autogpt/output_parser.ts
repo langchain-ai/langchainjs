@@ -1,4 +1,4 @@
-import { BaseOutputParser } from "../../schema/output_parser.js";
+import { BaseOutputParser } from "@langchain/core/output_parsers";
 import { AutoGPTAction } from "./schema.js";
 
 /**

@@ -1,8 +1,8 @@
+import { Document } from "@langchain/core/documents";
 import {
   RecursiveCharacterTextSplitter,
   TextSplitter,
 } from "../text_splitter.js";
-import { Document } from "../document.js";
 
 /**
  * Interface that defines the methods for loading and splitting documents.
