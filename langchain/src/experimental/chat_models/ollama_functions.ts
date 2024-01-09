@@ -2,13 +2,8 @@ import {
   FunctionDefinition,
   BaseFunctionCallOptions,
 } from "@langchain/core/language_models/base";
-import {
-  AIMessage,
-  BaseMessage,
-  ChatGenerationChunk,
-  ChatResult,
-} from "@langchain/core/messages";
-import { ChatResult } from "@langchain/core/outputs";
+import { AIMessage, BaseMessage } from "@langchain/core/messages";
+import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import {
   BaseChatModel,
   BaseChatModelParams,

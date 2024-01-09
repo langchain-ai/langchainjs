@@ -53,3 +53,202 @@ Because different models have different strengths, it may be helpful to pass in 
 import OllamaFunctionsCustomPrompt from "@examples/models/chat/ollama_functions/custom_prompt.ts";
 
 <CodeBlock language="typescript">{OllamaFunctionsCustomPrompt}</CodeBlock>
+
+## Streaming
+
+Ollama functions also supports streaming responses:
+
+import OllamaFunctionsStreaming from "@examples/models/chat/ollama_functions/streaming.ts";
+
+<CodeBlock language="typescript">{OllamaFunctionsStreaming}</CodeBlock>
+
+<details> <summary>Console output</summary>
+
+<CodeOutputBlock lang="typescript">
+
+```
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: '{"',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: 'tool',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: '":',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: ' "',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: 'get',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: '_',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: 'current',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: '_',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: 'we',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: 'ather',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: '",',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: '\n"',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: 'tool',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: '_',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: 'input',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: '":',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: ' {',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: '\n"',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: 'location',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: '":',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: ' "',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: 'San',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: ' Francisco',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: ',',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: ' CA',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: '",',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: '\n"',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: 'unit',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: '":',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: ' "',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: 'c',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: 'els',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: 'ius',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: '"',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: '\n}}',
+}
+AIMessageChunk {
+  lc_serializable: true,
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: '',
+}
+{"lc":1,"type":"constructor","id":["langchain_core","messages","AIMessageChunk"],"kwargs":{"content":"{\"tool\": \"get_current_weather\",\n\"tool_input\": {\n\"location\": \"San Francisco, CA\",\n\"unit\": \"celsius\"\n}}","additional_kwargs":{}}}
+```
+
+</CodeOutputBlock>
+</details>

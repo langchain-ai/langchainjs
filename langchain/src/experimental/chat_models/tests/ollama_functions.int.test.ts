@@ -111,7 +111,10 @@ test.skip("Test streaming OllamaFunctions with functions", async () => {
   const stream = await chat.stream([message]);
 
   let response;
+  let numOfStreams = 0;
   for await (const chunk of stream) {
+    console.log(chunk);
+    numOfStreams += 1;
     if (!response) {
       response = chunk;
     } else {
@@ -119,5 +122,7 @@ test.skip("Test streaming OllamaFunctions with functions", async () => {
     }
   }
 
+  expect(numOfStreams).toBeGreaterThan(1);
+  console.log(numOfStreams);
   console.log(JSON.stringify(response));
 });
