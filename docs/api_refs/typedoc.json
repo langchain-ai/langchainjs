@@ -124,7 +124,6 @@
     "../../langchain/src/chat_models/anthropic.ts",
     "../../langchain/src/chat_models/bedrock/index.ts",
     "../../langchain/src/chat_models/googlevertexai/index.ts",
-    "../../langchain/src/chat_models/alitongyi.ts",
     "../../langchain/src/chat_models/iflytek_xinghuo/index.ts",
     "../../langchain/src/chat_models/fake.ts",
     "../../langchain/src/schema/index.ts",

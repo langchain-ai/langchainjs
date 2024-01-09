@@ -87,9 +87,9 @@ interface ChatCompletionResponse {
 }
 
 /**
- * Interface defining the input to the ChatAliTongyi class.
+ * Interface defining the input to the ChatAlibabaTongyi class.
  */
-interface AliTongyiChatInput {
+interface AlibabaTongyiChatInput {
   /** Model name to use. Available options are: qwen-turbo, qwen-plus, qwen-max, or Other compatible models.
    * @default "qwen-turbo"
    */
@@ -179,14 +179,14 @@ function messageToTongyiRole(message: BaseMessage): TongyiMessageRole {
  * environment variable set.
  *
  * @augments BaseLLM
- * @augments AliTongyiInput
+ * @augments AlibabaTongyiInput
  * @example
  * ```typescript
- * const qwen = new ChatAliTongyi({
+ * const qwen = new ChatAlibabaTongyi({
  *   aliApiKey: "YOUR-API-KEY",
  * });
  *
- * const qwen = new ChatAliTongyi({
+ * const qwen = new ChatAlibabaTongyi({
  *   modelName: "qwen-turbo",
  *   temperature: 1,
  *   aliApiKey: "YOUR-API-KEY",
@@ -197,9 +197,12 @@ function messageToTongyiRole(message: BaseMessage): TongyiMessageRole {
  * await qwen.call(messages);
  * ```
  */
-export class ChatAliTongyi extends BaseChatModel implements AliTongyiChatInput {
+export class ChatAlibabaTongyi
+  extends BaseChatModel
+  implements AlibabaTongyiChatInput
+{
   static lc_name() {
-    return "ChatAliTongyi";
+    return "ChatAlibabaTongyi";
   }
 
   get callKeys() {
@@ -221,28 +224,30 @@ export class ChatAliTongyi extends BaseChatModel implements AliTongyiChatInput {
   aliApiKey?: string;
 
   streaming: boolean;
-  
+
   prefixMessages?: TongyiMessage[];
-  
+
   modelName: ChatCompletionRequest["model"];
-  
+
   apiUrl: string;
-  
+
   maxTokens?: number | undefined;
 
   temperature?: number | undefined;
-  
+
   topP?: number | undefined;
-  
+
   topK?: number | undefined;
-  
+
   repetitionPenalty?: number | undefined;
-  
+
   seed?: number | undefined;
-  
+
   enableSearch?: boolean | undefined;
 
-  constructor(fields: Partial<AliTongyiChatInput> & BaseChatModelParams = {}) {
+  constructor(
+    fields: Partial<AlibabaTongyiChatInput> & BaseChatModelParams = {}
+  ) {
     super(fields);
 
     this.aliApiKey = fields?.aliApiKey ?? getEnvironmentVariable("ALI_API_KEY");
@@ -477,7 +482,7 @@ export class ChatAliTongyi extends BaseChatModel implements AliTongyiChatInput {
   }
 
   _llmType(): string {
-    return "alitongyi";
+    return "alibaba_tongyi";
   }
 
   /** @ignore */

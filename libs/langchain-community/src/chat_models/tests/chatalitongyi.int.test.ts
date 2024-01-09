@@ -1,6 +1,6 @@
 import { test, expect } from "@jest/globals";
 import { SystemMessage, HumanMessage } from "@langchain/core/messages";
-import { ChatAliTongyi } from "../alitongyi.js";
+import { ChatAlibabaTongyi } from "../alibaba_tongyi.js";
 
 interface TestConfig {
   modelName: string | undefined;
@@ -28,13 +28,14 @@ const runTest = async ({
   message = "Hello!",
   shouldThrow = false,
 }: TestConfig) => {
-  const description = `Test ChatAliTongyi ${modelName || "default model"} ${
+  const description = `Test ChatAlibabaTongyi ${modelName || "default model"} ${
     config.description || ""
   }`.trim();
   let nrNewTokens = 0;
   let streamedCompletion = "";
-  if (config.streaming) {
-    config.callbacks = [
+  const passedConfig = { ...config };
+  if (passedConfig.streaming) {
+    passedConfig.callbacks = [
       {
         async handleLLMNewToken(token: string) {
           nrNewTokens += 1;
@@ -44,7 +45,7 @@ const runTest = async ({
     ];
   }
   test.skip(description, async () => {
-    const chat = new ChatAliTongyi({
+    const chat = new ChatAlibabaTongyi({
       modelName,
       ...config,
     });
@@ -63,7 +64,7 @@ const runTest = async ({
     const res = await chat.call(messages);
     console.log({ res });
 
-    if (config.streaming) {
+    if (passedConfig.streaming) {
       expect(nrNewTokens > 0).toBe(true);
       expect(res.text).toBe(streamedCompletion);
     }
