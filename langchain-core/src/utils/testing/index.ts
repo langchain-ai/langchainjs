@@ -29,6 +29,7 @@ import {
 } from "../../outputs.js";
 import { BaseRetriever } from "../../retrievers.js";
 import { Runnable } from "../../runnables/base.js";
+import { BaseTracer, Run } from "../../tracers/base.js";
 
 /**
  * Parser for comma-separated values. It splits the input text by commas
@@ -356,5 +357,20 @@ export class FakeListChatMessageHistory extends BaseListChatMessageHistory {
 
   async getMessages(): Promise<BaseMessage[]> {
     return this.messages;
+  }
+}
+
+export class FakeTracer extends BaseTracer {
+  name = "fake_tracer";
+
+  runs: Run[] = [];
+
+  constructor() {
+    super();
+  }
+
+  protected persistRun(run: Run): Promise<void> {
+    this.runs.push(run);
+    return Promise.resolve();
   }
 }
