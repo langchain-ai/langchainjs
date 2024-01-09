@@ -16,8 +16,8 @@
     "lint": "eslint src",
     "lint:fix": "yarn lint --fix",
     "precommit": "lint-staged",
-    "format": "prettier --write \"**/*.ts\"",
-    "format:check": "prettier --check \"**/*.ts\""
+    "format": "prettier --write \"src\"",
+    "format:check": "prettier --check \"src\""
   },
   "author": "LangChain",
   "license": "MIT",
@@ -35,6 +35,7 @@
     "@langchain/google-genai": "workspace:*",
     "@langchain/mistralai": "workspace:*",
     "@langchain/openai": "workspace:*",
+    "@langchain/yandex": "workspace:*",
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^1.1.0",
     "@planetscale/database": "^1.8.0",

@@ -1,8 +1,8 @@
 import { DataSource } from "typeorm";
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import { SqlDatabase } from "langchain/sql_db";
 import { SqlDatabaseChain } from "langchain/chains/sql_db";
-import { PromptTemplate } from "langchain/prompts";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const template = `Given an input question, first create a syntactically correct {dialect} query to run, then look at the results of the query and return the answer.
 Use the following format:

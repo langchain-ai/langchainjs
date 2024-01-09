@@ -1,5 +1,5 @@
+import { Chroma } from "@langchain/community/vectorstores/chroma";
 import { Comparators, Operators } from "../../chains/query_constructor/ir.js";
-import { Chroma } from "../../vectorstores/chroma.js";
 import { BasicTranslator } from "./base.js";
 
 /**

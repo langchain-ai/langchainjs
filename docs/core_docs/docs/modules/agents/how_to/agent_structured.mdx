@@ -4,6 +4,14 @@ Here is a simple example of an agent which uses LCEL, a web search tool (Tavily)
 
 The first step is to import necessary modules
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 ```typescript
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { z } from "zod";
@@ -16,7 +24,7 @@ import {
 } from "langchain/schema";
 import { RunnableSequence } from "langchain/runnables";
 import { ChatPromptTemplate, MessagesPlaceholder } from "langchain/prompts";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { AgentExecutor } from "langchain/agents";
 import { formatToOpenAIFunction, DynamicTool } from "langchain/tools";
 import type { FunctionsAgentAction } from "langchain/agents/openai/output_parser";

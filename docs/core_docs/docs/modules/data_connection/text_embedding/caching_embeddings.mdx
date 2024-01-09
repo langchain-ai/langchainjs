@@ -23,6 +23,14 @@ The main supported way to initialized a `CacheBackedEmbeddings` is the `fromByte
 
 ## Usage, in-memory
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai @langchain/community
+```
+
 Here's a basic test example with an in memory cache. This type of cache is primarily useful for unit tests or prototyping.
 Do not use this cache if you need to actually store the embeddings for an extended period of time:
 

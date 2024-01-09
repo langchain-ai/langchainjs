@@ -1,4 +1,4 @@
-import { OpenAIChat } from "langchain/llms/openai";
+import { OpenAIChat } from "@langchain/openai";
 
 export const run = async () => {
   const model = new OpenAIChat({

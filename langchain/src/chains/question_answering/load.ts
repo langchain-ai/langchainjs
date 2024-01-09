@@ -1,6 +1,6 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import { BasePromptTemplate } from "@langchain/core/prompts";
 import { LLMChain } from "../llm_chain.js";
-import { BasePromptTemplate } from "../../prompts/base.js";
 import {
   StuffDocumentsChain,
   MapReduceDocumentsChain,

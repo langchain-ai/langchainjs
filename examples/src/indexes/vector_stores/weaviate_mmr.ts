@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import weaviate from "weaviate-ts-client";
-import { WeaviateStore } from "langchain/vectorstores/weaviate";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { WeaviateStore } from "@langchain/community/vectorstores/weaviate";
+import { OpenAIEmbeddings } from "@langchain/openai";
 
 export async function run() {
   // Something wrong with the weaviate-ts-client types, so we need to disable

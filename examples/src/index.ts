@@ -1,6 +1,6 @@
-import { awaitAllCallbacks } from "langchain/callbacks";
 import path from "path";
 import url from "url";
+import { awaitAllCallbacks } from "@langchain/core/callbacks/promises";
 
 const [exampleName, ...args] = process.argv.slice(2);
 

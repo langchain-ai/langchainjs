@@ -1,11 +1,23 @@
+---
+sidebar_class_name: hidden
+---
+
 # Debugging chains
 
 It can be hard to debug a `Chain` object solely from its output as most `Chain` objects involve a fair amount of input prompt preprocessing and LLM output post-processing.
 
 Setting `verbose` to `true` will print out some internal states of the `Chain` object while running it.
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 ```typescript
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { ConversationChain } from "langchain/chains";
 
 const chat = new ChatOpenAI({});

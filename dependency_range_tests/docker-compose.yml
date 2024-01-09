@@ -1,0 +1,30 @@
+version: "3"
+services:
+  test-langchain-with-latest-deps:
+    image: node:18
+    environment:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
+    working_dir: /app
+    volumes:
+      - ../langchain:/langchain
+      - ./scripts:/scripts
+    command: bash /scripts/test-langchain-with-latest-deps.sh
+  test-langchain-with-lowest-deps:
+    image: node:18
+    environment:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
+    working_dir: /app
+    volumes:
+      - ../langchain:/langchain
+      - ./scripts:/scripts
+    command: bash /scripts/test-langchain-with-lowest-deps.sh
+  success:
+    image: alpine:3.14
+    command: echo "Success"
+    depends_on:
+      test-langchain-with-latest-deps:
+        condition: service_completed_successfully
+      test-langchain-with-lowest-deps:
+        condition: service_completed_successfully

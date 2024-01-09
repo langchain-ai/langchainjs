@@ -12,8 +12,12 @@ LangChain inserts vectors directly to Weaviate, and queries Weaviate for the nea
 
 ## Setup
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
 ```bash npm2yarn
-npm install weaviate-ts-client graphql
+npm install @langchain/openai weaviate-ts-client graphql @langchain/community
 ```
 
 You'll need to run Weaviate either locally or on a server, see [the Weaviate documentation](https://weaviate.io/developers/weaviate/installation) for more information.

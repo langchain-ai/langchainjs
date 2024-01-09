@@ -1,5 +1,5 @@
-import { ChatLlamaCpp } from "langchain/chat_models/llama_cpp";
-import { SystemMessage, HumanMessage } from "langchain/schema";
+import { ChatLlamaCpp } from "@langchain/community/chat_models/llama_cpp";
+import { SystemMessage, HumanMessage } from "@langchain/core/messages";
 
 const llamaPath = "/Replace/with/path/to/your/model/gguf-llama2-q4_0.bin";
 
