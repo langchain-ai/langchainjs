@@ -125,7 +125,7 @@ export class Milvus extends VectorStore {
     super(embeddings, args);
     this.embeddings = embeddings;
     this.collectionName = args.collectionName ?? genCollectionName();
-    this.partitionName = args.partitionName ?? 'Default partition';
+    this.partitionName = args.partitionName ?? "Default partition";
     this.textField = args.textField ?? MILVUS_TEXT_FIELD_NAME;
 
     this.autoId = args.autoId ?? true;
@@ -522,7 +522,7 @@ export class Milvus extends VectorStore {
     const args: MilvusLibArgs = {
       ...dbConfig,
       collectionName: dbConfig?.collectionName ?? genCollectionName(),
-      partitionName: dbConfig?.partitionName ?? 'Default partition',
+      partitionName: dbConfig?.partitionName ?? "Default partition",
     };
     const instance = new this(embeddings, args);
     await instance.addDocuments(docs);
