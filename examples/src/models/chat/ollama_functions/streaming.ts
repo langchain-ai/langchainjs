@@ -4,7 +4,7 @@ import { HumanMessage } from "@langchain/core/messages";
 const chat = new OllamaFunctions({
   model: "mistral",
   temperature: 0.1,
-  stop: ["\n\n\n"]
+  stop: ["\n\n\n"],
 }).bind({
   functions: [
     {
@@ -15,17 +15,17 @@ const chat = new OllamaFunctions({
         properties: {
           location: {
             type: "string",
-            description: "The city and state, e.g. San Francisco, CA"
+            description: "The city and state, e.g. San Francisco, CA",
           },
           unit: {
             type: "string",
-            enum: ["celsius", "fahrenheit"]
-          }
+            enum: ["celsius", "fahrenheit"],
+          },
         },
-        required: ["location"]
-      }
-    }
-  ]
+        required: ["location"],
+      },
+    },
+  ],
 });
 const message = new HumanMessage("What is the weather in San Francisco?");
 const stream = await chat.stream([message]);
