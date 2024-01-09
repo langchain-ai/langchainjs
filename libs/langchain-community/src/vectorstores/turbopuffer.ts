@@ -67,7 +67,7 @@ export class TurbopufferVectorStore extends VectorStore {
 
   caller: AsyncCaller;
 
-  batchSize = 500;
+  batchSize = 3000;
 
   public _vectorstoreType(): string {
     return "turbopuffer";
