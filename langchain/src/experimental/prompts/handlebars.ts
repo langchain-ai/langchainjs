@@ -42,7 +42,7 @@ export const parseHandlebars = (template: string): ParsedFStringNode[] => {
       }
     } else if (node.type === "BlockStatement") {
       // @ts-expect-error - handlebars' hbs.AST.BlockStatement isn't exported
-      nodes.push([...node.params, ...node.program.body]);
+      nodes.push(...node.params, ...node.program.body);
     }
   }
 
