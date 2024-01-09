@@ -1,6 +1,6 @@
 import { test, expect } from "@jest/globals";
+import { SystemMessage, HumanMessage } from "@langchain/core/messages";
 import { ChatAliTongyi } from "../alitongyi.js";
-import { SystemMessage, HumanMessage } from "../../schema/index.js";
 
 interface TestConfig {
   modelName: string | undefined;

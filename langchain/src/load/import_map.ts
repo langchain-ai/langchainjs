@@ -29,7 +29,6 @@ export * as document_loaders__web__serpapi from "../document_loaders/web/serpapi
 export * as document_loaders__web__sort_xyz_blockchain from "../document_loaders/web/sort_xyz_blockchain.js";
 export * as document_transformers__openai_functions from "../document_transformers/openai_functions.js";
 export * as chat_models__anthropic from "../chat_models/anthropic.js";
-export * as chat_models__alitongyi from "../chat_models/alitongyi.js";
 export * as schema__prompt_template from "../schema/prompt_template.js";
 export * as schema__query_constructor from "../schema/query_constructor.js";
 export * as output_parsers from "../output_parsers/index.js";
