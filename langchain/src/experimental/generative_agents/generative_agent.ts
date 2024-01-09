@@ -1,13 +1,13 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
-import { LLMChain } from "../../chains/llm_chain.js";
-import { PromptTemplate } from "../../prompts/index.js";
-import { GenerativeAgentMemory } from "./generative_agent_memory.js";
-import { ChainValues } from "../../schema/index.js";
-import { BaseChain } from "../../chains/base.js";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { ChainValues } from "@langchain/core/utils/types";
 import {
   CallbackManagerForChainRun,
   Callbacks,
-} from "../../callbacks/manager.js";
+} from "@langchain/core/callbacks/manager";
+import { LLMChain } from "../../chains/llm_chain.js";
+import { GenerativeAgentMemory } from "./generative_agent_memory.js";
+import { BaseChain } from "../../chains/base.js";
 
 /**
  * Configuration for the GenerativeAgent class. Defines the character's

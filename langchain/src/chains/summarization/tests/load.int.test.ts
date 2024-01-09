@@ -1,7 +1,7 @@
 import { test } from "@jest/globals";
-import { OpenAI } from "../../../llms/openai.js";
+import { OpenAI } from "@langchain/openai";
+import { Document } from "@langchain/core/documents";
 import { loadSummarizationChain } from "../load.js";
-import { Document } from "../../../document.js";
 
 test("Test loadSummzationChain stuff", async () => {
   const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });

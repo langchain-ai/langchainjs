@@ -1,7 +1,7 @@
 import { test, expect } from "@jest/globals";
+import { HumanMessage, AIMessage } from "@langchain/core/messages";
+import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
 import { BufferWindowMemory } from "../buffer_window_memory.js";
-import { ChatMessageHistory } from "../../stores/message/in_memory.js";
-import { HumanMessage, AIMessage } from "../../schema/index.js";
 
 test("Test buffer window memory", async () => {
   const memory = new BufferWindowMemory({ k: 1 });

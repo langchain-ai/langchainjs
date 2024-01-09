@@ -1,5 +1,6 @@
 import { GoogleAuth, GoogleAuthOptions } from "google-auth-library";
-import { Embeddings, EmbeddingsParams } from "../../embeddings/base.js";
+import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
+import { AsyncCallerCallOptions } from "@langchain/core/utils/async_caller";
 import {
   GoogleVertexAIBaseLLMInput,
   GoogleVertexAIBasePrediction,
@@ -9,7 +10,6 @@ import {
   GoogleVertexAILLMConnection,
   GoogleVertexAILLMResponse,
 } from "../../util/googlevertexai-connection.js";
-import { AsyncCallerCallOptions } from "../../util/async_caller.js";
 
 /**
  * Parameters for the GoogleVertexAIMultimodalEmbeddings class, extending

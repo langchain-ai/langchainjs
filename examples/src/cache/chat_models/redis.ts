@@ -1,6 +1,6 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { RedisCache } from "langchain/cache/ioredis";
 import { Redis } from "ioredis";
+import { RedisCache } from "@langchain/community/caches/ioredis";
 
 const client = new Redis("redis://localhost:6379");
 
