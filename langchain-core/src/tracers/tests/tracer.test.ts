@@ -2,27 +2,13 @@ import { test, expect, jest } from "@jest/globals";
 import * as uuid from "uuid";
 import { Serialized } from "../../load/serializable.js";
 import { Document } from "../../documents/document.js";
-import { BaseTracer, Run } from "../base.js";
+import { Run } from "../base.js";
 import { HumanMessage } from "../../messages/index.js";
+import { FakeTracer } from "../../utils/testing/index.js";
 
 const _DATE = 1620000000000;
 
 Date.now = jest.fn(() => _DATE);
-
-class FakeTracer extends BaseTracer {
-  name = "fake_tracer";
-
-  runs: Run[] = [];
-
-  constructor() {
-    super();
-  }
-
-  protected persistRun(run: Run): Promise<void> {
-    this.runs.push(run);
-    return Promise.resolve();
-  }
-}
 
 const serialized: Serialized = {
   lc: 1,
