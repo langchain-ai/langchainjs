@@ -8511,7 +8511,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.5, @langchain/core@~0.1.9":
+"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.12, @langchain/core@~0.1.5, @langchain/core@~0.1.9":
   version: 0.0.0-use.local
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
@@ -23639,7 +23639,7 @@ __metadata:
     "@google-cloud/storage": ^6.10.1
     "@jest/globals": ^29.5.0
     "@langchain/community": ~0.0.15
-    "@langchain/core": ~0.1.9
+    "@langchain/core": ~0.1.12
     "@langchain/openai": ~0.0.10
     "@notionhq/client": ^2.2.10
     "@pinecone-database/pinecone": ^1.1.0
