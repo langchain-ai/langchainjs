@@ -853,6 +853,12 @@
     "experimental/masking.cjs",
     "experimental/masking.js",
     "experimental/masking.d.ts",
+    "experimental/prompts/custom_format.cjs",
+    "experimental/prompts/custom_format.js",
+    "experimental/prompts/custom_format.d.ts",
+    "experimental/prompts/handlebars.cjs",
+    "experimental/prompts/handlebars.js",
+    "experimental/prompts/handlebars.d.ts",
     "experimental/tools/pyinterpreter.cjs",
     "experimental/tools/pyinterpreter.js",
     "experimental/tools/pyinterpreter.d.ts",
@@ -919,6 +925,7 @@
     "@tsconfig/recommended": "^1.0.2",
     "@types/d3-dsv": "^2",
     "@types/decamelize": "^1.2.0",
+    "@types/handlebars": "^4.1.0",
     "@types/html-to-text": "^9",
     "@types/js-yaml": "^4",
     "@types/jsdom": "^21.1.1",
@@ -949,6 +956,7 @@
     "fast-xml-parser": "^4.2.7",
     "google-auth-library": "^8.9.0",
     "googleapis": "^126.0.1",
+    "handlebars": "^4.7.8",
     "html-to-text": "^9.0.5",
     "ignore": "^5.2.0",
     "ioredis": "^5.3.2",
@@ -1008,6 +1016,7 @@
     "fast-xml-parser": "^4.2.7",
     "google-auth-library": "^8.9.0",
     "googleapis": "^126.0.1",
+    "handlebars": "^4.7.8",
     "html-to-text": "^9.0.5",
     "ignore": "^5.2.0",
     "ioredis": "^5.3.2",
@@ -1113,6 +1122,9 @@
       "optional": true
     },
     "googleapis": {
+      "optional": true
+    },
+    "handlebars": {
       "optional": true
     },
     "html-to-text": {
@@ -2630,6 +2642,16 @@
       "types": "./experimental/masking.d.ts",
       "import": "./experimental/masking.js",
       "require": "./experimental/masking.cjs"
+    },
+    "./experimental/prompts/custom_format": {
+      "types": "./experimental/prompts/custom_format.d.ts",
+      "import": "./experimental/prompts/custom_format.js",
+      "require": "./experimental/prompts/custom_format.cjs"
+    },
+    "./experimental/prompts/handlebars": {
+      "types": "./experimental/prompts/handlebars.d.ts",
+      "import": "./experimental/prompts/handlebars.js",
+      "require": "./experimental/prompts/handlebars.cjs"
     },
     "./experimental/tools/pyinterpreter": {
       "types": "./experimental/tools/pyinterpreter.d.ts",
