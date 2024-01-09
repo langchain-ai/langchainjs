@@ -23,7 +23,6 @@ export interface AstraLibArgs extends AsyncCallerParams {
   token: string;
   endpoint: string;
   collection: string;
-  namespace?: string;
   idKey?: string;
   contentKey?: string;
   collectionOptions?: CreateCollectionOptions;
@@ -49,7 +48,7 @@ export class AstraDBVectorStore extends VectorStore {
 
   private readonly contentKey: string; // if undefined the entirety of the content aside from the id and embedding will be stored as content
 
-  private readonly batchSize: number;
+  private readonly batchSize: number; // insertMany has a limit of 20 documents
 
   caller: AsyncCaller;
 
@@ -76,7 +75,7 @@ export class AstraDBVectorStore extends VectorStore {
     this.collectionOptions = collectionOptions;
     this.idKey = idKey ?? "_id";
     this.contentKey = contentKey ?? "text";
-    this.batchSize = batchSize ?? 25;
+    this.batchSize = batchSize && batchSize <= 20 ? batchSize : 20;
     this.caller = new AsyncCaller(callerArgs);
   }
 
@@ -126,7 +125,7 @@ export class AstraDBVectorStore extends VectorStore {
 
     const chunkedDocs = chunkArray(docs, this.batchSize);
     const batchCalls = chunkedDocs.map((chunk) =>
-      this.collection?.insertMany(chunk)
+      this.caller.call(async () => this.collection?.insertMany(chunk))
     );
 
     await Promise.all(batchCalls);
