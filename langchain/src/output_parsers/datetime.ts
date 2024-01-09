@@ -29,7 +29,7 @@ export class DatetimeOutputParser extends BaseOutputParser<Date> {
    */
   async parse(text: string): Promise<Date> {
     const parsedDate = new Date(text.trim());
-    if (isNaN(parsedDate.getTime())) {
+    if (Number.isNaN(parsedDate.getTime())) {
       throw new OutputParserException(`Could not parse output: ${text}`, text);
     }
     return parsedDate;
