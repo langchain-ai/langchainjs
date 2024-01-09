@@ -156,3 +156,23 @@ test.skip("Test ChatOllama with an image", async () => {
   ]);
   console.log({ res });
 });
+
+test.skip("test max tokens (numPredict)", async () => {
+  const ollama = new ChatOllama({
+    numPredict: 10,
+  }).pipe(new StringOutputParser());
+  const stream = await ollama.stream(
+    "explain quantum physics to me in as many words as possible"
+  );
+  let numTokens = 0;
+  let response = "";
+  for await (const s of stream) {
+    numTokens += 1;
+    response += s;
+  }
+
+  console.log({ numTokens, response });
+  // Ollama doesn't always stream back the exact number of tokens, so we
+  // check for a number which is slightly above the `numPredict`.
+  expect(numTokens).toBeLessThanOrEqual(12);
+});

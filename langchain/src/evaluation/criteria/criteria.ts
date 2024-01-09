@@ -13,6 +13,7 @@ import {
   LLMEvalChainInput,
   LLMStringEvaluator,
   StringEvaluatorArgs,
+  type ExtractLLMCallOptions,
 } from "../base.js";
 
 import { CRITERIA_PROMPT, PROMPT_WITH_REFERENCES } from "./prompt.js";
@@ -270,7 +271,7 @@ export class CriteriaEvalChain extends LLMStringEvaluator {
 
   async _evaluateStrings(
     args: StringEvaluatorArgs,
-    callOptions: this["llm"]["CallOptions"],
+    callOptions: ExtractLLMCallOptions<this["llm"]>,
     config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues> {
     const result = await this.call(

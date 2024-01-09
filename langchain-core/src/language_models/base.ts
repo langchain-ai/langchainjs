@@ -244,8 +244,6 @@ export interface BaseLanguageModelInterface<
   RunOutput = any,
   CallOptions extends BaseLanguageModelCallOptions = BaseLanguageModelCallOptions
 > extends RunnableInterface<BaseLanguageModelInput, RunOutput, CallOptions> {
-  CallOptions: CallOptions;
-
   get callKeys(): string[];
 
   generatePrompt(
@@ -307,8 +305,6 @@ export abstract class BaseLanguageModel<
     BaseLanguageModelParams,
     BaseLanguageModelInterface<RunOutput, CallOptions>
 {
-  declare CallOptions: CallOptions;
-
   /**
    * Keys that the language model accepts as call options.
    */

@@ -36,8 +36,6 @@ export interface LlamaCppCallOptions extends BaseLLMCallOptions {
 export class LlamaCpp extends LLM<LlamaCppCallOptions> {
   lc_serializable = true;
 
-  declare CallOptions: LlamaCppCallOptions;
-
   static inputs: LlamaCppInputs;
 
   maxTokens?: number;

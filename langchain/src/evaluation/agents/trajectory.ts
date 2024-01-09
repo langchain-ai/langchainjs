@@ -15,6 +15,7 @@ import {
   EvalOutputType,
   LLMEvalChainInput,
   LLMTrajectoryEvaluatorArgs,
+  type ExtractLLMCallOptions,
 } from "../base.js";
 import { EVAL_CHAT_PROMPT, TOOL_FREE_EVAL_CHAT_PROMPT } from "./prompt.js";
 
@@ -193,7 +194,7 @@ ${reference}
 
   async _evaluateAgentTrajectory(
     args: LLMTrajectoryEvaluatorArgs,
-    callOptions: this["llm"]["CallOptions"],
+    callOptions: ExtractLLMCallOptions<this["llm"]>,
     config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues> {
     const { input, prediction, reference, agentTrajectory } = args;
