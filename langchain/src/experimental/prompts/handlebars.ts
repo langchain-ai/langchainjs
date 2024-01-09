@@ -65,24 +65,7 @@ export class HandlebarsPromptTemplate<
   RunInput extends InputValues = any
 > extends CustomFormatPromptTemplate<RunInput> {
   static lc_name() {
-    return "CustomPromptTemplate";
-  }
-
-  lc_serializable = false;
-
-  constructor(input: CustomFormatPromptTemplateInput<RunInput>) {
-    super(input);
-    Object.assign(this, input);
-
-    if (this.validateTemplate && this.templateValidator !== undefined) {
-      let totalInputVariables: string[] = this.inputVariables;
-      if (this.partialVariables) {
-        totalInputVariables = totalInputVariables.concat(
-          Object.keys(this.partialVariables)
-        );
-      }
-      this.templateValidator(this.template, totalInputVariables);
-    }
+    return "HandlebarsPromptTemplate";
   }
 
   /**
@@ -90,16 +73,21 @@ export class HandlebarsPromptTemplate<
    */
   static fromTemplate<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunInput extends InputValues = any[]
+    RunInput extends InputValues = Record<string, any>
   >(
     template: string,
-    params: Omit<
+    params?: Omit<
       HandlebarsPromptTemplateInput<RunInput>,
-      "template" | "inputVariables" | "customParser" | "templateValidator"
+      | "template"
+      | "inputVariables"
+      | "customParser"
+      | "templateValidator"
+      | "renderer"
     >
   ) {
     return super.fromTemplate<RunInput>(template, {
       ...params,
+      validateTemplate: false,
       customParser: parseHandlebars,
       renderer: interpolateHandlebars,
     });

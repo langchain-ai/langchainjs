@@ -49,7 +49,7 @@ export class CustomFormatPromptTemplate<
    */
   static fromTemplate<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunInput extends InputValues = any[]
+    RunInput extends InputValues = Record<string, any>
   >(
     template: string,
     {
@@ -61,11 +61,12 @@ export class CustomFormatPromptTemplate<
     >
   ) {
     const names = new Set<string>();
-    customParser(template).forEach((node) => {
+    const nodes = customParser(template);
+    for (const node of nodes) {
       if (node.type === "variable") {
         names.add(node.name);
       }
-    });
+    }
     // eslint-disable-next-line @typescript-eslint/ban-types
     return new this<RunInput extends Symbol ? never : RunInput>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
