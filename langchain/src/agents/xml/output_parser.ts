@@ -38,12 +38,11 @@ export class XMLAgentOutputParser extends AgentActionOutputParser {
    */
   async parse(text: string): Promise<AgentAction | AgentFinish> {
     if (text.includes("</tool>")) {
-      const [tool, toolInput] = text.split("</tool>");
-      const _tool = tool.split("<tool>")[1];
-      const _toolInput = toolInput.split("<tool_input>")[1];
+      const _tool = text.match(/<tool>([^<]*)<\/tool>/)[1];
+      const _toolInput = text.match(/<tool_input>([^<]*)<\/tool_input>/)[1];
       return { tool: _tool, toolInput: _toolInput, log: text };
     } else if (text.includes("<final_answer>")) {
-      const [, answer] = text.split("<final_answer>");
+      const answer = text.match(/<final_answer>([^<]*)<\/final_answer>/)[1];
       return { returnValues: { output: answer }, log: text };
     } else {
       throw new OutputParserException(`Could not parse LLM output: ${text}`);
