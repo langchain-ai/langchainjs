@@ -7,6 +7,7 @@ import {
   SQL_MYSQL_PROMPT,
   SQL_POSTGRES_PROMPT,
   SQL_SQLITE_PROMPT,
+  SQL_ORACLE_PROMPT,
 } from "../chains/sql_db/sql_db_prompt.js";
 
 interface RawResultTableAndColumn {
@@ -217,6 +218,29 @@ export const getTableAndColumnsName = async (
 
     return formatToSqlTable(repLowerCase);
   }
+  if (appDataSource.options.type === "oracle") {
+    const schemaName = appDataSource.options.schema
+    const sql = `  
+      SELECT
+          TABLE_NAME AS table_name,
+          COLUMN_NAME AS column_name,
+          DATA_TYPE AS data_type,
+          NULLABLE AS is_nullable
+      FROM ALL_TAB_COLS
+      WHERE
+          OWNER = UPPER(${schemaName})`;
+    const rep = await appDataSource.query(sql);
+    const propertiesLower: Array<RawResultTableAndColumn> = [];
+    rep.forEach((item: any) => {
+      propertiesLower.push({
+        table_name: item.TABLE_NAME,
+        column_name: item.COLUMN_NAME,
+        data_type: item.DATA_TYPE,
+        is_nullable: item.IS_NULLABLE,
+      })        
+    })
+    return formatToSqlTable(propertiesLower);
+  }
   throw new Error("Database type not implemented yet");
 };
 
@@ -263,6 +287,8 @@ export const generateTableInfoFromTables = async (
         appDataSource.options?.schema ??
         appDataSource.options?.username ??
         "public";
+    } else if (appDataSource.options.type === "oracle") {
+      schema = appDataSource.options.schema
     }
     let sqlCreateTableQuery = schema
       ? `CREATE TABLE "${schema}"."${currentTable.tableName}" (\n`
@@ -292,6 +318,8 @@ export const generateTableInfoFromTables = async (
         appDataSource.options?.username ??
         "public";
       sqlSelectInfoQuery = `SELECT * FROM "${schema}"."${currentTable.tableName}" LIMIT ${nbSampleRow};\n`;
+    } else if (appDataSource.options.type === "oracle") {
+      sqlSelectInfoQuery = `SELECT * FROM "${schema}"."${currentTable.tableName}" WHERE ROWNUM <= ${nbSampleRow}`;
     } else {
       sqlSelectInfoQuery = `SELECT * FROM "${currentTable.tableName}" LIMIT ${nbSampleRow};\n`;
     }
@@ -345,6 +373,10 @@ export const getPromptTemplateFromDataSource = (
 
   if (appDataSource.options.type === "sap") {
     return SQL_SAP_HANA_PROMPT;
+  }
+
+  if (appDataSource.options.type === "oracle") {
+    return SQL_ORACLE_PROMPT;
   }
 
   return DEFAULT_SQL_DATABASE_PROMPT;
