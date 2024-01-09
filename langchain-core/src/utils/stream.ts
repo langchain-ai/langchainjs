@@ -18,22 +18,29 @@ export class IterableReadableStream<T>
     }
   }
 
-  async next() {
+  async next(): Promise<IteratorResult<T>> {
     this.ensureReader();
     try {
       const result = await this.reader.read();
-      if (result.done) this.reader.releaseLock(); // release lock when stream becomes closed
-      return {
-        done: result.done,
-        value: result.value as T, // Cloudflare Workers typing fix
-      };
+      if (result.done) {
+        this.reader.releaseLock(); // release lock when stream becomes closed
+        return {
+          done: true,
+          value: undefined,
+        };
+      } else {
+        return {
+          done: false,
+          value: result.value,
+        };
+      }
     } catch (e) {
       this.reader.releaseLock(); // release lock when stream becomes errored
       throw e;
     }
   }
 
-  async return() {
+  async return(): Promise<IteratorResult<T>> {
     this.ensureReader();
     // If wrapped in a Node stream, cancel is already called.
     if (this.locked) {
@@ -41,7 +48,7 @@ export class IterableReadableStream<T>
       this.reader.releaseLock(); // release lock first
       await cancelPromise; // now await it
     }
-    return { done: true, value: undefined as T }; // This cast fixes TS typing, and convention is to ignore final chunk value anyway
+    return { done: true, value: undefined };
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

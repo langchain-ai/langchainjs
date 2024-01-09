@@ -1,5 +1,5 @@
-import { BaseLLMOutputParser } from "../schema/output_parser.js";
-import type { ChatGeneration } from "../schema/index.js";
+import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
+import type { ChatGeneration } from "@langchain/core/outputs";
 
 export type ParsedToolCall = {
   name: string;

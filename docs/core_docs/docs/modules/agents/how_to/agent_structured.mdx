@@ -88,7 +88,7 @@ const responseOpenAIFunction = {
 ```
 
 Next, we construct a custom structured output parsing function that can detect when the model has called our final response function.
-This is similar to the method in the stock [JSONFunctionsOutputParser](https://api.js.langchain.com/classes/langchain_output_parsers.JsonOutputFunctionsParser.html),
+This is similar to the method in the stock [JSONOutputFunctionsParser](https://api.js.langchain.com/classes/langchain_output_parsers.JsonOutputFunctionsParser.html),
 but with a change to directly return a response when the final response function is called.
 
 ```typescript

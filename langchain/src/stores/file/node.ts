@@ -2,7 +2,7 @@ import * as fs from "node:fs/promises";
 import { mkdtempSync } from "node:fs";
 import { join } from "node:path";
 
-import { BaseFileStore } from "../../schema/index.js";
+import { BaseFileStore } from "./base.js";
 
 /**
  * Specific implementation of the `BaseFileStore` class for Node.js.

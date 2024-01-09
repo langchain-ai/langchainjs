@@ -1,8 +1,8 @@
 import { OpenAI } from "@langchain/openai";
-import { SerpAPI } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { loadEvaluator } from "langchain/evaluation";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 // Capturing Trajectory
 // The easiest way to return an agent's trajectory (without using tracing callbacks like those in LangSmith)

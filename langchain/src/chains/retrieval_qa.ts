@@ -1,13 +1,13 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import type { BaseRetrieverInterface } from "@langchain/core/retrievers";
+import { ChainValues } from "@langchain/core/utils/types";
+import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
 import { BaseChain, ChainInputs } from "./base.js";
 import { SerializedVectorDBQAChain } from "./serde.js";
-import { ChainValues } from "../schema/index.js";
 import {
   StuffQAChainParams,
   loadQAStuffChain,
 } from "./question_answering/load.js";
-import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;

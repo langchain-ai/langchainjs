@@ -1,4 +1,4 @@
-import { BaseLLMParams, LLM } from "../../llms/base.js";
+import { BaseLLMParams, LLM } from "@langchain/core/language_models/llms";
 
 export interface BittensorInput extends BaseLLMParams {
   systemPrompt?: string | null | undefined;

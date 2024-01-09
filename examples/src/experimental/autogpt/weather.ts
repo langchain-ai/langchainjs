@@ -1,8 +1,9 @@
 import { AutoGPT } from "langchain/experimental/autogpt";
-import { ReadFileTool, WriteFileTool, SerpAPI } from "langchain/tools";
+import { ReadFileTool, WriteFileTool } from "langchain/tools";
 import { NodeFileStore } from "langchain/stores/file/node";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 const store = new NodeFileStore();
 

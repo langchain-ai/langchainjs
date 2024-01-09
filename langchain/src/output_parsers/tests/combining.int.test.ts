@@ -1,12 +1,12 @@
 import { test } from "@jest/globals";
 
-import { PromptTemplate } from "../../prompts/index.js";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { ChatOpenAI } from "@langchain/openai";
 import {
   StructuredOutputParser,
   RegexParser,
   CombiningOutputParser,
 } from "../index.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
 
 test("CombiningOutputParser", async () => {
   const answerParser = StructuredOutputParser.fromNamesAndDescriptions({

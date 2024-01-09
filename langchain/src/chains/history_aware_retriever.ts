@@ -7,12 +7,12 @@ import {
 import { type BasePromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import type { DocumentInterface } from "@langchain/core/documents";
-import type { BaseMessage } from "../schema/index.js";
+import type { BaseMessage } from "@langchain/core/messages";
 
 /**
  * Params for the createHistoryAwareRetriever method.
  */
-export type CreateHistoryAwareRetriever = {
+export type CreateHistoryAwareRetrieverParams = {
   /**
    * Language model to use for generating a search term given chat history.
    */
@@ -60,7 +60,7 @@ export async function createHistoryAwareRetriever({
   llm,
   retriever,
   rephrasePrompt,
-}: CreateHistoryAwareRetriever): Promise<
+}: CreateHistoryAwareRetrieverParams): Promise<
   RunnableInterface<
     { input: string; chat_history: string | BaseMessage[] },
     DocumentInterface[]

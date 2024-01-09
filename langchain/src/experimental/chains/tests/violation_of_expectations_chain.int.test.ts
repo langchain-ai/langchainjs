@@ -1,7 +1,6 @@
-import { ChatOpenAI } from "../../../chat_models/openai.js";
-import { OpenAIEmbeddings } from "../../../embeddings/openai.js";
-import { AIMessage, HumanMessage } from "../../../schema/index.js";
-import { HNSWLib } from "../../../vectorstores/hnswlib.js";
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
+import { AIMessage, HumanMessage } from "@langchain/core/messages";
+import { MemoryVectorStore } from "../../../vectorstores/memory.js";
 import { ViolationOfExpectationsChain } from "../violation_of_expectations/violation_of_expectations_chain.js";
 
 const dummyMessages = [
@@ -17,7 +16,7 @@ const dummyMessages = [
 ];
 
 test.skip("should respond with the proper schema", async () => {
-  const vectorStore = await HNSWLib.fromTexts(
+  const vectorStore = await MemoryVectorStore.fromTexts(
     [" "],
     [{ id: 1 }],
     new OpenAIEmbeddings()
