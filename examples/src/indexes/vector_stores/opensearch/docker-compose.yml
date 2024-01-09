@@ -1,6 +1,6 @@
 # Reference:
 #   https://opensearch.org/docs/latest/install-and-configure/install-opensearch/docker/#sample-docker-composeyml
-version: '3'
+version: "3"
 services:
   opensearch:
     image: opensearchproject/opensearch:2.6.0

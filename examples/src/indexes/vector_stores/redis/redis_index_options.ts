@@ -1,7 +1,7 @@
 import { createClient } from "redis";
-import { Document } from "langchain/document";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { RedisVectorStore } from "langchain/vectorstores/redis";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { RedisVectorStore } from "@langchain/community/vectorstores/redis";
+import { Document } from "@langchain/core/documents";
 
 const client = createClient({
   url: process.env.REDIS_URL ?? "redis://localhost:6379",

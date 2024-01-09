@@ -1,4 +1,4 @@
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import { APIChain } from "langchain/chains";
 
 const OPEN_METEO_DOCS = `BASE URL: https://api.open-meteo.com/

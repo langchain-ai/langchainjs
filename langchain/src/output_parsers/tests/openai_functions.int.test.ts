@@ -5,8 +5,8 @@ import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { Operation, applyPatch } from "@langchain/core/utils/json_patch";
 
-import { ChatOpenAI } from "../../chat_models/openai.js";
-import { ChatPromptTemplate } from "../../prompts/index.js";
+import { ChatOpenAI } from "@langchain/openai";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { JsonOutputFunctionsParser } from "../openai_functions.js";
 import { HttpResponseOutputParser } from "../http_response.js";
 

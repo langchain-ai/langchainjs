@@ -1,11 +1,10 @@
 import { test } from "@jest/globals";
-import { Document } from "../../../document.js";
+import { Document } from "@langchain/core/documents";
+import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
+import { Chroma } from "@langchain/community/vectorstores/chroma";
 import { AttributeInfo } from "../../../schema/query_constructor.js";
-import { OpenAIEmbeddings } from "../../../embeddings/openai.js";
 import { SelfQueryRetriever } from "../index.js";
 import { ChromaTranslator } from "../chroma.js";
-import { OpenAI } from "../../../llms/openai.js";
-import { Chroma } from "../../../vectorstores/chroma.js";
 
 test.skip("Chroma Store Self Query Retriever Test", async () => {
   const docs = [

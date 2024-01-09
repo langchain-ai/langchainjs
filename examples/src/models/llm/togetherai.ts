@@ -1,5 +1,5 @@
 import { TogetherAI } from "@langchain/community/llms/togetherai";
-import { PromptTemplate } from "langchain/prompts";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const model = new TogetherAI({
   modelName: "mistralai/Mixtral-8x7B-Instruct-v0.1",

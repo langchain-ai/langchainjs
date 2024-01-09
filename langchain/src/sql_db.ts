@@ -1,4 +1,5 @@
 import type { DataSource as DataSourceT, DataSourceOptions } from "typeorm";
+import { Serializable } from "@langchain/core/load/serializable";
 import {
   generateTableInfoFromTables,
   getTableAndColumnsName,
@@ -10,7 +11,6 @@ import {
   verifyIncludeTablesExistInDatabase,
   verifyListTablesExistInDatabase,
 } from "./util/sql_utils.js";
-import { Serializable } from "./load/serializable.js";
 
 export type { SqlDatabaseDataSourceParams, SqlDatabaseOptionsParams };
 

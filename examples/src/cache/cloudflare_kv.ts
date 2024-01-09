@@ -1,7 +1,7 @@
 import type { KVNamespace } from "@cloudflare/workers-types";
 
-import { OpenAI } from "langchain/llms/openai";
-import { CloudflareKVCache } from "langchain/cache/cloudflare_kv";
+import { OpenAI } from "@langchain/openai";
+import { CloudflareKVCache } from "@langchain/community/caches/cloudflare_kv";
 
 export interface Env {
   KV_NAMESPACE: KVNamespace;

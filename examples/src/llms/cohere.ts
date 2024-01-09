@@ -1,4 +1,4 @@
-import { Cohere } from "langchain/llms/cohere";
+import { Cohere } from "@langchain/cohere";
 
 export const run = async () => {
   const model = new Cohere({

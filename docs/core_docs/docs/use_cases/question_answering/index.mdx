@@ -28,7 +28,7 @@ Each loader returns data as a LangChain `Document`.
 - `Splitting`: [Text splitters](/docs/modules/data_connection/document_transformers/) break `Documents` into splits of specified size
 - `Storage`: Storage (e.g., often a [vectorstore](/docs/modules/data_connection/vectorstores/)) will house [and often embed](https://www.pinecone.io/learn/vector-embeddings/) the splits
 - `Retrieval`: The app retrieves splits from storage (e.g., often [with similar embeddings](https://www.pinecone.io/learn/k-nearest-neighbor/) to the input question)
-- `Output`: An [LLM](/docs/modules/model_io/models/llms/) produces an answer using a prompt that includes the question and the retrieved splits
+- `Output`: An [LLM](/docs/modules/model_io/llms/) produces an answer using a prompt that includes the question and the retrieved splits
 
 ![flow.jpeg](/img/qa_flow.jpeg)
 
@@ -77,8 +77,16 @@ const splitDocs = await textSplitter.splitDocuments(data);
 
 Embed and store the splits in a vector database (for demo purposes we use an unoptimized, in-memory example but you can [browse integrations here](/docs/integrations/vectorstores/)):
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 ```typescript
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 
 const embeddings = new OpenAIEmbeddings();
@@ -153,7 +161,7 @@ Distill the retrieved documents into an answer using an LLM (e.g., `gpt-3.5-turb
 
 ```typescript
 import { RetrievalQAChain } from "langchain/chains";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 
 const model = new ChatOpenAI({ modelName: "gpt-3.5-turbo" });
 const chain = RetrievalQAChain.fromLLM(model, vectorStore.asRetriever());
@@ -184,7 +192,7 @@ The prompt in `RetrievalQA` chain can be customized as follows.
 
 ```typescript
 import { RetrievalQAChain } from "langchain/chains";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "langchain/prompts";
 
 const model = new ChatOpenAI({ modelName: "gpt-3.5-turbo" });
@@ -220,7 +228,7 @@ The full set of retrieved documents used for answer distillation can be returned
 
 ```typescript
 import { RetrievalQAChain } from "langchain/chains";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 
 const model = new ChatOpenAI({ modelName: "gpt-3.5-turbo" });
 
@@ -280,7 +288,7 @@ First, specify a `Memory buffer` to track the conversation inputs / outputs.
 ```typescript
 import { ConversationalRetrievalQAChain } from "langchain/chains";
 import { BufferMemory } from "langchain/memory";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 
 const memory = new BufferMemory({
   memoryKey: "chat_history",

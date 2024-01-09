@@ -6,9 +6,31 @@ const {
   DeclarationReflection,
   RendererEvent,
 } = require("typedoc");
-const { readFileSync } = require("fs");
+const fs = require("fs");
+const path = require("path")
 
-const PATH_TO_LANGCHAIN_PKG_JSON = "../../langchain/package.json"
+const PATH_TO_LANGCHAIN_PKG_JSON = "../../langchain/package.json";
+const BASE_OUTPUT_DIR = "./public";
+const SCRIPT_HTML = `<script>
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.keyCode === 75) { // Check for CMD + K or CTRL + K
+      const input = document.getElementById('tsd-search-field'); // Get the search input element by ID
+      input.focus(); // Focus on the search input element
+      document.getElementById('tsd-search').style.display = 'block'; // Show the div wrapper with ID tsd-search
+    }
+  }, false); // Add event listener for keydown events
+</script>`;
+
+/**
+ * @param {string | undefined} deprecationText 
+ * @returns {string}
+ */
+const DEPRECATION_HTML = (deprecationText) => `<div class="deprecation-warning">
+<h2>⚠️ Deprecated ⚠️</h2>
+${deprecationText ? `<p>${deprecationText}</p>` : ""}
+<p>This feature is deprecated and will be removed in the future.</p>
+<p>It is not recommended for use.</p>
+</div>`;
 
 /**
  * @param {Application} application 
@@ -20,7 +42,7 @@ function load(application) {
    */
   let langchainVersion;
   try {
-    const langChainPackageJson = readFileSync(PATH_TO_LANGCHAIN_PKG_JSON).toString();
+    const langChainPackageJson = fs.readFileSync(PATH_TO_LANGCHAIN_PKG_JSON).toString();
     langchainVersion = JSON.parse(langChainPackageJson).version;
   } catch (e) {
     throw new Error(`Error reading LangChain version for typedoc: ${e}`)
@@ -38,6 +60,9 @@ function load(application) {
   application.converter.on(Converter.EVENT_RESOLVE_BEGIN, onBeginResolve);
 
   application.renderer.on(RendererEvent.BEGIN, onBeginRenderEvent);
+
+
+  application.renderer.on(RendererEvent.END, onEndRenderEvent);
 
   const reflectionKindsToHide = [
     ReflectionKind.Property,
@@ -97,6 +122,42 @@ function load(application) {
     }
     if (reflection.name.startsWith("libs/")) {
       reflection.name = reflection.name.replace("libs/", "")
+    }
+  }
+
+  /**
+   * @param {Context} context 
+   */
+  async function onEndRenderEvent(context) {
+    const htmlToSplitAt = `<div class="tsd-toolbar-contents container">`;
+    const deprecatedHTML = "<h4>Deprecated</h4>"
+    
+    const { urls } = context;
+    for (const { url } of urls) {
+      const indexFilePath = path.join(BASE_OUTPUT_DIR, url);
+      let htmlFileContent = fs.readFileSync(indexFilePath, "utf-8");
+
+      if (htmlFileContent.includes(deprecatedHTML)) {
+        // If any comments are added to the `@deprecated` JSDoc, they'll
+        // be inside the following <p> tag.
+        const deprecationTextRegex = new RegExp(`${deprecatedHTML}<p>(.*?)</p>`);
+        const deprecationTextMatch = htmlFileContent.match(deprecationTextRegex);
+
+        /** @type {string | undefined} */
+        let textInsidePTag;
+
+        if (deprecationTextMatch) {
+          textInsidePTag = deprecationTextMatch[1];
+          const newTextToReplace = `${deprecatedHTML}<p>${textInsidePTag}</p>`
+          htmlFileContent = htmlFileContent.replace(newTextToReplace, DEPRECATION_HTML(textInsidePTag));
+        } else {
+          htmlFileContent = htmlFileContent.replace(deprecatedHTML, DEPRECATION_HTML(undefined));
+        }
+      }
+
+      const [part1, part2] = htmlFileContent.split(htmlToSplitAt);
+      const htmlWithScript = part1 + SCRIPT_HTML + part2;
+      fs.writeFileSync(indexFilePath, htmlWithScript);
     }
   }
 }

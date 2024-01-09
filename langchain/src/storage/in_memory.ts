@@ -1,4 +1,4 @@
-import { BaseStore } from "../schema/storage.js";
+import { BaseStore } from "@langchain/core/stores";
 
 /**
  * In-memory implementation of the BaseStore using a dictionary. Used for

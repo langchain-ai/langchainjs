@@ -1,0 +1,93 @@
+---
+sidebar_position: 3
+---
+
+# Custom LLM
+
+This notebook goes over how to create a custom LLM wrapper, in case you want to use your own LLM or a different wrapper than one that is directly supported in LangChain.
+
+There are a few required things that a custom LLM needs to implement:
+
+- A `_call` method that takes in a string and call options (which includes things like `stop` sequences), and returns a string.
+- A `_llmType` method that returns a string. Used for logging purposes only.
+
+You can also implement the following optional method:
+
+- A `_streamResponseChunks` method that returns an `AsyncIterator` and yields `GenerationChunks`. This allows the LLM to support streaming outputs.
+
+Let’s implement a very simple custom LLM that just echoes back the first `n` characters of the input.
+
+```typescript
+import { LLM, type BaseLLMParams } from "@langchain/core/language_models/llms";
+import type { CallbackManagerForLLMRun } from "langchain/callbacks";
+import { GenerationChunk } from "langchain/schema";
+
+export interface CustomLLMInput extends BaseLLMParams {
+  n: number;
+}
+
+export class CustomLLM extends LLM {
+  n: number;
+
+  constructor(fields: CustomLLMInput) {
+    super(fields);
+    this.n = fields.n;
+  }
+
+  _llmType() {
+    return "custom";
+  }
+
+  async _call(
+    prompt: string,
+    options: this["ParsedCallOptions"],
+    // Can pass runManager into sub runs for tracing
+    _runManager: CallbackManagerForLLMRun
+  ): Promise<string> {
+    return prompt.slice(0, this.n);
+  }
+
+  async *_streamResponseChunks(
+    prompt: string,
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<GenerationChunk> {
+    for (const letter of prompt.slice(0, this.n)) {
+      yield new GenerationChunk({
+        text: letter,
+      });
+      // Trigger the appropriate callback
+      await runManager?.handleLLMNewToken(letter);
+    }
+  }
+}
+```
+
+We can now use this as any other LLM:
+
+```typescript
+const llm = new CustomLLM({ n: 4 });
+
+await llm.invoke("I am an LLM");
+```
+
+```
+I am
+```
+
+And support streaming:
+
+```typescript
+const stream = await llm.stream("I am an LLM");
+
+for await (const chunk of stream) {
+  console.log(chunk);
+}
+```
+
+```
+I
+
+a
+m
+```

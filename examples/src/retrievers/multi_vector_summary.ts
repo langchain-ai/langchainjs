@@ -1,17 +1,15 @@
 import * as uuid from "uuid";
 
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { PromptTemplate } from "langchain/prompts";
-import { StringOutputParser } from "langchain/schema/output_parser";
-import { RunnableSequence } from "langchain/schema/runnable";
-
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { MultiVectorRetriever } from "langchain/retrievers/multi_vector";
-import { FaissStore } from "langchain/vectorstores/faiss";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { FaissStore } from "@langchain/community/vectorstores/faiss";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { InMemoryStore } from "langchain/storage/in_memory";
 import { TextLoader } from "langchain/document_loaders/fs/text";
-import { Document } from "langchain/document";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { Document } from "@langchain/core/documents";
 
 const textLoader = new TextLoader("../examples/state_of_the_union.txt");
 const parentDocuments = await textLoader.load();
@@ -52,14 +50,8 @@ const summaryDocs = summaries.map((summary, i) => {
   return summaryDoc;
 });
 
-const keyValuePairs: [string, Document][] = docs.map((originalDoc, i) => [
-  docIds[i],
-  originalDoc,
-]);
-
-// The docstore to use to store the original chunks
-const docstore = new InMemoryStore();
-await docstore.mset(keyValuePairs);
+// The byteStore to use to store the original chunks
+const byteStore = new InMemoryStore<Uint8Array>();
 
 // The vectorstore to use to index the child chunks
 const vectorstore = await FaissStore.fromDocuments(
@@ -69,9 +61,17 @@ const vectorstore = await FaissStore.fromDocuments(
 
 const retriever = new MultiVectorRetriever({
   vectorstore,
-  docstore,
+  byteStore,
   idKey,
 });
+
+const keyValuePairs: [string, Document][] = docs.map((originalDoc, i) => [
+  docIds[i],
+  originalDoc,
+]);
+
+// Use the retriever to add the original chunks to the document store
+await retriever.docstore.mset(keyValuePairs);
 
 // We could also add the original chunks to the vectorstore if we wish
 // const taggedOriginalDocs = docs.map((doc, i) => {

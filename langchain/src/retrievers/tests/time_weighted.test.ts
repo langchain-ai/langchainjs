@@ -1,5 +1,5 @@
 import { describe, expect, jest, test } from "@jest/globals";
-import { Document } from "../../document.js";
+import { Document } from "@langchain/core/documents";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
 import { MemoryVectorStore } from "../../vectorstores/memory.js";
 import {

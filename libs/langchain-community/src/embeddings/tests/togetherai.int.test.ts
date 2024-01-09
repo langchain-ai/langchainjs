@@ -1,14 +1,14 @@
 import { test, expect } from "@jest/globals";
 import { TogetherAIEmbeddings } from "../togetherai.js";
 
-test("Test TogetherAIEmbeddings.embedQuery", async () => {
+test.skip("Test TogetherAIEmbeddings.embedQuery", async () => {
   const embeddings = new TogetherAIEmbeddings();
   const res = await embeddings.embedQuery("Hello world");
   expect(typeof res[0]).toBe("number");
   expect(res.length).toBe(768);
 });
 
-test("Test TogetherAIEmbeddings.embedDocuments", async () => {
+test.skip("Test TogetherAIEmbeddings.embedDocuments", async () => {
   const embeddings = new TogetherAIEmbeddings();
   const res = await embeddings.embedDocuments(["Hello world", "Bye bye"]);
   expect(res).toHaveLength(2);

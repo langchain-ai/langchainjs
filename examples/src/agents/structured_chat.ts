@@ -1,43 +1,49 @@
-import { z } from "zod";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { initializeAgentExecutorWithOptions } from "langchain/agents";
-import { Calculator } from "langchain/tools/calculator";
-import { DynamicStructuredTool } from "langchain/tools";
+import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
+import { AgentExecutor, createStructuredChatAgent } from "langchain/agents";
+import { pull } from "langchain/hub";
+import type { ChatPromptTemplate } from "@langchain/core/prompts";
+import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
-export const run = async () => {
-  const model = new ChatOpenAI({ temperature: 0 });
-  const tools = [
-    new Calculator(), // Older existing single input tools will still work
-    new DynamicStructuredTool({
-      name: "random-number-generator",
-      description: "generates a random number between two input numbers",
-      schema: z.object({
-        low: z.number().describe("The lower bound of the generated number"),
-        high: z.number().describe("The upper bound of the generated number"),
-      }),
-      func: async ({ low, high }) =>
-        (Math.random() * (high - low) + low).toString(), // Outputs still must be strings
-      returnDirect: false, // This is an option that allows the tool to return the output directly
-    }),
-  ];
+import { ChatOpenAI } from "@langchain/openai";
 
-  const executor = await initializeAgentExecutorWithOptions(tools, model, {
-    agentType: "structured-chat-zero-shot-react-description",
-    verbose: true,
-  });
-  console.log("Loaded agent.");
+// Define the tools the agent will have access to.
+const tools = [new TavilySearchResults({ maxResults: 1 })];
 
-  const input = `What is a random number between 5 and 10 raised to the second power?`;
+// Get the prompt to use - you can modify this!
+// If you want to see the prompt in full, you can at:
+// https://smith.langchain.com/hub/hwchase17/structured-chat-agent
+const prompt = await pull<ChatPromptTemplate>(
+  "hwchase17/structured-chat-agent"
+);
 
-  console.log(`Executing with input "${input}"...`);
+const llm = new ChatOpenAI({
+  modelName: "gpt-3.5-turbo-1106",
+  temperature: 0,
+});
 
-  const result = await executor.invoke({ input });
+const agent = await createStructuredChatAgent({
+  llm,
+  tools,
+  prompt,
+});
 
-  console.log({ result });
+const agentExecutor = new AgentExecutor({
+  agent,
+  tools,
+});
 
-  /*
-    {
-      "output": "67.95299776074"
-    }
-  */
-};
+const result = await agentExecutor.invoke({
+  input: "what is LangChain?",
+});
+
+console.log(result);
+
+const result2 = await agentExecutor.invoke({
+  input: "what's my name?",
+  chat_history: [
+    new HumanMessage("hi! my name is cob"),
+    new AIMessage("Hello Cob! How can I assist you today?"),
+  ],
+});
+
+console.log(result2);

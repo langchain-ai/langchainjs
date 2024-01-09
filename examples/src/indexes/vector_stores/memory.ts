@@ -1,5 +1,5 @@
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 
 const vectorStore = await MemoryVectorStore.fromTexts(
   ["Hello world", "Bye bye", "hello nice world"],

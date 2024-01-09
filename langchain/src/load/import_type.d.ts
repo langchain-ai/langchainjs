@@ -526,6 +526,5 @@ export interface SecretMap {
   ANTHROPIC_API_KEY?: string;
   OPENAI_API_KEY?: string;
   PROMPTLAYER_API_KEY?: string;
-  REMOTE_RETRIEVER_AUTH_BEARER?: string;
   ZAPIER_NLA_API_KEY?: string;
 }

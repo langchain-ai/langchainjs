@@ -1,6 +1,6 @@
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { createClient } from "@supabase/supabase-js";
-import { SupabaseHybridSearch } from "langchain/retrievers/supabase";
+import { SupabaseHybridSearch } from "@langchain/community/retrievers/supabase";
 
 export const run = async () => {
   const client = createClient(

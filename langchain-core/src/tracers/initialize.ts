@@ -2,6 +2,8 @@ import { LangChainTracer } from "./tracer_langchain.js";
 import { LangChainTracerV1 } from "./tracer_langchain_v1.js";
 
 /**
+ * @deprecated Use the V2 handler instead.
+ *
  * Function that returns an instance of `LangChainTracerV1`. If a session
  * is provided, it loads that session into the tracer; otherwise, it loads
  * a default session.

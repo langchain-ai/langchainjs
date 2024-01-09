@@ -1,6 +1,6 @@
 import { BufferMemory } from "langchain/memory";
-import { FirestoreChatMessageHistory } from "langchain/stores/message/firestore";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { FirestoreChatMessageHistory } from "@langchain/community/stores/message/firestore";
+import { ChatOpenAI } from "@langchain/openai";
 import { ConversationChain } from "langchain/chains";
 
 const memory = new BufferMemory({

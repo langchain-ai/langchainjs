@@ -1,6 +1,7 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import type { ToolInterface } from "@langchain/core/tools";
-import { DynamicTool } from "../../../tools/dynamic.js";
+import { DynamicTool } from "@langchain/community/tools/dynamic";
+import { Toolkit } from "@langchain/community/agents/toolkits/base";
 import { JsonSpec } from "../../../tools/json.js";
 import { AgentExecutor } from "../../executor.js";
 import {
@@ -10,7 +11,6 @@ import {
 } from "./prompt.js";
 import { LLMChain } from "../../../chains/llm_chain.js";
 import { ZeroShotCreatePromptArgs, ZeroShotAgent } from "../../mrkl/index.js";
-import { Toolkit } from "../base.js";
 import {
   Headers,
   RequestsGetTool,
@@ -78,6 +78,8 @@ export class OpenApiToolkit extends RequestsToolkit {
 }
 
 /**
+ * @deprecated Create a specific agent with a custom tool instead.
+ *
  * Creates an OpenAPI agent using a language model, an OpenAPI toolkit,
  * and optional prompt arguments. It creates a prompt for the agent using
  * the OpenAPI tools and the provided prefix and suffix. It then creates a

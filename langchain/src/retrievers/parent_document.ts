@@ -4,7 +4,7 @@ import {
   type VectorStoreInterface,
   type VectorStoreRetrieverInterface,
 } from "@langchain/core/vectorstores";
-import { Document } from "../document.js";
+import { Document } from "@langchain/core/documents";
 import { TextSplitter } from "../text_splitter.js";
 import {
   MultiVectorRetriever,
@@ -37,7 +37,7 @@ export type ParentDocumentRetrieverFields = MultiVectorRetrieverInput & {
  * ```typescript
  * const retriever = new ParentDocumentRetriever({
  *   vectorstore: new MemoryVectorStore(new OpenAIEmbeddings()),
- *   docstore: new InMemoryStore(),
+ *   byteStore: new InMemoryStore<Uint8Array>(),
  *   parentSplitter: new RecursiveCharacterTextSplitter({
  *     chunkOverlap: 0,
  *     chunkSize: 500,
@@ -81,7 +81,6 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
   constructor(fields: ParentDocumentRetrieverFields) {
     super(fields);
     this.vectorstore = fields.vectorstore;
-    this.docstore = fields.docstore;
     this.childSplitter = fields.childSplitter;
     this.parentSplitter = fields.parentSplitter;
     this.idKey = fields.idKey ?? this.idKey;

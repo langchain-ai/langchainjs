@@ -1,9 +1,9 @@
-import { ChatYandexGPT } from "langchain/chat_models/yandex";
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { ChatYandexGPT } from "@langchain/yandex/chat_models";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
 const chat = new ChatYandexGPT();
 
-const res = await chat.call([
+const res = await chat.invoke([
   new SystemMessage(
     "You are a helpful assistant that translates English to French."
   ),

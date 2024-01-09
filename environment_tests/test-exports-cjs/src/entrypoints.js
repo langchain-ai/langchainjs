@@ -15,6 +15,7 @@ const base_language = require("langchain/base_language");
 const tools = require("langchain/tools");
 const tools_connery = require("langchain/tools/connery");
 const tools_render = require("langchain/tools/render");
+const tools_retriever = require("langchain/tools/retriever");
 const tools_google_places = require("langchain/tools/google_places");
 const chains = require("langchain/chains");
 const chains_combine_documents = require("langchain/chains/combine_documents");
