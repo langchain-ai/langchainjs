@@ -1,9 +1,9 @@
 import { test, expect } from "@jest/globals";
-import { DateOutputParser } from "../date.js";
-import { OutputParserException } from "../../schema/output_parser.js";
+import { OutputParserException } from "@langchain/core/output_parsers";
+import { DatetimeOutputParser } from "../datetime.js";
 
-test("DateOutputParser", async () => {
-  const parser = new DateOutputParser();
+test("DatetimeOutputParser", async () => {
+  const parser = new DatetimeOutputParser();
 
   const currentDate = new Date();
   const currentDateStr = currentDate.toISOString();

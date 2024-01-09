@@ -1,18 +1,18 @@
 import {
   BaseOutputParser,
   OutputParserException,
-} from "../schema/output_parser.js";
+} from "@langchain/core/output_parsers";
 
 /**
  * Class to parse the output of an LLM call to a date.
  * @augments BaseOutputParser
  */
-export class DateOutputParser extends BaseOutputParser<Date> {
+export class DatetimeOutputParser extends BaseOutputParser<Date> {
   static lc_name() {
-    return "DateOutputParser";
+    return "DatetimeOutputParser";
   }
 
-  lc_namespace = ["langchain_core", "output_parsers", "date"];
+  lc_namespace = ["langchain", "output_parsers"];
 
   lc_serializable = true;
 
