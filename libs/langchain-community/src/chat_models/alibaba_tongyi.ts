@@ -250,7 +250,8 @@ export class ChatAlibabaTongyi
   ) {
     super(fields);
 
-    this.alibabaApiKey = fields?.alibabaApiKey ?? getEnvironmentVariable("ALIBABA_API_KEY");
+    this.alibabaApiKey =
+      fields?.alibabaApiKey ?? getEnvironmentVariable("ALIBABA_API_KEY");
     if (!this.alibabaApiKey) {
       throw new Error("Ali API key not found");
     }
