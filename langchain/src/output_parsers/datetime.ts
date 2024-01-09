@@ -41,6 +41,10 @@ export class DatetimeOutputParser extends BaseOutputParser<Date> {
    * @returns A string containing instructions on the expected format of the response.
    */
   getFormatInstructions(): string {
-    return `Your response should be a datetime string that matches the following pattern: ${this.format}, with no other text. For example: 2011-10-05T14:48:00Z, 2019-01-01T00:00:00Z, 1932-04-21T04:42:23Z`;
+    return [
+      `Your response should be a datetime string that matches the following pattern: "${this.format}".`,
+      `Examples: 2011-10-05T14:48:00Z, 2019-01-01T00:00:00Z, 1932-04-21T04:42:23Z`,
+      `Return ONLY this string, no other words!`,
+    ].join("\n\n");
   }
 }
