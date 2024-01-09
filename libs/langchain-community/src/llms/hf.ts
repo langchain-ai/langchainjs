@@ -117,7 +117,7 @@ export class HuggingFaceInference extends LLM implements HFInput {
     return "hf";
   }
 
-  invocationParams(_options?: this["ParsedCallOptions"]) {
+  invocationParams(options?: this["ParsedCallOptions"]) {
     return {
       model: this.model,
       parameters: {
@@ -125,7 +125,7 @@ export class HuggingFaceInference extends LLM implements HFInput {
         return_full_text: false,
         temperature: this.temperature,
         max_new_tokens: this.maxTokens,
-        stop_sequences: this.stopSequences,
+        stop: options?.stop ?? this.stopSequences,
         top_p: this.topP,
         top_k: this.topK,
         repetition_penalty: this.frequencyPenalty,
