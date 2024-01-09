@@ -3,14 +3,14 @@ import { HumanMessage } from "@langchain/core/messages";
 
 // Default model is qwen-turbo
 const qwenTurbo = new ChatAlibabaTongyi({
-  aliApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.ALI_API_KEY
+  alibabaApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.ALIBABA_API_KEY
 });
 
 // Use qwen-plus
 const qwenPlus = new ChatAlibabaTongyi({
   modelName: "qwen-plus", // Available models: qwen-turbo, qwen-plus, qwen-max
   temperature: 1,
-  aliApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.ALI_API_KEY
+  alibabaApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.ALIBABA_API_KEY
 });
 
 const messages = [new HumanMessage("Hello")];

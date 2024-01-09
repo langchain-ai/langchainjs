@@ -103,9 +103,9 @@ interface AlibabaTongyiChatInput {
 
   /**
    * API key to use when making requests. Defaults to the value of
-   * `ALI_API_KEY` environment variable.
+   * `ALIBABA_API_KEY` environment variable.
    */
-  aliApiKey?: string;
+  alibabaApiKey?: string;
 
   /** Amount of randomness injected into the response. Ranges
    * from 0 to 1 (0 is not included). Use temp closer to 0 for analytical /
@@ -175,7 +175,7 @@ function messageToTongyiRole(message: BaseMessage): TongyiMessageRole {
 /**
  * Wrapper around Ali Tongyi large language models that use the Chat endpoint.
  *
- * To use you should have the `ALI_API_KEY`
+ * To use you should have the `ALIBABA_API_KEY`
  * environment variable set.
  *
  * @augments BaseLLM
@@ -183,13 +183,13 @@ function messageToTongyiRole(message: BaseMessage): TongyiMessageRole {
  * @example
  * ```typescript
  * const qwen = new ChatAlibabaTongyi({
- *   aliApiKey: "YOUR-API-KEY",
+ *   alibabaApiKey: "YOUR-API-KEY",
  * });
  *
  * const qwen = new ChatAlibabaTongyi({
  *   modelName: "qwen-turbo",
  *   temperature: 1,
- *   aliApiKey: "YOUR-API-KEY",
+ *   alibabaApiKey: "YOUR-API-KEY",
  * });
  *
  * const messages = [new HumanMessage("Hello")];
@@ -211,7 +211,7 @@ export class ChatAlibabaTongyi
 
   get lc_secrets() {
     return {
-      aliApiKey: "ALI_API_KEY",
+      alibabaApiKey: "ALIBABA_API_KEY",
     };
   }
 
@@ -221,7 +221,7 @@ export class ChatAlibabaTongyi
 
   lc_serializable: boolean;
 
-  aliApiKey?: string;
+  alibabaApiKey?: string;
 
   streaming: boolean;
 
@@ -250,8 +250,8 @@ export class ChatAlibabaTongyi
   ) {
     super(fields);
 
-    this.aliApiKey = fields?.aliApiKey ?? getEnvironmentVariable("ALI_API_KEY");
-    if (!this.aliApiKey) {
+    this.alibabaApiKey = fields?.alibabaApiKey ?? getEnvironmentVariable("ALIBABA_API_KEY");
+    if (!this.alibabaApiKey) {
       throw new Error("Ali API key not found");
     }
 
@@ -424,7 +424,7 @@ export class ChatAlibabaTongyi
         method: "POST",
         headers: {
           ...(stream ? { Accept: "text/event-stream" } : {}),
-          Authorization: `Bearer ${this.aliApiKey}`,
+          Authorization: `Bearer ${this.alibabaApiKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(request),
