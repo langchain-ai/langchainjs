@@ -990,6 +990,11 @@
       "import": "./vectorstores/zep.js",
       "require": "./vectorstores/zep.cjs"
     },
+    "./chat_models/alibaba_tongyi": {
+      "types": "./chat_models/alibaba_tongyi.d.ts",
+      "import": "./chat_models/alibaba_tongyi.js",
+      "require": "./chat_models/alibaba_tongyi.cjs"
+    },
     "./chat_models/baiduwenxin": {
       "types": "./chat_models/baiduwenxin.d.ts",
       "import": "./chat_models/baiduwenxin.js",
@@ -1590,6 +1595,9 @@
     "vectorstores/zep.cjs",
     "vectorstores/zep.js",
     "vectorstores/zep.d.ts",
+    "chat_models/alibaba_tongyi.cjs",
+    "chat_models/alibaba_tongyi.js",
+    "chat_models/alibaba_tongyi.d.ts",
     "chat_models/baiduwenxin.cjs",
     "chat_models/baiduwenxin.js",
     "chat_models/baiduwenxin.d.ts",
