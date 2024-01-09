@@ -1,7 +1,7 @@
 import { test } from "@jest/globals";
-import { OpenAI } from "../../llms/openai.js";
-import { PromptTemplate } from "../../prompts/index.js";
-import { Document } from "../../document.js";
+import { OpenAI } from "@langchain/openai";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { Document } from "@langchain/core/documents";
 import {
   loadQAMapReduceChain,
   loadQARefineChain,
@@ -9,7 +9,7 @@ import {
 import { createStuffDocumentsChain } from "../combine_documents/stuff.js";
 
 test("Test StuffDocumentsChain", async () => {
-  const llm = new OpenAI({ modelName: "text-ada-001" });
+  const llm = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
   const prompt = PromptTemplate.fromTemplate("Print {context}");
   const chain = await createStuffDocumentsChain({ llm, prompt });
   const docs = [
@@ -22,7 +22,10 @@ test("Test StuffDocumentsChain", async () => {
 });
 
 test("Test MapReduceDocumentsChain with QA chain", async () => {
-  const model = new OpenAI({ temperature: 0, modelName: "text-ada-001" });
+  const model = new OpenAI({
+    temperature: 0,
+    modelName: "gpt-3.5-turbo-instruct",
+  });
   const chain = loadQAMapReduceChain(model);
   const docs = [
     new Document({ pageContent: "harrison went to harvard" }),
@@ -36,7 +39,10 @@ test("Test MapReduceDocumentsChain with QA chain", async () => {
 });
 
 test("Test RefineDocumentsChain with QA chain", async () => {
-  const model = new OpenAI({ temperature: 0, modelName: "text-ada-001" });
+  const model = new OpenAI({
+    temperature: 0,
+    modelName: "gpt-3.5-turbo-instruct",
+  });
   const chain = loadQARefineChain(model);
   const docs = [
     new Document({ pageContent: "harrison went to harvard" }),

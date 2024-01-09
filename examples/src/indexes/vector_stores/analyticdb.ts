@@ -1,5 +1,5 @@
 import { AnalyticDBVectorStore } from "@langchain/community/vectorstores/analyticdb";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 
 const connectionOptions = {
   host: process.env.ANALYTICDB_HOST || "localhost",

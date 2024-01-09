@@ -1,9 +1,11 @@
 import { test, expect } from "@jest/globals";
 
-import { AIMessage, HumanMessage, LLMResult } from "../../schema/index.js";
+import { AIMessage, HumanMessage } from "@langchain/core/messages";
+import { LLMResult } from "@langchain/core/outputs";
+import { BaseLLM } from "@langchain/core/language_models/llms";
+
+import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
 import { EntityMemory } from "../entity_memory.js";
-import { BaseLLM } from "../../llms/base.js";
-import { ChatMessageHistory } from "../../stores/message/in_memory.js";
 
 class FakeLLM extends BaseLLM {
   _llmType(): string {

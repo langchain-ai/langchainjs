@@ -8,9 +8,8 @@ import {
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
-import { OpenAIClient } from "@langchain/openai";
+import { OpenAIClient, formatToOpenAITool } from "@langchain/openai";
 import { formatToOpenAIToolMessages } from "../format_scratchpad/openai_tools.js";
-import { formatToOpenAITool } from "../../tools/convert_to_openai.js";
 import {
   OpenAIToolsAgentOutputParser,
   type ToolsAgentStep,

@@ -1,7 +1,7 @@
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanMessage } from "langchain/schema";
+import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import { HumanMessage } from "@langchain/core/messages";
 
 const extractionFunctionSchema = {
   name: "extractor",

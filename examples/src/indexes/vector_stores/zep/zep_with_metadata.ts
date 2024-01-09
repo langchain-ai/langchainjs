@@ -1,7 +1,7 @@
 import { ZepVectorStore } from "@langchain/community/vectorstores/zep";
-import { Document } from "langchain/document";
 import { FakeEmbeddings } from "langchain/embeddings/fake";
 import { randomUUID } from "crypto";
+import { Document } from "@langchain/core/documents";
 
 const docs = [
   new Document({

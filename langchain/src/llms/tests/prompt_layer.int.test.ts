@@ -1,14 +1,14 @@
 import { test, expect } from "@jest/globals";
+import { SystemMessage } from "@langchain/core/messages";
+
 import { PromptLayerOpenAI } from "../openai.js";
 import { PromptLayerOpenAIChat } from "../openai-chat.js";
-
 import { PromptLayerChatOpenAI } from "../../chat_models/openai.js";
-import { SystemMessage } from "../../schema/index.js";
 
 test("Test PromptLayerOpenAI returns promptLayerID if returnPromptLayerId=true", async () => {
   const model = new PromptLayerOpenAI({
     maxTokens: 5,
-    modelName: "text-ada-001",
+    modelName: "gpt-3.5-turbo-instruct",
     returnPromptLayerId: true,
   });
   const res = await model.generate(["Print hello world"]);
@@ -20,7 +20,7 @@ test("Test PromptLayerOpenAI returns promptLayerID if returnPromptLayerId=true",
 
   const modelB = new PromptLayerOpenAI({
     maxTokens: 5,
-    modelName: "text-ada-001",
+    modelName: "gpt-3.5-turbo-instruct",
   });
   const resB = await modelB.generate(["Print hello world"]);
 

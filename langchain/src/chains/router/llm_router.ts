@@ -1,9 +1,9 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
-import { BasePromptTemplate } from "../../prompts/base.js";
+import { ChainValues } from "@langchain/core/utils/types";
+import { BasePromptTemplate } from "@langchain/core/prompts";
+import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { RouterChain } from "./multi_route.js";
-import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
-import { ChainValues } from "../../schema/index.js";
 import { ChainInputs } from "../../chains/base.js";
 
 /**

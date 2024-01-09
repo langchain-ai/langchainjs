@@ -1,6 +1,6 @@
 import type { DocumentInterface } from "@langchain/core/documents";
-import { BaseDocumentTransformer } from "../../schema/document.js";
-import { Callbacks } from "../../callbacks/manager.js";
+import { BaseDocumentTransformer } from "@langchain/core/documents";
+import { Callbacks } from "@langchain/core/callbacks/manager";
 
 /**
  * Base Document Compression class. All compressors should extend this class.

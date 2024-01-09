@@ -1,5 +1,5 @@
+import { PromptTemplate } from "@langchain/core/prompts";
 import { LLMChain, LLMChainInput } from "./llm_chain.js";
-import { PromptTemplate } from "../prompts/prompt.js";
 import { BufferMemory } from "../memory/buffer_memory.js";
 import { Optional } from "../types/type-utils.js";
 

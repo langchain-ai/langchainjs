@@ -62,8 +62,6 @@ export interface LlamaCppCallOptions extends BaseLanguageModelCallOptions {
  * ```
  */
 export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
-  declare CallOptions: LlamaCppCallOptions;
-
   static inputs: LlamaCppInputs;
 
   maxTokens?: number;

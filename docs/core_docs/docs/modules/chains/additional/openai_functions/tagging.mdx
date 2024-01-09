@@ -1,5 +1,6 @@
 ---
 hide_table_of_contents: true
+sidebar_class_name: hidden
 ---
 
 import CodeBlock from "@theme/CodeBlock";
@@ -12,5 +13,13 @@ Must be used with an [OpenAI Functions](https://platform.openai.com/docs/guides/
 :::
 
 This chain is designed to tag an input text according to properties defined in a schema.
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
 
 <CodeBlock language="typescript">{Tagging}</CodeBlock>

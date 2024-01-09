@@ -1,3 +1,7 @@
+---
+sidebar_class_name: hidden
+---
+
 # LLM
 
 An LLMChain is a simple chain that adds some functionality around language models. It is used widely throughout LangChain, including in other chains and agents.
@@ -13,6 +17,14 @@ import ExampleStream from "@examples/chains/llm_chain_stream.ts";
 import ExampleCancellation from "@examples/chains/llm_chain_cancellation.ts";
 
 We can construct an LLMChain which takes user input, formats it with a PromptTemplate, and then passes the formatted response to an LLM:
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
 
 <CodeBlock language="typescript">{ExampleLLM}</CodeBlock>
 

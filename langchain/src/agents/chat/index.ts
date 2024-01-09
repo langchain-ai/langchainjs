@@ -1,12 +1,12 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import type { ToolInterface } from "@langchain/core/tools";
-import { LLMChain } from "../../chains/llm_chain.js";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
-} from "../../prompts/chat.js";
-import { AgentStep } from "../../schema/index.js";
+} from "@langchain/core/prompts";
+import type { AgentStep } from "@langchain/core/agents";
+import { LLMChain } from "../../chains/llm_chain.js";
 import { Optional } from "../../types/type-utils.js";
 import { Agent, AgentArgs, OutputParserArgs } from "../agent.js";
 import { AgentInput } from "../types.js";
@@ -17,6 +17,7 @@ const DEFAULT_HUMAN_MESSAGE_TEMPLATE = "{input}\n\n{agent_scratchpad}";
 
 /**
  * Interface for arguments used to create a chat prompt.
+ * @deprecated
  */
 export interface ChatCreatePromptArgs {
   /** String to put after the list of tools. */
@@ -34,12 +35,16 @@ export interface ChatCreatePromptArgs {
 /**
  * Type for input data for creating a ChatAgent, extending AgentInput with
  * optional 'outputParser'.
+ *
+ * @deprecated
  */
 export type ChatAgentInput = Optional<AgentInput, "outputParser">;
 
 /**
  * Agent for the MRKL chain.
  * @augments Agent
+ *
+ * @deprecated Use the {@link https://api.js.langchain.com/functions/langchain_agents.createStructuredChatAgent.html | createStructuredChatAgent method instead}.
  */
 export class ChatAgent extends Agent {
   static lc_name() {

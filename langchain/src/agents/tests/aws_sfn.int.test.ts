@@ -2,10 +2,10 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { test } from "@jest/globals";
 
-import { StartExecutionAWSSfnTool } from "../../tools/aws_sfn.js";
-
-import { OpenAI } from "../../llms/openai.js";
-import { AWSSfnToolkit, createAWSSfnAgent } from "../toolkits/aws_sfn.js";
+import { OpenAI } from "@langchain/openai";
+import { StartExecutionAWSSfnTool } from "@langchain/community/tools/aws_sfn";
+import { AWSSfnToolkit } from "@langchain/community/agents/toolkits/aws_sfn";
+import { createAWSSfnAgent } from "../toolkits/aws_sfn.js";
 
 test.skip("StartExecutionAWSSfnTool invokes the correct state machine and returns the executionArn", async () => {
   const sfn = new StartExecutionAWSSfnTool({

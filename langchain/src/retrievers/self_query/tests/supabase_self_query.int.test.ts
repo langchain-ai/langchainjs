@@ -1,16 +1,15 @@
 /* eslint-disable no-process-env */
 import { test } from "@jest/globals";
 import { createClient } from "@supabase/supabase-js";
-import { Document } from "../../../document.js";
-import { AttributeInfo } from "../../../schema/query_constructor.js";
-import { OpenAIEmbeddings } from "../../../embeddings/openai.js";
-import { SelfQueryRetriever } from "../index.js";
-import { OpenAI } from "../../../llms/openai.js";
-import { SupabaseTranslator } from "../supabase.js";
+import { Document } from "@langchain/core/documents";
+import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
 import {
   SupabaseFilter,
   SupabaseVectorStore,
-} from "../../../vectorstores/supabase.js";
+} from "@langchain/community/vectorstores/supabase";
+import { AttributeInfo } from "../../../schema/query_constructor.js";
+import { SelfQueryRetriever } from "../index.js";
+import { SupabaseTranslator } from "../supabase.js";
 
 test("Supabase Store Self Query Retriever Test", async () => {
   const docs = [

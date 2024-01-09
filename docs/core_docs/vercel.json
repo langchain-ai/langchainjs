@@ -511,6 +511,10 @@
     {
       "source": "/docs/modules/agents/tools/how_to/dynamic(/?)",
       "destination": "/docs/modules/agents/tools/dynamic/"
+    },
+    {
+      "source": "/docs/modules/chains/foundational/sequential_chains(/?)",
+      "destination": "/docs/expression_language/"
     }
   ]
 }
