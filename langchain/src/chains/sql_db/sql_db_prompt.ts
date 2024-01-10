@@ -124,7 +124,6 @@ Question: {input}`,
   inputVariables: ["dialect", "table_info", "input", "top_k"],
 });
 
-
 export const SQL_ORACLE_PROMPT = /*#__PURE__*/ new PromptTemplate({
   template: `You are a ORACLE expert. Given an input question, first create a syntactically correct ORACLE query to run, then look at the results of the query and return the answer to the input question.
 Unless the user specifies in the question a specific number of examples to obtain, query for at most {top_k} results using the ROWNUM clause as per ORACLE. You can order the results to return the most informative data in the database.

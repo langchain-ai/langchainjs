@@ -219,7 +219,7 @@ export const getTableAndColumnsName = async (
     return formatToSqlTable(repLowerCase);
   }
   if (appDataSource.options.type === "oracle") {
-    const schemaName = appDataSource.options.schema
+    const schemaName = appDataSource.options.schema;
     const sql = `  
       SELECT
           TABLE_NAME AS table_name,
@@ -229,16 +229,18 @@ export const getTableAndColumnsName = async (
       FROM ALL_TAB_COLS
       WHERE
           OWNER = UPPER(${schemaName})`;
-    const rep = await appDataSource.query(sql);
+    const rep: Array<{ [key: string]: string }> = await appDataSource.query(
+      sql
+    );
     const propertiesLower: Array<RawResultTableAndColumn> = [];
-    rep.forEach((item: any) => {
+    rep.forEach((item) => {
       propertiesLower.push({
         table_name: item.TABLE_NAME,
         column_name: item.COLUMN_NAME,
         data_type: item.DATA_TYPE,
         is_nullable: item.IS_NULLABLE,
-      })        
-    })
+      });
+    });
     return formatToSqlTable(propertiesLower);
   }
   throw new Error("Database type not implemented yet");
@@ -288,7 +290,7 @@ export const generateTableInfoFromTables = async (
         appDataSource.options?.username ??
         "public";
     } else if (appDataSource.options.type === "oracle") {
-      schema = appDataSource.options.schema
+      schema = appDataSource.options.schema;
     }
     let sqlCreateTableQuery = schema
       ? `CREATE TABLE "${schema}"."${currentTable.tableName}" (\n`
