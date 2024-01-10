@@ -216,7 +216,7 @@ export interface FunctionDefinition {
    * To describe a function that accepts no parameters, provide the value
    * `{"type": "object", "properties": {}}`.
    */
-  parameters?: Record<string, unknown>;
+  parameters: Record<string, unknown>;
 
   /**
    * A description of what the function does, used by the model to choose when and
