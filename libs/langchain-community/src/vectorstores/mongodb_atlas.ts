@@ -10,13 +10,22 @@ import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 /**
  * Type that defines the arguments required to initialize the
  * MongoDBAtlasVectorSearch class. It includes the MongoDB collection,
- * index name, text key, and embedding key.
+ * index name, text key, embedding key, primary key, and overwrite flag.
+ *
+ * @param collection MongoDB collection to store the vectors.
+ * @param indexName A Collections Index Name.
+ * @param textKey Corresponds to the plaintext of 'pageContent'.
+ * @param embeddingKey Key to store the embedding under.
+ * @param overwrite Whether to update/overwrite existing documents.
+ * @param primaryKey The Key to use for updating/overwriting documents.
  */
 export type MongoDBAtlasVectorSearchLibArgs = {
   readonly collection: Collection<MongoDBDocument>;
   readonly indexName?: string;
   readonly textKey?: string;
   readonly embeddingKey?: string;
+  readonly overwrite?: boolean;
+  readonly primaryKey?: string;
 };
 
 /**
@@ -48,6 +57,10 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
 
   private readonly embeddingKey: string;
 
+  private readonly primaryKey: string;
+
+  private readonly overwrite: boolean;
+
   _vectorstoreType(): string {
     return "mongodb_atlas";
   }
@@ -61,6 +74,8 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     this.indexName = args.indexName ?? "default";
     this.textKey = args.textKey ?? "text";
     this.embeddingKey = args.embeddingKey ?? "embedding";
+    this.primaryKey = args.primaryKey ?? "_id";
+    this.overwrite = args.overwrite ?? false;
   }
 
   /**
@@ -76,7 +91,18 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
       [this.embeddingKey]: embedding,
       ...documents[idx].metadata,
     }));
-    await this.collection.insertMany(docs);
+    if (!this.overwrite) {
+      await this.collection.insertMany(docs);
+    } else {
+      const promises = docs.map((doc) => {
+        return this.collection.updateOne(
+          { [this.primaryKey]: doc[this.primaryKey] },
+          { $set: doc },
+          { upsert: true }
+        );
+      });
+      await Promise.all(promises);
+    }
   }
 
   /**
