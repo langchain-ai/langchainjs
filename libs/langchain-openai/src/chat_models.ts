@@ -597,7 +597,7 @@ export class ChatOpenAI<
           ),
         };
         generation.generationInfo = {
-          ...(part.finish_reason ? { finishReason: part.finish_reason } : {}),
+          ...(part.finish_reason ? { finish_reason: part.finish_reason } : {}),
           ...(part.logprobs ? { logprobs: part.logprobs } : {}),
         };
         generations.push(generation);
