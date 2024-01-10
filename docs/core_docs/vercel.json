@@ -515,6 +515,10 @@
     {
       "source": "/docs/modules/chains/foundational/sequential_chains(/?)",
       "destination": "/docs/expression_language/"
+    },
+    {
+      "source": "/docs/modules/memory/how_to(/.*)?",
+      "destination": "/docs/modules/memory/types$1"
     }
   ]
 }
