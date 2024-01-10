@@ -337,7 +337,7 @@
     "../../libs/langchain-community/src/vectorstores/weaviate.ts",
     "../../libs/langchain-community/src/vectorstores/xata.ts",
     "../../libs/langchain-community/src/vectorstores/zep.ts",
-    "../../libs/langchain-community/src/chat_models/alitongyi.ts",
+    "../../libs/langchain-community/src/chat_models/alibaba_tongyi.ts",
     "../../libs/langchain-community/src/chat_models/baiduwenxin.ts",
     "../../libs/langchain-community/src/chat_models/bedrock/index.ts",
     "../../libs/langchain-community/src/chat_models/bedrock/web.ts",
