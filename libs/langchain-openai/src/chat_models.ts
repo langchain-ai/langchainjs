@@ -596,9 +596,10 @@ export class ChatOpenAI<
             part.message ?? { role: "assistant" }
           ),
         };
-        if (part.finish_reason) {
-          generation.generationInfo = { finish_reason: part.finish_reason };
-        }
+        generation.generationInfo = {
+          ...(part.finish_reason ? { finishReason: part.finish_reason } : {}),
+          ...(part.logprobs ? { logprobs: part.logprobs } : {}),
+        };
         generations.push(generation);
       }
       return {
