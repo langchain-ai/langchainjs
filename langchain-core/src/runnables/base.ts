@@ -104,7 +104,11 @@ export type RunnableRetryFailedAttemptHandler = (error: any) => any;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function _coerceToDict(value: any, defaultKey: string) {
-  return value && !Array.isArray(value) && typeof value === "object"
+  return value &&
+    !Array.isArray(value) &&
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    !(value instanceof Date) &&
+    typeof value === "object"
     ? value
     : { [defaultKey]: value };
 }
