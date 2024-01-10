@@ -108,3 +108,41 @@ export function mergeConfigs<CallOptions extends RunnableConfig>(
   }
   return copy as Partial<CallOptions>;
 }
+
+export function patchConfig<
+  CallOptions extends RunnableConfig = RunnableConfig
+>({
+  config,
+  callbacks,
+  recursionLimit,
+  runName,
+  configurable,
+}: {
+  config?: CallOptions;
+  callbacks?: CallbackManager;
+  recursionLimit?: number;
+  runName?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  configurable?: Record<string, any>;
+}): CallOptions {
+  const newConfig = { ...config };
+  if (callbacks) {
+    newConfig.callbacks = callbacks;
+    if ("runName" in newConfig) {
+      delete newConfig.runName;
+    }
+  }
+  if (recursionLimit) {
+    newConfig.recursionLimit = recursionLimit;
+  }
+  if (runName) {
+    newConfig.runName = runName;
+  }
+  if (configurable) {
+    newConfig.configurable = {
+      ...(newConfig.configurable ? newConfig.configurable : {}),
+      ...configurable,
+    };
+  }
+  return newConfig as CallOptions;
+}
