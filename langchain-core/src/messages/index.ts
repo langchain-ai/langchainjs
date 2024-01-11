@@ -44,18 +44,9 @@ export type MessageContentImageUrl = {
   image_url: string | { url: string; detail?: "auto" | "low" | "high" };
 };
 
-export type MessageContentBlobUrl = {
-  type: "blob_url";
-  blob_url: {
-    url: string;
-    content_type: string;
-  };
-};
-
 export type MessageContentComplex =
   | MessageContentText
-  | MessageContentImageUrl
-  | MessageContentBlobUrl;
+  | MessageContentImageUrl;
 
 export type MessageContent = string | MessageContentComplex[];
 
