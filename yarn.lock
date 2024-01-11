@@ -5999,10 +5999,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@cloudflare/ai@npm:^1.0.47":
+  version: 1.0.47
+  resolution: "@cloudflare/ai@npm:1.0.47"
+  checksum: a9e371f789256bb5795c0cb60d975749b07d6cb50141b997da6b5c94380ddf18e851cba518e246414fcab4239d8f4438c5fe29172e6f06c136be3be19a3b65e0
+  languageName: node
+  linkType: hard
+
 "@cloudflare/workers-types@npm:^4.20230922.0":
   version: 4.20230922.0
   resolution: "@cloudflare/workers-types@npm:4.20230922.0"
   checksum: 629bab47cdbcb74e3c42fc9486f5186734b6dd734154cea7a0983ad83ee053b4fb1ae13ff618a7287612bc3b3d19ad72d6a34a84289a903623cb8a13af57596b
+  languageName: node
+  linkType: hard
+
+"@cloudflare/workers-types@npm:^4.20231218.0":
+  version: 4.20231218.0
+  resolution: "@cloudflare/workers-types@npm:4.20231218.0"
+  checksum: b7e50a76ee8e9d662227bbb74798b93b6102acc224f1071a9c99a9adb419ad0b3bdabf7561e7e1b4a320a6a4616badeecdfb1848fbdaada197c7b37d845b8774
   languageName: node
   linkType: hard
 
@@ -23647,6 +23661,39 @@ __metadata:
   languageName: node
   linkType: hard
 
+"langchain-cloudflare@workspace:libs/langchain-cloudflare":
+  version: 0.0.0-use.local
+  resolution: "langchain-cloudflare@workspace:libs/langchain-cloudflare"
+  dependencies:
+    "@cloudflare/ai": ^1.0.47
+    "@cloudflare/workers-types": ^4.20231218.0
+    "@jest/globals": ^29.5.0
+    "@langchain/core": ~0.1
+    "@swc/core": ^1.3.90
+    "@swc/jest": ^0.2.29
+    "@tsconfig/recommended": ^1.0.3
+    "@types/uuid": ^9
+    "@typescript-eslint/eslint-plugin": ^6.12.0
+    "@typescript-eslint/parser": ^6.12.0
+    dotenv: ^16.3.1
+    dpdm: ^3.12.0
+    eslint: ^8.33.0
+    eslint-config-airbnb-base: ^15.0.0
+    eslint-config-prettier: ^8.6.0
+    eslint-plugin-import: ^2.27.5
+    eslint-plugin-no-instanceof: ^1.0.1
+    eslint-plugin-prettier: ^4.2.1
+    jest: ^29.5.0
+    jest-environment-node: ^29.6.4
+    prettier: ^2.8.3
+    release-it: ^15.10.1
+    rollup: ^4.5.2
+    ts-jest: ^29.1.0
+    typescript: <5.2.0
+    uuid: ^9.0.1
+  languageName: unknown
+  linkType: soft
+
 "langchain@workspace:*, langchain@workspace:langchain":
   version: 0.0.0-use.local
   resolution: "langchain@workspace:langchain"
@@ -32648,6 +32695,15 @@ __metadata:
   bin:
     uuid: dist/bin/uuid
   checksum: 8dd2c83c43ddc7e1c71e36b60aea40030a6505139af6bee0f382ebcd1a56f6cd3028f7f06ffb07f8cf6ced320b76aea275284b224b002b289f89fe89c389b028
+  languageName: node
+  linkType: hard
+
+"uuid@npm:^9.0.1":
+  version: 9.0.1
+  resolution: "uuid@npm:9.0.1"
+  bin:
+    uuid: dist/bin/uuid
+  checksum: 39931f6da74e307f51c0fb463dc2462807531dc80760a9bff1e35af4316131b4fc3203d16da60ae33f07fdca5b56f3f1dd662da0c99fea9aaeab2004780cc5f4
   languageName: node
   linkType: hard
 
