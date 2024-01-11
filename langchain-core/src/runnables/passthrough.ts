@@ -2,9 +2,29 @@ import {
   Runnable,
   RunnableAssign,
   RunnableMap,
-  RunnableMapLike,
+  RunnableMapLike
 } from "./base.js";
 import type { RunnableConfig } from "./config.js";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type RunnablePassthroughFunc<RunInput = any, RunOutput = any> =
+  | ((input: RunInput) => RunOutput)
+  | ((input: RunInput, config?: RunnableConfig) => RunOutput);
+/**
+ * Call function that may optionally accept a config.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function callFuncWithVariableArgs<RunInput = any>({
+  func,
+  input,
+  config
+}: {
+  func: RunnablePassthroughFunc<RunInput>;
+  input: RunInput;
+  config?: RunnableConfig;
+}) {
+  return func(input, config);
+}
 
 /**
  * A runnable to passthrough inputs unchanged or with additional keys.
@@ -44,10 +64,27 @@ export class RunnablePassthrough<RunInput> extends Runnable<
 
   lc_serializable = true;
 
+  func?: RunnablePassthroughFunc<RunInput | AsyncGenerator<RunInput>>;
+
+  constructor(fields?: { func?: RunnablePassthroughFunc<RunInput | AsyncGenerator<RunInput>> }) {
+    super();
+    if (fields) {
+      this.func = fields.func;
+    }
+  }
+
   async invoke(
     input: RunInput,
     options?: Partial<RunnableConfig>
   ): Promise<RunInput> {
+    if (this.func) {
+      return callFuncWithVariableArgs({
+        func: this.func,
+        input,
+        config: options
+      });
+    }
+
     return this._callWithConfig(
       (input: RunInput) => Promise.resolve(input),
       input,
@@ -59,6 +96,14 @@ export class RunnablePassthrough<RunInput> extends Runnable<
     generator: AsyncGenerator<RunInput>,
     options: Partial<RunnableConfig>
   ): AsyncGenerator<RunInput> {
+    if (this.func) {
+      return callFuncWithVariableArgs<AsyncGenerator<RunInput>>({
+        func: this.func,
+        input: generator,
+        config: options
+      });
+    }
+
     return this._transformStreamWithConfig(
       generator,
       (input: AsyncGenerator<RunInput>) => input,
