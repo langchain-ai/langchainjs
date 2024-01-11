@@ -8,10 +8,28 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 import { VIEW_EVENTS_PROMPT } from "../prompts/index.js";
 import { getTimezoneOffsetInHours } from "../utils/get-timezone-offset-in-hours.js";
 
+import { RRuleSet } from "rrule-rust";
+import { DateTime } from "luxon";
+
 type RunViewEventParams = {
   calendarId: string;
   auth: JWT;
   model: BaseLLM;
+};
+
+type calendarItem = {
+  status: string;
+  summary: string;
+  description?: string;
+  recurrence?: string;
+  start: {
+    dateTime: string;
+    timeZone: string;
+  };
+  end: {
+    dateTime: string;
+    timeZone: string;
+  };
 };
 
 const runViewEvents = async (
@@ -50,25 +68,68 @@ const runViewEvents = async (
       ...loaded,
     });
 
-    const curatedItems =
-      response.data && response.data.items
-        ? response.data.items.map(
-            ({
-              status,
-              summary,
-              description,
-              start,
-              end,
-            }: // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            any) => ({
-              status,
-              summary,
-              description,
-              start,
-              end,
-            })
-          )
-        : [];
+    const startFilter = DateTime.fromISO(loaded.time_min)
+      .setZone(loaded.user_timezone)
+      .toJSDate();
+    const endFilter = DateTime.fromISO(loaded.time_max)
+      .setZone(loaded.user_timezone)
+      .toJSDate();
+
+    const curatedItems: calendarItem[] = [];
+
+    if (response.data && response.data.items) {
+      const items = response.data.items as calendarItem[];
+
+      for (const item of items) {
+        if (item.recurrence) {
+          const start = DateTime.fromISO(item.start.dateTime)
+            .setZone(item.start.timeZone)
+            .toJSDate();
+          const end = DateTime.fromISO(item.end.dateTime)
+            .setZone(item.end.timeZone)
+            .toJSDate();
+          const duration = end.getTime() - start.getTime();
+
+          const startRruleSet = new RRuleSet(
+            start.getTime(),
+            item.start.timeZone
+          ).toString();
+          const fullRule = `${startRruleSet.toString()}${item.recurrence}`;
+          const rruleSet = RRuleSet.parse(fullRule);
+          const dates: calendarItem[] = rruleSet
+            .between(startFilter.getTime(), endFilter.getTime())
+            .map((d) => {
+              return {
+                status: item.status,
+                summary: item.summary,
+                description: item.description,
+                start: {
+                  dateTime: DateTime.fromMillis(d + duration)
+                    .setZone(item.start.timeZone)
+                    .toISO(),
+                  timeZone: item.start.timeZone,
+                },
+                end: {
+                  dateTime: DateTime.fromMillis(d + duration)
+                    .setZone(item.start.timeZone)
+                    .toISO(),
+                  timeZone: item.start.timeZone,
+                },
+              } as calendarItem;
+            });
+
+          curatedItems.push(...dates);
+        } else {
+          curatedItems.push({
+            status: item.status,
+            summary: item.summary,
+            description: item.description,
+            start: item.start,
+            end: item.end,
+          } as calendarItem);
+        }
+      }
+    }
 
     return `Result for the prompt "${query}": \n${JSON.stringify(
       curatedItems,

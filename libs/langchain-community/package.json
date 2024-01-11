@@ -88,6 +88,7 @@
     "@types/html-to-text": "^9",
     "@types/jsdom": "^21.1.1",
     "@types/lodash": "^4",
+    "@types/luxon": "^3.4.0",
     "@types/mozilla-readability": "^0.2.1",
     "@types/pg": "^8",
     "@types/pg-copy-streams": "^1.2.2",
@@ -133,6 +134,7 @@
     "llmonitor": "^0.5.9",
     "lodash": "^4.17.21",
     "lunary": "^0.6.11",
+    "luxon": "^3.4.4",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
     "neo4j-driver": "^5.12.0",
@@ -146,6 +148,7 @@
     "release-it": "^15.10.1",
     "replicate": "^0.18.0",
     "rollup": "^3.19.1",
+    "rrule-rust": "^1.2.0",
     "ts-jest": "^29.1.0",
     "typeorm": "^0.3.12",
     "typescript": "~5.1.6",
@@ -192,6 +195,7 @@
     "@tensorflow-models/universal-sentence-encoder": "*",
     "@tensorflow/tfjs-converter": "*",
     "@tensorflow/tfjs-core": "*",
+    "@types/luxon": "^3.4.0",
     "@upstash/redis": "^1.20.6",
     "@vercel/kv": "^0.2.3",
     "@vercel/postgres": "^0.5.0",
@@ -218,6 +222,7 @@
     "llmonitor": "^0.5.9",
     "lodash": "^4.17.21",
     "lunary": "^0.6.11",
+    "luxon": "^3.4.4",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
     "neo4j-driver": "*",
@@ -228,6 +233,7 @@
     "portkey-ai": "^0.1.11",
     "redis": "^4.6.4",
     "replicate": "^0.18.0",
+    "rrule-rust": "^1.2.0",
     "typeorm": "^0.3.12",
     "typesense": "^1.5.3",
     "usearch": "^1.1.1",
@@ -343,6 +349,9 @@
     "@tensorflow/tfjs-core": {
       "optional": true
     },
+    "@types/luxon": {
+      "optional": true
+    },
     "@upstash/redis": {
       "optional": true
     },
@@ -421,6 +430,9 @@
     "lunary": {
       "optional": true
     },
+    "luxon": {
+      "optional": true
+    },
     "mongodb": {
       "optional": true
     },
@@ -449,6 +461,9 @@
       "optional": true
     },
     "replicate": {
+      "optional": true
+    },
+    "rrule-rust": {
       "optional": true
     },
     "typeorm": {
