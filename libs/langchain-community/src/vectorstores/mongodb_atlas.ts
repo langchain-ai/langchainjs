@@ -20,15 +20,13 @@ import {
  * @param indexName A Collections Index Name.
  * @param textKey Corresponds to the plaintext of 'pageContent'.
  * @param embeddingKey Key to store the embedding under.
- * @param overwrite Whether to update/overwrite existing documents.
- * @param primaryKey The Key to use for updating/overwriting documents.
+ * @param primaryKey The Key to use for upserting documents.
  */
 export interface MongoDBAtlasVectorSearchLibArgs extends AsyncCallerParams {
   readonly collection: Collection<MongoDBDocument>;
   readonly indexName?: string;
   readonly textKey?: string;
   readonly embeddingKey?: string;
-  readonly overwrite?: boolean;
   readonly primaryKey?: string;
 }
 
@@ -63,8 +61,6 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
 
   private readonly primaryKey: string;
 
-  private readonly overwrite: boolean;
-
   private caller: AsyncCaller;
 
   _vectorstoreType(): string {
@@ -81,7 +77,6 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     this.textKey = args.textKey ?? "text";
     this.embeddingKey = args.embeddingKey ?? "embedding";
     this.primaryKey = args.primaryKey ?? "_id";
-    this.overwrite = args.overwrite ?? false;
     this.caller = new AsyncCaller(args);
   }
 
@@ -92,25 +87,36 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
    * @param documents Corresponding documents to be added.
    * @returns Promise that resolves when the vectors and documents have been added.
    */
-  async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
+  async addVectors(
+    vectors: number[][],
+    documents: Document[],
+    options?: { ids?: string[] }
+  ) {
     const docs = vectors.map((embedding, idx) => ({
       [this.textKey]: documents[idx].pageContent,
       [this.embeddingKey]: embedding,
       ...documents[idx].metadata,
     }));
-    if (!this.overwrite) {
+    if (options?.ids === undefined) {
       await this.collection.insertMany(docs);
     } else {
+      if (options.ids.length !== vectors.length) {
+        throw new Error(
+          `If provided, "options.ids" must be an array with the same length as "vectors".`
+        );
+      }
+      const { ids } = options;
       for (let i = 0; i < docs.length; i += 1) {
         await this.caller.call(async () => {
           await this.collection.updateOne(
-            { [this.primaryKey]: docs[i][this.primaryKey] },
-            { $set: docs[i] },
+            { [this.primaryKey]: ids[i] },
+            { $set: { [this.primaryKey]: ids[i], ...docs[i] } },
             { upsert: true }
           );
         });
       }
     }
+    return options?.ids ?? docs.map((doc) => doc[this.primaryKey]);
   }
 
   /**
@@ -120,11 +126,12 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
    * @param documents Documents to be added.
    * @returns Promise that resolves when the documents have been added.
    */
-  async addDocuments(documents: Document[]): Promise<void> {
+  async addDocuments(documents: Document[], options?: { ids?: string[] }) {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
-      documents
+      documents,
+      options
     );
   }
 
@@ -263,7 +270,7 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: EmbeddingsInterface,
-    dbConfig: MongoDBAtlasVectorSearchLibArgs
+    dbConfig: MongoDBAtlasVectorSearchLibArgs & { ids?: string[] }
   ): Promise<MongoDBAtlasVectorSearch> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -289,10 +296,10 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: EmbeddingsInterface,
-    dbConfig: MongoDBAtlasVectorSearchLibArgs
+    dbConfig: MongoDBAtlasVectorSearchLibArgs & { ids?: string[] }
   ): Promise<MongoDBAtlasVectorSearch> {
     const instance = new this(embeddings, dbConfig);
-    await instance.addDocuments(docs);
+    await instance.addDocuments(docs, { ids: dbConfig.ids });
     return instance;
   }
 
