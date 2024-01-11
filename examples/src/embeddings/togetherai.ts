@@ -1,4 +1,4 @@
-import { TogetherAIEmbeddings } from "langchain/embeddings/togetherai";
+import { TogetherAIEmbeddings } from "@langchain/community/embeddings/togetherai";
 
 const embeddings = new TogetherAIEmbeddings({
   apiKey: process.env.TOGETHER_AI_API_KEY, // Default value
