@@ -153,8 +153,7 @@ export class CloudflareVectorizeStore extends VectorStore {
 
     if (results.matches) {
       for (const res of results.matches) {
-        const { [this.textKey]: pageContent, ...metadata } =
-          res.metadata ?? {};
+        const { [this.textKey]: pageContent, ...metadata } = res.metadata ?? {};
         result.push([
           new Document({ metadata, pageContent: pageContent as string }),
           res.score,

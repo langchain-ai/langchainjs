@@ -9,6 +9,8 @@ import {
 import { Generation } from "@langchain/core/outputs";
 
 /**
+ * @deprecated Install and import from "@langchain/cloudflare" instead.
+ *
  * Represents a specific implementation of a caching mechanism using Cloudflare KV
  * as the underlying storage system. It extends the `BaseCache` class and
  * overrides its methods to provide the Cloudflare KV-specific logic.
