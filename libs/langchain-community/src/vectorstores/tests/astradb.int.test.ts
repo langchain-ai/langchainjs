@@ -7,8 +7,8 @@ import { OpenAIEmbeddings } from "@langchain/openai";
 import { AstraDBVectorStore, AstraLibArgs } from "../astradb.js";
 
 const clientConfig = {
-  token: process.env.ASTRA_DB_APPLICATION_TOKEN ?? "AstraCS:UtiZALFxZxcQPTeqnSDcTUMd:474d65367195f56f30044274a55a7f0be8229d7c44b1b4146341b692c2925570",
-  endpoint: process.env.ASTRA_DB_ENDPOINT ?? "https://cbfd30a0-243a-4c42-8422-78ce5f4752c9-us-east-2.apps.astra.datastax.com",
+  token: process.env.ASTRA_DB_APPLICATION_TOKEN ?? "dummy",
+  endpoint: process.env.ASTRA_DB_ENDPOINT ?? "dummy",
   namespace: process.env.ASTRA_DB_NAMESPACE ?? "default_keyspace",
 };
 
