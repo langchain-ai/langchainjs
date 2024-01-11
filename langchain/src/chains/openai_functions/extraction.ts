@@ -1,15 +1,14 @@
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
-
-import { PromptTemplate } from "../../prompts/prompt.js";
+import { BaseChatModel } from "@langchain/core/language_models/chat_models";
+import { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
+import { PromptTemplate } from "@langchain/core/prompts";
 import {
   FunctionParameters,
   JsonKeyOutputFunctionsParser,
 } from "../../output_parsers/openai_functions.js";
 import { LLMChain } from "../llm_chain.js";
-import { BaseChatModel } from "../../chat_models/base.js";
-import { BaseFunctionCallOptions } from "../../base_language/index.js";
 
 /**
  * Function that returns an array of extraction functions. These functions

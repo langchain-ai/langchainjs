@@ -1,4 +1,5 @@
 import type { DataSource, DataSourceOptions } from "typeorm";
+import { PromptTemplate } from "@langchain/core/prompts";
 import {
   DEFAULT_SQL_DATABASE_PROMPT,
   SQL_SAP_HANA_PROMPT,
@@ -7,7 +8,6 @@ import {
   SQL_POSTGRES_PROMPT,
   SQL_SQLITE_PROMPT,
 } from "../chains/sql_db/sql_db_prompt.js";
-import { PromptTemplate } from "../prompts/index.js";
 
 interface RawResultTableAndColumn {
   table_name: string;

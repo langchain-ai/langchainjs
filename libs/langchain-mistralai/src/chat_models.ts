@@ -194,8 +194,14 @@ export class ChatMistralAI<
       );
     }
     this.apiKey = apiKey;
-
-    // this.client = new MistralClient(apiKey, fields?.endpoint);
+    this.streaming = fields?.streaming ?? this.streaming;
+    this.endpoint = fields?.endpoint;
+    this.temperature = fields?.temperature ?? this.temperature;
+    this.topP = fields?.topP ?? this.topP;
+    this.maxTokens = fields?.maxTokens ?? this.maxTokens;
+    this.safeMode = fields?.safeMode ?? this.safeMode;
+    this.randomSeed = fields?.randomSeed ?? this.randomSeed;
+    this.modelName = fields?.modelName ?? this.modelName;
   }
 
   _llmType() {

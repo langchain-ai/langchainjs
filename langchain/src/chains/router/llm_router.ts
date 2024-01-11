@@ -1,9 +1,9 @@
-import { BasePromptTemplate } from "../../prompts/base.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import { ChainValues } from "@langchain/core/utils/types";
+import { BasePromptTemplate } from "@langchain/core/prompts";
+import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { RouterChain } from "./multi_route.js";
-import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
-import { ChainValues } from "../../schema/index.js";
-import { BaseLanguageModel } from "../../base_language/index.js";
 import { ChainInputs } from "../../chains/base.js";
 
 /**
@@ -63,7 +63,7 @@ export class LLMRouterChain extends RouterChain implements LLMRouterChainInput {
    * @returns An instance of LLMRouterChain.
    */
   static fromLLM(
-    llm: BaseLanguageModel,
+    llm: BaseLanguageModelInterface,
     prompt: BasePromptTemplate,
     options?: Omit<LLMRouterChainInput, "llmChain">
   ) {

@@ -397,6 +397,9 @@ export interface OptionalImportMap {
   "langchain/retrievers/metal"?:
     | typeof import("../retrievers/metal.js")
     | Promise<typeof import("../retrievers/metal.js")>;
+  "langchain/retrievers/vectara_summary"?:
+    | typeof import("../retrievers/vectara_summary.js")
+    | Promise<typeof import("../retrievers/vectara_summary.js")>;
   "langchain/retrievers/self_query"?:
     | typeof import("../retrievers/self_query/index.js")
     | Promise<typeof import("../retrievers/self_query/index.js")>;
@@ -514,6 +517,9 @@ export interface OptionalImportMap {
   "langchain/experimental/hubs/makersuite/googlemakersuitehub"?:
     | typeof import("../experimental/hubs/makersuite/googlemakersuitehub.js")
     | Promise<typeof import("../experimental/hubs/makersuite/googlemakersuitehub.js")>;
+  "langchain/experimental/prompts/handlebars"?:
+    | typeof import("../experimental/prompts/handlebars.js")
+    | Promise<typeof import("../experimental/prompts/handlebars.js")>;
   "langchain/experimental/tools/pyinterpreter"?:
     | typeof import("../experimental/tools/pyinterpreter.js")
     | Promise<typeof import("../experimental/tools/pyinterpreter.js")>;
@@ -523,6 +529,5 @@ export interface SecretMap {
   ANTHROPIC_API_KEY?: string;
   OPENAI_API_KEY?: string;
   PROMPTLAYER_API_KEY?: string;
-  REMOTE_RETRIEVER_AUTH_BEARER?: string;
   ZAPIER_NLA_API_KEY?: string;
 }

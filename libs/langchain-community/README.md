@@ -8,6 +8,34 @@
 $ yarn add @langchain/community
 ```
 
+This package, along with the main LangChain package, depends on [`@langchain/core`](https://npmjs.com/package/@langchain/core/).
+If you are using this package with other LangChain packages, you should make sure that all of the packages depend on the same instance of @langchain/core.
+You can do so by adding appropriate field to your project's `package.json` like this:
+
+```json
+{
+  "name": "your-project",
+  "version": "0.0.0",
+  "dependencies": {
+    "@langchain/<ADD_PACKAGE_NAME_HERE>": "^0.0.0",
+    "langchain": "0.0.207"
+  },
+  "resolutions": {
+    "@langchain/core": "0.1.5"
+  },
+  "overrides": {
+    "@langchain/core": "0.1.5"
+  },
+  "pnpm": {
+    "overrides": {
+      "@langchain/core": "0.1.5"
+    }
+  }
+}
+```
+
+The field you need depends on the package manager you're using, but we recommend adding a field for the common `yarn`, `npm`, and `pnpm` to maximize compatibility.
+
 ## 🤔 What is this?
 
 LangChain Community contains third-party integrations that implement the base interfaces defined in LangChain Core, making them ready-to-use in any LangChain application.

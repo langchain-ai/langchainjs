@@ -1,7 +1,7 @@
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import { BufferWindowMemory } from "langchain/memory";
 import { LLMChain } from "langchain/chains";
-import { PromptTemplate } from "langchain/prompts";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 export const run = async () => {
   const memory = new BufferWindowMemory({ memoryKey: "chat_history", k: 1 });

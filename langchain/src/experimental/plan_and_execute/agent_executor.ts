@@ -1,3 +1,8 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import { ChainValues } from "@langchain/core/utils/types";
+import { Tool } from "@langchain/core/tools";
+import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
+import { DynamicStructuredTool } from "@langchain/community/tools/dynamic";
 import { BaseChain, ChainInputs } from "../../chains/base.js";
 import {
   BasePlanner,
@@ -12,13 +17,8 @@ import {
   DEFAULT_STEP_EXECUTOR_HUMAN_CHAT_MESSAGE_TEMPLATE,
   getPlannerChatPrompt,
 } from "./prompt.js";
-import { ChainValues } from "../../schema/index.js";
-import { BaseLanguageModel } from "../../base_language/index.js";
-import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { PlanOutputParser } from "./outputParser.js";
-import { Tool } from "../../tools/base.js";
-import { DynamicStructuredTool } from "../../tools/dynamic.js";
 import { ChatAgent } from "../../agents/chat/index.js";
 import { StructuredChatAgent } from "../../agents/index.js";
 import { SerializedLLMChain } from "../../chains/serde.js";
@@ -103,7 +103,7 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
     llm,
     tools,
   }: {
-    llm: BaseLanguageModel;
+    llm: BaseLanguageModelInterface;
     tools: Tool[] | DynamicStructuredTool[];
   }) {
     const plannerLlmChain = new LLMChain({
@@ -127,7 +127,7 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
     tools,
     humanMessageTemplate = DEFAULT_STEP_EXECUTOR_HUMAN_CHAT_MESSAGE_TEMPLATE,
   }: {
-    llm: BaseLanguageModel;
+    llm: BaseLanguageModelInterface;
     tools: Tool[] | DynamicStructuredTool[];
     humanMessageTemplate?: string;
   }) {
@@ -172,7 +172,7 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
     tools,
     humanMessageTemplate,
   }: {
-    llm: BaseLanguageModel;
+    llm: BaseLanguageModelInterface;
     tools: Tool[] | DynamicStructuredTool[];
     humanMessageTemplate?: string;
   } & Omit<PlanAndExecuteAgentExecutorInput, "planner" | "stepExecutor">) {

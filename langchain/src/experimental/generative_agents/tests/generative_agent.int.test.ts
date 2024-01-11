@@ -1,7 +1,6 @@
 import { test } from "@jest/globals";
 
-import { OpenAI } from "../../../llms/openai.js";
-import { OpenAIEmbeddings } from "../../../embeddings/openai.js";
+import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { MemoryVectorStore } from "../../../vectorstores/memory.js";
 import { TimeWeightedVectorStoreRetriever } from "../../../retrievers/time_weighted.js";
 import { GenerativeAgentMemory, GenerativeAgent } from "../index.js";

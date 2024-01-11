@@ -8,7 +8,7 @@ import {
   ClientConfig,
 } from "@zilliz/milvus2-sdk-node";
 
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
@@ -118,7 +118,7 @@ export class Milvus extends VectorStore {
     return "milvus";
   }
 
-  constructor(embeddings: Embeddings, args: MilvusLibArgs) {
+  constructor(embeddings: EmbeddingsInterface, args: MilvusLibArgs) {
     super(embeddings, args);
     this.embeddings = embeddings;
     this.collectionName = args.collectionName ?? genCollectionName();
@@ -463,7 +463,7 @@ export class Milvus extends VectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig?: MilvusLibArgs
   ): Promise<Milvus> {
     const docs: Document[] = [];
@@ -487,20 +487,12 @@ export class Milvus extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig?: MilvusLibArgs
   ): Promise<Milvus> {
     const args: MilvusLibArgs = {
-      collectionName: dbConfig?.collectionName || genCollectionName(),
-      url: dbConfig?.url,
-      ssl: dbConfig?.ssl,
-      username: dbConfig?.username,
-      password: dbConfig?.password,
-      textField: dbConfig?.textField,
-      primaryField: dbConfig?.primaryField,
-      vectorField: dbConfig?.vectorField,
-      clientConfig: dbConfig?.clientConfig,
-      autoId: dbConfig?.autoId,
+      ...dbConfig,
+      collectionName: dbConfig?.collectionName ?? genCollectionName(),
     };
     const instance = new this(embeddings, args);
     await instance.addDocuments(docs);
@@ -515,7 +507,7 @@ export class Milvus extends VectorStore {
    * @returns Promise resolving to a new Milvus instance.
    */
   static async fromExistingCollection(
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: MilvusLibArgs
   ): Promise<Milvus> {
     const instance = new this(embeddings, dbConfig);

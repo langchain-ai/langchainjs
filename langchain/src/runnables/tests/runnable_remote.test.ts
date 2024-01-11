@@ -1,9 +1,9 @@
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { jest, test } from "@jest/globals";
+import { AIMessageChunk } from "@langchain/core/messages";
 
 import { RemoteRunnable } from "../remote.js";
-import { AIMessageChunk } from "../../schema/index.js";
 
 const BASE_URL = "http://my-langserve-endpoint";
 
@@ -119,6 +119,28 @@ describe("RemoteRunnable", () => {
       `${BASE_URL}/a/invoke`,
       expect.objectContaining({
         body: '{"input":{"text":"string"},"config":{},"kwargs":{}}',
+      })
+    );
+    expect(result).toEqual(["a", "b", "c"]);
+  });
+
+  test("Invoke local langserve passing a configurable object", async () => {
+    // mock fetch, expect /invoke
+    const remote = new RemoteRunnable({ url: `${BASE_URL}/a` });
+    const result = await remote.invoke(
+      { text: "string" },
+      {
+        configurable: {
+          destination: "destination",
+          integration_id: "integration_id",
+          user_id: "user_id",
+        },
+      }
+    );
+    expect(fetch).toHaveBeenCalledWith(
+      `${BASE_URL}/a/invoke`,
+      expect.objectContaining({
+        body: '{"input":{"text":"string"},"config":{"configurable":{"destination":"destination","integration_id":"integration_id","user_id":"user_id"}},"kwargs":{}}',
       })
     );
     expect(result).toEqual(["a", "b", "c"]);

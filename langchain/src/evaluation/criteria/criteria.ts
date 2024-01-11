@@ -1,24 +1,23 @@
-import { BaseLLMOutputParser } from "../../schema/output_parser.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
+import { ChainValues } from "@langchain/core/utils/types";
+import { ChatGeneration, Generation, RUN_KEY } from "@langchain/core/outputs";
+import { BasePromptTemplate } from "@langchain/core/prompts";
+import {
+  Callbacks,
+  BaseCallbackConfig,
+} from "@langchain/core/callbacks/manager";
 import {
   eqSet,
   EvalOutputType,
   LLMEvalChainInput,
   LLMStringEvaluator,
   StringEvaluatorArgs,
+  type ExtractLLMCallOptions,
 } from "../base.js";
 
-import {
-  ChainValues,
-  ChatGeneration,
-  Generation,
-  RUN_KEY,
-} from "../../schema/index.js";
 import { CRITERIA_PROMPT, PROMPT_WITH_REFERENCES } from "./prompt.js";
-import { BaseLanguageModel } from "../../base_language/index.js";
-import { Callbacks } from "../../callbacks/index.js";
-import { BaseCallbackConfig } from "../../callbacks/manager.js";
-import { BasePromptTemplate } from "../../prompts/index.js";
-import { ConstitutionalPrinciple } from "../../chains/index.js";
+import { ConstitutionalPrinciple } from "../../chains/constitutional_ai/constitutional_principle.js";
 
 /**
  * A Criteria to evaluate.
@@ -208,7 +207,7 @@ export class CriteriaEvalChain extends LLMStringEvaluator {
    * @param chainOptions Options to pass to the constructor of the LLMChain.
    */
   static async fromLLM(
-    llm: BaseLanguageModel,
+    llm: BaseLanguageModelInterface,
     criteria?: CriteriaLike,
     chainOptions?: Partial<Omit<LLMEvalChainInput, "llm">>
   ) {
@@ -272,7 +271,7 @@ export class CriteriaEvalChain extends LLMStringEvaluator {
 
   async _evaluateStrings(
     args: StringEvaluatorArgs,
-    callOptions: this["llm"]["CallOptions"],
+    callOptions: ExtractLLMCallOptions<this["llm"]>,
     config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues> {
     const result = await this.call(

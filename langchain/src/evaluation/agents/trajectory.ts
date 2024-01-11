@@ -1,24 +1,23 @@
-import { BaseLLMOutputParser } from "../../schema/output_parser.js";
+import type { StructuredToolInterface } from "@langchain/core/tools";
+import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
+
+import { AgentStep } from "@langchain/core/agents";
+import { ChainValues } from "@langchain/core/utils/types";
+import { ChatGeneration, Generation, RUN_KEY } from "@langchain/core/outputs";
+import { BasePromptTemplate } from "@langchain/core/prompts";
+import {
+  Callbacks,
+  BaseCallbackConfig,
+} from "@langchain/core/callbacks/manager";
+import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import {
   AgentTrajectoryEvaluator,
   EvalOutputType,
   LLMEvalChainInput,
   LLMTrajectoryEvaluatorArgs,
+  type ExtractLLMCallOptions,
 } from "../base.js";
-
-import {
-  AgentStep,
-  ChainValues,
-  ChatGeneration,
-  Generation,
-  RUN_KEY,
-} from "../../schema/index.js";
-import { Callbacks } from "../../callbacks/index.js";
-import { BaseCallbackConfig } from "../../callbacks/manager.js";
-import { BasePromptTemplate } from "../../prompts/index.js";
-import { StructuredTool } from "../../tools/index.js";
 import { EVAL_CHAT_PROMPT, TOOL_FREE_EVAL_CHAT_PROMPT } from "./prompt.js";
-import { BaseChatModel } from "../../chat_models/base.js";
 
 /**
  * A parser for the output of the TrajectoryEvalChain.
@@ -94,7 +93,7 @@ export class TrajectoryEvalChain extends AgentTrajectoryEvaluator {
 
   static resolveTrajectoryPrompt(
     prompt?: BasePromptTemplate | undefined,
-    agentTools?: StructuredTool[]
+    agentTools?: StructuredToolInterface[]
   ) {
     let _prompt;
     if (prompt) {
@@ -113,7 +112,7 @@ export class TrajectoryEvalChain extends AgentTrajectoryEvaluator {
    *
    * @returns The description of the agent tools.
    */
-  static toolsDescription(agentTools: StructuredTool[]): string {
+  static toolsDescription(agentTools: StructuredToolInterface[]): string {
     return agentTools
       .map(
         (tool, i) =>
@@ -130,7 +129,7 @@ export class TrajectoryEvalChain extends AgentTrajectoryEvaluator {
    */
   static async fromLLM(
     llm: BaseChatModel,
-    agentTools?: StructuredTool[],
+    agentTools?: StructuredToolInterface[],
     chainOptions?: Partial<Omit<LLMEvalChainInput, "llm">>
   ) {
     let prompt = this.resolveTrajectoryPrompt(chainOptions?.prompt, agentTools);
@@ -195,7 +194,7 @@ ${reference}
 
   async _evaluateAgentTrajectory(
     args: LLMTrajectoryEvaluatorArgs,
-    callOptions: this["llm"]["CallOptions"],
+    callOptions: ExtractLLMCallOptions<this["llm"]>,
     config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues> {
     const { input, prediction, reference, agentTrajectory } = args;

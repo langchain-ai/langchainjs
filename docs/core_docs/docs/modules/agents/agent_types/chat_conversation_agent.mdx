@@ -1,6 +1,7 @@
 ---
 hide_table_of_contents: true
 sidebar_position: 3
+sidebar_class_name: hidden
 ---
 
 # Conversational
@@ -14,6 +15,14 @@ This walkthrough demonstrates how to use an agent optimized for conversation. Ot
 This example shows how to construct an agent using LCEL. Constructing agents this way allows for customization beyond what previous methods like using `initializeAgentExecutorWithOptions` allow.
 
 # Using LCEL
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
 
 <CodeBlock language="typescript">{RunnableExample}</CodeBlock>
 

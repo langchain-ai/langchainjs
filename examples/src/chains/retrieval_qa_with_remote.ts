@@ -1,4 +1,4 @@
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import { RetrievalQAChain } from "langchain/chains";
 import { RemoteLangChainRetriever } from "langchain/retrievers/remote";
 

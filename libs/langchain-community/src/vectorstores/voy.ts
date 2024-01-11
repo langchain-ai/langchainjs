@@ -1,5 +1,5 @@
 import type { Voy as VoyOriginClient, SearchResult } from "voy-search";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 
@@ -31,7 +31,7 @@ export class VoyVectorStore extends VectorStore {
     return "voi";
   }
 
-  constructor(client: VoyClient, embeddings: Embeddings) {
+  constructor(client: VoyClient, embeddings: EmbeddingsInterface) {
     super(embeddings, {});
     this.client = client;
     this.embeddings = embeddings;
@@ -156,7 +156,7 @@ export class VoyVectorStore extends VectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     client: VoyClient
   ): Promise<VoyVectorStore> {
     const docs: Document[] = [];
@@ -181,7 +181,7 @@ export class VoyVectorStore extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     client: VoyClient
   ): Promise<VoyVectorStore> {
     const instance = new VoyVectorStore(client, embeddings);

@@ -1,4 +1,3 @@
-import { BaseCallbackConfig } from "../callbacks/manager.js";
 import {
   BaseChatMessageHistory,
   BaseListChatMessageHistory,
@@ -28,10 +27,7 @@ type GetSessionHistoryCallable = (
   | BaseListChatMessageHistory;
 
 export interface RunnableWithMessageHistoryInputs<RunInput, RunOutput>
-  extends Omit<
-    RunnableBindingArgs<RunInput, RunOutput, BaseCallbackConfig>,
-    "bound" | "config"
-  > {
+  extends Omit<RunnableBindingArgs<RunInput, RunOutput>, "bound" | "config"> {
   runnable: Runnable<RunInput, RunOutput>;
   getMessageHistory: GetSessionHistoryCallable;
   inputMessagesKey?: string;
@@ -40,10 +36,74 @@ export interface RunnableWithMessageHistoryInputs<RunInput, RunOutput>
   config?: RunnableConfig;
 }
 
+/**
+ * Wraps a LCEL chain and manages history. It appends input messages
+ * and chain outputs as history, and adds the current history messages to
+ * the chain input.
+ * @example
+ * ```typescript
+ * // yarn add @langchain/anthropic @langchain/community @upstash/redis
+ *
+ * import {
+ *   ChatPromptTemplate,
+ *   MessagesPlaceholder,
+ * } from "@langchain/core/prompts";
+ * import { ChatAnthropic } from "@langchain/anthropic";
+ * import { UpstashRedisChatMessageHistory } from "@langchain/community/stores/message/upstash_redis";
+ * // For demos, you can also use an in-memory store:
+ * // import { ChatMessageHistory } from "langchain/stores/message/in_memory";
+ *
+ * const prompt = ChatPromptTemplate.fromMessages([
+ *   ["system", "You're an assistant who's good at {ability}"],
+ *   new MessagesPlaceholder("history"),
+ *   ["human", "{question}"],
+ * ]);
+ *
+ * const chain = prompt.pipe(new ChatAnthropic({}));
+ *
+ * const chainWithHistory = new RunnableWithMessageHistory({
+ *   runnable: chain,
+ *   getMessageHistory: (sessionId) =>
+ *     new UpstashRedisChatMessageHistory({
+ *       sessionId,
+ *       config: {
+ *         url: process.env.UPSTASH_REDIS_REST_URL!,
+ *         token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+ *       },
+ *     }),
+ *   inputMessagesKey: "question",
+ *   historyMessagesKey: "history",
+ * });
+ *
+ * const result = await chainWithHistory.invoke(
+ *   {
+ *     ability: "math",
+ *     question: "What does cosine mean?",
+ *   },
+ *   {
+ *     configurable: {
+ *       sessionId: "some_string_identifying_a_user",
+ *     },
+ *   }
+ * );
+ *
+ * const result2 = await chainWithHistory.invoke(
+ *   {
+ *     ability: "math",
+ *     question: "What's its inverse?",
+ *   },
+ *   {
+ *     configurable: {
+ *       sessionId: "some_string_identifying_a_user",
+ *     },
+ *   }
+ * );
+ * ```
+ */
 export class RunnableWithMessageHistory<
   RunInput,
   RunOutput
-> extends RunnableBinding<RunInput, RunOutput, BaseCallbackConfig> {
+> extends RunnableBinding<RunInput, RunOutput> {
   runnable: Runnable<RunInput, RunOutput>;
 
   inputMessagesKey?: string;
@@ -129,21 +189,21 @@ export class RunnableWithMessageHistory<
     );
   }
 
-  _enterHistory(
+  async _enterHistory(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     input: any,
     kwargs?: { config?: RunnableConfig }
-  ): Array<BaseMessage> {
+  ): Promise<BaseMessage[]> {
     const history = kwargs?.config?.configurable?.messageHistory;
 
     if (this.historyMessagesKey) {
-      return history.messages;
+      return history.getMessages();
     }
 
     const inputVal =
       input ||
       (this.inputMessagesKey ? input[this.inputMessagesKey] : undefined);
-    const historyMessages = history ? history.messages : [];
+    const historyMessages = history ? await history.getMessages() : [];
     const returnType = [
       ...historyMessages,
       ...this._getInputMessages(inputVal),
@@ -151,7 +211,7 @@ export class RunnableWithMessageHistory<
     return returnType;
   }
 
-  async _exitHistory(run: Run, config: BaseCallbackConfig): Promise<void> {
+  async _exitHistory(run: Run, config: RunnableConfig): Promise<void> {
     const history = config.configurable?.messageHistory;
 
     // Get input messages
@@ -176,7 +236,7 @@ export class RunnableWithMessageHistory<
     }
   }
 
-  async _mergeConfig(...configs: Array<BaseCallbackConfig | undefined>) {
+  async _mergeConfig(...configs: Array<RunnableConfig | undefined>) {
     const config = await super._mergeConfig(...configs);
     // Extract sessionId
     if (!config.configurable || !config.configurable.sessionId) {

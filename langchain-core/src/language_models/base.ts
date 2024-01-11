@@ -2,7 +2,7 @@ import type { Tiktoken, TiktokenModel } from "js-tiktoken/lite";
 
 import { type BaseCache, InMemoryCache } from "../caches.js";
 import {
-  type BasePromptValue,
+  type BasePromptValueInterface,
   StringPromptValue,
   ChatPromptValue,
 } from "../prompt_values.js";
@@ -20,7 +20,7 @@ import {
 } from "../callbacks/manager.js";
 import { AsyncCaller, AsyncCallerParams } from "../utils/async_caller.js";
 import { encodingForModel } from "../utils/tiktoken.js";
-import { Runnable } from "../runnables/base.js";
+import { Runnable, type RunnableInterface } from "../runnables/base.js";
 import { RunnableConfig } from "../runnables/config.js";
 
 // https://www.npmjs.com/package/js-tiktoken
@@ -235,9 +235,62 @@ export interface BaseFunctionCallOptions extends BaseLanguageModelCallOptions {
 }
 
 export type BaseLanguageModelInput =
-  | BasePromptValue
+  | BasePromptValueInterface
   | string
   | BaseMessageLike[];
+
+export interface BaseLanguageModelInterface<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput = any,
+  CallOptions extends BaseLanguageModelCallOptions = BaseLanguageModelCallOptions
+> extends RunnableInterface<BaseLanguageModelInput, RunOutput, CallOptions> {
+  get callKeys(): string[];
+
+  generatePrompt(
+    promptValues: BasePromptValueInterface[],
+    options?: string[] | CallOptions,
+    callbacks?: Callbacks
+  ): Promise<LLMResult>;
+
+  /**
+   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
+   */
+  predict(
+    text: string,
+    options?: string[] | CallOptions,
+    callbacks?: Callbacks
+  ): Promise<string>;
+
+  /**
+   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
+   */
+  predictMessages(
+    messages: BaseMessage[],
+    options?: string[] | CallOptions,
+    callbacks?: Callbacks
+  ): Promise<BaseMessage>;
+
+  _modelType(): string;
+
+  _llmType(): string;
+
+  getNumTokens(content: MessageContent): Promise<number>;
+
+  /**
+   * Get the identifying parameters of the LLM.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  _identifyingParams(): Record<string, any>;
+
+  serialize(): SerializedLLM;
+}
+
+export type LanguageModelOutput = BaseMessage | string;
+
+export type LanguageModelLike = Runnable<
+  BaseLanguageModelInput,
+  LanguageModelOutput
+>;
 
 /**
  * Base class for language models.
@@ -248,10 +301,10 @@ export abstract class BaseLanguageModel<
     CallOptions extends BaseLanguageModelCallOptions = BaseLanguageModelCallOptions
   >
   extends BaseLangChain<BaseLanguageModelInput, RunOutput, CallOptions>
-  implements BaseLanguageModelParams
+  implements
+    BaseLanguageModelParams,
+    BaseLanguageModelInterface<RunOutput, CallOptions>
 {
-  declare CallOptions: CallOptions;
-
   /**
    * Keys that the language model accepts as call options.
    */
@@ -287,17 +340,23 @@ export abstract class BaseLanguageModel<
   }
 
   abstract generatePrompt(
-    promptValues: BasePromptValue[],
+    promptValues: BasePromptValueInterface[],
     options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<LLMResult>;
 
+  /**
+   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
+   */
   abstract predict(
     text: string,
     options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<string>;
 
+  /**
+   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
+   */
   abstract predictMessages(
     messages: BaseMessage[],
     options?: string[] | CallOptions,
@@ -349,7 +408,7 @@ export abstract class BaseLanguageModel<
 
   protected static _convertInputToPromptValue(
     input: BaseLanguageModelInput
-  ): BasePromptValue {
+  ): BasePromptValueInterface {
     if (typeof input === "string") {
       return new StringPromptValue(input);
     } else if (Array.isArray(input)) {
@@ -411,4 +470,14 @@ export abstract class BaseLanguageModel<
   static async deserialize(_data: SerializedLLM): Promise<BaseLanguageModel> {
     throw new Error("Use .toJSON() instead");
   }
+}
+
+/**
+ * Shared interface for token usage
+ * return type from LLM calls.
+ */
+export interface TokenUsage {
+  completionTokens?: number;
+  promptTokens?: number;
+  totalTokens?: number;
 }

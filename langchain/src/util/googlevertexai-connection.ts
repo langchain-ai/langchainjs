@@ -1,5 +1,9 @@
-import { BaseLanguageModelCallOptions } from "../base_language/index.js";
-import { AsyncCaller, AsyncCallerCallOptions } from "./async_caller.js";
+import { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
+import { GenerationChunk } from "@langchain/core/outputs";
+import {
+  AsyncCaller,
+  AsyncCallerCallOptions,
+} from "@langchain/core/utils/async_caller";
 import type {
   GoogleVertexAIBaseLLMInput,
   GoogleVertexAIBasePrediction,
@@ -11,7 +15,6 @@ import type {
   GoogleAbstractedClientOps,
   GoogleAbstractedClientOpsMethod,
 } from "../types/googlevertexai-types.js";
-import { GenerationChunk } from "../schema/index.js";
 
 export abstract class GoogleConnection<
   CallOptions extends AsyncCallerCallOptions,

@@ -1,11 +1,13 @@
 import type { D1Database } from "@cloudflare/workers-types";
-
 import { BufferMemory } from "langchain/memory";
-import { CloudflareD1MessageHistory } from "langchain/stores/message/cloudflare_d1";
-import { ChatAnthropic } from "langchain/chat_models/anthropic";
-import { ChatPromptTemplate, MessagesPlaceholder } from "langchain/prompts";
-import { RunnableSequence } from "langchain/schema/runnable";
-import { StringOutputParser } from "langchain/schema/output_parser";
+import { CloudflareD1MessageHistory } from "@langchain/community/stores/message/cloudflare_d1";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { ChatAnthropic } from "@langchain/anthropic";
 
 export interface Env {
   DB: D1Database;

@@ -1,13 +1,16 @@
+import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { GenerationChunk } from "@langchain/core/outputs";
 import type { StringWithAutocomplete } from "@langchain/core/utils/types";
 import { LLM, type BaseLLMParams } from "@langchain/core/language_models/llms";
 
-import {
-  createOllamaStream,
-  OllamaInput,
-  OllamaCallOptions,
-} from "../utils/ollama.js";
+import { createOllamaGenerateStream, OllamaInput } from "../utils/ollama.js";
+
+export { type OllamaInput };
+
+export interface OllamaCallOptions extends BaseLanguageModelCallOptions {
+  images?: string[];
+}
 
 /**
  * Class that represents the Ollama language model. It extends the base
@@ -71,6 +74,8 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
 
   numKeep?: number;
 
+  numPredict?: number;
+
   numThread?: number;
 
   penalizeNewline?: boolean;
@@ -126,6 +131,7 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
     this.numGpu = fields.numGpu;
     this.numGqa = fields.numGqa;
     this.numKeep = fields.numKeep;
+    this.numPredict = fields.numPredict;
     this.numThread = fields.numThread;
     this.penalizeNewline = fields.penalizeNewline;
     this.presencePenalty = fields.presencePenalty;
@@ -153,6 +159,7 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
     return {
       model: this.model,
       format: this.format,
+      images: options?.images,
       options: {
         embedding_only: this.embeddingOnly,
         f16_kv: this.f16KV,
@@ -168,6 +175,7 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
         num_gpu: this.numGpu,
         num_gqa: this.numGqa,
         num_keep: this.numKeep,
+        num_predict: this.numPredict,
         num_thread: this.numThread,
         penalize_newline: this.penalizeNewline,
         presence_penalty: this.presencePenalty,
@@ -194,7 +202,7 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<GenerationChunk> {
     const stream = await this.caller.call(async () =>
-      createOllamaStream(
+      createOllamaGenerateStream(
         this.baseUrl,
         { ...this.invocationParams(options), prompt },
         options

@@ -1,12 +1,14 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import {
+  BaseChatMemory,
+  BaseChatMemoryInput,
+} from "@langchain/community/memory/chat_memory";
 import {
   InputValues,
   MemoryVariables,
-  getBufferString,
   OutputValues,
-} from "./base.js";
-
-import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
-import { BaseLanguageModel } from "../base_language/index.js";
+} from "@langchain/core/memory";
+import { getBufferString } from "@langchain/core/messages";
 
 /**
  * Interface for the input parameters of the `BufferTokenMemory` class.
@@ -21,7 +23,7 @@ export interface ConversationTokenBufferMemoryInput
   aiPrefix?: string;
 
   /* The LLM for this instance. */
-  llm: BaseLanguageModel;
+  llm: BaseLanguageModelInterface;
 
   /* Memory key for buffer instance. */
   memoryKey?: string;
@@ -63,7 +65,7 @@ export class ConversationTokenBufferMemory
 
   maxTokenLimit = 2000; // Default max token limit of 2000 which can be overridden
 
-  llm: BaseLanguageModel;
+  llm: BaseLanguageModelInterface;
 
   constructor(fields: ConversationTokenBufferMemoryInput) {
     super(fields);

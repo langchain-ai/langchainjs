@@ -1,10 +1,13 @@
 import {
+  BaseChatMemory,
+  BaseChatMemoryInput,
+} from "@langchain/community/memory/chat_memory";
+import {
   InputValues,
   MemoryVariables,
   BaseMemory,
   OutputValues,
-} from "./base.js";
-import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
+} from "@langchain/core/memory";
 
 /**
  * Interface that defines the shape of the input object that the

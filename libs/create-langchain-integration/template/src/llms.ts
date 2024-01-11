@@ -37,6 +37,23 @@ export class LLMIntegration
   }
 
   /**
+   * Replace with any secrets this class passes to `super`.
+   * See {@link ../../langchain-cohere/src/chat_model.ts} for
+   * an example.
+   */
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      apiKey: "API_KEY_NAME",
+    };
+  }
+
+  get lc_aliases(): { [key: string]: string } | undefined {
+    return {
+      apiKey: "API_KEY_NAME",
+    };
+  }
+
+  /**
    * For some given input string and options, return a string output.
    */
   async _call(

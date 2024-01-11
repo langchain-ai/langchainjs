@@ -1,7 +1,6 @@
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { RetrievalQAChain } from "langchain/chains";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { TokenTextSplitter } from "langchain/text_splitter";
 import { SearchApiLoader } from "langchain/document_loaders/web/searchapi";
 

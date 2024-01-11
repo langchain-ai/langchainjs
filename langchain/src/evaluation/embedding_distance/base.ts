@@ -1,18 +1,18 @@
 import { distance, similarity } from "ml-distance";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
+import { ChainValues } from "@langchain/core/utils/types";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import {
+  CallbackManagerForChainRun,
+  Callbacks,
+  BaseCallbackConfig,
+} from "@langchain/core/callbacks/manager";
 import {
   PairwiseStringEvaluator,
   PairwiseStringEvaluatorArgs,
   StringEvaluator,
   StringEvaluatorArgs,
 } from "../base.js";
-import { ChainValues } from "../../schema/index.js";
-import { OpenAIEmbeddings } from "../../embeddings/openai.js";
-import {
-  CallbackManagerForChainRun,
-  Callbacks,
-} from "../../callbacks/index.js";
-import { BaseCallbackConfig } from "../../callbacks/manager.js";
-import { Embeddings } from "../../embeddings/base.js";
 
 /**
  *
@@ -37,7 +37,7 @@ export interface EmbeddingDistanceEvalChainInput {
   /**
    * The embedding objects to vectorize the outputs.
    */
-  embedding?: Embeddings;
+  embedding?: EmbeddingsInterface;
 
   /**
    * The distance metric to use
@@ -95,7 +95,7 @@ export class EmbeddingDistanceEvalChain
 
   outputKey = "score";
 
-  embedding?: Embeddings;
+  embedding?: EmbeddingsInterface;
 
   distanceMetric: EmbeddingDistanceType = "cosine";
 
@@ -158,7 +158,7 @@ export class PairwiseEmbeddingDistanceEvalChain
 
   outputKey = "score";
 
-  embedding?: Embeddings;
+  embedding?: EmbeddingsInterface;
 
   distanceMetric: EmbeddingDistanceType = "cosine";
 

@@ -1,6 +1,6 @@
-import { ChatOpenAI } from "../../../chat_models/openai.js";
+import { StructuredToolInterface } from "@langchain/core/tools";
+import { ChatOpenAI } from "@langchain/openai";
 import { ConversationSummaryBufferMemory } from "../../../memory/summary_buffer.js";
-import { StructuredTool } from "../../../tools/base.js";
 import { initializeAgentExecutorWithOptions } from "../../initialize.js";
 import { OpenAIAgentTokenBufferMemory } from "./token_buffer_memory.js";
 
@@ -24,7 +24,7 @@ export type ConversationalRetrievalAgentOptions = {
  */
 export async function createConversationalRetrievalAgent(
   llm: ChatOpenAI,
-  tools: StructuredTool[],
+  tools: StructuredToolInterface[],
   options?: ConversationalRetrievalAgentOptions
 ) {
   const {

@@ -1,20 +1,20 @@
-import { Document } from "../document.js";
-import { formatDocumentsAsString } from "../util/document.js";
-import { VectorStoreRetriever } from "../vectorstores/base.js";
+import type { VectorStoreRetrieverInterface } from "@langchain/core/vectorstores";
+import { Document } from "@langchain/core/documents";
 import {
   BaseMemory,
   getInputValue,
   InputValues,
   MemoryVariables,
   OutputValues,
-} from "./base.js";
+} from "@langchain/core/memory";
+import { formatDocumentsAsString } from "../util/document.js";
 
 /**
  * Interface for the parameters required to initialize a
  * VectorStoreRetrieverMemory instance.
  */
 export interface VectorStoreRetrieverMemoryParams {
-  vectorStoreRetriever: VectorStoreRetriever;
+  vectorStoreRetriever: VectorStoreRetrieverInterface;
   inputKey?: string;
   outputKey?: string;
   memoryKey?: string;
@@ -56,7 +56,7 @@ export class VectorStoreRetrieverMemory
   extends BaseMemory
   implements VectorStoreRetrieverMemoryParams
 {
-  vectorStoreRetriever: VectorStoreRetriever;
+  vectorStoreRetriever: VectorStoreRetrieverInterface;
 
   inputKey?: string;
 

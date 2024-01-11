@@ -1,11 +1,14 @@
-import { Runnable, RunnableBatchOptions } from "../schema/runnable/index.js";
-import { RunnableConfig } from "../schema/runnable/config.js";
 import {
-  BaseCallbackConfig,
-  CallbackManagerForChainRun,
-} from "../callbacks/manager.js";
-import { getBytes, getLines, getMessages } from "../util/event-source-parse.js";
-import { Document } from "../document.js";
+  Runnable,
+  RunnableBatchOptions,
+  RunnableConfig,
+} from "@langchain/core/runnables";
+import { Document } from "@langchain/core/documents";
+import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
+import {
+  ChatPromptValue,
+  StringPromptValue,
+} from "@langchain/core/prompt_values";
 import {
   AIMessage,
   AIMessageChunk,
@@ -19,10 +22,13 @@ import {
   SystemMessageChunk,
   ToolMessage,
   ToolMessageChunk,
-} from "../schema/index.js";
-import { StringPromptValue } from "../prompts/base.js";
-import { ChatPromptValue } from "../prompts/chat.js";
-import { IterableReadableStream } from "../util/stream.js";
+} from "@langchain/core/messages";
+import {
+  getBytes,
+  getLines,
+  getMessages,
+} from "@langchain/community/utils/event_source_parse";
+import { IterableReadableStream } from "@langchain/core/utils/stream";
 
 type RemoteRunnableOptions = {
   timeout?: number;
@@ -190,7 +196,7 @@ export class RemoteRunnable<
     const response = await this.post<{
       input: RunInput;
       config?: RunnableConfig;
-      kwargs?: Omit<Partial<CallOptions>, keyof BaseCallbackConfig>;
+      kwargs?: Omit<Partial<CallOptions>, keyof RunnableConfig>;
     }>("/invoke", {
       input,
       config: removeCallbacks(config),
@@ -218,17 +224,17 @@ export class RemoteRunnable<
           [...pk, k],
         ] as [
           RunnableConfig[],
-          Omit<Partial<CallOptions>, keyof BaseCallbackConfig>[]
+          Omit<Partial<CallOptions>, keyof RunnableConfig>[]
         ],
       [[], []] as [
         RunnableConfig[],
-        Omit<Partial<CallOptions>, keyof BaseCallbackConfig>[]
+        Omit<Partial<CallOptions>, keyof RunnableConfig>[]
       ]
     ) ?? [undefined, undefined];
     const response = await this.post<{
       inputs: RunInput[];
       config?: (RunnableConfig & RunnableBatchOptions)[];
-      kwargs?: Omit<Partial<CallOptions>, keyof BaseCallbackConfig>[];
+      kwargs?: Omit<Partial<CallOptions>, keyof RunnableConfig>[];
     }>("/batch", {
       inputs,
       config: (configs ?? [])
@@ -286,7 +292,7 @@ export class RemoteRunnable<
     const response = await this.post<{
       input: RunInput;
       config?: RunnableConfig;
-      kwargs?: Omit<Partial<CallOptions>, keyof BaseCallbackConfig>;
+      kwargs?: Omit<Partial<CallOptions>, keyof RunnableConfig>;
     }>("/stream", {
       input,
       config,

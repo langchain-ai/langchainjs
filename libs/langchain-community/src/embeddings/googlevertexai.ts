@@ -1,13 +1,13 @@
 import { GoogleAuth, GoogleAuthOptions } from "google-auth-library";
 import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
 import { AsyncCallerCallOptions } from "@langchain/core/utils/async_caller";
+import { chunkArray } from "@langchain/core/utils/chunk_array";
 import {
   GoogleVertexAIBasePrediction,
   GoogleVertexAIBaseLLMInput,
   GoogleVertexAILLMPredictions,
 } from "../types/googlevertexai-types.js";
 import { GoogleVertexAILLMConnection } from "../utils/googlevertexai-connection.js";
-import { chunkArray } from "../utils/chunk.js";
 
 /**
  * Defines the parameters required to initialize a

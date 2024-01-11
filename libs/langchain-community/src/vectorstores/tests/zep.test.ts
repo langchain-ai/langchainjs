@@ -8,7 +8,7 @@ import {
   NotFoundError,
   ZepClient,
 } from "@getzep/zep-js";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
 import { IZepConfig, ZepVectorStore } from "../zep.js";
 import { FakeEmbeddings } from "../../utils/testing.js";
@@ -68,7 +68,7 @@ function isADocument(obj: any): obj is IDocument {
 
 describe("ZepVectorStore", () => {
   let zepConfig: IZepConfig;
-  let embeddings: Embeddings;
+  let embeddings: EmbeddingsInterface;
 
   beforeEach(() => {
     zepConfig = {
@@ -180,7 +180,7 @@ describe("ZepVectorStore", () => {
         const zepVectorStore = await originalFromDocuments.call(
           ZepVectorStore,
           docs as Document[],
-          embeddings as Embeddings,
+          embeddings as EmbeddingsInterface,
           zepConfig as IZepConfig
         );
         (zepVectorStore as any).collection = mockCollection;

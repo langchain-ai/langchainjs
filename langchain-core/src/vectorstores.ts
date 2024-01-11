@@ -1,6 +1,10 @@
-import type { Embeddings } from "./embeddings.js";
-import type { Document } from "./documents/document.js";
-import { BaseRetriever, BaseRetrieverInput } from "./retrievers.js";
+import type { EmbeddingsInterface } from "./embeddings.js";
+import type { DocumentInterface } from "./documents/document.js";
+import {
+  BaseRetriever,
+  BaseRetrieverInterface,
+  type BaseRetrieverInput,
+} from "./retrievers.js";
 import { Serializable } from "./load/serializable.js";
 import {
   CallbackManagerForRetrieverRun,
@@ -35,7 +39,7 @@ export type VectorStoreRetrieverMMRSearchKwargs = {
 /**
  * Type for input when creating a VectorStoreRetriever instance.
  */
-export type VectorStoreRetrieverInput<V extends VectorStore> =
+export type VectorStoreRetrieverInput<V extends VectorStoreInterface> =
   BaseRetrieverInput &
     (
       | {
@@ -53,13 +57,27 @@ export type VectorStoreRetrieverInput<V extends VectorStore> =
         }
     );
 
+export interface VectorStoreRetrieverInterface<
+  V extends VectorStoreInterface = VectorStoreInterface
+> extends BaseRetrieverInterface {
+  vectorStore: V;
+
+  addDocuments(
+    documents: DocumentInterface[],
+    options?: AddDocumentOptions
+  ): Promise<string[] | void>;
+}
+
 /**
  * Class for performing document retrieval from a VectorStore. Can perform
  * similarity search or maximal marginal relevance search.
  */
 export class VectorStoreRetriever<
-  V extends VectorStore = VectorStore
-> extends BaseRetriever {
+    V extends VectorStoreInterface = VectorStoreInterface
+  >
+  extends BaseRetriever
+  implements VectorStoreRetrieverInterface
+{
   static lc_name() {
     return "VectorStoreRetriever";
   }
@@ -96,7 +114,7 @@ export class VectorStoreRetriever<
   async _getRelevantDocuments(
     query: string,
     runManager?: CallbackManagerForRetrieverRun
-  ): Promise<Document[]> {
+  ): Promise<DocumentInterface[]> {
     if (this.searchType === "mmr") {
       if (typeof this.vectorStore.maxMarginalRelevanceSearch !== "function") {
         throw new Error(
@@ -122,11 +140,83 @@ export class VectorStoreRetriever<
   }
 
   async addDocuments(
-    documents: Document[],
+    documents: DocumentInterface[],
     options?: AddDocumentOptions
   ): Promise<string[] | void> {
     return this.vectorStore.addDocuments(documents, options);
   }
+}
+
+export interface VectorStoreInterface extends Serializable {
+  FilterType: object | string;
+
+  embeddings: EmbeddingsInterface;
+
+  _vectorstoreType(): string;
+
+  addVectors(
+    vectors: number[][],
+    documents: DocumentInterface[],
+    options?: AddDocumentOptions
+  ): Promise<string[] | void>;
+
+  addDocuments(
+    documents: DocumentInterface[],
+    options?: AddDocumentOptions
+  ): Promise<string[] | void>;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  delete(_params?: Record<string, any>): Promise<void>;
+
+  similaritySearchVectorWithScore(
+    query: number[],
+    k: number,
+    filter?: this["FilterType"]
+  ): Promise<[DocumentInterface, number][]>;
+
+  similaritySearch(
+    query: string,
+    k?: number,
+    filter?: this["FilterType"],
+    callbacks?: Callbacks
+  ): Promise<DocumentInterface[]>;
+
+  similaritySearchWithScore(
+    query: string,
+    k?: number,
+    filter?: this["FilterType"],
+    callbacks?: Callbacks
+  ): Promise<[DocumentInterface, number][]>;
+
+  /**
+   * Return documents selected using the maximal marginal relevance.
+   * Maximal marginal relevance optimizes for similarity to the query AND diversity
+   * among selected documents.
+   *
+   * @param {string} query - Text to look up documents similar to.
+   * @param {number} options.k - Number of documents to return.
+   * @param {number} options.fetchK - Number of documents to fetch before passing to the MMR algorithm.
+   * @param {number} options.lambda - Number between 0 and 1 that determines the degree of diversity among the results,
+   *                 where 0 corresponds to maximum diversity and 1 to minimum diversity.
+   * @param {this["FilterType"]} options.filter - Optional filter
+   * @param _callbacks
+   *
+   * @returns {Promise<DocumentInterface[]>} - List of documents selected by maximal marginal relevance.
+   */
+  maxMarginalRelevanceSearch?(
+    query: string,
+    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>,
+    callbacks: Callbacks | undefined
+  ): Promise<DocumentInterface[]>;
+
+  asRetriever(
+    kOrFields?: number | Partial<VectorStoreRetrieverInput<this>>,
+    filter?: this["FilterType"],
+    callbacks?: Callbacks,
+    tags?: string[],
+    metadata?: Record<string, unknown>,
+    verbose?: boolean
+  ): VectorStoreRetriever<this>;
 }
 
 /**
@@ -134,16 +224,19 @@ export class VectorStoreRetriever<
  * adding vectors and documents, deleting from the store, and searching
  * the store.
  */
-export abstract class VectorStore extends Serializable {
+export abstract class VectorStore
+  extends Serializable
+  implements VectorStoreInterface
+{
   declare FilterType: object | string;
 
   // Only ever instantiated in main LangChain
   lc_namespace = ["langchain", "vectorstores", this._vectorstoreType()];
 
-  embeddings: Embeddings;
+  embeddings: EmbeddingsInterface;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  constructor(embeddings: Embeddings, dbConfig: Record<string, any>) {
+  constructor(embeddings: EmbeddingsInterface, dbConfig: Record<string, any>) {
     super(dbConfig);
     this.embeddings = embeddings;
   }
@@ -152,12 +245,12 @@ export abstract class VectorStore extends Serializable {
 
   abstract addVectors(
     vectors: number[][],
-    documents: Document[],
+    documents: DocumentInterface[],
     options?: AddDocumentOptions
   ): Promise<string[] | void>;
 
   abstract addDocuments(
-    documents: Document[],
+    documents: DocumentInterface[],
     options?: AddDocumentOptions
   ): Promise<string[] | void>;
 
@@ -170,14 +263,14 @@ export abstract class VectorStore extends Serializable {
     query: number[],
     k: number,
     filter?: this["FilterType"]
-  ): Promise<[Document, number][]>;
+  ): Promise<[DocumentInterface, number][]>;
 
   async similaritySearch(
     query: string,
     k = 4,
     filter: this["FilterType"] | undefined = undefined,
     _callbacks: Callbacks | undefined = undefined // implement passing to embedQuery later
-  ): Promise<Document[]> {
+  ): Promise<DocumentInterface[]> {
     const results = await this.similaritySearchVectorWithScore(
       await this.embeddings.embedQuery(query),
       k,
@@ -192,7 +285,7 @@ export abstract class VectorStore extends Serializable {
     k = 4,
     filter: this["FilterType"] | undefined = undefined,
     _callbacks: Callbacks | undefined = undefined // implement passing to embedQuery later
-  ): Promise<[Document, number][]> {
+  ): Promise<[DocumentInterface, number][]> {
     return this.similaritySearchVectorWithScore(
       await this.embeddings.embedQuery(query),
       k,
@@ -213,18 +306,18 @@ export abstract class VectorStore extends Serializable {
    * @param {this["FilterType"]} options.filter - Optional filter
    * @param _callbacks
    *
-   * @returns {Promise<Document[]>} - List of documents selected by maximal marginal relevance.
+   * @returns {Promise<DocumentInterface[]>} - List of documents selected by maximal marginal relevance.
    */
   async maxMarginalRelevanceSearch?(
     query: string,
     options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>,
     _callbacks: Callbacks | undefined // implement passing to embedQuery later
-  ): Promise<Document[]>;
+  ): Promise<DocumentInterface[]>;
 
   static fromTexts(
     _texts: string[],
     _metadatas: object[] | object,
-    _embeddings: Embeddings,
+    _embeddings: EmbeddingsInterface,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     _dbConfig: Record<string, any>
   ): Promise<VectorStore> {
@@ -234,8 +327,8 @@ export abstract class VectorStore extends Serializable {
   }
 
   static fromDocuments(
-    _docs: Document[],
-    _embeddings: Embeddings,
+    _docs: DocumentInterface[],
+    _embeddings: EmbeddingsInterface,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     _dbConfig: Record<string, any>
   ): Promise<VectorStore> {
@@ -293,7 +386,7 @@ export abstract class SaveableVectorStore extends VectorStore {
 
   static load(
     _directory: string,
-    _embeddings: Embeddings
+    _embeddings: EmbeddingsInterface
   ): Promise<SaveableVectorStore> {
     throw new Error("Not implemented");
   }

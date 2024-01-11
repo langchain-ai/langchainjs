@@ -1,5 +1,5 @@
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { Neo4jVectorStore } from "langchain/vectorstores/neo4j_vector";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { Neo4jVectorStore } from "@langchain/community/vectorstores/neo4j_vector";
 
 // Configuration object for Neo4j connection and other related settings
 const config = {
