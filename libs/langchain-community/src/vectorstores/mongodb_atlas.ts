@@ -6,7 +6,10 @@ import {
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
-import { AsyncCaller, AsyncCallerParams } from "@langchain/core/utils/async_caller";
+import {
+  AsyncCaller,
+  AsyncCallerParams,
+} from "@langchain/core/utils/async_caller";
 
 /**
  * Type that defines the arguments required to initialize the
@@ -27,7 +30,7 @@ export interface MongoDBAtlasVectorSearchLibArgs extends AsyncCallerParams {
   readonly embeddingKey?: string;
   readonly overwrite?: boolean;
   readonly primaryKey?: string;
-};
+}
 
 /**
  * Type that defines the filter used in the
@@ -107,14 +110,6 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
           );
         });
       }
-      // const promises = docs.map((doc) => {
-      //   return this.collection.updateOne(
-      //     { [this.primaryKey]: doc[this.primaryKey] },
-      //     { $set: doc },
-      //     { upsert: true }
-      //   );
-      // });
-      // await Promise.all(promises);
     }
   }
 
