@@ -3,7 +3,7 @@ export interface OpenAIEndpointConfig {
   azureOpenAIApiInstanceName?: string;
   azureOpenAIApiKey?: string;
   azureOpenAIBasePath?: string;
-  baseURL?: string;
+  baseURL?: string | null;
 }
 
 /**
