@@ -1,4 +1,4 @@
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 
 const model = new OpenAI({});
 const promptAsString = "Human: Tell me a short joke about ice cream";

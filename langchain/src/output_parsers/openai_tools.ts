@@ -1,10 +1,17 @@
-import { BaseLLMOutputParser } from "../schema/output_parser.js";
-import type { ChatGeneration } from "../schema/index.js";
+import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
+import type { ChatGeneration } from "@langchain/core/outputs";
 
 export type ParsedToolCall = {
-  name: string;
+  type: string;
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  arguments: Record<string, any>;
+  args: Record<string, any>;
+
+  /** @deprecated Use `type` instead. Will be removed in 0.2.0. */
+  name: string;
+
+  /** @deprecated Use `args` instead. Will be removed in 0.2.0. */
+  arguments: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 };
 
 /**
@@ -18,7 +25,7 @@ export class JsonOutputToolsParser extends BaseLLMOutputParser<
     return "JsonOutputToolsParser";
   }
 
-  lc_namespace = ["langchain", "output_parsers"];
+  lc_namespace = ["langchain", "output_parsers", "openai_tools"];
 
   lc_serializable = true;
 
@@ -39,11 +46,27 @@ export class JsonOutputToolsParser extends BaseLLMOutputParser<
     const parsedToolCalls = [];
     for (const toolCall of clonedToolCalls) {
       if (toolCall.function !== undefined) {
-        const functionArgs = toolCall.function.arguments;
-        parsedToolCalls.push({
-          name: toolCall.function.name,
-          arguments: JSON.parse(functionArgs),
+        // @ts-expect-error name and arguemnts are defined by Object.defineProperty
+        const parsedToolCall: ParsedToolCall = {
+          type: toolCall.function.name,
+          args: JSON.parse(toolCall.function.arguments),
+        };
+
+        // backward-compatibility with previous
+        // versions of Langchain JS, which uses `name` and `arguments`
+        Object.defineProperty(parsedToolCall, "name", {
+          get() {
+            return this.type;
+          },
         });
+
+        Object.defineProperty(parsedToolCall, "arguments", {
+          get() {
+            return this.args;
+          },
+        });
+
+        parsedToolCalls.push(parsedToolCall);
       }
     }
     return parsedToolCalls;

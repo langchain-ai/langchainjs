@@ -1,5 +1,5 @@
+import { Document } from "@langchain/core/documents";
 import { SerpAPILoader } from "../web/serpapi.js";
-import { Document } from "../../document.js";
 
 test("Test buildUrl method", () => {
   const loader = new SerpAPILoader({ q: "testQuery", apiKey: "testApiKey" });

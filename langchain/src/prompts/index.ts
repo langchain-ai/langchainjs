@@ -1,10 +1,18 @@
+import { logVersion010MigrationWarning } from "../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion010MigrationWarning({
+  oldEntrypointName: "prompts",
+  newEntrypointName: "prompts",
+  newPackageName: "@langchain/core",
+});
+
 export {
   BasePromptTemplate,
   type BasePromptTemplateInput,
   StringPromptValue,
   BaseStringPromptTemplate,
+  BaseExampleSelector,
 } from "./base.js";
-export { BaseExampleSelector } from "@langchain/core/example_selectors";
 export { PromptTemplate, type PromptTemplateInput } from "./prompt.js";
 export {
   BasePromptSelector,

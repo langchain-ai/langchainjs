@@ -3,15 +3,18 @@ import {
   type BaseRetrieverInput,
 } from "@langchain/core/retrievers";
 import type { VectorStoreInterface } from "@langchain/core/vectorstores";
-import { BaseStoreInterface } from "../schema/storage.js";
-import { Document } from "../document.js";
+import { Document } from "@langchain/core/documents";
+import { BaseStore, type BaseStoreInterface } from "@langchain/core/stores";
+import { createDocumentStoreFromByteStore } from "../storage/encoder_backed.js";
 
 /**
  * Arguments for the MultiVectorRetriever class.
  */
 export interface MultiVectorRetrieverInput extends BaseRetrieverInput {
   vectorstore: VectorStoreInterface;
-  docstore: BaseStoreInterface<string, Document>;
+  /** @deprecated Prefer `byteStore`. */
+  docstore?: BaseStoreInterface<string, Document>;
+  byteStore?: BaseStore<string, Uint8Array>;
   idKey?: string;
   childK?: number;
   parentK?: number;
@@ -25,7 +28,7 @@ export interface MultiVectorRetrieverInput extends BaseRetrieverInput {
  * ```typescript
  * const retriever = new MultiVectorRetriever({
  *   vectorstore: new FaissStore(),
- *   docstore: new InMemoryStore(),
+ *   byteStore: new InMemoryStore<Unit8Array>(),
  *   idKey: "doc_id",
  *   childK: 20,
  *   parentK: 5,
@@ -55,7 +58,15 @@ export class MultiVectorRetriever extends BaseRetriever {
   constructor(args: MultiVectorRetrieverInput) {
     super(args);
     this.vectorstore = args.vectorstore;
-    this.docstore = args.docstore;
+    if (args.byteStore) {
+      this.docstore = createDocumentStoreFromByteStore(args.byteStore);
+    } else if (args.docstore) {
+      this.docstore = args.docstore;
+    } else {
+      throw new Error(
+        "byteStore and docstore are undefined. Please provide at least one."
+      );
+    }
     this.idKey = args.idKey ?? "doc_id";
     this.childK = args.childK;
     this.parentK = args.parentK;

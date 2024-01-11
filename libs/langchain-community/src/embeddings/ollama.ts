@@ -32,7 +32,7 @@ export class OllamaEmbeddings extends Embeddings {
   requestOptions?: OllamaRequestParams["options"];
 
   constructor(params?: OllamaEmbeddingsParams) {
-    super(params || {});
+    super({ maxConcurrency: 1, ...params });
 
     if (params?.model) {
       this.model = params.model;
@@ -68,6 +68,7 @@ export class OllamaEmbeddings extends Embeddings {
       numGpu: "num_gpu",
       numGqa: "num_gqa",
       numKeep: "num_keep",
+      numPredict: "num_predict",
       numThread: "num_thread",
       penalizeNewline: "penalize_newline",
       presencePenalty: "presence_penalty",
@@ -127,13 +128,10 @@ export class OllamaEmbeddings extends Embeddings {
     return json.embedding;
   }
 
-  async _embed(strings: string[]): Promise<number[][]> {
-    const embeddings: number[][] = [];
-
-    for await (const prompt of strings) {
-      const embedding = await this.caller.call(() => this._request(prompt));
-      embeddings.push(embedding);
-    }
+  async _embed(texts: string[]): Promise<number[][]> {
+    const embeddings: number[][] = await Promise.all(
+      texts.map((text) => this.caller.call(() => this._request(text)))
+    );
 
     return embeddings;
   }

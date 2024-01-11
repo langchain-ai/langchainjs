@@ -1,17 +1,17 @@
-import { ChatOpenAI } from "../../../chat_models/openai.js";
+import { ChatOpenAI } from "@langchain/openai";
 import {
   InputValues,
   MemoryVariables,
   OutputValues,
-  getBufferString,
   getInputValue,
   getOutputValue,
-} from "../../../memory/base.js";
+} from "@langchain/core/memory";
+import { getBufferString } from "@langchain/core/messages";
 import {
   BaseChatMemory,
   BaseChatMemoryInput,
-} from "../../../memory/chat_memory.js";
-import { _formatIntermediateSteps } from "../../openai/index.js";
+} from "@langchain/community/memory/chat_memory";
+import { _formatIntermediateSteps } from "../../openai_functions/index.js";
 
 /**
  * Type definition for the fields required to initialize an instance of

@@ -152,6 +152,12 @@ export interface LLMonitorHandlerFields
   extends BaseCallbackHandlerInput,
     LLMonitorOptions {}
 
+/**
+ * @deprecated Please use LunaryHandler instead:
+ * ```
+ * import { LunaryHandler } from "@langchain/community/callbacks/handlers/lunary";
+ * ```
+ */
 export class LLMonitorHandler
   extends BaseCallbackHandler
   implements LLMonitorHandlerFields

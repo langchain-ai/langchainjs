@@ -29,6 +29,7 @@ import {
 } from "../../outputs.js";
 import { BaseRetriever } from "../../retrievers.js";
 import { Runnable } from "../../runnables/base.js";
+import { BaseTracer, Run } from "../../tracers/base.js";
 
 /**
  * Parser for comma-separated values. It splits the input text by commas
@@ -99,6 +100,13 @@ export class FakeLLM extends LLM {
 }
 
 export class FakeStreamingLLM extends LLM {
+  sleep?: number = 50;
+
+  constructor(fields: { sleep?: number } & BaseLLMParams) {
+    super(fields);
+    this.sleep = fields.sleep ?? this.sleep;
+  }
+
   _llmType() {
     return "fake";
   }
@@ -109,7 +117,7 @@ export class FakeStreamingLLM extends LLM {
 
   async *_streamResponseChunks(input: string) {
     for (const c of input) {
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, this.sleep));
       yield { text: c, generationInfo: {} } as GenerationChunk;
     }
   }
@@ -343,7 +351,26 @@ export class FakeListChatMessageHistory extends BaseListChatMessageHistory {
     super();
   }
 
-  public async addMessage(message: BaseMessage): Promise<void> {
+  async addMessage(message: BaseMessage): Promise<void> {
     this.messages.push(message);
+  }
+
+  async getMessages(): Promise<BaseMessage[]> {
+    return this.messages;
+  }
+}
+
+export class FakeTracer extends BaseTracer {
+  name = "fake_tracer";
+
+  runs: Run[] = [];
+
+  constructor() {
+    super();
+  }
+
+  protected persistRun(run: Run): Promise<void> {
+    this.runs.push(run);
+    return Promise.resolve();
   }
 }

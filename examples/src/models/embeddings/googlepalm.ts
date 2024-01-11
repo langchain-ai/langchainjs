@@ -1,4 +1,4 @@
-import { GooglePaLMEmbeddings } from "langchain/embeddings/googlepalm";
+import { GooglePaLMEmbeddings } from "@langchain/community/embeddings/googlepalm";
 
 const model = new GooglePaLMEmbeddings({
   apiKey: "<YOUR API KEY>", // or set it in environment variable as `GOOGLE_PALM_API_KEY`

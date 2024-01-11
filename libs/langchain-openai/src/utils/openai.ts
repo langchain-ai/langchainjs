@@ -5,6 +5,7 @@ import {
 } from "openai";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import type { StructuredToolInterface } from "@langchain/core/tools";
+import type { FunctionDefinition } from "@langchain/core/language_models/base";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function wrapOpenAIClientError(e: any) {
@@ -29,7 +30,7 @@ export function wrapOpenAIClientError(e: any) {
  */
 export function formatToOpenAIFunction(
   tool: StructuredToolInterface
-): OpenAIClient.Chat.ChatCompletionCreateParams.Function {
+): FunctionDefinition {
   return {
     name: tool.name,
     description: tool.description,

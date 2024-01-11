@@ -1,5 +1,5 @@
 import { MultiPromptChain } from "langchain/chains";
-import { OpenAIChat } from "langchain/llms/openai";
+import { OpenAIChat } from "@langchain/openai";
 
 const llm = new OpenAIChat();
 const promptNames = ["physics", "math", "history"];

@@ -29,22 +29,27 @@
     "test:int": "yarn run test:int:deps && turbo run test:integration ; yarn run test:int:deps:down",
     "test:int:deps": "docker compose -f test-int-deps-docker-compose.yml up -d",
     "test:int:deps:down": "docker compose -f test-int-deps-docker-compose.yml down",
-    "test:exports:docker": "docker compose up --force-recreate",
+    "test:ranges:docker": "docker compose -f dependency_range_tests/docker-compose.yml up --force-recreate",
+    "test:exports:docker": "docker compose -f environment_tests/docker-compose.yml up --force-recreate",
     "publish": "bash langchain/scripts/release-branch.sh && turbo run --filter langchain build lint test --concurrency 1 && yarn run test:exports:docker && yarn workspace langchain run release && echo '🔗 Open https://github.com/langchain-ai/langchainjs/compare/release?expand=1 and merge the release PR'",
     "publish:core": "bash langchain/scripts/release-branch.sh && turbo run --filter @langchain/core build lint test --concurrency 1 && yarn run test:exports:docker && yarn workspace @langchain/core run release && echo '🔗 Open https://github.com/langchain-ai/langchainjs/compare/release?expand=1 and merge the release PR'",
     "example": "yarn workspace examples start",
     "precommit": "turbo run precommit",
     "docs": "yarn workspace core_docs start",
-    "docs:api_refs": "yarn workspace api_refs start"
+    "docs:api_refs": "yarn workspace api_refs start",
+    "release": "node release_workspace.js --workspace"
   },
   "author": "LangChain",
   "license": "MIT",
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",
     "@types/jest": "^29.5.3",
+    "@types/semver": "^7",
+    "commander": "^11.1.0",
     "dotenv": "^16.0.3",
     "lint-staged": "^13.1.1",
     "prettier": "^2.8.3",
+    "semver": "^7.5.4",
     "typescript": "~5.1.6"
   },
   "dependencies": {

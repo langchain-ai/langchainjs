@@ -1,10 +1,10 @@
 import { z } from "zod";
 import { expect, test } from "@jest/globals";
 
-import { Document } from "../../document.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
+import { Document } from "@langchain/core/documents";
+import { ChatOpenAI } from "@langchain/openai";
+import { PromptTemplate } from "@langchain/core/prompts";
 import { createMetadataTaggerFromZod } from "../openai_functions.js";
-import { PromptTemplate } from "../../prompts/index.js";
 
 const taggingChainTemplate = `Extract the desired information from the following passage.
 Anonymous critics are actually Roger Ebert.

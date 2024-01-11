@@ -1,0 +1,255 @@
+---
+sidebar_position: 0
+---
+
+# Custom agent
+
+This notebook goes through how to create your own custom agent.
+
+In this example, we will use OpenAI Function Calling to create this agent.
+**This is generally the most reliable way to create agents.**
+
+We will first create it WITHOUT memory, but we will then show how to add memory in.
+Memory is needed to enable conversation.
+
+## Load the LLM
+
+First, let's load the language model we're going to use to control the agent.
+
+```ts
+import { ChatOpenAI } from "@langchain/openai";
+
+/**
+ * Define your chat model to use.
+ */
+const model = new ChatOpenAI({
+  modelName: "gpt-3.5-turbo",
+  temperature: 0,
+});
+```
+
+## Define Tools
+
+Next, let's define some tools to use.
+Let's write a really simple JavaScript function to calculate the length of a word that is passed in.
+
+```ts
+import { DynamicTool } from "langchain/tools";
+
+const customTool = new DynamicTool({
+  name: "get_word_length",
+  description: "Returns the length of a word.",
+  func: async (input: string) => input.length.toString(),
+});
+
+/** Define your list of tools. */
+const tools = [customTool];
+```
+
+## Create Prompt
+
+Now let us create the prompt.
+Because OpenAI Function Calling is finetuned for tool usage, we hardly need any instructions on how to reason, or how to output format.
+We will just have two input variables: `input` and `agent_scratchpad`. `input` should be a string containing the user objective.
+`agent_scratchpad` should be a sequence of messages that contains the previous agent tool invocations and the corresponding tool outputs.
+
+```ts
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
+
+const prompt = ChatPromptTemplate.fromMessages([
+  ["system", "You are very powerful assistant, but don't know current events"],
+  ["human", "{input}"],
+  new MessagesPlaceholder("agent_scratchpad"),
+]);
+```
+
+## Bind tools to LLM
+
+How does the agent know what tools it can use?
+In this case we're relying on OpenAI function calling LLMs, which take functions as a separate argument and have been specifically trained to know when to invoke those functions.
+
+To pass in our tools to the agent, we just need to format them to the OpenAI function format and pass them to our model.
+(By `bind`-ing the functions, we're making sure that they're passed in each time the model is invoked.)
+
+```ts
+import { formatToOpenAIFunction } from "langchain/tools";
+
+const modelWithFunctions = model.bind({
+  functions: tools.map((tool) => formatToOpenAIFunction(tool)),
+});
+```
+
+## Create the Agent
+
+Putting those pieces together, we can now create the agent.
+We will import two last utility functions: a component for formatting intermediate steps to input messages that can be sent to the model,
+and an output parser for converting the output message into an agent action/agent finish.
+
+```ts
+import { RunnableSequence } from "@langchain/core/runnables";
+import { AgentExecutor, type AgentStep } from "langchain/agents";
+
+import { formatToOpenAIFunctionMessages } from "langchain/agents/format_scratchpad";
+import { OpenAIFunctionsAgentOutputParser } from "langchain/agents/openai/output_parser";
+
+const runnableAgent = RunnableSequence.from([
+  {
+    input: (i: { input: string; steps: AgentStep[] }) => i.input,
+    agent_scratchpad: (i: { input: string; steps: AgentStep[] }) =>
+      formatToOpenAIFunctionMessages(i.steps),
+  },
+  prompt,
+  modelWithFunctions,
+  new OpenAIFunctionsAgentOutputParser(),
+]);
+
+const executor = AgentExecutor.fromAgentAndTools({
+  agent: runnableAgent,
+  tools,
+});
+```
+
+And now, let's call the executor:
+
+:::tip
+[LangSmith trace](https://smith.langchain.com/public/6288fcd3-7e4e-488e-b40c-f83e052ad6ce/r)
+:::
+
+```ts
+const input = "How many letters in the word educa?";
+console.log(`Calling agent executor with query: ${input}`);
+
+const result = await executor.invoke({
+  input,
+});
+
+console.log(result);
+/*
+  Loaded agent executor
+  Calling agent executor with query: What is the weather in New York?
+  {
+    input: 'How many letters in the word educa?',
+    output: 'There are 5 letters in the word "educa".'
+  }
+*/
+```
+
+## Adding memory
+
+This is great - we have an agent!
+However, this agent is stateless - it doesn't remember anything about previous interactions.
+This means you can't ask follow up questions easily.
+Let's fix that by adding in memory.
+
+In order to do this, we need to do two things:
+
+1. Add a place for memory variables to go in the prompt
+2. Keep track of the chat history
+
+First, let's add a place for memory in the prompt.
+We do this by adding a placeholder for messages with the key `"chat_history"`.
+Notice that we put this ABOVE the new user input (to follow the conversation flow).
+
+```ts
+const MEMORY_KEY = "chat_history";
+const memoryPrompt = ChatPromptTemplate.fromMessages([
+  [
+    "system",
+    "You are very powerful assistant, but bad at calculating lengths of words.",
+  ],
+  new MessagesPlaceholder(MEMORY_KEY),
+  ["user", "{input}"],
+  new MessagesPlaceholder("agent_scratchpad"),
+]);
+```
+
+We can then set up a list to track the chat history:
+
+```ts
+import { AIMessage, BaseMessage, HumanMessage } from "@langchain/core/messages";
+
+const chatHistory: BaseMessage[] = [];
+```
+
+We can then put it all together in an agent:
+
+```ts
+const agentWithMemory = RunnableSequence.from([
+  {
+    input: (i) => i.input,
+    agent_scratchpad: (i) => formatToOpenAIFunctionMessages(i.steps),
+    chat_history: (i) => i.chat_history,
+  },
+  memoryPrompt,
+  modelWithFunctions,
+  new OpenAIFunctionsAgentOutputParser(),
+]);
+/** Pass the runnable along with the tools to create the Agent Executor */
+const executorWithMemory = AgentExecutor.fromAgentAndTools({
+  agent: agentWithMemory,
+  tools,
+});
+```
+
+When running, we now need to track the inputs and outputs as chat history.
+
+:::tip
+[LangSmith trace for the first invocation](https://smith.langchain.com/public/431f3955-693e-4ea5-ae07-737ec23e7e13/r)
+[LangSmith trace for the second invocation](https://smith.langchain.com/public/2618772e-3e13-4dde-b86f-973cffb2a3be/r)
+:::
+
+```ts
+const input1 = "how many letters in the word educa?";
+const result1 = await executorWithMemory.invoke({
+  input: input1,
+  chat_history: chatHistory,
+});
+
+console.log(result1);
+
+/*
+  {
+    input: 'how many letters in the word educa?',
+    chat_history: [],
+    output: 'There are 5 letters in the word "educa".'
+  }
+*/
+
+chatHistory.push(new HumanMessage(input1));
+chatHistory.push(new AIMessage(result.output));
+
+const result2 = await executorWithMemory.invoke({
+  input: "is that a real English word?",
+  chat_history: chatHistory,
+});
+
+console.log(result2);
+
+/*
+  {
+    input: 'is that a real English word?',
+    chat_history: [
+      HumanMessage {
+        lc_serializable: true,
+        lc_kwargs: [Object],
+        lc_namespace: [Array],
+        content: 'how many letters in the word educa?',
+        name: undefined,
+        additional_kwargs: {}
+      },
+      AIMessage {
+        lc_serializable: true,
+        lc_kwargs: [Object],
+        lc_namespace: [Array],
+        content: 'There are 5 letters in the word "educa".',
+        name: undefined,
+        additional_kwargs: {}
+      }
+    ],
+    output: 'The word "educa" is not a real English word. It has 5 letters.'
+  }
+*/
+```

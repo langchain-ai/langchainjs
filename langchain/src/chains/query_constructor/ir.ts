@@ -1,4 +1,4 @@
-import { VectorStore } from "../../vectorstores/base.js";
+import { VectorStore } from "@langchain/core/vectorstores";
 
 /**
  * Represents logical AND operator.
