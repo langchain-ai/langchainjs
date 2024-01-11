@@ -14,18 +14,15 @@ For longer-term persistence across chat sessions, you can swap out the default i
 
 ## Setup
 
-If you are using TypeScript, you may need to install Cloudflare types if they aren't already present:
-
-```bash npm2yarn
-npm install -S @cloudflare/workers-types
-```
+You'll need to install the LangChain Cloudflare integration package.
+For the below example, we also use Anthropic, but you can use any model you'd like:
 
 import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
 
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm install @langchain/anthropic @langchain/community
+npm install @langchain/cloudflare @langchain/anthropic
 ```
 
 Set up a D1 instance for your worker by following [the official documentation](https://developers.cloudflare.com/d1/). Your project's `wrangler.toml` file should

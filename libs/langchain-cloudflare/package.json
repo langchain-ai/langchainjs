@@ -1,5 +1,5 @@
 {
-  "name": "langchain-cloudflare",
+  "name": "@langchain/cloudflare",
   "version": "0.0.0",
   "description": "Cloudflare integration for LangChain.js",
   "type": "module",
