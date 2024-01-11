@@ -12,12 +12,10 @@ import { ChatGenerationChunk } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 
-import type { CloudflareWorkersAIInput } from "../llms/cloudflare_workersai.js";
-import { convertEventStreamToIterableReadableDataStream } from "../utils/event_source_parse.js";
+import type { CloudflareWorkersAIInput } from "./llms.js";
+import { convertEventStreamToIterableReadableDataStream } from "./utils/event_source_parse.js";
 
 /**
- * @deprecated Install and import from "@langchain/cloudflare" instead.
- *
  * An interface defining the options for a Cloudflare Workers AI call. It extends
  * the BaseLanguageModelCallOptions interface.
  */
@@ -25,8 +23,6 @@ export interface ChatCloudflareWorkersAICallOptions
   extends BaseLanguageModelCallOptions {}
 
 /**
- * @deprecated Install and import from "@langchain/cloudflare" instead.
- *
  * A class that enables calls to the Cloudflare Workers AI API to access large language
  * models in a chat-like fashion. It extends the SimpleChatModel class and
  * implements the CloudflareWorkersAIInput interface.
