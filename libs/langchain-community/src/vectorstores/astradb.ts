@@ -23,6 +23,7 @@ export interface AstraLibArgs extends AsyncCallerParams {
   token: string;
   endpoint: string;
   collection: string;
+  namespace?: string;
   idKey?: string;
   contentKey?: string;
   collectionOptions?: CreateCollectionOptions;
@@ -64,13 +65,14 @@ export class AstraDBVectorStore extends VectorStore {
       endpoint,
       collection,
       collectionOptions,
+      namespace,
       idKey,
       contentKey,
       batchSize,
       ...callerArgs
     } = args;
 
-    this.astraDBClient = new AstraDB(token, endpoint);
+    this.astraDBClient = new AstraDB(token, endpoint, namespace);
     this.collectionName = collection;
     this.collectionOptions = collectionOptions;
     this.idKey = idKey ?? "_id";
