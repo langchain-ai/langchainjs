@@ -104,7 +104,7 @@ const runViewEvents = async (
                 summary: item.summary,
                 description: item.description,
                 start: {
-                  dateTime: DateTime.fromMillis(d + duration)
+                  dateTime: DateTime.fromMillis(d)
                     .setZone(item.start.timeZone)
                     .toISO(),
                   timeZone: item.start.timeZone,
