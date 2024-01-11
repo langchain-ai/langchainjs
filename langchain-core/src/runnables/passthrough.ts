@@ -2,7 +2,7 @@ import {
   Runnable,
   RunnableAssign,
   RunnableMap,
-  RunnableMapLike
+  RunnableMapLike,
 } from "./base.js";
 import type { RunnableConfig } from "./config.js";
 
@@ -17,7 +17,7 @@ type RunnablePassthroughFunc<RunInput = any, RunOutput = any> =
 function callFuncWithVariableArgs<RunInput = any>({
   func,
   input,
-  config
+  config,
 }: {
   func: RunnablePassthroughFunc<RunInput>;
   input: RunInput;
@@ -66,7 +66,9 @@ export class RunnablePassthrough<RunInput> extends Runnable<
 
   func?: RunnablePassthroughFunc<RunInput | AsyncGenerator<RunInput>>;
 
-  constructor(fields?: { func?: RunnablePassthroughFunc<RunInput | AsyncGenerator<RunInput>> }) {
+  constructor(fields?: {
+    func?: RunnablePassthroughFunc<RunInput | AsyncGenerator<RunInput>>;
+  }) {
     super();
     if (fields) {
       this.func = fields.func;
@@ -81,7 +83,7 @@ export class RunnablePassthrough<RunInput> extends Runnable<
       return callFuncWithVariableArgs({
         func: this.func,
         input,
-        config: options
+        config: options,
       });
     }
 
@@ -100,7 +102,7 @@ export class RunnablePassthrough<RunInput> extends Runnable<
       return callFuncWithVariableArgs<AsyncGenerator<RunInput>>({
         func: this.func,
         input: generator,
-        config: options
+        config: options,
       });
     }
 
