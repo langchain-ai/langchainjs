@@ -6,6 +6,7 @@ import {
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
+import { AsyncCaller, AsyncCallerParams } from "@langchain/core/utils/async_caller";
 
 /**
  * Type that defines the arguments required to initialize the
@@ -19,7 +20,7 @@ import { maximalMarginalRelevance } from "@langchain/core/utils/math";
  * @param overwrite Whether to update/overwrite existing documents.
  * @param primaryKey The Key to use for updating/overwriting documents.
  */
-export type MongoDBAtlasVectorSearchLibArgs = {
+export interface MongoDBAtlasVectorSearchLibArgs extends AsyncCallerParams {
   readonly collection: Collection<MongoDBDocument>;
   readonly indexName?: string;
   readonly textKey?: string;
@@ -61,6 +62,8 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
 
   private readonly overwrite: boolean;
 
+  private caller: AsyncCaller;
+
   _vectorstoreType(): string {
     return "mongodb_atlas";
   }
@@ -76,6 +79,7 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     this.embeddingKey = args.embeddingKey ?? "embedding";
     this.primaryKey = args.primaryKey ?? "_id";
     this.overwrite = args.overwrite ?? false;
+    this.caller = new AsyncCaller(args);
   }
 
   /**
@@ -94,14 +98,23 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     if (!this.overwrite) {
       await this.collection.insertMany(docs);
     } else {
-      const promises = docs.map((doc) => {
-        return this.collection.updateOne(
-          { [this.primaryKey]: doc[this.primaryKey] },
-          { $set: doc },
-          { upsert: true }
-        );
-      });
-      await Promise.all(promises);
+      for (let i = 0; i < docs.length; i += 1) {
+        await this.caller.call(async () => {
+          await this.collection.updateOne(
+            { [this.primaryKey]: docs[i][this.primaryKey] },
+            { $set: docs[i] },
+            { upsert: true }
+          );
+        });
+      }
+      // const promises = docs.map((doc) => {
+      //   return this.collection.updateOne(
+      //     { [this.primaryKey]: doc[this.primaryKey] },
+      //     { $set: doc },
+      //     { upsert: true }
+      //   );
+      // });
+      // await Promise.all(promises);
     }
   }
 
