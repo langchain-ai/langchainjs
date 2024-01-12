@@ -1,5 +1,5 @@
 import { expect, test } from "@jest/globals";
-import { CohereEmbeddings } from "../../embeddings/cohere.js";
+import { CohereEmbeddings } from "@langchain/community/embeddings/cohere";
 import { MemoryVectorStore } from "../../vectorstores/memory.js";
 import { MultiQueryRetriever } from "../multi_query.js";
 import { ChatAnthropic } from "../../chat_models/anthropic.js";

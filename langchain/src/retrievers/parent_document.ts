@@ -4,7 +4,7 @@ import {
   type VectorStoreInterface,
   type VectorStoreRetrieverInterface,
 } from "@langchain/core/vectorstores";
-import { Document } from "../document.js";
+import { Document } from "@langchain/core/documents";
 import { TextSplitter } from "../text_splitter.js";
 import {
   MultiVectorRetriever,

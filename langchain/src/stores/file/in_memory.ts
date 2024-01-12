@@ -1,4 +1,4 @@
-import { BaseFileStore } from "../../schema/index.js";
+import { BaseFileStore } from "./base.js";
 
 /**
  * Class that provides an in-memory file storage system. It extends the

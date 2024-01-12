@@ -1,7 +1,7 @@
 import { test, expect } from "@jest/globals";
 
-import { OpenAIEmbeddings } from "../../embeddings/openai.js";
-import { Document } from "../../document.js";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { Document } from "@langchain/core/documents";
 import { MemoryVectorStore } from "../memory.js";
 
 test("MemoryVectorStore with external ids", async () => {

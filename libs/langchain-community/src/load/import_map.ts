@@ -33,6 +33,7 @@ export * as llms__togetherai from "../llms/togetherai.js";
 export * as llms__yandex from "../llms/yandex.js";
 export * as vectorstores__prisma from "../vectorstores/prisma.js";
 export * as vectorstores__vectara from "../vectorstores/vectara.js";
+export * as chat_models__alibaba_tongyi from "../chat_models/alibaba_tongyi.js";
 export * as chat_models__baiduwenxin from "../chat_models/baiduwenxin.js";
 export * as chat_models__cloudflare_workersai from "../chat_models/cloudflare_workersai.js";
 export * as chat_models__fireworks from "../chat_models/fireworks.js";

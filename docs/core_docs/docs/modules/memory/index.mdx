@@ -3,175 +3,244 @@ sidebar_position: 3
 sidebar_class_name: hidden
 ---
 
-# Memory
+# [Beta] Memory
 
-:::info
-Head to [Integrations](/docs/integrations/chat_memory) for documentation on built-in integrations with memory providers.
-:::
+Many LLM applications have a conversational interface. An essential component of a conversation is being able
+to refer to information introduced earlier in the conversation. At bare minimum, a conversational system
+should be able to access some window of past messages directly.
+A more complex system will need to have a world model that it is constantly updating,
+which allows it to do things like maintain information about entities and their relationships.
 
-🚧 _Docs under construction_ 🚧
+We call this ability to store information about past interactions "memory". LangChain provides utilities for
+adding memory to a system. These utilities can be used by themselves or incorporated seamlessly into a chain.
 
-By default, Chains and Agents are stateless,
-meaning that they treat each incoming query independently (like the underlying LLMs and chat models themselves).
-In some applications, like chatbots, it is essential
-to remember previous interactions, both in the short and long-term.
-The **Memory** class does exactly that.
+Most of memory-related functionality in LangChain is marked as beta. This is for two reasons:
 
-LangChain provides memory components in two forms.
-First, LangChain provides helper utilities for managing and manipulating previous chat messages.
-These are designed to be modular and useful regardless of how they are used.
-Secondly, LangChain provides easy ways to incorporate these utilities into chains.
+1. Most functionality (with some exceptions, see below) is not production ready.
+2. Most functionality (with some exceptions, see below) works with Legacy chains, not the newer LCEL syntax.
+
+The main exception to this is the ChatMessageHistory functionality.
+This functionality is largely production ready and does integrate with LCEL.
+
+- [LCEL Runnables](/docs/expression_language/how_to/message_history): See these docs for an overview of how to use ChatMessageHistory with LCEL runnables.
+- [Integrations](/docs/integrations/chat_memory): See these docs for an introduction to the various ChatMessageHistory integrations.
+
+## Introduction
+
+A memory system needs to support two basic actions: reading and writing.
+Recall that every chain defines some core execution logic that expects certain inputs.
+Some of these inputs come directly from the user, but some of these inputs can come from memory.
+A chain will interact with its memory system twice in a given run.
+
+1. AFTER receiving the initial user inputs but BEFORE executing the core logic, a chain will READ from its memory system and augment the user inputs.
+2. AFTER executing the core logic but BEFORE returning the answer, a chain will WRITE the inputs and outputs of the current run to memory, so that they can be referred to in future runs.
+
+![](/img/memory_diagram.png)
+
+## Building memory into a system
+
+The two core design decisions in any memory system are:
+
+- How state is stored
+- How state is queried
+
+### Storing: List of chat messages
+
+Underlying any memory is a history of all chat interactions. Even if these are not all used directly, they need to be stored in some form. One of the key parts of the LangChain memory module is a series of integrations for storing these chat messages, from in-memory lists to persistent databases.
+
+- [Chat message storage](/docs/modules/memory/chat_messages/): How to work with Chat Messages, and the various integrations offered.
+
+### Querying: Data structures and algorithms on top of chat messages
+
+Keeping a list of chat messages is fairly straight-forward. What is less straight-forward are the data structures and algorithms built on top of chat messages that serve a view of those messages that is most useful.
+
+A very simple memory system might just return the most recent messages each run. A slightly more complex memory system might return a succinct summary of the past K messages. An even more sophisticated system might extract entities from stored messages and only return information about entities referenced in the current run.
+
+Each application can have different requirements for how memory is queried. The memory module should make it easy to both get started with simple memory systems and write your own custom systems if needed.
+
+- [Memory types](/docs/modules/memory/types/): The various data structures and algorithms that make up the memory types LangChain supports
 
 ## Get started
 
-Memory involves keeping a concept of state around throughout a user's interactions with a language model. A user's interactions with a language model are captured in the concept of ChatMessages, so this boils down to ingesting, capturing, transforming and extracting knowledge from a sequence of chat messages. There are many different ways to do this, each of which exists as its own memory type.
+Let's take a look at what Memory actually looks like in LangChain. Here we'll cover the basics of interacting with an arbitrary memory class.
 
-In general, for each type of memory there are two ways to understanding using memory. These are the standalone functions which extract information from a sequence of messages, and then there is the way you can use this type of memory in a chain.
+Let's take a look at how to use `BufferMemory` in chains. `BufferMemory` is an extremely simple form of memory that just keeps a list of chat messages in a buffer and passes those into the prompt template:
 
-Memory can return multiple pieces of information (for example, the most recent N messages and a summary of all previous messages). The returned information can either be a string or a list of messages.
+```ts
+import { BufferMemory } from "langchain/memory";
+import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
-We will walk through the simplest form of memory: "buffer" memory, which just involves keeping a buffer of all prior messages. We will show how to use the modular utility functions here, then show how it can be used in a chain (both returning a string as well as a list of messages).
+const memory = new BufferMemory();
 
-## ChatMessageHistory
+await memory.chatHistory.addMessage(new HumanMessage("Hi!"));
+await memory.chatHistory.addMessage(new AIMessage("What's up?"));
+```
 
-One of the core utility classes underpinning most (if not all) memory modules is the `ChatMessageHistory` class. This is a super lightweight wrapper which exposes convenience methods for saving Human messages, AI messages, and then fetching them all.
+When using memory in a chain, there are a few key concepts to understand.
+Note that here we cover general concepts that are useful for most types of memory.
+Each individual memory type may have its own parameters and concepts.
 
-Subclassing this class allows you to use different storage solutions, such as Redis, to keep persistent chat message histories.
+### What variables get returned from memory
 
-```typescript
-import { ChatMessageHistory } from "langchain/memory";
+Before going into the chain, various variables are read from memory. These have specific names which need to align with the variables the chain expects.
+You can see what these variables are by calling `await memory.loadMemoryVariables({})`.
+Note that the empty dictionary that we pass in is just a placeholder for real variables.
+If the memory type you are using is dependent upon the input variables, you may need to pass values here.
 
-const history = new ChatMessageHistory();
+```ts
+await memory.loadMemoryVariables({});
 
-await history.addUserMessage("Hi!");
+// { history: "Human: Hi!\AI: What's up?" }
+```
 
-await history.addAIChatMessage("What's up?");
+In this case, you can see that `loadMemoryVariables` returns a single key, `history`.
+This means that your chain (and likely your prompt) should expect an input named `history`.
+You can generally control this variable through parameters on the memory class. For example, if you want the
+memory variables to be returned under the key `chat_history` you can do:
 
-const messages = await history.getMessages();
+```ts
+const memory2 = new BufferMemory({
+  memoryKey: "chat_history",
+});
 
-console.log(messages);
+await memory2.chatHistory.addMessage(new HumanMessage("Hi!"));
+await memory2.chatHistory.addMessage(new AIMessage("What's up?"));
+
+await memory2.loadMemoryVariables({});
+
+// { chat_history: "Human: Hi!\AI: What's up?" }
+```
+
+The parameter name to control these keys may vary per memory type, but it's important to understand that (1) this is controllable, and (2) how to control it.
+
+### Whether memory is a string or a list of messages
+
+One of the most common types of memory involves returning a list of chat messages. These can either be returned as a single string, all concatenated together (useful when they will be passed into LLMs) or a list of ChatMessages (useful when passed into ChatModels).
+
+By default, they are returned as a single string. In order to return as a list of messages, you can set `returnMessages` to `true`.
+
+```ts
+const messageMemory = new BufferMemory({
+  returnMessages: true,
+});
+
+await messageMemory.chatHistory.addMessage(new HumanMessage("Hi!"));
+await messageMemory.chatHistory.addMessage(new AIMessage("What's up?"));
+
+await messageMemory.loadMemoryVariables({});
 
 /*
-  [
-    HumanMessage {
-      content: 'Hi!',
-    },
-    AIMessage {
-      content: "What's up?",
-    }
-  ]
+  {
+    history: [
+      HumanMessage {
+        content: 'Hi!',
+        additional_kwargs: {}
+      },
+      AIMessage {
+        content: "What's up?",
+        additional_kwargs: {}
+      }
+    ]
+  }
 */
 ```
 
-You can also load messages into memory instances by creating and passing in a `ChatHistory` object.
-This lets you easily pick up state from past conversations. In addition to the above technique, you can do:
+### What keys are saved to memory
 
-```typescript
-import { BufferMemory, ChatMessageHistory } from "langchain/memory";
-import { HumanChatMessage, AIChatMessage } from "langchain/schema";
+Often times chains take in or return multiple input/output keys. In these cases, how can we know
+which keys we want to save to the chat message history? This is generally controllable by `inputKey` and `outputKey`
+parameters on the memory types. These default to None - and if there is only one input/output key the class
+will default to just use that key. However, if there are multiple input/output keys then you MUST specify the name of
+which one to use.
 
-const pastMessages = [
-  new HumanMessage("My name's Jonas"),
-  new AIMessage("Nice to meet you, Jonas!"),
-];
+### End to end example
 
-const memory = new BufferMemory({
-  chatHistory: new ChatMessageHistory(pastMessages),
-});
-```
+Finally, let's take a look at using this in a chain. We'll use an `LLMChain`, and show working with both an LLM and a ChatModel.
 
-:::note
-Do not share the same history or memory instance between two different chains, a memory instance represents the history of a single conversation
-:::
+#### Using an LLM
 
-:::note
-If you deploy your LangChain app on a serverless environment do not store memory instances in a variable, as your hosting provider may have reset it by the next time the function is called.
-:::
-
-## BufferMemory
-
-We now show how to use this simple concept in a chain. We first showcase `BufferMemory`, a wrapper around ChatMessageHistory that extracts the messages into an input variable.
-
-import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
-
-<IntegrationInstallTooltip></IntegrationInstallTooltip>
-
-```bash npm2yarn
-npm install @langchain/openai
-```
-
-```typescript
+```ts
 import { OpenAI } from "@langchain/openai";
-import { BufferMemory } from "langchain/memory";
-import { ConversationChain } from "langchain/chains";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { LLMChain } from "langchain/chains";
 
-const model = new OpenAI({});
-const memory = new BufferMemory();
-// This chain is preconfigured with a default prompt
-const chain = new ConversationChain({ llm: model, memory: memory });
-const res1 = await chain.call({ input: "Hi! I'm Jim." });
-console.log({ res1 });
+const llm = new OpenAI({ temperature: 0 });
+
+// Notice that a "chat_history" variable is present in the prompt template
+const template = `You are a nice chatbot having a conversation with a human.
+
+Previous conversation:
+{chat_history}
+
+New human question: {question}
+Response:`;
+
+const prompt = PromptTemplate.fromTemplate(template);
+
+// Notice that we need to align the `memoryKey` with the variable in the prompt
+const llmMemory = new BufferMemory({ memoryKey: "chat_history" });
+
+const conversationChain = new LLMChain({
+  llm,
+  prompt,
+  verbose: true,
+  memory: llmMemory,
+});
+
+// Notice that we just pass in the `question` variable.
+// `chat_history` gets populated by the memory class
+await conversationChain.invoke({ question: "What is your name?" });
+await conversationChain.invoke({ question: "What did I just ask you?" });
 ```
 
-```shell
-{response: " Hi Jim! It's nice to meet you. My name is AI. What would you like to talk about?"}
+```ts
+// { text: ' My name is OpenAI. What is your name?' }
+// { text: ' You just asked me what my name is.' }
 ```
 
-```typescript
-const res2 = await chain.call({ input: "What's my name?" });
-console.log({ res2 });
+#### Using a chat model
+
+```ts
+import { ChatOpenAI } from "@langchain/openai";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
+
+const chatModel = new ChatOpenAI({ temperature: 0 });
+
+const chatPrompt = ChatPromptTemplate.fromMessages([
+  ["system", "You are a nice chatbot having a conversation with a human."],
+  // The variable name here is what must align with memory
+  new MessagesPlaceholder("chat_history"),
+  ["human", "{question}"],
+]);
+
+// Notice that we set `returnMessages: true` to return raw chat messages that are inserted
+// into the MessagesPlaceholder.
+// Additionally, note that `"chat_history"` aligns with the MessagesPlaceholder name.
+const chatPromptMemory = new BufferMemory({
+  memoryKey: "chat_history",
+  returnMessages: true,
+});
+
+const chatConversationChain = new LLMChain({
+  llm: chatModel,
+  prompt: chatPrompt,
+  verbose: true,
+  memory: chatPromptMemory,
+});
+
+// Notice that we just pass in the `question` variables - `chat_history` gets populated by memory
+await chatConversationChain.invoke({ question: "What is your name?" });
+await chatConversationChain.invoke({ question: "What did I just ask you?" });
 ```
 
-```shell
-{response: ' You said your name is Jim. Is there anything else you would like to talk about?'}
+```ts
+// { text: "Hello! I'm an AI chatbot, so I don't have a personal name. You can just call me Chatbot. How can I assist you today?" }
+// { text: 'You just asked me what my name is.' }
 ```
 
-There are plenty of different types of memory, check out our examples to see more!
+## Next steps
 
-## Creating your own memory class
-
-The BaseMemory interface has two methods:
-
-```typescript
-export type InputValues = Record<string, any>;
-
-export type OutputValues = Record<string, any>;
-
-interface BaseMemory {
-  loadMemoryVariables(values: InputValues): Promise<MemoryVariables>;
-
-  saveContext(
-    inputValues: InputValues,
-    outputValues: OutputValues
-  ): Promise<void>;
-}
-```
-
-To implement your own memory class you have two options:
-
-### Subclassing `BaseChatMemory`
-
-This is the easiest way to implement your own memory class. You can subclass `BaseChatMemory`, which takes care of `saveContext` by saving inputs and outputs as [Chat Messages](https://api.js.langchain.com/classes/schema.BaseMessage.html), and implement only the `loadMemoryVariables` method. This method is responsible for returning the memory variables that are relevant for the current input values.
-
-```typescript
-abstract class BaseChatMemory extends BaseMemory {
-  chatHistory: ChatMessageHistory;
-
-  abstract loadMemoryVariables(values: InputValues): Promise<MemoryVariables>;
-}
-```
-
-### Subclassing `BaseMemory`
-
-If you want to implement a more custom memory class, you can subclass `BaseMemory` and implement both `loadMemoryVariables` and `saveContext` methods. The `saveContext` method is responsible for storing the input and output values in memory. The `loadMemoryVariables` method is responsible for returning the memory variables that are relevant for the current input values.
-
-```typescript
-abstract class BaseMemory {
-  abstract loadMemoryVariables(values: InputValues): Promise<MemoryVariables>;
-
-  abstract saveContext(
-    inputValues: InputValues,
-    outputValues: OutputValues
-  ): Promise<void>;
-}
-```
+And that's it for getting started! Please see the other sections for walkthroughs of more advanced topics.

@@ -1,4 +1,7 @@
-import { DynamicTool, DynamicToolInput } from "./dynamic.js";
+import {
+  DynamicTool,
+  DynamicToolInput,
+} from "@langchain/community/tools/dynamic";
 import { BaseChain } from "../chains/base.js";
 
 /**

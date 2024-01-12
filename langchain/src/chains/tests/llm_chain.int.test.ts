@@ -1,11 +1,10 @@
 import { test } from "@jest/globals";
-import { OpenAI } from "../../llms/openai.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
+import { OpenAI, ChatOpenAI } from "@langchain/openai";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   PromptTemplate,
-} from "../../prompts/index.js";
+} from "@langchain/core/prompts";
 import { LLMChain } from "../llm_chain.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
 

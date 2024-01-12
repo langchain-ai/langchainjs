@@ -52,7 +52,7 @@ interface LLMGenerateCachedParameters<
 }
 
 /**
- * LLM Wrapper. Provides an {@link call} (an {@link generate}) function that takes in a prompt (or prompts) and returns a string.
+ * LLM Wrapper. Takes in a prompt (or prompts) and returns a string.
  */
 export abstract class BaseLLM<
   CallOptions extends BaseLLMCallOptions = BaseLLMCallOptions
@@ -458,6 +458,7 @@ export abstract class BaseLLM<
   }
 
   /**
+   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
    * Convenience wrapper for {@link generate} that takes in a single string prompt and returns a single string output.
    */
   async call(
@@ -470,6 +471,8 @@ export abstract class BaseLLM<
   }
 
   /**
+   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
+   *
    * This method is similar to `call`, but it's used for making predictions
    * based on the input text.
    * @param text Input text for the prediction.
@@ -486,6 +489,8 @@ export abstract class BaseLLM<
   }
 
   /**
+   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
+   *
    * This method takes a list of messages, options, and callbacks, and
    * returns a predicted message.
    * @param messages A list of messages for the prediction.

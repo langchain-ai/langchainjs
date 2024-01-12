@@ -1,8 +1,7 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { ToolInterface } from "@langchain/core/tools";
+import { PromptTemplate, renderTemplate } from "@langchain/core/prompts";
 import { LLMChain } from "../../chains/llm_chain.js";
-import { PromptTemplate } from "../../prompts/prompt.js";
-import { renderTemplate } from "../../prompts/template.js";
 import { Optional } from "../../types/type-utils.js";
 import { Agent, AgentArgs, OutputParserArgs } from "../agent.js";
 import { deserializeHelper } from "../helpers.js";
@@ -56,6 +55,8 @@ export type ZeroShotAgentInput = Optional<AgentInput, "outputParser">;
  *   input: `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`,
  * });
  * ```
+ *
+ * @deprecated Use the {@link https://api.js.langchain.com/functions/langchain_agents.createReactAgent.html | createReactAgent method instead}.
  */
 export class ZeroShotAgent extends Agent {
   static lc_name() {

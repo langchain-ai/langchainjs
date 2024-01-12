@@ -1,11 +1,10 @@
 import { test, expect } from "@jest/globals";
-import { OpenAI } from "../../llms/openai.js";
-import { PromptTemplate } from "../../prompts/index.js";
+import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
+import { PromptTemplate } from "@langchain/core/prompts";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { StuffDocumentsChain } from "../../chains/combine_docs_chain.js";
 import { ConversationalRetrievalQAChain } from "../../chains/conversational_retrieval_chain.js";
 import { MemoryVectorStore } from "../../vectorstores/memory.js";
-import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { ContextualCompressionRetriever } from "../contextual_compression.js";
 import { LLMChainExtractor } from "../document_compressors/chain_extract.js";
 

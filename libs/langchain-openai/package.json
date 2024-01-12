@@ -1,6 +1,6 @@
 {
   "name": "@langchain/openai",
-  "version": "0.0.9",
+  "version": "0.0.11",
   "description": "OpenAI integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -35,9 +35,9 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1.5",
+    "@langchain/core": "~0.1.9",
     "js-tiktoken": "^1.0.7",
-    "openai": "^4.19.0",
+    "openai": "^4.24.2",
     "zod": "^3.22.3",
     "zod-to-json-schema": "3.20.3"
   },

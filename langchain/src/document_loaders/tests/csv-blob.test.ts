@@ -2,8 +2,8 @@ import * as url from "node:url";
 import * as path from "node:path";
 import * as fs from "node:fs/promises";
 import { test, expect } from "@jest/globals";
+import { Document } from "@langchain/core/documents";
 import { CSVLoader } from "../fs/csv.js";
-import { Document } from "../../document.js";
 
 test("Test CSV loader from blob", async () => {
   const filePath = path.resolve(

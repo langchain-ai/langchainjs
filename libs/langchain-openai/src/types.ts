@@ -113,6 +113,18 @@ export interface LegacyOpenAIInput {
 }
 
 export interface OpenAIChatInput extends OpenAIBaseInput {
+  /**
+   * Whether to return log probabilities of the output tokens or not.
+   * If true, returns the log probabilities of each output token returned in the content of message.
+   */
+  logprobs?: boolean;
+
+  /**
+   * An integer between 0 and 5 specifying the number of most likely tokens to return at each token position,
+   * each with an associated log probability. logprobs must be set to true if this parameter is used.
+   */
+  topLogprobs?: number;
+
   /** ChatGPT messages to pass as a prefix to the prompt */
   prefixMessages?: OpenAIClient.Chat.CreateChatCompletionRequestMessage[];
 }

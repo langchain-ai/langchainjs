@@ -35,8 +35,9 @@ export const flattenObjectForWeaviate = (
         }
       }
     } else if (Array.isArray(value)) {
-      if (
-        value.length > 0 &&
+      if (value.length === 0) {
+        flattenedObject[key] = value;
+      } else if (
         typeof value[0] !== "object" &&
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         value.every((el: any) => typeof el === typeof value[0])

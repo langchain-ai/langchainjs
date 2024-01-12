@@ -322,6 +322,7 @@ export interface OptionalImportMap {
 }
 
 export interface SecretMap {
+  ALIBABA_API_KEY?: string;
   AWS_ACCESS_KEY_ID?: string;
   AWS_SECRETE_ACCESS_KEY?: string;
   AWS_SECRET_ACCESS_KEY?: string;

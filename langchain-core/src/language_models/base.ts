@@ -244,8 +244,6 @@ export interface BaseLanguageModelInterface<
   RunOutput = any,
   CallOptions extends BaseLanguageModelCallOptions = BaseLanguageModelCallOptions
 > extends RunnableInterface<BaseLanguageModelInput, RunOutput, CallOptions> {
-  CallOptions: CallOptions;
-
   get callKeys(): string[];
 
   generatePrompt(
@@ -254,12 +252,18 @@ export interface BaseLanguageModelInterface<
     callbacks?: Callbacks
   ): Promise<LLMResult>;
 
+  /**
+   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
+   */
   predict(
     text: string,
     options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<string>;
 
+  /**
+   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
+   */
   predictMessages(
     messages: BaseMessage[],
     options?: string[] | CallOptions,
@@ -301,8 +305,6 @@ export abstract class BaseLanguageModel<
     BaseLanguageModelParams,
     BaseLanguageModelInterface<RunOutput, CallOptions>
 {
-  declare CallOptions: CallOptions;
-
   /**
    * Keys that the language model accepts as call options.
    */
@@ -343,12 +345,18 @@ export abstract class BaseLanguageModel<
     callbacks?: Callbacks
   ): Promise<LLMResult>;
 
+  /**
+   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
+   */
   abstract predict(
     text: string,
     options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<string>;
 
+  /**
+   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
+   */
   abstract predictMessages(
     messages: BaseMessage[],
     options?: string[] | CallOptions,

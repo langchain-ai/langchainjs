@@ -1,9 +1,9 @@
 /* eslint-disable no-process-env */
 
+import { OpenAI } from "@langchain/openai";
+import { ChainValues } from "@langchain/core/utils/types";
+import { Neo4jGraph } from "@langchain/community/graphs/neo4j_graph";
 import { GraphCypherQAChain, INTERMEDIATE_STEPS_KEY } from "../cypher.js";
-import { Neo4jGraph } from "../../../graphs/neo4j_graph.js";
-import { OpenAI } from "../../../llms/openai.js";
-import { ChainValues } from "../../../schema/index.js";
 
 describe.skip("testCypherGeneratingRun", () => {
   const url = process.env.NEO4J_URI as string;
