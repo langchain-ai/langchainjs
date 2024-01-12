@@ -9,6 +9,7 @@ import { AstraDBVectorStore, AstraLibArgs } from "../astradb.js";
 const clientConfig = {
   token: process.env.ASTRA_DB_APPLICATION_TOKEN ?? "dummy",
   endpoint: process.env.ASTRA_DB_ENDPOINT ?? "dummy",
+  namespace: process.env.ASTRA_DB_NAMESPACE ?? "default_keyspace",
 };
 
 const client = new AstraDB(clientConfig.token, clientConfig.endpoint);
@@ -24,7 +25,7 @@ const astraConfig: AstraLibArgs = {
   },
 };
 
-describe.skip("AstraDBVectorStore", () => {
+describe("AstraDBVectorStore", () => {
   beforeEach(async () => {
     try {
       await client.dropCollection(astraConfig.collection);
