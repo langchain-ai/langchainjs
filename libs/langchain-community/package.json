@@ -53,6 +53,7 @@
     "@aws-sdk/client-sfn": "^3.362.0",
     "@aws-sdk/credential-provider-node": "^3.388.0",
     "@aws-sdk/types": "^3.357.0",
+    "@azure/search-documents": "^12.0.0",
     "@clickhouse/client": "^0.2.5",
     "@cloudflare/ai": "^1.0.12",
     "@cloudflare/workers-types": "^4.20230922.0",
@@ -169,6 +170,7 @@
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@aws-sdk/client-sfn": "^3.310.0",
     "@aws-sdk/credential-provider-node": "^3.388.0",
+    "@azure/search-documents": "^12.0.0",
     "@clickhouse/client": "^0.2.5",
     "@cloudflare/ai": "^1.0.12",
     "@datastax/astra-db-ts": "^0.1.4",
@@ -267,6 +269,9 @@
       "optional": true
     },
     "@aws-sdk/credential-provider-node": {
+      "optional": true
+    },
+    "@azure/search-documents": {
       "optional": true
     },
     "@clickhouse/client": {
