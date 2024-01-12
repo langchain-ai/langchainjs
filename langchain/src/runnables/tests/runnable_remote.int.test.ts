@@ -1,12 +1,12 @@
 import { applyPatch } from "@langchain/core/utils/json_patch";
 import { RemoteRunnable } from "../remote.js";
 
-test("Invoke local langserve", async () => {
+test("streamLog hosted langserve", async () => {
   const remote = new RemoteRunnable({
     url: `https://chat-langchain-backend.langchain.dev/chat`,
   });
-  const result = remote.streamLog({
-    question: "What is this?",
+  const result = await remote.streamLog({
+    question: "What is a document loader?",
   });
   let totalByteSize = 0;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

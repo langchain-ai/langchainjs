@@ -49,7 +49,7 @@ const chain = RunnableSequence.from([
   new StringOutputParser(),
 ]);
 
-const stream = chain.streamLog("What is the powerhouse of the cell?");
+const stream = await chain.streamLog("What is the powerhouse of the cell?");
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let aggregate: any = {};

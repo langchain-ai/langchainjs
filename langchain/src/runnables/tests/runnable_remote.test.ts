@@ -25,58 +25,58 @@ data: ["a", "b", "c", "d"]
 event: end`;
 
 const bResp = `event: data
-data: {"content": "", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": "", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": "\\"", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": "\\"", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": "object", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": "object", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": "1", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": "1", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": ",", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": ",", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": " object", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": " object", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": "2", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": "2", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": ",", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": ",", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": " object", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": " object", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": "3", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": "3", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": ",", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": ",", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": " object", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": " object", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": "4", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": "4", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": ",", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": ",", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": " object", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": " object", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": "5", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": "5", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": "\\"", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": "\\"", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": "", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": "", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: end`;
 
@@ -186,12 +186,12 @@ describe("RemoteRunnable", () => {
 
   test("Stream log local langserve", async () => {
     const remote = new RemoteRunnable({ url: `${BASE_URL}/a` });
-    const stream = remote.streamLog({
+    const stream = await remote.streamLog({
       question: "What are the 5 best apples?",
     });
     let chunkCount = 0;
     for await (const chunk of stream) {
-      expect(chunk).toEqual('["a", "b", "c", "d"]');
+      expect(chunk).toEqual(["a", "b", "c", "d"]);
       chunkCount += 1;
     }
     expect(chunkCount).toBe(1);

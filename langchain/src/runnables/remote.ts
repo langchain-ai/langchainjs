@@ -28,6 +28,7 @@ import {
   ToolMessage,
   ToolMessageChunk,
 } from "@langchain/core/messages";
+import { GenerationChunk, ChatGenerationChunk } from "@langchain/core/outputs";
 import {
   getBytes,
   getLines,
@@ -53,83 +54,109 @@ function isSuperset(set: Set<string>, subset: Set<string>) {
 function revive(obj: any): any {
   if (Array.isArray(obj)) return obj.map(revive);
   if (typeof obj === "object") {
+    if (!obj || obj instanceof Date) {
+      return obj;
+    }
     const keysArr = Object.keys(obj);
     const keys = new Set(keysArr);
-    if (isSuperset(keys, new Set(["page_content", "metadata"])))
+    if (isSuperset(keys, new Set(["page_content", "metadata"]))) {
       return new Document({
         pageContent: obj.page_content,
         metadata: obj.metadata,
       });
+    }
 
-    if (isSuperset(keys, new Set(["content", "type", "is_chunk"]))) {
-      if (!obj.is_chunk) {
-        if (obj.type === "human") {
-          return new HumanMessage({
-            content: obj.content,
-          });
-        }
-        if (obj.type === "system") {
-          return new SystemMessage({
-            content: obj.content,
-          });
-        }
-        if (obj.type === "chat") {
-          return new ChatMessage({
-            content: obj.content,
-            role: obj.role,
-          });
-        }
-        if (obj.type === "function") {
-          return new FunctionMessage({
-            content: obj.content,
-            name: obj.name,
-          });
-        }
-        if (obj.type === "tool") {
-          return new ToolMessage({
-            content: obj.content,
-            tool_call_id: obj.tool_call_id,
-          });
-        }
-        if (obj.type === "ai") {
-          return new AIMessage({
-            content: obj.content,
-          });
-        }
-      } else {
-        if (obj.type === "human") {
-          return new HumanMessageChunk({
-            content: obj.content,
-          });
-        }
-        if (obj.type === "system") {
-          return new SystemMessageChunk({
-            content: obj.content,
-          });
-        }
-        if (obj.type === "chat") {
-          return new ChatMessageChunk({
-            content: obj.content,
-            role: obj.role,
-          });
-        }
-        if (obj.type === "function") {
-          return new FunctionMessageChunk({
-            content: obj.content,
-            name: obj.name,
-          });
-        }
-        if (obj.type === "tool") {
-          return new ToolMessageChunk({
-            content: obj.content,
-            tool_call_id: obj.tool_call_id,
-          });
-        }
-        if (obj.type === "ai") {
-          return new AIMessageChunk({
-            content: obj.content,
-          });
-        }
+    if (isSuperset(keys, new Set(["content", "type"]))) {
+      if (obj.type === "HumanMessage") {
+        return new HumanMessage({
+          content: obj.content,
+        });
+      }
+      if (obj.type === "SystemMessage") {
+        return new SystemMessage({
+          content: obj.content,
+        });
+      }
+      if (obj.type === "ChatMessage") {
+        return new ChatMessage({
+          content: obj.content,
+          role: obj.role,
+        });
+      }
+      if (obj.type === "FunctionMessage") {
+        return new FunctionMessage({
+          content: obj.content,
+          name: obj.name,
+        });
+      }
+      if (obj.type === "ToolMessage") {
+        return new ToolMessage({
+          content: obj.content,
+          tool_call_id: obj.tool_call_id,
+        });
+      }
+      if (obj.type === "AIMessage") {
+        return new AIMessage({
+          content: obj.content,
+        });
+      }
+      if (obj.type === "HumanMessageChunk") {
+        return new HumanMessageChunk({
+          content: obj.content,
+        });
+      }
+      if (obj.type === "SystemMessageChunk") {
+        return new SystemMessageChunk({
+          content: obj.content,
+        });
+      }
+      if (obj.type === "ChatMessageChunk") {
+        return new ChatMessageChunk({
+          content: obj.content,
+          role: obj.role,
+        });
+      }
+      if (obj.type === "FunctionMessageChunk") {
+        return new FunctionMessageChunk({
+          content: obj.content,
+          name: obj.name,
+        });
+      }
+      if (obj.type === "ToolMessageChunk") {
+        return new ToolMessageChunk({
+          content: obj.content,
+          tool_call_id: obj.tool_call_id,
+        });
+      }
+      if (obj.type === "AIMessageChunk") {
+        return new AIMessageChunk({
+          content: obj.content,
+        });
+      }
+    }
+    if (isSuperset(keys, new Set(["text", "generation_info", "type"]))) {
+      if (obj.type === "ChatGenerationChunk") {
+        return new ChatGenerationChunk({
+          message: revive(obj.message),
+          text: obj.text,
+          generationInfo: obj.generation_info,
+        });
+      } else if (obj.type === "ChatGeneration") {
+        return {
+          message: revive(obj.message),
+          text: obj.text,
+          generationInfo: obj.generation_info,
+        };
+      } else if (obj.type === "GenerationChunk") {
+        return new GenerationChunk({
+          text: obj.text,
+          generationInfo: obj.generation_info,
+        });
+      } else if (obj.type === "Generation") {
+        return {
+          text: obj.text,
+          generationInfo: obj.generation_info,
+        };
       }
     }
     if (isSuperset(keys, new Set(["text"]))) {
@@ -388,7 +415,7 @@ export class RemoteRunnable<
     }
     const runnableStream = convertEventStreamToIterableReadableDataStream(body);
     for await (const log of runnableStream) {
-      yield revive(log);
+      yield revive(JSON.parse(log));
     }
   }
 }
