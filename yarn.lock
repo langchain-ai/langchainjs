@@ -8313,7 +8313,7 @@ __metadata:
     uuid: ^9.0.0
     vectordb: ^0.1.4
     voy-search: 0.6.2
-    weaviate-ts-client: ^1.4.0
+    weaviate-ts-client: ^2.0.0
     web-auth-library: ^1.0.3
     zod: ^3.22.3
   peerDependencies:
@@ -8393,7 +8393,7 @@ __metadata:
     usearch: ^1.1.1
     vectordb: ^0.1.4
     voy-search: 0.6.2
-    weaviate-ts-client: ^1.4.0
+    weaviate-ts-client: ^2.0.0
     web-auth-library: ^1.0.3
     ws: ^8.14.2
   peerDependenciesMeta:
@@ -19176,7 +19176,7 @@ __metadata:
     uuid: ^9.0.0
     vectordb: ^0.1.4
     voy-search: 0.6.2
-    weaviate-ts-client: ^1.0.0
+    weaviate-ts-client: ^2.0.0
     zod: ^3.22.3
     zod-to-json-schema: 3.20.3
   languageName: unknown
@@ -20856,7 +20856,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-request@npm:^5.1.0":
+"graphql-request@npm:^5.2.0":
   version: 5.2.0
   resolution: "graphql-request@npm:5.2.0"
   dependencies:
@@ -23794,7 +23794,7 @@ __metadata:
     typescript: ~5.1.6
     uuid: ^9.0.0
     vectordb: ^0.1.4
-    weaviate-ts-client: ^1.4.0
+    weaviate-ts-client: ^2.0.0
     web-auth-library: ^1.0.3
     yaml: ^2.2.1
     youtube-transcript: ^1.0.6
@@ -23848,7 +23848,7 @@ __metadata:
     srt-parser-2: ^1.2.3
     typeorm: ^0.3.12
     vectordb: ^0.1.4
-    weaviate-ts-client: ^1.4.0
+    weaviate-ts-client: ^2.0.0
     web-auth-library: ^1.0.3
     ws: ^8.14.2
     youtube-transcript: ^1.0.6
@@ -31103,7 +31103,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tar@npm:^6.0.2, tar@npm:^6.1.11, tar@npm:^6.1.13, tar@npm:^6.1.2":
+"tar@npm:^6.0.2, tar@npm:^6.1.11, tar@npm:^6.1.2":
   version: 6.1.13
   resolution: "tar@npm:6.1.13"
   dependencies:
@@ -32889,25 +32889,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"weaviate-ts-client@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "weaviate-ts-client@npm:1.0.0"
+"weaviate-ts-client@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "weaviate-ts-client@npm:2.0.0"
   dependencies:
-    graphql-request: ^5.1.0
-    isomorphic-fetch: ^3.0.0
-    tar: ^6.1.13
-  checksum: ffa3c13913cf8999a1bfd3db1cc1952d7bfd4e6ca3d2f6eadfb17a56595bfc74fd9f068d1e9d73677b87281d53486ba333d5d5aedb31f072f05d6a5d8e7b2502
-  languageName: node
-  linkType: hard
-
-"weaviate-ts-client@npm:^1.4.0":
-  version: 1.4.0
-  resolution: "weaviate-ts-client@npm:1.4.0"
-  dependencies:
-    graphql-request: ^5.1.0
-    isomorphic-fetch: ^3.0.0
-    uuid: ^9.0.0
-  checksum: aef68e7d77ac8b3d42e1a3dd3c4dcb7a0c74b96c1a3d7b11e52313c7dfa9a9b3fc9ba5f3048628d67193ca6c84bb8a7eca641dacfdc459cfe26ac2fe20b07f11
+    graphql-request: ^5.2.0
+    uuid: ^9.0.1
+  checksum: 4c8ec1c55cb3acb19ebdfc6bdecfd3f6eee5f2361b9efeaf49fcdfce426c410f7ec551143768c0ff19e4615279c0d96695d86e65514b2a22f544826dc9640cae
   languageName: node
   linkType: hard
 

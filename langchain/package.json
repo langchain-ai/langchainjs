@@ -984,7 +984,7 @@
     "typeorm": "^0.3.12",
     "typescript": "~5.1.6",
     "vectordb": "^0.1.4",
-    "weaviate-ts-client": "^1.4.0",
+    "weaviate-ts-client": "^2.0.0",
     "web-auth-library": "^1.0.3",
     "youtube-transcript": "^1.0.6",
     "youtubei.js": "^5.8.0"
@@ -1036,7 +1036,7 @@
     "srt-parser-2": "^1.2.3",
     "typeorm": "^0.3.12",
     "vectordb": "^0.1.4",
-    "weaviate-ts-client": "^1.4.0",
+    "weaviate-ts-client": "^2.0.0",
     "web-auth-library": "^1.0.3",
     "ws": "^8.14.2",
     "youtube-transcript": "^1.0.6",
