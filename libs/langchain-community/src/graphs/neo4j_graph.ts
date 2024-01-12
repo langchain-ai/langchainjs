@@ -42,9 +42,9 @@ export class Neo4jGraph {
 
   private database: string;
 
-  private schema = "";
+  protected schema = "";
 
-  private structuredSchema: StructuredSchema = {
+  protected structuredSchema: StructuredSchema = {
     nodeProps: {},
     relProps: {},
     relationships: [],

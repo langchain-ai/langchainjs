@@ -256,6 +256,9 @@ export interface OptionalImportMap {
   "@langchain/community/graphs/neo4j_graph"?:
     | typeof import("../graphs/neo4j_graph.js")
     | Promise<typeof import("../graphs/neo4j_graph.js")>;
+  "@langchain/community/graphs/memgraph_graph"?:
+    | typeof import("../graphs/memgraph_graph.js")
+    | Promise<typeof import("../graphs/memgraph_graph.js")>;
   "@langchain/community/document_transformers/html_to_text"?:
     | typeof import("../document_transformers/html_to_text.js")
     | Promise<typeof import("../document_transformers/html_to_text.js")>;

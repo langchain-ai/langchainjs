@@ -86,6 +86,7 @@ export const optionalImportEntrypoints = [
   "langchain_community/retrievers/vectara_summary",
   "langchain_community/retrievers/zep",
   "langchain_community/graphs/neo4j_graph",
+  "langchain_community/graphs/memgraph_graph",
   "langchain_community/document_transformers/html_to_text",
   "langchain_community/document_transformers/mozilla_readability",
   "langchain_community/storage/convex",

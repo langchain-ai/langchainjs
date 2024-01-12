@@ -369,6 +369,7 @@
     "../../libs/langchain-community/src/caches/momento.ts",
     "../../libs/langchain-community/src/caches/upstash_redis.ts",
     "../../libs/langchain-community/src/graphs/neo4j_graph.ts",
+    "../../libs/langchain-community/src/graphs/memgraph_graph.ts",
     "../../libs/langchain-community/src/utils/event_source_parse.ts",
     "../../libs/langchain-community/src/document_transformers/html_to_text.ts",
     "../../libs/langchain-community/src/document_transformers/mozilla_readability.ts",
