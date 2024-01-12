@@ -222,26 +222,15 @@ export const getTableAndColumnsName = async (
     const schemaName = appDataSource.options.schema;
     const sql = `  
       SELECT
-          TABLE_NAME AS table_name,
-          COLUMN_NAME AS column_name,
-          DATA_TYPE AS data_type,
-          NULLABLE AS is_nullable
+          TABLE_NAME AS "table_name",
+          COLUMN_NAME AS "column_name",
+          DATA_TYPE AS "data_type",
+          NULLABLE AS "is_nullable"
       FROM ALL_TAB_COLS
       WHERE
-          OWNER = UPPER(${schemaName})`;
-    const rep: Array<{ [key: string]: string }> = await appDataSource.query(
-      sql
-    );
-    const propertiesLower: Array<RawResultTableAndColumn> = [];
-    rep.forEach((item) => {
-      propertiesLower.push({
-        table_name: item.TABLE_NAME,
-        column_name: item.COLUMN_NAME,
-        data_type: item.DATA_TYPE,
-        is_nullable: item.IS_NULLABLE,
-      });
-    });
-    return formatToSqlTable(propertiesLower);
+          OWNER = UPPER('${schemaName}');`;
+    const rep = await appDataSource.query(sql);
+    return formatToSqlTable(rep);
   }
   throw new Error("Database type not implemented yet");
 };
@@ -321,7 +310,7 @@ export const generateTableInfoFromTables = async (
         "public";
       sqlSelectInfoQuery = `SELECT * FROM "${schema}"."${currentTable.tableName}" LIMIT ${nbSampleRow};\n`;
     } else if (appDataSource.options.type === "oracle") {
-      sqlSelectInfoQuery = `SELECT * FROM "${schema}"."${currentTable.tableName}" WHERE ROWNUM <= ${nbSampleRow}`;
+      sqlSelectInfoQuery = `SELECT * FROM "${schema}"."${currentTable.tableName}" WHERE ROWNUM <= '${nbSampleRow}';`;
     } else {
       sqlSelectInfoQuery = `SELECT * FROM "${currentTable.tableName}" LIMIT ${nbSampleRow};\n`;
     }
