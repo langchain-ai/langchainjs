@@ -8,7 +8,7 @@ import {
   SystemMessagePromptTemplate,
 } from "@langchain/core/prompts";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { ChatCloudflareWorkersAI } from "../cloudflare_workersai.js";
+import { ChatCloudflareWorkersAI } from "../chat_models.js";
 
 describe("ChatCloudflareWorkersAI", () => {
   test("call", async () => {
