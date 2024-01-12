@@ -14,7 +14,7 @@ import {
 } from "@langchain/core/prompts";
 import { LengthBasedExampleSelector } from "@langchain/core/example_selectors";
 import { Serializable } from "@langchain/core/load/serializable";
-import { LangChainTracer } from "@langchain/core/tracers/tracer_langchain";
+import { ConsoleCallbackHandler } from "@langchain/core/tracers/console";
 import { CommaSeparatedListOutputParser } from "@langchain/core/output_parsers";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { initializeAgentExecutorWithOptions } from "../../agents/initialize.js";
@@ -190,7 +190,7 @@ test("serialize + deserialize llm chain string prompt", async () => {
     openAIApiKey: "openai-key",
     verbose: true,
     callbacks: [
-      new LangChainTracer(),
+      new ConsoleCallbackHandler(),
       {
         handleLLMEnd(output) {
           console.log(output);
@@ -290,7 +290,7 @@ test("serialize + deserialize llm chain few shot prompt w/ examples", async () =
     temperature: 0.5,
     modelName: "davinci",
     openAIApiKey: "openai-key",
-    callbacks: [new LangChainTracer()],
+    callbacks: [new ConsoleCallbackHandler()],
   });
   const prompt = new FewShotPromptTemplate({
     examples: [{ yo: "1" }, { yo: "2" }],
@@ -345,7 +345,7 @@ test("serialize + deserialize llmchain with list output parser", async () => {
     temperature: 0.5,
     modelName: "davinci",
     openAIApiKey: "openai-key",
-    callbacks: [new LangChainTracer()],
+    callbacks: [new ConsoleCallbackHandler()],
   });
   const prompt = PromptTemplate.fromTemplate(
     "An example about {yo} {format_instructions}"
@@ -369,7 +369,7 @@ test("serialize + deserialize llmchain with regex output parser", async () => {
     temperature: 0.5,
     modelName: "davinci",
     openAIApiKey: "openai-key",
-    callbacks: [new LangChainTracer()],
+    callbacks: [new ConsoleCallbackHandler()],
   });
   const prompt = PromptTemplate.fromTemplate(
     "An example about {yo} {format_instructions}"
@@ -403,7 +403,7 @@ test("serialize + deserialize llmchain with fix + combining output parser", asyn
     temperature: 0.5,
     modelName: "davinci",
     openAIApiKey: "openai-key",
-    callbacks: [new LangChainTracer()],
+    callbacks: [new ConsoleCallbackHandler()],
   });
   const prompt = PromptTemplate.fromTemplate(
     "An example about {yo} {format_instructions}"
@@ -436,7 +436,7 @@ test("serialize + deserialize llmchain with struct output parser throws", async 
     temperature: 0.5,
     modelName: "davinci",
     openAIApiKey: "openai-key",
-    callbacks: [new LangChainTracer()],
+    callbacks: [new ConsoleCallbackHandler({})],
   });
 
   const prompt = PromptTemplate.fromTemplate(
