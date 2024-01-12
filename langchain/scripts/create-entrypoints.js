@@ -104,7 +104,6 @@ const entrypoints = {
   // vectorstores
   "vectorstores/clickhouse": "vectorstores/clickhouse",
   "vectorstores/analyticdb": "vectorstores/analyticdb",
-  "vectorstores/azuresearch": "vectorstores/azuresearch",
   "vectorstores/base": "vectorstores/base",
   "vectorstores/cassandra": "vectorstores/cassandra",
   "vectorstores/convex": "vectorstores/convex",
