@@ -54,6 +54,7 @@ function isSuperset(set: Set<string>, subset: Set<string>) {
 function revive(obj: any): any {
   if (Array.isArray(obj)) return obj.map(revive);
   if (typeof obj === "object") {
+    // eslint-disable-next-line no-instanceof/no-instanceof
     if (!obj || obj instanceof Date) {
       return obj;
     }
