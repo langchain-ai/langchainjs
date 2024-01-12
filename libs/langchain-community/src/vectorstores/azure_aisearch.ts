@@ -1,55 +1,97 @@
 import * as uuid from "uuid";
 import { SearchClient, SearchIndexClient, AzureKeyCredential, IndexingResult, SearchIndex } from "@azure/search-documents";
-import { VectorStore } from "./base.js";
-import { Embeddings } from "../embeddings/base.js";
-import { Document } from "../document.js";
+import {
+  MaxMarginalRelevanceSearchOptions,
+  VectorStore,
+} from "@langchain/core/vectorstores";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
+import { Document } from "@langchain/core/documents";
+import { maximalMarginalRelevance } from "@langchain/core/utils/math";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
+
+// TODO: Allow to override default fields
 
 /**
- * Azure Search - Type of query.
+ * Azure AI Search query type.
  */
-export type AzureSearchType = "semantic_hybrid" | "similarity_hybrid" | "similarity";
+export const AzureAISearchQueryType = {
+  /** Vector search. */
+  Similarity: "similarity",
+  /** Hybrid full text and vector search. */
+  SimilarityHybrid: "similarity_hybrid",
+  /** Hybrid full text and vector search with semantic ranking. */
+  SemanticHybrid: "semantic_hybrid",
+} as const;
 
 /**
- * Azure search - Store DB Config.
+ * Azure AI Search query type.
  */
-export type AzureSearchStoreParams = {
-  client: {
-    indexName: string;
-    endpoint: string;
-    credential: string;
-  } | SearchClient<AzureSearchDocument>;
-  search: {
-    type: AzureSearchType;
-    language?: string;
-    semantic?: string;
-  };
+export type AzureAISearchQueryType = (typeof AzureAISearchQueryType)[keyof typeof AzureAISearchQueryType];
+
+/**
+ * Azure AI Search settings.
+ */
+export interface AzureAISearchQueryOptions {
+  readonly type: AzureAISearchQueryType;
+  readonly semantic?: string;
+  readonly semanticConfigurationName?: string;
+  readonly semanticQueryLanguage?: string;
+
+  // fields: Optional[List[SearchField]] = None,
+  // vector_search: Optional[VectorSearch] = None,
+  // semantic_settings: Optional[Union[SemanticSearch, SemanticSettings]] = None,
+  // scoring_profiles: Optional[List[ScoringProfile]] = None,
+  // default_scoring_profile: Optional[str] = None,
+  // cors_options: Optional[CorsOptions] = None,
 }
 
 /**
- * Define metadata schema.
- *
+ * Configuration options for the `AzureAISearchStore` constructor.
+ */
+export interface AzureAISearchConfig {
+  readonly client?: SearchClient<AzureAISearchDocument>;
+  readonly indexName?: string;
+  readonly endpoint?: string;
+  readonly key?: string;
+  readonly search: AzureAISearchQueryOptions;
+  /**
+   * The amount of documents to chunk by when adding vectors.
+   * @default 100
+   */
+  readonly chunkSize?: number;
+  /**
+   * The amount of documents to embed at once when adding documents.
+   * Note that some providers like Azure OpenAI can only embed 16 documents
+   * at a time.
+   * @default 16
+   */
+  readonly embeddingBatchSize?: number;
+}
+
+/**
+ * Azure AI Search options metadata schema.
  * If yout want to add custom data, use the attributes property.
  */
-export type AzureSearchDocumentMetadata = {
+export type AzureAISearchDocumentMetadata = {
   source: string;
   attributes?: Array<{ key: string; value: string; }>;
 }
 
 /**
- * Azure Search - Represents a document indexed.
+ * Azure AI Search indexed document.
  */
-export type AzureSearchDocument = {
+export type AzureAISearchDocument = {
   id: string;
   content: string;
   content_vector: number[];
-  metadata: AzureSearchDocumentMetadata;
+  metadata: AzureAISearchDocumentMetadata;
 }
 
 /**
- * Azure Search - Options for adding documents.
+ * Azure AI Search options for adding documents.
  */
-export type AzureSearchAddDocumentsOptions = {
-  keys?: string[];
+export type AzureAISearchAddDocumentsOptions = {
+  ids?: string[];
 }
 
 const DEFAULT_FIELD_ID = "id";
@@ -60,48 +102,122 @@ const DEFAULT_FIELD_METADATA_SOURCE = "source";
 const DEFAULT_FIELD_METADATA_ATTRS = "attributes";
 
 /**
- * Vector store implementation for Azure Cognitive Search.
+ * Azure AI Search vector store.
+ * To use this, you should have:
+ * - the `@azure/search-documents` NPM package installed
+ * - an endpoint and key to the Azure AI Search instance
+ *
+ * If you directly provide a `SearchClient` instance, you need to ensure that
+ * an index has been created. When using and endpoint and key, the index will
+ * be created automatically if it does not exist.
  */
-export class AzureSearchStore extends VectorStore {
+export class AzureAISearchVectorStore extends VectorStore {
   declare FilterType: string;
 
-  _vectorstoreType(): string {
-    return "azure-search";
+  get lc_secrets(): { [key: string]: string } {
+    return {
+      endpoint: "AZURE_AISEARCH_ENDPOINT",
+      key: "AZURE_AISEARCH_KEY",
+    };
   }
 
-  private readonly params: AzureSearchStoreParams;
+  _vectorstoreType(): string {
+    return "azure_aisearch";
+  }
 
-  private readonly client: SearchClient<AzureSearchDocument>;
+  private readonly initPromise: Promise<void>;
 
-  private constructor(client: SearchClient<AzureSearchDocument>, params: AzureSearchStoreParams, embeddings: Embeddings) {
-    super(embeddings, params);
+  private readonly client: SearchClient<AzureAISearchDocument>;
 
-    this.client = client;
-    this.params = params;
+  private readonly indexName: string;
+
+  private readonly chunkSize: number;
+
+  private readonly embeddingBatchSize: number;
+
+  private readonly options: AzureAISearchQueryOptions;
+
+  private constructor(embeddings: EmbeddingsInterface, config: AzureAISearchConfig) {
+    super(embeddings, config);
+
+    const endpoint = config.endpoint ?? getEnvironmentVariable("AZURE_AISEARCH_ENDPOINT");
+    const key = config.key ?? getEnvironmentVariable("AZURE_AISEARCH_KEY");
+
+    if (!config.client && (!endpoint && !key)) {
+      throw new Error(
+        "Azure AI Search client or connection string must be set."
+      );
+    }
+
+    this.indexName = config.indexName ?? "vectorSearchIndex";
+    this.chunkSize = config.chunkSize ?? 100;
+    this.embeddingBatchSize = config.embeddingBatchSize ?? 16;
+
+    if (!config.client) {
+      const credential = new AzureKeyCredential(key!);
+      this.client = new SearchClient(endpoint!, this.indexName, credential);
+      const indexClient = new SearchIndexClient(endpoint!, credential);
+
+      // Start initialization, but don't wait for it to finish here
+      this.initPromise = this.ensureIndexExists(indexClient).catch(
+        (error) => {
+          console.error("Error during Azure Cosmos DB initialization:", error);
+        }
+      );
+    }
+
+    this.options = config.search;
     this.embeddings = embeddings;
   }
 
   /**
-   * Upload documents into vector store.
-   *
-   * @param documents
-   * @param options
+   * Removes specified documents from the AzureAISearchVectorStore using a filter.
+   * @param filter OData filter to find documents to delete.
+   * @returns A promise that resolves when the documents have been removed.
+   */
+  async deleteByFilter(filter: string): Promise<IndexingResult[]> {
+    const { results } = await this.client.search("", {
+      filter,
+    });
+
+    const ids: string[] = [];
+    for await (const item of results) {
+      ids.push(item.document.id);
+    }
+
+    const { results: deleteResults } = await this.client.deleteDocuments(DEFAULT_FIELD_ID, ids);
+    return deleteResults;
+  }
+
+  /**
+   * Removes specified documents from the AzureAISearchVectorStore.
+   * @param ids IDs of the documents to be removed.
+   * @returns A promise that resolves when the documents have been removed.
+   */
+  async deleteById(ids: string | string[]): Promise<IndexingResult[]> {
+    await this.initPromise;
+    const { results } = await this.client.deleteDocuments(DEFAULT_FIELD_ID, Array.isArray(ids) ? ids : [ids]);
+    return results;
+  }
+
+  /**
+   * Method for adding documents to the AzureAISearchVectorStore. It first converts
+   * the documents to texts and then adds them as vectors.
+   * @param documents The documents to add.
+   * @param options Options for adding documents.
+   * @returns A promise that resolves to the ids of the added documents.
    */
   async addDocuments(
-    documents: Document<AzureSearchDocumentMetadata>[],
-    options?: AzureSearchAddDocumentsOptions
+    documents: Document<AzureAISearchDocumentMetadata>[],
+    options?: AzureAISearchAddDocumentsOptions
   ) {
     const texts = documents.map(({ pageContent }) => pageContent);
-
-    // Some providers like Azure OpenAI can only embed 16 documents at a time.
     const results: string[] = [];
-    const batchSize = 16;
 
-    for (let i = 0; i < texts.length; i += batchSize) {
-      const batch = texts.slice(i, i + batchSize);
-      const docsBatch = documents.slice(i, i + batchSize);
+    for (let i = 0; i < texts.length; i += this.embeddingBatchSize) {
+      const batch = texts.slice(i, i + this.embeddingBatchSize);
+      const docsBatch = documents.slice(i, i + this.embeddingBatchSize);
       const batchEmbeddings: number[][] = await this.embeddings.embedDocuments(batch);
-
       const batchResult = await this.addVectors(
         batchEmbeddings,
         docsBatch,
@@ -115,21 +231,20 @@ export class AzureSearchStore extends VectorStore {
   }
 
   /**
-   * Upload vectors into vector store.
-   *
-   * @param vectors
-   * @param documents
-   * @param options
+   * Method for adding vectors to the AzureAISearchVectorStore.
+   * @param vectors Vectors to be added.
+   * @param documents Corresponding documents to be added.
+   * @param options Options for adding documents.
+   * @returns A promise that resolves to the ids of the added documents.
    */
   async addVectors(
     vectors: number[][],
-    documents: Document<AzureSearchDocumentMetadata>[],
-    options?: AzureSearchAddDocumentsOptions
-  ) {
-    const keys = options?.keys ?? documents.map(() => uuid.v4());
-
-    const entities: AzureSearchDocument[] = documents.map((doc, idx) => ({
-      id: keys[idx],
+    documents: Document<AzureAISearchDocumentMetadata>[],
+    options?: AzureAISearchAddDocumentsOptions
+  ): Promise<string[]> {
+    const ids = options?.ids ?? documents.map(() => uuid.v4());
+    const entities: AzureAISearchDocument[] = documents.map((doc, idx) => ({
+      id: ids[idx],
       content: doc.pageContent,
       content_vector: vectors[idx],
       metadata: {
@@ -138,47 +253,13 @@ export class AzureSearchStore extends VectorStore {
       }
     }));
 
-    const chunkSize = 100;
-    for (let i = 0; i < entities.length; i += chunkSize) {
-      const chunk = entities.slice(i, i + chunkSize);
-
+    await this.initPromise;
+    for (let i = 0; i < entities.length; i += this.chunkSize) {
+      const chunk = entities.slice(i, i + this.chunkSize);
       await this.client.uploadDocuments(chunk, { throwOnAnyFailure: true });
     }
 
-    return keys;
-  }
-
-  /**
-   * Delete multiple documents by filter expression.
-   *
-   * @param filter OData filter to find documents to delete.
-   * @returns
-   */
-  async deleteMany(filter: string): Promise<IndexingResult[]> {
-    const { results } = await this.client.search("", {
-      filter,
-    });
-
-    const keys: string[] = [];
-    for await (const item of results) {
-      keys.push(item.document.id);
-    }
-
-    const { results: deleteResults } = await this.client.deleteDocuments(DEFAULT_FIELD_ID, keys);
-
-    return deleteResults;
-  }
-
-  /**
-   * Delete document by key(s).
-   *
-   * @param key
-   * @returns
-   */
-  async deleteByKey(key: string | string[]): Promise<IndexingResult[]> {
-    const { results } = await this.client.deleteDocuments(DEFAULT_FIELD_ID, Array.isArray(key) ? key : [key]);
-
-    return results;
+    return ids;
   }
 
   /**
@@ -188,40 +269,40 @@ export class AzureSearchStore extends VectorStore {
    * @param k
    * @param filter
    */
-  async similaritySearch(
-    query: string,
-    k = 4,
-    filter: this["FilterType"] | undefined = undefined,
-  ): Promise<Document[]> {
-    const searchType = this.params.search.type;
-    let results: [Document, number][] = [];
+  // async similaritySearch(
+  //   query: string,
+  //   k = 4,
+  //   filter: this["FilterType"] | undefined = undefined,
+  // ): Promise<Document[]> {
+  //   const searchType = this.params.search.type;
+  //   let results: [Document, number][] = [];
 
-    if (searchType === "similarity") {
-      results = await this.similaritySearchVectorWithScore(
-        await this.embeddings.embedQuery(query),
-        k,
-        filter
-      );
-    } else if (searchType === "similarity_hybrid") {
-      results = await this.hybridSearchVectorWithScore(
-        query,
-        await this.embeddings.embedQuery(query),
-        k,
-        filter
-      );
-    } else if (searchType === "semantic_hybrid") {
-      results = await this.semanticHybridSearchVectorWithScore(
-        query,
-        await this.embeddings.embedQuery(query),
-        k,
-        filter
-      );
-    } else {
-      throw new Error(`Unrecognized search type '${searchType}'`);
-    }
+  //   if (searchType === "similarity") {
+  //     results = await this.similaritySearchVectorWithScore(
+  //       await this.embeddings.embedQuery(query),
+  //       k,
+  //       filter
+  //     );
+  //   } else if (searchType === "similarity_hybrid") {
+  //     results = await this.hybridSearchVectorWithScore(
+  //       query,
+  //       await this.embeddings.embedQuery(query),
+  //       k,
+  //       filter
+  //     );
+  //   } else if (searchType === "semantic_hybrid") {
+  //     results = await this.semanticHybridSearchVectorWithScore(
+  //       query,
+  //       await this.embeddings.embedQuery(query),
+  //       k,
+  //       filter
+  //     );
+  //   } else {
+  //     throw new Error(`Unrecognized search type '${searchType}'`);
+  //   }
 
-    return results.map((result) => result[0]);
-  }
+  //   return results.map((result) => result[0]);
+  // }
 
   /**
    * Perform a similarity search using query type specified on Configuration.
@@ -230,37 +311,37 @@ export class AzureSearchStore extends VectorStore {
    * @param k
    * @param filter
    */
-  async similaritySearchWithScore(
-    query: string,
-    k = 4,
-    filter: this["FilterType"] | undefined = undefined,
-  ): Promise<[Document, number][]> {
-    const searchType = this.params.search.type;
+  // async similaritySearchWithScore(
+  //   query: string,
+  //   k = 4,
+  //   filter: this["FilterType"] | undefined = undefined,
+  // ): Promise<[Document, number][]> {
+  //   const searchType = this.params.search.type;
 
-    if (searchType === "similarity") {
-      return this.similaritySearchVectorWithScore(
-        await this.embeddings.embedQuery(query),
-        k,
-        filter
-      );
-    } else if (searchType === "similarity_hybrid") {
-      return this.hybridSearchVectorWithScore(
-        query,
-        await this.embeddings.embedQuery(query),
-        k,
-        filter
-      );
-    } else if (searchType === "semantic_hybrid") {
-      return this.semanticHybridSearchVectorWithScore(
-        query,
-        await this.embeddings.embedQuery(query),
-        k,
-        filter
-      );
-    }
+  //   if (searchType === "similarity") {
+  //     return this.similaritySearchVectorWithScore(
+  //       await this.embeddings.embedQuery(query),
+  //       k,
+  //       filter
+  //     );
+  //   } else if (searchType === "similarity_hybrid") {
+  //     return this.hybridSearchVectorWithScore(
+  //       query,
+  //       await this.embeddings.embedQuery(query),
+  //       k,
+  //       filter
+  //     );
+  //   } else if (searchType === "semantic_hybrid") {
+  //     return this.semanticHybridSearchVectorWithScore(
+  //       query,
+  //       await this.embeddings.embedQuery(query),
+  //       k,
+  //       filter
+  //     );
+  //   }
 
-    throw new Error(`Unrecognized search type '${searchType}'`);
-  }
+  //   throw new Error(`Unrecognized search type '${searchType}'`);
+  // }
 
   /**
    * Perform a hybrid search using text search.
@@ -270,35 +351,35 @@ export class AzureSearchStore extends VectorStore {
    * @param k
    * @param filter
    */
-  async hybridSearchVectorWithScore(
-    query: string,
-    queryVectors: number[],
-    k: number,
-    filter?: string
-  ): Promise<[Document, number][]> {
-    const { results } = await this.client.search(query, {
-      vectors: [{
-        value: queryVectors,
-        fields: [DEFAULT_FIELD_CONTENT_VECTOR],
-        kNearestNeighborsCount: k,
-      }],
-      filter,
-      top: k,
-    });
+  // async hybridSearchVectorWithScore(
+  //   query: string,
+  //   queryVectors: number[],
+  //   k: number,
+  //   filter?: string
+  // ): Promise<[Document, number][]> {
+  //   const { results } = await this.client.search(query, {
+  //     vectors: [{
+  //       value: queryVectors,
+  //       fields: [DEFAULT_FIELD_CONTENT_VECTOR],
+  //       kNearestNeighborsCount: k,
+  //     }],
+  //     filter,
+  //     top: k,
+  //   });
 
-    const docsWithScore: [Document, number][] = [];
+  //   const docsWithScore: [Document, number][] = [];
 
-    for await (const item of results) {
-      const document = new Document<AzureSearchDocumentMetadata>({
-        pageContent: item.document.content,
-        metadata: item.document.metadata,
-      });
+  //   for await (const item of results) {
+  //     const document = new Document<AzureAISearchDocumentMetadata>({
+  //       pageContent: item.document.content,
+  //       metadata: item.document.metadata,
+  //     });
 
-      docsWithScore.push([document, item.score]);
-    }
+  //     docsWithScore.push([document, item.score]);
+  //   }
 
-    return docsWithScore;
-  }
+  //   return docsWithScore;
+  // }
 
   /**
    * Perform a hybrid search using Semantic configuration.
@@ -308,70 +389,76 @@ export class AzureSearchStore extends VectorStore {
    * @param k
    * @param filter
    */
-  async semanticHybridSearchVectorWithScore(
-    query: string,
-    queryVectors: number[],
-    k: number,
-    filter?: string
-  ): Promise<[Document, number][]> {
-    const { results } = await this.client.search(query, {
-      vectors: [{
-        value: queryVectors,
-        fields: [DEFAULT_FIELD_CONTENT_VECTOR],
-        kNearestNeighborsCount: k,
-      }],
-      filter,
-      top: k,
-      queryType: "semantic",
-      queryLanguage: this.params.search.language ?? "en-us",
-      semanticConfiguration: this.params.search.semantic ?? "default",
-      captions: "extractive",
-      answers: "extractive",
-    });
+  // async semanticHybridSearchVectorWithScore(
+  //   query: string,
+  //   queryVectors: number[],
+  //   k: number,
+  //   filter?: string
+  // ): Promise<[Document, number][]> {
+  //   const { results } = await this.client.search(query, {
+  //     vectors: [{
+  //       value: queryVectors,
+  //       fields: [DEFAULT_FIELD_CONTENT_VECTOR],
+  //       kNearestNeighborsCount: k,
+  //     }],
+  //     filter,
+  //     top: k,
+  //     queryType: "semantic",
+  //     queryLanguage: this.params.search.language ?? "en-us",
+  //     semanticConfiguration: this.params.search.semantic ?? "default",
+  //     captions: "extractive",
+  //     answers: "extractive",
+  //   });
 
-    const docsWithScore: [Document<AzureSearchDocumentMetadata>, number][] = [];
+  //   const docsWithScore: [Document<AzureAISearchDocumentMetadata>, number][] = [];
 
-    for await (const item of results) {
-      const document = new Document<AzureSearchDocumentMetadata>({
-        pageContent: item.document.content,
-        metadata: item.document.metadata,
-      });
+  //   for await (const item of results) {
+  //     const document = new Document<AzureAISearchDocumentMetadata>({
+  //       pageContent: item.document.content,
+  //       metadata: item.document.metadata,
+  //     });
 
-      docsWithScore.push([document, item.rerankerScore ?? item.score]);
-    }
+  //     docsWithScore.push([document, item.rerankerScore ?? item.score]);
+  //   }
 
-    return docsWithScore;
-  }
+  //   return docsWithScore;
+  // }
 
   /**
-   * Execute a vector similarity search.
-   *
-   * @param query
-   * @param k
-   * @param filter
+   * Method that performs a similarity search on the vectors stored in the
+   * collection. It returns a list of documents and their corresponding
+   * similarity scores.
+   * @param queryVector Query vector for the similarity search.
+   * @param k=4 Number of nearest neighbors to return.
+   * @param filter string OData filter for the documents.
+   * @returns Promise that resolves to a list of documents and their corresponding similarity scores.
    */
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
     filter?: string
   ): Promise<[Document, number][]> {
+    await this.initPromise;
+
     const { results } = await this.client.search("", {
-      vectors: [{
-        value: query,
-        fields: [DEFAULT_FIELD_CONTENT_VECTOR],
-        kNearestNeighborsCount: k,
-      }],
+      vectorSearchOptions: {
+        queries: [{
+          kind: "vector",
+          vector: query,
+          kNearestNeighborsCount: k,
+        }],
+      },
+      searchFields: [DEFAULT_FIELD_CONTENT_VECTOR],
       filter,
     });
 
     const docsWithScore: [Document, number][] = [];
 
     for await (const item of results) {
-      const document = new Document<AzureSearchDocumentMetadata>({
+      const document = new Document<AzureAISearchDocumentMetadata>({
         pageContent: item.document.content,
         metadata: item.document.metadata,
       });
-
       docsWithScore.push([document, item.score]);
     }
 
@@ -379,184 +466,198 @@ export class AzureSearchStore extends VectorStore {
   }
 
   /**
-   * Ensure that index exists on Vector Store.
-   *
-   * @param dbConfig
-   * @protected
+   * Return documents selected using the maximal marginal relevance.
+   * Maximal marginal relevance optimizes for similarity to the query AND
+   * diversity among selected documents.
+   * @param query Text to look up documents similar to.
+   * @param options.k Number of documents to return.
+   * @param options.fetchK=20 Number of documents to fetch before passing to
+   *     the MMR algorithm.
+   * @param options.lambda=0.5 Number between 0 and 1 that determines the
+   *     degree of diversity among the results, where 0 corresponds to maximum
+   *     diversity and 1 to minimum diversity.
+   * @returns List of documents selected by maximal marginal relevance.
    */
-  protected static async ensureIndexExists(dbConfig: AzureSearchStoreParams): Promise<SearchClient<AzureSearchDocument>> {
-    if (isSearchClient(dbConfig.client)) return dbConfig.client;
+  async maxMarginalRelevanceSearch(
+    query: string,
+    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
+  ): Promise<Document[]> {
+    const { k, fetchK = 20, lambda = 0.5 } = options;
 
-    const {indexName, endpoint} = dbConfig.client;
-    const credential = new AzureKeyCredential(dbConfig.client.credential);
+    const queryEmbedding = await this.embeddings.embedQuery(query);
+    const docs = await this.similaritySearchVectorWithScore(
+      queryEmbedding,
+      fetchK
+    );
+    const embeddingList = docs.map((doc) => doc[0].metadata[DEFAULT_FIELD_CONTENT_VECTOR]);
 
-    const indexClient = new SearchIndexClient(endpoint, credential);
+    // Re-rank the results using MMR
+    const mmrIndexes = maximalMarginalRelevance(
+      queryEmbedding,
+      embeddingList,
+      lambda,
+      k
+    );
 
-    try {
-      await indexClient.getIndex(indexName);
-    } catch (e) {
-      // Index not exists.
-      await indexClient.createIndex(makeSearchIndex(indexName));
-    }
-
-    return new SearchClient(endpoint, indexName, credential);
+    const mmrDocs = mmrIndexes.map((index) => docs[index][0]);
+    return mmrDocs;
   }
 
   /**
-   * Create instance of vector store and upload text's as Document's.
-   *
-   * @param texts
-   * @param metadatas
-   * @param embeddings
-   * @param dbConfig
+   * Ensures that an index exists on the AzureAISearchVectorStore.
+   * @param indexClient The Azure AI Search index client.
+   * @returns A promise that resolves when the AzureAISearchVectorStore index has been initialized.
+   * @protected
+   */
+  protected async ensureIndexExists(indexClient: SearchIndexClient): Promise<void> {
+    try {
+      await indexClient.getIndex(this.indexName);
+    } catch (e) {
+      // Index does not exists, create it
+      const searchIndex = this.createSearchIndexDefinition(this.indexName);
+      await indexClient.createIndex(searchIndex);
+    }
+  }
+
+  /**
+   * Prepares the search index definition for Azure AI Search.
+   * @param indexName The name of the index.
+   * @returns The SearchIndex object.
+   */
+  protected createSearchIndexDefinition(indexName: string): SearchIndex {
+    return {
+      name: indexName,
+      vectorSearch: {
+        algorithms: [
+          {
+            name: "default",
+            kind: "hnsw",
+            parameters: {
+              m: 4,
+              efSearch: 500,
+              metric: "cosine",
+              efConstruction: 400
+            }
+          }
+        ],
+        profiles: [
+          {
+            name: "default",
+            algorithmConfigurationName: "default",
+          }
+        ]
+      },
+      semanticSearch: {
+        defaultConfigurationName: "default",
+        configurations: [
+          {
+            name: "default",
+            prioritizedFields: {
+              contentFields: [{
+                name: DEFAULT_FIELD_CONTENT,
+              }],
+              keywordsFields: [{
+                name: DEFAULT_FIELD_CONTENT,
+              }]
+            }
+          }
+        ]
+      },
+      fields: [
+        {
+          name: DEFAULT_FIELD_ID,
+          filterable: true,
+          key: true,
+          type: "Edm.String"
+        },
+        {
+          name: DEFAULT_FIELD_CONTENT,
+          searchable: true,
+          filterable: true,
+          type: "Edm.String"
+        },
+        {
+          name: DEFAULT_FIELD_CONTENT_VECTOR,
+          searchable: true,
+          type: "Collection(Edm.Single)",
+          vectorSearchDimensions: 1536,
+          vectorSearchProfileName: "default"
+        },
+        {
+          name: DEFAULT_FIELD_METADATA,
+          type: "Edm.ComplexType",
+          fields: [
+            {
+              name: DEFAULT_FIELD_METADATA_SOURCE,
+              type: "Edm.String",
+              filterable: true,
+            },
+            {
+              name: DEFAULT_FIELD_METADATA_ATTRS,
+              type: "Collection(Edm.ComplexType)",
+              fields: [
+                {
+                  name: "key",
+                  type: "Edm.String",
+                  filterable: true,
+                },
+                {
+                  name: "value",
+                  type: "Edm.String",
+                  filterable: true,
+                },
+              ]
+            }
+          ]
+        }
+      ]
+    };
+  }
+
+  /**
+   * Static method to create an instance of AzureAISearchVectorStore from a
+   * list of texts. It first converts the texts to vectors and then adds
+   * them to the collection.
+   * @param texts List of texts to be converted to vectors.
+   * @param metadatas Metadata for the texts.
+   * @param embeddings Embeddings to be used for conversion.
+   * @param config Database configuration for Azure AI Search.
+   * @returns Promise that resolves to a new instance of AzureAISearchVectorStore.
    */
   static async fromTexts(
     texts: string[],
-    metadatas: AzureSearchDocumentMetadata[],
-    embeddings: Embeddings,
-    dbConfig: AzureSearchStoreParams,
-  ): Promise<AzureSearchStore> {
-    const docs: Document<AzureSearchDocumentMetadata>[] = [];
-
-    // Transform texts into Documents.
+    metadatas: object[] | object,
+    embeddings: EmbeddingsInterface,
+    config: AzureAISearchConfig,
+  ): Promise<AzureAISearchVectorStore> {
+    const docs: Document<AzureAISearchDocumentMetadata>[] = [];
     for (let i = 0; i < texts.length; i += 1) {
       const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
-      const newDoc = new Document<AzureSearchDocumentMetadata>({
+      const newDoc = new Document({
         pageContent: texts[i],
         metadata,
       });
       docs.push(newDoc);
     }
-
-    // Start with documents
-    return this.fromDocuments(docs, embeddings, dbConfig);
+    return AzureAISearchVectorStore.fromDocuments(docs, embeddings, config);
   }
 
   /**
-   * Create a new vector store instance and upload documents.
-   *
-   * @param docs
-   * @param embeddings
-   * @param dbConfig
+   * Static method to create an instance of AzureAISearchVectorStore from a
+   * list of documents. It first converts the documents to vectors and then
+   * adds them to the database.
+   * @param docs List of documents to be converted to vectors.
+   * @param embeddings Embeddings to be used for conversion.
+   * @param config Database configuration for Azure AI Search.
+   * @returns Promise that resolves to a new instance of AzureAISearchVectorStore.
    */
   static async fromDocuments(
-    docs: Document<AzureSearchDocumentMetadata>[],
-    embeddings: Embeddings,
-    dbConfig: AzureSearchStoreParams,
-  ): Promise<AzureSearchStore> {
-    const instance = await this.create(dbConfig, embeddings);
-
-    // Start a client with documents.
+    docs: Document<AzureAISearchDocumentMetadata>[],
+    embeddings: EmbeddingsInterface,
+    config: AzureAISearchConfig,
+  ): Promise<AzureAISearchVectorStore> {
+    const instance = new this(embeddings, config);
     await instance.addDocuments(docs);
-
     return instance;
   }
-
-  /**
-   * Create a new vector store instance.
-   *
-   * @param dbConfig
-   * @param embeddings
-   */
-  static async create(
-    dbConfig: AzureSearchStoreParams,
-    embeddings: Embeddings,
-  ): Promise<AzureSearchStore> {
-    const client = await this.ensureIndexExists(dbConfig);
-
-    return new this(client, dbConfig, embeddings);
-  }
-}
-
-/**
- * Prepares the Index
- *
- * @param indexName - the name of the index
- */
-function makeSearchIndex(indexName: string): SearchIndex {
-  return {
-    name: indexName,
-    vectorSearch: {
-      algorithmConfigurations: [
-        {
-          name: "default",
-          kind: "hnsw",
-          parameters: {
-            m: 4,
-            efSearch: 500,
-            metric: "cosine",
-            efConstruction: 400
-          }
-        }
-      ]
-    },
-    semanticSettings: {
-      defaultConfiguration: "default",
-      configurations: [
-        {
-          name: "default",
-          prioritizedFields: {
-            prioritizedContentFields: [{
-              name: DEFAULT_FIELD_CONTENT,
-            }],
-            prioritizedKeywordsFields: [{
-              name: DEFAULT_FIELD_CONTENT,
-            }]
-          }
-        }
-      ]
-    },
-    fields: [
-      {
-        name: DEFAULT_FIELD_ID,
-        filterable: true,
-        key: true,
-        type: "Edm.String"
-      },
-      {
-        name: DEFAULT_FIELD_CONTENT,
-        searchable: true,
-        filterable: true,
-        type: "Edm.String"
-      },
-      {
-        name: DEFAULT_FIELD_CONTENT_VECTOR,
-        searchable: true,
-        type: "Collection(Edm.Single)",
-        vectorSearchDimensions: 1536,
-        vectorSearchConfiguration: "default"
-      },
-      {
-        name: DEFAULT_FIELD_METADATA,
-        type: "Edm.ComplexType",
-        fields: [
-          {
-            name: DEFAULT_FIELD_METADATA_SOURCE,
-            type: "Edm.String",
-            filterable: true,
-          },
-          {
-            name: DEFAULT_FIELD_METADATA_ATTRS,
-            type: "Collection(Edm.ComplexType)",
-            fields: [
-              {
-                name: "key",
-                type: "Edm.String",
-                filterable: true,
-              },
-              {
-                name: "value",
-                type: "Edm.String",
-                filterable: true,
-              },
-            ]
-          }
-        ]
-      }
-    ]
-  };
-}
-
-function isSearchClient<T extends object>(a: object | SearchClient<T>): a is SearchClient<T> {
-    return typeof a === "object" && a !== null && "search" in a;
 }
