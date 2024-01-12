@@ -228,7 +228,7 @@ export const getTableAndColumnsName = async (
           NULLABLE AS "is_nullable"
       FROM ALL_TAB_COLS
       WHERE
-          OWNER = UPPER('${schemaName}');`;
+          OWNER = UPPER('${schemaName}')`;
     const rep = await appDataSource.query(sql);
     return formatToSqlTable(rep);
   }
@@ -310,7 +310,7 @@ export const generateTableInfoFromTables = async (
         "public";
       sqlSelectInfoQuery = `SELECT * FROM "${schema}"."${currentTable.tableName}" LIMIT ${nbSampleRow};\n`;
     } else if (appDataSource.options.type === "oracle") {
-      sqlSelectInfoQuery = `SELECT * FROM "${schema}"."${currentTable.tableName}" WHERE ROWNUM <= '${nbSampleRow}';`;
+      sqlSelectInfoQuery = `SELECT * FROM "${schema}"."${currentTable.tableName}" WHERE ROWNUM <= '${nbSampleRow}'`;
     } else {
       sqlSelectInfoQuery = `SELECT * FROM "${currentTable.tableName}" LIMIT ${nbSampleRow};\n`;
     }
