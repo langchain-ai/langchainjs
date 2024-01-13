@@ -1,12 +1,12 @@
+import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { Runnable, RunnableLambda } from "@langchain/core/runnables";
-import { LangChainTracer } from "@langchain/core/tracers/tracer_langchain";
 import { RunCollectorCallbackHandler } from "@langchain/core/tracers/run_collector";
+import { LangChainTracer } from "@langchain/core/tracers/tracer_langchain";
 import { Client, Example, Feedback, Run } from "langsmith";
-import { KVMap, ValueType } from "langsmith/schemas";
 import { RunEvaluator } from "langsmith/evaluation";
+import { KVMap, ValueType } from "langsmith/schemas";
 import { RunnableConfig } from "../schema/runnable/config.js";
 import { randomName } from "./name_generation.js";
-import { BaseLanguageModel } from "../base_language/index.js";
 
 /**
  * Represents the result of an evaluation.
@@ -88,13 +88,26 @@ export type RunOnDatasetParams = {
   maxConcurrency?: number;
 };
 
-const createWrappedModel = (modelOrFactory: ChainOrFactory) => {
-  try {
-    (modelOrFactory as () => Runnable)();
-    return modelOrFactory as () => Runnable;
-  } catch (err) {
-    return () => modelOrFactory as Runnable;
+const createWrappedModel = async (modelOrFactory: ChainOrFactory) => {
+  if (modelOrFactory instanceof Runnable) {
+    return () => modelOrFactory;
   }
+  if (typeof modelOrFactory === "function") {
+    try {
+      // If it works with no arguments, assume it's a factory
+      let res = (modelOrFactory as () => Runnable)();
+      if (res instanceof Promise) {
+        res = await res;
+      }
+      return modelOrFactory as () => Runnable;
+    } catch (err) {
+      // Otherwise, it's a custom UDF, and we'll wrap
+      // in a lambda
+      const wrappedModel = new RunnableLambda({ func: modelOrFactory });
+      return () => wrappedModel;
+    }
+  }
+  throw new Error("Invalid modelOrFactory");
 };
 
 const loadExamples = async ({
@@ -185,7 +198,7 @@ export const runOnDataset = async (
     maxConcurrency,
   }: RunOnDatasetParams
 ) => {
-  const wrappedModel = createWrappedModel(chainOrFactory);
+  const wrappedModel = await createWrappedModel(chainOrFactory);
   client = client ?? new Client();
   projectName = projectName ?? randomName();
   const datasetId = (await client.readDataset({ datasetName })).id;
@@ -200,7 +213,10 @@ export const runOnDataset = async (
   // then we can be friendly and flatten the inputs to a list of strings.
   const isLanguageModel = chainOrFactory instanceof BaseLanguageModel;
   let runInputs: (string | KVMap)[] = [];
-  if (isLanguageModel && examples.every(({ inputs }) => inputs.length === 1)) {
+  if (
+    isLanguageModel &&
+    examples.every(({ inputs }) => Object.keys(inputs).length === 1)
+  ) {
     runInputs = examples.map(({ inputs }) => Object.values(inputs)[0]);
   } else runInputs = examples.map(({ inputs }) => inputs);
   const loadedEvalConfig = LoadedEvalConfig.fromRunEvalConfig(evaluation ?? {});
