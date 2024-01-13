@@ -1,98 +1,132 @@
 import { test } from "@jest/globals";
-import { Client, Run, Example } from "langsmith";
+import { Client, Example, Run } from "langsmith";
 
-import { FakeLLM, FakeChatModel } from "@langchain/core/utils/testing";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { RunEvalConfig, runOnDataset } from "../runner_utils.js";
 import { RunnableLambda } from "@langchain/core/runnables";
+import { FakeChatModel, FakeLLM } from "@langchain/core/utils/testing";
+import { DataType } from "langsmith/schemas";
 import { randomName } from "../name_generation.js";
+import { EvalResults, RunEvalConfig, runOnDataset } from "../runner_utils.js";
 
 const outputNotEmpty = ({ run }: { run: Run; example?: Example }) => {
-  const firstOutput = run.outputs && Object.values(run.outputs)[0];
+  const score = run?.outputs && Object.values(run?.outputs).length > 0;
   return {
     key: "output_not_empty",
-    score: firstOutput && firstOutput.content && firstOutput.content.length > 0,
+    score,
   };
 };
 
-describe("runner_utils KV singleio dataset", () => {
+const checkFeedbackPassed = (evalResults: EvalResults) => {
+  expect(evalResults.projectName).toBeDefined();
+  expect(evalResults.results).toBeDefined();
+  expect(Object.keys(evalResults.results).length).toBeGreaterThan(0);
+  for (const [_, result] of Object.entries(evalResults.results)) {
+    expect(result.execution_time).toBeGreaterThan(0);
+    expect(result.run_id).toBeDefined();
+    expect(result.feedback).toBeDefined();
+    expect(result.feedback.length).toEqual(1);
+    expect(result.feedback[0].score).toEqual(true);
+  }
+};
+
+const kvDataset = [
+  ["What's the capital of California?", "Sacramento"],
+  ["What's the capital of Nevada?", "Carson City"],
+  ["What's the capital of Oregon?", "Salem"],
+  ["What's the capital of Washington?", "Olympia"],
+].map((pair) => ({
+  inputs: { input: pair[0] },
+  outputs: { output: pair[1] },
+}));
+
+const chatDataset = kvDataset.map((message) => ({
+  inputs: {
+    input: [
+      { type: "system", data: { content: "Hello, how are you?" } },
+      { type: "human", data: { content: message.inputs.input } },
+    ],
+  },
+  outputs: {
+    output: { type: "ai", data: { content: message.outputs.output } },
+  },
+}));
+
+const datasetTypes: DataType[] = ["kv", "chat", "llm"];
+describe.each(datasetTypes)("runner_utils %s dataset", (datasetType) => {
+  //   describe("runner_utils chat dataset", () => {
+  //     const datasetType = "chat";
   let client: Client;
-  let datasetName: string = "lcjs singleio kv dataset integration tests";
-  let evalConfig: RunEvalConfig = { customEvaluators: [outputNotEmpty] };
+  const datasetName = `lcjs ${datasetType} integration tests`;
+  const evalConfig: RunEvalConfig = { customEvaluators: [outputNotEmpty] };
 
   beforeAll(async () => {
     client = new Client();
     try {
       await client.readDataset({ datasetName });
     } catch (e) {
-      await client.createDataset(datasetName);
-      const inputs = [
-        "What's the capital of California?",
-        "What's the capital of Nevada?",
-        "What's the capital of Oregon?",
-        "What's the capital of Washington?",
-      ];
-      const outputs = ["Sacramento", "Carson City", "Salem", "Olympia"];
+      const dataset = await client.createDataset(datasetName, {
+        dataType: datasetType,
+      });
+
+      const examples = datasetType === "chat" ? chatDataset : kvDataset;
       await Promise.all(
-        inputs.map(async (input, i) => {
-          client.createExample(
-            { input: input },
-            { output: outputs[i] },
-            { datasetName }
-          );
+        examples.map(async (example) => {
+          void client.createExample(example.inputs, example.outputs, {
+            datasetId: dataset.id,
+          });
         })
       );
     }
   });
 
-  test("Chat model on KV singleio dataset", async () => {
+  test(`Chat model on ${datasetType} singleio dataset`, async () => {
     const llm = new FakeChatModel({});
 
-    await runOnDataset(llm, datasetName, {
+    const evalResults = await runOnDataset(llm, datasetName, {
       client,
       evaluation: evalConfig,
       projectName: `fake-chat-model-${randomName()}`,
       projectMetadata: { env: "integration-tests", model: "fake-chat-model" },
     });
-    // _check_all_feedback_passed(eval_project_name, client)
+    checkFeedbackPassed(evalResults);
   });
 
-  test("FakeLLM on KV singleio dataset", async () => {
+  test(`FakeLLM on ${datasetType} singleio dataset`, async () => {
     const llm = new FakeLLM({});
-    await runOnDataset(llm, datasetName, {
+    const evalResults = await runOnDataset(llm, datasetName, {
       client,
       evaluation: evalConfig,
       projectName: `fake-llm-${randomName()}`,
       projectMetadata: { env: "integration-tests", model: "fake-llm" },
     });
-    // _check_all_feedback_passed(eval_project_name, client)
+    checkFeedbackPassed(evalResults);
   });
 
-  test("Runnable on KV singleio dataset", async () => {
+  test(`Runnable on ${datasetType} singleio dataset`, async () => {
     const runnable = new RunnableLambda({
-      func: (input: { input: string }) => {
-        return { "the wackiest input": input.input };
-      },
+      func: (input: { input: string }) => ({
+        "the wackiest input": input.input,
+      }),
     })
       .pipe(
         ChatPromptTemplate.fromMessages([["human", "{the wackiest input}"]])
       )
       .pipe(new FakeChatModel({}));
-    await runOnDataset(runnable, datasetName, {
+    const evalResults = await runOnDataset(runnable, datasetName, {
       client,
       evaluation: evalConfig,
       projectName: `runnable-${randomName()}`,
       projectMetadata: { env: "integration-tests" },
       maxConcurrency: 5,
     });
-    // _check_all_feedback_passed(eval_project_name, client)
+    checkFeedbackPassed(evalResults);
   });
 
-  test("Runnable constructor on KV singleio dataset", async () => {
+  test(`Runnable constructor on ${datasetType} singleio dataset`, async () => {
     const runnable = new RunnableLambda({
-      func: (input: { input: string }) => {
-        return { "the wackiest input": input.input };
-      },
+      func: (input: { input: string }) => ({
+        "the wackiest input": input.input,
+      }),
     })
       .pipe(
         ChatPromptTemplate.fromMessages([["human", "{the wackiest input}"]])
@@ -103,21 +137,21 @@ describe("runner_utils KV singleio dataset", () => {
       return runnable;
     }
 
-    await runOnDataset(construct, datasetName, {
+    const evalResults = await runOnDataset(construct, datasetName, {
       client,
       evaluation: evalConfig,
       projectName: `runnable-constructor-${randomName()}`,
       projectMetadata: { env: "integration-tests" },
       maxConcurrency: 5,
     });
-    // _check_all_feedback_passed(eval_project_name, client)
+    checkFeedbackPassed(evalResults);
   });
 
-  test("Arb func on KV singleio dataset", async () => {
+  test(`Arb func on ${datasetType} singleio dataset`, async () => {
     async function my_func(inputs: { input: string }) {
       return { "back atcha": inputs.input };
     }
-    await runOnDataset(my_func, datasetName, {
+    const evalResults = await runOnDataset(my_func, datasetName, {
       evaluation: evalConfig,
       client,
       maxConcurrency: 5,
@@ -127,14 +161,14 @@ describe("runner_utils KV singleio dataset", () => {
         model: "fake-chat-in-runnable",
       },
     });
-    // _check_all_feedback_passed(eval_project_name, client)
+    checkFeedbackPassed(evalResults);
   });
 
-  test("Arb constructor on KV singleio dataset", async () => {
+  test(`Arb constructor on ${datasetType} singleio dataset`, async () => {
     async function my_func(inputs: { input: string }) {
       return { "back atcha": inputs.input };
     }
-    await runOnDataset(() => my_func, datasetName, {
+    const evalResults = await runOnDataset(() => my_func, datasetName, {
       evaluation: evalConfig,
       client,
       maxConcurrency: 5,
@@ -144,6 +178,6 @@ describe("runner_utils KV singleio dataset", () => {
         model: "fake-chat-in-runnable",
       },
     });
-    // _check_all_feedback_passed(eval_project_name, client)
+    checkFeedbackPassed(evalResults);
   });
 });

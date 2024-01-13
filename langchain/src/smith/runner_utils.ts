@@ -1,10 +1,11 @@
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
+import { mapStoredMessagesToChatMessages } from "@langchain/core/messages";
 import { Runnable, RunnableLambda } from "@langchain/core/runnables";
 import { RunCollectorCallbackHandler } from "@langchain/core/tracers/run_collector";
 import { LangChainTracer } from "@langchain/core/tracers/tracer_langchain";
 import { Client, Example, Feedback, Run } from "langsmith";
 import { RunEvaluator } from "langsmith/evaluation";
-import { KVMap, ValueType } from "langsmith/schemas";
+import { DataType, ValueType } from "langsmith/schemas";
 import { RunnableConfig } from "../schema/runnable/config.js";
 import { randomName } from "./name_generation.js";
 
@@ -31,11 +32,11 @@ export type EvaluationResult = {
   /**
    * A correction record associated with the evaluation result.
    */
-  correction?: Record<string, any>;
+  correction?: Record<string, unknown>;
   /**
    * Information about the evaluator.
    */
-  evaluator_info?: Record<string, any>;
+  evaluator_info?: Record<string, unknown>;
   /**
    * The source run ID of the evaluation result.
    */
@@ -59,12 +60,31 @@ export type CoercableRunEvaluator =
 export type ChainOrFactory =
   | Runnable
   | (() => Runnable)
-  | ((obj: any) => any)
-  | (() => (obj: any) => any);
+  | ((obj: unknown) => unknown)
+  | ((obj: unknown) => Promise<unknown>)
+  | (() => (obj: unknown) => unknown)
+  | (() => (obj: unknown) => Promise<unknown>);
 export type RunEvalConfig = {
   customEvaluators?: (RunEvaluator | CoercableRunEvaluator)[];
 };
 
+class DynamicRunEvaluator implements RunEvaluator {
+  evaluator: RunnableLambda<
+    {
+      run: Run;
+      example?: Example;
+    },
+    EvaluationResult
+  >;
+
+  constructor(evaluator: CoercableRunEvaluator) {
+    this.evaluator = new RunnableLambda({ func: evaluator });
+  }
+
+  async evaluateRun(run: Run, example?: Example): Promise<EvaluationResult> {
+    return await this.evaluator.invoke({ run, example });
+  }
+}
 class LoadedEvalConfig {
   constructor(public evaluators: (RunEvaluator | DynamicRunEvaluator)[]) {}
 
@@ -82,21 +102,24 @@ class LoadedEvalConfig {
 
 export type RunOnDatasetParams = {
   evaluation?: RunEvalConfig;
-  projectMetadata?: Record<string, any>;
+  projectMetadata?: Record<string, unknown>;
   projectName?: string;
   client?: Client;
   maxConcurrency?: number;
 };
 
 const createWrappedModel = async (modelOrFactory: ChainOrFactory) => {
-  if (modelOrFactory instanceof Runnable) {
+  if (Runnable.isRunnable(modelOrFactory)) {
     return () => modelOrFactory;
   }
   if (typeof modelOrFactory === "function") {
     try {
       // If it works with no arguments, assume it's a factory
       let res = (modelOrFactory as () => Runnable)();
-      if (res instanceof Promise) {
+      if (
+        res &&
+        typeof (res as unknown as Promise<Runnable>).then === "function"
+      ) {
         res = await res;
       }
       return modelOrFactory as () => Runnable;
@@ -125,7 +148,7 @@ const loadExamples = async ({
   const runCollectors = [];
   const examples = [];
   for await (const example of exampleIterator) {
-    let runCollector = new RunCollectorCallbackHandler({
+    const runCollector = new RunCollectorCallbackHandler({
       exampleId: example.id,
     });
     configs.push({
@@ -144,22 +167,6 @@ const loadExamples = async ({
   };
 };
 
-class DynamicRunEvaluator implements RunEvaluator {
-  evaluator: RunnableLambda<
-    {
-      run: Run;
-      example?: Example;
-    },
-    EvaluationResult
-  >;
-  constructor(evaluator: CoercableRunEvaluator) {
-    this.evaluator = new RunnableLambda({ func: evaluator });
-  }
-  async evaluateRun(run: Run, example?: Example): Promise<EvaluationResult> {
-    return await this.evaluator.invoke({ run, example });
-  }
-}
-
 const runEvaluation = async ({
   evaluation,
   runs,
@@ -171,20 +178,71 @@ const runEvaluation = async ({
   examples: Example[];
   client: Client;
 }) => {
-  // TODO: Parallelize
-  const evaluators = evaluation.evaluators;
-  const results: Record<string, Feedback[]> = {};
-  for (let i = 0; i < runs.length; i++) {
+  // TODO: Parallelize and/or put in callbacks
+  const { evaluators } = evaluation;
+  const results: Record<
+    string,
+    { run_id: string; execution_time?: number; feedback: Feedback[] }
+  > = {};
+  for (let i = 0; i < runs.length; i += 1) {
     const run = runs[i];
     const example = examples[i];
     const result = await Promise.all(
       evaluators.map((evaluator) =>
-        client.evaluateRun(run, evaluator, { referenceExample: example })
+        client.evaluateRun(run, evaluator, {
+          referenceExample: example,
+          loadChildRuns: false,
+        })
       )
     );
-    results[run.id] = result;
+    results[example.id] = {
+      execution_time:
+        run?.end_time && run.start_time
+          ? run.end_time - run.start_time
+          : undefined,
+      feedback: result,
+      run_id: run.id,
+    };
   }
   return results;
+};
+
+export type EvalResults = {
+  projectName: string;
+  results: {
+    [key: string]: {
+      execution_time?: number;
+      run_id: string;
+      feedback: Feedback[];
+    };
+  };
+};
+
+const getExamplesinputs = (
+  examples: Example[],
+  chainOrFactory: ChainOrFactory,
+  dataType?: DataType
+) => {
+  if (dataType === "chat") {
+    // For some batty reason, we store the chat dataset differently.
+    // Stored  like { type: "system", data: { content: inputs.input } },
+    // But we need to create AIMesage, SystemMessage, etc.
+    return examples.map(({ inputs }) =>
+      mapStoredMessagesToChatMessages(inputs.input)
+    );
+  }
+  // If it's a language model and ALL example inputs have a single value,
+  // then we can be friendly and flatten the inputs to a list of strings.
+  const isLanguageModel =
+    typeof chainOrFactory === "object" &&
+    typeof (chainOrFactory as BaseLanguageModel)._llmType === "function";
+  if (
+    isLanguageModel &&
+    examples.every(({ inputs }) => Object.keys(inputs).length === 1)
+  ) {
+    return examples.map(({ inputs }) => Object.values(inputs)[0]);
+  }
+  return examples.map(({ inputs }) => inputs);
 };
 
 export const runOnDataset = async (
@@ -199,57 +257,58 @@ export const runOnDataset = async (
   }: RunOnDatasetParams
 ) => {
   const wrappedModel = await createWrappedModel(chainOrFactory);
-  client = client ?? new Client();
-  projectName = projectName ?? randomName();
-  const datasetId = (await client.readDataset({ datasetName })).id;
-  maxConcurrency = maxConcurrency ?? 5;
+  const testClient = client ?? new Client();
+  const testProjectName = projectName ?? randomName();
+  const dataset = await testClient.readDataset({ datasetName });
+  const datasetId = dataset.id;
+  const testConcurrency = maxConcurrency ?? 5;
   const { configs, examples, runCollectors } = await loadExamples({
     datasetName,
-    client,
-    projectName,
-    maxConcurrency,
+    client: testClient,
+    projectName: testProjectName,
+    maxConcurrency: testConcurrency,
   });
-  // If it's a language model and ALL example inputs have a single value,
-  // then we can be friendly and flatten the inputs to a list of strings.
-  const isLanguageModel = chainOrFactory instanceof BaseLanguageModel;
-  let runInputs: (string | KVMap)[] = [];
-  if (
-    isLanguageModel &&
-    examples.every(({ inputs }) => Object.keys(inputs).length === 1)
-  ) {
-    runInputs = examples.map(({ inputs }) => Object.values(inputs)[0]);
-  } else runInputs = examples.map(({ inputs }) => inputs);
+
   const loadedEvalConfig = LoadedEvalConfig.fromRunEvalConfig(evaluation ?? {});
 
-  await client.createProject({
-    projectName: projectName,
+  await testClient.createProject({
+    projectName: testProjectName,
     referenceDatasetId: datasetId,
     projectExtra: { metadata: { ...projectMetadata } },
   });
   const wrappedRunnable: Runnable = new RunnableLambda({
     func: wrappedModel,
   });
+  const runInputs = getExamplesinputs(
+    examples,
+    chainOrFactory,
+    dataset.data_type
+  );
+  await wrappedRunnable.invoke(runInputs[0]);
   await wrappedRunnable.batch(runInputs, configs, {
     maxConcurrency,
   });
   const runs: Run[] = [];
   const evalConfigs = [];
-  for (let i = 0; i < examples.length; i++) {
+  for (let i = 0; i < examples.length; i += 1) {
     runs.push(runCollectors[i].tracedRuns[0]);
     evalConfigs.push({ callbacks: [new RunCollectorCallbackHandler()] });
   }
-  let evalResults: Record<string, Feedback[]> = {};
+  let evalResults: Record<
+    string,
+    { run_id: string; execution_time?: number; feedback: Feedback[] }
+  > = {};
   if (evaluation) {
     evalResults = await runEvaluation({
       evaluation: loadedEvalConfig,
-      runs: runs,
-      examples: examples,
-      client,
+      runs,
+      examples,
+      client: testClient,
     });
   }
-  // TODO: Align format with python
-  return {
-    projectName,
-    evalResults,
+  const results: EvalResults = {
+    projectName: testProjectName,
+    results: evalResults ?? {},
   };
+  return results;
 };
