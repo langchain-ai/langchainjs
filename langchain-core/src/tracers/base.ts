@@ -318,7 +318,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       throw new Error("No chain run to end.");
     }
     run.end_time = Date.now();
-    run.error = error.message + (error?.stack ? `\n\n${error.stack}` : "");
+    run.error = error.message + (error.stack ? `\n\n${error.stack}` : "");
     run.events.push({
       name: "error",
       time: new Date(run.end_time).toISOString(),
