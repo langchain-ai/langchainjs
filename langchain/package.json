@@ -865,6 +865,9 @@
     "evaluation.cjs",
     "evaluation.js",
     "evaluation.d.ts",
+    "smith.cjs",
+    "smith.js",
+    "smith.d.ts",
     "runnables.cjs",
     "runnables.js",
     "runnables.d.ts",
@@ -2662,6 +2665,11 @@
       "types": "./evaluation.d.ts",
       "import": "./evaluation.js",
       "require": "./evaluation.cjs"
+    },
+    "./smith": {
+      "types": "./smith.d.ts",
+      "import": "./smith.js",
+      "require": "./smith.cjs"
     },
     "./runnables": {
       "types": "./runnables.d.ts",

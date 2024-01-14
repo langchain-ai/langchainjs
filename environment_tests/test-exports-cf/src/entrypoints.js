@@ -109,5 +109,6 @@ export * from "langchain/experimental/chains/violation_of_expectations";
 export * from "langchain/experimental/masking";
 export * from "langchain/experimental/prompts/custom_format";
 export * from "langchain/evaluation";
+export * from "langchain/smith";
 export * from "langchain/runnables";
 export * from "langchain/runnables/remote";

@@ -4,70 +4,35 @@ import { Runnable, RunnableLambda } from "@langchain/core/runnables";
 import { RunCollectorCallbackHandler } from "@langchain/core/tracers/run_collector";
 import { LangChainTracer } from "@langchain/core/tracers/tracer_langchain";
 import { Client, Example, Feedback, Run } from "langsmith";
-import { RunEvaluator } from "langsmith/evaluation";
-import { DataType, ValueType } from "langsmith/schemas";
+import { EvaluationResult, RunEvaluator } from "langsmith/evaluation";
+import { DataType } from "langsmith/schemas";
+import { LLMStringEvaluator } from "../evaluation/base.js";
+import { loadEvaluator } from "../evaluation/loader.js";
+import { EvaluatorType } from "../evaluation/types.js";
 import { RunnableConfig } from "../schema/runnable/config.js";
+import {
+  RunEvaluatorLike,
+  EvalConfig,
+  PrepareDataT,
+  RunEvalConfig,
+  defaultPrepareData,
+} from "./config.js";
 import { randomName } from "./name_generation.js";
-
-/**
- * Represents the result of an evaluation.
- */
-export type EvaluationResult = {
-  /**
-   * The key associated with the evaluation result.
-   */
-  key: string;
-  /**
-   * The score of the evaluation result.
-   */
-  score?: number | boolean;
-  /**
-   * The value of the evaluation result.
-   */
-  value?: ValueType;
-  /**
-   * A comment associated with the evaluation result.
-   */
-  comment?: string;
-  /**
-   * A correction record associated with the evaluation result.
-   */
-  correction?: Record<string, unknown>;
-  /**
-   * Information about the evaluator.
-   */
-  evaluator_info?: Record<string, unknown>;
-  /**
-   * The source run ID of the evaluation result.
-   */
-  source_run_id?: string;
-  /**
-   * The target run ID of the evaluation result.
-   */
-  target_run_id?: string;
-};
-
-export type CoercableRunEvaluator =
-  | (({
-      run,
-      example,
-    }: {
-      run: Run;
-      example?: Example;
-    }) => Promise<EvaluationResult>)
-  | (({ run, example }: { run: Run; example?: Example }) => EvaluationResult);
+import { ProgressBar } from "./progress.js";
 
 export type ChainOrFactory =
   | Runnable
   | (() => Runnable)
-  | ((obj: unknown) => unknown)
-  | ((obj: unknown) => Promise<unknown>)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  | ((obj: any) => any)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  | ((obj: any) => Promise<any>)
   | (() => (obj: unknown) => unknown)
   | (() => (obj: unknown) => Promise<unknown>);
-export type RunEvalConfig = {
-  customEvaluators?: (RunEvaluator | CoercableRunEvaluator)[];
-};
 
+/**
+ * Wraps an evaluator function + implements the RunEvaluator interface.
+ */
 class DynamicRunEvaluator implements RunEvaluator {
   evaluator: RunnableLambda<
     {
@@ -77,26 +42,133 @@ class DynamicRunEvaluator implements RunEvaluator {
     EvaluationResult
   >;
 
-  constructor(evaluator: CoercableRunEvaluator) {
+  constructor(evaluator: RunEvaluatorLike) {
     this.evaluator = new RunnableLambda({ func: evaluator });
   }
 
+  /**
+   * Evaluates a run with an optional example and returns the evaluation result.
+   * @param run The run to evaluate.
+   * @param example The optional example to use for evaluation.
+   * @returns A promise that resolves to the evaluation result.
+   */
   async evaluateRun(run: Run, example?: Example): Promise<EvaluationResult> {
     return await this.evaluator.invoke({ run, example });
   }
 }
+
+function isLLMStringEvaluator(evaluator: any): evaluator is LLMStringEvaluator {
+  return evaluator && typeof evaluator.evaluateStrings === "function";
+}
+
+/**
+ * Wraps an off-the-shelf evaluator (loaded using loadEvaluator; of EvaluatorType[T])
+ * and composes with a prepareData function so the user can prepare the trace and
+ * dataset data for the evaluator.
+ */
+class PreparedRunEvaluator implements RunEvaluator {
+  evaluator: LLMStringEvaluator;
+
+  prepareData: PrepareDataT;
+
+  isStringEvaluator: boolean;
+
+  evaluationName: string;
+
+  constructor(
+    evaluator: LLMStringEvaluator,
+    evaluationName: string,
+    prepareData: PrepareDataT = defaultPrepareData
+  ) {
+    this.evaluator = evaluator;
+    this.isStringEvaluator = typeof evaluator?.evaluateStrings === "function";
+    this.evaluationName = evaluationName;
+    this.prepareData = prepareData;
+  }
+
+  static async fromEvalConfig(
+    config: EvalConfig | keyof EvaluatorType
+  ): Promise<PreparedRunEvaluator> {
+    const evaluatorType =
+      typeof config === "string" ? config : config.evaluatorType;
+    const evalConfig = typeof config === "string" ? ({} as EvalConfig) : config;
+    const evaluator = await loadEvaluator(evaluatorType, evalConfig);
+    const feedbackKey = evalConfig?.feedbackKey ?? evaluator?.evaluationName;
+    if (!feedbackKey) {
+      throw new Error(
+        `Evaluator of type ${evaluatorType} must have an evaluationName` +
+          ` or feedbackKey. Please manually provide a feedbackKey in the EvalConfig.`
+      );
+    }
+    if (!isLLMStringEvaluator(evaluator)) {
+      throw new Error(
+        `Evaluator of type ${evaluatorType} not yet supported. ` +
+          "Please use a string evaluator, or implement your " +
+          "evaluation logic as a customEvaluator."
+      );
+    }
+    return new PreparedRunEvaluator(
+      evaluator as LLMStringEvaluator,
+      feedbackKey,
+      evalConfig?.prepareData
+    );
+  }
+
+  /**
+   * Evaluates a run with an optional example and returns the evaluation result.
+   * @param run The run to evaluate.
+   * @param example The optional example to use for evaluation.
+   * @returns A promise that resolves to the evaluation result.
+   */
+  async evaluateRun(run: Run, example?: Example): Promise<EvaluationResult> {
+    const { prediction, input, reference } = this.prepareData({
+      run,
+      reference_outputs: example?.outputs,
+    });
+    if (this.isStringEvaluator) {
+      const evalResult = await this.evaluator.evaluateStrings({
+        prediction: prediction as string,
+        reference: reference as string,
+        input: input as string,
+      });
+      return {
+        key: this.evaluationName,
+        comment: evalResult?.reasoning,
+        ...evalResult,
+      };
+    }
+    throw new Error(
+      "Evaluator not yet supported. " +
+        "Please use a string evaluator, or implement your " +
+        "evaluation logic as a customEvaluator."
+    );
+  }
+}
+
 class LoadedEvalConfig {
   constructor(public evaluators: (RunEvaluator | DynamicRunEvaluator)[]) {}
 
-  static fromRunEvalConfig(config: RunEvalConfig): LoadedEvalConfig {
-    const evaluators = config?.customEvaluators?.map((evaluator) => {
+  static async fromRunEvalConfig(
+    config: RunEvalConfig
+  ): Promise<LoadedEvalConfig> {
+    // Custom evaluators are applied "as-is"
+    const customEvaluators = config?.customEvaluators?.map((evaluator) => {
       if (typeof evaluator === "function") {
         return new DynamicRunEvaluator(evaluator);
       } else {
         return evaluator;
       }
     });
-    return new LoadedEvalConfig(evaluators ?? []);
+
+    const offTheShelfEvaluators = await Promise.all(
+      config?.evaluators?.map(
+        async (evaluator) =>
+          await PreparedRunEvaluator.fromEvalConfig(evaluator)
+      ) ?? []
+    );
+    return new LoadedEvalConfig(
+      (customEvaluators ?? []).concat(offTheShelfEvaluators ?? [])
+    );
   }
 }
 
@@ -108,6 +180,14 @@ export type RunOnDatasetParams = {
   maxConcurrency?: number;
 };
 
+/**
+ * Internals expect a constructor () -> Runnable. This function wraps/coerces
+ * the provided LangChain object, custom function, or factory function into
+ * a constructor of a runnable.
+ * @param modelOrFactory The model or factory to create a wrapped model from.
+ * @returns A function that returns the wrapped model.
+ * @throws Error if the modelOrFactory is invalid.
+ */
 const createWrappedModel = async (modelOrFactory: ChainOrFactory) => {
   if (Runnable.isRunnable(modelOrFactory)) {
     return () => modelOrFactory;
@@ -167,7 +247,7 @@ const loadExamples = async ({
   };
 };
 
-const runEvaluation = async ({
+const applyEvaluators = async ({
   evaluation,
   runs,
   examples,
@@ -178,8 +258,12 @@ const runEvaluation = async ({
   examples: Example[];
   client: Client;
 }) => {
-  // TODO: Parallelize and/or put in callbacks
+  // TODO: Parallelize and/or put in callbacks to speed up evals.
   const { evaluators } = evaluation;
+  const progress = new ProgressBar({
+    total: examples.length,
+    format: "Running Evaluators: {bar} {percentage}% | {value}/{total}",
+  });
   const results: Record<
     string,
     { run_id: string; execution_time?: number; feedback: Feedback[] }
@@ -195,6 +279,7 @@ const runEvaluation = async ({
         })
       )
     );
+    progress.increment();
     results[example.id] = {
       execution_time:
         run?.end_time && run.start_time
@@ -225,7 +310,7 @@ const getExamplesinputs = (
 ) => {
   if (dataType === "chat") {
     // For some batty reason, we store the chat dataset differently.
-    // Stored  like { type: "system", data: { content: inputs.input } },
+    // { type: "system", data: { content: inputs.input } },
     // But we need to create AIMesage, SystemMessage, etc.
     return examples.map(({ inputs }) =>
       mapStoredMessagesToChatMessages(inputs.input)
@@ -244,6 +329,62 @@ const getExamplesinputs = (
   }
   return examples.map(({ inputs }) => inputs);
 };
+
+/**
+ * Evaluates a given model or chain against a specified LangSmith dataset.
+ *
+ * This function fetches example records from the specified dataset,
+ * runs the model or chain against each example, and returns the evaluation
+ * results.
+ *
+ * @param chainOrFactory - A model or factory/constructor function to be evaluated. It can be a
+ * Runnable instance, a factory function that returns a Runnable, or a user-defined
+ * function or factory.
+ *
+ * @param datasetName - The name of the dataset against which the evaluation will be
+ * performed. This dataset should already be defined and contain the relevant data
+ * for evaluation.
+ *
+ * @param options - (Optional) Additional parameters for the evaluation process:
+ *   - `evaluation` (RunEvalConfig): Configuration for the evaluation, including
+ *     standard and custom evaluators.
+ *   - `projectName` (string): Name of the project for logging and tracking.
+ *   - `projectMetadata` (Record<string, unknown>): Additional metadata for the project.
+ *   - `client` (Client): Client instance for LangChain service interaction.
+ *   - `maxConcurrency` (number): Maximum concurrency level for dataset processing.
+ *
+ * @returns A promise that resolves to an `EvalResults` object. This object includes
+ * detailed results of the evaluation, such as execution time, run IDs, and feedback
+ * for each entry in the dataset.
+ *
+ * @example
+ * ```typescript
+ * // Example usage for evaluating a model on a dataset
+ * async function evaluateModel() {
+ *   const chain = /* ...create your model or chain...*\//
+ *   const datasetName = 'example-dataset';
+ *   const client = new Client(/* ...config... *\//);
+ *
+ *   const evaluationConfig = new RunEvalConfig({
+ *     evaluators: [/* ...evaluators... *\//],
+ *     customEvaluators: [/* ...custom evaluators... *\//],
+ *   });
+ *
+ *   const results = await runOnDataset(chain, datasetName, {
+ *     evaluation: evaluationConfig,
+ *     client: client
+ *   });
+ *
+ *   console.log('Evaluation Results:', results);
+ * }
+ *
+ * evaluateModel();
+ * ```
+ * In this example, `runOnDataset` is used to evaluate a language model (or a chain of models) against
+ * a dataset named 'example-dataset'. The evaluation process is configured using `RunEvalConfig`, which can
+ * include both standard and custom evaluators. The `Client` instance is used to interact with LangChain services.
+ * The function returns the evaluation results, which can be logged or further processed as needed.
+ */
 
 export const runOnDataset = async (
   chainOrFactory: ChainOrFactory,
@@ -269,7 +410,9 @@ export const runOnDataset = async (
     maxConcurrency: testConcurrency,
   });
 
-  const loadedEvalConfig = LoadedEvalConfig.fromRunEvalConfig(evaluation ?? {});
+  const loadedEvalConfig = await LoadedEvalConfig.fromRunEvalConfig(
+    evaluation ?? {}
+  );
 
   await testClient.createProject({
     projectName: testProjectName,
@@ -284,22 +427,32 @@ export const runOnDataset = async (
     chainOrFactory,
     dataset.data_type
   );
-  await wrappedRunnable.invoke(runInputs[0]);
-  await wrappedRunnable.batch(runInputs, configs, {
-    maxConcurrency,
+  const progress = new ProgressBar({
+    total: runInputs.length,
+    format: "Predicting: {bar} {percentage}% | {value}/{total}",
   });
+  // TODO: Collect the runs as well.
+  await wrappedRunnable
+    .withListeners({
+      onEnd: () => progress.increment(),
+    })
+    // TODO: Insert evaluation inline for immediate feedback.
+    .batch(runInputs, configs, {
+      maxConcurrency,
+      returnExceptions: true,
+    });
+
+  progress.complete();
   const runs: Run[] = [];
-  const evalConfigs = [];
   for (let i = 0; i < examples.length; i += 1) {
     runs.push(runCollectors[i].tracedRuns[0]);
-    evalConfigs.push({ callbacks: [new RunCollectorCallbackHandler()] });
   }
   let evalResults: Record<
     string,
     { run_id: string; execution_time?: number; feedback: Feedback[] }
   > = {};
   if (evaluation) {
-    evalResults = await runEvaluation({
+    evalResults = await applyEvaluators({
       evaluation: loadedEvalConfig,
       runs,
       examples,

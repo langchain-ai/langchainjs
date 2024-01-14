@@ -19161,6 +19161,7 @@ __metadata:
     ioredis: ^5.3.2
     js-yaml: ^4.1.0
     langchain: "workspace:*"
+    langsmith: ^0.0.59
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
     pg: ^8.11.0
@@ -23985,6 +23986,21 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"langsmith@npm:^0.0.59, langsmith@npm:~0.0.59":
+  version: 0.0.59
+  resolution: "langsmith@npm:0.0.59"
+  dependencies:
+    "@types/uuid": ^9.0.1
+    commander: ^10.0.1
+    p-queue: ^6.6.2
+    p-retry: 4
+    uuid: ^9.0.0
+  bin:
+    langsmith: dist/cli/main.cjs
+  checksum: 7a628fd843e6eff31b81d8c52033c4b1fde912e0a13b632bf5efe3a4c24d5074b58140e1a2c3a4230ef986a97b25c7e50cc6509efc88e9d07bd50f2efb85db42
+  languageName: node
+  linkType: hard
+
 "langsmith@npm:~0.0.48":
   version: 0.0.48
   resolution: "langsmith@npm:0.0.48"
@@ -23997,21 +24013,6 @@ __metadata:
   bin:
     langsmith: dist/cli/main.cjs
   checksum: 2552c1a8549eab8e03a5530e73ce37ad0e147ca3084edbfd56b7a29b92c7c5579e5c1e53222bfb846b5ee8219d8d80cc9a7cc07e78717e95cdefedb95d76cd86
-  languageName: node
-  linkType: hard
-
-"langsmith@npm:~0.0.59":
-  version: 0.0.59
-  resolution: "langsmith@npm:0.0.59"
-  dependencies:
-    "@types/uuid": ^9.0.1
-    commander: ^10.0.1
-    p-queue: ^6.6.2
-    p-retry: 4
-    uuid: ^9.0.0
-  bin:
-    langsmith: dist/cli/main.cjs
-  checksum: 7a628fd843e6eff31b81d8c52033c4b1fde912e0a13b632bf5efe3a4c24d5074b58140e1a2c3a4230ef986a97b25c7e50cc6509efc88e9d07bd50f2efb85db42
   languageName: node
   linkType: hard
 

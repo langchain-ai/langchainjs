@@ -1,12 +1,65 @@
 import { test } from "@jest/globals";
+import { ChatOpenAI } from "@langchain/openai";
 import { Client, Example, Run } from "langsmith";
 
+import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import { BaseChatModel } from "@langchain/core/language_models/chat_models";
+import { LLM } from "@langchain/core/language_models/llms";
+import { AIMessage, BaseMessage } from "@langchain/core/messages";
+import { ChatResult } from "@langchain/core/outputs";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnableLambda } from "@langchain/core/runnables";
-import { FakeChatModel, FakeLLM } from "@langchain/core/utils/testing";
 import { DataType } from "langsmith/schemas";
+import { RunEvalConfig } from "../config.js";
 import { randomName } from "../name_generation.js";
-import { EvalResults, RunEvalConfig, runOnDataset } from "../runner_utils.js";
+import { EvalResults, runOnDataset } from "../runner_utils.js";
+
+const answers: { [question: string]: string } = {
+  "What's the capital of California?": "Sacramento",
+  "What's the capital of Nevada?": "Carson City",
+  "What's the capital of Oregon?": "Salem",
+  "What's the capital of Washington?": "Olympia",
+};
+
+class FakeLLM extends LLM {
+  _llmType() {
+    return "fake";
+  }
+
+  async _call(prompt: string): Promise<string> {
+    return answers[prompt] || prompt;
+  }
+}
+
+export class FakeChatModel extends BaseChatModel {
+  _combineLLMOutput() {
+    return [];
+  }
+
+  _llmType(): string {
+    return "fake";
+  }
+
+  async _generate(
+    messages: BaseMessage[],
+    _?: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): Promise<ChatResult> {
+    const text = messages[messages.length - 1].content;
+    const answer = (answers[text as string] || text) as string;
+    await runManager?.handleLLMNewToken(answer);
+    const result = new AIMessage({ content: answer });
+    return {
+      generations: [
+        {
+          message: result,
+          text: answer,
+        },
+      ],
+      llmOutput: {},
+    };
+  }
+}
 
 const outputNotEmpty = ({ run }: { run: Run; example?: Example }) => {
   const score = run?.outputs && Object.values(run?.outputs).length > 0;
@@ -16,6 +69,11 @@ const outputNotEmpty = ({ run }: { run: Run; example?: Example }) => {
   };
 };
 
+const alwaysPass = (_: { run: Run; example?: Example }) => ({
+  key: "always_pass",
+  score: true,
+});
+
 const checkFeedbackPassed = (evalResults: EvalResults) => {
   expect(evalResults.projectName).toBeDefined();
   expect(evalResults.results).toBeDefined();
@@ -24,19 +82,18 @@ const checkFeedbackPassed = (evalResults: EvalResults) => {
     expect(result.execution_time).toBeGreaterThan(0);
     expect(result.run_id).toBeDefined();
     expect(result.feedback).toBeDefined();
-    expect(result.feedback.length).toEqual(1);
-    expect(result.feedback[0].score).toEqual(true);
+    expect(result.feedback.length).toBeGreaterThan(0);
+    // eslint-disable-next-line no-loop-func
+    result.feedback.forEach((feedback) => {
+      expect(feedback.score).toBeDefined();
+      expect(feedback.score).toBeTruthy();
+    });
   }
 };
 
-const kvDataset = [
-  ["What's the capital of California?", "Sacramento"],
-  ["What's the capital of Nevada?", "Carson City"],
-  ["What's the capital of Oregon?", "Salem"],
-  ["What's the capital of Washington?", "Olympia"],
-].map((pair) => ({
-  inputs: { input: pair[0] },
-  outputs: { output: pair[1] },
+const kvDataset = Object.entries(answers).map(([question, answer]) => ({
+  inputs: { input: question },
+  outputs: { output: answer },
 }));
 
 const chatDataset = kvDataset.map((message) => ({
@@ -53,11 +110,22 @@ const chatDataset = kvDataset.map((message) => ({
 
 const datasetTypes: DataType[] = ["kv", "chat", "llm"];
 describe.each(datasetTypes)("runner_utils %s dataset", (datasetType) => {
-  //   describe("runner_utils chat dataset", () => {
-  //     const datasetType = "chat";
   let client: Client;
   const datasetName = `lcjs ${datasetType} integration tests`;
-  const evalConfig: RunEvalConfig = { customEvaluators: [outputNotEmpty] };
+  const evalConfig = new RunEvalConfig({
+    customEvaluators: [outputNotEmpty, alwaysPass],
+    evaluators: [
+      new RunEvalConfig.LabeledCriteria({
+        criteria: "correctness",
+        feedbackKey: "labeledCorrect",
+        llm: new ChatOpenAI({
+          modelName: "gpt-3.5-turbo",
+          temperature: 0,
+          modelKwargs: { seed: 42 },
+        }),
+      }),
+    ],
+  });
 
   beforeAll(async () => {
     client = new Client();
@@ -104,9 +172,7 @@ describe.each(datasetTypes)("runner_utils %s dataset", (datasetType) => {
 
   test(`Runnable on ${datasetType} singleio dataset`, async () => {
     const runnable = new RunnableLambda({
-      func: (input: { input: string }) => ({
-        "the wackiest input": input.input,
-      }),
+      func: (input: { input: string }) => ({ output: answers[input.input] }),
     })
       .pipe(
         ChatPromptTemplate.fromMessages([["human", "{the wackiest input}"]])
@@ -148,8 +214,8 @@ describe.each(datasetTypes)("runner_utils %s dataset", (datasetType) => {
   });
 
   test(`Arb func on ${datasetType} singleio dataset`, async () => {
-    async function my_func(inputs: { input: string }) {
-      return { "back atcha": inputs.input };
+    async function my_func({ input }: { input: string }) {
+      return { output: answers[input] };
     }
     const evalResults = await runOnDataset(my_func, datasetName, {
       evaluation: evalConfig,
@@ -165,8 +231,8 @@ describe.each(datasetTypes)("runner_utils %s dataset", (datasetType) => {
   });
 
   test(`Arb constructor on ${datasetType} singleio dataset`, async () => {
-    async function my_func(inputs: { input: string }) {
-      return { "back atcha": inputs.input };
+    async function my_func({ input }: { input: string }) {
+      return { output: answers[input] };
     }
     const evalResults = await runOnDataset(() => my_func, datasetName, {
       evaluation: evalConfig,
