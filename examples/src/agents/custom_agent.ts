@@ -1,4 +1,4 @@
-import { ChatOpenAI, formatToOpenAIFunction } from "@langchain/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { AgentExecutor, type AgentStep } from "langchain/agents";
 import { formatToOpenAIFunctionMessages } from "langchain/agents/format_scratchpad";
@@ -6,6 +6,7 @@ import {
   ChatPromptTemplate,
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
+import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";
 import { OpenAIFunctionsAgentOutputParser } from "langchain/agents/openai/output_parser";
 import { AIMessage, BaseMessage, HumanMessage } from "@langchain/core/messages";
 import { DynamicTool } from "@langchain/community/tools/dynamic";
@@ -38,11 +39,11 @@ const prompt = ChatPromptTemplate.fromMessages([
 
 /**
  * Bind the tools to the LLM.
- * Here we're using the `formatToOpenAIFunction` util function
+ * Here we're using the `convertToOpenAIFunction` util function
  * to format our tools into the proper schema for OpenAI functions.
  */
 const modelWithFunctions = model.bind({
-  functions: tools.map((tool) => formatToOpenAIFunction(tool)),
+  functions: tools.map((tool) => convertToOpenAIFunction(tool)),
 });
 
 /**

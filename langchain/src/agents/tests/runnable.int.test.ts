@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
 import { test } from "@jest/globals";
-import { ChatOpenAI, formatToOpenAIFunction } from "@langchain/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import {
   ChatPromptTemplate,
   MessagesPlaceholder,
@@ -11,6 +11,7 @@ import {
   FunctionMessage,
 } from "@langchain/core/messages";
 import { SerpAPI } from "@langchain/community/tools/serpapi";
+import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";
 import { AgentStep } from "@langchain/core/agents";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { AgentExecutor } from "../executor.js";
@@ -28,7 +29,7 @@ test("Runnable variant", async () => {
   ]);
 
   const modelWithTools = model.bind({
-    functions: [...tools.map((tool) => formatToOpenAIFunction(tool))],
+    functions: [...tools.map((tool) => convertToOpenAIFunction(tool))],
   });
 
   const formatAgentSteps = (steps: AgentStep[]): BaseMessage[] =>
@@ -82,7 +83,7 @@ test("Runnable variant executor astream log", async () => {
   ]);
 
   const modelWithTools = model.bind({
-    functions: [...tools.map((tool) => formatToOpenAIFunction(tool))],
+    functions: [...tools.map((tool) => convertToOpenAIFunction(tool))],
   });
 
   const formatAgentSteps = (steps: AgentStep[]): BaseMessage[] =>
