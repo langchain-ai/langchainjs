@@ -250,6 +250,9 @@ export interface OptionalImportMap {
   "langchain/document_loaders/web/cheerio"?:
     | typeof import("../document_loaders/web/cheerio.js")
     | Promise<typeof import("../document_loaders/web/cheerio.js")>;
+  "langchain/document_loaders/web/clipper"?:
+    | typeof import("../document_loaders/web/clipper.js")
+    | Promise<typeof import("../document_loaders/web/clipper.js")>;
   "langchain/document_loaders/web/puppeteer"?:
     | typeof import("../document_loaders/web/puppeteer.js")
     | Promise<typeof import("../document_loaders/web/puppeteer.js")>;
