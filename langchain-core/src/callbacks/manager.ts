@@ -4,6 +4,7 @@ import type { ChainValues } from "../utils/types.js";
 import { LLMResult } from "../outputs.js";
 import {
   BaseCallbackHandler,
+  type BaseCallbackHandlerInterface,
   CallbackHandlerMethods,
   HandleLLMNewTokenCallbackFields,
   NewTokenIndices,
@@ -32,8 +33,8 @@ export interface CallbackManagerOptions {
 }
 
 export type Callbacks =
-  | CallbackManager
-  | (BaseCallbackHandler | CallbackHandlerMethods)[];
+  | CallbackManagerInterface
+  | (BaseCallbackHandlerInterface | CallbackHandlerMethods)[];
 
 export interface BaseCallbackConfig {
   /**
@@ -87,19 +88,32 @@ export abstract class BaseCallbackManager {
   }
 }
 
+export interface BaseRunManagerInterface extends BaseCallbackManagerMethods {
+  readonly runId: string;
+  readonly handlers: BaseCallbackHandler[];
+  readonly inheritableHandlers: BaseCallbackHandler[];
+  readonly tags: string[];
+  readonly inheritableTags: string[];
+  readonly metadata: Record<string, unknown>;
+  readonly inheritableMetadata: Record<string, unknown>;
+  readonly _parentRunId?: string;
+
+  handleText(text: string): Promise<void>;
+}
+
 /**
  * Base class for run manager in LangChain.
  */
-class BaseRunManager {
+abstract class BaseRunManager implements BaseRunManagerInterface {
   constructor(
-    public readonly runId: string,
-    protected readonly handlers: BaseCallbackHandler[],
-    protected readonly inheritableHandlers: BaseCallbackHandler[],
-    protected readonly tags: string[],
-    protected readonly inheritableTags: string[],
-    protected readonly metadata: Record<string, unknown>,
-    protected readonly inheritableMetadata: Record<string, unknown>,
-    protected readonly _parentRunId?: string
+    readonly runId: string,
+    readonly handlers: BaseCallbackHandler[],
+    readonly inheritableHandlers: BaseCallbackHandler[],
+    readonly tags: string[],
+    readonly inheritableTags: string[],
+    readonly metadata: Record<string, unknown>,
+    readonly inheritableMetadata: Record<string, unknown>,
+    readonly _parentRunId?: string
   ) {}
 
   async handleText(text: string): Promise<void> {
@@ -124,12 +138,21 @@ class BaseRunManager {
   }
 }
 
+export interface CallbackManagerForRetrieverRunInterface
+  extends BaseRunManagerInterface {
+  getChild(tag?: string): CallbackManagerInterface;
+
+  handleRetrieverEnd(documents: DocumentInterface[]): Promise<void>;
+
+  handleRetrieverError(err: Error | unknown): Promise<void>;
+}
+
 /**
  * Manages callbacks for retriever runs.
  */
 export class CallbackManagerForRetrieverRun
   extends BaseRunManager
-  implements BaseCallbackManagerMethods
+  implements CallbackManagerForRetrieverRunInterface
 {
   getChild(tag?: string): CallbackManager {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
@@ -190,9 +213,25 @@ export class CallbackManagerForRetrieverRun
   }
 }
 
+export interface CallbackManagerForLLMRunInterface
+  extends BaseRunManagerInterface {
+  handleLLMNewToken(
+    token: string,
+    idx?: NewTokenIndices,
+    _runId?: string,
+    _parentRunId?: string,
+    _tags?: string[],
+    fields?: any
+  ): Promise<void>;
+
+  handleLLMError(err: Error | unknown): Promise<void>;
+
+  handleLLMEnd(output: LLMResult): Promise<void>;
+}
+
 export class CallbackManagerForLLMRun
   extends BaseRunManager
-  implements BaseCallbackManagerMethods
+  implements CallbackManagerForLLMRunInterface
 {
   async handleLLMNewToken(
     token: string,
@@ -273,9 +312,34 @@ export class CallbackManagerForLLMRun
   }
 }
 
+export interface CallbackManagerForChainRunInterface
+  extends BaseRunManagerInterface {
+  getChild(tag?: string): CallbackManager;
+
+  handleChainError(
+    err: Error | unknown,
+    _runId?: string,
+    _parentRunId?: string,
+    _tags?: string[],
+    kwargs?: { inputs?: Record<string, unknown> }
+  ): Promise<void>;
+
+  handleChainEnd(
+    output: ChainValues,
+    _runId?: string,
+    _parentRunId?: string,
+    _tags?: string[],
+    kwargs?: { inputs?: Record<string, unknown> }
+  ): Promise<void>;
+
+  handleAgentAction(action: AgentAction): Promise<void>;
+
+  handleAgentEnd(action: AgentFinish): Promise<void>;
+}
+
 export class CallbackManagerForChainRun
   extends BaseRunManager
-  implements BaseCallbackManagerMethods
+  implements CallbackManagerForChainRunInterface
 {
   getChild(tag?: string): CallbackManager {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
@@ -396,9 +460,18 @@ export class CallbackManagerForChainRun
   }
 }
 
+export interface CallbackManagerForToolRunInterface
+  extends BaseRunManagerInterface {
+  getChild(tag?: string): CallbackManager;
+
+  handleToolError(err: Error | unknown): Promise<void>;
+
+  handleToolEnd(output: string): Promise<void>;
+}
+
 export class CallbackManagerForToolRun
   extends BaseRunManager
-  implements BaseCallbackManagerMethods
+  implements CallbackManagerForToolRunInterface
 {
   getChild(tag?: string): CallbackManager {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
@@ -460,6 +533,101 @@ export class CallbackManagerForToolRun
 }
 
 /**
+ * Manage callbacks from different components of LangChain.
+ */
+export interface CallbackManagerInterface extends BaseCallbackManagerMethods {
+  handlers: BaseCallbackHandlerInterface[];
+
+  inheritableHandlers: BaseCallbackHandlerInterface[];
+
+  tags: string[];
+
+  inheritableTags: string[];
+
+  metadata: Record<string, unknown>;
+
+  inheritableMetadata: Record<string, unknown>;
+
+  name: string;
+
+  handleLLMStart(
+    llm: Serialized,
+    prompts: string[],
+    _runId: string | undefined,
+    _parentRunId: string | undefined,
+    extraParams: Record<string, unknown> | undefined,
+    _tags: string[] | undefined,
+    _metadata: Record<string, unknown> | undefined,
+    runName: string | undefined
+  ): Promise<CallbackManagerForLLMRunInterface[]>;
+
+  handleChatModelStart(
+    llm: Serialized,
+    messages: BaseMessage[][],
+    _runId: string | undefined,
+    _parentRunId: string | undefined,
+    extraParams: Record<string, unknown> | undefined,
+    _tags: string[] | undefined,
+    _metadata: Record<string, unknown> | undefined,
+    runName: string | undefined
+  ): Promise<CallbackManagerForLLMRunInterface[]>;
+
+  handleChainStart(
+    chain: Serialized,
+    inputs: ChainValues,
+    runId: string,
+    runType: string | undefined,
+    _tags: string[] | undefined,
+    _metadata: Record<string, unknown> | undefined,
+    runName: string | undefined
+  ): Promise<CallbackManagerForChainRunInterface>;
+
+  handleToolStart(
+    tool: Serialized,
+    input: string,
+    runId: string,
+    _parentRunId: string | undefined,
+    _tags: string[] | undefined,
+    _metadata: Record<string, unknown> | undefined,
+    runName: string | undefined
+  ): Promise<CallbackManagerForToolRunInterface>;
+
+  handleRetrieverStart(
+    retriever: Serialized,
+    query: string,
+    runId: string,
+    _parentRunId: string | undefined,
+    _tags: string[] | undefined,
+    _metadata: Record<string, unknown> | undefined,
+    runName: string | undefined
+  ): Promise<CallbackManagerForRetrieverRunInterface>;
+
+  addHandler(handler: BaseCallbackHandlerInterface, inherit?: boolean): void;
+
+  removeHandler(handler: BaseCallbackHandlerInterface): void;
+
+  setHandler(handler: BaseCallbackHandlerInterface): void;
+
+  setHandlers(
+    handlers: BaseCallbackHandlerInterface[],
+    inherit?: boolean
+  ): void;
+
+  addTags(tags: string[], inherit?: boolean): void;
+
+  removeTags(tags: string[]): void;
+
+  addMetadata(metadata: Record<string, unknown>, inherit?: boolean): void;
+
+  removeMetadata(metadata: Record<string, unknown>): void;
+
+  copy(
+    additionalHandlers?: BaseCallbackHandlerInterface[],
+    inherit?: boolean
+  ): CallbackManagerInterface;
+}
+
+/**
  * @example
  * ```typescript
  * const prompt = PromptTemplate.fromTemplate("What is the answer to {question}?");
@@ -479,7 +647,7 @@ export class CallbackManagerForToolRun
  */
 export class CallbackManager
   extends BaseCallbackManager
-  implements BaseCallbackManagerMethods
+  implements CallbackManagerInterface
 {
   handlers: BaseCallbackHandler[] = [];
 
@@ -825,7 +993,7 @@ export class CallbackManager
   }
 
   copy(
-    additionalHandlers: BaseCallbackHandler[] = [],
+    additionalHandlers: BaseCallbackHandlerInterface[] = [],
     inherit = true
   ): CallbackManager {
     const manager = new CallbackManager(this._parentRunId);

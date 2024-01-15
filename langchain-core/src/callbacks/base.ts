@@ -269,19 +269,35 @@ abstract class BaseCallbackHandlerMethodsClass {
  */
 export type CallbackHandlerMethods = BaseCallbackHandlerMethodsClass;
 
+export interface BaseCallbackHandlerInterface
+  extends Serializable,
+    CallbackHandlerMethods,
+    BaseCallbackHandlerInput {
+  ignoreLLM: boolean;
+
+  ignoreChain: boolean;
+
+  ignoreAgent: boolean;
+
+  ignoreRetriever: boolean;
+
+  name: string;
+
+  awaitHandlers: boolean;
+
+  copy(): BaseCallbackHandlerInterface;
+}
+
 /**
  * Abstract base class for creating callback handlers in the LangChain
  * framework. It provides a set of optional methods that can be overridden
  * in derived classes to handle various events during the execution of a
  * LangChain application.
  */
-export abstract class BaseCallbackHandler
-  extends BaseCallbackHandlerMethodsClass
-  implements BaseCallbackHandlerInput, Serializable
-{
+export abstract class BaseCallbackHandler extends BaseCallbackHandlerMethodsClass {
   lc_serializable = false;
 
-  get lc_namespace(): ["langchain_core", "callbacks", string] {
+  get lc_namespace(): string[] {
     return ["langchain_core", "callbacks", this.name];
   }
 
