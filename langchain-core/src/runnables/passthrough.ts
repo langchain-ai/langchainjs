@@ -1,3 +1,4 @@
+import { concat } from "../utils/stream.js";
 import {
   Runnable,
   RunnableAssign,
@@ -7,53 +8,9 @@ import {
 import type { RunnableConfig } from "./config.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type RunnablePassthroughFunc<RunInput = any, RunOutput = any> =
-  | ((input: RunInput) => RunOutput)
-  | ((input: RunInput, config?: RunnableConfig) => RunOutput);
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type RunnablePassthroughAsyncGeneratorFunc<RunInput = any, RunOutput = any> =
-  | ((input: AsyncGenerator<RunInput>) => AsyncGenerator<RunOutput>)
-  | ((
-      input: AsyncGenerator<RunInput>,
-      config?: RunnableConfig
-    ) => AsyncGenerator<RunOutput>);
-
-/**
- * Call an AsyncGenerator function that may optionally accept a config.
- */
-function callAsyncGeneratorFuncWithVariableArgs<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunInput = any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput = any
->({
-  func,
-  input,
-  config,
-}: {
-  func: RunnablePassthroughAsyncGeneratorFunc<RunInput, RunOutput>;
-  input: AsyncGenerator<RunInput>;
-  config?: RunnableConfig;
-}): AsyncGenerator<RunOutput> {
-  return func(input, config);
-}
-
-/**
- * Call function that may optionally accept a config.
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function callFuncWithVariableArgs<RunInput = any, RunOutput = any>({
-  func,
-  input,
-  config,
-}: {
-  func: RunnablePassthroughFunc<RunInput, RunOutput>;
-  input: RunInput;
-  config?: RunnableConfig;
-}) {
-  return func(input, config);
-}
+type RunnablePassthroughFunc<RunInput = any> =
+  | ((input: RunInput) => void)
+  | ((input: RunInput, config?: RunnableConfig) => void);
 
 /**
  * A runnable to passthrough inputs unchanged or with additional keys.
@@ -93,15 +50,9 @@ export class RunnablePassthrough<RunInput> extends Runnable<
 
   lc_serializable = true;
 
-  func?:
-    | RunnablePassthroughFunc<RunInput>
-    | RunnablePassthroughAsyncGeneratorFunc<RunInput>;
+  func?: RunnablePassthroughFunc<RunInput>;
 
-  constructor(fields?: {
-    func?:
-      | RunnablePassthroughFunc<RunInput>
-      | RunnablePassthroughAsyncGeneratorFunc<RunInput>;
-  }) {
+  constructor(fields?: { func?: RunnablePassthroughFunc<RunInput> }) {
     super(fields);
     if (fields) {
       this.func = fields.func;
@@ -113,11 +64,7 @@ export class RunnablePassthrough<RunInput> extends Runnable<
     options?: Partial<RunnableConfig>
   ): Promise<RunInput> {
     if (this.func) {
-      return callFuncWithVariableArgs<RunInput>({
-        func: this.func as RunnablePassthroughFunc<RunInput>,
-        input,
-        config: options,
-      });
+      this.func(input);
     }
 
     return this._callWithConfig(
@@ -127,23 +74,37 @@ export class RunnablePassthrough<RunInput> extends Runnable<
     );
   }
 
-  transform(
+  async *transform(
     generator: AsyncGenerator<RunInput>,
     options: Partial<RunnableConfig>
   ): AsyncGenerator<RunInput> {
-    if (this.func) {
-      return callAsyncGeneratorFuncWithVariableArgs<RunInput>({
-        func: this.func as RunnablePassthroughAsyncGeneratorFunc<RunInput>,
-        input: generator,
-        config: options,
-      });
-    }
+    let finalOutput: RunInput | undefined;
+    let finalOutputSupported = true;
 
-    return this._transformStreamWithConfig(
+    for await (const chunk of this._transformStreamWithConfig(
       generator,
       (input: AsyncGenerator<RunInput>) => input,
       options
-    );
+    )) {
+      yield chunk;
+      if (finalOutputSupported) {
+        if (finalOutput === undefined) {
+          finalOutput = chunk;
+        } else {
+          try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            finalOutput = concat(finalOutput, chunk as any);
+          } catch {
+            finalOutput = undefined;
+            finalOutputSupported = false;
+          }
+        }
+      }
+    }
+
+    if (this.func && finalOutput !== undefined) {
+      this.func(finalOutput);
+    }
   }
 
   /**
