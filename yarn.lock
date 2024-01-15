@@ -24879,6 +24879,7 @@ __metadata:
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1
     "@notionhq/client": ^2.2.10
+    "@philschmid/clipper": ^0.2.0
     "@pinecone-database/pinecone": ^1.1.0
     "@supabase/supabase-js": ^2.10.0
     "@vercel/kv": ^0.2.3
@@ -24941,6 +24942,8 @@ __metadata:
     "@google-cloud/storage":
       optional: true
     "@notionhq/client":
+      optional: true
+    "@philschmid/clipper":
       optional: true
     "@pinecone-database/pinecone":
       optional: true
