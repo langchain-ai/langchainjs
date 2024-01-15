@@ -42,6 +42,7 @@ const entrypoints = {
   "utils/async_caller": "utils/async_caller",
   "utils/chunk_array": "utils/chunk_array",
   "utils/env": "utils/env",
+  "utils/function_calling": "utils/function_calling",
   "utils/hash": "utils/hash",
   "utils/json_patch": "utils/json_patch",
   "utils/json_schema": "utils/json_schema",
