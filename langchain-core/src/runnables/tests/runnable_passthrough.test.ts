@@ -46,3 +46,38 @@ test("RunnablePassthrough can call .assign as the first step with proper typing"
   console.log(result);
   expect(result).toEqual({ outputValue: "testing2" });
 });
+
+test("RunnablePassthrough can invoke a function without modifying passthrough value", async () => {
+  let wasCalled = false;
+  const addOne = (input: number) => {
+    wasCalled = true;
+    return input + 1;
+  };
+  const passthrough = new RunnablePassthrough<number>({
+    func: addOne,
+  });
+  const result = await passthrough.invoke(1);
+  expect(result).toEqual(1);
+  expect(wasCalled).toEqual(true);
+});
+
+test("RunnablePassthrough can transform a function as constructor args", async () => {
+  let wasCalled = false;
+  const addOne = (input: number) => {
+    wasCalled = true;
+    return input + 1;
+  };
+  const passthrough = new RunnablePassthrough<number>({
+    func: addOne,
+  });
+  async function* generateNumbers() {
+    yield 1;
+  }
+  const transformedGenerator = passthrough.transform(generateNumbers(), {});
+  const results = [];
+  for await (const value of transformedGenerator) {
+    results.push(value);
+  }
+  expect(results).toEqual([1]);
+  expect(wasCalled).toEqual(true);
+});
