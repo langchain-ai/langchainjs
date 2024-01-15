@@ -15,7 +15,7 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import type { StructuredToolInterface } from "@langchain/core/tools";
 import { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
-import { formatToOpenAIFunction } from "@langchain/openai";
+import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";
 
 /**
  * Type representing the sender_type of a message in the Minimax chat model.
@@ -480,7 +480,7 @@ export class ChatMinimax
       functions:
         options?.functions ??
         (options?.tools
-          ? options?.tools.map(formatToOpenAIFunction)
+          ? options?.tools.map(convertToOpenAIFunction)
           : undefined),
       plugins: options?.plugins,
     };
