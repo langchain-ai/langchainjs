@@ -8192,7 +8192,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/community@workspace:*, @langchain/community@workspace:libs/langchain-community, @langchain/community@~0.0.15":
+"@langchain/community@workspace:*, @langchain/community@workspace:libs/langchain-community, @langchain/community@~0.0.17":
   version: 0.0.0-use.local
   resolution: "@langchain/community@workspace:libs/langchain-community"
   dependencies:
@@ -8558,7 +8558,26 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.12, @langchain/core@~0.1.5, @langchain/core@~0.1.9":
+"@langchain/core@npm:~0.1.13":
+  version: 0.1.13
+  resolution: "@langchain/core@npm:0.1.13"
+  dependencies:
+    ansi-styles: ^5.0.0
+    camelcase: 6
+    decamelize: 1.2.0
+    js-tiktoken: ^1.0.8
+    langsmith: ~0.0.48
+    ml-distance: ^4.0.0
+    p-queue: ^6.6.2
+    p-retry: 4
+    uuid: ^9.0.0
+    zod: ^3.22.3
+    zod-to-json-schema: 3.20.3
+  checksum: 094c2eb8658b1a88c718584c00a10b757393f099718b9c027d5ebdf1debd3a9218e920d17c35b4f9a1a33ae2b43d56d36a6d251b87c2ccd56d4cb2302ff0d83b
+  languageName: node
+  linkType: hard
+
+"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.5, @langchain/core@~0.1.9":
   version: 0.0.0-use.local
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
@@ -8662,7 +8681,7 @@ __metadata:
   resolution: "@langchain/openai@workspace:libs/langchain-openai"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1.9
+    "@langchain/core": ~0.1.13
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     dpdm: ^3.12.0
@@ -23714,8 +23733,8 @@ __metadata:
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1
     "@jest/globals": ^29.5.0
-    "@langchain/community": ~0.0.15
-    "@langchain/core": ~0.1.12
+    "@langchain/community": ~0.0.17
+    "@langchain/core": ~0.1.13
     "@langchain/openai": ~0.0.10
     "@notionhq/client": ^2.2.10
     "@pinecone-database/pinecone": ^1.1.0
