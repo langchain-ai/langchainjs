@@ -10,16 +10,45 @@ import type { RunnableConfig } from "./config.js";
 type RunnablePassthroughFunc<RunInput = any, RunOutput = any> =
   | ((input: RunInput) => RunOutput)
   | ((input: RunInput, config?: RunnableConfig) => RunOutput);
-/**
- * Call function that may optionally accept a config.
- */
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function callFuncWithVariableArgs<RunInput = any>({
+type RunnablePassthroughAsyncGeneratorFunc<RunInput = any, RunOutput = any> =
+  | ((input: AsyncGenerator<RunInput>) => AsyncGenerator<RunOutput>)
+  | ((
+      input: AsyncGenerator<RunInput>,
+      config?: RunnableConfig
+    ) => AsyncGenerator<RunOutput>);
+
+/**
+ * Call an AsyncGenerator function that may optionally accept a config.
+ */
+function callAsyncGeneratorFuncWithVariableArgs<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput = any
+>({
   func,
   input,
   config,
 }: {
-  func: RunnablePassthroughFunc<RunInput>;
+  func: RunnablePassthroughAsyncGeneratorFunc<RunInput, RunOutput>;
+  input: AsyncGenerator<RunInput>;
+  config?: RunnableConfig;
+}): AsyncGenerator<RunOutput> {
+  return func(input, config);
+}
+
+/**
+ * Call function that may optionally accept a config.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function callFuncWithVariableArgs<RunInput = any, RunOutput = any>({
+  func,
+  input,
+  config,
+}: {
+  func: RunnablePassthroughFunc<RunInput, RunOutput>;
   input: RunInput;
   config?: RunnableConfig;
 }) {
@@ -64,12 +93,16 @@ export class RunnablePassthrough<RunInput> extends Runnable<
 
   lc_serializable = true;
 
-  func?: RunnablePassthroughFunc<RunInput | AsyncGenerator<RunInput>>;
+  func?:
+    | RunnablePassthroughFunc<RunInput>
+    | RunnablePassthroughAsyncGeneratorFunc<RunInput>;
 
   constructor(fields?: {
-    func?: RunnablePassthroughFunc<RunInput | AsyncGenerator<RunInput>>;
+    func?:
+      | RunnablePassthroughFunc<RunInput>
+      | RunnablePassthroughAsyncGeneratorFunc<RunInput>;
   }) {
-    super();
+    super(fields);
     if (fields) {
       this.func = fields.func;
     }
@@ -80,8 +113,8 @@ export class RunnablePassthrough<RunInput> extends Runnable<
     options?: Partial<RunnableConfig>
   ): Promise<RunInput> {
     if (this.func) {
-      return callFuncWithVariableArgs({
-        func: this.func,
+      return callFuncWithVariableArgs<RunInput>({
+        func: this.func as RunnablePassthroughFunc<RunInput>,
         input,
         config: options,
       });
@@ -99,8 +132,8 @@ export class RunnablePassthrough<RunInput> extends Runnable<
     options: Partial<RunnableConfig>
   ): AsyncGenerator<RunInput> {
     if (this.func) {
-      return callFuncWithVariableArgs<AsyncGenerator<RunInput>>({
-        func: this.func,
+      return callAsyncGeneratorFuncWithVariableArgs<RunInput>({
+        func: this.func as RunnablePassthroughAsyncGeneratorFunc<RunInput>,
         input: generator,
         config: options,
       });
