@@ -5,7 +5,8 @@ import {
   type AgentFinish,
   type AgentStep,
 } from "langchain/schema";
-import { ChatOpenAI, formatToOpenAIFunction } from "@langchain/openai";
+import { ChatOpenAI } from "@langchain/openai";
+import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";
 import { AgentExecutor } from "langchain/agents";
 import type { FunctionsAgentAction } from "langchain/agents/openai/output_parser";
 
@@ -105,7 +106,7 @@ const formatAgentSteps = (steps: AgentStep[]): BaseMessage[] =>
   });
 
 const llmWithTools = llm.bind({
-  functions: [formatToOpenAIFunction(searchTool), responseOpenAIFunction],
+  functions: [convertToOpenAIFunction(searchTool), responseOpenAIFunction],
 });
 /** Create the runnable */
 const runnableAgent = RunnableSequence.from<{
