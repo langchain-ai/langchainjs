@@ -33,6 +33,7 @@ module.exports = {
     "@typescript-eslint/no-unused-vars": ["warn", { args: "none" }],
     "@typescript-eslint/no-floating-promises": "error",
     "@typescript-eslint/no-misused-promises": "error",
+    "@typescript-eslint/no-unnecessary-condition": "error",
     camelcase: 0,
     "class-methods-use-this": 0,
     "import/extensions": [2, "ignorePackages"],

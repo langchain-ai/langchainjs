@@ -19,7 +19,7 @@
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && node scripts/move-cjs-to-dist.js && rm -rf dist-cjs",
     "build:watch": "node scripts/create-entrypoints.js && tsc --outDir dist/ --watch",
     "build:scripts": "node scripts/create-entrypoints.js && node scripts/check-tree-shaking.js",
-    "lint": "NODE_OPTIONS=--max-old-space-size=4096 eslint src && dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
+    "lint": "NODE_OPTIONS=--max-old-space-size=4096 eslint src && dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts --",
     "lint:fix": "yarn lint --fix",
     "clean": "rm -rf dist/ && NODE_OPTIONS=--max-old-space-size=4096 node scripts/create-entrypoints.js pre",
     "prepack": "yarn build",
