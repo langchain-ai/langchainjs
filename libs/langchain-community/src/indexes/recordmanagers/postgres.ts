@@ -94,7 +94,7 @@ export class PostgresRecordManager implements RecordManagerInterface {
 
     const valuesPlaceholders = recordsToUpsert
       .map((_, j) =>
-        this.generatePlaceholderForRowAt(j, recordsToUpsert.length)
+        this.generatePlaceholderForRowAt(j, recordsToUpsert[0].length)
       )
       .join(", ");
 
