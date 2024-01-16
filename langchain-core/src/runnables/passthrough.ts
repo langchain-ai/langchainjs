@@ -9,8 +9,10 @@ import type { RunnableConfig } from "./config.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type RunnablePassthroughFunc<RunInput = any> =
-  | ((input: RunInput) => void | Promise<void>)
-  | ((input: RunInput, config?: RunnableConfig) => void | Promise<void>);
+  | ((input: RunInput) => void)
+  | ((input: RunInput, config?: RunnableConfig) => void)
+  | ((input: RunInput) => Promise<void>)
+  | ((input: RunInput, config?: RunnableConfig) => Promise<void>);
 
 /**
  * A runnable to passthrough inputs unchanged or with additional keys.
