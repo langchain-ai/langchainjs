@@ -1,32 +1,17 @@
 import { describe, expect, test, jest } from "@jest/globals";
-import { PoolConfig } from "pg";
-import { PostgresRecordManager } from "../postgres.js";
+import { InMemoryRecordManger } from "../memory.js";
 
-describe("PostgresRecordManager", () => {
-  const tableName = "upsertion_record";
-  let recordManager: PostgresRecordManager;
+describe("MemoryRecordmanagerTest", () => {
+  let recordManager: InMemoryRecordManger;
 
   beforeAll(async () => {
-    const config = {
-      postgresConnectionOptions: {
-        type: "postgres",
-        host: "127.0.0.1",
-        port: 5432,
-        user: "myuser",
-        password: "ChangeMe",
-        database: "api",
-      } as PoolConfig,
-      namespace: "test",
-      tableName,
-    };
-    recordManager = new PostgresRecordManager(config);
+    recordManager = new InMemoryRecordManger();
     await recordManager.createSchema();
   });
 
   afterEach(async () => {
-    // Drop table, then recreate it for the next test.
-    await recordManager.pool.query(`DROP TABLE "${tableName}"`);
-    await recordManager.createSchema();
+    // Clear records
+    recordManager.records.clear();
   });
 
   afterAll(async () => {
@@ -63,17 +48,13 @@ describe("PostgresRecordManager", () => {
     try {
       const keys = ["a", "b", "c"];
       await recordManager.update(keys);
-      const res = await recordManager.pool.query(
-        `SELECT * FROM "${tableName}"`
-      );
-      res.rows.forEach((row) => expect(row.updated_at).toEqual(100));
+      const res = recordManager.records;
+      res.forEach((row) => expect(row.updatedAt).toEqual(100));
 
       recordManager.getTime = jest.fn(() => Promise.resolve(200));
       await recordManager.update(keys);
-      const res2 = await recordManager.pool.query(
-        `SELECT * FROM "${tableName}"`
-      );
-      res2.rows.forEach((row) => expect(row.updated_at).toEqual(200));
+      const res2 = recordManager.records;
+      res2.forEach((row) => expect(row.updatedAt).toEqual(200));
     } finally {
       recordManager.getTime = unmockedGetTime;
     }
@@ -82,7 +63,9 @@ describe("PostgresRecordManager", () => {
   test("Exists", async () => {
     const keys = ["a", "b", "c"];
     await recordManager.update(keys);
+    console.log(await recordManager.listKeys());
     const exists = await recordManager.exists(keys);
+    console.log(exists);
     expect(exists).toEqual([true, true, true]);
 
     const nonExistentKeys = ["d", "e", "f"];
