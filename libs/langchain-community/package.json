@@ -817,6 +817,11 @@
       "import": "./vectorstores/astradb.js",
       "require": "./vectorstores/astradb.cjs"
     },
+    "./vectorstores/azure_aisearch": {
+      "types": "./vectorstores/azure_aisearch.d.ts",
+      "import": "./vectorstores/azure_aisearch.js",
+      "require": "./vectorstores/azure_aisearch.cjs"
+    },
     "./vectorstores/azure_cosmosdb": {
       "types": "./vectorstores/azure_cosmosdb.d.ts",
       "import": "./vectorstores/azure_cosmosdb.js",
@@ -1526,6 +1531,9 @@
     "vectorstores/astradb.cjs",
     "vectorstores/astradb.js",
     "vectorstores/astradb.d.ts",
+    "vectorstores/azure_aisearch.cjs",
+    "vectorstores/azure_aisearch.js",
+    "vectorstores/azure_aisearch.d.ts",
     "vectorstores/azure_cosmosdb.cjs",
     "vectorstores/azure_cosmosdb.js",
     "vectorstores/azure_cosmosdb.d.ts",

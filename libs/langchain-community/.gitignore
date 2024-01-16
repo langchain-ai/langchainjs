@@ -193,6 +193,9 @@ vectorstores/analyticdb.d.ts
 vectorstores/astradb.cjs
 vectorstores/astradb.js
 vectorstores/astradb.d.ts
+vectorstores/azure_aisearch.cjs
+vectorstores/azure_aisearch.js
+vectorstores/azure_aisearch.d.ts
 vectorstores/azure_cosmosdb.cjs
 vectorstores/azure_cosmosdb.js
 vectorstores/azure_cosmosdb.d.ts
