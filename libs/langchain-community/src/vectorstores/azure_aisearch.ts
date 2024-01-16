@@ -9,8 +9,6 @@ import { Document } from "@langchain/core/documents";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
-// TODO: Allow to override default fields
-
 /**
  * Azure AI Search query type.
  */
@@ -33,16 +31,7 @@ export type AzureAISearchQueryType = (typeof AzureAISearchQueryType)[keyof typeo
  */
 export interface AzureAISearchQueryOptions {
   readonly type: AzureAISearchQueryType;
-  readonly semantic?: string;
   readonly semanticConfigurationName?: string;
-  readonly semanticQueryLanguage?: string;
-
-  // fields: Optional[List[SearchField]] = None,
-  // vector_search: Optional[VectorSearch] = None,
-  // semantic_settings: Optional[Union[SemanticSearch, SemanticSettings]] = None,
-  // scoring_profiles: Optional[List[ScoringProfile]] = None,
-  // default_scoring_profile: Optional[str] = None,
-  // cors_options: Optional[CorsOptions] = None,
 }
 
 /**
@@ -137,7 +126,7 @@ export class AzureAISearchVectorStore extends VectorStore {
 
   private readonly options: AzureAISearchQueryOptions;
 
-  private constructor(embeddings: EmbeddingsInterface, config: AzureAISearchConfig) {
+  constructor(embeddings: EmbeddingsInterface, config: AzureAISearchConfig) {
     super(embeddings, config);
 
     const endpoint = config.endpoint ?? getEnvironmentVariable("AZURE_AISEARCH_ENDPOINT");
@@ -149,7 +138,7 @@ export class AzureAISearchVectorStore extends VectorStore {
       );
     }
 
-    this.indexName = config.indexName ?? "vectorSearchIndex";
+    this.indexName = config.indexName ?? "vectorsearch";
     this.chunkSize = config.chunkSize ?? 100;
     this.embeddingBatchSize = config.embeddingBatchSize ?? 16;
 
@@ -161,9 +150,11 @@ export class AzureAISearchVectorStore extends VectorStore {
       // Start initialization, but don't wait for it to finish here
       this.initPromise = this.ensureIndexExists(indexClient).catch(
         (error) => {
-          console.error("Error during Azure Cosmos DB initialization:", error);
+          console.error("Error during Azure AI Search index initialization:", error);
         }
       );
+    } else {
+      this.client = config.client;
     }
 
     this.options = config.search;
@@ -175,8 +166,8 @@ export class AzureAISearchVectorStore extends VectorStore {
    * @param filter OData filter to find documents to delete.
    * @returns A promise that resolves when the documents have been removed.
    */
-  async deleteByFilter(filter: string): Promise<IndexingResult[]> {
-    const { results } = await this.client.search("", {
+  async deleteMany(filter: string): Promise<IndexingResult[]> {
+    const { results } = await this.client.search("*", {
       filter,
     });
 
@@ -201,8 +192,9 @@ export class AzureAISearchVectorStore extends VectorStore {
   }
 
   /**
-   * Method for adding documents to the AzureAISearchVectorStore. It first converts
-   * the documents to texts and then adds them as vectors.
+   * Adds documents to the AzureAISearchVectorStore.
+   * Documents are chunked into batches of size `embeddingBatchSize` then
+   * embedded and added to the AzureAISearchVectorStore.
    * @param documents The documents to add.
    * @param options Options for adding documents.
    * @returns A promise that resolves to the ids of the added documents.
@@ -231,7 +223,7 @@ export class AzureAISearchVectorStore extends VectorStore {
   }
 
   /**
-   * Method for adding vectors to the AzureAISearchVectorStore.
+   * Adds vectors to the AzureAISearchVectorStore.
    * @param vectors Vectors to be added.
    * @param documents Corresponding documents to be added.
    * @param options Options for adding documents.
@@ -263,171 +255,171 @@ export class AzureAISearchVectorStore extends VectorStore {
   }
 
   /**
-   * Perform a similarity search using query type specified on Configuration.
-   *
-   * @param query
-   * @param k
-   * @param filter
+   * Performs a similarity search using query type specified in configuration.
+   * @param query Query text for the similarity search.
+   * @param k=4 Number of nearest neighbors to return.
+   * @param filter Optional OData filter for the documents.
+   * @returns Promise that resolves to a list of documents and their corresponding similarity scores.
    */
-  // async similaritySearch(
-  //   query: string,
-  //   k = 4,
-  //   filter: this["FilterType"] | undefined = undefined,
-  // ): Promise<Document[]> {
-  //   const searchType = this.params.search.type;
-  //   let results: [Document, number][] = [];
+  async similaritySearch(
+    query: string,
+    k = 4,
+    filter: this["FilterType"] | undefined = undefined,
+  ): Promise<Document[]> {
+    const results = await this.similaritySearchWithScore(
+      query,
+      k,
+      filter
+    );
 
-  //   if (searchType === "similarity") {
-  //     results = await this.similaritySearchVectorWithScore(
-  //       await this.embeddings.embedQuery(query),
-  //       k,
-  //       filter
-  //     );
-  //   } else if (searchType === "similarity_hybrid") {
-  //     results = await this.hybridSearchVectorWithScore(
-  //       query,
-  //       await this.embeddings.embedQuery(query),
-  //       k,
-  //       filter
-  //     );
-  //   } else if (searchType === "semantic_hybrid") {
-  //     results = await this.semanticHybridSearchVectorWithScore(
-  //       query,
-  //       await this.embeddings.embedQuery(query),
-  //       k,
-  //       filter
-  //     );
-  //   } else {
-  //     throw new Error(`Unrecognized search type '${searchType}'`);
-  //   }
-
-  //   return results.map((result) => result[0]);
-  // }
+    return results.map((result) => result[0]);
+  }
 
   /**
-   * Perform a similarity search using query type specified on Configuration.
-   *
-   * @param query
-   * @param k
-   * @param filter
+   * Performs a similarity search using query type specified in configuration.
+   * @param query Query text for the similarity search.
+   * @param k=4 Number of nearest neighbors to return.
+   * @param filter Optional OData filter for the documents.
+   * @returns Promise that resolves to a list of documents and their corresponding similarity scores.
    */
-  // async similaritySearchWithScore(
-  //   query: string,
-  //   k = 4,
-  //   filter: this["FilterType"] | undefined = undefined,
-  // ): Promise<[Document, number][]> {
-  //   const searchType = this.params.search.type;
+  async similaritySearchWithScore(
+    query: string,
+    k = 4,
+    filter: this["FilterType"] | undefined = undefined,
+  ): Promise<[Document, number][]> {
+    const searchType = this.options.type;
 
-  //   if (searchType === "similarity") {
-  //     return this.similaritySearchVectorWithScore(
-  //       await this.embeddings.embedQuery(query),
-  //       k,
-  //       filter
-  //     );
-  //   } else if (searchType === "similarity_hybrid") {
-  //     return this.hybridSearchVectorWithScore(
-  //       query,
-  //       await this.embeddings.embedQuery(query),
-  //       k,
-  //       filter
-  //     );
-  //   } else if (searchType === "semantic_hybrid") {
-  //     return this.semanticHybridSearchVectorWithScore(
-  //       query,
-  //       await this.embeddings.embedQuery(query),
-  //       k,
-  //       filter
-  //     );
-  //   }
+    if (searchType === AzureAISearchQueryType.Similarity) {
+      return this.similaritySearchVectorWithScore(
+        await this.embeddings.embedQuery(query),
+        k,
+        filter
+      );
+    } else if (searchType === AzureAISearchQueryType.SimilarityHybrid) {
+      return this.hybridSearchVectorWithScore(
+        query,
+        await this.embeddings.embedQuery(query),
+        k,
+        filter
+      );
+    } else if (searchType === AzureAISearchQueryType.SemanticHybrid) {
+      return this.semanticHybridSearchVectorWithScore(
+        query,
+        await this.embeddings.embedQuery(query),
+        k,
+        filter
+      );
+    }
 
-  //   throw new Error(`Unrecognized search type '${searchType}'`);
-  // }
+    throw new Error(`Unrecognized search type '${searchType}'`);
+  }
 
   /**
-   * Perform a hybrid search using text search.
-   *
-   * @param query
-   * @param queryVectors
-   * @param k
-   * @param filter
+   * Performs a hybrid search using query text.
+   * @param query Query text for the similarity search.
+   * @param queryVector Query vector for the similarity search.
+   *    If not provided, the query text will be embedded.
+   * @param k=4 Number of nearest neighbors to return.
+   * @param filter Optional OData filter for the documents.
+   * @returns Promise that resolves to a list of documents and their corresponding similarity scores.
    */
-  // async hybridSearchVectorWithScore(
-  //   query: string,
-  //   queryVectors: number[],
-  //   k: number,
-  //   filter?: string
-  // ): Promise<[Document, number][]> {
-  //   const { results } = await this.client.search(query, {
-  //     vectors: [{
-  //       value: queryVectors,
-  //       fields: [DEFAULT_FIELD_CONTENT_VECTOR],
-  //       kNearestNeighborsCount: k,
-  //     }],
-  //     filter,
-  //     top: k,
-  //   });
+  async hybridSearchVectorWithScore(
+    query: string,
+    queryVector?: number[],
+    k = 4,
+    filter?: string
+  ): Promise<[Document, number][]> {
+    const vector = queryVector ?? await this.embeddings.embedQuery(query);
 
-  //   const docsWithScore: [Document, number][] = [];
+    await this.initPromise;
+    const { results } = await this.client.search(query, {
+      vectorSearchOptions: {
+        queries: [{
+          kind: "vector",
+          vector: vector,
+          kNearestNeighborsCount: k,
+          fields: [DEFAULT_FIELD_CONTENT_VECTOR],
+        }],
+      },
+      filter,
+      top: k,
+    });
 
-  //   for await (const item of results) {
-  //     const document = new Document<AzureAISearchDocumentMetadata>({
-  //       pageContent: item.document.content,
-  //       metadata: item.document.metadata,
-  //     });
+    const docsWithScore: [Document, number][] = [];
 
-  //     docsWithScore.push([document, item.score]);
-  //   }
+    for await (const item of results) {
+      const document = new Document<AzureAISearchDocumentMetadata & { embedding: number[] }>({
+        pageContent: item.document[DEFAULT_FIELD_CONTENT],
+        metadata: {
+          ...item.document[DEFAULT_FIELD_METADATA],
+          embedding: item.document[DEFAULT_FIELD_CONTENT_VECTOR],
+        }
+      });
+      docsWithScore.push([document, item.score]);
+    }
 
-  //   return docsWithScore;
-  // }
+    return docsWithScore;
+  }
 
   /**
-   * Perform a hybrid search using Semantic configuration.
-   *
-   * @param query
-   * @param queryVectors
-   * @param k
-   * @param filter
+   * Performs a hybrid search with semantic reranker using query text.
+   * @param query Query text for the similarity search.
+   * @param queryVector Query vector for the similarity search.
+   *    If not provided, the query text will be embedded.
+   * @param k=4 Number of nearest neighbors to return.
+   * @param filter Optional OData filter for the documents.
+   * @returns Promise that resolves to a list of documents and their corresponding similarity scores.
    */
-  // async semanticHybridSearchVectorWithScore(
-  //   query: string,
-  //   queryVectors: number[],
-  //   k: number,
-  //   filter?: string
-  // ): Promise<[Document, number][]> {
-  //   const { results } = await this.client.search(query, {
-  //     vectors: [{
-  //       value: queryVectors,
-  //       fields: [DEFAULT_FIELD_CONTENT_VECTOR],
-  //       kNearestNeighborsCount: k,
-  //     }],
-  //     filter,
-  //     top: k,
-  //     queryType: "semantic",
-  //     queryLanguage: this.params.search.language ?? "en-us",
-  //     semanticConfiguration: this.params.search.semantic ?? "default",
-  //     captions: "extractive",
-  //     answers: "extractive",
-  //   });
+  async semanticHybridSearchVectorWithScore(
+    query: string,
+    queryVector?: number[],
+    k = 4,
+    filter?: string
+  ): Promise<[Document, number][]> {
+    const vector = queryVector ?? await this.embeddings.embedQuery(query);
 
-  //   const docsWithScore: [Document<AzureAISearchDocumentMetadata>, number][] = [];
+    await this.initPromise;
+    const { results } = await this.client.search(query, {
+      vectorSearchOptions: {
+        queries: [{
+          kind: "vector",
+          vector: vector,
+          kNearestNeighborsCount: k,
+          fields: [DEFAULT_FIELD_CONTENT_VECTOR],
+        }],
+      },
+      filter,
+      top: k,
+      queryType: "semantic",
+      semanticSearchOptions: {
+        configurationName: 'semantic-search-config',
+        captions: {
+          captionType: "extractive",
+        },
+        answers: {
+          answerType: "extractive",
+        }
+      },
+    });
 
-  //   for await (const item of results) {
-  //     const document = new Document<AzureAISearchDocumentMetadata>({
-  //       pageContent: item.document.content,
-  //       metadata: item.document.metadata,
-  //     });
+    const docsWithScore: [Document, number][] = [];
 
-  //     docsWithScore.push([document, item.rerankerScore ?? item.score]);
-  //   }
+    for await (const item of results) {
+      const document = new Document<AzureAISearchDocumentMetadata & { embedding: number[] }>({
+        pageContent: item.document[DEFAULT_FIELD_CONTENT],
+        metadata: {
+          ...item.document[DEFAULT_FIELD_METADATA],
+          embedding: item.document[DEFAULT_FIELD_CONTENT_VECTOR],
+        }
+      });
+      docsWithScore.push([document, item.score]);
+    }
 
-  //   return docsWithScore;
-  // }
+    return docsWithScore;
+  }
 
   /**
-   * Method that performs a similarity search on the vectors stored in the
-   * collection. It returns a list of documents and their corresponding
-   * similarity scores.
+   * Performs a similarity search on the vectors stored in the collection.
    * @param queryVector Query vector for the similarity search.
    * @param k=4 Number of nearest neighbors to return.
    * @param filter string OData filter for the documents.
@@ -440,24 +432,27 @@ export class AzureAISearchVectorStore extends VectorStore {
   ): Promise<[Document, number][]> {
     await this.initPromise;
 
-    const { results } = await this.client.search("", {
+    const { results } = await this.client.search("*", {
       vectorSearchOptions: {
         queries: [{
           kind: "vector",
           vector: query,
           kNearestNeighborsCount: k,
+          fields: [DEFAULT_FIELD_CONTENT_VECTOR],
         }],
       },
-      searchFields: [DEFAULT_FIELD_CONTENT_VECTOR],
       filter,
     });
 
     const docsWithScore: [Document, number][] = [];
 
     for await (const item of results) {
-      const document = new Document<AzureAISearchDocumentMetadata>({
-        pageContent: item.document.content,
-        metadata: item.document.metadata,
+      const document = new Document<AzureAISearchDocumentMetadata & { embedding: number[] }>({
+        pageContent: item.document[DEFAULT_FIELD_CONTENT],
+        metadata: {
+          ...item.document[DEFAULT_FIELD_METADATA],
+          embedding: item.document[DEFAULT_FIELD_CONTENT_VECTOR],
+        }
       });
       docsWithScore.push([document, item.score]);
     }
@@ -489,7 +484,7 @@ export class AzureAISearchVectorStore extends VectorStore {
       queryEmbedding,
       fetchK
     );
-    const embeddingList = docs.map((doc) => doc[0].metadata[DEFAULT_FIELD_CONTENT_VECTOR]);
+    const embeddingList = docs.map((doc) => doc[0].metadata.embedding);
 
     // Re-rank the results using MMR
     const mmrIndexes = maximalMarginalRelevance(
@@ -530,7 +525,7 @@ export class AzureAISearchVectorStore extends VectorStore {
       vectorSearch: {
         algorithms: [
           {
-            name: "default",
+            name: "vector-search-algorithm",
             kind: "hnsw",
             parameters: {
               m: 4,
@@ -542,16 +537,16 @@ export class AzureAISearchVectorStore extends VectorStore {
         ],
         profiles: [
           {
-            name: "default",
-            algorithmConfigurationName: "default",
+            name: "vector-search-profile",
+            algorithmConfigurationName: "vector-search-algorithm",
           }
         ]
       },
       semanticSearch: {
-        defaultConfigurationName: "default",
+        defaultConfigurationName: "semantic-search-config",
         configurations: [
           {
-            name: "default",
+            name: "semantic-search-config",
             prioritizedFields: {
               contentFields: [{
                 name: DEFAULT_FIELD_CONTENT,
@@ -581,7 +576,7 @@ export class AzureAISearchVectorStore extends VectorStore {
           searchable: true,
           type: "Collection(Edm.Single)",
           vectorSearchDimensions: 1536,
-          vectorSearchProfileName: "default"
+          vectorSearchProfileName: "vector-search-profile"
         },
         {
           name: DEFAULT_FIELD_METADATA,
