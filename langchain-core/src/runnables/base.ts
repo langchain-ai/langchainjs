@@ -539,7 +539,7 @@ export abstract class Runnable<
    */
   pipe<NewRunOutput>(
     coerceable: RunnableLike<RunOutput, NewRunOutput>
-  ): RunnableSequence<RunInput, Exclude<NewRunOutput, Error>> {
+  ): Runnable<RunInput, Exclude<NewRunOutput, Error>> {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableSequence({
       first: this,
@@ -550,7 +550,7 @@ export abstract class Runnable<
   /**
    * Pick keys from the dict output of this runnable. Returns a new runnable.
    */
-  pick(keys: string | string[]): RunnableSequence {
+  pick(keys: string | string[]): Runnable {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return this.pipe(new RunnablePick(keys) as Runnable);
   }
@@ -560,7 +560,7 @@ export abstract class Runnable<
    */
   assign(
     mapping: RunnableMapLike<Record<string, unknown>, Record<string, unknown>>
-  ): RunnableSequence {
+  ): Runnable {
     return this.pipe(
       // eslint-disable-next-line @typescript-eslint/no-use-before-define
       new RunnableAssign(
