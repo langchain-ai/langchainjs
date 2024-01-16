@@ -650,9 +650,10 @@ export class AzureAISearchVectorStore extends VectorStore {
     docs: Document<AzureAISearchDocumentMetadata>[],
     embeddings: EmbeddingsInterface,
     config: AzureAISearchConfig,
+    options?: AzureAISearchAddDocumentsOptions,
   ): Promise<AzureAISearchVectorStore> {
     const instance = new this(embeddings, config);
-    await instance.addDocuments(docs);
+    await instance.addDocuments(docs, options);
     return instance;
   }
 }
