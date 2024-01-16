@@ -1,9 +1,15 @@
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { jest, test } from "@jest/globals";
-import { AIMessageChunk } from "@langchain/core/messages";
+import {
+  AIMessage,
+  AIMessageChunk,
+  HumanMessage,
+  SystemMessage,
+} from "@langchain/core/messages";
 
 import { RemoteRunnable } from "../remote.js";
+import { ChatPromptValue } from "../../prompts/chat.js";
 
 const BASE_URL = "http://my-langserve-endpoint";
 
@@ -80,6 +86,14 @@ data: {"content": "", "additional_kwargs": {}, "type": "AIMessageChunk", "exampl
 
 event: end`;
 
+const strangeTypesResp = `event: data
+data: {"content": "what is a document loader", "additional_kwargs": {}, "type": "human", "example": false}
+
+event: data
+data: {"messages":[{"content":"You are an expert programmer and problem-solver, tasked with answering any question about Langchain.","type":"system","additional_kwargs":{}},{"content":"I am an AI","type":"ai","additional_kwargs":{}}]}
+
+event: end`;
+
 describe("RemoteRunnable", () => {
   beforeAll(() => {
     // mock langserve service
@@ -94,6 +108,7 @@ describe("RemoteRunnable", () => {
       "/a/stream": respToStream(aResp),
       "/b/stream": respToStream(bResp),
       "/a/stream_log": respToStream(aResp),
+      "/strange_types/stream": respToStream(strangeTypesResp),
     };
 
     const oldFetch = global.fetch;
@@ -195,5 +210,23 @@ describe("RemoteRunnable", () => {
       chunkCount += 1;
     }
     expect(chunkCount).toBe(1);
+  });
+
+  test("Stream legacy data type formats", async () => {
+    const remote = new RemoteRunnable({ url: `${BASE_URL}/strange_types` });
+    const stream = await remote.stream({ text: "What are the 5 best apples?" });
+    const chunks = [];
+    for await (const chunk of stream) {
+      console.log(chunk);
+      chunks.push(chunk);
+    }
+    expect(chunks[0]).toBeInstanceOf(HumanMessage);
+    expect(chunks[1]).toBeInstanceOf(ChatPromptValue);
+    expect((chunks[1] as ChatPromptValue).messages[0]).toBeInstanceOf(
+      SystemMessage
+    );
+    expect((chunks[1] as ChatPromptValue).messages[1]).toBeInstanceOf(
+      AIMessage
+    );
   });
 });
