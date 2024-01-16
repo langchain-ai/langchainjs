@@ -124,7 +124,7 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
 
     const response = await this.client.send(new GetItemCommand(params));
     const items = response.Item
-      ? response.Item[this.messageAttributeName]?.L ?? []
+      ? response.Item[this.messageAttributeName].L ?? []
       : [];
     const messages = items
       .map((item) => ({

@@ -223,8 +223,8 @@ export class BaseGoogleVertexAI<AuthOptions>
   extractPredictionFromResponse(
     result: GoogleVertexAILLMResponse<TextPrediction>
   ): TextPrediction {
-    return (result?.data as GoogleVertexAILLMPredictions<TextPrediction>)
-      ?.predictions[0];
+    return (result.data as GoogleVertexAILLMPredictions<TextPrediction>)
+      .predictions[0];
   }
 
   extractGenerationFromPrediction(prediction: TextPrediction): Generation {

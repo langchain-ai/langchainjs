@@ -480,7 +480,7 @@ export class ChatMinimax
       functions:
         options?.functions ??
         (options?.tools
-          ? options?.tools.map(convertToOpenAIFunction)
+          ? options.tools.map(convertToOpenAIFunction)
           : undefined),
       plugins: options?.plugins,
     };
@@ -633,7 +633,7 @@ export class ChatMinimax
         // 取最后一条消息
         if (messages) {
           const message = messages[messages.length - 1];
-          const text = message?.text ?? "";
+          const text = message.text ?? "";
           generations.push({
             text,
             message: minimaxResponseToChatMessage(message),
@@ -642,7 +642,7 @@ export class ChatMinimax
       }
     } else {
       for (const choice of data.choices) {
-        const text = choice?.text ?? "";
+        const text = choice.text ?? "";
         generations.push({
           text,
           message: minimaxResponseToChatMessage({

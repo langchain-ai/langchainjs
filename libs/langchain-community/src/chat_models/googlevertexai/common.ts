@@ -285,8 +285,8 @@ export class BaseChatGoogleVertexAI<AuthOptions>
 
     const generations =
       (
-        result?.data as GoogleVertexAILLMPredictions<GoogleVertexAIChatPrediction>
-      )?.predictions?.map((prediction) =>
+        result.data as GoogleVertexAILLMPredictions<GoogleVertexAIChatPrediction>
+      ).predictions.map((prediction) =>
         BaseChatGoogleVertexAI.convertPrediction(prediction)
       ) ?? [];
     return {
@@ -381,9 +381,9 @@ export class BaseChatGoogleVertexAI<AuthOptions>
   static convertPrediction(
     prediction: GoogleVertexAIChatPrediction
   ): ChatGeneration {
-    const message = prediction?.candidates[0];
+    const message = prediction.candidates[0];
     return {
-      text: message?.content,
+      text: message.content,
       message: new AIMessage(message.content),
       generationInfo: prediction,
     };

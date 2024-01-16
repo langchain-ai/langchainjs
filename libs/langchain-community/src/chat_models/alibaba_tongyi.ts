@@ -251,7 +251,7 @@ export class ChatAlibabaTongyi
     super(fields);
 
     this.alibabaApiKey =
-      fields?.alibabaApiKey ?? getEnvironmentVariable("ALIBABA_API_KEY");
+      fields.alibabaApiKey ?? getEnvironmentVariable("ALIBABA_API_KEY");
     if (!this.alibabaApiKey) {
       throw new Error("Ali API key not found");
     }
@@ -335,12 +335,12 @@ export class ChatAlibabaTongyi
             options?.signal,
             (event) => {
               const data: ChatCompletionResponse = JSON.parse(event.data);
-              if (data?.code) {
+              if (data.code) {
                 if (rejected) {
                   return;
                 }
                 rejected = true;
-                reject(new Error(data?.message));
+                reject(new Error(data.message));
                 return;
               }
 

@@ -265,7 +265,7 @@ export class PineconeStore extends VectorStore {
       { includeValues: true }
     );
 
-    const matches = results?.matches ?? [];
+    const matches = results.matches ?? [];
     const embeddingList = matches.map((match) => match.values);
 
     const mmrIndexes = maximalMarginalRelevance(

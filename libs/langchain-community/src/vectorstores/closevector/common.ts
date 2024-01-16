@@ -118,7 +118,7 @@ export abstract class CloseVector<
       k,
       filter
         ? (x: { pageContent: string; metadata: Record<string, unknown> }) =>
-            filter?.({
+            filter({
               pageContent: x.pageContent,
               metadata: x.metadata || {},
             }) || false

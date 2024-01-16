@@ -9,7 +9,7 @@ test("Test FaissStore.fromTexts + addVectors", async () => {
     [{ id: 2 }],
     new FakeEmbeddings()
   );
-  expect(vectorStore.index?.ntotal()).toBe(1);
+  expect(vectorStore.index.ntotal()).toBe(1);
 
   await vectorStore.addVectors(
     [
@@ -32,7 +32,7 @@ test("Test FaissStore.fromTexts + addVectors", async () => {
       }),
     ]
   );
-  expect(vectorStore.index?.ntotal()).toBe(4);
+  expect(vectorStore.index.ntotal()).toBe(4);
 
   const resultTwo = await vectorStore.similaritySearchVectorWithScore(
     [1, 0, 0, 0],
@@ -60,7 +60,7 @@ test("Test FaissStore.fromDocuments + addVectors", async () => {
     ],
     new FakeEmbeddings()
   );
-  expect(vectorStore.index?.ntotal()).toBe(3);
+  expect(vectorStore.index.ntotal()).toBe(3);
 
   await vectorStore.addVectors(
     [
@@ -78,7 +78,7 @@ test("Test FaissStore.fromDocuments + addVectors", async () => {
       }),
     ]
   );
-  expect(vectorStore.index?.ntotal()).toBe(5);
+  expect(vectorStore.index.ntotal()).toBe(5);
 
   const results = await vectorStore.similaritySearchVectorWithScore(
     [1, 0, 0, 0],
@@ -117,7 +117,7 @@ test("Test FaissStore.fromIndex + mergeFrom", async () => {
       }),
     ]
   );
-  expect(vectorStore1.index?.ntotal()).toBe(3);
+  expect(vectorStore1.index.ntotal()).toBe(3);
 
   const vectorStore2 = await FaissStore.fromDocuments(
     [
@@ -130,7 +130,7 @@ test("Test FaissStore.fromIndex + mergeFrom", async () => {
   );
 
   await vectorStore2.mergeFrom(vectorStore1);
-  expect(vectorStore2.index?.ntotal()).toBe(4);
+  expect(vectorStore2.index.ntotal()).toBe(4);
 
   const results1 = await vectorStore2.similaritySearchVectorWithScore(
     [1, 0, 0, 0],
@@ -178,7 +178,7 @@ test("Test FaissStore.addDocuments", async () => {
   );
 
   expect(idsReturned1).toStrictEqual(ids);
-  expect(vectorStore.index?.ntotal()).toBe(4);
+  expect(vectorStore.index.ntotal()).toBe(4);
   expect(Object.keys(vectorStore._mapping).length).toBe(4);
   expect(vectorStore.docstore._docs.size).toBe(4);
 });
@@ -213,7 +213,7 @@ test("Test FaissStore.delete", async () => {
 
   expect(idsReturned).toStrictEqual(ids);
 
-  expect(vectorStore.index?.ntotal()).toBe(3);
+  expect(vectorStore.index.ntotal()).toBe(3);
   expect(Object.keys(vectorStore._mapping).length).toBe(3);
   expect(vectorStore.docstore._docs.size).toBe(3);
 
@@ -225,7 +225,7 @@ test("Test FaissStore.delete", async () => {
 
   await vectorStore.delete({ ids: ids.slice(2) });
 
-  expect(vectorStore.index?.ntotal()).toBe(2);
+  expect(vectorStore.index.ntotal()).toBe(2);
   expect(Object.keys(vectorStore._mapping).length).toBe(2);
   expect(vectorStore.docstore._docs.size).toBe(2);
 

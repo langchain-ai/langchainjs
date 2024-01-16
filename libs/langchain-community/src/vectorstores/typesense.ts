@@ -256,8 +256,8 @@ export class Typesense extends VectorStore {
     const results = typesenseResponse.results[0].hits;
 
     const hits = results?.map((hit: VectorSearchResponseHit<object>) => ({
-      document: hit?.document || {},
-      vector_distance: hit?.vector_distance || 2,
+      document: hit.document,
+      vector_distance: hit.vector_distance || 2,
     })) as
       | { document: Record<string, unknown>; vector_distance: number }[]
       | undefined;

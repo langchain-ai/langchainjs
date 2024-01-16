@@ -159,7 +159,7 @@ export class Portkey extends BaseLLM {
       stream: true,
     });
     for await (const data of response) {
-      const choice = data?.choices[0];
+      const choice = data.choices[0];
       if (!choice) {
         continue;
       }

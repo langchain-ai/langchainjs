@@ -38,7 +38,7 @@ test.skip("Test end to end with HNSWLib", async () => {
       maxRetries: 1,
     })
   );
-  expect(vectorStore.index?.getCurrentCount()).toBe(3);
+  expect(vectorStore.index.getCurrentCount()).toBe(3);
 
   const resultOne = await vectorStore.similaritySearch("hello world", 1);
   const resultOneMetadatas = resultOne.map(({ metadata }) => metadata);

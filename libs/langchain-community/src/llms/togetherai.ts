@@ -159,9 +159,9 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
       throw new Error("TOGETHER_AI_API_KEY not found.");
     }
     this.apiKey = apiKey;
-    this.temperature = inputs?.temperature ?? this.temperature;
-    this.topK = inputs?.topK ?? this.topK;
-    this.topP = inputs?.topP ?? this.topP;
+    this.temperature = inputs.temperature ?? this.temperature;
+    this.topK = inputs.topK ?? this.topK;
+    this.topP = inputs.topP ?? this.topP;
     this.modelName = inputs.modelName;
     this.streaming = inputs.streaming ?? this.streaming;
     this.repetitionPenalty = inputs.repetitionPenalty ?? this.repetitionPenalty;
@@ -185,17 +185,17 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
 
   private constructBody(prompt: string, options?: this["ParsedCallOptions"]) {
     const body = {
-      model: options?.modelName ?? this?.modelName,
+      model: options?.modelName ?? this.modelName,
       prompt,
-      temperature: this?.temperature ?? options?.temperature,
-      top_k: this?.topK ?? options?.topK,
-      top_p: this?.topP ?? options?.topP,
-      repetition_penalty: this?.repetitionPenalty ?? options?.repetitionPenalty,
-      logprobs: this?.logprobs ?? options?.logprobs,
-      stream_tokens: this?.streaming,
-      safety_model: this?.safetyModel ?? options?.safetyModel,
-      max_tokens: this?.maxTokens ?? options?.maxTokens,
-      stop: this?.stop ?? options?.stop,
+      temperature: this.temperature ?? options?.temperature,
+      top_k: this.topK ?? options?.topK,
+      top_p: this.topP ?? options?.topP,
+      repetition_penalty: this.repetitionPenalty ?? options?.repetitionPenalty,
+      logprobs: this.logprobs ?? options?.logprobs,
+      stream_tokens: this.streaming,
+      safety_model: this.safetyModel ?? options?.safetyModel,
+      max_tokens: this.maxTokens ?? options?.maxTokens,
+      stop: this.stop ?? options?.stop,
     };
     return body;
   }

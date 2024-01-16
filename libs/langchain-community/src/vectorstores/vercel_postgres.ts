@@ -77,7 +77,7 @@ export class VercelPostgres extends VectorStore {
     this.client = config.client;
 
     this._verbose =
-      getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true" ??
+      getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true" ||
       !!config.verbose;
   }
 
@@ -196,7 +196,7 @@ export class VercelPostgres extends VectorStore {
     documents: Document[],
     options?: { ids?: string[] }
   ): Promise<string[]> {
-    if (options?.ids !== undefined && options?.ids.length !== vectors.length) {
+    if (options?.ids !== undefined && options.ids.length !== vectors.length) {
       throw new Error(
         `If provided, the length of "ids" must be the same as the number of vectors.`
       );
@@ -256,7 +256,7 @@ export class VercelPostgres extends VectorStore {
     let paramCount = values.length;
 
     for (const [key, value] of Object.entries(_filter)) {
-      if (typeof value === "object" && value !== null) {
+      if (typeof value === "object") {
         const currentParamCount = paramCount;
         const placeholders = value.in
           .map((_, index) => `$${currentParamCount + index + 1}`)
@@ -390,7 +390,7 @@ export class VercelPostgres extends VectorStore {
    * @returns Promise that resolves when all clients are closed and the pool is terminated.
    */
   async end(): Promise<void> {
-    await this.client?.release();
+    await this.client.release();
     return this.pool.end();
   }
 }

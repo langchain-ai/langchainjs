@@ -135,11 +135,11 @@ export class MinimaxEmbeddings
       throw new Error("Minimax ApiKey not found");
     }
 
-    this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
-    this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
-    this.type = fieldsWithDefaults?.type ?? this.type;
+    this.modelName = fieldsWithDefaults.modelName ?? this.modelName;
+    this.batchSize = fieldsWithDefaults.batchSize ?? this.batchSize;
+    this.type = fieldsWithDefaults.type ?? this.type;
     this.stripNewLines =
-      fieldsWithDefaults?.stripNewLines ?? this.stripNewLines;
+      fieldsWithDefaults.stripNewLines ?? this.stripNewLines;
     this.basePath = fields?.configuration?.basePath ?? this.basePath;
     this.apiUrl = `${this.basePath}/embeddings`;
     this.headers = fields?.configuration?.headers ?? this.headers;

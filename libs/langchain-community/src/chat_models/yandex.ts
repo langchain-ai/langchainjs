@@ -117,7 +117,7 @@ export class ChatYandexGPT extends BaseChatModel {
       method: "POST",
       headers,
       body: JSON.stringify(bodyData),
-      signal: options?.signal,
+      signal: options.signal,
     });
     if (!response.ok) {
       throw new Error(

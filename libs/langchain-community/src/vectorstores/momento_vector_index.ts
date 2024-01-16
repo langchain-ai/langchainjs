@@ -178,7 +178,7 @@ export class MomentoVectorIndex extends VectorStore {
     ) {
       throw new Error(
         `Number of ids (${
-          documentProps?.ids?.length || "null"
+          documentProps.ids.length || "null"
         }) does not equal number of vectors (${vectors.length})`
       );
     }
@@ -276,7 +276,7 @@ export class MomentoVectorIndex extends VectorStore {
 
       return response.hits().map((hit) => [
         new Document({
-          pageContent: hit.metadata[this.textField]?.toString() ?? "",
+          pageContent: hit.metadata[this.textField].toString() ?? "",
           metadata: Object.fromEntries(
             Object.entries(hit.metadata).filter(
               ([key]) => key !== this.textField

@@ -93,9 +93,9 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
 
   constructor(fields: ZepMemoryInput) {
     super({
-      returnMessages: fields?.returnMessages ?? false,
-      inputKey: fields?.inputKey,
-      outputKey: fields?.outputKey,
+      returnMessages: fields.returnMessages ?? false,
+      inputKey: fields.inputKey,
+      outputKey: fields.outputKey,
     });
 
     this.humanPrefix = fields.humanPrefix ?? this.humanPrefix;

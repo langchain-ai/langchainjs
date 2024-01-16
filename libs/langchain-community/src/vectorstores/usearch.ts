@@ -40,7 +40,7 @@ export class USearch extends SaveableVectorStore {
     this._index = args.index;
     this._mapping = args.mapping ?? {};
     this.embeddings = embeddings;
-    this.docstore = args?.docstore ?? new SynchronousInMemoryDocstore();
+    this.docstore = args.docstore ?? new SynchronousInMemoryDocstore();
   }
 
   /**

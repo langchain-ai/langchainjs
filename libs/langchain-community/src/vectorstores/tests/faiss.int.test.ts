@@ -14,7 +14,7 @@ test("Test FaissStore.fromTexts", async () => {
     [{ id: 2 }, { id: 1 }, { id: 3 }],
     new OpenAIEmbeddings()
   );
-  expect(vectorStore.index?.ntotal()).toBe(3);
+  expect(vectorStore.index.ntotal()).toBe(3);
 
   const resultOne = await vectorStore.similaritySearch("hello world", 1);
   const resultOneMetadatas = resultOne.map(({ metadata }) => metadata);
@@ -31,7 +31,7 @@ test("Test FaissStore.fromTexts + addDocuments", async () => {
     [{ id: 2 }, { id: 1 }, { id: 3 }],
     new OpenAIEmbeddings()
   );
-  expect(vectorStore.index?.ntotal()).toBe(3);
+  expect(vectorStore.index.ntotal()).toBe(3);
 
   await vectorStore.addDocuments([
     new Document({
@@ -39,7 +39,7 @@ test("Test FaissStore.fromTexts + addDocuments", async () => {
       metadata: { id: 4 },
     }),
   ]);
-  expect(vectorStore.index?.ntotal()).toBe(4);
+  expect(vectorStore.index.ntotal()).toBe(4);
 
   const resultTwo = await vectorStore.similaritySearch("hello world", 3);
   const resultTwoMetadatas = resultTwo.map(({ metadata }) => metadata);
@@ -52,7 +52,7 @@ test("Test FaissStore.load and FaissStore.save", async () => {
     [{ id: 2 }, { id: 1 }, { id: 3 }],
     new OpenAIEmbeddings()
   );
-  expect(vectorStore.index?.ntotal()).toBe(3);
+  expect(vectorStore.index.ntotal()).toBe(3);
 
   const resultOne = await vectorStore.similaritySearch("hello world", 1);
   const resultOneMetadatas = resultOne.map(({ metadata }) => metadata);
@@ -94,7 +94,7 @@ test("Test FaissStore.loadFromPython", async () => {
     path.join(__dirname, "faiss.int.test.data/faiss_index"),
     new OpenAIEmbeddings()
   );
-  expect(loadedFromPythonVectorStore.index?.ntotal()).toBe(42);
+  expect(loadedFromPythonVectorStore.index.ntotal()).toBe(42);
 
   const results0 = await loadedFromPythonVectorStore.similaritySearch(
     "What did the president say about Ketanji Brown Jackson"

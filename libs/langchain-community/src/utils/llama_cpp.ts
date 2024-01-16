@@ -45,11 +45,11 @@ export interface LlamaBaseCppInputs {
 
 export function createLlamaModel(inputs: LlamaBaseCppInputs): LlamaModel {
   const options = {
-    gpuLayers: inputs?.gpuLayers,
+    gpuLayers: inputs.gpuLayers,
     modelPath: inputs.modelPath,
-    useMlock: inputs?.useMlock,
-    useMmap: inputs?.useMmap,
-    vocabOnly: inputs?.vocabOnly,
+    useMlock: inputs.useMlock,
+    useMmap: inputs.useMmap,
+    vocabOnly: inputs.vocabOnly,
   };
 
   return new LlamaModel(options);
@@ -60,15 +60,15 @@ export function createLlamaContext(
   inputs: LlamaBaseCppInputs
 ): LlamaContext {
   const options = {
-    batchSize: inputs?.batchSize,
-    contextSize: inputs?.contextSize,
-    embedding: inputs?.embedding,
-    f16Kv: inputs?.f16Kv,
-    logitsAll: inputs?.logitsAll,
+    batchSize: inputs.batchSize,
+    contextSize: inputs.contextSize,
+    embedding: inputs.embedding,
+    f16Kv: inputs.f16Kv,
+    logitsAll: inputs.logitsAll,
     model,
-    prependBos: inputs?.prependBos,
-    seed: inputs?.seed,
-    threads: inputs?.threads,
+    prependBos: inputs.prependBos,
+    seed: inputs.seed,
+    threads: inputs.threads,
   };
 
   return new LlamaContext(options);

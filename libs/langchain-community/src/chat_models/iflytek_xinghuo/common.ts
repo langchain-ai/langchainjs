@@ -369,9 +369,9 @@ export abstract class BaseChatIflytekXinghuo
         const { header, payload } = data;
         if (header.code === 0) {
           if (header.status === 0) {
-            response.result = payload.choices?.text[0]?.content ?? "";
+            response.result = payload.choices.text[0]?.content ?? "";
           } else if (header.status === 1) {
-            response.result += payload.choices?.text[0]?.content ?? "";
+            response.result += payload.choices.text[0]?.content ?? "";
           } else if (header.status === 2) {
             response = { ...response, usage: payload.usage?.text };
             break;
@@ -417,15 +417,15 @@ export abstract class BaseChatIflytekXinghuo
             const { header, payload } = data;
             if (header.code === 0) {
               if (header.status === 0) {
-                response.result = payload.choices?.text[0]?.content ?? "";
+                response.result = payload.choices.text[0]?.content ?? "";
               } else if (header.status === 1) {
-                response.result += payload.choices?.text[0]?.content ?? "";
+                response.result += payload.choices.text[0]?.content ?? "";
               } else if (header.status === 2) {
                 response = { ...response, usage: payload.usage?.text };
                 break;
               }
               void runManager?.handleLLMNewToken(
-                payload.choices?.text[0]?.content
+                payload.choices.text[0]?.content
               );
             } else {
               break;

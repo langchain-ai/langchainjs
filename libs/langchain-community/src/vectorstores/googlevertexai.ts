@@ -448,7 +448,7 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
       datapoints,
       options
     );
-    if (Object.keys(response?.data ?? {}).length === 0) {
+    if (Object.keys(response.data ?? {}).length === 0) {
       // Nothing in the response in the body means we saved it ok
       const idDoc = documents as IdDocument[];
       const docsToStore: Record<string, Document> = {};
@@ -581,7 +581,7 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
       featureVector: vector,
     };
     const restrictions = this.metadataToRestrictions(document.metadata);
-    if (restrictions?.length > 0) {
+    if (restrictions.length > 0) {
       ret.restricts = restrictions;
     }
     return ret;
@@ -636,13 +636,13 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
     const response = await connection.request(request, options);
 
     // Get the document for each datapoint id and return them
-    const nearestNeighbors = response?.data?.nearestNeighbors ?? [];
+    const nearestNeighbors = response.data.nearestNeighbors ?? [];
     const nearestNeighbor = nearestNeighbors[0];
-    const neighbors = nearestNeighbor?.neighbors ?? [];
+    const neighbors = nearestNeighbor.neighbors ?? [];
     const ret: [Document, number][] = await Promise.all(
       neighbors.map(async (neighbor) => {
-        const id = neighbor?.datapoint?.datapointId;
-        const distance = neighbor?.distance;
+        const id = neighbor.datapoint.datapointId;
+        const {distance} = neighbor;
         let doc: IdDocument;
         try {
           doc = await this.docstore.search(id);
@@ -679,7 +679,7 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
       await this.indexEndpointClient.request(this.callerOptions);
 
     // Get the endpoint
-    const publicEndpointDomainName = response?.data?.publicEndpointDomainName;
+    const {publicEndpointDomainName} = response.data;
     this.apiEndpoint = publicEndpointDomainName;
 
     // Determine which of the deployed indexes match the index id
@@ -687,7 +687,7 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
     // contain the "index name" or path, but not the index id by itself,
     // so we need to extract it from the name
     const indexPathPattern = /projects\/.+\/locations\/.+\/indexes\/(.+)$/;
-    const deployedIndexes = response?.data?.deployedIndexes ?? [];
+    const deployedIndexes = response.data.deployedIndexes ?? [];
     const deployedIndex = deployedIndexes.find((index) => {
       const deployedIndexPath = index.index;
       const match = deployedIndexPath.match(indexPathPattern);

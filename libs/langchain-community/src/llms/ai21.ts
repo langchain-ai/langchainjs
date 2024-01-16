@@ -152,7 +152,7 @@ export class AI21 extends LLM implements AI21Input {
     prompt: string,
     options: this["ParsedCallOptions"]
   ): Promise<string> {
-    let stop = options?.stop;
+    let {stop} = options;
     this.validateEnvironment();
     if (this.stop && stop && this.stop.length > 0 && stop.length > 0) {
       throw new Error("`stop` found in both the input and default params.");

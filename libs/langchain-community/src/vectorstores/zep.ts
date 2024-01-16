@@ -2,12 +2,12 @@ import {
   DocumentCollection,
   IDocument,
   NotFoundError,
-  ZepClient,
+  ZepClient
 } from "@getzep/zep-js";
 
 import {
   MaxMarginalRelevanceSearchOptions,
-  VectorStore,
+  VectorStore
 } from "@langchain/core/vectorstores";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
@@ -130,7 +130,7 @@ export class ZepVectorStore extends VectorStore {
       description: args.description,
       metadata: args.metadata,
       embeddingDimensions: args.embeddingDimensions,
-      isAutoEmbedded: this.autoEmbed,
+      isAutoEmbedded: this.autoEmbed
     });
 
     console.info("Created new collection:", args.collectionName);
@@ -159,7 +159,7 @@ export class ZepVectorStore extends VectorStore {
       const doc: IDocument = {
         content: documents[i].pageContent,
         metadata: documents[i].metadata,
-        embedding: vectors.length > 0 ? vectors[i] : undefined,
+        embedding: vectors.length > 0 ? vectors[i] : undefined
       };
       docs.push(doc);
     }
@@ -219,7 +219,7 @@ export class ZepVectorStore extends VectorStore {
     const results = await this.collection.search(
       {
         embedding: new Float32Array(query),
-        metadata: assignMetadata(filter),
+        metadata: assignMetadata(filter)
       },
       k
     );
@@ -235,7 +235,7 @@ export class ZepVectorStore extends VectorStore {
     const results = await this.collection.search(
       {
         text: query,
-        metadata: assignMetadata(filter),
+        metadata: assignMetadata(filter)
       },
       k
     );
@@ -324,7 +324,7 @@ export class ZepVectorStore extends VectorStore {
       zepResults = await this.collection.search(
         {
           embedding: new Float32Array(queryEmbedding),
-          metadata: assignMetadata(filter),
+          metadata: assignMetadata(filter)
         },
         fetchK
       );
@@ -374,7 +374,7 @@ export class ZepVectorStore extends VectorStore {
       const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
       const newDoc = new Document({
         pageContent: texts[i],
-        metadata,
+        metadata
       });
       docs.push(newDoc);
     }
@@ -408,16 +408,16 @@ function zepDocsToDocumentsAndScore(
   return results.map((d) => [
     new Document({
       pageContent: d.content,
-      metadata: d.metadata,
+      metadata: d.metadata
     }),
-    d.score ? d.score : 0,
+    d.score ? d.score : 0
   ]);
 }
 
 function assignMetadata(
   value: string | Record<string, unknown> | object | undefined
 ): Record<string, unknown> | undefined {
-  if (typeof value === "object" && value !== null) {
+  if (typeof value === "object") {
     return value as Record<string, unknown>;
   }
   if (value !== undefined) {

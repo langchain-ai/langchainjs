@@ -132,7 +132,7 @@ export class XataVectorSearch<
 
     return (
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      records?.map((record: any) => [
+      records.map((record: any) => [
         new Document({
           pageContent: record.content,
           metadata: Object.fromEntries(
@@ -146,7 +146,7 @@ export class XataVectorSearch<
           ),
         }),
         record.xata.score,
-      ]) ?? []
+      ])
     );
   }
 }

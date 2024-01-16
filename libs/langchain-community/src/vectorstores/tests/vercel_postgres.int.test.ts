@@ -16,8 +16,8 @@ const config = {
 
 describe("Test VercelPostgres store", () => {
   afterEach(async () => {
-    await vercelPostgresStore?.delete({ deleteAll: true });
-    await vercelPostgresStore?.end();
+    await vercelPostgresStore.delete({ deleteAll: true });
+    await vercelPostgresStore.end();
   });
 
   test("Test embeddings creation", async () => {

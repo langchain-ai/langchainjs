@@ -107,7 +107,7 @@ export class TogetherAIEmbeddings
 
   private constructBody(input: string) {
     const body = {
-      model: this?.modelName,
+      model: this.modelName,
       input,
     };
     return body;

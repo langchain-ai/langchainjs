@@ -70,13 +70,13 @@ export class GradientLLM extends LLM<BaseLLMCallOptions> {
   constructor(fields: GradientLLMParams) {
     super(fields);
 
-    this.modelSlug = fields?.modelSlug ?? this.modelSlug;
-    this.adapterId = fields?.adapterId;
+    this.modelSlug = fields.modelSlug ?? this.modelSlug;
+    this.adapterId = fields.adapterId;
     this.gradientAccessKey =
-      fields?.gradientAccessKey ??
+      fields.gradientAccessKey ??
       getEnvironmentVariable("GRADIENT_ACCESS_TOKEN");
     this.workspaceId =
-      fields?.workspaceId ?? getEnvironmentVariable("GRADIENT_WORKSPACE_ID");
+      fields.workspaceId ?? getEnvironmentVariable("GRADIENT_WORKSPACE_ID");
 
     this.inferenceParameters = fields.inferenceParameters;
 

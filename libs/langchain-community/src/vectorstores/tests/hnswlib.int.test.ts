@@ -14,7 +14,7 @@ test("Test HNSWLib.fromTexts", async () => {
     [{ id: 2 }, { id: 1 }, { id: 3 }],
     new OpenAIEmbeddings()
   );
-  expect(vectorStore.index?.getCurrentCount()).toBe(3);
+  expect(vectorStore.index.getCurrentCount()).toBe(3);
 
   const resultOne = await vectorStore.similaritySearch("hello world", 1);
   const resultOneMetadatas = resultOne.map(({ metadata }) => metadata);
@@ -31,8 +31,8 @@ test("Test HNSWLib.fromTexts + addDocuments", async () => {
     [{ id: 2 }, { id: 1 }, { id: 3 }],
     new OpenAIEmbeddings()
   );
-  expect(vectorStore.index?.getMaxElements()).toBe(3);
-  expect(vectorStore.index?.getCurrentCount()).toBe(3);
+  expect(vectorStore.index.getMaxElements()).toBe(3);
+  expect(vectorStore.index.getCurrentCount()).toBe(3);
 
   await vectorStore.addDocuments([
     new Document({
@@ -40,7 +40,7 @@ test("Test HNSWLib.fromTexts + addDocuments", async () => {
       metadata: { id: 4 },
     }),
   ]);
-  expect(vectorStore.index?.getMaxElements()).toBe(4);
+  expect(vectorStore.index.getMaxElements()).toBe(4);
 
   const resultTwo = await vectorStore.similaritySearch("hello world", 3);
   const resultTwoMetadatas = resultTwo.map(({ metadata }) => metadata);
@@ -53,7 +53,7 @@ test("Test HNSWLib.load, HNSWLib.save, and HNSWLib.delete", async () => {
     [{ id: 2 }, { id: 1 }, { id: 3 }],
     new OpenAIEmbeddings()
   );
-  expect(vectorStore.index?.getCurrentCount()).toBe(3);
+  expect(vectorStore.index.getCurrentCount()).toBe(3);
 
   const resultOne = await vectorStore.similaritySearch("hello world", 1);
   const resultOneMetadatas = resultOne.map(({ metadata }) => metadata);

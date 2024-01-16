@@ -339,7 +339,7 @@ export class Neo4jVectorStore extends VectorStore {
       }
     }
 
-    // eslint-disable-next-line no-constant-condition
+    // eslint-disable-next-line no-constant-condition, @typescript-eslint/no-unnecessary-condition
     while (true) {
       const fetchQuery = `
         MATCH (n:\`${nodeLabel}\`)
@@ -352,7 +352,7 @@ export class Neo4jVectorStore extends VectorStore {
 
       const data = await store.query(fetchQuery, { props: textNodeProperties });
 
-      if (!data) {
+      if (data.length === 0) {
         continue;
       }
 
@@ -424,7 +424,7 @@ export class Neo4jVectorStore extends VectorStore {
       }
     );
 
-    if (indexInformation) {
+    if (indexInformation.length > 0) {
       indexInformation = this.sortByIndexName(indexInformation, this.indexName);
 
       try {
@@ -468,7 +468,7 @@ export class Neo4jVectorStore extends VectorStore {
       }
     );
 
-    if (indexInformation) {
+    if (indexInformation.length > 0) {
       // Sort the index information by index name
       const sortedIndexInformation = this.sortByIndexName(
         indexInformation,
@@ -618,7 +618,7 @@ export class Neo4jVectorStore extends VectorStore {
     };
     const results = await this.query(readQuery, parameters);
 
-    if (results) {
+    if (results.length > 0) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const docs: [Document, number][] = results.map((result: any) => [
         new Document({

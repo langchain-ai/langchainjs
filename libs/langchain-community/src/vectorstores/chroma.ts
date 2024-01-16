@@ -159,7 +159,7 @@ export class Chroma extends VectorStore {
       let locFrom;
       let locTo;
 
-      if (metadata?.loc) {
+      if (metadata.loc) {
         if (metadata.loc.lines?.from !== undefined)
           locFrom = metadata.loc.lines.from;
         if (metadata.loc.lines?.to !== undefined) locTo = metadata.loc.lines.to;
@@ -245,7 +245,7 @@ export class Chroma extends VectorStore {
 
     const results: [Document, number][] = [];
     for (let i = 0; i < firstIds.length; i += 1) {
-      let metadata: Document["metadata"] = firstMetadatas?.[i] ?? {};
+      let metadata: Document["metadata"] = firstMetadatas[i] ?? {};
 
       if (metadata.locFrom && metadata.locTo) {
         metadata = {
@@ -264,7 +264,7 @@ export class Chroma extends VectorStore {
 
       results.push([
         new Document({
-          pageContent: firstDocuments?.[i] ?? "",
+          pageContent: firstDocuments[i] ?? "",
           metadata,
         }),
         firstDistances[i],

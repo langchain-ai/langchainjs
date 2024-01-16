@@ -41,10 +41,10 @@ export class GradientEmbeddings
     super(fields);
 
     this.gradientAccessKey =
-      fields?.gradientAccessKey ??
+      fields.gradientAccessKey ??
       getEnvironmentVariable("GRADIENT_ACCESS_TOKEN");
     this.workspaceId =
-      fields?.workspaceId ?? getEnvironmentVariable("GRADIENT_WORKSPACE_ID");
+      fields.workspaceId ?? getEnvironmentVariable("GRADIENT_WORKSPACE_ID");
 
     if (!this.gradientAccessKey) {
       throw new Error("Missing Gradient AI Access Token");

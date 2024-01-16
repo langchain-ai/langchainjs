@@ -123,64 +123,64 @@ export class AlephAlpha extends LLM implements AlephAlphaInput {
 
   constructor(fields: Partial<AlephAlpha>) {
     super(fields ?? {});
-    this.model = fields?.model ?? this.model;
-    this.temperature = fields?.temperature ?? this.temperature;
-    this.maximum_tokens = fields?.maximum_tokens ?? this.maximum_tokens;
-    this.minimum_tokens = fields?.minimum_tokens ?? this.minimum_tokens;
-    this.top_k = fields?.top_k ?? this.top_k;
-    this.top_p = fields?.top_p ?? this.top_p;
-    this.presence_penalty = fields?.presence_penalty ?? this.presence_penalty;
+    this.model = fields.model ?? this.model;
+    this.temperature = fields.temperature ?? this.temperature;
+    this.maximum_tokens = fields.maximum_tokens ?? this.maximum_tokens;
+    this.minimum_tokens = fields.minimum_tokens ?? this.minimum_tokens;
+    this.top_k = fields.top_k ?? this.top_k;
+    this.top_p = fields.top_p ?? this.top_p;
+    this.presence_penalty = fields.presence_penalty ?? this.presence_penalty;
     this.frequency_penalty =
-      fields?.frequency_penalty ?? this.frequency_penalty;
-    this.sequence_penalty = fields?.sequence_penalty ?? this.sequence_penalty;
+      fields.frequency_penalty ?? this.frequency_penalty;
+    this.sequence_penalty = fields.sequence_penalty ?? this.sequence_penalty;
     this.sequence_penalty_min_length =
-      fields?.sequence_penalty_min_length ?? this.sequence_penalty_min_length;
+      fields.sequence_penalty_min_length ?? this.sequence_penalty_min_length;
     this.repetition_penalties_include_prompt =
-      fields?.repetition_penalties_include_prompt ??
+      fields.repetition_penalties_include_prompt ??
       this.repetition_penalties_include_prompt;
     this.repetition_penalties_include_completion =
-      fields?.repetition_penalties_include_completion ??
+      fields.repetition_penalties_include_completion ??
       this.repetition_penalties_include_completion;
     this.use_multiplicative_presence_penalty =
-      fields?.use_multiplicative_presence_penalty ??
+      fields.use_multiplicative_presence_penalty ??
       this.use_multiplicative_presence_penalty;
     this.use_multiplicative_frequency_penalty =
-      fields?.use_multiplicative_frequency_penalty ??
+      fields.use_multiplicative_frequency_penalty ??
       this.use_multiplicative_frequency_penalty;
     this.use_multiplicative_sequence_penalty =
-      fields?.use_multiplicative_sequence_penalty ??
+      fields.use_multiplicative_sequence_penalty ??
       this.use_multiplicative_sequence_penalty;
-    this.penalty_bias = fields?.penalty_bias ?? this.penalty_bias;
+    this.penalty_bias = fields.penalty_bias ?? this.penalty_bias;
     this.penalty_exceptions =
-      fields?.penalty_exceptions ?? this.penalty_exceptions;
+      fields.penalty_exceptions ?? this.penalty_exceptions;
     this.penalty_exceptions_include_stop_sequences =
-      fields?.penalty_exceptions_include_stop_sequences ??
+      fields.penalty_exceptions_include_stop_sequences ??
       this.penalty_exceptions_include_stop_sequences;
-    this.best_of = fields?.best_of ?? this.best_of;
-    this.n = fields?.n ?? this.n;
-    this.logit_bias = fields?.logit_bias ?? this.logit_bias;
-    this.log_probs = fields?.log_probs ?? this.log_probs;
-    this.tokens = fields?.tokens ?? this.tokens;
-    this.raw_completion = fields?.raw_completion ?? this.raw_completion;
+    this.best_of = fields.best_of ?? this.best_of;
+    this.n = fields.n ?? this.n;
+    this.logit_bias = fields.logit_bias ?? this.logit_bias;
+    this.log_probs = fields.log_probs ?? this.log_probs;
+    this.tokens = fields.tokens ?? this.tokens;
+    this.raw_completion = fields.raw_completion ?? this.raw_completion;
     this.disable_optimizations =
-      fields?.disable_optimizations ?? this.disable_optimizations;
+      fields.disable_optimizations ?? this.disable_optimizations;
     this.completion_bias_inclusion =
-      fields?.completion_bias_inclusion ?? this.completion_bias_inclusion;
+      fields.completion_bias_inclusion ?? this.completion_bias_inclusion;
     this.completion_bias_inclusion_first_token_only =
-      fields?.completion_bias_inclusion_first_token_only ??
+      fields.completion_bias_inclusion_first_token_only ??
       this.completion_bias_inclusion_first_token_only;
     this.completion_bias_exclusion =
-      fields?.completion_bias_exclusion ?? this.completion_bias_exclusion;
+      fields.completion_bias_exclusion ?? this.completion_bias_exclusion;
     this.completion_bias_exclusion_first_token_only =
-      fields?.completion_bias_exclusion_first_token_only ??
+      fields.completion_bias_exclusion_first_token_only ??
       this.completion_bias_exclusion_first_token_only;
     this.contextual_control_threshold =
-      fields?.contextual_control_threshold ?? this.contextual_control_threshold;
+      fields.contextual_control_threshold ?? this.contextual_control_threshold;
     this.control_log_additive =
-      fields?.control_log_additive ?? this.control_log_additive;
+      fields.control_log_additive ?? this.control_log_additive;
     this.aleph_alpha_api_key =
-      fields?.aleph_alpha_api_key ?? this.aleph_alpha_api_key;
-    this.stop = fields?.stop ?? this.stop;
+      fields.aleph_alpha_api_key ?? this.aleph_alpha_api_key;
+    this.stop = fields.stop ?? this.stop;
   }
 
   /**
@@ -254,7 +254,7 @@ export class AlephAlpha extends LLM implements AlephAlphaInput {
     prompt: string,
     options: this["ParsedCallOptions"]
   ): Promise<string> {
-    let stop = options?.stop;
+    let {stop} = options;
     this.validateEnvironment();
     if (this.stop && stop && this.stop.length > 0 && stop.length > 0) {
       throw new Error("`stop` found in both the input and default params.");

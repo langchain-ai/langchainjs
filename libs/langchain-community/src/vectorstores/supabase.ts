@@ -129,9 +129,7 @@ export class SupabaseVectorStore extends VectorStore {
           `Error inserting: ${res.error.message} ${res.status} ${res.statusText}`
         );
       }
-      if (res.data) {
-        returnedIds = returnedIds.concat(res.data.map((row) => row.id));
-      }
+      returnedIds = returnedIds.concat(res.data.map((row) => row.id));
     }
     return returnedIds;
   }

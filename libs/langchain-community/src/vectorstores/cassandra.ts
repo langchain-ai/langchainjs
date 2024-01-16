@@ -201,7 +201,7 @@ export class CassandraStore extends VectorStore {
       prepare: true,
     });
 
-    return queryResultSet?.rows.map((row) => {
+    return queryResultSet.rows.map((row) => {
       const textContent = row.text;
       const sanitizedRow = { ...row };
       delete sanitizedRow.text;

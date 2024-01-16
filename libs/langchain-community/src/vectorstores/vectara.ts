@@ -14,9 +14,18 @@ import { FakeEmbeddings } from "../utils/testing.js";
  * instance.
  */
 export interface VectaraLibArgs {
-  customerId: number;
-  corpusId: number | number[];
-  apiKey: string;
+  /**
+   * @default process.env.VECTARA_CUSTOMER_ID
+   */
+  customerId?: number;
+  /**
+   * @default process.env.VECTARA_CORPUS_ID
+   */
+  corpusId?: number | number[];
+  /**
+   * @default process.env.VECTARA_API_KEY
+   */
+  apiKey?: string;
   verbose?: boolean;
   source?: string;
 }
@@ -209,7 +218,16 @@ export class VectaraStore extends VectorStore {
     if (!customerId) {
       throw new Error("Vectara customer id is not provided.");
     }
-    this.customerId = customerId;
+
+    if (typeof customerId === "string") {
+      try {
+        this.customerId = Number(customerId);
+      } catch (_) {
+        throw new Error(`Vectara customer id is not a number.\nReceived typeof: ${typeof customerId}\nnReceived value: ${customerId}`);
+      }
+    } else {
+      this.customerId = customerId;
+    }
 
     this.verbose = args.verbose ?? false;
   }
@@ -251,7 +269,7 @@ export class VectaraStore extends VectorStore {
    * @returns Promise that resolves when the deletion is complete.
    */
   async deleteDocuments(ids: string[]): Promise<void> {
-    if (ids && ids.length > 0) {
+    if (ids.length > 0) {
       const headers = await this.getJsonHeader();
       for (const id of ids) {
         const data = {
@@ -270,7 +288,7 @@ export class VectaraStore extends VectorStore {
             `https://${this.apiEndpoint}/v1/delete-doc`,
             {
               method: "POST",
-              headers: headers?.headers,
+              headers: headers.headers,
               body: JSON.stringify(data),
               signal: controller.signal,
             }
@@ -306,13 +324,13 @@ export class VectaraStore extends VectorStore {
     const doc_ids: string[] = [];
     let countAdded = 0;
     for (const document of documents) {
-      const doc_id: string = document.metadata?.document_id ?? uuid.v4();
+      const doc_id: string = document.metadata.document_id ?? uuid.v4();
       const data = {
         customer_id: this.customerId,
         corpus_id: this.corpusId[0],
         document: {
           document_id: doc_id,
-          title: document.metadata?.title ?? "",
+          title: document.metadata.title ?? "",
           metadata_json: JSON.stringify(document.metadata ?? {}),
           section: [
             {
@@ -330,7 +348,7 @@ export class VectaraStore extends VectorStore {
         );
         const response = await fetch(`https://${this.apiEndpoint}/v1/index`, {
           method: "POST",
-          headers: headers?.headers,
+          headers: headers.headers,
           body: JSON.stringify(data),
           signal: controller.signal,
         });
@@ -468,7 +486,7 @@ export class VectaraStore extends VectorStore {
               }
             : {}),
           corpusKey: corpusKeys,
-          ...(summary?.enabled ? { summary: [summary] } : {}),
+          ...(summary.enabled ? { summary: [summary] } : {}),
         },
       ],
     };
@@ -480,7 +498,7 @@ export class VectaraStore extends VectorStore {
     );
     const response = await fetch(`https://${this.apiEndpoint}/v1/query`, {
       method: "POST",
-      headers: headers?.headers,
+      headers: headers.headers,
       body: JSON.stringify(data),
       signal: controller.signal,
     });

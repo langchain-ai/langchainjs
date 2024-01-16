@@ -68,14 +68,14 @@ export class VoyageEmbeddings
     super(fieldsWithDefaults);
 
     const apiKey =
-      fieldsWithDefaults?.apiKey || getEnvironmentVariable("VOYAGEAI_API_KEY");
+      fieldsWithDefaults.apiKey || getEnvironmentVariable("VOYAGEAI_API_KEY");
 
     if (!apiKey) {
       throw new Error("Voyage AI API key not found");
     }
 
-    this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
-    this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
+    this.modelName = fieldsWithDefaults.modelName ?? this.modelName;
+    this.batchSize = fieldsWithDefaults.batchSize ?? this.batchSize;
     this.apiKey = apiKey;
     this.apiUrl = `${this.basePath}/embeddings`;
   }

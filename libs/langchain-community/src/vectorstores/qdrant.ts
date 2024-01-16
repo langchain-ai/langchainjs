@@ -165,7 +165,7 @@ export class QdrantVectorStore extends VectorStore {
     k?: number,
     filter?: QdrantSchemas["Filter"]
   ): Promise<[Document, number][]> {
-    if (!query) {
+    if (query.length === 0) {
       return [];
     }
 
@@ -257,7 +257,7 @@ export class QdrantVectorStore extends VectorStore {
     const instance = new this(embeddings, dbConfig);
     if (dbConfig.customPayload) {
       const documentOptions = {
-        customPayload: dbConfig?.customPayload,
+        customPayload: dbConfig.customPayload,
       };
       await instance.addDocuments(docs, documentOptions);
     } else {

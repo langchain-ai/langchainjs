@@ -176,7 +176,7 @@ export class WeaviateStore extends VectorStore {
       // if storing vectors fails, we need to know why
       const errorMessages: string[] = [];
       responses.forEach((response) => {
-        if (response?.result?.errors?.error) {
+        if (response.result?.errors?.error) {
           errorMessages.push(
             ...response.result.errors.error.map(
               (err) =>

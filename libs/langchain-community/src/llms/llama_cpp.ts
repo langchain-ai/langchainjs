@@ -60,11 +60,11 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
 
   constructor(inputs: LlamaCppInputs) {
     super(inputs);
-    this.maxTokens = inputs?.maxTokens;
-    this.temperature = inputs?.temperature;
-    this.topK = inputs?.topK;
-    this.topP = inputs?.topP;
-    this.trimWhitespaceSuffix = inputs?.trimWhitespaceSuffix;
+    this.maxTokens = inputs.maxTokens;
+    this.temperature = inputs.temperature;
+    this.topK = inputs.topK;
+    this.topP = inputs.topP;
+    this.trimWhitespaceSuffix = inputs.trimWhitespaceSuffix;
     this._model = createLlamaModel(inputs);
     this._context = createLlamaContext(this._model, inputs);
     this._session = createLlamaSession(this._context);
@@ -82,11 +82,11 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
     try {
       const promptOptions = {
         onToken: options?.onToken,
-        maxTokens: this?.maxTokens,
-        temperature: this?.temperature,
-        topK: this?.topK,
-        topP: this?.topP,
-        trimWhitespaceSuffix: this?.trimWhitespaceSuffix,
+        maxTokens: this.maxTokens,
+        temperature: this.temperature,
+        topK: this.topK,
+        topP: this.topP,
+        trimWhitespaceSuffix: this.trimWhitespaceSuffix,
       };
       const completion = await this._session.prompt(prompt, promptOptions);
       return completion;
@@ -101,9 +101,9 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<GenerationChunk> {
     const promptOptions = {
-      temperature: this?.temperature,
-      topK: this?.topK,
-      topP: this?.topP,
+      temperature: this.temperature,
+      topK: this.topK,
+      topP: this.topP,
     };
 
     const stream = await this.caller.call(async () =>

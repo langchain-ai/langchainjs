@@ -242,19 +242,17 @@ export class RedisVectorStore extends VectorStore {
 
     if (results.total) {
       for (const res of results.documents) {
-        if (res.value) {
-          const document = res.value;
-          if (document.vector_score) {
-            result.push([
-              new Document({
-                pageContent: document[this.contentKey] as string,
-                metadata: JSON.parse(
-                  this.unEscapeSpecialChars(document.metadata as string)
-                ),
-              }),
-              Number(document.vector_score),
-            ]);
-          }
+        const document = res.value;
+        if (document.vector_score) {
+          result.push([
+            new Document({
+              pageContent: document[this.contentKey] as string,
+              metadata: JSON.parse(
+                this.unEscapeSpecialChars(document.metadata as string)
+              ),
+            }),
+            Number(document.vector_score),
+          ]);
         }
       }
     }

@@ -94,7 +94,7 @@ export class PGVectorStore extends VectorStore {
     this.chunkSize = config.chunkSize ?? 500;
 
     this._verbose =
-      getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true" ??
+      getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true" ||
       !!config.verbose;
   }
 

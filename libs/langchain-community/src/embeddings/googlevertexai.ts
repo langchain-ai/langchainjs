@@ -121,11 +121,11 @@ export class GoogleVertexAIEmbeddings
     );
     const result: number[][] =
       responses
-        ?.map(
+        .map(
           (response) =>
             (
-              response?.data as GoogleVertexAILLMPredictions<GoogleVertexEmbeddingsResults>
-            )?.predictions?.map((result) => result.embeddings.values) ?? []
+              response.data as GoogleVertexAILLMPredictions<GoogleVertexEmbeddingsResults>
+            ).predictions.map((result) => result.embeddings.values) ?? []
         )
         .flat() ?? [];
     return result;

@@ -424,7 +424,7 @@ export class RocksetStore extends VectorStore {
   ): Promise<RocksetStore> {
     if (
       collectionOptions?.name &&
-      dbConfig.collectionName !== collectionOptions?.name
+      dbConfig.collectionName !== collectionOptions.name
     ) {
       throw new RocksetStoreError(
         "`dbConfig.name` and `collectionOptions.name` do not match"

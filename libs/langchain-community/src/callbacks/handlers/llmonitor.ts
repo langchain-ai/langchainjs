@@ -117,7 +117,7 @@ const parseExtraAndName = (
     ...(extraParams?.invocation_params ?? {}),
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore this is a valid property
-    ...(llm?.kwargs ?? {}),
+    ...(llm.kwargs ?? {}),
     ...(metadata || {}),
   };
 

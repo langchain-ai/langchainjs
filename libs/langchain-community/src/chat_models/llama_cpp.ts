@@ -88,11 +88,11 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
 
   constructor(inputs: LlamaCppInputs) {
     super(inputs);
-    this.maxTokens = inputs?.maxTokens;
-    this.temperature = inputs?.temperature;
-    this.topK = inputs?.topK;
-    this.topP = inputs?.topP;
-    this.trimWhitespaceSuffix = inputs?.trimWhitespaceSuffix;
+    this.maxTokens = inputs.maxTokens;
+    this.temperature = inputs.temperature;
+    this.topK = inputs.topK;
+    this.topP = inputs.topP;
+    this.trimWhitespaceSuffix = inputs.trimWhitespaceSuffix;
     this._model = createLlamaModel(inputs);
     this._context = createLlamaContext(this._model, inputs);
     this._session = null;
@@ -142,11 +142,11 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
     try {
       const promptOptions = {
         onToken: options.onToken,
-        maxTokens: this?.maxTokens,
-        temperature: this?.temperature,
-        topK: this?.topK,
-        topP: this?.topP,
-        trimWhitespaceSuffix: this?.trimWhitespaceSuffix,
+        maxTokens: this.maxTokens,
+        temperature: this.temperature,
+        topK: this.topK,
+        topP: this.topP,
+        trimWhitespaceSuffix: this.trimWhitespaceSuffix,
       };
       // @ts-expect-error - TS2531: Object is possibly 'null'.
       const completion = await this._session.prompt(prompt, promptOptions);
@@ -162,9 +162,9 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const promptOptions = {
-      temperature: this?.temperature,
-      topK: this?.topK,
-      topP: this?.topP,
+      temperature: this.temperature,
+      topK: this.topK,
+      topP: this.topP,
     };
 
     const prompt = this._buildPrompt(input);

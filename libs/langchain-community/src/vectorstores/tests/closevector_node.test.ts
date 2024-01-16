@@ -9,8 +9,8 @@ test("Test CloseVectorNode.fromTexts + addVectors", async () => {
     [{ id: 2 }],
     new FakeEmbeddings()
   );
-  expect(vectorStore.instance.index?.getMaxElements()).toBe(1);
-  expect(vectorStore.instance.index?.getCurrentCount()).toBe(1);
+  expect(vectorStore.instance.index.getMaxElements()).toBe(1);
+  expect(vectorStore.instance.index.getCurrentCount()).toBe(1);
 
   await vectorStore.addVectors(
     [
@@ -33,7 +33,7 @@ test("Test CloseVectorNode.fromTexts + addVectors", async () => {
       }),
     ]
   );
-  expect(vectorStore.instance.index?.getMaxElements()).toBe(4);
+  expect(vectorStore.instance.index.getMaxElements()).toBe(4);
 
   const resultTwo = await vectorStore.similaritySearchVectorWithScore(
     [1, 0, 0, 0],

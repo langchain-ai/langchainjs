@@ -21,8 +21,8 @@ test.skip("Test CloseVectorNode.fromTexts + addVectors", async () => {
       secret,
     }
   );
-  expect(vectorStore.instance.index?.getMaxElements()).toBe(1);
-  expect(vectorStore.instance.index?.getCurrentCount()).toBe(1);
+  expect(vectorStore.instance.index.getMaxElements()).toBe(1);
+  expect(vectorStore.instance.index.getCurrentCount()).toBe(1);
 
   await vectorStore.saveToCloud({
     description: "test",
@@ -40,5 +40,5 @@ test.skip("Test CloseVectorNode.fromTexts + addVectors", async () => {
     },
   });
 
-  expect(vectorStore2.instance.index?.getMaxElements()).toBe(1);
+  expect(vectorStore2.instance.index.getMaxElements()).toBe(1);
 });

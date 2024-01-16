@@ -38,10 +38,8 @@ async function dropVectorIndexes(store: Neo4jVectorStore) {
       RETURN name
     `);
 
-  if (allIndexes) {
-    for (const index of allIndexes) {
-      await store.query(`DROP INDEX ${index.name}`);
-    }
+  for (const index of allIndexes) {
+    await store.query(`DROP INDEX ${index.name}`);
   }
 }
 

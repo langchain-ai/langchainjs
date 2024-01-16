@@ -54,7 +54,7 @@ describe("Vertex AI matching", () => {
   test.skip("query", async () => {
     const results = await engine.similaritySearch("that");
     console.log("query", results);
-    expect(results?.length).toBeGreaterThanOrEqual(1);
+    expect(results.length).toBeGreaterThanOrEqual(1);
   });
 
   test.skip("query filter exclude", async () => {
@@ -66,7 +66,7 @@ describe("Vertex AI matching", () => {
     ];
     const results = await engine.similaritySearch("that", 4, filters);
     console.log("query", results);
-    expect(results?.length).toEqual(0);
+    expect(results.length).toEqual(0);
   });
 
   test.skip("delete", async () => {
@@ -75,7 +75,7 @@ describe("Vertex AI matching", () => {
     console.log("added", newDoc);
 
     const oldResults: IdDocument[] = await engine.similaritySearch("this", 10);
-    expect(oldResults?.length).toBeGreaterThanOrEqual(1);
+    expect(oldResults.length).toBeGreaterThanOrEqual(1);
     console.log(oldResults);
 
     const oldIds = oldResults.map((doc) => doc.id!);

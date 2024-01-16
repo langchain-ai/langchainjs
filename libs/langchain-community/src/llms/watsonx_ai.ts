@@ -92,16 +92,16 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
   constructor(fields: WatsonxAIParams) {
     super(fields);
 
-    this.region = fields?.region ?? this.region;
-    this.version = fields?.version ?? this.version;
-    this.modelId = fields?.modelId ?? this.modelId;
+    this.region = fields.region ?? this.region;
+    this.version = fields.version ?? this.version;
+    this.modelId = fields.modelId ?? this.modelId;
     this.ibmCloudApiKey =
-      fields?.ibmCloudApiKey ?? getEnvironmentVariable("IBM_CLOUD_API_KEY");
+      fields.ibmCloudApiKey ?? getEnvironmentVariable("IBM_CLOUD_API_KEY");
     this.projectId =
-      fields?.projectId ?? getEnvironmentVariable("WATSONX_PROJECT_ID");
+      fields.projectId ?? getEnvironmentVariable("WATSONX_PROJECT_ID");
 
     this.endpoint =
-      fields?.endpoint ?? endpointConstructor(this.region, this.version);
+      fields.endpoint ?? endpointConstructor(this.region, this.version);
     this.modelParameters = fields.modelParameters;
 
     if (!this.ibmCloudApiKey) {

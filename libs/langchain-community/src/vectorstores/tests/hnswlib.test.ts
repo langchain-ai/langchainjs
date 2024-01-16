@@ -10,8 +10,8 @@ test("Test HNSWLib.fromTexts + addVectors", async () => {
     [{ id: 2 }],
     new FakeEmbeddings()
   );
-  expect(vectorStore.index?.getMaxElements()).toBe(1);
-  expect(vectorStore.index?.getCurrentCount()).toBe(1);
+  expect(vectorStore.index.getMaxElements()).toBe(1);
+  expect(vectorStore.index.getCurrentCount()).toBe(1);
 
   await vectorStore.addVectors(
     [
@@ -34,7 +34,7 @@ test("Test HNSWLib.fromTexts + addVectors", async () => {
       }),
     ]
   );
-  expect(vectorStore.index?.getMaxElements()).toBe(4);
+  expect(vectorStore.index.getMaxElements()).toBe(4);
 
   const resultTwo = await vectorStore.similaritySearchVectorWithScore(
     [1, 0, 0, 0],

@@ -50,7 +50,7 @@ export class HNSWLib extends SaveableVectorStore {
     this._index = args.index;
     this.args = args;
     this.embeddings = embeddings;
-    this.docstore = args?.docstore ?? new SynchronousInMemoryDocstore();
+    this.docstore = args.docstore ?? new SynchronousInMemoryDocstore();
   }
 
   /**

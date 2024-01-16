@@ -145,12 +145,12 @@ export class SageMakerEndpoint extends LLM<BaseLLMCallOptions> {
       );
     }
 
-    const endpointName = fields?.endpointName;
+    const {endpointName} = fields;
     if (!endpointName) {
       throw new Error(`Please pass an "endpointName" field to the constructor`);
     }
 
-    const contentHandler = fields?.contentHandler;
+    const {contentHandler} = fields;
     if (!contentHandler) {
       throw new Error(
         `Please pass a "contentHandler" field to the constructor`

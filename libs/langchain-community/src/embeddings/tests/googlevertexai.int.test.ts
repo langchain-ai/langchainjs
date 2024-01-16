@@ -32,7 +32,7 @@ test("Test end to end with HNSWLib", async () => {
     [{ id: 2 }, { id: 1 }, { id: 3 }],
     new GoogleVertexAIEmbeddings()
   );
-  expect(vectorStore.index?.getCurrentCount()).toBe(3);
+  expect(vectorStore.index.getCurrentCount()).toBe(3);
 
   const resultOne = await vectorStore.similaritySearch("hello world", 1);
   const resultOneMetadatas = resultOne.map(({ metadata }) => metadata);
