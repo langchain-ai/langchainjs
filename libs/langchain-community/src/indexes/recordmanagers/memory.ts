@@ -6,6 +6,7 @@ import {
 
 interface MemoryRecord {
   updatedAt: number;
+  groupId: string | null;
 }
 
 export class InMemoryRecordManger extends RecordManager {
@@ -33,6 +34,7 @@ export class InMemoryRecordManger extends RecordManager {
   async update(keys: string[], updateOptions?: UpdateOptions): Promise<void> {
     const updatedAt = await this.getTime();
     const { timeAtLeast } = updateOptions ?? {};
+    let { groupIds } = updateOptions ?? {};
 
     if (timeAtLeast && updatedAt < timeAtLeast) {
       throw new Error(
@@ -40,12 +42,20 @@ export class InMemoryRecordManger extends RecordManager {
       );
     }
 
-    keys.forEach((key) => {
+    groupIds = groupIds ?? keys.map(() => null);
+
+    if (groupIds.length !== keys.length) {
+      throw new Error(
+        `Number of keys (${keys.length}) does not match number of group_ids ${groupIds.length})`
+      );
+    }
+
+    keys.forEach((key, i) => {
       const old = this.records.get(key);
       if (old) {
         old.updatedAt = updatedAt;
       } else {
-        this.records.set(key, { updatedAt });
+        this.records.set(key, { updatedAt, groupId: groupIds[i] });
       }
     });
   }
@@ -55,12 +65,13 @@ export class InMemoryRecordManger extends RecordManager {
   }
 
   async listKeys(options?: ListKeyOptions): Promise<string[]> {
-    const { before, after, limit } = options ?? {};
+    const { before, after, limit, groupIds } = options ?? {};
 
     const filteredRecords = Array.from(this.records).filter(([_key, doc]) => {
       const isBefore = !before || doc.updatedAt < before;
       const isAfter = !after || doc.updatedAt > after;
-      return isBefore && isAfter;
+      const belongsToGroup = !groupIds || groupIds.includes(doc.groupId);
+      return isBefore && isAfter && belongsToGroup;
     });
 
     return Promise.resolve(

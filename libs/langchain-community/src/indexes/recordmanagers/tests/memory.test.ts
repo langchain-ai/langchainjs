@@ -60,6 +60,18 @@ describe("MemoryRecordmanagerTest", () => {
     }
   });
 
+  test("Test update with groupIds", async () => {
+    const keys = ["a", "b", "c"];
+    await recordManager.update(keys, {
+      groupIds: ["group1", "group1", "group2"],
+    });
+    const res = Array.from(recordManager.records).filter(
+      ([_key, doc]) => doc.groupId === "group1"
+    );
+    expect(res.length).toEqual(2);
+    res.forEach(([_, row]) => expect(row.groupId).toEqual("group1"));
+  });
+
   test("Exists", async () => {
     const keys = ["a", "b", "c"];
     await recordManager.update(keys);
@@ -136,5 +148,14 @@ describe("MemoryRecordmanagerTest", () => {
     } finally {
       recordManager.getTime = unmockedGetTime;
     }
+  });
+
+  test("List keys with groupIds", async () => {
+    const keys = ["a", "b", "c"];
+    await recordManager.update(keys, {
+      groupIds: ["group1", "group1", "group2"],
+    });
+    const readKeys = await recordManager.listKeys({ groupIds: ["group1"] });
+    expect(readKeys).toEqual(["a", "b"]);
   });
 });
