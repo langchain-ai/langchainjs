@@ -14,7 +14,7 @@ import {
 import { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { PromptTemplate } from "@langchain/core/prompts";
-import { formatToOpenAIFunction } from "@langchain/openai";
+import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";
 import {
   ChatAnthropic,
   DEFAULT_STOP_SEQUENCES,
@@ -98,7 +98,7 @@ export class AnthropicFunctions extends BaseChatModel<ChatAnthropicFunctionsCall
     if (options.tools) {
       // eslint-disable-next-line no-param-reassign
       options.functions = (options.functions ?? []).concat(
-        options.tools.map(formatToOpenAIFunction)
+        options.tools.map(convertToOpenAIFunction)
       );
     }
     if (options.functions !== undefined && options.functions.length > 0) {

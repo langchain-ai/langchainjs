@@ -37,7 +37,7 @@ export type ToolsAgentStep = AgentStep & {
  *   new ChatOpenAI({
  *     modelName: "gpt-3.5-turbo-1106",
  *     temperature: 0,
- *   }).bind({ tools: tools.map(formatToOpenAITool) }),
+ *   }).bind({ tools: tools.map(convertToOpenAITool) }),
  *   new OpenAIToolsAgentOutputParser(),
  * ]).withConfig({ runName: "OpenAIToolsAgent" });
  *
