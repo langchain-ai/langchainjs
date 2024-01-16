@@ -28,7 +28,11 @@ import {
   ToolMessage,
   ToolMessageChunk,
 } from "@langchain/core/messages";
-import { GenerationChunk, ChatGenerationChunk } from "@langchain/core/outputs";
+import {
+  GenerationChunk,
+  ChatGenerationChunk,
+  RUN_KEY,
+} from "@langchain/core/outputs";
 import {
   getBytes,
   getLines,
@@ -67,36 +71,36 @@ function revive(obj: any): any {
       });
     }
 
-    if (isSuperset(keys, new Set(["content", "type"]))) {
-      if (obj.type === "HumanMessage") {
+    if (isSuperset(keys, new Set(["content", "type", "additional_kwargs"]))) {
+      if (obj.type === "HumanMessage" || obj.type === "human") {
         return new HumanMessage({
           content: obj.content,
         });
       }
-      if (obj.type === "SystemMessage") {
+      if (obj.type === "SystemMessage" || obj.type === "system") {
         return new SystemMessage({
           content: obj.content,
         });
       }
-      if (obj.type === "ChatMessage") {
+      if (obj.type === "ChatMessage" || obj.type === "chat") {
         return new ChatMessage({
           content: obj.content,
           role: obj.role,
         });
       }
-      if (obj.type === "FunctionMessage") {
+      if (obj.type === "FunctionMessage" || obj.type === "function") {
         return new FunctionMessage({
           content: obj.content,
           name: obj.name,
         });
       }
-      if (obj.type === "ToolMessage") {
+      if (obj.type === "ToolMessage" || obj.type === "tool") {
         return new ToolMessage({
           content: obj.content,
           tool_call_id: obj.tool_call_id,
         });
       }
-      if (obj.type === "AIMessage") {
+      if (obj.type === "AIMessage" || obj.type === "ai") {
         return new AIMessage({
           content: obj.content,
         });
@@ -160,15 +164,51 @@ function revive(obj: any): any {
         };
       }
     }
-    if (isSuperset(keys, new Set(["text"]))) {
-      return new StringPromptValue(obj.text);
+
+    if (isSuperset(keys, new Set(["tool", "tool_input", "log", "type"]))) {
+      if (obj.type === "AgentAction") {
+        return {
+          tool: obj.tool,
+          toolInput: obj.tool_input,
+          log: obj.log,
+        };
+      }
     }
+
+    if (isSuperset(keys, new Set(["return_values", "log", "type"]))) {
+      if (obj.type === "AgentFinish") {
+        return {
+          returnValues: obj.return_values,
+          log: obj.log,
+        };
+      }
+    }
+
+    if (isSuperset(keys, new Set(["generations", "run", "type"]))) {
+      if (obj.type === "LLMResult") {
+        return {
+          generations: revive(obj.generations),
+          llmOutput: obj.llm_output,
+          [RUN_KEY]: obj.run,
+        };
+      }
+    }
+
     if (isSuperset(keys, new Set(["messages"]))) {
+      // TODO: Start checking for type: ChatPromptValue and ChatPromptValueConcrete
+      // when LangServe bug is fixed
       return new ChatPromptValue({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         messages: obj.messages.map((msg: any) => revive(msg)),
       });
     }
+
+    if (isSuperset(keys, new Set(["text"]))) {
+      // TODO: Start checking for type: StringPromptValue
+      // when LangServe bug is fixed
+      return new StringPromptValue(obj.text);
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const innerRevive: (key: string) => [string, any] = (key: string) => [
       key,

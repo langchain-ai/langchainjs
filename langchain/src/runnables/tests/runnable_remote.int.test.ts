@@ -16,7 +16,6 @@ test("streamLog hosted langserve", async () => {
     aggregate = applyPatch(aggregate, chunk.ops).newDocument;
     const byteSize = Buffer.byteLength(jsonString, "utf-8");
     totalByteSize += byteSize;
-    console.log(chunk);
   }
   console.log("aggregate", aggregate);
   console.log("totalByteSize", totalByteSize);
