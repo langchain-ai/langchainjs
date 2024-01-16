@@ -2,7 +2,7 @@ import {
   ListKeyOptions,
   RecordManager,
   UpdateOptions,
-} from "@langchain/core/recordmanagers";
+} from "../recordmanagers.js";
 
 interface MemoryRecord {
   updatedAt: number;
@@ -10,7 +10,6 @@ interface MemoryRecord {
 
 export class InMemoryRecordManger extends RecordManager {
   records: Map<string, MemoryRecord>;
-
 
   constructor() {
     super();
@@ -57,7 +56,7 @@ export class InMemoryRecordManger extends RecordManager {
   async listKeys(options?: ListKeyOptions): Promise<string[]> {
     const { before, after, limit } = options ?? {};
 
-    const filteredRecords = Array.from(this.records).filter(([key, doc]) => {
+    const filteredRecords = Array.from(this.records).filter(([_key, doc]) => {
       const isBefore = !before || doc.updatedAt < before;
       const isAfter = !after || doc.updatedAt > after;
       return isBefore && isAfter;

@@ -106,3 +106,4 @@ export * from "langchain/experimental/masking";
 export * from "langchain/evaluation";
 export * from "langchain/runnables";
 export * from "langchain/runnables/remote";
+export * from "langchain/indexes";

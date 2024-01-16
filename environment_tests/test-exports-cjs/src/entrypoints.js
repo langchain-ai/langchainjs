@@ -106,3 +106,4 @@ const experimental_masking = require("langchain/experimental/masking");
 const evaluation = require("langchain/evaluation");
 const runnables = require("langchain/runnables");
 const runnables_remote = require("langchain/runnables/remote");
+const indexes = require("langchain/indexes");

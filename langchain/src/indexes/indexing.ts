@@ -4,7 +4,7 @@ import { v5 as uuidv5 } from "uuid";
 import {
   RecordManagerInterface,
   UUID_NAMESPACE,
-} from "@langchain/core/recordmanagers";
+} from "@langchain/community/indexes/recordmanagers";
 import { BaseDocumentLoader } from "../document_loaders/base.js";
 import { Document } from "../document.js";
 

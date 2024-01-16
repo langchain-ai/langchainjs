@@ -51,7 +51,6 @@ const entrypoints = {
   "utils/tiktoken": "utils/tiktoken",
   "utils/types": "utils/types",
   vectorstores: "vectorstores",
-  recordmanagers: "recordmanagers",
 };
 
 // Entrypoints in this list will

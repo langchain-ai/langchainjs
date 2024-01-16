@@ -1,9 +1,9 @@
+import pg, { PoolConfig, Pool, DatabaseError } from "pg";
 import {
   ListKeyOptions,
   RecordManagerInterface,
   UpdateOptions,
-} from "@langchain/core/recordmanagers";
-import pg, { PoolConfig, Pool, DatabaseError } from "pg";
+} from "../recordmanagers.js";
 
 export type PostgresRecordManagerOptions = {
   postgresConnectionOptions: PoolConfig;
@@ -90,11 +90,7 @@ export class PostgresRecordManager implements RecordManagerInterface {
       );
     }
 
-    const recordsToUpsert = keys.map((key) => [
-      key,
-      this.namespace,
-      updatedAt,
-    ]);
+    const recordsToUpsert = keys.map((key) => [key, this.namespace, updatedAt]);
 
     const valuesPlaceholders = recordsToUpsert
       .map((_, j) =>

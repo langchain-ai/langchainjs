@@ -1,4 +1,4 @@
-import { Serializable } from "./load/serializable.js";
+import { Serializable } from "../load/serializable.js";
 
 export const UUID_NAMESPACE = "00000000-0000-0000-0000-0000000007c0";
 
