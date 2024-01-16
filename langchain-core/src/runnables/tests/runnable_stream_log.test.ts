@@ -99,7 +99,7 @@ test("Runnable streamLog method with a more complicated sequence", async () => {
   ).toEqual(JSON.stringify(retrieverOutputDocs));
 });
 
-test.only("Test stream log aggregation", async () => {
+test("Test stream log aggregation", async () => {
   const prompt = ChatPromptTemplate.fromMessages([
     ["system", "You are a nice assistant"],
     ["human", "{question}"],
