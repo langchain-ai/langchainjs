@@ -200,7 +200,7 @@ export class AzureAISearchVectorStore extends VectorStore {
    * @returns A promise that resolves to the ids of the added documents.
    */
   async addDocuments(
-    documents: Document<AzureAISearchDocumentMetadata>[],
+    documents: Document[],
     options?: AzureAISearchAddDocumentsOptions
   ) {
     const texts = documents.map(({ pageContent }) => pageContent);
@@ -231,7 +231,7 @@ export class AzureAISearchVectorStore extends VectorStore {
    */
   async addVectors(
     vectors: number[][],
-    documents: Document<AzureAISearchDocumentMetadata>[],
+    documents: Document[],
     options?: AzureAISearchAddDocumentsOptions
   ): Promise<string[]> {
     const ids = options?.ids ?? documents.map(() => uuid.v4());
@@ -518,6 +518,7 @@ export class AzureAISearchVectorStore extends VectorStore {
    * Prepares the search index definition for Azure AI Search.
    * @param indexName The name of the index.
    * @returns The SearchIndex object.
+   * @protected
    */
   protected createSearchIndexDefinition(indexName: string): SearchIndex {
     return {
@@ -647,7 +648,7 @@ export class AzureAISearchVectorStore extends VectorStore {
    * @returns Promise that resolves to a new instance of AzureAISearchVectorStore.
    */
   static async fromDocuments(
-    docs: Document<AzureAISearchDocumentMetadata>[],
+    docs: Document[],
     embeddings: EmbeddingsInterface,
     config: AzureAISearchConfig,
     options?: AzureAISearchAddDocumentsOptions,
