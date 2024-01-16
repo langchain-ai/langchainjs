@@ -1,94 +1,62 @@
-import { Document } from "langchain/document";
-import { OpenAI } from "langchain/llms/openai";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import {
-  AzureSearchStore,
-} from "langchain/vectorstores/azuresearch";
-import { VectorDBQAChain } from "langchain/chains";
+  AzureAISearchVectorStore,
+  AzureAISearchQueryType,
+} from "@langchain/community/vectorstores/azure_aisearch";
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
+import { RetrievalQAChain } from "langchain/chains";
+import { TextLoader } from "langchain/document_loaders/fs/text";
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 
-// to run this first run Elastic's docker-container with `docker-compose up -d --build`
-export async function run() {
-  const docs = [
-    new Document({
-      metadata: { source: "bar" },
-      pageContent: "AzureSearch is a powerful search engine that supports vector db",
-    }),
-    new Document({
-      metadata: { source: "bar" },
-      pageContent: "nodejs is a powerful platform to build IA apps",
-    }),
-    new Document({
-      metadata: { source: "qux" },
-      pageContent: "lorem ipsum dolor sit amet",
-    }),
-    new Document({
-      metadata: { source: "qux" },
-      pageContent:
-        "AzureSearch can be used to keyword based search, semantic search and similarity search. You can also combine that with LLMs to create a QA system",
-    }),
-  ];
+// Load documents from file
+const loader = new TextLoader("./state_of_the_union.txt");
+const rawDocuments = await loader.load();
+const splitter = new RecursiveCharacterTextSplitter({
+  chunkSize: 1000,
+  chunkOverlap: 0,
+});
+const documents = await splitter.splitDocuments(rawDocuments);
 
-  const embeddings = new OpenAIEmbeddings(undefined, {
-    baseOptions: { temperature: 0 },
-  });
-
-  // will create an instance of vector store and create the index if not exists
-  const vectorStore = AzureSearchStore.create({
-    client: {
-      indexName: '<YOUR_INDEX_NAME>',
-      endpoint: '<YOUR_ENDPOINT>', // ex: https://<YOUR_SERVICE_NAME>.search.windows.net
-      credential: '<YOUR_ADMIN_API_KEY>'
-    },
+// Create Azure AI Search vector store
+const store = await AzureAISearchVectorStore.fromDocuments(
+  documents,
+  new OpenAIEmbeddings(),
+  {
     search: {
-      type: 'similarity', // also supports 'semantic_hybrid' and 'similarity_hybrid'
-    }
-  }, embeddings);
+      type: AzureAISearchQueryType.SimilarityHybrid,
+    },
+  }
+);
 
-  // Also supports an additional {keys: []} parameter for upsertion
-  const keys = await vectorStore.addDocuments(docs);
+// The first time you run this, the index will be created.
+// You may need to wait a bit for the index to be created before you can perform
+// a search, or you can create the index manually beforehand.
 
-  /* Search the vector DB */
-  const results = await vectorStore.similaritySearch("fox jump", 1);
-  console.log(JSON.stringify(results, null, 2));
-  /* [
-        {
-          "pageContent": "the quick brown fox jumped over the lazy dog",
-          "metadata": {
-            "source": "bar"
-          }
-        }
-    ]
-  */
+// Performs a similarity search
+const resultDocuments = await store.similaritySearch(
+  "What did the president say about Ketanji Brown Jackson?"
+);
 
-  /* Use as part of a chain (currently no metadata filters) for LLM query */
-  const model = new OpenAI();
-  const chain = VectorDBQAChain.fromLLM(model, vectorStore, {
-    k: 1,
-    returnSourceDocuments: true,
-  });
-  const response = await chain.call({ query: "What is AzureSearch?" });
+console.log("Similarity search results:");
+console.log(resultDocuments[0].pageContent);
+/*
+  Tonight. I call on the Senate to: Pass the Freedom to Vote Act. Pass the John Lewis Voting Rights Act. And while you’re at it, pass the Disclose Act so Americans can know who is funding our elections. 
 
-  console.log(JSON.stringify(response, null, 2));
-  /*
-    {
-      "text": "AzureSearch is a powerful search engine that supports vector db",
-      "sourceDocuments": [
-        {
-          "pageContent": "AzureSearch is a powerful search engine that supports vector db",
-          "metadata": {
-            "source": "bar"
-          }
-        }
-      ]
-    }
-    */
+  Tonight, I’d like to honor someone who has dedicated his life to serve this country: Justice Stephen Breyer—an Army veteran, Constitutional scholar, and retiring Justice of the United States Supreme Court. Justice Breyer, thank you for your service. 
 
-  await vectorStore.deleteByKey(keys);
+  One of the most serious constitutional responsibilities a President has is nominating someone to serve on the United States Supreme Court. 
 
-  const response2 = await chain.call({ query: "What is Azure Search?" });
-  console.log(JSON.stringify(response2, null, 2));
+  And I did that 4 days ago, when I nominated Circuit Court of Appeals Judge Ketanji Brown Jackson. One of our nation’s top legal minds, who will continue Justice Breyer’s legacy of excellence.
+*/
 
-  /*
-    []
-  */
-}
+// Use the store as part of a chain
+const model = new ChatOpenAI({ modelName: "gpt-35-turbo" });
+const chain = RetrievalQAChain.fromLLM(model, store.asRetriever());
+const response = await chain.invoke({
+  query: "What is the president's top priority regarding prices?",
+});
+
+console.log("Chain response:");
+console.log(response.text);
+/*
+  The president's top priority is getting prices under control.
+*/
