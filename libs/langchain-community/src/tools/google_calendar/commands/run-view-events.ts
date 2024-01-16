@@ -132,7 +132,7 @@ const runViewEvents = async (
     }
 
     return `Result for the prompt "${query}": \n${JSON.stringify(
-      curatedItems,
+      curatedItems.sort((a, b) => { return new Date(a.start.dateTime).getTime() - new Date(b.start.dateTime).getTime() }),
       null,
       2
     )}`;
