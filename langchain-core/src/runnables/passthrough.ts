@@ -66,7 +66,7 @@ export class RunnablePassthrough<RunInput> extends Runnable<
     options?: Partial<RunnableConfig>
   ): Promise<RunInput> {
     if (this.func) {
-      await this.func(input);
+      await this.func(input, options);
     }
 
     return this._callWithConfig(
@@ -105,7 +105,7 @@ export class RunnablePassthrough<RunInput> extends Runnable<
     }
 
     if (this.func && finalOutput !== undefined) {
-      await this.func(finalOutput);
+      await this.func(finalOutput, options);
     }
   }
 
