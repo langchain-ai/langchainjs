@@ -22,6 +22,7 @@ export class InMemoryRecordManger extends RecordManager {
 
   async createSchema(): Promise<void> {
     // nothing to do here
+    // compatibility with other record managers
     return Promise.resolve();
   }
 
@@ -75,6 +76,8 @@ export class InMemoryRecordManger extends RecordManager {
   }
 
   async end(): Promise<void> {
+    // nothing to do here
+    // compatibility with other record managers
     return Promise.resolve();
   }
 }
