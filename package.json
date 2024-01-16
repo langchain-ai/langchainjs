@@ -23,7 +23,7 @@
     "format": "turbo run format",
     "format:check": "turbo run format:check",
     "lint": "turbo run lint --concurrency 1",
-    "lint:fix": "yarn lint -- --fix",
+    "lint:fix": "turbo run lint:fix",
     "test": "yarn test:unit && yarn workspace @langchain/core build && yarn workspace langchain build && yarn test:exports:docker",
     "test:unit": "turbo run test --filter @langchain/core --filter langchain",
     "test:int": "yarn run test:int:deps && turbo run test:integration ; yarn run test:int:deps:down",
