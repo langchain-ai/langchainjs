@@ -4,7 +4,11 @@
 import { Run } from "langsmith";
 import { jest } from "@jest/globals";
 import { createChatMessageChunkEncoderStream } from "../../language_models/chat_models.js";
-import { BaseMessage } from "../../messages/index.js";
+import {
+  BaseMessage,
+  HumanMessage,
+  SystemMessage,
+} from "../../messages/index.js";
 import { OutputParserException } from "../../output_parsers/base.js";
 import { StringOutputParser } from "../../output_parsers/string.js";
 import {
@@ -22,6 +26,8 @@ import {
 } from "../../utils/testing/index.js";
 import { RunnableSequence, RunnableLambda } from "../base.js";
 import { RouterRunnable } from "../router.js";
+import { CommaSeparatedListOutputParser } from "../../output_parsers/list.js";
+import { ChatPromptValue } from "../../prompt_values.js";
 
 test("Test batch", async () => {
   const llm = new FakeLLM({});
@@ -336,4 +342,214 @@ test("Create a runnable sequence with a static method with invalid output and ca
     const result = await runnable.invoke({ input: "Hello sequence!" });
     console.log(result);
   }).rejects.toThrow(OutputParserException);
+});
+
+test("Test stream log aggregation", async () => {
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "You are a nice assistant"],
+    ["human", "{question}"],
+  ]);
+  const llm = new FakeStreamingLLM({
+    responses: ["tomato, lettuce, onion"],
+  });
+  const parser = new CommaSeparatedListOutputParser({});
+  const chain = prompt.pipe(llm).pipe(parser);
+  const logStream = await chain.streamLog({
+    question: "what is up?",
+  });
+  const chunks = [];
+  for await (const chunk of logStream) {
+    chunks.push(chunk);
+    console.log(JSON.stringify(chunk, null, 2));
+  }
+  expect(chunks).toMatchObject([
+    {
+      ops: [
+        {
+          op: "replace",
+          path: "",
+          value: {
+            id: expect.any(String),
+            streamed_output: [],
+            logs: {},
+          },
+        },
+      ],
+    },
+    {
+      ops: [
+        {
+          op: "add",
+          path: "/logs/ChatPromptTemplate",
+          value: {
+            id: expect.any(String),
+            name: "ChatPromptTemplate",
+            type: "prompt",
+            tags: ["seq:step:1"],
+            metadata: {},
+            start_time: expect.any(String),
+            streamed_output: [],
+            streamed_output_str: [],
+          },
+        },
+      ],
+    },
+    {
+      ops: [
+        {
+          op: "add",
+          path: "/logs/ChatPromptTemplate/final_output",
+          value: new ChatPromptValue([
+            new SystemMessage("You are a nice assistant"),
+            new HumanMessage("what is up?"),
+          ]),
+        },
+        {
+          op: "add",
+          path: "/logs/ChatPromptTemplate/end_time",
+          value: expect.any(String),
+        },
+      ],
+    },
+    {
+      ops: [
+        {
+          op: "add",
+          path: "/logs/FakeStreamingLLM",
+          value: {
+            id: expect.any(String),
+            name: "FakeStreamingLLM",
+            type: "llm",
+            tags: ["seq:step:2"],
+            metadata: {},
+            start_time: expect.any(String),
+            streamed_output: [],
+            streamed_output_str: [],
+          },
+        },
+      ],
+    },
+    {
+      ops: [
+        {
+          op: "add",
+          path: "/logs/CommaSeparatedListOutputParser",
+          value: {
+            id: expect.any(String),
+            name: "CommaSeparatedListOutputParser",
+            type: "parser",
+            tags: ["seq:step:3"],
+            metadata: {},
+            start_time: expect.any(String),
+            streamed_output: [],
+            streamed_output_str: [],
+          },
+        },
+      ],
+    },
+    {
+      ops: [
+        {
+          op: "add",
+          path: "/logs/CommaSeparatedListOutputParser/streamed_output/-",
+          value: ["tomato"],
+        },
+      ],
+    },
+    {
+      ops: [
+        {
+          op: "add",
+          path: "/streamed_output/-",
+          value: ["tomato"],
+        },
+      ],
+    },
+    {
+      ops: [
+        {
+          op: "add",
+          path: "/logs/CommaSeparatedListOutputParser/streamed_output/-",
+          value: ["lettuce"],
+        },
+      ],
+    },
+    {
+      ops: [
+        {
+          op: "add",
+          path: "/streamed_output/-",
+          value: ["lettuce"],
+        },
+      ],
+    },
+    {
+      ops: [
+        {
+          op: "add",
+          path: "/logs/FakeStreamingLLM/final_output",
+          value: {
+            generations: [
+              [
+                {
+                  text: "tomato, lettuce, onion",
+                  generationInfo: {},
+                },
+              ],
+            ],
+          },
+        },
+        {
+          op: "add",
+          path: "/logs/FakeStreamingLLM/end_time",
+          value: expect.any(String),
+        },
+      ],
+    },
+    {
+      ops: [
+        {
+          op: "add",
+          path: "/logs/CommaSeparatedListOutputParser/streamed_output/-",
+          value: ["onion"],
+        },
+      ],
+    },
+    {
+      ops: [
+        {
+          op: "add",
+          path: "/streamed_output/-",
+          value: ["onion"],
+        },
+      ],
+    },
+    {
+      ops: [
+        {
+          op: "add",
+          path: "/logs/CommaSeparatedListOutputParser/final_output",
+          value: {
+            output: ["tomato", "lettuce", "onion"],
+          },
+        },
+        {
+          op: "add",
+          path: "/logs/CommaSeparatedListOutputParser/end_time",
+          value: expect.any(String),
+        },
+      ],
+    },
+    {
+      ops: [
+        {
+          op: "replace",
+          path: "/final_output",
+          value: {
+            output: ["tomato", "lettuce", "onion"],
+          },
+        },
+      ],
+    },
+  ]);
 });
