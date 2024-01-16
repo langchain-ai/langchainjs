@@ -17,7 +17,7 @@ test("RunnablePassthrough can call .assign and pass prev result through", async 
 
   const chainWithAssign = chain.pipe(
     RunnablePassthrough.assign({
-      outputValue: (i) => i.outputValue
+      outputValue: (i) => i.outputValue,
     })
   );
 
@@ -36,11 +36,11 @@ test("RunnablePassthrough can call .assign as the first step with proper typing"
 
   const chain = RunnableSequence.from([
     RunnablePassthrough.assign({
-      input: (input) => input.otherProp
+      input: (input) => input.otherProp,
     }),
     promptTemplate,
     llm,
-    parser
+    parser,
   ]);
 
   const result = await chain.invoke({ otherProp: text });
@@ -55,7 +55,7 @@ test("RunnablePassthrough can invoke a function without modifying passthrough va
     return input + 1;
   };
   const passthrough = new RunnablePassthrough<number>({
-    func: addOne
+    func: addOne,
   });
   const result = await passthrough.invoke(1);
   expect(result).toEqual(1);
@@ -69,7 +69,7 @@ test("RunnablePassthrough can transform a function as constructor args", async (
     return input + 1;
   };
   const passthrough = new RunnablePassthrough<number>({
-    func: addOne
+    func: addOne,
   });
   async function* generateNumbers() {
     yield 1;
@@ -98,12 +98,12 @@ test("RunnablePassthrough can invoke a function and pass through config", async 
     addOneResult = input + config.configurable.number;
   };
   const passthrough = new RunnablePassthrough<number>({
-    func: addOne
+    func: addOne,
   });
   const result = await passthrough.invoke(1, {
     configurable: {
-      number: 1
-    }
+      number: 1,
+    },
   });
   expect(result).toEqual(1);
   expect(addOneResult).toEqual(2);
