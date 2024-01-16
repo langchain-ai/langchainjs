@@ -93,7 +93,7 @@ export abstract class BaseCallbackManager {
 class BaseRunManager {
   constructor(
     public readonly runId: string,
-    protected readonly handlers: BaseCallbackHandler[],
+    public readonly handlers: BaseCallbackHandler[],
     protected readonly inheritableHandlers: BaseCallbackHandler[],
     protected readonly tags: string[],
     protected readonly inheritableTags: string[],

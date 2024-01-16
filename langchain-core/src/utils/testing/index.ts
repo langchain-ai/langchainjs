@@ -104,9 +104,14 @@ export class FakeLLM extends LLM {
 export class FakeStreamingLLM extends LLM {
   sleep?: number = 50;
 
-  constructor(fields: { sleep?: number } & BaseLLMParams) {
+  responses?: string[];
+
+  constructor(
+    fields: { sleep?: number; responses?: string[] } & BaseLLMParams
+  ) {
     super(fields);
     this.sleep = fields.sleep ?? this.sleep;
+    this.responses = fields.responses;
   }
 
   _llmType() {
@@ -114,11 +119,15 @@ export class FakeStreamingLLM extends LLM {
   }
 
   async _call(prompt: string): Promise<string> {
-    return prompt;
+    const response = this.responses?.[0];
+    this.responses = this.responses?.slice(1);
+    return response ?? prompt;
   }
 
   async *_streamResponseChunks(input: string) {
-    for (const c of input) {
+    const response = this.responses?.[0];
+    this.responses = this.responses?.slice(1);
+    for (const c of response ?? input) {
       await new Promise((resolve) => setTimeout(resolve, this.sleep));
       yield { text: c, generationInfo: {} } as GenerationChunk;
     }

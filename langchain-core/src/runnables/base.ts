@@ -26,6 +26,7 @@ import {
 import { AsyncCaller } from "../utils/async_caller.js";
 import { Run } from "../tracers/base.js";
 import { RootListenersTracer } from "../tracers/root_listener.js";
+import { BaseCallbackHandler } from "../callbacks/base.js";
 
 /**
  * Base interface implemented by all runnables.
@@ -480,7 +481,19 @@ export abstract class Runnable<
         options
       );
       runManager = pipe.setup;
-      for await (const chunk of pipe.output) {
+      const isLogStreamHandler = (
+        handler: BaseCallbackHandler
+      ): handler is LogStreamCallbackHandler =>
+        handler.name === "log_stream_tracer";
+      const streamLogHandler = runManager?.handlers.find(isLogStreamHandler);
+      let iterator = pipe.output;
+      if (streamLogHandler !== undefined && runManager !== undefined) {
+        iterator = await streamLogHandler.tapOutputIterable(
+          runManager.runId,
+          pipe.output
+        );
+      }
+      for await (const chunk of iterator) {
         yield chunk;
         if (finalOutputSupported) {
           if (finalOutput === undefined) {
