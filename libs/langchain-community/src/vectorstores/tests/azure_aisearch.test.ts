@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { jest, test, expect } from "@jest/globals";
-import { FakeEmbeddings } from "../../embeddings/fake.js";
-import { AzureSearchStore } from "../azuresearch.js";
+import { FakeEmbeddings } from "../../utils/testing.js";
+import { AzureAISearchQueryType, AzureAISearchVectorStore } from "../azure_aisearch.js";
 
 const embedMock = jest
   .spyOn(FakeEmbeddings.prototype, 'embedDocuments');
@@ -10,7 +10,7 @@ beforeEach(() => {
   embedMock.mockClear();
 });
 
-test("AzureSearch addVectors should upload at max 100 documents up a time", async () => {
+test("AzureAISearchVectorStore addVectors should upload at max 100 documents up a time", async () => {
   const embeddings = new FakeEmbeddings();
   const client = {
     search: jest.fn<any>().mockResolvedValue({
@@ -19,12 +19,13 @@ test("AzureSearch addVectors should upload at max 100 documents up a time", asyn
     uploadDocuments: jest.fn(),
   };
 
-  const store = await AzureSearchStore.create({
+  const store = new AzureAISearchVectorStore(embeddings, {
     client: client as any,
     search: {
       type: 'similarity',
-    }
-  }, embeddings);
+    },
+    chunkSize: 100,
+  });
 
   expect(store).toBeDefined();
 
@@ -33,7 +34,6 @@ test("AzureSearch addVectors should upload at max 100 documents up a time", asyn
 
   for (let i = 0; i < 150; i++) {
     vectors.push(await embeddings.embedQuery(`hello ${i}`));
-
     documents.push({
       pageContent: `hello ${i}`,
       metadata: {
@@ -50,7 +50,7 @@ test("AzureSearch addVectors should upload at max 100 documents up a time", asyn
   expect(client.uploadDocuments.mock.calls[1][0]).toHaveLength(50);
 });
 
-test("AzureSearch addDocuments should embed at max 16 documents up a time", async () => {
+test("AzureAISearchVectorStore addDocuments should embed at max 16 documents up a time", async () => {
   const embeddings = new FakeEmbeddings();
   const client = {
     search: jest.fn<any>().mockResolvedValue({
@@ -59,12 +59,13 @@ test("AzureSearch addDocuments should embed at max 16 documents up a time", asyn
     uploadDocuments: jest.fn(),
   };
 
-  const store = await AzureSearchStore.create({
+  const store = new AzureAISearchVectorStore(embeddings, {
     client: client as any,
     search: {
       type: 'similarity',
-    }
-  }, embeddings);
+    },
+    embeddingBatchSize: 16,
+  });
 
   expect(store).toBeDefined();
 
@@ -87,7 +88,7 @@ test("AzureSearch addDocuments should embed at max 16 documents up a time", asyn
   expect(client.uploadDocuments.mock.calls[1][0]).toHaveLength(14);
 });
 
-test("AzureSearch with external keys", async () => {
+test("AzureAISearchVectorStore addDocuments should use specified IDs", async () => {
   const embeddings = new FakeEmbeddings();
   const client = {
     search: jest.fn<any>().mockResolvedValue({
@@ -96,12 +97,12 @@ test("AzureSearch with external keys", async () => {
     uploadDocuments: jest.fn(),
   };
 
-  const store = await AzureSearchStore.create({
+  const store = new AzureAISearchVectorStore(embeddings, {
     client: client as any,
     search: {
       type: 'similarity',
     }
-  }, embeddings);
+  });
 
   expect(store).toBeDefined();
 
@@ -116,7 +117,7 @@ test("AzureSearch with external keys", async () => {
       },
     ],
     {
-      keys: ["id1"]
+      ids: ["id1"]
     }
   );
 
@@ -124,7 +125,7 @@ test("AzureSearch with external keys", async () => {
   expect(result).toEqual(["id1"]);
 });
 
-test("AzureSearch with generated keys", async () => {
+test("AzureAISearchVectorStore addDocuments should use generated IDs", async () => {
   const embeddings = new FakeEmbeddings();
   const client = {
     search: jest.fn<any>().mockResolvedValue({
@@ -133,12 +134,12 @@ test("AzureSearch with generated keys", async () => {
     uploadDocuments: jest.fn(),
   };
 
-  const store = await AzureSearchStore.create({
+  const store = new AzureAISearchVectorStore(embeddings, {
     client: client as any,
     search: {
       type: 'similarity',
     }
-  }, embeddings);
+  });
 
   expect(store).toBeDefined();
 
@@ -158,7 +159,7 @@ test("AzureSearch with generated keys", async () => {
   expect(result).toHaveLength(1);
 });
 
-test("AzureSearch with similarity search", async () => {
+test("AzureAISearchVectorStore similarity search works", async () => {
   const search = 'test-query';
   const embeddings = new FakeEmbeddings();
   const client = {
@@ -167,21 +168,21 @@ test("AzureSearch with similarity search", async () => {
     }),
   };
 
-  const store = await AzureSearchStore.create({
+  const store = new AzureAISearchVectorStore(embeddings, {
     client: client as any,
     search: {
-      type: 'similarity',
+      type: AzureAISearchQueryType.Similarity,
     }
-  }, embeddings);
+  });
 
   await store.similaritySearch(search, 1);
 
   expect(store).toBeDefined();
-  expect(client.search.mock.calls[0][0]).toBe('');
+  expect(client.search.mock.calls[0][0]).toBe('*');
   expect((client.search.mock.calls[0][1] as any).queryType).toBeUndefined();
 });
 
-test("AxureSearch with similarity hybrid search", async () => {
+test("AzureAISearchVectorStore similarity hybrid search works", async () => {
   const search = 'test-query';
   const embeddings = new FakeEmbeddings();
   const client = {
@@ -190,12 +191,12 @@ test("AxureSearch with similarity hybrid search", async () => {
     }),
   };
 
-  const store = await AzureSearchStore.create({
+  const store = new AzureAISearchVectorStore(embeddings, {
     client: client as any,
     search: {
-      type: 'similarity_hybrid',
+      type: AzureAISearchQueryType.SimilarityHybrid,
     }
-  }, embeddings);
+  });
 
   await store.similaritySearch(search, 1);
 
@@ -204,7 +205,7 @@ test("AxureSearch with similarity hybrid search", async () => {
   expect((client.search.mock.calls[0][1] as any).queryType).toBeUndefined();
 });
 
-test("AxureSearch with semantic hybrid search", async () => {
+test("AzureAISearchVectorStore semantic hybrid search works", async () => {
   const search = 'test-query';
   const embeddings = new FakeEmbeddings();
   const client = {
@@ -213,12 +214,12 @@ test("AxureSearch with semantic hybrid search", async () => {
     }),
   };
 
-  const store = await AzureSearchStore.create({
+  const store = new AzureAISearchVectorStore(embeddings, {
     client: client as any,
     search: {
-      type: 'semantic_hybrid',
+      type: AzureAISearchQueryType.SemanticHybrid,
     }
-  }, embeddings);
+  });
 
   await store.similaritySearch(search, 1);
 
