@@ -37,6 +37,7 @@ export class PostgresRecordManager implements RecordManagerInterface {
             key TEXT NOT NULL,
             namespace TEXT NOT NULL,
             updated_at Double PRECISION NOT NULL,
+            group_id TEXT,
             UNIQUE (key, namespace)
           );`
       );
@@ -83,6 +84,7 @@ export class PostgresRecordManager implements RecordManagerInterface {
 
     const updatedAt = await this.getTime();
     const { timeAtLeast } = updateOptions ?? {};
+    let { groupIds } = updateOptions ?? {};
 
     if (timeAtLeast && updatedAt < timeAtLeast) {
       throw new Error(
@@ -90,7 +92,20 @@ export class PostgresRecordManager implements RecordManagerInterface {
       );
     }
 
-    const recordsToUpsert = keys.map((key) => [key, this.namespace, updatedAt]);
+    groupIds = groupIds ?? keys.map(() => null);
+
+    if (groupIds.length !== keys.length) {
+      throw new Error(
+        `Number of keys (${keys.length}) does not match number of group_ids ${groupIds.length})`
+      );
+    }
+
+    const recordsToUpsert = keys.map((key, i) => [
+      key,
+      this.namespace,
+      updatedAt,
+      groupIds[i],
+    ]);
 
     const valuesPlaceholders = recordsToUpsert
       .map((_, j) =>
@@ -98,7 +113,7 @@ export class PostgresRecordManager implements RecordManagerInterface {
       )
       .join(", ");
 
-    const query = `INSERT INTO "${this.tableName}" (key, namespace, updated_at) VALUES ${valuesPlaceholders} ON CONFLICT (key, namespace) DO UPDATE SET updated_at = EXCLUDED.updated_at;`;
+    const query = `INSERT INTO "${this.tableName}" (key, namespace, updated_at, group_id) VALUES ${valuesPlaceholders} ON CONFLICT (key, namespace) DO UPDATE SET updated_at = EXCLUDED.updated_at;`;
     await this.pool.query(query, recordsToUpsert.flat());
   }
 
@@ -121,9 +136,9 @@ export class PostgresRecordManager implements RecordManagerInterface {
   }
 
   async listKeys(options?: ListKeyOptions): Promise<string[]> {
-    const { before, after, limit } = options ?? {};
+    const { before, after, limit, groupIds } = options ?? {};
     let query = `SELECT key FROM "${this.tableName}" WHERE namespace = $1`;
-    const values: (string | number)[] = [this.namespace];
+    const values: (string | number | (string | null)[])[] = [this.namespace];
 
     let index = 2;
     if (before) {
@@ -141,6 +156,12 @@ export class PostgresRecordManager implements RecordManagerInterface {
     if (limit) {
       values.push(limit);
       query += ` LIMIT $${index}`;
+      index += 1;
+    }
+
+    if (groupIds) {
+      values.push(groupIds);
+      query += ` AND group_id = ANY($${index})`;
       index += 1;
     }
 

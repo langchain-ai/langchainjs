@@ -79,6 +79,19 @@ describe("PostgresRecordManager", () => {
     }
   });
 
+  test("Test update with groupIds", async () => {
+    const keys = ["a", "b", "c"];
+    await recordManager.update(keys, {
+      groupIds: ["group1", "group1", "group2"],
+    });
+    const res = await recordManager.pool.query(
+      `SELECT * FROM "${tableName}" WHERE group_id = ANY($1)`,
+      [["group1"]]
+    );
+    expect(res.rowCount).toEqual(2);
+    res.rows.forEach((row) => expect(row.group_id).toEqual("group1"));
+  });
+
   test("Exists", async () => {
     const keys = ["a", "b", "c"];
     await recordManager.update(keys);
@@ -153,5 +166,14 @@ describe("PostgresRecordManager", () => {
     } finally {
       recordManager.getTime = unmockedGetTime;
     }
+  });
+
+  test("List keys with groupIds", async () => {
+    const keys = ["a", "b", "c"];
+    await recordManager.update(keys, {
+      groupIds: ["group1", "group1", "group2"],
+    });
+    const readKeys = await recordManager.listKeys({ groupIds: ["group1"] });
+    expect(readKeys).toEqual(["a", "b"]);
   });
 });
