@@ -75,9 +75,7 @@ describe("MemoryRecordmanagerTest", () => {
   test("Exists", async () => {
     const keys = ["a", "b", "c"];
     await recordManager.update(keys);
-    console.log(await recordManager.listKeys());
     const exists = await recordManager.exists(keys);
-    console.log(exists);
     expect(exists).toEqual([true, true, true]);
 
     const nonExistentKeys = ["d", "e", "f"];
