@@ -22,6 +22,7 @@ import {
 } from "../../utils/testing/index.js";
 import { RunnableSequence, RunnableLambda } from "../base.js";
 import { RouterRunnable } from "../router.js";
+import { RunnableConfig } from "../config.js";
 
 test("Test batch", async () => {
   const llm = new FakeLLM({});
@@ -336,4 +337,36 @@ test("Create a runnable sequence with a static method with invalid output and ca
     const result = await runnable.invoke({ input: "Hello sequence!" });
     console.log(result);
   }).rejects.toThrow(OutputParserException);
+});
+
+test("RunnableSequence can pass config to every step in batched request", async () => {
+  let numSeen = 0;
+
+  const addOne = (x: number, options?: { config?: RunnableConfig }) => {
+    if (options?.config?.configurable?.isPresent === true) {
+      numSeen += 1;
+    }
+    return x + 1;
+  };
+  const addTwo = (x: number, options?: { config?: RunnableConfig }) => {
+    if (options?.config?.configurable?.isPresent === true) {
+      numSeen += 1;
+    }
+    return x + 2;
+  };
+  const addThree = (x: number, options?: { config?: RunnableConfig }) => {
+    if (options?.config?.configurable?.isPresent === true) {
+      numSeen += 1;
+    }
+    return x + 3;
+  };
+
+  const sequence = RunnableSequence.from([addOne, addTwo, addThree]);
+
+  await sequence.batch([1], {
+    configurable: {
+      isPresent: true,
+    },
+  });
+  expect(numSeen).toBe(3);
 });
