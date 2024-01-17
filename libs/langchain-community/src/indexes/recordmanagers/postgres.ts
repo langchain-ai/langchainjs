@@ -83,8 +83,7 @@ export class PostgresRecordManager implements RecordManagerInterface {
     }
 
     const updatedAt = await this.getTime();
-    const { timeAtLeast } = updateOptions ?? {};
-    let { groupIds } = updateOptions ?? {};
+    const { timeAtLeast, groupIds: _groupIds } = updateOptions ?? {};
 
     if (timeAtLeast && updatedAt < timeAtLeast) {
       throw new Error(
@@ -92,7 +91,7 @@ export class PostgresRecordManager implements RecordManagerInterface {
       );
     }
 
-    groupIds = groupIds ?? keys.map(() => null);
+    const groupIds = _groupIds ?? keys.map(() => null);
 
     if (groupIds.length !== keys.length) {
       throw new Error(
