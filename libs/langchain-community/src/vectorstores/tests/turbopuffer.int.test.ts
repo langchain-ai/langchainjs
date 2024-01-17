@@ -13,7 +13,7 @@ beforeEach(async () => {
   });
   await store.delete({
     deleteIndex: true,
-  })
+  });
 });
 
 test("similaritySearchVectorWithScore", async () => {
@@ -26,7 +26,7 @@ test("similaritySearchVectorWithScore", async () => {
 
   expect(store).toBeDefined();
 
-  const createdAt = new Date().getTime();
+  const createdAt = new Date().toString();
 
   await store.addDocuments([
     { pageContent: createdAt.toString(), metadata: { a: createdAt } },
@@ -47,7 +47,7 @@ test("similaritySearchVectorWithScore", async () => {
   ]);
 });
 
-test("similaritySearchVectorWithScore with a passed filter", async () => {
+test("similaritySearch with a passed filter", async () => {
   const embeddings = new OpenAIEmbeddings();
 
   const store = new TurbopufferVectorStore(embeddings, {
@@ -60,14 +60,23 @@ test("similaritySearchVectorWithScore with a passed filter", async () => {
   const createdAt = new Date().getTime();
 
   await store.addDocuments([
-    { pageContent: "hello 0", metadata: { created_at: createdAt } },
-    { pageContent: "hello 1", metadata: { created_at: createdAt + 1 } },
-    { pageContent: "hello 2", metadata: { created_at: createdAt + 2 } },
-    { pageContent: "hello 3", metadata: { created_at: createdAt + 3 } },
+    { pageContent: "hello 0", metadata: { created_at: createdAt.toString() } },
+    {
+      pageContent: "hello 1",
+      metadata: { created_at: (createdAt + 1).toString() },
+    },
+    {
+      pageContent: "hello 2",
+      metadata: { created_at: (createdAt + 2).toString() },
+    },
+    {
+      pageContent: "hello 3",
+      metadata: { created_at: (createdAt + 3).toString() },
+    },
   ]);
 
   const results = await store.similaritySearch("hello", 1, {
-    metadata: [["Eq", `{"created_at": ${createdAt}}`]],
+    created_at: [["Eq", (createdAt + 2).toString()]],
   });
 
   expect(results).toHaveLength(1);
@@ -76,6 +85,47 @@ test("similaritySearchVectorWithScore with a passed filter", async () => {
     new Document({
       metadata: { created_at: (createdAt + 2).toString() },
       pageContent: "hello 2",
+    }),
+  ]);
+});
+
+test("Should drop metadata keys from docs with non-string metadata", async () => {
+  const embeddings = new OpenAIEmbeddings();
+
+  const store = new TurbopufferVectorStore(embeddings, {
+    apiKey: getEnvironmentVariable("TURBOPUFFER_API_KEY"),
+    namespace: "langchain-js-testing",
+  });
+
+  expect(store).toBeDefined();
+
+  const createdAt = new Date().getTime();
+
+  await store.addDocuments([
+    {
+      pageContent: "hello 0",
+      metadata: { created_at: { time: createdAt.toString() } },
+    },
+    {
+      pageContent: "goodbye",
+      metadata: { created_at: { time: (createdAt + 1).toString() } },
+    },
+  ]);
+
+  const results = await store.similaritySearch("hello", 1, {
+    created_at: [["Eq", createdAt.toString()]],
+  });
+
+  expect(results).toHaveLength(0);
+
+  const results2 = await store.similaritySearch("hello", 1);
+
+  expect(results2).toEqual([
+    new Document({
+      metadata: {
+        created_at: null,
+      },
+      pageContent: "hello 0",
     }),
   ]);
 });
