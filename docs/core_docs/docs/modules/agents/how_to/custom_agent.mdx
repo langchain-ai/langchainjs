@@ -75,10 +75,10 @@ To pass in our tools to the agent, we just need to format them to the OpenAI fun
 (By `bind`-ing the functions, we're making sure that they're passed in each time the model is invoked.)
 
 ```ts
-import { formatToOpenAIFunction } from "langchain/tools";
+import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";
 
 const modelWithFunctions = model.bind({
-  functions: tools.map((tool) => formatToOpenAIFunction(tool)),
+  functions: tools.map((tool) => convertToOpenAIFunction(tool)),
 });
 ```
 

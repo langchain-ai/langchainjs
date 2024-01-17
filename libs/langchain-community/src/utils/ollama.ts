@@ -19,6 +19,7 @@ export interface OllamaInput {
   numGpu?: number;
   numGqa?: number;
   numKeep?: number;
+  numPredict?: number;
   numThread?: number;
   penalizeNewline?: boolean;
   presencePenalty?: number;
@@ -58,6 +59,7 @@ export interface OllamaRequestParams {
     num_gqa?: number;
     num_keep?: number;
     num_thread?: number;
+    num_predict?: number;
     penalize_newline?: boolean;
     presence_penalty?: number;
     repeat_last_n?: number;

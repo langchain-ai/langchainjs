@@ -1,6 +1,6 @@
 {
   "name": "@langchain/openai",
-  "version": "0.0.10",
+  "version": "0.0.12",
   "description": "OpenAI integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -19,7 +19,7 @@
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && node scripts/move-cjs-to-dist.js && rimraf dist-cjs",
     "build:watch": "node scripts/create-entrypoints.js && tsc --outDir dist/ --watch",
     "build:scripts": "node scripts/create-entrypoints.js && node scripts/check-tree-shaking.js",
-    "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint src",
+    "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
     "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "yarn lint:eslint && yarn lint:dpdm",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
@@ -35,9 +35,9 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1.9",
+    "@langchain/core": "~0.1.13",
     "js-tiktoken": "^1.0.7",
-    "openai": "^4.19.0",
+    "openai": "^4.24.2",
     "zod": "^3.22.3",
     "zod-to-json-schema": "3.20.3"
   },

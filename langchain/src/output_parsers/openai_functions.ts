@@ -30,7 +30,7 @@ export class OutputFunctionsParser extends BaseLLMOutputParser<string> {
     return "OutputFunctionsParser";
   }
 
-  lc_namespace = ["langchain", "output_parsers"];
+  lc_namespace = ["langchain", "output_parsers", "openai_functions"];
 
   lc_serializable = true;
 
@@ -86,7 +86,7 @@ export class JsonOutputFunctionsParser<
     return "JsonOutputFunctionsParser";
   }
 
-  lc_namespace = ["langchain", "output_parsers"];
+  lc_namespace = ["langchain", "output_parsers", "openai_functions"];
 
   lc_serializable = true;
 
@@ -179,13 +179,19 @@ export class JsonKeyOutputFunctionsParser<
     return "JsonKeyOutputFunctionsParser";
   }
 
-  lc_namespace = ["langchain", "output_parsers"];
+  lc_namespace = ["langchain", "output_parsers", "openai_functions"];
 
   lc_serializable = true;
 
   outputParser = new JsonOutputFunctionsParser();
 
   attrName: string;
+
+  get lc_aliases() {
+    return {
+      attrName: "key_name",
+    };
+  }
 
   constructor(fields: { attrName: string }) {
     super(fields);

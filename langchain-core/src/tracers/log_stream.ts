@@ -24,6 +24,9 @@ export type LogEntry = {
   metadata: Record<string, any>;
   /** ISO-8601 timestamp of when the run started. */
   start_time: string;
+  /** List of general output chunks streamed by this run. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  streamed_output: any[];
   /** List of LLM tokens streamed by this run, if applicable. */
   streamed_output_str: string[];
   /** Final output of this run. Only available after the run has finished successfully. */
@@ -121,6 +124,8 @@ export class LogStreamCallbackHandler extends BaseTracer {
 
   protected excludeTags?: string[];
 
+  protected rootId?: string;
+
   private keyMapByRunId: Record<string, string> = {};
 
   private counterMapByRunName: Record<string, number> = {};
@@ -159,7 +164,7 @@ export class LogStreamCallbackHandler extends BaseTracer {
   }
 
   _includeRun(run: Run): boolean {
-    if (run.parent_run_id === undefined) {
+    if (run.id === this.rootId) {
       return false;
     }
     const runTags = run.tags ?? [];
@@ -191,8 +196,38 @@ export class LogStreamCallbackHandler extends BaseTracer {
     return include;
   }
 
+  async *tapOutputIterable<T>(
+    runId: string,
+    output: AsyncGenerator<T>
+  ): AsyncGenerator<T> {
+    // Tap an output async iterator to stream its values to the log.
+    for await (const chunk of output) {
+      // root run is handled in .streamLog()
+      if (runId !== this.rootId) {
+        // if we can't find the run silently ignore
+        // eg. because this run wasn't included in the log
+        const key = this.keyMapByRunId[runId];
+        if (key) {
+          await this.writer.write(
+            new RunLogPatch({
+              ops: [
+                {
+                  op: "add",
+                  path: `/logs/${key}/streamed_output/-`,
+                  value: chunk,
+                },
+              ],
+            })
+          );
+        }
+      }
+      yield chunk;
+    }
+  }
+
   async onRunCreate(run: Run): Promise<void> {
-    if (run.parent_run_id === undefined) {
+    if (this.rootId === undefined) {
+      this.rootId = run.id;
       await this.writer.write(
         new RunLogPatch({
           ops: [
@@ -230,6 +265,7 @@ export class LogStreamCallbackHandler extends BaseTracer {
       tags: run.tags ?? [],
       metadata: run.extra?.metadata ?? {},
       start_time: new Date(run.start_time).toISOString(),
+      streamed_output: [],
       streamed_output_str: [],
       final_output: undefined,
       end_time: undefined,
@@ -270,7 +306,7 @@ export class LogStreamCallbackHandler extends BaseTracer {
       const patch = new RunLogPatch({ ops });
       await this.writer.write(patch);
     } finally {
-      if (run.parent_run_id === undefined) {
+      if (run.id === this.rootId) {
         const patch = new RunLogPatch({
           ops: [
             {

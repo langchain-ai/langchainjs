@@ -61,6 +61,7 @@ export * as experimental__plan_and_execute from "../experimental/plan_and_execut
 export * as experimental__chat_models__bittensor from "../experimental/chat_models/bittensor.js";
 export * as experimental__chains__violation_of_expectations from "../experimental/chains/violation_of_expectations/index.js";
 export * as experimental__masking from "../experimental/masking/index.js";
+export * as experimental__prompts__custom_format from "../experimental/prompts/custom_format.js";
 export * as evaluation from "../evaluation/index.js";
 export * as runnables__remote from "../runnables/remote.js";
 import {

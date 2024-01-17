@@ -1,8 +1,9 @@
 import { z } from "zod";
-import { ChatOpenAI, formatToOpenAITool } from "@langchain/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { Calculator } from "langchain/tools/calculator";
 import { AgentExecutor } from "langchain/agents";
 import { formatToOpenAIToolMessages } from "langchain/agents/format_scratchpad/openai_tools";
+import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import {
   OpenAIToolsAgentOutputParser,
   type ToolsAgentStep,
@@ -44,7 +45,7 @@ const weatherTool = new DynamicStructuredTool({
 const tools = [new Calculator(), weatherTool];
 
 // Convert to OpenAI tool format
-const modelWithTools = model.bind({ tools: tools.map(formatToOpenAITool) });
+const modelWithTools = model.bind({ tools: tools.map(convertToOpenAITool) });
 
 const prompt = ChatPromptTemplate.fromMessages([
   ["ai", "You are a helpful assistant"],

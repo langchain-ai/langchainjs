@@ -13,11 +13,7 @@ import {
   coerceMessageLikeToMessage,
 } from "../messages/index.js";
 import { type LLMResult } from "../outputs.js";
-import {
-  BaseCallbackConfig,
-  CallbackManager,
-  Callbacks,
-} from "../callbacks/manager.js";
+import { CallbackManager, Callbacks } from "../callbacks/manager.js";
 import { AsyncCaller, AsyncCallerParams } from "../utils/async_caller.js";
 import { encodingForModel } from "../utils/tiktoken.js";
 import { Runnable, type RunnableInterface } from "../runnables/base.js";
@@ -179,7 +175,7 @@ export interface BaseLanguageModelParams
   cache?: BaseCache | boolean;
 }
 
-export interface BaseLanguageModelCallOptions extends BaseCallbackConfig {
+export interface BaseLanguageModelCallOptions extends RunnableConfig {
   /**
    * Stop tokens to use for this call.
    * If not provided, the default stop tokens for the model will be used.
@@ -225,6 +221,11 @@ export interface FunctionDefinition {
   description?: string;
 }
 
+export interface ToolDefinition {
+  type: "function";
+  function: FunctionDefinition;
+}
+
 export type FunctionCallOption = {
   name: string;
 };
@@ -244,8 +245,6 @@ export interface BaseLanguageModelInterface<
   RunOutput = any,
   CallOptions extends BaseLanguageModelCallOptions = BaseLanguageModelCallOptions
 > extends RunnableInterface<BaseLanguageModelInput, RunOutput, CallOptions> {
-  CallOptions: CallOptions;
-
   get callKeys(): string[];
 
   generatePrompt(
@@ -307,8 +306,6 @@ export abstract class BaseLanguageModel<
     BaseLanguageModelParams,
     BaseLanguageModelInterface<RunOutput, CallOptions>
 {
-  declare CallOptions: CallOptions;
-
   /**
    * Keys that the language model accepts as call options.
    */
