@@ -2,8 +2,8 @@ import { PostgresRecordManager } from "@langchain/community/indexes/recordmanage
 // import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { index } from "langchain/indexes";
 import { PGVectorStore } from "@langchain/community/vectorstores/pgvector";
-import { FakeEmbeddings } from "langchain/embeddings/fake";
 import { PoolConfig } from "pg";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
 // See python version for more details
 // https://python.langchain.com/docs/modules/data_connection/indexing
@@ -30,7 +30,7 @@ const config = {
 };
 
 const vectorstore = await PGVectorStore.initialize(
-  new FakeEmbeddings(),
+  new OpenAIEmbeddings(),
   config
 );
 
