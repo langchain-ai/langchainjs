@@ -1,4 +1,4 @@
-import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
+import { JsonSchema7ObjectType } from "zod-to-json-schema";
 import {
   compare,
   type Operation as JSONPatchOperation,

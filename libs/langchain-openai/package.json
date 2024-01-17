@@ -38,8 +38,8 @@
     "@langchain/core": "~0.1.13",
     "js-tiktoken": "^1.0.7",
     "openai": "^4.24.2",
-    "zod": "^3.22.3",
-    "zod-to-json-schema": "3.20.3"
+    "zod": "^3.22.4",
+    "zod-to-json-schema": "^3.22.3"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",

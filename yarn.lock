@@ -8590,8 +8590,8 @@ __metadata:
     turbo: latest
     typescript: ~5.1.6
     uuid: ^9.0.0
-    zod: ^3.22.3
-    zod-to-json-schema: 3.20.3
+    zod: ^3.22.4
+    zod-to-json-schema: ^3.22.3
   languageName: unknown
   linkType: soft
 
@@ -8681,8 +8681,8 @@ __metadata:
     release-it: ^15.10.1
     rimraf: ^5.0.1
     typescript: ~5.1.6
-    zod: ^3.22.3
-    zod-to-json-schema: 3.20.3
+    zod: ^3.22.4
+    zod-to-json-schema: ^3.22.3
   languageName: unknown
   linkType: soft
 
@@ -19178,8 +19178,8 @@ __metadata:
     vectordb: ^0.1.4
     voy-search: 0.6.2
     weaviate-ts-client: ^1.0.0
-    zod: ^3.22.3
-    zod-to-json-schema: 3.20.3
+    zod: ^3.22.4
+    zod-to-json-schema: ^3.22.3
   languageName: unknown
   linkType: soft
 
@@ -23800,8 +23800,8 @@ __metadata:
     yaml: ^2.2.1
     youtube-transcript: ^1.0.6
     youtubei.js: ^5.8.0
-    zod: ^3.22.3
-    zod-to-json-schema: 3.20.3
+    zod: ^3.22.4
+    zod-to-json-schema: ^3.22.3
   peerDependencies:
     "@aws-sdk/client-s3": ^3.310.0
     "@aws-sdk/client-sagemaker-runtime": ^3.310.0
@@ -33804,16 +33804,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod-to-json-schema@npm:3.20.3":
-  version: 3.20.3
-  resolution: "zod-to-json-schema@npm:3.20.3"
+"zod-to-json-schema@npm:^3.22.3":
+  version: 3.22.3
+  resolution: "zod-to-json-schema@npm:3.22.3"
   peerDependencies:
-    zod: ^3.20.0
-  checksum: 1addf7e6f7d69398404dc90f5c9b76ea44e3f6deeb2fc7c72983a00e15b7340661d7e894b0a4eee3a07334dcdcc79d7064e44de46b4acc37d38ab2f3f7217ec8
+    zod: ^3.22.4
+  checksum: 2747a3d1514f579006939c0edd6a420acae65ad016df223b09c4a542cbc8c0ae61b4d7b391228a211cde973635ed49c47b1449791982f3b32d799319bb174f42
   languageName: node
   linkType: hard
 
-"zod@npm:^3.22.3":
+"zod@npm:^3.22.3, zod@npm:^3.22.4":
   version: 3.22.4
   resolution: "zod@npm:3.22.4"
   checksum: 80bfd7f8039b24fddeb0718a2ec7c02aa9856e4838d6aa4864335a047b6b37a3273b191ef335bf0b2002e5c514ef261ffcda5a589fb084a48c336ffc4cdbab7f
