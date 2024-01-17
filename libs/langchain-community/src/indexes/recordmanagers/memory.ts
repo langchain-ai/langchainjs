@@ -67,8 +67,12 @@ export class InMemoryRecordManager extends RecordManager {
     const { before, after, limit, groupIds } = options ?? {};
 
     const filteredRecords = Array.from(this.records).filter(([_key, doc]) => {
-      const isBefore = !before || doc.updatedAt < before;
-      const isAfter = !after || doc.updatedAt > after;
+      // Inclusive bounds for before and after (i.e. <= and >=).
+      // This is technically incorrect, but because there is no
+      // latency, it is not garanteed that after an update the
+      // timestamp on subsequent listKeys calls will be different.
+      const isBefore = !before || doc.updatedAt <= before;
+      const isAfter = !after || doc.updatedAt >= after;
       const belongsToGroup = !groupIds || groupIds.includes(doc.groupId);
       return isBefore && isAfter && belongsToGroup;
     });
