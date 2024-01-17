@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { jest, test, expect } from "@jest/globals";
-import { FakeEmbeddings } from "../../../../langchain/src/embeddings/fake.ts";
 import { FakeEmbeddings } from "langchain/embeddings/fake";
-import { PineconeStore } from "../pinecone.js";
+import { PineconeStore } from "../vectorstores.js";
 
 test("PineconeStore with external ids", async () => {
   const upsert = jest.fn();
