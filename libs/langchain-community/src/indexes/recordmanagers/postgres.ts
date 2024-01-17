@@ -39,7 +39,12 @@ export class PostgresRecordManager implements RecordManagerInterface {
             updated_at Double PRECISION NOT NULL,
             group_id TEXT,
             UNIQUE (key, namespace)
-          );`
+          );
+        CREATE INDEX IF NOT EXISTS updated_at_index ON "${this.tableName}" (updated_at);
+        CREATE INDEX IF NOT EXISTS key_index ON "${this.tableName}" (key);
+        CREATE INDEX IF NOT EXISTS namespace_index ON "${this.tableName}" (namespace);
+        CREATE INDEX IF NOT EXISTS group_id_index ON "${this.tableName}" (group_id);
+        `
       );
     } catch (e: unknown) {
       // This error indicates that the table already exists
