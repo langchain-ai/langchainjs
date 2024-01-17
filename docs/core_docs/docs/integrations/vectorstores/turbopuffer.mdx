@@ -11,9 +11,14 @@ Set your API key as an environment variable:
 export TURBOPUFFER_API_KEY=<YOUR_API_KEY>
 ```
 
-## Similarity Search
+## Usage
 
 import CodeBlock from "@theme/CodeBlock";
-import SimilaritySearchExample from "@examples/indexes/turbopuffer.ts";
+import SimilaritySearchExample from "@examples/indexes/vector_stores/turbopuffer.ts";
+
+Here are some examples of how to use the class. You can filter your queries by previous specified metadata, but
+keep in mind that currently only string values are supported.
+
+See [here for more information](https://turbopuffer.com/docs/reference/query#filter-parameters) on acceptable filter formats.
 
 <CodeBlock language="typescript">{SimilaritySearchExample}</CodeBlock>
