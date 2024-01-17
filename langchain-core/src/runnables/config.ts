@@ -138,7 +138,7 @@ export function patchConfig<CallOptions extends RunnableConfig>(
     recursionLimit,
     runName,
     configurable,
-  }: RunnableConfig
+  }: RunnableConfig = {}
 ): Partial<CallOptions> {
   const newConfig = ensureConfig(config);
   if (callbacks !== undefined) {
