@@ -92,9 +92,11 @@ export abstract class BaseTracer extends BaseCallbackHandler {
             currentDottedOrder,
           ].join(".");
         } else {
+          // This can happen naturally for callbacks added within a run
           // console.debug(`Parent run with UUID ${storedRun.parent_run_id} has no dotted order.`);
         }
       } else {
+        // This can happen naturally for callbacks added within a run
         // console.debug(
         //   `Parent run with UUID ${storedRun.parent_run_id} not found.`
         // );
