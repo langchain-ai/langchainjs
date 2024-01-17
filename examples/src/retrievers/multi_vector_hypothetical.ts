@@ -59,10 +59,9 @@ const chain = RunnableSequence.from([
 
 const hypotheticalQuestions = await chain.batch(
   docs,
-  {},
   {
     maxConcurrency: 5,
-  }
+  },
 );
 
 const idKey = "doc_id";

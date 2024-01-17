@@ -97,6 +97,7 @@ export type RunnableLike<RunInput = any, RunOutput = any> =
   | RunnableMapLike<RunInput, RunOutput>;
 
 export type RunnableBatchOptions = {
+  /** @deprecated Pass in via the standard runnable config object instead */
   maxConcurrency?: number;
   returnExceptions?: boolean;
 };
@@ -237,7 +238,6 @@ export abstract class Runnable<
    * Subclasses should override this method if they can batch more efficiently.
    * @param inputs Array of inputs to each batch call.
    * @param options Either a single call options object to apply to each batch call or an array for each call.
-   * @param batchOptions.maxConcurrency Maximum number of calls to run at once.
    * @param batchOptions.returnExceptions Whether to return errors rather than throwing on the first one
    * @returns An array of RunOutputs, or mixed RunOutputs and errors if batchOptions.returnExceptions is set
    */
@@ -265,8 +265,10 @@ export abstract class Runnable<
     batchOptions?: RunnableBatchOptions
   ): Promise<(RunOutput | Error)[]> {
     const configList = this._getOptionsList(options ?? {}, inputs.length);
+    const maxConcurrency =
+      configList[0]?.maxConcurrency ?? batchOptions?.maxConcurrency;
     const caller = new AsyncCaller({
-      maxConcurrency: batchOptions?.maxConcurrency,
+      maxConcurrency,
       onFailedAttempt: (e) => {
         throw e;
       },

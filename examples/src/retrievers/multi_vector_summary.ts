@@ -32,10 +32,9 @@ const chain = RunnableSequence.from([
 
 const summaries = await chain.batch(
   docs,
-  {},
   {
     maxConcurrency: 5,
-  }
+  },
 );
 
 const idKey = "doc_id";
