@@ -153,7 +153,7 @@ export abstract class Runnable<
     kwargs: Partial<CallOptions>
   ): Runnable<RunInput, RunOutput, CallOptions> {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    return new RunnableBinding({ bound: this, kwargs, config: kwargs ?? {} });
+    return new RunnableBinding({ bound: this, kwargs, config: {} });
   }
 
   /**
