@@ -65,9 +65,9 @@ describe.skip("Neo4j Graph Tests", () => {
       timeout: 0.1,
     });
     const res = await graph_timeout.query(
-      "UNWIND range(0,10000,1) AS i MERGE (f:Foo {id:i})"
+      "UNWIND range(0,10000,1) AS i MERGE (f:Foo {id:i}) RETURN collect(i)[..5]"
     );
-    console.log(res);
+    expect(res).toEqual(undefined);
     await graph.close();
   });
 });

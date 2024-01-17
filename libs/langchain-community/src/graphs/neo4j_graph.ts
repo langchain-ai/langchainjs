@@ -43,7 +43,7 @@ export class Neo4jGraph {
 
   private database: string;
 
-  private timeout: number | null;
+  private timeout: number | undefined;
 
   private schema = "";
 
@@ -63,7 +63,7 @@ export class Neo4jGraph {
     try {
       this.driver = neo4j.driver(url, neo4j.auth.basic(username, password));
       this.database = database;
-      this.timeout = timeout ? timeout * 1000 : null;
+      this.timeout = timeout ? timeout * 1000 : undefined;
     } catch (error) {
       throw new Error(
         "Could not create a Neo4j driver instance. Please check the connection details."
