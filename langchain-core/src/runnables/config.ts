@@ -159,7 +159,7 @@ export function patchConfig<CallOptions extends RunnableConfig>(
     newConfig.runName = runName;
   }
   if (configurable !== undefined) {
-    newConfig.configurable = configurable;
+    newConfig.configurable = { ...newConfig.configurable, ...configurable };
   }
   return newConfig;
 }
