@@ -8,54 +8,9 @@ This package contains the LangChain.js integrations for  through their SDK.
 npm install @langchain/pinecone
 ```
 
-## Chat Models
-
-This package contains the `<ADD_CLASS_NAME_HERE>` class, which is the recommended way to interface with the <ADD_NAME_HERE> series of models.
-
-To use, install the requirements, and configure your environment.
-
-```bash
-export <ADD_ENV_NAME_HERE>=your-api-key
-```
-
-Then initialize
-
-```typescript
-import { <ADD_CLASS_NAME_HERE> } from "@langchain/pinecone";
-
-const model = new ExampleChatClass({
-  apiKey: process.env.EXAMPLE_API_KEY,
-});
-const response = await model.invoke(new HumanMessage("Hello world!"));
-```
-
-### Streaming
-
-```typescript
-import { <ADD_CLASS_NAME_HERE> } from "@langchain/pinecone";
-
-const model = new ExampleChatClass({
-  apiKey: process.env.EXAMPLE_API_KEY,
-});
-const response = await model.stream(new HumanMessage("Hello world!"));
-```
-
-## Embeddings
-
-This package also adds support for <ADD_NAME_HERE> embeddings model.
-
-```typescript
-import { <ADD_CLASS_NAME_HERE> } from "@langchain/pinecone";
-
-const embeddings = new ExampleEmbeddingClass({
-  apiKey: process.env.EXAMPLE_API_KEY,
-});
-const res = await embeddings.embedQuery("Hello world");
-```
-
 ## Development
 
-To develop the <ADD_NAME_HERE> package, you'll need to follow these instructions:
+To develop the Pinecone package, you'll need to follow these instructions:
 
 ### Install dependencies
 
