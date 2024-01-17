@@ -1,7 +1,6 @@
 import { InMemoryRecordManager } from "@langchain/community/indexes/recordmanagers/memory";
 import { PGVectorStore } from "@langchain/community/vectorstores/pgvector";
 import { Document } from "@langchain/core/documents";
-import { type PoolConfig } from "pg";
 
 import { FakeEmbeddings } from "../../embeddings/fake.js";
 import { index } from "../indexing.js";
@@ -31,7 +30,7 @@ describe("Indexing API", () => {
         user: "myuser",
         password: "ChangeMe",
         database: "api",
-      } as PoolConfig,
+      },
       tableName,
     };
     recordManager = new InMemoryRecordManager();
