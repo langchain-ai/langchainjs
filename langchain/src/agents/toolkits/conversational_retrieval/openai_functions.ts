@@ -8,6 +8,7 @@ export type ConversationalRetrievalAgentOptions = {
   rememberIntermediateSteps?: boolean;
   memoryKey?: string;
   outputKey?: string;
+  inputKey?: string; 
   prefix?: string;
   verbose?: boolean;
 };
@@ -31,6 +32,7 @@ export async function createConversationalRetrievalAgent(
     rememberIntermediateSteps = true,
     memoryKey = "chat_history",
     outputKey = "output",
+    inputKey = "input",
     prefix,
     verbose,
   } = options ?? {};
@@ -40,6 +42,7 @@ export async function createConversationalRetrievalAgent(
       memoryKey,
       llm,
       outputKey,
+      inputKey,
     });
   } else {
     memory = new ConversationSummaryBufferMemory({
@@ -48,6 +51,7 @@ export async function createConversationalRetrievalAgent(
       maxTokenLimit: 12000,
       returnMessages: true,
       outputKey,
+      inputKey,
     });
   }
   const executor = await initializeAgentExecutorWithOptions(tools, llm, {
