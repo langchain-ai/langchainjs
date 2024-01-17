@@ -1,11 +1,11 @@
 import { describe, expect, test, jest } from "@jest/globals";
-import { InMemoryRecordManger } from "../memory.js";
+import { InMemoryRecordManager } from "../memory.js";
 
 describe("MemoryRecordmanagerTest", () => {
-  let recordManager: InMemoryRecordManger;
+  let recordManager: InMemoryRecordManager;
 
   beforeAll(async () => {
-    recordManager = new InMemoryRecordManger();
+    recordManager = new InMemoryRecordManager();
     await recordManager.createSchema();
   });
 

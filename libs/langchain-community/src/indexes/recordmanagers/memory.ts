@@ -9,7 +9,7 @@ interface MemoryRecord {
   groupId: string | null;
 }
 
-export class InMemoryRecordManger extends RecordManager {
+export class InMemoryRecordManager extends RecordManager {
   records: Map<string, MemoryRecord>;
 
   constructor() {
@@ -33,8 +33,7 @@ export class InMemoryRecordManger extends RecordManager {
 
   async update(keys: string[], updateOptions?: UpdateOptions): Promise<void> {
     const updatedAt = await this.getTime();
-    const { timeAtLeast } = updateOptions ?? {};
-    let { groupIds } = updateOptions ?? {};
+    const { timeAtLeast, groupIds: _groupIds } = updateOptions ?? {};
 
     if (timeAtLeast && updatedAt < timeAtLeast) {
       throw new Error(
@@ -42,7 +41,7 @@ export class InMemoryRecordManger extends RecordManager {
       );
     }
 
-    groupIds = groupIds ?? keys.map(() => null);
+    const groupIds = _groupIds ?? keys.map(() => null);
 
     if (groupIds.length !== keys.length) {
       throw new Error(
