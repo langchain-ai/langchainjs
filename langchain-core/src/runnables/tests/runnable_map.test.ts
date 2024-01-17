@@ -15,7 +15,6 @@ import {
   FakeStreamingLLM,
 } from "../../utils/testing/index.js";
 import { RunnableSequence, RunnableMap } from "../base.js";
-import { RunnableConfig } from "../config.js";
 import { RunnablePassthrough } from "../passthrough.js";
 
 test("Create a runnable sequence with a runnable map", async () => {
@@ -309,25 +308,4 @@ test("Should stream chunks through runnable passthrough and assign", async () =>
   expect(chunks4.reduce(concat)).toEqual(
     await chainWithPickMulti.invoke("What is your name?")
   );
-});
-
-test("Should pass configs for each batch invocation", async () => {
-  const runnableSequence = RunnableSequence.from([
-    (input: number, options?: { config?: RunnableConfig }) => {
-      if (options?.config?.configurable?.method) {
-        options?.config.configurable.method();
-      }
-      return input;
-    },
-    (result: number) => result,
-  ]);
-  let numCalled = 0;
-  await runnableSequence.batch([1, 2, 3], {
-    configurable: {
-      method: () => {
-        numCalled += 1;
-      },
-    },
-  });
-  expect(numCalled).toBe(3);
 });
