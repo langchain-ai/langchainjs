@@ -5,7 +5,7 @@ interface Neo4jGraphConfig {
   username: string;
   password: string;
   database?: string;
-  timeout?: number;
+  timeoutMs?: number;
 }
 
 interface StructuredSchema {
@@ -43,7 +43,7 @@ export class Neo4jGraph {
 
   private database: string;
 
-  private timeout: number | undefined;
+  private timeoutMs: number | undefined;
 
   private schema = "";
 
@@ -58,12 +58,12 @@ export class Neo4jGraph {
     username,
     password,
     database = "neo4j",
-    timeout,
+    timeoutMs,
   }: Neo4jGraphConfig) {
     try {
       this.driver = neo4j.driver(url, neo4j.auth.basic(username, password));
       this.database = database;
-      this.timeout = timeout ? timeout * 1000 : undefined;
+      this.timeoutMs = timeoutMs;
     } catch (error) {
       throw new Error(
         "Could not create a Neo4j driver instance. Please check the connection details."
@@ -112,7 +112,7 @@ export class Neo4jGraph {
     try {
       const result = await this.driver.executeQuery(query, params, {
         database: this.database,
-        transactionConfig: { timeout: this.timeout },
+        transactionConfig: { timeout: this.timeoutMs },
       });
       return toObjects(result.records);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

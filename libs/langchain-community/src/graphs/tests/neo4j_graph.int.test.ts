@@ -62,7 +62,7 @@ describe.skip("Neo4j Graph Tests", () => {
       url,
       username,
       password,
-      timeout: 0.1,
+      timeoutMs: 100,
     });
     const res = await graph_timeout.query(
       "UNWIND range(0,10000,1) AS i MERGE (f:Foo {id:i}) RETURN collect(i)[..5]"
