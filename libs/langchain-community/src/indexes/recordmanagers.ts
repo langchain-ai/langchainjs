@@ -1,6 +1,6 @@
 import { Serializable } from "../load/serializable.js";
 
-export const UUID_NAMESPACE = "00000000-0000-0000-0000-0000000007c0";
+export const UUID_NAMESPACE = "10f90ea3-90a4-4962-bf75-83a0f3c1c62a";
 
 export type UpdateOptions = {
   groupIds?: (string | null)[];
