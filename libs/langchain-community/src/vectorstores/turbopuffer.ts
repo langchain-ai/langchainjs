@@ -252,7 +252,7 @@ export class TurbopufferVectorStore extends VectorStore {
     k: number,
     includeVector?: boolean,
     // See https://Turbopuffer.com/docs/reference/query for more info
-    filter?: TurbopufferFilterType
+    filter?: this["FilterType"]
   ): Promise<TurbopufferQueryResult[]> {
     const data = {
       vector: query,
