@@ -309,3 +309,7 @@ test("Should stream chunks through runnable passthrough and assign", async () =>
     await chainWithPickMulti.invoke("What is your name?")
   );
 });
+
+test("Should pass configs for each batch invocation", async () => {
+  throw new Error("TODO: implement");
+});
