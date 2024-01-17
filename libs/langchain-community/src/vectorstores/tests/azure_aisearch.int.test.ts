@@ -6,7 +6,11 @@ import { SearchIndexClient, AzureKeyCredential } from "@azure/search-documents";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
 import { FakeEmbeddings } from "../../utils/testing.js";
-import { AzureAISearchVectorStore, AzureAISearchQueryType, AzureAISearchDocumentMetadata } from "../azure_aisearch.js";
+import {
+  AzureAISearchVectorStore,
+  AzureAISearchQueryType,
+  AzureAISearchDocumentMetadata,
+} from "../azure_aisearch.js";
 
 const INDEX_NAME = "vectorsearch";
 const DOCUMENT_IDS: string[] = ["1", "2", "3", "4"];
@@ -70,42 +74,48 @@ describe.skip("AzureAISearchVectorStore e2e integration tests", () => {
     const vectorStore = new AzureAISearchVectorStore(new OpenAIEmbeddings(), {
       indexName: INDEX_NAME,
       search: {
-        type: AzureAISearchQueryType.SemanticHybrid
+        type: AzureAISearchQueryType.SemanticHybrid,
       },
     });
 
     expect(vectorStore).toBeDefined();
 
-    await vectorStore.addDocuments([
-      {
-        pageContent: "This book is about politics",
-        metadata: {
-          source: "doc1",
-          attributes: [{ key: 'a', value: '1' }]
-        }
-      },
-      {
-        pageContent: "Cats sleeps a lot.",
-        metadata: {
-          source: "doc2",
-          attributes: [{ key: 'b', value: '1' }]
-        }
-      },
-      {
-        pageContent: "Sandwiches taste good.",
-        metadata: {
-          source: "doc3",
-          attributes: [{ key: 'c', value: '1' }]
-        }
-      },
-      {
-        pageContent: "The house is open",
-        metadata: {
-          source: "doc4",
-          attributes: [{ key: 'd', value: '1' }, { key: 'e', value: '2' }]
-        }
-      },
-    ], { ids: DOCUMENT_IDS });
+    await vectorStore.addDocuments(
+      [
+        {
+          pageContent: "This book is about politics",
+          metadata: {
+            source: "doc1",
+            attributes: [{ key: "a", value: "1" }],
+          },
+        },
+        {
+          pageContent: "Cats sleeps a lot.",
+          metadata: {
+            source: "doc2",
+            attributes: [{ key: "b", value: "1" }],
+          },
+        },
+        {
+          pageContent: "Sandwiches taste good.",
+          metadata: {
+            source: "doc3",
+            attributes: [{ key: "c", value: "1" }],
+          },
+        },
+        {
+          pageContent: "The house is open",
+          metadata: {
+            source: "doc4",
+            attributes: [
+              { key: "d", value: "1" },
+              { key: "e", value: "2" },
+            ],
+          },
+        },
+      ],
+      { ids: DOCUMENT_IDS }
+    );
 
     // Wait for the documents to be indexed
     await setTimeout(1000);
@@ -121,8 +131,8 @@ describe.skip("AzureAISearchVectorStore e2e integration tests", () => {
         pageContent: "Sandwiches taste good.",
         metadata: {
           source: "doc3",
-          attributes: [{ key: 'c', value: '1' }]
-        }
+          attributes: [{ key: "c", value: "1" }],
+        },
       },
     ]);
 
@@ -134,8 +144,11 @@ describe.skip("AzureAISearchVectorStore e2e integration tests", () => {
       pageContent: "The house is open",
       metadata: {
         source: "doc4",
-        attributes: [{ key: 'd', value: '1' }, { key: 'e', value: '2' }]
-      }
+        attributes: [
+          { key: "d", value: "1" },
+          { key: "e", value: "2" },
+        ],
+      },
     });
   });
 
@@ -205,16 +218,14 @@ describe.skip("AzureAISearchVectorStore integration tests", () => {
   let indexClient: SearchIndexClient;
 
   const embedMock = jest
-    .spyOn(FakeEmbeddings.prototype, 'embedDocuments')
-    .mockImplementation(
-      async (documents: string[]) => documents.map(() => Array(1536).fill(0.2))
+    .spyOn(FakeEmbeddings.prototype, "embedDocuments")
+    .mockImplementation(async (documents: string[]) =>
+      documents.map(() => Array(1536).fill(0.2))
     );
 
   const queryMock = jest
-    .spyOn(FakeEmbeddings.prototype, 'embedQuery')
-    .mockImplementation(
-      async () => Array(1536).fill(0.2)
-    );
+    .spyOn(FakeEmbeddings.prototype, "embedQuery")
+    .mockImplementation(async () => Array(1536).fill(0.2));
 
   beforeEach(() => {
     embedMock.mockClear();
@@ -227,7 +238,7 @@ describe.skip("AzureAISearchVectorStore integration tests", () => {
 
     indexClient = new SearchIndexClient(
       process.env.AZURE_AISEARCH_ENDPOINT!,
-      new AzureKeyCredential(process.env.AZURE_AISEARCH_KEY!),
+      new AzureKeyCredential(process.env.AZURE_AISEARCH_KEY!)
     );
 
     try {
@@ -246,7 +257,7 @@ describe.skip("AzureAISearchVectorStore integration tests", () => {
   });
 
   test("test index creation if not exists", async () => {
-    const newName = 'index-undefined';
+    const newName = "index-undefined";
 
     try {
       await indexClient.deleteIndex(newName);
@@ -254,21 +265,19 @@ describe.skip("AzureAISearchVectorStore integration tests", () => {
       // Ignore
     }
 
-    const store = new AzureAISearchVectorStore(embeddings,
-      {
-        indexName: newName,
-        search: {
-          type: AzureAISearchQueryType.Similarity,
-        }
+    const store = new AzureAISearchVectorStore(embeddings, {
+      indexName: newName,
+      search: {
+        type: AzureAISearchQueryType.Similarity,
       },
-    );
+    });
     await store.addDocuments([
       {
         pageContent: "foo",
         metadata: {
           source: "bar",
-        }
-      }
+        },
+      },
     ]);
 
     const index = await indexClient.getIndex(newName);
@@ -284,25 +293,26 @@ describe.skip("AzureAISearchVectorStore integration tests", () => {
 
   test("test add document", async () => {
     const id = new Date().getTime().toString();
-    const store = new AzureAISearchVectorStore(embeddings,
-      {
-        indexName: INDEX_NAME,
-        search: {
-          type: AzureAISearchQueryType.Similarity,
-        }
+    const store = new AzureAISearchVectorStore(embeddings, {
+      indexName: INDEX_NAME,
+      search: {
+        type: AzureAISearchQueryType.Similarity,
       },
-    );
-
-    const result = await store.addDocuments([
-      new Document<AzureAISearchDocumentMetadata>({
-        pageContent: "test index document upload text",
-        metadata: {
-          source: 'test',
-        }
-      })
-    ], {
-      ids: [id],
     });
+
+    const result = await store.addDocuments(
+      [
+        new Document<AzureAISearchDocumentMetadata>({
+          pageContent: "test index document upload text",
+          metadata: {
+            source: "test",
+          },
+        }),
+      ],
+      {
+        ids: [id],
+      }
+    );
 
     expect(result).toHaveLength(1);
   });
@@ -316,7 +326,7 @@ describe.skip("AzureAISearchVectorStore integration tests", () => {
         indexName: INDEX_NAME,
         search: {
           type: AzureAISearchQueryType.Similarity,
-        }
+        },
       }
     );
 
@@ -331,38 +341,46 @@ describe.skip("AzureAISearchVectorStore integration tests", () => {
   test("test search document with filter", async () => {
     const store = await AzureAISearchVectorStore.fromTexts(
       ["test index document upload text"],
-      [{
-        source: 'filter-test',
-        attributes: [{ key: 'abc', value: 'def' }],
-      }],
+      [
+        {
+          source: "filter-test",
+          attributes: [{ key: "abc", value: "def" }],
+        },
+      ],
       embeddings,
       {
         indexName: INDEX_NAME,
         search: {
           type: AzureAISearchQueryType.Similarity,
-        }
+        },
       }
     );
 
     // Need to wait a bit for the document to be indexed
     await setTimeout(1000);
 
-    const bySource = await store.similaritySearch("test", 1, "metadata/source eq 'filter-test'");
-    const byAttr = await store.similaritySearch("test", 1, "metadata/attributes/any(t: t/key eq 'abc' and t/value eq 'def')");
+    const bySource = await store.similaritySearch(
+      "test",
+      1,
+      "metadata/source eq 'filter-test'"
+    );
+    const byAttr = await store.similaritySearch(
+      "test",
+      1,
+      "metadata/attributes/any(t: t/key eq 'abc' and t/value eq 'def')"
+    );
 
     expect(bySource).toHaveLength(1);
     expect(byAttr).toHaveLength(1);
   });
 
   test("test search document with query key", async () => {
-    const store = new AzureAISearchVectorStore(embeddings,
-      {
-        indexName: INDEX_NAME,
-        search: {
-          type: AzureAISearchQueryType.Similarity,
-        }
+    const store = new AzureAISearchVectorStore(embeddings, {
+      indexName: INDEX_NAME,
+      search: {
+        type: AzureAISearchQueryType.Similarity,
       },
-    );
+    });
 
     const result = await store.similaritySearch("test", 1);
 
@@ -374,25 +392,26 @@ describe.skip("AzureAISearchVectorStore integration tests", () => {
 
   test("test delete documents by id", async () => {
     const id = new Date().getTime().toString();
-    const store = new AzureAISearchVectorStore(embeddings,
-      {
-        indexName: INDEX_NAME,
-        search: {
-          type: AzureAISearchQueryType.Similarity,
-        }
+    const store = new AzureAISearchVectorStore(embeddings, {
+      indexName: INDEX_NAME,
+      search: {
+        type: AzureAISearchQueryType.Similarity,
       },
-    );
-
-    await store.addDocuments([
-      new Document<AzureAISearchDocumentMetadata>({
-        pageContent: "test index document upload text",
-        metadata: {
-          source: 'test',
-        }
-      })
-    ], {
-      ids: [id],
     });
+
+    await store.addDocuments(
+      [
+        new Document<AzureAISearchDocumentMetadata>({
+          pageContent: "test index document upload text",
+          metadata: {
+            source: "test",
+          },
+        }),
+      ],
+      {
+        ids: [id],
+      }
+    );
 
     // Need to wait a bit for the document to be indexed
     await setTimeout(1000);
@@ -406,28 +425,28 @@ describe.skip("AzureAISearchVectorStore integration tests", () => {
     const id = new Date().getTime().toString();
     const source = `test-${id}`;
 
-    const store = new AzureAISearchVectorStore(embeddings,
-      {
-        indexName: INDEX_NAME,
-        search: {
-          type: AzureAISearchQueryType.Similarity,
-        }
+    const store = new AzureAISearchVectorStore(embeddings, {
+      indexName: INDEX_NAME,
+      search: {
+        type: AzureAISearchQueryType.Similarity,
       },
-    );
+    });
 
     await store.addDocuments([
       new Document<AzureAISearchDocumentMetadata>({
         pageContent: "test index document upload text",
         metadata: {
           source,
-        }
-      })
+        },
+      }),
     ]);
 
     // Need to wait a bit for the document to be indexed
     await setTimeout(1000);
 
-    const deleteResult = await store.deleteMany(`metadata/source eq '${source}'`);
+    const deleteResult = await store.deleteMany(
+      `metadata/source eq '${source}'`
+    );
 
     expect(deleteResult).toHaveLength(1);
   });
