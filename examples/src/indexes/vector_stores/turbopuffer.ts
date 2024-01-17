@@ -91,3 +91,8 @@ console.log(results3);
     }
   ]
 */
+
+// Remove all vectors from the namespace.
+await store.delete({
+  deleteIndex: true,
+});
