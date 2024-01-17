@@ -125,7 +125,6 @@ export class PostgresRecordManager implements RecordManagerInterface {
     const arrayPlaceholders = keys
       .map((_, i) => `$${i + startIndex}`)
       .join(", ");
-    console.log(arrayPlaceholders);
 
     const query = `
       SELECT k, (key is not null) ex from unnest(ARRAY[${arrayPlaceholders}]) k left join "${this.tableName}" on k=key and namespace = $1;
