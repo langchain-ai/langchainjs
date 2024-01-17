@@ -841,6 +841,12 @@ experimental/chains/violation_of_expectations.d.ts
 experimental/masking.cjs
 experimental/masking.js
 experimental/masking.d.ts
+experimental/prompts/custom_format.cjs
+experimental/prompts/custom_format.js
+experimental/prompts/custom_format.d.ts
+experimental/prompts/handlebars.cjs
+experimental/prompts/handlebars.js
+experimental/prompts/handlebars.d.ts
 experimental/tools/pyinterpreter.cjs
 experimental/tools/pyinterpreter.js
 experimental/tools/pyinterpreter.d.ts

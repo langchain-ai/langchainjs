@@ -307,6 +307,9 @@ vectorstores/xata.d.ts
 vectorstores/zep.cjs
 vectorstores/zep.js
 vectorstores/zep.d.ts
+chat_models/alibaba_tongyi.cjs
+chat_models/alibaba_tongyi.js
+chat_models/alibaba_tongyi.d.ts
 chat_models/baiduwenxin.cjs
 chat_models/baiduwenxin.js
 chat_models/baiduwenxin.d.ts

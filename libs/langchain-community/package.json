@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.0.15",
+  "version": "0.0.17",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -19,8 +19,10 @@
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && node scripts/move-cjs-to-dist.js && rm -rf dist-cjs",
     "build:watch": "node scripts/create-entrypoints.js && tsc --outDir dist/ --watch",
     "build:scripts": "node scripts/create-entrypoints.js && node scripts/check-tree-shaking.js",
-    "lint": "NODE_OPTIONS=--max-old-space-size=4096 eslint src && dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
-    "lint:fix": "yarn lint --fix",
+    "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
+    "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
+    "lint": "yarn lint:eslint && yarn lint:dpdm",
+    "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
     "clean": "rm -rf dist/ && NODE_OPTIONS=--max-old-space-size=4096 node scripts/create-entrypoints.js pre",
     "prepack": "yarn build",
     "test": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
@@ -53,7 +55,7 @@
     "@clickhouse/client": "^0.2.5",
     "@cloudflare/ai": "^1.0.12",
     "@cloudflare/workers-types": "^4.20230922.0",
-    "@datastax/astra-db-ts": "0.1.2",
+    "@datastax/astra-db-ts": "^0.1.3",
     "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
@@ -995,6 +997,11 @@
       "import": "./vectorstores/zep.js",
       "require": "./vectorstores/zep.cjs"
     },
+    "./chat_models/alibaba_tongyi": {
+      "types": "./chat_models/alibaba_tongyi.d.ts",
+      "import": "./chat_models/alibaba_tongyi.js",
+      "require": "./chat_models/alibaba_tongyi.cjs"
+    },
     "./chat_models/baiduwenxin": {
       "types": "./chat_models/baiduwenxin.d.ts",
       "import": "./chat_models/baiduwenxin.js",
@@ -1598,6 +1605,9 @@
     "vectorstores/zep.cjs",
     "vectorstores/zep.js",
     "vectorstores/zep.d.ts",
+    "chat_models/alibaba_tongyi.cjs",
+    "chat_models/alibaba_tongyi.js",
+    "chat_models/alibaba_tongyi.d.ts",
     "chat_models/baiduwenxin.cjs",
     "chat_models/baiduwenxin.js",
     "chat_models/baiduwenxin.d.ts",

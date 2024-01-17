@@ -17,6 +17,9 @@ export interface RunnableConfig extends BaseCallbackConfig {
    * Maximum number of times a call can recurse. If not provided, defaults to 25.
    */
   recursionLimit?: number;
+
+  /** Maximum number of parallel calls to make. */
+  maxConcurrency?: number;
 }
 
 export async function getCallbackManagerForConfig(config?: RunnableConfig) {
@@ -107,4 +110,56 @@ export function mergeConfigs<CallOptions extends RunnableConfig>(
     }
   }
   return copy as Partial<CallOptions>;
+}
+
+/**
+ * Ensure that a passed config is an object with all required keys present.
+ */
+export function ensureConfig<CallOptions extends RunnableConfig>(
+  config?: CallOptions
+): Partial<CallOptions> {
+  return {
+    tags: [],
+    metadata: {},
+    callbacks: undefined,
+    recursionLimit: 25,
+    ...config,
+  } as Partial<CallOptions>;
+}
+
+/**
+ * Helper function that patches runnable configs with updated properties.
+ */
+export function patchConfig<CallOptions extends RunnableConfig>(
+  config: Partial<CallOptions> = {},
+  {
+    callbacks,
+    maxConcurrency,
+    recursionLimit,
+    runName,
+    configurable,
+  }: RunnableConfig = {}
+): Partial<CallOptions> {
+  const newConfig = ensureConfig(config);
+  if (callbacks !== undefined) {
+    /**
+     * If we're replacing callbacks we need to unset runName
+     * since that should apply only to the same run as the original callbacks
+     */
+    delete newConfig.runName;
+    newConfig.callbacks = callbacks;
+  }
+  if (recursionLimit !== undefined) {
+    newConfig.recursionLimit = recursionLimit;
+  }
+  if (maxConcurrency !== undefined) {
+    newConfig.maxConcurrency = maxConcurrency;
+  }
+  if (runName !== undefined) {
+    newConfig.runName = runName;
+  }
+  if (configurable !== undefined) {
+    newConfig.configurable = { ...newConfig.configurable, ...configurable };
+  }
+  return newConfig;
 }

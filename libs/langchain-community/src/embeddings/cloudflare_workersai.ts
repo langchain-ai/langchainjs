@@ -12,6 +12,7 @@ type AiTextEmbeddingsOutput = {
   data: number[][];
 };
 
+/** @deprecated Install and import from "@langchain/cloudflare" instead. */
 export interface CloudflareWorkersAIEmbeddingsParams extends EmbeddingsParams {
   /** Binding */
   binding: Fetcher;
@@ -31,6 +32,7 @@ export interface CloudflareWorkersAIEmbeddingsParams extends EmbeddingsParams {
   stripNewLines?: boolean;
 }
 
+/** @deprecated Install and import from "@langchain/cloudflare" instead. */
 export class CloudflareWorkersAIEmbeddings extends Embeddings {
   modelName = "@cf/baai/bge-base-en-v1.5";
 

@@ -1,9 +1,10 @@
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
+import { z } from "zod";
 import {
   BaseCallbackConfig,
   CallbackManagerForLLMRun,
+  CallbackManagerForToolRun,
 } from "../../callbacks/manager.js";
 import {
   BaseChatMessageHistory,
@@ -29,6 +30,8 @@ import {
 } from "../../outputs.js";
 import { BaseRetriever } from "../../retrievers.js";
 import { Runnable } from "../../runnables/base.js";
+import { StructuredTool, ToolParams } from "../../tools.js";
+import { BaseTracer, Run } from "../../tracers/base.js";
 
 /**
  * Parser for comma-separated values. It splits the input text by commas
@@ -101,9 +104,14 @@ export class FakeLLM extends LLM {
 export class FakeStreamingLLM extends LLM {
   sleep?: number = 50;
 
-  constructor(fields: { sleep?: number } & BaseLLMParams) {
+  responses?: string[];
+
+  constructor(
+    fields: { sleep?: number; responses?: string[] } & BaseLLMParams
+  ) {
     super(fields);
     this.sleep = fields.sleep ?? this.sleep;
+    this.responses = fields.responses;
   }
 
   _llmType() {
@@ -111,11 +119,15 @@ export class FakeStreamingLLM extends LLM {
   }
 
   async _call(prompt: string): Promise<string> {
-    return prompt;
+    const response = this.responses?.[0];
+    this.responses = this.responses?.slice(1);
+    return response ?? prompt;
   }
 
   async *_streamResponseChunks(input: string) {
-    for (const c of input) {
+    const response = this.responses?.[0];
+    this.responses = this.responses?.slice(1);
+    for (const c of response ?? input) {
       await new Promise((resolve) => setTimeout(resolve, this.sleep));
       yield { text: c, generationInfo: {} } as GenerationChunk;
     }
@@ -356,5 +368,54 @@ export class FakeListChatMessageHistory extends BaseListChatMessageHistory {
 
   async getMessages(): Promise<BaseMessage[]> {
     return this.messages;
+  }
+}
+
+export class FakeTracer extends BaseTracer {
+  name = "fake_tracer";
+
+  runs: Run[] = [];
+
+  constructor() {
+    super();
+  }
+
+  protected persistRun(run: Run): Promise<void> {
+    this.runs.push(run);
+    return Promise.resolve();
+  }
+}
+
+export interface FakeToolParams<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
+> extends ToolParams {
+  name: string;
+  description: string;
+  schema: T;
+}
+
+export class FakeTool<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
+> extends StructuredTool<T> {
+  name: string;
+
+  description: string;
+
+  schema: T;
+
+  constructor(fields: FakeToolParams<T>) {
+    super(fields);
+    this.name = fields.name;
+    this.description = fields.description;
+    this.schema = fields.schema;
+  }
+
+  protected async _call(
+    arg: z.output<T>,
+    _runManager?: CallbackManagerForToolRun
+  ): Promise<string> {
+    return JSON.stringify(arg);
   }
 }

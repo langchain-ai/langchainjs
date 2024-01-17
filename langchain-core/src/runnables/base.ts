@@ -22,10 +22,12 @@ import {
   RunnableConfig,
   getCallbackManagerForConfig,
   mergeConfigs,
+  patchConfig,
 } from "./config.js";
 import { AsyncCaller } from "../utils/async_caller.js";
 import { Run } from "../tracers/base.js";
 import { RootListenersTracer } from "../tracers/root_listener.js";
+import { BaseCallbackHandler } from "../callbacks/base.js";
 
 /**
  * Base interface implemented by all runnables.
@@ -95,6 +97,7 @@ export type RunnableLike<RunInput = any, RunOutput = any> =
   | RunnableMapLike<RunInput, RunOutput>;
 
 export type RunnableBatchOptions = {
+  /** @deprecated Pass in via the standard runnable config object instead */
   maxConcurrency?: number;
   returnExceptions?: boolean;
 };
@@ -104,7 +107,11 @@ export type RunnableRetryFailedAttemptHandler = (error: any) => any;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function _coerceToDict(value: any, defaultKey: string) {
-  return value && !Array.isArray(value) && typeof value === "object"
+  return value &&
+    !Array.isArray(value) &&
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    !(value instanceof Date) &&
+    typeof value === "object"
     ? value
     : { [defaultKey]: value };
 }
@@ -231,7 +238,6 @@ export abstract class Runnable<
    * Subclasses should override this method if they can batch more efficiently.
    * @param inputs Array of inputs to each batch call.
    * @param options Either a single call options object to apply to each batch call or an array for each call.
-   * @param batchOptions.maxConcurrency Maximum number of calls to run at once.
    * @param batchOptions.returnExceptions Whether to return errors rather than throwing on the first one
    * @returns An array of RunOutputs, or mixed RunOutputs and errors if batchOptions.returnExceptions is set
    */
@@ -259,8 +265,10 @@ export abstract class Runnable<
     batchOptions?: RunnableBatchOptions
   ): Promise<(RunOutput | Error)[]> {
     const configList = this._getOptionsList(options ?? {}, inputs.length);
+    const maxConcurrency =
+      configList[0]?.maxConcurrency ?? batchOptions?.maxConcurrency;
     const caller = new AsyncCaller({
-      maxConcurrency: batchOptions?.maxConcurrency,
+      maxConcurrency,
       onFailedAttempt: (e) => {
         throw e;
       },
@@ -476,7 +484,19 @@ export abstract class Runnable<
         options
       );
       runManager = pipe.setup;
-      for await (const chunk of pipe.output) {
+      const isLogStreamHandler = (
+        handler: BaseCallbackHandler
+      ): handler is LogStreamCallbackHandler =>
+        handler.name === "log_stream_tracer";
+      const streamLogHandler = runManager?.handlers.find(isLogStreamHandler);
+      let iterator = pipe.output;
+      if (streamLogHandler !== undefined && runManager !== undefined) {
+        iterator = await streamLogHandler.tapOutputIterable(
+          runManager.runId,
+          pipe.output
+        );
+      }
+      for await (const chunk of iterator) {
         yield chunk;
         if (finalOutputSupported) {
           if (finalOutput === undefined) {
@@ -507,26 +527,6 @@ export abstract class Runnable<
     );
   }
 
-  _patchConfig(
-    config: Partial<CallOptions> = {},
-    callbackManager: CallbackManager | undefined = undefined,
-    recursionLimit: number | undefined = undefined
-  ): Partial<CallOptions> {
-    const newConfig = { ...config };
-    if (callbackManager !== undefined) {
-      /**
-       * If we're replacing callbacks we need to unset runName
-       * since that should apply only to the same run as the original callbacks
-       */
-      delete newConfig.runName;
-      return { ...newConfig, callbacks: callbackManager };
-    }
-    if (recursionLimit !== undefined) {
-      newConfig.recursionLimit = recursionLimit;
-    }
-    return newConfig;
-  }
-
   /**
    * Create a new runnable sequence that runs each individual runnable in series,
    * piping the output of one runnable into another runnable or runnable-like.
@@ -535,7 +535,7 @@ export abstract class Runnable<
    */
   pipe<NewRunOutput>(
     coerceable: RunnableLike<RunOutput, NewRunOutput>
-  ): RunnableSequence<RunInput, Exclude<NewRunOutput, Error>> {
+  ): Runnable<RunInput, Exclude<NewRunOutput, Error>> {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableSequence({
       first: this,
@@ -546,7 +546,7 @@ export abstract class Runnable<
   /**
    * Pick keys from the dict output of this runnable. Returns a new runnable.
    */
-  pick(keys: string | string[]): RunnableSequence {
+  pick(keys: string | string[]): Runnable {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return this.pipe(new RunnablePick(keys) as Runnable);
   }
@@ -556,7 +556,7 @@ export abstract class Runnable<
    */
   assign(
     mapping: RunnableMapLike<Record<string, unknown>, Record<string, unknown>>
-  ): RunnableSequence {
+  ): Runnable {
     return this.pipe(
       // eslint-disable-next-line @typescript-eslint/no-use-before-define
       new RunnableAssign(
@@ -949,7 +949,7 @@ export class RunnableEach<
 
   /**
    * Binds the runnable with the specified arguments.
-   * @param args The arguments to bind the runnable with.
+   * @param kwargs The arguments to bind the runnable with.
    * @returns A new instance of the `RunnableEach` class that is bound with the specified arguments.
    */
   bind(kwargs: Partial<CallOptions>) {
@@ -984,7 +984,7 @@ export class RunnableEach<
   ): Promise<RunOutputItem[]> {
     return this.bound.batch(
       inputs,
-      this._patchConfig(config, runManager?.getChild())
+      patchConfig(config, { callbacks: runManager?.getChild() })
     );
   }
 
@@ -1055,7 +1055,7 @@ export class RunnableRetry<
     runManager?: CallbackManagerForChainRun
   ): Partial<CallOptions> {
     const tag = attempt > 1 ? `retry:attempt:${attempt}` : undefined;
-    return this._patchConfig(config, runManager?.getChild(tag));
+    return patchConfig(config, { callbacks: runManager?.getChild(tag) });
   }
 
   protected async _invoke(
@@ -1257,16 +1257,17 @@ export class RunnableSequence<
         const step = initialSteps[i];
         nextStepInput = await step.invoke(
           nextStepInput,
-          this._patchConfig(options, runManager?.getChild(`seq:step:${i + 1}`))
+          patchConfig(options, {
+            callbacks: runManager?.getChild(`seq:step:${i + 1}`),
+          })
         );
       }
       // TypeScript can't detect that the last output of the sequence returns RunOutput, so call it out of the loop here
       finalOutput = await this.last.invoke(
         nextStepInput,
-        this._patchConfig(
-          options,
-          runManager?.getChild(`seq:step:${this.steps.length}`)
-        )
+        patchConfig(options, {
+          callbacks: runManager?.getChild(`seq:step:${this.steps.length}`),
+        })
       );
     } catch (e) {
       await runManager?.handleChainError(e);
@@ -1318,32 +1319,18 @@ export class RunnableSequence<
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let nextStepInputs: any = inputs;
-    let finalOutputs: (RunOutput | Error)[];
     try {
-      const initialSteps = [this.first, ...this.middle];
-      for (let i = 0; i < initialSteps.length; i += 1) {
-        const step = initialSteps[i];
+      for (let i = 0; i < this.steps.length; i += 1) {
+        const step = this.steps[i];
         nextStepInputs = await step.batch(
           nextStepInputs,
-          runManagers.map((runManager, j) =>
-            this._patchConfig(
-              configList[j],
-              runManager?.getChild(`seq:step:${i + 1}`)
-            )
-          ),
+          runManagers.map((runManager, j) => {
+            const childRunManager = runManager?.getChild(`seq:step:${i + 1}`);
+            return patchConfig(configList[j], { callbacks: childRunManager });
+          }),
           batchOptions
         );
       }
-      finalOutputs = await this.last.batch(
-        nextStepInputs,
-        runManagers.map((runManager) =>
-          this._patchConfig(
-            configList[this.steps.length - 1],
-            runManager?.getChild(`seq:step:${this.steps.length}`)
-          )
-        ),
-        batchOptions
-      );
     } catch (e) {
       await Promise.all(
         runManagers.map((runManager) => runManager?.handleChainError(e))
@@ -1351,11 +1338,11 @@ export class RunnableSequence<
       throw e;
     }
     await Promise.all(
-      runManagers.map((runManager, i) =>
-        runManager?.handleChainEnd(_coerceToDict(finalOutputs[i], "output"))
+      runManagers.map((runManager) =>
+        runManager?.handleChainEnd(_coerceToDict(nextStepInputs, "output"))
       )
     );
-    return finalOutputs;
+    return nextStepInputs;
   }
 
   async *_streamIterator(
@@ -1381,13 +1368,17 @@ export class RunnableSequence<
     try {
       let finalGenerator = steps[0].transform(
         inputGenerator(),
-        this._patchConfig(options, runManager?.getChild(`seq:step:1`))
+        patchConfig(options, {
+          callbacks: runManager?.getChild(`seq:step:1`),
+        })
       );
       for (let i = 1; i < steps.length; i += 1) {
         const step = steps[i];
         finalGenerator = await step.transform(
           finalGenerator,
-          this._patchConfig(options, runManager?.getChild(`seq:step:${i + 1}`))
+          patchConfig(options, {
+            callbacks: runManager?.getChild(`seq:step:${i + 1}`),
+          })
         );
       }
       for await (const chunk of finalGenerator) {
@@ -1538,7 +1529,9 @@ export class RunnableMap<
         Object.entries(this.steps).map(async ([key, runnable]) => {
           output[key] = await runnable.invoke(
             input,
-            this._patchConfig(options, runManager?.getChild(`map:key:${key}`))
+            patchConfig(options, {
+              callbacks: runManager?.getChild(`map:key:${key}`),
+            })
           );
         })
       );
@@ -1564,7 +1557,9 @@ export class RunnableMap<
       Object.entries(steps).map(([key, runnable], i) => {
         const gen = runnable.transform(
           inputCopies[i],
-          this._patchConfig(options, runManager?.getChild(`map:key:${key}`))
+          patchConfig(options, {
+            callbacks: runManager?.getChild(`map:key:${key}`),
+          })
         );
         return [key, gen.next().then((result) => ({ key, gen, result }))];
       })
@@ -1654,11 +1649,11 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
       }
       output = await output.invoke(
         input,
-        this._patchConfig(
-          config,
-          runManager?.getChild(),
-          (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1
-        )
+        patchConfig(config, {
+          callbacks: runManager?.getChild(),
+          recursionLimit:
+            (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
+        })
       );
     }
     return output;
@@ -1698,11 +1693,11 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
       }
       const stream = await output.stream(
         finalChunk,
-        this._patchConfig(
-          config,
-          runManager?.getChild(),
-          (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1
-        )
+        patchConfig(config, {
+          callbacks: runManager?.getChild(),
+          recursionLimit:
+            (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
+        })
       );
       for await (const chunk of stream) {
         yield chunk;
@@ -1798,7 +1793,7 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
       try {
         const output = await runnable.invoke(
           input,
-          this._patchConfig(options, runManager?.getChild())
+          patchConfig(options, { callbacks: runManager?.getChild() })
         );
         await runManager?.handleChainEnd(_coerceToDict(output, "output"));
         return output;
@@ -1874,7 +1869,9 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
         const outputs = await runnable.batch(
           inputs,
           runManagers.map((runManager, j) =>
-            this._patchConfig(configList[j], runManager?.getChild())
+            patchConfig(configList[j], {
+              callbacks: runManager?.getChild(),
+            })
           ),
           batchOptions
         );
@@ -1987,7 +1984,7 @@ export class RunnableAssign<
     // create mapper output gen
     const mapperOutput = this.mapper.transform(
       forMapper,
-      this._patchConfig(options, runManager?.getChild())
+      patchConfig(options, { callbacks: runManager?.getChild() })
     );
     // start the mapper
     const firstMapperChunkPromise = mapperOutput.next();

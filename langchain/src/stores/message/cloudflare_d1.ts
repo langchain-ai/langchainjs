@@ -2,5 +2,7 @@ import { logVersion010MigrationWarning } from "../../util/entrypoint_deprecation
 
 /* #__PURE__ */ logVersion010MigrationWarning({
   oldEntrypointName: "stores/message/cloudflare_d1",
+  newEntrypointName: "",
+  newPackageName: "@langchain/cloudflare",
 });
 export * from "@langchain/community/stores/message/cloudflare_d1";
