@@ -9,7 +9,7 @@ import { OutputParserException } from "../../output_parsers/base.js";
 import { StringOutputParser } from "../../output_parsers/string.js";
 import {
   ChatPromptTemplate,
-  SystemMessagePromptTemplate
+  SystemMessagePromptTemplate,
 } from "../../prompts/chat.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import {
@@ -18,7 +18,7 @@ import {
   FakeStreamingLLM,
   FakeSplitIntoListParser,
   FakeRunnable,
-  FakeListChatModel
+  FakeListChatModel,
 } from "../../utils/testing/index.js";
 import { RunnableSequence, RunnableLambda } from "../base.js";
 import { RouterRunnable } from "../router.js";
@@ -94,9 +94,9 @@ test("Callback order with transform streaming", async () => {
           {
             handleChainStart: (chain) =>
               order.push(chain.id[chain.id.length - 1]),
-            handleLLMStart: (llm) => order.push(llm.id[llm.id.length - 1])
-          }
-        ]
+            handleLLMStart: (llm) => order.push(llm.id[llm.id.length - 1]),
+          },
+        ],
       }
     );
   const chunks = [];
@@ -108,7 +108,7 @@ test("Callback order with transform streaming", async () => {
     "RunnableSequence",
     "ChatPromptTemplate",
     "FakeStreamingLLM",
-    "StrOutputParser"
+    "StrOutputParser",
   ]);
   expect(chunks.length).toEqual("Human: Hi there!".length);
   expect(chunks.join("")).toEqual("Human: Hi there!");
@@ -141,7 +141,7 @@ test("Router runnables", async () => {
     "You are an english major. Answer the question: {question}"
   ).pipe(englishLLM);
   const router = new RouterRunnable({
-    runnables: { math: chain1, english: chain2 }
+    runnables: { math: chain1, english: chain2 },
   });
   type RouterChainInput = {
     key: string;
@@ -150,9 +150,9 @@ test("Router runnables", async () => {
   const chain = RunnableSequence.from([
     {
       key: (x: RouterChainInput) => x.key,
-      input: { question: (x: RouterChainInput) => x.question }
+      input: { question: (x: RouterChainInput) => x.question },
     },
-    router
+    router,
   ]);
   const result = await chain.invoke({ key: "math", question: "2 + 2" });
   expect(result).toEqual("I am a math genius!");
@@ -160,12 +160,12 @@ test("Router runnables", async () => {
   const result2 = await chain.batch([
     {
       key: "math",
-      question: "2 + 2"
+      question: "2 + 2",
     },
     {
       key: "english",
-      question: "2 + 2"
-    }
+      question: "2 + 2",
+    },
   ]);
   expect(result2).toEqual(["I am a math genius!", "I am an English genius!"]);
 });
@@ -174,8 +174,8 @@ test("RunnableLambda that returns a runnable should invoke the runnable", async 
   const runnable = new RunnableLambda({
     func: () =>
       new RunnableLambda({
-        func: () => "testing"
-      })
+        func: () => "testing",
+      }),
   });
   const result = await runnable.invoke({});
   expect(result).toEqual("testing");
@@ -183,7 +183,7 @@ test("RunnableLambda that returns a runnable should invoke the runnable", async 
 
 test("RunnableLambda that returns a streaming runnable should stream output from the inner runnable", async () => {
   const runnable = new RunnableLambda({
-    func: () => new FakeStreamingLLM({})
+    func: () => new FakeStreamingLLM({}),
   });
   const stream = await runnable.stream("hello");
   const chunks = [];
@@ -197,7 +197,7 @@ test("RunnableEach", async () => {
   const parser = new FakeSplitIntoListParser();
   expect(await parser.invoke("first item, second item")).toEqual([
     "first item",
-    "second item"
+    "second item",
   ]);
   expect(await parser.map().invoke(["a, b", "c"])).toEqual([["a", "b"], ["c"]]);
   expect(
@@ -210,7 +210,7 @@ test("RunnableEach", async () => {
 
 test("Runnable withConfig", async () => {
   const fake = new FakeRunnable({
-    returnOptions: true
+    returnOptions: true,
   });
   const result = await fake.withConfig({ tags: ["a-tag"] }).invoke("hello");
   expect(result.tags).toEqual(["a-tag"]);
@@ -218,9 +218,9 @@ test("Runnable withConfig", async () => {
     .withConfig({
       metadata: {
         a: "b",
-        b: "c"
+        b: "c",
       },
-      tags: ["a-tag"]
+      tags: ["a-tag"],
     })
     .stream("hi", { tags: ["b-tag"], metadata: { a: "updated" } });
   const chunks = [];
@@ -235,10 +235,10 @@ test("Runnable withConfig", async () => {
 test("Listeners work", async () => {
   const prompt = ChatPromptTemplate.fromMessages([
     SystemMessagePromptTemplate.fromTemplate("You are a nice assistant."),
-    ["human", "{question}"]
+    ["human", "{question}"],
   ]);
   const model = new FakeListChatModel({
-    responses: ["foo"]
+    responses: ["foo"],
   });
   const chain = prompt.pipe(model);
 
@@ -252,7 +252,7 @@ test("Listeners work", async () => {
       },
       onEnd: (run: Run) => {
         mockEnd(run);
-      }
+      },
     })
     .invoke({ question: "What is the meaning of life?" });
 
@@ -266,10 +266,10 @@ test("Listeners work", async () => {
 test("Listeners work with async handlers", async () => {
   const prompt = ChatPromptTemplate.fromMessages([
     SystemMessagePromptTemplate.fromTemplate("You are a nice assistant."),
-    ["human", "{question}"]
+    ["human", "{question}"],
   ]);
   const model = new FakeListChatModel({
-    responses: ["foo"]
+    responses: ["foo"],
   });
   const chain = prompt.pipe(model);
 
@@ -288,7 +288,7 @@ test("Listeners work with async handlers", async () => {
         const promise = new Promise((resolve) => setTimeout(resolve, 2000));
         await promise;
         mockEnd(run);
-      }
+      },
     })
     .invoke({ question: "What is the meaning of life?" });
 
@@ -347,13 +347,13 @@ test("RunnableSequence can pass config to every step in batched request", async 
       numSeen += 1;
     }
     return x + 1;
-  }
+  };
   const addTwo = (x: number, options?: { config?: RunnableConfig }) => {
     if (options?.config?.configurable?.isPresent === true) {
       numSeen += 1;
     }
     return x + 2;
-  }
+  };
   const addThree = (x: number, options?: { config?: RunnableConfig }) => {
     if (options?.config?.configurable?.isPresent === true) {
       numSeen += 1;
@@ -365,8 +365,8 @@ test("RunnableSequence can pass config to every step in batched request", async 
 
   await sequence.batch([1], {
     configurable: {
-      isPresent: true
-    }
+      isPresent: true,
+    },
   });
   expect(numSeen).toBe(3);
 });
