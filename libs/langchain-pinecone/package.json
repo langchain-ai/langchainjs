@@ -1,7 +1,7 @@
 {
   "name": "pinecone",
   "version": "0.0.0",
-  "description": "Sample integration for LangChain.js",
+  "description": "LangChain integration for Pinecone's vector database",
   "type": "module",
   "engines": {
     "node": ">=18"
@@ -29,12 +29,13 @@
     "format": "prettier --write \"src\"",
     "format:check": "prettier --check \"src\""
   },
-  "author": "LangChain",
+  "author": "Pinecone, Inc",
   "license": "MIT",
   "dependencies": {
     "@langchain/core": "~0.1"
   },
   "devDependencies": {
+    "@pinecone-database/pinecone": "^2.0.0",
     "@jest/globals": "^29.5.0",
     "@swc/core": "^1.3.90",
     "@swc/jest": "^0.2.29",

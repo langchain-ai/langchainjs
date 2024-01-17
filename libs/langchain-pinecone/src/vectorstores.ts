@@ -2,14 +2,34 @@ import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 
+import {
+  RecordMetadata,
+  PineconeRecord,
+  Index as PineconeIndex,
+} from "@pinecone-database/pinecone";
+
+import {
+  AsyncCaller,
+  AsyncCallerParams,
+} from "@langchain/core/utils/async_caller";
+
+
+// eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
+type PineconeMetadata = Record<string, any>;
+
 /**
  * Database config for your vectorstore.
  */
-export interface PineconeStoreParams { }
+export interface PineconeStoreParams extends AsyncCallerParams {
+  pineconeIndex: PineconeIndex;
+  textKey?: string;
+  namespace?: string;
+  filter?: PineconeMetadata;
+}
 
 /**
- * Class for managing and operating vector search applications with
- * Tigris, an open-source Serverless NoSQL Database and Search Platform.
+ * Class for managing and operating vector search applications with 
+ * Pinecone, the cloud-native high-scale vector database 
  */
 export class PineconeStore extends VectorStore {
   // Replace
@@ -26,27 +46,10 @@ export class PineconeStore extends VectorStore {
   }
 
   /**
-   * Replace with any secrets this class passes to `super`.
-   * See {@link ../../langchain-cohere/src/chat_model.ts} for
-   * an example.
-   */
-  get lc_secrets(): { [key: string]: string } | undefined {
-    return {
-      apiKey: "API_KEY_NAME",
-    };
-  }
-
-  get lc_aliases(): { [key: string]: string } | undefined {
-    return {
-      apiKey: "API_KEY_NAME",
-    };
-  }
-
-  /**
-   * Method to add an array of documents to the vectorstore.
-   *
-   * Useful to override in case your vectorstore doesn't work directly with embeddings.
-   */
+ * Method to add an array of documents to the vectorstore.
+ *
+ * Useful to override in case your vectorstore doesn't work directly with embeddings.
+ */
   async addDocuments(
     documents: Document[],
     options?: { ids?: string[] } | string[]
