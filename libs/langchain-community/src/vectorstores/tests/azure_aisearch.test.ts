@@ -32,7 +32,7 @@ test("AzureAISearchVectorStore addVectors should upload at max 100 documents up 
   const documents = [];
   const vectors: number[][] = [];
 
-  for (let i = 0; i < 150; i++) {
+  for (let i = 0; i < 150; i += 1) {
     vectors.push(await embeddings.embedQuery(`hello ${i}`));
     documents.push({
       pageContent: `hello ${i}`,
@@ -71,7 +71,7 @@ test("AzureAISearchVectorStore addDocuments should embed at max 16 documents up 
 
   const documents = [];
 
-  for (let i = 0; i < 30; i++) {
+  for (let i = 0; i < 30; i += 1) {
     documents.push({
       pageContent: `hello ${i}`,
       metadata: {

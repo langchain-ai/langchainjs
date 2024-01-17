@@ -1,11 +1,11 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { jest, test, expect } from "@jest/globals";
-import { FakeEmbeddings } from "../../utils/testing.js";
 import { setTimeout } from "timers/promises";
 import { SearchIndexClient, AzureKeyCredential } from "@azure/search-documents";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
+import { FakeEmbeddings } from "../../utils/testing.js";
 import { AzureAISearchVectorStore, AzureAISearchQueryType, AzureAISearchDocumentMetadata } from "../azure_aisearch.js";
 
 const INDEX_NAME = "vectorsearch";

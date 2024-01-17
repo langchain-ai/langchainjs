@@ -143,8 +143,11 @@ export class AzureAISearchVectorStore extends VectorStore {
     this.embeddingBatchSize = config.embeddingBatchSize ?? 16;
 
     if (!config.client) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const credential = new AzureKeyCredential(key!);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       this.client = new SearchClient(endpoint!, this.indexName, credential);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const indexClient = new SearchIndexClient(endpoint!, credential);
 
       // Start initialization, but don't wait for it to finish here
@@ -327,7 +330,7 @@ export class AzureAISearchVectorStore extends VectorStore {
     query: string,
     queryVector?: number[],
     k = 4,
-    filter?: string
+    filter: string | undefined = undefined
   ): Promise<[Document, number][]> {
     const vector = queryVector ?? await this.embeddings.embedQuery(query);
 
@@ -336,7 +339,7 @@ export class AzureAISearchVectorStore extends VectorStore {
       vectorSearchOptions: {
         queries: [{
           kind: "vector",
-          vector: vector,
+          vector,
           kNearestNeighborsCount: k,
           fields: [DEFAULT_FIELD_CONTENT_VECTOR],
         }],
@@ -374,7 +377,7 @@ export class AzureAISearchVectorStore extends VectorStore {
     query: string,
     queryVector?: number[],
     k = 4,
-    filter?: string
+    filter: string | undefined = undefined
   ): Promise<[Document, number][]> {
     const vector = queryVector ?? await this.embeddings.embedQuery(query);
 
@@ -383,7 +386,7 @@ export class AzureAISearchVectorStore extends VectorStore {
       vectorSearchOptions: {
         queries: [{
           kind: "vector",
-          vector: vector,
+          vector,
           kNearestNeighborsCount: k,
           fields: [DEFAULT_FIELD_CONTENT_VECTOR],
         }],
