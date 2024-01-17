@@ -5,7 +5,7 @@ interface Neo4jGraphConfig {
   username: string;
   password: string;
   database?: string;
-  timeout?: number | null;
+  timeout?: number;
 }
 
 interface StructuredSchema {
@@ -58,7 +58,7 @@ export class Neo4jGraph {
     username,
     password,
     database = "neo4j",
-    timeout = null,
+    timeout,
   }: Neo4jGraphConfig) {
     try {
       this.driver = neo4j.driver(url, neo4j.auth.basic(username, password));
