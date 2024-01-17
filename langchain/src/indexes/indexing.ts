@@ -1,10 +1,10 @@
-import crypto from "crypto";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { v5 as uuidv5 } from "uuid";
 import {
   RecordManagerInterface,
   UUID_NAMESPACE,
 } from "@langchain/community/indexes/recordmanagers";
+import { insecureHash } from "@langchain/core/utils/hash";
 import { BaseDocumentLoader } from "../document_loaders/base.js";
 import { Document } from "../document.js";
 
@@ -92,19 +92,13 @@ class HashedDocument extends Document {
   }
 
   private hashStringToUUID(inputString: string): string {
-    const hash_value = crypto
-      .createHash("sha1")
-      .update(inputString, "utf-8")
-      .digest("hex");
+    const hash_value = insecureHash(inputString);
     return uuidv5(hash_value, UUID_NAMESPACE);
   }
 
   private hashNestedDictToUUID(data: Record<string, unknown>): string {
     const serialized_data = JSON.stringify(data, Object.keys(data).sort());
-    const hash_value = crypto
-      .createHash("sha1")
-      .update(serialized_data, "utf-8")
-      .digest("hex");
+    const hash_value = insecureHash(serialized_data);
     return uuidv5(hash_value, UUID_NAMESPACE);
   }
 }
@@ -224,16 +218,15 @@ export async function index(
   docsSource: BaseDocumentLoader | Document[],
   recordManager: RecordManagerInterface,
   vectorStore: VectorStore,
-  options: IndexOptions = {
-    batchSize: 100,
-    cleanup: undefined,
-    sourceIdKey: undefined,
-    cleanupBatchSize: 1000,
-    forceUpdate: false,
-  }
+  options?: IndexOptions
 ): Promise<IndexingResult> {
-  const { batchSize, cleanup, sourceIdKey, cleanupBatchSize, forceUpdate } =
-    options;
+  const {
+    batchSize = 100,
+    cleanup,
+    sourceIdKey,
+    cleanupBatchSize = 1000,
+    forceUpdate = false,
+  } = options ?? {};
 
   if (cleanup === "incremental" && !sourceIdKey) {
     throw new Error(
@@ -254,7 +247,7 @@ export async function index(
   let numUpdated = 0;
   let numSkipped = 0;
 
-  const batches = batch(batchSize, docs);
+  const batches = batch(batchSize ?? 100, docs);
 
   for (const batch of batches) {
     const hashedDocs = deduplicateInOrder(
