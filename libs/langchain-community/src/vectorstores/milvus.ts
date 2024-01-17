@@ -6,6 +6,7 @@ import {
   ErrorCode,
   FieldType,
   ClientConfig,
+  InsertReq,
 } from "@zilliz/milvus2-sdk-node";
 
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
@@ -79,7 +80,7 @@ export class Milvus extends VectorStore {
 
   collectionName: string;
 
-  partitionName: string;
+  partitionName?: string;
 
   numDimensions?: number;
 
@@ -125,7 +126,7 @@ export class Milvus extends VectorStore {
     super(embeddings, args);
     this.embeddings = embeddings;
     this.collectionName = args.collectionName ?? genCollectionName();
-    this.partitionName = args.partitionName ?? "Default partition";
+    this.partitionName = args.partitionName;
     this.textField = args.textField ?? MILVUS_TEXT_FIELD_NAME;
 
     this.autoId = args.autoId ?? true;
@@ -183,7 +184,9 @@ export class Milvus extends VectorStore {
       return;
     }
     await this.ensureCollection(vectors, documents);
-    await this.ensurePartition();
+    if (this.partitionName !== undefined) {
+      await this.ensurePartition();
+    }
 
     const insertDatas: InsertRow[] = [];
     // eslint-disable-next-line no-plusplus
@@ -229,11 +232,14 @@ export class Milvus extends VectorStore {
       insertDatas.push(data);
     }
 
-    const insertResp = await this.client.insert({
+    const params: InsertReq = {
       collection_name: this.collectionName,
-      partition_name: this.partitionName,
       fields_data: insertDatas,
-    });
+    };
+    if (this.partitionName !== undefined) {
+      params.partition_name = this.partitionName;
+    }
+    const insertResp = await this.client.insert(params);
     if (insertResp.status.error_code !== ErrorCode.SUCCESS) {
       throw new Error(`Error inserting data: ${JSON.stringify(insertResp)}`);
     }
@@ -355,6 +361,9 @@ export class Milvus extends VectorStore {
    * @returns Promise resolving to void.
    */
   async ensurePartition() {
+    if (this.partitionName === undefined) {
+      return;
+    }
     const hasPartResp = await this.client.hasPartition({
       collection_name: this.collectionName,
       partition_name: this.partitionName,
@@ -522,7 +531,6 @@ export class Milvus extends VectorStore {
     const args: MilvusLibArgs = {
       ...dbConfig,
       collectionName: dbConfig?.collectionName ?? genCollectionName(),
-      partitionName: dbConfig?.partitionName ?? "Default partition",
     };
     const instance = new this(embeddings, args);
     await instance.addDocuments(docs);
