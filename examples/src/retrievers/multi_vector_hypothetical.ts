@@ -57,12 +57,9 @@ const chain = RunnableSequence.from([
   new JsonKeyOutputFunctionsParser<string[]>({ attrName: "questions" }),
 ]);
 
-const hypotheticalQuestions = await chain.batch(
-  docs,
-  {
-    maxConcurrency: 5,
-  },
-);
+const hypotheticalQuestions = await chain.batch(docs, {
+  maxConcurrency: 5,
+});
 
 const idKey = "doc_id";
 const docIds = docs.map((_) => uuid.v4());
