@@ -966,7 +966,7 @@ export class RunnableEach<
 
   /**
    * Binds the runnable with the specified arguments.
-   * @param args The arguments to bind the runnable with.
+   * @param kwargs The arguments to bind the runnable with.
    * @returns A new instance of the `RunnableEach` class that is bound with the specified arguments.
    */
   bind(kwargs: Partial<CallOptions>) {
@@ -1335,32 +1335,18 @@ export class RunnableSequence<
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let nextStepInputs: any = inputs;
-    let finalOutputs: (RunOutput | Error)[];
     try {
-      const initialSteps = [this.first, ...this.middle];
-      for (let i = 0; i < initialSteps.length; i += 1) {
-        const step = initialSteps[i];
+      for (let i = 0; i < this.steps.length; i += 1) {
+        const step = this.steps[i];
         nextStepInputs = await step.batch(
           nextStepInputs,
-          runManagers.map((runManager, j) =>
-            this._patchConfig(
-              configList[j],
-              runManager?.getChild(`seq:step:${i + 1}`)
-            )
-          ),
+          runManagers.map((runManager, j) => {
+            const childRunManager = runManager?.getChild(`seq:step:${i + 1}`);
+            return this._patchConfig(configList[j], childRunManager);
+          }),
           batchOptions
         );
       }
-      finalOutputs = await this.last.batch(
-        nextStepInputs,
-        runManagers.map((runManager) =>
-          this._patchConfig(
-            configList[this.steps.length - 1],
-            runManager?.getChild(`seq:step:${this.steps.length}`)
-          )
-        ),
-        batchOptions
-      );
     } catch (e) {
       await Promise.all(
         runManagers.map((runManager) => runManager?.handleChainError(e))
@@ -1368,11 +1354,11 @@ export class RunnableSequence<
       throw e;
     }
     await Promise.all(
-      runManagers.map((runManager, i) =>
-        runManager?.handleChainEnd(_coerceToDict(finalOutputs[i], "output"))
+      runManagers.map((runManager) =>
+        runManager?.handleChainEnd(_coerceToDict(nextStepInputs, "output"))
       )
     );
-    return finalOutputs;
+    return nextStepInputs;
   }
 
   async *_streamIterator(
