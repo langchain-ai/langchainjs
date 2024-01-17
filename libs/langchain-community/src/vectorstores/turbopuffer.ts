@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from "uuid";
 import { type DocumentInterface, Document } from "@langchain/core/documents";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import {
@@ -7,13 +8,6 @@ import {
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { VectorStore } from "@langchain/core/vectorstores";
-
-export interface TurbopufferHeaders {
-  headers: {
-    Authorization: string;
-    "Content-Type": string;
-  };
-}
 
 export type TurbopufferDistanceMetric = "cosine_distance" | "euclidean_squared";
 
@@ -103,103 +97,120 @@ export class TurbopufferVectorStore extends VectorStore {
     });
   }
 
-  getJsonHeader(): TurbopufferHeaders {
+  defaultHeaders() {
     return {
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        "Content-Type": "application/json",
-      },
+      Authorization: `Bearer ${this.apiKey}`,
+      "Content-Type": "application/json",
     };
   }
 
-  async callWithRetry(fetchUrl: string, stringifiedBody: string) {
-    const response = await this.caller.call(async () =>
-      fetch(fetchUrl, {
-        method: "POST",
-        headers: this.getJsonHeader().headers,
+  async callWithRetry(fetchUrl: string, stringifiedBody: string | undefined, method: string = "POST") {
+    const json = await this.caller.call(async () => {
+      const headers: Record<string, string> = {
+        Authorization: `Bearer ${this.apiKey}`,
+      };
+      if (stringifiedBody !== undefined) {
+        headers["Content-Type"] = "application/json";
+      }
+      const response = await fetch(fetchUrl, {
+        method,
+        headers,
         body: stringifiedBody,
-      })
-    );
-    return response;
+      });
+      if (response.status !== 200) {
+        const error = new Error(
+          `Failed to call turbopuffer. Response status ${
+            response.status
+          }\nFull response: ${await response.text()}`
+        );
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (error as any).response = response;
+        throw error;
+      }
+      return response.json();
+    });
+    
+    return json;
   }
 
   async addVectors(
     vectors: number[][],
     documents: DocumentInterface[],
-    options?: { ids?: number[] }
-  ): Promise<void> {
-    try {
-      if (options?.ids && options.ids.length !== vectors.length) {
+    options?: { ids?: string[] }
+  ): Promise<string[]> {
+    if (options?.ids && options.ids.length !== vectors.length) {
+      throw new Error(
+        "Number of ids provided does not match number of vectors"
+      );
+    }
+
+    if (documents.length !== vectors.length) {
+      throw new Error(
+        "Number of documents provided does not match number of vectors"
+      );
+    }
+
+    if (documents.length === 0) {
+      throw new Error("No documents provided");
+    }
+
+    const batchedVectors: number[][][] = chunkArray(vectors, this.batchSize);
+    const batchedDocuments: DocumentInterface[][] = chunkArray(documents, this.batchSize);
+    const batchedIds = options?.ids
+      ? chunkArray(options.ids, this.batchSize)
+      : batchedDocuments.map((docs) =>
+          docs.map((_) => uuidv4())
+        );
+
+    const batchRequests = batchedVectors.map(async (batchVectors, index) => {
+      const batchDocs = batchedDocuments[index];
+      const batchIds = batchedIds[index];
+
+      if (batchIds.length !== batchVectors.length) {
         throw new Error(
           "Number of ids provided does not match number of vectors"
         );
       }
 
-      if (documents.length !== vectors.length) {
-        throw new Error(
-          "Number of documents provided does not match number of vectors"
-        );
-      }
+      const attributes = {
+        __lc_page_content: batchDocs.map((doc) => doc.pageContent),
+        // TODO: Fix metadata
+        metadata: batchDocs.map((doc) => JSON.stringify(doc.metadata ?? {})),
+      };
 
-      if (documents.length === 0) {
-        throw new Error("No documents provided");
-      }
+      const data = {
+        ids: batchIds,
+        vectors: batchVectors,
+        attributes,
+      };
 
-      const batchedVectors = chunkArray(vectors, this.batchSize);
-      const batchedDocuments = chunkArray(documents, this.batchSize);
-      const batchedIds = options?.ids
-        ? chunkArray(options.ids, this.batchSize)
-        : batchedDocuments.map((docs, index) =>
-            docs.map((_, docIndex) => index * this.batchSize + docIndex)
-          );
+      return this.callWithRetry(
+        `${this.apiUrl}/vectors/${this.namespace}`,
+        JSON.stringify(data)
+      );
+    });
 
-      const batchRequests = batchedVectors.map(async (batchVectors, index) => {
-        const batchDocs = batchedDocuments[index];
-        const batchIds = batchedIds[index];
-
-        if (batchIds.length !== batchVectors.length) {
-          throw new Error(
-            "Number of ids provided does not match number of vectors"
-          );
-        }
-
-        const attributes = {
-          pageContent: batchDocs.map((doc) => doc.pageContent),
-          metadata: batchDocs.map((doc) => JSON.stringify(doc.metadata ?? {})),
-        };
-
-        const data = {
-          ids: batchIds,
-          vectors: batchVectors,
-          attributes,
-        };
-
-        const response = await this.callWithRetry(
-          `${this.apiUrl}/vectors/${this.namespace}`,
-          JSON.stringify(data)
-        );
-
-        if (response.status !== 200) {
-          throw new Error(
-            `Failed to add vectors to Turbopuffer. Response status ${
-              response.status
-            }\nFull response: ${await response.text()}`
-          );
-        }
-      });
-
-      // Execute all batch requests in parallel
-      await Promise.all(batchRequests);
-    } catch (error) {
-      console.error("Error storing vectors:", error);
-      throw error;
+    // Execute all batch requests in parallel
+    await Promise.all(batchRequests);
+    return batchedIds.flat();
+  }
+  
+  async delete(params: {deleteIndex?: boolean}): Promise<void> {
+    if (params.deleteIndex) {
+      await this.callWithRetry(
+        `${this.apiUrl}/vectors/${this.namespace}`,
+        undefined,
+        "DELETE",
+      );
+    } else {
+      throw new Error(`You must provide a "deleteIndex" flag.`);
     }
   }
 
   async addDocuments(
     documents: DocumentInterface[],
-    options?: { ids?: number[] }
-  ): Promise<void> {
+    options?: { ids?: string[] }
+  ): Promise<string[]> {
     const vectors = await this.embeddings.embedDocuments(
       documents.map((doc) => doc.pageContent)
     );
@@ -224,21 +235,10 @@ export class TurbopufferVectorStore extends VectorStore {
       include_vectors: includeVector,
     };
 
-    const response = await this.callWithRetry(
+    return this.callWithRetry(
       `${this.apiUrl}/vectors/${this.namespace}/query`,
       JSON.stringify(data)
     );
-    if (response.status !== 200) {
-      throw new Error(
-        `Failed to query vectors from Turbopuffer. Response status ${
-          response.status
-        }\nFull response: ${await response.text()}`
-      );
-    }
-
-    const json = await response.json();
-    console.log(json);
-    return json;
   }
 
   async similaritySearchVectorWithScore(
@@ -254,7 +254,6 @@ export class TurbopufferVectorStore extends VectorStore {
       false,
       filter
     );
-    console.log("search", JSON.stringify(search, null, 2));
     const result: [DocumentInterface, number][] = search.map((res) => [
       new Document({
         pageContent: res.attributes.pageContent,

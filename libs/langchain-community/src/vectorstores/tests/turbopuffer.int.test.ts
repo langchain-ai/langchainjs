@@ -5,6 +5,17 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 import { TurbopufferVectorStore } from "../turbopuffer.js";
 
+beforeEach(async () => {
+  const embeddings = new OpenAIEmbeddings();
+  const store = new TurbopufferVectorStore(embeddings, {
+    apiKey: getEnvironmentVariable("TURBOPUFFER_API_KEY"),
+    namespace: "langchain-js-testing",
+  });
+  await store.delete({
+    deleteIndex: true,
+  })
+});
+
 test("similaritySearchVectorWithScore", async () => {
   const embeddings = new OpenAIEmbeddings();
 
@@ -36,7 +47,7 @@ test("similaritySearchVectorWithScore", async () => {
   ]);
 });
 
-test.only("similaritySearchVectorWithScore with a passed filter", async () => {
+test("similaritySearchVectorWithScore with a passed filter", async () => {
   const embeddings = new OpenAIEmbeddings();
 
   const store = new TurbopufferVectorStore(embeddings, {

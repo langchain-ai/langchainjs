@@ -10,7 +10,7 @@ const store = new TurbopufferVectorStore(embeddings, {
 
 const createdAt = new Date().getTime();
 // Add some documents to your store
-await store.addDocuments([
+const ids = await store.addDocuments([
   { pageContent: createdAt.toString(), metadata: { a: createdAt } },
   { pageContent: "hi", metadata: { a: createdAt } },
   { pageContent: "bye", metadata: { a: createdAt } },
