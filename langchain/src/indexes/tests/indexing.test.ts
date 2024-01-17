@@ -5,6 +5,17 @@ import { type PoolConfig } from "pg";
 
 import { FakeEmbeddings } from "../../embeddings/fake.js";
 import { index } from "../indexing.js";
+import { BaseDocumentLoader } from "../../document_loaders/base.js";
+
+class MockLoader extends BaseDocumentLoader {
+  constructor(public docs: Document[]) {
+    super();
+  }
+
+  async load(): Promise<Document[]> {
+    return this.docs;
+  }
+}
 
 describe("Indexing API", () => {
   let recordManager: InMemoryRecordManager;
@@ -300,5 +311,42 @@ describe("Indexing API", () => {
     expect(secondIndexingResult.numAdded).toEqual(0);
     expect(secondIndexingResult.numDeleted).toEqual(0);
     expect(secondIndexingResult.numUpdated).toEqual(3);
+  });
+
+  test("Test indexing with duplicate documents", async () => {
+    const docs: Document[] = [
+      {
+        pageContent: "Document 1 Content",
+        metadata: { source: "test" },
+      },
+      {
+        pageContent: "Document 1 Content",
+        metadata: { source: "test" },
+      },
+    ];
+
+    const indexingResult = await index(docs, recordManager, vectorstore);
+
+    expect(indexingResult.numAdded).toEqual(1);
+    expect(indexingResult.numSkipped).toEqual(0);
+  });
+
+  test("Test indexing with doc loader", async () => {
+    const mockLoader = new MockLoader([
+      {
+        pageContent: "Document 1 Content",
+        metadata: { source: "test" },
+      },
+      {
+        pageContent: "Document 2 Content",
+        metadata: { source: "test" },
+      },
+      {
+        pageContent: "Document 3 Content",
+        metadata: { source: "test" },
+      },
+    ]);
+    const indexingResult = await index(mockLoader, recordManager, vectorstore);
+    expect(indexingResult.numAdded).toEqual(3);
   });
 });
