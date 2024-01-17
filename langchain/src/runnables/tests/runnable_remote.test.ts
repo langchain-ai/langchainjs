@@ -81,7 +81,7 @@ data: {"content": "", "additional_kwargs": {}, "type": "ai", "example": false, "
 event: end`;
 
 describe("RemoteRunnable", () => {
-  beforeAll(() => {
+  beforeEach(() => {
     // mock langserve service
     const returnDataByEndpoint: Record<string, BodyInit> = {
       "/a/invoke": JSON.stringify({ output: ["a", "b", "c"] }),
@@ -107,7 +107,7 @@ describe("RemoteRunnable", () => {
       }) as any;
   });
 
-  afterAll(() => {
+  afterEach(() => {
     jest.clearAllMocks();
   });
 
