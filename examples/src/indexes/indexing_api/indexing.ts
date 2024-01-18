@@ -7,9 +7,6 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { CharacterTextSplitter } from "langchain/text_splitter";
 import { BaseDocumentLoader } from "langchain/document_loaders/base";
 
-// See python version for more details
-// https://python.langchain.com/docs/modules/data_connection/indexing
-
 // First, follow set-up instructions at
 // https://js.langchain.com/docs/modules/indexes/vector_stores/integrations/pgvector
 
