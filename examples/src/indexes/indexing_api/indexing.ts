@@ -4,6 +4,8 @@ import { index } from "langchain/indexes";
 import { PGVectorStore } from "@langchain/community/vectorstores/pgvector";
 import { PoolConfig } from "pg";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { CharacterTextSplitter } from "langchain/text_splitter";
+import { BaseDocumentLoader } from "langchain/document_loaders/base";
 
 // See python version for more details
 // https://python.langchain.com/docs/modules/data_connection/indexing
@@ -300,5 +302,131 @@ console.log(
     }
 */
 
+await clear();
+
+const newDoc1 = {
+  pageContent: "kitty kitty kitty kitty kitty",
+  metadata: { source: "kitty.txt" },
+};
+
+const newDoc2 = {
+  pageContent: "doggy doggy the doggy",
+  metadata: { source: "doggy.txt" },
+};
+
+const splitter = new CharacterTextSplitter({
+  separator: "t",
+  keepSeparator: true,
+  chunkSize: 12,
+  chunkOverlap: 2,
+});
+
+const newDocs = await splitter.splitDocuments([newDoc1, newDoc2]);
+console.log(newDocs);
+/*
+[
+  {
+    pageContent: 'kitty kit',
+    metadata: {source: 'kitty.txt'}
+  },
+  {
+    pageContent: 'tty kitty ki',
+    metadata: {source: 'kitty.txt'}
+  },
+  {
+    pageContent: 'tty kitty',
+    metadata: {source: 'kitty.txt'},
+  },
+  {
+    pageContent: 'doggy doggy',
+    metadata: {source: 'doggy.txt'},
+  {
+    pageContent: 'the doggy',
+    metadata: {source: 'doggy.txt'},
+  }
+]
+*/
+
+console.log(
+  await index(newDocs, recordManager, vectorstore, {
+    cleanup: "incremental",
+    sourceIdKey: "source",
+  })
+);
+/*
+{
+    numAdded: 5,
+    numUpdated: 0,
+    numDeleted: 0,
+    numSkipped: 0,
+}
+*/
+
+const changedDoggyDocs = [
+  {
+    pageContent: "woof woof",
+    metadata: { source: "doggy.txt" },
+  },
+  {
+    pageContent: "woof woof woof",
+    metadata: { source: "doggy.txt" },
+  },
+];
+
+console.log(
+  await index(changedDoggyDocs, recordManager, vectorstore, {
+    cleanup: "incremental",
+    sourceIdKey: "source",
+  })
+);
+
+/*
+{
+    numAdded: 2,
+    numUpdated: 0,
+    numDeleted: 2,
+    numSkipped: 0,
+}
+*/
+
+// Usage with document loaders
+
+// Create a document loader
+class MyCustomDocumentLoader extends BaseDocumentLoader {
+  load() {
+    return Promise.resolve([
+      {
+        pageContent: "kitty",
+        metadata: { source: "kitty.txt" },
+      },
+      {
+        pageContent: "doggy",
+        metadata: { source: "doggy.txt" },
+      },
+    ]);
+  }
+}
+
+await clear();
+
+const loader = new MyCustomDocumentLoader();
+
+console.log(
+  await index(loader, recordManager, vectorstore, {
+    cleanup: "incremental",
+    sourceIdKey: "source",
+  })
+);
+
+/*
+{
+    numAdded: 2,
+    numUpdated: 0,
+    numDeleted: 0,
+    numSkipped: 0,
+}
+*/
+
+// Closing resources
 await recordManager.end();
 await vectorstore.end();
