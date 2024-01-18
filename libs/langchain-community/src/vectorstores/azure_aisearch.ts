@@ -171,7 +171,7 @@ export class AzureAISearchVectorStore extends VectorStore {
    * @param filter OData filter to find documents to delete.
    * @returns A promise that resolves when the documents have been removed.
    */
-  async deleteMany(filter: string): Promise<void> {
+  async deleteMany(filter: string): Promise<IndexingResult[]> {
     const { results } = await this.client.search("*", {
       filter,
     });
@@ -181,11 +181,15 @@ export class AzureAISearchVectorStore extends VectorStore {
       docs.push(item.document);
     }
 
+    const deleteResults: IndexingResult[] = [];
     const bufferedClient =
       new SearchIndexingBufferedSender<AzureAISearchDocument>(
         this.client,
         (entity) => entity.id
       );
+    bufferedClient.on("batchSucceeded", (response) => {
+      deleteResults.push(...response.results);
+    });
     bufferedClient.on("batchFailed", (response) => {
       throw new Error(
         `Azure AI Search deleteDocuments batch failed: ${response}`
@@ -195,6 +199,8 @@ export class AzureAISearchVectorStore extends VectorStore {
     await bufferedClient.deleteDocuments(docs);
     await bufferedClient.flush();
     await bufferedClient.dispose();
+
+    return deleteResults;
   }
 
   /**
