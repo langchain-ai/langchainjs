@@ -15,7 +15,7 @@ test("WeaviateStore", async () => {
     host: process.env.WEAVIATE_HOST || "localhost:8080",
     apiKey: process.env.WEAVIATE_API_KEY
       ? new ApiKey(process.env.WEAVIATE_API_KEY)
-      : undefined
+      : undefined,
   });
 
   const store = await WeaviateStore.fromTexts(
@@ -26,24 +26,24 @@ test("WeaviateStore", async () => {
       client,
       indexName: "Test",
       textKey: "text",
-      metadataKeys: ["foo"]
+      metadataKeys: ["foo"],
     }
   );
 
   const results = await store.similaritySearch("hello world", 1);
   expect(results).toEqual([
-    new Document({ pageContent: "hello world", metadata: { foo: "bar" } })
+    new Document({ pageContent: "hello world", metadata: { foo: "bar" } }),
   ]);
 
   const results2 = await store.similaritySearch("hello world", 1, {
     where: {
       operator: "Equal",
       path: ["foo"],
-      valueText: "baz"
-    }
+      valueText: "baz",
+    },
   });
   expect(results2).toEqual([
-    new Document({ pageContent: "hi there", metadata: { foo: "baz" } })
+    new Document({ pageContent: "hi there", metadata: { foo: "baz" } }),
   ]);
 
   const testDocumentWithObjectMetadata = new Document({
@@ -52,10 +52,10 @@ test("WeaviateStore", async () => {
       deep: {
         string: "deep string",
         deepdeep: {
-          string: "even a deeper string"
-        }
-      }
-    }
+          string: "even a deeper string",
+        },
+      },
+    },
   });
   const documentStore = await WeaviateStore.fromDocuments(
     [testDocumentWithObjectMetadata],
@@ -64,7 +64,7 @@ test("WeaviateStore", async () => {
       client,
       indexName: "DocumentTest",
       textKey: "text",
-      metadataKeys: ["deep_string", "deep_deepdeep_string"]
+      metadataKeys: ["deep_string", "deep_deepdeep_string"],
     }
   );
 
@@ -75,8 +75,8 @@ test("WeaviateStore", async () => {
       where: {
         operator: "Equal",
         path: ["deep_string"],
-        valueText: "deep string"
-      }
+        valueText: "deep string",
+      },
     }
   );
   expect(result3).toEqual([
@@ -84,9 +84,9 @@ test("WeaviateStore", async () => {
       pageContent: "this is the deep document world!",
       metadata: {
         deep_string: "deep string",
-        deep_deepdeep_string: "even a deeper string"
-      }
-    })
+        deep_deepdeep_string: "even a deeper string",
+      },
+    }),
   ]);
 });
 
@@ -100,7 +100,7 @@ test("WeaviateStore upsert + delete", async () => {
     host: process.env.WEAVIATE_HOST || "localhost:8080",
     apiKey: process.env.WEAVIATE_API_KEY
       ? new ApiKey(process.env.WEAVIATE_API_KEY)
-      : undefined
+      : undefined,
   });
 
   const createdAt = new Date().getTime();
@@ -108,57 +108,57 @@ test("WeaviateStore upsert + delete", async () => {
     [
       new Document({
         pageContent: "testing",
-        metadata: { deletionTest: createdAt.toString() }
-      })
+        metadata: { deletionTest: createdAt.toString() },
+      }),
     ],
     new OpenAIEmbeddings(),
     {
       client,
       indexName: "DocumentTest",
       textKey: "pageContent",
-      metadataKeys: ["deletionTest"]
+      metadataKeys: ["deletionTest"],
     }
   );
 
   const ids = await store.addDocuments([
     {
       pageContent: "hello world",
-      metadata: { deletionTest: (createdAt + 1).toString() }
+      metadata: { deletionTest: (createdAt + 1).toString() },
     },
     {
       pageContent: "hello world",
-      metadata: { deletionTest: (createdAt + 1).toString() }
-    }
+      metadata: { deletionTest: (createdAt + 1).toString() },
+    },
   ]);
 
   const results = await store.similaritySearch("hello world", 4, {
     where: {
       operator: "Equal",
       path: ["deletionTest"],
-      valueText: (createdAt + 1).toString()
-    }
+      valueText: (createdAt + 1).toString(),
+    },
   });
   expect(results).toEqual([
     new Document({
       pageContent: "hello world",
-      metadata: { deletionTest: (createdAt + 1).toString() }
+      metadata: { deletionTest: (createdAt + 1).toString() },
     }),
     new Document({
       pageContent: "hello world",
-      metadata: { deletionTest: (createdAt + 1).toString() }
-    })
+      metadata: { deletionTest: (createdAt + 1).toString() },
+    }),
   ]);
 
   const ids2 = await store.addDocuments(
     [
       {
         pageContent: "hello world upserted",
-        metadata: { deletionTest: (createdAt + 1).toString() }
+        metadata: { deletionTest: (createdAt + 1).toString() },
       },
       {
         pageContent: "hello world upserted",
-        metadata: { deletionTest: (createdAt + 1).toString() }
-      }
+        metadata: { deletionTest: (createdAt + 1).toString() },
+      },
     ],
     { ids }
   );
@@ -169,18 +169,18 @@ test("WeaviateStore upsert + delete", async () => {
     where: {
       operator: "Equal",
       path: ["deletionTest"],
-      valueText: (createdAt + 1).toString()
-    }
+      valueText: (createdAt + 1).toString(),
+    },
   });
   expect(results2).toEqual([
     new Document({
       pageContent: "hello world upserted",
-      metadata: { deletionTest: (createdAt + 1).toString() }
+      metadata: { deletionTest: (createdAt + 1).toString() },
     }),
     new Document({
       pageContent: "hello world upserted",
-      metadata: { deletionTest: (createdAt + 1).toString() }
-    })
+      metadata: { deletionTest: (createdAt + 1).toString() },
+    }),
   ]);
 
   await store.delete({ ids: ids.slice(0, 1) });
@@ -189,14 +189,14 @@ test("WeaviateStore upsert + delete", async () => {
     where: {
       operator: "Equal",
       path: ["deletionTest"],
-      valueText: (createdAt + 1).toString()
-    }
+      valueText: (createdAt + 1).toString(),
+    },
   });
   expect(results3).toEqual([
     new Document({
       pageContent: "hello world upserted",
-      metadata: { deletionTest: (createdAt + 1).toString() }
-    })
+      metadata: { deletionTest: (createdAt + 1).toString() },
+    }),
   ]);
 });
 
@@ -209,7 +209,7 @@ test("WeaviateStore delete with filter", async () => {
     host: process.env.WEAVIATE_HOST || "localhost:8080",
     apiKey: process.env.WEAVIATE_API_KEY
       ? new ApiKey(process.env.WEAVIATE_API_KEY)
-      : undefined
+      : undefined,
   });
 
   const store = await WeaviateStore.fromTexts(
@@ -220,28 +220,28 @@ test("WeaviateStore delete with filter", async () => {
       client,
       indexName: "FilterDeletionTest",
       textKey: "text",
-      metadataKeys: ["foo"]
+      metadataKeys: ["foo"],
     }
   );
   const results = await store.similaritySearch("hello world", 1);
   expect(results).toEqual([
-    new Document({ pageContent: "hello world", metadata: { foo: "bar" } })
+    new Document({ pageContent: "hello world", metadata: { foo: "bar" } }),
   ]);
   await store.delete({
     filter: {
       where: {
         operator: "Equal",
         path: ["foo"],
-        valueText: "bar"
-      }
-    }
+        valueText: "bar",
+      },
+    },
   });
   const results2 = await store.similaritySearch("hello world", 1, {
     where: {
       operator: "Equal",
       path: ["foo"],
-      valueText: "bar"
-    }
+      valueText: "bar",
+    },
   });
   expect(results2).toEqual([]);
 });
