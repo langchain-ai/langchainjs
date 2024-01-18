@@ -57,7 +57,7 @@ export const flattenObjectForWeaviate = (
 
 /**
  * @deprecated Prefer the `@langchain/weaviate` package.
- * 
+ *
  * Interface that defines the arguments required to create a new instance
  * of the `WeaviateStore` class. It includes the Weaviate client, the name
  * of the class in Weaviate, and optional keys for text and metadata.
@@ -80,7 +80,7 @@ interface ResultRow {
 
 /**
  * @deprecated Prefer the `@langchain/weaviate` package.
- * 
+ *
  * Interface that defines a filter for querying data from Weaviate. It
  * includes a distance and a `WhereFilter`.
  */
@@ -91,7 +91,7 @@ export interface WeaviateFilter {
 
 /**
  * @deprecated Prefer the `@langchain/weaviate` package.
- * 
+ *
  * Class that extends the `VectorStore` base class. It provides methods to
  * interact with a Weaviate index, including adding vectors and documents,
  * deleting data, and performing similarity searches.
