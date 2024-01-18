@@ -18,14 +18,18 @@ function main() {
   const workspaces = fs
     .readdirSync("../../libs/")
     .filter((dir) => dir.startsWith("langchain-"))
-    .map((dir) => path.join("../../libs/", dir, "/scripts/create-entrypoints.js"));
+    .map((dir) =>
+      path.join("../../libs/", dir, "/scripts/create-entrypoints.js")
+    );
   const entrypointFiles = [
     "../../langchain/scripts/create-entrypoints.js",
     "../../langchain-core/scripts/create-entrypoints.js",
     ...workspaces,
   ];
   /** @type {Array<string>} */
-  const blacklistedEntrypoints = JSON.parse(fs.readFileSync("./blacklisted-entrypoints.json"));
+  const blacklistedEntrypoints = JSON.parse(
+    fs.readFileSync("./blacklisted-entrypoints.json")
+  );
 
   const entrypoints = new Set([]);
   entrypointFiles.forEach((entrypointFile) => {
@@ -66,7 +70,13 @@ function main() {
 
     Object.values(entrypointsObject)
       .filter((key) => !deprecatedNodeOnly.includes(key))
-      .filter((key) => !blacklistedEntrypoints.find((blacklistedItem) => blacklistedItem === `${entrypointDir}/src/${key}.ts`))
+      .filter(
+        (key) =>
+          !blacklistedEntrypoints.find(
+            (blacklistedItem) =>
+              blacklistedItem === `${entrypointDir}/src/${key}.ts`
+          )
+      )
       .map((key) => entrypoints.add(`${entrypointDir}/src/${key}.ts`));
   });
 
