@@ -140,9 +140,9 @@ export class AzureAISearchVectorStore extends VectorStore {
       config.endpoint ?? getEnvironmentVariable("AZURE_AISEARCH_ENDPOINT");
     const key = config.key ?? getEnvironmentVariable("AZURE_AISEARCH_KEY");
 
-    if (!config.client && !endpoint && !key) {
+    if (!config.client && (!endpoint || !key)) {
       throw new Error(
-        "Azure AI Search client or connection string must be set."
+        "Azure AI Search client or endpoint and key must be set."
       );
     }
 
