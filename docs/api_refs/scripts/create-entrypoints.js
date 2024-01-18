@@ -101,10 +101,7 @@ function main() {
 
   // Check if the `./typedoc.json` file exists, since it is gitignored by default
   if (!fs.existsSync("./typedoc.json")) {
-    console.log("Doesnt exist!!")
     fs.writeFileSync("./typedoc.json", "{}\n");
-  } else {
-    console.log("does exist, no-op")
   }
 
   updateJsonFile("./typedoc.json", () => ({
