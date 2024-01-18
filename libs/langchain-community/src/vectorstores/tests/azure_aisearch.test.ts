@@ -26,7 +26,6 @@ test("AzureAISearchVectorStore addVectors should upload at max 100 documents up 
     search: {
       type: "similarity",
     },
-    chunkSize: 100,
   });
 
   expect(store).toBeDefined();
