@@ -60,6 +60,8 @@ function getAnthropicPromptFromMessage(message: BaseMessage): string {
       return HUMAN_PROMPT;
     case "system":
       return "";
+    case "function":
+      return HUMAN_PROMPT;
     case "generic": {
       if (!ChatMessage.isInstance(message))
         throw new Error("Invalid generic chat message");
