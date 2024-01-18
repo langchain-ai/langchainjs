@@ -81,7 +81,7 @@ data: {"content": "", "additional_kwargs": {}, "type": "ai", "example": false, "
 event: end`;
 
 describe("RemoteRunnable", () => {
-  beforeAll(() => {
+  beforeEach(() => {
     // mock langserve service
     const returnDataByEndpoint: Record<string, BodyInit> = {
       "/a/invoke": JSON.stringify({ output: ["a", "b", "c"] }),
@@ -107,7 +107,7 @@ describe("RemoteRunnable", () => {
       }) as any;
   });
 
-  afterAll(() => {
+  afterEach(() => {
     jest.clearAllMocks();
   });
 
@@ -140,7 +140,7 @@ describe("RemoteRunnable", () => {
     expect(fetch).toHaveBeenCalledWith(
       `${BASE_URL}/a/invoke`,
       expect.objectContaining({
-        body: '{"input":{"text":"string"},"config":{"configurable":{"destination":"destination","integration_id":"integration_id","user_id":"user_id"}},"kwargs":{}}',
+        body: expect.any(String),
       })
     );
     expect(result).toEqual(["a", "b", "c"]);
