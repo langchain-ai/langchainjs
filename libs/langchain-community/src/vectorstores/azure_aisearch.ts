@@ -533,7 +533,7 @@ export class AzureAISearchVectorStore extends VectorStore {
       await indexClient.getIndex(this.indexName);
     } catch (e) {
       // Index does not exists, create it
-      const searchIndex = this.createSearchIndexDefinition(this.indexName);
+      const searchIndex = await this.createSearchIndexDefinition(this.indexName);
       await indexClient.createIndex(searchIndex);
     }
   }
@@ -544,7 +544,10 @@ export class AzureAISearchVectorStore extends VectorStore {
    * @returns The SearchIndex object.
    * @protected
    */
-  protected createSearchIndexDefinition(indexName: string): SearchIndex {
+  protected async createSearchIndexDefinition(indexName: string): Promise<SearchIndex> {
+    // Embed a test query to get the embedding dimensions
+    const testEmbedding = await this.embeddings.embedQuery("test");
+    const embeddingDimensions = testEmbedding.length;
     return {
       name: indexName,
       vectorSearch: {
@@ -604,7 +607,7 @@ export class AzureAISearchVectorStore extends VectorStore {
           name: DEFAULT_FIELD_CONTENT_VECTOR,
           searchable: true,
           type: "Collection(Edm.Single)",
-          vectorSearchDimensions: 1536,
+          vectorSearchDimensions: embeddingDimensions,
           vectorSearchProfileName: "vector-search-profile",
         },
         {
