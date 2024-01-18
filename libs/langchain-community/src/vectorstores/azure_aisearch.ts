@@ -210,11 +210,29 @@ export class AzureAISearchVectorStore extends VectorStore {
    */
   async deleteById(ids: string | string[]): Promise<IndexingResult[]> {
     await this.initPromise;
-    const { results } = await this.client.deleteDocuments(
-      DEFAULT_FIELD_ID,
-      Array.isArray(ids) ? ids : [ids]
+
+    const docsIds = Array.isArray(ids) ? ids : [ids];
+    const docs: { id: string }[] = docsIds.map((id) => ({ id }));
+
+    const deleteResults: IndexingResult[] = [];
+    const bufferedClient = new SearchIndexingBufferedSender<{ id: string }>(
+      this.client,
+      (entity) => entity.id
     );
-    return results;
+    bufferedClient.on("batchSucceeded", (response) => {
+      deleteResults.push(...response.results);
+    });
+    bufferedClient.on("batchFailed", (response) => {
+      throw new Error(
+        `Azure AI Search deleteDocuments batch failed: ${response}`
+      );
+    });
+
+    await bufferedClient.deleteDocuments(docs);
+    await bufferedClient.flush();
+    await bufferedClient.dispose();
+
+    return deleteResults;
   }
 
   /**
