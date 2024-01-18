@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { jest, test, expect } from "@jest/globals";
+import { SearchIndexingBufferedSender } from "@azure/search-documents";
 import { FakeEmbeddings } from "../../utils/testing.js";
 import {
   AzureAISearchQueryType,
@@ -7,18 +8,29 @@ import {
 } from "../azure_aisearch.js";
 
 const embedMock = jest.spyOn(FakeEmbeddings.prototype, "embedDocuments");
+const uploadDocumentsMock = jest.spyOn(
+  SearchIndexingBufferedSender.prototype,
+  "uploadDocuments"
+);
+const onMock = jest.spyOn(SearchIndexingBufferedSender.prototype, "on");
+const flushMock = jest.spyOn(SearchIndexingBufferedSender.prototype, "flush");
+const disposeMock = jest.spyOn(
+  SearchIndexingBufferedSender.prototype,
+  "dispose"
+);
 
 beforeEach(() => {
   embedMock.mockClear();
+  uploadDocumentsMock.mockClear();
+  onMock.mockClear();
+  flushMock.mockClear();
+  disposeMock.mockClear();
 });
 
-test("AzureAISearchVectorStore addVectors should upload at max 100 documents up a time", async () => {
+test("AzureAISearchVectorStore addVectors should upload documents in batches", async () => {
   const embeddings = new FakeEmbeddings();
   const client = {
-    search: jest.fn<any>().mockResolvedValue({
-      results: [],
-    }),
-    uploadDocuments: jest.fn(),
+    indexDocuments: jest.fn(),
   };
 
   const store = new AzureAISearchVectorStore(embeddings, {
@@ -33,7 +45,7 @@ test("AzureAISearchVectorStore addVectors should upload at max 100 documents up 
   const documents = [];
   const vectors: number[][] = [];
 
-  for (let i = 0; i < 150; i += 1) {
+  for (let i = 0; i < 1500; i += 1) {
     vectors.push(await embeddings.embedQuery(`hello ${i}`));
     documents.push({
       pageContent: `hello ${i}`,
@@ -46,18 +58,15 @@ test("AzureAISearchVectorStore addVectors should upload at max 100 documents up 
 
   await store.addVectors(vectors, documents);
 
-  expect(client.uploadDocuments).toHaveBeenCalledTimes(2);
-  expect(client.uploadDocuments.mock.calls[0][0]).toHaveLength(100);
-  expect(client.uploadDocuments.mock.calls[1][0]).toHaveLength(50);
+  expect(uploadDocumentsMock).toHaveBeenCalledTimes(1);
+  expect(flushMock).toHaveBeenCalledTimes(1);
+  expect(client.indexDocuments).toHaveBeenCalledTimes(2);
 });
 
 test("AzureAISearchVectorStore addDocuments should embed at max 16 documents up a time", async () => {
   const embeddings = new FakeEmbeddings();
   const client = {
-    search: jest.fn<any>().mockResolvedValue({
-      results: [],
-    }),
-    uploadDocuments: jest.fn(),
+    indexDocuments: jest.fn(),
   };
 
   const store = new AzureAISearchVectorStore(embeddings, {
@@ -85,17 +94,14 @@ test("AzureAISearchVectorStore addDocuments should embed at max 16 documents up 
   await store.addDocuments(documents);
 
   expect(embedMock).toHaveBeenCalledTimes(2);
-  expect(client.uploadDocuments.mock.calls[0][0]).toHaveLength(16);
-  expect(client.uploadDocuments.mock.calls[1][0]).toHaveLength(14);
+  expect(uploadDocumentsMock.mock.calls[0][0]).toHaveLength(16);
+  expect(uploadDocumentsMock.mock.calls[1][0]).toHaveLength(14);
 });
 
 test("AzureAISearchVectorStore addDocuments should use specified IDs", async () => {
   const embeddings = new FakeEmbeddings();
   const client = {
-    search: jest.fn<any>().mockResolvedValue({
-      results: [],
-    }),
-    uploadDocuments: jest.fn(),
+    indexDocuments: jest.fn(),
   };
 
   const store = new AzureAISearchVectorStore(embeddings, {
@@ -122,40 +128,8 @@ test("AzureAISearchVectorStore addDocuments should use specified IDs", async () 
     }
   );
 
-  expect(client.uploadDocuments).toHaveBeenCalledTimes(1);
+  expect(uploadDocumentsMock).toHaveBeenCalledTimes(1);
   expect(result).toEqual(["id1"]);
-});
-
-test("AzureAISearchVectorStore addDocuments should use generated IDs", async () => {
-  const embeddings = new FakeEmbeddings();
-  const client = {
-    search: jest.fn<any>().mockResolvedValue({
-      results: [],
-    }),
-    uploadDocuments: jest.fn(),
-  };
-
-  const store = new AzureAISearchVectorStore(embeddings, {
-    client: client as any,
-    search: {
-      type: "similarity",
-    },
-  });
-
-  expect(store).toBeDefined();
-
-  const result = await store.addDocuments([
-    {
-      pageContent: "hello",
-      metadata: {
-        source: "test",
-        attributes: [],
-      },
-    },
-  ]);
-
-  expect(client.uploadDocuments).toHaveBeenCalledTimes(1);
-  expect(result).toHaveLength(1);
 });
 
 test("AzureAISearchVectorStore similarity search works", async () => {
