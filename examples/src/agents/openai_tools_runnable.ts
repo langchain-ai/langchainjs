@@ -13,7 +13,7 @@ import {
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
-import { DynamicStructuredTool } from "@langchain/community/tools/dynamic";
+import { DynamicStructuredTool } from "@langchain/core/tools";
 
 const model = new ChatOpenAI({
   modelName: "gpt-3.5-turbo-1106",

@@ -9,7 +9,7 @@ import {
 import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";
 import { OpenAIFunctionsAgentOutputParser } from "langchain/agents/openai/output_parser";
 import { AIMessage, BaseMessage, HumanMessage } from "@langchain/core/messages";
-import { DynamicTool } from "@langchain/community/tools/dynamic";
+import { DynamicTool } from "@langchain/core/tools";
 
 /**
  * Define your chat model to use.

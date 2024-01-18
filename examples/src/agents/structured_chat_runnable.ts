@@ -15,7 +15,7 @@ import {
 } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { AgentStep } from "@langchain/core/agents";
-import { DynamicStructuredTool } from "@langchain/community/tools/dynamic";
+import { DynamicStructuredTool } from "@langchain/core/tools";
 
 /**
  * Need:
