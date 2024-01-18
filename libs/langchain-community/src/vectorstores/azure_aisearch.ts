@@ -5,6 +5,7 @@ import {
   AzureKeyCredential,
   IndexingResult,
   SearchIndex,
+  SearchIndexingBufferedSender,
 } from "@azure/search-documents";
 import {
   MaxMarginalRelevanceSearchOptions,
@@ -50,11 +51,6 @@ export interface AzureAISearchConfig {
   readonly endpoint?: string;
   readonly key?: string;
   readonly search: AzureAISearchQueryOptions;
-  /**
-   * The amount of documents to chunk by when adding vectors.
-   * @default 100
-   */
-  readonly chunkSize?: number;
   /**
    * The amount of documents to embed at once when adding documents.
    * Note that some providers like Azure OpenAI can only embed 16 documents
@@ -127,8 +123,6 @@ export class AzureAISearchVectorStore extends VectorStore {
 
   private readonly indexName: string;
 
-  private readonly chunkSize: number;
-
   private readonly embeddingBatchSize: number;
 
   private readonly options: AzureAISearchQueryOptions;
@@ -147,7 +141,6 @@ export class AzureAISearchVectorStore extends VectorStore {
     }
 
     this.indexName = config.indexName ?? "vectorsearch";
-    this.chunkSize = config.chunkSize ?? 100;
     this.embeddingBatchSize = config.embeddingBatchSize ?? 16;
 
     if (!config.client) {
@@ -266,10 +259,20 @@ export class AzureAISearchVectorStore extends VectorStore {
     }));
 
     await this.initPromise;
-    for (let i = 0; i < entities.length; i += this.chunkSize) {
-      const chunk = entities.slice(i, i + this.chunkSize);
-      await this.client.uploadDocuments(chunk, { throwOnAnyFailure: true });
-    }
+
+    const bufferedClient = new SearchIndexingBufferedSender<AzureAISearchDocument>(
+      this.client,
+      (entity) => entity.id,
+    );
+    bufferedClient.uploadDocuments(entities);
+    bufferedClient.on("batchFailed", (response) => {
+      throw new Error(
+        `Azure AI Search uploadDocuments batch failed: ${response}`
+      );
+    });
+
+    await bufferedClient.flush();
+    bufferedClient.dispose();
 
     return ids;
   }
