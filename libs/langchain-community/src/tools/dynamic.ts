@@ -14,6 +14,7 @@ export interface BaseDynamicToolInput extends ToolParams {
 }
 
 /**
+ * @deprecated Import from "@langchain/core/tools" instead.
  * Interface for the input parameters of the DynamicTool class.
  */
 export interface DynamicToolInput extends BaseDynamicToolInput {
@@ -24,6 +25,7 @@ export interface DynamicToolInput extends BaseDynamicToolInput {
 }
 
 /**
+ * @deprecated Import from "@langchain/core/tools" instead.
  * Interface for the input parameters of the DynamicStructuredTool class.
  */
 export interface DynamicStructuredToolInput<
@@ -38,6 +40,7 @@ export interface DynamicStructuredToolInput<
 }
 
 /**
+ * @deprecated Import from "@langchain/core/tools" instead.
  * A tool that can be created dynamically from a function, name, and description.
  */
 export class DynamicTool extends Tool {
@@ -80,6 +83,7 @@ export class DynamicTool extends Tool {
 }
 
 /**
+ * @deprecated Import from "@langchain/core/tools" instead.
  * A tool that can be created dynamically from a function, name, and
  * description, designed to work with structured data. It extends the
  * StructuredTool class and overrides the _call method to execute the
