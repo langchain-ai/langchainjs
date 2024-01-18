@@ -947,6 +947,11 @@
       "import": "./vectorstores/tigris.js",
       "require": "./vectorstores/tigris.cjs"
     },
+    "./vectorstores/turbopuffer": {
+      "types": "./vectorstores/turbopuffer.d.ts",
+      "import": "./vectorstores/turbopuffer.js",
+      "require": "./vectorstores/turbopuffer.cjs"
+    },
     "./vectorstores/typeorm": {
       "types": "./vectorstores/typeorm.d.ts",
       "import": "./vectorstores/typeorm.js",
@@ -1570,6 +1575,9 @@
     "vectorstores/tigris.cjs",
     "vectorstores/tigris.js",
     "vectorstores/tigris.d.ts",
+    "vectorstores/turbopuffer.cjs",
+    "vectorstores/turbopuffer.js",
+    "vectorstores/turbopuffer.d.ts",
     "vectorstores/typeorm.cjs",
     "vectorstores/typeorm.js",
     "vectorstores/typeorm.d.ts",
