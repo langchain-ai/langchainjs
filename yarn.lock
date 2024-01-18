@@ -8726,7 +8726,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/weaviate@workspace:libs/langchain-weaviate":
+"@langchain/weaviate@workspace:*, @langchain/weaviate@workspace:libs/langchain-weaviate":
   version: 0.0.0-use.local
   resolution: "@langchain/weaviate@workspace:libs/langchain-weaviate"
   dependencies:
@@ -19215,6 +19215,7 @@ __metadata:
     "@langchain/mistralai": "workspace:*"
     "@langchain/openai": "workspace:*"
     "@langchain/pinecone": "workspace:*"
+    "@langchain/weaviate": "workspace:*"
     "@langchain/yandex": "workspace:*"
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^2.0.0

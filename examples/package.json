@@ -38,6 +38,7 @@
     "@langchain/mistralai": "workspace:*",
     "@langchain/openai": "workspace:*",
     "@langchain/pinecone": "workspace:*",
+    "@langchain/weaviate": "workspace:*",
     "@langchain/yandex": "workspace:*",
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^2.0.0",
