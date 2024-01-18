@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { jest, test, expect } from "@jest/globals";
-import { FakeEmbeddings } from "../../utils/testing.js";
-import { PineconeStore } from "../pinecone.js";
+import { FakeEmbeddings } from "@langchain/core/utils/testing";
+import { PineconeStore } from "../vectorstores.js";
 
 test("PineconeStore with external ids", async () => {
   const upsert = jest.fn();
@@ -72,7 +72,7 @@ test("PineconeStore with generated ids", async () => {
   expect(results).toHaveLength(0);
 });
 
-test("PineconeSo with string arrays", async () => {
+test("PineconeStore with string arrays", async () => {
   const upsert = jest.fn();
   const client = {
     namespace: jest.fn<any>().mockReturnValue({
