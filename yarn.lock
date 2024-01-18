@@ -8693,7 +8693,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/pinecone@workspace:libs/langchain-pinecone":
+"@langchain/pinecone@workspace:*, @langchain/pinecone@workspace:libs/langchain-pinecone":
   version: 0.0.0-use.local
   resolution: "@langchain/pinecone@workspace:libs/langchain-pinecone"
   dependencies:
@@ -19181,9 +19181,10 @@ __metadata:
     "@langchain/google-genai": "workspace:*"
     "@langchain/mistralai": "workspace:*"
     "@langchain/openai": "workspace:*"
+    "@langchain/pinecone": "workspace:*"
     "@langchain/yandex": "workspace:*"
     "@opensearch-project/opensearch": ^2.2.0
-    "@pinecone-database/pinecone": ^1.1.0
+    "@pinecone-database/pinecone": ^2.0.0
     "@planetscale/database": ^1.8.0
     "@prisma/client": ^4.11.0
     "@raycast/api": ^1.55.2
