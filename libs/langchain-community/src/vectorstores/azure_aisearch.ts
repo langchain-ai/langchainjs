@@ -181,19 +181,20 @@ export class AzureAISearchVectorStore extends VectorStore {
       docs.push(item.document);
     }
 
-    const bufferedClient = new SearchIndexingBufferedSender<AzureAISearchDocument>(
-      this.client,
-      (entity) => entity.id,
-    );
-    bufferedClient.deleteDocuments(docs);
+    const bufferedClient =
+      new SearchIndexingBufferedSender<AzureAISearchDocument>(
+        this.client,
+        (entity) => entity.id
+      );
     bufferedClient.on("batchFailed", (response) => {
       throw new Error(
         `Azure AI Search deleteDocuments batch failed: ${response}`
       );
     });
 
+    await bufferedClient.deleteDocuments(docs);
     await bufferedClient.flush();
-    bufferedClient.dispose();
+    await bufferedClient.dispose();
   }
 
   /**
@@ -268,19 +269,20 @@ export class AzureAISearchVectorStore extends VectorStore {
 
     await this.initPromise;
 
-    const bufferedClient = new SearchIndexingBufferedSender<AzureAISearchDocument>(
-      this.client,
-      (entity) => entity.id,
-    );
-    bufferedClient.uploadDocuments(entities);
+    const bufferedClient =
+      new SearchIndexingBufferedSender<AzureAISearchDocument>(
+        this.client,
+        (entity) => entity.id
+      );
     bufferedClient.on("batchFailed", (response) => {
       throw new Error(
         `Azure AI Search uploadDocuments batch failed: ${response}`
       );
     });
 
+    await bufferedClient.uploadDocuments(entities);
     await bufferedClient.flush();
-    bufferedClient.dispose();
+    await bufferedClient.dispose();
 
     return ids;
   }
@@ -544,7 +546,9 @@ export class AzureAISearchVectorStore extends VectorStore {
       await indexClient.getIndex(this.indexName);
     } catch (e) {
       // Index does not exists, create it
-      const searchIndex = await this.createSearchIndexDefinition(this.indexName);
+      const searchIndex = await this.createSearchIndexDefinition(
+        this.indexName
+      );
       await indexClient.createIndex(searchIndex);
     }
   }
@@ -555,7 +559,9 @@ export class AzureAISearchVectorStore extends VectorStore {
    * @returns The SearchIndex object.
    * @protected
    */
-  protected async createSearchIndexDefinition(indexName: string): Promise<SearchIndex> {
+  protected async createSearchIndexDefinition(
+    indexName: string
+  ): Promise<SearchIndex> {
     // Embed a test query to get the embedding dimensions
     const testEmbedding = await this.embeddings.embedQuery("test");
     const embeddingDimensions = testEmbedding.length;
