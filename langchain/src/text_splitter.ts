@@ -752,15 +752,15 @@ export class TokenTextSplitter
     );
 
     let start_idx = 0;
-    let cur_idx = Math.min(start_idx + this.chunkSize, input_ids.length);
-    let chunk_ids = input_ids.slice(start_idx, cur_idx);
 
     while (start_idx < input_ids.length) {
+      if (start_idx > 0) {
+        start_idx -= this.chunkOverlap;
+      }
+      let end_idx = Math.min(start_idx + this.chunkSize, input_ids.length);
+      let chunk_ids = input_ids.slice(start_idx, end_idx);
       splits.push(this.tokenizer.decode(chunk_ids));
-
-      start_idx += this.chunkSize - this.chunkOverlap;
-      cur_idx = Math.min(start_idx + this.chunkSize, input_ids.length);
-      chunk_ids = input_ids.slice(start_idx, cur_idx);
+      start_idx = end_idx;
     }
 
     return splits;
