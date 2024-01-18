@@ -5,7 +5,7 @@ import {
 } from "@langchain/core/prompts";
 
 import { Tool } from "@langchain/core/tools";
-import { DynamicStructuredTool } from "@langchain/community/tools/dynamic";
+import { DynamicStructuredTool } from "@langchain/core/tools";
 
 export const PLANNER_SYSTEM_PROMPT_MESSAGE_TEMPLATE = [
   `Let's first understand the problem and devise a plan to solve the problem.`,
