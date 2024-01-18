@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import weaviate from "weaviate-ts-client";
+import weaviate, { ApiKey } from 'weaviate-ts-client';
 import { WeaviateStore } from "@langchain/weaviate";
 import { OpenAIEmbeddings } from "@langchain/openai";
 
@@ -8,7 +8,7 @@ export async function run() {
   const client = (weaviate as any).client({
     scheme: process.env.WEAVIATE_SCHEME || "https",
     host: process.env.WEAVIATE_HOST || "localhost",
-    apiKey: new (weaviate as any).ApiKey(
+    apiKey: new ApiKey(
       process.env.WEAVIATE_API_KEY || "default"
     ),
   });

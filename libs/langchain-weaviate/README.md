@@ -27,13 +27,14 @@ export WEAVIATE_API_KEY=
 ```
 
 ```typescript
+import weaviate, { ApiKey } from 'weaviate-ts-client';
 import { WeaviateStore } from "@langchain/weaviate";
-import weaviate from "weaviate-ts-client";
 
+// Weaviate SDK has a TypeScript issue so we must do this.
 const client = (weaviate as any).client({
   scheme: process.env.WEAVIATE_SCHEME || "https",
   host: process.env.WEAVIATE_HOST || "localhost",
-  apiKey: new (weaviate as any).ApiKey(
+  apiKey: new ApiKey(
     process.env.WEAVIATE_API_KEY || "default"
   ),
 });
