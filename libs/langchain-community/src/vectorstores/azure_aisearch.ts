@@ -415,12 +415,6 @@ export class AzureAISearchVectorStore extends VectorStore {
       queryType: "semantic",
       semanticSearchOptions: {
         configurationName: "semantic-search-config",
-        captions: {
-          captionType: "extractive",
-        },
-        answers: {
-          answerType: "extractive",
-        },
       },
     });
 
