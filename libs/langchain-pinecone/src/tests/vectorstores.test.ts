@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { jest, test, expect } from "@jest/globals";
-import { FakeEmbeddings } from "langchain/embeddings/fake";
+import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { PineconeStore } from "../vectorstores.js";
 
 test("PineconeStore with external ids", async () => {

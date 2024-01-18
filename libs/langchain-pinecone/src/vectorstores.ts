@@ -1,6 +1,5 @@
-import type { EmbeddingsInterface } from "@langchain/core/embeddings";
-import { VectorStore } from "@langchain/core/vectorstores";
-import { Document } from "@langchain/core/documents";
+import * as uuid from "uuid";
+import flatten from "flat";
 
 import {
   RecordMetadata,
@@ -8,11 +7,18 @@ import {
   Index as PineconeIndex,
 } from "@pinecone-database/pinecone";
 
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
+import {
+  VectorStore,
+  type MaxMarginalRelevanceSearchOptions,
+} from "@langchain/core/vectorstores";
+import { Document, type DocumentInterface } from "@langchain/core/documents";
 import {
   AsyncCaller,
   AsyncCallerParams,
 } from "@langchain/core/utils/async_caller";
-
+import { chunkArray } from "@langchain/core/utils/chunk_array";
+import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 
 // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
 type PineconeMetadata = Record<string, any>;
@@ -28,8 +34,19 @@ export interface PineconeStoreParams extends AsyncCallerParams {
 }
 
 /**
- * Class for managing and operating vector search applications with 
- * Pinecone, the cloud-native high-scale vector database 
+ * Type that defines the parameters for the delete operation in the
+ * PineconeStore class. It includes ids, filter, deleteAll flag, and namespace.
+ */
+export type PineconeDeleteParams = {
+  ids?: string[];
+  deleteAll?: boolean;
+  filter?: object;
+  namespace?: string;
+};
+
+/**
+ * Class for managing and operating vector search applications with
+ * Pinecone, the cloud-native high-scale vector database
  */
 export class PineconeStore extends VectorStore {
   declare FilterType: PineconeMetadata;
@@ -48,10 +65,7 @@ export class PineconeStore extends VectorStore {
     return "pinecone";
   }
 
-  constructor(
-    embeddings: EmbeddingsInterface,
-    params: PineconeStoreParams
-  ) {
+  constructor(embeddings: EmbeddingsInterface, params: PineconeStoreParams) {
     super(embeddings, params);
     this.embeddings = embeddings;
 
@@ -64,7 +78,6 @@ export class PineconeStore extends VectorStore {
     this.caller = new AsyncCaller(asyncCallerArgs);
   }
 
-
   /**
    * Method that adds documents to the Pinecone database.
    * @param documents Array of documents to add to the Pinecone database.
@@ -74,23 +87,22 @@ export class PineconeStore extends VectorStore {
   async addDocuments(
     documents: Document[],
     options?: { ids?: string[] } | string[]
-  ): Promise<void> {
+  ): Promise<string[]> {
     const texts = documents.map(({ pageContent }) => pageContent);
-    await this.addVectors(
+    return this.addVectors(
       await this.embeddings.embedDocuments(texts),
       documents,
       options
     );
   }
 
-
   /**
-     * Method that adds vectors to the Pinecone database.
-     * @param vectors Array of vectors to add to the Pinecone database.
-     * @param documents Array of documents associated with the vectors.
-     * @param options Optional ids for the vectors.
-     * @returns Promise that resolves with the ids of the added vectors.
-     */
+   * Method that adds vectors to the Pinecone database.
+   * @param vectors Array of vectors to add to the Pinecone database.
+   * @param documents Array of documents associated with the vectors.
+   * @param options Optional ids for the vectors.
+   * @returns Promise that resolves with the ids of the added vectors.
+   */
   async addVectors(
     vectors: number[][],
     documents: Document[],
@@ -240,12 +252,12 @@ export class PineconeStore extends VectorStore {
    *                 where 0 corresponds to maximum diversity and 1 to minimum diversity.
    * @param {PineconeMetadata} options.filter - Optional filter to apply to the search.
    *
-   * @returns {Promise<Document[]>} - List of documents selected by maximal marginal relevance.
+   * @returns {Promise<DocumentInterface[]>} - List of documents selected by maximal marginal relevance.
    */
   async maxMarginalRelevanceSearch(
     query: string,
     options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
-  ): Promise<Document[]> {
+  ): Promise<DocumentInterface[]> {
     const queryEmbedding = await this.embeddings.embedQuery(query);
 
     const results = await this._runPineconeQuery(
@@ -294,11 +306,11 @@ export class PineconeStore extends VectorStore {
     embeddings: EmbeddingsInterface,
     dbConfig:
       | {
-        pineconeIndex: PineconeIndex;
-        textKey?: string;
-        namespace?: string | undefined;
-      }
-      | PineconeLibArgs
+          pineconeIndex: PineconeIndex;
+          textKey?: string;
+          namespace?: string | undefined;
+        }
+      | PineconeStoreParams
   ): Promise<PineconeStore> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -310,7 +322,7 @@ export class PineconeStore extends VectorStore {
       docs.push(newDoc);
     }
 
-    const args: PineconeLibArgs = {
+    const args: PineconeStoreParams = {
       pineconeIndex: dbConfig.pineconeIndex,
       textKey: dbConfig.textKey,
       namespace: dbConfig.namespace,
@@ -319,13 +331,13 @@ export class PineconeStore extends VectorStore {
   }
 
   /**
-     * Static method that creates a new instance of the PineconeStore class
-     * from documents.
-     * @param docs Array of documents to add to the Pinecone database.
-     * @param embeddings Embeddings to use for the documents.
-     * @param dbConfig Configuration for the Pinecone database.
-     * @returns Promise that resolves with a new instance of the PineconeStore class.
-     */
+   * Static method that creates a new instance of the PineconeStore class
+   * from documents.
+   * @param docs Array of documents to add to the Pinecone database.
+   * @param embeddings Embeddings to use for the documents.
+   * @param dbConfig Configuration for the Pinecone database.
+   * @returns Promise that resolves with a new instance of the PineconeStore class.
+   */
   static async fromDocuments(
     docs: Document[],
     embeddings: EmbeddingsInterface,
@@ -348,10 +360,9 @@ export class PineconeStore extends VectorStore {
    */
   static async fromExistingIndex(
     embeddings: EmbeddingsInterface,
-    dbConfig: PineconeLibArgs
+    dbConfig: PineconeStoreParams
   ): Promise<PineconeStore> {
     const instance = new this(embeddings, dbConfig);
     return instance;
   }
-
 }
