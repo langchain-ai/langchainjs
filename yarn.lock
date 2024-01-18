@@ -8219,7 +8219,7 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1.9
+    "@langchain/core": ~0.1.16
     "@langchain/openai": ~0.0.10
     "@mozilla/readability": ^0.4.4
     "@opensearch-project/opensearch": ^2.2.0
@@ -8294,7 +8294,7 @@ __metadata:
     lunary: ^0.6.11
     mongodb: ^5.2.0
     mysql2: ^3.3.3
-    neo4j-driver: ^5.12.0
+    neo4j-driver: ^5.16.0
     node-llama-cpp: 2.7.3
     pg: ^8.11.0
     pg-copy-streams: ^6.0.5
@@ -8558,7 +8558,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.13, @langchain/core@~0.1.5, @langchain/core@~0.1.9":
+"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.13, @langchain/core@~0.1.16, @langchain/core@~0.1.5":
   version: 0.0.0-use.local
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
@@ -8590,8 +8590,8 @@ __metadata:
     turbo: latest
     typescript: ~5.1.6
     uuid: ^9.0.0
-    zod: ^3.22.3
-    zod-to-json-schema: 3.20.3
+    zod: ^3.22.4
+    zod-to-json-schema: ^3.22.3
   languageName: unknown
   linkType: soft
 
@@ -8681,8 +8681,8 @@ __metadata:
     release-it: ^15.10.1
     rimraf: ^5.0.1
     typescript: ~5.1.6
-    zod: ^3.22.3
-    zod-to-json-schema: 3.20.3
+    zod: ^3.22.4
+    zod-to-json-schema: ^3.22.3
   languageName: unknown
   linkType: soft
 
@@ -19178,8 +19178,8 @@ __metadata:
     vectordb: ^0.1.4
     voy-search: 0.6.2
     weaviate-ts-client: ^1.0.0
-    zod: ^3.22.3
-    zod-to-json-schema: 3.20.3
+    zod: ^3.22.4
+    zod-to-json-schema: ^3.22.3
   languageName: unknown
   linkType: soft
 
@@ -23715,7 +23715,7 @@ __metadata:
     "@google-cloud/storage": ^6.10.1
     "@jest/globals": ^29.5.0
     "@langchain/community": ~0.0.17
-    "@langchain/core": ~0.1.13
+    "@langchain/core": ~0.1.16
     "@langchain/openai": ~0.0.12
     "@notionhq/client": ^2.2.10
     "@pinecone-database/pinecone": ^1.1.0
@@ -23800,8 +23800,8 @@ __metadata:
     yaml: ^2.2.1
     youtube-transcript: ^1.0.6
     youtubei.js: ^5.8.0
-    zod: ^3.22.3
-    zod-to-json-schema: 3.20.3
+    zod: ^3.22.4
+    zod-to-json-schema: ^3.22.3
   peerDependencies:
     "@aws-sdk/client-s3": ^3.310.0
     "@aws-sdk/client-sagemaker-runtime": ^3.310.0
@@ -25536,32 +25536,32 @@ __metadata:
   languageName: node
   linkType: hard
 
-"neo4j-driver-bolt-connection@npm:5.12.0":
-  version: 5.12.0
-  resolution: "neo4j-driver-bolt-connection@npm:5.12.0"
+"neo4j-driver-bolt-connection@npm:5.16.0":
+  version: 5.16.0
+  resolution: "neo4j-driver-bolt-connection@npm:5.16.0"
   dependencies:
     buffer: ^6.0.3
-    neo4j-driver-core: 5.12.0
+    neo4j-driver-core: 5.16.0
     string_decoder: ^1.3.0
-  checksum: ec7b488073ee884bb29954d75983c077068a46d339141be501c44903fb7af9831b4639f6ee8e16eab886e217a7dfb6200b0bb6ddfe9563d03456cd2b3e67c8db
+  checksum: ddf5337fba3bd31b5909c1ab351d57df3b51d971786ba262d53ba38e89c4204d78cf7401527814e0ea6541dea26d21b54627e17fed4b9e78e2ee31f46b3deaf3
   languageName: node
   linkType: hard
 
-"neo4j-driver-core@npm:5.12.0":
-  version: 5.12.0
-  resolution: "neo4j-driver-core@npm:5.12.0"
-  checksum: 1e8f3a0c8c088a953150fbb2c89b6eb601328ee9d5b547e1bf0d29a4bacacc17eb8c2a492ebebffb1fb6563b820550205f18f7bec658feab8ebb5f041d17dd44
+"neo4j-driver-core@npm:5.16.0":
+  version: 5.16.0
+  resolution: "neo4j-driver-core@npm:5.16.0"
+  checksum: 58c33ea0121bdbd4d541c1967998fae1b07a092a8b83438c78567dd008f79ab3401a97824c9ccb721bb25c9ff65485521bb0a1b33fa75e3464a5b6324e65d593
   languageName: node
   linkType: hard
 
-"neo4j-driver@npm:^5.12.0":
-  version: 5.12.0
-  resolution: "neo4j-driver@npm:5.12.0"
+"neo4j-driver@npm:^5.16.0":
+  version: 5.16.0
+  resolution: "neo4j-driver@npm:5.16.0"
   dependencies:
-    neo4j-driver-bolt-connection: 5.12.0
-    neo4j-driver-core: 5.12.0
+    neo4j-driver-bolt-connection: 5.16.0
+    neo4j-driver-core: 5.16.0
     rxjs: ^7.8.1
-  checksum: aade3ddc66f7131ea64f797a8f65a7a702a0f1ae8224bc6eafec7a4784487f3ef0d3dcbbd8400cf7ad36802314fd7cd513dc578249ab2d4fa0d0a0d014bb47c8
+  checksum: ac6beea48043a379149132514fbabcd8ce2604c2e8237fdd60729244834a9ce45f5379aa6ca4fb93f008beaed9c3c4414e7087cd5b9d1e9c3397715fb74aa9e3
   languageName: node
   linkType: hard
 
@@ -33804,16 +33804,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod-to-json-schema@npm:3.20.3":
-  version: 3.20.3
-  resolution: "zod-to-json-schema@npm:3.20.3"
+"zod-to-json-schema@npm:^3.22.3":
+  version: 3.22.3
+  resolution: "zod-to-json-schema@npm:3.22.3"
   peerDependencies:
-    zod: ^3.20.0
-  checksum: 1addf7e6f7d69398404dc90f5c9b76ea44e3f6deeb2fc7c72983a00e15b7340661d7e894b0a4eee3a07334dcdcc79d7064e44de46b4acc37d38ab2f3f7217ec8
+    zod: ^3.22.4
+  checksum: 2747a3d1514f579006939c0edd6a420acae65ad016df223b09c4a542cbc8c0ae61b4d7b391228a211cde973635ed49c47b1449791982f3b32d799319bb174f42
   languageName: node
   linkType: hard
 
-"zod@npm:^3.22.3":
+"zod@npm:^3.22.3, zod@npm:^3.22.4":
   version: 3.22.4
   resolution: "zod@npm:3.22.4"
   checksum: 80bfd7f8039b24fddeb0718a2ec7c02aa9856e4838d6aa4864335a047b6b37a3273b191ef335bf0b2002e5c514ef261ffcda5a589fb084a48c336ffc4cdbab7f

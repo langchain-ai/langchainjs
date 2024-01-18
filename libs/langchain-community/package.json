@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -35,7 +35,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1.9",
+    "@langchain/core": "~0.1.16",
     "@langchain/openai": "~0.0.10",
     "flat": "^5.0.2",
     "langsmith": "~0.0.48",
@@ -137,7 +137,7 @@
     "lunary": "^0.6.11",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
-    "neo4j-driver": "^5.12.0",
+    "neo4j-driver": "^5.16.0",
     "node-llama-cpp": "2.7.3",
     "pg": "^8.11.0",
     "pg-copy-streams": "^6.0.5",
@@ -947,6 +947,11 @@
       "import": "./vectorstores/tigris.js",
       "require": "./vectorstores/tigris.cjs"
     },
+    "./vectorstores/turbopuffer": {
+      "types": "./vectorstores/turbopuffer.d.ts",
+      "import": "./vectorstores/turbopuffer.js",
+      "require": "./vectorstores/turbopuffer.cjs"
+    },
     "./vectorstores/typeorm": {
       "types": "./vectorstores/typeorm.d.ts",
       "import": "./vectorstores/typeorm.js",
@@ -1570,6 +1575,9 @@
     "vectorstores/tigris.cjs",
     "vectorstores/tigris.js",
     "vectorstores/tigris.d.ts",
+    "vectorstores/turbopuffer.cjs",
+    "vectorstores/turbopuffer.js",
+    "vectorstores/turbopuffer.d.ts",
     "vectorstores/typeorm.cjs",
     "vectorstores/typeorm.js",
     "vectorstores/typeorm.d.ts",

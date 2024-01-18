@@ -1,6 +1,7 @@
 import {
   type BaseCallbackConfig,
   CallbackManager,
+  ensureHandler,
 } from "../callbacks/manager.js";
 
 export const DEFAULT_RECURSION_LIMIT = 25;
@@ -33,23 +34,21 @@ export async function getCallbackManagerForConfig(config?: RunnableConfig) {
 }
 
 export function mergeConfigs<CallOptions extends RunnableConfig>(
-  config: RunnableConfig,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  options?: Record<string, any>
+  ...configs: (CallOptions | RunnableConfig | undefined | null)[]
 ): Partial<CallOptions> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const copy: Record<string, any> = { ...config };
-  if (options) {
+  const copy: Partial<CallOptions> = ensureConfig();
+  for (const options of configs.filter((c): c is CallOptions => !!c)) {
     for (const key of Object.keys(options)) {
       if (key === "metadata") {
         copy[key] = { ...copy[key], ...options[key] };
       } else if (key === "tags") {
-        copy[key] = (copy[key] ?? []).concat(options[key] ?? []);
+        copy[key] = [...new Set(copy[key]!.concat(options[key] ?? []))];
       } else if (key === "configurable") {
         copy[key] = { ...copy[key], ...options[key] };
       } else if (key === "callbacks") {
         const baseCallbacks = copy.callbacks;
-        const providedCallbacks = options.callbacks ?? config.callbacks;
+        const providedCallbacks = options.callbacks;
         // callbacks can be either undefined, Array<handler> or manager
         // so merging two callbacks values has 6 cases
         if (Array.isArray(providedCallbacks)) {
@@ -61,7 +60,7 @@ export function mergeConfigs<CallOptions extends RunnableConfig>(
             // baseCallbacks is a manager
             const manager = baseCallbacks.copy();
             for (const callback of providedCallbacks) {
-              manager.addHandler(callback, true);
+              manager.addHandler(ensureHandler(callback), true);
             }
             copy.callbacks = manager;
           }
@@ -72,13 +71,13 @@ export function mergeConfigs<CallOptions extends RunnableConfig>(
           } else if (Array.isArray(baseCallbacks)) {
             const manager = providedCallbacks.copy();
             for (const callback of baseCallbacks) {
-              manager.addHandler(callback, true);
+              manager.addHandler(ensureHandler(callback), true);
             }
             copy.callbacks = manager;
           } else {
             // baseCallbacks is also a manager
             copy.callbacks = new CallbackManager(
-              providedCallbacks.parentRunId,
+              providedCallbacks._parentRunId,
               {
                 handlers: baseCallbacks.handlers.concat(
                   providedCallbacks.handlers
@@ -105,26 +104,45 @@ export function mergeConfigs<CallOptions extends RunnableConfig>(
           }
         }
       } else {
-        copy[key] = options[key] ?? copy[key];
+        const typedKey = key as keyof CallOptions;
+        copy[typedKey] = options[typedKey] ?? copy[typedKey];
       }
     }
   }
   return copy as Partial<CallOptions>;
 }
 
+const PRIMITIVES = new Set(["string", "number", "boolean"]);
+
 /**
  * Ensure that a passed config is an object with all required keys present.
  */
 export function ensureConfig<CallOptions extends RunnableConfig>(
   config?: CallOptions
-): Partial<CallOptions> {
-  return {
+): CallOptions {
+  let empty = {
     tags: [],
     metadata: {},
     callbacks: undefined,
     recursionLimit: 25,
-    ...config,
-  } as Partial<CallOptions>;
+  } as RunnableConfig;
+  if (config) {
+    empty = { ...empty, ...config };
+  }
+  if (config?.configurable) {
+    for (const key of Object.keys(config.configurable)) {
+      if (
+        PRIMITIVES.has(typeof config.configurable[key]) &&
+        !empty.metadata?.[key]
+      ) {
+        if (!empty.metadata) {
+          empty.metadata = {};
+        }
+        empty.metadata[key] = config.configurable[key];
+      }
+    }
+  }
+  return empty as CallOptions;
 }
 
 /**

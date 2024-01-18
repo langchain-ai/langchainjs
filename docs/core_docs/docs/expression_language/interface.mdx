@@ -84,8 +84,15 @@ You can stream all steps (default) or include/exclude steps by name, tags or met
 
 This method yields [JSONPatch](https://jsonpatch.com/) ops that when applied in the same order as received build up the RunState.
 
+To reconstruct the JSONPatches into a single JSON object you can use the [`applyPatch`](https://api.js.langchain.com/functions/langchain_core_utils_json_patch.applyPatch.html) method.
+The example below demonstrates how to pass the patch to the `applyPatch` method.
+
 Here's an example with streaming intermediate documents from a retrieval chain:
 
 import StreamLogExample from "@examples/guides/expression_language/interface_stream_log.ts";
+
+```bash npm2yarn
+npm install @langchain/community @langchain/openai
+```
 
 <CodeBlock language="typescript">{StreamLogExample}</CodeBlock>

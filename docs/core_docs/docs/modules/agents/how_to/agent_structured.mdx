@@ -26,7 +26,7 @@ import { RunnableSequence } from "langchain/runnables";
 import { ChatPromptTemplate, MessagesPlaceholder } from "langchain/prompts";
 import { ChatOpenAI } from "@langchain/openai";
 import { AgentExecutor } from "langchain/agents";
-import { DynamicTool } from "langchain/tools";
+import { DynamicTool } from "@langchain/core/tools";
 import type { FunctionsAgentAction } from "langchain/agents/openai/output_parser";
 import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";
 
