@@ -30,12 +30,12 @@ AZURE_OPENAI_API_KEY=<YOUR_KEY>
 AZURE_OPENAI_API_DEPLOYMENT_NAME=<YOUR_DEPLOYMENT_NAME>
 ```
 
-Alternatively, you can pass the values directly to the `AzureSDKOpenAI` constructor:
+Alternatively, you can pass the values directly to the `AzureOpenAI` constructor:
 
 ```typescript
-import { AzureSDKOpenAI } from "@langchain/azure-openai";
+import { AzureOpenAI } from "@langchain/azure-openai";
 
-const model = new AzureSDKOpenAI({
+const model = new AzureOpenAI({
   azureOpenAIEndpoint: "<your_endpoint>",
   azureOpenAIApiKey: "<your_key>",
   azureOpenAIApiDeploymentName: "<your_deployment_name",
@@ -82,7 +82,7 @@ const model = new OpenAI({
   azureOpenAIApiDeploymentName: "{DEPLOYMENT_NAME}",
 });
 const res = await model.invoke(
-  "What would be a good company name a company that makes colorful socks?"
+  "What would be a good company name for a company that makes colorful socks?"
 );
 console.log({ res });
 ```
@@ -102,7 +102,7 @@ const model = new OpenAI({
     "https://westeurope.api.microsoft.com/openai/deployments", // In Node.js defaults to process.env.AZURE_OPENAI_BASE_PATH
 });
 const res = await model.invoke(
-  "What would be a good company name a company that makes colorful socks?"
+  "What would be a good company name for a company that makes colorful socks?"
 );
 console.log({ res });
 ```

@@ -1,7 +1,7 @@
-import { AzureSDKChatOpenAI } from "@langchain/azure-openai";
+import { AzureChatOpenAI } from "@langchain/azure-openai";
 
 export const run = async () => {
-  const model = new AzureSDKChatOpenAI({
+  const model = new AzureChatOpenAI({
     prefixMessages: [
       {
         role: "system",
@@ -11,7 +11,7 @@ export const run = async () => {
     maxTokens: 50,
   });
   const res = await model.invoke(
-    "What would be a good company name a company that makes colorful socks?"
+    "What would be a good company name for a company that makes colorful socks?"
   );
   console.log({ res });
 };
