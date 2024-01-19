@@ -108,18 +108,21 @@ const generateImportMap = ({
   entrypoints,
   requiresOptionalDependency,
   deprecatedNodeOnly,
+  deprecatedOmitFromImportMap,
   packageSuffix
 }: {
   entrypoints: Record<string, string>;
   requiresOptionalDependency: Array<string>;
   deprecatedNodeOnly: Array<string>;
+  deprecatedOmitFromImportMap: Array<string>;
   packageSuffix: string | null;
 }) => {
   // Generate import map
   const entrypointsToInclude = Object.keys(entrypoints)
     .filter((key) => key !== "load")
     .filter((key) => !deprecatedNodeOnly.includes(key))
-    .filter((key) => !requiresOptionalDependency.includes(key));
+    .filter((key) => !requiresOptionalDependency.includes(key))
+    .filter((key) => !deprecatedOmitFromImportMap.includes(key));
   const [pkg, importStatement, importMapPath] = importMap(packageSuffix);
   const contents = `${entrypointsToInclude
     .map((key) => importStatement(key, entrypoints[key]))
@@ -214,6 +217,7 @@ export function createEntrypoints({
   entrypoints,
   requiresOptionalDependency = [],
   deprecatedNodeOnly = [],
+  deprecatedOmitFromImportMap = [],
   packageSuffix
 }: {
   /**
@@ -236,6 +240,10 @@ export function createEntrypoints({
    */
   deprecatedNodeOnly?: string[];
   /**
+   * Endpoints that are deprecated due to redundancy. Will not appear in the import map.
+   */
+  deprecatedOmitFromImportMap?: string[];
+  /**
    * The suffix of the package. Eg. `community` for `@langchain/community`.
    * Used in the generated import map.
    */
@@ -251,6 +259,7 @@ export function createEntrypoints({
         entrypoints,
         requiresOptionalDependency,
         deprecatedNodeOnly,
+        deprecatedOmitFromImportMap,
         packageSuffix: packageSuffix ?? null
       });
       generateImportTypes({
