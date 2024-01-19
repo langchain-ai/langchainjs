@@ -2,11 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 // .gitignore
-const DEFAULT_GITIGNORE_PATHS = [
-  "node_modules",
-  "dist",
-  ".yarn",
-]
+const DEFAULT_GITIGNORE_PATHS = ["node_modules", "dist", ".yarn"];
 
 // This lists all the entrypoints for the library. Each key corresponds to an
 // importable path, eg. `import { AgentExecutor } from "langchain/agents"`.
@@ -14,7 +10,7 @@ const DEFAULT_GITIGNORE_PATHS = [
 // This is used to generate the `exports` field in package.json.
 // Order is not important.
 const entrypoints = {
-  "index": "index"
+  index: "index",
 };
 
 // Entrypoints in this list require an optional dependency to be installed.
@@ -78,7 +74,10 @@ const updateConfig = () => {
   });
 
   // Update .gitignore
-  fs.writeFileSync("./.gitignore", filenames.join("\n") + "\n" + DEFAULT_GITIGNORE_PATHS.join("\n") + "\n");
+  fs.writeFileSync(
+    "./.gitignore",
+    filenames.join("\n") + "\n" + DEFAULT_GITIGNORE_PATHS.join("\n") + "\n"
+  );
 };
 
 const cleanGenerated = () => {

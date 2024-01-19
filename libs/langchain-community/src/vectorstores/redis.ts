@@ -247,9 +247,11 @@ export class RedisVectorStore extends VectorStore {
           if (document.vector_score) {
             result.push([
               new Document({
-                pageContent: document[this.contentKey] as string,
+                pageContent: (document[this.contentKey] ?? "") as string,
                 metadata: JSON.parse(
-                  this.unEscapeSpecialChars(document.metadata as string)
+                  this.unEscapeSpecialChars(
+                    (document.metadata ?? "{}") as string
+                  )
                 ),
               }),
               Number(document.vector_score),
