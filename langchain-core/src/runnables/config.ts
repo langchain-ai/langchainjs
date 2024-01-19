@@ -21,6 +21,9 @@ export interface RunnableConfig extends BaseCallbackConfig {
 
   /** Maximum number of parallel calls to make. */
   maxConcurrency?: number;
+
+  /** For streaming only: preemptively load the first streamed chunk of the stream to detect errors. */
+  beginStreamImmediately?: boolean;
 }
 
 export async function getCallbackManagerForConfig(config?: RunnableConfig) {

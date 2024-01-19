@@ -181,7 +181,7 @@ export class AsyncGeneratorWithSetup<
 
   private firstResultUsed = false;
 
-  constructor(generator: AsyncGenerator<T>, startSetup: () => Promise<S>) {
+  constructor(generator: AsyncGenerator<T>, startSetup?: () => Promise<S>) {
     this.generator = generator;
     // setup is a promise that resolves only after the first iterator value
     // is available. this is useful when setup of several piped generators

@@ -16,6 +16,7 @@ import {
   type IterableReadableStreamInterface,
   atee,
   pipeGeneratorWithSetup,
+  AsyncGeneratorWithSetup,
 } from "../utils/stream.js";
 import {
   DEFAULT_RECURSION_LIMIT,
@@ -313,6 +314,13 @@ export abstract class Runnable<
     input: RunInput,
     options?: Partial<CallOptions>
   ): Promise<IterableReadableStream<RunOutput>> {
+    if (options?.beginStreamImmediately) {
+      const wrappedGenerator = new AsyncGeneratorWithSetup(
+        this._streamIterator(input, options)
+      );
+      await wrappedGenerator.setup;
+      return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
+    }
     return IterableReadableStream.fromAsyncGenerator(
       this._streamIterator(input, options)
     );

@@ -44,6 +44,19 @@ test("Test stream", async () => {
   }
 });
 
+test("Test stream with an immediate thrown error", async () => {
+  const llm = new FakeStreamingLLM({
+    thrownErrorString: "testing",
+  });
+  try {
+    await llm.stream("Hi there!", {
+      beginStreamImmediately: true,
+    });
+  } catch (e: any) {
+    expect(e.message).toEqual("testing");
+  }
+});
+
 test("Test chat model stream", async () => {
   const llm = new FakeChatModel({});
   const stream = await llm.stream("Hi there!");
