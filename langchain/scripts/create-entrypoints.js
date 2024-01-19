@@ -158,6 +158,7 @@ const entrypoints = {
   "document_loaders/web/azure_blob_storage_file":
     "document_loaders/web/azure_blob_storage_file",
   "document_loaders/web/cheerio": "document_loaders/web/cheerio",
+  "document_loaders/web/clipper": "document_loaders/web/clipper",
   "document_loaders/web/puppeteer": "document_loaders/web/puppeteer",
   "document_loaders/web/playwright": "document_loaders/web/playwright",
   "document_loaders/web/college_confidential":
@@ -609,6 +610,7 @@ const requiresOptionalDependency = [
   "document_loaders/web/azure_blob_storage_container",
   "document_loaders/web/azure_blob_storage_file",
   "document_loaders/web/cheerio",
+  "document_loaders/web/clipper",
   "document_loaders/web/puppeteer",
   "document_loaders/web/playwright",
   "document_loaders/web/college_confidential",

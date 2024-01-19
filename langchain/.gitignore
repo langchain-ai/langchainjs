@@ -400,6 +400,9 @@ document_loaders/web/azure_blob_storage_file.d.ts
 document_loaders/web/cheerio.cjs
 document_loaders/web/cheerio.js
 document_loaders/web/cheerio.d.ts
+document_loaders/web/clipper.cjs
+document_loaders/web/clipper.js
+document_loaders/web/clipper.d.ts
 document_loaders/web/puppeteer.cjs
 document_loaders/web/puppeteer.js
 document_loaders/web/puppeteer.d.ts

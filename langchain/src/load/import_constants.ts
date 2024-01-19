@@ -84,6 +84,7 @@ export const optionalImportEntrypoints = [
   "langchain/document_loaders/web/azure_blob_storage_container",
   "langchain/document_loaders/web/azure_blob_storage_file",
   "langchain/document_loaders/web/cheerio",
+  "langchain/document_loaders/web/clipper",
   "langchain/document_loaders/web/puppeteer",
   "langchain/document_loaders/web/playwright",
   "langchain/document_loaders/web/college_confidential",

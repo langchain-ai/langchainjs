@@ -43,6 +43,8 @@ export function listExternals() {
     "firebase-admin/firestore",
     "web-auth-library/google",
     "@google-ai/generativelanguage/build/protos/protos.js",
+    "@philschmid/clipper/dist/clipper.js",
+    "@philschmid/clipper/dist/crawler.js",
   ];
 }
 
