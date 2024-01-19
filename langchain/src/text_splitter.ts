@@ -757,8 +757,8 @@ export class TokenTextSplitter
       if (start_idx > 0) {
         start_idx -= this.chunkOverlap;
       }
-      let end_idx = Math.min(start_idx + this.chunkSize, input_ids.length);
-      let chunk_ids = input_ids.slice(start_idx, end_idx);
+      const end_idx = Math.min(start_idx + this.chunkSize, input_ids.length);
+      const chunk_ids = input_ids.slice(start_idx, end_idx);
       splits.push(this.tokenizer.decode(chunk_ids));
       start_idx = end_idx;
     }
