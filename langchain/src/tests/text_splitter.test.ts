@@ -358,7 +358,7 @@ test("Token text splitter overlap when last chunk is large", async () => {
     chunkOverlap: 3,
   });
   const output = await splitter.splitText(text);
-  const expectedOutput = ["foo bar b az a", "b az a a"];
+  const expectedOutput = ["foo bar baz a", " baz a a"];
 
   expect(output).toEqual(expectedOutput);
 });
