@@ -179,26 +179,15 @@ export const getTableAndColumnsName = async (
 
   if (appDataSource.options.type === "mssql") {
     const schema = appDataSource.options?.schema;
-    const sqlWithSchema =
-      "SELECT " +
-      "TABLE_NAME AS table_name, " +
-      "COLUMN_NAME AS column_name, " +
-      "DATA_TYPE AS data_type, " +
-      "IS_NULLABLE AS is_nullable " +
-      "FROM INFORMATION_SCHEMA.COLUMNS " +
-      `WHERE TABLE_SCHEMA = '${schema}'` +
-      "ORDER BY TABLE_NAME, ORDINAL_POSITION;";
+    const sql = `SELECT
+    TABLE_NAME AS table_name,
+    COLUMN_NAME AS column_name,
+    DATA_TYPE AS data_type,
+    IS_NULLABLE AS is_nullable
+    FROM INFORMATION_SCHEMA.COLUMNS
+    ${schema && `WHERE TABLE_SCHEMA = '${schema}'`} 
+ORDER BY TABLE_NAME, ORDINAL_POSITION;`
 
-    const sqlWithoutSchema =
-      "SELECT " +
-      "TABLE_NAME AS table_name, " +
-      "COLUMN_NAME AS column_name, " +
-      "DATA_TYPE AS data_type, " +
-      "IS_NULLABLE AS is_nullable " +
-      "FROM INFORMATION_SCHEMA.COLUMNS " +
-      "ORDER BY TABLE_NAME, ORDINAL_POSITION;";
-
-    sql = schema ? sqlWithSchema : sqlWithoutSchema;
     const rep = await appDataSource.query(sql);
     return formatToSqlTable(rep);
   }
@@ -277,7 +266,7 @@ export const generateTableInfoFromTables = async (
     // Add the custom info of the table
     const tableCustomDescription =
       customDescription &&
-      Object.keys(customDescription).includes(currentTable.tableName)
+        Object.keys(customDescription).includes(currentTable.tableName)
         ? `${customDescription[currentTable.tableName]}\n`
         : "";
     // Add the creation of the table in SQL
@@ -301,9 +290,8 @@ export const generateTableInfoFromTables = async (
       if (key > 0) {
         sqlCreateTableQuery += ", ";
       }
-      sqlCreateTableQuery += `${currentColumn.columnName} ${
-        currentColumn.dataType
-      } ${currentColumn.isNullable ? "" : "NOT NULL"}`;
+      sqlCreateTableQuery += `${currentColumn.columnName} ${currentColumn.dataType
+        } ${currentColumn.isNullable ? "" : "NOT NULL"}`;
     }
     sqlCreateTableQuery += ") \n";
 
@@ -349,10 +337,10 @@ export const generateTableInfoFromTables = async (
 
     globalString = globalString.concat(
       tableCustomDescription +
-        sqlCreateTableQuery +
-        sqlSelectInfoQuery +
-        columnNamesConcatString +
-        sample
+      sqlCreateTableQuery +
+      sqlSelectInfoQuery +
+      columnNamesConcatString +
+      sample
     );
   }
 
