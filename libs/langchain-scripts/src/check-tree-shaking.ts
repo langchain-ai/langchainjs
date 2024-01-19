@@ -51,12 +51,15 @@ async function listExternals(extraInternals: Array<string | RegExp>) {
   ];
 }
 
-export async function checkTreeShaking({
-  extraInternals = [],
-}: {
-  extraInternals: Array<string | RegExp>;
-}) {
-  const externals = await listExternals(extraInternals);
+type TreeShakingArgs = {
+  /**
+   * @default [...Object.keys(packageJson.dependencies), ...Object.keys(packageJson.peerDependencies), /node:/, /@langchain\/core\//]
+   */
+  extraInternals?: Array<string | RegExp>;
+};
+
+export async function checkTreeShaking(options?: TreeShakingArgs) {
+  const externals = await listExternals(options?.extraInternals ?? []);
   const entrypoints = await listEntrypoints();
   const consoleLog = console.log;
   const reportMap: Map<

@@ -1,6 +1,5 @@
 import { createEntrypoints } from "@langchain/scripts";
-import path from "path";
-import { identifySecrets } from "./identify-secrets.js"
+import * as path from "path";
 
 // This lists all the entrypoints for the library. Each key corresponds to an
 // importable path, eg. `import { AgentExecutor } from "langchain/agents"`.

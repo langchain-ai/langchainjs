@@ -34,7 +34,6 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "workspace:^",
     "rollup": "^4.5.2",
     "typescript": "<5.2.0"
   },
