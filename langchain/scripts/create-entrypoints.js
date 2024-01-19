@@ -1,4 +1,6 @@
 import { createEntrypoints } from "@langchain/scripts";
+import path from "path";
+import { identifySecrets } from "./identify-secrets.js"
 
 // This lists all the entrypoints for the library. Each key corresponds to an
 // importable path, eg. `import { AgentExecutor } from "langchain/agents"`.
@@ -806,6 +808,8 @@ const extraImportMapEntries = [
   },
 ];
 
+const absTsConfigPath = path.resolve(process.cwd(), "tsconfig.json");
+
 createEntrypoints({
   entrypoints,
   deprecatedNodeOnly,
@@ -813,4 +817,5 @@ createEntrypoints({
   deprecatedOmitFromImportMap,
   shouldTestExports: true,
   extraImportMapEntries,
+  absTsConfigPath,
 });

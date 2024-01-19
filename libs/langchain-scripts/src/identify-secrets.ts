@@ -1,29 +1,40 @@
 import ts from "typescript";
 import * as fs from "fs";
 
-export function identifySecrets() {
+export function identifySecrets(absTsConfigPath: string) {
   const secrets = new Set();
 
   const tsConfig = ts.parseJsonConfigFileContent(
-    ts.readJsonConfigFile("./tsconfig.json", (p) =>
-      fs.readFileSync(p, "utf-8")
-    ),
+    ts.readJsonConfigFile(absTsConfigPath, (p) => fs.readFileSync(p, "utf-8")),
     ts.sys,
     "./src/"
   );
 
+  // `tsConfig.options.target` is not always defined when running this
+  // via the `@langchain/scripts` package. Instead, fallback to the raw
+  // tsConfig.json file contents.
+  const tsConfigFileContentsText =
+    "text" in tsConfig.raw
+      ? JSON.parse(tsConfig.raw.text as string)
+      : { compilerOptions: {} };
+
+  const tsConfigTarget =
+    tsConfig.options.target || tsConfigFileContentsText.compilerOptions.target;
+
   for (const fileName of tsConfig.fileNames.filter(
     (fn) => !fn.endsWith("test.ts")
   )) {
-    if (!tsConfig.options.target) {
-      throw new Error("tsConfig.options.target is undefined");
+    if (!tsConfigTarget) {
+      continue;
     }
+
     const sourceFile = ts.createSourceFile(
       fileName,
       fs.readFileSync(fileName, "utf-8"),
-      tsConfig.options.target,
+      tsConfigTarget,
       true
     );
+
     sourceFile.forEachChild((node) => {
       switch (node.kind) {
         case ts.SyntaxKind.ClassDeclaration:

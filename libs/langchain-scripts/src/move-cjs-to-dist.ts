@@ -1,16 +1,23 @@
-import { resolve, dirname, parse, format } from "node:path";
+import { parse, format } from "node:path";
 import { readdir, readFile, writeFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
 
-function abs(relativePath: string) {
-  return resolve(dirname(fileURLToPath(import.meta.url)), relativePath);
-}
-
-export async function moveAndRename(source: string, dest: string) {
+export async function moveAndRename({
+  source,
+  dest,
+  abs,
+}: {
+  source: string;
+  dest: string;
+  abs: (p: string) => string;
+}) {
   try {
     for (const file of await readdir(abs(source), { withFileTypes: true })) {
       if (file.isDirectory()) {
-        await moveAndRename(`${source}/${file.name}`, `${dest}/${file.name}`);
+        await moveAndRename({
+          source: `${source}/${file.name}`,
+          dest: `${dest}/${file.name}`,
+          abs,
+        });
       } else if (file.isFile()) {
         const parsed = parse(file.name);
 
