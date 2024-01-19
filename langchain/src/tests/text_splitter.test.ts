@@ -350,6 +350,19 @@ test("Token text splitter", async () => {
   expect(output).toEqual(expectedOutput);
 });
 
+test("Token text splitter overlap when last chunk is large", async () => {
+  const text = "foo bar baz a a";
+  const splitter = new TokenTextSplitter({
+    encodingName: "r50k_base",
+    chunkSize: 5,
+    chunkOverlap: 3,
+  });
+  const output = await splitter.splitText(text);
+  const expectedOutput = ["foo bar b az a", "b az a a"];
+
+  expect(output).toEqual(expectedOutput);
+});
+
 test("Test markdown text splitter", async () => {
   const text =
     "# 🦜️🔗 LangChain\n" +
