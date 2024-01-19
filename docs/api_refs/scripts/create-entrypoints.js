@@ -10,11 +10,9 @@ const BASE_TYPEDOC_CONFIG = {
     "visibility",
     "instance-first",
     "required-first",
-    "alphabetical"
+    "alphabetical",
   ],
-  plugin: [
-    "./typedoc_plugins/hide_underscore_lc.js"
-  ],
+  plugin: ["./typedoc_plugins/hide_underscore_lc.js"],
   tsconfig: "../../tsconfig.json",
   readme: "none",
   excludePrivate: true,
@@ -22,14 +20,13 @@ const BASE_TYPEDOC_CONFIG = {
   excludeExternals: true,
   excludeNotDocumented: false,
   includeVersion: true,
-  sourceLinkTemplate: "https://github.com/langchain-ai/langchainjs/blob/{gitRevision}/{path}#L{line}",
+  sourceLinkTemplate:
+    "https://github.com/langchain-ai/langchainjs/blob/{gitRevision}/{path}#L{line}",
   logLevel: "Error",
   name: "LangChain.js",
   skipErrorChecking: true,
-  exclude: [
-    "dist"
-  ],
-}
+  exclude: ["dist"],
+};
 
 /**
  *
