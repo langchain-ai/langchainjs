@@ -1,12 +1,12 @@
 import { test, expect } from "@jest/globals";
-import { PromptLayerAzureSDKOpenAI } from "../azure_openai.js";
-import { PromptLayerAzureSDKOpenAIChat } from "../azure_openai-chat.js";
+import { PromptLayerAzureOpenAI } from "../azure_openai.js";
+import { PromptLayerAzureOpenAIChat } from "../azure_openai-chat.js";
 
 import { PromptLayerChatOpenAI } from "../../chat_models/openai.js";
 import { SystemMessage } from "../../schema/index.js";
 
-test("Test PromptLayerOpenAI returns promptLayerID if returnPromptLayerId=true", async () => {
-  const model = new PromptLayerAzureSDKOpenAI({
+test("Test PromptLayerAzureOpenAI returns promptLayerID if returnPromptLayerId=true", async () => {
+  const model = new PromptLayerAzureOpenAI({
     maxTokens: 5,
     modelName: "text-ada-001",
     returnPromptLayerId: true,
@@ -18,7 +18,7 @@ test("Test PromptLayerOpenAI returns promptLayerID if returnPromptLayerId=true",
     typeof res.generations[0][0].generationInfo?.promptLayerRequestId
   ).toBe("number");
 
-  const modelB = new PromptLayerAzureSDKOpenAI({
+  const modelB = new PromptLayerAzureOpenAI({
     maxTokens: 5,
     modelName: "text-ada-001",
   });
@@ -30,7 +30,7 @@ test("Test PromptLayerOpenAI returns promptLayerID if returnPromptLayerId=true",
 });
 
 test("Test PromptLayerOpenAIChat returns promptLayerID if returnPromptLayerId=true", async () => {
-  const model = new PromptLayerAzureSDKOpenAIChat({
+  const model = new PromptLayerAzureOpenAIChat({
     prefixMessages: [
       {
         role: "system",
@@ -46,7 +46,7 @@ test("Test PromptLayerOpenAIChat returns promptLayerID if returnPromptLayerId=tr
     typeof res.generations[0][0].generationInfo?.promptLayerRequestId
   ).toBe("number");
 
-  const modelB = new PromptLayerAzureSDKOpenAIChat({
+  const modelB = new PromptLayerAzureOpenAIChat({
     prefixMessages: [
       {
         role: "system",

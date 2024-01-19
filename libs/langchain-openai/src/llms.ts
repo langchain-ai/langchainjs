@@ -32,7 +32,7 @@ export { OpenAIChat };
 /**
  * Interface for tracking token usage in OpenAI calls.
  */
-export interface TokenUsage {
+interface TokenUsage {
   completionTokens?: number;
   promptTokens?: number;
   totalTokens?: number;

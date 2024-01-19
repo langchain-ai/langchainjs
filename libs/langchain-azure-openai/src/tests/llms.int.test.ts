@@ -3,11 +3,11 @@ import { LLMResult } from "@langchain/core/outputs";
 import { StringPromptValue } from "@langchain/core/prompt_values";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
-import { AzureSDKOpenAI } from "../azure/llms_sdk.js";
-import { AzureSDKChatOpenAI } from "../azure/chat_models_sdk.js";
+import { AzureOpenAI } from "../llms.js";
+import { AzureOpenAIChat } from "../chat_models.js";
 
 test("Test OpenAI", async () => {
-  const model = new AzureSDKOpenAI({
+  const model = new AzureOpenAI({
     maxTokens: 5,
     modelName: "gpt-3.5-turbo-instruct",
   });
@@ -16,7 +16,7 @@ test("Test OpenAI", async () => {
 });
 
 test("Test OpenAI with stop", async () => {
-  const model = new AzureSDKOpenAI({
+  const model = new AzureOpenAI({
     maxTokens: 5,
     modelName: "gpt-3.5-turbo-instruct",
   });
@@ -25,7 +25,7 @@ test("Test OpenAI with stop", async () => {
 });
 
 test("Test OpenAI with stop in object", async () => {
-  const model = new AzureSDKOpenAI({
+  const model = new AzureOpenAI({
     maxTokens: 5,
     modelName: "gpt-3.5-turbo-instruct",
   });
@@ -34,7 +34,7 @@ test("Test OpenAI with stop in object", async () => {
 });
 
 test("Test OpenAI with timeout in call options", async () => {
-  const model = new AzureSDKOpenAI({
+  const model = new AzureOpenAI({
     maxTokens: 5,
     modelName: "gpt-3.5-turbo-instruct",
   });
@@ -46,7 +46,7 @@ test("Test OpenAI with timeout in call options", async () => {
 }, 5000);
 
 test("Test OpenAI with timeout in call options and node adapter", async () => {
-  const model = new AzureSDKOpenAI({
+  const model = new AzureOpenAI({
     maxTokens: 5,
     modelName: "gpt-3.5-turbo-instruct",
   });
@@ -58,7 +58,7 @@ test("Test OpenAI with timeout in call options and node adapter", async () => {
 }, 5000);
 
 test("Test OpenAI with signal in call options", async () => {
-  const model = new AzureSDKOpenAI({
+  const model = new AzureOpenAI({
     maxTokens: 5,
     modelName: "gpt-3.5-turbo-instruct",
   });
@@ -75,7 +75,7 @@ test("Test OpenAI with signal in call options", async () => {
 }, 5000);
 
 test("Test OpenAI with signal in call options and node adapter", async () => {
-  const model = new AzureSDKOpenAI({
+  const model = new AzureOpenAI({
     maxTokens: 5,
     modelName: "gpt-3.5-turbo-instruct",
   });
@@ -92,7 +92,7 @@ test("Test OpenAI with signal in call options and node adapter", async () => {
 }, 5000);
 
 test("Test OpenAI with concurrency == 1", async () => {
-  const model = new AzureSDKOpenAI({
+  const model = new AzureOpenAI({
     maxTokens: 5,
     modelName: "gpt-3.5-turbo-instruct",
     maxConcurrency: 1,
@@ -105,7 +105,7 @@ test("Test OpenAI with concurrency == 1", async () => {
 });
 
 test("Test OpenAI with maxTokens -1", async () => {
-  const model = new AzureSDKOpenAI({
+  const model = new AzureOpenAI({
     maxTokens: -1,
     modelName: "gpt-3.5-turbo-instruct",
   });
@@ -114,26 +114,26 @@ test("Test OpenAI with maxTokens -1", async () => {
 });
 
 test("Test OpenAI with chat model returns OpenAIChat", async () => {
-  const model = new AzureSDKOpenAI({ modelName: "gpt-3.5-turbo" });
-  expect(model).toBeInstanceOf(AzureSDKChatOpenAI);
+  const model = new AzureOpenAI({ modelName: "gpt-3.5-turbo" });
+  expect(model).toBeInstanceOf(AzureOpenAIChat);
   const res = await model.call("Print hello world");
   console.log({ res });
   expect(typeof res).toBe("string");
 });
 
 test("Test OpenAI with instruct model returns OpenAI", async () => {
-  const model = new AzureSDKOpenAI({ modelName: "gpt-3.5-turbo-instruct" });
-  expect(model).toBeInstanceOf(AzureSDKOpenAI);
+  const model = new AzureOpenAI({ modelName: "gpt-3.5-turbo-instruct" });
+  expect(model).toBeInstanceOf(AzureOpenAI);
   const res = await model.call("Print hello world");
   console.log({ res });
   expect(typeof res).toBe("string");
 });
 
 test("Test OpenAI with versioned instruct model returns OpenAI", async () => {
-  const model = new AzureSDKOpenAI({
+  const model = new AzureOpenAI({
     modelName: "gpt-3.5-turbo-instruct-0914",
   });
-  expect(model).toBeInstanceOf(AzureSDKOpenAI);
+  expect(model).toBeInstanceOf(AzureOpenAI);
   const res = await model.call("Print hello world");
   console.log({ res });
   expect(typeof res).toBe("string");
@@ -146,7 +146,7 @@ test("Test ChatOpenAI tokenUsage", async () => {
     totalTokens: 0,
   };
 
-  const model = new AzureSDKOpenAI({
+  const model = new AzureOpenAI({
     maxTokens: 5,
     modelName: "gpt-3.5-turbo-instruct",
     callbackManager: CallbackManager.fromHandlers({
@@ -165,7 +165,7 @@ test("Test OpenAI in streaming mode", async () => {
   let nrNewTokens = 0;
   let streamedCompletion = "";
 
-  const model = new AzureSDKOpenAI({
+  const model = new AzureOpenAI({
     maxTokens: 5,
     modelName: "gpt-3.5-turbo-instruct",
     streaming: true,
@@ -190,7 +190,7 @@ test("Test OpenAI in streaming mode with multiple prompts", async () => {
     ["", ""],
   ];
 
-  const model = new AzureSDKOpenAI({
+  const model = new AzureOpenAI({
     maxTokens: 5,
     modelName: "gpt-3.5-turbo-instruct",
     streaming: true,
@@ -219,7 +219,7 @@ test("Test OpenAIChat in streaming mode with multiple prompts", async () => {
   let nrNewTokens = 0;
   const completions = [[""], [""]];
 
-  const model = new AzureSDKOpenAI({
+  const model = new AzureOpenAI({
     maxTokens: 5,
     modelName: "gpt-3.5-turbo",
     streaming: true,
@@ -245,7 +245,7 @@ test("Test OpenAIChat in streaming mode with multiple prompts", async () => {
 });
 
 test("Test OpenAI prompt value", async () => {
-  const model = new AzureSDKOpenAI({
+  const model = new AzureOpenAI({
     maxTokens: 5,
     modelName: "gpt-3.5-turbo-instruct",
   });
@@ -263,7 +263,7 @@ test("Test OpenAI prompt value", async () => {
 });
 
 test("Test OpenAI stream method", async () => {
-  const model = new AzureSDKOpenAI({
+  const model = new AzureOpenAI({
     maxTokens: 50,
     modelName: "gpt-3.5-turbo-instruct",
   });
@@ -277,7 +277,7 @@ test("Test OpenAI stream method", async () => {
 
 test("Test OpenAI stream method with abort", async () => {
   await expect(async () => {
-    const model = new AzureSDKOpenAI({
+    const model = new AzureOpenAI({
       maxTokens: 250,
       modelName: "gpt-3.5-turbo-instruct",
     });
@@ -294,7 +294,7 @@ test("Test OpenAI stream method with abort", async () => {
 });
 
 test("Test OpenAI stream method with early break", async () => {
-  const model = new AzureSDKOpenAI({
+  const model = new AzureOpenAI({
     maxTokens: 50,
     modelName: "gpt-3.5-turbo-instruct",
   });

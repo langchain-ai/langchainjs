@@ -1193,6 +1193,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.9.1",
+    "@langchain/azure-openai": "~0.0.1",
     "@langchain/community": "~0.0.15",
     "@langchain/core": "~0.1.9",
     "@langchain/openai": "~0.0.10",

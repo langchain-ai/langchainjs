@@ -1,7 +1,7 @@
 {
-  "name": "@langchain/openai",
-  "version": "0.0.10",
-  "description": "OpenAI integrations for LangChain.js",
+  "name": "@langchain/azure-openai",
+  "version": "0.0.1",
+  "description": "Azure SDK for OpenAI integrations for LangChain.js",
   "type": "module",
   "engines": {
     "node": ">=18"
@@ -35,9 +35,10 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
+    "@azure/openai": "1.0.0-beta.10",
     "@langchain/core": "~0.1.9",
+    "@langchain/openai": "~0.0.12",
     "js-tiktoken": "^1.0.7",
-    "openai": "^4.19.0",
     "zod": "^3.22.3",
     "zod-to-json-schema": "3.20.3"
   },
@@ -75,7 +76,9 @@
     "ml",
     "openai",
     "embeddings",
-    "vectorstores"
+    "vectorstores",
+    "azure",
+    "azure SDK"
   ],
   "exports": {
     ".": {

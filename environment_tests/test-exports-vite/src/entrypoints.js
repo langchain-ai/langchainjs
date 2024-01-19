@@ -32,6 +32,7 @@ export * from "langchain/embeddings/minimax";
 export * from "langchain/embeddings/voyage";
 export * from "langchain/llms/base";
 export * from "langchain/llms/openai";
+export * from "langchain/llms/azure_openai";
 export * from "langchain/llms/ai21";
 export * from "langchain/llms/aleph_alpha";
 export * from "langchain/llms/cloudflare_workersai";

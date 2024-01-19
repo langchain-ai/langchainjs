@@ -15,12 +15,19 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { GenerationChunk, type LLMResult } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { AzureOpenAIInput, OpenAICallOptions, OpenAIInput } from "../types.js";
-import { AzureSDKChatOpenAI } from "./chat_models_sdk.js";
-import { TokenUsage } from "../llms.js";
-// import { promptLayerTrackRequest } from "../util/prompt-layer.js";
+import { AzureOpenAIInput, OpenAICallOptions, OpenAIInput } from "./types.js";
+import { AzureOpenAIChat } from "./chat_models.js";
 
-export class AzureSDKOpenAI<
+/**
+ * Interface for tracking token usage in OpenAI calls.
+ */
+export interface TokenUsage {
+  completionTokens?: number;
+  promptTokens?: number;
+  totalTokens?: number;
+}
+
+export class AzureOpenAI<
     CallOptions extends OpenAICallOptions = OpenAICallOptions
   >
   extends BaseLLM<CallOptions>
@@ -108,9 +115,9 @@ export class AzureSDKOpenAI<
       !fields?.modelName?.includes("-instruct")
     ) {
       // eslint-disable-next-line no-constructor-return
-      return new AzureSDKChatOpenAI(
+      return new AzureOpenAIChat(
         fields
-      ) as unknown as AzureSDKOpenAI<CallOptions>;
+      ) as unknown as AzureOpenAI<CallOptions>;
     }
     super(fields ?? {});
 

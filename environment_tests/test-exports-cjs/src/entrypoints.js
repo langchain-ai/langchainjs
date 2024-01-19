@@ -32,6 +32,7 @@ const embeddings_minimax = require("langchain/embeddings/minimax");
 const embeddings_voyage = require("langchain/embeddings/voyage");
 const llms_base = require("langchain/llms/base");
 const llms_openai = require("langchain/llms/openai");
+const llms_azure_openai = require("langchain/llms/azure_openai");
 const llms_ai21 = require("langchain/llms/ai21");
 const llms_aleph_alpha = require("langchain/llms/aleph_alpha");
 const llms_cloudflare_workersai = require("langchain/llms/cloudflare_workersai");

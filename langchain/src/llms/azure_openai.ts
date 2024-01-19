@@ -1,4 +1,4 @@
-import { AzureSDKOpenAI } from "@langchain/openai";
+import { AzureOpenAI } from "@langchain/azure-openai";
 import { getEnvironmentVariable } from "../util/env.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import type { LLMResult } from "../schema/index.js";
@@ -8,7 +8,7 @@ import { promptLayerTrackRequest } from "../util/prompt-layer.js";
  * PromptLayer wrapper to OpenAI
  * @augments OpenAI
  */
-export class PromptLayerAzureSDKOpenAI extends AzureSDKOpenAI {
+export class PromptLayerAzureOpenAI extends AzureOpenAI {
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       promptLayerApiKey: "PROMPTLAYER_API_KEY",
@@ -24,7 +24,7 @@ export class PromptLayerAzureSDKOpenAI extends AzureSDKOpenAI {
   returnPromptLayerId?: boolean;
 
   constructor(
-    fields?: ConstructorParameters<typeof AzureSDKOpenAI>[0] & {
+    fields?: ConstructorParameters<typeof AzureOpenAI>[0] & {
       promptLayerApiKey?: string;
       plTags?: string[];
       returnPromptLayerId?: boolean;
@@ -88,6 +88,6 @@ export class PromptLayerAzureSDKOpenAI extends AzureSDKOpenAI {
 }
 
 export {
-  AzureSDKChatOpenAI,
-  PromptLayerAzureSDKOpenAIChat,
+  AzureOpenAIChat,
+  PromptLayerAzureOpenAIChat,
 } from "./azure_openai-chat.js";

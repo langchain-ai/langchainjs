@@ -1,9 +1,9 @@
 import { expect, test } from "@jest/globals";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
-import { AzureSDKChatOpenAI } from "../azure/chat_models_sdk.js";
+import { AzureOpenAIChat } from "../chat_models.js";
 
 test("Test OpenAI", async () => {
-  const model = new AzureSDKChatOpenAI({
+  const model = new AzureOpenAIChat({
     modelName: "gpt-3.5-turbo",
     maxTokens: 10,
   });
@@ -12,7 +12,7 @@ test("Test OpenAI", async () => {
 });
 
 test("Test OpenAI with prefix messages", async () => {
-  const model = new AzureSDKChatOpenAI({
+  const model = new AzureOpenAIChat({
     prefixMessages: [
       { role: "user", content: "My name is John" },
       { role: "assistant", content: "Hi there" },
@@ -27,7 +27,7 @@ test("Test OpenAI in streaming mode", async () => {
   let nrNewTokens = 0;
   let streamedCompletion = "";
 
-  const model = new AzureSDKChatOpenAI({
+  const model = new AzureOpenAIChat({
     maxTokens: 10,
     modelName: "gpt-3.5-turbo",
     streaming: true,
@@ -46,19 +46,19 @@ test("Test OpenAI in streaming mode", async () => {
 }, 30000);
 
 test("Test OpenAI with stop", async () => {
-  const model = new AzureSDKChatOpenAI({ maxTokens: 5 });
+  const model = new AzureOpenAIChat({ maxTokens: 5 });
   const res = await model.call("Print hello world", ["world"]);
   console.log({ res });
 });
 
 test("Test OpenAI with stop in object", async () => {
-  const model = new AzureSDKChatOpenAI({ maxTokens: 5 });
+  const model = new AzureOpenAIChat({ maxTokens: 5 });
   const res = await model.call("Print hello world", { stop: ["world"] });
   console.log({ res });
 });
 
 test("Test OpenAI with timeout in call options", async () => {
-  const model = new AzureSDKChatOpenAI({ maxTokens: 5 });
+  const model = new AzureOpenAIChat({ maxTokens: 5 });
   await expect(() =>
     model.call("Print hello world", {
       timeout: 10,
@@ -67,7 +67,7 @@ test("Test OpenAI with timeout in call options", async () => {
 }, 5000);
 
 test("Test OpenAI with timeout in call options and node adapter", async () => {
-  const model = new AzureSDKChatOpenAI({ maxTokens: 5 });
+  const model = new AzureOpenAIChat({ maxTokens: 5 });
   await expect(() =>
     model.call("Print hello world", {
       timeout: 10,
@@ -76,7 +76,7 @@ test("Test OpenAI with timeout in call options and node adapter", async () => {
 }, 5000);
 
 test("Test OpenAI with signal in call options", async () => {
-  const model = new AzureSDKChatOpenAI({ maxTokens: 5 });
+  const model = new AzureOpenAIChat({ maxTokens: 5 });
   const controller = new AbortController();
   await expect(() => {
     const ret = model.call("Print hello world", {
@@ -90,7 +90,7 @@ test("Test OpenAI with signal in call options", async () => {
 }, 5000);
 
 test("Test OpenAI with signal in call options and node adapter", async () => {
-  const model = new AzureSDKChatOpenAI({ maxTokens: 5 });
+  const model = new AzureOpenAIChat({ maxTokens: 5 });
   const controller = new AbortController();
   await expect(() => {
     const ret = model.call("Print hello world", {
@@ -104,7 +104,7 @@ test("Test OpenAI with signal in call options and node adapter", async () => {
 }, 5000);
 
 test("Test OpenAIChat stream method", async () => {
-  const model = new AzureSDKChatOpenAI({
+  const model = new AzureOpenAIChat({
     maxTokens: 50,
     modelName: "gpt-3.5-turbo",
   });
@@ -119,7 +119,7 @@ test("Test OpenAIChat stream method", async () => {
 
 test("Test OpenAIChat stream method with abort", async () => {
   await expect(async () => {
-    const model = new AzureSDKChatOpenAI({
+    const model = new AzureOpenAIChat({
       maxTokens: 50,
       modelName: "gpt-3.5-turbo",
     });
@@ -136,7 +136,7 @@ test("Test OpenAIChat stream method with abort", async () => {
 });
 
 test("Test OpenAIChat stream method with early break", async () => {
-  const model = new AzureSDKChatOpenAI({
+  const model = new AzureOpenAIChat({
     maxTokens: 50,
     modelName: "gpt-3.5-turbo",
   });

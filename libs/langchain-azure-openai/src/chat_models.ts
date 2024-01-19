@@ -7,58 +7,17 @@ import {
   FunctionName,
   AzureExtensionsOptions,
   ChatChoice,
+  ChatRequestMessage
 } from "@azure/openai";
-import { OpenAI as OpenAIClient } from "openai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { GenerationChunk } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-// import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 import { LLM, type BaseLLMParams } from "@langchain/core/language_models/llms";
-import { AzureOpenAIInput, OpenAIChatInput } from "../types.js";
-import { OpenAIChatCallOptions } from "../legacy.js";
+import { AzureOpenAIInput, OpenAIChatCallOptions, OpenAIChatInput } from "./types.js";
 
 export { type AzureOpenAIInput, type OpenAIChatInput };
 
-/**
- * Wrapper around OpenAI large language models that use the Chat endpoint.
- *
- * To use you should have the `openai` package installed, with the
- * `OPENAI_API_KEY` environment variable set.
- *
- * To use with Azure you should have the `openai` package installed, with the
- * `AZURE_OPENAI_API_KEY`,
- * `AZURE_OPENAI_API_INSTANCE_NAME`,
- * `AZURE_OPENAI_API_DEPLOYMENT_NAME`
- * and `AZURE_OPENAI_API_VERSION` environment variable set.
- *
- * @remarks
- * Any parameters that are valid to be passed to {@link
- * https://platform.openai.com/docs/api-reference/chat/create |
- * `openai.createCompletion`} can be passed through {@link modelKwargs}, even
- * if not explicitly available on this class.
- *
- * @augments BaseLLM
- * @augments OpenAIInput
- * @augments AzureOpenAIChatInput
- * @example
- * ```typescript
- * const model = new OpenAIChat({
- *   prefixMessages: [
- *     {
- *       role: "system",
- *       content: "You are a helpful assistant that answers in pirate language",
- *     },
- *   ],
- *   maxTokens: 50,
- * });
- *
- * const res = await model.call(
- *   "What would be a good company name for a company that makes colorful socks?"
- * );
- * console.log({ res });
- * ```
- */
-export class AzureSDKChatOpenAI
+export class AzureOpenAIChat
   extends LLM<OpenAIChatCallOptions>
   implements OpenAIChatInput, AzureOpenAIInput
 {
@@ -109,7 +68,7 @@ export class AzureSDKChatOpenAI
 
   modelName = "gpt-3.5-turbo";
 
-  prefixMessages?: OpenAIClient.Chat.ChatCompletionMessageParam[];
+  prefixMessages?: ChatRequestMessage[];
 
   modelKwargs?: OpenAIChatInput["modelKwargs"];
 
@@ -120,6 +79,7 @@ export class AzureSDKChatOpenAI
   user?: string;
 
   streaming = false;
+  
 
   functions?: FunctionDefinition[];
 
@@ -210,6 +170,21 @@ export class AzureSDKChatOpenAI
     );
   }
 
+  /**
+   * Formats the messages for the OpenAI API.
+   * @param prompt The prompt to be formatted.
+   * @returns Array of formatted messages.
+   */
+  private formatMessages(
+    prompt: string
+  ): ChatRequestMessage[] {
+    const message: ChatRequestMessage = {
+      role: "user",
+      content: prompt,
+    };
+    return this.prefixMessages ? [...this.prefixMessages, message] : [message];
+  }
+
   async *_streamResponseChunks(
     content: string,
     options: this["ParsedCallOptions"],
@@ -219,14 +194,9 @@ export class AzureSDKChatOpenAI
       throw new Error("Azure OpenAI Completion Deployment name not found");
     }
 
-    const streams = await this.client.streamChatCompletions(
+    const stream = await this.client.streamChatCompletions(
       this.azureOpenAIApiCompletionsDeploymentName,
-      [
-        {
-          content,
-          role: "user",
-        },
-      ],
+      this.formatMessages(content),
       {
         functions: this.functions,
         functionCall: this.functionCall,
@@ -247,7 +217,7 @@ export class AzureSDKChatOpenAI
       }
     );
 
-    for await (const data of streams) {
+    for await (const data of stream) {
       const choice: ChatChoice = data?.choices[0];
       if (!choice) {
         continue;
@@ -327,12 +297,7 @@ export class AzureSDKChatOpenAI
     } else {
       const streams = await this.client.streamChatCompletions(
         this.azureOpenAIApiCompletionsDeploymentName,
-        [
-          {
-            content,
-            role: "user",
-          },
-        ],
+        this.formatMessages(content),
         {
           functions: this.functions,
           functionCall: this.functionCall,

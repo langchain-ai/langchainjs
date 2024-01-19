@@ -20,6 +20,7 @@ export * as chains__openai_functions from "../chains/openai_functions/index.js";
 export * as chains__retrieval from "../chains/retrieval.js";
 export * as embeddings__cache_backed from "../embeddings/cache_backed.js";
 export * as embeddings__fake from "../embeddings/fake.js";
+export * as llms__azure_openai from "../llms/azure_openai.js";
 export * as llms__fake from "../llms/fake.js";
 export * as vectorstores__memory from "../vectorstores/memory.js";
 export * as text_splitter from "../text_splitter.js";
