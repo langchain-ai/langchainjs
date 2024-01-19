@@ -11,20 +11,23 @@ const DEFAULT_GITIGNORE_PATHS = ["node_modules", "dist", ".yarn"];
 const testExports: Array<[string, (p: string) => string]> = [
   [
     "test-exports-esm",
-    (p: string) => `import * as ${p.replace(/\//g, "_")} from "langchain/${p}";`
+    (p: string) =>
+      `import * as ${p.replace(/\//g, "_")} from "langchain/${p}";`,
   ],
   [
     "test-exports-esbuild",
-    (p: string) => `import * as ${p.replace(/\//g, "_")} from "langchain/${p}";`
+    (p: string) =>
+      `import * as ${p.replace(/\//g, "_")} from "langchain/${p}";`,
   ],
   [
     "test-exports-cjs",
-    (p: string) => `const ${p.replace(/\//g, "_")} = require("langchain/${p}");`
+    (p: string) =>
+      `const ${p.replace(/\//g, "_")} = require("langchain/${p}");`,
   ],
   ["test-exports-cf", (p: string) => `export * from "langchain/${p}";`],
   ["test-exports-vercel", (p: string) => `export * from "langchain/${p}";`],
   ["test-exports-vite", (p: string) => `export * from "langchain/${p}";`],
-  ["test-exports-bun", (p: string) => `export * from "langchain/${p}";`]
+  ["test-exports-bun", (p: string) => `export * from "langchain/${p}";`],
 ];
 
 const updateJsonFile = (
@@ -47,10 +50,10 @@ const generateFiles = (
       return [
         [
           `${key}.cjs`,
-          `module.exports = require('${relativePath}dist/${value}.cjs');`
+          `module.exports = require('${relativePath}dist/${value}.cjs');`,
         ],
         [`${key}.js`, `export * from '${compiledPath}'`],
-        [`${key}.d.ts`, `export * from '${compiledPath}'`]
+        [`${key}.d.ts`, `export * from '${compiledPath}'`],
       ];
     }
   );
@@ -62,7 +65,7 @@ const updateConfig = ({
   entrypoints,
   deprecatedNodeOnly,
   requiresOptionalDependency,
-  shouldTestExports
+  shouldTestExports,
 }: {
   entrypoints: Record<string, string>;
   deprecatedNodeOnly: Array<string>;
@@ -81,7 +84,7 @@ const updateConfig = ({
           const entryPoint = {
             types: `./${key}.d.ts`,
             import: `./${key}.js`,
-            require: `./${key}.cjs`
+            require: `./${key}.cjs`,
           };
 
           return [key === "index" ? "." : `./${key}`, entryPoint];
@@ -89,7 +92,7 @@ const updateConfig = ({
       ),
       { "./package.json": "./package.json" }
     ),
-    files: ["dist/", ...filenames]
+    files: ["dist/", ...filenames],
   }));
 
   // Write generated files
@@ -122,7 +125,7 @@ const updateConfig = ({
 };
 
 const cleanGenerated = ({
-  entrypoints
+  entrypoints,
 }: {
   entrypoints: Record<string, string>;
 }) => {
@@ -145,7 +148,7 @@ const importMap = (
   `langchain${packageSuffix ? `-${packageSuffix}` : ""}`,
   (k: string, p: string) =>
     `export * as ${k.replace(/\//g, "__")} from "../${p}.js";`,
-  "src/load/import_map.ts"
+  "src/load/import_map.ts",
 ];
 
 const generateImportMap = ({
@@ -153,7 +156,7 @@ const generateImportMap = ({
   requiresOptionalDependency,
   deprecatedNodeOnly,
   deprecatedOmitFromImportMap,
-  packageSuffix
+  packageSuffix,
 }: {
   entrypoints: Record<string, string>;
   requiresOptionalDependency: Array<string>;
@@ -185,14 +188,14 @@ const importTypes = (
     `  "@langchain${packageSuffix ? `/${packageSuffix}` : ""}/${k}"?:
     | typeof import("../${p}.js")
     | Promise<typeof import("../${p}.js")>;`,
-  "src/load/import_type.d.ts"
+  "src/load/import_type.d.ts",
 ];
 
 const generateImportTypes = ({
   entrypoints,
   requiresOptionalDependency,
   deprecatedNodeOnly,
-  packageSuffix
+  packageSuffix,
 }: {
   entrypoints: Record<string, string>;
   requiresOptionalDependency: Array<string>;
@@ -229,14 +232,14 @@ const importConstants = (
   `langchain${packageSuffix ? `-${packageSuffix}` : ""}`,
   (k: string) =>
     `  "langchain${packageSuffix ? `_${packageSuffix}` : ""}/${k}"`,
-  "src/load/import_constants.ts"
+  "src/load/import_constants.ts",
 ];
 
 const generateImportConstants = ({
   entrypoints,
   requiresOptionalDependency,
   deprecatedNodeOnly,
-  packageSuffix
+  packageSuffix,
 }: {
   entrypoints: Record<string, string>;
   requiresOptionalDependency: Array<string>;
@@ -264,7 +267,7 @@ export function createEntrypoints({
   deprecatedNodeOnly = [],
   deprecatedOmitFromImportMap = [],
   packageSuffix,
-  shouldTestExports = false
+  shouldTestExports = false,
 }: {
   /**
    * This lists all the entrypoints for the library. Each key corresponds to an
@@ -311,19 +314,19 @@ export function createEntrypoints({
         requiresOptionalDependency,
         deprecatedNodeOnly,
         deprecatedOmitFromImportMap,
-        packageSuffix: packageSuffix ?? null
+        packageSuffix: packageSuffix ?? null,
       });
       generateImportTypes({
         entrypoints,
         requiresOptionalDependency,
         deprecatedNodeOnly,
-        packageSuffix: packageSuffix ?? null
+        packageSuffix: packageSuffix ?? null,
       });
       generateImportConstants({
         entrypoints,
         requiresOptionalDependency,
         deprecatedNodeOnly,
-        packageSuffix: packageSuffix ?? null
+        packageSuffix: packageSuffix ?? null,
       });
     }
   } else {
@@ -331,7 +334,7 @@ export function createEntrypoints({
       entrypoints,
       deprecatedNodeOnly,
       requiresOptionalDependency,
-      shouldTestExports
+      shouldTestExports,
     });
   }
 }

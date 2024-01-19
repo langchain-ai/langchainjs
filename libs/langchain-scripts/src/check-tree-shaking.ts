@@ -46,7 +46,7 @@ async function listExternals() {
     ...Object.keys(packageJson.dependencies ?? {}),
     ...Object.keys(packageJson.peerDependencies ?? {}),
     /node:/,
-    /@langchain\/core\//
+    /@langchain\/core\//,
   ];
 }
 
@@ -75,12 +75,12 @@ export async function checkTreeShaking() {
     await rollup({
       external: externals,
       input: entrypoint,
-      experimentalLogSideEffects: true
+      experimentalLogSideEffects: true,
     });
 
     reportMap.set(entrypoint, {
       log: sideEffects,
-      hasSideEffects: sideEffects.length > 0
+      hasSideEffects: sideEffects.length > 0,
     });
   }
 
