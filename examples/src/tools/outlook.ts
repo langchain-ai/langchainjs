@@ -1,11 +1,11 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { AgentExecutor, createOpenAIFunctionsAgent } from "langchain/agents";
 import {
   OutlookReadMailTool,
   OutlookSendMailTool,
 } from "@langchain/community/tools/outlook";
-import { pull } from "langchain/hub";
+import { ChatOpenAI } from "@langchain/openai";
 import type { ChatPromptTemplate } from "@langchain/core/prompts";
+import { pull } from "langchain/hub";
+import { AgentExecutor, createOpenAIFunctionsAgent } from "langchain/agents";
 
 async function AgentRead() {
   const llm = new ChatOpenAI({
@@ -14,7 +14,9 @@ async function AgentRead() {
 
   const outlookReadMail = new OutlookReadMailTool(undefined, "token");
   const tools = [outlookReadMail];
-  const prompt = await pull<ChatPromptTemplate>("hwchase17/openai-tools-agent");
+  const prompt = await pull<ChatPromptTemplate>(
+    "hwchase17/openai-functions-agent"
+  );
 
   const agent = await createOpenAIFunctionsAgent({
     llm,
@@ -42,7 +44,9 @@ async function AgentSend() {
 
   const sendMailTool = new OutlookSendMailTool(undefined, "token");
   const tools = [sendMailTool];
-  const prompt = await pull<ChatPromptTemplate>("hwchase17/openai-tools-agent");
+  const prompt = await pull<ChatPromptTemplate>(
+    "hwchase17/openai-functions-agent"
+  );
 
   const agent = await createOpenAIFunctionsAgent({
     llm,
