@@ -17,7 +17,7 @@ import {
   ChatPromptTemplate,
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
-import { DynamicTool } from "@langchain/community/tools/dynamic";
+import { DynamicTool } from "@langchain/core/tools";
 
 const llm = new ChatOpenAI({
   modelName: "gpt-4-1106-preview",

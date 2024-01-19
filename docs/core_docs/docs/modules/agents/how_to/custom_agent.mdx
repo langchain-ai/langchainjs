@@ -34,7 +34,7 @@ Next, let's define some tools to use.
 Let's write a really simple JavaScript function to calculate the length of a word that is passed in.
 
 ```ts
-import { DynamicTool } from "langchain/tools";
+import { DynamicTool } from "@langchain/core/tools";
 
 const customTool = new DynamicTool({
   name: "get_word_length",
