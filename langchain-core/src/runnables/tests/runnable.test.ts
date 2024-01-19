@@ -49,9 +49,7 @@ test("Test stream with an immediate thrown error", async () => {
     thrownErrorString: "testing",
   });
   try {
-    await llm.stream("Hi there!", {
-      beginStreamImmediately: true,
-    });
+    await llm.stream("Hi there!");
   } catch (e: any) {
     expect(e.message).toEqual("testing");
   }

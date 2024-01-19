@@ -189,7 +189,11 @@ export class AsyncGeneratorWithSetup<
     // to each generator is available.
     this.setup = new Promise((resolve, reject) => {
       this.firstResult = generator.next();
-      this.firstResult.then(startSetup).then(resolve, reject);
+      if (startSetup) {
+        this.firstResult.then(startSetup).then(resolve, reject);
+      } else {
+        this.firstResult.then((_result) => resolve(undefined as S), reject);
+      }
     });
   }
 
