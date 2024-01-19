@@ -5,6 +5,28 @@ import { identifySecrets } from "./identify-secrets.js";
 // .gitignore
 const DEFAULT_GITIGNORE_PATHS = ["node_modules", "dist", ".yarn"];
 
+// List of test-exports-* packages which we use to test that the exports field
+// works correctly across different JS environments.
+// Each entry is a tuple of [package name, import statement].
+const testExports: Array<[string, (p: string) => string]> = [
+  [
+    "test-exports-esm",
+    (p: string) => `import * as ${p.replace(/\//g, "_")} from "langchain/${p}";`
+  ],
+  [
+    "test-exports-esbuild",
+    (p: string) => `import * as ${p.replace(/\//g, "_")} from "langchain/${p}";`
+  ],
+  [
+    "test-exports-cjs",
+    (p: string) => `const ${p.replace(/\//g, "_")} = require("langchain/${p}");`
+  ],
+  ["test-exports-cf", (p: string) => `export * from "langchain/${p}";`],
+  ["test-exports-vercel", (p: string) => `export * from "langchain/${p}";`],
+  ["test-exports-vite", (p: string) => `export * from "langchain/${p}";`],
+  ["test-exports-bun", (p: string) => `export * from "langchain/${p}";`]
+];
+
 const updateJsonFile = (
   relativePath: string,
   updateFunction: (json: Record<string, unknown>) => Record<string, unknown>
@@ -37,9 +59,15 @@ const generateFiles = (
 };
 
 const updateConfig = ({
-  entrypoints
+  entrypoints,
+  deprecatedNodeOnly,
+  requiresOptionalDependency,
+  shouldTestExports
 }: {
   entrypoints: Record<string, string>;
+  deprecatedNodeOnly: Array<string>;
+  requiresOptionalDependency: Array<string>;
+  shouldTestExports: boolean;
 }) => {
   const generatedFiles = generateFiles(entrypoints);
   const filenames = Object.keys(generatedFiles);
@@ -75,6 +103,22 @@ const updateConfig = ({
     "./.gitignore",
     `${filenames.join("\n")}\n${DEFAULT_GITIGNORE_PATHS.join("\n")}\n`
   );
+
+  if (shouldTestExports) {
+    // Update test-exports-*/entrypoints.js
+    const entrypointsToTest = Object.keys(entrypoints)
+      .filter((key) => !deprecatedNodeOnly.includes(key))
+      .filter((key) => !requiresOptionalDependency.includes(key));
+    testExports.forEach(([pkg, importStatement]) => {
+      const contents = `${entrypointsToTest
+        .map((key) => importStatement(key))
+        .join("\n")}\n`;
+      fs.writeFileSync(
+        `../environment_tests/${pkg}/src/entrypoints.js`,
+        contents
+      );
+    });
+  }
 };
 
 const cleanGenerated = ({
@@ -183,7 +227,8 @@ const importConstants = (
   packageSuffix: string | null
 ): [string, (k: string) => string, string] => [
   `langchain${packageSuffix ? `-${packageSuffix}` : ""}`,
-  (k: string) => `  "langchain${packageSuffix ? `_${packageSuffix}` : ""}/${k}"`,
+  (k: string) =>
+    `  "langchain${packageSuffix ? `_${packageSuffix}` : ""}/${k}"`,
   "src/load/import_constants.ts"
 ];
 
@@ -218,7 +263,8 @@ export function createEntrypoints({
   requiresOptionalDependency = [],
   deprecatedNodeOnly = [],
   deprecatedOmitFromImportMap = [],
-  packageSuffix
+  packageSuffix,
+  shouldTestExports = false
 }: {
   /**
    * This lists all the entrypoints for the library. Each key corresponds to an
@@ -248,6 +294,11 @@ export function createEntrypoints({
    * Used in the generated import map.
    */
   packageSuffix?: string;
+  /**
+   * Whether or not to write to the test exports files. At the moment this only
+   * applies to the `langchain` package.
+   */
+  shouldTestExports?: boolean;
 }) {
   const command = process.argv[2];
   const generateMaps = process.argv[3];
@@ -276,6 +327,11 @@ export function createEntrypoints({
       });
     }
   } else {
-    updateConfig({ entrypoints });
+    updateConfig({
+      entrypoints,
+      deprecatedNodeOnly,
+      requiresOptionalDependency,
+      shouldTestExports
+    });
   }
 }
