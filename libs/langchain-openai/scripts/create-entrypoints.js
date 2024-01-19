@@ -7,7 +7,7 @@ import * as path from "path";
 // This is used to generate the `exports` field in package.json.
 // Order is not important.
 const entrypoints = {
-  "index": "index"
+  index: "index",
 };
 
 // Entrypoints in this list require an optional dependency to be installed.
