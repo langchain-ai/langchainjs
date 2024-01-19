@@ -3,7 +3,7 @@ import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 /**
- * @param {string} relativePath 
+ * @param {string} relativePath
  * @returns {string}
  */
 function abs(relativePath) {
