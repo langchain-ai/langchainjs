@@ -186,7 +186,7 @@ export const getTableAndColumnsName = async (
     IS_NULLABLE AS is_nullable
     FROM INFORMATION_SCHEMA.COLUMNS
     ${schema && `WHERE TABLE_SCHEMA = '${schema}'`} 
-ORDER BY TABLE_NAME, ORDINAL_POSITION;`
+ORDER BY TABLE_NAME, ORDINAL_POSITION;`;
 
     const rep = await appDataSource.query(sql);
     return formatToSqlTable(rep);
@@ -266,7 +266,7 @@ export const generateTableInfoFromTables = async (
     // Add the custom info of the table
     const tableCustomDescription =
       customDescription &&
-        Object.keys(customDescription).includes(currentTable.tableName)
+      Object.keys(customDescription).includes(currentTable.tableName)
         ? `${customDescription[currentTable.tableName]}\n`
         : "";
     // Add the creation of the table in SQL
@@ -290,8 +290,9 @@ export const generateTableInfoFromTables = async (
       if (key > 0) {
         sqlCreateTableQuery += ", ";
       }
-      sqlCreateTableQuery += `${currentColumn.columnName} ${currentColumn.dataType
-        } ${currentColumn.isNullable ? "" : "NOT NULL"}`;
+      sqlCreateTableQuery += `${currentColumn.columnName} ${
+        currentColumn.dataType
+      } ${currentColumn.isNullable ? "" : "NOT NULL"}`;
     }
     sqlCreateTableQuery += ") \n";
 
@@ -337,10 +338,10 @@ export const generateTableInfoFromTables = async (
 
     globalString = globalString.concat(
       tableCustomDescription +
-      sqlCreateTableQuery +
-      sqlSelectInfoQuery +
-      columnNamesConcatString +
-      sample
+        sqlCreateTableQuery +
+        sqlSelectInfoQuery +
+        columnNamesConcatString +
+        sample
     );
   }
 
