@@ -44,7 +44,7 @@ class MemgraphGraph extends Neo4jGraph {
       await graph.verifyConnectivity();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      console.log("Failed to verify connection.");
+      console.error("Failed to verify connection.");
     }
 
     try {
@@ -53,7 +53,7 @@ class MemgraphGraph extends Neo4jGraph {
     } catch (error: any) {
       throw new Error(error.message);
     } finally {
-      console.log("Schema refreshed successfully.");
+      console.debug("Schema refreshed successfully.");
     }
 
     return graph;

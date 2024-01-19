@@ -32,15 +32,15 @@ describe.skip("Memgraph Graph Tests", () => {
     await graph.refreshSchema();
     console.log(graph.getSchema());
 
-    // expect(graph.getSchema()).toMatchInlineSnapshot(`
-    //   "Node properties are the following:
-    //   Node name: 'Actor', Node properties: [{"property":"name","type":"str"}]
-    //   Node name: 'Movie', Node properties: [{"property":"title","type":"str"}]
-    //   Relationship properties are the following:
-    //   Relationship name: 'ACTED_IN', Relationship properties: [{"property":"roles","type":"tuple"}]
-    //   The relationships are the following:
-    //   (:Actor)-[:ACTED_IN]->(:Movie)"
-    // `);
+    expect(graph.getSchema()).toMatchInlineSnapshot(`
+      "Node properties are the following:
+      Node name: 'Actor', Node properties: [{"property":"name","type":"str"}]
+      Node name: 'Movie', Node properties: [{"property":"title","type":"str"}]
+      Relationship properties are the following:
+      Relationship name: 'ACTED_IN', Relationship properties: [{"property":"roles","type":"tuple"}]
+      The relationships are the following:
+      (:Actor)-[:ACTED_IN]->(:Movie)"
+    `);
   });
 
   test("Test that Memgraph database is correctly instantiated and connected", async () => {
