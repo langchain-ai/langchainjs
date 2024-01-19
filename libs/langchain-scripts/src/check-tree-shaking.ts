@@ -40,18 +40,23 @@ async function listEntrypoints() {
   return entrypoints;
 }
 
-async function listExternals() {
+async function listExternals(extraInternals: Array<string | RegExp>) {
   const packageJson = await getPackageJson();
   return [
     ...Object.keys(packageJson.dependencies ?? {}),
     ...Object.keys(packageJson.peerDependencies ?? {}),
     /node:/,
     /@langchain\/core\//,
+    ...extraInternals,
   ];
 }
 
-export async function checkTreeShaking() {
-  const externals = await listExternals();
+export async function checkTreeShaking({
+  extraInternals = []
+}: {
+  extraInternals: Array<string | RegExp>
+}) {
+  const externals = await listExternals(extraInternals);
   const entrypoints = await listEntrypoints();
   const consoleLog = console.log;
   const reportMap: Map<

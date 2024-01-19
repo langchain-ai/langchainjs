@@ -8726,7 +8726,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/scripts@workspace:libs/langchain-scripts":
+"@langchain/scripts@workspace:*, @langchain/scripts@workspace:libs/langchain-scripts":
   version: 0.0.0-use.local
   resolution: "@langchain/scripts@workspace:libs/langchain-scripts"
   dependencies:
@@ -23800,6 +23800,7 @@ __metadata:
     "@langchain/community": ~0.0.17
     "@langchain/core": ~0.1.16
     "@langchain/openai": ~0.0.12
+    "@langchain/scripts": "workspace:*"
     "@notionhq/client": ^2.2.10
     "@pinecone-database/pinecone": ^1.1.0
     "@supabase/supabase-js": ^2.10.0
