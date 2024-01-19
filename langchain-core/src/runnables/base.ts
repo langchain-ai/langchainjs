@@ -3,7 +3,6 @@ import pRetry from "p-retry";
 import {
   CallbackManager,
   CallbackManagerForChainRun,
-  BaseCallbackConfig,
 } from "../callbacks/manager.js";
 import {
   LogStreamCallbackHandler,
@@ -13,16 +12,23 @@ import {
 import { Serializable } from "../load/serializable.js";
 import {
   IterableReadableStream,
+  concat,
   type IterableReadableStreamInterface,
+  atee,
+  pipeGeneratorWithSetup,
 } from "../utils/stream.js";
 import {
+  DEFAULT_RECURSION_LIMIT,
   RunnableConfig,
-  getCallbackMangerForConfig,
+  ensureConfig,
+  getCallbackManagerForConfig,
   mergeConfigs,
+  patchConfig,
 } from "./config.js";
 import { AsyncCaller } from "../utils/async_caller.js";
 import { Run } from "../tracers/base.js";
 import { RootListenersTracer } from "../tracers/root_listener.js";
+import { BaseCallbackHandler } from "../callbacks/base.js";
 
 /**
  * Base interface implemented by all runnables.
@@ -51,12 +57,6 @@ export interface RunnableInterface<
     inputs: RunInput[],
     options?: Partial<CallOptions> | Partial<CallOptions>[],
     batchOptions?: RunnableBatchOptions & { returnExceptions: true }
-  ): Promise<(RunOutput | Error)[]>;
-
-  batch(
-    inputs: RunInput[],
-    options?: Partial<CallOptions> | Partial<CallOptions>[],
-    batchOptions?: RunnableBatchOptions
   ): Promise<(RunOutput | Error)[]>;
 
   batch(
@@ -98,6 +98,7 @@ export type RunnableLike<RunInput = any, RunOutput = any> =
   | RunnableMapLike<RunInput, RunOutput>;
 
 export type RunnableBatchOptions = {
+  /** @deprecated Pass in via the standard runnable config object instead */
   maxConcurrency?: number;
   returnExceptions?: boolean;
 };
@@ -107,7 +108,11 @@ export type RunnableRetryFailedAttemptHandler = (error: any) => any;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function _coerceToDict(value: any, defaultKey: string) {
-  return value && !Array.isArray(value) && typeof value === "object"
+  return value &&
+    !Array.isArray(value) &&
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    !(value instanceof Date) &&
+    typeof value === "object"
     ? value
     : { [defaultKey]: value };
 }
@@ -127,6 +132,15 @@ export abstract class Runnable<
   implements RunnableInterface<RunInput, RunOutput, CallOptions>
 {
   protected lc_runnable = true;
+
+  name?: string;
+
+  getName(suffix?: string): string {
+    const name =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      this.name ?? (this.constructor as any).lc_name() ?? this.constructor.name;
+    return suffix ? `${name}${suffix}` : name;
+  }
 
   abstract invoke(
     input: RunInput,
@@ -205,19 +219,19 @@ export abstract class Runnable<
     });
   }
 
-  protected _getOptionsList(
-    options: Partial<CallOptions> | Partial<CallOptions>[],
+  protected _getOptionsList<O extends CallOptions & { runType?: string }>(
+    options: Partial<O> | Partial<O>[],
     length = 0
-  ): Partial<CallOptions & { runType?: string }>[] {
+  ): Partial<O>[] {
     if (Array.isArray(options)) {
       if (options.length !== length) {
         throw new Error(
           `Passed "options" must be an array with the same length as the inputs, but got ${options.length} options for ${length} inputs`
         );
       }
-      return options;
+      return options.map(ensureConfig);
     }
-    return Array.from({ length }, () => options);
+    return Array.from({ length }, () => ensureConfig(options));
   }
 
   /**
@@ -225,7 +239,6 @@ export abstract class Runnable<
    * Subclasses should override this method if they can batch more efficiently.
    * @param inputs Array of inputs to each batch call.
    * @param options Either a single call options object to apply to each batch call or an array for each call.
-   * @param batchOptions.maxConcurrency Maximum number of calls to run at once.
    * @param batchOptions.returnExceptions Whether to return errors rather than throwing on the first one
    * @returns An array of RunOutputs, or mixed RunOutputs and errors if batchOptions.returnExceptions is set
    */
@@ -253,8 +266,10 @@ export abstract class Runnable<
     batchOptions?: RunnableBatchOptions
   ): Promise<(RunOutput | Error)[]> {
     const configList = this._getOptionsList(options ?? {}, inputs.length);
+    const maxConcurrency =
+      configList[0]?.maxConcurrency ?? batchOptions?.maxConcurrency;
     const caller = new AsyncCaller({
-      maxConcurrency: batchOptions?.maxConcurrency,
+      maxConcurrency,
       onFailedAttempt: (e) => {
         throw e;
       },
@@ -306,17 +321,23 @@ export abstract class Runnable<
   protected _separateRunnableConfigFromCallOptions(
     options: Partial<CallOptions> = {}
   ): [RunnableConfig, Omit<Partial<CallOptions>, keyof RunnableConfig>] {
-    const runnableConfig: RunnableConfig = {
+    const runnableConfig: RunnableConfig = ensureConfig({
       callbacks: options.callbacks,
       tags: options.tags,
       metadata: options.metadata,
       runName: options.runName,
-    };
+      configurable: options.configurable,
+      recursionLimit: options.recursionLimit,
+      maxConcurrency: options.maxConcurrency,
+    });
     const callOptions = { ...options };
     delete callOptions.callbacks;
     delete callOptions.tags;
     delete callOptions.metadata;
     delete callOptions.runName;
+    delete callOptions.configurable;
+    delete callOptions.recursionLimit;
+    delete callOptions.maxConcurrency;
     return [runnableConfig, callOptions];
   }
 
@@ -331,19 +352,20 @@ export abstract class Runnable<
     input: T,
     options?: Partial<CallOptions> & { runType?: string }
   ) {
-    const callbackManager_ = await getCallbackMangerForConfig(options);
+    const config = ensureConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(config);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
       undefined,
-      options?.runType,
+      config?.runType,
       undefined,
       undefined,
-      options?.runName
+      config?.runName ?? this.getName()
     );
     let output;
     try {
-      output = await func.bind(this)(input, options, runManager);
+      output = await func.call(this, input, config, runManager);
     } catch (e) {
       await runManager?.handleChainError(e);
       throw e;
@@ -376,7 +398,7 @@ export abstract class Runnable<
   ): Promise<(RunOutput | Error)[]> {
     const optionsList = this._getOptionsList(options ?? {}, inputs.length);
     const callbackManagers = await Promise.all(
-      optionsList.map(getCallbackMangerForConfig)
+      optionsList.map(getCallbackManagerForConfig)
     );
     const runManagers = await Promise.all(
       callbackManagers.map((callbackManager, i) =>
@@ -387,13 +409,19 @@ export abstract class Runnable<
           optionsList[i].runType,
           undefined,
           undefined,
-          optionsList[i].runName
+          optionsList[i].runName ?? this.getName()
         )
       )
     );
     let outputs: (RunOutput | Error)[];
     try {
-      outputs = await func(inputs, optionsList, runManagers, batchOptions);
+      outputs = await func.call(
+        this,
+        inputs,
+        optionsList,
+        runManagers,
+        batchOptions
+      );
     } catch (e) {
       await Promise.all(
         runManagers.map((runManager) => runManager?.handleChainError(e))
@@ -430,31 +458,17 @@ export abstract class Runnable<
     let finalOutput: O | undefined;
     let finalOutputSupported = true;
 
-    const callbackManager_ = await getCallbackMangerForConfig(options);
-    let runManager: CallbackManagerForChainRun | undefined;
-    const serializedRepresentation = this.toJSON();
+    const config = ensureConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(config);
     async function* wrapInputForTracing() {
       for await (const chunk of inputGenerator) {
-        if (!runManager) {
-          // Start the run manager AFTER the iterator starts to preserve
-          // tracing order
-          runManager = await callbackManager_?.handleChainStart(
-            serializedRepresentation,
-            { input: "" },
-            undefined,
-            options?.runType,
-            undefined,
-            undefined,
-            options?.runName
-          );
-        }
         if (finalInputSupported) {
           if (finalInput === undefined) {
             finalInput = chunk;
           } else {
             try {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              finalInput = (finalInput as any).concat(chunk);
+              finalInput = concat(finalInput, chunk as any);
             } catch {
               finalInput = undefined;
               finalInputSupported = false;
@@ -465,14 +479,37 @@ export abstract class Runnable<
       }
     }
 
-    const wrappedInputGenerator = wrapInputForTracing();
+    let runManager: CallbackManagerForChainRun | undefined;
     try {
-      const outputIterator = transformer(
-        wrappedInputGenerator,
-        runManager,
-        options
+      const pipe = await pipeGeneratorWithSetup(
+        transformer.bind(this),
+        wrapInputForTracing(),
+        async () =>
+          callbackManager_?.handleChainStart(
+            this.toJSON(),
+            { input: "" },
+            undefined,
+            config?.runType,
+            undefined,
+            undefined,
+            config?.runName ?? this.getName()
+          ),
+        config
       );
-      for await (const chunk of outputIterator) {
+      runManager = pipe.setup;
+      const isLogStreamHandler = (
+        handler: BaseCallbackHandler
+      ): handler is LogStreamCallbackHandler =>
+        handler.name === "log_stream_tracer";
+      const streamLogHandler = runManager?.handlers.find(isLogStreamHandler);
+      let iterator = pipe.output;
+      if (streamLogHandler !== undefined && runManager !== undefined) {
+        iterator = await streamLogHandler.tapOutputIterable(
+          runManager.runId,
+          pipe.output
+        );
+      }
+      for await (const chunk of iterator) {
         yield chunk;
         if (finalOutputSupported) {
           if (finalOutput === undefined) {
@@ -480,7 +517,7 @@ export abstract class Runnable<
           } else {
             try {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              finalOutput = (finalOutput as any).concat(chunk);
+              finalOutput = concat(finalOutput, chunk as any);
             } catch {
               finalOutput = undefined;
               finalOutputSupported = false;
@@ -503,22 +540,6 @@ export abstract class Runnable<
     );
   }
 
-  _patchConfig(
-    config: Partial<CallOptions> = {},
-    callbackManager: CallbackManager | undefined = undefined
-  ): Partial<CallOptions> {
-    const newConfig = { ...config };
-    if (callbackManager !== undefined) {
-      /**
-       * If we're replacing callbacks we need to unset runName
-       * since that should apply only to the same run as the original callbacks
-       */
-      delete newConfig.runName;
-      return { ...newConfig, callbacks: callbackManager };
-    }
-    return newConfig;
-  }
-
   /**
    * Create a new runnable sequence that runs each individual runnable in series,
    * piping the output of one runnable into another runnable or runnable-like.
@@ -527,12 +548,35 @@ export abstract class Runnable<
    */
   pipe<NewRunOutput>(
     coerceable: RunnableLike<RunOutput, NewRunOutput>
-  ): RunnableSequence<RunInput, Exclude<NewRunOutput, Error>> {
+  ): Runnable<RunInput, Exclude<NewRunOutput, Error>> {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableSequence({
       first: this,
       last: _coerceToRunnable(coerceable),
     });
+  }
+
+  /**
+   * Pick keys from the dict output of this runnable. Returns a new runnable.
+   */
+  pick(keys: string | string[]): Runnable {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    return this.pipe(new RunnablePick(keys) as Runnable);
+  }
+
+  /**
+   * Assigns new fields to the dict output of this runnable. Returns a new runnable.
+   */
+  assign(
+    mapping: RunnableMapLike<Record<string, unknown>, Record<string, unknown>>
+  ): Runnable {
+    return this.pipe(
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      new RunnableAssign(
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        new RunnableMap<Record<string, unknown>>({ steps: mapping })
+      ) as Runnable
+    );
   }
 
   /**
@@ -554,7 +598,7 @@ export abstract class Runnable<
         // Make a best effort to gather, for any type that supports concat.
         // This method should throw an error if gathering fails.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        finalChunk = (finalChunk as any).concat(chunk);
+        finalChunk = concat(finalChunk, chunk as any);
       }
     }
     yield* this._streamIterator(finalChunk, options);
@@ -580,7 +624,7 @@ export abstract class Runnable<
       ...streamOptions,
       autoClose: false,
     });
-    const config: Partial<CallOptions> = options ?? {};
+    const config = ensureConfig(options);
     const { callbacks } = config;
     if (callbacks === undefined) {
       config.callbacks = [stream];
@@ -668,7 +712,7 @@ export abstract class Runnable<
 export type RunnableBindingArgs<
   RunInput,
   RunOutput,
-  CallOptions extends RunnableConfig
+  CallOptions extends RunnableConfig = RunnableConfig
 > = {
   bound: Runnable<RunInput, RunOutput, CallOptions>;
   kwargs?: Partial<CallOptions>;
@@ -682,7 +726,7 @@ export type RunnableBindingArgs<
 export class RunnableBinding<
   RunInput,
   RunOutput,
-  CallOptions extends RunnableConfig
+  CallOptions extends RunnableConfig = RunnableConfig
 > extends Runnable<RunInput, RunOutput, CallOptions> {
   static lc_name() {
     return "RunnableBinding";
@@ -710,12 +754,15 @@ export class RunnableBinding<
     this.configFactories = fields.configFactories;
   }
 
+  getName(suffix?: string | undefined): string {
+    return this.bound.getName(suffix);
+  }
+
   async _mergeConfig(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    options?: Record<string, any>
+    ...options: (Partial<CallOptions> | RunnableConfig | undefined)[]
   ): Promise<Partial<CallOptions>> {
-    const config = mergeConfigs<CallOptions>(this.config, options);
-    return mergeConfigs<CallOptions>(
+    const config = mergeConfigs(this.config, ...options);
+    return mergeConfigs(
       config,
       ...(this.configFactories
         ? await Promise.all(
@@ -730,7 +777,8 @@ export class RunnableBinding<
   bind(
     kwargs: Partial<CallOptions>
   ): RunnableBinding<RunInput, RunOutput, CallOptions> {
-    return this.constructor({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return new (this.constructor as any)({
       bound: this.bound,
       kwargs: { ...this.kwargs, ...kwargs },
       config: this.config,
@@ -740,7 +788,8 @@ export class RunnableBinding<
   withConfig(
     config: RunnableConfig
   ): RunnableBinding<RunInput, RunOutput, CallOptions> {
-    return this.constructor({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return new (this.constructor as any)({
       bound: this.bound,
       kwargs: this.kwargs,
       config: { ...this.config, ...config },
@@ -751,7 +800,8 @@ export class RunnableBinding<
     stopAfterAttempt?: number;
     onFailedAttempt?: RunnableRetryFailedAttemptHandler;
   }): RunnableRetry<RunInput, RunOutput, CallOptions> {
-    return this.constructor({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return new (this.constructor as any)({
       bound: this.bound.withRetry(fields),
       kwargs: this.kwargs,
       config: this.config,
@@ -764,7 +814,7 @@ export class RunnableBinding<
   ): Promise<RunOutput> {
     return this.bound.invoke(
       input,
-      await this._mergeConfig({ ...options, ...this.kwargs })
+      await this._mergeConfig(options, this.kwargs)
     );
   }
 
@@ -794,13 +844,10 @@ export class RunnableBinding<
     const mergedOptions = Array.isArray(options)
       ? await Promise.all(
           options.map(async (individualOption) =>
-            this._mergeConfig({
-              ...individualOption,
-              ...this.kwargs,
-            })
+            this._mergeConfig(individualOption, this.kwargs)
           )
         )
-      : await this._mergeConfig({ ...options, ...this.kwargs });
+      : await this._mergeConfig(options, this.kwargs);
     return this.bound.batch(inputs, mergedOptions, batchOptions);
   }
 
@@ -810,7 +857,7 @@ export class RunnableBinding<
   ) {
     yield* this.bound._streamIterator(
       input,
-      await this._mergeConfig({ ...options, ...this.kwargs })
+      await this._mergeConfig(options, this.kwargs)
     );
   }
 
@@ -820,7 +867,7 @@ export class RunnableBinding<
   ): Promise<IterableReadableStream<RunOutput>> {
     return this.bound.stream(
       input,
-      await this._mergeConfig({ ...options, ...this.kwargs })
+      await this._mergeConfig(options, this.kwargs)
     );
   }
 
@@ -831,7 +878,7 @@ export class RunnableBinding<
   ): AsyncGenerator<RunOutput> {
     yield* this.bound.transform(
       generator,
-      await this._mergeConfig({ ...options, ...this.kwargs })
+      await this._mergeConfig(options, this.kwargs)
     );
   }
 
@@ -890,7 +937,7 @@ export class RunnableBinding<
 export class RunnableEach<
   RunInputItem,
   RunOutputItem,
-  CallOptions extends BaseCallbackConfig
+  CallOptions extends RunnableConfig
 > extends Runnable<RunInputItem[], RunOutputItem[], CallOptions> {
   static lc_name() {
     return "RunnableEach";
@@ -911,7 +958,7 @@ export class RunnableEach<
 
   /**
    * Binds the runnable with the specified arguments.
-   * @param args The arguments to bind the runnable with.
+   * @param kwargs The arguments to bind the runnable with.
    * @returns A new instance of the `RunnableEach` class that is bound with the specified arguments.
    */
   bind(kwargs: Partial<CallOptions>) {
@@ -946,7 +993,7 @@ export class RunnableEach<
   ): Promise<RunOutputItem[]> {
     return this.bound.batch(
       inputs,
-      this._patchConfig(config, runManager?.getChild())
+      patchConfig(config, { callbacks: runManager?.getChild() })
     );
   }
 
@@ -1017,7 +1064,7 @@ export class RunnableRetry<
     runManager?: CallbackManagerForChainRun
   ): Partial<CallOptions> {
     const tag = attempt > 1 ? `retry:attempt:${attempt}` : undefined;
-    return this._patchConfig(config, runManager?.getChild(tag));
+    return patchConfig(config, { callbacks: runManager?.getChild(tag) });
   }
 
   protected async _invoke(
@@ -1187,11 +1234,13 @@ export class RunnableSequence<
     middle?: Runnable[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     last: Runnable<any, RunOutput>;
+    name?: string;
   }) {
     super(fields);
     this.first = fields.first;
     this.middle = fields.middle ?? this.middle;
     this.last = fields.last;
+    this.name = fields.name;
   }
 
   get steps() {
@@ -1199,7 +1248,7 @@ export class RunnableSequence<
   }
 
   async invoke(input: RunInput, options?: RunnableConfig): Promise<RunOutput> {
-    const callbackManager_ = await getCallbackMangerForConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(options);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
@@ -1217,16 +1266,17 @@ export class RunnableSequence<
         const step = initialSteps[i];
         nextStepInput = await step.invoke(
           nextStepInput,
-          this._patchConfig(options, runManager?.getChild(`seq:step:${i + 1}`))
+          patchConfig(options, {
+            callbacks: runManager?.getChild(`seq:step:${i + 1}`),
+          })
         );
       }
       // TypeScript can't detect that the last output of the sequence returns RunOutput, so call it out of the loop here
       finalOutput = await this.last.invoke(
         nextStepInput,
-        this._patchConfig(
-          options,
-          runManager?.getChild(`seq:step:${this.steps.length}`)
-        )
+        patchConfig(options, {
+          callbacks: runManager?.getChild(`seq:step:${this.steps.length}`),
+        })
       );
     } catch (e) {
       await runManager?.handleChainError(e);
@@ -1261,7 +1311,7 @@ export class RunnableSequence<
   ): Promise<(RunOutput | Error)[]> {
     const configList = this._getOptionsList(options ?? {}, inputs.length);
     const callbackManagers = await Promise.all(
-      configList.map(getCallbackMangerForConfig)
+      configList.map(getCallbackManagerForConfig)
     );
     const runManagers = await Promise.all(
       callbackManagers.map((callbackManager, i) =>
@@ -1278,32 +1328,18 @@ export class RunnableSequence<
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let nextStepInputs: any = inputs;
-    let finalOutputs: (RunOutput | Error)[];
     try {
-      const initialSteps = [this.first, ...this.middle];
-      for (let i = 0; i < initialSteps.length; i += 1) {
-        const step = initialSteps[i];
+      for (let i = 0; i < this.steps.length; i += 1) {
+        const step = this.steps[i];
         nextStepInputs = await step.batch(
           nextStepInputs,
-          runManagers.map((runManager, j) =>
-            this._patchConfig(
-              configList[j],
-              runManager?.getChild(`seq:step:${i + 1}`)
-            )
-          ),
+          runManagers.map((runManager, j) => {
+            const childRunManager = runManager?.getChild(`seq:step:${i + 1}`);
+            return patchConfig(configList[j], { callbacks: childRunManager });
+          }),
           batchOptions
         );
       }
-      finalOutputs = await this.last.batch(
-        nextStepInputs,
-        runManagers.map((runManager) =>
-          this._patchConfig(
-            configList[this.steps.length - 1],
-            runManager?.getChild(`seq:step:${this.steps.length}`)
-          )
-        ),
-        batchOptions
-      );
     } catch (e) {
       await Promise.all(
         runManagers.map((runManager) => runManager?.handleChainError(e))
@@ -1311,18 +1347,18 @@ export class RunnableSequence<
       throw e;
     }
     await Promise.all(
-      runManagers.map((runManager, i) =>
-        runManager?.handleChainEnd(_coerceToDict(finalOutputs[i], "output"))
+      runManagers.map((runManager) =>
+        runManager?.handleChainEnd(_coerceToDict(nextStepInputs, "output"))
       )
     );
-    return finalOutputs;
+    return nextStepInputs;
   }
 
   async *_streamIterator(
     input: RunInput,
     options?: RunnableConfig
   ): AsyncGenerator<RunOutput> {
-    const callbackManager_ = await getCallbackMangerForConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(options);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
@@ -1341,13 +1377,17 @@ export class RunnableSequence<
     try {
       let finalGenerator = steps[0].transform(
         inputGenerator(),
-        this._patchConfig(options, runManager?.getChild(`seq:step:1`))
+        patchConfig(options, {
+          callbacks: runManager?.getChild(`seq:step:1`),
+        })
       );
       for (let i = 1; i < steps.length; i += 1) {
         const step = steps[i];
         finalGenerator = await step.transform(
           finalGenerator,
-          this._patchConfig(options, runManager?.getChild(`seq:step:${i + 1}`))
+          patchConfig(options, {
+            callbacks: runManager?.getChild(`seq:step:${i + 1}`),
+          })
         );
       }
       for await (const chunk of finalGenerator) {
@@ -1358,7 +1398,7 @@ export class RunnableSequence<
           } else {
             try {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              finalOutput = (finalOutput as any).concat(chunk);
+              finalOutput = concat(finalOutput, chunk as any);
             } catch (e) {
               finalOutput = undefined;
               concatSupported = false;
@@ -1385,12 +1425,14 @@ export class RunnableSequence<
           ...coerceable.middle,
         ]),
         last: coerceable.last,
+        name: this.name ?? coerceable.name,
       });
     } else {
       return new RunnableSequence({
         first: this.first,
         middle: [...this.middle, this.last],
         last: _coerceToRunnable(coerceable),
+        name: this.name,
       });
     }
   }
@@ -1401,16 +1443,20 @@ export class RunnableSequence<
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  static from<RunInput = any, RunOutput = any>([first, ...runnables]: [
-    RunnableLike<RunInput>,
-    ...RunnableLike[],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunnableLike<any, RunOutput>
-  ]) {
+  static from<RunInput = any, RunOutput = any>(
+    [first, ...runnables]: [
+      RunnableLike<RunInput>,
+      ...RunnableLike[],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      RunnableLike<any, RunOutput>
+    ],
+    name?: string
+  ) {
     return new RunnableSequence<RunInput, Exclude<RunOutput, Error>>({
       first: _coerceToRunnable(first),
       middle: runnables.slice(0, -1).map(_coerceToRunnable),
       last: _coerceToRunnable(runnables[runnables.length - 1]),
+      name,
     });
   }
 }
@@ -1471,9 +1517,9 @@ export class RunnableMap<
 
   async invoke(
     input: RunInput,
-    options?: Partial<BaseCallbackConfig>
+    options?: Partial<RunnableConfig>
   ): Promise<RunOutput> {
-    const callbackManager_ = await getCallbackMangerForConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(options);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       {
@@ -1492,7 +1538,9 @@ export class RunnableMap<
         Object.entries(this.steps).map(async ([key, runnable]) => {
           output[key] = await runnable.invoke(
             input,
-            this._patchConfig(options, runManager?.getChild(key))
+            patchConfig(options, {
+              callbacks: runManager?.getChild(`map:key:${key}`),
+            })
           );
         })
       );
@@ -1502,6 +1550,66 @@ export class RunnableMap<
     }
     await runManager?.handleChainEnd(output);
     return output as RunOutput;
+  }
+
+  async *_transform(
+    generator: AsyncGenerator<RunInput>,
+    runManager?: CallbackManagerForChainRun,
+    options?: Partial<RunnableConfig>
+  ): AsyncGenerator<RunOutput> {
+    // shallow copy steps to ignore changes while iterating
+    const steps = { ...this.steps };
+    // each step gets a copy of the input iterator
+    const inputCopies = atee(generator, Object.keys(steps).length);
+    // start the first iteration of each output iterator
+    const tasks = new Map(
+      Object.entries(steps).map(([key, runnable], i) => {
+        const gen = runnable.transform(
+          inputCopies[i],
+          patchConfig(options, {
+            callbacks: runManager?.getChild(`map:key:${key}`),
+          })
+        );
+        return [key, gen.next().then((result) => ({ key, gen, result }))];
+      })
+    );
+    // yield chunks as they become available,
+    // starting new iterations as needed,
+    // until all iterators are done
+    while (tasks.size) {
+      const { key, result, gen } = await Promise.race(tasks.values());
+      tasks.delete(key);
+      if (!result.done) {
+        yield { [key]: result.value } as unknown as RunOutput;
+        tasks.set(
+          key,
+          gen.next().then((result) => ({ key, gen, result }))
+        );
+      }
+    }
+  }
+
+  transform(
+    generator: AsyncGenerator<RunInput>,
+    options?: Partial<RunnableConfig>
+  ): AsyncGenerator<RunOutput> {
+    return this._transformStreamWithConfig(
+      generator,
+      this._transform.bind(this),
+      options
+    );
+  }
+
+  async stream(
+    input: RunInput,
+    options?: Partial<RunnableConfig>
+  ): Promise<IterableReadableStream<RunOutput>> {
+    async function* generator() {
+      yield input;
+    }
+    return IterableReadableStream.fromAsyncGenerator(
+      this.transform(generator(), options)
+    );
   }
 }
 
@@ -1518,15 +1626,20 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
 
   lc_namespace = ["langchain_core", "runnables"];
 
-  protected func: RunnableFunc<RunInput, RunOutput>;
+  protected func: RunnableFunc<
+    RunInput,
+    RunOutput | Runnable<RunInput, RunOutput>
+  >;
 
-  constructor(fields: { func: RunnableFunc<RunInput, RunOutput> }) {
+  constructor(fields: {
+    func: RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>;
+  }) {
     super(fields);
     this.func = fields.func;
   }
 
   static from<RunInput, RunOutput>(
-    func: RunnableFunc<RunInput, RunOutput>
+    func: RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
   ): RunnableLambda<RunInput, RunOutput> {
     return new RunnableLambda({
       func,
@@ -1535,14 +1648,21 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
 
   async _invoke(
     input: RunInput,
-    config?: Partial<BaseCallbackConfig>,
+    config?: Partial<RunnableConfig>,
     runManager?: CallbackManagerForChainRun
   ) {
     let output = await this.func(input, { config });
     if (output && Runnable.isRunnable(output)) {
+      if (config?.recursionLimit === 0) {
+        throw new Error("Recursion limit reached.");
+      }
       output = await output.invoke(
         input,
-        this._patchConfig(config, runManager?.getChild())
+        patchConfig(config, {
+          callbacks: runManager?.getChild(),
+          recursionLimit:
+            (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
+        })
       );
     }
     return output;
@@ -1550,9 +1670,73 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
 
   async invoke(
     input: RunInput,
-    options?: Partial<BaseCallbackConfig>
+    options?: Partial<RunnableConfig>
   ): Promise<RunOutput> {
     return this._callWithConfig(this._invoke, input, options);
+  }
+
+  async *_transform(
+    generator: AsyncGenerator<RunInput>,
+    runManager?: CallbackManagerForChainRun,
+    config?: Partial<RunnableConfig>
+  ): AsyncGenerator<RunOutput> {
+    let finalChunk;
+    for await (const chunk of generator) {
+      if (finalChunk === undefined) {
+        finalChunk = chunk;
+      } else {
+        // Make a best effort to gather, for any type that supports concat.
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          finalChunk = concat(finalChunk, chunk as any);
+        } catch (e) {
+          finalChunk = chunk;
+        }
+      }
+    }
+
+    const output = await this.func(finalChunk, { config });
+    if (output && Runnable.isRunnable(output)) {
+      if (config?.recursionLimit === 0) {
+        throw new Error("Recursion limit reached.");
+      }
+      const stream = await output.stream(
+        finalChunk,
+        patchConfig(config, {
+          callbacks: runManager?.getChild(),
+          recursionLimit:
+            (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
+        })
+      );
+      for await (const chunk of stream) {
+        yield chunk;
+      }
+    } else {
+      yield output;
+    }
+  }
+
+  transform(
+    generator: AsyncGenerator<RunInput>,
+    options?: Partial<RunnableConfig>
+  ): AsyncGenerator<RunOutput> {
+    return this._transformStreamWithConfig(
+      generator,
+      this._transform.bind(this),
+      options
+    );
+  }
+
+  async stream(
+    input: RunInput,
+    options?: Partial<RunnableConfig>
+  ): Promise<IterableReadableStream<RunOutput>> {
+    async function* generator() {
+      yield input;
+    }
+    return IterableReadableStream.fromAsyncGenerator(
+      this.transform(generator(), options)
+    );
   }
 }
 
@@ -1595,7 +1779,7 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
 
   async invoke(
     input: RunInput,
-    options?: Partial<BaseCallbackConfig>
+    options?: Partial<RunnableConfig>
   ): Promise<RunOutput> {
     const callbackManager_ = await CallbackManager.configure(
       options?.callbacks,
@@ -1618,7 +1802,7 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
       try {
         const output = await runnable.invoke(
           input,
-          this._patchConfig(options, runManager?.getChild())
+          patchConfig(options, { callbacks: runManager?.getChild() })
         );
         await runManager?.handleChainEnd(_coerceToDict(output, "output"));
         return output;
@@ -1637,25 +1821,25 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
 
   async batch(
     inputs: RunInput[],
-    options?: Partial<BaseCallbackConfig> | Partial<BaseCallbackConfig>[],
+    options?: Partial<RunnableConfig> | Partial<RunnableConfig>[],
     batchOptions?: RunnableBatchOptions & { returnExceptions?: false }
   ): Promise<RunOutput[]>;
 
   async batch(
     inputs: RunInput[],
-    options?: Partial<BaseCallbackConfig> | Partial<BaseCallbackConfig>[],
+    options?: Partial<RunnableConfig> | Partial<RunnableConfig>[],
     batchOptions?: RunnableBatchOptions & { returnExceptions: true }
   ): Promise<(RunOutput | Error)[]>;
 
   async batch(
     inputs: RunInput[],
-    options?: Partial<BaseCallbackConfig> | Partial<BaseCallbackConfig>[],
+    options?: Partial<RunnableConfig> | Partial<RunnableConfig>[],
     batchOptions?: RunnableBatchOptions
   ): Promise<(RunOutput | Error)[]>;
 
   async batch(
     inputs: RunInput[],
-    options?: Partial<BaseCallbackConfig> | Partial<BaseCallbackConfig>[],
+    options?: Partial<RunnableConfig> | Partial<RunnableConfig>[],
     batchOptions?: RunnableBatchOptions
   ): Promise<(RunOutput | Error)[]> {
     if (batchOptions?.returnExceptions) {
@@ -1694,7 +1878,9 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
         const outputs = await runnable.batch(
           inputs,
           runManagers.map((runManager, j) =>
-            this._patchConfig(configList[j], runManager?.getChild())
+            patchConfig(configList[j], {
+              callbacks: runManager?.getChild(),
+            })
           ),
           batchOptions
         );
@@ -1742,6 +1928,205 @@ export function _coerceToRunnable<RunInput, RunOutput>(
   } else {
     throw new Error(
       `Expected a Runnable, function or object.\nInstead got an unsupported type.`
+    );
+  }
+}
+
+export interface RunnableAssignFields<RunInput> {
+  mapper: RunnableMap<RunInput>;
+}
+
+/**
+ * A runnable that assigns key-value pairs to inputs of type `Record<string, unknown>`.
+ */
+export class RunnableAssign<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunInput extends Record<string, any> = Record<string, any>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
+    CallOptions extends RunnableConfig = RunnableConfig
+  >
+  extends Runnable<RunInput, RunOutput>
+  implements RunnableAssignFields<RunInput>
+{
+  static lc_name() {
+    return "RunnableAssign";
+  }
+
+  lc_namespace = ["langchain_core", "runnables"];
+
+  lc_serializable = true;
+
+  mapper: RunnableMap<RunInput>;
+
+  constructor(fields: RunnableMap<RunInput> | RunnableAssignFields<RunInput>) {
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    if (fields instanceof RunnableMap) {
+      // eslint-disable-next-line no-param-reassign
+      fields = { mapper: fields };
+    }
+    super(fields);
+    this.mapper = fields.mapper;
+  }
+
+  async invoke(
+    input: RunInput,
+    options?: Partial<CallOptions>
+  ): Promise<RunOutput> {
+    const mapperResult = await this.mapper.invoke(input, options);
+
+    return {
+      ...input,
+      ...mapperResult,
+    } as RunOutput;
+  }
+
+  async *_transform(
+    generator: AsyncGenerator<RunInput>,
+    runManager?: CallbackManagerForChainRun,
+    options?: Partial<RunnableConfig>
+  ): AsyncGenerator<RunOutput> {
+    // collect mapper keys
+    const mapperKeys = this.mapper.getStepsKeys();
+    // create two input gens, one for the mapper, one for the input
+    const [forPassthrough, forMapper] = atee(generator);
+    // create mapper output gen
+    const mapperOutput = this.mapper.transform(
+      forMapper,
+      patchConfig(options, { callbacks: runManager?.getChild() })
+    );
+    // start the mapper
+    const firstMapperChunkPromise = mapperOutput.next();
+    // yield the passthrough
+    for await (const chunk of forPassthrough) {
+      if (typeof chunk !== "object" || Array.isArray(chunk)) {
+        throw new Error(
+          `RunnableAssign can only be used with objects as input, got ${typeof chunk}`
+        );
+      }
+      const filtered = Object.fromEntries(
+        Object.entries(chunk).filter(([key]) => !mapperKeys.includes(key))
+      );
+      if (Object.keys(filtered).length > 0) {
+        yield filtered as unknown as RunOutput;
+      }
+    }
+    // yield the mapper output
+    yield (await firstMapperChunkPromise).value;
+    for await (const chunk of mapperOutput) {
+      yield chunk as unknown as RunOutput;
+    }
+  }
+
+  transform(
+    generator: AsyncGenerator<RunInput>,
+    options?: Partial<RunnableConfig>
+  ): AsyncGenerator<RunOutput> {
+    return this._transformStreamWithConfig(
+      generator,
+      this._transform.bind(this),
+      options
+    );
+  }
+
+  async stream(
+    input: RunInput,
+    options?: Partial<RunnableConfig>
+  ): Promise<IterableReadableStream<RunOutput>> {
+    async function* generator() {
+      yield input;
+    }
+    return IterableReadableStream.fromAsyncGenerator(
+      this.transform(generator(), options)
+    );
+  }
+}
+
+export interface RunnablePickFields {
+  keys: string | string[];
+}
+
+/**
+ * A runnable that assigns key-value pairs to inputs of type `Record<string, unknown>`.
+ */
+export class RunnablePick<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunInput extends Record<string, any> = Record<string, any>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> | any = Record<string, any> | any,
+    CallOptions extends RunnableConfig = RunnableConfig
+  >
+  extends Runnable<RunInput, RunOutput>
+  implements RunnablePickFields
+{
+  static lc_name() {
+    return "RunnablePick";
+  }
+
+  lc_namespace = ["langchain_core", "runnables"];
+
+  lc_serializable = true;
+
+  keys: string | string[];
+
+  constructor(fields: string | string[] | RunnablePickFields) {
+    if (typeof fields === "string" || Array.isArray(fields)) {
+      // eslint-disable-next-line no-param-reassign
+      fields = { keys: fields };
+    }
+    super(fields);
+    this.keys = fields.keys;
+  }
+
+  async _pick(input: RunInput): Promise<RunOutput> {
+    if (typeof this.keys === "string") {
+      return input[this.keys];
+    } else {
+      const picked = this.keys
+        .map((key) => [key, input[key]])
+        .filter((v) => v[1] !== undefined);
+      return picked.length === 0 ? undefined : Object.fromEntries(picked);
+    }
+  }
+
+  async invoke(
+    input: RunInput,
+    options?: Partial<CallOptions>
+  ): Promise<RunOutput> {
+    return this._callWithConfig(this._pick.bind(this), input, options);
+  }
+
+  async *_transform(
+    generator: AsyncGenerator<RunInput>
+  ): AsyncGenerator<RunOutput> {
+    for await (const chunk of generator) {
+      const picked = await this._pick(chunk);
+      if (picked !== undefined) {
+        yield picked;
+      }
+    }
+  }
+
+  transform(
+    generator: AsyncGenerator<RunInput>,
+    options?: Partial<RunnableConfig>
+  ): AsyncGenerator<RunOutput> {
+    return this._transformStreamWithConfig(
+      generator,
+      this._transform.bind(this),
+      options
+    );
+  }
+
+  async stream(
+    input: RunInput,
+    options?: Partial<RunnableConfig>
+  ): Promise<IterableReadableStream<RunOutput>> {
+    async function* generator() {
+      yield input;
+    }
+    return IterableReadableStream.fromAsyncGenerator(
+      this.transform(generator(), options)
     );
   }
 }

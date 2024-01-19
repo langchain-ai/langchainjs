@@ -1,5 +1,6 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import type { ToolInterface } from "@langchain/core/tools";
+import { Toolkit } from "@langchain/community/agents/toolkits/base";
 import {
   JsonGetValueTool,
   JsonListKeysTool,
@@ -8,7 +9,6 @@ import {
 import { JSON_PREFIX, JSON_SUFFIX } from "./prompt.js";
 import { LLMChain } from "../../../chains/llm_chain.js";
 import { ZeroShotCreatePromptArgs, ZeroShotAgent } from "../../mrkl/index.js";
-import { Toolkit } from "../base.js";
 import { AgentExecutor } from "../../executor.js";
 
 /**
@@ -36,6 +36,8 @@ export class JsonToolkit extends Toolkit {
 }
 
 /**
+ * @deprecated Create a specific agent with a custom tool instead.
+ *
  * Creates a JSON agent using a language model, a JSON toolkit, and
  * optional prompt arguments. It creates a prompt for the agent using the
  * JSON tools and the provided prefix and suffix. It then creates a

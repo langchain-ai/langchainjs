@@ -4,28 +4,24 @@ import {
   ToolInputParsingException,
   Tool,
 } from "@langchain/core/tools";
-import { BaseChain, ChainInputs } from "../chains/base.js";
+import { Runnable, type RunnableConfig } from "@langchain/core/runnables";
+import { AgentAction, AgentFinish, AgentStep } from "@langchain/core/agents";
+import { ChainValues } from "@langchain/core/utils/types";
+import {
+  CallbackManager,
+  CallbackManagerForChainRun,
+  Callbacks,
+} from "@langchain/core/callbacks/manager";
+import { OutputParserException } from "@langchain/core/output_parsers";
+import { Serializable } from "@langchain/core/load/serializable";
+import { SerializedLLMChain } from "../chains/serde.js";
+import { StoppingMethod } from "./types.js";
 import {
   BaseMultiActionAgent,
   BaseSingleActionAgent,
   RunnableAgent,
 } from "./agent.js";
-import { StoppingMethod } from "./types.js";
-import { SerializedLLMChain } from "../chains/serde.js";
-import {
-  AgentAction,
-  ChainValues,
-  AgentFinish,
-  AgentStep,
-} from "../schema/index.js";
-import {
-  CallbackManager,
-  CallbackManagerForChainRun,
-  Callbacks,
-} from "../callbacks/manager.js";
-import { OutputParserException } from "../schema/output_parser.js";
-import { Runnable } from "../schema/runnable/base.js";
-import { Serializable } from "../load/serializable.js";
+import { BaseChain, ChainInputs } from "../chains/base.js";
 
 interface AgentExecutorIteratorInput {
   agentExecutor: AgentExecutor;
@@ -47,7 +43,7 @@ export class AgentExecutorIterator
 
   inputs: Record<string, string>;
 
-  callbacks: Callbacks;
+  callbacks?: Callbacks;
 
   tags: string[] | undefined;
 
@@ -88,6 +84,7 @@ export class AgentExecutorIterator
     super(fields);
     this.agentExecutor = fields.agentExecutor;
     this.inputs = fields.inputs;
+    this.callbacks = fields.callbacks;
     this.tags = fields.tags;
     this.metadata = fields.metadata;
     this.runName = fields.runName;
@@ -349,6 +346,9 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
 
   earlyStoppingMethod: StoppingMethod = "force";
 
+  // TODO: Update BaseChain implementation on breaking change to include this
+  returnOnlyOutputs = true;
+
   /**
    * How to handle errors raised by the agent's output parser.
     Defaults to `False`, which raises the error.
@@ -375,8 +375,11 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
 
   constructor(input: AgentExecutorInput) {
     let agent: BaseSingleActionAgent | BaseMultiActionAgent;
+    let returnOnlyOutputs = true;
     if (Runnable.isRunnable(input.agent)) {
       agent = new RunnableAgent({ runnable: input.agent });
+      // TODO: Update BaseChain implementation on breaking change
+      returnOnlyOutputs = false;
     } else {
       agent = input.agent;
     }
@@ -386,6 +389,7 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
     this.tools = input.tools;
     this.handleParsingErrors =
       input.handleParsingErrors ?? this.handleParsingErrors;
+    this.returnOnlyOutputs = returnOnlyOutputs;
     if (this.agent._agentActionType() === "multi") {
       for (const tool of this.tools) {
         if (tool.returnDirect) {
@@ -438,11 +442,19 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
       const { returnValues } = finishStep;
       const additional = await this.agent.prepareForOutput(returnValues, steps);
 
-      if (this.returnIntermediateSteps) {
-        return { ...returnValues, intermediateSteps: steps, ...additional };
-      }
       await runManager?.handleAgentEnd(finishStep);
-      return { ...returnValues, ...additional };
+
+      let response;
+
+      if (this.returnIntermediateSteps) {
+        response = { ...returnValues, intermediateSteps: steps, ...additional };
+      } else {
+        response = { ...returnValues, ...additional };
+      }
+      if (!this.returnOnlyOutputs) {
+        response = { ...inputs, ...response };
+      }
+      return response;
     };
 
     while (this.shouldContinue(iterations)) {
@@ -699,14 +711,15 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
 
   async *_streamIterator(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    inputs: Record<string, any>
+    inputs: Record<string, any>,
+    options?: Partial<RunnableConfig>
   ): AsyncGenerator<ChainValues> {
     const agentExecutorIterator = new AgentExecutorIterator({
       inputs,
       agentExecutor: this,
-      metadata: this.metadata,
-      tags: this.tags,
-      callbacks: this.callbacks,
+      metadata: options?.metadata,
+      tags: options?.tags,
+      callbacks: options?.callbacks,
     });
     const iterator = agentExecutorIterator.streamIterator();
     for await (const step of iterator) {

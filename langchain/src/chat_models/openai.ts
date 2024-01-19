@@ -4,9 +4,17 @@ import {
   messageToOpenAIRole,
 } from "@langchain/openai";
 
-import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
-import { BaseMessage, ChatMessage, ChatResult } from "../schema/index.js";
+import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import { BaseMessage, ChatMessage } from "@langchain/core/messages";
+import { ChatResult } from "@langchain/core/outputs";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
+import { logVersion010MigrationWarning } from "../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion010MigrationWarning({
+  oldEntrypointName: "chat_models/openai",
+  newEntrypointName: "",
+  newPackageName: "@langchain/openai",
+});
 
 export {
   type AzureOpenAIInput,

@@ -1,5 +1,5 @@
 import { Runnable, RunnableLike, _coerceToRunnable } from "./base.js";
-import { RunnableConfig } from "./config.js";
+import { RunnableConfig, patchConfig } from "./config.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
 /**
@@ -92,7 +92,7 @@ export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
    *
    * @example
    * ```ts
-   * import { RunnableBranch } from "langchain/schema/runnable";
+   * import { RunnableBranch } from "@langchain/core/runnables";
    *
    * const branch = RunnableBranch.from([
    *   [(x: number) => x > 0, (x: number) => x + 1],
@@ -143,12 +143,16 @@ export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
       const [condition, branchRunnable] = this.branches[i];
       const conditionValue = await condition.invoke(
         input,
-        this._patchConfig(config, runManager?.getChild(`condition:${i + 1}`))
+        patchConfig(config, {
+          callbacks: runManager?.getChild(`condition:${i + 1}`),
+        })
       );
       if (conditionValue) {
         result = await branchRunnable.invoke(
           input,
-          this._patchConfig(config, runManager?.getChild(`branch:${i + 1}`))
+          patchConfig(config, {
+            callbacks: runManager?.getChild(`branch:${i + 1}`),
+          })
         );
         break;
       }
@@ -156,7 +160,9 @@ export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
     if (!result) {
       result = await this.default.invoke(
         input,
-        this._patchConfig(config, runManager?.getChild("default"))
+        patchConfig(config, {
+          callbacks: runManager?.getChild("default"),
+        })
       );
     }
     return result;

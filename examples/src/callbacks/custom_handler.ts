@@ -1,6 +1,7 @@
-import { BaseCallbackHandler } from "langchain/callbacks";
-import { Serialized } from "langchain/load/serializable";
-import { AgentAction, AgentFinish, ChainValues } from "langchain/schema";
+import { Serialized } from "@langchain/core/load/serializable";
+import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
+import { AgentAction, AgentFinish } from "@langchain/core/agents";
+import { ChainValues } from "@langchain/core/utils/types";
 
 export class MyCallbackHandler extends BaseCallbackHandler {
   name = "MyCallbackHandler";

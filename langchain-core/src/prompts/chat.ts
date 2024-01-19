@@ -75,6 +75,7 @@ export abstract class BaseMessagePromptTemplate<
  */
 export interface MessagesPlaceholderFields<T extends string> {
   variableName: T;
+  optional?: boolean;
 }
 
 /**
@@ -82,14 +83,19 @@ export interface MessagesPlaceholderFields<T extends string> {
  * extends the BaseMessagePromptTemplate.
  */
 export class MessagesPlaceholder<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunInput extends InputValues = any
-> extends BaseMessagePromptTemplate<RunInput> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunInput extends InputValues = any
+  >
+  extends BaseMessagePromptTemplate<RunInput>
+  implements MessagesPlaceholderFields<Extract<keyof RunInput, string>>
+{
   static lc_name() {
     return "MessagesPlaceholder";
   }
 
   variableName: Extract<keyof RunInput, string>;
+
+  optional: boolean;
 
   constructor(variableName: Extract<keyof RunInput, string>);
 
@@ -108,6 +114,7 @@ export class MessagesPlaceholder<
     }
     super(fields);
     this.variableName = fields.variableName;
+    this.optional = fields.optional ?? false;
   }
 
   get inputVariables() {
@@ -115,9 +122,19 @@ export class MessagesPlaceholder<
   }
 
   validateInputOrThrow(
-    input: Array<unknown>,
+    input: Array<unknown> | undefined,
     variableName: Extract<keyof RunInput, string>
   ): input is BaseMessage[] {
+    if (this.optional && !input) {
+      return false;
+    } else if (!input) {
+      const error = new Error(
+        `Error: Field "${variableName}" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages as an input value. Received: undefined`
+      );
+      error.name = "InputFormatError";
+      throw error;
+    }
+
     let isInputBaseMessage = false;
 
     if (Array.isArray(input)) {
@@ -147,7 +164,7 @@ export class MessagesPlaceholder<
   ): Promise<BaseMessage[]> {
     this.validateInputOrThrow(values[this.variableName], this.variableName);
 
-    return values[this.variableName];
+    return values[this.variableName] ?? [];
   }
 }
 
@@ -460,6 +477,13 @@ function _coerceMessagePromptTemplateLike(
   }
 }
 
+function isMessagesPlaceholder(
+  x: BaseMessagePromptTemplate | BaseMessage
+): x is MessagesPlaceholder {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (x.constructor as any).lc_name() === "MessagesPlaceholder";
+}
+
 /**
  * Class that represents a chat prompt. It extends the
  * BaseChatPromptTemplate and uses an array of BaseMessagePromptTemplate
@@ -598,7 +622,10 @@ export class ChatPromptTemplate<
       } else {
         const inputValues = promptMessage.inputVariables.reduce(
           (acc, inputVariable) => {
-            if (!(inputVariable in allValues)) {
+            if (
+              !(inputVariable in allValues) &&
+              !(isMessagesPlaceholder(promptMessage) && promptMessage.optional)
+            ) {
               throw new Error(
                 `Missing value for input variable \`${inputVariable.toString()}\``
               );

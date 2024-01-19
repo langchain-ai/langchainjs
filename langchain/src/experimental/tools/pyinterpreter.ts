@@ -1,5 +1,5 @@
 import { loadPyodide, type PyodideInterface } from "pyodide";
-import { Tool, ToolParams } from "../../tools/base.js";
+import { Tool, ToolParams } from "@langchain/core/tools";
 
 export type PythonInterpreterToolParams = Parameters<typeof loadPyodide>[0] &
   ToolParams & {

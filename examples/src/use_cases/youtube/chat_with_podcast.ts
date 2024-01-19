@@ -1,9 +1,8 @@
 import { RetrievalQAChain } from "langchain/chains";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { SearchApiLoader } from "langchain/document_loaders/web/searchapi";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { TokenTextSplitter } from "langchain/text_splitter";
-import { FaissStore } from "langchain/vectorstores/faiss";
+import { FaissStore } from "@langchain/community/vectorstores/faiss";
 
 const loader = new SearchApiLoader({
   engine: "youtube_transcripts",

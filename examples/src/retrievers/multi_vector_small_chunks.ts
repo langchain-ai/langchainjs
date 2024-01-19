@@ -1,12 +1,12 @@
 import * as uuid from "uuid";
 
 import { MultiVectorRetriever } from "langchain/retrievers/multi_vector";
-import { FaissStore } from "langchain/vectorstores/faiss";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { FaissStore } from "@langchain/community/vectorstores/faiss";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { InMemoryStore } from "langchain/storage/in_memory";
 import { TextLoader } from "langchain/document_loaders/fs/text";
-import { Document } from "langchain/document";
+import { Document } from "@langchain/core/documents";
 
 const textLoader = new TextLoader("../examples/state_of_the_union.txt");
 const parentDocuments = await textLoader.load();
@@ -37,14 +37,8 @@ for (let i = 0; i < docs.length; i += 1) {
   subDocs.push(...taggedChildDocs);
 }
 
-const keyValuePairs: [string, Document][] = docs.map((doc, i) => [
-  docIds[i],
-  doc,
-]);
-
-// The docstore to use to store the original chunks
-const docstore = new InMemoryStore();
-await docstore.mset(keyValuePairs);
+// The byteStore to use to store the original chunks
+const byteStore = new InMemoryStore<Uint8Array>();
 
 // The vectorstore to use to index the child chunks
 const vectorstore = await FaissStore.fromDocuments(
@@ -54,7 +48,7 @@ const vectorstore = await FaissStore.fromDocuments(
 
 const retriever = new MultiVectorRetriever({
   vectorstore,
-  docstore,
+  byteStore,
   idKey,
   // Optional `k` parameter to search for more child documents in VectorStore.
   // Note that this does not exactly correspond to the number of final (parent) documents
@@ -64,6 +58,14 @@ const retriever = new MultiVectorRetriever({
   // retriever and sent to LLM. This is an upper-bound, and the final count may be lower than this.
   parentK: 5,
 });
+
+const keyValuePairs: [string, Document][] = docs.map((originalDoc, i) => [
+  docIds[i],
+  originalDoc,
+]);
+
+// Use the retriever to add the original chunks to the document store
+await retriever.docstore.mset(keyValuePairs);
 
 // Vectorstore alone retrieves the small chunks
 const vectorstoreResult = await retriever.vectorstore.similaritySearch(

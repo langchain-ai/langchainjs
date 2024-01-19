@@ -1,12 +1,11 @@
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HNSWLib } from "langchain/vectorstores/hnswlib";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
+import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import * as fs from "fs";
-import { PromptTemplate } from "langchain/prompts";
-import { StringOutputParser } from "langchain/schema/output_parser";
-import { RunnableSequence } from "langchain/schema/runnable";
 import { formatDocumentsAsString } from "langchain/util/document";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { RunnableSequence } from "@langchain/core/runnables";
 
 /* Initialize the LLM & set streaming to true */
 const model = new ChatOpenAI({

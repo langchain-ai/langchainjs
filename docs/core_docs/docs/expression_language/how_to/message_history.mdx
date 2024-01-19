@@ -1,0 +1,189 @@
+# Add message history (memory)
+
+The `RunnableWithMessageHistory` let's us add message history to certain types of chains.
+
+Specifically, it can be used for any Runnable that takes as input one of
+
+- a sequence of `BaseMessage`
+- a dict with a key that takes a sequence of `BaseMessage`
+- a dict with a key that takes the latest message(s) as a string or sequence of `BaseMessage`, and a separate key that takes historical messages
+
+And returns as output one of
+
+- a string that can be treated as the contents of an `AIMessage`
+- a sequence of `BaseMessage`
+- a dict with a key that contains a sequence of `BaseMessage`
+
+Let's take a look at some examples to see how it works.
+
+## Setup
+
+We'll use Upstash to store our chat message histories and Anthropic's claude-2 model so we'll need to install the following dependencies:
+
+```bash npm2yarn
+npm install @langchain/anthropic @langchain/community @upstash/redis
+```
+
+You'll need to set environment variables for `ANTHROPIC_API_KEY` and grab your Upstash REST url and secret token.
+
+### [LangSmith](https://smith.langchain.com/)
+
+LangSmith is especially useful for something like message history injection, where it can be hard to otherwise understand what the inputs are to various parts of the chain.
+
+Note that LangSmith is not needed, but it is helpful.
+If you do want to use LangSmith, after you sign up at the link above, make sure to uncoment the below and set your environment variables to start logging traces:
+
+```bash
+export LANGCHAIN_TRACING_V2="true"
+export LANGCHAIN_API_KEY="<your-api-key>"
+```
+
+## Example: Dict input, message output
+
+Let's create a simple chain that takes a dict as input and returns a BaseMessage.
+
+In this case the `"question"` key in the input represents our input message, and the `"history"` key is where our historical messages will be injected.
+
+```typescript
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
+import { ChatAnthropic } from "@langchain/anthropic";
+import { UpstashRedisChatMessageHistory } from "@langchain/community/stores/message/upstash_redis";
+// For demos, you can also use an in-memory store:
+// import { ChatMessageHistory } from "langchain/stores/message/in_memory";
+
+const prompt = ChatPromptTemplate.fromMessages([
+  ["system", "You're an assistant who's good at {ability}"],
+  new MessagesPlaceholder("history"),
+  ["human", "{question}"],
+]);
+
+const chain = prompt.pipe(new ChatAnthropic({ modelName: "claude-2.1" }));
+```
+
+### Adding message history
+
+To add message history to our original chain we wrap it in the `RunnableWithMessageHistory` class.
+
+Crucially, we also need to define a method that takes a `sessionId` string and based on it returns a `BaseChatMessageHistory`. Given the same input, this method should return an equivalent output.
+
+In this case we'll also want to specify `inputMessagesKey` (the key to be treated as the latest input message) and `historyMessagesKey` (the key to add historical messages to).
+
+```typescript
+const chainWithHistory = new RunnableWithMessageHistory({
+  runnable: chain,
+  getMessageHistory: (sessionId) =>
+    new UpstashRedisChatMessageHistory({
+      sessionId,
+      config: {
+        url: process.env.UPSTASH_REDIS_REST_URL!,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+      },
+    }),
+  inputMessagesKey: "question",
+  historyMessagesKey: "history",
+});
+```
+
+## Invoking with config
+
+Whenever we call our chain with message history, we need to include an additional config object that contains the `session_id`
+
+```typescript
+{
+  configurable: {
+    sessionId: "<SESSION_ID>";
+  }
+}
+```
+
+Given the same configuration, our chain should be pulling from the same chat message history.
+
+```typescript
+const result = await chainWithHistory.invoke(
+  {
+    ability: "math",
+    question: "What does cosine mean?",
+  },
+  {
+    configurable: {
+      sessionId: "foobarbaz",
+    },
+  }
+);
+
+console.log(result);
+
+/*
+  AIMessage {
+    content: 'Cosine refers to one of the basic trigonometric functions. Specifically:\n' +
+      '\n' +
+      '- Cosine is one of the three main trigonometric functions, along with sine and tangent. It is often abbreviated as cos.\n' +
+      '\n' +
+      '- For a right triangle with sides a, b, and c (where c is the hypotenuse), cosine represents the ratio of the length of the adjacent side (a) to the length of the hypotenuse (c). So cos(A) = a/c, where A is the angle opposite side a.\n' +
+      '\n' +
+      '- On the Cartesian plane, cosine represents the x-coordinate of a point on the unit circle for a given angle. So if you take an angle θ on the unit circle, the cosine of θ gives you the x-coordinate of where the terminal side of that angle intersects the circle.\n' +
+      '\n' +
+      '- The cosine function has a periodic waveform that oscillates between 1 and -1. Its graph forms a cosine wave.\n' +
+      '\n' +
+      'So in essence, cosine helps relate an angle in a right triangle to the ratio of two of its sides. Along with sine and tangent, it is foundational to trigonometry and mathematical modeling of periodic functions.',
+    name: undefined,
+    additional_kwargs: {
+      id: 'msg_01QnnAkKEz7WvhJrwLWGbLBm',
+      type: 'message',
+      role: 'assistant',
+      model: 'claude-2.1',
+      stop_reason: 'end_turn',
+      stop_sequence: null
+    }
+  }
+*/
+
+const result2 = await chainWithHistory.invoke(
+  {
+    ability: "math",
+    question: "What's its inverse?",
+  },
+  {
+    configurable: {
+      sessionId: "foobarbaz",
+    },
+  }
+);
+
+console.log(result2);
+
+/*
+  AIMessage {
+    content: 'The inverse of the cosine function is the arcsine or inverse sine function, often written as sin−1(x) or sin^{-1}(x).\n' +
+      '\n' +
+      'Some key properties of the inverse cosine function:\n' +
+      '\n' +
+      '- It accepts values between -1 and 1 as inputs and returns angles from 0 to π radians (0 to 180 degrees). This is the inverse of the regular cosine function, which takes angles and returns the cosine ratio.\n' +
+      '\n' +
+      '- It is also called cos−1(x) or cos^{-1}(x) (read as "cosine inverse of x").\n' +
+      '\n' +
+      '- The notation sin−1(x) is usually preferred over cos−1(x) since it relates more directly to the unit circle definition of cosine. sin−1(x) gives the angle whose sine equals x.\n' +
+      '\n' +
+      '- The arcsine function is one-to-one on the domain [-1, 1]. This means every output angle maps back to exactly one input ratio x. This one-to-one mapping is what makes it the mathematical inverse of cosine.\n' +
+      '\n' +
+      'So in summary, arcsine or inverse sine, written as sin−1(x) or sin^{-1}(x), gives you the angle whose cosine evaluates to the input x, undoing the cosine function. It is used throughout trigonometry and calculus.',
+    additional_kwargs: {
+      id: 'msg_01PYRhpoUudApdJvxug6R13W',
+      type: 'message',
+      role: 'assistant',
+      model: 'claude-2.1',
+      stop_reason: 'end_turn',
+      stop_sequence: null
+    }
+  }
+*/
+```
+
+:::tip
+[Langsmith trace](https://smith.langchain.com/public/50377a89-d0b8-413b-8cd7-8e6618835e00/r)
+:::
+
+Looking at the Langsmith trace for the second call, we can see that when constructing the prompt, a "history" variable has been injected which is a list of two messages (our first input and first output).

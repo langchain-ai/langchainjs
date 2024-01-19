@@ -39,6 +39,10 @@ export class StringPromptValue
   extends BasePromptValue
   implements StringPromptValueInterface
 {
+  static lc_name(): string {
+    return "StringPromptValue";
+  }
+
   lc_namespace = ["langchain_core", "prompt_values"];
 
   lc_serializable = true;

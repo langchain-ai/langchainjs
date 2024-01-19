@@ -1,14 +1,14 @@
 import type { basename as BasenameT } from "node:path";
 import type { readFile as ReadFileT } from "node:fs/promises";
+import { Document } from "@langchain/core/documents";
+import { getEnv } from "@langchain/core/utils/env";
+import { StringWithAutocomplete } from "@langchain/core/utils/types";
 import {
   DirectoryLoader,
   UnknownHandling,
   LoadersMapping,
 } from "./directory.js";
-import { getEnv } from "../../util/env.js";
-import { Document } from "../../document.js";
 import { BaseDocumentLoader } from "../base.js";
-import type { StringWithAutocomplete } from "../../util/types.js";
 
 const UNSTRUCTURED_API_FILETYPES = [
   ".txt",

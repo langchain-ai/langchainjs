@@ -1,4 +1,4 @@
-import { PromptTemplate } from "../../prompts/prompt.js";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const QA_TEMPLATE = `You are a teacher grading a quiz.
 You are given a question, the student's answer, and the true answer, and are asked to score the student answer as either CORRECT or INCORRECT.

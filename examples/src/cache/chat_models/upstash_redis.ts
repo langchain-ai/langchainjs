@@ -1,5 +1,5 @@
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { UpstashRedisCache } from "langchain/cache/upstash_redis";
+import { ChatOpenAI } from "@langchain/openai";
+import { UpstashRedisCache } from "@langchain/community/caches/upstash_redis";
 
 // See https://docs.upstash.com/redis/howto/connectwithupstashredis#quick-start for connection options
 const cache = new UpstashRedisCache({

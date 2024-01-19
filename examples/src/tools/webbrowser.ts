@@ -1,6 +1,5 @@
 import { WebBrowser } from "langchain/tools/webbrowser";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 
 export async function run() {
   // this will not work with Azure OpenAI API yet

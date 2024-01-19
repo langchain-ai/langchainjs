@@ -1,15 +1,28 @@
-import { BaseLLMOutputParser } from "../schema/output_parser.js";
-import type { ChatGeneration } from "../schema/index.js";
+import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
+import type { ChatGeneration } from "@langchain/core/outputs";
 
 export type ParsedToolCall = {
-  name: string;
+  id?: string;
+
+  type: string;
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  arguments: Record<string, any>;
+  args: Record<string, any>;
+
+  /** @deprecated Use `type` instead. Will be removed in 0.2.0. */
+  name: string;
+
+  /** @deprecated Use `args` instead. Will be removed in 0.2.0. */
+  arguments: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+};
+
+export type JsonOutputToolsParserParams = {
+  /** Whether to return the tool call id. */
+  returnId?: boolean;
 };
 
 /**
- * Class for parsing the output of an LLM into a JSON object. Uses an
- * instance of `OutputToolsParser` to parse the output.
+ * Class for parsing the output of a tool-calling LLM into a JSON object.
  */
 export class JsonOutputToolsParser extends BaseLLMOutputParser<
   ParsedToolCall[]
@@ -18,9 +31,16 @@ export class JsonOutputToolsParser extends BaseLLMOutputParser<
     return "JsonOutputToolsParser";
   }
 
-  lc_namespace = ["langchain", "output_parsers"];
+  returnId = false;
+
+  lc_namespace = ["langchain", "output_parsers", "openai_tools"];
 
   lc_serializable = true;
+
+  constructor(fields?: JsonOutputToolsParserParams) {
+    super(fields);
+    this.returnId = fields?.returnId ?? this.returnId;
+  }
 
   /**
    * Parses the output and returns a JSON object. If `argsOnly` is true,
@@ -39,13 +59,90 @@ export class JsonOutputToolsParser extends BaseLLMOutputParser<
     const parsedToolCalls = [];
     for (const toolCall of clonedToolCalls) {
       if (toolCall.function !== undefined) {
-        const functionArgs = toolCall.function.arguments;
-        parsedToolCalls.push({
-          name: toolCall.function.name,
-          arguments: JSON.parse(functionArgs),
+        // @ts-expect-error name and arguemnts are defined by Object.defineProperty
+        const parsedToolCall: ParsedToolCall = {
+          type: toolCall.function.name,
+          args: JSON.parse(toolCall.function.arguments),
+        };
+
+        if (this.returnId) {
+          parsedToolCall.id = toolCall.id;
+        }
+
+        // backward-compatibility with previous
+        // versions of Langchain JS, which uses `name` and `arguments`
+        Object.defineProperty(parsedToolCall, "name", {
+          get() {
+            return this.type;
+          },
         });
+
+        Object.defineProperty(parsedToolCall, "arguments", {
+          get() {
+            return this.args;
+          },
+        });
+
+        parsedToolCalls.push(parsedToolCall);
       }
     }
     return parsedToolCalls;
+  }
+}
+
+export type JsonOutputKeyToolsParserParams = {
+  keyName: string;
+  returnSingle?: boolean;
+  /** Whether to return the tool call id. */
+  returnId?: boolean;
+};
+
+/**
+ * Class for parsing the output of a tool-calling LLM into a JSON object if you are
+ * expecting only a single tool to be called.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export class JsonOutputKeyToolsParser extends BaseLLMOutputParser<any> {
+  static lc_name() {
+    return "JsonOutputKeyToolsParser";
+  }
+
+  lc_namespace = ["langchain", "output_parsers", "openai_tools"];
+
+  lc_serializable = true;
+
+  returnId = false;
+
+  /** The type of tool calls to return. */
+  keyName: string;
+
+  /** Whether to return only the first tool call. */
+  returnSingle = false;
+
+  initialParser: JsonOutputToolsParser;
+
+  constructor(params: JsonOutputKeyToolsParserParams) {
+    super(params);
+    this.keyName = params.keyName;
+    this.returnSingle = params.returnSingle ?? this.returnSingle;
+    this.initialParser = new JsonOutputToolsParser(params);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async parseResult(generations: ChatGeneration[]): Promise<any> {
+    const results = await this.initialParser.parseResult(generations);
+    const matchingResults = results.filter(
+      (result) => result.type === this.keyName
+    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let returnedValues: ParsedToolCall[] | Record<string, any>[] =
+      matchingResults;
+    if (!this.returnId) {
+      returnedValues = matchingResults.map((result) => result.args);
+    }
+    if (this.returnSingle) {
+      return returnedValues[0];
+    }
+    return returnedValues;
   }
 }
