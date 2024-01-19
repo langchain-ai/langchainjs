@@ -106,6 +106,7 @@ const entrypoints = {
   "vectorstores/singlestore": "vectorstores/singlestore",
   "vectorstores/supabase": "vectorstores/supabase",
   "vectorstores/tigris": "vectorstores/tigris",
+  "vectorstores/turbopuffer": "vectorstores/turbopuffer",
   "vectorstores/typeorm": "vectorstores/typeorm",
   "vectorstores/typesense": "vectorstores/typesense",
   "vectorstores/usearch": "vectorstores/usearch",
@@ -116,6 +117,7 @@ const entrypoints = {
   "vectorstores/xata": "vectorstores/xata",
   "vectorstores/zep": "vectorstores/zep",
   // chat_models
+  "chat_models/alibaba_tongyi": "chat_models/alibaba_tongyi",
   "chat_models/baiduwenxin": "chat_models/baiduwenxin",
   "chat_models/bedrock": "chat_models/bedrock/index",
   "chat_models/bedrock/web": "chat_models/bedrock/web",

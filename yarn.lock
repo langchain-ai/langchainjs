@@ -6083,10 +6083,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@cloudflare/ai@npm:^1.0.47":
+  version: 1.0.47
+  resolution: "@cloudflare/ai@npm:1.0.47"
+  checksum: a9e371f789256bb5795c0cb60d975749b07d6cb50141b997da6b5c94380ddf18e851cba518e246414fcab4239d8f4438c5fe29172e6f06c136be3be19a3b65e0
+  languageName: node
+  linkType: hard
+
 "@cloudflare/workers-types@npm:^4.20230922.0":
   version: 4.20230922.0
   resolution: "@cloudflare/workers-types@npm:4.20230922.0"
   checksum: 629bab47cdbcb74e3c42fc9486f5186734b6dd734154cea7a0983ad83ee053b4fb1ae13ff618a7287612bc3b3d19ad72d6a34a84289a903623cb8a13af57596b
+  languageName: node
+  linkType: hard
+
+"@cloudflare/workers-types@npm:^4.20231218.0":
+  version: 4.20231218.0
+  resolution: "@cloudflare/workers-types@npm:4.20231218.0"
+  checksum: b7e50a76ee8e9d662227bbb74798b93b6102acc224f1071a9c99a9adb419ad0b3bdabf7561e7e1b4a320a6a4616badeecdfb1848fbdaada197c7b37d845b8774
   languageName: node
   linkType: hard
 
@@ -6124,14 +6138,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@datastax/astra-db-ts@npm:0.1.2":
-  version: 0.1.2
-  resolution: "@datastax/astra-db-ts@npm:0.1.2"
+"@datastax/astra-db-ts@npm:^0.1.3":
+  version: 0.1.3
+  resolution: "@datastax/astra-db-ts@npm:0.1.3"
   dependencies:
     axios: ^1.4.0
     bson: ^6.2.0
     winston: ^3.7.2
-  checksum: 15be1b453d1712ae73962eec95ebd4ab904a17c6e318ba669211b2584ac1c565ba3de04f469015fcf5e1aa6113a304c9f43662a758c2ab345274374e4fe0e53b
+  checksum: 22b227d94817513d5a1e7ea0ca1d719ea658d1052d489d36569b5f95e03cac4b28b13da46b5f784d6db6132892ab5e85d27a64fa4040e1fb4479868ecca5b5d9
   languageName: node
   linkType: hard
 
@@ -7273,6 +7287,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@faker-js/faker@npm:^8.3.1":
+  version: 8.3.1
+  resolution: "@faker-js/faker@npm:8.3.1"
+  checksum: 33efe912411fe61f43b313784a9ce041dfbfb54bc3b2f7b923a547f97beb6b3763534f9c37af25ab330982e6b36e6f7b040dfb35c115deb8c789d8ada413bd94
+  languageName: node
+  linkType: hard
+
 "@fastify/busboy@npm:^1.2.1":
   version: 1.2.1
   resolution: "@fastify/busboy@npm:1.2.1"
@@ -8199,33 +8220,36 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/azure-openai@workspace:libs/langchain-azure-openai, @langchain/azure-openai@~0.0.1":
+"@langchain/cloudflare@workspace:*, @langchain/cloudflare@workspace:libs/langchain-cloudflare":
   version: 0.0.0-use.local
-  resolution: "@langchain/azure-openai@workspace:libs/langchain-azure-openai"
+  resolution: "@langchain/cloudflare@workspace:libs/langchain-cloudflare"
   dependencies:
-    "@azure/openai": 1.0.0-beta.10
+    "@cloudflare/ai": ^1.0.47
+    "@cloudflare/workers-types": ^4.20231218.0
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1.9
-    "@langchain/openai": ~0.0.12
+    "@langchain/core": ~0.1
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
+    "@tsconfig/recommended": ^1.0.3
+    "@types/uuid": ^9
+    "@typescript-eslint/eslint-plugin": ^6.12.0
+    "@typescript-eslint/parser": ^6.12.0
+    dotenv: ^16.3.1
     dpdm: ^3.12.0
     eslint: ^8.33.0
     eslint-config-airbnb-base: ^15.0.0
     eslint-config-prettier: ^8.6.0
     eslint-plugin-import: ^2.27.5
-    eslint-plugin-jest: ^27.6.0
     eslint-plugin-no-instanceof: ^1.0.1
     eslint-plugin-prettier: ^4.2.1
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
-    js-tiktoken: ^1.0.7
     prettier: ^2.8.3
     release-it: ^15.10.1
-    rimraf: ^5.0.1
-    typescript: ~5.1.6
-    zod: ^3.22.3
-    zod-to-json-schema: 3.20.3
+    rollup: ^4.5.2
+    ts-jest: ^29.1.0
+    typescript: <5.2.0
+    uuid: ^9.0.1
   languageName: unknown
   linkType: soft
 
@@ -8259,7 +8283,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/community@workspace:*, @langchain/community@workspace:libs/langchain-community, @langchain/community@~0.0.15":
+"@langchain/community@workspace:*, @langchain/community@workspace:libs/langchain-community, @langchain/community@~0.0.17":
   version: 0.0.0-use.local
   resolution: "@langchain/community@workspace:libs/langchain-community"
   dependencies:
@@ -8275,7 +8299,7 @@ __metadata:
     "@clickhouse/client": ^0.2.5
     "@cloudflare/ai": ^1.0.12
     "@cloudflare/workers-types": ^4.20230922.0
-    "@datastax/astra-db-ts": 0.1.2
+    "@datastax/astra-db-ts": ^0.1.3
     "@elastic/elasticsearch": ^8.4.0
     "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": ^4.0.0
@@ -8286,7 +8310,7 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1.9
+    "@langchain/core": ~0.1.16
     "@langchain/openai": ~0.0.10
     "@mozilla/readability": ^0.4.4
     "@opensearch-project/opensearch": ^2.2.0
@@ -8361,7 +8385,7 @@ __metadata:
     lunary: ^0.6.11
     mongodb: ^5.2.0
     mysql2: ^3.3.3
-    neo4j-driver: ^5.12.0
+    neo4j-driver: ^5.16.0
     node-llama-cpp: 2.7.3
     pg: ^8.11.0
     pg-copy-streams: ^6.0.5
@@ -8625,26 +8649,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/core@npm:~0.1.13":
-  version: 0.1.15
-  resolution: "@langchain/core@npm:0.1.15"
-  dependencies:
-    ansi-styles: ^5.0.0
-    camelcase: 6
-    decamelize: 1.2.0
-    js-tiktoken: ^1.0.8
-    langsmith: ~0.0.48
-    ml-distance: ^4.0.0
-    p-queue: ^6.6.2
-    p-retry: 4
-    uuid: ^9.0.0
-    zod: ^3.22.3
-    zod-to-json-schema: 3.20.3
-  checksum: f1677765d138e7401bf53ddc49fe00defd2a42dcda1fead18089793957ced8b650c7cc1a077662ab3826b6dad6a6d2f2ca0d8ba24dc38243024987fe7d8e0051
-  languageName: node
-  linkType: hard
-
-"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.5, @langchain/core@~0.1.9":
+"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.13, @langchain/core@~0.1.16, @langchain/core@~0.1.5":
   version: 0.0.0-use.local
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
@@ -8676,7 +8681,8 @@ __metadata:
     turbo: latest
     typescript: ~5.1.6
     uuid: ^9.0.0
-    zod: ^3.22.3
+    zod: ^3.22.4
+    zod-to-json-schema: ^3.22.3
   languageName: unknown
   linkType: soft
 
@@ -8742,25 +8748,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/openai@npm:~0.0.12":
-  version: 0.0.12
-  resolution: "@langchain/openai@npm:0.0.12"
-  dependencies:
-    "@langchain/core": ~0.1.13
-    js-tiktoken: ^1.0.7
-    openai: ^4.24.2
-    zod: ^3.22.3
-    zod-to-json-schema: 3.20.3
-  checksum: 2bd59490fc571f743df208ae0fa6e4bb339f38312746af1fab0e500c4aa483f2f388f214616d4dfbd81bf986475675c3cefd80a6db373fe0ec2912c96ddf8d1d
-  languageName: node
-  linkType: hard
-
-"@langchain/openai@workspace:*, @langchain/openai@workspace:libs/langchain-openai, @langchain/openai@~0.0.10":
+"@langchain/openai@workspace:*, @langchain/openai@workspace:libs/langchain-openai, @langchain/openai@~0.0.10, @langchain/openai@~0.0.12":
   version: 0.0.0-use.local
   resolution: "@langchain/openai@workspace:libs/langchain-openai"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1.9
+    "@langchain/core": ~0.1.13
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     dpdm: ^3.12.0
@@ -8774,13 +8767,46 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     js-tiktoken: ^1.0.7
-    openai: ^4.19.0
+    openai: ^4.24.2
     prettier: ^2.8.3
     release-it: ^15.10.1
     rimraf: ^5.0.1
     typescript: ~5.1.6
-    zod: ^3.22.3
-    zod-to-json-schema: 3.20.3
+    zod: ^3.22.4
+    zod-to-json-schema: ^3.22.3
+  languageName: unknown
+  linkType: soft
+
+"@langchain/pinecone@workspace:*, @langchain/pinecone@workspace:libs/langchain-pinecone":
+  version: 0.0.0-use.local
+  resolution: "@langchain/pinecone@workspace:libs/langchain-pinecone"
+  dependencies:
+    "@faker-js/faker": ^8.3.1
+    "@jest/globals": ^29.5.0
+    "@langchain/core": ~0.1
+    "@pinecone-database/pinecone": ^2.0.0
+    "@swc/core": ^1.3.90
+    "@swc/jest": ^0.2.29
+    "@tsconfig/recommended": ^1.0.3
+    "@typescript-eslint/eslint-plugin": ^6.12.0
+    "@typescript-eslint/parser": ^6.12.0
+    dotenv: ^16.3.1
+    dpdm: ^3.12.0
+    eslint: ^8.33.0
+    eslint-config-airbnb-base: ^15.0.0
+    eslint-config-prettier: ^8.6.0
+    eslint-plugin-import: ^2.27.5
+    eslint-plugin-no-instanceof: ^1.0.1
+    eslint-plugin-prettier: ^4.2.1
+    flat: ^5.0.2
+    jest: ^29.5.0
+    jest-environment-node: ^29.6.4
+    prettier: ^2.8.3
+    release-it: ^15.10.1
+    rollup: ^4.5.2
+    ts-jest: ^29.1.0
+    typescript: <5.2.0
+    uuid: ^9.0.0
   languageName: unknown
   linkType: soft
 
@@ -9539,6 +9565,18 @@ __metadata:
     encoding: ^0.1.13
     typescript: ^4.9.4
   checksum: 5ff066c23006c6ad8eb3ae5add5aa2633adacf48c539a498f6d97798fb9640254a2ede99f7e47aaff3d885e3df5168ed193990d846acd9bebded7140f18c8eb1
+  languageName: node
+  linkType: hard
+
+"@pinecone-database/pinecone@npm:^2.0.0":
+  version: 2.0.1
+  resolution: "@pinecone-database/pinecone@npm:2.0.1"
+  dependencies:
+    "@sinclair/typebox": ^0.29.0
+    ajv: ^8.12.0
+    cross-fetch: ^3.1.5
+    encoding: ^0.1.13
+  checksum: 43ece04cd66a597281a92d189561bd8eed133a541c32c9d2f8a7c10b2b6c899eeaaf3c7a14387ba62e05f0fa5c441bd3588a9a6c36dddd265699587a9eea8cd1
   languageName: node
   linkType: hard
 
@@ -12177,6 +12215,15 @@ __metadata:
   dependencies:
     "@types/node": "*"
   checksum: c3070ccdc9ca0f40df747bced1c96c71a61992d6f7c767e8fd24bb6a3c2de26e8b84135ede000b7e79db530a23e7e88dcd9db60eee6395d0f4ce1dae91369dd4
+  languageName: node
+  linkType: hard
+
+"@types/handlebars@npm:^4.1.0":
+  version: 4.1.0
+  resolution: "@types/handlebars@npm:4.1.0"
+  dependencies:
+    handlebars: "*"
+  checksum: 536d9f690c93f5d13fcc4a37ae7dd11f41eb73c47416d56f51623aedc3b573ad9775d6618ede75d7bf9148ac75694e50f8e6ba5773de7d9f040811368c73739f
   languageName: node
   linkType: hard
 
@@ -19211,15 +19258,17 @@ __metadata:
     "@gomomento/sdk": ^1.51.1
     "@google/generative-ai": ^0.1.0
     "@langchain/anthropic": "workspace:*"
+    "@langchain/cloudflare": "workspace:*"
     "@langchain/cohere": "workspace:*"
     "@langchain/community": "workspace:*"
     "@langchain/core": "workspace:*"
     "@langchain/google-genai": "workspace:*"
     "@langchain/mistralai": "workspace:*"
     "@langchain/openai": "workspace:*"
+    "@langchain/pinecone": "workspace:*"
     "@langchain/yandex": "workspace:*"
     "@opensearch-project/opensearch": ^2.2.0
-    "@pinecone-database/pinecone": ^1.1.0
+    "@pinecone-database/pinecone": ^2.0.0
     "@planetscale/database": ^1.8.0
     "@prisma/client": ^4.11.0
     "@raycast/api": ^1.55.2
@@ -19266,8 +19315,8 @@ __metadata:
     vectordb: ^0.1.4
     voy-search: 0.6.2
     weaviate-ts-client: ^1.0.0
-    zod: ^3.22.3
-    zod-to-json-schema: 3.20.3
+    zod: ^3.22.4
+    zod-to-json-schema: ^3.22.3
   languageName: unknown
   linkType: soft
 
@@ -21047,6 +21096,24 @@ __metadata:
   version: 2.0.1
   resolution: "handle-thing@npm:2.0.1"
   checksum: 68071f313062315cd9dce55710e9496873945f1dd425107007058fc1629f93002a7649fcc3e464281ce02c7e809a35f5925504ab8105d972cf649f1f47cb7d6c
+  languageName: node
+  linkType: hard
+
+"handlebars@npm:*, handlebars@npm:^4.7.8":
+  version: 4.7.8
+  resolution: "handlebars@npm:4.7.8"
+  dependencies:
+    minimist: ^1.2.5
+    neo-async: ^2.6.2
+    source-map: ^0.6.1
+    uglify-js: ^3.1.4
+    wordwrap: ^1.0.0
+  dependenciesMeta:
+    uglify-js:
+      optional: true
+  bin:
+    handlebars: bin/handlebars
+  checksum: 00e68bb5c183fd7b8b63322e6234b5ac8fbb960d712cb3f25587d559c2951d9642df83c04a1172c918c41bcfc81bfbd7a7718bbce93b893e0135fc99edea93ff
   languageName: node
   linkType: hard
 
@@ -23784,10 +23851,9 @@ __metadata:
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1
     "@jest/globals": ^29.5.0
-    "@langchain/azure-openai": ~0.0.1
-    "@langchain/community": ~0.0.15
-    "@langchain/core": ~0.1.9
-    "@langchain/openai": ~0.0.10
+    "@langchain/community": ~0.0.17
+    "@langchain/core": ~0.1.16
+    "@langchain/openai": ~0.0.12
     "@notionhq/client": ^2.2.10
     "@pinecone-database/pinecone": ^1.1.0
     "@supabase/supabase-js": ^2.10.0
@@ -23796,6 +23862,7 @@ __metadata:
     "@tsconfig/recommended": ^1.0.2
     "@types/d3-dsv": ^2
     "@types/decamelize": ^1.2.0
+    "@types/handlebars": ^4.1.0
     "@types/html-to-text": ^9
     "@types/js-yaml": ^4
     "@types/jsdom": ^21.1.1
@@ -23828,6 +23895,7 @@ __metadata:
     fast-xml-parser: ^4.2.7
     google-auth-library: ^8.9.0
     googleapis: ^126.0.1
+    handlebars: ^4.7.8
     html-to-text: ^9.0.5
     ignore: ^5.2.0
     ioredis: ^5.3.2
@@ -23869,8 +23937,8 @@ __metadata:
     yaml: ^2.2.1
     youtube-transcript: ^1.0.6
     youtubei.js: ^5.8.0
-    zod: ^3.22.3
-    zod-to-json-schema: 3.20.3
+    zod: ^3.22.4
+    zod-to-json-schema: ^3.22.3
   peerDependencies:
     "@aws-sdk/client-s3": ^3.310.0
     "@aws-sdk/client-sagemaker-runtime": ^3.310.0
@@ -23898,6 +23966,7 @@ __metadata:
     fast-xml-parser: ^4.2.7
     google-auth-library: ^8.9.0
     googleapis: ^126.0.1
+    handlebars: ^4.7.8
     html-to-text: ^9.0.5
     ignore: ^5.2.0
     ioredis: ^5.3.2
@@ -23976,6 +24045,8 @@ __metadata:
     google-auth-library:
       optional: true
     googleapis:
+      optional: true
+    handlebars:
       optional: true
     html-to-text:
       optional: true
@@ -25602,32 +25673,32 @@ __metadata:
   languageName: node
   linkType: hard
 
-"neo4j-driver-bolt-connection@npm:5.12.0":
-  version: 5.12.0
-  resolution: "neo4j-driver-bolt-connection@npm:5.12.0"
+"neo4j-driver-bolt-connection@npm:5.16.0":
+  version: 5.16.0
+  resolution: "neo4j-driver-bolt-connection@npm:5.16.0"
   dependencies:
     buffer: ^6.0.3
-    neo4j-driver-core: 5.12.0
+    neo4j-driver-core: 5.16.0
     string_decoder: ^1.3.0
-  checksum: ec7b488073ee884bb29954d75983c077068a46d339141be501c44903fb7af9831b4639f6ee8e16eab886e217a7dfb6200b0bb6ddfe9563d03456cd2b3e67c8db
+  checksum: ddf5337fba3bd31b5909c1ab351d57df3b51d971786ba262d53ba38e89c4204d78cf7401527814e0ea6541dea26d21b54627e17fed4b9e78e2ee31f46b3deaf3
   languageName: node
   linkType: hard
 
-"neo4j-driver-core@npm:5.12.0":
-  version: 5.12.0
-  resolution: "neo4j-driver-core@npm:5.12.0"
-  checksum: 1e8f3a0c8c088a953150fbb2c89b6eb601328ee9d5b547e1bf0d29a4bacacc17eb8c2a492ebebffb1fb6563b820550205f18f7bec658feab8ebb5f041d17dd44
+"neo4j-driver-core@npm:5.16.0":
+  version: 5.16.0
+  resolution: "neo4j-driver-core@npm:5.16.0"
+  checksum: 58c33ea0121bdbd4d541c1967998fae1b07a092a8b83438c78567dd008f79ab3401a97824c9ccb721bb25c9ff65485521bb0a1b33fa75e3464a5b6324e65d593
   languageName: node
   linkType: hard
 
-"neo4j-driver@npm:^5.12.0":
-  version: 5.12.0
-  resolution: "neo4j-driver@npm:5.12.0"
+"neo4j-driver@npm:^5.16.0":
+  version: 5.16.0
+  resolution: "neo4j-driver@npm:5.16.0"
   dependencies:
-    neo4j-driver-bolt-connection: 5.12.0
-    neo4j-driver-core: 5.12.0
+    neo4j-driver-bolt-connection: 5.16.0
+    neo4j-driver-core: 5.16.0
     rxjs: ^7.8.1
-  checksum: aade3ddc66f7131ea64f797a8f65a7a702a0f1ae8224bc6eafec7a4784487f3ef0d3dcbbd8400cf7ad36802314fd7cd513dc578249ab2d4fa0d0a0d014bb47c8
+  checksum: ac6beea48043a379149132514fbabcd8ce2604c2e8237fdd60729244834a9ce45f5379aa6ca4fb93f008beaed9c3c4414e7087cd5b9d1e9c3397715fb74aa9e3
   languageName: node
   linkType: hard
 
@@ -26399,9 +26470,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openai@npm:^4.19.0":
-  version: 4.19.0
-  resolution: "openai@npm:4.19.0"
+"openai@npm:^4.24.2":
+  version: 4.24.2
+  resolution: "openai@npm:4.24.2"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
@@ -26414,7 +26485,7 @@ __metadata:
     web-streams-polyfill: ^3.2.1
   bin:
     openai: bin/cli
-  checksum: 906c79b73a236504d2ca30a104c988d30833c37ccdffe68755665b285116d56baf03a00027587e9390e6e87894c2a6783f105826a2f66a67fb948300efac14f1
+  checksum: 95be77f624a682be3bb3c789ef46fd1b85e3d96c7e759010803fc94c596cdb5b4334d96579de6eead6710981bc23cdc98ac201be1d1cb99bb1d32c4ebb998cf5
   languageName: node
   linkType: hard
 
@@ -32137,7 +32208,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"uglify-js@npm:^3.7.7":
+"uglify-js@npm:^3.1.4, uglify-js@npm:^3.7.7":
   version: 3.17.4
   resolution: "uglify-js@npm:3.17.4"
   bin:
@@ -32782,6 +32853,15 @@ __metadata:
   bin:
     uuid: dist/bin/uuid
   checksum: 8dd2c83c43ddc7e1c71e36b60aea40030a6505139af6bee0f382ebcd1a56f6cd3028f7f06ffb07f8cf6ced320b76aea275284b224b002b289f89fe89c389b028
+  languageName: node
+  linkType: hard
+
+"uuid@npm:^9.0.1":
+  version: 9.0.1
+  resolution: "uuid@npm:9.0.1"
+  bin:
+    uuid: dist/bin/uuid
+  checksum: 39931f6da74e307f51c0fb463dc2462807531dc80760a9bff1e35af4316131b4fc3203d16da60ae33f07fdca5b56f3f1dd662da0c99fea9aaeab2004780cc5f4
   languageName: node
   linkType: hard
 
@@ -33494,6 +33574,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"wordwrap@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "wordwrap@npm:1.0.0"
+  checksum: 2a44b2788165d0a3de71fd517d4880a8e20ea3a82c080ce46e294f0b68b69a2e49cff5f99c600e275c698a90d12c5ea32aff06c311f0db2eb3f1201f3e7b2a04
+  languageName: node
+  linkType: hard
+
 "wordwrapjs@npm:^4.0.0":
   version: 4.0.1
   resolution: "wordwrapjs@npm:4.0.1"
@@ -33873,16 +33960,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod-to-json-schema@npm:3.20.3":
-  version: 3.20.3
-  resolution: "zod-to-json-schema@npm:3.20.3"
+"zod-to-json-schema@npm:^3.22.3":
+  version: 3.22.3
+  resolution: "zod-to-json-schema@npm:3.22.3"
   peerDependencies:
-    zod: ^3.20.0
-  checksum: 1addf7e6f7d69398404dc90f5c9b76ea44e3f6deeb2fc7c72983a00e15b7340661d7e894b0a4eee3a07334dcdcc79d7064e44de46b4acc37d38ab2f3f7217ec8
+    zod: ^3.22.4
+  checksum: 2747a3d1514f579006939c0edd6a420acae65ad016df223b09c4a542cbc8c0ae61b4d7b391228a211cde973635ed49c47b1449791982f3b32d799319bb174f42
   languageName: node
   linkType: hard
 
-"zod@npm:^3.22.3":
+"zod@npm:^3.22.3, zod@npm:^3.22.4":
   version: 3.22.4
   resolution: "zod@npm:3.22.4"
   checksum: 80bfd7f8039b24fddeb0718a2ec7c02aa9856e4838d6aa4864335a047b6b37a3273b191ef335bf0b2002e5c514ef261ffcda5a589fb084a48c336ffc4cdbab7f

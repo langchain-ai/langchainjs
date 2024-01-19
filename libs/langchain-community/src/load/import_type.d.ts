@@ -322,6 +322,7 @@ export interface OptionalImportMap {
 }
 
 export interface SecretMap {
+  ALIBABA_API_KEY?: string;
   AWS_ACCESS_KEY_ID?: string;
   AWS_SECRETE_ACCESS_KEY?: string;
   AWS_SECRET_ACCESS_KEY?: string;
@@ -362,6 +363,7 @@ export interface SecretMap {
   REMOTE_RETRIEVER_AUTH_BEARER?: string;
   REPLICATE_API_TOKEN?: string;
   SEARXNG_API_BASE?: string;
+  TURBOPUFFER_API_KEY?: string;
   UPSTASH_REDIS_REST_TOKEN?: string;
   UPSTASH_REDIS_REST_URL?: string;
   VECTARA_API_KEY?: string;

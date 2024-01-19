@@ -1,8 +1,9 @@
 import { z } from "zod";
-import { ChatOpenAI, formatToOpenAITool } from "@langchain/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { Calculator } from "langchain/tools/calculator";
 import { AgentExecutor } from "langchain/agents";
 import { formatToOpenAIToolMessages } from "langchain/agents/format_scratchpad/openai_tools";
+import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import {
   OpenAIToolsAgentOutputParser,
   type ToolsAgentStep,
@@ -12,7 +13,7 @@ import {
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
-import { DynamicStructuredTool } from "@langchain/community/tools/dynamic";
+import { DynamicStructuredTool } from "@langchain/core/tools";
 
 const model = new ChatOpenAI({
   modelName: "gpt-3.5-turbo-1106",
@@ -44,7 +45,7 @@ const weatherTool = new DynamicStructuredTool({
 const tools = [new Calculator(), weatherTool];
 
 // Convert to OpenAI tool format
-const modelWithTools = model.bind({ tools: tools.map(formatToOpenAITool) });
+const modelWithTools = model.bind({ tools: tools.map(convertToOpenAITool) });
 
 const prompt = ChatPromptTemplate.fromMessages([
   ["ai", "You are a helpful assistant"],

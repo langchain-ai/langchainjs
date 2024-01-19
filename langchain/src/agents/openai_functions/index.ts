@@ -10,16 +10,13 @@ import {
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
-import {
-  ChatOpenAI,
-  ChatOpenAICallOptions,
-  formatToOpenAIFunction,
-} from "@langchain/openai";
+import { ChatOpenAI, ChatOpenAICallOptions } from "@langchain/openai";
 import type {
   AgentAction,
   AgentFinish,
   AgentStep,
 } from "@langchain/core/agents";
+import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";
 import {
   AIMessage,
   BaseMessage,
@@ -231,7 +228,7 @@ export class OpenAIAgent extends Agent {
 
     const valuesForPrompt = { ...newInputs };
     const valuesForLLM: CallOptionsIfAvailable<typeof llm> = {
-      functions: this.tools.map(formatToOpenAIFunction),
+      functions: this.tools.map(convertToOpenAIFunction),
     };
     const callKeys =
       "callKeys" in this.llmChain.llm ? this.llmChain.llm.callKeys : [];
@@ -346,7 +343,7 @@ export async function createOpenAIFunctionsAgent({
     );
   }
   const llmWithTools = llm.bind({
-    functions: tools.map(formatToOpenAIFunction),
+    functions: tools.map(convertToOpenAIFunction),
   });
   const agent = RunnableSequence.from([
     RunnablePassthrough.assign({

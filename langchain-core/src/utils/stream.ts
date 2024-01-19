@@ -1,6 +1,6 @@
 export interface IterableReadableStreamInterface<T>
   extends ReadableStream<T>,
-    AsyncGenerator<T> {}
+    AsyncIterable<T> {}
 
 /*
  * Support async iterator syntax for ReadableStreams in all environments.

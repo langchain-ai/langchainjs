@@ -108,6 +108,7 @@ import * as experimental_chat_models_bittensor from "langchain/experimental/chat
 import * as experimental_chat_models_ollama_functions from "langchain/experimental/chat_models/ollama_functions";
 import * as experimental_chains_violation_of_expectations from "langchain/experimental/chains/violation_of_expectations";
 import * as experimental_masking from "langchain/experimental/masking";
+import * as experimental_prompts_custom_format from "langchain/experimental/prompts/custom_format";
 import * as evaluation from "langchain/evaluation";
 import * as runnables from "langchain/runnables";
 import * as runnables_remote from "langchain/runnables/remote";

@@ -332,6 +332,8 @@ const entrypoints = {
   "experimental/chains/violation_of_expectations":
     "experimental/chains/violation_of_expectations/index",
   "experimental/masking": "experimental/masking/index",
+  "experimental/prompts/custom_format": "experimental/prompts/custom_format",
+  "experimental/prompts/handlebars": "experimental/prompts/handlebars",
   "experimental/tools/pyinterpreter": "experimental/tools/pyinterpreter",
   // evaluation
   evaluation: "evaluation/index",
@@ -698,6 +700,7 @@ const requiresOptionalDependency = [
   "experimental/chat_models/anthropic_functions",
   "experimental/llms/bittensor",
   "experimental/hubs/makersuite/googlemakersuitehub",
+  "experimental/prompts/handlebars",
   "experimental/tools/pyinterpreter",
   "util/convex",
 ];
