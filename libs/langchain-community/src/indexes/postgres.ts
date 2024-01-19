@@ -1,13 +1,12 @@
-import pg, { PoolConfig, Pool, DatabaseError } from "pg";
+import pg, { PoolConfig, Pool } from "pg";
 import {
   ListKeyOptions,
   RecordManagerInterface,
-  UpdateOptions,
-} from "../recordmanagers.js";
+  UpdateOptions
+} from "./base.js";
 
 export type PostgresRecordManagerOptions = {
   postgresConnectionOptions: PoolConfig;
-  namespace: string;
   tableName?: string;
 };
 
@@ -18,8 +17,8 @@ export class PostgresRecordManager implements RecordManagerInterface {
 
   namespace: string;
 
-  constructor(config: PostgresRecordManagerOptions) {
-    const { postgresConnectionOptions, namespace, tableName } = config;
+  constructor(namespace: string, config: PostgresRecordManagerOptions) {
+    const { postgresConnectionOptions, tableName } = config;
     this.namespace = namespace;
     this.pool = new pg.Pool(postgresConnectionOptions);
     this.tableName = tableName || "upsertion_records";
@@ -31,29 +30,29 @@ export class PostgresRecordManager implements RecordManagerInterface {
 
   async createSchema(): Promise<void> {
     try {
-      await this.pool.query(
-        `CREATE TABLE IF NOT EXISTS "${this.tableName}" (
-            uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-            key TEXT NOT NULL,
-            namespace TEXT NOT NULL,
-            updated_at Double PRECISION NOT NULL,
-            group_id TEXT,
-            UNIQUE (key, namespace)
-          );
-        CREATE INDEX IF NOT EXISTS updated_at_index ON "${this.tableName}" (updated_at);
-        CREATE INDEX IF NOT EXISTS key_index ON "${this.tableName}" (key);
-        CREATE INDEX IF NOT EXISTS namespace_index ON "${this.tableName}" (namespace);
-        CREATE INDEX IF NOT EXISTS group_id_index ON "${this.tableName}" (group_id);
-        `
-      );
-    } catch (e: unknown) {
+      await this.pool.query(`
+CREATE TABLE IF NOT EXISTS "${this.tableName}" (
+  uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  key TEXT NOT NULL,
+  namespace TEXT NOT NULL,
+  updated_at Double PRECISION NOT NULL,
+  group_id TEXT,
+  UNIQUE (key, namespace)
+);
+CREATE INDEX IF NOT EXISTS updated_at_index ON "${this.tableName}" (updated_at);
+CREATE INDEX IF NOT EXISTS key_index ON "${this.tableName}" (key);
+CREATE INDEX IF NOT EXISTS namespace_index ON "${this.tableName}" (namespace);
+CREATE INDEX IF NOT EXISTS group_id_index ON "${this.tableName}" (group_id);`);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
       // This error indicates that the table already exists
       // Due to asynchronous nature of the code, it is possible that
       // the table is created between the time we check if it exists
       // and the time we try to create it. It can be safely ignored.
-      if ((e as DatabaseError).code !== "23505") {
-        throw e;
+      if ("code" in e && e.code === "23505") {
+        return;
       }
+      throw e;
     }
   }
 
@@ -108,7 +107,7 @@ export class PostgresRecordManager implements RecordManagerInterface {
       key,
       this.namespace,
       updatedAt,
-      groupIds[i],
+      groupIds[i]
     ]);
 
     const valuesPlaceholders = recordsToUpsert
