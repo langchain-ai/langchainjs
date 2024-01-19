@@ -52,9 +52,9 @@ async function listExternals(extraInternals: Array<string | RegExp>) {
 }
 
 export async function checkTreeShaking({
-  extraInternals = []
+  extraInternals = [],
 }: {
-  extraInternals: Array<string | RegExp>
+  extraInternals: Array<string | RegExp>;
 }) {
   const externals = await listExternals(extraInternals);
   const entrypoints = await listEntrypoints();

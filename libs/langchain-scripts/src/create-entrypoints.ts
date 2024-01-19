@@ -199,7 +199,7 @@ const generateImportMap = ({
         newData.exportedAliases[exportAlias] = [];
       }
       newData.exportedAliases[exportAlias] =
-      newData.exportedAliases[exportAlias].concat(modules);
+        newData.exportedAliases[exportAlias].concat(modules);
       return newData;
     },
     {

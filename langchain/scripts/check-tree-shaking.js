@@ -1,4 +1,4 @@
-import { checkTreeShaking } from "@langchain/scripts"
+import { checkTreeShaking } from "@langchain/scripts";
 
 checkTreeShaking({
   extraInternals: [
@@ -18,5 +18,5 @@ checkTreeShaking({
     "firebase-admin/firestore",
     "web-auth-library/google",
     "@google-ai/generativelanguage/build/protos/protos.js",
-  ]
-})
+  ],
+});
