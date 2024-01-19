@@ -2,6 +2,35 @@ const { Project, SyntaxKind } = require("ts-morph");
 const fs = require("fs");
 const path = require("path");
 
+const BASE_TYPEDOC_CONFIG = {
+  $schema: "https://typedoc.org/schema.json",
+  out: "public",
+  sort: [
+    "kind",
+    "visibility",
+    "instance-first",
+    "required-first",
+    "alphabetical"
+  ],
+  plugin: [
+    "./typedoc_plugins/hide_underscore_lc.js"
+  ],
+  tsconfig: "../../tsconfig.json",
+  readme: "none",
+  excludePrivate: true,
+  excludeInternal: true,
+  excludeExternals: true,
+  excludeNotDocumented: false,
+  includeVersion: true,
+  sourceLinkTemplate: "https://github.com/langchain-ai/langchainjs/blob/{gitRevision}/{path}#L{line}",
+  logLevel: "Error",
+  name: "LangChain.js",
+  skipErrorChecking: true,
+  exclude: [
+    "dist"
+  ],
+}
+
 /**
  *
  * @param {string} relativePath
@@ -80,8 +109,13 @@ function main() {
       .map((key) => entrypoints.add(`${entrypointDir}/src/${key}.ts`));
   });
 
-  updateJsonFile("./typedoc.json", (json) => ({
-    ...json,
+  // Check if the `./typedoc.json` file exists, since it is gitignored by default
+  if (!fs.existsSync("./typedoc.json")) {
+    fs.writeFileSync("./typedoc.json", "{}\n");
+  }
+
+  updateJsonFile("./typedoc.json", () => ({
+    ...BASE_TYPEDOC_CONFIG,
     entryPoints: Array.from(entrypoints),
   }));
 }
