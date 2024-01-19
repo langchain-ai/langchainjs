@@ -107,12 +107,19 @@ export class FakeStreamingLLM extends LLM {
 
   responses?: string[];
 
+  thrownErrorString?: string;
+
   constructor(
-    fields: { sleep?: number; responses?: string[] } & BaseLLMParams
+    fields: {
+      sleep?: number;
+      responses?: string[];
+      thrownErrorString?: string;
+    } & BaseLLMParams
   ) {
     super(fields);
     this.sleep = fields.sleep ?? this.sleep;
     this.responses = fields.responses;
+    this.thrownErrorString = fields.thrownErrorString;
   }
 
   _llmType() {
@@ -120,12 +127,18 @@ export class FakeStreamingLLM extends LLM {
   }
 
   async _call(prompt: string): Promise<string> {
+    if (this.thrownErrorString) {
+      throw new Error(this.thrownErrorString);
+    }
     const response = this.responses?.[0];
     this.responses = this.responses?.slice(1);
     return response ?? prompt;
   }
 
   async *_streamResponseChunks(input: string) {
+    if (this.thrownErrorString) {
+      throw new Error(this.thrownErrorString);
+    }
     const response = this.responses?.[0];
     this.responses = this.responses?.slice(1);
     for (const c of response ?? input) {
