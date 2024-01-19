@@ -1,0 +1,1 @@
+export * from '../../dist/indexes/recordmanagers/postgres.js'
