@@ -11,9 +11,10 @@ import { RedisVectorStore } from "../redis.js";
 
 describe("RedisVectorStore", () => {
   let vectorStore: RedisVectorStore;
+  let client: RedisClientType;
 
-  beforeEach(async () => {
-    const client = createClient({ url: process.env.REDIS_URL });
+  beforeAll(async () => {
+    client = createClient({ url: process.env.REDIS_URL });
     await client.connect();
 
     vectorStore = new RedisVectorStore(new OpenAIEmbeddings(), {
@@ -21,6 +22,11 @@ describe("RedisVectorStore", () => {
       indexName: "test-index",
       keyPrefix: "test:",
     });
+  });
+
+  afterAll(async () => {
+    await vectorStore.delete({ deleteAll: true });
+    await client.quit();
   });
 
   test("auto-generated ids", async () => {
