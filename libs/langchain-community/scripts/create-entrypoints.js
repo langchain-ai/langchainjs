@@ -1,6 +1,4 @@
-import * as fs from "fs";
 import * as path from "path";
-import { identifySecrets } from "./identify-secrets.js";
 import { createEntrypoints } from "@langchain/scripts";
 
 // This lists all the entrypoints for the library. Each key corresponds to an
