@@ -257,7 +257,7 @@ export class RemoteRunnable<
       headers: {
         "Content-Type": "application/json",
       },
-      signal: AbortSignal.timeout(this.options?.timeout ?? 5000),
+      signal: AbortSignal.timeout(this.options?.timeout ?? 60000),
     });
   }
 
