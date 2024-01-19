@@ -1,1 +1,0 @@
-module.exports = require('../../dist/indexes/recordmanagers/postgres.cjs');
