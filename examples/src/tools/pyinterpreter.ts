@@ -30,3 +30,17 @@ const result = await chain.invoke({
 });
 
 console.log(JSON.parse(result).stdout);
+
+
+// To install python packages:
+// This uses the loadPackages command.
+// This works for packages built with pyodide.
+await interpreter.addPackage("numpy");
+// But for other packages, you will want to use micropip.
+// See: https://pyodide.org/en/stable/usage/loading-packages.html
+// for more information
+await interpreter.addPackage("micropip");
+// The following is roughly equivalent to:
+// pyodide.runPython(`import ${pkgname}; ${pkgname}`);
+const micropip = interpreter.pyodideInstance.pyimport("micropip");
+await micropip.install('numpy');
