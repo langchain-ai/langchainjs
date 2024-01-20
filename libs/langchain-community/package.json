@@ -1782,6 +1782,9 @@
     "memory/zep.d.ts",
     "util/convex.cjs",
     "util/convex.js",
-    "util/convex.d.ts"
+    "util/convex.d.ts",
+    "index.cjs",
+    "index.js",
+    "index.d.ts"
   ]
 }
