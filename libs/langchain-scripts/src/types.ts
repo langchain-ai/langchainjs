@@ -66,3 +66,10 @@ export interface PackageJSON {
     | Record<string, ExportsMapValue | string>
     | Record<"./package.json", "./package.json">;
 }
+
+export type TreeShakingArgs = {
+  /**
+   * @default [...Object.keys(packageJson.dependencies), ...Object.keys(packageJson.peerDependencies), /node:/, /@langchain\/core\//]
+   */
+  extraInternals?: Array<string | RegExp>;
+};

@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import { rollup } from "rollup";
-import { ExportsMapValue, PackageJSON } from "./types.js";
+import { ExportsMapValue, PackageJSON, TreeShakingArgs } from "./types.js";
 
 async function getPackageJson(): Promise<PackageJSON> {
   return JSON.parse(await fs.readFile("package.json", "utf-8"));
@@ -50,13 +50,6 @@ async function listExternals(extraInternals: Array<string | RegExp>) {
     ...extraInternals,
   ];
 }
-
-type TreeShakingArgs = {
-  /**
-   * @default [...Object.keys(packageJson.dependencies), ...Object.keys(packageJson.peerDependencies), /node:/, /@langchain\/core\//]
-   */
-  extraInternals?: Array<string | RegExp>;
-};
 
 export async function checkTreeShaking(options?: TreeShakingArgs) {
   const externals = await listExternals(options?.extraInternals ?? []);
