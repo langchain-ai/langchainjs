@@ -12,6 +12,14 @@ const model = new OpenAI({});
 const interpreter = await PythonInterpreterTool.initialize({
   indexURL: "../node_modules/pyodide",
 });
+
+// Note: In Deno, it may be easier to initialize the interpreter yourself:
+// import pyodideModule from "npm:pyodide/pyodide.js";
+// import { PythonInterpreterTool } from "npm:langchain/experimental/tools/pyinterpreter";
+
+// const pyodide = await pyodideModule.loadPyodide();
+// const pythonTool = new PythonInterpreterTool({instance: pyodide})
+
 const chain = prompt
   .pipe(model)
   .pipe(new StringOutputParser())
