@@ -13,5 +13,5 @@ checkTreeShaking({
     "firebase-admin/app",
     "firebase-admin/firestore",
     "lunary/langchain",
-  ]
-})
+  ],
+});
