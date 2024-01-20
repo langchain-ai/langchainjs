@@ -26,7 +26,7 @@ export type FunctionsAgentAction = AgentAction & {
  *   modelName: "gpt-4",
  *   temperature: 0,
  * }).bind({
- *   functions: tools.map((tool) => formatToOpenAIFunction(tool)),
+ *   functions: tools.map((tool) => convertToOpenAIFunction(tool)),
  * });
  *
  * const runnableAgent = RunnableSequence.from([

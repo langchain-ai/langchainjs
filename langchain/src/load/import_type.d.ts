@@ -517,6 +517,9 @@ export interface OptionalImportMap {
   "langchain/experimental/hubs/makersuite/googlemakersuitehub"?:
     | typeof import("../experimental/hubs/makersuite/googlemakersuitehub.js")
     | Promise<typeof import("../experimental/hubs/makersuite/googlemakersuitehub.js")>;
+  "langchain/experimental/prompts/handlebars"?:
+    | typeof import("../experimental/prompts/handlebars.js")
+    | Promise<typeof import("../experimental/prompts/handlebars.js")>;
   "langchain/experimental/tools/pyinterpreter"?:
     | typeof import("../experimental/tools/pyinterpreter.js")
     | Promise<typeof import("../experimental/tools/pyinterpreter.js")>;

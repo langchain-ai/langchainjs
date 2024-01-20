@@ -121,8 +121,6 @@ export interface TogetherAICallOptions
 export class TogetherAI extends LLM<TogetherAICallOptions> {
   lc_serializable = true;
 
-  declare CallOptions: TogetherAICallOptions;
-
   static inputs: TogetherAIInputs;
 
   temperature = 0.7;

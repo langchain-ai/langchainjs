@@ -3,11 +3,8 @@ import fs from "fs";
 import { z } from "zod";
 import { AgentAction, AgentFinish, AgentStep } from "@langchain/core/agents";
 import { AIMessage } from "@langchain/core/messages";
-import {
-  OpenAIEmbeddings,
-  ChatOpenAI,
-  formatToOpenAIFunction,
-} from "@langchain/openai";
+import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
+import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";
 import { RunnableSequence } from "@langchain/core/runnables";
 import {
   ChatPromptTemplate,
@@ -96,7 +93,7 @@ test("Pass custom structured output parsers", async () => {
   });
   /** Bind both retriever and response functions to LLM */
   const llmWithTools = llm.bind({
-    functions: [formatToOpenAIFunction(retrieverTool), responseOpenAIFunction],
+    functions: [convertToOpenAIFunction(retrieverTool), responseOpenAIFunction],
   });
   /** Create the runnable */
   const runnableAgent = RunnableSequence.from([
