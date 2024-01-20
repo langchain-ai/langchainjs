@@ -484,3 +484,9 @@ memory/zep.d.ts
 util/convex.cjs
 util/convex.js
 util/convex.d.ts
+index.cjs
+index.js
+index.d.ts
+node_modules
+dist
+.yarn
