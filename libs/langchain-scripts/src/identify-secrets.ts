@@ -1,5 +1,5 @@
 import ts from "typescript";
-import * as fs from "fs";
+import * as fs from "node:fs";
 
 export function identifySecrets(absTsConfigPath: string) {
   const secrets = new Set();
