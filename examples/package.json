@@ -17,8 +17,8 @@
     "lint": "yarn lint:eslint",
     "lint:fix": "yarn lint --fix",
     "precommit": "lint-staged",
-    "format": "prettier --write \"src\"",
-    "format:check": "prettier --check \"src\""
+    "format": "prettier --config .prettierrc --write \"src\"",
+    "format:check": "prettier --config .prettierrc --check \"src\""
   },
   "author": "LangChain",
   "license": "MIT",
