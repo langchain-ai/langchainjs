@@ -37,7 +37,6 @@
   "dependencies": {
     "@azure/openai": "1.0.0-beta.10",
     "@langchain/core": "~0.1.9",
-    "@langchain/openai": "~0.0.12",
     "js-tiktoken": "^1.0.7",
     "zod": "^3.22.3",
     "zod-to-json-schema": "3.20.3"

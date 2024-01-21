@@ -4,6 +4,14 @@ import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import type { LLMResult } from "../schema/index.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 
+export {
+  type AzureOpenAIInput,
+  type OpenAICallOptions,
+  type OpenAIInput,
+} from "@langchain/openai";
+
+export { AzureOpenAI };
+
 /**
  * PromptLayer wrapper to OpenAI
  * @augments OpenAI

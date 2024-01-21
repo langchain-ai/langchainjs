@@ -8,6 +8,7 @@ import {
 } from "@azure/openai";
 import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import { TiktokenModel } from "js-tiktoken/lite";
+import { type EmbeddingsParams } from "@langchain/core/embeddings";
 
 // reexport this type from the included package so we can easily override and extend it if needed in the future
 // also makes it easier for folks to import this type without digging around into the dependent packages
@@ -174,3 +175,34 @@ export interface OpenAIChatCallOptions extends OpenAICallOptions {
   promptIndex?: number;
 }
 
+export interface AzureOpenAIEmbeddingsParams extends EmbeddingsParams {
+  /**
+   * An identifier for the caller or end user of the operation. This may be used for tracking
+   * or rate-limiting purposes.
+   */
+  user?: string;
+  /**
+   * The model name to provide as part of this embeddings request.
+   * Not applicable to Azure OpenAI, where deployment information should be included in the Azure
+   * resource URI that's connected to.
+   */
+  modelName?: string;
+
+  /**
+   * The maximum number of documents to embed in a single request. This is
+   * limited by the OpenAI API to a maximum of 2048.
+   */
+  batchSize?: number;
+
+  /**
+   * Whether to strip new lines from the input text. This is recommended by
+   * OpenAI for older models, but may not be suitable for all use cases.
+   * See: https://github.com/openai/openai-python/issues/418#issuecomment-1525939500
+   */
+  stripNewLines?: boolean;
+
+  /**
+   * Timeout to use when making requests to OpenAI.
+   */
+  timeout?: number;
+}
