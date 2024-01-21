@@ -40,6 +40,12 @@ async function listEntrypoints() {
   return entrypoints;
 }
 
+/**
+ * 
+ * @param {Array<string | RegExp> | undefined} extraInternals 
+ * @default [...Object.keys(packageJson.dependencies ?? {}), ...Object.keys(packageJson.peerDependencies ?? {})]
+ * @returns {Promise<Array<string | RegExp>>}
+ */
 async function listExternals(extraInternals: Array<string | RegExp>) {
   const packageJson = await getPackageJson();
   return [
