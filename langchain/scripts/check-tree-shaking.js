@@ -2,7 +2,9 @@ import { checkTreeShaking } from "@langchain/scripts";
 
 checkTreeShaking({
   extraInternals: [
+    /node\:/,
     /js-tiktoken/,
+    /@langchain\/core/,
     /@langchain\/community/,
     "axios", // axios is a dependency of openai
     "convex",
@@ -18,5 +20,5 @@ checkTreeShaking({
     "firebase-admin/firestore",
     "web-auth-library/google",
     "@google-ai/generativelanguage/build/protos/protos.js",
-  ],
+  ]
 });

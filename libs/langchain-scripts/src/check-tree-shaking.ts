@@ -45,8 +45,6 @@ async function listExternals(extraInternals: Array<string | RegExp>) {
   return [
     ...Object.keys(packageJson.dependencies ?? {}),
     ...Object.keys(packageJson.peerDependencies ?? {}),
-    /node:/,
-    /@langchain\/core\//,
     ...extraInternals,
   ];
 }

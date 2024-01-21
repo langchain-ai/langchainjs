@@ -1,3 +1,8 @@
 import { checkTreeShaking } from "@langchain/scripts";
 
-checkTreeShaking();
+checkTreeShaking({
+  extraInternals: [
+    /node\:/,
+    /@langchain\/core\//,
+  ]
+});

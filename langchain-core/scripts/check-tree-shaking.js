@@ -1,5 +1,6 @@
 import { checkTreeShaking } from "@langchain/scripts";
 
 checkTreeShaking({
-  extraInternals: [/js-tiktoken/],
+  extraInternals: [/node\:/,
+  /js-tiktoken/],
 });
