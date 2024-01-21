@@ -20,5 +20,5 @@ checkTreeShaking({
     "firebase-admin/firestore",
     "web-auth-library/google",
     "@google-ai/generativelanguage/build/protos/protos.js",
-  ]
+  ],
 });
