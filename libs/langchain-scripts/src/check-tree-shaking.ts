@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import { rollup } from "rollup";
-import { ExportsMapValue, PackageJSON } from "./types.js";
+import { ExportsMapValue, PackageJSON, TreeShakingArgs } from "./types.js";
 
 async function getPackageJson(): Promise<PackageJSON> {
   return JSON.parse(await fs.readFile("package.json", "utf-8"));
