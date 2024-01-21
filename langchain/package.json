@@ -811,6 +811,9 @@
     "util/time.cjs",
     "util/time.js",
     "util/time.d.ts",
+    "util/migrations/0_1.cjs",
+    "util/migrations/0_1.js",
+    "util/migrations/0_1.d.ts",
     "experimental/autogpt.cjs",
     "experimental/autogpt.js",
     "experimental/autogpt.d.ts",
@@ -1014,6 +1017,7 @@
     "d3-dsv": "^2.0.0",
     "epub2": "^3.0.1",
     "fast-xml-parser": "^4.2.7",
+    "glob": "^10.3.10",
     "google-auth-library": "^8.9.0",
     "googleapis": "^126.0.1",
     "handlebars": "^4.7.8",
@@ -1034,6 +1038,7 @@
     "redis": "^4.6.4",
     "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.3",
+    "ts-morph": "^21.0.1",
     "typeorm": "^0.3.12",
     "vectordb": "^0.1.4",
     "weaviate-ts-client": "^1.4.0",
@@ -2572,6 +2577,11 @@
       "types": "./util/time.d.ts",
       "import": "./util/time.js",
       "require": "./util/time.cjs"
+    },
+    "./util/migrations/0_1": {
+      "types": "./util/migrations/0_1.d.ts",
+      "import": "./util/migrations/0_1.js",
+      "require": "./util/migrations/0_1.cjs"
     },
     "./experimental/autogpt": {
       "types": "./experimental/autogpt.d.ts",

@@ -799,6 +799,9 @@ util/math.d.ts
 util/time.cjs
 util/time.js
 util/time.d.ts
+util/migrations/0_1.cjs
+util/migrations/0_1.js
+util/migrations/0_1.d.ts
 experimental/autogpt.cjs
 experimental/autogpt.js
 experimental/autogpt.d.ts

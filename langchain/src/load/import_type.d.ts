@@ -505,6 +505,9 @@ export interface OptionalImportMap {
   "langchain/util/convex"?:
     | typeof import("../util/convex.js")
     | Promise<typeof import("../util/convex.js")>;
+  "langchain/util/migrations/0_1"?:
+    | typeof import("../util/migrations/0_0-0_1-migrate-imports.js")
+    | Promise<typeof import("../util/migrations/0_0-0_1-migrate-imports.js")>;
   "langchain/experimental/multimodal_embeddings/googlevertexai"?:
     | typeof import("../experimental/multimodal_embeddings/googlevertexai.js")
     | Promise<typeof import("../experimental/multimodal_embeddings/googlevertexai.js")>;
