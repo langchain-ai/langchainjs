@@ -7,11 +7,8 @@ export CI=true
 # enable extended globbing for omitting build artifacts
 shopt -s extglob
 
-# Build LangChain
-yarn build --filter=langchain
-
-# avoid copying unwanted artifacts from the host
-rsync -av --exclude={node_modules/,.yarn/,src/} --include={langchain/,langchain-core/,libs/,package.json,yarn.lock} ../ /Users/bracesproul/code/lang-chain-ai/tmp-projects/test-lc-deps/
+# avoid copying build artifacts from the host
+cp -r ../langchain/!(node_modules|dist|dist-cjs|dist-esm|build|.next|.turbo) ./
 
 yarn
 

@@ -66,7 +66,7 @@
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
     "@jest/globals": "^29.5.0",
-    "@langchain/scripts": "workspace:*",
+    "@langchain/scripts": "^0.0.1",
     "@mozilla/readability": "^0.4.4",
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^1.1.0",
