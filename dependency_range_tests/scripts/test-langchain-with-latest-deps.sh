@@ -8,13 +8,13 @@ export CI=true
 shopt -s extglob
 
 # avoid copying build artifacts from the host
-cp -r ../langchain/!(node_modules|dist|dist-cjs|dist-esm|build|.next|.turbo) ./
+cp -r ../langchain/!(node_modules|dist|dist-cjs|dist-esm|build|.next|.turbo) /Users/bracesproul/code/lang-chain-ai/tmp-projects/test-lc-deps/
 
 # Copy the yarn.lock file from the host
-cp -r ../langchain-core/!(node_modules|dist|dist-cjs|dist-esm|build|.next|.turbo) ./
-cp -r ../libs/!(node_modules|dist|dist-cjs|dist-esm|build|.next|.turbo) ./
-cp ../yarn.lock ./
-cp ../package.json ./
+cp -r ../langchain-core/!(node_modules|dist|dist-cjs|dist-esm|build|.next|.turbo) /Users/bracesproul/code/lang-chain-ai/tmp-projects/test-lc-deps/
+cp -r ../libs/!(node_modules|dist|dist-cjs|dist-esm|build|.next|.turbo) /Users/bracesproul/code/lang-chain-ai/tmp-projects/test-lc-deps/
+cp ../yarn.lock /Users/bracesproul/code/lang-chain-ai/tmp-projects/test-lc-deps/
+cp ../package.json /Users/bracesproul/code/lang-chain-ai/tmp-projects/test-lc-deps/
 
 yarn
 
