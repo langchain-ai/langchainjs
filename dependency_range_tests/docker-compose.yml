@@ -11,6 +11,7 @@ services:
       - ../langchain-core:/langchain-core
       - ../libs:/libs
       - ../yarn.lock:/yarn.lock
+      - ../package.json:/package.json
       - ./scripts:/scripts
     command: bash /scripts/test-langchain-with-latest-deps.sh
   test-langchain-with-lowest-deps:

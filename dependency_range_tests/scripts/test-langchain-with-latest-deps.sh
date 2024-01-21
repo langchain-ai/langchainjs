@@ -12,6 +12,9 @@ cp -r ../langchain/!(node_modules|dist|dist-cjs|dist-esm|build|.next|.turbo) ./
 
 # Copy the yarn.lock file from the host
 cp ../yarn.lock ./
+cp ../langchain-core/!(node_modules|dist|dist-cjs|dist-esm|build|.next|.turbo) ./
+cp ../libs/!(node_modules|dist|dist-cjs|dist-esm|build|.next|.turbo) ./
+cp ../package.json ./
 
 yarn
 
