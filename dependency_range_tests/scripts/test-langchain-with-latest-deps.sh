@@ -10,8 +10,6 @@ shopt -s extglob
 # avoid copying build artifacts from the host
 cp -r ../langchain/!(node_modules|dist|dist-cjs|dist-esm|build|.next|.turbo) ./
 
-echo printing ls
-ls -la ../
 # Copy the yarn.lock file from the host
 cp ../yarn.lock ./
 

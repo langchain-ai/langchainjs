@@ -8,6 +8,9 @@ services:
     working_dir: /app
     volumes:
       - ../langchain:/langchain
+      - ../langchain-core:/langchain-core
+      - ../libs:/libs
+      - ../yarn.lock:/yarn.lock
       - ./scripts:/scripts
     command: bash /scripts/test-langchain-with-latest-deps.sh
   test-langchain-with-lowest-deps:
