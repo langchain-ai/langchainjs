@@ -1,4 +1,4 @@
-import { Project, SyntaxKind } from "ts-morph";
+import { ImportSpecifier, Project, SourceFile, SyntaxKind } from "ts-morph";
 import { glob } from "glob";
 import path from "node:path";
 
@@ -71,16 +71,24 @@ function getEntrypointsFromFile(
   return result;
 }
 
+type FoundSymbol = {
+  entrypoint: string;
+  foundSymbol: string;
+  packageSuffix: string;
+};
+
 /**
  * Finds a matching symbol in the array of exported symbols.
  * @param {{ symbol: string, kind: SyntaxKind }} target - The target symbol and its kind to find.
  * @param {Array<EntrypointAndSymbols>} exportedSymbols - The array of exported symbols to search.
+ * @param {string} packageSuffix - The suffix of the package to import from. Eg, core
  * @returns {{ entrypoint: string, foundSymbol: string } | undefined} The matching symbol or undefined if not found.
  */
 function findMatchingSymbol(
   target: { symbol: string; kind: SyntaxKind },
-  exportedSymbols: Array<EntrypointAndSymbols>
-): { entrypoint: string; foundSymbol: string } | undefined {
+  exportedSymbols: Array<EntrypointAndSymbols>,
+  packageSuffix: string
+): FoundSymbol | undefined {
   for (const entry of exportedSymbols) {
     const foundSymbol = entry.exportedSymbols.find(
       ({ symbol, kind }) => symbol === target.symbol && kind === target.kind
@@ -89,6 +97,7 @@ function findMatchingSymbol(
       return {
         entrypoint: entry.entrypoint,
         foundSymbol: foundSymbol.symbol,
+        packageSuffix,
       }; // Return the matching entry object
     }
   }
@@ -116,6 +125,38 @@ function removeLoad(
       exportedSymbols: withoutLoadOrIndex,
     };
   });
+}
+
+function updateImport({
+  matchingSymbols,
+  namedImport,
+  projectFile,
+  namedImportText,
+}: {
+  matchingSymbols: Array<FoundSymbol | undefined>;
+  namedImport: ImportSpecifier;
+  projectFile: SourceFile;
+  namedImportText: string;
+}): boolean {
+  const firstMatchingSymbol = matchingSymbols.find(
+    (matchingSymbol) => matchingSymbol
+  );
+  if (firstMatchingSymbol) {
+    console.debug(
+      `Found matching symbol in the "@langchain/${firstMatchingSymbol.packageSuffix}" package.`,
+      {
+        matchingSymbol: firstMatchingSymbol,
+      }
+    );
+
+    namedImport.remove();
+    projectFile.addImportDeclaration({
+      moduleSpecifier: `@langchain/${firstMatchingSymbol.packageSuffix}${firstMatchingSymbol.entrypoint}`,
+      namedImports: [namedImportText],
+    });
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -168,7 +209,6 @@ export async function updateEntrypointsFrom0_0_xTo0_1_x({
       project
     )
   );
-
   const langchainCommunityPackageEntrypoints = removeLoad(
     getEntrypointsFromFile(
       path.join(
@@ -181,7 +221,6 @@ export async function updateEntrypointsFrom0_0_xTo0_1_x({
       project
     )
   );
-
   const langchainOpenAIPackageEntrypoints = removeLoad(
     getEntrypointsFromFile(
       path.join(
@@ -194,18 +233,29 @@ export async function updateEntrypointsFrom0_0_xTo0_1_x({
       project
     )
   );
-
-  console.log(
-    "langchainCorePackageEntrypoints.length",
-    langchainCorePackageEntrypoints.length
+  const langchainCoherePackageEntrypoints = removeLoad(
+    getEntrypointsFromFile(
+      path.join(
+        localLangChainPath,
+        "libs",
+        "langchain-cohere",
+        "scripts",
+        "create-entrypoints.js"
+      ),
+      project
+    )
   );
-  console.log(
-    "langchainCommunityPackageEntrypoints.length",
-    langchainCommunityPackageEntrypoints.length
-  );
-  console.log(
-    "langchainOpenAIPackageEntrypoints.length",
-    langchainOpenAIPackageEntrypoints.length
+  const langchainPineconePackageEntrypoints = removeLoad(
+    getEntrypointsFromFile(
+      path.join(
+        localLangChainPath,
+        "libs",
+        "langchain-pinecone",
+        "scripts",
+        "create-entrypoints.js"
+      ),
+      project
+    )
   );
 
   const globPattern = customGlobPattern || "/**/*.ts";
@@ -218,12 +268,11 @@ export async function updateEntrypointsFrom0_0_xTo0_1_x({
   const allCodebaseFiles = glob
     .sync(path.join(codePath, globPattern), { ignore: ignorePattern })
     .map((filePath) => path.resolve(filePath));
-  console.log("allCodebaseFiles.length", allCodebaseFiles.length);
 
   for await (const filePath of allCodebaseFiles) {
     const projectFile = project.addSourceFileAtPath(filePath);
     const imports = projectFile.getImportDeclarations();
-    console.log("imports", imports.length)
+
     imports.forEach((importItem) => {
       // Get all imports
       const module = importItem.getModuleSpecifierValue();
@@ -232,7 +281,7 @@ export async function updateEntrypointsFrom0_0_xTo0_1_x({
       if (!module.startsWith("langchain/")) {
         return;
       }
-      console.log("Found langchain import!");
+
       // look at each import and see if it exists in
       let didUpdate = false;
 
@@ -256,66 +305,47 @@ export async function updateEntrypointsFrom0_0_xTo0_1_x({
 
         // If we couldn't find the kind of the named imports kind, skip it
         if (!namedImportKind) {
-          console.log("no named imports")
           return;
         }
 
         const matchingSymbolCore = findMatchingSymbol(
           { symbol: namedImportText, kind: namedImportKind },
-          langchainCorePackageEntrypoints
+          langchainCorePackageEntrypoints,
+          "core"
         );
         const matchingSymbolCommunity = findMatchingSymbol(
           { symbol: namedImportText, kind: namedImportKind },
-          langchainCommunityPackageEntrypoints
+          langchainCommunityPackageEntrypoints,
+          "community"
         );
         const matchingSymbolOpenAI = findMatchingSymbol(
           { symbol: namedImportText, kind: namedImportKind },
-          langchainOpenAIPackageEntrypoints
+          langchainOpenAIPackageEntrypoints,
+          "openai"
+        );
+        const matchingSymbolCohere = findMatchingSymbol(
+          { symbol: namedImportText, kind: namedImportKind },
+          langchainCoherePackageEntrypoints,
+          "cohere"
+        );
+        const matchingSymbolPinecone = findMatchingSymbol(
+          { symbol: namedImportText, kind: namedImportKind },
+          langchainPineconePackageEntrypoints,
+          "pinecone"
         );
 
-        if (matchingSymbolCore) {
-          console.debug(
-            "Found matching symbol from `@langchain/core` package.",
-            {
-              matchingSymbol: matchingSymbolCore,
-            }
-          );
-
-          namedImport.remove();
-          projectFile.addImportDeclaration({
-            moduleSpecifier: `@langchain/core${matchingSymbolCore.entrypoint}`,
-            namedImports: [namedImportText],
-          });
-          didUpdate = true;
-        } else if (matchingSymbolCommunity) {
-          console.debug(
-            "Found matching symbol from `@langchain/community` package.",
-            {
-              matchingSymbol: matchingSymbolCommunity,
-            }
-          );
-
-          namedImport.remove();
-          projectFile.addImportDeclaration({
-            moduleSpecifier: `@langchain/community${matchingSymbolCommunity.entrypoint}`,
-            namedImports: [namedImportText],
-          });
-          didUpdate = true;
-        } else if (matchingSymbolOpenAI) {
-          console.debug(
-            "Found matching symbol from `@langchain/openai` package.",
-            {
-              matchingSymbol: matchingSymbolOpenAI,
-            }
-          );
-
-          namedImport.remove();
-          projectFile.addImportDeclaration({
-            moduleSpecifier: `@langchain/openai${matchingSymbolOpenAI.entrypoint}`,
-            namedImports: [namedImportText],
-          });
-          didUpdate = true;
-        }
+        didUpdate = updateImport({
+          matchingSymbols: [
+            matchingSymbolCore,
+            matchingSymbolOpenAI,
+            matchingSymbolCohere,
+            matchingSymbolPinecone,
+            matchingSymbolCommunity,
+          ],
+          namedImport,
+          projectFile,
+          namedImportText,
+        });
       });
 
       if (didUpdate) {
