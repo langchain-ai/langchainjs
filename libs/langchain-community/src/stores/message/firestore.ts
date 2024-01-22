@@ -24,14 +24,16 @@ import {
 export interface FirestoreDBChatMessageHistory {
   /**
    * An array of collection names, should match the length of `docs` field.
+   * @TODO make required variable in 0.2
    */
   collections?: string[];
   /**
    * An array of doc names, should match the length of `collections` field.
+   * @TODO make required variable in 0.2
    */
   docs?: string[];
   /**
-   * @deprecated Will be removed in 0.1 use `collections` field instead.
+   * @deprecated Will be removed in 0.2 use `collections` field instead.
    */
   collectionName?: string;
   sessionId: string;
@@ -98,16 +100,22 @@ export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
     }
     if (!collectionName && !collections) {
       throw new Error(
-        "Must pass in a collections. Fields `collectionName` and `collections` are both undefined."
+        "Must pass in a list of collections. Fields `collectionName` and `collections` are both undefined."
       );
     }
     if (collections || docs) {
-      // If the collections length does not match docs length, and the collections list
-      // does not have a length of 1 (in this case we assume the sessionId is the only doc)
-      // throw an error.
-      if (collections?.length !== docs?.length && collections?.length !== 1) {
+      // This checks that the 'collections' and 'docs' arrays have the same length,
+      // which means each collection has a corresponding document name. The only exception allowed is
+      // when there is exactly one collection provided and 'docs' is not defined. In this case, it is
+      // assumed that the 'sessionId' will be used as the document name for that single collection.
+      if (
+        !(
+          collections?.length === docs?.length ||
+          (collections?.length === 1 && !docs)
+        )
+      ) {
         throw new Error(
-          "Collections and docs options must have the same length"
+          "Collections and docs options must have the same length, or collections must have a length of 1 if docs is not defined."
         );
       }
     }
