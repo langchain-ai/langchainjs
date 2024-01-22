@@ -6,15 +6,13 @@ interface MemoryRecord {
 }
 
 export class InMemoryRecordManager extends RecordManager {
+  lc_namespace = ["langchain", "recordmanagers", "memory"];
+
   records: Map<string, MemoryRecord>;
 
   constructor() {
     super();
     this.records = new Map();
-  }
-
-  _recordManagerType(): string {
-    return "Memory";
   }
 
   async createSchema(): Promise<void> {
@@ -82,12 +80,6 @@ export class InMemoryRecordManager extends RecordManager {
 
   async deleteKeys(keys: string[]): Promise<void> {
     keys.forEach((key) => this.records.delete(key));
-    return Promise.resolve();
-  }
-
-  async end(): Promise<void> {
-    // nothing to do here
-    // compatibility with other record managers
     return Promise.resolve();
   }
 }

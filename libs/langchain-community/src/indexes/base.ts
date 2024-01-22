@@ -15,7 +15,6 @@ export type ListKeyOptions = {
 };
 
 export interface RecordManagerInterface {
-  _recordManagerType(): string;
   /**
    * Creates schema in the record manager.
    * @returns Promise
@@ -57,20 +56,13 @@ export interface RecordManagerInterface {
    * @param keys List of keys to delete
    */
   deleteKeys(keys: string[]): Promise<void>;
-  /**
-   * Ends the record manager.
-   * @returns Promise
-   */
-  end(): Promise<void>;
 }
 
 export abstract class RecordManager
   extends Serializable
   implements RecordManagerInterface
 {
-  lc_namespace = ["langchain", "recordmanagers", this._recordManagerType()];
-
-  abstract _recordManagerType(): string;
+  lc_namespace = ["langchain", "recordmanagers"];
 
   abstract createSchema(): Promise<void>;
 
@@ -83,6 +75,4 @@ export abstract class RecordManager
   abstract listKeys(options?: ListKeyOptions): Promise<string[]>;
 
   abstract deleteKeys(keys: string[]): Promise<void>;
-
-  abstract end(): Promise<void>;
 }

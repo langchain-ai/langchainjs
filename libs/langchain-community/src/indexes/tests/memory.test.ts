@@ -14,10 +14,6 @@ describe("MemoryRecordmanagerTest", () => {
     recordManager.records.clear();
   });
 
-  afterAll(async () => {
-    await recordManager.end();
-  });
-
   test("Test upsertion", async () => {
     const keys = ["a", "b", "c"];
     await recordManager.update(keys);

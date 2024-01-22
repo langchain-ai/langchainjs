@@ -484,9 +484,9 @@ memory/zep.d.ts
 util/convex.cjs
 util/convex.js
 util/convex.d.ts
-indexes.cjs
-indexes.js
-indexes.d.ts
+indexes/base.cjs
+indexes/base.js
+indexes/base.d.ts
 indexes/postgres.cjs
 indexes/postgres.js
 indexes/postgres.d.ts

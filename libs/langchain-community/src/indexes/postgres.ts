@@ -11,6 +11,8 @@ export type PostgresRecordManagerOptions = {
 };
 
 export class PostgresRecordManager implements RecordManagerInterface {
+  lc_namespace = ["langchain", "recordmanagers", "postgres"];
+
   pool: Pool;
 
   tableName: string;
@@ -22,10 +24,6 @@ export class PostgresRecordManager implements RecordManagerInterface {
     this.namespace = namespace;
     this.pool = new pg.Pool(postgresConnectionOptions);
     this.tableName = tableName || "upsertion_records";
-  }
-
-  _recordManagerType(): string {
-    return "postgres";
   }
 
   async createSchema(): Promise<void> {
@@ -177,15 +175,14 @@ CREATE INDEX IF NOT EXISTS group_id_index ON "${this.tableName}" (group_id);`);
       return;
     }
 
-    // const startIndex = 2;
-    // const arrayPlaceholders = keys
-    //   .map((_, i) => `$${i + startIndex}`)
-    //   .join(", ");
-
     const query = `DELETE FROM "${this.tableName}" WHERE namespace = $1 AND key = ANY($2);`;
     await this.pool.query(query, [this.namespace, keys]);
   }
 
+  /**
+   * Terminates the connection pool.
+   * @returns {Promise<void>}
+   */
   async end(): Promise<void> {
     await this.pool.end();
   }

@@ -1292,10 +1292,10 @@
       "import": "./util/convex.js",
       "require": "./util/convex.cjs"
     },
-    "./indexes": {
-      "types": "./indexes.d.ts",
-      "import": "./indexes.js",
-      "require": "./indexes.cjs"
+    "./indexes/base": {
+      "types": "./indexes/base.d.ts",
+      "import": "./indexes/base.js",
+      "require": "./indexes/base.cjs"
     },
     "./indexes/postgres": {
       "types": "./indexes/postgres.d.ts",
@@ -1797,9 +1797,9 @@
     "util/convex.cjs",
     "util/convex.js",
     "util/convex.d.ts",
-    "indexes.cjs",
-    "indexes.js",
-    "indexes.d.ts",
+    "indexes/base.cjs",
+    "indexes/base.js",
+    "indexes/base.d.ts",
     "indexes/postgres.cjs",
     "indexes/postgres.js",
     "indexes/postgres.d.ts",
