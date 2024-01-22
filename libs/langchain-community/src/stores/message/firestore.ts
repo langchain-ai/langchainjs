@@ -28,7 +28,9 @@ export interface FirestoreDBChatMessageHistory {
    */
   collections?: string[];
   /**
-   * An array of doc names, should match the length of `collections` field.
+   * An array of doc names, should match the length of `collections` field,
+   * or undefined if the collections field has a length of 1. In this case,
+   * it will default to use `sessionId` as the doc name.
    * @TODO make required variable in 0.2
    */
   docs?: string[];
