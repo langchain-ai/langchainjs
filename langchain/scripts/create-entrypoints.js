@@ -240,6 +240,7 @@ const entrypoints = {
   "output_parsers/expression": "output_parsers/expression",
   // retrievers
   "retrievers/amazon_kendra": "retrievers/amazon_kendra",
+  "retrievers/amazon_knowledge_bases": "retrievers/amazon_knowledge_bases",
   "retrievers/remote": "retrievers/remote/index",
   "retrievers/supabase": "retrievers/supabase",
   "retrievers/zep": "retrievers/zep",
@@ -434,6 +435,7 @@ const deprecatedOmitFromImportMap = [
   "memory/zep",
   "prompts",
   "retrievers/amazon_kendra",
+  "retrievers/amazon_knowledge_bases",
   "retrievers/chaindesk",
   "retrievers/databerry",
   "retrievers/metal",

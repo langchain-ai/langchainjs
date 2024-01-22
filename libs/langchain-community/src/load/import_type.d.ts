@@ -241,6 +241,9 @@ export interface OptionalImportMap {
   "@langchain/community/retrievers/amazon_kendra"?:
     | typeof import("../retrievers/amazon_kendra.js")
     | Promise<typeof import("../retrievers/amazon_kendra.js")>;
+  "@langchain/community/retrievers/amazon_knowledge_bases"?:
+    | typeof import("../retrievers/amazon_knowledge_bases.js")
+    | Promise<typeof import("../retrievers/amazon_knowledge_bases.js")>;
   "@langchain/community/retrievers/metal"?:
     | typeof import("../retrievers/metal.js")
     | Promise<typeof import("../retrievers/metal.js")>;

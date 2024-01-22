@@ -1,17 +1,18 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { test } from "@jest/globals";
-import { AmazonKendraRetriever } from "../amazon_kendra.js";
+import { AmazonKnowledgeBaseRetriever } from "../amazon_knowledge_bases.js";
 
-test.skip("AmazonKendraRetriever", async () => {
-  const retriever = new AmazonKendraRetriever({
+test("AmazonKnowledgeBaseRetriever", async () => {
+  const retriever = new AmazonKnowledgeBaseRetriever({
     topK: 10,
-    indexId: "5c0fcb10-9573-42df-8846-e30d69004ec5",
-    region: "us-east-2",
+    knowledgeBaseId: "GZ3S9ZLSIM",
+    region: "us-east-1",
     clientOptions: {
       credentials: {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+        sessionToken: process.env.AWS_SESSION_TOKEN!,
       },
     },
   });

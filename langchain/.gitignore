@@ -610,6 +610,9 @@ output_parsers/expression.d.ts
 retrievers/amazon_kendra.cjs
 retrievers/amazon_kendra.js
 retrievers/amazon_kendra.d.ts
+retrievers/amazon_knowledge_bases.cjs
+retrievers/amazon_knowledge_bases.js
+retrievers/amazon_knowledge_bases.d.ts
 retrievers/remote.cjs
 retrievers/remote.js
 retrievers/remote.d.ts
