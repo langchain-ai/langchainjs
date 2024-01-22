@@ -2,7 +2,7 @@ import pg, { PoolConfig, Pool } from "pg";
 import {
   ListKeyOptions,
   RecordManagerInterface,
-  UpdateOptions
+  UpdateOptions,
 } from "./base.js";
 
 export type PostgresRecordManagerOptions = {
@@ -107,7 +107,7 @@ CREATE INDEX IF NOT EXISTS group_id_index ON "${this.tableName}" (group_id);`);
       key,
       this.namespace,
       updatedAt,
-      groupIds[i]
+      groupIds[i],
     ]);
 
     const valuesPlaceholders = recordsToUpsert

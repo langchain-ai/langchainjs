@@ -14,9 +14,9 @@ describe("PostgresRecordManager", () => {
         port: 5432,
         user: "myuser",
         password: "ChangeMe",
-        database: "api"
+        database: "api",
       } as PoolConfig,
-      tableName
+      tableName,
     };
     recordManager = new PostgresRecordManager("test", config);
     await recordManager.createSchema();
@@ -81,7 +81,7 @@ describe("PostgresRecordManager", () => {
   test("Test update with groupIds", async () => {
     const keys = ["a", "b", "c"];
     await recordManager.update(keys, {
-      groupIds: ["group1", "group1", "group2"]
+      groupIds: ["group1", "group1", "group2"],
     });
     const res = await recordManager.pool.query(
       `SELECT * FROM "${tableName}" WHERE group_id = ANY($1)`,
@@ -126,19 +126,19 @@ describe("PostgresRecordManager", () => {
 
       // All keys inserted after 90: should be all keys
       const readKeysAfterInsertedAfter = await recordManager.listKeys({
-        after: 90
+        after: 90,
       });
       expect(readKeysAfterInsertedAfter).toEqual(expect.arrayContaining(keys));
 
       // All keys inserted after 110: should be none
       const readKeysAfterInsertedBefore = await recordManager.listKeys({
-        after: 110
+        after: 110,
       });
       expect(readKeysAfterInsertedBefore).toEqual([]);
 
       // All keys inserted before 110: should be all keys
       const readKeysBeforeInsertedBefore = await recordManager.listKeys({
-        before: 110
+        before: 110,
       });
       expect(readKeysBeforeInsertedBefore).toEqual(
         expect.arrayContaining(keys)
@@ -146,7 +146,7 @@ describe("PostgresRecordManager", () => {
 
       // All keys inserted before 90: should be none
       const readKeysBeforeInsertedAfter = await recordManager.listKeys({
-        before: 90
+        before: 90,
       });
       expect(readKeysBeforeInsertedAfter).toEqual([]);
 
@@ -159,7 +159,7 @@ describe("PostgresRecordManager", () => {
       // All keys updated after 90 and before 110: should only be "c" now
       const readKeysBeforeAndAfter = await recordManager.listKeys({
         before: 110,
-        after: 90
+        after: 90,
       });
       expect(readKeysBeforeAndAfter).toEqual(["c"]);
     } finally {
@@ -170,7 +170,7 @@ describe("PostgresRecordManager", () => {
   test("List keys with groupIds", async () => {
     const keys = ["a", "b", "c"];
     await recordManager.update(keys, {
-      groupIds: ["group1", "group1", "group2"]
+      groupIds: ["group1", "group1", "group2"],
     });
     const readKeys = await recordManager.listKeys({ groupIds: ["group1"] });
     expect(readKeys).toEqual(["a", "b"]);

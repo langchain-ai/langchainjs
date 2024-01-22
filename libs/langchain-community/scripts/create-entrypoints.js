@@ -186,7 +186,7 @@ const entrypoints = {
   "memory/zep": "memory/zep",
   "util/convex": "utils/convex",
   // indexes
-  "indexes/base": "indexes/base",
+  "indexes": "indexes/base",
   "indexes/postgres": "indexes/postgres",
   "indexes/memory": "indexes/memory",
 };
