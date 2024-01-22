@@ -53,7 +53,7 @@ const updateJsonFile = (
 const generateFiles = (
   entrypoints: Record<string, string>
 ): Record<string, string> => {
-  const files = [...Object.entries(entrypoints), ["index", "index"]].flatMap(
+  const files = [...Object.entries(entrypoints)].flatMap(
     ([key, value]) => {
       const nrOfDots = key.split("/").length - 1;
       const relativePath = "../".repeat(nrOfDots) || "./";

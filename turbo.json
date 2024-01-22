@@ -10,7 +10,7 @@
         "*.d.ts"
       ],
       "inputs": [
-        "./libs/langchain-scripts/src/**",
+        "./libs/langchain-scripts/src/",
         "./libs/langchain-scripts/scripts/**",
         "./libs/langchain-scripts/package.json",
         "./libs/langchain-scripts/tsconfig.json"
