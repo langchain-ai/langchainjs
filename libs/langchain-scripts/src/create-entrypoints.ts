@@ -53,21 +53,19 @@ const updateJsonFile = (
 const generateFiles = (
   entrypoints: Record<string, string>
 ): Record<string, string> => {
-  const files = [...Object.entries(entrypoints)].flatMap(
-    ([key, value]) => {
-      const nrOfDots = key.split("/").length - 1;
-      const relativePath = "../".repeat(nrOfDots) || "./";
-      const compiledPath = `${relativePath}dist/${value}.js`;
-      return [
-        [
-          `${key}.cjs`,
-          `module.exports = require('${relativePath}dist/${value}.cjs');`,
-        ],
-        [`${key}.js`, `export * from '${compiledPath}'`],
-        [`${key}.d.ts`, `export * from '${compiledPath}'`],
-      ];
-    }
-  );
+  const files = [...Object.entries(entrypoints)].flatMap(([key, value]) => {
+    const nrOfDots = key.split("/").length - 1;
+    const relativePath = "../".repeat(nrOfDots) || "./";
+    const compiledPath = `${relativePath}dist/${value}.js`;
+    return [
+      [
+        `${key}.cjs`,
+        `module.exports = require('${relativePath}dist/${value}.cjs');`,
+      ],
+      [`${key}.js`, `export * from '${compiledPath}'`],
+      [`${key}.d.ts`, `export * from '${compiledPath}'`],
+    ];
+  });
 
   return Object.fromEntries(files);
 };
