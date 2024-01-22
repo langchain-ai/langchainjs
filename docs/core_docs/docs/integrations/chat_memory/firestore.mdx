@@ -24,10 +24,17 @@ import IntegrationInstallTooltip from "@mdx_components/integration_install_toolt
 npm install @langchain/openai @langchain/community
 ```
 
-Go to your the Settings icon Project settings in the Firebase console.
-In the Your apps card, select the nickname of the app for which you need a config object.
-Select Config from the Firebase SDK snippet pane.
-Copy the config object snippet, then add it to your firebase functions FirestoreChatMessageHistory.
+Visit the `Project Settings` page from your Firebase project setup an app using the `code` icon:
+![Firebase Project Settings](/img/firebase_project_settings.png)
+
+From there, give your app a name, then once initialized copy the `firebaseConfig` object and paste it into the `config` field of the `FirestoreChatMessageHistory` constructor:
+```typescript
+import { FirestoreChatMessageHistory } from "@langchain/community/stores/message/firestore";
+
+const firestoreChatHistory = new FirestoreChatMessageHistory({
+  config: yourFirebaseConfigObject
+})
+```
 
 ## Usage
 

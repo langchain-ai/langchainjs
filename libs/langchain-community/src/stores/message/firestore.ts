@@ -103,18 +103,50 @@ export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
       .doc(this.sessionId);
   }
 
+  private _addCollectionsAndDocsToDocument(options: {
+    collections: string[];
+    docs: string[];
+  }): DocumentReference<DocumentData> {
+    if (!this.document) {
+      throw new Error("Document not initialized");
+    }
+
+    if (options.collections.length !== options.docs.length) {
+      throw new Error("Collections and docs options must have the same length");
+    }
+
+    const newDocument = options.collections.reduce<
+      DocumentReference<DocumentData>
+    >(
+      (acc, collection, index) =>
+        acc.collection(collection).doc(options.docs[index]),
+      this.document
+    );
+
+    return newDocument;
+  }
+
   /**
    * Method to retrieve all messages from the Firestore collection
    * associated with the current session. Returns an array of BaseMessage
    * objects.
    * @returns Array of stored messages
    */
-  async getMessages(): Promise<BaseMessage[]> {
+  async getMessages(options?: {
+    collections: string[];
+    docs: string[];
+  }): Promise<BaseMessage[]> {
     if (!this.document) {
       throw new Error("Document not initialized");
     }
 
-    const querySnapshot = await this.document
+    let newDocument = this.document;
+
+    if (options) {
+      newDocument = this._addCollectionsAndDocsToDocument(options);
+    }
+
+    const querySnapshot = await newDocument
       .collection("messages")
       .orderBy("createdAt", "asc")
       .get()
@@ -136,23 +168,35 @@ export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
    * passed as a BaseMessage object.
    * @param message The message to be added as a BaseMessage object.
    */
-  public async addMessage(message: BaseMessage) {
+  public async addMessage(message: BaseMessage, options?: {
+    collections: string[];
+    docs: string[];
+  }) {
     const messages = mapChatMessagesToStoredMessages([message]);
-    await this.upsertMessage(messages[0]);
+    await this.upsertMessage(messages[0], options);
   }
 
-  private async upsertMessage(message: StoredMessage): Promise<void> {
+  private async upsertMessage(message: StoredMessage, options?: {
+    collections: string[];
+    docs: string[];
+  }): Promise<void> {
     if (!this.document) {
       throw new Error("Document not initialized");
     }
-    await this.document.set(
+
+    let newDocument = this.document;
+    if (options) {
+      newDocument = this._addCollectionsAndDocsToDocument(options);
+    }
+
+    await newDocument.set(
       {
         id: this.sessionId,
         user_id: this.userId,
       },
       { merge: true }
     );
-    await this.document
+    await newDocument
       .collection("messages")
       .add({
         type: message.type,
@@ -169,11 +213,20 @@ export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
    * Method to delete all messages from the Firestore collection associated
    * with the current session.
    */
-  public async clear(): Promise<void> {
+  public async clear(options?: {
+    collections: string[];
+    docs: string[];
+  }): Promise<void> {
     if (!this.document) {
       throw new Error("Document not initialized");
     }
-    await this.document
+
+    let newDocument = this.document;
+    if (options) {
+      newDocument = this._addCollectionsAndDocsToDocument(options);
+    }
+
+    await newDocument
       .collection("messages")
       .get()
       .then((querySnapshot) => {
@@ -186,7 +239,7 @@ export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
       .catch((err) => {
         throw new Error(`Unknown response type: ${err.toString()}`);
       });
-    await this.document.delete().catch((err) => {
+    await newDocument.delete().catch((err) => {
       throw new Error(`Unknown response type: ${err.toString()}`);
     });
   }

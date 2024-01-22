@@ -3,6 +3,7 @@
 import { test, expect } from "@jest/globals";
 
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
+import admin from "firebase-admin";
 import { FirestoreChatMessageHistory } from "../message/firestore.js";
 
 const sessionId = Date.now().toString();
@@ -42,4 +43,51 @@ test.skip("Test firestore message history store", async () => {
   await messageHistory.clear();
 
   expect(await messageHistory.getMessages()).toEqual([]);
+});
+
+test.skip("Test firestore works with nested collections", async () => {
+  const messageHistory = new FirestoreChatMessageHistory({
+    collectionName: "chats",
+    sessionId: "user-id",
+    userId: "a@example.com",
+    config: {
+      projectId: "YOUR-PROJECT-ID",
+      credential: admin.credential.cert({
+        projectId: "YOUR-PROJECT-ID",
+        privateKey:
+          "-----BEGIN PRIVATE KEY-----\n\n-----END PRIVATE KEY-----\n",
+        clientEmail:
+          "CHANGE-ME@CHANGE-ME-TOO.iam.gserviceaccount.com",
+      }),
+    },
+  });
+
+  const message = new HumanMessage(
+    `My name's Jonas and the current time is ${new Date().toLocaleTimeString()}`
+  );
+
+  await messageHistory.addMessage(message, {
+    collections: ["bots"],
+    docs: ["bot-id"],
+  });
+
+  const gotMessages = await messageHistory.getMessages({
+    collections: ["bots"],
+    docs: ["bot-id"],
+  });
+
+  expect(gotMessages).toEqual([message]);
+
+  // clear the collection
+  await messageHistory.clear({
+    collections: ["bots"],
+    docs: ["bot-id"],
+  });
+
+  // verify that the collection is empty
+  const messagesAfterClear = await messageHistory.getMessages({
+    collections: ["bots"],
+    docs: ["bot-id"],
+  });
+  expect(messagesAfterClear).toEqual([]);
 });
