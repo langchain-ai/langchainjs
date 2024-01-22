@@ -31,7 +31,7 @@ export interface FirestoreDBChatMessageHistory {
    */
   docs?: string[];
   /**
-   * @deprecated use `collections` field instead.
+   * @deprecated Will be removed in 0.1 use `collections` field instead.
    */
   collectionName?: string;
   sessionId: string;
@@ -102,17 +102,16 @@ export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
       );
     }
     if (collections || docs) {
-      if (collections?.length !== docs?.length) {
+      // If the collections length does not match docs length, and the collections list
+      // does not have a length of 1 (in this case we assume the sessionId is the only doc)
+      // throw an error.
+      if (collections?.length !== docs?.length && collections?.length !== 1) {
         throw new Error(
           "Collections and docs options must have the same length"
         );
       }
     }
-    if (docs && !docs.find((d) => d === sessionId)) {
-      throw new Error(
-        `sessionID must exit as a doc. Received: ${docs.join(", ")}`
-      );
-    }
+
     this.collections = collections || ([collectionName] as string[]);
     this.docs = docs || ([sessionId] as string[]);
     this.sessionId = sessionId;

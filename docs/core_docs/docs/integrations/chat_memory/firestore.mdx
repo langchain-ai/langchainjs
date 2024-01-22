@@ -54,8 +54,6 @@ const messageHistory = new FirestoreChatMessageHistory({
 Here, the `collections` field should match the names and ordering of the `collections` in your database.
 The same goes for `docs`, it should match the names and ordering of the `docs` in your database.
 
-The `docs` field also must contain the `sessionId` as this is the key used for identifying the chat session.
-
 ## Usage
 
 import Example from "@examples/memory/firestore.ts";
@@ -69,12 +67,12 @@ The `FirestoreChatMessageHistory` class supports nested collections, and dynamic
 The example below shows how to add and retrieve messages from a database with the following structure:
 
 ```
-/chats/{user-id}/bots/{bot-id}/messages/{message-id}
+/chats/{chat-id}/bots/{bot-id}/messages/{message-id}
 ```
 
 import NestedExample from "@examples/memory/firestore_nested.ts";
 
-<CodeBlock language="typescript">{ExaNestedExamplemple}</CodeBlock>
+<CodeBlock language="typescript">{NestedExample}</CodeBlock>
 
 ## Firestore Rules
 

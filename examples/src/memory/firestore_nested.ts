@@ -7,7 +7,7 @@ import admin from "firebase-admin";
 const memory = new BufferMemory({
   chatHistory: new FirestoreChatMessageHistory({
     collections: ["chats", "bots"],
-    docs: ["user-id", "bot-id"],
+    docs: ["chat-id", "bot-id"],
     sessionId: "user-id",
     userId: "a@example.com",
     config: {

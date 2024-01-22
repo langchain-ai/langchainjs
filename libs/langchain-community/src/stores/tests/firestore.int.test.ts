@@ -33,7 +33,7 @@ test.skip("Test firestore message history store", async () => {
 
   const messageHistory2 = new FirestoreChatMessageHistory({
     collections: ["langchain"],
-    docs: [sessionId],
+    docs: ["langchain-doc-id"],
     sessionId,
     userId: "a@example.com",
     config: {
@@ -57,7 +57,7 @@ test.skip("Test firestore message history store", async () => {
 test.skip("Test firestore works with nested collections", async () => {
   const messageHistory = new FirestoreChatMessageHistory({
     collections: ["chats", "bots"],
-    docs: ["user-id", "bot-id"],
+    docs: ["chat-id", "bot-id"],
     sessionId: "user-id",
     userId: "a@example.com",
     config: {
@@ -74,7 +74,6 @@ test.skip("Test firestore works with nested collections", async () => {
   const message = new HumanMessage(
     `My name's Jonas and the current time is ${new Date().toLocaleTimeString()}`
   );
-
   await messageHistory.addMessage(message);
   const gotMessages = await messageHistory.getMessages();
   expect(gotMessages).toEqual([message]);

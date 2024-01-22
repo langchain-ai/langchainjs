@@ -8,7 +8,7 @@ const memory = new BufferMemory({
   chatHistory: new FirestoreChatMessageHistory({
     collections: ["langchain"],
     docs: ["lc-example"],
-    sessionId: "lc-example",
+    sessionId: "lc-example-id",
     userId: "a@example.com",
     config: {
       projectId: "YOUR-PROJECT-ID",
