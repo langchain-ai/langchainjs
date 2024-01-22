@@ -24,24 +24,58 @@ import IntegrationInstallTooltip from "@mdx_components/integration_install_toolt
 npm install @langchain/openai @langchain/community
 ```
 
-Visit the `Project Settings` page from your Firebase project setup an app using the `code` icon:
-![Firebase Project Settings](/img/firebase_project_settings.png)
+Visit the `Project Settings` page from your Firebase project and select the `Service accounts` tab.
 
-From there, give your app a name, then once initialized copy the `firebaseConfig` object and paste it into the `config` field of the `FirestoreChatMessageHistory` constructor:
+Inside the `Service accounts` tab, click the `Generate new private key` button inside the `Firebase Admin SDK` section to download a JSON file containing your service account's credentials.
+
+Using the downloaded JSON file, pass in the `projectId`, `privateKey`, and `clientEmail` to the `config` object of the `FirestoreChatMessageHistory` class, like shown below:
 
 ```typescript
 import { FirestoreChatMessageHistory } from "@langchain/community/stores/message/firestore";
+import admin from "firebase-admin";
 
-const firestoreChatHistory = new FirestoreChatMessageHistory({
-  config: yourFirebaseConfigObject,
+const messageHistory = new FirestoreChatMessageHistory({
+  collections: ["chats"],
+  docs: ["user-id"]
+  sessionId: "user-id",
+  userId: "a@example.com",
+  config: {
+    projectId: "YOUR-PROJECT-ID",
+    credential: admin.credential.cert({
+      projectId: "YOUR-PROJECT-ID",
+      privateKey:
+        "-----BEGIN PRIVATE KEY-----\nCHANGE-ME\n-----END PRIVATE KEY-----\n",
+      clientEmail: "CHANGE-ME@CHANGE-ME-TOO.iam.gserviceaccount.com",
+    }),
+  },
 });
 ```
+
+Here, the `collections` field should match the names and ordering of the `collections` in your database.
+The same goes for `docs`, it should match the names and ordering of the `docs` in your database.
+
+The `docs` field also must contain the `sessionId` as this is the key used for identifying the chat session.
 
 ## Usage
 
 import Example from "@examples/memory/firestore.ts";
 
 <CodeBlock language="typescript">{Example}</CodeBlock>
+
+### Nested Collections
+
+The `FirestoreChatMessageHistory` class supports nested collections, and dynamic collection/doc names.
+
+The example below shows how to add and retrieve messages from a database with the following structure:
+
+```
+/chats/{user-id}/bots/{bot-id}/messages/{message-id}
+```
+
+import NestedExample from "@examples/memory/firestore_nested.ts";
+
+<CodeBlock language="typescript">{ExaNestedExamplemple}</CodeBlock>
+
 
 ## Firestore Rules
 

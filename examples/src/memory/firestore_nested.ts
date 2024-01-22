@@ -6,9 +6,9 @@ import admin from "firebase-admin";
 
 const memory = new BufferMemory({
   chatHistory: new FirestoreChatMessageHistory({
-    collections: ["langchain"],
-    docs: ["lc-example"],
-    sessionId: "lc-example",
+    collections: ["chats", "bots"],
+    docs: ["user-id", "bot-id"],
+    sessionId: "user-id",
     userId: "a@example.com",
     config: {
       projectId: "YOUR-PROJECT-ID",
@@ -28,12 +28,12 @@ const chain = new ConversationChain({ llm: model, memory });
 const res1 = await chain.call({ input: "Hi! I'm Jim." });
 console.log({ res1 });
 /*
-{ res1: { text: "Hello Jim! It's nice to meet you. My name is AI. How may I assist you today?" } }
+{ res1: { response: 'Hello Jim! How can I assist you today?' } }
 */
 
 const res2 = await chain.call({ input: "What did I just say my name was?" });
 console.log({ res2 });
 
 /*
-{ res1: { text: "You said your name was Jim." } }
+{ res2: { response: 'You just said that your name is Jim.' } }
 */

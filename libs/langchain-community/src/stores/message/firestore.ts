@@ -22,7 +22,18 @@ import {
  * configuration for the Firebase app.
  */
 export interface FirestoreDBChatMessageHistory {
-  collectionName: string;
+  /**
+   * An array of collection names, should match the length of `docs` field.
+   */
+  collections?: string[];
+  /**
+   * An array of doc names, should match the length of `collections` field.
+   */
+  docs?: string[];
+  /**
+   * @deprecated use `collections` field instead.
+   */
+  collectionName?: string;
   sessionId: string;
   userId: string;
   appIdx?: number;
@@ -54,7 +65,9 @@ export interface FirestoreDBChatMessageHistory {
 export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "firestore"];
 
-  private collectionName: string;
+  private collections: string[];
+
+  private docs: string[];
 
   private sessionId: string;
 
@@ -70,13 +83,38 @@ export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
 
   constructor({
     collectionName,
+    collections,
+    docs,
     sessionId,
     userId,
     appIdx = 0,
     config,
   }: FirestoreDBChatMessageHistory) {
     super();
-    this.collectionName = collectionName;
+    if (collectionName && collections) {
+      throw new Error(
+        "Can not pass in collectionName and collections. Please use collections only."
+      );
+    }
+    if (!collectionName && !collections) {
+      throw new Error(
+        "Must pass in a collections. Fields `collectionName` and `collections` are both undefined."
+      );
+    }
+    if (collections || docs) {
+      if (collections?.length !== docs?.length) {
+        throw new Error(
+          "Collections and docs options must have the same length"
+        );
+      }
+    }
+    if (docs && !docs.find((d) => d === sessionId)) {
+      throw new Error(
+        `sessionID must exit as a doc. Received: ${docs.join(", ")}`
+      );
+    }
+    this.collections = collections || ([collectionName] as string[]);
+    this.docs = docs || ([sessionId] as string[]);
     this.sessionId = sessionId;
     this.userId = userId;
     this.document = null;
@@ -98,32 +136,11 @@ export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
 
     this.firestoreClient = getFirestore(app);
 
-    this.document = this.firestoreClient
-      .collection(this.collectionName)
-      .doc(this.sessionId);
-  }
-
-  private _addCollectionsAndDocsToDocument(options: {
-    collections: string[];
-    docs: string[];
-  }): DocumentReference<DocumentData> {
-    if (!this.document) {
-      throw new Error("Document not initialized");
-    }
-
-    if (options.collections.length !== options.docs.length) {
-      throw new Error("Collections and docs options must have the same length");
-    }
-
-    const newDocument = options.collections.reduce<
-      DocumentReference<DocumentData>
-    >(
+    this.document = this.collections.reduce<DocumentReference<DocumentData>>(
       (acc, collection, index) =>
-        acc.collection(collection).doc(options.docs[index]),
-      this.document
+        acc.collection(collection).doc(this.docs[index]),
+      this.firestoreClient as unknown as DocumentReference<DocumentData>
     );
-
-    return newDocument;
   }
 
   /**
@@ -132,21 +149,12 @@ export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
    * objects.
    * @returns Array of stored messages
    */
-  async getMessages(options?: {
-    collections: string[];
-    docs: string[];
-  }): Promise<BaseMessage[]> {
+  async getMessages(): Promise<BaseMessage[]> {
     if (!this.document) {
       throw new Error("Document not initialized");
     }
 
-    let newDocument = this.document;
-
-    if (options) {
-      newDocument = this._addCollectionsAndDocsToDocument(options);
-    }
-
-    const querySnapshot = await newDocument
+    const querySnapshot = await this.document
       .collection("messages")
       .orderBy("createdAt", "asc")
       .get()
@@ -168,41 +176,24 @@ export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
    * passed as a BaseMessage object.
    * @param message The message to be added as a BaseMessage object.
    */
-  public async addMessage(
-    message: BaseMessage,
-    options?: {
-      collections: string[];
-      docs: string[];
-    }
-  ) {
+  public async addMessage(message: BaseMessage) {
     const messages = mapChatMessagesToStoredMessages([message]);
-    await this.upsertMessage(messages[0], options);
+    await this.upsertMessage(messages[0]);
   }
 
-  private async upsertMessage(
-    message: StoredMessage,
-    options?: {
-      collections: string[];
-      docs: string[];
-    }
-  ): Promise<void> {
+  private async upsertMessage(message: StoredMessage): Promise<void> {
     if (!this.document) {
       throw new Error("Document not initialized");
     }
 
-    let newDocument = this.document;
-    if (options) {
-      newDocument = this._addCollectionsAndDocsToDocument(options);
-    }
-
-    await newDocument.set(
+    await this.document.set(
       {
         id: this.sessionId,
         user_id: this.userId,
       },
       { merge: true }
     );
-    await newDocument
+    await this.document
       .collection("messages")
       .add({
         type: message.type,
@@ -219,20 +210,12 @@ export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
    * Method to delete all messages from the Firestore collection associated
    * with the current session.
    */
-  public async clear(options?: {
-    collections: string[];
-    docs: string[];
-  }): Promise<void> {
+  public async clear(): Promise<void> {
     if (!this.document) {
       throw new Error("Document not initialized");
     }
 
-    let newDocument = this.document;
-    if (options) {
-      newDocument = this._addCollectionsAndDocsToDocument(options);
-    }
-
-    await newDocument
+    await this.document
       .collection("messages")
       .get()
       .then((querySnapshot) => {
@@ -245,7 +228,7 @@ export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
       .catch((err) => {
         throw new Error(`Unknown response type: ${err.toString()}`);
       });
-    await newDocument.delete().catch((err) => {
+    await this.document.delete().catch((err) => {
       throw new Error(`Unknown response type: ${err.toString()}`);
     });
   }

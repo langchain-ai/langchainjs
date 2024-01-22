@@ -32,10 +32,19 @@ test.skip("Test firestore message history store", async () => {
   expect(await messageHistory.getMessages()).toEqual(expectedMessages);
 
   const messageHistory2 = new FirestoreChatMessageHistory({
-    collectionName: "langchain",
+    collections: ["langchain"],
+    docs: [sessionId],
     sessionId,
     userId: "a@example.com",
-    config: { projectId: "your-project-id" },
+    config: {
+      projectId: "YOUR-PROJECT-ID",
+      credential: admin.credential.cert({
+        projectId: "YOUR-PROJECT-ID",
+        privateKey:
+          "-----BEGIN PRIVATE KEY-----\nnCHANGE-ME\n-----END PRIVATE KEY-----\n",
+        clientEmail: "CHANGE-ME@CHANGE-ME-TOO.iam.gserviceaccount.com",
+      }),
+    },
   });
 
   expect(await messageHistory2.getMessages()).toEqual(expectedMessages);
@@ -47,7 +56,8 @@ test.skip("Test firestore message history store", async () => {
 
 test.skip("Test firestore works with nested collections", async () => {
   const messageHistory = new FirestoreChatMessageHistory({
-    collectionName: "chats",
+    collections: ["chats", "bots"],
+    docs: ["user-id", "bot-id"],
     sessionId: "user-id",
     userId: "a@example.com",
     config: {
@@ -55,7 +65,7 @@ test.skip("Test firestore works with nested collections", async () => {
       credential: admin.credential.cert({
         projectId: "YOUR-PROJECT-ID",
         privateKey:
-          "-----BEGIN PRIVATE KEY-----\n\n-----END PRIVATE KEY-----\n",
+          "-----BEGIN PRIVATE KEY-----\nnCHANGE-ME\n-----END PRIVATE KEY-----\n",
         clientEmail: "CHANGE-ME@CHANGE-ME-TOO.iam.gserviceaccount.com",
       }),
     },
@@ -65,28 +75,12 @@ test.skip("Test firestore works with nested collections", async () => {
     `My name's Jonas and the current time is ${new Date().toLocaleTimeString()}`
   );
 
-  await messageHistory.addMessage(message, {
-    collections: ["bots"],
-    docs: ["bot-id"],
-  });
-
-  const gotMessages = await messageHistory.getMessages({
-    collections: ["bots"],
-    docs: ["bot-id"],
-  });
-
+  await messageHistory.addMessage(message);
+  const gotMessages = await messageHistory.getMessages();
   expect(gotMessages).toEqual([message]);
-
   // clear the collection
-  await messageHistory.clear({
-    collections: ["bots"],
-    docs: ["bot-id"],
-  });
-
+  await messageHistory.clear();
   // verify that the collection is empty
-  const messagesAfterClear = await messageHistory.getMessages({
-    collections: ["bots"],
-    docs: ["bot-id"],
-  });
+  const messagesAfterClear = await messageHistory.getMessages();
   expect(messagesAfterClear).toEqual([]);
 });
