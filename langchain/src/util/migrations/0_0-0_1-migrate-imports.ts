@@ -9,6 +9,11 @@ type EntrypointAndSymbols = {
   exportedSymbols: Array<ExportedSymbol>;
 };
 
+enum UpgradingModule {
+  COHERE = "cohere",
+  PINECONE = "pinecone",
+}
+
 /**
  * @param {string} entrypointFile
  * @param {Project} project
@@ -168,6 +173,7 @@ export async function updateEntrypointsFrom0_0_xTo0_1_x({
   codePath,
   customGlobPattern,
   customIgnorePattern,
+  skipCheck,
 }: {
   /**
    * The absolute path to the locally cloned LangChain repo root.
@@ -195,6 +201,13 @@ export async function updateEntrypointsFrom0_0_xTo0_1_x({
    * @default {["**\/node_modules/**", "**\/dist/**", "**\/*.d.ts"]}
    */
   customIgnorePattern?: string[] | string;
+  /**
+   * Optionally skip checking the passed modules for imports to
+   * update.
+   * @example [UpgradingModule.COHERE]
+   * @default undefined
+   */
+  skipCheck?: Array<UpgradingModule>;
 }) {
   const project = new Project();
 
@@ -233,7 +246,7 @@ export async function updateEntrypointsFrom0_0_xTo0_1_x({
       project
     )
   );
-  const langchainCoherePackageEntrypoints = removeLoad(
+  const langchainCoherePackageEntrypoints = !skipCheck?.includes(UpgradingModule.COHERE) ? removeLoad(
     getEntrypointsFromFile(
       path.join(
         localLangChainPath,
@@ -244,8 +257,8 @@ export async function updateEntrypointsFrom0_0_xTo0_1_x({
       ),
       project
     )
-  );
-  const langchainPineconePackageEntrypoints = removeLoad(
+  ) : null;
+  const langchainPineconePackageEntrypoints = !skipCheck?.includes(UpgradingModule.PINECONE) ? removeLoad(
     getEntrypointsFromFile(
       path.join(
         localLangChainPath,
@@ -256,7 +269,7 @@ export async function updateEntrypointsFrom0_0_xTo0_1_x({
       ),
       project
     )
-  );
+  ) : null;
 
   const globPattern = customGlobPattern || "/**/*.ts";
   const ignorePattern = customIgnorePattern || [
@@ -323,16 +336,16 @@ export async function updateEntrypointsFrom0_0_xTo0_1_x({
           langchainOpenAIPackageEntrypoints,
           "openai"
         );
-        const matchingSymbolCohere = findMatchingSymbol(
+        const matchingSymbolCohere = langchainCoherePackageEntrypoints ? findMatchingSymbol(
           { symbol: namedImportText, kind: namedImportKind },
           langchainCoherePackageEntrypoints,
           "cohere"
-        );
-        const matchingSymbolPinecone = findMatchingSymbol(
+        ) : undefined;
+        const matchingSymbolPinecone = langchainPineconePackageEntrypoints ? findMatchingSymbol(
           { symbol: namedImportText, kind: namedImportKind },
           langchainPineconePackageEntrypoints,
           "pinecone"
-        );
+        ) : undefined;
 
         didUpdate = updateImport({
           matchingSymbols: [
