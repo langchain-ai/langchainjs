@@ -5,6 +5,7 @@ import { Document } from "@langchain/core/documents";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
 import { index } from "../indexing.js";
 import { BaseDocumentLoader } from "../../document_loaders/base.js";
+import { sleep } from "../../util/time.js";
 
 class MockLoader extends BaseDocumentLoader {
   constructor(public docs: Document[]) {
@@ -43,6 +44,8 @@ describe("Indexing API", () => {
     recordManager.records.clear();
     await vectorstore.pool.query(`DROP TABLE "${tableName}"`);
     await vectorstore.ensureTableInDatabase();
+    // Because the indexing API relies on timestamps, without this the tests are flaky.
+    await sleep(1000);
   });
 
   afterAll(async () => {
