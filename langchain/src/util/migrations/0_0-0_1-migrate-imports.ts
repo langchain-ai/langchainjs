@@ -197,8 +197,8 @@ export async function updateEntrypointsFrom0_0_xTo0_1_x({
    * A custom ignore pattern for ignoring files.
    * The backslash included in the example and default is only for
    * JSDoc to escape the asterisk. Do not include unless intentionally.
-   * @example {["**\/node_modules/**", "**\/dist/**", "**\/*.d.ts"]}
-   * @default {["**\/node_modules/**", "**\/dist/**", "**\/*.d.ts"]}
+   * @example ["**\/node_modules/**", "**\/dist/**", "**\/*.d.ts"]
+   * @default node_modules/**
    */
   customIgnorePattern?: string[] | string;
   /**
@@ -280,115 +280,147 @@ export async function updateEntrypointsFrom0_0_xTo0_1_x({
     : null;
 
   const globPattern = customGlobPattern || "/**/*.ts";
-  const ignorePattern = customIgnorePattern || [
-    "**/node_modules/**",
-    "**/dist/**",
-    "**/*.d.ts",
-  ];
+  const ignorePattern = customIgnorePattern;
 
-  const allCodebaseFiles = glob
-    .sync(path.join(codePath, globPattern), { ignore: ignorePattern })
-    .map((filePath) => path.resolve(filePath));
+  const allCodebaseFiles = (
+    await glob(path.join(codePath, globPattern), {
+      ignore: ignorePattern,
+    })
+  )
+    .map((filePath) => path.resolve(filePath))
+    .filter((filePath) => !filePath.includes("node_modules/"));
 
   for await (const filePath of allCodebaseFiles) {
-    const projectFile = project.addSourceFileAtPath(filePath);
-    const imports = projectFile.getImportDeclarations();
-
-    imports.forEach((importItem) => {
-      // Get all imports
-      const module = importItem.getModuleSpecifierValue();
-      // Get only the named imports. Eg: import { foo } from "langchain/util";
-      const namedImports = importItem.getNamedImports();
-      if (!module.startsWith("langchain/")) {
-        return;
+    let projectFile: SourceFile;
+    try {
+      projectFile = project.addSourceFileAtPath(filePath);
+      if (!projectFile) {
+        throw new Error(`Failed to add source file at path: ${filePath}`);
       }
+    } catch (error) {
+      console.error(
+        {
+          filePath,
+          error,
+        },
+        "Error occurred while trying to add source file. Continuing"
+      );
+      return;
+    }
 
-      // look at each import and see if it exists in
-      let didUpdate = false;
+    try {
+      const imports = projectFile.getImportDeclarations();
 
-      namedImports.forEach((namedImport) => {
-        const namedImportText = namedImport.getText();
-        let namedImportKind: SyntaxKind | null = null;
-
-        const symbol = namedImport.getSymbol();
-        if (symbol) {
-          // Resolve alias symbol to its original symbol
-          const aliasedSymbol = symbol.getAliasedSymbol() || symbol;
-
-          // Get the original declarations of the symbol
-          const declarations = aliasedSymbol.getDeclarations();
-          if (declarations.length > 0) {
-            // Assuming the first declaration is the original one
-            const originalDeclarationKind = declarations[0].getKind();
-            namedImportKind = originalDeclarationKind;
-          }
-        }
-
-        // If we couldn't find the kind of the named imports kind, skip it
-        if (!namedImportKind) {
+      imports.forEach((importItem) => {
+        // Get all imports
+        const module = importItem.getModuleSpecifierValue();
+        // Get only the named imports. Eg: import { foo } from "langchain/util";
+        const namedImports = importItem.getNamedImports();
+        if (!module.startsWith("langchain/")) {
           return;
         }
 
-        const matchingSymbolCore = findMatchingSymbol(
-          { symbol: namedImportText, kind: namedImportKind },
-          langchainCorePackageEntrypoints,
-          "core"
-        );
-        const matchingSymbolCommunity = findMatchingSymbol(
-          { symbol: namedImportText, kind: namedImportKind },
-          langchainCommunityPackageEntrypoints,
-          "community"
-        );
-        const matchingSymbolOpenAI = findMatchingSymbol(
-          { symbol: namedImportText, kind: namedImportKind },
-          langchainOpenAIPackageEntrypoints,
-          "openai"
-        );
-        const matchingSymbolCohere = langchainCoherePackageEntrypoints
-          ? findMatchingSymbol(
-              { symbol: namedImportText, kind: namedImportKind },
-              langchainCoherePackageEntrypoints,
-              "cohere"
-            )
-          : undefined;
-        const matchingSymbolPinecone = langchainPineconePackageEntrypoints
-          ? findMatchingSymbol(
-              { symbol: namedImportText, kind: namedImportKind },
-              langchainPineconePackageEntrypoints,
-              "pinecone"
-            )
-          : undefined;
+        // look at each import and see if it exists in
+        let didUpdate = false;
 
-        didUpdate = updateImport({
-          matchingSymbols: [
-            matchingSymbolCore,
-            matchingSymbolOpenAI,
-            matchingSymbolCohere,
-            matchingSymbolPinecone,
-            matchingSymbolCommunity,
-          ],
-          namedImport,
-          projectFile,
-          namedImportText,
+        namedImports.forEach((namedImport) => {
+          const namedImportText = namedImport.getText();
+          let namedImportKind: SyntaxKind | null = null;
+
+          const symbol = namedImport.getSymbol();
+          if (symbol) {
+            // Resolve alias symbol to its original symbol
+            const aliasedSymbol = symbol.getAliasedSymbol() || symbol;
+
+            // Get the original declarations of the symbol
+            const declarations = aliasedSymbol.getDeclarations();
+            if (declarations.length > 0) {
+              // Assuming the first declaration is the original one
+              const originalDeclarationKind = declarations[0].getKind();
+              namedImportKind = originalDeclarationKind;
+            }
+          }
+
+          // If we couldn't find the kind of the named imports kind, skip it
+          if (!namedImportKind) {
+            return;
+          }
+
+          const matchingSymbolCore = findMatchingSymbol(
+            { symbol: namedImportText, kind: namedImportKind },
+            langchainCorePackageEntrypoints,
+            "core"
+          );
+          const matchingSymbolCommunity = findMatchingSymbol(
+            { symbol: namedImportText, kind: namedImportKind },
+            langchainCommunityPackageEntrypoints,
+            "community"
+          );
+          const matchingSymbolOpenAI = findMatchingSymbol(
+            { symbol: namedImportText, kind: namedImportKind },
+            langchainOpenAIPackageEntrypoints,
+            "openai"
+          );
+          const matchingSymbolCohere = langchainCoherePackageEntrypoints
+            ? findMatchingSymbol(
+                { symbol: namedImportText, kind: namedImportKind },
+                langchainCoherePackageEntrypoints,
+                "cohere"
+              )
+            : undefined;
+          const matchingSymbolPinecone = langchainPineconePackageEntrypoints
+            ? findMatchingSymbol(
+                { symbol: namedImportText, kind: namedImportKind },
+                langchainPineconePackageEntrypoints,
+                "pinecone"
+              )
+            : undefined;
+
+          didUpdate = updateImport({
+            matchingSymbols: [
+              matchingSymbolCore,
+              matchingSymbolOpenAI,
+              matchingSymbolCohere,
+              matchingSymbolPinecone,
+              matchingSymbolCommunity,
+            ],
+            namedImport,
+            projectFile,
+            namedImportText,
+          });
         });
-      });
 
-      if (didUpdate) {
-        projectFile.saveSync();
-
-        // Check if all named imports were removed, and only a file import remains.
-        // eg: import { foo } from "langchain/anthropic"; -> import "langchain/anthropic";
-        // if so, remove the import entirely
-        const importClause = importItem.getImportClause();
-        if (
-          !importClause ||
-          (!importClause.getDefaultImport() &&
-            importClause.getNamedImports().length === 0)
-        ) {
-          importItem.remove();
+        if (didUpdate) {
           projectFile.saveSync();
+
+          // Check if all named imports were removed, and only a file import remains.
+          // eg: import { foo } from "langchain/anthropic"; -> import "langchain/anthropic";
+          // if so, remove the import entirely
+          const importClause = importItem.getImportClause();
+          if (
+            !importClause ||
+            (!importClause.getDefaultImport() &&
+              importClause.getNamedImports().length === 0)
+          ) {
+            importItem.remove();
+            projectFile.saveSync();
+          }
         }
-      }
-    });
+      });
+    } catch (error) {
+      console.error(
+        {
+          filePath,
+          error,
+        },
+        "Error occurred while trying to read file. Continuing"
+      );
+    }
+
+    // Remove source file from the project after we're done with it
+    // to prevent OOM errors.
+    if (projectFile) {
+      project.removeSourceFile(projectFile);
+    }
   }
 }
