@@ -31,7 +31,6 @@ const result = await chain.invoke({
 
 console.log(JSON.parse(result).stdout);
 
-
 // To install python packages:
 // This uses the loadPackages command.
 // This works for packages built with pyodide.
@@ -43,4 +42,4 @@ await interpreter.addPackage("micropip");
 // The following is roughly equivalent to:
 // pyodide.runPython(`import ${pkgname}; ${pkgname}`);
 const micropip = interpreter.pyodideInstance.pyimport("micropip");
-await micropip.install('numpy');
+await micropip.install("numpy");
