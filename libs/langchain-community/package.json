@@ -1292,20 +1292,20 @@
       "import": "./util/convex.js",
       "require": "./util/convex.cjs"
     },
-    "./indexes/recordmanagers": {
-      "types": "./indexes/recordmanagers.d.ts",
-      "import": "./indexes/recordmanagers.js",
-      "require": "./indexes/recordmanagers.cjs"
+    "./indexes": {
+      "types": "./indexes.d.ts",
+      "import": "./indexes.js",
+      "require": "./indexes.cjs"
     },
-    "./indexes/recordmanagers/postgres": {
-      "types": "./indexes/recordmanagers/postgres.d.ts",
-      "import": "./indexes/recordmanagers/postgres.js",
-      "require": "./indexes/recordmanagers/postgres.cjs"
+    "./indexes/postgres": {
+      "types": "./indexes/postgres.d.ts",
+      "import": "./indexes/postgres.js",
+      "require": "./indexes/postgres.cjs"
     },
-    "./indexes/recordmanagers/memory": {
-      "types": "./indexes/recordmanagers/memory.d.ts",
-      "import": "./indexes/recordmanagers/memory.js",
-      "require": "./indexes/recordmanagers/memory.cjs"
+    "./indexes/memory": {
+      "types": "./indexes/memory.d.ts",
+      "import": "./indexes/memory.js",
+      "require": "./indexes/memory.cjs"
     },
     "./package.json": "./package.json"
   },
@@ -1797,14 +1797,14 @@
     "util/convex.cjs",
     "util/convex.js",
     "util/convex.d.ts",
-    "indexes/recordmanagers.cjs",
-    "indexes/recordmanagers.js",
-    "indexes/recordmanagers.d.ts",
-    "indexes/recordmanagers/postgres.cjs",
-    "indexes/recordmanagers/postgres.js",
-    "indexes/recordmanagers/postgres.d.ts",
-    "indexes/recordmanagers/memory.cjs",
-    "indexes/recordmanagers/memory.js",
-    "indexes/recordmanagers/memory.d.ts"
+    "indexes.cjs",
+    "indexes.js",
+    "indexes.d.ts",
+    "indexes/postgres.cjs",
+    "indexes/postgres.js",
+    "indexes/postgres.d.ts",
+    "indexes/memory.cjs",
+    "indexes/memory.js",
+    "indexes/memory.d.ts"
   ]
 }

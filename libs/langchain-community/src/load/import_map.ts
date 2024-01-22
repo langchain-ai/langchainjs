@@ -55,5 +55,5 @@ export * as stores__doc__base from "../stores/doc/base.js";
 export * as stores__doc__in_memory from "../stores/doc/in_memory.js";
 export * as stores__message__in_memory from "../stores/message/in_memory.js";
 export * as memory__chat_memory from "../memory/chat_memory.js";
-export * as indexes__recordmanagers from "../indexes/base.js";
-export * as indexes__recordmanagers__memory from "../indexes/memory.js";
+export * as indexes from "../indexes/base.js";
+export * as indexes__memory from "../indexes/memory.js";
