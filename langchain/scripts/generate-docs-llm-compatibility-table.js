@@ -77,8 +77,20 @@ Each ChatModel integration can optionally provide native implementations to trul
  * Build code // documentation paths to rewrite.
  */
 const CWD = process.cwd();
-const LLM_DOC_INDEX_PATH = path.join(CWD, "..", "docs", "core_docs", "./docs/integrations/llms/index.mdx");
-const CHAT_MODELS_DOC_INDEX_PATH = path.join(CWD, "..", "docs", "core_docs", "./docs/integrations/chat/index.mdx");
+const LLM_DOC_INDEX_PATH = path.join(
+  CWD,
+  "..",
+  "docs",
+  "core_docs",
+  "./docs/integrations/llms/index.mdx"
+);
+const CHAT_MODELS_DOC_INDEX_PATH = path.join(
+  CWD,
+  "..",
+  "docs",
+  "core_docs",
+  "./docs/integrations/chat/index.mdx"
+);
 const CHAT_MODEL_DIRECTORY = path.join(CWD, "./dist/chat_models");
 const LLM_DIRECTORY = path.join(CWD, "./dist/llms");
 
@@ -108,8 +120,10 @@ const getAllJSFilesInDir = async (pattern, options) => {
   }
 
   await walk(options.cwd || process.cwd());
-  const filteredFileList = fileList.filter(file => file.match(new RegExp(pattern))).map((file) => path.basename(file))
-  return filteredFileList
+  const filteredFileList = fileList
+    .filter((file) => file.match(new RegExp(pattern)))
+    .map((file) => path.basename(file));
+  return filteredFileList;
 };
 
 /**
@@ -169,11 +183,7 @@ const createTable = (data) => {
  * @param {string} file
  * @param {"chat" | "llm"} type
  */
-const checkClassMethods = async (
-  directory,
-  file,
-  type,
-) => {
+const checkClassMethods = async (directory, file, type) => {
   const fullFilePath = path.join(directory, file);
   let all;
   try {
@@ -196,10 +206,12 @@ const checkClassMethods = async (
 
       if (instance.prototype._streamResponseChunks) {
         if (type === "chat") {
-          hasStreamImplemented = instance.prototype._streamResponseChunks !==
+          hasStreamImplemented =
+            instance.prototype._streamResponseChunks !==
             BaseChatModel.prototype._streamResponseChunks;
         } else {
-          hasStreamImplemented = instance.prototype._streamResponseChunks !==
+          hasStreamImplemented =
+            instance.prototype._streamResponseChunks !==
             BaseLLM.prototype._streamResponseChunks;
         }
       }
@@ -216,9 +228,15 @@ const checkClassMethods = async (
 };
 
 export async function main() {
-  const pattern = "^(?!.*(?:\.test\.ts|\.cjs|\.d\.ts)$).*";
-  const chatModelFiles = await getAllJSFilesInDir(pattern, { nodir: true, cwd: CHAT_MODEL_DIRECTORY });
-  const llmFiles = await getAllJSFilesInDir(pattern, { nodir: true, cwd: LLM_DIRECTORY });
+  const pattern = "^(?!.*(?:.test.ts|.cjs|.d.ts)$).*";
+  const chatModelFiles = await getAllJSFilesInDir(pattern, {
+    nodir: true,
+    cwd: CHAT_MODEL_DIRECTORY,
+  });
+  const llmFiles = await getAllJSFilesInDir(pattern, {
+    nodir: true,
+    cwd: LLM_DIRECTORY,
+  });
 
   const [chatClassCompatibility, llmClassCompatibility] = await Promise.all([
     Promise.all(
@@ -245,7 +263,7 @@ export async function main() {
 
   await Promise.all([
     exec(`prettier --write ${CHAT_MODELS_DOC_INDEX_PATH}`),
-    exec(`prettier --write ${LLM_DOC_INDEX_PATH}`)
+    exec(`prettier --write ${LLM_DOC_INDEX_PATH}`),
   ]);
 }
 
@@ -253,6 +271,6 @@ export async function main() {
   try {
     await main();
   } catch (e) {
-    console.error('Error generating docs table: ', e);
+    console.error("Error generating docs table: ", e);
   }
 })();

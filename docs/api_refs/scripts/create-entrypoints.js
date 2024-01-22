@@ -10,11 +10,9 @@ const BASE_TYPEDOC_CONFIG = {
     "visibility",
     "instance-first",
     "required-first",
-    "alphabetical"
+    "alphabetical",
   ],
-  plugin: [
-    "./typedoc_plugins/hide_underscore_lc.js"
-  ],
+  plugin: ["./typedoc_plugins/hide_underscore_lc.js"],
   tsconfig: "../../tsconfig.json",
   readme: "none",
   excludePrivate: true,
@@ -22,14 +20,13 @@ const BASE_TYPEDOC_CONFIG = {
   excludeExternals: true,
   excludeNotDocumented: false,
   includeVersion: true,
-  sourceLinkTemplate: "https://github.com/langchain-ai/langchainjs/blob/{gitRevision}/{path}#L{line}",
+  sourceLinkTemplate:
+    "https://github.com/langchain-ai/langchainjs/blob/{gitRevision}/{path}#L{line}",
   logLevel: "Error",
   name: "LangChain.js",
   skipErrorChecking: true,
-  exclude: [
-    "dist"
-  ],
-}
+  exclude: ["dist"],
+};
 
 /**
  *
@@ -47,14 +44,18 @@ function main() {
   const workspaces = fs
     .readdirSync("../../libs/")
     .filter((dir) => dir.startsWith("langchain-"))
-    .map((dir) => path.join("../../libs/", dir, "/scripts/create-entrypoints.js"));
+    .map((dir) =>
+      path.join("../../libs/", dir, "/scripts/create-entrypoints.js")
+    );
   const entrypointFiles = [
     "../../langchain/scripts/create-entrypoints.js",
     "../../langchain-core/scripts/create-entrypoints.js",
     ...workspaces,
   ];
   /** @type {Array<string>} */
-  const blacklistedEntrypoints = JSON.parse(fs.readFileSync("./blacklisted-entrypoints.json"));
+  const blacklistedEntrypoints = JSON.parse(
+    fs.readFileSync("./blacklisted-entrypoints.json")
+  );
 
   const entrypoints = new Set([]);
   entrypointFiles.forEach((entrypointFile) => {
@@ -95,7 +96,13 @@ function main() {
 
     Object.values(entrypointsObject)
       .filter((key) => !deprecatedNodeOnly.includes(key))
-      .filter((key) => !blacklistedEntrypoints.find((blacklistedItem) => blacklistedItem === `${entrypointDir}/src/${key}.ts`))
+      .filter(
+        (key) =>
+          !blacklistedEntrypoints.find(
+            (blacklistedItem) =>
+              blacklistedItem === `${entrypointDir}/src/${key}.ts`
+          )
+      )
       .map((key) => entrypoints.add(`${entrypointDir}/src/${key}.ts`));
   });
 
