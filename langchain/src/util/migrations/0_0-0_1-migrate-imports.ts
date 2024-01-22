@@ -9,7 +9,7 @@ type EntrypointAndSymbols = {
   exportedSymbols: Array<ExportedSymbol>;
 };
 
-enum UpgradingModule {
+enum UpgradingModule /* #__PURE__ */ {
   COHERE = "cohere",
   PINECONE = "pinecone",
 }
