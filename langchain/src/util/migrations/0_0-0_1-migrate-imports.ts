@@ -246,30 +246,38 @@ export async function updateEntrypointsFrom0_0_xTo0_1_x({
       project
     )
   );
-  const langchainCoherePackageEntrypoints = !skipCheck?.includes(UpgradingModule.COHERE) ? removeLoad(
-    getEntrypointsFromFile(
-      path.join(
-        localLangChainPath,
-        "libs",
-        "langchain-cohere",
-        "scripts",
-        "create-entrypoints.js"
-      ),
-      project
-    )
-  ) : null;
-  const langchainPineconePackageEntrypoints = !skipCheck?.includes(UpgradingModule.PINECONE) ? removeLoad(
-    getEntrypointsFromFile(
-      path.join(
-        localLangChainPath,
-        "libs",
-        "langchain-pinecone",
-        "scripts",
-        "create-entrypoints.js"
-      ),
-      project
-    )
-  ) : null;
+  const langchainCoherePackageEntrypoints = !skipCheck?.includes(
+    UpgradingModule.COHERE
+  )
+    ? removeLoad(
+        getEntrypointsFromFile(
+          path.join(
+            localLangChainPath,
+            "libs",
+            "langchain-cohere",
+            "scripts",
+            "create-entrypoints.js"
+          ),
+          project
+        )
+      )
+    : null;
+  const langchainPineconePackageEntrypoints = !skipCheck?.includes(
+    UpgradingModule.PINECONE
+  )
+    ? removeLoad(
+        getEntrypointsFromFile(
+          path.join(
+            localLangChainPath,
+            "libs",
+            "langchain-pinecone",
+            "scripts",
+            "create-entrypoints.js"
+          ),
+          project
+        )
+      )
+    : null;
 
   const globPattern = customGlobPattern || "/**/*.ts";
   const ignorePattern = customIgnorePattern || [
@@ -336,16 +344,20 @@ export async function updateEntrypointsFrom0_0_xTo0_1_x({
           langchainOpenAIPackageEntrypoints,
           "openai"
         );
-        const matchingSymbolCohere = langchainCoherePackageEntrypoints ? findMatchingSymbol(
-          { symbol: namedImportText, kind: namedImportKind },
-          langchainCoherePackageEntrypoints,
-          "cohere"
-        ) : undefined;
-        const matchingSymbolPinecone = langchainPineconePackageEntrypoints ? findMatchingSymbol(
-          { symbol: namedImportText, kind: namedImportKind },
-          langchainPineconePackageEntrypoints,
-          "pinecone"
-        ) : undefined;
+        const matchingSymbolCohere = langchainCoherePackageEntrypoints
+          ? findMatchingSymbol(
+              { symbol: namedImportText, kind: namedImportKind },
+              langchainCoherePackageEntrypoints,
+              "cohere"
+            )
+          : undefined;
+        const matchingSymbolPinecone = langchainPineconePackageEntrypoints
+          ? findMatchingSymbol(
+              { symbol: namedImportText, kind: namedImportKind },
+              langchainPineconePackageEntrypoints,
+              "pinecone"
+            )
+          : undefined;
 
         didUpdate = updateImport({
           matchingSymbols: [

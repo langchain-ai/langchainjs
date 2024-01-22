@@ -703,7 +703,7 @@ const requiresOptionalDependency = [
   "experimental/prompts/handlebars",
   "experimental/tools/pyinterpreter",
   "util/convex",
-  "util/migrations/0_1"
+  "util/migrations/0_1",
 ];
 
 const extraImportMapEntries = [

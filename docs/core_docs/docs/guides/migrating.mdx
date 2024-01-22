@@ -18,7 +18,7 @@ The new packages it checks for are:
 Some of these integration packages (not `core` or `community`) do have breaking changes. If you'd like to opt out of updating to those modules, you may pass in the `skipCheck` arg with a list of modules you'd like to ignore.
 
 For example, `@langchain/cohere` bumps to the new Cohere SDK version. If you do not wish to upgrade, it will instead update your `cohere` imports to the `@langchain/community` package which still contains the previous version of the Cohere SDK.
- 
+
 The example below demonstrates how to run the migration script, checking all new packages.
 
 ### Setup
