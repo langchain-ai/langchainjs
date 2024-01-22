@@ -185,10 +185,10 @@ const entrypoints = {
   "memory/motorhead_memory": "memory/motorhead_memory",
   "memory/zep": "memory/zep",
   "util/convex": "utils/convex",
-  // recordmanagers
-  "indexes/recordmanagers": "indexes/recordmanagers",
-  "indexes/recordmanagers/postgres": "indexes/recordmanagers/postgres",
-  "indexes/recordmanagers/memory": "indexes/recordmanagers/memory",
+  // indexes
+  "indexes/base": "indexes/base",
+  "indexes/postgres": "indexes/postgres",
+  "indexes/memory": "indexes/memory",
 };
 
 // Entrypoints in this list will
@@ -313,7 +313,12 @@ const requiresOptionalDependency = [
   "memory/motorhead_memory",
   "memory/zep",
   "util/convex",
+<<<<<<< HEAD
   "indexes/recordmanagers/postgres",
+=======
+  // indexes
+  "indexes/postgres",
+>>>>>>> da22f3c6b2954e457161826cb7611cc118052261
 ];
 
 const updateJsonFile = (relativePath, updateFunction) => {

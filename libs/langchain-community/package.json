@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -29,8 +29,8 @@
     "test:watch": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
     "test:single": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 100000",
     "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
-    "format": "prettier --write \"src\"",
-    "format:check": "prettier --check \"src\""
+    "format": "prettier --config .prettierrc --write \"src\" \"scripts\"",
+    "format:check": "prettier --config .prettierrc --check \"src\" \"scripts\""
   },
   "author": "LangChain",
   "license": "MIT",
@@ -1292,20 +1292,20 @@
       "import": "./util/convex.js",
       "require": "./util/convex.cjs"
     },
-    "./indexes/recordmanagers": {
-      "types": "./indexes/recordmanagers.d.ts",
-      "import": "./indexes/recordmanagers.js",
-      "require": "./indexes/recordmanagers.cjs"
+    "./indexes/base": {
+      "types": "./indexes/base.d.ts",
+      "import": "./indexes/base.js",
+      "require": "./indexes/base.cjs"
     },
-    "./indexes/recordmanagers/postgres": {
-      "types": "./indexes/recordmanagers/postgres.d.ts",
-      "import": "./indexes/recordmanagers/postgres.js",
-      "require": "./indexes/recordmanagers/postgres.cjs"
+    "./indexes/postgres": {
+      "types": "./indexes/postgres.d.ts",
+      "import": "./indexes/postgres.js",
+      "require": "./indexes/postgres.cjs"
     },
-    "./indexes/recordmanagers/memory": {
-      "types": "./indexes/recordmanagers/memory.d.ts",
-      "import": "./indexes/recordmanagers/memory.js",
-      "require": "./indexes/recordmanagers/memory.cjs"
+    "./indexes/memory": {
+      "types": "./indexes/memory.d.ts",
+      "import": "./indexes/memory.js",
+      "require": "./indexes/memory.cjs"
     },
     "./package.json": "./package.json"
   },
@@ -1797,6 +1797,7 @@
     "util/convex.cjs",
     "util/convex.js",
     "util/convex.d.ts",
+<<<<<<< HEAD
     "indexes/recordmanagers.cjs",
     "indexes/recordmanagers.js",
     "indexes/recordmanagers.d.ts",
@@ -1806,5 +1807,16 @@
     "indexes/recordmanagers/memory.cjs",
     "indexes/recordmanagers/memory.js",
     "indexes/recordmanagers/memory.d.ts"
+=======
+    "indexes/base.cjs",
+    "indexes/base.js",
+    "indexes/base.d.ts",
+    "indexes/postgres.cjs",
+    "indexes/postgres.js",
+    "indexes/postgres.d.ts",
+    "indexes/memory.cjs",
+    "indexes/memory.js",
+    "indexes/memory.d.ts"
+>>>>>>> da22f3c6b2954e457161826cb7611cc118052261
   ]
 }
