@@ -5,22 +5,24 @@ import { describe, expect, test } from "@jest/globals";
 import { faker } from "@faker-js/faker";
 import { Pinecone } from "@pinecone-database/pinecone";
 import * as uuid from "uuid";
-import { OpenAIEmbeddings } from "@langchain/openai";
+import { SyntheticEmbeddings } from "@langchain/core/utils/testing";
 import { Document } from "@langchain/core/documents";
-import { PineconeLibArgs, PineconeStore } from "../pinecone.js";
+import { PineconeStoreParams, PineconeStore } from "../vectorstores.js";
 
 describe("PineconeStore", () => {
   let pineconeStore: PineconeStore;
   const testIndexName = process.env.PINECONE_INDEX!;
 
   beforeAll(async () => {
-    const embeddings = new OpenAIEmbeddings();
+    const embeddings = new SyntheticEmbeddings({
+      vectorSize: 1536,
+    });
 
     const pinecone = new Pinecone();
 
     const pineconeIndex = pinecone.Index(testIndexName);
 
-    const pineconeArgs: PineconeLibArgs = {
+    const pineconeArgs: PineconeStoreParams = {
       pineconeIndex,
     };
 
