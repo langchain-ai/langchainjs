@@ -111,3 +111,4 @@ export * from "langchain/experimental/prompts/custom_format";
 export * from "langchain/evaluation";
 export * from "langchain/runnables";
 export * from "langchain/runnables/remote";
+export * from "langchain/indexes";

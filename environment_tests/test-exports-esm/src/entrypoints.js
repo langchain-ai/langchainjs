@@ -111,3 +111,4 @@ import * as experimental_prompts_custom_format from "langchain/experimental/prom
 import * as evaluation from "langchain/evaluation";
 import * as runnables from "langchain/runnables";
 import * as runnables_remote from "langchain/runnables/remote";
+import * as indexes from "langchain/indexes";

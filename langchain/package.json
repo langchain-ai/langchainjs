@@ -871,6 +871,9 @@
     "runnables/remote.cjs",
     "runnables/remote.js",
     "runnables/remote.d.ts",
+    "indexes.cjs",
+    "indexes.js",
+    "indexes.d.ts",
     "index.cjs",
     "index.js",
     "index.d.ts"
@@ -2672,6 +2675,11 @@
       "types": "./runnables/remote.d.ts",
       "import": "./runnables/remote.js",
       "require": "./runnables/remote.cjs"
+    },
+    "./indexes": {
+      "types": "./indexes.d.ts",
+      "import": "./indexes.js",
+      "require": "./indexes.cjs"
     },
     "./package.json": "./package.json"
   }

@@ -111,3 +111,4 @@ const experimental_prompts_custom_format = require("langchain/experimental/promp
 const evaluation = require("langchain/evaluation");
 const runnables = require("langchain/runnables");
 const runnables_remote = require("langchain/runnables/remote");
+const indexes = require("langchain/indexes");

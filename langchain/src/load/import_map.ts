@@ -64,6 +64,7 @@ export * as experimental__masking from "../experimental/masking/index.js";
 export * as experimental__prompts__custom_format from "../experimental/prompts/custom_format.js";
 export * as evaluation from "../evaluation/index.js";
 export * as runnables__remote from "../runnables/remote.js";
+export * as indexes from "../indexes/index.js";
 import {
   ChatOpenAI,
   OpenAI,
