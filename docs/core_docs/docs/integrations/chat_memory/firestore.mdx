@@ -28,12 +28,13 @@ Visit the `Project Settings` page from your Firebase project setup an app using 
 ![Firebase Project Settings](/img/firebase_project_settings.png)
 
 From there, give your app a name, then once initialized copy the `firebaseConfig` object and paste it into the `config` field of the `FirestoreChatMessageHistory` constructor:
+
 ```typescript
 import { FirestoreChatMessageHistory } from "@langchain/community/stores/message/firestore";
 
 const firestoreChatHistory = new FirestoreChatMessageHistory({
-  config: yourFirebaseConfigObject
-})
+  config: yourFirebaseConfigObject,
+});
 ```
 
 ## Usage

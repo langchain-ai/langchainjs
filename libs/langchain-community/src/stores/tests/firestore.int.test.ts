@@ -56,8 +56,7 @@ test.skip("Test firestore works with nested collections", async () => {
         projectId: "YOUR-PROJECT-ID",
         privateKey:
           "-----BEGIN PRIVATE KEY-----\n\n-----END PRIVATE KEY-----\n",
-        clientEmail:
-          "CHANGE-ME@CHANGE-ME-TOO.iam.gserviceaccount.com",
+        clientEmail: "CHANGE-ME@CHANGE-ME-TOO.iam.gserviceaccount.com",
       }),
     },
   });

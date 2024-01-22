@@ -168,18 +168,24 @@ export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
    * passed as a BaseMessage object.
    * @param message The message to be added as a BaseMessage object.
    */
-  public async addMessage(message: BaseMessage, options?: {
-    collections: string[];
-    docs: string[];
-  }) {
+  public async addMessage(
+    message: BaseMessage,
+    options?: {
+      collections: string[];
+      docs: string[];
+    }
+  ) {
     const messages = mapChatMessagesToStoredMessages([message]);
     await this.upsertMessage(messages[0], options);
   }
 
-  private async upsertMessage(message: StoredMessage, options?: {
-    collections: string[];
-    docs: string[];
-  }): Promise<void> {
+  private async upsertMessage(
+    message: StoredMessage,
+    options?: {
+      collections: string[];
+      docs: string[];
+    }
+  ): Promise<void> {
     if (!this.document) {
       throw new Error("Document not initialized");
     }
