@@ -622,9 +622,6 @@
     "retrievers/amazon_kendra.cjs",
     "retrievers/amazon_kendra.js",
     "retrievers/amazon_kendra.d.ts",
-    "retrievers/amazon_knowledge_bases.cjs",
-    "retrievers/amazon_knowledge_bases.js",
-    "retrievers/amazon_knowledge_bases.d.ts",
     "retrievers/remote.cjs",
     "retrievers/remote.js",
     "retrievers/remote.d.ts",
@@ -2260,11 +2257,6 @@
       "types": "./retrievers/amazon_kendra.d.ts",
       "import": "./retrievers/amazon_kendra.js",
       "require": "./retrievers/amazon_kendra.cjs"
-    },
-    "./retrievers/amazon_knowledge_bases": {
-      "types": "./retrievers/amazon_knowledge_bases.d.ts",
-      "import": "./retrievers/amazon_knowledge_bases.js",
-      "require": "./retrievers/amazon_knowledge_bases.cjs"
     },
     "./retrievers/remote": {
       "types": "./retrievers/remote.d.ts",

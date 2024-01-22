@@ -6,8 +6,8 @@ import { AmazonKnowledgeBaseRetriever } from "../amazon_knowledge_bases.js";
 test("AmazonKnowledgeBaseRetriever", async () => {
   const retriever = new AmazonKnowledgeBaseRetriever({
     topK: 10,
-    knowledgeBaseId: "GZ3S9ZLSIM",
-    region: "us-east-1",
+    knowledgeBaseId: process.env.AMAZON_KNOWLEDGE_BASE_ID || "",
+    region: process.env.AWS_REGION || "us-east-1",
     clientOptions: {
       credentials: {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
@@ -18,8 +18,5 @@ test("AmazonKnowledgeBaseRetriever", async () => {
   });
 
   const docs = await retriever.getRelevantDocuments("How are clouds formed?");
-
   expect(docs.length).toBeGreaterThan(0);
-
-  console.log(docs);
 });

@@ -104,23 +104,16 @@ export class AmazonKnowledgeBaseRetriever extends BaseRetriever {
     const retrieveResponse = await this.bedrockAgentRuntimeClient.send(
       retrieveCommand
     );
-    const retriveLength = retrieveResponse.retrievalResults?.length;
-    const documents: Array<Document> = [];
 
-    if (retriveLength === 0) {
-      return documents;
-    } else {
-      retrieveResponse.retrievalResults?.forEach((result) => {
-        documents.push({
-          pageContent: this.cleanResult(result.content?.text || ""),
-          metadata: {
-            source: result.location?.s3Location?.uri,
-            score: result.score,
-          },
-        });
-      });
-    }
-    return documents;
+    return (
+      retrieveResponse.retrievalResults?.map((result) => ({
+        pageContent: this.cleanResult(result.content?.text || ""),
+        metadata: {
+          source: result.location?.s3Location?.uri,
+          score: result.score,
+        },
+      })) ?? ([] as Array<Document>)
+    );
   }
 
   async _getRelevantDocuments(query: string): Promise<Document[]> {
