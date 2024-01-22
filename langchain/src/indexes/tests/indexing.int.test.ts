@@ -68,21 +68,19 @@ describe("Indexing API", () => {
       },
     ];
 
-    const initialIndexingResult = await index(
-      docs,
+    const initialIndexingResult = await index({
+      docsSource: docs,
       recordManager,
-      vectorstore,
-      {}
-    );
+      vectorStore: vectorstore,
+    });
 
     expect(initialIndexingResult.numAdded).toEqual(3);
 
-    const secondIndexingResult = await index(
-      docs,
+    const secondIndexingResult = await index({
+      docsSource: docs,
       recordManager,
-      vectorstore,
-      {}
-    );
+      vectorStore: vectorstore,
+    });
     expect(secondIndexingResult.numAdded).toEqual(0);
     expect(secondIndexingResult.numSkipped).toEqual(3);
 
@@ -107,10 +105,20 @@ describe("Indexing API", () => {
       },
     ];
 
-    await index(docs, recordManager, vectorstore, { cleanup: "full" });
+    await index({
+      docsSource: docs,
+      recordManager,
+      vectorStore: vectorstore,
+      options: { cleanup: "full" },
+    });
 
-    const secondIndexingResult = await index([], recordManager, vectorstore, {
-      cleanup: "full",
+    const secondIndexingResult = await index({
+      docsSource: [],
+      recordManager,
+      vectorStore: vectorstore,
+      options: {
+        cleanup: "full",
+      },
     });
     expect(secondIndexingResult.numAdded).toEqual(0);
     expect(secondIndexingResult.numSkipped).toEqual(0);
@@ -137,14 +145,24 @@ describe("Indexing API", () => {
       },
     ];
 
-    await index(docs, recordManager, vectorstore, {
-      cleanup: "full",
+    await index({
+      docsSource: docs,
+      recordManager,
+      vectorStore: vectorstore,
+      options: {
+        cleanup: "full",
+      },
     });
 
     docs[0].pageContent = "Document 1 Content Updated";
 
-    const secondIndexingResult = await index(docs, recordManager, vectorstore, {
-      cleanup: "full",
+    const secondIndexingResult = await index({
+      docsSource: docs,
+      recordManager,
+      vectorStore: vectorstore,
+      options: {
+        cleanup: "full",
+      },
     });
     expect(secondIndexingResult.numAdded).toEqual(1);
     expect(secondIndexingResult.numDeleted).toEqual(1);
@@ -171,14 +189,24 @@ describe("Indexing API", () => {
       },
     ];
 
-    await index(docs, recordManager, vectorstore, {
-      cleanup: "full",
+    await index({
+      docsSource: docs,
+      recordManager,
+      vectorStore: vectorstore,
+      options: {
+        cleanup: "full",
+      },
     });
 
     docs[0].metadata.field = "value";
 
-    const secondIndexingResult = await index(docs, recordManager, vectorstore, {
-      cleanup: "full",
+    const secondIndexingResult = await index({
+      docsSource: docs,
+      recordManager,
+      vectorStore: vectorstore,
+      options: {
+        cleanup: "full",
+      },
     });
     expect(secondIndexingResult.numAdded).toEqual(1);
     expect(secondIndexingResult.numDeleted).toEqual(1);
@@ -201,16 +229,26 @@ describe("Indexing API", () => {
       },
     ];
 
-    await index(docs, recordManager, vectorstore, {
-      cleanup: "incremental",
-      sourceIdKey: "source",
+    await index({
+      docsSource: docs,
+      recordManager,
+      vectorStore: vectorstore,
+      options: {
+        cleanup: "incremental",
+        sourceIdKey: "source",
+      },
     });
 
     docs[0].pageContent = "Document 1 Content Updated";
 
-    const secondIndexingResult = await index(docs, recordManager, vectorstore, {
-      cleanup: "incremental",
-      sourceIdKey: "source",
+    const secondIndexingResult = await index({
+      docsSource: docs,
+      recordManager,
+      vectorStore: vectorstore,
+      options: {
+        cleanup: "incremental",
+        sourceIdKey: "source",
+      },
     });
     expect(secondIndexingResult.numAdded).toEqual(1);
     expect(secondIndexingResult.numDeleted).toEqual(1);
@@ -237,16 +275,26 @@ describe("Indexing API", () => {
       },
     ];
 
-    await index(docs, recordManager, vectorstore, {
-      cleanup: "incremental",
-      sourceIdKey: "source",
+    await index({
+      docsSource: docs,
+      recordManager,
+      vectorStore: vectorstore,
+      options: {
+        cleanup: "incremental",
+        sourceIdKey: "source",
+      },
     });
 
     docs[0].metadata.field = "value";
 
-    const secondIndexingResult = await index(docs, recordManager, vectorstore, {
-      cleanup: "incremental",
-      sourceIdKey: "source",
+    const secondIndexingResult = await index({
+      docsSource: docs,
+      recordManager,
+      vectorStore: vectorstore,
+      options: {
+        cleanup: "incremental",
+        sourceIdKey: "source",
+      },
     });
     expect(secondIndexingResult.numAdded).toEqual(1);
     expect(secondIndexingResult.numDeleted).toEqual(1);
@@ -269,11 +317,15 @@ describe("Indexing API", () => {
       },
     ];
 
-    await index(docs, recordManager, vectorstore);
+    await index({ docsSource: docs, recordManager, vectorStore: vectorstore });
 
     docs[0].pageContent = "Document 1 Content Updated";
 
-    const secondIndexingResult = await index(docs, recordManager, vectorstore);
+    const secondIndexingResult = await index({
+      docsSource: docs,
+      recordManager,
+      vectorStore: vectorstore,
+    });
     expect(secondIndexingResult.numAdded).toEqual(1);
     expect(secondIndexingResult.numDeleted).toEqual(0);
     expect(secondIndexingResult.numSkipped).toEqual(2);
@@ -295,8 +347,13 @@ describe("Indexing API", () => {
       },
     ];
 
-    await index(docs, recordManager, vectorstore, {
-      cleanup: "full",
+    await index({
+      docsSource: docs,
+      recordManager,
+      vectorStore: vectorstore,
+      options: {
+        cleanup: "full",
+      },
     });
 
     // Force update is mostly useful when you are re-indexing with updated embeddings.
@@ -305,9 +362,14 @@ describe("Indexing API", () => {
     // before re-indexing.
     await vectorstore.pool.query(`DELETE FROM "${tableName}"`);
 
-    const secondIndexingResult = await index(docs, recordManager, vectorstore, {
-      cleanup: "full",
-      forceUpdate: true,
+    const secondIndexingResult = await index({
+      docsSource: docs,
+      recordManager,
+      vectorStore: vectorstore,
+      options: {
+        cleanup: "full",
+        forceUpdate: true,
+      },
     });
 
     expect(secondIndexingResult.numAdded).toEqual(0);
@@ -327,7 +389,11 @@ describe("Indexing API", () => {
       },
     ];
 
-    const indexingResult = await index(docs, recordManager, vectorstore);
+    const indexingResult = await index({
+      docsSource: docs,
+      recordManager,
+      vectorStore: vectorstore,
+    });
 
     expect(indexingResult.numAdded).toEqual(1);
     expect(indexingResult.numSkipped).toEqual(0);
@@ -348,7 +414,11 @@ describe("Indexing API", () => {
         metadata: { source: "test" },
       },
     ]);
-    const indexingResult = await index(mockLoader, recordManager, vectorstore);
+    const indexingResult = await index({
+      docsSource: mockLoader,
+      recordManager,
+      vectorStore: vectorstore,
+    });
     expect(indexingResult.numAdded).toEqual(3);
   });
 });
