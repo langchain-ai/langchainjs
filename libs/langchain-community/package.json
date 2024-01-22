@@ -44,7 +44,7 @@
   },
   "devDependencies": {
     "@aws-crypto/sha256-js": "^5.0.0",
-    "@aws-sdk/client-bedrock-agent-runtime": "^3.485.0",
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.496.0",
     "@aws-sdk/client-bedrock-runtime": "^3.422.0",
     "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-kendra": "^3.352.0",
