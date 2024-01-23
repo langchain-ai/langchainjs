@@ -17,4 +17,5 @@ module.exports = {
   setupFiles: ["dotenv/config"],
   testTimeout: 20_000,
   passWithNoTests: true,
+  collectCoverageFrom: ["src/**/*.ts"]
 };

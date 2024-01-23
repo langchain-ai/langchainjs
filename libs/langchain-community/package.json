@@ -1297,6 +1297,21 @@
       "import": "./util/convex.js",
       "require": "./util/convex.cjs"
     },
+    "./indexes/base": {
+      "types": "./indexes/base.d.ts",
+      "import": "./indexes/base.js",
+      "require": "./indexes/base.cjs"
+    },
+    "./indexes/postgres": {
+      "types": "./indexes/postgres.d.ts",
+      "import": "./indexes/postgres.js",
+      "require": "./indexes/postgres.cjs"
+    },
+    "./indexes/memory": {
+      "types": "./indexes/memory.d.ts",
+      "import": "./indexes/memory.js",
+      "require": "./indexes/memory.cjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -1789,6 +1804,15 @@
     "memory/zep.d.ts",
     "util/convex.cjs",
     "util/convex.js",
-    "util/convex.d.ts"
+    "util/convex.d.ts",
+    "indexes/base.cjs",
+    "indexes/base.js",
+    "indexes/base.d.ts",
+    "indexes/postgres.cjs",
+    "indexes/postgres.js",
+    "indexes/postgres.d.ts",
+    "indexes/memory.cjs",
+    "indexes/memory.js",
+    "indexes/memory.d.ts"
   ]
 }
