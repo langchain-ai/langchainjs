@@ -1,7 +1,7 @@
 export const config = {
   entrypoints: {
-    "agents": "src/agents/index.ts",
-    "utils": "src/utils/index.ts"
+    agents: "src/agents/index.ts",
+    utils: "src/utils/index.ts",
   },
   tsConfigPath: "tsconfig.json",
   cjsSource: "build/cjs",
@@ -16,9 +16,9 @@ export const config = {
     {
       modules: ["extra-module"],
       alias: ["extra-alias"],
-      path: "extra/path"
-    }
+      path: "extra/path",
+    },
   ],
   gitignorePaths: ["node_modules", "dist", ".yarn"],
-  internals: [/^internal-regex/]
+  internals: [/^internal-regex/],
 };

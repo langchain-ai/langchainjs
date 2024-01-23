@@ -11,5 +11,5 @@ export const config = {
   shouldTestExports: "should be a boolean, not a string",
   extraImportMapEntries: "should be an array, not a string",
   gitignorePaths: [789], // array elements should be strings
-  internals: "should be an array, not a string"
+  internals: "should be an array, not a string",
 };
