@@ -67,6 +67,12 @@ jobs:
       - name: Test
         run: yarn run test:unit
 
+      - name: Upload Code Coverage
+        if: steps.changes.outputs.has-changes == '1'
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
   test-exports:
     uses:
       ./.github/workflows/test-exports.yml
