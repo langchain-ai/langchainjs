@@ -73,3 +73,78 @@ export type TreeShakingArgs = {
    */
   extraInternals?: Array<string | RegExp>;
 };
+
+export interface ExtraImportMapEntry {
+  modules: Array<string>;
+  alias: Array<string>;
+  path: string;
+}
+
+export interface ImportData {
+  imports: Record<string, string[]>;
+  exportedAliases: Record<string, string[]>;
+}
+
+export interface LangChainConfig {
+  /**
+   * This lists all the entrypoints for the library. Each key corresponds to an
+   * importable path, eg. `import { AgentExecutor } from "langchain/agents"`.
+   * The value is the path to the file in `src/` that exports the entrypoint.
+   * This is used to generate the `exports` field in package.json.
+   * Order is not important.
+   */
+  entrypoints: Record<string, string>;
+  /**
+   * Entrypoints in this list require an optional dependency to be installed.
+   * Therefore they are not tested in the generated test-exports-* packages.
+   */
+  requiresOptionalDependency?: string[];
+  /**
+   * Entrypoints in this list will
+   * 1. Be excluded from the documentation
+   * 2. Be only available in Node.js environments (for backwards compatibility)
+   */
+  deprecatedNodeOnly?: string[];
+  /**
+   * Endpoints that are deprecated due to redundancy. Will not appear in the import map.
+   */
+  deprecatedOmitFromImportMap?: string[];
+  /**
+   * The suffix of the package. Eg. `community` for `@langchain/community`.
+   * Used in the generated import map.
+   */
+  packageSuffix?: string;
+  /**
+   * Whether or not to write to the test exports files. At the moment this only
+   * applies to the `langchain` package.
+   */
+  shouldTestExports?: boolean;
+  /**
+   * Extra entries to add to the import map.
+   */
+  extraImportMapEntries?: Array<ExtraImportMapEntry>;
+  /**
+   * The absolute path to the tsconfig.json file.
+   */
+  tsConfigPath: string;
+  /**
+   * Paths to add to .gitignore
+   * @default ["node_modules", "dist", ".yarn"]
+   * @type {string[]}
+   */
+  gitignorePaths?: string[];
+  internals?: Array<string | RegExp>;
+  /**
+   * The source of the `.cjs` files to move.
+   */
+  cjsSource: string;
+  /**
+   * The destination to move the `.cjs` files to.
+   */
+  cjsDestination: string;
+  /**
+   * @param {string} relativePath
+   * @returns {string}
+   */
+  abs: (relativePath: string) => string;
+}
