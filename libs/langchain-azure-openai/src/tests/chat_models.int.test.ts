@@ -1,8 +1,8 @@
 import { expect, test } from "@jest/globals";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
-import { AzureOpenAIChat } from "../chat_models.js";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { ClientSecretCredential, TokenCredential } from "@azure/identity";
+import { AzureOpenAIChat } from "../chat_models.js";
 
 test("Test OpenAI", async () => {
   const model = new AzureOpenAIChat({
@@ -156,18 +156,21 @@ test("Test OpenAIChat stream method with early break", async () => {
 });
 
 test("Test OpenAI with TokenCredentials", async () => {
-  const tenantId:string = getEnvironmentVariable("AZURE_TENANT_ID")?? "";
-  const clientId:string = getEnvironmentVariable("AZURE_CLIENT_ID")?? "";
-  const clientSecret:string = getEnvironmentVariable("AZURE_CLIENT_SECRET")?? "";
+  const tenantId: string = getEnvironmentVariable("AZURE_TENANT_ID") ?? "";
+  const clientId: string = getEnvironmentVariable("AZURE_CLIENT_ID") ?? "";
+  const clientSecret: string =
+    getEnvironmentVariable("AZURE_CLIENT_SECRET") ?? "";
 
   const credentials: TokenCredential = new ClientSecretCredential(
-    tenantId, clientId, clientSecret
+    tenantId,
+    clientId,
+    clientSecret
   );
-  
+
   const model = new AzureOpenAIChat({
     modelName: "gpt-3.5-turbo",
     maxTokens: 10,
-    credentials
+    credentials,
   });
   const res = await model.call("Print hello world");
   console.log({ res });

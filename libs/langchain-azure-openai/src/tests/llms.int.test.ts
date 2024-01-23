@@ -4,10 +4,10 @@ import { StringPromptValue } from "@langchain/core/prompt_values";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { ClientSecretCredential } from "@azure/identity";
-import { AzureOpenAI } from "../llms.js";
-import { AzureOpenAIChat } from "../chat_models.js";
 import { TokenCredential } from "@azure/core-auth";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { AzureOpenAI } from "../llms.js";
+import { AzureOpenAIChat } from "../chat_models.js";
 
 test("Test OpenAI", async () => {
   const model = new AzureOpenAI({
@@ -315,18 +315,21 @@ test("Test OpenAI stream method with early break", async () => {
 });
 
 test("Test OpenAI with Token credentials ", async () => {
-  const tenantId:string = getEnvironmentVariable("AZURE_TENANT_ID")?? "";
-  const clientId:string = getEnvironmentVariable("AZURE_CLIENT_ID")?? "";
-  const clientSecret:string = getEnvironmentVariable("AZURE_CLIENT_SECRET")?? "";
+  const tenantId: string = getEnvironmentVariable("AZURE_TENANT_ID") ?? "";
+  const clientId: string = getEnvironmentVariable("AZURE_CLIENT_ID") ?? "";
+  const clientSecret: string =
+    getEnvironmentVariable("AZURE_CLIENT_SECRET") ?? "";
 
   const credentials: TokenCredential = new ClientSecretCredential(
-    tenantId, clientId, clientSecret
+    tenantId,
+    clientId,
+    clientSecret
   );
 
   const model = new AzureOpenAI({
     maxTokens: 5,
     modelName: "gpt-3.5-turbo-instruct",
-    credentials
+    credentials,
   });
   const res = await model.call("Print hello world");
   console.log({ res });

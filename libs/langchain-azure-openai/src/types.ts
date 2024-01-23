@@ -4,7 +4,7 @@ import {
   FunctionCallPreset,
   FunctionDefinition,
   FunctionName,
-  ChatRequestMessage
+  ChatRequestMessage,
 } from "@azure/openai";
 import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import { TiktokenModel } from "js-tiktoken/lite";
@@ -37,7 +37,7 @@ export declare interface AzureOpenAIInput {
   /**
    * API version to use when making requests to Azure OpenAI.
    */
-  azureOpenAIApiVersion?: string;  
+  azureOpenAIApiVersion?: string;
 
   credentials?: KeyCredential | TokenCredential;
 }
@@ -109,7 +109,7 @@ export declare interface OpenAIBaseInput {
 
   /** A collection of textual sequences that will end completions generation. */
   stop?: string[];
-    
+
   /** Whether to stream the results or not. Enabling disables tokenUsage reporting */
   streaming: boolean;
 
@@ -121,7 +121,7 @@ export declare interface OpenAIBaseInput {
    * `openai.createCompletion`} that are not explicitly specified on this class.
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  modelKwargs?: Record<string, any>;  
+  modelKwargs?: Record<string, any>;
 
   /**
    * Timeout to use when making requests to OpenAI.

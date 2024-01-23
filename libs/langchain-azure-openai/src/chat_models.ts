@@ -7,14 +7,22 @@ import {
   FunctionName,
   AzureExtensionsOptions,
   ChatChoice,
-  ChatRequestMessage
+  ChatRequestMessage,
 } from "@azure/openai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { GenerationChunk } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { KeyCredential, TokenCredential, isTokenCredential } from "@azure/core-auth";
+import {
+  KeyCredential,
+  TokenCredential,
+  isTokenCredential,
+} from "@azure/core-auth";
 import { LLM, type BaseLLMParams } from "@langchain/core/language_models/llms";
-import { AzureOpenAIInput, OpenAIChatCallOptions, OpenAIChatInput } from "./types.js";
+import {
+  AzureOpenAIInput,
+  OpenAIChatCallOptions,
+  OpenAIChatInput,
+} from "./types.js";
 
 export { type AzureOpenAIInput, type OpenAIChatInput };
 
@@ -80,7 +88,6 @@ export class AzureOpenAIChat
   user?: string;
 
   streaming = false;
-  
 
   functions?: FunctionDefinition[];
 
@@ -162,9 +169,8 @@ export class AzureOpenAIChat
       this.azureOpenAIApiKey = this.azureOpenAIApiKey ?? "";
     }
 
-    const azureCredential = fields?.credentials ?? new AzureKeyCredential(
-      this.azureOpenAIApiKey
-    );
+    const azureCredential =
+      fields?.credentials ?? new AzureKeyCredential(this.azureOpenAIApiKey);
 
     if (isTokenCredential(azureCredential)) {
       this.client = new AzureOpenAIClient(
@@ -184,9 +190,7 @@ export class AzureOpenAIChat
    * @param prompt The prompt to be formatted.
    * @returns Array of formatted messages.
    */
-  private formatMessages(
-    prompt: string
-  ): ChatRequestMessage[] {
+  private formatMessages(prompt: string): ChatRequestMessage[] {
     const message: ChatRequestMessage = {
       role: "user",
       content: prompt,

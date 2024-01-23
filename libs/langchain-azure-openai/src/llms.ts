@@ -15,7 +15,11 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { GenerationChunk, type LLMResult } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { KeyCredential, TokenCredential, isTokenCredential } from "@azure/core-auth";
+import {
+  KeyCredential,
+  TokenCredential,
+  isTokenCredential,
+} from "@azure/core-auth";
 import { AzureOpenAIInput, OpenAICallOptions, OpenAIInput } from "./types.js";
 import { AzureOpenAIChat } from "./chat_models.js";
 
@@ -116,9 +120,7 @@ export class AzureOpenAI<
       !fields?.modelName?.includes("-instruct")
     ) {
       // eslint-disable-next-line no-constructor-return
-      return new AzureOpenAIChat(
-        fields
-      ) as unknown as AzureOpenAI<CallOptions>;
+      return new AzureOpenAIChat(fields) as unknown as AzureOpenAI<CallOptions>;
     }
     super(fields ?? {});
 
@@ -167,10 +169,9 @@ export class AzureOpenAI<
       throw new Error("Cannot stream results when bestOf > 1");
     }
 
-    const azureCredential = fields?.credentials ?? new AzureKeyCredential(
-      this.azureOpenAIApiKey
-    );
-    
+    const azureCredential =
+      fields?.credentials ?? new AzureKeyCredential(this.azureOpenAIApiKey);
+
     if (isTokenCredential(azureCredential)) {
       this.client = new AzureOpenAIClient(
         this.azureOpenAIEndpoint ?? "",
@@ -182,7 +183,6 @@ export class AzureOpenAI<
         azureCredential as KeyCredential
       );
     }
-    
   }
 
   async *_streamResponseChunks(
