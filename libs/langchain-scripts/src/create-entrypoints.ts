@@ -1,17 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { identifySecrets } from "./identify-secrets.js";
-
-export interface ExtraImportMapEntry {
-  modules: Array<string>;
-  alias: Array<string>;
-  path: string;
-}
-
-export interface ImportData {
-  imports: Record<string, string[]>;
-  exportedAliases: Record<string, string[]>;
-}
+import type { ExtraImportMapEntry, ImportData } from "./types.js";
 
 // .gitignore
 const DEFAULT_GITIGNORE_PATHS = ["node_modules", "dist", ".yarn"];
@@ -320,6 +310,8 @@ export function createEntrypoints({
   shouldTestExports = false,
   extraImportMapEntries = [],
   absTsConfigPath,
+  isPre,
+  shouldGenMaps,
 }: {
   /**
    * This lists all the entrypoints for the library. Each key corresponds to an
@@ -362,13 +354,18 @@ export function createEntrypoints({
    * The absolute path to the tsconfig.json file.
    */
   absTsConfigPath: string;
+  /**
+   * Whether or not the pre command was passed.
+   */
+  isPre: boolean;
+  /**
+   * Whether or not to generate import maps
+   */
+  shouldGenMaps: boolean;
 }) {
-  const command = process.argv[2];
-  const generateMaps = process.argv[3];
-
-  if (command === "pre") {
+  if (isPre) {
     cleanGenerated({ entrypoints });
-    if (generateMaps) {
+    if (shouldGenMaps) {
       generateImportMap({
         entrypoints,
         requiresOptionalDependency,

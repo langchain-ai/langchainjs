@@ -859,9 +859,6 @@ runnables.d.ts
 runnables/remote.cjs
 runnables/remote.js
 runnables/remote.d.ts
-index.cjs
-index.js
-index.d.ts
 node_modules
 dist
 .yarn
