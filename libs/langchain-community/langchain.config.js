@@ -203,6 +203,10 @@ export const config = {
     "memory/motorhead_memory": "memory/motorhead_memory",
     "memory/zep": "memory/zep",
     "util/convex": "utils/convex",
+    // indexes
+    "indexes/base": "indexes/base",
+    "indexes/postgres": "indexes/postgres",
+    "indexes/memory": "indexes/memory",
   },
   requiresOptionalDependency: [
     "tools/aws_sfn",
@@ -319,6 +323,8 @@ export const config = {
     "memory/motorhead_memory",
     "memory/zep",
     "util/convex",
+    // indexes
+    "indexes/postgres",
   ],
   packageSuffix: "community",
   tsConfigPath: resolve("./tsconfig.json"),
