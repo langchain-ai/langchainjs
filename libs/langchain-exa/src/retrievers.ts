@@ -1,4 +1,9 @@
-import Exa from "exa-js";
+import Exa, {
+  RegularSearchOptions,
+  SearchResponse,
+  SearchResult,
+  TextContentsOptions,
+} from "exa-js";
 
 import { BaseRetriever, BaseRetrieverInput } from "@langchain/core/retrievers";
 import { Document } from "@langchain/core/documents";
@@ -10,6 +15,15 @@ import { Document } from "@langchain/core/documents";
  */
 export interface ExaRetrieverFields extends BaseRetrieverInput {
   client: Exa;
+  searchArgs?: RegularSearchOptions;
+}
+
+export function _getMetadata(result: SearchResult): Record<string, unknown> {
+  const newMetadata = result;
+  if ("text" in newMetadata) {
+    delete newMetadata.text;
+  }
+  return newMetadata;
 }
 
 /**
@@ -33,15 +47,28 @@ export class ExaRetriever extends BaseRetriever {
 
   private client: Exa;
 
+  searchArgs?: RegularSearchOptions;
+
   constructor(fields: ExaRetrieverFields) {
     super(fields);
 
     this.client = fields.client;
+    this.searchArgs = fields.searchArgs;
   }
 
   async _getRelevantDocuments(query: string): Promise<Document[]> {
-    const res = await this.client.searchAndContents(query);
-    console.log(res);
-    throw new Error("todo implement");
+    const res: SearchResponse<{ text: TextContentsOptions }> =
+      await this.client.searchAndContents(query, this.searchArgs);
+
+    const documents: Document[] = [];
+    for (const result of res.results) {
+      documents.push(
+        new Document({
+          pageContent: result.text ?? "",
+          metadata: _getMetadata(result),
+        })
+      );
+    }
+    return documents;
   }
 }
