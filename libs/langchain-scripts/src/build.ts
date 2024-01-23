@@ -6,6 +6,7 @@ import { createEntrypoints } from "./create-entrypoints.js";
 import { checkTreeShaking } from "./check-tree-shaking.js";
 import { moveAndRename } from "./move-cjs-to-dist.js";
 import type { LangChainConfig } from "./types.js";
+import { _verifyObjectIsLangChainConfig } from "./utils.js";
 
 export type { LangChainConfig } from "./types.js";
 
@@ -41,6 +42,9 @@ async function main() {
   let config: LangChainConfig;
   try {
     const { config: lcConfig } = await import(resolvedConfigPath);
+    if (!_verifyObjectIsLangChainConfig(lcConfig)) {
+      throw new Error("Invalid config object.");
+    }
     config = lcConfig;
   } catch (e) {
     console.error(

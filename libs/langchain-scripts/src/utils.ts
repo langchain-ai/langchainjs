@@ -1,6 +1,6 @@
 import { LangChainConfig } from "./types.js";
 
-export function verifyObjectIsLangChainConfig(
+export function _verifyObjectIsLangChainConfig(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   obj: any
 ): obj is LangChainConfig {
