@@ -17,4 +17,5 @@ module.exports = {
   setupFiles: ["dotenv/config"],
   setupFilesAfterEnv: ["./scripts/jest-setup-after-env.js"],
   testTimeout: 20_000,
+  collectCoverageFrom: ["src/**/*.ts"]
 };
