@@ -1,5 +1,7 @@
 import { test, expect } from "@jest/globals";
 import { AzureOpenAIEmbeddings } from "../embeddings.js";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { ClientSecretCredential, TokenCredential } from "@azure/identity";
 
 test("Test OpenAIEmbeddings.embedQuery", async () => {
   const embeddings = new AzureOpenAIEmbeddings();
@@ -48,5 +50,19 @@ test("Test timeout error thrown from SDK", async () => {
       "Bye bye",
     ]);
   }).rejects.toThrow();
+});
+
+test("Test OpenAIEmbeddings.embedQuery with TokenCredentials", async () => {
+  const tenantId:string = getEnvironmentVariable("AZURE_TENANT_ID")?? "";
+  const clientId:string = getEnvironmentVariable("AZURE_CLIENT_ID")?? "";
+  const clientSecret:string = getEnvironmentVariable("AZURE_CLIENT_SECRET")?? "";
+
+  const credentials: TokenCredential = new ClientSecretCredential(
+    tenantId, clientId, clientSecret
+  );
+  
+  const embeddings = new AzureOpenAIEmbeddings({credentials});
+  const res = await embeddings.embedQuery("Hello world");
+  expect(typeof res[0]).toBe("number");
 });
 

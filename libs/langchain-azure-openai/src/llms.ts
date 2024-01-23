@@ -15,6 +15,7 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { GenerationChunk, type LLMResult } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { KeyCredential, TokenCredential, isTokenCredential } from "@azure/core-auth";
 import { AzureOpenAIInput, OpenAICallOptions, OpenAIInput } from "./types.js";
 import { AzureOpenAIChat } from "./chat_models.js";
 
@@ -133,7 +134,7 @@ export class AzureOpenAI<
       fields?.azureOpenAIApiKey ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY");
 
-    if (!this.azureOpenAIApiKey) {
+    if (!this.azureOpenAIApiKey && !fields?.credentials) {
       throw new Error("Azure OpenAI API key not found");
     }
 
@@ -166,13 +167,22 @@ export class AzureOpenAI<
       throw new Error("Cannot stream results when bestOf > 1");
     }
 
-    const azureKeyCredential: AzureKeyCredential = new AzureKeyCredential(
+    const azureCredential = fields?.credentials ?? new AzureKeyCredential(
       this.azureOpenAIApiKey
     );
-    this.client = new AzureOpenAIClient(
-      this.azureOpenAIEndpoint ?? "",
-      azureKeyCredential
-    );
+    
+    if (isTokenCredential(azureCredential)) {
+      this.client = new AzureOpenAIClient(
+        this.azureOpenAIEndpoint ?? "",
+        azureCredential as TokenCredential
+      );
+    } else {
+      this.client = new AzureOpenAIClient(
+        this.azureOpenAIEndpoint ?? "",
+        azureCredential as KeyCredential
+      );
+    }
+    
   }
 
   async *_streamResponseChunks(

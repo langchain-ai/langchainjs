@@ -9,6 +9,7 @@ import {
 import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import { TiktokenModel } from "js-tiktoken/lite";
 import { type EmbeddingsParams } from "@langchain/core/embeddings";
+import { KeyCredential, TokenCredential } from "@azure/core-auth";
 
 // reexport this type from the included package so we can easily override and extend it if needed in the future
 // also makes it easier for folks to import this type without digging around into the dependent packages
@@ -37,6 +38,8 @@ export declare interface AzureOpenAIInput {
    * API version to use when making requests to Azure OpenAI.
    */
   azureOpenAIApiVersion?: string;  
+
+  credentials?: KeyCredential | TokenCredential;
 }
 
 export declare interface OpenAIBaseInput {

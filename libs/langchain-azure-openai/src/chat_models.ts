@@ -12,6 +12,7 @@ import {
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { GenerationChunk } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { KeyCredential, TokenCredential, isTokenCredential } from "@azure/core-auth";
 import { LLM, type BaseLLMParams } from "@langchain/core/language_models/llms";
 import { AzureOpenAIInput, OpenAIChatCallOptions, OpenAIChatInput } from "./types.js";
 
@@ -161,13 +162,21 @@ export class AzureOpenAIChat
       this.azureOpenAIApiKey = this.azureOpenAIApiKey ?? "";
     }
 
-    const azureKeyCredential: AzureKeyCredential = new AzureKeyCredential(
+    const azureCredential = fields?.credentials ?? new AzureKeyCredential(
       this.azureOpenAIApiKey
     );
-    this.client = new AzureOpenAIClient(
-      this.azureOpenAIEndpoint ?? "",
-      azureKeyCredential
-    );
+
+    if (isTokenCredential(azureCredential)) {
+      this.client = new AzureOpenAIClient(
+        this.azureOpenAIEndpoint ?? "",
+        azureCredential as TokenCredential
+      );
+    } else {
+      this.client = new AzureOpenAIClient(
+        this.azureOpenAIEndpoint ?? "",
+        azureCredential as KeyCredential
+      );
+    }
   }
 
   /**
