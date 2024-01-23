@@ -18,7 +18,7 @@ it("should exclude the text field from metadata", () => {
   expect("text" in metadata).toBe(false);
 });
 
-test("can instanciate a document class", () => {
+test("can instantiate a document class", () => {
   const newDoc = new Document({
     pageContent: "This is a test",
     metadata: { test: true },
