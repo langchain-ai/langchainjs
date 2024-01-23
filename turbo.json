@@ -33,6 +33,23 @@
     "lint": {
       "outputs": []
     },
+    "lint:fix": {
+      "outputs": [
+        "langchain/src/**/*.ts",
+        "langchain-core/src/**/*.ts",
+        "libs/**/src/**/*.ts",
+        "docs/core_docs/**/*.js",
+        "examples/src/**/*.ts",
+        "**/*.eslintcache"
+      ],
+      "inputs": [
+        "langchain/src/**/*.ts",
+        "langchain-core/src/**/*.ts",
+        "libs/**/src/**/*.ts",
+        "docs/core_docs/**/*.js",
+        "examples/src/**/*.ts"
+      ]
+    },
     "format": {
       "outputs": []
     },

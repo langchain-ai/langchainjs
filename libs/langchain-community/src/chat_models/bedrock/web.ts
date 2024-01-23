@@ -38,6 +38,8 @@ function convertOneMessageToText(
     return `${aiPrompt} ${message.content}`;
   } else if (message._getType() === "system") {
     return `${humanPrompt} <admin>${message.content}</admin>`;
+  } else if (message._getType() === "function") {
+    return `${humanPrompt} ${message.content}`;
   } else if (ChatMessage.isInstance(message)) {
     return `\n\n${
       message.role[0].toUpperCase() + message.role.slice(1)

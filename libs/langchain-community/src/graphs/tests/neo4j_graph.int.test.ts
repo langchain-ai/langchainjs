@@ -53,4 +53,21 @@ describe.skip("Neo4j Graph Tests", () => {
     await graph.close();
     expect(res).toEqual(expectedOutput);
   });
+
+  test("Test that Neo4j database works timeouts", async () => {
+    expect(url).toBeDefined();
+    expect(username).toBeDefined();
+    expect(password).toBeDefined();
+    const graph_timeout = await Neo4jGraph.initialize({
+      url,
+      username,
+      password,
+      timeoutMs: 100,
+    });
+    const res = await graph_timeout.query(
+      "UNWIND range(0,10000,1) AS i MERGE (f:Foo {id:i}) RETURN collect(i)[..5]"
+    );
+    expect(res).toEqual(undefined);
+    await graph.close();
+  });
 });

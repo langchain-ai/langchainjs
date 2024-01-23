@@ -1,6 +1,5 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
-import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
+import { zodToJsonSchema, JsonSchema7ObjectType } from "zod-to-json-schema";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
 import { PromptTemplate } from "@langchain/core/prompts";

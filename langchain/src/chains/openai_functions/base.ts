@@ -1,6 +1,5 @@
 import type { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
-import { JsonSchema7Type } from "zod-to-json-schema/src/parseDef.js";
+import { zodToJsonSchema, JsonSchema7Type } from "zod-to-json-schema";
 
 import type { BaseOutputParser } from "@langchain/core/output_parsers";
 import type { BasePromptTemplate } from "@langchain/core/prompts";

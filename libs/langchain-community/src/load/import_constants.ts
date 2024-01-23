@@ -107,4 +107,5 @@ export const optionalImportEntrypoints = [
   "langchain_community/memory/motorhead_memory",
   "langchain_community/memory/zep",
   "langchain_community/util/convex",
+  "langchain_community/indexes/postgres",
 ];

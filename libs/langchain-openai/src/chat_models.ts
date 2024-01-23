@@ -26,6 +26,7 @@ import {
 } from "@langchain/core/language_models/chat_models";
 import type { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
+import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import type {
   AzureOpenAIInput,
   OpenAICallOptions,
@@ -34,7 +35,7 @@ import type {
   LegacyOpenAIInput,
 } from "./types.js";
 import { type OpenAIEndpointConfig, getEndpoint } from "./utils/azure.js";
-import { wrapOpenAIClientError, formatToOpenAITool } from "./utils/openai.js";
+import { wrapOpenAIClientError } from "./utils/openai.js";
 import {
   FunctionDef,
   formatFunctionDefinitions,
@@ -430,7 +431,7 @@ export class ChatOpenAI<
       functions: options?.functions,
       function_call: options?.function_call,
       tools: isStructuredToolArray(options?.tools)
-        ? options?.tools.map(formatToOpenAITool)
+        ? options?.tools.map(convertToOpenAITool)
         : options?.tools,
       tool_choice: options?.tool_choice,
       response_format: options?.response_format,
