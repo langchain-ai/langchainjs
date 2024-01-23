@@ -122,7 +122,7 @@ async function main() {
   }
 }
 
-/* #__PURE__ */main().catch((e) => {
+/* #__PURE__ */ main().catch((e) => {
   console.error(e);
   process.exit(1);
 });
