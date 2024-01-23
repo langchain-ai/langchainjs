@@ -37,6 +37,9 @@ tools/dataforseo_api_search.d.ts
 tools/gmail.cjs
 tools/gmail.js
 tools/gmail.d.ts
+tools/google_calendar.cjs
+tools/google_calendar.js
+tools/google_calendar.d.ts
 tools/google_custom_search.cjs
 tools/google_custom_search.js
 tools/google_custom_search.d.ts
@@ -274,6 +277,9 @@ vectorstores/supabase.d.ts
 vectorstores/tigris.cjs
 vectorstores/tigris.js
 vectorstores/tigris.d.ts
+vectorstores/turbopuffer.cjs
+vectorstores/turbopuffer.js
+vectorstores/turbopuffer.d.ts
 vectorstores/typeorm.cjs
 vectorstores/typeorm.js
 vectorstores/typeorm.d.ts
@@ -301,6 +307,9 @@ vectorstores/xata.d.ts
 vectorstores/zep.cjs
 vectorstores/zep.js
 vectorstores/zep.d.ts
+chat_models/alibaba_tongyi.cjs
+chat_models/alibaba_tongyi.js
+chat_models/alibaba_tongyi.d.ts
 chat_models/baiduwenxin.cjs
 chat_models/baiduwenxin.js
 chat_models/baiduwenxin.d.ts
@@ -349,6 +358,9 @@ chat_models/yandex.d.ts
 callbacks/handlers/llmonitor.cjs
 callbacks/handlers/llmonitor.js
 callbacks/handlers/llmonitor.d.ts
+callbacks/handlers/lunary.cjs
+callbacks/handlers/lunary.js
+callbacks/handlers/lunary.d.ts
 retrievers/amazon_kendra.cjs
 retrievers/amazon_kendra.js
 retrievers/amazon_kendra.d.ts
@@ -361,6 +373,9 @@ retrievers/databerry.d.ts
 retrievers/metal.cjs
 retrievers/metal.js
 retrievers/metal.d.ts
+retrievers/remote.cjs
+retrievers/remote.js
+retrievers/remote.d.ts
 retrievers/supabase.cjs
 retrievers/supabase.js
 retrievers/supabase.d.ts
@@ -370,6 +385,9 @@ retrievers/tavily_search_api.d.ts
 retrievers/vectara_summary.cjs
 retrievers/vectara_summary.js
 retrievers/vectara_summary.d.ts
+retrievers/vespa.cjs
+retrievers/vespa.js
+retrievers/vespa.d.ts
 retrievers/zep.cjs
 retrievers/zep.js
 retrievers/zep.d.ts
@@ -466,3 +484,12 @@ memory/zep.d.ts
 util/convex.cjs
 util/convex.js
 util/convex.d.ts
+indexes/base.cjs
+indexes/base.js
+indexes/base.d.ts
+indexes/postgres.cjs
+indexes/postgres.js
+indexes/postgres.d.ts
+indexes/memory.cjs
+indexes/memory.js
+indexes/memory.d.ts

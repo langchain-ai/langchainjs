@@ -30,6 +30,16 @@ binding = "VECTORIZE_INDEX"
 index_name = "<index_name>"
 ```
 
+Finally, you'll need to install the LangChain Cloudflare integration package:
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/cloudflare
+```
+
 ## Usage
 
 Below is an example worker that adds documents to a vectorstore, queries it, or clears it depending on the path used. It also uses [Cloudflare Workers AI Embeddings](/docs/integrations/text_embedding/cloudflare_ai).
@@ -41,7 +51,7 @@ If running locally, be sure to run wrangler as `npx wrangler dev --remote`!
 ```toml
 name = "langchain-test"
 main = "worker.js"
-compatibility_date = "2023-09-22"
+compatibility_date = "2024-01-10"
 
 [[vectorize]]
 binding = "VECTORIZE_INDEX"

@@ -1,5 +1,5 @@
+import { Document } from "@langchain/core/documents";
 import { SearchApiLoader } from "../web/searchapi.js";
-import { Document } from "../../document.js";
 
 test("Test buildUrl method without engine", () => {
   const loader = new SearchApiLoader({ apiKey: "ApiKey", q: "Query" });

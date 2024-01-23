@@ -1,5 +1,5 @@
-import { Chroma } from "langchain/vectorstores/chroma";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { Chroma } from "@langchain/community/vectorstores/chroma";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 
 // Create docs with a loader

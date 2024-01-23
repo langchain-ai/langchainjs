@@ -1,5 +1,5 @@
 import { describe, expect, test } from "@jest/globals";
-import { Document } from "../document.js";
+import { Document } from "@langchain/core/documents";
 import {
   CharacterTextSplitter,
   LatexTextSplitter,
@@ -346,6 +346,19 @@ test("Token text splitter", async () => {
   });
   const output = await splitter.splitText(text);
   const expectedOutput = ["foo bar b", "az a a"];
+
+  expect(output).toEqual(expectedOutput);
+});
+
+test("Token text splitter overlap when last chunk is large", async () => {
+  const text = "foo bar baz a a";
+  const splitter = new TokenTextSplitter({
+    encodingName: "r50k_base",
+    chunkSize: 5,
+    chunkOverlap: 3,
+  });
+  const output = await splitter.splitText(text);
+  const expectedOutput = ["foo bar baz a", " baz a a"];
 
   expect(output).toEqual(expectedOutput);
 });

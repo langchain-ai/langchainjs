@@ -4,8 +4,13 @@ import { AstraDB } from "@datastax/astra-db-ts";
 import { Collection } from "@datastax/astra-db-ts/dist/collections";
 import { CreateCollectionOptions } from "@datastax/astra-db-ts/dist/collections/options.js";
 
+import {
+  AsyncCaller,
+  AsyncCallerParams,
+} from "@langchain/core/utils/async_caller";
 import { Document } from "@langchain/core/documents";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
+import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 import {
   MaxMarginalRelevanceSearchOptions,
@@ -14,7 +19,7 @@ import {
 
 export type CollectionFilter = Record<string, unknown>;
 
-export interface AstraLibArgs {
+export interface AstraLibArgs extends AsyncCallerParams {
   token: string;
   endpoint: string;
   collection: string;
@@ -24,6 +29,10 @@ export interface AstraLibArgs {
   collectionOptions?: CreateCollectionOptions;
   batchSize?: number;
 }
+
+export type AstraDeleteParams = {
+  ids: string[];
+};
 
 export class AstraDBVectorStore extends VectorStore {
   declare FilterType: CollectionFilter;
@@ -40,6 +49,10 @@ export class AstraDBVectorStore extends VectorStore {
 
   private readonly contentKey: string; // if undefined the entirety of the content aside from the id and embedding will be stored as content
 
+  private readonly batchSize: number; // insertMany has a limit of 20 documents
+
+  caller: AsyncCaller;
+
   _vectorstoreType(): string {
     return "astradb";
   }
@@ -47,11 +60,25 @@ export class AstraDBVectorStore extends VectorStore {
   constructor(embeddings: EmbeddingsInterface, args: AstraLibArgs) {
     super(embeddings, args);
 
-    this.astraDBClient = new AstraDB(args.token, args.endpoint);
-    this.collectionName = args.collection;
-    this.collectionOptions = args.collectionOptions;
-    this.idKey = args.idKey ?? "_id";
-    this.contentKey = args.contentKey ?? "text";
+    const {
+      token,
+      endpoint,
+      collection,
+      collectionOptions,
+      namespace,
+      idKey,
+      contentKey,
+      batchSize,
+      ...callerArgs
+    } = args;
+
+    this.astraDBClient = new AstraDB(token, endpoint, namespace);
+    this.collectionName = collection;
+    this.collectionOptions = collectionOptions;
+    this.idKey = idKey ?? "_id";
+    this.contentKey = contentKey ?? "text";
+    this.batchSize = batchSize && batchSize <= 20 ? batchSize : 20;
+    this.caller = new AsyncCaller(callerArgs);
   }
 
   /**
@@ -98,7 +125,12 @@ export class AstraDBVectorStore extends VectorStore {
       ...documents[idx].metadata,
     }));
 
-    await this.collection.insertMany(docs);
+    const chunkedDocs = chunkArray(docs, this.batchSize);
+    const batchCalls = chunkedDocs.map((chunk) =>
+      this.caller.call(async () => this.collection?.insertMany(chunk))
+    );
+
+    await Promise.all(batchCalls);
   }
 
   /**
@@ -118,6 +150,25 @@ export class AstraDBVectorStore extends VectorStore {
       documents,
       options
     );
+  }
+
+  /**
+   * Method that deletes documents from AstraDB.
+   *
+   * @param params AstraDeleteParameters for the delete.
+   * @returns Promise that resolves when the documents have been deleted.
+   */
+  async delete(params: AstraDeleteParams) {
+    if (!this.collection) {
+      throw new Error("Must connect to a collection before deleting");
+    }
+
+    for (const id of params.ids) {
+      console.debug(`Deleting document with id ${id}`);
+      await this.collection.deleteOne({
+        [this.idKey]: id,
+      });
+    }
   }
 
   /**

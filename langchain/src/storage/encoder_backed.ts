@@ -1,5 +1,5 @@
-import { BaseStore } from "../schema/storage.js";
-import { Document } from "../document.js";
+import { Document } from "@langchain/core/documents";
+import { BaseStore } from "@langchain/core/stores";
 
 /**
  * Class that provides a layer of abstraction over the base storage,

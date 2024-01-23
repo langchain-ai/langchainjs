@@ -22,6 +22,7 @@ const entrypoints = {
   "tools/dynamic": "tools/dynamic",
   "tools/dataforseo_api_search": "tools/dataforseo_api_search",
   "tools/gmail": "tools/gmail/index",
+  "tools/google_calendar": "tools/google_calendar/index",
   "tools/google_custom_search": "tools/google_custom_search",
   "tools/google_places": "tools/google_places",
   "tools/ifttt": "tools/ifttt",
@@ -105,6 +106,7 @@ const entrypoints = {
   "vectorstores/singlestore": "vectorstores/singlestore",
   "vectorstores/supabase": "vectorstores/supabase",
   "vectorstores/tigris": "vectorstores/tigris",
+  "vectorstores/turbopuffer": "vectorstores/turbopuffer",
   "vectorstores/typeorm": "vectorstores/typeorm",
   "vectorstores/typesense": "vectorstores/typesense",
   "vectorstores/usearch": "vectorstores/usearch",
@@ -115,6 +117,7 @@ const entrypoints = {
   "vectorstores/xata": "vectorstores/xata",
   "vectorstores/zep": "vectorstores/zep",
   // chat_models
+  "chat_models/alibaba_tongyi": "chat_models/alibaba_tongyi",
   "chat_models/baiduwenxin": "chat_models/baiduwenxin",
   "chat_models/bedrock": "chat_models/bedrock/index",
   "chat_models/bedrock/web": "chat_models/bedrock/web",
@@ -132,14 +135,17 @@ const entrypoints = {
   "chat_models/yandex": "chat_models/yandex",
   // callbacks
   "callbacks/handlers/llmonitor": "callbacks/handlers/llmonitor",
+  "callbacks/handlers/lunary": "callbacks/handlers/lunary",
   // retrievers
   "retrievers/amazon_kendra": "retrievers/amazon_kendra",
   "retrievers/chaindesk": "retrievers/chaindesk",
   "retrievers/databerry": "retrievers/databerry",
   "retrievers/metal": "retrievers/metal",
+  "retrievers/remote": "retrievers/remote/index",
   "retrievers/supabase": "retrievers/supabase",
   "retrievers/tavily_search_api": "retrievers/tavily_search_api",
   "retrievers/vectara_summary": "retrievers/vectara_summary",
+  "retrievers/vespa": "retrievers/vespa",
   "retrievers/zep": "retrievers/zep",
   // cache
   "caches/cloudflare_kv": "caches/cloudflare_kv",
@@ -179,6 +185,10 @@ const entrypoints = {
   "memory/motorhead_memory": "memory/motorhead_memory",
   "memory/zep": "memory/zep",
   "util/convex": "utils/convex",
+  // indexes
+  "indexes/base": "indexes/base",
+  "indexes/postgres": "indexes/postgres",
+  "indexes/memory": "indexes/memory",
 };
 
 // Entrypoints in this list will
@@ -193,8 +203,10 @@ const requiresOptionalDependency = [
   "tools/aws_lambda",
   "tools/discord",
   "tools/gmail",
+  "tools/google_calendar",
   "agents/toolkits/aws_sfn",
   "callbacks/handlers/llmonitor",
+  "callbacks/handlers/lunary",
   "embeddings/bedrock",
   "embeddings/cloudflare_workersai",
   "embeddings/cohere",
@@ -301,6 +313,8 @@ const requiresOptionalDependency = [
   "memory/motorhead_memory",
   "memory/zep",
   "util/convex",
+  // indexes
+  "indexes/postgres",
 ];
 
 const updateJsonFile = (relativePath, updateFunction) => {

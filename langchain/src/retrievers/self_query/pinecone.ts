@@ -1,5 +1,5 @@
+import type { VectorStoreInterface } from "@langchain/core/vectorstores";
 import { Comparators, Operators } from "../../chains/query_constructor/ir.js";
-import { PineconeStore } from "../../vectorstores/pinecone.js";
 import { BasicTranslator } from "./base.js";
 
 /**
@@ -24,7 +24,7 @@ import { BasicTranslator } from "./base.js";
  * ```
  */
 export class PineconeTranslator<
-  T extends PineconeStore
+  T extends VectorStoreInterface
 > extends BasicTranslator<T> {
   constructor() {
     super({

@@ -9,8 +9,8 @@ import {
   RunnableSequence,
 } from "@langchain/core/runnables";
 import { OpenAIClient } from "@langchain/openai";
+import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { formatToOpenAIToolMessages } from "../format_scratchpad/openai_tools.js";
-import { formatToOpenAITool } from "../../tools/convert_to_openai.js";
 import {
   OpenAIToolsAgentOutputParser,
   type ToolsAgentStep,
@@ -108,7 +108,7 @@ export async function createOpenAIToolsAgent({
       ].join("\n")
     );
   }
-  const modelWithTools = llm.bind({ tools: tools.map(formatToOpenAITool) });
+  const modelWithTools = llm.bind({ tools: tools.map(convertToOpenAITool) });
   const agent = RunnableSequence.from([
     RunnablePassthrough.assign({
       agent_scratchpad: (input: { steps: ToolsAgentStep[] }) =>

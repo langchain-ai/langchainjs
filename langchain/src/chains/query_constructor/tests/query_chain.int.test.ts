@@ -1,4 +1,5 @@
 import { test } from "@jest/globals";
+import { OpenAI } from "@langchain/openai";
 import { loadQueryConstructorChain } from "../index.js";
 import {
   Comparators,
@@ -7,7 +8,6 @@ import {
   Operators,
   StructuredQuery,
 } from "../ir.js";
-import { OpenAI } from "../../../llms/openai.js";
 import { AttributeInfo } from "../../../schema/query_constructor.js";
 import { BasicTranslator } from "../../../retrievers/self_query/base.js";
 

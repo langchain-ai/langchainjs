@@ -1,9 +1,8 @@
 import { ApifyDatasetLoader } from "langchain/document_loaders/web/apify_dataset";
-import { Document } from "langchain/document";
-import { HNSWLib } from "langchain/vectorstores/hnswlib";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
+import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
 import { RetrievalQAChain } from "langchain/chains";
-import { OpenAI } from "langchain/llms/openai";
+import { Document } from "@langchain/core/documents";
 
 /*
  * datasetMappingFunction is a function that maps your Apify dataset format to LangChain documents.

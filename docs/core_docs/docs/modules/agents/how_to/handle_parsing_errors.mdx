@@ -14,6 +14,14 @@ Here's an example where the model initially tries to set `"Reminder"` as the tas
 import CodeBlock from "@theme/CodeBlock";
 import HandleParsingErrorExample from "@examples/agents/handle_parsing_error.ts";
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 <CodeBlock language="typescript">{HandleParsingErrorExample}</CodeBlock>
 
 This is what the resulting trace looks like - note that the LLM retries before correctly choosing a matching enum:

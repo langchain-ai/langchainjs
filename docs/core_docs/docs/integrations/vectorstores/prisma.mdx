@@ -71,6 +71,14 @@ npx prisma migrate dev
 
 ## Usage
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai @langchain/community
+```
+
 :::warning
 Table names and column names (in fields such as `tableName`, `vectorColumnName`, `columns` and `filter`) are passed into SQL queries directly without parametrisation.
 These fields must be sanitized beforehand to avoid SQL injection.

@@ -1,5 +1,5 @@
 import { CheerioWebBaseLoader } from "langchain/document_loaders/web/cheerio";
-import { MozillaReadabilityTransformer } from "langchain/document_transformers/mozilla_readability";
+import { MozillaReadabilityTransformer } from "@langchain/community/document_transformers/mozilla_readability";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 
 const loader = new CheerioWebBaseLoader(

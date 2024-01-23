@@ -1,9 +1,9 @@
 import { z } from "zod";
 import type { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
-import { DynamicStructuredTool } from "langchain/tools";
 import { AgentExecutor, createOpenAIFunctionsAgent } from "langchain/agents";
 import { pull } from "langchain/hub";
+import { DynamicStructuredTool } from "@langchain/core/tools";
 
 const model = new ChatOpenAI({ temperature: 0.1 });
 const tools = [

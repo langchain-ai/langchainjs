@@ -9,10 +9,7 @@ import {
   NewTokenIndices,
 } from "./base.js";
 import { ConsoleCallbackHandler } from "../tracers/console.js";
-import {
-  getTracingCallbackHandler,
-  getTracingV2CallbackHandler,
-} from "../tracers/initialize.js";
+import { getTracingV2CallbackHandler } from "../tracers/initialize.js";
 import { type BaseMessage, getBufferString } from "../messages/index.js";
 import { getEnvironmentVariable } from "../utils/env.js";
 import {
@@ -96,7 +93,7 @@ export abstract class BaseCallbackManager {
 class BaseRunManager {
   constructor(
     public readonly runId: string,
-    protected readonly handlers: BaseCallbackHandler[],
+    public readonly handlers: BaseCallbackHandler[],
     protected readonly inheritableHandlers: BaseCallbackHandler[],
     protected readonly tags: string[],
     protected readonly inheritableTags: string[],
@@ -498,7 +495,7 @@ export class CallbackManager
 
   name = "callback_manager";
 
-  private readonly _parentRunId?: string;
+  public readonly _parentRunId?: string;
 
   constructor(
     parentRunId?: string,
@@ -931,14 +928,6 @@ export class CallbackManager
       ) {
         if (tracingV2Enabled) {
           callbackManager.addHandler(await getTracingV2CallbackHandler(), true);
-        } else {
-          const session =
-            getEnvironmentVariable("LANGCHAIN_PROJECT") &&
-            getEnvironmentVariable("LANGCHAIN_SESSION");
-          callbackManager.addHandler(
-            await getTracingCallbackHandler(session),
-            true
-          );
         }
       }
     }
@@ -958,7 +947,7 @@ export class CallbackManager
   }
 }
 
-function ensureHandler(
+export function ensureHandler(
   handler: BaseCallbackHandler | CallbackHandlerMethods
 ): BaseCallbackHandler {
   if ("name" in handler) {

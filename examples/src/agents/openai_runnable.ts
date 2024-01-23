@@ -1,16 +1,20 @@
 import { AgentExecutor } from "langchain/agents";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { ChatPromptTemplate, MessagesPlaceholder } from "langchain/prompts";
-import {
-  AIMessage,
-  AgentStep,
-  BaseMessage,
-  FunctionMessage,
-} from "langchain/schema";
-import { RunnableSequence } from "langchain/schema/runnable";
-import { SerpAPI, formatToOpenAIFunction } from "langchain/tools";
+import { ChatOpenAI } from "@langchain/openai";
 import { Calculator } from "langchain/tools/calculator";
 import { OpenAIFunctionsAgentOutputParser } from "langchain/agents/openai/output_parser";
+import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
+import {
+  AIMessage,
+  BaseMessage,
+  FunctionMessage,
+} from "@langchain/core/messages";
+import { AgentStep } from "@langchain/core/agents";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 /** Define your list of tools. */
 const tools = [new Calculator(), new SerpAPI()];
@@ -33,11 +37,11 @@ const prompt = ChatPromptTemplate.fromMessages([
 ]);
 /**
  * Bind the tools to the LLM.
- * Here we're using the `formatToOpenAIFunction` util function
+ * Here we're using the `convertToOpenAIFunction` util function
  * to format our tools into the proper schema for OpenAI functions.
  */
 const modelWithFunctions = model.bind({
-  functions: [...tools.map((tool) => formatToOpenAIFunction(tool))],
+  functions: [...tools.map((tool) => convertToOpenAIFunction(tool))],
 });
 /**
  * Define a new agent steps parser.

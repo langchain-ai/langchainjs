@@ -1,5 +1,5 @@
-import { USearch } from "langchain/vectorstores/usearch";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { USearch } from "@langchain/community/vectorstores/usearch";
+import { OpenAIEmbeddings } from "@langchain/openai";
 
 const vectorStore = await USearch.fromTexts(
   ["Hello world", "Bye bye", "hello nice world"],

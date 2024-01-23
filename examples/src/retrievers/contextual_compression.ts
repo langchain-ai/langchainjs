@@ -1,9 +1,8 @@
 import * as fs from "fs";
 
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { HNSWLib } from "langchain/vectorstores/hnswlib";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { ContextualCompressionRetriever } from "langchain/retrievers/contextual_compression";
 import { LLMChainExtractor } from "langchain/retrievers/document_compressors/chain_extract";
 

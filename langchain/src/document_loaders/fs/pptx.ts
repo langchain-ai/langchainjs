@@ -1,5 +1,5 @@
 import { parseOfficeAsync } from "officeparser";
-import { Document } from "../../document.js";
+import { Document } from "@langchain/core/documents";
 import { BufferLoader } from "./buffer.js";
 
 /**

@@ -1,4 +1,8 @@
 import {
+  VectaraFilter,
+  VectaraStore,
+} from "@langchain/community/vectorstores/vectara";
+import {
   Comparator,
   Comparators,
   Comparison,
@@ -9,7 +13,6 @@ import {
   StructuredQuery,
   Visitor,
 } from "../../chains/query_constructor/ir.js";
-import { VectaraFilter, VectaraStore } from "../../vectorstores/vectara.js";
 import { BaseTranslator } from "./base.js";
 import { isFilterEmpty } from "./utils.js";
 

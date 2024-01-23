@@ -28,8 +28,12 @@ Google Cloud using one of these methods:
   to the project and set the `GOOGLE_APPLICATION_CREDENTIALS` environment
   variable to the path of this file.
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
 ```bash npm2yarn
-npm install google-auth-library
+npm install google-auth-library @langchain/community
 ```
 
 ### Web
@@ -50,7 +54,7 @@ GOOGLE_VERTEX_AI_WEB_CREDENTIALS={"type":"service_account","project_id":"YOUR_PR
 You can also pass your credentials directly in code like this:
 
 ```typescript
-import { ChatGoogleVertexAI } from "langchain/chat_models/googlevertexai/web";
+import { ChatGoogleVertexAI } from "@langchain/community/chat_models/googlevertexai";
 
 const model = new ChatGoogleVertexAI({
   authOptions: {

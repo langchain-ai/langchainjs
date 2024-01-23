@@ -173,8 +173,16 @@ export const CONVERSATION_STAGES = {
 };
 ```
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 ```typescript
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 // test the intermediate chains
 const verbose = true;
 const llm = new ChatOpenAI({ temperature: 0.9 });
@@ -325,7 +333,7 @@ We assume that the product knowledge base is simply a text file.
 
 ```typescript
 import { RetrievalQAChain } from "langchain/chains";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { CharacterTextSplitter } from "langchain/text_splitter";
@@ -484,7 +492,7 @@ export class CustomPromptTemplateForTools extends BaseStringPromptTemplate {
  */
 import { AgentActionOutputParser } from "langchain/agents";
 import { AgentAction, AgentFinish } from "langchain/schema";
-import { FormatInstructionsOptions } from "langchain/schema/output_parser";
+import { FormatInstructionsOptions } from "@langchain/core/output_parsers";
 
 export class SalesConvoOutputParser extends AgentActionOutputParser {
   ai_prefix: string;

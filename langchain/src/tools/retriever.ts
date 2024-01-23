@@ -4,7 +4,7 @@ import { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
 import {
   DynamicStructuredTool,
   type DynamicStructuredToolInput,
-} from "@langchain/community/tools/dynamic";
+} from "@langchain/core/tools";
 import { formatDocumentsAsString } from "../util/document.js";
 
 export function createRetrieverTool(

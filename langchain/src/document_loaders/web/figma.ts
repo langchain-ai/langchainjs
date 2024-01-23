@@ -1,6 +1,6 @@
+import { Document } from "@langchain/core/documents";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { BaseDocumentLoader } from "../base.js";
-import { Document } from "../../document.js";
-import { getEnvironmentVariable } from "../../util/env.js";
 
 /**
  * Interface representing a Figma file. It includes properties for the
