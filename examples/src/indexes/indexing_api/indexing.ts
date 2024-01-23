@@ -43,9 +43,11 @@ const recordManagerConfig = {
     database: "api",
   } as PoolConfig,
   tableName: "upsertion_records",
-  namespace: "test_namespace",
 };
-const recordManager = new PostgresRecordManager("test", recordManagerConfig);
+const recordManager = new PostgresRecordManager(
+  "test_namespace",
+  recordManagerConfig
+);
 
 // Create the schema if it doesn't exist
 await recordManager.createSchema();
@@ -78,7 +80,6 @@ async function clear() {
 
 // No cleanup
 await clear();
-
 // This mode does not do automatic clean up of old versions of content; however, it still takes care of content de-duplication.
 
 console.log(
