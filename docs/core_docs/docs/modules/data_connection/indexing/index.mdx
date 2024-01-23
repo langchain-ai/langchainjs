@@ -55,8 +55,8 @@ When content is mutated (e.g., the source PDF file was revised) there will be a 
 
 1. Do not use with a store that has been pre-populated with content independently of the indexing API, as the record manager will not know that records have been inserted previously.
 2. Only works with LangChain `vectorstore`'s that support:
-  a). document addition by id (`addDocuments` method with ids argument)
-  b). delete by id (delete method with ids argument)
+   a). document addition by id (`addDocuments` method with ids argument)
+   b). delete by id (delete method with ids argument)
 
 Compatible Vectorstores: [`PGVector`](/docs/integrations/vectorstores/pgvector), [`Chroma`](/docs/integrations/vectorstores/chroma), [`CloudflareVectorize`](/docs/integrations/vectorstores/cloudflare_vectorize),
 [`ElasticVectorSearch`](/docs/integrations/vectorstores/elasticsearch), [`FAISS`](/docs/integrations/vectorstores/faiss), [`MomentoVectorIndex`](/docs/integrations/vectorstores/momento_vector_index),
