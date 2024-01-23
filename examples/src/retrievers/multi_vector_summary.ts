@@ -30,13 +30,9 @@ const chain = RunnableSequence.from([
   new StringOutputParser(),
 ]);
 
-const summaries = await chain.batch(
-  docs,
-  {},
-  {
-    maxConcurrency: 5,
-  }
-);
+const summaries = await chain.batch(docs, {
+  maxConcurrency: 5,
+});
 
 const idKey = "doc_id";
 const docIds = docs.map((_) => uuid.v4());
