@@ -49,7 +49,6 @@ async function main() {
     const { config: lcConfig } = await import(resolvedConfigPath);
     config = lcConfig;
   } catch (e) {
-    console.error(e);
     console.error(
       `Failed to read config file at path: ${configFilePath}.\n\nError: ${JSON.stringify(
         e,
