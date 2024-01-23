@@ -12,23 +12,17 @@ export type { LangChainConfig } from "./types.js";
 async function main() {
   const program = new Command();
   program
-    .description("Release a new workspace version to NPM.")
+    .description("Run a build script for a LangChain package.")
     .option(
       "--config <config>",
-      "Path to the config file, eg ./langchain.config.js"
+      "Path to the config file, defaults to ./langchain.config.js"
     )
     .option(
       "--create-entrypoints",
-      "Boolean, pass only if you want to create entrypoints"
+      "Pass only if you want to create entrypoints"
     )
-    .option(
-      "--tree-shaking",
-      "Boolean, pass only if you want to check tree shaking"
-    )
-    .option(
-      "--move-cjs-dist",
-      "Boolean, pass only if you want to move cjs to dist"
-    )
+    .option("--tree-shaking", "Pass only if you want to check tree shaking")
+    .option("--move-cjs-dist", "Pass only if you want to move cjs to dist")
     .option("--pre")
     .option("--gen-maps");
 
@@ -51,9 +45,7 @@ async function main() {
   } catch (e) {
     console.error(
       `Failed to read config file at path: ${configFilePath}.\n\nError: ${JSON.stringify(
-        e,
-        null,
-        2
+        e
       )}`
     );
     process.exit(1);
