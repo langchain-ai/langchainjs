@@ -22,9 +22,7 @@ test("ExaFindSimilarResults can perform a simalitaty search with a provided URL"
     client: new Exa(),
   });
 
-  const toolData = await exaTool.invoke(
-    "https://langchain.com"
-  );
+  const toolData = await exaTool.invoke("https://langchain.com");
 
   const parsedData = JSON.parse(toolData);
   expect("results" in parsedData).toBeTruthy();
