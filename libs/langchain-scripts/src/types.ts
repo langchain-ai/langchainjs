@@ -74,15 +74,15 @@ export type TreeShakingArgs = {
   extraInternals?: Array<string | RegExp>;
 };
 
+export interface ImportData {
+  imports: Record<string, string[]>;
+  exportedAliases: Record<string, string[]>;
+}
+
 export interface ExtraImportMapEntry {
   modules: Array<string>;
   alias: Array<string>;
   path: string;
-}
-
-export interface ImportData {
-  imports: Record<string, string[]>;
-  exportedAliases: Record<string, string[]>;
 }
 
 export interface LangChainConfig {
