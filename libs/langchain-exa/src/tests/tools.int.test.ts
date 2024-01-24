@@ -4,6 +4,7 @@ import { ExaFindSimilarResults, ExaSearchResults } from "../tools.js";
 
 test("ExaSearchResults can perform a search given a string query", async () => {
   const exaTool = new ExaSearchResults({
+    // @ts-expect-error type errors
     client: new Exa(),
   });
 
@@ -19,6 +20,7 @@ test("ExaSearchResults can perform a search given a string query", async () => {
 
 test("ExaFindSimilarResults can perform a simalitaty search with a provided URL", async () => {
   const exaTool = new ExaFindSimilarResults({
+    // @ts-expect-error type errors
     client: new Exa(),
   });
 

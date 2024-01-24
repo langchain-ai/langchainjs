@@ -6,7 +6,7 @@ import Exa, { RegularSearchOptions } from "exa-js";
  * Options for the ExaSearchResults tool.
  */
 export type ExaSearchRetrieverFields = ToolParams & {
-  client: Exa;
+  client: Exa.default;
   searchArgs?: RegularSearchOptions;
 };
 
@@ -23,7 +23,7 @@ export class ExaSearchResults extends Tool {
 
   name = "exa_search_results_json";
 
-  private client: Exa;
+  private client: Exa.default;
 
   searchArgs?: RegularSearchOptions;
 
@@ -53,7 +53,7 @@ export class ExaFindSimilarResults extends Tool {
 
   name = "exa_find_similar_results_json";
 
-  private client: Exa;
+  private client: Exa.default;
 
   searchArgs?: RegularSearchOptions;
 

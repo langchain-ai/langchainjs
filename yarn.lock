@@ -8602,7 +8602,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/exa@workspace:libs/langchain-exa":
+"@langchain/exa@workspace:*, @langchain/exa@workspace:libs/langchain-exa":
   version: 0.0.0-use.local
   resolution: "@langchain/exa@workspace:libs/langchain-exa"
   dependencies:
@@ -19256,6 +19256,7 @@ __metadata:
     "@langchain/cohere": "workspace:*"
     "@langchain/community": "workspace:*"
     "@langchain/core": "workspace:*"
+    "@langchain/exa": "workspace:*"
     "@langchain/google-genai": "workspace:*"
     "@langchain/mistralai": "workspace:*"
     "@langchain/openai": "workspace:*"
@@ -19288,6 +19289,7 @@ __metadata:
     eslint-plugin-import: ^2.27.5
     eslint-plugin-prettier: ^4.2.1
     eslint-plugin-unused-imports: ^3.0.0
+    exa-js: ^1.0.5
     faiss-node: ^0.5.1
     graphql: ^16.6.0
     ioredis: ^5.3.2

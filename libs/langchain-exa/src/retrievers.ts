@@ -14,7 +14,7 @@ import { Document } from "@langchain/core/documents";
  * interface and adds a `client` field of type `Exa`.
  */
 export interface ExaRetrieverFields extends BaseRetrieverInput {
-  client: Exa;
+  client: Exa.default;
   searchArgs?: RegularSearchOptions;
 }
 
@@ -45,7 +45,7 @@ export class ExaRetriever extends BaseRetriever {
 
   lc_namespace = ["langchain", "retrievers", "exa"];
 
-  private client: Exa;
+  private client: Exa.default;
 
   searchArgs?: RegularSearchOptions;
 
