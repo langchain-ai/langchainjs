@@ -1,0 +1,194 @@
+import { BaseLanguageModel } from "@langchain/core/language_models/base";
+import { Example, Run } from "langsmith";
+import { EvaluationResult, RunEvaluator } from "langsmith/evaluation";
+import { Criteria } from "../evaluation/index.js";
+import { LoadEvaluatorOptions } from "../evaluation/loader.js";
+import { EvaluatorType } from "../evaluation/types.js";
+
+export type EvaluatorInputs = {
+  input?: string | unknown;
+  prediction: string | unknown;
+  reference?: string | unknown;
+};
+
+export type EvaluatorInputFormatter = ({
+  rawInput,
+  rawPrediction,
+  rawReferenceOutput,
+  run,
+}: {
+  rawInput: any;
+  rawPrediction: any;
+  rawReferenceOutput?: any;
+  run: Run;
+}) => EvaluatorInputs;
+
+/**
+ * Type of a function that can be coerced into a RunEvaluator function.
+ * While we have the class-based RunEvaluator, it's often more convenient to directly
+ * pass a function to the runner. This type allows us to do that.
+ */
+export type RunEvaluatorLike =
+  | (({
+      run,
+      example,
+    }: {
+      run: Run;
+      example?: Example;
+    }) => Promise<EvaluationResult>)
+  | (({ run, example }: { run: Run; example?: Example }) => EvaluationResult);
+
+/**
+ * Configuration class for running evaluations on datasets.
+ *
+ * @remarks
+ * RunEvalConfig in LangSmith is a configuration class for running evaluations on datasets. Its primary purpose is to define the parameters and evaluators that will be applied during the evaluation of a dataset. This configuration can include various evaluators, custom evaluators, and different keys for inputs, predictions, and references.
+ *
+ * @typeparam T - The type of evaluators.
+ * @typeparam U - The type of custom evaluators.
+ */
+export type RunEvalConfig<
+  T extends keyof EvaluatorType = keyof EvaluatorType,
+  U extends RunEvaluator | RunEvaluatorLike = RunEvaluator | RunEvaluatorLike
+> = {
+  /**
+   * Custom evaluators to apply to a dataset run.
+   * Each evaluator is provided with a run trace containing the model
+   * outputs, as well as an "example" object representing a record
+   * in the dataset.
+   */
+  customEvaluators?: U[];
+
+  /**
+   * LangChain evaluators to apply to a dataset run.
+   * You can optionally specify these by name, or by
+   * configuring them with an EvalConfig object.
+   */
+  evaluators?: (T | EvalConfig)[];
+
+  /**
+   * Convert the evaluation data into a format that can be used by the evaluator.
+   * By default, we pass the first value of the run.inputs, run.outputs (predictions),
+   * and references (example.outputs)
+   *
+   * @returns The prepared data.
+   */
+  formatEvaluatorInputs?: EvaluatorInputFormatter;
+
+  /**
+   * The language model specification for evaluators that require one.
+   */
+  evalLlm?: string;
+};
+
+export interface EvalConfig extends LoadEvaluatorOptions {
+  /**
+   * The name of the evaluator to use.
+   * Example: labeled_criteria, criteria, etc.
+   */
+  evaluatorType: keyof EvaluatorType;
+
+  /**
+   * The feedback (or metric) name to use for the logged
+   * evaluation results. If none provided, we default to
+   * the evaluationName.
+   */
+  feedbackKey?: string;
+
+  /**
+   * Convert the evaluation data into a format that can be used by the evaluator.
+   * @param data The data to prepare.
+   * @returns The prepared data.
+   */
+  formatEvaluatorInputs: EvaluatorInputFormatter;
+}
+
+/**
+ * Configuration to load a "CriteriaEvalChain" evaluator,
+ * which prompts an LLM to determine whether the model's
+ * prediction complies with the provided criteria.
+ * @param criteria - The criteria to use for the evaluator.
+ * @param llm - The language model to use for the evaluator.
+ * @returns The configuration for the evaluator.
+ * @example
+ * ```ts
+ * const evalConfig = new RunEvalConfig(
+ *  [new RunEvalConfig.Criteria("helpfulness")],
+ * );
+ * ```
+ * @example
+ * ```ts
+ * const evalConfig = new RunEvalConfig(
+ * [new RunEvalConfig.Criteria(
+ *      { "isCompliant": "Does the submission comply with the requirements of XYZ"
+ *  })],
+ */
+export type CriteriaEvalChainConfig = EvalConfig & {
+  evaluatorType: "criteria";
+
+  /**
+   * The "criteria" to insert into the prompt template
+   * used for evaluation. See the prompt at
+   * https://smith.langchain.com/hub/langchain-ai/criteria-evaluator
+   * for more information.
+   */
+  criteria?: Criteria | Record<string, string>;
+
+  /**
+   * The feedback (or metric) name to use for the logged
+   * evaluation results. If none provided, we default to
+   * the evaluationName.
+   */
+  feedbackKey?: string;
+
+  /**
+   * The language model to use as the evaluator.
+   */
+  llm?: BaseLanguageModel;
+};
+
+/**
+ * Configuration to load a "LabeledCriteriaEvalChain" evaluator,
+ * which prompts an LLM to determine whether the model's
+ * prediction complies with the provided criteria and also
+ * provides a "ground truth" label for the evaluator to incorporate
+ * in its evaluation.
+ * @param criteria - The criteria to use for the evaluator.
+ * @param llm - The language model to use for the evaluator.
+ * @returns The configuration for the evaluator.
+ * @example
+ * ```ts
+ * const evalConfig = new RunEvalConfig(
+ *  [new RunEvalConfig.LabeledCriteria("correctness")],
+ * );
+ * ```
+ * @example
+ * ```ts
+ * const evalConfig = new RunEvalConfig(
+ * [new RunEvalConfig.Criteria(
+ *      { "mentionsAllFacts": "Does the include all facts provided in the reference?"
+ *  })],
+ */
+export type LabeledCriteria = EvalConfig & {
+  evaluatorType: "labeled_criteria";
+
+  /**
+   * The "criteria" to insert into the prompt template
+   * used for evaluation. See the prompt at
+   * https://smith.langchain.com/hub/langchain-ai/labeled-criteria
+   * for more information.
+   */
+  criteria?: Criteria | Record<string, string>;
+
+  /**
+   * The feedback (or metric) name to use for the logged
+   * evaluation results. If none provided, we default to
+   * the evaluationName.
+   */
+  feedbackKey?: string;
+
+  /**
+   * The language model to use as the evaluator.
+   */
+  llm?: BaseLanguageModel;
+};
