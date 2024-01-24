@@ -138,6 +138,7 @@ const entrypoints = {
   "callbacks/handlers/lunary": "callbacks/handlers/lunary",
   // retrievers
   "retrievers/amazon_kendra": "retrievers/amazon_kendra",
+  "retrievers/amazon_knowledge_base": "retrievers/amazon_knowledge_base",
   "retrievers/chaindesk": "retrievers/chaindesk",
   "retrievers/databerry": "retrievers/databerry",
   "retrievers/metal": "retrievers/metal",
@@ -154,6 +155,7 @@ const entrypoints = {
   "caches/upstash_redis": "caches/upstash_redis",
   // graphs
   "graphs/neo4j_graph": "graphs/neo4j_graph",
+  "graphs/memgraph_graph": "graphs/memgraph_graph",
   "utils/event_source_parse": "utils/event_source_parse",
   // document transformers
   "document_transformers/html_to_text": "document_transformers/html_to_text",
@@ -280,6 +282,7 @@ const requiresOptionalDependency = [
   "chat_models/iflytek_xinghuo",
   "chat_models/iflytek_xinghuo/web",
   "retrievers/amazon_kendra",
+  "retrievers/amazon_knowledge_base",
   "retrievers/metal",
   "retrievers/supabase",
   "retrievers/vectara_summary",
@@ -288,6 +291,7 @@ const requiresOptionalDependency = [
   "cache/momento",
   "cache/upstash_redis",
   "graphs/neo4j_graph",
+  "graphs/memgraph_graph",
   // document_transformers
   "document_transformers/html_to_text",
   "document_transformers/mozilla_readability",
