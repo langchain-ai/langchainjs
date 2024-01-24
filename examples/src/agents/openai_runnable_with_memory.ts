@@ -1,8 +1,9 @@
 import { AgentExecutor } from "langchain/agents";
-import { ChatOpenAI, formatToOpenAIFunction } from "@langchain/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { Calculator } from "langchain/tools/calculator";
 import { OpenAIFunctionsAgentOutputParser } from "langchain/agents/openai/output_parser";
 import { BufferMemory } from "langchain/memory";
+import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";
 import {
   ChatPromptTemplate,
   MessagesPlaceholder,
@@ -27,11 +28,11 @@ const model = new ChatOpenAI({ modelName: "gpt-4", temperature: 0 });
 
 /**
  * Bind the tools to the LLM.
- * Here we're using the `formatToOpenAIFunction` util function
+ * Here we're using the `convertToOpenAIFunction` util function
  * to format our tools into the proper schema for OpenAI functions.
  */
 const modelWithFunctions = model.bind({
-  functions: [...tools.map((tool) => formatToOpenAIFunction(tool))],
+  functions: [...tools.map((tool) => convertToOpenAIFunction(tool))],
 });
 
 const memory = new BufferMemory({

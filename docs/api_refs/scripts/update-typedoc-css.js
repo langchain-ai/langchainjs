@@ -23,7 +23,6 @@ async function main() {
 }
 `;
 
-
   let file = await readFile("./public/assets/style.css", "utf-8");
   file += css;
   await writeFile("./public/assets/style.css", file);

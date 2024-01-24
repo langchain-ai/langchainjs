@@ -13,11 +13,12 @@
     "start": "tsx --experimental-wasm-modules -r dotenv/config src/index.ts",
     "postinstall": "prisma generate --schema ./src/indexes/vector_stores/prisma_vectorstore/prisma/schema.prisma",
     "start:dist": "yarn build && node -r dotenv/config dist/index.js",
-    "lint": "eslint src",
+    "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
+    "lint": "yarn lint:eslint",
     "lint:fix": "yarn lint --fix",
     "precommit": "lint-staged",
-    "format": "prettier --write \"src\"",
-    "format:check": "prettier --check \"src\""
+    "format": "prettier --config .prettierrc --write \"src\"",
+    "format:check": "prettier --config .prettierrc --check \"src\""
   },
   "author": "LangChain",
   "license": "MIT",
@@ -36,9 +37,10 @@
     "@langchain/google-genai": "workspace:*",
     "@langchain/mistralai": "workspace:*",
     "@langchain/openai": "workspace:*",
+    "@langchain/pinecone": "workspace:*",
     "@langchain/yandex": "workspace:*",
     "@opensearch-project/opensearch": "^2.2.0",
-    "@pinecone-database/pinecone": "^1.1.0",
+    "@pinecone-database/pinecone": "^2.0.0",
     "@planetscale/database": "^1.8.0",
     "@prisma/client": "^4.11.0",
     "@raycast/api": "^1.55.2",
@@ -70,8 +72,8 @@
     "vectordb": "^0.1.4",
     "voy-search": "0.6.2",
     "weaviate-ts-client": "^1.0.0",
-    "zod": "^3.22.3",
-    "zod-to-json-schema": "3.20.3"
+    "zod": "^3.22.4",
+    "zod-to-json-schema": "^3.22.3"
   },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",
