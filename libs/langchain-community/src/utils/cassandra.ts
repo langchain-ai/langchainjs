@@ -4,7 +4,8 @@ import * as path from "node:path";
 import * as os from "node:os";
 
 export interface AstraServiceProviderArgs {
-  datacenterID: string;
+  datacenterID?: string;
+  endpoint?: string | URL;
   token: string;
   regionName?: string;
 }
@@ -63,6 +64,29 @@ export class CasssandraClientFactory {
     const astraArgs = args.serviceProviderArgs?.astra;
     if (!astraArgs) {
       throw new Error("Astra configuration is not provided in args.");
+    }
+
+    if (!astraArgs.endpoint && !astraArgs.datacenterID) {
+      throw new Error(
+        "Astra endpoint or datacenterID must be provided in args."
+      );
+    }
+
+    // Extract datacenterID and regionName from endpoint if provided
+    if (astraArgs.endpoint) {
+      const endpoint = new URL(astraArgs.endpoint.toString());
+      const hostnameParts = endpoint.hostname.split("-");
+      const domainSuffix = ".apps.astra.datastax.com";
+
+      if (hostnameParts[hostnameParts.length - 1].endsWith(domainSuffix)) {
+        astraArgs.datacenterID =
+          astraArgs.datacenterID || hostnameParts.slice(0, 5).join("-");
+
+        // Extract regionName by joining elements from index 5 to the end, and then remove the domain suffix
+        const fullRegionName = hostnameParts.slice(5).join("-");
+        astraArgs.regionName =
+          astraArgs.regionName || fullRegionName.replace(domainSuffix, "");
+      }
     }
 
     // Initialize cloud configuration if not already defined
@@ -174,6 +198,10 @@ export class CasssandraClientFactory {
     astraArgs: AstraServiceProviderArgs,
     scbPath: string
   ): Promise<void> {
+    if (!astraArgs.datacenterID) {
+      throw new Error("Astra datacenterID is not provided in args.");
+    }
+
     // First POST request gets all bundle locations for the database_id
     const bundleURLTemplate =
       "https://api.astra.datastax.com/v2/databases/{database_id}/secureBundleURL?all=true";

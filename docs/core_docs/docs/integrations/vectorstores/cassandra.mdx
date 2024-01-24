@@ -54,13 +54,13 @@ const configConnection = {
   serviceProviderArgs: {
     astra: {
       token: <...> as string,
-      datacenterID: <...> as string,
+      endpoint: <...> as string,
     },
   },
 };
 ```
 
-An optional `region:` property may be provided to connect to a specific region.
+Instead of `endpoint:`, you many provide property `datacenterID:` and optionally `regionName:`.
 
 ## Indexing docs
 

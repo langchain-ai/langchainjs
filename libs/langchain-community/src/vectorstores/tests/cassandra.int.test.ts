@@ -9,7 +9,7 @@ const cassandraConfig = {
   serviceProviderArgs: {
     astra: {
       token: process.env.ASTRA_TOKEN as string,
-      datacenterID: process.env.ASTRA_DB_ID as string,
+      endpoint: process.env.ASTRA_DB_ENDPOINT as string,
     },
   },
   keyspace: "test",
@@ -43,7 +43,7 @@ const noPartitionConfig = {
 // Note there are multiple describe functions that need to be un-skipped for internal testing.
 // To run these tests:
 //   1. switch "describe.skip(" to "describe("
-//   2. Export OPENAI_API_KEY, ASTRA_DB_ID, and ASTRA_TOKEN
+//   2. Export OPENAI_API_KEY, ASTRA_DB_ENDPOINT, and ASTRA_TOKEN
 //   3. cd langchainjs/libs/langchain-community
 //   4. yarn test:single src/vectorstores/tests/cassandra.int.test.ts
 // Once manual testing is complete, re-instate the ".skip"
