@@ -13,9 +13,8 @@ import { RunnableConfig } from "../schema/runnable/config.js";
 import {
   RunEvaluatorLike,
   EvalConfig,
-  PrepareDataT,
+  EvaluatorInputFormatter,
   RunEvalConfig,
-  defaultPrepareData,
 } from "./config.js";
 import { randomName } from "./name_generation.js";
 import { ProgressBar } from "./progress.js";
@@ -69,7 +68,7 @@ function isLLMStringEvaluator(evaluator: any): evaluator is LLMStringEvaluator {
 class PreparedRunEvaluator implements RunEvaluator {
   evaluator: LLMStringEvaluator;
 
-  prepareData: PrepareDataT;
+  formatEvaluatorInputs: EvaluatorInputFormatter;
 
   isStringEvaluator: boolean;
 
@@ -78,12 +77,12 @@ class PreparedRunEvaluator implements RunEvaluator {
   constructor(
     evaluator: LLMStringEvaluator,
     evaluationName: string,
-    prepareData: PrepareDataT = defaultPrepareData
+    formatEvaluatorInputs: EvaluatorInputFormatter
   ) {
     this.evaluator = evaluator;
     this.isStringEvaluator = typeof evaluator?.evaluateStrings === "function";
     this.evaluationName = evaluationName;
-    this.prepareData = prepareData;
+    this.formatEvaluatorInputs = formatEvaluatorInputs;
   }
 
   static async fromEvalConfig(
@@ -110,7 +109,7 @@ class PreparedRunEvaluator implements RunEvaluator {
     return new PreparedRunEvaluator(
       evaluator as LLMStringEvaluator,
       feedbackKey,
-      evalConfig?.prepareData
+      evalConfig?.formatEvaluatorInputs
     );
   }
 
@@ -121,9 +120,11 @@ class PreparedRunEvaluator implements RunEvaluator {
    * @returns A promise that resolves to the evaluation result.
    */
   async evaluateRun(run: Run, example?: Example): Promise<EvaluationResult> {
-    const { prediction, input, reference } = this.prepareData({
+    const { prediction, input, reference } = this.formatEvaluatorInputs({
+      rawInput: run.inputs,
+      rawPrediction: run.outputs,
+      rawReferenceOutput: example?.outputs,
       run,
-      reference_outputs: example?.outputs,
     });
     if (this.isStringEvaluator) {
       const evalResult = await this.evaluator.evaluateStrings({
@@ -173,7 +174,7 @@ class LoadedEvalConfig {
 }
 
 export type RunOnDatasetParams = {
-  evaluation?: RunEvalConfig;
+  evaluationConfig?: RunEvalConfig;
   projectMetadata?: Record<string, unknown>;
   projectName?: string;
   client?: Client;
@@ -262,7 +263,7 @@ const applyEvaluators = async ({
   const { evaluators } = evaluation;
   const progress = new ProgressBar({
     total: examples.length,
-    format: "Running Evaluators: {bar} {percentage}% | {value}/{total}",
+    format: "Running Evaluators: {bar} {percentage}% | {value}/{total}\n",
   });
   const results: Record<
     string,
@@ -271,7 +272,7 @@ const applyEvaluators = async ({
   for (let i = 0; i < runs.length; i += 1) {
     const run = runs[i];
     const example = examples[i];
-    const result = await Promise.all(
+    const evaluatorResults = await Promise.all(
       evaluators.map((evaluator) =>
         client.evaluateRun(run, evaluator, {
           referenceExample: example,
@@ -285,7 +286,7 @@ const applyEvaluators = async ({
         run?.end_time && run.start_time
           ? run.end_time - run.start_time
           : undefined,
-      feedback: result,
+      feedback: evaluatorResults,
       run_id: run.id,
     };
   }
@@ -303,7 +304,7 @@ export type EvalResults = {
   };
 };
 
-const getExamplesinputs = (
+const getExamplesInputs = (
   examples: Example[],
   chainOrFactory: ChainOrFactory,
   dataType?: DataType
@@ -371,8 +372,8 @@ const getExamplesinputs = (
  *   });
  *
  *   const results = await runOnDataset(chain, datasetName, {
- *     evaluation: evaluationConfig,
- *     client: client
+ *     evaluationConfig,
+ *     client,
  *   });
  *
  *   console.log('Evaluation Results:', results);
@@ -390,7 +391,7 @@ export const runOnDataset = async (
   chainOrFactory: ChainOrFactory,
   datasetName: string,
   {
-    evaluation,
+    evaluationConfig,
     projectName,
     projectMetadata,
     client,
@@ -410,10 +411,6 @@ export const runOnDataset = async (
     maxConcurrency: testConcurrency,
   });
 
-  const loadedEvalConfig = await LoadedEvalConfig.fromRunEvalConfig(
-    evaluation ?? {}
-  );
-
   await testClient.createProject({
     projectName: testProjectName,
     referenceDatasetId: datasetId,
@@ -421,8 +418,8 @@ export const runOnDataset = async (
   });
   const wrappedRunnable: Runnable = new RunnableLambda({
     func: wrappedModel,
-  });
-  const runInputs = getExamplesinputs(
+  }).withConfig({ runName: "evaluationRun" });
+  const runInputs = getExamplesInputs(
     examples,
     chainOrFactory,
     dataset.data_type
@@ -451,7 +448,10 @@ export const runOnDataset = async (
     string,
     { run_id: string; execution_time?: number; feedback: Feedback[] }
   > = {};
-  if (evaluation) {
+  if (evaluationConfig) {
+    const loadedEvalConfig = await LoadedEvalConfig.fromRunEvalConfig(
+      evaluationConfig
+    );
     evalResults = await applyEvaluators({
       evaluation: loadedEvalConfig,
       runs,

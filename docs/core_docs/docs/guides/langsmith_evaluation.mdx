@@ -29,14 +29,14 @@ For more information on other ways to set up tracing, please reference the [Lang
 However, in this example, we will use environment variables.
 
 ```bash
-npm install @langchain/core @langchain/openai langsmith uuid
+npm install @langchain/openai @langchain/community langsmith uuid
 ```
 
 ```typescript
 import { v4 as uuidv4 } from "uuid";
-const unique_id = uuidv4().slice(0, 8);
+const uniqueId = uuidv4().slice(0, 8);
 process.env.LANGCHAIN_TRACING_V2 = "true";
-process.env.LANGCHAIN_PROJECT = `JS Tracing Walkthrough - ${unique_id}`;
+process.env.LANGCHAIN_PROJECT = `JS Tracing Walkthrough - ${uniqueId}`;
 process.env.LANGCHAIN_ENDPOINT = "https://api.smith.langchain.com";
 process.env.LANGCHAIN_API_KEY = "<YOUR-API-KEY>"; // Replace with your API key
 
@@ -54,73 +54,66 @@ import { Client } from "langsmith";
 const client = new Client();
 ```
 
-Create a LangChain component and log runs to the platform. In this example, we will create a ReAct-style agent with access to a general search tool (DuckDuckGo). The agent's prompt can be viewed in the [Hub here](https://smith.langchain.com/hub/wfh/langsmith-agent-prompt).
+Create a LangChain component and log runs to the platform. In this example, we will create an OpenAI function calling agent with access to a general search tool (Tavily). The agent's prompt can be viewed in the [Hub here](https://smith.langchain.com/hub/hwchase17/openai-functions-agent).
 
 ```typescript
-import { TavilySearchAPIRetriever } from "@langchain/community/retrievers/tavily_search_api";
-import { DocumentInterface } from "@langchain/core/documents";
-import { StringOutputParser } from "@langchain/core/output_parsers";
-import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { RunnableLambda, RunnableMap } from "@langchain/core/runnables";
+import { AgentExecutor, createOpenAIFunctionsAgent } from "langchain/agents";
+import { pull } from "langchain/hub";
+import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
 import { ChatOpenAI } from "@langchain/openai";
+import type { ChatPromptTemplate } from "@langchain/core/prompts";
 
-const retriever = new TavilySearchAPIRetriever({
-  k: 10,
-});
-const formatDocs = (docs: DocumentInterface[]) =>
-  docs.map((doc, i) => {
-    const metadataAttributes = Object.keys(doc.metadata)
-      .map((key) => `${key}="${doc.metadata[key]}"`)
-      .join(" ");
-    return `<Document id="${i}" ${metadataAttributes}>\n${doc.pageContent}\n</Document>\n`;
-  });
+const tools = [new TavilySearchResults()];
 
-const llm = new ChatOpenAI({});
-const prompt = ChatPromptTemplate.fromMessages([
-  [
-    "system",
-    "You are an AI assistant. Answer user questions as best as you are able." +
-      " Use the following search results if applicable.\n" +
-      " {docs}",
-  ],
-  ["human", "{input}"],
-]);
+// Get the prompt to use - you can modify this!
+// If you want to see the prompt in full, you can at:
+// https://smith.langchain.com/hub/hwchase17/openai-functions-agent
+const prompt = await pull<ChatPromptTemplate>(
+  "hwchase17/openai-functions-agent"
+);
 
-const getString = (input: { input: string }) => input.input;
-const selectInput = new RunnableLambda({
-  func: getString,
+const llm = new ChatOpenAI({
+  modelName: "gpt-3.5-turbo-1106",
+  temperature: 0,
 });
 
-const chain = RunnableMap.from({
-  input: selectInput,
-  docs: selectInput.pipe(retriever).pipe(formatDocs),
-})
-  .pipe(prompt)
-  .pipe(llm)
-  .pipe(new StringOutputParser());
+const agent = await createOpenAIFunctionsAgent({
+  llm,
+  tools,
+  prompt,
+});
+
+const agentExecutor = new AgentExecutor({
+  agent,
+  tools,
+});
 ```
 
-This setup lets you run the chain on multiple inputs concurrently, reducing latency. The runs are logged to LangSmith in the background.
+You can run the executor on multiple inputs concurrently, reducing latency. The runs are logged to LangSmith in the background.
 
 ```typescript
 const inputs = [
-  "What is LangChain?",
-  "What's LangSmith?",
-  "When was Llama-v2 released?",
-  "What is the langsmith cookbook?",
-  "When did langchain first announce the hub?",
+  { input: "What is LangChain?" },
+  { input: "What's LangSmith?" },
+  { input: "When was Llama-v2 released?" },
+  { input: "What is the langsmith cookbook?" },
+  { input: "When did langchain first announce the hub?" },
 ];
 
-const inputList = inputs.map((input) => ({ input }));
-const results = await chain.batch(inputList)
-);
+const results = await agentExecutor.batch(inputs);
 console.log(results.slice(0, 2));
 ```
 
 ```out
 [
-  'LangChain is a framework that allows developers to build applications powered by Large Language Models (LLMs). It provides a set of modules and tools to integrate LLMs with external data sources, customize prompts, and create advanced language model systems. LangChain enables users to create context-aware applications and leverage the power of natural language processing (NLP). It offers features such as customizable prompts, flexible components, and model integration for data augmented generation. LangChain has integrations with various LLM providers and external data sources, making it a comprehensive solution for developing NLP applications.',
-  'LangSmith is a platform developed by LangChain that provides tools for debugging, testing, evaluating, and monitoring Language Learning Models (LLMs) and intelligent agents. It helps developers move from prototyping to production by offering features such as trace logging, performance metrics, evaluation tools, and dataset management. LangSmith seamlessly integrates with LangChain, an open-source framework for building LLM applications. The platform allows developers to create and manage prompts, collaborate with teams, collect feedback, and monitor the performance of their LLM applications.'
+  {
+    input: 'What is LangChain?',
+    output: 'LangChain is a framework that allows developers to build applications with Language Model Systems (LLMs) through composability. It provides a set of tools and modules for building context-aware language model systems, including features for retrieval augmented generation, analyzing structured data, chatbots, and more. LangChain also offers the LangChain Expression Language (LCEL) to create custom chains and adapt language models to specific business contexts. It was launched as an open-source project in October 2022 and has gained popularity for its capabilities in the field of generative AI and language model integration. You can find more information about LangChain on their [official website](https://www.langchain.com/).'
+  },
+  {
+    input: "What's LangSmith?",
+    output: 'LangSmith is a unified platform designed to help developers with debugging, testing, evaluating, and monitoring chains and intelligent agents built on any LLM (Language Model) framework. It provides full visibility into model inputs and outputs, facilitates dataset creation from existing logs, and seamlessly integrates logging/debugging workflows with testing/evaluation workflows. LangSmith aims to bridge the gap between prototype and production, offering a single, fully-integrated hub for developers to work from. It also assists in tracing and evaluating complex agent prompt chains, reducing the time required for debugging and refinement. LangSmith is part of the LangChain ecosystem, which is an open-source framework for building with LLMs.'
+  }
 ]
 ```
 
@@ -146,13 +139,14 @@ const outputs = [
   "The langsmith cookbook is a github repository containing detailed examples of how to use LangSmith to debug, evaluate, and monitor large language model-powered applications.",
   "September 5, 2023",
 ];
-const datasetName = `lcjs-qa-${unique_id}`;
+
+const datasetName = `lcjs-qa-${uniqueId}`;
 const dataset = await client.createDataset(datasetName);
 
 await Promise.all(
   inputs.map(async (input, i) => {
     await client.createExample(
-      { input },
+      input,
       { output: outputs[i] },
       {
         datasetId: dataset.id,
@@ -170,7 +164,7 @@ It can be helpful to use automated metrics and AI-assisted feedback to evaluate 
 Below, we will create a custom run evaluator that logs a heuristic evaluation.
 
 ```typescript
-import { RunEvalConfig } from "langchain/smith";
+import type { RunEvalConfig } from "langchain/smith";
 import { Run, Example } from "langsmith";
 
 // An illustrative custom evaluator example
@@ -179,19 +173,31 @@ const notUnsure = (props: { run: Run; example?: Example }) => ({
   score: !props.run?.outputs?.output.includes("not sure"),
 });
 
-const evaluation = new RunEvalConfig({
+const evaluation: RunEvalConfig = {
   // The 'evaluators' are loaded from LangChain's evaluation
   // library.
   evaluators: [
-    new RunEvalConfig.LabeledCriteria({
+    {
+      evaluatorType: "labeled_criteria",
       criteria: "correctness",
       feedbackKey: "correctness",
-    }),
+      formatEvaluatorInputs: ({
+        rawInput,
+        rawPrediction,
+        rawReferenceOutput,
+      }) => {
+        return {
+          input: rawInput.input,
+          prediction: rawPrediction.output,
+          reference: rawReferenceOutput.output,
+        };
+      },
+    },
   ],
   // Custom evaluators can be user-defined RunEvaluator's
-  // or compatible function
+  // or a compatible function
   customEvaluators: [notUnsure],
-});
+};
 ```
 
 ### 3. Run the Benchmark
@@ -207,8 +213,8 @@ The results will be visible in the LangSmith app.
 ```typescript
 import { runOnDataset } from "langchain/smith";
 
-await runOnDataset(chain, datasetName, {
-  evaluation,
+await runOnDataset(agentExecutor, datasetName, {
+  evaluationConfig: evaluation,
 });
 ```
 
@@ -220,7 +226,7 @@ Running Evaluators: ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 
 ### Review the test results
 
-You can review the test results tracing UI below by clicking the URL in the output above or navigating to the "Testing & Datasets" page in LangSmith **"lcjs-qa-{unique_id}"** dataset.
+You can review the test results tracing UI below by clicking the URL in the output above or navigating to the "Testing & Datasets" page in LangSmith **"lcjs-qa-{uniqueId}"** dataset.
 
 This will show the new runs and the feedback logged from the selected evaluators. You can also explore a summary of the results in tabular format below.
 

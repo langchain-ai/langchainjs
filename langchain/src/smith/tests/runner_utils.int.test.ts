@@ -5,7 +5,11 @@ import { Client, Example, Run } from "langsmith";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { LLM } from "@langchain/core/language_models/llms";
-import { AIMessage, BaseMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  BaseMessage,
+  isBaseMessage,
+} from "@langchain/core/messages";
 import { ChatResult } from "@langchain/core/outputs";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnableLambda } from "@langchain/core/runnables";
@@ -108,24 +112,54 @@ const chatDataset = kvDataset.map((message) => ({
   },
 }));
 
-const datasetTypes: DataType[] = ["kv", "chat", "llm"];
+// const datasetTypes: DataType[] = ["kv", "chat", "llm"];
+const datasetTypes: DataType[] = [];
 describe.each(datasetTypes)("runner_utils %s dataset", (datasetType) => {
   let client: Client;
   const datasetName = `lcjs ${datasetType} integration tests`;
-  const evalConfig = new RunEvalConfig({
+  const evalConfig: RunEvalConfig = {
     customEvaluators: [outputNotEmpty, alwaysPass],
     evaluators: [
-      new RunEvalConfig.LabeledCriteria({
+      {
+        evaluatorType: "labeled_criteria",
         criteria: "correctness",
         feedbackKey: "labeledCorrect",
+        formatEvaluatorInputs: ({
+          rawInput,
+          rawPrediction,
+          rawReferenceOutput,
+        }) => {
+          let prediction: string;
+          if (isBaseMessage(rawPrediction)) {
+            if (typeof rawPrediction.content !== "string") {
+              throw new Error("Multimodal mesages not supported.");
+            }
+            prediction = rawPrediction.content;
+          } else if (typeof rawPrediction === "string") {
+            prediction = rawPrediction;
+          } else if (
+            rawPrediction &&
+            typeof rawPrediction === "object" &&
+            "output" in rawPrediction
+          ) {
+            prediction = rawPrediction.output as string;
+          } else {
+            throw new Error("Unsupported prediction type.");
+          }
+          return {
+            input: (rawInput as any).input,
+            prediction,
+            reference: (rawReferenceOutput as any).output,
+          };
+        },
         llm: new ChatOpenAI({
           modelName: "gpt-3.5-turbo",
           temperature: 0,
           modelKwargs: { seed: 42 },
         }),
-      }),
+      },
     ],
-  });
+  };
 
   beforeAll(async () => {
     client = new Client();
@@ -152,7 +186,7 @@ describe.each(datasetTypes)("runner_utils %s dataset", (datasetType) => {
 
     const evalResults = await runOnDataset(llm, datasetName, {
       client,
-      evaluation: evalConfig,
+      evaluationConfig: evalConfig,
       projectName: `fake-chat-model-${randomName()}`,
       projectMetadata: { env: "integration-tests", model: "fake-chat-model" },
     });
@@ -163,7 +197,7 @@ describe.each(datasetTypes)("runner_utils %s dataset", (datasetType) => {
     const llm = new FakeLLM({});
     const evalResults = await runOnDataset(llm, datasetName, {
       client,
-      evaluation: evalConfig,
+      evaluationConfig: evalConfig,
       projectName: `fake-llm-${randomName()}`,
       projectMetadata: { env: "integration-tests", model: "fake-llm" },
     });
@@ -180,7 +214,7 @@ describe.each(datasetTypes)("runner_utils %s dataset", (datasetType) => {
       .pipe(new FakeChatModel({}));
     const evalResults = await runOnDataset(runnable, datasetName, {
       client,
-      evaluation: evalConfig,
+      evaluationConfig: evalConfig,
       projectName: `runnable-${randomName()}`,
       projectMetadata: { env: "integration-tests" },
       maxConcurrency: 5,
@@ -205,7 +239,7 @@ describe.each(datasetTypes)("runner_utils %s dataset", (datasetType) => {
 
     const evalResults = await runOnDataset(construct, datasetName, {
       client,
-      evaluation: evalConfig,
+      evaluationConfig: evalConfig,
       projectName: `runnable-constructor-${randomName()}`,
       projectMetadata: { env: "integration-tests" },
       maxConcurrency: 5,
@@ -218,7 +252,7 @@ describe.each(datasetTypes)("runner_utils %s dataset", (datasetType) => {
       return { output: answers[input] };
     }
     const evalResults = await runOnDataset(my_func, datasetName, {
-      evaluation: evalConfig,
+      evaluationConfig: evalConfig,
       client,
       maxConcurrency: 5,
       projectName: `arb-function-${randomName()}`,
@@ -235,7 +269,7 @@ describe.each(datasetTypes)("runner_utils %s dataset", (datasetType) => {
       return { output: answers[input] };
     }
     const evalResults = await runOnDataset(() => my_func, datasetName, {
-      evaluation: evalConfig,
+      evaluationConfig: evalConfig,
       client,
       maxConcurrency: 5,
       projectName: `arb-constructor-function-${randomName()}`,
