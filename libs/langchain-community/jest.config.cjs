@@ -5,6 +5,7 @@ module.exports = {
   modulePathIgnorePatterns: ["dist/", "docs/"],
   moduleNameMapper: {
     "^(\\.{1,2}/.*)\\.js$": "$1",
+    "^@utils/(.*)$": "<rootDir>/src/utils/$1",
   },
   transform: {
     "^.+\\.tsx?$": ["@swc/jest"],

@@ -1,4 +1,3 @@
-import { Client, DseClientOptions } from "cassandra-driver";
 import { BaseListChatMessageHistory } from "@langchain/core/chat_history";
 import {
   BaseMessage,
@@ -7,7 +6,14 @@ import {
   mapStoredMessagesToChatMessages,
 } from "@langchain/core/messages";
 
-export interface CassandraChatMessageHistoryOptions extends DseClientOptions {
+import { Client } from "cassandra-driver";
+import {
+  CasssandraClientFactory,
+  CassandraClientArgs,
+} from "../../utils/cassandra.js";
+
+export interface CassandraChatMessageHistoryOptions
+  extends CassandraClientArgs {
   keyspace: string;
   table: string;
   sessionId: string;
@@ -62,7 +68,6 @@ export class CassandraChatMessageHistory extends BaseListChatMessageHistory {
 
   constructor(options: CassandraChatMessageHistoryOptions) {
     super();
-    this.client = new Client(options);
     this.keyspace = options.keyspace;
     this.table = options.table;
     this.sessionId = options.sessionId;
@@ -130,6 +135,8 @@ export class CassandraChatMessageHistory extends BaseListChatMessageHistory {
     if (this.tableExists) {
       return;
     }
+
+    this.client = await CasssandraClientFactory.getClient(this.options);
 
     await this.client.execute(`
     CREATE TABLE IF NOT EXISTS ${this.keyspace}.${this.table} (
