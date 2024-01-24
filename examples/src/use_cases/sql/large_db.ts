@@ -39,14 +39,21 @@ const tableChain = createStructuredOutputRunnable({
     ["human", "{input}"],
   ]),
 });
-// console.log(
-//   await tableChain.invoke({
-//     input: "What are all the genres of Alanis Morisette songs?",
-//   })
-// );
+console.log(
+  await tableChain.invoke({
+    input: "What are all the genres of Alanis Morisette songs?",
+  })
+);
 /**
 { names: [ 'Genre', 'Artist', 'Track' ] }
  */
+
+// -------------
+
+// You can see a LangSmith trace of the above chain here:
+// ADD_LINK
+
+// -------------
 
 /**
 This works pretty well! Except, as we’ll see below, we actually need a few other tables as well.
@@ -71,14 +78,21 @@ const categoryChain = createStructuredOutputRunnable<
     ["human", "{input}"],
   ]),
 });
-// console.log(
-//   await categoryChain.invoke({
-//     input: "What are all the genres of Alanis Morisette songs?",
-//   })
-// );
+console.log(
+  await categoryChain.invoke({
+    input: "What are all the genres of Alanis Morisette songs?",
+  })
+);
 /**
 { names: [ 'Music' ] }
  */
+
+// -------------
+
+// You can see a LangSmith trace of the above chain here:
+// ADD_LINK
+
+// -------------
 
 const getTables = (categories: z.infer<typeof Table>): Array<string> => {
   let tables: Array<string> = [];
@@ -106,11 +120,11 @@ const getTables = (categories: z.infer<typeof Table>): Array<string> => {
 };
 
 const tableChain2 = categoryChain.pipe(getTables);
-// console.log(
-//   await tableChain2.invoke({
-//     input: "What are all the genres of Alanis Morisette songs?",
-//   })
-// );
+console.log(
+  await tableChain2.invoke({
+    input: "What are all the genres of Alanis Morisette songs?",
+  })
+);
 /**
 [
   'Album',
@@ -122,6 +136,13 @@ const tableChain2 = categoryChain.pipe(getTables);
   'Track'
 ]
  */
+
+// -------------
+
+// You can see a LangSmith trace of the above chain here:
+// ADD_LINK
+
+// -------------
 
 // Now that we’ve got a chain that can output the relevant tables for any query we can combine this with our createSqlQueryChain, which can accept a list of tableNamesToUse to determine which table schemas are included in the prompt:
 
@@ -141,10 +162,10 @@ const tableChain3 = RunnableSequence.from([
 const fullChain = RunnablePassthrough.assign({
   tableNamesToUse: tableChain3,
 }).pipe(queryChain);
-// const query = await fullChain.invoke({
-//   question: "What are all the genres of Alanis Morisette songs?",
-// });
-// console.log(query);
+const query = await fullChain.invoke({
+  question: "What are all the genres of Alanis Morisette songs?",
+});
+console.log(query);
 /**
 SELECT Genre.Name
 FROM Genre
@@ -155,10 +176,17 @@ WHERE Artist.Name = "Alanis Morisette"
 LIMIT 5;
  */
 
-// console.log(await db.run(query));
+console.log(await db.run(query));
 /**
 
  */
+
+// -------------
+
+// You can see a LangSmith trace of the above chain here:
+// ADD_LINK
+
+// -------------
 
 // We might rephrase our question slightly to remove redundancy in the answer
 const query2 = await fullChain.invoke({
@@ -178,3 +206,9 @@ console.log(await db.run(query2));
 
  */
 
+// -------------
+
+// You can see a LangSmith trace of the above chain here:
+// ADD_LINK
+
+// -------------

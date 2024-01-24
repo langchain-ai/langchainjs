@@ -72,8 +72,15 @@ AND Invoice = 6.633;
  */
 console.log(await db.run(query));
 /**
- * 
+ *
  */
+
+// -------------
+
+// You can see a LangSmith trace of the above chain here:
+// ADD_LINK
+
+// -------------
 
 // The obvious downside of this approach is that we need to make two model calls instead of one to generate our query.
 // To get around this we can try to perform the query generation and query check in a single model invocation:
@@ -126,9 +133,16 @@ const result = await chain2.invoke({
 });
 console.log(result);
 /**
- * 
+ *
  */
 console.log(await db.run(result));
 /**
- * 
+ *
  */
+
+// -------------
+
+// You can see a LangSmith trace of the above chain here:
+// ADD_LINK
+
+// -------------

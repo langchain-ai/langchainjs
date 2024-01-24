@@ -43,11 +43,11 @@ properNouns = properNouns.concat(
   await queryAsList(db, "SELECT Name FROM Genre")
 );
 
-// console.log(properNouns.length);
+console.log(properNouns.length);
 /**
 647
  */
-// console.log(properNouns.slice(0, 5));
+console.log(properNouns.slice(0, 5));
 /**
 [
   'AC/DC',
@@ -101,11 +101,11 @@ const chain = RunnablePassthrough.assign({
   proper_nouns: retrieverChain,
 }).pipe(queryChain);
 
-// const query = await chain.invoke({
-//   question: "What are all the genres of Elenis Moriset songs?",
-//   proper_nouns: "",
-// });
-// console.log(query);
+const query = await chain.invoke({
+  question: "What are all the genres of Elenis Moriset songs?",
+  proper_nouns: "",
+});
+console.log(query);
 /**
 SELECT Genre.Name
 FROM Genre
@@ -114,10 +114,17 @@ JOIN Album ON Track.AlbumId = Album.AlbumId
 JOIN Artist ON Album.ArtistId = Artist.ArtistId
 WHERE Artist.Name = 'Elenis Moriset';
  */
-// console.log(await db.run(query));
+console.log(await db.run(query));
 /**
 
  */
+
+// -------------
+
+// You can see a LangSmith trace of the above chain here:
+// ADD_LINK
+
+// -------------
 
 // With retrieval:
 const query2 = await chain.invoke({
@@ -136,3 +143,10 @@ console.log(await db.run(query2));
 /**
 
  */
+
+// -------------
+
+// You can see a LangSmith trace of the above chain here:
+// ADD_LINK
+
+// -------------
