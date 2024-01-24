@@ -70,7 +70,7 @@ AND Invoices.InvoiceDate >= '2003-01-01'
 AND Invoices.InvoiceDate < '2010-01-01'
 AND Invoice = 6.633;
  */
-console.log(db.run(query));
+console.log(await db.run(query));
 /**
  * 
  */
@@ -128,7 +128,7 @@ console.log(result);
 /**
  * 
  */
-console.log(db.run(result));
+console.log(await db.run(result));
 /**
  * 
  */

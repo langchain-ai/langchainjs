@@ -2,11 +2,12 @@
 
 LangChain has a SQL Agent which provides a more flexible way of interacting with SQL Databases than a chain. The main advantages of using the SQL Agent are:
 
-- It can answer questions based on the databases’ schema as well as on the databases’ content (like describing a specific table).
+- It can answer questions based on the databases schema as well as on the databases content (like describing a specific table).
 - It can recover from errors by running a generated query, catching the traceback and regenerating it correctly.
 - It can query the database as many times as needed to answer the user question.
 
-To initialize the agent we’ll use the [`createSqlAgent`](https://api.js.langchain.com/functions/langchain_agents_toolkits_sql.createSqlAgent.html) function. This agent uses the [`SqlToolkit`](https://api.js.langchain.com/classes/langchain_agents_toolkits_sql.SqlToolkit.html) which contains tools to:
+To initialize the agent we'll use the [`createSqlAgent`](https://api.js.langchain.com/functions/langchain_agents_toolkits_sql.createSqlAgent.html) function.
+This agent uses the [`SqlToolkit`](https://api.js.langchain.com/classes/langchain_agents_toolkits_sql.SqlToolkit.html) which contains tools to:
 
 - Create and execute queries
 - Check query syntax
@@ -36,3 +37,8 @@ The below example will use a SQLite connection with Chinook database. Follow the
 - Test `SELECT * FROM Artist LIMIT 10;`
 
 Now, `Chinhook.db` is in our directory and we can interface with it using the Typeorm-driven `SqlDatabase` class:
+
+import CodeBlock from "@theme/CodeBlock";
+import DbCheck from "@examples/use_cases/sql/db_check.ts";
+
+<CodeBlock language="typescript">{DbCheck}</CodeBlock>

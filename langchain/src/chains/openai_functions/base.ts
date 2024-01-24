@@ -100,7 +100,9 @@ export function createOpenAIFnRunnable<
   RunOutput extends Record<string, any> = Record<string, any>
 >(
   config: CreateOpenAIFnRunnableConfig<RunInput, RunOutput>
-): RunnableInterface<RunInput, RunOutput> {
+): RunnableInterface<RunInput, RunOutput> & {
+  pipe: Runnable<RunInput, RunOutput>["pipe"];
+} {
   const {
     functions,
     llm,
@@ -216,7 +218,9 @@ export function createStructuredOutputRunnable<
   RunOutput extends Record<string, any> = Record<string, any>
 >(
   config: CreateStructuredOutputRunnableConfig<RunInput, RunOutput>
-): RunnableInterface<RunInput, RunOutput> {
+): RunnableInterface<RunInput, RunOutput> & {
+  pipe: Runnable<RunInput, RunOutput>["pipe"];
+} {
   const { outputSchema, llm, prompt, outputParser } = config;
   const jsonSchema = isZodSchema(outputSchema)
     ? zodToJsonSchema(outputSchema)
