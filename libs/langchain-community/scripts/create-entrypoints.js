@@ -138,6 +138,7 @@ const entrypoints = {
   "callbacks/handlers/lunary": "callbacks/handlers/lunary",
   // retrievers
   "retrievers/amazon_kendra": "retrievers/amazon_kendra",
+  "retrievers/amazon_knowledge_base": "retrievers/amazon_knowledge_base",
   "retrievers/chaindesk": "retrievers/chaindesk",
   "retrievers/databerry": "retrievers/databerry",
   "retrievers/metal": "retrievers/metal",
@@ -280,6 +281,7 @@ const requiresOptionalDependency = [
   "chat_models/iflytek_xinghuo",
   "chat_models/iflytek_xinghuo/web",
   "retrievers/amazon_kendra",
+  "retrievers/amazon_knowledge_base",
   "retrievers/metal",
   "retrievers/supabase",
   "retrievers/vectara_summary",
