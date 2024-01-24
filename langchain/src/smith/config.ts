@@ -29,14 +29,20 @@ export type EvaluatorInputFormatter = ({
  * pass a function to the runner. This type allows us to do that.
  */
 export type RunEvaluatorLike =
-  | (({
-      run,
-      example,
-    }: {
+  | ((props: {
       run: Run;
       example?: Example;
+      rawInput: Record<string, unknown>;
+      rawPrediction?: Record<string, unknown>;
+      rawReferenceOutput?: Record<string, unknown>;
     }) => Promise<EvaluationResult>)
-  | (({ run, example }: { run: Run; example?: Example }) => EvaluationResult);
+  | ((props: {
+      run: Run;
+      example?: Example;
+      rawInput: Record<string, unknown>;
+      rawPrediction?: Record<string, unknown>;
+      rawReferenceOutput?: Record<string, unknown>;
+    }) => EvaluationResult);
 
 /**
  * Configuration class for running evaluations on datasets.
