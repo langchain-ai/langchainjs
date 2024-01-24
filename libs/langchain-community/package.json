@@ -1172,6 +1172,11 @@
       "import": "./graphs/neo4j_graph.js",
       "require": "./graphs/neo4j_graph.cjs"
     },
+    "./graphs/memgraph_graph": {
+      "types": "./graphs/memgraph_graph.d.ts",
+      "import": "./graphs/memgraph_graph.js",
+      "require": "./graphs/memgraph_graph.cjs"
+    },
     "./utils/event_source_parse": {
       "types": "./utils/event_source_parse.d.ts",
       "import": "./utils/event_source_parse.js",
@@ -1732,6 +1737,9 @@
     "graphs/neo4j_graph.cjs",
     "graphs/neo4j_graph.js",
     "graphs/neo4j_graph.d.ts",
+    "graphs/memgraph_graph.cjs",
+    "graphs/memgraph_graph.js",
+    "graphs/memgraph_graph.d.ts",
     "utils/event_source_parse.cjs",
     "utils/event_source_parse.js",
     "utils/event_source_parse.d.ts",
