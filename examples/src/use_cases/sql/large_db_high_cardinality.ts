@@ -18,9 +18,6 @@ const db = await SqlDatabase.fromDataSourceParams({
   appDataSource: datasource,
 });
 
-const seen = false;
-const resSeen = false;
-
 async function queryAsList(database: any, query: string): Promise<string[]> {
   const res: Array<{ [key: string]: string }> = JSON.parse(
     await database.run(query)
@@ -83,7 +80,7 @@ const prompt = ChatPromptTemplate.fromMessages([
   ["human", "{input}"],
 ]);
 
-const llm = new ChatOpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 });
+const llm = new ChatOpenAI({ modelName: "gpt-4", temperature: 0 });
 
 const queryChain = await createSqlQueryChain({
   llm,
@@ -101,52 +98,59 @@ const chain = RunnablePassthrough.assign({
   proper_nouns: retrieverChain,
 }).pipe(queryChain);
 
-const query = await chain.invoke({
+// To try out our chain, let’s see what happens when we try filtering on “elenis moriset”, a misspelling of Alanis Morissette, without and with retrieval:
+
+// Without retrieval
+const query = await queryChain.invoke({
   question: "What are all the genres of Elenis Moriset songs?",
   proper_nouns: "",
 });
-console.log(query);
+console.log("query", query);
 /**
-SELECT Genre.Name
+query SELECT DISTINCT Genre.Name
 FROM Genre
 JOIN Track ON Genre.GenreId = Track.GenreId
 JOIN Album ON Track.AlbumId = Album.AlbumId
 JOIN Artist ON Album.ArtistId = Artist.ArtistId
-WHERE Artist.Name = 'Elenis Moriset';
+WHERE Artist.Name = 'Elenis Moriset'
+LIMIT 5;
  */
-console.log(await db.run(query));
+console.log("db query results", await db.run(query));
 /**
-
+db query results []
  */
+
 
 // -------------
 
 // You can see a LangSmith trace of the above chain here:
-// ADD_LINK
+// https://smith.langchain.com/public/b153cb9b-6fbb-43a8-b2ba-4c86715183b9/r
 
 // -------------
+
 
 // With retrieval:
 const query2 = await chain.invoke({
   question: "What are all the genres of Elenis Moriset songs?",
 });
-console.log(query2);
+console.log("query2", query2);
 /**
-SELECT Genre.Name
+query2 SELECT DISTINCT Genre.Name
 FROM Genre
 JOIN Track ON Genre.GenreId = Track.GenreId
 JOIN Album ON Track.AlbumId = Album.AlbumId
 JOIN Artist ON Album.ArtistId = Artist.ArtistId
-WHERE Artist.Name = 'Elenis Moriset';
+WHERE Artist.Name = 'Alanis Morissette';
  */
-console.log(await db.run(query2));
+console.log("db query results", await db.run(query2));
 /**
-
+db query results [{"Name":"Rock"}]
  */
+
 
 // -------------
 
 // You can see a LangSmith trace of the above chain here:
-// ADD_LINK
+// https://smith.langchain.com/public/2f4f0e37-3b7f-47b5-837c-e2952489cac0/r
 
 // -------------

@@ -3,7 +3,7 @@ import { zodToJsonSchema, JsonSchema7Type } from "zod-to-json-schema";
 
 import type { BaseOutputParser } from "@langchain/core/output_parsers";
 import type { BasePromptTemplate } from "@langchain/core/prompts";
-import type { Runnable, RunnableInterface } from "@langchain/core/runnables";
+import type { Runnable } from "@langchain/core/runnables";
 import type {
   BaseFunctionCallOptions,
   BaseLanguageModelInput,
@@ -23,7 +23,7 @@ export type CreateOpenAIFnRunnableConfig<
 > = {
   functions: FunctionDefinition[];
   /** Language model to use, assumed to support the OpenAI function-calling API. */
-  llm: RunnableInterface<
+  llm: Runnable<
     BaseLanguageModelInput,
     BaseMessage,
     BaseFunctionCallOptions
@@ -100,7 +100,7 @@ export function createOpenAIFnRunnable<
   RunOutput extends Record<string, any> = Record<string, any>
 >(
   config: CreateOpenAIFnRunnableConfig<RunInput, RunOutput>
-): RunnableInterface<RunInput, RunOutput> & {
+): Runnable<RunInput, RunOutput> & {
   pipe: Runnable<RunInput, RunOutput>["pipe"];
 } {
   const {
@@ -145,7 +145,7 @@ export type CreateStructuredOutputRunnableConfig<
   /**
    * Language model to use, assumed to support the OpenAI function-calling API.
    */
-  llm: RunnableInterface<
+  llm: Runnable<
     BaseLanguageModelInput,
     BaseMessage,
     BaseFunctionCallOptions
@@ -218,7 +218,7 @@ export function createStructuredOutputRunnable<
   RunOutput extends Record<string, any> = Record<string, any>
 >(
   config: CreateStructuredOutputRunnableConfig<RunInput, RunOutput>
-): RunnableInterface<RunInput, RunOutput> & {
+): Runnable<RunInput, RunOutput> & {
   pipe: Runnable<RunInput, RunOutput>["pipe"];
 } {
   const { outputSchema, llm, prompt, outputParser } = config;

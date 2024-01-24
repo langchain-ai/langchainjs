@@ -238,7 +238,15 @@ type SqlInoutWithTables = SqlInput & {
   tableNamesToUse: string[];
 };
 
-const strip = (text: string) => text.trim();
+const strip = (text: string) => {
+  // Replace escaped quotes with actual quotes
+  let newText = text.replace(/\\"/g, '"').trim();
+  // Remove wrapping quotes if the entire string is wrapped in quotes
+  if (newText.startsWith('"') && newText.endsWith('"')) {
+    newText = newText.substring(1, newText.length - 1);
+  }
+  return newText;
+};
 
 function difference(setA: Set<string>, setB: Set<string>) {
   return new Set([...setA].filter((x) => !setB.has(x)));
