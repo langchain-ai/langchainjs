@@ -171,13 +171,13 @@ export function mapGenerateContentResultToChatResult(
 
   const [candidate] = response.candidates;
   const { content, ...generationInfo } = candidate;
-  const text = content.parts[0]?.text ?? "";
+  const text = content?.parts[0]?.text ?? "";
 
   const generation: ChatGeneration = {
     text,
     message: new AIMessage({
       content: text,
-      name: content === null ? undefined : content.role,
+      name: !content ? undefined : content.role,
       additional_kwargs: generationInfo,
     }),
     generationInfo,
