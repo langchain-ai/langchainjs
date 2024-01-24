@@ -1,7 +1,7 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { test } from "@jest/globals";
-import { AmazonKnowledgeBaseRetriever } from "../amazon_knowledge_bases.js";
+import { AmazonKnowledgeBaseRetriever } from "../amazon_knowledge_base.js";
 
 test("AmazonKnowledgeBaseRetriever", async () => {
   const retriever = new AmazonKnowledgeBaseRetriever({

@@ -43,7 +43,7 @@ export class AmazonKnowledgeBaseRetriever extends BaseRetriever {
     return "AmazonKnowledgeBaseRetriever";
   }
 
-  lc_namespace = ["langchain", "retrievers", "amazon_bedrock_knowledge_bases"];
+  lc_namespace = ["langchain", "retrievers", "amazon_bedrock_knowledge_base"];
 
   knowledgeBaseId: string;
 
@@ -59,24 +59,14 @@ export class AmazonKnowledgeBaseRetriever extends BaseRetriever {
   }: AmazonKnowledgeBaseRetrieverArgs) {
     super();
 
-    if (!region) {
-      throw new Error("Please pass region field to the constructor!");
-    }
-
-    if (!knowledgeBaseId) {
-      throw new Error("Please pass Knowledge Base Id to the constructor");
-    }
-
     this.topK = topK;
     this.bedrockAgentRuntimeClient = new BedrockAgentRuntimeClient({
       region,
       ...clientOptions,
     });
-
     this.knowledgeBaseId = knowledgeBaseId;
   }
 
-  // A method to clean the result text by replacing sequences of whitespace with a single space and removing ellipses.
   /**
    * Cleans the result text by replacing sequences of whitespace with a
    * single space and removing ellipses.

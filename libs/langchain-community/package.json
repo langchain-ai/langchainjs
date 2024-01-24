@@ -1097,10 +1097,10 @@
       "import": "./retrievers/amazon_kendra.js",
       "require": "./retrievers/amazon_kendra.cjs"
     },
-    "./retrievers/amazon_knowledge_bases": {
-      "types": "./retrievers/amazon_knowledge_bases.d.ts",
-      "import": "./retrievers/amazon_knowledge_bases.js",
-      "require": "./retrievers/amazon_knowledge_bases.cjs"
+    "./retrievers/amazon_knowledge_base": {
+      "types": "./retrievers/amazon_knowledge_base.d.ts",
+      "import": "./retrievers/amazon_knowledge_base.js",
+      "require": "./retrievers/amazon_knowledge_base.cjs"
     },
     "./retrievers/chaindesk": {
       "types": "./retrievers/chaindesk.d.ts",
@@ -1672,9 +1672,9 @@
     "retrievers/amazon_kendra.cjs",
     "retrievers/amazon_kendra.js",
     "retrievers/amazon_kendra.d.ts",
-    "retrievers/amazon_knowledge_bases.cjs",
-    "retrievers/amazon_knowledge_bases.js",
-    "retrievers/amazon_knowledge_bases.d.ts",
+    "retrievers/amazon_knowledge_base.cjs",
+    "retrievers/amazon_knowledge_base.js",
+    "retrievers/amazon_knowledge_base.d.ts",
     "retrievers/chaindesk.cjs",
     "retrievers/chaindesk.js",
     "retrievers/chaindesk.d.ts",
