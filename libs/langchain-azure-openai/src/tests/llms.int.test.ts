@@ -7,7 +7,7 @@ import { ClientSecretCredential } from "@azure/identity";
 import { TokenCredential } from "@azure/core-auth";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { AzureOpenAI } from "../llms.js";
-import { AzureOpenAIChat } from "../chat_models.js";
+import { AzureOpenAIChat } from "../legacy.js";
 
 test("Test OpenAI", async () => {
   const model = new AzureOpenAI({

@@ -21,7 +21,7 @@ import {
   isTokenCredential,
 } from "@azure/core-auth";
 import { AzureOpenAIInput, OpenAICallOptions, OpenAIInput } from "./types.js";
-import { AzureOpenAIChat } from "./chat_models.js";
+import { AzureOpenAIChat } from "./legacy.js";
 
 /**
  * Interface for tracking token usage in OpenAI calls.
@@ -170,7 +170,8 @@ export class AzureOpenAI<
     }
 
     const azureCredential =
-      fields?.credentials ?? new AzureKeyCredential(this.azureOpenAIApiKey);
+      fields?.credentials ??
+      new AzureKeyCredential(this.azureOpenAIApiKey ?? "");
 
     if (isTokenCredential(azureCredential)) {
       this.client = new AzureOpenAIClient(
