@@ -32,16 +32,16 @@ export type RunEvaluatorLike =
   | ((props: {
       run: Run;
       example?: Example;
-      rawInput: Record<string, unknown>;
-      rawPrediction?: Record<string, unknown>;
-      rawReferenceOutput?: Record<string, unknown>;
+      input: Record<string, unknown>;
+      prediction?: Record<string, unknown>;
+      reference?: Record<string, unknown>;
     }) => Promise<EvaluationResult>)
   | ((props: {
       run: Run;
       example?: Example;
-      rawInput: Record<string, unknown>;
-      rawPrediction?: Record<string, unknown>;
-      rawReferenceOutput?: Record<string, unknown>;
+      input: Record<string, unknown>;
+      prediction?: Record<string, unknown>;
+      reference?: Record<string, unknown>;
     }) => EvaluationResult);
 
 /**

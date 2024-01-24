@@ -35,11 +35,11 @@ export type ChainOrFactory =
 class DynamicRunEvaluator implements RunEvaluator {
   evaluator: RunnableLambda<
     {
+      input: Record<string, unknown>;
+      prediction?: Record<string, unknown>;
+      reference?: Record<string, unknown>;
       run: Run;
       example?: Example;
-      rawInput: Record<string, unknown>;
-      rawPrediction?: Record<string, unknown>;
-      rawReferenceOutput?: Record<string, unknown>;
     },
     EvaluationResult
   >;
