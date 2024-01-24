@@ -15,50 +15,26 @@ const enum UpgradingModule {
 }
 
 /**
- * @param {string} entrypointFile
+ * @param {string} packagePath
  * @param {Project} project
  * @returns {Array<EntrypointAndSymbols> }
  */
-function getEntrypointsFromFile(
-  entrypointFile: string,
+async function getEntrypointsFromFile(
+  packagePath: string,
   project: Project
-): Array<EntrypointAndSymbols> {
-  // load file contents from ts-morph
-  const file = project.addSourceFileAtPath(entrypointFile);
-  // extract the variable named entrypoints
-  const entrypointVar = file.getVariableDeclarationOrThrow("entrypoints");
-  // extract the `deprecatedNodeOnly` if it exists
-  const deprecatedNodeOnlyVar =
-    file.getVariableDeclaration("deprecatedNodeOnly");
-  let deprecatedNodeOnly: Array<string> = [];
-  if (deprecatedNodeOnlyVar) {
-    const deprecatedNodeOnlyKeys = deprecatedNodeOnlyVar
-      .getInitializerIfKindOrThrow(SyntaxKind.ArrayLiteralExpression)
-      .getElements()
-      .map((element) => element.getText().replaceAll('"', ""));
-    deprecatedNodeOnly = deprecatedNodeOnlyKeys;
-  }
-  // get all keys from the entrypoints object
-  const entrypointKeys = entrypointVar
-    .getInitializerIfKindOrThrow(SyntaxKind.ObjectLiteralExpression)
-    .getProperties()
-    .map((property) => property.getText());
-  const entrypointKeysArray = entrypointKeys.map((kv) =>
-    kv.split(":").map((part) => part.trim().replace(/^"|"$/g, ""))
+): Promise<Array<EntrypointAndSymbols>> {
+  // @TODO replace any with LangChainConfig from `@langchain/scripts`
+  const { config }: { config: any } = await import(
+    path.join(packagePath, "langchain.config.js")
   );
+  const { entrypoints, deprecatedNodeOnly } = config;
 
-  const entrypointsObject: Record<string, string> =
-    Object.fromEntries(entrypointKeysArray);
-
-  const result = Object.entries(entrypointsObject).flatMap(([key, value]) => {
+  const result = Object.entries(entrypoints).flatMap(([key, value]) => {
     if (deprecatedNodeOnly.includes(key)) {
       return [];
     }
     const newFile = project.addSourceFileAtPath(
-      path.join(
-        entrypointFile.replace("scripts/create-entrypoints.js", "src"),
-        `${value}.ts`
-      )
+      path.join(packagePath, "src", `${value}.ts`)
     );
     const exportedSymbolsMap = newFile.getExportedDeclarations();
     const exportedSymbols = Array.from(exportedSymbolsMap.entries()).map(
@@ -212,37 +188,20 @@ export async function updateEntrypointsFrom0_0_xTo0_1_x({
   const project = new Project();
 
   const langchainCorePackageEntrypoints = removeLoad(
-    getEntrypointsFromFile(
-      path.join(
-        localLangChainPath,
-        "langchain-core",
-        "scripts",
-        "create-entrypoints.js"
-      ),
+    await getEntrypointsFromFile(
+      path.join(localLangChainPath, "langchain-core"),
       project
     )
   );
   const langchainCommunityPackageEntrypoints = removeLoad(
-    getEntrypointsFromFile(
-      path.join(
-        localLangChainPath,
-        "libs",
-        "langchain-community",
-        "scripts",
-        "create-entrypoints.js"
-      ),
+    await getEntrypointsFromFile(
+      path.join(localLangChainPath, "libs", "langchain-community"),
       project
     )
   );
   const langchainOpenAIPackageEntrypoints = removeLoad(
-    getEntrypointsFromFile(
-      path.join(
-        localLangChainPath,
-        "libs",
-        "langchain-openai",
-        "scripts",
-        "create-entrypoints.js"
-      ),
+    await getEntrypointsFromFile(
+      path.join(localLangChainPath, "libs", "langchain-openai"),
       project
     )
   );
@@ -250,14 +209,8 @@ export async function updateEntrypointsFrom0_0_xTo0_1_x({
     UpgradingModule.COHERE
   )
     ? removeLoad(
-        getEntrypointsFromFile(
-          path.join(
-            localLangChainPath,
-            "libs",
-            "langchain-cohere",
-            "scripts",
-            "create-entrypoints.js"
-          ),
+        await getEntrypointsFromFile(
+          path.join(localLangChainPath, "libs", "langchain-cohere"),
           project
         )
       )
@@ -266,14 +219,8 @@ export async function updateEntrypointsFrom0_0_xTo0_1_x({
     UpgradingModule.PINECONE
   )
     ? removeLoad(
-        getEntrypointsFromFile(
-          path.join(
-            localLangChainPath,
-            "libs",
-            "langchain-pinecone",
-            "scripts",
-            "create-entrypoints.js"
-          ),
+        await getEntrypointsFromFile(
+          path.join(localLangChainPath, "libs", "langchain-pinecone"),
           project
         )
       )
