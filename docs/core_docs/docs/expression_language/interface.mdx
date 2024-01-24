@@ -68,8 +68,8 @@ import BatchExample from "@examples/guides/expression_language/interface_batch.t
 
 <CodeBlock language="typescript">{BatchExample}</CodeBlock>
 
-You can also pass a `batchOptions` argument to the call. There are options to set maximum concurrency
-and whether or not to return exceptions instead of throwing them (useful for gracefully handling failures!):
+You can also pass additional arguments to the call. The standard LCEL config object contains an option to set maximum concurrency,
+and an additional `batch()` specific config object that includes an option for whether or not to return exceptions instead of throwing them (useful for gracefully handling failures!):
 
 import BatchExampleWithOptions from "@examples/guides/expression_language/interface_batch_with_options.ts";
 
@@ -84,8 +84,15 @@ You can stream all steps (default) or include/exclude steps by name, tags or met
 
 This method yields [JSONPatch](https://jsonpatch.com/) ops that when applied in the same order as received build up the RunState.
 
+To reconstruct the JSONPatches into a single JSON object you can use the [`applyPatch`](https://api.js.langchain.com/functions/langchain_core_utils_json_patch.applyPatch.html) method.
+The example below demonstrates how to pass the patch to the `applyPatch` method.
+
 Here's an example with streaming intermediate documents from a retrieval chain:
 
 import StreamLogExample from "@examples/guides/expression_language/interface_stream_log.ts";
+
+```bash npm2yarn
+npm install @langchain/community @langchain/openai
+```
 
 <CodeBlock language="typescript">{StreamLogExample}</CodeBlock>

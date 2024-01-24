@@ -106,6 +106,7 @@ const entrypoints = {
   "vectorstores/singlestore": "vectorstores/singlestore",
   "vectorstores/supabase": "vectorstores/supabase",
   "vectorstores/tigris": "vectorstores/tigris",
+  "vectorstores/turbopuffer": "vectorstores/turbopuffer",
   "vectorstores/typeorm": "vectorstores/typeorm",
   "vectorstores/typesense": "vectorstores/typesense",
   "vectorstores/usearch": "vectorstores/usearch",
@@ -184,6 +185,10 @@ const entrypoints = {
   "memory/motorhead_memory": "memory/motorhead_memory",
   "memory/zep": "memory/zep",
   "util/convex": "utils/convex",
+  // indexes
+  "indexes/base": "indexes/base",
+  "indexes/postgres": "indexes/postgres",
+  "indexes/memory": "indexes/memory",
 };
 
 // Entrypoints in this list will
@@ -308,6 +313,8 @@ const requiresOptionalDependency = [
   "memory/motorhead_memory",
   "memory/zep",
   "util/convex",
+  // indexes
+  "indexes/postgres",
 ];
 
 const updateJsonFile = (relativePath, updateFunction) => {

@@ -319,6 +319,9 @@ export interface OptionalImportMap {
   "@langchain/community/util/convex"?:
     | typeof import("../utils/convex.js")
     | Promise<typeof import("../utils/convex.js")>;
+  "@langchain/community/indexes/postgres"?:
+    | typeof import("../indexes/postgres.js")
+    | Promise<typeof import("../indexes/postgres.js")>;
 }
 
 export interface SecretMap {
@@ -363,6 +366,7 @@ export interface SecretMap {
   REMOTE_RETRIEVER_AUTH_BEARER?: string;
   REPLICATE_API_TOKEN?: string;
   SEARXNG_API_BASE?: string;
+  TURBOPUFFER_API_KEY?: string;
   UPSTASH_REDIS_REST_TOKEN?: string;
   UPSTASH_REDIS_REST_URL?: string;
   VECTARA_API_KEY?: string;

@@ -7,7 +7,7 @@ const namespace = "langchain.test";
 const [dbName, collectionName] = namespace.split(".");
 const collection = client.db(dbName).collection(collectionName);
 
-await MongoDBAtlasVectorSearch.fromTexts(
+const vectorstore = await MongoDBAtlasVectorSearch.fromTexts(
   ["Hello world", "Bye bye", "What's this?"],
   [{ id: 2 }, { id: 1 }, { id: 3 }],
   new CohereEmbeddings(),
@@ -18,5 +18,13 @@ await MongoDBAtlasVectorSearch.fromTexts(
     embeddingKey: "embedding", // The name of the collection field containing the embedded text. Defaults to "embedding"
   }
 );
+
+const assignedIds = await vectorstore.addDocuments([
+  { pageContent: "upsertable", metadata: {} },
+]);
+
+const upsertedDocs = [{ pageContent: "overwritten", metadata: {} }];
+
+await vectorstore.addDocuments(upsertedDocs, { ids: assignedIds });
 
 await client.close();

@@ -12,8 +12,8 @@ const chain = promptTemplate.pipe(model);
 
 const result = await chain.batch(
   [{ topic: "bears" }, { topic: "cats" }],
-  {},
-  { returnExceptions: true, maxConcurrency: 1 }
+  { maxConcurrency: 1 },
+  { returnExceptions: true }
 );
 
 console.log(result);

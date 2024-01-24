@@ -166,16 +166,33 @@ yarn lint && yarn format
 If you add a new file to be exported, either import & re-export from \`src/index.ts\`, or add it to \`scripts/create-entrypoints.js\` and run \`yarn build\` to generate the new entrypoint.
 `;
 
-export const DEFAULT_RELEASE_IT = `{
-  "github": {
-    "release": true,
-    "autoGenerate": true,
-    "tokenRef": "GITHUB_TOKEN_RELEASE"
+export const DEFAULT_RELEASE_IT = {
+  github: {
+    release: true,
+    autoGenerate: true,
+    tokenRef: "GITHUB_TOKEN_RELEASE",
   },
-  "npm": {
-    "versionArgs": [
-      "--workspaces-update=false"
-    ]
-  }
-}
-`;
+  npm: {
+    versionArgs: ["--workspaces-update=false"],
+  },
+};
+
+export const DEFAULT_PRETTIERRC = {
+  $schema: "https://json.schemastore.org/prettierrc",
+  printWidth: 80,
+  tabWidth: 2,
+  useTabs: false,
+  semi: true,
+  singleQuote: false,
+  quoteProps: "as-needed",
+  jsxSingleQuote: false,
+  trailingComma: "es5",
+  bracketSpacing: true,
+  arrowParens: "always",
+  requirePragma: false,
+  insertPragma: false,
+  proseWrap: "preserve",
+  htmlWhitespaceSensitivity: "css",
+  vueIndentScriptAndStyle: false,
+  endOfLine: "lf",
+};

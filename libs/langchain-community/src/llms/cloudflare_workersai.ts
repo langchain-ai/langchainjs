@@ -6,6 +6,8 @@ import { GenerationChunk } from "@langchain/core/outputs";
 import { convertEventStreamToIterableReadableDataStream } from "../utils/event_source_parse.js";
 
 /**
+ * @deprecated Install and import from "@langchain/cloudflare" instead.
+ *
  * Interface for CloudflareWorkersAI input parameters.
  */
 export interface CloudflareWorkersAIInput {
@@ -17,6 +19,8 @@ export interface CloudflareWorkersAIInput {
 }
 
 /**
+ * @deprecated Install and import from "@langchain/cloudflare" instead.
+ *
  * Class representing the CloudflareWorkersAI language model. It extends the LLM (Large
  * Language Model) class, providing a standard interface for interacting
  * with the CloudflareWorkersAI language model.

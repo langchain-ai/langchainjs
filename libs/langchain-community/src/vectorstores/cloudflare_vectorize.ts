@@ -13,12 +13,17 @@ import {
 } from "@langchain/core/utils/async_caller";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 
+/**
+ * @deprecated Install and import from "@langchain/cloudflare" instead.
+ */
 export interface VectorizeLibArgs extends AsyncCallerParams {
   index: VectorizeIndex;
   textKey?: string;
 }
 
 /**
+ * @deprecated Install and import from "@langchain/cloudflare" instead.
+ *
  * Type that defines the parameters for the delete operation in the
  * CloudflareVectorizeStore class. It includes ids, deleteAll flag, and namespace.
  */
@@ -27,6 +32,8 @@ export type VectorizeDeleteParams = {
 };
 
 /**
+ * @deprecated Install and import from "@langchain/cloudflare" instead.
+ *
  * Class that extends the VectorStore class and provides methods to
  * interact with the Cloudflare Vectorize vector database.
  */
