@@ -13,20 +13,6 @@ const datasource = new DataSource({
 const db = await SqlDatabase.fromDataSourceParams({
   appDataSource: datasource,
 });
-console.log(db.allTables.map((t) => t.tableName));
-/**
-[
-  'Album',       'Artist',
-  'Customer',    'Employee',
-  'Genre',       'Invoice',
-  'InvoiceLine', 'MediaType',
-  'Playlist',    'PlaylistTrack',
-  'Track'
-]
- */
-
-// # Query checker
-// Perhaps the simplest strategy is to ask the model itself to check the original query for common mistakes. Suppose we have the following SQL query chain:
 
 const llm = new ChatOpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 });
 const chain = new SqlDatabaseChain({
@@ -34,6 +20,10 @@ const chain = new SqlDatabaseChain({
   database: db,
   inputKey: "question",
 });
+
+/**
+ * And we want to validate its outputs. We can do so by extending the chain with a second prompt and model call:
+ */
 
 const SYSTEM_PROMPT = `Double check the user's {dialect} query for common mistakes, including:
 - Using NOT IN with NULL values
@@ -65,11 +55,11 @@ const fullChain = RunnableSequence.from([
   },
   validationChain,
 ]);
-// const query = await fullChain.invoke({
-//   question:
-//     "What's the average Invoice from an American customer whose Fax is missing since 2003 but before 2010",
-// });
-// console.log(query);
+const query = await fullChain.invoke({
+  question:
+    "What's the average Invoice from an American customer whose Fax is missing since 2003 but before 2010",
+});
+console.log(query);
 /**
 SELECT AVG(Invoice)
 FROM Customers
@@ -80,7 +70,13 @@ AND Invoices.InvoiceDate >= '2003-01-01'
 AND Invoices.InvoiceDate < '2010-01-01'
 AND Invoice = 6.633;
  */
-// console.log(db.run(query));
+console.log(db.run(query));
+/**
+ * 
+ */
+
+// The obvious downside of this approach is that we need to make two model calls instead of one to generate our query.
+// To get around this we can try to perform the query generation and query check in a single model invocation:
 
 const SYSTEM_PROMPT_2 = `You are a {dialect} expert. Given an input question, create a syntactically correct {dialect} query to run.
 Unless the user specifies in the question a specific number of examples to obtain, query for at most {top_k} results using the LIMIT clause as per {dialect}. You can order the results to return the most informative data in the database.
@@ -129,4 +125,10 @@ const result = await chain2.invoke({
     "What's the average Invoice from an American customer whose Fax is missing since 2003 but before 2010",
 });
 console.log(result);
+/**
+ * 
+ */
 console.log(db.run(result));
+/**
+ * 
+ */
