@@ -37,6 +37,9 @@ class DynamicRunEvaluator implements RunEvaluator {
     {
       run: Run;
       example?: Example;
+      rawInput: Record<string, unknown>;
+      rawPrediction?: Record<string, unknown>;
+      rawReferenceOutput?: Record<string, unknown>;
     },
     EvaluationResult
   >;
@@ -52,7 +55,13 @@ class DynamicRunEvaluator implements RunEvaluator {
    * @returns A promise that resolves to the evaluation result.
    */
   async evaluateRun(run: Run, example?: Example): Promise<EvaluationResult> {
-    return await this.evaluator.invoke({ run, example });
+    return await this.evaluator.invoke({
+      run,
+      example,
+      rawInput: run.inputs,
+      rawPrediction: run.outputs,
+      rawReferenceOutput: example?.outputs,
+    });
   }
 }
 
