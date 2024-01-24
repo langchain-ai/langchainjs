@@ -11,7 +11,6 @@ import {
   isBaseMessage,
 } from "@langchain/core/messages";
 import { ChatResult } from "@langchain/core/outputs";
-import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnableLambda } from "@langchain/core/runnables";
 import { DataType } from "langsmith/schemas";
 import { RunEvalConfig } from "../config.js";
@@ -112,8 +111,7 @@ const chatDataset = kvDataset.map((message) => ({
   },
 }));
 
-// const datasetTypes: DataType[] = ["kv", "chat", "llm"];
-const datasetTypes: DataType[] = [];
+const datasetTypes: DataType[] = ["kv", "chat", "llm"];
 describe.each(datasetTypes)("runner_utils %s dataset", (datasetType) => {
   let client: Client;
   const datasetName = `lcjs ${datasetType} integration tests`;
@@ -207,11 +205,7 @@ describe.each(datasetTypes)("runner_utils %s dataset", (datasetType) => {
   test(`Runnable on ${datasetType} singleio dataset`, async () => {
     const runnable = new RunnableLambda({
       func: (input: { input: string }) => ({ output: answers[input.input] }),
-    })
-      .pipe(
-        ChatPromptTemplate.fromMessages([["human", "{the wackiest input}"]])
-      )
-      .pipe(new FakeChatModel({}));
+    });
     const evalResults = await runOnDataset(runnable, datasetName, {
       client,
       evaluationConfig: evalConfig,
@@ -224,14 +218,8 @@ describe.each(datasetTypes)("runner_utils %s dataset", (datasetType) => {
 
   test(`Runnable constructor on ${datasetType} singleio dataset`, async () => {
     const runnable = new RunnableLambda({
-      func: (input: { input: string }) => ({
-        "the wackiest input": input.input,
-      }),
-    })
-      .pipe(
-        ChatPromptTemplate.fromMessages([["human", "{the wackiest input}"]])
-      )
-      .pipe(new FakeChatModel({}));
+      func: (input: { input: string }) => ({ output: answers[input.input] }),
+    });
 
     function construct() {
       return runnable;
