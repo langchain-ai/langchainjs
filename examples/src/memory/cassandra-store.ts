@@ -8,7 +8,7 @@ const configConnection = {
   serviceProviderArgs: {
     astra: {
       token: "<your Astra Token>" as string,
-      datacenterID: "<your Astra DB ID>" as string,
+      endpoint: "<your Astra Endpoint>" as string,
     },
   },
 };
