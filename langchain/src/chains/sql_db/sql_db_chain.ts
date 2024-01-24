@@ -1,14 +1,26 @@
-import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import type {
+  BaseLanguageModel,
+  BaseLanguageModelInterface,
+} from "@langchain/core/language_models/base";
 import type { TiktokenModel } from "js-tiktoken/lite";
 import type { OpenAI } from "@langchain/openai";
 import { ChainValues } from "@langchain/core/utils/types";
-import { PromptTemplate } from "@langchain/core/prompts";
+import { BasePromptTemplate, PromptTemplate } from "@langchain/core/prompts";
 import {
   calculateMaxTokens,
   getModelContextSize,
 } from "@langchain/core/language_models/base";
 import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
-import { DEFAULT_SQL_DATABASE_PROMPT } from "./sql_db_prompt.js";
+import {
+  RunnablePassthrough,
+  RunnableSequence,
+} from "@langchain/core/runnables";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import {
+  DEFAULT_SQL_DATABASE_PROMPT,
+  SQL_PROMPTS_MAP,
+  SqlDialect,
+} from "./sql_db_prompt.js";
 import { BaseChain, ChainInputs } from "../base.js";
 import { LLMChain } from "../llm_chain.js";
 import type { SqlDatabase } from "../../sql_db.js";
@@ -205,4 +217,88 @@ export class SqlDatabaseChain extends BaseChain {
       We suggest you to use the includeTables parameters when creating the SqlDatabase object to select only a subset of the tables. You can also use a model which can handle more tokens.`);
     }
   }
+}
+
+interface CreateSqlQueryChainFields {
+  llm: BaseLanguageModel;
+  db: SqlDatabase;
+  prompt?: BasePromptTemplate;
+  /**
+   * @default 5
+   */
+  k?: number;
+  dialect: SqlDialect;
+}
+
+type SqlInput = {
+  question: string;
+};
+
+type SqlInoutWithTables = SqlInput & {
+  tableNamesToUse: string[];
+};
+
+const strip = (text: string) => text.trim();
+
+function difference(setA: Set<string>, setB: Set<string>) {
+  return new Set([...setA].filter((x) => !setB.has(x)));
+}
+
+export async function createSqlQueryChain({
+  llm,
+  db,
+  prompt,
+  k = 5,
+  dialect,
+}: CreateSqlQueryChainFields) {
+  let promptToUse: BasePromptTemplate;
+  if (prompt) {
+    promptToUse = prompt;
+  } else if (SQL_PROMPTS_MAP[dialect]) {
+    promptToUse = SQL_PROMPTS_MAP[dialect];
+  } else {
+    promptToUse = DEFAULT_SQL_DATABASE_PROMPT;
+  }
+
+  if (
+    difference(
+      new Set(["input", "top_k", "table_info"]),
+      new Set(promptToUse.inputVariables)
+    ).size > 0
+  ) {
+    throw new Error(
+      `Prompt must have input variables: 'input', 'top_k', 'table_info'. Received prompt with input variables: ` +
+        `${promptToUse.inputVariables}. Full prompt:\n\n${promptToUse}`
+    );
+  }
+  if (promptToUse.inputVariables.includes("dialect")) {
+    promptToUse = await promptToUse.partial({ dialect });
+  }
+
+  promptToUse = await promptToUse.partial({ top_k: k.toString() });
+
+  const inputs = {
+    input: (x: Record<string, unknown>) => {
+      if ("question" in x) {
+        return `${(x as SqlInput).question}\nSQLQuery: `;
+      }
+      throw new Error("Input must include a question property.");
+    },
+    table_info: async (x: Record<string, unknown>) =>
+      db.getTableInfo((x as SqlInoutWithTables).tableNamesToUse),
+  };
+
+  return RunnableSequence.from([
+    RunnablePassthrough.assign(inputs),
+    (x) => {
+      const newInputs = { ...x };
+      delete newInputs.question;
+      delete newInputs.tableNamesToUse;
+      return newInputs;
+    },
+    promptToUse,
+    llm.bind({ stop: ["\nSQLResult:"] }),
+    new StringOutputParser(),
+    strip,
+  ]);
 }

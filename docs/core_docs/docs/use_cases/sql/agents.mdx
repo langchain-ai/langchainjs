@@ -1,0 +1,38 @@
+# Agents
+
+LangChain has a SQL Agent which provides a more flexible way of interacting with SQL Databases than a chain. The main advantages of using the SQL Agent are:
+
+- It can answer questions based on the databases’ schema as well as on the databases’ content (like describing a specific table).
+- It can recover from errors by running a generated query, catching the traceback and regenerating it correctly.
+- It can query the database as many times as needed to answer the user question.
+
+To initialize the agent we’ll use the [`createSqlAgent`](https://api.js.langchain.com/functions/langchain_agents_toolkits_sql.createSqlAgent.html) function. This agent uses the [`SqlToolkit`](https://api.js.langchain.com/classes/langchain_agents_toolkits_sql.SqlToolkit.html) which contains tools to:
+
+- Create and execute queries
+- Check query syntax
+- Retrieve table descriptions
+- … and more
+
+## Setup
+
+First, install the required packages and set your environment variables. This example will use OpenAI as the LLM.
+
+```bash
+npm install langchain @langchain/community @langchain/openai typeorm sqlite3
+```
+
+```bash
+export OPENAI_API_KEY="your api key"
+# Uncomment the below to use LangSmith. Not required.
+# export LANGCHAIN_API_KEY="your api key"
+# export LANGCHAIN_TRACING_V2=true
+```
+
+The below example will use a SQLite connection with Chinook database. Follow these [installation steps](https://database.guide/2-sample-databases-sqlite/) to create `Chinook.db` in the same directory as this notebook:
+
+- Save [this](https://raw.githubusercontent.com/lerocha/chinook-database/master/ChinookDatabase/DataSources/Chinook_Sqlite.sql) file as `Chinook_Sqlite.sql`
+- Run sqlite3 `Chinook.db`
+- Run `.read Chinook_Sqlite.sql`
+- Test `SELECT * FROM Artist LIMIT 10;`
+
+Now, `Chinhook.db` is in our directory and we can interface with it using the Typeorm-driven `SqlDatabase` class:
