@@ -38,6 +38,7 @@ export function convertAuthorToRole(author: string) {
      *  we will convert them to human messages and merge with following
      * */
     case "ai":
+    case "model": // getMessageAuthor returns message.name. code ex.: return message.name ?? type;
       return "model";
     case "system":
     case "human":
