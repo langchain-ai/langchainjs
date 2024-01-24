@@ -404,7 +404,7 @@ describe.skip("AzureAISearchVectorStore integration tests", () => {
         new Document<AzureAISearchDocumentMetadata>({
           pageContent: "test index document upload text",
           metadata: {
-            source: "test",
+            source: "deleteById",
           },
         }),
       ],
@@ -416,9 +416,18 @@ describe.skip("AzureAISearchVectorStore integration tests", () => {
     // Need to wait a bit for the document to be indexed
     await setTimeout(1000);
 
-    const deleteResult = await store.deleteById(id);
+    await store.delete({ ids: id });
 
-    expect(deleteResult).toHaveLength(1);
+    // Wait a bit for the index to be updated
+    await setTimeout(1000);
+
+    const docs = await store.similaritySearch(
+      "test",
+      1,
+      "metadata/source eq 'deleteById'"
+    );
+
+    expect(docs).toHaveLength(0);
   });
 
   test("test delete documents by filter", async () => {
@@ -444,10 +453,19 @@ describe.skip("AzureAISearchVectorStore integration tests", () => {
     // Need to wait a bit for the document to be indexed
     await setTimeout(1000);
 
-    const deleteResult = await store.deleteMany(
+    await store.delete({
+      filter: `metadata/source eq '${source}'`
+    });
+
+    // Wait a bit for the index to be updated
+    await setTimeout(1000);
+
+    const docs = await store.similaritySearch(
+      "test",
+      1,
       `metadata/source eq '${source}'`
     );
 
-    expect(deleteResult).toHaveLength(1);
+    expect(docs).toHaveLength(0);
   });
 });

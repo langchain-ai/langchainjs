@@ -86,6 +86,11 @@ export type AzureAISearchAddDocumentsOptions = {
   ids?: string[];
 };
 
+/**
+ * Azure AI Search filter type.
+ */
+export type AzureAISearchFilterType = string;
+
 const DEFAULT_FIELD_ID = "id";
 const DEFAULT_FIELD_CONTENT = "content";
 const DEFAULT_FIELD_CONTENT_VECTOR = "content_vector";
@@ -104,7 +109,7 @@ const DEFAULT_FIELD_METADATA_ATTRS = "attributes";
  * be created automatically if it does not exist.
  */
 export class AzureAISearchVectorStore extends VectorStore {
-  declare FilterType: string;
+  declare FilterType: AzureAISearchFilterType;
 
   get lc_secrets(): { [key: string]: string } {
     return {
@@ -167,11 +172,31 @@ export class AzureAISearchVectorStore extends VectorStore {
   }
 
   /**
+  * Removes specified documents from the AzureAISearchVectorStore using IDs or a filter.
+   * @param params Object that includes either an array of IDs or a filter for the data to be deleted.
+   * @returns A promise that resolves when the documents have been removed.
+   */
+  async delete(params: {
+    ids?: string | string[];
+    filter?: AzureAISearchFilterType;
+  }) {
+    if (!params.ids && !params.filter) {
+      throw new Error(`Azure AI Search delete requires either "ids" or "filter" to be set in the input object`);
+    }
+    if (params.ids) {
+      await this.deleteById(params.ids);
+    }
+    if (params.filter) {
+      await this.deleteMany(params.filter);
+    }
+  }
+
+  /**
    * Removes specified documents from the AzureAISearchVectorStore using a filter.
    * @param filter OData filter to find documents to delete.
    * @returns A promise that resolves when the documents have been removed.
    */
-  async deleteMany(filter: string): Promise<IndexingResult[]> {
+  private async deleteMany(filter: AzureAISearchFilterType): Promise<IndexingResult[]> {
     const { results } = await this.client.search("*", {
       filter,
     });
@@ -208,7 +233,7 @@ export class AzureAISearchVectorStore extends VectorStore {
    * @param ids IDs of the documents to be removed.
    * @returns A promise that resolves when the documents have been removed.
    */
-  async deleteById(ids: string | string[]): Promise<IndexingResult[]> {
+  private async deleteById(ids: string | string[]): Promise<IndexingResult[]> {
     await this.initPromise;
 
     const docsIds = Array.isArray(ids) ? ids : [ids];
