@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.1.5",
+  "version": "0.1.7",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -865,12 +865,21 @@
     "evaluation.cjs",
     "evaluation.js",
     "evaluation.d.ts",
+    "smith.cjs",
+    "smith.js",
+    "smith.d.ts",
     "runnables.cjs",
     "runnables.js",
     "runnables.d.ts",
     "runnables/remote.cjs",
     "runnables/remote.js",
-    "runnables/remote.d.ts"
+    "runnables/remote.d.ts",
+    "indexes.cjs",
+    "indexes.js",
+    "indexes.d.ts",
+    "index.cjs",
+    "index.js",
+    "index.d.ts"
   ],
   "repository": {
     "type": "git",
@@ -1002,7 +1011,7 @@
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
     "@notionhq/client": "^2.2.10",
-    "@pinecone-database/pinecone": "^1.1.0",
+    "@pinecone-database/pinecone": "*",
     "@supabase/supabase-js": "^2.10.0",
     "@vercel/kv": "^0.2.3",
     "@xata.io/client": "^0.28.0",
@@ -1203,7 +1212,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.9.1",
-    "@langchain/community": "~0.0.17",
+    "@langchain/community": "~0.0.20",
     "@langchain/core": "~0.1.16",
     "@langchain/openai": "~0.0.12",
     "binary-extensions": "^2.2.0",
@@ -1212,7 +1221,7 @@
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
     "langchainhub": "~0.0.6",
-    "langsmith": "~0.0.48",
+    "langsmith": "~0.0.59",
     "ml-distance": "^4.0.0",
     "openapi-types": "^12.1.3",
     "p-retry": "4",
@@ -2664,6 +2673,11 @@
       "import": "./evaluation.js",
       "require": "./evaluation.cjs"
     },
+    "./smith": {
+      "types": "./smith.d.ts",
+      "import": "./smith.js",
+      "require": "./smith.cjs"
+    },
     "./runnables": {
       "types": "./runnables.d.ts",
       "import": "./runnables.js",
@@ -2673,6 +2687,11 @@
       "types": "./runnables/remote.d.ts",
       "import": "./runnables/remote.js",
       "require": "./runnables/remote.cjs"
+    },
+    "./indexes": {
+      "types": "./indexes.d.ts",
+      "import": "./indexes.js",
+      "require": "./indexes.cjs"
     },
     "./package.json": "./package.json"
   }
