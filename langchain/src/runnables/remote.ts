@@ -43,6 +43,7 @@ import { IterableReadableStream } from "@langchain/core/utils/stream";
 
 type RemoteRunnableOptions = {
   timeout?: number;
+  headers?: Record<string, unknown>;
 };
 
 function isSuperset(set: Set<string>, subset: Set<string>) {
@@ -256,8 +257,9 @@ export class RemoteRunnable<
       body: JSON.stringify(body),
       headers: {
         "Content-Type": "application/json",
+        ...this.options?.headers,
       },
-      signal: AbortSignal.timeout(this.options?.timeout ?? 5000),
+      signal: AbortSignal.timeout(this.options?.timeout ?? 60000),
     });
   }
 

@@ -1,0 +1,74 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# Exa Search
+
+Exa (formerly Metaphor Search) is a search engine fully designed for use by LLMs. Search for documents on the internet using natural language queries, then retrieve cleaned HTML content from desired documents.
+
+Unlike keyword-based search (Google), Exa's neural search capabilities allow it to semantically understand queries and return relevant documents.
+For example, we could search `"fascinating article about cats"` and compare the search results from Google and Exa.
+Google gives us SEO-optimized listicles based on the keyword “fascinating”. Exa just works.
+
+This notebook goes over how to use Exa Search with LangChain.
+
+First, get an Exa API key and add it as an environment variable.
+Get 1000 free searches/month by [signing up here.](https://dashboard.exa.ai/login)
+
+## Usage
+
+First, install the LangChain integration package for Exa:
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/exa @langchain/openai langchain
+```
+
+You'll need to set your API key as an environment variable.
+
+The `Exa` class defaults to `EXASEARCH_API_KEY` when searching for your API key.
+
+## Usage
+
+import ToolExample from "@examples/tools/exa_search.ts";
+
+<CodeBlock language="typescript">{ToolExample}</CodeBlock>
+
+:::tip
+You can see a LangSmith trace for this example [here](https://smith.langchain.com/public/775ea9a8-d54c-405c-9126-a012405d9099/r).
+:::
+
+## Using the Exa SDK as LangChain Agent Tools
+
+We can create LangChain tools which use the Exa SDK to perform queries and retrieve content.
+Using these tools we can construct a simple search agent that can answer questions about any topic.
+
+import AgentExample from "@examples/tools/exa_agent.ts";
+
+<CodeBlock language="typescript">{AgentExample}</CodeBlock>
+
+```
+{
+  input: 'Summarize for me a fascinating article about cats.',
+  output: 'The article titled "The Secret Lives of Cats: What You Never Knew" provides an intriguing look into the world of cats. It discusses how cats have been a part of human society for thousands of years, initially being revered in ancient Egypt and later becoming common household pets.\n' +
+    '\n' +
+    "The article also delves into the unique behaviors of cats, explaining that they are solitary hunters in the wild and this instinct still drives many of their behaviors in domestic settings. For instance, their tendency to bring 'gifts' to their owners is a demonstration of their hunting prowess.\n" +
+    '\n' +
+    "Cats also have a unique communication system. They use a combination of vocalizations, body language, and scent marking to communicate with each other and with humans. Interestingly, the article notes that cats have a special 'meow' they use exclusively to communicate with humans.\n" +
+    '\n' +
+    'The article also discusses the physical abilities of cats, such as their incredible agility and balance, their sharp retractable claws, and their keen senses which make them excellent hunters. Cats have a highly developed sense of hearing and can detect a wider range of frequencies than dogs or humans.\n' +
+    '\n' +
+    "Finally, the article touches on the importance of understanding and respecting a cat's natural behaviors and instincts in order to have a happy and healthy relationship with them.\n" +
+    '\n' +
+    'Source: [The Secret Lives of Cats: What You Never Knew](https://www.example.com)'
+}
+```
+
+:::tip
+You can see a LangSmith trace for this example [here](https://smith.langchain.com/public/b2792cd7-862a-4b0b-88e9-88e5d7268f3e/r).
+:::

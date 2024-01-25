@@ -157,10 +157,10 @@ export function messageToOpenAIRole(message: BaseMessage): string {
 export interface ChatOpenAICallOptions
   extends OpenAIChatCallOptions,
     BaseFunctionCallOptions {
-      tools?: ChatCompletionsToolDefinition[];
-      tool_choice?: ChatCompletionsNamedToolSelection;
-      response_format?: ChatCompletionsResponseFormat;
-      seed?: number;
+  tools?: ChatCompletionsToolDefinition[];
+  tool_choice?: ChatCompletionsNamedToolSelection;
+  response_format?: ChatCompletionsResponseFormat;
+  seed?: number;
 }
 
 export class AzureChatOpenAI

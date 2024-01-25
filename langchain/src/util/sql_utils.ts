@@ -178,17 +178,17 @@ export const getTableAndColumnsName = async (
   }
 
   if (appDataSource.options.type === "mssql") {
-    sql =
-      "SELECT " +
-      "TABLE_NAME AS table_name, " +
-      "COLUMN_NAME AS column_name, " +
-      "DATA_TYPE AS data_type, " +
-      "IS_NULLABLE AS is_nullable " +
-      "FROM INFORMATION_SCHEMA.COLUMNS " +
-      "ORDER BY TABLE_NAME, ORDINAL_POSITION;";
+    const schema = appDataSource.options?.schema;
+    const sql = `SELECT
+    TABLE_NAME AS table_name,
+    COLUMN_NAME AS column_name,
+    DATA_TYPE AS data_type,
+    IS_NULLABLE AS is_nullable
+    FROM INFORMATION_SCHEMA.COLUMNS
+    ${schema && `WHERE TABLE_SCHEMA = '${schema}'`} 
+ORDER BY TABLE_NAME, ORDINAL_POSITION;`;
 
     const rep = await appDataSource.query(sql);
-
     return formatToSqlTable(rep);
   }
 
@@ -273,6 +273,8 @@ export const generateTableInfoFromTables = async (
     let schema = null;
     if (appDataSource.options.type === "postgres") {
       schema = appDataSource.options?.schema ?? "public";
+    } else if (appDataSource.options.type === "mssql") {
+      schema = appDataSource.options?.schema;
     } else if (appDataSource.options.type === "sap") {
       schema =
         appDataSource.options?.schema ??
@@ -302,7 +304,10 @@ export const generateTableInfoFromTables = async (
       const schema = appDataSource.options?.schema ?? "public";
       sqlSelectInfoQuery = `SELECT * FROM "${schema}"."${currentTable.tableName}" LIMIT ${nbSampleRow};\n`;
     } else if (appDataSource.options.type === "mssql") {
-      sqlSelectInfoQuery = `SELECT TOP ${nbSampleRow} * FROM [${currentTable.tableName}];\n`;
+      const schema = appDataSource.options?.schema;
+      sqlSelectInfoQuery = schema
+        ? `SELECT TOP ${nbSampleRow} * FROM ${schema}.[${currentTable.tableName}];\n`
+        : `SELECT TOP ${nbSampleRow} * FROM [${currentTable.tableName}];\n`;
     } else if (appDataSource.options.type === "sap") {
       const schema =
         appDataSource.options?.schema ??

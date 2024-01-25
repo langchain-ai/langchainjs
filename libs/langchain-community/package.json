@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.0.18",
+  "version": "0.0.20",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -29,8 +29,8 @@
     "test:watch": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
     "test:single": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 100000",
     "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
-    "format": "prettier --write \"src\"",
-    "format:check": "prettier --check \"src\""
+    "format": "prettier --config .prettierrc --write \"src\" \"scripts\"",
+    "format:check": "prettier --config .prettierrc --check \"src\" \"scripts\""
   },
   "author": "LangChain",
   "license": "MIT",
@@ -44,6 +44,7 @@
   },
   "devDependencies": {
     "@aws-crypto/sha256-js": "^5.0.0",
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.496.0",
     "@aws-sdk/client-bedrock-runtime": "^3.422.0",
     "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-kendra": "^3.352.0",
@@ -55,7 +56,7 @@
     "@clickhouse/client": "^0.2.5",
     "@cloudflare/ai": "^1.0.12",
     "@cloudflare/workers-types": "^4.20230922.0",
-    "@datastax/astra-db-ts": "^0.1.3",
+    "@datastax/astra-db-ts": "^0.1.4",
     "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
@@ -160,6 +161,7 @@
   },
   "peerDependencies": {
     "@aws-crypto/sha256-js": "^5.0.0",
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.485.0",
     "@aws-sdk/client-bedrock-runtime": "^3.422.0",
     "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-kendra": "^3.352.0",
@@ -169,7 +171,7 @@
     "@aws-sdk/credential-provider-node": "^3.388.0",
     "@clickhouse/client": "^0.2.5",
     "@cloudflare/ai": "^1.0.12",
-    "@datastax/astra-db-ts": "0.1.2",
+    "@datastax/astra-db-ts": "^0.1.4",
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-js": "^0.9.0",
@@ -241,6 +243,9 @@
   },
   "peerDependenciesMeta": {
     "@aws-crypto/sha256-js": {
+      "optional": true
+    },
+    "@aws-sdk/client-bedrock-agent-runtime": {
       "optional": true
     },
     "@aws-sdk/client-bedrock-runtime": {
@@ -1092,6 +1097,11 @@
       "import": "./retrievers/amazon_kendra.js",
       "require": "./retrievers/amazon_kendra.cjs"
     },
+    "./retrievers/amazon_knowledge_base": {
+      "types": "./retrievers/amazon_knowledge_base.d.ts",
+      "import": "./retrievers/amazon_knowledge_base.js",
+      "require": "./retrievers/amazon_knowledge_base.cjs"
+    },
     "./retrievers/chaindesk": {
       "types": "./retrievers/chaindesk.d.ts",
       "import": "./retrievers/chaindesk.js",
@@ -1161,6 +1171,11 @@
       "types": "./graphs/neo4j_graph.d.ts",
       "import": "./graphs/neo4j_graph.js",
       "require": "./graphs/neo4j_graph.cjs"
+    },
+    "./graphs/memgraph_graph": {
+      "types": "./graphs/memgraph_graph.d.ts",
+      "import": "./graphs/memgraph_graph.js",
+      "require": "./graphs/memgraph_graph.cjs"
     },
     "./utils/event_source_parse": {
       "types": "./utils/event_source_parse.d.ts",
@@ -1291,6 +1306,21 @@
       "types": "./util/convex.d.ts",
       "import": "./util/convex.js",
       "require": "./util/convex.cjs"
+    },
+    "./indexes/base": {
+      "types": "./indexes/base.d.ts",
+      "import": "./indexes/base.js",
+      "require": "./indexes/base.cjs"
+    },
+    "./indexes/postgres": {
+      "types": "./indexes/postgres.d.ts",
+      "import": "./indexes/postgres.js",
+      "require": "./indexes/postgres.cjs"
+    },
+    "./indexes/memory": {
+      "types": "./indexes/memory.d.ts",
+      "import": "./indexes/memory.js",
+      "require": "./indexes/memory.cjs"
     },
     "./package.json": "./package.json"
   },
@@ -1662,6 +1692,9 @@
     "retrievers/amazon_kendra.cjs",
     "retrievers/amazon_kendra.js",
     "retrievers/amazon_kendra.d.ts",
+    "retrievers/amazon_knowledge_base.cjs",
+    "retrievers/amazon_knowledge_base.js",
+    "retrievers/amazon_knowledge_base.d.ts",
     "retrievers/chaindesk.cjs",
     "retrievers/chaindesk.js",
     "retrievers/chaindesk.d.ts",
@@ -1704,6 +1737,9 @@
     "graphs/neo4j_graph.cjs",
     "graphs/neo4j_graph.js",
     "graphs/neo4j_graph.d.ts",
+    "graphs/memgraph_graph.cjs",
+    "graphs/memgraph_graph.js",
+    "graphs/memgraph_graph.d.ts",
     "utils/event_source_parse.cjs",
     "utils/event_source_parse.js",
     "utils/event_source_parse.d.ts",
@@ -1781,6 +1817,15 @@
     "memory/zep.d.ts",
     "util/convex.cjs",
     "util/convex.js",
-    "util/convex.d.ts"
+    "util/convex.d.ts",
+    "indexes/base.cjs",
+    "indexes/base.js",
+    "indexes/base.d.ts",
+    "indexes/postgres.cjs",
+    "indexes/postgres.js",
+    "indexes/postgres.d.ts",
+    "indexes/memory.cjs",
+    "indexes/memory.js",
+    "indexes/memory.d.ts"
   ]
 }
