@@ -9061,7 +9061,7 @@ __metadata:
     eslint-plugin-import: ^2.27.5
     eslint-plugin-no-instanceof: ^1.0.1
     eslint-plugin-prettier: ^4.2.1
-    exa-js: ^1.0.5
+    exa-js: ^1.0.9
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     prettier: ^2.8.3
@@ -20466,12 +20466,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"exa-js@npm:^1.0.5":
-  version: 1.0.5
-  resolution: "exa-js@npm:1.0.5"
+"exa-js@npm:^1.0.9":
+  version: 1.0.9
+  resolution: "exa-js@npm:1.0.9"
   dependencies:
     cross-fetch: ^4.0.0
-  checksum: 875e525db111ff9df07ab618ae88c859ff80749ed8ff01d87dbb90ab287870a91fcb3ef2fc411d574cac3ad6179d4b52d968f94318588128ef68bbce52b37df5
+  checksum: ad4b7989a9bead24122530cb15289fd1df743a9b85d470c2c6824b2d46b9fcfdff57df9ac506ef66252f180140c035f88b6ab27d8ad1595f2656e6636635dbba
   languageName: node
   linkType: hard
 
@@ -20523,7 +20523,7 @@ __metadata:
     eslint-plugin-import: ^2.27.5
     eslint-plugin-prettier: ^4.2.1
     eslint-plugin-unused-imports: ^3.0.0
-    exa-js: ^1.0.5
+    exa-js: ^1.0.9
     faiss-node: ^0.5.1
     firebase-admin: ^11.9.0
     graphql: ^16.6.0

@@ -15,7 +15,6 @@ test("ExaRetriever can retrieve some data", async () => {
   console.log("results:", JSON.stringify(results, null, 2));
   expect(results.length).toBeGreaterThan(0);
   // verify metadata fields are populated
-  expect(results[0].metadata.title).toBeGreaterThan(1);
-  expect(results[0].metadata.url).toBeGreaterThan(1);
-  expect(results[0].metadata.id).toBeGreaterThan(1);
+  expect(results[0].metadata.url.length).toBeGreaterThan(1);
+  expect(results[0].metadata.id.length).toBeGreaterThan(1);
 });

@@ -35,7 +35,7 @@
   "license": "MIT",
   "dependencies": {
     "@langchain/core": "~0.1",
-    "exa-js": "^1.0.5"
+    "exa-js": "^1.0.9"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",

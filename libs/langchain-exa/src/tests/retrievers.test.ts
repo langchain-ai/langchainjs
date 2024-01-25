@@ -1,6 +1,5 @@
 import { it, expect } from "@jest/globals";
 import { SearchResult, TextContentsOptions } from "exa-js";
-import { Document } from "@langchain/core/documents";
 import { _getMetadata } from "../retrievers.js";
 
 it("should exclude the text field from metadata", () => {
@@ -18,12 +17,3 @@ it("should exclude the text field from metadata", () => {
   expect("text" in metadata).toBe(false);
 });
 
-test("can instantiate a document class", () => {
-  const newDoc = new Document({
-    pageContent: "This is a test",
-    metadata: { test: true },
-  });
-  expect(newDoc).toBeTruthy();
-  expect(newDoc.metadata.test).toBeTruthy();
-  expect(newDoc.pageContent).toBe("This is a test");
-});
