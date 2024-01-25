@@ -84,13 +84,14 @@ import type { RunEvalConfig, DynamicRunEvaluatorParams } from "langchain/smith";
 // An illustrative custom evaluator example
 const notUnsure = async ({
   run,
+  example,
   input,
   prediction,
   reference,
 }: DynamicRunEvaluatorParams) => {
   return {
     key: "not_unsure",
-    score: prediction?.includes("not sure"),
+    score: !prediction?.output?.includes("not sure"),
   };
 };
 

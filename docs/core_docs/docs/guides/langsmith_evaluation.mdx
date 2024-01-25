@@ -185,7 +185,7 @@ const notUnsure = async ({
 }: DynamicRunEvaluatorParams) => {
   return {
     key: "not_unsure",
-    score: !prediction?.includes("not sure"),
+    score: !prediction?.output?.includes("not sure"),
   };
 };
 
