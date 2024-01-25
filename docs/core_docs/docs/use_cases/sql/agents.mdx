@@ -70,3 +70,32 @@ We'll use a SemanticSimilarityExampleSelector, which will perform a semantic sea
 import ExampleSelector from "@examples/use_cases/sql/agents/example_selector.ts";
 
 <CodeBlock language="typescript">{ExampleSelector}</CodeBlock>
+
+::tip
+You can see a LangSmith trace of this example [here](https://smith.langchain.com/public/6c5d5f95-7789-475f-ba99-79d5c34e593b/r).
+:::
+
+## Dealing with high-cardinality columns
+
+In order to filter columns that contain proper nouns such as addresses, song names or artists, we first need to double-check the spelling in order to filter the data correctly.
+
+We can achieve this by creating a vector store with all the distinct proper nouns that exist in the database.
+We can then have the agent query that vector store each time the user includes a proper noun in their question, to find the correct spelling for that word.
+In this way, the agent can make sure it understands which entity the user is referring to before building the target query.
+
+First we need the unique values for each entity we want, for which we define a function that parses the result into a list of elements:
+
+import HighCardinalityExample from "@examples/use_cases/sql/agents/high_cardinality_columns.ts";
+
+<CodeBlock language="typescript">{HighCardinalityExample}</CodeBlock>
+
+::tip
+You can see a LangSmith trace of this example [here](https://smith.langchain.com/public/e93eff6c-6843-49e3-93bf-f1b9f5a8cafd/r).
+:::
+
+## Next steps
+
+Under the hood, `createSqlAgentRunnable` is just passing in SQL tools to more generic agent constructors.
+To learn more about the built-in generic agent types as well as how to build custom agents, head to the [Agents Modules](/docs/modules/agents).
+
+The built-in `AgentExecutor` runs a simple Agent action -> Tool call -> Agent action… loop. To build more complex agent runtimes, head to the [LangGraph section](docs/langgraph).

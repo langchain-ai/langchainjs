@@ -171,7 +171,7 @@ export async function createSqlAgentRunnable(
 
   let prefix = "";
   let newPrompt = fields.prompt;
-  let dbContext: Record<string, unknown> = {};
+  let dbContext = "";
   // Constructing prompt
   if (!newPrompt) {
     prefix = fields.prefix ?? SQL_PREFIX;
@@ -179,19 +179,15 @@ export async function createSqlAgentRunnable(
       .replace("{dialect}", newToolkit.dialect)
       .replace("{top_k}", newTopK.toString());
   } else {
-    if ("top_k" in newPrompt.inputVariables) {
+    if (newPrompt.inputVariables.includes("top_k")) {
       newPrompt = await newPrompt.partial({ top_k: newTopK.toString() });
     }
-    if ("dialect" in newPrompt.inputVariables) {
+    if (newPrompt.inputVariables.includes("dialect")) {
       newPrompt = await newPrompt.partial({ dialect: newToolkit.dialect });
-      dbContext = JSON.parse(await newToolkit.db.getTableInfo());
+      dbContext = await newToolkit.db.getTableInfo();
     }
-    if ("table_info" in newPrompt.inputVariables) {
-      newPrompt =
-        dbContext.table_info && typeof dbContext.table_info === "string"
-          ? await newPrompt.partial({ table_info: dbContext.table_info })
-          : newPrompt;
-
+    if (newPrompt.inputVariables.includes("table_info")) {
+      newPrompt = await newPrompt.partial({ table_info: dbContext });
       tools = tools.filter((t) => t.name !== "list-tables-sql");
     }
   }

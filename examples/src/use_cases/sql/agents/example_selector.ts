@@ -8,7 +8,10 @@ import {
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
-import { SqlToolkit, createSqlAgent } from "langchain/agents/toolkits/sql";
+import {
+  SqlToolkit,
+  createSqlAgentRunnable,
+} from "langchain/agents/toolkits/sql";
 import { SqlDatabase } from "langchain/sql_db";
 import { DataSource } from "typeorm";
 import { examples } from "./examples.js";
@@ -55,7 +58,7 @@ const fewShotPrompt = new FewShotPromptTemplate({
 const fullPrompt = ChatPromptTemplate.fromMessages([
   new SystemMessagePromptTemplate(fewShotPrompt),
   ["human", "{input}"],
-  new MessagesPlaceholder("agentScratchpad"),
+  new MessagesPlaceholder("agent_scratchpad"),
 ]);
 
 // And now we can create our agent with our custom prompt:
@@ -69,15 +72,17 @@ const db = await SqlDatabase.fromDataSourceParams({
   appDataSource: datasource,
 });
 
-// format our prompt to pass to the `createSqlAgent` function:
-
-const formattedPrompt = await fewShotPrompt.invoke({
-  input: "",
-  agentScratchpad: [],
-  top_k: 5,
-  dialect: "sqlite",
+const agentExecutor = await createSqlAgentRunnable({
+  llm,
+  toolkit: new SqlToolkit(db, llm),
+  agentType: "openai-tools",
+  prompt: fullPrompt,
 });
 
-const agent = createSqlAgent(llm, new SqlToolkit(db, llm), {
-  prefix: formattedPrompt.value,
-});
+console.log(await agentExecutor.invoke({ input: "How many artists are there?" }));
+/**
+{
+  input: 'How many artists are there?',
+  output: 'There are 275 artists.'
+}
+ */
