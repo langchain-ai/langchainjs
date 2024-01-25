@@ -42,3 +42,31 @@ import CodeBlock from "@theme/CodeBlock";
 import DbCheck from "@examples/use_cases/sql/db_check.ts";
 
 <CodeBlock language="typescript">{DbCheck}</CodeBlock>
+
+## Agent
+
+We'll use an OpenAI chat model and an "openai-tools" agent, which will use OpenAI's function-calling API to drive the agent's tool selection and invocations.
+
+As we can see, the agent will first choose which tables are relevant and then add the schema for those tables and a few sample rows to the prompt.
+
+import AgentExample from "@examples/use_cases/sql/agents/index.ts";
+
+<CodeBlock language="typescript">{AgentExample}</CodeBlock>
+
+
+## Using a dynamic few-shot prompt
+
+To optimize agent performance, we can provide a custom prompt with domain-specific knowledge. In this case we'll create a few shot prompt with an example selector, that will dynamically build the few shot prompt based on the user input. This will help the model make better queries by inserting relevant queries in the prompt that the model can use as reference.
+
+First we need some user input \<> SQL query examples:
+
+import ExampleList from "@examples/use_cases/sql/agents/examples.ts";
+
+<CodeBlock language="typescript">{ExampleList}</CodeBlock>
+
+Now we can create an example selector. This will take the actual user input and select some number of examples to add to our few-shot prompt.
+We'll use a SemanticSimilarityExampleSelector, which will perform a semantic search using the embeddings and vector store we configure to find the examples most similar to our input:
+
+import ExampleSelector from "@examples/use_cases/sql/agents/example_selector.ts";
+
+<CodeBlock language="typescript">{ExampleSelector}</CodeBlock>

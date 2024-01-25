@@ -120,6 +120,7 @@ console.log("db query results", await db.run(query));
 db query results []
  */
 
+
 // -------------
 
 // You can see a LangSmith trace of the above chain here:
@@ -144,6 +145,7 @@ console.log("db query results", await db.run(query2));
 /**
 db query results [{"Name":"Rock"}]
  */
+
 
 // -------------
 

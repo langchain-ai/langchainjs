@@ -30,9 +30,3 @@ console.log("db run result", await db.run(response));
 db run result [{"COUNT(*)":8}]
  */
 
-// -------------
-
-// You can see a LangSmith trace of the above chain here:
-//
-
-// -------------
