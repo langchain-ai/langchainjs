@@ -439,6 +439,7 @@ export class AzureAISearchVectorStore extends VectorStore {
             fields: [DEFAULT_FIELD_CONTENT_VECTOR],
           },
         ],
+        filterMode: filter?.vectorFilterMode,
       },
       filter: filter?.filterExpression,
       top: k,
@@ -491,6 +492,7 @@ export class AzureAISearchVectorStore extends VectorStore {
             fields: [DEFAULT_FIELD_CONTENT_VECTOR],
           },
         ],
+        filterMode: filter?.vectorFilterMode,
       },
       filter: filter?.filterExpression,
       top: k,
@@ -543,6 +545,7 @@ export class AzureAISearchVectorStore extends VectorStore {
             fields: [DEFAULT_FIELD_CONTENT_VECTOR],
           },
         ],
+        filterMode: filter?.vectorFilterMode,
       },
       filter: filter?.filterExpression,
     });
