@@ -1,8 +1,8 @@
 import Exa, {
+  ContentsOptions,
   RegularSearchOptions,
   SearchResponse,
   SearchResult,
-  TextContentsOptions,
 } from "exa-js";
 
 import { BaseRetriever, BaseRetrieverInput } from "@langchain/core/retrievers";
@@ -13,9 +13,11 @@ import { Document } from "@langchain/core/documents";
  * `ExaRetriever` instance. It extends the `BaseRetrieverInput`
  * interface and adds a `client` field of type `Exa`.
  */
-export interface ExaRetrieverFields extends BaseRetrieverInput {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export interface ExaRetrieverFields<T extends ContentsOptions = any>
+  extends BaseRetrieverInput {
   client: Exa.default;
-  searchArgs?: RegularSearchOptions;
+  searchArgs?: RegularSearchOptions & T;
 }
 
 export function _getMetadata(result: SearchResult): Record<string, unknown> {
@@ -38,7 +40,10 @@ export function _getMetadata(result: SearchResult): Record<string, unknown> {
  * const docs = await retriever.getRelevantDocuments("hello");
  * ```
  */
-export class ExaRetriever extends BaseRetriever {
+export class ExaRetriever<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends ContentsOptions = any
+> extends BaseRetriever {
   static lc_name() {
     return "ExaRetriever";
   }
@@ -47,9 +52,9 @@ export class ExaRetriever extends BaseRetriever {
 
   private client: Exa.default;
 
-  searchArgs?: RegularSearchOptions;
+  searchArgs?: RegularSearchOptions & T;
 
-  constructor(fields: ExaRetrieverFields) {
+  constructor(fields: ExaRetrieverFields<T>) {
     super(fields);
 
     this.client = fields.client;
@@ -57,14 +62,16 @@ export class ExaRetriever extends BaseRetriever {
   }
 
   async _getRelevantDocuments(query: string): Promise<Document[]> {
-    const res: SearchResponse<{ text: TextContentsOptions }> =
-      await this.client.searchAndContents(query, this.searchArgs);
+    const res: SearchResponse<T> = await this.client.searchAndContents<T>(
+      query,
+      this.searchArgs
+    );
 
     const documents: Document[] = [];
     for (const result of res.results) {
       documents.push(
         new Document({
-          pageContent: result.text ?? "",
+          pageContent: "text" in result ? result.text : "",
           metadata: _getMetadata(result),
         })
       );
