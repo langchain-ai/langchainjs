@@ -6,6 +6,7 @@ import {
   IndexingResult,
   SearchIndex,
   SearchIndexingBufferedSender,
+  VectorFilterMode,
 } from "@azure/search-documents";
 import {
   MaxMarginalRelevanceSearchOptions,
@@ -67,6 +68,7 @@ export interface AzureAISearchConfig {
 export type AzureAISearchDocumentMetadata = {
   source: string;
   attributes?: Array<{ key: string; value: string }>;
+  embedding?: number[];
 };
 
 /**
@@ -89,7 +91,14 @@ export type AzureAISearchAddDocumentsOptions = {
 /**
  * Azure AI Search filter type.
  */
-export type AzureAISearchFilterType = string;
+export type AzureAISearchFilterType = {
+  /** OData filter. */
+  filterExpression?: string;
+  /** Determines whether or not filters are applied before or after the vector search is performed. */
+  vectorFilterMode?: VectorFilterMode;
+  /** Determines whether or not to include the embeddings in the search results. */
+  includeEmbeddings?: boolean;
+};
 
 const DEFAULT_FIELD_ID = "id";
 const DEFAULT_FIELD_CONTENT = "content";
@@ -172,7 +181,7 @@ export class AzureAISearchVectorStore extends VectorStore {
   }
 
   /**
-  * Removes specified documents from the AzureAISearchVectorStore using IDs or a filter.
+   * Removes specified documents from the AzureAISearchVectorStore using IDs or a filter.
    * @param params Object that includes either an array of IDs or a filter for the data to be deleted.
    * @returns A promise that resolves when the documents have been removed.
    */
@@ -181,7 +190,9 @@ export class AzureAISearchVectorStore extends VectorStore {
     filter?: AzureAISearchFilterType;
   }) {
     if (!params.ids && !params.filter) {
-      throw new Error(`Azure AI Search delete requires either "ids" or "filter" to be set in the input object`);
+      throw new Error(
+        `Azure AI Search delete requires either "ids" or "filter" to be set in the params object`
+      );
     }
     if (params.ids) {
       await this.deleteById(params.ids);
@@ -193,12 +204,20 @@ export class AzureAISearchVectorStore extends VectorStore {
 
   /**
    * Removes specified documents from the AzureAISearchVectorStore using a filter.
-   * @param filter OData filter to find documents to delete.
+   * @param filter Filter options to find documents to delete.
    * @returns A promise that resolves when the documents have been removed.
    */
-  private async deleteMany(filter: AzureAISearchFilterType): Promise<IndexingResult[]> {
+  private async deleteMany(
+    filter: AzureAISearchFilterType
+  ): Promise<IndexingResult[]> {
+    if (!filter.filterExpression) {
+      throw new Error(
+        `Azure AI Search deleteMany requires "filterExpression" to be set in the filter object`
+      );
+    }
+
     const { results } = await this.client.search("*", {
-      filter,
+      filter: filter.filterExpression,
     });
 
     const docs: AzureAISearchDocument[] = [];
@@ -340,7 +359,7 @@ export class AzureAISearchVectorStore extends VectorStore {
    * Performs a similarity search using query type specified in configuration.
    * @param query Query text for the similarity search.
    * @param k=4 Number of nearest neighbors to return.
-   * @param filter Optional OData filter for the documents.
+   * @param filter Optional filter options for the documents.
    * @returns Promise that resolves to a list of documents and their corresponding similarity scores.
    */
   async similaritySearch(
@@ -357,7 +376,7 @@ export class AzureAISearchVectorStore extends VectorStore {
    * Performs a similarity search using query type specified in configuration.
    * @param query Query text for the similarity search.
    * @param k=4 Number of nearest neighbors to return.
-   * @param filter Optional OData filter for the documents.
+   * @param filter Optional filter options for the documents.
    * @returns Promise that resolves to a list of documents and their corresponding similarity scores.
    */
   async similaritySearchWithScore(
@@ -398,14 +417,14 @@ export class AzureAISearchVectorStore extends VectorStore {
    * @param queryVector Query vector for the similarity search.
    *    If not provided, the query text will be embedded.
    * @param k=4 Number of nearest neighbors to return.
-   * @param filter Optional OData filter for the documents.
+   * @param filter Optional filter options for the documents.
    * @returns Promise that resolves to a list of documents and their corresponding similarity scores.
    */
   async hybridSearchVectorWithScore(
     query: string,
     queryVector?: number[],
     k = 4,
-    filter: string | undefined = undefined
+    filter: this["FilterType"] | undefined = undefined
   ): Promise<[Document, number][]> {
     const vector = queryVector ?? (await this.embeddings.embedQuery(query));
 
@@ -421,22 +440,23 @@ export class AzureAISearchVectorStore extends VectorStore {
           },
         ],
       },
-      filter,
+      filter: filter?.filterExpression,
       top: k,
     });
 
     const docsWithScore: [Document, number][] = [];
 
     for await (const item of results) {
-      const document = new Document<
-        AzureAISearchDocumentMetadata & { embedding: number[] }
-      >({
+      const document = new Document<AzureAISearchDocumentMetadata>({
         pageContent: item.document[DEFAULT_FIELD_CONTENT],
         metadata: {
           ...item.document[DEFAULT_FIELD_METADATA],
-          embedding: item.document[DEFAULT_FIELD_CONTENT_VECTOR],
         },
       });
+      if (filter?.includeEmbeddings) {
+        document.metadata.embedding =
+          item.document[DEFAULT_FIELD_CONTENT_VECTOR];
+      }
       docsWithScore.push([document, item.score]);
     }
 
@@ -449,14 +469,14 @@ export class AzureAISearchVectorStore extends VectorStore {
    * @param queryVector Query vector for the similarity search.
    *    If not provided, the query text will be embedded.
    * @param k=4 Number of nearest neighbors to return.
-   * @param filter Optional OData filter for the documents.
+   * @param filter Optional filter options for the documents.
    * @returns Promise that resolves to a list of documents and their corresponding similarity scores.
    */
   async semanticHybridSearchVectorWithScore(
     query: string,
     queryVector?: number[],
     k = 4,
-    filter: string | undefined = undefined
+    filter: this["FilterType"] | undefined = undefined
   ): Promise<[Document, number][]> {
     const vector = queryVector ?? (await this.embeddings.embedQuery(query));
 
@@ -472,7 +492,7 @@ export class AzureAISearchVectorStore extends VectorStore {
           },
         ],
       },
-      filter,
+      filter: filter?.filterExpression,
       top: k,
       queryType: "semantic",
       semanticSearchOptions: {
@@ -483,15 +503,16 @@ export class AzureAISearchVectorStore extends VectorStore {
     const docsWithScore: [Document, number][] = [];
 
     for await (const item of results) {
-      const document = new Document<
-        AzureAISearchDocumentMetadata & { embedding: number[] }
-      >({
+      const document = new Document<AzureAISearchDocumentMetadata>({
         pageContent: item.document[DEFAULT_FIELD_CONTENT],
         metadata: {
           ...item.document[DEFAULT_FIELD_METADATA],
-          embedding: item.document[DEFAULT_FIELD_CONTENT_VECTOR],
         },
       });
+      if (filter?.includeEmbeddings) {
+        document.metadata.embedding =
+          item.document[DEFAULT_FIELD_CONTENT_VECTOR];
+      }
       docsWithScore.push([document, item.score]);
     }
 
@@ -502,13 +523,13 @@ export class AzureAISearchVectorStore extends VectorStore {
    * Performs a similarity search on the vectors stored in the collection.
    * @param queryVector Query vector for the similarity search.
    * @param k=4 Number of nearest neighbors to return.
-   * @param filter string OData filter for the documents.
+   * @param filter Optional filter options for the documents.
    * @returns Promise that resolves to a list of documents and their corresponding similarity scores.
    */
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: string
+    filter?: this["FilterType"]
   ): Promise<[Document, number][]> {
     await this.initPromise;
 
@@ -523,21 +544,22 @@ export class AzureAISearchVectorStore extends VectorStore {
           },
         ],
       },
-      filter,
+      filter: filter?.filterExpression,
     });
 
     const docsWithScore: [Document, number][] = [];
 
     for await (const item of results) {
-      const document = new Document<
-        AzureAISearchDocumentMetadata & { embedding: number[] }
-      >({
+      const document = new Document<AzureAISearchDocumentMetadata>({
         pageContent: item.document[DEFAULT_FIELD_CONTENT],
         metadata: {
           ...item.document[DEFAULT_FIELD_METADATA],
-          embedding: item.document[DEFAULT_FIELD_CONTENT_VECTOR],
         },
       });
+      if (filter?.includeEmbeddings) {
+        document.metadata.embedding =
+          item.document[DEFAULT_FIELD_CONTENT_VECTOR];
+      }
       docsWithScore.push([document, item.score]);
     }
 
@@ -562,11 +584,16 @@ export class AzureAISearchVectorStore extends VectorStore {
     options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
   ): Promise<Document[]> {
     const { k, fetchK = 20, lambda = 0.5 } = options;
+    const includeEmbeddingsFlag = options.filter?.includeEmbeddings || false;
 
     const queryEmbedding = await this.embeddings.embedQuery(query);
     const docs = await this.similaritySearchVectorWithScore(
       queryEmbedding,
-      fetchK
+      fetchK,
+      {
+        ...options.filter,
+        includeEmbeddings: true,
+      }
     );
     const embeddingList = docs.map((doc) => doc[0].metadata.embedding);
 
@@ -578,8 +605,15 @@ export class AzureAISearchVectorStore extends VectorStore {
       k
     );
 
-    const mmrDocs = mmrIndexes.map((index) => docs[index][0]);
-    return mmrDocs;
+    return mmrIndexes.map((index) => {
+      const doc = docs[index][0];
+
+      // Remove embeddings if they were not requested originally
+      if (!includeEmbeddingsFlag) {
+        delete doc.metadata.embedding;
+      }
+      return doc;
+    });
   }
 
   /**

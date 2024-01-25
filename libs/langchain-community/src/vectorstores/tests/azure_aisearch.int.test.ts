@@ -336,6 +336,29 @@ describe.skip("AzureAISearchVectorStore integration tests", () => {
     const docs = await store.similaritySearch("test", 1);
 
     expect(docs).toHaveLength(1);
+    expect(docs[0].metadata.embeddings).not.toBeDefined();
+  });
+
+  test("test search document with included embeddings", async () => {
+    const store = await AzureAISearchVectorStore.fromTexts(
+      ["test index document upload text"],
+      [],
+      embeddings,
+      {
+        indexName: INDEX_NAME,
+        search: {
+          type: AzureAISearchQueryType.Similarity,
+        },
+      }
+    );
+
+    // Need to wait a bit for the document to be indexed
+    await setTimeout(1000);
+
+    const docs = await store.similaritySearch("test", 1, { includeEmbeddings: true });
+
+    expect(docs).toHaveLength(1);
+    expect(docs[0].metadata.embeddings).toBeDefined();
   });
 
   test("test search document with filter", async () => {
@@ -359,16 +382,13 @@ describe.skip("AzureAISearchVectorStore integration tests", () => {
     // Need to wait a bit for the document to be indexed
     await setTimeout(1000);
 
-    const bySource = await store.similaritySearch(
-      "test",
-      1,
-      "metadata/source eq 'filter-test'"
-    );
-    const byAttr = await store.similaritySearch(
-      "test",
-      1,
-      "metadata/attributes/any(t: t/key eq 'abc' and t/value eq 'def')"
-    );
+    const bySource = await store.similaritySearch("test", 1, {
+      filterExpression: "metadata/source eq 'filter-test'",
+    });
+    const byAttr = await store.similaritySearch("test", 1, {
+      filterExpression:
+        "metadata/attributes/any(t: t/key eq 'abc' and t/value eq 'def')",
+    });
 
     expect(bySource).toHaveLength(1);
     expect(byAttr).toHaveLength(1);
@@ -421,11 +441,9 @@ describe.skip("AzureAISearchVectorStore integration tests", () => {
     // Wait a bit for the index to be updated
     await setTimeout(1000);
 
-    const docs = await store.similaritySearch(
-      "test",
-      1,
-      "metadata/source eq 'deleteById'"
-    );
+    const docs = await store.similaritySearch("test", 1, {
+      filterExpression: "metadata/source eq 'deleteById'",
+    });
 
     expect(docs).toHaveLength(0);
   });
@@ -454,17 +472,17 @@ describe.skip("AzureAISearchVectorStore integration tests", () => {
     await setTimeout(1000);
 
     await store.delete({
-      filter: `metadata/source eq '${source}'`
+      filter: {
+        filterExpression: `metadata/source eq '${source}'`,
+      },
     });
 
     // Wait a bit for the index to be updated
     await setTimeout(1000);
 
-    const docs = await store.similaritySearch(
-      "test",
-      1,
-      `metadata/source eq '${source}'`
-    );
+    const docs = await store.similaritySearch("test", 1, {
+      filterExpression: `metadata/source eq '${source}'`,
+    });
 
     expect(docs).toHaveLength(0);
   });
