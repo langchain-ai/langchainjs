@@ -57,7 +57,7 @@ import AgentExample from "@examples/use_cases/sql/agents/index.ts";
 
 To optimize agent performance, we can provide a custom prompt with domain-specific knowledge. In this case we'll create a few shot prompt with an example selector, that will dynamically build the few shot prompt based on the user input. This will help the model make better queries by inserting relevant queries in the prompt that the model can use as reference.
 
-First we need some user input \<> SQL query examples:
+First we need some user input SQL query examples:
 
 import ExampleList from "@examples/use_cases/sql/agents/examples.ts";
 
