@@ -8,7 +8,7 @@ export type ConversationalRetrievalAgentOptions = {
   rememberIntermediateSteps?: boolean;
   memoryKey?: string;
   outputKey?: string;
-  inputKey?: string; 
+  inputKey?: string;
   prefix?: string;
   verbose?: boolean;
 };
