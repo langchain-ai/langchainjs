@@ -17,11 +17,22 @@ export type EvaluatorInputFormatter = ({
   rawReferenceOutput,
   run,
 }: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   rawInput: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   rawPrediction: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   rawReferenceOutput?: any;
   run: Run;
 }) => EvaluatorInputs;
+
+export type DynamicRunEvaluatorParams = {
+  input: Record<string, unknown>;
+  prediction?: Record<string, unknown>;
+  reference?: Record<string, unknown>;
+  run: Run;
+  example?: Example;
+};
 
 /**
  * Type of a function that can be coerced into a RunEvaluator function.
@@ -29,14 +40,8 @@ export type EvaluatorInputFormatter = ({
  * pass a function to the runner. This type allows us to do that.
  */
 export type RunEvaluatorLike =
-  | (({
-      run,
-      example,
-    }: {
-      run: Run;
-      example?: Example;
-    }) => Promise<EvaluationResult>)
-  | (({ run, example }: { run: Run; example?: Example }) => EvaluationResult);
+  | ((props: DynamicRunEvaluatorParams) => Promise<EvaluationResult>)
+  | ((props: DynamicRunEvaluatorParams) => EvaluationResult);
 
 /**
  * Configuration class for running evaluations on datasets.

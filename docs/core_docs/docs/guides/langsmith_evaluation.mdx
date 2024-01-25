@@ -173,14 +173,24 @@ LLM is sure about what it has generated. You can perform much more sophisticated
 external APIs.
 
 ```typescript
-import type { RunEvalConfig } from "langchain/smith";
-import { Run, Example } from "langsmith";
+import type { RunEvalConfig, DynamicRunEvaluatorParams } from "langchain/smith";
 
 // An illustrative custom evaluator example
-const notUnsure = async ({ run, example }: { run: Run; example?: Example }) => {
+const notUnsure = async ({
+  run,
+  example,
+  input,
+  prediction,
+  reference,
+}: DynamicRunEvaluatorParams) => {
+  if (typeof prediction?.output !== "string") {
+    throw new Error(
+      "Invalid prediction format for this evaluator. Please check your chain's outputs and try again."
+    );
+  }
   return {
     key: "not_unsure",
-    score: !run.outputs?.output.includes("not sure"),
+    score: !(prediction?.output as string).includes("not sure"),
   };
 };
 

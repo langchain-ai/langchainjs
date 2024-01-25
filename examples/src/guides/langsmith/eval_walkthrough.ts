@@ -79,14 +79,18 @@ await Promise.all(
   })
 );
 
-import type { RunEvalConfig } from "langchain/smith";
-import { Run, Example } from "langsmith";
+import type { RunEvalConfig, DynamicRunEvaluatorParams } from "langchain/smith";
 
 // An illustrative custom evaluator example
-const notUnsure = async ({ run }: { run: Run; example?: Example }) => {
+const notUnsure = async ({ prediction }: DynamicRunEvaluatorParams) => {
+  if (typeof prediction?.output !== "string") {
+    throw new Error(
+      "Invalid prediction format for this evaluator. Please check your chain's outputs and try again."
+    );
+  }
   return {
     key: "not_unsure",
-    score: !run.outputs?.output.includes("not sure"),
+    score: !(prediction?.output as string).includes("not sure"),
   };
 };
 
