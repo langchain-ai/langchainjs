@@ -60,10 +60,10 @@ test("AzureAISearchVectorStore addVectors should upload documents in batches", a
 
   expect(uploadDocumentsMock).toHaveBeenCalledTimes(1);
   expect(flushMock).toHaveBeenCalledTimes(1);
-  expect(client.indexDocuments).toHaveBeenCalledTimes(2);
+  expect(client.indexDocuments).toHaveBeenCalledTimes(3);
 });
 
-test("AzureAISearchVectorStore addDocuments should embed at max 16 documents up a time", async () => {
+test("AzureAISearchVectorStore addDocuments should embed and upload documents in batches", async () => {
   const embeddings = new FakeEmbeddings();
   const client = {
     indexDocuments: jest.fn(),
@@ -74,14 +74,13 @@ test("AzureAISearchVectorStore addDocuments should embed at max 16 documents up 
     search: {
       type: "similarity",
     },
-    embeddingBatchSize: 16,
   });
 
   expect(store).toBeDefined();
 
   const documents = [];
 
-  for (let i = 0; i < 30; i += 1) {
+  for (let i = 0; i < 1500; i += 1) {
     documents.push({
       pageContent: `hello ${i}`,
       metadata: {
@@ -93,9 +92,10 @@ test("AzureAISearchVectorStore addDocuments should embed at max 16 documents up 
 
   await store.addDocuments(documents);
 
-  expect(embedMock).toHaveBeenCalledTimes(2);
-  expect(uploadDocumentsMock.mock.calls[0][0]).toHaveLength(16);
-  expect(uploadDocumentsMock.mock.calls[1][0]).toHaveLength(14);
+  expect(embedMock).toHaveBeenCalledTimes(1);
+  expect(uploadDocumentsMock).toHaveBeenCalledTimes(1);
+  expect(flushMock).toHaveBeenCalledTimes(1);
+  expect(client.indexDocuments).toHaveBeenCalledTimes(3);
 });
 
 test("AzureAISearchVectorStore addDocuments should use specified IDs", async () => {

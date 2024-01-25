@@ -52,13 +52,6 @@ export interface AzureAISearchConfig {
   readonly endpoint?: string;
   readonly key?: string;
   readonly search: AzureAISearchQueryOptions;
-  /**
-   * The amount of documents to embed at once when adding documents.
-   * Note that some providers like Azure OpenAI can only embed 16 documents
-   * at a time.
-   * @default 16
-   */
-  readonly embeddingBatchSize?: number;
 }
 
 /**
@@ -155,7 +148,6 @@ export class AzureAISearchVectorStore extends VectorStore {
     }
 
     this.indexName = config.indexName ?? "vectorsearch";
-    this.embeddingBatchSize = config.embeddingBatchSize ?? 16;
 
     if (!config.client) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -292,22 +284,14 @@ export class AzureAISearchVectorStore extends VectorStore {
     options?: AzureAISearchAddDocumentsOptions
   ) {
     const texts = documents.map(({ pageContent }) => pageContent);
-    const results: string[] = [];
-
-    for (let i = 0; i < texts.length; i += this.embeddingBatchSize) {
-      const batch = texts.slice(i, i + this.embeddingBatchSize);
-      const docsBatch = documents.slice(i, i + this.embeddingBatchSize);
-      const batchEmbeddings: number[][] = await this.embeddings.embedDocuments(
-        batch
-      );
-      const batchResult = await this.addVectors(
-        batchEmbeddings,
-        docsBatch,
-        options
-      );
-
-      results.push(...batchResult);
-    }
+    const embeddings: number[][] = await this.embeddings.embedDocuments(
+      texts
+    );
+    const results = await this.addVectors(
+      embeddings,
+      documents,
+      options
+    );
 
     return results;
   }
