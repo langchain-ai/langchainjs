@@ -356,7 +356,7 @@ const getExamplesInputs = (
  * for evaluation.
  *
  * @param options - (Optional) Additional parameters for the evaluation process:
- *   - `evaluation` (RunEvalConfig): Configuration for the evaluation, including
+ *   - `evaluationConfig` (RunEvalConfig): Configuration for the evaluation, including
  *     standard and custom evaluators.
  *   - `projectName` (string): Name of the project for logging and tracking.
  *   - `projectMetadata` (Record<string, unknown>): Additional metadata for the project.
@@ -375,10 +375,10 @@ const getExamplesInputs = (
  *   const datasetName = 'example-dataset';
  *   const client = new Client(/* ...config... *\//);
  *
- *   const evaluationConfig = new RunEvalConfig({
+ *   const evaluationConfig = {
  *     evaluators: [/* ...evaluators... *\//],
  *     customEvaluators: [/* ...custom evaluators... *\//],
- *   });
+ *   };
  *
  *   const results = await runOnDataset(chain, datasetName, {
  *     evaluationConfig,

@@ -73,10 +73,26 @@ export type RunEvalConfig<
   evaluators?: (T | EvalConfig)[];
 
   /**
-   * Convert the evaluation data into a format that can be used by the evaluator.
-   * By default, we pass the first value of the run.inputs, run.outputs (predictions),
-   * and references (example.outputs)
-   *
+   * Convert the evaluation data into formats that can be used by the evaluator.
+   * This should most commonly be a string.
+   * Parameters are the raw input from the run, the raw output, raw reference output, and the raw run.
+   * @example
+   * ```ts
+   * // Chain input: { input: "some string" }
+   * // Chain output: { output: "some output" }
+   * // Reference example output format: { output: "some reference output" }
+   * const formatEvaluatorInputs = ({
+   *   rawInput,
+   *   rawPrediction,
+   *   rawReferenceOutput,
+   * }) => {
+   *   return {
+   *     input: rawInput.input,
+   *     prediction: rawPrediction.output,
+   *     reference: rawReferenceOutput.output,
+   *   };
+   * };
+   * ```
    * @returns The prepared data.
    */
   formatEvaluatorInputs?: EvaluatorInputFormatter;
@@ -102,8 +118,26 @@ export interface EvalConfig extends LoadEvaluatorOptions {
   feedbackKey?: string;
 
   /**
-   * Convert the evaluation data into a format that can be used by the evaluator.
-   * @param data The data to prepare.
+   * Convert the evaluation data into formats that can be used by the evaluator.
+   * This should most commonly be a string.
+   * Parameters are the raw input from the run, the raw output, raw reference output, and the raw run.
+   * @example
+   * ```ts
+   * // Chain input: { input: "some string" }
+   * // Chain output: { output: "some output" }
+   * // Reference example output format: { output: "some reference output" }
+   * const formatEvaluatorInputs = ({
+   *   rawInput,
+   *   rawPrediction,
+   *   rawReferenceOutput,
+   * }) => {
+   *   return {
+   *     input: rawInput.input,
+   *     prediction: rawPrediction.output,
+   *     reference: rawReferenceOutput.output,
+   *   };
+   * };
+   * ```
    * @returns The prepared data.
    */
   formatEvaluatorInputs: EvaluatorInputFormatter;
@@ -118,16 +152,21 @@ export interface EvalConfig extends LoadEvaluatorOptions {
  * @returns The configuration for the evaluator.
  * @example
  * ```ts
- * const evalConfig = new RunEvalConfig(
- *  [new RunEvalConfig.Criteria("helpfulness")],
- * );
+ * const evalConfig = {
+ *   evaluators: [{
+ *     evaluatorType: "criteria",
+ *     criteria: "helpfulness"
+ *   }]
+ * };
  * ```
  * @example
  * ```ts
- * const evalConfig = new RunEvalConfig(
- * [new RunEvalConfig.Criteria(
- *      { "isCompliant": "Does the submission comply with the requirements of XYZ"
- *  })],
+ * const evalConfig = {
+ *   evaluators: [{
+ *     evaluatorType: "criteria",
+ *     criteria: { "isCompliant": "Does the submission comply with the requirements of XYZ"
+ *   }]
+ * };
  */
 export type CriteriaEvalChainConfig = EvalConfig & {
   evaluatorType: "criteria";
@@ -164,16 +203,21 @@ export type CriteriaEvalChainConfig = EvalConfig & {
  * @returns The configuration for the evaluator.
  * @example
  * ```ts
- * const evalConfig = new RunEvalConfig(
- *  [new RunEvalConfig.LabeledCriteria("correctness")],
- * );
+ * const evalConfig = {
+ *   evaluators: [{
+ *     evaluatorType: "labeled_criteria",
+ *     criteria: "correctness"
+ *   }],
+ * };
  * ```
  * @example
  * ```ts
- * const evalConfig = new RunEvalConfig(
- * [new RunEvalConfig.Criteria(
- *      { "mentionsAllFacts": "Does the include all facts provided in the reference?"
- *  })],
+ * const evalConfig = {
+ *   evaluators: [{
+ *     evaluatorType: "labeled_criteria",
+ *     criteria: { "mentionsAllFacts": "Does the include all facts provided in the reference?" }
+ *   }],
+ * };
  */
 export type LabeledCriteria = EvalConfig & {
   evaluatorType: "labeled_criteria";
