@@ -1,0 +1,24 @@
+# Exa Search
+
+The Exa Search API provides a new search experience designed for LLMs.
+
+## Usage
+
+First, install the LangChain integration package for Exa:
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/exa
+```
+
+You'll need to set your API key as an environment variable.
+
+The `Exa` class defaults to `EXASEARCH_API_KEY` when searching for your API key.
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/retrievers/exa.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
