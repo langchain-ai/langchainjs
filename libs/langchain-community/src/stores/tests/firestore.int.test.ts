@@ -3,6 +3,7 @@
 import { test, expect } from "@jest/globals";
 
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
+import admin from "firebase-admin";
 import { FirestoreChatMessageHistory } from "../message/firestore.js";
 
 const sessionId = Date.now().toString();
@@ -31,10 +32,19 @@ test.skip("Test firestore message history store", async () => {
   expect(await messageHistory.getMessages()).toEqual(expectedMessages);
 
   const messageHistory2 = new FirestoreChatMessageHistory({
-    collectionName: "langchain",
+    collections: ["langchain"],
+    docs: ["langchain-doc-id"],
     sessionId,
     userId: "a@example.com",
-    config: { projectId: "your-project-id" },
+    config: {
+      projectId: "YOUR-PROJECT-ID",
+      credential: admin.credential.cert({
+        projectId: "YOUR-PROJECT-ID",
+        privateKey:
+          "-----BEGIN PRIVATE KEY-----\nnCHANGE-ME\n-----END PRIVATE KEY-----\n",
+        clientEmail: "CHANGE-ME@CHANGE-ME-TOO.iam.gserviceaccount.com",
+      }),
+    },
   });
 
   expect(await messageHistory2.getMessages()).toEqual(expectedMessages);
@@ -42,4 +52,63 @@ test.skip("Test firestore message history store", async () => {
   await messageHistory.clear();
 
   expect(await messageHistory.getMessages()).toEqual([]);
+});
+
+test.skip("Test firestore works with nested collections", async () => {
+  const messageHistory = new FirestoreChatMessageHistory({
+    collections: ["chats", "bots"],
+    docs: ["chat-id", "bot-id"],
+    sessionId: "user-id",
+    userId: "a@example.com",
+    config: {
+      projectId: "YOUR-PROJECT-ID",
+      credential: admin.credential.cert({
+        projectId: "YOUR-PROJECT-ID",
+        privateKey:
+          "-----BEGIN PRIVATE KEY-----\nnCHANGE-ME\n-----END PRIVATE KEY-----\n",
+        clientEmail: "CHANGE-ME@CHANGE-ME-TOO.iam.gserviceaccount.com",
+      }),
+    },
+  });
+
+  const message = new HumanMessage(
+    `My name's Jonas and the current time is ${new Date().toLocaleTimeString()}`
+  );
+  await messageHistory.addMessage(message);
+  const gotMessages = await messageHistory.getMessages();
+  expect(gotMessages).toEqual([message]);
+  // clear the collection
+  await messageHistory.clear();
+  // verify that the collection is empty
+  const messagesAfterClear = await messageHistory.getMessages();
+  expect(messagesAfterClear).toEqual([]);
+});
+
+test.skip("Test firestore works with when only a list of one collection is passed.", async () => {
+  const messageHistory = new FirestoreChatMessageHistory({
+    collections: ["only-one"],
+    sessionId: "user-id",
+    userId: "a@example.com",
+    config: {
+      projectId: "YOUR-PROJECT-ID",
+      credential: admin.credential.cert({
+        projectId: "YOUR-PROJECT-ID",
+        privateKey:
+          "-----BEGIN PRIVATE KEY-----\nnCHANGE-ME\n-----END PRIVATE KEY-----\n",
+        clientEmail: "CHANGE-ME@CHANGE-ME-TOO.iam.gserviceaccount.com",
+      }),
+    },
+  });
+
+  const message = new HumanMessage(
+    `My name's Jonas and the current time is ${new Date().toLocaleTimeString()}`
+  );
+  await messageHistory.addMessage(message);
+  const gotMessages = await messageHistory.getMessages();
+  expect(gotMessages).toEqual([message]);
+  // clear the collection
+  await messageHistory.clear();
+  // verify that the collection is empty
+  const messagesAfterClear = await messageHistory.getMessages();
+  expect(messagesAfterClear).toEqual([]);
 });
