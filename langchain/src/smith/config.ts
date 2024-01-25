@@ -23,26 +23,22 @@ export type EvaluatorInputFormatter = ({
   run: Run;
 }) => EvaluatorInputs;
 
+export type DynamicRunEvaluatorParams = {
+  input: Record<string, unknown>;
+  prediction?: Record<string, unknown>;
+  reference?: Record<string, unknown>;
+  run: Run;
+  example?: Example;
+};
+
 /**
  * Type of a function that can be coerced into a RunEvaluator function.
  * While we have the class-based RunEvaluator, it's often more convenient to directly
  * pass a function to the runner. This type allows us to do that.
  */
 export type RunEvaluatorLike =
-  | ((props: {
-      run: Run;
-      example?: Example;
-      input: Record<string, unknown>;
-      prediction?: Record<string, unknown>;
-      reference?: Record<string, unknown>;
-    }) => Promise<EvaluationResult>)
-  | ((props: {
-      run: Run;
-      example?: Example;
-      input: Record<string, unknown>;
-      prediction?: Record<string, unknown>;
-      reference?: Record<string, unknown>;
-    }) => EvaluationResult);
+  | ((props: DynamicRunEvaluatorParams) => Promise<EvaluationResult>)
+  | ((props: DynamicRunEvaluatorParams) => EvaluationResult);
 
 /**
  * Configuration class for running evaluations on datasets.

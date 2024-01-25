@@ -79,14 +79,18 @@ await Promise.all(
   })
 );
 
-import type { RunEvalConfig } from "langchain/smith";
-import { Run, Example } from "langsmith";
+import type { RunEvalConfig, DynamicRunEvaluatorParams } from "langchain/smith";
 
 // An illustrative custom evaluator example
-const notUnsure = async ({ run }: { run: Run; example?: Example }) => {
+const notUnsure = async ({
+  run,
+  input,
+  prediction,
+  reference,
+}: DynamicRunEvaluatorParams) => {
   return {
     key: "not_unsure",
-    score: !run.outputs?.output.includes("not sure"),
+    score: prediction?.includes("not sure"),
   };
 };
 

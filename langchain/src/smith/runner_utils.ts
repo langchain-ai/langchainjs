@@ -6,15 +6,16 @@ import { LangChainTracer } from "@langchain/core/tracers/tracer_langchain";
 import { Client, Example, Feedback, Run } from "langsmith";
 import { EvaluationResult, RunEvaluator } from "langsmith/evaluation";
 import { DataType } from "langsmith/schemas";
+import { RunnableConfig } from "@langchain/core/runnables";
 import { LLMStringEvaluator } from "../evaluation/base.js";
 import { loadEvaluator } from "../evaluation/loader.js";
 import { EvaluatorType } from "../evaluation/types.js";
-import { RunnableConfig } from "../schema/runnable/config.js";
-import {
+import type {
   RunEvaluatorLike,
   EvalConfig,
   EvaluatorInputFormatter,
   RunEvalConfig,
+  DynamicRunEvaluatorParams,
 } from "./config.js";
 import { randomName } from "./name_generation.js";
 import { ProgressBar } from "./progress.js";
@@ -33,16 +34,7 @@ export type ChainOrFactory =
  * Wraps an evaluator function + implements the RunEvaluator interface.
  */
 class DynamicRunEvaluator implements RunEvaluator {
-  evaluator: RunnableLambda<
-    {
-      input: Record<string, unknown>;
-      prediction?: Record<string, unknown>;
-      reference?: Record<string, unknown>;
-      run: Run;
-      example?: Example;
-    },
-    EvaluationResult
-  >;
+  evaluator: RunnableLambda<DynamicRunEvaluatorParams, EvaluationResult>;
 
   constructor(evaluator: RunEvaluatorLike) {
     this.evaluator = new RunnableLambda({ func: evaluator });

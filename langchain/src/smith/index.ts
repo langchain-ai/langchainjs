@@ -1,4 +1,8 @@
-import type { RunEvalConfig } from "./config.js";
-import { runOnDataset } from "./runner_utils.js";
+import {
+  type EvalResults,
+  type RunOnDatasetParams,
+  runOnDataset,
+} from "./runner_utils.js";
 
-export { type RunEvalConfig, runOnDataset };
+export { type EvalResults, type RunOnDatasetParams, runOnDataset };
+export * from "./config.js";
