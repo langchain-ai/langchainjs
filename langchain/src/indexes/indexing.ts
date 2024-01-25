@@ -2,9 +2,10 @@ import { VectorStore } from "@langchain/core/vectorstores";
 import { v5 as uuidv5 } from "uuid";
 import {
   RecordManagerInterface,
-  UUID_NAMESPACE,
-} from "@langchain/community/indexes/recordmanagers";
+  UUIDV5_NAMESPACE,
+} from "@langchain/community/indexes/base";
 import { insecureHash } from "@langchain/core/utils/hash";
+import { DocumentInterface } from "@langchain/core/documents";
 import { BaseDocumentLoader } from "../document_loaders/base.js";
 import { Document } from "../document.js";
 
@@ -17,12 +18,20 @@ type IndexingResult = {
   numSkipped: number;
 };
 
+type StringOrDocFunc = string | ((doc: DocumentInterface) => string);
+
+interface HashedDocumentArgs {
+  pageContent: string;
+  metadata: Metadata;
+  uid: string;
+}
+
 /**
  * HashedDocument is a Document with hashes calculated.
  * Hashes are calculated based on page content and metadata.
  * It is used for indexing.
  */
-class HashedDocument extends Document {
+class HashedDocument implements DocumentInterface {
   uid: string;
 
   hash_?: string;
@@ -35,71 +44,73 @@ class HashedDocument extends Document {
 
   metadata: Metadata;
 
-  constructor(page_content: string, metadata: Metadata, uid: string) {
-    super({ pageContent: page_content, metadata });
-    this.uid = uid;
-    this.pageContent = page_content;
-    this.metadata = metadata;
+  constructor(fields: HashedDocumentArgs) {
+    this.uid = fields.uid;
+    this.pageContent = fields.pageContent;
+    this.metadata = fields.metadata;
   }
 
   calculateHashes(): void {
-    const content = this.pageContent;
-    const { metadata } = this;
-
     const forbiddenKeys = ["hash_", "content_hash", "metadata_hash"];
 
     for (const key of forbiddenKeys) {
-      if (key in metadata) {
+      if (key in this.metadata) {
         throw new Error(
-          `Metadata cannot contain key ${key} as it is reserved for internal use.`
+          `Metadata cannot contain key ${key} as it is reserved for internal use. Restricted keys: [${forbiddenKeys.join(
+            ", "
+          )}]`
         );
       }
     }
 
-    const contentHash = this.hashStringToUUID(content);
+    const contentHash = this._hashStringToUUID(this.pageContent);
 
     try {
-      const metadataHash = this.hashNestedDictToUUID(metadata);
+      const metadataHash = this._hashNestedDictToUUID(this.metadata);
       this.contentHash = contentHash;
       this.metadataHash = metadataHash;
-      this.hash_ = this.hashStringToUUID(contentHash + metadataHash);
     } catch (e) {
       throw new Error(
         `Failed to hash metadata: ${e}. Please use a dict that can be serialized using json.`
       );
     }
 
+    this.hash_ = this._hashStringToUUID(this.contentHash + this.metadataHash);
+
     if (!this.uid) {
       this.uid = this.hash_;
     }
   }
 
-  toDocument(): Document {
+  toDocument(): DocumentInterface {
     return new Document({
       pageContent: this.pageContent,
       metadata: this.metadata,
     });
   }
 
-  static fromDocument(document: Document, uid?: string): HashedDocument {
-    const doc = new HashedDocument(
-      document.pageContent,
-      document.metadata,
-      uid || (document as Document & { uid: string }).uid
-    );
+  static fromDocument(
+    document: DocumentInterface,
+    uid?: string
+  ): HashedDocument {
+    const doc = new this({
+      pageContent: document.pageContent,
+      metadata: document.metadata,
+      uid: uid || (document as DocumentInterface & { uid: string }).uid,
+    });
     doc.calculateHashes();
     return doc;
   }
 
-  private hashStringToUUID(inputString: string): string {
+  private _hashStringToUUID(inputString: string): string {
     const hash_value = insecureHash(inputString);
-    return uuidv5(hash_value, UUID_NAMESPACE);
+    return uuidv5(hash_value, UUIDV5_NAMESPACE);
   }
 
-  private hashNestedDictToUUID(data: Record<string, unknown>): string {
+  private _hashNestedDictToUUID(data: Record<string, unknown>): string {
     const serialized_data = JSON.stringify(data, Object.keys(data).sort());
     const hash_value = insecureHash(serialized_data);
-    return uuidv5(hash_value, UUID_NAMESPACE);
+    return uuidv5(hash_value, UUIDV5_NAMESPACE);
   }
 }
 
@@ -112,31 +123,32 @@ export type IndexOptions = {
   batchSize?: number;
   /**
    * The cleanup mode to use. Can be "full", "incremental" or undefined.
-   *          - **Incremental**: Cleans up all documents that haven't been updated AND
-   *                          that are associated with source ids that were seen
-   *                          during indexing.
-   *                          Clean up is done continuously during indexing helping
-   *                          to minimize the probability of users seeing duplicated
-   *                          content.
-   *           - **Full**: Delete all documents that haven to been returned by the loader.
-   *                   Clean up runs after all documents have been indexed.
-   *                   This means that users may see duplicated content during indexing.
-   *           - **undefined**: Do not delete any documents.
+   * - **Incremental**: Cleans up all documents that haven't been updated AND
+   *   that are associated with source ids that were seen
+   *   during indexing.
+   *   Clean up is done continuously during indexing helping
+   *   to minimize the probability of users seeing duplicated
+   *   content.
+   * - **Full**: Delete all documents that haven to been returned by the loader.
+   *   Clean up runs after all documents have been indexed.
+   *   This means that users may see duplicated content during indexing.
+   * - **undefined**: Do not delete any documents.
    */
   cleanup?: CleanupMode;
   /**
-   * Optional key that helps identify the original source
-   *           of the document. Must either be a string representing the key of the source in the metadata
-   *          or a function that takes a document and returns a string representing the source. **Required when cleanup is incremental**.
+   * Optional key that helps identify the original source of the document.
+   * Must either be a string representing the key of the source in the metadata
+   * or a function that takes a document and returns a string representing the source.
+   * **Required when cleanup is incremental**.
    */
-  sourceIdKey?: string | ((doc: Document) => string);
+  sourceIdKey?: StringOrDocFunc;
   /**
    * Batch size to use when cleaning up documents.
    */
   cleanupBatchSize?: number;
   /**
    * Force update documents even if they are present in the
-   *           record manager. Useful if you are re-indexing with updated embeddings.
+   * record manager. Useful if you are re-indexing with updated embeddings.
    */
   forceUpdate?: boolean;
 };
@@ -180,13 +192,13 @@ function deduplicateInOrder(
   return deduplicated;
 }
 
-function get_source_id_assigner(
-  sourceIdKey: string | ((doc: Document) => string) | null
-): (doc: Document) => string | null {
+function getSourceIdAssigner(
+  sourceIdKey: StringOrDocFunc | null
+): (doc: DocumentInterface) => string | null {
   if (sourceIdKey === null) {
-    return (_doc: Document) => null;
+    return (_doc: DocumentInterface) => null;
   } else if (typeof sourceIdKey === "string") {
-    return (doc: Document) => doc.metadata[sourceIdKey];
+    return (doc: DocumentInterface) => doc.metadata[sourceIdKey];
   } else if (typeof sourceIdKey === "function") {
     return sourceIdKey;
   } else {
@@ -194,6 +206,26 @@ function get_source_id_assigner(
       `sourceIdKey should be null, a string or a function, got ${typeof sourceIdKey}`
     );
   }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const _isBaseDocumentLoader = (arg: any): arg is BaseDocumentLoader => {
+  if (
+    "load" in arg &&
+    typeof arg.load === "function" &&
+    "loadAndSplit" in arg &&
+    typeof arg.loadAndSplit === "function"
+  ) {
+    return true;
+  }
+  return false;
+};
+
+interface IndexArgs {
+  docsSource: BaseDocumentLoader | DocumentInterface[];
+  recordManager: RecordManagerInterface;
+  vectorStore: VectorStore;
+  options?: IndexOptions;
 }
 
 /**
@@ -208,18 +240,15 @@ function get_source_id_assigner(
  * For the time being, documents are indexed using their hashes, and users
  *  are not able to specify the uid of the document.
  *
- * @param docsSource The source of documents to index. Can be a DocumentLoader or a list of Documents.
- * @param recordManager The record manager to use for keeping track of indexed documents.
- * @param vectorStore The vector store to use for storing the documents.
- * @param options Options for indexing.
- * @returns IndexingResult
+ * @param {IndexArgs} args
+ * @param {BaseDocumentLoader | DocumentInterface[]} args.docsSource The source of documents to index. Can be a DocumentLoader or a list of Documents.
+ * @param {RecordManagerInterface} args.recordManager The record manager to use for keeping track of indexed documents.
+ * @param {VectorStore} args.vectorStore The vector store to use for storing the documents.
+ * @param {IndexOptions | undefined} args.options Options for indexing.
+ * @returns {Promise<IndexingResult>}
  */
-export async function index(
-  docsSource: BaseDocumentLoader | Document[],
-  recordManager: RecordManagerInterface,
-  vectorStore: VectorStore,
-  options?: IndexOptions
-): Promise<IndexingResult> {
+export async function index(args: IndexArgs): Promise<IndexingResult> {
+  const { docsSource, recordManager, vectorStore, options } = args;
   const {
     batchSize = 100,
     cleanup,
@@ -230,16 +259,15 @@ export async function index(
 
   if (cleanup === "incremental" && !sourceIdKey) {
     throw new Error(
-      "Source id key s required when cleanup mode is incremental"
+      "sourceIdKey is required when cleanup mode is incremental. Please provide through 'options.sourceIdKey'."
     );
   }
 
-  const docs =
-    docsSource instanceof BaseDocumentLoader // eslint-disable-line no-instanceof/no-instanceof -- required to distinguish types
-      ? await docsSource.load()
-      : docsSource;
+  const docs = _isBaseDocumentLoader(docsSource)
+    ? await docsSource.load()
+    : docsSource;
 
-  const sourceIdAssigner = get_source_id_assigner(sourceIdKey ?? null);
+  const sourceIdAssigner = getSourceIdAssigner(sourceIdKey ?? null);
 
   const indexStartDt = await recordManager.getTime();
   let numAdded = 0;
@@ -247,7 +275,7 @@ export async function index(
   let numUpdated = 0;
   let numSkipped = 0;
 
-  const batches = batch(batchSize ?? 100, docs);
+  const batches = batch<DocumentInterface>(batchSize ?? 100, docs);
 
   for (const batch of batches) {
     const hashedDocs = deduplicateInOrder(
@@ -272,7 +300,7 @@ export async function index(
     );
 
     const uids: string[] = [];
-    const docsToIndex: Document[] = [];
+    const docsToIndex: DocumentInterface[] = [];
     const docsToUpdate: string[] = [];
     const seenDocs = new Set<string>();
     hashedDocs.forEach((hashedDoc, i) => {

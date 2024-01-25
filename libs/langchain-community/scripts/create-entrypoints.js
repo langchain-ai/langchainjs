@@ -317,12 +317,8 @@ const requiresOptionalDependency = [
   "memory/motorhead_memory",
   "memory/zep",
   "util/convex",
-<<<<<<< HEAD
-  "indexes/recordmanagers/postgres",
-=======
   // indexes
   "indexes/postgres",
->>>>>>> da22f3c6b2954e457161826cb7611cc118052261
 ];
 
 const updateJsonFile = (relativePath, updateFunction) => {

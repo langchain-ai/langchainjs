@@ -1818,17 +1818,6 @@
     "util/convex.cjs",
     "util/convex.js",
     "util/convex.d.ts",
-<<<<<<< HEAD
-    "indexes/recordmanagers.cjs",
-    "indexes/recordmanagers.js",
-    "indexes/recordmanagers.d.ts",
-    "indexes/recordmanagers/postgres.cjs",
-    "indexes/recordmanagers/postgres.js",
-    "indexes/recordmanagers/postgres.d.ts",
-    "indexes/recordmanagers/memory.cjs",
-    "indexes/recordmanagers/memory.js",
-    "indexes/recordmanagers/memory.d.ts"
-=======
     "indexes/base.cjs",
     "indexes/base.js",
     "indexes/base.d.ts",
@@ -1838,6 +1827,5 @@
     "indexes/memory.cjs",
     "indexes/memory.js",
     "indexes/memory.d.ts"
->>>>>>> da22f3c6b2954e457161826cb7611cc118052261
   ]
 }

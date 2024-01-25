@@ -1,1 +1,1 @@
-export * from "./indexing.js";
+export { type CleanupMode, type IndexOptions, index } from "./indexing.js";

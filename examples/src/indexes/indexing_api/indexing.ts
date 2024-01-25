@@ -1,9 +1,8 @@
-import { PostgresRecordManager } from "@langchain/community/indexes/recordmanagers/postgres";
-// import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { PostgresRecordManager } from "@langchain/community/indexes/postgres";
 import { index } from "langchain/indexes";
 import { PGVectorStore } from "@langchain/community/vectorstores/pgvector";
 import { PoolConfig } from "pg";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { CharacterTextSplitter } from "langchain/text_splitter";
 import { BaseDocumentLoader } from "langchain/document_loaders/base";
 
@@ -28,7 +27,7 @@ const config = {
   },
 };
 
-const vectorstore = await PGVectorStore.initialize(
+const vectorStore = await PGVectorStore.initialize(
   new OpenAIEmbeddings(),
   config
 );
@@ -44,9 +43,11 @@ const recordManagerConfig = {
     database: "api",
   } as PoolConfig,
   tableName: "upsertion_records",
-  namespace: "test_namespace",
 };
-const recordManager = new PostgresRecordManager(recordManagerConfig);
+const recordManager = new PostgresRecordManager(
+  "test_namespace",
+  recordManagerConfig
+);
 
 // Create the schema if it doesn't exist
 await recordManager.createSchema();
@@ -66,27 +67,31 @@ const doc2 = {
  * Hacky helper method to clear content. See the `full` mode section to to understand why it works.
  */
 async function clear() {
-  await index([], recordManager, vectorstore, {
-    cleanup: "full",
-    sourceIdKey: "source",
+  await index({
+    docsSource: [],
+    recordManager,
+    vectorStore,
+    options: {
+      cleanup: "full",
+      sourceIdKey: "source",
+    },
   });
 }
 
 // No cleanup
 await clear();
-
 // This mode does not do automatic clean up of old versions of content; however, it still takes care of content de-duplication.
 
 console.log(
-  await index(
-    [doc1, doc1, doc1, doc1, doc1, doc1],
+  await index({
+    docsSource: [doc1, doc1, doc1, doc1, doc1, doc1],
     recordManager,
-    vectorstore,
-    {
+    vectorStore,
+    options: {
       cleanup: undefined,
       sourceIdKey: "source",
-    }
-  )
+    },
+  })
 );
 
 /*
@@ -101,9 +106,14 @@ console.log(
 await clear();
 
 console.log(
-  await index([doc1, doc2], recordManager, vectorstore, {
-    cleanup: undefined,
-    sourceIdKey: "source",
+  await index({
+    docsSource: [doc1, doc2],
+    recordManager,
+    vectorStore,
+    options: {
+      cleanup: undefined,
+      sourceIdKey: "source",
+    },
   })
 );
 
@@ -119,9 +129,14 @@ console.log(
 // Second time around all content will be skipped
 
 console.log(
-  await index([doc1, doc2], recordManager, vectorstore, {
-    cleanup: undefined,
-    sourceIdKey: "source",
+  await index({
+    docsSource: [doc1, doc2],
+    recordManager,
+    vectorStore,
+    options: {
+      cleanup: undefined,
+      sourceIdKey: "source",
+    },
   })
 );
 
@@ -142,9 +157,14 @@ const doc1Updated = {
 };
 
 console.log(
-  await index([doc1Updated, doc2], recordManager, vectorstore, {
-    cleanup: undefined,
-    sourceIdKey: "source",
+  await index({
+    docsSource: [doc1Updated, doc2],
+    recordManager,
+    vectorStore,
+    options: {
+      cleanup: undefined,
+      sourceIdKey: "source",
+    },
   })
 );
 
@@ -179,9 +199,14 @@ Resulting records in the database:
 await clear();
 
 console.log(
-  await index([doc1, doc2], recordManager, vectorstore, {
-    cleanup: "incremental",
-    sourceIdKey: "source",
+  await index({
+    docsSource: [doc1, doc2],
+    recordManager,
+    vectorStore,
+    options: {
+      cleanup: "incremental",
+      sourceIdKey: "source",
+    },
   })
 );
 
@@ -197,9 +222,14 @@ console.log(
 // Indexing again should result in both documents getting skipped – also skipping the embedding operation!
 
 console.log(
-  await index([doc1, doc2], recordManager, vectorstore, {
-    cleanup: "incremental",
-    sourceIdKey: "source",
+  await index({
+    docsSource: [doc1, doc2],
+    recordManager,
+    vectorStore,
+    options: {
+      cleanup: "incremental",
+      sourceIdKey: "source",
+    },
   })
 );
 
@@ -214,9 +244,14 @@ console.log(
 
 // If we provide no documents with incremental indexing mode, nothing will change.
 console.log(
-  await index([], recordManager, vectorstore, {
-    cleanup: "incremental",
-    sourceIdKey: "source",
+  await index({
+    docsSource: [],
+    recordManager,
+    vectorStore,
+    options: {
+      cleanup: "incremental",
+      sourceIdKey: "source",
+    },
   })
 );
 
@@ -237,9 +272,14 @@ const changedDoc1 = {
   metadata: { source: "kitty.txt" },
 };
 console.log(
-  await index([changedDoc1], recordManager, vectorstore, {
-    cleanup: "incremental",
-    sourceIdKey: "source",
+  await index({
+    docsSource: [changedDoc1],
+    recordManager,
+    vectorStore,
+    options: {
+      cleanup: "incremental",
+      sourceIdKey: "source",
+    },
   })
 );
 
@@ -256,14 +296,19 @@ console.log(
 await clear();
 // In full mode the user should pass the full universe of content that should be indexed into the indexing function.
 
-// Any documents that are not passed into the indexing function and are present in the vectorstore will be deleted!
+// Any documents that are not passed into the indexing function and are present in the vectorStore will be deleted!
 
 // This behavior is useful to handle deletions of source documents.
 const allDocs = [doc1, doc2];
 console.log(
-  await index(allDocs, recordManager, vectorstore, {
-    cleanup: "full",
-    sourceIdKey: "source",
+  await index({
+    docsSource: allDocs,
+    recordManager,
+    vectorStore,
+    options: {
+      cleanup: "full",
+      sourceIdKey: "source",
+    },
   })
 );
 
@@ -284,9 +329,14 @@ const doc2Only = [doc2];
 // This afffects all documents regardless of source id!
 
 console.log(
-  await index(doc2Only, recordManager, vectorstore, {
-    cleanup: "full",
-    sourceIdKey: "source",
+  await index({
+    docsSource: doc2Only,
+    recordManager,
+    vectorStore,
+    options: {
+      cleanup: "full",
+      sourceIdKey: "source",
+    },
   })
 );
 
@@ -345,9 +395,14 @@ console.log(newDocs);
 */
 
 console.log(
-  await index(newDocs, recordManager, vectorstore, {
-    cleanup: "incremental",
-    sourceIdKey: "source",
+  await index({
+    docsSource: newDocs,
+    recordManager,
+    vectorStore,
+    options: {
+      cleanup: "incremental",
+      sourceIdKey: "source",
+    },
   })
 );
 /*
@@ -371,9 +426,14 @@ const changedDoggyDocs = [
 ];
 
 console.log(
-  await index(changedDoggyDocs, recordManager, vectorstore, {
-    cleanup: "incremental",
-    sourceIdKey: "source",
+  await index({
+    docsSource: changedDoggyDocs,
+    recordManager,
+    vectorStore,
+    options: {
+      cleanup: "incremental",
+      sourceIdKey: "source",
+    },
   })
 );
 
@@ -409,9 +469,14 @@ await clear();
 const loader = new MyCustomDocumentLoader();
 
 console.log(
-  await index(loader, recordManager, vectorstore, {
-    cleanup: "incremental",
-    sourceIdKey: "source",
+  await index({
+    docsSource: loader,
+    recordManager,
+    vectorStore,
+    options: {
+      cleanup: "incremental",
+      sourceIdKey: "source",
+    },
   })
 );
 
@@ -426,4 +491,4 @@ console.log(
 
 // Closing resources
 await recordManager.end();
-await vectorstore.end();
+await vectorStore.end();
