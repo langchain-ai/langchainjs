@@ -58,9 +58,9 @@ class DynamicRunEvaluator implements RunEvaluator {
     return await this.evaluator.invoke({
       run,
       example,
-      rawInput: run.inputs,
-      rawPrediction: run.outputs,
-      rawReferenceOutput: example?.outputs,
+      input: run.inputs,
+      prediction: run.outputs,
+      reference: example?.outputs,
     });
   }
 }
