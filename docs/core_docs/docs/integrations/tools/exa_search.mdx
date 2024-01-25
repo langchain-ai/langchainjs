@@ -6,7 +6,16 @@ import CodeBlock from "@theme/CodeBlock";
 
 # Exa Search
 
-The Exa Search API provides a new search experience designed for LLMs.
+Exa (formerly Metaphor Search) is a search engine fully designed for use by LLMs. Search for documents on the internet using natural language queries, then retrieve cleaned HTML content from desired documents.
+
+Unlike keyword-based search (Google), Exa's neural search capabilities allow it to semantically understand queries and return relevant documents.
+For example, we could search `"fascinating article about cats"` and compare the search results from Google and Exa.
+Google gives us SEO-optimized listicles based on the keyword “fascinating”. Exa just works.
+
+This notebook goes over how to use Exa Search with LangChain.
+
+First, get an Exa API key and add it as an environment variable.
+Get 1000 free searches/month by [signing up here.](https://dashboard.exa.ai/login)
 
 ## Usage
 
@@ -17,7 +26,7 @@ import IntegrationInstallTooltip from "@mdx_components/integration_install_toolt
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm install @langchain/exa
+npm install @langchain/exa @langchain/openai langchain
 ```
 
 You'll need to set your API key as an environment variable.
