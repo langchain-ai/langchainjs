@@ -17,8 +17,11 @@ export type EvaluatorInputFormatter = ({
   rawReferenceOutput,
   run,
 }: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   rawInput: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   rawPrediction: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   rawReferenceOutput?: any;
   run: Run;
 }) => EvaluatorInputs;
