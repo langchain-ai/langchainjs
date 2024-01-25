@@ -212,7 +212,7 @@ export class AzureOpenAI<
         frequencyPenalty: this.frequencyPenalty,
         bestOf: this.bestOf,
         requestOptions: {
-          timeout: options?.timeout,
+          timeout: options?.timeout ?? this.timeout,
         },
         abortSignal: options?.signal ?? undefined,
         ...this.modelKwargs,
@@ -287,7 +287,7 @@ export class AzureOpenAI<
             frequencyPenalty: this.frequencyPenalty,
             bestOf: this.bestOf,
             requestOptions: {
-              timeout: options?.timeout,
+              timeout: options?.timeout ?? this.timeout,
             },
             abortSignal: options?.signal ?? undefined,
             ...this.modelKwargs,
@@ -364,7 +364,7 @@ export class AzureOpenAI<
             frequencyPenalty: this.frequencyPenalty,
             bestOf: this.bestOf,
             requestOptions: {
-              timeout: options?.timeout,
+              timeout: options?.timeout ?? this.timeout,
             },
             abortSignal: options?.signal ?? undefined,
             ...this.modelKwargs,

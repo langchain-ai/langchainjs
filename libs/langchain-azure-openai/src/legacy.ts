@@ -221,9 +221,10 @@ export class AzureOpenAIChat
         frequencyPenalty: this.frequencyPenalty,
         azureExtensionOptions: this.azureExtensionOptions,
         requestOptions: {
-          timeout: options?.timeout,
+          timeout: options?.timeout ?? this.timeout,
         },
         abortSignal: options?.signal ?? undefined,
+        ...this.modelKwargs,
       }
     );
 
@@ -285,9 +286,10 @@ export class AzureOpenAIChat
           frequencyPenalty: this.frequencyPenalty,
           azureExtensionOptions: this.azureExtensionOptions,
           requestOptions: {
-            timeout: options?.timeout,
+            timeout: options?.timeout ?? this.timeout,
           },
           abortSignal: options?.signal ?? undefined,
+          ...this.modelKwargs,
         }
       );
 
@@ -322,9 +324,10 @@ export class AzureOpenAIChat
           frequencyPenalty: this.frequencyPenalty,
           azureExtensionOptions: this.azureExtensionOptions,
           requestOptions: {
-            timeout: options?.timeout,
+            timeout: options?.timeout ?? this.timeout,
           },
           abortSignal: options?.signal ?? undefined,
+          ...this.modelKwargs,
         }
       );
       let result: string | null | undefined = null;

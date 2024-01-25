@@ -10,6 +10,9 @@ import {
   AzureKeyCredential,
   ChatCompletions,
   EventStream,
+  ChatCompletionsToolDefinition,
+  ChatCompletionsNamedToolSelection,
+  ChatCompletionsResponseFormat,
 } from "@azure/openai";
 import {
   BaseChatModel,
@@ -153,7 +156,12 @@ export function messageToOpenAIRole(message: BaseMessage): string {
 
 export interface ChatOpenAICallOptions
   extends OpenAIChatCallOptions,
-    BaseFunctionCallOptions {}
+    BaseFunctionCallOptions {
+      tools?: ChatCompletionsToolDefinition[];
+      tool_choice?: ChatCompletionsNamedToolSelection;
+      response_format?: ChatCompletionsResponseFormat;
+      seed?: number;
+}
 
 export class AzureChatOpenAI
   extends BaseChatModel<ChatOpenAICallOptions>
@@ -315,6 +323,11 @@ export class AzureChatOpenAI
             timeout: options?.timeout ?? this.timeout,
           },
           abortSignal: options?.signal ?? undefined,
+          tools: options?.tools,
+          toolChoice: options?.tool_choice,
+          responseFormat: options?.response_format,
+          seed: options?.seed,
+          ...this.modelKwargs,
         }
       );
       return res;
@@ -410,6 +423,11 @@ export class AzureChatOpenAI
             timeout: options?.timeout ?? this.timeout,
           },
           abortSignal: options?.signal ?? undefined,
+          tools: options?.tools,
+          toolChoice: options?.tool_choice,
+          responseFormat: options?.response_format,
+          seed: options?.seed,
+          ...this.modelKwargs,
         }
       );
 
