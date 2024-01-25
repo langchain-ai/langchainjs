@@ -130,8 +130,6 @@ export class AzureAISearchVectorStore extends VectorStore {
 
   private readonly indexName: string;
 
-  private readonly embeddingBatchSize: number;
-
   private readonly options: AzureAISearchQueryOptions;
 
   constructor(embeddings: EmbeddingsInterface, config: AzureAISearchConfig) {
@@ -273,8 +271,6 @@ export class AzureAISearchVectorStore extends VectorStore {
 
   /**
    * Adds documents to the AzureAISearchVectorStore.
-   * Documents are chunked into batches of size `embeddingBatchSize` then
-   * embedded and added to the AzureAISearchVectorStore.
    * @param documents The documents to add.
    * @param options Options for adding documents.
    * @returns A promise that resolves to the ids of the added documents.
