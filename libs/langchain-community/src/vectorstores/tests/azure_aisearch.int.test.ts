@@ -358,7 +358,7 @@ describe.skip("AzureAISearchVectorStore integration tests", () => {
     const docs = await store.similaritySearch("test", 1, { includeEmbeddings: true });
 
     expect(docs).toHaveLength(1);
-    expect(docs[0].metadata.embeddings).toBeDefined();
+    expect(docs[0].metadata.embedding).toBeDefined();
   });
 
   test("test search document with filter", async () => {
