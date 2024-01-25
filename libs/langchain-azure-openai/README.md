@@ -2,6 +2,8 @@
 
 This package contains the Azure SDK for OpenAI LangChain.js integrations.
 
+It provides Azure OpenAI support through the [Azure SDK for OpenAI](https://github.com/Azure/azure-sdk-for-js/tree/main/sdk/openai/openai) library. 
+
 ## Installation
 
 ```bash npm2yarn
@@ -38,22 +40,28 @@ The field you need depends on the package manager you're using, but we recommend
 
 ## Chat Models
 
-This package contains the `ChatOpenAI` class, which is the recommended way to interface with the OpenAI series of models.
+This package contains the `AzureChatOpenAI` class, which is the recommended way to interface with the OpenAI series of models.
 
 To use, install the requirements, and configure your environment.
 
 ```bash
-export OPENAI_API_KEY=your-api-key
+export AZURE_OPENAI_API_ENDPOINT=<your_endpoint>
+export AZURE_OPENAI_API_KEY=<your_key>
+export AZURE_OPENAI_API_DEPLOYMENT_NAME=<your_deployment_name>
 ```
 
-Then initialize
+Then initialize the model and make the calls:
 
 ```typescript
-import { ChatOpenAI } from "@langchain/openai";
+import { AzureChatOpenAI } from "@langchain/azure-openai";
 
-const model = new ChatOpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+const model = new AzureChatOpenAI({
   modelName: "gpt-4-1106-preview",
+  // Note that the following are optional, and will default to the values below
+  // if not provided.
+  azureOpenAIEndpoint: process.env.AZURE_OPENAI_API_ENDPOINT,
+  azureOpenAIApiKey: process.env.AZURE_OPENAI_API_KEY,
+  azureOpenAIApiDeploymentName: process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME,
 });
 const response = await model.invoke(new HumanMessage("Hello world!"));
 ```
@@ -61,11 +69,15 @@ const response = await model.invoke(new HumanMessage("Hello world!"));
 ### Streaming
 
 ```typescript
-import { ChatOpenAI } from "@langchain/openai";
+import { AzureChatOpenAI } from "@langchain/azure-openai";
 
-const model = new ChatOpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+const model = new AzureChatOpenAI({
   modelName: "gpt-4-1106-preview",
+  // Note that the following are optional, and will default to the values below
+  // if not provided.
+  azureOpenAIEndpoint: process.env.AZURE_OPENAI_API_ENDPOINT,
+  azureOpenAIApiKey: process.env.AZURE_OPENAI_API_KEY,
+  azureOpenAIApiDeploymentName: process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME,
 });
 const response = await model.stream(new HumanMessage("Hello world!"));
 ```
@@ -75,43 +87,21 @@ const response = await model.stream(new HumanMessage("Hello world!"));
 This package also adds support for OpenAI's embeddings model.
 
 ```typescript
-import { OpenAIEmbeddings } from "@langchain/openai";
+import { AzureOpenAIEmbeddings } from "@langchain/azure-openai";
 
-const embeddings = new OpenAIEmbeddings({
-  apiKey: process.env.OPENAI_API_KEY,
+const embeddings = new AzureOpenAIEmbeddings({
+  // Note that the following are optional, and will default to the values below
+  // if not provided.
+  azureOpenAIEndpoint: process.env.AZURE_OPENAI_API_ENDPOINT,
+  azureOpenAIApiKey: process.env.AZURE_OPENAI_API_KEY,
+  azureOpenAIApiDeploymentName: process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME,
 });
 const res = await embeddings.embedQuery("Hello world");
 ```
 
-## Azure SDK for OpenAI
-
-This package also supports OpenAI through [Azure SDK for OpenAI](https://github.com/Azure/azure-sdk-for-js/tree/main/sdk/openai/openai) library. 
-
-To use, install the requirements, and configure your environment.
-
-```bash
-export AZURE_OPENAI_API_ENDPOINT=your-api-endpoint
-export AZURE_OPENAI_API_DEPLOYMENT_NAME=your-deployment
-export AZURE_OPENAI_API_KEY=your-api-key
-export AZURE_OPENAI_API_INSTANCE_NAME=your-api-instance-name
-export AZURE_OPENAI_API_VERSION=your-api-version
-```
-
-Then, you could initialize the `AzureSDKOpenAI` and make the calls
-
-```typescript
-import { AzureSDKOpenAI } from "@langchain/openai";
-
-const model = new AzureSDKOpenAI({
-  maxTokens: 5,
-  modelName: "gpt-3.5-turbo-instruct",
-});
-const res = await model.call("Print hello world");
-```
-
 ## Development
 
-To develop the OpenAI package, you'll need to follow these instructions:
+To develop the Azure OpenAI package, you'll need to follow these instructions:
 
 ### Install dependencies
 
@@ -128,7 +118,7 @@ yarn build
 Or from the repo root:
 
 ```bash
-yarn build --filter=@langchain/openai
+yarn build --filter=@langchain/azure-openai
 ```
 
 ### Run tests
