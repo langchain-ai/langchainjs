@@ -48,14 +48,12 @@ console.log(
 { names: [ 'Artist', 'Track', 'Genre' ] }
  */
 
-
 // -------------
 
 // You can see a LangSmith trace of the above chain here:
 // https://smith.langchain.com/public/5ca0c91e-4a40-44ef-8c45-9a4247dc474c/r
 
 // -------------
-
 
 /**
 This works pretty well! Except, as we’ll see below, we actually need a few other tables as well.
@@ -89,14 +87,12 @@ console.log(
 { names: [ 'Music' ] }
  */
 
-
 // -------------
 
 // You can see a LangSmith trace of the above chain here:
 // https://smith.langchain.com/public/12b62e78-bfbe-42ff-86f2-ad738a476554/r
 
 // -------------
-
 
 const getTables = (categories: z.infer<typeof Table>): Array<string> => {
   let tables: Array<string> = [];
@@ -141,14 +137,12 @@ console.log(
 ]
  */
 
-
 // -------------
 
 // You can see a LangSmith trace of the above chain here:
 // https://smith.langchain.com/public/e78c10aa-e923-4a24-b0c8-f7a6f5d316ce/r
 
 // -------------
-
 
 // Now that we’ve got a chain that can output the relevant tables for any query we can combine this with our createSqlQueryChain, which can accept a list of tableNamesToUse to determine which table schemas are included in the prompt:
 
@@ -187,14 +181,12 @@ console.log(await db.run(query));
 [{"Name":"Rock"}]
  */
 
-
 // -------------
 
 // You can see a LangSmith trace of the above chain here:
 // https://smith.langchain.com/public/c7d576d0-3462-40db-9edc-5492f10555bf/r
 
 // -------------
-
 
 // We might rephrase our question slightly to remove redundancy in the answer
 const query2 = await fullChain.invoke({
@@ -212,7 +204,6 @@ console.log(await db.run(query2));
 /**
 [{"Name":"Rock"}]
  */
-
 
 // -------------
 

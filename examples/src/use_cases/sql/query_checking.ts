@@ -65,14 +65,12 @@ console.log("db query results", await db.run(query));
 db query results [{"AVG(\"Total\")":6.632999999999998}]
  */
 
-
 // -------------
 
 // You can see a LangSmith trace of the above chain here:
 // https://smith.langchain.com/public/d1131395-8477-47cd-8f74-e0c5491ea956/r
 
 // -------------
-
 
 // The obvious downside of this approach is that we need to make two model calls instead of one to generate our query.
 // To get around this we can try to perform the query generation and query check in a single model invocation:
@@ -132,7 +130,6 @@ console.log("db query results", await db.run(query2));
 /**
 db query results [{"AVG(\"Total\")":6.632999999999998}]
  */
-
 
 // -------------
 

@@ -120,14 +120,12 @@ console.log("db query results", await db.run(query));
 db query results []
  */
 
-
 // -------------
 
 // You can see a LangSmith trace of the above chain here:
 // https://smith.langchain.com/public/b153cb9b-6fbb-43a8-b2ba-4c86715183b9/r
 
 // -------------
-
 
 // With retrieval:
 const query2 = await chain.invoke({
@@ -146,7 +144,6 @@ console.log("db query results", await db.run(query2));
 /**
 db query results [{"Name":"Rock"}]
  */
-
 
 // -------------
 

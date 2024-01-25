@@ -23,11 +23,7 @@ export type CreateOpenAIFnRunnableConfig<
 > = {
   functions: FunctionDefinition[];
   /** Language model to use, assumed to support the OpenAI function-calling API. */
-  llm: Runnable<
-    BaseLanguageModelInput,
-    BaseMessage,
-    BaseFunctionCallOptions
-  >;
+  llm: Runnable<BaseLanguageModelInput, BaseMessage, BaseFunctionCallOptions>;
   /** BasePromptTemplate to pass to the model. */
   prompt: BasePromptTemplate<InputValues<Extract<keyof RunInput, string>>>;
   /**
@@ -145,11 +141,7 @@ export type CreateStructuredOutputRunnableConfig<
   /**
    * Language model to use, assumed to support the OpenAI function-calling API.
    */
-  llm: Runnable<
-    BaseLanguageModelInput,
-    BaseMessage,
-    BaseFunctionCallOptions
-  >;
+  llm: Runnable<BaseLanguageModelInput, BaseMessage, BaseFunctionCallOptions>;
   /** BasePromptTemplate to pass to the model. */
   prompt: BasePromptTemplate<InputValues<Extract<keyof RunInput, string>>>;
   /**
