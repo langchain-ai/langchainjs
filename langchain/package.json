@@ -865,21 +865,12 @@
     "evaluation.cjs",
     "evaluation.js",
     "evaluation.d.ts",
-    "smith.cjs",
-    "smith.js",
-    "smith.d.ts",
     "runnables.cjs",
     "runnables.js",
     "runnables.d.ts",
     "runnables/remote.cjs",
     "runnables/remote.js",
-    "runnables/remote.d.ts",
-    "indexes.cjs",
-    "indexes.js",
-    "indexes.d.ts",
-    "index.cjs",
-    "index.js",
-    "index.d.ts"
+    "runnables/remote.d.ts"
   ],
   "repository": {
     "type": "git",
@@ -2673,11 +2664,6 @@
       "import": "./evaluation.js",
       "require": "./evaluation.cjs"
     },
-    "./smith": {
-      "types": "./smith.d.ts",
-      "import": "./smith.js",
-      "require": "./smith.cjs"
-    },
     "./runnables": {
       "types": "./runnables.d.ts",
       "import": "./runnables.js",
@@ -2687,11 +2673,6 @@
       "types": "./runnables/remote.d.ts",
       "import": "./runnables/remote.js",
       "require": "./runnables/remote.cjs"
-    },
-    "./indexes": {
-      "types": "./indexes.d.ts",
-      "import": "./indexes.js",
-      "require": "./indexes.cjs"
     },
     "./package.json": "./package.json"
   }

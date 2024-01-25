@@ -9052,6 +9052,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1
+    "@langchain/scripts": ^0.0.2
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9205,20 +9206,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/scripts@npm:^0.0.2":
-  version: 0.0.2
-  resolution: "@langchain/scripts@npm:0.0.2"
-  dependencies:
-    commander: ^11.1.0
-    rollup: ^4.5.2
-    typescript: <5.2.0
-  bin:
-    lc-build: build.js
-  checksum: 0e623d659dcfc1f1517b465d4863ec9406d35277b0f3ce4aa7e0b6bf709ef76d040f305ef917bf72ef92a401c3f7d077c9de474680311b37f24c36c863319cf7
-  languageName: node
-  linkType: hard
-
-"@langchain/scripts@workspace:libs/langchain-scripts":
+"@langchain/scripts@^0.0.2, @langchain/scripts@workspace:libs/langchain-scripts":
   version: 0.0.0-use.local
   resolution: "@langchain/scripts@workspace:libs/langchain-scripts"
   dependencies:
