@@ -284,14 +284,8 @@ export class AzureAISearchVectorStore extends VectorStore {
     options?: AzureAISearchAddDocumentsOptions
   ) {
     const texts = documents.map(({ pageContent }) => pageContent);
-    const embeddings: number[][] = await this.embeddings.embedDocuments(
-      texts
-    );
-    const results = await this.addVectors(
-      embeddings,
-      documents,
-      options
-    );
+    const embeddings: number[][] = await this.embeddings.embedDocuments(texts);
+    const results = await this.addVectors(embeddings, documents, options);
 
     return results;
   }

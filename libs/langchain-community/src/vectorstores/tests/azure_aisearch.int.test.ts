@@ -355,7 +355,9 @@ describe.skip("AzureAISearchVectorStore integration tests", () => {
     // Need to wait a bit for the document to be indexed
     await setTimeout(1000);
 
-    const docs = await store.similaritySearch("test", 1, { includeEmbeddings: true });
+    const docs = await store.similaritySearch("test", 1, {
+      includeEmbeddings: true,
+    });
 
     expect(docs).toHaveLength(1);
     expect(docs[0].metadata.embedding).toBeDefined();
