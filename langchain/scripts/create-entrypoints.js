@@ -336,6 +336,8 @@ const entrypoints = {
   "experimental/tools/pyinterpreter": "experimental/tools/pyinterpreter",
   // evaluation
   evaluation: "evaluation/index",
+  // smith (LangSmith Evaluation)
+  smith: "smith/index",
   // runnables
   runnables: "runnables/index",
   "runnables/remote": "runnables/remote",

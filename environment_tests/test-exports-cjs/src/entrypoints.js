@@ -109,6 +109,7 @@ const experimental_chains_violation_of_expectations = require("langchain/experim
 const experimental_masking = require("langchain/experimental/masking");
 const experimental_prompts_custom_format = require("langchain/experimental/prompts/custom_format");
 const evaluation = require("langchain/evaluation");
+const smith = require("langchain/smith");
 const runnables = require("langchain/runnables");
 const runnables_remote = require("langchain/runnables/remote");
 const indexes = require("langchain/indexes");

@@ -241,6 +241,9 @@ export interface OptionalImportMap {
   "@langchain/community/retrievers/amazon_kendra"?:
     | typeof import("../retrievers/amazon_kendra.js")
     | Promise<typeof import("../retrievers/amazon_kendra.js")>;
+  "@langchain/community/retrievers/amazon_knowledge_base"?:
+    | typeof import("../retrievers/amazon_knowledge_base.js")
+    | Promise<typeof import("../retrievers/amazon_knowledge_base.js")>;
   "@langchain/community/retrievers/metal"?:
     | typeof import("../retrievers/metal.js")
     | Promise<typeof import("../retrievers/metal.js")>;
@@ -256,6 +259,9 @@ export interface OptionalImportMap {
   "@langchain/community/graphs/neo4j_graph"?:
     | typeof import("../graphs/neo4j_graph.js")
     | Promise<typeof import("../graphs/neo4j_graph.js")>;
+  "@langchain/community/graphs/memgraph_graph"?:
+    | typeof import("../graphs/memgraph_graph.js")
+    | Promise<typeof import("../graphs/memgraph_graph.js")>;
   "@langchain/community/document_transformers/html_to_text"?:
     | typeof import("../document_transformers/html_to_text.js")
     | Promise<typeof import("../document_transformers/html_to_text.js")>;

@@ -853,6 +853,9 @@ experimental/tools/pyinterpreter.d.ts
 evaluation.cjs
 evaluation.js
 evaluation.d.ts
+smith.cjs
+smith.js
+smith.d.ts
 runnables.cjs
 runnables.js
 runnables.d.ts

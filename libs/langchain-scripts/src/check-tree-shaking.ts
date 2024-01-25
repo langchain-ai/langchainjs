@@ -40,13 +40,19 @@ async function listEntrypoints() {
   return entrypoints;
 }
 
-async function listExternals(extraInternals: Array<string | RegExp>) {
+/**
+ *
+ * @param {Array<string | RegExp> | undefined} extraInternals
+ * @default [...Object.keys(packageJson.dependencies ?? {}), ...Object.keys(packageJson.peerDependencies ?? {})]
+ * @returns {Promise<Array<string | RegExp>>}
+ */
+async function listExternals(
+  extraInternals: Array<string | RegExp>
+): Promise<Array<string | RegExp>> {
   const packageJson = await getPackageJson();
   return [
     ...Object.keys(packageJson.dependencies ?? {}),
     ...Object.keys(packageJson.peerDependencies ?? {}),
-    /node:/,
-    /@langchain\/core\//,
     ...extraInternals,
   ];
 }
