@@ -11,6 +11,7 @@ const DEFAULT_GITIGNORE_PATHS = ["node_modules", "dist", ".yarn"];
 // Order is not important.
 const entrypoints = {
   index: "index",
+  build: "build",
 };
 
 // Entrypoints in this list require an optional dependency to be installed.
