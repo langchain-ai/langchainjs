@@ -40,7 +40,19 @@ import ToolExample from "@examples/tools/exa_search.ts";
 <CodeBlock language="typescript">{ToolExample}</CodeBlock>
 
 :::tip
-
 You can see a LangSmith trace for this example [here](https://smith.langchain.com/public/775ea9a8-d54c-405c-9126-a012405d9099/r).
+:::
 
+
+## Using the Exa SDK as LangChain Agent Tools
+
+We can create LangChain tools which use the Exa SDK to perform queries and retrieve content.
+Using these tools we can construct a simple search agent that can answer questions about any topic.
+
+import AgentExample from "@examples/tools/exa_agent.ts";
+
+<CodeBlock language="typescript">{AgentExample}</CodeBlock>
+
+:::tip
+You can see a LangSmith trace for this example [here](https://smith.langchain.com/public/0baed9d8-3c4e-460b-801a-ac6f31af7a74/r).
 :::
