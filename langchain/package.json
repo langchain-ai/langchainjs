@@ -874,6 +874,9 @@
     "runnables/remote.cjs",
     "runnables/remote.js",
     "runnables/remote.d.ts",
+    "indexes.cjs",
+    "indexes.js",
+    "indexes.d.ts",
     "index.cjs",
     "index.js",
     "index.d.ts"
@@ -1205,7 +1208,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.9.1",
-    "@langchain/community": "~0.0.17",
+    "@langchain/community": "~0.0.20",
     "@langchain/core": "~0.1.16",
     "@langchain/openai": "~0.0.12",
     "binary-extensions": "^2.2.0",
@@ -2680,6 +2683,11 @@
       "types": "./runnables/remote.d.ts",
       "import": "./runnables/remote.js",
       "require": "./runnables/remote.cjs"
+    },
+    "./indexes": {
+      "types": "./indexes.d.ts",
+      "import": "./indexes.js",
+      "require": "./indexes.cjs"
     },
     "./package.json": "./package.json"
   }

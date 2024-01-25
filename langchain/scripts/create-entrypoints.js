@@ -341,6 +341,8 @@ const entrypoints = {
   // runnables
   runnables: "runnables/index",
   "runnables/remote": "runnables/remote",
+  // indexes
+  indexes: "indexes/index",
 };
 
 // TODO: Remove all these in 0.2.0

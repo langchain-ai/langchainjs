@@ -112,3 +112,4 @@ const evaluation = require("langchain/evaluation");
 const smith = require("langchain/smith");
 const runnables = require("langchain/runnables");
 const runnables_remote = require("langchain/runnables/remote");
+const indexes = require("langchain/indexes");

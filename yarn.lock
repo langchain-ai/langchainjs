@@ -8634,7 +8634,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/community@workspace:*, @langchain/community@workspace:libs/langchain-community, @langchain/community@~0.0.17":
+"@langchain/community@workspace:*, @langchain/community@workspace:libs/langchain-community, @langchain/community@~0.0.20":
   version: 0.0.0-use.local
   resolution: "@langchain/community@workspace:libs/langchain-community"
   dependencies:
@@ -25083,7 +25083,7 @@ __metadata:
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1
     "@jest/globals": ^29.5.0
-    "@langchain/community": ~0.0.17
+    "@langchain/community": ~0.0.20
     "@langchain/core": ~0.1.16
     "@langchain/openai": ~0.0.12
     "@notionhq/client": ^2.2.10
@@ -25355,7 +25355,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langsmith@npm:^0.0.59, langsmith@npm:~0.0.59":
+"langsmith@npm:^0.0.59":
   version: 0.0.59
   resolution: "langsmith@npm:0.0.59"
   dependencies:
@@ -25382,6 +25382,21 @@ __metadata:
   bin:
     langsmith: dist/cli/main.cjs
   checksum: 2552c1a8549eab8e03a5530e73ce37ad0e147ca3084edbfd56b7a29b92c7c5579e5c1e53222bfb846b5ee8219d8d80cc9a7cc07e78717e95cdefedb95d76cd86
+  languageName: node
+  linkType: hard
+
+"langsmith@npm:~0.0.59":
+  version: 0.0.63
+  resolution: "langsmith@npm:0.0.63"
+  dependencies:
+    "@types/uuid": ^9.0.1
+    commander: ^10.0.1
+    p-queue: ^6.6.2
+    p-retry: 4
+    uuid: ^9.0.0
+  bin:
+    langsmith: dist/cli/main.cjs
+  checksum: aeab97f033dc099f4946418f5f7c99f0107a9fab1838e78acb52dc87aa4b4fc2f0f9a0aacb6f37a8131d1cf800e175e2af6696b910b8492b3b67d6a564ac59cb
   languageName: node
   linkType: hard
 
