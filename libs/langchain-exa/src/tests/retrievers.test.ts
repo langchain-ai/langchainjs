@@ -16,4 +16,3 @@ it("should exclude the text field from metadata", () => {
   const metadata = _getMetadata(dummyResult);
   expect("text" in metadata).toBe(false);
 });
-
