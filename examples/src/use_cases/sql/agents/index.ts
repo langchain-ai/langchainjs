@@ -17,7 +17,7 @@ const llm = new ChatOpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 });
 const agentExecutor = await createSqlAgentRunnable({
   llm,
   toolkit: new SqlToolkit(db, llm),
-  agentType: "openai-tools"
+  agentType: "openai-tools",
 });
 
 console.log(
@@ -26,7 +26,7 @@ console.log(
     input:
       "List the total sales per country. Which country's customers spent the most?",
   }),
-  "\n\n",
+  "\n\n"
 );
 /**
  {
@@ -62,7 +62,7 @@ console.log(
   await agentExecutor.invoke({
     input: "Describe the playlisttrack table",
   }),
-  "\n\n",
+  "\n\n"
 );
 /**
  {

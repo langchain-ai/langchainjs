@@ -79,7 +79,9 @@ const agentExecutor = await createSqlAgentRunnable({
   prompt: fullPrompt,
 });
 
-console.log(await agentExecutor.invoke({ input: "How many artists are there?" }));
+console.log(
+  await agentExecutor.invoke({ input: "How many artists are there?" })
+);
 /**
 {
   input: 'How many artists are there?',
