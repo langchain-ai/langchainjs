@@ -1,6 +1,10 @@
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { mapStoredMessagesToChatMessages } from "@langchain/core/messages";
-import { Runnable, RunnableLambda } from "@langchain/core/runnables";
+import {
+  Runnable,
+  RunnableLambda,
+  RunnableConfig,
+} from "@langchain/core/runnables";
 import { RunCollectorCallbackHandler } from "@langchain/core/tracers/run_collector";
 import { LangChainTracer } from "@langchain/core/tracers/tracer_langchain";
 import { Client, Example, Feedback, Run } from "langsmith";
@@ -9,12 +13,12 @@ import { DataType } from "langsmith/schemas";
 import { LLMStringEvaluator } from "../evaluation/base.js";
 import { loadEvaluator } from "../evaluation/loader.js";
 import { EvaluatorType } from "../evaluation/types.js";
-import { RunnableConfig } from "../schema/runnable/config.js";
-import {
+import type {
   RunEvaluatorLike,
   EvalConfig,
   EvaluatorInputFormatter,
   RunEvalConfig,
+  DynamicRunEvaluatorParams,
 } from "./config.js";
 import { randomName } from "./name_generation.js";
 import { ProgressBar } from "./progress.js";
@@ -33,13 +37,7 @@ export type ChainOrFactory =
  * Wraps an evaluator function + implements the RunEvaluator interface.
  */
 class DynamicRunEvaluator implements RunEvaluator {
-  evaluator: RunnableLambda<
-    {
-      run: Run;
-      example?: Example;
-    },
-    EvaluationResult
-  >;
+  evaluator: RunnableLambda<DynamicRunEvaluatorParams, EvaluationResult>;
 
   constructor(evaluator: RunEvaluatorLike) {
     this.evaluator = new RunnableLambda({ func: evaluator });
@@ -52,10 +50,17 @@ class DynamicRunEvaluator implements RunEvaluator {
    * @returns A promise that resolves to the evaluation result.
    */
   async evaluateRun(run: Run, example?: Example): Promise<EvaluationResult> {
-    return await this.evaluator.invoke({ run, example });
+    return await this.evaluator.invoke({
+      run,
+      example,
+      input: run.inputs,
+      prediction: run.outputs,
+      reference: example?.outputs,
+    });
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isLLMStringEvaluator(evaluator: any): evaluator is LLMStringEvaluator {
   return evaluator && typeof evaluator.evaluateStrings === "function";
 }
@@ -347,7 +352,7 @@ const getExamplesInputs = (
  * for evaluation.
  *
  * @param options - (Optional) Additional parameters for the evaluation process:
- *   - `evaluation` (RunEvalConfig): Configuration for the evaluation, including
+ *   - `evaluationConfig` (RunEvalConfig): Configuration for the evaluation, including
  *     standard and custom evaluators.
  *   - `projectName` (string): Name of the project for logging and tracking.
  *   - `projectMetadata` (Record<string, unknown>): Additional metadata for the project.
@@ -366,10 +371,10 @@ const getExamplesInputs = (
  *   const datasetName = 'example-dataset';
  *   const client = new Client(/* ...config... *\//);
  *
- *   const evaluationConfig = new RunEvalConfig({
+ *   const evaluationConfig = {
  *     evaluators: [/* ...evaluators... *\//],
  *     customEvaluators: [/* ...custom evaluators... *\//],
- *   });
+ *   };
  *
  *   const results = await runOnDataset(chain, datasetName, {
  *     evaluationConfig,

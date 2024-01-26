@@ -81,7 +81,7 @@ const checkFeedbackPassed = (evalResults: EvalResults) => {
   expect(evalResults.projectName).toBeDefined();
   expect(evalResults.results).toBeDefined();
   expect(Object.keys(evalResults.results).length).toBeGreaterThan(0);
-  for (const [_, result] of Object.entries(evalResults.results)) {
+  for (const [, result] of Object.entries(evalResults.results)) {
     expect(result.execution_time).toBeGreaterThan(0);
     expect(result.run_id).toBeDefined();
     expect(result.feedback).toBeDefined();
@@ -145,9 +145,9 @@ describe.each(datasetTypes)("runner_utils %s dataset", (datasetType) => {
             throw new Error("Unsupported prediction type.");
           }
           return {
-            input: (rawInput as any).input,
+            input: rawInput.input,
             prediction,
-            reference: (rawReferenceOutput as any).output,
+            reference: rawReferenceOutput.output,
           };
         },
         llm: new ChatOpenAI({

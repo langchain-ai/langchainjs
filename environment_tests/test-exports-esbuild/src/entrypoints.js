@@ -112,3 +112,4 @@ import * as evaluation from "langchain/evaluation";
 import * as smith from "langchain/smith";
 import * as runnables from "langchain/runnables";
 import * as runnables_remote from "langchain/runnables/remote";
+import * as indexes from "langchain/indexes";

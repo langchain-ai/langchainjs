@@ -51,12 +51,21 @@ const inputs = [
 const results = await agentExecutor.batch(inputs);
 console.log(results.slice(0, 2));
 
-const outputs = [
-  "LangChain is an open-source framework for building applications using large language models. It is also the name of the company building LangSmith.",
-  "LangSmith is a unified platform for debugging, testing, and monitoring language model applications and agents powered by LangChain",
-  "July 18, 2023",
-  "The langsmith cookbook is a github repository containing detailed examples of how to use LangSmith to debug, evaluate, and monitor large language model-powered applications.",
-  "September 5, 2023",
+const referenceOutputs = [
+  {
+    output:
+      "LangChain is an open-source framework for building applications using large language models. It is also the name of the company building LangSmith.",
+  },
+  {
+    output:
+      "LangSmith is a unified platform for debugging, testing, and monitoring language model applications and agents powered by LangChain",
+  },
+  { output: "July 18, 2023" },
+  {
+    output:
+      "The langsmith cookbook is a github repository containing detailed examples of how to use LangSmith to debug, evaluate, and monitor large language model-powered applications.",
+  },
+  { output: "September 5, 2023" },
 ];
 
 const datasetName = `lcjs-qa-${uniqueId}`;
@@ -64,24 +73,26 @@ const dataset = await client.createDataset(datasetName);
 
 await Promise.all(
   inputs.map(async (input, i) => {
-    await client.createExample(
-      input,
-      { output: outputs[i] },
-      {
-        datasetId: dataset.id,
-      }
-    );
+    await client.createExample(input, referenceOutputs[i], {
+      datasetId: dataset.id,
+    });
   })
 );
 
-import type { RunEvalConfig } from "langchain/smith";
-import { Run, Example } from "langsmith";
+import type { RunEvalConfig, DynamicRunEvaluatorParams } from "langchain/smith";
 
 // An illustrative custom evaluator example
-const notUnsure = (props: { run: Run; example?: Example }) => ({
-  key: "not_unsure",
-  score: !props.run?.outputs?.output.includes("not sure"),
-});
+const notUnsure = async ({ prediction }: DynamicRunEvaluatorParams) => {
+  if (typeof prediction?.output !== "string") {
+    throw new Error(
+      "Invalid prediction format for this evaluator. Please check your chain's outputs and try again."
+    );
+  }
+  return {
+    key: "not_unsure",
+    score: !prediction.output.includes("not sure"),
+  };
+};
 
 const evaluation: RunEvalConfig = {
   // The 'evaluators' are loaded from LangChain's evaluation

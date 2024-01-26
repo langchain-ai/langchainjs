@@ -112,3 +112,4 @@ export * from "langchain/evaluation";
 export * from "langchain/smith";
 export * from "langchain/runnables";
 export * from "langchain/runnables/remote";
+export * from "langchain/indexes";
