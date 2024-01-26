@@ -6,8 +6,8 @@
 
 ## Overview
 
-LangGraph is a library for building stateful, multi-actor applications with LLMs, built on top of (and intended to be used with) [LangChain.js](https://github.com/langchain-ai/langchainjs). 
-It extends the [LangChain Expression Language](/docs/expression_language/) with the ability to coordinate multiple chains (or actors) across multiple steps of computation in a cyclic manner. 
+LangGraph is a library for building stateful, multi-actor applications with LLMs, built on top of (and intended to be used with) [LangChain.js](https://github.com/langchain-ai/langchainjs).
+It extends the [LangChain Expression Language](/docs/expression_language/) with the ability to coordinate multiple chains (or actors) across multiple steps of computation in a cyclic manner.
 It is inspired by [Pregel](https://research.google/pubs/pub37252/) and [Apache Beam](https://beam.apache.org/).
 The current interface exposed is one inspired by [NetworkX](https://networkx.org/documentation/latest/).
 
@@ -16,7 +16,6 @@ Crucially, this is NOT a **DAG** framework.
 If you want to build a DAG, you should use just use [LangChain Expression Language](/docs/expression_language/).
 
 Cycles are important for agent-like behaviors, where you call an LLM in a loop, asking it what action to take next.
-
 
 > Looking for the Python version? Click [here](https://github.com/langchain-ai/langgraph).
 
@@ -69,12 +68,11 @@ This is a real simple class that takes in a ToolInvocation and calls that tool, 
 
 A ToolInvocation is any type with `tool` and `toolInput` attribute.
 
-
 ```typescript
 import { ToolExecutor } from "@langchain/langgraph/prebuilt";
 
 const toolExecutor = new ToolExecutor({
-  tools
+  tools,
 });
 ```
 
@@ -95,7 +93,7 @@ import { ChatOpenAI } from "@langchain/openai";
 // See the streaming section for more information on this.
 const model = new ChatOpenAI({
   temperature: 0,
-  streaming: true
+  streaming: true,
 });
 ```
 
@@ -134,8 +132,8 @@ const agentState = {
   messages: {
     value: (x: BaseMessage[], y: BaseMessage[]) => x.concat(y),
     default: () => [],
-  }
-}
+  },
+};
 ```
 
 ### Define the nodes
@@ -247,23 +245,23 @@ workflow.setEntryPoint("agent");
 
 // We now add a conditional edge
 workflow.addConditionalEdges(
-// First, we define the start node. We use `agent`.
-// This means these are the edges taken after the `agent` node is called.
-"agent",
-// Next, we pass in the function that will determine which node is called next.
-shouldContinue,
-// Finally we pass in a mapping.
-// The keys are strings, and the values are other nodes.
-// END is a special node marking that the graph should finish.
-// What will happen is we will call `should_continue`, and then the output of that
-// will be matched against the keys in this mapping.
-// Based on which one it matches, that node will then be called.
-{
-  // If `tools`, then we call the tool node.
-  continue: "action",
-  // Otherwise we finish.
-  end: END
-}
+  // First, we define the start node. We use `agent`.
+  // This means these are the edges taken after the `agent` node is called.
+  "agent",
+  // Next, we pass in the function that will determine which node is called next.
+  shouldContinue,
+  // Finally we pass in a mapping.
+  // The keys are strings, and the values are other nodes.
+  // END is a special node marking that the graph should finish.
+  // What will happen is we will call `should_continue`, and then the output of that
+  // will be matched against the keys in this mapping.
+  // Based on which one it matches, that node will then be called.
+  {
+    // If `tools`, then we call the tool node.
+    continue: "action",
+    // Otherwise we finish.
+    end: END,
+  }
 );
 
 // We now add a normal edge from `tools` to `agent`.
@@ -286,8 +284,8 @@ This runnable accepts a list of messages.
 import { HumanMessage } from "@langchain/core/messages";
 
 const inputs = {
-  messages: [new HumanMessage("what is the weather in sf")]
-}
+  messages: [new HumanMessage("what is the weather in sf")],
+};
 const result = await app.invoke(inputs);
 ```
 
@@ -306,7 +304,7 @@ One of the benefits of using LangGraph is that it is easy to stream output as it
 
 ```typescript
 const inputs = {
-  messages: [new HumanMessage("what is the weather in sf")]
+  messages: [new HumanMessage("what is the weather in sf")],
 };
 for await (const output of await app.stream(inputs)) {
   console.log("output", output);
@@ -329,7 +327,7 @@ Langchain Expression Language allows you to easily define chains (DAGs) but does
 
 ### ChatAgentExecutor: with function calling
 
-This agent executor takes a list of messages as input and outputs a list of messages. 
+This agent executor takes a list of messages as input and outputs a list of messages.
 All agent state is represented as a list of messages.
 This specifically uses OpenAI function calling.
 This is recommended agent executor for newer chat based models that support function calling.
@@ -364,7 +362,6 @@ This class is responsible for constructing the graph.
 It exposes an interface inspired by [NetworkX](https://networkx.org/documentation/latest/).
 This graph is parameterized by a state object that it passes around to each node.
 
-
 #### `constructor`
 
 ```typescript
@@ -386,7 +383,6 @@ When constructing the graph, you need to pass in a schema for a state.
 Each node then returns operations to update that state.
 These operations can either SET specific attributes on the state (e.g. overwrite the existing values) or ADD to the existing attribute.
 Whether to set or add is denoted by annotating the state object you construct the graph with.
-
 
 Let's take a look at an example:
 
@@ -553,7 +549,7 @@ const firstAgent = (inputs: AgentData) => {
     tool: "tavily_search_results_json",
     // We just pass in the `input` key to this tool
     toolInput: newInputs.input,
-    log: ""
+    log: "",
   };
   newInputs.agentOutcome = action;
   return newInputs;
@@ -578,7 +574,7 @@ workflow.setEntryPoint("firstAgent");
 // We define the same edges as before
 workflow.addConditionalEdges("agent", shouldContinue, {
   continue: "tools",
-  exit: END
+  exit: END,
 });
 workflow.addEdge("tools", "agent");
 
@@ -598,7 +594,7 @@ Depending on whether or not the first tool call is actually useful, this may sav
 ```typescript
 const result = await chain.invoke({
   input: "what is the weather in sf",
-  steps: []
+  steps: [],
 });
 ```
 
