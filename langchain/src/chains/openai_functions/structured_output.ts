@@ -81,7 +81,8 @@ export class FunctionCallStructuredOutputParser<
     super(fields);
     if (fields.jsonSchema !== undefined) {
       this.jsonSchemaValidator = new Validator(fields.jsonSchema, "7");
-    } else {
+    }
+    if (fields.zodSchema !== undefined) {
       this.zodSchema = fields.zodSchema;
     }
   }
