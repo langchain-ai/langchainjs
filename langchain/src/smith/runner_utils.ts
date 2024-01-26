@@ -10,6 +10,8 @@ import { LangChainTracer } from "@langchain/core/tracers/tracer_langchain";
 import { Client, Example, Feedback, Run } from "langsmith";
 import { EvaluationResult, RunEvaluator } from "langsmith/evaluation";
 import { DataType } from "langsmith/schemas";
+import { Serialized } from "@langchain/core/load/serializable";
+import { ChainValues } from "@langchain/core/utils/types";
 import { LLMStringEvaluator } from "../evaluation/base.js";
 import { loadEvaluator } from "../evaluation/loader.js";
 import { EvaluatorType } from "../evaluation/types.js";
@@ -33,6 +35,30 @@ export type ChainOrFactory =
   | (() => (obj: unknown) => unknown)
   | (() => (obj: unknown) => Promise<unknown>);
 
+class RunIdResolver {
+  runIdPromiseResolver: (runId: string) => void;
+
+  runIdPromise: Promise<string>;
+
+  constructor() {
+    this.runIdPromise = new Promise<string>((resolve) => {
+      this.runIdPromiseResolver = resolve;
+    });
+  }
+
+  handleChainStart = (
+    _chain: Serialized,
+    _inputs: ChainValues,
+    runId: string
+  ) => {
+    this.runIdPromiseResolver(runId);
+  };
+
+  async resolve(): Promise<string> {
+    return this.runIdPromise;
+  }
+}
+
 /**
  * Wraps an evaluator function + implements the RunEvaluator interface.
  */
@@ -50,13 +76,24 @@ class DynamicRunEvaluator implements RunEvaluator {
    * @returns A promise that resolves to the evaluation result.
    */
   async evaluateRun(run: Run, example?: Example): Promise<EvaluationResult> {
-    return await this.evaluator.invoke({
-      run,
-      example,
-      input: run.inputs,
-      prediction: run.outputs,
-      reference: example?.outputs,
-    });
+    const resolver = new RunIdResolver();
+    const result = await this.evaluator.invoke(
+      {
+        run,
+        example,
+        input: run.inputs,
+        prediction: run.outputs,
+        reference: example?.outputs,
+      },
+      {
+        callbacks: [resolver],
+      }
+    );
+    const runId = await resolver.resolve();
+    return {
+      sourceRunId: runId,
+      ...result,
+    };
   }
 }
 
@@ -131,15 +168,23 @@ class PreparedRunEvaluator implements RunEvaluator {
       rawReferenceOutput: example?.outputs,
       run,
     });
+    const resolver = new RunIdResolver();
     if (this.isStringEvaluator) {
-      const evalResult = await this.evaluator.evaluateStrings({
-        prediction: prediction as string,
-        reference: reference as string,
-        input: input as string,
-      });
+      const evalResult = await this.evaluator.evaluateStrings(
+        {
+          prediction: prediction as string,
+          reference: reference as string,
+          input: input as string,
+        },
+        {
+          callbacks: [resolver],
+        }
+      );
+      const runId = await resolver.resolve();
       return {
         key: this.evaluationName,
         comment: evalResult?.reasoning,
+        sourceRunId: runId,
         ...evalResult,
       };
     }

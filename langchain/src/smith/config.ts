@@ -4,6 +4,7 @@ import { EvaluationResult, RunEvaluator } from "langsmith/evaluation";
 import { Criteria } from "../evaluation/index.js";
 import { LoadEvaluatorOptions } from "../evaluation/loader.js";
 import { EvaluatorType } from "../evaluation/types.js";
+import { RunnableConfig } from "@langchain/core/runnables";
 
 export type EvaluatorInputs = {
   input?: string | unknown;
@@ -40,8 +41,14 @@ export type DynamicRunEvaluatorParams = {
  * pass a function to the runner. This type allows us to do that.
  */
 export type RunEvaluatorLike =
-  | ((props: DynamicRunEvaluatorParams) => Promise<EvaluationResult>)
-  | ((props: DynamicRunEvaluatorParams) => EvaluationResult);
+  | ((
+      props: DynamicRunEvaluatorParams,
+      options?: { config?: RunnableConfig }
+    ) => Promise<EvaluationResult>)
+  | ((
+      props: DynamicRunEvaluatorParams,
+      options?: { config?: RunnableConfig }
+    ) => EvaluationResult);
 
 /**
  * Configuration class for running evaluations on datasets.
