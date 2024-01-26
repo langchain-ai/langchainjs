@@ -326,8 +326,8 @@ function buildMetadataTerms(filter: Record<string, any> | null): Array<Record<st
           result.push({ range: { [metadataKey]: value } });
         } else if ('regexp' in value) {
           result.push({ regexp: { [metadataKey]: value.regexp } });
-        } else if ('term_set' in value) {
-          result.push({ terms_set: { [metadataKey]: value.term_set } });
+        } else if ('terms_set' in value) {
+          result.push({ terms_set: { [metadataKey]: value.terms_set } });
         } else if ('wildcard' in value) {
           result.push({ wildcard: { [metadataKey]: value.wildcard } });
         }
