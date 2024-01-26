@@ -99,7 +99,7 @@ export class AzureOpenAI<
 
   azureOpenAIEndpoint?: string;
 
-  azureOpenAIApiDeploymentName?: string;
+  azureOpenAIEmbeddingsApiDeploymentName?: string;
 
   logprobs?: number;
 
@@ -128,8 +128,8 @@ export class AzureOpenAI<
       fields?.azureOpenAIEndpoint ??
       getEnvironmentVariable("AZURE_OPENAI_API_ENDPOINT");
 
-    this.azureOpenAIApiDeploymentName =
-      fields?.azureOpenAIApiDeploymentName ??
+    this.azureOpenAIEmbeddingsApiDeploymentName =
+      fields?.azureOpenAIEmbeddingsApiDeploymentName ??
       getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME");
 
     this.azureOpenAIApiKey =
@@ -144,7 +144,7 @@ export class AzureOpenAI<
       throw new Error("Azure OpenAI Endpoint not found");
     }
 
-    if (!this.azureOpenAIApiDeploymentName) {
+    if (!this.azureOpenAIEmbeddingsApiDeploymentName) {
       throw new Error("Azure OpenAI Completion Deployment name not found");
     }
 
@@ -191,12 +191,12 @@ export class AzureOpenAI<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<GenerationChunk> {
-    if (!this.azureOpenAIApiDeploymentName) {
+    if (!this.azureOpenAIEmbeddingsApiDeploymentName) {
       throw new Error("Azure OpenAI Completion Deployment name not found");
     }
 
     const stream = await this.client.streamCompletions(
-      this.azureOpenAIApiDeploymentName,
+      this.azureOpenAIEmbeddingsApiDeploymentName,
       [input],
       {
         maxTokens: this.maxTokens,
@@ -245,7 +245,7 @@ export class AzureOpenAI<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult> {
-    if (!this.azureOpenAIApiDeploymentName) {
+    if (!this.azureOpenAIEmbeddingsApiDeploymentName) {
       throw new Error("Azure OpenAI Completion Deployment name not found");
     }
 
@@ -271,7 +271,7 @@ export class AzureOpenAI<
         let response: Omit<Completions, "choices" | "usage"> | undefined;
 
         const stream = await this.client.streamCompletions(
-          this.azureOpenAIApiDeploymentName,
+          this.azureOpenAIEmbeddingsApiDeploymentName,
           subPrompts[i],
           {
             maxTokens: this.maxTokens,
@@ -348,7 +348,7 @@ export class AzureOpenAI<
 
       for (let i = 0; i < subPrompts.length; i += 1) {
         const data = await this.client.getCompletions(
-          this.azureOpenAIApiDeploymentName,
+          this.azureOpenAIEmbeddingsApiDeploymentName,
           prompts,
           {
             maxTokens: this.maxTokens,

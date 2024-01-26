@@ -55,7 +55,7 @@ export class AzureOpenAIChat
   }
 
   _llmType() {
-    return "openai";
+    return "azure-openai";
   }
 
   temperature = 1;
@@ -114,7 +114,7 @@ export class AzureOpenAIChat
       getEnvironmentVariable("AZURE_OPENAI_API_ENDPOINT");
 
     this.azureOpenAIApiCompletionsDeploymentName =
-      fields?.azureOpenAIApiDeploymentName ??
+      fields?.azureOpenAIEmbeddingsApiDeploymentName ??
       getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME");
 
     this.azureOpenAIApiKey =

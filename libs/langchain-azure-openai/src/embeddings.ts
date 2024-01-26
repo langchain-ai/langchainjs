@@ -32,7 +32,7 @@ export class AzureOpenAIEmbeddings
 
   azureOpenAIEndpoint?: string;
 
-  azureOpenAIApiDeploymentName?: string;
+  azureOpenAIEmbeddingsApiDeploymentName?: string;
 
   private client: AzureOpenAIClient;
 
@@ -46,9 +46,11 @@ export class AzureOpenAIEmbeddings
 
     super(fieldsWithDefaults);
 
-    this.azureOpenAIApiDeploymentName =
-      fields?.azureOpenAIApiDeploymentName ??
-      getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME");
+    this.azureOpenAIEmbeddingsApiDeploymentName =
+      (fieldsWithDefaults?.azureOpenAIEmbeddingsApiDeploymentName ||
+        fieldsWithDefaults?.azureOpenAIApiDeploymentName) ??
+      (getEnvironmentVariable("AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME") ||
+        getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME"));
 
     this.azureOpenAIEndpoint =
       fields?.azureOpenAIEndpoint ??
@@ -62,7 +64,7 @@ export class AzureOpenAIEmbeddings
       throw new Error("Azure OpenAI API key not found");
     }
 
-    if (!this.azureOpenAIApiDeploymentName) {
+    if (!this.azureOpenAIEmbeddingsApiDeploymentName) {
       throw new Error("Azure OpenAI Completion Deployment name not found");
     }
 
@@ -117,12 +119,12 @@ export class AzureOpenAIEmbeddings
   }
 
   private async getEmbeddings(input: string[]) {
-    if (!this.azureOpenAIApiDeploymentName) {
+    if (!this.azureOpenAIEmbeddingsApiDeploymentName) {
       throw new Error("Azure OpenAI Completion Deployment name not found");
     }
 
     const res = await this.client.getEmbeddings(
-      this.azureOpenAIApiDeploymentName,
+      this.azureOpenAIEmbeddingsApiDeploymentName,
       input,
       {
         user: this.user,

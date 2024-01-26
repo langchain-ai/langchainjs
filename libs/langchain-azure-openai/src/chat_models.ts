@@ -167,6 +167,43 @@ export class AzureChatOpenAI
   extends BaseChatModel<ChatOpenAICallOptions>
   implements OpenAIChatInput, AzureOpenAIInput
 {
+  static lc_name() {
+    return "AzureChatOpenAI";
+  }
+
+  get callKeys() {
+    return [
+      ...super.callKeys,
+      "options",
+      "function_call",
+      "functions",
+      "tools",
+      "tool_choice",
+      "promptIndex",
+      "response_format",
+      "seed",
+    ];
+  }
+
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      azureOpenAIApiKey: "AZURE_OPENAI_API_KEY",
+      azureOpenAIEndpoint: "AZURE_OPENAI_API_ENDPOINT",
+      azureOpenAIApiDeploymentName: "AZURE_OPENAI_API_DEPLOYMENT_NAME",
+    };
+  }
+
+  get lc_aliases(): Record<string, string> {
+    return {
+      modelName: "model",
+      azureOpenAIApiKey: "azure_openai_api_key",
+      azureOpenAIEndpoint: "azure_openai_api_endpoint",
+      azureOpenAIApiDeploymentName: "azure_openai_api_deployment_name",
+    };
+  }
+
+  lc_serializable = true;
+
   functions?: FunctionDefinition[] | undefined;
 
   functionCall?: FunctionCallPreset | FunctionName | undefined;
@@ -221,7 +258,7 @@ export class AzureChatOpenAI
       getEnvironmentVariable("AZURE_OPENAI_API_ENDPOINT");
 
     this.azureOpenAIApiCompletionsDeploymentName =
-      fields?.azureOpenAIApiDeploymentName ??
+      fields?.azureOpenAIEmbeddingsApiDeploymentName ??
       getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME");
 
     this.azureOpenAIApiKey =
