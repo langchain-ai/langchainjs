@@ -58,38 +58,39 @@ async function main() {
 
   const entrypoints = new Set([]);
 
-  await Promise.all(
-    configFiles.map(async (configFile) => {
-      const langChainConfig = await import(configFile);
-      if (!("entrypoints" in langChainConfig.config)) {
-        throw new Error(
-          `The config file "${configFile}" does not contain any entrypoints.`
-        );
-      } else if (
-        langChainConfig.config.entrypoints === null ||
-        langChainConfig.config.entrypoints === undefined
-      ) {
-        return;
-      }
-      const { config } = langChainConfig;
+  for await (const configFile of configFiles) {
+    const langChainConfig = await import(configFile);
+    if (!("entrypoints" in langChainConfig.config)) {
+      throw new Error(
+        `The config file "${configFile}" does not contain any entrypoints.`
+      );
+    } else if (
+      langChainConfig.config.entrypoints === null ||
+      langChainConfig.config.entrypoints === undefined
+    ) {
+      return;
+    }
+    const { config } = langChainConfig;
 
-      const entrypointDir = configFile.split("/langchain.config.js")[0];
+    const entrypointDir = path.relative(
+      process.cwd(),
+      configFile.split("/langchain.config.js")[0]
+    );
 
-      const deprecatedNodeOnly =
-        "deprecatedNodeOnly" in config ? config.deprecatedNodeOnly : [];
+    const deprecatedNodeOnly =
+      "deprecatedNodeOnly" in config ? config.deprecatedNodeOnly : [];
 
-      Object.values(config.entrypoints)
-        .filter((key) => !deprecatedNodeOnly.includes(key))
-        .filter(
-          (key) =>
-            !blacklistedEntrypoints.find(
-              (blacklistedItem) =>
-                blacklistedItem === `${entrypointDir}/src/${key}.ts`
-            )
-        )
-        .map((key) => entrypoints.add(`${entrypointDir}/src/${key}.ts`));
-    })
-  );
+    Object.values(config.entrypoints)
+      .filter((key) => !deprecatedNodeOnly.includes(key))
+      .filter(
+        (key) =>
+          !blacklistedEntrypoints.find(
+            (blacklistedItem) =>
+              blacklistedItem === `${entrypointDir}/src/${key}.ts`
+          )
+      )
+      .map((key) => entrypoints.add(`${entrypointDir}/src/${key}.ts`));
+  }
   // Check if the `./typedoc.json` file exists, since it is gitignored by default
   if (!fs.existsSync("./typedoc.json")) {
     fs.writeFileSync("./typedoc.json", "{}\n");
@@ -97,9 +98,7 @@ async function main() {
 
   updateJsonFile("./typedoc.json", () => ({
     ...BASE_TYPEDOC_CONFIG,
-    entryPoints: Array.from(entrypoints).map((entrypoint) =>
-      path.relative(process.cwd(), entrypoint)
-    ),
+    entryPoints: Array.from(entrypoints),
   }));
 }
 main();
