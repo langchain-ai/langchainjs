@@ -76,7 +76,7 @@ export class FunctionCallStructuredOutputParser<
       fields = fieldsOrSchema;
     }
     if (fields.jsonSchema === undefined && fields.zodSchema === undefined) {
-      throw new Error(`Must provide one of "jsonSchema" or "zodSchema".`);
+      throw new Error(`Must provide at least one of "jsonSchema" or "zodSchema".`);
     }
     super(fields);
     if (fields.jsonSchema !== undefined) {
