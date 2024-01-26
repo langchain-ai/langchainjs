@@ -29,7 +29,10 @@
     "test:single": "NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 100000",
     "test:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
     "format": "prettier --config .prettierrc --write \"src\"",
-    "format:check": "prettier --config .prettierrc --check \"src\""
+    "format:check": "prettier --config .prettierrc --check \"src\"",
+    "move-cjs-to-dist": "yarn lc-build --config ./langchain.config.js --move-cjs-dist",
+    "create-entrypoints": "yarn lc-build --config ./langchain.config.js --create-entrypoints",
+    "check-tree-shaking": "yarn lc-build --config ./langchain.config.js --tree-shaking"
   },
   "author": "LangChain",
   "license": "MIT",
