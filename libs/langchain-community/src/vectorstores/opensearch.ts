@@ -319,7 +319,7 @@ export class OpenSearchVectorStore extends VectorStore {
       const metadataKey = `metadata.${key}`;
       if (typeof value === 'object') {
         if ('exists' in value) {
-          if(!!value[exists]) {
+          if(!!value.exists) {
             must.push({ exists: { field: metadataKey } });
           } else {
             must_not.push({ exists: { field: metadataKey } });
