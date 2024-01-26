@@ -250,7 +250,7 @@ export class CassandraStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: WhereClause,
+    filter?: WhereClause
   ): Promise<[Document, number][]> {
     return this.search(query, k, filter, false);
   }
