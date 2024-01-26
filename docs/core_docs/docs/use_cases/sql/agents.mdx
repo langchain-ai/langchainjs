@@ -53,6 +53,10 @@ import AgentExample from "@examples/use_cases/sql/agents/index.ts";
 
 <CodeBlock language="typescript">{AgentExample}</CodeBlock>
 
+:::tip
+You can see the LangSmith traces from the example above [here](https://smith.langchain.com/public/8bdedd3f-a76a-4968-878f-ad7366540baa/r) and [here](https://smith.langchain.com/public/6b3f932a-3f37-4946-8db4-99cc826da7de/r)
+:::
+
 ## Using a dynamic few-shot prompt
 
 To optimize agent performance, we can provide a custom prompt with domain-specific knowledge. In this case we'll create a few shot prompt with an example selector, that will dynamically build the few shot prompt based on the user input. This will help the model make better queries by inserting relevant queries in the prompt that the model can use as reference.
@@ -71,7 +75,7 @@ import ExampleSelector from "@examples/use_cases/sql/agents/example_selector.ts"
 <CodeBlock language="typescript">{ExampleSelector}</CodeBlock>
 
 ::tip
-You can see a LangSmith trace of this example [here](https://smith.langchain.com/public/6c5d5f95-7789-475f-ba99-79d5c34e593b/r).
+You can see a LangSmith trace of this example [here](https://smith.langchain.com/public/18962b1f-e8d9-4928-9813-49031e421a0a/r).
 :::
 
 ## Dealing with high-cardinality columns
@@ -89,7 +93,7 @@ import HighCardinalityExample from "@examples/use_cases/sql/agents/high_cardinal
 <CodeBlock language="typescript">{HighCardinalityExample}</CodeBlock>
 
 ::tip
-You can see a LangSmith trace of this example [here](https://smith.langchain.com/public/e93eff6c-6843-49e3-93bf-f1b9f5a8cafd/r).
+You can see a LangSmith trace of this example [here](https://smith.langchain.com/public/5b4e6f56-d252-4d3d-af74-638dc0d1d9cb/r).
 :::
 
 ## Next steps

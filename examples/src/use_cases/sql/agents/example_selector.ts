@@ -8,12 +8,10 @@ import {
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
-import {
-  SqlToolkit,
-  createSqlAgentRunnable,
-} from "langchain/agents/toolkits/sql";
+import { SqlToolkit } from "langchain/agents/toolkits/sql";
 import { SqlDatabase } from "langchain/sql_db";
 import { DataSource } from "typeorm";
+import { AgentExecutor, createOpenAIToolsAgent } from "langchain/agents";
 import { examples } from "./examples.js";
 
 const exampleSelector = await SemanticSimilarityExampleSelector.fromExamples(
@@ -72,11 +70,21 @@ const db = await SqlDatabase.fromDataSourceParams({
   appDataSource: datasource,
 });
 
-const agentExecutor = await createSqlAgentRunnable({
+const sqlToolKit = new SqlToolkit(db, llm);
+const tools = sqlToolKit.getTools();
+const newPrompt = await fullPrompt.partial({
+  dialect: sqlToolKit.dialect,
+  top_k: "10",
+});
+
+const runnableAgent = await createOpenAIToolsAgent({
   llm,
-  toolkit: new SqlToolkit(db, llm),
-  agentType: "openai-tools",
-  prompt: fullPrompt,
+  tools,
+  prompt: newPrompt,
+});
+const agentExecutor = new AgentExecutor({
+  agent: runnableAgent,
+  tools,
 });
 
 console.log(

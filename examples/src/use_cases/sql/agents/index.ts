@@ -1,8 +1,16 @@
+import {
+  ChatPromptTemplate,
+  HumanMessagePromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
+import { createOpenAIToolsAgent, AgentExecutor } from "langchain/agents";
 import {
   SqlToolkit,
-  createSqlAgentRunnable,
+  SQL_PREFIX,
+  SQL_SUFFIX,
 } from "langchain/agents/toolkits/sql";
+import { AIMessage } from "langchain/schema";
 import { SqlDatabase } from "langchain/sql_db";
 import { DataSource } from "typeorm";
 
@@ -14,19 +22,33 @@ const db = await SqlDatabase.fromDataSourceParams({
   appDataSource: datasource,
 });
 const llm = new ChatOpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 });
-const agentExecutor = await createSqlAgentRunnable({
+const sqlToolKit = new SqlToolkit(db, llm);
+const tools = sqlToolKit.getTools();
+const prompt = ChatPromptTemplate.fromMessages([
+  ["system", SQL_PREFIX],
+  HumanMessagePromptTemplate.fromTemplate("{input}"),
+  new AIMessage(SQL_SUFFIX.replace("{agent_scratchpad}", "")),
+  new MessagesPlaceholder("agent_scratchpad"),
+]);
+const newPrompt = await prompt.partial({
+  dialect: sqlToolKit.dialect,
+  top_k: "10",
+});
+const runnableAgent = await createOpenAIToolsAgent({
   llm,
-  toolkit: new SqlToolkit(db, llm),
-  agentType: "openai-tools",
+  tools,
+  prompt: newPrompt,
+});
+const agentExecutor = new AgentExecutor({
+  agent: runnableAgent,
+  tools,
 });
 
 console.log(
-  "\n\n",
   await agentExecutor.invoke({
     input:
       "List the total sales per country. Which country's customers spent the most?",
-  }),
-  "\n\n"
+  })
 );
 /**
  {
@@ -44,25 +66,14 @@ console.log(
     '9. India: $75.26\n' +
     '10. Chile: $46.62\n' +
     '\n' +
-    "To find out which country's customers spent the most, we can see that the USA has the highest total sales with $523.06.\n" +
-    '\n' +
-    'Answer: The country whose customers spent the most is the USA.'
+    "To find out which country's customers spent the most, we can see that the customers from the USA spent the most with a total sales of $523.06."
 }
  */
 
-// -------------
-
-// You can see a LangSmith trace of the above chain here:
-// https://smith.langchain.com/public/886aeea4-7fcf-4ba8-94e1-1a98a8919ec9/r
-
-// -------------
-
 console.log(
-  "\n\n",
   await agentExecutor.invoke({
     input: "Describe the playlisttrack table",
-  }),
-  "\n\n"
+  })
 );
 /**
  {
@@ -77,13 +88,6 @@ console.log(
     '| 1          | 3389    |\n' +
     '| 1          | 3390    |\n' +
     '\n' +
-    "Please let me know if there's anything else I can help with!"
+    'Please let me know if there is anything else I can help you with.'
 }
  */
-
-// -------------
-
-// You can see a LangSmith trace of the above chain here:
-// https://smith.langchain.com/public/065a9cc5-8f11-4045-b141-e751b8034b61/r
-
-// -------------

@@ -3,7 +3,8 @@ import {
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
-import { createSqlAgentRunnable } from "langchain/agents/toolkits/sql";
+import { AgentExecutor, createOpenAIToolsAgent } from "langchain/agents";
+import { SqlToolkit } from "langchain/agents/toolkits/sql";
 import { SqlDatabase } from "langchain/sql_db";
 import { Tool } from "langchain/tools";
 import { createRetrieverTool } from "langchain/tools/retriever";
@@ -82,33 +83,30 @@ const prompt = ChatPromptTemplate.fromMessages([
   new MessagesPlaceholder("agent_scratchpad"),
 ]);
 const llm = new ChatOpenAI({ modelName: "gpt-4", temperature: 0 });
-const agent = await createSqlAgentRunnable({
+const sqlToolKit = new SqlToolkit(db, llm);
+const newPrompt = await prompt.partial({
+  dialect: sqlToolKit.dialect,
+  top_k: "10",
+  table_names: db.allTables.map((t) => t.tableName).join(", "),
+});
+const tools = [...sqlToolKit.getTools(), retrieverTool];
+const runnableAgent = await createOpenAIToolsAgent({
   llm,
-  db,
-  extraTools: [retrieverTool],
-  prompt,
-  agentType: "openai-tools",
+  tools,
+  prompt: newPrompt,
+});
+const agentExecutor = new AgentExecutor({
+  agent: runnableAgent,
+  tools,
 });
 console.log(
-  await agent.invoke({
+  await agentExecutor.invoke({
     input: "How many albums does alis in chain have?",
-    table_names: db.allTables.map((t) => t.tableName).join("\n"),
   })
 );
 /**
 {
   input: 'How many albums does alis in chain have?',
-  table_names: 'Album\n' +
-    'Artist\n' +
-    'Customer\n' +
-    'Employee\n' +
-    'Genre\n' +
-    'Invoice\n' +
-    'InvoiceLine\n' +
-    'MediaType\n' +
-    'Playlist\n' +
-    'PlaylistTrack\n' +
-    'Track',
-  output: 'Alice In Chains has 1 album in the database.'
+  output: 'Alice In Chains has 1 album.'
 }
  */
