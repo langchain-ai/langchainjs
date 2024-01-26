@@ -499,3 +499,6 @@ indexes/postgres.d.ts
 indexes/memory.cjs
 indexes/memory.js
 indexes/memory.d.ts
+node_modules
+dist
+.yarn
