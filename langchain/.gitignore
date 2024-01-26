@@ -865,6 +865,6 @@ runnables/remote.d.ts
 indexes.cjs
 indexes.js
 indexes.d.ts
-index.cjs
-index.js
-index.d.ts
+node_modules
+dist
+.yarn
