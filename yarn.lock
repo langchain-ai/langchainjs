@@ -7907,6 +7907,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@google/generative-ai@npm:^0.1.3":
+  version: 0.1.3
+  resolution: "@google/generative-ai@npm:0.1.3"
+  checksum: 6ab4e214c5f792c9dce66aa00268dd75295be093ec9305ccb8e2251210e5a6680a17ec9f041d8108ee3a2ce49e2f26bc9a30ef97e17a2d83818a92a824f6efd1
+  languageName: node
+  linkType: hard
+
 "@gradientai/nodejs-sdk@npm:^1.2.0":
   version: 1.2.0
   resolution: "@gradientai/nodejs-sdk@npm:1.2.0"
@@ -9082,7 +9089,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/google-genai@workspace:libs/langchain-google-genai"
   dependencies:
-    "@google/generative-ai": ^0.1.0
+    "@google/generative-ai": ^0.1.3
     "@jest/globals": ^29.5.0
     "@langchain/community": "workspace:*"
     "@langchain/core": ~0.1.5
