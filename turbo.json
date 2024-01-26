@@ -2,7 +2,22 @@
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": ["**/.env"],
   "pipeline": {
+    "@langchain/scripts#build": {
+      "outputs": [
+        "./libs/langchain-scripts/dist/**",
+        "*.js",
+        "*.cjs",
+        "*.d.ts"
+      ],
+      "inputs": [
+        "./libs/langchain-scripts/src/",
+        "./libs/langchain-scripts/scripts/**",
+        "./libs/langchain-scripts/package.json",
+        "./libs/langchain-scripts/tsconfig.json"
+      ]
+    },
     "@langchain/core#build": {
+      "dependsOn": ["@langchain/scripts#build"],
       "outputs": ["dist/**", "dist-cjs/**", "*.js", "*.cjs", "*.d.ts"],
       "inputs": ["src/**", "scripts/**", "package.json", "tsconfig.json"]
     },
@@ -23,6 +38,7 @@
     },
     "build": {
       "dependsOn": [
+        "@langchain/scripts#build",
         "@langchain/core#build",
         "@langchain/community#build",
         "^build"
