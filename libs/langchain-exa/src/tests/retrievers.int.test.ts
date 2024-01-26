@@ -1,6 +1,6 @@
 import { test, expect } from "@jest/globals";
 import Exa from "exa-js";
-import { ExaRetriever, _getMetadata } from "../retrievers.js";
+import { ExaRetriever } from "../retrievers.js";
 
 test("ExaRetriever can retrieve some data", async () => {
   const exaRetriever = new ExaRetriever<{ text: true }>({
