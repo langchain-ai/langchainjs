@@ -316,9 +316,35 @@ function buildMetadataTerms(filter: Record<string, any> | null): Array<Record<st
   for (const [key, value] of Object.entries(filter)) {
     const metadataKey = `metadata.${key}`;
 
-    // Handle various query types here...
-    // (The function's implementation remains the same as in the previous response)
-
+    if (typeof value === 'object') {
+      if ('gte' in value || 'gt' in value || 'lte' in value || 'lt' in value) {
+        result.push({ range: { [metadataKey]: value } });
+      } else if ('value' in value && 'boost' in value) {
+        result.push({ term: { [metadataKey]: value } });
+      } else if ('terms' in value || 'boost' in value) {
+        result.push({ terms: { [metadataKey]: value } });
+      } else if ('term_set' in value) {
+        result.push({ terms_set: { [metadataKey]: value } });
+      } else if ('prefix' in value) {
+        result.push({ prefix: { [metadataKey]: value.prefix } });
+      } else if ('fuzziness' in value) {
+        result.push({ fuzzy: { [metadataKey]: value } });
+      } else if ('wildcard' in value) {
+        result.push({ wildcard: { [metadataKey]: value.wildcard } });
+      } else if ('regexp' in value) {
+        result.push({ regexp: { [metadataKey]: value.regexp } });
+      } else if (key === 'ids') {
+        result.push({ ids: value });
+      }
+    } else {
+      if (key === 'exists') {
+        result.push({ exists: { field: metadataKey } });
+      } else {
+        const aggregatorKey = Array.isArray(value) ? 'terms' : 'term';
+        result.push({ [aggregatorKey]: { [metadataKey]: value } });
+      }
+    }
+  }
   return result;
 }
 
