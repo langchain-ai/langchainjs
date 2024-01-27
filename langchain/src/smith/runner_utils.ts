@@ -1,26 +1,26 @@
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
+import { Serialized } from "@langchain/core/load/serializable";
 import { mapStoredMessagesToChatMessages } from "@langchain/core/messages";
 import {
   Runnable,
-  RunnableLambda,
   RunnableConfig,
+  RunnableLambda,
 } from "@langchain/core/runnables";
 import { RunCollectorCallbackHandler } from "@langchain/core/tracers/run_collector";
 import { LangChainTracer } from "@langchain/core/tracers/tracer_langchain";
+import { ChainValues } from "@langchain/core/utils/types";
 import { Client, Example, Feedback, Run } from "langsmith";
 import { EvaluationResult, RunEvaluator } from "langsmith/evaluation";
 import { DataType } from "langsmith/schemas";
-import { Serialized } from "@langchain/core/load/serializable";
-import { ChainValues } from "@langchain/core/utils/types";
 import { LLMStringEvaluator } from "../evaluation/base.js";
 import { loadEvaluator } from "../evaluation/loader.js";
 import { EvaluatorType } from "../evaluation/types.js";
 import type {
-  RunEvaluatorLike,
+  DynamicRunEvaluatorParams,
   EvalConfig,
   EvaluatorInputFormatter,
   RunEvalConfig,
-  DynamicRunEvaluatorParams,
+  RunEvaluatorLike,
 } from "./config.js";
 import { randomName } from "./name_generation.js";
 import { ProgressBar } from "./progress.js";
@@ -41,8 +41,8 @@ class RunIdResolver {
   runIdPromise: Promise<string>;
 
   constructor() {
-    this.runIdPromise = new Promise<string>((resolve) => {
-      this.runIdPromiseResolver = resolve;
+    this.runIdPromise = new Promise<string>((extract) => {
+      this.runIdPromiseResolver = extract;
     });
   }
 
@@ -54,7 +54,7 @@ class RunIdResolver {
     this.runIdPromiseResolver(runId);
   };
 
-  async resolve(): Promise<string> {
+  async extract(): Promise<string> {
     return this.runIdPromise;
   }
 }
@@ -73,10 +73,10 @@ class DynamicRunEvaluator implements RunEvaluator {
    * Evaluates a run with an optional example and returns the evaluation result.
    * @param run The run to evaluate.
    * @param example The optional example to use for evaluation.
-   * @returns A promise that resolves to the evaluation result.
+   * @returns A promise that extracts to the evaluation result.
    */
   async evaluateRun(run: Run, example?: Example): Promise<EvaluationResult> {
-    const resolver = new RunIdResolver();
+    const extracter = new RunIdResolver();
     const result = await this.evaluator.invoke(
       {
         run,
@@ -86,10 +86,10 @@ class DynamicRunEvaluator implements RunEvaluator {
         reference: example?.outputs,
       },
       {
-        callbacks: [resolver],
+        callbacks: [extracter],
       }
     );
-    const runId = await resolver.resolve();
+    const runId = await extracter.extract();
     return {
       sourceRunId: runId,
       ...result,
@@ -159,7 +159,7 @@ class PreparedRunEvaluator implements RunEvaluator {
    * Evaluates a run with an optional example and returns the evaluation result.
    * @param run The run to evaluate.
    * @param example The optional example to use for evaluation.
-   * @returns A promise that resolves to the evaluation result.
+   * @returns A promise that extracts to the evaluation result.
    */
   async evaluateRun(run: Run, example?: Example): Promise<EvaluationResult> {
     const { prediction, input, reference } = this.formatEvaluatorInputs({
@@ -168,7 +168,7 @@ class PreparedRunEvaluator implements RunEvaluator {
       rawReferenceOutput: example?.outputs,
       run,
     });
-    const resolver = new RunIdResolver();
+    const extracter = new RunIdResolver();
     if (this.isStringEvaluator) {
       const evalResult = await this.evaluator.evaluateStrings(
         {
@@ -177,10 +177,10 @@ class PreparedRunEvaluator implements RunEvaluator {
           input: input as string,
         },
         {
-          callbacks: [resolver],
+          callbacks: [extracter],
         }
       );
-      const runId = await resolver.resolve();
+      const runId = await extracter.extract();
       return {
         key: this.evaluationName,
         comment: evalResult?.reasoning,
