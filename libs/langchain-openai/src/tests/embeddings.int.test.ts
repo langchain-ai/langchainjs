@@ -67,3 +67,26 @@ test("Test OpenAI embeddings with an invalid org throws", async () => {
     ]);
   }).rejects.toThrow();
 });
+
+test("Test OpenAIEmbeddings.embedQuery with v3 and dimensions", async () => {
+  const embeddings = new OpenAIEmbeddings({
+    modelName: "text-embedding-3-small",
+    dimensions: 127,
+  });
+  const res = await embeddings.embedQuery("Hello world");
+  expect(typeof res[0]).toBe("number");
+  expect(res.length).toBe(127);
+});
+
+test("Test OpenAIEmbeddings.embedDocuments with v3 and dimensions", async () => {
+  const embeddings = new OpenAIEmbeddings({
+    modelName: "text-embedding-3-small",
+    dimensions: 127,
+  });
+  const res = await embeddings.embedDocuments(["Hello world", "Bye bye"]);
+  expect(res).toHaveLength(2);
+  expect(typeof res[0][0]).toBe("number");
+  expect(typeof res[1][0]).toBe("number");
+  expect(res[0].length).toBe(127);
+  expect(res[1].length).toBe(127);
+});

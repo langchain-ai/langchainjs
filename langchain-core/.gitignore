@@ -130,6 +130,6 @@ utils/types.d.ts
 vectorstores.cjs
 vectorstores.js
 vectorstores.d.ts
-index.cjs
-index.js
-index.d.ts
+node_modules
+dist
+.yarn

@@ -1,13 +1,21 @@
 /* eslint-disable prefer-template */
-import { Client as CassandraClient, DseClientOptions } from "cassandra-driver";
-
 import {
   AsyncCaller,
   AsyncCallerParams,
 } from "@langchain/core/utils/async_caller";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
-import { VectorStore } from "@langchain/core/vectorstores";
+import {
+  VectorStore,
+  MaxMarginalRelevanceSearchOptions,
+} from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
+import { maximalMarginalRelevance } from "@langchain/core/utils/math";
+
+import { Client } from "cassandra-driver";
+import {
+  CasssandraClientFactory,
+  CassandraClientArgs,
+} from "../utils/cassandra.js";
 
 export interface Column {
   type: string;
@@ -31,7 +39,9 @@ export type WhereClause = Filter[] | Filter | Record<string, unknown>;
 
 export type SupportedVectorTypes = "cosine" | "dot_product" | "euclidean";
 
-export interface CassandraLibArgs extends DseClientOptions, AsyncCallerParams {
+export interface CassandraLibArgs
+  extends CassandraClientArgs,
+    AsyncCallerParams {
   table: string;
   keyspace: string;
   vectorType?: SupportedVectorTypes;
@@ -53,7 +63,7 @@ export class CassandraStore extends VectorStore {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   declare FilterType: WhereClause;
 
-  private client: CassandraClient;
+  private client: Client;
 
   private readonly vectorType: SupportedVectorTypes;
 
@@ -73,13 +83,15 @@ export class CassandraStore extends VectorStore {
 
   private indices: Index[];
 
-  private initializationState = 0; // 0: Not Initialized, 1: In Progress, 2: Initialized
-
   private initializationPromise: Promise<void> | null = null;
 
   asyncCaller: AsyncCaller;
 
   private readonly batchSize: number;
+
+  private readonly embeddingColumnAlias = "embedding";
+
+  private constructorArgs: CassandraLibArgs;
 
   _vectorstoreType(): string {
     return "cassandra";
@@ -101,7 +113,7 @@ export class CassandraStore extends VectorStore {
       metadataColumns,
     } = args;
 
-    const argsWithDefaults = {
+    this.constructorArgs = {
       ...args,
       indices,
       maxConcurrency,
@@ -109,8 +121,8 @@ export class CassandraStore extends VectorStore {
       batchSize,
       vectorType,
     };
-    this.asyncCaller = new AsyncCaller(argsWithDefaults);
-    this.client = new CassandraClient(argsWithDefaults);
+
+    this.asyncCaller = new AsyncCaller(this.constructorArgs);
 
     // Assign properties
     this.vectorType = vectorType;
@@ -155,23 +167,25 @@ export class CassandraStore extends VectorStore {
   }
 
   /**
-   * Method to search for vectors that are similar to a given query vector.
+   * Helper method to search for vectors that are similar to a given query vector.
    * @param query The query vector.
-   * @param k The number of similar vectors to return.
-   * @param filter
+   * @param k The number of similar Documents to return.
+   * @param filter Optional filter to be applied as a WHERE clause.
+   * @param includeEmbedding Whether to include the embedding vectors in the results.
    * @returns Promise that resolves with an array of tuples, each containing a Document and a score.
    */
-  async similaritySearchVectorWithScore(
+  async search(
     query: number[],
     k: number,
-    filter?: WhereClause
+    filter?: WhereClause,
+    includeEmbedding?: boolean
   ): Promise<[Document, number][]> {
     await this.initialize();
 
     // Ensure we have an array of Filter from the public interface
     const filters = this.asFilters(filter);
 
-    const queryStr = this.buildSearchQuery(filters);
+    const queryStr = this.buildSearchQuery(filters, includeEmbedding);
 
     // Search query will be of format:
     //   SELECT ..., text, similarity_x(?) AS similarity_score
@@ -207,6 +221,12 @@ export class CassandraStore extends VectorStore {
       delete sanitizedRow.text;
       delete sanitizedRow.similarity_score;
 
+      if (includeEmbedding && sanitizedRow[this.embeddingColumnAlias]) {
+        sanitizedRow[this.embeddingColumnAlias] = Object.values(
+          sanitizedRow[this.embeddingColumnAlias]
+        );
+      }
+
       Object.keys(sanitizedRow).forEach((key) => {
         if (sanitizedRow[key] === null) {
           delete sanitizedRow[key];
@@ -217,6 +237,64 @@ export class CassandraStore extends VectorStore {
         new Document({ pageContent: textContent, metadata: sanitizedRow }),
         row.similarity_score,
       ];
+    });
+  }
+
+  /**
+   * Method to search for vectors that are similar to a given query vector.
+   * @param query The query vector.
+   * @param k The number of similar Documents to return.
+   * @param filter Optional filter to be applied as a WHERE clause.
+   * @returns Promise that resolves with an array of tuples, each containing a Document and a score.
+   */
+  async similaritySearchVectorWithScore(
+    query: number[],
+    k: number,
+    filter?: WhereClause
+  ): Promise<[Document, number][]> {
+    return this.search(query, k, filter, false);
+  }
+
+  /**
+   * Method to search for vectors that are similar to a given query vector, but with
+   * the results selected using the maximal marginal relevance.
+   * @param query The query string.
+   * @param options.k The number of similar Documents to return.
+   * @param options.fetchK=4*k The number of records to fetch before passing to the MMR algorithm.
+   * @param options.lambda=0.5 The degree of diversity among the results between 0 (maximum diversity) and 1 (minimum diversity).
+   * @param options.filter Optional filter to be applied as a WHERE clause.
+   * @returns List of documents selected by maximal marginal relevance.
+   */
+  async maxMarginalRelevanceSearch(
+    query: string,
+    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
+  ): Promise<Document[]> {
+    const { k, fetchK = 4 * k, lambda = 0.5, filter } = options;
+
+    const queryEmbedding = await this.embeddings.embedQuery(query);
+
+    const queryResults = await this.search(
+      queryEmbedding,
+      fetchK,
+      filter,
+      true
+    );
+
+    const embeddingList = queryResults.map(
+      (doc) => doc[0].metadata[this.embeddingColumnAlias]
+    );
+
+    const mmrIndexes = maximalMarginalRelevance(
+      queryEmbedding,
+      embeddingList,
+      lambda,
+      k
+    );
+
+    return mmrIndexes.map((idx) => {
+      const doc = queryResults[idx][0];
+      delete doc.metadata[this.embeddingColumnAlias];
+      return doc;
     });
   }
 
@@ -289,21 +367,21 @@ export class CassandraStore extends VectorStore {
    * @returns Promise that resolves when the database has been initialized.
    */
   private async initialize(): Promise<void> {
-    if (this.initializationState === 2) {
-      // Already initialized
-      return Promise.resolve();
-    }
-
-    if (this.initializationState === 1 && this.initializationPromise) {
-      // Initialization in progress, wait for it to complete
+    // If already initialized or initialization is in progress, return the existing promise
+    if (this.initializationPromise) {
       return this.initializationPromise;
     }
 
-    // Start the initialization process
-    this.initializationState = 1;
-    this.initializationPromise = new Promise((resolve, reject) => {
-      this.performInitialization().then(resolve).catch(reject);
-    });
+    // Start the initialization process and store the promise
+    this.initializationPromise = this.performInitialization()
+      .then(() => {
+        // Initialization successful
+      })
+      .catch((error) => {
+        // Reset to allow retrying in case of failure
+        this.initializationPromise = null;
+        throw error;
+      });
 
     return this.initializationPromise;
   }
@@ -312,6 +390,8 @@ export class CassandraStore extends VectorStore {
    * Method to perform the initialization tasks
    */
   private async performInitialization() {
+    this.client = await CasssandraClientFactory.getClient(this.constructorArgs);
+
     let cql = "";
     cql = `CREATE TABLE IF NOT EXISTS ${this.keyspace}.${this.table} (
       ${this.primaryKey.map((col) => `${col.name} ${col.type}`).join(", ")}
@@ -367,8 +447,6 @@ export class CassandraStore extends VectorStore {
              ON ${this.keyspace}.${this.table} ${value} USING 'StorageAttachedIndex' ${optionsClause};`;
       await this.client.execute(cql);
     }
-
-    this.initializationState = 2; // Mark as initialized
   }
 
   /**
@@ -506,13 +584,20 @@ export class CassandraStore extends VectorStore {
    * Cassandra database.
    * @param query The query vector.
    * @param k The number of similar vectors to return.
-   * @param filters
+   * @param filters Optional filters to be applied as a WHERE clause.
+   * @param includeEmbedding Whether to include the embedding vectors in the results.
    * @returns The CQL query string.
    */
-  private buildSearchQuery(filters: Filter[]): string {
+  private buildSearchQuery(
+    filters: Filter[],
+    includeEmbedding = false
+  ): string {
     const whereClause = filters ? this.buildWhereClause(filters) : "";
+    const embeddingColumn = includeEmbedding
+      ? `, vector AS ${this.embeddingColumnAlias}`
+      : "";
 
-    const cqlQuery = `SELECT ${this.selectColumns}, text, similarity_${this.vectorType}(vector, ?) AS similarity_score
+    const cqlQuery = `SELECT ${this.selectColumns}, text, similarity_${this.vectorType}(vector, ?) AS similarity_score ${embeddingColumn}
                         FROM ${this.keyspace}.${this.table} ${whereClause} ORDER BY vector ANN OF ? LIMIT ?`;
 
     return cqlQuery;
