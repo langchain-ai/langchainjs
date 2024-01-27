@@ -49,13 +49,9 @@ class RunIdExtractor {
   handleChainStart = (
     _chain: Serialized,
     _inputs: ChainValues,
-    runId: string,
-    parentRunId?: string
+    runId: string
   ) => {
-    if (!parentRunId) {
-      // Only resolve root runs
-      this.runIdPromiseResolver(runId);
-    }
+    this.runIdPromiseResolver(runId);
   };
 
   async extract(): Promise<string> {
