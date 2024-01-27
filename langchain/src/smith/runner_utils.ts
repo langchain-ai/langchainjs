@@ -35,7 +35,7 @@ export type ChainOrFactory =
   | (() => (obj: unknown) => unknown)
   | (() => (obj: unknown) => Promise<unknown>);
 
-class RunIdResolver {
+class RunIdExtractor {
   runIdPromiseResolver: (runId: string) => void;
 
   runIdPromise: Promise<string>;
@@ -76,7 +76,7 @@ class DynamicRunEvaluator implements RunEvaluator {
    * @returns A promise that extracts to the evaluation result.
    */
   async evaluateRun(run: Run, example?: Example): Promise<EvaluationResult> {
-    const extracter = new RunIdResolver();
+    const extractor = new RunIdExtractor();
     const result = await this.evaluator.invoke(
       {
         run,
@@ -86,10 +86,10 @@ class DynamicRunEvaluator implements RunEvaluator {
         reference: example?.outputs,
       },
       {
-        callbacks: [extracter],
+        callbacks: [extractor],
       }
     );
-    const runId = await extracter.extract();
+    const runId = await extractor.extract();
     return {
       sourceRunId: runId,
       ...result,
@@ -168,7 +168,7 @@ class PreparedRunEvaluator implements RunEvaluator {
       rawReferenceOutput: example?.outputs,
       run,
     });
-    const extracter = new RunIdResolver();
+    const extractor = new RunIdExtractor();
     if (this.isStringEvaluator) {
       const evalResult = await this.evaluator.evaluateStrings(
         {
@@ -177,10 +177,10 @@ class PreparedRunEvaluator implements RunEvaluator {
           input: input as string,
         },
         {
-          callbacks: [extracter],
+          callbacks: [extractor],
         }
       );
-      const runId = await extracter.extract();
+      const runId = await extractor.extract();
       return {
         key: this.evaluationName,
         comment: evalResult?.reasoning,
