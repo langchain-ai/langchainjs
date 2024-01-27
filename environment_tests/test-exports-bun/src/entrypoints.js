@@ -13,6 +13,7 @@ export * from "langchain/agents/xml/output_parser";
 export * from "langchain/agents/openai/output_parser";
 export * from "langchain/base_language";
 export * from "langchain/tools";
+export * from "langchain/tools/chain";
 export * from "langchain/tools/connery";
 export * from "langchain/tools/render";
 export * from "langchain/tools/retriever";
