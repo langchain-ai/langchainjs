@@ -1,10 +1,10 @@
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
+import { RunnableConfig } from "@langchain/core/runnables";
 import { Example, Run } from "langsmith";
 import { EvaluationResult, RunEvaluator } from "langsmith/evaluation";
 import { Criteria } from "../evaluation/index.js";
 import { LoadEvaluatorOptions } from "../evaluation/loader.js";
 import { EvaluatorType } from "../evaluation/types.js";
-import { RunnableConfig } from "@langchain/core/runnables";
 
 export type EvaluatorInputs = {
   input?: string | unknown;
