@@ -130,7 +130,7 @@ export abstract class CloseVector<
           pageContent: x[0].pageContent,
           metadata: x[0].metadata || {},
         }),
-        x[1],
+        1 - x[1],
       ]
     );
     return mapped;
