@@ -96,6 +96,7 @@ export const config = {
     // vectorstores
     "vectorstores/analyticdb": "vectorstores/analyticdb",
     "vectorstores/astradb": "vectorstores/astradb",
+    "vectorstores/azure_aisearch": "vectorstores/azure_aisearch",
     "vectorstores/azure_cosmosdb": "vectorstores/azure_cosmosdb",
     "vectorstores/cassandra": "vectorstores/cassandra",
     "vectorstores/chroma": "vectorstores/chroma",
@@ -247,6 +248,7 @@ export const config = {
     "llms/portkey",
     "vectorstores/analyticdb",
     "vectorstores/astradb",
+    "vectorstores/azure_aisearch",
     "vectorstores/azure_cosmosdb",
     "vectorstores/cassandra",
     "vectorstores/chroma",
