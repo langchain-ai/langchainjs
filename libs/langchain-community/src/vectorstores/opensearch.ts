@@ -284,6 +284,24 @@ export class OpenSearchVectorStore extends VectorStore {
     await this.client.indices.create({ index: this.indexName, body });
   }
 
+  interface FilterValue {
+    exists?: boolean;
+    fuzzy?: string;
+    ids?: string[];
+    prefix?: string;
+    gte?: number;
+    gt?: number;
+    lte?: number;
+    lt?: number;
+    regexp?: string;
+    terms_set?: Record<string, any>
+    wildcard?: string;
+  }
+
+  interface Filter {
+    [key: string]: FilterValue | string[] | string | null;
+  }
+
   /**
    * Builds metadata terms for OpenSearch queries.
    *
@@ -292,7 +310,7 @@ export class OpenSearchVectorStore extends VectorStore {
    * term, terms, terms_set, ids, range, prefix, exists, fuzzy, wildcard, and regexp.
    * Reference: https://opensearch.org/docs/latest/query-dsl/term/index/
    *
-   * @param {Record<string, any> | null} filter - The filter object used to construct query terms.
+   * @param {Filter | null} filter - The filter object used to construct query terms.
    * Each key represents a field, and the value specifies the type of query and its parameters.
    *
    * @returns {Array<Record<string, any>>} An array of OpenSearch query terms.
@@ -311,7 +329,7 @@ export class OpenSearchVectorStore extends VectorStore {
    * const queryTerms = buildMetadataTerms(filter);
    * // queryTerms would be an array of OpenSearch query objects.
    */
-  buildMetadataTerms(filter) {
+  buildMetadataTerms(filter: Filter | null): Array<Record<string, any>> {
     if (filter == null) return {};
     const must = [];
     const must_not = [];
