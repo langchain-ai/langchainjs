@@ -77,6 +77,7 @@ class DynamicRunEvaluator implements RunEvaluator {
    */
   async evaluateRun(run: Run, example?: Example): Promise<EvaluationResult> {
     const extractor = new RunIdExtractor();
+    const tracer = new LangChainTracer({ projectName: "evaluators" });
     const result = await this.evaluator.invoke(
       {
         run,
@@ -86,7 +87,7 @@ class DynamicRunEvaluator implements RunEvaluator {
         reference: example?.outputs,
       },
       {
-        callbacks: [extractor],
+        callbacks: [extractor, tracer],
       }
     );
     const runId = await extractor.extract();
@@ -169,6 +170,7 @@ class PreparedRunEvaluator implements RunEvaluator {
       run,
     });
     const extractor = new RunIdExtractor();
+    const tracer = new LangChainTracer({ projectName: "evaluators" });
     if (this.isStringEvaluator) {
       const evalResult = await this.evaluator.evaluateStrings(
         {
@@ -177,7 +179,7 @@ class PreparedRunEvaluator implements RunEvaluator {
           input: input as string,
         },
         {
-          callbacks: [extractor],
+          callbacks: [extractor, tracer],
         }
       );
       const runId = await extractor.extract();
