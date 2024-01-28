@@ -58,7 +58,7 @@ export class ConstitutionalPrinciple {
 
 export const PRINCIPLES: {
   [key: string]: ConstitutionalPrinciple;
-} = /* #__PURE__ */ {
+} = {
   harmful1: /* #__PURE__ */ new ConstitutionalPrinciple({
     name: "harmful1",
     critiqueRequest:
