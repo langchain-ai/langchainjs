@@ -13,6 +13,7 @@ const agents_xml_output_parser = require("langchain/agents/xml/output_parser");
 const agents_openai_output_parser = require("langchain/agents/openai/output_parser");
 const base_language = require("langchain/base_language");
 const tools = require("langchain/tools");
+const tools_chain = require("langchain/tools/chain");
 const tools_connery = require("langchain/tools/connery");
 const tools_render = require("langchain/tools/render");
 const tools_retriever = require("langchain/tools/retriever");

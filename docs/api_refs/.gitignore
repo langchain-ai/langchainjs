@@ -39,4 +39,3 @@ next-env.d.ts
 /public/*
 /langchain
 /langchain-core
-typedoc.json

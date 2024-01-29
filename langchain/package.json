@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.1.7",
+  "version": "0.1.9",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -73,6 +73,9 @@
     "tools/calculator.cjs",
     "tools/calculator.js",
     "tools/calculator.d.ts",
+    "tools/chain.cjs",
+    "tools/chain.js",
+    "tools/chain.d.ts",
     "tools/connery.cjs",
     "tools/connery.js",
     "tools/connery.d.ts",
@@ -876,10 +879,7 @@
     "runnables/remote.d.ts",
     "indexes.cjs",
     "indexes.js",
-    "indexes.d.ts",
-    "index.cjs",
-    "index.js",
-    "index.d.ts"
+    "indexes.d.ts"
   ],
   "repository": {
     "type": "git",
@@ -889,23 +889,26 @@
     "build": "yarn run build:deps && yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
     "build:deps": "yarn run turbo:command build --filter=@langchain/core --filter=@langchain/anthropic --filter=@langchain/openai --filter=@langchain/community --concurrency=1",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rimraf dist/tests dist/**/tests",
-    "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && node scripts/move-cjs-to-dist.js && rimraf dist-cjs",
-    "build:watch": "node scripts/create-entrypoints.js && tsc --outDir dist/ --watch",
-    "build:scripts": "node scripts/create-entrypoints.js && node scripts/check-tree-shaking.js",
+    "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rimraf dist-cjs",
+    "build:watch": "yarn create-entrypoints && tsc --outDir dist/ --watch",
+    "build:scripts": "yarn create-entrypoints && yarn check-tree-shaking",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
     "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "yarn lint:eslint && yarn lint:dpdm",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
     "precommit": "lint-staged",
-    "clean": "rimraf .turbo/ dist/ && NODE_OPTIONS=--max-old-space-size=4096 node scripts/create-entrypoints.js pre",
+    "clean": "rimraf .turbo/ dist/ && NODE_OPTIONS=--max-old-space-size=4096 yarn create-entrypoints -- --pre --gen-maps",
     "prepack": "yarn build",
     "release": "release-it --only-version --config .release-it.json",
     "test": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
     "test:watch": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
     "test:integration": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
     "test:single": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 100000",
-    "format": "prettier --config .prettierrc --write \"src\" \"scripts\"",
-    "format:check": "prettier --config .prettierrc --check \"src\" \"scripts\""
+    "format": "prettier --config .prettierrc --write \"src\"",
+    "format:check": "prettier --config .prettierrc --check \"src\"",
+    "move-cjs-to-dist": "yarn lc-build --config ./langchain.config.js --move-cjs-dist",
+    "create-entrypoints": "yarn lc-build --config ./langchain.config.js --create-entrypoints",
+    "check-tree-shaking": "yarn lc-build --config ./langchain.config.js --tree-shaking"
   },
   "author": "LangChain",
   "license": "MIT",
@@ -923,6 +926,7 @@
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
     "@jest/globals": "^29.5.0",
+    "@langchain/scripts": "^0.0.2",
     "@notionhq/client": "^2.2.10",
     "@pinecone-database/pinecone": "^1.1.0",
     "@supabase/supabase-js": "^2.10.0",
@@ -1348,6 +1352,11 @@
       "types": "./tools/calculator.d.ts",
       "import": "./tools/calculator.js",
       "require": "./tools/calculator.cjs"
+    },
+    "./tools/chain": {
+      "types": "./tools/chain.d.ts",
+      "import": "./tools/chain.js",
+      "require": "./tools/chain.cjs"
     },
     "./tools/connery": {
       "types": "./tools/connery.d.ts",
