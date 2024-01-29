@@ -173,6 +173,11 @@ module.exports = {
       },
     },
     {
+      type: "doc",
+      label: "LangGraph",
+      id: "langgraph",
+    },
+    {
       type: "html",
       value: "<hr>",
       defaultStyle: true,

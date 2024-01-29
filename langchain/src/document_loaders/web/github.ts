@@ -11,7 +11,7 @@ import { BaseDocumentLoader } from "../base.js";
 import { UnknownHandling } from "../fs/directory.js";
 import { extname } from "../../util/extname.js";
 
-const extensions = new Set(binaryExtensions);
+const extensions = /* #__PURE__ */ new Set(binaryExtensions);
 
 /**
  * A function that checks if a file path is a binary file based on its

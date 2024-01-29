@@ -1,4 +1,3 @@
-const { Project, SyntaxKind } = require("ts-morph");
 const fs = require("fs");
 const path = require("path");
 
@@ -39,62 +38,49 @@ const updateJsonFile = (relativePath, updateFunction) => {
   fs.writeFileSync(relativePath, JSON.stringify(res, null, 2) + "\n");
 };
 
-function main() {
-  const project = new Project();
+async function main() {
   const workspaces = fs
     .readdirSync("../../libs/")
     .filter((dir) => dir.startsWith("langchain-"))
-    .map((dir) =>
-      path.join("../../libs/", dir, "/scripts/create-entrypoints.js")
-    );
-  const entrypointFiles = [
-    "../../langchain/scripts/create-entrypoints.js",
-    "../../langchain-core/scripts/create-entrypoints.js",
+    .map((dir) => path.join("../../libs/", dir, "/langchain.config.js"));
+  const configFiles = [
+    "../../langchain/langchain.config.js",
+    "../../langchain-core/langchain.config.js",
     ...workspaces,
-  ];
+  ]
+    .map((configFile) => path.resolve(configFile))
+    .filter((configFile) => !configFile.includes("/langchain-scripts/"));
+
   /** @type {Array<string>} */
   const blacklistedEntrypoints = JSON.parse(
     fs.readFileSync("./blacklisted-entrypoints.json")
   );
 
   const entrypoints = new Set([]);
-  entrypointFiles.forEach((entrypointFile) => {
-    // load file contents from ts-morph
-    const file = project.addSourceFileAtPath(entrypointFile);
-    // extract the variable named entrypoints
-    const entrypointVar = file.getVariableDeclarationOrThrow("entrypoints");
-    // extract the `deprecatedNodeOnly` if it exists
-    const deprecatedNodeOnlyVar =
-      file.getVariableDeclaration("deprecatedNodeOnly");
-    /**
-     * @type {string[]}
-     */
-    let deprecatedNodeOnly = [];
-    if (deprecatedNodeOnlyVar) {
-      const deprecatedNodeOnlyKeys = deprecatedNodeOnlyVar
-        .getInitializerIfKindOrThrow(SyntaxKind.ArrayLiteralExpression)
-        .getElements()
-        .map((element) => element.getText().replaceAll('"', ""));
-      deprecatedNodeOnly = deprecatedNodeOnlyKeys;
+
+  for await (const configFile of configFiles) {
+    const langChainConfig = await import(configFile);
+    if (!("entrypoints" in langChainConfig.config)) {
+      throw new Error(
+        `The config file "${configFile}" does not contain any entrypoints.`
+      );
+    } else if (
+      langChainConfig.config.entrypoints === null ||
+      langChainConfig.config.entrypoints === undefined
+    ) {
+      return;
     }
-    // get all keys from the entrypoints object
-    const entrypointKeys = entrypointVar
-      .getInitializerIfKindOrThrow(SyntaxKind.ObjectLiteralExpression)
-      .getProperties()
-      .map((property) => property.getText());
-    const entrypointKeysArray = entrypointKeys.map((kv) =>
-      kv.split(":").map((part) => part.trim().replace(/^"|"$/g, ""))
+    const { config } = langChainConfig;
+
+    const entrypointDir = path.relative(
+      process.cwd(),
+      configFile.split("/langchain.config.js")[0]
     );
 
-    /**
-     * @type {Record<string, string>}
-     */
-    const entrypointsObject = Object.fromEntries(entrypointKeysArray);
-    const entrypointDir = entrypointFile.split(
-      "/scripts/create-entrypoints.js"
-    )[0];
+    const deprecatedNodeOnly =
+      "deprecatedNodeOnly" in config ? config.deprecatedNodeOnly : [];
 
-    Object.values(entrypointsObject)
+    Object.values(config.entrypoints)
       .filter((key) => !deprecatedNodeOnly.includes(key))
       .filter(
         (key) =>
@@ -104,8 +90,7 @@ function main() {
           )
       )
       .map((key) => entrypoints.add(`${entrypointDir}/src/${key}.ts`));
-  });
-
+  }
   // Check if the `./typedoc.json` file exists, since it is gitignored by default
   if (!fs.existsSync("./typedoc.json")) {
     fs.writeFileSync("./typedoc.json", "{}\n");

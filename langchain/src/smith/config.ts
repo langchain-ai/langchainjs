@@ -1,4 +1,5 @@
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
+import { RunnableConfig } from "@langchain/core/runnables";
 import { Example, Run } from "langsmith";
 import { EvaluationResult, RunEvaluator } from "langsmith/evaluation";
 import { Criteria } from "../evaluation/index.js";
@@ -40,8 +41,14 @@ export type DynamicRunEvaluatorParams = {
  * pass a function to the runner. This type allows us to do that.
  */
 export type RunEvaluatorLike =
-  | ((props: DynamicRunEvaluatorParams) => Promise<EvaluationResult>)
-  | ((props: DynamicRunEvaluatorParams) => EvaluationResult);
+  | ((
+      props: DynamicRunEvaluatorParams,
+      options?: { config?: RunnableConfig }
+    ) => Promise<EvaluationResult>)
+  | ((
+      props: DynamicRunEvaluatorParams,
+      options?: { config?: RunnableConfig }
+    ) => EvaluationResult);
 
 /**
  * Configuration class for running evaluations on datasets.

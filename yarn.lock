@@ -4507,7 +4507,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/abort-controller@npm:^1.0.0, @azure/abort-controller@npm:^1.1.0":
+"@azure/abort-controller@npm:^1.0.0, @azure/abort-controller@npm:^1.0.4, @azure/abort-controller@npm:^1.1.0":
   version: 1.1.0
   resolution: "@azure/abort-controller@npm:1.1.0"
   dependencies:
@@ -4537,7 +4537,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/core-client@npm:^1.4.0":
+"@azure/core-client@npm:^1.3.0, @azure/core-client@npm:^1.4.0":
   version: 1.7.3
   resolution: "@azure/core-client@npm:1.7.3"
   dependencies:
@@ -4549,6 +4549,17 @@ __metadata:
     "@azure/logger": ^1.0.0
     tslib: ^2.2.0
   checksum: 155a188b75b2d5ea783d5fde50479337c41796736f0fced1576466c8251e429195c229f2aff0bf897761f15c19d8fd0deea9a54aab514bd3584e37140e3f0cdc
+  languageName: node
+  linkType: hard
+
+"@azure/core-http-compat@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "@azure/core-http-compat@npm:2.0.1"
+  dependencies:
+    "@azure/abort-controller": ^1.0.4
+    "@azure/core-client": ^1.3.0
+    "@azure/core-rest-pipeline": ^1.3.0
+  checksum: 50749822a3d7cd67e3af0f030093395f9776fab16eef6245a43fb967030d5d8554b0b237376894dcda409e9f49c588035ec4868f11ac6181cbf37a26c6290b0d
   languageName: node
   linkType: hard
 
@@ -4595,7 +4606,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/core-rest-pipeline@npm:^1.1.0, @azure/core-rest-pipeline@npm:^1.13.0, @azure/core-rest-pipeline@npm:^1.5.0, @azure/core-rest-pipeline@npm:^1.9.1":
+"@azure/core-rest-pipeline@npm:^1.1.0, @azure/core-rest-pipeline@npm:^1.13.0, @azure/core-rest-pipeline@npm:^1.3.0, @azure/core-rest-pipeline@npm:^1.5.0, @azure/core-rest-pipeline@npm:^1.9.1":
   version: 1.13.0
   resolution: "@azure/core-rest-pipeline@npm:1.13.0"
   dependencies:
@@ -4729,6 +4740,23 @@ __metadata:
     "@azure/logger": ^1.0.3
     tslib: ^2.4.0
   checksum: ce2a0f93bf952aa7b02e2f4f4e7b6a719f7d7a29a6ea1ba91b13582fc7e6fe0b9e0d07d575a273d290eb4f619aabcb599a20478055a2efc0a637c415bb945967
+  languageName: node
+  linkType: hard
+
+"@azure/search-documents@npm:^12.0.0":
+  version: 12.0.0
+  resolution: "@azure/search-documents@npm:12.0.0"
+  dependencies:
+    "@azure/core-auth": ^1.3.0
+    "@azure/core-client": ^1.3.0
+    "@azure/core-http-compat": ^2.0.1
+    "@azure/core-paging": ^1.1.1
+    "@azure/core-rest-pipeline": ^1.3.0
+    "@azure/core-tracing": ^1.0.0
+    "@azure/logger": ^1.0.0
+    events: ^3.0.0
+    tslib: ^2.2.0
+  checksum: b42c54b8e128196ed0740d6b4539307d989baaeecd4614ec28fbb7dc2fa175b35db9049968698851502abb4f26b2d2c8ca0c44ddb56089fd9f4bca5cef437002
   languageName: node
   linkType: hard
 
@@ -8055,6 +8083,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@google/generative-ai@npm:^0.1.3":
+  version: 0.1.3
+  resolution: "@google/generative-ai@npm:0.1.3"
+  checksum: 6ab4e214c5f792c9dce66aa00268dd75295be093ec9305ccb8e2251210e5a6680a17ec9f041d8108ee3a2ce49e2f26bc9a30ef97e17a2d83818a92a824f6efd1
+  languageName: node
+  linkType: hard
+
 "@gradientai/nodejs-sdk@npm:^1.2.0":
   version: 1.2.0
   resolution: "@gradientai/nodejs-sdk@npm:1.2.0"
@@ -8700,6 +8735,7 @@ __metadata:
     "@anthropic-ai/sdk": ^0.12.0
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.5
+    "@langchain/scripts": ^0.0.2
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     dpdm: ^3.12.0
@@ -8758,6 +8794,7 @@ __metadata:
     "@cloudflare/workers-types": ^4.20231218.0
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1
+    "@langchain/scripts": ^0.0.2
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -8789,6 +8826,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1
+    "@langchain/scripts": ^0.0.2
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -8827,6 +8865,7 @@ __metadata:
     "@aws-sdk/client-sfn": ^3.362.0
     "@aws-sdk/credential-provider-node": ^3.388.0
     "@aws-sdk/types": ^3.357.0
+    "@azure/search-documents": ^12.0.0
     "@clickhouse/client": ^0.2.5
     "@cloudflare/ai": ^1.0.12
     "@cloudflare/workers-types": ^4.20230922.0
@@ -8843,6 +8882,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.16
     "@langchain/openai": ~0.0.10
+    "@langchain/scripts": ^0.0.2
     "@mozilla/readability": ^0.4.4
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^1.1.0
@@ -8948,6 +8988,7 @@ __metadata:
     "@aws-sdk/client-sagemaker-runtime": ^3.310.0
     "@aws-sdk/client-sfn": ^3.310.0
     "@aws-sdk/credential-provider-node": ^3.388.0
+    "@azure/search-documents": ^12.0.0
     "@clickhouse/client": ^0.2.5
     "@cloudflare/ai": ^1.0.12
     "@datastax/astra-db-ts": ^0.1.4
@@ -9037,6 +9078,8 @@ __metadata:
     "@aws-sdk/client-sfn":
       optional: true
     "@aws-sdk/credential-provider-node":
+      optional: true
+    "@azure/search-documents":
       optional: true
     "@clickhouse/client":
       optional: true
@@ -9188,6 +9231,7 @@ __metadata:
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
     "@jest/globals": ^29.5.0
+    "@langchain/scripts": ^0.0.2
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     ansi-styles: ^5.0.0
@@ -9226,6 +9270,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1
+    "@langchain/scripts": ^0.0.2
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9255,10 +9300,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/google-genai@workspace:libs/langchain-google-genai"
   dependencies:
-    "@google/generative-ai": ^0.1.0
+    "@google/generative-ai": ^0.1.3
     "@jest/globals": ^29.5.0
     "@langchain/community": "workspace:*"
     "@langchain/core": ~0.1.5
+    "@langchain/scripts": ^0.0.2
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9289,6 +9335,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.5
+    "@langchain/scripts": ^0.0.2
     "@mistralai/mistralai": ^0.0.7
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9319,6 +9366,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.13
+    "@langchain/scripts": ^0.0.2
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     dpdm: ^3.12.0
@@ -9332,7 +9380,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     js-tiktoken: ^1.0.7
-    openai: ^4.24.2
+    openai: ^4.26.0
     prettier: ^2.8.3
     release-it: ^15.10.1
     rimraf: ^5.0.1
@@ -9349,6 +9397,7 @@ __metadata:
     "@faker-js/faker": ^8.3.1
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1
+    "@langchain/scripts": ^0.0.2
     "@pinecone-database/pinecone": ^2.0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9375,7 +9424,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/scripts@workspace:libs/langchain-scripts":
+"@langchain/scripts@^0.0.2, @langchain/scripts@workspace:libs/langchain-scripts":
   version: 0.0.0-use.local
   resolution: "@langchain/scripts@workspace:libs/langchain-scripts"
   dependencies:
@@ -9412,6 +9461,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1
+    "@langchain/scripts": ^0.0.2
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -13325,18 +13375,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ts-morph/common@npm:~0.21.0":
-  version: 0.21.0
-  resolution: "@ts-morph/common@npm:0.21.0"
-  dependencies:
-    fast-glob: ^3.2.12
-    minimatch: ^7.4.3
-    mkdirp: ^2.1.6
-    path-browserify: ^1.0.1
-  checksum: c322e2a58608d7d924646b10ba9ad432b03e7b119788c9f0f270550bd5aca22947fcaa1c63f27e80898a50de3ed99fc8d9c23569c6a2f3f36c9307e35ceba3ed
-  languageName: node
-  linkType: hard
-
 "@tsconfig/recommended@npm:^1.0.2":
   version: 1.0.2
   resolution: "@tsconfig/recommended@npm:1.0.2"
@@ -15584,7 +15622,6 @@ __metadata:
     react: ^18
     react-dom: ^18
     tailwindcss: ^3.3.0
-    ts-morph: ^20.0.0
     typedoc: ^0.25.6
     typescript: ~5.1.6
   languageName: unknown
@@ -17493,13 +17530,6 @@ __metadata:
   version: 4.6.0
   resolution: "co@npm:4.6.0"
   checksum: 5210d9223010eb95b29df06a91116f2cf7c8e0748a9013ed853b53f362ea0e822f1e5bb054fb3cefc645239a4cf966af1f6133a3b43f40d591f3b68ed6cf0510
-  languageName: node
-  linkType: hard
-
-"code-block-writer@npm:^12.0.0":
-  version: 12.0.0
-  resolution: "code-block-writer@npm:12.0.0"
-  checksum: 9f6505a4d668c9131c6f3f686359079439e66d5f50c236614d52fcfa53aeb0bc615b2c6c64ef05b5511e3b0433ccfd9f7756ad40eb3b9298af6a7d791ab1981d
   languageName: node
   linkType: hard
 
@@ -20975,19 +21005,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fast-glob@npm:^3.2.12, fast-glob@npm:^3.3.2":
-  version: 3.3.2
-  resolution: "fast-glob@npm:3.3.2"
-  dependencies:
-    "@nodelib/fs.stat": ^2.0.2
-    "@nodelib/fs.walk": ^1.2.3
-    glob-parent: ^5.1.2
-    merge2: ^1.3.0
-    micromatch: ^4.0.4
-  checksum: 900e4979f4dbc3313840078419245621259f349950411ca2fa445a2f9a1a6d98c3b5e7e0660c5ccd563aa61abe133a21765c6c0dec8e57da1ba71d8000b05ec1
-  languageName: node
-  linkType: hard
-
 "fast-glob@npm:^3.3.0, fast-glob@npm:^3.3.1":
   version: 3.3.1
   resolution: "fast-glob@npm:3.3.1"
@@ -20998,6 +21015,19 @@ __metadata:
     merge2: ^1.3.0
     micromatch: ^4.0.4
   checksum: b6f3add6403e02cf3a798bfbb1183d0f6da2afd368f27456010c0bc1f9640aea308243d4cb2c0ab142f618276e65ecb8be1661d7c62a7b4e5ba774b9ce5432e5
+  languageName: node
+  linkType: hard
+
+"fast-glob@npm:^3.3.2":
+  version: 3.3.2
+  resolution: "fast-glob@npm:3.3.2"
+  dependencies:
+    "@nodelib/fs.stat": ^2.0.2
+    "@nodelib/fs.walk": ^1.2.3
+    glob-parent: ^5.1.2
+    merge2: ^1.3.0
+    micromatch: ^4.0.4
+  checksum: 900e4979f4dbc3313840078419245621259f349950411ca2fa445a2f9a1a6d98c3b5e7e0660c5ccd563aa61abe133a21765c6c0dec8e57da1ba71d8000b05ec1
   languageName: node
   linkType: hard
 
@@ -25265,6 +25295,7 @@ __metadata:
     "@langchain/community": ~0.0.20
     "@langchain/core": ~0.1.16
     "@langchain/openai": ~0.0.12
+    "@langchain/scripts": ^0.0.2
     "@notionhq/client": ^2.2.10
     "@pinecone-database/pinecone": ^1.1.0
     "@supabase/supabase-js": ^2.10.0
@@ -26667,15 +26698,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minimatch@npm:^7.4.3":
-  version: 7.4.6
-  resolution: "minimatch@npm:7.4.6"
-  dependencies:
-    brace-expansion: ^2.0.1
-  checksum: 1a6c8d22618df9d2a88aabeef1de5622eb7b558e9f8010be791cb6b0fa6e102d39b11c28d75b855a1e377b12edc7db8ff12a99c20353441caa6a05e78deb5da9
-  languageName: node
-  linkType: hard
-
 "minimatch@npm:^9.0.0, minimatch@npm:^9.0.3":
   version: 9.0.3
   resolution: "minimatch@npm:9.0.3"
@@ -26836,15 +26858,6 @@ __metadata:
   bin:
     mkdirp: dist/cjs/src/bin.js
   checksum: 039998e3a55f056f48dbd025ad1f5095c78464ed62bd666fcaf78d07fd15b73218aabe3237e7a500b3f6cacdce684f6bbbc9a773792dce7cceab0dc266e95238
-  languageName: node
-  linkType: hard
-
-"mkdirp@npm:^2.1.6":
-  version: 2.1.6
-  resolution: "mkdirp@npm:2.1.6"
-  bin:
-    mkdirp: dist/cjs/src/bin.js
-  checksum: 8a1d09ffac585e55f41c54f445051f5bc33a7de99b952bb04c576cafdf1a67bb4bae8cb93736f7da6838771fbf75bc630430a3a59e1252047d2278690bd150ee
   languageName: node
   linkType: hard
 
@@ -27911,9 +27924,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openai@npm:^4.24.2":
-  version: 4.24.7
-  resolution: "openai@npm:4.24.7"
+"openai@npm:^4.26.0":
+  version: 4.26.0
+  resolution: "openai@npm:4.26.0"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
@@ -27926,7 +27939,7 @@ __metadata:
     web-streams-polyfill: ^3.2.1
   bin:
     openai: bin/cli
-  checksum: 1b24ee208ea16d5eb2213f5cd53ec06d7f7ecb08f9a6663f0ff9297dcf33504b9b5bcb153dff10e0bf90ec24ef8db727fee6753b6bcf7ca7e2d9bec47abc2f35
+  checksum: 362a5f636b4b02e471812dd0ebaf7f463f6392e10c299d11ed844d41e69b17fcbd4b847f546a4c2a40b6b9db5ab9a245bfdc20c948f176f5fe4ac0e3c4a87b78
   languageName: node
   linkType: hard
 
@@ -28405,13 +28418,6 @@ __metadata:
     no-case: ^3.0.4
     tslib: ^2.0.3
   checksum: ba98bfd595fc91ef3d30f4243b1aee2f6ec41c53b4546bfa3039487c367abaa182471dcfc830a1f9e1a0df00c14a370514fa2b3a1aacc68b15a460c31116873e
-  languageName: node
-  linkType: hard
-
-"path-browserify@npm:^1.0.1":
-  version: 1.0.1
-  resolution: "path-browserify@npm:1.0.1"
-  checksum: c6d7fa376423fe35b95b2d67990060c3ee304fc815ff0a2dc1c6c3cfaff2bd0d572ee67e18f19d0ea3bbe32e8add2a05021132ac40509416459fffee35200699
   languageName: node
   linkType: hard
 
@@ -33068,16 +33074,6 @@ __metadata:
   version: 6.0.3
   resolution: "ts-mixer@npm:6.0.3"
   checksum: 7fbaba0a413bf817835a6a23d46bccf4192dd4d7345b6bae9d594c88acffac35bf4995ef3cce753090c8abcdf2afd16dba8899365584a1f960ccc2a15bf2e2d6
-  languageName: node
-  linkType: hard
-
-"ts-morph@npm:^20.0.0":
-  version: 20.0.0
-  resolution: "ts-morph@npm:20.0.0"
-  dependencies:
-    "@ts-morph/common": ~0.21.0
-    code-block-writer: ^12.0.0
-  checksum: 8a96d72a26e4e3c4139c581834364a97207f78a5878f70aa6f58787c0f4003a9386a64f43b814bac7bf028e572ef8660939f56844641b05bfaf7ae7437be9011
   languageName: node
   linkType: hard
 
