@@ -11,4 +11,5 @@ export {
   SQL_MSSQL_PROMPT,
   SQL_MYSQL_PROMPT,
   SQL_SAP_HANA_PROMPT,
+  SQL_PROMPTS_MAP,
 } from "./sql_db_prompt.js";
