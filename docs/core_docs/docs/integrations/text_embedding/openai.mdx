@@ -16,11 +16,45 @@ import { OpenAIEmbeddings } from "@langchain/openai";
 const embeddings = new OpenAIEmbeddings({
   openAIApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.OPENAI_API_KEY
   batchSize: 512, // Default value if omitted is 512. Max is 2048
+  modelName: "text-embedding-3-large",
 });
 ```
 
 If you're part of an organization, you can set `process.env.OPENAI_ORGANIZATION` to your OpenAI organization id, or pass it in as `organization` when
 initializing the model.
+
+## Specifying dimensions
+
+With the `text-embedding-3` class of models, you can specify the size of the embeddings you want returned. For example by default `text-embedding-3-large` returns embeddings of dimension 3072:
+
+```typescript
+const embeddings = new OpenAIEmbeddings({
+  modelName: "text-embedding-3-large",
+});
+
+const vectors = await embeddings.embedDocuments(["some text"]);
+console.log(vectors[0].length);
+```
+
+```
+3072
+```
+
+But by passing in `dimensions: 1024` we can reduce the size of our embeddings to 1024:
+
+```typescript
+const embeddings1024 = new OpenAIEmbeddings({
+  modelName: "text-embedding-3-large",
+  dimensions: 1024,
+});
+
+const vectors2 = await embeddings1024.embedDocuments(["some text"]);
+console.log(vectors2[0].length);
+```
+
+```
+1024
+```
 
 ## Custom URLs
 

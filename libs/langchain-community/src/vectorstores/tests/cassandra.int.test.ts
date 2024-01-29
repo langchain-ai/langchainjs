@@ -1,23 +1,22 @@
 /* eslint-disable no-process-env */
 import { test, expect, describe } from "@jest/globals";
-
-import { Client } from "cassandra-driver";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
+import { CasssandraClientFactory } from "../../utils/cassandra.js";
 import { CassandraStore } from "../cassandra.js";
 
 const cassandraConfig = {
-  cloud: {
-    secureConnectBundle: process.env.CASSANDRA_SCB as string,
-  },
-  credentials: {
-    username: "token",
-    password: process.env.CASSANDRA_TOKEN as string,
+  serviceProviderArgs: {
+    astra: {
+      token: process.env.ASTRA_TOKEN as string,
+      endpoint: process.env.ASTRA_DB_ENDPOINT as string,
+    },
   },
   keyspace: "test",
   table: "test",
 };
-const client = new Client(cassandraConfig);
+
+let client;
 
 const noPartitionConfig = {
   ...cassandraConfig,
@@ -38,16 +37,29 @@ const noPartitionConfig = {
   ],
 };
 
-// Note there are multiple describe functions that need to be un-skipped for internal testing
+// These tests are configured to run against an Astra database. You can run against Cassandra by
+// updating the cassandraConfig above, and adjusting the environment variables as appropriate.
+//
+// Note there are multiple describe functions that need to be un-skipped for internal testing.
+// To run these tests:
 //   1. switch "describe.skip(" to "describe("
-//   2. Copy the SCB into the dev container (if using it)
-//   3. Export OPENAI_API_KEY, CASSANDRA_SCB, and CASSANDRA_TOKEN
-//   4. cd langchainjs/libs/langchain-community
-//   5. yarn test:single src/vectorstores/tests/cassandra.int.test.ts
+//   2. Export OPENAI_API_KEY, ASTRA_DB_ENDPOINT, and ASTRA_TOKEN
+//   3. cd langchainjs/libs/langchain-community
+//   4. yarn test:single src/vectorstores/tests/cassandra.int.test.ts
 // Once manual testing is complete, re-instate the ".skip"
 describe.skip("CassandraStore - no explicit partition key", () => {
   beforeAll(async () => {
+    client = await CasssandraClientFactory.getClient(cassandraConfig);
     await client.execute("DROP TABLE IF EXISTS test.test;");
+  });
+
+  beforeEach(async () => {
+    try {
+      client = await CasssandraClientFactory.getClient(cassandraConfig);
+      await client.execute("TRUNCATE test.test;");
+    } catch (err) {
+      // Ignore error if table does not exist
+    }
   });
 
   test("CassandraStore.fromText", async () => {
@@ -278,10 +290,37 @@ describe.skip("CassandraStore - no explicit partition key", () => {
       }),
     ]);
   });
+
+  test("CassandraStore.mmr", async () => {
+    const vectorStore = await CassandraStore.fromTexts(
+      ["I am blue!", "I am blue!", "I am yellow"],
+      [
+        { id: 2, name: "Alex" },
+        { id: 1, name: "Scott" },
+        { id: 3, name: "Bubba" },
+      ],
+      new OpenAIEmbeddings(),
+      noPartitionConfig
+    );
+
+    const results = await vectorStore.maxMarginalRelevanceSearch("I am blue!", {
+      k: 2,
+      fetchK: 3,
+      lambda: 0,
+    });
+
+    // Check that the results array has exactly two documents.
+    expect(results.length).toEqual(2);
+
+    // Check if one of the documents has id=3.
+    const hasId3 = results.some((doc) => doc.metadata.id === 3);
+    expect(hasId3).toBeTruthy();
+  });
 });
 
 describe.skip("CassandraStore - no explicit partition key", () => {
   beforeAll(async () => {
+    client = await CasssandraClientFactory.getClient(cassandraConfig);
     await client.execute("DROP TABLE IF EXISTS test.test;");
   });
 
@@ -378,6 +417,7 @@ const partitionConfig = {
 
 describe.skip("CassandraStore - with explicit partition key", () => {
   beforeAll(async () => {
+    client = await CasssandraClientFactory.getClient(cassandraConfig);
     await client.execute("DROP TABLE IF EXISTS test.test;");
   });
 
@@ -395,8 +435,6 @@ describe.skip("CassandraStore - with explicit partition key", () => {
     const results = await vectorStore.similaritySearch("Hey", 1, {
       group: 2,
     });
-
-    console.debug(`results: ${JSON.stringify(results)}`);
 
     expect(results).toEqual([
       new Document({

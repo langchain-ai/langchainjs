@@ -3,15 +3,19 @@ import { CassandraChatMessageHistory } from "@langchain/community/stores/message
 import { ChatOpenAI } from "@langchain/openai";
 import { ConversationChain } from "langchain/chains";
 
+// The example below uses Astra DB, but you can use any Cassandra connection
+const configConnection = {
+  serviceProviderArgs: {
+    astra: {
+      token: "<your Astra Token>" as string,
+      endpoint: "<your Astra Endpoint>" as string,
+    },
+  },
+};
+
 const memory = new BufferMemory({
   chatHistory: new CassandraChatMessageHistory({
-    cloud: {
-      secureConnectBundle: "<path to your secure bundle>",
-    },
-    credentials: {
-      username: "token",
-      password: "<your Cassandra access token>",
-    },
+    ...configConnection,
     keyspace: "langchain",
     table: "message_history",
     sessionId: "<some unique session identifier>",
