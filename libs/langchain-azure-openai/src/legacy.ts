@@ -5,6 +5,7 @@ import {
   AzureExtensionsOptions,
   ChatChoice,
   ChatRequestMessage,
+  OpenAIKeyCredential,
 } from "@azure/openai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { GenerationChunk } from "@langchain/core/outputs";
@@ -36,6 +37,7 @@ export class AzureOpenAIChat
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
+      openAIApiKey: "OPENAI_API_KEY",
       azureOpenAIApiKey: "AZURE_OPENAI_API_KEY",
       azureOpenAIEndpoint: "AZURE_OPENAI_API_ENDPOINT",
       azureOpenAIApiDeploymentName: "AZURE_OPENAI_API_DEPLOYMENT_NAME",
@@ -45,6 +47,7 @@ export class AzureOpenAIChat
   get lc_aliases(): Record<string, string> {
     return {
       modelName: "model",
+      openAIApiKey: "openai_api_key",
       azureOpenAIApiKey: "azure_openai_api_key",
       azureOpenAIEndpoint: "azure_openai_api_endpoint",
       azureOpenAIApiDeploymentName: "azure_openai_api_deployment_name",
@@ -112,7 +115,9 @@ export class AzureOpenAIChat
 
     this.azureOpenAIApiKey =
       fields?.azureOpenAIApiKey ??
-      getEnvironmentVariable("AZURE_OPENAI_API_KEY");
+      fields?.openAIApiKey ??
+      (getEnvironmentVariable("AZURE_OPENAI_API_KEY") ||
+        getEnvironmentVariable("OPENAI_API_KEY"));
 
     if (!this.azureOpenAIApiKey) {
       throw new Error("Azure OpenAI API key not found");
@@ -150,15 +155,12 @@ export class AzureOpenAIChat
       );
     }
 
-    if (this.azureOpenAIApiKey) {
-      if (!this.azureOpenAIApiCompletionsDeploymentName) {
-        throw new Error("Azure OpenAI API deployment name not found");
-      }
-      this.azureOpenAIApiKey = this.azureOpenAIApiKey ?? "";
-    }
-
     const azureCredential =
-      fields?.credentials ?? new AzureKeyCredential(this.azureOpenAIApiKey);
+      fields?.credentials ??
+      (fields?.azureOpenAIApiKey ||
+        getEnvironmentVariable("AZURE_OPENAI_API_KEY"))
+        ? new AzureKeyCredential(this.azureOpenAIApiKey ?? "")
+        : new OpenAIKeyCredential(this.azureOpenAIApiKey ?? "");
 
     if (isTokenCredential(azureCredential)) {
       this.client = new AzureOpenAIClient(

@@ -13,6 +13,8 @@ import { KeyCredential, TokenCredential } from "@azure/core-auth";
 export type { TiktokenModel };
 
 export declare interface AzureOpenAIInput {
+  openAIApiKey?: string;
+
   /**
    * API key to use when making requests to Azure OpenAI.
    */

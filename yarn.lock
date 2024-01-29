@@ -4493,6 +4493,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@azure-rest/core-client@npm:^1.1.7":
+  version: 1.1.7
+  resolution: "@azure-rest/core-client@npm:1.1.7"
+  dependencies:
+    "@azure/abort-controller": ^1.1.0
+    "@azure/core-auth": ^1.3.0
+    "@azure/core-rest-pipeline": ^1.5.0
+    "@azure/core-tracing": ^1.0.1
+    "@azure/core-util": ^1.0.0
+    tslib: ^2.2.0
+  checksum: 62edbc81c1fa682879a56e59eb53f164d7ba232647b1ac9f0d895d9153bda7cd3b43fa324d9fab046583236f8a5d5675c732e6133e6d925f1b50911877049f27
+  languageName: node
+  linkType: hard
+
 "@azure/abort-controller@npm:^1.0.0, @azure/abort-controller@npm:^1.0.4, @azure/abort-controller@npm:^1.1.0":
   version: 1.1.0
   resolution: "@azure/abort-controller@npm:1.1.0"
@@ -4512,7 +4526,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/core-auth@npm:^1.4.0":
+"@azure/core-auth@npm:^1.4.0, @azure/core-auth@npm:^1.5.0":
   version: 1.5.0
   resolution: "@azure/core-auth@npm:1.5.0"
   dependencies:
@@ -4523,7 +4537,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/core-client@npm:^1.3.0":
+"@azure/core-client@npm:^1.3.0, @azure/core-client@npm:^1.4.0":
   version: 1.7.3
   resolution: "@azure/core-client@npm:1.7.3"
   dependencies:
@@ -4592,7 +4606,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/core-rest-pipeline@npm:^1.3.0, @azure/core-rest-pipeline@npm:^1.9.1":
+"@azure/core-rest-pipeline@npm:^1.1.0, @azure/core-rest-pipeline@npm:^1.13.0, @azure/core-rest-pipeline@npm:^1.3.0, @azure/core-rest-pipeline@npm:^1.5.0, @azure/core-rest-pipeline@npm:^1.9.1":
   version: 1.13.0
   resolution: "@azure/core-rest-pipeline@npm:1.13.0"
   dependencies:
@@ -4605,6 +4619,15 @@ __metadata:
     https-proxy-agent: ^5.0.0
     tslib: ^2.2.0
   checksum: 9fe889625756121ceff421805aa643fa6b29bf5fa3730111b0ec509aa08f84b04befd29532e9fa270a85435ed9d597aa777b96730968e425d1aedea256827e94
+  languageName: node
+  linkType: hard
+
+"@azure/core-sse@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "@azure/core-sse@npm:2.0.0"
+  dependencies:
+    tslib: ^2.4.0
+  checksum: e640c7e251fcf8b2cd2d8759eea71c07f8dbb9953a6deb9a28e79efab26deca7e561acddd6cd2770d7e641f4fb2479f802b03ab1deb0410c3993e1cf67ac74d0
   languageName: node
   linkType: hard
 
@@ -4627,7 +4650,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/core-util@npm:^1.0.0, @azure/core-util@npm:^1.1.0, @azure/core-util@npm:^1.3.0":
+"@azure/core-util@npm:^1.0.0, @azure/core-util@npm:^1.1.0, @azure/core-util@npm:^1.3.0, @azure/core-util@npm:^1.4.0":
   version: 1.6.1
   resolution: "@azure/core-util@npm:1.6.1"
   dependencies:
@@ -4675,6 +4698,48 @@ __metadata:
   dependencies:
     tslib: ^2.2.0
   checksum: 2c243d4c667bbc5cd3e60d4473d0f1169fcef2498a02138398af15547fe1b2870197bcb4c487327451488e4d71dee05244771d51328f03611e193b99fb9aa9af
+  languageName: node
+  linkType: hard
+
+"@azure/msal-browser@npm:^3.5.0":
+  version: 3.7.1
+  resolution: "@azure/msal-browser@npm:3.7.1"
+  dependencies:
+    "@azure/msal-common": 14.6.1
+  checksum: 756cc9aef745739408be6dace5fb8aee0e63c98d6998a38c70e5eea18257ce4a79ec100e88d370402c28e1688bf13280e5166633a560e8bcfbad0525d3bb46ac
+  languageName: node
+  linkType: hard
+
+"@azure/msal-common@npm:14.6.1":
+  version: 14.6.1
+  resolution: "@azure/msal-common@npm:14.6.1"
+  checksum: 6d9da0a2863a4b076208d6ab75ff1fd2f7a3cb8018f4ee937cc769d27603ffa1c137a4a64b7bdf4e1d37d0b6275243ae758824f0adb554a5e8f37b83ee942763
+  languageName: node
+  linkType: hard
+
+"@azure/msal-node@npm:^2.5.1":
+  version: 2.6.2
+  resolution: "@azure/msal-node@npm:2.6.2"
+  dependencies:
+    "@azure/msal-common": 14.6.1
+    jsonwebtoken: ^9.0.0
+    uuid: ^8.3.0
+  checksum: 7d842c1269bd0892d6545c64cc49a5c8a739ded35103b7faa389dde0b0318c9c057df06626baa40d40dfa164db65be8544c7c32796aa3454716ec817c1749380
+  languageName: node
+  linkType: hard
+
+"@azure/openai@npm:1.0.0-beta.11":
+  version: 1.0.0-beta.11
+  resolution: "@azure/openai@npm:1.0.0-beta.11"
+  dependencies:
+    "@azure-rest/core-client": ^1.1.7
+    "@azure/core-auth": ^1.4.0
+    "@azure/core-rest-pipeline": ^1.13.0
+    "@azure/core-sse": ^2.0.0
+    "@azure/core-util": ^1.4.0
+    "@azure/logger": ^1.0.3
+    tslib: ^2.4.0
+  checksum: ce2a0f93bf952aa7b02e2f4f4e7b6a719f7d7a29a6ea1ba91b13582fc7e6fe0b9e0d07d575a273d290eb4f619aabcb599a20478055a2efc0a637c415bb945967
   languageName: node
   linkType: hard
 

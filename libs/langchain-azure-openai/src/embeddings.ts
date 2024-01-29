@@ -3,6 +3,7 @@ import {
   type OpenAIClientOptions as AzureOpenAIClientOptions,
   OpenAIClient as AzureOpenAIClient,
   AzureKeyCredential,
+  OpenAIKeyCredential,
 } from "@azure/openai";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
@@ -58,7 +59,9 @@ export class AzureOpenAIEmbeddings
 
     this.azureOpenAIApiKey =
       fields?.azureOpenAIApiKey ??
-      getEnvironmentVariable("AZURE_OPENAI_API_KEY");
+      fields?.openAIApiKey ??
+      (getEnvironmentVariable("AZURE_OPENAI_API_KEY") ||
+        getEnvironmentVariable("OPENAI_API_KEY"));
 
     if (!this.azureOpenAIApiKey) {
       throw new Error("Azure OpenAI API key not found");
@@ -84,7 +87,11 @@ export class AzureOpenAIEmbeddings
     this.timeout = fieldsWithDefaults?.timeout;
 
     const azureCredential =
-      fields?.credentials ?? new AzureKeyCredential(this.azureOpenAIApiKey);
+      fields?.credentials ??
+      (fields?.azureOpenAIApiKey ||
+        getEnvironmentVariable("AZURE_OPENAI_API_KEY"))
+        ? new AzureKeyCredential(this.azureOpenAIApiKey ?? "")
+        : new OpenAIKeyCredential(this.azureOpenAIApiKey ?? "");
 
     if (isTokenCredential(azureCredential)) {
       this.client = new AzureOpenAIClient(
