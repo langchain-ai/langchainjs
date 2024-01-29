@@ -40,7 +40,7 @@ The field you need depends on the package manager you're using, but we recommend
 
 ## Chat Models
 
-This package contains the `AzureChatOpenAI` class, which is the recommended way to interface with the OpenAI series of models.
+This package contains the `AzureChatOpenAI` class, which is the recommended way to interface with deployed models on Azure OpenAI.
 
 To use, install the requirements, and configure your environment.
 
@@ -84,7 +84,7 @@ const response = await model.stream(new HumanMessage("Hello world!"));
 
 ## Embeddings
 
-This package also adds support for OpenAI's embeddings model.
+This package also supports embeddings with Azure OpenAI.
 
 ```typescript
 import { AzureOpenAIEmbeddings } from "@langchain/azure-openai";
