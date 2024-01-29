@@ -153,6 +153,7 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
   /**
    * Recursively fetches all the pages in the specified space.
    * @param start The start parameter to paginate through the results.
+   * @param limit The limit parameter to control the size of the results, default to this.limit defined by the Class
    * @returns Promise resolving to an array of ConfluencePage objects.
    */
   private async fetchAllPagesInSpace(start = 0, limit = this.limit): Promise<ConfluencePage[]> {
