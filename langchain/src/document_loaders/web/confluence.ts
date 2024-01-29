@@ -61,8 +61,6 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
 
   public readonly limit: number;
 
-  public readonly start: number;
-
   public readonly personalAccessToken?: string;
 
   constructor({
@@ -102,7 +100,7 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
   /**
    * Fetches all the pages in the specified space and converts each page to
    * a Document instance.
-   * @param start The start parameter to paginate through the results.
+   * @param start The start parameter to set inital offset to fetch pages.
    * @returns Promise resolving to an array of Document instances.
    */
   public async load(start = 0): Promise<Document[]> {
