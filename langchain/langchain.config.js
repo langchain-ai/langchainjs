@@ -58,6 +58,7 @@ export const config = {
     "tools/aws_lambda": "tools/aws_lambda",
     "tools/aws_sfn": "tools/aws_sfn",
     "tools/calculator": "tools/calculator",
+    "tools/chain": "tools/chain",
     "tools/connery": "tools/connery",
     "tools/render": "tools/render",
     "tools/retriever": "tools/retriever",

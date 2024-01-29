@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.1.7",
+  "version": "0.1.9",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -73,6 +73,9 @@
     "tools/calculator.cjs",
     "tools/calculator.js",
     "tools/calculator.d.ts",
+    "tools/chain.cjs",
+    "tools/chain.js",
+    "tools/chain.d.ts",
     "tools/connery.cjs",
     "tools/connery.js",
     "tools/connery.d.ts",
@@ -1349,6 +1352,11 @@
       "types": "./tools/calculator.d.ts",
       "import": "./tools/calculator.js",
       "require": "./tools/calculator.cjs"
+    },
+    "./tools/chain": {
+      "types": "./tools/chain.d.ts",
+      "import": "./tools/chain.js",
+      "require": "./tools/chain.cjs"
     },
     "./tools/connery": {
       "types": "./tools/connery.d.ts",

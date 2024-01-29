@@ -11,8 +11,8 @@ import {
   isBaseMessage,
 } from "@langchain/core/messages";
 import { ChatResult } from "@langchain/core/outputs";
-import { RunnableLambda } from "@langchain/core/runnables";
-import { DataType } from "langsmith/schemas";
+import { RunnableConfig, RunnableLambda } from "@langchain/core/runnables";
+import { DataType, KVMap } from "langsmith/schemas";
 import { RunEvalConfig } from "../config.js";
 import { randomName } from "../name_generation.js";
 import { EvalResults, runOnDataset } from "../runner_utils.js";
@@ -64,11 +64,20 @@ export class FakeChatModel extends BaseChatModel {
   }
 }
 
-const outputNotEmpty = ({ run }: { run: Run; example?: Example }) => {
-  const score = run?.outputs && Object.values(run?.outputs).length > 0;
+const getScore = ({ outputs }: { outputs?: KVMap }) =>
+  outputs && Object.values(outputs).length > 0;
+
+const outputNotEmpty = async (
+  { run }: { run: Run; example?: Example },
+  options?: { config?: RunnableConfig }
+) => {
+  const lambda = new RunnableLambda({ func: getScore });
+  const score = await lambda.invoke(run, options?.config);
   return {
     key: "output_not_empty",
     score,
+    comment:
+      "We have thoroughly checked the output and it is possibly not not empty.",
   };
 };
 
