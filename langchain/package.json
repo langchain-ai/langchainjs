@@ -190,9 +190,6 @@
     "llms/openai.cjs",
     "llms/openai.js",
     "llms/openai.d.ts",
-    "llms/azure_openai.cjs",
-    "llms/azure_openai.js",
-    "llms/azure_openai.d.ts",
     "llms/ai21.cjs",
     "llms/ai21.js",
     "llms/ai21.d.ts",
@@ -1211,7 +1208,6 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.9.1",
-    "@langchain/azure-openai": "~0.0.1",
     "@langchain/community": "~0.0.20",
     "@langchain/core": "~0.1.16",
     "@langchain/openai": "~0.0.12",
@@ -1547,11 +1543,6 @@
       "types": "./llms/openai.d.ts",
       "import": "./llms/openai.js",
       "require": "./llms/openai.cjs"
-    },
-    "./llms/azure_openai": {
-      "types": "./llms/azure_openai.d.ts",
-      "import": "./llms/azure_openai.js",
-      "require": "./llms/azure_openai.cjs"
     },
     "./llms/ai21": {
       "types": "./llms/ai21.d.ts",

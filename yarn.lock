@@ -8719,7 +8719,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/azure-openai@workspace:libs/langchain-azure-openai, @langchain/azure-openai@~0.0.1":
+"@langchain/azure-openai@workspace:libs/langchain-azure-openai":
   version: 0.0.0-use.local
   resolution: "@langchain/azure-openai@workspace:libs/langchain-azure-openai"
   dependencies:
@@ -25262,7 +25262,6 @@ __metadata:
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1
     "@jest/globals": ^29.5.0
-    "@langchain/azure-openai": ~0.0.1
     "@langchain/community": ~0.0.20
     "@langchain/core": ~0.1.16
     "@langchain/openai": ~0.0.12
