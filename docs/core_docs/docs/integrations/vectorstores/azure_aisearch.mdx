@@ -1,0 +1,36 @@
+# Azure AI Search
+
+[Azure AI Search](https://azure.microsoft.com/products/ai-services/ai-search) (formerly known as Azure Search and Azure Cognitive Search) is a distributed, RESTful search engine optimized for speed and relevance on production-scale workloads on Azure. It supports also vector search using the [k-nearest neighbor](https://en.wikipedia.org/wiki/Nearest_neighbor_search) (kNN) algorithm and also [semantic search](https://learn.microsoft.com/azure/search/semantic-search-overview).
+
+This vector store integration supports full text search, vector search and [hybrid search for best ranking performance](https://techcommunity.microsoft.com/t5/ai-azure-ai-services-blog/azure-cognitive-search-outperforming-vector-search-with-hybrid/ba-p/3929167).
+
+Learn how to leverage the vector search capabilities of Azure AI Search from [this page](https://learn.microsoft.com/azure/search/vector-search-overview). If you don't have an Azure account, you can [create a free account](https://azure.microsoft.com/free/) to get started.
+
+## Setup
+
+You'll first need to install the `@azure/search-documents` SDK and the [`@langchain/community`](https://www.npmjs.com/package/@langchain/community) package:
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install -S @langchain/community @azure/search-documents
+```
+
+You'll also need to have an Azure AI Search instance running. You can deploy a free version on Azure Portal without any cost, following [this guide](https://learn.microsoft.com/azure/search/search-create-service-portal).
+
+Once you have your instance running, make sure you have the endpoint and the admin key (query keys can be used only to search document, not to index, update or delete). The endpoint is the URL of your instance which you can find in the Azure Portal, under the "Overview" section of your instance. The admin key can be found under the "Keys" section of your instance. Then you need to set the following environment variables:
+
+import CodeBlock from "@theme/CodeBlock";
+import EnvVars from "@examples/indexes/vector_stores/azure_aisearch/.env.example";
+
+<CodeBlock language="text">{EnvVars}</CodeBlock>
+
+## Example: index docs, vector search and LLM integration
+
+Below is an example that indexes documents from a file in Azure AI Search, runs a hybrid search query, and finally uses a chain to answer a question in natural language based on the retrieved documents.
+
+import Example from "@examples/indexes/vector_stores/azure_aisearch/azure_aisearch.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>

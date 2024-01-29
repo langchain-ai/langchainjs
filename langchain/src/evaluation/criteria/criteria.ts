@@ -38,7 +38,7 @@ export type Criteria =
   | "creativity"
   | "detail";
 
-const SUPPORTED_CRITERIA: Record<Criteria, string> = /* #__PURE__ */ {
+const SUPPORTED_CRITERIA: Record<Criteria, string> = {
   conciseness: "Is the submission concise and to the point?",
   relevance: "Is the submission referring to a real quote from the text?",
   correctness: "Is the submission correct, accurate, and factual?",

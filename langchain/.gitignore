@@ -61,6 +61,9 @@ tools/aws_sfn.d.ts
 tools/calculator.cjs
 tools/calculator.js
 tools/calculator.d.ts
+tools/chain.cjs
+tools/chain.js
+tools/chain.d.ts
 tools/connery.cjs
 tools/connery.js
 tools/connery.d.ts
@@ -865,6 +868,6 @@ runnables/remote.d.ts
 indexes.cjs
 indexes.js
 indexes.d.ts
-index.cjs
-index.js
-index.d.ts
+node_modules
+dist
+.yarn

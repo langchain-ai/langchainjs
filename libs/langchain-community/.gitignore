@@ -193,6 +193,9 @@ vectorstores/analyticdb.d.ts
 vectorstores/astradb.cjs
 vectorstores/astradb.js
 vectorstores/astradb.d.ts
+vectorstores/azure_aisearch.cjs
+vectorstores/azure_aisearch.js
+vectorstores/azure_aisearch.d.ts
 vectorstores/azure_cosmosdb.cjs
 vectorstores/azure_cosmosdb.js
 vectorstores/azure_cosmosdb.d.ts
@@ -499,3 +502,6 @@ indexes/postgres.d.ts
 indexes/memory.cjs
 indexes/memory.js
 indexes/memory.d.ts
+node_modules
+dist
+.yarn

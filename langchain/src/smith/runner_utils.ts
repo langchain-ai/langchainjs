@@ -1,12 +1,14 @@
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
+import { Serialized } from "@langchain/core/load/serializable";
 import { mapStoredMessagesToChatMessages } from "@langchain/core/messages";
 import {
   Runnable,
-  RunnableLambda,
   RunnableConfig,
+  RunnableLambda,
 } from "@langchain/core/runnables";
 import { RunCollectorCallbackHandler } from "@langchain/core/tracers/run_collector";
 import { LangChainTracer } from "@langchain/core/tracers/tracer_langchain";
+import { ChainValues } from "@langchain/core/utils/types";
 import { Client, Example, Feedback, Run } from "langsmith";
 import { EvaluationResult, RunEvaluator } from "langsmith/evaluation";
 import { DataType } from "langsmith/schemas";
@@ -14,11 +16,11 @@ import { LLMStringEvaluator } from "../evaluation/base.js";
 import { loadEvaluator } from "../evaluation/loader.js";
 import { EvaluatorType } from "../evaluation/types.js";
 import type {
-  RunEvaluatorLike,
+  DynamicRunEvaluatorParams,
   EvalConfig,
   EvaluatorInputFormatter,
   RunEvalConfig,
-  DynamicRunEvaluatorParams,
+  RunEvaluatorLike,
 } from "./config.js";
 import { randomName } from "./name_generation.js";
 import { ProgressBar } from "./progress.js";
@@ -32,6 +34,30 @@ export type ChainOrFactory =
   | ((obj: any) => Promise<any>)
   | (() => (obj: unknown) => unknown)
   | (() => (obj: unknown) => Promise<unknown>);
+
+class RunIdExtractor {
+  runIdPromiseResolver: (runId: string) => void;
+
+  runIdPromise: Promise<string>;
+
+  constructor() {
+    this.runIdPromise = new Promise<string>((extract) => {
+      this.runIdPromiseResolver = extract;
+    });
+  }
+
+  handleChainStart = (
+    _chain: Serialized,
+    _inputs: ChainValues,
+    runId: string
+  ) => {
+    this.runIdPromiseResolver(runId);
+  };
+
+  async extract(): Promise<string> {
+    return this.runIdPromise;
+  }
+}
 
 /**
  * Wraps an evaluator function + implements the RunEvaluator interface.
@@ -47,16 +73,28 @@ class DynamicRunEvaluator implements RunEvaluator {
    * Evaluates a run with an optional example and returns the evaluation result.
    * @param run The run to evaluate.
    * @param example The optional example to use for evaluation.
-   * @returns A promise that resolves to the evaluation result.
+   * @returns A promise that extracts to the evaluation result.
    */
   async evaluateRun(run: Run, example?: Example): Promise<EvaluationResult> {
-    return await this.evaluator.invoke({
-      run,
-      example,
-      input: run.inputs,
-      prediction: run.outputs,
-      reference: example?.outputs,
-    });
+    const extractor = new RunIdExtractor();
+    const tracer = new LangChainTracer({ projectName: "evaluators" });
+    const result = await this.evaluator.invoke(
+      {
+        run,
+        example,
+        input: run.inputs,
+        prediction: run.outputs,
+        reference: example?.outputs,
+      },
+      {
+        callbacks: [extractor, tracer],
+      }
+    );
+    const runId = await extractor.extract();
+    return {
+      sourceRunId: runId,
+      ...result,
+    };
   }
 }
 
@@ -122,7 +160,7 @@ class PreparedRunEvaluator implements RunEvaluator {
    * Evaluates a run with an optional example and returns the evaluation result.
    * @param run The run to evaluate.
    * @param example The optional example to use for evaluation.
-   * @returns A promise that resolves to the evaluation result.
+   * @returns A promise that extracts to the evaluation result.
    */
   async evaluateRun(run: Run, example?: Example): Promise<EvaluationResult> {
     const { prediction, input, reference } = this.formatEvaluatorInputs({
@@ -131,15 +169,24 @@ class PreparedRunEvaluator implements RunEvaluator {
       rawReferenceOutput: example?.outputs,
       run,
     });
+    const extractor = new RunIdExtractor();
+    const tracer = new LangChainTracer({ projectName: "evaluators" });
     if (this.isStringEvaluator) {
-      const evalResult = await this.evaluator.evaluateStrings({
-        prediction: prediction as string,
-        reference: reference as string,
-        input: input as string,
-      });
+      const evalResult = await this.evaluator.evaluateStrings(
+        {
+          prediction: prediction as string,
+          reference: reference as string,
+          input: input as string,
+        },
+        {
+          callbacks: [extractor, tracer],
+        }
+      );
+      const runId = await extractor.extract();
       return {
         key: this.evaluationName,
         comment: evalResult?.reasoning,
+        sourceRunId: runId,
         ...evalResult,
       };
     }
