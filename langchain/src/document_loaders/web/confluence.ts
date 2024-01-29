@@ -12,6 +12,7 @@ export interface ConfluencePagesLoaderParams {
   username?: string;
   accessToken?: string;
   personalAccessToken?: string;
+  start?: number;
   limit?: number;
 }
 
@@ -61,6 +62,8 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
 
   public readonly limit: number;
 
+  public readonly start: number;
+
   public readonly personalAccessToken?: string;
 
   constructor({
@@ -69,6 +72,7 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
     username,
     accessToken,
     limit = 25,
+    start = 0,
     personalAccessToken,
   }: ConfluencePagesLoaderParams) {
     super();
@@ -77,6 +81,7 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
     this.username = username;
     this.accessToken = accessToken;
     this.limit = limit;
+    this.start = start;
     this.personalAccessToken = personalAccessToken;
   }
 
@@ -104,7 +109,7 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
    */
   public async load(): Promise<Document[]> {
     try {
-      const pages = await this.fetchAllPagesInSpace();
+      const pages = await this.fetchAllPagesInSpace(this.start);
       return pages.map((page) => this.createDocumentFromPage(page));
     } catch (error) {
       console.error("Error:", error);
