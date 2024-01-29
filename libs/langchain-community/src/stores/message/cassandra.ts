@@ -8,7 +8,7 @@ import {
 
 import { Client } from "cassandra-driver";
 import {
-  CasssandraClientFactory,
+  CassandraClientFactory,
   CassandraClientArgs,
 } from "../../utils/cassandra.js";
 
@@ -136,7 +136,7 @@ export class CassandraChatMessageHistory extends BaseListChatMessageHistory {
       return;
     }
 
-    this.client = await CasssandraClientFactory.getClient(this.options);
+    this.client = await CassandraClientFactory.getClient(this.options);
 
     await this.client.execute(`
     CREATE TABLE IF NOT EXISTS ${this.keyspace}.${this.table} (

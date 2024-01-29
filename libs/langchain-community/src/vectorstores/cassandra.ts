@@ -13,7 +13,7 @@ import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 
 import { Client } from "cassandra-driver";
 import {
-  CasssandraClientFactory,
+  CassandraClientFactory,
   CassandraClientArgs,
 } from "../utils/cassandra.js";
 
@@ -390,7 +390,7 @@ export class CassandraStore extends VectorStore {
    * Method to perform the initialization tasks
    */
   private async performInitialization() {
-    this.client = await CasssandraClientFactory.getClient(this.constructorArgs);
+    this.client = await CassandraClientFactory.getClient(this.constructorArgs);
 
     let cql = "";
     cql = `CREATE TABLE IF NOT EXISTS ${this.keyspace}.${this.table} (
