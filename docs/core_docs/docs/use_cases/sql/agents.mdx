@@ -6,7 +6,7 @@ LangChain has a SQL Agent which provides a more flexible way of interacting with
 - It can recover from errors by running a generated query, catching the traceback and regenerating it correctly.
 - It can query the database as many times as needed to answer the user question.
 
-To initialize the agent we'll use the [`createSqlAgent`](https://api.js.langchain.com/functions/langchain_agents_toolkits_sql.createSqlAgent.html) function.
+To initialize the agent we'll use the [`createOpenAIToolsAgent`](https://api.js.langchain.com/functions/langchain_agents.createOpenAIToolsAgent.html) function.
 This agent uses the [`SqlToolkit`](https://api.js.langchain.com/classes/langchain_agents_toolkits_sql.SqlToolkit.html) which contains tools to:
 
 - Create and execute queries
@@ -43,7 +43,7 @@ import DbCheck from "@examples/use_cases/sql/db_check.ts";
 
 <CodeBlock language="typescript">{DbCheck}</CodeBlock>
 
-## Agent
+## Initializing the Agent
 
 We'll use an OpenAI chat model and an "openai-tools" agent, which will use OpenAI's function-calling API to drive the agent's tool selection and invocations.
 
@@ -98,7 +98,6 @@ You can see a LangSmith trace of this example [here](https://smith.langchain.com
 
 ## Next steps
 
-Under the hood, `createSqlAgentRunnable` is just passing in SQL tools to more generic agent constructors.
 To learn more about the built-in generic agent types as well as how to build custom agents, head to the [Agents Modules](/docs/modules/agents).
 
 The built-in `AgentExecutor` runs a simple Agent action -> Tool call -> Agent action… loop. To build more complex agent runtimes, head to the [LangGraph section](docs/langgraph).

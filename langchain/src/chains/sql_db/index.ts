@@ -1,6 +1,7 @@
 export {
   SqlDatabaseChain,
-  SqlDatabaseChainInput,
+  type SqlDatabaseChainInput,
+  type CreateSqlQueryChainFields,
   createSqlQueryChain,
 } from "./sql_db_chain.js";
 export {

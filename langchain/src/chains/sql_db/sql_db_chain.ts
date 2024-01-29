@@ -219,7 +219,7 @@ export class SqlDatabaseChain extends BaseChain {
   }
 }
 
-interface CreateSqlQueryChainFields {
+export interface CreateSqlQueryChainFields {
   llm: BaseLanguageModel;
   db: SqlDatabase;
   prompt?: BasePromptTemplate;
@@ -248,9 +248,8 @@ const strip = (text: string) => {
   return newText;
 };
 
-function difference(setA: Set<string>, setB: Set<string>) {
-  return new Set([...setA].filter((x) => !setB.has(x)));
-}
+const difference = (setA: Set<string>, setB: Set<string>) =>
+  new Set([...setA].filter((x) => !setB.has(x)));
 
 export async function createSqlQueryChain({
   llm,

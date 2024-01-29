@@ -1,7 +1,2 @@
-export {
-  SqlCreatePromptArgs,
-  SqlToolkit,
-  createSqlAgent,
-  createSqlAgentRunnable,
-} from "./sql.js";
+export { SqlCreatePromptArgs, SqlToolkit, createSqlAgent } from "./sql.js";
 export { SQL_PREFIX, SQL_SUFFIX } from "./prompt.js";

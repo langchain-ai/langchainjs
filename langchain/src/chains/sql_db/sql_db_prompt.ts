@@ -152,12 +152,11 @@ export type SqlDialect =
   | "mssql"
   | "sap hana";
 
-export const SQL_PROMPTS_MAP: Record<SqlDialect, BasePromptTemplate> =
-  /*#__PURE__*/ {
-    oracle: SQL_ORACLE_PROMPT,
-    postgres: SQL_POSTGRES_PROMPT,
-    sqlite: SQL_SQLITE_PROMPT,
-    mysql: SQL_MYSQL_PROMPT,
-    mssql: SQL_MSSQL_PROMPT,
-    "sap hana": SQL_SAP_HANA_PROMPT,
-  };
+export const SQL_PROMPTS_MAP: Record<SqlDialect, BasePromptTemplate> = {
+  oracle: SQL_ORACLE_PROMPT,
+  postgres: SQL_POSTGRES_PROMPT,
+  sqlite: SQL_SQLITE_PROMPT,
+  mysql: SQL_MYSQL_PROMPT,
+  mssql: SQL_MSSQL_PROMPT,
+  "sap hana": SQL_SAP_HANA_PROMPT,
+};
