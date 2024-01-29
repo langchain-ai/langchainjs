@@ -12,7 +12,6 @@ export interface ConfluencePagesLoaderParams {
   username?: string;
   accessToken?: string;
   personalAccessToken?: string;
-  start?: number;
   limit?: number;
 }
 
@@ -72,7 +71,6 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
     username,
     accessToken,
     limit = 25,
-    start = 0,
     personalAccessToken,
   }: ConfluencePagesLoaderParams) {
     super();
@@ -81,7 +79,6 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
     this.username = username;
     this.accessToken = accessToken;
     this.limit = limit;
-    this.start = start;
     this.personalAccessToken = personalAccessToken;
   }
 
@@ -105,11 +102,12 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
   /**
    * Fetches all the pages in the specified space and converts each page to
    * a Document instance.
+   * @param start The start parameter to paginate through the results.
    * @returns Promise resolving to an array of Document instances.
    */
-  public async load(): Promise<Document[]> {
+  public async load(start = 0): Promise<Document[]> {
     try {
-      const pages = await this.fetchAllPagesInSpace(this.start);
+      const pages = await this.fetchAllPagesInSpace(start);
       return pages.map((page) => this.createDocumentFromPage(page));
     } catch (error) {
       console.error("Error:", error);
