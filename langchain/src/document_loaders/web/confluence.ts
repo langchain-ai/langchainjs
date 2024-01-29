@@ -100,12 +100,14 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
   /**
    * Fetches all the pages in the specified space and converts each page to
    * a Document instance.
-   * @param start The start parameter to set inital offset to fetch pages.
+   * @param options the extra options of the load function
+   * @param options.limit The limit parameter to overwrite the size to fetch pages.
+   * @param options.start The start parameter to set inital offset to fetch pages.
    * @returns Promise resolving to an array of Document instances.
    */
-  public async load(start = 0): Promise<Document[]> {
+  public async load(options?: { start?: number, limit?: number }): Promise<Document[]> {
     try {
-      const pages = await this.fetchAllPagesInSpace(start);
+      const pages = await this.fetchAllPagesInSpace(options?.start, options?.limit);
       return pages.map((page) => this.createDocumentFromPage(page));
     } catch (error) {
       console.error("Error:", error);
@@ -153,8 +155,8 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
    * @param start The start parameter to paginate through the results.
    * @returns Promise resolving to an array of ConfluencePage objects.
    */
-  private async fetchAllPagesInSpace(start = 0): Promise<ConfluencePage[]> {
-    const url = `${this.baseUrl}/rest/api/content?spaceKey=${this.spaceKey}&limit=${this.limit}&start=${start}&expand=body.storage`;
+  private async fetchAllPagesInSpace(start = 0, limit = this.limit): Promise<ConfluencePage[]> {
+    const url = `${this.baseUrl}/rest/api/content?spaceKey=${this.spaceKey}&limit=${limit}&start=${start}&expand=body.storage`;
     const data = await this.fetchConfluenceData(url);
 
     if (data.size === 0) {
@@ -162,7 +164,7 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
     }
 
     const nextPageStart = start + data.size;
-    const nextPageResults = await this.fetchAllPagesInSpace(nextPageStart);
+    const nextPageResults = await this.fetchAllPagesInSpace(nextPageStart, limit);
 
     return data.results.concat(nextPageResults);
   }
