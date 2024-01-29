@@ -1,9 +1,6 @@
 import {
   OpenAIClientOptions,
   AzureExtensionsOptions,
-  FunctionCallPreset,
-  FunctionDefinition,
-  FunctionName,
   ChatRequestMessage,
 } from "@azure/openai";
 import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
@@ -168,10 +165,6 @@ export interface OpenAICallOptions extends BaseLanguageModelCallOptions {
 export interface OpenAIChatInput extends OpenAIBaseInput {
   /** ChatGPT messages to pass as a prefix to the prompt */
   prefixMessages?: ChatRequestMessage[];
-
-  functions?: FunctionDefinition[];
-
-  functionCall?: FunctionCallPreset | FunctionName;
 
   azureExtensionOptions?: AzureExtensionsOptions;
 }

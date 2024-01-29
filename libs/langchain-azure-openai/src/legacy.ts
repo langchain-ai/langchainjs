@@ -2,9 +2,6 @@ import {
   type OpenAIClientOptions as AzureOpenAIClientOptions,
   OpenAIClient as AzureOpenAIClient,
   AzureKeyCredential,
-  FunctionDefinition,
-  FunctionCallPreset,
-  FunctionName,
   AzureExtensionsOptions,
   ChatChoice,
   ChatRequestMessage,
@@ -86,10 +83,6 @@ export class AzureOpenAIChat
 
   streaming = false;
 
-  functions?: FunctionDefinition[];
-
-  functionCall?: FunctionCallPreset | FunctionName;
-
   azureExtensionOptions?: AzureExtensionsOptions;
 
   azureOpenAIEndpoint?: string;
@@ -147,8 +140,6 @@ export class AzureOpenAIChat
     this.maxTokens = fields?.maxTokens;
     this.stop = fields?.stop;
     this.user = fields?.user;
-    this.functions = fields?.functions;
-    this.functionCall = fields?.functionCall;
     this.azureExtensionOptions = fields?.azureExtensionOptions;
 
     this.streaming = fields?.streaming ?? false;
@@ -208,8 +199,8 @@ export class AzureOpenAIChat
       this.azureOpenAIApiCompletionsDeploymentName,
       this.formatMessages(content),
       {
-        functions: options?.functions ?? this.functions,
-        functionCall: this.functionCall,
+        functions: options?.functions,
+        functionCall: options?.function_call,
         maxTokens: this.maxTokens,
         temperature: this.temperature,
         topP: this.topP,
@@ -273,8 +264,8 @@ export class AzureOpenAIChat
           },
         ],
         {
-          functions: options?.functions ?? this.functions,
-          functionCall: this.functionCall,
+          functions: options?.functions,
+          functionCall: options?.function_call,
           maxTokens: this.maxTokens,
           temperature: this.temperature,
           topP: this.topP,
@@ -311,8 +302,8 @@ export class AzureOpenAIChat
         this.azureOpenAIApiCompletionsDeploymentName,
         this.formatMessages(content),
         {
-          functions: options?.functions ?? this.functions,
-          functionCall: this.functionCall,
+          functions: options?.functions,
+          functionCall: options?.function_call,
           maxTokens: this.maxTokens,
           temperature: this.temperature,
           topP: this.topP,

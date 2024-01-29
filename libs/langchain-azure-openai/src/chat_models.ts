@@ -1,9 +1,6 @@
 import {
   type OpenAIClientOptions as AzureOpenAIClientOptions,
   OpenAIClient as AzureOpenAIClient,
-  FunctionDefinition,
-  FunctionCallPreset,
-  FunctionName,
   AzureExtensionsOptions,
   ChatRequestMessage,
   ChatResponseMessage,
@@ -21,6 +18,7 @@ import {
 import {
   BaseFunctionCallOptions,
   FunctionCallOption,
+  FunctionDefinition,
   TokenUsage,
 } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
@@ -204,10 +202,6 @@ export class AzureChatOpenAI
 
   lc_serializable = true;
 
-  functions?: FunctionDefinition[] | undefined;
-
-  functionCall?: FunctionCallPreset | FunctionName | undefined;
-
   azureExtensionOptions?: AzureExtensionsOptions | undefined;
 
   maxTokens?: number | undefined;
@@ -289,8 +283,6 @@ export class AzureChatOpenAI
     this.logitBias = fields?.logitBias;
     this.stop = fields?.stop;
     this.user = fields?.user;
-    this.functions = fields?.functions;
-    this.functionCall = fields?.functionCall;
     this.azureExtensionOptions = fields?.azureExtensionOptions;
 
     this.streaming = fields?.streaming ?? false;
@@ -344,8 +336,8 @@ export class AzureChatOpenAI
         this.azureOpenAIApiCompletionsDeploymentName,
         azureOpenAIMessages,
         {
-          functions: options?.functions ?? this.functions,
-          functionCall: options?.function_call ?? this.functionCall,
+          functions: options?.functions,
+          functionCall: options?.function_call,
           maxTokens: this.maxTokens,
           temperature: this.temperature,
           topP: this.topP,
@@ -444,8 +436,8 @@ export class AzureChatOpenAI
         this.azureOpenAIApiCompletionsDeploymentName,
         azureOpenAIMessages,
         {
-          functions: options?.functions ?? this.functions,
-          functionCall: options?.function_call ?? this.functionCall,
+          functions: options?.functions,
+          functionCall: options?.function_call,
           maxTokens: this.maxTokens,
           temperature: this.temperature,
           topP: this.topP,
@@ -524,8 +516,8 @@ export class AzureChatOpenAI
 
       const promptTokenUsage = await this.getEstimatedTokenCountFromPrompt(
         messages,
-        this.functions ?? options.functions,
-        this.functionCall ?? options.function_call
+        options?.functions,
+        options?.function_call
       );
 
       const completionTokenUsage = await this.getNumTokensFromGenerations(
