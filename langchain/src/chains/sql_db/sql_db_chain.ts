@@ -251,6 +251,33 @@ const strip = (text: string) => {
 const difference = (setA: Set<string>, setB: Set<string>) =>
   new Set([...setA].filter((x) => !setB.has(x)));
 
+
+/**
+ * Create a SQL query chain that can create SQL queries for the given database.
+ * Returns a Runnable.
+ * 
+ * @param {BaseLanguageModel} llm The language model to use in the chain.
+ * @param {SqlDatabase} db The database to use in the chain.
+ * @param {BasePromptTemplate | undefined} prompt The prompt to use in the chain.
+ * @param {BaseLanguageModel | undefined} k The amount of docs/results to return. Passed through the prompt input value `top_k`.
+ * @param {SqlDialect} dialect The SQL dialect to use in the chain.
+ * @returns {Promise<RunnableSequence<Record<string, unknown>, string>>} A runnable sequence representing the chain.
+ * @example ```typescript
+ * const datasource = new DataSource({
+ *   type: "sqlite",
+ *   database: "../../../../Chinook.db",
+ * });
+ * const db = await SqlDatabase.fromDataSourceParams({
+ *   appDataSource: datasource,
+ * });
+ * const llm = new ChatOpenAI({ temperature: 0 });
+ * const chain = await createSqlQueryChain({
+ *   llm,
+ *   db,
+ *   dialect: "sqlite",
+ * });
+ * ```
+ */
 export async function createSqlQueryChain({
   llm,
   db,
