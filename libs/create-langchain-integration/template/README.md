@@ -24,7 +24,7 @@ Then initialize
 import { <ADD_CLASS_NAME_HERE> } from "@langchain/<ADD_PACKAGE_NAME_HERE>";
 
 const model = new ExampleChatClass({
-  apiKey: process.env.EXAMPLE_API_KEY,
+apiKey: process.env.EXAMPLE_API_KEY,
 });
 const response = await model.invoke(new HumanMessage("Hello world!"));
 \`\`\`
@@ -35,7 +35,7 @@ const response = await model.invoke(new HumanMessage("Hello world!"));
 import { <ADD_CLASS_NAME_HERE> } from "@langchain/<ADD_PACKAGE_NAME_HERE>";
 
 const model = new ExampleChatClass({
-  apiKey: process.env.EXAMPLE_API_KEY,
+apiKey: process.env.EXAMPLE_API_KEY,
 });
 const response = await model.stream(new HumanMessage("Hello world!"));
 \`\`\`
@@ -48,7 +48,7 @@ This package also adds support for <ADD_NAME_HERE> embeddings model.
 import { <ADD_CLASS_NAME_HERE> } from "@langchain/<ADD_PACKAGE_NAME_HERE>";
 
 const embeddings = new ExampleEmbeddingClass({
-  apiKey: process.env.EXAMPLE_API_KEY,
+apiKey: process.env.EXAMPLE_API_KEY,
 });
 const res = await embeddings.embedQuery("Hello world");
 \`\`\`
