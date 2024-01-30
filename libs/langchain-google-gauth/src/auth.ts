@@ -46,6 +46,7 @@ export class GAuthClient implements GoogleAbstractedClient {
             ...ret,
             data: new NodeJsonStream(ret.data),
           };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (xx: any) {
       console.error("call to gauth.request", JSON.stringify(xx, null, 2));
       console.error(

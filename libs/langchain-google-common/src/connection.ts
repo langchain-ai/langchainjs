@@ -11,15 +11,12 @@ import type {
   GoogleLLMModelFamily,
   GooglePlatformType,
   GoogleResponse,
-} from "./types.js";
-import { JsonStream } from "./stream.js";
-import {
+  GoogleLLMResponse,
   GeminiContent,
   GeminiGenerationConfig,
   GeminiRequest,
   GeminiSafetySetting,
-  GenerateContentResponseData,
-} from "./gemini.js";
+} from "./types.js";
 import {
   GoogleAbstractedClient,
   GoogleAbstractedClientOps,
@@ -233,15 +230,6 @@ export abstract class GoogleAIConnection<
   }
 }
 
-export type GoogleLLMResponseData =
-  | JsonStream
-  | GenerateContentResponseData
-  | GenerateContentResponseData[];
-
-export interface GoogleLLMResponse extends GoogleResponse {
-  data: GoogleLLMResponseData;
-}
-
 export abstract class AbstractGoogleLLMConnection<
   MessageType,
   AuthOptions
@@ -253,10 +241,6 @@ export abstract class AbstractGoogleLLMConnection<
   async buildUrlMethodGemini(): Promise<string> {
     // Vertex AI only handles streamedGenerateContent
     return "streamGenerateContent";
-
-    // return this.streaming
-    //   ? "streamGenerateContent"
-    //   : "generateContent";
   }
 
   async buildUrlMethod(): Promise<string> {

@@ -15,101 +15,17 @@ import {
   ChatResult,
   Generation,
 } from "@langchain/core/outputs";
-import { GoogleLLMResponse } from "./connection.js";
-import { GoogleAIModelParams } from "./types.js";
-
-export interface GeminiPartText {
-  text: string;
-}
-
-export interface GeminiPartInlineData {
-  mimeType: string;
-  data: string;
-}
-
-// Vertex AI only
-export interface GeminiPartFileData {
-  mimeType: string;
-  fileUri: string;
-}
-
-// AI Studio only?
-export interface GeminiPartFunctionCall {
-  name: string;
-  args?: object;
-}
-
-// AI Studio Only?
-export interface GeminiPartFunctionResponse {
-  name: string;
-  response: object;
-}
-
-export type GeminiPart =
-  | GeminiPartText
-  | GeminiPartInlineData
-  | GeminiPartFileData
-  | GeminiPartFunctionCall
-  | GeminiPartFunctionResponse;
-
-export interface GeminiSafetySetting {
-  category: string;
-  threshold: string;
-}
-
-export interface GeminiSafetyRating {
-  category: string;
-  probability: string;
-}
-
-export type GeminiRole = "user" | "model";
-
-// Vertex AI requires the role
-
-export interface GeminiContent {
-  parts: GeminiPart[];
-  role: GeminiRole; // Vertex AI requires the role
-}
-
-export interface GeminiTool {
-  // TODO: Implement
-}
-
-export interface GeminiGenerationConfig {
-  stopSequences?: string[];
-  candidateCount?: number;
-  maxOutputTokens?: number;
-  temperature?: number;
-  topP?: number;
-  topK?: number;
-}
-
-export interface GeminiRequest {
-  contents?: GeminiContent[];
-  tools?: GeminiTool[];
-  safetySettings?: GeminiSafetySetting[];
-  generationConfig?: GeminiGenerationConfig;
-}
-
-interface GeminiResponseCandidate {
-  content: {
-    parts: GeminiPart[];
-    role: string;
-  };
-  finishReason: string;
-  index: number;
-  tokenCount?: number;
-  safetyRatings: GeminiSafetyRating[];
-}
-
-interface GeminiResponsePromptFeedback {
-  safetyRatings: GeminiSafetyRating[];
-}
-
-export interface GenerateContentResponseData {
-  candidates: GeminiResponseCandidate[];
-  promptFeedback: GeminiResponsePromptFeedback;
-}
+import type {
+  GoogleLLMResponse,
+  GoogleAIModelParams,
+  GeminiPartText,
+  GeminiPartInlineData,
+  GeminiPartFileData,
+  GeminiPart,
+  GeminiRole,
+  GeminiContent,
+  GenerateContentResponseData,
+} from "../types.js";
 
 function messageContentText(content: MessageContentText): GeminiPartText {
   return {

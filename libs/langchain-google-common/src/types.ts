@@ -1,5 +1,5 @@
 import type { BaseLLMParams } from "@langchain/core/language_models/llms";
-import { isModelGemini, validateGeminiParams } from "./gemini.js";
+import type { JsonStream } from "./utils/stream.js";
 
 /**
  * Parameters needed to setup the client connection.
@@ -84,53 +84,6 @@ export interface GoogleAIModelParams {
   safetySettings?: GoogleAISafetySetting[];
 }
 
-export function copyAIModelParams(
-  params: GoogleAIModelParams | undefined
-): GoogleAIModelParams {
-  return copyAIModelParamsInto(params, {});
-}
-
-export function copyAIModelParamsInto(
-  params: GoogleAIModelParams | undefined,
-  target: GoogleAIModelParams
-): GoogleAIModelParams {
-  const ret: GoogleAIModelParams = target || {};
-
-  ret.model = params?.model ?? target.model;
-
-  ret.temperature = params?.temperature ?? target.temperature;
-  ret.maxOutputTokens = params?.maxOutputTokens ?? target.maxOutputTokens;
-  ret.topP = params?.topP ?? target.topP;
-  ret.topK = params?.topK ?? target.topK;
-  ret.stopSequences = params?.stopSequences ?? target.stopSequences;
-  ret.safetySettings = params?.safetySettings ?? target.safetySettings;
-
-  return ret;
-}
-
-export function validateModelParams(
-  params: GoogleAIModelParams | undefined
-): void {
-  const testParams: GoogleAIModelParams = params ?? {};
-  switch (modelToFamily(testParams.model)) {
-    case "gemini":
-      return validateGeminiParams(testParams);
-    default:
-      throw new Error(
-        `Unable to verify model params: ${JSON.stringify(params)}`
-      );
-  }
-}
-
-export function copyAndValidateModelParamsInto(
-  params: GoogleAIModelParams | undefined,
-  target: GoogleAIModelParams
-): GoogleAIModelParams {
-  copyAIModelParamsInto(params, target);
-  validateModelParams(target);
-  return target;
-}
-
 export interface GoogleAIBaseLLMInput<AuthOptions>
   extends BaseLLMParams,
     GoogleConnectionParams<AuthOptions>,
@@ -141,16 +94,106 @@ export interface GoogleResponse {
   data: any;
 }
 
+export interface GeminiPartText {
+  text: string;
+}
+
+export interface GeminiPartInlineData {
+  mimeType: string;
+  data: string;
+}
+
+// Vertex AI only
+export interface GeminiPartFileData {
+  mimeType: string;
+  fileUri: string;
+}
+
+// AI Studio only?
+export interface GeminiPartFunctionCall {
+  name: string;
+  args?: object;
+}
+
+// AI Studio Only?
+export interface GeminiPartFunctionResponse {
+  name: string;
+  response: object;
+}
+
+export type GeminiPart =
+  | GeminiPartText
+  | GeminiPartInlineData
+  | GeminiPartFileData
+  | GeminiPartFunctionCall
+  | GeminiPartFunctionResponse;
+
+export interface GeminiSafetySetting {
+  category: string;
+  threshold: string;
+}
+
+export interface GeminiSafetyRating {
+  category: string;
+  probability: string;
+}
+
+export type GeminiRole = "user" | "model";
+
+// Vertex AI requires the role
+
+export interface GeminiContent {
+  parts: GeminiPart[];
+  role: GeminiRole; // Vertex AI requires the role
+}
+
+export interface GeminiTool {
+  // TODO: Implement
+}
+
+export interface GeminiGenerationConfig {
+  stopSequences?: string[];
+  candidateCount?: number;
+  maxOutputTokens?: number;
+  temperature?: number;
+  topP?: number;
+  topK?: number;
+}
+
+export interface GeminiRequest {
+  contents?: GeminiContent[];
+  tools?: GeminiTool[];
+  safetySettings?: GeminiSafetySetting[];
+  generationConfig?: GeminiGenerationConfig;
+}
+
+interface GeminiResponseCandidate {
+  content: {
+    parts: GeminiPart[];
+    role: string;
+  };
+  finishReason: string;
+  index: number;
+  tokenCount?: number;
+  safetyRatings: GeminiSafetyRating[];
+}
+
+interface GeminiResponsePromptFeedback {
+  safetyRatings: GeminiSafetyRating[];
+}
+
+export interface GenerateContentResponseData {
+  candidates: GeminiResponseCandidate[];
+  promptFeedback: GeminiResponsePromptFeedback;
+}
+
 export type GoogleLLMModelFamily = null | "palm" | "gemini";
 
-export function modelToFamily(
-  modelName: string | undefined
-): GoogleLLMModelFamily {
-  if (!modelName) {
-    return null;
-  } else if (isModelGemini(modelName)) {
-    return "gemini";
-  } else {
-    return null;
-  }
+export type GoogleLLMResponseData =
+  | JsonStream
+  | GenerateContentResponseData
+  | GenerateContentResponseData[];
+
+export interface GoogleLLMResponse extends GoogleResponse {
+  data: GoogleLLMResponseData;
 }

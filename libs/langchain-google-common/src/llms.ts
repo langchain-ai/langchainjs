@@ -10,21 +10,23 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 import { AbstractGoogleLLMConnection } from "./connection.js";
 import {
-  copyAIModelParams,
-  copyAndValidateModelParamsInto,
   GoogleAIBaseLLMInput,
   GoogleAIModelParams,
   GoogleAISafetySetting,
   GooglePlatformType,
+  GeminiContent,
 } from "./types.js";
 import {
-  GeminiContent,
+  copyAIModelParams,
+  copyAndValidateModelParamsInto,
+} from "./utils/common.js";
+import {
   messageContentToParts,
   responseToBaseMessage,
   responseToGeneration,
   responseToString,
-} from "./gemini.js";
-import { JsonStream } from "./stream.js";
+} from "./utils/gemini.js";
+import { JsonStream } from "./utils/stream.js";
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
 
 class GoogleLLMConnection<AuthOptions> extends AbstractGoogleLLMConnection<

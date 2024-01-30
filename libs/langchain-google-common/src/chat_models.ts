@@ -10,24 +10,26 @@ import {
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import { AIMessageChunk } from "@langchain/core/messages";
 import {
-  copyAIModelParams,
-  copyAndValidateModelParamsInto,
   GoogleAIBaseLLMInput,
   GoogleAIModelParams,
   GoogleAISafetySetting,
   GoogleConnectionParams,
   GooglePlatformType,
+  GeminiContent,
 } from "./types.js";
+import {
+  copyAIModelParams,
+  copyAndValidateModelParamsInto,
+} from "./utils/common.js";
 import { AbstractGoogleLLMConnection } from "./connection.js";
 import {
   baseMessageToContent,
-  GeminiContent,
   responseToChatGeneration,
   responseToChatResult,
-} from "./gemini.js";
+} from "./utils/gemini.js";
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
 import { GoogleBaseLLMInput } from "./llms.js";
-import { JsonStream } from "./stream.js";
+import { JsonStream } from "./utils/stream.js";
 
 class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   BaseMessage[],

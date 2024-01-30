@@ -4,7 +4,7 @@ import {
   GoogleAbstractedClient,
   GoogleAbstractedClientOps,
 } from "../auth.js";
-import { JsonStream } from "../stream.js";
+import { JsonStream } from "../utils/stream.js";
 import { GoogleAIBaseLLMInput } from "../types.js";
 
 export function mockId(): string {

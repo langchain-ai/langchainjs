@@ -1,4 +1,4 @@
-import { ReadableJsonStream } from "./stream.js";
+import { ReadableJsonStream } from "./utils/stream.js";
 import { GooglePlatformType } from "./types.js";
 
 export type GoogleAbstractedClientOpsMethod = "GET" | "POST";
