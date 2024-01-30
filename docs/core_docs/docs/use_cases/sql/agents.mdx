@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Agents
 
-LangChain has a SQL Agent which provides a more flexible way of interacting with SQL Databases than a chain. The main advantages of using the SQL Agent are:
+LangChain offers a number of tools and functions that allow you to create SQL Agents which can provide a more flexible way of interacting with SQL databases. The main advantages of using SQL Agents are:
 
 - It can answer questions based on the databases schema as well as on the databases content (like describing a specific table).
 - It can recover from errors by running a generated query, catching the traceback and regenerating it correctly.
@@ -58,7 +58,9 @@ import AgentExample from "@examples/use_cases/sql/agents/index.ts";
 <CodeBlock language="typescript">{AgentExample}</CodeBlock>
 
 :::tip
+
 You can see the LangSmith traces from the example above [here](https://smith.langchain.com/public/8bdedd3f-a76a-4968-878f-ad7366540baa/r) and [here](https://smith.langchain.com/public/6b3f932a-3f37-4946-8db4-99cc826da7de/r)
+
 :::
 
 ## Using a dynamic few-shot prompt
@@ -79,7 +81,9 @@ import ExampleSelector from "@examples/use_cases/sql/agents/example_selector.ts"
 <CodeBlock language="typescript">{ExampleSelector}</CodeBlock>
 
 ::tip
+
 You can see a LangSmith trace of this example [here](https://smith.langchain.com/public/18962b1f-e8d9-4928-9813-49031e421a0a/r)
+
 :::
 
 ## Dealing with high-cardinality columns
@@ -97,7 +101,9 @@ import HighCardinalityExample from "@examples/use_cases/sql/agents/high_cardinal
 <CodeBlock language="typescript">{HighCardinalityExample}</CodeBlock>
 
 ::tip
-You can see a LangSmith trace of this example [here](https://smith.langchain.com/public/5b4e6f56-d252-4d3d-af74-638dc0d1d9cb/r).
+
+You can see a LangSmith trace of this example [here](https://smith.langchain.com/public/5b4e6f56-d252-4d3d-af74-638dc0d1d9cb/r)
+
 :::
 
 ## Next steps

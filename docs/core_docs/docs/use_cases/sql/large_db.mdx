@@ -55,6 +55,10 @@ You can see an example of this in the [SQL: Agents](/docs/use_cases/sql/agents) 
 
 ## High-cardinality columns
 
+High-cardinality refers to columns in a database that have a vast range of unique values.
+These columns are characterized by a high level of uniqueness in their data entries, such as individual names, addresses, or product serial numbers.
+High-cardinality data can pose challenges for indexing and querying, as it requires more sophisticated strategies to efficiently filter and retrieve specific entries.
+
 In order to filter columns that contain proper nouns such as addresses, song names or artists, we first need to double-check the spelling in order to filter the data correctly.
 
 One naive strategy it to create a vector store with all the distinct proper nouns that exist in the database.

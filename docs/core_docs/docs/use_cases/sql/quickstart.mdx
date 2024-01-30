@@ -57,7 +57,6 @@ Great! We've got a SQL database that we can query. Now let's try hooking it up t
 ## Chain
 
 Let's create a simple chain that takes a question, turns it into a SQL query, executes the query, and uses the result to answer the original question.
-QuerySQLDataBaseTool
 
 ### Convert question to SQL query
 
@@ -119,15 +118,14 @@ For more complex query-generation, we may want to create few-shot prompts or add
 
 ## Agents
 
-LangChain has an SQL Agent which provides a more flexible way of interacting with SQL databases. The main advantages of using the SQL Agent are:
+LangChain offers a number of tools and functions that allow you to create SQL Agents which can provide a more flexible way of interacting with SQL databases. The main advantages of using SQL Agents are:
 
 - It can answer questions based on the databases' schema as well as on the databases' content (like describing a specific table).
 - It can recover from errors by running a generated query, catching the traceback and regenerating it correctly.
 - It can answer questions that require multiple dependent queries.
 - It will save tokens by only considering the schema from relevant tables.
-- To initialize the agent, we use [`createSqlAgent`](https://api.js.langchain.com/functions/langchain_agents_toolkits_sql.createSqlAgent.html) function.
+- To initialize the agent, we use [`createOpenAIToolsAgent`](https://api.js.langchain.com/functions/langchain_agents.createOpenAIToolsAgent.html) function.
   This agent contains the [`SqlToolkit`](https://api.js.langchain.com/classes/langchain_agents_toolkits_sql.SqlToolkit.html) which contains tools to:
-
 - Create and execute queries
 - Check query syntax
 - Retrieve table descriptions
