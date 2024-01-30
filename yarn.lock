@@ -8797,6 +8797,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.58.0
     "@typescript-eslint/parser": ^5.58.0
     "@upstash/redis": ^1.20.6
+    "@upstash/vector": ^1.0.0
     "@vercel/kv": ^0.2.3
     "@vercel/postgres": ^0.5.0
     "@writerai/writer-sdk": ^0.40.2
@@ -8899,6 +8900,7 @@ __metadata:
     "@tensorflow/tfjs-converter": "*"
     "@tensorflow/tfjs-core": "*"
     "@upstash/redis": ^1.20.6
+    "@upstash/vector": ^1.0.0
     "@vercel/kv": ^0.2.3
     "@vercel/postgres": ^0.5.0
     "@writerai/writer-sdk": ^0.40.2
@@ -9018,6 +9020,8 @@ __metadata:
     "@tensorflow/tfjs-core":
       optional: true
     "@upstash/redis":
+      optional: true
+    "@upstash/vector":
       optional: true
     "@vercel/kv":
       optional: true
@@ -14844,6 +14848,13 @@ __metadata:
   dependencies:
     isomorphic-fetch: ^3.0.0
   checksum: e4bcf1d61b0fa3dec5b2b730831a0d6939416bdafe1af753479e53b035aa70be49ca96a6f3f52473d488ec896588a0134ee71b4c71f0caecb6454648f2e3bd29
+  languageName: node
+  linkType: hard
+
+"@upstash/vector@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@upstash/vector@npm:1.0.0"
+  checksum: 445434a2a44283eae14c495811a0e79abb52b5ca77f57713c82b0ccc00bf7f97d6f1962bbb314d52613615c6eeb2549239e1e68a88a077e9e4356ed158a682fa
   languageName: node
   linkType: hard
 

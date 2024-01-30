@@ -104,6 +104,7 @@
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
     "@upstash/redis": "^1.20.6",
+    "@upstash/vector": "^1.0.0",
     "@vercel/kv": "^0.2.3",
     "@vercel/postgres": "^0.5.0",
     "@writerai/writer-sdk": "^0.40.2",
@@ -203,6 +204,7 @@
     "@tensorflow/tfjs-converter": "*",
     "@tensorflow/tfjs-core": "*",
     "@upstash/redis": "^1.20.6",
+    "@upstash/vector": "^1.0.0",
     "@vercel/kv": "^0.2.3",
     "@vercel/postgres": "^0.5.0",
     "@writerai/writer-sdk": "^0.40.2",
@@ -360,6 +362,9 @@
       "optional": true
     },
     "@upstash/redis": {
+      "optional": true
+    },
+    "@upstash/vector": {
       "optional": true
     },
     "@vercel/kv": {
@@ -980,6 +985,11 @@
       "types": "./vectorstores/typesense.d.ts",
       "import": "./vectorstores/typesense.js",
       "require": "./vectorstores/typesense.cjs"
+    },
+    "./vectorstores/upstash": {
+      "types": "./vectorstores/upstash.d.ts",
+      "import": "./vectorstores/upstash.js",
+      "require": "./vectorstores/upstash.cjs"
     },
     "./vectorstores/usearch": {
       "types": "./vectorstores/usearch.d.ts",
