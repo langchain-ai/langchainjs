@@ -1,0 +1,9 @@
+{
+  "imports": {
+    "langchain/": "npm:/langchain/",
+    "@langchain/langchain/": "npm:@langchain/community/",
+    "@langchain/openai": "npm:@langchain/openai",
+    "@langchain/core/": "npm:/@langchain/core/",
+    "cheerio": "npm:/cheerio"
+  }
+}
