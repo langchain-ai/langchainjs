@@ -44,9 +44,7 @@ export type MessageContentImageUrl = {
   image_url: string | { url: string; detail?: "auto" | "low" | "high" };
 };
 
-export type MessageContentComplex =
-  | MessageContentText
-  | MessageContentImageUrl;
+export type MessageContentComplex = MessageContentText | MessageContentImageUrl;
 
 export type MessageContent = string | MessageContentComplex[];
 
