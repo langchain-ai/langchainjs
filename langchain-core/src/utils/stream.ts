@@ -1,6 +1,6 @@
 export interface IterableReadableStreamInterface<T>
   extends ReadableStream<T>,
-    AsyncGenerator<T> {}
+    AsyncIterable<T> {}
 
 /*
  * Support async iterator syntax for ReadableStreams in all environments.
@@ -18,22 +18,29 @@ export class IterableReadableStream<T>
     }
   }
 
-  async next() {
+  async next(): Promise<IteratorResult<T>> {
     this.ensureReader();
     try {
       const result = await this.reader.read();
-      if (result.done) this.reader.releaseLock(); // release lock when stream becomes closed
-      return {
-        done: result.done,
-        value: result.value as T, // Cloudflare Workers typing fix
-      };
+      if (result.done) {
+        this.reader.releaseLock(); // release lock when stream becomes closed
+        return {
+          done: true,
+          value: undefined,
+        };
+      } else {
+        return {
+          done: false,
+          value: result.value,
+        };
+      }
     } catch (e) {
       this.reader.releaseLock(); // release lock when stream becomes errored
       throw e;
     }
   }
 
-  async return() {
+  async return(): Promise<IteratorResult<T>> {
     this.ensureReader();
     // If wrapped in a Node stream, cancel is already called.
     if (this.locked) {
@@ -41,7 +48,7 @@ export class IterableReadableStream<T>
       this.reader.releaseLock(); // release lock first
       await cancelPromise; // now await it
     }
-    return { done: true, value: undefined as T }; // This cast fixes TS typing, and convention is to ignore final chunk value anyway
+    return { done: true, value: undefined };
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -157,4 +164,83 @@ export function concat<
   } else {
     throw new Error(`Cannot concat ${typeof first} and ${typeof second}`);
   }
+}
+
+export class AsyncGeneratorWithSetup<
+  S = unknown,
+  T = unknown,
+  TReturn = unknown,
+  TNext = unknown
+> implements AsyncGenerator<T, TReturn, TNext>
+{
+  private generator: AsyncGenerator<T>;
+
+  public setup: Promise<S>;
+
+  private firstResult: Promise<IteratorResult<T>>;
+
+  private firstResultUsed = false;
+
+  constructor(generator: AsyncGenerator<T>, startSetup?: () => Promise<S>) {
+    this.generator = generator;
+    // setup is a promise that resolves only after the first iterator value
+    // is available. this is useful when setup of several piped generators
+    // needs to happen in logical order, ie. in the order in which input to
+    // to each generator is available.
+    this.setup = new Promise((resolve, reject) => {
+      this.firstResult = generator.next();
+      if (startSetup) {
+        this.firstResult.then(startSetup).then(resolve, reject);
+      } else {
+        this.firstResult.then((_result) => resolve(undefined as S), reject);
+      }
+    });
+  }
+
+  async next(...args: [] | [TNext]): Promise<IteratorResult<T>> {
+    if (!this.firstResultUsed) {
+      this.firstResultUsed = true;
+      return this.firstResult;
+    }
+
+    return this.generator.next(...args);
+  }
+
+  async return(
+    value: TReturn | PromiseLike<TReturn>
+  ): Promise<IteratorResult<T>> {
+    return this.generator.return(value);
+  }
+
+  async throw(e: Error): Promise<IteratorResult<T>> {
+    return this.generator.throw(e);
+  }
+
+  [Symbol.asyncIterator]() {
+    return this;
+  }
+}
+
+export async function pipeGeneratorWithSetup<
+  S,
+  A extends unknown[],
+  T,
+  TReturn,
+  TNext,
+  U,
+  UReturn,
+  UNext
+>(
+  to: (
+    g: AsyncGenerator<T, TReturn, TNext>,
+    s: S,
+    ...args: A
+  ) => AsyncGenerator<U, UReturn, UNext>,
+  generator: AsyncGenerator<T, TReturn, TNext>,
+  startSetup: () => Promise<S>,
+  ...args: A
+) {
+  const gen = new AsyncGeneratorWithSetup(generator, startSetup);
+  const setup = await gen.setup;
+  return { output: to(gen, setup, ...args), setup };
 }

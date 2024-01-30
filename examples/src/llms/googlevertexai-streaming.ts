@@ -1,4 +1,4 @@
-import { GoogleVertexAI } from "langchain/llms/googlevertexai";
+import { GoogleVertexAI } from "@langchain/community/llms/googlevertexai";
 
 const model = new GoogleVertexAI({
   temperature: 0.7,

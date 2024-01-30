@@ -1,13 +1,13 @@
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
-import { OpenAI } from "langchain/llms/openai";
-import { StructuredTool } from "langchain/tools";
+import { OpenAI } from "@langchain/openai";
 import {
   GmailCreateDraft,
   GmailGetMessage,
   GmailGetThread,
   GmailSearch,
   GmailSendMessage,
-} from "langchain/tools/gmail";
+} from "@langchain/community/tools/gmail";
+import { StructuredTool } from "@langchain/core/tools";
 
 export async function run() {
   const model = new OpenAI({

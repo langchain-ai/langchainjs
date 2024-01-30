@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { PromptTemplate } from "langchain/prompts";
+import { ChatOpenAI } from "@langchain/openai";
 import { LLMChain } from "langchain/chains";
 import {
   StructuredOutputParser,
   OutputFixingParser,
 } from "langchain/output_parsers";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const outputParser = StructuredOutputParser.fromZodSchema(
   z

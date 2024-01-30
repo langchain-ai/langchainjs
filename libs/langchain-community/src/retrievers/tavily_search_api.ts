@@ -7,7 +7,7 @@ import {
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 /**
- * Options for the HydeRetriever class, which includes a BaseLanguageModel
+ * Options for the TavilySearchAPIRetriever class, which includes a BaseLanguageModel
  * instance, a VectorStore instance, and an optional promptTemplate which
  * can either be a BasePromptTemplate instance or a PromptKey.
  */

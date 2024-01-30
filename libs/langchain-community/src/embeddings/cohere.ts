@@ -5,6 +5,7 @@ import { chunkArray } from "@langchain/core/utils/chunk_array";
 /**
  * Interface that extends EmbeddingsParams and defines additional
  * parameters specific to the CohereEmbeddings class.
+ * @deprecated Use `CohereEmbeddingsParams` from `@langchain/cohere` instead.
  */
 export interface CohereEmbeddingsParams extends EmbeddingsParams {
   modelName: string;
@@ -26,8 +27,8 @@ export interface CohereEmbeddingsParams extends EmbeddingsParams {
  *   "What would be a good company name for a company that makes colorful socks?",
  * );
  * console.log({ res });
- *
  * ```
+ * @deprecated Use `CohereEmbeddings` from `@langchain/cohere` instead.
  */
 export class CohereEmbeddings
   extends Embeddings

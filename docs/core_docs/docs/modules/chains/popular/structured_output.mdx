@@ -1,5 +1,6 @@
 ---
 hide_table_of_contents: true
+sidebar_class_name: hidden
 ---
 
 import CodeBlock from "@theme/CodeBlock";
@@ -31,6 +32,14 @@ npm install zod zod-to-json-schema
 ### Format Text into Structured Data
 
 import FormatExample from "@examples/chains/openai_functions_structured_format.ts";
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
 
 <CodeBlock language="typescript">{FormatExample}</CodeBlock>
 

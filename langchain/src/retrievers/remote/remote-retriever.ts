@@ -1,10 +1,11 @@
-import { Document } from "../../document.js";
 import {
   RemoteRetriever,
   RemoteRetrieverParams,
   RemoteRetrieverValues,
-} from "./base.js";
+} from "@langchain/community/retrievers/remote";
+import { Document } from "@langchain/core/documents";
 
+/** @deprecated */
 export interface RemoteLangChainRetrieverParams extends RemoteRetrieverParams {
   /**
    * The key in the JSON body to put the query in
@@ -25,6 +26,7 @@ export interface RemoteLangChainRetrieverParams extends RemoteRetrieverParams {
 }
 
 /**
+ * @deprecated Use RemoteRetriever instead.
  * Specific implementation of the `RemoteRetriever` class designed to
  * retrieve documents from a remote source using a JSON-based API. It
  * implements the `RemoteLangChainRetrieverParams` interface which defines

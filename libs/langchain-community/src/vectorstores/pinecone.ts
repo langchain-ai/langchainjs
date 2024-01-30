@@ -21,9 +21,11 @@ import {
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 
+/** @deprecated Install and import from @langchain/pinecone instead. */
 // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
 type PineconeMetadata = Record<string, any>;
 
+/** @deprecated Install and import from @langchain/pinecone instead. */
 export interface PineconeLibArgs extends AsyncCallerParams {
   pineconeIndex: PineconeIndex;
   textKey?: string;
@@ -32,6 +34,7 @@ export interface PineconeLibArgs extends AsyncCallerParams {
 }
 
 /**
+ * @deprecated Install and import from @langchain/pinecone instead.
  * Type that defines the parameters for the delete operation in the
  * PineconeStore class. It includes ids, filter, deleteAll flag, and namespace.
  */
@@ -43,6 +46,7 @@ export type PineconeDeleteParams = {
 };
 
 /**
+ * @deprecated Install and import from @langchain/pinecone instead.
  * Class that extends the VectorStore class and provides methods to
  * interact with the Pinecone vector database.
  */

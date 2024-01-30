@@ -1,10 +1,9 @@
 import { AttributeInfo } from "langchain/schema/query_constructor";
-import { Document } from "langchain/document";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
 import { SelfQueryRetriever } from "langchain/retrievers/self_query";
 import { ChromaTranslator } from "langchain/retrievers/self_query/chroma";
-import { OpenAI } from "langchain/llms/openai";
-import { Chroma } from "langchain/vectorstores/chroma";
+import { Chroma } from "@langchain/community/vectorstores/chroma";
+import { Document } from "@langchain/core/documents";
 
 /**
  * First, we create a bunch of documents. You can load your own documents here instead.

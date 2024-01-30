@@ -1,5 +1,5 @@
-import { Document } from "../document.js";
-import { BasePromptTemplate } from "../prompts/base.js";
+import { Document } from "@langchain/core/documents";
+import { BasePromptTemplate } from "@langchain/core/prompts";
 
 /**
  * Formats a document using a given prompt template.

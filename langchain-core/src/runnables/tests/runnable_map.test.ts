@@ -242,4 +242,70 @@ test("Should stream chunks through runnable passthrough and assign", async () =>
   expect(chunks2.reduce(concat)).toEqual(
     await chainWithAssign.invoke("What is your name?")
   );
+
+  const chainWithPick = chainWithAssign.pick("llm");
+
+  const chunks3 = [];
+
+  for await (const chunk of await chainWithPick.stream("What is your name?")) {
+    chunks3.push(chunk);
+  }
+
+  expect(chunks3).toEqual([
+    "W",
+    "h",
+    "a",
+    "t",
+    " ",
+    "i",
+    "s",
+    " ",
+    "y",
+    "o",
+    "u",
+    "r",
+    " ",
+    "n",
+    "a",
+    "m",
+    "e",
+    "?",
+  ]);
+  expect(chunks3.reduce(concat)).toEqual(
+    await chainWithPick.invoke("What is your name?")
+  );
+
+  const chainWithPickMulti = chainWithAssign.pick(["llm"]);
+
+  const chunks4 = [];
+
+  for await (const chunk of await chainWithPickMulti.stream(
+    "What is your name?"
+  )) {
+    chunks4.push(chunk);
+  }
+
+  expect(chunks4).toEqual([
+    { llm: "W" },
+    { llm: "h" },
+    { llm: "a" },
+    { llm: "t" },
+    { llm: " " },
+    { llm: "i" },
+    { llm: "s" },
+    { llm: " " },
+    { llm: "y" },
+    { llm: "o" },
+    { llm: "u" },
+    { llm: "r" },
+    { llm: " " },
+    { llm: "n" },
+    { llm: "a" },
+    { llm: "m" },
+    { llm: "e" },
+    { llm: "?" },
+  ]);
+  expect(chunks4.reduce(concat)).toEqual(
+    await chainWithPickMulti.invoke("What is your name?")
+  );
 });

@@ -7,7 +7,7 @@ import {
 } from "./callbacks/manager.js";
 import type { DocumentInterface } from "./documents/document.js";
 import { Runnable, type RunnableInterface } from "./runnables/base.js";
-import { RunnableConfig } from "./runnables/config.js";
+import { RunnableConfig, ensureConfig } from "./runnables/config.js";
 
 /**
  * Base Retriever class. All indexes should extend this class.
@@ -85,7 +85,7 @@ export abstract class BaseRetriever
     query: string,
     config?: Callbacks | BaseCallbackConfig
   ): Promise<DocumentInterface[]> {
-    const parsedConfig = parseCallbackConfigArg(config);
+    const parsedConfig = ensureConfig(parseCallbackConfigArg(config));
     const callbackManager_ = await CallbackManager.configure(
       parsedConfig.callbacks,
       this.callbacks,

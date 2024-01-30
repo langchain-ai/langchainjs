@@ -1,0 +1,877 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`can initialize createStructuredChatAgent 1`] = `
+{
+  "id": [
+    "langchain_core",
+    "runnables",
+    "RunnableSequence",
+  ],
+  "kwargs": {
+    "first": {
+      "id": [
+        "langchain_core",
+        "runnables",
+        "RunnableAssign",
+      ],
+      "kwargs": {
+        "mapper": {
+          "id": [
+            "langchain_core",
+            "runnables",
+            "RunnableMap",
+          ],
+          "kwargs": {
+            "steps": {
+              "agent_scratchpad": {
+                "id": [
+                  "langchain_core",
+                  "runnables",
+                  "RunnableLambda",
+                ],
+                "lc": 1,
+                "type": "not_implemented",
+              },
+            },
+          },
+          "lc": 1,
+          "type": "constructor",
+        },
+      },
+      "lc": 1,
+      "type": "constructor",
+    },
+    "last": {
+      "id": [
+        "langchain",
+        "agents",
+        "structured_chat",
+        "StructuredChatOutputParserWithRetries",
+      ],
+      "lc": 1,
+      "type": "not_implemented",
+    },
+    "middle": [
+      {
+        "id": [
+          "langchain_core",
+          "prompts",
+          "chat",
+          "ChatPromptTemplate",
+        ],
+        "kwargs": {
+          "input_variables": [
+            "input",
+            "agent_scratchpad",
+          ],
+          "messages": [
+            {
+              "id": [
+                "langchain_core",
+                "prompts",
+                "chat",
+                "SystemMessagePromptTemplate",
+              ],
+              "kwargs": {
+                "prompt": {
+                  "id": [
+                    "langchain_core",
+                    "prompts",
+                    "prompt",
+                    "PromptTemplate",
+                  ],
+                  "kwargs": {
+                    "input_variables": [
+                      "tools",
+                      "tool_names",
+                    ],
+                    "partial_variables": undefined,
+                    "template": "{tools} {tool_names}",
+                    "template_format": "f-string",
+                  },
+                  "lc": 1,
+                  "type": "constructor",
+                },
+              },
+              "lc": 1,
+              "type": "constructor",
+            },
+            {
+              "id": [
+                "langchain_core",
+                "prompts",
+                "chat",
+                "HumanMessagePromptTemplate",
+              ],
+              "kwargs": {
+                "prompt": {
+                  "id": [
+                    "langchain_core",
+                    "prompts",
+                    "prompt",
+                    "PromptTemplate",
+                  ],
+                  "kwargs": {
+                    "input_variables": [
+                      "input",
+                      "agent_scratchpad",
+                    ],
+                    "partial_variables": undefined,
+                    "template": "{input} {agent_scratchpad}",
+                    "template_format": "f-string",
+                  },
+                  "lc": 1,
+                  "type": "constructor",
+                },
+              },
+              "lc": 1,
+              "type": "constructor",
+            },
+          ],
+          "partial_variables": undefined,
+        },
+        "lc": 1,
+        "type": "constructor",
+      },
+      {
+        "id": [
+          "langchain_core",
+          "runnables",
+          "RunnableBinding",
+        ],
+        "kwargs": {
+          "bound": {
+            "id": [
+              "langchain",
+              "llms",
+              "fake",
+              "FakeLLM",
+            ],
+            "lc": 1,
+            "type": "not_implemented",
+          },
+          "config": {},
+          "kwargs": {
+            "stop": [
+              "Observation",
+            ],
+          },
+        },
+        "lc": 1,
+        "type": "constructor",
+      },
+    ],
+    "name": undefined,
+  },
+  "lc": 1,
+  "type": "constructor",
+}
+`;
+
+exports[`createOpenAIFunctionsAgent works 1`] = `
+{
+  "id": [
+    "langchain_core",
+    "runnables",
+    "RunnableSequence",
+  ],
+  "kwargs": {
+    "first": {
+      "id": [
+        "langchain_core",
+        "runnables",
+        "RunnableAssign",
+      ],
+      "kwargs": {
+        "mapper": {
+          "id": [
+            "langchain_core",
+            "runnables",
+            "RunnableMap",
+          ],
+          "kwargs": {
+            "steps": {
+              "agent_scratchpad": {
+                "id": [
+                  "langchain_core",
+                  "runnables",
+                  "RunnableLambda",
+                ],
+                "lc": 1,
+                "type": "not_implemented",
+              },
+            },
+          },
+          "lc": 1,
+          "type": "constructor",
+        },
+      },
+      "lc": 1,
+      "type": "constructor",
+    },
+    "last": {
+      "id": [
+        "langchain",
+        "agents",
+        "openai",
+        "OpenAIFunctionsAgentOutputParser",
+      ],
+      "lc": 1,
+      "type": "not_implemented",
+    },
+    "middle": [
+      {
+        "id": [
+          "langchain_core",
+          "prompts",
+          "chat",
+          "ChatPromptTemplate",
+        ],
+        "kwargs": {
+          "input_variables": [
+            "tools",
+            "tool_names",
+            "input",
+            "agent_scratchpad",
+          ],
+          "messages": [
+            {
+              "id": [
+                "langchain_core",
+                "prompts",
+                "chat",
+                "SystemMessagePromptTemplate",
+              ],
+              "kwargs": {
+                "prompt": {
+                  "id": [
+                    "langchain_core",
+                    "prompts",
+                    "prompt",
+                    "PromptTemplate",
+                  ],
+                  "kwargs": {
+                    "input_variables": [
+                      "tools",
+                      "tool_names",
+                    ],
+                    "partial_variables": undefined,
+                    "template": "{tools} {tool_names}",
+                    "template_format": "f-string",
+                  },
+                  "lc": 1,
+                  "type": "constructor",
+                },
+              },
+              "lc": 1,
+              "type": "constructor",
+            },
+            {
+              "id": [
+                "langchain_core",
+                "prompts",
+                "chat",
+                "HumanMessagePromptTemplate",
+              ],
+              "kwargs": {
+                "prompt": {
+                  "id": [
+                    "langchain_core",
+                    "prompts",
+                    "prompt",
+                    "PromptTemplate",
+                  ],
+                  "kwargs": {
+                    "input_variables": [
+                      "input",
+                      "agent_scratchpad",
+                    ],
+                    "partial_variables": undefined,
+                    "template": "{input} {agent_scratchpad}",
+                    "template_format": "f-string",
+                  },
+                  "lc": 1,
+                  "type": "constructor",
+                },
+              },
+              "lc": 1,
+              "type": "constructor",
+            },
+          ],
+          "partial_variables": undefined,
+        },
+        "lc": 1,
+        "type": "constructor",
+      },
+      {
+        "id": [
+          "langchain_core",
+          "runnables",
+          "RunnableBinding",
+        ],
+        "kwargs": {
+          "bound": {
+            "id": [
+              "langchain",
+              "chat_models",
+              "fake",
+              "FakeChatModel",
+            ],
+            "lc": 1,
+            "type": "not_implemented",
+          },
+          "config": {},
+          "kwargs": {
+            "functions": [
+              {
+                "description": "Useful for getting the result of a math expression. The input to this tool should be a valid mathematical expression that could be executed by a simple calculator.",
+                "name": "calculator",
+                "parameters": {
+                  "$schema": "http://json-schema.org/draft-07/schema#",
+                  "additionalProperties": false,
+                  "properties": {
+                    "input": {
+                      "type": "string",
+                    },
+                  },
+                  "type": "object",
+                },
+              },
+            ],
+          },
+        },
+        "lc": 1,
+        "type": "constructor",
+      },
+    ],
+    "name": undefined,
+  },
+  "lc": 1,
+  "type": "constructor",
+}
+`;
+
+exports[`createOpenAIToolsAgent works 1`] = `
+{
+  "id": [
+    "langchain_core",
+    "runnables",
+    "RunnableSequence",
+  ],
+  "kwargs": {
+    "first": {
+      "id": [
+        "langchain_core",
+        "runnables",
+        "RunnableAssign",
+      ],
+      "kwargs": {
+        "mapper": {
+          "id": [
+            "langchain_core",
+            "runnables",
+            "RunnableMap",
+          ],
+          "kwargs": {
+            "steps": {
+              "agent_scratchpad": {
+                "id": [
+                  "langchain_core",
+                  "runnables",
+                  "RunnableLambda",
+                ],
+                "lc": 1,
+                "type": "not_implemented",
+              },
+            },
+          },
+          "lc": 1,
+          "type": "constructor",
+        },
+      },
+      "lc": 1,
+      "type": "constructor",
+    },
+    "last": {
+      "id": [
+        "langchain",
+        "agents",
+        "openai",
+        "OpenAIToolsAgentOutputParser",
+      ],
+      "lc": 1,
+      "type": "not_implemented",
+    },
+    "middle": [
+      {
+        "id": [
+          "langchain_core",
+          "prompts",
+          "chat",
+          "ChatPromptTemplate",
+        ],
+        "kwargs": {
+          "input_variables": [
+            "tools",
+            "tool_names",
+            "input",
+            "agent_scratchpad",
+          ],
+          "messages": [
+            {
+              "id": [
+                "langchain_core",
+                "prompts",
+                "chat",
+                "SystemMessagePromptTemplate",
+              ],
+              "kwargs": {
+                "prompt": {
+                  "id": [
+                    "langchain_core",
+                    "prompts",
+                    "prompt",
+                    "PromptTemplate",
+                  ],
+                  "kwargs": {
+                    "input_variables": [
+                      "tools",
+                      "tool_names",
+                    ],
+                    "partial_variables": undefined,
+                    "template": "{tools} {tool_names}",
+                    "template_format": "f-string",
+                  },
+                  "lc": 1,
+                  "type": "constructor",
+                },
+              },
+              "lc": 1,
+              "type": "constructor",
+            },
+            {
+              "id": [
+                "langchain_core",
+                "prompts",
+                "chat",
+                "HumanMessagePromptTemplate",
+              ],
+              "kwargs": {
+                "prompt": {
+                  "id": [
+                    "langchain_core",
+                    "prompts",
+                    "prompt",
+                    "PromptTemplate",
+                  ],
+                  "kwargs": {
+                    "input_variables": [
+                      "input",
+                      "agent_scratchpad",
+                    ],
+                    "partial_variables": undefined,
+                    "template": "{input} {agent_scratchpad}",
+                    "template_format": "f-string",
+                  },
+                  "lc": 1,
+                  "type": "constructor",
+                },
+              },
+              "lc": 1,
+              "type": "constructor",
+            },
+          ],
+          "partial_variables": undefined,
+        },
+        "lc": 1,
+        "type": "constructor",
+      },
+      {
+        "id": [
+          "langchain_core",
+          "runnables",
+          "RunnableBinding",
+        ],
+        "kwargs": {
+          "bound": {
+            "id": [
+              "langchain",
+              "chat_models",
+              "fake",
+              "FakeChatModel",
+            ],
+            "lc": 1,
+            "type": "not_implemented",
+          },
+          "config": {},
+          "kwargs": {
+            "tools": [
+              {
+                "function": {
+                  "description": "Useful for getting the result of a math expression. The input to this tool should be a valid mathematical expression that could be executed by a simple calculator.",
+                  "name": "calculator",
+                  "parameters": {
+                    "$schema": "http://json-schema.org/draft-07/schema#",
+                    "additionalProperties": false,
+                    "properties": {
+                      "input": {
+                        "type": "string",
+                      },
+                    },
+                    "type": "object",
+                  },
+                },
+                "type": "function",
+              },
+            ],
+          },
+        },
+        "lc": 1,
+        "type": "constructor",
+      },
+    ],
+    "name": undefined,
+  },
+  "lc": 1,
+  "type": "constructor",
+}
+`;
+
+exports[`createReactAgent works 1`] = `
+{
+  "id": [
+    "langchain_core",
+    "runnables",
+    "RunnableSequence",
+  ],
+  "kwargs": {
+    "first": {
+      "id": [
+        "langchain_core",
+        "runnables",
+        "RunnableAssign",
+      ],
+      "kwargs": {
+        "mapper": {
+          "id": [
+            "langchain_core",
+            "runnables",
+            "RunnableMap",
+          ],
+          "kwargs": {
+            "steps": {
+              "agent_scratchpad": {
+                "id": [
+                  "langchain_core",
+                  "runnables",
+                  "RunnableLambda",
+                ],
+                "lc": 1,
+                "type": "not_implemented",
+              },
+            },
+          },
+          "lc": 1,
+          "type": "constructor",
+        },
+      },
+      "lc": 1,
+      "type": "constructor",
+    },
+    "last": {
+      "id": [
+        "langchain",
+        "agents",
+        "react",
+        "ReActSingleInputOutputParser",
+      ],
+      "lc": 1,
+      "type": "not_implemented",
+    },
+    "middle": [
+      {
+        "id": [
+          "langchain_core",
+          "prompts",
+          "chat",
+          "ChatPromptTemplate",
+        ],
+        "kwargs": {
+          "input_variables": [
+            "input",
+            "agent_scratchpad",
+          ],
+          "messages": [
+            {
+              "id": [
+                "langchain_core",
+                "prompts",
+                "chat",
+                "SystemMessagePromptTemplate",
+              ],
+              "kwargs": {
+                "prompt": {
+                  "id": [
+                    "langchain_core",
+                    "prompts",
+                    "prompt",
+                    "PromptTemplate",
+                  ],
+                  "kwargs": {
+                    "input_variables": [
+                      "tools",
+                      "tool_names",
+                    ],
+                    "partial_variables": undefined,
+                    "template": "{tools} {tool_names}",
+                    "template_format": "f-string",
+                  },
+                  "lc": 1,
+                  "type": "constructor",
+                },
+              },
+              "lc": 1,
+              "type": "constructor",
+            },
+            {
+              "id": [
+                "langchain_core",
+                "prompts",
+                "chat",
+                "HumanMessagePromptTemplate",
+              ],
+              "kwargs": {
+                "prompt": {
+                  "id": [
+                    "langchain_core",
+                    "prompts",
+                    "prompt",
+                    "PromptTemplate",
+                  ],
+                  "kwargs": {
+                    "input_variables": [
+                      "input",
+                      "agent_scratchpad",
+                    ],
+                    "partial_variables": undefined,
+                    "template": "{input} {agent_scratchpad}",
+                    "template_format": "f-string",
+                  },
+                  "lc": 1,
+                  "type": "constructor",
+                },
+              },
+              "lc": 1,
+              "type": "constructor",
+            },
+          ],
+          "partial_variables": undefined,
+        },
+        "lc": 1,
+        "type": "constructor",
+      },
+      {
+        "id": [
+          "langchain_core",
+          "runnables",
+          "RunnableBinding",
+        ],
+        "kwargs": {
+          "bound": {
+            "id": [
+              "langchain",
+              "llms",
+              "fake",
+              "FakeLLM",
+            ],
+            "lc": 1,
+            "type": "not_implemented",
+          },
+          "config": {},
+          "kwargs": {
+            "stop": [
+              "
+Observation:",
+            ],
+          },
+        },
+        "lc": 1,
+        "type": "constructor",
+      },
+    ],
+    "name": undefined,
+  },
+  "lc": 1,
+  "type": "constructor",
+}
+`;
+
+exports[`createXmlAgent works 1`] = `
+{
+  "id": [
+    "langchain_core",
+    "runnables",
+    "RunnableSequence",
+  ],
+  "kwargs": {
+    "first": {
+      "id": [
+        "langchain_core",
+        "runnables",
+        "RunnableAssign",
+      ],
+      "kwargs": {
+        "mapper": {
+          "id": [
+            "langchain_core",
+            "runnables",
+            "RunnableMap",
+          ],
+          "kwargs": {
+            "steps": {
+              "agent_scratchpad": {
+                "id": [
+                  "langchain_core",
+                  "runnables",
+                  "RunnableLambda",
+                ],
+                "lc": 1,
+                "type": "not_implemented",
+              },
+            },
+          },
+          "lc": 1,
+          "type": "constructor",
+        },
+      },
+      "lc": 1,
+      "type": "constructor",
+    },
+    "last": {
+      "id": [
+        "langchain",
+        "agents",
+        "xml",
+        "XMLAgentOutputParser",
+      ],
+      "lc": 1,
+      "type": "not_implemented",
+    },
+    "middle": [
+      {
+        "id": [
+          "langchain_core",
+          "prompts",
+          "chat",
+          "ChatPromptTemplate",
+        ],
+        "kwargs": {
+          "input_variables": [
+            "tool_names",
+            "input",
+            "agent_scratchpad",
+          ],
+          "messages": [
+            {
+              "id": [
+                "langchain_core",
+                "prompts",
+                "chat",
+                "SystemMessagePromptTemplate",
+              ],
+              "kwargs": {
+                "prompt": {
+                  "id": [
+                    "langchain_core",
+                    "prompts",
+                    "prompt",
+                    "PromptTemplate",
+                  ],
+                  "kwargs": {
+                    "input_variables": [
+                      "tools",
+                      "tool_names",
+                    ],
+                    "partial_variables": undefined,
+                    "template": "{tools} {tool_names}",
+                    "template_format": "f-string",
+                  },
+                  "lc": 1,
+                  "type": "constructor",
+                },
+              },
+              "lc": 1,
+              "type": "constructor",
+            },
+            {
+              "id": [
+                "langchain_core",
+                "prompts",
+                "chat",
+                "HumanMessagePromptTemplate",
+              ],
+              "kwargs": {
+                "prompt": {
+                  "id": [
+                    "langchain_core",
+                    "prompts",
+                    "prompt",
+                    "PromptTemplate",
+                  ],
+                  "kwargs": {
+                    "input_variables": [
+                      "input",
+                      "agent_scratchpad",
+                    ],
+                    "partial_variables": undefined,
+                    "template": "{input} {agent_scratchpad}",
+                    "template_format": "f-string",
+                  },
+                  "lc": 1,
+                  "type": "constructor",
+                },
+              },
+              "lc": 1,
+              "type": "constructor",
+            },
+          ],
+          "partial_variables": undefined,
+        },
+        "lc": 1,
+        "type": "constructor",
+      },
+      {
+        "id": [
+          "langchain_core",
+          "runnables",
+          "RunnableBinding",
+        ],
+        "kwargs": {
+          "bound": {
+            "id": [
+              "langchain",
+              "llms",
+              "fake",
+              "FakeLLM",
+            ],
+            "lc": 1,
+            "type": "not_implemented",
+          },
+          "config": {},
+          "kwargs": {
+            "stop": [
+              "</tool_input>",
+              "</final_answer>",
+            ],
+          },
+        },
+        "lc": 1,
+        "type": "constructor",
+      },
+    ],
+    "name": undefined,
+  },
+  "lc": 1,
+  "type": "constructor",
+}
+`;

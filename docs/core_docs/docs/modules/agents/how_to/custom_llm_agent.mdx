@@ -1,3 +1,7 @@
+---
+sidebar_class_name: hidden
+---
+
 import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/agents/custom_llm_agent.ts";
 import RunnableExample from "@examples/agents/custom_llm_agent_runnable.ts";
@@ -25,6 +29,14 @@ The LLMAgent is used in an AgentExecutor. This AgentExecutor can largely be thou
 `AgentFinish` is a response that contains the final message to be sent back to the user. This should be used to end an agent run.
 
 # With LCEL
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
 
 <CodeBlock language="typescript">{RunnableExample}</CodeBlock>
 

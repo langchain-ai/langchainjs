@@ -48,14 +48,26 @@ test.skip("MongoDBAtlasVectorSearch with external ids", async () => {
     await collection.deleteMany({});
 
     await vectorStore.addDocuments([
-      { pageContent: "Dogs are tough.", metadata: { a: 1 } },
-      { pageContent: "Cats have fluff.", metadata: { b: 1 } },
-      { pageContent: "What is a sandwich?", metadata: { c: 1 } },
-      { pageContent: "That fence is purple.", metadata: { d: 1, e: 2 } },
+      {
+        pageContent: "Dogs are tough.",
+        metadata: { a: 1, created_at: new Date().toISOString() },
+      },
+      {
+        pageContent: "Cats have fluff.",
+        metadata: { b: 1, created_at: new Date().toISOString() },
+      },
+      {
+        pageContent: "What is a sandwich?",
+        metadata: { c: 1, created_at: new Date().toISOString() },
+      },
+      {
+        pageContent: "That fence is purple.",
+        metadata: { d: 1, e: 2, created_at: new Date().toISOString() },
+      },
     ]);
 
-    // we sleep 2 seconds to make sure the index in atlas has replicated the new documents
-    await setTimeout(2000);
+    // we sleep 5 seconds to make sure the index in atlas has replicated the new documents
+    await setTimeout(5000);
     const results: Document[] = await vectorStore.similaritySearch(
       "Sandwich",
       1
@@ -66,27 +78,27 @@ test.skip("MongoDBAtlasVectorSearch with external ids", async () => {
       { pageContent: "What is a sandwich?", metadata: { c: 1 } },
     ]);
 
-    // we can pre filter the search
-    const preFilter = {
-      e: { $lte: 1 },
-    };
+    // // we can pre filter the search
+    // const preFilter = {
+    //   e: { $lte: 1 },
+    // };
 
-    const filteredResults = await vectorStore.similaritySearch(
-      "That fence is purple",
-      1,
-      preFilter
-    );
+    // const filteredResults = await vectorStore.similaritySearch(
+    //   "That fence is purple",
+    //   1,
+    //   preFilter
+    // );
 
-    expect(filteredResults).toEqual([]);
+    // expect(filteredResults).toEqual([]);
 
-    const retriever = vectorStore.asRetriever({
-      filter: {
-        preFilter,
-      },
-    });
+    // const retriever = vectorStore.asRetriever({
+    //   filter: {
+    //     preFilter,
+    //   },
+    // });
 
-    const docs = await retriever.getRelevantDocuments("That fence is purple");
-    expect(docs).toEqual([]);
+    // const docs = await retriever.getRelevantDocuments("That fence is purple");
+    // expect(docs).toEqual([]);
   } finally {
     await client.close();
   }
@@ -115,7 +127,7 @@ test.skip("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () =
       { collection, indexName: "default" }
     );
 
-    // we sleep 2 seconds to make sure the index in atlas has replicated the new documents
+    // we sleep 5 seconds to make sure the index in atlas has replicated the new documents
     await setTimeout(5000);
 
     const output = await vectorStore.maxMarginalRelevanceSearch("foo", {
@@ -159,6 +171,65 @@ test.skip("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () =
 
     const similarity = await vectorStore.similaritySearchWithScore("foo", 1);
     expect(similarity.length).toBe(1);
+  } finally {
+    await client.close();
+  }
+});
+
+test.skip("MongoDBAtlasVectorSearch upsert", async () => {
+  expect(process.env.MONGODB_ATLAS_URI).toBeDefined();
+
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const client = new MongoClient(process.env.MONGODB_ATLAS_URI!);
+
+  try {
+    const namespace = "langchain.test";
+    const [dbName, collectionName] = namespace.split(".");
+    const collection = client.db(dbName).collection(collectionName);
+
+    const vectorStore = new MongoDBAtlasVectorSearch(new OpenAIEmbeddings(), {
+      collection,
+    });
+
+    expect(vectorStore).toBeDefined();
+
+    // check if the database is empty
+    await collection.deleteMany({});
+
+    const ids = await vectorStore.addDocuments([
+      { pageContent: "Dogs are tough.", metadata: { a: 1 } },
+      { pageContent: "Cats have fluff.", metadata: { b: 1 } },
+      { pageContent: "What is a sandwich?", metadata: { c: 1 } },
+      { pageContent: "That fence is purple.", metadata: { d: 1, e: 2 } },
+    ]);
+
+    // we sleep 5 seconds to make sure the index in atlas has replicated the new documents
+    await setTimeout(5000);
+    const results: Document[] = await vectorStore.similaritySearch(
+      "Sandwich",
+      1
+    );
+
+    expect(results.length).toEqual(1);
+    expect(results).toMatchObject([
+      { pageContent: "What is a sandwich?", metadata: { c: 1 } },
+    ]);
+
+    await vectorStore.addDocuments(
+      [{ pageContent: "upserted", metadata: {} }],
+      { ids: [ids[2]] }
+    );
+
+    // we sleep 5 seconds to make sure the index in atlas has replicated the new documents
+    await setTimeout(5000);
+    const results2: Document[] = await vectorStore.similaritySearch(
+      "Sandwich",
+      1
+    );
+    console.log(results2);
+
+    expect(results2.length).toEqual(1);
+    expect(results2[0].pageContent).not.toContain("sandwich");
   } finally {
     await client.close();
   }

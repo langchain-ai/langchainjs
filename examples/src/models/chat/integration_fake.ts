@@ -1,6 +1,6 @@
-import { FakeListChatModel } from "langchain/chat_models/fake";
-import { HumanMessage } from "langchain/schema";
-import { StringOutputParser } from "langchain/schema/output_parser";
+import { FakeListChatModel } from "@langchain/core/utils/testing";
+import { HumanMessage } from "@langchain/core/messages";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 
 /**
  * The FakeListChatModel can be used to simulate ordered predefined responses.

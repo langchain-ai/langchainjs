@@ -1,5 +1,5 @@
 import type { CheerioAPI } from "cheerio";
-import { Document } from "../../document.js";
+import { Document } from "@langchain/core/documents";
 import { CheerioWebBaseLoader } from "./cheerio.js";
 
 /**

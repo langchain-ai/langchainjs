@@ -20,8 +20,16 @@ This quick start will demonstrate how an Agent could use a Lambda function to se
 - If you have not run [`aws configure`](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) via the AWS CLI, the `region`, `accessKeyId`, and `secretAccessKey` must be provided to the AWSLambda constructor.
 - The IAM role corresponding to those credentials must have permission to invoke the lambda function.
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 ```typescript
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import { SerpAPI } from "langchain/tools";
 import { AWSLambda } from "langchain/tools/aws_lambda";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";

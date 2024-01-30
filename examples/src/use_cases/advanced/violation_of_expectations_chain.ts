@@ -1,8 +1,7 @@
 import { ViolationOfExpectationsChain } from "langchain/experimental/chains/violation_of_expectations";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { AIMessage, HumanMessage } from "langchain/schema";
-import { HNSWLib } from "langchain/vectorstores/hnswlib";
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
+import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
+import { AIMessage, HumanMessage } from "@langchain/core/messages";
 
 // Short GPT generated conversation between a human and an AI.
 const dummyMessages = [

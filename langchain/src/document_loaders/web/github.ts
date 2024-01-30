@@ -1,14 +1,17 @@
 import ignore, { Ignore } from "ignore";
 import binaryExtensions from "binary-extensions";
 
-import { Document } from "../../document.js";
+import { Document } from "@langchain/core/documents";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import {
+  AsyncCaller,
+  AsyncCallerParams,
+} from "@langchain/core/utils/async_caller";
 import { BaseDocumentLoader } from "../base.js";
 import { UnknownHandling } from "../fs/directory.js";
 import { extname } from "../../util/extname.js";
-import { getEnvironmentVariable } from "../../util/env.js";
-import { AsyncCaller, AsyncCallerParams } from "../../util/async_caller.js";
 
-const extensions = new Set(binaryExtensions);
+const extensions = /* #__PURE__ */ new Set(binaryExtensions);
 
 /**
  * A function that checks if a file path is a binary file based on its

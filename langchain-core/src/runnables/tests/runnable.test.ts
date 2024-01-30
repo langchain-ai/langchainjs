@@ -22,6 +22,7 @@ import {
 } from "../../utils/testing/index.js";
 import { RunnableSequence, RunnableLambda } from "../base.js";
 import { RouterRunnable } from "../router.js";
+import { RunnableConfig } from "../config.js";
 
 test("Test batch", async () => {
   const llm = new FakeLLM({});
@@ -40,6 +41,17 @@ test("Test stream", async () => {
   while (!done) {
     const chunk = await reader.read();
     done = chunk.done;
+  }
+});
+
+test("Test stream with an immediate thrown error", async () => {
+  const llm = new FakeStreamingLLM({
+    thrownErrorString: "testing",
+  });
+  try {
+    await llm.stream("Hi there!");
+  } catch (e: any) {
+    expect(e.message).toEqual("testing");
   }
 });
 
@@ -77,6 +89,40 @@ test("Stream the entire way through", async () => {
   }
   expect(chunks.length).toEqual("Hi there!".length);
   expect(chunks.join("")).toEqual("Hi there!");
+});
+
+test("Callback order with transform streaming", async () => {
+  const prompt = ChatPromptTemplate.fromTemplate(`{input}`);
+  const llm = new FakeStreamingLLM({});
+  const order: string[] = [];
+  const stream = await prompt
+    .pipe(llm)
+    .pipe(new StringOutputParser())
+    .stream(
+      { input: "Hi there!" },
+      {
+        callbacks: [
+          {
+            handleChainStart: (chain) =>
+              order.push(chain.id[chain.id.length - 1]),
+            handleLLMStart: (llm) => order.push(llm.id[llm.id.length - 1]),
+          },
+        ],
+      }
+    );
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+    console.log(chunk);
+  }
+  expect(order).toEqual([
+    "RunnableSequence",
+    "ChatPromptTemplate",
+    "FakeStreamingLLM",
+    "StrOutputParser",
+  ]);
+  expect(chunks.length).toEqual("Human: Hi there!".length);
+  expect(chunks.join("")).toEqual("Human: Hi there!");
 });
 
 test("Don't use intermediate streaming", async () => {
@@ -144,6 +190,18 @@ test("RunnableLambda that returns a runnable should invoke the runnable", async 
   });
   const result = await runnable.invoke({});
   expect(result).toEqual("testing");
+});
+
+test("RunnableLambda that returns a streaming runnable should stream output from the inner runnable", async () => {
+  const runnable = new RunnableLambda({
+    func: () => new FakeStreamingLLM({}),
+  });
+  const stream = await runnable.stream("hello");
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+  expect(chunks).toEqual(["h", "e", "l", "l", "o"]);
 });
 
 test("RunnableEach", async () => {
@@ -290,4 +348,36 @@ test("Create a runnable sequence with a static method with invalid output and ca
     const result = await runnable.invoke({ input: "Hello sequence!" });
     console.log(result);
   }).rejects.toThrow(OutputParserException);
+});
+
+test("RunnableSequence can pass config to every step in batched request", async () => {
+  let numSeen = 0;
+
+  const addOne = (x: number, options?: { config?: RunnableConfig }) => {
+    if (options?.config?.configurable?.isPresent === true) {
+      numSeen += 1;
+    }
+    return x + 1;
+  };
+  const addTwo = (x: number, options?: { config?: RunnableConfig }) => {
+    if (options?.config?.configurable?.isPresent === true) {
+      numSeen += 1;
+    }
+    return x + 2;
+  };
+  const addThree = (x: number, options?: { config?: RunnableConfig }) => {
+    if (options?.config?.configurable?.isPresent === true) {
+      numSeen += 1;
+    }
+    return x + 3;
+  };
+
+  const sequence = RunnableSequence.from([addOne, addTwo, addThree]);
+
+  await sequence.batch([1], {
+    configurable: {
+      isPresent: true,
+    },
+  });
+  expect(numSeen).toBe(3);
 });

@@ -1,5 +1,6 @@
 ---
 hide_table_of_contents: true
+sidebar_class_name: hidden
 ---
 
 import CodeBlock from "@theme/CodeBlock";
@@ -22,6 +23,14 @@ The below examples initialize the chain with a URL hosting an OpenAPI spec for b
 ### Query XKCD
 
 import SimpleExample from "@examples/chains/openai_functions_openapi_simple.ts";
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
 
 <CodeBlock language="typescript">{SimpleExample}</CodeBlock>
 
