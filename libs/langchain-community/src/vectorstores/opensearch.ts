@@ -36,7 +36,26 @@ export interface OpenSearchClientArgs {
  * Type alias for an object. It's used to define filters for OpenSearch
  * queries.
  */
-type OpenSearchFilter = object;
+type OpenSearchFilter = {
+  [key: string]: FilterTypeValue | string[] | string | null;
+};
+
+/**
+ * FilterTypeValue for OpenSearch queries.
+ */
+interface FilterTypeValue {
+  exists?: boolean;
+  fuzzy?: string;
+  ids?: string[];
+  prefix?: string;
+  gte?: number;
+  gt?: number;
+  lte?: number;
+  lt?: number;
+  regexp?: string;
+  terms_set?: Record<string, any>;
+  wildcard?: string;
+}
 
 /**
  * Class that provides a wrapper around the OpenSearch service for vector
@@ -284,24 +303,6 @@ export class OpenSearchVectorStore extends VectorStore {
     await this.client.indices.create({ index: this.indexName, body });
   }
 
-  interface FilterValue {
-    exists?: boolean;
-    fuzzy?: string;
-    ids?: string[];
-    prefix?: string;
-    gte?: number;
-    gt?: number;
-    lte?: number;
-    lt?: number;
-    regexp?: string;
-    terms_set?: Record<string, any>
-    wildcard?: string;
-  }
-
-  interface Filter {
-    [key: string]: FilterValue | string[] | string | null;
-  }
-
   /**
    * Builds metadata terms for OpenSearch queries.
    *
@@ -329,42 +330,44 @@ export class OpenSearchVectorStore extends VectorStore {
    * const queryTerms = buildMetadataTerms(filter);
    * // queryTerms would be an array of OpenSearch query objects.
    */
-  buildMetadataTerms(filter: Filter | null): Array<Record<string, any>> {
-    if (filter == null) return {};
+  buildMetadataTerms(filter: OpenSearchFilter | undefined): object {
+    if (!filter) return {};
     const must = [];
     const must_not = [];
     for (const [key, value] of Object.entries(filter)) {
       const metadataKey = `metadata.${key}`;
-      if (typeof value === "object") {
-        if ("exists" in value) {
-          if (value.exists) {
-            must.push({ exists: { field: metadataKey } });
-          } else {
-            must_not.push({ exists: { field: metadataKey } });
+      if (value) {
+        if (typeof value === "object") {
+          if ("exists" in value) {
+            if (value.exists) {
+              must.push({ exists: { field: metadataKey } });
+            } else {
+              must_not.push({ exists: { field: metadataKey } });
+            }
+          } else if ("fuzzy" in value) {
+            must.push({ fuzzy: { [metadataKey]: value.fuzzy } });
+          } else if ("ids" in value) {
+            must.push({ ids: { values: value.ids } });
+          } else if ("prefix" in value) {
+            must.push({ prefix: { [metadataKey]: value.prefix } });
+          } else if (
+            "gte" in value ||
+            "gt" in value ||
+            "lte" in value ||
+            "lt" in value
+          ) {
+            must.push({ range: { [metadataKey]: value } });
+          } else if ("regexp" in value) {
+            must.push({ regexp: { [metadataKey]: value.regexp } });
+          } else if ("terms_set" in value) {
+            must.push({ terms_set: { [metadataKey]: value.terms_set } });
+          } else if ("wildcard" in value) {
+            must.push({ wildcard: { [metadataKey]: value.wildcard } });
           }
-        } else if ("fuzzy" in value) {
-          must.push({ fuzzy: { [metadataKey]: value.fuzzy } });
-        } else if ("ids" in value) {
-          must.push({ ids: { values: value.ids } });
-        } else if ("prefix" in value) {
-          must.push({ prefix: { [metadataKey]: value.prefix } });
-        } else if (
-          "gte" in value ||
-          "gt" in value ||
-          "lte" in value ||
-          "lt" in value
-        ) {
-          must.push({ range: { [metadataKey]: value } });
-        } else if ("regexp" in value) {
-          must.push({ regexp: { [metadataKey]: value.regexp } });
-        } else if ("terms_set" in value) {
-          must.push({ terms_set: { [metadataKey]: value.terms_set } });
-        } else if ("wildcard" in value) {
-          must.push({ wildcard: { [metadataKey]: value.wildcard } });
+        } else {
+          const aggregatorKey = Array.isArray(value) ? "terms" : "term";
+          must.push({ [aggregatorKey]: { [metadataKey]: value } });
         }
-      } else {
-        const aggregatorKey = Array.isArray(value) ? "terms" : "term";
-        must.push({ [aggregatorKey]: { [metadataKey]: value } });
       }
     }
     return { must, must_not };
