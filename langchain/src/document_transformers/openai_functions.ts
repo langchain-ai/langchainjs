@@ -1,6 +1,8 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
-import type { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
+import {
+  zodToJsonSchema,
+  type JsonSchema7ObjectType,
+} from "zod-to-json-schema";
 
 import {
   Document,

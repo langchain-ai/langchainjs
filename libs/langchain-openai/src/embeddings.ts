@@ -19,6 +19,12 @@ export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
   modelName: string;
 
   /**
+   * The number of dimensions the resulting output embeddings should have.
+   * Only supported in `text-embedding-3` and later models.
+   */
+  dimensions?: number;
+
+  /**
    * Timeout to use when making requests to OpenAI.
    */
   timeout?: number;
@@ -62,6 +68,12 @@ export class OpenAIEmbeddings
 
   // TODO: Update to `false` on next minor release (see: https://github.com/langchain-ai/langchainjs/pull/3612)
   stripNewLines = true;
+
+  /**
+   * The number of dimensions the resulting output embeddings should have.
+   * Only supported in `text-embedding-3` and later models.
+   */
+  dimensions?: number;
 
   timeout?: number;
 
@@ -133,6 +145,7 @@ export class OpenAIEmbeddings
     this.stripNewLines =
       fieldsWithDefaults?.stripNewLines ?? this.stripNewLines;
     this.timeout = fieldsWithDefaults?.timeout;
+    this.dimensions = fieldsWithDefaults?.dimensions;
 
     this.azureOpenAIApiVersion = azureApiVersion;
     this.azureOpenAIApiKey = azureApiKey;
@@ -177,12 +190,16 @@ export class OpenAIEmbeddings
       this.batchSize
     );
 
-    const batchRequests = batches.map((batch) =>
-      this.embeddingWithRetry({
+    const batchRequests = batches.map((batch) => {
+      const params: OpenAIClient.EmbeddingCreateParams = {
         model: this.modelName,
         input: batch,
-      })
-    );
+      };
+      if (this.dimensions) {
+        params.dimensions = this.dimensions;
+      }
+      return this.embeddingWithRetry(params);
+    });
     const batchResponses = await Promise.all(batchRequests);
 
     const embeddings: number[][] = [];
@@ -203,10 +220,14 @@ export class OpenAIEmbeddings
    * @returns Promise that resolves to an embedding for the document.
    */
   async embedQuery(text: string): Promise<number[]> {
-    const { data } = await this.embeddingWithRetry({
+    const params: OpenAIClient.EmbeddingCreateParams = {
       model: this.modelName,
       input: this.stripNewLines ? text.replace(/\n/g, " ") : text,
-    });
+    };
+    if (this.dimensions) {
+      params.dimensions = this.dimensions;
+    }
+    const { data } = await this.embeddingWithRetry(params);
     return data[0].embedding;
   }
 

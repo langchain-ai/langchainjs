@@ -235,24 +235,28 @@ import { OpenAI } from "langchain/llms/openai";
 We call these subpaths "entrypoints". In general, you should create a new entrypoint if you are adding a new integration with a 3rd party library. If you're adding self-contained functionality without any external dependencies, you can add it to an existing entrypoint.
 
 In order to declare a new entrypoint that users can import from, you
-should edit the `langchain/scripts/create-entrypoints.js` or `libs/langchain-community/scripts/create-entrypoints.js` script. To add an
+should edit the `langchain/langchain.config.js` or `libs/langchain-community/langchain.config.js` file. To add an
 entrypoint `tools` that imports from `tools/index.ts` you'd add
-the following to the `entrypoints` variable:
+the following to the `entrypoints` key inside the `config` variable:
 
 ```typescript
-const entrypoints = {
+// ...
+entrypoints: {
   // ...
   tools: "tools/index",
-};
+},
+// ...
 ```
 
-If you're adding a new integration which requires installing a third party depencency, you must add the entrypoint to the `requiresOptionalDependency` array, also located inside `langchain/scripts/create-entrypoints.js` or `libs/langchain-community/scripts/create-entrypoints.js`.
+If you're adding a new integration which requires installing a third party dependency, you must add the entrypoint to the `requiresOptionalDependency` array, also located inside `langchain/langchain.config.js` or `libs/langchain-community/langchain.config.js`.
 
 ```typescript
-const requiresOptionalDependency = [
+// ...
+requiresOptionalDependency: [
   // ...
   "tools/index",
-];
+],
+// ...
 ```
 
 This will make sure the entrypoint is included in the published package,

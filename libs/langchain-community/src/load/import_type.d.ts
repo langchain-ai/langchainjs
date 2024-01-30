@@ -241,6 +241,9 @@ export interface OptionalImportMap {
   "@langchain/community/retrievers/amazon_kendra"?:
     | typeof import("../retrievers/amazon_kendra.js")
     | Promise<typeof import("../retrievers/amazon_kendra.js")>;
+  "@langchain/community/retrievers/amazon_knowledge_base"?:
+    | typeof import("../retrievers/amazon_knowledge_base.js")
+    | Promise<typeof import("../retrievers/amazon_knowledge_base.js")>;
   "@langchain/community/retrievers/metal"?:
     | typeof import("../retrievers/metal.js")
     | Promise<typeof import("../retrievers/metal.js")>;
@@ -256,6 +259,9 @@ export interface OptionalImportMap {
   "@langchain/community/graphs/neo4j_graph"?:
     | typeof import("../graphs/neo4j_graph.js")
     | Promise<typeof import("../graphs/neo4j_graph.js")>;
+  "@langchain/community/graphs/memgraph_graph"?:
+    | typeof import("../graphs/memgraph_graph.js")
+    | Promise<typeof import("../graphs/memgraph_graph.js")>;
   "@langchain/community/document_transformers/html_to_text"?:
     | typeof import("../document_transformers/html_to_text.js")
     | Promise<typeof import("../document_transformers/html_to_text.js")>;
@@ -319,13 +325,19 @@ export interface OptionalImportMap {
   "@langchain/community/util/convex"?:
     | typeof import("../utils/convex.js")
     | Promise<typeof import("../utils/convex.js")>;
+  "@langchain/community/indexes/postgres"?:
+    | typeof import("../indexes/postgres.js")
+    | Promise<typeof import("../indexes/postgres.js")>;
 }
 
 export interface SecretMap {
+  ALIBABA_API_KEY?: string;
   AWS_ACCESS_KEY_ID?: string;
   AWS_SECRETE_ACCESS_KEY?: string;
   AWS_SECRET_ACCESS_KEY?: string;
   AWS_SESSION_TOKEN?: string;
+  AZURE_AISEARCH_ENDPOINT?: string;
+  AZURE_AISEARCH_KEY?: string;
   AZURE_COSMOSDB_CONNECTION_STRING?: string;
   BAIDU_API_KEY?: string;
   BAIDU_SECRET_KEY?: string;
@@ -362,6 +374,7 @@ export interface SecretMap {
   REMOTE_RETRIEVER_AUTH_BEARER?: string;
   REPLICATE_API_TOKEN?: string;
   SEARXNG_API_BASE?: string;
+  TURBOPUFFER_API_KEY?: string;
   UPSTASH_REDIS_REST_TOKEN?: string;
   UPSTASH_REDIS_REST_URL?: string;
   VECTARA_API_KEY?: string;
