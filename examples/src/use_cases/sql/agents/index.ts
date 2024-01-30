@@ -33,8 +33,7 @@ You MUST double check your query before executing it. If you get an error while 
 DO NOT make any DML statements (INSERT, UPDATE, DELETE, DROP etc.) to the database.
 
 If the question does not seem related to the database, just return "I don't know" as the answer.`;
-const SQL_SUFFIX =
-  `Begin!
+const SQL_SUFFIX = `Begin!
 
 Question: {input}
 Thought: I should look at the tables in the database to see what I can query.

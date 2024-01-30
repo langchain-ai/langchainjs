@@ -251,11 +251,10 @@ const strip = (text: string) => {
 const difference = (setA: Set<string>, setB: Set<string>) =>
   new Set([...setA].filter((x) => !setB.has(x)));
 
-
 /**
  * Create a SQL query chain that can create SQL queries for the given database.
  * Returns a Runnable.
- * 
+ *
  * @param {BaseLanguageModel} llm The language model to use in the chain.
  * @param {SqlDatabase} db The database to use in the chain.
  * @param {BasePromptTemplate | undefined} prompt The prompt to use in the chain.
