@@ -72,6 +72,8 @@ Crucially, we also need to define a method that takes a `sessionId` string and b
 In this case we'll also want to specify `inputMessagesKey` (the key to be treated as the latest input message) and `historyMessagesKey` (the key to add historical messages to).
 
 ```typescript
+import { RunnableWithMessageHistory } from "@langchain/core/runnables";
+
 const chainWithHistory = new RunnableWithMessageHistory({
   runnable: chain,
   getMessageHistory: (sessionId) =>

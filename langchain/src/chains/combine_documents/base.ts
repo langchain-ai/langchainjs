@@ -25,7 +25,10 @@ export async function formatDocuments({
     documents.map((document) =>
       documentPrompt
         .withConfig({ runName: "document_formatter" })
-        .invoke({ page_content: document.pageContent }, config)
+        .invoke(
+          { ...document.metadata, page_content: document.pageContent },
+          config
+        )
     )
   );
   return formattedDocs.join(documentSeparator);

@@ -38,6 +38,7 @@ export function convertAuthorToRole(author: string) {
      *  we will convert them to human messages and merge with following
      * */
     case "ai":
+    case "model": // getMessageAuthor returns message.name. code ex.: return message.name ?? type;
       return "model";
     case "system":
     case "human":
@@ -170,13 +171,13 @@ export function mapGenerateContentResultToChatResult(
 
   const [candidate] = response.candidates;
   const { content, ...generationInfo } = candidate;
-  const text = content.parts[0]?.text ?? "";
+  const text = content?.parts[0]?.text ?? "";
 
   const generation: ChatGeneration = {
     text,
     message: new AIMessage({
       content: text,
-      name: content === null ? undefined : content.role,
+      name: !content ? undefined : content.role,
       additional_kwargs: generationInfo,
     }),
     generationInfo,
@@ -195,13 +196,13 @@ export function convertResponseContentToChatGenerationChunk(
   }
   const [candidate] = response.candidates;
   const { content, ...generationInfo } = candidate;
-  const text = content.parts[0]?.text ?? "";
+  const text = content?.parts[0]?.text ?? "";
 
   return new ChatGenerationChunk({
     text,
     message: new AIMessageChunk({
       content: text,
-      name: content === null ? undefined : content.role,
+      name: !content ? undefined : content.role,
       // Each chunk can have unique "generationInfo", and merging strategy is unclear,
       // so leave blank for now.
       additional_kwargs: {},

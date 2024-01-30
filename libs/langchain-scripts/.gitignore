@@ -1,6 +1,9 @@
 index.cjs
 index.js
 index.d.ts
+build.cjs
+build.js
+build.d.ts
 node_modules
 dist
 .yarn
