@@ -3,7 +3,7 @@ import { zodToJsonSchema, JsonSchema7Type } from "zod-to-json-schema";
 
 import type { BaseOutputParser } from "@langchain/core/output_parsers";
 import type { BasePromptTemplate } from "@langchain/core/prompts";
-import type { Runnable } from "@langchain/core/runnables";
+import type { Runnable, RunnableInterface } from "@langchain/core/runnables";
 import type {
   BaseFunctionCallOptions,
   BaseLanguageModelInput,
@@ -23,7 +23,7 @@ export type CreateOpenAIFnRunnableConfig<
 > = {
   functions: FunctionDefinition[];
   /** Language model to use, assumed to support the OpenAI function-calling API. */
-  llm: Runnable<BaseLanguageModelInput, BaseMessage, BaseFunctionCallOptions>;
+  llm: RunnableInterface<BaseLanguageModelInput, BaseMessage, BaseFunctionCallOptions>;
   /** BasePromptTemplate to pass to the model. */
   prompt: BasePromptTemplate<InputValues<Extract<keyof RunInput, string>>>;
   /**
@@ -139,7 +139,7 @@ export type CreateStructuredOutputRunnableConfig<
   /**
    * Language model to use, assumed to support the OpenAI function-calling API.
    */
-  llm: Runnable<BaseLanguageModelInput, BaseMessage, BaseFunctionCallOptions>;
+  llm: RunnableInterface<BaseLanguageModelInput, BaseMessage, BaseFunctionCallOptions>;
   /** BasePromptTemplate to pass to the model. */
   prompt: BasePromptTemplate<InputValues<Extract<keyof RunInput, string>>>;
   /**
