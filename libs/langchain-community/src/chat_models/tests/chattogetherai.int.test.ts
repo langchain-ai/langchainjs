@@ -79,7 +79,7 @@ describe("ChatTogetherAI", () => {
     expect(responseA.generations[0][0].text.length).toBeGreaterThan(10);
   });
 
-  test.only("JSON mode", async () => {
+  test("JSON mode", async () => {
     const responseSchema = {
       type: "object",
       properties: {
@@ -110,7 +110,7 @@ describe("ChatTogetherAI", () => {
     });
   });
 
-  test.only("Tool calls", async () => {
+  test("Tool calls", async () => {
     class CalculatorTool extends StructuredTool {
       name = "Calculator";
 
