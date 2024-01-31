@@ -76,7 +76,7 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
     username,
     accessToken,
     limit = 25,
-    expand = 'body.storage',
+    expand = "body.storage",
     personalAccessToken,
   }: ConfluencePagesLoaderParams) {
     super();
