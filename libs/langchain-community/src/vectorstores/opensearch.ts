@@ -37,7 +37,7 @@ export interface OpenSearchClientArgs {
  * queries.
  */
 type OpenSearchFilter = {
-  [key: string]: FilterTypeValue | string[] | string | null;
+  [key: string]: FilterTypeValue | (string | number)[] | string | number;
 };
 
 /**
@@ -337,7 +337,7 @@ export class OpenSearchVectorStore extends VectorStore {
     for (const [key, value] of Object.entries(filter)) {
       const metadataKey = `metadata.${key}`;
       if (value) {
-        if (typeof value === "object") {
+        if (typeof value === "object" && !Array.isArray(value)) {
           if ("exists" in value) {
             if (value.exists) {
               must.push({ exists: { field: metadataKey } });
