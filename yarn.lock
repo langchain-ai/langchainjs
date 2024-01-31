@@ -8872,7 +8872,7 @@ __metadata:
     "@aws-sdk/credential-provider-node": ^3.388.0
     "@azure/search-documents": ^12.0.0
     "@clickhouse/client": ^0.2.5
-    "@cloudflare/ai": ^1.0.12
+    "@cloudflare/ai": "*"
     "@datastax/astra-db-ts": ^0.1.4
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": "*"
@@ -8884,7 +8884,7 @@ __metadata:
     "@huggingface/inference": ^2.6.4
     "@mozilla/readability": "*"
     "@opensearch-project/opensearch": "*"
-    "@pinecone-database/pinecone": ^1.1.0
+    "@pinecone-database/pinecone": "*"
     "@planetscale/database": ^1.8.0
     "@qdrant/js-client-rest": ^1.2.0
     "@raycast/api": ^1.55.2
@@ -8910,7 +8910,7 @@ __metadata:
     closevector-common: 0.1.0-alpha.1
     closevector-node: 0.1.0-alpha.10
     closevector-web: 0.1.0-alpha.16
-    cohere-ai: ">=6.0.0"
+    cohere-ai: "*"
     convex: ^1.3.1
     discord.js: ^14.14.1
     faiss-node: ^0.5.1
