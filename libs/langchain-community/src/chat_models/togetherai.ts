@@ -6,7 +6,6 @@ import {
   type OpenAICoreRequestOptions,
   ChatOpenAI,
 } from "@langchain/openai";
-
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 type TogetherAIUnsupportedArgs =
@@ -15,11 +14,15 @@ type TogetherAIUnsupportedArgs =
   | "logitBias"
   | "functions";
 
-type TogetherAIUnsupportedCallOptions = "functions" | "function_call" | "tools";
+type TogetherAIUnsupportedCallOptions = "functions" | "function_call";
 
-export type ChatTogetherAICallOptions = Partial<
-  Omit<ChatOpenAICallOptions, TogetherAIUnsupportedCallOptions>
->;
+export interface ChatTogetherAICallOptions extends Omit<ChatOpenAICallOptions, TogetherAIUnsupportedCallOptions> {
+  response_format: {
+    type: "json_object";
+    schema: Record<string, unknown>;
+  };
+}
+
 
 export interface ChatTogetherAIInput
   extends Omit<OpenAIChatInput, "openAIApiKey" | TogetherAIUnsupportedArgs>,
