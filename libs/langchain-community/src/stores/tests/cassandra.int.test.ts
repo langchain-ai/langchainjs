@@ -1,7 +1,7 @@
 /* eslint-disable no-process-env */
 import { test, expect, describe } from "@jest/globals";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
-import { CasssandraClientFactory } from "../../utils/cassandra.js";
+import { CassandraClientFactory } from "../../utils/cassandra.js";
 import { CassandraChatMessageHistory } from "../message/cassandra.js";
 
 const cassandraConfig = {
@@ -25,7 +25,7 @@ let client;
 // Once manual testing is complete, re-instate the ".skip"
 describe.skip("CassandraChatMessageHistory", () => {
   beforeAll(async () => {
-    client = await CasssandraClientFactory.getClient(cassandraConfig);
+    client = await CassandraClientFactory.getClient(cassandraConfig);
     await client.execute("DROP TABLE IF EXISTS test.test_message_history;");
   });
 
