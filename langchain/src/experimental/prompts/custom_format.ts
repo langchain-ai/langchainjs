@@ -40,7 +40,11 @@ export class CustomFormatPromptTemplate<
           Object.keys(this.partialVariables)
         );
       }
-      this.templateValidator(this.template, totalInputVariables);
+      if (typeof this.template === "string") {
+        this.templateValidator(this.template, totalInputVariables);
+      } else {
+        throw new Error(`Must pass in string as template. Received: ${this.template}`);
+      }
     }
   }
 
@@ -84,6 +88,10 @@ export class CustomFormatPromptTemplate<
    */
   async format(values: TypedPromptInputValues<RunInput>): Promise<string> {
     const allValues = await this.mergePartialAndUserVariables(values);
-    return this.renderer(this.template, allValues);
+    if (typeof this.template === "string") {
+      return this.renderer(this.template, allValues);
+    } else {
+      throw new Error(`Must pass in string as template. Received: ${this.template}`);
+    }
   }
 }
