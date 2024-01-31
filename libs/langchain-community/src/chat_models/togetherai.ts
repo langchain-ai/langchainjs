@@ -21,6 +21,16 @@ export type ChatTogetherAICallOptions = Partial<
   Omit<ChatOpenAICallOptions, TogetherAIUnsupportedCallOptions>
 >;
 
+export interface ChatTogetherAIInput
+  extends Omit<OpenAIChatInput, "openAIApiKey" | TogetherAIUnsupportedArgs>,
+    BaseChatModelParams {
+  /**
+   * The TogetherAI API key to use for requests.
+   * @default process.env.TOGETHER_AI_API_KEY
+   */
+  togetherAIApiKey?: string;
+}
+
 /**
  * Wrapper around TogetherAI API for large language models fine-tuned for chat
  *
@@ -28,16 +38,15 @@ export type ChatTogetherAICallOptions = Partial<
  * full API ref at:
  * @link {https://docs.together.ai/reference/chat-completions}
  *
- * To use, you should have the `openai` package installed and
- * the `TOGETHER_AI_API_KEY` environment variable set.
+ * To use, you should have the `TOGETHER_AI_API_KEY` environment variable set.
  * @example
  * ```typescript
  * const model = new ChatTogetherAI({
  *   temperature: 0.9,
- *   togetherAIApiKey: "YOUR-API-KEY",
+ *   togetherAIApiKey: process.env.TOGETHER_AI_API_KEY,
  * });
  *
- * const response = await model.invoke("Hello, how are you?");
+ * const response = await model.invoke([new HumanMessage("Hello there!")]);
  * console.log(response);
  * ```
  */
@@ -57,8 +66,6 @@ export class ChatTogetherAI extends ChatOpenAI<ChatTogetherAICallOptions> {
   }
 
   lc_serializable = true;
-
-  togetherAIApiKey?: string;
 
   constructor(
     fields?: Partial<
@@ -83,8 +90,6 @@ export class ChatTogetherAI extends ChatOpenAI<ChatTogetherAICallOptions> {
         baseURL: "https://api.together.xyz/v1/",
       },
     });
-
-    this.togetherAIApiKey = togetherAIApiKey;
   }
 
   toJSON() {
