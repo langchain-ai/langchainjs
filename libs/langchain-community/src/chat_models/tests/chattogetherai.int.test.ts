@@ -86,11 +86,11 @@ describe("ChatTogetherAI", () => {
         orderedArray: {
           type: "array",
           items: {
-            type: "number"
-          }
-        }
+            type: "number",
+          },
+        },
       },
-      required: ["orderedArray"]
+      required: ["orderedArray"],
     };
     const chat = new ChatTogetherAI().bind({
       response_format: {
@@ -100,15 +100,14 @@ describe("ChatTogetherAI", () => {
     });
     const prompt = ChatPromptTemplate.fromMessages([
       ["system", "You are a helpful assistant who responds in JSON."],
-      [
-        "human",
-        "Please list this output in order of DESC [1, 4, 2, 8].",
-      ],
+      ["human", "Please list this output in order of DESC [1, 4, 2, 8]."],
     ]);
     const res = await prompt.pipe(chat).invoke({});
     console.log({ res });
     expect(typeof res.content).toEqual("string");
-    expect(JSON.parse(res.content as string)).toMatchObject({ orderedArray: expect.any(Array) });
+    expect(JSON.parse(res.content as string)).toMatchObject({
+      orderedArray: expect.any(Array),
+    });
   });
 
   test.only("Tool calls", async () => {
@@ -142,6 +141,8 @@ describe("ChatTogetherAI", () => {
     const res = await prompt.pipe(chat).invoke({});
     console.log({ res });
     expect(res.additional_kwargs.tool_calls?.length).toBeGreaterThan(0);
-    expect(JSON.parse(res.additional_kwargs.tool_calls?.[0].function.arguments ?? "")).toMatchObject({ a: expect.any(Number), b: expect.any(Number) });
+    expect(
+      JSON.parse(res.additional_kwargs.tool_calls?.[0].function.arguments ?? "")
+    ).toMatchObject({ a: expect.any(Number), b: expect.any(Number) });
   });
 });
