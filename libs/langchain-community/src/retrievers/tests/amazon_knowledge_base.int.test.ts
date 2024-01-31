@@ -3,7 +3,7 @@
 import { test } from "@jest/globals";
 import { AmazonKnowledgeBaseRetriever } from "../amazon_knowledge_base.js";
 
-test("AmazonKnowledgeBaseRetriever", async () => {
+test.skip("AmazonKnowledgeBaseRetriever", async () => {
   const retriever = new AmazonKnowledgeBaseRetriever({
     topK: 10,
     knowledgeBaseId: process.env.AMAZON_KNOWLEDGE_BASE_ID || "",

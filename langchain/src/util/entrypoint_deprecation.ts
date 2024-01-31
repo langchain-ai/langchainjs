@@ -1,3 +1,5 @@
+import { getEnvironmentVariable } from "./env.js";
+
 export function logVersion010MigrationWarning({
   oldEntrypointName,
   newEntrypointName,
@@ -33,5 +35,9 @@ export function logVersion010MigrationWarning({
       `This will be mandatory after the next "langchain" minor version bump to 0.2.`,
     ].join("\n");
   }
-  console.warn(warningText);
+  if (
+    getEnvironmentVariable("LANGCHAIN_SUPPRESS_MIGRATION_WARNINGS") !== "true"
+  ) {
+    console.warn(warningText);
+  }
 }

@@ -1,5 +1,6 @@
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
 import {
+  type Runnable,
   type RunnableInterface,
   RunnableSequence,
   RunnableBranch,
@@ -61,7 +62,7 @@ export async function createHistoryAwareRetriever({
   retriever,
   rephrasePrompt,
 }: CreateHistoryAwareRetrieverParams): Promise<
-  RunnableInterface<
+  Runnable<
     { input: string; chat_history: string | BaseMessage[] },
     DocumentInterface[]
   >

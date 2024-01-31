@@ -7,31 +7,34 @@ import {
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
 } from "@langchain/core/prompts";
-import { ChatFireworks } from "../fireworks.js";
+import { ChatTogetherAI } from "../togetherai.js";
 
-describe.skip("ChatFireworks", () => {
-  test("call", async () => {
-    const chat = new ChatFireworks();
+describe("ChatTogetherAI", () => {
+  test("invoke", async () => {
+    const chat = new ChatTogetherAI();
     const message = new HumanMessage("Hello!");
-    const res = await chat.call([message]);
+    const res = await chat.invoke([message]);
     console.log({ res });
+    expect(res.content.length).toBeGreaterThan(10);
   });
 
   test("generate", async () => {
-    const chat = new ChatFireworks();
+    const chat = new ChatTogetherAI();
     const message = new HumanMessage("Hello!");
     const res = await chat.generate([[message]]);
     console.log(JSON.stringify(res, null, 2));
+    expect(res.generations[0][0].text.length).toBeGreaterThan(10);
   });
 
   test("custom messages", async () => {
-    const chat = new ChatFireworks();
-    const res = await chat.call([new ChatMessage("Hello!", "user")]);
-    console.log(JSON.stringify(res, null, 2));
+    const chat = new ChatTogetherAI();
+    const res = await chat.invoke([new ChatMessage("Hello!", "user")]);
+    console.log({ res });
+    expect(res.content.length).toBeGreaterThan(10);
   });
 
   test("prompt templates", async () => {
-    const chat = new ChatFireworks();
+    const chat = new ChatTogetherAI();
 
     // PaLM doesn't support translation yet
     const systemPrompt = PromptTemplate.fromTemplate(
@@ -51,10 +54,11 @@ describe.skip("ChatFireworks", () => {
     ]);
 
     console.log(responseA.generations);
+    expect(responseA.generations[0][0].text.length).toBeGreaterThan(10);
   });
 
   test("longer chain of messages", async () => {
-    const chat = new ChatFireworks();
+    const chat = new ChatTogetherAI();
 
     const chatPrompt = ChatPromptTemplate.fromMessages([
       HumanMessagePromptTemplate.fromTemplate(`Hi, my name is Joe!`),
@@ -69,5 +73,6 @@ describe.skip("ChatFireworks", () => {
     ]);
 
     console.log(responseA.generations);
+    expect(responseA.generations[0][0].text.length).toBeGreaterThan(10);
   });
 });
