@@ -21,7 +21,7 @@ export interface CassandraClientArgs extends DseClientOptions {
 /**
  * A factory class for creating Cassandra clients.
  */
-export class CasssandraClientFactory {
+export class CassandraClientFactory {
   /**
    * Get a Cassandra client with the provided arguments.
    * @param args The arguments for creating the Cassandra client.
@@ -46,7 +46,7 @@ export class CasssandraClientFactory {
     }
 
     if (args.serviceProviderArgs && args.serviceProviderArgs.astra) {
-      return CasssandraClientFactory.processAstraArgs(args);
+      return CassandraClientFactory.processAstraArgs(args);
     }
 
     throw new Error("Unsupported configuration for Cassandra client.");
@@ -98,11 +98,11 @@ export class CasssandraClientFactory {
     // Set default bundle location if it is not set
     if (!modifiedArgs.cloud.secureConnectBundle) {
       modifiedArgs.cloud.secureConnectBundle =
-        await CasssandraClientFactory.getAstraDefaultBundleLocation(astraArgs);
+        await CassandraClientFactory.getAstraDefaultBundleLocation(astraArgs);
     }
 
     // Ensure secure connect bundle exists
-    await CasssandraClientFactory.setAstraBundle(
+    await CassandraClientFactory.setAstraBundle(
       astraArgs,
       modifiedArgs.cloud.secureConnectBundle
     );
@@ -161,7 +161,7 @@ export class CasssandraClientFactory {
 
         // File is more than 360 days old, download a fresh copy
         if (fileAgeInDays > 360) {
-          await CasssandraClientFactory.downloadAstraSecureConnectBundle(
+          await CassandraClientFactory.downloadAstraSecureConnectBundle(
             astraArgs,
             scbPath
           );
@@ -174,7 +174,7 @@ export class CasssandraClientFactory {
           error.code === "ENOENT"
         ) {
           // Handle file not found error (ENOENT)
-          await CasssandraClientFactory.downloadAstraSecureConnectBundle(
+          await CassandraClientFactory.downloadAstraSecureConnectBundle(
             astraArgs,
             scbPath
           );

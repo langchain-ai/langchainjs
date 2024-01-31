@@ -2,7 +2,7 @@
 import { test, expect, describe } from "@jest/globals";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
-import { CasssandraClientFactory } from "../../utils/cassandra.js";
+import { CassandraClientFactory } from "../../utils/cassandra.js";
 import { CassandraStore } from "../cassandra.js";
 
 const cassandraConfig = {
@@ -49,13 +49,13 @@ const noPartitionConfig = {
 // Once manual testing is complete, re-instate the ".skip"
 describe.skip("CassandraStore - no explicit partition key", () => {
   beforeAll(async () => {
-    client = await CasssandraClientFactory.getClient(cassandraConfig);
+    client = await CassandraClientFactory.getClient(cassandraConfig);
     await client.execute("DROP TABLE IF EXISTS test.test;");
   });
 
   beforeEach(async () => {
     try {
-      client = await CasssandraClientFactory.getClient(cassandraConfig);
+      client = await CassandraClientFactory.getClient(cassandraConfig);
       await client.execute("TRUNCATE test.test;");
     } catch (err) {
       // Ignore error if table does not exist
@@ -320,7 +320,7 @@ describe.skip("CassandraStore - no explicit partition key", () => {
 
 describe.skip("CassandraStore - no explicit partition key", () => {
   beforeAll(async () => {
-    client = await CasssandraClientFactory.getClient(cassandraConfig);
+    client = await CassandraClientFactory.getClient(cassandraConfig);
     await client.execute("DROP TABLE IF EXISTS test.test;");
   });
 
@@ -417,7 +417,7 @@ const partitionConfig = {
 
 describe.skip("CassandraStore - with explicit partition key", () => {
   beforeAll(async () => {
-    client = await CasssandraClientFactory.getClient(cassandraConfig);
+    client = await CassandraClientFactory.getClient(cassandraConfig);
     await client.execute("DROP TABLE IF EXISTS test.test;");
   });
 
