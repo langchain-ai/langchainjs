@@ -1,0 +1,34 @@
+import CodeBlock from "@theme/CodeBlock";
+import IndexQueryExample from "@examples/indexes/vector_stores/upstash/index_and_query_docs.ts";
+import DeleteExample from "@examples/indexes/vector_stores/upstash/delete_docs.ts";
+
+# Upstash Vector
+
+Upstash Vector is a REST based serverless vector database, designed for working with vector embeddings.
+
+## Setup
+
+1. Install Upstash Vector SDK.
+
+```bash npm2yarn
+npm install -S @upstash/vector
+```
+
+We use OpenAI for the embeddings of the below snippets.
+However, you can also create the embeddings using the model of your choice, that is available in the LangChain.
+
+```bash npm2yarn
+npm install -S @langchain/openai
+```
+
+## Index and Query Documents
+
+You can index the LangChain documents with any model of your choice, and perform a search over these documents.
+
+<CodeBlock language="typescript">{IndexQueryExample}</CodeBlock>
+
+## Delete Documents
+
+You can also delete the documents you've indexed previously.
+
+<CodeBlock language="typescript">{DeleteExample}</CodeBlock>

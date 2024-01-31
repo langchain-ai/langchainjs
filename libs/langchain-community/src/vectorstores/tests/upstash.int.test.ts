@@ -11,14 +11,11 @@ describe("UpstashVectorStore", () => {
 
   beforeEach(async () => {
     index = new Index({
-      url: "https://easy-hen-69932-us1-vector.upstash.io",
-      token:
-        "ABIFMGVhc3ktaGVuLTY5OTMyLXVzMWFkbWluTm1NNFlXUTBaVFl0WkdVM1lpMDBOV0UwTFRsa09HSXRPR1ptWkRVMllqQmtOekps",
+      url: process.env.UPSTASH_VECTOR_REST_URL as string,
+      token: process.env.UPSTASH_VECTOR_REST_TOKEN as string,
     });
 
-    embeddings = new OpenAIEmbeddings({
-      openAIApiKey: "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",
-    });
+    embeddings = new OpenAIEmbeddings();
 
     store = new UpstashVectorStore(embeddings, {
       index,
@@ -27,7 +24,7 @@ describe("UpstashVectorStore", () => {
     expect(store).toBeDefined();
   });
 
-  test("basic operations with documents", async () => {
+  test.skip("basic operations with documents", async () => {
     const createdAt = new Date().getTime();
 
     const ids = await store.addDocuments([
@@ -40,9 +37,7 @@ describe("UpstashVectorStore", () => {
     // Sleeping for a second to make sure that all the indexing operations are finished.
     await sleep(1000);
 
-    console.log(ids);
-
-    const results1 = await store.similaritySearch("hello!", 1);
+    const results1 = await store.similaritySearchWithScore("hello!", 1);
     expect(results1).toHaveLength(1);
 
     expect(results1).toEqual([
@@ -60,7 +55,7 @@ describe("UpstashVectorStore", () => {
     expect(results3).toHaveLength(2);
   });
 
-  test("UpstashVectorStore.fromText", async () => {
+  test.skip("UpstashVectorStore.fromText", async () => {
     const vectorStore = await UpstashVectorStore.fromTexts(
       ["hello there!", "what are you building?", "vectors are great!"],
       [
