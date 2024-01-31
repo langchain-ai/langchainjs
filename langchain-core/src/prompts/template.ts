@@ -11,7 +11,7 @@ export type TemplateFormat = "f-string";
  * Type that represents a node in a parsed format string. It can be either
  * a literal text or a variable name.
  */
-type ParsedFStringNode =
+export type ParsedFStringNode =
   | { type: "literal"; text: string }
   | { type: "variable"; name: string };
 

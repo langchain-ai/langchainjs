@@ -1,11 +1,11 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import { Callbacks } from "@langchain/core/callbacks/manager";
 import {
   BaseOutputParser,
   OutputParserException,
-} from "../schema/output_parser.js";
-import { BasePromptTemplate } from "../prompts/base.js";
+} from "@langchain/core/output_parsers";
+import { BasePromptTemplate } from "@langchain/core/prompts";
 import { LLMChain } from "../chains/llm_chain.js";
-import { Callbacks } from "../callbacks/manager.js";
 import { NAIVE_FIX_PROMPT } from "./prompts.js";
 
 /**

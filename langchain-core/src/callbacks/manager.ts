@@ -93,7 +93,7 @@ export abstract class BaseCallbackManager {
 class BaseRunManager {
   constructor(
     public readonly runId: string,
-    protected readonly handlers: BaseCallbackHandler[],
+    public readonly handlers: BaseCallbackHandler[],
     protected readonly inheritableHandlers: BaseCallbackHandler[],
     protected readonly tags: string[],
     protected readonly inheritableTags: string[],
@@ -495,7 +495,7 @@ export class CallbackManager
 
   name = "callback_manager";
 
-  private readonly _parentRunId?: string;
+  public readonly _parentRunId?: string;
 
   constructor(
     parentRunId?: string,
@@ -947,7 +947,7 @@ export class CallbackManager
   }
 }
 
-function ensureHandler(
+export function ensureHandler(
   handler: BaseCallbackHandler | CallbackHandlerMethods
 ): BaseCallbackHandler {
   if ("name" in handler) {

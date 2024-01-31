@@ -1,7 +1,7 @@
-import { ChatAnthropic } from "langchain/chat_models/anthropic";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { RunnableSequence } from "@langchain/core/runnables";
+import { ChatAnthropic } from "@langchain/anthropic";
 
 const promptTemplate =
   PromptTemplate.fromTemplate(`Given the user question below, classify it as either being about \`LangChain\`, \`Anthropic\`, or \`Other\`.

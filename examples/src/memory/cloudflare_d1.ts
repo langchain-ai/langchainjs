@@ -1,14 +1,13 @@
 import type { D1Database } from "@cloudflare/workers-types";
-
-import { ChatAnthropic } from "langchain/chat_models/anthropic";
 import { BufferMemory } from "langchain/memory";
-import { CloudflareD1MessageHistory } from "@langchain/community/stores/message/cloudflare_d1";
+import { CloudflareD1MessageHistory } from "@langchain/cloudflare";
 import {
   ChatPromptTemplate,
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { StringOutputParser } from "@langchain/core/output_parsers";
+import { ChatAnthropic } from "@langchain/anthropic";
 
 export interface Env {
   DB: D1Database;
@@ -32,7 +31,7 @@ export default {
           database: env.DB,
         }),
       });
-      const prompt = ChatPromptTemplate.fromPromptMessages([
+      const prompt = ChatPromptTemplate.fromMessages([
         ["system", "You are a helpful chatbot"],
         new MessagesPlaceholder("history"),
         ["human", "{input}"],

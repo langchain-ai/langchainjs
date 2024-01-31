@@ -1,4 +1,4 @@
-import { Embeddings, EmbeddingsParams } from "./base.js";
+import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
 
 /**
  * A class that provides fake embeddings by overriding the embedDocuments

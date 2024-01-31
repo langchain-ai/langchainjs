@@ -1,6 +1,4 @@
-import { zodToJsonSchema } from "zod-to-json-schema";
-import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
-
+import { zodToJsonSchema, JsonSchema7ObjectType } from "zod-to-json-schema";
 import type { StructuredToolInterface } from "@langchain/core/tools";
 import type {
   BaseLanguageModel,
@@ -11,15 +9,15 @@ import {
   RunnableSequence,
 } from "@langchain/core/runnables";
 import type { BasePromptTemplate } from "@langchain/core/prompts";
-import { LLMChain } from "../../chains/llm_chain.js";
-import { PromptTemplate } from "../../prompts/prompt.js";
 import {
   BaseMessagePromptTemplate,
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
-} from "../../prompts/chat.js";
-import { AgentStep } from "../../schema/index.js";
+  PromptTemplate,
+} from "@langchain/core/prompts";
+import { AgentStep } from "@langchain/core/agents";
+import { LLMChain } from "../../chains/llm_chain.js";
 import { Optional } from "../../types/type-utils.js";
 import { Agent, AgentArgs, OutputParserArgs } from "../agent.js";
 import { AgentInput } from "../types.js";
@@ -54,6 +52,7 @@ export type StructuredChatAgentInput = Optional<AgentInput, "outputParser">;
 /**
  * Agent that interoperates with Structured Tools using React logic.
  * @augments Agent
+ * @deprecated Use the {@link https://api.js.langchain.com/functions/langchain_agents.createStructuredChatAgent.html | createStructuredChatAgent method instead}.
  */
 export class StructuredChatAgent extends Agent {
   static lc_name() {

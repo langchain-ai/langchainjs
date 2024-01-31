@@ -6,8 +6,8 @@ import {
   type AgentStep,
 } from "langchain/schema";
 import { ChatOpenAI } from "@langchain/openai";
+import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";
 import { AgentExecutor } from "langchain/agents";
-import { formatToOpenAIFunction, DynamicTool } from "langchain/tools";
 import type { FunctionsAgentAction } from "langchain/agents/openai/output_parser";
 
 import { TavilySearchAPIRetriever } from "@langchain/community/retrievers/tavily_search_api";
@@ -17,6 +17,7 @@ import {
   ChatPromptTemplate,
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
+import { DynamicTool } from "@langchain/core/tools";
 
 const llm = new ChatOpenAI({
   modelName: "gpt-4-1106-preview",
@@ -105,7 +106,7 @@ const formatAgentSteps = (steps: AgentStep[]): BaseMessage[] =>
   });
 
 const llmWithTools = llm.bind({
-  functions: [formatToOpenAIFunction(searchTool), responseOpenAIFunction],
+  functions: [convertToOpenAIFunction(searchTool), responseOpenAIFunction],
 });
 /** Create the runnable */
 const runnableAgent = RunnableSequence.from<{

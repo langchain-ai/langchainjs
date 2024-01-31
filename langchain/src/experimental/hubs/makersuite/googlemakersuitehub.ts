@@ -2,15 +2,15 @@ import type { protos } from "@google-ai/generativelanguage";
 import type { google } from "@google-ai/generativelanguage/build/protos/protos.js";
 import { GoogleAuth, GoogleAuthOptions } from "google-auth-library";
 import type { BaseLanguageModel } from "@langchain/core/language_models/base";
-
-import { GooglePaLM } from "../../../llms/googlepalm.js";
-import { ChatGooglePaLM } from "../../../chat_models/googlepalm.js";
-import { PromptTemplate } from "../../../prompts/index.js";
-import { Runnable } from "../../../schema/runnable/index.js";
+import { ChatGooglePaLM } from "@langchain/community/chat_models/googlepalm";
+import { GooglePaLM } from "@langchain/community/llms/googlepalm";
+import { Runnable } from "@langchain/core/runnables";
+import { PromptTemplate } from "@langchain/core/prompts";
 import {
   AsyncCaller,
   AsyncCallerCallOptions,
-} from "../../../util/async_caller.js";
+} from "@langchain/core/utils/async_caller";
+
 import {
   GoogleAbstractedClientOpsMethod,
   GoogleResponse,

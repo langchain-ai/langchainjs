@@ -1,12 +1,13 @@
 import path from "node:path";
 import fs from "node:fs/promises";
 
-import { BaseCache, Generation } from "../schema/index.js";
 import {
+  BaseCache,
   getCacheKey,
   serializeGeneration,
   deserializeStoredGeneration,
-} from "./base.js";
+} from "@langchain/core/caches";
+import { Generation } from "@langchain/core/outputs";
 
 /**
  * A cache that uses the local filesystem as the backing store.

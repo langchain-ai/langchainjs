@@ -3,17 +3,19 @@ import { Document } from "@langchain/core/documents";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import axiosMod, { AxiosRequestConfig, AxiosStatic } from "axios";
 import * as cheerio from "cheerio";
-import { isNode } from "../util/env.js";
+import {
+  CallbackManager,
+  CallbackManagerForToolRun,
+} from "@langchain/core/callbacks/manager";
+import { isNode } from "@langchain/core/utils/env";
+import { Tool, ToolParams } from "@langchain/core/tools";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 import {
   RecursiveCharacterTextSplitter,
   TextSplitter,
 } from "../text_splitter.js";
 import { MemoryVectorStore } from "../vectorstores/memory.js";
-import { Tool, ToolParams } from "./base.js";
-import {
-  CallbackManager,
-  CallbackManagerForToolRun,
-} from "../callbacks/manager.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { formatDocumentsAsString } from "../util/document.js";
 
@@ -274,7 +276,8 @@ export class WebBrowser extends Tool {
       doSummary ? "a summary" : task
     } from the above text, also provide up to 5 markdown links from within that would be of interest (always including URL and text). Links should be provided, if present, in markdown syntax as a list under the heading "Relevant Links:".`;
 
-    return this.model.predict(input, undefined, runManager?.getChild());
+    const chain = RunnableSequence.from([this.model, new StringOutputParser()]);
+    return chain.invoke(input, runManager?.getChild());
   }
 
   name = "web-browser";

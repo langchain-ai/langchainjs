@@ -6,39 +6,41 @@ import type {
 import type { StructuredToolInterface } from "@langchain/core/tools";
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import {
+  Runnable,
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
-import { CallbackManager } from "../../callbacks/manager.js";
-import { ChatOpenAI, ChatOpenAICallOptions } from "../../chat_models/openai.js";
-import type { BasePromptTemplate } from "../../prompts/base.js";
-import {
-  AIMessage,
+import { ChatOpenAI, ChatOpenAICallOptions } from "@langchain/openai";
+import type {
   AgentAction,
   AgentFinish,
   AgentStep,
+} from "@langchain/core/agents";
+import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";
+import {
+  AIMessage,
   BaseMessage,
   FunctionMessage,
-  ChainValues,
   SystemMessage,
   BaseMessageChunk,
-} from "../../schema/index.js";
-import { Agent, AgentArgs } from "../agent.js";
-import { AgentInput } from "../types.js";
-import { PREFIX } from "./prompt.js";
+} from "@langchain/core/messages";
+import { ChainValues } from "@langchain/core/utils/types";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   MessagesPlaceholder,
   SystemMessagePromptTemplate,
-} from "../../prompts/chat.js";
+  BasePromptTemplate,
+} from "@langchain/core/prompts";
+import { CallbackManager } from "@langchain/core/callbacks/manager";
+import { Agent, AgentArgs } from "../agent.js";
+import { AgentInput } from "../types.js";
+import { PREFIX } from "./prompt.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import {
   FunctionsAgentAction,
   OpenAIFunctionsAgentOutputParser,
 } from "../openai/output_parser.js";
-import { formatToOpenAIFunction } from "../../tools/convert_to_openai.js";
-import { Runnable } from "../../schema/runnable/base.js";
 import { formatToOpenAIFunctionMessages } from "../format_scratchpad/openai_functions.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -96,6 +98,8 @@ export interface OpenAIAgentCreatePromptArgs {
  * Class representing an agent for the OpenAI chat model in LangChain. It
  * extends the Agent class and provides additional functionality specific
  * to the OpenAIAgent type.
+ *
+ * @deprecated Use the {@link https://api.js.langchain.com/functions/langchain_agents.createOpenAIFunctionsAgent.html | createOpenAIFunctionsAgent method instead}.
  */
 export class OpenAIAgent extends Agent {
   static lc_name() {
@@ -224,7 +228,7 @@ export class OpenAIAgent extends Agent {
 
     const valuesForPrompt = { ...newInputs };
     const valuesForLLM: CallOptionsIfAvailable<typeof llm> = {
-      functions: this.tools.map(formatToOpenAIFunction),
+      functions: this.tools.map(convertToOpenAIFunction),
     };
     const callKeys =
       "callKeys" in this.llmChain.llm ? this.llmChain.llm.callKeys : [];
@@ -339,7 +343,7 @@ export async function createOpenAIFunctionsAgent({
     );
   }
   const llmWithTools = llm.bind({
-    functions: tools.map(formatToOpenAIFunction),
+    functions: tools.map(convertToOpenAIFunction),
   });
   const agent = RunnableSequence.from([
     RunnablePassthrough.assign({

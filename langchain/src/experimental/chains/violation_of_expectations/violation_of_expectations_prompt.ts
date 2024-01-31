@@ -1,4 +1,4 @@
-import { PromptTemplate } from "../../../prompts/prompt.js";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 export const PREDICT_NEXT_USER_MESSAGE_PROMPT =
   /* #__PURE__ */ PromptTemplate.fromTemplate(`

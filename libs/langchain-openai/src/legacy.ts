@@ -24,6 +24,8 @@ export interface OpenAIChatCallOptions extends OpenAICallOptions {
 }
 
 /**
+ * @deprecated For legacy compatibility. Use ChatOpenAI instead.
+ *
  * Wrapper around OpenAI large language models that use the Chat endpoint.
  *
  * To use you should have the `openai` package installed, with the

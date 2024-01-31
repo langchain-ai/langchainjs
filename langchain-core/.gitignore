@@ -100,6 +100,9 @@ utils/chunk_array.d.ts
 utils/env.cjs
 utils/env.js
 utils/env.d.ts
+utils/function_calling.cjs
+utils/function_calling.js
+utils/function_calling.d.ts
 utils/hash.cjs
 utils/hash.js
 utils/hash.d.ts
@@ -127,6 +130,6 @@ utils/types.d.ts
 vectorstores.cjs
 vectorstores.js
 vectorstores.d.ts
-index.cjs
-index.js
-index.d.ts
+node_modules
+dist
+.yarn

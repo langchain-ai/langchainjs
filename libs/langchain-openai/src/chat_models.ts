@@ -26,6 +26,7 @@ import {
 } from "@langchain/core/language_models/chat_models";
 import type { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
+import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import type {
   AzureOpenAIInput,
   OpenAICallOptions,
@@ -34,7 +35,7 @@ import type {
   LegacyOpenAIInput,
 } from "./types.js";
 import { type OpenAIEndpointConfig, getEndpoint } from "./utils/azure.js";
-import { wrapOpenAIClientError, formatToOpenAITool } from "./utils/openai.js";
+import { wrapOpenAIClientError } from "./utils/openai.js";
 import {
   FunctionDef,
   formatFunctionDefinitions,
@@ -283,6 +284,10 @@ export class ChatOpenAI<
 
   maxTokens?: number;
 
+  logprobs?: boolean;
+
+  topLogprobs?: number;
+
   openAIApiKey?: string;
 
   azureOpenAIApiVersion?: string;
@@ -352,6 +357,8 @@ export class ChatOpenAI<
     this.frequencyPenalty = fields?.frequencyPenalty ?? this.frequencyPenalty;
     this.presencePenalty = fields?.presencePenalty ?? this.presencePenalty;
     this.maxTokens = fields?.maxTokens;
+    this.logprobs = fields?.logprobs;
+    this.topLogprobs = fields?.topLogprobs;
     this.n = fields?.n ?? this.n;
     this.logitBias = fields?.logitBias;
     this.stop = fields?.stop;
@@ -414,6 +421,8 @@ export class ChatOpenAI<
       frequency_penalty: this.frequencyPenalty,
       presence_penalty: this.presencePenalty,
       max_tokens: this.maxTokens === -1 ? undefined : this.maxTokens,
+      logprobs: this.logprobs,
+      top_logprobs: this.topLogprobs,
       n: this.n,
       logit_bias: this.logitBias,
       stop: options?.stop ?? this.stop,
@@ -422,7 +431,7 @@ export class ChatOpenAI<
       functions: options?.functions,
       function_call: options?.function_call,
       tools: isStructuredToolArray(options?.tools)
-        ? options?.tools.map(formatToOpenAITool)
+        ? options?.tools.map(convertToOpenAITool)
         : options?.tools,
       tool_choice: options?.tool_choice,
       response_format: options?.response_format,
@@ -596,9 +605,10 @@ export class ChatOpenAI<
             part.message ?? { role: "assistant" }
           ),
         };
-        if (part.finish_reason) {
-          generation.generationInfo = { finish_reason: part.finish_reason };
-        }
+        generation.generationInfo = {
+          ...(part.finish_reason ? { finish_reason: part.finish_reason } : {}),
+          ...(part.logprobs ? { logprobs: part.logprobs } : {}),
+        };
         generations.push(generation);
       }
       return {

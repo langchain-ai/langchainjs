@@ -1,17 +1,17 @@
-import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
+import { JsonSchema7ObjectType } from "zod-to-json-schema";
 import {
   compare,
   type Operation as JSONPatchOperation,
 } from "@langchain/core/utils/json_patch";
 
-import { ChatGeneration, Generation } from "../schema/index.js";
-import { Optional } from "../types/type-utils.js";
+import { ChatGeneration, Generation } from "@langchain/core/outputs";
 import {
   BaseCumulativeTransformOutputParser,
   type BaseCumulativeTransformOutputParserInput,
   BaseLLMOutputParser,
-} from "../schema/output_parser.js";
-import { parsePartialJson } from "./json.js";
+} from "@langchain/core/output_parsers";
+import { parsePartialJson } from "@langchain/core/output_parsers";
+import { Optional } from "../types/type-utils.js";
 
 /**
  * Represents optional parameters for a function in a JSON Schema.
@@ -30,7 +30,7 @@ export class OutputFunctionsParser extends BaseLLMOutputParser<string> {
     return "OutputFunctionsParser";
   }
 
-  lc_namespace = ["langchain", "output_parsers"];
+  lc_namespace = ["langchain", "output_parsers", "openai_functions"];
 
   lc_serializable = true;
 
@@ -79,12 +79,14 @@ export class OutputFunctionsParser extends BaseLLMOutputParser<string> {
  * Class for parsing the output of an LLM into a JSON object. Uses an
  * instance of `OutputFunctionsParser` to parse the output.
  */
-export class JsonOutputFunctionsParser extends BaseCumulativeTransformOutputParser<object> {
+export class JsonOutputFunctionsParser<
+  Output extends object = object
+> extends BaseCumulativeTransformOutputParser<Output> {
   static lc_name() {
     return "JsonOutputFunctionsParser";
   }
 
-  lc_namespace = ["langchain", "output_parsers"];
+  lc_namespace = ["langchain", "output_parsers", "openai_functions"];
 
   lc_serializable = true;
 
@@ -113,7 +115,7 @@ export class JsonOutputFunctionsParser extends BaseCumulativeTransformOutputPars
 
   async parsePartialResult(
     generations: ChatGeneration[]
-  ): Promise<object | undefined> {
+  ): Promise<Output | undefined> {
     const generation = generations[0];
     if (!generation.message) {
       return undefined;
@@ -130,7 +132,7 @@ export class JsonOutputFunctionsParser extends BaseCumulativeTransformOutputPars
     return {
       ...functionCall,
       arguments: parsePartialJson(functionCall.arguments),
-    };
+    } as Output;
   }
 
   /**
@@ -141,7 +143,7 @@ export class JsonOutputFunctionsParser extends BaseCumulativeTransformOutputPars
    */
   async parseResult(
     generations: Generation[] | ChatGeneration[]
-  ): Promise<object> {
+  ): Promise<Output> {
     const result = await this.outputParser.parseResult(generations);
     if (!result) {
       throw new Error(
@@ -151,7 +153,7 @@ export class JsonOutputFunctionsParser extends BaseCumulativeTransformOutputPars
     return this.parse(result);
   }
 
-  async parse(text: string): Promise<object> {
+  async parse(text: string): Promise<Output> {
     const parsedResult = JSON.parse(text);
     if (this.argsOnly) {
       return parsedResult;
@@ -177,13 +179,19 @@ export class JsonKeyOutputFunctionsParser<
     return "JsonKeyOutputFunctionsParser";
   }
 
-  lc_namespace = ["langchain", "output_parsers"];
+  lc_namespace = ["langchain", "output_parsers", "openai_functions"];
 
   lc_serializable = true;
 
   outputParser = new JsonOutputFunctionsParser();
 
   attrName: string;
+
+  get lc_aliases() {
+    return {
+      attrName: "key_name",
+    };
+  }
 
   constructor(fields: { attrName: string }) {
     super(fields);

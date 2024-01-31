@@ -1,6 +1,5 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { AgentExecutor } from "langchain/agents";
-import { SerpAPI } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 import { pull } from "langchain/hub";
 import { BufferMemory } from "langchain/memory";
@@ -11,6 +10,7 @@ import { PromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { AgentStep } from "@langchain/core/agents";
 import { BaseMessage } from "@langchain/core/messages";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 /** Define your chat model */
 const model = new ChatOpenAI({ modelName: "gpt-4" });

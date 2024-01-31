@@ -1,3 +1,5 @@
+import { getEnvironmentVariable } from "./env.js";
+
 export function logVersion010MigrationWarning({
   oldEntrypointName,
   newEntrypointName,
@@ -7,20 +9,35 @@ export function logVersion010MigrationWarning({
   newEntrypointName?: string;
   newPackageName?: string;
 }) {
-  /* #__PURE__ */ console.warn(
-    [
-      `[WARNING]: Importing from "langchain/${oldEntrypointName}" is deprecated.\n`,
-      `Instead, please add the "${newPackageName}" package to your project with e.g.`,
+  let finalEntrypointName = "";
+  if (newEntrypointName === undefined) {
+    finalEntrypointName = `/${oldEntrypointName}`;
+  } else if (newEntrypointName !== "") {
+    finalEntrypointName = `/${newEntrypointName}`;
+  }
+  let warningText = [
+    `[WARNING]: Importing from "langchain/${oldEntrypointName}" is deprecated.`,
+    ``,
+    `Instead, please add the "${newPackageName}" package to your project with e.g.`,
+    ``,
+    `    $ npm install ${newPackageName}`,
+    ``,
+    `and import from "${newPackageName}${finalEntrypointName}".`,
+    ``,
+    `This will be mandatory after the next "langchain" minor version bump to 0.2.`,
+  ].join("\n");
+  if (newPackageName === "@langchain/core") {
+    warningText = [
+      `[WARNING]: Importing from "langchain/${oldEntrypointName}" is deprecated.`,
       ``,
-      `    $ npm install ${newPackageName}`,
-      ``,
-      `and import from "${newPackageName}${
-        newEntrypointName === undefined
-          ? `/${oldEntrypointName}`
-          : newEntrypointName
-      }".`,
+      `Instead, please import from "${newPackageName}${finalEntrypointName}".`,
       ``,
       `This will be mandatory after the next "langchain" minor version bump to 0.2.`,
-    ].join("\n")
-  );
+    ].join("\n");
+  }
+  if (
+    getEnvironmentVariable("LANGCHAIN_SUPPRESS_MIGRATION_WARNINGS") !== "true"
+  ) {
+    console.warn(warningText);
+  }
 }

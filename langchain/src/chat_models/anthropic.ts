@@ -1,3 +1,4 @@
+// TODO: Deprecate in favor of new Anthropic package once out of beta
 import {
   Anthropic,
   AI_PROMPT,
@@ -59,6 +60,8 @@ function getAnthropicPromptFromMessage(message: BaseMessage): string {
       return HUMAN_PROMPT;
     case "system":
       return "";
+    case "function":
+      return HUMAN_PROMPT;
     case "generic": {
       if (!ChatMessage.isInstance(message))
         throw new Error("Invalid generic chat message");

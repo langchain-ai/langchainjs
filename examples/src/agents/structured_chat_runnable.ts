@@ -5,7 +5,6 @@ import {
   StructuredChatOutputParserWithRetries,
 } from "langchain/agents";
 import { Calculator } from "langchain/tools/calculator";
-import { DynamicStructuredTool } from "langchain/tools";
 import { renderTextDescriptionAndArgs } from "langchain/tools/render";
 import { formatLogToString } from "langchain/agents/format_scratchpad/log";
 import {
@@ -16,6 +15,7 @@ import {
 } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { AgentStep } from "@langchain/core/agents";
+import { DynamicStructuredTool } from "@langchain/core/tools";
 
 /**
  * Need:

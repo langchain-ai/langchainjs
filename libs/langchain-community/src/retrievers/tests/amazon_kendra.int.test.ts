@@ -18,5 +18,7 @@ test.skip("AmazonKendraRetriever", async () => {
 
   const docs = await retriever.getRelevantDocuments("How are clouds formed?");
 
+  expect(docs.length).toBeGreaterThan(0);
+
   console.log(docs);
 });

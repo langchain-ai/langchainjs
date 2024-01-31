@@ -92,10 +92,14 @@ export abstract class BaseTracer extends BaseCallbackHandler {
             currentDottedOrder,
           ].join(".");
         } else {
-          console.warn(
-            `Parent run with UUID ${storedRun.parent_run_id} not found.`
-          );
+          // This can happen naturally for callbacks added within a run
+          // console.debug(`Parent run with UUID ${storedRun.parent_run_id} has no dotted order.`);
         }
+      } else {
+        // This can happen naturally for callbacks added within a run
+        // console.debug(
+        //   `Parent run with UUID ${storedRun.parent_run_id} not found.`
+        // );
       }
     } else {
       storedRun.trace_id = storedRun.id;
@@ -318,7 +322,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       throw new Error("No chain run to end.");
     }
     run.end_time = Date.now();
-    run.error = error.message;
+    run.error = error.message + (error?.stack ? `\n\n${error.stack}` : "");
     run.events.push({
       name: "error",
       time: new Date(run.end_time).toISOString(),
