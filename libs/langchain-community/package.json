@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.0.22",
+  "version": "0.0.23",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -1091,6 +1091,11 @@
       "import": "./chat_models/portkey.js",
       "require": "./chat_models/portkey.cjs"
     },
+    "./chat_models/togetherai": {
+      "types": "./chat_models/togetherai.d.ts",
+      "import": "./chat_models/togetherai.js",
+      "require": "./chat_models/togetherai.cjs"
+    },
     "./chat_models/yandex": {
       "types": "./chat_models/yandex.d.ts",
       "import": "./chat_models/yandex.js",
@@ -1702,6 +1707,9 @@
     "chat_models/portkey.cjs",
     "chat_models/portkey.js",
     "chat_models/portkey.d.ts",
+    "chat_models/togetherai.cjs",
+    "chat_models/togetherai.js",
+    "chat_models/togetherai.d.ts",
     "chat_models/yandex.cjs",
     "chat_models/yandex.js",
     "chat_models/yandex.d.ts",

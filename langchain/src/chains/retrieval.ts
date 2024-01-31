@@ -74,7 +74,7 @@ export async function createRetrievalChain<RunOutput>({
   retriever,
   combineDocsChain,
 }: CreateRetrievalChainParams<RunOutput>): Promise<
-  RunnableInterface<
+  Runnable<
     { input: string; chat_history?: BaseMessage[] | string } & {
       [key: string]: unknown;
     },

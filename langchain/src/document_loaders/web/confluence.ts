@@ -13,6 +13,7 @@ export interface ConfluencePagesLoaderParams {
   accessToken?: string;
   personalAccessToken?: string;
   limit?: number;
+  expand?: string;
 }
 
 /**
@@ -61,6 +62,12 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
 
   public readonly limit: number;
 
+  /**
+   * expand parameter for confluence rest api
+   * description can be found at https://developer.atlassian.com/server/confluence/expansions-in-the-rest-api/
+   */
+  public readonly expand?: string;
+
   public readonly personalAccessToken?: string;
 
   constructor({
@@ -69,6 +76,7 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
     username,
     accessToken,
     limit = 25,
+    expand = "body.storage",
     personalAccessToken,
   }: ConfluencePagesLoaderParams) {
     super();
@@ -77,6 +85,7 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
     this.username = username;
     this.accessToken = accessToken;
     this.limit = limit;
+    this.expand = expand;
     this.personalAccessToken = personalAccessToken;
   }
 
@@ -165,7 +174,7 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
     start = 0,
     limit = this.limit
   ): Promise<ConfluencePage[]> {
-    const url = `${this.baseUrl}/rest/api/content?spaceKey=${this.spaceKey}&limit=${limit}&start=${start}&expand=body.storage`;
+    const url = `${this.baseUrl}/rest/api/content?spaceKey=${this.spaceKey}&limit=${limit}&start=${start}&expand=${this.expand}`;
     const data = await this.fetchConfluenceData(url);
 
     if (data.size === 0) {

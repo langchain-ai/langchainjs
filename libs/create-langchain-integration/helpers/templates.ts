@@ -3,12 +3,6 @@ import fs from "fs/promises";
 import os from "os";
 
 import { copy } from "./copy";
-import {
-  DEFAULT_ESLINTRC,
-  DEFAULT_README,
-  DEFAULT_RELEASE_IT,
-  DEFAULT_PRETTIERRC,
-} from "./default_file_contents";
 
 /**
  * Install a internal template to a given `root` directory.
@@ -44,17 +38,6 @@ export async function installTemplate({ appName, root }: any) {
   await fs.writeFile(
     path.join(root, ".gitignore"),
     ["node_modules", "dist", ".yarn"].join("\n") + os.EOL
-  );
-
-  await fs.writeFile(path.join(root, ".eslintrc.cjs"), DEFAULT_ESLINTRC);
-  await fs.writeFile(path.join(root, "README.md"), DEFAULT_README);
-  await fs.writeFile(
-    path.join(root, ".release-it.json"),
-    `${JSON.stringify(DEFAULT_RELEASE_IT)}\n`
-  );
-  await fs.writeFile(
-    path.join(root, ".prettierrc"),
-    `${JSON.stringify(DEFAULT_PRETTIERRC)}\n`
   );
 
   console.log("\nDone!\n");

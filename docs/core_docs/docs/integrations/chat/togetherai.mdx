@@ -1,0 +1,34 @@
+---
+sidebar_label: TogetherAI
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# ChatTogetherAI
+
+## Setup
+
+1. Create a TogetherAI account and get your API key [here](http://api.together.ai/).
+2. Export or set your API key inline. The ChatTogetherAI class defaults to `process.env.TOGETHER_AI_API_KEY`.
+
+```bash
+export TOGETHER_AI_API_KEY=your-api-key
+```
+
+You can use models provided by TogetherAI as follows:
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/community
+```
+
+import TogetherAI from "@examples/models/chat/integration_togetherai.ts";
+
+<CodeBlock language="typescript">{TogetherAI}</CodeBlock>
+
+Behind the scenes, TogetherAI uses the OpenAI SDK and OpenAI compatible API, with some caveats:
+
+- Certain properties are not supported by the TogetherAI API, see [here](https://docs.together.ai/reference/chat-completions).
