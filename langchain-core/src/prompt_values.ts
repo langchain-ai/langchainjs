@@ -111,23 +111,13 @@ export class ChatPromptValue
   }
 }
 
-export interface ImagePath {
-  /** Specifies the detail level of the image. */
-  detail?: "auto" | "low" | "high";
-
-  /** A path to the image on your local machine. */
-  path: string;
-}
-
-export interface ImageURL {
+export type ImageContent = {
   /** Specifies the detail level of the image. */
   detail?: "auto" | "low" | "high";
 
   /** Either a URL of the image or the base64 encoded image data. */
   url: string;
 }
-
-export type ImageContent = ImagePath | ImageURL;
 
 export interface ImagePromptValueFields {
   imageUrl: ImageContent;
@@ -151,11 +141,9 @@ export class ImagePromptValue extends BasePromptValue {
   /** @ignore */
   value: string;
 
-  constructor(imageUrl: ImageURL);
-
-  constructor(imagePath: ImagePath);
-
   constructor(fields: ImagePromptValueFields);
+
+  constructor(fields: ImageContent);
 
   constructor(fields: ImageContent | ImagePromptValueFields) {
     if (!("imageUrl" in fields)) {
@@ -168,7 +156,7 @@ export class ImagePromptValue extends BasePromptValue {
   }
 
   toString() {
-    return "url" in this.imageUrl ? this.imageUrl.url : this.imageUrl.path;
+    return this.imageUrl.url;
   }
 
   toChatMessages() {
@@ -179,8 +167,7 @@ export class ImagePromptValue extends BasePromptValue {
             type: "image_url",
             image_url: {
               detail: this.imageUrl.detail,
-              url:
-                "url" in this.imageUrl ? this.imageUrl.url : this.imageUrl.path,
+              url: this.imageUrl.url,
             },
           },
         ],

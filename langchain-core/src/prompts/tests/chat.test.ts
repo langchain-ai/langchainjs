@@ -15,7 +15,6 @@ import {
   ChatMessage,
   FunctionMessage,
 } from "../../messages/index.js";
-import { imageToDataUrl } from "../../utils/image.js";
 
 function createChatPromptTemplate() {
   const systemPrompt = new PromptTemplate({
@@ -490,40 +489,3 @@ test("Multi part chat prompt template with image", async () => {
   ]);
 });
 
-test("Multi part chat prompt template with file path for image", async () => {
-  const name = "Bob";
-  const pathToImage = "../docs/core_docs/static/img/agent.png";
-  const template = ChatPromptTemplate.fromMessages([
-    ["system", "You are an AI assistant named {name}"],
-    [
-      "human",
-      [
-        {
-          type: "image_url",
-          image_url: {
-            detail: "high",
-            path: pathToImage,
-          },
-        },
-      ],
-    ],
-  ]);
-  const messages = await template.formatMessages({
-    name,
-  });
-  const imageDataURL = await imageToDataUrl(pathToImage);
-  expect(messages).toEqual([
-    new SystemMessage("You are an AI assistant named Bob"),
-    new HumanMessage({
-      content: [
-        {
-          type: "image_url",
-          image_url: {
-            url: imageDataURL,
-            detail: "high",
-          },
-        },
-      ],
-    }),
-  ]);
-});

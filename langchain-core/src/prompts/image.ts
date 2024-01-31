@@ -1,5 +1,5 @@
 import { MessageContent } from "../messages/index.js";
-import { ImagePromptValue, ImageURL } from "../prompt_values.js";
+import { ImagePromptValue, ImageContent } from "../prompt_values.js";
 import type { InputValues, PartialValues } from "../utils/types.js";
 import {
   BasePromptTemplate,
@@ -116,7 +116,7 @@ export class ImagePromptTemplate<
    * @param values The values to be used to format the prompt template.
    * @returns A promise that resolves to a string which is the formatted prompt.
    */
-  async format<FormatOutput = ImageURL>(
+  async format<FormatOutput = ImageContent>(
     values: TypedPromptInputValues<RunInput>
   ): Promise<FormatOutput> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -134,43 +134,19 @@ export class ImagePromptTemplate<
         formatted[key] = value;
       }
     }
-    let url = values.url || formatted.url;
-    const path = values.path || formatted.path;
+    const url = values.url || formatted.url;
     const detail = values.detail || formatted.detail;
-    if (!url && !path) {
-      throw new Error("Must provide either url or path.");
-    }
     if (!url) {
-      if (typeof path !== "string") {
-        throw new Error("path must be a string.");
-      }
-      // Requires node:fs so we don't want to always
-      // import for client side application support.
-      const { imageToDataUrl } = await ImagePromptTemplate.imports();
-      url = await imageToDataUrl(path);
+      throw new Error("Must provide either an image URL.");
     }
     if (typeof url !== "string") {
       throw new Error("url must be a string.");
     }
-    const output: ImageURL = { url };
+    const output: ImageContent = { url };
     if (detail) {
       output.detail = detail;
     }
     return output as FormatOutput;
-  }
-
-  /** @ignore */
-  static async imports(): Promise<{
-    imageToDataUrl: (imagePath: string) => Promise<string>;
-  }> {
-    try {
-      const { imageToDataUrl } = await import("../utils/image.js");
-      return { imageToDataUrl };
-    } catch (e) {
-      throw new Error(
-        "Please install cohere-ai as a dependency with, e.g. `yarn add cohere-ai`"
-      );
-    }
   }
 
   /**

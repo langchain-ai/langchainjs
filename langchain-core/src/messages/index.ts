@@ -43,8 +43,9 @@ export type MessageContentText = {
 
 export type MessageContentImageUrl = {
   type: "image_url";
-  image_url: string | { url: string; detail?: ImageDetail }
-  | { path: string; detail?: ImageDetail };
+  image_url:
+    | string
+    | { url: string; detail?: ImageDetail };
 };
 
 export type MessageContentComplex = MessageContentText | MessageContentImageUrl;
