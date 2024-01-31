@@ -488,4 +488,3 @@ test("Multi part chat prompt template with image", async () => {
     }),
   ]);
 });
-
