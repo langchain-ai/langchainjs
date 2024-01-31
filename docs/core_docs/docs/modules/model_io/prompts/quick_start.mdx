@@ -198,3 +198,10 @@ const chatPrompt = ChatPromptTemplate.fromMessages<{
   text: string;
 }>([systemMessagePrompt, humanMessagePrompt]);
 ```
+
+## Multi-modal prompts
+
+import CodeBlock from "@theme/CodeBlock";
+import MultiModalPromptExample from "@examples/prompts/multi_modal.ts";
+
+<CodeBlock language="typescript">{MultiModalPromptExample}</CodeBlock>
