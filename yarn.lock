@@ -17517,6 +17517,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"code-block-writer@npm:^12.0.0":
+  version: 12.0.0
+  resolution: "code-block-writer@npm:12.0.0"
+  checksum: 9f6505a4d668c9131c6f3f686359079439e66d5f50c236614d52fcfa53aeb0bc615b2c6c64ef05b5511e3b0433ccfd9f7756ad40eb3b9298af6a7d791ab1981d
+  languageName: node
+  linkType: hard
+
 "cohere-ai@npm:>=6.0.0":
   version: 6.2.2
   resolution: "cohere-ai@npm:6.2.2"
@@ -20718,8 +20725,8 @@ __metadata:
     eslint-plugin-unused-imports: ^3.0.0
     exa-js: ^1.0.9
     faiss-node: ^0.5.1
-    glob: ^10.3.10
     firebase-admin: ^11.9.0
+    glob: ^10.3.10
     graphql: ^16.6.0
     ioredis: ^5.3.2
     js-yaml: ^4.1.0
@@ -28457,6 +28464,13 @@ __metadata:
     no-case: ^3.0.4
     tslib: ^2.0.3
   checksum: ba98bfd595fc91ef3d30f4243b1aee2f6ec41c53b4546bfa3039487c367abaa182471dcfc830a1f9e1a0df00c14a370514fa2b3a1aacc68b15a460c31116873e
+  languageName: node
+  linkType: hard
+
+"path-browserify@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "path-browserify@npm:1.0.1"
+  checksum: c6d7fa376423fe35b95b2d67990060c3ee304fc815ff0a2dc1c6c3cfaff2bd0d572ee67e18f19d0ea3bbe32e8add2a05021132ac40509416459fffee35200699
   languageName: node
   linkType: hard
 
