@@ -422,7 +422,7 @@ class _StringImageMessagePromptTemplate<
       // Assuming ChatMessage constructor also takes a content argument
       return new this.chatMessageClass({
         content,
-        role: this.getRoleFromMessageClass(this.chatMessageClass.name),
+        role: this.getRoleFromMessageClass(this.chatMessageClass.lc_name()),
       });
     } else {
       throw new Error("No message class defined");
