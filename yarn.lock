@@ -8648,7 +8648,7 @@ __metadata:
     "@anthropic-ai/sdk": ^0.12.0
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.5
-    "@langchain/scripts": ^0.0.2
+    "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     dpdm: ^3.12.0
@@ -8676,7 +8676,7 @@ __metadata:
     "@cloudflare/workers-types": ^4.20231218.0
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1
-    "@langchain/scripts": ^0.0.2
+    "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -8708,7 +8708,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1
-    "@langchain/scripts": ^0.0.2
+    "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -8764,7 +8764,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.16
     "@langchain/openai": ~0.0.10
-    "@langchain/scripts": ^0.0.2
+    "@langchain/scripts": ~0.0
     "@mozilla/readability": ^0.4.4
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^1.1.0
@@ -9113,7 +9113,7 @@ __metadata:
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/scripts": ^0.0.2
+    "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     ansi-styles: ^5.0.0
@@ -9152,7 +9152,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1
-    "@langchain/scripts": ^0.0.2
+    "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9184,7 +9184,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.1
-    "@langchain/scripts": ^0.0.2
+    "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9214,7 +9214,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.1
     "@langchain/google-common": ~0.0.0
-    "@langchain/scripts": ^0.0.2
+    "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9245,7 +9245,7 @@ __metadata:
     "@google/generative-ai": ^0.1.3
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.5
-    "@langchain/scripts": ^0.0.2
+    "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9277,7 +9277,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.1
     "@langchain/google-common": ~0.0.0
-    "@langchain/scripts": ^0.0.2
+    "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9307,7 +9307,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.5
-    "@langchain/scripts": ^0.0.2
+    "@langchain/scripts": ~0.0
     "@mistralai/mistralai": ^0.0.7
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9338,7 +9338,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.13
-    "@langchain/scripts": ^0.0.2
+    "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     dpdm: ^3.12.0
@@ -9369,7 +9369,7 @@ __metadata:
     "@faker-js/faker": ^8.3.1
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1
-    "@langchain/scripts": ^0.0.2
+    "@langchain/scripts": ~0.0
     "@pinecone-database/pinecone": ^2.0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9396,7 +9396,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/scripts@^0.0.2, @langchain/scripts@workspace:libs/langchain-scripts, @langchain/scripts@~0.0":
+"@langchain/scripts@workspace:libs/langchain-scripts, @langchain/scripts@~0.0, @langchain/scripts@~0.0":
   version: 0.0.0-use.local
   resolution: "@langchain/scripts@workspace:libs/langchain-scripts"
   dependencies:
@@ -9467,7 +9467,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1
-    "@langchain/scripts": ^0.0.2
+    "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -25302,7 +25302,7 @@ __metadata:
     "@langchain/community": ~0.0.20
     "@langchain/core": ~0.1.16
     "@langchain/openai": ~0.0.12
-    "@langchain/scripts": ^0.0.2
+    "@langchain/scripts": ~0.0
     "@notionhq/client": ^2.2.10
     "@pinecone-database/pinecone": ^1.1.0
     "@supabase/supabase-js": ^2.10.0
