@@ -102,8 +102,8 @@ export class IterableReadableStream<T>
         // Fix: `else if (value)` will hang the streaming when nullish value (e.g. empty string) is pulled
         controller.enqueue(value);
       },
-      async cancel() {
-        await generator.return(undefined);
+      async cancel(reason) {
+        await generator.return(reason);
       },
     });
   }

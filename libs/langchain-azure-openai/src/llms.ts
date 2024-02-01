@@ -22,7 +22,6 @@ import {
   isTokenCredential,
 } from "@azure/core-auth";
 import { AzureOpenAIInput, OpenAICallOptions, OpenAIInput } from "./types.js";
-import { AzureOpenAIChat } from "./legacy.js";
 
 /**
  * Interface for tracking token usage in OpenAI calls.
@@ -117,14 +116,6 @@ export class AzureOpenAI<
         configuration?: AzureOpenAIClientOptions;
       }
   ) {
-    if (
-      (fields?.modelName?.startsWith("gpt-3.5-turbo") ||
-        fields?.modelName?.startsWith("gpt-4")) &&
-      !fields?.modelName?.includes("-instruct")
-    ) {
-      // eslint-disable-next-line no-constructor-return
-      return new AzureOpenAIChat(fields) as unknown as AzureOpenAI<CallOptions>;
-    }
     super(fields ?? {});
 
     this.azureOpenAIEndpoint =
@@ -203,10 +194,10 @@ export class AzureOpenAI<
       throw new Error("Azure OpenAI Completion Deployment name not found");
     }
 
-    const stream = await this.client.streamCompletions(
-      this.azureOpenAIApiDeploymentName,
-      [input],
-      {
+    const deploymentName = this.azureOpenAIApiDeploymentName;
+
+    const stream = await this.caller.call(() =>
+      this.client.streamCompletions(deploymentName, [input], {
         maxTokens: this.maxTokens,
         temperature: this.temperature,
         topP: this.topP,
@@ -224,7 +215,7 @@ export class AzureOpenAI<
         },
         abortSignal: options?.signal ?? undefined,
         ...this.modelKwargs,
-      }
+      })
     );
 
     for await (const data of stream) {
@@ -257,6 +248,8 @@ export class AzureOpenAI<
       throw new Error("Azure OpenAI Completion Deployment name not found");
     }
 
+    const deploymentName = this.azureOpenAIApiDeploymentName;
+
     if (this.maxTokens === -1) {
       if (prompts.length !== 1) {
         throw new Error(
@@ -278,10 +271,8 @@ export class AzureOpenAI<
       for (let i = 0; i < subPrompts.length; i += 1) {
         let response: Omit<Completions, "choices" | "usage"> | undefined;
 
-        const stream = await this.client.streamCompletions(
-          this.azureOpenAIApiDeploymentName,
-          subPrompts[i],
-          {
+        const stream = await this.caller.call(() =>
+          this.client.streamCompletions(deploymentName, subPrompts[i], {
             maxTokens: this.maxTokens,
             temperature: this.temperature,
             topP: this.topP,
@@ -299,7 +290,7 @@ export class AzureOpenAI<
             },
             abortSignal: options?.signal ?? undefined,
             ...this.modelKwargs,
-          }
+          })
         );
         for await (const message of stream) {
           if (!response) {
@@ -355,10 +346,8 @@ export class AzureOpenAI<
       const choices: Choice[] = [];
 
       for (let i = 0; i < subPrompts.length; i += 1) {
-        const data = await this.client.getCompletions(
-          this.azureOpenAIApiDeploymentName,
-          prompts,
-          {
+        const data = await this.caller.call(() =>
+          this.client.getCompletions(deploymentName, prompts, {
             maxTokens: this.maxTokens,
             temperature: this.temperature,
             topP: this.topP,
@@ -376,7 +365,7 @@ export class AzureOpenAI<
             },
             abortSignal: options?.signal ?? undefined,
             ...this.modelKwargs,
-          }
+          })
         );
 
         choices.push(...data.choices);
@@ -422,5 +411,3 @@ export class AzureOpenAI<
     return "azure_openai";
   }
 }
-
-// export { AzureOpenAIChat } from "./azure_openai-chat.js";

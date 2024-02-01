@@ -326,7 +326,7 @@ export class AzureChatOpenAI
     );
   }
 
-  async completionWithRetry(
+  protected async _streamChatCompletionsWithRetry(
     azureOpenAIMessages: ChatRequestMessage[],
     options: this["ParsedCallOptions"]
   ): Promise<EventStream<ChatCompletions>> {
@@ -373,7 +373,7 @@ export class AzureChatOpenAI
     const azureOpenAIMessages: ChatRequestMessage[] =
       this.formatMessages(messages);
     let defaultRole: string | undefined;
-    const streamIterable = await this.completionWithRetry(
+    const streamIterable = await this._streamChatCompletionsWithRetry(
       azureOpenAIMessages,
       options
     );
@@ -429,15 +429,14 @@ export class AzureChatOpenAI
     if (!this.azureOpenAIApiCompletionsDeploymentName) {
       throw new Error("Azure OpenAI Completion Deployment name not found");
     }
+    const deploymentName = this.azureOpenAIApiCompletionsDeploymentName;
     const tokenUsage: TokenUsage = {};
     const azureOpenAIMessages: ChatRequestMessage[] =
       this.formatMessages(messages);
 
     if (!this.streaming) {
-      const data = await this.client.getChatCompletions(
-        this.azureOpenAIApiCompletionsDeploymentName,
-        azureOpenAIMessages,
-        {
+      const data = await this.caller.call(() =>
+        this.client.getChatCompletions(deploymentName, azureOpenAIMessages, {
           functions: options?.functions,
           functionCall: options?.function_call,
           maxTokens: this.maxTokens,
@@ -459,7 +458,7 @@ export class AzureChatOpenAI
           responseFormat: options?.response_format,
           seed: options?.seed,
           ...this.modelKwargs,
-        }
+        })
       );
 
       const { completionTokens, promptTokens, totalTokens } = data?.usage ?? {};

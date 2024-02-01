@@ -7,7 +7,6 @@ import { ClientSecretCredential } from "@azure/identity";
 import { TokenCredential } from "@azure/core-auth";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { AzureOpenAI } from "../llms.js";
-import { AzureOpenAIChat } from "../legacy.js";
 
 test("Test OpenAI", async () => {
   const model = new AzureOpenAI({
@@ -114,14 +113,6 @@ test("Test OpenAI with maxTokens -1", async () => {
   });
   const res = await model.call("Print hello world", ["world"]);
   console.log({ res });
-});
-
-test("Test OpenAI with chat model returns OpenAIChat", async () => {
-  const model = new AzureOpenAI({ modelName: "gpt-3.5-turbo" });
-  expect(model).toBeInstanceOf(AzureOpenAIChat);
-  const res = await model.call("Print hello world");
-  console.log({ res });
-  expect(typeof res).toBe("string");
 });
 
 test("Test OpenAI with instruct model returns OpenAI", async () => {

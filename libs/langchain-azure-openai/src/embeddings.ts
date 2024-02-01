@@ -5,12 +5,12 @@ import {
   AzureKeyCredential,
   OpenAIKeyCredential,
 } from "@azure/openai";
-import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   KeyCredential,
   TokenCredential,
   isTokenCredential,
 } from "@azure/core-auth";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { AzureOpenAIInput, AzureOpenAIEmbeddingsParams } from "./types.js";
 
@@ -130,16 +130,18 @@ export class AzureOpenAIEmbeddings
       throw new Error("Azure OpenAI Completion Deployment name not found");
     }
 
-    const res = await this.client.getEmbeddings(
-      this.azureOpenAIEmbeddingsApiDeploymentName,
-      input,
-      {
-        user: this.user,
-        model: this.modelName,
-        requestOptions: {
-          timeout: this.timeout,
-        },
-      }
+    const res = await this.caller.call(() =>
+      this.client.getEmbeddings(
+        this.azureOpenAIEmbeddingsApiDeploymentName ?? "",
+        input,
+        {
+          user: this.user,
+          model: this.modelName,
+          requestOptions: {
+            timeout: this.timeout,
+          },
+        }
+      )
     );
 
     return res.data[0].embedding;
