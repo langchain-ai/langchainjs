@@ -245,3 +245,135 @@ test("WeaviateStore delete with filter", async () => {
   });
   expect(results2).toEqual([]);
 });
+
+test("Initializing via constructor", () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const client = (weaviate as any).client({
+    scheme:
+      process.env.WEAVIATE_SCHEME ||
+      (process.env.WEAVIATE_HOST ? "https" : "http"),
+    host: process.env.WEAVIATE_HOST || "localhost:8080",
+    apiKey: process.env.WEAVIATE_API_KEY
+      ? new ApiKey(process.env.WEAVIATE_API_KEY)
+      : undefined,
+  });
+  const store = new WeaviateStore(new OpenAIEmbeddings(), {
+    client,
+    indexName: "Test",
+    textKey: "text",
+    metadataKeys: ["foo"],
+  });
+
+  expect(store).toBeDefined();
+  expect(store._vectorstoreType()).toBe("weaviate");
+});
+
+test("addDocuments & addVectors method works", async () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const client = (weaviate as any).client({
+    scheme:
+      process.env.WEAVIATE_SCHEME ||
+      (process.env.WEAVIATE_HOST ? "https" : "http"),
+    host: process.env.WEAVIATE_HOST || "localhost:8080",
+    apiKey: process.env.WEAVIATE_API_KEY
+      ? new ApiKey(process.env.WEAVIATE_API_KEY)
+      : undefined,
+  });
+  console.log(
+    process.env.WEAVIATE_SCHEME ||
+      (process.env.WEAVIATE_HOST ? "https" : "http")
+  );
+  const store = new WeaviateStore(new OpenAIEmbeddings(), {
+    client,
+    indexName: "Test",
+    textKey: "text",
+    metadataKeys: ["foo"],
+  });
+
+  const documents = [
+    new Document({ pageContent: "hello world", metadata: { foo: "bar" } }),
+    new Document({ pageContent: "hi there", metadata: { foo: "baz" } }),
+    new Document({ pageContent: "how are you", metadata: { foo: "qux" } }),
+    new Document({ pageContent: "bye now", metadata: { foo: "bar" } }),
+  ];
+
+  const embeddings = await store.embeddings.embedDocuments(
+    documents.map((d) => d.pageContent)
+  );
+
+  const vectors = await store.addVectors(embeddings, documents);
+
+  expect(vectors).toHaveLength(4);
+});
+
+test("maxMarginalRelevanceSearch", async () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const client = (weaviate as any).client({
+    scheme:
+      process.env.WEAVIATE_SCHEME ||
+      (process.env.WEAVIATE_HOST ? "https" : "http"),
+    host: process.env.WEAVIATE_HOST || "localhost:8080",
+    apiKey: process.env.WEAVIATE_API_KEY
+      ? new ApiKey(process.env.WEAVIATE_API_KEY)
+      : undefined,
+  });
+
+  const createdAt = new Date().getTime();
+
+  const fatherDoc = new Document({
+    pageContent: "hello father",
+    metadata: { deletionTest: (createdAt + 3).toString() },
+  });
+
+  const store = await WeaviateStore.fromDocuments(
+    [
+      new Document({
+        pageContent: "testing",
+        metadata: { deletionTest: createdAt.toString() },
+      }),
+      new Document({
+        pageContent: "hello world",
+        metadata: { deletionTest: (createdAt + 1).toString() },
+      }),
+      new Document({
+        pageContent: "hello mother",
+        metadata: { deletionTest: (createdAt + 2).toString() },
+      }),
+      fatherDoc,
+    ],
+    new OpenAIEmbeddings(),
+    {
+      client,
+      indexName: "DocumentTest",
+      textKey: "pageContent",
+      metadataKeys: ["deletionTest"],
+    }
+  );
+
+  const result = await store.maxMarginalRelevanceSearch("father", { k: 1 });
+
+  expect(result[0].pageContent).toEqual(fatherDoc.pageContent);
+});
+
+test("fromExistingIndex", async () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const client = (weaviate as any).client({
+    scheme:
+      process.env.WEAVIATE_SCHEME ||
+      (process.env.WEAVIATE_HOST ? "https" : "http"),
+    host: process.env.WEAVIATE_HOST || "localhost:8080",
+    apiKey: process.env.WEAVIATE_API_KEY
+      ? new ApiKey(process.env.WEAVIATE_API_KEY)
+      : undefined,
+  });
+
+  const store = await WeaviateStore.fromExistingIndex(new OpenAIEmbeddings(), {
+    client,
+    indexName: "DocumentTest",
+    textKey: "pageContent",
+    metadataKeys: ["deletionTest"],
+  });
+
+  expect(store).toBeDefined();
+  expect(store._vectorstoreType()).toBe("weaviate");
+});
