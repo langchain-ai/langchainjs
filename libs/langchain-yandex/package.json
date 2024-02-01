@@ -68,22 +68,38 @@
   },
   "exports": {
     "./chat_models": {
-      "types": "./chat_models.d.ts",
+      "types": {
+        "import": "./chat_models.d.ts",
+        "require": "./chat_models.d.cts",
+        "default": "./chat_models.d.ts"
+      },
       "import": "./chat_models.js",
       "require": "./chat_models.cjs"
     },
     "./embeddings": {
-      "types": "./embeddings.d.ts",
+      "types": {
+        "import": "./embeddings.d.ts",
+        "require": "./embeddings.d.cts",
+        "default": "./embeddings.d.ts"
+      },
       "import": "./embeddings.js",
       "require": "./embeddings.cjs"
     },
     ".": {
-      "types": "./index.d.ts",
+      "types": {
+        "import": "./index.d.ts",
+        "require": "./index.d.cts",
+        "default": "./index.d.ts"
+      },
       "import": "./index.js",
       "require": "./index.cjs"
     },
     "./llms": {
-      "types": "./llms.d.ts",
+      "types": {
+        "import": "./llms.d.ts",
+        "require": "./llms.d.cts",
+        "default": "./llms.d.ts"
+      },
       "import": "./llms.js",
       "require": "./llms.cjs"
     },
@@ -94,14 +110,18 @@
     "chat_models.cjs",
     "chat_models.js",
     "chat_models.d.ts",
+    "chat_models.d.cts",
     "embeddings.cjs",
     "embeddings.js",
     "embeddings.d.ts",
+    "embeddings.d.cts",
     "index.cjs",
     "index.js",
     "index.d.ts",
+    "index.d.cts",
     "llms.cjs",
     "llms.js",
-    "llms.d.ts"
+    "llms.d.ts",
+    "llms.d.cts"
   ]
 }
