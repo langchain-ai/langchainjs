@@ -13,6 +13,7 @@ import * as agents_xml_output_parser from "langchain/agents/xml/output_parser";
 import * as agents_openai_output_parser from "langchain/agents/openai/output_parser";
 import * as base_language from "langchain/base_language";
 import * as tools from "langchain/tools";
+import * as tools_chain from "langchain/tools/chain";
 import * as tools_connery from "langchain/tools/connery";
 import * as tools_render from "langchain/tools/render";
 import * as tools_retriever from "langchain/tools/retriever";
@@ -109,5 +110,7 @@ import * as experimental_chains_violation_of_expectations from "langchain/experi
 import * as experimental_masking from "langchain/experimental/masking";
 import * as experimental_prompts_custom_format from "langchain/experimental/prompts/custom_format";
 import * as evaluation from "langchain/evaluation";
+import * as smith from "langchain/smith";
 import * as runnables from "langchain/runnables";
 import * as runnables_remote from "langchain/runnables/remote";
+import * as indexes from "langchain/indexes";

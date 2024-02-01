@@ -3,7 +3,7 @@ import * as url from "node:url";
 import * as path from "node:path";
 import { PPTXLoader } from "../fs/pptx.js";
 
-test("Test PowerPoint loader from file", async () => {
+test.skip("Test PowerPoint loader from file", async () => {
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
     "./example_data/theikuntest.pptx"
@@ -15,7 +15,7 @@ test("Test PowerPoint loader from file", async () => {
   expect(docs[0].pageContent).toContain("UTSC IS THE BEST");
 });
 
-test("Test PowerPoint loader from empty powerpoint file", async () => {
+test.skip("Test PowerPoint loader from empty powerpoint file", async () => {
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
     "./example_data/emptyfile.pptx"

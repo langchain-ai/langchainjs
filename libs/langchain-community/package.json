@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.0.18",
+  "version": "0.0.25",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -16,21 +16,24 @@
     "build": "yarn run build:deps && yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
     "build:deps": "yarn run turbo:command build --filter=@langchain/core --filter=@langchain/anthropic --filter=@langchain/openai --concurrency=1",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rm -rf dist/tests dist/**/tests",
-    "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && node scripts/move-cjs-to-dist.js && rm -rf dist-cjs",
-    "build:watch": "node scripts/create-entrypoints.js && tsc --outDir dist/ --watch",
-    "build:scripts": "node scripts/create-entrypoints.js && node scripts/check-tree-shaking.js",
+    "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rm -rf dist-cjs",
+    "build:watch": "yarn create-entrypoints && tsc --outDir dist/ --watch",
+    "build:scripts": "yarn create-entrypoints && yarn check-tree-shaking",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
     "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "yarn lint:eslint && yarn lint:dpdm",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
-    "clean": "rm -rf dist/ && NODE_OPTIONS=--max-old-space-size=4096 node scripts/create-entrypoints.js pre",
+    "clean": "rm -rf dist/ && NODE_OPTIONS=--max-old-space-size=4096 yarn create-entrypoints -- --pre",
     "prepack": "yarn build",
     "test": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
     "test:watch": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
     "test:single": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 100000",
     "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
-    "format": "prettier --write \"src\" \"scripts\"",
-    "format:check": "prettier --check \"src\" \"scripts\""
+    "format": "prettier --config .prettierrc --write \"src\"",
+    "format:check": "prettier --config .prettierrc --check \"src\"",
+    "move-cjs-to-dist": "yarn lc-build --config ./langchain.config.js --move-cjs-dist",
+    "create-entrypoints": "yarn lc-build --config ./langchain.config.js --create-entrypoints",
+    "check-tree-shaking": "yarn lc-build --config ./langchain.config.js --tree-shaking"
   },
   "author": "LangChain",
   "license": "MIT",
@@ -44,6 +47,7 @@
   },
   "devDependencies": {
     "@aws-crypto/sha256-js": "^5.0.0",
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.496.0",
     "@aws-sdk/client-bedrock-runtime": "^3.422.0",
     "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-kendra": "^3.352.0",
@@ -52,10 +56,11 @@
     "@aws-sdk/client-sfn": "^3.362.0",
     "@aws-sdk/credential-provider-node": "^3.388.0",
     "@aws-sdk/types": "^3.357.0",
+    "@azure/search-documents": "^12.0.0",
     "@clickhouse/client": "^0.2.5",
     "@cloudflare/ai": "^1.0.12",
     "@cloudflare/workers-types": "^4.20230922.0",
-    "@datastax/astra-db-ts": "^0.1.3",
+    "@datastax/astra-db-ts": "^0.1.4",
     "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
@@ -66,6 +71,7 @@
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
     "@jest/globals": "^29.5.0",
+    "@langchain/scripts": "^0.0.2",
     "@mozilla/readability": "^0.4.4",
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^1.1.0",
@@ -160,6 +166,7 @@
   },
   "peerDependencies": {
     "@aws-crypto/sha256-js": "^5.0.0",
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.485.0",
     "@aws-sdk/client-bedrock-runtime": "^3.422.0",
     "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-kendra": "^3.352.0",
@@ -167,9 +174,10 @@
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@aws-sdk/client-sfn": "^3.310.0",
     "@aws-sdk/credential-provider-node": "^3.388.0",
+    "@azure/search-documents": "^12.0.0",
     "@clickhouse/client": "^0.2.5",
-    "@cloudflare/ai": "^1.0.12",
-    "@datastax/astra-db-ts": "0.1.2",
+    "@cloudflare/ai": "*",
+    "@datastax/astra-db-ts": "^0.1.4",
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-js": "^0.9.0",
@@ -180,7 +188,7 @@
     "@huggingface/inference": "^2.6.4",
     "@mozilla/readability": "*",
     "@opensearch-project/opensearch": "*",
-    "@pinecone-database/pinecone": "^1.1.0",
+    "@pinecone-database/pinecone": "*",
     "@planetscale/database": "^1.8.0",
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",
@@ -206,7 +214,7 @@
     "closevector-common": "0.1.0-alpha.1",
     "closevector-node": "0.1.0-alpha.10",
     "closevector-web": "0.1.0-alpha.16",
-    "cohere-ai": ">=6.0.0",
+    "cohere-ai": "*",
     "convex": "^1.3.1",
     "discord.js": "^14.14.1",
     "faiss-node": "^0.5.1",
@@ -243,6 +251,9 @@
     "@aws-crypto/sha256-js": {
       "optional": true
     },
+    "@aws-sdk/client-bedrock-agent-runtime": {
+      "optional": true
+    },
     "@aws-sdk/client-bedrock-runtime": {
       "optional": true
     },
@@ -262,6 +273,9 @@
       "optional": true
     },
     "@aws-sdk/credential-provider-node": {
+      "optional": true
+    },
+    "@azure/search-documents": {
       "optional": true
     },
     "@clickhouse/client": {
@@ -807,6 +821,11 @@
       "import": "./vectorstores/astradb.js",
       "require": "./vectorstores/astradb.cjs"
     },
+    "./vectorstores/azure_aisearch": {
+      "types": "./vectorstores/azure_aisearch.d.ts",
+      "import": "./vectorstores/azure_aisearch.js",
+      "require": "./vectorstores/azure_aisearch.cjs"
+    },
     "./vectorstores/azure_cosmosdb": {
       "types": "./vectorstores/azure_cosmosdb.d.ts",
       "import": "./vectorstores/azure_cosmosdb.js",
@@ -1072,6 +1091,11 @@
       "import": "./chat_models/portkey.js",
       "require": "./chat_models/portkey.cjs"
     },
+    "./chat_models/togetherai": {
+      "types": "./chat_models/togetherai.d.ts",
+      "import": "./chat_models/togetherai.js",
+      "require": "./chat_models/togetherai.cjs"
+    },
     "./chat_models/yandex": {
       "types": "./chat_models/yandex.d.ts",
       "import": "./chat_models/yandex.js",
@@ -1091,6 +1115,11 @@
       "types": "./retrievers/amazon_kendra.d.ts",
       "import": "./retrievers/amazon_kendra.js",
       "require": "./retrievers/amazon_kendra.cjs"
+    },
+    "./retrievers/amazon_knowledge_base": {
+      "types": "./retrievers/amazon_knowledge_base.d.ts",
+      "import": "./retrievers/amazon_knowledge_base.js",
+      "require": "./retrievers/amazon_knowledge_base.cjs"
     },
     "./retrievers/chaindesk": {
       "types": "./retrievers/chaindesk.d.ts",
@@ -1162,10 +1191,10 @@
       "import": "./graphs/neo4j_graph.js",
       "require": "./graphs/neo4j_graph.cjs"
     },
-    "./utils/event_source_parse": {
-      "types": "./utils/event_source_parse.d.ts",
-      "import": "./utils/event_source_parse.js",
-      "require": "./utils/event_source_parse.cjs"
+    "./graphs/memgraph_graph": {
+      "types": "./graphs/memgraph_graph.d.ts",
+      "import": "./graphs/memgraph_graph.js",
+      "require": "./graphs/memgraph_graph.cjs"
     },
     "./document_transformers/html_to_text": {
       "types": "./document_transformers/html_to_text.d.ts",
@@ -1287,10 +1316,35 @@
       "import": "./memory/zep.js",
       "require": "./memory/zep.cjs"
     },
+    "./indexes/base": {
+      "types": "./indexes/base.d.ts",
+      "import": "./indexes/base.js",
+      "require": "./indexes/base.cjs"
+    },
+    "./indexes/postgres": {
+      "types": "./indexes/postgres.d.ts",
+      "import": "./indexes/postgres.js",
+      "require": "./indexes/postgres.cjs"
+    },
+    "./indexes/memory": {
+      "types": "./indexes/memory.d.ts",
+      "import": "./indexes/memory.js",
+      "require": "./indexes/memory.cjs"
+    },
     "./util/convex": {
       "types": "./util/convex.d.ts",
       "import": "./util/convex.js",
       "require": "./util/convex.cjs"
+    },
+    "./utils/event_source_parse": {
+      "types": "./utils/event_source_parse.d.ts",
+      "import": "./utils/event_source_parse.js",
+      "require": "./utils/event_source_parse.cjs"
+    },
+    "./utils/cassandra": {
+      "types": "./utils/cassandra.d.ts",
+      "import": "./utils/cassandra.js",
+      "require": "./utils/cassandra.cjs"
     },
     "./package.json": "./package.json"
   },
@@ -1491,6 +1545,9 @@
     "vectorstores/astradb.cjs",
     "vectorstores/astradb.js",
     "vectorstores/astradb.d.ts",
+    "vectorstores/azure_aisearch.cjs",
+    "vectorstores/azure_aisearch.js",
+    "vectorstores/azure_aisearch.d.ts",
     "vectorstores/azure_cosmosdb.cjs",
     "vectorstores/azure_cosmosdb.js",
     "vectorstores/azure_cosmosdb.d.ts",
@@ -1650,6 +1707,9 @@
     "chat_models/portkey.cjs",
     "chat_models/portkey.js",
     "chat_models/portkey.d.ts",
+    "chat_models/togetherai.cjs",
+    "chat_models/togetherai.js",
+    "chat_models/togetherai.d.ts",
     "chat_models/yandex.cjs",
     "chat_models/yandex.js",
     "chat_models/yandex.d.ts",
@@ -1662,6 +1722,9 @@
     "retrievers/amazon_kendra.cjs",
     "retrievers/amazon_kendra.js",
     "retrievers/amazon_kendra.d.ts",
+    "retrievers/amazon_knowledge_base.cjs",
+    "retrievers/amazon_knowledge_base.js",
+    "retrievers/amazon_knowledge_base.d.ts",
     "retrievers/chaindesk.cjs",
     "retrievers/chaindesk.js",
     "retrievers/chaindesk.d.ts",
@@ -1704,9 +1767,9 @@
     "graphs/neo4j_graph.cjs",
     "graphs/neo4j_graph.js",
     "graphs/neo4j_graph.d.ts",
-    "utils/event_source_parse.cjs",
-    "utils/event_source_parse.js",
-    "utils/event_source_parse.d.ts",
+    "graphs/memgraph_graph.cjs",
+    "graphs/memgraph_graph.js",
+    "graphs/memgraph_graph.d.ts",
     "document_transformers/html_to_text.cjs",
     "document_transformers/html_to_text.js",
     "document_transformers/html_to_text.d.ts",
@@ -1779,8 +1842,23 @@
     "memory/zep.cjs",
     "memory/zep.js",
     "memory/zep.d.ts",
+    "indexes/base.cjs",
+    "indexes/base.js",
+    "indexes/base.d.ts",
+    "indexes/postgres.cjs",
+    "indexes/postgres.js",
+    "indexes/postgres.d.ts",
+    "indexes/memory.cjs",
+    "indexes/memory.js",
+    "indexes/memory.d.ts",
     "util/convex.cjs",
     "util/convex.js",
-    "util/convex.d.ts"
+    "util/convex.d.ts",
+    "utils/event_source_parse.cjs",
+    "utils/event_source_parse.js",
+    "utils/event_source_parse.d.ts",
+    "utils/cassandra.cjs",
+    "utils/cassandra.js",
+    "utils/cassandra.d.ts"
   ]
 }

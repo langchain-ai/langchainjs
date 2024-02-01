@@ -45,9 +45,9 @@ export class Neo4jGraph {
 
   private timeoutMs: number | undefined;
 
-  private schema = "";
+  protected schema = "";
 
-  private structuredSchema: StructuredSchema = {
+  protected structuredSchema: StructuredSchema = {
     nodeProps: {},
     relProps: {},
     relationships: [],
