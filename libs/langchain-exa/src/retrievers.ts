@@ -67,9 +67,18 @@ export class ExaRetriever<
 
     const documents: Document[] = [];
     for (const result of res.results) {
+      let pageContent;
+      if ("text" in result) {
+        pageContent = result.text;
+      } else if ("highlights" in result) {
+        pageContent = result.highlights.join("\n\n");
+      } else {
+        pageContent = "No results found.";
+      }
+
       documents.push(
         new Document({
-          pageContent: "text" in result ? result.text : "No text found.",
+          pageContent,
           metadata: _getMetadata<T>(result),
         })
       );
