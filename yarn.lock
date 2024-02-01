@@ -9396,7 +9396,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/scripts@^0.0.2, @langchain/scripts@workspace:libs/langchain-scripts":
+"@langchain/scripts@^0.0.2, @langchain/scripts@workspace:libs/langchain-scripts, @langchain/scripts@~0.0":
   version: 0.0.0-use.local
   resolution: "@langchain/scripts@workspace:libs/langchain-scripts"
   dependencies:
@@ -9434,6 +9434,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1
     "@langchain/openai": "workspace:^"
+    "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
