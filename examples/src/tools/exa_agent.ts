@@ -5,29 +5,26 @@ import {
 import { ChatOpenAI } from "@langchain/openai";
 import Exa from "exa-js";
 import { AgentExecutor, createOpenAIFunctionsAgent } from "langchain/agents";
-import { Tool } from "@langchain/core/tools";
+import { createRetrieverTool } from "langchain/tools/retriever";
+import { ExaRetriever } from "@langchain/exa";
 
 // @ts-expect-error Some TS Config's will cause this to give a TypeScript error, even though it works.
 const client: Exa.default = new Exa(process.env.EXASEARCH_API_KEY);
 
-class Search extends Tool {
-  name = "search";
+const exaRetriever = new ExaRetriever({
+  client,
+  searchArgs: {
+    numResults: 2,
+  },
+});
 
-  description = "Get the contents of a webpage given a string search query.";
+// Convert the ExaRetriever into a tool
+const searchTool = createRetrieverTool(exaRetriever, {
+  name: "search",
+  description: "Get the contents of a webpage given a string search query.",
+});
 
-  async _call(query: string) {
-    const results = await client.searchAndContents<{ highlights: true }>(
-      query,
-      {
-        numResults: 1,
-        highlights: true,
-      }
-    );
-    return JSON.stringify(results, null, 2);
-  }
-}
-
-const tools = [new Search()];
+const tools = [searchTool];
 const llm = new ChatOpenAI({ modelName: "gpt-4", temperature: 0 });
 const prompt = ChatPromptTemplate.fromMessages([
   [

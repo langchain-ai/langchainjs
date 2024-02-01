@@ -45,7 +45,7 @@ You can see a LangSmith trace for this example [here](https://smith.langchain.co
 
 ## Using the Exa SDK as LangChain Agent Tools
 
-We can create LangChain tools which use the Exa SDK to perform queries and retrieve content.
+We can create LangChain tools which use the [`ExaRetriever`](/docs/integrations/retrievers/exa) and the [`createRetrieverTool`](https://api.js.langchain.com/functions/langchain_tools_retriever.createRetrieverTool.html)
 Using these tools we can construct a simple search agent that can answer questions about any topic.
 
 import AgentExample from "@examples/tools/exa_agent.ts";
@@ -55,20 +55,16 @@ import AgentExample from "@examples/tools/exa_agent.ts";
 ```
 {
   input: 'Summarize for me a fascinating article about cats.',
-  output: `The article titled "What the love of cats taught me about myself" by Annalisa Barbieri, published on The Guardian, discusses\n` +
+  output: 'The article discusses the research of biologist Jaroslav Flegr, who has been investigating the effects of a single-celled parasite called Toxoplasma gondii (T. gondii or Toxo), which is excreted by cats in their feces. Flegr began to suspect in the early 1990s that this parasite was subtly manipulating his personality, causing him to behave in strange, often self-destructive ways. He reasoned that if it was affecting him, it was probably doing the same to others.\n' +
     '\n' +
-    'the author's journey of becoming a cat lover. Initially, the author was not keen on having cats. However, over time, as the requests\n` +
+    "T. gondii is the microbe that causes toxoplasmosis, a disease that can be transmitted from a pregnant woman to her fetus, potentially resulting in severe brain damage or death. It's also a major threat to people with weakened immunity. However, healthy children and adults usually experience nothing worse than brief flu-like symptoms before quickly fighting off the protozoan, which then lies dormant inside brain cells.\n" +
     '\n' +
-    'for a cat in the household became more frequent and the list of reasons to get a cat grew longer, the author began to consider the\n` +
+    "Flegr's research is unconventional and suggests that these tiny organisms carried by house cats could be creeping into our brains, causing everything from car wrecks to schizophrenia.\n" +
     '\n' +
-    'idea. The author started watching videos about kittens, which are described as cute, and this seems to have played a role in changing\n` +
-    '\n' +
-    'her perspective towards cats.\n` +
-    '\n' +
-    'Source: [The Guardian](https://www.theguardian.com/lifeandstyle/2023/jan/08/what-the-love-of-cats-taught-me-about-myself)'
+    '(Source: [The Atlantic](https://www.theatlantic.com/magazine/archive/2012/03/how-your-cat-is-making-you-crazy/308873/))'
 }
 ```
 
 :::tip
-You can see a LangSmith trace for this example [here](https://smith.langchain.com/public/65963d51-9bcb-4d1e-91ae-3fb51410ad72/r).
+You can see a LangSmith trace for this example [here](https://smith.langchain.com/public/d123ba5f-8535-4669-9e43-ac7ab3c6735e/r).
 :::
