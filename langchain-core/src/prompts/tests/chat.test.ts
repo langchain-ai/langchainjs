@@ -488,3 +488,66 @@ test("Multi part chat prompt template with image", async () => {
     }),
   ]);
 });
+
+test("Multi-modal, multi part chat prompt works with instances of BaseMessage", async () => {
+  const name = "Bob";
+  const objectName = "chair";
+  const myImage = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAA";
+  const myUrl = "https://www.example.com/image.png";
+  const inlineImageUrl = new HumanMessage({
+    content: [
+      {
+        type: "image_url",
+        image_url: "data:image/jpeg;base64,{myImage}",
+      },
+    ],
+  });
+  const objectImageUrl = new HumanMessage({
+    content: [
+      {
+        type: "image_url",
+        image_url: {
+          url: "data:image/jpeg;base64,{myImage}",
+          detail: "high",
+        },
+      },
+    ],
+  });
+  const normalMessage = new HumanMessage({
+    content: [
+      {
+        type: "text",
+        text: "What is in this object {objectName}",
+      },
+    ],
+  });
+  const template = ChatPromptTemplate.fromMessages([
+    ["system", "You are an AI assistant named {name}"],
+    inlineImageUrl,
+    normalMessage,
+    objectImageUrl,
+    [
+      "human",
+      [
+        {
+          type: "text",
+          text: "What is in this object {objectName}",
+        },
+        {
+          type: "image_url",
+          image_url: {
+            url: "{myUrl}",
+            detail: "high",
+          },
+        },
+      ],
+    ],
+  ]);
+  const messages = await template.formatMessages({
+    name,
+    objectName,
+    myImage,
+    myUrl,
+  });
+  expect(messages).toMatchSnapshot();
+});

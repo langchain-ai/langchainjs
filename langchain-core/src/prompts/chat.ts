@@ -797,21 +797,28 @@ export class ChatPromptTemplate<
     }
     const formattedMessageContent = await Promise.all(
       message.content.map(async (item) => {
-        if (
-          item.type !== "image_url" ||
-          typeof item.image_url === "string" ||
-          !("url" in item.image_url)
-        ) {
+        if (item.type !== "image_url") {
           return item;
         }
-        const imageUrl = item.image_url.url;
+
+        let imageUrl = "";
+        if (typeof item.image_url === "string") {
+          imageUrl = item.image_url;
+        } else {
+          imageUrl = item.image_url.url;
+        }
+
         const promptTemplatePlaceholder = PromptTemplate.fromTemplate(imageUrl);
         const formattedUrl = await promptTemplatePlaceholder.format(
           inputValues
         );
-        if ("url" in item.image_url) {
+
+        if (typeof item.image_url !== "string" && "url" in item.image_url) {
           // eslint-disable-next-line no-param-reassign
           item.image_url.url = formattedUrl;
+        } else {
+          // eslint-disable-next-line no-param-reassign
+          item.image_url = formattedUrl;
         }
         return item;
       })
