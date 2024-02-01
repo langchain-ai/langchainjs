@@ -640,9 +640,10 @@ export abstract class Runnable<
       copiedCallbacks.inheritableHandlers.push(stream);
       config.callbacks = copiedCallbacks;
     }
-    const runnableStream = await this.stream(input, config);
+    const runnableStreamPromise = this.stream(input, config);
     async function consumeRunnableStream() {
       try {
+        const runnableStream = await runnableStreamPromise;
         for await (const chunk of runnableStream) {
           const patch = new RunLogPatch({
             ops: [
@@ -659,13 +660,13 @@ export abstract class Runnable<
         await stream.writer.close();
       }
     }
-    const runnableStreamPromise = consumeRunnableStream();
+    const runnableStreamConsumePromise = consumeRunnableStream();
     try {
       for await (const log of stream) {
         yield log;
       }
     } finally {
-      await runnableStreamPromise;
+      await runnableStreamConsumePromise;
     }
   }
 
