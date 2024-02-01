@@ -20,11 +20,9 @@ export interface ExaRetrieverFields<T extends ContentsOptions = any>
   searchArgs?: RegularSearchOptions & T;
 }
 
-export function _getMetadata(result: SearchResult): Record<string, unknown> {
-  const newMetadata = result;
-  if ("text" in newMetadata) {
-    delete newMetadata.text;
-  }
+export function _getMetadata<T extends ContentsOptions>(result: SearchResult<T>): Record<string, unknown> {
+  const newMetadata: Record<string, unknown> = { ...result };
+  delete newMetadata.text;
   return newMetadata;
 }
 
@@ -41,8 +39,7 @@ export function _getMetadata(result: SearchResult): Record<string, unknown> {
  * ```
  */
 export class ExaRetriever<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends ContentsOptions = any
+  T extends ContentsOptions = { highlights: true }
 > extends BaseRetriever {
   static lc_name() {
     return "ExaRetriever";
@@ -72,7 +69,7 @@ export class ExaRetriever<
       documents.push(
         new Document({
           pageContent: "text" in result ? result.text : "",
-          metadata: _getMetadata(result),
+          metadata: _getMetadata<T>(result),
         })
       );
     }
