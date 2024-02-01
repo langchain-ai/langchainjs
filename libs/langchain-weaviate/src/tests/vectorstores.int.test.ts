@@ -279,10 +279,7 @@ test("addDocuments & addVectors method works", async () => {
       ? new ApiKey(process.env.WEAVIATE_API_KEY)
       : undefined,
   });
-  console.log(
-    process.env.WEAVIATE_SCHEME ||
-      (process.env.WEAVIATE_HOST ? "https" : "http")
-  );
+
   const store = new WeaviateStore(new OpenAIEmbeddings(), {
     client,
     indexName: "Test",
