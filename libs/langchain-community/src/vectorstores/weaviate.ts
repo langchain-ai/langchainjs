@@ -14,7 +14,7 @@ import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 
 // Note this function is not generic, it is designed specifically for Weaviate
 // https://weaviate.io/developers/weaviate/config-refs/datatypes#introduction
-/** 
+/**
  * @deprecated Prefer the `@langchain/weaviate` package.
  */
 export const flattenObjectForWeaviate = (

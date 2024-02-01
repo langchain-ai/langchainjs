@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1706823149620" clover="3.2.0">
-  <project timestamp="1706823149620" name="All files">
+<coverage generated="1706823280390" clover="3.2.0">
+  <project timestamp="1706823280390" name="All files">
     <metrics statements="104" coveredstatements="92" conditionals="40" coveredconditionals="26" methods="23" coveredmethods="22" elements="167" coveredelements="140" complexity="0" loc="104" ncloc="104" packages="1" files="1" classes="1"/>
     <file name="vectorstores.ts" path="/Users/bracesproul/code/lang-chain-ai/wt/brace/weaviate-integration-pkg/libs/langchain-weaviate/src/vectorstores.ts">
       <metrics statements="104" coveredstatements="92" conditionals="40" coveredconditionals="26" methods="23" coveredmethods="22"/>
