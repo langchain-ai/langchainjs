@@ -1,0 +1,52 @@
+---
+sidebar_class_name: node-only
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# SingleStore
+
+[SingleStoreDB](https://singlestore.com/) is a high-performance distributed SQL database that supports deployment both in the [cloud](https://www.singlestore.com/cloud/) and on-premise. It provides vector storage, as well as vector functions like [dot_product](https://docs.singlestore.com/managed-service/en/reference/sql-reference/vector-functions/dot_product.html) and [euclidean_distance](https://docs.singlestore.com/managed-service/en/reference/sql-reference/vector-functions/euclidean_distance.html), thereby supporting AI applications that require text similarity matching.
+
+:::tip Compatibility
+Only available on Node.js.
+:::
+
+LangChain.js requires the `mysql2` library to create a connection to a SingleStoreDB instance.
+
+## Setup
+
+1. Establish a SingleStoreDB environment. You have the flexibility to choose between [Cloud-based](https://docs.singlestore.com/managed-service/en/getting-started-with-singlestoredb-cloud.html) or [On-Premise](https://docs.singlestore.com/db/v8.1/en/developer-resources/get-started-using-singlestoredb-for-free.html) editions.
+2. Install the mysql2 JS client
+
+```bash npm2yarn
+npm install -S mysql2
+```
+
+## Usage
+
+`SingleStoreVectorStore` manages a connection pool. It is recommended to call `await store.end();` before terminating your application to assure all connections are appropriately closed and prevent any possible resource leaks.
+
+### Standard usage
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai @langchain/community
+```
+
+import UsageExample from "@examples/indexes/vector_stores/singlestore.ts";
+
+Below is a straightforward example showcasing how to import the relevant module and perform a base similarity search using the `SingleStoreVectorStore`:
+
+<CodeBlock language="typescript">{UsageExample}</CodeBlock>
+
+### Metadata Filtering
+
+import UsageExampleWithMetadata from "@examples/indexes/vector_stores/singlestore_with_metadata_filter.ts";
+
+If it is needed to filter results based on specific metadata fields, you can pass a filter parameter to narrow down your search to the documents that match all specified fields in the filter object:
+
+<CodeBlock language="typescript">{UsageExampleWithMetadata}</CodeBlock>

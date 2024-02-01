@@ -1,12 +1,12 @@
-import { PromptTemplate } from "../prompts/prompt.js";
-import { BaseLanguageModel } from "../base_language/index.js";
-import { VectorStore } from "../vectorstores/base.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import type { VectorStoreInterface } from "@langchain/core/vectorstores";
+import { ChainValues } from "@langchain/core/utils/types";
+import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
+import { PromptTemplate } from "@langchain/core/prompts";
 import { SerializedChatVectorDBQAChain } from "./serde.js";
-import { ChainValues } from "../schema/index.js";
 import { BaseChain, ChainInputs } from "./base.js";
 import { LLMChain } from "./llm_chain.js";
 import { loadQAStuffChain } from "./question_answering/load.js";
-import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
@@ -29,7 +29,7 @@ Helpful Answer:`;
  * Interface for the input parameters of the ChatVectorDBQAChain class.
  */
 export interface ChatVectorDBQAChainInput extends ChainInputs {
-  vectorstore: VectorStore;
+  vectorstore: VectorStoreInterface;
   combineDocumentsChain: BaseChain;
   questionGeneratorChain: LLMChain;
   returnSourceDocuments?: boolean;
@@ -59,7 +59,7 @@ export class ChatVectorDBQAChain
     return [this.outputKey];
   }
 
-  vectorstore: VectorStore;
+  vectorstore: VectorStoreInterface;
 
   combineDocumentsChain: BaseChain;
 
@@ -180,8 +180,8 @@ export class ChatVectorDBQAChain
    * @returns New instance of ChatVectorDBQAChain.
    */
   static fromLLM(
-    llm: BaseLanguageModel,
-    vectorstore: VectorStore,
+    llm: BaseLanguageModelInterface,
+    vectorstore: VectorStoreInterface,
     options: {
       inputKey?: string;
       outputKey?: string;

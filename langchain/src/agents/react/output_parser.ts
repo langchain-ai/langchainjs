@@ -1,7 +1,7 @@
-import { renderTemplate } from "../../prompts/template.js";
+import { AgentAction, AgentFinish } from "@langchain/core/agents";
+import { renderTemplate } from "@langchain/core/prompts";
 import { AgentActionOutputParser } from "../types.js";
 import { FORMAT_INSTRUCTIONS } from "./prompt.js";
-import { AgentAction, AgentFinish } from "../../schema/index.js";
 
 const FINAL_ANSWER_ACTION = "Final Answer:";
 const FINAL_ANSWER_AND_PARSABLE_ACTION_ERROR_MESSAGE =
@@ -29,6 +29,21 @@ const FINAL_ANSWER_AND_PARSABLE_ACTION_ERROR_MESSAGE =
  * ```
  * Thought: agent thought here
  * Final Answer: The temperature is 100 degrees
+ * ```
+ * @example
+ * ```typescript
+ *
+ * const runnableAgent = RunnableSequence.from([
+ *   ...rest of runnable
+ *   new ReActSingleInputOutputParser({ toolNames: ["SerpAPI", "Calculator"] }),
+ * ]);
+ * const agent = AgentExecutor.fromAgentAndTools({
+ *   agent: runnableAgent,
+ *   tools: [new SerpAPI(), new Calculator()],
+ * });
+ * const result = await agent.invoke({
+ *   input: "whats the weather in pomfret?",
+ * });
  * ```
  */
 export class ReActSingleInputOutputParser extends AgentActionOutputParser {

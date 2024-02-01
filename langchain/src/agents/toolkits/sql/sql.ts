@@ -1,14 +1,14 @@
-import { Tool } from "../../../tools/base.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import type { ToolInterface } from "@langchain/core/tools";
+import { Toolkit } from "@langchain/community/agents/toolkits/base";
+import { renderTemplate } from "@langchain/core/prompts";
 import {
   InfoSqlTool,
   ListTablesSqlTool,
   QueryCheckerTool,
   QuerySqlTool,
 } from "../../../tools/sql.js";
-import { Toolkit } from "../base.js";
-import { BaseLanguageModel } from "../../../base_language/index.js";
 import { SQL_PREFIX, SQL_SUFFIX } from "./prompt.js";
-import { renderTemplate } from "../../../prompts/template.js";
 import { LLMChain } from "../../../chains/llm_chain.js";
 import { ZeroShotAgent, ZeroShotCreatePromptArgs } from "../../mrkl/index.js";
 import { AgentExecutor } from "../../executor.js";
@@ -26,15 +26,23 @@ export interface SqlCreatePromptArgs extends ZeroShotCreatePromptArgs {
 /**
  * Class that represents a toolkit for working with SQL databases. It
  * initializes SQL tools based on the provided SQL database.
+ * @example
+ * ```typescript
+ * const model = new ChatOpenAI({});
+ * const toolkit = new SqlToolkit(sqlDb, model);
+ * const executor = createSqlAgent(model, toolkit);
+ * const result = await executor.invoke({ input: 'List the total sales per country. Which country's customers spent the most?' });
+ * console.log(`Got output ${result.output}`);
+ * ```
  */
 export class SqlToolkit extends Toolkit {
-  tools: Tool[];
+  tools: ToolInterface[];
 
   db: SqlDatabase;
 
   dialect = "sqlite";
 
-  constructor(db: SqlDatabase, llm?: BaseLanguageModel) {
+  constructor(db: SqlDatabase, llm?: BaseLanguageModelInterface) {
     super();
     this.db = db;
     this.tools = [
@@ -47,7 +55,7 @@ export class SqlToolkit extends Toolkit {
 }
 
 export function createSqlAgent(
-  llm: BaseLanguageModel,
+  llm: BaseLanguageModelInterface,
   toolkit: SqlToolkit,
   args?: SqlCreatePromptArgs
 ) {

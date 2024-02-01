@@ -1,18 +1,13 @@
 import { AgentExecutor } from "langchain/agents";
 import { formatLogToString } from "langchain/agents/format_scratchpad/log";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { PromptTemplate } from "langchain/prompts";
-import {
-  AgentAction,
-  AgentFinish,
-  AgentStep,
-  BaseMessage,
-  HumanMessage,
-  InputValues,
-} from "langchain/schema";
-import { RunnableSequence } from "langchain/schema/runnable";
-import { SerpAPI } from "langchain/tools";
+import { ChatOpenAI } from "@langchain/openai";
 import { Calculator } from "langchain/tools/calculator";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { AgentAction, AgentFinish, AgentStep } from "@langchain/core/agents";
+import { BaseMessage, HumanMessage } from "@langchain/core/messages";
+import { InputValues } from "@langchain/core/memory";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 /**
  * Instantiate the chat model and bind the stop token
@@ -105,6 +100,15 @@ async function formatMessages(
 /** Define the custom output parser */
 function customOutputParser(message: BaseMessage): AgentAction | AgentFinish {
   const text = message.content;
+  if (typeof text !== "string") {
+    throw new Error(
+      `Message content is not a string. Received: ${JSON.stringify(
+        text,
+        null,
+        2
+      )}`
+    );
+  }
   /** If the input includes "Final Answer" return as an instance of `AgentFinish` */
   if (text.includes("Final Answer:")) {
     const parts = text.split("Final Answer:");
@@ -146,7 +150,7 @@ const input = `Who is Olivia Wilde's boyfriend? What is his current age raised t
 
 console.log(`Executing with input "${input}"...`);
 
-const result = await executor.call({ input });
+const result = await executor.invoke({ input });
 
 console.log(`Got output ${result.output}`);
 /**

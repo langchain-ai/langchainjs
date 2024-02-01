@@ -4,21 +4,18 @@ import {
   AgentExecutor,
 } from "langchain/agents";
 import { LLMChain } from "langchain/chains";
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
+import { Calculator } from "langchain/tools/calculator";
 import {
   BaseStringPromptTemplate,
   SerializedBasePromptTemplate,
   renderTemplate,
-} from "langchain/prompts";
-import {
-  InputValues,
-  PartialValues,
-  AgentStep,
-  AgentAction,
-  AgentFinish,
-} from "langchain/schema";
-import { SerpAPI, Tool } from "langchain/tools";
-import { Calculator } from "langchain/tools/calculator";
+} from "@langchain/core/prompts";
+import { InputValues } from "@langchain/core/memory";
+import { PartialValues } from "@langchain/core/utils/types";
+import { AgentStep, AgentAction, AgentFinish } from "@langchain/core/agents";
+import { Tool } from "@langchain/core/tools";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 const PREFIX = `Answer the following questions as best you can. You have access to the following tools:`;
 const formatInstructions = (
@@ -142,7 +139,7 @@ export const run = async () => {
 
   console.log(`Executing with input "${input}"...`);
 
-  const result = await executor.call({ input });
+  const result = await executor.invoke({ input });
 
   console.log(`Got output ${result.output}`);
 };

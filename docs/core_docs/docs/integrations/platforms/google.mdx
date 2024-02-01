@@ -1,0 +1,131 @@
+---
+keywords: [gemini, gemini-pro]
+---
+
+# Google
+
+Functionality related to [Google Cloud Platform](https://cloud.google.com/)
+
+## Chat models
+
+### ChatGoogleGenerativeAI
+
+Access Gemini models such as `gemini-pro` and `gemini-pro-vision` through the [`ChatGoogleGenerativeAI`](/docs/integrations/chat/google_generativeai) class.
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/google-genai
+```
+
+Configure your API key.
+
+```
+export GOOGLE_API_KEY=your-api-key
+```
+
+```typescript
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+
+const model = new ChatGoogleGenerativeAI({
+  modelName: "gemini-pro",
+  maxOutputTokens: 2048,
+});
+
+// Batch and stream are also supported
+const res = await model.invoke([
+  [
+    "human",
+    "What would be a good company name for a company that makes colorful socks?",
+  ],
+]);
+```
+
+Gemini vision models support image inputs when providing a single human message. For example:
+
+```typescript
+const visionModel = new ChatGoogleGenerativeAI({
+  modelName: "gemini-pro-vision",
+  maxOutputTokens: 2048,
+});
+const image = fs.readFileSync("./hotdog.jpg").toString("base64");
+const input2 = [
+  new HumanMessage({
+    content: [
+      {
+        type: "text",
+        text: "Describe the following image.",
+      },
+      {
+        type: "image_url",
+        image_url: `data:image/png;base64,${image}`,
+      },
+    ],
+  }),
+];
+
+const res = await visionModel.invoke(input2);
+```
+
+The value of image_url must be a base64 encoded image (e.g., data:image/png;base64,abcd124).
+
+### Vertex AI
+
+Access PaLM chat models like `chat-bison` and `codechat-bison` via Google Cloud.
+
+```typescript
+import { ChatGoogleVertexAI } from "langchain/chat_models/googlevertexai";
+```
+
+## LLMs
+
+### Vertex AI
+
+Access PaLM LLMs like `text-bison` and `code-bison` via Google Cloud.
+
+```typescript
+import { GoogleVertexAI } from "langchain/llms/googlevertexai";
+```
+
+### Model Garden
+
+Access PaLM and hundreds of OSS models via Vertex AI Model Garden.
+
+```typescript
+import { GoogleVertexAI } from "langchain/llms/googlevertexai";
+```
+
+## Vector Store
+
+### Vertex AI Vector Search
+
+> [Vertex AI Vector Search](https://cloud.google.com/vertex-ai/docs/matching-engine/overview),
+> formerly known as Vertex AI Matching Engine, provides the industry's leading high-scale
+> low latency vector database. These vector databases are commonly
+> referred to as vector similarity-matching or an approximate nearest neighbor (ANN) service.
+
+```typescript
+import { MatchingEngine } from "langchain/vectorstores/googlevertexai";
+```
+
+## Tools
+
+### Google Search
+
+- Set up a Custom Search Engine, following [these instructions](https://stackoverflow.com/questions/37083058/programmatically-searching-google-in-python-using-custom-search)
+- Get an API Key and Custom Search Engine ID from the previous step, and set them as environment variables `GOOGLE_API_KEY` and `GOOGLE_CSE_ID` respectively
+
+There exists a `GoogleCustomSearch` utility which wraps this API. To import this utility:
+
+```typescript
+import { GoogleCustomSearch } from "langchain/tools";
+```
+
+We can easily load this wrapper as a Tool (to use with an Agent). We can do this with:
+
+```typescript
+const tools = [new GoogleCustomSearch({})];
+// Pass this variable into your agent.
+```

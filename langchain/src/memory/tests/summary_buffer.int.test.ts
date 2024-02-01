@@ -1,12 +1,11 @@
 import { test, expect } from "@jest/globals";
+import { OpenAI, ChatOpenAI } from "@langchain/openai";
+import { SystemMessage } from "@langchain/core/messages";
 import { ConversationSummaryBufferMemory } from "../summary_buffer.js";
-import { OpenAI } from "../../llms/openai.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
-import { SystemMessage } from "../../schema/index.js";
 
 test("Test summary buffer memory", async () => {
   const memory = new ConversationSummaryBufferMemory({
-    llm: new OpenAI({ modelName: "text-davinci-003", temperature: 0 }),
+    llm: new OpenAI({ modelName: "gpt-3.5-turbo-instruct", temperature: 0 }),
     maxTokenLimit: 10,
   });
   expect(await memory.loadMemoryVariables({})).toEqual({
@@ -51,7 +50,7 @@ test("Test summary buffer memory with chat model", async () => {
 
 test("Test summary buffer memory return messages", async () => {
   const memory = new ConversationSummaryBufferMemory({
-    llm: new OpenAI({ modelName: "text-davinci-003", temperature: 0 }),
+    llm: new OpenAI({ modelName: "gpt-3.5-turbo-instruct", temperature: 0 }),
     returnMessages: true,
     maxTokenLimit: 10,
   });

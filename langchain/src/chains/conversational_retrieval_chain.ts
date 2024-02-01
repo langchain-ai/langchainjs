@@ -1,17 +1,13 @@
-import { PromptTemplate } from "../prompts/prompt.js";
-import { BaseLanguageModel } from "../base_language/index.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import type { BaseRetrieverInterface } from "@langchain/core/retrievers";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { BaseMessage, HumanMessage, AIMessage } from "@langchain/core/messages";
+import { ChainValues } from "@langchain/core/utils/types";
+import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
 import { SerializedChatVectorDBQAChain } from "./serde.js";
-import {
-  ChainValues,
-  BaseMessage,
-  HumanMessage,
-  AIMessage,
-} from "../schema/index.js";
-import { BaseRetriever } from "../schema/retriever.js";
 import { BaseChain, ChainInputs } from "./base.js";
 import { LLMChain } from "./llm_chain.js";
 import { QAChainParams, loadQAChain } from "./question_answering/load.js";
-import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
@@ -28,10 +24,11 @@ Standalone question:`;
  * ConversationalRetrievalQAChain class.
  */
 export interface ConversationalRetrievalQAChainInput extends ChainInputs {
-  retriever: BaseRetriever;
+  retriever: BaseRetrieverInterface;
   combineDocumentsChain: BaseChain;
   questionGeneratorChain: LLMChain;
   returnSourceDocuments?: boolean;
+  returnGeneratedQuestion?: boolean;
   inputKey?: string;
 }
 
@@ -39,6 +36,35 @@ export interface ConversationalRetrievalQAChainInput extends ChainInputs {
  * Class for conducting conversational question-answering tasks with a
  * retrieval component. Extends the BaseChain class and implements the
  * ConversationalRetrievalQAChainInput interface.
+ * @example
+ * ```typescript
+ * const model = new ChatAnthropic({});
+ *
+ * const text = fs.readFileSync("state_of_the_union.txt", "utf8");
+ *
+ * const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });
+ * const docs = await textSplitter.createDocuments([text]);
+ *
+ * const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
+ *
+ * const chain = ConversationalRetrievalQAChain.fromLLM(
+ *   model,
+ *   vectorStore.asRetriever(),
+ * );
+ *
+ * const question = "What did the president say about Justice Breyer?";
+ *
+ * const res = await chain.call({ question, chat_history: "" });
+ * console.log(res);
+ *
+ * const chatHistory = `${question}\n${res.text}`;
+ * const followUpRes = await chain.call({
+ *   question: "Was that nice?",
+ *   chat_history: chatHistory,
+ * });
+ * console.log(followUpRes);
+ *
+ * ```
  */
 export class ConversationalRetrievalQAChain
   extends BaseChain
@@ -62,13 +88,15 @@ export class ConversationalRetrievalQAChain
     );
   }
 
-  retriever: BaseRetriever;
+  retriever: BaseRetrieverInterface;
 
   combineDocumentsChain: BaseChain;
 
   questionGeneratorChain: LLMChain;
 
   returnSourceDocuments = false;
+
+  returnGeneratedQuestion = false;
 
   constructor(fields: ConversationalRetrievalQAChainInput) {
     super(fields);
@@ -78,6 +106,8 @@ export class ConversationalRetrievalQAChain
     this.inputKey = fields.inputKey ?? this.inputKey;
     this.returnSourceDocuments =
       fields.returnSourceDocuments ?? this.returnSourceDocuments;
+    this.returnGeneratedQuestion =
+      fields.returnGeneratedQuestion ?? this.returnGeneratedQuestion;
   }
 
   /**
@@ -167,14 +197,20 @@ export class ConversationalRetrievalQAChain
       input_documents: docs,
       chat_history: chatHistory,
     };
-    const result = await this.combineDocumentsChain.call(
+    let result = await this.combineDocumentsChain.call(
       inputs,
       runManager?.getChild("combine_documents")
     );
     if (this.returnSourceDocuments) {
-      return {
+      result = {
         ...result,
         sourceDocuments: docs,
+      };
+    }
+    if (this.returnGeneratedQuestion) {
+      result = {
+        ...result,
+        generatedQuestion: newQuestion,
       };
     }
     return result;
@@ -198,16 +234,16 @@ export class ConversationalRetrievalQAChain
   /**
    * Static method to create a new ConversationalRetrievalQAChain from a
    * BaseLanguageModel and a BaseRetriever.
-   * @param llm {@link BaseLanguageModel} instance used to generate a new question.
-   * @param retriever {@link BaseRetriever} instance used to retrieve relevant documents.
+   * @param llm {@link BaseLanguageModelInterface} instance used to generate a new question.
+   * @param retriever {@link BaseRetrieverInterface} instance used to retrieve relevant documents.
    * @param options.returnSourceDocuments Whether to return source documents in the final output
    * @param options.questionGeneratorChainOptions Options to initialize the standalone question generation chain used as the first internal step
    * @param options.qaChainOptions {@link QAChainParams} used to initialize the QA chain used as the second internal step
    * @returns A new instance of ConversationalRetrievalQAChain.
    */
   static fromLLM(
-    llm: BaseLanguageModel,
-    retriever: BaseRetriever,
+    llm: BaseLanguageModelInterface,
+    retriever: BaseRetrieverInterface,
     options: {
       outputKey?: string; // not used
       returnSourceDocuments?: boolean;
@@ -216,7 +252,7 @@ export class ConversationalRetrievalQAChain
       /** @deprecated Pass in qaChainOptions.prompt instead */
       qaTemplate?: string;
       questionGeneratorChainOptions?: {
-        llm?: BaseLanguageModel;
+        llm?: BaseLanguageModelInterface;
         template?: string;
       };
       qaChainOptions?: QAChainParams;

@@ -1,7 +1,7 @@
-import { VectorStore } from "../vectorstores/base.js";
-import { Document } from "../document.js";
-import { BaseRetriever, BaseRetrieverInput } from "../schema/retriever.js";
-import { CallbackManagerForRetrieverRun } from "../callbacks/manager.js";
+import { BaseRetriever, BaseRetrieverInput } from "@langchain/core/retrievers";
+import type { VectorStoreInterface } from "@langchain/core/vectorstores";
+import type { DocumentInterface } from "@langchain/core/documents";
+import { CallbackManagerForRetrieverRun } from "@langchain/core/callbacks/manager";
 
 /**
  * Interface for the fields required to initialize a
@@ -9,9 +9,9 @@ import { CallbackManagerForRetrieverRun } from "../callbacks/manager.js";
  */
 export interface TimeWeightedVectorStoreRetrieverFields
   extends BaseRetrieverInput {
-  vectorStore: VectorStore;
+  vectorStore: VectorStoreInterface;
   searchKwargs?: number;
-  memoryStream?: Document[];
+  memoryStream?: DocumentInterface[];
   decayRate?: number;
   k?: number;
   otherScoreKeys?: string[];
@@ -24,6 +24,22 @@ export const BUFFER_IDX = "buffer_idx";
 /**
  * TimeWeightedVectorStoreRetriever retrieves documents based on their time-weighted relevance.
  * ref: https://github.com/langchain-ai/langchain/blob/master/libs/langchain/langchain/retrievers/time_weighted_retriever.py
+ * @example
+ * ```typescript
+ * const retriever = new TimeWeightedVectorStoreRetriever({
+ *   vectorStore: new MemoryVectorStore(new OpenAIEmbeddings()),
+ *   memoryStream: [],
+ *   searchKwargs: 2,
+ * });
+ * await retriever.addDocuments([
+ *   { pageContent: "My name is John.", metadata: {} },
+ *   { pageContent: "My favourite food is pizza.", metadata: {} },
+ *
+ * ]);
+ * const results = await retriever.getRelevantDocuments(
+ *   "What is my favourite food?",
+ * );
+ * ```
  */
 export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
   static lc_name() {
@@ -37,7 +53,7 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
   /**
    * The vectorstore to store documents and determine salience.
    */
-  private vectorStore: VectorStore;
+  private vectorStore: VectorStoreInterface;
 
   /**
    * The number of top K most relevant documents to consider when searching.
@@ -47,7 +63,7 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
   /**
    * The memory_stream of documents to search through.
    */
-  private memoryStream: Document[];
+  private memoryStream: DocumentInterface[];
 
   /**
    * The exponential decay factor used as (1.0-decay_rate)**(hrs_passed).
@@ -88,7 +104,7 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
    * Get the memory stream of documents.
    * @returns The memory stream of documents.
    */
-  getMemoryStream(): Document[] {
+  getMemoryStream(): DocumentInterface[] {
     return this.memoryStream;
   }
 
@@ -96,7 +112,7 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
    * Set the memory stream of documents.
    * @param memoryStream The new memory stream of documents.
    */
-  setMemoryStream(memoryStream: Document[]) {
+  setMemoryStream(memoryStream: DocumentInterface[]) {
     this.memoryStream = memoryStream;
   }
 
@@ -108,7 +124,7 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
   async _getRelevantDocuments(
     query: string,
     runManager?: CallbackManagerForRetrieverRun
-  ): Promise<Document[]> {
+  ): Promise<DocumentInterface[]> {
     const now = Math.floor(Date.now() / 1000);
     const memoryDocsAndScores = this.getMemoryDocsAndScores();
 
@@ -129,7 +145,7 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
    *
    * @param docs - The documents to add to vector store in the retriever
    */
-  async addDocuments(docs: Document[]): Promise<void> {
+  async addDocuments(docs: DocumentInterface[]): Promise<void> {
     const now = Math.floor(Date.now() / 1000);
     const savedDocs = this.prepareDocuments(docs, now);
 
@@ -143,11 +159,11 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
    */
   private getMemoryDocsAndScores(): Record<
     number,
-    { doc: Document; score: number }
+    { doc: DocumentInterface; score: number }
   > {
     const memoryDocsAndScores: Record<
       number,
-      { doc: Document; score: number }
+      { doc: DocumentInterface; score: number }
     > = {};
     for (const doc of this.memoryStream.slice(-this.k)) {
       const bufferIdx = doc.metadata[BUFFER_IDX];
@@ -172,15 +188,16 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
   private async getSalientDocuments(
     query: string,
     runManager?: CallbackManagerForRetrieverRun
-  ): Promise<Record<number, { doc: Document; score: number }>> {
-    const docAndScores: [Document, number][] =
+  ): Promise<Record<number, { doc: DocumentInterface; score: number }>> {
+    const docAndScores: [DocumentInterface, number][] =
       await this.vectorStore.similaritySearchWithScore(
         query,
         this.searchKwargs,
         undefined,
         runManager?.getChild()
       );
-    const results: Record<number, { doc: Document; score: number }> = {};
+    const results: Record<number, { doc: DocumentInterface; score: number }> =
+      {};
     for (const [fetchedDoc, score] of docAndScores) {
       const bufferIdx = fetchedDoc.metadata[BUFFER_IDX];
       if (bufferIdx === undefined) {
@@ -201,9 +218,9 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
    * @returns The final set of documents
    */
   private computeResults(
-    docsAndScores: Record<number, { doc: Document; score: number }>,
+    docsAndScores: Record<number, { doc: DocumentInterface; score: number }>,
     now: number
-  ): Document[] {
+  ): DocumentInterface[] {
     const recordedDocs = Object.values(docsAndScores)
       .map(({ doc, score }) => ({
         doc,
@@ -211,7 +228,7 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
       }))
       .sort((a, b) => b.score - a.score);
 
-    const results: Document[] = [];
+    const results: DocumentInterface[] = [];
     for (const { doc } of recordedDocs) {
       const bufferedDoc = this.memoryStream[doc.metadata[BUFFER_IDX]];
       bufferedDoc.metadata[LAST_ACCESSED_AT_KEY] = now;
@@ -229,7 +246,10 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
    * @param now - The current timestamp
    * @returns The prepared documents
    */
-  private prepareDocuments(docs: Document[], now: number): Document[] {
+  private prepareDocuments(
+    docs: DocumentInterface[],
+    now: number
+  ): DocumentInterface[] {
     return docs.map((doc, i) => ({
       ...doc,
       metadata: {
@@ -249,7 +269,7 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
    * @returns The combined score for the document
    */
   private getCombinedScore(
-    doc: Document,
+    doc: DocumentInterface,
     vectorRelevance: number | null,
     nowMsec: number
   ): number {

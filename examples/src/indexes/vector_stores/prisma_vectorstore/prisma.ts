@@ -1,5 +1,5 @@
-import { PrismaVectorStore } from "langchain/vectorstores/prisma";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { PrismaVectorStore } from "@langchain/community/vectorstores/prisma";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { PrismaClient, Prisma, Document } from "@prisma/client";
 
 export const run = async () => {
@@ -57,12 +57,4 @@ export const run = async () => {
   // Use the default filter a.k.a {"content": "default"}
   const resultTwo = await vectorStore.similaritySearch("Hello world", 1);
   console.log(resultTwo);
-
-  // Override the local filter
-  const resultThree = await vectorStore.similaritySearchWithScore(
-    "Hello world",
-    1,
-    { content: { equals: "different_content" } }
-  );
-  console.log(resultThree);
 };

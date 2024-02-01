@@ -1,14 +1,21 @@
 {
   "name": "test-exports-cf",
   "version": "0.0.0",
+  "workspaces": [
+    "libs/*"
+  ],
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20230321.0",
-    "typescript": "^5.0.3",
-    "vitest": "0.34.3",
-    "wrangler": "3.7.0"
+    "@cloudflare/workers-types": "^4.20230321.0"
   },
   "dependencies": {
-    "langchain": "workspace:*"
+    "@langchain/anthropic": "workspace:*",
+    "@langchain/community": "workspace:*",
+    "@langchain/core": "workspace:*",
+    "@langchain/openai": "workspace:*",
+    "langchain": "workspace:*",
+    "wrangler": "3.7.0",
+    "vitest": "0.34.3",
+    "typescript": "^5.0.3"
   },
   "private": true,
   "scripts": {

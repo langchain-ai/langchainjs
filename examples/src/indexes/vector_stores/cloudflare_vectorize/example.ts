@@ -6,8 +6,10 @@ import type {
   Request,
 } from "@cloudflare/workers-types";
 
-import { CloudflareVectorizeStore } from "langchain/vectorstores/cloudflare_vectorize";
-import { CloudflareWorkersAIEmbeddings } from "langchain/embeddings/cloudflare_workersai";
+import {
+  CloudflareVectorizeStore,
+  CloudflareWorkersAIEmbeddings,
+} from "@langchain/cloudflare";
 
 export interface Env {
   VECTORIZE_INDEX: VectorizeIndex;

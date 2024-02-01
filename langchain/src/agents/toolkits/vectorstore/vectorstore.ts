@@ -1,8 +1,8 @@
-import { Tool } from "../../../tools/base.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import type { VectorStoreInterface } from "@langchain/core/vectorstores";
+import { ToolInterface } from "@langchain/core/tools";
+import { Toolkit } from "@langchain/community/agents/toolkits/base";
 import { VectorStoreQATool } from "../../../tools/vectorstore.js";
-import { VectorStore } from "../../../vectorstores/base.js";
-import { Toolkit } from "../base.js";
-import { BaseLanguageModel } from "../../../base_language/index.js";
 import { ZeroShotCreatePromptArgs, ZeroShotAgent } from "../../mrkl/index.js";
 import { VECTOR_PREFIX, VECTOR_ROUTER_PREFIX } from "./prompt.js";
 import { SUFFIX } from "../../mrkl/prompt.js";
@@ -14,7 +14,7 @@ import { AgentExecutor } from "../../executor.js";
  * the vector store itself, its name, and description.
  */
 export interface VectorStoreInfo {
-  vectorStore: VectorStore;
+  vectorStore: VectorStoreInterface;
   name: string;
   description: string;
 }
@@ -23,13 +23,32 @@ export interface VectorStoreInfo {
  * Class representing a toolkit for working with a single vector store. It
  * initializes the vector store QA tool based on the provided vector store
  * information and language model.
+ * @example
+ * ```typescript
+ * const toolkit = new VectorStoreToolkit(
+ *   {
+ *     name: "state_of_union_address",
+ *     description: "the most recent state of the Union address",
+ *     vectorStore: new HNSWLib(),
+ *   },
+ *   new ChatOpenAI({ temperature: 0 }),
+ * );
+ * const result = await toolkit.invoke({
+ *   input:
+ *     "What did biden say about Ketanji Brown Jackson in the state of the union address?",
+ * });
+ * console.log(`Got output ${result.output}`);
+ * ```
  */
 export class VectorStoreToolkit extends Toolkit {
-  tools: Tool[];
+  tools: ToolInterface[];
 
-  llm: BaseLanguageModel;
+  llm: BaseLanguageModelInterface;
 
-  constructor(vectorStoreInfo: VectorStoreInfo, llm: BaseLanguageModel) {
+  constructor(
+    vectorStoreInfo: VectorStoreInfo,
+    llm: BaseLanguageModelInterface
+  ) {
     super();
     const description = VectorStoreQATool.getDescription(
       vectorStoreInfo.name,
@@ -51,13 +70,16 @@ export class VectorStoreToolkit extends Toolkit {
  * vector store information and language model.
  */
 export class VectorStoreRouterToolkit extends Toolkit {
-  tools: Tool[];
+  tools: ToolInterface[];
 
   vectorStoreInfos: VectorStoreInfo[];
 
-  llm: BaseLanguageModel;
+  llm: BaseLanguageModelInterface;
 
-  constructor(vectorStoreInfos: VectorStoreInfo[], llm: BaseLanguageModel) {
+  constructor(
+    vectorStoreInfos: VectorStoreInfo[],
+    llm: BaseLanguageModelInterface
+  ) {
     super();
     this.llm = llm;
     this.vectorStoreInfos = vectorStoreInfos;
@@ -74,8 +96,9 @@ export class VectorStoreRouterToolkit extends Toolkit {
   }
 }
 
+/** @deprecated Create a specific agent with a custom tool instead. */
 export function createVectorStoreAgent(
-  llm: BaseLanguageModel,
+  llm: BaseLanguageModelInterface,
   toolkit: VectorStoreToolkit,
   args?: ZeroShotCreatePromptArgs
 ) {
@@ -102,8 +125,9 @@ export function createVectorStoreAgent(
   });
 }
 
+/** @deprecated Create a specific agent with a custom tool instead. */
 export function createVectorStoreRouterAgent(
-  llm: BaseLanguageModel,
+  llm: BaseLanguageModelInterface,
   toolkit: VectorStoreRouterToolkit,
   args?: ZeroShotCreatePromptArgs
 ) {

@@ -1,34 +1,32 @@
 import { test, expect } from "@jest/globals";
 import { stringify } from "yaml";
 import { z } from "zod";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { Cohere } from "@langchain/community/llms/cohere";
+import { OpenAI, ChatOpenAI } from "@langchain/openai";
 
-import { load } from "../index.js";
-import { OpenAI } from "../../llms/openai.js";
-import { PromptTemplate } from "../../prompts/prompt.js";
-import { LLMChain } from "../../chains/llm_chain.js";
-import { Cohere } from "../../llms/cohere.js";
 import {
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
   ChatPromptTemplate,
-} from "../../prompts/chat.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
-import { LangChainTracer } from "../../callbacks/index.js";
-import {
   FewShotPromptTemplate,
-  LengthBasedExampleSelector,
-} from "../../prompts/index.js";
+  PromptTemplate,
+} from "@langchain/core/prompts";
+import { LengthBasedExampleSelector } from "@langchain/core/example_selectors";
+import { Serializable } from "@langchain/core/load/serializable";
+import { ConsoleCallbackHandler } from "@langchain/core/tracers/console";
+import { CommaSeparatedListOutputParser } from "@langchain/core/output_parsers";
+import { LLMChain } from "../../chains/llm_chain.js";
 import { initializeAgentExecutorWithOptions } from "../../agents/initialize.js";
 import { Calculator } from "../../tools/calculator.js";
 import { RequestsGetTool } from "../../tools/requests.js";
 import { JsonListKeysTool, JsonSpec } from "../../tools/json.js";
 import { AgentExecutor } from "../../agents/executor.js";
-import { CommaSeparatedListOutputParser } from "../../output_parsers/list.js";
 import { StructuredOutputParser } from "../../output_parsers/structured.js";
-import { Serializable } from "../serializable.js";
 import { RegexParser } from "../../output_parsers/regex.js";
 import { OutputFixingParser } from "../../output_parsers/fix.js";
 import { CombiningOutputParser } from "../../output_parsers/combining.js";
+import { load } from "../index.js";
 
 test("serialize + deserialize custom classes", async () => {
   class Person extends Serializable {
@@ -192,7 +190,7 @@ test("serialize + deserialize llm chain string prompt", async () => {
     openAIApiKey: "openai-key",
     verbose: true,
     callbacks: [
-      new LangChainTracer(),
+      new ConsoleCallbackHandler(),
       {
         handleLLMEnd(output) {
           console.log(output);
@@ -211,6 +209,48 @@ test("serialize + deserialize llm chain string prompt", async () => {
   });
   expect(chain2).toBeInstanceOf(LLMChain);
   expect(JSON.stringify(chain2, null, 2)).toBe(str);
+});
+
+test("serialize + deserialize with new and old ids", async () => {
+  const prompt = PromptTemplate.fromTemplate("Hello, {name}!");
+  const strWithNewId = JSON.stringify(prompt, null, 2);
+  expect(stringify(JSON.parse(strWithNewId))).toMatchSnapshot();
+  expect(JSON.parse(strWithNewId).id).toEqual([
+    "langchain_core",
+    "prompts",
+    "prompt",
+    "PromptTemplate",
+  ]);
+  const strWithOldId = JSON.stringify({
+    ...JSON.parse(strWithNewId),
+    id: ["langchain", "prompts", "prompt", "PromptTemplate"],
+  });
+  const prompt2 = await load<PromptTemplate>(strWithOldId);
+  expect(prompt2).toBeInstanceOf(PromptTemplate);
+  const prompt3 = await load<PromptTemplate>(strWithNewId);
+  expect(prompt3).toBeInstanceOf(PromptTemplate);
+});
+
+test("serialize + deserialize runnable sequence with new and old ids", async () => {
+  const runnable = RunnableSequence.from([
+    ChatPromptTemplate.fromTemplate("hi there"),
+    new ChatOpenAI(),
+  ]);
+  const strWithNewId = JSON.stringify(runnable, null, 2);
+  expect(stringify(JSON.parse(strWithNewId))).toMatchSnapshot();
+  expect(JSON.parse(strWithNewId).id).toEqual([
+    "langchain_core",
+    "runnables",
+    "RunnableSequence",
+  ]);
+  const strWithOldId = JSON.stringify({
+    ...JSON.parse(strWithNewId),
+    id: ["langchain", "schema", "runnable", "RunnableSequence"],
+  });
+  const runnable2 = await load<RunnableSequence>(strWithOldId);
+  expect(runnable2).toBeInstanceOf(RunnableSequence);
+  const runnable3 = await load<RunnableSequence>(strWithNewId);
+  expect(runnable3).toBeInstanceOf(RunnableSequence);
 });
 
 test("serialize + deserialize llm chain chat prompt", async () => {
@@ -250,7 +290,7 @@ test("serialize + deserialize llm chain few shot prompt w/ examples", async () =
     temperature: 0.5,
     modelName: "davinci",
     openAIApiKey: "openai-key",
-    callbacks: [new LangChainTracer()],
+    callbacks: [new ConsoleCallbackHandler()],
   });
   const prompt = new FewShotPromptTemplate({
     examples: [{ yo: "1" }, { yo: "2" }],
@@ -267,7 +307,7 @@ test("serialize + deserialize llm chain few shot prompt w/ examples", async () =
       OPENAI_API_KEY: "openai-key",
     })
   ).rejects.toThrowError(
-    'Trying to load an object that doesn\'t implement serialization: $.kwargs.prompt -> {"lc":1,"type":"not_implemented","id":["langchain","prompts","few_shot","FewShotPromptTemplate"]}'
+    'Trying to load an object that doesn\'t implement serialization: $.kwargs.prompt -> {"lc":1,"type":"not_implemented","id":["langchain_core","prompts","few_shot","FewShotPromptTemplate"]}'
   );
 });
 
@@ -296,7 +336,7 @@ test("serialize + deserialize llm chain few shot prompt w/ selector", async () =
       OPENAI_API_KEY: "openai-key",
     })
   ).rejects.toThrow(
-    'Trying to load an object that doesn\'t implement serialization: $.kwargs.prompt -> {"lc":1,"type":"not_implemented","id":["langchain","prompts","few_shot","FewShotPromptTemplate"]}'
+    'Trying to load an object that doesn\'t implement serialization: $.kwargs.prompt -> {"lc":1,"type":"not_implemented","id":["langchain_core","prompts","few_shot","FewShotPromptTemplate"]}'
   );
 });
 
@@ -305,7 +345,7 @@ test("serialize + deserialize llmchain with list output parser", async () => {
     temperature: 0.5,
     modelName: "davinci",
     openAIApiKey: "openai-key",
-    callbacks: [new LangChainTracer()],
+    callbacks: [new ConsoleCallbackHandler()],
   });
   const prompt = PromptTemplate.fromTemplate(
     "An example about {yo} {format_instructions}"
@@ -329,7 +369,7 @@ test("serialize + deserialize llmchain with regex output parser", async () => {
     temperature: 0.5,
     modelName: "davinci",
     openAIApiKey: "openai-key",
-    callbacks: [new LangChainTracer()],
+    callbacks: [new ConsoleCallbackHandler()],
   });
   const prompt = PromptTemplate.fromTemplate(
     "An example about {yo} {format_instructions}"
@@ -363,7 +403,7 @@ test("serialize + deserialize llmchain with fix + combining output parser", asyn
     temperature: 0.5,
     modelName: "davinci",
     openAIApiKey: "openai-key",
-    callbacks: [new LangChainTracer()],
+    callbacks: [new ConsoleCallbackHandler()],
   });
   const prompt = PromptTemplate.fromTemplate(
     "An example about {yo} {format_instructions}"
@@ -396,7 +436,7 @@ test("serialize + deserialize llmchain with struct output parser throws", async 
     temperature: 0.5,
     modelName: "davinci",
     openAIApiKey: "openai-key",
-    callbacks: [new LangChainTracer()],
+    callbacks: [new ConsoleCallbackHandler({})],
   });
 
   const prompt = PromptTemplate.fromTemplate(
@@ -477,4 +517,21 @@ test("Should load traces even if the constructor name changes (minified environm
   );
   console.log(JSON.stringify(llm2, null, 2));
   expect(JSON.stringify(llm2, null, 2)).toBe(str);
+});
+
+test("Should load a real-world serialized chain", async () => {
+  const serializedValue = `{"lc": 1, "type": "constructor", "id": ["langchain_core", "runnables", "RunnableSequence"], "kwargs": {"first": {"lc": 1, "type": "constructor", "id": ["langchain_core", "runnables", "RunnableParallel"], "kwargs": {"steps": {"equation_statement": {"lc": 1, "type": "constructor", "id": ["langchain_core", "runnables", "RunnablePassthrough"], "kwargs": {"func": null, "afunc": null, "input_type": null}}}}}, "middle": [{"lc": 1, "type": "constructor", "id": ["langchain_core", "prompts", "chat", "ChatPromptTemplate"], "kwargs": {"input_variables": ["equation_statement"], "messages": [{"lc": 1, "type": "constructor", "id": ["langchain_core", "prompts", "chat", "SystemMessagePromptTemplate"], "kwargs": {"prompt": {"lc": 1, "type": "constructor", "id": ["langchain_core", "prompts", "prompt", "PromptTemplate"], "kwargs": {"input_variables": [], "template": "Write out the following equation using algebraic symbols then solve it. Use the format\\n\\nEQUATION:...\\nSOLUTION:...\\n\\n", "template_format": "f-string", "partial_variables": {}}}}}, {"lc": 1, "type": "constructor", "id": ["langchain_core", "prompts", "chat", "HumanMessagePromptTemplate"], "kwargs": {"prompt": {"lc": 1, "type": "constructor", "id": ["langchain_core", "prompts", "prompt", "PromptTemplate"], "kwargs": {"input_variables": ["equation_statement"], "template": "{equation_statement}", "template_format": "f-string", "partial_variables": {}}}}}]}}, {"lc": 1, "type": "constructor", "id": ["langchain", "chat_models", "openai", "ChatOpenAI"], "kwargs": {"temperature": 0.0, "openai_api_key": {"lc": 1, "type": "secret", "id": ["OPENAI_API_KEY"]}}}], "last": {"lc": 1, "type": "constructor", "id": ["langchain_core", "output_parsers", "string", "StrOutputParser"], "kwargs": {}}}}`;
+  const chain = await load<RunnableSequence>(serializedValue, {
+    OPENAI_API_KEY: "openai-key",
+  });
+  // @ts-expect-error testing
+  expect(chain.first.constructor.lc_name()).toBe("RunnableMap");
+  // @ts-expect-error testing
+  expect(chain.middle.length).toBe(2);
+  // @ts-expect-error testing
+  expect(chain.middle[0].constructor.lc_name()).toBe(`ChatPromptTemplate`);
+  // @ts-expect-error testing
+  expect(chain.middle[1].constructor.lc_name()).toBe(`ChatOpenAI`);
+  // @ts-expect-error testing
+  expect(chain.last.constructor.lc_name()).toBe(`StrOutputParser`);
 });

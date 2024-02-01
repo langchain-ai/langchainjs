@@ -1,4 +1,4 @@
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import { SqlDatabase } from "langchain/sql_db";
 import { createSqlAgent, SqlToolkit } from "langchain/agents/toolkits/sql";
 import { DataSource } from "typeorm";
@@ -55,7 +55,7 @@ export const run = async () => {
 
   console.log(`Executing with input "${input}"...`);
 
-  const result = await executor.call({ input });
+  const result = await executor.invoke({ input });
 
   console.log(`Got output ${result.output}`);
 

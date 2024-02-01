@@ -1,9 +1,15 @@
-import { Document } from "../../document.js";
+import { Document } from "@langchain/core/documents";
 import { CheerioWebBaseLoader } from "./cheerio.js";
 
 /**
  * A document loader specifically designed for loading documents from the
  * College Confidential website. It extends the CheerioWebBaseLoader.
+ * @example
+ * ```typescript
+ * const loader = new CollegeConfidentialLoader("https:exampleurl.com");
+ * const docs = await loader.load();
+ * console.log({ docs });
+ * ```
  */
 export class CollegeConfidentialLoader extends CheerioWebBaseLoader {
   constructor(webPath: string) {

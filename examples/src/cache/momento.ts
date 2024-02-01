@@ -1,10 +1,10 @@
-import { OpenAI } from "langchain/llms/openai";
-import { MomentoCache } from "langchain/cache/momento";
+import { OpenAI } from "@langchain/openai";
 import {
   CacheClient,
   Configurations,
   CredentialProvider,
-} from "@gomomento/sdk"; // `from "gomomento/sdk-web";` for browser/edge
+} from "@gomomento/sdk";
+import { MomentoCache } from "@langchain/community/caches/momento";
 
 // See https://github.com/momentohq/client-sdk-javascript for connection options
 const client = new CacheClient({

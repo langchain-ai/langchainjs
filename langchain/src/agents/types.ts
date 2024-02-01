@@ -1,13 +1,10 @@
-import { LLMChain } from "../chains/llm_chain.js";
+import type { Runnable } from "@langchain/core/runnables";
+import { BaseOutputParser } from "@langchain/core/output_parsers";
+import type { AgentAction, AgentFinish } from "@langchain/core/agents";
+import type { BaseMessage } from "@langchain/core/messages";
+import type { ChainValues } from "@langchain/core/utils/types";
 import { SerializedLLMChain } from "../chains/serde.js";
-import {
-  AgentAction,
-  AgentFinish,
-  BaseMessage,
-  ChainValues,
-} from "../schema/index.js";
-import { BaseOutputParser } from "../schema/output_parser.js";
-import { Runnable } from "../schema/runnable/base.js";
+import { LLMChain } from "../chains/llm_chain.js";
 
 /**
  * Interface defining the input for creating an agent. It includes the
@@ -42,6 +39,14 @@ export interface RunnableAgentInput {
  */
 export abstract class AgentActionOutputParser extends BaseOutputParser<
   AgentAction | AgentFinish
+> {}
+
+/**
+ * Abstract class representing an output parser specifically for agents
+ * that return multiple actions.
+ */
+export abstract class AgentMultiActionOutputParser extends BaseOutputParser<
+  AgentAction[] | AgentFinish
 > {}
 
 /**

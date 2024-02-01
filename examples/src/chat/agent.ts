@@ -1,12 +1,12 @@
 import { LLMChain } from "langchain/chains";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { ZeroShotAgent, AgentExecutor } from "langchain/agents";
-import { SerpAPI } from "langchain/tools";
 import {
   ChatPromptTemplate,
   SystemMessagePromptTemplate,
   HumanMessagePromptTemplate,
-} from "langchain/prompts";
+} from "@langchain/core/prompts";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 export const run = async () => {
   const tools = [
@@ -44,9 +44,9 @@ This was your previous work (but I haven't seen any of it! I only see what you r
 
   const executor = AgentExecutor.fromAgentAndTools({ agent, tools });
 
-  const response = await executor.run(
-    "How many people live in canada as of 2023?"
-  );
+  const response = await executor.invoke({
+    input: "How many people live in canada as of 2023?",
+  });
 
   console.log(response);
 };

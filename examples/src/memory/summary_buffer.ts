@@ -1,5 +1,4 @@
-import { OpenAI } from "langchain/llms/openai";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { OpenAI, ChatOpenAI } from "@langchain/openai";
 import { ConversationSummaryBufferMemory } from "langchain/memory";
 import { ConversationChain } from "langchain/chains";
 import {
@@ -7,11 +6,11 @@ import {
   HumanMessagePromptTemplate,
   MessagesPlaceholder,
   SystemMessagePromptTemplate,
-} from "langchain/prompts";
+} from "@langchain/core/prompts";
 
 // summary buffer memory
 const memory = new ConversationSummaryBufferMemory({
-  llm: new OpenAI({ modelName: "text-davinci-003", temperature: 0 }),
+  llm: new OpenAI({ modelName: "gpt-3.5-turbo-instruct", temperature: 0 }),
   maxTokenLimit: 10,
 });
 
@@ -68,7 +67,7 @@ const chain = new ConversationChain({
   prompt: chatPrompt,
 });
 
-const res1 = await chain.predict({ input: "Hi, what's up?" });
+const res1 = await chain.invoke({ input: "Hi, what's up?" });
 console.log({ res1 });
 /*
   {
@@ -76,7 +75,7 @@ console.log({ res1 });
   }
 */
 
-const res2 = await chain.predict({
+const res2 = await chain.invoke({
   input: "Just working on writing some documentation!",
 });
 console.log({ res2 });
@@ -86,7 +85,7 @@ console.log({ res2 });
   }
 */
 
-const res3 = await chain.predict({
+const res3 = await chain.invoke({
   input: "For LangChain! Have you heard of it?",
 });
 console.log({ res3 });
@@ -96,7 +95,7 @@ console.log({ res3 });
   }
 */
 
-const res4 = await chain.predict({
+const res4 = await chain.invoke({
   input:
     "That's not the right one, although a lot of people confuse it for that!",
 });

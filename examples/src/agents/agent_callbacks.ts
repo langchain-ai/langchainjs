@@ -1,7 +1,7 @@
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
-import { OpenAI } from "langchain/llms/openai";
-import { SerpAPI } from "langchain/tools";
+import { OpenAI } from "@langchain/openai";
 import { Calculator } from "langchain/tools/calculator";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 const model = new OpenAI({ temperature: 0 });
 const tools = [
@@ -17,19 +17,24 @@ const executor = await initializeAgentExecutorWithOptions(tools, model, {
 });
 
 const input = `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`;
-const result = await executor.run(input, [
+const result = await executor.invoke(
+  { input },
   {
-    handleAgentAction(action, runId) {
-      console.log("\nhandleAgentAction", action, runId);
-    },
-    handleAgentEnd(action, runId) {
-      console.log("\nhandleAgentEnd", action, runId);
-    },
-    handleToolEnd(output, runId) {
-      console.log("\nhandleToolEnd", output, runId);
-    },
-  },
-]);
+    callbacks: [
+      {
+        handleAgentAction(action, runId) {
+          console.log("\nhandleAgentAction", action, runId);
+        },
+        handleAgentEnd(action, runId) {
+          console.log("\nhandleAgentEnd", action, runId);
+        },
+        handleToolEnd(output, runId) {
+          console.log("\nhandleToolEnd", output, runId);
+        },
+      },
+    ],
+  }
+);
 /*
 handleAgentAction {
   tool: 'search',

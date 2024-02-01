@@ -1,7 +1,7 @@
 import type { extname as ExtnameT, resolve as ResolveT } from "node:path";
 import type { readdir as ReaddirT } from "node:fs/promises";
-import { Document } from "../../document.js";
-import { getEnv } from "../../util/env.js";
+import { Document } from "@langchain/core/documents";
+import { getEnv } from "@langchain/core/utils/env";
 import { BaseDocumentLoader } from "../base.js";
 
 // TypeScript enums are not tree-shakeable, so doing this instead
@@ -30,6 +30,20 @@ export interface LoadersMapping {
 /**
  * A document loader that loads documents from a directory. It extends the
  * `BaseDocumentLoader` class and implements the `load()` method.
+ * @example
+ * ```typescript
+ *
+ * const directoryLoader = new DirectoryLoader(
+ *   "src/document_loaders/example_data/",
+ *   {
+ *     ".pdf": (path: string) => new PDFLoader(path),
+ *   },
+ * );
+ *
+ * const docs = await directoryLoader.load();
+ * console.log({ docs });
+ *
+ * ```
  */
 export class DirectoryLoader extends BaseDocumentLoader {
   constructor(

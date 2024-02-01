@@ -1,8 +1,8 @@
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import { AgentExecutor } from "langchain/agents";
 import { loadAgent } from "langchain/agents/load";
-import { SerpAPI } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 export const run = async () => {
   const model = new OpenAI({ temperature: 0 });
@@ -30,7 +30,7 @@ export const run = async () => {
   const input = `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`;
   console.log(`Executing with input "${input}"...`);
 
-  const result = await executor.call({ input });
+  const result = await executor.invoke({ input });
 
   console.log(`Got output ${result.output}`);
 };

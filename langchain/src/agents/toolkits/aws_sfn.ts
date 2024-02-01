@@ -1,16 +1,14 @@
-import { Tool } from "../../tools/base.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import {
-  SfnConfig,
-  StartExecutionAWSSfnTool,
-  DescribeExecutionAWSSfnTool,
-  SendTaskSuccessAWSSfnTool,
-} from "../../tools/aws_sfn.js";
-import { Toolkit } from "./base.js";
-import { BaseLanguageModel } from "../../base_language/index.js";
-import { renderTemplate } from "../../prompts/template.js";
+  type AWSSfnToolkitArgs,
+  AWSSfnToolkit,
+} from "@langchain/community/agents/toolkits/aws_sfn";
+import { renderTemplate } from "@langchain/core/prompts";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { ZeroShotAgent, ZeroShotCreatePromptArgs } from "../mrkl/index.js";
 import { AgentExecutor } from "../executor.js";
+
+export { AWSSfnToolkit, type AWSSfnToolkitArgs };
 
 export const SFN_PREFIX = `You are an agent designed to interact with AWS Step Functions state machines to execute and coordinate asynchronous workflows and tasks.
 Given an input question, command, or task use the appropriate tool to execute a command to interact with AWS Step Functions and return the result.
@@ -28,73 +26,8 @@ Thought: I should look at state machines within AWS Step Functions to see what a
 
 export interface AWSSfnCreatePromptArgs extends ZeroShotCreatePromptArgs {}
 
-/**
- * Interface for the arguments required to create an AWS Step Functions
- * toolkit.
- */
-export interface AWSSfnToolkitArgs {
-  name: string;
-  description: string;
-  stateMachineArn: string;
-  asl?: string;
-  llm?: BaseLanguageModel;
-}
-
-/**
- * Class representing a toolkit for interacting with AWS Step Functions.
- * It initializes the AWS Step Functions tools and provides them as tools
- * for the agent.
- */
-export class AWSSfnToolkit extends Toolkit {
-  tools: Tool[];
-
-  stateMachineArn: string;
-
-  asl: string;
-
-  constructor(args: AWSSfnToolkitArgs & SfnConfig) {
-    super();
-    this.stateMachineArn = args.stateMachineArn;
-    if (args.asl) {
-      this.asl = args.asl;
-    }
-    this.tools = [
-      new StartExecutionAWSSfnTool({
-        name: args.name,
-        description: StartExecutionAWSSfnTool.formatDescription(
-          args.name,
-          args.description
-        ),
-        stateMachineArn: args.stateMachineArn,
-      }),
-      new DescribeExecutionAWSSfnTool(
-        Object.assign(
-          args.region ? { region: args.region } : {},
-          args.accessKeyId && args.secretAccessKey
-            ? {
-                accessKeyId: args.accessKeyId,
-                secretAccessKey: args.secretAccessKey,
-              }
-            : {}
-        )
-      ),
-      new SendTaskSuccessAWSSfnTool(
-        Object.assign(
-          args.region ? { region: args.region } : {},
-          args.accessKeyId && args.secretAccessKey
-            ? {
-                accessKeyId: args.accessKeyId,
-                secretAccessKey: args.secretAccessKey,
-              }
-            : {}
-        )
-      ),
-    ];
-  }
-}
-
 export function createAWSSfnAgent(
-  llm: BaseLanguageModel,
+  llm: BaseLanguageModelInterface,
   toolkit: AWSSfnToolkit,
   args?: AWSSfnCreatePromptArgs
 ) {

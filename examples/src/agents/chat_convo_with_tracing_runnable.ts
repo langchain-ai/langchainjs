@@ -1,15 +1,16 @@
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { AgentExecutor } from "langchain/agents";
-import { SerpAPI } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 import { pull } from "langchain/hub";
-import { PromptTemplate } from "langchain/prompts";
-import { RunnableSequence } from "langchain/schema/runnable";
-import { AgentStep, BaseMessage } from "langchain/schema";
 import { BufferMemory } from "langchain/memory";
 import { formatLogToString } from "langchain/agents/format_scratchpad/log";
 import { renderTextDescription } from "langchain/tools/render";
 import { ReActSingleInputOutputParser } from "langchain/agents/react/output_parser";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { AgentStep } from "@langchain/core/agents";
+import { BaseMessage } from "@langchain/core/messages";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 /** Define your chat model */
 const model = new ChatOpenAI({ modelName: "gpt-4" });
@@ -76,15 +77,15 @@ const executor = AgentExecutor.fromAgentAndTools({
 console.log("Loaded agent.");
 
 const input0 = "hi, i am bob";
-const result0 = await executor.call({ input: input0 });
+const result0 = await executor.invoke({ input: input0 });
 console.log(`Got output ${result0.output}`);
 
 const input1 = "whats my name?";
-const result1 = await executor.call({ input: input1 });
+const result1 = await executor.invoke({ input: input1 });
 console.log(`Got output ${result1.output}`);
 
 const input2 = "whats the weather in pomfret?";
-const result2 = await executor.call({ input: input2 });
+const result2 = await executor.invoke({ input: input2 });
 console.log(`Got output ${result2.output}`);
 /**
  * Loaded agent.

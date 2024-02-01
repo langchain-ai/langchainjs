@@ -1,15 +1,15 @@
 import { AgentExecutor, ChatAgent } from "langchain/agents";
 import { ConversationChain, LLMChain } from "langchain/chains";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { BufferMemory } from "langchain/memory";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   MessagesPlaceholder,
   SystemMessagePromptTemplate,
-} from "langchain/prompts";
-import { HumanMessage, SystemMessage } from "langchain/schema";
-import { SerpAPI } from "langchain/tools";
+} from "@langchain/core/prompts";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 export const run = async () => {
   const chat = new ChatOpenAI({ temperature: 0 });
@@ -137,9 +137,9 @@ export const run = async () => {
   // Create an executor, which calls to the agent until an answer is found
   const executor = AgentExecutor.fromAgentAndTools({ agent, tools });
 
-  const responseG = await executor.run(
-    "How many people live in canada as of 2023?"
-  );
+  const responseG = await executor.invoke({
+    input: "How many people live in canada as of 2023?",
+  });
 
   console.log(responseG);
 };

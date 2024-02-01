@@ -1,15 +1,18 @@
+import {
+  BaseRetriever,
+  type BaseRetrieverInput,
+} from "@langchain/core/retrievers";
+import { Document } from "@langchain/core/documents";
+import { VectorStore } from "@langchain/core/vectorstores";
+import { CallbackManagerForRetrieverRun } from "@langchain/core/callbacks/manager";
 import { LLMChain } from "../../chains/llm_chain.js";
 import {
   QueryConstructorChainOptions,
   loadQueryConstructorChain,
 } from "../../chains/query_constructor/index.js";
 import { StructuredQuery } from "../../chains/query_constructor/ir.js";
-import { Document } from "../../document.js";
-import { BaseRetriever, BaseRetrieverInput } from "../../schema/retriever.js";
-import { VectorStore } from "../../vectorstores/base.js";
 import { FunctionalTranslator } from "./functional.js";
 import { BaseTranslator, BasicTranslator } from "./base.js";
-import { CallbackManagerForRetrieverRun } from "../../callbacks/manager.js";
 
 export { BaseTranslator, BasicTranslator, FunctionalTranslator };
 
@@ -36,6 +39,19 @@ export interface SelfQueryRetrieverArgs<T extends VectorStore>
  * Class for question answering over an index. It retrieves relevant
  * documents based on a query. It extends the BaseRetriever class and
  * implements the SelfQueryRetrieverArgs interface.
+ * @example
+ * ```typescript
+ * const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+ *   llm: new ChatOpenAI(),
+ *   vectorStore: await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings()),
+ *   documentContents: "Brief summary of a movie",
+ *   attributeInfo: attributeInfo,
+ *   structuredQueryTranslator: new FunctionalTranslator(),
+ * });
+ * const relevantDocuments = await selfQueryRetriever.getRelevantDocuments(
+ *   "Which movies are directed by Greta Gerwig?",
+ * );
+ * ```
  */
 export class SelfQueryRetriever<T extends VectorStore>
   extends BaseRetriever

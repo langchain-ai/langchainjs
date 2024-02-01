@@ -1,8 +1,8 @@
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { Calculator } from "langchain/tools/calculator";
-import { MessagesPlaceholder } from "langchain/prompts";
 import { BufferMemory } from "langchain/memory";
+import { MessagesPlaceholder } from "@langchain/core/prompts";
 
 export const run = async () => {
   const model = new ChatOpenAI({ temperature: 0 });
@@ -21,7 +21,9 @@ export const run = async () => {
     },
   });
 
-  const result = await executor.call({ input: `what is 9 to the 2nd power?` });
+  const result = await executor.invoke({
+    input: `what is 9 to the 2nd power?`,
+  });
 
   console.log(result);
 
@@ -31,7 +33,7 @@ export const run = async () => {
     }
   */
 
-  const result2 = await executor.call({
+  const result2 = await executor.invoke({
     input: `what is that number squared?`,
   });
 

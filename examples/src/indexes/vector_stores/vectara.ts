@@ -1,5 +1,6 @@
-import { VectaraStore } from "langchain/vectorstores/vectara";
-import { Document } from "langchain/document";
+import { VectaraStore } from "@langchain/community/vectorstores/vectara";
+import { VectaraSummaryRetriever } from "@langchain/community/retrievers/vectara_summary";
+import { Document } from "@langchain/core/documents";
 
 // Create the Vectara store.
 const store = new VectaraStore({
@@ -10,7 +11,7 @@ const store = new VectaraStore({
 });
 
 // Add two documents with some metadata.
-await store.addDocuments([
+const doc_ids = await store.addDocuments([
   new Document({
     pageContent: "Do I dare to eat a peach?",
     metadata: {
@@ -36,25 +37,60 @@ const resultsWithScore = await store.similaritySearchWithScore(
 
 // Print the results.
 console.log(JSON.stringify(resultsWithScore, null, 2));
-// [
-//   [
-//     {
-//       "pageContent": "In the room the women come and go talking of Michelangelo",
-//       "metadata": [
-//         {
-//           "name": "lang",
-//           "value": "eng"
-//         },
-//         {
-//           "name": "offset",
-//           "value": "0"
-//         },
-//         {
-//           "name": "len",
-//           "value": "57"
-//         }
-//       ]
-//     },
-//     0.38169062
-//   ]
-// ]
+/*
+[
+  [
+    {
+      "pageContent": "In the room the women come and go talking of Michelangelo",
+      "metadata": {
+        "lang": "eng",
+        "offset": "0",
+        "len": "57",
+        "foo": "bar"
+      }
+    },
+    0.4678752
+  ]
+]
+*/
+
+const retriever = new VectaraSummaryRetriever({ vectara: store, topK: 3 });
+const documents = await retriever.getRelevantDocuments(
+  "What were the women talking about?"
+);
+
+console.log(JSON.stringify(documents, null, 2));
+/*
+[
+  {
+    "pageContent": "<b>In the room the women come and go talking of Michelangelo</b>",
+    "metadata": {
+      "lang": "eng",
+      "offset": "0",
+      "len": "57",
+      "foo": "bar"
+    }
+  },
+  {
+    "pageContent": "<b>In the room the women come and go talking of Michelangelo</b>",
+    "metadata": {
+      "lang": "eng",
+      "offset": "0",
+      "len": "57",
+      "foo": "bar"
+    }
+  },
+  {
+    "pageContent": "<b>In the room the women come and go talking of Michelangelo</b>",
+    "metadata": {
+      "lang": "eng",
+      "offset": "0",
+      "len": "57",
+      "foo": "bar"
+    }
+  }
+]
+*/
+
+// Delete the documents.
+await store.deleteDocuments(doc_ids);

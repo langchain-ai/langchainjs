@@ -1,13 +1,13 @@
-import { Document } from "../../document.js";
-import { Embeddings } from "../../embeddings/base.js";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
+import type { DocumentInterface } from "@langchain/core/documents";
+import { cosineSimilarity } from "@langchain/core/utils/math";
 import { BaseDocumentCompressor } from "./index.js";
-import { cosineSimilarity } from "../../util/math.js";
 
 /**
  * Interface for the parameters of the `EmbeddingsFilter` class.
  */
 export interface EmbeddingsFilterParams {
-  embeddings: Embeddings;
+  embeddings: EmbeddingsInterface;
   similarityFn?: (x: number[][], y: number[][]) => number[][];
   similarityThreshold?: number;
   k?: number;
@@ -16,12 +16,25 @@ export interface EmbeddingsFilterParams {
 /**
  * Class that represents a document compressor that uses embeddings to
  * drop documents unrelated to the query.
+ * @example
+ * ```typescript
+ * const embeddingsFilter = new EmbeddingsFilter({
+ *   embeddings: new OpenAIEmbeddings(),
+ *   similarityThreshold: 0.8,
+ *   k: 5,
+ * });
+ * const retrievedDocs = await embeddingsFilter.filterDocuments(
+ *   getDocuments(),
+ *   "What did the speaker say about Justice Breyer in the 2022 State of the Union?",
+ * );
+ * console.log({ retrievedDocs });
+ * ```
  */
 export class EmbeddingsFilter extends BaseDocumentCompressor {
   /**
    * Embeddings to use for embedding document contents and queries.
    */
-  embeddings: Embeddings;
+  embeddings: EmbeddingsInterface;
 
   /**
    * Similarity function for comparing documents.
@@ -52,9 +65,9 @@ export class EmbeddingsFilter extends BaseDocumentCompressor {
   }
 
   async compressDocuments(
-    documents: Document[],
+    documents: DocumentInterface[],
     query: string
-  ): Promise<Document[]> {
+  ): Promise<DocumentInterface[]> {
     const embeddedDocuments = await this.embeddings.embedDocuments(
       documents.map((doc) => doc.pageContent)
     );

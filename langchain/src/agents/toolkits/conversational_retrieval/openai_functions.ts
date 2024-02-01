@@ -1,6 +1,6 @@
-import { ChatOpenAI } from "../../../chat_models/openai.js";
+import { StructuredToolInterface } from "@langchain/core/tools";
+import { ChatOpenAI } from "@langchain/openai";
 import { ConversationSummaryBufferMemory } from "../../../memory/summary_buffer.js";
-import { StructuredTool } from "../../../tools/base.js";
 import { initializeAgentExecutorWithOptions } from "../../initialize.js";
 import { OpenAIAgentTokenBufferMemory } from "./token_buffer_memory.js";
 
@@ -8,6 +8,7 @@ export type ConversationalRetrievalAgentOptions = {
   rememberIntermediateSteps?: boolean;
   memoryKey?: string;
   outputKey?: string;
+  inputKey?: string;
   prefix?: string;
   verbose?: boolean;
 };
@@ -24,13 +25,14 @@ export type ConversationalRetrievalAgentOptions = {
  */
 export async function createConversationalRetrievalAgent(
   llm: ChatOpenAI,
-  tools: StructuredTool[],
+  tools: StructuredToolInterface[],
   options?: ConversationalRetrievalAgentOptions
 ) {
   const {
     rememberIntermediateSteps = true,
     memoryKey = "chat_history",
     outputKey = "output",
+    inputKey = "input",
     prefix,
     verbose,
   } = options ?? {};
@@ -40,6 +42,7 @@ export async function createConversationalRetrievalAgent(
       memoryKey,
       llm,
       outputKey,
+      inputKey,
     });
   } else {
     memory = new ConversationSummaryBufferMemory({
@@ -48,6 +51,7 @@ export async function createConversationalRetrievalAgent(
       maxTokenLimit: 12000,
       returnMessages: true,
       outputKey,
+      inputKey,
     });
   }
   const executor = await initializeAgentExecutorWithOptions(tools, llm, {

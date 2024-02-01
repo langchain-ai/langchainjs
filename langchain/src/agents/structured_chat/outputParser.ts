@@ -1,14 +1,14 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import { Callbacks } from "@langchain/core/callbacks/manager";
+import { AgentAction, AgentFinish } from "@langchain/core/agents";
+import { OutputParserException } from "@langchain/core/output_parsers";
+import { renderTemplate } from "@langchain/core/prompts";
 import { AgentActionOutputParser } from "../types.js";
 import {
   AGENT_ACTION_FORMAT_INSTRUCTIONS,
   FORMAT_INSTRUCTIONS,
 } from "./prompt.js";
 import { OutputFixingParser } from "../../output_parsers/fix.js";
-import { BaseLanguageModel } from "../../base_language/index.js";
-import { AgentAction, AgentFinish } from "../../schema/index.js";
-import { OutputParserException } from "../../schema/output_parser.js";
-import { renderTemplate } from "../../prompts/index.js";
-import { Callbacks } from "../../callbacks/manager.js";
 
 /**
  * A class that provides a custom implementation for parsing the output of
@@ -84,6 +84,18 @@ export interface StructuredChatOutputParserArgs {
  * and `OutputFixingParser` classes. It extends the
  * `AgentActionOutputParser` class and allows for retrying the output
  * parsing using the `OutputFixingParser` if it is provided.
+ * @example
+ * ```typescript
+ * const outputParser = new StructuredChatOutputParserWithRetries.fromLLM(
+ *   new ChatOpenAI({ temperature: 0 }),
+ *   {
+ *     toolNames: ["calculator", "random-number-generator"],
+ *   },
+ * );
+ * const result = await outputParser.parse(
+ *  "What is a random number between 5 and 10 raised to the second power?"
+ * );
+ * ```
  */
 export class StructuredChatOutputParserWithRetries extends AgentActionOutputParser {
   lc_namespace = ["langchain", "agents", "structured_chat"];
@@ -139,7 +151,7 @@ export class StructuredChatOutputParserWithRetries extends AgentActionOutputPars
    * @returns A new `StructuredChatOutputParserWithRetries` instance.
    */
   static fromLLM(
-    llm: BaseLanguageModel,
+    llm: BaseLanguageModelInterface,
     options: Omit<StructuredChatOutputParserArgs, "outputFixingParser">
   ): StructuredChatOutputParserWithRetries {
     const baseParser =

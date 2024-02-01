@@ -1,7 +1,7 @@
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
-import { OpenAI } from "langchain/llms/openai";
-import { SerpAPI } from "langchain/tools";
+import { OpenAI } from "@langchain/openai";
 import { Calculator } from "langchain/tools/calculator";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 const model = new OpenAI({ temperature: 0 });
 const tools = [
@@ -24,7 +24,7 @@ setTimeout(() => {
 
 try {
   const input = `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`;
-  const result = await executor.call({ input, signal: controller.signal });
+  const result = await executor.invoke({ input, signal: controller.signal });
 } catch (e) {
   console.log(e);
   /*

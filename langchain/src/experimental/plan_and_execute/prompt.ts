@@ -2,9 +2,9 @@ import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
-} from "../../prompts/chat.js";
+} from "@langchain/core/prompts";
 
-import { Tool } from "../../tools/base.js";
+import { Tool, DynamicStructuredTool } from "@langchain/core/tools";
 
 export const PLANNER_SYSTEM_PROMPT_MESSAGE_TEMPLATE = [
   `Let's first understand the problem and devise a plan to solve the problem.`,
@@ -37,7 +37,9 @@ You may extract and combine relevant data from your previous steps when respondi
  * @param tools the tools available to the `planner`
  * @returns
  */
-export const getPlannerChatPrompt = async (tools: Tool[]) => {
+export const getPlannerChatPrompt = async (
+  tools: Tool[] | DynamicStructuredTool[]
+) => {
   const toolStrings = tools
     .map((tool) => `${tool.name}: ${tool.description}`)
     .join("\n");

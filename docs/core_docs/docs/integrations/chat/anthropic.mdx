@@ -1,0 +1,39 @@
+---
+sidebar_label: Anthropic
+---
+
+# ChatAnthropic
+
+LangChain supports Anthropic's Claude family of chat models.
+
+## Usage
+
+import AnthropicLegacy from "@examples/models/chat/integration_anthropic_legacy.ts";
+
+<CodeBlock language="typescript">{AnthropicLegacy}</CodeBlock>
+
+## ChatAnthropicMessages
+
+LangChain also offers the beta Anthropic Messages endpoint through the new langchain-anthropic package.
+
+You'll first need to install the [`@langchain/anthropic`](https://www.npmjs.com/package/@langchain/anthropic) package:
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/anthropic
+```
+
+You'll also need to sign up and get an [Anthropic API key](https://www.anthropic.com/).
+Set it as an environment variable named `ANTHROPIC_API_KEY`, or pass it into the constructor as shown below.
+
+## Usage
+
+You can initialize an instance like this:
+
+import CodeBlock from "@theme/CodeBlock";
+import Anthropic from "@examples/models/chat/integration_anthropic.ts";
+
+<CodeBlock language="typescript">{Anthropic}</CodeBlock>

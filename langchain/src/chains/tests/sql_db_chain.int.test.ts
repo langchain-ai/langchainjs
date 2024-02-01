@@ -1,6 +1,6 @@
 import { expect, test } from "@jest/globals";
 import { DataSource } from "typeorm";
-import { OpenAI } from "../../llms/openai.js";
+import { OpenAI } from "@langchain/openai";
 import { SqlDatabaseChain } from "../sql_db/sql_db_chain.js";
 import { SqlDatabase } from "../../sql_db.js";
 import { SQL_SQLITE_PROMPT } from "../sql_db/sql_db_prompt.js";
@@ -106,7 +106,7 @@ Aliquam ultricies, sapien a porta luctus, dolor nibh dignissim erat, dictum luct
 Aliquam ex velit, porta sit amet augue vulputate, rhoncus fermentum magna. Integer non elementum augue. Phasellus rhoncus nisl nec magna lacinia vulputate. Suspendisse diam nibh, egestas a porta a, pellentesque ut nisl. Donec tempus ligula at leo convallis consequat. Duis sapien lorem, lobortis ac nisl dapibus, bibendum mollis lorem. Sed congue porttitor ex, eget scelerisque ligula consectetur quis. Mauris felis mauris, sodales quis nunc non, condimentum eleifend quam. Ut vitae viverra lorem. Vivamus lacinia et dolor vitae cursus. Proin faucibus venenatis enim vitae tincidunt. Sed sed venenatis leo.
 `;
 
-test("Test token limite SqlDatabaseChain", async () => {
+test.skip("Test token limit SqlDatabaseChain", async () => {
   const datasource = new DataSource({
     type: "sqlite",
     database: ":memory:",

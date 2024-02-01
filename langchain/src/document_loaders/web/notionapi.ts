@@ -16,9 +16,9 @@ import type {
 } from "notion-to-md/build/types";
 import yaml from "js-yaml";
 
-import { Document } from "../../document.js";
+import { Document } from "@langchain/core/documents";
+import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { BaseDocumentLoader } from "../base.js";
-import { AsyncCaller } from "../../util/async_caller.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type GuardType<T> = T extends (x: any, ...rest: any) => x is infer U
@@ -82,6 +82,22 @@ export type NotionAPILoaderOptions = {
 /**
  * A class that extends the BaseDocumentLoader class. It represents a
  * document loader for loading documents from Notion using the Notion API.
+ * @example
+ * ```typescript
+ * const pageLoader = new NotionAPILoader({
+ *   clientOptions: { auth: "<NOTION_INTEGRATION_TOKEN>" },
+ *   id: "<PAGE_ID>",
+ *   type: "page",
+ * });
+ * const pageDocs = await pageLoader.loadAndSplit();
+ * const dbLoader = new NotionAPILoader({
+ *   clientOptions: { auth: "<NOTION_INTEGRATION_TOKEN>" },
+ *   id: "<DATABASE_ID>",
+ *   type: "database",
+ *   propertiesAsHeader: true,
+ * });
+ * const dbDocs = await dbLoader.load();
+ * ```
  */
 export class NotionAPILoader extends BaseDocumentLoader {
   private caller: AsyncCaller;

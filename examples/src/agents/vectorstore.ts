@@ -1,6 +1,5 @@
-import { OpenAI } from "langchain/llms/openai";
-import { HNSWLib } from "langchain/vectorstores/hnswlib";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
+import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import * as fs from "fs";
 import {
@@ -32,7 +31,7 @@ const input =
   "What did biden say about Ketanji Brown Jackson is the state of the union address?";
 console.log(`Executing: ${input}`);
 
-const result = await agent.call({ input });
+const result = await agent.invoke({ input });
 console.log(`Got output ${result.output}`);
 console.log(
   `Got intermediate steps ${JSON.stringify(result.intermediateSteps, null, 2)}`

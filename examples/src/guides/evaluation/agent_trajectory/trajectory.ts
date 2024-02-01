@@ -1,8 +1,8 @@
-import { OpenAI } from "langchain/llms/openai";
-import { SerpAPI } from "langchain/tools";
+import { OpenAI } from "@langchain/openai";
 import { Calculator } from "langchain/tools/calculator";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { loadEvaluator } from "langchain/evaluation";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 // Capturing Trajectory
 // The easiest way to return an agent's trajectory (without using tracing callbacks like those in LangSmith)
@@ -27,7 +27,7 @@ const executor = await initializeAgentExecutorWithOptions(tools, model, {
 
 const input = `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`;
 
-const result = await executor.call({ input });
+const result = await executor.invoke({ input });
 
 // Evaluate Trajectory
 

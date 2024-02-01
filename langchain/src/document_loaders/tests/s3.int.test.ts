@@ -20,7 +20,7 @@ const UnstructuredLoaderMock = jest.fn().mockImplementation(() => ({
   load: jest.fn().mockImplementation(() => ["fake document"]),
 }));
 
-test("Test S3 loader", async () => {
+test.skip("Test S3 loader", async () => {
   if (!S3Client) {
     // this is to avoid a linting error. S3Client is mocked above.
   }

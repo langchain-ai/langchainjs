@@ -1,12 +1,11 @@
-import { FaissStore } from "langchain/vectorstores/faiss";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { FaissStore } from "@langchain/community/vectorstores/faiss";
+import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import {
   createRetrieverTool,
   createConversationalRetrievalAgent,
 } from "langchain/agents/toolkits";
-import { ChatOpenAI } from "langchain/chat_models/openai";
 
 const loader = new TextLoader("state_of_the_union.txt");
 const docs = await loader.load();
@@ -36,7 +35,7 @@ const executor = await createConversationalRetrievalAgent(model, [tool], {
   verbose: true,
 });
 
-const result = await executor.call({
+const result = await executor.invoke({
   input: "Hi, I'm Bob!",
 });
 
@@ -49,7 +48,7 @@ console.log(result);
   }
 */
 
-const result2 = await executor.call({
+const result2 = await executor.invoke({
   input: "What's my name?",
 });
 
@@ -59,7 +58,7 @@ console.log(result2);
   { output: 'Your name is Bob.', intermediateSteps: [] }
 */
 
-const result3 = await executor.call({
+const result3 = await executor.invoke({
   input:
     "What did the president say about Ketanji Brown Jackson in the most recent state of the union?",
 });
@@ -75,7 +74,7 @@ console.log(result3);
   }
 */
 
-const result4 = await executor.call({
+const result4 = await executor.invoke({
   input: "How long ago did he nominate her?",
 });
 

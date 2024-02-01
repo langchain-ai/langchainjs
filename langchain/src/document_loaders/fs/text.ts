@@ -1,6 +1,6 @@
 import type { readFile as ReadFileT } from "node:fs/promises";
-import { Document } from "../../document.js";
-import { getEnv } from "../../util/env.js";
+import { Document } from "@langchain/core/documents";
+import { getEnv } from "@langchain/core/utils/env";
 import { BaseDocumentLoader } from "../base.js";
 
 /**
@@ -10,6 +10,11 @@ import { BaseDocumentLoader } from "../base.js";
  * using the `parse()` method, and create a `Document` instance for each
  * parsed page. The metadata includes the source of the text (file path or
  * blob) and, if there are multiple pages, the line number of each page.
+ * @example
+ * ```typescript
+ * const loader = new TextLoader("src/document_loaders/example_data/example.txt");
+ * const docs = await loader.load();
+ * ```
  */
 export class TextLoader extends BaseDocumentLoader {
   constructor(public filePathOrBlob: string | Blob) {

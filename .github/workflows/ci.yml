@@ -44,7 +44,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        node-version: [18.x, 19.x, 20.x]
+        node-version: [18.x, 20.x]
         # See Node.js release schedule at https://nodejs.org/en/about/releases/
         # include:
           # - os: windows-latest
@@ -66,8 +66,27 @@ jobs:
         run: yarn install --immutable
       - name: Test
         run: yarn run test:unit
+        # run: yarn run test:unit -- --coverage
+      # - name: Upload coverage reports to Codecov
+      #   uses: codecov/codecov-action@v3
+      #   env:
+      #     CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   test-exports:
     uses:
       ./.github/workflows/test-exports.yml
     secrets: inherit
+
+  examples-build:
+    name: Build examples
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build examples
+        run: yarn build --filter=examples

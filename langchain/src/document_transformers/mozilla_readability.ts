@@ -1,34 +1,6 @@
-import { Readability } from "@mozilla/readability";
-import { JSDOM } from "jsdom";
-import { Options } from "mozilla-readability";
-import { Document } from "../document.js";
-import { MappingDocumentTransformer } from "../schema/document.js";
+import { logVersion010MigrationWarning } from "../util/entrypoint_deprecation.js";
 
-/**
- * A transformer that uses the Mozilla Readability library to extract the
- * main content from a web page.
- */
-export class MozillaReadabilityTransformer extends MappingDocumentTransformer {
-  static lc_name() {
-    return "MozillaReadabilityTransformer";
-  }
-
-  constructor(protected options: Options = {}) {
-    super(options);
-  }
-
-  async _transformDocument(document: Document): Promise<Document> {
-    const doc = new JSDOM(document.pageContent);
-
-    const readability = new Readability(doc.window.document, this.options);
-
-    const result = readability.parse();
-
-    return new Document({
-      pageContent: result?.textContent ?? "",
-      metadata: {
-        ...document.metadata,
-      },
-    });
-  }
-}
+/* #__PURE__ */ logVersion010MigrationWarning({
+  oldEntrypointName: "document_transformers/mozilla_readability",
+});
+export * from "@langchain/community/document_transformers/mozilla_readability";

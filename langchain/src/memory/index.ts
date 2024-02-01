@@ -35,3 +35,7 @@ export {
   ConversationSummaryBufferMemory,
   type ConversationSummaryBufferMemoryInput,
 } from "./summary_buffer.js";
+export {
+  ConversationTokenBufferMemory,
+  type ConversationTokenBufferMemoryInput,
+} from "./buffer_token_memory.js";

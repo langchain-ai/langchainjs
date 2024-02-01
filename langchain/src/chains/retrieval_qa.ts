@@ -1,13 +1,13 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import type { BaseRetrieverInterface } from "@langchain/core/retrievers";
+import { ChainValues } from "@langchain/core/utils/types";
+import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
 import { BaseChain, ChainInputs } from "./base.js";
-import { BaseLanguageModel } from "../base_language/index.js";
 import { SerializedVectorDBQAChain } from "./serde.js";
-import { ChainValues } from "../schema/index.js";
-import { BaseRetriever } from "../schema/retriever.js";
 import {
   StuffQAChainParams,
   loadQAStuffChain,
 } from "./question_answering/load.js";
-import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
@@ -16,7 +16,7 @@ export type LoadValues = Record<string, any>;
  * Interface for the input parameters of the RetrievalQAChain class.
  */
 export interface RetrievalQAChainInput extends Omit<ChainInputs, "memory"> {
-  retriever: BaseRetriever;
+  retriever: BaseRetrieverInterface;
   combineDocumentsChain: BaseChain;
   inputKey?: string;
   returnSourceDocuments?: boolean;
@@ -25,6 +25,27 @@ export interface RetrievalQAChainInput extends Omit<ChainInputs, "memory"> {
 /**
  * Class representing a chain for performing question-answering tasks with
  * a retrieval component.
+ * @example
+ * ```typescript
+ * // Initialize the OpenAI model and the remote retriever with the specified configuration
+ * const model = new ChatOpenAI({});
+ * const retriever = new RemoteLangChainRetriever({
+ *   url: "http://example.com/api",
+ *   auth: { bearer: "foo" },
+ *   inputKey: "message",
+ *   responseKey: "response",
+ * });
+ *
+ * // Create a RetrievalQAChain using the model and retriever
+ * const chain = RetrievalQAChain.fromLLM(model, retriever);
+ *
+ * // Execute the chain with a query and log the result
+ * const res = await chain.call({
+ *   query: "What did the president say about Justice Breyer?",
+ * });
+ * console.log({ res });
+ *
+ * ```
  */
 export class RetrievalQAChain
   extends BaseChain
@@ -46,7 +67,7 @@ export class RetrievalQAChain
     );
   }
 
-  retriever: BaseRetriever;
+  retriever: BaseRetrieverInterface;
 
   combineDocumentsChain: BaseChain;
 
@@ -112,8 +133,8 @@ export class RetrievalQAChain
    * @returns A new instance of RetrievalQAChain.
    */
   static fromLLM(
-    llm: BaseLanguageModel,
-    retriever: BaseRetriever,
+    llm: BaseLanguageModelInterface,
+    retriever: BaseRetrieverInterface,
     options?: Partial<
       Omit<
         RetrievalQAChainInput,

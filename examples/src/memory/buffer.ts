@@ -1,7 +1,7 @@
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import { BufferMemory } from "langchain/memory";
 import { LLMChain } from "langchain/chains";
-import { PromptTemplate } from "langchain/prompts";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const memory = new BufferMemory({ memoryKey: "chat_history" });
 const model = new OpenAI({ temperature: 0.9 });

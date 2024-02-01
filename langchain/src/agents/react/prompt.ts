@@ -1,4 +1,4 @@
-export const FORMAT_INSTRUCTIONS /* #__PURE__ */ = `Use the following format:
+export const FORMAT_INSTRUCTIONS = `Use the following format:
 
 Question: the input question you must answer
 Thought: you should always think about what to do

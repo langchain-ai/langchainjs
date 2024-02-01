@@ -1,7 +1,7 @@
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { SerpAPI } from "langchain/tools";
+import { ChatOpenAI } from "@langchain/openai";
 import { Calculator } from "langchain/tools/calculator";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 export const run = async () => {
   const model = new ChatOpenAI({ temperature: 0 });
@@ -24,7 +24,7 @@ export const run = async () => {
 
   console.log(`Executing with input "${input}"...`);
 
-  const result = await executor.call({ input });
+  const result = await executor.invoke({ input });
 
   console.log(`Got output ${result.output}`);
 

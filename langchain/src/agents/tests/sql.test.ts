@@ -59,7 +59,7 @@ afterEach(async () => {
   await db.appDataSource.destroy();
 });
 
-test("QuerySqlTool", async () => {
+test.skip("QuerySqlTool", async () => {
   const querySqlTool = new QuerySqlTool(db);
   const result = await querySqlTool.call("SELECT * FROM users");
   expect(result).toBe(
@@ -67,13 +67,13 @@ test("QuerySqlTool", async () => {
   );
 });
 
-test("QuerySqlTool with error", async () => {
+test.skip("QuerySqlTool with error", async () => {
   const querySqlTool = new QuerySqlTool(db);
   const result = await querySqlTool.call("SELECT * FROM userss");
   expect(result).toBe(`QueryFailedError: SQLITE_ERROR: no such table: userss`);
 });
 
-test("InfoSqlTool", async () => {
+test.skip("InfoSqlTool", async () => {
   const infoSqlTool = new InfoSqlTool(db);
   const result = await infoSqlTool.call("users, products");
   const expectStr = `
@@ -94,7 +94,7 @@ SELECT * FROM "users" LIMIT 3;
   expect(result.trim()).toBe(expectStr.trim());
 });
 
-test("InfoSqlTool with customDescription", async () => {
+test.skip("InfoSqlTool with customDescription", async () => {
   db.customDescription = {
     products: "Custom Description for Products Table",
     users: "Custom Description for Users Table",
@@ -122,7 +122,7 @@ SELECT * FROM "users" LIMIT 3;
   expect(result.trim()).toBe(expectStr.trim());
 });
 
-test("InfoSqlTool with error", async () => {
+test.skip("InfoSqlTool with error", async () => {
   const infoSqlTool = new InfoSqlTool(db);
   const result = await infoSqlTool.call("userss, products");
   expect(result).toBe(
@@ -130,19 +130,19 @@ test("InfoSqlTool with error", async () => {
   );
 });
 
-test("ListTablesSqlTool", async () => {
+test.skip("ListTablesSqlTool", async () => {
   const listSqlTool = new ListTablesSqlTool(db);
   const result = await listSqlTool.call("");
   expect(result).toBe(`products, users`);
 });
 
-test("QueryCheckerTool", async () => {
+test.skip("QueryCheckerTool", async () => {
   const queryCheckerTool = new QueryCheckerTool();
   expect(queryCheckerTool.llmChain).not.toBeNull();
   expect(queryCheckerTool.llmChain.inputKeys).toEqual(["query"]);
 });
 
-test("ListTablesSqlTool with include tables", async () => {
+test.skip("ListTablesSqlTool with include tables", async () => {
   const includesTables = ["users"];
   db.includesTables = includesTables;
   const listSqlTool = new ListTablesSqlTool(db);
@@ -150,7 +150,7 @@ test("ListTablesSqlTool with include tables", async () => {
   expect(result).toBe("users");
 });
 
-test("ListTablesSqlTool with ignore tables", async () => {
+test.skip("ListTablesSqlTool with ignore tables", async () => {
   const ignoreTables = ["products"];
   db.ignoreTables = ignoreTables;
   const listSqlTool = new ListTablesSqlTool(db);

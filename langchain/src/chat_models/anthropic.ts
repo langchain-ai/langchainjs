@@ -1,3 +1,4 @@
+// TODO: Deprecate in favor of new Anthropic package once out of beta
 import {
   Anthropic,
   AI_PROMPT,
@@ -7,19 +8,26 @@ import {
 import type { CompletionCreateParams } from "@anthropic-ai/sdk/resources/completions";
 import type { Stream } from "@anthropic-ai/sdk/streaming";
 
-import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
+import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   AIMessage,
   AIMessageChunk,
-  BaseMessage,
-  ChatGeneration,
-  ChatGenerationChunk,
+  type BaseMessage,
   ChatMessage,
-  ChatResult,
-} from "../schema/index.js";
-import { getEnvironmentVariable } from "../util/env.js";
-import { BaseChatModel, BaseChatModelParams } from "./base.js";
-import { BaseLanguageModelCallOptions } from "../base_language/index.js";
+} from "@langchain/core/messages";
+import {
+  type ChatGeneration,
+  ChatGenerationChunk,
+  type ChatResult,
+} from "@langchain/core/outputs";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import {
+  BaseChatModel,
+  type BaseChatModelParams,
+} from "@langchain/core/language_models/chat_models";
+import { type BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
+
+export { AI_PROMPT, HUMAN_PROMPT };
 
 /**
  * Extracts the custom role of a generic chat message.
@@ -52,6 +60,8 @@ function getAnthropicPromptFromMessage(message: BaseMessage): string {
       return HUMAN_PROMPT;
     case "system":
       return "";
+    case "function":
+      return HUMAN_PROMPT;
     case "generic": {
       if (!ChatMessage.isInstance(message))
         throw new Error("Invalid generic chat message");
@@ -140,7 +150,15 @@ type Kwargs = Record<string, any>;
  * https://console.anthropic.com/docs/api/reference |
  * `anthropic.complete`} can be passed through {@link invocationKwargs},
  * even if not explicitly available on this class.
- *
+ * @example
+ * ```typescript
+ * const model = new ChatAnthropic({
+ *   temperature: 0.9,
+ *   anthropicApiKey: 'YOUR-API-KEY',
+ * });
+ * const res = await model.invoke({ input: 'Hello!' });
+ * console.log(res);
+ * ```
  */
 export class ChatAnthropic<
     CallOptions extends BaseLanguageModelCallOptions = BaseLanguageModelCallOptions

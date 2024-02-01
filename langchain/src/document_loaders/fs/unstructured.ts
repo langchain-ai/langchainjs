@@ -1,12 +1,13 @@
 import type { basename as BasenameT } from "node:path";
 import type { readFile as ReadFileT } from "node:fs/promises";
+import { Document } from "@langchain/core/documents";
+import { getEnv } from "@langchain/core/utils/env";
+import { StringWithAutocomplete } from "@langchain/core/utils/types";
 import {
   DirectoryLoader,
   UnknownHandling,
   LoadersMapping,
 } from "./directory.js";
-import { getEnv } from "../../util/env.js";
-import { Document } from "../../document.js";
 import { BaseDocumentLoader } from "../base.js";
 
 const UNSTRUCTURED_API_FILETYPES = [
@@ -94,12 +95,6 @@ export type SkipInferTableTypes =
  * Set the chunking_strategy to chunk text into larger or smaller elements. Defaults to None with optional arg of by_title
  */
 type ChunkingStrategy = "None" | "by_title";
-
-/**
- * Represents a string value with autocomplete suggestions. It is used for
- * the `strategy` property in the UnstructuredLoaderOptions.
- */
-type StringWithAutocomplete<T> = T | (string & Record<never, never>);
 
 export type UnstructuredLoaderOptions = {
   apiKey?: string;
@@ -303,6 +298,13 @@ export class UnstructuredLoader extends BaseDocumentLoader {
  * using the UnstructuredLoader. It creates a UnstructuredLoader instance
  * for each supported file type and passes it to the DirectoryLoader
  * constructor.
+ * @example
+ * ```typescript
+ * const loader = new UnstructuredDirectoryLoader("path/to/directory", {
+ *   apiKey: "MY_API_KEY",
+ * });
+ * const docs = await loader.load();
+ * ```
  */
 export class UnstructuredDirectoryLoader extends DirectoryLoader {
   constructor(

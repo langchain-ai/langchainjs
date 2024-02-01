@@ -1,8 +1,7 @@
-import { BaseLanguageModel } from "../../base_language/index.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import { ToolInterface } from "@langchain/core/tools";
+import { PromptTemplate, renderTemplate } from "@langchain/core/prompts";
 import { LLMChain } from "../../chains/llm_chain.js";
-import { PromptTemplate } from "../../prompts/prompt.js";
-import { renderTemplate } from "../../prompts/template.js";
-import { Tool } from "../../tools/base.js";
 import { Optional } from "../../types/type-utils.js";
 import { Agent, AgentArgs, OutputParserArgs } from "../agent.js";
 import { deserializeHelper } from "../helpers.js";
@@ -35,6 +34,29 @@ export type ZeroShotAgentInput = Optional<AgentInput, "outputParser">;
 /**
  * Agent for the MRKL chain.
  * @augments Agent
+ * @example
+ * ```typescript
+ *
+ * const agent = new ZeroShotAgent({
+ *   llmChain: new LLMChain({
+ *     llm: new ChatOpenAI({ temperature: 0 }),
+ *     prompt: ZeroShotAgent.createPrompt([new SerpAPI(), new Calculator()], {
+ *       prefix: `Answer the following questions as best you can, but speaking as a pirate might speak. You have access to the following tools:`,
+ *       suffix: `Begin! Remember to speak as a pirate when giving your final answer. Use lots of "Args"
+ * Question: {input}
+ * {agent_scratchpad}`,
+ *       inputVariables: ["input", "agent_scratchpad"],
+ *     }),
+ *   }),
+ *   allowedTools: ["search", "calculator"],
+ * });
+ *
+ * const result = await agent.invoke({
+ *   input: `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`,
+ * });
+ * ```
+ *
+ * @deprecated Use the {@link https://api.js.langchain.com/functions/langchain_agents.createReactAgent.html | createReactAgent method instead}.
  */
 export class ZeroShotAgent extends Agent {
   static lc_name() {
@@ -43,7 +65,7 @@ export class ZeroShotAgent extends Agent {
 
   lc_namespace = ["langchain", "agents", "mrkl"];
 
-  declare ToolType: Tool;
+  declare ToolType: ToolInterface;
 
   constructor(input: ZeroShotAgentInput) {
     const outputParser =
@@ -77,7 +99,7 @@ export class ZeroShotAgent extends Agent {
    * does not have a description.
    * @param tools List of tools to validate.
    */
-  static validateTools(tools: Tool[]) {
+  static validateTools(tools: ToolInterface[]) {
     const descriptionlessTool = tools.find((tool) => !tool.description);
     if (descriptionlessTool) {
       const msg =
@@ -96,7 +118,7 @@ export class ZeroShotAgent extends Agent {
    * @param args.prefix - String to put before the list of tools.
    * @param args.inputVariables - List of input variables the final prompt will expect.
    */
-  static createPrompt(tools: Tool[], args?: ZeroShotCreatePromptArgs) {
+  static createPrompt(tools: ToolInterface[], args?: ZeroShotCreatePromptArgs) {
     const {
       prefix = PREFIX,
       suffix = SUFFIX,
@@ -130,8 +152,8 @@ export class ZeroShotAgent extends Agent {
    * @returns A new instance of ZeroShotAgent.
    */
   static fromLLMAndTools(
-    llm: BaseLanguageModel,
-    tools: Tool[],
+    llm: BaseLanguageModelInterface,
+    tools: ToolInterface[],
     args?: ZeroShotCreatePromptArgs & AgentArgs
   ) {
     ZeroShotAgent.validateTools(tools);
@@ -152,7 +174,10 @@ export class ZeroShotAgent extends Agent {
   }
 
   static async deserialize(
-    data: SerializedZeroShotAgent & { llm?: BaseLanguageModel; tools?: Tool[] }
+    data: SerializedZeroShotAgent & {
+      llm?: BaseLanguageModelInterface;
+      tools?: ToolInterface[];
+    }
   ): Promise<ZeroShotAgent> {
     const { llm, tools, ...rest } = data;
     return deserializeHelper(
@@ -160,8 +185,8 @@ export class ZeroShotAgent extends Agent {
       tools,
       rest,
       (
-        llm: BaseLanguageModel,
-        tools: Tool[],
+        llm: BaseLanguageModelInterface,
+        tools: ToolInterface[],
         args: SerializedFromLLMAndTools
       ) =>
         ZeroShotAgent.fromLLMAndTools(llm, tools, {

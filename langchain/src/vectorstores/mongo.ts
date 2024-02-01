@@ -1,11 +1,11 @@
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import type {
   MongoClient,
   Collection,
   Document as MongoDocument,
 } from "mongodb";
-import { VectorStore } from "./base.js";
-import { Embeddings } from "../embeddings/base.js";
-import { Document } from "../document.js";
+import { Document } from "@langchain/core/documents";
+import { VectorStore } from "@langchain/core/vectorstores";
 
 /** @deprecated use `MongoDBAtlasVectorSearch` instead. */
 export type MongoLibArgs = {
@@ -36,7 +36,7 @@ export class MongoVectorStore extends VectorStore {
     return "mongodb";
   }
 
-  constructor(embeddings: Embeddings, args: MongoLibArgs) {
+  constructor(embeddings: EmbeddingsInterface, args: MongoLibArgs) {
     super(embeddings, args);
     this.collection = args.collection;
     this.client = args.client;
@@ -170,7 +170,7 @@ export class MongoVectorStore extends VectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: MongoLibArgs
   ): Promise<MongoVectorStore> {
     const docs: Document[] = [];
@@ -196,7 +196,7 @@ export class MongoVectorStore extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: MongoLibArgs
   ): Promise<MongoVectorStore> {
     const instance = new this(embeddings, dbConfig);

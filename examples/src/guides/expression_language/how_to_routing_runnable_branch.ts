@@ -1,7 +1,7 @@
-import { ChatAnthropic } from "langchain/chat_models/anthropic";
-import { PromptTemplate } from "langchain/prompts";
-import { StringOutputParser } from "langchain/schema/output_parser";
-import { RunnableBranch, RunnableSequence } from "langchain/schema/runnable";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { RunnableBranch, RunnableSequence } from "@langchain/core/runnables";
+import { ChatAnthropic } from "@langchain/anthropic";
 
 const promptTemplate =
   PromptTemplate.fromTemplate(`Given the user question below, classify it as either being about \`LangChain\`, \`Anthropic\`, or \`Other\`.
@@ -15,7 +15,7 @@ Do not respond with more than one word.
 Classification:`);
 
 const model = new ChatAnthropic({
-  modelName: "claude-2",
+  modelName: "claude-2.1",
 });
 
 const classificationChain = RunnableSequence.from([

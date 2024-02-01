@@ -1,7 +1,11 @@
+import {
+  BaseRetriever,
+  type BaseRetrieverInput,
+  type BaseRetrieverInterface,
+} from "@langchain/core/retrievers";
+import type { DocumentInterface } from "@langchain/core/documents";
+import { CallbackManagerForRetrieverRun } from "@langchain/core/callbacks/manager";
 import { BaseDocumentCompressor } from "./document_compressors/index.js";
-import { Document } from "../document.js";
-import { BaseRetriever, BaseRetrieverInput } from "../schema/retriever.js";
-import { CallbackManagerForRetrieverRun } from "../callbacks/manager.js";
 
 /**
  * Interface for the arguments required to construct a
@@ -10,13 +14,23 @@ import { CallbackManagerForRetrieverRun } from "../callbacks/manager.js";
  */
 export interface ContextualCompressionRetrieverArgs extends BaseRetrieverInput {
   baseCompressor: BaseDocumentCompressor;
-  baseRetriever: BaseRetriever;
+  baseRetriever: BaseRetrieverInterface;
 }
 
 /**
  * A retriever that wraps a base retriever and compresses the results. It
  * retrieves relevant documents based on a given query and then compresses
  * these documents using a specified document compressor.
+ * @example
+ * ```typescript
+ * const retriever = new ContextualCompressionRetriever({
+ *   baseCompressor: new LLMChainExtractor(),
+ *   baseRetriever: new HNSWLib().asRetriever(),
+ * });
+ * const retrievedDocs = await retriever.getRelevantDocuments(
+ *   "What did the speaker say about Justice Breyer?",
+ * );
+ * ```
  */
 export class ContextualCompressionRetriever extends BaseRetriever {
   static lc_name() {
@@ -27,7 +41,7 @@ export class ContextualCompressionRetriever extends BaseRetriever {
 
   baseCompressor: BaseDocumentCompressor;
 
-  baseRetriever: BaseRetriever;
+  baseRetriever: BaseRetrieverInterface;
 
   constructor(fields: ContextualCompressionRetrieverArgs) {
     super(fields);
@@ -39,7 +53,7 @@ export class ContextualCompressionRetriever extends BaseRetriever {
   async _getRelevantDocuments(
     query: string,
     runManager?: CallbackManagerForRetrieverRun
-  ): Promise<Document[]> {
+  ): Promise<DocumentInterface[]> {
     const docs = await this.baseRetriever.getRelevantDocuments(
       query,
       runManager?.getChild("base_retriever")

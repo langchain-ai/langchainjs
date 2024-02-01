@@ -1,16 +1,20 @@
 import { AgentExecutor } from "langchain/agents";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { ChatPromptTemplate, MessagesPlaceholder } from "langchain/prompts";
-import {
-  AIMessage,
-  AgentStep,
-  BaseMessage,
-  FunctionMessage,
-} from "langchain/schema";
-import { RunnableSequence } from "langchain/schema/runnable";
-import { SerpAPI, formatToOpenAIFunction } from "langchain/tools";
+import { ChatOpenAI } from "@langchain/openai";
 import { Calculator } from "langchain/tools/calculator";
 import { OpenAIFunctionsAgentOutputParser } from "langchain/agents/openai/output_parser";
+import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
+import {
+  AIMessage,
+  BaseMessage,
+  FunctionMessage,
+} from "@langchain/core/messages";
+import { AgentStep } from "@langchain/core/agents";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 /** Define your list of tools. */
 const tools = [new Calculator(), new SerpAPI()];
@@ -27,17 +31,17 @@ const model = new ChatOpenAI({ modelName: "gpt-4", temperature: 0 });
  * steps into a list of `BaseMessages` which can be passed into `MessagesPlaceholder`
  */
 const prompt = ChatPromptTemplate.fromMessages([
-  ["ai", "You are a helpful assistant"],
+  ["system", "You are a helpful assistant"],
   ["human", "{input}"],
   new MessagesPlaceholder("agent_scratchpad"),
 ]);
 /**
  * Bind the tools to the LLM.
- * Here we're using the `formatToOpenAIFunction` util function
+ * Here we're using the `convertToOpenAIFunction` util function
  * to format our tools into the proper schema for OpenAI functions.
  */
-const modelWithTools = model.bind({
-  functions: [...tools.map((tool) => formatToOpenAIFunction(tool))],
+const modelWithFunctions = model.bind({
+  functions: [...tools.map((tool) => convertToOpenAIFunction(tool))],
 });
 /**
  * Define a new agent steps parser.
@@ -68,7 +72,7 @@ const runnableAgent = RunnableSequence.from([
       formatAgentSteps(i.steps),
   },
   prompt,
-  modelWithTools,
+  modelWithFunctions,
   new OpenAIFunctionsAgentOutputParser(),
 ]);
 /** Pass the runnable along with the tools to create the Agent Executor */
@@ -81,7 +85,7 @@ console.log("Loaded agent executor");
 
 const query = "What is the weather in New York?";
 console.log(`Calling agent executor with query: ${query}`);
-const result = await executor.call({
+const result = await executor.invoke({
   input: query,
 });
 console.log(result);

@@ -1,5 +1,5 @@
-import { getEnvironmentVariable } from "../../util/env.js";
-import { Document } from "../../document.js";
+import { Document } from "@langchain/core/documents";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { BaseDocumentLoader } from "../base.js";
 
 type JSONPrimitive = string | number | boolean | null;
@@ -27,6 +27,15 @@ type SearchApiParameters = {
 /**
  * Class representing a document loader for loading search results from
  * the SearchApi. It extends the BaseDocumentLoader class.
+ * @example
+ * ```typescript
+ * const loader = new SearchApiLoader({
+ *   q: "{query}",
+ *   apiKey: "{apiKey}",
+ *   engine: "google",
+ * });
+ * const docs = await loader.load();
+ * ```
  */
 export class SearchApiLoader extends BaseDocumentLoader {
   private apiKey: string;

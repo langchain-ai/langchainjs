@@ -2,20 +2,23 @@
 
 import { expect, test } from "@jest/globals";
 import { HUMAN_PROMPT } from "@anthropic-ai/sdk";
-import { ChatMessage, HumanMessage } from "../../schema/index.js";
-import { ChatPromptValue } from "../../prompts/chat.js";
+import { ChatPromptValue } from "@langchain/core/prompt_values";
+import { ChatMessage, HumanMessage } from "@langchain/core/messages";
 import {
   PromptTemplate,
   ChatPromptTemplate,
   AIMessagePromptTemplate,
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
-} from "../../prompts/index.js";
+} from "@langchain/core/prompts";
+import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { ChatAnthropic } from "../anthropic.js";
-import { CallbackManager } from "../../callbacks/index.js";
 
 test("Test ChatAnthropic", async () => {
-  const chat = new ChatAnthropic({ modelName: "claude-instant-v1" });
+  const chat = new ChatAnthropic({
+    modelName: "claude-instant-v1",
+    maxRetries: 0,
+  });
   const message = new HumanMessage("Hello!");
   const res = await chat.call([message]);
   console.log({ res });
@@ -24,6 +27,7 @@ test("Test ChatAnthropic", async () => {
 test("Test ChatAnthropic Generate", async () => {
   const chat = new ChatAnthropic({
     modelName: "claude-instant-v1",
+    maxRetries: 0,
   });
   const message = new HumanMessage("Hello!");
   const res = await chat.generate([[message], [message]]);
@@ -40,6 +44,7 @@ test("Test ChatAnthropic Generate", async () => {
 test("Test ChatAnthropic Generate w/ ClientOptions", async () => {
   const chat = new ChatAnthropic({
     modelName: "claude-instant-v1",
+    maxRetries: 0,
     clientOptions: {
       defaultHeaders: {
         "Helicone-Auth": "HELICONE_API_KEY",
@@ -61,6 +66,7 @@ test("Test ChatAnthropic Generate w/ ClientOptions", async () => {
 test("Test ChatAnthropic Generate with a signal in call options", async () => {
   const chat = new ChatAnthropic({
     modelName: "claude-instant-v1",
+    maxRetries: 0,
   });
   const controller = new AbortController();
   const message = new HumanMessage(
@@ -72,7 +78,7 @@ test("Test ChatAnthropic Generate with a signal in call options", async () => {
     });
     setTimeout(() => {
       controller.abort();
-    }, 500);
+    }, 1000);
     return res;
   }).rejects.toThrow();
 }, 10000);
@@ -80,6 +86,7 @@ test("Test ChatAnthropic Generate with a signal in call options", async () => {
 test("Test ChatAnthropic tokenUsage with a batch", async () => {
   const model = new ChatAnthropic({
     temperature: 0,
+    maxRetries: 0,
     modelName: "claude-instant-v1",
   });
   const res = await model.generate([
@@ -95,6 +102,7 @@ test("Test ChatAnthropic in streaming mode", async () => {
 
   const model = new ChatAnthropic({
     modelName: "claude-instant-v1",
+    maxRetries: 0,
     streaming: true,
     callbacks: CallbackManager.fromHandlers({
       async handleLLMNewToken(token: string) {
@@ -117,6 +125,7 @@ test("Test ChatAnthropic in streaming mode with a signal", async () => {
 
   const model = new ChatAnthropic({
     modelName: "claude-instant-v1",
+    maxRetries: 0,
     streaming: true,
     callbacks: CallbackManager.fromHandlers({
       async handleLLMNewToken(token: string) {
@@ -145,6 +154,7 @@ test("Test ChatAnthropic in streaming mode with a signal", async () => {
 test("Test ChatAnthropic prompt value", async () => {
   const chat = new ChatAnthropic({
     modelName: "claude-instant-v1",
+    maxRetries: 0,
   });
   const message = new HumanMessage("Hello!");
   const res = await chat.generatePrompt([new ChatPromptValue([message])]);
@@ -160,6 +170,7 @@ test("Test ChatAnthropic prompt value", async () => {
 test("ChatAnthropic, docs, prompt templates", async () => {
   const chat = new ChatAnthropic({
     modelName: "claude-instant-v1",
+    maxRetries: 0,
     temperature: 0,
   });
 
@@ -186,6 +197,7 @@ test("ChatAnthropic, docs, prompt templates", async () => {
 test("ChatAnthropic, longer chain of messages", async () => {
   const chat = new ChatAnthropic({
     modelName: "claude-v1",
+    maxRetries: 0,
     temperature: 0,
   });
 
@@ -209,6 +221,7 @@ test("ChatAnthropic, Anthropic apiUrl set manually via constructor", async () =>
   const anthropicApiUrl = "https://api.anthropic.com";
   const chat = new ChatAnthropic({
     modelName: "claude-instant-v1",
+    maxRetries: 0,
     anthropicApiUrl,
   });
   const message = new HumanMessage("Hello!");
@@ -219,6 +232,7 @@ test("ChatAnthropic, Anthropic apiUrl set manually via constructor", async () =>
 test("ChatAnthropic, Claude V2", async () => {
   const chat = new ChatAnthropic({
     modelName: "claude-2",
+    maxRetries: 0,
     temperature: 0,
   });
 
@@ -240,6 +254,7 @@ test("ChatAnthropic, Claude V2", async () => {
 test("ChatAnthropic with specific roles in ChatMessage", async () => {
   const chat = new ChatAnthropic({
     modelName: "claude-instant-v1",
+    maxRetries: 0,
     maxTokensToSample: 10,
   });
   const user_message = new ChatMessage("Hello!", HUMAN_PROMPT);
@@ -250,6 +265,7 @@ test("ChatAnthropic with specific roles in ChatMessage", async () => {
 test("Test ChatAnthropic stream method", async () => {
   const model = new ChatAnthropic({
     maxTokensToSample: 50,
+    maxRetries: 0,
     modelName: "claude-instant-v1",
   });
   const stream = await model.stream("Print hello world.");
@@ -264,7 +280,8 @@ test("Test ChatAnthropic stream method", async () => {
 test("Test ChatAnthropic stream method with abort", async () => {
   await expect(async () => {
     const model = new ChatAnthropic({
-      maxTokensToSample: 50,
+      maxTokensToSample: 500,
+      maxRetries: 0,
       modelName: "claude-instant-v1",
     });
     const stream = await model.stream(
@@ -282,6 +299,7 @@ test("Test ChatAnthropic stream method with abort", async () => {
 test("Test ChatAnthropic stream method with early break", async () => {
   const model = new ChatAnthropic({
     maxTokensToSample: 50,
+    maxRetries: 0,
     modelName: "claude-instant-v1",
   });
   const stream = await model.stream(
@@ -300,6 +318,7 @@ test("Test ChatAnthropic stream method with early break", async () => {
 test("Test ChatAnthropic headers passed through", async () => {
   const chat = new ChatAnthropic({
     modelName: "claude-instant-v1",
+    maxRetries: 0,
     anthropicApiKey: "NOT_REAL",
     invocationKwargs: {
       headers: {

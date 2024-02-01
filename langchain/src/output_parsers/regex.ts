@@ -1,8 +1,8 @@
-import { SerializedFields } from "../load/map_keys.js";
 import {
   BaseOutputParser,
   OutputParserException,
-} from "../schema/output_parser.js";
+} from "@langchain/core/output_parsers";
+import type { SerializedFields } from "../load/map_keys.js";
 
 export interface RegExpFields {
   pattern: string;

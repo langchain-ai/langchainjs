@@ -1,12 +1,12 @@
-import { BaseLanguageModel } from "../../base_language/index.js";
-import { LLMChain } from "../../chains/llm_chain.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import type { ToolInterface } from "@langchain/core/tools";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
-} from "../../prompts/chat.js";
-import { AgentStep } from "../../schema/index.js";
-import { Tool } from "../../tools/base.js";
+} from "@langchain/core/prompts";
+import type { AgentStep } from "@langchain/core/agents";
+import { LLMChain } from "../../chains/llm_chain.js";
 import { Optional } from "../../types/type-utils.js";
 import { Agent, AgentArgs, OutputParserArgs } from "../agent.js";
 import { AgentInput } from "../types.js";
@@ -17,6 +17,7 @@ const DEFAULT_HUMAN_MESSAGE_TEMPLATE = "{input}\n\n{agent_scratchpad}";
 
 /**
  * Interface for arguments used to create a chat prompt.
+ * @deprecated
  */
 export interface ChatCreatePromptArgs {
   /** String to put after the list of tools. */
@@ -34,12 +35,16 @@ export interface ChatCreatePromptArgs {
 /**
  * Type for input data for creating a ChatAgent, extending AgentInput with
  * optional 'outputParser'.
+ *
+ * @deprecated
  */
 export type ChatAgentInput = Optional<AgentInput, "outputParser">;
 
 /**
  * Agent for the MRKL chain.
  * @augments Agent
+ *
+ * @deprecated Use the {@link https://api.js.langchain.com/functions/langchain_agents.createStructuredChatAgent.html | createStructuredChatAgent method instead}.
  */
 export class ChatAgent extends Agent {
   static lc_name() {
@@ -48,7 +53,7 @@ export class ChatAgent extends Agent {
 
   lc_namespace = ["langchain", "agents", "chat"];
 
-  declare ToolType: Tool;
+  declare ToolType: ToolInterface;
 
   constructor(input: ChatAgentInput) {
     const outputParser =
@@ -78,7 +83,7 @@ export class ChatAgent extends Agent {
    * @param tools Array of Tool instances to validate.
    * @returns void
    */
-  static validateTools(tools: Tool[]) {
+  static validateTools(tools: ToolInterface[]) {
     const descriptionlessTool = tools.find((tool) => !tool.description);
     if (descriptionlessTool) {
       const msg =
@@ -121,7 +126,7 @@ export class ChatAgent extends Agent {
    * @param args.humanMessageTemplate - String to use directly as the human message template
    * @param args.formatInstructions - Formattable string to use as the instructions template
    */
-  static createPrompt(tools: Tool[], args?: ChatCreatePromptArgs) {
+  static createPrompt(tools: ToolInterface[], args?: ChatCreatePromptArgs) {
     const {
       prefix = PREFIX,
       suffix = SUFFIX,
@@ -144,14 +149,14 @@ export class ChatAgent extends Agent {
   /**
    * Creates a ChatAgent instance using a language model, tools, and
    * optional arguments.
-   * @param llm BaseLanguageModel instance to use in the agent.
+   * @param llm BaseLanguageModelInterface instance to use in the agent.
    * @param tools Array of Tool instances to include in the agent.
    * @param args Optional arguments to customize the agent and prompt.
    * @returns ChatAgent instance
    */
   static fromLLMAndTools(
-    llm: BaseLanguageModel,
-    tools: Tool[],
+    llm: BaseLanguageModelInterface,
+    tools: ToolInterface[],
     args?: ChatCreatePromptArgs & AgentArgs
   ) {
     ChatAgent.validateTools(tools);

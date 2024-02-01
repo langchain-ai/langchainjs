@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as yaml from "js-yaml";
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import { JsonSpec, JsonObject } from "langchain/tools";
 import { JsonToolkit, createJsonAgent } from "langchain/agents";
 
@@ -25,7 +25,7 @@ export const run = async () => {
 
   console.log(`Executing with input "${input}"...`);
 
-  const result = await executor.call({ input });
+  const result = await executor.invoke({ input });
 
   console.log(`Got output ${result.output}`);
 

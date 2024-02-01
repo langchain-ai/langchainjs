@@ -1,20 +1,20 @@
-import { Document } from "../document.js";
-import { formatDocumentsAsString } from "../util/document.js";
-import { VectorStoreRetriever } from "../vectorstores/base.js";
+import type { VectorStoreRetrieverInterface } from "@langchain/core/vectorstores";
+import { Document } from "@langchain/core/documents";
 import {
   BaseMemory,
   getInputValue,
   InputValues,
   MemoryVariables,
   OutputValues,
-} from "./base.js";
+} from "@langchain/core/memory";
+import { formatDocumentsAsString } from "../util/document.js";
 
 /**
  * Interface for the parameters required to initialize a
  * VectorStoreRetrieverMemory instance.
  */
 export interface VectorStoreRetrieverMemoryParams {
-  vectorStoreRetriever: VectorStoreRetriever;
+  vectorStoreRetriever: VectorStoreRetrieverInterface;
   inputKey?: string;
   outputKey?: string;
   memoryKey?: string;
@@ -27,12 +27,36 @@ export interface VectorStoreRetrieverMemoryParams {
  * documents from a vector store database, which can be useful for
  * maintaining conversation history or other types of memory in an LLM
  * application.
+ * @example
+ * ```typescript
+ * const vectorStore = new MemoryVectorStore(new OpenAIEmbeddings());
+ * const memory = new VectorStoreRetrieverMemory({
+ *   vectorStoreRetriever: vectorStore.asRetriever(1),
+ *   memoryKey: "history",
+ * });
+ *
+ * // Saving context to memory
+ * await memory.saveContext(
+ *   { input: "My favorite food is pizza" },
+ *   { output: "thats good to know" },
+ * );
+ * await memory.saveContext(
+ *   { input: "My favorite sport is soccer" },
+ *   { output: "..." },
+ * );
+ * await memory.saveContext({ input: "I don't the Celtics" }, { output: "ok" });
+ *
+ * // Loading memory variables
+ * console.log(
+ *   await memory.loadMemoryVariables({ prompt: "what sport should i watch?" }),
+ * );
+ * ```
  */
 export class VectorStoreRetrieverMemory
   extends BaseMemory
   implements VectorStoreRetrieverMemoryParams
 {
-  vectorStoreRetriever: VectorStoreRetriever;
+  vectorStoreRetriever: VectorStoreRetrieverInterface;
 
   inputKey?: string;
 
@@ -65,7 +89,7 @@ export class VectorStoreRetrieverMemory
     return {
       [this.memoryKey]: this.returnDocs
         ? results
-        : formatDocumentsAsString(results, "\n"),
+        : formatDocumentsAsString(results),
     };
   }
 

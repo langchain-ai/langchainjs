@@ -1,26 +1,28 @@
-import { ChatAnthropic } from "langchain/chat_models/anthropic";
 import { AgentExecutor } from "langchain/agents";
-import { SerpAPI, Tool } from "langchain/tools";
+import { XMLAgentOutputParser } from "langchain/agents/xml/output_parser";
+import { renderTextDescription } from "langchain/tools/render";
+import { formatLogToMessage } from "langchain/agents/format_scratchpad/log_to_message";
+import { Tool } from "@langchain/core/tools";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   MessagesPlaceholder,
-} from "langchain/prompts";
-import { RunnableSequence } from "langchain/schema/runnable";
-import { AgentStep } from "langchain/schema";
-import { XMLAgentOutputParser } from "langchain/agents/xml/output_parser";
-import { renderTextDescription } from "langchain/tools/render";
-import { formatLogToMessage } from "langchain/agents/format_scratchpad/log_to_message";
+} from "@langchain/core/prompts";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { AgentStep } from "@langchain/core/agents";
+import { ChatAnthropic } from "@langchain/anthropic";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 /**
  * Define your chat model.
  * In this case we'll use Claude since it preforms well on XML related tasks
  */
-const model = new ChatAnthropic({ modelName: "claude-2", temperature: 0 }).bind(
-  {
-    stop: ["</tool_input>", "</final_answer>"],
-  }
-);
+const model = new ChatAnthropic({
+  modelName: "claude-2.1",
+  temperature: 0,
+}).bind({
+  stop: ["</tool_input>", "</final_answer>"],
+});
 /** Define your list of tools. */
 const tools = [new SerpAPI()];
 
@@ -92,7 +94,7 @@ console.log("Loaded agent.");
 
 const input = `What is the weather in Honolulu?`;
 console.log(`Calling executor with input: ${input}`);
-const result = await executor.call({ input, tools });
+const result = await executor.invoke({ input, tools });
 console.log(result);
 
 /*

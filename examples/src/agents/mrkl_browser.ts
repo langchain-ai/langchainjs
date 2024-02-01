@@ -1,9 +1,8 @@
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { SerpAPI } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 import { WebBrowser } from "langchain/tools/webbrowser";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 export const run = async () => {
   const model = new OpenAI({ temperature: 0 });
@@ -28,7 +27,7 @@ export const run = async () => {
 
   console.log(`Executing with input "${input}"...`);
 
-  const result = await executor.call({ input });
+  const result = await executor.invoke({ input });
   /*
   Entering new agent_executor chain...
   I need to find the word of the day on Merriam Webster and then search for it on Google

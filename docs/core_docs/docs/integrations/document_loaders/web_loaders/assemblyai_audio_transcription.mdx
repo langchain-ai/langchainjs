@@ -1,0 +1,40 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# AssemblyAI Audio Transcript
+
+This covers how to load audio (and video) transcripts as document objects from a file using the [AssemblyAI API](https://www.assemblyai.com/docs/api-reference/transcript).
+
+## Usage
+
+First, you'll need to install the official AssemblyAI package:
+
+```bash npm2yarn
+npm install assemblyai
+```
+
+To use the loaders you need an [AssemblyAI account](https://www.assemblyai.com/dashboard/signup) and
+[get your AssemblyAI API key from the dashboard](https://www.assemblyai.com/app/account).
+
+Then, configure the API key as the `ASSEMBLYAI_API_KEY` environment variable or the `apiKey` options parameter.
+
+import TranscriptExample from "@examples/document_loaders/assemblyai_audio_transcription.ts";
+
+<CodeBlock language="typescript">{TranscriptExample}</CodeBlock>
+
+> ** info **
+>
+> - You can use the `AudioTranscriptParagraphsLoader` or `AudioTranscriptSentencesLoader` to split the transcript into paragraphs or sentences.
+> - The `audio` parameter can be a URL, a local file path, a buffer, or a stream.
+> - The `audio` can also be a video file. See the [list of supported file types in the FAQ doc](https://www.assemblyai.com/docs/concepts/faq#:~:text=file%20types%20are%20supported).
+> - If you don't pass in the `apiKey` option, the loader will use the `ASSEMBLYAI_API_KEY` environment variable.
+> - You can add more properties in addition to `audio`. Find the full list of request parameters in the [AssemblyAI API docs](https://www.assemblyai.com/docs/api-reference/transcript#create-a-transcript).
+
+You can also use the `AudioSubtitleLoader` to get `srt` or `vtt` subtitles as a document.
+
+import SubtitleExample from "@examples/document_loaders/assemblyai_subtitles.ts";
+
+<CodeBlock language="typescript">{SubtitleExample}</CodeBlock>

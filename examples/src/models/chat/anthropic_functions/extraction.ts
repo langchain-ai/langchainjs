@@ -2,8 +2,8 @@ import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
 import { AnthropicFunctions } from "langchain/experimental/chat_models/anthropic_functions";
-import { PromptTemplate } from "langchain/prompts";
 import { JsonOutputFunctionsParser } from "langchain/output_parsers";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const EXTRACTION_TEMPLATE = `Extract and save the relevant entities mentioned in the following passage together with their properties.
 
@@ -42,6 +42,7 @@ const model = new AnthropicFunctions({
   },
 });
 
+// Use a JsonOutputFunctionsParser to get the parsed JSON response directly.
 const chain = await prompt.pipe(model).pipe(new JsonOutputFunctionsParser());
 
 const response = await chain.invoke({

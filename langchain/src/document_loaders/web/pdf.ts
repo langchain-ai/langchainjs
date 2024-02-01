@@ -1,11 +1,15 @@
-import { type TextItem } from "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js";
-
-import { Document } from "../../document.js";
+import { Document } from "@langchain/core/documents";
 import { BaseDocumentLoader } from "../base.js";
 import { formatDocumentsAsString } from "../../util/document.js";
 
 /**
  * A document loader for loading data from PDFs.
+ * @example
+ * ```typescript
+ * const loader = new WebPDFLoader(new Blob());
+ * const docs = await loader.load();
+ * console.log({ docs });
+ * ```
  */
 export class WebPDFLoader extends BaseDocumentLoader {
   protected blob: Blob;
@@ -14,14 +18,21 @@ export class WebPDFLoader extends BaseDocumentLoader {
 
   private pdfjs: typeof PDFLoaderImports;
 
+  protected parsedItemSeparator: string;
+
   constructor(
     blob: Blob,
-    { splitPages = true, pdfjs = PDFLoaderImports } = {}
+    {
+      splitPages = true,
+      pdfjs = PDFLoaderImports,
+      parsedItemSeparator = "",
+    } = {}
   ) {
     super();
     this.blob = blob;
     this.splitPages = splitPages ?? this.splitPages;
     this.pdfjs = pdfjs;
+    this.parsedItemSeparator = parsedItemSeparator;
   }
 
   /**
@@ -48,9 +59,22 @@ export class WebPDFLoader extends BaseDocumentLoader {
         continue;
       }
 
-      const text = content.items
-        .map((item) => (item as TextItem).str)
-        .join("\n");
+      // Eliminate excessive newlines
+      // Source: https://github.com/albertcui/pdf-parse/blob/7086fc1cc9058545cdf41dd0646d6ae5832c7107/lib/pdf-parse.js#L16
+      let lastY;
+      const textItems = [];
+      for (const item of content.items) {
+        if ("str" in item) {
+          if (lastY === item.transform[5] || !lastY) {
+            textItems.push(item.str);
+          } else {
+            textItems.push(`\n${item.str}`);
+          }
+          // eslint-disable-next-line prefer-destructuring
+          lastY = item.transform[5];
+        }
+      }
+      const text = textItems.join(this.parsedItemSeparator);
 
       documents.push(
         new Document({

@@ -1,18 +1,13 @@
 import { AgentExecutor } from "langchain/agents";
 import { formatLogToString } from "langchain/agents/format_scratchpad/log";
-import { OpenAI } from "langchain/llms/openai";
-import { PromptTemplate } from "langchain/prompts";
-import {
-  AgentAction,
-  AgentFinish,
-  AgentStep,
-  BaseMessage,
-  HumanMessage,
-  InputValues,
-} from "langchain/schema";
-import { RunnableSequence } from "langchain/schema/runnable";
-import { SerpAPI } from "langchain/tools";
+import { OpenAI } from "@langchain/openai";
 import { Calculator } from "langchain/tools/calculator";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { AgentAction, AgentFinish, AgentStep } from "@langchain/core/agents";
+import { BaseMessage, HumanMessage } from "@langchain/core/messages";
+import { InputValues } from "@langchain/core/memory";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 /**
  * Instantiate the LLM and bind the stop token
@@ -111,7 +106,7 @@ function customOutputParser(text: string): AgentAction | AgentFinish {
     const finalAnswers = { output: input };
     return { log: text, returnValues: finalAnswers };
   }
-  /** Use RegEx to extract any actions and their values */
+  /** Use regex to extract any actions and their values */
   const match = /Action: (.*)\nAction Input: (.*)/s.exec(text);
   if (!match) {
     throw new Error(`Could not parse LLM output: ${text}`);
@@ -145,7 +140,7 @@ const input = `Who is Olivia Wilde's boyfriend? What is his current age raised t
 
 console.log(`Executing with input "${input}"...`);
 
-const result = await executor.call({ input });
+const result = await executor.invoke({ input });
 
 console.log(`Got output ${result.output}`);
 /**

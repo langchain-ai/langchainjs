@@ -1,12 +1,12 @@
+import { ChainValues } from "@langchain/core/utils/types";
+import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
 import { BaseChain, ChainInputs } from "./base.js";
-import { ChainValues } from "../schema/index.js";
 import {
   SerializedBaseChain,
   SerializedSequentialChain,
   SerializedSimpleSequentialChain,
 } from "./serde.js";
 import { intersection, union, difference } from "../util/set.js";
-import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
 function formatSet(input: Set<string>) {
   return Array.from(input)
@@ -16,6 +16,10 @@ function formatSet(input: Set<string>) {
 
 /**
  * Interface for the input parameters of the SequentialChain class.
+ *
+ * @deprecated
+ * Switch to expression language: https://js.langchain.com/docs/expression_language/
+ * Will be removed in 0.2.0
  */
 export interface SequentialChainInput extends ChainInputs {
   /** Array of chains to run as a sequence. The chains are run in order they appear in the array. */
@@ -30,6 +34,53 @@ export interface SequentialChainInput extends ChainInputs {
 
 /**
  * Chain where the outputs of one chain feed directly into next.
+ * @example
+ * ```typescript
+ * const promptTemplate = new PromptTemplate({
+ *   template: `You are a playwright. Given the title of play and the era it is set in, it is your job to write a synopsis for that title.
+ * Title: {title}
+ * Era: {era}
+ * Playwright: This is a synopsis for the above play:`,
+ *   inputVariables: ["title", "era"],
+ * });
+
+ * const reviewPromptTemplate = new PromptTemplate({
+ *   template: `You are a play critic from the New York Times. Given the synopsis of play, it is your job to write a review for that play.
+ *   
+ *     Play Synopsis:
+ *     {synopsis}
+ *     Review from a New York Times play critic of the above play:`,
+ *   inputVariables: ["synopsis"],
+ * });
+
+ * const overallChain = new SequentialChain({
+ *   chains: [
+ *     new LLMChain({
+ *       llm: new ChatOpenAI({ temperature: 0 }),
+ *       prompt: promptTemplate,
+ *       outputKey: "synopsis",
+ *     }),
+ *     new LLMChain({
+ *       llm: new OpenAI({ temperature: 0 }),
+ *       prompt: reviewPromptTemplate,
+ *       outputKey: "review",
+ *     }),
+ *   ],
+ *   inputVariables: ["era", "title"],
+ *   outputVariables: ["synopsis", "review"],
+ *   verbose: true,
+ * });
+
+ * const chainExecutionResult = await overallChain.call({
+ *   title: "Tragedy at sunset on the beach",
+ *   era: "Victorian England",
+ * });
+ * console.log(chainExecutionResult);
+ * ```
+ * 
+ * @deprecated
+ * Switch to {@link https://js.langchain.com/docs/expression_language/ | expression language}.
+ * Will be removed in 0.2.0
  */
 export class SequentialChain extends BaseChain implements SequentialChainInput {
   static lc_name() {
@@ -193,6 +244,7 @@ export class SequentialChain extends BaseChain implements SequentialChainInput {
 }
 
 /**
+ * @deprecated Switch to expression language: https://js.langchain.com/docs/expression_language/
  * Interface for the input parameters of the SimpleSequentialChain class.
  */
 export interface SimpleSequentialChainInput extends ChainInputs {
@@ -203,6 +255,7 @@ export interface SimpleSequentialChainInput extends ChainInputs {
 }
 
 /**
+ * @deprecated Switch to expression language: https://js.langchain.com/docs/expression_language/
  * Simple chain where a single string output of one chain is fed directly into the next.
  * @augments BaseChain
  * @augments SimpleSequentialChainInput

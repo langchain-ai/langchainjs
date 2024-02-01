@@ -1,3 +1,8 @@
+import type {
+  SupabaseFilterRPCCall,
+  SupabaseMetadata,
+  SupabaseVectorStore,
+} from "@langchain/community/vectorstores/supabase";
 import {
   Comparator,
   Comparators,
@@ -7,11 +12,6 @@ import {
   Operators,
   StructuredQuery,
 } from "../../chains/query_constructor/ir.js";
-import type {
-  SupabaseFilterRPCCall,
-  SupabaseMetadata,
-  SupabaseVectorStore,
-} from "../../vectorstores/supabase.js";
 import { BaseTranslator } from "./base.js";
 import { isFilterEmpty, isFloat, isInt, isObject, isString } from "./utils.js";
 import {
@@ -36,6 +36,20 @@ type ValueType = {
  * A specialized translator designed to work with Supabase, extending the
  * BaseTranslator class. It translates structured queries into a format
  * that can be understood by the Supabase database.
+ * @example
+ * ```typescript
+ * const selfQueryRetriever = new SelfQueryRetriever({
+ *   llm: new ChatOpenAI(),
+ *   vectorStore: new SupabaseVectorStore(),
+ *   documentContents: "Brief summary of a movie",
+ *   attributeInfo: [],
+ *   structuredQueryTranslator: new SupabaseTranslator(),
+ * });
+ *
+ * const queryResult = await selfQueryRetriever.getRelevantDocuments(
+ *   "Which movies are directed by Greta Gerwig?",
+ * );
+ * ```
  */
 export class SupabaseTranslator<
   T extends SupabaseVectorStore

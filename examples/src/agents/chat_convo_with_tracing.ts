@@ -1,7 +1,7 @@
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
-import { SerpAPI } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 export const run = async () => {
   process.env.LANGCHAIN_HANDLER = "langchain";
@@ -27,19 +27,19 @@ export const run = async () => {
 
   const input0 = "hi, i am bob";
 
-  const result0 = await executor.call({ input: input0 });
+  const result0 = await executor.invoke({ input: input0 });
 
   console.log(`Got output ${result0.output}`);
 
   const input1 = "whats my name?";
 
-  const result1 = await executor.call({ input: input1 });
+  const result1 = await executor.invoke({ input: input1 });
 
   console.log(`Got output ${result1.output}`);
 
   const input2 = "whats the weather in pomfret?";
 
-  const result2 = await executor.call({ input: input2 });
+  const result2 = await executor.invoke({ input: input2 });
 
   console.log(`Got output ${result2.output}`);
 };

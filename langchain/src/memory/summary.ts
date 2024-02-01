@@ -1,14 +1,20 @@
-import { BaseLanguageModel } from "../base_language/index.js";
-import { LLMChain } from "../chains/llm_chain.js";
-import { BasePromptTemplate } from "../prompts/base.js";
-import { BaseMessage, SystemMessage } from "../schema/index.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import {
+  BaseMessage,
+  SystemMessage,
   getBufferString,
+} from "@langchain/core/messages";
+import {
+  BaseChatMemory,
+  BaseChatMemoryInput,
+} from "@langchain/community/memory/chat_memory";
+import { BasePromptTemplate } from "@langchain/core/prompts";
+import {
   InputValues,
   MemoryVariables,
   OutputValues,
-} from "./base.js";
-import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
+} from "@langchain/core/memory";
+import { LLMChain } from "../chains/llm_chain.js";
 import { SUMMARY_PROMPT } from "./prompt.js";
 
 /**
@@ -24,7 +30,7 @@ export interface ConversationSummaryMemoryInput
  */
 export interface BaseConversationSummaryMemoryInput
   extends BaseChatMemoryInput {
-  llm: BaseLanguageModel;
+  llm: BaseLanguageModelInterface;
   memoryKey?: string;
   humanPrefix?: string;
   aiPrefix?: string;
@@ -44,7 +50,7 @@ export abstract class BaseConversationSummaryMemory extends BaseChatMemory {
 
   aiPrefix = "AI";
 
-  llm: BaseLanguageModel;
+  llm: BaseLanguageModelInterface;
 
   prompt: BasePromptTemplate = SUMMARY_PROMPT;
 
@@ -98,6 +104,30 @@ export abstract class BaseConversationSummaryMemory extends BaseChatMemory {
  * Class that provides a concrete implementation of the conversation
  * memory. It includes methods for loading memory variables, saving
  * context, and clearing the memory.
+ * @example
+ * ```typescript
+ * const memory = new ConversationSummaryMemory({
+ *   memoryKey: "chat_history",
+ *   llm: new ChatOpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 }),
+ * });
+ *
+ * const model = new ChatOpenAI();
+ * const prompt =
+ *   PromptTemplate.fromTemplate(`The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.
+ *
+ * Current conversation:
+ * {chat_history}
+ * Human: {input}
+ * AI:`);
+ * const chain = new LLMChain({ llm: model, prompt, memory });
+ *
+ * const res1 = await chain.call({ input: "Hi! I'm Jim." });
+ * console.log({ res1, memory: await memory.loadMemoryVariables({}) });
+ *
+ * const res2 = await chain.call({ input: "What's my name?" });
+ * console.log({ res2, memory: await memory.loadMemoryVariables({}) });
+ *
+ * ```
  */
 export class ConversationSummaryMemory extends BaseConversationSummaryMemory {
   buffer = "";

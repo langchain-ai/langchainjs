@@ -1,15 +1,13 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
-import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
-
-import { PromptTemplate } from "../../prompts/prompt.js";
+import { zodToJsonSchema, JsonSchema7ObjectType } from "zod-to-json-schema";
+import { BaseChatModel } from "@langchain/core/language_models/chat_models";
+import { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
+import { PromptTemplate } from "@langchain/core/prompts";
 import {
   FunctionParameters,
   JsonOutputFunctionsParser,
 } from "../../output_parsers/openai_functions.js";
 import { LLMChain, LLMChainInput } from "../llm_chain.js";
-import { BaseChatModel } from "../../chat_models/base.js";
-import { BaseFunctionCallOptions } from "../../base_language/index.js";
 
 /**
  * Type representing the options for creating a tagging chain.
@@ -48,6 +46,10 @@ Passage:
  * @param llm LLM to use in the chain. Must support function calling.
  * @param options Options for creating the tagging chain.
  * @returns A new instance of LLMChain configured for tagging.
+ *
+ * @deprecated
+ * Switch to expression language: https://js.langchain.com/docs/expression_language/
+ * Will be removed in 0.2.0
  */
 export function createTaggingChain(
   schema: FunctionParameters,
@@ -76,6 +78,10 @@ export function createTaggingChain(
  * @param llm LLM to use in the chain. Must support function calling.
  * @param options Options for creating the tagging chain.
  * @returns A new instance of LLMChain configured for tagging.
+ *
+ * @deprecated
+ * Switch to expression language: https://js.langchain.com/docs/expression_language/
+ * Will be removed in 0.2.0
  */
 export function createTaggingChainFromZod(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

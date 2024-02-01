@@ -1,11 +1,11 @@
+import { ChainValues } from "@langchain/core/utils/types";
+import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
 import { BaseChain, ChainInputs } from "./base.js";
 import {
   TextSplitter,
   RecursiveCharacterTextSplitter,
 } from "../text_splitter.js";
-import { ChainValues } from "../schema/index.js";
 import { SerializedAnalyzeDocumentChain } from "./serde.js";
-import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
@@ -24,6 +24,24 @@ export interface AnalyzeDocumentChainInput extends Omit<ChainInputs, "memory"> {
  * Chain that combines documents by stuffing into context.
  * @augments BaseChain
  * @augments StuffDocumentsChainInput
+ * @example
+ * ```typescript
+ * const model = new ChatOpenAI({ temperature: 0 });
+ * const combineDocsChain = loadSummarizationChain(model);
+ * const chain = new AnalyzeDocumentChain({
+ *   combineDocumentsChain: combineDocsChain,
+ * });
+ *
+ * // Read the text from a file (this is a placeholder for actual file reading)
+ * const text = readTextFromFile("state_of_the_union.txt");
+ *
+ * // Invoke the chain to analyze the document
+ * const res = await chain.call({
+ *   input_document: text,
+ * });
+ *
+ * console.log({ res });
+ * ```
  */
 export class AnalyzeDocumentChain
   extends BaseChain

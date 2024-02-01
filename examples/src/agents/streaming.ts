@@ -1,10 +1,10 @@
 import { LLMChain } from "langchain/chains";
 import { AgentExecutor, ZeroShotAgent } from "langchain/agents";
-import { BaseCallbackHandler } from "langchain/callbacks";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { Calculator } from "langchain/tools/calculator";
-import { AgentAction } from "langchain/schema";
-import { Serialized } from "langchain/load/serializable";
+import { Serialized } from "@langchain/core/load/serializable";
+import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
+import { AgentAction } from "@langchain/core/agents";
 
 export const run = async () => {
   // You can implement your own callback handler by extending BaseCallbackHandler
@@ -83,11 +83,11 @@ export const run = async () => {
    * The `handler2` callback handler will only be used for callbacks related to the
    * LLMChain and LLM, since we passed it to the LLMChain and LLM objects upon creation.
    */
-  const result = await agentExecutor.call(
+  const result = await agentExecutor.invoke(
     {
       input: "What is 2 to the power of 8",
     },
-    [handler1]
+    { callbacks: [handler1] }
   ); // this is needed to see handleAgentAction
   /*
   handleChainStart { chain: { name: 'agent_executor' } }

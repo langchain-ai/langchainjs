@@ -1,24 +1,36 @@
-import type { TextItem } from "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js";
-import { Document } from "../../document.js";
+import { Document } from "@langchain/core/documents";
 import { BufferLoader } from "./buffer.js";
 import { formatDocumentsAsString } from "../../util/document.js";
 
 /**
  * A class that extends the `BufferLoader` class. It represents a document
  * loader that loads documents from PDF files.
+ * @example
+ * ```typescript
+ * const loader = new PDFLoader("path/to/bitcoin.pdf");
+ * const docs = await loader.load();
+ * console.log({ docs });
+ * ```
  */
 export class PDFLoader extends BufferLoader {
   private splitPages: boolean;
 
   private pdfjs: typeof PDFLoaderImports;
 
+  protected parsedItemSeparator: string;
+
   constructor(
     filePathOrBlob: string | Blob,
-    { splitPages = true, pdfjs = PDFLoaderImports } = {}
+    {
+      splitPages = true,
+      pdfjs = PDFLoaderImports,
+      parsedItemSeparator = "",
+    } = {}
   ) {
     super(filePathOrBlob);
     this.splitPages = splitPages;
     this.pdfjs = pdfjs;
+    this.parsedItemSeparator = parsedItemSeparator;
   }
 
   /**
@@ -61,9 +73,23 @@ export class PDFLoader extends BufferLoader {
         continue;
       }
 
-      const text = content.items
-        .map((item) => (item as TextItem).str)
-        .join("\n");
+      // Eliminate excessive newlines
+      // Source: https://github.com/albertcui/pdf-parse/blob/7086fc1cc9058545cdf41dd0646d6ae5832c7107/lib/pdf-parse.js#L16
+      let lastY;
+      const textItems = [];
+      for (const item of content.items) {
+        if ("str" in item) {
+          if (lastY === item.transform[5] || !lastY) {
+            textItems.push(item.str);
+          } else {
+            textItems.push(`\n${item.str}`);
+          }
+          // eslint-disable-next-line prefer-destructuring
+          lastY = item.transform[5];
+        }
+      }
+
+      const text = textItems.join(this.parsedItemSeparator);
 
       documents.push(
         new Document({

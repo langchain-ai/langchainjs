@@ -1,14 +1,16 @@
-import { Document } from "../document.js";
-import { BasePromptTemplate, StringPromptValue } from "../prompts/base.js";
-import { PromptTemplate } from "../prompts/prompt.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import { Document } from "@langchain/core/documents";
+import { PromptTemplate, BasePromptTemplate } from "@langchain/core/prompts";
+import {
+  StringPromptValue,
+  BasePromptValue,
+} from "@langchain/core/prompt_values";
 import {
   VectorStore,
   VectorStoreRetriever,
   VectorStoreRetrieverInput,
-} from "../vectorstores/base.js";
-import { BaseLanguageModel } from "../base_language/index.js";
-import { BasePromptValue } from "../schema/index.js";
-import { CallbackManagerForRetrieverRun } from "../callbacks/manager.js";
+} from "@langchain/core/vectorstores";
+import { CallbackManagerForRetrieverRun } from "@langchain/core/callbacks/manager";
 
 /**
  * A string that corresponds to a specific prompt template.
@@ -30,7 +32,7 @@ export type PromptKey =
  */
 export type HydeRetrieverOptions<V extends VectorStore> =
   VectorStoreRetrieverInput<V> & {
-    llm: BaseLanguageModel;
+    llm: BaseLanguageModelInterface;
     promptTemplate?: BasePromptTemplate | PromptKey;
   };
 
@@ -39,6 +41,25 @@ export type HydeRetrieverOptions<V extends VectorStore> =
  * extends the VectorStoreRetriever class and uses a BaseLanguageModel to
  * generate a hypothetical answer to the query, which is then used to
  * retrieve relevant documents.
+ * @example
+ * ```typescript
+ * const retriever = new HydeRetriever({
+ *   vectorStore: new MemoryVectorStore(new OpenAIEmbeddings()),
+ *   llm: new ChatOpenAI(),
+ *   k: 1,
+ * });
+ * await vectorStore.addDocuments(
+ *   [
+ *     "My name is John.",
+ *     "My name is Bob.",
+ *     "My favourite food is pizza.",
+ *     "My favourite food is pasta.",
+ *   ].map((pageContent) => new Document({ pageContent })),
+ * );
+ * const results = await retriever.getRelevantDocuments(
+ *   "What is my favourite food?",
+ * );
+ * ```
  */
 export class HydeRetriever<
   V extends VectorStore = VectorStore
@@ -51,7 +72,7 @@ export class HydeRetriever<
     return ["langchain", "retrievers", "hyde"];
   }
 
-  llm: BaseLanguageModel;
+  llm: BaseLanguageModelInterface;
 
   promptTemplate?: BasePromptTemplate;
 

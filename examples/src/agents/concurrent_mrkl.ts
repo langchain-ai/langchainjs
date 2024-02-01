@@ -1,8 +1,8 @@
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
-import { SerpAPI } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 import process from "process";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 export const run = async () => {
   process.env.LANGCHAIN_TRACING = "true";
@@ -29,9 +29,9 @@ export const run = async () => {
 
   // This will result in a lot of errors, because the shared Tracer is not concurrency-safe.
   const [resultA, resultB, resultC] = await Promise.all([
-    executor.call({ input }),
-    executor.call({ input }),
-    executor.call({ input }),
+    executor.invoke({ input }),
+    executor.invoke({ input }),
+    executor.invoke({ input }),
   ]);
 
   console.log(`Got output ${resultA.output} ${resultA.__run.runId}`);

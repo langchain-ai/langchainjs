@@ -1,12 +1,12 @@
 import { AgentExecutor, ChatAgentOutputParser } from "langchain/agents";
 import { formatLogToString } from "langchain/agents/format_scratchpad/log";
-import { OpenAI } from "langchain/llms/openai";
-import { ChatPromptTemplate, PromptTemplate } from "langchain/prompts";
-import { AgentStep } from "langchain/schema";
-import { RunnableSequence } from "langchain/schema/runnable";
-import { SerpAPI } from "langchain/tools";
+import { OpenAI } from "@langchain/openai";
 import { Calculator } from "langchain/tools/calculator";
 import { renderTextDescription } from "langchain/tools/render";
+import { ChatPromptTemplate, PromptTemplate } from "@langchain/core/prompts";
+import { AgentStep } from "@langchain/core/agents";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 /** Define the model to be used */
 const model = new OpenAI({ temperature: 0 });
@@ -57,7 +57,9 @@ $JSON_BLOB
 Observation: the result of the action
 ... (this Thought/Action/Observation can repeat N times)
 Thought: I now know the final answer
-Final Answer: the final answer to the original input question`;
+Final Answer: the final answer to the original input question
+
+Action part must be always wrapped in 3 backticks.`;
 const SUFFIX = `Begin! Reminder to always use the exact characters \`Final Answer\` when responding.
 Thoughts: {agent_scratchpad}`;
 const DEFAULT_HUMAN_MESSAGE_TEMPLATE = "Question: {input}";
@@ -90,7 +92,8 @@ const runnableAgent = RunnableSequence.from([
       formatLogToString(i.steps),
   },
   prompt,
-  model,
+  // Important, otherwise the answer is only hallucinated
+  model.bind({ stop: ["\nObservation"] }),
   outputParser,
 ]);
 
@@ -109,7 +112,7 @@ console.log("Loaded agent executor");
 
 const input = `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`;
 console.log(`Calling agent with prompt: ${input}`);
-const result = await executor.call({ input });
+const result = await executor.invoke({ input });
 console.log(result);
 /**
 Loaded agent executor

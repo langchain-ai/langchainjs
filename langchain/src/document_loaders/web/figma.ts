@@ -1,6 +1,6 @@
+import { Document } from "@langchain/core/documents";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { BaseDocumentLoader } from "../base.js";
-import { Document } from "../../document.js";
-import { getEnvironmentVariable } from "../../util/env.js";
 
 /**
  * Interface representing a Figma file. It includes properties for the
@@ -43,6 +43,15 @@ export interface FigmaLoaderParams {
  * extends the BaseDocumentLoader and implements the FigmaLoaderParams
  * interface. The constructor takes a config object as a parameter, which
  * contains the access token, an array of node IDs, and the file key.
+ * @example
+ * ```typescript
+ * const loader = new FigmaFileLoader({
+ *   accessToken: "FIGMA_ACCESS_TOKEN",
+ *   nodeIds: ["id1", "id2", "id3"],
+ *   fileKey: "key",
+ * });
+ * const docs = await loader.load();
+ * ```
  */
 export class FigmaFileLoader
   extends BaseDocumentLoader

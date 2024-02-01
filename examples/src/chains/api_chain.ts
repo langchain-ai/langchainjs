@@ -1,4 +1,4 @@
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import { APIChain } from "langchain/chains";
 
 const OPEN_METEO_DOCS = `BASE URL: https://api.open-meteo.com/
@@ -32,7 +32,7 @@ freezinglevel_height	Instant	meters	Altitude above sea level of the 0°C level
 visibility	Instant	meters	Viewing distance in meters. Influenced by low clouds, humidity and aerosols. Maximum visibility is approximately 24 km.`;
 
 export async function run() {
-  const model = new OpenAI({ modelName: "text-davinci-003" });
+  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
   const chain = APIChain.fromLLMAndAPIDocs(model, OPEN_METEO_DOCS, {
     headers: {
       // These headers will be used for API requests made by the chain.

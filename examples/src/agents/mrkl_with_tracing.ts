@@ -1,8 +1,8 @@
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
-import { SerpAPI } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 import process from "process";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 export const run = async () => {
   process.env.LANGCHAIN_TRACING_V2 = "true";
@@ -26,7 +26,7 @@ export const run = async () => {
 
   console.log(`Executing with input "${input}"...`);
 
-  const result = await executor.call({ input });
+  const result = await executor.invoke({ input });
 
   console.log(`Got output ${result.output}`);
 };

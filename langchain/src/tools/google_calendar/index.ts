@@ -1,3 +1,5 @@
-export { GoogleCalendarCreateTool } from "./create.js";
-export { GoogleCalendarViewTool } from "./view.js";
-export type { GoogleCalendarAgentParams } from "./base.js";
+export {
+  type GoogleCalendarAgentParams,
+  GoogleCalendarCreateTool,
+  GoogleCalendarViewTool,
+} from "@langchain/community/tools/google_calendar";

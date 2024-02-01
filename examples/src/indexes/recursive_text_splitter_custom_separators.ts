@@ -1,5 +1,5 @@
-import { Document } from "langchain/document";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { Document } from "@langchain/core/documents";
 
 const text = `Some other considerations include:
 

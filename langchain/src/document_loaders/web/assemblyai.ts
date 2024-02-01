@@ -1,15 +1,16 @@
 import {
   AssemblyAI,
   BaseServiceParams,
-  CreateTranscriptParameters,
+  TranscribeParams,
   SubtitleFormat,
   Transcript,
   TranscriptParagraph,
   TranscriptSentence,
+  CreateTranscriptParameters,
 } from "assemblyai";
-import { Document } from "../../document.js";
+import { Document } from "@langchain/core/documents";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { BaseDocumentLoader } from "../base.js";
-import { getEnvironmentVariable } from "../../util/env.js";
 import { AssemblyAIOptions } from "../../types/assemblyai-types.js";
 
 export type * from "../../types/assemblyai-types.js";
@@ -21,7 +22,7 @@ abstract class AssemblyAILoader extends BaseDocumentLoader {
   protected client: AssemblyAI;
 
   /**
-   * Creates a new AssemblyAI loader.
+   * Create a new AssemblyAI loader.
    * @param assemblyAIOptions The options to configure the AssemblyAI loader.
    * Configure the `assemblyAIOptions.apiKey` with your AssemblyAI API key, or configure it as the `ASSEMBLYAI_API_KEY` environment variable.
    */
@@ -43,55 +44,65 @@ abstract class AssemblyAILoader extends BaseDocumentLoader {
 }
 
 abstract class CreateTranscriptLoader extends AssemblyAILoader {
-  protected CreateTranscriptParameters?: CreateTranscriptParameters;
+  protected transcribeParams?: TranscribeParams | CreateTranscriptParameters;
 
   protected transcriptId?: string;
 
   /**
-   * Retrevies an existing transcript by its ID.
-   * @param params The parameters to create the transcript, or the ID of the transcript to retrieve.
+   * Transcribe audio or retrieve an existing transcript by its ID.
+   * @param params The parameters to transcribe audio, or the ID of the transcript to retrieve.
    * @param assemblyAIOptions The options to configure the AssemblyAI loader.
    * Configure the `assemblyAIOptions.apiKey` with your AssemblyAI API key, or configure it as the `ASSEMBLYAI_API_KEY` environment variable.
    */
   constructor(
-    params: CreateTranscriptParameters | string,
+    params: TranscribeParams | CreateTranscriptParameters | string,
     assemblyAIOptions?: AssemblyAIOptions
   ) {
     super(assemblyAIOptions);
     if (typeof params === "string") {
       this.transcriptId = params;
     } else {
-      this.CreateTranscriptParameters = params;
+      this.transcribeParams = params;
     }
   }
 
-  protected async getOrCreateTranscript() {
+  protected async transcribeOrGetTranscript() {
     if (this.transcriptId) {
       return await this.client.transcripts.get(this.transcriptId);
     }
-    if (this.CreateTranscriptParameters) {
-      return await this.client.transcripts.create(
-        this.CreateTranscriptParameters
-      );
+    if (this.transcribeParams) {
+      let transcribeParams: TranscribeParams;
+      if ("audio_url" in this.transcribeParams) {
+        transcribeParams = {
+          ...this.transcribeParams,
+          audio: this.transcribeParams.audio_url,
+        };
+      } else {
+        transcribeParams = this.transcribeParams;
+      }
+
+      return await this.client.transcripts.transcribe(transcribeParams);
+    } else {
+      throw new Error("No transcript ID or transcribe parameters provided");
     }
   }
 }
 
 /**
- * Creates and loads the transcript as a document using AssemblyAI.
+ * Transcribe audio and load the transcript as a document using AssemblyAI.
  */
 export class AudioTranscriptLoader extends CreateTranscriptLoader {
   /**
-   * Creates a transcript and loads the transcript as a document using AssemblyAI.
+   * Transcribe audio and load the transcript as a document using AssemblyAI.
    * @returns A promise that resolves to a single document containing the transcript text
    * as the page content, and the transcript object as the metadata.
    */
   override async load(): Promise<Document<Transcript>[]> {
-    const transcript = await this.getOrCreateTranscript();
+    const transcript = await this.transcribeOrGetTranscript();
 
     return [
       new Document({
-        pageContent: transcript.text,
+        pageContent: transcript.text as string,
         metadata: transcript,
       }),
     ];
@@ -99,15 +110,15 @@ export class AudioTranscriptLoader extends CreateTranscriptLoader {
 }
 
 /**
- * Creates a transcript and loads the paragraphs of the transcript, creating a document for each paragraph.
+ * Transcribe audio and load the paragraphs of the transcript, creating a document for each paragraph.
  */
 export class AudioTranscriptParagraphsLoader extends CreateTranscriptLoader {
   /**
-   * Creates a transcript and loads the paragraphs of the transcript, creating a document for each paragraph.
+   * Transcribe audio and load the paragraphs of the transcript, creating a document for each paragraph.
    * @returns A promise that resolves to an array of documents, each containing a paragraph of the transcript.
    */
   override async load(): Promise<Document<TranscriptParagraph>[]> {
-    const transcript = await this.getOrCreateTranscript();
+    const transcript = await this.transcribeOrGetTranscript();
     const paragraphsResponse = await this.client.transcripts.paragraphs(
       transcript.id
     );
@@ -122,16 +133,15 @@ export class AudioTranscriptParagraphsLoader extends CreateTranscriptLoader {
 }
 
 /**
- * Creates a transcript for the given `CreateTranscriptParameters.audio_url`,
- * and loads the sentences of the transcript, creating a document for each sentence.
+ * Transcribe audio and load the sentences of the transcript, creating a document for each sentence.
  */
 export class AudioTranscriptSentencesLoader extends CreateTranscriptLoader {
   /**
-   * Creates a transcript and loads the sentences of the transcript, creating a document for each sentence.
+   * Transcribe audio and load the sentences of the transcript, creating a document for each sentence.
    * @returns A promise that resolves to an array of documents, each containing a sentence of the transcript.
    */
   override async load(): Promise<Document<TranscriptSentence>[]> {
-    const transcript = await this.getOrCreateTranscript();
+    const transcript = await this.transcribeOrGetTranscript();
     const sentencesResponse = await this.client.transcripts.sentences(
       transcript.id
     );
@@ -146,24 +156,24 @@ export class AudioTranscriptSentencesLoader extends CreateTranscriptLoader {
 }
 
 /**
- * Creates a transcript and loads subtitles for the transcript as `srt` or `vtt` format.
+ * Transcribe audio and load subtitles for the transcript as `srt` or `vtt` format.
  */
 export class AudioSubtitleLoader extends CreateTranscriptLoader {
   /**
-   * Creates a new AudioSubtitleLoader.
-   * @param CreateTranscriptParameters The parameters to create the transcript.
+   * Create a new AudioSubtitleLoader.
+   * @param transcribeParams The parameters to transcribe audio.
    * @param subtitleFormat The format of the subtitles, either `srt` or `vtt`.
    * @param assemblyAIOptions The options to configure the AssemblyAI loader.
    * Configure the `assemblyAIOptions.apiKey` with your AssemblyAI API key, or configure it as the `ASSEMBLYAI_API_KEY` environment variable.
    */
   constructor(
-    CreateTranscriptParameters: CreateTranscriptParameters,
+    transcribeParams: TranscribeParams | CreateTranscriptParameters,
     subtitleFormat: SubtitleFormat,
     assemblyAIOptions?: AssemblyAIOptions
   );
 
   /**
-   * Creates a new AudioSubtitleLoader.
+   * Create a new AudioSubtitleLoader.
    * @param transcriptId The ID of the transcript to retrieve.
    * @param subtitleFormat The format of the subtitles, either `srt` or `vtt`.
    * @param assemblyAIOptions The options to configure the AssemblyAI loader.
@@ -176,14 +186,14 @@ export class AudioSubtitleLoader extends CreateTranscriptLoader {
   );
 
   /**
-   * Creates a new AudioSubtitleLoader.
-   * @param params The parameters to create the transcript, or the ID of the transcript to retrieve.
+   * Create a new AudioSubtitleLoader.
+   * @param params The parameters to transcribe audio, or the ID of the transcript to retrieve.
    * @param subtitleFormat The format of the subtitles, either `srt` or `vtt`.
    * @param assemblyAIOptions The options to configure the AssemblyAI loader.
    * Configure the `assemblyAIOptions.apiKey` with your AssemblyAI API key, or configure it as the `ASSEMBLYAI_API_KEY` environment variable.
    */
   constructor(
-    params: CreateTranscriptParameters | string,
+    params: TranscribeParams | CreateTranscriptParameters | string,
     private subtitleFormat: SubtitleFormat = "srt",
     assemblyAIOptions?: AssemblyAIOptions
   ) {
@@ -192,11 +202,11 @@ export class AudioSubtitleLoader extends CreateTranscriptLoader {
   }
 
   /**
-   * Creates a transcript and loads subtitles for the transcript as `srt` or `vtt` format.
+   * Transcribe audio and load subtitles for the transcript as `srt` or `vtt` format.
    * @returns A promise that resolves a document containing the subtitles as the page content.
    */
   override async load(): Promise<Document[]> {
-    const transcript = await this.getOrCreateTranscript();
+    const transcript = await this.transcribeOrGetTranscript();
     const subtitles = await this.client.transcripts.subtitles(
       transcript.id,
       this.subtitleFormat

@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as yaml from "js-yaml";
 import { JsonSpec, JsonObject } from "langchain/tools";
 import { createOpenApiAgent, OpenApiToolkit } from "langchain/agents";
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 
 export const run = async () => {
   let data: JsonObject;
@@ -28,7 +28,7 @@ export const run = async () => {
   const input = `Make a POST request to openai /completions. The prompt should be 'tell me a joke.'`;
   console.log(`Executing with input "${input}"...`);
 
-  const result = await executor.call({ input });
+  const result = await executor.invoke({ input });
   console.log(`Got output ${result.output}`);
 
   console.log(

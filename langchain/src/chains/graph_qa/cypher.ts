@@ -1,10 +1,10 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import { ChainValues } from "@langchain/core/utils/types";
+import { BasePromptTemplate } from "@langchain/core/prompts";
+import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
+import { Neo4jGraph } from "@langchain/community/graphs/neo4j_graph";
 import { LLMChain } from "../../chains/llm_chain.js";
-import { ChainValues } from "../../schema/index.js";
-import { BasePromptTemplate } from "../../prompts/base.js";
 import { BaseChain, ChainInputs } from "../base.js";
-import { BaseLanguageModel } from "../../base_language/index.js";
-import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
-import { Neo4jGraph } from "../../graphs/neo4j_graph.js";
 import { CYPHER_GENERATION_PROMPT, CYPHER_QA_PROMPT } from "./prompts.js";
 
 export const INTERMEDIATE_STEPS_KEY = "intermediateSteps";
@@ -22,15 +22,25 @@ export interface GraphCypherQAChainInput extends ChainInputs {
 
 export interface FromLLMInput {
   graph: Neo4jGraph;
-  llm?: BaseLanguageModel;
-  cypherLLM?: BaseLanguageModel;
-  qaLLM?: BaseLanguageModel;
+  llm?: BaseLanguageModelInterface;
+  cypherLLM?: BaseLanguageModelInterface;
+  qaLLM?: BaseLanguageModelInterface;
   qaPrompt?: BasePromptTemplate;
   cypherPrompt?: BasePromptTemplate;
   returnIntermediateSteps?: boolean;
   returnDirect?: boolean;
 }
 
+/**
+ * @example
+ * ```typescript
+ * const chain = new GraphCypherQAChain({
+ *   llm: new ChatOpenAI({ temperature: 0 }),
+ *   graph: new Neo4jGraph(),
+ * });
+ * const res = await chain.run("Who played in Pulp Fiction?");
+ * ```
+ */
 export class GraphCypherQAChain extends BaseChain {
   private graph: Neo4jGraph;
 
@@ -123,12 +133,12 @@ export class GraphCypherQAChain extends BaseChain {
     }
 
     const qaChain = new LLMChain({
-      llm: (qaLLM || llm) as BaseLanguageModel,
+      llm: (qaLLM || llm) as BaseLanguageModelInterface,
       prompt: qaPrompt,
     });
 
     const cypherGenerationChain = new LLMChain({
-      llm: (cypherLLM || llm) as BaseLanguageModel,
+      llm: (cypherLLM || llm) as BaseLanguageModelInterface,
       prompt: cypherPrompt,
     });
 

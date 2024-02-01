@@ -1,8 +1,11 @@
 import type { CheerioAPI, load as LoadT, SelectorType } from "cheerio";
-import { Document } from "../../document.js";
+import { Document } from "@langchain/core/documents";
+import {
+  AsyncCaller,
+  AsyncCallerParams,
+} from "@langchain/core/utils/async_caller";
 import { BaseDocumentLoader } from "../base.js";
 import type { DocumentLoader } from "../base.js";
-import { AsyncCaller, AsyncCallerParams } from "../../util/async_caller.js";
 
 /**
  * Represents the parameters for configuring the CheerioWebBaseLoader. It
@@ -31,6 +34,12 @@ export interface WebBaseLoaderParams extends AsyncCallerParams {
  * A class that extends the BaseDocumentLoader and implements the
  * DocumentLoader interface. It represents a document loader for loading
  * web-based documents using Cheerio.
+ * @example
+ * ```typescript
+ * const loader = new CheerioWebBaseLoader("https:exampleurl.com");
+ * const docs = await loader.load();
+ * console.log({ docs });
+ * ```
  */
 export class CheerioWebBaseLoader
   extends BaseDocumentLoader

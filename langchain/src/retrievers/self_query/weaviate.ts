@@ -1,4 +1,8 @@
 import {
+  WeaviateFilter,
+  WeaviateStore,
+} from "@langchain/community/vectorstores/weaviate";
+import {
   Comparator,
   Comparators,
   Comparison,
@@ -9,7 +13,6 @@ import {
   StructuredQuery,
   Visitor,
 } from "../../chains/query_constructor/ir.js";
-import { WeaviateFilter, WeaviateStore } from "../../vectorstores/weaviate.js";
 import { BaseTranslator } from "./base.js";
 import { isFilterEmpty, isString, isInt, isFloat } from "./utils.js";
 
@@ -54,6 +57,20 @@ export type WeaviateStructuredQueryResult = {
  * A class that translates or converts data into a format that can be used
  * with Weaviate, a vector search engine. It extends the `BaseTranslator`
  * class and provides specific implementation for Weaviate.
+ * @example
+ * ```typescript
+ * const selfQueryRetriever = new SelfQueryRetriever({
+ *   llm: new ChatOpenAI(),
+ *   vectorStore: new WeaviateStore(),
+ *   documentContents: "Brief summary of a movie",
+ *   attributeInfo: [],
+ *   structuredQueryTranslator: new WeaviateTranslator(),
+ * });
+ *
+ * const relevantDocuments = await selfQueryRetriever.getRelevantDocuments(
+ *   "Which movies are rated higher than 8.5?",
+ * );
+ * ```
  */
 export class WeaviateTranslator<
   T extends WeaviateStore

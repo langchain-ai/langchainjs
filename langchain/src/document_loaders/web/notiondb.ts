@@ -1,6 +1,6 @@
+import { Document } from "@langchain/core/documents";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { BaseDocumentLoader } from "../base.js";
-import { Document } from "../../document.js";
-import { getEnvironmentVariable } from "../../util/env.js";
 
 const NOTION_BASE_URL = "https://api.notion.com/v1";
 
@@ -39,7 +39,17 @@ interface NotionPage {
   };
 }
 
-/** @deprecated use the `NotionAPILoader` class instead. */
+/** @deprecated use the `NotionAPILoader` class instead.
+ * @example
+ * ```typescript
+ * const loader = new NotionDBLoader({
+ *   pageSizeLimit: 10,
+ *   databaseId: "{databaseId}",
+ *   notionIntegrationToken: "{notionIntegrationToken}",
+ * });
+ * const docs = await loader.load();
+ * ```
+ */
 export class NotionDBLoader
   extends BaseDocumentLoader
   implements NotionDBLoaderParams

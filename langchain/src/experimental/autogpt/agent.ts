@@ -1,23 +1,23 @@
-import { LLMChain } from "../../chains/llm_chain.js";
-import { BaseChatModel } from "../../chat_models/base.js";
-import { VectorStoreRetriever } from "../../vectorstores/base.js";
-import { Tool } from "../../tools/base.js";
-
-import { AutoGPTOutputParser } from "./output_parser.js";
-import { AutoGPTPrompt } from "./prompt.js";
+import type { VectorStoreRetrieverInterface } from "@langchain/core/vectorstores";
+import { Tool } from "@langchain/core/tools";
 import {
   AIMessage,
   BaseMessage,
   HumanMessage,
   SystemMessage,
-} from "../../schema/index.js";
-// import { HumanInputRun } from "./tools/human/tool"; // TODO
-import { ObjectTool, FINISH_NAME } from "./schema.js";
-import { TokenTextSplitter } from "../../text_splitter.js";
+} from "@langchain/core/messages";
+import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import {
   getEmbeddingContextSize,
   getModelContextSize,
-} from "../../base_language/count_tokens.js";
+} from "@langchain/core/language_models/base";
+import { LLMChain } from "../../chains/llm_chain.js";
+
+import { AutoGPTOutputParser } from "./output_parser.js";
+import { AutoGPTPrompt } from "./prompt.js";
+// import { HumanInputRun } from "./tools/human/tool"; // TODO
+import { ObjectTool, FINISH_NAME } from "./schema.js";
+import { TokenTextSplitter } from "../../text_splitter.js";
 
 /**
  * Interface for the input parameters of the AutoGPT class.
@@ -25,7 +25,7 @@ import {
 export interface AutoGPTInput {
   aiName: string;
   aiRole: string;
-  memory: VectorStoreRetriever;
+  memory: VectorStoreRetrieverInterface;
   humanInTheLoop?: boolean;
   outputParser?: AutoGPTOutputParser;
   maxIterations?: number;
@@ -35,11 +35,32 @@ export interface AutoGPTInput {
  * Class representing the AutoGPT concept with LangChain primitives. It is
  * designed to be used with a set of tools such as a search tool,
  * write-file tool, and a read-file tool.
+ * @example
+ * ```typescript
+ * const autogpt = AutoGPT.fromLLMAndTools(
+ *   new ChatOpenAI({ temperature: 0 }),
+ *   [
+ *     new ReadFileTool({ store: new InMemoryFileStore() }),
+ *     new WriteFileTool({ store: new InMemoryFileStore() }),
+ *     new SerpAPI("YOUR_SERPAPI_API_KEY", {
+ *       location: "San Francisco,California,United States",
+ *       hl: "en",
+ *       gl: "us",
+ *     }),
+ *   ],
+ *   {
+ *     memory: new MemoryVectorStore(new OpenAIEmbeddings()).asRetriever(),
+ *     aiName: "Tom",
+ *     aiRole: "Assistant",
+ *   },
+ * );
+ * const result = await autogpt.run(["write a weather report for SF today"]);
+ * ```
  */
 export class AutoGPT {
   aiName: string;
 
-  memory: VectorStoreRetriever;
+  memory: VectorStoreRetrieverInterface;
 
   fullMessageHistory: BaseMessage[];
 

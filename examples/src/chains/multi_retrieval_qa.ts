@@ -1,6 +1,5 @@
 import { MultiRetrievalQAChain } from "langchain/chains";
-import { OpenAIChat } from "langchain/llms/openai";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIChat, OpenAIEmbeddings } from "@langchain/openai";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 
 const embeddings = new OpenAIEmbeddings();

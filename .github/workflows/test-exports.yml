@@ -1,8 +1,8 @@
 name: Environment tests
 
 on:
-  workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
-  workflow_call:  # Allows triggering the workflow from another workflow
+  workflow_dispatch: # Allows triggering the workflow manually in GitHub UI
+  workflow_call: # Allows triggering the workflow from another workflow
 
 # If another push to the same PR or branch happens while this workflow is still running,
 # cancel the earlier run in favor of the next run.
@@ -35,9 +35,12 @@ jobs:
         run: yarn install --immutable
       - name: Build
         run: yarn workspace langchain build
+        shell: bash
+        env:
+          SKIP_API_DOCS: true
 
       - name: Test esbuild exports
-        run: docker compose -f docker-compose.yml run test-exports-esbuild
+        run: docker compose -f environment_tests/docker-compose.yml run test-exports-esbuild
 
   exports-esm:
     runs-on: ubuntu-latest
@@ -52,9 +55,12 @@ jobs:
         run: yarn install --immutable
       - name: Build
         run: yarn workspace langchain build
+        shell: bash
+        env:
+          SKIP_API_DOCS: true
 
       - name: Test esm exports
-        run: docker compose -f docker-compose.yml run test-exports-esm
+        run: docker compose -f environment_tests/docker-compose.yml run test-exports-esm
 
   exports-cjs:
     runs-on: ubuntu-latest
@@ -69,9 +75,12 @@ jobs:
         run: yarn install --immutable
       - name: Build
         run: yarn workspace langchain build
+        shell: bash
+        env:
+          SKIP_API_DOCS: true
 
       - name: Test cjs exports
-        run: docker compose -f docker-compose.yml run test-exports-cjs
+        run: docker compose -f environment_tests/docker-compose.yml run test-exports-cjs
 
   exports-cf:
     runs-on: ubuntu-latest
@@ -86,9 +95,12 @@ jobs:
         run: yarn install --immutable
       - name: Build
         run: yarn workspace langchain build
+        shell: bash
+        env:
+          SKIP_API_DOCS: true
 
       - name: Test cf exports
-        run: docker compose -f docker-compose.yml run test-exports-cf
+        run: docker compose -f environment_tests/docker-compose.yml run test-exports-cf
 
   exports-vercel:
     runs-on: ubuntu-latest
@@ -103,9 +115,12 @@ jobs:
         run: yarn install --immutable
       - name: Build
         run: yarn workspace langchain build
+        shell: bash
+        env:
+          SKIP_API_DOCS: true
 
       - name: Test vercel exports
-        run: docker compose -f docker-compose.yml run test-exports-vercel
+        run: docker compose -f environment_tests/docker-compose.yml run test-exports-vercel
 
   exports-vite:
     runs-on: ubuntu-latest
@@ -120,11 +135,14 @@ jobs:
         run: yarn install --immutable
       - name: Build
         run: yarn workspace langchain build
+        shell: bash
+        env:
+          SKIP_API_DOCS: true
 
       - name: Test vite exports
-        run: docker compose -f docker-compose.yml run test-exports-vite
+        run: docker compose -f environment_tests/docker-compose.yml run test-exports-vite
 
-  exports-bun:
+  exports-tsc:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -137,6 +155,29 @@ jobs:
         run: yarn install --immutable
       - name: Build
         run: yarn workspace langchain build
+        shell: bash
+        env:
+          SKIP_API_DOCS: true
 
-      - name: Test bun exports
-        run: docker compose -f docker-compose.yml run test-exports-bun
+      - name: Test compiling exports with tsc
+        run: docker compose -f environment_tests/docker-compose.yml run test-exports-tsc
+
+  # exports-bun:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Use Node.js ${{ env.NODE_VERSION }}
+  #       uses: actions/setup-node@v3
+  #       with:
+  #         node-version: ${{ env.NODE_VERSION }}
+  #         cache: "yarn"
+  #     - name: Install dependencies
+  #       run: yarn install --immutable
+  #     - name: Build
+  #       run: yarn workspace langchain build
+  #       shell: bash
+  #       env:
+  #         SKIP_API_DOCS: true
+
+  #     - name: Test bun exports
+  #       run: docker compose -f environment_tests/docker-compose.yml run test-exports-bun

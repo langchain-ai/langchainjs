@@ -1,3 +1,7 @@
+import { Document } from "@langchain/core/documents";
+import { ChainValues } from "@langchain/core/utils/types";
+import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
+import { BasePromptTemplate, PromptTemplate } from "@langchain/core/prompts";
 import type {
   SerializedStuffDocumentsChain,
   SerializedMapReduceDocumentsChain,
@@ -5,13 +9,6 @@ import type {
 } from "./serde.js";
 import { BaseChain, ChainInputs } from "./base.js";
 import { LLMChain } from "./llm_chain.js";
-
-import { Document } from "../document.js";
-
-import { ChainValues } from "../schema/index.js";
-import { BasePromptTemplate } from "../prompts/base.js";
-import { PromptTemplate } from "../prompts/prompt.js";
-import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
 /**
  * Interface for the input properties of the StuffDocumentsChain class.
@@ -206,8 +203,9 @@ export class MapReduceDocumentsChain
               ...rest,
             })
           );
-        const length =
-          await this.combineDocumentChain.llmChain.llm.getNumTokens(formatted);
+        const length = await this.combineDocumentChain.llmChain._getNumTokens(
+          formatted
+        );
 
         const withinTokenLimit = length < this.maxTokens;
         // If we can skip the map step, and we're within the token limit, we don't

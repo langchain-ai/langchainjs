@@ -1,11 +1,11 @@
-import { BaseLanguageModel } from "../../base_language/index.js";
-import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import type { VectorStoreInterface } from "@langchain/core/vectorstores";
+import { Document } from "@langchain/core/documents";
+import { ChainValues } from "@langchain/core/utils/types";
+import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
 import { BaseChain, ChainInputs } from "../../chains/base.js";
 import { SerializedBaseChain } from "../../chains/serde.js";
-import { Document } from "../../document.js";
-import { ChainValues } from "../../schema/index.js";
 import { Optional } from "../../types/type-utils.js";
-import { VectorStore } from "../../vectorstores/base.js";
 import { TaskCreationChain } from "./task_creation.js";
 import { TaskExecutionChain } from "./task_execution.js";
 import { TaskPrioritizationChain } from "./task_prioritization.js";
@@ -30,7 +30,7 @@ export interface BabyAGIInputs
   creationChain: BaseChain;
   prioritizationChain: BaseChain;
   executionChain: BaseChain;
-  vectorstore: VectorStore;
+  vectorstore: VectorStoreInterface;
   maxIterations?: number;
 }
 
@@ -39,6 +39,18 @@ export interface BabyAGIInputs
  * prioritization, and execution. It uses three chains for these
  * operations: `creationChain`, `prioritizationChain`, and
  * `executionChain`.
+ * @example
+ * ```typescript
+ * const babyAGI = BabyAGI.fromLLM({
+ *   llm: new OpenAI({ temperature: 0 }),
+ *   vectorstore: new MemoryVectorStore(new OpenAIEmbeddings()),
+ *   maxIterations: 3,
+ * });
+ *
+ * const result = await babyAGI.call({
+ *   objective: "Write a weather report for SF today",
+ * });
+ * ```
  */
 export class BabyAGI extends BaseChain implements BabyAGIInputs {
   static lc_name() {
@@ -55,7 +67,7 @@ export class BabyAGI extends BaseChain implements BabyAGIInputs {
 
   taskIDCounter: number;
 
-  vectorstore: VectorStore;
+  vectorstore: VectorStoreInterface;
 
   maxIterations: number;
 
@@ -316,7 +328,7 @@ export class BabyAGI extends BaseChain implements BabyAGIInputs {
   }: Optional<
     BabyAGIInputs,
     "executionChain" | "creationChain" | "prioritizationChain"
-  > & { llm: BaseLanguageModel }) {
+  > & { llm: BaseLanguageModelInterface }) {
     const creationChain = TaskCreationChain.fromLLM({
       llm,
       verbose,

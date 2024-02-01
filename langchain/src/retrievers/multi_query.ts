@@ -1,11 +1,14 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import {
+  BaseRetriever,
+  type BaseRetrieverInput,
+  type BaseRetrieverInterface,
+} from "@langchain/core/retrievers";
+import { Document } from "@langchain/core/documents";
+import { BaseOutputParser } from "@langchain/core/output_parsers";
+import { PromptTemplate, BasePromptTemplate } from "@langchain/core/prompts";
+import { CallbackManagerForRetrieverRun } from "@langchain/core/callbacks/manager";
 import { LLMChain } from "../chains/llm_chain.js";
-import { PromptTemplate } from "../prompts/prompt.js";
-import { Document } from "../document.js";
-import { BaseOutputParser } from "../schema/output_parser.js";
-import { BaseRetriever, BaseRetrieverInput } from "../schema/retriever.js";
-import { CallbackManagerForRetrieverRun } from "../callbacks/index.js";
-import { BaseLanguageModel } from "../base_language/index.js";
-import { BasePromptTemplate } from "../prompts/base.js";
 
 interface LineList {
   lines: string[];
@@ -59,13 +62,25 @@ Original question: {question}`,
 });
 
 export interface MultiQueryRetrieverInput extends BaseRetrieverInput {
-  retriever: BaseRetriever;
+  retriever: BaseRetrieverInterface;
   llmChain: LLMChain<LineList>;
   queryCount?: number;
   parserKey?: string;
 }
 
-// Export class
+/**
+ * @example
+ * ```typescript
+ * const retriever = new MultiQueryRetriever.fromLLM({
+ *   llm: new ChatAnthropic({}),
+ *   retriever: new MemoryVectorStore().asRetriever(),
+ *   verbose: true,
+ * });
+ * const retrievedDocs = await retriever.getRelevantDocuments(
+ *   "What are mitochondria made of?",
+ * );
+ * ```
+ */
 export class MultiQueryRetriever extends BaseRetriever {
   static lc_name() {
     return "MultiQueryRetriever";
@@ -73,7 +88,7 @@ export class MultiQueryRetriever extends BaseRetriever {
 
   lc_namespace = ["langchain", "retrievers", "multiquery"];
 
-  private retriever: BaseRetriever;
+  private retriever: BaseRetrieverInterface;
 
   private llmChain: LLMChain<LineList>;
 
@@ -91,7 +106,7 @@ export class MultiQueryRetriever extends BaseRetriever {
 
   static fromLLM(
     fields: Omit<MultiQueryRetrieverInput, "llmChain"> & {
-      llm: BaseLanguageModel;
+      llm: BaseLanguageModelInterface;
       prompt?: BasePromptTemplate;
     }
   ): MultiQueryRetriever {

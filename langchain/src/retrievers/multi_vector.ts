@@ -1,14 +1,20 @@
-import { BaseStoreInterface } from "../schema/storage.js";
-import { Document } from "../document.js";
-import { BaseRetriever, BaseRetrieverInput } from "../schema/retriever.js";
-import { VectorStore } from "../vectorstores/base.js";
+import {
+  BaseRetriever,
+  type BaseRetrieverInput,
+} from "@langchain/core/retrievers";
+import type { VectorStoreInterface } from "@langchain/core/vectorstores";
+import { Document } from "@langchain/core/documents";
+import { BaseStore, type BaseStoreInterface } from "@langchain/core/stores";
+import { createDocumentStoreFromByteStore } from "../storage/encoder_backed.js";
 
 /**
  * Arguments for the MultiVectorRetriever class.
  */
 export interface MultiVectorRetrieverInput extends BaseRetrieverInput {
-  vectorstore: VectorStore;
-  docstore: BaseStoreInterface<string, Document>;
+  vectorstore: VectorStoreInterface;
+  /** @deprecated Prefer `byteStore`. */
+  docstore?: BaseStoreInterface<string, Document>;
+  byteStore?: BaseStore<string, Uint8Array>;
   idKey?: string;
   childK?: number;
   parentK?: number;
@@ -18,6 +24,19 @@ export interface MultiVectorRetrieverInput extends BaseRetrieverInput {
  * A retriever that retrieves documents from a vector store and a document
  * store. It uses the vector store to find relevant documents based on a
  * query, and then retrieves the full documents from the document store.
+ * @example
+ * ```typescript
+ * const retriever = new MultiVectorRetriever({
+ *   vectorstore: new FaissStore(),
+ *   byteStore: new InMemoryStore<Unit8Array>(),
+ *   idKey: "doc_id",
+ *   childK: 20,
+ *   parentK: 5,
+ * });
+ *
+ * const retrieverResult = await retriever.getRelevantDocuments("justice breyer");
+ * console.log(retrieverResult[0].pageContent.length);
+ * ```
  */
 export class MultiVectorRetriever extends BaseRetriever {
   static lc_name() {
@@ -26,7 +45,7 @@ export class MultiVectorRetriever extends BaseRetriever {
 
   lc_namespace = ["langchain", "retrievers", "multi_vector"];
 
-  public vectorstore: VectorStore;
+  public vectorstore: VectorStoreInterface;
 
   public docstore: BaseStoreInterface<string, Document>;
 
@@ -39,7 +58,15 @@ export class MultiVectorRetriever extends BaseRetriever {
   constructor(args: MultiVectorRetrieverInput) {
     super(args);
     this.vectorstore = args.vectorstore;
-    this.docstore = args.docstore;
+    if (args.byteStore) {
+      this.docstore = createDocumentStoreFromByteStore(args.byteStore);
+    } else if (args.docstore) {
+      this.docstore = args.docstore;
+    } else {
+      throw new Error(
+        "byteStore and docstore are undefined. Please provide at least one."
+      );
+    }
     this.idKey = args.idKey ?? "doc_id";
     this.childK = args.childK;
     this.parentK = args.parentK;
