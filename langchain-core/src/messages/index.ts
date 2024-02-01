@@ -550,7 +550,9 @@ export class ChatMessage
 
   role: string;
 
-  _chatMessageClass = ChatMessage;
+  static _chatMessageClass(): typeof ChatMessage {
+    return ChatMessage;
+  }
 
   constructor(content: string, role: string);
 

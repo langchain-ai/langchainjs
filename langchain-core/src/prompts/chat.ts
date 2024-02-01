@@ -385,6 +385,12 @@ class _StringImageMessagePromptTemplate<
 
   protected messageClass?: MessageClass;
 
+  static _messageClass(): MessageClass {
+    throw new Error(
+      "Can not invoke _messageClass from inside _StringImageMessagePromptTemplate"
+    );
+  }
+
   // ChatMessage contains role field, others don't.
   // Because of this, we have a separate class property for ChatMessage.
   protected chatMessageClass?: ChatMessageClass;
@@ -416,13 +422,17 @@ class _StringImageMessagePromptTemplate<
   }
 
   createMessage(content: MessageContent) {
-    if (this.messageClass) {
-      return new this.messageClass({ content });
-    } else if (this.chatMessageClass) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const constructor = this.constructor as any;
+    if (constructor._messageClass()) {
+      const MsgClass = constructor._messageClass();
+      return new MsgClass({ content });
+    } else if (constructor.chatMessageClass) {
+      const MsgClass = constructor.chatMessageClass();
       // Assuming ChatMessage constructor also takes a content argument
-      return new this.chatMessageClass({
+      return new MsgClass({
         content,
-        role: this.getRoleFromMessageClass(this.chatMessageClass.lc_name()),
+        role: this.getRoleFromMessageClass(MsgClass.lc_name()),
       });
     } else {
       throw new Error("No message class defined");
@@ -579,7 +589,9 @@ export class HumanMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any
 > extends _StringImageMessagePromptTemplate<RunInput> {
-  messageClass = HumanMessage;
+  static _messageClass(): typeof HumanMessage {
+    return HumanMessage;
+  }
 
   static lc_name() {
     return "HumanMessagePromptTemplate";
@@ -594,7 +606,9 @@ export class AIMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any
 > extends _StringImageMessagePromptTemplate<RunInput> {
-  messageClass = AIMessage;
+  static _messageClass(): typeof AIMessage {
+    return AIMessage;
+  }
 
   static lc_name() {
     return "AIMessagePromptTemplate";
@@ -619,7 +633,9 @@ export class SystemMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any
 > extends _StringImageMessagePromptTemplate<RunInput> {
-  messageClass = SystemMessage;
+  static _messageClass(): typeof SystemMessage {
+    return SystemMessage;
+  }
 
   static lc_name() {
     return "SystemMessagePromptTemplate";
