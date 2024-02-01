@@ -22,7 +22,7 @@ export function _getMetadata<T extends { text: true } = { text: true }>(
   result: SearchResult<T>
 ): Record<string, unknown> {
   const newMetadata: Record<string, unknown> = { ...result };
-  delete newMetadata.highlights;
+  delete newMetadata.text;
   return newMetadata;
 }
 

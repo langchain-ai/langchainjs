@@ -1,22 +1,22 @@
 import { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
 import { Tool, type ToolParams } from "@langchain/core/tools";
-import Exa, { ContentsOptions, RegularSearchOptions } from "exa-js";
+import Exa, { RegularSearchOptions } from "exa-js";
 
 /**
  * Options for the ExaSearchResults tool.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ExaSearchRetrieverFields<T extends ContentsOptions = any> =
-  ToolParams & {
-    client: Exa.default;
-    searchArgs?: RegularSearchOptions & T;
-  };
+export type ExaSearchRetrieverFields<
+  T extends { text: true } = { text: true }
+> = ToolParams & {
+  client: Exa.default;
+  searchArgs?: RegularSearchOptions & T;
+};
 
 /**
  * Tool for the Exa search API.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export class ExaSearchResults<T extends ContentsOptions = any> extends Tool {
+export class ExaSearchResults extends Tool {
   static lc_name(): string {
     return "ExaSearchResults";
   }
@@ -28,9 +28,9 @@ export class ExaSearchResults<T extends ContentsOptions = any> extends Tool {
 
   private client: Exa.default;
 
-  searchArgs?: RegularSearchOptions & T;
+  searchArgs?: RegularSearchOptions & { text: true };
 
-  constructor(fields: ExaSearchRetrieverFields<T>) {
+  constructor(fields: ExaSearchRetrieverFields<{ text: true }>) {
     super(fields);
     this.client = fields.client;
     this.searchArgs = fields.searchArgs;
@@ -41,15 +41,15 @@ export class ExaSearchResults<T extends ContentsOptions = any> extends Tool {
     _runManager?: CallbackManagerForToolRun
   ): Promise<string> {
     return JSON.stringify(
-      await this.client.searchAndContents<T>(input, this.searchArgs)
+      await this.client.searchAndContents<{ text: true }>(
+        input,
+        this.searchArgs
+      )
     );
   }
 }
 
-export class ExaFindSimilarResults<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends ContentsOptions = any
-> extends Tool {
+export class ExaFindSimilarResults extends Tool {
   static lc_name(): string {
     return "ExaFindSimilarResults";
   }
@@ -61,9 +61,9 @@ export class ExaFindSimilarResults<
 
   private client: Exa.default;
 
-  searchArgs?: RegularSearchOptions & T;
+  searchArgs?: RegularSearchOptions & { text: true };
 
-  constructor(fields: ExaSearchRetrieverFields<T>) {
+  constructor(fields: ExaSearchRetrieverFields<{ text: true }>) {
     super(fields);
     this.client = fields.client;
     this.searchArgs = fields.searchArgs;
@@ -74,7 +74,10 @@ export class ExaFindSimilarResults<
     _runManager?: CallbackManagerForToolRun
   ): Promise<string> {
     return JSON.stringify(
-      await this.client.findSimilarAndContents<T>(url, this.searchArgs)
+      await this.client.findSimilarAndContents<{ text: true }>(
+        url,
+        this.searchArgs
+      )
     );
   }
 }

@@ -3,7 +3,7 @@ import Exa from "exa-js";
 import { ExaRetriever } from "../retrievers.js";
 
 test("ExaRetriever can retrieve some data", async () => {
-  const exaRetriever = new ExaRetriever<{ text: true }>({
+  const exaRetriever = new ExaRetriever({
     // @ts-expect-error type errors
     client: new Exa(),
   });
