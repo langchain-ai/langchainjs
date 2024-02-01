@@ -101,7 +101,7 @@ test("Test FaissStore.loadFromPython", async () => {
   );
 
   const expectedResultofPythonSaved = new Document({
-    metadata: { source: "../../../../../../examples/state_of_the_union.txt" },
+    metadata: { source: "../../../../../examples/state_of_the_union.txt" },
     pageContent: `Tonight. I call on the Senate to: Pass the Freedom to Vote Act. Pass the John Lewis Voting Rights Act. And while you’re at it, pass the Disclose Act so Americans can know who is funding our elections. 
 
 Tonight, I’d like to honor someone who has dedicated his life to serve this country: Justice Stephen Breyer—an Army veteran, Constitutional scholar, and retiring Justice of the United States Supreme Court. Justice Breyer, thank you for your service. 
