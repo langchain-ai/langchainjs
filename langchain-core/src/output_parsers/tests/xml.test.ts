@@ -56,12 +56,21 @@ test("Can parse XML", async () => {
   const parser = new XMLOutputParser<MySchema>();
 
   const result = await parser.invoke(XML_EXAMPLE);
-  expect(result).toBe(expectedResult);
+  expect(result).toStrictEqual(expectedResult);
 });
 
 test("Can parse backtick wrapped XML", async () => {
   const parser = new XMLOutputParser<MySchema>();
 
   const result = await parser.invoke(BACKTICK_WRAPPED_XML);
-  expect(result).toBe(expectedResult);
+  expect(result).toStrictEqual(expectedResult);
+});
+
+test("Can format instructions with passed tags.", async () => {
+  const tags = ["tag1", "tag2", "tag3"];
+  const parser = new XMLOutputParser<MySchema>({ tags });
+
+  const formatInstructions = parser.getFormatInstructions();
+
+  expect(formatInstructions).toContain("tag1, tag2, tag3");
 });
