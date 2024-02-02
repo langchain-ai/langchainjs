@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { jest, test, expect, describe } from "@jest/globals";
-import { FakeEmbeddings } from "../../utils/testing.js";
+import { FakeEmbeddings } from "@langchain/core/utils/testing";
 
 import { RedisVectorStore } from "../redis.js";
 

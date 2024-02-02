@@ -4,8 +4,8 @@ import {
   SemanticSimilarityExampleSelector,
 } from "@langchain/core/example_selectors";
 import { PromptTemplate } from "@langchain/core/prompts";
+import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { MemoryVectorStore } from "../../vectorstores/memory.js";
-import { FakeEmbeddings } from "../../embeddings/fake.js";
 
 test("Test using LengthBasedExampleSelector", async () => {
   const prompt = new PromptTemplate({

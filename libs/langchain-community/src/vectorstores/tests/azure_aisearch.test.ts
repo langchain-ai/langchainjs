@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { jest, test, expect } from "@jest/globals";
 import { SearchIndexingBufferedSender } from "@azure/search-documents";
-import { FakeEmbeddings } from "../../utils/testing.js";
+import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import {
   AzureAISearchQueryType,
   AzureAISearchVectorStore,
