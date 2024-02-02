@@ -39,6 +39,23 @@ test("Runnable streamLog method", async () => {
   });
 });
 
+test.only("Runnable streamLog can break a for await loop", async () => {
+  const promptTemplate = PromptTemplate.fromTemplate("{input}");
+  const llm = new FakeLLM({});
+  const runnable = promptTemplate.pipe(llm);
+  const result = runnable.streamLog({ input: "Hello world!" });
+  let iters = 0;
+  for await (const _ of result) {
+    console.log("iter");
+    iters += 1;
+    if (iters > 1) {
+      break;
+    }
+  }
+  console.log("Finished");
+  expect(iters).toBe(2);
+});
+
 test("Runnable streamLog method with a more complicated sequence", async () => {
   const promptTemplate = ChatPromptTemplate.fromMessages<{
     documents: string;
