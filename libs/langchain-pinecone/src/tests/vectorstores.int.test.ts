@@ -162,4 +162,32 @@ describe("PineconeStore", () => {
 
     expect(results2.length).toEqual(0);
   });
+
+  test("query based on passed namespace", async () => {
+    const pageContent = "Can we make namespaces work!";
+    const id1 = uuid.v4();
+    const id2 = uuid.v4();
+
+    const res1 = await pineconeStore.addDocuments(
+      [{ pageContent, metadata: { foo: id1 } }],
+      {
+        namespace: "test-1",
+      }
+    );
+    const res2 = await pineconeStore.addDocuments(
+      [{ pageContent, metadata: { foo: id2 } }],
+      {
+        namespace: "test-2",
+      }
+    );
+
+    console.log(res1, res2);
+
+    const results = await pineconeStore.similaritySearch(pageContent, 1, {
+      namespace: "test-1",
+    });
+
+    expect(results.length).toEqual(1);
+    expect(results[0].metadata.foo).toBe(id1);
+  });
 });
