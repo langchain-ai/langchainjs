@@ -1175,6 +1175,7 @@
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/langchain/",
   "scripts": {
     "build": "yarn run build:deps && yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
     "build:deps": "yarn run turbo:command build --filter=@langchain/core --filter=@langchain/anthropic --filter=@langchain/openai --filter=@langchain/community --concurrency=1",
