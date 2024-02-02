@@ -33,7 +33,6 @@ export class Document<
   get lc_aliases(): Record<string, string> {
     return {
       pageContent: "page_content",
-      openAIApiKey: "openai_api_key",
     };
   }
 
