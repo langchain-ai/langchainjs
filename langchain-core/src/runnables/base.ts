@@ -81,7 +81,7 @@ export interface RunnableInterface<
 export type RunnableFunc<RunInput, RunOutput> = (
   input: RunInput,
   options?:
-    | { config?: RunnableConfig } & RunnableConfig
+    | ({ config?: RunnableConfig } & RunnableConfig)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     | Record<string, any>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
