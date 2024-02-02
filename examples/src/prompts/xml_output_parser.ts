@@ -39,8 +39,26 @@ const parser = new XMLOutputParser<MySchema>();
 
 const result = await parser.invoke(XML_EXAMPLE);
 
-console.log(result);
-
+console.log(JSON.stringify(result, null, 2));
 /*
-
+{
+  "userProfile": {
+    "userID": 12345,
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "roles": {
+      "role": [
+        "Admin",
+        "User"
+      ]
+    },
+    "preferences": {
+      "theme": "Dark",
+      "notifications": {
+        "email": true,
+        "sms": false
+      }
+    }
+  }
+}
 */
