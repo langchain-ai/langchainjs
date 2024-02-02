@@ -22,12 +22,14 @@ export interface DocumentInterface<
  * Interface for interacting with a document.
  */
 export class Document<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Metadata extends Record<string, any> = Record<string, any>
-> extends Serializable implements DocumentInput, DocumentInterface
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Metadata extends Record<string, any> = Record<string, any>
+  >
+  extends Serializable
+  implements DocumentInput, DocumentInterface
 {
   static lc_name(): string {
-    return "Document"
+    return "Document";
   }
 
   get lc_aliases(): Record<string, string> {
@@ -36,7 +38,7 @@ export class Document<
     };
   }
 
-  lc_namespace = ["langchain_core", "documents", "base"];
+  lc_namespace = ["langchain", "schema", "document"];
 
   pageContent: string;
 
