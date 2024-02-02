@@ -77,14 +77,15 @@ export interface RunnableInterface<
   ): AsyncGenerator<RunOutput>;
 }
 
+// TODO: Make `options` just take `RunnableConfig`
 export type RunnableFunc<RunInput, RunOutput> = (
   input: RunInput,
   options?:
-    | { config?: RunnableConfig }
+    | ({ config?: RunnableConfig } & RunnableConfig)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     | Record<string, any>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    | (Record<string, any> & { config: RunnableConfig })
+    | (Record<string, any> & { config: RunnableConfig } & RunnableConfig)
 ) => RunOutput | Promise<RunOutput>;
 
 export type RunnableMapLike<RunInput, RunOutput> = {
@@ -1659,7 +1660,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     config?: Partial<RunnableConfig>,
     runManager?: CallbackManagerForChainRun
   ) {
-    let output = await this.func(input, { config });
+    let output = await this.func(input, { ...config, config });
     if (output && Runnable.isRunnable(output)) {
       if (config?.recursionLimit === 0) {
         throw new Error("Recursion limit reached.");
@@ -1703,7 +1704,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
       }
     }
 
-    const output = await this.func(finalChunk, { config });
+    const output = await this.func(finalChunk, { ...config, config });
     if (output && Runnable.isRunnable(output)) {
       if (config?.recursionLimit === 0) {
         throw new Error("Recursion limit reached.");
