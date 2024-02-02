@@ -12,6 +12,7 @@
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-yandex/",
   "scripts": {
     "build": "yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rm -rf dist/tests dist/**/tests",
