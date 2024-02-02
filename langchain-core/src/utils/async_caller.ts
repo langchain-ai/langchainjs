@@ -115,9 +115,7 @@ export class AsyncCaller {
               if (error instanceof Error) {
                 throw error;
               } else {
-                const err = new Error(error.message);
-                err.name = error.code ?? "";
-                throw err;
+                throw new Error(error);
               }
             }),
           {
