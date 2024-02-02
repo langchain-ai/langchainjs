@@ -7,6 +7,7 @@ import {
   SystemMessagePromptTemplate,
   HumanMessagePromptTemplate,
 } from "../../prompts/chat.js";
+import type { Document } from "../../documents/document.js";
 import { concat } from "../../utils/stream.js";
 import {
   FakeLLM,
@@ -32,7 +33,7 @@ test("Create a runnable sequence with a runnable map", async () => {
     question: (input: string) => input,
     documents: RunnableSequence.from([
       new FakeRetriever(),
-      (docs: Document[]) => JSON.stringify(docs),
+      (docs: Document[]) => JSON.stringify(docs.map((doc) => doc.pageContent)),
     ]),
     extraField: new FakeLLM({}),
   };
@@ -42,7 +43,7 @@ test("Create a runnable sequence with a runnable map", async () => {
   const result = await runnable.invoke("Do you know the Muffin Man?");
   console.log(result);
   expect(result.content).toEqual(
-    `You are a nice assistant.\nContext:\n[{"pageContent":"foo","metadata":{}},{"pageContent":"bar","metadata":{}}]\n\nQuestion:\nDo you know the Muffin Man?`
+    `You are a nice assistant.\nContext:\n["foo","bar"]\n\nQuestion:\nDo you know the Muffin Man?`
   );
 });
 
