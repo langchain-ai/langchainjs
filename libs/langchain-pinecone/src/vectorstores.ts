@@ -203,7 +203,7 @@ export class PineconeStore extends VectorStore {
       throw new Error("cannot provide both `filter` and `this.filter`");
     }
     const _filter = filter ?? this.filter;
-  
+
     let optionsNamespace = this.namespace ?? "";
     if (_filter && "namespace" in _filter) {
       optionsNamespace = _filter.namespace;
