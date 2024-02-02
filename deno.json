@@ -8,6 +8,7 @@
     "@langchain/pinecone": "npm:@langchain/pinecone",
     "@pinecone-database/pinecone": "npm:@pinecone-database/pinecone",
     "zod": "npm:/zod",
-    "@langchain/anthropic": "npm:@langchain/anthropic"
+    "@langchain/anthropic": "npm:@langchain/anthropic",
+    "node-llama-cpp": "npm:/node-llama-cpp"
   }
 }
