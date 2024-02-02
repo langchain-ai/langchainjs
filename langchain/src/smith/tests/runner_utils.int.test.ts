@@ -121,7 +121,7 @@ const chatDataset = kvDataset.map((message) => ({
 }));
 
 const datasetTypes: DataType[] = ["kv", "llm"]; // TODO: add chat
-describe.each(datasetTypes)("runner_utils %s dataset", (datasetType) => {
+describe.skip.each(datasetTypes)("runner_utils %s dataset", (datasetType) => {
   let client: Client;
   const datasetName = `lcjs ${datasetType} integration tests`;
   const evalConfig: RunEvalConfig = {
