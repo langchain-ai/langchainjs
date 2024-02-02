@@ -1,9 +1,8 @@
 import { test, expect, jest } from "@jest/globals";
 import { SupabaseClient } from "@supabase/supabase-js";
 
+import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { SupabaseVectorStore } from "../supabase.js";
-
-import { FakeEmbeddings } from "../../utils/testing.js";
 
 test("similaritySearchVectorWithScore should call RPC with the vectorstore filters", async () => {
   const supabaseClientMock = {

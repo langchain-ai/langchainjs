@@ -13,7 +13,7 @@ import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
 import { Callbacks } from "@langchain/core/callbacks/manager";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
-import { FakeEmbeddings } from "../utils/testing.js";
+import { FakeEmbeddings } from "@langchain/core/utils/testing";
 
 /**
  * Interface for the arguments required to initialize a ZepVectorStore
