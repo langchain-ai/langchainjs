@@ -186,7 +186,7 @@ const generateImportMap = ({
       if (!newData.imports[path]) {
         newData.imports[path] = [];
       }
-      newData.imports[path] = newData.imports[path].concat(modules);
+      newData.imports[path] = [...new Set(newData.imports[path].concat(modules))];
       const exportAlias = alias.join("__");
       if (!newData.exportedAliases[exportAlias]) {
         newData.exportedAliases[exportAlias] = [];
