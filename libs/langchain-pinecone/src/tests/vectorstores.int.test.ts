@@ -17,6 +17,7 @@ function sleep(ms: number) {
 describe.skip("PineconeStore", () => {
   let pineconeStore: PineconeStore;
   const testIndexName = process.env.PINECONE_INDEX!;
+  let namespaces: string[] = [];
 
   beforeAll(async () => {
     const embeddings = new SyntheticEmbeddings({
@@ -37,7 +38,15 @@ describe.skip("PineconeStore", () => {
   });
 
   afterEach(async () => {
-    await pineconeStore.delete({ deleteAll: true });
+    if (namespaces.length) {
+      const delAllPromise = namespaces.map((namespace) =>
+        pineconeStore.delete({ deleteAll: true, namespace })
+      );
+      await Promise.all(delAllPromise);
+      namespaces = [];
+    } else {
+      await pineconeStore.delete({ deleteAll: true });
+    }
   });
 
   test("user-provided ids", async () => {
@@ -177,26 +186,26 @@ describe.skip("PineconeStore", () => {
     expect(results2.length).toEqual(0);
   });
 
-  test("query based on passed namespace", async () => {
+  test.only("query based on passed namespace", async () => {
     const pageContent = "Can we make namespaces work!";
     const id1 = uuid.v4();
     const id2 = uuid.v4();
-
+    namespaces = ["test-1", "test-2"];
     await pineconeStore.addDocuments(
       [{ pageContent, metadata: { foo: id1 } }],
       {
-        namespace: "test-1",
+        namespace: namespaces[0],
       }
     );
     await pineconeStore.addDocuments(
       [{ pageContent, metadata: { foo: id2 } }],
       {
-        namespace: "test-2",
+        namespace: namespaces[1],
       }
     );
     await sleep(35000);
     const results = await pineconeStore.similaritySearch(pageContent, 1, {
-      namespace: "test-1",
+      namespace: namespaces[0],
     });
 
     expect(results.length).toEqual(1);
