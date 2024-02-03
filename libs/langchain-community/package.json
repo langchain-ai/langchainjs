@@ -244,7 +244,7 @@
     "usearch": "^1.1.1",
     "vectordb": "^0.1.4",
     "voy-search": "0.6.2",
-    "weaviate-ts-client": "^1.4.0",
+    "weaviate-ts-client": "*",
     "web-auth-library": "^1.0.3",
     "ws": "^8.14.2"
   },
