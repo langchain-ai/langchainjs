@@ -1,6 +1,6 @@
 import { test, expect } from "@jest/globals";
 import { Document } from "@langchain/core/documents";
-import { FakeEmbeddings } from "../../utils/testing.js";
+import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { CloseVectorNode } from "../closevector/node.js";
 
 test("Test CloseVectorNode.fromTexts + addVectors", async () => {

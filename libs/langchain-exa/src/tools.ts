@@ -5,18 +5,19 @@ import Exa, { ContentsOptions, RegularSearchOptions } from "exa-js";
 /**
  * Options for the ExaSearchResults tool.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ExaSearchRetrieverFields<T extends ContentsOptions = any> =
-  ToolParams & {
-    client: Exa.default;
-    searchArgs?: RegularSearchOptions & T;
-  };
+export type ExaSearchRetrieverFields<
+  T extends ContentsOptions = { text: true }
+> = ToolParams & {
+  client: Exa.default;
+  searchArgs?: RegularSearchOptions & T;
+};
 
 /**
  * Tool for the Exa search API.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export class ExaSearchResults<T extends ContentsOptions = any> extends Tool {
+export class ExaSearchResults<
+  T extends ContentsOptions = { text: true }
+> extends Tool {
   static lc_name(): string {
     return "ExaSearchResults";
   }
@@ -47,8 +48,7 @@ export class ExaSearchResults<T extends ContentsOptions = any> extends Tool {
 }
 
 export class ExaFindSimilarResults<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends ContentsOptions = any
+  T extends ContentsOptions = { text: true }
 > extends Tool {
   static lc_name(): string {
     return "ExaFindSimilarResults";

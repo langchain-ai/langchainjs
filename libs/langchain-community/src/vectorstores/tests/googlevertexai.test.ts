@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { beforeEach, expect, test } from "@jest/globals";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
-import { SyntheticEmbeddings } from "../../utils/testing.js";
+import { SyntheticEmbeddings } from "@langchain/core/utils/testing";
 import { InMemoryDocstore } from "../../stores/doc/in_memory.js";
 import { MatchingEngineArgs, MatchingEngine } from "../googlevertexai.js";
 

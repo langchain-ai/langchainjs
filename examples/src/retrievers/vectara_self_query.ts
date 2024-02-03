@@ -4,7 +4,7 @@ import { SelfQueryRetriever } from "langchain/retrievers/self_query";
 import { OpenAI } from "@langchain/openai";
 import { VectaraStore } from "@langchain/community/vectorstores/vectara";
 import { VectaraTranslator } from "langchain/retrievers/self_query/vectara";
-import { FakeEmbeddings } from "langchain/embeddings/fake";
+import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { Document } from "@langchain/core/documents";
 
 /**
