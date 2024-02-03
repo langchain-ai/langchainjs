@@ -9235,6 +9235,7 @@ __metadata:
     "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
+    "@types/sax": ^1
     ansi-styles: ^5.0.0
     camelcase: 6
     decamelize: 1.2.0
@@ -9246,7 +9247,6 @@ __metadata:
     eslint-plugin-jest: ^27.6.0
     eslint-plugin-no-instanceof: ^1.0.1
     eslint-plugin-prettier: ^4.2.1
-    fast-xml-parser: ^4.3.4
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     js-tiktoken: ^1.0.8
@@ -9258,6 +9258,7 @@ __metadata:
     prettier: ^2.8.3
     release-it: ^15.10.1
     rimraf: ^5.0.1
+    sax: ^1.3.0
     turbo: latest
     typescript: ~5.1.6
     uuid: ^9.0.0
@@ -14334,6 +14335,15 @@ __metadata:
     "@types/glob": "*"
     "@types/node": "*"
   checksum: b47fa302f46434cba704d20465861ad250df79467d3d289f9d6490d3aeeb41e8cb32dd80bd1a8fd833d1e185ac719fbf9be12e05ad9ce9be094d8ee8f1405347
+  languageName: node
+  linkType: hard
+
+"@types/sax@npm:^1":
+  version: 1.2.7
+  resolution: "@types/sax@npm:1.2.7"
+  dependencies:
+    "@types/node": "*"
+  checksum: 7ece5fbb5d9c8fc76ab0de2f99d705edf92f18e701d4f9d9b0647275e32eb65e656c1badf9dfaa12f4e1ff3e250561c8c9cfe79e8b5f33dd1417ac0f1804f6cc
   languageName: node
   linkType: hard
 
@@ -21219,17 +21229,6 @@ __metadata:
   bin:
     fxparser: src/cli/cli.js
   checksum: d8b0c9e04756f6c43fa0399428f30149acadae21350e42e26e8fe98e24e6afa6b9b00aa554453795036b00e9fee974a1b556fe2ba18be391d51a9bf1ab790e7c
-  languageName: node
-  linkType: hard
-
-"fast-xml-parser@npm:^4.3.4":
-  version: 4.3.4
-  resolution: "fast-xml-parser@npm:4.3.4"
-  dependencies:
-    strnum: ^1.0.5
-  bin:
-    fxparser: src/cli/cli.js
-  checksum: ab88177343f6d3d971d53462db3011003a83eb8a8db704840127ddaaf27105ea90cdf7903a0f9b2e1279ccc4adfca8dfc0277b33bae6262406f10c16bd60ccf9
   languageName: node
   linkType: hard
 
@@ -31347,7 +31346,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sax@npm:^1.2.4":
+"sax@npm:^1.2.4, sax@npm:^1.3.0":
   version: 1.3.0
   resolution: "sax@npm:1.3.0"
   checksum: 238ab3a9ba8c8f8aaf1c5ea9120386391f6ee0af52f1a6a40bbb6df78241dd05d782f2359d614ac6aae08c4c4125208b456548a6cf68625aa4fe178486e63ecd

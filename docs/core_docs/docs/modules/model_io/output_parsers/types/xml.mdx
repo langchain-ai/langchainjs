@@ -2,12 +2,11 @@
 
 The `XMLOutputParser` takes language model output which contains XML and parses it into a JSON object.
 
-The output parser currently does _not_ support streaming results.
+The output parser also supports streaming outputs.
 
 ## Usage
 
 import CodeBlock from "@theme/CodeBlock";
-import XMLExample from "@examples/prompts/xml_output_parser.ts";
 
 import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
 
@@ -17,4 +16,12 @@ import IntegrationInstallTooltip from "@mdx_components/integration_install_toolt
 npm install @langchain/core
 ```
 
+import XMLExample from "@examples/prompts/xml_output_parser.ts";
+
 <CodeBlock language="typescript">{XMLExample}</CodeBlock>
+
+## Streaming
+
+import XMLStreamingExample from "@examples/prompts/xml_output_parser_streaming.ts";
+
+<CodeBlock language="typescript">{XMLStreamingExample}</CodeBlock>

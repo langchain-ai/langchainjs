@@ -18,47 +18,50 @@ const XML_EXAMPLE = `<?xml version="1.0" encoding="UTF-8"?>
   </preferences>
 </userProfile>`;
 
-type MySchema = {
-  userProfile: {
-    userID: number;
-    name: string;
-    email: string;
-    roles: { role: string[] };
-    preferences: {
-      theme: string;
-      notifications: {
-        email: boolean;
-        sms: boolean;
-      };
-    };
-  };
-};
-
-// Pass in a generic type for the schema
-const parser = new XMLOutputParser<MySchema>();
+const parser = new XMLOutputParser();
 
 const result = await parser.invoke(XML_EXAMPLE);
 
 console.log(JSON.stringify(result, null, 2));
 /*
 {
-  "userProfile": {
-    "userID": 12345,
-    "name": "John Doe",
-    "email": "john.doe@example.com",
-    "roles": {
-      "role": [
-        "Admin",
-        "User"
+  "userProfile": [
+    {
+      "userID": "12345"
+    },
+    {
+      "name": "John Doe"
+    },
+    {
+      "email": "john.doe@example.com"
+    },
+    {
+      "roles": [
+        {
+          "role": "Admin"
+        },
+        {
+          "role": "User"
+        }
       ]
     },
-    "preferences": {
-      "theme": "Dark",
-      "notifications": {
-        "email": true,
-        "sms": false
-      }
+    {
+      "preferences": [
+        {
+          "theme": "Dark"
+        },
+        {
+          "notifications": [
+            {
+              "email": "true"
+            },
+            {
+              "sms": "false"
+            }
+          ]
+        }
+      ]
     }
-  }
+  ]
 }
 */

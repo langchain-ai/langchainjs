@@ -1,5 +1,7 @@
-import { XMLParser } from "fast-xml-parser";
-import { BaseOutputParser } from "./base.js";
+import sax, { SAXOptions } from "sax";
+import { BaseCumulativeTransformOutputParser } from "./transform.js";
+import { Operation, compare } from "../utils/json_patch.js";
+import { ChatGeneration, Generation } from "../outputs.js";
 
 export const XML_FORMAT_INSTRUCTIONS = `The output should be formatted as a XML file.
 1. Output should conform to the tags below. 
@@ -12,11 +14,11 @@ As an example, for the tags ["foo", "bar", "baz"]:
 3. String "<foo>\n   <tag>\n   </tag>\n</foo>" is a badly-formatted instance.
 
 Here are the output tags:
-\`\`\
+\`\`\`
 {tags}
 \`\`\``;
 
-export interface XMLOutputParserFields {
+export interface XMLOutputParserFields extends SAXOptions {
   /**
    * Optional list of tags that the output should conform to.
    * Only used in formatting of the prompt.
@@ -24,15 +26,22 @@ export interface XMLOutputParserFields {
   tags?: string[];
 }
 
-export class XMLOutputParser<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends Record<string, any> = Record<string, any>
-> extends BaseOutputParser<T> {
+export type Content = string | undefined | Array<{ [key: string]: Content }>;
+
+export type XMLResult = {
+  [key: string]: Content;
+};
+
+export class XMLOutputParser extends BaseCumulativeTransformOutputParser<XMLResult> {
   tags?: string[];
+
+  saxOptions?: SAXOptions;
 
   constructor(fields?: XMLOutputParserFields) {
     super();
-    this.tags = fields?.tags;
+    const { tags, ...saxOptions } = fields ?? {};
+    this.tags = tags;
+    this.saxOptions = saxOptions;
   }
 
   static lc_name() {
@@ -43,8 +52,27 @@ export class XMLOutputParser<
 
   lc_serializable = true;
 
-  async parse(text: string): Promise<T> {
-    return parseXMLMarkdown<T>(text);
+  protected _diff(
+    prev: unknown | undefined,
+    next: unknown
+  ): Operation[] | undefined {
+    if (!next) {
+      return undefined;
+    }
+    if (!prev) {
+      return [{ op: "replace", path: "", value: next }];
+    }
+    return compare(prev, next);
+  }
+
+  async parsePartialResult(
+    generations: ChatGeneration[] | Generation[]
+  ): Promise<XMLResult | undefined> {
+    return parseXMLMarkdown(generations[0].text, this.saxOptions);
+  }
+
+  async parse(text: string): Promise<XMLResult> {
+    return parseXMLMarkdown(text, this.saxOptions);
   }
 
   getFormatInstructions(): string {
@@ -55,24 +83,97 @@ export class XMLOutputParser<
   }
 }
 
-export function parseXMLMarkdown<
+const strip = (text: string) =>
+  text
+    .split("\n")
+    .map((line) => line.replace(/^\s+/, ""))
+    .join("\n");
+
+type ParsedResult = {
+  name: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends Record<string, any> = Record<string, any>
->(s: string) {
-  const parser = new XMLParser();
-  const newString = s.trim();
-  // Try to find XML string within triple backticks.
-  const match = /```(xml)?(.*)```/s.exec(newString);
-  let parsedResult: T;
-  if (!match) {
-    // If match found, use the content within the backticks
-    parsedResult = parser.parse(newString);
+  attributes: Record<string, any>;
+  children: Array<ParsedResult>;
+  text?: string;
+  isSelfClosing: boolean;
+};
+
+const parseParsedResult = (input: ParsedResult): XMLResult => {
+  if (Object.keys(input).length === 0) {
+    return {};
+  }
+  const result: XMLResult = {};
+  if (input.children.length > 0) {
+    result[input.name] = input.children.map(parseParsedResult);
+    return result;
   } else {
-    parsedResult = parser.parse(match[2]);
+    result[input.name] = input.text ?? undefined;
+    return result;
+  }
+};
+
+export function parseXMLMarkdown(
+  s: string,
+  saxOptions?: SAXOptions
+): XMLResult {
+  const cleanedString = strip(s);
+  const parser = sax.parser(true, saxOptions);
+  let parsedResult: ParsedResult = {} as ParsedResult;
+  const elementStack: ParsedResult[] = [];
+
+  parser.onopentag = (node) => {
+    const element = {
+      name: node.name,
+      attributes: node.attributes,
+      children: [],
+      text: "",
+      isSelfClosing: node.isSelfClosing,
+    };
+
+    if (elementStack.length > 0) {
+      const parentElement = elementStack[elementStack.length - 1];
+      parentElement.children.push(element);
+    } else {
+      parsedResult = element as ParsedResult;
+    }
+
+    if (!node.isSelfClosing) {
+      elementStack.push(element);
+    }
+  };
+
+  parser.onclosetag = () => {
+    if (elementStack.length > 0) {
+      const lastElement = elementStack.pop();
+      if (elementStack.length === 0 && lastElement) {
+        parsedResult = lastElement as ParsedResult;
+      }
+    }
+  };
+
+  parser.ontext = (text) => {
+    if (elementStack.length > 0) {
+      const currentElement = elementStack[elementStack.length - 1];
+      currentElement.text += text;
+    }
+  };
+
+  parser.onattribute = (attr) => {
+    if (elementStack.length > 0) {
+      const currentElement = elementStack[elementStack.length - 1];
+      currentElement.attributes[attr.name] = attr.value;
+    }
+  };
+
+  // Try to find XML string within triple backticks.
+  const match = /```(xml)?(.*)```/s.exec(cleanedString.trim());
+  const xmlString = match ? match[2] : cleanedString.trim();
+  parser.write(xmlString).close();
+
+  // Remove the XML declaration if present
+  if (parsedResult && parsedResult.name === "?xml") {
+    parsedResult = parsedResult.children[0] as ParsedResult;
   }
 
-  if (parsedResult && "?xml" in parsedResult) {
-    delete parsedResult["?xml"];
-  }
-  return parsedResult;
+  return parseParsedResult(parsedResult);
 }
