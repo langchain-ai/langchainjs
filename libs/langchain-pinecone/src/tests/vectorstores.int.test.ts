@@ -43,10 +43,10 @@ describe.skip("PineconeStore", () => {
         pineconeStore.delete({ deleteAll: true, namespace })
       );
       await Promise.all(delAllPromise);
-      namespaces = [];
     } else {
       await pineconeStore.delete({ deleteAll: true });
     }
+    namespaces = [];
   });
 
   test("user-provided ids", async () => {
@@ -186,7 +186,7 @@ describe.skip("PineconeStore", () => {
     expect(results2.length).toEqual(0);
   });
 
-  test.only("query based on passed namespace", async () => {
+  test("query based on passed namespace", async () => {
     const pageContent = "Can we make namespaces work!";
     const id1 = uuid.v4();
     const id2 = uuid.v4();
@@ -207,7 +207,6 @@ describe.skip("PineconeStore", () => {
     const results = await pineconeStore.similaritySearch(pageContent, 1, {
       namespace: namespaces[0],
     });
-
     expect(results.length).toEqual(1);
     expect(results[0].metadata.foo).toBe(id1);
   });
