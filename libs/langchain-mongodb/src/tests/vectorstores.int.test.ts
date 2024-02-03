@@ -4,7 +4,7 @@
 import { test, expect } from "@jest/globals";
 import { MongoClient } from "mongodb";
 import { setTimeout } from "timers/promises";
-import { OpenAIEmbeddings } from "@langchain/openai";
+import { SyntheticEmbeddings } from "@langchain/core/utils/testing";
 import { Document } from "@langchain/core/documents";
 
 import { MongoDBAtlasVectorSearch } from "../vectorstores.js";
@@ -27,7 +27,7 @@ import { MongoDBAtlasVectorSearch } from "../vectorstores.js";
 }
 */
 
-test.skip("MongoDBAtlasVectorSearch with external ids", async () => {
+test("MongoDBAtlasVectorSearch with external ids", async () => {
   expect(process.env.MONGODB_ATLAS_URI).toBeDefined();
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -38,9 +38,12 @@ test.skip("MongoDBAtlasVectorSearch with external ids", async () => {
     const [dbName, collectionName] = namespace.split(".");
     const collection = client.db(dbName).collection(collectionName);
 
-    const vectorStore = new MongoDBAtlasVectorSearch(new OpenAIEmbeddings(), {
-      collection,
-    });
+    const vectorStore = new MongoDBAtlasVectorSearch(
+      new SyntheticEmbeddings({ vectorSize: 1536 }),
+      {
+        collection,
+      }
+    );
 
     expect(vectorStore).toBeDefined();
 
@@ -104,11 +107,8 @@ test.skip("MongoDBAtlasVectorSearch with external ids", async () => {
   }
 });
 
-test.skip("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () => {
+test("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () => {
   expect(process.env.MONGODB_ATLAS_URI).toBeDefined();
-  expect(
-    process.env.OPENAI_API_KEY || process.env.AZURE_OPENAI_API_KEY
-  ).toBeDefined();
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const client = new MongoClient(process.env.MONGODB_ATLAS_URI!);
@@ -123,7 +123,7 @@ test.skip("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () =
     const vectorStore = await MongoDBAtlasVectorSearch.fromTexts(
       texts,
       {},
-      new OpenAIEmbeddings(),
+      new SyntheticEmbeddings({ vectorSize: 1536 }),
       { collection, indexName: "default" }
     );
 
@@ -176,7 +176,7 @@ test.skip("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () =
   }
 });
 
-test.skip("MongoDBAtlasVectorSearch upsert", async () => {
+test("MongoDBAtlasVectorSearch upsert", async () => {
   expect(process.env.MONGODB_ATLAS_URI).toBeDefined();
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -187,9 +187,12 @@ test.skip("MongoDBAtlasVectorSearch upsert", async () => {
     const [dbName, collectionName] = namespace.split(".");
     const collection = client.db(dbName).collection(collectionName);
 
-    const vectorStore = new MongoDBAtlasVectorSearch(new OpenAIEmbeddings(), {
-      collection,
-    });
+    const vectorStore = new MongoDBAtlasVectorSearch(
+      new SyntheticEmbeddings({ vectorSize: 1536 }),
+      {
+        collection,
+      }
+    );
 
     expect(vectorStore).toBeDefined();
 

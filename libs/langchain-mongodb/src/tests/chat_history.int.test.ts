@@ -12,7 +12,7 @@ afterAll(async () => {
   await client.close();
 });
 
-test.skip("Test MongoDB history store", async () => {
+test("Test MongoDB history store", async () => {
   expect(process.env.MONGODB_ATLAS_URI).toBeDefined();
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -43,7 +43,7 @@ test.skip("Test MongoDB history store", async () => {
   await client.close();
 });
 
-test.skip("Test clear MongoDB history store", async () => {
+test("Test clear MongoDB history store", async () => {
   expect(process.env.MONGODB_ATLAS_URI).toBeDefined();
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
