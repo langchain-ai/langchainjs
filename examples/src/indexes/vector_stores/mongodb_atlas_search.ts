@@ -1,4 +1,4 @@
-import { MongoDBAtlasVectorSearch } from "@langchain/community/vectorstores/mongodb_atlas";
+import { MongoDBAtlasVectorSearch } from "@langchain/mongodb";
 import { CohereEmbeddings } from "@langchain/cohere";
 import { MongoClient } from "mongodb";
 

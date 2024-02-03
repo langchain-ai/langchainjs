@@ -1,5 +1,5 @@
 {
-  "name": "langchain-mongodb",
+  "name": "@langchain/mongodb",
   "version": "0.0.0",
   "description": "Sample integration for LangChain.js",
   "type": "module",

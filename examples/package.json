@@ -38,6 +38,7 @@
     "@langchain/exa": "workspace:*",
     "@langchain/google-genai": "workspace:*",
     "@langchain/mistralai": "workspace:*",
+    "@langchain/mongodb": "workspace:*",
     "@langchain/openai": "workspace:*",
     "@langchain/pinecone": "workspace:*",
     "@langchain/weaviate": "workspace:*",
