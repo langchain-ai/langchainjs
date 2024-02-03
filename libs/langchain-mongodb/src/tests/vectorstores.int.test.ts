@@ -7,7 +7,7 @@ import { setTimeout } from "timers/promises";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
 
-import { MongoDBAtlasVectorSearch } from "../mongodb_atlas.js";
+import { MongoDBAtlasVectorSearch } from "../vectorstores.js";
 
 /**
  * The following json can be used to create an index in atlas for Cohere embeddings.
