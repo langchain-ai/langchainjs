@@ -7,7 +7,7 @@ import {
   BaseCallbackConfig,
   Callbacks,
 } from "@langchain/core/callbacks/manager";
-import { FakeEmbeddings } from "../utils/testing.js";
+import { FakeEmbeddings } from "@langchain/core/utils/testing";
 
 /**
  * Interface for the arguments required to initialize a VectaraStore
