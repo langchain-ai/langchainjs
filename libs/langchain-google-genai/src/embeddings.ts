@@ -144,7 +144,7 @@ export class GoogleGenerativeAIEmbeddings
       if (res.status === 'fulfilled') {
         return res.value.embeddings.map(e => e.values || [])
       } else {
-        return Array(batchEmbedChunks[idx].length).fill(null)
+        return Array(batchEmbedChunks[idx].length).fill([])
       }
     })
 
