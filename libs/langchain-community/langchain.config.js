@@ -151,6 +151,7 @@ export const config = {
     "chat_models/minimax": "chat_models/minimax",
     "chat_models/ollama": "chat_models/ollama",
     "chat_models/portkey": "chat_models/portkey",
+    "chat_models/togetherai": "chat_models/togetherai",
     "chat_models/yandex": "chat_models/yandex",
     // callbacks
     "callbacks/handlers/llmonitor": "callbacks/handlers/llmonitor",
@@ -175,7 +176,6 @@ export const config = {
     // graphs
     "graphs/neo4j_graph": "graphs/neo4j_graph",
     "graphs/memgraph_graph": "graphs/memgraph_graph",
-    "utils/event_source_parse": "utils/event_source_parse",
     // document transformers
     "document_transformers/html_to_text": "document_transformers/html_to_text",
     "document_transformers/mozilla_readability":
@@ -205,11 +205,14 @@ export const config = {
     "memory/chat_memory": "memory/chat_memory",
     "memory/motorhead_memory": "memory/motorhead_memory",
     "memory/zep": "memory/zep",
-    "util/convex": "utils/convex",
     // indexes
     "indexes/base": "indexes/base",
     "indexes/postgres": "indexes/postgres",
     "indexes/memory": "indexes/memory",
+    // utils
+    "util/convex": "utils/convex",
+    "utils/event_source_parse": "utils/event_source_parse",
+    "utils/cassandra": "utils/cassandra",
   },
   requiresOptionalDependency: [
     "tools/aws_sfn",

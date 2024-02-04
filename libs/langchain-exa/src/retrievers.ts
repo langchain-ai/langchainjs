@@ -13,18 +13,17 @@ import { Document } from "@langchain/core/documents";
  * `ExaRetriever` instance. It extends the `BaseRetrieverInput`
  * interface and adds a `client` field of type `Exa`.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export interface ExaRetrieverFields<T extends ContentsOptions = any>
+export interface ExaRetrieverFields<T extends ContentsOptions = { text: true }>
   extends BaseRetrieverInput {
   client: Exa.default;
   searchArgs?: RegularSearchOptions & T;
 }
 
-export function _getMetadata(result: SearchResult): Record<string, unknown> {
-  const newMetadata = result;
-  if ("text" in newMetadata) {
-    delete newMetadata.text;
-  }
+export function _getMetadata<T extends ContentsOptions = { text: true }>(
+  result: SearchResult<T>
+): Record<string, unknown> {
+  const newMetadata: Record<string, unknown> = { ...result };
+  delete newMetadata.text;
   return newMetadata;
 }
 
@@ -41,8 +40,7 @@ export function _getMetadata(result: SearchResult): Record<string, unknown> {
  * ```
  */
 export class ExaRetriever<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends ContentsOptions = any
+  T extends ContentsOptions = { text: true }
 > extends BaseRetriever {
   static lc_name() {
     return "ExaRetriever";
@@ -69,10 +67,19 @@ export class ExaRetriever<
 
     const documents: Document[] = [];
     for (const result of res.results) {
+      let pageContent;
+      if ("text" in result) {
+        pageContent = result.text;
+      } else if ("highlights" in result) {
+        pageContent = result.highlights.join("\n\n");
+      } else {
+        pageContent = "No results found.";
+      }
+
       documents.push(
         new Document({
-          pageContent: "text" in result ? result.text : "",
-          metadata: _getMetadata(result),
+          pageContent,
+          metadata: _getMetadata<T>(result),
         })
       );
     }
