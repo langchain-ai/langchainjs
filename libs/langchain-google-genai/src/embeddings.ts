@@ -129,7 +129,7 @@ export class GoogleGenerativeAIEmbeddings
   protected async _embedDocumentsContent(
     documents: string[]
   ): Promise<number[][]> {
-    const batchEmbedChunks = [];
+    const batchEmbedChunks: string[][] = [];
     for (let i = 0; i < documents.length; i += this.maxBatchSize) {
       batchEmbedChunks.push(documents.slice(i, i + this.maxBatchSize));
     };
@@ -140,15 +140,14 @@ export class GoogleGenerativeAIEmbeddings
 
     const responses = await Promise.allSettled(batchEmbedRequests.map((req) => this.client.batchEmbedContents(req)));
 
-    const embeddings = []
-    for (const [idx, res] of responses.entries()) {
-      if (res.status === "fulfilled") {
-        embeddings.push(...res.value.embeddings.map((e) => e.values || []));
+    const embeddings = responses.flatMap((res, idx) => {
+      if (res.status === 'fulfilled') {
+        return res.value.embeddings.map(e => e.values || [])
       } else {
-        // if request fails, push empty array equal to length of request
-        Array(batchEmbedChunks[idx].length).forEach(() => embeddings.push([]));
+        return Array(batchEmbedChunks[idx].length).fill(null)
       }
-    }
+    })
+
     return embeddings;
   }
 
