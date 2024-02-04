@@ -76,7 +76,7 @@ export class GoogleGenerativeAIEmbeddings
 
   stripNewLines = true;
 
-  maxBatchSize = 100;
+  maxBatchSize = 100; // Max batch size for embedDocuments set by GenerativeModel client's batchEmbedContents call
 
   private client: GenerativeModel;
 
@@ -145,9 +145,9 @@ export class GoogleGenerativeAIEmbeddings
       if (res.status === "fulfilled") {
         embeddings.push(...res.value.embeddings.map((e) => e.values || []));
       } else {
-        // if the last request fails, push empty array equal to modulo of maxBatchSize
-        if (idx === (batchEmbedRequests.length - 1)) {
-          Array(batchEmbedRequests.length % this.maxBatchSize).forEach(() => embeddings.push([]));
+        // if the last request fails, push empty array equal to length of last request
+        if (idx === batchEmbedRequests.length - 1) {
+          Array(batchEmbedRequests[batchEmbedRequests.length - 1].requests.length).forEach(() => embeddings.push([]));
         }
         // if request fails push, maxBatchSize number of empty arrays
         else {
