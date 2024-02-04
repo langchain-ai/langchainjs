@@ -145,14 +145,8 @@ export class GoogleGenerativeAIEmbeddings
       if (res.status === "fulfilled") {
         embeddings.push(...res.value.embeddings.map((e) => e.values || []));
       } else {
-        // if the last request fails, push empty array equal to length of last request
-        if (idx === batchEmbedRequests.length - 1) {
-          Array(batchEmbedRequests[batchEmbedRequests.length - 1].requests.length).forEach(() => embeddings.push([]));
-        }
-        // if request fails push, maxBatchSize number of empty arrays
-        else {
-          Array(this.maxBatchSize).forEach(() => embeddings.push([]));
-        }
+        // if request fails, push empty array equal to length of request
+        Array(batchEmbedChunks[idx].length).forEach(() => embeddings.push([]));
       }
     }
     return embeddings;
