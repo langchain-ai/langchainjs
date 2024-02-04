@@ -76,6 +76,8 @@ export class GoogleGenerativeAIEmbeddings
 
   stripNewLines = true;
 
+  maxBatchSize = 100;
+
   private client: GenerativeModel;
 
   constructor(fields?: GoogleGenerativeAIEmbeddingsParams) {
@@ -127,11 +129,33 @@ export class GoogleGenerativeAIEmbeddings
   protected async _embedDocumentsContent(
     documents: string[]
   ): Promise<number[][]> {
-    const req = {
-      requests: documents.map((doc) => this._convertToContent(doc)),
+    const batchEmbedChunks = [];
+    for (let i = 0; i < documents.length; i += this.maxBatchSize) {
+      batchEmbedChunks.push(documents.slice(i, i + this.maxBatchSize));
     };
-    const res = await this.client.batchEmbedContents(req);
-    return res.embeddings.map((e) => e.values || []) ?? [];
+
+    const batchEmbedRequests = batchEmbedChunks.map((chunk) => ({
+      requests: chunk.map((doc) => this._convertToContent(doc)),
+    }));
+
+    const responses = await Promise.allSettled(batchEmbedRequests.map((req) => this.client.batchEmbedContents(req)));
+
+    const embeddings = []
+    for (const [idx, res] of responses.entries()) {
+      if (res.status === "fulfilled") {
+        embeddings.push(...res.value.embeddings.map((e) => e.values || []));
+      } else {
+        // if the last request fails, push empty array equal to modulo of maxBatchSize
+        if (idx === (batchEmbedRequests.length - 1)) {
+          Array(batchEmbedRequests.length % this.maxBatchSize).forEach(() => embeddings.push([]));
+        }
+        // if request fails push, maxBatchSize number of empty arrays
+        else {
+          Array(this.maxBatchSize).forEach(() => embeddings.push([]));
+        }
+      }
+    }
+    return embeddings;
   }
 
   /**
