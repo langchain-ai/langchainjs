@@ -2,6 +2,7 @@ import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
 import type { TaskType, EmbedContentRequest } from "@google/generative-ai";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
+import { chunkArray } from "@langchain/core/utils/chunk_array";
 
 /**
  * Interface that extends EmbeddingsParams and defines additional
@@ -129,10 +130,7 @@ export class GoogleGenerativeAIEmbeddings
   protected async _embedDocumentsContent(
     documents: string[]
   ): Promise<number[][]> {
-    const batchEmbedChunks: string[][] = [];
-    for (let i = 0; i < documents.length; i += this.maxBatchSize) {
-      batchEmbedChunks.push(documents.slice(i, i + this.maxBatchSize));
-    };
+    const batchEmbedChunks: string[][] = chunkArray<string>(documents, this.maxBatchSize)
 
     const batchEmbedRequests = batchEmbedChunks.map((chunk) => ({
       requests: chunk.map((doc) => this._convertToContent(doc)),
