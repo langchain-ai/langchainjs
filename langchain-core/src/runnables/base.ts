@@ -77,14 +77,15 @@ export interface RunnableInterface<
   ): AsyncGenerator<RunOutput>;
 }
 
+// TODO: Make `options` just take `RunnableConfig`
 export type RunnableFunc<RunInput, RunOutput> = (
   input: RunInput,
   options?:
-    | { config?: RunnableConfig }
+    | ({ config?: RunnableConfig } & RunnableConfig)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     | Record<string, any>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    | (Record<string, any> & { config: RunnableConfig })
+    | (Record<string, any> & { config: RunnableConfig } & RunnableConfig)
 ) => RunOutput | Promise<RunOutput>;
 
 export type RunnableMapLike<RunInput, RunOutput> = {
@@ -640,9 +641,10 @@ export abstract class Runnable<
       copiedCallbacks.inheritableHandlers.push(stream);
       config.callbacks = copiedCallbacks;
     }
-    const runnableStream = await this.stream(input, config);
+    const runnableStreamPromise = this.stream(input, config);
     async function consumeRunnableStream() {
       try {
+        const runnableStream = await runnableStreamPromise;
         for await (const chunk of runnableStream) {
           const patch = new RunLogPatch({
             ops: [
@@ -659,13 +661,13 @@ export abstract class Runnable<
         await stream.writer.close();
       }
     }
-    const runnableStreamPromise = consumeRunnableStream();
+    const runnableStreamConsumePromise = consumeRunnableStream();
     try {
       for await (const log of stream) {
         yield log;
       }
     } finally {
-      await runnableStreamPromise;
+      await runnableStreamConsumePromise;
     }
   }
 
@@ -1658,7 +1660,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     config?: Partial<RunnableConfig>,
     runManager?: CallbackManagerForChainRun
   ) {
-    let output = await this.func(input, { config });
+    let output = await this.func(input, { ...config, config });
     if (output && Runnable.isRunnable(output)) {
       if (config?.recursionLimit === 0) {
         throw new Error("Recursion limit reached.");
@@ -1702,7 +1704,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
       }
     }
 
-    const output = await this.func(finalChunk, { config });
+    const output = await this.func(finalChunk, { ...config, config });
     if (output && Runnable.isRunnable(output)) {
       if (config?.recursionLimit === 0) {
         throw new Error("Recursion limit reached.");

@@ -1,5 +1,5 @@
 /* eslint-disable spaced-comment */
-import { PromptTemplate } from "@langchain/core/prompts";
+import { BasePromptTemplate, PromptTemplate } from "@langchain/core/prompts";
 
 export const DEFAULT_SQL_DATABASE_PROMPT = /*#__PURE__*/ new PromptTemplate({
   template: `Given an input question, first create a syntactically correct {dialect} query to run, then look at the results of the query and return the answer. Unless the user specifies in his question a specific number of examples he wishes to obtain, always limit your query to at most {top_k} results. You can order the results by a relevant column to return the most interesting examples in the database.
@@ -143,3 +143,20 @@ Only use the following tables:
 Question: {input}`,
   inputVariables: ["dialect", "table_info", "input", "top_k"],
 });
+
+export type SqlDialect =
+  | "oracle"
+  | "postgres"
+  | "sqlite"
+  | "mysql"
+  | "mssql"
+  | "sap hana";
+
+export const SQL_PROMPTS_MAP: Record<SqlDialect, BasePromptTemplate> = {
+  oracle: SQL_ORACLE_PROMPT,
+  postgres: SQL_POSTGRES_PROMPT,
+  sqlite: SQL_SQLITE_PROMPT,
+  mysql: SQL_MYSQL_PROMPT,
+  mssql: SQL_MSSQL_PROMPT,
+  "sap hana": SQL_SAP_HANA_PROMPT,
+};

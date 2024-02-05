@@ -177,14 +177,14 @@ export class ChatCohere<
     // The last message in the array is the most recent, all other messages
     // are apart of the chat history.
     const { message } = cohereMessages[cohereMessages.length - 1];
-    const chat_history: Cohere.ChatMessage[] = [];
+    const chatHistory: Cohere.ChatMessage[] = [];
     if (cohereMessages.length > 1) {
-      chat_history.concat(cohereMessages.slice(0, -1));
+      chatHistory.push(...cohereMessages.slice(0, -1));
     }
     const input = {
       ...params,
       message,
-      chat_history,
+      chatHistory,
     };
 
     // Handle streaming
@@ -274,14 +274,14 @@ export class ChatCohere<
     // The last message in the array is the most recent, all other messages
     // are apart of the chat history.
     const { message } = cohereMessages[cohereMessages.length - 1];
-    const chat_history: Cohere.ChatMessage[] = [];
+    const chatHistory: Cohere.ChatMessage[] = [];
     if (cohereMessages.length > 1) {
-      chat_history.concat(cohereMessages.slice(0, -1));
+      chatHistory.push(...cohereMessages.slice(0, -1));
     }
     const input = {
       ...params,
       message,
-      chat_history,
+      chatHistory,
     };
 
     // All models have a built in `this.caller` property for retries

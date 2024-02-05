@@ -764,6 +764,26 @@ export const config = {
     },
     {
       modules: [
+        "AIMessage",
+        "AIMessageChunk",
+        "BaseMessage",
+        "BaseMessageChunk",
+        "ChatMessage",
+        "ChatMessageChunk",
+        "FunctionMessage",
+        "FunctionMessageChunk",
+        "HumanMessage",
+        "HumanMessageChunk",
+        "SystemMessage",
+        "SystemMessageChunk",
+        "ToolMessage",
+        "ToolMessageChunk",
+      ],
+      alias: ["schema"],
+      path: "@langchain/core/messages",
+    },
+    {
+      modules: [
         "AIMessagePromptTemplate",
         "ChatMessagePromptTemplate",
         "ChatPromptTemplate",

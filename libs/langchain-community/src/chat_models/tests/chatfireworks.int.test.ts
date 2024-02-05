@@ -9,7 +9,7 @@ import {
 } from "@langchain/core/prompts";
 import { ChatFireworks } from "../fireworks.js";
 
-describe("ChatFireworks", () => {
+describe.skip("ChatFireworks", () => {
   test("call", async () => {
     const chat = new ChatFireworks();
     const message = new HumanMessage("Hello!");

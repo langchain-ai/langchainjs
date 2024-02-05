@@ -1,5 +1,5 @@
 import { test, expect } from "@jest/globals";
-import { SyntheticEmbeddings } from "../fake.js";
+import { SyntheticEmbeddings } from "@langchain/core/utils/testing";
 
 test("Synthetic basic", async () => {
   const embed = new SyntheticEmbeddings({ vectorSize: 5 });

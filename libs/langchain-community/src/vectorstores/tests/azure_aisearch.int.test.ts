@@ -5,7 +5,7 @@ import { setTimeout } from "timers/promises";
 import { SearchIndexClient, AzureKeyCredential } from "@azure/search-documents";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
-import { FakeEmbeddings } from "../../utils/testing.js";
+import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import {
   AzureAISearchVectorStore,
   AzureAISearchQueryType,
