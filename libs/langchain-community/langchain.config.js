@@ -9,9 +9,8 @@ function abs(relativePath) {
   return resolve(dirname(fileURLToPath(import.meta.url)), relativePath);
 }
 
-
 export const config = {
-  internals:[
+  internals: [
     /node\:/,
     /@langchain\/core\//,
     "convex",
@@ -161,6 +160,7 @@ export const config = {
     "retrievers/amazon_knowledge_base": "retrievers/amazon_knowledge_base",
     "retrievers/chaindesk": "retrievers/chaindesk",
     "retrievers/databerry": "retrievers/databerry",
+    "retrievers/dria": "retrievers/dria",
     "retrievers/metal": "retrievers/metal",
     "retrievers/remote": "retrievers/remote/index",
     "retrievers/supabase": "retrievers/supabase",
@@ -298,6 +298,7 @@ export const config = {
     "chat_models/iflytek_xinghuo/web",
     "retrievers/amazon_kendra",
     "retrievers/amazon_knowledge_base",
+    "retrievers/dria",
     "retrievers/metal",
     "retrievers/supabase",
     "retrievers/vectara_summary",
@@ -340,4 +341,4 @@ export const config = {
   cjsSource: "./dist-cjs",
   cjsDestination: "./dist",
   abs,
-}
+};
