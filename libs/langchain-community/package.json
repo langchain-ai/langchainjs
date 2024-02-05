@@ -1645,6 +1645,15 @@
       "import": "./retrievers/databerry.js",
       "require": "./retrievers/databerry.cjs"
     },
+    "./retrievers/dria": {
+      "types": {
+        "import": "./retrievers/dria.d.ts",
+        "require": "./retrievers/dria.d.cts",
+        "default": "./retrievers/dria.d.ts"
+      },
+      "import": "./retrievers/dria.js",
+      "require": "./retrievers/dria.cjs"
+    },
     "./retrievers/metal": {
       "types": {
         "import": "./retrievers/metal.d.ts",
@@ -2544,6 +2553,10 @@
     "retrievers/databerry.js",
     "retrievers/databerry.d.ts",
     "retrievers/databerry.d.cts",
+    "retrievers/dria.cjs",
+    "retrievers/dria.js",
+    "retrievers/dria.d.ts",
+    "retrievers/dria.d.cts",
     "retrievers/metal.cjs",
     "retrievers/metal.js",
     "retrievers/metal.d.ts",
