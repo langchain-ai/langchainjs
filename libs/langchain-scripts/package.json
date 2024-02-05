@@ -1,6 +1,6 @@
 {
   "name": "@langchain/scripts",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Shared scripts for LangChain.js",
   "type": "module",
   "engines": {
@@ -12,6 +12,7 @@
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-scripts/",
   "bin": {
     "lc-build": "./build.js"
   },

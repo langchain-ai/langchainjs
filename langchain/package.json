@@ -1175,6 +1175,7 @@
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/langchain/",
   "scripts": {
     "build": "yarn run build:deps && yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
     "build:deps": "yarn run turbo:command build --filter=@langchain/core --filter=@langchain/anthropic --filter=@langchain/openai --filter=@langchain/community --concurrency=1",
@@ -1187,7 +1188,7 @@
     "lint": "yarn lint:eslint && yarn lint:dpdm",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
     "precommit": "lint-staged",
-    "clean": "rimraf .turbo/ dist/ && NODE_OPTIONS=--max-old-space-size=4096 yarn create-entrypoints -- --pre --gen-maps",
+    "clean": "rimraf .turbo/ dist/ && NODE_OPTIONS=--max-old-space-size=4096 yarn lc-build --config ./langchain.config.js --create-entrypoints --pre --gen-maps",
     "prepack": "yarn build",
     "release": "release-it --only-version --config .release-it.json",
     "test": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",

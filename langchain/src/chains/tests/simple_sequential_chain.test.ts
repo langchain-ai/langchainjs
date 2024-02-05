@@ -3,11 +3,11 @@ import { BaseLLM } from "@langchain/core/language_models/llms";
 import { LLMResult } from "@langchain/core/outputs";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { VectorStoreRetriever } from "@langchain/core/vectorstores";
+import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { LLMChain } from "../llm_chain.js";
 import { SimpleSequentialChain } from "../sequential_chain.js";
 import { AnalyzeDocumentChain } from "../analyze_documents_chain.js";
 import { ConversationalRetrievalQAChain } from "../conversational_retrieval_chain.js";
-import { FakeEmbeddings } from "../../embeddings/fake.js";
 import { MemoryVectorStore } from "../../vectorstores/memory.js";
 
 class FakeLLM1 extends BaseLLM {
