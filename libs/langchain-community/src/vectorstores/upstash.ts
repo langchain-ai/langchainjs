@@ -3,8 +3,16 @@ import { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Index as UpstashIndex } from "@upstash/vector";
 import { Document } from "@langchain/core/documents";
+import { chunkArray } from "@langchain/core/utils/chunk_array";
+import {
+  AsyncCaller,
+  AsyncCallerParams,
+} from "@langchain/core/utils/async_caller";
 
-export interface UpstashVectorLibArgs {
+/**
+ * This interface defines the arguments for the UpstashVectorStore class.
+ */
+export interface UpstashVectorLibArgs extends AsyncCallerParams {
   index: UpstashIndex;
 }
 
@@ -21,9 +29,11 @@ export type UpstashQueryMetadata = UpstashMetadata & { documentContentLC: any };
 export type UpstashDeleteParams =
   | {
       ids: string | string[];
+      deleteAll?: never;
     }
-  | { deleteAll: boolean };
+  | { deleteAll: boolean; ids?: never };
 
+const CONCURRENT_UPSERT_LIMIT = 1000;
 /**
  * The main class that extends the 'VectorStore' class. It provides
  * methods for interacting with Upstash index, such as adding documents,
@@ -31,6 +41,8 @@ export type UpstashDeleteParams =
  */
 export class UpstashVectorStore extends VectorStore {
   index: UpstashIndex;
+
+  caller: AsyncCaller;
 
   _vectorstoreType(): string {
     return "upstash";
@@ -41,9 +53,10 @@ export class UpstashVectorStore extends VectorStore {
 
     this.embeddings = embeddings;
 
-    const { index } = args;
+    const { index, ...asyncCallerArgs } = args;
 
     this.index = index;
+    this.caller = new AsyncCaller(asyncCallerArgs);
   }
 
   /**
@@ -91,7 +104,13 @@ export class UpstashVectorStore extends VectorStore {
       };
     });
 
-    await this.index.upsert(upstashVectors);
+    const vectorChunks = chunkArray(upstashVectors, CONCURRENT_UPSERT_LIMIT);
+
+    const batchRequests = vectorChunks.map((chunk) =>
+      this.caller.call(async () => this.index.upsert(chunk))
+    );
+
+    await Promise.all(batchRequests);
 
     return documentIds;
   }
@@ -103,9 +122,9 @@ export class UpstashVectorStore extends VectorStore {
    * @returns Promise that resolves when the specified documents have been deleted from the database.
    */
   async delete(params: UpstashDeleteParams): Promise<void> {
-    if ("deleteAll" in params && params.deleteAll) {
+    if (params.deleteAll) {
       await this.index.reset();
-    } else if ("ids" in params) {
+    } else if (params.ids) {
       await this.index.delete(params.ids);
     } else {
       throw new Error(

@@ -11,11 +11,13 @@ describe("UpstashVectorStore", () => {
 
   beforeEach(async () => {
     index = new Index({
-      url: process.env.UPSTASH_VECTOR_REST_URL as string,
-      token: process.env.UPSTASH_VECTOR_REST_TOKEN as string,
+      url: process.env.UPSTASH_VECTOR_REST_URL,
+      token: process.env.UPSTASH_VECTOR_REST_TOKEN,
     });
 
-    embeddings = new OpenAIEmbeddings();
+    embeddings = new OpenAIEmbeddings({
+      openAIApiKey: process.env.OPENAI_KEY,
+    });
 
     store = new UpstashVectorStore(embeddings, {
       index,
@@ -40,7 +42,11 @@ describe("UpstashVectorStore", () => {
     const results1 = await store.similaritySearchWithScore("hello!", 1);
     expect(results1).toHaveLength(1);
 
-    expect(results1).toEqual([
+    console.log(results1[0][0]);
+    console.log(
+      new Document({ metadata: { a: createdAt + 1 }, pageContent: "hello" })
+    );
+    expect([results1[0][0]]).toEqual([
       new Document({ metadata: { a: createdAt + 1 }, pageContent: "hello" }),
     ]);
 

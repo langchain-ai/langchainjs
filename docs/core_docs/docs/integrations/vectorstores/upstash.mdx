@@ -1,4 +1,5 @@
 import CodeBlock from "@theme/CodeBlock";
+import CreateClientExample from "@examples/indexes/vector_stores/upstash/create_client.ts";
 import IndexQueryExample from "@examples/indexes/vector_stores/upstash/index_and_query_docs.ts";
 import DeleteExample from "@examples/indexes/vector_stores/upstash/delete_docs.ts";
 
@@ -8,18 +9,28 @@ Upstash Vector is a REST based serverless vector database, designed for working 
 
 ## Setup
 
-1. Install Upstash Vector SDK.
+1. Create Upstash Vector Index
+
+You can create an index from [Upstash Console](https://console.upstash.com/vector). For further reference, see [docs](https://upstash.com/docs/vector/overall/getstarted).
+
+2. Install Upstash Vector SDK.
 
 ```bash npm2yarn
 npm install -S @upstash/vector
 ```
 
-We use OpenAI for the embeddings of the below snippets.
+We use OpenAI for the embeddings of the below examples.
 However, you can also create the embeddings using the model of your choice, that is available in the LangChain.
 
 ```bash npm2yarn
 npm install -S @langchain/openai
 ```
+
+## Create Upstash Vector Client
+
+There are two ways to create the client. You can either pass the credentials as string manually from the `.env` file (or as string variables), or you can retrieve the credentials from the environment automatically.
+
+<CodeBlock language="typescript">{CreateClientExample}</CodeBlock>
 
 ## Index and Query Documents
 
