@@ -45,7 +45,10 @@ export class CloseVectorWeb extends CloseVector<CloseVectorHNSWWeb> {
     if (args.instance) {
       this.instance = args.instance;
     } else {
-      this.instance = new CloseVectorHNSWWeb(embeddings, { ...args, ...credentials});
+      this.instance = new CloseVectorHNSWWeb(embeddings, {
+        ...args,
+        ...credentials,
+      });
     }
   }
 
@@ -61,15 +64,13 @@ export class CloseVectorWeb extends CloseVector<CloseVectorHNSWWeb> {
    * @param options.public a boolean to determine if the index should be public or private, if not provided, the index will be private. If the index is public, it can be accessed by anyone with the uuid.
    * @param options.description a description of the index
    */
-  async saveToCloud(
-    options:{
-      uuid?: string;
-      public?: boolean;
-      description?: string;
-      credentials?: CloseVectorCredentials;
-      onProgress?: (progress: { loaded: number; total: number }) => void;
-    }
-  ) {
+  async saveToCloud(options: {
+    uuid?: string;
+    public?: boolean;
+    description?: string;
+    credentials?: CloseVectorCredentials;
+    onProgress?: (progress: { loaded: number; total: number }) => void;
+  }) {
     await this.instance.saveToCloud({
       ...options,
       credentials: options.credentials || this.credentials,
@@ -83,14 +84,12 @@ export class CloseVectorWeb extends CloseVector<CloseVectorHNSWWeb> {
    * @param options.onProgress a callback function to track the download progress
    * @param options.embeddings the embeddings to be used by the CloseVectorWeb instance
    */
-  static async loadFromCloud(
-    options: {
-      embeddings: EmbeddingsInterface;
-      uuid: string;
-      credentials?: CloseVectorCredentials,
-      onProgress?: (progress: { loaded: number; total: number }) => void;
-    }
-  ) {
+  static async loadFromCloud(options: {
+    embeddings: EmbeddingsInterface;
+    uuid: string;
+    credentials?: CloseVectorCredentials;
+    onProgress?: (progress: { loaded: number; total: number }) => void;
+  }) {
     const instance = await CloseVectorHNSWWeb.loadFromCloud(options);
     const vectorstore = new this(
       options.embeddings,
