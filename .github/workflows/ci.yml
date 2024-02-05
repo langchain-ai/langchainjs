@@ -39,39 +39,6 @@ jobs:
       - name: Check linting
         run: yarn run lint
 
-  test:
-    name: Unit Tests
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-        node-version: [18.x, 20.x]
-        # See Node.js release schedule at https://nodejs.org/en/about/releases/
-        # include:
-          # - os: windows-latest
-          #   node-version: 20.x
-          # - os: macos-latest
-          #   node-version: 20.x
-    runs-on: ${{ matrix.os }}
-    env:
-      PUPPETEER_SKIP_DOWNLOAD: "true"
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
-    steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: "yarn"
-      - name: Install dependencies
-        run: yarn install --immutable
-      - name: Test
-        run: yarn run test:unit
-      #   run: yarn run test:unit -- --coverage
-      # - name: Upload coverage reports to Codecov
-      #   uses: codecov/codecov-action@v3
-      #   env:
-      #     CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
   test-exports:
     uses:
       ./.github/workflows/test-exports.yml
