@@ -8924,9 +8924,9 @@ __metadata:
     "@zilliz/milvus2-sdk-node": ">=2.2.11"
     cassandra-driver: ^4.7.2
     chromadb: ^1.5.3
-    closevector-common: 0.1.0-alpha.1
-    closevector-node: 0.1.0-alpha.10
-    closevector-web: 0.1.0-alpha.15
+    closevector-common: 0.1.3
+    closevector-node: 0.1.5
+    closevector-web: 0.1.5
     cohere-ai: ">=6.0.0"
     convex: ^1.3.1
     discord.js: ^14.14.1
@@ -9026,9 +9026,9 @@ __metadata:
     "@zilliz/milvus2-sdk-node": ">=2.2.7"
     cassandra-driver: ^4.7.2
     chromadb: "*"
-    closevector-common: 0.1.0-alpha.1
-    closevector-node: 0.1.0-alpha.10
-    closevector-web: 0.1.0-alpha.16
+    closevector-common: 0.1.3
+    closevector-node: 0.1.5
+    closevector-web: 0.1.5
     cohere-ai: "*"
     convex: ^1.3.1
     discord.js: ^14.14.1
@@ -17524,10 +17524,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"closevector-common@npm:0.1.0-alpha.1":
-  version: 0.1.0-alpha.1
-  resolution: "closevector-common@npm:0.1.0-alpha.1"
-  checksum: eccd2ee3ef43c60203a15005309b16a18ee90a50515e60df1c306e431c96ced9b913d9c362b551014fc8975f9b5c26fef3f61d74286b4c7039c6bc91d9ea54dd
+"closevector-common@npm:0.1.3":
+  version: 0.1.3
+  resolution: "closevector-common@npm:0.1.3"
+  checksum: eba748d8e25483c0a327fe1c886f5662dde7243b6f32e9b108d7b0ab6d3b6ba5194fdc6f143aa2c3c5eb8f27db365cd6cd83d5633945467267bcab83aff78d9e
   languageName: node
   linkType: hard
 
@@ -17538,38 +17538,38 @@ __metadata:
   languageName: node
   linkType: hard
 
-"closevector-hnswlib-node@npm:0.1.0-alpha.2":
-  version: 0.1.0-alpha.2
-  resolution: "closevector-hnswlib-node@npm:0.1.0-alpha.2"
+"closevector-hnswlib-node@npm:0.1.1":
+  version: 0.1.1
+  resolution: "closevector-hnswlib-node@npm:0.1.1"
   dependencies:
     bindings: ^1.5.0
     node-addon-api: ^7.0.0
     node-gyp: latest
-  checksum: 9bf4cf9325caacc5e6c237392f4bc7f9d0344ed009030494117930e014b664b500627c0bd75f6eaca3ab64625a0c927c1c198bfc0f31516d72d83844190ec54d
+  checksum: eb9f51b993cb64df9e3e352ebd20a448aeda617efa2c85256b3674d1ed6aacb665b8037e104c58dc9df53815fcd0abff9d6b3ebf94463dc56751e1cc4d6d8257
   languageName: node
   linkType: hard
 
-"closevector-hnswlib-wasm@npm:0.1.0-alpha.3":
-  version: 0.1.0-alpha.3
-  resolution: "closevector-hnswlib-wasm@npm:0.1.0-alpha.3"
+"closevector-hnswlib-wasm@npm:0.1.1":
+  version: 0.1.1
+  resolution: "closevector-hnswlib-wasm@npm:0.1.1"
   dependencies:
     bindings: ^1.5.0
     node-addon-api: ^7.0.0
-  checksum: d0dd57782c25807b38b4977f19d1bedea5347d85e33917f20bbfa40c1017eaec565252f27f3e4675690cddda0c889d732ce5069abb6c29976a903be828ecbe8d
+  checksum: 2be44e3ea4710f3a7bf1204b1e8447efdc7b610a18bab35bec460ef33cec8ea6e77aff1f8a47fe431315d7c2c9fafd1c75bbd1019f105284574d56a6916e8dc9
   languageName: node
   linkType: hard
 
-"closevector-node@npm:0.1.0-alpha.10":
-  version: 0.1.0-alpha.10
-  resolution: "closevector-node@npm:0.1.0-alpha.10"
+"closevector-node@npm:0.1.5":
+  version: 0.1.5
+  resolution: "closevector-node@npm:0.1.5"
   dependencies:
     axios: ^1.4.0
-    closevector-common: 0.1.0-alpha.1
-    closevector-hnswlib-node: 0.1.0-alpha.2
+    closevector-common: 0.1.3
+    closevector-hnswlib-node: 0.1.1
     jsonwebtoken: ^9.0.0
     tar: ^6.1.15
     typescript: ^5.1.6
-  checksum: af946bcab810414af4408013fadf402253dfe5375cb0ef0f036f1fce4885cf65ccf5f201cc4aac35b95bdeccb04d47678bc333a08a83ec7d0e5de9c69456c1e6
+  checksum: 96d2bb4fb9443bfa7f84a9e41ca9100de3bd7dbe98d4f81b2429c4ddc6194f61be9449552fe9d2c4f2a3aeb27746cdd222ff6ff3e3e00bd8ad9470dff25ef3aa
   languageName: node
   linkType: hard
 
@@ -17597,20 +17597,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"closevector-web@npm:0.1.0-alpha.15":
-  version: 0.1.0-alpha.15
-  resolution: "closevector-web@npm:0.1.0-alpha.15"
+"closevector-web@npm:0.1.5":
+  version: 0.1.5
+  resolution: "closevector-web@npm:0.1.5"
   dependencies:
     axios: ^1.4.0
     closevector-browserify-zlib: 0.1.0-alpha.3
-    closevector-common: 0.1.0-alpha.1
+    closevector-common: 0.1.3
     closevector-crypto-jwt: 0.1.0-alpha.3
-    closevector-hnswlib-wasm: 0.1.0-alpha.3
+    closevector-hnswlib-wasm: 0.1.1
     closevector-stream-browserify: 0.1.0-alpha.1
     gunzip-maybe: ^1.4.2
     tar-stream: ^3.1.6
     typescript: ^5.1.6
-  checksum: 2f8b0b53b0aa944a00ffda9215d5b3ddafedbae3bee7e78ed49d0b183b03f2ec6340876a21b020381f2e193578b29e067f76ca0e4c34c10d439232147c93ace8
+  checksum: 30e99f943dd76d8e0d37994eb39a2492fff7999114fa5efae60aea9b29abcc8903099af2a8d42da7ba91729228c66ffbbfa572bc19a953c385de17be1a404753
   languageName: node
   linkType: hard
 
