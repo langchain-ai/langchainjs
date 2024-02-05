@@ -33,9 +33,9 @@ The most common full sequence from raw data to answer looks like:
 
 **Indexing**
 
-1. **Load**: First we need to load our data. This is done with [DocumentLoaders](https://js.langchain.com/docs/modules/data_connection/document_loaders/).
-2. **Split**: [Text splitters](https://js.langchain.com/docs/modules/data_connection/document_transformers/) break large `Documents` into smaller chunks. This is useful both for indexing data and for passing it in to a model, since large chunks are harder to search over and won't fit in a model's finite context window.
-3. **Store**: We need somewhere to store and index our splits, so that they can later be searched over. This is often done using a [VectorStore](https://js.langchain.com/docs/modules/data_connection/vectorstores/) and [Embeddings](https://js.langchain.com/docs/modules/data_connection/text_embedding/) model.
+1. **Load**: First we need to load our data. This is done with [DocumentLoaders](/docs/modules/data_connection/document_loaders/).
+2. **Split**: [Text splitters](/docs/modules/data_connection/document_transformers/) break large `Documents` into smaller chunks. This is useful both for indexing data and for passing it in to a model, since large chunks are harder to search over and won't fit in a model's finite context window.
+3. **Store**: We need somewhere to store and index our splits, so that they can later be searched over. This is often done using a [VectorStore](/docs/modules/data_connection/vectorstores/) and [Embeddings](/docs/modules/data_connection/text_embedding/) model.
 
 ![Indexing](/img/rag_indexing.png)
 
