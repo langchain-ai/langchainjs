@@ -25474,7 +25474,6 @@ __metadata:
     expr-eval: ^2.0.2
     fast-xml-parser: ^4.2.7
     google-auth-library: ^8.9.0
-    googleapis: ^126.0.1
     handlebars: ^4.7.8
     html-to-text: ^9.0.5
     ignore: ^5.2.0
@@ -25545,7 +25544,6 @@ __metadata:
     epub2: ^3.0.1
     fast-xml-parser: ^4.2.7
     google-auth-library: ^8.9.0
-    googleapis: ^126.0.1
     handlebars: ^4.7.8
     html-to-text: ^9.0.5
     ignore: ^5.2.0
@@ -25623,8 +25621,6 @@ __metadata:
     fast-xml-parser:
       optional: true
     google-auth-library:
-      optional: true
-    googleapis:
       optional: true
     handlebars:
       optional: true
