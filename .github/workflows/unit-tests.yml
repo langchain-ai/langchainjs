@@ -1,7 +1,7 @@
 # This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
 
-name: CI
+name: Unit Tests
 
 on:
   push:
@@ -24,8 +24,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test-langchain:
-    name: Unit Tests (LangChain)
+  langchain:
+    name: LangChain
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -57,8 +57,8 @@ jobs:
       #   env:
       #     CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
-  test-core:
-    name: Unit Tests (Core)
+  core:
+    name: Core
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -90,8 +90,8 @@ jobs:
       #   env:
       #     CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
-  test-community:
-    name: Unit Tests (Community)
+  community:
+    name: Community
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -123,8 +123,8 @@ jobs:
       #   env:
       #     CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
-  test-integrations:
-    name: Unit Tests (Integrations)
+  integrations:
+    name: Integrations
     strategy:
       matrix:
         os: [ubuntu-latest]
