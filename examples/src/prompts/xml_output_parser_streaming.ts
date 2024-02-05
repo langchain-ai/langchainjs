@@ -12,7 +12,7 @@ const XML_EXAMPLE = `<?xml version="1.0" encoding="UTF-8"?>
 
 const parser = new XMLOutputParser();
 
-// Define your LLM, in this example we'll use a Demo streaming LLM
+// Define your LLM, in this example we'll use demo streaming LLM
 const streamingLLM = new FakeStreamingLLM({
   responses: [XML_EXAMPLE],
 }).pipe(parser); // Pipe the parser to the LLM

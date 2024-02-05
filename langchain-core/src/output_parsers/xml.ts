@@ -1,5 +1,8 @@
 import sax, { SAXOptions } from "sax";
-import { BaseCumulativeTransformOutputParser } from "./transform.js";
+import {
+  BaseCumulativeTransformOutputParser,
+  BaseCumulativeTransformOutputParserInput,
+} from "./transform.js";
 import { Operation, compare } from "../utils/json_patch.js";
 import { ChatGeneration, Generation } from "../outputs.js";
 
@@ -18,7 +21,9 @@ Here are the output tags:
 {tags}
 \`\`\``;
 
-export interface XMLOutputParserFields extends SAXOptions {
+export interface XMLOutputParserFields
+  extends SAXOptions,
+    BaseCumulativeTransformOutputParserInput {
   /**
    * Optional list of tags that the output should conform to.
    * Only used in formatting of the prompt.
@@ -38,8 +43,11 @@ export class XMLOutputParser extends BaseCumulativeTransformOutputParser<XMLResu
   saxOptions?: SAXOptions;
 
   constructor(fields?: XMLOutputParserFields) {
-    super();
-    const { tags, ...saxOptions } = fields ?? {};
+    const f = fields ?? {};
+    const { tags, ...saxOptions } = f;
+
+    super(f);
+
     this.tags = tags;
     this.saxOptions = saxOptions;
   }
@@ -87,7 +95,8 @@ const strip = (text: string) =>
   text
     .split("\n")
     .map((line) => line.replace(/^\s+/, ""))
-    .join("\n");
+    .join("\n")
+    .trim();
 
 type ParsedResult = {
   name: string;
@@ -166,8 +175,8 @@ export function parseXMLMarkdown(
   };
 
   // Try to find XML string within triple backticks.
-  const match = /```(xml)?(.*)```/s.exec(cleanedString.trim());
-  const xmlString = match ? match[2] : cleanedString.trim();
+  const match = /```(xml)?(.*)```/s.exec(cleanedString);
+  const xmlString = match ? match[2] : cleanedString;
   parser.write(xmlString).close();
 
   // Remove the XML declaration if present
