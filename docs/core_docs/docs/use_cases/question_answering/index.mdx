@@ -25,13 +25,14 @@ Note: Here we focus on Q&A for unstructured data. Two RAG use cases which we cov
 
 A typical RAG application has two main components:
 
-**Indexing**: a pipeline for ingesting data from a source and indexing it. *This usually happens offline*.
+**Indexing**: a pipeline for ingesting data from a source and indexing it. _This usually happens offline_.
 
 **Retrieval and generation**: the actual RAG chain, which takes the user query at run time and retrieves the relevant data from the index, then passes that to the model.
 
 The most common full sequence from raw data to answer looks like:
 
 **Indexing**
+
 1. **Load**: First we need to load our data. This is done with [DocumentLoaders](https://js.langchain.com/docs/modules/data_connection/document_loaders/).
 2. **Split**: [Text splitters](https://js.langchain.com/docs/modules/data_connection/document_transformers/) break large `Documents` into smaller chunks. This is useful both for indexing data and for passing it in to a model, since large chunks are harder to search over and won't fit in a model's finite context window.
 3. **Store**: We need somewhere to store and index our splits, so that they can later be searched over. This is often done using a [VectorStore](https://js.langchain.com/docs/modules/data_connection/vectorstores/) and [Embeddings](https://js.langchain.com/docs/modules/data_connection/text_embedding/) model.
@@ -39,12 +40,14 @@ The most common full sequence from raw data to answer looks like:
 ![Indexing](/img/rag_indexing.png)
 
 **Retrieval and generation**
+
 1. **Retrieve**: Given a user input, relevant splits are retrieved from storage using a [Retriever](/docs/modules/data_connection/retrievers/).
 2. **Generate**: A [ChatModel](/docs/modules/model_io/chat) / [LLM](/docs/modules/model_io/llms) produces an answer using a prompt that includes the question and the retrieved data
 
 ![Retrieval generation](/img/rag_retrieval_generation.png)
 
 ## Table of contents
+
 - [Quickstart](/docs/use_cases/question_answering/): We recommend starting here. Many of the following guides assume you fully understand the architecture shown in the Quickstart.
 - [Returning sources](/docs/use_cases/question_answering/): How to return the source documents used in a particular generation.
 - [Streaming](/docs/use_cases/question_answering/): How to stream final answers as well as intermediate steps.
