@@ -79,7 +79,7 @@ test("MemoryVectorStore with custom similarity", async () => {
       similarityCalledCount += 1;
       similarityCalled = true;
       return similarity.cosine(a, b);
-    }
+    },
   });
 
   expect(store).toBeDefined();
