@@ -53,7 +53,7 @@ export function parseJsonMarkdown(s: string, parser = parsePartialJson) {
   }
 }
 
-// Adapted from https://github.com/KillianLucas/open-interpreter/blob/main/interpreter/utils/parse_partial_json.py
+// Adapted from https://github.com/KillianLucas/open-interpreter/blob/main/interpreter/core/llm/utils/parse_partial_json.py
 // MIT License
 export function parsePartialJson(s: string) {
   // If the input is undefined, return null to indicate failure.

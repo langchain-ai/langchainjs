@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -1256,7 +1256,6 @@
     "eslint-plugin-prettier": "^4.2.1",
     "fast-xml-parser": "^4.2.7",
     "google-auth-library": "^8.9.0",
-    "googleapis": "^126.0.1",
     "handlebars": "^4.7.8",
     "html-to-text": "^9.0.5",
     "ignore": "^5.2.0",
@@ -1316,7 +1315,6 @@
     "epub2": "^3.0.1",
     "fast-xml-parser": "^4.2.7",
     "google-auth-library": "^8.9.0",
-    "googleapis": "^126.0.1",
     "handlebars": "^4.7.8",
     "html-to-text": "^9.0.5",
     "ignore": "^5.2.0",
@@ -1420,9 +1418,6 @@
       "optional": true
     },
     "google-auth-library": {
-      "optional": true
-    },
-    "googleapis": {
       "optional": true
     },
     "handlebars": {
