@@ -5,9 +5,9 @@ import { RedisClientType, createClient } from "redis";
 import { v4 as uuidv4 } from "uuid";
 import { test, expect } from "@jest/globals";
 import { faker } from "@faker-js/faker";
-import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
-import { RedisVectorStore } from "../redis.js";
+import { SyntheticEmbeddings } from "@langchain/core/utils/testing";
+import { RedisVectorStore } from "../vectorstores.js";
 
 describe("RedisVectorStore", () => {
   let vectorStore: RedisVectorStore;
@@ -17,7 +17,7 @@ describe("RedisVectorStore", () => {
     client = createClient({ url: process.env.REDIS_URL });
     await client.connect();
 
-    vectorStore = new RedisVectorStore(new OpenAIEmbeddings(), {
+    vectorStore = new RedisVectorStore(new SyntheticEmbeddings(), {
       redisClient: client as RedisClientType,
       indexName: "test-index",
       keyPrefix: "test:",
