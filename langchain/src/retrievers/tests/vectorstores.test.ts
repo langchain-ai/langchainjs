@@ -20,6 +20,14 @@ test("Test Memory Retriever with Callback", async () => {
   const queryStr = "testing testing";
   let startRun = 0;
   let endRun = 0;
+  let startPromiseResolve: (v?: unknown) => void;
+  const startPromise = new Promise((resolve) => {
+    startPromiseResolve = resolve;
+  });
+  let endPromiseResolve: (v?: unknown) => void;
+  const endPromise = new Promise((resolve) => {
+    endPromiseResolve = resolve;
+  });
 
   const retriever = vectorStore.asRetriever({
     k: 1,
@@ -29,10 +37,12 @@ test("Test Memory Retriever with Callback", async () => {
         handleRetrieverStart: async (_, query) => {
           expect(query).toBe(queryStr);
           startRun += 1;
+          startPromiseResolve();
         },
         handleRetrieverEnd: async (documents) => {
           expect(documents[0].pageContent).toBe(pageContent);
           endRun += 1;
+          endPromiseResolve();
         },
       },
     ],
@@ -41,6 +51,8 @@ test("Test Memory Retriever with Callback", async () => {
   const results = await retriever.getRelevantDocuments(queryStr);
 
   expect(results).toEqual([new Document({ metadata: { a: 1 }, pageContent })]);
+  await startPromise;
+  await endPromise;
   expect(startRun).toBe(1);
   expect(endRun).toBe(1);
 });
