@@ -257,6 +257,7 @@ function serialize<RunInput>(input: RunInput): any {
     const rtn = Object.fromEntries(keysArr.map(innerSerialize));
     return rtn;
   }
+  return input;
 }
 
 export class RemoteRunnable<
