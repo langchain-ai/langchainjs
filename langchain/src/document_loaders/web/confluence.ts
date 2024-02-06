@@ -30,12 +30,12 @@ export interface ConfluencePage {
   };
   status: string;
   version?: {
-    number: number,
+    number: number;
     when: string;
     by: {
       displayName: string;
-    }
-  }
+    };
+  };
 }
 
 /**
