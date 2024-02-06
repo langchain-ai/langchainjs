@@ -3,8 +3,6 @@
 import { CloseVectorNode } from "@langchain/community/vectorstores/closevector/node";
 import { CloseVectorWeb } from "@langchain/community/vectorstores/closevector/web";
 import { OpenAIEmbeddings } from "@langchain/openai";
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { createPublicGetFileOperationUrl } from "closevector-web";
 
 // Create a vector store through any method, here from texts as an example
 // If you want to import the browser version, use the following line instead:
@@ -50,14 +48,12 @@ const loadedVectorStore = await CloseVectorNode.loadFromCloud({
 // });
 
 const loadedVectorStoreOnBrowser = await CloseVectorWeb.loadFromCloud({
-  url: (
-    await createPublicGetFileOperationUrl({
-      uuid,
-      accessKey: "your access key",
-    })
-  ).url,
   uuid,
   embeddings: new OpenAIEmbeddings(),
+  credentials: {
+    key: "your access key",
+    secret: "your secret",
+  },
 });
 
 // vectorStore and loadedVectorStore are identical

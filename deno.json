@@ -1,0 +1,14 @@
+{
+  "imports": {
+    "langchain/": "npm:/langchain/",
+    "@langchain/community/": "npm:/@langchain/community/",
+    "@langchain/openai": "npm:@langchain/openai",
+    "@langchain/core/": "npm:/@langchain/core/",
+    "cheerio": "npm:/cheerio",
+    "@langchain/pinecone": "npm:@langchain/pinecone",
+    "@pinecone-database/pinecone": "npm:@pinecone-database/pinecone",
+    "zod": "npm:/zod",
+    "@langchain/anthropic": "npm:@langchain/anthropic",
+    "node-llama-cpp": "npm:/node-llama-cpp"
+  }
+}

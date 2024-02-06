@@ -1,6 +1,6 @@
 {
   "name": "create-langchain-integration",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "repository": {
     "type": "git",
     "url": "https://github.com/langchain-ai/langchainjs",
@@ -9,7 +9,7 @@
   "bin": "./dist/index.js",
   "scripts": {
     "dev": "ncc build ./index.ts -w -o dist/",
-    "build": "ncc build ./index.ts -o ./dist/ --minify --no-cache --no-source-map-register",
+    "build": "ncc build ./index.ts -o ./dist/ --minify --no-cache --no-source-map-register && cp ./template/.eslintrc.cjs ./template/.prettierrc ./template/.release-it.json ./dist/template",
     "format": "prettier --write \"./\"",
     "format:check": "prettier --check \"./\""
   },

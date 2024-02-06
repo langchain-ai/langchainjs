@@ -5,8 +5,8 @@
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "yarn build:typedoc && rimraf ./docs/api && NODE_OPTIONS=--max-old-space-size=7168 docusaurus start",
-    "build": "yarn clean && yarn build:typedoc && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
-    "build:vercel": "yarn clean && yarn build:typedoc:vercel && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
+    "build": "yarn clean && yarn build:typedoc && yarn quarto && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
+    "build:vercel": "yarn clean && yarn build:typedoc:vercel && bash ./vercel_build.sh && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
     "build:typedoc": "yarn workspace api_refs build",
     "build:typedoc:vercel": "yarn workspace api_refs build:vercel",
     "swizzle": "docusaurus swizzle",
@@ -21,7 +21,8 @@
     "precommit": "lint-staged",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,md,mdx}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,md,mdx}\"",
-    "clean": "rm -rf .docusaurus/ .turbo/ .build/"
+    "clean": "rm -rf .docusaurus/ .turbo/ .build/",
+    "quarto": "quarto render docs/"
   },
   "dependencies": {
     "@docusaurus/core": "2.4.3",
