@@ -1,0 +1,66 @@
+# CSV
+
+LLMs are great for building question-answering systems over various types of data sources.
+In this section we'll go over how to build Q&A systems over data stored in a CSV file(s).
+Like working with SQL databases, the key to working with CSV files is to give an LLM access to tools for querying and interacting with the data.
+The two main ways to do this are to either:
+
+* **RECOMMENDED**: Load the CSV(s) into a SQL database, and use the approaches outlined in the [SQL use case docs](/docs/use_cases/sql/).
+* Give the LLM access to a Python environment where it can use libraries like Pandas to interact with the data.
+
+## ⚠️ Security note ⚠️
+
+Both approaches mentioned above carry significant risks. Using SQL requires executing model-generated SQL queries.
+Using a library like Pandas requires letting the model execute Python code. Since it is easier to tightly scope SQL connection permissions and sanitize SQL queries than it is to sandbox Python environments, **we HIGHLY recommend interacting with CSV data via SQL.**
+For more on general security best practices, [see here](/docs/security).
+
+## Setup
+Dependencies for this guide:
+
+```bash npm2yarn
+npm install --save langchain @langchain/community @langchain/openai sqlite data-forge data-forge-fs
+```
+
+Set the required environment variables:
+
+```bash
+export OPENAI_API_KEY="your-api-key"
+```
+
+Download the [titanic.csv](https://web.stanford.edu/class/archive/cs/cs109/cs109.1166/stuff/) if you don't already have it.
+
+import CodeBlock from "@theme/CodeBlock";
+import LoadCSV from "@examples/use_cases/csv/load-csv.ts";
+
+<CodeBlock language="typescript">{LoadCSV}</CodeBlock>
+
+## SQL
+
+Using SQL to interact with CSV data is the recommended approach because it is easier to limit permissions and sanitize queries than with arbitrary TypeScript code.
+
+Most SQL databases make it easy to load a CSV file in as a table ([DuckDB](https://duckdb.org/docs/data/csv/overview.html), [SQLite](https://www.sqlite.org/csv.html), etc.).
+Once you've done this you can use all of the chain and agent-creating techniques outlined in the [SQL use case guide](/docs/use_cases/sql/).
+Here's a quick example of how we might do this with SQLite:
+
+Spin up a docker container with a PostgreSQL database
+
+```bash
+docker run -d --name postgres -e POSTGRES_HOST_AUTH_METHOD=trust -p 5432:5432 postgres
+```
+
+import CreateDB from "@examples/use_cases/csv/create-db.ts";
+
+<CodeBlock language="typescript">{CreateDB}</CodeBlock>
+
+And create a [SQL agent](/docs/use_cases/sql/agents) to interact with it:
+
+import CreateAgent from "@examples/use_cases/csv/create-agent.ts";
+
+<CodeBlock language="typescript">{CreateAgent}</CodeBlock>
+
+:::tip
+LangSmith [trace](https://smith.langchain.com/public/5dd11f4e-ad66-406a-a1e3-1cf37f9d715c/r).
+:::
+
+This approach easily generalizes to multiple CSVs, since we can just load each of them into our database as it's own table.
+Head to the [SQL guide](/docs/use_cases/sql/) for more.
