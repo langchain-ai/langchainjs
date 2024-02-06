@@ -2,7 +2,7 @@ import * as uuid from "uuid";
 import { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Index as UpstashIndex } from "@upstash/vector";
-import { Document } from "@langchain/core/documents";
+import { Document, DocumentInterface } from "@langchain/core/documents";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import {
   AsyncCaller,
@@ -16,11 +16,13 @@ export interface UpstashVectorLibArgs extends AsyncCallerParams {
   index: UpstashIndex;
 }
 
-// eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
+//  @typescript-eslint/no-explicit-any
 export type UpstashMetadata = Record<string, any>;
 
-// eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
-export type UpstashQueryMetadata = UpstashMetadata & { documentContentLC: any };
+//  @typescript-eslint/no-explicit-any
+export type UpstashQueryMetadata = UpstashMetadata & {
+  _pageContentLC: any;
+};
 
 /**
  * Type that defines the parameters for the delete method.
@@ -44,6 +46,8 @@ export class UpstashVectorStore extends VectorStore {
 
   caller: AsyncCaller;
 
+  embeddings: EmbeddingsInterface;
+
   _vectorstoreType(): string {
     return "upstash";
   }
@@ -66,7 +70,10 @@ export class UpstashVectorStore extends VectorStore {
    * @param options Optional object containing array of ids for the documents.
    * @returns Promise that resolves with the ids of the provided documents when the upsert operation is done.
    */
-  async addDocuments(documents: Document[], options?: { ids?: string[] }) {
+  async addDocuments(
+    documents: DocumentInterface[],
+    options?: { ids?: string[] }
+  ) {
     const texts = documents.map(({ pageContent }) => pageContent);
 
     const embeddings = await this.embeddings.embedDocuments(texts);
@@ -83,7 +90,7 @@ export class UpstashVectorStore extends VectorStore {
    */
   async addVectors(
     vectors: number[][],
-    documents: Document[],
+    documents: DocumentInterface[],
     options?: { ids?: string[] }
   ) {
     const documentIds =
@@ -91,7 +98,7 @@ export class UpstashVectorStore extends VectorStore {
 
     const upstashVectors = vectors.map((vector, index) => {
       const metadata = {
-        pageContentLC: documents[index].pageContent,
+        _pageContentLC: documents[index].pageContent,
         ...documents[index].metadata,
       };
 
@@ -126,10 +133,6 @@ export class UpstashVectorStore extends VectorStore {
       await this.index.reset();
     } else if (params.ids) {
       await this.index.delete(params.ids);
-    } else {
-      throw new Error(
-        "You must provide either an array of target ids or deleteAll as true"
-      );
     }
   }
 
@@ -164,12 +167,12 @@ export class UpstashVectorStore extends VectorStore {
     const results = await this._runUpstashQuery(query, k);
 
     const searchResult: [Document, number][] = results.map((res) => {
-      const { pageContentLC, ...metadata } = (res.metadata ??
+      const { _pageContentLC, ...metadata } = (res.metadata ??
         {}) as UpstashQueryMetadata;
       return [
         new Document({
           metadata,
-          pageContent: pageContentLC,
+          pageContent: _pageContentLC,
         }),
         res.score,
       ];
@@ -190,7 +193,7 @@ export class UpstashVectorStore extends VectorStore {
    */
   static async fromTexts(
     texts: string[],
-    metadatas: object[] | object,
+    metadatas: UpstashMetadata | UpstashMetadata[],
     embeddings: EmbeddingsInterface,
     dbConfig: UpstashVectorLibArgs
   ): Promise<UpstashVectorStore> {
@@ -216,7 +219,7 @@ export class UpstashVectorStore extends VectorStore {
    * @returns Promise that resolves with a new UpstashVector instance
    */
   static async fromDocuments(
-    docs: Document[],
+    docs: DocumentInterface[],
     embeddings: EmbeddingsInterface,
     dbConfig: UpstashVectorLibArgs
   ): Promise<UpstashVectorStore> {

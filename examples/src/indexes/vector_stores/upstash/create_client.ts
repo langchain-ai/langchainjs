@@ -15,7 +15,7 @@ const storeWithCredentials = new UpstashVectorStore(embeddings, {
 });
 
 // Creating the index from the environment variables automatically.
-const indexFromEnv = Index.fromEnv();
+const indexFromEnv = new Index();
 
 const storeFromEnv = new UpstashVectorStore(embeddings, {
   index: indexFromEnv,

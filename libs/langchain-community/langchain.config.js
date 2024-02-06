@@ -281,6 +281,7 @@ export const config = {
     "vectorstores/tigris",
     "vectorstores/typeorm",
     "vectorstores/typesense",
+    "vectorstores/upstash",
     "vectorstores/usearch",
     "vectorstores/vercel_postgres",
     "vectorstores/voy",

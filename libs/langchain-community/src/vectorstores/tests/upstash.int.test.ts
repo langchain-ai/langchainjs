@@ -1,12 +1,13 @@
 import { Index } from "@upstash/vector";
-import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
+import { SyntheticEmbeddings } from "@langchain/core/utils/testing";
+import { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { UpstashVectorStore } from "../upstash.js";
 import { sleep } from "../../utils/time.js";
 
 describe("UpstashVectorStore", () => {
   let store: UpstashVectorStore;
-  let embeddings: OpenAIEmbeddings;
+  let embeddings: EmbeddingsInterface;
   let index: Index;
 
   beforeEach(async () => {
@@ -15,8 +16,8 @@ describe("UpstashVectorStore", () => {
       token: process.env.UPSTASH_VECTOR_REST_TOKEN,
     });
 
-    embeddings = new OpenAIEmbeddings({
-      openAIApiKey: process.env.OPENAI_KEY,
+    embeddings = new SyntheticEmbeddings({
+      vectorSize: 1536,
     });
 
     store = new UpstashVectorStore(embeddings, {
@@ -26,7 +27,7 @@ describe("UpstashVectorStore", () => {
     expect(store).toBeDefined();
   });
 
-  test.skip("basic operations with documents", async () => {
+  test("basic operations with documents", async () => {
     const createdAt = new Date().getTime();
 
     const ids = await store.addDocuments([
@@ -42,10 +43,6 @@ describe("UpstashVectorStore", () => {
     const results1 = await store.similaritySearchWithScore("hello!", 1);
     expect(results1).toHaveLength(1);
 
-    console.log(results1[0][0]);
-    console.log(
-      new Document({ metadata: { a: createdAt + 1 }, pageContent: "hello" })
-    );
     expect([results1[0][0]]).toEqual([
       new Document({ metadata: { a: createdAt + 1 }, pageContent: "hello" }),
     ]);
@@ -61,7 +58,7 @@ describe("UpstashVectorStore", () => {
     expect(results3).toHaveLength(2);
   });
 
-  test.skip("UpstashVectorStore.fromText", async () => {
+  test("UpstashVectorStore.fromText", async () => {
     const vectorStore = await UpstashVectorStore.fromTexts(
       ["hello there!", "what are you building?", "vectors are great!"],
       [
