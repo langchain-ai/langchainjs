@@ -9,9 +9,8 @@ import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 
-// Adapted from internal redis types which aren't exported
+// Adapated from internal redis types which aren't exported
 /**
- * @deprecated Install and import from the "@langchain/redis" integration package instead.
  * Type for creating a schema vector field. It includes the algorithm,
  * distance metric, and initial capacity.
  */
@@ -24,7 +23,6 @@ export type CreateSchemaVectorField<
   INITIAL_CAP?: number;
 } & A;
 /**
- * @deprecated Install and import from the "@langchain/redis" integration package instead.
  * Type for creating a flat schema vector field. It extends
  * CreateSchemaVectorField with a block size property.
  */
@@ -35,7 +33,6 @@ export type CreateSchemaFlatVectorField = CreateSchemaVectorField<
   }
 >;
 /**
- * @deprecated Install and import from the "@langchain/redis" integration package instead.
  * Type for creating a HNSW schema vector field. It extends
  * CreateSchemaVectorField with M, EF_CONSTRUCTION, and EF_RUNTIME
  * properties.
@@ -53,19 +50,16 @@ type CreateIndexOptions = NonNullable<
   Parameters<ReturnType<typeof createClient>["ft"]["create"]>[3]
 >;
 
-/** @deprecated Install and import from the "@langchain/redis" integration package instead. */
 export type RedisSearchLanguages = `${NonNullable<
   CreateIndexOptions["LANGUAGE"]
 >}`;
 
-/** @deprecated Install and import from the "@langchain/redis" integration package instead. */
 export type RedisVectorStoreIndexOptions = Omit<
   CreateIndexOptions,
   "LANGUAGE"
 > & { LANGUAGE?: RedisSearchLanguages };
 
 /**
- * @deprecated Install and import from the "@langchain/redis" integration package instead.
  * Interface for the configuration of the RedisVectorStore. It includes
  * the Redis client, index name, index options, key prefix, content key,
  * metadata key, vector key, and filter.
@@ -85,7 +79,6 @@ export interface RedisVectorStoreConfig {
 }
 
 /**
- * @deprecated Install and import from the "@langchain/redis" integration package instead.
  * Interface for the options when adding documents to the
  * RedisVectorStore. It includes keys and batch size.
  */
@@ -95,14 +88,12 @@ export interface RedisAddOptions {
 }
 
 /**
- * @deprecated Install and import from the "@langchain/redis" integration package instead.
  * Type for the filter used in the RedisVectorStore. It is an array of
  * strings.
  */
 export type RedisVectorStoreFilterType = string[];
 
 /**
- * @deprecated Install and import from the "@langchain/redis" integration package instead.
  * Class representing a RedisVectorStore. It extends the VectorStore class
  * and includes methods for adding documents and vectors, performing
  * similarity searches, managing the index, and more.

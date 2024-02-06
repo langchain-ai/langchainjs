@@ -17,7 +17,7 @@ type RedisClientType =
   | ReturnType<typeof createCluster>;
 
 /**
- * @deprecated Import from "@langchain/redis" instead.
+ * @deprecated Import from "@langchain/community/caches/ioredis" instead.
  * Represents a specific implementation of a caching mechanism using Redis
  * as the underlying storage system. It extends the `BaseCache` class and
  * overrides its methods to provide the Redis-specific logic.

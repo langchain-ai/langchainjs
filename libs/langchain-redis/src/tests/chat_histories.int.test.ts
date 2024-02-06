@@ -3,7 +3,7 @@
 import { test, expect } from "@jest/globals";
 import { createClient } from "redis";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
-import { RedisChatMessageHistory } from "../message/redis.js";
+import { RedisChatMessageHistory } from "../chat_histories.js";
 
 afterAll(async () => {
   const client = createClient();
