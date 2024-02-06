@@ -237,7 +237,7 @@
     "pg-copy-streams": "^6.0.5",
     "pickleparser": "^0.2.1",
     "portkey-ai": "^0.1.11",
-    "redis": "^4.6.4",
+    "redis": "*",
     "replicate": "^0.18.0",
     "typeorm": "^0.3.12",
     "typesense": "^1.5.3",
