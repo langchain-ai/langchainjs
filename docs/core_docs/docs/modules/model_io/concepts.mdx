@@ -29,7 +29,7 @@ Additionally, not all models are the same. Different models have different promp
 
 ## Messages
 
-ChatModels takes a list of messages as input and returns a message. There are a few different types of messages. All messages have a `role` and a `content` property. The `role` describes WHO is saying the message. LangChain has different message classes for different roles. The `content` property describes the content of the message. This can be a few different things:
+ChatModels take a list of messages as input and return a message. There are a few different types of messages. All messages have a `role` and a `content` property. The `role` describes WHO is saying the message. LangChain has different message classes for different roles. The `content` property describes the content of the message. This can be a few different things:
 
 - A string (most models are this way)
 - A List of dictionaries (this is used for multi-modal input, where the dictionary contains information about that input type and that input location)
@@ -42,7 +42,7 @@ This represents a message from the user. Generally consists only of content.
 
 ### AIMessage
 
-This represents a message from the model. This may have `additional_kwargs` in it - for example, `functional_call` if using OpenAI Function calling.
+This represents a message from the model. This may have `additional_kwargs` in it - for example, `function_call` if using OpenAI Function calling.
 
 ### SystemMessage
 
