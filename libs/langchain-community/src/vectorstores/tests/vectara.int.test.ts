@@ -4,7 +4,7 @@ import fs from "fs";
 import { expect, beforeAll } from "@jest/globals";
 import { insecureHash } from "@langchain/core/utils/hash";
 import { Document } from "@langchain/core/documents";
-import { FakeEmbeddings } from "../../utils/testing.js";
+import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import {
   VectaraFile,
   VectaraLibArgs,

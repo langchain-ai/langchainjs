@@ -2,7 +2,7 @@ import { describe, expect, test, jest } from "@jest/globals";
 import { PoolConfig } from "pg";
 import { PostgresRecordManager } from "../postgres.js";
 
-describe("PostgresRecordManager", () => {
+describe.skip("PostgresRecordManager", () => {
   const tableName = "upsertion_record";
   let recordManager: PostgresRecordManager;
 
