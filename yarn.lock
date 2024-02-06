@@ -25356,6 +25356,7 @@ __metadata:
     eslint-plugin-prettier: ^4.2.1
     expr-eval: ^2.0.2
     fast-xml-parser: ^4.2.7
+    glob: ^10.3.10
     google-auth-library: ^8.9.0
     googleapis: ^126.0.1
     handlebars: ^4.7.8
@@ -25391,6 +25392,7 @@ __metadata:
     sonix-speech-recognition: ^2.1.1
     srt-parser-2: ^1.2.3
     ts-jest: ^29.1.0
+    ts-morph: ^21.0.1
     typeorm: ^0.3.12
     typescript: ~5.1.6
     uuid: ^9.0.0
@@ -25427,7 +25429,6 @@ __metadata:
     d3-dsv: ^2.0.0
     epub2: ^3.0.1
     fast-xml-parser: ^4.2.7
-    glob: ^10.3.10
     google-auth-library: ^8.9.0
     googleapis: ^126.0.1
     handlebars: ^4.7.8
@@ -25448,7 +25449,6 @@ __metadata:
     redis: ^4.6.4
     sonix-speech-recognition: ^2.1.1
     srt-parser-2: ^1.2.3
-    ts-morph: ^21.0.1
     typeorm: ^0.3.12
     vectordb: ^0.1.4
     weaviate-ts-client: ^1.4.0
@@ -25507,6 +25507,8 @@ __metadata:
       optional: true
     fast-xml-parser:
       optional: true
+    glob:
+      optional: true
     google-auth-library:
       optional: true
     googleapis:
@@ -25546,6 +25548,8 @@ __metadata:
     sonix-speech-recognition:
       optional: true
     srt-parser-2:
+      optional: true
+    ts-morph:
       optional: true
     typeorm:
       optional: true

@@ -967,6 +967,7 @@
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
     "fast-xml-parser": "^4.2.7",
+    "glob": "^10.3.10",
     "google-auth-library": "^8.9.0",
     "googleapis": "^126.0.1",
     "handlebars": "^4.7.8",
@@ -994,6 +995,7 @@
     "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.3",
     "ts-jest": "^29.1.0",
+    "ts-morph": "^21.0.1",
     "typeorm": "^0.3.12",
     "typescript": "~5.1.6",
     "vectordb": "^0.1.4",
@@ -1027,7 +1029,6 @@
     "d3-dsv": "^2.0.0",
     "epub2": "^3.0.1",
     "fast-xml-parser": "^4.2.7",
-    "glob": "^10.3.10",
     "google-auth-library": "^8.9.0",
     "googleapis": "^126.0.1",
     "handlebars": "^4.7.8",
@@ -1048,7 +1049,6 @@
     "redis": "^4.6.4",
     "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.3",
-    "ts-morph": "^21.0.1",
     "typeorm": "^0.3.12",
     "vectordb": "^0.1.4",
     "weaviate-ts-client": "^1.4.0",
@@ -1133,6 +1133,9 @@
     "fast-xml-parser": {
       "optional": true
     },
+    "glob": {
+      "optional": true
+    },
     "google-auth-library": {
       "optional": true
     },
@@ -1191,6 +1194,9 @@
       "optional": true
     },
     "srt-parser-2": {
+      "optional": true
+    },
+    "ts-morph": {
       "optional": true
     },
     "typeorm": {
