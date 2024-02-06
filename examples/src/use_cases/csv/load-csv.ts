@@ -4,7 +4,8 @@ import "data-forge-fs";
 export const loadCSV = (filePath: string) => {
   const result = dataForge
     .readFileSync(filePath) // Read input file.
-    .parseCSV().asJSON(); 
+    .parseCSV()
+    .asJSON();
   return (result as any).dataframe.content;
 };
 const df = loadCSV("/Users/bracesproul/Downloads/titanic.csv");

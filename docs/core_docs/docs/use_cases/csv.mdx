@@ -5,8 +5,8 @@ In this section we'll go over how to build Q&A systems over data stored in a CSV
 Like working with SQL databases, the key to working with CSV files is to give an LLM access to tools for querying and interacting with the data.
 The two main ways to do this are to either:
 
-* **RECOMMENDED**: Load the CSV(s) into a SQL database, and use the approaches outlined in the [SQL use case docs](/docs/use_cases/sql/).
-* Give the LLM access to a Python environment where it can use libraries like Pandas to interact with the data.
+- **RECOMMENDED**: Load the CSV(s) into a SQL database, and use the approaches outlined in the [SQL use case docs](/docs/use_cases/sql/).
+- Give the LLM access to a Python environment where it can use libraries like Pandas to interact with the data.
 
 ## ⚠️ Security note ⚠️
 
@@ -15,6 +15,7 @@ Using a library like Pandas requires letting the model execute Python code. Sinc
 For more on general security best practices, [see here](/docs/security).
 
 ## Setup
+
 Dependencies for this guide:
 
 ```bash npm2yarn

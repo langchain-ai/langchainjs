@@ -55,9 +55,11 @@ const sqlInsertCommand = createInsertCommand(df.values.rows, df.columnNames);
 await db.run(sqlInsertCommand);
 
 console.log(
-  JSON.parse(await db.run(
-    `SELECT * FROM passengers WHERE "Name" = 'Mrs. Charles Melville (Clara Jennings Gregg) Hays';`
-  ))
+  JSON.parse(
+    await db.run(
+      `SELECT * FROM passengers WHERE "Name" = 'Mrs. Charles Melville (Clara Jennings Gregg) Hays';`
+    )
+  )
 );
 /**
 [
