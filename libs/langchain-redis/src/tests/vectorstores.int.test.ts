@@ -6,8 +6,8 @@ import { v4 as uuidv4 } from "uuid";
 import { test, expect } from "@jest/globals";
 import { faker } from "@faker-js/faker";
 import { Document } from "@langchain/core/documents";
-import { RedisVectorStore } from "../vectorstores.js";
 import { SyntheticEmbeddings } from "@langchain/core/utils/testing";
+import { RedisVectorStore } from "../vectorstores.js";
 
 describe("RedisVectorStore", () => {
   let vectorStore: RedisVectorStore;
