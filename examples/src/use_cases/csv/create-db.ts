@@ -1,6 +1,6 @@
 import { DataSource } from "typeorm";
 import { SqlDatabase } from "langchain/sql_db";
-import { loadCSV } from "./load-csv.js";
+import { loadCSV } from "./csv.js";
 
 const df = loadCSV("/Users/bracesproul/Downloads/titanic.csv");
 

@@ -9,6 +9,11 @@
     "@pinecone-database/pinecone": "npm:@pinecone-database/pinecone",
     "zod": "npm:/zod",
     "@langchain/anthropic": "npm:@langchain/anthropic",
-    "node-llama-cpp": "npm:/node-llama-cpp"
+    "node-llama-cpp": "npm:/node-llama-cpp",
+    "d3": "npm:/d3",
+    "d3-selection": "npm:/d3-selection",
+    "data-forge": "npm:/data-forge",
+    "data-forge-fs": "npm:/data-forge-fs",
+    "skia_canvas": "https://deno.land/x/skia_canvas/mod.ts"
   }
 }
