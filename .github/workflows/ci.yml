@@ -55,5 +55,11 @@ jobs:
           node-version: 18.x
       - name: Install dependencies
         run: yarn install --immutable
+      - name: Build Core
+        run: yarn turbo:command build --filter=@langchain/core
+      - name: Build all except LangChain
+        run: yarn turbo:command build --filter=!examples --filter=!langchain --filter=!core_docs --filter=!api_refs --filter=!create-langchain-integration
+      - name: Build LangChain
+        run: yarn turbo:command build --filter=langchain
       - name: Build examples
-        run: yarn build --filter=examples
+        run: yarn turbo:command build --filter=examples

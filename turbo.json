@@ -76,6 +76,10 @@
       "outputs": [],
       "dependsOn": ["^build"]
     },
+    "test:ci": {
+      "outputs": [],
+      "dependsOn": ["test"]
+    },
     "test:integration": {
       "outputs": [],
       "dependsOn": ["^build"]
