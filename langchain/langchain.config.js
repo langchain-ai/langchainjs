@@ -336,6 +336,7 @@ export const config = {
     "util/document": "util/document",
     "util/math": "util/math",
     "util/time": "util/time",
+    "util/migrations/0_1": "util/migrations/0_0-0_1-migrate-imports",
     // experimental
     "experimental/autogpt": "experimental/autogpt/index",
     "experimental/openai_assistant": "experimental/openai_assistant/index",
@@ -720,6 +721,7 @@ export const config = {
     "experimental/prompts/handlebars",
     "experimental/tools/pyinterpreter",
     "util/convex",
+    "util/migrations/0_1",
   ],
   extraImportMapEntries: [
     {
@@ -792,6 +794,13 @@ export const config = {
         "SystemMessagePromptTemplate",
       ],
       alias: ["prompts", "chat"],
+      path: "@langchain/core/prompts",
+    },
+    {
+      modules: [
+        "ImagePromptTemplate",
+      ],
+      alias: ["prompts", "image"],
       path: "@langchain/core/prompts",
     },
     {
