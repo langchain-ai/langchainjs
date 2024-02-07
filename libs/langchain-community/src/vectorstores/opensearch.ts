@@ -53,6 +53,7 @@ interface FilterTypeValue {
   lte?: number;
   lt?: number;
   regexp?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   terms_set?: Record<string, any>;
   wildcard?: string;
 }
