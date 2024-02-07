@@ -1082,10 +1082,6 @@
     "util/time.js",
     "util/time.d.ts",
     "util/time.d.cts",
-    "util/migrations/0_1.cjs",
-    "util/migrations/0_1.js",
-    "util/migrations/0_1.d.ts",
-    "util/migrations/0_1.d.cts",
     "experimental/autogpt.cjs",
     "experimental/autogpt.js",
     "experimental/autogpt.d.ts",
@@ -1259,7 +1255,6 @@
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
     "fast-xml-parser": "^4.2.7",
-    "glob": "^10.3.10",
     "google-auth-library": "^8.9.0",
     "handlebars": "^4.7.8",
     "html-to-text": "^9.0.5",
@@ -1286,7 +1281,6 @@
     "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.3",
     "ts-jest": "^29.1.0",
-    "ts-morph": "^21.0.1",
     "typeorm": "^0.3.12",
     "typescript": "~5.1.6",
     "vectordb": "^0.1.4",
@@ -1320,7 +1314,6 @@
     "d3-dsv": "^2.0.0",
     "epub2": "^3.0.1",
     "fast-xml-parser": "^4.2.7",
-    "glob": "^10.3.10",
     "google-auth-library": "^8.9.0",
     "handlebars": "^4.7.8",
     "html-to-text": "^9.0.5",
@@ -1340,7 +1333,6 @@
     "redis": "^4.6.4",
     "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.3",
-    "ts-morph": "^21.0.1",
     "typeorm": "^0.3.12",
     "vectordb": "^0.1.4",
     "weaviate-ts-client": "^1.4.0",
@@ -1425,9 +1417,6 @@
     "fast-xml-parser": {
       "optional": true
     },
-    "glob": {
-      "optional": true
-    },
     "google-auth-library": {
       "optional": true
     },
@@ -1483,9 +1472,6 @@
       "optional": true
     },
     "srt-parser-2": {
-      "optional": true
-    },
-    "ts-morph": {
       "optional": true
     },
     "typeorm": {
@@ -3959,15 +3945,6 @@
       },
       "import": "./util/time.js",
       "require": "./util/time.cjs"
-    },
-    "./util/migrations/0_1": {
-      "types": {
-        "import": "./util/migrations/0_1.d.ts",
-        "require": "./util/migrations/0_1.d.cts",
-        "default": "./util/migrations/0_1.d.ts"
-      },
-      "import": "./util/migrations/0_1.js",
-      "require": "./util/migrations/0_1.cjs"
     },
     "./experimental/autogpt": {
       "types": {
