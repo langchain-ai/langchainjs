@@ -2,6 +2,7 @@ import * as readline from "readline";
 import { JsonOutputToolsParser } from "langchain/output_parsers";
 import { callToolList, model } from "./helpers.js";
 
+// Use readline to ask the user for approval
 function askQuestion(question: string): Promise<string> {
   const rl = readline.createInterface({
     input: process.stdin,
@@ -24,6 +25,7 @@ async function humanApproval(toolInvocations: any[]): Promise<any[]> {
 
 Anything except 'Y'/'Yes' (case-insensitive) will be treated as a no.\n`;
 
+  // Ask the user for approval
   const resp = await askQuestion(msg);
   if (!["yes", "y"].includes(resp.toLowerCase())) {
     throw new Error(`Tool invocations not approved:\n\n${toolStrs}`);
@@ -39,7 +41,6 @@ const chain = model
 const response = await chain.invoke(
   "how many emails did i get in the last 5 days?"
 );
-
 console.log(response);
 /**
 Do you approve of the following tool invocations
@@ -58,7 +59,6 @@ y
 const response2 = await chain.invoke(
   "Send sally@gmail.com an email saying 'What's up homie'"
 );
-
 console.log(response2);
 /**
 Do you approve of the following tool invocations
