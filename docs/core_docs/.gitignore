@@ -41,3 +41,4 @@ docs/use_cases/question_answering/local_retrieval_qa.mdx
 docs/use_cases/question_answering/conversational_retrieval_agents.mdx
 docs/use_cases/question_answering/citations.mdx
 docs/use_cases/question_answering/chat_history.mdx
+docs/modules/model_io/output_parsers/types/openai_tools.mdx
