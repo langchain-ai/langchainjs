@@ -25683,6 +25683,7 @@ __metadata:
     d3-dsv: ^2.0.0
     epub2: ^3.0.1
     fast-xml-parser: ^4.2.7
+    glob: ^10.3.10
     google-auth-library: ^8.9.0
     handlebars: ^4.7.8
     html-to-text: ^9.0.5
@@ -25702,6 +25703,7 @@ __metadata:
     redis: ^4.6.4
     sonix-speech-recognition: ^2.1.1
     srt-parser-2: ^1.2.3
+    ts-morph: ^21.0.1
     typeorm: ^0.3.12
     vectordb: ^0.1.4
     weaviate-ts-client: ^1.4.0
