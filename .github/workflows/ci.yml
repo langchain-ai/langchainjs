@@ -56,10 +56,10 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build Core
-        run: yarn build --filter=@langchain/core
+        run: yarn turbo:command build --filter=@langchain/core
       - name: Build all except LangChain
-        run: yarn build --filter=!langchain
+        run: yarn turbo:command build --filter=!langchain
       - name: Build LangChain
-        run: yarn build --filter=langchain
+        run: yarn turbo:command build --filter=langchain
       - name: Build examples
-        run: yarn build --filter=examples
+        run: yarn turbo:command build --filter=examples
