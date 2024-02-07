@@ -224,9 +224,6 @@ test(`Chat model dataset`, async () => {
           rawPrediction,
           rawReferenceOutput,
         }: any) => {
-          console.log(rawInput);
-          console.log(rawPrediction);
-          console.log(rawReferenceOutput);
           return {
             input: rawInput.question,
             prediction: rawPrediction.output,
