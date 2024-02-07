@@ -19,6 +19,17 @@ async function main() {
     }
     // rename
     await fs.rename(md, md + "x");
+
+    // Quatro generates irregular quotes in the markdown files
+    const badQuote = `“`;
+    const goodQuote = `"`;
+    const contents = await fs.readFile(md + "x", "utf-8");
+    if (contents.includes(badQuote)) {
+      // Regex search and replace all badQuotes
+      const newContents = contents.replace(new RegExp(badQuote, "g"), goodQuote);
+      await fs.writeFile(md + "x", newContents);
+    }
+    
     return [`${md}x`];
   });
 
