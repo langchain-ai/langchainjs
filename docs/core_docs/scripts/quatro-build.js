@@ -21,12 +21,13 @@ async function main() {
     await fs.rename(md, md + "x");
 
     // Quatro generates irregular quotes in the markdown files
-    const badQuote = `“`;
+    const badOpeningQuote = `“`;
+    const badClosingQuote = `”`;
     const goodQuote = `"`;
     const contents = await fs.readFile(md + "x", "utf-8");
-    if (contents.includes(badQuote)) {
+    if (contents.includes(badOpeningQuote) || contents.includes(badClosingQuote)) {
       // Regex search and replace all badQuotes
-      const newContents = contents.replace(new RegExp(badQuote, "g"), goodQuote);
+      const newContents = contents.replace(new RegExp(badOpeningQuote, "g"), goodQuote).replace(new RegExp(badClosingQuote, "g"), goodQuote);
       await fs.writeFile(md + "x", newContents);
     }
     
