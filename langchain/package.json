@@ -1085,6 +1085,7 @@
     "util/migrations/0_1.cjs",
     "util/migrations/0_1.js",
     "util/migrations/0_1.d.ts",
+    "util/migrations/0_1.d.cts",
     "experimental/autogpt.cjs",
     "experimental/autogpt.js",
     "experimental/autogpt.d.ts",
@@ -3958,7 +3959,11 @@
       "require": "./util/time.cjs"
     },
     "./util/migrations/0_1": {
-      "types": "./util/migrations/0_1.d.ts",
+      "types": {
+        "import": "./util/migrations/0_1.d.ts",
+        "require": "./util/migrations/0_1.d.cts",
+        "default": "./util/migrations/0_1.d.ts"
+      },
       "import": "./util/migrations/0_1.js",
       "require": "./util/migrations/0_1.cjs"
     },

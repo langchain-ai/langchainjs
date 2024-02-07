@@ -1073,6 +1073,7 @@ util/time.d.cts
 util/migrations/0_1.cjs
 util/migrations/0_1.js
 util/migrations/0_1.d.ts
+util/migrations/0_1.d.cts
 experimental/autogpt.cjs
 experimental/autogpt.js
 experimental/autogpt.d.ts
