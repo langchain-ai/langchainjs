@@ -1,6 +1,7 @@
 // @ts-nocheck
 
 // Inlined to deal with portability issues
+// Originally from: https://github.com/isaacs/sax-js
 
 const initializeSax = function () {
   const sax: any = {};
