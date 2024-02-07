@@ -1,6 +1,10 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import Database, { Database as DatabaseType, Statement } from "better-sqlite3";
-import { ListKeyOptions, RecordManagerInterface, UpdateOptions } from "./base.js";
+import {
+  ListKeyOptions,
+  RecordManagerInterface,
+  UpdateOptions,
+} from "./base.js";
 
 interface TimeRow {
   epoch: number;
@@ -10,7 +14,9 @@ interface Record {
   k: string;
   ex: boolean;
 }
-
+interface KeyRecord {
+  key: string;
+}
 
 /**
  * Options for configuring the SQLiteRecordManager class.
@@ -20,7 +26,7 @@ export type SQLiteRecordManagerOptions = {
    * The file path or connection string of the SQLite database.
    */
   filepathOrConnectionString: string;
-  
+
   /**
    * The name of the table in the SQLite database.
    */
@@ -30,15 +36,15 @@ export type SQLiteRecordManagerOptions = {
 export class SQLiteRecordManager implements RecordManagerInterface {
   lc_namespace = ["langchain", "recordmanagers", "sqlite"];
 
-  tableName: string
+  tableName: string;
 
   db: DatabaseType;
 
-  namespace: string
+  namespace: string;
 
   constructor(namespace: string, config: SQLiteRecordManagerOptions) {
     const { filepathOrConnectionString, tableName } = config;
-    this.namespace = namespace;   
+    this.namespace = namespace;
     this.tableName = tableName;
     this.db = new Database(filepathOrConnectionString);
   }
@@ -63,7 +69,7 @@ export class SQLiteRecordManager implements RecordManagerInterface {
         resolve();
       } catch (error: unknown) {
         // Handle errors specific to SQLite
-        console.error('Error creating schema:', error);
+        console.error("Error creating schema:", error);
         reject(error);
       }
     });
@@ -72,8 +78,10 @@ export class SQLiteRecordManager implements RecordManagerInterface {
   async getTime(): Promise<number> {
     return new Promise<number>((resolve, reject) => {
       try {
-        const statement: Statement<[]> = this.db.prepare("SELECT strftime('%s', 'now') AS epoch");
-        const {epoch} = statement.get() as TimeRow;
+        const statement: Statement<[]> = this.db.prepare(
+          "SELECT strftime('%s', 'now') AS epoch"
+        );
+        const { epoch } = statement.get() as TimeRow;
         resolve(epoch);
       } catch (error) {
         reject(error);
@@ -81,50 +89,53 @@ export class SQLiteRecordManager implements RecordManagerInterface {
     });
   }
 
-
   async update(keys: string[], updateOptions?: UpdateOptions): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-        if (keys.length === 0) {
-            resolve();
-            return;
-        }
+      if (keys.length === 0) {
+        resolve();
+        return;
+      }
 
-        this.getTime()
-            .then(async updatedAt => {
-                const { timeAtLeast, groupIds: _groupIds } = updateOptions ?? {};
+      this.getTime()
+        .then(async (updatedAt) => {
+          const { timeAtLeast, groupIds: _groupIds } = updateOptions ?? {};
 
-                if (timeAtLeast && updatedAt < timeAtLeast) {
-                    throw new Error(`Time sync issue with database ${updatedAt} < ${timeAtLeast}`);
-                }
+          if (timeAtLeast && updatedAt < timeAtLeast) {
+            throw new Error(
+              `Time sync issue with database ${updatedAt} < ${timeAtLeast}`
+            );
+          }
 
-                const groupIds = _groupIds ?? keys.map(() => null);
+          const groupIds = _groupIds ?? keys.map(() => null);
 
-                if (groupIds.length !== keys.length) {
-                    throw new Error(`Number of keys (${keys.length}) does not match number of group_ids ${groupIds.length})`);
-                }
+          if (groupIds.length !== keys.length) {
+            throw new Error(
+              `Number of keys (${keys.length}) does not match number of group_ids ${groupIds.length})`
+            );
+          }
 
-                const recordsToUpsert = keys.map((key, i) => [
-                    key,
-                    this.namespace,
-                    updatedAt,
-                    groupIds[i],
-                ]);
+          const recordsToUpsert = keys.map((key, i) => [
+            key,
+            this.namespace,
+            updatedAt,
+            groupIds[i],
+          ]);
 
-                for (const row of recordsToUpsert) {
-                  // Prepare the statement for each row with a fixed number of anonymous placeholders
-                  const individualStatement = this.db.prepare(`
+          for (const row of recordsToUpsert) {
+            // Prepare the statement for each row with a fixed number of anonymous placeholders
+            const individualStatement = this.db.prepare(`
                       INSERT INTO "${this.tableName}" (key, namespace, updated_at, group_id)
                       VALUES (?, ?, ?, ?)
                       ON CONFLICT (key, namespace) DO UPDATE SET updated_at = excluded.updated_at;
                   `);
-                  // Execute the prepared statement for the current row
-                  individualStatement.run(...row);
-              }
+            // Execute the prepared statement for the current row
+            individualStatement.run(...row);
+          }
 
-                resolve();
-            })
-            .catch(error => reject(error));
-      });
+          resolve();
+        })
+        .catch((error) => reject(error));
+    });
   }
 
   async exists(keys: string[]): Promise<boolean[]> {
@@ -134,18 +145,22 @@ export class SQLiteRecordManager implements RecordManagerInterface {
         return;
       }
 
-      const arrayPlaceholders = keys.map((_, i) => `$${i + 2}`).join(", ");
-
-      const statement: Statement<[string, ...string[]]> = this.db.prepare(`
-        SELECT k, (key is not null) ex
-        FROM unnest(ARRAY[${arrayPlaceholders}]) k
-        LEFT JOIN "${this.tableName}" ON k=key AND namespace = ?
-      `);
+      const placeholders = keys.map((_) => `?`).join(", ");
+      const sql = `
+        SELECT key
+        FROM "${this.tableName}"
+        WHERE namespace = ? AND key IN (${placeholders})
+      `;
 
       try {
-        const result = statement.all(this.namespace, ...keys) as Record[];
-
-        resolve(result.map(row => row.ex));
+        const rows = this.db
+          .prepare(sql)
+          .all(this.namespace, ...keys) as KeyRecord[];
+        // Create a set of existing keys for faster lookup
+        const existingKeysSet = new Set(rows.map((row) => row.key));
+        // Map to boolean array based on presence in the existingKeysSet
+        const exists = keys.map((key) => existingKeysSet.has(key));
+        resolve(exists);
       } catch (error) {
         reject(error);
       }
@@ -174,15 +189,17 @@ export class SQLiteRecordManager implements RecordManagerInterface {
       }
 
       if (groupIds && Array.isArray(groupIds)) {
-        query += ` AND group_id IN (${groupIds.map(() => '?').join(', ')})`;
+        query += ` AND group_id IN (${groupIds.map(() => "?").join(", ")})`;
         values.push(...(groupIds as (string | number | (string | null)[])[]));
       }
 
       query += ";";
 
       try {
-        const result = this.db.prepare(query).all(...values) as { key: string }[];
-        resolve(result.map(row => row.key));
+        const result = this.db.prepare(query).all(...values) as {
+          key: string;
+        }[];
+        resolve(result.map((row) => row.key));
       } catch (error) {
         reject(error);
       }
@@ -196,7 +213,9 @@ export class SQLiteRecordManager implements RecordManagerInterface {
         return;
       }
 
-      const query = `DELETE FROM "${this.tableName}" WHERE namespace = ? AND key IN (${keys.map(() => '?').join(', ')});`;
+      const query = `DELETE FROM "${
+        this.tableName
+      }" WHERE namespace = ? AND key IN (${keys.map(() => "?").join(", ")});`;
       const values: (string | number)[] = [this.namespace, ...keys];
 
       try {
@@ -207,5 +226,4 @@ export class SQLiteRecordManager implements RecordManagerInterface {
       }
     });
   }
-
 }
