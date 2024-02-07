@@ -1,6 +1,6 @@
 import { test, expect } from "@jest/globals";
 import { Document } from "@langchain/core/documents";
-import { FakeEmbeddings } from "../../utils/testing.js";
+import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { VoyVectorStore, VoyClient } from "../voy.js";
 
 const fakeClient: VoyClient = {

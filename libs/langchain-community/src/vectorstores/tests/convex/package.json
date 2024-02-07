@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "type": "module",
   "dependencies": {
-    "convex": "1.4.1"
+    "convex": "1.4.1",
+    "@langchain/core": "~0.1"
   }
 }

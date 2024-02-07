@@ -4493,6 +4493,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@azure-rest/core-client@npm:^1.1.7":
+  version: 1.1.7
+  resolution: "@azure-rest/core-client@npm:1.1.7"
+  dependencies:
+    "@azure/abort-controller": ^1.1.0
+    "@azure/core-auth": ^1.3.0
+    "@azure/core-rest-pipeline": ^1.5.0
+    "@azure/core-tracing": ^1.0.1
+    "@azure/core-util": ^1.0.0
+    tslib: ^2.2.0
+  checksum: 62edbc81c1fa682879a56e59eb53f164d7ba232647b1ac9f0d895d9153bda7cd3b43fa324d9fab046583236f8a5d5675c732e6133e6d925f1b50911877049f27
+  languageName: node
+  linkType: hard
+
 "@azure/abort-controller@npm:^1.0.0, @azure/abort-controller@npm:^1.0.4, @azure/abort-controller@npm:^1.1.0":
   version: 1.1.0
   resolution: "@azure/abort-controller@npm:1.1.0"
@@ -4512,7 +4526,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/core-auth@npm:^1.4.0":
+"@azure/core-auth@npm:^1.4.0, @azure/core-auth@npm:^1.5.0":
   version: 1.5.0
   resolution: "@azure/core-auth@npm:1.5.0"
   dependencies:
@@ -4523,7 +4537,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/core-client@npm:^1.3.0":
+"@azure/core-client@npm:^1.3.0, @azure/core-client@npm:^1.4.0":
   version: 1.7.3
   resolution: "@azure/core-client@npm:1.7.3"
   dependencies:
@@ -4592,7 +4606,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/core-rest-pipeline@npm:^1.3.0, @azure/core-rest-pipeline@npm:^1.9.1":
+"@azure/core-rest-pipeline@npm:^1.1.0, @azure/core-rest-pipeline@npm:^1.13.0, @azure/core-rest-pipeline@npm:^1.3.0, @azure/core-rest-pipeline@npm:^1.5.0, @azure/core-rest-pipeline@npm:^1.9.1":
   version: 1.13.0
   resolution: "@azure/core-rest-pipeline@npm:1.13.0"
   dependencies:
@@ -4605,6 +4619,15 @@ __metadata:
     https-proxy-agent: ^5.0.0
     tslib: ^2.2.0
   checksum: 9fe889625756121ceff421805aa643fa6b29bf5fa3730111b0ec509aa08f84b04befd29532e9fa270a85435ed9d597aa777b96730968e425d1aedea256827e94
+  languageName: node
+  linkType: hard
+
+"@azure/core-sse@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "@azure/core-sse@npm:2.0.0"
+  dependencies:
+    tslib: ^2.4.0
+  checksum: e640c7e251fcf8b2cd2d8759eea71c07f8dbb9953a6deb9a28e79efab26deca7e561acddd6cd2770d7e641f4fb2479f802b03ab1deb0410c3993e1cf67ac74d0
   languageName: node
   linkType: hard
 
@@ -4627,7 +4650,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/core-util@npm:^1.0.0, @azure/core-util@npm:^1.1.0, @azure/core-util@npm:^1.3.0":
+"@azure/core-util@npm:^1.0.0, @azure/core-util@npm:^1.1.0, @azure/core-util@npm:^1.3.0, @azure/core-util@npm:^1.4.0":
   version: 1.6.1
   resolution: "@azure/core-util@npm:1.6.1"
   dependencies:
@@ -4647,12 +4670,76 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/logger@npm:^1.0.0":
+"@azure/identity@npm:^4.0.1":
+  version: 4.0.1
+  resolution: "@azure/identity@npm:4.0.1"
+  dependencies:
+    "@azure/abort-controller": ^1.0.0
+    "@azure/core-auth": ^1.5.0
+    "@azure/core-client": ^1.4.0
+    "@azure/core-rest-pipeline": ^1.1.0
+    "@azure/core-tracing": ^1.0.0
+    "@azure/core-util": ^1.3.0
+    "@azure/logger": ^1.0.0
+    "@azure/msal-browser": ^3.5.0
+    "@azure/msal-node": ^2.5.1
+    events: ^3.0.0
+    jws: ^4.0.0
+    open: ^8.0.0
+    stoppable: ^1.1.0
+    tslib: ^2.2.0
+  checksum: 2c975ca70b274dc185022c2b19f1774079fd5cfb08c78ec3500e4baf973911b2958031d5fa36369d3c9acdeb25db457cc497991e7393b383103c058e097703e5
+  languageName: node
+  linkType: hard
+
+"@azure/logger@npm:^1.0.0, @azure/logger@npm:^1.0.3":
   version: 1.0.4
   resolution: "@azure/logger@npm:1.0.4"
   dependencies:
     tslib: ^2.2.0
   checksum: 2c243d4c667bbc5cd3e60d4473d0f1169fcef2498a02138398af15547fe1b2870197bcb4c487327451488e4d71dee05244771d51328f03611e193b99fb9aa9af
+  languageName: node
+  linkType: hard
+
+"@azure/msal-browser@npm:^3.5.0":
+  version: 3.7.1
+  resolution: "@azure/msal-browser@npm:3.7.1"
+  dependencies:
+    "@azure/msal-common": 14.6.1
+  checksum: 756cc9aef745739408be6dace5fb8aee0e63c98d6998a38c70e5eea18257ce4a79ec100e88d370402c28e1688bf13280e5166633a560e8bcfbad0525d3bb46ac
+  languageName: node
+  linkType: hard
+
+"@azure/msal-common@npm:14.6.1":
+  version: 14.6.1
+  resolution: "@azure/msal-common@npm:14.6.1"
+  checksum: 6d9da0a2863a4b076208d6ab75ff1fd2f7a3cb8018f4ee937cc769d27603ffa1c137a4a64b7bdf4e1d37d0b6275243ae758824f0adb554a5e8f37b83ee942763
+  languageName: node
+  linkType: hard
+
+"@azure/msal-node@npm:^2.5.1":
+  version: 2.6.2
+  resolution: "@azure/msal-node@npm:2.6.2"
+  dependencies:
+    "@azure/msal-common": 14.6.1
+    jsonwebtoken: ^9.0.0
+    uuid: ^8.3.0
+  checksum: 7d842c1269bd0892d6545c64cc49a5c8a739ded35103b7faa389dde0b0318c9c057df06626baa40d40dfa164db65be8544c7c32796aa3454716ec817c1749380
+  languageName: node
+  linkType: hard
+
+"@azure/openai@npm:1.0.0-beta.11":
+  version: 1.0.0-beta.11
+  resolution: "@azure/openai@npm:1.0.0-beta.11"
+  dependencies:
+    "@azure-rest/core-client": ^1.1.7
+    "@azure/core-auth": ^1.4.0
+    "@azure/core-rest-pipeline": ^1.13.0
+    "@azure/core-sse": ^2.0.0
+    "@azure/core-util": ^1.4.0
+    "@azure/logger": ^1.0.3
+    tslib: ^2.4.0
+  checksum: ce2a0f93bf952aa7b02e2f4f4e7b6a719f7d7a29a6ea1ba91b13582fc7e6fe0b9e0d07d575a273d290eb4f619aabcb599a20478055a2efc0a637c415bb945967
   languageName: node
   linkType: hard
 
@@ -7734,6 +7821,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@faker-js/faker@npm:^8.4.0":
+  version: 8.4.0
+  resolution: "@faker-js/faker@npm:8.4.0"
+  checksum: 682581f0b009b7e8b81bc0736a3f1df2fb5179706786b87ef5bed5e2e28e22dfeba10e5122942371f12d68e833be3b3726850f96940baf080500cef35a77403b
+  languageName: node
+  linkType: hard
+
 "@fastify/busboy@npm:^1.2.1":
   version: 1.2.1
   resolution: "@fastify/busboy@npm:1.2.1"
@@ -8648,7 +8742,7 @@ __metadata:
     "@anthropic-ai/sdk": ^0.12.0
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.5
-    "@langchain/scripts": ^0.0.2
+    "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     dpdm: ^3.12.0
@@ -8668,6 +8762,38 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@langchain/azure-openai@workspace:*, @langchain/azure-openai@workspace:libs/langchain-azure-openai":
+  version: 0.0.0-use.local
+  resolution: "@langchain/azure-openai@workspace:libs/langchain-azure-openai"
+  dependencies:
+    "@azure/core-auth": ^1.5.0
+    "@azure/identity": ^4.0.1
+    "@azure/openai": 1.0.0-beta.11
+    "@jest/globals": ^29.5.0
+    "@langchain/core": ~0.1.9
+    "@langchain/scripts": ~0.0
+    "@swc/core": ^1.3.90
+    "@swc/jest": ^0.2.29
+    dpdm: ^3.12.0
+    eslint: ^8.33.0
+    eslint-config-airbnb-base: ^15.0.0
+    eslint-config-prettier: ^8.6.0
+    eslint-plugin-import: ^2.27.5
+    eslint-plugin-jest: ^27.6.0
+    eslint-plugin-no-instanceof: ^1.0.1
+    eslint-plugin-prettier: ^4.2.1
+    jest: ^29.5.0
+    jest-environment-node: ^29.6.4
+    js-tiktoken: ^1.0.7
+    prettier: ^2.8.3
+    release-it: ^15.10.1
+    rimraf: ^5.0.1
+    typescript: ~5.1.6
+    zod: ^3.22.3
+    zod-to-json-schema: 3.20.3
+  languageName: unknown
+  linkType: soft
+
 "@langchain/cloudflare@workspace:*, @langchain/cloudflare@workspace:libs/langchain-cloudflare":
   version: 0.0.0-use.local
   resolution: "@langchain/cloudflare@workspace:libs/langchain-cloudflare"
@@ -8676,7 +8802,7 @@ __metadata:
     "@cloudflare/workers-types": ^4.20231218.0
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1
-    "@langchain/scripts": ^0.0.2
+    "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -8708,7 +8834,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1
-    "@langchain/scripts": ^0.0.2
+    "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -8764,7 +8890,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.16
     "@langchain/openai": ~0.0.10
-    "@langchain/scripts": ^0.0.2
+    "@langchain/scripts": ~0.0
     "@mozilla/readability": ^0.4.4
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^1.1.0
@@ -8805,9 +8931,9 @@ __metadata:
     "@zilliz/milvus2-sdk-node": ">=2.2.11"
     cassandra-driver: ^4.7.2
     chromadb: ^1.5.3
-    closevector-common: 0.1.0-alpha.1
-    closevector-node: 0.1.0-alpha.10
-    closevector-web: 0.1.0-alpha.15
+    closevector-common: 0.1.3
+    closevector-node: 0.1.6
+    closevector-web: 0.1.6
     cohere-ai: ">=6.0.0"
     convex: ^1.3.1
     discord.js: ^14.14.1
@@ -8872,7 +8998,7 @@ __metadata:
     "@aws-sdk/credential-provider-node": ^3.388.0
     "@azure/search-documents": ^12.0.0
     "@clickhouse/client": ^0.2.5
-    "@cloudflare/ai": ^1.0.12
+    "@cloudflare/ai": "*"
     "@datastax/astra-db-ts": ^0.1.4
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": "*"
@@ -8884,7 +9010,7 @@ __metadata:
     "@huggingface/inference": ^2.6.4
     "@mozilla/readability": "*"
     "@opensearch-project/opensearch": "*"
-    "@pinecone-database/pinecone": ^1.1.0
+    "@pinecone-database/pinecone": "*"
     "@planetscale/database": ^1.8.0
     "@qdrant/js-client-rest": ^1.2.0
     "@raycast/api": ^1.55.2
@@ -8907,10 +9033,10 @@ __metadata:
     "@zilliz/milvus2-sdk-node": ">=2.2.7"
     cassandra-driver: ^4.7.2
     chromadb: "*"
-    closevector-common: 0.1.0-alpha.1
-    closevector-node: 0.1.0-alpha.10
-    closevector-web: 0.1.0-alpha.16
-    cohere-ai: ">=6.0.0"
+    closevector-common: 0.1.3
+    closevector-node: 0.1.6
+    closevector-web: 0.1.6
+    cohere-ai: "*"
     convex: ^1.3.1
     discord.js: ^14.14.1
     faiss-node: ^0.5.1
@@ -8932,14 +9058,14 @@ __metadata:
     pg-copy-streams: ^6.0.5
     pickleparser: ^0.2.1
     portkey-ai: ^0.1.11
-    redis: ^4.6.4
+    redis: "*"
     replicate: ^0.18.0
     typeorm: ^0.3.12
     typesense: ^1.5.3
     usearch: ^1.1.1
     vectordb: ^0.1.4
     voy-search: 0.6.2
-    weaviate-ts-client: ^1.4.0
+    weaviate-ts-client: "*"
     web-auth-library: ^1.0.3
     ws: ^8.14.2
   peerDependenciesMeta:
@@ -9108,14 +9234,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.1, @langchain/core@~0.1.13, @langchain/core@~0.1.16, @langchain/core@~0.1.5":
+"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.1, @langchain/core@~0.1.13, @langchain/core@~0.1.16, @langchain/core@~0.1.5, @langchain/core@~0.1.9":
   version: 0.0.0-use.local
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/scripts": ^0.0.2
+    "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
+    "@types/sax": ^1
     ansi-styles: ^5.0.0
     camelcase: 6
     decamelize: 1.2.0
@@ -9138,6 +9265,7 @@ __metadata:
     prettier: ^2.8.3
     release-it: ^15.10.1
     rimraf: ^5.0.1
+    sax: ^1.3.0
     turbo: latest
     typescript: ~5.1.6
     uuid: ^9.0.0
@@ -9152,7 +9280,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1
-    "@langchain/scripts": ^0.0.2
+    "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9167,7 +9295,7 @@ __metadata:
     eslint-plugin-import: ^2.27.5
     eslint-plugin-no-instanceof: ^1.0.1
     eslint-plugin-prettier: ^4.2.1
-    exa-js: ^1.0.9
+    exa-js: ^1.0.12
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     prettier: ^2.8.3
@@ -9184,7 +9312,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.1
-    "@langchain/scripts": ^0.0.2
+    "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9214,7 +9342,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.1
     "@langchain/google-common": ~0.0.0
-    "@langchain/scripts": ^0.0.2
+    "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9245,7 +9373,7 @@ __metadata:
     "@google/generative-ai": ^0.1.3
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.5
-    "@langchain/scripts": ^0.0.2
+    "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9277,7 +9405,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.1
     "@langchain/google-common": ~0.0.0
-    "@langchain/scripts": ^0.0.2
+    "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9307,7 +9435,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.5
-    "@langchain/scripts": ^0.0.2
+    "@langchain/scripts": ~0.0
     "@mistralai/mistralai": ^0.0.7
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9332,13 +9460,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/openai@workspace:*, @langchain/openai@workspace:libs/langchain-openai, @langchain/openai@~0.0.10, @langchain/openai@~0.0.12":
+"@langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai, @langchain/openai@~0.0.10, @langchain/openai@~0.0.12":
   version: 0.0.0-use.local
   resolution: "@langchain/openai@workspace:libs/langchain-openai"
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.13
-    "@langchain/scripts": ^0.0.2
+    "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     dpdm: ^3.12.0
@@ -9369,7 +9497,7 @@ __metadata:
     "@faker-js/faker": ^8.3.1
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1
-    "@langchain/scripts": ^0.0.2
+    "@langchain/scripts": ~0.0
     "@pinecone-database/pinecone": ^2.0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9396,7 +9524,41 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/scripts@^0.0.2, @langchain/scripts@workspace:libs/langchain-scripts":
+"@langchain/redis@workspace:*, @langchain/redis@workspace:libs/langchain-redis":
+  version: 0.0.0-use.local
+  resolution: "@langchain/redis@workspace:libs/langchain-redis"
+  dependencies:
+    "@faker-js/faker": ^8.4.0
+    "@jest/globals": ^29.5.0
+    "@langchain/core": ~0.1
+    "@langchain/scripts": ~0.0
+    "@swc/core": ^1.3.90
+    "@swc/jest": ^0.2.29
+    "@tsconfig/recommended": ^1.0.3
+    "@types/uuid": ^9
+    "@typescript-eslint/eslint-plugin": ^6.12.0
+    "@typescript-eslint/parser": ^6.12.0
+    dotenv: ^16.3.1
+    dpdm: ^3.12.0
+    eslint: ^8.33.0
+    eslint-config-airbnb-base: ^15.0.0
+    eslint-config-prettier: ^8.6.0
+    eslint-plugin-import: ^2.27.5
+    eslint-plugin-no-instanceof: ^1.0.1
+    eslint-plugin-prettier: ^4.2.1
+    jest: ^29.5.0
+    jest-environment-node: ^29.6.4
+    prettier: ^2.8.3
+    redis: ^4.6.13
+    release-it: ^15.10.1
+    rollup: ^4.5.2
+    ts-jest: ^29.1.0
+    typescript: <5.2.0
+    uuid: ^9.0.1
+  languageName: unknown
+  linkType: soft
+
+"@langchain/scripts@workspace:libs/langchain-scripts, @langchain/scripts@~0.0":
   version: 0.0.0-use.local
   resolution: "@langchain/scripts@workspace:libs/langchain-scripts"
   dependencies:
@@ -9427,13 +9589,47 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@langchain/weaviate@workspace:*, @langchain/weaviate@workspace:libs/langchain-weaviate":
+  version: 0.0.0-use.local
+  resolution: "@langchain/weaviate@workspace:libs/langchain-weaviate"
+  dependencies:
+    "@jest/globals": ^29.5.0
+    "@langchain/core": ~0.1
+    "@langchain/openai": "workspace:^"
+    "@langchain/scripts": ~0.0
+    "@swc/core": ^1.3.90
+    "@swc/jest": ^0.2.29
+    "@tsconfig/recommended": ^1.0.3
+    "@types/uuid": ^9
+    "@typescript-eslint/eslint-plugin": ^6.12.0
+    "@typescript-eslint/parser": ^6.12.0
+    dotenv: ^16.3.1
+    dpdm: ^3.12.0
+    eslint: ^8.33.0
+    eslint-config-airbnb-base: ^15.0.0
+    eslint-config-prettier: ^8.6.0
+    eslint-plugin-import: ^2.27.5
+    eslint-plugin-no-instanceof: ^1.0.1
+    eslint-plugin-prettier: ^4.2.1
+    jest: ^29.5.0
+    jest-environment-node: ^29.6.4
+    prettier: ^2.8.3
+    release-it: ^15.10.1
+    rollup: ^4.5.2
+    ts-jest: ^29.1.0
+    typescript: <5.2.0
+    uuid: ^9.0.1
+    weaviate-ts-client: ^2.0.0
+  languageName: unknown
+  linkType: soft
+
 "@langchain/yandex@workspace:*, @langchain/yandex@workspace:libs/langchain-yandex":
   version: 0.0.0-use.local
   resolution: "@langchain/yandex@workspace:libs/langchain-yandex"
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1
-    "@langchain/scripts": ^0.0.2
+    "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -10397,6 +10593,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@redis/client@npm:1.5.14":
+  version: 1.5.14
+  resolution: "@redis/client@npm:1.5.14"
+  dependencies:
+    cluster-key-slot: 1.1.2
+    generic-pool: 3.9.0
+    yallist: 4.0.0
+  checksum: f401997c6df92055c1a59385ed2fed7ee9295860f39935821107ea2570f76168dd1b25b71a3b37b9bbfaba26a9d18080d6bcd101a4bfc3852f72cc20576c6e7d
+  languageName: node
+  linkType: hard
+
 "@redis/client@npm:1.5.7":
   version: 1.5.7
   resolution: "@redis/client@npm:1.5.7"
@@ -10417,12 +10624,30 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@redis/graph@npm:1.1.1":
+  version: 1.1.1
+  resolution: "@redis/graph@npm:1.1.1"
+  peerDependencies:
+    "@redis/client": ^1.0.0
+  checksum: caf9b9a3ff82a08ae543c356a3fed548399ae79aba5ed08ce6cf1b522b955eb5cee4406b0ed0c6899345f8fbc06dfd6cd51304ae8422c3ebbc468f53294dc509
+  languageName: node
+  linkType: hard
+
 "@redis/json@npm:1.0.4":
   version: 1.0.4
   resolution: "@redis/json@npm:1.0.4"
   peerDependencies:
     "@redis/client": ^1.0.0
   checksum: de07f9c37abed603dec352593eb69fc8a94475e7f86b4f65b9805394492d448a1e4181db74269d80eb9dba6f3ae8a41804204821db36bb801cd7c1e30ac7ec80
+  languageName: node
+  linkType: hard
+
+"@redis/json@npm:1.0.6":
+  version: 1.0.6
+  resolution: "@redis/json@npm:1.0.6"
+  peerDependencies:
+    "@redis/client": ^1.0.0
+  checksum: 9fda29abc339c72593f34a23f8023b715c1f8f3d73f7c59889af02f25589bac2ad57073ad08d0b8da42cd8c258665a7b38d39e761e92945cc27aca651c8a93a5
   languageName: node
   linkType: hard
 
@@ -10435,12 +10660,30 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@redis/search@npm:1.1.6":
+  version: 1.1.6
+  resolution: "@redis/search@npm:1.1.6"
+  peerDependencies:
+    "@redis/client": ^1.0.0
+  checksum: 0d87e6a9e40e62e46064ccfccca9a5ba7ce608890740415008acb1e83a02690edf37ac1ee878bcc0702d30a2eeba7776e7b467b71f87d8e7b278f38637161e16
+  languageName: node
+  linkType: hard
+
 "@redis/time-series@npm:1.0.4":
   version: 1.0.4
   resolution: "@redis/time-series@npm:1.0.4"
   peerDependencies:
     "@redis/client": ^1.0.0
   checksum: a5fca079deb04a2f204a7f9a375a6ff698a119d5dd53f7581fa8fd9e3bacacf1ecb0253b97fada484a012fea7a98014bc0f4f79707d4e92ff61c00318f2bfe04
+  languageName: node
+  linkType: hard
+
+"@redis/time-series@npm:1.0.5":
+  version: 1.0.5
+  resolution: "@redis/time-series@npm:1.0.5"
+  peerDependencies:
+    "@redis/client": ^1.0.0
+  checksum: 6bbdb0b793dcbd13518aa60a09a980f953554e4c745bfacc1611baa8098f360e0378e8ee6b7faf600a67f1de83f4b68bbec6f95a0740faee6164c14be3a30752
   languageName: node
   linkType: hard
 
@@ -14195,6 +14438,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/sax@npm:^1":
+  version: 1.2.7
+  resolution: "@types/sax@npm:1.2.7"
+  dependencies:
+    "@types/node": "*"
+  checksum: 7ece5fbb5d9c8fc76ab0de2f99d705edf92f18e701d4f9d9b0647275e32eb65e656c1badf9dfaa12f4e1ff3e250561c8c9cfe79e8b5f33dd1417ac0f1804f6cc
+  languageName: node
+  linkType: hard
+
 "@types/sax@npm:^1.2.1":
   version: 1.2.5
   resolution: "@types/sax@npm:1.2.5"
@@ -17383,10 +17635,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"closevector-common@npm:0.1.0-alpha.1":
-  version: 0.1.0-alpha.1
-  resolution: "closevector-common@npm:0.1.0-alpha.1"
-  checksum: eccd2ee3ef43c60203a15005309b16a18ee90a50515e60df1c306e431c96ced9b913d9c362b551014fc8975f9b5c26fef3f61d74286b4c7039c6bc91d9ea54dd
+"closevector-common@npm:0.1.3":
+  version: 0.1.3
+  resolution: "closevector-common@npm:0.1.3"
+  checksum: eba748d8e25483c0a327fe1c886f5662dde7243b6f32e9b108d7b0ab6d3b6ba5194fdc6f143aa2c3c5eb8f27db365cd6cd83d5633945467267bcab83aff78d9e
   languageName: node
   linkType: hard
 
@@ -17397,38 +17649,38 @@ __metadata:
   languageName: node
   linkType: hard
 
-"closevector-hnswlib-node@npm:0.1.0-alpha.2":
-  version: 0.1.0-alpha.2
-  resolution: "closevector-hnswlib-node@npm:0.1.0-alpha.2"
+"closevector-hnswlib-node@npm:0.1.1":
+  version: 0.1.1
+  resolution: "closevector-hnswlib-node@npm:0.1.1"
   dependencies:
     bindings: ^1.5.0
     node-addon-api: ^7.0.0
     node-gyp: latest
-  checksum: 9bf4cf9325caacc5e6c237392f4bc7f9d0344ed009030494117930e014b664b500627c0bd75f6eaca3ab64625a0c927c1c198bfc0f31516d72d83844190ec54d
+  checksum: eb9f51b993cb64df9e3e352ebd20a448aeda617efa2c85256b3674d1ed6aacb665b8037e104c58dc9df53815fcd0abff9d6b3ebf94463dc56751e1cc4d6d8257
   languageName: node
   linkType: hard
 
-"closevector-hnswlib-wasm@npm:0.1.0-alpha.3":
-  version: 0.1.0-alpha.3
-  resolution: "closevector-hnswlib-wasm@npm:0.1.0-alpha.3"
+"closevector-hnswlib-wasm@npm:0.1.1":
+  version: 0.1.1
+  resolution: "closevector-hnswlib-wasm@npm:0.1.1"
   dependencies:
     bindings: ^1.5.0
     node-addon-api: ^7.0.0
-  checksum: d0dd57782c25807b38b4977f19d1bedea5347d85e33917f20bbfa40c1017eaec565252f27f3e4675690cddda0c889d732ce5069abb6c29976a903be828ecbe8d
+  checksum: 2be44e3ea4710f3a7bf1204b1e8447efdc7b610a18bab35bec460ef33cec8ea6e77aff1f8a47fe431315d7c2c9fafd1c75bbd1019f105284574d56a6916e8dc9
   languageName: node
   linkType: hard
 
-"closevector-node@npm:0.1.0-alpha.10":
-  version: 0.1.0-alpha.10
-  resolution: "closevector-node@npm:0.1.0-alpha.10"
+"closevector-node@npm:0.1.6":
+  version: 0.1.6
+  resolution: "closevector-node@npm:0.1.6"
   dependencies:
     axios: ^1.4.0
-    closevector-common: 0.1.0-alpha.1
-    closevector-hnswlib-node: 0.1.0-alpha.2
+    closevector-common: 0.1.3
+    closevector-hnswlib-node: 0.1.1
     jsonwebtoken: ^9.0.0
     tar: ^6.1.15
     typescript: ^5.1.6
-  checksum: af946bcab810414af4408013fadf402253dfe5375cb0ef0f036f1fce4885cf65ccf5f201cc4aac35b95bdeccb04d47678bc333a08a83ec7d0e5de9c69456c1e6
+  checksum: e374556a2bc094569bda13d51135b27840d6c0bd1a03be8d990e0d6886b6240f592a3ae4c5096374166e923da8ac63211c2440263063f923a6aa265d0dcc5519
   languageName: node
   linkType: hard
 
@@ -17456,20 +17708,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"closevector-web@npm:0.1.0-alpha.15":
-  version: 0.1.0-alpha.15
-  resolution: "closevector-web@npm:0.1.0-alpha.15"
+"closevector-web@npm:0.1.6":
+  version: 0.1.6
+  resolution: "closevector-web@npm:0.1.6"
   dependencies:
     axios: ^1.4.0
     closevector-browserify-zlib: 0.1.0-alpha.3
-    closevector-common: 0.1.0-alpha.1
+    closevector-common: 0.1.3
     closevector-crypto-jwt: 0.1.0-alpha.3
-    closevector-hnswlib-wasm: 0.1.0-alpha.3
+    closevector-hnswlib-wasm: 0.1.1
     closevector-stream-browserify: 0.1.0-alpha.1
     gunzip-maybe: ^1.4.2
     tar-stream: ^3.1.6
     typescript: ^5.1.6
-  checksum: 2f8b0b53b0aa944a00ffda9215d5b3ddafedbae3bee7e78ed49d0b183b03f2ec6340876a21b020381f2e193578b29e067f76ca0e4c34c10d439232147c93ace8
+  checksum: 95057ca3a1fac73c1927dfab9d932a2006cb9dfd7084c2750efb3b88c4c90b0681e70adc48c12f840bf5416cd86e89f9ba9bb1b59e8e06ffa2f6833e56ee68af
   languageName: node
   linkType: hard
 
@@ -20666,12 +20918,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"exa-js@npm:^1.0.9":
-  version: 1.0.9
-  resolution: "exa-js@npm:1.0.9"
+"exa-js@npm:^1.0.12":
+  version: 1.0.12
+  resolution: "exa-js@npm:1.0.12"
   dependencies:
     cross-fetch: ^4.0.0
-  checksum: ad4b7989a9bead24122530cb15289fd1df743a9b85d470c2c6824b2d46b9fcfdff57df9ac506ef66252f180140c035f88b6ab27d8ad1595f2656e6636635dbba
+  checksum: b966977cd8163219bd3039989339d8c3c13d67fe06f349db98fed87e6e7a7f312a2f1460bc4ef148e88d0d56b37a8e5b84ca05e5401a89ad6407902130fff339
   languageName: node
   linkType: hard
 
@@ -20686,6 +20938,7 @@ __metadata:
     "@gomomento/sdk": ^1.51.1
     "@google/generative-ai": ^0.1.0
     "@langchain/anthropic": "workspace:*"
+    "@langchain/azure-openai": "workspace:*"
     "@langchain/cloudflare": "workspace:*"
     "@langchain/cohere": "workspace:*"
     "@langchain/community": "workspace:*"
@@ -20695,6 +20948,8 @@ __metadata:
     "@langchain/mistralai": "workspace:*"
     "@langchain/openai": "workspace:*"
     "@langchain/pinecone": "workspace:*"
+    "@langchain/redis": "workspace:*"
+    "@langchain/weaviate": "workspace:*"
     "@langchain/yandex": "workspace:*"
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^2.0.0
@@ -20723,7 +20978,7 @@ __metadata:
     eslint-plugin-import: ^2.27.5
     eslint-plugin-prettier: ^4.2.1
     eslint-plugin-unused-imports: ^3.0.0
-    exa-js: ^1.0.9
+    exa-js: ^1.0.12
     faiss-node: ^0.5.1
     firebase-admin: ^11.9.0
     glob: ^10.3.10
@@ -20738,7 +20993,7 @@ __metadata:
     pickleparser: ^0.2.1
     prettier: ^2.8.3
     prisma: ^4.11.0
-    redis: ^4.6.6
+    redis: ^4.6.13
     sqlite3: ^5.1.4
     ts-morph: ^21.0.1
     tsx: ^3.12.3
@@ -20748,7 +21003,7 @@ __metadata:
     uuid: ^9.0.0
     vectordb: ^0.1.4
     voy-search: 0.6.2
-    weaviate-ts-client: ^1.0.0
+    weaviate-ts-client: ^2.0.0
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.3
   languageName: unknown
@@ -22443,7 +22698,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-request@npm:^5.1.0":
+"graphql-request@npm:^5.1.0, graphql-request@npm:^5.2.0":
   version: 5.2.0
   resolution: "graphql-request@npm:5.2.0"
   dependencies:
@@ -25316,7 +25571,7 @@ __metadata:
     "@langchain/community": ~0.0.20
     "@langchain/core": ~0.1.16
     "@langchain/openai": ~0.0.12
-    "@langchain/scripts": ^0.0.2
+    "@langchain/scripts": ~0.0
     "@notionhq/client": ^2.2.10
     "@pinecone-database/pinecone": ^1.1.0
     "@supabase/supabase-js": ^2.10.0
@@ -25358,7 +25613,6 @@ __metadata:
     fast-xml-parser: ^4.2.7
     glob: ^10.3.10
     google-auth-library: ^8.9.0
-    googleapis: ^126.0.1
     handlebars: ^4.7.8
     html-to-text: ^9.0.5
     ignore: ^5.2.0
@@ -25430,7 +25684,6 @@ __metadata:
     epub2: ^3.0.1
     fast-xml-parser: ^4.2.7
     google-auth-library: ^8.9.0
-    googleapis: ^126.0.1
     handlebars: ^4.7.8
     html-to-text: ^9.0.5
     ignore: ^5.2.0
@@ -25510,8 +25763,6 @@ __metadata:
     glob:
       optional: true
     google-auth-library:
-      optional: true
-    googleapis:
       optional: true
     handlebars:
       optional: true
@@ -27963,7 +28214,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"open@npm:^8.0.9, open@npm:^8.4.0":
+"open@npm:^8.0.0, open@npm:^8.0.9, open@npm:^8.4.0":
   version: 8.4.2
   resolution: "open@npm:8.4.2"
   dependencies:
@@ -30460,6 +30711,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"redis@npm:^4.6.13":
+  version: 4.6.13
+  resolution: "redis@npm:4.6.13"
+  dependencies:
+    "@redis/bloom": 1.2.0
+    "@redis/client": 1.5.14
+    "@redis/graph": 1.1.1
+    "@redis/json": 1.0.6
+    "@redis/search": 1.1.6
+    "@redis/time-series": 1.0.5
+  checksum: 10150ec30f1f89e47cec41c27dc77a99c78a0b078735de4fc9b79c2a779787d52274c64c52004af161b95b9729067671a4cfca95257719968accb30057856a09
+  languageName: node
+  linkType: hard
+
 "redis@npm:^4.6.6":
   version: 4.6.6
   resolution: "redis@npm:4.6.6"
@@ -31275,7 +31540,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sax@npm:^1.2.4":
+"sax@npm:^1.2.4, sax@npm:^1.3.0":
   version: 1.3.0
   resolution: "sax@npm:1.3.0"
   checksum: 238ab3a9ba8c8f8aaf1c5ea9120386391f6ee0af52f1a6a40bbb6df78241dd05d782f2359d614ac6aae08c4c4125208b456548a6cf68625aa4fe178486e63ecd
@@ -32197,6 +32462,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"stoppable@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "stoppable@npm:1.1.0"
+  checksum: 63104fcbdece130bc4906fd982061e763d2ef48065ed1ab29895e5ad00552c625f8a4c50c9cd2e3bfa805c8a2c3bfdda0f07c5ae39694bd2d5cb0bee1618d1e9
+  languageName: node
+  linkType: hard
+
 "stream-events@npm:^1.0.5":
   version: 1.0.5
   resolution: "stream-events@npm:1.0.5"
@@ -32755,7 +33027,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tar@npm:^6.0.2, tar@npm:^6.1.11, tar@npm:^6.1.13, tar@npm:^6.1.2":
+"tar@npm:^6.0.2, tar@npm:^6.1.11, tar@npm:^6.1.2":
   version: 6.1.13
   resolution: "tar@npm:6.1.13"
   dependencies:
@@ -34541,17 +34813,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"weaviate-ts-client@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "weaviate-ts-client@npm:1.0.0"
-  dependencies:
-    graphql-request: ^5.1.0
-    isomorphic-fetch: ^3.0.0
-    tar: ^6.1.13
-  checksum: ffa3c13913cf8999a1bfd3db1cc1952d7bfd4e6ca3d2f6eadfb17a56595bfc74fd9f068d1e9d73677b87281d53486ba333d5d5aedb31f072f05d6a5d8e7b2502
-  languageName: node
-  linkType: hard
-
 "weaviate-ts-client@npm:^1.4.0":
   version: 1.4.0
   resolution: "weaviate-ts-client@npm:1.4.0"
@@ -34560,6 +34821,16 @@ __metadata:
     isomorphic-fetch: ^3.0.0
     uuid: ^9.0.0
   checksum: aef68e7d77ac8b3d42e1a3dd3c4dcb7a0c74b96c1a3d7b11e52313c7dfa9a9b3fc9ba5f3048628d67193ca6c84bb8a7eca641dacfdc459cfe26ac2fe20b07f11
+  languageName: node
+  linkType: hard
+
+"weaviate-ts-client@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "weaviate-ts-client@npm:2.0.0"
+  dependencies:
+    graphql-request: ^5.2.0
+    uuid: ^9.0.1
+  checksum: 4c8ec1c55cb3acb19ebdfc6bdecfd3f6eee5f2361b9efeaf49fcdfce426c410f7ec551143768c0ff19e4615279c0d96695d86e65514b2a22f544826dc9640cae
   languageName: node
   linkType: hard
 
@@ -35452,6 +35723,15 @@ __metadata:
     tslib: ^2.5.0
     undici: ^5.19.1
   checksum: 4321f102ba1141c5aaaf94852f2afe3e4d0b27d62a670b65959f16462e7d017b0d8195990dc5ded79285f04287533ff7739f8c154593356cc6aa6ed9a70782ee
+  languageName: node
+  linkType: hard
+
+"zod-to-json-schema@npm:3.20.3":
+  version: 3.20.3
+  resolution: "zod-to-json-schema@npm:3.20.3"
+  peerDependencies:
+    zod: ^3.20.0
+  checksum: 1addf7e6f7d69398404dc90f5c9b76ea44e3f6deeb2fc7c72983a00e15b7340661d7e894b0a4eee3a07334dcdcc79d7064e44de46b4acc37d38ab2f3f7217ec8
   languageName: node
   linkType: hard
 

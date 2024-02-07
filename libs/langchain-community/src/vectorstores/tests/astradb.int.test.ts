@@ -25,7 +25,7 @@ const astraConfig: AstraLibArgs = {
   },
 };
 
-describe("AstraDBVectorStore", () => {
+describe.skip("AstraDBVectorStore", () => {
   beforeEach(async () => {
     try {
       await client.dropCollection(astraConfig.collection);

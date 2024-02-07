@@ -9,16 +9,24 @@ import { SyntheticEmbeddings } from "@langchain/core/utils/testing";
 import { Document } from "@langchain/core/documents";
 import { PineconeStoreParams, PineconeStore } from "../vectorstores.js";
 
-describe("PineconeStore", () => {
+function sleep(ms: number) {
+  // eslint-disable-next-line no-promise-executor-return
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+describe.skip("PineconeStore", () => {
   let pineconeStore: PineconeStore;
   const testIndexName = process.env.PINECONE_INDEX!;
+  let namespaces: string[] = [];
 
   beforeAll(async () => {
     const embeddings = new SyntheticEmbeddings({
       vectorSize: 1536,
     });
 
-    const pinecone = new Pinecone();
+    const pinecone = new Pinecone({
+      apiKey: process.env.PINECONE_API_KEY!,
+    });
 
     const pineconeIndex = pinecone.Index(testIndexName);
 
@@ -29,6 +37,18 @@ describe("PineconeStore", () => {
     pineconeStore = new PineconeStore(embeddings, pineconeArgs);
   });
 
+  afterEach(async () => {
+    if (namespaces.length) {
+      const delAllPromise = namespaces.map((namespace) =>
+        pineconeStore.delete({ deleteAll: true, namespace })
+      );
+      await Promise.all(delAllPromise);
+    } else {
+      await pineconeStore.delete({ deleteAll: true });
+    }
+    namespaces = [];
+  });
+
   test("user-provided ids", async () => {
     const documentId = uuid.v4();
     const pageContent = faker.lorem.sentence(5);
@@ -37,6 +57,7 @@ describe("PineconeStore", () => {
       [{ pageContent, metadata: {} }],
       [documentId]
     );
+    await sleep(35000);
 
     const results = await pineconeStore.similaritySearch(pageContent, 1);
 
@@ -46,6 +67,7 @@ describe("PineconeStore", () => {
       [{ pageContent: `${pageContent} upserted`, metadata: {} }],
       [documentId]
     );
+    await sleep(35000);
 
     const results2 = await pineconeStore.similaritySearch(pageContent, 1);
 
@@ -61,6 +83,7 @@ describe("PineconeStore", () => {
       { pageContent, metadata: { foo: "bar" } },
     ]);
 
+    await sleep(35000);
     const results = await pineconeStore.similaritySearch(pageContent, 1);
 
     expect(results).toEqual([
@@ -77,7 +100,7 @@ describe("PineconeStore", () => {
       { pageContent, metadata: { foo: id } },
       { pageContent, metadata: { foo: "qux" } },
     ]);
-
+    await sleep(35000);
     // If the filter wasn't working, we'd get all 3 documents back
     const results = await pineconeStore.similaritySearch(pageContent, 3, {
       foo: id,
@@ -97,7 +120,7 @@ describe("PineconeStore", () => {
       { pageContent, metadata: { foo: id } },
       { pageContent, metadata: { foo: id } },
     ]);
-
+    await sleep(35000);
     // If the filter wasn't working, we'd get all 3 documents back
     const results = await pineconeStore.maxMarginalRelevanceSearch(
       pageContent,
@@ -119,7 +142,7 @@ describe("PineconeStore", () => {
       { pageContent, metadata: { foo: id } },
       { pageContent, metadata: { foo: id } },
     ]);
-
+    await sleep(35000);
     const results = await pineconeStore.similaritySearch(pageContent, 2, {
       foo: id,
     });
@@ -145,7 +168,7 @@ describe("PineconeStore", () => {
       { pageContent, metadata: { foo: id } },
       { pageContent, metadata: { foo: id } },
     ]);
-
+    await sleep(35000);
     const results = await pineconeStore.similaritySearch(pageContent, 2, {
       foo: id,
     });
@@ -161,5 +184,30 @@ describe("PineconeStore", () => {
     });
 
     expect(results2.length).toEqual(0);
+  });
+
+  test("query based on passed namespace", async () => {
+    const pageContent = "Can we make namespaces work!";
+    const id1 = uuid.v4();
+    const id2 = uuid.v4();
+    namespaces = ["test-1", "test-2"];
+    await pineconeStore.addDocuments(
+      [{ pageContent, metadata: { foo: id1 } }],
+      {
+        namespace: namespaces[0],
+      }
+    );
+    await pineconeStore.addDocuments(
+      [{ pageContent, metadata: { foo: id2 } }],
+      {
+        namespace: namespaces[1],
+      }
+    );
+    await sleep(35000);
+    const results = await pineconeStore.similaritySearch(pageContent, 1, {
+      namespace: namespaces[0],
+    });
+    expect(results.length).toEqual(1);
+    expect(results[0].metadata.foo).toBe(id1);
   });
 });

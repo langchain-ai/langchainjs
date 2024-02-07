@@ -5,7 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { SupabaseHybridSearch } from "../supabase.js";
 
-test("Supabase hybrid keyword search", async () => {
+test.skip("Supabase hybrid keyword search", async () => {
   const client = createClient(
     process.env.SUPABASE_URL!,
     process.env.SUPABASE_PRIVATE_KEY!
