@@ -58,7 +58,7 @@ jobs:
       - name: Build Core
         run: yarn turbo:command build --filter=@langchain/core
       - name: Build all except LangChain
-        run: yarn turbo:command build --filter=!langchain
+        run: yarn turbo:command build --filter=!langchain --filter=!core_docc --filter=!api_refs --filter=!create-langchain-integration
       - name: Build LangChain
         run: yarn turbo:command build --filter=langchain
       - name: Build examples
