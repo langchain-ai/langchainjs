@@ -36,11 +36,15 @@ test("Test ConfluenceLoader and fetchConfluenceData calls", async () => {
   // until the size of the response is 0
   const fetchConfluenceDataMock = jest
     .spyOn(loader, "fetchConfluenceData")
-    .mockImplementationOnce(() =>
-      Promise.resolve({ size: 2, results: fakeResponse })
+    .mockImplementationOnce(
+      () =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        Promise.resolve({ size: 2, results: fakeResponse }) as any
     )
-    .mockImplementationOnce(() =>
-      Promise.resolve({ size: 2, results: fakeResponse })
+    .mockImplementationOnce(
+      () =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        Promise.resolve({ size: 2, results: fakeResponse }) as any
     )
     .mockImplementationOnce(() => Promise.resolve({ size: 0, results: [] }));
 
