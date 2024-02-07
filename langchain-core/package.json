@@ -281,6 +281,15 @@
       "import": "./runnables.js",
       "require": "./runnables.cjs"
     },
+    "./runnables/remote": {
+      "types": {
+        "import": "./runnables/remote.d.ts",
+        "require": "./runnables/remote.d.cts",
+        "default": "./runnables/remote.d.ts"
+      },
+      "import": "./runnables/remote.js",
+      "require": "./runnables/remote.cjs"
+    },
     "./retrievers": {
       "types": {
         "import": "./retrievers.d.ts",
@@ -397,6 +406,15 @@
       },
       "import": "./utils/env.js",
       "require": "./utils/env.cjs"
+    },
+    "./utils/event_source_parse": {
+      "types": {
+        "import": "./utils/event_source_parse.d.ts",
+        "require": "./utils/event_source_parse.d.cts",
+        "default": "./utils/event_source_parse.d.ts"
+      },
+      "import": "./utils/event_source_parse.js",
+      "require": "./utils/event_source_parse.cjs"
     },
     "./utils/function_calling": {
       "types": {
@@ -576,6 +594,10 @@
     "runnables.js",
     "runnables.d.ts",
     "runnables.d.cts",
+    "runnables/remote.cjs",
+    "runnables/remote.js",
+    "runnables/remote.d.ts",
+    "runnables/remote.d.cts",
     "retrievers.cjs",
     "retrievers.js",
     "retrievers.d.ts",
@@ -628,6 +650,10 @@
     "utils/env.js",
     "utils/env.d.ts",
     "utils/env.d.cts",
+    "utils/event_source_parse.cjs",
+    "utils/event_source_parse.js",
+    "utils/event_source_parse.d.ts",
+    "utils/event_source_parse.d.cts",
     "utils/function_calling.cjs",
     "utils/function_calling.js",
     "utils/function_calling.d.ts",
