@@ -74,7 +74,7 @@ test("createOpenAIFunctionsAgent can stream log", async () => {
   }
 
   if (!firstChunkTime) {
-    throw new Error("firstChunkTime was not set.")
+    throw new Error("firstChunkTime was not set.");
   }
 
   console.log(chunks.length);
