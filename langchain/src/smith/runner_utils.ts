@@ -6,8 +6,8 @@ import {
   RunnableConfig,
   RunnableLambda,
 } from "@langchain/core/runnables";
-import { RunCollectorCallbackHandler } from "@langchain/core/tracers/run_collector";
 import { LangChainTracer } from "@langchain/core/tracers/tracer_langchain";
+import { BaseTracer } from "@langchain/core/tracers/base";
 import { ChainValues } from "@langchain/core/utils/types";
 import { Client, Example, Feedback, Run } from "langsmith";
 import { EvaluationResult, RunEvaluator } from "langsmith/evaluation";
@@ -35,7 +35,7 @@ export type ChainOrFactory =
   | (() => (obj: unknown) => unknown)
   | (() => (obj: unknown) => Promise<unknown>);
 
-class RunIdExtractor {
+class SingleRunIdExtractor {
   runIdPromiseResolver: (runId: string) => void;
 
   runIdPromise: Promise<string>;
@@ -59,6 +59,30 @@ class RunIdExtractor {
   }
 }
 
+class SingleRunExtractor extends BaseTracer {
+  runPromiseResolver: (run: Run) => void;
+
+  runPromise: Promise<Run>;
+
+  /** The name of the callback handler. */
+  name = "single_run_extractor";
+
+  constructor() {
+    super();
+    this.runPromise = new Promise<Run>((extract) => {
+      this.runPromiseResolver = extract;
+    });
+  }
+
+  async persistRun(run: Run) {
+    this.runPromiseResolver(run);
+  }
+
+  async extract(): Promise<Run> {
+    return this.runPromise;
+  }
+}
+
 /**
  * Wraps an evaluator function + implements the RunEvaluator interface.
  */
@@ -76,7 +100,7 @@ class DynamicRunEvaluator implements RunEvaluator {
    * @returns A promise that extracts to the evaluation result.
    */
   async evaluateRun(run: Run, example?: Example): Promise<EvaluationResult> {
-    const extractor = new RunIdExtractor();
+    const extractor = new SingleRunIdExtractor();
     const tracer = new LangChainTracer({ projectName: "evaluators" });
     const result = await this.evaluator.invoke(
       {
@@ -169,7 +193,7 @@ class PreparedRunEvaluator implements RunEvaluator {
       rawReferenceOutput: example?.outputs,
       run,
     });
-    const extractor = new RunIdExtractor();
+    const extractor = new SingleRunIdExtractor();
     const tracer = new LangChainTracer({ projectName: "evaluators" });
     if (this.isStringEvaluator) {
       const evalResult = await this.evaluator.evaluateStrings(
@@ -278,25 +302,23 @@ const loadExamples = async ({
 }) => {
   const exampleIterator = client.listExamples({ datasetName });
   const configs: RunnableConfig[] = [];
-  const runCollectors = [];
+  const runExtractors = [];
   const examples = [];
   for await (const example of exampleIterator) {
-    const runCollector = new RunCollectorCallbackHandler({
-      exampleId: example.id,
-    });
+    const runExtractor = new SingleRunExtractor();
     configs.push({
       callbacks: [
         new LangChainTracer({ exampleId: example.id, projectName }),
-        runCollector,
+        runExtractor,
       ],
     });
     examples.push(example);
-    runCollectors.push(runCollector);
+    runExtractors.push(runExtractor);
   }
   return {
     configs,
     examples,
-    runCollectors,
+    runExtractors,
   };
 };
 
@@ -456,7 +478,7 @@ export const runOnDataset = async (
   const dataset = await testClient.readDataset({ datasetName });
   const datasetId = dataset.id;
   const testConcurrency = maxConcurrency ?? 5;
-  const { configs, examples, runCollectors } = await loadExamples({
+  const { configs, examples, runExtractors } = await loadExamples({
     datasetName,
     client: testClient,
     projectName: testProjectName,
@@ -494,7 +516,7 @@ export const runOnDataset = async (
   progress.complete();
   const runs: Run[] = [];
   for (let i = 0; i < examples.length; i += 1) {
-    runs.push(runCollectors[i].tracedRuns[0]);
+    runs.push(await runExtractors[i].extract());
   }
   let evalResults: Record<
     string,
