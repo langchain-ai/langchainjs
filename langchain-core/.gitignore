@@ -82,6 +82,10 @@ runnables.cjs
 runnables.js
 runnables.d.ts
 runnables.d.cts
+runnables/remote.cjs
+runnables/remote.js
+runnables/remote.d.ts
+runnables/remote.d.cts
 retrievers.cjs
 retrievers.js
 retrievers.d.ts
@@ -134,6 +138,10 @@ utils/env.cjs
 utils/env.js
 utils/env.d.ts
 utils/env.d.cts
+utils/event_source_parse.cjs
+utils/event_source_parse.js
+utils/event_source_parse.d.ts
+utils/event_source_parse.d.cts
 utils/function_calling.cjs
 utils/function_calling.js
 utils/function_calling.d.ts
