@@ -25,12 +25,17 @@ async function main() {
     const badClosingQuote = `”`;
     const goodQuote = `"`;
     const contents = await fs.readFile(md + "x", "utf-8");
-    if (contents.includes(badOpeningQuote) || contents.includes(badClosingQuote)) {
+    if (
+      contents.includes(badOpeningQuote) ||
+      contents.includes(badClosingQuote)
+    ) {
       // Regex search and replace all badQuotes
-      const newContents = contents.replace(new RegExp(badOpeningQuote, "g"), goodQuote).replace(new RegExp(badClosingQuote, "g"), goodQuote);
+      const newContents = contents
+        .replace(new RegExp(badOpeningQuote, "g"), goodQuote)
+        .replace(new RegExp(badClosingQuote, "g"), goodQuote);
       await fs.writeFile(md + "x", newContents);
     }
-    
+
     return [`${md}x`];
   });
 
