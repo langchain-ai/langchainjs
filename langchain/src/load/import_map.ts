@@ -80,6 +80,7 @@ import {
   HumanMessagePromptTemplate,
   MessagesPlaceholder,
   SystemMessagePromptTemplate,
+  ImagePromptTemplate,
   PipelinePromptTemplate
 } from "@langchain/core/prompts";
 import {
@@ -188,6 +189,10 @@ const prompts__chat = {
   SystemMessagePromptTemplate
 };
 export { prompts__chat };
+const prompts__image = {
+  ImagePromptTemplate
+};
+export { prompts__image };
 const prompts__pipeline = {
   PipelinePromptTemplate
 };
