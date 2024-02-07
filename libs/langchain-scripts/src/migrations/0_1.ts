@@ -1,6 +1,7 @@
 import { ImportSpecifier, Project, SourceFile, SyntaxKind } from "ts-morph";
 import { glob } from "glob";
 import path from "node:path";
+import { LangChainConfig } from "../types.js";
 
 type ExportedSymbol = { symbol: string; kind: SyntaxKind };
 
@@ -23,14 +24,13 @@ async function getEntrypointsFromFile(
   packagePath: string,
   project: Project
 ): Promise<Array<EntrypointAndSymbols>> {
-  // @TODO replace any with LangChainConfig from `@langchain/scripts`
-  const { config }: { config: any } = await import(
+  const { config }: { config: LangChainConfig } = await import(
     path.join(packagePath, "langchain.config.js")
   );
   const { entrypoints, deprecatedNodeOnly } = config;
 
   const result = Object.entries(entrypoints).flatMap(([key, value]) => {
-    if (deprecatedNodeOnly.includes(key)) {
+    if (deprecatedNodeOnly?.includes(key)) {
       return [];
     }
     const newFile = project.addSourceFileAtPath(

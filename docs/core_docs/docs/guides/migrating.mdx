@@ -36,14 +36,16 @@ import MigrationExample from "@examples/guides/migrating.ts";
 
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
+Install the scripts package to import the migration script:
+
 ```bash npm2yarn
-npm install @langchain/core @langchain/community @langchain/openai @langchain/cohere @langchain/pinecone
+npm install @langchain/scripts
 ```
 
-Then, install the required peer dependencies:
+Then, install any integration packages you'd like to use:
 
 ```bash npm2yarn
-npm install ts-morph glob
+npm install @langchain/core @langchain/community @langchain/openai @langchain/cohere @langchain/pinecone
 ```
 
 Then, run the migration code as seen below.

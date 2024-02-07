@@ -73,11 +73,15 @@ test("createOpenAIFunctionsAgent can stream log", async () => {
     chunks.push(chunk);
   }
 
+  if (!firstChunkTime) {
+    throw new Error("firstChunkTime was not set.");
+  }
+
   console.log(chunks.length);
   console.log();
   console.log(
     "Time to complete after first chunk:",
-    new Date().getTime() - firstChunkTime!
+    new Date().getTime() - firstChunkTime
   );
 
   console.log(chunks.length);
