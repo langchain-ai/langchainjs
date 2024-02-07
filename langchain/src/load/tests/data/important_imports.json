@@ -32,6 +32,7 @@
   "langchain/prompts/chat/ChatPromptTemplate": "langchain_core/prompts/chat/ChatPromptTemplate",
   "langchain/prompts/chat/HumanMessagePromptTemplate": "langchain_core/prompts/chat/HumanMessagePromptTemplate",
   "langchain/prompts/chat/SystemMessagePromptTemplate": "langchain_core/prompts/chat/SystemMessagePromptTemplate",
+  "langchain/prompts/image/ImagePromptTemplate": "langchain_core/prompts/image/ImagePromptTemplate",
   "langchain/schema/agent/AgentActionMessageLog": "langchain_core/agents/AgentActionMessageLog",
   "langchain/schema/agent/OpenAIToolAgentAction": "langchain/agents/output_parsers/openai_tools/OpenAIToolAgentAction",
   "langchain/prompts/chat/BaseMessagePromptTemplate": "langchain_core/prompts/chat/BaseMessagePromptTemplate",

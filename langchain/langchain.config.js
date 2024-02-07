@@ -795,6 +795,13 @@ export const config = {
       path: "@langchain/core/prompts",
     },
     {
+      modules: [
+        "ImagePromptTemplate",
+      ],
+      alias: ["prompts", "image"],
+      path: "@langchain/core/prompts",
+    },
+    {
       modules: ["PipelinePromptTemplate"],
       alias: ["prompts", "pipeline"],
       path: "@langchain/core/prompts",
