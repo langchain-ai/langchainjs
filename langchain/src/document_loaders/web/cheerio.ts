@@ -1,4 +1,4 @@
-import type { CheerioAPI, load as LoadT, SelectorType } from "cheerio";
+import type { CheerioAPI, CheerioOptions, load as LoadT, SelectorType } from "cheerio";
 import { Document } from "@langchain/core/documents";
 import {
   AsyncCaller,
@@ -56,27 +56,44 @@ export class CheerioWebBaseLoader
   constructor(public webPath: string, fields?: WebBaseLoaderParams) {
     super();
     const { timeout, selector, textDecoder, ...rest } = fields ?? {};
+    console.log(rest);
     this.timeout = timeout ?? 10000;
     this.caller = new AsyncCaller(rest);
     this.selector = selector ?? "body";
     this.textDecoder = textDecoder;
   }
 
+  /**
+   * Fetches web documents from the given array of URLs and loads them using Cheerio.
+   * It returns an array of CheerioAPI instances.
+   * @param urls An array of URLs to fetch and load.
+   * @returns A Promise that resolves to an array of CheerioAPI instances.
+   */
+  static async scrapeAll(
+    urls: string[],
+    caller: AsyncCaller,
+    timeout: number | undefined,
+    textDecoder?: TextDecoder,
+    options?: CheerioOptions
+  ): Promise<CheerioAPI[]> {
+    return Promise.all(urls.map(url => CheerioWebBaseLoader._scrape(url, caller, timeout, textDecoder, options)));
+  }
+
   static async _scrape(
     url: string,
     caller: AsyncCaller,
     timeout: number | undefined,
-    textDecoder?: TextDecoder
+    textDecoder?: TextDecoder,
+    options?: CheerioOptions
   ): Promise<CheerioAPI> {
     const { load } = await CheerioWebBaseLoader.imports();
     const response = await caller.call(fetch, url, {
       signal: timeout ? AbortSignal.timeout(timeout) : undefined,
     });
-
     const html =
       textDecoder?.decode(await response.arrayBuffer()) ??
       (await response.text());
-    return load(html);
+    return load(html, options);
   }
 
   /**
