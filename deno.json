@@ -9,6 +9,7 @@
     "@pinecone-database/pinecone": "npm:@pinecone-database/pinecone",
     "zod": "npm:/zod",
     "@langchain/anthropic": "npm:@langchain/anthropic",
-    "node-llama-cpp": "npm:/node-llama-cpp"
+    "node-llama-cpp": "npm:/node-llama-cpp",
+    "readline": "https://deno.land/x/readline@v1.1.0/mod.ts"
   }
 }
