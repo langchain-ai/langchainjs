@@ -57,15 +57,15 @@ test("Test ConfluenceLoader and fetchConfluenceData calls", async () => {
   // Ensure the arguments are correct for each call
   expect(fetchConfluenceDataMock).toHaveBeenNthCalledWith(
     1,
-    "https://example.atlassian.net/wiki/rest/api/content?spaceKey=SPACEKEY&limit=25&start=0&expand=body.storage"
+    "https://example.atlassian.net/wiki/rest/api/content?spaceKey=SPACEKEY&limit=25&start=0&expand=body.storage,version"
   );
   expect(fetchConfluenceDataMock).toHaveBeenNthCalledWith(
     2,
-    "https://example.atlassian.net/wiki/rest/api/content?spaceKey=SPACEKEY&limit=25&start=2&expand=body.storage"
+    "https://example.atlassian.net/wiki/rest/api/content?spaceKey=SPACEKEY&limit=25&start=2&expand=body.storage,version"
   );
   expect(fetchConfluenceDataMock).toHaveBeenNthCalledWith(
     3,
-    "https://example.atlassian.net/wiki/rest/api/content?spaceKey=SPACEKEY&limit=25&start=4&expand=body.storage"
+    "https://example.atlassian.net/wiki/rest/api/content?spaceKey=SPACEKEY&limit=25&start=4&expand=body.storage,version"
   );
 
   // Check if the generated URLs in the metadata are correct
