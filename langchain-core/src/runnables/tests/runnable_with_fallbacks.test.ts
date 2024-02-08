@@ -43,14 +43,14 @@ test("RunnableWithFallbacks stream", async () => {
   const llmWithFallbacks = llm.withFallbacks({
     fallbacks: [backupLlm],
   });
-  const expectedUptput = "Hi there!";
-  const stream = await llmWithFallbacks.stream(expectedUptput);
+  const expectedOutput = "Hi there!";
+  const stream = await llmWithFallbacks.stream(expectedOutput);
   const chunks: string[] = [];
   for await (const chunk of stream) {
     chunks.push(chunk);
   }
-  expect(chunks.length).toEqual(expectedUptput.length);
-  expect(chunks.join("")).toEqual(expectedUptput);
+  expect(chunks.length).toEqual(expectedOutput.length);
+  expect(chunks.join("")).toEqual(expectedOutput);
 });
 
 test("RunnableWithFallbacks stream with initial error", async () => {
@@ -59,13 +59,13 @@ test("RunnableWithFallbacks stream with initial error", async () => {
   const llmWithFallbacks = llmWithError.withFallbacks({
     fallbacks: [backupLlm],
   });
-  const expectedUptput = "Hi there!";
-  const stream = await llmWithFallbacks.stream(expectedUptput);
+  const expectedOutput = "Hi there!";
+  const stream = await llmWithFallbacks.stream(expectedOutput);
   const chunks: string[] = [];
   for await (const chunk of stream) {
     console.log(chunk);
     chunks.push(chunk);
   }
-  expect(chunks.length).toEqual(expectedUptput.length);
-  expect(chunks.join("")).toEqual(expectedUptput);
+  expect(chunks.length).toEqual(expectedOutput.length);
+  expect(chunks.join("")).toEqual(expectedOutput);
 });
