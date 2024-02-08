@@ -31,3 +31,14 @@ yarn-error.log*
 !.yarn/versions
 
 /.quarto/
+
+# AUTO_GENERATED_DOCS
+docs/use_cases/tool_use/human_in_the_loop.mdx
+docs/use_cases/question_answering/streaming.mdx
+docs/use_cases/question_answering/sources.mdx
+docs/use_cases/question_answering/quickstart.mdx
+docs/use_cases/question_answering/local_retrieval_qa.mdx
+docs/use_cases/question_answering/conversational_retrieval_agents.mdx
+docs/use_cases/question_answering/citations.mdx
+docs/use_cases/question_answering/chat_history.mdx
+docs/modules/model_io/output_parsers/types/openai_tools.mdx
