@@ -9234,7 +9234,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.1, @langchain/core@~0.1.13, @langchain/core@~0.1.16, @langchain/core@~0.1.24, @langchain/core@~0.1.5, @langchain/core@~0.1.9":
+"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.1, @langchain/core@~0.1.13, @langchain/core@~0.1.16, @langchain/core@~0.1.25, @langchain/core@~0.1.5, @langchain/core@~0.1.9":
   version: 0.0.0-use.local
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
@@ -9242,7 +9242,6 @@ __metadata:
     "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
-    "@types/sax": ^1
     ansi-styles: ^5.0.0
     camelcase: 6
     decamelize: 1.2.0
@@ -9265,7 +9264,6 @@ __metadata:
     prettier: ^2.8.3
     release-it: ^15.10.1
     rimraf: ^5.0.1
-    sax: ^1.3.0
     turbo: latest
     typescript: ~5.1.6
     uuid: ^9.0.0
@@ -9558,7 +9556,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/scripts@workspace:libs/langchain-scripts, @langchain/scripts@~0.0":
+"@langchain/scripts@workspace:*, @langchain/scripts@workspace:libs/langchain-scripts, @langchain/scripts@~0.0":
   version: 0.0.0-use.local
   resolution: "@langchain/scripts@workspace:libs/langchain-scripts"
   dependencies:
@@ -9577,12 +9575,14 @@ __metadata:
     eslint-plugin-import: ^2.27.5
     eslint-plugin-no-instanceof: ^1.0.1
     eslint-plugin-prettier: ^4.2.1
+    glob: ^10.3.10
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     prettier: ^2.8.3
     release-it: ^15.10.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
+    ts-morph: ^21.0.1
     typescript: <5.2.0
   bin:
     lc-build: ./build.js
@@ -14438,15 +14438,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/sax@npm:^1":
-  version: 1.2.7
-  resolution: "@types/sax@npm:1.2.7"
-  dependencies:
-    "@types/node": "*"
-  checksum: 7ece5fbb5d9c8fc76ab0de2f99d705edf92f18e701d4f9d9b0647275e32eb65e656c1badf9dfaa12f4e1ff3e250561c8c9cfe79e8b5f33dd1417ac0f1804f6cc
-  languageName: node
-  linkType: hard
-
 "@types/sax@npm:^1.2.1":
   version: 1.2.5
   resolution: "@types/sax@npm:1.2.5"
@@ -17143,6 +17134,13 @@ __metadata:
   version: 6.3.0
   resolution: "camelcase@npm:6.3.0"
   checksum: 8c96818a9076434998511251dcb2761a94817ea17dbdc37f47ac080bd088fc62c7369429a19e2178b993497132c8cbcf5cc1f44ba963e76782ba469c0474938d
+  languageName: node
+  linkType: hard
+
+"camelcase@npm:^4.1.0":
+  version: 4.1.0
+  resolution: "camelcase@npm:4.1.0"
+  checksum: 9683356daf9b64fae4b30c91f8ceb1f34f22746e03d1804efdbe738357d38b47f206cdd71efcf2ed72018b2e88eeb8ec3f79adb09c02f1253a4b6d5d405ff2ae
   languageName: node
   linkType: hard
 
@@ -20950,6 +20948,7 @@ __metadata:
     "@langchain/openai": "workspace:*"
     "@langchain/pinecone": "workspace:*"
     "@langchain/redis": "workspace:*"
+    "@langchain/scripts": "workspace:*"
     "@langchain/weaviate": "workspace:*"
     "@langchain/yandex": "workspace:*"
     "@opensearch-project/opensearch": ^2.2.0
@@ -20982,7 +20981,6 @@ __metadata:
     exa-js: ^1.0.12
     faiss-node: ^0.5.1
     firebase-admin: ^11.9.0
-    glob: ^10.3.10
     graphql: ^16.6.0
     ioredis: ^5.3.2
     js-yaml: ^4.1.0
@@ -20997,7 +20995,6 @@ __metadata:
     readline: ^1.3.0
     redis: ^4.6.13
     sqlite3: ^5.1.4
-    ts-morph: ^21.0.1
     tsx: ^3.12.3
     typeorm: ^0.3.12
     typescript: ~5.1.6
@@ -23479,6 +23476,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"infobox-parser@npm:^3.6.2":
+  version: 3.6.4
+  resolution: "infobox-parser@npm:3.6.4"
+  dependencies:
+    camelcase: ^4.1.0
+  checksum: 1ce5a5d22a5fcadaf27c08c39e2ba27336becb60e9b7eac591734f634c8069a48113485b5027a322ff313ac5e16961e1e6e5de7a62b1cf14e1a594806d08c1d0
+  languageName: node
+  linkType: hard
+
 "inherits@npm:2, inherits@npm:2.0.4, inherits@npm:^2.0.0, inherits@npm:^2.0.1, inherits@npm:^2.0.3, inherits@npm:^2.0.4, inherits@npm:~2.0.1, inherits@npm:~2.0.3":
   version: 2.0.4
   resolution: "inherits@npm:2.0.4"
@@ -25571,7 +25577,7 @@ __metadata:
     "@google-cloud/storage": ^6.10.1
     "@jest/globals": ^29.5.0
     "@langchain/community": ~0.0.20
-    "@langchain/core": ~0.1.24
+    "@langchain/core": ~0.1.25
     "@langchain/openai": ~0.0.12
     "@langchain/scripts": ~0.0
     "@notionhq/client": ^2.2.10
@@ -25613,7 +25619,6 @@ __metadata:
     eslint-plugin-prettier: ^4.2.1
     expr-eval: ^2.0.2
     fast-xml-parser: ^4.2.7
-    glob: ^10.3.10
     google-auth-library: ^8.9.0
     handlebars: ^4.7.8
     html-to-text: ^9.0.5
@@ -25633,6 +25638,7 @@ __metadata:
     node-llama-cpp: 2.7.3
     notion-to-md: ^3.1.0
     officeparser: ^4.0.4
+    openai: ^4.26.1
     openapi-types: ^12.1.3
     p-retry: 4
     pdf-parse: 1.1.1
@@ -25648,13 +25654,13 @@ __metadata:
     sonix-speech-recognition: ^2.1.1
     srt-parser-2: ^1.2.3
     ts-jest: ^29.1.0
-    ts-morph: ^21.0.1
     typeorm: ^0.3.12
     typescript: ~5.1.6
     uuid: ^9.0.0
     vectordb: ^0.1.4
     weaviate-ts-client: ^1.4.0
     web-auth-library: ^1.0.3
+    wikipedia: ^2.1.2
     yaml: ^2.2.1
     youtube-transcript: ^1.0.6
     youtubei.js: ^5.8.0
@@ -25685,7 +25691,6 @@ __metadata:
     d3-dsv: ^2.0.0
     epub2: ^3.0.1
     fast-xml-parser: ^4.2.7
-    glob: ^10.3.10
     google-auth-library: ^8.9.0
     handlebars: ^4.7.8
     html-to-text: ^9.0.5
@@ -25705,7 +25710,6 @@ __metadata:
     redis: ^4.6.4
     sonix-speech-recognition: ^2.1.1
     srt-parser-2: ^1.2.3
-    ts-morph: ^21.0.1
     typeorm: ^0.3.12
     vectordb: ^0.1.4
     weaviate-ts-client: ^1.4.0
@@ -25764,8 +25768,6 @@ __metadata:
       optional: true
     fast-xml-parser:
       optional: true
-    glob:
-      optional: true
     google-auth-library:
       optional: true
     handlebars:
@@ -25803,8 +25805,6 @@ __metadata:
     sonix-speech-recognition:
       optional: true
     srt-parser-2:
-      optional: true
-    ts-morph:
       optional: true
     typeorm:
       optional: true
@@ -26466,9 +26466,9 @@ __metadata:
   linkType: hard
 
 "lru-cache@npm:^9.1.1 || ^10.0.0":
-  version: 10.1.0
-  resolution: "lru-cache@npm:10.1.0"
-  checksum: 58056d33e2500fbedce92f8c542e7c11b50d7d086578f14b7074d8c241422004af0718e08a6eaae8705cee09c77e39a61c1c79e9370ba689b7010c152e6a76ab
+  version: 10.2.0
+  resolution: "lru-cache@npm:10.2.0"
+  checksum: eee7ddda4a7475deac51ac81d7dd78709095c6fa46e8350dc2d22462559a1faa3b81ed931d5464b13d48cbd7e08b46100b6f768c76833912bc444b99c37e25db
   languageName: node
   linkType: hard
 
@@ -28245,6 +28245,25 @@ __metadata:
   bin:
     openai: bin/cli
   checksum: 362a5f636b4b02e471812dd0ebaf7f463f6392e10c299d11ed844d41e69b17fcbd4b847f546a4c2a40b6b9db5ab9a245bfdc20c948f176f5fe4ac0e3c4a87b78
+  languageName: node
+  linkType: hard
+
+"openai@npm:^4.26.1":
+  version: 4.26.1
+  resolution: "openai@npm:4.26.1"
+  dependencies:
+    "@types/node": ^18.11.18
+    "@types/node-fetch": ^2.6.4
+    abort-controller: ^3.0.0
+    agentkeepalive: ^4.2.1
+    digest-fetch: ^1.3.0
+    form-data-encoder: 1.7.2
+    formdata-node: ^4.3.2
+    node-fetch: ^2.6.7
+    web-streams-polyfill: ^3.2.1
+  bin:
+    openai: bin/cli
+  checksum: 08252ccba461b55f621b2cd19f73d4cb1dcb183c4eeeab990c29daf97845124b0716c193943b538f6f738e8c6132e5a3ae0ebdaee526ab7ddcc8af2a38357f30
   languageName: node
   linkType: hard
 
@@ -31551,7 +31570,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sax@npm:^1.2.4, sax@npm:^1.3.0":
+"sax@npm:^1.2.4":
   version: 1.3.0
   resolution: "sax@npm:1.3.0"
   checksum: 238ab3a9ba8c8f8aaf1c5ea9120386391f6ee0af52f1a6a40bbb6df78241dd05d782f2359d614ac6aae08c4c4125208b456548a6cf68625aa4fe178486e63ecd
@@ -35269,6 +35288,16 @@ __metadata:
   dependencies:
     string-width: ^5.0.1
   checksum: 64c48cf27171221be5f86fc54b94dd29879165bdff1a7aa92dde723d9a8c99fb108312768a5d62c8c2b80b701fa27bbd36a1ddc58367585cd45c0db7920a0cba
+  languageName: node
+  linkType: hard
+
+"wikipedia@npm:^2.1.2":
+  version: 2.1.2
+  resolution: "wikipedia@npm:2.1.2"
+  dependencies:
+    axios: ^1.4.0
+    infobox-parser: ^3.6.2
+  checksum: 35ef209e8d2e77ac0d8a954ea20d485b5a892a3b26a085166f0fedb4d8670b8a47d873ff92dab87164fcccff2af226e0c0a33b16dedd6c55e1d77b878bcc15ce
   languageName: node
   linkType: hard
 

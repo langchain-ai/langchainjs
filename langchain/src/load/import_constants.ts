@@ -169,7 +169,6 @@ export const optionalImportEntrypoints: string[] = [
   "langchain/graphs/neo4j_graph",
   "langchain/hub",
   "langchain/util/convex",
-  "langchain/util/migrations/0_1",
   "langchain/experimental/multimodal_embeddings/googlevertexai",
   "langchain/experimental/chat_models/anthropic_functions",
   "langchain/experimental/llms/bittensor",

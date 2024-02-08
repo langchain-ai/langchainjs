@@ -36,16 +36,12 @@ const result = await agentExecutor.invoke({
 console.log(result);
 ```
 
-<CodeOutputBlock lang="typescript">
-
-```
+```bash
 {
   input: 'Who directed the 2023 film Oppenheimer and what is their age? What is their age in days (assume 365 days per year)?',
   output: 'The 2023 film "Oppenheimer" was directed by Christopher Nolan, who was born on July 30, 1970. As of 2023, Christopher Nolan is 52 years old. His age in days, assuming 365 days per year, is approximately 19,525 days.'
 }
 ```
-
-</CodeOutputBlock>
 
 ### `{ verbose: true }`
 
@@ -64,11 +60,10 @@ const result = await agentExecutor.invoke({
 console.log(result);
 ```
 
-<details> <summary>Console output</summary>
+<details> 
+  <summary>Console output</summary>
 
-<CodeOutputBlock lang="typescript">
-
-```
+```bash
 [chain/start] [1:chain:AgentExecutor] Entering Chain run with input: {
   "input": "Who directed the 2023 film Oppenheimer and what is their age? What is their age in days (assume 365 days per year)?"
 }
@@ -3642,8 +3637,6 @@ console.log(result);
 }
 ```
 
-</CodeOutputBlock>
-
 </details>
 
 ### `Tool({ ..., verbose: true })`
@@ -3662,11 +3655,10 @@ const result = await agentExecutor.invoke({
 console.log(result);
 ```
 
-<details> <summary>Console output</summary>
+<details> 
+  <summary>Console output</summary>
 
-<CodeOutputBlock lang="typescript">
-
-```
+```bash
 [tool/start] [1:tool:TavilySearchResults] Entering Tool run with input: "director of 2023 film Oppenheimer"
 [tool/end] [1:tool:TavilySearchResults] [2.26s] Exiting Tool run with output: "[{"title":"Oppenheimer (2023) - IMDb","url":"https://www.imdb.com/title/tt15398776/","content":"Oppenheimer: Directed by Christopher Nolan. With Cillian Murphy, Emily Blunt, Robert Downey Jr., Alden Ehrenreich. The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.","score":0.95419,"raw_content":null},{"title":"Christopher Nolan Wins Best Director Golden Globe for 'Oppenheimer'","url":"https://variety.com/2024/film/awards/christopher-nolan-golden-globes-best-director-oppenheimer-1235860547/#!","content":"Christopher Nolan was lauded as best director at the Golden Globes for \" Oppenheimer ,\" a grim, three-hour historical drama that ignited the box office. It marks Nolan's first Globe win ...","score":0.94788,"raw_content":null},{"title":"Oppenheimer (2023) - Full Cast & Crew - IMDb","url":"https://www.imdb.com/title/tt15398776/fullcredits/","content":"Directed by Christopher Nolan ... (directed by) Writing Credits Cast (in credits order) complete, awaiting verification Produced by Music by Ludwig Göransson Cinematography by Hoyte Van Hoytema ... director of photography Editing by Jennifer Lame Casting By John Papsidera ... (casting by) Production Design by Ruth De Jong Art Direction by","score":0.94173,"raw_content":null},{"title":"'Oppenheimer' director Christopher Nolan honors Heath Ledger while ...","url":"https://www.cnn.com/2024/01/07/entertainment/christopher-nolan-heath-ledger-golden-globes/index.html","content":"CNN values your feedback\nChristopher Nolan honors ‘Dark Knight’ star Heath Ledger while accepting Golden Globe\nChristopher Nolan won the best director Golden Globe award on Sunday for his 2023 film “Oppenheimer,” and he took the opportunity to honor the late Heath Ledger during his acceptance speech.\n He went on to say that in the middle of his speech at the time, “I glanced up and Robert Downey Jr. caught my eye and gave me a look of love and support.”\n He posthumously won both a Golden Globe as well as an Academy Award for best supporting actor for his work as the Joker in Nolan’s 2008 masterpiece “The Dark Knight.”\n See the full list of winners\nDowney Jr. along with his co-star Cillian Murphy each won Globes on Sunday for their performances in Nolan’s “Oppenheimer” on Sunday night. Same love and support he’s shown so many people in our community for so many years,” he added.\n","score":0.93823,"raw_content":null},{"title":"Oppenheimer (film) - Wikipedia","url":"https://en.wikipedia.org/wiki/Oppenheimer_(film)","content":"The film continued to hold well in the following weeks, making $32 million and $29.1 million in its fifth and sixth weekends.[174][175] As of September 10, 2023, the highest grossing territories were the United Kingdom ($72 million), Germany ($46.9 million), China ($46.8 million), France ($40.1 million) and Australia ($25.9 million).[176]\nCritical response\nThe film received critical acclaim.[a] Critics praised Oppenheimer primarily for its screenplay, the performances of the cast (particularly Murphy and Downey), and the visuals;[b] it was frequently cited as one of Nolan's best films,[191][192][183] and of 2023, although some criticism was aimed towards the writing of the female characters.[187] Hindustan Times reported that the film was also hailed as one of the best films of the 21st century.[193] He also chose to alternate between scenes in color and black-and-white to convey the story from both subjective and objective perspectives, respectively,[68] with most of Oppenheimer's view shown via the former, while the latter depicts a \"more objective view of his story from a different character's point of view\".[69][67] Wanting to make the film as subjective as possible, the production team decided to include visions of Oppenheimer's conceptions of the quantum world and waves of energy.[70] Nolan noted that Oppenheimer never publicly apologized for his role in the atomic bombings of Hiroshima and Nagasaki, but still desired to portray Oppenheimer as feeling genuine guilt for his actions, believing this to be accurate.[71]\nI think of any character I've dealt with, Oppenheimer is by far the most ambiguous and paradoxical. The production team was able to obtain government permission to film at White Sands Missile Range, but only at highly inconvenient hours, and therefore chose to film the scene elsewhere in the New Mexico desert.[2][95]\nThe production filmed the Trinity test scenes in Belen, New Mexico, with Murphy climbing a 100-foot steel tower, a replica of the original site used in the Manhattan Project, in rough weather.[2][95]\nA special set was built in which gasoline, propane, aluminum powder, and magnesium were used to create the explosive effect.[54] Although they used miniatures for the practical effect, the film's special effects supervisor Scott R. Fisher referred to them as \"big-atures\", since the special effects team had tried to build the models as physically large as possible. He felt that \"while our relationship with that [nuclear] fear has ebbed and flowed with time, the threat itself never actually went away\", and felt the 2022 Russian invasion of Ukraine had caused a resurgence of nuclear anxiety.[54] Nolan had also penned a script for a biopic of Howard Hughes approximately during the time of production of Martin Scorsese's The Aviator (2004), which had given him insight on how to write a script regarding a person's life.[53] Emily Blunt described the Oppenheimer script as \"emotional\" and resembling that of a thriller, while also remarking that Nolan had \"Trojan-Horsed a biopic into a thriller\".[72]\nCasting\nOppenheimer marks the sixth collaboration between Nolan and Murphy, and the first starring Murphy as the lead. [for Oppenheimer] in his approach to trying to deal with the consequences of what he'd been involved with\", while also underscoring that it is a \"huge shift in perception about the reality of Oppenheimer's perception\".[53] He wanted to execute a quick tonal shift after the atomic bombings of Hiroshima and Nagasaki, desiring to go from the \"highest triumphalism, the highest high, to the lowest low in the shortest amount of screen time possible\".[66] For the ending, Nolan chose to make it intentionally vague to be open to interpretation and refrained from being didactic or conveying specific messages in his work.","score":0.90685,"raw_content":null}]"
 [tool/start] [1:tool:TavilySearchResults] Entering Tool run with input: "Christopher Nolan birthdate"
@@ -3680,8 +3672,6 @@ console.log(result);
   output: 'The 2023 film "Oppenheimer" was directed by Christopher Nolan. Christopher Nolan was born on July 30, 1970, which makes him 53 years old as of 2023. His age in days, assuming 365 days per year, is approximately 19,345 days.'
 }
 ```
-
-</CodeOutputBlock>
 
 </details>
 
