@@ -37,9 +37,7 @@ export class SitemapLoader
 
   constructor(public webPath: string, params: SitemapLoaderParams = {}) {
     const paramsWithDefaults = { chunkSize: 300, ...params };
-    let path = webPath.endsWith("/")
-      ? webPath.slice(0, -1)
-      : webPath;
+    let path = webPath.endsWith("/") ? webPath.slice(0, -1) : webPath;
     // Allow for custom sitepath paths to be passed in.
     path = path.endsWith(".xml") ? path : `${path}/sitemap.xml`;
     super(path, paramsWithDefaults);
