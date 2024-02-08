@@ -1,5 +1,5 @@
 import { Cluster, QueryResult } from "couchbase";
-import { Document } from "../../document.js";
+import { Document } from "@langchain/core/documents";
 import { BaseDocumentLoader, DocumentLoader } from "../base.js";
 
 export class CouchbaseDocumentLoader
@@ -58,7 +58,7 @@ export class CouchbaseDocumentLoader
       );
 
       const document = pageContentFields
-        .map((k) => `${k}: ${row[k]}`)
+        .map((k) => `${k}: ${JSON.stringify(row[k])}`)
         .join("\n");
 
       yield new Document({

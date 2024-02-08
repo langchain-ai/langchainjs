@@ -2006,10 +2006,10 @@
       "import": "./document_loaders/web/confluence.js",
       "require": "./document_loaders/web/confluence.cjs"
     },
-      "./document_loaders/web/couchbase": {
-        "types": "./document_loaders/web/couchbase.d.ts",
-        "import": "./document_loaders/web/couchbase.js",
-        "require": "./document_loaders/web/couchbase.cjs"
+    "./document_loaders/web/couchbase": {
+      "types": "./document_loaders/web/couchbase.d.ts",
+      "import": "./document_loaders/web/couchbase.js",
+      "require": "./document_loaders/web/couchbase.cjs"
     },
     "./document_loaders/web/searchapi": {
       "types": "./document_loaders/web/searchapi.d.ts",
