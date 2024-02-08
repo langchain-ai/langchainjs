@@ -89,7 +89,7 @@ export class AsyncCaller {
 
   protected onFailedAttempt: AsyncCallerParams["onFailedAttempt"];
 
-  queue: typeof import("p-queue")["default"]["prototype"];
+  private queue: typeof import("p-queue")["default"]["prototype"];
 
   constructor(params: AsyncCallerParams) {
     this.maxConcurrency = params.maxConcurrency ?? Infinity;
