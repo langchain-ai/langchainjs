@@ -20,6 +20,8 @@ export interface SitemapLoaderParams extends WebBaseLoaderParams {
   chunkSize?: number;
 }
 
+const DEFAULT_CHUNK_SIZE = 300;
+
 type SiteMapElement = {
   loc: string;
   changefreq?: string;
@@ -36,9 +38,9 @@ export class SitemapLoader
   chunkSize: number;
 
   constructor(public webPath: string, params: SitemapLoaderParams = {}) {
-    const paramsWithDefaults = { chunkSize: 300, ...params };
+    const paramsWithDefaults = { chunkSize: DEFAULT_CHUNK_SIZE, ...params };
     let path = webPath.endsWith("/") ? webPath.slice(0, -1) : webPath;
-    // Allow for custom sitepath paths to be passed in.
+    // Allow for custom sitemap paths to be passed in with the url.
     path = path.endsWith(".xml") ? path : `${path}/sitemap.xml`;
     super(path, paramsWithDefaults);
 
