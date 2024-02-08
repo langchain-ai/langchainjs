@@ -20,6 +20,17 @@ type IndexingResult = {
 
 type StringOrDocFunc = string | ((doc: DocumentInterface) => string);
 
+export interface HashedDocumentInterface extends DocumentInterface {
+  uid: string;
+  hash_?: string;
+  contentHash?: string;
+  metadataHash?: string;
+  pageContent: string;
+  metadata: Metadata;
+  calculateHashes(): void;
+  toDocument(): DocumentInterface;
+}
+
 interface HashedDocumentArgs {
   pageContent: string;
   metadata: Metadata;
@@ -31,7 +42,7 @@ interface HashedDocumentArgs {
  * Hashes are calculated based on page content and metadata.
  * It is used for indexing.
  */
-class HashedDocument implements DocumentInterface {
+export class _HashedDocument implements HashedDocumentInterface {
   uid: string;
 
   hash_?: string;
@@ -92,7 +103,7 @@ class HashedDocument implements DocumentInterface {
   static fromDocument(
     document: DocumentInterface,
     uid?: string
-  ): HashedDocument {
+  ): _HashedDocument {
     const doc = new this({
       pageContent: document.pageContent,
       metadata: document.metadata,
@@ -174,10 +185,10 @@ export function _batch<T>(size: number, iterable: T[]): T[][] {
 }
 
 export function _deduplicateInOrder(
-  hashedDocuments: HashedDocument[]
-): HashedDocument[] {
+  hashedDocuments: HashedDocumentInterface[]
+): HashedDocumentInterface[] {
   const seen = new Set<string>();
-  const deduplicated: HashedDocument[] = [];
+  const deduplicated: HashedDocumentInterface[] = [];
 
   for (const hashedDoc of hashedDocuments) {
     if (!hashedDoc.hash_) {
@@ -279,7 +290,7 @@ export async function index(args: IndexArgs): Promise<IndexingResult> {
 
   for (const batch of batches) {
     const hashedDocs = _deduplicateInOrder(
-      batch.map((doc) => HashedDocument.fromDocument(doc))
+      batch.map((doc) => _HashedDocument.fromDocument(doc))
     );
 
     const sourceIds = hashedDocs.map((doc) => sourceIdAssigner(doc));

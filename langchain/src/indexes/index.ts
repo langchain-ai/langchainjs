@@ -6,4 +6,5 @@ export {
   _deduplicateInOrder,
   _getSourceIdAssigner,
   _isBaseDocumentLoader,
+  _HashedDocument,
 } from "./indexing.js";
