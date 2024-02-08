@@ -105,17 +105,17 @@ export class SitemapLoader
       const { loc: source, ...metadata } = elements[i];
 
       // extract page metadata
-      const metaDescription = $("meta[name='description']").attr("content");
-      const metaTitle = $("meta[property='og:title']").attr("content");
-      const metaLang = $("meta[property='og:locale']").attr("content");
+      const description = $("meta[name='description']").attr("content");
+      const title = $("meta[property='og:title']").attr("content");
+      const lang = $("meta[property='og:locale']").attr("content");
 
       return new Document({
         pageContent: text,
         metadata: {
           ...metadata,
-          metaDescription,
-          metaTitle,
-          metaLang,
+          description,
+          title,
+          lang,
           source: source.trim(),
         },
       });
