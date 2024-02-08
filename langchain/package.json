@@ -460,6 +460,9 @@
     "document_loaders/web/confluence.cjs",
     "document_loaders/web/confluence.js",
     "document_loaders/web/confluence.d.ts",
+    "document_loaders/web/couchbase.cjs",
+    "document_loaders/web/couchbase.js",
+    "document_loaders/web/couchbase.d.ts",
     "document_loaders/web/searchapi.cjs",
     "document_loaders/web/searchapi.js",
     "document_loaders/web/searchapi.d.ts",
@@ -952,6 +955,7 @@
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.5.3",
     "convex": "^1.3.1",
+    "couchbase": "^4.2.10",
     "d3-dsv": "^2.0.0",
     "dotenv": "^16.0.3",
     "dpdm": "^3.12.0",
@@ -1021,6 +1025,7 @@
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "*",
     "convex": "^1.3.1",
+    "couchbase": "^4.2.10",
     "d3-dsv": "^2.0.0",
     "epub2": "^3.0.1",
     "fast-xml-parser": "^4.2.7",
@@ -1114,6 +1119,9 @@
       "optional": true
     },
     "convex": {
+      "optional": true
+    },
+    "couchbase": {
       "optional": true
     },
     "d3-dsv": {
@@ -1997,6 +2005,11 @@
       "types": "./document_loaders/web/confluence.d.ts",
       "import": "./document_loaders/web/confluence.js",
       "require": "./document_loaders/web/confluence.cjs"
+    },
+      "./document_loaders/web/couchbase": {
+        "types": "./document_loaders/web/couchbase.d.ts",
+        "import": "./document_loaders/web/couchbase.js",
+        "require": "./document_loaders/web/couchbase.cjs"
     },
     "./document_loaders/web/searchapi": {
       "types": "./document_loaders/web/searchapi.d.ts",
