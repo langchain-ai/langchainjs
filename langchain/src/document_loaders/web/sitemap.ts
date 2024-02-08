@@ -25,16 +25,21 @@ type SiteMapElement = {
   changefreq?: string;
   lastmod?: string;
   priority?: string;
-}
+};
 
-export class SitemapLoader extends CheerioWebBaseLoader implements SitemapLoaderParams {
+export class SitemapLoader
+  extends CheerioWebBaseLoader
+  implements SitemapLoaderParams
+{
   allowUrlPatterns: string[] | undefined;
 
   chunkSize: number;
 
   constructor(public webPath: string, params: SitemapLoaderParams = {}) {
-    const paramsWithDefaults = { chunkSize: 300, ...params }
-    const path = webPath.endsWith("/") ? `${webPath}sitemap.xml` : `${webPath}/sitemap.xml`;
+    const paramsWithDefaults = { chunkSize: 300, ...params };
+    const path = webPath.endsWith("/")
+      ? `${webPath}sitemap.xml`
+      : `${webPath}/sitemap.xml`;
     super(path, paramsWithDefaults);
 
     this.webPath = path;
@@ -57,25 +62,25 @@ export class SitemapLoader extends CheerioWebBaseLoader implements SitemapLoader
     const elements: Array<SiteMapElement> = [];
 
     $("url").each((_, element) => {
-      const loc = $(element).find('loc').text();
+      const loc = $(element).find("loc").text();
       if (!loc) {
         return;
       }
       const changefreq = $(element).find("changefreq").text();
-      const lastmod = $(element).find('lastmod').text();
-      const priority = $(element).find('priority').text();
+      const lastmod = $(element).find("lastmod").text();
+      const priority = $(element).find("priority").text();
 
       elements.push({ loc, changefreq, lastmod, priority });
     });
 
     $("sitemap").each((_, element) => {
-      const loc = $(element).find('loc').text();
+      const loc = $(element).find("loc").text();
       if (!loc) {
         return;
       }
       const changefreq = $(element).find("changefreq").text();
-      const lastmod = $(element).find('lastmod').text();
-      const priority = $(element).find('priority').text();
+      const lastmod = $(element).find("lastmod").text();
+      const priority = $(element).find("priority").text();
 
       elements.push({ loc, changefreq, lastmod, priority });
     });
@@ -84,24 +89,26 @@ export class SitemapLoader extends CheerioWebBaseLoader implements SitemapLoader
   }
 
   private async _loadSitemapUrls(
-    elements: Array<SiteMapElement>,
+    elements: Array<SiteMapElement>
   ): Promise<DocumentInterface[]> {
     const all = await CheerioWebBaseLoader.scrapeAll(
       elements.map((ele) => ele.loc),
       this.caller,
       this.timeout,
-      this.textDecoder,
+      this.textDecoder
     );
     const documents: Array<DocumentInterface> = all.map(($, i) => {
       if (!elements[i]) {
         throw new Error("Scraped docs and elements not in sync");
       }
       const text = $(this.selector).text();
+      const { loc: source, ...metadata } = elements[i];
+
       // extract page metadata
       const metaDescription = $("meta[name='description']").attr("content");
       const metaTitle = $("meta[property='og:title']").attr("content");
       const metaLang = $("meta[property='og:locale']").attr("content");
-      const { loc: source, ...metadata } = elements[i];
+
       return new Document({
         pageContent: text,
         metadata: {
@@ -109,8 +116,8 @@ export class SitemapLoader extends CheerioWebBaseLoader implements SitemapLoader
           metaDescription,
           metaTitle,
           metaLang,
-          source: source.trim()
-        }
+          source: source.trim(),
+        },
       });
     });
     return documents;

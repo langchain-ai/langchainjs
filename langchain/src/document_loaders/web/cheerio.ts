@@ -1,4 +1,9 @@
-import type { CheerioAPI, CheerioOptions, load as LoadT, SelectorType } from "cheerio";
+import type {
+  CheerioAPI,
+  CheerioOptions,
+  load as LoadT,
+  SelectorType,
+} from "cheerio";
 import { Document } from "@langchain/core/documents";
 import {
   AsyncCaller,
@@ -75,7 +80,11 @@ export class CheerioWebBaseLoader
     textDecoder?: TextDecoder,
     options?: CheerioOptions
   ): Promise<CheerioAPI[]> {
-    return Promise.all(urls.map(url => CheerioWebBaseLoader._scrape(url, caller, timeout, textDecoder, options)));
+    return Promise.all(
+      urls.map((url) =>
+        CheerioWebBaseLoader._scrape(url, caller, timeout, textDecoder, options)
+      )
+    );
   }
 
   static async _scrape(
