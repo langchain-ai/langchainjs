@@ -56,7 +56,6 @@ export class CheerioWebBaseLoader
   constructor(public webPath: string, fields?: WebBaseLoaderParams) {
     super();
     const { timeout, selector, textDecoder, ...rest } = fields ?? {};
-    console.log(rest);
     this.timeout = timeout ?? 10000;
     this.caller = new AsyncCaller(rest);
     this.selector = selector ?? "body";

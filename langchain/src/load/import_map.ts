@@ -25,6 +25,7 @@ export * as llms__fake from "../llms/fake.js";
 export * as vectorstores__memory from "../vectorstores/memory.js";
 export * as text_splitter from "../text_splitter.js";
 export * as document_loaders__base from "../document_loaders/base.js";
+export * as document_loaders__web__sitemap from "../document_loaders/web/sitemap.js";
 export * as document_loaders__web__searchapi from "../document_loaders/web/searchapi.js";
 export * as document_loaders__web__serpapi from "../document_loaders/web/serpapi.js";
 export * as document_loaders__web__sort_xyz_blockchain from "../document_loaders/web/sort_xyz_blockchain.js";

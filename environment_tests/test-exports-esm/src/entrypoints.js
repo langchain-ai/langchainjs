@@ -50,6 +50,7 @@ import * as text_splitter from "langchain/text_splitter";
 import * as memory from "langchain/memory";
 import * as document from "langchain/document";
 import * as document_loaders_base from "langchain/document_loaders/base";
+import * as document_loaders_web_sitemap from "langchain/document_loaders/web/sitemap";
 import * as document_loaders_web_searchapi from "langchain/document_loaders/web/searchapi";
 import * as document_loaders_web_serpapi from "langchain/document_loaders/web/serpapi";
 import * as document_loaders_web_sort_xyz_blockchain from "langchain/document_loaders/web/sort_xyz_blockchain";

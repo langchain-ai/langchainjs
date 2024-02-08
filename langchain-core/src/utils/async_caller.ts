@@ -89,7 +89,7 @@ export class AsyncCaller {
 
   protected onFailedAttempt: AsyncCallerParams["onFailedAttempt"];
 
-  private queue: typeof import("p-queue")["default"]["prototype"];
+  queue: typeof import("p-queue")["default"]["prototype"];
 
   constructor(params: AsyncCallerParams) {
     this.maxConcurrency = params.maxConcurrency ?? Infinity;
@@ -106,7 +106,6 @@ export class AsyncCaller {
     callable: T,
     ...args: Parameters<T>
   ): Promise<Awaited<ReturnType<T>>> {
-    console.log("calling", args)
     return this.queue.add(
       () =>
         pRetry(

@@ -1,4 +1,5 @@
 import { Document, DocumentInterface } from "@langchain/core/documents";
+import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { CheerioWebBaseLoader, WebBaseLoaderParams } from "./cheerio.js";
 
 /**
@@ -6,12 +7,17 @@ import { CheerioWebBaseLoader, WebBaseLoaderParams } from "./cheerio.js";
  * @interface SitemapLoaderParams
  * @extends WebBaseLoaderParams
  */
-interface SitemapLoaderParams extends WebBaseLoaderParams {
+export interface SitemapLoaderParams extends WebBaseLoaderParams {
   /**
    * @property {string[] | undefined} filterUrls - A list of regexes. Only URLs that match one of the filter URLs will be loaded.
    * WARNING: The filter URLs are interpreted as regular expressions. Escape special characters if needed.
    */
   filterUrls?: string[];
+  /**
+   * The size to chunk the sitemap URLs into for scraping.
+   * @default {300}
+   */
+  chunkSize?: number;
 }
 
 type SiteMapElement = {
@@ -21,18 +27,19 @@ type SiteMapElement = {
   priority?: string;
 }
 
-const MAX_CONCURRENCY_DEFAULT = 50;
-
 export class SitemapLoader extends CheerioWebBaseLoader implements SitemapLoaderParams {
-  allow_url_patterns: string[] | undefined;
+  allowUrlPatterns: string[] | undefined;
+
+  chunkSize: number;
 
   constructor(public webPath: string, params: SitemapLoaderParams = {}) {
-    const paramsWithDefaults = { maxConcurrency: MAX_CONCURRENCY_DEFAULT, ...params }
-    const path = `${webPath}/sitemap.xml`;
+    const paramsWithDefaults = { chunkSize: 300, ...params }
+    const path = webPath.endsWith("/") ? `${webPath}sitemap.xml` : `${webPath}/sitemap.xml`;
     super(path, paramsWithDefaults);
 
     this.webPath = path;
-    this.allow_url_patterns = paramsWithDefaults.filterUrls;
+    this.allowUrlPatterns = paramsWithDefaults.filterUrls;
+    this.chunkSize = paramsWithDefaults.chunkSize;
   }
 
   async parseSitemap() {
@@ -42,7 +49,8 @@ export class SitemapLoader extends CheerioWebBaseLoader implements SitemapLoader
       this.timeout,
       this.textDecoder,
       {
-        xmlMode: true
+        xmlMode: true,
+        xml: true,
       }
     );
 
@@ -103,7 +111,13 @@ export class SitemapLoader extends CheerioWebBaseLoader implements SitemapLoader
 
   async load(): Promise<Document[]> {
     const elements = await this.parseSitemap();
-    const documents = await this._loadSitemapUrls(elements);
+    const chunks = chunkArray(elements, this.chunkSize);
+
+    const documents: DocumentInterface[] = [];
+    for await (const chunk of chunks) {
+      const chunkedDocuments = await this._loadSitemapUrls(chunk);
+      documents.push(...chunkedDocuments);
+    }
     return documents;
   }
 }

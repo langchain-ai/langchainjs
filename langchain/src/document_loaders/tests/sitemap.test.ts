@@ -2,11 +2,8 @@ import { test } from '@jest/globals';
 import { SitemapLoader } from '../web/sitemap.js';
 
 test("SitemapLoader", async () => {
-  const loader = new SitemapLoader("https://js.langchain.com", {
-    maxRetries: 1,
-    maxConcurrency: 100,
-  });
+  const loader = new SitemapLoader("https://www.langchain.com/sitemap.xml");
 
   const docs = await loader.load();
-  console.log({ docs: docs.length });
+  expect(docs.length).toBeGreaterThan(0);
 })
