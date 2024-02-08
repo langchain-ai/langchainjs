@@ -97,11 +97,18 @@ export class SitemapLoader extends CheerioWebBaseLoader implements SitemapLoader
         throw new Error("Scraped docs and elements not in sync");
       }
       const text = $(this.selector).text();
+      // extract page metadata
+      const metaDescription = $("meta[name='description']").attr("content");
+      const metaTitle = $("meta[property='og:title']").attr("content");
+      const metaLang = $("meta[property='og:locale']").attr("content");
       const { loc: source, ...metadata } = elements[i];
       return new Document({
         pageContent: text,
         metadata: {
           ...metadata,
+          metaDescription,
+          metaTitle,
+          metaLang,
           source: source.trim()
         }
       });
