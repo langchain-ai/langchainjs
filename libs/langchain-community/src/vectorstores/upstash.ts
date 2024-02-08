@@ -19,8 +19,8 @@ export interface UpstashVectorLibArgs extends AsyncCallerParams {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type UpstashMetadata = Record<string, any>;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type UpstashQueryMetadata = UpstashMetadata & {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   _pageContentLC: any;
 };
 
