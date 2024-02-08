@@ -46,3 +46,21 @@ const queryResult = await UpstashVector.similaritySearchWithScore(
 );
 
 console.log(queryResult);
+/**
+[
+  [
+    Document {
+      pageContent: 'Upstash Vector is great for building AI applications.',
+      metadata: [Object]
+    },
+    0.9016147
+  ],
+  [
+    Document {
+      pageContent: 'What are you building?',
+      metadata: [Object]
+    },
+    0.8613077
+  ]
+]
+ */
