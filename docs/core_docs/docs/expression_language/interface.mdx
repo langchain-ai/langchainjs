@@ -6,7 +6,7 @@ import CodeBlock from "@theme/CodeBlock";
 
 # Interface
 
-In an effort to make it as easy as possible to create custom chains, we've implemented a ["Runnable"](https://api.js.langchain.com/classes/schema_runnable.Runnable.html) protocol that most components implement.
+In an effort to make it as easy as possible to create custom chains, we've implemented a ["Runnable"](https://api.js.langchain.com/classes/langchain_core_runnables.Runnable.html) protocol that most components implement.
 This is a standard interface with a few different methods, which make it easy to define custom chains as well as making it possible to invoke them in a standard way. The standard interface exposed includes:
 
 - [`stream`](/docs/expression_language/interface#stream): stream back chunks of the response
