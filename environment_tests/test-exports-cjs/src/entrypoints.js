@@ -50,6 +50,7 @@ const text_splitter = require("langchain/text_splitter");
 const memory = require("langchain/memory");
 const document = require("langchain/document");
 const document_loaders_base = require("langchain/document_loaders/base");
+const document_loaders_web_sitemap = require("langchain/document_loaders/web/sitemap");
 const document_loaders_web_searchapi = require("langchain/document_loaders/web/searchapi");
 const document_loaders_web_serpapi = require("langchain/document_loaders/web/serpapi");
 const document_loaders_web_sort_xyz_blockchain = require("langchain/document_loaders/web/sort_xyz_blockchain");
