@@ -2,7 +2,7 @@
 import { jest, test, expect, describe } from "@jest/globals";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
 
-import { RedisVectorStore } from "../redis.js";
+import { RedisVectorStore } from "../vectorstores.js";
 
 const createRedisClientMockup = () => {
   const hSetMock = jest.fn();

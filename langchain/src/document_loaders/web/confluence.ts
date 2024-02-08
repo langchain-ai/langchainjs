@@ -22,9 +22,18 @@ export interface ConfluencePagesLoaderParams {
 export interface ConfluencePage {
   id: string;
   title: string;
+  type: string;
   body: {
     storage: {
       value: string;
+    };
+  };
+  status: string;
+  version?: {
+    number: number;
+    when: string;
+    by: {
+      displayName: string;
     };
   };
 }
@@ -76,7 +85,7 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
     username,
     accessToken,
     limit = 25,
-    expand = "body.storage",
+    expand = "body.storage,version",
     personalAccessToken,
   }: ConfluencePagesLoaderParams) {
     super();
@@ -212,8 +221,14 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
     return new Document({
       pageContent: textWithoutEmptyLines,
       metadata: {
+        id: page.id,
+        status: page.status,
         title: page.title,
+        type: page.type,
         url: pageUrl,
+        version: page.version?.number,
+        updated_by: page.version?.by?.displayName,
+        updated_at: page.version?.when,
       },
     });
   }

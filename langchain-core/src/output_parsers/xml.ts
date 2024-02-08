@@ -1,9 +1,9 @@
-import sax, { SAXOptions } from "sax";
 import {
   BaseCumulativeTransformOutputParser,
   BaseCumulativeTransformOutputParserInput,
 } from "./transform.js";
 import { Operation, compare } from "../utils/json_patch.js";
+import { sax } from "../utils/sax-js/sax.js";
 import { ChatGeneration, Generation } from "../outputs.js";
 
 export const XML_FORMAT_INSTRUCTIONS = `The output should be formatted as a XML file.
@@ -22,8 +22,7 @@ Here are the output tags:
 \`\`\``;
 
 export interface XMLOutputParserFields
-  extends SAXOptions,
-    BaseCumulativeTransformOutputParserInput {
+  extends BaseCumulativeTransformOutputParserInput {
   /**
    * Optional list of tags that the output should conform to.
    * Only used in formatting of the prompt.
@@ -40,16 +39,10 @@ export type XMLResult = {
 export class XMLOutputParser extends BaseCumulativeTransformOutputParser<XMLResult> {
   tags?: string[];
 
-  saxOptions?: SAXOptions;
-
   constructor(fields?: XMLOutputParserFields) {
-    const f = fields ?? {};
-    const { tags, ...saxOptions } = f;
+    super(fields);
 
-    super(f);
-
-    this.tags = tags;
-    this.saxOptions = saxOptions;
+    this.tags = fields?.tags;
   }
 
   static lc_name() {
@@ -76,11 +69,11 @@ export class XMLOutputParser extends BaseCumulativeTransformOutputParser<XMLResu
   async parsePartialResult(
     generations: ChatGeneration[] | Generation[]
   ): Promise<XMLResult | undefined> {
-    return parseXMLMarkdown(generations[0].text, this.saxOptions);
+    return parseXMLMarkdown(generations[0].text);
   }
 
   async parse(text: string): Promise<XMLResult> {
-    return parseXMLMarkdown(text, this.saxOptions);
+    return parseXMLMarkdown(text);
   }
 
   getFormatInstructions(): string {
@@ -121,16 +114,14 @@ const parseParsedResult = (input: ParsedResult): XMLResult => {
   }
 };
 
-export function parseXMLMarkdown(
-  s: string,
-  saxOptions?: SAXOptions
-): XMLResult {
+export function parseXMLMarkdown(s: string): XMLResult {
   const cleanedString = strip(s);
-  const parser = sax.parser(true, saxOptions);
+  const parser = sax.parser(true);
   let parsedResult: ParsedResult = {} as ParsedResult;
   const elementStack: ParsedResult[] = [];
 
-  parser.onopentag = (node) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  parser.onopentag = (node: any) => {
     const element = {
       name: node.name,
       attributes: node.attributes,
@@ -160,14 +151,16 @@ export function parseXMLMarkdown(
     }
   };
 
-  parser.ontext = (text) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  parser.ontext = (text: any) => {
     if (elementStack.length > 0) {
       const currentElement = elementStack[elementStack.length - 1];
       currentElement.text += text;
     }
   };
 
-  parser.onattribute = (attr) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  parser.onattribute = (attr: any) => {
     if (elementStack.length > 0) {
       const currentElement = elementStack[elementStack.length - 1];
       currentElement.attributes[attr.name] = attr.value;

@@ -503,6 +503,10 @@ export class ToolMessage extends BaseMessage {
   _getType(): MessageType {
     return "tool";
   }
+
+  static isInstance(message: BaseMessage): message is ToolMessage {
+    return message._getType() === "tool";
+  }
 }
 
 /**
