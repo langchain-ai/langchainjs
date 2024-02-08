@@ -1915,6 +1915,61 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
     );
     throw firstError;
   }
+
+  async *_streamIterator(
+    input: RunInput,
+    options?: Partial<RunnableConfig>
+  ): AsyncGenerator<RunOutput> {
+    const callbackManager_ = await CallbackManager.configure(
+      options?.callbacks,
+      undefined,
+      options?.tags,
+      undefined,
+      options?.metadata
+    );
+    const runManager = await callbackManager_?.handleChainStart(
+      this.toJSON(),
+      _coerceToDict(input, "input"),
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      options?.runName
+    );
+    let firstError;
+    for (const runnable of this.runnables()) {
+      try {
+        const stream = await runnable.stream(
+          input,
+          patchConfig(options, { callbacks: runManager?.getChild() })
+        );
+        let finalOutput;
+        for await (const chunk of stream) {
+          yield chunk;
+          if (finalOutput === undefined) {
+            finalOutput = chunk;
+          } else {
+            try {
+              finalOutput = concat(finalOutput, chunk);
+            } catch (e) {
+              finalOutput = undefined;
+            }
+          }
+        }
+
+        return runManager?.handleChainEnd(_coerceToDict(finalOutput, "output"));
+      } catch (e) {
+        if (firstError === undefined) {
+          firstError = e;
+        }
+      }
+    }
+    if (!firstError) {
+      throw new Error("No error stored at end of fallbacks.");
+    }
+    await runManager?.handleChainError(firstError);
+    throw firstError;
+  }
 }
 
 // TODO: Figure out why the compiler needs help eliminating Error as a RunOutput type
