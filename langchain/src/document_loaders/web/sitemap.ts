@@ -47,6 +47,15 @@ export class SitemapLoader
     this.chunkSize = paramsWithDefaults.chunkSize;
   }
 
+  _checkUrlPatterns(url: string): boolean {
+    if (!this.allowUrlPatterns) {
+      return true;
+    }
+    return this.allowUrlPatterns.some((pattern) =>
+      new RegExp(pattern).test(url)
+    );
+  }
+
   async parseSitemap() {
     const $ = await CheerioWebBaseLoader._scrape(
       this.webPath,
@@ -66,6 +75,11 @@ export class SitemapLoader
       if (!loc) {
         return;
       }
+
+      if (!this._checkUrlPatterns(loc)) {
+        return;
+      }
+
       const changefreq = $(element).find("changefreq").text();
       const lastmod = $(element).find("lastmod").text();
       const priority = $(element).find("priority").text();
@@ -88,7 +102,7 @@ export class SitemapLoader
     return elements;
   }
 
-  private async _loadSitemapUrls(
+  async _loadSitemapUrls(
     elements: Array<SiteMapElement>
   ): Promise<DocumentInterface[]> {
     const all = await CheerioWebBaseLoader.scrapeAll(
