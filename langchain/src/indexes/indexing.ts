@@ -153,7 +153,7 @@ export type IndexOptions = {
   forceUpdate?: boolean;
 };
 
-function batch<T>(size: number, iterable: T[]): T[][] {
+export function _batch<T>(size: number, iterable: T[]): T[][] {
   const batches: T[][] = [];
   let currentBatch: T[] = [];
 
@@ -173,7 +173,7 @@ function batch<T>(size: number, iterable: T[]): T[][] {
   return batches;
 }
 
-function deduplicateInOrder(
+export function _deduplicateInOrder(
   hashedDocuments: HashedDocument[]
 ): HashedDocument[] {
   const seen = new Set<string>();
@@ -192,7 +192,7 @@ function deduplicateInOrder(
   return deduplicated;
 }
 
-function getSourceIdAssigner(
+export function _getSourceIdAssigner(
   sourceIdKey: StringOrDocFunc | null
 ): (doc: DocumentInterface) => string | null {
   if (sourceIdKey === null) {
@@ -209,7 +209,7 @@ function getSourceIdAssigner(
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const _isBaseDocumentLoader = (arg: any): arg is BaseDocumentLoader => {
+export const _isBaseDocumentLoader = (arg: any): arg is BaseDocumentLoader => {
   if (
     "load" in arg &&
     typeof arg.load === "function" &&
@@ -267,7 +267,7 @@ export async function index(args: IndexArgs): Promise<IndexingResult> {
     ? await docsSource.load()
     : docsSource;
 
-  const sourceIdAssigner = getSourceIdAssigner(sourceIdKey ?? null);
+  const sourceIdAssigner = _getSourceIdAssigner(sourceIdKey ?? null);
 
   const indexStartDt = await recordManager.getTime();
   let numAdded = 0;
@@ -275,10 +275,10 @@ export async function index(args: IndexArgs): Promise<IndexingResult> {
   let numUpdated = 0;
   let numSkipped = 0;
 
-  const batches = batch<DocumentInterface>(batchSize ?? 100, docs);
+  const batches = _batch<DocumentInterface>(batchSize ?? 100, docs);
 
   for (const batch of batches) {
-    const hashedDocs = deduplicateInOrder(
+    const hashedDocs = _deduplicateInOrder(
       batch.map((doc) => HashedDocument.fromDocument(doc))
     );
 
