@@ -17137,6 +17137,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"camelcase@npm:^4.1.0":
+  version: 4.1.0
+  resolution: "camelcase@npm:4.1.0"
+  checksum: 9683356daf9b64fae4b30c91f8ceb1f34f22746e03d1804efdbe738357d38b47f206cdd71efcf2ed72018b2e88eeb8ec3f79adb09c02f1253a4b6d5d405ff2ae
+  languageName: node
+  linkType: hard
+
 "camelcase@npm:^5.3.1":
   version: 5.3.1
   resolution: "camelcase@npm:5.3.1"
@@ -23467,6 +23474,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"infobox-parser@npm:^3.6.2":
+  version: 3.6.4
+  resolution: "infobox-parser@npm:3.6.4"
+  dependencies:
+    camelcase: ^4.1.0
+  checksum: 1ce5a5d22a5fcadaf27c08c39e2ba27336becb60e9b7eac591734f634c8069a48113485b5027a322ff313ac5e16961e1e6e5de7a62b1cf14e1a594806d08c1d0
+  languageName: node
+  linkType: hard
+
 "inherits@npm:2, inherits@npm:2.0.4, inherits@npm:^2.0.0, inherits@npm:^2.0.1, inherits@npm:^2.0.3, inherits@npm:^2.0.4, inherits@npm:~2.0.1, inherits@npm:~2.0.3":
   version: 2.0.4
   resolution: "inherits@npm:2.0.4"
@@ -25620,6 +25636,7 @@ __metadata:
     node-llama-cpp: 2.7.3
     notion-to-md: ^3.1.0
     officeparser: ^4.0.4
+    openai: ^4.26.1
     openapi-types: ^12.1.3
     p-retry: 4
     pdf-parse: 1.1.1
@@ -25641,6 +25658,7 @@ __metadata:
     vectordb: ^0.1.4
     weaviate-ts-client: ^1.4.0
     web-auth-library: ^1.0.3
+    wikipedia: ^2.1.2
     yaml: ^2.2.1
     youtube-transcript: ^1.0.6
     youtubei.js: ^5.8.0
@@ -28225,6 +28243,25 @@ __metadata:
   bin:
     openai: bin/cli
   checksum: 362a5f636b4b02e471812dd0ebaf7f463f6392e10c299d11ed844d41e69b17fcbd4b847f546a4c2a40b6b9db5ab9a245bfdc20c948f176f5fe4ac0e3c4a87b78
+  languageName: node
+  linkType: hard
+
+"openai@npm:^4.26.1":
+  version: 4.26.1
+  resolution: "openai@npm:4.26.1"
+  dependencies:
+    "@types/node": ^18.11.18
+    "@types/node-fetch": ^2.6.4
+    abort-controller: ^3.0.0
+    agentkeepalive: ^4.2.1
+    digest-fetch: ^1.3.0
+    form-data-encoder: 1.7.2
+    formdata-node: ^4.3.2
+    node-fetch: ^2.6.7
+    web-streams-polyfill: ^3.2.1
+  bin:
+    openai: bin/cli
+  checksum: 08252ccba461b55f621b2cd19f73d4cb1dcb183c4eeeab990c29daf97845124b0716c193943b538f6f738e8c6132e5a3ae0ebdaee526ab7ddcc8af2a38357f30
   languageName: node
   linkType: hard
 
@@ -35242,6 +35279,16 @@ __metadata:
   dependencies:
     string-width: ^5.0.1
   checksum: 64c48cf27171221be5f86fc54b94dd29879165bdff1a7aa92dde723d9a8c99fb108312768a5d62c8c2b80b701fa27bbd36a1ddc58367585cd45c0db7920a0cba
+  languageName: node
+  linkType: hard
+
+"wikipedia@npm:^2.1.2":
+  version: 2.1.2
+  resolution: "wikipedia@npm:2.1.2"
+  dependencies:
+    axios: ^1.4.0
+    infobox-parser: ^3.6.2
+  checksum: 35ef209e8d2e77ac0d8a954ea20d485b5a892a3b26a085166f0fedb4d8670b8a47d873ff92dab87164fcccff2af226e0c0a33b16dedd6c55e1d77b878bcc15ce
   languageName: node
   linkType: hard
 

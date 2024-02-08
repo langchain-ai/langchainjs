@@ -270,14 +270,10 @@ export class CriteriaEvalChain extends LLMStringEvaluator {
   }
 
   async _evaluateStrings(
-    args: StringEvaluatorArgs,
-    callOptions: ExtractLLMCallOptions<this["llm"]>,
+    args: StringEvaluatorArgs & ExtractLLMCallOptions<this["llm"]>,
     config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues> {
-    const result = await this.call(
-      { ...this.getEvalInput(args), ...callOptions },
-      config
-    );
+    const result = await this.call({ ...this.getEvalInput(args) }, config);
 
     return this._prepareOutput(result);
   }
