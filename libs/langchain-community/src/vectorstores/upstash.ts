@@ -16,10 +16,10 @@ export interface UpstashVectorLibArgs extends AsyncCallerParams {
   index: UpstashIndex;
 }
 
-//  @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type UpstashMetadata = Record<string, any>;
 
-//  @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type UpstashQueryMetadata = UpstashMetadata & {
   _pageContentLC: any;
 };
@@ -163,10 +163,10 @@ export class UpstashVectorStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number
-  ): Promise<[Document, number][]> {
+  ): Promise<[DocumentInterface, number][]> {
     const results = await this._runUpstashQuery(query, k);
 
-    const searchResult: [Document, number][] = results.map((res) => {
+    const searchResult: [DocumentInterface, number][] = results.map((res) => {
       const { _pageContentLC, ...metadata } = (res.metadata ??
         {}) as UpstashQueryMetadata;
       return [
@@ -197,7 +197,7 @@ export class UpstashVectorStore extends VectorStore {
     embeddings: EmbeddingsInterface,
     dbConfig: UpstashVectorLibArgs
   ): Promise<UpstashVectorStore> {
-    const docs: Document[] = [];
+    const docs: DocumentInterface[] = [];
 
     for (let i = 0; i < texts.length; i += 1) {
       const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
