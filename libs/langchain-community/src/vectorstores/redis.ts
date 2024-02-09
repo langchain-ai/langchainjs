@@ -307,15 +307,17 @@ export class RedisVectorStore extends VectorStore {
    * @param docs The documents to add.
    * @param embeddings The embeddings to use.
    * @param dbConfig The configuration for the RedisVectorStore.
+   * @param docsOptions The document options to use.
    * @returns A promise that resolves to a new instance of RedisVectorStore.
    */
   static async fromDocuments(
     docs: Document[],
     embeddings: EmbeddingsInterface,
-    dbConfig: RedisVectorStoreConfig
+    dbConfig: RedisVectorStoreConfig,
+    docsOptions?: RedisAddOptions,
   ): Promise<RedisVectorStore> {
     const instance = new this(embeddings, dbConfig);
-    await instance.addDocuments(docs);
+    await instance.addDocuments(docs, docsOptions);
     return instance;
   }
 
