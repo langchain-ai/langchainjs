@@ -27,7 +27,7 @@ interface VectorSearchOptions {
  */
 export interface OpenSearchClientArgs {
   readonly client: Client;
-  readonly service?: 'es' | 'aoss';
+  readonly service?: "es" | "aoss";
   readonly indexName?: string;
 
   readonly vectorSearchOptions?: VectorSearchOptions;
@@ -299,10 +299,10 @@ export class OpenSearchVectorStore extends VectorStore {
             },
           },
           {
-              "metadata.loc": {
-                  match_mapping_type: "object",
-                  mapping: { type: "object" },
-              },
+            "metadata.loc": {
+              match_mapping_type: "object",
+              mapping: { type: "object" },
+            },
           },
         ],
         properties: {
