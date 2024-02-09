@@ -536,7 +536,6 @@ export const config = {
     "vectorstores/tigris",
     "vectorstores/typeorm",
     "vectorstores/typesense",
-    "vectorstores/upstash",
     "vectorstores/usearch",
     "vectorstores/vectara",
     "vectorstores/vercel_postgres",
