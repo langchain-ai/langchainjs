@@ -9,7 +9,6 @@ function abs(relativePath) {
   return resolve(dirname(fileURLToPath(import.meta.url)), relativePath);
 }
 
-
 export const config = {
   internals: [
     /node\:/,
@@ -537,6 +536,7 @@ export const config = {
     "vectorstores/tigris",
     "vectorstores/typeorm",
     "vectorstores/typesense",
+    "vectorstores/upstash",
     "vectorstores/usearch",
     "vectorstores/vectara",
     "vectorstores/vercel_postgres",
@@ -858,4 +858,4 @@ export const config = {
   cjsSource: "./dist-cjs",
   cjsDestination: "./dist",
   abs,
-}
+};
