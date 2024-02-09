@@ -212,6 +212,7 @@
     "@xata.io/client": "^0.28.0",
     "@xenova/transformers": "^2.5.4",
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
+    "better-sqlite3": "^9.4.0",
     "cassandra-driver": "^4.7.2",
     "chromadb": "*",
     "closevector-common": "0.1.3",
@@ -381,6 +382,9 @@
       "optional": true
     },
     "@zilliz/milvus2-sdk-node": {
+      "optional": true
+    },
+    "better-sqlite3": {
       "optional": true
     },
     "cassandra-driver": {
@@ -2002,6 +2006,15 @@
       "import": "./indexes/memory.js",
       "require": "./indexes/memory.cjs"
     },
+    "./indexes/sqlite": {
+      "types": {
+        "import": "./indexes/sqlite.d.ts",
+        "require": "./indexes/sqlite.d.cts",
+        "default": "./indexes/sqlite.d.ts"
+      },
+      "import": "./indexes/sqlite.js",
+      "require": "./indexes/sqlite.cjs"
+    },
     "./util/convex": {
       "types": {
         "import": "./util/convex.d.ts",
@@ -2701,6 +2714,10 @@
     "indexes/memory.js",
     "indexes/memory.d.ts",
     "indexes/memory.d.cts",
+    "indexes/sqlite.cjs",
+    "indexes/sqlite.js",
+    "indexes/sqlite.d.ts",
+    "indexes/sqlite.d.cts",
     "util/convex.cjs",
     "util/convex.js",
     "util/convex.d.ts",

@@ -89,7 +89,7 @@ CREATE INDEX IF NOT EXISTS group_id_index ON "${this.tableName}" (group_id);`);
       const { epoch } = statement.get() as TimeRow;
       return Number(epoch);
     } catch (error) {
-      console.error('Error getting time in SQLiteRecordManager:', error);
+      console.error('Error getting time in SQLiteRecordManager:');
       throw error;
     }
   }
