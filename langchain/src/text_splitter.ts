@@ -82,7 +82,8 @@ export abstract class TextSplitter
     const _metadatas =
       metadatas.length > 0
         ? metadatas
-        : new Array(texts.length).fill().map(() => ({}));
+        : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          new Array(texts.length).map(() => ({} as Record<string, any>));
     const {
       chunkHeader = "",
       chunkOverlapHeader = "(cont'd) ",
