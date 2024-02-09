@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.1.16",
+  "version": "0.1.17",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -602,6 +602,10 @@
     "document_loaders/web/s3.js",
     "document_loaders/web/s3.d.ts",
     "document_loaders/web/s3.d.cts",
+    "document_loaders/web/sitemap.cjs",
+    "document_loaders/web/sitemap.js",
+    "document_loaders/web/sitemap.d.ts",
+    "document_loaders/web/sitemap.d.cts",
     "document_loaders/web/sonix_audio.cjs",
     "document_loaders/web/sonix_audio.js",
     "document_loaders/web/sonix_audio.d.ts",
@@ -2867,6 +2871,15 @@
       },
       "import": "./document_loaders/web/s3.js",
       "require": "./document_loaders/web/s3.cjs"
+    },
+    "./document_loaders/web/sitemap": {
+      "types": {
+        "import": "./document_loaders/web/sitemap.d.ts",
+        "require": "./document_loaders/web/sitemap.d.cts",
+        "default": "./document_loaders/web/sitemap.d.ts"
+      },
+      "import": "./document_loaders/web/sitemap.js",
+      "require": "./document_loaders/web/sitemap.cjs"
     },
     "./document_loaders/web/sonix_audio": {
       "types": {

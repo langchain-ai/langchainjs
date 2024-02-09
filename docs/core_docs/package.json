@@ -6,7 +6,7 @@
     "docusaurus": "docusaurus",
     "start": "yarn build:typedoc && rimraf ./docs/api && NODE_OPTIONS=--max-old-space-size=7168 docusaurus start",
     "build": "yarn clean && yarn build:typedoc && yarn quarto && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
-    "build:vercel": "yarn clean && yarn build:typedoc:vercel && bash ./vercel_build.sh && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
+    "build:vercel": "yarn clean && yarn build:typedoc:vercel && yarn quarto:vercel && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
     "build:typedoc": "yarn workspace api_refs build",
     "build:typedoc:vercel": "yarn workspace api_refs build:vercel",
     "swizzle": "docusaurus swizzle",
@@ -22,7 +22,8 @@
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,md,mdx}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,md,mdx}\"",
     "clean": "rm -rf .docusaurus/ .turbo/ .build/",
-    "quarto": "quarto render docs/"
+    "quarto": "quarto render docs/ && node ./scripts/quatro-build.js",
+    "quarto:vercel": "bash ./scripts/vercel_build.sh && node ./scripts/quatro-build.js"
   },
   "dependencies": {
     "@docusaurus/core": "2.4.3",
@@ -48,6 +49,7 @@
     "eslint-plugin-jsx-a11y": "^6.6.0",
     "eslint-plugin-react": "^7.30.1",
     "eslint-plugin-react-hooks": "^4.6.0",
+    "glob": "^10.3.10",
     "prettier": "^2.7.1",
     "rimraf": "^5.0.1",
     "swc-loader": "^0.2.3",

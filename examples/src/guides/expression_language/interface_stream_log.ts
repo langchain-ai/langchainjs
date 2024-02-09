@@ -11,7 +11,6 @@ import {
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
 } from "@langchain/core/prompts";
-import { applyPatch } from "@langchain/core/utils/json_patch";
 
 // Initialize the LLM to use to answer the question.
 const model = new ChatOpenAI({});
@@ -49,18 +48,21 @@ const chain = RunnableSequence.from([
   new StringOutputParser(),
 ]);
 
-const stream = await chain.streamLog("What is the powerhouse of the cell?");
+const logStream = await chain.streamLog("What is the powerhouse of the cell?");
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let aggregate: any = {};
+let state;
 
-for await (const chunk of stream) {
-  console.log(JSON.stringify(chunk));
-  // You can also reconstruct the log using the `applyPatch` function.
-  aggregate = applyPatch(aggregate, chunk.ops).newDocument;
-  console.log();
+for await (const logPatch of logStream) {
+  console.log(JSON.stringify(logPatch));
+  if (!state) {
+    state = logPatch;
+  } else {
+    state = state.concat(logPatch);
+  }
 }
-console.log("aggregate", aggregate);
+
+console.log("aggregate", state);
+
 /*
   {"ops":[{"op":"replace","path":"","value":{"id":"5a79d2e7-171a-4034-9faa-63af88e5a451","streamed_output":[],"logs":{}}}]}
 
