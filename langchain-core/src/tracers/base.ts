@@ -537,7 +537,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       time: new Date().toISOString(),
       kwargs: { token, idx, chunk: fields?.chunk },
     });
-    await this.onLLMNewToken?.(run, token);
+    await this.onLLMNewToken?.(run, token, { chunk: fields?.chunk });
     return run;
   }
 
@@ -577,5 +577,10 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   onText?(run: Run): void | Promise<void>;
 
-  onLLMNewToken?(run: Run, token: string): void | Promise<void>;
+  onLLMNewToken?(
+    run: Run,
+    token: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    kwargs?: { chunk: any }
+  ): void | Promise<void>;
 }
