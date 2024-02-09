@@ -6,10 +6,10 @@ describe("SQLiteRecordManager", () => {
   let recordManager: SQLiteRecordManager;
 
   beforeAll(async () => {
-    const filepathOrConnectionString = ":memory:";
+    const localPath = ":memory:";
     recordManager = new SQLiteRecordManager("test", {
       tableName,
-      filepathOrConnectionString,
+      localPath,
     });
     await recordManager.createSchema();
   });
@@ -22,6 +22,7 @@ describe("SQLiteRecordManager", () => {
   afterAll(() => {
     recordManager.db.close();
   });
+
   test("Test upsertion", async () => {
     const keys = ["a", "b", "c"];
     await recordManager.update(keys);

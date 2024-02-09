@@ -19,10 +19,15 @@ interface KeyRecord {
  */
 export type SQLiteRecordManagerOptions = {
   /**
-   * The file path or connection string of the SQLite database.
+   * The file path of the SQLite database.
+   * One of either `localPath` or `connectionString` is required.
    */
-  filepathOrConnectionString: string;
-
+  localPath?: string;
+  /**
+   * The connection string of the SQLite database.
+   * One of either `localPath` or `connectionString` is required.
+   */
+  connectionString?: string;
   /**
    * The name of the table in the SQLite database.
    */
@@ -39,30 +44,39 @@ export class SQLiteRecordManager implements RecordManagerInterface {
   namespace: string;
 
   constructor(namespace: string, config: SQLiteRecordManagerOptions) {
-    const { filepathOrConnectionString, tableName } = config;
+    const { localPath, connectionString, tableName } = config;
+    if (!connectionString && !localPath) {
+      throw new Error(
+        "One of either `localPath` or `connectionString` is required."
+      );
+    }
+    if (connectionString && localPath) {
+      throw new Error(
+        "Only one of either `localPath` or `connectionString` is allowed."
+      );
+    }
     this.namespace = namespace;
     this.tableName = tableName;
-    this.db = new Database(filepathOrConnectionString);
+    this.db = new Database(connectionString ?? localPath);
   }
 
   async createSchema(): Promise<void> {
     try {
       this.db.exec(`
-        CREATE TABLE IF NOT EXISTS "${this.tableName}" (
-          uuid TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
-          key TEXT NOT NULL,
-          namespace TEXT NOT NULL,
-          updated_at REAL NOT NULL,
-          group_id TEXT,
-          UNIQUE (key, namespace)
-        );
-        CREATE INDEX IF NOT EXISTS updated_at_index ON "${this.tableName}" (updated_at);
-        CREATE INDEX IF NOT EXISTS key_index ON "${this.tableName}" (key);
-        CREATE INDEX IF NOT EXISTS namespace_index ON "${this.tableName}" (namespace);
-        CREATE INDEX IF NOT EXISTS group_id_index ON "${this.tableName}" (group_id);
-      `);
+CREATE TABLE IF NOT EXISTS "${this.tableName}" (
+  uuid TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+  key TEXT NOT NULL,
+  namespace TEXT NOT NULL,
+  updated_at REAL NOT NULL,
+  group_id TEXT,
+  UNIQUE (key, namespace)
+);
+CREATE INDEX IF NOT EXISTS updated_at_index ON "${this.tableName}" (updated_at);
+CREATE INDEX IF NOT EXISTS key_index ON "${this.tableName}" (key);
+CREATE INDEX IF NOT EXISTS namespace_index ON "${this.tableName}" (namespace);
+CREATE INDEX IF NOT EXISTS group_id_index ON "${this.tableName}" (group_id);`);
     } catch (error) {
-      console.error("Error creating schema:", error);
+      console.error("Error creating schema");
       throw error; // Re-throw the error to let the caller handle it
     }
   }
@@ -113,17 +127,13 @@ export class SQLiteRecordManager implements RecordManagerInterface {
     const updateTransaction = this.db.transaction(() => {
       for (const row of recordsToUpsert) {
         this.db
-          .prepare(
-            `
-          INSERT INTO "${this.tableName}" (key, namespace, updated_at, group_id)
-          VALUES (?, ?, ?, ?)
-          ON CONFLICT (key, namespace) DO UPDATE SET updated_at = excluded.updated_at
-        `
-          )
+          .prepare(`
+INSERT INTO "${this.tableName}" (key, namespace, updated_at, group_id)
+VALUES (?, ?, ?, ?)
+ON CONFLICT (key, namespace) DO UPDATE SET updated_at = excluded.updated_at`)
           .run(...row);
       }
     });
-
     updateTransaction();
   }
 
@@ -135,10 +145,9 @@ export class SQLiteRecordManager implements RecordManagerInterface {
     // Prepare the placeholders and the query
     const placeholders = keys.map(() => `?`).join(", ");
     const sql = `
-      SELECT key
-      FROM "${this.tableName}"
-      WHERE namespace = ? AND key IN (${placeholders})
-    `;
+SELECT key
+FROM "${this.tableName}"
+WHERE namespace = ? AND key IN (${placeholders})`;
 
     // Initialize an array to fill with the existence checks
     const existsArray = new Array(keys.length).fill(false);
@@ -156,7 +165,7 @@ export class SQLiteRecordManager implements RecordManagerInterface {
       });
       return existsArray;
     } catch (error) {
-      console.error("Error checking existence of keys:", error);
+      console.error("Error checking existence of keys");
       throw error; // Allow the caller to handle the error
     }
   }
@@ -196,7 +205,7 @@ export class SQLiteRecordManager implements RecordManagerInterface {
       const result = this.db.prepare(query).all(...values) as { key: string }[];
       return result.map((row) => row.key);
     } catch (error) {
-      console.error("Error listing keys:", error);
+      console.error("Error listing keys.");
       throw error; // Re-throw the error to be handled by the caller
     }
   }
@@ -208,13 +217,13 @@ export class SQLiteRecordManager implements RecordManagerInterface {
 
     const placeholders = keys.map(() => "?").join(", ");
     const query = `DELETE FROM "${this.tableName}" WHERE namespace = ? AND key IN (${placeholders});`;
-    const values: (string | number)[] = [this.namespace, ...keys];
+    const values = [this.namespace, ...keys].map((v) => typeof v !== "string" ? `${v}` : v);
 
     // Directly using try/catch with async/await for cleaner flow
     try {
       this.db.prepare(query).run(...values);
     } catch (error) {
-      console.error("Error deleting keys:", error);
+      console.error("Error deleting keys");
       throw error; // Re-throw the error to be handled by the caller
     }
   }
