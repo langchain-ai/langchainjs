@@ -535,7 +535,7 @@ export class LogStreamCallbackHandler extends BaseTracer {
           op: "add",
           path: `/logs/${runName}/streamed_output/-`,
           value: isChatGenerationChunk(kwargs?.chunk)
-            ? kwargs.chunk.message
+            ? kwargs?.chunk.message
             : token,
         },
       ],
