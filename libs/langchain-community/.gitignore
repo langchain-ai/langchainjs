@@ -666,6 +666,10 @@ indexes/memory.cjs
 indexes/memory.js
 indexes/memory.d.ts
 indexes/memory.d.cts
+indexes/sqlite.cjs
+indexes/sqlite.js
+indexes/sqlite.d.ts
+indexes/sqlite.d.cts
 util/convex.cjs
 util/convex.js
 util/convex.d.ts

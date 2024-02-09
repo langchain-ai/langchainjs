@@ -209,6 +209,7 @@ export const config = {
     "indexes/base": "indexes/base",
     "indexes/postgres": "indexes/postgres",
     "indexes/memory": "indexes/memory",
+    "indexes/sqlite": "indexes/sqlite",
     // utils
     "util/convex": "utils/convex",
     "utils/event_source_parse": "utils/event_source_parse",
@@ -334,6 +335,7 @@ export const config = {
     "util/convex",
     // indexes
     "indexes/postgres",
+    "indexes/sqlite",
   ],
   packageSuffix: "community",
   tsConfigPath: resolve("./tsconfig.json"),
