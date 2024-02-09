@@ -2,7 +2,13 @@ import { test } from "@jest/globals";
 import { SitemapLoader } from "../web/sitemap.js";
 
 test("SitemapLoader", async () => {
-  const loader = new SitemapLoader("https://www.langchain.com/");
+  const regexFailIfNotJsLangChain = /^https:\/\/js\.langchain\.com\//;
+  const regexContainsToolsDynamic = /tools\/dynamic/;
+
+  // Filter our 1 bad url (has since been fixed in vercel, but keep the test!)
+  const loader = new SitemapLoader("https://js.langchain.com/", {
+    filterUrls: [regexFailIfNotJsLangChain, regexContainsToolsDynamic],
+  });
 
   const docs = await loader.load();
   expect(docs.length).toBeGreaterThan(0);
