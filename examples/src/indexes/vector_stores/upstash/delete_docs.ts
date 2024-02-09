@@ -25,7 +25,4 @@ const IDs = await UpstashVector.addDocuments([
 // eslint-disable-next-line no-promise-executor-return
 await new Promise((resolve) => setTimeout(resolve, 1000));
 
-const newIDs = await UpstashVector.delete({ ids: [IDs[0], IDs[2], IDs[3]] });
-
-console.log(newIDs.length);
-// 1
+await UpstashVector.delete({ ids: [IDs[0], IDs[2], IDs[3]] });
