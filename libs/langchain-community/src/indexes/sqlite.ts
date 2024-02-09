@@ -68,17 +68,16 @@ export class SQLiteRecordManager implements RecordManagerInterface {
   }
 
   async getTime(): Promise<number> {
-    return new Promise<number>((resolve, reject) => {
-      try {
-        const statement: Statement<[]> = this.db.prepare(
-          "SELECT strftime('%s', 'now') AS epoch"
-        );
-        const { epoch } = statement.get() as TimeRow;
-        resolve(Number(epoch));
-      } catch (error) {
-        reject(error);
-      }
-    });
+    try {
+      const statement: Statement<[]> = this.db.prepare(
+        "SELECT strftime('%s', 'now') AS epoch"
+      );
+      const { epoch } = statement.get() as TimeRow;
+      return Number(epoch);
+    } catch (error) {
+      console.error('Error getting time in SQLiteRecordManager:', error);
+      throw error;
+    }
   }
 
   async update(keys: string[], updateOptions?: UpdateOptions): Promise<void> {
@@ -134,7 +133,7 @@ export class SQLiteRecordManager implements RecordManagerInterface {
     }
 
     // Prepare the placeholders and the query
-    const placeholders = keys.map((_, i) => `?`).join(", ");
+    const placeholders = keys.map(() => `?`).join(", ");
     const sql = `
       SELECT key
       FROM "${this.tableName}"
