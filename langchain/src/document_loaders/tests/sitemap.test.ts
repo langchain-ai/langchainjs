@@ -7,10 +7,7 @@ test("SitemapLoader", async () => {
 
   // Filter our 1 bad url (has since been fixed in vercel, but keep the test!)
   const loader = new SitemapLoader("https://js.langchain.com/", {
-    filterUrls: [
-      regexFailIfNotJsLangChain,
-      regexContainsToolsDynamic,
-    ]
+    filterUrls: [regexFailIfNotJsLangChain, regexContainsToolsDynamic],
   });
 
   const docs = await loader.load();
