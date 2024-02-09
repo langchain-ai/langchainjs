@@ -1,4 +1,4 @@
-# LangServe
+# Integrating with LangServe
 
 [LangServe](https://python.langchain.com/docs/langserve) is a Python framework that helps developers deploy LangChain [runnables and chains](/docs/expression_language/)
 as REST APIs.
@@ -6,10 +6,10 @@ as REST APIs.
 If you have a deployed LangServe route, you can use the [RemoteRunnable](https://api.js.langchain.com/classes/langchain_runnables_remote.RemoteRunnable.html) class to interact
 with it as if it were a local chain. This allows you to more easily call hosted LangServe instances from JavaScript environments (like in the browser on the frontend).
 
-You'll need to install or package LangChain into your frontend:
+You'll need to install or package LangChain core into your frontend:
 
 ```bash npm2yarn
-npm install langchain
+npm install @langchain/core
 ```
 
 ## Usage
@@ -23,9 +23,7 @@ import Example from "@examples/ecosystem/langsmith.ts";
 <CodeBlock language="typescript">{Example}</CodeBlock>
 
 [`streamLog`](/docs/expression_language/interface) is a lower level method for streaming chain intermediate steps as partial JSONPatch chunks.
-This method allows for a few extra options as well to only include or exclude certain named steps.
-
-`@langchain/core` also provides an `applyPatch` utility for aggregating these chunks into a full output:
+This method allows for a few extra options as well to only include or exclude certain named steps:
 
 import StreamLogExample from "@examples/ecosystem/langsmith_stream_log.ts";
 
