@@ -11,7 +11,6 @@ import {
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
 } from "@langchain/core/prompts";
-import { applyPatch } from "@langchain/core/utils/json_patch";
 
 // Initialize the LLM to use to answer the question.
 const model = new ChatOpenAI({});
