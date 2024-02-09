@@ -80,7 +80,9 @@ export abstract class TextSplitter
   ): Promise<Document[]> {
     // if no metadata is provided, we create an empty one for each text
     const _metadatas =
-      metadatas.length > 0 ? metadatas : new Array(texts.length).fill().map(() => ({}));
+      metadatas.length > 0
+        ? metadatas
+        : new Array(texts.length).fill().map(() => ({}));
     const {
       chunkHeader = "",
       chunkOverlapHeader = "(cont'd) ",
