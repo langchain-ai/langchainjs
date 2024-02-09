@@ -53,8 +53,8 @@ export class SitemapLoader
     if (!this.allowUrlPatterns) {
       return false;
     }
-    return this.allowUrlPatterns.some((pattern) =>
-      new RegExp(pattern).test(url)
+    return !this.allowUrlPatterns.some(
+      (pattern) => !new RegExp(pattern).test(url)
     );
   }
 
