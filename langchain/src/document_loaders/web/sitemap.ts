@@ -9,10 +9,10 @@ import { CheerioWebBaseLoader, WebBaseLoaderParams } from "./cheerio.js";
  */
 export interface SitemapLoaderParams extends WebBaseLoaderParams {
   /**
-   * @property {string[] | undefined} filterUrls - A list of regexes. Only URLs that match one of the filter URLs will be loaded.
+   * @property {(string | RegExp)[] | undefined} filterUrls - A list of regexes. Only URLs that match one of the filter URLs will be loaded.
    * WARNING: The filter URLs are interpreted as regular expressions. Escape special characters if needed.
    */
-  filterUrls?: string[];
+  filterUrls?: (string | RegExp)[];
   /**
    * The size to chunk the sitemap URLs into for scraping.
    * @default {300}
@@ -33,7 +33,7 @@ export class SitemapLoader
   extends CheerioWebBaseLoader
   implements SitemapLoaderParams
 {
-  allowUrlPatterns: string[] | undefined;
+  allowUrlPatterns: (string | RegExp)[] | undefined;
 
   chunkSize: number;
 
@@ -51,7 +51,7 @@ export class SitemapLoader
 
   _checkUrlPatterns(url: string): boolean {
     if (!this.allowUrlPatterns) {
-      return true;
+      return false;
     }
     return this.allowUrlPatterns.some((pattern) =>
       new RegExp(pattern).test(url)
@@ -78,7 +78,7 @@ export class SitemapLoader
         return;
       }
 
-      if (!this._checkUrlPatterns(loc)) {
+      if (this._checkUrlPatterns(loc)) {
         return;
       }
 
