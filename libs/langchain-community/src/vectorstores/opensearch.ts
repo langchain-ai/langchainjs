@@ -142,7 +142,8 @@ export class OpenSearchVectorStore extends VectorStore {
     const documentIds =
       options?.ids ?? Array.from({ length: vectors.length }, () => uuid.v4());
     const operations = vectors.flatMap((embedding, idx) => {
-      const document = [
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const document: Record<string, any> = [
         {
           index: {
             _index: this.indexName,
