@@ -5,8 +5,8 @@ import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 import { ChatPromptValue, StringPromptValue } from "../prompt_values.js";
 import {
   LogStreamCallbackHandler,
+  RunLogPatch,
   type LogStreamCallbackHandlerInput,
-  type RunLogPatch,
 } from "../tracers/log_stream.js";
 import {
   AIMessage,
@@ -485,7 +485,8 @@ export class RemoteRunnable<
     }
     const runnableStream = convertEventStreamToIterableReadableDataStream(body);
     for await (const log of runnableStream) {
-      yield revive(JSON.parse(log));
+      const chunk = revive(JSON.parse(log));
+      yield new RunLogPatch({ ops: chunk.ops });
     }
   }
 }
