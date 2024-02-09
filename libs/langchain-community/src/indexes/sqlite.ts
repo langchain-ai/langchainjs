@@ -89,7 +89,7 @@ CREATE INDEX IF NOT EXISTS group_id_index ON "${this.tableName}" (group_id);`);
       const { epoch } = statement.get() as TimeRow;
       return Number(epoch);
     } catch (error) {
-      console.error('Error getting time in SQLiteRecordManager:');
+      console.error("Error getting time in SQLiteRecordManager:");
       throw error;
     }
   }
@@ -127,10 +127,12 @@ CREATE INDEX IF NOT EXISTS group_id_index ON "${this.tableName}" (group_id);`);
     const updateTransaction = this.db.transaction(() => {
       for (const row of recordsToUpsert) {
         this.db
-          .prepare(`
+          .prepare(
+            `
 INSERT INTO "${this.tableName}" (key, namespace, updated_at, group_id)
 VALUES (?, ?, ?, ?)
-ON CONFLICT (key, namespace) DO UPDATE SET updated_at = excluded.updated_at`)
+ON CONFLICT (key, namespace) DO UPDATE SET updated_at = excluded.updated_at`
+          )
           .run(...row);
       }
     });
@@ -217,7 +219,9 @@ WHERE namespace = ? AND key IN (${placeholders})`;
 
     const placeholders = keys.map(() => "?").join(", ");
     const query = `DELETE FROM "${this.tableName}" WHERE namespace = ? AND key IN (${placeholders});`;
-    const values = [this.namespace, ...keys].map((v) => typeof v !== "string" ? `${v}` : v);
+    const values = [this.namespace, ...keys].map((v) =>
+      typeof v !== "string" ? `${v}` : v
+    );
 
     // Directly using try/catch with async/await for cleaner flow
     try {
