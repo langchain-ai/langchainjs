@@ -37,7 +37,27 @@ export interface OpenSearchClientArgs {
  * Type alias for an object. It's used to define filters for OpenSearch
  * queries.
  */
-type OpenSearchFilter = object;
+type OpenSearchFilter = {
+  [key: string]: FilterTypeValue | (string | number)[] | string | number;
+};
+
+/**
+ * FilterTypeValue for OpenSearch queries.
+ */
+interface FilterTypeValue {
+  exists?: boolean;
+  fuzzy?: string;
+  ids?: string[];
+  prefix?: string;
+  gte?: number;
+  gt?: number;
+  lte?: number;
+  lt?: number;
+  regexp?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  terms_set?: Record<string, any>;
+  wildcard?: string;
+}
 
 /**
  * Class that provides a wrapper around the OpenSearch service for vector
@@ -169,7 +189,7 @@ export class OpenSearchVectorStore extends VectorStore {
       body: {
         query: {
           bool: {
-            filter: { bool: { must: this.buildMetadataTerms(filter) } },
+            filter: { bool: this.buildMetadataTerms(filter) },
             must: [
               {
                 knn: {
@@ -308,16 +328,74 @@ export class OpenSearchVectorStore extends VectorStore {
     await this.client.indices.create({ index: this.indexName, body });
   }
 
-  private buildMetadataTerms(
-    filter?: OpenSearchFilter
-  ): { [key: string]: Record<string, unknown> }[] {
-    if (filter == null) return [];
-    const result = [];
+  /**
+   * Builds metadata terms for OpenSearch queries.
+   *
+   * This function takes a filter object and constructs an array of query terms
+   * compatible with OpenSearch 2.x. It supports a variety of query types including
+   * term, terms, terms_set, ids, range, prefix, exists, fuzzy, wildcard, and regexp.
+   * Reference: https://opensearch.org/docs/latest/query-dsl/term/index/
+   *
+   * @param {Filter | null} filter - The filter object used to construct query terms.
+   * Each key represents a field, and the value specifies the type of query and its parameters.
+   *
+   * @returns {Array<Record<string, any>>} An array of OpenSearch query terms.
+   *
+   * @example
+   * // Example filter:
+   * const filter = {
+   *   status: { "exists": true },
+   *   age: { "gte": 30, "lte": 40 },
+   *   tags: ["tag1", "tag2"],
+   *   description: { "wildcard": "*test*" },
+   *
+   * };
+   *
+   * // Resulting query terms:
+   * const queryTerms = buildMetadataTerms(filter);
+   * // queryTerms would be an array of OpenSearch query objects.
+   */
+  buildMetadataTerms(filter: OpenSearchFilter | undefined): object {
+    if (!filter) return {};
+    const must = [];
+    const must_not = [];
     for (const [key, value] of Object.entries(filter)) {
-      const aggregatorKey = Array.isArray(value) ? "terms" : "term";
-      result.push({ [aggregatorKey]: { [`metadata.${key}`]: value } });
+      const metadataKey = `metadata.${key}`;
+      if (value) {
+        if (typeof value === "object" && !Array.isArray(value)) {
+          if ("exists" in value) {
+            if (value.exists) {
+              must.push({ exists: { field: metadataKey } });
+            } else {
+              must_not.push({ exists: { field: metadataKey } });
+            }
+          } else if ("fuzzy" in value) {
+            must.push({ fuzzy: { [metadataKey]: value.fuzzy } });
+          } else if ("ids" in value) {
+            must.push({ ids: { values: value.ids } });
+          } else if ("prefix" in value) {
+            must.push({ prefix: { [metadataKey]: value.prefix } });
+          } else if (
+            "gte" in value ||
+            "gt" in value ||
+            "lte" in value ||
+            "lt" in value
+          ) {
+            must.push({ range: { [metadataKey]: value } });
+          } else if ("regexp" in value) {
+            must.push({ regexp: { [metadataKey]: value.regexp } });
+          } else if ("terms_set" in value) {
+            must.push({ terms_set: { [metadataKey]: value.terms_set } });
+          } else if ("wildcard" in value) {
+            must.push({ wildcard: { [metadataKey]: value.wildcard } });
+          }
+        } else {
+          const aggregatorKey = Array.isArray(value) ? "terms" : "term";
+          must.push({ [aggregatorKey]: { [metadataKey]: value } });
+        }
+      }
     }
-    return result;
+    return { must, must_not };
   }
 
   /**

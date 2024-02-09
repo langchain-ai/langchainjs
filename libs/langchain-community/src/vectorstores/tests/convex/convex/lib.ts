@@ -1,8 +1,8 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { v } from "convex/values";
+import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { ConvexVectorStore } from "../../../convex.js";
 import { action, mutation } from "./_generated/server.js";
-import { FakeEmbeddings } from "../../../../utils/testing.js";
 
 export const reset = mutation({
   args: {},

@@ -337,10 +337,6 @@
       "destination": "/docs/modules/agents/tools/integrations/aiplugin-tool/"
     },
     {
-      "source": "/docs/modules/agents/tools/dynamic(/?)",
-      "destination": "/docs/modules/agents/tools/how_to/dynamic/"
-    },
-    {
       "source": "/docs/modules/agents/tools/lambda_agent(/?)",
       "destination": "/docs/modules/agents/tools/integrations/lambda_agent/"
     },

@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
 import { Document } from "@langchain/core/documents";
-import { FakeEmbeddings } from "../../utils/testing.js";
+import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { Neo4jVectorStore } from "../neo4j_vector.js";
 
 const OS_TOKEN_COUNT = 1536;
