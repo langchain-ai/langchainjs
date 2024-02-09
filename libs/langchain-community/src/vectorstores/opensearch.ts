@@ -27,6 +27,7 @@ interface VectorSearchOptions {
  */
 export interface OpenSearchClientArgs {
   readonly client: Client;
+  readonly service?: "es" | "aoss";
   readonly indexName?: string;
 
   readonly vectorSearchOptions?: VectorSearchOptions;
@@ -71,6 +72,9 @@ export class OpenSearchVectorStore extends VectorStore {
 
   private readonly indexName: string;
 
+  // if true, use the Amazon OpenSearch Serverless service instead of es
+  private readonly isAoss: boolean;
+
   private readonly engine: OpenSearchEngine;
 
   private readonly spaceType: OpenSearchSpaceType;
@@ -96,6 +100,7 @@ export class OpenSearchVectorStore extends VectorStore {
 
     this.client = args.client;
     this.indexName = args.indexName ?? "documents";
+    this.isAoss = (args.service ?? "es") === "aoss";
   }
 
   /**
@@ -136,21 +141,35 @@ export class OpenSearchVectorStore extends VectorStore {
     );
     const documentIds =
       options?.ids ?? Array.from({ length: vectors.length }, () => uuid.v4());
-    const operations = vectors.flatMap((embedding, idx) => [
-      {
-        index: {
-          _index: this.indexName,
-          _id: documentIds[idx],
+    const operations = vectors.flatMap((embedding, idx) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const document: Record<string, any> = [
+        {
+          index: {
+            _index: this.indexName,
+            _id: documentIds[idx],
+          },
         },
-      },
-      {
-        embedding,
-        metadata: documents[idx].metadata,
-        text: documents[idx].pageContent,
-      },
-    ]);
+        {
+          embedding,
+          metadata: documents[idx].metadata,
+          text: documents[idx].pageContent,
+        },
+      ];
+
+      // aoss does not support document id
+      if (this.isAoss) {
+        delete document[0].index?._id;
+      }
+
+      return document;
+    });
     await this.client.bulk({ body: operations });
-    await this.client.indices.refresh({ index: this.indexName });
+
+    // aoss does not support refresh
+    if (!this.isAoss) {
+      await this.client.indices.refresh({ index: this.indexName });
+    }
   }
 
   /**
@@ -276,8 +295,14 @@ export class OpenSearchVectorStore extends VectorStore {
           {
             // map all metadata properties to be keyword
             "metadata.*": {
-              match_mapping_type: "*",
+              match_mapping_type: "string",
               mapping: { type: "keyword" },
+            },
+          },
+          {
+            "metadata.loc": {
+              match_mapping_type: "object",
+              mapping: { type: "object" },
             },
           },
         ],
