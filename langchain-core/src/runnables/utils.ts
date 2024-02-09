@@ -1,5 +1,12 @@
 import { StreamEvent } from "../tracers/log_stream.js";
 
+/**
+ * Utility to filter the root event in the streamEvents implementation.
+ * This is simply binding the arguments to the namespace to make save on
+ * a bit of typing in the streamEvents implementation.
+ *
+ * TODO: Refactor and remove.
+ */
 export class _RootEventFilter {
   includeNames?: string[];
 

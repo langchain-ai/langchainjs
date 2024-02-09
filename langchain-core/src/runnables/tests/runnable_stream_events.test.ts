@@ -25,8 +25,6 @@ function reverse(s: string) {
 }
 
 test("Runnable streamEvents method", async () => {
-  // Test the event stream with a tool.
-
   const chain = RunnableLambda.from(reverse).withConfig({
     runName: "reverse",
   });
@@ -64,8 +62,6 @@ test("Runnable streamEvents method", async () => {
 });
 
 test("Runnable streamEvents method with three runnables", async () => {
-  // Test the event stream with a tool.
-
   const r = RunnableLambda.from(reverse);
 
   const chain = r

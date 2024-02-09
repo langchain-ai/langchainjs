@@ -112,6 +112,9 @@ export class RunLog extends RunLogPatch {
   }
 }
 
+/**
+ * Data associated with a StreamEvent.
+ */
 export type StreamEventData = {
   /**
    * The input passed to the runnable that generated the event.
@@ -142,6 +145,7 @@ export type StreamEventData = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   chunk?: any;
 };
+
 /**
  * A streaming event.
  *
@@ -231,7 +235,6 @@ async function _getStandardizedInputs(run: Run, schemaFormat: SchemaFormat) {
 
   const { inputs } = run;
 
-  console.log(inputs);
   if (["retriever", "llm", "prompt"].includes(run.run_type)) {
     return inputs;
   }
