@@ -2,10 +2,9 @@ import { BufferMemory } from "langchain/memory";
 import { PostgresChatMessageHistory } from "@langchain/community/stores/message/postgres";
 import { ChatOpenAI } from "@langchain/openai";
 import { ConversationChain } from "langchain/chains";
-import { v4 as uuidv4 } from "uuid";
 
 const chatHistory = new PostgresChatMessageHistory({
-  sessionId: uuidv4(),
+  sessionId: "lc-example",
   poolConfig: {
     host: "127.0.0.1",
     port: 5432,
@@ -44,5 +43,5 @@ console.log({ res2 });
 }
 */
 
-// If you provided a pool config you can close the created pool when you are done
+// If you provided a pool config you should close the created pool when you are done
 await chatHistory.end();
