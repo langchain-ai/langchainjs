@@ -35,14 +35,14 @@ export type PostgresChatMessageHistoryInput = {
   pool?: pg.Pool;
 };
 
-export type StoredPostgresMessageData = {
+export interface StoredPostgresMessageData {
   name: string;
   role: string;
   content: string;
   additional_kwargs?: Record<string, unknown>;
   type: string;
   tool_call_id: string;
-};
+}
 
 export class PostgresChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "postgres"];
@@ -55,24 +55,34 @@ export class PostgresChatMessageHistory extends BaseListChatMessageHistory {
 
   private initialized = false;
 
+  /**
+   * Creates a new PostgresChatMessageHistory.
+   * @param {PostgresChatMessageHistoryInput} fields The input fields for the PostgresChatMessageHistory.
+   * @param {string} fields.tableName The name of the table name to use. Defaults to `langchain_chat_histories`.
+   * @param {string} fields.sessionId The session ID to use when storing and retrieving chat message history.
+   * @param {pg.Pool} fields.pool The Postgres pool to use. If provided, the PostgresChatMessageHistory will use the provided pool.
+   * @param {pg.PoolConfig} fields.poolConfig The configuration object for the Postgres pool. If no pool is provided, the conig will be used to create a new pool.
+   * If `pool` is provided, it will be used as the Postgres pool even if `poolConfig` is also provided.
+   * @throws If neither `pool` nor `poolConfig` is provided.
+   */
   constructor(fields: PostgresChatMessageHistoryInput) {
-    const { tableName, sessionId, pool: client, poolConfig } = fields;
+    const { tableName, sessionId, pool, poolConfig } = fields;
     super(fields);
     // Ensure that either a client or config is provided
-    if (!client && !poolConfig) {
+    if (!pool && !poolConfig) {
       throw new Error(
         "PostgresChatMessageHistory requires either a client or config"
       );
-    } else if (client && poolConfig) {
-      throw new Error(
-        "PostgresChatMessageHistory requires either a client or config, not both"
-      );
     }
-    this.pool = client || new pg.Pool(poolConfig);
+    this.pool = pool ?? new pg.Pool(poolConfig);
     this.tableName = tableName || this.tableName;
     this.sessionId = sessionId;
   }
 
+  /**
+   * Checks if the table has been created and creates it if it hasn't.
+   * @returns Promise that resolves when the table's existence is ensured.
+   */
   private async ensureTable(): Promise<void> {
     if (this.initialized) return;
 
@@ -82,7 +92,20 @@ export class PostgresChatMessageHistory extends BaseListChatMessageHistory {
             session_id VARCHAR(255) NOT NULL,
             message JSONB NOT NULL
         );`;
-    await this.pool.query(query);
+
+    try {
+      await this.pool.query(query);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      // This error indicates that the table already exists
+      // Due to asynchronous nature of the code, it is possible that
+      // the table is created between the time we check if it exists
+      // and the time we try to create it. It can be safely ignored.
+      // If it's not this error, rethrow it.
+      if (!("code" in e) || e.code !== "23505") {
+        throw e;
+      }
+    }
     this.initialized = true;
   }
 
