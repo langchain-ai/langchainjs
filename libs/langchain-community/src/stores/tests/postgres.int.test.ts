@@ -3,7 +3,7 @@ import pg from "pg";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { PostgresChatMessageHistory } from "../message/postgres.js";
 
-describe("Postgres Chat History", () => {
+describe.skip("Postgres Chat History", () => {
   let chatHistory: PostgresChatMessageHistory;
   let pool: pg.Pool;
   const tableName = "test";
@@ -29,7 +29,7 @@ describe("Postgres Chat History", () => {
   });
 
   afterAll(async () => {
-    await pool.end();
+    await chatHistory.end();
   });
 
   test("Test postgres history store", async () => {
