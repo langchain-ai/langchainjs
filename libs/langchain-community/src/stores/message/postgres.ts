@@ -44,6 +44,35 @@ export interface StoredPostgresMessageData {
   tool_call_id: string;
 }
 
+/**
+ * Class for managing chat message history using a Postgres Database as a
+ * storage backend. Extends the BaseListChatMessageHistory class.
+ * @example
+ * ```typescript
+ * const chatHistory = new PostgresChatMessageHistory({
+ *    tableName: "langchain_chat_histories",
+ *    sessionId: "lc-example",
+ *    pool: new pg.Pool({
+ *      host: "127.0.0.1",
+ *      port: 5432,
+ *      user: "myuser",
+ *      password: "ChangeMe",
+ *      database: "api",
+ *    }),
+ * });
+ *
+ * const chain = new ConversationChain({
+ *     llm: new ChatOpenAI(),
+ *     memory: new BufferMemory({ chatHistory }),
+ * });
+ *
+ * const response = await chain.invoke({
+ *     input: "What did I just say my name was?",
+ * });
+ *
+ * console.log({ response });
+ * ```
+ */
 export class PostgresChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "postgres"];
 
