@@ -533,7 +533,7 @@ export class LogStreamCallbackHandler extends BaseTracer {
     let streamedOutputValue;
     if (isChatModel) {
       if (isChatGenerationChunk(kwargs?.chunk)) {
-        streamedOutputValue = kwargs.chunk;
+        streamedOutputValue = kwargs?.chunk;
       } else {
         streamedOutputValue = new AIMessageChunk(token);
       }
