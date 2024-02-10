@@ -303,14 +303,7 @@ export class FakeListChatModel extends BaseChatModel {
       await this._sleepIfRequested();
       const chunk = this._createResponseChunk(text);
       yield chunk;
-      void runManager?.handleLLMNewToken(
-        text,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        { chunk }
-      );
+      void runManager?.handleLLMNewToken(text);
     }
   }
 

@@ -9,6 +9,7 @@ import {
 } from "../callbacks/base.js";
 import { IterableReadableStream } from "../utils/stream.js";
 import { ChatGenerationChunk, GenerationChunk } from "../outputs.js";
+import { AIMessageChunk } from "../messages/index.js";
 
 /**
  * Interface that represents the structure of a log entry in the
@@ -527,6 +528,18 @@ export class LogStreamCallbackHandler extends BaseTracer {
     if (runName === undefined) {
       return;
     }
+    // TODO: Remove hack
+    const isChatModel = run.inputs.messages !== undefined;
+    let streamedOutputValue;
+    if (isChatModel) {
+      if (isChatGenerationChunk(kwargs?.chunk)) {
+        streamedOutputValue = kwargs.chunk;
+      } else {
+        streamedOutputValue = new AIMessageChunk(token);
+      }
+    } else {
+      streamedOutputValue = token;
+    }
     const patch = new RunLogPatch({
       ops: [
         {
@@ -537,9 +550,7 @@ export class LogStreamCallbackHandler extends BaseTracer {
         {
           op: "add",
           path: `/logs/${runName}/streamed_output/-`,
-          value: isChatGenerationChunk(kwargs?.chunk)
-            ? kwargs?.chunk.message
-            : token,
+          value: streamedOutputValue,
         },
       ],
     });
