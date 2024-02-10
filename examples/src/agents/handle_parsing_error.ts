@@ -3,7 +3,7 @@ import type { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
 import { AgentExecutor, createOpenAIFunctionsAgent } from "langchain/agents";
 import { pull } from "langchain/hub";
-import { DynamicStructuredTool } from "@langchain/community/tools/dynamic";
+import { DynamicStructuredTool } from "@langchain/core/tools";
 
 const model = new ChatOpenAI({ temperature: 0.1 });
 const tools = [

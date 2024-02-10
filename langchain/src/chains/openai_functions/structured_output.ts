@@ -1,6 +1,5 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
-import { JsonSchema7Type } from "zod-to-json-schema/src/parseDef.js";
+import { zodToJsonSchema, JsonSchema7Type } from "zod-to-json-schema";
 
 import { Validator } from "@langchain/core/utils/json_schema";
 import { ChatOpenAI } from "@langchain/openai";
@@ -77,12 +76,15 @@ export class FunctionCallStructuredOutputParser<
       fields = fieldsOrSchema;
     }
     if (fields.jsonSchema === undefined && fields.zodSchema === undefined) {
-      throw new Error(`Must provide one of "jsonSchema" or "zodSchema".`);
+      throw new Error(
+        `Must provide at least one of "jsonSchema" or "zodSchema".`
+      );
     }
     super(fields);
     if (fields.jsonSchema !== undefined) {
       this.jsonSchemaValidator = new Validator(fields.jsonSchema, "7");
-    } else {
+    }
+    if (fields.zodSchema !== undefined) {
       this.zodSchema = fields.zodSchema;
     }
   }
@@ -140,6 +142,7 @@ export class FunctionCallStructuredOutputParser<
 }
 
 /**
+ * @deprecated Use {@link https://api.js.langchain.com/functions/langchain_chains_openai_functions.createStructuredOutputRunnable.html | createStructuredOutputRunnable} instead
  * Create a chain that returns output matching a JSON Schema.
  * @param input Object that includes all LLMChainInput fields except "outputParser"
  * as well as an additional required "outputSchema" JSON Schema object.
@@ -184,6 +187,7 @@ export function createStructuredOutputChain<
   });
 }
 
+/** @deprecated Use {@link https://api.js.langchain.com/functions/langchain_chains_openai_functions.createStructuredOutputRunnable.html | createStructuredOutputRunnable} instead */
 export function createStructuredOutputChainFromZod<T extends z.AnyZodObject>(
   zodSchema: T,
   input: Omit<StructuredOutputChainInput<T>, "outputSchema">

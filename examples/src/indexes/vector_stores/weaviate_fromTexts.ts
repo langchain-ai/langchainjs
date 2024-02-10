@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import weaviate from "weaviate-ts-client";
-import { WeaviateStore } from "@langchain/community/vectorstores/weaviate";
+import weaviate, { ApiKey } from "weaviate-ts-client";
+import { WeaviateStore } from "@langchain/weaviate";
 import { OpenAIEmbeddings } from "@langchain/openai";
 
 export async function run() {
@@ -8,9 +8,7 @@ export async function run() {
   const client = (weaviate as any).client({
     scheme: process.env.WEAVIATE_SCHEME || "https",
     host: process.env.WEAVIATE_HOST || "localhost",
-    apiKey: new (weaviate as any).ApiKey(
-      process.env.WEAVIATE_API_KEY || "default"
-    ),
+    apiKey: new ApiKey(process.env.WEAVIATE_API_KEY || "default"),
   });
 
   // Create a store and fill it with some texts + metadata

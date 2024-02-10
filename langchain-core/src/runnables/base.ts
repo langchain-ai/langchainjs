@@ -16,10 +16,12 @@ import {
   type IterableReadableStreamInterface,
   atee,
   pipeGeneratorWithSetup,
+  AsyncGeneratorWithSetup,
 } from "../utils/stream.js";
 import {
   DEFAULT_RECURSION_LIMIT,
   RunnableConfig,
+  ensureConfig,
   getCallbackManagerForConfig,
   mergeConfigs,
   patchConfig,
@@ -75,14 +77,15 @@ export interface RunnableInterface<
   ): AsyncGenerator<RunOutput>;
 }
 
+// TODO: Make `options` just take `RunnableConfig`
 export type RunnableFunc<RunInput, RunOutput> = (
   input: RunInput,
   options?:
-    | { config?: RunnableConfig }
+    | ({ config?: RunnableConfig } & RunnableConfig)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     | Record<string, any>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    | (Record<string, any> & { config: RunnableConfig })
+    | (Record<string, any> & { config: RunnableConfig } & RunnableConfig)
 ) => RunOutput | Promise<RunOutput>;
 
 export type RunnableMapLike<RunInput, RunOutput> = {
@@ -106,7 +109,7 @@ export type RunnableBatchOptions = {
 export type RunnableRetryFailedAttemptHandler = (error: any) => any;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function _coerceToDict(value: any, defaultKey: string) {
+export function _coerceToDict(value: any, defaultKey: string) {
   return value &&
     !Array.isArray(value) &&
     // eslint-disable-next-line no-instanceof/no-instanceof
@@ -218,19 +221,19 @@ export abstract class Runnable<
     });
   }
 
-  protected _getOptionsList(
-    options: Partial<CallOptions> | Partial<CallOptions>[],
+  protected _getOptionsList<O extends CallOptions & { runType?: string }>(
+    options: Partial<O> | Partial<O>[],
     length = 0
-  ): Partial<CallOptions & { runType?: string }>[] {
+  ): Partial<O>[] {
     if (Array.isArray(options)) {
       if (options.length !== length) {
         throw new Error(
           `Passed "options" must be an array with the same length as the inputs, but got ${options.length} options for ${length} inputs`
         );
       }
-      return options;
+      return options.map(ensureConfig);
     }
-    return Array.from({ length }, () => options);
+    return Array.from({ length }, () => ensureConfig(options));
   }
 
   /**
@@ -312,27 +315,35 @@ export abstract class Runnable<
     input: RunInput,
     options?: Partial<CallOptions>
   ): Promise<IterableReadableStream<RunOutput>> {
-    return IterableReadableStream.fromAsyncGenerator(
+    // Buffer the first streamed chunk to allow for initial errors
+    // to surface immediately.
+    const wrappedGenerator = new AsyncGeneratorWithSetup(
       this._streamIterator(input, options)
     );
+    await wrappedGenerator.setup;
+    return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
   }
 
   protected _separateRunnableConfigFromCallOptions(
     options: Partial<CallOptions> = {}
   ): [RunnableConfig, Omit<Partial<CallOptions>, keyof RunnableConfig>] {
-    const runnableConfig: RunnableConfig = {
+    const runnableConfig: RunnableConfig = ensureConfig({
       callbacks: options.callbacks,
       tags: options.tags,
       metadata: options.metadata,
       runName: options.runName,
       configurable: options.configurable,
-    };
+      recursionLimit: options.recursionLimit,
+      maxConcurrency: options.maxConcurrency,
+    });
     const callOptions = { ...options };
     delete callOptions.callbacks;
     delete callOptions.tags;
     delete callOptions.metadata;
     delete callOptions.runName;
     delete callOptions.configurable;
+    delete callOptions.recursionLimit;
+    delete callOptions.maxConcurrency;
     return [runnableConfig, callOptions];
   }
 
@@ -347,19 +358,20 @@ export abstract class Runnable<
     input: T,
     options?: Partial<CallOptions> & { runType?: string }
   ) {
-    const callbackManager_ = await getCallbackManagerForConfig(options);
+    const config = ensureConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(config);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
       undefined,
-      options?.runType,
+      config?.runType,
       undefined,
       undefined,
-      options?.runName ?? this.getName()
+      config?.runName ?? this.getName()
     );
     let output;
     try {
-      output = await func.bind(this)(input, options, runManager);
+      output = await func.call(this, input, config, runManager);
     } catch (e) {
       await runManager?.handleChainError(e);
       throw e;
@@ -409,7 +421,13 @@ export abstract class Runnable<
     );
     let outputs: (RunOutput | Error)[];
     try {
-      outputs = await func(inputs, optionsList, runManagers, batchOptions);
+      outputs = await func.call(
+        this,
+        inputs,
+        optionsList,
+        runManagers,
+        batchOptions
+      );
     } catch (e) {
       await Promise.all(
         runManagers.map((runManager) => runManager?.handleChainError(e))
@@ -446,7 +464,8 @@ export abstract class Runnable<
     let finalOutput: O | undefined;
     let finalOutputSupported = true;
 
-    const callbackManager_ = await getCallbackManagerForConfig(options);
+    const config = ensureConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(config);
     async function* wrapInputForTracing() {
       for await (const chunk of inputGenerator) {
         if (finalInputSupported) {
@@ -469,19 +488,19 @@ export abstract class Runnable<
     let runManager: CallbackManagerForChainRun | undefined;
     try {
       const pipe = await pipeGeneratorWithSetup(
-        transformer,
+        transformer.bind(this),
         wrapInputForTracing(),
         async () =>
           callbackManager_?.handleChainStart(
             this.toJSON(),
             { input: "" },
             undefined,
-            options?.runType,
+            config?.runType,
             undefined,
             undefined,
-            options?.runName ?? this.getName()
+            config?.runName ?? this.getName()
           ),
-        options
+        config
       );
       runManager = pipe.setup;
       const isLogStreamHandler = (
@@ -611,7 +630,7 @@ export abstract class Runnable<
       ...streamOptions,
       autoClose: false,
     });
-    const config: Partial<CallOptions> = options ?? {};
+    const config = ensureConfig(options);
     const { callbacks } = config;
     if (callbacks === undefined) {
       config.callbacks = [stream];
@@ -622,9 +641,10 @@ export abstract class Runnable<
       copiedCallbacks.inheritableHandlers.push(stream);
       config.callbacks = copiedCallbacks;
     }
-    const runnableStream = await this.stream(input, config);
+    const runnableStreamPromise = this.stream(input, config);
     async function consumeRunnableStream() {
       try {
+        const runnableStream = await runnableStreamPromise;
         for await (const chunk of runnableStream) {
           const patch = new RunLogPatch({
             ops: [
@@ -641,13 +661,13 @@ export abstract class Runnable<
         await stream.writer.close();
       }
     }
-    const runnableStreamPromise = consumeRunnableStream();
+    const runnableStreamConsumePromise = consumeRunnableStream();
     try {
       for await (const log of stream) {
         yield log;
       }
     } finally {
-      await runnableStreamPromise;
+      await runnableStreamConsumePromise;
     }
   }
 
@@ -746,11 +766,10 @@ export class RunnableBinding<
   }
 
   async _mergeConfig(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    options?: Record<string, any>
+    ...options: (Partial<CallOptions> | RunnableConfig | undefined)[]
   ): Promise<Partial<CallOptions>> {
-    const config = mergeConfigs<CallOptions>(this.config, options);
-    return mergeConfigs<CallOptions>(
+    const config = mergeConfigs(this.config, ...options);
+    return mergeConfigs(
       config,
       ...(this.configFactories
         ? await Promise.all(
@@ -802,7 +821,7 @@ export class RunnableBinding<
   ): Promise<RunOutput> {
     return this.bound.invoke(
       input,
-      await this._mergeConfig({ ...options, ...this.kwargs })
+      await this._mergeConfig(options, this.kwargs)
     );
   }
 
@@ -832,13 +851,10 @@ export class RunnableBinding<
     const mergedOptions = Array.isArray(options)
       ? await Promise.all(
           options.map(async (individualOption) =>
-            this._mergeConfig({
-              ...individualOption,
-              ...this.kwargs,
-            })
+            this._mergeConfig(individualOption, this.kwargs)
           )
         )
-      : await this._mergeConfig({ ...options, ...this.kwargs });
+      : await this._mergeConfig(options, this.kwargs);
     return this.bound.batch(inputs, mergedOptions, batchOptions);
   }
 
@@ -848,7 +864,7 @@ export class RunnableBinding<
   ) {
     yield* this.bound._streamIterator(
       input,
-      await this._mergeConfig({ ...options, ...this.kwargs })
+      await this._mergeConfig(options, this.kwargs)
     );
   }
 
@@ -858,7 +874,7 @@ export class RunnableBinding<
   ): Promise<IterableReadableStream<RunOutput>> {
     return this.bound.stream(
       input,
-      await this._mergeConfig({ ...options, ...this.kwargs })
+      await this._mergeConfig(options, this.kwargs)
     );
   }
 
@@ -869,7 +885,7 @@ export class RunnableBinding<
   ): AsyncGenerator<RunOutput> {
     yield* this.bound.transform(
       generator,
-      await this._mergeConfig({ ...options, ...this.kwargs })
+      await this._mergeConfig(options, this.kwargs)
     );
   }
 
@@ -1598,9 +1614,11 @@ export class RunnableMap<
     async function* generator() {
       yield input;
     }
-    return IterableReadableStream.fromAsyncGenerator(
+    const wrappedGenerator = new AsyncGeneratorWithSetup(
       this.transform(generator(), options)
     );
+    await wrappedGenerator.setup;
+    return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
   }
 }
 
@@ -1642,7 +1660,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     config?: Partial<RunnableConfig>,
     runManager?: CallbackManagerForChainRun
   ) {
-    let output = await this.func(input, { config });
+    let output = await this.func(input, { ...config, config });
     if (output && Runnable.isRunnable(output)) {
       if (config?.recursionLimit === 0) {
         throw new Error("Recursion limit reached.");
@@ -1686,7 +1704,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
       }
     }
 
-    const output = await this.func(finalChunk, { config });
+    const output = await this.func(finalChunk, { ...config, config });
     if (output && Runnable.isRunnable(output)) {
       if (config?.recursionLimit === 0) {
         throw new Error("Recursion limit reached.");
@@ -1725,9 +1743,11 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     async function* generator() {
       yield input;
     }
-    return IterableReadableStream.fromAsyncGenerator(
+    const wrappedGenerator = new AsyncGeneratorWithSetup(
       this.transform(generator(), options)
     );
+    await wrappedGenerator.setup;
+    return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
   }
 }
 
@@ -2027,9 +2047,11 @@ export class RunnableAssign<
     async function* generator() {
       yield input;
     }
-    return IterableReadableStream.fromAsyncGenerator(
+    const wrappedGenerator = new AsyncGeneratorWithSetup(
       this.transform(generator(), options)
     );
+    await wrappedGenerator.setup;
+    return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
   }
 }
 
@@ -2116,8 +2138,10 @@ export class RunnablePick<
     async function* generator() {
       yield input;
     }
-    return IterableReadableStream.fromAsyncGenerator(
+    const wrappedGenerator = new AsyncGeneratorWithSetup(
       this.transform(generator(), options)
     );
+    await wrappedGenerator.setup;
+    return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
   }
 }

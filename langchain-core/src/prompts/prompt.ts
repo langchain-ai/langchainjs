@@ -14,6 +14,7 @@ import {
 } from "./template.js";
 import type { SerializedPromptTemplate } from "./serde.js";
 import type { InputValues, PartialValues } from "../utils/types.js";
+import { MessageContent } from "../messages/index.js";
 
 /**
  * Inputs to create a {@link PromptTemplate}
@@ -28,7 +29,7 @@ export interface PromptTemplateInput<
   /**
    * The prompt template
    */
-  template: string;
+  template: MessageContent;
 
   /**
    * The format of the prompt template. Options are 'f-string'
@@ -107,7 +108,7 @@ export class PromptTemplate<
     return "PromptTemplate";
   }
 
-  template: string;
+  template: MessageContent;
 
   templateFormat: TemplateFormat = "f-string";
 
@@ -143,7 +144,11 @@ export class PromptTemplate<
    */
   async format(values: TypedPromptInputValues<RunInput>): Promise<string> {
     const allValues = await this.mergePartialAndUserVariables(values);
-    return renderTemplate(this.template, this.templateFormat, allValues);
+    return renderTemplate(
+      this.template as string,
+      this.templateFormat,
+      allValues
+    );
   }
 
   /**

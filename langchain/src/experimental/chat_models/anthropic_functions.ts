@@ -13,7 +13,7 @@ import {
 } from "@langchain/core/language_models/chat_models";
 import { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
-import { PromptTemplate } from "@langchain/core/prompts";
+import { BasePromptTemplate, PromptTemplate } from "@langchain/core/prompts";
 import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";
 import {
   ChatAnthropic,
@@ -24,7 +24,8 @@ import {
 const TOOL_SYSTEM_PROMPT =
   /* #__PURE__ */
   PromptTemplate.fromTemplate(`In addition to responding, you can use tools.
-You have access to the following tools.
+You should use tools as often as you can, as they return the most accurate information possible.
+You have access to the following tools:
 
 {tools}
 
@@ -50,12 +51,15 @@ export interface ChatAnthropicFunctionsCallOptions
 export type AnthropicFunctionsInput = Partial<AnthropicInput> &
   BaseChatModelParams & {
     llm?: BaseChatModel;
+    systemPromptTemplate?: BasePromptTemplate;
   };
 
 export class AnthropicFunctions extends BaseChatModel<ChatAnthropicFunctionsCallOptions> {
   llm: BaseChatModel;
 
   stopSequences?: string[];
+
+  systemPromptTemplate: BasePromptTemplate;
 
   lc_namespace = ["langchain", "experimental", "chat_models"];
 
@@ -66,6 +70,8 @@ export class AnthropicFunctions extends BaseChatModel<ChatAnthropicFunctionsCall
   constructor(fields?: AnthropicFunctionsInput) {
     super(fields ?? {});
     this.llm = fields?.llm ?? new ChatAnthropic(fields);
+    this.systemPromptTemplate =
+      fields?.systemPromptTemplate ?? TOOL_SYSTEM_PROMPT;
     this.stopSequences =
       fields?.stopSequences ?? (this.llm as ChatAnthropic).stopSequences;
   }
@@ -102,7 +108,7 @@ export class AnthropicFunctions extends BaseChatModel<ChatAnthropicFunctionsCall
       );
     }
     if (options.functions !== undefined && options.functions.length > 0) {
-      const content = await TOOL_SYSTEM_PROMPT.format({
+      const content = await this.systemPromptTemplate.format({
         tools: JSON.stringify(options.functions, null, 2),
       });
       const systemMessage = new SystemMessage({ content });

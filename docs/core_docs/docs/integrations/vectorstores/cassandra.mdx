@@ -14,45 +14,63 @@ The [latest version](<https://cwiki.apache.org/confluence/display/CASSANDRA/CEP-
 
 ## Setup
 
-1. Create an [Astra DB account](https://astra.datastax.com/register).
-2. Create a [vector enabled database](https://astra.datastax.com/createDatabase).
-3. Download your secure connect bundle and application token on your database's "Connect" tab.
-4. Set up the following env vars:
-
-```bash
-export OPENAI_API_KEY=YOUR_OPENAI_API_KEY_HERE
-export CASSANDRA_SCB=YOUR_CASSANDRA_SCB_HERE
-export CASSANDRA_TOKEN=YOUR_CASSANDRA_TOKEN_HERE
-```
-
-5. Install the Cassandra Node.js driver.
-
-```bash npm2yarn
-npm install cassandra-driver
-```
-
-## Indexing docs
+First, install the Cassandra Node.js driver:
 
 import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
 
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm install @langchain/openai
+npm install cassandra-driver @langchain/community @langchain/openai
 ```
+
+Depending on your database providers, the specifics of how to connect to the database will vary. We will create a document `configConnection` which will be used as part of the vector store configuration.
+
+### Apache Cassandra®
+
+Vector search is supported in [Apache Cassandra® 5.0](https://cassandra.apache.org/_/Apache-Cassandra-5.0-Moving-Toward-an-AI-Driven-Future.html) and above. You can use a standard connection document, for example:
+
+```typescript
+const configConnection = {
+  contactPoints: ['h1', 'h2'],
+  localDataCenter: 'datacenter1',
+  credentials: {
+    username: <...> as string,
+    password: <...> as string,
+  },
+};
+```
+
+### Astra DB
+
+Astra DB is a cloud-native Cassandra-as-a-Service platform.
+
+1. Create an [Astra DB account](https://astra.datastax.com/register).
+2. Create a [vector enabled database](https://astra.datastax.com/createDatabase).
+3. Create a [token](https://docs.datastax.com/en/astra/docs/manage-application-tokens.html) for your database.
+
+```typescript
+const configConnection = {
+  serviceProviderArgs: {
+    astra: {
+      token: <...> as string,
+      endpoint: <...> as string,
+    },
+  },
+};
+```
+
+Instead of `endpoint:`, you many provide property `datacenterID:` and optionally `regionName:`.
+
+## Indexing docs
 
 ```typescript
 import { CassandraStore } from "langchain/vectorstores/cassandra";
 import { OpenAIEmbeddings } from "@langchain/openai";
 
+// The configConnection document is defined above
 const config = {
-  cloud: {
-    secureConnectBundle: process.env.CASSANDRA_SCB as string,
-  },
-  credentials: {
-    username: "token",
-    password: process.env.CASSANDRA_TOKEN as string,
-  },
+  ...configConnection,
   keyspace: "test",
   dimensions: 1536,
   table: "test",

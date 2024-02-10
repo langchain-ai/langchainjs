@@ -1,6 +1,6 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import type { ToolInterface } from "@langchain/core/tools";
-import { DynamicTool } from "@langchain/community/tools/dynamic";
+import { DynamicTool } from "@langchain/core/tools";
 import { Toolkit } from "@langchain/community/agents/toolkits/base";
 import { JsonSpec } from "../../../tools/json.js";
 import { AgentExecutor } from "../../executor.js";

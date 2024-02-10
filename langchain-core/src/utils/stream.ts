@@ -102,6 +102,9 @@ export class IterableReadableStream<T>
         // Fix: `else if (value)` will hang the streaming when nullish value (e.g. empty string) is pulled
         controller.enqueue(value);
       },
+      async cancel(reason) {
+        await generator.return(reason);
+      },
     });
   }
 }
@@ -181,7 +184,7 @@ export class AsyncGeneratorWithSetup<
 
   private firstResultUsed = false;
 
-  constructor(generator: AsyncGenerator<T>, startSetup: () => Promise<S>) {
+  constructor(generator: AsyncGenerator<T>, startSetup?: () => Promise<S>) {
     this.generator = generator;
     // setup is a promise that resolves only after the first iterator value
     // is available. this is useful when setup of several piped generators
@@ -189,7 +192,11 @@ export class AsyncGeneratorWithSetup<
     // to each generator is available.
     this.setup = new Promise((resolve, reject) => {
       this.firstResult = generator.next();
-      this.firstResult.then(startSetup).then(resolve, reject);
+      if (startSetup) {
+        this.firstResult.then(startSetup).then(resolve, reject);
+      } else {
+        this.firstResult.then((_result) => resolve(undefined as S), reject);
+      }
     });
   }
 

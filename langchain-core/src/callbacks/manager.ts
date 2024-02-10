@@ -495,7 +495,7 @@ export class CallbackManager
 
   name = "callback_manager";
 
-  private readonly _parentRunId?: string;
+  public readonly _parentRunId?: string;
 
   constructor(
     parentRunId?: string,
@@ -947,7 +947,7 @@ export class CallbackManager
   }
 }
 
-function ensureHandler(
+export function ensureHandler(
   handler: BaseCallbackHandler | CallbackHandlerMethods
 ): BaseCallbackHandler {
   if ("name" in handler) {

@@ -1,6 +1,5 @@
 import type { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
-import { JsonSchema7Type } from "zod-to-json-schema/src/parseDef.js";
+import { zodToJsonSchema, JsonSchema7Type } from "zod-to-json-schema";
 
 import type { BaseOutputParser } from "@langchain/core/output_parsers";
 import type { BasePromptTemplate } from "@langchain/core/prompts";
@@ -101,7 +100,7 @@ export function createOpenAIFnRunnable<
   RunOutput extends Record<string, any> = Record<string, any>
 >(
   config: CreateOpenAIFnRunnableConfig<RunInput, RunOutput>
-): RunnableInterface<RunInput, RunOutput> {
+): Runnable<RunInput, RunOutput> {
   const {
     functions,
     llm,
@@ -217,7 +216,7 @@ export function createStructuredOutputRunnable<
   RunOutput extends Record<string, any> = Record<string, any>
 >(
   config: CreateStructuredOutputRunnableConfig<RunInput, RunOutput>
-): RunnableInterface<RunInput, RunOutput> {
+): Runnable<RunInput, RunOutput> {
   const { outputSchema, llm, prompt, outputParser } = config;
   const jsonSchema = isZodSchema(outputSchema)
     ? zodToJsonSchema(outputSchema)

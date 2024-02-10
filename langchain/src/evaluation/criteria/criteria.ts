@@ -38,7 +38,7 @@ export type Criteria =
   | "creativity"
   | "detail";
 
-const SUPPORTED_CRITERIA: Record<Criteria, string> = /* #__PURE__ */ {
+const SUPPORTED_CRITERIA: Record<Criteria, string> = {
   conciseness: "Is the submission concise and to the point?",
   relevance: "Is the submission referring to a real quote from the text?",
   correctness: "Is the submission correct, accurate, and factual?",
@@ -270,14 +270,10 @@ export class CriteriaEvalChain extends LLMStringEvaluator {
   }
 
   async _evaluateStrings(
-    args: StringEvaluatorArgs,
-    callOptions: ExtractLLMCallOptions<this["llm"]>,
+    args: StringEvaluatorArgs & ExtractLLMCallOptions<this["llm"]>,
     config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues> {
-    const result = await this.call(
-      { ...this.getEvalInput(args), ...callOptions },
-      config
-    );
+    const result = await this.call({ ...this.getEvalInput(args) }, config);
 
     return this._prepareOutput(result);
   }

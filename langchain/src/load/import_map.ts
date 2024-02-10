@@ -10,6 +10,7 @@ export * as agents__format_scratchpad__log_to_message from "../agents/format_scr
 export * as agents__react__output_parser from "../agents/react/output_parser.js";
 export * as agents__xml__output_parser from "../agents/xml/output_parser.js";
 export * as agents__openai__output_parser from "../agents/openai/output_parser.js";
+export * as tools__chain from "../tools/chain.js";
 export * as tools__render from "../tools/render.js";
 export * as tools__retriever from "../tools/retriever.js";
 export * as chains from "../chains/index.js";
@@ -63,7 +64,9 @@ export * as experimental__chains__violation_of_expectations from "../experimenta
 export * as experimental__masking from "../experimental/masking/index.js";
 export * as experimental__prompts__custom_format from "../experimental/prompts/custom_format.js";
 export * as evaluation from "../evaluation/index.js";
+export * as smith from "../smith/index.js";
 export * as runnables__remote from "../runnables/remote.js";
+export * as indexes from "../indexes/index.js";
 import {
   ChatOpenAI,
   OpenAI,
@@ -77,6 +80,7 @@ import {
   HumanMessagePromptTemplate,
   MessagesPlaceholder,
   SystemMessagePromptTemplate,
+  ImagePromptTemplate,
   PipelinePromptTemplate
 } from "@langchain/core/prompts";
 import {
@@ -159,6 +163,23 @@ const schema__messages = {
   ToolMessageChunk
 };
 export { schema__messages };
+const schema = {
+  AIMessage,
+  AIMessageChunk,
+  BaseMessage,
+  BaseMessageChunk,
+  ChatMessage,
+  ChatMessageChunk,
+  FunctionMessage,
+  FunctionMessageChunk,
+  HumanMessage,
+  HumanMessageChunk,
+  SystemMessage,
+  SystemMessageChunk,
+  ToolMessage,
+  ToolMessageChunk
+};
+export { schema };
 const prompts__chat = {
   AIMessagePromptTemplate,
   ChatMessagePromptTemplate,
@@ -168,6 +189,10 @@ const prompts__chat = {
   SystemMessagePromptTemplate
 };
 export { prompts__chat };
+const prompts__image = {
+  ImagePromptTemplate
+};
+export { prompts__image };
 const prompts__pipeline = {
   PipelinePromptTemplate
 };

@@ -4,10 +4,7 @@ import { createOpenAIFunctionsAgent, AgentExecutor } from "langchain/agents";
 import { pull } from "langchain/hub";
 
 import { z } from "zod";
-import {
-  DynamicTool,
-  DynamicStructuredTool,
-} from "@langchain/community/tools/dynamic";
+import { DynamicTool, DynamicStructuredTool } from "@langchain/core/tools";
 
 const llm = new ChatOpenAI({
   modelName: "gpt-3.5-turbo",

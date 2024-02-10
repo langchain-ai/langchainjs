@@ -1,4 +1,3 @@
-// TODO: Deprecate in favor of stores/message/ioredis.ts when LLMCache and other implementations are ported
 import {
   createClient,
   RedisClientOptions,
@@ -15,6 +14,7 @@ import {
 } from "@langchain/core/messages";
 
 /**
+ * @deprecated Install and import from the "@langchain/redis" integration package instead.
  * Type for the input to the `RedisChatMessageHistory` constructor.
  */
 export type RedisChatMessageHistoryInput = {
@@ -27,6 +27,7 @@ export type RedisChatMessageHistoryInput = {
 };
 
 /**
+ * @deprecated Install and import from the "@langchain/redis" integration package instead.
  * Class for storing chat message history using Redis. Extends the
  * `BaseListChatMessageHistory` class.
  * @example
