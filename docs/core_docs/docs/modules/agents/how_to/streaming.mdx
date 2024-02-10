@@ -1,5 +1,6 @@
 import CodeBlock from "@theme/CodeBlock";
 import StreamIntermediateStepsExample from "@examples/agents/stream_intermediate_steps.ts";
+import StreamEventsExample from "@examples/agents/stream_events.ts";
 import StreamLogExample from "@examples/agents/stream_log.ts";
 
 # Streaming
@@ -27,7 +28,30 @@ You can see that we get back a bunch of different information. There are two way
 1. By using the AgentAction or observation directly
 2. By using the messages object
 
-## Streaming tokens
+## Custom streaming with events
+
+Use the `streamEvents` API in case the default behavior of stream does not work for your application (e.g., if you need to stream individual tokens from the agent or surface steps occuring within tools).
+
+:::warning
+This is a beta API, meaning that some details might change slightly in the future based on usage. You can pass a `version` parameter to tweak the behavior.
+:::
+
+Let’s use this API to stream the following events:
+
+1. Agent Start with inputs
+2. Tool Start with inputs
+3. Tool End with outputs
+4. Stream the agent final anwer token by token
+5. Agent End with outputs
+
+<CodeBlock language="typescript">{StreamEventsExample}</CodeBlock>
+
+## Other approaches
+
+### `streamLog`
+
+You can also use the astream_log API. This API produces a granular log of all events that occur during execution. The log format is based on the [JSONPatch](https://jsonpatch.com/) standard.
+It’s granular, but requires effort to parse. For this reason, we created the `streamEvents` API as an easier alternative.
 
 In addition to streaming the final result, you can also stream tokens from each individual step. This will require more complex parsing of the logs.
 
