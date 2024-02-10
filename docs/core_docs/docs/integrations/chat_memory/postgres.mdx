@@ -25,7 +25,7 @@ npm install @langchain/openai @langchain/community pg
 Each chat history session is stored in a Postgres database and requires a session id.
 
 The connection to postgres is handled through a pool. You can either pass an instance of a pool via the `pool` parameter or pass a pool config via the `poolConfig` parameter. See [pg-node docs on pools](https://node-postgres.com/apis/pool)
-for more information.
+for more information. A provided pool takes precedence, thus if both a pool instance and a pool config are passed, only the pool will be used.
 
 import Example from "@examples/memory/postgres.ts";
 
