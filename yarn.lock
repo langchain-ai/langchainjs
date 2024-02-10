@@ -8924,6 +8924,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.58.0
     "@typescript-eslint/parser": ^5.58.0
     "@upstash/redis": ^1.20.6
+    "@upstash/vector": ^1.0.2
     "@vercel/kv": ^0.2.3
     "@vercel/postgres": ^0.5.0
     "@writerai/writer-sdk": ^0.40.2
@@ -9028,6 +9029,7 @@ __metadata:
     "@tensorflow/tfjs-converter": "*"
     "@tensorflow/tfjs-core": "*"
     "@upstash/redis": ^1.20.6
+    "@upstash/vector": ^1.0.2
     "@vercel/kv": ^0.2.3
     "@vercel/postgres": ^0.5.0
     "@writerai/writer-sdk": ^0.40.2
@@ -9149,6 +9151,8 @@ __metadata:
     "@tensorflow/tfjs-core":
       optional: true
     "@upstash/redis":
+      optional: true
+    "@upstash/vector":
       optional: true
     "@vercel/kv":
       optional: true
@@ -15210,6 +15214,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@upstash/vector@npm:^1.0.2":
+  version: 1.0.2
+  resolution: "@upstash/vector@npm:1.0.2"
+  checksum: e047b919ab1a93de0ea6db339aea82ccbeefaa748a792fa539a8b6b0d36f0ab83b9fe9ff4ece79e8b2a8f08e0e49a33b51f914d16e4d24d26b932830420537a6
+  languageName: node
+  linkType: hard
+
 "@vercel/kv@npm:^0.2.3":
   version: 0.2.3
   resolution: "@vercel/kv@npm:0.2.3"
@@ -21015,6 +21026,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.51.0
     "@typescript-eslint/parser": ^5.51.0
     "@upstash/redis": ^1.20.6
+    "@upstash/vector": ^1.0.2
     "@vercel/kv": ^0.2.3
     "@xata.io/client": ^0.28.0
     "@zilliz/milvus2-sdk-node": ^2.2.7
