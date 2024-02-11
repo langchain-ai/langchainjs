@@ -19,10 +19,10 @@ export class CouchbaseDocumentLoader
 
   /**
    * construct Couchbase document loader with a requirement for couchbase cluster client
-   * @param client { Cluster } [couchbase connected client to connect to database]
-   * @param query { string } [query to get results from while loading the data]
-   * @param pageContentFields { Array<string> } [filters fields of the document and shows these only]
-   * @param metadataFields { Array<string> } [metadata fields required]
+   * @param client { Cluster } [ couchbase connected client to connect to database ]
+   * @param query { string } [ query to get results from while loading the data ]
+   * @param pageContentFields { Array<string> } [ filters fields of the document and shows these only ]
+   * @param metadataFields { Array<string> } [ metadata fields required ]
    */
   constructor(
     client: Cluster,
@@ -42,6 +42,7 @@ export class CouchbaseDocumentLoader
 
   /**
    * Function to load document based on query from couchbase
+   * @returns {Promise<Document[]>} [ Returns a promise of all the documents as array ]
    */
   async load(): Promise<Document[]> {
     const documents: Document[] = [];
@@ -52,7 +53,8 @@ export class CouchbaseDocumentLoader
   }
 
   /**
-   * Helper function to load each document
+   * Function to load documents based on iterator rather than full load
+   * @returns {AsyncIterable<Document>} [ Returns an iterator to fetch documents ]
    */
   async *lazyLoad(): AsyncIterable<Document> {
     // Run SQL++ Query
