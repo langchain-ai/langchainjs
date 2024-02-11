@@ -4,6 +4,7 @@
     "@langchain/community/": "npm:/@langchain/community/",
     "@langchain/openai": "npm:@langchain/openai",
     "@langchain/core/": "npm:/@langchain/core/",
+    "dotenv/": "npm:/dotenv/",
     "cheerio": "npm:/cheerio",
     "@langchain/pinecone": "npm:@langchain/pinecone",
     "@pinecone-database/pinecone": "npm:@pinecone-database/pinecone",
