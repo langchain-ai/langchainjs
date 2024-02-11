@@ -295,6 +295,9 @@ export interface OptionalImportMap {
   "langchain/document_loaders/web/confluence"?:
     | typeof import("../document_loaders/web/confluence.js")
     | Promise<typeof import("../document_loaders/web/confluence.js")>;
+  "langchain/document_loaders/web/couchbase"?:
+    | typeof import("../document_loaders/web/couchbase.js")
+    | Promise<typeof import("../document_loaders/web/couchbase.js")>;
   "langchain/document_loaders/web/youtube"?:
     | typeof import("../document_loaders/web/youtube.js")
     | Promise<typeof import("../document_loaders/web/youtube.js")>;

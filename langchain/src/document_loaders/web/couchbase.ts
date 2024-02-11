@@ -2,6 +2,9 @@ import { Cluster, QueryResult } from "couchbase";
 import { Document } from "@langchain/core/documents";
 import { BaseDocumentLoader, DocumentLoader } from "../base.js";
 
+/**
+ * loader for couchbase document
+ */
 export class CouchbaseDocumentLoader
   extends BaseDocumentLoader
   implements DocumentLoader
@@ -14,6 +17,13 @@ export class CouchbaseDocumentLoader
 
   private metadataFields?: string[];
 
+  /**
+   * construct Couchbase document loader with a requirement for couchbase cluster client
+   * @param client { Cluster } [couchbase connected client to connect to database]
+   * @param query { string } [query to get results from while loading the data]
+   * @param pageContentFields { Array<string> } [filters fields of the document and shows these only]
+   * @param metadataFields { Array<string> } [metadata fields required]
+   */
   constructor(
     client: Cluster,
     query: string,
@@ -30,6 +40,9 @@ export class CouchbaseDocumentLoader
     this.metadataFields = metadataFields;
   }
 
+  /**
+   * Function to load document based on query from couchbase
+   */
   async load(): Promise<Document[]> {
     const documents: Document[] = [];
     for await (const doc of this.lazyLoad()) {
@@ -38,6 +51,9 @@ export class CouchbaseDocumentLoader
     return documents;
   }
 
+  /**
+   * Helper function to load each document
+   */
   async *lazyLoad(): AsyncIterable<Document> {
     // Run SQL++ Query
     const result: QueryResult = await this.cluster.query(this.query);
