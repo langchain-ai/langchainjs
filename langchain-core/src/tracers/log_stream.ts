@@ -150,7 +150,7 @@ export type StreamEventData = {
 /**
  * A streaming event.
  *
- * Schema of a streaming event which is produced from the astream_events method.
+ * Schema of a streaming event which is produced from the streamEvents method.
  */
 export type StreamEvent = {
   /**
