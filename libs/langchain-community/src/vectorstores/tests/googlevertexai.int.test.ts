@@ -3,7 +3,7 @@
 import { beforeAll, expect, test } from "@jest/globals";
 import { Document } from "@langchain/core/documents";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
-import { SyntheticEmbeddings } from "../../utils/testing.js";
+import { SyntheticEmbeddings } from "@langchain/core/utils/testing";
 import { InMemoryDocstore } from "../../stores/doc/in_memory.js";
 import {
   MatchingEngineArgs,

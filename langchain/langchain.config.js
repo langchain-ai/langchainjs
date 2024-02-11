@@ -9,7 +9,6 @@ function abs(relativePath) {
   return resolve(dirname(fileURLToPath(import.meta.url)), relativePath);
 }
 
-
 export const config = {
   internals: [
     /node\:/,
@@ -198,6 +197,7 @@ export const config = {
     "document_loaders/web/pdf": "document_loaders/web/pdf",
     "document_loaders/web/recursive_url": "document_loaders/web/recursive_url",
     "document_loaders/web/s3": "document_loaders/web/s3",
+    "document_loaders/web/sitemap": "document_loaders/web/sitemap",
     "document_loaders/web/sonix_audio": "document_loaders/web/sonix_audio",
     "document_loaders/web/confluence": "document_loaders/web/confluence",
     "document_loaders/web/searchapi": "document_loaders/web/searchapi",
@@ -642,6 +642,7 @@ export const config = {
     "document_loaders/web/notionapi",
     "document_loaders/web/recursive_url",
     "document_loaders/web/s3",
+    "document_loaders/web/sitemap",
     "document_loaders/web/sonix_audio",
     "document_loaders/web/confluence",
     "document_loaders/web/youtube",
@@ -766,6 +767,26 @@ export const config = {
     },
     {
       modules: [
+        "AIMessage",
+        "AIMessageChunk",
+        "BaseMessage",
+        "BaseMessageChunk",
+        "ChatMessage",
+        "ChatMessageChunk",
+        "FunctionMessage",
+        "FunctionMessageChunk",
+        "HumanMessage",
+        "HumanMessageChunk",
+        "SystemMessage",
+        "SystemMessageChunk",
+        "ToolMessage",
+        "ToolMessageChunk",
+      ],
+      alias: ["schema"],
+      path: "@langchain/core/messages",
+    },
+    {
+      modules: [
         "AIMessagePromptTemplate",
         "ChatMessagePromptTemplate",
         "ChatPromptTemplate",
@@ -774,6 +795,13 @@ export const config = {
         "SystemMessagePromptTemplate",
       ],
       alias: ["prompts", "chat"],
+      path: "@langchain/core/prompts",
+    },
+    {
+      modules: [
+        "ImagePromptTemplate",
+      ],
+      alias: ["prompts", "image"],
       path: "@langchain/core/prompts",
     },
     {
@@ -831,4 +859,4 @@ export const config = {
   cjsSource: "./dist-cjs",
   cjsDestination: "./dist",
   abs,
-}
+};

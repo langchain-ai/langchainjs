@@ -2,6 +2,7 @@ import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
 import type { TaskType, EmbedContentRequest } from "@google/generative-ai";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
+import { chunkArray } from "@langchain/core/utils/chunk_array";
 
 /**
  * Interface that extends EmbeddingsParams and defines additional
@@ -76,6 +77,8 @@ export class GoogleGenerativeAIEmbeddings
 
   stripNewLines = true;
 
+  maxBatchSize = 100; // Max batch size for embedDocuments set by GenerativeModel client's batchEmbedContents call
+
   private client: GenerativeModel;
 
   constructor(fields?: GoogleGenerativeAIEmbeddingsParams) {
@@ -127,11 +130,28 @@ export class GoogleGenerativeAIEmbeddings
   protected async _embedDocumentsContent(
     documents: string[]
   ): Promise<number[][]> {
-    const req = {
-      requests: documents.map((doc) => this._convertToContent(doc)),
-    };
-    const res = await this.client.batchEmbedContents(req);
-    return res.embeddings.map((e) => e.values || []) ?? [];
+    const batchEmbedChunks: string[][] = chunkArray<string>(
+      documents,
+      this.maxBatchSize
+    );
+
+    const batchEmbedRequests = batchEmbedChunks.map((chunk) => ({
+      requests: chunk.map((doc) => this._convertToContent(doc)),
+    }));
+
+    const responses = await Promise.allSettled(
+      batchEmbedRequests.map((req) => this.client.batchEmbedContents(req))
+    );
+
+    const embeddings = responses.flatMap((res, idx) => {
+      if (res.status === "fulfilled") {
+        return res.value.embeddings.map((e) => e.values || []);
+      } else {
+        return Array(batchEmbedChunks[idx].length).fill([]);
+      }
+    });
+
+    return embeddings;
   }
 
   /**

@@ -34,18 +34,21 @@ export type MessageType =
   | "function"
   | "tool";
 
-export type MessageContent =
-  | string
-  | (
-      | {
-          type: "text";
-          text: string;
-        }
-      | {
-          type: "image_url";
-          image_url: string | { url: string; detail?: "auto" | "low" | "high" };
-        }
-    )[];
+type ImageDetail = "auto" | "low" | "high";
+
+export type MessageContentText = {
+  type: "text";
+  text: string;
+};
+
+export type MessageContentImageUrl = {
+  type: "image_url";
+  image_url: string | { url: string; detail?: ImageDetail };
+};
+
+export type MessageContentComplex = MessageContentText | MessageContentImageUrl;
+
+export type MessageContent = string | MessageContentComplex[];
 
 export interface FunctionCall {
   /**
@@ -500,6 +503,10 @@ export class ToolMessage extends BaseMessage {
   _getType(): MessageType {
     return "tool";
   }
+
+  static isInstance(message: BaseMessage): message is ToolMessage {
+    return message._getType() === "tool";
+  }
 }
 
 /**
@@ -547,6 +554,10 @@ export class ChatMessage
 
   role: string;
 
+  static _chatMessageClass(): typeof ChatMessage {
+    return ChatMessage;
+  }
+
   constructor(content: string, role: string);
 
   constructor(fields: ChatMessageFieldsWithRole);
@@ -571,7 +582,7 @@ export class ChatMessage
 
 export type BaseMessageLike =
   | BaseMessage
-  | [StringWithAutocomplete<MessageType | "user" | "assistant">, string]
+  | [StringWithAutocomplete<MessageType | "user" | "assistant">, MessageContent]
   | string;
 
 export function isBaseMessage(

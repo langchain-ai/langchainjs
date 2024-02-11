@@ -4,6 +4,9 @@ index.d.ts
 build.cjs
 build.js
 build.d.ts
+migrations.cjs
+migrations.js
+migrations.d.ts
 node_modules
 dist
 .yarn
