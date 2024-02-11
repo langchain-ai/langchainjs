@@ -9,9 +9,8 @@ function abs(relativePath) {
   return resolve(dirname(fileURLToPath(import.meta.url)), relativePath);
 }
 
-
 export const config = {
-  internals:[
+  internals: [
     /node\:/,
     /@langchain\/core\//,
     "convex",
@@ -128,6 +127,7 @@ export const config = {
     "vectorstores/turbopuffer": "vectorstores/turbopuffer",
     "vectorstores/typeorm": "vectorstores/typeorm",
     "vectorstores/typesense": "vectorstores/typesense",
+    "vectorstores/upstash": "vectorstores/upstash",
     "vectorstores/usearch": "vectorstores/usearch",
     "vectorstores/vectara": "vectorstores/vectara",
     "vectorstores/vercel_postgres": "vectorstores/vercel_postgres",
@@ -161,6 +161,7 @@ export const config = {
     "retrievers/amazon_knowledge_base": "retrievers/amazon_knowledge_base",
     "retrievers/chaindesk": "retrievers/chaindesk",
     "retrievers/databerry": "retrievers/databerry",
+    "retrievers/dria": "retrievers/dria",
     "retrievers/metal": "retrievers/metal",
     "retrievers/remote": "retrievers/remote/index",
     "retrievers/supabase": "retrievers/supabase",
@@ -209,6 +210,7 @@ export const config = {
     "indexes/base": "indexes/base",
     "indexes/postgres": "indexes/postgres",
     "indexes/memory": "indexes/memory",
+    "indexes/sqlite": "indexes/sqlite",
     // utils
     "util/convex": "utils/convex",
     "utils/event_source_parse": "utils/event_source_parse",
@@ -281,6 +283,7 @@ export const config = {
     "vectorstores/tigris",
     "vectorstores/typeorm",
     "vectorstores/typesense",
+    "vectorstores/upstash",
     "vectorstores/usearch",
     "vectorstores/vercel_postgres",
     "vectorstores/voy",
@@ -298,6 +301,7 @@ export const config = {
     "chat_models/iflytek_xinghuo/web",
     "retrievers/amazon_kendra",
     "retrievers/amazon_knowledge_base",
+    "retrievers/dria",
     "retrievers/metal",
     "retrievers/supabase",
     "retrievers/vectara_summary",
@@ -334,10 +338,11 @@ export const config = {
     "util/convex",
     // indexes
     "indexes/postgres",
+    "indexes/sqlite",
   ],
   packageSuffix: "community",
   tsConfigPath: resolve("./tsconfig.json"),
   cjsSource: "./dist-cjs",
   cjsDestination: "./dist",
   abs,
-}
+};
