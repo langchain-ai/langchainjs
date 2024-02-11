@@ -25,6 +25,7 @@ For help with querying for documents using SQL++ (SQL for JSON), please check th
 
 ```typescript 
 import { CouchbaseDocumentLoader } from "langchain/document_loaders/web/couchbase";
+import { Cluster } from "couchbase"
 
 const connectionString = "couchbase://localhost";  // valid couchbase connection string
 const dbUsername = "Administrator"  // valid database user with read access to the bucket being queried
@@ -44,6 +45,7 @@ const query = `
   const couchbaseClient = await Cluster.connect(connectionString, {
     username: dbUsername,
     password: dbPassword,
+    configProfile: "wanDevelopment"
   });
 
 ```

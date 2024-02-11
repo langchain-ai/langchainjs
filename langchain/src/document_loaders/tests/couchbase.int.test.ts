@@ -3,16 +3,36 @@ import { Cluster } from "couchbase";
 import { CouchbaseDocumentLoader } from "../web/couchbase.js";
 
 test("Test Couchbase Cluster connection ", async () => {
-  const couchbaseClient = await Cluster.connect("couchbase://localhost", {
-    username: "Administrator",
-    password: "password",
+  const connectionString = "<enter-valid-couchbase-connection-string>";
+  const databaseUsername = "<enter-valid-couchbase-user>";
+  const databasePassword = "<enter-valid-couchbase-password>";
+  const query = `
+        SELECT h.* FROM \`travel-sample\`.inventory.hotel h 
+        WHERE h.country = 'United States'
+        LIMIT 10
+    `;
+  const validPageContentFields = ["country", "name", "description"];
+  const validMetadataFields = ["id"]
+  
+  const couchbaseClient = await Cluster.connect(connectionString, {
+    username: databaseUsername,
+    password: databasePassword,
+    configProfile: "wanDevelopment"
   });
   const loader = new CouchbaseDocumentLoader(
     couchbaseClient,
-    "Select r.* from `travel-sample`.`inventory`.`route` as r limit 10",
-    ["airline", "sourceairport"]
+    query,
+    validPageContentFields,
+    validMetadataFields
   );
-  const doc = await loader.load();
-  console.log(doc);
-  expect(doc.length).toBeGreaterThan(0);
+  const docs = await loader.load();
+  console.log(docs);
+  expect(docs.length).toBeGreaterThan(0);
+
+  for (const doc of docs) {
+    console.log(doc);
+    expect(doc.pageContent).not.toBe(""); // Assuming valid page content fields
+    expect(doc.metadata).toHaveProperty('id'); // Assuming metadata has id field
+    expect(doc.metadata.id).not.toBe("");
+  }
 });
