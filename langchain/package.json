@@ -617,6 +617,7 @@
     "document_loaders/web/couchbase.cjs",
     "document_loaders/web/couchbase.js",
     "document_loaders/web/couchbase.d.ts",
+    "document_loaders/web/couchbase.d.cts",
     "document_loaders/web/searchapi.cjs",
     "document_loaders/web/searchapi.js",
     "document_loaders/web/searchapi.d.ts",
@@ -2908,7 +2909,11 @@
       "require": "./document_loaders/web/confluence.cjs"
     },
     "./document_loaders/web/couchbase": {
-      "types": "./document_loaders/web/couchbase.d.ts",
+      "types": {
+        "import": "./document_loaders/web/couchbase.d.ts",
+        "require": "./document_loaders/web/couchbase.d.cts",
+        "default": "./document_loaders/web/couchbase.d.ts"
+      },
       "import": "./document_loaders/web/couchbase.js",
       "require": "./document_loaders/web/couchbase.cjs"
     },

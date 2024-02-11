@@ -182,7 +182,6 @@ export const config = {
     "document_loaders/web/azure_blob_storage_file":
       "document_loaders/web/azure_blob_storage_file",
     "document_loaders/web/cheerio": "document_loaders/web/cheerio",
-    "document_loaders/web/couchbase": "document_loaders/web/couchbase",
     "document_loaders/web/puppeteer": "document_loaders/web/puppeteer",
     "document_loaders/web/playwright": "document_loaders/web/playwright",
     "document_loaders/web/college_confidential":
@@ -200,6 +199,7 @@ export const config = {
     "document_loaders/web/sitemap": "document_loaders/web/sitemap",
     "document_loaders/web/sonix_audio": "document_loaders/web/sonix_audio",
     "document_loaders/web/confluence": "document_loaders/web/confluence",
+    "document_loaders/web/couchbase": "document_loaders/web/couchbase",
     "document_loaders/web/searchapi": "document_loaders/web/searchapi",
     "document_loaders/web/serpapi": "document_loaders/web/serpapi",
     "document_loaders/web/sort_xyz_blockchain":
@@ -628,7 +628,6 @@ export const config = {
     "document_loaders/web/azure_blob_storage_container",
     "document_loaders/web/azure_blob_storage_file",
     "document_loaders/web/cheerio",
-    "document_loaders/web/couchbase",
     "document_loaders/web/puppeteer",
     "document_loaders/web/playwright",
     "document_loaders/web/college_confidential",
@@ -645,6 +644,7 @@ export const config = {
     "document_loaders/web/sitemap",
     "document_loaders/web/sonix_audio",
     "document_loaders/web/confluence",
+    "document_loaders/web/couchbase",
     "document_loaders/web/youtube",
     "document_loaders/fs/directory",
     "document_loaders/fs/buffer",
