@@ -34,6 +34,7 @@ import { Run } from "../tracers/base.js";
 import { RootListenersTracer } from "../tracers/root_listener.js";
 import { BaseCallbackHandler } from "../callbacks/base.js";
 import { _RootEventFilter } from "./utils.js";
+import { RunTree } from "langsmith/run_trees";
 
 /**
  * Base interface implemented by all runnables.
@@ -2362,5 +2363,49 @@ export class RunnablePick<
     );
     await wrappedGenerator.setup;
     return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
+  }
+}
+
+type RunnableTraceeableFunc<RunInput, RunOutput> = (
+  input: RunInput,
+  options?: { config?: RunnableConfig; runTree: RunTree } & RunnableConfig
+) => RunOutput | Promise<RunOutput>;
+
+export class RunnableTraceable<RunInput, RunOutput> extends Runnable<
+  RunInput,
+  RunOutput
+> {
+  lc_serializable = false;
+
+  lc_namespace = ["langchain_core", "runnables"];
+
+  protected func: RunnableTraceeableFunc<RunInput, RunOutput>;
+
+  constructor(fields: { func: RunnableTraceeableFunc<RunInput, RunOutput> }) {
+    super(fields);
+    this.func = fields.func;
+  }
+
+  static from<RunInput, RunOutput>(
+    func: RunnableTraceeableFunc<RunInput, RunOutput>
+  ) {
+    return new RunnableTraceable({ func });
+  }
+
+  async invoke(input: RunInput, options?: Partial<RunnableConfig>) {
+    const config = ensureConfig(options);
+    const callbackManager = await getCallbackManagerForConfig(config);
+
+    const parentRunId = callbackManager?._parentRunId;
+
+    const runTree = new RunTree({
+      parent_run: parentRunId
+        ? new RunTree({ name: "Parent", run_type: "chain", id: parentRunId })
+        : undefined,
+      name: "Wrapper",
+      run_type: "chain",
+    });
+
+    return await this.func(input, { config, runTree });
   }
 }
