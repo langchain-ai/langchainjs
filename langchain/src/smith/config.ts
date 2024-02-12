@@ -50,6 +50,20 @@ export type RunEvaluatorLike =
       options?: { config?: RunnableConfig }
     ) => EvaluationResult);
 
+export function isOffTheShelfEvaluator<
+  T extends keyof EvaluatorType,
+  U extends RunEvaluator | RunEvaluatorLike = RunEvaluator | RunEvaluatorLike
+>(evaluator: T | EvalConfig | U): evaluator is T | EvalConfig {
+  return typeof evaluator === "string" || "evaluatorType" in evaluator;
+}
+
+export function isCustomEvaluator<
+  T extends keyof EvaluatorType,
+  U extends RunEvaluator | RunEvaluatorLike = RunEvaluator | RunEvaluatorLike
+>(evaluator: T | EvalConfig | U): evaluator is U {
+  return !isOffTheShelfEvaluator(evaluator);
+}
+
 /**
  * Configuration class for running evaluations on datasets.
  *
@@ -68,6 +82,8 @@ export type RunEvalConfig<
    * Each evaluator is provided with a run trace containing the model
    * outputs, as well as an "example" object representing a record
    * in the dataset.
+   *
+   * @deprecated Use `evaluators` instead.
    */
   customEvaluators?: U[];
 
@@ -76,7 +92,7 @@ export type RunEvalConfig<
    * You can optionally specify these by name, or by
    * configuring them with an EvalConfig object.
    */
-  evaluators?: (T | EvalConfig)[];
+  evaluators?: (T | EvalConfig | U)[];
 
   /**
    * Convert the evaluation data into formats that can be used by the evaluator.

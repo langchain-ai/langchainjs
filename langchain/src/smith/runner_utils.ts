@@ -15,12 +15,14 @@ import { DataType } from "langsmith/schemas";
 import { LLMStringEvaluator } from "../evaluation/base.js";
 import { loadEvaluator } from "../evaluation/loader.js";
 import { EvaluatorType } from "../evaluation/types.js";
-import type {
-  DynamicRunEvaluatorParams,
-  EvalConfig,
-  EvaluatorInputFormatter,
-  RunEvalConfig,
-  RunEvaluatorLike,
+import {
+  isOffTheShelfEvaluator,
+  type DynamicRunEvaluatorParams,
+  type EvalConfig,
+  type EvaluatorInputFormatter,
+  type RunEvalConfig,
+  type RunEvaluatorLike,
+  isCustomEvaluator,
 } from "./config.js";
 import { randomName } from "./name_generation.js";
 import { ProgressBar } from "./progress.js";
@@ -229,7 +231,9 @@ class LoadedEvalConfig {
     config: RunEvalConfig
   ): Promise<LoadedEvalConfig> {
     // Custom evaluators are applied "as-is"
-    const customEvaluators = config?.customEvaluators?.map((evaluator) => {
+    const customEvaluators = (
+      config?.customEvaluators ?? config.evaluators?.filter(isCustomEvaluator)
+    )?.map((evaluator) => {
       if (typeof evaluator === "function") {
         return new DynamicRunEvaluator(evaluator);
       } else {
@@ -238,10 +242,12 @@ class LoadedEvalConfig {
     });
 
     const offTheShelfEvaluators = await Promise.all(
-      config?.evaluators?.map(
-        async (evaluator) =>
-          await PreparedRunEvaluator.fromEvalConfig(evaluator)
-      ) ?? []
+      config?.evaluators
+        ?.filter(isOffTheShelfEvaluator)
+        ?.map(
+          async (evaluator) =>
+            await PreparedRunEvaluator.fromEvalConfig(evaluator)
+        ) ?? []
     );
     return new LoadedEvalConfig(
       (customEvaluators ?? []).concat(offTheShelfEvaluators ?? [])
