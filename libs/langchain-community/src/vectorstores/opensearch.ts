@@ -18,6 +18,8 @@ interface VectorSearchOptions {
   readonly m?: number;
   readonly efConstruction?: number;
   readonly efSearch?: number;
+  readonly numberOfShards?: number;
+  readonly numberOfReplicas?: number;
 }
 
 /**
@@ -83,6 +85,10 @@ export class OpenSearchVectorStore extends VectorStore {
 
   private readonly efSearch: number;
 
+  private readonly numberOfShards: number;
+
+  private readonly numberOfReplicas: number;
+
   private readonly m: number;
 
   _vectorstoreType(): string {
@@ -97,6 +103,8 @@ export class OpenSearchVectorStore extends VectorStore {
     this.m = args.vectorSearchOptions?.m ?? 16;
     this.efConstruction = args.vectorSearchOptions?.efConstruction ?? 512;
     this.efSearch = args.vectorSearchOptions?.efSearch ?? 512;
+    this.numberOfShards = args.vectorSearchOptions?.numberOfShards ?? 5;
+    this.numberOfReplicas = args.vectorSearchOptions?.numberOfReplicas ?? 1;
 
     this.client = args.client;
     this.indexName = args.indexName ?? "documents";
@@ -137,6 +145,8 @@ export class OpenSearchVectorStore extends VectorStore {
       this.spaceType,
       this.efSearch,
       this.efConstruction,
+      this.numberOfShards,
+      this.numberOfReplicas,
       this.m
     );
     const documentIds =
@@ -279,13 +289,15 @@ export class OpenSearchVectorStore extends VectorStore {
     spaceType = "l2",
     efSearch = 512,
     efConstruction = 512,
+    numberOfShards = 5,
+    numberOfReplicas = 1,
     m = 16
   ): Promise<void> {
     const body = {
       settings: {
         index: {
-          number_of_shards: 5,
-          number_of_replicas: 1,
+          number_of_shards: numberOfShards,
+          number_of_replicas: numberOfReplicas,
           knn: true,
           "knn.algo_param.ef_search": efSearch,
         },
