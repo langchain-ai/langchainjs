@@ -1,0 +1,22 @@
+{
+  "candidates": [
+    {
+      "content": { "role": "model" },
+      "finishReason": "SAFETY",
+      "safetyRatings": [
+        { "category": "HARM_CATEGORY_HARASSMENT", "probability": "LOW" },
+        { "category": "HARM_CATEGORY_HATE_SPEECH", "probability": "LOW" },
+        {
+          "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+          "probability": "NEGLIGIBLE"
+        },
+        {
+          "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+          "probability": "MEDIUM",
+          "blocked": true
+        }
+      ]
+    }
+  ],
+  "usageMetadata": { "promptTokenCount": 2321, "totalTokenCount": 2321 }
+}

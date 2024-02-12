@@ -11,6 +11,8 @@ import { ChatGoogleBase, ChatGoogleBaseInput } from "../chat_models.js";
 import { authOptions, MockClient, MockClientAuthInfo, mockId } from "./mock.js";
 import { GoogleAIBaseLLMInput } from "../types.js";
 import { GoogleAbstractedClient } from "../auth.js";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 
 class ChatGoogle extends ChatGoogleBase<MockClientAuthInfo> {
   constructor(fields?: ChatGoogleBaseInput<MockClientAuthInfo>) {
@@ -219,5 +221,33 @@ describe("Mock ChatGoogle", () => {
     expect(data.contents[1].parts).toBeDefined();
     expect(data.contents[1].parts.length).toBeGreaterThanOrEqual(1);
     expect(data.contents[1].parts[0].text).toEqual("Ok");
+  });
+
+  test("2. Blocked response", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-2-mock.json",
+    };
+
+    const model = new ChatGoogle({
+      model: "gemini-pro",
+      authOptions,
+    });
+
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["human", "dangerous content"],
+    ]);
+
+    const result = await prompt
+      .pipe(model)
+      .pipe(new StringOutputParser())
+      .invoke({});
+
+    // console.log("record", JSON.stringify(record, null, 1));
+    console.log("result", JSON.stringify(result, null, 1));
   });
 });
