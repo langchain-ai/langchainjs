@@ -1,4 +1,4 @@
-import { type DocumentInterface } from "../../documents/document.js"
+import { type DocumentInterface } from "../../documents/document.js";
 import { BaseDocumentTransformer } from "../../documents/transformers.js";
 import { Callbacks } from "../../callbacks/manager.js";
 

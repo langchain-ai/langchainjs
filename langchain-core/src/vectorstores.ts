@@ -5,7 +5,11 @@ import {
   CallbackManagerForRetrieverRun,
   Callbacks,
 } from "./callbacks/manager.js";
-import { BaseRetrieverInput, BaseRetrieverInterface, BaseRetriever } from "./retrievers/index.js";
+import {
+  BaseRetrieverInput,
+  BaseRetrieverInterface,
+  BaseRetriever,
+} from "./retrievers/index.js";
 
 /**
  * Type for options when adding a document to the VectorStore.

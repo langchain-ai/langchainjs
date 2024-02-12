@@ -1,4 +1,10 @@
-import { Callbacks, BaseCallbackConfig, CallbackManagerForRetrieverRun, parseCallbackConfigArg, CallbackManager } from "../callbacks/manager.js";
+import {
+  Callbacks,
+  BaseCallbackConfig,
+  CallbackManagerForRetrieverRun,
+  parseCallbackConfigArg,
+  CallbackManager,
+} from "../callbacks/manager.js";
 import { DocumentInterface } from "../documents/document.js";
 import { RunnableInterface, Runnable } from "../runnables/base.js";
 import { RunnableConfig, ensureConfig } from "../runnables/config.js";
