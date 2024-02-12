@@ -25702,7 +25702,7 @@ __metadata:
     js-yaml: ^4.1.0
     jsdom: ^22.1.0
     jsonpointer: ^5.0.1
-    langchainhub: ~0.0.6
+    langchainhub: ~0.0.7
     langsmith: ~0.0.59
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
@@ -25895,10 +25895,10 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langchainhub@npm:~0.0.6":
-  version: 0.0.6
-  resolution: "langchainhub@npm:0.0.6"
-  checksum: f771e5375b7ae9cc6fc59d5e2b1fd35c29e5759f4595617e3a235142bc2ca12c4135aa1631d85ee4e25c89968696242dd6380f6b90e87ffbc9006efc3cdc53c4
+"langchainhub@npm:~0.0.7":
+  version: 0.0.7
+  resolution: "langchainhub@npm:0.0.7"
+  checksum: 90e303931ffe70fc7a95a67fd6d6fbe3ddb0bd631d141f36bc9c16f1c5511293c18deeaa06f3101636f076a05a6c7007e1927042aaef8bcc7fb56633f508ccbb
   languageName: node
   linkType: hard
 
