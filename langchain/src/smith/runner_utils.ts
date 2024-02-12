@@ -467,7 +467,7 @@ const getExamplesInputs = (
  * The function returns the evaluation results, which can be logged or further processed as needed.
  */
 
-export const runOnDataset = async (
+export async function runOnDataset(
   chainOrFactory: ChainOrFactory,
   datasetName: string,
   {
@@ -477,7 +477,29 @@ export const runOnDataset = async (
     client,
     maxConcurrency,
   }: RunOnDatasetParams
-) => {
+): Promise<EvalResults>;
+
+export async function runOnDataset(
+  chainOrFactory: ChainOrFactory,
+  datasetName: string,
+  evaluators: RunEvalConfig["evaluators"]
+): Promise<EvalResults>;
+
+export async function runOnDataset(
+  chainOrFactory: ChainOrFactory,
+  datasetName: string,
+  options: RunOnDatasetParams | RunEvalConfig["evaluators"]
+) {
+  const {
+    evaluationConfig,
+    projectName,
+    projectMetadata,
+    client,
+    maxConcurrency,
+  }: RunOnDatasetParams = Array.isArray(options)
+    ? { evaluationConfig: { evaluators: options } }
+    : options ?? {};
+
   const wrappedModel = await createWrappedModel(chainOrFactory);
   const testClient = client ?? new Client();
   const testProjectName = projectName ?? randomName();
@@ -544,4 +566,4 @@ export const runOnDataset = async (
     results: evalResults ?? {},
   };
   return results;
-};
+}
