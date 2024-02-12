@@ -46,7 +46,7 @@ test("streamLog hosted langserve with concat syntax", async () => {
   console.log("totalByteSize", totalByteSize);
 });
 
-test("streamLog with raw messages", async () => {
+test.skip("streamLog with raw messages", async () => {
   const chain = new RemoteRunnable({
     url: "https://aimor-deployment-bf1e4ebc87365334b3b8a6b175fb4151-ffoprvkqsa-uc.a.run.app/",
   });
