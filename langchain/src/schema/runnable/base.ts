@@ -14,5 +14,6 @@ export {
   RunnableParallel,
   RunnableLambda,
   RunnableWithFallbacks,
+  RunnableTraceable,
   _coerceToRunnable,
 } from "@langchain/core/runnables";
