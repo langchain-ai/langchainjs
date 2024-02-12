@@ -1,5 +1,6 @@
 import pRetry from "p-retry";
 
+import { RunTree } from "langsmith/run_trees";
 import {
   CallbackManager,
   CallbackManagerForChainRun,
@@ -34,7 +35,6 @@ import { Run } from "../tracers/base.js";
 import { RootListenersTracer } from "../tracers/root_listener.js";
 import { BaseCallbackHandler } from "../callbacks/base.js";
 import { _RootEventFilter } from "./utils.js";
-import { RunTree } from "langsmith/run_trees";
 
 /**
  * Base interface implemented by all runnables.
