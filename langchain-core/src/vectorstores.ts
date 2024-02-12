@@ -1,15 +1,11 @@
 import type { EmbeddingsInterface } from "./embeddings.js";
 import type { DocumentInterface } from "./documents/document.js";
-import {
-  BaseRetriever,
-  BaseRetrieverInterface,
-  type BaseRetrieverInput,
-} from "./retrievers.js";
 import { Serializable } from "./load/serializable.js";
 import {
   CallbackManagerForRetrieverRun,
   Callbacks,
 } from "./callbacks/manager.js";
+import { BaseRetrieverInput, BaseRetrieverInterface, BaseRetriever } from "./retrievers/index.js";
 
 /**
  * Type for options when adding a document to the VectorStore.

@@ -20,7 +20,6 @@ export * as outputs from "../outputs.js";
 export * as prompts from "../prompts/index.js";
 export * as prompt_values from "../prompt_values.js";
 export * as runnables from "../runnables/index.js";
-export * as retrievers from "../retrievers.js";
 export * as stores from "../stores.js";
 export * as tools from "../tools.js";
 export * as tracers__base from "../tracers/base.js";
