@@ -5,6 +5,7 @@ import {
   Runnable,
   RunnableConfig,
   RunnableLambda,
+  RunnableTraceable,
 } from "@langchain/core/runnables";
 import { LangChainTracer } from "@langchain/core/tracers/tracer_langchain";
 import { BaseTracer } from "@langchain/core/tracers/base";
@@ -12,6 +13,10 @@ import { ChainValues } from "@langchain/core/utils/types";
 import { Client, Example, Feedback, Run } from "langsmith";
 import { EvaluationResult, RunEvaluator } from "langsmith/evaluation";
 import { DataType } from "langsmith/schemas";
+import {
+  type TraceableFunction,
+  isTraceableFunction,
+} from "langsmith/run_helpers";
 import { LLMStringEvaluator } from "../evaluation/base.js";
 import { loadEvaluator } from "../evaluation/loader.js";
 import { EvaluatorType } from "../evaluation/types.js";
@@ -30,6 +35,8 @@ import { ProgressBar } from "./progress.js";
 export type ChainOrFactory =
   | Runnable
   | (() => Runnable)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  | TraceableFunction<any, any>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   | ((obj: any) => any)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -288,7 +295,19 @@ const createWrappedModel = async (modelOrFactory: ChainOrFactory) => {
       return modelOrFactory as () => Runnable;
     } catch (err) {
       // Otherwise, it's a custom UDF, and we'll wrap
-      // in a lambda
+      // in a lambda or a traceable function
+      if (isTraceableFunction(modelOrFactory)) {
+        const wrappedModel = new RunnableTraceable({
+          func: (input, config) =>
+            modelOrFactory(
+              input,
+              // @ts-expect-error Seems like a mismatch of LangSmith clients, try to force version?
+              config?.runTree ? { root: config?.runTree } : null
+            ),
+        });
+        return () => wrappedModel;
+      }
+
       const wrappedModel = new RunnableLambda({ func: modelOrFactory });
       return () => wrappedModel;
     }
