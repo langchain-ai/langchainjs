@@ -56,6 +56,7 @@ import {
   FunctionDef,
   formatFunctionDefinitions,
 } from "./utils/openai-format-fndef.js";
+import { USER_AGENT_PREFIX } from "./constants.js";
 
 function _convertDeltaToMessageChunk(
   delta: ChatResponseMessage,
@@ -302,12 +303,18 @@ export class AzureChatOpenAI
     if (isTokenCredential(azureCredential)) {
       this.client = new AzureOpenAIClient(
         this.azureOpenAIEndpoint ?? "",
-        azureCredential as TokenCredential
+        azureCredential as TokenCredential,
+        {
+          userAgentOptions: { userAgentPrefix: USER_AGENT_PREFIX },
+        }
       );
     } else {
       this.client = new AzureOpenAIClient(
         this.azureOpenAIEndpoint ?? "",
-        azureCredential as KeyCredential
+        azureCredential as KeyCredential,
+        {
+          userAgentOptions: { userAgentPrefix: USER_AGENT_PREFIX },
+        }
       );
     }
   }
