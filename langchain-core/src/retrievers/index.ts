@@ -1,13 +1,7 @@
-import {
-  BaseCallbackConfig,
-  CallbackManager,
-  CallbackManagerForRetrieverRun,
-  Callbacks,
-  parseCallbackConfigArg,
-} from "./callbacks/manager.js";
-import type { DocumentInterface } from "./documents/document.js";
-import { Runnable, type RunnableInterface } from "./runnables/base.js";
-import { RunnableConfig, ensureConfig } from "./runnables/config.js";
+import { Callbacks, BaseCallbackConfig, CallbackManagerForRetrieverRun, parseCallbackConfigArg, CallbackManager } from "../callbacks/manager.js";
+import { DocumentInterface } from "../documents/document.js";
+import { RunnableInterface, Runnable } from "../runnables/base.js";
+import { RunnableConfig, ensureConfig } from "../runnables/config.js";
 
 /**
  * Base Retriever class. All indexes should extend this class.
