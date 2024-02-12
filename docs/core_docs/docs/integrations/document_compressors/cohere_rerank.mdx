@@ -16,3 +16,12 @@ import IntegrationInstallTooltip from "@mdx_components/integration_install_toolt
 ```bash npm2yarn
 npm install @langchain/cohere
 ```
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/document_compressors/cohere_rerank.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
+From the results, we can see it returned the top 3 documents, and assigned a `relevanceScore` to each.
+
+As expected, the document with the highest `relevanceScore` is the one that references Washington, D.C., with a score of `98.7%`!
