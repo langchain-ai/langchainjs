@@ -264,3 +264,69 @@ export type LabeledCriteria = EvalConfig & {
    */
   llm?: BaseLanguageModel;
 };
+
+const isStringifiableValue = (
+  value: unknown
+): value is string | number | boolean | bigint =>
+  typeof value === "string" ||
+  typeof value === "number" ||
+  typeof value === "boolean" ||
+  typeof value === "bigint";
+
+const getSingleStringifiedValue = (value: unknown) => {
+  if (isStringifiableValue(value)) {
+    return `${value}`;
+  }
+
+  if (typeof value === "object" && value != null && !Array.isArray(value)) {
+    const entries = Object.entries(value);
+
+    if (entries.length === 1 && isStringifiableValue(entries[0][1])) {
+      return `${entries[0][1]}`;
+    }
+  }
+
+  console.warn("Non-stringifiable value found when coercing", value);
+  return `${value}`;
+};
+
+export const RunConfig = {
+  Criteria(
+    criteria: Criteria,
+    config?: { formatEvaluatorInputs?: EvaluatorInputFormatter }
+  ) {
+    const formatEvaluatorInputs =
+      config?.formatEvaluatorInputs ??
+      ((payload) => ({
+        prediction: getSingleStringifiedValue(payload.rawPrediction),
+        input: getSingleStringifiedValue(payload.rawInput),
+      }));
+
+    return {
+      evaluatorType: "criteria",
+      criteria,
+      feedbackKey: criteria,
+      formatEvaluatorInputs,
+    } satisfies EvalConfig;
+  },
+
+  LabeledCriteria(
+    criteria: Criteria,
+    config?: { formatEvaluatorInputs?: EvaluatorInputFormatter }
+  ) {
+    const formatEvaluatorInputs =
+      config?.formatEvaluatorInputs ??
+      ((payload) => ({
+        prediction: getSingleStringifiedValue(payload.rawPrediction),
+        input: getSingleStringifiedValue(payload.rawInput),
+        reference: getSingleStringifiedValue(payload.rawReferenceOutput),
+      }));
+
+    return {
+      evaluatorType: "labeled_criteria",
+      criteria,
+      feedbackKey: criteria,
+      formatEvaluatorInputs,
+    } satisfies EvalConfig;
+  },
+};
