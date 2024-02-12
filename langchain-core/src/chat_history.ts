@@ -33,7 +33,7 @@ export abstract class BaseListChatMessageHistory extends Serializable {
   /**
    * This is a convenience method for adding a human message string to the store.
    * Please note that this is a convenience method. Code should favor the
-   * bulk add_messages interface instead to save on round-trips to the underlying
+   * bulk addMessages interface instead to save on round-trips to the underlying
    * persistence layer.
    * This method may be deprecated in a future release.
    */
@@ -49,7 +49,7 @@ export abstract class BaseListChatMessageHistory extends Serializable {
   /**
    * This is a convenience method for adding an AI message string to the store.
    * Please note that this is a convenience method. Code should favor the bulk
-   * add_messages interface instead to save on round-trips to the underlying
+   * addMessages interface instead to save on round-trips to the underlying
    * persistence layer.
    * This method may be deprecated in a future release.
    */
