@@ -2,7 +2,7 @@ import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { RunnableConfig } from "@langchain/core/runnables";
 import { Example, Run } from "langsmith";
 import { EvaluationResult, RunEvaluator } from "langsmith/evaluation";
-import { Criteria } from "../evaluation/index.js";
+import { Criteria as CriteriaType } from "../evaluation/index.js";
 import { LoadEvaluatorOptions } from "../evaluation/loader.js";
 import { EvaluatorType } from "../evaluation/types.js";
 
@@ -199,7 +199,7 @@ export type CriteriaEvalChainConfig = EvalConfig & {
    * https://smith.langchain.com/hub/langchain-ai/criteria-evaluator
    * for more information.
    */
-  criteria?: Criteria | Record<string, string>;
+  criteria?: CriteriaType | Record<string, string>;
 
   /**
    * The feedback (or metric) name to use for the logged
@@ -250,7 +250,7 @@ export type LabeledCriteria = EvalConfig & {
    * https://smith.langchain.com/hub/langchain-ai/labeled-criteria
    * for more information.
    */
-  criteria?: Criteria | Record<string, string>;
+  criteria?: CriteriaType | Record<string, string>;
 
   /**
    * The feedback (or metric) name to use for the logged
@@ -290,43 +290,41 @@ const getSingleStringifiedValue = (value: unknown) => {
   return `${value}`;
 };
 
-export const RunConfig = {
-  Criteria(
-    criteria: Criteria,
-    config?: { formatEvaluatorInputs?: EvaluatorInputFormatter }
-  ) {
-    const formatEvaluatorInputs =
-      config?.formatEvaluatorInputs ??
-      ((payload) => ({
-        prediction: getSingleStringifiedValue(payload.rawPrediction),
-        input: getSingleStringifiedValue(payload.rawInput),
-      }));
+export function Criteria(
+  criteria: CriteriaType,
+  config?: { formatEvaluatorInputs?: EvaluatorInputFormatter }
+) {
+  const formatEvaluatorInputs =
+    config?.formatEvaluatorInputs ??
+    ((payload) => ({
+      prediction: getSingleStringifiedValue(payload.rawPrediction),
+      input: getSingleStringifiedValue(payload.rawInput),
+    }));
 
-    return {
-      evaluatorType: "criteria",
-      criteria,
-      feedbackKey: criteria,
-      formatEvaluatorInputs,
-    } satisfies EvalConfig;
-  },
+  return {
+    evaluatorType: "criteria",
+    criteria,
+    feedbackKey: criteria,
+    formatEvaluatorInputs,
+  } satisfies EvalConfig;
+}
 
-  LabeledCriteria(
-    criteria: Criteria,
-    config?: { formatEvaluatorInputs?: EvaluatorInputFormatter }
-  ) {
-    const formatEvaluatorInputs =
-      config?.formatEvaluatorInputs ??
-      ((payload) => ({
-        prediction: getSingleStringifiedValue(payload.rawPrediction),
-        input: getSingleStringifiedValue(payload.rawInput),
-        reference: getSingleStringifiedValue(payload.rawReferenceOutput),
-      }));
+export function LabeledCriteria(
+  criteria: CriteriaType,
+  config?: { formatEvaluatorInputs?: EvaluatorInputFormatter }
+) {
+  const formatEvaluatorInputs =
+    config?.formatEvaluatorInputs ??
+    ((payload) => ({
+      prediction: getSingleStringifiedValue(payload.rawPrediction),
+      input: getSingleStringifiedValue(payload.rawInput),
+      reference: getSingleStringifiedValue(payload.rawReferenceOutput),
+    }));
 
-    return {
-      evaluatorType: "labeled_criteria",
-      criteria,
-      feedbackKey: criteria,
-      formatEvaluatorInputs,
-    } satisfies EvalConfig;
-  },
-};
+  return {
+    evaluatorType: "labeled_criteria",
+    criteria,
+    feedbackKey: criteria,
+    formatEvaluatorInputs,
+  } satisfies EvalConfig;
+}
