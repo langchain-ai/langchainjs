@@ -104,7 +104,7 @@ export class PostgresChatMessageHistory extends BaseListChatMessageHistory {
       );
     }
     this.pool = pool ?? new pg.Pool(poolConfig);
-    this.tableName = tableName || this.tableName;
+    this.tableName = pg.escapeIdentifier(tableName || this.tableName);
     this.sessionId = sessionId;
   }
 
@@ -116,11 +116,13 @@ export class PostgresChatMessageHistory extends BaseListChatMessageHistory {
     if (this.initialized) return;
 
     const query = `
-        CREATE TABLE IF NOT EXISTS "${this.tableName}" (
+        CREATE TABLE IF NOT EXISTS ${this.tableName} (
             id SERIAL PRIMARY KEY,
             session_id VARCHAR(255) NOT NULL,
             message JSONB NOT NULL
         );`;
+
+    console.log(query);
 
     try {
       await this.pool.query(query);
@@ -144,7 +146,7 @@ export class PostgresChatMessageHistory extends BaseListChatMessageHistory {
       ({ data, type }) => [this.sessionId, { ...data, type }]
     )[0];
 
-    const query = `INSERT INTO "${this.tableName}" (session_id, message) VALUES ($1, $2)`;
+    const query = `INSERT INTO ${this.tableName} (session_id, message) VALUES ($1, $2)`;
 
     await this.pool.query(query, storedMessage);
   }
@@ -152,7 +154,7 @@ export class PostgresChatMessageHistory extends BaseListChatMessageHistory {
   async getMessages(): Promise<BaseMessage[]> {
     await this.ensureTable();
 
-    const query = `SELECT message FROM "${this.tableName}" WHERE session_id = $1 ORDER BY id`;
+    const query = `SELECT message FROM ${this.tableName} WHERE session_id = $1 ORDER BY id`;
 
     const res = await this.pool.query(query, [this.sessionId]);
 
@@ -168,7 +170,7 @@ export class PostgresChatMessageHistory extends BaseListChatMessageHistory {
   async clear(): Promise<void> {
     await this.ensureTable();
 
-    const query = `DELETE FROM "${this.tableName}" WHERE session_id = $1`;
+    const query = `DELETE FROM ${this.tableName} WHERE session_id = $1`;
     await this.pool.query(query, [this.sessionId]);
   }
 
