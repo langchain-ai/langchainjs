@@ -7,17 +7,17 @@ test("Test Couchbase Cluster connection ", async () => {
   const databaseUsername = "<enter-valid-couchbase-user>";
   const databasePassword = "<enter-valid-couchbase-password>";
   const query = `
-        SELECT h.* FROM \`travel-sample\`.inventory.hotel h 
-        WHERE h.country = 'United States'
-        LIMIT 10
-    `;
+    SELECT h.* FROM \`travel-sample\`.inventory.hotel h 
+    WHERE h.country = 'United States'
+    LIMIT 10
+  `;
   const validPageContentFields = ["country", "name", "description"];
-  const validMetadataFields = ["id"]
-  
+  const validMetadataFields = ["id"];
+
   const couchbaseClient = await Cluster.connect(connectionString, {
     username: databaseUsername,
     password: databasePassword,
-    configProfile: "wanDevelopment"
+    configProfile: "wanDevelopment",
   });
   const loader = new CouchbaseDocumentLoader(
     couchbaseClient,
@@ -26,13 +26,11 @@ test("Test Couchbase Cluster connection ", async () => {
     validMetadataFields
   );
   const docs = await loader.load();
-  console.log(docs);
   expect(docs.length).toBeGreaterThan(0);
 
   for (const doc of docs) {
-    console.log(doc);
     expect(doc.pageContent).not.toBe(""); // Assuming valid page content fields
-    expect(doc.metadata).toHaveProperty('id'); // Assuming metadata has id field
+    expect(doc.metadata).toHaveProperty("id"); // Assuming metadata has id field
     expect(doc.metadata.id).not.toBe("");
   }
 });

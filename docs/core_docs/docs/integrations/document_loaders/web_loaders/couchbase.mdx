@@ -33,20 +33,20 @@ const dbPassword = "Password"  // password for the database user
 
 // query is a valid SQL++ query
 const query = `
-        SELECT h.* FROM `travel-sample`.inventory.hotel h 
-        WHERE h.country = 'United States'
-        LIMIT 1
-    `;
+    SELECT h.* FROM \`travel-sample\`.inventory.hotel h 
+    WHERE h.country = 'United States'
+    LIMIT 1
+`;
 ```
 
 ### Connect to Couchbase Cluster
 
 ```typescript
-  const couchbaseClient = await Cluster.connect(connectionString, {
+const couchbaseClient = await Cluster.connect(connectionString, {
     username: dbUsername,
     password: dbPassword,
     configProfile: "wanDevelopment"
-  });
+});
 
 ```
 
