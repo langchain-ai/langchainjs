@@ -1,7 +1,9 @@
 import { createClient } from "redis";
-import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
-import { RetrievalQAChain } from "langchain/chains";
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { RedisVectorStore } from "@langchain/redis";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
+import { createRetrievalChain } from "langchain/chains/retrieval";
 
 const client = createClient({
   url: process.env.REDIS_URL ?? "redis://localhost:6379",
@@ -42,22 +44,48 @@ console.log(filterRes);
 */
 
 /* Usage as part of a chain */
-const model = new OpenAI();
-const chain = RetrievalQAChain.fromLLM(model, vectorStore.asRetriever(1), {
-  returnSourceDocuments: true,
+const model = new ChatOpenAI({ modelName: "gpt-3.5-turbo-1106" });
+const questionAnsweringPrompt = ChatPromptTemplate.fromMessages([
+  [
+    "system",
+    "Answer the user's questions based on the below context:\n\n{context}",
+  ],
+  ["human", "{input}"],
+]);
+
+const combineDocsChain = await createStuffDocumentsChain({
+  llm: model,
+  prompt: questionAnsweringPrompt,
 });
-const chainRes = await chain.call({ query: "What did the fox do?" });
+
+const chain = await createRetrievalChain({
+  retriever: vectorStore.asRetriever(),
+  combineDocsChain,
+});
+
+const chainRes = await chain.invoke({ input: "What did the fox do?" });
 console.log(chainRes);
 /*
-{
-  text: " The fox jumped over the lazy dog.",
-  sourceDocuments: [
-    Document {
-      pageContent: "the quick brown fox jumped over the lazy dog",
-      metadata: [Object]
-    }
-  ]
-}
+  {
+    input: 'What did the fox do?',
+    chat_history: [],
+    context: [
+      Document {
+        pageContent: 'the quick brown fox jumped over the lazy dog',
+        metadata: [Object]
+      },
+      Document {
+        pageContent: 'lorem ipsum dolor sit amet',
+        metadata: [Object]
+      },
+      Document {
+        pageContent: 'consectetur adipiscing elit',
+        metadata: [Object]
+      },
+      Document { pageContent: 'redis is fast', metadata: [Object] }
+    ],
+    answer: 'The fox jumped over the lazy dog.'
+  }
 */
 
 await client.disconnect();

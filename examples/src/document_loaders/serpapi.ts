@@ -1,10 +1,12 @@
-import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
-import { RetrievalQAChain } from "langchain/chains";
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { SerpAPILoader } from "langchain/document_loaders/web/serpapi";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
+import { createRetrievalChain } from "langchain/chains/retrieval";
 
 // Initialize the necessary components
-const llm = new OpenAI();
+const llm = new ChatOpenAI();
 const embeddings = new OpenAIEmbeddings();
 const apiKey = "Your SerpAPI API key";
 
@@ -19,8 +21,26 @@ const docs = await loader.load();
 // Use MemoryVectorStore to store the loaded documents in memory
 const vectorStore = await MemoryVectorStore.fromDocuments(docs, embeddings);
 
-// Use RetrievalQAChain to retrieve documents and answer the question
-const chain = RetrievalQAChain.fromLLM(llm, vectorStore.asRetriever());
-const answer = await chain.call({ query: question });
+const questionAnsweringPrompt = ChatPromptTemplate.fromMessages([
+  [
+    "system",
+    "Answer the user's questions based on the below context:\n\n{context}",
+  ],
+  ["human", "{input}"],
+]);
 
-console.log(answer.text);
+const combineDocsChain = await createStuffDocumentsChain({
+  llm,
+  prompt: questionAnsweringPrompt,
+});
+
+const chain = await createRetrievalChain({
+  retriever: vectorStore.asRetriever(),
+  combineDocsChain,
+});
+
+const res = await chain.invoke({
+  input: question,
+});
+
+console.log(res.answer);
