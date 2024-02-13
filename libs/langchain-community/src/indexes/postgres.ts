@@ -23,13 +23,13 @@ export class PostgresRecordManager implements RecordManagerInterface {
     const { postgresConnectionOptions, tableName } = config;
     this.namespace = namespace;
     this.pool = new pg.Pool(postgresConnectionOptions);
-    this.tableName = tableName || "upsertion_records";
+    this.tableName = pg.escapeIdentifier(tableName || "upsertion_records");
   }
 
   async createSchema(): Promise<void> {
     try {
       await this.pool.query(`
-CREATE TABLE IF NOT EXISTS "${this.tableName}" (
+CREATE TABLE IF NOT EXISTS ${this.tableName} (
   uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   key TEXT NOT NULL,
   namespace TEXT NOT NULL,
@@ -37,10 +37,10 @@ CREATE TABLE IF NOT EXISTS "${this.tableName}" (
   group_id TEXT,
   UNIQUE (key, namespace)
 );
-CREATE INDEX IF NOT EXISTS updated_at_index ON "${this.tableName}" (updated_at);
-CREATE INDEX IF NOT EXISTS key_index ON "${this.tableName}" (key);
-CREATE INDEX IF NOT EXISTS namespace_index ON "${this.tableName}" (namespace);
-CREATE INDEX IF NOT EXISTS group_id_index ON "${this.tableName}" (group_id);`);
+CREATE INDEX IF NOT EXISTS updated_at_index ON ${this.tableName} (updated_at);
+CREATE INDEX IF NOT EXISTS key_index ON ${this.tableName} (key);
+CREATE INDEX IF NOT EXISTS namespace_index ON ${this.tableName} (namespace);
+CREATE INDEX IF NOT EXISTS group_id_index ON ${this.tableName} (group_id);`);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       // This error indicates that the table already exists
@@ -114,7 +114,7 @@ CREATE INDEX IF NOT EXISTS group_id_index ON "${this.tableName}" (group_id);`);
       )
       .join(", ");
 
-    const query = `INSERT INTO "${this.tableName}" (key, namespace, updated_at, group_id) VALUES ${valuesPlaceholders} ON CONFLICT (key, namespace) DO UPDATE SET updated_at = EXCLUDED.updated_at;`;
+    const query = `INSERT INTO ${this.tableName} (key, namespace, updated_at, group_id) VALUES ${valuesPlaceholders} ON CONFLICT (key, namespace) DO UPDATE SET updated_at = EXCLUDED.updated_at;`;
     await this.pool.query(query, recordsToUpsert.flat());
   }
 
@@ -129,7 +129,7 @@ CREATE INDEX IF NOT EXISTS group_id_index ON "${this.tableName}" (group_id);`);
       .join(", ");
 
     const query = `
-      SELECT k, (key is not null) ex from unnest(ARRAY[${arrayPlaceholders}]) k left join "${this.tableName}" on k=key and namespace = $1;
+      SELECT k, (key is not null) ex from unnest(ARRAY[${arrayPlaceholders}]) k left join ${this.tableName} on k=key and namespace = $1;
       `;
     const res = await this.pool.query(query, [this.namespace, ...keys.flat()]);
     return res.rows.map((row: { ex: boolean }) => row.ex);
@@ -137,7 +137,7 @@ CREATE INDEX IF NOT EXISTS group_id_index ON "${this.tableName}" (group_id);`);
 
   async listKeys(options?: ListKeyOptions): Promise<string[]> {
     const { before, after, limit, groupIds } = options ?? {};
-    let query = `SELECT key FROM "${this.tableName}" WHERE namespace = $1`;
+    let query = `SELECT key FROM ${this.tableName} WHERE namespace = $1`;
     const values: (string | number | (string | null)[])[] = [this.namespace];
 
     let index = 2;
@@ -175,7 +175,7 @@ CREATE INDEX IF NOT EXISTS group_id_index ON "${this.tableName}" (group_id);`);
       return;
     }
 
-    const query = `DELETE FROM "${this.tableName}" WHERE namespace = $1 AND key = ANY($2);`;
+    const query = `DELETE FROM ${this.tableName} WHERE namespace = $1 AND key = ANY($2);`;
     await this.pool.query(query, [this.namespace, keys]);
   }
 
