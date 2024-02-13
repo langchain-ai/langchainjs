@@ -6,14 +6,14 @@ sidebar_position: 4
 
 This notebook goes over how to create a custom chat model wrapper, in case you want to use your own chat model or a different wrapper than one that is directly supported in LangChain.
 
-There are a few required things that a chat model needs to implement:
+There are a few required things that a chat model needs to implement after extending the [`SimpleChatModel` class](https://api.js.langchain.com/classes/langchain_core_language_models_chat_models.SimpleChatModel.html):
 
 - A `_call` method that takes in a list of messages and call options (which includes things like `stop` sequences), and returns a string.
 - A `_llmType` method that returns a string. Used for logging purposes only.
 
 You can also implement the following optional method:
 
-- A `_streamResponseChunks` method that returns an `AsyncGenerator` and yields `ChatGenerationChunks`. This allows the LLM to support streaming outputs.
+- A `_streamResponseChunks` method that returns an `AsyncGenerator` and yields [`ChatGenerationChunks`](https://api.js.langchain.com/classes/langchain_core_outputs.ChatGenerationChunk.html). This allows the LLM to support streaming outputs.
 
 Let’s implement a very simple custom chat model that just echoes back the first `n` characters of the input.
 
@@ -45,12 +45,13 @@ export class CustomChatModel extends SimpleChatModel {
   async _call(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    // Can pass `runManager?.getChild()` when invoking internal runnables for tracing
     runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
     if (!messages.length) {
       throw new Error("No messages provided.");
     }
+    // Pass `runManager?.getChild()` when invoking internal runnables to enable tracing
+    // await subRunnable.invoke(params, runManager?.getChild());
     if (typeof messages[0].content !== "string") {
       throw new Error("Multimodal messages are not supported.");
     }
@@ -68,6 +69,8 @@ export class CustomChatModel extends SimpleChatModel {
     if (typeof messages[0].content !== "string") {
       throw new Error("Multimodal messages are not supported.");
     }
+    // Pass `runManager?.getChild()` when invoking internal runnables to enable tracing
+    // await subRunnable.invoke(params, runManager?.getChild());
     for (const letter of messages[0].content.slice(0, this.n)) {
       yield new ChatGenerationChunk({
         message: new AIMessageChunk({
@@ -127,7 +130,7 @@ AIMessageChunk {
 
 ## Richer outputs
 
-If you want to take advantage of LangChain's callback system for functionality like token tracking, you can extend the `BaseChatModel` class and implement the lower level
+If you want to take advantage of LangChain's callback system for functionality like token tracking, you can extend the [`BaseChatModel`](https://api.js.langchain.com/classes/langchain_core_language_models_chat_models.BaseChatModel.html) class and implement the lower level
 `_generate` method. It also takes a list of `BaseMessage`s as input, but requires you to construct and return a `ChatGeneration` object that permits additional metadata.
 Here's an example:
 
@@ -163,7 +166,6 @@ export class AdvancedCustomChatModel extends BaseChatModel<AdvancedCustomChatMod
   async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    // Can pass `runManager?.getChild()` when invoking internal runnables for tracing
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     if (!messages.length) {
@@ -172,6 +174,8 @@ export class AdvancedCustomChatModel extends BaseChatModel<AdvancedCustomChatMod
     if (typeof messages[0].content !== "string") {
       throw new Error("Multimodal messages are not supported.");
     }
+    // Pass `runManager?.getChild()` when invoking internal runnables to enable tracing
+    // await subRunnable.invoke(params, runManager?.getChild());
     const content = messages[0].content.slice(0, this.n);
     const tokenUsage = {
       usedTokens: this.n,
