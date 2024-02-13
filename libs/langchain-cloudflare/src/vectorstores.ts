@@ -32,6 +32,8 @@ export type VectorizeDeleteParams = {
  * interact with the Cloudflare Vectorize vector database.
  */
 export class CloudflareVectorizeStore extends VectorStore {
+  declare FilterType: VectorizeVectorMetadataFilter;
+
   textKey: string;
 
   namespace?: string;
@@ -143,7 +145,7 @@ export class CloudflareVectorizeStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: VectorizeVectorMetadataFilter
+    filter?: this["FilterType"]
   ): Promise<[Document, number][]> {
     const results = await this.index.query(query, {
       returnMetadata: true,
