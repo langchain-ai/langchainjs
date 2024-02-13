@@ -27,20 +27,26 @@ const docs = [
 
 const cohereRerank = new CohereRerank({
   apiKey: process.env.COHERE_API_KEY, // Default
+  topN: 3, // Default
   model: "rerank-english-v2.0", // Default
 });
 
-const rerankedDocuments = await cohereRerank.rerank(docs, query, {
-  topN: 5,
-});
+const rerankedDocuments = await cohereRerank.compressDocuments(docs, query);
 
 console.log(rerankedDocuments);
 /**
 [
-  { index: 3, relevanceScore: 0.9871293 },
-  { index: 1, relevanceScore: 0.29961726 },
-  { index: 4, relevanceScore: 0.27542195 },
-  { index: 0, relevanceScore: 0.08977329 },
-  { index: 2, relevanceScore: 0.041462272 }
+  Document {
+    pageContent: 'Washington, D.C. (also known as simply Washington or D.C., and officially as the District of Columbia) is the capital of the United States. It is a federal district. The President of the USA and many major national government offices are in the territory. This makes it the political center of the United States of America.',
+    metadata: { relevanceScore: 0.9871293 }
+  },
+  Document {
+    pageContent: 'The Commonwealth of the Northern Mariana Islands is a group of islands in the Pacific Ocean that are a political division controlled by the United States. Its capital is Saipan.',
+    metadata: { relevanceScore: 0.29961726 }
+  },
+  Document {
+    pageContent: 'Capital punishment (the death penalty) has existed in the United States since before the United States was a country. As of 2017, capital punishment is legal in 30 of the 50 states. The federal government (including the United States military) also uses capital punishment.',
+    metadata: { relevanceScore: 0.27542195 }
+  }
 ]
  */
