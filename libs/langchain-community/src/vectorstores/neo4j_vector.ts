@@ -519,8 +519,7 @@ export class Neo4jVectorStore extends VectorStore {
   ): Array<{ [key: string]: any }> {
     return values.sort(
       (a, b) =>
-        (a.index_name === indexName ? -1 : 0) -
-        (b.index_name === indexName ? -1 : 0)
+        (a.name === indexName ? -1 : 0) - (b.name === indexName ? -1 : 0)
     );
   }
 
