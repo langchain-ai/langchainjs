@@ -3,6 +3,7 @@ import * as uuid from "uuid";
 import {
   VectorizeIndex,
   VectorizeVectorMetadata,
+  VectorizeVectorMetadataFilter,
 } from "@cloudflare/workers-types";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
@@ -141,12 +142,14 @@ export class CloudflareVectorizeStore extends VectorStore {
    */
   async similaritySearchVectorWithScore(
     query: number[],
-    k: number
+    k: number,
+    filter?: VectorizeVectorMetadataFilter
   ): Promise<[Document, number][]> {
     const results = await this.index.query(query, {
       returnMetadata: true,
       returnValues: true,
       topK: k,
+      filter,
     });
 
     const result: [Document, number][] = [];
