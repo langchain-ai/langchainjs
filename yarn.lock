@@ -8917,7 +8917,7 @@ __metadata:
     "@types/jsdom": ^21.1.1
     "@types/lodash": ^4
     "@types/mozilla-readability": ^0.2.1
-    "@types/pg": ^8
+    "@types/pg": ^8.11
     "@types/pg-copy-streams": ^1.2.2
     "@types/uuid": ^9
     "@types/ws": ^8
@@ -14286,7 +14286,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/pg@npm:*, @types/pg@npm:^8":
+"@types/pg@npm:*":
   version: 8.10.2
   resolution: "@types/pg@npm:8.10.2"
   dependencies:
@@ -14305,6 +14305,17 @@ __metadata:
     pg-protocol: "*"
     pg-types: ^2.2.0
   checksum: ac145553a8ad2f357feacad1bceaf5d6ce904eb9d66233b84c469a2b4fa3738d4ebdf29b7ea45387be2d07f915fd873a229f90a2f766d7c377afa7c41fbcf8d1
+  languageName: node
+  linkType: hard
+
+"@types/pg@npm:^8.11":
+  version: 8.11.0
+  resolution: "@types/pg@npm:8.11.0"
+  dependencies:
+    "@types/node": "*"
+    pg-protocol: "*"
+    pg-types: ^4.0.1
+  checksum: 8ae18abce86a012afdd68b2fb85a9fd0e9529f2dae8ca64311a4804fc8423441d605df51f547170efa4584c6ee9f919b4f5f731d5a6221386c5d04560de4334c
   languageName: node
   linkType: hard
 

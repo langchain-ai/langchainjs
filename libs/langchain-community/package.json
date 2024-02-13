@@ -99,7 +99,7 @@
     "@types/jsdom": "^21.1.1",
     "@types/lodash": "^4",
     "@types/mozilla-readability": "^0.2.1",
-    "@types/pg": "^8",
+    "@types/pg": "^8.11",
     "@types/pg-copy-streams": "^1.2.2",
     "@types/uuid": "^9",
     "@types/ws": "^8",
