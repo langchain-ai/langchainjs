@@ -82,14 +82,14 @@ export class CohereRerank {
 
   /**
    * Returns an ordered list of documents ordered by their relevance to the provided query.
-   * 
+   *
    * @param {Array<DocumentInterface | string | Record<string, string>>} documents A list of documents as strings, DocumentInterfaces or objects with a `pageContent` key.
    * @param {string} query The query to use for reranking the documents.
-   * @param options 
+   * @param options
    * @param {string} options.model The name of the model to use.
    * @param {number} options.topN How many documents to return.
    * @param {number} options.maxChunksPerDoc The maximum number of chunks per document.
-   * 
+   *
    * @returns {Promise<Array<{ index: number; relevanceScore: number }>>} An ordered list of documents with relevance scores.
    */
   async rerank(
