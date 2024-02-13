@@ -93,7 +93,7 @@ Let's walk through what's happening here.
 
 2. Though we can query the vector store directly, we convert the vector store into a retriever to return retrieved documents in the right format for the question answering chain.
 
-3. We initialize a `RetrievalQAChain` with the `.fromLLM` method, which we'll call later in step 4.
+3. We initialize a retrieval chain, which we'll call later in step 4.
 
 4. We ask questions!
 
