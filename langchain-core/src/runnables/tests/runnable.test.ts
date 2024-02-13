@@ -23,6 +23,7 @@ import {
 import { RunnableSequence, RunnableLambda } from "../base.js";
 import { RouterRunnable } from "../router.js";
 import { RunnableConfig } from "../config.js";
+import { JsonOutputParser } from "../../output_parsers/json.js";
 
 test("Test batch", async () => {
   const llm = new FakeLLM({});
@@ -380,4 +381,33 @@ test("RunnableSequence can pass config to every step in batched request", async 
     },
   });
   expect(numSeen).toBe(3);
+});
+
+test("Should aggregate properly", async () => {
+  const model = new FakeStreamingLLM({
+    responses: [
+      `{"countries": [{"name": "France", "population": 67391582}, {"name": "Spain", "population": 46754778}, {"name": "Japan", "population": 126476461}]}`,
+    ],
+  });
+
+  // A function that does not operates on input streams and breaks streaming.
+  const extractCountryNames = (inputs: Record<string, any>) => {
+    if (!Array.isArray(inputs.countries)) {
+      return "";
+    }
+    return inputs.countries.map((country) => country.name);
+  };
+
+  const chain = model.pipe(new JsonOutputParser()).pipe(extractCountryNames);
+
+  const stream = await chain.stream(
+    `output a list of the countries france, spain and japan and their populations in JSON format. Use a dict with an outer key of "countries" which contains a list of countries. Each country should have the key "name" and "population"`
+  );
+
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+  expect(chunks.length).toEqual(1);
+  expect(chunks[0]).toEqual(["France", "Spain", "Japan"]);
 });

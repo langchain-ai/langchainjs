@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.0.27",
+  "version": "0.0.28",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -39,8 +39,8 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1.16",
-    "@langchain/openai": "~0.0.10",
+    "@langchain/core": "~0.1.28",
+    "@langchain/openai": "~0.0.14",
     "flat": "^5.0.2",
     "langsmith": "~0.0.48",
     "uuid": "^9.0.0",
@@ -133,7 +133,7 @@
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
     "faiss-node": "^0.5.1",
-    "firebase-admin": "^11.9.0",
+    "firebase-admin": "^11.9.0 || ^12.0.0",
     "google-auth-library": "^8.9.0",
     "googleapis": "^126.0.1",
     "graphql": "^16.6.0",
@@ -226,7 +226,7 @@
     "discord.js": "^14.14.1",
     "dria": "^0.0.3",
     "faiss-node": "^0.5.1",
-    "firebase-admin": "^11.9.0",
+    "firebase-admin": "^11.9.0 || ^12.0.0",
     "google-auth-library": "^8.9.0",
     "googleapis": "^126.0.1",
     "hnswlib-node": "^1.4.2",

@@ -93,50 +93,9 @@ Let's walk through what's happening here.
 
 2. Though we can query the vector store directly, we convert the vector store into a retriever to return retrieved documents in the right format for the question answering chain.
 
-3. We initialize a `RetrievalQAChain` with the `.fromLLM` method, which we'll call later in step 4.
+3. We initialize a retrieval chain, which we'll call later in step 4.
 
 4. We ask questions!
 
-See the individual sections for deeper dives on specific retrievers.
-
-## Custom Retriever
-
-Since the retriever interface is so simple, it's pretty easy to write a custom one.
-Note the underscore before `_getRelevantDocuments()` - the base class wraps the non-prefixed version in order to automatically handle tracing.
-
-```typescript
-import {
-  BaseRetriever,
-  type BaseRetrieverInput,
-} from "@langchain/core/retrievers";
-import type { CallbackManagerForRetrieverRun } from "@langchain/core/callbacks/manager";
-import type { Document } from "@langchain/core/documents";
-
-export interface CustomRetrieverInput extends BaseRetrieverInput {}
-
-export class CustomRetriever extends BaseRetriever {
-  lc_namespace: string[];
-
-  constructor(fields?: CustomRetrieverInput) {
-    super(fields);
-  }
-
-  async _getRelevantDocuments(
-    query: string,
-    // Can pass runManager into sub runs for tracing
-    runManager?: CallbackManagerForRetrieverRun
-  ): Promise<Document[]> {
-    /**
-     * e.g.
-     * return [
-     *   new Document({ pageContent: "foo", metadata: {} }),
-     * ];
-     */
-    ...
-  }
-}
-
-const retriever = new CustomRetriever({});
-
-await retriever.getRelevantDocuments("bar");
-```
+See the individual sections for deeper dives on specific retrievers, or this section to learn how to
+[create your own custom retriever over any data source](/docs/modules/data_connection/retrievers/custom).

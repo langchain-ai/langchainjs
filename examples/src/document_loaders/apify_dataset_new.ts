@@ -1,8 +1,10 @@
 import { ApifyDatasetLoader } from "langchain/document_loaders/web/apify_dataset";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
-import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
-import { RetrievalQAChain } from "langchain/chains";
+import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
+import { createRetrievalChain } from "langchain/chains/retrieval";
 
 /*
  * datasetMappingFunction is a function that maps your Apify dataset format to LangChain documents.
@@ -33,17 +35,32 @@ const docs = await loader.load();
 
 const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
 
-const model = new OpenAI({
+const model = new ChatOpenAI({
   temperature: 0,
 });
 
-const chain = RetrievalQAChain.fromLLM(model, vectorStore.asRetriever(), {
-  returnSourceDocuments: true,
-});
-const res = await chain.call({ query: "What is LangChain?" });
+const questionAnsweringPrompt = ChatPromptTemplate.fromMessages([
+  [
+    "system",
+    "Answer the user's questions based on the below context:\n\n{context}",
+  ],
+  ["human", "{input}"],
+]);
 
-console.log(res.text);
-console.log(res.sourceDocuments.map((d: Document) => d.metadata.source));
+const combineDocsChain = await createStuffDocumentsChain({
+  llm: model,
+  prompt: questionAnsweringPrompt,
+});
+
+const chain = await createRetrievalChain({
+  retriever: vectorStore.asRetriever(),
+  combineDocsChain,
+});
+
+const res = await chain.invoke({ input: "What is LangChain?" });
+
+console.log(res.answer);
+console.log(res.context.map((doc) => doc.metadata.source));
 
 /*
   LangChain is a framework for developing applications powered by language models.
