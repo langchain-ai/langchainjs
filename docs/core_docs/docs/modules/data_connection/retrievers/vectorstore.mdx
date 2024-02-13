@@ -38,7 +38,7 @@ const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
 // Initialize a retriever wrapper around the vector store
 const vectorStoreRetriever = vectorStore.asRetriever();
 
-const docs = retriever.getRelevantDocuments(
+const docs = await retriever.getRelevantDocuments(
   "what did he say about ketanji brown jackson"
 );
 ```

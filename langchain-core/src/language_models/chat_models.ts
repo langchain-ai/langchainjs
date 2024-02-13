@@ -108,7 +108,7 @@ export abstract class BaseChatModel<
     super(fields);
   }
 
-  abstract _combineLLMOutput?(
+  _combineLLMOutput?(
     ...llmOutputs: LLMResult["llmOutput"][]
   ): LLMResult["llmOutput"];
 
