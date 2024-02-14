@@ -44,6 +44,7 @@ test("LangChain V2 tracer does not throw errors for its methods", async () => {
 
 class FakeTracer extends LangChainTracer {
   createOperations: { [id: string]: Run } = {};
+
   updateOperations: { [id: string]: Run } = {};
 
   async onRunCreate(run: Run): Promise<void> {
