@@ -13,11 +13,20 @@ export interface Run extends BaseRun {
   id: string;
   child_runs: this[];
   child_execution_order: number;
+  dotted_order?: string;
+  trace_id?: string;
+}
+
+export interface RunCreate2 extends RunCreate {
+  trace_id?: string;
+  dotted_order?: string;
 }
 
 export interface RunUpdate extends BaseRunUpdate {
   events: BaseRun["events"];
   inputs: KVMap;
+  trace_id?: string;
+  dotted_order?: string;
 }
 
 export interface LangChainTracerFields extends BaseCallbackHandlerInput {
@@ -69,7 +78,7 @@ export class LangChainTracer
   protected async persistRun(_run: Run): Promise<void> {}
 
   async onRunCreate(run: Run): Promise<void> {
-    const persistedRun: RunCreate = await this._convertToCreate(
+    const persistedRun: RunCreate2 = await this._convertToCreate(
       run,
       this.exampleId
     );
@@ -83,6 +92,9 @@ export class LangChainTracer
       outputs: run.outputs,
       events: run.events,
       inputs: run.inputs,
+      trace_id: run.trace_id,
+      dotted_order: run.dotted_order,
+      parent_run_id: run.parent_run_id,
     };
     await this.client.updateRun(run.id, runUpdate);
   }
