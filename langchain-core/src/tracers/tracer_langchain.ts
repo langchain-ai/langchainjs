@@ -68,7 +68,7 @@ export class LangChainTracer
 
   protected async persistRun(_run: Run): Promise<void> {}
 
-  protected async _persistRunSingle(run: Run): Promise<void> {
+  protected async onRunCreate(run: Run): Promise<void> {
     const persistedRun: RunCreate = await this._convertToCreate(
       run,
       this.exampleId
@@ -76,7 +76,7 @@ export class LangChainTracer
     await this.client.createRun(persistedRun);
   }
 
-  protected async _updateRunSingle(run: Run): Promise<void> {
+  protected async onRunUpdate(run: Run): Promise<void> {
     const runUpdate: RunUpdate = {
       end_time: run.end_time,
       error: run.error,
@@ -85,53 +85,5 @@ export class LangChainTracer
       inputs: run.inputs,
     };
     await this.client.updateRun(run.id, runUpdate);
-  }
-
-  async onRetrieverStart(run: Run): Promise<void> {
-    await this._persistRunSingle(run);
-  }
-
-  async onRetrieverEnd(run: Run): Promise<void> {
-    await this._updateRunSingle(run);
-  }
-
-  async onRetrieverError(run: Run): Promise<void> {
-    await this._updateRunSingle(run);
-  }
-
-  async onLLMStart(run: Run): Promise<void> {
-    await this._persistRunSingle(run);
-  }
-
-  async onLLMEnd(run: Run): Promise<void> {
-    await this._updateRunSingle(run);
-  }
-
-  async onLLMError(run: Run): Promise<void> {
-    await this._updateRunSingle(run);
-  }
-
-  async onChainStart(run: Run): Promise<void> {
-    await this._persistRunSingle(run);
-  }
-
-  async onChainEnd(run: Run): Promise<void> {
-    await this._updateRunSingle(run);
-  }
-
-  async onChainError(run: Run): Promise<void> {
-    await this._updateRunSingle(run);
-  }
-
-  async onToolStart(run: Run): Promise<void> {
-    await this._persistRunSingle(run);
-  }
-
-  async onToolEnd(run: Run): Promise<void> {
-    await this._updateRunSingle(run);
-  }
-
-  async onToolError(run: Run): Promise<void> {
-    await this._updateRunSingle(run);
   }
 }
