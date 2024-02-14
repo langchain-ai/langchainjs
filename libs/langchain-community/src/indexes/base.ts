@@ -1,4 +1,4 @@
-import { Serializable } from "../load/serializable.js";
+import { Serializable } from "@langchain/core/load/serializable";
 
 // Arbitrary value, used for generating namespaced UUIDs.
 export const UUIDV5_NAMESPACE = "10f90ea3-90a4-4962-bf75-83a0f3c1c62a";
