@@ -36,6 +36,11 @@ You can find more information on how to setup `pgvector` in the [official reposi
 
 ## Usage
 
+::::danger Security
+User-generated data such as usernames should not be used as input for table and column names.  
+**This may lead to SQL Injection!**
+::::
+
 import Example from "@examples/indexes/vector_stores/pgvector_vectorstore/pgvector.ts";
 
 One complete example of using `PGVectorStore` is the following:
