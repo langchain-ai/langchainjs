@@ -826,7 +826,6 @@ export const config = {
         "RunnableRetry",
         "RunnableSequence",
         "RunnableWithFallbacks",
-        "RunnableTraceable",
         "RunnableWithMessageHistory",
       ],
       alias: ["schema", "runnable"],

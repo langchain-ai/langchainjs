@@ -16,7 +16,6 @@ export {
   RunnableWithFallbacks,
   RunnableAssign,
   RunnablePick,
-  RunnableTraceable,
   _coerceToRunnable,
 } from "./base.js";
 export {

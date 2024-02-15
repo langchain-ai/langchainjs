@@ -115,7 +115,6 @@ import {
   RunnableRetry,
   RunnableSequence,
   RunnableWithFallbacks,
-  RunnableTraceable,
   RunnableWithMessageHistory
 } from "@langchain/core/runnables";
 import {
@@ -215,7 +214,6 @@ const schema__runnable = {
   RunnableRetry,
   RunnableSequence,
   RunnableWithFallbacks,
-  RunnableTraceable,
   RunnableWithMessageHistory
 };
 export { schema__runnable };
