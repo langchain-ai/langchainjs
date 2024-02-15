@@ -292,7 +292,10 @@ const getSingleStringifiedValue = (value: unknown) => {
 
 export function Criteria(
   criteria: CriteriaType,
-  config?: { formatEvaluatorInputs?: EvaluatorInputFormatter }
+  config?: {
+    formatEvaluatorInputs?: EvaluatorInputFormatter;
+    feedbackKey?: string;
+  }
 ) {
   const formatEvaluatorInputs =
     config?.formatEvaluatorInputs ??
@@ -304,7 +307,7 @@ export function Criteria(
   return {
     evaluatorType: "criteria",
     criteria,
-    feedbackKey: criteria,
+    feedbackKey: config?.feedbackKey ?? criteria,
     formatEvaluatorInputs,
   } satisfies EvalConfig;
 }
