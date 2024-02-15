@@ -20,10 +20,7 @@ import {
 } from "langsmith";
 import { EvaluationResult, RunEvaluator } from "langsmith/evaluation";
 import { DataType } from "langsmith/schemas";
-import {
-  type TraceableFunction,
-  isTraceableFunction,
-} from "langsmith/traceable";
+import type { TraceableFunction } from "langsmith/traceable";
 import { LLMStringEvaluator } from "../evaluation/base.js";
 import { loadEvaluator } from "../evaluation/loader.js";
 import { EvaluatorType } from "../evaluation/types.js";
@@ -158,7 +155,12 @@ class RunnableTraceable<RunInput, RunOutput> extends Runnable<
   constructor(fields: { func: AnyTraceableFunction }) {
     super(fields);
 
-    if (!isTraceableFunction(fields.func)) {
+    if (
+      !(
+        typeof fields.func === "function" &&
+        "langsmith:traceable" in fields.func
+      )
+    ) {
       throw new Error(
         "RunnableTraceable requires a function that is wrapped in traceable higher-order function"
       );
