@@ -199,7 +199,11 @@ class RunnableTraceable<RunInput, RunOutput> extends Runnable<
           !(input instanceof Date)
         )
       ) {
-        return (await this.func(runTree, input.input)) as RunOutput;
+        try {
+          return (await this.func(runTree, input.input)) as RunOutput;
+        } catch (err) {
+          return (await this.func(runTree, input)) as RunOutput;
+        }
       }
     }
 
