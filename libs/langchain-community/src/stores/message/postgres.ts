@@ -122,8 +122,6 @@ export class PostgresChatMessageHistory extends BaseListChatMessageHistory {
             message JSONB NOT NULL
         );`;
 
-    console.log(query);
-
     try {
       await this.pool.query(query);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
