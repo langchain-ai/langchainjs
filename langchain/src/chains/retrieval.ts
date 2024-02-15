@@ -6,7 +6,7 @@ import {
   RunnablePassthrough,
 } from "@langchain/core/runnables";
 import type { BaseMessage } from "@langchain/core/messages";
-import type { DocumentInterface } from "@langchain/core/documents";
+import type { DocumentInterface, Document } from "@langchain/core/documents";
 
 /**
  * Parameters for the createRetrievalChain method.
@@ -78,7 +78,7 @@ export async function createRetrievalChain<RunOutput>({
     { input: string; chat_history?: BaseMessage[] | string } & {
       [key: string]: unknown;
     },
-    { context: string; answer: RunOutput } & { [key: string]: unknown }
+    { context: Document[]; answer: RunOutput } & { [key: string]: unknown }
   >
 > {
   let retrieveDocumentsChain: Runnable<{ input: string }, DocumentInterface[]>;

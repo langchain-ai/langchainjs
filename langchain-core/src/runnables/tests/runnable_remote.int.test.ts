@@ -22,7 +22,31 @@ test("streamLog hosted langserve", async () => {
   console.log("totalByteSize", totalByteSize);
 });
 
-test("streamLog with raw messages", async () => {
+test("streamLog hosted langserve with concat syntax", async () => {
+  const remote = new RemoteRunnable({
+    url: `https://chat-langchain-backend.langchain.dev/chat`,
+  });
+  const result = await remote.streamLog({
+    question: "What is a document loader?",
+  });
+  let totalByteSize = 0;
+  let state;
+
+  for await (const chunk of result) {
+    if (!state) {
+      state = chunk;
+    } else {
+      state = state.concat(chunk);
+    }
+    const jsonString = JSON.stringify(chunk);
+    const byteSize = Buffer.byteLength(jsonString, "utf-8");
+    totalByteSize += byteSize;
+  }
+  console.log("final state", state);
+  console.log("totalByteSize", totalByteSize);
+});
+
+test.skip("streamLog with raw messages", async () => {
   const chain = new RemoteRunnable({
     url: "https://aimor-deployment-bf1e4ebc87365334b3b8a6b175fb4151-ffoprvkqsa-uc.a.run.app/",
   });

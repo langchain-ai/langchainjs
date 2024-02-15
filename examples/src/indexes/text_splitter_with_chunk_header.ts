@@ -1,7 +1,9 @@
-import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
-import { RetrievalQAChain, loadQAStuffChain } from "langchain/chains";
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { CharacterTextSplitter } from "langchain/text_splitter";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
+import { createRetrievalChain } from "langchain/chains/retrieval";
 
 const splitter = new CharacterTextSplitter({
   chunkSize: 1536,
@@ -26,28 +28,45 @@ const pamDocs = await splitter.createDocuments(
   }
 );
 
-const vectorStore = await HNSWLib.fromDocuments(
+const vectorstore = await HNSWLib.fromDocuments(
   jimDocs.concat(pamDocs),
   new OpenAIEmbeddings()
 );
 
-const model = new OpenAI({ temperature: 0 });
-
-const chain = new RetrievalQAChain({
-  combineDocumentsChain: loadQAStuffChain(model),
-  retriever: vectorStore.asRetriever(),
-  returnSourceDocuments: true,
+const llm = new ChatOpenAI({
+  modelName: "gpt-3.5-turbo-1106",
+  temperature: 0,
 });
-const res = await chain.call({
-  query: "What is Pam's favorite color?",
+
+const questionAnsweringPrompt = ChatPromptTemplate.fromMessages([
+  [
+    "system",
+    "Answer the user's questions based on the below context:\n\n{context}",
+  ],
+  ["human", "{input}"],
+]);
+
+const combineDocsChain = await createStuffDocumentsChain({
+  llm,
+  prompt: questionAnsweringPrompt,
+});
+
+const chain = await createRetrievalChain({
+  retriever: vectorstore.asRetriever(),
+  combineDocsChain,
+});
+
+const res = await chain.invoke({
+  input: "What is Pam's favorite color?",
 });
 
 console.log(JSON.stringify(res, null, 2));
 
 /*
   {
-    "text": " Red.",
-    "sourceDocuments": [
+    "input": "What is Pam's favorite color?",
+    "chat_history": [],
+    "context": [
       {
         "pageContent": "DOCUMENT NAME: Pam Interview\n\n---\n\nMy favorite color is red.",
         "metadata": {
@@ -70,6 +89,7 @@ console.log(JSON.stringify(res, null, 2));
           }
         }
       }
-    ]
+    ],
+    "answer": "Pam's favorite color is red."
   }
 */

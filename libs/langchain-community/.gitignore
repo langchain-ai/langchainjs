@@ -386,6 +386,10 @@ vectorstores/typesense.cjs
 vectorstores/typesense.js
 vectorstores/typesense.d.ts
 vectorstores/typesense.d.cts
+vectorstores/upstash.cjs
+vectorstores/upstash.js
+vectorstores/upstash.d.ts
+vectorstores/upstash.d.cts
 vectorstores/usearch.cjs
 vectorstores/usearch.js
 vectorstores/usearch.d.ts
@@ -506,6 +510,10 @@ retrievers/databerry.cjs
 retrievers/databerry.js
 retrievers/databerry.d.ts
 retrievers/databerry.d.cts
+retrievers/dria.cjs
+retrievers/dria.js
+retrievers/dria.d.ts
+retrievers/dria.d.cts
 retrievers/metal.cjs
 retrievers/metal.js
 retrievers/metal.d.ts
@@ -666,6 +674,10 @@ indexes/memory.cjs
 indexes/memory.js
 indexes/memory.d.ts
 indexes/memory.d.cts
+indexes/sqlite.cjs
+indexes/sqlite.js
+indexes/sqlite.d.ts
+indexes/sqlite.d.cts
 util/convex.cjs
 util/convex.js
 util/convex.d.ts

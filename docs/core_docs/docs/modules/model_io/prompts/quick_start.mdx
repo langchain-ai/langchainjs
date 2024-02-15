@@ -161,7 +161,7 @@ console.log(formattedChatPrompt);
 */
 ```
 
-You can also use `ChatPromptTemplate`'s `.formatPrompt()` method -- this returns a `PromptValue`, which you can convert to a string or Message object,
+You can also use `ChatPromptTemplate`'s `.formatPromptValue()` method -- this returns a `PromptValue`, which you can convert to a string or Message object,
 depending on whether you want to use the formatted value as input to an LLM or chat model.
 
 If you prefer to use the message classes, there is a `fromTemplate` method exposed on these classes.

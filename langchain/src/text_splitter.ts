@@ -79,8 +79,11 @@ export abstract class TextSplitter
     chunkHeaderOptions: TextSplitterChunkHeaderOptions = {}
   ): Promise<Document[]> {
     // if no metadata is provided, we create an empty one for each text
-    const _metadatas =
-      metadatas.length > 0 ? metadatas : new Array(texts.length).fill({});
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const _metadatas: Record<string, any>[] =
+      metadatas.length > 0
+        ? metadatas
+        : [...Array(texts.length)].map(() => ({}));
     const {
       chunkHeader = "",
       chunkOverlapHeader = "(cont'd) ",

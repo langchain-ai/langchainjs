@@ -57,10 +57,6 @@ export class CustomChatModel extends SimpleChatModel {
       await runManager?.handleLLMNewToken(letter);
     }
   }
-
-  _combineLLMOutput() {
-    return {};
-  }
 }
 
 const chatModel = new CustomChatModel({ n: 4 });
