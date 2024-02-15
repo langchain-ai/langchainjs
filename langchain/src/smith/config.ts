@@ -311,7 +311,10 @@ export function Criteria(
 
 export function LabeledCriteria(
   criteria: CriteriaType,
-  config?: { formatEvaluatorInputs?: EvaluatorInputFormatter }
+  config?: {
+    formatEvaluatorInputs?: EvaluatorInputFormatter;
+    feedbackKey?: string;
+  }
 ) {
   const formatEvaluatorInputs =
     config?.formatEvaluatorInputs ??
@@ -324,7 +327,7 @@ export function LabeledCriteria(
   return {
     evaluatorType: "labeled_criteria",
     criteria,
-    feedbackKey: criteria,
+    feedbackKey: config?.feedbackKey ?? criteria,
     formatEvaluatorInputs,
   } satisfies EvalConfig;
 }
