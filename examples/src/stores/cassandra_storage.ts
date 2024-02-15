@@ -6,8 +6,8 @@ import { AIMessage, HumanMessage } from "@langchain/core/messages";
 const configConnection = {
     serviceProviderArgs: {
       astra: {
-        token: <...> as string,
-        endpoint: <...> as string,
+        token: "YOUR_TOKEN_OR_LOAD_FROM_ENV"as string,
+        endpoint: "YOUR_ENDPOINT_OR_LOAD_FROM_ENV" as string,
       },
     },
   };  
