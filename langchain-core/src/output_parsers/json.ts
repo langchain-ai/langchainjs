@@ -36,7 +36,7 @@ export class JsonOutputParser<
     return parseJsonMarkdown(generations[0].text);
   }
 
-  async parse(text: string): Promise<Partial<T>> {
+  async parse(text: string): Promise<T> {
     return parseJsonMarkdown(text, JSON.parse);
   }
 
