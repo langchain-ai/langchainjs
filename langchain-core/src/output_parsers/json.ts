@@ -5,7 +5,10 @@ import { ChatGeneration, Generation } from "../outputs.js";
 /**
  * Class for parsing the output of an LLM into a JSON object.
  */
-export class JsonOutputParser extends BaseCumulativeTransformOutputParser<object> {
+export class JsonOutputParser<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends Record<string, any> = Record<string, any>
+> extends BaseCumulativeTransformOutputParser<Partial<T>> {
   static lc_name() {
     return "JsonOutputParser";
   }
@@ -29,11 +32,11 @@ export class JsonOutputParser extends BaseCumulativeTransformOutputParser<object
 
   async parsePartialResult(
     generations: ChatGeneration[] | Generation[]
-  ): Promise<object | undefined> {
+  ): Promise<Partial<T> | undefined> {
     return parseJsonMarkdown(generations[0].text);
   }
 
-  async parse(text: string): Promise<object> {
+  async parse(text: string): Promise<Partial<T>> {
     return parseJsonMarkdown(text, JSON.parse);
   }
 
