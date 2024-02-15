@@ -194,31 +194,15 @@ const notUnsure = async ({
   };
 };
 
-const evaluation: RunEvalConfig = {
-  // The 'evaluators' are loaded from LangChain's evaluation
-  // library.
-  evaluators: [
-    {
-      evaluatorType: "labeled_criteria",
-      criteria: "correctness",
-      feedbackKey: "correctness",
-      formatEvaluatorInputs: ({
-        rawInput,
-        rawPrediction,
-        rawReferenceOutput,
-      }) => {
-        return {
-          input: rawInput.input,
-          prediction: rawPrediction.output,
-          reference: rawReferenceOutput.output,
-        };
-      },
-    },
-  ],
+const evaluators: RunEvalConfig["evaluators"] = [
+  // LangChain's built-in evaluators
+  LabeledCriteria("correctness"),
+  Criteria("conciseness"),
+
   // Custom evaluators can be user-defined RunEvaluator's
   // or a compatible function
-  customEvaluators: [notUnsure],
-};
+  notUnsure
+];
 ```
 
 For predefined evaluators passed under the `evaluators` key, the passed `formatEvaluatorInputs` formats the raw input and output from the chain and example correctly.
@@ -239,9 +223,7 @@ The results will be visible in the LangSmith app.
 ```typescript
 import { runOnDataset } from "langchain/smith";
 
-await runOnDataset(agentExecutor, datasetName, {
-  evaluationConfig: evaluation,
-});
+await runOnDataset(agentExecutor, datasetName, evaluators);
 ```
 
 ```out
