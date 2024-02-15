@@ -78,28 +78,16 @@ export class PGVectorStore extends VectorStore {
     config: PGVectorStoreArgs
   ) {
     super(embeddings, config);
-
-    // Escape identifiers here to avoid potentially missing them in the future.
-    this.tableName = pg.escapeIdentifier(config.tableName);
-    this.collectionTableName =
-      config.collectionTableName &&
-      pg.escapeIdentifier(config.collectionTableName);
+    this.tableName = config.tableName;
+    this.collectionTableName = config.collectionTableName;
     this.collectionName = config.collectionName ?? "langchain";
     this.collectionMetadata = config.collectionMetadata ?? null;
     this.filter = config.filter;
 
-    this.vectorColumnName = pg.escapeIdentifier(
-      config.columns?.vectorColumnName ?? "embedding"
-    );
-    this.contentColumnName = pg.escapeIdentifier(
-      config.columns?.contentColumnName ?? "text"
-    );
-    this.idColumnName = pg.escapeIdentifier(
-      config.columns?.idColumnName ?? "id"
-    );
-    this.metadataColumnName = pg.escapeIdentifier(
-      config.columns?.metadataColumnName ?? "metadata"
-    );
+    this.vectorColumnName = config.columns?.vectorColumnName ?? "embedding";
+    this.contentColumnName = config.columns?.contentColumnName ?? "text";
+    this.idColumnName = config.columns?.idColumnName ?? "id";
+    this.metadataColumnName = config.columns?.metadataColumnName ?? "metadata";
 
     const pool = new pg.Pool(config.postgresConnectionOptions);
     this.pool = pool;
@@ -251,7 +239,7 @@ export class PGVectorStore extends VectorStore {
 
     const text = `
       INSERT INTO ${this.tableName}(
-        ${columns.map((column) => `${column}`).join(", ")}
+        ${columns.map((column) => `"${column}"`).join(", ")}
       )
       VALUES ${valuesPlaceholders}
     `;
@@ -442,19 +430,12 @@ export class PGVectorStore extends VectorStore {
 
     const documents = (await this.pool.query(queryString, parameters)).rows;
 
-    // We need to remove the double quotes because the pg result does not include them
-    const unescapedContentColumnName = this.unescapeIdentifier(
-      this.contentColumnName
-    );
-    const unescapedMetadataColumnName = this.unescapeIdentifier(
-      this.metadataColumnName
-    );
     const results = [] as [Document, number][];
     for (const doc of documents) {
-      if (doc._distance != null && doc[unescapedContentColumnName] != null) {
+      if (doc._distance != null && doc[this.contentColumnName] != null) {
         const document = new Document({
-          pageContent: doc[unescapedContentColumnName],
-          metadata: doc[unescapedMetadataColumnName],
+          pageContent: doc[this.contentColumnName],
+          metadata: doc[this.metadataColumnName],
         });
         results.push([document, doc._distance]);
       }
@@ -474,10 +455,10 @@ export class PGVectorStore extends VectorStore {
 
     await this.pool.query(`
       CREATE TABLE IF NOT EXISTS ${this.tableName} (
-        ${this.idColumnName} uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
-        ${this.contentColumnName} text,
-        ${this.metadataColumnName} jsonb,
-        ${this.vectorColumnName} vector
+        "${this.idColumnName}" uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+        "${this.contentColumnName}" text,
+        "${this.metadataColumnName}" jsonb,
+        "${this.vectorColumnName}" vector
       );
     `);
   }
@@ -501,9 +482,7 @@ export class PGVectorStore extends VectorStore {
           ADD COLUMN collection_id uuid;
 
         ALTER TABLE ${this.tableName}
-          ADD CONSTRAINT "${this.unescapeIdentifier(
-            this.tableName
-          )}_collection_id_fkey"
+          ADD CONSTRAINT ${this.tableName}_collection_id_fkey
           FOREIGN KEY (collection_id)
           REFERENCES ${this.collectionTableName}(uuid)
           ON DELETE CASCADE;
@@ -574,9 +553,5 @@ export class PGVectorStore extends VectorStore {
   async end(): Promise<void> {
     this.client?.release();
     return this.pool.end();
-  }
-
-  private unescapeIdentifier(identifier: string): string {
-    return identifier.slice(1, -1);
   }
 }
