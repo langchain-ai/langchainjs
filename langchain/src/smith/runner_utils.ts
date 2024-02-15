@@ -183,11 +183,24 @@ class RunnableTraceable<RunInput, RunOutput> extends Runnable<
     if (
       typeof input === "object" &&
       input != null &&
-      Object.keys(input).length === 1 &&
-      "args" in input &&
-      Array.isArray(input)
+      Object.keys(input).length === 1
     ) {
-      return (await this.func(runTree, ...input)) as RunOutput;
+      if ("args" in input && Array.isArray(input)) {
+        return (await this.func(runTree, ...input)) as RunOutput;
+      }
+
+      if (
+        "input" in input &&
+        !(
+          typeof input === "object" &&
+          input != null &&
+          !Array.isArray(input) &&
+          // eslint-disable-next-line no-instanceof/no-instanceof
+          !(input instanceof Date)
+        )
+      ) {
+        return (await this.func(runTree, input.input)) as RunOutput;
+      }
     }
 
     return (await this.func(runTree, input)) as RunOutput;
