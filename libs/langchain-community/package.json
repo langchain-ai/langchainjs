@@ -1809,6 +1809,15 @@
       "import": "./document_transformers/mozilla_readability.js",
       "require": "./document_transformers/mozilla_readability.cjs"
     },
+    "./storage/cassandra": {
+      "types": {
+        "import": "./storage/cassandra.d.ts",
+        "require": "./storage/cassandra.d.cts",
+        "default": "./storage/cassandra.d.ts"
+      },
+      "import": "./storage/cassandra.js",
+      "require": "./storage/cassandra.cjs"
+    },
     "./storage/convex": {
       "types": {
         "import": "./storage/convex.d.ts",
@@ -2650,6 +2659,10 @@
     "document_transformers/mozilla_readability.js",
     "document_transformers/mozilla_readability.d.ts",
     "document_transformers/mozilla_readability.d.cts",
+    "storage/cassandra.cjs",
+    "storage/cassandra.js",
+    "storage/cassandra.d.ts",
+    "storage/cassandra.d.cts",
     "storage/convex.cjs",
     "storage/convex.js",
     "storage/convex.d.ts",

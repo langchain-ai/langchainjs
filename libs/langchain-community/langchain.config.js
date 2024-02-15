@@ -182,6 +182,7 @@ export const config = {
     "document_transformers/mozilla_readability":
       "document_transformers/mozilla_readability",
     // storage
+    "storage/cassandra": "storage/cassandra",
     "storage/convex": "storage/convex",
     "storage/ioredis": "storage/ioredis",
     "storage/upstash_redis": "storage/upstash_redis",
