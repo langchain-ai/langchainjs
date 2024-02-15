@@ -87,7 +87,8 @@ export abstract class StructuredTool<
 
   protected abstract _call(
     arg: z.output<T>,
-    runManager?: CallbackManagerForToolRun
+    runManager?: CallbackManagerForToolRun,
+    config?: RunnableConfig
   ): Promise<string>;
 
   /**
@@ -148,7 +149,7 @@ export abstract class StructuredTool<
     );
     let result;
     try {
-      result = await this._call(parsed, runManager);
+      result = await this._call(parsed, runManager, config);
     } catch (e) {
       await runManager?.handleToolError(e);
       throw e;
@@ -220,7 +221,8 @@ export interface BaseDynamicToolInput extends ToolParams {
 export interface DynamicToolInput extends BaseDynamicToolInput {
   func: (
     input: string,
-    runManager?: CallbackManagerForToolRun
+    runManager?: CallbackManagerForToolRun,
+    config?: RunnableConfig
   ) => Promise<string>;
 }
 
@@ -233,7 +235,8 @@ export interface DynamicStructuredToolInput<
 > extends BaseDynamicToolInput {
   func: (
     input: z.infer<T>,
-    runManager?: CallbackManagerForToolRun
+    runManager?: CallbackManagerForToolRun,
+    config?: RunnableConfig
   ) => Promise<string>;
   schema: T;
 }
@@ -274,9 +277,10 @@ export class DynamicTool extends Tool {
   /** @ignore */
   async _call(
     input: string,
-    runManager?: CallbackManagerForToolRun
+    runManager?: CallbackManagerForToolRun,
+    config?: RunnableConfig
   ): Promise<string> {
-    return this.func(input, runManager);
+    return this.func(input, runManager, config);
   }
 }
 
@@ -326,8 +330,9 @@ export class DynamicStructuredTool<
 
   protected _call(
     arg: z.output<T>,
-    runManager?: CallbackManagerForToolRun
+    runManager?: CallbackManagerForToolRun,
+    config?: RunnableConfig
   ): Promise<string> {
-    return this.func(arg, runManager);
+    return this.func(arg, runManager, config);
   }
 }
