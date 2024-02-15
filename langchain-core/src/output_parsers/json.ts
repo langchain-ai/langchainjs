@@ -8,7 +8,7 @@ import { ChatGeneration, Generation } from "../outputs.js";
 export class JsonOutputParser<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends Record<string, any> = Record<string, any>
-> extends BaseCumulativeTransformOutputParser<Partial<T>> {
+> extends BaseCumulativeTransformOutputParser<T> {
   static lc_name() {
     return "JsonOutputParser";
   }
@@ -30,9 +30,11 @@ export class JsonOutputParser<
     return compare(prev, next);
   }
 
+  // This should actually return Partial<T>, but there's no way
+  // to specify emitted chunks as instances separate from the main output type.
   async parsePartialResult(
     generations: ChatGeneration[] | Generation[]
-  ): Promise<Partial<T> | undefined> {
+  ): Promise<T | undefined> {
     return parseJsonMarkdown(generations[0].text);
   }
 
