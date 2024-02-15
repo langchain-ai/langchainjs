@@ -138,8 +138,8 @@ export class RunnablePassthrough<RunInput> extends Runnable<
    * ```
    */
   static assign<
-    RunInput extends Record<string, unknown>,
-    RunOutput extends Record<string, unknown>
+    RunInput extends Record<string, unknown> = Record<string, unknown>,
+    RunOutput extends Record<string, unknown> = Record<string, unknown>
   >(
     mapping: RunnableMapLike<RunInput, RunOutput>
   ): RunnableAssign<RunInput, RunInput & RunOutput> {
