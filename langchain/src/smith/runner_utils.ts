@@ -155,12 +155,7 @@ class RunnableTraceable<RunInput, RunOutput> extends Runnable<
   constructor(fields: { func: AnyTraceableFunction }) {
     super(fields);
 
-    if (
-      !(
-        typeof fields.func === "function" &&
-        "langsmith:traceable" in fields.func
-      )
-    ) {
+    if (!isLangsmithTraceableFunction(fields.func)) {
       throw new Error(
         "RunnableTraceable requires a function that is wrapped in traceable higher-order function"
       );
@@ -359,7 +354,7 @@ const createWrappedModel = async (modelOrFactory: ChainOrFactory) => {
     } catch (err) {
       // Otherwise, it's a custom UDF, and we'll wrap
       // in a lambda or a traceable function
-      if (isTraceableFunction(modelOrFactory)) {
+      if (isLangsmithTraceableFunction(modelOrFactory)) {
         const wrappedModel = new RunnableTraceable({ func: modelOrFactory });
         return () => wrappedModel;
       }
@@ -641,4 +636,8 @@ export async function runOnDataset(
     results: evalResults ?? {},
   };
   return results;
+}
+
+function isLangsmithTraceableFunction(x: unknown): x is AnyTraceableFunction {
+  return typeof x === "function" && "langsmith:traceable" in x;
 }
