@@ -42,7 +42,7 @@
     "@langchain/core": "~0.1.28",
     "@langchain/openai": "~0.0.14",
     "flat": "^5.0.2",
-    "langsmith": "~0.0.48",
+    "langsmith": "~0.1.0",
     "uuid": "^9.0.0",
     "zod": "^3.22.3"
   },

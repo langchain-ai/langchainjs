@@ -9017,7 +9017,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     jsdom: ^22.1.0
-    langsmith: ~0.0.48
+    langsmith: ~0.1.0
     llmonitor: ^0.5.9
     lodash: ^4.17.21
     lunary: ^0.6.11
@@ -9324,7 +9324,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     js-tiktoken: ^1.0.8
-    langsmith: ~0.0.48
+    langsmith: ~0.1.0
     ml-distance: ^4.0.0
     ml-matrix: ^6.10.4
     p-queue: ^6.6.2
@@ -21130,7 +21130,7 @@ __metadata:
     ioredis: ^5.3.2
     js-yaml: ^4.1.0
     langchain: "workspace:*"
-    langsmith: ^0.0.59
+    langsmith: ^0.1.0
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
     pg: ^8.11.0
@@ -25814,7 +25814,7 @@ __metadata:
     jsdom: ^22.1.0
     jsonpointer: ^5.0.1
     langchainhub: ~0.0.8
-    langsmith: ~0.0.59
+    langsmith: ~0.1.0
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
@@ -26030,9 +26030,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langsmith@npm:^0.0.59":
-  version: 0.0.59
-  resolution: "langsmith@npm:0.0.59"
+"langsmith@npm:^0.1.0, langsmith@npm:~0.1.0":
+  version: 0.1.0
+  resolution: "langsmith@npm:0.1.0"
   dependencies:
     "@types/uuid": ^9.0.1
     commander: ^10.0.1
@@ -26041,37 +26041,7 @@ __metadata:
     uuid: ^9.0.0
   bin:
     langsmith: dist/cli/main.cjs
-  checksum: 7a628fd843e6eff31b81d8c52033c4b1fde912e0a13b632bf5efe3a4c24d5074b58140e1a2c3a4230ef986a97b25c7e50cc6509efc88e9d07bd50f2efb85db42
-  languageName: node
-  linkType: hard
-
-"langsmith@npm:~0.0.48":
-  version: 0.0.48
-  resolution: "langsmith@npm:0.0.48"
-  dependencies:
-    "@types/uuid": ^9.0.1
-    commander: ^10.0.1
-    p-queue: ^6.6.2
-    p-retry: 4
-    uuid: ^9.0.0
-  bin:
-    langsmith: dist/cli/main.cjs
-  checksum: 2552c1a8549eab8e03a5530e73ce37ad0e147ca3084edbfd56b7a29b92c7c5579e5c1e53222bfb846b5ee8219d8d80cc9a7cc07e78717e95cdefedb95d76cd86
-  languageName: node
-  linkType: hard
-
-"langsmith@npm:~0.0.59":
-  version: 0.0.63
-  resolution: "langsmith@npm:0.0.63"
-  dependencies:
-    "@types/uuid": ^9.0.1
-    commander: ^10.0.1
-    p-queue: ^6.6.2
-    p-retry: 4
-    uuid: ^9.0.0
-  bin:
-    langsmith: dist/cli/main.cjs
-  checksum: aeab97f033dc099f4946418f5f7c99f0107a9fab1838e78acb52dc87aa4b4fc2f0f9a0aacb6f37a8131d1cf800e175e2af6696b910b8492b3b67d6a564ac59cb
+  checksum: e731c8712d070ac09d85903adec11c06ac4b73e8195bc1dba9a93d0bb7e0ab4cb44f9eeb8295331d46bae6881f25c3df8a853f26c871162e6d8c10c24b4038a4
   languageName: node
   linkType: hard
 
