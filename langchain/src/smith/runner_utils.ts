@@ -5,18 +5,25 @@ import {
   Runnable,
   RunnableConfig,
   RunnableLambda,
-  RunnableTraceable,
+  getCallbackManagerForConfig,
 } from "@langchain/core/runnables";
 import { LangChainTracer } from "@langchain/core/tracers/tracer_langchain";
 import { BaseTracer } from "@langchain/core/tracers/base";
 import { ChainValues } from "@langchain/core/utils/types";
-import { Client, Example, Feedback, Run } from "langsmith";
+import {
+  Client,
+  Example,
+  Feedback,
+  Run,
+  RunTree,
+  RunTreeConfig,
+} from "langsmith";
 import { EvaluationResult, RunEvaluator } from "langsmith/evaluation";
 import { DataType } from "langsmith/schemas";
 import {
   type TraceableFunction,
   isTraceableFunction,
-} from "langsmith/run_helpers";
+} from "langsmith/traceable";
 import { LLMStringEvaluator } from "../evaluation/base.js";
 import { loadEvaluator } from "../evaluation/loader.js";
 import { EvaluatorType } from "../evaluation/types.js";
@@ -36,7 +43,7 @@ export type ChainOrFactory =
   | Runnable
   | (() => Runnable)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  | TraceableFunction<any, any>
+  | TraceableFunction<any>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   | ((obj: any) => any)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -134,6 +141,61 @@ class DynamicRunEvaluator implements RunEvaluator {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isLLMStringEvaluator(evaluator: any): evaluator is LLMStringEvaluator {
   return evaluator && typeof evaluator.evaluateStrings === "function";
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyTraceableFunction = TraceableFunction<(...any: any[]) => any>;
+
+class RunnableTraceable<RunInput, RunOutput> extends Runnable<
+  RunInput,
+  RunOutput
+> {
+  lc_serializable = false;
+
+  lc_namespace = ["langchain_core", "runnables"];
+
+  protected func: AnyTraceableFunction;
+
+  constructor(fields: { func: AnyTraceableFunction }) {
+    super(fields);
+
+    if (!isTraceableFunction(fields.func)) {
+      throw new Error(
+        "RunnableTraceable requires a function that is wrapped in traceable higher-order function"
+      );
+    }
+
+    this.func = fields.func;
+  }
+
+  async invoke(input: RunInput, options?: Partial<RunnableConfig>) {
+    const [config] = this._getOptionsList(options ?? {}, 1);
+    const callbackManager = await getCallbackManagerForConfig(config);
+
+    const partialConfig =
+      "langsmith:traceable" in this.func
+        ? (this.func["langsmith:traceable"] as RunTreeConfig)
+        : { name: "<lambda>" };
+
+    const runTree = new RunTree({
+      ...partialConfig,
+      parent_run: callbackManager?._parentRunId
+        ? new RunTree({ name: "<parent>", id: callbackManager?._parentRunId })
+        : undefined,
+    });
+
+    if (
+      typeof input === "object" &&
+      input != null &&
+      Object.keys(input).length === 1 &&
+      "args" in input &&
+      Array.isArray(input)
+    ) {
+      return (await this.func(runTree, ...input)) as RunOutput;
+    }
+
+    return (await this.func(runTree, input)) as RunOutput;
+  }
 }
 
 /**
@@ -297,14 +359,7 @@ const createWrappedModel = async (modelOrFactory: ChainOrFactory) => {
       // Otherwise, it's a custom UDF, and we'll wrap
       // in a lambda or a traceable function
       if (isTraceableFunction(modelOrFactory)) {
-        const wrappedModel = new RunnableTraceable({
-          func: (input, config) =>
-            modelOrFactory(
-              input,
-              // @ts-expect-error Seems like a mismatch of LangSmith clients, try to force version?
-              config?.runTree ? { root: config?.runTree } : null
-            ),
-        });
+        const wrappedModel = new RunnableTraceable({ func: modelOrFactory });
         return () => wrappedModel;
       }
 
