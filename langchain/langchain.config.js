@@ -14,6 +14,7 @@ export const config = {
     /node\:/,
     /js-tiktoken/,
     /@langchain\/core/,
+    /langsmith/,
     /@langchain\/community/,
     "axios", // axios is a dependency of openai
     "convex",
