@@ -67,7 +67,7 @@
     "ioredis": "^5.3.2",
     "js-yaml": "^4.1.0",
     "langchain": "workspace:*",
-    "langsmith": "^0.0.59",
+    "langsmith": "^0.1.0",
     "ml-distance": "^4.0.0",
     "mongodb": "^5.2.0",
     "pg": "^8.11.0",
