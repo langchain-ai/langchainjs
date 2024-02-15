@@ -42,8 +42,7 @@ import { ProgressBar } from "./progress.js";
 export type ChainOrFactory =
   | Runnable
   | (() => Runnable)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  | TraceableFunction<any>
+  | AnyTraceableFunction
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   | ((obj: any) => any)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
