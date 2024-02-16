@@ -240,7 +240,10 @@ export type CriteriaEvalChainConfig = Criteria;
 
 export function Criteria(
   criteria: CriteriaType,
-  config?: Omit<Partial<Criteria>, "evaluatorType">
+  config?: Pick<
+    Partial<LabeledCriteria>,
+    "formatEvaluatorInputs" | "llm" | "feedbackKey"
+  >
 ): EvalConfig {
   const formatEvaluatorInputs =
     config?.formatEvaluatorInputs ??
@@ -253,6 +256,7 @@ export function Criteria(
     evaluatorType: "criteria",
     criteria,
     feedbackKey: config?.feedbackKey ?? criteria,
+    llm: config?.llm,
     formatEvaluatorInputs,
   };
 }
@@ -303,7 +307,10 @@ export type LabeledCriteria = EvalConfig & {
 
 export function LabeledCriteria(
   criteria: CriteriaType,
-  config?: Omit<Partial<LabeledCriteria>, "evaluatorType">
+  config?: Pick<
+    Partial<LabeledCriteria>,
+    "formatEvaluatorInputs" | "llm" | "feedbackKey"
+  >
 ): LabeledCriteria {
   const formatEvaluatorInputs =
     config?.formatEvaluatorInputs ??
@@ -317,6 +324,7 @@ export function LabeledCriteria(
     evaluatorType: "labeled_criteria",
     criteria,
     feedbackKey: config?.feedbackKey ?? criteria,
+    llm: config?.llm,
     formatEvaluatorInputs,
   };
 }
@@ -330,20 +338,22 @@ export type EmbeddingDistance = EvalConfig &
   EmbeddingDistanceEvalChainInput & { evaluatorType: "embedding_distance" };
 
 export function EmbeddingDistance(
-  config: Omit<Partial<EmbeddingDistance>, "evaluatorType">
+  config?: Pick<
+    Partial<LabeledCriteria>,
+    "formatEvaluatorInputs" | "embedding" | "distanceMetric" | "feedbackKey"
+  >
 ): EmbeddingDistance {
   const formatEvaluatorInputs =
     config?.formatEvaluatorInputs ??
     ((payload) => ({
       prediction: getSingleStringifiedValue(payload.rawPrediction),
-      input: getSingleStringifiedValue(payload.rawInput),
       reference: getSingleStringifiedValue(payload.rawReferenceOutput),
     }));
 
   return {
     evaluatorType: "embedding_distance",
-    embedding: config.embedding,
-    distanceMetric: config.distanceMetric,
+    embedding: config?.embedding,
+    distanceMetric: config?.distanceMetric,
     feedbackKey: config?.feedbackKey ?? "embedding_distance",
     formatEvaluatorInputs,
   };
