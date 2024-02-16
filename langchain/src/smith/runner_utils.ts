@@ -36,6 +36,10 @@ import {
 } from "./config.js";
 import { randomName } from "./name_generation.js";
 import { ProgressBar } from "./progress.js";
+import type {
+  CallbackManager,
+  CallbackManagerForChainRun,
+} from "../callbacks/manager.js";
 
 export type ChainOrFactory =
   | Runnable
@@ -143,6 +147,80 @@ function isLLMStringEvaluator(evaluator: any): evaluator is LLMStringEvaluator {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyTraceableFunction = TraceableFunction<(...any: any[]) => any>;
 
+/**
+ * Internal implementation of RunTree, which uses the
+ * provided callback manager instead of the internal LangSmith client.
+ *
+ * The goal of this class is to ensure seamless interop when intergrated
+ * with other Runnables.
+ */
+class CallbackManagerRunTree extends RunTree {
+  callbackManager: CallbackManager;
+
+  activeCallbackManager: CallbackManagerForChainRun | undefined = undefined;
+
+  constructor(config: RunTreeConfig, callbackManager: CallbackManager) {
+    super(config);
+
+    this.callbackManager = callbackManager;
+  }
+
+  async createChild(config: RunTreeConfig): Promise<CallbackManagerRunTree> {
+    const child = new CallbackManagerRunTree(
+      {
+        ...config,
+        parent_run: this,
+        project_name: this.project_name,
+        client: this.client,
+      },
+      this.activeCallbackManager?.getChild() ?? this.callbackManager
+    );
+    this.child_runs.push(child);
+    return child;
+  }
+
+  async postRun(): Promise<void> {
+    // how it is translated in comparison to basic RunTree?
+    this.activeCallbackManager = await this.callbackManager.handleChainStart(
+      typeof this.serialized !== "object" &&
+        this.serialized != null &&
+        "lc" in this.serialized
+        ? this.serialized
+        : {
+            id: ["langchain", "smith", "CallbackManagerRunTree"],
+            lc: 1,
+            type: "not_implemented",
+          },
+      this.inputs,
+      this.id,
+      this.run_type,
+      undefined,
+      undefined,
+      this.name
+    );
+  }
+
+  async patchRun(): Promise<void> {
+    if (this.error) {
+      await this.activeCallbackManager?.handleChainError(
+        this.error,
+        this.id,
+        this.parent_run?.id,
+        undefined,
+        undefined
+      );
+    } else {
+      await this.activeCallbackManager?.handleChainEnd(
+        this.outputs ?? {},
+        this.id,
+        this.parent_run?.id,
+        undefined,
+        undefined
+      );
+    }
+  }
+}
+
 class RunnableTraceable<RunInput, RunOutput> extends Runnable<
   RunInput,
   RunOutput
@@ -174,12 +252,16 @@ class RunnableTraceable<RunInput, RunOutput> extends Runnable<
         ? (this.func["langsmith:traceable"] as RunTreeConfig)
         : { name: "<lambda>" };
 
-    const runTree = new RunTree({
-      ...partialConfig,
-      parent_run: callbackManager?._parentRunId
-        ? new RunTree({ name: "<parent>", id: callbackManager?._parentRunId })
-        : undefined,
-    });
+    if (!callbackManager) throw new Error("CallbackManager not found");
+    const runTree = new CallbackManagerRunTree(
+      {
+        ...partialConfig,
+        parent_run: callbackManager?._parentRunId
+          ? new RunTree({ name: "<parent>", id: callbackManager?._parentRunId })
+          : undefined,
+      },
+      callbackManager
+    );
 
     if (
       typeof input === "object" &&
