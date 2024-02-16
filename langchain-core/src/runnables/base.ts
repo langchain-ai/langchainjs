@@ -98,7 +98,6 @@ export type RunnableMapLike<RunInput, RunOutput> = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type RunnableLike<RunInput = any, RunOutput = any> =
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   | RunnableInterface<RunInput, RunOutput>
   | RunnableFunc<RunInput, RunOutput>
   | RunnableMapLike<RunInput, RunOutput>;
