@@ -2,7 +2,11 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 
-export type EmbeddingTaskType = "search_query" | "search_document" | "clustering" | "classification";
+export type EmbeddingTaskType =
+  | "search_query"
+  | "search_document"
+  | "clustering"
+  | "classification";
 
 /**
  * Interface for NomicEmbeddings parameters. Extends EmbeddingsParams and
@@ -52,7 +56,7 @@ export interface NomicEmbeddingsResult {
   embeddings: Array<number[]>;
   usage: {
     total_tokens: number;
-  }
+  };
 }
 
 /**
@@ -155,7 +159,7 @@ export class NomicEmbeddings
         }),
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${this.apiKey}`
+          Authorization: `Bearer ${this.apiKey}`,
         },
       });
       if (!res.ok) {
