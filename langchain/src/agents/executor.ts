@@ -433,7 +433,7 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
   async _call(
     inputs: ChainValues,
     runManager?: CallbackManagerForChainRun,
-    config?: RunnableConfig,
+    config?: RunnableConfig
   ): Promise<AgentExecutorOutput> {
     const toolsByName = Object.fromEntries(
       this.tools.map((t) => [t.name.toLowerCase(), t])
