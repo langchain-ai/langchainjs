@@ -30,12 +30,8 @@ export interface NomicEmbeddingsParams extends EmbeddingsParams {
    */
   taskType?: EmbeddingTaskType;
   /**
-   * Override the default endpoint.
-   */
-  endpoint?: string;
-  /**
    * The maximum number of documents to embed in a single request.
-   * @default {512}
+   * @default {400}
    */
   batchSize?: number;
   /**
@@ -60,7 +56,7 @@ export interface NomicEmbeddingsResult {
 }
 
 /**
- * Class for generating embeddings using the MistralAI API.
+ * Class for generating embeddings using the Nomic API.
  */
 export class NomicEmbeddings
   extends Embeddings
@@ -70,7 +66,7 @@ export class NomicEmbeddings
 
   taskType: EmbeddingTaskType = "search_document";
 
-  batchSize = 512;
+  batchSize = 400;
 
   stripNewLines = true;
 
@@ -96,14 +92,13 @@ export class NomicEmbeddings
     this.taskType = fields?.taskType ?? this.taskType;
     this.batchSize = fields?.batchSize ?? this.batchSize;
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
-    this.endpoint = fields?.endpoint ?? this.endpoint;
     this.dimensionality = fields?.dimensionality;
     this.apiKey = apiKey;
   }
 
   /**
    * Method to generate embeddings for an array of documents. Splits the
-   * documents into batches and makes requests to the MistralAI API to generate
+   * documents into batches and makes requests to the Nomic API to generate
    * embeddings.
    * @param {Array<string>} texts Array of documents to generate embeddings for.
    * @returns {Promise<number[][]>} Promise that resolves to a 2D array of embeddings for each document.
@@ -113,6 +108,7 @@ export class NomicEmbeddings
       this.stripNewLines ? texts.map((t) => t.replace(/\n/g, " ")) : texts,
       this.batchSize
     );
+    console.log("batches", batches.length)
     const batchRequests = batches.map((batch) =>
       this.embeddingWithRetry(batch)
     );
@@ -139,15 +135,16 @@ export class NomicEmbeddings
   }
 
   /**
-   * Private method to make a request to the MistralAI API to generate
+   * Private method to make a request to the Nomic API to generate
    * embeddings. Handles the retry logic and returns the response from the
    * API.
-   * @param {string | Array<string>} input Text to send to the MistralAI API.
+   * @param {string | Array<string>} input Text to send to the Nomic API.
    * @returns {Promise<NomicEmbeddingsResult>} Promise that resolves to the response from the API.
    */
   private async embeddingWithRetry(
     input: string | Array<string>
   ): Promise<NomicEmbeddingsResult> {
+    let numSuccess = 0;
     return this.caller.call(async () => {
       const res = await fetch(`${this.endpoint}/v1/embedding/text`, {
         method: "POST",
@@ -165,6 +162,8 @@ export class NomicEmbeddings
       if (!res.ok) {
         throw new Error(`Failed to generate embeddings: ${res.statusText}`);
       }
+      numSuccess += 1;
+      console.log(`Success: ${numSuccess}`)
       return res.json();
     });
   }

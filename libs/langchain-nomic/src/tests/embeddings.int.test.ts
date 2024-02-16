@@ -16,6 +16,18 @@ test("NomicEmbeddings can embed docs", async () => {
   expect(embeddings[0]).toHaveLength(768);
 });
 
+test("NomicEmbeddings can embed more docs than the default batch size", async () => {
+  const nomicEmbeddings = new NomicEmbeddings({
+    maxRetries: 0,
+  });
+  // Batch size is 400. 800 docs should be 2 batches.
+  const docs = Array.from({ length: 800 }, () => "hello world");
+
+  const embeddings = await nomicEmbeddings.embedDocuments(docs);
+  expect(embeddings).toHaveLength(800);
+  expect(embeddings[0]).toHaveLength(768);
+});
+
 test("NomicEmbeddings can embed query", async () => {
   const nomicEmbeddings = new NomicEmbeddings();
   const query = "hello world";
