@@ -326,17 +326,17 @@ class PreparedRunEvaluator implements RunEvaluator {
     const evalConfig = typeof config === "string" ? ({} as EvalConfig) : config;
     const evaluator = await loadEvaluator(evaluatorType, evalConfig);
     const feedbackKey = evalConfig?.feedbackKey ?? evaluator?.evaluationName;
-    if (!feedbackKey) {
-      throw new Error(
-        `Evaluator of type ${evaluatorType} must have an evaluationName` +
-          ` or feedbackKey. Please manually provide a feedbackKey in the EvalConfig.`
-      );
-    }
     if (!isLLMStringEvaluator(evaluator)) {
       throw new Error(
         `Evaluator of type ${evaluatorType} not yet supported. ` +
           "Please use a string evaluator, or implement your " +
           "evaluation logic as a custom evaluator."
+      );
+    }
+    if (!feedbackKey) {
+      throw new Error(
+        `Evaluator of type ${evaluatorType} must have an evaluationName` +
+          ` or feedbackKey. Please manually provide a feedbackKey in the EvalConfig.`
       );
     }
     return new PreparedRunEvaluator(
@@ -392,7 +392,7 @@ class LoadedEvalConfig {
   constructor(public evaluators: (RunEvaluator | DynamicRunEvaluator)[]) {}
 
   static async fromRunEvalConfig(
-    config: RunEvalConfig
+    config: RunEvalConfig<keyof EvaluatorType>
   ): Promise<LoadedEvalConfig> {
     // Custom evaluators are applied "as-is"
     const customEvaluators = (

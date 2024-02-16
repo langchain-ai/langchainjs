@@ -68,7 +68,10 @@ export function isCustomEvaluator<
 }
 
 export type RunEvalType<
-  T extends keyof EvaluatorType = keyof EvaluatorType,
+  T extends keyof EvaluatorType =
+    | "criteria"
+    | "labeled_criteria"
+    | "embedding_distance",
   U extends RunEvaluator | RunEvaluatorLike = RunEvaluator | RunEvaluatorLike
 > = T | EvalConfig | U;
 
@@ -82,7 +85,10 @@ export type RunEvalType<
  * @typeparam U - The type of custom evaluators.
  */
 export type RunEvalConfig<
-  T extends keyof EvaluatorType = keyof EvaluatorType,
+  T extends keyof EvaluatorType =
+    | "criteria"
+    | "labeled_criteria"
+    | "embedding_distance",
   U extends RunEvaluator | RunEvaluatorLike = RunEvaluator | RunEvaluatorLike
 > = {
   /**
@@ -338,9 +344,10 @@ export type EmbeddingDistance = EvalConfig &
   EmbeddingDistanceEvalChainInput & { evaluatorType: "embedding_distance" };
 
 export function EmbeddingDistance(
+  distanceMetric: EmbeddingDistanceEvalChainInput["distanceMetric"],
   config?: Pick<
     Partial<LabeledCriteria>,
-    "formatEvaluatorInputs" | "embedding" | "distanceMetric" | "feedbackKey"
+    "formatEvaluatorInputs" | "embedding" | "feedbackKey"
   >
 ): EmbeddingDistance {
   const formatEvaluatorInputs =
@@ -353,7 +360,7 @@ export function EmbeddingDistance(
   return {
     evaluatorType: "embedding_distance",
     embedding: config?.embedding,
-    distanceMetric: config?.distanceMetric,
+    distanceMetric,
     feedbackKey: config?.feedbackKey ?? "embedding_distance",
     formatEvaluatorInputs,
   };
