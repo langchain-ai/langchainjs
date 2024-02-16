@@ -691,18 +691,18 @@ const getExamplesInputs = (
 export async function runOnDataset(
   chainOrFactory: ChainOrFactory,
   datasetName: string,
-  options: RunOnDatasetParams
+  options?: RunOnDatasetParams
 ) {
   const {
     projectName,
     projectMetadata,
     client,
     maxConcurrency,
-  }: RunOnDatasetParams = options;
+  }: RunOnDatasetParams = options ?? {};
 
   const evaluationConfig =
-    options.evaluationConfig ??
-    (options.evaluators != null
+    options?.evaluationConfig ??
+    (options?.evaluators != null
       ? {
           evaluators: options.evaluators,
           formatEvaluatorInputs: options.formatEvaluatorInputs,
