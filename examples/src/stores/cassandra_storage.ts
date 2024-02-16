@@ -4,19 +4,19 @@ import { AIMessage, HumanMessage } from "@langchain/core/messages";
 // This document is the Cassandra driver connection document; the example is to AstraDB but
 // any valid Cassandra connection can be used.
 const configConnection = {
-    serviceProviderArgs: {
-      astra: {
-        token: "YOUR_TOKEN_OR_LOAD_FROM_ENV"as string,
-        endpoint: "YOUR_ENDPOINT_OR_LOAD_FROM_ENV" as string,
-      },
+  serviceProviderArgs: {
+    astra: {
+      token: "YOUR_TOKEN_OR_LOAD_FROM_ENV" as string,
+      endpoint: "YOUR_ENDPOINT_OR_LOAD_FROM_ENV" as string,
     },
-  };  
+  },
+};
 
 const store = new CassandraKVStore({
-    ...configConnection,
-    keyspace: "test", // keyspace must exist
-    table: "test_kv", // table will be created if it does not exist
-    keyDelimiter: ":", // optional, default is "/"
+  ...configConnection,
+  keyspace: "test", // keyspace must exist
+  table: "test_kv", // table will be created if it does not exist
+  keyDelimiter: ":", // optional, default is "/"
 });
 
 // Define our encoder/decoder for converting between strings and Uint8Arrays
