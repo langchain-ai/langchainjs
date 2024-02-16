@@ -1,4 +1,4 @@
-import neo4j, { Neo4jError, RoutingControl } from "neo4j-driver";
+import neo4j, { RoutingControl } from "neo4j-driver";
 
 interface Neo4jGraphConfig {
   url: string;
