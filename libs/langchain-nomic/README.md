@@ -16,7 +16,7 @@ Currently, they offer two embeddings models:
 - `nomic-embed-text-v1`
 - `nomic-embed-text-v1.5`
 
-`nomic-embed-text-v1` allows for you to customize the number of demensions returned. It defaults to the largest possible number of dimensions (768), or you can select 64, 128, 256, or 512.
+`nomic-embed-text-v1.5` allows for you to customize the number of dimensions returned. It defaults to the largest possible number of dimensions (768), or you can select 64, 128, 256, or 512.
 
 Now set the necessary environment variable (or pass it in via the constructor):
 
