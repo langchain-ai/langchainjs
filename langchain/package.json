@@ -1310,7 +1310,7 @@
     "@gomomento/sdk-core": "^1.51.1",
     "@gomomento/sdk-web": "^1.51.1",
     "@google-ai/generativelanguage": "^0.2.1",
-    "@google-cloud/storage": "^6.10.1",
+    "@google-cloud/storage": "^6.10.1 || ^7.7.0",
     "@notionhq/client": "^2.2.10",
     "@pinecone-database/pinecone": "*",
     "@supabase/supabase-js": "^2.10.0",
