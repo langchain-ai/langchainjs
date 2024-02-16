@@ -90,6 +90,10 @@ retrievers.cjs
 retrievers.js
 retrievers.d.ts
 retrievers.d.cts
+retrievers/document_compressors/base.cjs
+retrievers/document_compressors/base.js
+retrievers/document_compressors/base.d.ts
+retrievers/document_compressors/base.d.cts
 stores.cjs
 stores.js
 stores.d.ts
