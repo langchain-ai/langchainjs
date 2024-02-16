@@ -64,6 +64,11 @@ export function isCustomEvaluator<
   return !isOffTheShelfEvaluator(evaluator);
 }
 
+export type RunEvaluatorConfig<
+  T extends keyof EvaluatorType = keyof EvaluatorType,
+  U extends RunEvaluator | RunEvaluatorLike = RunEvaluator | RunEvaluatorLike
+> = T | EvalConfig | U;
+
 /**
  * Configuration class for running evaluations on datasets.
  *
@@ -78,21 +83,11 @@ export type RunEvalConfig<
   U extends RunEvaluator | RunEvaluatorLike = RunEvaluator | RunEvaluatorLike
 > = {
   /**
-   * Custom evaluators to apply to a dataset run.
-   * Each evaluator is provided with a run trace containing the model
-   * outputs, as well as an "example" object representing a record
-   * in the dataset.
-   *
-   * @deprecated Use `evaluators` instead.
-   */
-  customEvaluators?: U[];
-
-  /**
-   * LangChain evaluators to apply to a dataset run.
+   * Evaluators to apply to a dataset run.
    * You can optionally specify these by name, or by
    * configuring them with an EvalConfig object.
    */
-  evaluators?: (T | EvalConfig | U)[];
+  evaluators?: RunEvaluatorConfig<T, U>[];
 
   /**
    * Convert the evaluation data into formats that can be used by the evaluator.
@@ -120,9 +115,14 @@ export type RunEvalConfig<
   formatEvaluatorInputs?: EvaluatorInputFormatter;
 
   /**
-   * The language model specification for evaluators that require one.
+   * Custom evaluators to apply to a dataset run.
+   * Each evaluator is provided with a run trace containing the model
+   * outputs, as well as an "example" object representing a record
+   * in the dataset.
+   *
+   * @deprecated Use `evaluators` instead.
    */
-  evalLlm?: string;
+  customEvaluators?: U[];
 };
 
 export interface EvalConfig extends LoadEvaluatorOptions {

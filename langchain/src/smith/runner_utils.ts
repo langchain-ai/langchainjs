@@ -32,6 +32,7 @@ import {
   type RunEvalConfig,
   type RunEvaluatorLike,
   isCustomEvaluator,
+  RunEvaluatorConfig,
 } from "./config.js";
 import { randomName } from "./name_generation.js";
 import { ProgressBar } from "./progress.js";
@@ -337,13 +338,64 @@ class LoadedEvalConfig {
   }
 }
 
-export type RunOnDatasetParams = {
-  evaluationConfig?: RunEvalConfig;
-  projectMetadata?: Record<string, unknown>;
+export interface RunOnDatasetParams {
+  /**
+   * Evaluators to apply to a dataset run.
+   * You can optionally specify these by name, or by
+   * configuring them with an EvalConfig object.
+   */
+  evaluators?: RunEvaluatorConfig[];
+
+  /**
+   * Convert the evaluation data into formats that can be used by the evaluator.
+   * This should most commonly be a string.
+   * Parameters are the raw input from the run, the raw output, raw reference output, and the raw run.
+   * @example
+   * ```ts
+   * // Chain input: { input: "some string" }
+   * // Chain output: { output: "some output" }
+   * // Reference example output format: { output: "some reference output" }
+   * const formatEvaluatorInputs = ({
+   *   rawInput,
+   *   rawPrediction,
+   *   rawReferenceOutput,
+   * }) => {
+   *   return {
+   *     input: rawInput.input,
+   *     prediction: rawPrediction.output,
+   *     reference: rawReferenceOutput.output,
+   *   };
+   * };
+   * ```
+   * @returns The prepared data.
+   */
+  formatEvaluatorInputs?: EvaluatorInputFormatter;
+
+  /**
+   * Name of the project for logging and tracking.
+   */
   projectName?: string;
+
+  /**
+   * Additional metadata for the project.
+   */
+  projectMetadata?: Record<string, unknown>;
+
+  /**
+   * Client instance for LangSmith service interaction.
+   */
   client?: Client;
+
+  /**
+   * Maximum concurrency level for dataset processing.
+   */
   maxConcurrency?: number;
-};
+
+  /**
+   * @deprecated Pass keys directly to the RunOnDatasetParams instead
+   */
+  evaluationConfig?: RunEvalConfig;
+}
 
 /**
  * Internals expect a constructor () -> Runnable. This function wraps/coerces
@@ -358,6 +410,11 @@ const createWrappedModel = async (modelOrFactory: ChainOrFactory) => {
     return () => modelOrFactory;
   }
   if (typeof modelOrFactory === "function") {
+    if (isLangsmithTraceableFunction(modelOrFactory)) {
+      const wrappedModel = new RunnableTraceable({ func: modelOrFactory });
+      return () => wrappedModel;
+    }
+
     try {
       // If it works with no arguments, assume it's a factory
       let res = (modelOrFactory as () => Runnable)();
@@ -370,12 +427,7 @@ const createWrappedModel = async (modelOrFactory: ChainOrFactory) => {
       return modelOrFactory as () => Runnable;
     } catch (err) {
       // Otherwise, it's a custom UDF, and we'll wrap
-      // in a lambda or a traceable function
-      if (isLangsmithTraceableFunction(modelOrFactory)) {
-        const wrappedModel = new RunnableTraceable({ func: modelOrFactory });
-        return () => wrappedModel;
-      }
-
+      // the function in a lambda
       const wrappedModel = new RunnableLambda({ func: modelOrFactory });
       return () => wrappedModel;
     }
@@ -514,11 +566,11 @@ const getExamplesInputs = (
  * for evaluation.
  *
  * @param options - (Optional) Additional parameters for the evaluation process:
- *   - `evaluationConfig` (RunEvalConfig): Configuration for the evaluation, including
- *     standard and custom evaluators.
+ *   - `evaluators` (RunEvalConfig): Evaluators to apply to a dataset run.
+ *   - `formatEvaluatorInputs` (EvaluatorInputFormatter): Convert the evaluation data into formats that can be used by the evaluator.
  *   - `projectName` (string): Name of the project for logging and tracking.
  *   - `projectMetadata` (Record<string, unknown>): Additional metadata for the project.
- *   - `client` (Client): Client instance for LangChain service interaction.
+ *   - `client` (Client): Client instance for LangSmith service interaction.
  *   - `maxConcurrency` (number): Maximum concurrency level for dataset processing.
  *
  * @returns A promise that resolves to an `EvalResults` object. This object includes
@@ -557,35 +609,23 @@ const getExamplesInputs = (
 export async function runOnDataset(
   chainOrFactory: ChainOrFactory,
   datasetName: string,
-  {
-    evaluationConfig,
-    projectName,
-    projectMetadata,
-    client,
-    maxConcurrency,
-  }: RunOnDatasetParams
-): Promise<EvalResults>;
-
-export async function runOnDataset(
-  chainOrFactory: ChainOrFactory,
-  datasetName: string,
-  evaluators: RunEvalConfig["evaluators"]
-): Promise<EvalResults>;
-
-export async function runOnDataset(
-  chainOrFactory: ChainOrFactory,
-  datasetName: string,
-  options: RunOnDatasetParams | RunEvalConfig["evaluators"]
+  options: RunOnDatasetParams
 ) {
   const {
-    evaluationConfig,
     projectName,
     projectMetadata,
     client,
     maxConcurrency,
-  }: RunOnDatasetParams = Array.isArray(options)
-    ? { evaluationConfig: { evaluators: options } }
-    : options ?? {};
+  }: RunOnDatasetParams = options;
+
+  const evaluationConfig =
+    options.evaluationConfig ??
+    (options.evaluators != null
+      ? {
+          evaluators: options.evaluators,
+          formatEvaluatorInputs: options.formatEvaluatorInputs,
+        }
+      : undefined);
 
   const wrappedModel = await createWrappedModel(chainOrFactory);
   const testClient = client ?? new Client();
