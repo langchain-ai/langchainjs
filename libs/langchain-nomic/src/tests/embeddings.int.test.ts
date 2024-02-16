@@ -41,7 +41,6 @@ test("NomicEmbeddings can embed with non-default model", async () => {
   });
   const query = "hello world";
   const embeddings = await nomicEmbeddings.embedQuery(query);
-  // Different num of dimensions from default model
   expect(embeddings).toHaveLength(768);
 });
 
@@ -52,6 +51,6 @@ test("NomicEmbeddings can embed with non-default num of dimensions", async () =>
   });
   const query = "hello world";
   const embeddings = await nomicEmbeddings.embedQuery(query);
-  // Different num of dimensions from default model
+  // Different num of dimensions from default
   expect(embeddings).toHaveLength(256);
 });

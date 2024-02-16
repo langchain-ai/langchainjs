@@ -108,16 +108,11 @@ export class NomicEmbeddings
       this.stripNewLines ? texts.map((t) => t.replace(/\n/g, " ")) : texts,
       this.batchSize
     );
-    console.log("batches", batches.length);
     const batchRequests = batches.map((batch) =>
       this.embeddingWithRetry(batch)
     );
     const batchResponses = await Promise.all(batchRequests);
-    let embeddings: number[][] = [];
-    for (let i = 0; i < batchResponses.length; i += 1) {
-      const { embeddings: embeddingsRes } = batchResponses[i];
-      embeddings = embeddings.concat(embeddingsRes);
-    }
+    const embeddings = batchResponses.map(({ embeddings }) => embeddings).flat();
     return embeddings;
   }
 
@@ -144,7 +139,6 @@ export class NomicEmbeddings
   private async embeddingWithRetry(
     input: string | Array<string>
   ): Promise<NomicEmbeddingsResult> {
-    let numSuccess = 0;
     return this.caller.call(async () => {
       const res = await fetch(`${this.endpoint}/v1/embedding/text`, {
         method: "POST",
@@ -162,8 +156,6 @@ export class NomicEmbeddings
       if (!res.ok) {
         throw new Error(`Failed to generate embeddings: ${res.statusText}`);
       }
-      numSuccess += 1;
-      console.log(`Success: ${numSuccess}`);
       return res.json();
     });
   }
