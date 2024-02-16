@@ -9519,7 +9519,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/nomic@workspace:libs/langchain-nomic":
+"@langchain/nomic@workspace:*, @langchain/nomic@workspace:libs/langchain-nomic":
   version: 0.0.0-use.local
   resolution: "@langchain/nomic@workspace:libs/langchain-nomic"
   dependencies:
@@ -21145,6 +21145,7 @@ __metadata:
     "@langchain/exa": "workspace:*"
     "@langchain/google-genai": "workspace:*"
     "@langchain/mistralai": "workspace:*"
+    "@langchain/nomic": "workspace:*"
     "@langchain/openai": "workspace:*"
     "@langchain/pinecone": "workspace:*"
     "@langchain/redis": "workspace:*"
