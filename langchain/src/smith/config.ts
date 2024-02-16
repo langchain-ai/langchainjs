@@ -2,7 +2,7 @@ import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { RunnableConfig } from "@langchain/core/runnables";
 import { Example, Run } from "langsmith";
 import { EvaluationResult, RunEvaluator } from "langsmith/evaluation";
-import { Criteria } from "../evaluation/index.js";
+import { Criteria as CriteriaType } from "../evaluation/index.js";
 import { LoadEvaluatorOptions } from "../evaluation/loader.js";
 import { EvaluatorType } from "../evaluation/types.js";
 
@@ -50,6 +50,20 @@ export type RunEvaluatorLike =
       options?: { config?: RunnableConfig }
     ) => EvaluationResult);
 
+export function isOffTheShelfEvaluator<
+  T extends keyof EvaluatorType,
+  U extends RunEvaluator | RunEvaluatorLike = RunEvaluator | RunEvaluatorLike
+>(evaluator: T | EvalConfig | U): evaluator is T | EvalConfig {
+  return typeof evaluator === "string" || "evaluatorType" in evaluator;
+}
+
+export function isCustomEvaluator<
+  T extends keyof EvaluatorType,
+  U extends RunEvaluator | RunEvaluatorLike = RunEvaluator | RunEvaluatorLike
+>(evaluator: T | EvalConfig | U): evaluator is U {
+  return !isOffTheShelfEvaluator(evaluator);
+}
+
 /**
  * Configuration class for running evaluations on datasets.
  *
@@ -68,6 +82,8 @@ export type RunEvalConfig<
    * Each evaluator is provided with a run trace containing the model
    * outputs, as well as an "example" object representing a record
    * in the dataset.
+   *
+   * @deprecated Use `evaluators` instead.
    */
   customEvaluators?: U[];
 
@@ -76,7 +92,7 @@ export type RunEvalConfig<
    * You can optionally specify these by name, or by
    * configuring them with an EvalConfig object.
    */
-  evaluators?: (T | EvalConfig)[];
+  evaluators?: (T | EvalConfig | U)[];
 
   /**
    * Convert the evaluation data into formats that can be used by the evaluator.
@@ -183,7 +199,7 @@ export type CriteriaEvalChainConfig = EvalConfig & {
    * https://smith.langchain.com/hub/langchain-ai/criteria-evaluator
    * for more information.
    */
-  criteria?: Criteria | Record<string, string>;
+  criteria?: CriteriaType | Record<string, string>;
 
   /**
    * The feedback (or metric) name to use for the logged
@@ -234,7 +250,7 @@ export type LabeledCriteria = EvalConfig & {
    * https://smith.langchain.com/hub/langchain-ai/labeled-criteria
    * for more information.
    */
-  criteria?: Criteria | Record<string, string>;
+  criteria?: CriteriaType | Record<string, string>;
 
   /**
    * The feedback (or metric) name to use for the logged
@@ -248,3 +264,73 @@ export type LabeledCriteria = EvalConfig & {
    */
   llm?: BaseLanguageModel;
 };
+
+const isStringifiableValue = (
+  value: unknown
+): value is string | number | boolean | bigint =>
+  typeof value === "string" ||
+  typeof value === "number" ||
+  typeof value === "boolean" ||
+  typeof value === "bigint";
+
+const getSingleStringifiedValue = (value: unknown) => {
+  if (isStringifiableValue(value)) {
+    return `${value}`;
+  }
+
+  if (typeof value === "object" && value != null && !Array.isArray(value)) {
+    const entries = Object.entries(value);
+
+    if (entries.length === 1 && isStringifiableValue(entries[0][1])) {
+      return `${entries[0][1]}`;
+    }
+  }
+
+  console.warn("Non-stringifiable value found when coercing", value);
+  return `${value}`;
+};
+
+export function Criteria(
+  criteria: CriteriaType,
+  config?: {
+    formatEvaluatorInputs?: EvaluatorInputFormatter;
+    feedbackKey?: string;
+  }
+) {
+  const formatEvaluatorInputs =
+    config?.formatEvaluatorInputs ??
+    ((payload) => ({
+      prediction: getSingleStringifiedValue(payload.rawPrediction),
+      input: getSingleStringifiedValue(payload.rawInput),
+    }));
+
+  return {
+    evaluatorType: "criteria",
+    criteria,
+    feedbackKey: config?.feedbackKey ?? criteria,
+    formatEvaluatorInputs,
+  } satisfies EvalConfig;
+}
+
+export function LabeledCriteria(
+  criteria: CriteriaType,
+  config?: {
+    formatEvaluatorInputs?: EvaluatorInputFormatter;
+    feedbackKey?: string;
+  }
+) {
+  const formatEvaluatorInputs =
+    config?.formatEvaluatorInputs ??
+    ((payload) => ({
+      prediction: getSingleStringifiedValue(payload.rawPrediction),
+      input: getSingleStringifiedValue(payload.rawInput),
+      reference: getSingleStringifiedValue(payload.rawReferenceOutput),
+    }));
+
+  return {
+    evaluatorType: "labeled_criteria",
+    criteria,
+    feedbackKey: config?.feedbackKey ?? criteria,
+    formatEvaluatorInputs,
+  } satisfies EvalConfig;
+}

@@ -1,3 +1,7 @@
+import { ChatPromptTemplate } from "../../prompts/chat.js";
+import { RunnableSequence } from "../../runnables/base.js";
+import { RunnablePassthrough } from "../../runnables/passthrough.js";
+import { FakeStreamingLLM } from "../../utils/testing/index.js";
 import { JsonOutputParser } from "../json.js";
 
 const STREAMED_TOKENS = `
@@ -270,6 +274,51 @@ test("JSONOutputParser parses streamed JSON diff", async () => {
   const parser = new JsonOutputParser({ diff: true });
   const result = await acc(parser.transform(generator(), {}));
   expect(result).toEqual(EXPECTED_STREAMED_JSON_DIFF);
+});
+
+test("JsonOutputParser supports a type param", async () => {
+  type CypherEvaluationChainInput = {
+    question: string;
+    cypher: string;
+    schema: string;
+    errors: string[];
+  };
+
+  type CypherEvaluationChainOutput = {
+    cypher: string;
+    errors: string[];
+  };
+
+  const prompt = ChatPromptTemplate.fromTemplate(
+    `{errors} {question} {cypher} {schema}`
+  );
+  const llm = new FakeStreamingLLM({
+    responses: [`{"cypher":"testoutput","errors":["testerror"]}`],
+  });
+
+  const chain = RunnableSequence.from<
+    CypherEvaluationChainInput,
+    CypherEvaluationChainOutput
+  >([
+    RunnablePassthrough.assign<CypherEvaluationChainInput>({
+      // Convert array of strings into single string
+      errors: ({ errors }) =>
+        Array.isArray(errors) ? errors.join("\n") : errors,
+    }),
+    prompt,
+    llm,
+    new JsonOutputParser<CypherEvaluationChainOutput>(),
+  ]);
+  const result = await chain.invoke({
+    question: "test",
+    cypher: "test",
+    schema: "test",
+    errors: ["test"],
+  });
+  expect(result).toEqual({
+    cypher: "testoutput",
+    errors: ["testerror"],
+  });
 });
 
 const GOOD_JSON = `\`\`\`json

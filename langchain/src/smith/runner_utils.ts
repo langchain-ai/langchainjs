@@ -5,22 +5,33 @@ import {
   Runnable,
   RunnableConfig,
   RunnableLambda,
+  getCallbackManagerForConfig,
 } from "@langchain/core/runnables";
 import { LangChainTracer } from "@langchain/core/tracers/tracer_langchain";
 import { BaseTracer } from "@langchain/core/tracers/base";
 import { ChainValues } from "@langchain/core/utils/types";
-import { Client, Example, Feedback, Run } from "langsmith";
+import {
+  Client,
+  Example,
+  Feedback,
+  Run,
+  RunTree,
+  RunTreeConfig,
+} from "langsmith";
 import { EvaluationResult, RunEvaluator } from "langsmith/evaluation";
 import { DataType } from "langsmith/schemas";
+import type { TraceableFunction } from "langsmith/traceable";
 import { LLMStringEvaluator } from "../evaluation/base.js";
 import { loadEvaluator } from "../evaluation/loader.js";
 import { EvaluatorType } from "../evaluation/types.js";
-import type {
-  DynamicRunEvaluatorParams,
-  EvalConfig,
-  EvaluatorInputFormatter,
-  RunEvalConfig,
-  RunEvaluatorLike,
+import {
+  isOffTheShelfEvaluator,
+  type DynamicRunEvaluatorParams,
+  type EvalConfig,
+  type EvaluatorInputFormatter,
+  type RunEvalConfig,
+  type RunEvaluatorLike,
+  isCustomEvaluator,
 } from "./config.js";
 import { randomName } from "./name_generation.js";
 import { ProgressBar } from "./progress.js";
@@ -28,6 +39,7 @@ import { ProgressBar } from "./progress.js";
 export type ChainOrFactory =
   | Runnable
   | (() => Runnable)
+  | AnyTraceableFunction
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   | ((obj: any) => any)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -125,6 +137,78 @@ class DynamicRunEvaluator implements RunEvaluator {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isLLMStringEvaluator(evaluator: any): evaluator is LLMStringEvaluator {
   return evaluator && typeof evaluator.evaluateStrings === "function";
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyTraceableFunction = TraceableFunction<(...any: any[]) => any>;
+
+class RunnableTraceable<RunInput, RunOutput> extends Runnable<
+  RunInput,
+  RunOutput
+> {
+  lc_serializable = false;
+
+  lc_namespace = ["langchain_core", "runnables"];
+
+  protected func: AnyTraceableFunction;
+
+  constructor(fields: { func: AnyTraceableFunction }) {
+    super(fields);
+
+    if (!isLangsmithTraceableFunction(fields.func)) {
+      throw new Error(
+        "RunnableTraceable requires a function that is wrapped in traceable higher-order function"
+      );
+    }
+
+    this.func = fields.func;
+  }
+
+  async invoke(input: RunInput, options?: Partial<RunnableConfig>) {
+    const [config] = this._getOptionsList(options ?? {}, 1);
+    const callbackManager = await getCallbackManagerForConfig(config);
+
+    const partialConfig =
+      "langsmith:traceable" in this.func
+        ? (this.func["langsmith:traceable"] as RunTreeConfig)
+        : { name: "<lambda>" };
+
+    const runTree = new RunTree({
+      ...partialConfig,
+      parent_run: callbackManager?._parentRunId
+        ? new RunTree({ name: "<parent>", id: callbackManager?._parentRunId })
+        : undefined,
+    });
+
+    if (
+      typeof input === "object" &&
+      input != null &&
+      Object.keys(input).length === 1
+    ) {
+      if ("args" in input && Array.isArray(input)) {
+        return (await this.func(runTree, ...input)) as RunOutput;
+      }
+
+      if (
+        "input" in input &&
+        !(
+          typeof input === "object" &&
+          input != null &&
+          !Array.isArray(input) &&
+          // eslint-disable-next-line no-instanceof/no-instanceof
+          !(input instanceof Date)
+        )
+      ) {
+        try {
+          return (await this.func(runTree, input.input)) as RunOutput;
+        } catch (err) {
+          return (await this.func(runTree, input)) as RunOutput;
+        }
+      }
+    }
+
+    return (await this.func(runTree, input)) as RunOutput;
+  }
 }
 
 /**
@@ -229,7 +313,9 @@ class LoadedEvalConfig {
     config: RunEvalConfig
   ): Promise<LoadedEvalConfig> {
     // Custom evaluators are applied "as-is"
-    const customEvaluators = config?.customEvaluators?.map((evaluator) => {
+    const customEvaluators = (
+      config?.customEvaluators ?? config.evaluators?.filter(isCustomEvaluator)
+    )?.map((evaluator) => {
       if (typeof evaluator === "function") {
         return new DynamicRunEvaluator(evaluator);
       } else {
@@ -238,10 +324,12 @@ class LoadedEvalConfig {
     });
 
     const offTheShelfEvaluators = await Promise.all(
-      config?.evaluators?.map(
-        async (evaluator) =>
-          await PreparedRunEvaluator.fromEvalConfig(evaluator)
-      ) ?? []
+      config?.evaluators
+        ?.filter(isOffTheShelfEvaluator)
+        ?.map(
+          async (evaluator) =>
+            await PreparedRunEvaluator.fromEvalConfig(evaluator)
+        ) ?? []
     );
     return new LoadedEvalConfig(
       (customEvaluators ?? []).concat(offTheShelfEvaluators ?? [])
@@ -282,7 +370,12 @@ const createWrappedModel = async (modelOrFactory: ChainOrFactory) => {
       return modelOrFactory as () => Runnable;
     } catch (err) {
       // Otherwise, it's a custom UDF, and we'll wrap
-      // in a lambda
+      // in a lambda or a traceable function
+      if (isLangsmithTraceableFunction(modelOrFactory)) {
+        const wrappedModel = new RunnableTraceable({ func: modelOrFactory });
+        return () => wrappedModel;
+      }
+
       const wrappedModel = new RunnableLambda({ func: modelOrFactory });
       return () => wrappedModel;
     }
@@ -461,7 +554,7 @@ const getExamplesInputs = (
  * The function returns the evaluation results, which can be logged or further processed as needed.
  */
 
-export const runOnDataset = async (
+export async function runOnDataset(
   chainOrFactory: ChainOrFactory,
   datasetName: string,
   {
@@ -471,7 +564,29 @@ export const runOnDataset = async (
     client,
     maxConcurrency,
   }: RunOnDatasetParams
-) => {
+): Promise<EvalResults>;
+
+export async function runOnDataset(
+  chainOrFactory: ChainOrFactory,
+  datasetName: string,
+  evaluators: RunEvalConfig["evaluators"]
+): Promise<EvalResults>;
+
+export async function runOnDataset(
+  chainOrFactory: ChainOrFactory,
+  datasetName: string,
+  options: RunOnDatasetParams | RunEvalConfig["evaluators"]
+) {
+  const {
+    evaluationConfig,
+    projectName,
+    projectMetadata,
+    client,
+    maxConcurrency,
+  }: RunOnDatasetParams = Array.isArray(options)
+    ? { evaluationConfig: { evaluators: options } }
+    : options ?? {};
+
   const wrappedModel = await createWrappedModel(chainOrFactory);
   const testClient = client ?? new Client();
   const testProjectName = projectName ?? randomName();
@@ -538,4 +653,8 @@ export const runOnDataset = async (
     results: evalResults ?? {},
   };
   return results;
-};
+}
+
+function isLangsmithTraceableFunction(x: unknown): x is AnyTraceableFunction {
+  return typeof x === "function" && "langsmith:traceable" in x;
+}
