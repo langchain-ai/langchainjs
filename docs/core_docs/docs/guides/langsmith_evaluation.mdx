@@ -194,15 +194,17 @@ const notUnsure = async ({
   };
 };
 
-const evaluators: RunEvalConfig["evaluators"] = [
-  // LangChain's built-in evaluators
-  LabeledCriteria("correctness"),
-  Criteria("conciseness"),
+const evaluators: RunEvalConfig = {
+  evaluators: [
+    // LangChain's built-in evaluators
+    LabeledCriteria("correctness"),
+    Criteria("conciseness"),
 
-  // Custom evaluators can be user-defined RunEvaluator's
-  // or a compatible function
-  notUnsure,
-];
+    // Custom evaluators can be user-defined RunEvaluator's
+    // or a compatible function
+    notUnsure,
+  ],
+};
 ```
 
 For predefined evaluators passed under the `evaluators` key, the passed `formatEvaluatorInputs` formats the raw input and output from the chain and example correctly.
