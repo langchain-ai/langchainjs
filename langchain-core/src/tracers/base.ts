@@ -65,6 +65,19 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     return this;
   }
 
+  protected stringifyError(error: unknown) {
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    if (error instanceof Error) {
+      return error.message + (error?.stack ? `\n\n${error.stack}` : "");
+    }
+
+    if (typeof error === "string") {
+      return error;
+    }
+
+    return `${error}`;
+  }
+
   protected abstract persistRun(run: Run): Promise<void>;
 
   protected _addChildRun(parentRun: Run, childRun: Run) {
@@ -232,13 +245,13 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     return run;
   }
 
-  async handleLLMError(error: Error, runId: string): Promise<Run> {
+  async handleLLMError(error: unknown, runId: string): Promise<Run> {
     const run = this.runMap.get(runId);
     if (!run || run?.run_type !== "llm") {
       throw new Error("No LLM run to end.");
     }
     run.end_time = Date.now();
-    run.error = error.message;
+    run.error = this.stringifyError(error);
     run.events.push({
       name: "error",
       time: new Date(run.end_time).toISOString(),
@@ -311,7 +324,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
   }
 
   async handleChainError(
-    error: Error,
+    error: unknown,
     runId: string,
     _parentRunId?: string,
     _tags?: string[],
@@ -322,7 +335,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       throw new Error("No chain run to end.");
     }
     run.end_time = Date.now();
-    run.error = error.message + (error?.stack ? `\n\n${error.stack}` : "");
+    run.error = this.stringifyError(error);
     run.events.push({
       name: "error",
       time: new Date(run.end_time).toISOString(),
@@ -388,13 +401,13 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     return run;
   }
 
-  async handleToolError(error: Error, runId: string): Promise<Run> {
+  async handleToolError(error: unknown, runId: string): Promise<Run> {
     const run = this.runMap.get(runId);
     if (!run || run?.run_type !== "tool") {
       throw new Error("No tool run to end");
     }
     run.end_time = Date.now();
-    run.error = error.message;
+    run.error = this.stringifyError(error);
     run.events.push({
       name: "error",
       time: new Date(run.end_time).toISOString(),
@@ -489,13 +502,13 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     return run;
   }
 
-  async handleRetrieverError(error: Error, runId: string): Promise<Run> {
+  async handleRetrieverError(error: unknown, runId: string): Promise<Run> {
     const run = this.runMap.get(runId);
     if (!run || run?.run_type !== "retriever") {
       throw new Error("No retriever run to end");
     }
     run.end_time = Date.now();
-    run.error = error.message;
+    run.error = this.stringifyError(error);
     run.events.push({
       name: "error",
       time: new Date(run.end_time).toISOString(),

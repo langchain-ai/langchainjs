@@ -12,7 +12,7 @@ const chat = new ChatOpenAI({
 import { CheerioWebBaseLoader } from "langchain/document_loaders/web/cheerio";
 
 const loader = new CheerioWebBaseLoader(
-  "https://docs.smith.langchain.com/overview"
+  "https://docs.smith.langchain.com/user_guide"
 );
 
 const rawDocs = await loader.load();

@@ -107,14 +107,14 @@ export abstract class BaseChain<
     try {
       outputValues = await (fullValues.signal
         ? (Promise.race([
-            this._call(fullValues as RunInput, runManager),
+            this._call(fullValues as RunInput, runManager, config),
             new Promise((_, reject) => {
               fullValues.signal?.addEventListener("abort", () => {
                 reject(new Error("AbortError"));
               });
             }),
           ]) as Promise<RunOutput>)
-        : this._call(fullValues as RunInput, runManager));
+        : this._call(fullValues as RunInput, runManager, config));
     } catch (e) {
       await runManager?.handleChainError(e);
       throw e;
@@ -165,7 +165,8 @@ export abstract class BaseChain<
    */
   abstract _call(
     values: RunInput,
-    runManager?: CallbackManagerForChainRun
+    runManager?: CallbackManagerForChainRun,
+    config?: RunnableConfig
   ): Promise<RunOutput>;
 
   /**

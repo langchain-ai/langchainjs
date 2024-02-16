@@ -2,8 +2,10 @@ import {
   AzureAISearchVectorStore,
   AzureAISearchQueryType,
 } from "@langchain/community/vectorstores/azure_aisearch";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
-import { RetrievalQAChain } from "langchain/chains";
+import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
+import { createRetrievalChain } from "langchain/chains/retrieval";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 
@@ -49,14 +51,31 @@ console.log(resultDocuments[0].pageContent);
 */
 
 // Use the store as part of a chain
-const model = new ChatOpenAI({ modelName: "gpt-35-turbo" });
-const chain = RetrievalQAChain.fromLLM(model, store.asRetriever());
+const model = new ChatOpenAI({ modelName: "gpt-3.5-turbo-1106" });
+const questionAnsweringPrompt = ChatPromptTemplate.fromMessages([
+  [
+    "system",
+    "Answer the user's questions based on the below context:\n\n{context}",
+  ],
+  ["human", "{input}"],
+]);
+
+const combineDocsChain = await createStuffDocumentsChain({
+  llm: model,
+  prompt: questionAnsweringPrompt,
+});
+
+const chain = await createRetrievalChain({
+  retriever: store.asRetriever(),
+  combineDocsChain,
+});
+
 const response = await chain.invoke({
-  query: "What is the president's top priority regarding prices?",
+  input: "What is the president's top priority regarding prices?",
 });
 
 console.log("Chain response:");
-console.log(response.text);
+console.log(response.answer);
 /*
   The president's top priority is getting prices under control.
 */

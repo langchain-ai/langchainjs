@@ -6645,6 +6645,48 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@couchbase/couchbase-darwin-arm64-napi@npm:4.2.10":
+  version: 4.2.10
+  resolution: "@couchbase/couchbase-darwin-arm64-napi@npm:4.2.10"
+  conditions: os=darwin & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@couchbase/couchbase-darwin-x64-napi@npm:4.2.10":
+  version: 4.2.10
+  resolution: "@couchbase/couchbase-darwin-x64-napi@npm:4.2.10"
+  conditions: os=darwin & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@couchbase/couchbase-linux-arm64-napi@npm:4.2.10":
+  version: 4.2.10
+  resolution: "@couchbase/couchbase-linux-arm64-napi@npm:4.2.10"
+  conditions: os=linux & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@couchbase/couchbase-linux-x64-napi@npm:4.2.10":
+  version: 4.2.10
+  resolution: "@couchbase/couchbase-linux-x64-napi@npm:4.2.10"
+  conditions: os=linux & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@couchbase/couchbase-linuxmusl-x64-napi@npm:4.2.10":
+  version: 4.2.10
+  resolution: "@couchbase/couchbase-linuxmusl-x64-napi@npm:4.2.10"
+  conditions: os=linux & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@couchbase/couchbase-win32-x64-napi@npm:4.2.10":
+  version: 4.2.10
+  resolution: "@couchbase/couchbase-win32-x64-napi@npm:4.2.10"
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
 "@crawlee/types@npm:^3.3.0":
   version: 3.3.1
   resolution: "@crawlee/types@npm:3.3.1"
@@ -7844,6 +7886,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@firebase/app-check-interop-types@npm:0.3.0":
+  version: 0.3.0
+  resolution: "@firebase/app-check-interop-types@npm:0.3.0"
+  checksum: e8b6adfe47ea4149e7a330890ee2feca47d9c48323dd9a1a2247b63879c89fe5e8869c93ec36927639e1d7951a5b365623032f66ef8086981cf08f9504b18c2b
+  languageName: node
+  linkType: hard
+
 "@firebase/app-types@npm:0.9.0":
   version: 0.9.0
   resolution: "@firebase/app-types@npm:0.9.0"
@@ -7858,51 +7907,52 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@firebase/component@npm:0.6.4":
-  version: 0.6.4
-  resolution: "@firebase/component@npm:0.6.4"
+"@firebase/component@npm:0.6.5":
+  version: 0.6.5
+  resolution: "@firebase/component@npm:0.6.5"
   dependencies:
-    "@firebase/util": 1.9.3
+    "@firebase/util": 1.9.4
     tslib: ^2.1.0
-  checksum: 5d7006e4bc70508f16fe9297c351ca7eff29b59f7fd4cc99a6e28f93b62f422d0401d84b0ddc38a52f7125aa646c9a98d014a86afdd2c50caf178b1987f71ab6
+  checksum: d77f5b1777c8ea1366ea49a737aaae2e218878c1e2a2dc00234c1b25e5dababa41f2aa7b4d0e0d52d5274c714cb4fd6d295fc5c10e3da85bf076c7ec008339a5
   languageName: node
   linkType: hard
 
-"@firebase/database-compat@npm:^0.3.4":
-  version: 0.3.4
-  resolution: "@firebase/database-compat@npm:0.3.4"
+"@firebase/database-compat@npm:^1.0.2":
+  version: 1.0.3
+  resolution: "@firebase/database-compat@npm:1.0.3"
   dependencies:
-    "@firebase/component": 0.6.4
-    "@firebase/database": 0.14.4
-    "@firebase/database-types": 0.10.4
+    "@firebase/component": 0.6.5
+    "@firebase/database": 1.0.3
+    "@firebase/database-types": 1.0.1
     "@firebase/logger": 0.4.0
-    "@firebase/util": 1.9.3
+    "@firebase/util": 1.9.4
     tslib: ^2.1.0
-  checksum: d5162718f052de9c1c4a6f82c9d42775a2f3dc84f86230a0471eb2c5c50f02837c1bc0be11805867efa2f0798f429443a5a3b9c8670ff34514516abce28ed3f8
+  checksum: 0eea986766e3768db4f52d1856305c76c2e27dd0156eff4155846e9db044e69e81988aee1120aec9c619eac9356f86cf2cee9da3db1ef3137b9377dcb0636b5e
   languageName: node
   linkType: hard
 
-"@firebase/database-types@npm:0.10.4, @firebase/database-types@npm:^0.10.4":
-  version: 0.10.4
-  resolution: "@firebase/database-types@npm:0.10.4"
+"@firebase/database-types@npm:1.0.1, @firebase/database-types@npm:^1.0.0":
+  version: 1.0.1
+  resolution: "@firebase/database-types@npm:1.0.1"
   dependencies:
     "@firebase/app-types": 0.9.0
-    "@firebase/util": 1.9.3
-  checksum: 4fcecd212221eced0e84e4b4a3a069ed94cb9060da72472455dd509c4c490417e8929e390937d35e69a5629e4eb490c727bdc1e001ec8f43b097c0734d5715ad
+    "@firebase/util": 1.9.4
+  checksum: 261726bc5f540e8f8ef3f34319de3fe87fda5a537f6f0c760e14cf84c28e046fedae0df29b7308fe48497c1c3fdac5ace3a43fcdbc754bb5eb22d381f974cc41
   languageName: node
   linkType: hard
 
-"@firebase/database@npm:0.14.4":
-  version: 0.14.4
-  resolution: "@firebase/database@npm:0.14.4"
+"@firebase/database@npm:1.0.3":
+  version: 1.0.3
+  resolution: "@firebase/database@npm:1.0.3"
   dependencies:
+    "@firebase/app-check-interop-types": 0.3.0
     "@firebase/auth-interop-types": 0.2.1
-    "@firebase/component": 0.6.4
+    "@firebase/component": 0.6.5
     "@firebase/logger": 0.4.0
-    "@firebase/util": 1.9.3
+    "@firebase/util": 1.9.4
     faye-websocket: 0.11.4
     tslib: ^2.1.0
-  checksum: cc2f520a6b92528589781a7c9d6cbd5409cff89c80d73690903a567ef91bf701d036ef872a1e3bd1797c5a85a64d9dcbf73618973360d3d76282464f06a3ff06
+  checksum: 8e6d199fca8f9204cb4d4b5a3e5b9472c68d610385ead1fdbe8a6e27d8dcbe89bc60ea3fcf93c4f017ec2a07e58ccd0fdedfe149fa45585de841ed6784472a99
   languageName: node
   linkType: hard
 
@@ -7915,12 +7965,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@firebase/util@npm:1.9.3":
-  version: 1.9.3
-  resolution: "@firebase/util@npm:1.9.3"
+"@firebase/util@npm:1.9.4":
+  version: 1.9.4
+  resolution: "@firebase/util@npm:1.9.4"
   dependencies:
     tslib: ^2.1.0
-  checksum: b2dbd39229580df2075d102bc26a895eefdfb7ddc7bd71da6765f9ff4a61f5b67b6583e7e20676c56dc0e3f9379376fdef09a46b37b8d088b9de3eb0afbc066a
+  checksum: da3cefa7a8e8509fd00b88ed0c25ea37ac26998b41c23ab1d3a56ab91b6cd3d582145ed7ec0f0770a4479ba7602424b970e505ef82a0872cb3eed32680b3b120
   languageName: node
   linkType: hard
 
@@ -7996,25 +8046,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@google-cloud/firestore@npm:^6.6.0":
-  version: 6.6.1
-  resolution: "@google-cloud/firestore@npm:6.6.1"
+"@google-cloud/firestore@npm:^7.1.0":
+  version: 7.3.0
+  resolution: "@google-cloud/firestore@npm:7.3.0"
   dependencies:
     fast-deep-equal: ^3.1.1
     functional-red-black-tree: ^1.0.1
-    google-gax: ^3.5.7
-    protobufjs: ^7.0.0
-  checksum: 9f3838e07d74da34ba4cf322efd3f82e3b8f5b330ae01c0e51d717aacafe2a84caa2869989bbff87fe020086f5b8591baaaf8c643dc93c20fd3f6f2adfd67a24
-  languageName: node
-  linkType: hard
-
-"@google-cloud/paginator@npm:^3.0.7":
-  version: 3.0.7
-  resolution: "@google-cloud/paginator@npm:3.0.7"
-  dependencies:
-    arrify: ^2.0.0
-    extend: ^3.0.2
-  checksum: bdecce8a894a0c7f47f13d0e42b2fa142098e1dd34ce571b7216ad624057214baf9066ecf091501b3770da9d7be20b983eda30185c8c6596192cb748f8a0090c
+    google-gax: ^4.0.4
+    protobufjs: ^7.2.5
+  checksum: 6e12f011250ee6e3f8a522ab02d706af7966675b6653e77734929fce1493efc9fed90de398900228da660f4f4738ccafa2bad96f4573e8097267c67f1ab87f90
   languageName: node
   linkType: hard
 
@@ -8028,13 +8068,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@google-cloud/projectify@npm:^3.0.0":
-  version: 3.0.0
-  resolution: "@google-cloud/projectify@npm:3.0.0"
-  checksum: 4fa7ad689422b0b9c152fb00260e54e39d81678f9c51518bdb34bc57ee00604524fcdd5837fa97eb2f8ff4811afee3f345b1b0993bc4a2fa1b803bdd6554839a
-  languageName: node
-  linkType: hard
-
 "@google-cloud/projectify@npm:^4.0.0":
   version: 4.0.0
   resolution: "@google-cloud/projectify@npm:4.0.0"
@@ -8042,43 +8075,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@google-cloud/promisify@npm:^3.0.0":
-  version: 3.0.1
-  resolution: "@google-cloud/promisify@npm:3.0.1"
-  checksum: 44b4de760425d6ea328f6208c46219cfcc44383b4015c67a6b18b55b8fee5b754a11f80ed481a7d779bc471950b2b856dce51e36e8004b0d2f73a93e50d756ce
-  languageName: node
-  linkType: hard
-
 "@google-cloud/promisify@npm:^4.0.0":
   version: 4.0.0
   resolution: "@google-cloud/promisify@npm:4.0.0"
   checksum: edd189398c5ed5b7b64a373177d77c87d076a248c31b8ae878bb91e2411d89860108bcb948c349f32628973a823bd131beb53ec008fd613a8cb466ef1d89de49
-  languageName: node
-  linkType: hard
-
-"@google-cloud/storage@npm:^6.9.5":
-  version: 6.12.0
-  resolution: "@google-cloud/storage@npm:6.12.0"
-  dependencies:
-    "@google-cloud/paginator": ^3.0.7
-    "@google-cloud/projectify": ^3.0.0
-    "@google-cloud/promisify": ^3.0.0
-    abort-controller: ^3.0.0
-    async-retry: ^1.3.3
-    compressible: ^2.0.12
-    duplexify: ^4.0.0
-    ent: ^2.2.0
-    extend: ^3.0.2
-    fast-xml-parser: ^4.2.2
-    gaxios: ^5.0.0
-    google-auth-library: ^8.0.1
-    mime: ^3.0.0
-    mime-types: ^2.0.8
-    p-limit: ^3.0.1
-    retry-request: ^5.0.0
-    teeny-request: ^8.0.0
-    uuid: ^8.0.0
-  checksum: cfe44e3f4d1bacd8eeefa7885d261f421c4ff84e82abe50200b5b77e28322baf9cb67497872b9868b25b43b14197b1a155d5eb7b70afb39d3476fa4bdead3338
   languageName: node
   linkType: hard
 
@@ -8159,6 +8159,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@grpc/grpc-js@npm:~1.9.6":
+  version: 1.9.14
+  resolution: "@grpc/grpc-js@npm:1.9.14"
+  dependencies:
+    "@grpc/proto-loader": ^0.7.8
+    "@types/node": ">=12.12.47"
+  checksum: 1e0821876fc55fa1d71a674e65db6227ca398f6ff77735bd44d8d4a554fa97dcddd06e7844c3d7da37350feafd824ec88af04f0ab0e0c2e0bc8f753939935240
+  languageName: node
+  linkType: hard
+
 "@grpc/proto-loader@npm:0.7.7":
   version: 0.7.7
   resolution: "@grpc/proto-loader@npm:0.7.7"
@@ -8186,6 +8196,20 @@ __metadata:
   bin:
     proto-loader-gen-types: build/bin/proto-loader-gen-types.js
   checksum: cc42649cf65c74f627ac80b1f3ed275c4cf96dbc27728cc887e91e217c69a3bd6b94dfa7571725a94538d84735af53d35e9583cc77eb65f3c035106216cc4a1b
+  languageName: node
+  linkType: hard
+
+"@grpc/proto-loader@npm:^0.7.8":
+  version: 0.7.10
+  resolution: "@grpc/proto-loader@npm:0.7.10"
+  dependencies:
+    lodash.camelcase: ^4.3.0
+    long: ^5.0.0
+    protobufjs: ^7.2.4
+    yargs: ^17.7.2
+  bin:
+    proto-loader-gen-types: build/bin/proto-loader-gen-types.js
+  checksum: 4987e23b57942c2363b6a6a106e63efae636666cefa348778dfafef2ff72da7343c8587667521cb1d52482827bcd001dd535bdc27065110af56d9c7c176334c9
   languageName: node
   linkType: hard
 
@@ -8883,7 +8907,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/community@workspace:*, @langchain/community@workspace:libs/langchain-community, @langchain/community@~0.0.20":
+"@langchain/community@workspace:*, @langchain/community@workspace:libs/langchain-community, @langchain/community@~0.0.29":
   version: 0.0.0-use.local
   resolution: "@langchain/community@workspace:libs/langchain-community"
   dependencies:
@@ -8912,8 +8936,8 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1.16
-    "@langchain/openai": ~0.0.10
+    "@langchain/core": ~0.1.29
+    "@langchain/openai": ~0.0.14
     "@langchain/scripts": ~0.0
     "@mozilla/readability": ^0.4.4
     "@opensearch-project/opensearch": ^2.2.0
@@ -8975,7 +8999,7 @@ __metadata:
     eslint-plugin-no-instanceof: ^1.0.1
     eslint-plugin-prettier: ^4.2.1
     faiss-node: ^0.5.1
-    firebase-admin: ^11.9.0
+    firebase-admin: ^11.9.0 || ^12.0.0
     flat: ^5.0.2
     google-auth-library: ^8.9.0
     googleapis: ^126.0.1
@@ -8986,13 +9010,13 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     jsdom: ^22.1.0
-    langsmith: ~0.0.48
+    langsmith: ~0.1.1
     llmonitor: ^0.5.9
     lodash: ^4.17.21
     lunary: ^0.6.11
     mongodb: ^5.2.0
     mysql2: ^3.3.3
-    neo4j-driver: ^5.16.0
+    neo4j-driver: ^5.17.0
     node-llama-cpp: 2.7.3
     pg: ^8.11.0
     pg-copy-streams: ^6.0.5
@@ -9071,7 +9095,7 @@ __metadata:
     discord.js: ^14.14.1
     dria: ^0.0.3
     faiss-node: ^0.5.1
-    firebase-admin: ^11.9.0
+    firebase-admin: ^11.9.0 || ^12.0.0
     google-auth-library: ^8.9.0
     googleapis: ^126.0.1
     hnswlib-node: ^1.4.2
@@ -9271,7 +9295,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.1, @langchain/core@~0.1.13, @langchain/core@~0.1.16, @langchain/core@~0.1.25, @langchain/core@~0.1.5, @langchain/core@~0.1.9":
+"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.1, @langchain/core@~0.1.13, @langchain/core@~0.1.29, @langchain/core@~0.1.5, @langchain/core@~0.1.9":
   version: 0.0.0-use.local
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
@@ -9293,7 +9317,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     js-tiktoken: ^1.0.8
-    langsmith: ~0.0.48
+    langsmith: ~0.1.1
     ml-distance: ^4.0.0
     ml-matrix: ^6.10.4
     p-queue: ^6.6.2
@@ -9495,7 +9519,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai, @langchain/openai@~0.0.10, @langchain/openai@~0.0.12":
+"@langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai, @langchain/openai@~0.0.14":
   version: 0.0.0-use.local
   resolution: "@langchain/openai@workspace:libs/langchain-openai"
   dependencies:
@@ -14265,6 +14289,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/node@npm:^20.10.3":
+  version: 20.11.17
+  resolution: "@types/node@npm:20.11.17"
+  dependencies:
+    undici-types: ~5.26.4
+  checksum: 59c0dde187120adc97da30063c86511664b24b50fe777abfe1f557c217d0a0b84a68aaab5ef8ac44f5c2986b3f9cd605a15fa6e4f31195e594da96bbe9617c20
+  languageName: node
+  linkType: hard
+
 "@types/node@npm:^20.4.5":
   version: 20.4.8
   resolution: "@types/node@npm:20.4.8"
@@ -18460,6 +18493,35 @@ __metadata:
   languageName: node
   linkType: hard
 
+"couchbase@npm:^4.2.10":
+  version: 4.2.10
+  resolution: "couchbase@npm:4.2.10"
+  dependencies:
+    "@couchbase/couchbase-darwin-arm64-napi": 4.2.10
+    "@couchbase/couchbase-darwin-x64-napi": 4.2.10
+    "@couchbase/couchbase-linux-arm64-napi": 4.2.10
+    "@couchbase/couchbase-linux-x64-napi": 4.2.10
+    "@couchbase/couchbase-linuxmusl-x64-napi": 4.2.10
+    "@couchbase/couchbase-win32-x64-napi": 4.2.10
+    cmake-js: ^7.2.1
+    node-addon-api: ^7.0.0
+  dependenciesMeta:
+    "@couchbase/couchbase-darwin-arm64-napi":
+      optional: true
+    "@couchbase/couchbase-darwin-x64-napi":
+      optional: true
+    "@couchbase/couchbase-linux-arm64-napi":
+      optional: true
+    "@couchbase/couchbase-linux-x64-napi":
+      optional: true
+    "@couchbase/couchbase-linuxmusl-x64-napi":
+      optional: true
+    "@couchbase/couchbase-win32-x64-napi":
+      optional: true
+  checksum: 1cc4725c5f16c3173691a9e4f702e479df545473deac694f7a8627f58a63a92718824d018730b51a7d4d6a0a8e125b0ef5f3f81cf995a831b8a3adfa05e9ecc7
+  languageName: node
+  linkType: hard
+
 "create-langchain-integration@workspace:libs/create-langchain-integration":
   version: 0.0.0-use.local
   resolution: "create-langchain-integration@workspace:libs/create-langchain-integration"
@@ -21085,12 +21147,12 @@ __metadata:
     eslint-plugin-unused-imports: ^3.0.0
     exa-js: ^1.0.12
     faiss-node: ^0.5.1
-    firebase-admin: ^11.9.0
+    firebase-admin: ^12.0.0
     graphql: ^16.6.0
     ioredis: ^5.3.2
     js-yaml: ^4.1.0
     langchain: "workspace:*"
-    langsmith: ^0.0.59
+    langsmith: ^0.1.1
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
     pg: ^8.11.0
@@ -21424,7 +21486,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fast-xml-parser@npm:4.2.5, fast-xml-parser@npm:^4.2.2":
+"fast-xml-parser@npm:4.2.5":
   version: 4.2.5
   resolution: "fast-xml-parser@npm:4.2.5"
   dependencies:
@@ -21716,16 +21778,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"firebase-admin@npm:^11.9.0":
-  version: 11.10.1
-  resolution: "firebase-admin@npm:11.10.1"
+"firebase-admin@npm:^11.9.0 || ^12.0.0, firebase-admin@npm:^12.0.0":
+  version: 12.0.0
+  resolution: "firebase-admin@npm:12.0.0"
   dependencies:
     "@fastify/busboy": ^1.2.1
-    "@firebase/database-compat": ^0.3.4
-    "@firebase/database-types": ^0.10.4
-    "@google-cloud/firestore": ^6.6.0
-    "@google-cloud/storage": ^6.9.5
-    "@types/node": ">=12.12.47"
+    "@firebase/database-compat": ^1.0.2
+    "@firebase/database-types": ^1.0.0
+    "@google-cloud/firestore": ^7.1.0
+    "@google-cloud/storage": ^7.7.0
+    "@types/node": ^20.10.3
     jsonwebtoken: ^9.0.0
     jwks-rsa: ^3.0.1
     node-forge: ^1.3.1
@@ -21735,7 +21797,7 @@ __metadata:
       optional: true
     "@google-cloud/storage":
       optional: true
-  checksum: e0ba6795be4064b0713c83d305894b79d1543d9129e4b531ee9f299020923b36b0c3ed7509ced9fe02ca5a65f030077eee9bcfa20c29919a0996ef7e7a5caeaa
+  checksum: df3c58a91eb1f0adcb035471692d8cc8d1f0fb6f49e9a1c0d5cd5d38d25a2dde69ad3e8a46993770eebb8e05750db55d25f74ab5678b2492635a1953c8068500
   languageName: node
   linkType: hard
 
@@ -22201,16 +22263,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"gcp-metadata@npm:^5.2.0":
-  version: 5.2.0
-  resolution: "gcp-metadata@npm:5.2.0"
-  dependencies:
-    gaxios: ^5.0.0
-    json-bigint: ^1.0.0
-  checksum: 4e7ed589c814bb79cbf052b0eda1d5e219fbee030f4772eca27ec1e6e1faa85ba0ef3b17ea5c3fd51a54fc5429c924b4edbb260ac147701f211fb9807b893544
-  languageName: node
-  linkType: hard
-
 "gcp-metadata@npm:^5.3.0":
   version: 5.3.0
   resolution: "gcp-metadata@npm:5.3.0"
@@ -22628,23 +22680,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"google-auth-library@npm:^8.0.1":
-  version: 8.8.0
-  resolution: "google-auth-library@npm:8.8.0"
-  dependencies:
-    arrify: ^2.0.0
-    base64-js: ^1.3.0
-    ecdsa-sig-formatter: ^1.0.11
-    fast-text-encoding: ^1.0.0
-    gaxios: ^5.0.0
-    gcp-metadata: ^5.2.0
-    gtoken: ^6.1.0
-    jws: ^4.0.0
-    lru-cache: ^6.0.0
-  checksum: 4552805466679e258febc4c0621d401d510df267f2f105957b8925b79c1454d9a2e5d53af211dd90a1848658f608babac7f5bc2f3c536c441ba32ba3641d335d
-  languageName: node
-  linkType: hard
-
 "google-auth-library@npm:^8.0.2, google-auth-library@npm:^8.9.0":
   version: 8.9.0
   resolution: "google-auth-library@npm:8.9.0"
@@ -22677,32 +22712,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"google-gax@npm:^3.5.7":
-  version: 3.6.1
-  resolution: "google-gax@npm:3.6.1"
-  dependencies:
-    "@grpc/grpc-js": ~1.8.0
-    "@grpc/proto-loader": ^0.7.0
-    "@types/long": ^4.0.0
-    "@types/rimraf": ^3.0.2
-    abort-controller: ^3.0.0
-    duplexify: ^4.0.0
-    fast-text-encoding: ^1.0.3
-    google-auth-library: ^8.0.2
-    is-stream-ended: ^0.1.4
-    node-fetch: ^2.6.1
-    object-hash: ^3.0.0
-    proto3-json-serializer: ^1.0.0
-    protobufjs: 7.2.4
-    protobufjs-cli: 1.1.1
-    retry-request: ^5.0.0
-  bin:
-    compileProtos: build/tools/compileProtos.js
-    minifyProtoJson: build/tools/minify.js
-  checksum: 16e5fb211d75c6a4cb4d2e62adba7bbf41d160feba74fe39435a70fc31ef8ebc740af4527a2897abab39a1806d131792b2a761da432ae1b916198c9c43aab36e
-  languageName: node
-  linkType: hard
-
 "google-gax@npm:^3.5.8":
   version: 3.6.0
   resolution: "google-gax@npm:3.6.0"
@@ -22726,6 +22735,26 @@ __metadata:
     compileProtos: build/tools/compileProtos.js
     minifyProtoJson: build/tools/minify.js
   checksum: 4c7b1b5a278ffda3eaa92e7f25a9e0ea2d0a76aca704aca4baee4fe9d109916e97e83062ad751006ed93ac675a7fd74028061204fa9ed92833a853e6657a71a1
+  languageName: node
+  linkType: hard
+
+"google-gax@npm:^4.0.4":
+  version: 4.3.0
+  resolution: "google-gax@npm:4.3.0"
+  dependencies:
+    "@grpc/grpc-js": ~1.9.6
+    "@grpc/proto-loader": ^0.7.0
+    "@types/long": ^4.0.0
+    abort-controller: ^3.0.0
+    duplexify: ^4.0.0
+    google-auth-library: ^9.0.0
+    node-fetch: ^2.6.1
+    object-hash: ^3.0.0
+    proto3-json-serializer: ^2.0.0
+    protobufjs: 7.2.6
+    retry-request: ^7.0.0
+    uuid: ^9.0.1
+  checksum: 2471ab0ce4fd74bd2510eac31e7285d20879dc93df104d2fcd4b11ef3cbba8c482d63a41d8e7c7c5804ffd0bc185f902b8190ee363dfca80f4cd45c4dfcf9a57
   languageName: node
   linkType: hard
 
@@ -25725,9 +25754,9 @@ __metadata:
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^7.7.0
     "@jest/globals": ^29.5.0
-    "@langchain/community": ~0.0.20
-    "@langchain/core": ~0.1.25
-    "@langchain/openai": ~0.0.12
+    "@langchain/community": ~0.0.29
+    "@langchain/core": ~0.1.29
+    "@langchain/openai": ~0.0.14
     "@langchain/scripts": ~0.0
     "@notionhq/client": ^2.2.10
     "@pinecone-database/pinecone": ^1.1.0
@@ -25755,6 +25784,7 @@ __metadata:
     cheerio: ^1.0.0-rc.12
     chromadb: ^1.5.3
     convex: ^1.3.1
+    couchbase: ^4.2.10
     d3-dsv: ^2.0.0
     dotenv: ^16.0.3
     dpdm: ^3.12.0
@@ -25779,8 +25809,8 @@ __metadata:
     js-yaml: ^4.1.0
     jsdom: ^22.1.0
     jsonpointer: ^5.0.1
-    langchainhub: ~0.0.6
-    langsmith: ~0.0.59
+    langchainhub: ~0.0.8
+    langsmith: ~0.1.1
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
@@ -25837,6 +25867,7 @@ __metadata:
     cheerio: ^1.0.0-rc.12
     chromadb: "*"
     convex: ^1.3.1
+    couchbase: ^4.2.10
     d3-dsv: ^2.0.0
     epub2: ^3.0.1
     fast-xml-parser: ^4.2.7
@@ -25909,6 +25940,8 @@ __metadata:
       optional: true
     convex:
       optional: true
+    couchbase:
+      optional: true
     d3-dsv:
       optional: true
     epub2:
@@ -25972,10 +26005,10 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langchainhub@npm:~0.0.6":
-  version: 0.0.6
-  resolution: "langchainhub@npm:0.0.6"
-  checksum: f771e5375b7ae9cc6fc59d5e2b1fd35c29e5759f4595617e3a235142bc2ca12c4135aa1631d85ee4e25c89968696242dd6380f6b90e87ffbc9006efc3cdc53c4
+"langchainhub@npm:~0.0.8":
+  version: 0.0.8
+  resolution: "langchainhub@npm:0.0.8"
+  checksum: b46316adbbd5f1971892b423e6a7e9c7681f4c44e4ac3c3b79c6beef96a28fc9582a4ee14affb617fd887f3dac8cae55368e1b7c4a41bb43f86f17c5d63031e3
   languageName: node
   linkType: hard
 
@@ -25996,9 +26029,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langsmith@npm:^0.0.59":
-  version: 0.0.59
-  resolution: "langsmith@npm:0.0.59"
+"langsmith@npm:^0.1.1, langsmith@npm:~0.1.1":
+  version: 0.1.1
+  resolution: "langsmith@npm:0.1.1"
   dependencies:
     "@types/uuid": ^9.0.1
     commander: ^10.0.1
@@ -26007,37 +26040,7 @@ __metadata:
     uuid: ^9.0.0
   bin:
     langsmith: dist/cli/main.cjs
-  checksum: 7a628fd843e6eff31b81d8c52033c4b1fde912e0a13b632bf5efe3a4c24d5074b58140e1a2c3a4230ef986a97b25c7e50cc6509efc88e9d07bd50f2efb85db42
-  languageName: node
-  linkType: hard
-
-"langsmith@npm:~0.0.48":
-  version: 0.0.48
-  resolution: "langsmith@npm:0.0.48"
-  dependencies:
-    "@types/uuid": ^9.0.1
-    commander: ^10.0.1
-    p-queue: ^6.6.2
-    p-retry: 4
-    uuid: ^9.0.0
-  bin:
-    langsmith: dist/cli/main.cjs
-  checksum: 2552c1a8549eab8e03a5530e73ce37ad0e147ca3084edbfd56b7a29b92c7c5579e5c1e53222bfb846b5ee8219d8d80cc9a7cc07e78717e95cdefedb95d76cd86
-  languageName: node
-  linkType: hard
-
-"langsmith@npm:~0.0.59":
-  version: 0.0.63
-  resolution: "langsmith@npm:0.0.63"
-  dependencies:
-    "@types/uuid": ^9.0.1
-    commander: ^10.0.1
-    p-queue: ^6.6.2
-    p-retry: 4
-    uuid: ^9.0.0
-  bin:
-    langsmith: dist/cli/main.cjs
-  checksum: aeab97f033dc099f4946418f5f7c99f0107a9fab1838e78acb52dc87aa4b4fc2f0f9a0aacb6f37a8131d1cf800e175e2af6696b910b8492b3b67d6a564ac59cb
+  checksum: e0283c242edcf25822fe1a1d33ffb80301f5575e60153879972c5dbdaba3873ef460f874e7186be0908edc83b80f6167236415dd1d4cf21f5e5bbb30383699aa
   languageName: node
   linkType: hard
 
@@ -27581,32 +27584,32 @@ __metadata:
   languageName: node
   linkType: hard
 
-"neo4j-driver-bolt-connection@npm:5.16.0":
-  version: 5.16.0
-  resolution: "neo4j-driver-bolt-connection@npm:5.16.0"
+"neo4j-driver-bolt-connection@npm:5.17.0":
+  version: 5.17.0
+  resolution: "neo4j-driver-bolt-connection@npm:5.17.0"
   dependencies:
     buffer: ^6.0.3
-    neo4j-driver-core: 5.16.0
+    neo4j-driver-core: 5.17.0
     string_decoder: ^1.3.0
-  checksum: ddf5337fba3bd31b5909c1ab351d57df3b51d971786ba262d53ba38e89c4204d78cf7401527814e0ea6541dea26d21b54627e17fed4b9e78e2ee31f46b3deaf3
+  checksum: 778b7df9e6bc0bb29da98cea3b7dbd0407b652466c13d0fb657c7a4d8f11f99ba2704cc3d0a29b43edc298431a65be93ead834c30a57872df6518c0fe25d4834
   languageName: node
   linkType: hard
 
-"neo4j-driver-core@npm:5.16.0":
-  version: 5.16.0
-  resolution: "neo4j-driver-core@npm:5.16.0"
-  checksum: 58c33ea0121bdbd4d541c1967998fae1b07a092a8b83438c78567dd008f79ab3401a97824c9ccb721bb25c9ff65485521bb0a1b33fa75e3464a5b6324e65d593
+"neo4j-driver-core@npm:5.17.0":
+  version: 5.17.0
+  resolution: "neo4j-driver-core@npm:5.17.0"
+  checksum: b441ba5349878934755c29bde7aac8ce5d8c23c403473902c15009cd8a4d727d0693529828721168de35a4bf43e7dff8cfd6e8c334cc8d37ac2385bc6d150086
   languageName: node
   linkType: hard
 
-"neo4j-driver@npm:^5.16.0":
-  version: 5.16.0
-  resolution: "neo4j-driver@npm:5.16.0"
+"neo4j-driver@npm:^5.17.0":
+  version: 5.17.0
+  resolution: "neo4j-driver@npm:5.17.0"
   dependencies:
-    neo4j-driver-bolt-connection: 5.16.0
-    neo4j-driver-core: 5.16.0
+    neo4j-driver-bolt-connection: 5.17.0
+    neo4j-driver-core: 5.17.0
     rxjs: ^7.8.1
-  checksum: ac6beea48043a379149132514fbabcd8ce2604c2e8237fdd60729244834a9ce45f5379aa6ca4fb93f008beaed9c3c4414e7087cd5b9d1e9c3397715fb74aa9e3
+  checksum: 655c5a8279e74a7c2e6085ea152ba2c83fd0dcd4c9badd40f14eb32d2da5fbc39881a730682de77c5a0bdb8b607cf240b3730263d902bfb0bc163fcc76e91257
   languageName: node
   linkType: hard
 
@@ -30128,6 +30131,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"proto3-json-serializer@npm:^2.0.0":
+  version: 2.0.1
+  resolution: "proto3-json-serializer@npm:2.0.1"
+  dependencies:
+    protobufjs: ^7.2.5
+  checksum: dfdb30f1453af356224c60c7106f9211167f142c1310696a24beb7d69c498ad15e6e0cc64e5a9585d1a24787a0be59a0662b6e673727a715f36622dc3a31abf5
+  languageName: node
+  linkType: hard
+
 "protobufjs-cli@npm:1.1.1":
   version: 1.1.1
   resolution: "protobufjs-cli@npm:1.1.1"
@@ -30188,6 +30200,26 @@ __metadata:
     "@types/node": ">=13.7.0"
     long: ^5.0.0
   checksum: a952cdf2a5e5250c16ae651b570849b6f5b20a5475c3eef63ffb290ad239aa2916adfc1cc676f7fc93c69f48113df268761c0c246f7f023118c85bdd1a170044
+  languageName: node
+  linkType: hard
+
+"protobufjs@npm:7.2.6, protobufjs@npm:^7.2.4, protobufjs@npm:^7.2.5":
+  version: 7.2.6
+  resolution: "protobufjs@npm:7.2.6"
+  dependencies:
+    "@protobufjs/aspromise": ^1.1.2
+    "@protobufjs/base64": ^1.1.2
+    "@protobufjs/codegen": ^2.0.4
+    "@protobufjs/eventemitter": ^1.1.0
+    "@protobufjs/fetch": ^1.1.0
+    "@protobufjs/float": ^1.0.2
+    "@protobufjs/inquire": ^1.1.0
+    "@protobufjs/path": ^1.1.2
+    "@protobufjs/pool": ^1.1.0
+    "@protobufjs/utf8": ^1.1.0
+    "@types/node": ">=13.7.0"
+    long: ^5.0.0
+  checksum: 3c62e48f7d50017ac3b0dcd2a58e617cf858f9fba56a488bd48b9aa3482893a75540052dbcb3c12dfbaab42b1d04964611175faf06bdadcd33a4ebac982a511e
   languageName: node
   linkType: hard
 
@@ -33242,19 +33274,6 @@ __metadata:
     mkdirp: ^1.0.3
     yallist: ^4.0.0
   checksum: db4d9fe74a2082c3a5016630092c54c8375ff3b280186938cfd104f2e089c4fd9bad58688ef6be9cf186a889671bf355c7cda38f09bbf60604b281715ca57f5c
-  languageName: node
-  linkType: hard
-
-"teeny-request@npm:^8.0.0":
-  version: 8.0.3
-  resolution: "teeny-request@npm:8.0.3"
-  dependencies:
-    http-proxy-agent: ^5.0.0
-    https-proxy-agent: ^5.0.0
-    node-fetch: ^2.6.1
-    stream-events: ^1.0.5
-    uuid: ^9.0.0
-  checksum: 6682a14df3708068db147c91af5f2b2e097e2e53c03dddaef40f6f974297f2da9e6112c615af9fbc84a1685c6846b8a9e485771d1a350aa25e9ff5fcf63dd821
   languageName: node
   linkType: hard
 
