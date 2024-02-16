@@ -80,7 +80,12 @@ export class AzureBlobStorageFileLoader extends BaseDocumentLoader {
 
     try {
       const blobServiceClient = BlobServiceClient.fromConnectionString(
-        this.connectionString
+        this.connectionString,
+        {
+          userAgentOptions: {
+            userAgentPrefix: "langchainjs-blob-storage-file",
+          },
+        }
       );
 
       const containerClient = blobServiceClient.getContainerClient(
