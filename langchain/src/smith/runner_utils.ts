@@ -32,7 +32,6 @@ import {
   type RunEvalConfig,
   type RunEvaluatorLike,
   isCustomEvaluator,
-  RunEvaluatorConfig,
 } from "./config.js";
 import { randomName } from "./name_generation.js";
 import { ProgressBar } from "./progress.js";
@@ -337,7 +336,7 @@ class PreparedRunEvaluator implements RunEvaluator {
       throw new Error(
         `Evaluator of type ${evaluatorType} not yet supported. ` +
           "Please use a string evaluator, or implement your " +
-          "evaluation logic as a customEvaluator."
+          "evaluation logic as a custom evaluator."
       );
     }
     return new PreparedRunEvaluator(
@@ -384,7 +383,7 @@ class PreparedRunEvaluator implements RunEvaluator {
     throw new Error(
       "Evaluator not yet supported. " +
         "Please use a string evaluator, or implement your " +
-        "evaluation logic as a customEvaluator."
+        "evaluation logic as a custom evaluator."
     );
   }
 }
@@ -420,39 +419,8 @@ class LoadedEvalConfig {
   }
 }
 
-export interface RunOnDatasetParams {
-  /**
-   * Evaluators to apply to a dataset run.
-   * You can optionally specify these by name, or by
-   * configuring them with an EvalConfig object.
-   */
-  evaluators?: RunEvaluatorConfig[];
-
-  /**
-   * Convert the evaluation data into formats that can be used by the evaluator.
-   * This should most commonly be a string.
-   * Parameters are the raw input from the run, the raw output, raw reference output, and the raw run.
-   * @example
-   * ```ts
-   * // Chain input: { input: "some string" }
-   * // Chain output: { output: "some output" }
-   * // Reference example output format: { output: "some reference output" }
-   * const formatEvaluatorInputs = ({
-   *   rawInput,
-   *   rawPrediction,
-   *   rawReferenceOutput,
-   * }) => {
-   *   return {
-   *     input: rawInput.input,
-   *     prediction: rawPrediction.output,
-   *     reference: rawReferenceOutput.output,
-   *   };
-   * };
-   * ```
-   * @returns The prepared data.
-   */
-  formatEvaluatorInputs?: EvaluatorInputFormatter;
-
+export interface RunOnDatasetParams
+  extends Omit<RunEvalConfig, "customEvaluators"> {
   /**
    * Name of the project for logging and tracking.
    */
@@ -648,7 +616,7 @@ const getExamplesInputs = (
  * for evaluation.
  *
  * @param options - (Optional) Additional parameters for the evaluation process:
- *   - `evaluators` (RunEvalConfig): Evaluators to apply to a dataset run.
+ *   - `evaluators` (RunEvalType[]): Evaluators to apply to a dataset run.
  *   - `formatEvaluatorInputs` (EvaluatorInputFormatter): Convert the evaluation data into formats that can be used by the evaluator.
  *   - `projectName` (string): Name of the project for logging and tracking.
  *   - `projectMetadata` (Record<string, unknown>): Additional metadata for the project.
@@ -667,13 +635,8 @@ const getExamplesInputs = (
  *   const datasetName = 'example-dataset';
  *   const client = new Client(/* ...config... *\//);
  *
- *   const evaluationConfig = {
- *     evaluators: [/* ...evaluators... *\//],
- *     customEvaluators: [/* ...custom evaluators... *\//],
- *   };
- *
  *   const results = await runOnDataset(chain, datasetName, {
- *     evaluationConfig,
+ *     evaluators: [/* ...evaluators... *\//],
  *     client,
  *   });
  *
@@ -683,7 +646,7 @@ const getExamplesInputs = (
  * evaluateModel();
  * ```
  * In this example, `runOnDataset` is used to evaluate a language model (or a chain of models) against
- * a dataset named 'example-dataset'. The evaluation process is configured using `RunEvalConfig`, which can
+ * a dataset named 'example-dataset'. The evaluation process is configured using `RunOnDatasetParams["evaluators"]`, which can
  * include both standard and custom evaluators. The `Client` instance is used to interact with LangChain services.
  * The function returns the evaluation results, which can be logged or further processed as needed.
  */
@@ -700,7 +663,7 @@ export async function runOnDataset(
     maxConcurrency,
   }: RunOnDatasetParams = options ?? {};
 
-  const evaluationConfig =
+  const evaluationConfig: RunEvalConfig | undefined =
     options?.evaluationConfig ??
     (options?.evaluators != null
       ? {

@@ -64,7 +64,7 @@ export function isCustomEvaluator<
   return !isOffTheShelfEvaluator(evaluator);
 }
 
-export type RunEvaluatorConfig<
+export type RunEvalType<
   T extends keyof EvaluatorType = keyof EvaluatorType,
   U extends RunEvaluator | RunEvaluatorLike = RunEvaluator | RunEvaluatorLike
 > = T | EvalConfig | U;
@@ -87,7 +87,7 @@ export type RunEvalConfig<
    * You can optionally specify these by name, or by
    * configuring them with an EvalConfig object.
    */
-  evaluators?: RunEvaluatorConfig<T, U>[];
+  evaluators?: RunEvalType<T, U>[];
 
   /**
    * Convert the evaluation data into formats that can be used by the evaluator.
