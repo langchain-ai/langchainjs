@@ -59,7 +59,12 @@ export class AzureBlobStorageContainerLoader extends BaseDocumentLoader {
    */
   public async load() {
     const blobServiceClient = BlobServiceClient.fromConnectionString(
-      this.connectionString
+      this.connectionString,
+      {
+        userAgentOptions: {
+          userAgentPrefix: "langchainjs-blob-storage-container",
+        },
+      }
     );
 
     const containerClient = blobServiceClient.getContainerClient(
