@@ -148,7 +148,7 @@
     "lunary": "^0.6.11",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
-    "neo4j-driver": "^5.16.0",
+    "neo4j-driver": "^5.17.0",
     "node-llama-cpp": "2.7.3",
     "pg": "^8.11.0",
     "pg-copy-streams": "^6.0.5",

@@ -9065,7 +9065,7 @@ __metadata:
     lunary: ^0.6.11
     mongodb: ^5.2.0
     mysql2: ^3.3.3
-    neo4j-driver: ^5.16.0
+    neo4j-driver: ^5.17.0
     node-llama-cpp: 2.7.3
     pg: ^8.11.0
     pg-copy-streams: ^6.0.5
@@ -27660,32 +27660,32 @@ __metadata:
   languageName: node
   linkType: hard
 
-"neo4j-driver-bolt-connection@npm:5.16.0":
-  version: 5.16.0
-  resolution: "neo4j-driver-bolt-connection@npm:5.16.0"
+"neo4j-driver-bolt-connection@npm:5.17.0":
+  version: 5.17.0
+  resolution: "neo4j-driver-bolt-connection@npm:5.17.0"
   dependencies:
     buffer: ^6.0.3
-    neo4j-driver-core: 5.16.0
+    neo4j-driver-core: 5.17.0
     string_decoder: ^1.3.0
-  checksum: ddf5337fba3bd31b5909c1ab351d57df3b51d971786ba262d53ba38e89c4204d78cf7401527814e0ea6541dea26d21b54627e17fed4b9e78e2ee31f46b3deaf3
+  checksum: 778b7df9e6bc0bb29da98cea3b7dbd0407b652466c13d0fb657c7a4d8f11f99ba2704cc3d0a29b43edc298431a65be93ead834c30a57872df6518c0fe25d4834
   languageName: node
   linkType: hard
 
-"neo4j-driver-core@npm:5.16.0":
-  version: 5.16.0
-  resolution: "neo4j-driver-core@npm:5.16.0"
-  checksum: 58c33ea0121bdbd4d541c1967998fae1b07a092a8b83438c78567dd008f79ab3401a97824c9ccb721bb25c9ff65485521bb0a1b33fa75e3464a5b6324e65d593
+"neo4j-driver-core@npm:5.17.0":
+  version: 5.17.0
+  resolution: "neo4j-driver-core@npm:5.17.0"
+  checksum: b441ba5349878934755c29bde7aac8ce5d8c23c403473902c15009cd8a4d727d0693529828721168de35a4bf43e7dff8cfd6e8c334cc8d37ac2385bc6d150086
   languageName: node
   linkType: hard
 
-"neo4j-driver@npm:^5.16.0":
-  version: 5.16.0
-  resolution: "neo4j-driver@npm:5.16.0"
+"neo4j-driver@npm:^5.17.0":
+  version: 5.17.0
+  resolution: "neo4j-driver@npm:5.17.0"
   dependencies:
-    neo4j-driver-bolt-connection: 5.16.0
-    neo4j-driver-core: 5.16.0
+    neo4j-driver-bolt-connection: 5.17.0
+    neo4j-driver-core: 5.17.0
     rxjs: ^7.8.1
-  checksum: ac6beea48043a379149132514fbabcd8ce2604c2e8237fdd60729244834a9ce45f5379aa6ca4fb93f008beaed9c3c4414e7087cd5b9d1e9c3397715fb74aa9e3
+  checksum: 655c5a8279e74a7c2e6085ea152ba2c83fd0dcd4c9badd40f14eb32d2da5fbc39881a730682de77c5a0bdb8b607cf240b3730263d902bfb0bc163fcc76e91257
   languageName: node
   linkType: hard
 
