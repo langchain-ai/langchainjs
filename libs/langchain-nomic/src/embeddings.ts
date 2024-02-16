@@ -108,7 +108,7 @@ export class NomicEmbeddings
       this.stripNewLines ? texts.map((t) => t.replace(/\n/g, " ")) : texts,
       this.batchSize
     );
-    console.log("batches", batches.length)
+    console.log("batches", batches.length);
     const batchRequests = batches.map((batch) =>
       this.embeddingWithRetry(batch)
     );
@@ -163,7 +163,7 @@ export class NomicEmbeddings
         throw new Error(`Failed to generate embeddings: ${res.statusText}`);
       }
       numSuccess += 1;
-      console.log(`Success: ${numSuccess}`)
+      console.log(`Success: ${numSuccess}`);
       return res.json();
     });
   }
