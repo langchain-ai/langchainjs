@@ -4,7 +4,11 @@ import {
   ToolInputParsingException,
   Tool,
 } from "@langchain/core/tools";
-import { Runnable, type RunnableConfig } from "@langchain/core/runnables";
+import {
+  Runnable,
+  type RunnableConfig,
+  patchConfig,
+} from "@langchain/core/runnables";
 import { AgentAction, AgentFinish, AgentStep } from "@langchain/core/agents";
 import { ChainValues } from "@langchain/core/utils/types";
 import {
@@ -428,7 +432,8 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
   /** @ignore */
   async _call(
     inputs: ChainValues,
-    runManager?: CallbackManagerForChainRun
+    runManager?: CallbackManagerForChainRun,
+    config?: RunnableConfig
   ): Promise<AgentExecutorOutput> {
     const toolsByName = Object.fromEntries(
       this.tools.map((t) => [t.name.toLowerCase(), t])
@@ -511,7 +516,10 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
           let observation;
           try {
             observation = tool
-              ? await tool.call(action.toolInput, runManager?.getChild())
+              ? await tool.invoke(
+                  action.toolInput,
+                  patchConfig(config, { callbacks: runManager?.getChild() })
+                )
               : `${action.tool} is not a valid tool, try another one.`;
           } catch (e) {
             // eslint-disable-next-line no-instanceof/no-instanceof
