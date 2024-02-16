@@ -108,11 +108,15 @@ export class Neo4jGraph {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async query<RecordShape extends Record<string, any> = Record<string, any>>(query: string, params: Record<string, any> = {}, routing: RoutingControl = neo4j.routing.WRITE): Promise<RecordShape[] | undefined> {
+  async query<RecordShape extends Record<string, any> = Record<string, any>>(
+    query: string,
+    params: Record<string, any> = {},
+    routing: RoutingControl = neo4j.routing.WRITE
+  ): Promise<RecordShape[] | undefined> {
     const result = await this.driver.executeQuery<RecordShape>(query, params, {
       database: this.database,
       routing,
-      transactionConfig: { timeout: this.timeoutMs,  },
+      transactionConfig: { timeout: this.timeoutMs },
     });
     return toObjects<RecordShape>(result.records);
   }
@@ -208,7 +212,9 @@ export class Neo4jGraph {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function toObjects<RecordShape extends Record<string, any> = Record<string, any>>(records: neo4j.Record<RecordShape>): RecordShape[] {
+function toObjects<
+  RecordShape extends Record<string, any> = Record<string, any>
+>(records: neo4j.Record<RecordShape>): RecordShape[] {
   return records.map((record) => {
     const rObj = record.toObject();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
