@@ -7,7 +7,7 @@ on:
   push:
     branches: ["main"]
   pull_request:
-    # Do not run this workflow if only docs changed.
+    # Only run if examples, langchain, core, or integration package code changes.
     paths:
       - 'examples/**'
       - 'langchain/**'
