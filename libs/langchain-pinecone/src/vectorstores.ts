@@ -99,6 +99,7 @@ export class PineconeStore extends VectorStore {
 
   /**
    * Method that adds vectors to the Pinecone database.
+   * 
    * @param vectors Array of vectors to add to the Pinecone database.
    * @param documents Array of documents associated with the vectors.
    * @param options Optional ids for the vectors.

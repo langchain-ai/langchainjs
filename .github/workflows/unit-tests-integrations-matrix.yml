@@ -19,7 +19,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -34,12 +33,13 @@ jobs:
 
       - name: Determine changed folders
         id: changed_folders
-        run: echo "::set-output name=folders::$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^libs/' | cut -d'/' -f2 | sort -u)"
+        run: |
+          FOLDERS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^libs/' | cut -d'/' -f2 | sort -u | tr '\n' ' ')
+          echo "folders=$FOLDERS" >> $GITHUB_OUTPUT
 
       - name: Run commands for changed folders
         run: |
           for folder in ${{ steps.changed_folders.outputs.folders }}; do
-            # Run commands with folder variable
             echo "Running commands for folder $folder"
-            # Example: cd $folder && npm install && npm test
+            # Example: cd libs/$folder && npm install && npm test
           done
