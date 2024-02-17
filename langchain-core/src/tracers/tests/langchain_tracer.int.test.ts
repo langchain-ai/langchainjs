@@ -2,7 +2,7 @@
 import * as uuid from "uuid";
 import { test } from "@jest/globals";
 
-import { LangChainTracer } from "../tracer_langchain.js";
+import { LangChainTracer, Run } from "../tracer_langchain.js";
 import { Serialized } from "../../load/serializable.js";
 import { HumanMessage } from "../../messages/index.js";
 
@@ -40,4 +40,38 @@ test("LangChain V2 tracer does not throw errors for its methods", async () => {
   const llmRunId3 = uuid.v4();
   await tracer.handleLLMStart(serialized, ["test"], llmRunId3);
   await tracer.handleLLMEnd({ generations: [[]] }, llmRunId3);
+});
+
+class FakeTracer extends LangChainTracer {
+  createOperations: { [id: string]: Run } = {};
+
+  updateOperations: { [id: string]: Run } = {};
+
+  async onRunCreate(run: Run): Promise<void> {
+    this.createOperations[run.id] = run;
+  }
+
+  async onRunUpdate(run: Run): Promise<void> {
+    this.updateOperations[run.id] = run;
+  }
+}
+
+test("LangChain V2 tracer creates and updates runs with trace_id and dotted_order", async () => {
+  const tracer = new FakeTracer({
+    projectName: `JS Int Test - ${uuid.v4()}`,
+  });
+  const chainRunId = uuid.v4();
+  const llmRunId = uuid.v4();
+  await tracer.handleChainStart(serialized, { foo: "bar" }, chainRunId);
+
+  await tracer.handleLLMStart(serialized, ["test"], llmRunId, chainRunId);
+  await tracer.handleLLMEnd({ generations: [[]] }, llmRunId);
+  await tracer.handleChainEnd({ foo: "bar" }, chainRunId);
+
+  expect(tracer.createOperations[chainRunId].trace_id).toBeDefined();
+  expect(tracer.createOperations[chainRunId].trace_id).toEqual(chainRunId);
+  expect(tracer.createOperations[chainRunId].dotted_order).toBeDefined();
+  expect(tracer.updateOperations[llmRunId].trace_id).toBeDefined();
+  expect(tracer.updateOperations[llmRunId].trace_id).toEqual(chainRunId);
+  expect(tracer.updateOperations[llmRunId].dotted_order).toBeDefined();
 });

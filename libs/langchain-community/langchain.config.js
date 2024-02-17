@@ -182,6 +182,7 @@ export const config = {
     "document_transformers/mozilla_readability":
       "document_transformers/mozilla_readability",
     // storage
+    "storage/cassandra": "storage/cassandra",
     "storage/convex": "storage/convex",
     "storage/ioredis": "storage/ioredis",
     "storage/upstash_redis": "storage/upstash_redis",
@@ -316,6 +317,7 @@ export const config = {
     "document_transformers/html_to_text",
     "document_transformers/mozilla_readability",
     // storage
+    "storage/cassandra",
     "storage/convex",
     "storage/ioredis",
     "storage/upstash_redis",
@@ -337,7 +339,9 @@ export const config = {
     // memory
     "memory/motorhead_memory",
     "memory/zep",
+    // utils
     "util/convex",
+    "utils/cassandra",
     // indexes
     "indexes/postgres",
     "indexes/sqlite",

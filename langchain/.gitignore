@@ -602,6 +602,10 @@ document_loaders/web/confluence.cjs
 document_loaders/web/confluence.js
 document_loaders/web/confluence.d.ts
 document_loaders/web/confluence.d.cts
+document_loaders/web/couchbase.cjs
+document_loaders/web/couchbase.js
+document_loaders/web/couchbase.d.ts
+document_loaders/web/couchbase.d.cts
 document_loaders/web/searchapi.cjs
 document_loaders/web/searchapi.js
 document_loaders/web/searchapi.d.ts

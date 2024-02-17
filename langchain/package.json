@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.1.17",
+  "version": "0.1.20",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -614,6 +614,10 @@
     "document_loaders/web/confluence.js",
     "document_loaders/web/confluence.d.ts",
     "document_loaders/web/confluence.d.cts",
+    "document_loaders/web/couchbase.cjs",
+    "document_loaders/web/couchbase.js",
+    "document_loaders/web/couchbase.d.ts",
+    "document_loaders/web/couchbase.d.cts",
     "document_loaders/web/searchapi.cjs",
     "document_loaders/web/searchapi.js",
     "document_loaders/web/searchapi.d.ts",
@@ -1219,7 +1223,7 @@
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
     "@google-ai/generativelanguage": "^0.2.1",
-    "@google-cloud/storage": "^6.10.1",
+    "@google-cloud/storage": "^7.7.0",
     "@jest/globals": "^29.5.0",
     "@langchain/scripts": "~0.0",
     "@notionhq/client": "^2.2.10",
@@ -1247,6 +1251,7 @@
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.5.3",
     "convex": "^1.3.1",
+    "couchbase": "^4.2.10",
     "d3-dsv": "^2.0.0",
     "dotenv": "^16.0.3",
     "dpdm": "^3.12.0",
@@ -1305,7 +1310,7 @@
     "@gomomento/sdk-core": "^1.51.1",
     "@gomomento/sdk-web": "^1.51.1",
     "@google-ai/generativelanguage": "^0.2.1",
-    "@google-cloud/storage": "^6.10.1",
+    "@google-cloud/storage": "^6.10.1 || ^7.7.0",
     "@notionhq/client": "^2.2.10",
     "@pinecone-database/pinecone": "*",
     "@supabase/supabase-js": "^2.10.0",
@@ -1317,6 +1322,7 @@
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "*",
     "convex": "^1.3.1",
+    "couchbase": "^4.2.10",
     "d3-dsv": "^2.0.0",
     "epub2": "^3.0.1",
     "fast-xml-parser": "^4.2.7",
@@ -1409,6 +1415,9 @@
       "optional": true
     },
     "convex": {
+      "optional": true
+    },
+    "couchbase": {
       "optional": true
     },
     "d3-dsv": {
@@ -1504,16 +1513,16 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.9.1",
-    "@langchain/community": "~0.0.20",
-    "@langchain/core": "~0.1.25",
-    "@langchain/openai": "~0.0.12",
+    "@langchain/community": "~0.0.29",
+    "@langchain/core": "~0.1.29",
+    "@langchain/openai": "~0.0.14",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
     "js-tiktoken": "^1.0.7",
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
-    "langchainhub": "~0.0.6",
-    "langsmith": "~0.0.59",
+    "langchainhub": "~0.0.8",
+    "langsmith": "~0.1.1",
     "ml-distance": "^4.0.0",
     "openapi-types": "^12.1.3",
     "p-retry": "4",
@@ -2898,6 +2907,15 @@
       },
       "import": "./document_loaders/web/confluence.js",
       "require": "./document_loaders/web/confluence.cjs"
+    },
+    "./document_loaders/web/couchbase": {
+      "types": {
+        "import": "./document_loaders/web/couchbase.d.ts",
+        "require": "./document_loaders/web/couchbase.d.cts",
+        "default": "./document_loaders/web/couchbase.d.ts"
+      },
+      "import": "./document_loaders/web/couchbase.js",
+      "require": "./document_loaders/web/couchbase.cjs"
     },
     "./document_loaders/web/searchapi": {
       "types": {

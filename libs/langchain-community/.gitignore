@@ -574,6 +574,10 @@ document_transformers/mozilla_readability.cjs
 document_transformers/mozilla_readability.js
 document_transformers/mozilla_readability.d.ts
 document_transformers/mozilla_readability.d.cts
+storage/cassandra.cjs
+storage/cassandra.js
+storage/cassandra.d.ts
+storage/cassandra.d.cts
 storage/convex.cjs
 storage/convex.js
 storage/convex.d.ts

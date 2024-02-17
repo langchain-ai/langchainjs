@@ -8,7 +8,7 @@ const chatModel = new ChatOpenAI({});
 const embeddings = new OpenAIEmbeddings({});
 
 const loader = new CheerioWebBaseLoader(
-  "https://docs.smith.langchain.com/overview"
+  "https://docs.smith.langchain.com/user_guide"
 );
 
 const docs = await loader.load();

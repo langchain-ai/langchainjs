@@ -5,29 +5,45 @@ import {
   Runnable,
   RunnableConfig,
   RunnableLambda,
+  getCallbackManagerForConfig,
 } from "@langchain/core/runnables";
 import { LangChainTracer } from "@langchain/core/tracers/tracer_langchain";
 import { BaseTracer } from "@langchain/core/tracers/base";
 import { ChainValues } from "@langchain/core/utils/types";
-import { Client, Example, Feedback, Run } from "langsmith";
+import {
+  Client,
+  Example,
+  Feedback,
+  Run,
+  RunTree,
+  RunTreeConfig,
+} from "langsmith";
 import { EvaluationResult, RunEvaluator } from "langsmith/evaluation";
 import { DataType } from "langsmith/schemas";
+import type { TraceableFunction } from "langsmith/traceable";
 import { LLMStringEvaluator } from "../evaluation/base.js";
 import { loadEvaluator } from "../evaluation/loader.js";
 import { EvaluatorType } from "../evaluation/types.js";
-import type {
-  DynamicRunEvaluatorParams,
-  EvalConfig,
-  EvaluatorInputFormatter,
-  RunEvalConfig,
-  RunEvaluatorLike,
+import {
+  isOffTheShelfEvaluator,
+  type DynamicRunEvaluatorParams,
+  type EvalConfig,
+  type EvaluatorInputFormatter,
+  type RunEvalConfig,
+  type RunEvaluatorLike,
+  isCustomEvaluator,
 } from "./config.js";
 import { randomName } from "./name_generation.js";
 import { ProgressBar } from "./progress.js";
+import type {
+  CallbackManager,
+  CallbackManagerForChainRun,
+} from "../callbacks/manager.js";
 
 export type ChainOrFactory =
   | Runnable
   | (() => Runnable)
+  | AnyTraceableFunction
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   | ((obj: any) => any)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -127,6 +143,156 @@ function isLLMStringEvaluator(evaluator: any): evaluator is LLMStringEvaluator {
   return evaluator && typeof evaluator.evaluateStrings === "function";
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyTraceableFunction = TraceableFunction<(...any: any[]) => any>;
+
+/**
+ * Internal implementation of RunTree, which uses the
+ * provided callback manager instead of the internal LangSmith client.
+ *
+ * The goal of this class is to ensure seamless interop when intergrated
+ * with other Runnables.
+ */
+class CallbackManagerRunTree extends RunTree {
+  callbackManager: CallbackManager;
+
+  activeCallbackManager: CallbackManagerForChainRun | undefined = undefined;
+
+  constructor(config: RunTreeConfig, callbackManager: CallbackManager) {
+    super(config);
+
+    this.callbackManager = callbackManager;
+  }
+
+  async createChild(config: RunTreeConfig): Promise<CallbackManagerRunTree> {
+    const child = new CallbackManagerRunTree(
+      {
+        ...config,
+        parent_run: this,
+        project_name: this.project_name,
+        client: this.client,
+      },
+      this.activeCallbackManager?.getChild() ?? this.callbackManager
+    );
+    this.child_runs.push(child);
+    return child;
+  }
+
+  async postRun(): Promise<void> {
+    // how it is translated in comparison to basic RunTree?
+    this.activeCallbackManager = await this.callbackManager.handleChainStart(
+      typeof this.serialized !== "object" &&
+        this.serialized != null &&
+        "lc" in this.serialized
+        ? this.serialized
+        : {
+            id: ["langchain", "smith", "CallbackManagerRunTree"],
+            lc: 1,
+            type: "not_implemented",
+          },
+      this.inputs,
+      this.id,
+      this.run_type,
+      undefined,
+      undefined,
+      this.name
+    );
+  }
+
+  async patchRun(): Promise<void> {
+    if (this.error) {
+      await this.activeCallbackManager?.handleChainError(
+        this.error,
+        this.id,
+        this.parent_run?.id,
+        undefined,
+        undefined
+      );
+    } else {
+      await this.activeCallbackManager?.handleChainEnd(
+        this.outputs ?? {},
+        this.id,
+        this.parent_run?.id,
+        undefined,
+        undefined
+      );
+    }
+  }
+}
+
+class RunnableTraceable<RunInput, RunOutput> extends Runnable<
+  RunInput,
+  RunOutput
+> {
+  lc_serializable = false;
+
+  lc_namespace = ["langchain_core", "runnables"];
+
+  protected func: AnyTraceableFunction;
+
+  constructor(fields: { func: AnyTraceableFunction }) {
+    super(fields);
+
+    if (!isLangsmithTraceableFunction(fields.func)) {
+      throw new Error(
+        "RunnableTraceable requires a function that is wrapped in traceable higher-order function"
+      );
+    }
+
+    this.func = fields.func;
+  }
+
+  async invoke(input: RunInput, options?: Partial<RunnableConfig>) {
+    const [config] = this._getOptionsList(options ?? {}, 1);
+    const callbackManager = await getCallbackManagerForConfig(config);
+
+    const partialConfig =
+      "langsmith:traceable" in this.func
+        ? (this.func["langsmith:traceable"] as RunTreeConfig)
+        : { name: "<lambda>" };
+
+    if (!callbackManager) throw new Error("CallbackManager not found");
+    const runTree = new CallbackManagerRunTree(
+      {
+        ...partialConfig,
+        parent_run: callbackManager?._parentRunId
+          ? new RunTree({ name: "<parent>", id: callbackManager?._parentRunId })
+          : undefined,
+      },
+      callbackManager
+    );
+
+    if (
+      typeof input === "object" &&
+      input != null &&
+      Object.keys(input).length === 1
+    ) {
+      if ("args" in input && Array.isArray(input)) {
+        return (await this.func(runTree, ...input)) as RunOutput;
+      }
+
+      if (
+        "input" in input &&
+        !(
+          typeof input === "object" &&
+          input != null &&
+          !Array.isArray(input) &&
+          // eslint-disable-next-line no-instanceof/no-instanceof
+          !(input instanceof Date)
+        )
+      ) {
+        try {
+          return (await this.func(runTree, input.input)) as RunOutput;
+        } catch (err) {
+          return (await this.func(runTree, input)) as RunOutput;
+        }
+      }
+    }
+
+    return (await this.func(runTree, input)) as RunOutput;
+  }
+}
+
 /**
  * Wraps an off-the-shelf evaluator (loaded using loadEvaluator; of EvaluatorType[T])
  * and composes with a prepareData function so the user can prepare the trace and
@@ -160,17 +326,17 @@ class PreparedRunEvaluator implements RunEvaluator {
     const evalConfig = typeof config === "string" ? ({} as EvalConfig) : config;
     const evaluator = await loadEvaluator(evaluatorType, evalConfig);
     const feedbackKey = evalConfig?.feedbackKey ?? evaluator?.evaluationName;
-    if (!feedbackKey) {
-      throw new Error(
-        `Evaluator of type ${evaluatorType} must have an evaluationName` +
-          ` or feedbackKey. Please manually provide a feedbackKey in the EvalConfig.`
-      );
-    }
     if (!isLLMStringEvaluator(evaluator)) {
       throw new Error(
         `Evaluator of type ${evaluatorType} not yet supported. ` +
           "Please use a string evaluator, or implement your " +
-          "evaluation logic as a customEvaluator."
+          "evaluation logic as a custom evaluator."
+      );
+    }
+    if (!feedbackKey) {
+      throw new Error(
+        `Evaluator of type ${evaluatorType} must have an evaluationName` +
+          ` or feedbackKey. Please manually provide a feedbackKey in the EvalConfig.`
       );
     }
     return new PreparedRunEvaluator(
@@ -217,7 +383,7 @@ class PreparedRunEvaluator implements RunEvaluator {
     throw new Error(
       "Evaluator not yet supported. " +
         "Please use a string evaluator, or implement your " +
-        "evaluation logic as a customEvaluator."
+        "evaluation logic as a custom evaluator."
     );
   }
 }
@@ -226,10 +392,12 @@ class LoadedEvalConfig {
   constructor(public evaluators: (RunEvaluator | DynamicRunEvaluator)[]) {}
 
   static async fromRunEvalConfig(
-    config: RunEvalConfig
+    config: RunEvalConfig<keyof EvaluatorType>
   ): Promise<LoadedEvalConfig> {
     // Custom evaluators are applied "as-is"
-    const customEvaluators = config?.customEvaluators?.map((evaluator) => {
+    const customEvaluators = (
+      config?.customEvaluators ?? config.evaluators?.filter(isCustomEvaluator)
+    )?.map((evaluator) => {
       if (typeof evaluator === "function") {
         return new DynamicRunEvaluator(evaluator);
       } else {
@@ -238,10 +406,12 @@ class LoadedEvalConfig {
     });
 
     const offTheShelfEvaluators = await Promise.all(
-      config?.evaluators?.map(
-        async (evaluator) =>
-          await PreparedRunEvaluator.fromEvalConfig(evaluator)
-      ) ?? []
+      config?.evaluators
+        ?.filter(isOffTheShelfEvaluator)
+        ?.map(
+          async (evaluator) =>
+            await PreparedRunEvaluator.fromEvalConfig(evaluator)
+        ) ?? []
     );
     return new LoadedEvalConfig(
       (customEvaluators ?? []).concat(offTheShelfEvaluators ?? [])
@@ -249,13 +419,33 @@ class LoadedEvalConfig {
   }
 }
 
-export type RunOnDatasetParams = {
-  evaluationConfig?: RunEvalConfig;
-  projectMetadata?: Record<string, unknown>;
+export interface RunOnDatasetParams
+  extends Omit<RunEvalConfig, "customEvaluators"> {
+  /**
+   * Name of the project for logging and tracking.
+   */
   projectName?: string;
+
+  /**
+   * Additional metadata for the project.
+   */
+  projectMetadata?: Record<string, unknown>;
+
+  /**
+   * Client instance for LangSmith service interaction.
+   */
   client?: Client;
+
+  /**
+   * Maximum concurrency level for dataset processing.
+   */
   maxConcurrency?: number;
-};
+
+  /**
+   * @deprecated Pass keys directly to the RunOnDatasetParams instead
+   */
+  evaluationConfig?: RunEvalConfig;
+}
 
 /**
  * Internals expect a constructor () -> Runnable. This function wraps/coerces
@@ -270,6 +460,11 @@ const createWrappedModel = async (modelOrFactory: ChainOrFactory) => {
     return () => modelOrFactory;
   }
   if (typeof modelOrFactory === "function") {
+    if (isLangsmithTraceableFunction(modelOrFactory)) {
+      const wrappedModel = new RunnableTraceable({ func: modelOrFactory });
+      return () => wrappedModel;
+    }
+
     try {
       // If it works with no arguments, assume it's a factory
       let res = (modelOrFactory as () => Runnable)();
@@ -282,7 +477,7 @@ const createWrappedModel = async (modelOrFactory: ChainOrFactory) => {
       return modelOrFactory as () => Runnable;
     } catch (err) {
       // Otherwise, it's a custom UDF, and we'll wrap
-      // in a lambda
+      // the function in a lambda
       const wrappedModel = new RunnableLambda({ func: modelOrFactory });
       return () => wrappedModel;
     }
@@ -421,11 +616,11 @@ const getExamplesInputs = (
  * for evaluation.
  *
  * @param options - (Optional) Additional parameters for the evaluation process:
- *   - `evaluationConfig` (RunEvalConfig): Configuration for the evaluation, including
- *     standard and custom evaluators.
+ *   - `evaluators` (RunEvalType[]): Evaluators to apply to a dataset run.
+ *   - `formatEvaluatorInputs` (EvaluatorInputFormatter): Convert the evaluation data into formats that can be used by the evaluator.
  *   - `projectName` (string): Name of the project for logging and tracking.
  *   - `projectMetadata` (Record<string, unknown>): Additional metadata for the project.
- *   - `client` (Client): Client instance for LangChain service interaction.
+ *   - `client` (Client): Client instance for LangSmith service interaction.
  *   - `maxConcurrency` (number): Maximum concurrency level for dataset processing.
  *
  * @returns A promise that resolves to an `EvalResults` object. This object includes
@@ -440,13 +635,8 @@ const getExamplesInputs = (
  *   const datasetName = 'example-dataset';
  *   const client = new Client(/* ...config... *\//);
  *
- *   const evaluationConfig = {
- *     evaluators: [/* ...evaluators... *\//],
- *     customEvaluators: [/* ...custom evaluators... *\//],
- *   };
- *
  *   const results = await runOnDataset(chain, datasetName, {
- *     evaluationConfig,
+ *     evaluators: [/* ...evaluators... *\//],
  *     client,
  *   });
  *
@@ -456,22 +646,32 @@ const getExamplesInputs = (
  * evaluateModel();
  * ```
  * In this example, `runOnDataset` is used to evaluate a language model (or a chain of models) against
- * a dataset named 'example-dataset'. The evaluation process is configured using `RunEvalConfig`, which can
+ * a dataset named 'example-dataset'. The evaluation process is configured using `RunOnDatasetParams["evaluators"]`, which can
  * include both standard and custom evaluators. The `Client` instance is used to interact with LangChain services.
  * The function returns the evaluation results, which can be logged or further processed as needed.
  */
 
-export const runOnDataset = async (
+export async function runOnDataset(
   chainOrFactory: ChainOrFactory,
   datasetName: string,
-  {
-    evaluationConfig,
+  options?: RunOnDatasetParams
+) {
+  const {
     projectName,
     projectMetadata,
     client,
     maxConcurrency,
-  }: RunOnDatasetParams
-) => {
+  }: RunOnDatasetParams = options ?? {};
+
+  const evaluationConfig: RunEvalConfig | undefined =
+    options?.evaluationConfig ??
+    (options?.evaluators != null
+      ? {
+          evaluators: options.evaluators,
+          formatEvaluatorInputs: options.formatEvaluatorInputs,
+        }
+      : undefined);
+
   const wrappedModel = await createWrappedModel(chainOrFactory);
   const testClient = client ?? new Client();
   const testProjectName = projectName ?? randomName();
@@ -538,4 +738,8 @@ export const runOnDataset = async (
     results: evalResults ?? {},
   };
   return results;
-};
+}
+
+function isLangsmithTraceableFunction(x: unknown): x is AnyTraceableFunction {
+  return typeof x === "function" && "langsmith:traceable" in x;
+}

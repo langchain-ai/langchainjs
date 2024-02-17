@@ -1,8 +1,10 @@
-import { RetrievalQAChain } from "langchain/chains";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { SearchApiLoader } from "langchain/document_loaders/web/searchapi";
 import { TokenTextSplitter } from "langchain/text_splitter";
 import { FaissStore } from "@langchain/community/vectorstores/faiss";
+import { createRetrievalChain } from "langchain/chains/retrieval";
+import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
 
 const loader = new SearchApiLoader({
   engine: "youtube_transcripts",
@@ -18,25 +20,39 @@ const textSplitterQA = new TokenTextSplitter({
 
 const docsQA = await textSplitterQA.splitDocuments(docs);
 
-const llm_question_answer = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo-16k",
+const llm = new ChatOpenAI({
+  modelName: "gpt-3.5-turbo-1106",
   temperature: 0.2,
 });
 
 const embeddings = new OpenAIEmbeddings();
 
-const db = await FaissStore.fromDocuments(await docsQA, embeddings);
+const vectorstore = await FaissStore.fromDocuments(docsQA, embeddings);
 
-const qa = RetrievalQAChain.fromLLM(llm_question_answer, db.asRetriever(), {
-  verbose: true,
+const questionAnsweringPrompt = ChatPromptTemplate.fromMessages([
+  [
+    "system",
+    "Answer the user's questions based on the below context:\n\n{context}",
+  ],
+  ["human", "{input}"],
+]);
+
+const combineDocsChain = await createStuffDocumentsChain({
+  llm,
+  prompt: questionAnsweringPrompt,
 });
 
-const question = "How many people he wanted to help?";
+const qaChain = await createRetrievalChain({
+  retriever: vectorstore.asRetriever(),
+  combineDocsChain,
+});
 
-const answer = await qa.run(question);
+const question = "How many people did he want to help?";
 
-console.log(answer);
+const result = await qaChain.invoke({ input: question });
 
-/**
- * He wanted to help 1,000 deaf people.
- */
+console.log(result.answer);
+
+/*
+  MrBeast wanted to help 1,000 deaf people hear again. He and his team were able to help over 40 people at the time of the video, and they were on their way to reaching their goal of 1,000.
+*/

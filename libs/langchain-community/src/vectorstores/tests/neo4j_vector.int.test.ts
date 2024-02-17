@@ -516,3 +516,83 @@ test.skip("Test escape lucene characters", async () => {
   await dropVectorIndexes(neo4jVectorStore);
   await neo4jVectorStore.close();
 });
+
+test.skip("Test multiple index", async () => {
+  const url = process.env.NEO4J_URI as string;
+  const username = process.env.NEO4J_USERNAME as string;
+  const password = process.env.NEO4J_PASSWORD as string;
+
+  expect(url).toBeDefined();
+  expect(username).toBeDefined();
+  expect(password).toBeDefined();
+
+  const embeddings = new FakeEmbeddingsWithOsDimension();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const metadatas: any[] = [];
+
+  const foo = await Neo4jVectorStore.fromTexts(["foo"], metadatas, embeddings, {
+    url,
+    username,
+    password,
+    indexName: "Foo",
+    nodeLabel: "Foo",
+  });
+
+  const bar = await Neo4jVectorStore.fromTexts(["bar"], metadatas, embeddings, {
+    url,
+    username,
+    password,
+    indexName: "Bar",
+    nodeLabel: "Bar",
+  });
+
+  const fooExistingIndex = await Neo4jVectorStore.fromExistingIndex(
+    embeddings,
+    {
+      url,
+      username,
+      password,
+      indexName: "Foo",
+    }
+  );
+
+  const fooOutput = await fooExistingIndex.similaritySearch(
+    "This is the end of the world!",
+    1
+  );
+  const fooExpectedResult = [
+    new Document({
+      pageContent: "foo",
+      metadata: {},
+    }),
+  ];
+  expect(fooOutput).toStrictEqual(fooExpectedResult);
+
+  const barExistingIndex = await Neo4jVectorStore.fromExistingIndex(
+    embeddings,
+    {
+      url,
+      username,
+      password,
+      indexName: "Bar",
+    }
+  );
+
+  const barOutput = await barExistingIndex.similaritySearch(
+    "This is the end of the world!",
+    1
+  );
+  const barExpectedResult = [
+    new Document({
+      pageContent: "bar",
+      metadata: {},
+    }),
+  ];
+  expect(barOutput).toStrictEqual(barExpectedResult);
+
+  await dropVectorIndexes(barExistingIndex);
+  await foo.close();
+  await bar.close();
+  await barExistingIndex.close();
+  await fooExistingIndex.close();
+});

@@ -93,6 +93,7 @@ export type AzureAISearchFilterType = {
   includeEmbeddings?: boolean;
 };
 
+const USER_AGENT_PREFIX = "langchainjs-azure-aisearch";
 const DEFAULT_FIELD_ID = "id";
 const DEFAULT_FIELD_CONTENT = "content";
 const DEFAULT_FIELD_CONTENT_VECTOR = "content_vector";
@@ -151,9 +152,13 @@ export class AzureAISearchVectorStore extends VectorStore {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const credential = new AzureKeyCredential(key!);
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this.client = new SearchClient(endpoint!, this.indexName, credential);
+      this.client = new SearchClient(endpoint!, this.indexName, credential, {
+        userAgentOptions: { userAgentPrefix: USER_AGENT_PREFIX },
+      });
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const indexClient = new SearchIndexClient(endpoint!, credential);
+      const indexClient = new SearchIndexClient(endpoint!, credential, {
+        userAgentOptions: { userAgentPrefix: USER_AGENT_PREFIX },
+      });
 
       // Start initialization, but don't wait for it to finish here
       this.initPromise = this.ensureIndexExists(indexClient).catch((error) => {
