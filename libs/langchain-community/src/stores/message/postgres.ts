@@ -104,7 +104,7 @@ export class PostgresChatMessageHistory extends BaseListChatMessageHistory {
     // Ensure that either a client or config is provided
     if (!pool && !poolConfig) {
       throw new Error(
-        "PostgresChatMessageHistory requires either a client or config"
+        "PostgresChatMessageHistory requires either a pool instance or pool config"
       );
     }
     this.pool = pool ?? new pg.Pool(poolConfig);
