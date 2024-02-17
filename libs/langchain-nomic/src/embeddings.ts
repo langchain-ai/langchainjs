@@ -112,7 +112,9 @@ export class NomicEmbeddings
       this.embeddingWithRetry(batch)
     );
     const batchResponses = await Promise.all(batchRequests);
-    const embeddings = batchResponses.map(({ embeddings }) => embeddings).flat();
+    const embeddings = batchResponses
+      .map(({ embeddings }) => embeddings)
+      .flat();
     return embeddings;
   }
 
