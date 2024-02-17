@@ -33,15 +33,19 @@ export type PostgresChatMessageHistoryInput = {
    * new pool using the provided configuration.
    */
   pool?: pg.Pool;
+  /**
+   * If true, the table name will be escaped. ('lAnGcHaIn' will be escaped to '"lAnGcHaIn"')
+   */
+  escapeTableName?: boolean;
 };
 
 export interface StoredPostgresMessageData {
-  name: string;
-  role: string;
+  name: string | undefined;
+  role: string | undefined;
   content: string;
   additional_kwargs?: Record<string, unknown>;
   type: string;
-  tool_call_id: string;
+  tool_call_id: string | undefined;
 }
 
 /**
@@ -95,7 +99,7 @@ export class PostgresChatMessageHistory extends BaseListChatMessageHistory {
    * @throws If neither `pool` nor `poolConfig` is provided.
    */
   constructor(fields: PostgresChatMessageHistoryInput) {
-    const { tableName, sessionId, pool, poolConfig } = fields;
+    const { tableName, sessionId, pool, poolConfig, escapeTableName } = fields;
     super(fields);
     // Ensure that either a client or config is provided
     if (!pool && !poolConfig) {
@@ -104,7 +108,10 @@ export class PostgresChatMessageHistory extends BaseListChatMessageHistory {
       );
     }
     this.pool = pool ?? new pg.Pool(poolConfig);
-    this.tableName = pg.escapeIdentifier(tableName || this.tableName);
+    const _tableName = tableName || this.tableName;
+    this.tableName = escapeTableName
+      ? pg.escapeIdentifier(_tableName)
+      : _tableName;
     this.sessionId = sessionId;
   }
 
@@ -140,13 +147,11 @@ export class PostgresChatMessageHistory extends BaseListChatMessageHistory {
 
   async addMessage(message: BaseMessage): Promise<void> {
     await this.ensureTable();
-    const storedMessage = mapChatMessagesToStoredMessages([message]).map(
-      ({ data, type }) => [this.sessionId, { ...data, type }]
-    )[0];
+    const { data, type } = mapChatMessagesToStoredMessages([message])[0];
 
     const query = `INSERT INTO ${this.tableName} (session_id, message) VALUES ($1, $2)`;
 
-    await this.pool.query(query, storedMessage);
+    await this.pool.query(query, [this.sessionId, { ...data, type }]);
   }
 
   async getMessages(): Promise<BaseMessage[]> {
