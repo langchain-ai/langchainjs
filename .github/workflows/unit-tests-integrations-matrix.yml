@@ -26,7 +26,7 @@ jobs:
 
     strategy:
       matrix:
-        folder: [folder1, folder2, folder3] # Add folder names here
+        folder: [libs/langchain-community/, libs/langchain-pinecone/, libs/langchain-redis/] # Add folder names here
 
     steps:
       - name: Checkout code
