@@ -44,6 +44,7 @@ export class RedisCache extends BaseCache {
    * Retrieves data from the cache. It constructs a cache key from the given
    * `prompt` and `llmKey`, and retrieves the corresponding value from the
    * Redis database.
+   * 
    * @param prompt The prompt used to construct the cache key.
    * @param llmKey The LLM key used to construct the cache key.
    * @returns An array of Generations if found, null otherwise.

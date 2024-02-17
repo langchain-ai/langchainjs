@@ -1,0 +1,42 @@
+name: Matrix Unit Tests
+
+on:
+  push:
+    paths:
+      - 'libs/**' # Trigger only if changes occur in the ./libs directory
+
+
+# If another push to the same PR or branch happens while this workflow is still running,
+# cancel the earlier run in favor of the next run.
+#
+# There's no point in testing an outdated version of the code. GitHub only allows
+# a limited number of job runners to be active at the same time, so it's better to cancel
+# pointless jobs early so that more useful jobs can run sooner.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        folder: [folder1, folder2, folder3] # Add folder names here
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Determine changed folders
+        id: changed_folders
+        run: echo "::set-output name=folders::$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^libs/' | cut -d'/' -f2 | sort -u)"
+
+      - name: Run commands for changed folders
+        run: |
+          for folder in ${{ steps.changed_folders.outputs.folders }}; do
+            # Run commands with folder variable
+            echo "Running commands for folder $folder"
+            # Example: cd $folder && npm install && npm test
+          done
