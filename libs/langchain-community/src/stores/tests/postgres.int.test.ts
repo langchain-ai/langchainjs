@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from "uuid";
 import pg from "pg";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { PostgresChatMessageHistory } from "../message/postgres.js";
@@ -7,7 +6,7 @@ describe.skip("Postgres Chat History", () => {
   let chatHistory: PostgresChatMessageHistory;
   let pool: pg.Pool;
   const tableName = "test";
-  const sessionId = uuidv4();
+  const sessionId = "test-session-id";
 
   beforeAll(async () => {
     pool = new pg.Pool({
