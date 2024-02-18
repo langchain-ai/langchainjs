@@ -57,6 +57,7 @@ export class OllamaEmbeddings extends Embeddings {
       embeddingOnly: "embedding_only",
       f16KV: "f16_kv",
       frequencyPenalty: "frequency_penalty",
+      keepAlive: "keep_alive",
       logitsAll: "logits_all",
       lowVram: "low_vram",
       mainGpu: "main_gpu",
