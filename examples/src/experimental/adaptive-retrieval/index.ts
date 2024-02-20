@@ -51,8 +51,7 @@ const relevantDocs = [
     metadata: { id: uuidV4() },
   }),
   new Document({
-    pageContent:
-      "LangGraph is a new open source library by the LangChain team",
+    pageContent: "LangGraph is a new open source library by the LangChain team",
     metadata: { id: uuidV4() },
   }),
   new Document({

@@ -4,6 +4,7 @@ This is an implementation of the [Supabase](https://supabase.com/) blog post
 ["Matryoshka embeddings: faster OpenAI vector search using Adaptive Retrieval"](https://supabase.com/blog/matryoshka-embeddings).
 
 ### TLDR;
+
 The `AdaptiveRetrieval` retriever takes in two vector stores: `smallStore` and `largeStore`.
 The small and large is determined via the number of vector dimensions the embeddings model
 uses which is passed to the vector store when instantiated (because of this you are required to use
