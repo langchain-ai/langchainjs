@@ -52,6 +52,8 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
 
   frequencyPenalty?: number;
 
+  headers?: Record<string, string>;
+
   logitsAll?: boolean;
 
   lowVram?: boolean;
@@ -117,6 +119,7 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
       ? fields.baseUrl.slice(0, -1)
       : fields.baseUrl ?? this.baseUrl;
 
+    this.headers = fields.headers ?? this.headers;
     this.embeddingOnly = fields.embeddingOnly;
     this.f16KV = fields.f16KV;
     this.frequencyPenalty = fields.frequencyPenalty;
@@ -205,7 +208,10 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
       createOllamaGenerateStream(
         this.baseUrl,
         { ...this.invocationParams(options), prompt },
-        options
+        {
+          ...options,
+          headers: this.headers,
+        }
       )
     );
     for await (const chunk of stream) {

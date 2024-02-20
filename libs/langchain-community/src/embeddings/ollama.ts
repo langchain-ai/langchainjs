@@ -3,7 +3,7 @@ import { OllamaInput, OllamaRequestParams } from "../utils/ollama.js";
 
 type CamelCasedRequestOptions = Omit<
   OllamaInput,
-  "baseUrl" | "model" | "format"
+  "baseUrl" | "model" | "format" | "headers"
 >;
 
 /**
@@ -17,6 +17,9 @@ interface OllamaEmbeddingsParams extends EmbeddingsParams {
   /** Base URL of the Ollama server, defaults to "http://localhost:11434" */
   baseUrl?: string;
 
+  /** Extra headers to include in the Ollama API request */
+  headers?: Record<string, string>;
+
   /** Advanced Ollama API request parameters in camelCase, see
    * https://github.com/jmorganca/ollama/blob/main/docs/modelfile.md#valid-parameters-and-values
    * for details of the available parameters.
@@ -29,6 +32,8 @@ export class OllamaEmbeddings extends Embeddings {
 
   baseUrl = "http://localhost:11434";
 
+  headers?: Record<string, string>;
+
   requestOptions?: OllamaRequestParams["options"];
 
   constructor(params?: OllamaEmbeddingsParams) {
@@ -40,6 +45,10 @@ export class OllamaEmbeddings extends Embeddings {
 
     if (params?.baseUrl) {
       this.baseUrl = params.baseUrl;
+    }
+
+    if (params?.headers) {
+      this.headers = params.headers;
     }
 
     if (params?.requestOptions) {
@@ -111,7 +120,10 @@ export class OllamaEmbeddings extends Embeddings {
 
     const response = await fetch(`${formattedBaseUrl}/api/embeddings`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...this.headers,
+      },
       body: JSON.stringify({
         prompt,
         model,
