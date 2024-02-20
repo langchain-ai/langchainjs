@@ -1,6 +1,6 @@
 # @langchain/nomic
 
-This package contains the LangChain.js integrations for Nomic via their REST API.
+This package contains the LangChain.js integrations for Nomic via the @nomic-ai/atlas package.
 
 ## Installation
 

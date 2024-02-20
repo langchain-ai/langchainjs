@@ -1,6 +1,7 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
+import { AtlasUser } from "@nomic-ai/atlas";
 
 export type EmbeddingTaskType =
   | "search_query"
@@ -70,9 +71,7 @@ export class NomicEmbeddings
 
   stripNewLines = true;
 
-  endpoint = "https://api-atlas.nomic.ai";
-
-  apiKey: string;
+  client: AtlasUser;
 
   dimensionality?: number;
 
@@ -88,12 +87,12 @@ export class NomicEmbeddings
     if (!apiKey) {
       throw new Error("NOMIC_API_KEY is required.");
     }
+    this.client = new AtlasUser({ apiKey });
     this.modelName = fields?.modelName ?? this.modelName;
     this.taskType = fields?.taskType ?? this.taskType;
     this.batchSize = fields?.batchSize ?? this.batchSize;
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
     this.dimensionality = fields?.dimensionality;
-    this.apiKey = apiKey;
   }
 
   /**
@@ -142,23 +141,13 @@ export class NomicEmbeddings
     input: string | Array<string>
   ): Promise<NomicEmbeddingsResult> {
     return this.caller.call(async () => {
-      const res = await fetch(`${this.endpoint}/v1/embedding/text`, {
-        method: "POST",
-        body: JSON.stringify({
-          model: this.modelName,
-          texts: Array.isArray(input) ? input : [input],
-          task_type: this.taskType,
-          dimensionality: this.dimensionality,
-        }),
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${this.apiKey}`,
-        },
+      const result = await this.client.apiCall(`/v1/embedding/text`, "POST", {
+        model: this.modelName,
+        texts: Array.isArray(input) ? input : [input],
+        task_type: this.taskType,
+        dimensionality: this.dimensionality,
       });
-      if (!res.ok) {
-        throw new Error(`Failed to generate embeddings: ${res.statusText}`);
-      }
-      return res.json();
+      return result;
     });
   }
 }
