@@ -109,6 +109,7 @@ const experimental_chat_models_ollama_functions = require("langchain/experimenta
 const experimental_chains_violation_of_expectations = require("langchain/experimental/chains/violation_of_expectations");
 const experimental_masking = require("langchain/experimental/masking");
 const experimental_prompts_custom_format = require("langchain/experimental/prompts/custom_format");
+const experimental_retrievers_adaptive_retrieval = require("langchain/experimental/retrievers/adaptive_retrieval");
 const evaluation = require("langchain/evaluation");
 const smith = require("langchain/smith");
 const runnables = require("langchain/runnables");

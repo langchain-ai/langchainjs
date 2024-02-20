@@ -1158,6 +1158,10 @@
     "experimental/tools/pyinterpreter.js",
     "experimental/tools/pyinterpreter.d.ts",
     "experimental/tools/pyinterpreter.d.cts",
+    "experimental/retrievers/adaptive_retrieval.cjs",
+    "experimental/retrievers/adaptive_retrieval.js",
+    "experimental/retrievers/adaptive_retrieval.d.ts",
+    "experimental/retrievers/adaptive_retrieval.d.cts",
     "evaluation.cjs",
     "evaluation.js",
     "evaluation.d.ts",
@@ -4131,6 +4135,15 @@
       },
       "import": "./experimental/tools/pyinterpreter.js",
       "require": "./experimental/tools/pyinterpreter.cjs"
+    },
+    "./experimental/retrievers/adaptive_retrieval": {
+      "types": {
+        "import": "./experimental/retrievers/adaptive_retrieval.d.ts",
+        "require": "./experimental/retrievers/adaptive_retrieval.d.cts",
+        "default": "./experimental/retrievers/adaptive_retrieval.d.ts"
+      },
+      "import": "./experimental/retrievers/adaptive_retrieval.js",
+      "require": "./experimental/retrievers/adaptive_retrieval.cjs"
     },
     "./evaluation": {
       "types": {

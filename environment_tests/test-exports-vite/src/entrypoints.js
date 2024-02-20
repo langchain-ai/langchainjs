@@ -109,6 +109,7 @@ export * from "langchain/experimental/chat_models/ollama_functions";
 export * from "langchain/experimental/chains/violation_of_expectations";
 export * from "langchain/experimental/masking";
 export * from "langchain/experimental/prompts/custom_format";
+export * from "langchain/experimental/retrievers/adaptive_retrieval";
 export * from "langchain/evaluation";
 export * from "langchain/smith";
 export * from "langchain/runnables";

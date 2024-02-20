@@ -7870,6 +7870,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@faker-js/faker@npm:^8.4.1":
+  version: 8.4.1
+  resolution: "@faker-js/faker@npm:8.4.1"
+  checksum: d802d531f8929562715adc279cfec763c9a4bc596ec67b0ce43fd0ae61b285d2b0eec6f1f4aa852452a63721a842fe7e81926dce7bd92acca94b01e2a1f55f5a
+  languageName: node
+  linkType: hard
+
 "@fastify/busboy@npm:^1.2.1":
   version: 1.2.1
   resolution: "@fastify/busboy@npm:1.2.1"
@@ -21165,6 +21172,7 @@ __metadata:
   dependencies:
     "@clickhouse/client": ^0.2.5
     "@elastic/elasticsearch": ^8.4.0
+    "@faker-js/faker": ^8.4.1
     "@getmetal/metal-sdk": ^4.0.0
     "@getzep/zep-js": ^0.9.0
     "@gomomento/sdk": ^1.51.1
