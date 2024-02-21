@@ -783,6 +783,15 @@
       "import": "./embeddings/cohere.js",
       "require": "./embeddings/cohere.cjs"
     },
+    "./embeddings/fireworks": {
+      "types": {
+        "import": "./embeddings/fireworks.d.ts",
+        "require": "./embeddings/fireworks.d.cts",
+        "default": "./embeddings/fireworks.d.ts"
+      },
+      "import": "./embeddings/fireworks.js",
+      "require": "./embeddings/fireworks.cjs"
+    },
     "./embeddings/googlepalm": {
       "types": {
         "import": "./embeddings/googlepalm.d.ts",
@@ -2203,6 +2212,10 @@
     "embeddings/cohere.js",
     "embeddings/cohere.d.ts",
     "embeddings/cohere.d.cts",
+    "embeddings/fireworks.cjs",
+    "embeddings/fireworks.js",
+    "embeddings/fireworks.d.ts",
+    "embeddings/fireworks.d.cts",
     "embeddings/googlepalm.cjs",
     "embeddings/googlepalm.js",
     "embeddings/googlepalm.d.ts",

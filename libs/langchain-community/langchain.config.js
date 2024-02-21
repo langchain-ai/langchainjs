@@ -58,6 +58,7 @@ export const config = {
     "embeddings/bedrock": "embeddings/bedrock",
     "embeddings/cloudflare_workersai": "embeddings/cloudflare_workersai",
     "embeddings/cohere": "embeddings/cohere",
+    "embeddings/fireworks": "embeddings/fireworks",
     "embeddings/googlepalm": "embeddings/googlepalm",
     "embeddings/googlevertexai": "embeddings/googlevertexai",
     "embeddings/gradient_ai": "embeddings/gradient_ai",

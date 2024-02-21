@@ -118,6 +118,10 @@ embeddings/cohere.cjs
 embeddings/cohere.js
 embeddings/cohere.d.ts
 embeddings/cohere.d.cts
+embeddings/fireworks.cjs
+embeddings/fireworks.js
+embeddings/fireworks.d.ts
+embeddings/fireworks.d.cts
 embeddings/googlepalm.cjs
 embeddings/googlepalm.js
 embeddings/googlepalm.d.ts
