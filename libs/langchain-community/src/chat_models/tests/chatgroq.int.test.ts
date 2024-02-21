@@ -5,7 +5,7 @@ import { ChatGroq } from "../groq.js";
 describe.skip("ChatGroq", () => {
   test("invoke", async () => {
     const chat = new ChatGroq({
-      maxRetries: 0
+      maxRetries: 0,
     });
     const message = new HumanMessage("What color is the sky?");
     const res = await chat.invoke([message]);

@@ -76,8 +76,7 @@ export class ChatGroq extends ChatOpenAI<ChatGroqCallOptions> {
     > &
       BaseChatModelParams & { apiKey?: string }
   ) {
-    const apiKey =
-      fields?.apiKey || getEnvironmentVariable("GROQ_API_KEY");
+    const apiKey = fields?.apiKey || getEnvironmentVariable("GROQ_API_KEY");
 
     if (!apiKey) {
       throw new Error(
@@ -143,7 +142,7 @@ export class ChatGroq extends ChatOpenAI<ChatGroqCallOptions> {
     if (request.stream === true) {
       return super.completionWithRetry(request, options);
     }
-    console.log(request, options)
+    console.log(request, options);
     return super.completionWithRetry(request, options);
   }
 }
