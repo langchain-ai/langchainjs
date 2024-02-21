@@ -6,6 +6,7 @@ export interface OllamaInput {
   embeddingOnly?: boolean;
   f16KV?: boolean;
   frequencyPenalty?: number;
+  keepAlive?: string;
   logitsAll?: boolean;
   lowVram?: boolean;
   mainGpu?: number;
