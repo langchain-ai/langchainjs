@@ -8,7 +8,7 @@ import {
 import { Document } from "@langchain/core/documents";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 
-import type {
+import {
   CassandraClientArgs,
   Column,
   Filter,
