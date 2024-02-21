@@ -55,7 +55,7 @@ export class OllamaEmbeddings extends Embeddings {
     if (params?.headers) {
       this.headers = params.headers;
     }
-    
+
     if (params?.keepAlive) {
       this.keepAlive = params.keepAlive;
     }
