@@ -22,7 +22,12 @@ import {
   ChatGeneration,
 } from "@langchain/core/outputs";
 import Groq from "groq-sdk";
-import { ChatCompletion, ChatCompletionCreateParams, ChatCompletionCreateParamsNonStreaming, ChatCompletionCreateParamsStreaming } from 'groq-sdk/resources/chat/completions';
+import {
+  ChatCompletion,
+  ChatCompletionCreateParams,
+  ChatCompletionCreateParamsNonStreaming,
+  ChatCompletionCreateParamsStreaming,
+} from "groq-sdk/resources/chat/completions";
 import { ChatCompletionChunk } from "groq-sdk/lib/chat_completions_ext";
 
 export interface ChatGroqCallOptions extends BaseChatModelCallOptions {}
