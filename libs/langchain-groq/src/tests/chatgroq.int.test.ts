@@ -1,9 +1,9 @@
 import { describe, test } from "@jest/globals";
 import { ChatMessage, HumanMessage } from "@langchain/core/messages";
-import { ChatGroq } from "../groq.js";
+import { ChatGroq } from "../chat_models.js";
 
-describe.skip("ChatGroq", () => {
-  test("invoke", async () => {
+describe("ChatGroq", () => {
+  test.only("invoke", async () => {
     const chat = new ChatGroq({
       maxRetries: 0,
     });
@@ -28,5 +28,21 @@ describe.skip("ChatGroq", () => {
     expect(res.content.length).toBeGreaterThan(10);
   });
 
+  test("streaming", async () => {
+    const chat = new ChatGroq();
+    const message = new HumanMessage("What color is the sky?");
+    const stream = await chat.stream([message]);
+    let iters = 0;
+    let finalRes = "";
+    for await (const chunk of stream) {
+      iters += 1;
+      finalRes += chunk.content;
+    }
+    console.log({ finalRes, iters });
+    expect(iters).toBeGreaterThan(10);
+  });
+
   // From their API docs it appears you can pass functions through the messages field, test function calling
 });
+
+
