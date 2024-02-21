@@ -1,14 +1,16 @@
-import { BaseChatModel, type BaseChatModelParams } from "@langchain/core/language_models/chat_models";
+import { BaseChatModel, BaseChatModelCallOptions, type BaseChatModelParams } from "@langchain/core/language_models/chat_models";
 import {
   type OpenAICoreRequestOptions,
 } from "@langchain/openai";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
-import { AIMessage, BaseMessage, ChatMessage } from "@langchain/core/messages";
+import { AIMessage, AIMessageChunk, BaseMessage, ChatMessage, ChatMessageChunk, HumanMessageChunk, SystemMessageChunk } from "@langchain/core/messages";
 import { ChatResult, ChatGenerationChunk, ChatGeneration } from "@langchain/core/outputs";
 import Groq from "groq-sdk";
 import type { ChatCompletionCreateParamsStreaming, ChatCompletionCreateParamsNonStreaming, ChatCompletionCreateParams, ChatCompletionChunk, ChatCompletion } from "./types/types.js"
+
+export interface ChatGroqCallOptions extends BaseChatModelCallOptions {}
 
 export interface ChatGroqInput extends BaseChatModelParams {
   /**
@@ -90,6 +92,31 @@ function groqResponseToChatMessage(
   }
 }
 
+function _convertDeltaToMessageChunk(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  delta: Record<string, any>
+) {
+  const { role } = delta;
+  const content = delta.content ?? "";
+  let additional_kwargs;
+  if (delta.function_call) {
+    additional_kwargs = {
+      function_call: delta.function_call,
+    };
+  } else {
+    additional_kwargs = {};
+  }
+  if (role === "user") {
+    return new HumanMessageChunk({ content });
+  } else if (role === "assistant") {
+    return new AIMessageChunk({ content, additional_kwargs });
+  } else if (role === "system") {
+    return new SystemMessageChunk({ content });
+  } else {
+    return new ChatMessageChunk({ content, role });
+  }
+}
+
 /**
  * Wrapper around Groq API for large language models fine-tuned for chat
  *
@@ -109,7 +136,7 @@ function groqResponseToChatMessage(
  * console.log(response);
  * ```
  */
-export class ChatGroq extends BaseChatModel {
+export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
   client: Groq;
 
   modelName = "llama2-70b-4096";
@@ -181,6 +208,39 @@ export class ChatGroq extends BaseChatModel {
     }
   }
 
+  async *_streamResponseChunks(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    const params = this.invocationParams(options);
+    const messagesMapped =
+      convertMessagesToGroqParams(messages);
+    const response = await this.completionWithRetry({
+      ...params,
+      messages: messagesMapped,
+      stream: true,
+    }, params);
+    for await (const data of response) {
+      const choice = data?.choices[0];
+      if (!choice) {
+        continue;
+      }
+      const chunk = new ChatGenerationChunk({
+        message: _convertDeltaToMessageChunk(choice.delta ?? {}),
+        text: choice.delta.content ?? "",
+        generationInfo: {
+          finishReason: choice.finish_reason,
+        },
+      });
+      yield chunk;
+      void runManager?.handleLLMNewToken(chunk.text ?? "");
+    }
+    if (options.signal?.aborted) {
+      throw new Error("AbortError");
+    }
+  }
+
   async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
@@ -192,6 +252,7 @@ export class ChatGroq extends BaseChatModel {
       convertMessagesToGroqParams(messages);
 
     if (params.stream) {
+      console.log("streaming via _generate")
       const stream = this._streamResponseChunks(messages, options, runManager);
       const finalChunks: Record<number, ChatGenerationChunk> = {};
       for await (const chunk of stream) {
