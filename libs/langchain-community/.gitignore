@@ -646,6 +646,10 @@ stores/message/planetscale.cjs
 stores/message/planetscale.js
 stores/message/planetscale.d.ts
 stores/message/planetscale.d.cts
+stores/message/postgres.cjs
+stores/message/postgres.js
+stores/message/postgres.d.ts
+stores/message/postgres.d.cts
 stores/message/redis.cjs
 stores/message/redis.js
 stores/message/redis.d.ts

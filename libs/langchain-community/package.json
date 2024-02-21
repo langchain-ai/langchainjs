@@ -99,7 +99,7 @@
     "@types/jsdom": "^21.1.1",
     "@types/lodash": "^4",
     "@types/mozilla-readability": "^0.2.1",
-    "@types/pg": "^8",
+    "@types/pg": "^8.11.0",
     "@types/pg-copy-streams": "^1.2.2",
     "@types/uuid": "^9",
     "@types/ws": "^8",
@@ -1971,6 +1971,15 @@
       "import": "./stores/message/planetscale.js",
       "require": "./stores/message/planetscale.cjs"
     },
+    "./stores/message/postgres": {
+      "types": {
+        "import": "./stores/message/postgres.d.ts",
+        "require": "./stores/message/postgres.d.cts",
+        "default": "./stores/message/postgres.d.ts"
+      },
+      "import": "./stores/message/postgres.js",
+      "require": "./stores/message/postgres.cjs"
+    },
     "./stores/message/redis": {
       "types": {
         "import": "./stores/message/redis.d.ts",
@@ -2740,6 +2749,10 @@
     "stores/message/planetscale.js",
     "stores/message/planetscale.d.ts",
     "stores/message/planetscale.d.cts",
+    "stores/message/postgres.cjs",
+    "stores/message/postgres.js",
+    "stores/message/postgres.d.ts",
+    "stores/message/postgres.d.cts",
     "stores/message/redis.cjs",
     "stores/message/redis.js",
     "stores/message/redis.d.ts",
