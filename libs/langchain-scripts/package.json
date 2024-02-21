@@ -1,6 +1,6 @@
 {
   "name": "@langchain/scripts",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Shared scripts for LangChain.js",
   "type": "module",
   "engines": {
@@ -38,7 +38,9 @@
   "license": "MIT",
   "dependencies": {
     "commander": "^11.1.0",
+    "glob": "^10.3.10",
     "rollup": "^4.5.2",
+    "ts-morph": "^21.0.1",
     "typescript": "<5.2.0"
   },
   "devDependencies": {
@@ -76,6 +78,11 @@
       "import": "./build.js",
       "require": "./build.cjs"
     },
+    "./migrations": {
+      "types": "./migrations.d.ts",
+      "import": "./migrations.js",
+      "require": "./migrations.cjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -85,6 +92,9 @@
     "index.d.ts",
     "build.cjs",
     "build.js",
-    "build.d.ts"
+    "build.d.ts",
+    "migrations.cjs",
+    "migrations.js",
+    "migrations.d.ts"
   ]
 }

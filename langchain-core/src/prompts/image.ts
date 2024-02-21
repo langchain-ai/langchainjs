@@ -51,6 +51,8 @@ export class ImagePromptTemplate<
     return "ImagePromptTemplate";
   }
 
+  lc_namespace = ["langchain_core", "prompts", "image"];
+
   template: Record<string, unknown>;
 
   templateFormat: TemplateFormat = "f-string";

@@ -5,7 +5,10 @@ import { ChatGeneration, Generation } from "../outputs.js";
 /**
  * Class for parsing the output of an LLM into a JSON object.
  */
-export class JsonOutputParser extends BaseCumulativeTransformOutputParser<object> {
+export class JsonOutputParser<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends Record<string, any> = Record<string, any>
+> extends BaseCumulativeTransformOutputParser<T> {
   static lc_name() {
     return "JsonOutputParser";
   }
@@ -27,13 +30,15 @@ export class JsonOutputParser extends BaseCumulativeTransformOutputParser<object
     return compare(prev, next);
   }
 
+  // This should actually return Partial<T>, but there's no way
+  // to specify emitted chunks as instances separate from the main output type.
   async parsePartialResult(
     generations: ChatGeneration[] | Generation[]
-  ): Promise<object | undefined> {
+  ): Promise<T | undefined> {
     return parseJsonMarkdown(generations[0].text);
   }
 
-  async parse(text: string): Promise<object> {
+  async parse(text: string): Promise<T> {
     return parseJsonMarkdown(text, JSON.parse);
   }
 
@@ -53,7 +58,7 @@ export function parseJsonMarkdown(s: string, parser = parsePartialJson) {
   }
 }
 
-// Adapted from https://github.com/KillianLucas/open-interpreter/blob/main/interpreter/utils/parse_partial_json.py
+// Adapted from https://github.com/KillianLucas/open-interpreter/blob/main/interpreter/core/llm/utils/parse_partial_json.py
 // MIT License
 export function parsePartialJson(s: string) {
   // If the input is undefined, return null to indicate failure.

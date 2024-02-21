@@ -9,7 +9,7 @@ Looking for the Python version? Check out [LangChain](https://github.com/langcha
 
 To help you ship LangChain apps to production faster, check out [LangSmith](https://smith.langchain.com).
 [LangSmith](https://smith.langchain.com) is a unified developer platform for building, testing, and monitoring LLM applications.
-Fill out [this form](https://airtable.com/appwQzlErAS2qiP0L/shrGtGaVBVAz7NcV2) to get off the waitlist or speak with our sales team.
+Fill out [this form](https://airtable.com/appwQzlErAS2qiP0L/shrGtGaVBVAz7NcV2) to get on the waitlist or speak with our sales team.
 
 ## ⚡️ Quick Install
 
@@ -51,7 +51,7 @@ The LangChain libraries themselves are made up of several different packages.
 
 Integrations may also be split into their own compatible packages.
 
-![LangChain Stack](https://github.com/langchain-ai/langchainjs/blob/main/docs/core_docs/static/img/langchain_stack.png)
+![LangChain Stack](https://github.com/langchain-ai/langchainjs/blob/main/docs/core_docs/static/img/langchain_stack_feb_2024.webp)
 
 This library aims to assist in the development of those types of applications. Common examples of these applications include:
 

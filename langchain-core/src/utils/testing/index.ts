@@ -294,14 +294,16 @@ export class FakeListChatModel extends BaseChatModel {
   async *_streamResponseChunks(
     _messages: BaseMessage[],
     _options: this["ParsedCallOptions"],
-    _runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const response = this._currentResponse();
     this._incrementResponse();
 
     for await (const text of response) {
       await this._sleepIfRequested();
-      yield this._createResponseChunk(text);
+      const chunk = this._createResponseChunk(text);
+      yield chunk;
+      void runManager?.handleLLMNewToken(text);
     }
   }
 

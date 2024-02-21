@@ -18,6 +18,8 @@ interface VectorSearchOptions {
   readonly m?: number;
   readonly efConstruction?: number;
   readonly efSearch?: number;
+  readonly numberOfShards?: number;
+  readonly numberOfReplicas?: number;
 }
 
 /**
@@ -27,6 +29,7 @@ interface VectorSearchOptions {
  */
 export interface OpenSearchClientArgs {
   readonly client: Client;
+  readonly service?: "es" | "aoss";
   readonly indexName?: string;
 
   readonly vectorSearchOptions?: VectorSearchOptions;
@@ -53,6 +56,7 @@ interface FilterTypeValue {
   lte?: number;
   lt?: number;
   regexp?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   terms_set?: Record<string, any>;
   wildcard?: string;
 }
@@ -70,6 +74,9 @@ export class OpenSearchVectorStore extends VectorStore {
 
   private readonly indexName: string;
 
+  // if true, use the Amazon OpenSearch Serverless service instead of es
+  private readonly isAoss: boolean;
+
   private readonly engine: OpenSearchEngine;
 
   private readonly spaceType: OpenSearchSpaceType;
@@ -77,6 +84,10 @@ export class OpenSearchVectorStore extends VectorStore {
   private readonly efConstruction: number;
 
   private readonly efSearch: number;
+
+  private readonly numberOfShards: number;
+
+  private readonly numberOfReplicas: number;
 
   private readonly m: number;
 
@@ -92,9 +103,12 @@ export class OpenSearchVectorStore extends VectorStore {
     this.m = args.vectorSearchOptions?.m ?? 16;
     this.efConstruction = args.vectorSearchOptions?.efConstruction ?? 512;
     this.efSearch = args.vectorSearchOptions?.efSearch ?? 512;
+    this.numberOfShards = args.vectorSearchOptions?.numberOfShards ?? 5;
+    this.numberOfReplicas = args.vectorSearchOptions?.numberOfReplicas ?? 1;
 
     this.client = args.client;
     this.indexName = args.indexName ?? "documents";
+    this.isAoss = (args.service ?? "es") === "aoss";
   }
 
   /**
@@ -131,25 +145,41 @@ export class OpenSearchVectorStore extends VectorStore {
       this.spaceType,
       this.efSearch,
       this.efConstruction,
+      this.numberOfShards,
+      this.numberOfReplicas,
       this.m
     );
     const documentIds =
       options?.ids ?? Array.from({ length: vectors.length }, () => uuid.v4());
-    const operations = vectors.flatMap((embedding, idx) => [
-      {
-        index: {
-          _index: this.indexName,
-          _id: documentIds[idx],
+    const operations = vectors.flatMap((embedding, idx) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const document: Record<string, any> = [
+        {
+          index: {
+            _index: this.indexName,
+            _id: documentIds[idx],
+          },
         },
-      },
-      {
-        embedding,
-        metadata: documents[idx].metadata,
-        text: documents[idx].pageContent,
-      },
-    ]);
+        {
+          embedding,
+          metadata: documents[idx].metadata,
+          text: documents[idx].pageContent,
+        },
+      ];
+
+      // aoss does not support document id
+      if (this.isAoss) {
+        delete document[0].index?._id;
+      }
+
+      return document;
+    });
     await this.client.bulk({ body: operations });
-    await this.client.indices.refresh({ index: this.indexName });
+
+    // aoss does not support refresh
+    if (!this.isAoss) {
+      await this.client.indices.refresh({ index: this.indexName });
+    }
   }
 
   /**
@@ -259,13 +289,15 @@ export class OpenSearchVectorStore extends VectorStore {
     spaceType = "l2",
     efSearch = 512,
     efConstruction = 512,
+    numberOfShards = 5,
+    numberOfReplicas = 1,
     m = 16
   ): Promise<void> {
     const body = {
       settings: {
         index: {
-          number_of_shards: 5,
-          number_of_replicas: 1,
+          number_of_shards: numberOfShards,
+          number_of_replicas: numberOfReplicas,
           knn: true,
           "knn.algo_param.ef_search": efSearch,
         },
@@ -275,8 +307,14 @@ export class OpenSearchVectorStore extends VectorStore {
           {
             // map all metadata properties to be keyword
             "metadata.*": {
-              match_mapping_type: "*",
+              match_mapping_type: "string",
               mapping: { type: "keyword" },
+            },
+          },
+          {
+            "metadata.loc": {
+              match_mapping_type: "object",
+              mapping: { type: "object" },
             },
           },
         ],

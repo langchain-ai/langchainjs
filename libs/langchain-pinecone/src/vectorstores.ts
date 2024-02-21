@@ -86,7 +86,7 @@ export class PineconeStore extends VectorStore {
    */
   async addDocuments(
     documents: Document[],
-    options?: { ids?: string[] } | string[]
+    options?: { ids?: string[]; namespace?: string } | string[]
   ): Promise<string[]> {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
@@ -106,7 +106,7 @@ export class PineconeStore extends VectorStore {
   async addVectors(
     vectors: number[][],
     documents: Document[],
-    options?: { ids?: string[] } | string[]
+    options?: { ids?: string[]; namespace?: string } | string[]
   ) {
     const ids = Array.isArray(options) ? options : options?.ids;
     const documentIds = ids == null ? documents.map(() => uuid.v4()) : ids;
@@ -151,7 +151,11 @@ export class PineconeStore extends VectorStore {
       } as PineconeRecord<RecordMetadata>;
     });
 
-    const namespace = this.pineconeIndex.namespace(this.namespace ?? "");
+    const optionsNamespace =
+      !Array.isArray(options) && options?.namespace
+        ? options.namespace
+        : this.namespace;
+    const namespace = this.pineconeIndex.namespace(optionsNamespace ?? "");
     // Pinecone recommends a limit of 100 vectors per upsert request
     const chunkSize = 100;
     const chunkedVectors = chunkArray(pineconeVectors, chunkSize);
@@ -171,7 +175,8 @@ export class PineconeStore extends VectorStore {
    */
   async delete(params: PineconeDeleteParams): Promise<void> {
     const { deleteAll, ids, filter } = params;
-    const namespace = this.pineconeIndex.namespace(this.namespace ?? "");
+    const optionsNamespace = params.namespace ?? this.namespace;
+    const namespace = this.pineconeIndex.namespace(optionsNamespace ?? "");
 
     if (deleteAll) {
       await namespace.deleteAll();
@@ -198,7 +203,14 @@ export class PineconeStore extends VectorStore {
       throw new Error("cannot provide both `filter` and `this.filter`");
     }
     const _filter = filter ?? this.filter;
-    const namespace = this.pineconeIndex.namespace(this.namespace ?? "");
+
+    let optionsNamespace = this.namespace ?? "";
+    if (_filter && "namespace" in _filter) {
+      optionsNamespace = _filter.namespace;
+      delete _filter.namespace;
+    }
+
+    const namespace = this.pineconeIndex.namespace(optionsNamespace ?? "");
 
     const results = await namespace.query({
       includeMetadata: true,
@@ -207,7 +219,6 @@ export class PineconeStore extends VectorStore {
       filter: _filter,
       ...options,
     });
-
     return results;
   }
 

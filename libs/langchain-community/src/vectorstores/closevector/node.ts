@@ -23,6 +23,7 @@ import { CloseVector } from "./common.js";
  */
 export interface CloseVectorNodeArgs
   extends CloseVectorHNSWLibArgs<HierarchicalNSWT> {
+  space: "cosine" | "l2" | "ip";
   instance?: CloseVectorHNSWNode;
 }
 
@@ -46,53 +47,47 @@ export class CloseVectorNode extends CloseVector<CloseVectorHNSWNode> {
     } else {
       this.instance = new CloseVectorHNSWNode(embeddings, args);
     }
-    if (this.credentials?.key) {
-      this.instance.accessKey = this.credentials.key;
-    }
-    if (this.credentials?.secret) {
-      this.instance.secret = this.credentials.secret;
-    }
+  }
+
+  uuid() {
+    return this.instance.uuid;
   }
 
   /**
    * Method to save the index to the CloseVector CDN.
-   * @param options
-   * @param options.description A description of the index.
-   * @param options.public Whether the index should be public or private. Defaults to false.
-   * @param options.uuid A UUID for the index. If not provided, a new index will be created.
-   * @param options.onProgress A callback function that will be called with the progress of the upload.
+   * @param options.uuid after uploading the index to the CloseVector CDN, the uuid of the index can be obtained by instance.uuid
+   * @param options.credentials the credentials to be used to access the CloseVector API
+   * @param options.onProgress a callback function to track the upload progress
+   * @param options.public a boolean to determine if the index should be public or private, if not provided, the index will be private. If the index is public, it can be accessed by anyone with the uuid.
+   * @param options.description a description of the index
    */
-  async saveToCloud(
-    options: Parameters<CloseVectorHNSWNode["saveToCloud"]>[0]
-  ) {
-    await this.instance.saveToCloud(options);
+  async saveToCloud(options: {
+    uuid?: string;
+    public?: boolean;
+    description?: string;
+    credentials?: CloseVectorCredentials;
+    onProgress?: (progress: { loaded: number; total: number }) => void;
+  }) {
+    await this.instance.saveToCloud({
+      ...options,
+      credentials: options.credentials || this.credentials,
+    });
   }
 
   /**
    * Method to load the index from the CloseVector CDN.
-   * @param options
-   * @param options.uuid The UUID of the index to be downloaded.
-   * @param options.credentials The credentials to be used by the CloseVectorNode instance.
-   * @param options.embeddings The embeddings to be used by the CloseVectorNode instance.
-   * @param options.onProgress A callback function that will be called with the progress of the download.
+   * @param options.uuid after uploading the index to the CloseVector CDN, the uuid of the index can be obtained by instance.uuid
+   * @param options.credentials the credentials to be used to access the CloseVector API
+   * @param options.onProgress a callback function to track the download progress
+   * @param options.embeddings the embeddings to be used by the CloseVectorWeb instance
    */
-  static async loadFromCloud(
-    options: Omit<
-      Parameters<(typeof CloseVectorHNSWNode)["loadFromCloud"]>[0] & {
-        embeddings: EmbeddingsInterface;
-        credentials: CloseVectorCredentials;
-      },
-      "accessKey" | "secret"
-    >
-  ) {
-    if (!options.credentials.key || !options.credentials.secret) {
-      throw new Error("key and secret must be provided");
-    }
-    const instance = await CloseVectorHNSWNode.loadFromCloud({
-      ...options,
-      accessKey: options.credentials.key,
-      secret: options.credentials.secret,
-    });
+  static async loadFromCloud(options: {
+    embeddings: EmbeddingsInterface;
+    uuid: string;
+    credentials?: CloseVectorCredentials;
+    onProgress?: (progress: { loaded: number; total: number }) => void;
+  }) {
+    const instance = await CloseVectorHNSWNode.loadFromCloud(options);
     const vectorstore = new this(
       options.embeddings,
       instance.args,

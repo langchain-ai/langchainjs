@@ -118,6 +118,10 @@ embeddings/cohere.cjs
 embeddings/cohere.js
 embeddings/cohere.d.ts
 embeddings/cohere.d.cts
+embeddings/fireworks.cjs
+embeddings/fireworks.js
+embeddings/fireworks.d.ts
+embeddings/fireworks.d.cts
 embeddings/googlepalm.cjs
 embeddings/googlepalm.js
 embeddings/googlepalm.d.ts
@@ -386,6 +390,10 @@ vectorstores/typesense.cjs
 vectorstores/typesense.js
 vectorstores/typesense.d.ts
 vectorstores/typesense.d.cts
+vectorstores/upstash.cjs
+vectorstores/upstash.js
+vectorstores/upstash.d.ts
+vectorstores/upstash.d.cts
 vectorstores/usearch.cjs
 vectorstores/usearch.js
 vectorstores/usearch.d.ts
@@ -506,6 +514,10 @@ retrievers/databerry.cjs
 retrievers/databerry.js
 retrievers/databerry.d.ts
 retrievers/databerry.d.cts
+retrievers/dria.cjs
+retrievers/dria.js
+retrievers/dria.d.ts
+retrievers/dria.d.cts
 retrievers/metal.cjs
 retrievers/metal.js
 retrievers/metal.d.ts
@@ -566,6 +578,10 @@ document_transformers/mozilla_readability.cjs
 document_transformers/mozilla_readability.js
 document_transformers/mozilla_readability.d.ts
 document_transformers/mozilla_readability.d.cts
+storage/cassandra.cjs
+storage/cassandra.js
+storage/cassandra.d.ts
+storage/cassandra.d.cts
 storage/convex.cjs
 storage/convex.js
 storage/convex.d.ts
@@ -666,6 +682,10 @@ indexes/memory.cjs
 indexes/memory.js
 indexes/memory.d.ts
 indexes/memory.d.cts
+indexes/sqlite.cjs
+indexes/sqlite.js
+indexes/sqlite.d.ts
+indexes/sqlite.d.cts
 util/convex.cjs
 util/convex.js
 util/convex.d.ts

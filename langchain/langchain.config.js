@@ -9,12 +9,12 @@ function abs(relativePath) {
   return resolve(dirname(fileURLToPath(import.meta.url)), relativePath);
 }
 
-
 export const config = {
   internals: [
     /node\:/,
     /js-tiktoken/,
     /@langchain\/core/,
+    /langsmith/,
     /@langchain\/community/,
     "axios", // axios is a dependency of openai
     "convex",
@@ -197,8 +197,10 @@ export const config = {
     "document_loaders/web/pdf": "document_loaders/web/pdf",
     "document_loaders/web/recursive_url": "document_loaders/web/recursive_url",
     "document_loaders/web/s3": "document_loaders/web/s3",
+    "document_loaders/web/sitemap": "document_loaders/web/sitemap",
     "document_loaders/web/sonix_audio": "document_loaders/web/sonix_audio",
     "document_loaders/web/confluence": "document_loaders/web/confluence",
+    "document_loaders/web/couchbase": "document_loaders/web/couchbase",
     "document_loaders/web/searchapi": "document_loaders/web/searchapi",
     "document_loaders/web/serpapi": "document_loaders/web/serpapi",
     "document_loaders/web/sort_xyz_blockchain":
@@ -640,8 +642,10 @@ export const config = {
     "document_loaders/web/notionapi",
     "document_loaders/web/recursive_url",
     "document_loaders/web/s3",
+    "document_loaders/web/sitemap",
     "document_loaders/web/sonix_audio",
     "document_loaders/web/confluence",
+    "document_loaders/web/couchbase",
     "document_loaders/web/youtube",
     "document_loaders/fs/directory",
     "document_loaders/fs/buffer",
@@ -795,6 +799,13 @@ export const config = {
       path: "@langchain/core/prompts",
     },
     {
+      modules: [
+        "ImagePromptTemplate",
+      ],
+      alias: ["prompts", "image"],
+      path: "@langchain/core/prompts",
+    },
+    {
       modules: ["PipelinePromptTemplate"],
       alias: ["prompts", "pipeline"],
       path: "@langchain/core/prompts",
@@ -849,4 +860,4 @@ export const config = {
   cjsSource: "./dist-cjs",
   cjsDestination: "./dist",
   abs,
-}
+};

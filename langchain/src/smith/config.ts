@@ -2,7 +2,10 @@ import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { RunnableConfig } from "@langchain/core/runnables";
 import { Example, Run } from "langsmith";
 import { EvaluationResult, RunEvaluator } from "langsmith/evaluation";
-import { Criteria } from "../evaluation/index.js";
+import {
+  Criteria as CriteriaType,
+  type EmbeddingDistanceEvalChainInput,
+} from "../evaluation/index.js";
 import { LoadEvaluatorOptions } from "../evaluation/loader.js";
 import { EvaluatorType } from "../evaluation/types.js";
 
@@ -50,6 +53,28 @@ export type RunEvaluatorLike =
       options?: { config?: RunnableConfig }
     ) => EvaluationResult);
 
+export function isOffTheShelfEvaluator<
+  T extends keyof EvaluatorType,
+  U extends RunEvaluator | RunEvaluatorLike = RunEvaluator | RunEvaluatorLike
+>(evaluator: T | EvalConfig | U): evaluator is T | EvalConfig {
+  return typeof evaluator === "string" || "evaluatorType" in evaluator;
+}
+
+export function isCustomEvaluator<
+  T extends keyof EvaluatorType,
+  U extends RunEvaluator | RunEvaluatorLike = RunEvaluator | RunEvaluatorLike
+>(evaluator: T | EvalConfig | U): evaluator is U {
+  return !isOffTheShelfEvaluator(evaluator);
+}
+
+export type RunEvalType<
+  T extends keyof EvaluatorType =
+    | "criteria"
+    | "labeled_criteria"
+    | "embedding_distance",
+  U extends RunEvaluator | RunEvaluatorLike = RunEvaluator | RunEvaluatorLike
+> = T | EvalConfig | U;
+
 /**
  * Configuration class for running evaluations on datasets.
  *
@@ -60,23 +85,18 @@ export type RunEvaluatorLike =
  * @typeparam U - The type of custom evaluators.
  */
 export type RunEvalConfig<
-  T extends keyof EvaluatorType = keyof EvaluatorType,
+  T extends keyof EvaluatorType =
+    | "criteria"
+    | "labeled_criteria"
+    | "embedding_distance",
   U extends RunEvaluator | RunEvaluatorLike = RunEvaluator | RunEvaluatorLike
 > = {
   /**
-   * Custom evaluators to apply to a dataset run.
-   * Each evaluator is provided with a run trace containing the model
-   * outputs, as well as an "example" object representing a record
-   * in the dataset.
-   */
-  customEvaluators?: U[];
-
-  /**
-   * LangChain evaluators to apply to a dataset run.
+   * Evaluators to apply to a dataset run.
    * You can optionally specify these by name, or by
    * configuring them with an EvalConfig object.
    */
-  evaluators?: (T | EvalConfig)[];
+  evaluators?: RunEvalType<T, U>[];
 
   /**
    * Convert the evaluation data into formats that can be used by the evaluator.
@@ -104,9 +124,14 @@ export type RunEvalConfig<
   formatEvaluatorInputs?: EvaluatorInputFormatter;
 
   /**
-   * The language model specification for evaluators that require one.
+   * Custom evaluators to apply to a dataset run.
+   * Each evaluator is provided with a run trace containing the model
+   * outputs, as well as an "example" object representing a record
+   * in the dataset.
+   *
+   * @deprecated Use `evaluators` instead.
    */
-  evalLlm?: string;
+  customEvaluators?: U[];
 };
 
 export interface EvalConfig extends LoadEvaluatorOptions {
@@ -149,6 +174,31 @@ export interface EvalConfig extends LoadEvaluatorOptions {
   formatEvaluatorInputs: EvaluatorInputFormatter;
 }
 
+const isStringifiableValue = (
+  value: unknown
+): value is string | number | boolean | bigint =>
+  typeof value === "string" ||
+  typeof value === "number" ||
+  typeof value === "boolean" ||
+  typeof value === "bigint";
+
+const getSingleStringifiedValue = (value: unknown) => {
+  if (isStringifiableValue(value)) {
+    return `${value}`;
+  }
+
+  if (typeof value === "object" && value != null && !Array.isArray(value)) {
+    const entries = Object.entries(value);
+
+    if (entries.length === 1 && isStringifiableValue(entries[0][1])) {
+      return `${entries[0][1]}`;
+    }
+  }
+
+  console.warn("Non-stringifiable value found when coercing", value);
+  return `${value}`;
+};
+
 /**
  * Configuration to load a "CriteriaEvalChain" evaluator,
  * which prompts an LLM to determine whether the model's
@@ -174,7 +224,7 @@ export interface EvalConfig extends LoadEvaluatorOptions {
  *   }]
  * };
  */
-export type CriteriaEvalChainConfig = EvalConfig & {
+export type Criteria = EvalConfig & {
   evaluatorType: "criteria";
 
   /**
@@ -183,20 +233,39 @@ export type CriteriaEvalChainConfig = EvalConfig & {
    * https://smith.langchain.com/hub/langchain-ai/criteria-evaluator
    * for more information.
    */
-  criteria?: Criteria | Record<string, string>;
+  criteria?: CriteriaType | Record<string, string>;
 
   /**
-   * The feedback (or metric) name to use for the logged
-   * evaluation results. If none provided, we default to
-   * the evaluationName.
-   */
-  feedbackKey?: string;
-
-  /**
-   * The language model to use as the evaluator.
+   * The language model to use as the evaluator, defaults to GPT-4
    */
   llm?: BaseLanguageModel;
 };
+
+// for compatibility reasons
+export type CriteriaEvalChainConfig = Criteria;
+
+export function Criteria(
+  criteria: CriteriaType,
+  config?: Pick<
+    Partial<LabeledCriteria>,
+    "formatEvaluatorInputs" | "llm" | "feedbackKey"
+  >
+): EvalConfig {
+  const formatEvaluatorInputs =
+    config?.formatEvaluatorInputs ??
+    ((payload) => ({
+      prediction: getSingleStringifiedValue(payload.rawPrediction),
+      input: getSingleStringifiedValue(payload.rawInput),
+    }));
+
+  return {
+    evaluatorType: "criteria",
+    criteria,
+    feedbackKey: config?.feedbackKey ?? criteria,
+    llm: config?.llm,
+    formatEvaluatorInputs,
+  };
+}
 
 /**
  * Configuration to load a "LabeledCriteriaEvalChain" evaluator,
@@ -234,17 +303,65 @@ export type LabeledCriteria = EvalConfig & {
    * https://smith.langchain.com/hub/langchain-ai/labeled-criteria
    * for more information.
    */
-  criteria?: Criteria | Record<string, string>;
+  criteria?: CriteriaType | Record<string, string>;
 
   /**
-   * The feedback (or metric) name to use for the logged
-   * evaluation results. If none provided, we default to
-   * the evaluationName.
-   */
-  feedbackKey?: string;
-
-  /**
-   * The language model to use as the evaluator.
+   * The language model to use as the evaluator, defaults to GPT-4
    */
   llm?: BaseLanguageModel;
 };
+
+export function LabeledCriteria(
+  criteria: CriteriaType,
+  config?: Pick<
+    Partial<LabeledCriteria>,
+    "formatEvaluatorInputs" | "llm" | "feedbackKey"
+  >
+): LabeledCriteria {
+  const formatEvaluatorInputs =
+    config?.formatEvaluatorInputs ??
+    ((payload) => ({
+      prediction: getSingleStringifiedValue(payload.rawPrediction),
+      input: getSingleStringifiedValue(payload.rawInput),
+      reference: getSingleStringifiedValue(payload.rawReferenceOutput),
+    }));
+
+  return {
+    evaluatorType: "labeled_criteria",
+    criteria,
+    feedbackKey: config?.feedbackKey ?? criteria,
+    llm: config?.llm,
+    formatEvaluatorInputs,
+  };
+}
+
+/**
+ * Configuration to load a "EmbeddingDistanceEvalChain" evaluator,
+ * which embeds distances to score semantic difference between
+ * a prediction and reference.
+ */
+export type EmbeddingDistance = EvalConfig &
+  EmbeddingDistanceEvalChainInput & { evaluatorType: "embedding_distance" };
+
+export function EmbeddingDistance(
+  distanceMetric: EmbeddingDistanceEvalChainInput["distanceMetric"],
+  config?: Pick<
+    Partial<LabeledCriteria>,
+    "formatEvaluatorInputs" | "embedding" | "feedbackKey"
+  >
+): EmbeddingDistance {
+  const formatEvaluatorInputs =
+    config?.formatEvaluatorInputs ??
+    ((payload) => ({
+      prediction: getSingleStringifiedValue(payload.rawPrediction),
+      reference: getSingleStringifiedValue(payload.rawReferenceOutput),
+    }));
+
+  return {
+    evaluatorType: "embedding_distance",
+    embedding: config?.embedding,
+    distanceMetric,
+    feedbackKey: config?.feedbackKey ?? "embedding_distance",
+    formatEvaluatorInputs,
+  };
+}

@@ -179,8 +179,7 @@ export abstract class LLMStringEvaluator<
    * @param config
    */
   abstract _evaluateStrings(
-    args: StringEvaluatorArgs,
-    callOptions?: ExtractLLMCallOptions<this["llm"]>,
+    args: StringEvaluatorArgs & ExtractLLMCallOptions<this["llm"]>,
     config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues>;
 
@@ -195,12 +194,11 @@ export abstract class LLMStringEvaluator<
    * @param config
    */
   evaluateStrings(
-    args: StringEvaluatorArgs,
-    callOptions?: ExtractLLMCallOptions<this["llm"]>,
+    args: StringEvaluatorArgs & ExtractLLMCallOptions<this["llm"]>,
     config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues> {
     this.checkEvaluationArgs(args.reference, args.input);
-    return this._evaluateStrings(args, callOptions, config);
+    return this._evaluateStrings(args, config);
   }
 }
 

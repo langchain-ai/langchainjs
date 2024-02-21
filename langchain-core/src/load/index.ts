@@ -29,19 +29,19 @@ function combineAliasesAndInvert(constructor: typeof Serializable) {
 
 async function reviver(
   this: {
-    optionalImportsMap: OptionalImportMap;
-    optionalImportEntrypoints: string[];
-    secretsMap: SecretMap;
-    importMap: Record<string, unknown>;
+    optionalImportsMap?: OptionalImportMap;
+    optionalImportEntrypoints?: string[];
+    secretsMap?: SecretMap;
+    importMap?: Record<string, unknown>;
     path?: string[];
   },
   value: unknown
 ): Promise<unknown> {
   const {
-    optionalImportsMap,
-    optionalImportEntrypoints,
-    importMap,
-    secretsMap,
+    optionalImportsMap = {},
+    optionalImportEntrypoints = [],
+    importMap = {},
+    secretsMap = {},
     path = ["$"],
   } = this;
   const pathStr = path.join(".");
@@ -234,21 +234,13 @@ async function reviver(
 
 export async function load<T>(
   text: string,
-  {
-    secretsMap,
-    importMap,
-    optionalImportsMap,
-    optionalImportEntrypoints,
-  }: {
-    secretsMap: SecretMap;
-    optionalImportsMap: OptionalImportMap;
-    optionalImportEntrypoints: string[];
-    importMap: Record<string, unknown>;
+  mappings?: {
+    secretsMap?: SecretMap;
+    optionalImportsMap?: OptionalImportMap;
+    optionalImportEntrypoints?: string[];
+    importMap?: Record<string, unknown>;
   }
 ): Promise<T> {
   const json = JSON.parse(text);
-  return reviver.call(
-    { secretsMap, optionalImportsMap, optionalImportEntrypoints, importMap },
-    json
-  ) as Promise<T>;
+  return reviver.call({ ...mappings }, json) as Promise<T>;
 }

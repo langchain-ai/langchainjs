@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "0.1.22",
+  "version": "0.1.31",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -27,6 +27,7 @@
     "prepack": "yarn build",
     "release": "release-it --only-version --config .release-it.json",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
+    "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
     "test:single": "NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 100000",
     "format": "prettier --config .prettierrc --write \"src\"",
@@ -42,7 +43,7 @@
     "camelcase": "6",
     "decamelize": "1.2.0",
     "js-tiktoken": "^1.0.8",
-    "langsmith": "~0.0.48",
+    "langsmith": "~0.1.1",
     "ml-distance": "^4.0.0",
     "p-queue": "^6.6.2",
     "p-retry": "4",
@@ -279,6 +280,15 @@
       "import": "./runnables.js",
       "require": "./runnables.cjs"
     },
+    "./runnables/remote": {
+      "types": {
+        "import": "./runnables/remote.d.ts",
+        "require": "./runnables/remote.d.cts",
+        "default": "./runnables/remote.d.ts"
+      },
+      "import": "./runnables/remote.js",
+      "require": "./runnables/remote.cjs"
+    },
     "./retrievers": {
       "types": {
         "import": "./retrievers.d.ts",
@@ -395,6 +405,15 @@
       },
       "import": "./utils/env.js",
       "require": "./utils/env.cjs"
+    },
+    "./utils/event_source_parse": {
+      "types": {
+        "import": "./utils/event_source_parse.d.ts",
+        "require": "./utils/event_source_parse.d.cts",
+        "default": "./utils/event_source_parse.d.ts"
+      },
+      "import": "./utils/event_source_parse.js",
+      "require": "./utils/event_source_parse.cjs"
     },
     "./utils/function_calling": {
       "types": {
@@ -574,6 +593,10 @@
     "runnables.js",
     "runnables.d.ts",
     "runnables.d.cts",
+    "runnables/remote.cjs",
+    "runnables/remote.js",
+    "runnables/remote.d.ts",
+    "runnables/remote.d.cts",
     "retrievers.cjs",
     "retrievers.js",
     "retrievers.d.ts",
@@ -626,6 +649,10 @@
     "utils/env.js",
     "utils/env.d.ts",
     "utils/env.d.cts",
+    "utils/event_source_parse.cjs",
+    "utils/event_source_parse.js",
+    "utils/event_source_parse.d.ts",
+    "utils/event_source_parse.d.cts",
     "utils/function_calling.cjs",
     "utils/function_calling.js",
     "utils/function_calling.d.ts",
