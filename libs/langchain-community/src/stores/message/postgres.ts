@@ -64,17 +64,6 @@ export interface StoredPostgresMessageData {
  *      database: "api",
  *    }),
  * });
- *
- * const chain = new ConversationChain({
- *     llm: new ChatOpenAI(),
- *     memory: new BufferMemory({ chatHistory }),
- * });
- *
- * const response = await chain.invoke({
- *     input: "What did I just say my name was?",
- * });
- *
- * console.log({ response });
  * ```
  */
 export class PostgresChatMessageHistory extends BaseListChatMessageHistory {
@@ -99,8 +88,8 @@ export class PostgresChatMessageHistory extends BaseListChatMessageHistory {
    * @throws If neither `pool` nor `poolConfig` is provided.
    */
   constructor(fields: PostgresChatMessageHistoryInput) {
-    const { tableName, sessionId, pool, poolConfig, escapeTableName } = fields;
     super(fields);
+    const { tableName, sessionId, pool, poolConfig, escapeTableName } = fields;
     // Ensure that either a client or config is provided
     if (!pool && !poolConfig) {
       throw new Error(
