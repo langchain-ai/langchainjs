@@ -1,50 +1,39 @@
-# @langchain/nomic
+# @langchain/groq
 
-This package contains the LangChain.js integrations for Nomic via the @nomic-ai/atlas package.
+This package contains the LangChain.js integrations for Groq via the groq/sdk package.
 
 ## Installation
 
 ```bash npm2yarn
-npm install @langchain/nomic
+npm install @langchain/groq
 ```
 
-## Embeddings
+## Chat models
 
-This package adds support for Nomic embeddings.
+This package adds support for Groq chat model inference.
 
-Currently, they offer two embeddings models:
-- `nomic-embed-text-v1`
-- `nomic-embed-text-v1.5`
-
-`nomic-embed-text-v1.5` allows for you to customize the number of dimensions returned. It defaults to the largest possible number of dimensions (768), or you can select 64, 128, 256, or 512.
-
-Now set the necessary environment variable (or pass it in via the constructor):
+Set the necessary environment variable (or pass it in via the constructor):
 
 ```bash
-export NOMIC_API_KEY=
+export GROQ_API_KEY=
 ```
 
 ```typescript
-import { NomicEmbeddings } from "@langchain/nomic";
+import { ChatGroq } from "@langchain/groq";
+import { HumanMessage } from "@langchain/core/messages";
 
-const nomicEmbeddings = new NomicEmbeddings({
-  apiKey: process.env.NOMIC_API_KEY, // Default value.
-  modelName: "nomic-embed-text-v1",  // Default value.
+const model = new ChatGroq({
+  apiKey: process.env.GROQ_API_KEY, // Default value.
 });
 
-const docs = [
-  "hello world",
-  "nomic embeddings!",
-  "super special langchain integration package",
-  "what color is the sky?",
-];
+const message = new HumanMessage("What color is the sky?");
 
-const embeddings = await nomicEmbeddings.embedDocuments(docs);
+const res = await chat.invoke([message]);
 ```
 
 ## Development
 
-To develop the `@langchain/nomic` package, you'll need to follow these instructions:
+To develop the `@langchain/groq` package, you'll need to follow these instructions:
 
 ### Install dependencies
 
@@ -61,7 +50,7 @@ yarn build
 Or from the repo root:
 
 ```bash
-yarn build --filter=@langchain/nomic
+yarn build --filter=@langchain/groq
 ```
 
 ### Run tests
