@@ -520,6 +520,15 @@ export class CallbackManager
     this._parentRunId = parentRunId;
   }
 
+  /**
+   * Gets the parent run ID, if any.
+   *
+   * @returns The parent run ID.
+   */
+  getParentRunId() {
+    return this._parentRunId;
+  }
+
   async handleLLMStart(
     llm: Serialized,
     prompts: string[],
