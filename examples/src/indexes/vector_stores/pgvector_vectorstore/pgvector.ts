@@ -41,15 +41,39 @@ console.log(results);
   [ Document { pageContent: 'Cat drinks milk', metadata: { a: 1 } } ]
 */
 
+// Filtering is supported
+const results2 = await pgvectorStore.similaritySearch("water", 1, {
+  a: 2,
+});
+
+console.log(results2);
+
+/*
+  [ Document { pageContent: 'what's this', metadata: { a: 2 } } ]
+*/
+
+// Filtering on multiple values using "in" is supported too
+const results3 = await pgvectorStore.similaritySearch("water", 1, {
+  a: {
+    in: [2],
+  },
+});
+
+console.log(results3);
+
+/*
+  [ Document { pageContent: 'what's this', metadata: { a: 2 } } ]
+*/
+
 await pgvectorStore.delete({
   filter: {
     a: 1,
   },
 });
 
-const results2 = await pgvectorStore.similaritySearch("water", 1);
+const results4 = await pgvectorStore.similaritySearch("water", 1);
 
-console.log(results2);
+console.log(results4);
 
 /*
   [ Document { pageContent: 'what's this', metadata: { a: 2 } } ]

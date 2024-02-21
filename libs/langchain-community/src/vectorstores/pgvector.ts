@@ -409,13 +409,14 @@ export class PGVectorStore extends VectorStore {
   ): Promise<[Document, number][]> {
     const embeddingString = `[${query.join(",")}]`;
     const _filter: this["FilterType"] = filter ?? {};
-    
+
     let collectionId;
     if (this.collectionTableName) {
       collectionId = await this.getOrCreateCollection();
     }
 
-    const parameters = [embeddingString, k];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const parameters: unknown[] = [embeddingString, k];
     const whereClauses = [];
 
     if (collectionId) {
@@ -425,23 +426,27 @@ export class PGVectorStore extends VectorStore {
     let paramCount = parameters.length;
     for (const [key, value] of Object.entries(_filter)) {
       if (typeof value === "object" && value !== null) {
-        const _value: { [key: string]: any } = value as { [key: string]: any };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const _value: Record<string, any> = value;
         const currentParamCount = paramCount;
-        const placeholders = _value.in
-          .map((_: any, index: number) => `$${currentParamCount + index + 1}`)
-          .join(",");
-        whereClauses.push(
-          `${this.metadataColumnName}->>'${key}' IN (${placeholders})`
-        );
-        parameters.push(..._value.in);
-        paramCount += _value.in.length;
+        if (Array.isArray(_value.in)) {
+          const placeholders = _value.in
+            .map(
+              (_: unknown, index: number) => `$${currentParamCount + index + 1}`
+            )
+            .join(",");
+          whereClauses.push(
+            `${this.metadataColumnName}->>'${key}' IN (${placeholders})`
+          );
+          parameters.push(..._value.in);
+          paramCount += _value.in.length;
+        }
       } else {
-        const _value:any = value ;
         paramCount += 1;
         whereClauses.push(
           `${this.metadataColumnName}->>'${key}' = $${paramCount}`
         );
-        parameters.push(_value);
+        parameters.push(value);
       }
     }
 
