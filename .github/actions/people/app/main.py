@@ -627,6 +627,6 @@ if __name__ == "__main__":
     logging.info("Pushing branch")
     subprocess.run(["git", "push", "origin", branch_name, "-f"], check=True)
     logging.info("Creating PR")
-    pr = repo.create_pull(title=message, body=message, base="master", head=branch_name)
+    pr = repo.create_pull(title=message, body=message, base="main", head=branch_name)
     logging.info(f"Created PR: {pr.number}")
     logging.info("Finished")
