@@ -9488,7 +9488,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/groq@workspace:libs/langchain-groq":
+"@langchain/groq@workspace:*, @langchain/groq@workspace:libs/langchain-groq":
   version: 0.0.0-use.local
   resolution: "@langchain/groq@workspace:libs/langchain-groq"
   dependencies:
@@ -21210,6 +21210,7 @@ __metadata:
     "@langchain/core": "workspace:*"
     "@langchain/exa": "workspace:*"
     "@langchain/google-genai": "workspace:*"
+    "@langchain/groq": "workspace:*"
     "@langchain/mistralai": "workspace:*"
     "@langchain/nomic": "workspace:*"
     "@langchain/openai": "workspace:*"

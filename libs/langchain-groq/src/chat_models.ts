@@ -22,13 +22,8 @@ import {
   ChatGeneration,
 } from "@langchain/core/outputs";
 import Groq from "groq-sdk";
-import type {
-  ChatCompletionCreateParamsStreaming,
-  ChatCompletionCreateParamsNonStreaming,
-  ChatCompletionCreateParams,
-  ChatCompletionChunk,
-  ChatCompletion,
-} from "./types/types.js";
+import { ChatCompletion, ChatCompletionCreateParams, ChatCompletionCreateParamsNonStreaming, ChatCompletionCreateParamsStreaming } from 'groq-sdk/resources/chat/completions';
+import { ChatCompletionChunk } from "groq-sdk/lib/chat_completions_ext";
 
 export interface ChatGroqCallOptions extends BaseChatModelCallOptions {}
 
@@ -104,9 +99,7 @@ function groqResponseToChatMessage(
 ): BaseMessage {
   switch (message.role) {
     case "assistant":
-      return new AIMessage(message.content || "", {
-        tool_calls: message.tool_calls,
-      });
+      return new AIMessage(message.content || "");
     default:
       return new ChatMessage(message.content || "", message.role ?? "unknown");
   }
