@@ -29,7 +29,7 @@ export class PostgresRecordManager implements RecordManagerInterface {
   async createSchema(): Promise<void> {
     try {
       await this.pool.query(`
-CREATE TABLE IF NOT EXISTS "${this.tableName}" (
+CREATE TABLE IF NOT EXISTS ${this.tableName} (
   uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   key TEXT NOT NULL,
   namespace TEXT NOT NULL,
