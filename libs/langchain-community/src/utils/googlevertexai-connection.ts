@@ -189,6 +189,8 @@ export class GoogleVertexAILLMConnection<
 
   client: GoogleAbstractedClient;
 
+  customModelURL: string;
+
   constructor(
     fields: GoogleVertexAIBaseLLMInput<AuthOptions> | undefined,
     caller: AsyncCaller,
@@ -198,13 +200,20 @@ export class GoogleVertexAILLMConnection<
     super(fields, caller, client, streaming);
     this.client = client;
     this.model = fields?.model ?? this.model;
+
+    this.customModelURL = fields?.customModelURL ?? "";
   }
 
   async buildUrl(): Promise<string> {
-    const projectId = await this.client.getProjectId();
     const method = this.streaming ? "serverStreamingPredict" : "predict";
-    const url = `https://${this.endpoint}/v1/projects/${projectId}/locations/${this.location}/publishers/google/models/${this.model}:${method}`;
-    return url;
+
+    if (this.customModelURL.trim() !== "") {
+      return `${this.customModelURL}:${method}`;
+    }
+
+    const projectId = await this.client.getProjectId();
+
+    return `https://${this.endpoint}/v1/projects/${projectId}/locations/${this.location}/publishers/google/models/${this.model}:${method}`;
   }
 
   formatStreamingData(
