@@ -21,29 +21,28 @@ export interface AstraDBChatMessageHistoryProps {
   sessionId: string;
 }
 
-
 /**
  * Class for storing chat message history with Astra DB. It extends the
  * BaseListChatMessageHistory class and provides methods to get, add, and
  * clear messages.
  * @example
- * 
+ *
  * ```typescript
  * const client = new AstraDB(
  *   process.env.ASTRA_DB_APPLICATION_TOKEN,
  *   process.env.ASTRA_DB_ENDPOINT,
  *   process.env.ASTRA_DB_NAMESPACE
  * );
- * 
+ *
  * const collection = await client.collection("test_chat");
- * 
+ *
  * const chatHistory = new AstraDBChatMessageHistory({
  *   collection,
  *   sessionId: "YOUR_SESSION_ID",
  * });
- * 
+ *
  * const messages = await chatHistory.getMessages();
- * 
+ *
  * await chatHistory.clear();
  */
 export class AstraDBChatMessageHistory extends BaseListChatMessageHistory {
@@ -61,9 +60,9 @@ export class AstraDBChatMessageHistory extends BaseListChatMessageHistory {
 
   /**
    * async initializer function to return a new instance of AstraDBChatMessageHistory in a single step
-   * @param AstraDBChatMessageHistoryInput 
+   * @param AstraDBChatMessageHistoryInput
    * @returns Promise<AstraDBChatMessageHistory>
-   * 
+   *
    * @example
    * const chatHistory = await AstraDBChatMessageHistory.initialize({
    *  token: process.env.ASTRA_DB_APPLICATION_TOKEN,
@@ -73,7 +72,13 @@ export class AstraDBChatMessageHistory extends BaseListChatMessageHistory {
    *  sessionId: "YOUR_SESSION_ID"
    * });
    */
-  static async initialize({ token, endpoint, collectionName, namespace, sessionId }: AstraDBChatMessageHistoryInput): Promise<AstraDBChatMessageHistory> {
+  static async initialize({
+    token,
+    endpoint,
+    collectionName,
+    namespace,
+    sessionId,
+  }: AstraDBChatMessageHistoryInput): Promise<AstraDBChatMessageHistory> {
     const client = new AstraDB(token, endpoint, namespace);
     const collection = await client.collection(collectionName);
     return new AstraDBChatMessageHistory({ collection, sessionId });
@@ -99,7 +104,7 @@ export class AstraDBChatMessageHistory extends BaseListChatMessageHistory {
   async addMessage(message: BaseMessage): Promise<void> {
     const messages = mapChatMessagesToStoredMessages([message]);
     const { type, data } = messages[0];
-  
+
     await this.collection.insertOne({
       sessionId: this.sessionId,
       timestamp: Date.now(),

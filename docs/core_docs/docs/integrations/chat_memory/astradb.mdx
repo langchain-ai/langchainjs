@@ -31,15 +31,18 @@ There are two ways to inialize your `AstraDBChatMessageHistory`
 If you already have an instance of the `AstraDB` client defined you can connect to your collection and initialize an instance of the `ChatMessageHistory` using the constuctor.
 
 ```typescript
-const client = client = new AstraDB(
+const client = (client = new AstraDB(
   process.env.ASTRA_DB_APPLICATION_TOKEN,
   process.env.ASTRA_DB_ENDPOINT,
   process.env.ASTRA_DB_NAMESPACE
-);
+));
 
 const collection = await client.collection("YOUR_COLLECTION_NAME");
-    
-const chatHistory = new AstraDBChatMessageHistory({ collection, sessionId: "YOUR_SESSION_ID" });
+
+const chatHistory = new AstraDBChatMessageHistory({
+  collection,
+  sessionId: "YOUR_SESSION_ID",
+});
 ```
 
 If you don't already have an instance of an `AstraDB` client you can use the `initialize` method.
@@ -50,7 +53,7 @@ const chatHistory = await AstraDBChatMessageHistory.initialize({
   endpoint: process.env.ASTRA_DB_ENDPOINT ?? "endpoint",
   namespace: process.env.ASTRA_DB_NAMESPACE,
   collectionName: "YOUR_COLLECTION_NAME",
-  sessionId: "YOUR_SESSION_ID"
+  sessionId: "YOUR_SESSION_ID",
 });
 ```
 

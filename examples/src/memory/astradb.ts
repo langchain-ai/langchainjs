@@ -33,7 +33,7 @@ const chainWithHistory = new RunnableWithMessageHistory({
       endpoint: process.env.ASTRA_DB_ENDPOINT as string,
       namespace: process.env.ASTRA_DB_NAMESPACE,
       collectionName: "YOUR_COLLECTION_NAME",
-      sessionId
+      sessionId,
     });
     return chatHistory;
   },

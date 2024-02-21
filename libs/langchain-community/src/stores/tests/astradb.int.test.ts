@@ -31,10 +31,12 @@ describe("AstraDBChatMessageHistory", () => {
     const collection = await client.collection("test_messages");
 
     const sessionId = "langchain_test_messages_session";
-    
+
     const history = new AstraDBChatMessageHistory({ collection, sessionId });
 
-    await history.addUserMessage("What TS client allows me to connect to Astra DB?");
+    await history.addUserMessage(
+      "What TS client allows me to connect to Astra DB?"
+    );
     await history.addAIChatMessage("@datastax/astra-db-ts");
 
     const expectedMessages = [
@@ -48,17 +50,19 @@ describe("AstraDBChatMessageHistory", () => {
 
   test("Test clear Asta DB Chat History", async () => {
     const sessionId = "langchain_test_messages_session";
-    
+
     // tests creation via static method
     const history = await AstraDBChatMessageHistory.initialize({
       token: process.env.ASTRA_DB_APPLICATION_TOKEN ?? "token",
       endpoint: process.env.ASTRA_DB_ENDPOINT ?? "endpoint",
-      collectionName:"test_messages",
+      collectionName: "test_messages",
       namespace: process.env.ASTRA_DB_NAMESPACE,
-      sessionId
+      sessionId,
     });
 
-    await history.addUserMessage("What TS client allows me to connect to Astra DB?");
+    await history.addUserMessage(
+      "What TS client allows me to connect to Astra DB?"
+    );
     await history.addAIChatMessage("@datastax/astra-db-ts");
 
     const expectedMessages = [
