@@ -143,6 +143,16 @@ export class FireworksEmbeddings
         body: JSON.stringify(request),
       });
 
+      if (!response.ok) {
+        const { error: message } = await response.json();
+        const error = new Error(
+          `Error ${response.status}: ${message ?? "Unspecified error"}`
+        );
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (error as any).response = response;
+        throw error;
+      }
+
       const json = await response.json();
       return json;
     };
