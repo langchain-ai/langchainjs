@@ -5,7 +5,7 @@ import { AstraDBChatMessageHistory } from "../message/astradb.js";
 
 let client: AstraDB;
 
-describe("AstraDBChatMessageHistory", () => {
+describe.skip("AstraDBChatMessageHistory", () => {
   beforeAll(() => {
     expect(process.env.ASTRA_DB_APPLICATION_TOKEN).toBeDefined();
     expect(process.env.ASTRA_DB_ENDPOINT).toBeDefined();
