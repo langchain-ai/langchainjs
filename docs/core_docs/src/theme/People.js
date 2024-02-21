@@ -12,15 +12,17 @@ function renderPerson({ login, avatarUrl, url }) {
         padding: "18px",
       }}
     >
-      <a href={url} target="_blank">
+      <a href={url} target="_blank" rel="noreferrer">
         <img
           src={avatarUrl}
+          alt={`Avatar for ${login}`}
           style={{ borderRadius: "50%", width: "128px", height: "128px" }}
         />
       </a>
       <a
         href={url}
         target="_blank"
+        rel="noreferrer"
         style={{ fontSize: "18px", fontWeight: "700" }}
       >
         @{login}
@@ -34,9 +36,7 @@ export default function People({ type, count }) {
   if (count !== undefined) {
     people = people.slice(0, parseInt(count, 10));
   }
-  const html = people.map((person) => {
-    return renderPerson(person);
-  });
+  const html = people.map((person) => renderPerson(person));
   return (
     <div
       style={{
