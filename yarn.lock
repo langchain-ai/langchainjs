@@ -25963,8 +25963,7 @@ __metadata:
     typeorm: ^0.3.12
     typescript: ~5.1.6
     uuid: ^9.0.0
-    vectordb: ^0.1.4
-    weaviate-ts-client: ^1.4.0
+    weaviate-ts-client: ^2.0.0
     web-auth-library: ^1.0.3
     wikipedia: ^2.1.2
     yaml: ^2.2.1
@@ -26018,8 +26017,7 @@ __metadata:
     sonix-speech-recognition: ^2.1.1
     srt-parser-2: ^1.2.3
     typeorm: ^0.3.12
-    vectordb: ^0.1.4
-    weaviate-ts-client: ^1.4.0
+    weaviate-ts-client: "*"
     web-auth-library: ^1.0.3
     ws: ^8.14.2
     youtube-transcript: ^1.0.6
@@ -26116,8 +26114,6 @@ __metadata:
     srt-parser-2:
       optional: true
     typeorm:
-      optional: true
-    vectordb:
       optional: true
     weaviate-ts-client:
       optional: true
