@@ -9488,6 +9488,39 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@langchain/llama-cpp@workspace:libs/langchain-llama-cpp":
+  version: 0.0.0-use.local
+  resolution: "@langchain/llama-cpp@workspace:libs/langchain-llama-cpp"
+  dependencies:
+    "@jest/globals": ^29.5.0
+    "@langchain/core": ~0.1
+    "@langchain/openai": "workspace:^"
+    "@langchain/scripts": ~0.0
+    "@swc/core": ^1.3.90
+    "@swc/jest": ^0.2.29
+    "@tsconfig/recommended": ^1.0.3
+    "@types/uuid": ^9
+    "@typescript-eslint/eslint-plugin": ^6.12.0
+    "@typescript-eslint/parser": ^6.12.0
+    dotenv: ^16.3.1
+    dpdm: ^3.12.0
+    eslint: ^8.33.0
+    eslint-config-airbnb-base: ^15.0.0
+    eslint-config-prettier: ^8.6.0
+    eslint-plugin-import: ^2.27.5
+    eslint-plugin-no-instanceof: ^1.0.1
+    eslint-plugin-prettier: ^4.2.1
+    jest: ^29.5.0
+    jest-environment-node: ^29.6.4
+    node-llama-cpp: ^2.8.7
+    prettier: ^2.8.3
+    release-it: ^15.10.1
+    rollup: ^4.5.2
+    ts-jest: ^29.1.0
+    typescript: <5.2.0
+  languageName: unknown
+  linkType: soft
+
 "@langchain/mistralai@workspace:*, @langchain/mistralai@workspace:libs/langchain-mistralai":
   version: 0.0.0-use.local
   resolution: "@langchain/mistralai@workspace:libs/langchain-mistralai"
@@ -28008,6 +28041,37 @@ __metadata:
   bin:
     node-llama-cpp: dist/cli/cli.js
   checksum: 5be984ab4711d3e6f3f29e6246e5d3b437b0e48631376f361c832a969530ffa4da5cdc78e8cf8e003a86411ced42c7cf022ad6d5b50c24f276cd841dbb077e0b
+  languageName: node
+  linkType: hard
+
+"node-llama-cpp@npm:^2.8.7":
+  version: 2.8.7
+  resolution: "node-llama-cpp@npm:2.8.7"
+  dependencies:
+    chalk: ^5.3.0
+    chmodrp: ^1.0.2
+    cli-progress: ^3.12.0
+    cmake-js: ^7.2.1
+    cross-env: ^7.0.3
+    cross-spawn: ^7.0.3
+    env-var: ^7.3.1
+    fs-extra: ^11.1.1
+    log-symbols: ^5.1.0
+    node-addon-api: ^7.0.0
+    octokit: ^3.1.0
+    ora: ^7.0.1
+    simple-git: ^3.19.1
+    uuid: ^9.0.0
+    which: ^4.0.0
+    yargs: ^17.7.2
+  peerDependencies:
+    typescript: ">=5.0.0"
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  bin:
+    node-llama-cpp: dist/cli/cli.js
+  checksum: 34ccb74ad90f751c8ef502f89b5584a50cebb3cdf83774d9d46bcdf719580b237814b7b54de1e1b7740b7b02d7a00886929bf6785abf506e7fa7cbc3404bacd8
   languageName: node
   linkType: hard
 
