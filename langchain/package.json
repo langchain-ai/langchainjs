@@ -1293,8 +1293,7 @@
     "ts-jest": "^29.1.0",
     "typeorm": "^0.3.12",
     "typescript": "~5.1.6",
-    "vectordb": "^0.1.4",
-    "weaviate-ts-client": "^1.4.0",
+    "weaviate-ts-client": "^2.0.0",
     "web-auth-library": "^1.0.3",
     "wikipedia": "^2.1.2",
     "youtube-transcript": "^1.0.6",
@@ -1333,7 +1332,7 @@
     "ioredis": "^5.3.2",
     "jsdom": "*",
     "mammoth": "^1.6.0",
-    "mongodb": "^5.2.0",
+    "mongodb": ">=5.2.0",
     "node-llama-cpp": "*",
     "notion-to-md": "^3.1.0",
     "officeparser": "^4.0.4",
@@ -1346,8 +1345,7 @@
     "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.3",
     "typeorm": "^0.3.12",
-    "vectordb": "^0.1.4",
-    "weaviate-ts-client": "^1.4.0",
+    "weaviate-ts-client": "*",
     "web-auth-library": "^1.0.3",
     "ws": "^8.14.2",
     "youtube-transcript": "^1.0.6",
@@ -1490,9 +1488,6 @@
       "optional": true
     },
     "typeorm": {
-      "optional": true
-    },
-    "vectordb": {
       "optional": true
     },
     "weaviate-ts-client": {

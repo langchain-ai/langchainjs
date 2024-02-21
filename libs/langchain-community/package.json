@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.0.30",
+  "version": "0.0.31",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -236,7 +236,7 @@
     "llmonitor": "^0.5.9",
     "lodash": "^4.17.21",
     "lunary": "^0.6.11",
-    "mongodb": "^5.2.0",
+    "mongodb": ">=5.2.0",
     "mysql2": "^3.3.3",
     "neo4j-driver": "*",
     "node-llama-cpp": "*",
@@ -782,6 +782,15 @@
       },
       "import": "./embeddings/cohere.js",
       "require": "./embeddings/cohere.cjs"
+    },
+    "./embeddings/fireworks": {
+      "types": {
+        "import": "./embeddings/fireworks.d.ts",
+        "require": "./embeddings/fireworks.d.cts",
+        "default": "./embeddings/fireworks.d.ts"
+      },
+      "import": "./embeddings/fireworks.js",
+      "require": "./embeddings/fireworks.cjs"
     },
     "./embeddings/googlepalm": {
       "types": {
@@ -2203,6 +2212,10 @@
     "embeddings/cohere.js",
     "embeddings/cohere.d.ts",
     "embeddings/cohere.d.cts",
+    "embeddings/fireworks.cjs",
+    "embeddings/fireworks.js",
+    "embeddings/fireworks.d.ts",
+    "embeddings/fireworks.d.cts",
     "embeddings/googlepalm.cjs",
     "embeddings/googlepalm.js",
     "embeddings/googlepalm.d.ts",

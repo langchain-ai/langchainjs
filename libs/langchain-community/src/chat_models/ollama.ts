@@ -66,6 +66,8 @@ export class ChatOllama
 
   baseUrl = "http://localhost:11434";
 
+  keepAlive = "5m";
+
   embeddingOnly?: boolean;
 
   f16KV?: boolean;
@@ -138,6 +140,7 @@ export class ChatOllama
     this.baseUrl = fields.baseUrl?.endsWith("/")
       ? fields.baseUrl.slice(0, -1)
       : fields.baseUrl ?? this.baseUrl;
+    this.keepAlive = fields.keepAlive ?? this.keepAlive;
     this.embeddingOnly = fields.embeddingOnly;
     this.f16KV = fields.f16KV;
     this.frequencyPenalty = fields.frequencyPenalty;
@@ -187,6 +190,7 @@ export class ChatOllama
     return {
       model: this.model,
       format: this.format,
+      keep_alive: this.keepAlive,
       options: {
         embedding_only: this.embeddingOnly,
         f16_kv: this.f16KV,

@@ -46,6 +46,8 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
 
   baseUrl = "http://localhost:11434";
 
+  keepAlive = "5m";
+
   embeddingOnly?: boolean;
 
   f16KV?: boolean;
@@ -118,6 +120,7 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
     this.baseUrl = fields.baseUrl?.endsWith("/")
       ? fields.baseUrl.slice(0, -1)
       : fields.baseUrl ?? this.baseUrl;
+    this.keepAlive = fields.keepAlive ?? this.keepAlive;
 
     this.headers = fields.headers ?? this.headers;
     this.embeddingOnly = fields.embeddingOnly;
@@ -162,6 +165,7 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
     return {
       model: this.model,
       format: this.format,
+      keep_alive: this.keepAlive,
       images: options?.images,
       options: {
         embedding_only: this.embeddingOnly,
