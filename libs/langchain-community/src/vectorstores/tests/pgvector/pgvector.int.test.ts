@@ -107,6 +107,36 @@ describe("PGVectorStore", () => {
     expect(result.rowCount).toEqual(1);
   });
 
+  test("PGvector supports different filter types", async () => {
+    const documents = [
+      { pageContent: "Lorem Ipsum", metadata: { a: 100 } },
+      { pageContent: "Lorem Ipsum", metadata: { a: 200 } },
+      { pageContent: "Lorem Ipsum", metadata: { a: 300 } },
+    ];
+
+    await pgvectorVectorStore.addDocuments(documents);
+
+    const result = await pgvectorVectorStore.similaritySearch("hello", 2, {
+      a: {
+        in: [100, 300],
+      },
+    });
+
+    expect(result.length).toEqual(2);
+    expect(result).toEqual([
+      { pageContent: "Lorem Ipsum", metadata: { a: 100 } },
+      { pageContent: "Lorem Ipsum", metadata: { a: 300 } },
+    ]);
+
+    const result2 = await pgvectorVectorStore.similaritySearch("hello", 2, {
+      a: 200,
+    });
+    expect(result2.length).toEqual(1);
+    expect(result2).toEqual([
+      { pageContent: "Lorem Ipsum", metadata: { a: 200 } },
+    ]);
+  });
+
   test("PGvector can delete document by id", async () => {
     try {
       const documents = [

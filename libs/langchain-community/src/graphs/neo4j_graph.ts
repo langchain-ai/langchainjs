@@ -110,6 +110,7 @@ export class Neo4jGraph {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async query<RecordShape extends Record<string, any> = Record<string, any>>(
     query: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     params: Record<string, any> = {},
     routing: RoutingControl = neo4j.routing.WRITE
   ): Promise<RecordShape[] | undefined> {
@@ -211,8 +212,8 @@ export class Neo4jGraph {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function toObjects<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RecordShape extends Record<string, any> = Record<string, any>
 >(records: neo4j.Record<RecordShape>): RecordShape[] {
   return records.map((record) => {
