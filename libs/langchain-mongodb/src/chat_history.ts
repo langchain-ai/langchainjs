@@ -1,4 +1,4 @@
-import { Collection, Document as MongoDBDocument, ObjectId } from "mongodb";
+import { Collection, Document as MongoDBDocument } from "mongodb";
 import { BaseListChatMessageHistory } from "@langchain/core/chat_history";
 import {
   BaseMessage,
@@ -29,6 +29,8 @@ export class MongoDBChatMessageHistory extends BaseListChatMessageHistory {
 
   private sessionId: string;
 
+  private idKey = "sessionId";
+
   constructor({ collection, sessionId }: MongoDBChatMessageHistoryInput) {
     super();
     this.collection = collection;
@@ -37,7 +39,7 @@ export class MongoDBChatMessageHistory extends BaseListChatMessageHistory {
 
   async getMessages(): Promise<BaseMessage[]> {
     const document = await this.collection.findOne({
-      _id: new ObjectId(this.sessionId),
+      [this.idKey]: this.sessionId,
     });
     const messages = document?.messages || [];
     return mapStoredMessagesToChatMessages(messages);
@@ -46,7 +48,7 @@ export class MongoDBChatMessageHistory extends BaseListChatMessageHistory {
   async addMessage(message: BaseMessage): Promise<void> {
     const messages = mapChatMessagesToStoredMessages([message]);
     await this.collection.updateOne(
-      { _id: new ObjectId(this.sessionId) },
+      { [this.idKey]: this.sessionId },
       {
         $push: { messages: { $each: messages } },
       },
@@ -55,6 +57,6 @@ export class MongoDBChatMessageHistory extends BaseListChatMessageHistory {
   }
 
   async clear(): Promise<void> {
-    await this.collection.deleteOne({ _id: new ObjectId(this.sessionId) });
+    await this.collection.deleteOne({ [this.idKey]: this.sessionId });
   }
 }

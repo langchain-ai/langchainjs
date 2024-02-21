@@ -71,7 +71,7 @@
     "langchain": "workspace:*",
     "langsmith": "^0.1.1",
     "ml-distance": "^4.0.0",
-    "mongodb": "^5.2.0",
+    "mongodb": "^6.3.0",
     "pg": "^8.11.0",
     "pickleparser": "^0.2.1",
     "prisma": "^4.11.0",

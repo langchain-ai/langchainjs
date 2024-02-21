@@ -33,14 +33,16 @@ Create and name a cluster when prompted, then find it under `Database`. Select `
 
 After configuring your cluster, you'll need to create an index on the collection field you want to search over.
 
-Go to the `Search` tab within your cluster, then select `Create Search Index` (not Vector Search Index!).
-Using the JSON editor option, add an index to the collection you wish to use.
+Go to the `Atlas Search` tab within your cluster, then create a plain `Atlas Search` index (not an `Atlas Vector Search` Index!)
+using the JSON editor option.
 
-```js
+Note that the `dimensions` property should match the dimensionality of the embeddings you are using.
+For example, Cohere embeddings have 1024 dimensions, and by default OpenAI embeddings have 1536:
+
+```json
 {
   "mappings": {
     "fields": {
-      // Default value, should match the name of the field within your collection that contains embeddings
       "embedding": [
         {
           "dimensions": 1024,
@@ -52,8 +54,6 @@ Using the JSON editor option, add an index to the collection you wish to use.
   }
 }
 ```
-
-The `dimensions` property should match the dimensionality of the embeddings you are using. For example, Cohere embeddings have 1024 dimensions, and OpenAI embeddings have 1536.
 
 **Note:** By default the vector store expects an index name of `default`, an indexed collection field name of `embedding`, and a raw text field name of `text`. You should initialize the vector store with field names matching your collection schema as shown below.
 

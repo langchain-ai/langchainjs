@@ -4,7 +4,7 @@
 import { test, expect } from "@jest/globals";
 import { MongoClient } from "mongodb";
 import { setTimeout } from "timers/promises";
-import { SyntheticEmbeddings } from "@langchain/core/utils/testing";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
 
 import { MongoDBAtlasVectorSearch } from "../vectorstores.js";
@@ -38,12 +38,9 @@ test("MongoDBAtlasVectorSearch with external ids", async () => {
     const [dbName, collectionName] = namespace.split(".");
     const collection = client.db(dbName).collection(collectionName);
 
-    const vectorStore = new MongoDBAtlasVectorSearch(
-      new SyntheticEmbeddings({ vectorSize: 1536 }),
-      {
-        collection,
-      }
-    );
+    const vectorStore = new MongoDBAtlasVectorSearch(new OpenAIEmbeddings(), {
+      collection,
+    });
 
     expect(vectorStore).toBeDefined();
 
@@ -123,7 +120,7 @@ test("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () => {
     const vectorStore = await MongoDBAtlasVectorSearch.fromTexts(
       texts,
       {},
-      new SyntheticEmbeddings({ vectorSize: 1536 }),
+      new OpenAIEmbeddings(),
       { collection, indexName: "default" }
     );
 
@@ -187,12 +184,9 @@ test("MongoDBAtlasVectorSearch upsert", async () => {
     const [dbName, collectionName] = namespace.split(".");
     const collection = client.db(dbName).collection(collectionName);
 
-    const vectorStore = new MongoDBAtlasVectorSearch(
-      new SyntheticEmbeddings({ vectorSize: 1536 }),
-      {
-        collection,
-      }
-    );
+    const vectorStore = new MongoDBAtlasVectorSearch(new OpenAIEmbeddings(), {
+      collection,
+    });
 
     expect(vectorStore).toBeDefined();
 
