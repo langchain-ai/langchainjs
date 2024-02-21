@@ -35,7 +35,7 @@ const chain = prompt.pipe(model).pipe(new StringOutputParser());
 const chainWithHistory = new RunnableWithMessageHistory({
   runnable: chain,
   inputMessagesKey: "input",
-  getMessageHistory: (sessionId) => {
+  getMessageHistory: async (sessionId) => {
     const chatHistory = new PostgresChatMessageHistory({
       sessionId: sessionId,
       pool,
