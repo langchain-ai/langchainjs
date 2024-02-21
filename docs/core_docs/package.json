@@ -54,7 +54,8 @@
     "rimraf": "^5.0.1",
     "swc-loader": "^0.2.3",
     "typedoc": "^0.24.4",
-    "typedoc-plugin-markdown": "next"
+    "typedoc-plugin-markdown": "next",
+    "yaml-loader": "^0.8.0"
   },
   "packageManager": "yarn@3.4.1",
   "browserslist": {

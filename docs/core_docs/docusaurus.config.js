@@ -53,6 +53,10 @@ const config = {
               use: ["json-loader", "./code-block-loader.js"],
             },
             {
+              test: /\.ya?ml$/,
+              use: "yaml-loader",
+            },
+            {
               test: /\.m?js/,
               resolve: {
                 fullySpecified: false,
@@ -172,6 +176,10 @@ const config = {
             label: "More",
             position: "left",
             items: [
+              {
+                to: "/docs/people/",
+                label: "People",
+              },
               {
                 to: "/docs/community",
                 label: "Community",
