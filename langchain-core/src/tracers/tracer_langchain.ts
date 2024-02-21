@@ -98,7 +98,7 @@ export class LangChainTracer
     };
     await this.client.updateRun(run.id, runUpdate);
   }
-  
+
   getRun(id: string): Run | undefined {
     return this.runMap.get(id);
   }
