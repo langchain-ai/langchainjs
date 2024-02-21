@@ -1,14 +1,34 @@
-import { BaseChatModel, BaseChatModelCallOptions, type BaseChatModelParams } from "@langchain/core/language_models/chat_models";
 import {
-  type OpenAICoreRequestOptions,
-} from "@langchain/openai";
+  BaseChatModel,
+  BaseChatModelCallOptions,
+  type BaseChatModelParams,
+} from "@langchain/core/language_models/chat_models";
+import { type OpenAICoreRequestOptions } from "@langchain/openai";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
-import { AIMessage, AIMessageChunk, BaseMessage, ChatMessage, ChatMessageChunk, HumanMessageChunk, SystemMessageChunk } from "@langchain/core/messages";
-import { ChatResult, ChatGenerationChunk, ChatGeneration } from "@langchain/core/outputs";
+import {
+  AIMessage,
+  AIMessageChunk,
+  BaseMessage,
+  ChatMessage,
+  ChatMessageChunk,
+  HumanMessageChunk,
+  SystemMessageChunk,
+} from "@langchain/core/messages";
+import {
+  ChatResult,
+  ChatGenerationChunk,
+  ChatGeneration,
+} from "@langchain/core/outputs";
 import Groq from "groq-sdk";
-import type { ChatCompletionCreateParamsStreaming, ChatCompletionCreateParamsNonStreaming, ChatCompletionCreateParams, ChatCompletionChunk, ChatCompletion } from "./types/types.js"
+import type {
+  ChatCompletionCreateParamsStreaming,
+  ChatCompletionCreateParamsNonStreaming,
+  ChatCompletionCreateParams,
+  ChatCompletionChunk,
+  ChatCompletion,
+} from "./types/types.js";
 
 export interface ChatGroqCallOptions extends BaseChatModelCallOptions {}
 
@@ -63,20 +83,20 @@ export function messageToGroqRole(message: BaseMessage): GroqRoleEnum {
   }
 }
 
-function convertMessagesToGroqParams(messages: BaseMessage[]): Array<ChatCompletion.Choice.Message> {
-  return messages.map(
-    (message) => {
-      if (typeof message.content !== "string") {
-        throw new Error("Non string message content not supported");
-      }
-      return {
-        role: messageToGroqRole(message),
-        content: message.content,
-        name: message.name,
-        function_call: message.additional_kwargs.function_call,
-      }
+function convertMessagesToGroqParams(
+  messages: BaseMessage[]
+): Array<ChatCompletion.Choice.Message> {
+  return messages.map((message) => {
+    if (typeof message.content !== "string") {
+      throw new Error("Non string message content not supported");
     }
-  );
+    return {
+      role: messageToGroqRole(message),
+      content: message.content,
+      name: message.name,
+      function_call: message.additional_kwargs.function_call,
+    };
+  });
 }
 
 function groqResponseToChatMessage(
@@ -189,23 +209,21 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
   async completionWithRetry(
     request: ChatCompletionCreateParams,
     options?: OpenAICoreRequestOptions
-  ): Promise<
-    | AsyncIterable<ChatCompletionChunk>
-    | ChatCompletion
-  > {
-    return this.caller.call(async () => this.client.chat.completions.create(
-        request,
-        options
-      ));
+  ): Promise<AsyncIterable<ChatCompletionChunk> | ChatCompletion> {
+    return this.caller.call(async () =>
+      this.client.chat.completions.create(request, options)
+    );
   }
 
-  invocationParams(options: this["ParsedCallOptions"]): ChatCompletionCreateParams {
+  invocationParams(
+    options: this["ParsedCallOptions"]
+  ): ChatCompletionCreateParams {
     const params = super.invocationParams(options);
     return {
       ...params,
       model: this.modelName,
       temperature: this.temperature,
-    }
+    };
   }
 
   async *_streamResponseChunks(
@@ -214,13 +232,15 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const params = this.invocationParams(options);
-    const messagesMapped =
-      convertMessagesToGroqParams(messages);
-    const response = await this.completionWithRetry({
-      ...params,
-      messages: messagesMapped,
-      stream: true,
-    }, params);
+    const messagesMapped = convertMessagesToGroqParams(messages);
+    const response = await this.completionWithRetry(
+      {
+        ...params,
+        messages: messagesMapped,
+        stream: true,
+      },
+      params
+    );
     for await (const data of response) {
       const choice = data?.choices[0];
       if (!choice) {
@@ -248,11 +268,10 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
   ): Promise<ChatResult> {
     const tokenUsage: TokenUsage = {};
     const params = this.invocationParams(options);
-    const messagesMapped =
-      convertMessagesToGroqParams(messages);
+    const messagesMapped = convertMessagesToGroqParams(messages);
 
     if (params.stream) {
-      console.log("streaming via _generate")
+      console.log("streaming via _generate");
       const stream = this._streamResponseChunks(messages, options, runManager);
       const finalChunks: Record<number, ChatGenerationChunk> = {};
       for await (const chunk of stream) {
@@ -280,23 +299,24 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
           signal: options?.signal,
         }
       );
-  
+
       if ("usage" in data && data.usage) {
         const {
           completion_tokens: completionTokens,
           prompt_tokens: promptTokens,
           total_tokens: totalTokens,
         } = data.usage as ChatCompletion.Usage;
-  
+
         if (completionTokens) {
           tokenUsage.completionTokens =
             (tokenUsage.completionTokens ?? 0) + completionTokens;
         }
-  
+
         if (promptTokens) {
-          tokenUsage.promptTokens = (tokenUsage.promptTokens ?? 0) + promptTokens;
+          tokenUsage.promptTokens =
+            (tokenUsage.promptTokens ?? 0) + promptTokens;
         }
-  
+
         if (totalTokens) {
           tokenUsage.totalTokens = (tokenUsage.totalTokens ?? 0) + totalTokens;
         }
@@ -314,13 +334,14 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
             ),
           };
           generation.generationInfo = {
-            ...(part.finish_reason ? { finish_reason: part.finish_reason } : {}),
+            ...(part.finish_reason
+              ? { finish_reason: part.finish_reason }
+              : {}),
             ...(part.logprobs ? { logprobs: part.logprobs } : {}),
           };
           generations.push(generation);
         }
       }
-
 
       return {
         generations,

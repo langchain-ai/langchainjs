@@ -42,5 +42,3 @@ describe("ChatGroq", () => {
     expect(iters).toBeGreaterThan(1);
   });
 });
-
-

@@ -7,7 +7,7 @@ export interface ChatCompletionChunk {
 
   model: string;
 
-  object: 'chat.completion.chunk';
+  object: "chat.completion.chunk";
 
   system_fingerprint?: string;
 }
@@ -16,7 +16,13 @@ export namespace ChatCompletionChunk {
   export interface Choice {
     delta: Choice.Delta;
 
-    finish_reason: 'stop' | 'length' | 'tool_calls' | 'content_filter' | 'function_call' | null;
+    finish_reason:
+      | "stop"
+      | "length"
+      | "tool_calls"
+      | "content_filter"
+      | "function_call"
+      | null;
 
     index: number;
 
@@ -29,7 +35,7 @@ export namespace ChatCompletionChunk {
 
       function_call?: Delta.FunctionCall;
 
-      role?: 'system' | 'user' | 'assistant' | 'tool';
+      role?: "system" | "user" | "assistant" | "tool";
 
       tool_calls?: Array<Delta.ToolCall>;
     }
@@ -48,7 +54,7 @@ export namespace ChatCompletionChunk {
 
         function?: ToolCall.Function;
 
-        type?: 'function';
+        type?: "function";
       }
 
       export namespace ToolCall {
