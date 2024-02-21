@@ -1881,6 +1881,15 @@
       "import": "./stores/doc/in_memory.js",
       "require": "./stores/doc/in_memory.cjs"
     },
+    "./stores/message/astradb": {
+      "types": {
+        "import": "./stores/message/astradb.d.ts",
+        "require": "./stores/message/astradb.d.cts",
+        "default": "./stores/message/astradb.d.ts"
+      },
+      "import": "./stores/message/astradb.js",
+      "require": "./stores/message/astradb.cjs"
+    },
     "./stores/message/cassandra": {
       "types": {
         "import": "./stores/message/cassandra.d.ts",
@@ -2709,6 +2718,10 @@
     "stores/doc/in_memory.js",
     "stores/doc/in_memory.d.ts",
     "stores/doc/in_memory.d.cts",
+    "stores/message/astradb.cjs",
+    "stores/message/astradb.js",
+    "stores/message/astradb.d.ts",
+    "stores/message/astradb.d.cts",
     "stores/message/cassandra.cjs",
     "stores/message/cassandra.js",
     "stores/message/cassandra.d.ts",
