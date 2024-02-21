@@ -16,20 +16,18 @@ export interface GoogleVertexAIConnectionParams<AuthOptions>
   apiVersion?: string;
 
   /**
-   * Whether you are planning to connect to a public VertexAI model
+   * If you are planning to connect to a model that lives under a custom endpoint
+   * provide the "customModelURL" which will override the automatic URL building
    *
-   * In case you are connecting to a default model, that was published by Google
-   * and lives under the /publishers/google/models/:model path in Google Cloud
-   * you should use "true" (default behaviour)
+   * This is necessary in cases when you want to point to a fine-tuned model or
+   * a model that has been hidden under VertexAI Endpoints.
    *
-   * If you are planning on connecting to a model that lives under a custom endpoint
-   * which will be the case whenever you are fine-tuning your model for example
-   * then you should use "false", which will make sure the "/publishers/google/models/:model"
-   * is not being included when building the connection URL.
+   * In those cases, specifying the `GoogleVertexAIModelParams.model` param
+   * will not be necessary and will be ignored.
    *
    * @see GoogleVertexAILLMConnection.buildUrl
    * */
-  useGooglePublishedModel?: boolean
+  customModelURL?: string;
 }
 
 export interface GoogleVertexAIModelParams {
