@@ -12,7 +12,7 @@ import {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AddDocumentOptions = Record<string, any>;
 
-export interface AdaptiveRetrievalFields<
+export interface MatryoshkaRetrievalFields<
   Store extends VectorStore = VectorStore
 > extends Omit<VectorStoreRetrieverInput<Store>, "vectorStore"> {
   /**
@@ -51,7 +51,7 @@ export interface AdaptiveRetrievalFields<
  * Based off of the "Matryoshka embeddings: faster OpenAI vector search using Adaptive Retrieval"
  * blog post {@link https://supabase.com/blog/matryoshka-embeddings}.
  *
- * The AdaptiveRetrieval retriever performs two semantic searches. The first uses the smaller
+ * The MatryoshkaRetrieval retriever performs two semantic searches. The first uses the smaller
  * store which returns many results, but is less accurate. Then, using the documents returned
  * from the smaller store, the larger store is used to perform a more accurate search over the
  * smaller set of documents.
@@ -60,7 +60,7 @@ export interface AdaptiveRetrievalFields<
  * filter the results from the large store. You may override this metadata key by passing a
  * custom `idKey` to the constructor.
  */
-export class AdaptiveRetrieval<
+export class MatryoshkaRetrieval<
   Store extends VectorStore = VectorStore
 > extends VectorStoreRetriever<Store> {
   largeStore: Store;
@@ -71,7 +71,7 @@ export class AdaptiveRetrieval<
 
   idKey = "id";
 
-  constructor(fields: AdaptiveRetrievalFields<Store>) {
+  constructor(fields: MatryoshkaRetrievalFields<Store>) {
     super({
       ...fields,
       vectorStore: fields.smallStore,

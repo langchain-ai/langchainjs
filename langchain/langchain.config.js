@@ -361,7 +361,6 @@ export const config = {
     "experimental/prompts/custom_format": "experimental/prompts/custom_format",
     "experimental/prompts/handlebars": "experimental/prompts/handlebars",
     "experimental/tools/pyinterpreter": "experimental/tools/pyinterpreter",
-    "experimental/retrievers/adaptive_retrieval": "experimental/retrievers/adaptive_retrieval/index",
     // evaluation
     evaluation: "evaluation/index",
     // smith (LangSmith Evaluation)

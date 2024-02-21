@@ -1146,10 +1146,6 @@ experimental/tools/pyinterpreter.cjs
 experimental/tools/pyinterpreter.js
 experimental/tools/pyinterpreter.d.ts
 experimental/tools/pyinterpreter.d.cts
-experimental/retrievers/adaptive_retrieval.cjs
-experimental/retrievers/adaptive_retrieval.js
-experimental/retrievers/adaptive_retrieval.d.ts
-experimental/retrievers/adaptive_retrieval.d.cts
 evaluation.cjs
 evaluation.js
 evaluation.d.ts

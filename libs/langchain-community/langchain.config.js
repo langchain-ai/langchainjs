@@ -169,6 +169,7 @@ export const config = {
     "retrievers/vectara_summary": "retrievers/vectara_summary",
     "retrievers/vespa": "retrievers/vespa",
     "retrievers/zep": "retrievers/zep",
+    "retrievers/matryoshka_retrieval": "retrievers/matryoshka_retrieval",
     // cache
     "caches/cloudflare_kv": "caches/cloudflare_kv",
     "caches/ioredis": "caches/ioredis",

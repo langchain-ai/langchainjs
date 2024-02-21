@@ -542,6 +542,10 @@ retrievers/zep.cjs
 retrievers/zep.js
 retrievers/zep.d.ts
 retrievers/zep.d.cts
+retrievers/matryoshka_retrieval.cjs
+retrievers/matryoshka_retrieval.js
+retrievers/matryoshka_retrieval.d.ts
+retrievers/matryoshka_retrieval.d.cts
 caches/cloudflare_kv.cjs
 caches/cloudflare_kv.js
 caches/cloudflare_kv.d.ts

@@ -1,4 +1,4 @@
-import { AdaptiveRetrieval } from "langchain/experimental/retrievers/adaptive_retrieval";
+import { MatryoshkaRetrieval } from "@langchain/community/retrievers/matryoshka_retrieval";
 import { Chroma } from "@langchain/community/vectorstores/chroma";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
@@ -23,7 +23,7 @@ const largeStore = new Chroma(largeEmbeddings, {
   collectionName: "adaptive-retrieval-large",
 });
 
-const retriever = new AdaptiveRetrieval({
+const retriever = new MatryoshkaRetrieval({
   smallStore,
   largeStore,
 });
@@ -67,7 +67,7 @@ const allDocs = [...irrelevantDocs, ...relevantDocs];
 
 /**
  * IMPORTANT:
- * The `addDocuments` method on `AdaptiveRetrieval` will
+ * The `addDocuments` method on `MatryoshkaRetrieval` will
  * insert documents into BOTH the small and large vector stores.
  */
 await retriever.addDocuments(allDocs);

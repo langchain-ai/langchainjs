@@ -1,17 +1,17 @@
-# Adaptive Retrieval
+# Matryoshka Retrieval
 
 This is an implementation of the [Supabase](https://supabase.com/) blog post
 ["Matryoshka embeddings: faster OpenAI vector search using Adaptive Retrieval"](https://supabase.com/blog/matryoshka-embeddings).
 
 ### Overview
 
-The `AdaptiveRetrieval` retriever takes in two vector stores: `smallStore` and `largeStore`.
+The `MatryoshkaRetrieval` retriever takes in two vector stores: `smallStore` and `largeStore`.
 The small and large is determined via the number of vector dimensions the embeddings model
 uses which is passed to the vector store when instantiated (because of this you are required to use
 an embeddings model which allows for customizing the number of dimensions, or two separate embeddings
 models with different dimensions).
 
-Then, when `getRelevantDocuments` is called, the `AdaptiveRetrieval` retriever will first perform
+Then, when `getRelevantDocuments` is called, the `MatryoshkaRetrieval` retriever will first perform
 semantic search on the `smallStore` for a large number of documents. We want to retrieve a large
 number because since the number of dimensions is on the smaller side, the results will be less
 focused and more broad. Then, we perform semantic search on the `largeStore` for the most relevant
@@ -42,6 +42,6 @@ export OPENAI_API_KEY=your-api-key
 We'll also be using `chroma` for our vector store. Follow the instructions [here](/docs/integrations/vectorstores/chroma) to setup.
 
 import CodeBlock from "@theme/CodeBlock";
-import Example from "@examples/experimental/adaptive-retrieval/index.ts";
+import Example from "@examples/retrievers/matryoshka_retrieval.ts";
 
 <CodeBlock language="typescript">{Example}</CodeBlock>
