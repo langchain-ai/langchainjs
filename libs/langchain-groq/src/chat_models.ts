@@ -269,7 +269,6 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
     const messagesMapped = convertMessagesToGroqParams(messages);
 
     if (params.stream) {
-      console.log("streaming via _generate");
       const stream = this._streamResponseChunks(messages, options, runManager);
       const finalChunks: Record<number, ChatGenerationChunk> = {};
       for await (const chunk of stream) {
