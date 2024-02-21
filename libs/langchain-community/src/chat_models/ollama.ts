@@ -74,6 +74,8 @@ export class ChatOllama
 
   frequencyPenalty?: number;
 
+  headers?: Record<string, string>;
+
   logitsAll?: boolean;
 
   lowVram?: boolean;
@@ -142,6 +144,7 @@ export class ChatOllama
     this.embeddingOnly = fields.embeddingOnly;
     this.f16KV = fields.f16KV;
     this.frequencyPenalty = fields.frequencyPenalty;
+    this.headers = fields.headers;
     this.logitsAll = fields.logitsAll;
     this.lowVram = fields.lowVram;
     this.mainGpu = fields.mainGpu;
@@ -240,7 +243,10 @@ export class ChatOllama
         ...this.invocationParams(options),
         prompt: this._formatMessagesAsPrompt(input),
       },
-      options
+      {
+        ...options,
+        headers: this.headers,
+      }
     );
     for await (const chunk of stream) {
       if (!chunk.done) {
@@ -280,7 +286,10 @@ export class ChatOllama
             ...this.invocationParams(options),
             messages: this._convertMessagesToOllamaMessages(input),
           },
-          options
+          {
+            ...options,
+            headers: this.headers,
+          }
         )
       );
       for await (const chunk of stream) {
