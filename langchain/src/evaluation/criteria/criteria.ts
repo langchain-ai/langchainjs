@@ -1,24 +1,23 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
-import { BaseLLMOutputParser } from "../../schema/output_parser.js";
+import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
+import { ChainValues } from "@langchain/core/utils/types";
+import { ChatGeneration, Generation, RUN_KEY } from "@langchain/core/outputs";
+import { BasePromptTemplate } from "@langchain/core/prompts";
+import {
+  Callbacks,
+  BaseCallbackConfig,
+} from "@langchain/core/callbacks/manager";
 import {
   eqSet,
   EvalOutputType,
   LLMEvalChainInput,
   LLMStringEvaluator,
   StringEvaluatorArgs,
+  type ExtractLLMCallOptions,
 } from "../base.js";
 
-import {
-  ChainValues,
-  ChatGeneration,
-  Generation,
-  RUN_KEY,
-} from "../../schema/index.js";
 import { CRITERIA_PROMPT, PROMPT_WITH_REFERENCES } from "./prompt.js";
-import { Callbacks } from "../../callbacks/index.js";
-import { BaseCallbackConfig } from "../../callbacks/manager.js";
-import { BasePromptTemplate } from "../../prompts/index.js";
-import { ConstitutionalPrinciple } from "../../chains/index.js";
+import { ConstitutionalPrinciple } from "../../chains/constitutional_ai/constitutional_principle.js";
 
 /**
  * A Criteria to evaluate.
@@ -39,7 +38,7 @@ export type Criteria =
   | "creativity"
   | "detail";
 
-const SUPPORTED_CRITERIA: Record<Criteria, string> = /* #__PURE__ */ {
+const SUPPORTED_CRITERIA: Record<Criteria, string> = {
   conciseness: "Is the submission concise and to the point?",
   relevance: "Is the submission referring to a real quote from the text?",
   correctness: "Is the submission correct, accurate, and factual?",
@@ -271,14 +270,10 @@ export class CriteriaEvalChain extends LLMStringEvaluator {
   }
 
   async _evaluateStrings(
-    args: StringEvaluatorArgs,
-    callOptions: this["llm"]["CallOptions"],
+    args: StringEvaluatorArgs & ExtractLLMCallOptions<this["llm"]>,
     config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues> {
-    const result = await this.call(
-      { ...this.getEvalInput(args), ...callOptions },
-      config
-    );
+    const result = await this.call({ ...this.getEvalInput(args) }, config);
 
     return this._prepareOutput(result);
   }

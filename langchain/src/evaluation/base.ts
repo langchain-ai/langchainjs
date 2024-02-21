@@ -1,8 +1,11 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import { AgentStep } from "@langchain/core/agents";
+import { ChainValues } from "@langchain/core/utils/types";
+import {
+  BaseCallbackConfig,
+  Callbacks,
+} from "@langchain/core/callbacks/manager";
 import { BaseChain, LLMChain, LLMChainInput } from "../chains/index.js";
-import { AgentStep, ChainValues } from "../schema/index.js";
-import { Callbacks } from "../callbacks/index.js";
-import { BaseCallbackConfig } from "../callbacks/manager.js";
 
 /**
  * Base input for evaluators.
@@ -11,6 +14,15 @@ export interface LLMEvalChainInput<
   T extends EvalOutputType = EvalOutputType,
   L extends BaseLanguageModelInterface = BaseLanguageModelInterface
 > extends LLMChainInput<T, L> {}
+
+export type ExtractLLMCallOptions<LanguageModelInterface> =
+  LanguageModelInterface extends BaseLanguageModelInterface<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    any,
+    infer CallOptions
+  >
+    ? CallOptions
+    : never;
 
 /**
  * Compare two sets for equality
@@ -167,8 +179,7 @@ export abstract class LLMStringEvaluator<
    * @param config
    */
   abstract _evaluateStrings(
-    args: StringEvaluatorArgs,
-    callOptions?: this["llm"]["CallOptions"],
+    args: StringEvaluatorArgs & ExtractLLMCallOptions<this["llm"]>,
     config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues>;
 
@@ -183,12 +194,11 @@ export abstract class LLMStringEvaluator<
    * @param config
    */
   evaluateStrings(
-    args: StringEvaluatorArgs,
-    callOptions?: this["llm"]["CallOptions"],
+    args: StringEvaluatorArgs & ExtractLLMCallOptions<this["llm"]>,
     config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues> {
     this.checkEvaluationArgs(args.reference, args.input);
-    return this._evaluateStrings(args, callOptions, config);
+    return this._evaluateStrings(args, config);
   }
 }
 
@@ -286,7 +296,7 @@ export abstract class LLMPairwiseStringEvaluator extends LLMEvalChain {
    */
   abstract _evaluateStringPairs(
     args: LLMPairwiseStringEvaluatorArgs,
-    callOptions?: this["llm"]["CallOptions"],
+    callOptions?: ExtractLLMCallOptions<this["llm"]>,
     config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues>;
 
@@ -299,7 +309,7 @@ export abstract class LLMPairwiseStringEvaluator extends LLMEvalChain {
    */
   evaluateStringPairs(
     args: LLMPairwiseStringEvaluatorArgs,
-    callOptions?: this["llm"]["CallOptions"],
+    callOptions?: ExtractLLMCallOptions<this["llm"]>,
     config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues> {
     this.checkEvaluationArgs(args.reference, args.input);
@@ -327,7 +337,7 @@ export abstract class AgentTrajectoryEvaluator extends LLMEvalChain {
    */
   abstract _evaluateAgentTrajectory(
     args: LLMTrajectoryEvaluatorArgs,
-    callOptions?: this["llm"]["CallOptions"],
+    callOptions?: ExtractLLMCallOptions<this["llm"]>,
     config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues>;
 
@@ -340,7 +350,7 @@ export abstract class AgentTrajectoryEvaluator extends LLMEvalChain {
    */
   evaluateAgentTrajectory(
     args: LLMTrajectoryEvaluatorArgs,
-    callOptions?: this["llm"]["CallOptions"],
+    callOptions?: ExtractLLMCallOptions<this["llm"]>,
     config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues> {
     this.checkEvaluationArgs(args.reference, args.input);

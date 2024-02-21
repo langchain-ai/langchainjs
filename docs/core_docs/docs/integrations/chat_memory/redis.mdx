@@ -12,8 +12,12 @@ For longer-term persistence across chat sessions, you can swap out the default i
 
 You will need to install [node-redis](https://github.com/redis/node-redis) in your project:
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
 ```bash npm2yarn
-npm install redis
+npm install @langchain/openai redis @langchain/community
 ```
 
 You will also need a Redis instance to connect to. See instructions on [the official Redis website](https://redis.io/docs/getting-started/) for running the server locally.

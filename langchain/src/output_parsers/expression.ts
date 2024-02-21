@@ -1,6 +1,6 @@
+import { BaseOutputParser } from "@langchain/core/output_parsers";
 import { MasterHandler } from "./expression_type_handlers/factory.js";
 import { ParsedType } from "./expression_type_handlers/types.js";
-import { BaseOutputParser } from "../schema/output_parser.js";
 import { ASTParser } from "./expression_type_handlers/base.js";
 /**
  * okay so we need to be able to handle the following cases:

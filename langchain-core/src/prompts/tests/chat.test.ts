@@ -275,6 +275,37 @@ test("Test SimpleMessagePromptTemplate", async () => {
   expect(messages).toEqual([new HumanMessage("Hello Foo, I'm Bar")]);
 });
 
+test("Test MessagesPlaceholder optional", async () => {
+  const prompt = new MessagesPlaceholder({
+    variableName: "foo",
+    optional: true,
+  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const messages = await prompt.formatMessages({} as any);
+  expect(messages).toEqual([]);
+});
+
+test("Test MessagesPlaceholder optional in a chat prompt template", async () => {
+  const prompt = ChatPromptTemplate.fromMessages([
+    new MessagesPlaceholder({
+      variableName: "foo",
+      optional: true,
+    }),
+  ]);
+  const messages = await prompt.formatMessages({});
+  expect(messages).toEqual([]);
+});
+
+test("Test MessagesPlaceholder not optional", async () => {
+  const prompt = new MessagesPlaceholder({
+    variableName: "foo",
+  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await expect(prompt.formatMessages({} as any)).rejects.toThrow(
+    'Error: Field "foo" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages as an input value. Received: undefined'
+  );
+});
+
 test("Test using partial", async () => {
   const userPrompt = new PromptTemplate({
     template: "{foo}{bar}",
@@ -364,4 +395,159 @@ test("Does not throws if null or undefined is passed as input to MessagesPlaceho
       throw e;
     }
   }
+});
+
+test("Multi part chat prompt template", async () => {
+  const name = "Bob";
+  const objectName = "chair";
+  const template = ChatPromptTemplate.fromMessages([
+    ["system", "You are an AI assistant named {name}"],
+    [
+      "human",
+      [
+        {
+          type: "text",
+          text: "What is in this object {objectName}",
+        },
+      ],
+    ],
+  ]);
+  const messages = await template.formatMessages({
+    name,
+    objectName,
+  });
+  expect(messages).toEqual([
+    new SystemMessage("You are an AI assistant named Bob"),
+    new HumanMessage({
+      content: [
+        {
+          type: "text",
+          text: "What is in this object chair",
+        },
+      ],
+    }),
+  ]);
+});
+
+test("Multi part chat prompt template with image", async () => {
+  const name = "Bob";
+  const objectName = "chair";
+  const myImage = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAA";
+  const myUrl = "https://www.example.com/image.png";
+  const template = ChatPromptTemplate.fromMessages([
+    ["system", "You are an AI assistant named {name}"],
+    [
+      "human",
+      [
+        {
+          type: "image_url",
+          image_url: "data:image/jpeg;base64,{myImage}",
+        },
+        {
+          type: "text",
+          text: "What is in this object {objectName}",
+        },
+        {
+          type: "image_url",
+          image_url: {
+            url: "{myUrl}",
+            detail: "high",
+          },
+        },
+      ],
+    ],
+  ]);
+  const messages = await template.formatMessages({
+    name,
+    objectName,
+    myImage,
+    myUrl,
+  });
+  expect(messages).toEqual([
+    new SystemMessage("You are an AI assistant named Bob"),
+    new HumanMessage({
+      content: [
+        {
+          type: "image_url",
+          image_url: {
+            url: `data:image/jpeg;base64,${myImage}`,
+          },
+        },
+        {
+          type: "text",
+          text: `What is in this object ${objectName}`,
+        },
+        {
+          type: "image_url",
+          image_url: {
+            url: `${myUrl}`,
+            detail: "high",
+          },
+        },
+      ],
+    }),
+  ]);
+});
+
+test("Multi-modal, multi part chat prompt works with instances of BaseMessage", async () => {
+  const name = "Bob";
+  const objectName = "chair";
+  const myImage = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAA";
+  const myUrl = "https://www.example.com/image.png";
+  const inlineImageUrl = new HumanMessage({
+    content: [
+      {
+        type: "image_url",
+        image_url: "data:image/jpeg;base64,{myImage}",
+      },
+    ],
+  });
+  const objectImageUrl = new HumanMessage({
+    content: [
+      {
+        type: "image_url",
+        image_url: {
+          url: "data:image/jpeg;base64,{myImage}",
+          detail: "high",
+        },
+      },
+    ],
+  });
+  const normalMessage = new HumanMessage({
+    content: [
+      {
+        type: "text",
+        text: "What is in this object {objectName}",
+      },
+    ],
+  });
+  const template = ChatPromptTemplate.fromMessages([
+    ["system", "You are an AI assistant named {name}"],
+    inlineImageUrl,
+    normalMessage,
+    objectImageUrl,
+    [
+      "human",
+      [
+        {
+          type: "text",
+          text: "What is in this object {objectName}",
+        },
+        {
+          type: "image_url",
+          image_url: {
+            url: "{myUrl}",
+            detail: "high",
+          },
+        },
+      ],
+    ],
+  ]);
+  const messages = await template.formatMessages({
+    name,
+    objectName,
+    myImage,
+    myUrl,
+  });
+  expect(messages).toMatchSnapshot();
 });

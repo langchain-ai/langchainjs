@@ -2,34 +2,31 @@ import { test, expect } from "@jest/globals";
 import { stringify } from "yaml";
 import { z } from "zod";
 import { RunnableSequence } from "@langchain/core/runnables";
+import { Cohere } from "@langchain/community/llms/cohere";
+import { OpenAI, ChatOpenAI } from "@langchain/openai";
 
-import { load } from "../index.js";
-import { OpenAI } from "../../llms/openai.js";
-import { PromptTemplate } from "../../prompts/prompt.js";
-import { LLMChain } from "../../chains/llm_chain.js";
-import { Cohere } from "../../llms/cohere.js";
 import {
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
   ChatPromptTemplate,
-} from "../../prompts/chat.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
-import { LangChainTracer } from "../../callbacks/index.js";
-import {
   FewShotPromptTemplate,
-  LengthBasedExampleSelector,
-} from "../../prompts/index.js";
+  PromptTemplate,
+} from "@langchain/core/prompts";
+import { LengthBasedExampleSelector } from "@langchain/core/example_selectors";
+import { Serializable } from "@langchain/core/load/serializable";
+import { ConsoleCallbackHandler } from "@langchain/core/tracers/console";
+import { CommaSeparatedListOutputParser } from "@langchain/core/output_parsers";
+import { LLMChain } from "../../chains/llm_chain.js";
 import { initializeAgentExecutorWithOptions } from "../../agents/initialize.js";
 import { Calculator } from "../../tools/calculator.js";
 import { RequestsGetTool } from "../../tools/requests.js";
 import { JsonListKeysTool, JsonSpec } from "../../tools/json.js";
 import { AgentExecutor } from "../../agents/executor.js";
-import { CommaSeparatedListOutputParser } from "../../output_parsers/list.js";
 import { StructuredOutputParser } from "../../output_parsers/structured.js";
-import { Serializable } from "../serializable.js";
 import { RegexParser } from "../../output_parsers/regex.js";
 import { OutputFixingParser } from "../../output_parsers/fix.js";
 import { CombiningOutputParser } from "../../output_parsers/combining.js";
+import { load } from "../index.js";
 
 test("serialize + deserialize custom classes", async () => {
   class Person extends Serializable {
@@ -193,7 +190,7 @@ test("serialize + deserialize llm chain string prompt", async () => {
     openAIApiKey: "openai-key",
     verbose: true,
     callbacks: [
-      new LangChainTracer(),
+      new ConsoleCallbackHandler(),
       {
         handleLLMEnd(output) {
           console.log(output);
@@ -293,7 +290,7 @@ test("serialize + deserialize llm chain few shot prompt w/ examples", async () =
     temperature: 0.5,
     modelName: "davinci",
     openAIApiKey: "openai-key",
-    callbacks: [new LangChainTracer()],
+    callbacks: [new ConsoleCallbackHandler()],
   });
   const prompt = new FewShotPromptTemplate({
     examples: [{ yo: "1" }, { yo: "2" }],
@@ -348,7 +345,7 @@ test("serialize + deserialize llmchain with list output parser", async () => {
     temperature: 0.5,
     modelName: "davinci",
     openAIApiKey: "openai-key",
-    callbacks: [new LangChainTracer()],
+    callbacks: [new ConsoleCallbackHandler()],
   });
   const prompt = PromptTemplate.fromTemplate(
     "An example about {yo} {format_instructions}"
@@ -372,7 +369,7 @@ test("serialize + deserialize llmchain with regex output parser", async () => {
     temperature: 0.5,
     modelName: "davinci",
     openAIApiKey: "openai-key",
-    callbacks: [new LangChainTracer()],
+    callbacks: [new ConsoleCallbackHandler()],
   });
   const prompt = PromptTemplate.fromTemplate(
     "An example about {yo} {format_instructions}"
@@ -406,7 +403,7 @@ test("serialize + deserialize llmchain with fix + combining output parser", asyn
     temperature: 0.5,
     modelName: "davinci",
     openAIApiKey: "openai-key",
-    callbacks: [new LangChainTracer()],
+    callbacks: [new ConsoleCallbackHandler()],
   });
   const prompt = PromptTemplate.fromTemplate(
     "An example about {yo} {format_instructions}"
@@ -439,7 +436,7 @@ test("serialize + deserialize llmchain with struct output parser throws", async 
     temperature: 0.5,
     modelName: "davinci",
     openAIApiKey: "openai-key",
-    callbacks: [new LangChainTracer()],
+    callbacks: [new ConsoleCallbackHandler({})],
   });
 
   const prompt = PromptTemplate.fromTemplate(

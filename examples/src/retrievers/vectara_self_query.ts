@@ -1,11 +1,12 @@
 import { AttributeInfo } from "langchain/schema/query_constructor";
-import { Document } from "langchain/document";
 import { SelfQueryRetriever } from "langchain/retrievers/self_query";
 
-import { OpenAI } from "langchain/llms/openai";
-import { VectaraStore } from "langchain/vectorstores/vectara";
+import { OpenAI } from "@langchain/openai";
+import { VectaraStore } from "@langchain/community/vectorstores/vectara";
 import { VectaraTranslator } from "langchain/retrievers/self_query/vectara";
-import { FakeEmbeddings } from "langchain/embeddings/fake";
+import { FakeEmbeddings } from "@langchain/core/utils/testing";
+import { Document } from "@langchain/core/documents";
+
 /**
  * First, we create a bunch of documents. You can load your own documents here instead.
  * Each document has a pageContent and a metadata field. Make sure your metadata matches the AttributeInfo below.

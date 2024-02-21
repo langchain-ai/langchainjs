@@ -2,7 +2,22 @@
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": ["**/.env"],
   "pipeline": {
+    "@langchain/scripts#build": {
+      "outputs": [
+        "./libs/langchain-scripts/dist/**",
+        "*.js",
+        "*.cjs",
+        "*.d.ts"
+      ],
+      "inputs": [
+        "./libs/langchain-scripts/src/",
+        "./libs/langchain-scripts/scripts/**",
+        "./libs/langchain-scripts/package.json",
+        "./libs/langchain-scripts/tsconfig.json"
+      ]
+    },
     "@langchain/core#build": {
+      "dependsOn": ["@langchain/scripts#build"],
       "outputs": ["dist/**", "dist-cjs/**", "*.js", "*.cjs", "*.d.ts"],
       "inputs": ["src/**", "scripts/**", "package.json", "tsconfig.json"]
     },
@@ -23,6 +38,7 @@
     },
     "build": {
       "dependsOn": [
+        "@langchain/scripts#build",
         "@langchain/core#build",
         "@langchain/community#build",
         "^build"
@@ -33,6 +49,23 @@
     "lint": {
       "outputs": []
     },
+    "lint:fix": {
+      "outputs": [
+        "langchain/src/**/*.ts",
+        "langchain-core/src/**/*.ts",
+        "libs/**/src/**/*.ts",
+        "docs/core_docs/**/*.js",
+        "examples/src/**/*.ts",
+        "**/*.eslintcache"
+      ],
+      "inputs": [
+        "langchain/src/**/*.ts",
+        "langchain-core/src/**/*.ts",
+        "libs/**/src/**/*.ts",
+        "docs/core_docs/**/*.js",
+        "examples/src/**/*.ts"
+      ]
+    },
     "format": {
       "outputs": []
     },
@@ -42,6 +75,10 @@
     "test": {
       "outputs": [],
       "dependsOn": ["^build"]
+    },
+    "test:ci": {
+      "outputs": [],
+      "dependsOn": ["test"]
     },
     "test:integration": {
       "outputs": [],

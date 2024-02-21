@@ -108,7 +108,7 @@ export abstract class BaseChatModel<
     super(fields);
   }
 
-  abstract _combineLLMOutput?(
+  _combineLLMOutput?(
     ...llmOutputs: LLMResult["llmOutput"][]
   ): LLMResult["llmOutput"];
 
@@ -531,6 +531,8 @@ export abstract class BaseChatModel<
   ): Promise<ChatResult>;
 
   /**
+   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
+   *
    * Makes a single call to the chat model.
    * @param messages An array of BaseMessage instances.
    * @param options The call options or an array of stop sequences.
@@ -552,6 +554,8 @@ export abstract class BaseChatModel<
   }
 
   /**
+   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
+   *
    * Makes a single call to the chat model with a prompt value.
    * @param promptValue The value of the prompt.
    * @param options The call options or an array of stop sequences.
@@ -568,6 +572,8 @@ export abstract class BaseChatModel<
   }
 
   /**
+   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
+   *
    * Predicts the next message based on the input messages.
    * @param messages An array of BaseMessage instances.
    * @param options The call options or an array of stop sequences.
@@ -583,6 +589,8 @@ export abstract class BaseChatModel<
   }
 
   /**
+   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
+   *
    * Predicts the next message based on a text input.
    * @param text The text input.
    * @param options The call options or an array of stop sequences.

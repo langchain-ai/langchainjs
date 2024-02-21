@@ -1,7 +1,6 @@
 import type * as tiktoken from "js-tiktoken";
-import { Document } from "./document.js";
-import { getEncoding } from "./util/tiktoken.js";
-import { BaseDocumentTransformer } from "./schema/document.js";
+import { Document, BaseDocumentTransformer } from "@langchain/core/documents";
+import { getEncoding } from "@langchain/core/utils/tiktoken";
 
 export interface TextSplitterParams {
   chunkSize: number;
@@ -80,8 +79,11 @@ export abstract class TextSplitter
     chunkHeaderOptions: TextSplitterChunkHeaderOptions = {}
   ): Promise<Document[]> {
     // if no metadata is provided, we create an empty one for each text
-    const _metadatas =
-      metadatas.length > 0 ? metadatas : new Array(texts.length).fill({});
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const _metadatas: Record<string, any>[] =
+      metadatas.length > 0
+        ? metadatas
+        : [...Array(texts.length)].map(() => ({}));
     const {
       chunkHeader = "",
       chunkOverlapHeader = "(cont'd) ",
@@ -753,15 +755,15 @@ export class TokenTextSplitter
     );
 
     let start_idx = 0;
-    let cur_idx = Math.min(start_idx + this.chunkSize, input_ids.length);
-    let chunk_ids = input_ids.slice(start_idx, cur_idx);
 
     while (start_idx < input_ids.length) {
+      if (start_idx > 0) {
+        start_idx -= this.chunkOverlap;
+      }
+      const end_idx = Math.min(start_idx + this.chunkSize, input_ids.length);
+      const chunk_ids = input_ids.slice(start_idx, end_idx);
       splits.push(this.tokenizer.decode(chunk_ids));
-
-      start_idx += this.chunkSize - this.chunkOverlap;
-      cur_idx = Math.min(start_idx + this.chunkSize, input_ids.length);
-      chunk_ids = input_ids.slice(start_idx, cur_idx);
+      start_idx = end_idx;
     }
 
     return splits;

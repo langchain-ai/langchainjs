@@ -1,3 +1,4 @@
+import { MessageContent } from "../messages/index.js";
 import type { TemplateFormat } from "./template.js";
 
 /**
@@ -13,7 +14,7 @@ export type SerializedPromptTemplate = {
   _type?: "prompt";
   input_variables: string[];
   template_format?: TemplateFormat;
-  template?: string;
+  template?: MessageContent;
 };
 
 /**

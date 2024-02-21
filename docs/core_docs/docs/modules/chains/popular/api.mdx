@@ -1,5 +1,6 @@
 ---
 sidebar_position: 0
+sidebar_class_name: hidden
 ---
 
 # API chains
@@ -10,5 +11,13 @@ If your API requires authentication or other headers, you can pass the chain a `
 
 import CodeBlock from "@theme/CodeBlock";
 import APIExample from "@examples/chains/api_chain.ts";
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
 
 <CodeBlock language="typescript">{APIExample}</CodeBlock>

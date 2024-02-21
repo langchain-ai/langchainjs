@@ -34,7 +34,20 @@ And we need [pg-copy-streams](https://github.com/brianc/node-pg-copy-streams) to
 npm install -S pg-copy-streams
 ```
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai @langchain/community
+```
+
 ## Usage
+
+::::danger Security
+User-generated data such as usernames should not be used as input for the collection name.  
+**This may lead to SQL Injection!**
+::::
 
 import UsageExample from "@examples/indexes/vector_stores/analyticdb.ts";
 

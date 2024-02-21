@@ -51,7 +51,7 @@ The LangChain libraries themselves are made up of several different packages.
 
 Integrations may also be split into their own compatible packages.
 
-![LangChain Stack](https://github.com/langchain-ai/langchainjs/blob/main/docs/core_docs/static/img/langchain_stack.png)
+![LangChain Stack](https://github.com/langchain-ai/langchainjs/blob/main/docs/core_docs/static/img/langchain_stack_feb_2024.webp)
 
 This library aims to assist in the development of those types of applications. Common examples of these applications include:
 
@@ -63,7 +63,7 @@ This library aims to assist in the development of those types of applications. C
 
 **💬 Chatbots**
 
-- [Documentation](https://js.langchain.com/docs/modules/model_io/models/chat/)
+- [Documentation](https://js.langchain.com/docs/modules/models/chat/)
 - End-to-end Example: [Chat-LangChain](https://github.com/langchain-ai/chat-langchain)
 
 ## 🚀 How does LangChain help?

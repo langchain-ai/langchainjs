@@ -1,5 +1,6 @@
 ---
 sidebar_position: 0
+sidebar_class_name: hidden
 ---
 
 # Stuff
@@ -14,5 +15,13 @@ Here's how it looks in practice:
 
 import QAExample from "@examples/chains/question_answering_stuff.ts";
 import CodeBlock from "@theme/CodeBlock";
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
 
 <CodeBlock language="typescript">{QAExample}</CodeBlock>

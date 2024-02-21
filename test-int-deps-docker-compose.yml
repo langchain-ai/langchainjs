@@ -6,6 +6,12 @@ services:
     ports:
       - '6379:6379'
     command: redis-server --save 20 1 --loglevel warning
+  redis-vectorsearch:
+    image: redis/redis-stack-server:latest
+    restart: always
+    ports:
+      - '6378:6379'
+    command: redis-stack-server
   weaviate:
     image: semitechnologies/weaviate:1.19.7
     ports:

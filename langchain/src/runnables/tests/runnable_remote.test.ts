@@ -1,9 +1,15 @@
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { jest, test } from "@jest/globals";
+import {
+  AIMessage,
+  AIMessageChunk,
+  HumanMessage,
+  SystemMessage,
+} from "@langchain/core/messages";
 
 import { RemoteRunnable } from "../remote.js";
-import { AIMessageChunk } from "../../schema/index.js";
+import { ChatPromptValue } from "../../prompts/chat.js";
 
 const BASE_URL = "http://my-langserve-endpoint";
 
@@ -25,63 +31,71 @@ data: ["a", "b", "c", "d"]
 event: end`;
 
 const bResp = `event: data
-data: {"content": "", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": "", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": "\\"", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": "\\"", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": "object", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": "object", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": "1", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": "1", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": ",", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": ",", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": " object", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": " object", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": "2", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": "2", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": ",", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": ",", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": " object", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": " object", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": "3", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": "3", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": ",", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": ",", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": " object", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": " object", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": "4", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": "4", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": ",", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": ",", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": " object", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": " object", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": "5", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": "5", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": "\\"", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": "\\"", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
 
 event: data
-data: {"content": "", "additional_kwargs": {}, "type": "ai", "example": false, "is_chunk": true}
+data: {"content": "", "additional_kwargs": {}, "type": "AIMessageChunk", "example": false}
+
+event: end`;
+
+const strangeTypesResp = `event: data
+data: {"content": "what is a document loader", "additional_kwargs": {}, "type": "human", "example": false}
+
+event: data
+data: {"messages":[{"content":"You are an expert programmer and problem-solver, tasked with answering any question about Langchain.","type":"system","additional_kwargs":{}},{"content":"I am an AI","type":"ai","additional_kwargs":{}}]}
 
 event: end`;
 
 describe("RemoteRunnable", () => {
-  beforeAll(() => {
+  beforeEach(() => {
     // mock langserve service
     const returnDataByEndpoint: Record<string, BodyInit> = {
       "/a/invoke": JSON.stringify({ output: ["a", "b", "c"] }),
@@ -93,6 +107,7 @@ describe("RemoteRunnable", () => {
       }),
       "/a/stream": respToStream(aResp),
       "/b/stream": respToStream(bResp),
+      "/strange_types/stream": respToStream(strangeTypesResp),
     };
 
     const oldFetch = global.fetch;
@@ -107,7 +122,7 @@ describe("RemoteRunnable", () => {
       }) as any;
   });
 
-  afterAll(() => {
+  afterEach(() => {
     jest.clearAllMocks();
   });
 
@@ -119,6 +134,28 @@ describe("RemoteRunnable", () => {
       `${BASE_URL}/a/invoke`,
       expect.objectContaining({
         body: '{"input":{"text":"string"},"config":{},"kwargs":{}}',
+      })
+    );
+    expect(result).toEqual(["a", "b", "c"]);
+  });
+
+  test("Invoke local langserve passing a configurable object", async () => {
+    // mock fetch, expect /invoke
+    const remote = new RemoteRunnable({ url: `${BASE_URL}/a` });
+    const result = await remote.invoke(
+      { text: "string" },
+      {
+        configurable: {
+          destination: "destination",
+          integration_id: "integration_id",
+          user_id: "user_id",
+        },
+      }
+    );
+    expect(fetch).toHaveBeenCalledWith(
+      `${BASE_URL}/a/invoke`,
+      expect.objectContaining({
+        body: expect.any(String),
       })
     );
     expect(result).toEqual(["a", "b", "c"]);
@@ -158,6 +195,24 @@ describe("RemoteRunnable", () => {
     expect(chunkCount).toBe(18);
     expect(accumulator?.content).toEqual(
       '"object1, object2, object3, object4, object5"'
+    );
+  });
+
+  test("Stream legacy data type formats", async () => {
+    const remote = new RemoteRunnable({ url: `${BASE_URL}/strange_types` });
+    const stream = await remote.stream({ text: "What are the 5 best apples?" });
+    const chunks = [];
+    for await (const chunk of stream) {
+      console.log(chunk);
+      chunks.push(chunk);
+    }
+    expect(chunks[0]).toBeInstanceOf(HumanMessage);
+    expect(chunks[1]).toBeInstanceOf(ChatPromptValue);
+    expect((chunks[1] as ChatPromptValue).messages[0]).toBeInstanceOf(
+      SystemMessage
+    );
+    expect((chunks[1] as ChatPromptValue).messages[1]).toBeInstanceOf(
+      AIMessage
     );
   });
 });

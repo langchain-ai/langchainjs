@@ -1,3 +1,4 @@
+import { MessageContent } from "../messages/index.js";
 import type { InputValues } from "../utils/types.js";
 
 /**
@@ -10,7 +11,7 @@ export type TemplateFormat = "f-string";
  * Type that represents a node in a parsed format string. It can be either
  * a literal text or a variable name.
  */
-type ParsedFStringNode =
+export type ParsedFStringNode =
   | { type: "literal"; text: string }
   | { type: "variable"; name: string };
 
@@ -109,7 +110,7 @@ export const parseTemplate = (
 ) => DEFAULT_PARSER_MAPPING[templateFormat](template);
 
 export const checkValidTemplate = (
-  template: string,
+  template: MessageContent,
   templateFormat: TemplateFormat,
   inputVariables: string[]
 ) => {
@@ -123,7 +124,30 @@ export const checkValidTemplate = (
       acc[v] = "foo";
       return acc;
     }, {} as Record<string, string>);
-    renderTemplate(template, templateFormat, dummyInputs);
+    if (Array.isArray(template)) {
+      template.forEach((message) => {
+        if (message.type === "text") {
+          renderTemplate(message.text, templateFormat, dummyInputs);
+        } else if (message.type === "image_url") {
+          if (typeof message.image_url === "string") {
+            renderTemplate(message.image_url, templateFormat, dummyInputs);
+          } else {
+            const imageUrl = message.image_url.url;
+            renderTemplate(imageUrl, templateFormat, dummyInputs);
+          }
+        } else {
+          throw new Error(
+            `Invalid message template received. ${JSON.stringify(
+              message,
+              null,
+              2
+            )}`
+          );
+        }
+      });
+    } else {
+      renderTemplate(template, templateFormat, dummyInputs);
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     throw new Error(`Invalid prompt schema: ${e.message}`);

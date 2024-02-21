@@ -11,6 +11,7 @@ import {
   type BaseMessageLike,
   coerceMessageLikeToMessage,
   isBaseMessage,
+  MessageContent,
 } from "../messages/index.js";
 import {
   type ChatPromptValueInterface,
@@ -25,6 +26,8 @@ import {
   type TypedPromptInputValues,
 } from "./base.js";
 import { PromptTemplate, type ParamsFromFString } from "./prompt.js";
+import { ImagePromptTemplate } from "./image.js";
+import { parseFString } from "./template.js";
 
 /**
  * Abstract class that serves as a base for creating message prompt
@@ -75,6 +78,7 @@ export abstract class BaseMessagePromptTemplate<
  */
 export interface MessagesPlaceholderFields<T extends string> {
   variableName: T;
+  optional?: boolean;
 }
 
 /**
@@ -82,14 +86,19 @@ export interface MessagesPlaceholderFields<T extends string> {
  * extends the BaseMessagePromptTemplate.
  */
 export class MessagesPlaceholder<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunInput extends InputValues = any
-> extends BaseMessagePromptTemplate<RunInput> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunInput extends InputValues = any
+  >
+  extends BaseMessagePromptTemplate<RunInput>
+  implements MessagesPlaceholderFields<Extract<keyof RunInput, string>>
+{
   static lc_name() {
     return "MessagesPlaceholder";
   }
 
   variableName: Extract<keyof RunInput, string>;
+
+  optional: boolean;
 
   constructor(variableName: Extract<keyof RunInput, string>);
 
@@ -108,6 +117,7 @@ export class MessagesPlaceholder<
     }
     super(fields);
     this.variableName = fields.variableName;
+    this.optional = fields.optional ?? false;
   }
 
   get inputVariables() {
@@ -115,9 +125,19 @@ export class MessagesPlaceholder<
   }
 
   validateInputOrThrow(
-    input: Array<unknown>,
+    input: Array<unknown> | undefined,
     variableName: Extract<keyof RunInput, string>
   ): input is BaseMessage[] {
+    if (this.optional && !input) {
+      return false;
+    } else if (!input) {
+      const error = new Error(
+        `Error: Field "${variableName}" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages as an input value. Received: undefined`
+      );
+      error.name = "InputFormatError";
+      throw error;
+    }
+
     let isInputBaseMessage = false;
 
     if (Array.isArray(input)) {
@@ -147,7 +167,7 @@ export class MessagesPlaceholder<
   ): Promise<BaseMessage[]> {
     this.validateInputOrThrow(values[this.variableName], this.variableName);
 
-    return values[this.variableName];
+    return values[this.variableName] ?? [];
   }
 }
 
@@ -314,6 +334,243 @@ export class ChatMessagePromptTemplate<
   }
 }
 
+interface _TextTemplateParam {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  text?: string | Record<string, any>;
+}
+
+interface _ImageTemplateParam {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  image_url?: string | Record<string, any>;
+}
+
+type MessageClass =
+  | typeof HumanMessage
+  | typeof AIMessage
+  | typeof SystemMessage;
+
+type ChatMessageClass = typeof ChatMessage;
+
+class _StringImageMessagePromptTemplate<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends InputValues = any,
+  RunOutput extends BaseMessage[] = BaseMessage[]
+> extends BaseMessagePromptTemplate<RunInput, RunOutput> {
+  lc_namespace = ["langchain_core", "prompts", "chat"];
+
+  lc_serializable = true;
+
+  inputVariables: Array<Extract<keyof RunInput, string>> = [];
+
+  additionalOptions: Record<string, unknown> = {};
+
+  prompt:
+    | BaseStringPromptTemplate<
+        InputValues<Extract<keyof RunInput, string>>,
+        string
+      >
+    | Array<
+        | BaseStringPromptTemplate<
+            InputValues<Extract<keyof RunInput, string>>,
+            string
+          >
+        | ImagePromptTemplate<
+            InputValues<Extract<keyof RunInput, string>>,
+            string
+          >
+        | MessageStringPromptTemplateFields<
+            InputValues<Extract<keyof RunInput, string>>
+          >
+      >;
+
+  protected messageClass?: MessageClass;
+
+  static _messageClass(): MessageClass {
+    throw new Error(
+      "Can not invoke _messageClass from inside _StringImageMessagePromptTemplate"
+    );
+  }
+
+  // ChatMessage contains role field, others don't.
+  // Because of this, we have a separate class property for ChatMessage.
+  protected chatMessageClass?: ChatMessageClass;
+
+  constructor(
+    /** @TODO When we come up with a better way to type prompt templates, fix this */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    fields: any,
+    additionalOptions?: Record<string, unknown>
+  ) {
+    if (!("prompt" in fields)) {
+      // eslint-disable-next-line no-param-reassign
+      fields = { prompt: fields };
+    }
+    super(fields);
+    this.prompt = fields.prompt;
+    if (Array.isArray(this.prompt)) {
+      let inputVariables: Extract<keyof RunInput, string>[] = [];
+      this.prompt.forEach((prompt) => {
+        if ("inputVariables" in prompt) {
+          inputVariables = inputVariables.concat(prompt.inputVariables);
+        }
+      });
+      this.inputVariables = inputVariables;
+    } else {
+      this.inputVariables = this.prompt.inputVariables;
+    }
+    this.additionalOptions = additionalOptions ?? this.additionalOptions;
+  }
+
+  createMessage(content: MessageContent) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const constructor = this.constructor as any;
+    if (constructor._messageClass()) {
+      const MsgClass = constructor._messageClass();
+      return new MsgClass({ content });
+    } else if (constructor.chatMessageClass) {
+      const MsgClass = constructor.chatMessageClass();
+      // Assuming ChatMessage constructor also takes a content argument
+      return new MsgClass({
+        content,
+        role: this.getRoleFromMessageClass(MsgClass.lc_name()),
+      });
+    } else {
+      throw new Error("No message class defined");
+    }
+  }
+
+  getRoleFromMessageClass(name: string) {
+    switch (name) {
+      case "HumanMessage":
+        return "human";
+      case "AIMessage":
+        return "ai";
+      case "SystemMessage":
+        return "system";
+      case "ChatMessage":
+        return "chat";
+      default:
+        throw new Error("Invalid message class name");
+    }
+  }
+
+  static fromTemplate(
+    template: string | Array<string | _TextTemplateParam | _ImageTemplateParam>,
+    additionalOptions?: Record<string, unknown>
+  ) {
+    if (typeof template === "string") {
+      return new this(PromptTemplate.fromTemplate(template));
+    }
+    const prompt: Array<
+      PromptTemplate<InputValues> | ImagePromptTemplate<InputValues>
+    > = [];
+    for (const item of template) {
+      if (
+        typeof item === "string" ||
+        (typeof item === "object" && "text" in item)
+      ) {
+        let text = "";
+        if (typeof item === "string") {
+          text = item;
+        } else if (typeof item.text === "string") {
+          text = item.text ?? "";
+        }
+        prompt.push(PromptTemplate.fromTemplate(text));
+      } else if (typeof item === "object" && "image_url" in item) {
+        let imgTemplate = item.image_url ?? "";
+        let imgTemplateObject: ImagePromptTemplate<InputValues>;
+        let inputVariables: string[] = [];
+        if (typeof imgTemplate === "string") {
+          const parsedTemplate = parseFString(imgTemplate);
+          const variables = parsedTemplate.flatMap((item) =>
+            item.type === "variable" ? [item.name] : []
+          );
+
+          if ((variables?.length ?? 0) > 0) {
+            if (variables.length > 1) {
+              throw new Error(
+                `Only one format variable allowed per image template.\nGot: ${variables}\nFrom: ${imgTemplate}`
+              );
+            }
+            inputVariables = [variables[0]];
+          } else {
+            inputVariables = [];
+          }
+
+          imgTemplate = { url: imgTemplate };
+          imgTemplateObject = new ImagePromptTemplate<InputValues>({
+            template: imgTemplate,
+            inputVariables,
+          });
+        } else if (typeof imgTemplate === "object") {
+          if ("url" in imgTemplate) {
+            const parsedTemplate = parseFString(imgTemplate.url);
+            inputVariables = parsedTemplate.flatMap((item) =>
+              item.type === "variable" ? [item.name] : []
+            );
+          } else {
+            inputVariables = [];
+          }
+          imgTemplateObject = new ImagePromptTemplate<InputValues>({
+            template: imgTemplate,
+            inputVariables,
+          });
+        } else {
+          throw new Error("Invalid image template");
+        }
+        prompt.push(imgTemplateObject);
+      }
+    }
+    return new this({ prompt, additionalOptions });
+  }
+
+  async format(input: TypedPromptInputValues<RunInput>): Promise<BaseMessage> {
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    if (this.prompt instanceof BaseStringPromptTemplate) {
+      const text = await this.prompt.format(input);
+
+      return this.createMessage(text);
+    } else {
+      const content: MessageContent = [];
+      for (const prompt of this.prompt) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let inputs: Record<string, any> = {};
+        if (!("inputVariables" in prompt)) {
+          throw new Error(
+            `Prompt ${prompt} does not have inputVariables defined.`
+          );
+        }
+        for (const item of prompt.inputVariables) {
+          if (!inputs) {
+            inputs = { [item]: input[item] };
+          }
+          inputs = { ...inputs, [item]: input[item] };
+        }
+        // eslint-disable-next-line no-instanceof/no-instanceof
+        if (prompt instanceof BaseStringPromptTemplate) {
+          const formatted = await prompt.format(
+            inputs as TypedPromptInputValues<RunInput>
+          );
+          content.push({ type: "text", text: formatted });
+          /** @TODO replace this */
+          // eslint-disable-next-line no-instanceof/no-instanceof
+        } else if (prompt instanceof ImagePromptTemplate) {
+          const formatted = await prompt.format(
+            inputs as TypedPromptInputValues<RunInput>
+          );
+          content.push({ type: "image_url", image_url: formatted });
+        }
+      }
+
+      return this.createMessage(content);
+    }
+  }
+
+  async formatMessages(values: RunInput): Promise<RunOutput> {
+    return [await this.format(values)] as BaseMessage[] as RunOutput;
+  }
+}
+
 /**
  * Class that represents a human message prompt template. It extends the
  * BaseMessageStringPromptTemplate.
@@ -331,17 +588,13 @@ export class ChatMessagePromptTemplate<
 export class HumanMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any
-> extends BaseMessageStringPromptTemplate<RunInput> {
+> extends _StringImageMessagePromptTemplate<RunInput> {
+  static _messageClass(): typeof HumanMessage {
+    return HumanMessage;
+  }
+
   static lc_name() {
     return "HumanMessagePromptTemplate";
-  }
-
-  async format(values: RunInput): Promise<BaseMessage> {
-    return new HumanMessage(await this.prompt.format(values));
-  }
-
-  static fromTemplate(template: string) {
-    return new this(PromptTemplate.fromTemplate(template));
   }
 }
 
@@ -352,17 +605,13 @@ export class HumanMessagePromptTemplate<
 export class AIMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any
-> extends BaseMessageStringPromptTemplate<RunInput> {
+> extends _StringImageMessagePromptTemplate<RunInput> {
+  static _messageClass(): typeof AIMessage {
+    return AIMessage;
+  }
+
   static lc_name() {
     return "AIMessagePromptTemplate";
-  }
-
-  async format(values: RunInput): Promise<BaseMessage> {
-    return new AIMessage(await this.prompt.format(values));
-  }
-
-  static fromTemplate(template: string) {
-    return new this(PromptTemplate.fromTemplate(template));
   }
 }
 
@@ -383,17 +632,13 @@ export class AIMessagePromptTemplate<
 export class SystemMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any
-> extends BaseMessageStringPromptTemplate<RunInput> {
+> extends _StringImageMessagePromptTemplate<RunInput> {
+  static _messageClass(): typeof SystemMessage {
+    return SystemMessage;
+  }
+
   static lc_name() {
     return "SystemMessagePromptTemplate";
-  }
-
-  async format(values: RunInput): Promise<BaseMessage> {
-    return new SystemMessage(await this.prompt.format(values));
-  }
-
-  static fromTemplate(template: string) {
-    return new this(PromptTemplate.fromTemplate(template));
   }
 }
 
@@ -443,11 +688,11 @@ function _coerceMessagePromptTemplateLike(
   }
   const message = coerceMessageLikeToMessage(messagePromptTemplateLike);
   if (message._getType() === "human") {
-    return HumanMessagePromptTemplate.fromTemplate(message.content as string);
+    return HumanMessagePromptTemplate.fromTemplate(message.content);
   } else if (message._getType() === "ai") {
-    return AIMessagePromptTemplate.fromTemplate(message.content as string);
+    return AIMessagePromptTemplate.fromTemplate(message.content);
   } else if (message._getType() === "system") {
-    return SystemMessagePromptTemplate.fromTemplate(message.content as string);
+    return SystemMessagePromptTemplate.fromTemplate(message.content);
   } else if (ChatMessage.isInstance(message)) {
     return ChatMessagePromptTemplate.fromTemplate(
       message.content as string,
@@ -458,6 +703,13 @@ function _coerceMessagePromptTemplateLike(
       `Could not coerce message prompt template from input. Received message type: "${message._getType()}".`
     );
   }
+}
+
+function isMessagesPlaceholder(
+  x: BaseMessagePromptTemplate | BaseMessage
+): x is MessagesPlaceholder {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (x.constructor as any).lc_name() === "MessagesPlaceholder";
 }
 
 /**
@@ -561,20 +813,29 @@ export class ChatPromptTemplate<
     }
     const formattedMessageContent = await Promise.all(
       message.content.map(async (item) => {
-        if (
-          item.type !== "image_url" ||
-          typeof item.image_url === "string" ||
-          !item.image_url?.url
-        ) {
+        if (item.type !== "image_url") {
           return item;
         }
-        const imageUrl = item.image_url.url;
+
+        let imageUrl = "";
+        if (typeof item.image_url === "string") {
+          imageUrl = item.image_url;
+        } else {
+          imageUrl = item.image_url.url;
+        }
+
         const promptTemplatePlaceholder = PromptTemplate.fromTemplate(imageUrl);
         const formattedUrl = await promptTemplatePlaceholder.format(
           inputValues
         );
-        // eslint-disable-next-line no-param-reassign
-        item.image_url.url = formattedUrl;
+
+        if (typeof item.image_url !== "string" && "url" in item.image_url) {
+          // eslint-disable-next-line no-param-reassign
+          item.image_url.url = formattedUrl;
+        } else {
+          // eslint-disable-next-line no-param-reassign
+          item.image_url = formattedUrl;
+        }
         return item;
       })
     );
@@ -598,7 +859,10 @@ export class ChatPromptTemplate<
       } else {
         const inputValues = promptMessage.inputVariables.reduce(
           (acc, inputVariable) => {
-            if (!(inputVariable in allValues)) {
+            if (
+              !(inputVariable in allValues) &&
+              !(isMessagesPlaceholder(promptMessage) && promptMessage.optional)
+            ) {
               throw new Error(
                 `Missing value for input variable \`${inputVariable.toString()}\``
               );
@@ -686,7 +950,6 @@ export class ChatPromptTemplate<
           : acc,
       Object.create(null) as PartialValues
     );
-
     const inputVariables = new Set<string>();
     for (const promptMessage of flattenedMessages) {
       // eslint-disable-next-line no-instanceof/no-instanceof

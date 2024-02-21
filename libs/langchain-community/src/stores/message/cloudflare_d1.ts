@@ -9,6 +9,8 @@ import {
   mapStoredMessagesToChatMessages,
 } from "@langchain/core/messages";
 /**
+ * @deprecated Install and import from "@langchain/cloudflare" instead.
+ *
  * Type definition for the input parameters required when instantiating a
  * CloudflareD1MessageHistory object.
  */
@@ -19,6 +21,8 @@ export type CloudflareD1MessageHistoryInput = {
 };
 
 /**
+ * @deprecated Install and import from "@langchain/cloudflare" instead.
+ *
  * Interface for the data transfer object used when selecting stored
  * messages from the Cloudflare D1 database.
  */
@@ -33,6 +37,8 @@ interface selectStoredMessagesDTO {
 }
 
 /**
+ * @deprecated Install and import from "@langchain/cloudflare" instead.
+ *
  * Class for storing and retrieving chat message history from a
  * Cloudflare D1 database. Extends the BaseListChatMessageHistory class.
  * @example

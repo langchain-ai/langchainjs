@@ -1,4 +1,4 @@
-import { Fireworks } from "langchain/llms/fireworks";
+import { Fireworks } from "@langchain/community/llms/fireworks";
 
 const model = new Fireworks({
   temperature: 0.9,

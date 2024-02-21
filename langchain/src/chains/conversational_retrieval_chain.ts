@@ -1,17 +1,13 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import type { BaseRetrieverInterface } from "@langchain/core/retrievers";
-import { PromptTemplate } from "../prompts/prompt.js";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { BaseMessage, HumanMessage, AIMessage } from "@langchain/core/messages";
+import { ChainValues } from "@langchain/core/utils/types";
+import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
 import { SerializedChatVectorDBQAChain } from "./serde.js";
-import {
-  ChainValues,
-  BaseMessage,
-  HumanMessage,
-  AIMessage,
-} from "../schema/index.js";
 import { BaseChain, ChainInputs } from "./base.js";
 import { LLMChain } from "./llm_chain.js";
 import { QAChainParams, loadQAChain } from "./question_answering/load.js";
-import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;

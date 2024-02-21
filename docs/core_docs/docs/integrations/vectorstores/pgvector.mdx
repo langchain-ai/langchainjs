@@ -12,6 +12,14 @@ npm install pg
 
 ### Setup a `pgvector` self hosted instance with `docker-compose`
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai @langchain/community
+```
+
 `pgvector` provides a prebuilt Docker image that can be used to quickly setup a self-hosted Postgres instance.
 Create a file below named `docker-compose.yml`:
 
@@ -27,6 +35,11 @@ And then in the same directory, run `docker compose up` to start the container.
 You can find more information on how to setup `pgvector` in the [official repository](https://github.com/pgvector/pgvector).
 
 ## Usage
+
+::::danger Security
+User-generated data such as usernames should not be used as input for table and column names.  
+**This may lead to SQL Injection!**
+::::
 
 import Example from "@examples/indexes/vector_stores/pgvector_vectorstore/pgvector.ts";
 

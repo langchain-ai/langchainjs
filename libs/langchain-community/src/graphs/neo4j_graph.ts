@@ -1,10 +1,11 @@
-import neo4j, { Neo4jError } from "neo4j-driver";
+import neo4j, { RoutingControl } from "neo4j-driver";
 
 interface Neo4jGraphConfig {
   url: string;
   username: string;
   password: string;
   database?: string;
+  timeoutMs?: number;
 }
 
 interface StructuredSchema {
@@ -42,9 +43,11 @@ export class Neo4jGraph {
 
   private database: string;
 
-  private schema = "";
+  private timeoutMs: number | undefined;
 
-  private structuredSchema: StructuredSchema = {
+  protected schema = "";
+
+  protected structuredSchema: StructuredSchema = {
     nodeProps: {},
     relProps: {},
     relationships: [],
@@ -55,10 +58,12 @@ export class Neo4jGraph {
     username,
     password,
     database = "neo4j",
+    timeoutMs,
   }: Neo4jGraphConfig) {
     try {
       this.driver = neo4j.driver(url, neo4j.auth.basic(username, password));
       this.database = database;
+      this.timeoutMs = timeoutMs;
     } catch (error) {
       throw new Error(
         "Could not create a Neo4j driver instance. Please check the connection details."
@@ -103,23 +108,17 @@ export class Neo4jGraph {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async query(query: string, params: any = {}): Promise<any[] | undefined> {
-    try {
-      const result = await this.driver.executeQuery(query, params, {
-        database: this.database,
-      });
-      return toObjects(result.records);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      if (
-        // eslint-disable-next-line
-        error instanceof Neo4jError &&
-        error.code === "Neo.ClientError.Procedure.ProcedureNotFound"
-      ) {
-        throw new Error("Procedure not found in Neo4j.");
-      }
-    }
-    return undefined;
+  async query<RecordShape extends Record<string, any> = Record<string, any>>(
+    query: string,
+    params: Record<string, any> = {},
+    routing: RoutingControl = neo4j.routing.WRITE
+  ): Promise<RecordShape[] | undefined> {
+    const result = await this.driver.executeQuery<RecordShape>(query, params, {
+      database: this.database,
+      routing,
+      transactionConfig: { timeout: this.timeoutMs },
+    });
+    return toObjects<RecordShape>(result.records);
   }
 
   async verifyConnectivity() {
@@ -153,16 +152,16 @@ export class Neo4jGraph {
 
     // Assuming query method is defined and returns a Promise
     const nodeProperties: NodeType[] | undefined = (
-      await this.query(nodePropertiesQuery)
-    )?.map((el: { output: NodeType }) => el.output);
+      await this.query<{ output: NodeType }>(nodePropertiesQuery)
+    )?.map((el) => el.output);
 
     const relationshipsProperties: RelType[] | undefined = (
-      await this.query(relPropertiesQuery)
-    )?.map((el: { output: RelType }) => el.output);
+      await this.query<{ output: RelType }>(relPropertiesQuery)
+    )?.map((el) => el.output);
 
     const relationships: PathType[] | undefined = (
-      await this.query(relQuery)
-    )?.map((el: { output: PathType }) => el.output);
+      await this.query<{ output: PathType }>(relQuery)
+    )?.map((el) => el.output);
 
     // Structured schema similar to Python's dictionary comprehension
     this.structuredSchema = {
@@ -212,18 +211,19 @@ export class Neo4jGraph {
   }
 }
 
-function toObjects(records: neo4j.Record[]) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const recordValues: Record<string, any>[] = records.map((record) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function toObjects<
+  RecordShape extends Record<string, any> = Record<string, any>
+>(records: neo4j.Record<RecordShape>): RecordShape[] {
+  return records.map((record) => {
     const rObj = record.toObject();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const out: { [key: string]: any } = {};
-    Object.keys(rObj).forEach((key) => {
+    const out: Partial<RecordShape> = {};
+    Object.keys(rObj).forEach((key: keyof RecordShape) => {
       out[key] = itemIntToString(rObj[key]);
     });
-    return out;
+    return out as RecordShape;
   });
-  return recordValues;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

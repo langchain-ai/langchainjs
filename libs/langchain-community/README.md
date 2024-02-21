@@ -21,14 +21,14 @@ You can do so by adding appropriate field to your project's `package.json` like 
     "langchain": "0.0.207"
   },
   "resolutions": {
-    "@langchain/core": "0.1.2"
+    "@langchain/core": "0.1.5"
   },
   "overrides": {
-    "@langchain/core": "0.1.2"
+    "@langchain/core": "0.1.5"
   },
   "pnpm": {
     "overrides": {
-      "@langchain/core": "0.1.2"
+      "@langchain/core": "0.1.5"
     }
   }
 }
@@ -40,7 +40,7 @@ The field you need depends on the package manager you're using, but we recommend
 
 LangChain Community contains third-party integrations that implement the base interfaces defined in LangChain Core, making them ready-to-use in any LangChain application.
 
-![LangChain Stack](../../docs/core_docs/static/img/langchain_stack.png)
+![LangChain Stack](../../docs/core_docs/static/img/langchain_stack_feb_2024.webp)
 
 ## 📕 Releases & Versioning
 

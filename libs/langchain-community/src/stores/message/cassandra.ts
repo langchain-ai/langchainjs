@@ -1,4 +1,3 @@
-import { Client, DseClientOptions } from "cassandra-driver";
 import { BaseListChatMessageHistory } from "@langchain/core/chat_history";
 import {
   BaseMessage,
@@ -7,7 +6,14 @@ import {
   mapStoredMessagesToChatMessages,
 } from "@langchain/core/messages";
 
-export interface CassandraChatMessageHistoryOptions extends DseClientOptions {
+import {
+  Column,
+  CassandraTable,
+  CassandraClientArgs,
+} from "../../utils/cassandra.js";
+
+export interface CassandraChatMessageHistoryOptions
+  extends CassandraClientArgs {
   keyspace: string;
   table: string;
   sessionId: string;
@@ -46,28 +52,29 @@ export interface CassandraChatMessageHistoryOptions extends DseClientOptions {
 export class CassandraChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "cassandra"];
 
-  private keyspace: string;
-
-  private table: string;
-
-  private client: Client;
+  private cassandraTable: CassandraTable;
 
   private sessionId: string;
 
-  private tableExists: boolean;
-
   private options: CassandraChatMessageHistoryOptions;
 
-  private queries: { insert: string; select: string; delete: string };
+  private colSessionId: Column;
+
+  private colMessageTs: Column;
+
+  private colMessageType: Column;
+
+  private colData: Column;
 
   constructor(options: CassandraChatMessageHistoryOptions) {
     super();
-    this.client = new Client(options);
-    this.keyspace = options.keyspace;
-    this.table = options.table;
     this.sessionId = options.sessionId;
-    this.tableExists = false;
     this.options = options;
+
+    this.colSessionId = { name: "session_id", type: "text", partition: true };
+    this.colMessageTs = { name: "message_ts", type: "timestamp" };
+    this.colMessageType = { name: "message_type", type: "text" };
+    this.colData = { name: "data", type: "text" };
   }
 
   /**
@@ -76,11 +83,12 @@ export class CassandraChatMessageHistory extends BaseListChatMessageHistory {
    */
   public async getMessages(): Promise<BaseMessage[]> {
     await this.ensureTable();
-    const resultSet = await this.client.execute(
-      this.queries.select,
-      [this.sessionId],
-      { prepare: true }
+
+    const resultSet = await this.cassandraTable.select(
+      [this.colMessageType, this.colData],
+      [{ name: "session_id", value: this.sessionId }]
     );
+
     const storedMessages: StoredMessage[] = resultSet.rows.map((row) => ({
       type: row.message_type,
       data: JSON.parse(row.data),
@@ -99,11 +107,16 @@ export class CassandraChatMessageHistory extends BaseListChatMessageHistory {
     await this.ensureTable();
     const messages = mapChatMessagesToStoredMessages([message]);
     const { type, data } = messages[0];
-    return this.client
-      .execute(
-        this.queries.insert,
-        [this.sessionId, type, JSON.stringify(data)],
-        { prepare: true, ...this.options }
+
+    return this.cassandraTable
+      .upsert(
+        [[this.sessionId, type, Date.now(), JSON.stringify(data)]],
+        [
+          this.colSessionId,
+          this.colMessageType,
+          this.colMessageTs,
+          this.colData,
+        ]
       )
       .then(() => {});
   }
@@ -114,11 +127,8 @@ export class CassandraChatMessageHistory extends BaseListChatMessageHistory {
    */
   public async clear(): Promise<void> {
     await this.ensureTable();
-    return this.client
-      .execute(this.queries.delete, [this.sessionId], {
-        prepare: true,
-        ...this.options,
-      })
+    return this.cassandraTable
+      .delete({ name: this.colSessionId.name, value: this.sessionId })
       .then(() => {});
   }
 
@@ -127,26 +137,16 @@ export class CassandraChatMessageHistory extends BaseListChatMessageHistory {
    * @returns Promise that resolves when the database has been initialized.
    */
   private async ensureTable(): Promise<void> {
-    if (this.tableExists) {
+    if (this.cassandraTable) {
       return;
     }
 
-    await this.client.execute(`
-    CREATE TABLE IF NOT EXISTS ${this.keyspace}.${this.table} (
-        session_id text,
-        message_ts timestamp,
-        message_type text,
-        data text,
-        PRIMARY KEY ((session_id), message_ts)
-      );
-    `);
-
-    this.queries = {
-      insert: `INSERT INTO ${this.keyspace}.${this.table} (session_id, message_ts, message_type, data) VALUES (?, toTimestamp(now()), ?, ?);`,
-      select: `SELECT message_type, data FROM ${this.keyspace}.${this.table} WHERE session_id = ?;`,
-      delete: `DELETE FROM ${this.keyspace}.${this.table} WHERE session_id = ?;`,
+    const tableConfig = {
+      ...this.options,
+      primaryKey: [this.colSessionId, this.colMessageTs],
+      nonKeyColumns: [this.colMessageType, this.colData],
     };
 
-    this.tableExists = true;
+    this.cassandraTable = await new CassandraTable(tableConfig);
   }
 }

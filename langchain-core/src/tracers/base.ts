@@ -28,6 +28,8 @@ export interface Run extends BaseRun {
     time: string;
     kwargs?: Record<string, unknown>;
   }>;
+  trace_id?: string;
+  dotted_order?: string;
 }
 
 export interface AgentRun extends Run {
@@ -41,6 +43,17 @@ function _coerceToDict(value: any, defaultKey: string) {
     : { [defaultKey]: value };
 }
 
+function stripNonAlphanumeric(input: string) {
+  return input.replace(/[-:.]/g, "");
+}
+
+function convertToDottedOrderFormat(epoch: number, runId: string) {
+  return (
+    stripNonAlphanumeric(`${new Date(epoch).toISOString().slice(0, -1)}000Z`) +
+    runId
+  );
+}
+
 export abstract class BaseTracer extends BaseCallbackHandler {
   protected runMap: Map<string, Run> = new Map();
 
@@ -52,6 +65,19 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     return this;
   }
 
+  protected stringifyError(error: unknown) {
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    if (error instanceof Error) {
+      return error.message + (error?.stack ? `\n\n${error.stack}` : "");
+    }
+
+    if (typeof error === "string") {
+      return error;
+    }
+
+    return `${error}`;
+  }
+
   protected abstract persistRun(run: Run): Promise<void>;
 
   protected _addChildRun(parentRun: Run, childRun: Run) {
@@ -59,18 +85,41 @@ export abstract class BaseTracer extends BaseCallbackHandler {
   }
 
   protected async _startTrace(run: Run) {
-    if (run.parent_run_id !== undefined) {
-      const parentRun = this.runMap.get(run.parent_run_id);
+    const currentDottedOrder = convertToDottedOrderFormat(
+      run.start_time,
+      run.id
+    );
+    const storedRun = { ...run };
+    if (storedRun.parent_run_id !== undefined) {
+      const parentRun = this.runMap.get(storedRun.parent_run_id);
       if (parentRun) {
-        this._addChildRun(parentRun, run);
+        this._addChildRun(parentRun, storedRun);
         parentRun.child_execution_order = Math.max(
           parentRun.child_execution_order,
-          run.child_execution_order
+          storedRun.child_execution_order
         );
+        storedRun.trace_id = parentRun.trace_id;
+        if (parentRun.dotted_order !== undefined) {
+          storedRun.dotted_order = [
+            parentRun.dotted_order,
+            currentDottedOrder,
+          ].join(".");
+        } else {
+          // This can happen naturally for callbacks added within a run
+          // console.debug(`Parent run with UUID ${storedRun.parent_run_id} has no dotted order.`);
+        }
+      } else {
+        // This can happen naturally for callbacks added within a run
+        // console.debug(
+        //   `Parent run with UUID ${storedRun.parent_run_id} not found.`
+        // );
       }
+    } else {
+      storedRun.trace_id = storedRun.id;
+      storedRun.dotted_order = currentDottedOrder;
     }
-    this.runMap.set(run.id, run);
-    await this.onRunCreate?.(run);
+    this.runMap.set(storedRun.id, storedRun);
+    await this.onRunCreate?.(storedRun);
   }
 
   protected async _endTrace(run: Run): Promise<void> {
@@ -196,13 +245,13 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     return run;
   }
 
-  async handleLLMError(error: Error, runId: string): Promise<Run> {
+  async handleLLMError(error: unknown, runId: string): Promise<Run> {
     const run = this.runMap.get(runId);
     if (!run || run?.run_type !== "llm") {
       throw new Error("No LLM run to end.");
     }
     run.end_time = Date.now();
-    run.error = error.message;
+    run.error = this.stringifyError(error);
     run.events.push({
       name: "error",
       time: new Date(run.end_time).toISOString(),
@@ -275,7 +324,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
   }
 
   async handleChainError(
-    error: Error,
+    error: unknown,
     runId: string,
     _parentRunId?: string,
     _tags?: string[],
@@ -286,7 +335,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       throw new Error("No chain run to end.");
     }
     run.end_time = Date.now();
-    run.error = error.message;
+    run.error = this.stringifyError(error);
     run.events.push({
       name: "error",
       time: new Date(run.end_time).toISOString(),
@@ -352,13 +401,13 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     return run;
   }
 
-  async handleToolError(error: Error, runId: string): Promise<Run> {
+  async handleToolError(error: unknown, runId: string): Promise<Run> {
     const run = this.runMap.get(runId);
     if (!run || run?.run_type !== "tool") {
       throw new Error("No tool run to end");
     }
     run.end_time = Date.now();
-    run.error = error.message;
+    run.error = this.stringifyError(error);
     run.events.push({
       name: "error",
       time: new Date(run.end_time).toISOString(),
@@ -453,13 +502,13 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     return run;
   }
 
-  async handleRetrieverError(error: Error, runId: string): Promise<Run> {
+  async handleRetrieverError(error: unknown, runId: string): Promise<Run> {
     const run = this.runMap.get(runId);
     if (!run || run?.run_type !== "retriever") {
       throw new Error("No retriever run to end");
     }
     run.end_time = Date.now();
-    run.error = error.message;
+    run.error = this.stringifyError(error);
     run.events.push({
       name: "error",
       time: new Date(run.end_time).toISOString(),
@@ -501,7 +550,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       time: new Date().toISOString(),
       kwargs: { token, idx, chunk: fields?.chunk },
     });
-    await this.onLLMNewToken?.(run, token);
+    await this.onLLMNewToken?.(run, token, { chunk: fields?.chunk });
     return run;
   }
 
@@ -541,5 +590,10 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   onText?(run: Run): void | Promise<void>;
 
-  onLLMNewToken?(run: Run, token: string): void | Promise<void>;
+  onLLMNewToken?(
+    run: Run,
+    token: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    kwargs?: { chunk: any }
+  ): void | Promise<void>;
 }

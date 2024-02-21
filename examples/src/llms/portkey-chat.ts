@@ -1,5 +1,5 @@
-import { PortkeyChat } from "langchain/chat_models/portkey";
-import { SystemMessage } from "langchain/schema";
+import { PortkeyChat } from "@langchain/community/chat_models/portkey";
+import { SystemMessage } from "@langchain/core/messages";
 
 export const run = async () => {
   const model = new PortkeyChat({

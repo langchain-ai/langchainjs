@@ -1,7 +1,7 @@
 import { test, expect } from "@jest/globals";
 import { Document } from "@langchain/core/documents";
+import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { FaissStore } from "../faiss.js";
-import { FakeEmbeddings } from "../../utils/testing.js";
 
 test("Test FaissStore.fromTexts + addVectors", async () => {
   const vectorStore = await FaissStore.fromTexts(

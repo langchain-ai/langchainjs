@@ -1,6 +1,6 @@
 import { describe, expect, jest, test } from "@jest/globals";
-import { Document } from "../../document.js";
-import { FakeEmbeddings } from "../../embeddings/fake.js";
+import { Document } from "@langchain/core/documents";
+import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { MemoryVectorStore } from "../../vectorstores/memory.js";
 import {
   BUFFER_IDX,
