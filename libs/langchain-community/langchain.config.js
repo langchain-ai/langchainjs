@@ -190,6 +190,7 @@ export const config = {
     // stores
     "stores/doc/base": "stores/doc/base",
     "stores/doc/in_memory": "stores/doc/in_memory",
+    "stores/message/astradb": "stores/message/astradb",
     "stores/message/cassandra": "stores/message/cassandra",
     "stores/message/cloudflare_d1": "stores/message/cloudflare_d1",
     "stores/message/convex": "stores/message/convex",
@@ -322,6 +323,7 @@ export const config = {
     "storage/upstash_redis",
     "storage/vercel_kv",
     // stores
+    "stores/message/astradb",
     "stores/message/cassandra",
     "stores/message/cloudflare_d1",
     "stores/message/convex",

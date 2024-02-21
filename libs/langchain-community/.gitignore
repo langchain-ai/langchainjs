@@ -602,6 +602,10 @@ stores/doc/in_memory.cjs
 stores/doc/in_memory.js
 stores/doc/in_memory.d.ts
 stores/doc/in_memory.d.cts
+stores/message/astradb.cjs
+stores/message/astradb.js
+stores/message/astradb.d.ts
+stores/message/astradb.d.cts
 stores/message/cassandra.cjs
 stores/message/cassandra.js
 stores/message/cassandra.d.ts
