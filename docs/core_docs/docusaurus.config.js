@@ -54,7 +54,7 @@ const config = {
             },
             {
               test: /\.ya?ml$/,
-              use: 'yaml-loader'
+              use: "yaml-loader",
             },
             {
               test: /\.m?js/,
