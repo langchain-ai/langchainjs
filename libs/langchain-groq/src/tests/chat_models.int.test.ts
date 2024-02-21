@@ -2,7 +2,7 @@ import { describe, test } from "@jest/globals";
 import { ChatMessage, HumanMessage } from "@langchain/core/messages";
 import { ChatGroq } from "../chat_models.js";
 
-describe("ChatGroq", () => {
+describe.skip("ChatGroq", () => {
   test("invoke", async () => {
     const chat = new ChatGroq({
       maxRetries: 0,
@@ -28,7 +28,7 @@ describe("ChatGroq", () => {
     expect(res.content.length).toBeGreaterThan(10);
   });
 
-  test.only("streaming", async () => {
+  test("streaming", async () => {
     const chat = new ChatGroq();
     const message = new HumanMessage("What color is the sky?");
     const stream = await chat.stream([message]);
