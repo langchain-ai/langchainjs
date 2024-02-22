@@ -124,15 +124,27 @@ export class MatryoshkaRetrieval<
     if (this.searchType === "cosine") {
       lambdaFunc = new RunnableLambda<Array<number[]>, Array<number[]>>({
         func: (input) => cosineSimilarity(input, largeEmbeddings),
-      }).withConfig(runManager?.getChild("MatryoshkaRetrieval._rankByLargeEmbeddings.cosine") ?? {});
+      }).withConfig(
+        runManager?.getChild(
+          "MatryoshkaRetrieval._rankByLargeEmbeddings.cosine"
+        ) ?? {}
+      );
     } else if (this.searchType === "innerProduct") {
       lambdaFunc = new RunnableLambda<Array<number[]>, Array<number[]>>({
         func: (input) => innerProduct(input, largeEmbeddings),
-      }).withConfig(runManager?.getChild("MatryoshkaRetrieval._rankByLargeEmbeddings.innerProduct") ?? {});
+      }).withConfig(
+        runManager?.getChild(
+          "MatryoshkaRetrieval._rankByLargeEmbeddings.innerProduct"
+        ) ?? {}
+      );
     } else {
       lambdaFunc = new RunnableLambda<Array<number[]>, Array<number[]>>({
         func: (input) => euclideanDistance(input, largeEmbeddings),
-      }).withConfig(runManager?.getChild("MatryoshkaRetrieval._rankByLargeEmbeddings.euclideanDistance") ?? {});
+      }).withConfig(
+        runManager?.getChild(
+          "MatryoshkaRetrieval._rankByLargeEmbeddings.euclideanDistance"
+        ) ?? {}
+      );
     }
     // Calculate the similarity scores between the query embedding and the large embeddings
     const [similarityScores] = await lambdaFunc.invoke([queryEmbedding]);
@@ -172,10 +184,18 @@ export class MatryoshkaRetrieval<
             this.filter
           )
         ).map(([doc]) => doc),
-    }).withConfig(runManager?.getChild("MatryoshkaRetrieval._getRelevantDocuments.smallResults") ?? {});
+    }).withConfig(
+      runManager?.getChild(
+        "MatryoshkaRetrieval._getRelevantDocuments.smallResults"
+      ) ?? {}
+    );
     const smallResults = await smallResultsLambda.invoke(queryEmbedding);
 
-    return this._rankByLargeEmbeddings(queryEmbedding, smallResults, runManager);
+    return this._rankByLargeEmbeddings(
+      queryEmbedding,
+      smallResults,
+      runManager
+    );
   }
 
   /**
