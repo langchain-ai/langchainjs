@@ -25,11 +25,22 @@ describe.skip("PostgresRecordManager", () => {
   afterEach(async () => {
     // Drop table, then recreate it for the next test.
     await recordManager.pool.query(`DROP TABLE "${tableName}"`);
+
     await recordManager.createSchema();
   });
 
   afterAll(async () => {
     await recordManager.end();
+  });
+
+  test("Test explicit schema definition", async () => { 
+      // create new schema for test
+      await recordManager.pool.query('CREATE SCHEMA "newSchema"');
+
+      await recordManager.createSchema('newSchema');
+
+      // drop created schema
+      await recordManager.pool.query(`DROP SCHEMA IF EXISTS "newSchema" CASCADE`);
   });
 
   test("Test upsertion", async () => {

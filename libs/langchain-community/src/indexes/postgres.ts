@@ -43,10 +43,10 @@ export class PostgresRecordManager implements RecordManagerInterface {
           group_id TEXT,
           UNIQUE (key, namespace)
         );
-        CREATE INDEX IF NOT EXISTS updated_at_index ON "${finalTableName}" (updated_at);
-        CREATE INDEX IF NOT EXISTS key_index ON "${finalTableName}" (key);
-        CREATE INDEX IF NOT EXISTS namespace_index ON "${finalTableName}" (namespace);
-        CREATE INDEX IF NOT EXISTS group_id_index ON "${finalTableName}" (group_id);`
+        CREATE INDEX IF NOT EXISTS updated_at_index ON ${finalTableName} (updated_at);
+        CREATE INDEX IF NOT EXISTS key_index ON ${finalTableName} (key);
+        CREATE INDEX IF NOT EXISTS namespace_index ON ${finalTableName} (namespace);
+        CREATE INDEX IF NOT EXISTS group_id_index ON ${finalTableName} (group_id);`
       );
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
