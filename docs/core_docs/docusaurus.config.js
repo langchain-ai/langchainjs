@@ -16,7 +16,7 @@ const baseDarkCodeBlockTheme = require("prism-react-renderer/themes/vsDark");
 const config = {
   title: "🦜️🔗 Langchain",
   tagline: "LangChain JS Docs",
-  favicon: "img/favicon.ico",
+  favicon: "img/brand/favicon.png",
   // Set the production url of your site here
   url: "https://js.langchain.com",
   // Set the /<baseUrl>/ pathname under which your site is served
@@ -145,9 +145,12 @@ const config = {
           },
         },
       },
-      image: "img/parrot-chainlink-icon.png",
+      image: "img/brand/theme-image.png",
       navbar: {
-        title: "🦜️🔗 LangChain",
+        logo: {
+          src: "img/brand/wordmark.png",
+          srcDark: "img/brand/wordmark-dark.png",
+        },
         items: [
           {
             to: "/docs/get_started/introduction",
