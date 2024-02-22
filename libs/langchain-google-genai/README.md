@@ -1,4 +1,4 @@
-8# @langchain/google-genai
+# @langchain/google-genai
 
 This package contains the LangChain.js integrations for Gemini through their generative-ai SDK.
 
