@@ -4,25 +4,28 @@ import { PostgresRecordManager } from "../postgres.js";
 
 describe.skip("PostgresRecordManager", () => {
   const tableName = "upsertion_record";
+  const config = {
+    postgresConnectionOptions: {
+      type: "postgres",
+      host: "127.0.0.1",
+      port: 5432,
+      user: "myuser",
+      password: "ChangeMe",
+      database: "api",
+    } as PoolConfig,
+    tableName,
+  };
   let recordManager: PostgresRecordManager;
 
   beforeAll(async () => {
-    const config = {
-      postgresConnectionOptions: {
-        type: "postgres",
-        host: "127.0.0.1",
-        port: 5432,
-        user: "myuser",
-        password: "ChangeMe",
-        database: "api",
-      } as PoolConfig,
-      tableName,
-    };
     recordManager = new PostgresRecordManager("test", config);
     await recordManager.createSchema();
   });
 
   afterEach(async () => {
+    // reinitialize record manager
+    recordManager = new PostgresRecordManager("test", config);
+
     // Drop table, then recreate it for the next test.
     await recordManager.pool.query(`DROP TABLE "${tableName}"`);
 
@@ -34,10 +37,14 @@ describe.skip("PostgresRecordManager", () => {
   });
 
   test("Test explicit schema definition", async () => { 
+      // configure explicit schema on record mananger
+      recordManager = new PostgresRecordManager("test", config, "newSchema");
+
       // create new schema for test
       await recordManager.pool.query('CREATE SCHEMA "newSchema"');
-
-      await recordManager.createSchema('newSchema');
+      
+      // create table in new schema
+      await recordManager.createSchema();
 
       // drop created schema
       await recordManager.pool.query(`DROP SCHEMA IF EXISTS "newSchema" CASCADE`);

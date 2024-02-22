@@ -19,21 +19,19 @@ export class PostgresRecordManager implements RecordManagerInterface {
 
   namespace: string;
 
-  constructor(namespace: string, config: PostgresRecordManagerOptions) {
+  schema?: string;
+
+  constructor(namespace: string, config: PostgresRecordManagerOptions, schema?: string) {
     const { postgresConnectionOptions, tableName } = config;
     this.namespace = namespace;
     this.pool = new pg.Pool(postgresConnectionOptions);
     this.tableName = tableName || "upsertion_records";
+    this.schema = schema;
   }
 
-  /**
-   * Generates the table provided under this.tableName
-   *
-   * @param schema - Optional parameter to designate which Postgres schema in which to create the table
-   */
-  async createSchema(schema?: string): Promise<void> {
+  async createSchema(): Promise<void> {
     try {
-      const finalTableName = (schema) ? `"${schema}"."${this.tableName}"` : `"${this.tableName}"`;
+      const finalTableName = (this.schema) ? `"${this.schema}"."${this.tableName}"` : `"${this.tableName}"`;
       await this.pool.query(`
         CREATE TABLE IF NOT EXISTS ${finalTableName} (
           uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -122,7 +120,8 @@ export class PostgresRecordManager implements RecordManagerInterface {
       )
       .join(", ");
 
-    const query = `INSERT INTO "${this.tableName}" (key, namespace, updated_at, group_id) VALUES ${valuesPlaceholders} ON CONFLICT (key, namespace) DO UPDATE SET updated_at = EXCLUDED.updated_at;`;
+    const finalTableName = (this.schema) ? `"${this.schema}"."${this.tableName}"` : `"${this.tableName}"`;
+    const query = `INSERT INTO ${finalTableName} (key, namespace, updated_at, group_id) VALUES ${valuesPlaceholders} ON CONFLICT (key, namespace) DO UPDATE SET updated_at = EXCLUDED.updated_at;`;
     await this.pool.query(query, recordsToUpsert.flat());
   }
 
@@ -136,8 +135,9 @@ export class PostgresRecordManager implements RecordManagerInterface {
       .map((_, i) => `$${i + startIndex}`)
       .join(", ");
 
+    const finalTableName = (this.schema) ? `"${this.schema}"."${this.tableName}"` : `"${this.tableName}"`;
     const query = `
-      SELECT k, (key is not null) ex from unnest(ARRAY[${arrayPlaceholders}]) k left join "${this.tableName}" on k=key and namespace = $1;
+      SELECT k, (key is not null) ex from unnest(ARRAY[${arrayPlaceholders}]) k left join ${finalTableName} on k=key and namespace = $1;
       `;
     const res = await this.pool.query(query, [this.namespace, ...keys.flat()]);
     return res.rows.map((row: { ex: boolean }) => row.ex);
@@ -145,7 +145,9 @@ export class PostgresRecordManager implements RecordManagerInterface {
 
   async listKeys(options?: ListKeyOptions): Promise<string[]> {
     const { before, after, limit, groupIds } = options ?? {};
-    let query = `SELECT key FROM "${this.tableName}" WHERE namespace = $1`;
+    const finalTableName = (this.schema) ? `"${this.schema}"."${this.tableName}"` : `"${this.tableName}"`;
+
+    let query = `SELECT key FROM ${finalTableName} WHERE namespace = $1`;
     const values: (string | number | (string | null)[])[] = [this.namespace];
 
     let index = 2;
@@ -183,7 +185,8 @@ export class PostgresRecordManager implements RecordManagerInterface {
       return;
     }
 
-    const query = `DELETE FROM "${this.tableName}" WHERE namespace = $1 AND key = ANY($2);`;
+    const finalTableName = (this.schema) ? `"${this.schema}"."${this.tableName}"` : `"${this.tableName}"`;
+    const query = `DELETE FROM ${finalTableName} WHERE namespace = $1 AND key = ANY($2);`;
     await this.pool.query(query, [this.namespace, keys]);
   }
 
