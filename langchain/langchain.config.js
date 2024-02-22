@@ -295,6 +295,7 @@ export const config = {
     "retrievers/self_query/weaviate": "retrievers/self_query/weaviate",
     "retrievers/self_query/vectara": "retrievers/self_query/vectara",
     "retrievers/vespa": "retrievers/vespa",
+    "retrievers/matryoshka_retrieval": "retrievers/matryoshka_retrieval",
     // cache
     cache: "cache/index",
     "cache/cloudflare_kv": "cache/cloudflare_kv",
