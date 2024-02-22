@@ -26,21 +26,29 @@ export class PostgresRecordManager implements RecordManagerInterface {
     this.tableName = tableName || "upsertion_records";
   }
 
-  async createSchema(): Promise<void> {
+  /**
+   * Generates the table provided under this.tableName
+   *
+   * @param schema - Optional parameter to designate which Postgres schema in which to create the table
+   */
+  async createSchema(schema?: string): Promise<void> {
     try {
+      const finalTableName = (schema) ? `"${schema}"."${this.tableName}"` : `"${this.tableName}"`;
       await this.pool.query(`
-CREATE TABLE IF NOT EXISTS ${this.tableName} (
-  uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  key TEXT NOT NULL,
-  namespace TEXT NOT NULL,
-  updated_at Double PRECISION NOT NULL,
-  group_id TEXT,
-  UNIQUE (key, namespace)
-);
-CREATE INDEX IF NOT EXISTS updated_at_index ON "${this.tableName}" (updated_at);
-CREATE INDEX IF NOT EXISTS key_index ON "${this.tableName}" (key);
-CREATE INDEX IF NOT EXISTS namespace_index ON "${this.tableName}" (namespace);
-CREATE INDEX IF NOT EXISTS group_id_index ON "${this.tableName}" (group_id);`);
+        CREATE TABLE IF NOT EXISTS ${finalTableName} (
+          uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          key TEXT NOT NULL,
+          namespace TEXT NOT NULL,
+          updated_at Double PRECISION NOT NULL,
+          group_id TEXT,
+          UNIQUE (key, namespace)
+        );
+        CREATE INDEX IF NOT EXISTS updated_at_index ON "${finalTableName}" (updated_at);
+        CREATE INDEX IF NOT EXISTS key_index ON "${finalTableName}" (key);
+        CREATE INDEX IF NOT EXISTS namespace_index ON "${finalTableName}" (namespace);
+        CREATE INDEX IF NOT EXISTS group_id_index ON "${finalTableName}" (group_id);`
+      );
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       // This error indicates that the table already exists
