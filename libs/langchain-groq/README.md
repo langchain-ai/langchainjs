@@ -28,7 +28,7 @@ const model = new ChatGroq({
 
 const message = new HumanMessage("What color is the sky?");
 
-const res = await chat.invoke([message]);
+const res = await model.invoke([message]);
 ```
 
 ## Development
