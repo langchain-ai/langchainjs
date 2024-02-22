@@ -5,21 +5,19 @@ This is an implementation of the [Supabase](https://supabase.com/) blog post
 
 ### Overview
 
-The `MatryoshkaRetrieval` retriever takes in two vector stores: `smallStore` and `largeStore`.
-The small and large is determined via the number of vector dimensions the embeddings model
-uses which is passed to the vector store when instantiated (because of this you are required to use
-an embeddings model which allows for customizing the number of dimensions, or two separate embeddings
-models with different dimensions).
+This class performs "Adaptive Retrieval" for searching text embeddings efficiently using the
+Matryoshka Representation Learning (MRL) technique. It retrieves documents similar to a query
+embedding in two steps:
 
-Then, when `getRelevantDocuments` is called, the `MatryoshkaRetrieval` retriever will first perform
-semantic search on the `smallStore` for a large number of documents. We want to retrieve a large
-number because since the number of dimensions is on the smaller side, the results will be less
-focused and more broad. Then, we perform semantic search on the `largeStore` for the most relevant
-documents (passing in the IDs of the documents retrieved from the `smallStore` as a filter). Since
-the large store uses more dimensions, its results will be more focused and relevant.
+- **First-pass**: Uses a lower dimensional sub-vector from the MRL embedding for an initial, fast,
+but less accurate search.
 
-As outlined in the blog, the benefits of using a small and large store in one shot are increased speed,
-and the quality of results overall.
+- **Second-pass**: Re-ranks the top results from the first pass using the full, high-dimensional
+embedding for higher accuracy.
+
+
+This code demonstrates using MRL embeddings for efficient vector search by combining faster,
+lower-dimensional initial search with accurate, high-dimensional re-ranking.
 
 ## Example
 
