@@ -1,4 +1,4 @@
-# @langchain/google-genai
+8# @langchain/google-genai
 
 This package contains the LangChain.js integrations for Gemini through their generative-ai SDK.
 
@@ -55,7 +55,7 @@ const model = new ChatGoogleGenerativeAI({
   modelName: "gemini-pro",
   maxOutputTokens: 2048,
 });
-const response = await mode.invoke(new HumanMessage("Hello world!"));
+const response = await model.invoke(new HumanMessage("Hello world!"));
 ```
 
 #### Multimodal inputs
