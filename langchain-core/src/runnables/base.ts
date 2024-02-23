@@ -1937,42 +1937,42 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
         }
       }
     }
-
-    // eslint-disable-next-line prefer-destructuring
-    const func = this.func;
-    async function* generatorWrapper() {
-      const output = await func(finalChunk as RunInput, { ...config, config });
-      if (output && Runnable.isRunnable(output)) {
-        if (config?.recursionLimit === 0) {
-          throw new Error("Recursion limit reached.");
-        }
-        const stream = await output.stream(
-          finalChunk as RunInput,
-          patchConfig(config, {
-            callbacks: runManager?.getChild(),
-            recursionLimit:
-              (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
-          })
-        );
-        for await (const chunk of stream) {
-          yield chunk;
-        }
-      } else {
-        yield output;
-      }
-    }
-    const finalGenerator = await new Promise<AsyncGenerator<RunOutput>>(
-      (resolve) => {
+    const output = await new Promise<RunOutput | Runnable>(
+      (resolve, reject) => {
         void AsyncLocalStorageProviderSingleton.getInstance().run(
           config,
           async () => {
-            const wrappedGenerator = generatorWrapper();
-            resolve(wrappedGenerator);
+            try {
+              const res = await this.func(finalChunk as RunInput, {
+                ...config,
+                config,
+              });
+              resolve(res);
+            } catch (e) {
+              reject(e);
+            }
           }
         );
       }
     );
-    yield* finalGenerator;
+    if (output && Runnable.isRunnable(output)) {
+      if (config?.recursionLimit === 0) {
+        throw new Error("Recursion limit reached.");
+      }
+      const stream = await output.stream(
+        finalChunk as RunInput,
+        patchConfig(config, {
+          callbacks: runManager?.getChild(),
+          recursionLimit:
+            (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
+        })
+      );
+      for await (const chunk of stream) {
+        yield chunk;
+      }
+    } else {
+      yield output;
+    }
   }
 
   transform(

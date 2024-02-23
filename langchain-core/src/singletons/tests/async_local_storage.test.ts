@@ -32,4 +32,63 @@ test("Config should be automatically populated after setting global async local 
     }
   );
   expect(res2?.tags).toEqual(["tester"]);
+
+  const stream = await outer.stream(
+    { hi2: true },
+    {
+      configurable: {
+        sampleKey: "sampleValue",
+      },
+      tags: ["stream_tester"],
+    }
+  );
+  const chunks = [];
+  for await (const chunk of stream) {
+    console.log(chunk);
+    chunks.push(chunk);
+  }
+  expect(chunks.length).toEqual(1);
+  expect(chunks[0]).toEqual(
+    expect.objectContaining({
+      configurable: {
+        sampleKey: "sampleValue",
+      },
+      tags: ["stream_tester"],
+    })
+  );
+
+  const outer2 = RunnableLambda.from(async () => inner);
+  const res3 = await outer2.invoke(
+    {},
+    {
+      configurable: {
+        sampleKey: "sampleValue",
+      },
+      tags: ["test_recursive"],
+    }
+  );
+  expect(res3?.tags).toEqual(["test_recursive"]);
+  const stream2 = await outer2.stream(
+    {},
+    {
+      configurable: {
+        sampleKey: "sampleValue",
+      },
+      tags: ["stream_test_recursive"],
+    }
+  );
+  const chunks2 = [];
+  for await (const chunk of stream2) {
+    console.log(chunk);
+    chunks2.push(chunk);
+  }
+  expect(chunks2.length).toEqual(1);
+  expect(chunks2[0]).toEqual(
+    expect.objectContaining({
+      configurable: {
+        sampleKey: "sampleValue",
+      },
+      tags: ["stream_test_recursive"],
+    })
+  );
 });
