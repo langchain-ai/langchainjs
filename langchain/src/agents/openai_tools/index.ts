@@ -95,7 +95,7 @@ export type CreateOpenAIToolsAgentParams = {
  * });
  * ```
  */
-export async function createOpenAIToolsAgent({
+export function createOpenAIToolsAgent({
   llm,
   tools,
   prompt,
