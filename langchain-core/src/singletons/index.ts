@@ -16,17 +16,16 @@ export class MockAsyncLocalStorage implements AsyncLocalStorageInterface {
   }
 }
 
-class AsyncLocalStorageProvider<
-  T extends new (...args: any[]) => AsyncLocalStorageInterface
-> {
-  private asyncLocalStorageClass: T = MockAsyncLocalStorage as T;
+class AsyncLocalStorageProvider {
+  private asyncLocalStorage: AsyncLocalStorageInterface =
+    new MockAsyncLocalStorage();
 
-  getClass(): T {
-    return this.asyncLocalStorageClass;
+  getInstance(): AsyncLocalStorageInterface {
+    return this.asyncLocalStorage;
   }
 
-  setClass(newClass: T) {
-    this.asyncLocalStorageClass = newClass;
+  setInstance(instance: AsyncLocalStorageInterface) {
+    this.asyncLocalStorage = instance;
   }
 }
 

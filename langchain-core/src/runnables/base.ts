@@ -34,12 +34,7 @@ import { Run } from "../tracers/base.js";
 import { RootListenersTracer } from "../tracers/root_listener.js";
 import { BaseCallbackHandler } from "../callbacks/base.js";
 import { _RootEventFilter } from "./utils.js";
-import {
-  type AsyncLocalStorageInterface,
-  AsyncLocalStorageProviderSingleton,
-} from "../singletons/index.js";
-
-let asyncLocalStorage: AsyncLocalStorageInterface;
+import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 
 /**
  * Base interface implemented by all runnables.
@@ -1867,9 +1862,6 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
   constructor(fields: {
     func: RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>;
   }) {
-    if (asyncLocalStorage === undefined) {
-      asyncLocalStorage = new (AsyncLocalStorageProviderSingleton.getClass())();
-    }
     super(fields);
     this.func = fields.func;
   }
@@ -1888,27 +1880,30 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     runManager?: CallbackManagerForChainRun
   ) {
     return new Promise<RunOutput>((resolve, reject) => {
-      void asyncLocalStorage.run(config, async () => {
-        try {
-          let output = await this.func(input, { ...config, config });
-          if (output && Runnable.isRunnable(output)) {
-            if (config?.recursionLimit === 0) {
-              throw new Error("Recursion limit reached.");
+      void AsyncLocalStorageProviderSingleton.getInstance().run(
+        config,
+        async () => {
+          try {
+            let output = await this.func(input, { ...config, config });
+            if (output && Runnable.isRunnable(output)) {
+              if (config?.recursionLimit === 0) {
+                throw new Error("Recursion limit reached.");
+              }
+              output = await output.invoke(
+                input,
+                patchConfig(config, {
+                  callbacks: runManager?.getChild(),
+                  recursionLimit:
+                    (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
+                })
+              );
             }
-            output = await output.invoke(
-              input,
-              patchConfig(config, {
-                callbacks: runManager?.getChild(),
-                recursionLimit:
-                  (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
-              })
-            );
+            resolve(output);
+          } catch (e) {
+            reject(e);
           }
-          resolve(output);
-        } catch (e) {
-          reject(e);
         }
-      });
+      );
     });
   }
 
@@ -1919,7 +1914,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     return this._callWithConfig(
       this._invoke,
       input,
-      options ?? asyncLocalStorage.getStore()
+      options ?? AsyncLocalStorageProviderSingleton.getInstance().getStore()
     );
   }
 
@@ -1968,10 +1963,13 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     }
     const finalGenerator = await new Promise<AsyncGenerator<RunOutput>>(
       (resolve) => {
-        void asyncLocalStorage.run(config, async () => {
-          const wrappedGenerator = generatorWrapper();
-          resolve(wrappedGenerator);
-        });
+        void AsyncLocalStorageProviderSingleton.getInstance().run(
+          config,
+          async () => {
+            const wrappedGenerator = generatorWrapper();
+            resolve(wrappedGenerator);
+          }
+        );
       }
     );
     yield* finalGenerator;
@@ -1984,7 +1982,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     return this._transformStreamWithConfig(
       generator,
       this._transform.bind(this),
-      options ?? asyncLocalStorage.getStore()
+      options ?? AsyncLocalStorageProviderSingleton.getInstance().getStore()
     );
   }
 
