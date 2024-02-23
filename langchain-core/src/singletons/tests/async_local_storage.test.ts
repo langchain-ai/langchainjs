@@ -4,9 +4,7 @@ import { AsyncLocalStorageProviderSingleton } from "../index.js";
 import { RunnableLambda } from "../../runnables/base.js";
 
 test("Config should be automatically populated after setting global async local storage", async () => {
-  const inner = RunnableLambda.from((_, config) => {
-    return config;
-  });
+  const inner = RunnableLambda.from((_, config) => config);
   const outer = RunnableLambda.from(async (input) => {
     const res = await inner.invoke(input);
     return res;
