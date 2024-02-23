@@ -322,7 +322,7 @@ export abstract class Runnable<
     // Buffer the first streamed chunk to allow for initial errors
     // to surface immediately.
     const wrappedGenerator = new AsyncGeneratorWithSetup(
-      this._streamIterator(input, options)
+      this._streamIterator(input, ensureConfig(options))
     );
     await wrappedGenerator.setup;
     return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
@@ -611,7 +611,7 @@ export abstract class Runnable<
         finalChunk = concat(finalChunk, chunk as any);
       }
     }
-    yield* this._streamIterator(finalChunk, options);
+    yield* this._streamIterator(finalChunk, ensureConfig(options));
   }
 
   /**
@@ -1474,7 +1474,8 @@ export class RunnableSequence<
   }
 
   async invoke(input: RunInput, options?: RunnableConfig): Promise<RunOutput> {
-    const callbackManager_ = await getCallbackManagerForConfig(options);
+    const config = ensureConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(config);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
@@ -1482,7 +1483,7 @@ export class RunnableSequence<
       undefined,
       undefined,
       undefined,
-      options?.runName
+      config?.runName
     );
     let nextStepInput = input;
     let finalOutput: RunOutput;
@@ -1492,7 +1493,7 @@ export class RunnableSequence<
         const step = initialSteps[i];
         nextStepInput = await step.invoke(
           nextStepInput,
-          patchConfig(options, {
+          patchConfig(config, {
             callbacks: runManager?.getChild(`seq:step:${i + 1}`),
           })
         );
@@ -1500,7 +1501,7 @@ export class RunnableSequence<
       // TypeScript can't detect that the last output of the sequence returns RunOutput, so call it out of the loop here
       finalOutput = await this.last.invoke(
         nextStepInput,
-        patchConfig(options, {
+        patchConfig(config, {
           callbacks: runManager?.getChild(`seq:step:${this.steps.length}`),
         })
       );
@@ -1745,7 +1746,8 @@ export class RunnableMap<
     input: RunInput,
     options?: Partial<RunnableConfig>
   ): Promise<RunOutput> {
-    const callbackManager_ = await getCallbackManagerForConfig(options);
+    const config = ensureConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(config);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       {
@@ -1755,7 +1757,7 @@ export class RunnableMap<
       undefined,
       undefined,
       undefined,
-      options?.runName
+      config?.runName
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const output: Record<string, any> = {};
@@ -1764,7 +1766,7 @@ export class RunnableMap<
         Object.entries(this.steps).map(async ([key, runnable]) => {
           output[key] = await runnable.invoke(
             input,
-            patchConfig(options, {
+            patchConfig(config, {
               callbacks: runManager?.getChild(`map:key:${key}`),
             })
           );
@@ -1911,11 +1913,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     input: RunInput,
     options?: Partial<RunnableConfig>
   ): Promise<RunOutput> {
-    return this._callWithConfig(
-      this._invoke,
-      input,
-      options ?? AsyncLocalStorageProviderSingleton.getInstance().getStore()
-    );
+    return this._callWithConfig(this._invoke, input, options);
   }
 
   async *_transform(
@@ -1982,7 +1980,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     return this._transformStreamWithConfig(
       generator,
       this._transform.bind(this),
-      options ?? AsyncLocalStorageProviderSingleton.getInstance().getStore()
+      options
     );
   }
 
