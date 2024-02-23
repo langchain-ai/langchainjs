@@ -4,8 +4,8 @@ import { AstraDB } from "@datastax/astra-db-ts";
 import { faker } from "@faker-js/faker";
 import { Document } from "@langchain/core/documents";
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { AstraDBVectorStore, AstraLibArgs } from "../astradb.js";
 import { FakeEmbeddings } from "closevector-common/dist/fake.js";
+import { AstraDBVectorStore, AstraLibArgs } from "../astradb.js";
 
 describe.skip("AstraDBVectorStore", () => {
   const clientConfig = {
