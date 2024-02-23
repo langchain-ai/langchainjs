@@ -20,12 +20,17 @@ class AsyncLocalStorageProvider {
   private asyncLocalStorage: AsyncLocalStorageInterface =
     new MockAsyncLocalStorage();
 
+  private hasBeenInitialized = false;
+
   getInstance(): AsyncLocalStorageInterface {
     return this.asyncLocalStorage;
   }
 
-  setInstance(instance: AsyncLocalStorageInterface) {
-    this.asyncLocalStorage = instance;
+  initializeGlobalInstance(instance: AsyncLocalStorageInterface) {
+    if (!this.hasBeenInitialized) {
+      this.hasBeenInitialized = true;
+      this.asyncLocalStorage = instance;
+    }
   }
 }
 
