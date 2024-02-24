@@ -89,8 +89,8 @@ export class AstraDBVectorStore extends VectorStore {
    */
   async initialize(): Promise<void> {
     await this.astraDBClient.createCollection(
-        this.collectionName,
-        this.collectionOptions
+      this.collectionName,
+      this.collectionOptions
     );
     this.collection = await this.astraDBClient.collection(this.collectionName);
     console.debug("Connected to Astra DB collection");

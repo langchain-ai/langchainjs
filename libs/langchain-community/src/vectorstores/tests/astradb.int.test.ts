@@ -136,9 +136,9 @@ describe.skip("AstraDBVectorStore", () => {
   });
 
   test("collection exists", async () => {
-    let store = new AstraDBVectorStore(new FakeEmbeddings(), astraConfig)
-    await store.initialize()
-    await store.initialize()
+    let store = new AstraDBVectorStore(new FakeEmbeddings(), astraConfig);
+    await store.initialize();
+    await store.initialize();
     try {
       store = new AstraDBVectorStore(new FakeEmbeddings(), {
         ...astraConfig,
@@ -147,12 +147,12 @@ describe.skip("AstraDBVectorStore", () => {
             dimension: 8,
             metric: "cosine",
           },
-        }
-      })
-      await store.initialize()
-      fail("Should have thrown error")
+        },
+      });
+      await store.initialize();
+      fail("Should have thrown error");
     } catch (e: any) {
-      expect(e.message).toContain("already exists with different 'vector'")
+      expect(e.message).toContain("already exists with different 'vector'");
     }
   }, 60000);
 });
