@@ -298,6 +298,15 @@
       "import": "./retrievers.js",
       "require": "./retrievers.cjs"
     },
+    "./singletons": {
+      "types": {
+        "import": "./singletons.d.ts",
+        "require": "./singletons.d.cts",
+        "default": "./singletons.d.ts"
+      },
+      "import": "./singletons.js",
+      "require": "./singletons.cjs"
+    },
     "./stores": {
       "types": {
         "import": "./stores.d.ts",
@@ -601,6 +610,10 @@
     "retrievers.js",
     "retrievers.d.ts",
     "retrievers.d.cts",
+    "singletons.cjs",
+    "singletons.js",
+    "singletons.d.ts",
+    "singletons.d.cts",
     "stores.cjs",
     "stores.js",
     "stores.d.ts",

@@ -35,6 +35,7 @@ export const config = {
     runnables: "runnables/index",
     "runnables/remote": "runnables/remote",
     retrievers: "retrievers",
+    singletons: "singletons/index",
     stores: "stores",
     tools: "tools",
     "tracers/base": "tracers/base",
