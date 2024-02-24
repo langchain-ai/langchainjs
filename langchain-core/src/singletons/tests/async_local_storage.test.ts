@@ -91,4 +91,23 @@ test("Config should be automatically populated after setting global async local 
       tags: ["stream_test_recursive"],
     })
   );
+
+  const inner2 = RunnableLambda.from((_, config) => config).withConfig({
+    runName: "inner_test_run",
+  });
+  const outer3 = RunnableLambda.from(async (input) => {
+    const res = await inner2.invoke(input);
+    return res;
+  });
+
+  const res4 = await outer3.invoke(
+    { hi: true },
+    {
+      configurable: {
+        sampleKey: "sampleValue",
+      },
+      tags: ["tester_with_config"],
+    }
+  );
+  expect(res4?.tags).toEqual(["tester_with_config"]);
 });
