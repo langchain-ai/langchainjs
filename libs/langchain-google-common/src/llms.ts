@@ -28,6 +28,7 @@ import {
 } from "./utils/gemini.js";
 import { JsonStream } from "./utils/stream.js";
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
+import { ensureParams } from "./utils/failedHandler.js";
 
 class GoogleLLMConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   MessageContent,
@@ -87,7 +88,7 @@ export abstract class GoogleBaseLLM<AuthOptions>
   protected streamedConnection: GoogleLLMConnection<AuthOptions>;
 
   constructor(fields?: GoogleBaseLLMInput<AuthOptions>) {
-    super(fields ?? {});
+    super(ensureParams(fields));
 
     copyAndValidateModelParamsInto(fields, this);
 

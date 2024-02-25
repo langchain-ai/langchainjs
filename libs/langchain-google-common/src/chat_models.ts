@@ -30,6 +30,7 @@ import {
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
 import { GoogleBaseLLMInput } from "./llms.js";
 import { JsonStream } from "./utils/stream.js";
+import {ensureParams} from "./utils/failedHandler.js";
 
 class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   BaseMessage[],
@@ -86,7 +87,7 @@ export abstract class ChatGoogleBase<AuthOptions>
   protected streamedConnection: ChatConnection<AuthOptions>;
 
   constructor(fields?: ChatGoogleBaseInput<AuthOptions>) {
-    super(fields ?? {});
+    super(ensureParams(fields));
 
     copyAndValidateModelParamsInto(fields, this);
 
