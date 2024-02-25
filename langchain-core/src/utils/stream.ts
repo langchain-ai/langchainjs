@@ -1,6 +1,8 @@
-export interface IterableReadableStreamInterface<T>
-  extends ReadableStream<T>,
-    AsyncIterable<T> {}
+// Make this a type to override a shared async iterator in case
+// web-streams-polyfill is in the environment - the supplied types
+// don't quite match.
+export type IterableReadableStreamInterface<T> = ReadableStream<T> &
+  AsyncIterable<T>;
 
 /*
  * Support async iterator syntax for ReadableStreams in all environments.
