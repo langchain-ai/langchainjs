@@ -1,6 +1,6 @@
-// Make this a type to override a shared async iterator in case
-// web-streams-polyfill is in the environment - the supplied types
-// don't quite match.
+// Make this a type to override ReadableStream's async iterator type in case
+// the popular web-streams-polyfill is imported - the supplied types
+// in this case don't quite match.
 export type IterableReadableStreamInterface<T> = ReadableStream<T> &
   AsyncIterable<T>;
 
