@@ -211,9 +211,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@anthropic-ai/sdk@npm:^0.12.0":
-  version: 0.12.0
-  resolution: "@anthropic-ai/sdk@npm:0.12.0"
+"@anthropic-ai/sdk@npm:^0.14.1":
+  version: 0.14.1
+  resolution: "@anthropic-ai/sdk@npm:0.14.1"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
@@ -224,7 +224,7 @@ __metadata:
     formdata-node: ^4.3.2
     node-fetch: ^2.6.7
     web-streams-polyfill: ^3.2.1
-  checksum: f27d6c452a3343b49b777c7395b8595c74f1df3aa668cb0b40ce9c62df9170e5276780163d66e36c36cb81aea3be31256a2b45a143d70dd5687fadc6c9b51b49
+  checksum: b900397c273aece772d08ed611ec24eb22fb13ee0f535644725d9dc5fa1b87b658c457d6d002004d7d8986f3d0d89ed93d5c31547a56294a641b6ad5489114d4
   languageName: node
   linkType: hard
 
@@ -8787,7 +8787,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/anthropic@workspace:libs/langchain-anthropic"
   dependencies:
-    "@anthropic-ai/sdk": ^0.12.0
+    "@anthropic-ai/sdk": ^0.14.1
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.5
     "@langchain/scripts": ~0.0
@@ -9295,7 +9295,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.1, @langchain/core@~0.1.13, @langchain/core@~0.1.32, @langchain/core@~0.1.5, @langchain/core@~0.1.9":
+"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.1, @langchain/core@~0.1.13, @langchain/core@~0.1.32, @langchain/core@~0.1.34, @langchain/core@~0.1.5, @langchain/core@~0.1.9":
   version: 0.0.0-use.local
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
@@ -25916,7 +25916,7 @@ __metadata:
     "@google-cloud/storage": ^7.7.0
     "@jest/globals": ^29.5.0
     "@langchain/community": ~0.0.32
-    "@langchain/core": ~0.1.32
+    "@langchain/core": ~0.1.34
     "@langchain/openai": ~0.0.14
     "@langchain/scripts": ~0.0
     "@notionhq/client": ^2.2.10
