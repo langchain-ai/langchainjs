@@ -3,7 +3,7 @@ import { test, expect, describe } from "@jest/globals";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
 import { CassandraClientFactory } from "../../utils/cassandra.js";
-import { CassandraStore } from "../cassandra.js";
+import { CassandraLibArgs, CassandraStore } from "../cassandra.js";
 
 const cassandraConfig = {
   serviceProviderArgs: {
@@ -12,7 +12,7 @@ const cassandraConfig = {
       endpoint: process.env.ASTRA_DB_ENDPOINT as string,
     },
   },
-  keyspace: "test",
+  keyspace: "default_keyspace",
   table: "test",
 };
 
@@ -47,16 +47,16 @@ const noPartitionConfig = {
 //   3. cd langchainjs/libs/langchain-community
 //   4. yarn test:single src/vectorstores/tests/cassandra.int.test.ts
 // Once manual testing is complete, re-instate the ".skip"
-describe.skip("CassandraStore - no explicit partition key", () => {
+describe("CassandraStore - no explicit partition key", () => {
   beforeAll(async () => {
     client = await CassandraClientFactory.getClient(cassandraConfig);
-    await client.execute("DROP TABLE IF EXISTS test.test;");
+    await client.execute("DROP TABLE IF EXISTS default_keyspace.test;");
   });
 
   beforeEach(async () => {
     try {
       client = await CassandraClientFactory.getClient(cassandraConfig);
-      await client.execute("TRUNCATE test.test;");
+      await client.execute("TRUNCATE default_keyspace.test;");
     } catch (err) {
       // Ignore error if table does not exist
     }
@@ -71,12 +71,12 @@ describe.skip("CassandraStore - no explicit partition key", () => {
         { id: 3, name: "Bubba" },
       ],
       new OpenAIEmbeddings(),
-      noPartitionConfig
+      noPartitionConfig,
     );
 
     const results = await vectorStore.similaritySearch(
       "Green yellow purple",
-      1
+      1,
     );
     expect(results).toEqual([
       new Document({
@@ -95,12 +95,12 @@ describe.skip("CassandraStore - no explicit partition key", () => {
         { id: 3, name: "Bubba" },
       ],
       new OpenAIEmbeddings(),
-      noPartitionConfig
+      noPartitionConfig,
     );
 
     const vectorStore = await CassandraStore.fromExistingIndex(
       new OpenAIEmbeddings(),
-      noPartitionConfig
+      noPartitionConfig,
     );
 
     const results = await vectorStore.similaritySearch("Whats up", 1);
@@ -131,12 +131,12 @@ describe.skip("CassandraStore - no explicit partition key", () => {
         { id: 3, name: "Bubba" },
       ],
       new OpenAIEmbeddings(),
-      testConfig
+      testConfig,
     );
 
     const vectorStore = await CassandraStore.fromExistingIndex(
       new OpenAIEmbeddings(),
-      testConfig
+      testConfig,
     );
 
     const results = await vectorStore.similaritySearch("Hey", 1, {
@@ -169,12 +169,12 @@ describe.skip("CassandraStore - no explicit partition key", () => {
         { id: 3, name: "Bubba", seq: 77 },
       ],
       new OpenAIEmbeddings(),
-      testConfig
+      testConfig,
     );
 
     const vectorStore = await CassandraStore.fromExistingIndex(
       new OpenAIEmbeddings(),
-      testConfig
+      testConfig,
     );
 
     // With out the filter this would match on Scott, but we are using > filter
@@ -201,87 +201,87 @@ describe.skip("CassandraStore - no explicit partition key", () => {
       new Document({
         pageContent: "Hello Muddah, hello Faddah",
         metadata: { id: 1, name: "Alex" },
-      })
+      }),
     );
     docs.push(
       new Document({
         pageContent: "Here I am at Camp Granada",
         metadata: { id: 2, name: "Blair" },
-      })
+      }),
     );
     docs.push(
       new Document({
         pageContent: "Camp is very entertaining",
         metadata: { id: 3, name: "Casey" },
-      })
+      }),
     );
     docs.push(
       new Document({
         pageContent: "And they say we'll have some fun if it stops raining",
         metadata: { id: 4, name: "Dana" },
-      })
+      }),
     );
 
     docs.push(
       new Document({
         pageContent: "I went hiking with Joe Spivey",
         metadata: { id: 5, name: "Amber" },
-      })
+      }),
     );
     docs.push(
       new Document({
         pageContent: "He developed poison ivy",
         metadata: { id: 6, name: "Blair" },
-      })
+      }),
     );
     docs.push(
       new Document({
         pageContent: "You remember Leonard Skinner",
         metadata: { id: 7, name: "Casey" },
-      })
+      }),
     );
     docs.push(
       new Document({
         pageContent: "He got Ptomaine poisoning last night after dinner",
         metadata: { id: 8, name: "Dana" },
-      })
+      }),
     );
 
     docs.push(
       new Document({
         pageContent: "All the counsellors hate the waiters",
         metadata: { id: 9, name: "Amber" },
-      })
+      }),
     );
     docs.push(
       new Document({
         pageContent: "And the lake has alligators",
         metadata: { id: 10, name: "Blair" },
-      })
+      }),
     );
     docs.push(
       new Document({
         pageContent: "And the head coach wants no sissies",
         metadata: { id: 11, name: "Casey" },
-      })
+      }),
     );
     docs.push(
       new Document({
         pageContent: "So he reads to us from something called Ulysses",
         metadata: { id: 12, name: "Dana" },
-      })
+      }),
     );
 
     const vectorStore = await CassandraStore.fromExistingIndex(
       new OpenAIEmbeddings(),
-      testConfig
+      testConfig,
     );
 
     await vectorStore.addDocuments(docs);
 
     const results = await vectorStore.similaritySearch(
       "something called Ulysses",
-      1
+      1,
     );
     expect(results).toEqual([
       new Document({
@@ -300,7 +300,7 @@ describe.skip("CassandraStore - no explicit partition key", () => {
         { id: 3, name: "Bubba" },
       ],
       new OpenAIEmbeddings(),
-      noPartitionConfig
+      noPartitionConfig,
     );
 
     const results = await vectorStore.maxMarginalRelevanceSearch("I am blue!", {
@@ -321,7 +321,7 @@ describe.skip("CassandraStore - no explicit partition key", () => {
 describe.skip("CassandraStore - no explicit partition key", () => {
   beforeAll(async () => {
     client = await CassandraClientFactory.getClient(cassandraConfig);
-    await client.execute("DROP TABLE IF EXISTS test.test;");
+    await client.execute("DROP TABLE IF EXISTS default_keyspace.test;");
   });
 
   test("CassandraStore.fromExistingIndex (with geo_distance filter)", async () => {
@@ -367,12 +367,12 @@ describe.skip("CassandraStore - no explicit partition key", () => {
         },
       ],
       new OpenAIEmbeddings(),
-      testConfig
+      testConfig,
     );
 
     const vectorStore = await CassandraStore.fromExistingIndex(
       new OpenAIEmbeddings(),
-      testConfig
+      testConfig,
     );
 
     const results = await vectorStore.similaritySearch("Heavy", 1, [
@@ -418,7 +418,7 @@ const partitionConfig = {
 describe.skip("CassandraStore - with explicit partition key", () => {
   beforeAll(async () => {
     client = await CassandraClientFactory.getClient(cassandraConfig);
-    await client.execute("DROP TABLE IF EXISTS test.test;");
+    await client.execute("DROP TABLE IF EXISTS default_keyspace.test;");
   });
 
   test("CassandraStore.partitionKey", async () => {
@@ -429,7 +429,7 @@ describe.skip("CassandraStore - with explicit partition key", () => {
         { group: 2, ts: new Date(1655377200000), id: 1, name: "Alice" },
       ],
       new OpenAIEmbeddings(),
-      partitionConfig
+      partitionConfig,
     );
 
     const results = await vectorStore.similaritySearch("Hey", 1, {
@@ -460,14 +460,14 @@ describe.skip("CassandraStore - with explicit partition key", () => {
         { group: 3, ts: new Date(1655377204000), id: 5, name: "Alex" },
       ],
       new OpenAIEmbeddings(),
-      partitionConfig
+      partitionConfig,
     );
 
     await expect(
       vectorStore.similaritySearch("Banana", 1, [
         { name: "group", value: 1 },
         { name: "ts", value: new Date(1655377202000), operator: ">" },
-      ])
+      ]),
     ).rejects.toThrow();
 
     // Once Cassandra supports filtering against non-indexed cluster columns, the following should work
@@ -478,4 +478,26 @@ describe.skip("CassandraStore - with explicit partition key", () => {
     //   }),
     // ]);
   });
+});
+
+describe("CassandraStore - with explicit partition key", () => {
+  beforeAll(async () => {
+    client = await CassandraClientFactory.getClient(cassandraConfig);
+    await client.execute("DROP TABLE IF EXISTS default_keyspace.test;");
+  });
+
+  test("no metadata and no primary keys", async () => {
+    const store = await CassandraStore.fromTexts(
+      ["I am blue", "Green yellow purple", "Hello there hello"],
+      [],
+      new OpenAIEmbeddings(),
+      {
+        ...cassandraConfig,
+        dimensions: 1536,
+      } as CassandraLibArgs,
+    );
+    const result = await store.similaritySearch("Green yellow purple", 1);
+    const content = result[0].pageContent;
+    expect(content).toEqual("Green yellow purple");
+  }, 60000);
 });
