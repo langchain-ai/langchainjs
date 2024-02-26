@@ -479,20 +479,24 @@ export abstract class BaseLanguageModel<
    * 
    * @template {any} RunInput The input type for the Runnable.
    * @template {z.ZodObject<any, any, any, any>} RunOutput The output type for the Runnable, expected to be a Zod schema object for structured output validation.
-   * @template {RunnableConfig} CallOptions The type for call options, extending from RunnableConfig.
    * 
-   * @param {z.ZodEffects<RunOutput>} schema The schema for the structured output.
-   * @returns {Runnable<RunInput, RunOutput, CallOptions>} A new runnable that calls the LLM with structured output.
+   * @param {z.ZodEffects<RunOutput> | Record<string, any>} schema The schema for the structured output. Either as a ZOD class or a valid JSON schema object.
+   * @returns {Runnable<RunInput, RunOutput>} A new runnable that calls the LLM with structured output.
    */
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunInput = any,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>,
-    CallOptions extends RunnableConfig = RunnableConfig
   >(
-    _schema: z.ZodEffects<RunOutput>
-  ): Runnable<RunInput, RunOutput, CallOptions> {
+    // @ts-expect-error Var is unused in this base method implementation.
+    {
+      schema,
+    }: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      schema: z.ZodEffects<RunOutput> | Record<string, any>
+    }
+  ): Runnable<RunInput, RunOutput> {
     throw new Error("Method not implemented.");
   }
 }
