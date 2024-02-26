@@ -198,12 +198,16 @@ function _convertDeltaToMessageChunk(delta: {
   content?: string | undefined;
   tool_calls?: MistralAIToolCalls[] | undefined;
 }) {
+  // Our merge additional kwargs util function will throw unless there
+  // is an index key in each tool object (as seen in OpenAI's) so we
+  // need to insert it here.
   const toolCallsWithIndex = delta.tool_calls?.length
     ? delta.tool_calls?.map((toolCall, index) => ({
         ...toolCall,
         index,
       }))
     : undefined;
+
   let role = "assistant";
   if (delta.role) {
     role = delta.role;
