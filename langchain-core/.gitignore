@@ -66,6 +66,10 @@ output_parsers.cjs
 output_parsers.js
 output_parsers.d.ts
 output_parsers.d.cts
+output_parsers/openai_tools.cjs
+output_parsers/openai_tools.js
+output_parsers/openai_tools.d.ts
+output_parsers/openai_tools.d.cts
 outputs.cjs
 outputs.js
 outputs.d.ts

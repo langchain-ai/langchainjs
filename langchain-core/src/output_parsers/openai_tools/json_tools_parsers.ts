@@ -1,4 +1,4 @@
-import type { ChatGeneration } from "@langchain/core/outputs";
+import { ChatGeneration } from "../../outputs.js";
 import { BaseLLMOutputParser } from "../base.js";
 
 export type ParsedToolCall = {
