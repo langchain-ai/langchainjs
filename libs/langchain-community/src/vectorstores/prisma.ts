@@ -324,7 +324,7 @@ export class PrismaVectorStore<
   async similaritySearch(
     query: string,
     k = 4,
-    _filter: this["FilterType"] | undefined = undefined,
+    _filter?: TFilterModel,
     _callbacks: Callbacks | undefined = undefined // implement passing to embedQuery later
   ): Promise<Document<SimilarityModel<TModel, TSelectModel>>[]> {
     const results = await this.similaritySearchVectorWithScore(
