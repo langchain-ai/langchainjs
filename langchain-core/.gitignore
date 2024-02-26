@@ -90,6 +90,10 @@ retrievers.cjs
 retrievers.js
 retrievers.d.ts
 retrievers.d.cts
+singletons.cjs
+singletons.js
+singletons.d.ts
+singletons.d.cts
 stores.cjs
 stores.js
 stores.d.ts

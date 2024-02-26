@@ -4,6 +4,7 @@ import { AstraDB } from "@datastax/astra-db-ts";
 import { faker } from "@faker-js/faker";
 import { Document } from "@langchain/core/documents";
 import { OpenAIEmbeddings } from "@langchain/openai";
+import { FakeEmbeddings } from "closevector-common/dist/fake.js";
 import { AstraDBVectorStore, AstraLibArgs } from "../astradb.js";
 
 describe.skip("AstraDBVectorStore", () => {
@@ -133,4 +134,25 @@ describe.skip("AstraDBVectorStore", () => {
       "AstraDB is built on Apache Cassandra"
     );
   });
+
+  test("collection exists", async () => {
+    let store = new AstraDBVectorStore(new FakeEmbeddings(), astraConfig);
+    await store.initialize();
+    await store.initialize();
+    try {
+      store = new AstraDBVectorStore(new FakeEmbeddings(), {
+        ...astraConfig,
+        collectionOptions: {
+          vector: {
+            dimension: 8,
+            metric: "cosine",
+          },
+        },
+      });
+      await store.initialize();
+      fail("Should have thrown error");
+    } catch (e: any) {
+      expect(e.message).toContain("already exists with different 'vector'");
+    }
+  }, 60000);
 });
