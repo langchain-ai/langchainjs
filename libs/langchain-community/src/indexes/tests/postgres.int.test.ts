@@ -1,6 +1,9 @@
 import { describe, expect, test, jest } from "@jest/globals";
 import { PoolConfig } from "pg";
-import { PostgresRecordManager, PostgresRecordManagerOptions } from "../postgres.js";
+import {
+  PostgresRecordManager,
+  PostgresRecordManagerOptions,
+} from "../postgres.js";
 
 describe.skip("PostgresRecordManager", () => {
   const tableName = "upsertion_record";
@@ -33,24 +36,29 @@ describe.skip("PostgresRecordManager", () => {
     await recordManager.end();
   });
 
-  test("Test explicit schema definition", async () => { 
-      // configure explicit schema with record manager
-      config.schema = "newSchema";
-      const explicitSchemaRecordManager = new PostgresRecordManager("test", config);
+  test("Test explicit schema definition", async () => {
+    // configure explicit schema with record manager
+    config.schema = "newSchema";
+    const explicitSchemaRecordManager = new PostgresRecordManager(
+      "test",
+      config
+    );
 
-      // create new schema for test
-      console.log('creating new schema in test');
-      await explicitSchemaRecordManager.pool.query('CREATE SCHEMA "newSchema"');
-      
-      // create table in new schema
-      console.log('calling createSchema function from test');
-      await explicitSchemaRecordManager.createSchema();
+    // create new schema for test
+    console.log("creating new schema in test");
+    await explicitSchemaRecordManager.pool.query('CREATE SCHEMA "newSchema"');
 
-      // drop created schema
-      await explicitSchemaRecordManager.pool.query(`DROP SCHEMA IF EXISTS "newSchema" CASCADE`);
+    // create table in new schema
+    console.log("calling createSchema function from test");
+    await explicitSchemaRecordManager.createSchema();
 
-      // end record manager connection
-      await explicitSchemaRecordManager.end();
+    // drop created schema
+    await explicitSchemaRecordManager.pool.query(
+      `DROP SCHEMA IF EXISTS "newSchema" CASCADE`
+    );
+
+    // end record manager connection
+    await explicitSchemaRecordManager.end();
   });
 
   test("Test upsertion", async () => {

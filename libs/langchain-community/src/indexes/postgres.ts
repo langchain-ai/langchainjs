@@ -27,7 +27,9 @@ export class PostgresRecordManager implements RecordManagerInterface {
     this.namespace = namespace;
     this.pool = new pg.Pool(postgresConnectionOptions);
     this.tableName = tableName || "upsertion_records";
-    this.finalTableName = (config.schema) ? `"${config.schema}"."${tableName}"` : `"${tableName}"`;
+    this.finalTableName = config.schema
+      ? `"${config.schema}"."${tableName}"`
+      : `"${tableName}"`;
   }
 
   async createSchema(): Promise<void> {
@@ -44,8 +46,7 @@ export class PostgresRecordManager implements RecordManagerInterface {
         CREATE INDEX IF NOT EXISTS updated_at_index ON ${this.finalTableName} (updated_at);
         CREATE INDEX IF NOT EXISTS key_index ON ${this.finalTableName} (key);
         CREATE INDEX IF NOT EXISTS namespace_index ON ${this.finalTableName} (namespace);
-        CREATE INDEX IF NOT EXISTS group_id_index ON ${this.finalTableName} (group_id);`
-      );
+        CREATE INDEX IF NOT EXISTS group_id_index ON ${this.finalTableName} (group_id);`);
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
