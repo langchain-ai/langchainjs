@@ -236,3 +236,64 @@ To use a calculator respond with valid JSON containing a single key: 'calculator
   const parsedRes = JSON.parse(finalRes);
   expect(parsedRes.calculator).toBeDefined();
 });
+
+test("Can stream and concat responses for a complex tool", async () => {
+  class PersonTraits extends StructuredTool {
+    name = "person_traits";
+
+    description = "Log the traits of a person";
+
+    schema = z.object({
+      person: z.object({
+        name: z.string().describe("Name of the person"),
+        age: z.number().describe("Age of the person"),
+        friends: z.array(
+          z.object({
+            name: z.string().describe("Name of the friend"),
+            age: z.number().describe("Age of the friend"),
+          })
+        ),
+        friendsCount: z.number().describe("Number of friends"),
+        areFriendsCool: z.boolean().describe("Whether or not the user thinks the friends are cool"),
+      })
+    });
+
+    async _call(_input: { input: string }) {
+      return "the answer!";
+    }
+  }
+
+  const model = new ChatMistralAI({
+    modelName: "mistral-large",
+  }).bind({
+    tools: [new PersonTraits()],
+  });
+
+  const prompt = ChatPromptTemplate.fromMessages([
+    "system",
+    "You are a helpful assistant, who always logs the traits of a person and their friends because the user has a bad memory.",
+    "human",
+    "Hi!!! My name's John Doe, and I'm almost 4 years old!. I have 6 friends: Mary, age 24, May, age 22, and Jane, age 30, Joey, age 18, Sam, age 19 and MacFarland age 66. They're all super cool!",
+  ]);
+
+  const chain = prompt.pipe(model);
+  const response = await chain.stream({});
+  let finalRes: BaseMessage[] = [];
+  for await (const chunk of response) {
+    console.log(chunk);
+    finalRes = finalRes.concat(chunk);
+  }
+  if (!finalRes) {
+    throw new Error("No final response found");
+  }
+  
+  expect(finalRes[0].additional_kwargs.tool_calls?.[0]).toBeDefined();
+  const toolCall = finalRes[0].additional_kwargs.tool_calls?.[0];
+  expect(toolCall?.function.name).toBe("person_traits");
+  const args = JSON.parse(toolCall?.function.arguments ?? "{}");
+  expect(args.name).toBeDefined();
+  expect(args.age).toBeDefined();
+  expect(args.friends.length).toBeGreaterThan(0);
+  expect(args.friendsCount).toBeDefined();
+  expect(args.areFriendsCool).toBeDefined();
+});

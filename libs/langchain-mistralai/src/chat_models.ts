@@ -198,6 +198,9 @@ function _convertDeltaToMessageChunk(delta: {
   content?: string | undefined;
   tool_calls?: MistralAIToolCalls[] | undefined;
 }) {
+  if (!delta.content && !delta.tool_calls) {
+    return null;
+  }
   // Our merge additional kwargs util function will throw unless there
   // is an index key in each tool object (as seen in OpenAI's) so we
   // need to insert it here.
@@ -476,8 +479,13 @@ export class ChatMistralAI<
         prompt: 0,
         completion: choice.index ?? 0,
       };
+      const message = _convertDeltaToMessageChunk(delta);
+      if (message === null) {
+        // Do not yield a chunk if the message is empty
+        continue;
+      }
       const generationChunk = new ChatGenerationChunk({
-        message: _convertDeltaToMessageChunk(delta),
+        message,
         text: delta.content ?? "",
         generationInfo: newTokenIndices,
       });
