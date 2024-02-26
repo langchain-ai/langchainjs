@@ -45,31 +45,41 @@ test("Can call tools using structured tools", async () => {
     description = "Calculate the answer to a math equation";
 
     schema = z.object({
-      calculator: z.string().describe("The math equation to calculate the answer for."),
+      calculator: z
+        .string()
+        .describe("The math equation to calculate the answer for."),
     });
 
     async _call(_input: { input: string }) {
       return "the answer!";
-    };
+    }
   }
 
   const model = new ChatMistralAI({
-    modelName: "mistral-large"
+    modelName: "mistral-large",
   }).bind({
     tools: [new Calculator()],
   });
 
   const prompt = ChatPromptTemplate.fromMessages([
-    "system", "you are very bad at math and always must use a calculator",
-    "human", "what is the sum of 223 + 228 divided by 718236 multiplied by 1234?"
+    "system",
+    "you are very bad at math and always must use a calculator",
+    "human",
+    "what is the sum of 223 + 228 divided by 718236 multiplied by 1234?",
   ]);
 
   const chain = prompt.pipe(model);
   const response = await chain.invoke({});
   expect("tool_calls" in response.additional_kwargs).toBe(true);
-  console.log(response.additional_kwargs.tool_calls?.[0])
-  expect(response.additional_kwargs.tool_calls?.[0].function.name).toBe("calculator");
-  expect(JSON.parse(response.additional_kwargs.tool_calls?.[0].function.arguments ?? "{}").calculator).toBeDefined();
+  console.log(response.additional_kwargs.tool_calls?.[0]);
+  expect(response.additional_kwargs.tool_calls?.[0].function.name).toBe(
+    "calculator"
+  );
+  expect(
+    JSON.parse(
+      response.additional_kwargs.tool_calls?.[0].function.arguments ?? "{}"
+    ).calculator
+  ).toBeDefined();
 });
 
 test("Can call tools", async () => {
@@ -85,30 +95,38 @@ test("Can call tools", async () => {
             calculator: {
               type: "string",
               description: "The math equation to calculate the answer for.",
-            }
+            },
           },
           required: ["calculator"],
         },
-      }
-    }
+      },
+    },
   ];
 
   const model = new ChatMistralAI({
-    modelName: "mistral-large"
+    modelName: "mistral-large",
   }).bind({
     tools,
   });
 
   const prompt = ChatPromptTemplate.fromMessages([
-    "system", "you are very bad at math and always must use a calculator",
-    "human", "what is the sum of 223 + 228 divided by 718236 multiplied by 1234?"
+    "system",
+    "you are very bad at math and always must use a calculator",
+    "human",
+    "what is the sum of 223 + 228 divided by 718236 multiplied by 1234?",
   ]);
   const chain = prompt.pipe(model);
   const response = await chain.invoke({});
   expect("tool_calls" in response.additional_kwargs).toBe(true);
-  console.log(response.additional_kwargs.tool_calls?.[0])
-  expect(response.additional_kwargs.tool_calls?.[0].function.name).toBe("calculator");
-  expect(JSON.parse(response.additional_kwargs.tool_calls?.[0].function.arguments ?? "{}").calculator).toBeDefined();
+  console.log(response.additional_kwargs.tool_calls?.[0]);
+  expect(response.additional_kwargs.tool_calls?.[0].function.name).toBe(
+    "calculator"
+  );
+  expect(
+    JSON.parse(
+      response.additional_kwargs.tool_calls?.[0].function.arguments ?? "{}"
+    ).calculator
+  ).toBeDefined();
 });
 
 test("Can call .stream with tool calling", async () => {
@@ -118,30 +136,34 @@ test("Can call .stream with tool calling", async () => {
     description = "Calculate the answer to a math equation";
 
     schema = z.object({
-      calculator: z.string().describe("The math equation to calculate the answer for."),
+      calculator: z
+        .string()
+        .describe("The math equation to calculate the answer for."),
     });
 
     async _call(_input: { input: string }) {
       return "the answer!";
-    };
+    }
   }
 
   const model = new ChatMistralAI({
-    modelName: "mistral-large"
+    modelName: "mistral-large",
   }).bind({
     tools: [new Calculator()],
   });
 
   const prompt = ChatPromptTemplate.fromMessages([
-    "system", "you are very bad at math and always must use a calculator",
-    "human", "what is the sum of 223 + 228 divided by 718236 multiplied by 1234?"
+    "system",
+    "you are very bad at math and always must use a calculator",
+    "human",
+    "what is the sum of 223 + 228 divided by 718236 multiplied by 1234?",
   ]);
 
   const chain = prompt.pipe(model);
   const response = await chain.stream({});
   let finalRes: BaseMessage | null = null;
   for await (const chunk of response) {
-    console.log(chunk)
+    console.log(chunk);
     finalRes = chunk;
   }
   if (!finalRes) {
@@ -149,24 +171,32 @@ test("Can call .stream with tool calling", async () => {
   }
 
   expect("tool_calls" in finalRes.additional_kwargs).toBe(true);
-  console.log(finalRes.additional_kwargs.tool_calls?.[0])
-  expect(finalRes.additional_kwargs.tool_calls?.[0].function.name).toBe("calculator");
-  expect(JSON.parse(finalRes.additional_kwargs.tool_calls?.[0].function.arguments ?? "{}").calculator).toBeDefined();
+  console.log(finalRes.additional_kwargs.tool_calls?.[0]);
+  expect(finalRes.additional_kwargs.tool_calls?.[0].function.name).toBe(
+    "calculator"
+  );
+  expect(
+    JSON.parse(
+      finalRes.additional_kwargs.tool_calls?.[0].function.arguments ?? "{}"
+    ).calculator
+  ).toBeDefined();
 });
 
 test("Can use json mode response format", async () => {
   const model = new ChatMistralAI({
-    modelName: "mistral-large"
+    modelName: "mistral-large",
   }).bind({
     responseFormat: {
       type: "json_object",
     },
-  })
+  });
 
   const prompt = ChatPromptTemplate.fromMessages([
-    "system", `you are very bad at math and always must use a calculator.
+    "system",
+    `you are very bad at math and always must use a calculator.
 To use a calculator respond with valid JSON containing a single key: 'calculator' which should contain the math equation to calculate the answer for.`,
-    "human", "what is the sum of 223 + 228 divided by 718236 multiplied by 1234?"
+    "human",
+    "what is the sum of 223 + 228 divided by 718236 multiplied by 1234?",
   ]);
 
   const chain = prompt.pipe(model);
@@ -179,24 +209,26 @@ To use a calculator respond with valid JSON containing a single key: 'calculator
 
 test("Can call .stream with json mode", async () => {
   const model = new ChatMistralAI({
-    modelName: "mistral-large"
+    modelName: "mistral-large",
   }).bind({
     responseFormat: {
       type: "json_object",
     },
-  })
+  });
 
   const prompt = ChatPromptTemplate.fromMessages([
-    "system", `you are very bad at math and always must use a calculator.
+    "system",
+    `you are very bad at math and always must use a calculator.
 To use a calculator respond with valid JSON containing a single key: 'calculator' which should contain the math equation to calculate the answer for.`,
-    "human", "what is the sum of 223 + 228 divided by 718236 multiplied by 1234?"
+    "human",
+    "what is the sum of 223 + 228 divided by 718236 multiplied by 1234?",
   ]);
 
   const chain = prompt.pipe(model);
   const response = await chain.stream({});
   let finalRes = "";
   for await (const chunk of response) {
-    console.log(chunk)
+    console.log(chunk);
     finalRes += chunk.content;
   }
 
