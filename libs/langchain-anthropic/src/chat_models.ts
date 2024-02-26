@@ -105,6 +105,8 @@ type Kwargs = Record<string, any>;
  * even if not explicitly available on this class.
  * @example
  * ```typescript
+ * import { ChatAnthropic } from "@langchain/anthropic";
+ *
  * const model = new ChatAnthropic({
  *   temperature: 0.9,
  *   anthropicApiKey: 'YOUR-API-KEY',
