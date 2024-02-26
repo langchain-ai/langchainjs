@@ -1,6 +1,6 @@
 import { describe, expect, test, jest } from "@jest/globals";
 import { PoolConfig } from "pg";
-import { PostgresRecordManager } from "../postgres.js";
+import { PostgresRecordManager, PostgresRecordManagerOptions } from "../postgres.js";
 
 describe.skip("PostgresRecordManager", () => {
   const tableName = "upsertion_record";
@@ -14,7 +14,7 @@ describe.skip("PostgresRecordManager", () => {
       database: "api",
     } as PoolConfig,
     tableName,
-  };
+  } as PostgresRecordManagerOptions;
   let recordManager: PostgresRecordManager;
 
   beforeAll(async () => {
@@ -23,9 +23,6 @@ describe.skip("PostgresRecordManager", () => {
   });
 
   afterEach(async () => {
-    // reinitialize record manager
-    recordManager = new PostgresRecordManager("test", config);
-
     // Drop table, then recreate it for the next test.
     await recordManager.pool.query(`DROP TABLE "${tableName}"`);
 
@@ -37,17 +34,23 @@ describe.skip("PostgresRecordManager", () => {
   });
 
   test("Test explicit schema definition", async () => { 
-      // configure explicit schema on record mananger
-      recordManager = new PostgresRecordManager("test", config, "newSchema");
+      // configure explicit schema with record manager
+      config.schema = "newSchema";
+      const explicitSchemaRecordManager = new PostgresRecordManager("test", config);
 
       // create new schema for test
-      await recordManager.pool.query('CREATE SCHEMA "newSchema"');
+      console.log('creating new schema in test');
+      await explicitSchemaRecordManager.pool.query('CREATE SCHEMA "newSchema"');
       
       // create table in new schema
-      await recordManager.createSchema();
+      console.log('calling createSchema function from test');
+      await explicitSchemaRecordManager.createSchema();
 
       // drop created schema
-      await recordManager.pool.query(`DROP SCHEMA IF EXISTS "newSchema" CASCADE`);
+      await explicitSchemaRecordManager.pool.query(`DROP SCHEMA IF EXISTS "newSchema" CASCADE`);
+
+      // end record manager connection
+      await explicitSchemaRecordManager.end();
   });
 
   test("Test upsertion", async () => {

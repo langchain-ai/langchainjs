@@ -8,6 +8,7 @@ import {
 export type PostgresRecordManagerOptions = {
   postgresConnectionOptions: PoolConfig;
   tableName?: string;
+  schema?: string;
 };
 
 export class PostgresRecordManager implements RecordManagerInterface {
@@ -19,21 +20,20 @@ export class PostgresRecordManager implements RecordManagerInterface {
 
   namespace: string;
 
-  schema?: string;
+  finalTableName: string;
 
-  constructor(namespace: string, config: PostgresRecordManagerOptions, schema?: string) {
+  constructor(namespace: string, config: PostgresRecordManagerOptions) {
     const { postgresConnectionOptions, tableName } = config;
     this.namespace = namespace;
     this.pool = new pg.Pool(postgresConnectionOptions);
     this.tableName = tableName || "upsertion_records";
-    this.schema = schema;
+    this.finalTableName = (config.schema) ? `"${config.schema}"."${tableName}"` : `"${tableName}"`;
   }
 
   async createSchema(): Promise<void> {
     try {
-      const finalTableName = (this.schema) ? `"${this.schema}"."${this.tableName}"` : `"${this.tableName}"`;
       await this.pool.query(`
-        CREATE TABLE IF NOT EXISTS ${finalTableName} (
+        CREATE TABLE IF NOT EXISTS ${this.finalTableName} (
           uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
           key TEXT NOT NULL,
           namespace TEXT NOT NULL,
@@ -41,10 +41,10 @@ export class PostgresRecordManager implements RecordManagerInterface {
           group_id TEXT,
           UNIQUE (key, namespace)
         );
-        CREATE INDEX IF NOT EXISTS updated_at_index ON ${finalTableName} (updated_at);
-        CREATE INDEX IF NOT EXISTS key_index ON ${finalTableName} (key);
-        CREATE INDEX IF NOT EXISTS namespace_index ON ${finalTableName} (namespace);
-        CREATE INDEX IF NOT EXISTS group_id_index ON ${finalTableName} (group_id);`
+        CREATE INDEX IF NOT EXISTS updated_at_index ON ${this.finalTableName} (updated_at);
+        CREATE INDEX IF NOT EXISTS key_index ON ${this.finalTableName} (key);
+        CREATE INDEX IF NOT EXISTS namespace_index ON ${this.finalTableName} (namespace);
+        CREATE INDEX IF NOT EXISTS group_id_index ON ${this.finalTableName} (group_id);`
       );
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -120,8 +120,7 @@ export class PostgresRecordManager implements RecordManagerInterface {
       )
       .join(", ");
 
-    const finalTableName = (this.schema) ? `"${this.schema}"."${this.tableName}"` : `"${this.tableName}"`;
-    const query = `INSERT INTO ${finalTableName} (key, namespace, updated_at, group_id) VALUES ${valuesPlaceholders} ON CONFLICT (key, namespace) DO UPDATE SET updated_at = EXCLUDED.updated_at;`;
+    const query = `INSERT INTO ${this.finalTableName} (key, namespace, updated_at, group_id) VALUES ${valuesPlaceholders} ON CONFLICT (key, namespace) DO UPDATE SET updated_at = EXCLUDED.updated_at;`;
     await this.pool.query(query, recordsToUpsert.flat());
   }
 
@@ -135,9 +134,8 @@ export class PostgresRecordManager implements RecordManagerInterface {
       .map((_, i) => `$${i + startIndex}`)
       .join(", ");
 
-    const finalTableName = (this.schema) ? `"${this.schema}"."${this.tableName}"` : `"${this.tableName}"`;
     const query = `
-      SELECT k, (key is not null) ex from unnest(ARRAY[${arrayPlaceholders}]) k left join ${finalTableName} on k=key and namespace = $1;
+      SELECT k, (key is not null) ex from unnest(ARRAY[${arrayPlaceholders}]) k left join ${this.finalTableName} on k=key and namespace = $1;
       `;
     const res = await this.pool.query(query, [this.namespace, ...keys.flat()]);
     return res.rows.map((row: { ex: boolean }) => row.ex);
@@ -145,9 +143,8 @@ export class PostgresRecordManager implements RecordManagerInterface {
 
   async listKeys(options?: ListKeyOptions): Promise<string[]> {
     const { before, after, limit, groupIds } = options ?? {};
-    const finalTableName = (this.schema) ? `"${this.schema}"."${this.tableName}"` : `"${this.tableName}"`;
 
-    let query = `SELECT key FROM ${finalTableName} WHERE namespace = $1`;
+    let query = `SELECT key FROM ${this.finalTableName} WHERE namespace = $1`;
     const values: (string | number | (string | null)[])[] = [this.namespace];
 
     let index = 2;
@@ -185,8 +182,7 @@ export class PostgresRecordManager implements RecordManagerInterface {
       return;
     }
 
-    const finalTableName = (this.schema) ? `"${this.schema}"."${this.tableName}"` : `"${this.tableName}"`;
-    const query = `DELETE FROM ${finalTableName} WHERE namespace = $1 AND key = ANY($2);`;
+    const query = `DELETE FROM ${this.finalTableName} WHERE namespace = $1 AND key = ANY($2);`;
     await this.pool.query(query, [this.namespace, keys]);
   }
 
