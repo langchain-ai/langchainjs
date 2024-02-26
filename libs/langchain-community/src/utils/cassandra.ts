@@ -309,9 +309,9 @@ export class CassandraClientFactory {
     }
 
     // First POST request gets all bundle locations for the database_id
-    const bundleURLTemplate =
-      astraArgs.bundleUrlTemplate ? astraArgs.bundleUrlTemplate :
-      "https://api.astra.datastax.com/v2/databases/{database_id}/secureBundleURL?all=true";
+    const bundleURLTemplate = astraArgs.bundleUrlTemplate
+      ? astraArgs.bundleUrlTemplate
+      : "https://api.astra.datastax.com/v2/databases/{database_id}/secureBundleURL?all=true";
     const url = bundleURLTemplate.replace(
       "{database_id}",
       astraArgs.datacenterID
