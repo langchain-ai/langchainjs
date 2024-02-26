@@ -254,8 +254,10 @@ test("Can stream and concat responses for a complex tool", async () => {
           })
         ),
         friendsCount: z.number().describe("Number of friends"),
-        areFriendsCool: z.boolean().describe("Whether or not the user thinks the friends are cool"),
-      })
+        areFriendsCool: z
+          .boolean()
+          .describe("Whether or not the user thinks the friends are cool"),
+      }),
     });
 
     async _call(_input: { input: string }) {
@@ -286,7 +288,7 @@ test("Can stream and concat responses for a complex tool", async () => {
   if (!finalRes) {
     throw new Error("No final response found");
   }
-  
+
   expect(finalRes[0].additional_kwargs.tool_calls?.[0]).toBeDefined();
   const toolCall = finalRes[0].additional_kwargs.tool_calls?.[0];
   expect(toolCall?.function.name).toBe("person_traits");
