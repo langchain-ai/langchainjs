@@ -15,16 +15,11 @@ import {
 } from "@langchain/core/language_models/chat_models";
 import { type BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 
-type AnthropicMessage = Anthropic.Beta.MessageParam;
-type AnthropicMessageCreateParams = Omit<
-  Anthropic.Beta.MessageCreateParamsNonStreaming,
-  "anthropic-beta"
->;
-type AnthropicStreamingMessageCreateParams = Omit<
-  Anthropic.Beta.MessageCreateParamsStreaming,
-  "anthropic-beta"
->;
-type AnthropicMessageStreamEvent = Anthropic.Beta.MessageStreamEvent;
+type AnthropicMessage = Anthropic.MessageParam;
+type AnthropicMessageCreateParams = Anthropic.MessageCreateParamsNonStreaming;
+type AnthropicStreamingMessageCreateParams =
+  Anthropic.MessageCreateParamsStreaming;
+type AnthropicMessageStreamEvent = Anthropic.MessageStreamEvent;
 
 /**
  * Input to AnthropicChat class.
@@ -106,7 +101,7 @@ type Kwargs = Record<string, any>;
  * @remarks
  * Any parameters that are valid to be passed to {@link
  * https://console.anthropic.com/docs/api/reference |
- * `anthropic.beta.messages`} can be passed through {@link invocationKwargs},
+ * `anthropic.messages`} can be passed through {@link invocationKwargs},
  * even if not explicitly available on this class.
  * @example
  * ```typescript
@@ -203,7 +198,7 @@ export class ChatAnthropicMessages<
     options?: this["ParsedCallOptions"]
   ): Omit<
     AnthropicMessageCreateParams | AnthropicStreamingMessageCreateParams,
-    "messages" | "anthropic-beta"
+    "messages"
   > &
     Kwargs {
     return {
@@ -434,16 +429,11 @@ export class ChatAnthropicMessages<
       });
     }
     const makeCompletionRequest = async () =>
-      this.streamingClient.beta.messages.create(
-        // TODO: Fix typing once underlying SDK is fixed to not require unnecessary "anthropic-beta" param
-        {
-          ...request,
-          ...this.invocationKwargs,
-          stream: true,
-        } as AnthropicStreamingMessageCreateParams & {
-          "anthropic-beta": string;
-        }
-      );
+      this.streamingClient.messages.create({
+        ...request,
+        ...this.invocationKwargs,
+        stream: true,
+      } as AnthropicStreamingMessageCreateParams);
     return this.caller.call(makeCompletionRequest);
   }
 
@@ -451,7 +441,7 @@ export class ChatAnthropicMessages<
   protected async completionWithRetry(
     request: AnthropicMessageCreateParams & Kwargs,
     options: { signal?: AbortSignal }
-  ): Promise<Anthropic.Beta.Message> {
+  ): Promise<Anthropic.Message> {
     if (!this.anthropicApiKey) {
       throw new Error("Missing Anthropic API key.");
     }
@@ -465,13 +455,10 @@ export class ChatAnthropicMessages<
       });
     }
     const makeCompletionRequest = async () =>
-      this.batchClient.beta.messages.create(
-        // TODO: Fix typing once underlying SDK is fixed to not require unnecessary "anthropic-beta" param
-        {
-          ...request,
-          ...this.invocationKwargs,
-        } as AnthropicMessageCreateParams & { "anthropic-beta": string }
-      );
+      this.batchClient.messages.create({
+        ...request,
+        ...this.invocationKwargs,
+      } as AnthropicMessageCreateParams);
     return this.caller.callWithOptions(
       { signal: options.signal },
       makeCompletionRequest
