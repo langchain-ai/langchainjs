@@ -1,5 +1,6 @@
 import type { Tiktoken, TiktokenModel } from "js-tiktoken/lite";
 
+import { z } from "zod";
 import { type BaseCache, InMemoryCache } from "../caches.js";
 import {
   type BasePromptValueInterface,
@@ -470,6 +471,29 @@ export abstract class BaseLanguageModel<
    */
   static async deserialize(_data: SerializedLLM): Promise<BaseLanguageModel> {
     throw new Error("Use .toJSON() instead");
+  }
+
+  /**
+   * Return a new runnable which calls an LLM with structured output.
+   * Only available for LLMs that support structured output.
+   * 
+   * @template {any} RunInput The input type for the Runnable.
+   * @template {z.ZodObject<any, any, any, any>} RunOutput The output type for the Runnable, expected to be a Zod schema object for structured output validation.
+   * @template {RunnableConfig} CallOptions The type for call options, extending from RunnableConfig.
+   * 
+   * @param {z.ZodEffects<RunOutput>} schema The schema for the structured output.
+   * @returns {Runnable<RunInput, RunOutput, CallOptions>} A new runnable that calls the LLM with structured output.
+   */
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunInput = any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>,
+    CallOptions extends RunnableConfig = RunnableConfig
+  >(
+    _schema: z.ZodEffects<RunOutput>
+  ): Runnable<RunInput, RunOutput, CallOptions> {
+    throw new Error("Method not implemented.");
   }
 }
 
