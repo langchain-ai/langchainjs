@@ -288,7 +288,12 @@ export class ChatMistralAI<
 
   maxTokens: number;
 
+  /**
+   * @deprecated use safePrompt instead
+   */
   safeMode = false;
+
+  safePrompt = false;
 
   randomSeed?: number;
 
@@ -311,6 +316,7 @@ export class ChatMistralAI<
     this.topP = fields?.topP ?? this.topP;
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
     this.safeMode = fields?.safeMode ?? this.safeMode;
+    this.safePrompt = fields?.safePrompt ?? this.safePrompt;
     this.randomSeed = fields?.randomSeed ?? this.randomSeed;
     this.modelName = fields?.modelName ?? this.modelName;
     this.client = new MistralClient(this.apiKey, this.endpoint);
@@ -336,16 +342,17 @@ export class ChatMistralAI<
           return tool;
         })
         .flat() ?? [];
-    const params = {
+    const params: Omit<MistralAIChatCompletionOptions, "messages"> = {
       model: this.modelName,
-      temperature: this.temperature,
-      topP: this.topP,
-      maxTokens: this.maxTokens,
-      safeMode: this.safeMode,
-      randomSeed: this.randomSeed,
-      responseFormat: response_format as ResponseFormat,
       tools: mistralAITools,
-      tool_choice,
+      temperature: this.temperature,
+      maxTokens: this.maxTokens,
+      topP: this.topP,
+      randomSeed: this.randomSeed,
+      safeMode: this.safeMode,
+      safePrompt: this.safePrompt,
+      toolChoice: tool_choice,
+      responseFormat: response_format as ResponseFormat,
     };
     return params;
   }
