@@ -903,7 +903,7 @@ export class ChatOpenAI<
    * @param {boolean | undefined} includeRaw Whether to include the raw output in the result. Defaults to false.
    * @returns {Runnable<RunInput, RunOutput> | Runnable<RunInput, { raw: BaseMessage; parsed: RunOutput }>} A new runnable that calls the LLM with structured output.
    */
-  override withStructuredOutput<
+  withStructuredOutput<
     RunInput = BaseLanguageModelInput,
     // prettier-ignore
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
