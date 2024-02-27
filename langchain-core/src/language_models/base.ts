@@ -1,5 +1,6 @@
 import type { Tiktoken, TiktokenModel } from "js-tiktoken/lite";
 
+import { z } from "zod";
 import { type BaseCache, InMemoryCache } from "../caches.js";
 import {
   type BasePromptValueInterface,
@@ -470,6 +471,37 @@ export abstract class BaseLanguageModel<
    */
   static async deserialize(_data: SerializedLLM): Promise<BaseLanguageModel> {
     throw new Error("Use .toJSON() instead");
+  }
+
+  /**
+   * Return a new runnable which calls an LLM with structured output.
+   * Only available for LLMs that support structured output.
+   *
+   * @template {any} RunInput The input type for the Runnable.
+   * @template {z.ZodObject<any, any, any, any>} RunOutput The output type for the Runnable, expected to be a Zod schema object for structured output validation.
+   *
+   * @param {z.ZodEffects<RunOutput> | Record<string, any>} schema The schema for the structured output. Either as a ZOD class or a valid JSON schema object.
+   * @param {string} name The name of the function to call.
+   * @returns {Runnable<RunInput, RunOutput>} A new runnable that calls the LLM with structured output.
+   */
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunInput = any,
+    // prettier-ignore
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
+  >(
+    // @ts-expect-error Var is unused in this base method implementation.
+    {
+      schema,
+      name,
+    }: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      schema: z.ZodEffects<RunOutput> | Record<string, any>;
+      name: string;
+    }
+  ): Runnable<RunInput, RunOutput> {
+    throw new Error("Method not implemented.");
   }
 }
 
