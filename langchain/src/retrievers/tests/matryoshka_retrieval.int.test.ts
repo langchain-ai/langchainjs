@@ -38,7 +38,7 @@ test("MatryoshkaRetrieval can retrieve", async () => {
     "LangGraph is a new open source library by the LangChain team",
     "LangChain announced GA of LangSmith last week!",
     "I heart LangChain",
-  ]
+  ];
   const relevantDocs = [
     new Document({
       pageContent: relevantDocContents[0],
@@ -49,8 +49,7 @@ test("MatryoshkaRetrieval can retrieve", async () => {
       metadata: { id: uuidV4() },
     }),
     new Document({
-      pageContent:
-        relevantDocContents[2],
+      pageContent: relevantDocContents[2],
       metadata: { id: uuidV4() },
     }),
     new Document({
@@ -67,16 +66,16 @@ test("MatryoshkaRetrieval can retrieve", async () => {
   await retriever.addDocuments(allDocs);
 
   const query = "What is LangChain?";
-  console.log("Querying documents")
+  console.log("Querying documents");
   const results = await retriever.getRelevantDocuments(query);
 
-  const retrieverResultContents = new Set(results.map((doc) => doc.pageContent));
+  const retrieverResultContents = new Set(
+    results.map((doc) => doc.pageContent)
+  );
 
   console.log([...retrieverResultContents]);
   expect(results.length).toBe(5);
-  expect(retrieverResultContents).toEqual(
-    new Set(relevantDocContents)
-  );
+  expect(retrieverResultContents).toEqual(new Set(relevantDocContents));
 });
 
 test("Can change number of docs returned (largeK)", async () => {
@@ -137,5 +136,7 @@ test("AddDocunents adds large embeddings metadata field", async () => {
   const relevantDocs = await retriever.getRelevantDocuments("hello world");
   expect(relevantDocs[0].metadata.id).toBe(testId);
   expect(relevantDocs[0].metadata[retriever.largeEmbeddingKey]).toBeDefined();
-  expect(JSON.parse(relevantDocs[0].metadata[retriever.largeEmbeddingKey]).length).toBe(3072);
-})
+  expect(
+    JSON.parse(relevantDocs[0].metadata[retriever.largeEmbeddingKey]).length
+  ).toBe(3072);
+});

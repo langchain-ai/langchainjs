@@ -109,11 +109,10 @@ export class MatryoshkaRetrieval<
    */
   private _rankByLargeEmbeddings(
     embeddedQuery: number[],
-    smallResults: DocumentInterface[],
+    smallResults: DocumentInterface[]
   ): DocumentInterface[] {
-
-    const largeEmbeddings: Array<number[]> = smallResults.map(
-      (doc) => JSON.parse(doc.metadata[this.largeEmbeddingKey])
+    const largeEmbeddings: Array<number[]> = smallResults.map((doc) =>
+      JSON.parse(doc.metadata[this.largeEmbeddingKey])
     );
     let func: () => Array<number[]>;
 
@@ -149,16 +148,10 @@ export class MatryoshkaRetrieval<
     return indices.map((i) => smallResults[i]);
   }
 
-  async _getRelevantDocuments(
-    query: string,
-  ): Promise<DocumentInterface[]> {
+  async _getRelevantDocuments(query: string): Promise<DocumentInterface[]> {
     const [embeddedQuery, smallResults] = await Promise.all([
       this.largeEmbeddingModel.embedQuery(query),
-      this.vectorStore.similaritySearch(
-        query,
-        this.smallK,
-        this.filter
-      )
+      this.vectorStore.similaritySearch(query, this.smallK, this.filter),
     ]);
 
     return this._rankByLargeEmbeddings(embeddedQuery, smallResults);
