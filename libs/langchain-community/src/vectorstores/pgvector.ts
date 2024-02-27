@@ -511,9 +511,9 @@ export class PGVectorStore extends VectorStore {
    * @returns Promise that resolves when the table has been ensured.
    */
   async ensureTableInDatabase(): Promise<void> {
-    await this.pool.query("CREATE EXTENSION IF NOT EXISTS vector;");
-    await this.pool.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";');
-    const tableQuery = this.schemaName == null ? `
+    const vectorQuery = this.schemaName == null ? "CREATE EXTENSION IF NOT EXISTS vector;" : `CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA ${this.schemaName};`
+    const uuidQuery = this.schemaName == null ? 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";' : `CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA ${this.schemaName};`
+     const tableQuery = this.schemaName == null ? `
       CREATE TABLE IF NOT EXISTS ${this.tableName} (
         "${this.idColumnName}" uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
         "${this.contentColumnName}" text,
@@ -525,9 +525,11 @@ export class PGVectorStore extends VectorStore {
         "${this.idColumnName}" uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
         "${this.contentColumnName}" text,
         "${this.metadataColumnName}" jsonb,
-        "${this.vectorColumnName}" vector
+        "${this.vectorColumnName}" ${this.schemaName}.vector
       );
     `
+    await this.pool.query(vectorQuery);
+    await this.pool.query(uuidQuery);
     await this.pool.query(tableQuery);
   }
 
