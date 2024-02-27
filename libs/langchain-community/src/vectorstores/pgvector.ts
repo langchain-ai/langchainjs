@@ -18,6 +18,7 @@ export interface PGVectorStoreArgs {
   collectionName?: string;
   collectionMetadata?: Metadata | null;
   schemaName?: string | null;
+  extensionSchemaName?: String | null;
   columns?: {
     idColumnName?: string;
     vectorColumnName?: string;
@@ -60,6 +61,8 @@ export class PGVectorStore extends VectorStore {
 
   contentColumnName: string;
 
+  extensionSchemaName: string | null;
+  
   metadataColumnName: string;
 
   filter?: Metadata;
@@ -86,6 +89,8 @@ export class PGVectorStore extends VectorStore {
     this.collectionName = config.collectionName ?? "langchain";
     this.collectionMetadata = config.collectionMetadata ?? null;
     this.schemaName = config.schemaName ?? null;
+    this.extensionSchemaName = config.extensionSchemaName ?? null;
+
     this.filter = config.filter;
 
     this.vectorColumnName = config.columns?.vectorColumnName ?? "embedding";
@@ -511,8 +516,8 @@ export class PGVectorStore extends VectorStore {
    * @returns Promise that resolves when the table has been ensured.
    */
   async ensureTableInDatabase(): Promise<void> {
-    const vectorQuery = this.schemaName == null ? "CREATE EXTENSION IF NOT EXISTS vector;" : `CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA ${this.schemaName};`
-    const uuidQuery = this.schemaName == null ? 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";' : `CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA ${this.schemaName};`
+    const vectorQuery = this.extensionSchemaName == null ? "CREATE EXTENSION IF NOT EXISTS vector;" : `CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA ${this.extensionSchemaName};`
+    const uuidQuery = this.extensionSchemaName == null ? 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";' : `CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA ${this.extensionSchemaName};`
      const tableQuery = this.schemaName == null ? `
       CREATE TABLE IF NOT EXISTS ${this.tableName} (
         "${this.idColumnName}" uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
