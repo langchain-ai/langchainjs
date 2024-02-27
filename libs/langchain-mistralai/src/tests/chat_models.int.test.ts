@@ -307,7 +307,7 @@ describe("withStructuredOutput", () => {
       temperature: 0,
       modelName: "mistral-large",
     });
-  
+
     const calculatorSchema = z
       .object({
         operation: z
@@ -321,7 +321,7 @@ describe("withStructuredOutput", () => {
       schema: calculatorSchema,
       name: "calculator",
     });
-  
+
     const prompt = ChatPromptTemplate.fromMessages([
       "system",
       "You are VERY bad at math and must always use a calculator.",
@@ -335,13 +335,13 @@ describe("withStructuredOutput", () => {
     expect("number1" in result).toBe(true);
     expect("number2" in result).toBe(true);
   });
-  
+
   test("withStructuredOutput zod schema JSON mode", async () => {
     const model = new ChatMistralAI({
       temperature: 0,
       modelName: "mistral-large",
     });
-  
+
     const calculatorSchema = z.object({
       operation: z.enum(["add", "subtract", "multiply", "divide"]),
       number1: z.number(),
@@ -352,7 +352,7 @@ describe("withStructuredOutput", () => {
       name: "calculator",
       method: "jsonMode",
     });
-  
+
     const prompt = ChatPromptTemplate.fromMessages([
       "system",
       `You are VERY bad at math and must always use a calculator.
@@ -371,13 +371,13 @@ describe("withStructuredOutput", () => {
     expect("number1" in result).toBe(true);
     expect("number2" in result).toBe(true);
   });
-  
+
   test("withStructuredOutput JSON schema function calling", async () => {
     const model = new ChatMistralAI({
       temperature: 0,
       modelName: "mistral-large",
     });
-  
+
     const calculatorSchema = z
       .object({
         operation: z
@@ -387,12 +387,12 @@ describe("withStructuredOutput", () => {
         number2: z.number().describe("The second number to operate on."),
       })
       .describe("A calculator schema");
-  
+
     const modelWithStructuredOutput = model.withStructuredOutput({
       schema: zodToJsonSchema(calculatorSchema),
       name: "calculator",
     });
-  
+
     const prompt = ChatPromptTemplate.fromMessages([
       "system",
       `You are VERY bad at math and must always use a calculator.`,
@@ -406,13 +406,13 @@ describe("withStructuredOutput", () => {
     expect("number1" in result).toBe(true);
     expect("number2" in result).toBe(true);
   });
-  
+
   test("withStructuredOutput JSON schema JSON mode", async () => {
     const model = new ChatMistralAI({
       temperature: 0,
       modelName: "mistral-large",
     });
-  
+
     const calculatorSchema = z.object({
       operation: z.enum(["add", "subtract", "multiply", "divide"]),
       number1: z.number(),
@@ -423,7 +423,7 @@ describe("withStructuredOutput", () => {
       name: "calculator",
       method: "jsonMode",
     });
-  
+
     const prompt = ChatPromptTemplate.fromMessages([
       "system",
       `You are VERY bad at math and must always use a calculator.
@@ -442,13 +442,13 @@ describe("withStructuredOutput", () => {
     expect("number1" in result).toBe(true);
     expect("number2" in result).toBe(true);
   });
-  
+
   test("withStructuredOutput includeRaw true", async () => {
     const model = new ChatMistralAI({
       temperature: 0,
       modelName: "mistral-large",
     });
-  
+
     const calculatorSchema = z
       .object({
         operation: z
@@ -463,7 +463,7 @@ describe("withStructuredOutput", () => {
       name: "calculator",
       includeRaw: true,
     });
-  
+
     const prompt = ChatPromptTemplate.fromMessages([
       "system",
       "You are VERY bad at math and must always use a calculator.",
@@ -473,7 +473,7 @@ describe("withStructuredOutput", () => {
     const chain = prompt.pipe(modelWithStructuredOutput);
     const result = await chain.invoke({});
     console.log(result);
-  
+
     expect("parsed" in result).toBe(true);
     // Need to make TS happy :)
     if (!("parsed" in result)) {
@@ -483,7 +483,7 @@ describe("withStructuredOutput", () => {
     expect("operation" in parsed).toBe(true);
     expect("number1" in parsed).toBe(true);
     expect("number2" in parsed).toBe(true);
-  
+
     expect("raw" in result).toBe(true);
     // Need to make TS happy :)
     if (!("raw" in result)) {
@@ -496,15 +496,21 @@ describe("withStructuredOutput", () => {
     );
     expect(
       "operation" in
-        JSON.parse(raw.additional_kwargs.tool_calls?.[0].function.arguments ?? "")
+        JSON.parse(
+          raw.additional_kwargs.tool_calls?.[0].function.arguments ?? ""
+        )
     ).toBe(true);
     expect(
       "number1" in
-        JSON.parse(raw.additional_kwargs.tool_calls?.[0].function.arguments ?? "")
+        JSON.parse(
+          raw.additional_kwargs.tool_calls?.[0].function.arguments ?? ""
+        )
     ).toBe(true);
     expect(
       "number2" in
-        JSON.parse(raw.additional_kwargs.tool_calls?.[0].function.arguments ?? "")
+        JSON.parse(
+          raw.additional_kwargs.tool_calls?.[0].function.arguments ?? ""
+        )
     ).toBe(true);
   });
 });
