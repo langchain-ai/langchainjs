@@ -301,18 +301,21 @@ test("Can stream and concat responses for a complex tool", async () => {
   expect(args.areFriendsCool).toBeDefined();
 });
 
-
 test("withStructuredOutput zod schema function calling", async () => {
   const model = new ChatMistralAI({
     temperature: 0,
     modelName: "mistral-large",
   });
 
-  const calculatorSchema = z.object({
-    operation: z.enum(["add", "subtract", "multiply", "divide"]).describe("The type of operation to execute."),
-    number1: z.number().describe("The first number to operate on."),
-    number2: z.number().describe("The second number to operate on."),
-  }).describe("A calculator schema");
+  const calculatorSchema = z
+    .object({
+      operation: z
+        .enum(["add", "subtract", "multiply", "divide"])
+        .describe("The type of operation to execute."),
+      number1: z.number().describe("The first number to operate on."),
+      number2: z.number().describe("The second number to operate on."),
+    })
+    .describe("A calculator schema");
   const modelWithStructuredOutput = model.withStructuredOutput({
     schema: calculatorSchema,
     name: "calculator",
@@ -374,11 +377,15 @@ test("withStructuredOutput JSON schema function calling", async () => {
     modelName: "mistral-large",
   });
 
-  const calculatorSchema = z.object({
-    operation: z.enum(["add", "subtract", "multiply", "divide"]).describe("The type of operation to execute."),
-    number1: z.number().describe("The first number to operate on."),
-    number2: z.number().describe("The second number to operate on."),
-  }).describe("A calculator schema");
+  const calculatorSchema = z
+    .object({
+      operation: z
+        .enum(["add", "subtract", "multiply", "divide"])
+        .describe("The type of operation to execute."),
+      number1: z.number().describe("The first number to operate on."),
+      number2: z.number().describe("The second number to operate on."),
+    })
+    .describe("A calculator schema");
 
   const modelWithStructuredOutput = model.withStructuredOutput({
     schema: zodToJsonSchema(calculatorSchema),
@@ -441,11 +448,15 @@ test("withStructuredOutput includeRaw true", async () => {
     modelName: "mistral-large",
   });
 
-  const calculatorSchema = z.object({
-    operation: z.enum(["add", "subtract", "multiply", "divide"]).describe("The type of operation to execute."),
-    number1: z.number().describe("The first number to operate on."),
-    number2: z.number().describe("The second number to operate on."),
-  }).describe("A calculator schema");
+  const calculatorSchema = z
+    .object({
+      operation: z
+        .enum(["add", "subtract", "multiply", "divide"])
+        .describe("The type of operation to execute."),
+      number1: z.number().describe("The first number to operate on."),
+      number2: z.number().describe("The second number to operate on."),
+    })
+    .describe("A calculator schema");
   const modelWithStructuredOutput = model.withStructuredOutput({
     schema: calculatorSchema,
     name: "calculator",

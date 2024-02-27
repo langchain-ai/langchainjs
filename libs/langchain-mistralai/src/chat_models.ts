@@ -36,7 +36,11 @@ import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { z } from "zod";
 import { JsonOutputParser } from "@langchain/core/output_parsers";
 import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
-import { Runnable, RunnablePassthrough, RunnableMap } from "@langchain/core/runnables";
+import {
+  Runnable,
+  RunnablePassthrough,
+  RunnableMap,
+} from "@langchain/core/runnables";
 
 interface TokenUsage {
   completionTokens?: number;
@@ -514,7 +518,7 @@ export class ChatMistralAI<
     return [];
   }
 
-    /**
+  /**
    * Model wrapper that returns outputs formatted to match the given schema.
    *
    * @template {any} RunInput The input type for the Runnable.
@@ -527,7 +531,7 @@ export class ChatMistralAI<
    * @param {boolean | undefined} includeRaw Whether to include the raw output in the result. Defaults to false.
    * @returns {Runnable<RunInput, RunOutput, CallOptions>} A new runnable that calls the LLM with structured output.
    */
-    withStructuredOutput<
+  withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunInput = any,
     // prettier-ignore
