@@ -254,6 +254,12 @@ function _convertDeltaToMessageChunk(delta: {
   }
 }
 
+function _convertStructuredToolToMistralTool(
+  tools: StructuredToolInterface[]
+): MistralAIToolInput[] {
+  return tools.map((tool) => convertToOpenAITool(tool) as MistralAIToolInput);
+};
+
 /**
  * Integration with a chat model.
  */
@@ -314,12 +320,6 @@ export class ChatMistralAI<
     return "mistral_ai";
   }
 
-  convertStructuredToolToMistralTool(
-    tools: StructuredToolInterface[]
-  ): MistralAIToolInput[] {
-    return tools.map((tool) => convertToOpenAITool(tool) as MistralAIToolInput);
-  }
-
   /**
    * Get the parameters used to invoke the model
    */
@@ -331,7 +331,7 @@ export class ChatMistralAI<
       tools
         ?.map((tool) => {
           if ("lc_namespace" in tool) {
-            return this.convertStructuredToolToMistralTool([tool]);
+            return _convertStructuredToolToMistralTool([tool]);
           }
           return tool;
         })
