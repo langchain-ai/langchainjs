@@ -1,5 +1,6 @@
 import type { BaseLLMParams } from "@langchain/core/language_models/llms";
 import type { JsonStream } from "./utils/stream.js";
+import {GoogleAISafetyParams} from "./utils/safety.js";
 
 /**
  * Parameters needed to setup the client connection.
@@ -87,7 +88,8 @@ export interface GoogleAIModelParams {
 export interface GoogleAIBaseLLMInput<AuthOptions>
   extends BaseLLMParams,
     GoogleConnectionParams<AuthOptions>,
-    GoogleAIModelParams {}
+    GoogleAIModelParams,
+    GoogleAISafetyParams {}
 
 export interface GoogleResponse {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -179,6 +181,7 @@ interface GeminiResponseCandidate {
 }
 
 interface GeminiResponsePromptFeedback {
+  blockReason?: string;
   safetyRatings: GeminiSafetyRating[];
 }
 

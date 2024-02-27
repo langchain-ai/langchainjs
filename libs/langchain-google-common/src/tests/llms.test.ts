@@ -7,6 +7,7 @@ import {
   mockFile,
   mockId,
 } from "./mock.js";
+import {GoogleAISafetyError} from "../utils/safety.js";
 
 class GoogleLLM extends GoogleBaseLLM<MockClientAuthInfo> {
   constructor(fields?: GoogleBaseLLMInput<MockClientAuthInfo>) {
@@ -229,4 +230,63 @@ describe("Mock Google LLM", () => {
     expect(responseArray).toHaveLength(6);
     console.log("record", JSON.stringify(record, null, 2));
   });
+
+  test("4: streamGenerateContent - non-streaming - safety", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "llm-4-mock.json",
+    };
+    const model = new GoogleLLM({
+      authOptions,
+    });
+    let caught = false;
+    try {
+      await model.call("Hello world");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (xx: any) {
+      caught = true;
+      expect(xx).toBeInstanceOf(GoogleAISafetyError);
+
+      const reply = xx?.reply;
+      const expectedReply = await mockFile("llm-4-mock.txt");
+      expect(reply).toEqual(expectedReply);
+    }
+    expect(caught).toEqual(true);
+  });
+
+  test("5: streamGenerateContent - streaming - safety", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "llm-5-mock.json",
+    };
+    const model = new GoogleLLM({
+      authOptions,
+    });
+    const response = await model.stream("Hello world");
+    const responseArray: string[] = [];
+    let caught = false;
+    try {
+      for await (const value of response) {
+        responseArray.push(value);
+      }
+
+    } catch (xx) {
+      caught = true;
+      expect(xx).toBeInstanceOf(GoogleAISafetyError);
+    }
+
+    expect(responseArray).toHaveLength(4);
+    console.log("record", JSON.stringify(record, null, 2));
+
+    expect(caught).toEqual(true);
+  });
+
 });

@@ -11,6 +11,7 @@ import { ChatGoogleBase, ChatGoogleBaseInput } from "../chat_models.js";
 import { authOptions, MockClient, MockClientAuthInfo, mockId } from "./mock.js";
 import { GoogleAIBaseLLMInput } from "../types.js";
 import { GoogleAbstractedClient } from "../auth.js";
+import {GoogleAISafetyError} from "../utils/safety.js";
 
 class ChatGoogle extends ChatGoogleBase<MockClientAuthInfo> {
   constructor(fields?: ChatGoogleBaseInput<MockClientAuthInfo>) {
@@ -220,4 +221,48 @@ describe("Mock ChatGoogle", () => {
     expect(data.contents[1].parts.length).toBeGreaterThanOrEqual(1);
     expect(data.contents[1].parts[0].text).toEqual("Ok");
   });
+
+  test("2. Response format - safety", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-2-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+    });
+    const messages: BaseMessageLike[] = [
+      new HumanMessage("Flip a coin and tell me H for heads and T for tails"),
+      new AIMessage("H"),
+      new HumanMessage("Flip it again"),
+    ];
+    let caught = false;
+    try {
+      await model.call(messages);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (xx: any) {
+      caught = true;
+      expect(xx).toBeInstanceOf(GoogleAISafetyError);
+
+      const result = xx?.reply.generations[0].message;
+
+      expect(result._getType()).toEqual("ai");
+      const aiMessage = result as AIMessage;
+      expect(aiMessage.content).toBeDefined();
+      expect(aiMessage.content.length).toBeGreaterThanOrEqual(1);
+      expect(aiMessage.content[0]).toHaveProperty("type");
+
+      const complexContent = aiMessage.content[0] as MessageContentComplex;
+      expect(complexContent.type).toEqual("text");
+      const content = complexContent as MessageContentText;
+      expect(content.text).toEqual("T");
+    }
+
+    expect(caught).toEqual(true);
+  });
+
 });

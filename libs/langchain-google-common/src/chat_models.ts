@@ -24,13 +24,15 @@ import {
 import { AbstractGoogleLLMConnection } from "./connection.js";
 import {
   baseMessageToContent,
-  responseToChatGeneration,
-  responseToChatResult,
+  defaultGeminiSafetyHandler,
+  safeResponseToChatGeneration,
+  safeResponseToChatResult,
 } from "./utils/gemini.js";
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
 import { GoogleBaseLLMInput } from "./llms.js";
 import { JsonStream } from "./utils/stream.js";
 import {ensureParams} from "./utils/failedHandler.js";
+import {GoogleAISafetyParams} from "./utils/safety.js";
 
 class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   BaseMessage[],
@@ -52,7 +54,8 @@ class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
 export interface ChatGoogleBaseInput<AuthOptions>
   extends BaseChatModelParams,
     GoogleConnectionParams<AuthOptions>,
-    GoogleAIModelParams {}
+    GoogleAIModelParams,
+    GoogleAISafetyParams {}
 
 /**
  * Integration with a chat model.
@@ -82,6 +85,8 @@ export abstract class ChatGoogleBase<AuthOptions>
 
   safetySettings: GoogleAISafetySetting[] = [];
 
+  safetyHandler;
+
   protected connection: ChatConnection<AuthOptions>;
 
   protected streamedConnection: ChatConnection<AuthOptions>;
@@ -90,6 +95,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     super(ensureParams(fields));
 
     copyAndValidateModelParamsInto(fields, this);
+    this.safetyHandler = fields?.safetyHandler ?? defaultGeminiSafetyHandler;
 
     const client = this.buildClient(fields);
     this.buildConnection(fields ?? {}, client);
@@ -157,7 +163,7 @@ export abstract class ChatGoogleBase<AuthOptions>
       parameters,
       options
     );
-    const ret = responseToChatResult(response);
+    const ret = safeResponseToChatResult(response, this.safetyHandler);
     return ret;
   }
 
@@ -184,7 +190,7 @@ export abstract class ChatGoogleBase<AuthOptions>
       const output = await stream.nextChunk();
       const chunk =
         output !== null
-          ? responseToChatGeneration({ data: output })
+          ? safeResponseToChatGeneration({ data: output }, this.safetyHandler)
           : new ChatGenerationChunk({
               text: "",
               generationInfo: { finishReason: "stop" },

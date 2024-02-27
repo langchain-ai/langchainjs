@@ -54,7 +54,10 @@ describe("GAuth LLM gai", () => {
     expect(model.platform).toEqual("gai");
   });
 
-  test("call", async () => {
+  /*
+   * This test currently fails in AI Studio due to zealous safety systems
+   */
+  test.skip("call", async () => {
     const model = new GoogleLLM({
       platformType: "gai",
     });
@@ -63,9 +66,23 @@ describe("GAuth LLM gai", () => {
       if (res.length === 1) {
         expect(res).toBe("2");
       } else {
-        expect(res.length).toBeGreaterThan(0);
         console.log("call result:", res);
+        expect(res.length).toBeGreaterThan(0);
       }
+    } catch (xx) {
+      console.error(xx);
+      throw xx;
+    }
+  });
+
+  test("call", async () => {
+    const model = new GoogleLLM({
+      platformType: "gai",
+    });
+    try {
+      const res = await model.call("If the time is 1:00, what time is it?");
+      expect(res.length).toBeGreaterThan(0);
+      expect(res.substring(0,4)).toEqual("1:00");
     } catch (xx) {
       console.error(xx);
       throw xx;
@@ -92,8 +109,13 @@ describe("GAuth LLM gai", () => {
       "What is the answer to live, the universe, and everything? Be verbose."
     );
     const chunks = [];
-    for await (const chunk of stream) {
-      chunks.push(chunk);
+    try {
+      for await (const chunk of stream) {
+        chunks.push(chunk);
+      }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (xx: any) {
+      expect(xx?.message).toEqual("Finish reason: RECITATION")
     }
     expect(chunks.length).toBeGreaterThan(1);
   });

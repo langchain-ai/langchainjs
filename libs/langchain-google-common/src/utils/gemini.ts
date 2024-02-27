@@ -26,6 +26,10 @@ import type {
   GeminiContent,
   GenerateContentResponseData,
 } from "../types.js";
+import type {
+  GoogleAISafetyHandler
+} from "./safety.js";
+import {GoogleAISafetyError} from "./safety.js";
 
 function messageContentText(content: MessageContentText): GeminiPartText {
   return {
@@ -211,11 +215,43 @@ export function responseToString(response: GoogleLLMResponse): string {
   return ret;
 }
 
+function safeResponseTo<RetType>(
+  response: GoogleLLMResponse,
+  safetyHandler: GoogleAISafetyHandler,
+  responseTo: (response: GoogleLLMResponse) => RetType
+): RetType {
+  try {
+    const safeResponse = safetyHandler(response);
+    return responseTo(safeResponse);
+  } catch (xx) {
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    if (xx instanceof GoogleAISafetyError){
+      const ret = responseTo(xx.response);
+      xx.reply = ret;
+    }
+    throw xx;
+  }
+}
+
+export function safeResponseToString(
+  response: GoogleLLMResponse,
+  safetyHandler: GoogleAISafetyHandler
+): string {
+  return safeResponseTo(response, safetyHandler, responseToString);
+}
+
 export function responseToGeneration(response: GoogleLLMResponse): Generation {
   return {
     text: responseToString(response),
     generationInfo: response,
   };
+}
+
+export function safeResponseToGeneration(
+  response: GoogleLLMResponse,
+  safetyHandler: GoogleAISafetyHandler
+): Generation {
+  return safeResponseTo(response, safetyHandler, responseToGeneration);
 }
 
 export function responseToChatGeneration(
@@ -226,6 +262,13 @@ export function responseToChatGeneration(
     message: partToMessage(responseToParts(response)[0]),
     generationInfo: response,
   });
+}
+
+export function safeResponseToChatGeneration(
+  response: GoogleLLMResponse,
+  safetyHandler: GoogleAISafetyHandler
+): ChatGenerationChunk {
+  return safeResponseTo( response, safetyHandler, responseToChatGeneration );
 }
 
 export function partToMessage(part: GeminiPart): BaseMessageChunk {
@@ -265,12 +308,26 @@ export function responseToBaseMessage(
   });
 }
 
+export function safeResponseToBaseMessage(
+  response: GoogleLLMResponse,
+  safetyHandler: GoogleAISafetyHandler
+): BaseMessage {
+  return safeResponseTo(response, safetyHandler, responseToBaseMessage);
+}
+
 export function responseToChatResult(response: GoogleLLMResponse): ChatResult {
   const generations = responseToChatGenerations(response);
   return {
     generations,
     llmOutput: response,
   };
+}
+
+export function safeResponseToChatResult(
+  response: GoogleLLMResponse,
+  safetyHandler: GoogleAISafetyHandler
+): ChatResult {
+  return safeResponseTo(response, safetyHandler, responseToChatResult);
 }
 
 export function validateGeminiParams(params: GoogleAIModelParams): void {
@@ -296,4 +353,62 @@ export function validateGeminiParams(params: GoogleAIModelParams): void {
 
 export function isModelGemini(modelName: string): boolean {
   return modelName.toLowerCase().startsWith("gemini");
+}
+
+function defaultGeminiDataSafetyHandler( response: GoogleLLMResponse, data: GenerateContentResponseData ): GenerateContentResponseData {
+
+  // Check to see if our prompt was blocked in the first place
+  const promptFeedback = data?.promptFeedback;
+  const blockReason = promptFeedback?.blockReason;
+  if (blockReason) {
+    throw new GoogleAISafetyError(response, `Prompt blocked: ${blockReason}`);
+  }
+
+  // Check to see if we finished for an exceptional reason
+  const ERROR_FINISH = [
+    "SAFETY",
+    "RECITATION",
+    "OTHER",
+  ]
+
+  const firstCandidate = data?.candidates?.[0];
+  const finishReason = firstCandidate?.finishReason;
+  if (ERROR_FINISH.includes(finishReason)) {
+    throw new GoogleAISafetyError(response, `Finish reason: ${finishReason}`);
+  }
+
+  return data;
+}
+
+export const defaultGeminiSafetyHandler: GoogleAISafetyHandler = (response: GoogleLLMResponse): GoogleLLMResponse => {
+
+  let newdata;
+
+  if ("nextChunk" in response.data) {
+    // TODO: This is a stream. How to handle?
+    newdata = response.data;
+
+  } else if (Array.isArray(response.data)) {
+    // If it is an array, try to handle every item in the array
+    try {
+      newdata = response.data.map( item => defaultGeminiDataSafetyHandler(response, item) );
+
+    } catch (xx) {
+      // eslint-disable-next-line no-instanceof/no-instanceof
+      if (xx instanceof GoogleAISafetyError) {
+        throw new GoogleAISafetyError(response, xx.message);
+      } else {
+        throw xx;
+      }
+    }
+
+  } else {
+    const data = response.data as GenerateContentResponseData;
+    newdata = defaultGeminiDataSafetyHandler( response, data );
+  }
+
+  return {
+    ...response,
+    data: newdata
+  }
 }

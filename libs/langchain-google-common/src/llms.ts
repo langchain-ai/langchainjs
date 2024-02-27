@@ -21,10 +21,11 @@ import {
   copyAndValidateModelParamsInto,
 } from "./utils/common.js";
 import {
+  defaultGeminiSafetyHandler,
   messageContentToParts,
-  responseToBaseMessage,
-  responseToGeneration,
-  responseToString,
+  safeResponseToBaseMessage,
+  safeResponseToGeneration,
+  safeResponseToString,
 } from "./utils/gemini.js";
 import { JsonStream } from "./utils/stream.js";
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
@@ -83,6 +84,8 @@ export abstract class GoogleBaseLLM<AuthOptions>
 
   safetySettings: GoogleAISafetySetting[] = [];
 
+  safetyHandler;
+
   protected connection: GoogleLLMConnection<AuthOptions>;
 
   protected streamedConnection: GoogleLLMConnection<AuthOptions>;
@@ -91,6 +94,7 @@ export abstract class GoogleBaseLLM<AuthOptions>
     super(ensureParams(fields));
 
     copyAndValidateModelParamsInto(fields, this);
+    this.safetyHandler = fields?.safetyHandler ?? defaultGeminiSafetyHandler;
 
     const client = this.buildClient(fields);
     this.buildConnection(fields ?? {}, client);
@@ -161,7 +165,7 @@ export abstract class GoogleBaseLLM<AuthOptions>
   ): Promise<string> {
     const parameters = copyAIModelParams(this);
     const result = await this.connection.request(_prompt, parameters, _options);
-    const ret = responseToString(result);
+    const ret = safeResponseToString(result, this.safetyHandler);
     return ret;
   }
 
@@ -188,7 +192,7 @@ export abstract class GoogleBaseLLM<AuthOptions>
       const output = await stream.nextChunk();
       const chunk =
         output !== null
-          ? new GenerationChunk(responseToGeneration({ data: output }))
+          ? new GenerationChunk(safeResponseToGeneration({ data: output }, this.safetyHandler))
           : new GenerationChunk({
               text: "",
               generationInfo: { finishReason: "stop" },
@@ -208,7 +212,7 @@ export abstract class GoogleBaseLLM<AuthOptions>
       {},
       options as BaseLanguageModelCallOptions
     );
-    const ret = responseToBaseMessage(result);
+    const ret = safeResponseToBaseMessage(result,this.safetyHandler);
     return ret;
   }
 }
