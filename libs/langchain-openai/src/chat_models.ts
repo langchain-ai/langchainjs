@@ -30,6 +30,7 @@ import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { z } from "zod";
 import { Runnable, RunnableMap, RunnablePassthrough } from "@langchain/core/runnables";
 import { JsonOutputParser } from "@langchain/core/output_parsers";
+import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 import type {
   AzureOpenAIInput,
   OpenAICallOptions,
@@ -879,12 +880,13 @@ export class ChatOpenAI<
     }
   ): Runnable<RunInput, RunOutput> {
     let llm: Runnable;
-    const outputParser = new JsonOutputParser<RunOutput>();
+    let outputParser: JsonOutputKeyToolsParser | JsonOutputParser<RunOutput>;
 
     if (method === "jsonMode") {
       llm = this.bind({
         response_format: { type: "json_object" },
       } as Partial<CallOptions>);
+      outputParser = new JsonOutputParser<RunOutput>();
     } else {
       // Is function calling
       if (isZodSchema(schema)) {
@@ -908,11 +910,34 @@ export class ChatOpenAI<
           tools: [new TmpClass()],
           tool_choice: "auto",
         } as unknown as Partial<CallOptions>);
+        outputParser = new JsonOutputKeyToolsParser({
+          returnSingle: true,
+          keyName: name,
+        })
       } else {
+        let keyName: string | undefined = name;
+        if (!keyName) {
+          if ("name" in schema) {
+            keyName = schema.name as string;
+          } else {
+            throw new Error("Name not found in schema or as provided argument to 'withStructuredOutput', but is required.")
+          }
+        }
+    
         llm = this.bind({
-          tools: [schema],
+          tools: [{
+            type: "function" as const,
+            function: {
+              name: keyName,
+              parameters: schema,
+            },
+          }],
           tool_choice: "auto",
         } as unknown as Partial<CallOptions>);
+        outputParser = new JsonOutputKeyToolsParser({
+          returnSingle: true,
+          keyName,
+        })
       }
     }
 
