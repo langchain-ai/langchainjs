@@ -486,13 +486,9 @@ export abstract class BaseLanguageModel<
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunInput = any,
+    // prettier-ignore
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<
-      any,
-      any,
-      any,
-      any
-    >
+    RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
   >(
     // @ts-expect-error Var is unused in this base method implementation.
     {
