@@ -18,9 +18,7 @@ import {
   ChatGenerationChunk,
   type ChatResult,
 } from "@langchain/core/outputs";
-import {
-  type StructuredToolInterface,
-} from "@langchain/core/tools";
+import { type StructuredToolInterface } from "@langchain/core/tools";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   BaseChatModel,
@@ -899,14 +897,16 @@ export class ChatOpenAI<
       if (isZodSchema(schema)) {
         const asZodSchema = zodToJsonSchema(schema);
         llm = this.bind({
-          tools: [{
-            type: "function" as const,
-            function: {
-              name,
-              description: asZodSchema.description,
-              parameters: asZodSchema,
+          tools: [
+            {
+              type: "function" as const,
+              function: {
+                name,
+                description: asZodSchema.description,
+                parameters: asZodSchema,
+              },
             },
-          }],
+          ],
           tool_choice: "auto",
         } as unknown as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser({
@@ -953,7 +953,7 @@ export class ChatOpenAI<
         raw: llm,
       },
       parsedWithFallback,
-    ])
+    ]);
     return chain;
   }
 }
