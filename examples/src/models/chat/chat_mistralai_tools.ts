@@ -4,8 +4,7 @@ import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_
 import { z } from "zod";
 import { StructuredTool } from "@langchain/core/tools";
 
-const calculatorSchema = z
-.object({
+const calculatorSchema = z.object({
   operation: z
     .enum(["add", "subtract", "multiply", "divide"])
     .describe("The type of operation to execute."),
@@ -43,7 +42,10 @@ const modelWithTool = model.bind({
 });
 
 const prompt = ChatPromptTemplate.fromMessages([
-  ["system", "You are a helpful assistant who always needs to use a calculator."],
+  [
+    "system",
+    "You are a helpful assistant who always needs to use a calculator.",
+  ],
   ["human", "{input}"],
 ]);
 
