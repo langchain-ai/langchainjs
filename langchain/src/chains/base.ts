@@ -7,7 +7,7 @@ import {
   Callbacks,
   parseCallbackConfigArg,
 } from "@langchain/core/callbacks/manager";
-import { type RunnableConfig } from "@langchain/core/runnables";
+import { ensureConfig, type RunnableConfig } from "@langchain/core/runnables";
 import {
   BaseLangChain,
   BaseLangChainParams,
@@ -84,7 +84,7 @@ export abstract class BaseChain<
    * @returns Promise that resolves with the output of the chain run.
    */
   async invoke(input: RunInput, options?: RunnableConfig): Promise<RunOutput> {
-    const [config] = this._getOptionsList(options ?? {}, 1);
+    const config = ensureConfig(options);
     const fullValues = await this._formatValues(input);
     const callbackManager_ = await CallbackManager.configure(
       config?.callbacks,
