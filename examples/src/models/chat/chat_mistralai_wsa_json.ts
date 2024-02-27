@@ -1,16 +1,5 @@
 import { ChatMistralAI } from "@langchain/mistralai";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { z } from "zod";
-
-const calculatorSchema = z
-  .object({
-    operation: z
-      .enum(["add", "subtract", "multiply", "divide"])
-      .describe("The type of operation to execute."),
-    number1: z.number().describe("The first number to operate on."),
-    number2: z.number().describe("The second number to operate on."),
-  })
-  .describe("A simple calculator tool");
 
 const calculatorJsonSchema = {
   type: "object",
@@ -56,6 +45,6 @@ const response = await chain.invoke({
   input: "What is 2 + 2?",
 });
 console.log(response);
-/**
-
+/*
+{ operation: 'add', number1: 2, number2: 2 }
  */

@@ -38,8 +38,8 @@ const response = await chain.invoke({
   input: "What is 2 + 2?",
 });
 console.log(response);
-/**
-
+/*
+{ operation: 'add', number1: 2, number2: 2 }
  */
 
 /**
@@ -57,7 +57,30 @@ const includeRawChain = prompt.pipe(includeRawModel);
 const includeRawResponse = await includeRawChain.invoke({
   input: "What is 2 + 2?",
 });
-console.log(includeRawResponse);
-/**
-
+console.log(JSON.stringify(includeRawResponse, null, 2));
+/*
+{
+  "raw": {
+    "kwargs": {
+      "content": "",
+      "additional_kwargs": {
+        "tool_calls": [
+          {
+            "id": "null",
+            "type": "function",
+            "function": {
+              "name": "calculator",
+              "arguments": "{\"operation\": \"add\", \"number1\": 2, \"number2\": 2}"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "parsed": {
+    "operation": "add",
+    "number1": 2,
+    "number2": 2
+  }
+}
  */

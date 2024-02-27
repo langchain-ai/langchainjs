@@ -62,6 +62,6 @@ const response = await chain.invoke({
   input: "What is 2 + 2?",
 });
 console.log(response);
-/**
-
+/*
+{ operation: 'add', number1: 2, number2: 2 }
  */
