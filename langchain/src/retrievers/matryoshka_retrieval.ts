@@ -1,7 +1,5 @@
-import { CallbackManagerForRetrieverRun } from "@langchain/core/callbacks/manager";
 import { DocumentInterface } from "@langchain/core/documents";
 import { Embeddings } from "@langchain/core/embeddings";
-import { RunnableBinding, RunnableLambda } from "@langchain/core/runnables";
 import {
   cosineSimilarity,
   euclideanDistance,
@@ -22,14 +20,12 @@ type AddDocumentOptions = Record<string, any>;
 export interface MatryoshkaRetrievalFields {
   /**
    * The number of documents to retrieve from the small store.
-   *
-   * @default 20
+   * @default 50
    */
   smallK?: number;
   /**
    * The number of documents to retrieve from the large store.
-   *
-   * @default 5
+   * @default 8
    */
   largeK?: number;
   /**
@@ -66,15 +62,15 @@ export interface MatryoshkaRetrievalFields {
  * embedding for higher accuracy.
  *
  *
- * This code demonstrates using MRL embeddings for efficient vector search by combining faster,
+ * This code implements MRL embeddings for efficient vector search by combining faster,
  * lower-dimensional initial search with accurate, high-dimensional re-ranking.
  */
 export class MatryoshkaRetrieval<
   Store extends VectorStore = VectorStore
 > extends VectorStoreRetriever<Store> {
-  smallK = 20;
+  smallK = 50;
 
-  largeK = 5;
+  largeK = 8;
 
   largeEmbeddingKey = "lc_large_embedding";
 
@@ -107,75 +103,65 @@ export class MatryoshkaRetrieval<
    * by sorting the entire list of documents based on their similarity scores and then selecting the top
    * `largeK` documents.
    *
-   * @param {number[]} queryEmbedding - The embedding of the query, represented as an array of numbers.
-   * @param {DocumentInterface[]} smallResults - An array of documents, each with metadata that includes a large embedding for similarity comparison.
+   * @param {number[]} embeddedQuery The embedding of the query, represented as an array of numbers.
+   * @param {DocumentInterface[]} smallResults An array of documents, each with metadata that includes a large embedding for similarity comparison.
    * @returns {Promise<DocumentInterface[]>} A promise that resolves to an array of the top `largeK` ranked documents based on their similarity to the query embedding.
    */
-  private async _rankByLargeEmbeddings(
-    queryEmbedding: number[],
+  private _rankByLargeEmbeddings(
+    embeddedQuery: number[],
     smallResults: DocumentInterface[],
-    runManager?: CallbackManagerForRetrieverRun
-  ): Promise<DocumentInterface[]> {
-    const largeEmbeddings: Array<number[]> = smallResults.map(
-      (doc) => doc.metadata[this.largeEmbeddingKey]
-    );
-    let lambdaFunc: RunnableBinding<Array<number[]>, Array<number[]>>;
+  ): DocumentInterface[] {
 
-    if (this.searchType === "cosine") {
-      lambdaFunc = new RunnableLambda<Array<number[]>, Array<number[]>>({
-        func: (input) => cosineSimilarity(input, largeEmbeddings),
-      }).withConfig(runManager?.getChild("MatryoshkaRetrieval._rankByLargeEmbeddings.cosine") ?? {});
-    } else if (this.searchType === "innerProduct") {
-      lambdaFunc = new RunnableLambda<Array<number[]>, Array<number[]>>({
-        func: (input) => innerProduct(input, largeEmbeddings),
-      }).withConfig(runManager?.getChild("MatryoshkaRetrieval._rankByLargeEmbeddings.innerProduct") ?? {});
-    } else {
-      lambdaFunc = new RunnableLambda<Array<number[]>, Array<number[]>>({
-        func: (input) => euclideanDistance(input, largeEmbeddings),
-      }).withConfig(runManager?.getChild("MatryoshkaRetrieval._rankByLargeEmbeddings.euclideanDistance") ?? {});
+    const largeEmbeddings: Array<number[]> = smallResults.map(
+      (doc) => JSON.parse(doc.metadata[this.largeEmbeddingKey])
+    );
+    let func: () => Array<number[]>;
+
+    switch (this.searchType) {
+      case "cosine":
+        func = () => cosineSimilarity([embeddedQuery], largeEmbeddings);
+        break;
+      case "innerProduct":
+        func = () => innerProduct([embeddedQuery], largeEmbeddings);
+        break;
+      case "euclidean":
+        func = () => euclideanDistance([embeddedQuery], largeEmbeddings);
+        break;
+      default:
+        throw new Error(`Unknown search type: ${this.searchType}`);
     }
+
     // Calculate the similarity scores between the query embedding and the large embeddings
-    const [similarityScores] = await lambdaFunc.invoke([queryEmbedding]);
+    const [similarityScores] = func();
 
     // Create an array of indices from 0 to N-1, where N is the number of documents
-    const indices = Array.from(
+    let indices = Array.from(
       { length: smallResults.length },
       (_, index) => index
     );
 
-    // Sort the indices based on the similarity scores, from highest to lowest
-    indices.sort((a, b) => similarityScores[b] - similarityScores[a]);
+    indices = indices
+      .map((v, i) => [similarityScores[i], v])
+      .sort(([a], [b]) => b - a)
+      .slice(0, this.largeK)
+      .map(([, i]) => i);
 
-    // Map the sorted indices back to documents
-    const rankedDocuments = indices.map((index) => smallResults[index]);
-
-    return rankedDocuments.slice(0, this.largeK);
+    return indices.map((i) => smallResults[i]);
   }
 
   async _getRelevantDocuments(
     query: string,
-    runManager?: CallbackManagerForRetrieverRun
   ): Promise<DocumentInterface[]> {
-    const queryEmbedding = await this.largeEmbeddingModel.embedQuery(query);
-    // Use similaritySearchVectorWithScore so we can pass in the embeddings that were generated
-    // using the large embedding model. If we do not do this, then it'll embed the query using
-    // the smaller embeddings model which is linked to the vector store.
-    const smallResultsLambda = new RunnableLambda<
-      Array<number>,
-      Array<DocumentInterface>
-    >({
-      func: async (input) =>
-        (
-          await this.vectorStore.similaritySearchVectorWithScore(
-            input,
-            this.smallK,
-            this.filter
-          )
-        ).map(([doc]) => doc),
-    }).withConfig(runManager?.getChild("MatryoshkaRetrieval._getRelevantDocuments.smallResults") ?? {});
-    const smallResults = await smallResultsLambda.invoke(queryEmbedding);
+    const [embeddedQuery, smallResults] = await Promise.all([
+      this.largeEmbeddingModel.embedQuery(query),
+      this.vectorStore.similaritySearch(
+        query,
+        this.smallK,
+        this.filter
+      )
+    ]);
 
-    return this._rankByLargeEmbeddings(queryEmbedding, smallResults, runManager);
+    return this._rankByLargeEmbeddings(embeddedQuery, smallResults);
   }
 
   /**
@@ -208,25 +194,11 @@ export class MatryoshkaRetrieval<
         ...doc,
         metadata: {
           ...doc.metadata,
-          [this.largeEmbeddingKey]: allDocLargeEmbeddings[idx],
+          [this.largeEmbeddingKey]: JSON.stringify(allDocLargeEmbeddings[idx]),
         },
       })
     );
 
-    let numErrs = 0;
-    let numSuccess = 0;
-    for await (const doc of newDocuments) {
-      try {
-        await this.vectorStore.addDocuments([doc], options);
-        numSuccess += 1;
-      } catch (e) {
-        numErrs += 1;
-        console.error(
-          `Error adding document with id: ${doc.metadata["Wiki Page"]} to the vector store: ${e}`
-        );
-      }
-    }
-    console.log(`Number of errors adding documents: ${numErrs}\n\nNumber of successes adding documents: ${numSuccess}`);
-    return [];
+    return this.vectorStore.addDocuments(newDocuments, options);
   };
 }

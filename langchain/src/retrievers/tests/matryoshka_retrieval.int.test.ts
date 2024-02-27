@@ -22,48 +22,60 @@ test("MatryoshkaRetrieval can retrieve", async () => {
   const retriever = new MatryoshkaRetrieval({
     largeEmbeddingModel: largeEmbeddings,
     vectorStore,
+    largeK: 5,
   });
 
   const irrelevantDocs = Array.from({ length: 250 }).map(
     () =>
       new Document({
-        pageContent: faker.lorem.paragraph(5),
+        pageContent: faker.lorem.words(7),
         metadata: { id: uuidV4() },
       })
   );
-  const relevantDocIds = Array.from({ length: 5 }).map(() => uuidV4());
+  const relevantDocContents = [
+    "LangChain is an open source github repo",
+    "There are JS and PY versions of the LangChain github repos",
+    "LangGraph is a new open source library by the LangChain team",
+    "LangChain announced GA of LangSmith last week!",
+    "I heart LangChain",
+  ]
   const relevantDocs = [
     new Document({
-      pageContent: "LangChain is an open source github repo",
-      metadata: { id: relevantDocIds[0] },
+      pageContent: relevantDocContents[0],
+      metadata: { id: uuidV4() },
     }),
     new Document({
-      pageContent: "There are JS and PY versions of the LangChain github repos",
-      metadata: { id: relevantDocIds[1] },
+      pageContent: relevantDocContents[1],
+      metadata: { id: uuidV4() },
     }),
     new Document({
       pageContent:
-        "LangGraph is a new open source library by the LangChain team",
-      metadata: { id: relevantDocIds[2] },
+        relevantDocContents[2],
+      metadata: { id: uuidV4() },
     }),
     new Document({
-      pageContent: "LangChain announced GA of LangSmith last week!",
-      metadata: { id: relevantDocIds[3] },
+      pageContent: relevantDocContents[3],
+      metadata: { id: uuidV4() },
     }),
     new Document({
-      pageContent: "I heart LangChain",
-      metadata: { id: relevantDocIds[4] },
+      pageContent: relevantDocContents[4],
+      metadata: { id: uuidV4() },
     }),
   ];
   const allDocs = [...irrelevantDocs, ...relevantDocs];
+
   await retriever.addDocuments(allDocs);
 
   const query = "What is LangChain?";
+  console.log("Querying documents")
   const results = await retriever.getRelevantDocuments(query);
-  console.log(results.map((doc) => doc.pageContent));
+
+  const retrieverResultContents = new Set(results.map((doc) => doc.pageContent));
+
+  console.log([...retrieverResultContents]);
   expect(results.length).toBe(5);
-  expect(new Set(results.map((doc) => doc.metadata.id))).toEqual(
-    new Set(relevantDocIds)
+  expect(retrieverResultContents).toEqual(
+    new Set(relevantDocContents)
   );
 });
 
@@ -125,5 +137,5 @@ test("AddDocunents adds large embeddings metadata field", async () => {
   const relevantDocs = await retriever.getRelevantDocuments("hello world");
   expect(relevantDocs[0].metadata.id).toBe(testId);
   expect(relevantDocs[0].metadata[retriever.largeEmbeddingKey]).toBeDefined();
-  expect(relevantDocs[0].metadata[retriever.largeEmbeddingKey].length).toBe(3072);
+  expect(JSON.parse(relevantDocs[0].metadata[retriever.largeEmbeddingKey]).length).toBe(3072);
 })
