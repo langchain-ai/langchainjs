@@ -790,7 +790,7 @@ describe("ChatOpenAI withStructuredOutput", () => {
       temperature: 0,
       modelName: "gpt-4-turbo-preview",
     });
-  
+
     const calculatorSchema = z.object({
       operation: z.enum(["add", "subtract", "multiply", "divide"]),
       number1: z.number(),
@@ -800,7 +800,7 @@ describe("ChatOpenAI withStructuredOutput", () => {
       schema: calculatorSchema,
       name: "calculator",
     });
-  
+
     const prompt = ChatPromptTemplate.fromMessages([
       "system",
       "You are VERY bad at math and must always use a calculator.",
@@ -814,13 +814,13 @@ describe("ChatOpenAI withStructuredOutput", () => {
     expect("number1" in result).toBe(true);
     expect("number2" in result).toBe(true);
   });
-  
+
   test("withStructuredOutput zod schema JSON mode", async () => {
     const model = new ChatOpenAI({
       temperature: 0,
       modelName: "gpt-4-turbo-preview",
     });
-  
+
     const calculatorSchema = z.object({
       operation: z.enum(["add", "subtract", "multiply", "divide"]),
       number1: z.number(),
@@ -831,7 +831,7 @@ describe("ChatOpenAI withStructuredOutput", () => {
       name: "calculator",
       method: "jsonMode",
     });
-  
+
     const prompt = ChatPromptTemplate.fromMessages([
       "system",
       `You are VERY bad at math and must always use a calculator.
@@ -850,13 +850,13 @@ describe("ChatOpenAI withStructuredOutput", () => {
     expect("number1" in result).toBe(true);
     expect("number2" in result).toBe(true);
   });
-  
+
   test("withStructuredOutput JSON schema function calling", async () => {
     const model = new ChatOpenAI({
       temperature: 0,
       modelName: "gpt-4-turbo-preview",
     });
-  
+
     const calculatorSchema = z.object({
       operation: z.enum(["add", "subtract", "multiply", "divide"]),
       number1: z.number(),
@@ -866,7 +866,7 @@ describe("ChatOpenAI withStructuredOutput", () => {
       schema: zodToJsonSchema(calculatorSchema),
       name: "calculator",
     });
-  
+
     const prompt = ChatPromptTemplate.fromMessages([
       "system",
       `You are VERY bad at math and must always use a calculator.`,
@@ -880,13 +880,13 @@ describe("ChatOpenAI withStructuredOutput", () => {
     expect("number1" in result).toBe(true);
     expect("number2" in result).toBe(true);
   });
-  
+
   test("withStructuredOutput JSON schema JSON mode", async () => {
     const model = new ChatOpenAI({
       temperature: 0,
       modelName: "gpt-4-turbo-preview",
     });
-  
+
     const calculatorSchema = z.object({
       operation: z.enum(["add", "subtract", "multiply", "divide"]),
       number1: z.number(),
@@ -897,7 +897,7 @@ describe("ChatOpenAI withStructuredOutput", () => {
       name: "calculator",
       method: "jsonMode",
     });
-  
+
     const prompt = ChatPromptTemplate.fromMessages([
       "system",
       `You are VERY bad at math and must always use a calculator.
@@ -916,13 +916,13 @@ describe("ChatOpenAI withStructuredOutput", () => {
     expect("number1" in result).toBe(true);
     expect("number2" in result).toBe(true);
   });
-  
+
   test("withStructuredOutput includeRaw true", async () => {
     const model = new ChatOpenAI({
       temperature: 0,
       modelName: "gpt-4-turbo-preview",
     });
-  
+
     const calculatorSchema = z.object({
       operation: z.enum(["add", "subtract", "multiply", "divide"]),
       number1: z.number(),
@@ -933,7 +933,7 @@ describe("ChatOpenAI withStructuredOutput", () => {
       name: "calculator",
       includeRaw: true,
     });
-  
+
     const prompt = ChatPromptTemplate.fromMessages([
       "system",
       "You are VERY bad at math and must always use a calculator.",
@@ -943,7 +943,7 @@ describe("ChatOpenAI withStructuredOutput", () => {
     const chain = prompt.pipe(modelWithStructuredOutput);
     const result = await chain.invoke({});
     console.log(result);
-  
+
     expect("parsed" in result).toBe(true);
     // Need to make TS happy :)
     if (!("parsed" in result)) {
@@ -953,7 +953,7 @@ describe("ChatOpenAI withStructuredOutput", () => {
     expect("operation" in parsed).toBe(true);
     expect("number1" in parsed).toBe(true);
     expect("number2" in parsed).toBe(true);
-  
+
     expect("raw" in result).toBe(true);
     // Need to make TS happy :)
     if (!("raw" in result)) {
@@ -966,16 +966,21 @@ describe("ChatOpenAI withStructuredOutput", () => {
     );
     expect(
       "operation" in
-        JSON.parse(raw.additional_kwargs.tool_calls?.[0].function.arguments ?? "")
+        JSON.parse(
+          raw.additional_kwargs.tool_calls?.[0].function.arguments ?? ""
+        )
     ).toBe(true);
     expect(
       "number1" in
-        JSON.parse(raw.additional_kwargs.tool_calls?.[0].function.arguments ?? "")
+        JSON.parse(
+          raw.additional_kwargs.tool_calls?.[0].function.arguments ?? ""
+        )
     ).toBe(true);
     expect(
       "number2" in
-        JSON.parse(raw.additional_kwargs.tool_calls?.[0].function.arguments ?? "")
+        JSON.parse(
+          raw.additional_kwargs.tool_calls?.[0].function.arguments ?? ""
+        )
     ).toBe(true);
   });
 });
-
