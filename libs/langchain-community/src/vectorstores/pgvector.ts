@@ -570,7 +570,7 @@ export class PGVectorStore extends VectorStore {
           REFERENCES ${this.collectionTableName}(uuid)
           ON DELETE CASCADE;
       `
-      await this.pool.query();
+      await this.pool.query(queryString);
     } catch (e) {
       if (!(e as Error).message.includes("already exists")) {
         console.error(e);
