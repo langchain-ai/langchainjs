@@ -30,6 +30,7 @@ import * as os from "node:os";
  * - `endpoint`: Optional. The URL or network address of the Astra DB instance. Can be used to directly specify the connection endpoint.
  * - `datacenterID`: Optional. The unique identifier of the data center to connect to. Used to compute the endpoint.
  * - `regionName`: Optional. The region name of the Astra DB instance. Used to compute the endpoint. Default to the primary region.
+ * - `bundleUrlTemplate`: Optional. The URL template for downloading the secure connect bundle. Used to customize the bundle URL. "database_id" variable will be resolved at runtime.
  *
  * Either `endpoint` or `datacenterID` must be provided to establish a connection to Astra DB.
  */
@@ -38,6 +39,7 @@ export interface AstraServiceProviderArgs {
   endpoint?: string | URL;
   datacenterID?: string;
   regionName?: string;
+  bundleUrlTemplate?: string;
 }
 
 /**
@@ -307,8 +309,9 @@ export class CassandraClientFactory {
     }
 
     // First POST request gets all bundle locations for the database_id
-    const bundleURLTemplate =
-      "https://api.astra.datastax.com/v2/databases/{database_id}/secureBundleURL?all=true";
+    const bundleURLTemplate = astraArgs.bundleUrlTemplate
+      ? astraArgs.bundleUrlTemplate
+      : "https://api.astra.datastax.com/v2/databases/{database_id}/secureBundleURL?all=true";
     const url = bundleURLTemplate.replace(
       "{database_id}",
       astraArgs.datacenterID

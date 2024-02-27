@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "0.1.34",
+  "version": "0.1.38",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -43,7 +43,7 @@
     "camelcase": "6",
     "decamelize": "1.2.0",
     "js-tiktoken": "^1.0.8",
-    "langsmith": "~0.1.1",
+    "langsmith": "~0.1.7",
     "ml-distance": "^4.0.0",
     "p-queue": "^6.6.2",
     "p-retry": "4",
@@ -244,6 +244,15 @@
       },
       "import": "./output_parsers.js",
       "require": "./output_parsers.cjs"
+    },
+    "./output_parsers/openai_tools": {
+      "types": {
+        "import": "./output_parsers/openai_tools.d.ts",
+        "require": "./output_parsers/openai_tools.d.cts",
+        "default": "./output_parsers/openai_tools.d.ts"
+      },
+      "import": "./output_parsers/openai_tools.js",
+      "require": "./output_parsers/openai_tools.cjs"
     },
     "./outputs": {
       "types": {
@@ -587,6 +596,10 @@
     "output_parsers.js",
     "output_parsers.d.ts",
     "output_parsers.d.cts",
+    "output_parsers/openai_tools.cjs",
+    "output_parsers/openai_tools.js",
+    "output_parsers/openai_tools.d.ts",
+    "output_parsers/openai_tools.d.cts",
     "outputs.cjs",
     "outputs.js",
     "outputs.d.ts",

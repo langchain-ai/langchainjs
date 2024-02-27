@@ -29,6 +29,7 @@ export const config = {
     memory: "memory",
     messages: "messages/index",
     output_parsers: "output_parsers/index",
+    "output_parsers/openai_tools": "output_parsers/openai_tools/index",
     outputs: "outputs",
     prompts: "prompts/index",
     prompt_values: "prompt_values",
