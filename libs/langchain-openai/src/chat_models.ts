@@ -24,7 +24,10 @@ import {
   BaseChatModel,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
-import type { BaseFunctionCallOptions, BaseLanguageModelInput } from "@langchain/core/language_models/base";
+import type {
+  BaseFunctionCallOptions,
+  BaseLanguageModelInput,
+} from "@langchain/core/language_models/base";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { z } from "zod";
@@ -869,25 +872,25 @@ export class ChatOpenAI<
     name: string;
     method?: "functionCalling" | "jsonMode";
     includeRaw: true;
-  }): Runnable<RunInput, { raw: BaseMessage, parsed: RunOutput }>
+  }): Runnable<RunInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
-  RunInput = BaseLanguageModelInput,
-  // prettier-ignore
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
->({
-  schema,
-  name,
-  method,
-  includeRaw,
-}: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  schema: z.ZodEffects<RunOutput> | Record<string, any>;
-  name: string;
-  method?: "functionCalling" | "jsonMode";
-  includeRaw?: false;
-}): Runnable<RunInput, RunOutput>
+    RunInput = BaseLanguageModelInput,
+    // prettier-ignore
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
+  >({
+    schema,
+    name,
+    method,
+    includeRaw,
+  }: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    schema: z.ZodEffects<RunOutput> | Record<string, any>;
+    name: string;
+    method?: "functionCalling" | "jsonMode";
+    includeRaw?: false;
+  }): Runnable<RunInput, RunOutput>;
 
   /**
    * Model wrapper that returns outputs formatted to match the given schema.
@@ -916,10 +919,15 @@ export class ChatOpenAI<
     name: string;
     method?: "functionCalling" | "jsonMode";
     includeRaw?: boolean;
-  }): Runnable<RunInput, RunOutput> | Runnable<RunInput, {
-    raw: BaseMessage,
-    parsed: RunOutput
-  }> {
+  }):
+    | Runnable<RunInput, RunOutput>
+    | Runnable<
+        RunInput,
+        {
+          raw: BaseMessage;
+          parsed: RunOutput;
+        }
+      > {
     let llm: Runnable;
     let outputParser: JsonOutputKeyToolsParser | JsonOutputParser<RunOutput>;
 
@@ -984,7 +992,10 @@ export class ChatOpenAI<
     const parsedWithFallback = parserAssign.withFallbacks({
       fallbacks: [parserNone],
     });
-    return RunnableSequence.from<RunInput, { raw: BaseMessage, parsed: RunOutput }>([
+    return RunnableSequence.from<
+      RunInput,
+      { raw: BaseMessage; parsed: RunOutput }
+    >([
       {
         raw: llm,
       },
