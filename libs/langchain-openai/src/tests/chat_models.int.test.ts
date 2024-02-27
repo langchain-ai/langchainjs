@@ -948,9 +948,7 @@ test("withStructuredOutput includeRaw true", async () => {
   if (!("parsed" in result)) {
     throw new Error("parsed not in result");
   }
-  const { parsed } = result as {
-    parsed: { operation: string; number1: number; number2: number };
-  };
+  const { parsed } = result;
   expect("operation" in parsed).toBe(true);
   expect("number1" in parsed).toBe(true);
   expect("number2" in parsed).toBe(true);
