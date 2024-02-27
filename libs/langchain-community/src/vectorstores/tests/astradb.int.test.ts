@@ -151,6 +151,7 @@ describe.skip("AstraDBVectorStore", () => {
       });
       await store.initialize();
       fail("Should have thrown error");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       expect(e.message).toContain("already exists with different 'vector'");
     }

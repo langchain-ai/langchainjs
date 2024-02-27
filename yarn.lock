@@ -8907,7 +8907,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/community@workspace:*, @langchain/community@workspace:libs/langchain-community, @langchain/community@~0.0.32":
+"@langchain/community@workspace:*, @langchain/community@workspace:libs/langchain-community, @langchain/community@~0.0.33":
   version: 0.0.0-use.local
   resolution: "@langchain/community@workspace:libs/langchain-community"
   dependencies:
@@ -8936,7 +8936,7 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1.32
+    "@langchain/core": ~0.1.36
     "@langchain/openai": ~0.0.14
     "@langchain/scripts": ~0.0
     "@mozilla/readability": ^0.4.4
@@ -9295,7 +9295,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.1, @langchain/core@~0.1.13, @langchain/core@~0.1.32, @langchain/core@~0.1.34, @langchain/core@~0.1.5, @langchain/core@~0.1.9":
+"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.1, @langchain/core@~0.1.13, @langchain/core@~0.1.36, @langchain/core@~0.1.5, @langchain/core@~0.1.9":
   version: 0.0.0-use.local
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
@@ -9317,7 +9317,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     js-tiktoken: ^1.0.8
-    langsmith: ~0.1.1
+    langsmith: ~0.1.7
     ml-distance: ^4.0.0
     ml-matrix: ^6.10.4
     p-queue: ^6.6.2
@@ -25944,8 +25944,8 @@ __metadata:
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^7.7.0
     "@jest/globals": ^29.5.0
-    "@langchain/community": ~0.0.32
-    "@langchain/core": ~0.1.34
+    "@langchain/community": ~0.0.33
+    "@langchain/core": ~0.1.36
     "@langchain/openai": ~0.0.14
     "@langchain/scripts": ~0.0
     "@notionhq/client": ^2.2.10
@@ -26000,7 +26000,7 @@ __metadata:
     jsdom: ^22.1.0
     jsonpointer: ^5.0.1
     langchainhub: ~0.0.8
-    langsmith: ~0.1.1
+    langsmith: ~0.1.7
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
@@ -26227,6 +26227,21 @@ __metadata:
   bin:
     langsmith: dist/cli/main.cjs
   checksum: e0283c242edcf25822fe1a1d33ffb80301f5575e60153879972c5dbdaba3873ef460f874e7186be0908edc83b80f6167236415dd1d4cf21f5e5bbb30383699aa
+  languageName: node
+  linkType: hard
+
+"langsmith@npm:~0.1.7":
+  version: 0.1.7
+  resolution: "langsmith@npm:0.1.7"
+  dependencies:
+    "@types/uuid": ^9.0.1
+    commander: ^10.0.1
+    p-queue: ^6.6.2
+    p-retry: 4
+    uuid: ^9.0.0
+  bin:
+    langsmith: dist/cli/main.cjs
+  checksum: e8787b21c1ab80c1542b0cca9be99d300124b4e5d665e05f0caf3bc3616392a6fd46ca62466e6ede54062d9273123d0f5f4c40296c11b869a399dca592647b5e
   languageName: node
   linkType: hard
 

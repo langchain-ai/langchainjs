@@ -9,7 +9,11 @@ import { AgentAction, AgentFinish, AgentStep } from "@langchain/core/agents";
 import { BaseMessage } from "@langchain/core/messages";
 import { ChainValues } from "@langchain/core/utils/types";
 import { Serializable } from "@langchain/core/load/serializable";
-import { Runnable } from "@langchain/core/runnables";
+import {
+  Runnable,
+  patchConfig,
+  type RunnableConfig,
+} from "@langchain/core/runnables";
 import { LLMChain } from "../chains/llm_chain.js";
 import {
   AgentActionOutputParser,
@@ -119,7 +123,8 @@ export abstract class BaseSingleActionAgent extends BaseAgent {
   abstract plan(
     steps: AgentStep[],
     inputs: ChainValues,
-    callbackManager?: CallbackManager
+    callbackManager?: CallbackManager,
+    config?: RunnableConfig
   ): Promise<AgentAction | AgentFinish>;
 }
 
@@ -145,7 +150,8 @@ export abstract class BaseMultiActionAgent extends BaseAgent {
   abstract plan(
     steps: AgentStep[],
     inputs: ChainValues,
-    callbackManager?: CallbackManager
+    callbackManager?: CallbackManager,
+    config?: RunnableConfig
   ): Promise<AgentAction[] | AgentFinish>;
 }
 
@@ -184,14 +190,17 @@ export class RunnableAgent extends BaseMultiActionAgent {
   async plan(
     steps: AgentStep[],
     inputs: ChainValues,
-    callbackManager?: CallbackManager
+    callbackManager?: CallbackManager,
+    config?: RunnableConfig
   ): Promise<AgentAction[] | AgentFinish> {
     const invokeInput = { ...inputs, steps };
-
-    const output = await this.runnable.invoke(invokeInput, {
-      callbacks: callbackManager,
-      runName: "RunnableAgent",
-    });
+    const output = await this.runnable.invoke(
+      invokeInput,
+      patchConfig(config, {
+        callbacks: callbackManager,
+        runName: "RunnableAgent",
+      })
+    );
 
     if (isAgentAction(output)) {
       return [output];
