@@ -897,11 +897,6 @@ export class ChatOpenAI<
     } else {
       // Is function calling
       if (isZodSchema(schema)) {
-        if (!name) {
-          throw new Error(
-            "A 'name' must be provided if using a ZOD schema and 'method' is 'functionCalling'"
-          );
-        }
         class TmpClass extends StructuredTool {
           schema = schema as z.ZodEffects<RunOutput>;
 
@@ -924,23 +919,12 @@ export class ChatOpenAI<
           keyName: name,
         });
       } else {
-        let keyName: string | undefined = name;
-        if (!keyName) {
-          if ("name" in schema) {
-            keyName = schema.name as string;
-          } else {
-            throw new Error(
-              "Name not found in schema or as provided argument to 'withStructuredOutput', but is required."
-            );
-          }
-        }
-
         llm = this.bind({
           tools: [
             {
               type: "function" as const,
               function: {
-                name: keyName,
+                name,
                 parameters: schema,
               },
             },
@@ -949,7 +933,7 @@ export class ChatOpenAI<
         } as unknown as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser({
           returnSingle: true,
-          keyName,
+          keyName: name,
         });
       }
     }
