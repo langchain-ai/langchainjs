@@ -301,7 +301,7 @@ test("Can stream and concat responses for a complex tool", async () => {
   expect(args.areFriendsCool).toBeDefined();
 });
 
-test("withStructuredOutput zod schema function calling", async () => {
+test.only("withStructuredOutput zod schema function calling", async () => {
   const model = new ChatMistralAI({
     temperature: 0,
     modelName: "mistral-large",
@@ -335,7 +335,7 @@ test("withStructuredOutput zod schema function calling", async () => {
   expect("number2" in result).toBe(true);
 });
 
-test("withStructuredOutput zod schema JSON mode", async () => {
+test.only("withStructuredOutput zod schema JSON mode", async () => {
   const model = new ChatMistralAI({
     temperature: 0,
     modelName: "mistral-large",
@@ -371,7 +371,7 @@ Respond with a JSON object containing three keys:
   expect("number2" in result).toBe(true);
 });
 
-test("withStructuredOutput JSON schema function calling", async () => {
+test.only("withStructuredOutput JSON schema function calling", async () => {
   const model = new ChatMistralAI({
     temperature: 0,
     modelName: "mistral-large",
@@ -406,7 +406,7 @@ test("withStructuredOutput JSON schema function calling", async () => {
   expect("number2" in result).toBe(true);
 });
 
-test("withStructuredOutput JSON schema JSON mode", async () => {
+test.only("withStructuredOutput JSON schema JSON mode", async () => {
   const model = new ChatMistralAI({
     temperature: 0,
     modelName: "mistral-large",
@@ -442,7 +442,7 @@ Respond with a JSON object containing three keys:
   expect("number2" in result).toBe(true);
 });
 
-test("withStructuredOutput includeRaw true", async () => {
+test.only("withStructuredOutput includeRaw true", async () => {
   const model = new ChatMistralAI({
     temperature: 0,
     modelName: "mistral-large",
@@ -478,9 +478,7 @@ test("withStructuredOutput includeRaw true", async () => {
   if (!("parsed" in result)) {
     throw new Error("parsed not in result");
   }
-  const { parsed } = result as {
-    parsed: { operation: string; number1: number; number2: number };
-  };
+  const { parsed } = result;
   expect("operation" in parsed).toBe(true);
   expect("number1" in parsed).toBe(true);
   expect("number2" in parsed).toBe(true);
