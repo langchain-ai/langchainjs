@@ -15,18 +15,18 @@ const largeEmbeddings = new OpenAIEmbeddings({
 
 const vectorStore = new Chroma(smallEmbeddings, {
   numDimensions: 512,
-  collectionName: "adaptive-retrieval-small",
 });
 
 const retriever = new MatryoshkaRetrieval({
   vectorStore,
   largeEmbeddingModel: largeEmbeddings,
+  largeK: 5,
 });
 
 const irrelevantDocs = Array.from({ length: 250 }).map(
   () =>
     new Document({
-      pageContent: faker.lorem.paragraph(5),
+      pageContent: faker.lorem.word(7), // Similar length to the relevant docs
     })
 );
 const relevantDocs = [
