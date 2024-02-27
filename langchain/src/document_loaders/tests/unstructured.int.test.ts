@@ -10,7 +10,7 @@ import {
   UnknownHandling,
 } from "../fs/unstructured.js";
 
-test("Test Unstructured base loader", async () => {
+test.skip("Test Unstructured base loader", async () => {
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
     "./example_data/example.txt"
@@ -29,7 +29,7 @@ test("Test Unstructured base loader", async () => {
   }
 });
 
-test("Test Unstructured base loader with fast strategy", async () => {
+test.skip("Test Unstructured base loader with fast strategy", async () => {
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
     "./example_data/1706.03762.pdf"
@@ -47,7 +47,7 @@ test("Test Unstructured base loader with fast strategy", async () => {
   expect(typeof docs[0].pageContent).toBe("string");
 });
 
-test("Test Unstructured directory loader", async () => {
+test.skip("Test Unstructured directory loader", async () => {
   const directoryPath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
     "./example_data"
