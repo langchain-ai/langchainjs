@@ -19,7 +19,6 @@ import {
   type ChatResult,
 } from "@langchain/core/outputs";
 import {
-  StructuredTool,
   type StructuredToolInterface,
 } from "@langchain/core/tools";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
@@ -33,11 +32,12 @@ import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { z } from "zod";
 import {
   Runnable,
-  RunnableMap,
   RunnablePassthrough,
+  RunnableSequence,
 } from "@langchain/core/runnables";
 import { JsonOutputParser } from "@langchain/core/output_parsers";
 import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import type {
   AzureOpenAIInput,
   OpenAICallOptions,
@@ -862,7 +862,7 @@ export class ChatOpenAI<
    * @template {z.ZodObject<any, any, any, any>} RunOutput The output type for the Runnable, expected to be a Zod schema object for structured output validation.
    * @template {RunnableConfig} CallOptions The type for call options, extending from RunnableConfig.
    *
-   * @param {z.ZodEffects<RunOutput>} schema The schema for the structured output. Either as a ZOD schema or a valid JSON schema object.
+   * @param {z.ZodEffects<RunOutput>} schema The schema for the structured output. Either as a Zod schema or a valid JSON schema object.
    * @param {string} name The name of the function to call.
    * @param {"functionCalling" | "jsonMode"} method The method to use for getting the structured output. Defaults to "functionCalling".
    * @param {boolean | undefined} includeRaw Whether to include the raw output in the result. Defaults to false.
@@ -897,21 +897,16 @@ export class ChatOpenAI<
     } else {
       // Is function calling
       if (isZodSchema(schema)) {
-        class TmpClass extends StructuredTool {
-          schema = schema as z.ZodEffects<RunOutput>;
-
-          description = schema.description;
-
-          // We need this because TypeScript can not infer that name will not be undefined
-          // even though there is a check above.
-          name = name ?? "";
-
-          async _call(input: RunInput) {
-            return JSON.stringify(input);
-          }
-        }
+        const asZodSchema = zodToJsonSchema(schema);
         llm = this.bind({
-          tools: [new TmpClass()],
+          tools: [{
+            type: "function" as const,
+            function: {
+              name,
+              description: asZodSchema.description,
+              parameters: asZodSchema,
+            },
+          }],
           tool_choice: "auto",
         } as unknown as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser({
@@ -945,7 +940,7 @@ export class ChatOpenAI<
 
     const parserAssign = RunnablePassthrough.assign({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      parsed: (input: any) => outputParser.invoke(input.raw),
+      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
     });
     const parserNone = RunnablePassthrough.assign({
       parsed: () => null,
@@ -953,11 +948,13 @@ export class ChatOpenAI<
     const parsedWithFallback = parserAssign.withFallbacks({
       fallbacks: [parserNone],
     });
-    return new RunnableMap({
-      steps: {
+    const chain = RunnableSequence.from([
+      {
         raw: llm,
       },
-    }).pipe(parsedWithFallback);
+      parsedWithFallback,
+    ])
+    return chain;
   }
 }
 
