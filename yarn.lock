@@ -9295,7 +9295,26 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.1, @langchain/core@~0.1.13, @langchain/core@~0.1.32, @langchain/core@~0.1.35, @langchain/core@~0.1.5, @langchain/core@~0.1.9":
+"@langchain/core@npm:~0.1.38":
+  version: 0.1.38
+  resolution: "@langchain/core@npm:0.1.38"
+  dependencies:
+    ansi-styles: ^5.0.0
+    camelcase: 6
+    decamelize: 1.2.0
+    js-tiktoken: ^1.0.8
+    langsmith: ~0.1.7
+    ml-distance: ^4.0.0
+    p-queue: ^6.6.2
+    p-retry: 4
+    uuid: ^9.0.0
+    zod: ^3.22.4
+    zod-to-json-schema: ^3.22.3
+  checksum: 66dccd122daea994070790e7dc8d1d2594fe75119e9cd5822be1fc673f1edf2da375fdd12707dda92787c967809b8f5f381f72d82e93401ff4cc417a702a2d39
+  languageName: node
+  linkType: hard
+
+"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.1, @langchain/core@~0.1.13, @langchain/core@~0.1.32, @langchain/core@~0.1.5, @langchain/core@~0.1.9":
   version: 0.0.0-use.local
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
@@ -25945,7 +25964,7 @@ __metadata:
     "@google-cloud/storage": ^7.7.0
     "@jest/globals": ^29.5.0
     "@langchain/community": ~0.0.32
-    "@langchain/core": ~0.1.35
+    "@langchain/core": ~0.1.38
     "@langchain/openai": ~0.0.14
     "@langchain/scripts": ~0.0
     "@notionhq/client": ^2.2.10
