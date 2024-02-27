@@ -925,6 +925,7 @@ export class ChatOpenAI<
               type: "function" as const,
               function: {
                 name,
+                description: schema.description,
                 parameters: schema,
               },
             },
