@@ -38,7 +38,7 @@ Respond with a JSON object containing three keys:
 const chain = prompt.pipe(modelWithStructuredOutput);
 const result = await chain.invoke({});
 console.log(result);
-/**
+/*
 { operation: 'add', number1: 2, number2: 2 }
  */
 
@@ -56,7 +56,7 @@ const includeRawModel = model.withStructuredOutput({
 const includeRawChain = prompt.pipe(includeRawModel);
 const includeRawResult = await includeRawChain.invoke({});
 console.log(JSON.stringify(includeRawResult, null, 2));
-/**
+/*
 {
   "raw": {
     "kwargs": {

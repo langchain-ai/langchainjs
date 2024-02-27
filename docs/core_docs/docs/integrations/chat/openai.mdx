@@ -52,9 +52,9 @@ import OpenAITools from "@examples/models/chat/integration_openai_tool_calls.ts"
 
 You can also use the `.withStructuredOutput({ ... })` method to coerce `ChatOpenAI` into returning a structured output.
 
-The method allows for passing in either a valid JSON schema (like what is returned from [`zodToJsonSchema`](https://www.npmjs.com/package/zod-to-json-schema)).
+The method allows for passing in either a Zod object, or a valid JSON schema (like what is returned from [`zodToJsonSchema`](https://www.npmjs.com/package/zod-to-json-schema)).
 
-Using the method is simple, just define your LLM and call `.withStructuredOutput({ ... })` with the desired schema.
+Using the method is simple. Just define your LLM and call `.withStructuredOutput({ ... })` on it, passing the desired schema.
 
 Here is an example using a Zod schema and the `functionCalling` mode (default mode):
 

@@ -901,7 +901,7 @@ export class ChatOpenAI<
    * @param {string} name The name of the function to call.
    * @param {"functionCalling" | "jsonMode"} method The method to use for getting the structured output. Defaults to "functionCalling".
    * @param {boolean | undefined} includeRaw Whether to include the raw output in the result. Defaults to false.
-   * @returns {Runnable<RunInput, RunOutput, CallOptions>} A new runnable that calls the LLM with structured output.
+   * @returns {Runnable<RunInput, RunOutput> | Runnable<RunInput, { raw: BaseMessage; parsed: RunOutput }>} A new runnable that calls the LLM with structured output.
    */
   override withStructuredOutput<
     RunInput = BaseLanguageModelInput,
