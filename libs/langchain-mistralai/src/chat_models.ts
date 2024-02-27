@@ -258,7 +258,7 @@ function _convertStructuredToolToMistralTool(
   tools: StructuredToolInterface[]
 ): MistralAIToolInput[] {
   return tools.map((tool) => convertToOpenAITool(tool) as MistralAIToolInput);
-};
+}
 
 /**
  * Integration with a chat model.
