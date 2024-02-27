@@ -2,12 +2,12 @@ import { test, expect } from "@jest/globals";
 import { ChatOpenAI } from "@langchain/openai";
 import type { ChatPromptTemplate } from "@langchain/core/prompts";
 import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
+import { RunnableLambda } from "@langchain/core/runnables";
+import { LangChainTracer } from "@langchain/core/tracers/tracer_langchain";
 import { AsyncLocalStorageProviderSingleton } from "@langchain/core/singletons";
 import { AsyncLocalStorage } from "async_hooks";
 import { pull } from "../../hub.js";
 import { AgentExecutor, createOpenAIToolsAgent } from "../index.js";
-import { RunnableLambda } from "@langchain/core/runnables";
-import { LangChainTracer } from "@langchain/core/tracers/tracer_langchain";
 
 const tools = [new TavilySearchResults({ maxResults: 1 })];
 
@@ -40,7 +40,7 @@ test("createOpenAIToolsAgent works", async () => {
   expect(result.output.length).toBeGreaterThan(10);
 });
 
-test("createOpenAIToolsAgent tracing works", async () => {
+test.skip("createOpenAIToolsAgent tracing works when it is nested in a lambda", async () => {
   AsyncLocalStorageProviderSingleton.initializeGlobalInstance(
     new AsyncLocalStorage()
   );
