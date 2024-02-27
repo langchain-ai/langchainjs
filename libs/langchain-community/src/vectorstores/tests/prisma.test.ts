@@ -39,7 +39,7 @@ describe("Prisma", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
-  test("passes provided filters", async () => {
+  test("passes provided filters with simiaritySearch", async () => {
     const embeddings = new FakeEmbeddings();
     const store = new PrismaVectorStore(new FakeEmbeddings(), {
       db: mockPrismaClient,
