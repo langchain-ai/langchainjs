@@ -96,3 +96,34 @@ test("Can change number of docs returned (largeK)", async () => {
   const results = await retriever.getRelevantDocuments(query);
   expect(results.length).toBe(10);
 });
+
+test("AddDocunents adds large embeddings metadata field", async () => {
+  const testId = uuidV4();
+  const doc = new Document({
+    pageContent: "hello world",
+    metadata: { id: testId },
+  });
+
+  const smallEmbeddings = new OpenAIEmbeddings({
+    modelName: "text-embedding-3-small",
+    dimensions: 512, // Min num for small
+  });
+  const largeEmbeddings = new OpenAIEmbeddings({
+    modelName: "text-embedding-3-large",
+    dimensions: 3072, // Max num for large
+  });
+
+  const vectorStore = new MemoryVectorStore(smallEmbeddings);
+
+  const retriever = new MatryoshkaRetrieval({
+    largeEmbeddingModel: largeEmbeddings,
+    vectorStore,
+  });
+
+  await retriever.addDocuments([doc]);
+
+  const relevantDocs = await retriever.getRelevantDocuments("hello world");
+  expect(relevantDocs[0].metadata.id).toBe(testId);
+  expect(relevantDocs[0].metadata[retriever.largeEmbeddingKey]).toBeDefined();
+  expect(relevantDocs[0].metadata[retriever.largeEmbeddingKey].length).toBe(3072);
+})

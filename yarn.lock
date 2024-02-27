@@ -18908,13 +18908,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"csv-parse@npm:^5.5.3":
-  version: 5.5.3
-  resolution: "csv-parse@npm:5.5.3"
-  checksum: 38399bc4c61b721bc2f52a6262d6000b4e5f391e45b071f6eb087b293a02f867020f7da36adf6f56eb9fb45bd28c82cd223afd35846551fb5ad31bf3d0602961
-  languageName: node
-  linkType: hard
-
 "d3-dsv@npm:^2.0.0":
   version: 2.0.0
   resolution: "d3-dsv@npm:2.0.0"
@@ -21221,7 +21214,6 @@ __metadata:
     axios: ^0.26.0
     chromadb: ^1.5.3
     convex: ^1.3.1
-    csv-parse: ^5.5.3
     dotenv: ^16.0.3
     eslint: ^8.33.0
     eslint-config-airbnb-base: ^15.0.0

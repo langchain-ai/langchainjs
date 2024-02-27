@@ -1,0 +1,26 @@
+{
+  "version": "3",
+  "remote": {
+    "https://deno.land/std@0.215.0/dotenv/mod.ts": "0180eaeedaaf88647318811cdaa418cc64dc51fb08354f91f5f480d0a1309f7d",
+    "https://deno.land/std@0.215.0/dotenv/parse.ts": "a49ed243bd62ec26f38614042cda4e5e3a47b18337c93b0f9f8556a5c918884b",
+    "https://deno.land/std@0.215.0/dotenv/stringify.ts": "0047ad7068289735d08964046aea267a750c141b494ca0e38831b89be6c020c2"
+  },
+  "workspace": {
+    "dependencies": [
+      "npm:@langchain/anthropic",
+      "npm:@langchain/community",
+      "npm:@langchain/core",
+      "npm:@langchain/openai",
+      "npm:@langchain/pinecone",
+      "npm:@pinecone-database/pinecone",
+      "npm:cheerio",
+      "npm:csv-parse",
+      "npm:dotenv",
+      "npm:file:.",
+      "npm:ml-distance",
+      "npm:node-llama-cpp",
+      "npm:zod",
+      "npm:zod-to-json-schema"
+    ]
+  }
+}

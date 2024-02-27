@@ -213,6 +213,20 @@ export class MatryoshkaRetrieval<
       })
     );
 
-    return this.vectorStore.addDocuments(newDocuments, options);
+    let numErrs = 0;
+    let numSuccess = 0;
+    for await (const doc of newDocuments) {
+      try {
+        await this.vectorStore.addDocuments([doc], options);
+        numSuccess += 1;
+      } catch (e) {
+        numErrs += 1;
+        console.error(
+          `Error adding document with id: ${doc.metadata["Wiki Page"]} to the vector store: ${e}`
+        );
+      }
+    }
+    console.log(`Number of errors adding documents: ${numErrs}\n\nNumber of successes adding documents: ${numSuccess}`);
+    return [];
   };
 }
