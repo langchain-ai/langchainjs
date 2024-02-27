@@ -15,7 +15,7 @@ const mockColumns = {
 
 const sql = jest.fn<(params: unknown) => Sql>();
 const raw = jest.fn<(params: unknown) => Sql>();
-const join = jest.fn< (params: unknown) => Sql>();
+const join = jest.fn<(params: unknown) => Sql>();
 
 const mockPrismaNamespace = {
   ModelName: {}, 
