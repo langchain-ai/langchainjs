@@ -158,33 +158,18 @@ export class PGVectorStore extends VectorStore {
    * @returns The collectionId for the given collectionName.
    */
   async getOrCreateCollection(): Promise<string> {
-    const queryString = this.schemaName == null ? `
+    const queryString = `
       SELECT uuid from ${this.collectionTableName}
       WHERE name = $1;
-    ` : `
-      SELECT uuid from ${this.schemaName}.${this.collectionTableName}
-      WHERE name = $1;
-    ` ;
+    `;
     const queryResult = await this.pool.query(queryString, [
       this.collectionName,
     ]);
     let collectionId = queryResult.rows[0]?.uuid;
 
     if (!collectionId) {
-      const insertString = this.schemaName == null ? `
+      const insertString = `
         INSERT INTO ${this.collectionTableName}(
-          uuid,
-          name,
-          cmetadata
-        )
-        VALUES (
-          uuid_generate_v4(),
-          $1,
-          $2
-        )
-        RETURNING uuid;
-      ` : `
-        INSERT INTO ${this.schemaName}.${this.collectionTableName}(
           uuid,
           name,
           cmetadata
@@ -496,8 +481,8 @@ export class PGVectorStore extends VectorStore {
       ORDER BY "_distance" ASC
       LIMIT $2;
       ` : `
-      SELECT *, ${this.schemaName}.${this.vectorColumnName} <=> $1 as "_distance"
-      FROM ${this.tableName}
+      SELECT *, ${this.vectorColumnName} <=> $1 as "_distance"
+      FROM ${this.schemaName}.${this.tableName}
       ${whereClause}
       ${collectionId ? "AND collection_id = $3" : ""}
       ORDER BY "_distance" ASC
@@ -576,11 +561,11 @@ export class PGVectorStore extends VectorStore {
           cmetadata jsonb
         );
 
-        ALTER TABLE ${this.tableName}
+        ALTER TABLE ${this.schemaName}.${this.tableName}
           ADD COLUMN collection_id uuid;
 
-        ALTER TABLE ${this.tableName}
-          ADD CONSTRAINT ${this.tableName}_collection_id_fkey
+        ALTER TABLE ${this.schemaName}.${this.tableName}
+          ADD CONSTRAINT ${this.schemaName}.${this.tableName}_collection_id_fkey
           FOREIGN KEY (collection_id)
           REFERENCES ${this.collectionTableName}(uuid)
           ON DELETE CASCADE;
