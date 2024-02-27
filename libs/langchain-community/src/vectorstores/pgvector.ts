@@ -17,6 +17,7 @@ export interface PGVectorStoreArgs {
   collectionTableName?: string;
   collectionName?: string;
   collectionMetadata?: Metadata | null;
+  schemaName?: string | null;
   columns?: {
     idColumnName?: string;
     vectorColumnName?: string;
@@ -51,6 +52,8 @@ export class PGVectorStore extends VectorStore {
 
   collectionMetadata: Metadata | null;
 
+  schemaName: string | null;
+
   idColumnName: string;
 
   vectorColumnName: string;
@@ -82,6 +85,7 @@ export class PGVectorStore extends VectorStore {
     this.collectionTableName = config.collectionTableName;
     this.collectionName = config.collectionName ?? "langchain";
     this.collectionMetadata = config.collectionMetadata ?? null;
+    this.schemaName = config.schemaName ?? null;
     this.filter = config.filter;
 
     this.vectorColumnName = config.columns?.vectorColumnName ?? "embedding";
@@ -154,18 +158,33 @@ export class PGVectorStore extends VectorStore {
    * @returns The collectionId for the given collectionName.
    */
   async getOrCreateCollection(): Promise<string> {
-    const queryString = `
+    const queryString = this.schemaName == null ? `
       SELECT uuid from ${this.collectionTableName}
       WHERE name = $1;
-    `;
+    ` : `
+      SELECT uuid from ${this.schemaName}.${this.collectionTableName}
+      WHERE name = $1;
+    ` ;
     const queryResult = await this.pool.query(queryString, [
       this.collectionName,
     ]);
     let collectionId = queryResult.rows[0]?.uuid;
 
     if (!collectionId) {
-      const insertString = `
+      const insertString = this.schemaName == null ? `
         INSERT INTO ${this.collectionTableName}(
+          uuid,
+          name,
+          cmetadata
+        )
+        VALUES (
+          uuid_generate_v4(),
+          $1,
+          $2
+        )
+        RETURNING uuid;
+      ` : `
+        INSERT INTO ${this.schemaName}.${this.collectionTableName}(
           uuid,
           name,
           cmetadata
@@ -237,8 +256,13 @@ export class PGVectorStore extends VectorStore {
       .map((_, j) => this.generatePlaceholderForRowAt(j, columns.length))
       .join(", ");
 
-    const text = `
+    const text = this.schemaName == null ? `
       INSERT INTO ${this.tableName}(
+        ${columns.map((column) => `"${column}"`).join(", ")}
+      )
+      VALUES ${valuesPlaceholders}
+    ` : `
+      INSERT INTO ${this.schemaName}.${this.tableName}(
         ${columns.map((column) => `"${column}"`).join(", ")}
       )
       VALUES ${valuesPlaceholders}
@@ -322,8 +346,13 @@ export class PGVectorStore extends VectorStore {
     // Set parameters of dynamically generated query
     const params = collectionId ? [ids, collectionId] : [ids];
 
-    const queryString = `
+    const queryString = this.schemaName == null ? `
       DELETE FROM ${this.tableName}
+      WHERE ${collectionId ? "collection_id = $2 AND " : ""}${
+      this.idColumnName
+    } = ANY($1::uuid[])
+    ` : `
+      DELETE FROM ${this.schemaName}.${this.tableName}
       WHERE ${collectionId ? "collection_id = $2 AND " : ""}${
       this.idColumnName
     } = ANY($1::uuid[])
@@ -347,8 +376,13 @@ export class PGVectorStore extends VectorStore {
     // Set parameters of dynamically generated query
     const params = collectionId ? [filter, collectionId] : [filter];
 
-    const queryString = `
+    const queryString = this.schemaName == null ? `
       DELETE FROM ${this.tableName}
+      WHERE ${collectionId ? "collection_id = $2 AND " : ""}${
+      this.metadataColumnName
+    }::jsonb @> $1
+    ` : `
+      DELETE FROM ${this.schemaName}.${this.tableName}
       WHERE ${collectionId ? "collection_id = $2 AND " : ""}${
       this.metadataColumnName
     }::jsonb @> $1
@@ -454,8 +488,15 @@ export class PGVectorStore extends VectorStore {
       ? `WHERE ${whereClauses.join(" AND ")}`
       : "";
 
-    const queryString = `
+    const queryString = this.schemaName == null ? `
       SELECT *, ${this.vectorColumnName} <=> $1 as "_distance"
+      FROM ${this.tableName}
+      ${whereClause}
+      ${collectionId ? "AND collection_id = $3" : ""}
+      ORDER BY "_distance" ASC
+      LIMIT $2;
+      ` : `
+      SELECT *, ${this.schemaName}.${this.vectorColumnName} <=> $1 as "_distance"
       FROM ${this.tableName}
       ${whereClause}
       ${collectionId ? "AND collection_id = $3" : ""}
@@ -487,15 +528,22 @@ export class PGVectorStore extends VectorStore {
   async ensureTableInDatabase(): Promise<void> {
     await this.pool.query("CREATE EXTENSION IF NOT EXISTS vector;");
     await this.pool.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";');
-
-    await this.pool.query(`
+    const tableQuery = this.schemaName == null ? `
       CREATE TABLE IF NOT EXISTS ${this.tableName} (
         "${this.idColumnName}" uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
         "${this.contentColumnName}" text,
         "${this.metadataColumnName}" jsonb,
         "${this.vectorColumnName}" vector
       );
-    `);
+    ` : `
+      CREATE TABLE IF NOT EXISTS ${this.schemaName}.${this.tableName} (
+        "${this.idColumnName}" uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+        "${this.contentColumnName}" text,
+        "${this.metadataColumnName}" jsonb,
+        "${this.vectorColumnName}" vector
+      );
+    `
+    await this.pool.query(tableQuery);
   }
 
   /**
@@ -506,7 +554,7 @@ export class PGVectorStore extends VectorStore {
    */
   async ensureCollectionTableInDatabase(): Promise<void> {
     try {
-      await this.pool.query(`
+      const queryString = this.schemaName == null ? `
         CREATE TABLE IF NOT EXISTS ${this.collectionTableName} (
           uuid uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
           name character varying,
@@ -521,7 +569,23 @@ export class PGVectorStore extends VectorStore {
           FOREIGN KEY (collection_id)
           REFERENCES ${this.collectionTableName}(uuid)
           ON DELETE CASCADE;
-      `);
+      ` : `
+        CREATE TABLE IF NOT EXISTS ${this.schemaName}.${this.collectionTableName} (
+          uuid uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+          name character varying,
+          cmetadata jsonb
+        );
+
+        ALTER TABLE ${this.tableName}
+          ADD COLUMN collection_id uuid;
+
+        ALTER TABLE ${this.tableName}
+          ADD CONSTRAINT ${this.tableName}_collection_id_fkey
+          FOREIGN KEY (collection_id)
+          REFERENCES ${this.collectionTableName}(uuid)
+          ON DELETE CASCADE;
+      `
+      await this.pool.query();
     } catch (e) {
       if (!(e as Error).message.includes("already exists")) {
         console.error(e);
