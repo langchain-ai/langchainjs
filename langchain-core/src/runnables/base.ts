@@ -1884,22 +1884,25 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     return new Promise<RunOutput>((resolve, reject) => {
       const childConfig = patchConfig(config, {
         callbacks: runManager?.getChild(),
-        recursionLimit:
-          (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
+        recursionLimit: (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
       });
       void AsyncLocalStorageProviderSingleton.getInstance().run(
         childConfig,
         async () => {
           try {
-            let output = await this.func(input, { ...childConfig, config: childConfig });
+            let output = await this.func(input, {
+              ...childConfig,
+              config: childConfig,
+            });
             if (output && Runnable.isRunnable(output)) {
               if (config?.recursionLimit === 0) {
                 throw new Error("Recursion limit reached.");
               }
-              output = await output.invoke(
-                input,
-                {...childConfig, recursionLimit: (childConfig.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1}
-              );
+              output = await output.invoke(input, {
+                ...childConfig,
+                recursionLimit:
+                  (childConfig.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
+              });
             }
             resolve(output);
           } catch (e) {

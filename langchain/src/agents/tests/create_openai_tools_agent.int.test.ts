@@ -58,9 +58,11 @@ test("createOpenAIToolsAgent tracing works", async () => {
     agent,
     tools,
   });
-  
+
   const outer = RunnableLambda.from(async (input) => {
-    const noop = RunnableLambda.from(() => "hi").withConfig({ runName: "nested_testing" });
+    const noop = RunnableLambda.from(() => "hi").withConfig({
+      runName: "nested_testing",
+    });
     const noopRes = await noop.invoke({ nested: "nested" });
     console.log(noopRes);
     const res = await agentExecutor.invoke({
@@ -71,7 +73,7 @@ test("createOpenAIToolsAgent tracing works", async () => {
   const input = "what is LangChain?";
   const result = await outer.invoke(input, {
     tags: ["test"],
-    callbacks: [new LangChainTracer({ projectName: "langchainjs-tracing-2" })]
+    callbacks: [new LangChainTracer({ projectName: "langchainjs-tracing-2" })],
   });
 
   console.log(result);
