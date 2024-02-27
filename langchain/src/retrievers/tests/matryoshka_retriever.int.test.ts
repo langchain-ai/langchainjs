@@ -4,10 +4,10 @@ import { faker } from "@faker-js/faker";
 import { Document } from "@langchain/core/documents";
 import { v4 as uuidV4 } from "uuid";
 import { SyntheticEmbeddings } from "@langchain/core/utils/testing";
-import { MatryoshkaRetrieval } from "../matryoshka_retrieval.js";
+import { MatryoshkaRetriever } from "../matryoshka_retriever.js";
 import { MemoryVectorStore } from "../../vectorstores/memory.js";
 
-test("MatryoshkaRetrieval can retrieve", async () => {
+test("MatryoshkaRetriever can retrieve", async () => {
   const smallEmbeddings = new OpenAIEmbeddings({
     modelName: "text-embedding-3-small",
     dimensions: 512, // Min num for small
@@ -19,7 +19,7 @@ test("MatryoshkaRetrieval can retrieve", async () => {
 
   const vectorStore = new MemoryVectorStore(smallEmbeddings);
 
-  const retriever = new MatryoshkaRetrieval({
+  const retriever = new MatryoshkaRetriever({
     largeEmbeddingModel: largeEmbeddings,
     vectorStore,
     largeK: 5,
@@ -95,7 +95,7 @@ test("Can change number of docs returned (largeK)", async () => {
         metadata: { id: uuidV4() },
       })
   );
-  const retriever = new MatryoshkaRetrieval({
+  const retriever = new MatryoshkaRetriever({
     largeEmbeddingModel: largeEmbeddings,
     vectorStore,
     largeK: 10,
@@ -126,7 +126,7 @@ test("AddDocunents adds large embeddings metadata field", async () => {
 
   const vectorStore = new MemoryVectorStore(smallEmbeddings);
 
-  const retriever = new MatryoshkaRetrieval({
+  const retriever = new MatryoshkaRetriever({
     largeEmbeddingModel: largeEmbeddings,
     vectorStore,
   });

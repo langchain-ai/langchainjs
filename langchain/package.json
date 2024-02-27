@@ -942,10 +942,10 @@
     "retrievers/vespa.js",
     "retrievers/vespa.d.ts",
     "retrievers/vespa.d.cts",
-    "retrievers/matryoshka_retrieval.cjs",
-    "retrievers/matryoshka_retrieval.js",
-    "retrievers/matryoshka_retrieval.d.ts",
-    "retrievers/matryoshka_retrieval.d.cts",
+    "retrievers/matryoshka_retriever.cjs",
+    "retrievers/matryoshka_retriever.js",
+    "retrievers/matryoshka_retriever.d.ts",
+    "retrievers/matryoshka_retriever.d.cts",
     "cache.cjs",
     "cache.js",
     "cache.d.ts",
@@ -3650,14 +3650,14 @@
       "import": "./retrievers/vespa.js",
       "require": "./retrievers/vespa.cjs"
     },
-    "./retrievers/matryoshka_retrieval": {
+    "./retrievers/matryoshka_retriever": {
       "types": {
-        "import": "./retrievers/matryoshka_retrieval.d.ts",
-        "require": "./retrievers/matryoshka_retrieval.d.cts",
-        "default": "./retrievers/matryoshka_retrieval.d.ts"
+        "import": "./retrievers/matryoshka_retriever.d.ts",
+        "require": "./retrievers/matryoshka_retriever.d.cts",
+        "default": "./retrievers/matryoshka_retriever.d.ts"
       },
-      "import": "./retrievers/matryoshka_retrieval.js",
-      "require": "./retrievers/matryoshka_retrieval.cjs"
+      "import": "./retrievers/matryoshka_retriever.js",
+      "require": "./retrievers/matryoshka_retriever.cjs"
     },
     "./cache": {
       "types": {

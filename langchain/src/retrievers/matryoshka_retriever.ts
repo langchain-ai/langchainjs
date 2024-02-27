@@ -17,7 +17,7 @@ import {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AddDocumentOptions = Record<string, any>;
 
-export interface MatryoshkaRetrievalFields {
+export interface MatryoshkaRetrieverFields {
   /**
    * The number of documents to retrieve from the small store.
    * @default 50
@@ -65,7 +65,7 @@ export interface MatryoshkaRetrievalFields {
  * This code implements MRL embeddings for efficient vector search by combining faster,
  * lower-dimensional initial search with accurate, high-dimensional re-ranking.
  */
-export class MatryoshkaRetrieval<
+export class MatryoshkaRetriever<
   Store extends VectorStore = VectorStore
 > extends VectorStoreRetriever<Store> {
   smallK = 50;
@@ -79,7 +79,7 @@ export class MatryoshkaRetrieval<
   searchType: "cosine" | "innerProduct" | "euclidean" = "cosine";
 
   constructor(
-    fields: MatryoshkaRetrievalFields & VectorStoreRetrieverInput<Store>
+    fields: MatryoshkaRetrieverFields & VectorStoreRetrieverInput<Store>
   ) {
     super(fields);
     this.smallK = fields.smallK ?? this.smallK;

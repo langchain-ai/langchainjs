@@ -1,4 +1,4 @@
-import { MatryoshkaRetrieval } from "langchain/retrievers/matryoshka_retrieval";
+import { MatryoshkaRetriever } from "langchain/retrievers/matryoshka_retrieval";
 import { Chroma } from "@langchain/community/vectorstores/chroma";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
@@ -17,7 +17,7 @@ const vectorStore = new Chroma(smallEmbeddings, {
   numDimensions: 512,
 });
 
-const retriever = new MatryoshkaRetrieval({
+const retriever = new MatryoshkaRetriever({
   vectorStore,
   largeEmbeddingModel: largeEmbeddings,
   largeK: 5,
@@ -50,7 +50,7 @@ const allDocs = [...irrelevantDocs, ...relevantDocs];
 
 /**
  * IMPORTANT:
- * The `addDocuments` method on `MatryoshkaRetrieval` will
+ * The `addDocuments` method on `MatryoshkaRetriever` will
  * generate the small AND large embeddings for all documents.
  */
 await retriever.addDocuments(allDocs);
