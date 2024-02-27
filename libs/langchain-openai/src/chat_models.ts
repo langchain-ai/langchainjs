@@ -908,7 +908,7 @@ export class ChatOpenAI<
             },
           ],
           tool_choice: "auto",
-        } as unknown as Partial<CallOptions>);
+        } as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser({
           returnSingle: true,
           keyName: name,
@@ -926,7 +926,7 @@ export class ChatOpenAI<
             },
           ],
           tool_choice: "auto",
-        } as unknown as Partial<CallOptions>);
+        } as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser({
           returnSingle: true,
           keyName: name,
