@@ -517,8 +517,8 @@ export abstract class BaseLanguageModel<
    *
    * @param {z.ZodEffects<RunOutput>} schema The schema for the structured output. Either as a Zod schema or a valid JSON schema object.
    * @param {string} name The name of the function to call.
-   * @param {"functionCalling" | "jsonMode"} method The method to use for getting the structured output. Defaults to "functionCalling".
-   * @param {boolean | undefined} includeRaw Whether to include the raw output in the result. Defaults to false.
+   * @param {"functionCalling" | "jsonMode"} [method=functionCalling] The method to use for getting the structured output. Defaults to "functionCalling".
+   * @param {boolean | undefined} [includeRaw=false] Whether to include the raw output in the result. Defaults to false.
    * @returns {Runnable<RunInput, RunOutput> | Runnable<RunInput, { raw: BaseMessage; parsed: RunOutput }>} A new runnable that calls the LLM with structured output.
    */
   withStructuredOutput?<
