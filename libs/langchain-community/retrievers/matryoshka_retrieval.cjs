@@ -1,1 +1,0 @@
-module.exports = require('../dist/retrievers/matryoshka_retrieval.cjs');
