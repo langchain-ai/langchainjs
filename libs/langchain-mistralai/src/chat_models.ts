@@ -571,20 +571,14 @@ export class ChatMistralAI<
    * @returns {Runnable<RunInput, RunOutput> | Runnable<RunInput, { raw: BaseMessage; parsed: RunOutput }>} A new runnable that calls the LLM with structured output.
    */
   withStructuredOutput<
-    RunInput = BaseLanguageModelInput,
+    RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
     // prettier-ignore
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
   >({
     schema,
     name,
-    /**
-     * @default functionCalling
-     */
     method = "functionCalling",
-    /**
-     * @default false
-     */
     includeRaw = false,
   }: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -601,7 +595,7 @@ export class ChatMistralAI<
           parsed: RunOutput;
         }
       > {
-    let llm: Runnable;
+    let llm: Runnable<BaseLanguageModelInput>;
     let outputParser: JsonOutputKeyToolsParser | JsonOutputParser<RunOutput>;
 
     if (method === "jsonMode") {
@@ -626,7 +620,7 @@ export class ChatMistralAI<
           ],
           tool_choice: "auto",
         } as Partial<CallOptions>);
-        outputParser = new JsonOutputKeyToolsParser({
+        outputParser = new JsonOutputKeyToolsParser<RunOutput>({
           returnSingle: true,
           keyName: name,
         });
@@ -644,7 +638,7 @@ export class ChatMistralAI<
           ],
           tool_choice: "auto",
         } as Partial<CallOptions>);
-        outputParser = new JsonOutputKeyToolsParser({
+        outputParser = new JsonOutputKeyToolsParser<RunOutput>({
           returnSingle: true,
           keyName: name,
         });
@@ -652,7 +646,7 @@ export class ChatMistralAI<
     }
 
     if (!includeRaw) {
-      return llm.pipe(outputParser);
+      return llm.pipe(outputParser) as Runnable<RunInput, RunOutput>;
     }
 
     const parserAssign = RunnablePassthrough.assign({
