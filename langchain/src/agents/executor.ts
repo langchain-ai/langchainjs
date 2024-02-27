@@ -30,8 +30,12 @@ import { BaseChain, ChainInputs } from "../chains/base.js";
 interface AgentExecutorIteratorInput {
   agentExecutor: AgentExecutor;
   inputs: Record<string, string>;
+  config?: RunnableConfig;
+  /** @deprecated Use "config" */
   callbacks?: Callbacks;
+  /** @deprecated Use "config" */
   tags?: string[];
+  /** @deprecated Use "config" */
   metadata?: Record<string, unknown>;
   runName?: string;
   runManager?: CallbackManagerForChainRun;
@@ -47,12 +51,18 @@ export class AgentExecutorIterator
 
   inputs: Record<string, string>;
 
+  config?: RunnableConfig;
+
+  /** @deprecated Use "config" */
   callbacks?: Callbacks;
 
+  /** @deprecated Use "config" */
   tags: string[] | undefined;
 
+  /** @deprecated Use "config" */
   metadata: Record<string, unknown> | undefined;
 
+  /** @deprecated Use "config" */
   runName: string | undefined;
 
   private _finalOutputs: Record<string, unknown> | undefined;
@@ -93,6 +103,7 @@ export class AgentExecutorIterator
     this.metadata = fields.metadata;
     this.runName = fields.runName;
     this.runManager = fields.runManager;
+    this.config = fields.config;
   }
 
   /**
@@ -180,7 +191,8 @@ export class AgentExecutorIterator
       this.nameToToolMap,
       this.inputs,
       this.intermediateSteps,
-      runManager
+      runManager,
+      this.config
     );
   }
 
@@ -465,7 +477,12 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
     while (this.shouldContinue(iterations)) {
       let output;
       try {
-        output = await this.agent.plan(steps, inputs, runManager?.getChild());
+        output = await this.agent.plan(
+          steps,
+          inputs,
+          runManager?.getChild(),
+          config
+        );
       } catch (e) {
         // eslint-disable-next-line no-instanceof/no-instanceof
         if (e instanceof OutputParserException) {
@@ -574,14 +591,16 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
     nameToolMap: Record<string, ToolInterface>,
     inputs: ChainValues,
     intermediateSteps: AgentStep[],
-    runManager?: CallbackManagerForChainRun
+    runManager?: CallbackManagerForChainRun,
+    config?: RunnableConfig
   ): Promise<AgentFinish | AgentStep[]> {
     let output;
     try {
       output = await this.agent.plan(
         intermediateSteps,
         inputs,
-        runManager?.getChild()
+        runManager?.getChild(),
+        config
       );
     } catch (e) {
       // eslint-disable-next-line no-instanceof/no-instanceof
@@ -725,6 +744,8 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
     const agentExecutorIterator = new AgentExecutorIterator({
       inputs,
       agentExecutor: this,
+      config: options,
+      // TODO: Deprecate these other parameters
       metadata: options?.metadata,
       tags: options?.tags,
       callbacks: options?.callbacks,
