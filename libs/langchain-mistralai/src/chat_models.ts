@@ -574,7 +574,7 @@ export class ChatMistralAI<
             },
           ],
           tool_choice: "auto",
-        } as unknown as Partial<CallOptions>);
+        } as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser({
           returnSingle: true,
           keyName: name,
@@ -592,7 +592,7 @@ export class ChatMistralAI<
             },
           ],
           tool_choice: "auto",
-        } as unknown as Partial<CallOptions>);
+        } as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser({
           returnSingle: true,
           keyName: name,
