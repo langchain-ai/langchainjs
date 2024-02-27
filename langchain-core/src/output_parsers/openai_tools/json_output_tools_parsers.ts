@@ -101,8 +101,10 @@ export type JsonOutputKeyToolsParserParams = {
  * Class for parsing the output of a tool-calling LLM into a JSON object if you are
  * expecting only a single tool to be called.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export class JsonOutputKeyToolsParser extends BaseLLMOutputParser<any> {
+export class JsonOutputKeyToolsParser<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends Record<string, any> = Record<string, any>
+> extends BaseLLMOutputParser<T> {
   static lc_name() {
     return "JsonOutputKeyToolsParser";
   }
