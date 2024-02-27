@@ -24,7 +24,7 @@ import {
   BaseChatModel,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
-import type { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
+import type { BaseFunctionCallOptions, BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { z } from "zod";
@@ -853,12 +853,46 @@ export class ChatOpenAI<
     );
   }
 
+  withStructuredOutput<
+    RunInput = BaseLanguageModelInput,
+    // prettier-ignore
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
+  >({
+    schema,
+    name,
+    method,
+    includeRaw,
+  }: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    schema: z.ZodEffects<RunOutput> | Record<string, any>;
+    name: string;
+    method?: "functionCalling" | "jsonMode";
+    includeRaw: true;
+  }): Runnable<RunInput, { raw: BaseMessage, parsed: RunOutput }>
+
+  withStructuredOutput<
+  RunInput = BaseLanguageModelInput,
+  // prettier-ignore
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
+>({
+  schema,
+  name,
+  method,
+  includeRaw,
+}: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  schema: z.ZodEffects<RunOutput> | Record<string, any>;
+  name: string;
+  method?: "functionCalling" | "jsonMode";
+  includeRaw?: false;
+}): Runnable<RunInput, RunOutput>
+
   /**
    * Model wrapper that returns outputs formatted to match the given schema.
    *
-   * @template {any} RunInput The input type for the Runnable.
    * @template {z.ZodObject<any, any, any, any>} RunOutput The output type for the Runnable, expected to be a Zod schema object for structured output validation.
-   * @template {RunnableConfig} CallOptions The type for call options, extending from RunnableConfig.
    *
    * @param {z.ZodEffects<RunOutput>} schema The schema for the structured output. Either as a Zod schema or a valid JSON schema object.
    * @param {string} name The name of the function to call.
@@ -866,9 +900,8 @@ export class ChatOpenAI<
    * @param {boolean | undefined} includeRaw Whether to include the raw output in the result. Defaults to false.
    * @returns {Runnable<RunInput, RunOutput, CallOptions>} A new runnable that calls the LLM with structured output.
    */
-  withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunInput = any,
+  override withStructuredOutput<
+    RunInput = BaseLanguageModelInput,
     // prettier-ignore
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
@@ -883,7 +916,10 @@ export class ChatOpenAI<
     name: string;
     method?: "functionCalling" | "jsonMode";
     includeRaw?: boolean;
-  }): Runnable<RunInput, RunOutput> {
+  }): Runnable<RunInput, RunOutput> | Runnable<RunInput, {
+    raw: BaseMessage,
+    parsed: RunOutput
+  }> {
     let llm: Runnable;
     let outputParser: JsonOutputKeyToolsParser | JsonOutputParser<RunOutput>;
 
@@ -948,13 +984,12 @@ export class ChatOpenAI<
     const parsedWithFallback = parserAssign.withFallbacks({
       fallbacks: [parserNone],
     });
-    const chain = RunnableSequence.from([
+    return RunnableSequence.from<RunInput, { raw: BaseMessage, parsed: RunOutput }>([
       {
         raw: llm,
       },
       parsedWithFallback,
     ]);
-    return chain;
   }
 }
 
