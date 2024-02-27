@@ -693,3 +693,4 @@ utils/cassandra.d.cts
 node_modules
 dist
 .yarn
+.env

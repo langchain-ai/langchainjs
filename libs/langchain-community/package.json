@@ -80,6 +80,7 @@
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",
     "@rockset/client": "^0.9.1",
+    "@sap/hana-client": "^2.19.21",
     "@smithy/eventstream-codec": "^2.0.5",
     "@smithy/protocol-http": "^3.0.6",
     "@smithy/signature-v4": "^2.0.10",
@@ -198,6 +199,7 @@
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",
     "@rockset/client": "^0.9.1",
+    "@sap/hana-client": "^2.19.21",
     "@smithy/eventstream-codec": "^2.0.5",
     "@smithy/protocol-http": "^3.0.6",
     "@smithy/signature-v4": "^2.0.10",
@@ -338,6 +340,9 @@
       "optional": true
     },
     "@rockset/client": {
+      "optional": true
+    },
+    "@sap/hana-client": {
       "optional": true
     },
     "@smithy/eventstream-codec": {

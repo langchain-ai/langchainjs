@@ -8898,6 +8898,7 @@ __metadata:
     "@qdrant/js-client-rest": ^1.2.0
     "@raycast/api": ^1.55.2
     "@rockset/client": ^0.9.1
+    "@sap/hana-client": ^2.19.21
     "@smithy/eventstream-codec": ^2.0.5
     "@smithy/protocol-http": ^3.0.6
     "@smithy/signature-v4": ^2.0.10
@@ -9019,6 +9020,7 @@ __metadata:
     "@qdrant/js-client-rest": ^1.2.0
     "@raycast/api": ^1.55.2
     "@rockset/client": ^0.9.1
+    "@sap/hana-client": ^2.19.21
     "@smithy/eventstream-codec": ^2.0.5
     "@smithy/protocol-http": ^3.0.6
     "@smithy/signature-v4": ^2.0.10
@@ -9131,6 +9133,8 @@ __metadata:
     "@raycast/api":
       optional: true
     "@rockset/client":
+      optional: true
+    "@sap/hana-client":
       optional: true
     "@smithy/eventstream-codec":
       optional: true
@@ -10807,6 +10811,15 @@ __metadata:
   version: 1.5.1
   resolution: "@rushstack/eslint-patch@npm:1.5.1"
   checksum: e4c25322312dbaa29e835a7ab4fbac53c8731dd0da65e46646e38945e296429e7fb91c2ef3da5af5d5938d44b0cde1d5290438ebb3dcb015e02b80b5e2530d24
+  languageName: node
+  linkType: hard
+
+"@sap/hana-client@npm:^2.19.21":
+  version: 2.19.21
+  resolution: "@sap/hana-client@npm:2.19.21"
+  dependencies:
+    debug: 3.1.0
+  checksum: 747647addf8e2f5977130909cb42391284dcf1e9da87178b2b37b126cb90b79d06a3bb069730599bd2d7acff751f571d236dbfe62581aea7b8d0427b1cfdf8bf
   languageName: node
   linkType: hard
 
@@ -18821,6 +18834,15 @@ __metadata:
   dependencies:
     ms: 2.0.0
   checksum: d2f51589ca66df60bf36e1fa6e4386b318c3f1e06772280eea5b1ae9fd3d05e9c2b7fd8a7d862457d00853c75b00451aa2d7459b924629ee385287a650f58fe6
+  languageName: node
+  linkType: hard
+
+"debug@npm:3.1.0":
+  version: 3.1.0
+  resolution: "debug@npm:3.1.0"
+  dependencies:
+    ms: 2.0.0
+  checksum: 0b52718ab957254a5b3ca07fc34543bc778f358620c206a08452251eb7fc193c3ea3505072acbf4350219c14e2d71ceb7bdaa0d3370aa630b50da790458d08b3
   languageName: node
   linkType: hard
 
