@@ -43,3 +43,7 @@ import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/retrievers/matryoshka_retrieval.ts";
 
 <CodeBlock language="typescript">{Example}</CodeBlock>
+
+:::note
+Due to the constraints of some vector stores, the large embedding metadata field is stringified (`JSON.stringify`) before being stored. This means that the metadata field will need to be parsed (`JSON.parse`) when retrieved from the vector store.
+:::
