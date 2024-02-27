@@ -254,6 +254,15 @@
       "import": "./output_parsers/openai_tools.js",
       "require": "./output_parsers/openai_tools.cjs"
     },
+    "./output_parsers/openai_functions": {
+      "types": {
+        "import": "./output_parsers/openai_functions.d.ts",
+        "require": "./output_parsers/openai_functions.d.cts",
+        "default": "./output_parsers/openai_functions.d.ts"
+      },
+      "import": "./output_parsers/openai_functions.js",
+      "require": "./output_parsers/openai_functions.cjs"
+    },
     "./outputs": {
       "types": {
         "import": "./outputs.d.ts",
@@ -600,6 +609,10 @@
     "output_parsers/openai_tools.js",
     "output_parsers/openai_tools.d.ts",
     "output_parsers/openai_tools.d.cts",
+    "output_parsers/openai_functions.cjs",
+    "output_parsers/openai_functions.js",
+    "output_parsers/openai_functions.d.ts",
+    "output_parsers/openai_functions.d.cts",
     "outputs.cjs",
     "outputs.js",
     "outputs.d.ts",
