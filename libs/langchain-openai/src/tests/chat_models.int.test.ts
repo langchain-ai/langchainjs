@@ -916,24 +916,6 @@ Respond with a JSON object containing three keys:
   expect("number2" in result).toBe(true);
 });
 
-test("withStructuredOutput throws if name is not provided with a zod schema", async () => {
-  const model = new ChatOpenAI({
-    temperature: 0,
-    modelName: "gpt-4-turbo-preview",
-  });
-
-  const calculatorSchema = z.object({
-    operation: z.enum(["add", "subtract", "multiply", "divide"]),
-    number1: z.number(),
-    number2: z.number(),
-  });
-  expect(() =>
-    model.withStructuredOutput({
-      schema: calculatorSchema,
-    })
-  ).toThrow();
-});
-
 test("withStructuredOutput includeRaw true", async () => {
   const model = new ChatOpenAI({
     temperature: 0,

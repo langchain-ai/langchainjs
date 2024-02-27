@@ -863,20 +863,17 @@ export class ChatOpenAI<
    * @template {RunnableConfig} CallOptions The type for call options, extending from RunnableConfig.
    *
    * @param {z.ZodEffects<RunOutput>} schema The schema for the structured output. Either as a ZOD schema or a valid JSON schema object.
+   * @param {string} name The name of the function to call.
    * @param {"functionCalling" | "jsonMode"} method The method to use for getting the structured output. Defaults to "functionCalling".
-   * @param {boolean | undefined}
+   * @param {boolean | undefined} includeRaw Whether to include the raw output in the result. Defaults to false.
    * @returns {Runnable<RunInput, RunOutput, CallOptions>} A new runnable that calls the LLM with structured output.
    */
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunInput = any,
+    // prettier-ignore
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<
-      any,
-      any,
-      any,
-      any
-    >
+    RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
   >({
     schema,
     name,
@@ -885,7 +882,7 @@ export class ChatOpenAI<
   }: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     schema: z.ZodEffects<RunOutput> | Record<string, any>;
-    name?: string;
+    name: string;
     method?: "functionCalling" | "jsonMode";
     includeRaw?: boolean;
   }): Runnable<RunInput, RunOutput> {
@@ -980,13 +977,9 @@ export class ChatOpenAI<
 }
 
 function isZodSchema<
+  // prettier-ignore
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<
-    any,
-    any,
-    any,
-    any
-  >
+  RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 >(input: any): input is z.ZodEffects<RunOutput> {
   // Check for a characteristic method of Zod schemas
