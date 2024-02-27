@@ -18,7 +18,10 @@ import {
   ChatGenerationChunk,
   type ChatResult,
 } from "@langchain/core/outputs";
-import { StructuredTool, type StructuredToolInterface } from "@langchain/core/tools";
+import {
+  StructuredTool,
+  type StructuredToolInterface,
+} from "@langchain/core/tools";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   BaseChatModel,
@@ -28,7 +31,11 @@ import type { BaseFunctionCallOptions } from "@langchain/core/language_models/ba
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { z } from "zod";
-import { Runnable, RunnableMap, RunnablePassthrough } from "@langchain/core/runnables";
+import {
+  Runnable,
+  RunnableMap,
+  RunnablePassthrough,
+} from "@langchain/core/runnables";
 import { JsonOutputParser } from "@langchain/core/output_parsers";
 import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 import type {
@@ -850,11 +857,11 @@ export class ChatOpenAI<
 
   /**
    * Model wrapper that returns outputs formatted to match the given schema.
-   * 
+   *
    * @template {any} RunInput The input type for the Runnable.
    * @template {z.ZodObject<any, any, any, any>} RunOutput The output type for the Runnable, expected to be a Zod schema object for structured output validation.
    * @template {RunnableConfig} CallOptions The type for call options, extending from RunnableConfig.
-   * 
+   *
    * @param {z.ZodEffects<RunOutput>} schema The schema for the structured output. Either as a ZOD schema or a valid JSON schema object.
    * @param {"functionCalling" | "jsonMode"} method The method to use for getting the structured output. Defaults to "functionCalling".
    * @param {boolean | undefined}
@@ -864,21 +871,24 @@ export class ChatOpenAI<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunInput = any,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>,
-  >(
-    {
-      schema,
-      name,
-      method = "functionCalling",
-      includeRaw = false
-    }: {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      schema: z.ZodEffects<RunOutput> | Record<string, any>;
-      name?: string;
-      method?: "functionCalling" | "jsonMode";
-      includeRaw?: boolean;
-    }
-  ): Runnable<RunInput, RunOutput> {
+    RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<
+      any,
+      any,
+      any,
+      any
+    >
+  >({
+    schema,
+    name,
+    method = "functionCalling",
+    includeRaw = false,
+  }: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    schema: z.ZodEffects<RunOutput> | Record<string, any>;
+    name?: string;
+    method?: "functionCalling" | "jsonMode";
+    includeRaw?: boolean;
+  }): Runnable<RunInput, RunOutput> {
     let llm: Runnable;
     let outputParser: JsonOutputKeyToolsParser | JsonOutputParser<RunOutput>;
 
@@ -891,17 +901,19 @@ export class ChatOpenAI<
       // Is function calling
       if (isZodSchema(schema)) {
         if (!name) {
-          throw new Error("A 'name' must be provided if using a ZOD schema and 'method' is 'functionCalling'")
+          throw new Error(
+            "A 'name' must be provided if using a ZOD schema and 'method' is 'functionCalling'"
+          );
         }
         class TmpClass extends StructuredTool {
           schema = schema as z.ZodEffects<RunOutput>;
-  
+
           description = schema.description;
-  
+
           // We need this because TypeScript can not infer that name will not be undefined
           // even though there is a check above.
           name = name ?? "";
-  
+
           async _call(input: RunInput) {
             return JSON.stringify(input);
           }
@@ -913,31 +925,35 @@ export class ChatOpenAI<
         outputParser = new JsonOutputKeyToolsParser({
           returnSingle: true,
           keyName: name,
-        })
+        });
       } else {
         let keyName: string | undefined = name;
         if (!keyName) {
           if ("name" in schema) {
             keyName = schema.name as string;
           } else {
-            throw new Error("Name not found in schema or as provided argument to 'withStructuredOutput', but is required.")
+            throw new Error(
+              "Name not found in schema or as provided argument to 'withStructuredOutput', but is required."
+            );
           }
         }
-    
+
         llm = this.bind({
-          tools: [{
-            type: "function" as const,
-            function: {
-              name: keyName,
-              parameters: schema,
+          tools: [
+            {
+              type: "function" as const,
+              function: {
+                name: keyName,
+                parameters: schema,
+              },
             },
-          }],
+          ],
           tool_choice: "auto",
         } as unknown as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser({
           returnSingle: true,
           keyName,
-        })
+        });
       }
     }
 
@@ -963,12 +979,16 @@ export class ChatOpenAI<
   }
 }
 
-
 function isZodSchema<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
+  RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<
+    any,
+    any,
+    any,
+    any
+  >
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 >(input: any): input is z.ZodEffects<RunOutput> {
   // Check for a characteristic method of Zod schemas
-  return typeof input?.parse === 'function';
+  return typeof input?.parse === "function";
 }

@@ -48,6 +48,12 @@ import OpenAITools from "@examples/models/chat/integration_openai_tool_calls.ts"
 
 <CodeBlock language="typescript">{OpenAITools}</CodeBlock>
 
+### `.withStructuredOutput({ ... })`
+
+You can also use the `.withStructuredOutput({ ... })` method to coerce `ChatOpenAI` into returning a structured output.
+
+The method allows for passing in either a valid JSON schema (like what is returned from [`zodToJsonSchema`]())
+
 ## Custom URLs
 
 You can customize the base URL the SDK sends requests to by passing a `configuration` parameter like this:

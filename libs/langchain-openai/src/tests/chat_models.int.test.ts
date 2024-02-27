@@ -787,7 +787,7 @@ test("Test ChatOpenAI token usage reporting for streaming calls", async () => {
 test("withStructuredOutput zod schema function calling", async () => {
   const model = new ChatOpenAI({
     temperature: 0,
-    modelName: "gpt-4-turbo-preview"
+    modelName: "gpt-4-turbo-preview",
   });
 
   const calculatorSchema = z.object({
@@ -801,8 +801,10 @@ test("withStructuredOutput zod schema function calling", async () => {
   });
 
   const prompt = ChatPromptTemplate.fromMessages([
-    "system", "You are VERY bad at math and must always use a calculator.",
-    "human", "Please help me!! What is 2 + 2?",
+    "system",
+    "You are VERY bad at math and must always use a calculator.",
+    "human",
+    "Please help me!! What is 2 + 2?",
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
@@ -815,7 +817,7 @@ test("withStructuredOutput zod schema function calling", async () => {
 test("withStructuredOutput zod schema JSON mode", async () => {
   const model = new ChatOpenAI({
     temperature: 0,
-    modelName: "gpt-4-turbo-preview"
+    modelName: "gpt-4-turbo-preview",
   });
 
   const calculatorSchema = z.object({
@@ -830,13 +832,15 @@ test("withStructuredOutput zod schema JSON mode", async () => {
   });
 
   const prompt = ChatPromptTemplate.fromMessages([
-    "system", `You are VERY bad at math and must always use a calculator.
+    "system",
+    `You are VERY bad at math and must always use a calculator.
 Respond with a JSON object containing three keys:
 'operation': the type of operation to execute, either 'add', 'subtract', 'multiply' or 'divide',
 'number1': the first number to operate on,
 'number2': the second number to operate on.
 `,
-    "human", "Please help me!! What is 2 + 2?",
+    "human",
+    "Please help me!! What is 2 + 2?",
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
@@ -849,7 +853,7 @@ Respond with a JSON object containing three keys:
 test("withStructuredOutput JSON schema function calling", async () => {
   const model = new ChatOpenAI({
     temperature: 0,
-    modelName: "gpt-4-turbo-preview"
+    modelName: "gpt-4-turbo-preview",
   });
 
   const calculatorSchema = z.object({
@@ -863,8 +867,10 @@ test("withStructuredOutput JSON schema function calling", async () => {
   });
 
   const prompt = ChatPromptTemplate.fromMessages([
-    "system", `You are VERY bad at math and must always use a calculator.`,
-    "human", "Please help me!! What is 2 + 2?",
+    "system",
+    `You are VERY bad at math and must always use a calculator.`,
+    "human",
+    "Please help me!! What is 2 + 2?",
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
@@ -877,7 +883,7 @@ test("withStructuredOutput JSON schema function calling", async () => {
 test("withStructuredOutput JSON schema JSON mode", async () => {
   const model = new ChatOpenAI({
     temperature: 0,
-    modelName: "gpt-4-turbo-preview"
+    modelName: "gpt-4-turbo-preview",
   });
 
   const calculatorSchema = z.object({
@@ -892,13 +898,15 @@ test("withStructuredOutput JSON schema JSON mode", async () => {
   });
 
   const prompt = ChatPromptTemplate.fromMessages([
-    "system", `You are VERY bad at math and must always use a calculator.
+    "system",
+    `You are VERY bad at math and must always use a calculator.
 Respond with a JSON object containing three keys:
 'operation': the type of operation to execute, either 'add', 'subtract', 'multiply' or 'divide',
 'number1': the first number to operate on,
 'number2': the second number to operate on.
 `,
-    "human", "Please help me!! What is 2 + 2?",
+    "human",
+    "Please help me!! What is 2 + 2?",
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
@@ -911,7 +919,7 @@ Respond with a JSON object containing three keys:
 test("withStructuredOutput throws if name is not provided with a zod schema", async () => {
   const model = new ChatOpenAI({
     temperature: 0,
-    modelName: "gpt-4-turbo-preview"
+    modelName: "gpt-4-turbo-preview",
   });
 
   const calculatorSchema = z.object({
@@ -919,7 +927,7 @@ test("withStructuredOutput throws if name is not provided with a zod schema", as
     number1: z.number(),
     number2: z.number(),
   });
-  expect(() => 
+  expect(() =>
     model.withStructuredOutput({
       schema: calculatorSchema,
     })
@@ -929,7 +937,7 @@ test("withStructuredOutput throws if name is not provided with a zod schema", as
 test("withStructuredOutput includeRaw true", async () => {
   const model = new ChatOpenAI({
     temperature: 0,
-    modelName: "gpt-4-turbo-preview"
+    modelName: "gpt-4-turbo-preview",
   });
 
   const calculatorSchema = z.object({
@@ -944,8 +952,10 @@ test("withStructuredOutput includeRaw true", async () => {
   });
 
   const prompt = ChatPromptTemplate.fromMessages([
-    "system", "You are VERY bad at math and must always use a calculator.",
-    "human", "Please help me!! What is 2 + 2?",
+    "system",
+    "You are VERY bad at math and must always use a calculator.",
+    "human",
+    "Please help me!! What is 2 + 2?",
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
@@ -956,7 +966,9 @@ test("withStructuredOutput includeRaw true", async () => {
   if (!("parsed" in result)) {
     throw new Error("parsed not in result");
   }
-  const { parsed } = result as { parsed: { operation: string, number1: number, number2: number } };
+  const { parsed } = result as {
+    parsed: { operation: string; number1: number; number2: number };
+  };
   expect("operation" in parsed).toBe(true);
   expect("number1" in parsed).toBe(true);
   expect("number2" in parsed).toBe(true);
@@ -968,8 +980,19 @@ test("withStructuredOutput includeRaw true", async () => {
   }
   const { raw } = result as { raw: AIMessage };
   expect(raw.additional_kwargs.tool_calls?.length).toBeGreaterThan(0);
-  expect(raw.additional_kwargs.tool_calls?.[0].function.name).toBe("calculator");
-  expect("operation" in JSON.parse(raw.additional_kwargs.tool_calls?.[0].function.arguments ?? "")).toBe(true);
-  expect("number1" in JSON.parse(raw.additional_kwargs.tool_calls?.[0].function.arguments ?? "")).toBe(true);
-  expect("number2" in JSON.parse(raw.additional_kwargs.tool_calls?.[0].function.arguments ?? "")).toBe(true);
+  expect(raw.additional_kwargs.tool_calls?.[0].function.name).toBe(
+    "calculator"
+  );
+  expect(
+    "operation" in
+      JSON.parse(raw.additional_kwargs.tool_calls?.[0].function.arguments ?? "")
+  ).toBe(true);
+  expect(
+    "number1" in
+      JSON.parse(raw.additional_kwargs.tool_calls?.[0].function.arguments ?? "")
+  ).toBe(true);
+  expect(
+    "number2" in
+      JSON.parse(raw.additional_kwargs.tool_calls?.[0].function.arguments ?? "")
+  ).toBe(true);
 });
