@@ -76,6 +76,10 @@ import ToolCalling from "@examples/models/chat/chat_mistralai_tools.ts";
 
 Using the `.withStructuredOutput` method, you can easily make the LLM return structured output, given only a Zod or JSON schema:
 
+:::note
+The Mistral tool calling API requires descriptions for each tool field. If descriptions are not supplied, the API will error.
+:::
+
 import WSAExample from "@examples/models/chat/chat_mistralai_wsa.ts";
 
 <CodeBlock language="typescript">{WSAExample}</CodeBlock>
