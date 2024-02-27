@@ -3,8 +3,12 @@ import { Optional } from "../../types/type-utils.js";
 import { Generation, ChatGeneration } from "../../outputs.js";
 import { BaseLLMOutputParser } from "../base.js";
 import { parsePartialJson } from "../json.js";
-import { BaseCumulativeTransformOutputParser, BaseCumulativeTransformOutputParserInput } from "../transform.js";
-import { compare,
+import {
+  BaseCumulativeTransformOutputParser,
+  BaseCumulativeTransformOutputParserInput,
+} from "../transform.js";
+import {
+  compare,
   type Operation as JSONPatchOperation,
 } from "../../utils/json_patch.js";
 
