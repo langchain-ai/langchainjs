@@ -1,6 +1,6 @@
 import { Runnable, type RunnableBatchOptions } from "./base.js";
 import { IterableReadableStream } from "../utils/stream.js";
-import type { RunnableConfig } from "./config.js";
+import { ensureConfig, type RunnableConfig } from "./config.js";
 
 export type RouterInput = {
   key: string;
@@ -43,7 +43,7 @@ export class RouterRunnable<
     if (runnable === undefined) {
       throw new Error(`No runnable associated with key "${key}".`);
     }
-    return runnable.invoke(actualInput, options);
+    return runnable.invoke(actualInput, ensureConfig(options));
   }
 
   async batch(
