@@ -37,7 +37,7 @@ const modelWithTools = model.bind({
   },
 });
 
-import { JsonOutputKeyToolsParser } from "langchain/output_parsers";
+import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 import { RunnableSequence } from "@langchain/core/runnables";
 
 const chain = RunnableSequence.from([

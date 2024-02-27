@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatOpenAI } from "@langchain/openai";
-import { JsonOutputToolsParser } from "langchain/output_parsers";
+import { JsonOutputToolsParser } from "@langchain/core/output_parsers/openai_tools";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 
 const EXTRACTION_TEMPLATE = `Extract and save the relevant entities mentioned \

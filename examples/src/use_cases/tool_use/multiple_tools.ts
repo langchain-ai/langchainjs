@@ -42,7 +42,7 @@ const exponentiateTool = new DynamicStructuredTool({
 
 import { ChatOpenAI } from "@langchain/openai";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
-import { JsonOutputToolsParser } from "langchain/output_parsers";
+import { JsonOutputToolsParser } from "@langchain/core/output_parsers/openai_tools";
 import {
   RunnableLambda,
   RunnablePassthrough,
