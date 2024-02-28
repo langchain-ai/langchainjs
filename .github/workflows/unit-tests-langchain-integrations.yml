@@ -11,6 +11,7 @@ on:
     paths:
       - 'lanchain-core/**'
       - 'libs/**/**'
+      - '!libs/langchain-community/**'
   workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
 
 
