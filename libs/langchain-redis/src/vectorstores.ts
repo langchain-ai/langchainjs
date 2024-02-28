@@ -429,7 +429,7 @@ export class RedisVectorStore extends VectorStore {
     if (Array.isArray(filter)) {
       return filter.map(this.escapeSpecialChars).join("|");
     }
-    return this.filter;
+    return filter;
   }
 
   /**
