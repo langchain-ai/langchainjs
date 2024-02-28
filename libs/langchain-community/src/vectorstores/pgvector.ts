@@ -506,7 +506,7 @@ export class PGVectorStore extends VectorStore {
     const extensionName = this.extensionSchemaName == null ? "vector" : `"${this.extensionSchemaName}.vector"`
     const tableName = this.schemaName == null ? `"${this.tableName}"` : `"${this.schemaName}"."${this.tableName}"`
      const tableQuery = `
-      CREATE TABLE IF NOT EXISTS "${tableName}" (
+      CREATE TABLE IF NOT EXISTS ${tableName} (
         "${this.idColumnName}" uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
         "${this.contentColumnName}" text,
         "${this.metadataColumnName}" jsonb,
