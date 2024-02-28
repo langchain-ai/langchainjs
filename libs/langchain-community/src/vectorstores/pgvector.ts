@@ -532,7 +532,7 @@ export class PGVectorStore extends VectorStore {
           ADD COLUMN collection_id uuid;
 
         ALTER TABLE ${this.computedTableName}
-          ADD CONSTRAINT ${this.computedTableName}_collection_id_fkey
+          ADD CONSTRAINT ${this.tableName}_collection_id_fkey
           FOREIGN KEY (collection_id)
           REFERENCES ${this.collectionTableName}(uuid)
           ON DELETE CASCADE;
