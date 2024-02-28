@@ -327,8 +327,8 @@ export class ElasticVectorSearch extends VectorStore {
       if (condition.operator === "exists") {
         result.push({
           [condition.operator]: {
-            field: `metadata.${condition.field}`
-          }
+            field: `metadata.${condition.field}`,
+          },
         });
       } else {
         result.push({
