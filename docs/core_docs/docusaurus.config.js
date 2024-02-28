@@ -216,7 +216,7 @@ const config = {
               },
               {
                 href: "https://github.com/langchain-ai/langserve",
-                label: "LangServe"
+                label: "LangServe",
               },
               {
                 href: "https://python.langchain.com/en/latest/",
