@@ -101,26 +101,34 @@ export interface GeminiPartText {
 }
 
 export interface GeminiPartInlineData {
-  mimeType: string;
-  data: string;
+  inlineData: {
+    mimeType: string;
+    data: string;
+  };
 }
 
 // Vertex AI only
 export interface GeminiPartFileData {
-  mimeType: string;
-  fileUri: string;
+  fileData: {
+    mimeType: string;
+    fileUri: string;
+  };
 }
 
 // AI Studio only?
 export interface GeminiPartFunctionCall {
-  name: string;
-  args?: object;
+  functionCall: {
+    name: string;
+    args?: object;
+  };
 }
 
 // AI Studio Only?
 export interface GeminiPartFunctionResponse {
-  name: string;
-  response: object;
+  functionResponse: {
+    name: string;
+    response: object;
+  };
 }
 
 export type GeminiPart =

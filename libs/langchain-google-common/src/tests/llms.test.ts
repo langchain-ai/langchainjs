@@ -1,4 +1,10 @@
 import { expect, test } from "@jest/globals";
+import {
+  BaseMessage,
+  HumanMessageChunk,
+  MessageContentComplex
+} from "@langchain/core/messages";
+import {ChatPromptValue} from "@langchain/core/prompt_values";
 import { GoogleBaseLLM, GoogleBaseLLMInput } from "../llms.js";
 import {
   authOptions,
@@ -287,6 +293,155 @@ describe("Mock Google LLM", () => {
     console.log("record", JSON.stringify(record, null, 2));
 
     expect(caught).toEqual(true);
+  });
+
+  test("6: predictMessages image blue-square", async() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "llm-6-mock.json",
+    };
+
+    const model = new GoogleLLM({
+      authOptions,
+      model: "gemini-pro-vision",
+    });
+
+    const message: MessageContentComplex[] = [
+      {
+        type: "text",
+        text: "What is in this image?"
+      },
+      {
+        type: "image_url",
+        image_url: `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH6AIbFwQSRaexCAAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAJklEQVQY02P8//8/A27AxIAXsEAor31f0CS2OfEQ1j2Q0owU+RsAGNUJD2/04PgAAAAASUVORK5CYII=`
+      }
+    ]
+
+    const messages: BaseMessage[] = [
+      new HumanMessageChunk({content: message})
+    ]
+    const res = await model.predictMessages(messages);
+
+    console.log('record', record);
+    expect(record.opts).toHaveProperty("data");
+    expect(record.opts.data).toHaveProperty("contents");
+    expect(record.opts.data.contents).toHaveLength(1);
+    expect(record.opts.data.contents[0]).toHaveProperty("parts");
+
+    const parts = record?.opts?.data?.contents[0]?.parts;
+    console.log(parts);
+    expect(parts).toHaveLength(2);
+    expect(parts[0]).toHaveProperty("text");
+    expect(parts[1]).toHaveProperty("inlineData");
+    expect(parts[1].inlineData).toHaveProperty("mimeType");
+    expect(parts[1].inlineData).toHaveProperty("data");
+
+    expect(res?.content?.[0]).toEqual({text: "A blue square.", type: "text"});
+  })
+
+  /*
+   * This test is skipped because .invoke() converts everything to text
+   * only at the moment.
+   */
+  test.skip("6: invoke image blue-square", async() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "llm-6-mock.json",
+    };
+
+    const model = new GoogleLLM({
+      authOptions,
+      model: "gemini-pro-vision",
+    });
+
+    const message: MessageContentComplex[] = [
+      {
+        type: "text",
+        text: "What is in this image?"
+      },
+      {
+        type: "image_url",
+        image_url: `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH6AIbFwQSRaexCAAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAJklEQVQY02P8//8/A27AxIAXsEAor31f0CS2OfEQ1j2Q0owU+RsAGNUJD2/04PgAAAAASUVORK5CYII=`
+      }
+    ]
+
+    const messages: BaseMessage[] = [
+      new HumanMessageChunk({content: message})
+    ]
+
+    // const input: BaseLanguageModelInput = [["human", message]]
+    const input = new ChatPromptValue(messages);
+    const res = await model.invoke(input);
+
+    console.log('record', record);
+    expect(record.opts).toHaveProperty("data");
+    expect(record.opts.data).toHaveProperty("contents");
+    expect(record.opts.data.contents).toHaveLength(1);
+    expect(record.opts.data.contents[0]).toHaveProperty("parts");
+
+    const parts = record?.opts?.data?.contents[0]?.parts;
+    console.log(parts);
+    expect(parts).toHaveLength(2);
+    expect(parts[0]).toHaveProperty("text");
+    expect(parts[1]).toHaveProperty("inlineData");
+    expect(parts[1].inlineData).toHaveProperty("mimeType");
+    expect(parts[1].inlineData).toHaveProperty("data");
+
+    expect(res).toEqual("A blue square.");
+  })
+
+  /*
+   * This test is skipped because .stream() converts everything to text
+   * only at the moment.
+   */
+  test.skip("7: stream image blue-square", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "llm-7-mock.json",
+    };
+    const model = new GoogleLLM({
+      authOptions,
+      model: "gemini-pro-image",
+    });
+
+    const message: MessageContentComplex[] = [
+      {
+        type: "text",
+        text: "What is in this image?"
+      },
+      {
+        type: "image_url",
+        image_url: `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH6AIbFwQSRaexCAAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAJklEQVQY02P8//8/A27AxIAXsEAor31f0CS2OfEQ1j2Q0owU+RsAGNUJD2/04PgAAAAASUVORK5CYII=`
+      }
+    ]
+
+    const messages: BaseMessage[] = [
+      new HumanMessageChunk({content: message})
+    ]
+
+    // const input: BaseLanguageModelInput = [["human", message]]
+    const input = new ChatPromptValue(messages);
+
+    const response = await model.stream(input);
+    const responseArray: string[] = [];
+    for await (const value of response) {
+      responseArray.push(value);
+    }
+
+    expect(responseArray).toHaveLength(3);
+    console.log("record", JSON.stringify(record, null, 2));
   });
 
 });

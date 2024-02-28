@@ -51,14 +51,18 @@ function messageContentImageUrl(
 
   if (url.startsWith("data:")) {
     return {
-      mimeType: url.split(":")[1].split(";")[0],
-      data: url.split(",")[1],
+      inlineData: {
+        mimeType: url.split(":")[1].split(";")[0],
+        data: url.split(",")[1],
+      },
     };
   } else {
     // FIXME - need some way to get mime type
     return {
-      mimeType: "image/png",
-      fileUri: url,
+      fileData: {
+        mimeType: "image/png",
+        fileUri: url,
+      },
     };
   }
 }
@@ -135,7 +139,7 @@ function inlineDataPartToMessageContent(
 ): MessageContentImageUrl {
   return {
     type: "image_url",
-    image_url: `data:${part.mimeType};base64,${part.data}`,
+    image_url: `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`,
   };
 }
 
@@ -144,7 +148,7 @@ function fileDataPartToMessageContent(
 ): MessageContentImageUrl {
   return {
     type: "image_url",
-    image_url: part.fileUri,
+    image_url: part.fileData.fileUri,
   };
 }
 
@@ -153,9 +157,9 @@ export function partsToMessageContent(parts: GeminiPart[]): MessageContent {
     .map((part) => {
       if ("text" in part) {
         return textPartToMessageContent(part);
-      } else if ("mimeType" in part && "data" in part) {
+      } else if ("inlineData" in part) {
         return inlineDataPartToMessageContent(part);
-      } else if ("mimeType" in part && "fileUri" in part) {
+      } else if ("fileData" in part) {
         return fileDataPartToMessageContent(part);
       } else {
         return null;
