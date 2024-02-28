@@ -1,0 +1,117 @@
+labels: [Question]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for your interest in LangChain.js 🦜️🔗!
+
+        Please follow these instructions, fill every question, and do every step. 🙏
+        
+        We're asking for this because answering questions and solving problems in GitHub takes a lot of time --
+        this is time that we cannot spend on adding new features, fixing bugs, writing documentation or reviewing pull requests.
+
+        By asking questions in a structured way (following this) it will be much easier for us to help you.
+
+        There's a high chance that by following this process, you'll find the solution on your own, eliminating the need to submit a question and wait for an answer. 😎
+
+        As there are many questions submitted every day, we will **DISCARD** and close the incomplete ones. 
+        
+        That will allow us (and others) to focus on helping people like you that follow the whole process. 🤓
+        
+        Relevant links to check before opening a question to see if your question has already been answered, fixed or
+        if there's another way to solve your problem:
+        
+        [LangChain.js documentation with the integrated search](https://js.langchain.com/docs/get_started/introduction),
+        [API Reference](https://api.js.langchain.com/),
+        [GitHub search](https://github.com/langchain-ai/langchainjs),
+        [LangChain.js Github Discussions](https://github.com/langchain-ai/langchainjs/discussions),
+        [LangChain.js Github Issues](https://github.com/langchain-ai/langchainjs/issues?q=is%3Aissue),
+        [LangChain.js ChatBot](https://chatjs.langchain.com/)
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checked other resources
+      description: Please confirm and check all the following options.
+      options:
+        - label: I added a very descriptive title to this question.
+          required: true
+        - label: I searched the LangChain documentation with the integrated search.
+          required: true
+        - label: I used the GitHub search to find a similar question and didn't find it.
+          required: true
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Commit to Help
+      description: |
+        After submitting this, I commit to one of:
+
+          * Read open questions until I find 2 where I can help someone and add a comment to help there.
+          * I already hit the "watch" button in this repository to receive notifications and I commit to help at least 2 people that ask questions in the future.
+          * Once my question is answered, I will mark the answer as "accepted".
+      options:
+        - label: I commit to help with one of those options 👆
+          required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Example Code
+      description: |
+        Please add a self-contained, [minimal, reproducible, example](https://stackoverflow.com/help/minimal-reproducible-example) with your use case.
+        
+        If a maintainer can copy it, run it, and see it right away, there's a much higher chance that you'll be able to get help.
+        
+        **Important!** 
+        
+        * Use code tags (e.g., ```typescript ... ```) to correctly [format your code](https://help.github.com/en/github/writing-on-github/creating-and-highlighting-code-blocks#syntax-highlighting).
+        * INCLUDE the language label (e.g. `typescript`) after the first three backticks to enable syntax highlighting. (e.g., ```typescript rather than ```).
+        * Reduce your code to the minimum required to reproduce the issue if possible. This makes it much easier for others to help you.
+        * Avoid screenshots when possible, as they are hard to read and (more importantly) don't allow others to copy-and-paste your code.
+
+      placeholder: |
+        import { RunnableLambda } from "@langchain/core/runnables"
+
+        const badCode = (inputs: Record<string, any>) => {
+          throw new Error('For demo purposes');
+        }
+
+        const chain = new RunnableLambda({ func: badCode });
+        await chain.invoke({ input: 'Hello!' });
+      render: typescript
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: |
+        What is the problem, question, or error?
+
+        Write a short description explaining what you are doing, what you expect to happen, and what is currently happening.
+      placeholder: |
+        * I'm trying to use the `langchain` library to do X.
+        * I expect to see Y.
+        * Instead, it does Z.
+    validations:
+      required: true
+  - type: textarea
+    id: system-info
+    attributes:
+      label: System Info
+      description: |
+        Please share your system info with us. 
+        
+        "yarn info langchain" 
+        platform (windows / linux / mac)
+        Node version
+        yarn version
+      placeholder: |
+        "yarn info langchain"
+        platform
+        Node version
+        yarn version
+        
+        These will only surface LangChain.js packages, don't forget to include any other relevant
+        packages you're using (if you're not sure what's relevant, you can paste the entire output of `yarn info`).
+    validations:
+      required: true
