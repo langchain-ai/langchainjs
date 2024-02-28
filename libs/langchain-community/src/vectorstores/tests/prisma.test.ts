@@ -7,19 +7,19 @@ class Sql {
   strings: string[];
 }
 
-const mockColumns = { 
+const mockColumns = {
   id: PrismaVectorStore.IdColumn as typeof PrismaVectorStore.IdColumn,
-  content: PrismaVectorStore.ContentColumn as typeof PrismaVectorStore.ContentColumn,
+  content:
+    PrismaVectorStore.ContentColumn as typeof PrismaVectorStore.ContentColumn,
 };
-
 
 const sql = jest.fn<(params: unknown) => Sql>();
 const raw = jest.fn<(params: unknown) => Sql>();
 const join = jest.fn<(params: unknown) => Sql>();
 
 const mockPrismaNamespace = {
-  ModelName: {}, 
-  Sql, 
+  ModelName: {},
+  Sql,
   raw,
   join,
   sql,
@@ -48,14 +48,20 @@ describe("Prisma", () => {
       vectorColumnName: "vector",
       columns: mockColumns,
     });
-    const similaritySearchVectorWithScoreSpy = jest.spyOn(store, "similaritySearchVectorWithScore").mockResolvedValue([]);
+    const similaritySearchVectorWithScoreSpy = jest
+      .spyOn(store, "similaritySearchVectorWithScore")
+      .mockResolvedValue([]);
 
-    const filter = { id: {equals: '123'}}
+    const filter = { id: { equals: "123" } };
 
     await store.similaritySearch("hello", 1, filter);
-    
+
     const embeddedQuery = await embeddings.embedQuery("hello");
     expect(similaritySearchVectorWithScoreSpy).toHaveBeenCalledTimes(1);
-    expect(similaritySearchVectorWithScoreSpy).toHaveBeenCalledWith(embeddedQuery, 1, filter);
-  })
+    expect(similaritySearchVectorWithScoreSpy).toHaveBeenCalledWith(
+      embeddedQuery,
+      1,
+      filter
+    );
+  });
 });

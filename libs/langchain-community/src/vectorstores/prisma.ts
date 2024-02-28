@@ -111,6 +111,8 @@ export class PrismaVectorStore<
   TSelectModel extends ModelColumns<TModel>,
   TFilterModel extends PrismaSqlFilter<TModel>
 > extends VectorStore {
+  declare FilterType: TFilterModel;
+
   protected tableName: string;
 
   protected vectorColumnName: string;
@@ -324,7 +326,7 @@ export class PrismaVectorStore<
   async similaritySearch(
     query: string,
     k = 4,
-    filter: this['filter'] = undefined,
+    filter?: this["FilterType"],
     _callbacks: Callbacks | undefined = undefined // implement passing to embedQuery later
   ): Promise<Document<SimilarityModel<TModel, TSelectModel>>[]> {
     const results = await this.similaritySearchVectorWithScore(
