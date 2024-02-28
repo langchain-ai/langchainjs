@@ -113,7 +113,7 @@ export class Neo4jGraph {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     params: Record<string, any> = {},
     routing: RoutingControl = neo4j.routing.WRITE
-  ): Promise<RecordShape[] | undefined> {
+  ): Promise<RecordShape[]> {
     const result = await this.driver.executeQuery<RecordShape>(query, params, {
       database: this.database,
       routing,
@@ -152,15 +152,15 @@ export class Neo4jGraph {
     `;
 
     // Assuming query method is defined and returns a Promise
-    const nodeProperties: NodeType[] | undefined = (
+    const nodeProperties = (
       await this.query<{ output: NodeType }>(nodePropertiesQuery)
     )?.map((el) => el.output);
 
-    const relationshipsProperties: RelType[] | undefined = (
+    const relationshipsProperties = (
       await this.query<{ output: RelType }>(relPropertiesQuery)
     )?.map((el) => el.output);
 
-    const relationships: PathType[] | undefined = (
+    const relationships: PathType[] = (
       await this.query<{ output: PathType }>(relQuery)
     )?.map((el) => el.output);
 
