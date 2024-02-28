@@ -227,7 +227,7 @@ const config = {
           {
             href: "https://chatjs.langchain.com",
             label: "Chat",
-            position: "left",
+            position: "right",
           },
           // Please keep GitHub link to the right for consistency.
           {
