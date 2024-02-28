@@ -477,9 +477,10 @@ export class PGVectorStore extends VectorStore {
       ORDER BY "_distance" ASC
       LIMIT $2;
       `;
-    const schemaConfig = `SET search_path TO ${this.extensionSchemaName}, public;`;
-
-    await this.pool.query(schemaConfig);
+    if (this.extensionSchemaName !== null) {
+      const schemaConfig = `SET search_path TO ${this.extensionSchemaName}, public;`;
+      await this.pool.query(schemaConfig);
+    }
     const documents = (await this.pool.query(queryString, parameters)).rows;
 
     const results = [] as [Document, number][];
