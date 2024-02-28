@@ -1,7 +1,6 @@
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
-import { Callbacks } from "@langchain/core/callbacks/manager";
 
 const IdColumnSymbol = Symbol("id");
 const ContentColumnSymbol = Symbol("content");
@@ -326,8 +325,7 @@ export class PrismaVectorStore<
   async similaritySearch(
     query: string,
     k = 4,
-    filter?: this["FilterType"],
-    _callbacks: Callbacks | undefined = undefined // implement passing to embedQuery later
+    filter: this["FilterType"] | undefined = undefined
   ): Promise<Document<SimilarityModel<TModel, TSelectModel>>[]> {
     const results = await this.similaritySearchVectorWithScore(
       await this.embeddings.embedQuery(query),
@@ -350,8 +348,7 @@ export class PrismaVectorStore<
   async similaritySearchWithScore(
     query: string,
     k?: number,
-    filter?: TFilterModel,
-    _callbacks: Callbacks | undefined = undefined // implement passing to embedQuery later
+    filter?: this["FilterType"]
   ) {
     return super.similaritySearchWithScore(query, k, filter);
   }
@@ -367,7 +364,7 @@ export class PrismaVectorStore<
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: TFilterModel
+    filter?: this["FilterType"]
   ): Promise<[Document<SimilarityModel<TModel, TSelectModel>>, number][]> {
     // table name, column names cannot be parametrised
     // these fields are thus not escaped by Prisma and can be dangerous if user input is used
@@ -414,7 +411,7 @@ export class PrismaVectorStore<
     return results;
   }
 
-  buildSqlFilterStr(filter?: TFilterModel) {
+  buildSqlFilterStr(filter?: this["FilterType"]) {
     if (filter == null) return null;
     return this.Prisma.join(
       Object.entries(filter).flatMap(([key, ops]) =>
