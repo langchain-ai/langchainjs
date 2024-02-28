@@ -1,4 +1,4 @@
-import MistralClient, {
+import {
   ChatCompletionResponse,
   Function as MistralAIFunction,
   ToolCalls as MistralAIToolCalls,
@@ -299,8 +299,6 @@ export class ChatMistralAI<
 
   lc_serializable = true;
 
-  client: MistralClient;
-
   constructor(fields?: ChatMistralAIInput) {
     super(fields ?? {});
     const apiKey = fields?.apiKey ?? getEnvironmentVariable("MISTRAL_API_KEY");
@@ -319,7 +317,6 @@ export class ChatMistralAI<
     this.safePrompt = fields?.safePrompt ?? this.safePrompt;
     this.randomSeed = fields?.randomSeed ?? this.randomSeed;
     this.modelName = fields?.modelName ?? this.modelName;
-    this.client = new MistralClient(this.apiKey, this.endpoint);
   }
 
   _llmType() {
@@ -378,14 +375,17 @@ export class ChatMistralAI<
   ): Promise<
     ChatCompletionResponse | AsyncGenerator<ChatCompletionResponseChunk>
   > {
+    const { MistralClient } = await this.imports();
+    const client = new MistralClient(this.apiKey, this.endpoint);
+
     return this.caller.call(async () => {
       let res:
         | ChatCompletionResponse
         | AsyncGenerator<ChatCompletionResponseChunk>;
       if (streaming) {
-        res = this.client.chatStream(input);
+        res = client.chatStream(input);
       } else {
-        res = await this.client.chat(input);
+        res = await client.chat(input);
       }
       return res;
     });
@@ -675,6 +675,12 @@ export class ChatMistralAI<
       },
       parsedWithFallback,
     ]);
+  }
+
+  /** @ignore */
+  private async imports() {
+    const { default: MistralClient } = await import("@mistralai/mistralai");
+    return { MistralClient };
   }
 }
 

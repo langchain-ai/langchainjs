@@ -1,7 +1,7 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
-import MistralClient, { EmbeddingResponse } from "@mistralai/mistralai";
+import { EmbeddingResponse } from "@mistralai/mistralai";
 
 /**
  * Interface for MistralAIEmbeddings parameters. Extends EmbeddingsParams and
@@ -59,8 +59,6 @@ export class MistralAIEmbeddings
 
   endpoint?: string;
 
-  client: MistralClient;
-
   constructor(fields?: Partial<MistralAIEmbeddingsParams>) {
     super(fields ?? {});
     const apiKey = fields?.apiKey ?? getEnvironmentVariable("MISTRAL_API_KEY");
@@ -73,7 +71,6 @@ export class MistralAIEmbeddings
     this.encodingFormat = fields?.encodingFormat ?? this.encodingFormat;
     this.batchSize = fields?.batchSize ?? this.batchSize;
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
-    this.client = new MistralClient(this.apiKey, this.endpoint);
   }
 
   /**
@@ -128,12 +125,20 @@ export class MistralAIEmbeddings
   private async embeddingWithRetry(
     input: string | Array<string>
   ): Promise<EmbeddingResponse> {
+    const { MistralClient } = await this.imports();
+    const client = new MistralClient(this.apiKey, this.endpoint);
     return this.caller.call(async () => {
-      const res = await this.client.embeddings({
+      const res = await client.embeddings({
         model: this.modelName,
         input,
       });
       return res;
     });
+  }
+
+  /** @ignore */
+  private async imports() {
+    const { default: MistralClient } = await import("@mistralai/mistralai");
+    return { MistralClient };
   }
 }
