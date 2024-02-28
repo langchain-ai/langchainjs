@@ -540,7 +540,7 @@ export class PGVectorStore extends VectorStore {
         ALTER TABLE ${tableName}
           ADD CONSTRAINT "${tableName.replaceAll('"', '')}_collection_id_fkey"
           FOREIGN KEY (collection_id)
-          REFERENCES "${this.collectionTableName}(uuid)"
+          REFERENCES ${this.collectionTableName}(uuid)
           ON DELETE CASCADE;
       `
       await this.pool.query(queryString);
