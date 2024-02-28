@@ -2,7 +2,7 @@
 
 import { MongoClient, ObjectId } from "mongodb";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
-import { MongoDBChatMessageHistory } from "../message/mongodb.js";
+import { MongoDBChatMessageHistory } from "../chat_history.js";
 
 afterAll(async () => {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -12,7 +12,7 @@ afterAll(async () => {
   await client.close();
 });
 
-test.skip("Test MongoDB history store", async () => {
+test("Test MongoDB history store", async () => {
   expect(process.env.MONGODB_ATLAS_URI).toBeDefined();
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -43,7 +43,7 @@ test.skip("Test MongoDB history store", async () => {
   await client.close();
 });
 
-test.skip("Test clear MongoDB history store", async () => {
+test("Test clear MongoDB history store", async () => {
   expect(process.env.MONGODB_ATLAS_URI).toBeDefined();
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

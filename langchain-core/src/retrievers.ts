@@ -68,7 +68,7 @@ export abstract class BaseRetriever
     input: string,
     options?: RunnableConfig
   ): Promise<DocumentInterface[]> {
-    return this.getRelevantDocuments(input, options);
+    return this.getRelevantDocuments(input, ensureConfig(options));
   }
 
   /**

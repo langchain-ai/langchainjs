@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.0.30",
+  "version": "0.0.33",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -39,7 +39,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1.29",
+    "@langchain/core": "~0.1.36",
     "@langchain/openai": "~0.0.14",
     "flat": "^5.0.2",
     "langsmith": "~0.1.1",
@@ -99,7 +99,7 @@
     "@types/jsdom": "^21.1.1",
     "@types/lodash": "^4",
     "@types/mozilla-readability": "^0.2.1",
-    "@types/pg": "^8",
+    "@types/pg": "^8.11.0",
     "@types/pg-copy-streams": "^1.2.2",
     "@types/uuid": "^9",
     "@types/ws": "^8",
@@ -236,7 +236,7 @@
     "llmonitor": "^0.5.9",
     "lodash": "^4.17.21",
     "lunary": "^0.6.11",
-    "mongodb": "^5.2.0",
+    "mongodb": ">=5.2.0",
     "mysql2": "^3.3.3",
     "neo4j-driver": "*",
     "node-llama-cpp": "*",
@@ -782,6 +782,15 @@
       },
       "import": "./embeddings/cohere.js",
       "require": "./embeddings/cohere.cjs"
+    },
+    "./embeddings/fireworks": {
+      "types": {
+        "import": "./embeddings/fireworks.d.ts",
+        "require": "./embeddings/fireworks.d.cts",
+        "default": "./embeddings/fireworks.d.ts"
+      },
+      "import": "./embeddings/fireworks.js",
+      "require": "./embeddings/fireworks.cjs"
     },
     "./embeddings/googlepalm": {
       "types": {
@@ -1872,6 +1881,15 @@
       "import": "./stores/doc/in_memory.js",
       "require": "./stores/doc/in_memory.cjs"
     },
+    "./stores/message/astradb": {
+      "types": {
+        "import": "./stores/message/astradb.d.ts",
+        "require": "./stores/message/astradb.d.cts",
+        "default": "./stores/message/astradb.d.ts"
+      },
+      "import": "./stores/message/astradb.js",
+      "require": "./stores/message/astradb.cjs"
+    },
     "./stores/message/cassandra": {
       "types": {
         "import": "./stores/message/cassandra.d.ts",
@@ -1961,6 +1979,15 @@
       },
       "import": "./stores/message/planetscale.js",
       "require": "./stores/message/planetscale.cjs"
+    },
+    "./stores/message/postgres": {
+      "types": {
+        "import": "./stores/message/postgres.d.ts",
+        "require": "./stores/message/postgres.d.cts",
+        "default": "./stores/message/postgres.d.ts"
+      },
+      "import": "./stores/message/postgres.js",
+      "require": "./stores/message/postgres.cjs"
     },
     "./stores/message/redis": {
       "types": {
@@ -2203,6 +2230,10 @@
     "embeddings/cohere.js",
     "embeddings/cohere.d.ts",
     "embeddings/cohere.d.cts",
+    "embeddings/fireworks.cjs",
+    "embeddings/fireworks.js",
+    "embeddings/fireworks.d.ts",
+    "embeddings/fireworks.d.cts",
     "embeddings/googlepalm.cjs",
     "embeddings/googlepalm.js",
     "embeddings/googlepalm.d.ts",
@@ -2687,6 +2718,10 @@
     "stores/doc/in_memory.js",
     "stores/doc/in_memory.d.ts",
     "stores/doc/in_memory.d.cts",
+    "stores/message/astradb.cjs",
+    "stores/message/astradb.js",
+    "stores/message/astradb.d.ts",
+    "stores/message/astradb.d.cts",
     "stores/message/cassandra.cjs",
     "stores/message/cassandra.js",
     "stores/message/cassandra.d.ts",
@@ -2727,6 +2762,10 @@
     "stores/message/planetscale.js",
     "stores/message/planetscale.d.ts",
     "stores/message/planetscale.d.cts",
+    "stores/message/postgres.cjs",
+    "stores/message/postgres.js",
+    "stores/message/postgres.d.ts",
+    "stores/message/postgres.d.cts",
     "stores/message/redis.cjs",
     "stores/message/redis.js",
     "stores/message/redis.d.ts",

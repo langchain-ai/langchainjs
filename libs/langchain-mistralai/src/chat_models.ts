@@ -1,4 +1,12 @@
 import {
+  ChatCompletionResponse,
+  Function as MistralAIFunction,
+  ToolCalls as MistralAIToolCalls,
+  ToolChoice as MistralAIToolChoice,
+  ResponseFormat,
+  ChatCompletionResponseChunk,
+} from "@mistralai/mistralai";
+import {
   MessageType,
   type BaseMessage,
   MessageContent,
@@ -6,13 +14,13 @@ import {
   HumanMessage,
   HumanMessageChunk,
   AIMessageChunk,
+  ToolMessageChunk,
+  ChatMessageChunk,
 } from "@langchain/core/messages";
-import { type BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import {
-  type ChatCompletionResult as MistralAIChatCompletionResult,
-  type ChatCompletionOptions as MistralAIChatCompletionOptions,
-  type Message as MistralAIInputMessage,
-} from "@mistralai/mistralai";
+  BaseLanguageModelInput,
+  type BaseLanguageModelCallOptions,
+} from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   type BaseChatModelParams,
@@ -26,11 +34,58 @@ import {
 } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
+import { StructuredToolInterface } from "@langchain/core/tools";
+import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
+import { z } from "zod";
+import { JsonOutputParser } from "@langchain/core/output_parsers";
+import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
+import {
+  Runnable,
+  RunnablePassthrough,
+  RunnableSequence,
+} from "@langchain/core/runnables";
+import { zodToJsonSchema } from "zod-to-json-schema";
 
 interface TokenUsage {
   completionTokens?: number;
   promptTokens?: number;
   totalTokens?: number;
+}
+
+type MistralAIInputMessage = {
+  role: string;
+  name?: string;
+  content: string | string[];
+  tool_calls?: MistralAIToolCalls[];
+};
+
+type MistralAIToolInput = { type: string; function: MistralAIFunction };
+
+type MistralAIChatCompletionOptions = {
+  model: string;
+  messages: Array<{
+    role: string;
+    name?: string;
+    content: string | string[];
+    tool_calls?: MistralAIToolCalls[];
+  }>;
+  tools?: Array<MistralAIToolInput>;
+  temperature?: number;
+  maxTokens?: number;
+  topP?: number;
+  randomSeed?: number;
+  safeMode?: boolean;
+  safePrompt?: boolean;
+  toolChoice?: MistralAIToolChoice;
+  responseFormat?: ResponseFormat;
+};
+
+interface MistralAICallOptions extends BaseLanguageModelCallOptions {
+  response_format?: {
+    type: "text" | "json_object";
+  };
+  tools: StructuredToolInterface[] | MistralAIToolInput[];
+  tool_choice?: MistralAIToolChoice;
 }
 
 /**
@@ -44,7 +99,7 @@ export interface ChatMistralAIInput extends BaseChatModelParams {
   apiKey?: string;
   /**
    * The name of the model to use.
-   * @default {"mistral-small"}
+   * @default {"mistral-small-latest"}
    */
   modelName?: string;
   /**
@@ -77,8 +132,14 @@ export interface ChatMistralAIInput extends BaseChatModelParams {
   /**
    * Whether to inject a safety prompt before all conversations.
    * @default {false}
+   * @deprecated use safePrompt instead
    */
   safeMode?: boolean;
+  /**
+   * Whether to inject a safety prompt before all conversations.
+   * @default {false}
+   */
+  safePrompt?: boolean;
   /**
    * The seed to use for random sampling. If set, different calls will generate deterministic results.
    */
@@ -121,41 +182,89 @@ function convertMessagesToMistralMessages(
 }
 
 function mistralAIResponseToChatMessage(
-  choice: MistralAIChatCompletionResult["choices"][0]
+  choice: ChatCompletionResponse["choices"][0]
 ): BaseMessage {
-  if ("delta" in choice && !("message" in choice)) {
-    return new AIMessage(choice.delta?.content ?? "");
-  }
-  if (!("message" in choice) || !choice.message) {
-    throw new Error("No message found in the choice.");
-  }
-
   const { message } = choice;
+  // MistralAI SDK does not include tool_calls in the non
+  // streaming return type, so we need to extract it like this
+  // to satisfy typescript.
+  let toolCalls: MistralAIToolCalls[] = [];
+  if ("tool_calls" in message) {
+    toolCalls = message.tool_calls as MistralAIToolCalls[];
+  }
   switch (message.role) {
     case "assistant":
-      return new AIMessage(message.content ?? "");
+      return new AIMessage({
+        content: message.content ?? "",
+        additional_kwargs: {
+          tool_calls: toolCalls,
+        },
+      });
     default:
       return new HumanMessage(message.content ?? "");
   }
 }
 
 function _convertDeltaToMessageChunk(delta: {
-  role?: "user" | "assistant";
-  content?: string;
+  role?: string | undefined;
+  content?: string | undefined;
+  tool_calls?: MistralAIToolCalls[] | undefined;
 }) {
-  const role = delta.role ?? "assistant";
+  if (!delta.content && !delta.tool_calls) {
+    return null;
+  }
+  // Our merge additional kwargs util function will throw unless there
+  // is an index key in each tool object (as seen in OpenAI's) so we
+  // need to insert it here.
+  const toolCallsWithIndex = delta.tool_calls?.length
+    ? delta.tool_calls?.map((toolCall, index) => ({
+        ...toolCall,
+        index,
+      }))
+    : undefined;
+
+  let role = "assistant";
+  if (delta.role) {
+    role = delta.role;
+  } else if (toolCallsWithIndex) {
+    role = "tool";
+  }
   const content = delta.content ?? "";
+  let additional_kwargs;
+  if (toolCallsWithIndex) {
+    additional_kwargs = {
+      tool_calls: toolCallsWithIndex,
+    };
+  } else {
+    additional_kwargs = {};
+  }
+
   if (role === "user") {
     return new HumanMessageChunk({ content });
+  } else if (role === "assistant") {
+    return new AIMessageChunk({ content, additional_kwargs });
+  } else if (role === "tool") {
+    return new ToolMessageChunk({
+      content,
+      additional_kwargs,
+      tool_call_id: toolCallsWithIndex?.[0].id ?? "",
+    });
+  } else {
+    return new ChatMessageChunk({ content, role });
   }
-  return new AIMessageChunk({ content });
+}
+
+function _convertStructuredToolToMistralTool(
+  tools: StructuredToolInterface[]
+): MistralAIToolInput[] {
+  return tools.map((tool) => convertToOpenAITool(tool) as MistralAIToolInput);
 }
 
 /**
  * Integration with a chat model.
  */
 export class ChatMistralAI<
-    CallOptions extends BaseLanguageModelCallOptions = BaseLanguageModelCallOptions
+    CallOptions extends MistralAICallOptions = MistralAICallOptions
   >
   extends BaseChatModel<CallOptions>
   implements ChatMistralAIInput
@@ -165,7 +274,7 @@ export class ChatMistralAI<
     return "ChatMistralAI";
   }
 
-  modelName = "mistral-small";
+  modelName = "mistral-small-latest";
 
   apiKey: string;
 
@@ -179,7 +288,12 @@ export class ChatMistralAI<
 
   maxTokens: number;
 
+  /**
+   * @deprecated use safePrompt instead
+   */
   safeMode = false;
+
+  safePrompt = false;
 
   randomSeed?: number;
 
@@ -200,6 +314,7 @@ export class ChatMistralAI<
     this.topP = fields?.topP ?? this.topP;
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
     this.safeMode = fields?.safeMode ?? this.safeMode;
+    this.safePrompt = fields?.safePrompt ?? this.safePrompt;
     this.randomSeed = fields?.randomSeed ?? this.randomSeed;
     this.modelName = fields?.modelName ?? this.modelName;
   }
@@ -211,14 +326,30 @@ export class ChatMistralAI<
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams(): Omit<MistralAIChatCompletionOptions, "messages"> {
-    const params = {
+  invocationParams(
+    options?: this["ParsedCallOptions"]
+  ): Omit<MistralAIChatCompletionOptions, "messages"> {
+    const { response_format, tools, tool_choice } = options ?? {};
+    const mistralAITools: MistralAIToolInput[] =
+      tools
+        ?.map((tool) => {
+          if ("lc_namespace" in tool) {
+            return _convertStructuredToolToMistralTool([tool]);
+          }
+          return tool;
+        })
+        .flat() ?? [];
+    const params: Omit<MistralAIChatCompletionOptions, "messages"> = {
       model: this.modelName,
+      tools: mistralAITools,
       temperature: this.temperature,
-      topP: this.topP,
       maxTokens: this.maxTokens,
-      safeMode: this.safeMode,
+      topP: this.topP,
       randomSeed: this.randomSeed,
+      safeMode: this.safeMode,
+      safePrompt: this.safePrompt,
+      toolChoice: tool_choice,
+      responseFormat: response_format as ResponseFormat,
     };
     return params;
   }
@@ -231,26 +362,26 @@ export class ChatMistralAI<
   async completionWithRetry(
     input: MistralAIChatCompletionOptions,
     streaming: true
-  ): Promise<AsyncGenerator<MistralAIChatCompletionResult>>;
+  ): Promise<AsyncGenerator<ChatCompletionResponseChunk>>;
 
   async completionWithRetry(
     input: MistralAIChatCompletionOptions,
     streaming: false
-  ): Promise<MistralAIChatCompletionResult>;
+  ): Promise<ChatCompletionResponse>;
 
   async completionWithRetry(
     input: MistralAIChatCompletionOptions,
     streaming: boolean
   ): Promise<
-    | MistralAIChatCompletionResult
-    | AsyncGenerator<MistralAIChatCompletionResult>
+    ChatCompletionResponse | AsyncGenerator<ChatCompletionResponseChunk>
   > {
     const { MistralClient } = await this.imports();
     const client = new MistralClient(this.apiKey, this.endpoint);
+
     return this.caller.call(async () => {
       let res:
-        | MistralAIChatCompletionResult
-        | AsyncGenerator<MistralAIChatCompletionResult>;
+        | ChatCompletionResponse
+        | AsyncGenerator<ChatCompletionResponseChunk>;
       if (streaming) {
         res = client.chatStream(input);
       } else {
@@ -267,7 +398,7 @@ export class ChatMistralAI<
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     const tokenUsage: TokenUsage = {};
-    const params = this.invocationParams();
+    const params = this.invocationParams(options);
     const mistralMessages = convertMessagesToMistralMessages(messages);
     const input = {
       ...params,
@@ -346,7 +477,7 @@ export class ChatMistralAI<
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const mistralMessages = convertMessagesToMistralMessages(messages);
-    const params = this.invocationParams();
+    const params = this.invocationParams(options);
     const input = {
       ...params,
       messages: mistralMessages,
@@ -367,8 +498,13 @@ export class ChatMistralAI<
         prompt: 0,
         completion: choice.index ?? 0,
       };
+      const message = _convertDeltaToMessageChunk(delta);
+      if (message === null) {
+        // Do not yield a chunk if the message is empty
+        continue;
+      }
       const generationChunk = new ChatGenerationChunk({
-        message: _convertDeltaToMessageChunk(delta),
+        message,
         text: delta.content ?? "",
         generationInfo: newTokenIndices,
       });
@@ -393,8 +529,167 @@ export class ChatMistralAI<
     return [];
   }
 
-  async imports() {
+  withStructuredOutput<
+    RunInput = BaseLanguageModelInput,
+    // prettier-ignore
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
+  >({
+    schema,
+    name,
+    method,
+    includeRaw,
+  }: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    schema: z.ZodEffects<RunOutput> | Record<string, any>;
+    name: string;
+    method?: "functionCalling" | "jsonMode";
+    includeRaw: true;
+  }): Runnable<RunInput, { raw: BaseMessage; parsed: RunOutput }>;
+
+  withStructuredOutput<
+    RunInput = BaseLanguageModelInput,
+    // prettier-ignore
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
+  >({
+    schema,
+    name,
+    method,
+    includeRaw,
+  }: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    schema: z.ZodEffects<RunOutput> | Record<string, any>;
+    name: string;
+    method?: "functionCalling" | "jsonMode";
+    includeRaw?: false;
+  }): Runnable<RunInput, RunOutput>;
+
+  /**
+   * Model wrapper that returns outputs formatted to match the given schema.
+   *
+   * @template {BaseLanguageModelInput} RunInput The input type for the Runnable, expected to be the same input for the LLM.
+   * @template {z.ZodObject<any, any, any, any>} RunOutput The output type for the Runnable, expected to be a Zod schema object for structured output validation.
+   *
+   * @param {z.ZodEffects<RunOutput>} schema The schema for the structured output. Either as a Zod schema or a valid JSON schema object.
+   * @param {string} name The name of the function to call.
+   * @param {"functionCalling" | "jsonMode"} [method=functionCalling] The method to use for getting the structured output. Defaults to "functionCalling".
+   * @param {boolean | undefined} [includeRaw=false] Whether to include the raw output in the result. Defaults to false.
+   * @returns {Runnable<RunInput, RunOutput> | Runnable<RunInput, { raw: BaseMessage; parsed: RunOutput }>} A new runnable that calls the LLM with structured output.
+   */
+  withStructuredOutput<
+    RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
+    // prettier-ignore
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
+  >({
+    schema,
+    name,
+    method = "functionCalling",
+    includeRaw = false,
+  }: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    schema: z.ZodEffects<RunOutput> | Record<string, any>;
+    name: string;
+    method?: "functionCalling" | "jsonMode";
+    includeRaw?: boolean;
+  }):
+    | Runnable<RunInput, RunOutput>
+    | Runnable<
+        RunInput,
+        {
+          raw: BaseMessage;
+          parsed: RunOutput;
+        }
+      > {
+    let llm: Runnable<BaseLanguageModelInput>;
+    let outputParser: JsonOutputKeyToolsParser | JsonOutputParser<RunOutput>;
+
+    if (method === "jsonMode") {
+      llm = this.bind({
+        response_format: { type: "json_object" },
+      } as Partial<CallOptions>);
+      outputParser = new JsonOutputParser<RunOutput>();
+    } else {
+      // Is function calling
+      if (isZodSchema(schema)) {
+        const asZodSchema = zodToJsonSchema(schema);
+        llm = this.bind({
+          tools: [
+            {
+              type: "function" as const,
+              function: {
+                name,
+                description: asZodSchema.description,
+                parameters: asZodSchema,
+              },
+            },
+          ],
+          tool_choice: "auto",
+        } as Partial<CallOptions>);
+        outputParser = new JsonOutputKeyToolsParser<RunOutput>({
+          returnSingle: true,
+          keyName: name,
+        });
+      } else {
+        llm = this.bind({
+          tools: [
+            {
+              type: "function" as const,
+              function: {
+                name,
+                description: schema.description,
+                parameters: schema,
+              },
+            },
+          ],
+          tool_choice: "auto",
+        } as Partial<CallOptions>);
+        outputParser = new JsonOutputKeyToolsParser<RunOutput>({
+          returnSingle: true,
+          keyName: name,
+        });
+      }
+    }
+
+    if (!includeRaw) {
+      return llm.pipe(outputParser) as Runnable<RunInput, RunOutput>;
+    }
+
+    const parserAssign = RunnablePassthrough.assign({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
+    });
+    const parserNone = RunnablePassthrough.assign({
+      parsed: () => null,
+    });
+    const parsedWithFallback = parserAssign.withFallbacks({
+      fallbacks: [parserNone],
+    });
+    return RunnableSequence.from<
+      RunInput,
+      { raw: BaseMessage; parsed: RunOutput }
+    >([
+      {
+        raw: llm,
+      },
+      parsedWithFallback,
+    ]);
+  }
+
+  /** @ignore */
+  private async imports() {
     const { default: MistralClient } = await import("@mistralai/mistralai");
     return { MistralClient };
   }
+}
+
+function isZodSchema<
+  // prettier-ignore
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+>(input: any): input is z.ZodEffects<RunOutput> {
+  // Check for a characteristic method of Zod schemas
+  return typeof input?.parse === "function";
 }

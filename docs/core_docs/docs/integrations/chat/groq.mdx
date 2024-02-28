@@ -1,0 +1,43 @@
+---
+sidebar_label: Groq
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# ChatGroq
+
+## Setup
+
+In order to use the Groq API you'll need an API key. You can sign up for a Groq account and create an API key [here](https://wow.groq.com/).
+
+You'll first need to install the [`@langchain/groq`](https://www.npmjs.com/package/@langchain/groq) package:
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/groq
+```
+
+## Usage
+
+import ChatGroqExample from "@examples/models/chat/chat_groq.ts";
+
+<CodeBlock language="typescript">{ChatGroqExample}</CodeBlock>
+
+:::info
+You can see a LangSmith trace of this example [here](https://smith.langchain.com/public/2ba59207-1383-4e42-b6a6-c1ddcfcd5710/r)
+:::
+
+### Streaming
+
+Groq's API also supports streaming token responses. The example below demonstrates how to use this feature.
+
+import ChatStreamGroqExample from "@examples/models/chat/chat_stream_groq.ts";
+
+<CodeBlock language="typescript">{ChatStreamGroqExample}</CodeBlock>
+
+:::info
+You can see a LangSmith trace of this example [here](https://smith.langchain.com/public/72832eb5-b9ae-4ce0-baa2-c2e95eca61a7/r)
+:::
