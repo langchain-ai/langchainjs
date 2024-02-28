@@ -3,7 +3,7 @@ import { OllamaInput, OllamaRequestParams } from "../utils/ollama.js";
 
 type CamelCasedRequestOptions = Omit<
   OllamaInput,
-  "baseUrl" | "model" | "format"
+  "baseUrl" | "model" | "format" | "headers"
 >;
 
 /**
@@ -17,6 +17,12 @@ interface OllamaEmbeddingsParams extends EmbeddingsParams {
   /** Base URL of the Ollama server, defaults to "http://localhost:11434" */
   baseUrl?: string;
 
+  /** Extra headers to include in the Ollama API request */
+  headers?: Record<string, string>;
+
+  /** Defaults to "5m" */
+  keepAlive?: string;
+
   /** Advanced Ollama API request parameters in camelCase, see
    * https://github.com/jmorganca/ollama/blob/main/docs/modelfile.md#valid-parameters-and-values
    * for details of the available parameters.
@@ -29,6 +35,10 @@ export class OllamaEmbeddings extends Embeddings {
 
   baseUrl = "http://localhost:11434";
 
+  headers?: Record<string, string>;
+
+  keepAlive = "5m";
+
   requestOptions?: OllamaRequestParams["options"];
 
   constructor(params?: OllamaEmbeddingsParams) {
@@ -40,6 +50,14 @@ export class OllamaEmbeddings extends Embeddings {
 
     if (params?.baseUrl) {
       this.baseUrl = params.baseUrl;
+    }
+
+    if (params?.headers) {
+      this.headers = params.headers;
+    }
+
+    if (params?.keepAlive) {
+      this.keepAlive = params.keepAlive;
     }
 
     if (params?.requestOptions) {
@@ -57,6 +75,7 @@ export class OllamaEmbeddings extends Embeddings {
       embeddingOnly: "embedding_only",
       f16KV: "f16_kv",
       frequencyPenalty: "frequency_penalty",
+      keepAlive: "keep_alive",
       logitsAll: "logits_all",
       lowVram: "low_vram",
       mainGpu: "main_gpu",
@@ -97,7 +116,7 @@ export class OllamaEmbeddings extends Embeddings {
   }
 
   async _request(prompt: string): Promise<number[]> {
-    const { model, baseUrl, requestOptions } = this;
+    const { model, baseUrl, keepAlive, requestOptions } = this;
 
     let formattedBaseUrl = baseUrl;
     if (formattedBaseUrl.startsWith("http://localhost:")) {
@@ -111,10 +130,14 @@ export class OllamaEmbeddings extends Embeddings {
 
     const response = await fetch(`${formattedBaseUrl}/api/embeddings`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...this.headers,
+      },
       body: JSON.stringify({
         prompt,
         model,
+        keep_alive: keepAlive,
         options: requestOptions,
       }),
     });

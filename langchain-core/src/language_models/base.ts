@@ -1,5 +1,6 @@
 import type { Tiktoken, TiktokenModel } from "js-tiktoken/lite";
 
+import { z } from "zod";
 import { type BaseCache, InMemoryCache } from "../caches.js";
 import {
   type BasePromptValueInterface,
@@ -471,6 +472,86 @@ export abstract class BaseLanguageModel<
   static async deserialize(_data: SerializedLLM): Promise<BaseLanguageModel> {
     throw new Error("Use .toJSON() instead");
   }
+
+  withStructuredOutput?<
+    RunInput = BaseLanguageModelInput,
+    // prettier-ignore
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
+  >({
+    schema,
+    name,
+    method,
+    includeRaw,
+  }: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    schema: z.ZodEffects<RunOutput> | Record<string, any>;
+    name: string;
+    method?: "functionCalling" | "jsonMode";
+    includeRaw: true;
+  }): Runnable<RunInput, { raw: BaseMessage; parsed: RunOutput }>;
+
+  withStructuredOutput?<
+    RunInput = BaseLanguageModelInput,
+    // prettier-ignore
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
+  >({
+    schema,
+    name,
+    method,
+    includeRaw,
+  }: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    schema: z.ZodEffects<RunOutput> | Record<string, any>;
+    name: string;
+    method?: "functionCalling" | "jsonMode";
+    includeRaw?: false;
+  }): Runnable<RunInput, RunOutput>;
+
+  /**
+   * Model wrapper that returns outputs formatted to match the given schema.
+   *
+   * @template {BaseLanguageModelInput} RunInput The input type for the Runnable, expected to be the same input for the LLM.
+   * @template {z.ZodObject<any, any, any, any>} RunOutput The output type for the Runnable, expected to be a Zod schema object for structured output validation.
+   *
+   * @param {z.ZodEffects<RunOutput>} schema The schema for the structured output. Either as a Zod schema or a valid JSON schema object.
+   * @param {string} name The name of the function to call.
+   * @param {"functionCalling" | "jsonMode"} [method=functionCalling] The method to use for getting the structured output. Defaults to "functionCalling".
+   * @param {boolean | undefined} [includeRaw=false] Whether to include the raw output in the result. Defaults to false.
+   * @returns {Runnable<RunInput, RunOutput> | Runnable<RunInput, { raw: BaseMessage; parsed: RunOutput }>} A new runnable that calls the LLM with structured output.
+   */
+  withStructuredOutput?<
+    RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
+    // prettier-ignore
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
+  >({
+    schema,
+    name,
+    /**
+     * @default functionCalling
+     */
+    method,
+    /**
+     * @default false
+     */
+    includeRaw,
+  }: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    schema: z.ZodEffects<RunOutput> | Record<string, any>;
+    name: string;
+    method?: "functionCalling" | "jsonMode";
+    includeRaw?: boolean;
+  }):
+    | Runnable<RunInput, RunOutput>
+    | Runnable<
+        RunInput,
+        {
+          raw: BaseMessage;
+          parsed: RunOutput;
+        }
+      >;
 }
 
 /**

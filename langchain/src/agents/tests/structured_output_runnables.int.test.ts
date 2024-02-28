@@ -23,13 +23,14 @@ const structuredOutputParser = (
   if (typeof output.content !== "string") {
     throw new Error("Cannot parse non-string output.");
   }
-  if (!("function_call" in output.additional_kwargs)) {
+  if (output.additional_kwargs.function_call === undefined) {
     return { returnValues: { output: output.content }, log: output.content };
   }
 
   const functionCall = output.additional_kwargs.function_call;
   const name = functionCall?.name as string;
   const inputs = functionCall?.arguments as string;
+  console.log(functionCall);
 
   const jsonInput = JSON.parse(inputs);
 

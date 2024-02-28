@@ -16,7 +16,7 @@ const baseDarkCodeBlockTheme = require("prism-react-renderer/themes/vsDark");
 const config = {
   title: "🦜️🔗 Langchain",
   tagline: "LangChain JS Docs",
-  favicon: "img/favicon.ico",
+  favicon: "img/brand/favicon.png",
   // Set the production url of your site here
   url: "https://js.langchain.com",
   // Set the /<baseUrl>/ pathname under which your site is served
@@ -51,6 +51,10 @@ const config = {
             {
               test: examplesPath,
               use: ["json-loader", "./code-block-loader.js"],
+            },
+            {
+              test: /\.ya?ml$/,
+              use: "yaml-loader",
             },
             {
               test: /\.m?js/,
@@ -141,9 +145,12 @@ const config = {
           },
         },
       },
-      image: "img/parrot-chainlink-icon.png",
+      image: "img/brand/theme-image.png",
       navbar: {
-        title: "🦜️🔗 LangChain",
+        logo: {
+          src: "img/brand/wordmark.png",
+          srcDark: "img/brand/wordmark-dark.png",
+        },
         items: [
           {
             to: "/docs/get_started/introduction",
@@ -173,6 +180,10 @@ const config = {
             position: "left",
             items: [
               {
+                to: "/docs/people/",
+                label: "People",
+              },
+              {
                 to: "/docs/community",
                 label: "Community",
               },
@@ -188,16 +199,16 @@ const config = {
           },
           {
             type: "dropdown",
-            label: "Also by LangChain",
+            label: "🦜🔗",
             position: "right",
             items: [
               {
-                href: "https://chat.langchain.com",
-                label: "Chat our docs",
-              },
-              {
                 href: "https://smith.langchain.com",
                 label: "LangSmith",
+              },
+              {
+                href: "https://docs.smith.langchain.com",
+                label: "LangSmith Docs",
               },
               {
                 href: "https://smith.langchain.com/hub",
@@ -212,6 +223,11 @@ const config = {
                 label: "Python Docs",
               },
             ],
+          },
+          {
+            href: "https://chatjs.langchain.com",
+            label: "Chat",
+            position: "right",
           },
           // Please keep GitHub link to the right for consistency.
           {

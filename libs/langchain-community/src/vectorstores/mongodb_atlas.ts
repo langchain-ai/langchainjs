@@ -12,6 +12,7 @@ import {
 } from "@langchain/core/utils/async_caller";
 
 /**
+ * @deprecated Install and import from the "@langchain/mongodb" integration package instead.
  * Type that defines the arguments required to initialize the
  * MongoDBAtlasVectorSearch class. It includes the MongoDB collection,
  * index name, text key, embedding key, primary key, and overwrite flag.
@@ -31,6 +32,7 @@ export interface MongoDBAtlasVectorSearchLibArgs extends AsyncCallerParams {
 }
 
 /**
+ * @deprecated Install and import from the "@langchain/mongodb" integration package instead.
  * Type that defines the filter used in the
  * similaritySearchVectorWithScore and maxMarginalRelevanceSearch methods.
  * It includes pre-filter, post-filter pipeline, and a flag to include
@@ -43,6 +45,7 @@ type MongoDBAtlasFilter = {
 } & MongoDBDocument;
 
 /**
+ * @deprecated Install and import from the "@langchain/mongodb" integration package instead.
  * Class that is a wrapper around MongoDB Atlas Vector Search. It is used
  * to store embeddings in MongoDB documents, create a vector search index,
  * and perform K-Nearest Neighbors (KNN) search with an approximate

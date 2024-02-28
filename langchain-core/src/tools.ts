@@ -9,7 +9,7 @@ import {
   BaseLangChain,
   type BaseLangChainParams,
 } from "./language_models/base.js";
-import type { RunnableConfig } from "./runnables/config.js";
+import { ensureConfig, type RunnableConfig } from "./runnables/config.js";
 import type { RunnableInterface } from "./runnables/base.js";
 
 /**
@@ -101,7 +101,7 @@ export abstract class StructuredTool<
     input: (z.output<T> extends string ? string : never) | z.input<T>,
     config?: RunnableConfig
   ): Promise<string> {
-    return this.call(input, config);
+    return this.call(input, ensureConfig(config));
   }
 
   /**
