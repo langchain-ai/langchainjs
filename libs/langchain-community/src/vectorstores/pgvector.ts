@@ -503,7 +503,7 @@ export class PGVectorStore extends VectorStore {
   async ensureTableInDatabase(): Promise<void> {
     const vectorQuery = this.extensionSchemaName == null ? "CREATE EXTENSION IF NOT EXISTS vector;" : `CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA "${this.extensionSchemaName}";`
     const uuidQuery = this.extensionSchemaName == null ? 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";' : `CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "${this.extensionSchemaName}";`
-    const extensionName = this.extensionSchemaName == null ? "vector" : `"${this.extensionSchemaName}.vector"`
+    const extensionName = this.extensionSchemaName == null ? "vector" : `"${this.extensionSchemaName}"."vector"`
     const tableName = this.schemaName == null ? `${this.tableName}` : `"${this.schemaName}"."${this.tableName}"`
      const tableQuery = `
       CREATE TABLE IF NOT EXISTS ${tableName} (
@@ -528,7 +528,7 @@ export class PGVectorStore extends VectorStore {
     try {
     const tableName = this.schemaName == null ? `${this.tableName}` : `"${this.schemaName}"."${this.tableName}"`
       const queryString = `
-        CREATE TABLE IF NOT EXISTS "${this.collectionTableName}" (
+        CREATE TABLE IF NOT EXISTS ${this.collectionTableName} (
           uuid uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
           name character varying,
           cmetadata jsonb
@@ -538,7 +538,7 @@ export class PGVectorStore extends VectorStore {
           ADD COLUMN collection_id uuid;
 
         ALTER TABLE ${tableName}
-          ADD CONSTRAINT "${tableName.replaceAll('"', '')}_collection_id_fkey"
+          ADD CONSTRAINT ${tableName}_collection_id_fkey
           FOREIGN KEY (collection_id)
           REFERENCES ${this.collectionTableName}(uuid)
           ON DELETE CASCADE;
