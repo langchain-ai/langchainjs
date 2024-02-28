@@ -18,7 +18,7 @@ export interface PGVectorStoreArgs {
   collectionName?: string;
   collectionMetadata?: Metadata | null;
   schemaName?: string | null;
-  extensionSchemaName?: String | null;
+  extensionSchemaName?: string | null;
   columns?: {
     idColumnName?: string;
     vectorColumnName?: string;
