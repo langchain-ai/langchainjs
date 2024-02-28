@@ -35,6 +35,7 @@ import { RootListenersTracer } from "../tracers/root_listener.js";
 import { BaseCallbackHandler } from "../callbacks/base.js";
 import { _RootEventFilter } from "./utils.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
+import { Graph } from "./graph.js";
 
 /**
  * Base interface implemented by all runnables.
@@ -548,6 +549,29 @@ export abstract class Runnable<
       undefined,
       { inputs: _coerceToDict(finalInput, "input") }
     );
+  }
+
+  getGraph(config?: RunnableConfig): Graph {
+    const graph = new Graph();
+
+    // TODO: what should the inputNode be?
+    const inputNode = graph.addNode({
+      type: "unknown",
+      config,
+    });
+
+    const runnableNode = graph.addNode(this); // Assuming `this` refers to an instance that can be treated as data for a node
+
+    // TODO: what should the outputNode be?
+    const outputNode = graph.addNode({
+      type: "unknown",
+      config,
+    });
+
+    graph.addEdge(inputNode, runnableNode);
+    graph.addEdge(runnableNode, outputNode);
+
+    return graph;
   }
 
   /**
