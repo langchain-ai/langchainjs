@@ -1,12 +1,10 @@
+import { NewTokenIndices } from "@langchain/core/callbacks/base";
+import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   BaseChatModel,
   BaseChatModelCallOptions,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
-import { type OpenAICoreRequestOptions } from "@langchain/openai";
-import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { NewTokenIndices } from "@langchain/core/callbacks/base";
-import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   AIMessage,
   AIMessageChunk,
@@ -17,18 +15,20 @@ import {
   SystemMessageChunk,
 } from "@langchain/core/messages";
 import {
-  ChatResult,
-  ChatGenerationChunk,
   ChatGeneration,
+  ChatGenerationChunk,
+  ChatResult,
 } from "@langchain/core/outputs";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { type OpenAICoreRequestOptions } from "@langchain/openai";
 import Groq from "groq-sdk";
+import { ChatCompletionChunk } from "groq-sdk/lib/chat_completions_ext";
 import {
   ChatCompletion,
   ChatCompletionCreateParams,
   ChatCompletionCreateParamsNonStreaming,
   ChatCompletionCreateParamsStreaming,
 } from "groq-sdk/resources/chat/completions";
-import { ChatCompletionChunk } from "groq-sdk/lib/chat_completions_ext";
 
 export interface ChatGroqCallOptions extends BaseChatModelCallOptions {}
 
@@ -189,6 +189,7 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
 
     this.client = new Groq({
       apiKey,
+      dangerouslyAllowBrowser: true,
     });
     this.temperature = fields?.temperature ?? this.temperature;
     this.modelName = fields?.modelName ?? this.modelName;
