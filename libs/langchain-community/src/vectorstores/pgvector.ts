@@ -59,6 +59,8 @@ export class PGVectorStore extends VectorStore {
 
   vectorColumnName: string;
 
+  computedTableName: string;
+
   contentColumnName: string;
 
   extensionSchemaName: string | null;
@@ -90,7 +92,8 @@ export class PGVectorStore extends VectorStore {
     this.collectionMetadata = config.collectionMetadata ?? null;
     this.schemaName = config.schemaName ?? null;
     this.extensionSchemaName = config.extensionSchemaName ?? null;
-
+    this.computedTableName =  this.schemaName == null ? `${this.tableName}` : `"${this.schemaName}"."${this.tableName}"`
+    
     this.filter = config.filter;
 
     this.vectorColumnName = config.columns?.vectorColumnName ?? "embedding";
@@ -246,10 +249,8 @@ export class PGVectorStore extends VectorStore {
       .map((_, j) => this.generatePlaceholderForRowAt(j, columns.length))
       .join(", ");
 
-    const tableName = this.schemaName == null ? `${this.tableName}` : `"${this.schemaName}"."${this.tableName}"`
-
     const text = `
-      INSERT INTO ${tableName}(
+      INSERT INTO ${this.computedTableName}(
         ${columns.map((column) => `"${column}"`).join(", ")}
       )
       VALUES ${valuesPlaceholders}
@@ -333,10 +334,8 @@ export class PGVectorStore extends VectorStore {
     // Set parameters of dynamically generated query
     const params = collectionId ? [ids, collectionId] : [ids];
 
-    const tableName = this.schemaName == null ? `${this.tableName}` : `"${this.schemaName}"."${this.tableName}"`
-
     const queryString = `
-      DELETE FROM ${tableName}
+      DELETE FROM ${this.computedTableName}
       WHERE ${collectionId ? "collection_id = $2 AND " : ""}${
       this.idColumnName
     } = ANY($1::uuid[])
@@ -360,10 +359,8 @@ export class PGVectorStore extends VectorStore {
     // Set parameters of dynamically generated query
     const params = collectionId ? [filter, collectionId] : [filter];
 
-    const tableName = this.schemaName == null ? `${this.tableName}` : `"${this.schemaName}"."${this.tableName}"`
-
     const queryString = `
-      DELETE FROM ${tableName}
+      DELETE FROM ${this.computedTableName}
       WHERE ${collectionId ? "collection_id = $2 AND " : ""}${
       this.metadataColumnName
     }::jsonb @> $1
@@ -464,7 +461,6 @@ export class PGVectorStore extends VectorStore {
         parameters.push(value);
       }
     }
-    const tableName = this.schemaName == null ? `${this.tableName}` : `"${this.schemaName}"."${this.tableName}"`
 
     const whereClause = whereClauses.length
       ? `WHERE ${whereClauses.join(" AND ")}`
@@ -472,7 +468,7 @@ export class PGVectorStore extends VectorStore {
 
     const queryString = `
       SELECT *, "${this.vectorColumnName}" <=> $1 as "_distance"
-      FROM ${tableName}
+      FROM ${this.computedTableName}
       ${whereClause}
       ${collectionId ? "AND collection_id = $3" : ""}
       ORDER BY "_distance" ASC
@@ -504,9 +500,8 @@ export class PGVectorStore extends VectorStore {
     const vectorQuery = this.extensionSchemaName == null ? "CREATE EXTENSION IF NOT EXISTS vector;" : `CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA "${this.extensionSchemaName}";`
     const uuidQuery = this.extensionSchemaName == null ? 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";' : `CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "${this.extensionSchemaName}";`
     const extensionName = this.extensionSchemaName == null ? "vector" : `"${this.extensionSchemaName}"."vector"`
-    const tableName = this.schemaName == null ? `${this.tableName}` : `"${this.schemaName}"."${this.tableName}"`
      const tableQuery = `
-      CREATE TABLE IF NOT EXISTS ${tableName} (
+      CREATE TABLE IF NOT EXISTS ${this.computedTableName} (
         "${this.idColumnName}" uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
         "${this.contentColumnName}" text,
         "${this.metadataColumnName}" jsonb,
@@ -526,7 +521,6 @@ export class PGVectorStore extends VectorStore {
    */
   async ensureCollectionTableInDatabase(): Promise<void> {
     try {
-    const tableName = this.schemaName == null ? `${this.tableName}` : `"${this.schemaName}"."${this.tableName}"`
       const queryString = `
         CREATE TABLE IF NOT EXISTS ${this.collectionTableName} (
           uuid uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
@@ -534,11 +528,11 @@ export class PGVectorStore extends VectorStore {
           cmetadata jsonb
         );
 
-        ALTER TABLE ${tableName}
+        ALTER TABLE ${this.computedTableName}
           ADD COLUMN collection_id uuid;
 
-        ALTER TABLE ${tableName}
-          ADD CONSTRAINT ${tableName}_collection_id_fkey
+        ALTER TABLE ${this.computedTableName}
+          ADD CONSTRAINT ${this.computedTableName}_collection_id_fkey
           FOREIGN KEY (collection_id)
           REFERENCES ${this.collectionTableName}(uuid)
           ON DELETE CASCADE;
