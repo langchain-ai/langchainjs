@@ -5,12 +5,6 @@ name: Node.js Integration Tests
 
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - 'langchain/**'
-  pull_request:
-    paths:
-      - 'langchain/**'
 
 jobs:
   build:
