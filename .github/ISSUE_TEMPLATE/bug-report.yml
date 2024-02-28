@@ -20,7 +20,7 @@ body:
         [GitHub search](https://github.com/langchain-ai/langchainjs),
         [LangChain.js Github Discussions](https://github.com/langchain-ai/langchainjs/discussions),
         [LangChain.js Github Issues](https://github.com/langchain-ai/langchainjs/issues?q=is%3Aissue),
-        [LangChain.js ChatBot](https://chat.langchain.com/)
+        [LangChain.js ChatBot](https://chatjs.langchain.com/)
   - type: checkboxes
     id: checks
     attributes:
