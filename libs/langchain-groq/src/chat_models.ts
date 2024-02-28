@@ -51,7 +51,7 @@ export interface ChatGroqInput extends BaseChatModelParams {
   /**
    * Whether or not to stream responses.
    */
-  stream?: boolean;
+  streaming?: boolean;
   /**
    * The temperature to use for sampling.
    * @default 0.7
@@ -161,6 +161,8 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
 
   temperature = 0.7;
 
+  streaming = false;
+
   static lc_name() {
     return "ChatGroq";
   }
@@ -193,6 +195,7 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
     });
     this.temperature = fields?.temperature ?? this.temperature;
     this.modelName = fields?.modelName ?? this.modelName;
+    this.streaming = fields?.streaming ?? this.streaming;
   }
 
   async completionWithRetry(
@@ -269,7 +272,7 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
     const params = this.invocationParams(options);
     const messagesMapped = convertMessagesToGroqParams(messages);
 
-    if (params.stream) {
+    if (this.streaming) {
       const stream = this._streamResponseChunks(messages, options, runManager);
       const finalChunks: Record<number, ChatGenerationChunk> = {};
       for await (const chunk of stream) {
