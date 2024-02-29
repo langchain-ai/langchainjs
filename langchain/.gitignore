@@ -590,6 +590,10 @@ document_loaders/web/s3.cjs
 document_loaders/web/s3.js
 document_loaders/web/s3.d.ts
 document_loaders/web/s3.d.cts
+document_loaders/web/sitemap.cjs
+document_loaders/web/sitemap.js
+document_loaders/web/sitemap.d.ts
+document_loaders/web/sitemap.d.cts
 document_loaders/web/sonix_audio.cjs
 document_loaders/web/sonix_audio.js
 document_loaders/web/sonix_audio.d.ts
@@ -598,6 +602,10 @@ document_loaders/web/confluence.cjs
 document_loaders/web/confluence.js
 document_loaders/web/confluence.d.ts
 document_loaders/web/confluence.d.cts
+document_loaders/web/couchbase.cjs
+document_loaders/web/couchbase.js
+document_loaders/web/couchbase.d.ts
+document_loaders/web/couchbase.d.cts
 document_loaders/web/searchapi.cjs
 document_loaders/web/searchapi.js
 document_loaders/web/searchapi.d.ts
@@ -922,6 +930,10 @@ retrievers/vespa.cjs
 retrievers/vespa.js
 retrievers/vespa.d.ts
 retrievers/vespa.d.cts
+retrievers/matryoshka_retriever.cjs
+retrievers/matryoshka_retriever.js
+retrievers/matryoshka_retriever.d.ts
+retrievers/matryoshka_retriever.d.cts
 cache.cjs
 cache.js
 cache.d.ts

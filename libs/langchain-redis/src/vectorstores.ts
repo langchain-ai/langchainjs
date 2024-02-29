@@ -90,8 +90,10 @@ export interface RedisAddOptions {
 /**
  * Type for the filter used in the RedisVectorStore. It is an array of
  * strings.
+ * If a string is passed instead of an array the value is used directly, this
+ * allows custom filters to be passed.
  */
-export type RedisVectorStoreFilterType = string[];
+export type RedisVectorStoreFilterType = string[] | string;
 
 /**
  * Class representing a RedisVectorStore. It extends the VectorStore class
@@ -424,7 +426,10 @@ export class RedisVectorStore extends VectorStore {
   }
 
   private prepareFilter(filter: RedisVectorStoreFilterType) {
-    return filter.map(this.escapeSpecialChars).join("|");
+    if (Array.isArray(filter)) {
+      return filter.map(this.escapeSpecialChars).join("|");
+    }
+    return filter;
   }
 
   /**

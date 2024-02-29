@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.0.26",
+  "version": "0.0.33",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -39,10 +39,10 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1.16",
-    "@langchain/openai": "~0.0.10",
+    "@langchain/core": "~0.1.36",
+    "@langchain/openai": "~0.0.14",
     "flat": "^5.0.2",
-    "langsmith": "~0.0.48",
+    "langsmith": "~0.1.1",
     "uuid": "^9.0.0",
     "zod": "^3.22.3"
   },
@@ -93,24 +93,27 @@
     "@tensorflow/tfjs-converter": "^3.6.0",
     "@tensorflow/tfjs-core": "^3.6.0",
     "@tsconfig/recommended": "^1.0.2",
+    "@types/better-sqlite3": "^7.6.9",
     "@types/flat": "^5.0.2",
     "@types/html-to-text": "^9",
     "@types/jsdom": "^21.1.1",
     "@types/lodash": "^4",
     "@types/mozilla-readability": "^0.2.1",
-    "@types/pg": "^8",
+    "@types/pg": "^8.11.0",
     "@types/pg-copy-streams": "^1.2.2",
     "@types/uuid": "^9",
     "@types/ws": "^8",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
     "@upstash/redis": "^1.20.6",
+    "@upstash/vector": "^1.0.2",
     "@vercel/kv": "^0.2.3",
     "@vercel/postgres": "^0.5.0",
     "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.28.0",
     "@xenova/transformers": "^2.5.4",
     "@zilliz/milvus2-sdk-node": ">=2.2.11",
+    "better-sqlite3": "^9.4.0",
     "cassandra-driver": "^4.7.2",
     "chromadb": "^1.5.3",
     "closevector-common": "0.1.3",
@@ -121,6 +124,7 @@
     "discord.js": "^14.14.1",
     "dotenv": "^16.0.3",
     "dpdm": "^3.12.0",
+    "dria": "^0.0.3",
     "eslint": "^8.33.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^8.6.0",
@@ -129,7 +133,7 @@
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
     "faiss-node": "^0.5.1",
-    "firebase-admin": "^11.9.0",
+    "firebase-admin": "^11.9.0 || ^12.0.0",
     "google-auth-library": "^8.9.0",
     "googleapis": "^126.0.1",
     "graphql": "^16.6.0",
@@ -144,7 +148,7 @@
     "lunary": "^0.6.11",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
-    "neo4j-driver": "^5.16.0",
+    "neo4j-driver": "^5.17.0",
     "node-llama-cpp": "2.7.3",
     "pg": "^8.11.0",
     "pg-copy-streams": "^6.0.5",
@@ -204,12 +208,14 @@
     "@tensorflow/tfjs-converter": "*",
     "@tensorflow/tfjs-core": "*",
     "@upstash/redis": "^1.20.6",
+    "@upstash/vector": "^1.0.2",
     "@vercel/kv": "^0.2.3",
     "@vercel/postgres": "^0.5.0",
     "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.28.0",
     "@xenova/transformers": "^2.5.4",
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
+    "better-sqlite3": "^9.4.0",
     "cassandra-driver": "^4.7.2",
     "chromadb": "*",
     "closevector-common": "0.1.3",
@@ -218,8 +224,9 @@
     "cohere-ai": "*",
     "convex": "^1.3.1",
     "discord.js": "^14.14.1",
+    "dria": "^0.0.3",
     "faiss-node": "^0.5.1",
-    "firebase-admin": "^11.9.0",
+    "firebase-admin": "^11.9.0 || ^12.0.0",
     "google-auth-library": "^8.9.0",
     "googleapis": "^126.0.1",
     "hnswlib-node": "^1.4.2",
@@ -229,7 +236,7 @@
     "llmonitor": "^0.5.9",
     "lodash": "^4.17.21",
     "lunary": "^0.6.11",
-    "mongodb": "^5.2.0",
+    "mongodb": ">=5.2.0",
     "mysql2": "^3.3.3",
     "neo4j-driver": "*",
     "node-llama-cpp": "*",
@@ -363,6 +370,9 @@
     "@upstash/redis": {
       "optional": true
     },
+    "@upstash/vector": {
+      "optional": true
+    },
     "@vercel/kv": {
       "optional": true
     },
@@ -379,6 +389,9 @@
       "optional": true
     },
     "@zilliz/milvus2-sdk-node": {
+      "optional": true
+    },
+    "better-sqlite3": {
       "optional": true
     },
     "cassandra-driver": {
@@ -403,6 +416,9 @@
       "optional": true
     },
     "discord.js": {
+      "optional": true
+    },
+    "dria": {
       "optional": true
     },
     "faiss-node": {
@@ -766,6 +782,15 @@
       },
       "import": "./embeddings/cohere.js",
       "require": "./embeddings/cohere.cjs"
+    },
+    "./embeddings/fireworks": {
+      "types": {
+        "import": "./embeddings/fireworks.d.ts",
+        "require": "./embeddings/fireworks.d.cts",
+        "default": "./embeddings/fireworks.d.ts"
+      },
+      "import": "./embeddings/fireworks.js",
+      "require": "./embeddings/fireworks.cjs"
     },
     "./embeddings/googlepalm": {
       "types": {
@@ -1370,6 +1395,15 @@
       "import": "./vectorstores/typesense.js",
       "require": "./vectorstores/typesense.cjs"
     },
+    "./vectorstores/upstash": {
+      "types": {
+        "import": "./vectorstores/upstash.d.ts",
+        "require": "./vectorstores/upstash.d.cts",
+        "default": "./vectorstores/upstash.d.ts"
+      },
+      "import": "./vectorstores/upstash.js",
+      "require": "./vectorstores/upstash.cjs"
+    },
     "./vectorstores/usearch": {
       "types": {
         "import": "./vectorstores/usearch.d.ts",
@@ -1640,6 +1674,15 @@
       "import": "./retrievers/databerry.js",
       "require": "./retrievers/databerry.cjs"
     },
+    "./retrievers/dria": {
+      "types": {
+        "import": "./retrievers/dria.d.ts",
+        "require": "./retrievers/dria.d.cts",
+        "default": "./retrievers/dria.d.ts"
+      },
+      "import": "./retrievers/dria.js",
+      "require": "./retrievers/dria.cjs"
+    },
     "./retrievers/metal": {
       "types": {
         "import": "./retrievers/metal.d.ts",
@@ -1775,6 +1818,15 @@
       "import": "./document_transformers/mozilla_readability.js",
       "require": "./document_transformers/mozilla_readability.cjs"
     },
+    "./storage/cassandra": {
+      "types": {
+        "import": "./storage/cassandra.d.ts",
+        "require": "./storage/cassandra.d.cts",
+        "default": "./storage/cassandra.d.ts"
+      },
+      "import": "./storage/cassandra.js",
+      "require": "./storage/cassandra.cjs"
+    },
     "./storage/convex": {
       "types": {
         "import": "./storage/convex.d.ts",
@@ -1828,6 +1880,15 @@
       },
       "import": "./stores/doc/in_memory.js",
       "require": "./stores/doc/in_memory.cjs"
+    },
+    "./stores/message/astradb": {
+      "types": {
+        "import": "./stores/message/astradb.d.ts",
+        "require": "./stores/message/astradb.d.cts",
+        "default": "./stores/message/astradb.d.ts"
+      },
+      "import": "./stores/message/astradb.js",
+      "require": "./stores/message/astradb.cjs"
     },
     "./stores/message/cassandra": {
       "types": {
@@ -1919,6 +1980,15 @@
       "import": "./stores/message/planetscale.js",
       "require": "./stores/message/planetscale.cjs"
     },
+    "./stores/message/postgres": {
+      "types": {
+        "import": "./stores/message/postgres.d.ts",
+        "require": "./stores/message/postgres.d.cts",
+        "default": "./stores/message/postgres.d.ts"
+      },
+      "import": "./stores/message/postgres.js",
+      "require": "./stores/message/postgres.cjs"
+    },
     "./stores/message/redis": {
       "types": {
         "import": "./stores/message/redis.d.ts",
@@ -1999,6 +2069,15 @@
       },
       "import": "./indexes/memory.js",
       "require": "./indexes/memory.cjs"
+    },
+    "./indexes/sqlite": {
+      "types": {
+        "import": "./indexes/sqlite.d.ts",
+        "require": "./indexes/sqlite.d.cts",
+        "default": "./indexes/sqlite.d.ts"
+      },
+      "import": "./indexes/sqlite.js",
+      "require": "./indexes/sqlite.cjs"
     },
     "./util/convex": {
       "types": {
@@ -2151,6 +2230,10 @@
     "embeddings/cohere.js",
     "embeddings/cohere.d.ts",
     "embeddings/cohere.d.cts",
+    "embeddings/fireworks.cjs",
+    "embeddings/fireworks.js",
+    "embeddings/fireworks.d.ts",
+    "embeddings/fireworks.d.cts",
     "embeddings/googlepalm.cjs",
     "embeddings/googlepalm.js",
     "embeddings/googlepalm.d.ts",
@@ -2419,6 +2502,10 @@
     "vectorstores/typesense.js",
     "vectorstores/typesense.d.ts",
     "vectorstores/typesense.d.cts",
+    "vectorstores/upstash.cjs",
+    "vectorstores/upstash.js",
+    "vectorstores/upstash.d.ts",
+    "vectorstores/upstash.d.cts",
     "vectorstores/usearch.cjs",
     "vectorstores/usearch.js",
     "vectorstores/usearch.d.ts",
@@ -2539,6 +2626,10 @@
     "retrievers/databerry.js",
     "retrievers/databerry.d.ts",
     "retrievers/databerry.d.cts",
+    "retrievers/dria.cjs",
+    "retrievers/dria.js",
+    "retrievers/dria.d.ts",
+    "retrievers/dria.d.cts",
     "retrievers/metal.cjs",
     "retrievers/metal.js",
     "retrievers/metal.d.ts",
@@ -2599,6 +2690,10 @@
     "document_transformers/mozilla_readability.js",
     "document_transformers/mozilla_readability.d.ts",
     "document_transformers/mozilla_readability.d.cts",
+    "storage/cassandra.cjs",
+    "storage/cassandra.js",
+    "storage/cassandra.d.ts",
+    "storage/cassandra.d.cts",
     "storage/convex.cjs",
     "storage/convex.js",
     "storage/convex.d.ts",
@@ -2623,6 +2718,10 @@
     "stores/doc/in_memory.js",
     "stores/doc/in_memory.d.ts",
     "stores/doc/in_memory.d.cts",
+    "stores/message/astradb.cjs",
+    "stores/message/astradb.js",
+    "stores/message/astradb.d.ts",
+    "stores/message/astradb.d.cts",
     "stores/message/cassandra.cjs",
     "stores/message/cassandra.js",
     "stores/message/cassandra.d.ts",
@@ -2663,6 +2762,10 @@
     "stores/message/planetscale.js",
     "stores/message/planetscale.d.ts",
     "stores/message/planetscale.d.cts",
+    "stores/message/postgres.cjs",
+    "stores/message/postgres.js",
+    "stores/message/postgres.d.ts",
+    "stores/message/postgres.d.cts",
     "stores/message/redis.cjs",
     "stores/message/redis.js",
     "stores/message/redis.d.ts",
@@ -2699,6 +2802,10 @@
     "indexes/memory.js",
     "indexes/memory.d.ts",
     "indexes/memory.d.cts",
+    "indexes/sqlite.cjs",
+    "indexes/sqlite.js",
+    "indexes/sqlite.d.ts",
+    "indexes/sqlite.d.cts",
     "util/convex.cjs",
     "util/convex.js",
     "util/convex.d.ts",

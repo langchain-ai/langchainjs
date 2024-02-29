@@ -3,8 +3,13 @@ import {
   type Operation as JSONPatchOperation,
 } from "../utils/fast-json-patch/index.js";
 import { BaseTracer, type Run } from "./base.js";
-import { BaseCallbackHandlerInput } from "../callbacks/base.js";
+import {
+  BaseCallbackHandlerInput,
+  HandleLLMNewTokenCallbackFields,
+} from "../callbacks/base.js";
 import { IterableReadableStream } from "../utils/stream.js";
+import { ChatGenerationChunk, GenerationChunk } from "../outputs.js";
+import { AIMessageChunk } from "../messages/index.js";
 
 /**
  * Interface that represents the structure of a log entry in the
@@ -29,6 +34,9 @@ export type LogEntry = {
   streamed_output: any[];
   /** List of LLM tokens streamed by this run, if applicable. */
   streamed_output_str: string[];
+  /** Inputs to this run. Not available currently via streamLog. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  inputs?: any;
   /** Final output of this run. Only available after the run has finished successfully. */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   final_output?: any;
@@ -50,6 +58,10 @@ export type RunState = {
    * If filters were supplied, this list will contain only the runs that matched the filters.
    */
   logs: Record<string, LogEntry>;
+  /** Name of the object being run. */
+  name: string;
+  /** Type of the object being run, eg. prompt, chain, llm, etc. */
+  type: string;
 };
 
 /**
@@ -62,8 +74,8 @@ export type RunState = {
 export class RunLogPatch {
   ops: JSONPatchOperation[];
 
-  constructor(fields: { ops: JSONPatchOperation[] }) {
-    this.ops = fields.ops;
+  constructor(fields: { ops?: JSONPatchOperation[] }) {
+    this.ops = fields.ops ?? [];
   }
 
   concat(other: RunLogPatch) {
@@ -80,7 +92,7 @@ export class RunLogPatch {
 export class RunLog extends RunLogPatch {
   state: RunState;
 
-  constructor(fields: { ops: JSONPatchOperation[]; state: RunState }) {
+  constructor(fields: { ops?: JSONPatchOperation[]; state: RunState }) {
     super(fields);
     this.state = fields.state;
   }
@@ -90,7 +102,104 @@ export class RunLog extends RunLogPatch {
     const states = applyPatch(this.state, other.ops);
     return new RunLog({ ops, state: states[states.length - 1].newDocument });
   }
+
+  static fromRunLogPatch(patch: RunLogPatch) {
+    const states = applyPatch({}, patch.ops);
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    return new RunLog({
+      ops: patch.ops,
+      state: states[states.length - 1].newDocument as RunState,
+    });
+  }
 }
+
+/**
+ * Data associated with a StreamEvent.
+ */
+export type StreamEventData = {
+  /**
+   * The input passed to the runnable that generated the event.
+   * Inputs will sometimes be available at the *START* of the runnable, and
+   * sometimes at the *END* of the runnable.
+   * If a runnable is able to stream its inputs, then its input by definition
+   * won't be known until the *END* of the runnable when it has finished streaming
+   * its inputs.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  input?: any;
+
+  /**
+   * The output of the runnable that generated the event.
+   * Outputs will only be available at the *END* of the runnable.
+   * For most runnables, this field can be inferred from the `chunk` field,
+   * though there might be some exceptions for special cased runnables (e.g., like
+   * chat models), which may return more information.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  output?: any;
+
+  /**
+   * A streaming chunk from the output that generated the event.
+   * chunks support addition in general, and adding them up should result
+   * in the output of the runnable that generated the event.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  chunk?: any;
+};
+
+/**
+ * A streaming event.
+ *
+ * Schema of a streaming event which is produced from the streamEvents method.
+ */
+export type StreamEvent = {
+  /**
+   * Event names are of the format: on_[runnable_type]_(start|stream|end).
+   *
+   * Runnable types are one of:
+   * - llm - used by non chat models
+   * - chat_model - used by chat models
+   * - prompt --  e.g., ChatPromptTemplate
+   * - tool -- from tools defined via @tool decorator or inheriting from Tool/BaseTool
+   * - chain - most Runnables are of this type
+   *
+   * Further, the events are categorized as one of:
+   * - start - when the runnable starts
+   * - stream - when the runnable is streaming
+   * - end - when the runnable ends
+   *
+   * start, stream and end are associated with slightly different `data` payload.
+   *
+   * Please see the documentation for `EventData` for more details.
+   */
+  event: string;
+  /** The name of the runnable that generated the event. */
+  name: string;
+  /**
+   * An randomly generated ID to keep track of the execution of the given runnable.
+   *
+   * Each child runnable that gets invoked as part of the execution of a parent runnable
+   * is assigned its own unique ID.
+   */
+  run_id: string;
+  /**
+   * Tags associated with the runnable that generated this event.
+   * Tags are always inherited from parent runnables.
+   */
+  tags?: string[];
+  /** Metadata associated with the runnable that generated this event. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  metadata: Record<string, any>;
+  /**
+   * Event data.
+   *
+   * The contents of the event data depend on the event type.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data: StreamEventData;
+};
+
+export type SchemaFormat = "original" | "streaming_events";
 
 export interface LogStreamCallbackHandlerInput
   extends BaseCallbackHandlerInput {
@@ -101,6 +210,76 @@ export interface LogStreamCallbackHandlerInput
   excludeNames?: string[];
   excludeTypes?: string[];
   excludeTags?: string[];
+  _schemaFormat?: SchemaFormat;
+}
+
+/**
+ * Extract standardized inputs from a run.
+ *
+ * Standardizes the inputs based on the type of the runnable used.
+ *
+ * @param run - Run object
+ * @param schemaFormat - The schema format to use.
+ *
+ * @returns Valid inputs are only dict. By conventions, inputs always represented
+ * invocation using named arguments.
+ * A null means that the input is not yet known!
+ */
+async function _getStandardizedInputs(run: Run, schemaFormat: SchemaFormat) {
+  if (schemaFormat === "original") {
+    throw new Error(
+      "Do not assign inputs with original schema drop the key for now. " +
+        "When inputs are added to streamLog they should be added with " +
+        "standardized schema for streaming events."
+    );
+  }
+
+  const { inputs } = run;
+
+  if (["retriever", "llm", "prompt"].includes(run.run_type)) {
+    return inputs;
+  }
+
+  if (Object.keys(inputs).length === 1 && inputs?.input === "") {
+    return undefined;
+  }
+
+  // new style chains
+  // These nest an additional 'input' key inside the 'inputs' to make sure
+  // the input is always a dict. We need to unpack and user the inner value.
+  // We should try to fix this in Runnables and callbacks/tracers
+  // Runnables should be using a null type here not a placeholder
+  // dict.
+  return inputs.input;
+}
+
+async function _getStandardizedOutputs(run: Run, schemaFormat: SchemaFormat) {
+  const { outputs } = run;
+  if (schemaFormat === "original") {
+    // Return the old schema, without standardizing anything
+    return outputs;
+  }
+
+  if (["retriever", "llm", "prompt"].includes(run.run_type)) {
+    return outputs;
+  }
+
+  // TODO: Remove this hacky check
+  if (
+    outputs !== undefined &&
+    Object.keys(outputs).length === 1 &&
+    outputs?.output !== undefined
+  ) {
+    return outputs.output;
+  }
+
+  return outputs;
+}
+
+function isChatGenerationChunk(
+  x?: ChatGenerationChunk | GenerationChunk
+): x is ChatGenerationChunk {
+  return x !== undefined && (x as ChatGenerationChunk).message !== undefined;
 }
 
 /**
@@ -123,6 +302,8 @@ export class LogStreamCallbackHandler extends BaseTracer {
   protected excludeTypes?: string[];
 
   protected excludeTags?: string[];
+
+  protected _schemaFormat: SchemaFormat = "original";
 
   protected rootId?: string;
 
@@ -147,6 +328,7 @@ export class LogStreamCallbackHandler extends BaseTracer {
     this.excludeNames = fields?.excludeNames;
     this.excludeTypes = fields?.excludeTypes;
     this.excludeTags = fields?.excludeTags;
+    this._schemaFormat = fields?._schemaFormat ?? this._schemaFormat;
     this.transformStream = new TransformStream();
     this.writer = this.transformStream.writable.getWriter();
     this.receiveStream = IterableReadableStream.fromReadableStream(
@@ -236,6 +418,8 @@ export class LogStreamCallbackHandler extends BaseTracer {
               path: "",
               value: {
                 id: run.id,
+                name: run.name,
+                type: run.run_type,
                 streamed_output: [],
                 final_output: undefined,
                 logs: {},
@@ -270,6 +454,11 @@ export class LogStreamCallbackHandler extends BaseTracer {
       final_output: undefined,
       end_time: undefined,
     };
+
+    if (this._schemaFormat === "streaming_events") {
+      logEntry.inputs = await _getStandardizedInputs(run, this._schemaFormat);
+    }
+
     await this.writer.write(
       new RunLogPatch({
         ops: [
@@ -289,13 +478,19 @@ export class LogStreamCallbackHandler extends BaseTracer {
       if (runName === undefined) {
         return;
       }
-      const ops: JSONPatchOperation[] = [
-        {
-          op: "add",
-          path: `/logs/${runName}/final_output`,
-          value: run.outputs,
-        },
-      ];
+      const ops: JSONPatchOperation[] = [];
+      if (this._schemaFormat === "streaming_events") {
+        ops.push({
+          op: "replace",
+          path: `/logs/${runName}/inputs`,
+          value: await _getStandardizedInputs(run, this._schemaFormat),
+        });
+      }
+      ops.push({
+        op: "add",
+        path: `/logs/${runName}/final_output`,
+        value: await _getStandardizedOutputs(run, this._schemaFormat),
+      });
       if (run.end_time !== undefined) {
         ops.push({
           op: "add",
@@ -312,7 +507,7 @@ export class LogStreamCallbackHandler extends BaseTracer {
             {
               op: "replace",
               path: "/final_output",
-              value: run.outputs,
+              value: await _getStandardizedOutputs(run, this._schemaFormat),
             },
           ],
         });
@@ -324,10 +519,26 @@ export class LogStreamCallbackHandler extends BaseTracer {
     }
   }
 
-  async onLLMNewToken(run: Run, token: string): Promise<void> {
+  async onLLMNewToken(
+    run: Run,
+    token: string,
+    kwargs?: HandleLLMNewTokenCallbackFields
+  ): Promise<void> {
     const runName = this.keyMapByRunId[run.id];
     if (runName === undefined) {
       return;
+    }
+    // TODO: Remove hack
+    const isChatModel = run.inputs.messages !== undefined;
+    let streamedOutputValue;
+    if (isChatModel) {
+      if (isChatGenerationChunk(kwargs?.chunk)) {
+        streamedOutputValue = kwargs?.chunk;
+      } else {
+        streamedOutputValue = new AIMessageChunk(token);
+      }
+    } else {
+      streamedOutputValue = token;
     }
     const patch = new RunLogPatch({
       ops: [
@@ -335,6 +546,11 @@ export class LogStreamCallbackHandler extends BaseTracer {
           op: "add",
           path: `/logs/${runName}/streamed_output_str/-`,
           value: token,
+        },
+        {
+          op: "add",
+          path: `/logs/${runName}/streamed_output/-`,
+          value: streamedOutputValue,
         },
       ],
     });

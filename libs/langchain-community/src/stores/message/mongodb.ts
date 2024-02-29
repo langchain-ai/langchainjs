@@ -6,12 +6,14 @@ import {
   mapStoredMessagesToChatMessages,
 } from "@langchain/core/messages";
 
+/** @deprecated Install and import from the "@langchain/mongodb" integration package instead. */
 export interface MongoDBChatMessageHistoryInput {
   collection: Collection<MongoDBDocument>;
   sessionId: string;
 }
 
 /**
+ * @deprecated Install and import from the "@langchain/mongodb" integration package instead.
  * @example
  * ```typescript
  * const chatHistory = new MongoDBChatMessageHistory({

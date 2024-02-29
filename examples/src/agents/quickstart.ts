@@ -23,7 +23,7 @@ console.log(toolResult);
 */
 
 const loader = new CheerioWebBaseLoader(
-  "https://docs.smith.langchain.com/overview"
+  "https://docs.smith.langchain.com/user_guide"
 );
 const rawDocs = await loader.load();
 const splitter = new RecursiveCharacterTextSplitter({
@@ -44,9 +44,9 @@ console.log(retrieverResult[0]);
 
 /*
   Document {
-    pageContent: "dataset uploading.Once we have a dataset, how can we use it to test changes to a prompt or chain? The most basic approach is to run the chain over the data points and visualize the outputs. Despite technological advancements, there still is no substitute for looking at outputs by eye. Currently, running the chain over the data points needs to be done client-side. The LangSmith client makes it easy to pull down a dataset and then run a chain over them, logging the results to a new project associated with the dataset. From there, you can review them. We've made it easy to assign feedback to runs and mark them as correct or incorrect directly in the web app, displaying aggregate statistics for each test project.We also make it easier to evaluate these runs. To that end, we've added a set of evaluators to the open-source LangChain library. These evaluators can be specified when initiating a test run and will evaluate the results once the test run completes. If we’re being honest, most of",
+    pageContent: "your application progresses through the beta testing phase, it's essential to continue collecting data to refine and improve...",
     metadata: {
-      source: 'https://docs.smith.langchain.com/overview',
+      source: 'https://docs.smith.langchain.com/user_guide',
       loc: { lines: [Object] }
     }
   }

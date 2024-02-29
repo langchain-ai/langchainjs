@@ -3,6 +3,7 @@ import {
   CallbackManager,
   ensureHandler,
 } from "../callbacks/manager.js";
+import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 
 export const DEFAULT_RECURSION_LIMIT = 25;
 
@@ -120,25 +121,27 @@ const PRIMITIVES = new Set(["string", "number", "boolean"]);
 export function ensureConfig<CallOptions extends RunnableConfig>(
   config?: CallOptions
 ): CallOptions {
-  let empty = {
+  const loadedConfig =
+    config ?? AsyncLocalStorageProviderSingleton.getInstance().getStore();
+  let empty: RunnableConfig = {
     tags: [],
     metadata: {},
     callbacks: undefined,
     recursionLimit: 25,
-  } as RunnableConfig;
-  if (config) {
-    empty = { ...empty, ...config };
+  };
+  if (loadedConfig) {
+    empty = { ...empty, ...loadedConfig };
   }
-  if (config?.configurable) {
-    for (const key of Object.keys(config.configurable)) {
+  if (loadedConfig?.configurable) {
+    for (const key of Object.keys(loadedConfig.configurable)) {
       if (
-        PRIMITIVES.has(typeof config.configurable[key]) &&
+        PRIMITIVES.has(typeof loadedConfig.configurable[key]) &&
         !empty.metadata?.[key]
       ) {
         if (!empty.metadata) {
           empty.metadata = {};
         }
-        empty.metadata[key] = config.configurable[key];
+        empty.metadata[key] = loadedConfig.configurable[key];
       }
     }
   }

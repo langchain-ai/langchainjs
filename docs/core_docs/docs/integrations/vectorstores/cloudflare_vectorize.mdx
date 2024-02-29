@@ -50,7 +50,7 @@ If running locally, be sure to run wrangler as `npx wrangler dev --remote`!
 
 ```toml
 name = "langchain-test"
-main = "worker.js"
+main = "worker.ts"
 compatibility_date = "2024-01-10"
 
 [[vectorize]]
@@ -65,3 +65,7 @@ import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/indexes/vector_stores/cloudflare_vectorize/example.ts";
 
 <CodeBlock language="typescript">{Example}</CodeBlock>
+
+You can also pass a `filter` parameter to filter by previously loaded metadata.
+See [the official documentation](https://developers.cloudflare.com/vectorize/learning/metadata-filtering/)
+for information on the required format.

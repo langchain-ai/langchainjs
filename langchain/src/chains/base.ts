@@ -7,7 +7,7 @@ import {
   Callbacks,
   parseCallbackConfigArg,
 } from "@langchain/core/callbacks/manager";
-import type { RunnableConfig } from "@langchain/core/runnables";
+import { ensureConfig, type RunnableConfig } from "@langchain/core/runnables";
 import {
   BaseLangChain,
   BaseLangChainParams,
@@ -83,7 +83,8 @@ export abstract class BaseChain<
    * @param config Optional configuration for the Runnable.
    * @returns Promise that resolves with the output of the chain run.
    */
-  async invoke(input: RunInput, config?: RunnableConfig): Promise<RunOutput> {
+  async invoke(input: RunInput, options?: RunnableConfig): Promise<RunOutput> {
+    const config = ensureConfig(options);
     const fullValues = await this._formatValues(input);
     const callbackManager_ = await CallbackManager.configure(
       config?.callbacks,
@@ -107,14 +108,14 @@ export abstract class BaseChain<
     try {
       outputValues = await (fullValues.signal
         ? (Promise.race([
-            this._call(fullValues as RunInput, runManager),
+            this._call(fullValues as RunInput, runManager, config),
             new Promise((_, reject) => {
               fullValues.signal?.addEventListener("abort", () => {
                 reject(new Error("AbortError"));
               });
             }),
           ]) as Promise<RunOutput>)
-        : this._call(fullValues as RunInput, runManager));
+        : this._call(fullValues as RunInput, runManager, config));
     } catch (e) {
       await runManager?.handleChainError(e);
       throw e;
@@ -165,7 +166,8 @@ export abstract class BaseChain<
    */
   abstract _call(
     values: RunInput,
-    runManager?: CallbackManagerForChainRun
+    runManager?: CallbackManagerForChainRun,
+    config?: RunnableConfig
   ): Promise<RunOutput>;
 
   /**

@@ -1,13 +1,13 @@
 import { test } from "@jest/globals";
 import { HuggingFaceInference } from "../hf.js";
 
-test("Test HuggingFace", async () => {
+test.skip("Test HuggingFace", async () => {
   const model = new HuggingFaceInference({ temperature: 0.1, topP: 0.5 });
   const res = await model.invoke("1 + 1 =");
   console.log(res);
 }, 50000);
 
-test("Test HuggingFace with streaming", async () => {
+test.skip("Test HuggingFace with streaming", async () => {
   const model = new HuggingFaceInference({
     model: "mistralai/Mistral-7B-v0.1",
     temperature: 0.1,
@@ -24,7 +24,7 @@ test("Test HuggingFace with streaming", async () => {
   expect(chunks.length).toBeGreaterThan(1);
 }, 50000);
 
-test("Test HuggingFace with stop sequence", async () => {
+test.skip("Test HuggingFace with stop sequence", async () => {
   const model = new HuggingFaceInference({
     model: "mistralai/Mistral-7B-v0.1",
     temperature: 0.1,

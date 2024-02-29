@@ -7,7 +7,10 @@ import {
 import {
   LogStreamCallbackHandler,
   LogStreamCallbackHandlerInput,
+  RunLog,
   RunLogPatch,
+  StreamEvent,
+  StreamEventData,
 } from "../tracers/log_stream.js";
 import { Serializable } from "../load/serializable.js";
 import {
@@ -30,6 +33,8 @@ import { AsyncCaller } from "../utils/async_caller.js";
 import { Run } from "../tracers/base.js";
 import { RootListenersTracer } from "../tracers/root_listener.js";
 import { BaseCallbackHandler } from "../callbacks/base.js";
+import { _RootEventFilter } from "./utils.js";
+import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 
 /**
  * Base interface implemented by all runnables.
@@ -94,7 +99,6 @@ export type RunnableMapLike<RunInput, RunOutput> = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type RunnableLike<RunInput = any, RunOutput = any> =
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   | RunnableInterface<RunInput, RunOutput>
   | RunnableFunc<RunInput, RunOutput>
   | RunnableMapLike<RunInput, RunOutput>;
@@ -318,7 +322,7 @@ export abstract class Runnable<
     // Buffer the first streamed chunk to allow for initial errors
     // to surface immediately.
     const wrappedGenerator = new AsyncGeneratorWithSetup(
-      this._streamIterator(input, options)
+      this._streamIterator(input, ensureConfig(options))
     );
     await wrappedGenerator.setup;
     return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
@@ -607,7 +611,7 @@ export abstract class Runnable<
         finalChunk = concat(finalChunk, chunk as any);
       }
     }
-    yield* this._streamIterator(finalChunk, options);
+    yield* this._streamIterator(finalChunk, ensureConfig(options));
   }
 
   /**
@@ -626,19 +630,31 @@ export abstract class Runnable<
     options?: Partial<CallOptions>,
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
   ): AsyncGenerator<RunLogPatch> {
-    const stream = new LogStreamCallbackHandler({
+    const logStreamCallbackHandler = new LogStreamCallbackHandler({
       ...streamOptions,
       autoClose: false,
+      _schemaFormat: "original",
     });
     const config = ensureConfig(options);
+    yield* this._streamLog(input, logStreamCallbackHandler, config);
+  }
+
+  protected async *_streamLog(
+    input: RunInput,
+    logStreamCallbackHandler: LogStreamCallbackHandler,
+    config: Partial<CallOptions>
+  ): AsyncGenerator<RunLogPatch> {
     const { callbacks } = config;
     if (callbacks === undefined) {
-      config.callbacks = [stream];
+      // eslint-disable-next-line no-param-reassign
+      config.callbacks = [logStreamCallbackHandler];
     } else if (Array.isArray(callbacks)) {
-      config.callbacks = callbacks.concat([stream]);
+      // eslint-disable-next-line no-param-reassign
+      config.callbacks = callbacks.concat([logStreamCallbackHandler]);
     } else {
       const copiedCallbacks = callbacks.copy();
-      copiedCallbacks.inheritableHandlers.push(stream);
+      copiedCallbacks.inheritableHandlers.push(logStreamCallbackHandler);
+      // eslint-disable-next-line no-param-reassign
       config.callbacks = copiedCallbacks;
     }
     const runnableStreamPromise = this.stream(input, config);
@@ -655,19 +671,207 @@ export abstract class Runnable<
               },
             ],
           });
-          await stream.writer.write(patch);
+          await logStreamCallbackHandler.writer.write(patch);
         }
       } finally {
-        await stream.writer.close();
+        await logStreamCallbackHandler.writer.close();
       }
     }
     const runnableStreamConsumePromise = consumeRunnableStream();
     try {
-      for await (const log of stream) {
+      for await (const log of logStreamCallbackHandler) {
         yield log;
       }
     } finally {
       await runnableStreamConsumePromise;
+    }
+  }
+
+  /**
+   * Generate a stream of events emitted by the internal steps of the runnable.
+   *
+   * Use to create an iterator over StreamEvents that provide real-time information
+   * about the progress of the runnable, including StreamEvents from intermediate
+   * results.
+   *
+   * A StreamEvent is a dictionary with the following schema:
+   *
+   * - `event`: string - Event names are of the format: on_[runnable_type]_(start|stream|end).
+   * - `name`: string - The name of the runnable that generated the event.
+   * - `run_id`: string - Randomly generated ID associated with the given execution of
+   *   the runnable that emitted the event. A child runnable that gets invoked as part of the execution of a
+   *   parent runnable is assigned its own unique ID.
+   * - `tags`: string[] - The tags of the runnable that generated the event.
+   * - `metadata`: Record<string, any> - The metadata of the runnable that generated the event.
+   * - `data`: Record<string, any>
+   *
+   * Below is a table that illustrates some events that might be emitted by various
+   * chains. Metadata fields have been omitted from the table for brevity.
+   * Chain definitions have been included after the table.
+   *
+   * | event                | name             | chunk                              | input                                         | output                                          |
+   * |----------------------|------------------|------------------------------------|-----------------------------------------------|-------------------------------------------------|
+   * | on_llm_start         | [model name]     |                                    | {'input': 'hello'}                            |                                                 |
+   * | on_llm_stream        | [model name]     | 'Hello' OR AIMessageChunk("hello") |                                               |                                                 |
+   * | on_llm_end           | [model name]     |                                    | 'Hello human!'                                |
+   * | on_chain_start       | format_docs      |                                    |                                               |                                                 |
+   * | on_chain_stream      | format_docs      | "hello world!, goodbye world!"     |                                               |                                                 |
+   * | on_chain_end         | format_docs      |                                    | [Document(...)]                               | "hello world!, goodbye world!"                  |
+   * | on_tool_start        | some_tool        |                                    | {"x": 1, "y": "2"}                            |                                                 |
+   * | on_tool_stream       | some_tool        |   {"x": 1, "y": "2"}               |                                               |                                                 |
+   * | on_tool_end          | some_tool        |                                    |                                               | {"x": 1, "y": "2"}                              |
+   * | on_retriever_start   | [retriever name] |                                    | {"query": "hello"}                            |                                                 |
+   * | on_retriever_chunk   | [retriever name] |  {documents: [...]}                |                                               |                                                 |
+   * | on_retriever_end     | [retriever name] |                                    | {"query": "hello"}                            | {documents: [...]}                              |
+   * | on_prompt_start      | [template_name]  |                                    | {"question": "hello"}                         |                                                 |
+   * | on_prompt_end        | [template_name]  |                                    | {"question": "hello"}                         | ChatPromptValue(messages: [SystemMessage, ...]) |
+   */
+  async *streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & { version: "v1" },
+    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
+  ): AsyncGenerator<StreamEvent> {
+    if (options.version !== "v1") {
+      throw new Error(
+        `Only version "v1" of the events schema is currently supported.`
+      );
+    }
+    let runLog;
+    let hasEncounteredStartEvent = false;
+    const config = ensureConfig(options);
+    const rootTags = config.tags ?? [];
+    const rootMetadata = config.metadata ?? {};
+    const rootName = config.runName ?? this.getName();
+    const logStreamCallbackHandler = new LogStreamCallbackHandler({
+      ...streamOptions,
+      autoClose: false,
+      _schemaFormat: "streaming_events",
+    });
+    const rootEventFilter = new _RootEventFilter({
+      ...streamOptions,
+    });
+    const logStream = this._streamLog(input, logStreamCallbackHandler, config);
+    for await (const log of logStream) {
+      if (!runLog) {
+        runLog = RunLog.fromRunLogPatch(log);
+      } else {
+        runLog = runLog.concat(log);
+      }
+      if (runLog.state === undefined) {
+        throw new Error(
+          `Internal error: "streamEvents" state is missing. Please open a bug report.`
+        );
+      }
+      // Yield the start event for the root runnable if it hasn't been seen.
+      // The root run is never filtered out
+      if (!hasEncounteredStartEvent) {
+        hasEncounteredStartEvent = true;
+        const state = { ...runLog.state };
+        const event: StreamEvent = {
+          run_id: state.id,
+          event: `on_${state.type}_start`,
+          name: rootName,
+          tags: rootTags,
+          metadata: rootMetadata,
+          data: {
+            input,
+          },
+        };
+        if (rootEventFilter.includeEvent(event, state.type)) {
+          yield event;
+        }
+      }
+      const paths = log.ops
+        .filter((op) => op.path.startsWith("/logs/"))
+        .map((op) => op.path.split("/")[2]);
+      const dedupedPaths = [...new Set(paths)];
+      for (const path of dedupedPaths) {
+        let eventType;
+        let data: StreamEventData = {};
+        const logEntry = runLog.state.logs[path];
+        if (logEntry.end_time === undefined) {
+          if (logEntry.streamed_output.length > 0) {
+            eventType = "stream";
+          } else {
+            eventType = "start";
+          }
+        } else {
+          eventType = "end";
+        }
+        if (eventType === "start") {
+          // Include the inputs with the start event if they are available.
+          // Usually they will NOT be available for components that operate
+          // on streams, since those components stream the input and
+          // don't know its final value until the end of the stream.
+          if (logEntry.inputs !== undefined) {
+            data.input = logEntry.inputs;
+          }
+        } else if (eventType === "end") {
+          if (logEntry.inputs !== undefined) {
+            data.input = logEntry.inputs;
+          }
+          data.output = logEntry.final_output;
+        } else if (eventType === "stream") {
+          const chunkCount = logEntry.streamed_output.length;
+          if (chunkCount !== 1) {
+            throw new Error(
+              `Expected exactly one chunk of streamed output, got ${chunkCount} instead. Encountered in: "${logEntry.name}"`
+            );
+          }
+          data = { chunk: logEntry.streamed_output[0] };
+          // Clean up the stream, we don't need it anymore.
+          // And this avoids duplicates as well!
+          logEntry.streamed_output = [];
+        }
+        yield {
+          event: `on_${logEntry.type}_${eventType}`,
+          name: logEntry.name,
+          run_id: logEntry.id,
+          tags: logEntry.tags,
+          metadata: logEntry.metadata,
+          data,
+        };
+      }
+      // Finally, we take care of the streaming output from the root chain
+      // if there is any.
+      const { state } = runLog;
+      if (state.streamed_output.length > 0) {
+        const chunkCount = state.streamed_output.length;
+        if (chunkCount !== 1) {
+          throw new Error(
+            `Expected exactly one chunk of streamed output, got ${chunkCount} instead. Encountered in: "${state.name}"`
+          );
+        }
+        const data = { chunk: state.streamed_output[0] };
+        // Clean up the stream, we don't need it anymore.
+        state.streamed_output = [];
+        const event = {
+          event: `on_${state.type}_stream`,
+          run_id: state.id,
+          tags: rootTags,
+          metadata: rootMetadata,
+          name: rootName,
+          data,
+        };
+        if (rootEventFilter.includeEvent(event, state.type)) {
+          yield event;
+        }
+      }
+    }
+    const state = runLog?.state;
+    if (state !== undefined) {
+      // Finally, yield the end event for the root runnable.
+      const event = {
+        event: `on_${state.type}_end`,
+        name: rootName,
+        run_id: state.id,
+        tags: rootTags,
+        metadata: rootMetadata,
+        data: {
+          output: state.final_output,
+        },
+      };
+      if (rootEventFilter.includeEvent(event, state.type)) yield event;
     }
   }
 
@@ -886,6 +1090,21 @@ export class RunnableBinding<
     yield* this.bound.transform(
       generator,
       await this._mergeConfig(options, this.kwargs)
+    );
+  }
+
+  async *streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & { version: "v1" },
+    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
+  ): AsyncGenerator<StreamEvent> {
+    yield* this.bound.streamEvents(
+      input,
+      {
+        ...(await this._mergeConfig(options, this.kwargs)),
+        version: options.version,
+      },
+      streamOptions
     );
   }
 
@@ -1255,7 +1474,8 @@ export class RunnableSequence<
   }
 
   async invoke(input: RunInput, options?: RunnableConfig): Promise<RunOutput> {
-    const callbackManager_ = await getCallbackManagerForConfig(options);
+    const config = ensureConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(config);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
@@ -1263,7 +1483,7 @@ export class RunnableSequence<
       undefined,
       undefined,
       undefined,
-      options?.runName
+      config?.runName
     );
     let nextStepInput = input;
     let finalOutput: RunOutput;
@@ -1273,7 +1493,7 @@ export class RunnableSequence<
         const step = initialSteps[i];
         nextStepInput = await step.invoke(
           nextStepInput,
-          patchConfig(options, {
+          patchConfig(config, {
             callbacks: runManager?.getChild(`seq:step:${i + 1}`),
           })
         );
@@ -1281,7 +1501,7 @@ export class RunnableSequence<
       // TypeScript can't detect that the last output of the sequence returns RunOutput, so call it out of the loop here
       finalOutput = await this.last.invoke(
         nextStepInput,
-        patchConfig(options, {
+        patchConfig(config, {
           callbacks: runManager?.getChild(`seq:step:${this.steps.length}`),
         })
       );
@@ -1526,7 +1746,8 @@ export class RunnableMap<
     input: RunInput,
     options?: Partial<RunnableConfig>
   ): Promise<RunOutput> {
-    const callbackManager_ = await getCallbackManagerForConfig(options);
+    const config = ensureConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(config);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       {
@@ -1536,7 +1757,7 @@ export class RunnableMap<
       undefined,
       undefined,
       undefined,
-      options?.runName
+      config?.runName
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const output: Record<string, any> = {};
@@ -1545,7 +1766,7 @@ export class RunnableMap<
         Object.entries(this.steps).map(async ([key, runnable]) => {
           output[key] = await runnable.invoke(
             input,
-            patchConfig(options, {
+            patchConfig(config, {
               callbacks: runManager?.getChild(`map:key:${key}`),
             })
           );
@@ -1660,21 +1881,36 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     config?: Partial<RunnableConfig>,
     runManager?: CallbackManagerForChainRun
   ) {
-    let output = await this.func(input, { ...config, config });
-    if (output && Runnable.isRunnable(output)) {
-      if (config?.recursionLimit === 0) {
-        throw new Error("Recursion limit reached.");
-      }
-      output = await output.invoke(
-        input,
-        patchConfig(config, {
-          callbacks: runManager?.getChild(),
-          recursionLimit:
-            (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
-        })
+    return new Promise<RunOutput>((resolve, reject) => {
+      const childConfig = patchConfig(config, {
+        callbacks: runManager?.getChild(),
+        recursionLimit: (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
+      });
+      void AsyncLocalStorageProviderSingleton.getInstance().run(
+        childConfig,
+        async () => {
+          try {
+            let output = await this.func(input, {
+              ...childConfig,
+              config: childConfig,
+            });
+            if (output && Runnable.isRunnable(output)) {
+              if (config?.recursionLimit === 0) {
+                throw new Error("Recursion limit reached.");
+              }
+              output = await output.invoke(input, {
+                ...childConfig,
+                recursionLimit:
+                  (childConfig.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
+              });
+            }
+            resolve(output);
+          } catch (e) {
+            reject(e);
+          }
+        }
       );
-    }
-    return output;
+    });
   }
 
   async invoke(
@@ -1689,7 +1925,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     runManager?: CallbackManagerForChainRun,
     config?: Partial<RunnableConfig>
   ): AsyncGenerator<RunOutput> {
-    let finalChunk;
+    let finalChunk: RunInput | undefined;
     for await (const chunk of generator) {
       if (finalChunk === undefined) {
         finalChunk = chunk;
@@ -1703,14 +1939,30 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
         }
       }
     }
-
-    const output = await this.func(finalChunk, { ...config, config });
+    const output = await new Promise<RunOutput | Runnable>(
+      (resolve, reject) => {
+        void AsyncLocalStorageProviderSingleton.getInstance().run(
+          config,
+          async () => {
+            try {
+              const res = await this.func(finalChunk as RunInput, {
+                ...config,
+                config,
+              });
+              resolve(res);
+            } catch (e) {
+              reject(e);
+            }
+          }
+        );
+      }
+    );
     if (output && Runnable.isRunnable(output)) {
       if (config?.recursionLimit === 0) {
         throw new Error("Recursion limit reached.");
       }
       const stream = await output.stream(
-        finalChunk,
+        finalChunk as RunInput,
         patchConfig(config, {
           callbacks: runManager?.getChild(),
           recursionLimit:

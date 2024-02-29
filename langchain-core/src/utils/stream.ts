@@ -1,6 +1,8 @@
-export interface IterableReadableStreamInterface<T>
-  extends ReadableStream<T>,
-    AsyncIterable<T> {}
+// Make this a type to override ReadableStream's async iterator type in case
+// the popular web-streams-polyfill is imported - the supplied types
+// in this case don't quite match.
+export type IterableReadableStreamInterface<T> = ReadableStream<T> &
+  AsyncIterable<T>;
 
 /*
  * Support async iterator syntax for ReadableStreams in all environments.
@@ -157,7 +159,7 @@ export function concat<
     const chunk = { ...first } as Record<string, any>;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     for (const [key, value] of Object.entries(second as Record<string, any>)) {
-      if (key in chunk) {
+      if (key in chunk && !Array.isArray(chunk[key])) {
         chunk[key] = concat(chunk[key], value);
       } else {
         chunk[key] = value;

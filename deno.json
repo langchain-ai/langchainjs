@@ -4,12 +4,15 @@
     "@langchain/community/": "npm:/@langchain/community/",
     "@langchain/openai": "npm:@langchain/openai",
     "@langchain/core/": "npm:/@langchain/core/",
+    "dotenv/": "npm:/dotenv/",
     "cheerio": "npm:/cheerio",
     "@langchain/pinecone": "npm:@langchain/pinecone",
     "@pinecone-database/pinecone": "npm:@pinecone-database/pinecone",
     "zod": "npm:/zod",
     "zod-to-json-schema": "npm:/zod-to-json-schema",
     "@langchain/anthropic": "npm:@langchain/anthropic",
-    "node-llama-cpp": "npm:/node-llama-cpp"
+    "node-llama-cpp": "npm:/node-llama-cpp",
+    "readline": "https://deno.land/x/readline@v1.1.0/mod.ts",
+    "ml-distance": "npm:/ml-distance"
   }
 }

@@ -55,7 +55,7 @@ const model = new ChatGoogleGenerativeAI({
   modelName: "gemini-pro",
   maxOutputTokens: 2048,
 });
-const response = await mode.invoke(new HumanMessage("Hello world!"));
+const response = await model.invoke(new HumanMessage("Hello world!"));
 ```
 
 #### Multimodal inputs

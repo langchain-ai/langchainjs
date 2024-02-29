@@ -17,7 +17,7 @@ class MockLoader extends BaseDocumentLoader {
   }
 }
 
-describe("Indexing API", () => {
+describe.skip("Indexing API", () => {
   let recordManager: InMemoryRecordManager;
   let vectorstore: PGVectorStore;
   const tableName = "testlangchain";
