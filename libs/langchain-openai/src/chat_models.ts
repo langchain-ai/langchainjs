@@ -39,6 +39,7 @@ import {
 import { JsonOutputParser } from "@langchain/core/output_parsers";
 import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import { betaWarning } from "@langchain/core/utils/beta_warning";
 import type {
   AzureOpenAIInput,
   OpenAICallOptions,
@@ -928,6 +929,7 @@ export class ChatOpenAI<
           parsed: RunOutput;
         }
       > {
+    betaWarning("withStructuredOutput");
     let llm: Runnable<BaseLanguageModelInput>;
     let outputParser: JsonOutputKeyToolsParser | JsonOutputParser<RunOutput>;
 
