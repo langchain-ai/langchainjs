@@ -469,18 +469,20 @@ export class PGVectorStore extends VectorStore {
       ? `WHERE ${whereClauses.join(" AND ")}`
       : "";
 
+    const operatorString =
+      this.extensionSchemaName !== null
+        ? `OPERATOR(${this.extensionSchemaName}.<=>)`
+        : "<=>";
+
     const queryString = `
-      SELECT *, "${this.vectorColumnName}" <=> $1 as "_distance"
+      SELECT *, "${this.vectorColumnName}" ${operatorString} $1 as "_distance"
       FROM ${this.computedTableName}
       ${whereClause}
       ${collectionId ? "AND collection_id = $3" : ""}
       ORDER BY "_distance" ASC
       LIMIT $2;
       `;
-    if (this.extensionSchemaName !== null) {
-      const schemaConfig = `SET search_path TO ${this.extensionSchemaName}, public;`;
-      await this.pool.query(schemaConfig);
-    }
+
     const documents = (await this.pool.query(queryString, parameters)).rows;
 
     const results = [] as [Document, number][];
