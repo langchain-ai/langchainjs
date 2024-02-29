@@ -37,20 +37,19 @@ A number of models implement helper methods that will take care of formatting an
 Let's take a look at how we might take the following Zod function schema and get different models to invoke it:
 
 ```typescript
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Note that the descriptions here are crucial, as they will be passed along
  * to the model along with the class name.
  */
-const calculatorSchema = z
-  .object({
-    operation: z
-      .enum(["add", "subtract", "multiply", "divide"])
-      .describe("The type of operation to execute."),
-    number1: z.number().describe("The first number to operate on."),
-    number2: z.number().describe("The second number to operate on."),
-  });
+const calculatorSchema = z.object({
+  operation: z
+    .enum(["add", "subtract", "multiply", "divide"])
+    .describe("The type of operation to execute."),
+  number1: z.number().describe("The first number to operate on."),
+  number2: z.number().describe("The second number to operate on."),
+});
 ```
 
 <Tabs>
@@ -69,21 +68,23 @@ We can use the `ChatOpenAI.bind()` method to handle converting `calculatorSchema
 
 ```typescript
 import { ChatOpenAI } from "@langchain/openai";
-import { zodToJsonSchema } from 'zod-to-json-schema';
+import { zodToJsonSchema } from "zod-to-json-schema";
 
 const llm = new ChatOpenAI({
   modelName: "gpt-3.5-turbo-0125",
   temperature: 0,
 });
 const llmWithTools = llm.bind({
-  tools: [{
-    type: "function" as const,
-    function: {
-      name: "calculator",
-      description: "A simple calculator tool",
-      parameters: zodToJsonSchema(calculatorSchema),
-    }
-  }],
+  tools: [
+    {
+      type: "function" as const,
+      function: {
+        name: "calculator",
+        description: "A simple calculator tool",
+        parameters: zodToJsonSchema(calculatorSchema),
+      },
+    },
+  ],
 });
 const response = await llmWithTools.invoke("What is 3 * 12");
 console.log(JSON.stringify(response, null, 2));
@@ -116,7 +117,7 @@ See the LangSmith trace [here](https://smith.langchain.com/public/cb36c6e5-e478-
 We can add a tool parser to extract the tool calls from the generated message to JSON:
 
 ```typescript
-import { JsonOutputToolsParser } from '@langchain/core/output_parsers/openai_tools';
+import { JsonOutputToolsParser } from "@langchain/core/output_parsers/openai_tools";
 
 const toolChain = llmWithTools.pipe(new JsonOutputToolsParser());
 const response = await toolChain.invoke("What is 3 * 12");
@@ -144,20 +145,22 @@ If we wanted to force that a tool is used (and that it is used only once), we ca
 
 ```typescript
 const llmWithMultiply = llm.bind({
-  tools: [{
-    type: "function" as const,
-    function: {
-      name: "calculator",
-      description: "A simple calculator tool",
-      parameters: zodToJsonSchema(calculatorSchema),
-    }
-  }],
+  tools: [
+    {
+      type: "function" as const,
+      function: {
+        name: "calculator",
+        description: "A simple calculator tool",
+        parameters: zodToJsonSchema(calculatorSchema),
+      },
+    },
+  ],
   tool_choice: {
     type: "function" as const,
     function: {
       name: "calculator",
-    }
-  }
+    },
+  },
 });
 const response = await llmWithMultiply.invoke("What is 3 * 12");
 console.log(JSON.stringify(response, null, 2));
@@ -182,6 +185,7 @@ console.log(JSON.stringify(response, null, 2));
   }
 }
 ```
+
   </TabItem>
 
   <TabItem value="mistralai" label="MistralAI">
@@ -199,21 +203,23 @@ We can use the `ChatMistralAI.bind()` method to handle converting `calculatorSch
 
 ```typescript
 import { ChatMistralAI } from "@langchain/mistralai";
-import { zodToJsonSchema } from 'zod-to-json-schema';
+import { zodToJsonSchema } from "zod-to-json-schema";
 
 const llm = new ChatMistralAI({
   modelName: "mistral-large-latest",
   temperature: 0,
 });
 const llmWithTools = llm.bind({
-  tools: [{
-    type: "function" as const,
-    function: {
-      name: "calculator",
-      description: "A simple calculator tool",
-      parameters: zodToJsonSchema(calculatorSchema),
-    }
-  }],
+  tools: [
+    {
+      type: "function" as const,
+      function: {
+        name: "calculator",
+        description: "A simple calculator tool",
+        parameters: zodToJsonSchema(calculatorSchema),
+      },
+    },
+  ],
 });
 const response = await llmWithTools.invoke("What is 3 * 12");
 console.log(JSON.stringify(response, null, 2));
@@ -246,7 +252,7 @@ See the LangSmith trace [here](https://smith.langchain.com/public/ea36cd94-ff85-
 We can add a tool parser to extract the tool calls from the generated message to JSON:
 
 ```typescript
-import { JsonOutputToolsParser } from '@langchain/core/output_parsers/openai_tools';
+import { JsonOutputToolsParser } from "@langchain/core/output_parsers/openai_tools";
 
 const toolChain = llmWithTools.pipe(new JsonOutputToolsParser());
 const response = await toolChain.invoke("What is 3 * 12");
@@ -269,6 +275,7 @@ console.log(JSON.stringify(response, null, 2));
 :::tip
 See the LangSmith trace [here](https://smith.langchain.com/public/05893756-0689-4d38-933f-529920f86dbb/r).
 :::
+
   </TabItem>
 
   <TabItem value="togetherai" label="TogetherAI">
@@ -286,21 +293,23 @@ We can use the `ChatTogetherAI.bind()` method to handle converting `calculatorSc
 
 ```typescript
 import { ChatTogetherAI } from "@langchain/community/chat_models/togetherai";
-import { zodToJsonSchema } from 'zod-to-json-schema';
+import { zodToJsonSchema } from "zod-to-json-schema";
 
 const llm = new ChatTogetherAI({
   modelName: "mistralai/Mixtral-8x7B-Instruct-v0.1",
   temperature: 0,
 });
 const llmWithTools = llm.bind({
-  tools: [{
-    type: "function" as const,
-    function: {
-      name: "calculator",
-      description: "A simple calculator tool",
-      parameters: zodToJsonSchema(calculatorSchema),
-    }
-  }],
+  tools: [
+    {
+      type: "function" as const,
+      function: {
+        name: "calculator",
+        description: "A simple calculator tool",
+        parameters: zodToJsonSchema(calculatorSchema),
+      },
+    },
+  ],
 });
 const response = await llmWithTools.invoke("What is 3 * 12");
 console.log(JSON.stringify(response, null, 2));
@@ -333,7 +342,7 @@ See the LangSmith trace [here](https://smith.langchain.com/public/bf416507-a583-
 We can add a tool parser to extract the tool calls from the generated message to JSON:
 
 ```typescript
-import { JsonOutputToolsParser } from '@langchain/core/output_parsers/openai_tools';
+import { JsonOutputToolsParser } from "@langchain/core/output_parsers/openai_tools";
 
 const toolChain = llmWithTools.pipe(new JsonOutputToolsParser());
 const response = await toolChain.invoke("What is 3 * 12");
@@ -361,20 +370,22 @@ If we wanted to force that a tool is used (and that it is used only once), we ca
 
 ```typescript
 const llmWithMultiply = llm.bind({
-  tools: [{
-    type: "function" as const,
-    function: {
-      name: "calculator",
-      description: "A simple calculator tool",
-      parameters: zodToJsonSchema(calculatorSchema),
-    }
-  }],
+  tools: [
+    {
+      type: "function" as const,
+      function: {
+        name: "calculator",
+        description: "A simple calculator tool",
+        parameters: zodToJsonSchema(calculatorSchema),
+      },
+    },
+  ],
   tool_choice: {
     type: "function" as const,
     function: {
       name: "calculator",
-    }
-  }
+    },
+  },
 });
 const response = await llmWithMultiply.invoke("What is 3 * 12");
 console.log(JSON.stringify(response, null, 2));
@@ -399,6 +410,7 @@ console.log(JSON.stringify(response, null, 2));
   }
 }
 ```
+
   </TabItem>
 
 </Tabs>
@@ -408,7 +420,7 @@ console.log(JSON.stringify(response, null, 2));
 In case you need to access function schemas directly, LangChain has a built-in converter that can turn Zod schemas with LangChain tools into the OpenAI format JSON schema:
 
 import CodeBlock from "@theme/CodeBlock";
-import LCToolToOAIFunc from "@examples/models/chat/function_calling/lc_tool_to_oai.ts"
+import LCToolToOAIFunc from "@examples/models/chat/function_calling/lc_tool_to_oai.ts";
 
 <CodeBlock language="typescript">{LCToolToOAIFunc}</CodeBlock>
 
