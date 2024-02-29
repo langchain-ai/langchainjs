@@ -3,7 +3,7 @@ import { test, expect, describe } from "@jest/globals";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
 import { CassandraClientFactory } from "../../utils/cassandra.js";
-import { CassandraStore } from "../cassandra.js";
+import { CassandraLibArgs, CassandraStore } from "../cassandra.js";
 
 const cassandraConfig = {
   serviceProviderArgs: {
@@ -12,7 +12,7 @@ const cassandraConfig = {
       endpoint: process.env.ASTRA_DB_ENDPOINT as string,
     },
   },
-  keyspace: "test",
+  keyspace: "default_keyspace",
   table: "test",
 };
 
@@ -47,16 +47,16 @@ const noPartitionConfig = {
 //   3. cd langchainjs/libs/langchain-community
 //   4. yarn test:single src/vectorstores/tests/cassandra.int.test.ts
 // Once manual testing is complete, re-instate the ".skip"
-describe.skip("CassandraStore - no explicit partition key", () => {
+describe("CassandraStore - no explicit partition key", () => {
   beforeAll(async () => {
     client = await CassandraClientFactory.getClient(cassandraConfig);
-    await client.execute("DROP TABLE IF EXISTS test.test;");
+    await client.execute("DROP TABLE IF EXISTS default_keyspace.test;");
   });
 
   beforeEach(async () => {
     try {
       client = await CassandraClientFactory.getClient(cassandraConfig);
-      await client.execute("TRUNCATE test.test;");
+      await client.execute("TRUNCATE default_keyspace.test;");
     } catch (err) {
       // Ignore error if table does not exist
     }
@@ -321,7 +321,7 @@ describe.skip("CassandraStore - no explicit partition key", () => {
 describe.skip("CassandraStore - no explicit partition key", () => {
   beforeAll(async () => {
     client = await CassandraClientFactory.getClient(cassandraConfig);
-    await client.execute("DROP TABLE IF EXISTS test.test;");
+    await client.execute("DROP TABLE IF EXISTS default_keyspace.test;");
   });
 
   test("CassandraStore.fromExistingIndex (with geo_distance filter)", async () => {
@@ -418,7 +418,7 @@ const partitionConfig = {
 describe.skip("CassandraStore - with explicit partition key", () => {
   beforeAll(async () => {
     client = await CassandraClientFactory.getClient(cassandraConfig);
-    await client.execute("DROP TABLE IF EXISTS test.test;");
+    await client.execute("DROP TABLE IF EXISTS default_keyspace.test;");
   });
 
   test("CassandraStore.partitionKey", async () => {
@@ -478,4 +478,26 @@ describe.skip("CassandraStore - with explicit partition key", () => {
     //   }),
     // ]);
   });
+});
+
+describe("CassandraStore - with explicit partition key", () => {
+  beforeAll(async () => {
+    client = await CassandraClientFactory.getClient(cassandraConfig);
+    await client.execute("DROP TABLE IF EXISTS default_keyspace.test;");
+  });
+
+  test("no metadata and no primary keys", async () => {
+    const store = await CassandraStore.fromTexts(
+      ["I am blue", "Green yellow purple", "Hello there hello"],
+      [],
+      new OpenAIEmbeddings(),
+      {
+        ...cassandraConfig,
+        dimensions: 1536,
+      } as CassandraLibArgs
+    );
+    const result = await store.similaritySearch("Green yellow purple", 1);
+    const content = result[0].pageContent;
+    expect(content).toEqual("Green yellow purple");
+  }, 60000);
 });

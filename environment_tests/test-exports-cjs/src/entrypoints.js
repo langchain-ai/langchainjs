@@ -89,6 +89,7 @@ const retrievers_document_compressors_embeddings_filter = require("langchain/ret
 const retrievers_hyde = require("langchain/retrievers/hyde");
 const retrievers_score_threshold = require("langchain/retrievers/score_threshold");
 const retrievers_vespa = require("langchain/retrievers/vespa");
+const retrievers_matryoshka_retriever = require("langchain/retrievers/matryoshka_retriever");
 const cache = require("langchain/cache");
 const stores_doc_in_memory = require("langchain/stores/doc/in_memory");
 const stores_file_in_memory = require("langchain/stores/file/in_memory");

@@ -89,6 +89,7 @@ import * as retrievers_document_compressors_embeddings_filter from "langchain/re
 import * as retrievers_hyde from "langchain/retrievers/hyde";
 import * as retrievers_score_threshold from "langchain/retrievers/score_threshold";
 import * as retrievers_vespa from "langchain/retrievers/vespa";
+import * as retrievers_matryoshka_retriever from "langchain/retrievers/matryoshka_retriever";
 import * as cache from "langchain/cache";
 import * as stores_doc_in_memory from "langchain/stores/doc/in_memory";
 import * as stores_file_in_memory from "langchain/stores/file/in_memory";
