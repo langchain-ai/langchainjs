@@ -3,10 +3,14 @@ import {
   Callbacks,
 } from "@langchain/core/callbacks/manager";
 import { LLM } from "@langchain/core/language_models/llms";
-import { type BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
-import { BaseMessage, MessageContent } from "@langchain/core/messages";
+import {
+  type BaseLanguageModelCallOptions,
+  BaseLanguageModelInput
+} from "@langchain/core/language_models/base";
+import {BaseMessage, BaseMessageChunk, MessageContent} from "@langchain/core/messages";
 import { GenerationChunk } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { IterableReadableStream } from "@langchain/core/utils/stream";
 
 import { AbstractGoogleLLMConnection } from "./connection.js";
 import {
@@ -21,6 +25,7 @@ import {
   copyAndValidateModelParamsInto,
 } from "./utils/common.js";
 import {
+  chunkToString,
   defaultGeminiSafetyHandler,
   messageContentToParts,
   safeResponseToBaseMessage,
@@ -30,6 +35,7 @@ import {
 import { JsonStream } from "./utils/stream.js";
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
 import { ensureParams } from "./utils/failedHandler.js";
+import { ChatGoogleBase } from "./chat_models.js";
 
 class GoogleLLMConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   MessageContent,
@@ -50,6 +56,25 @@ class GoogleLLMConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   }
 }
 
+type ProxyChatInput<AuthOptions> =
+  GoogleAIBaseLLMInput<AuthOptions> &
+  {
+    connection: GoogleLLMConnection<AuthOptions>;
+  }
+
+
+class ProxyChatGoogle<AuthOptions>
+  extends ChatGoogleBase<AuthOptions> {
+
+  constructor(fields: ProxyChatInput<AuthOptions>) {
+    super(fields);
+  }
+
+  buildAbstractedClient(fields: ProxyChatInput<AuthOptions>): GoogleAbstractedClient {
+    return fields.connection.client;
+  }
+}
+
 /**
  * Input to LLM class.
  */
@@ -67,6 +92,8 @@ export abstract class GoogleBaseLLM<AuthOptions>
   static lc_name() {
     return "GoogleLLM";
   }
+
+  originalFields?: GoogleBaseLLMInput<AuthOptions>;
 
   lc_serializable = true;
 
@@ -92,6 +119,7 @@ export abstract class GoogleBaseLLM<AuthOptions>
 
   constructor(fields?: GoogleBaseLLMInput<AuthOptions>) {
     super(ensureParams(fields));
+    this.originalFields = fields;
 
     copyAndValidateModelParamsInto(fields, this);
     this.safetyHandler = fields?.safetyHandler ?? defaultGeminiSafetyHandler;
@@ -214,5 +242,39 @@ export abstract class GoogleBaseLLM<AuthOptions>
     );
     const ret = safeResponseToBaseMessage(result,this.safetyHandler);
     return ret;
+  }
+
+  createProxyChat(): ChatGoogleBase<AuthOptions>{
+    console.log("this",this);
+    return new ProxyChatGoogle<AuthOptions>({
+      ...this.originalFields,
+      connection: this.connection,
+    })
+  }
+
+
+  async invoke(input: BaseLanguageModelInput, options?: BaseLanguageModelCallOptions): Promise<string> {
+    const proxyChat = this.createProxyChat();
+    const chunk = await proxyChat.invoke(input, options);
+    return chunkToString(chunk);
+  }
+
+
+  async stream(input: BaseLanguageModelInput, options?: Partial<BaseLanguageModelCallOptions>): Promise<IterableReadableStream<string>> {
+    const proxyChat = this.createProxyChat();
+
+    const chatStream = await proxyChat.stream(input, options);
+
+    // Based on code from Gemini Advanced
+    const transformStream = new TransformStream({
+      transform(chunk: BaseMessageChunk, controller) {
+        const text = chunkToString(chunk);
+        const encodedText = new TextEncoder().encode(text);
+        controller.enqueue(encodedText);
+      }
+    });
+
+    const readableStream = chatStream.pipeThrough(transformStream);
+    return IterableReadableStream.fromReadableStream(readableStream);
   }
 }

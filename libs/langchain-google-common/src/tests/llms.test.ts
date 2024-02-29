@@ -347,7 +347,7 @@ describe("Mock Google LLM", () => {
    * This test is skipped because .invoke() converts everything to text
    * only at the moment.
    */
-  test.skip("6: invoke image blue-square", async() => {
+  test("6: invoke image blue-square", async() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
@@ -376,8 +376,6 @@ describe("Mock Google LLM", () => {
     const messages: BaseMessage[] = [
       new HumanMessageChunk({content: message})
     ]
-
-    // const input: BaseLanguageModelInput = [["human", message]]
     const input = new ChatPromptValue(messages);
     const res = await model.invoke(input);
 
@@ -402,7 +400,7 @@ describe("Mock Google LLM", () => {
    * This test is skipped because .stream() converts everything to text
    * only at the moment.
    */
-  test.skip("7: stream image blue-square", async () => {
+  test("7: stream image blue-square", async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();

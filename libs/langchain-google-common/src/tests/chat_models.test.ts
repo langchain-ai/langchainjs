@@ -1,8 +1,8 @@
 import { expect, test } from "@jest/globals";
 import {
-  AIMessage,
+  AIMessage, BaseMessage,
   BaseMessageLike,
-  HumanMessage,
+  HumanMessage, HumanMessageChunk,
   MessageContentComplex,
   MessageContentText,
   SystemMessage,
@@ -264,5 +264,56 @@ describe("Mock ChatGoogle", () => {
 
     expect(caught).toEqual(true);
   });
+
+  /*
+   * Images aren't supported (yet) by Gemini, but a one-round with
+   * image should work ok.
+   */
+  test("3. invoke - images", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-3-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      model: "gemini-pro-vision"
+    });
+
+    const message: MessageContentComplex[] = [
+      {
+        type: "text",
+        text: "What is in this image?"
+      },
+      {
+        type: "image_url",
+        image_url: `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH6AIbFwQSRaexCAAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAJklEQVQY02P8//8/A27AxIAXsEAor31f0CS2OfEQ1j2Q0owU+RsAGNUJD2/04PgAAAAASUVORK5CYII=`
+      }
+    ]
+
+    const messages: BaseMessage[] = [
+      new HumanMessageChunk({content: message})
+    ]
+
+    const result = await model.invoke(messages);
+
+    expect(record.opts).toHaveProperty("data");
+    expect(record.opts.data).toHaveProperty("contents");
+    expect(record.opts.data.contents).toHaveLength(1);
+    expect(record.opts.data.contents[0]).toHaveProperty("parts");
+
+    const parts = record?.opts?.data?.contents[0]?.parts;
+    expect(parts).toHaveLength(2);
+    expect(parts[0]).toHaveProperty("text");
+    expect(parts[1]).toHaveProperty("inlineData");
+    expect(parts[1].inlineData).toHaveProperty("mimeType");
+    expect(parts[1].inlineData).toHaveProperty("data");
+
+    expect(result.content[0]).toHaveProperty("text")
+    expect((result.content[0] as MessageContentText).text).toEqual("A blue square.");
+  })
 
 });

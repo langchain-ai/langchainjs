@@ -155,7 +155,9 @@ function fileDataPartToMessageContent(
 export function partsToMessageContent(parts: GeminiPart[]): MessageContent {
   return parts
     .map((part) => {
-      if ("text" in part) {
+      if (part === undefined || part === null) {
+        return null;
+      } else if ("text" in part) {
         return textPartToMessageContent(part);
       } else if ("inlineData" in part) {
         return inlineDataPartToMessageContent(part);
@@ -273,6 +275,20 @@ export function safeResponseToChatGeneration(
   safetyHandler: GoogleAISafetyHandler
 ): ChatGenerationChunk {
   return safeResponseTo( response, safetyHandler, responseToChatGeneration );
+}
+
+export function chunkToString(chunk: BaseMessageChunk): string {
+  if (chunk === null) {
+    return "";
+  } else if (typeof chunk.content === "string") {
+    return chunk.content;
+  } else if (chunk.content.length === 0) {
+    return "";
+  } else if (chunk.content[0].type === "text") {
+    return chunk.content[0].text
+  } else {
+    throw new Error(`Unexpected chunk: ${chunk}`);
+  }
 }
 
 export function partToMessage(part: GeminiPart): BaseMessageChunk {

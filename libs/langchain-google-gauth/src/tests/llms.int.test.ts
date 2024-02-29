@@ -1,6 +1,12 @@
 import { test } from "@jest/globals";
+import {
+  AIMessage,
+  BaseMessage,
+  HumanMessageChunk,
+  MessageContentComplex
+} from "@langchain/core/messages";
+import { ChatPromptValue } from "@langchain/core/prompt_values";
 import { GoogleLLM } from "../llms.js";
-import {AIMessage, BaseMessage, HumanMessageChunk, MessageContentComplex} from "@langchain/core/messages";
 
 const imgData = {
   blueSquare: "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH6AIbFwQSRaexCAAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAJklEQVQY02P8//8/A27AxIAXsEAor31f0CS2OfEQ1j2Q0owU+RsAGNUJD2/04PgAAAAASUVORK5CYII=",
@@ -49,6 +55,57 @@ describe("GAuth LLM", () => {
     }
     expect(chunks.length).toBeGreaterThan(1);
   });
+
+  test("predictMessage image", async () => {
+    const model = new GoogleLLM({
+      model: "gemini-pro-vision",
+    });
+    const message: MessageContentComplex[] = [
+      {
+        type: "text",
+        text: "What is in this image?"
+      },
+      {
+        type: "image_url",
+        image_url: `data:image/png;base64,${imgData.blueSquare}`
+      }
+    ]
+
+    const messages: BaseMessage[] = [
+      new HumanMessageChunk({content: message})
+    ]
+    const res = await model.predictMessages(messages);
+    expect(res).toBeInstanceOf(AIMessage);
+    expect(Array.isArray(res.content)).toEqual(true);
+    expect(res.content[0]).toHaveProperty("text");
+    console.log("res",res)
+  })
+
+  test("invoke image", async () => {
+    const model = new GoogleLLM({
+      model: "gemini-pro-vision",
+    });
+    const message: MessageContentComplex[] = [
+      {
+        type: "text",
+        text: "What is in this image?"
+      },
+      {
+        type: "image_url",
+        image_url: `data:image/png;base64,${imgData.blueSquare}`
+      }
+    ]
+
+    const messages: BaseMessage[] = [
+      new HumanMessageChunk({content: message})
+    ]
+    const input = new ChatPromptValue(messages);
+    const res = await model.invoke(input);
+    expect(res).toBeDefined();
+    expect(res.length).toBeGreaterThan(0);
+    console.log("res",res)
+  })
+
 });
 
 describe("GAuth LLM gai", () => {
@@ -150,4 +207,31 @@ describe("GAuth LLM gai", () => {
     expect(res.content[0]).toHaveProperty("text");
     console.log("res",res)
   })
+
+  test("invoke image", async () => {
+    const model = new GoogleLLM({
+      platformType: "gai",
+      model: "gemini-pro-vision",
+    });
+    const message: MessageContentComplex[] = [
+      {
+        type: "text",
+        text: "What is in this image?"
+      },
+      {
+        type: "image_url",
+        image_url: `data:image/png;base64,${imgData.blueSquare}`
+      }
+    ]
+
+    const messages: BaseMessage[] = [
+      new HumanMessageChunk({content: message})
+    ]
+    const input = new ChatPromptValue(messages);
+    const res = await model.invoke(input);
+    expect(res).toBeDefined();
+    expect(res.length).toBeGreaterThan(0);
+    console.log("res",res)
+  })
+
 });
