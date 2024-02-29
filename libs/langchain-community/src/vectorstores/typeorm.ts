@@ -27,7 +27,6 @@ export class TypeORMVectorStoreDocument extends Document {
 }
 
 const defaultDocumentTableName = "documents";
-const defaultSchemaName = "public";
 
 /**
  * Class that provides an interface to a Postgres vector database. It
@@ -40,7 +39,7 @@ export class TypeORMVectorStore extends VectorStore {
 
   tableName: string;
 
-  schemaName: string;
+  schemaName?: string;
 
   documentEntity: EntitySchema;
 
@@ -60,7 +59,7 @@ export class TypeORMVectorStore extends VectorStore {
   ) {
     super(embeddings, fields);
     this.tableName = fields.tableName || defaultDocumentTableName;
-    this.schemaName = fields.schemaName || defaultSchemaName;
+    this.schemaName = fields.schemaName;
     this.filter = fields.filter;
 
     const TypeORMDocumentEntity = new EntitySchema<TypeORMVectorStoreDocument>({
@@ -222,15 +221,20 @@ export class TypeORMVectorStore extends VectorStore {
     await this.appDataSource.query(
       'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
     );
-
     await this.appDataSource.query(`
-      CREATE TABLE IF NOT EXISTS ${this.schemaName}.${this.tableName} (
+      CREATE TABLE IF NOT EXISTS ${this.getTablePath()} (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
         "pageContent" text,
         metadata jsonb,
         embedding vector
       );
     `);
+  }
+
+  private getTablePath() {
+    if (!this.schemaName) return this.tableName;
+
+    return `"${this.schemaName}"."${this.tableName}"`;
   }
 
   /**
