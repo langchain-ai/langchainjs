@@ -102,6 +102,16 @@ export class Graph {
     return node;
   }
 
+  removeNode(node: Node): void {
+    // Remove the node from the nodes map
+    delete this.nodes[node.id];
+
+    // Filter out edges connected to the node
+    this.edges = this.edges.filter(
+      (edge) => edge.source !== node.id && edge.target !== node.id
+    );
+  }
+
   addEdge(source: Node, target: Node, data?: string): Edge {
     if (!Object.prototype.hasOwnProperty.call(this.nodes, source.id)) {
       throw new Error(`Source node ${source.id} not in graph`);
@@ -134,5 +144,39 @@ export class Graph {
       }
     });
     return found.length === 1 ? found[0] : null;
+  }
+
+  extend(graph: Graph): void {
+    // Add all nodes from the other graph, taking care to avoid duplicates
+    Object.entries(graph.nodes).forEach(([key, value]) => {
+      this.nodes[key] = value;
+    });
+
+    // Add all edges from the other graph
+    this.edges = [...this.edges, ...graph.edges];
+  }
+
+  trimFirstNode(): void {
+    const firstNode = this.firstNode();
+    if (firstNode) {
+      const outgoingEdges = this.edges.filter(
+        (edge) => edge.source === firstNode.id
+      );
+      if (Object.keys(this.nodes).length === 1 || outgoingEdges.length === 1) {
+        this.removeNode(firstNode);
+      }
+    }
+  }
+
+  trimLastNode(): void {
+    const lastNode = this.lastNode();
+    if (lastNode) {
+      const incomingEdges = this.edges.filter(
+        (edge) => edge.target === lastNode.id
+      );
+      if (Object.keys(this.nodes).length === 1 || incomingEdges.length === 1) {
+        this.removeNode(lastNode);
+      }
+    }
   }
 }

@@ -55,8 +55,8 @@ test("Test graph sequence", async () => {
         id: 2,
         type: "runnable",
         data: {
-          id: ["tests", "unit_tests", "fake", "llm", "FakeListLLM"],
-          name: "FakeListLLM",
+          id: ["langchain", "llms", "fake", "llm", "FakeLLM"],
+          name: "FakeLLM",
         },
       },
       {

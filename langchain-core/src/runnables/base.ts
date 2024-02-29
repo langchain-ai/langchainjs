@@ -554,8 +554,16 @@ export abstract class Runnable<
   getGraph(config?: RunnableConfig): Graph {
     const graph = new Graph();
 
-    graph.addNode(this); // Assuming `this` refers to an instance that can be treated as data for a node
+    // TODO: what is the inputNode here?
+    const inputNode = graph.addNode({});
 
+    const runnableNode = graph.addNode(this); // Assuming `this` refers to an instance that can be treated as data for a node
+
+    // TODO: what is the outputNode here?
+    const outputNode = graph.addNode({});
+
+    graph.addEdge(inputNode, runnableNode);
+    graph.addEdge(runnableNode, outputNode);
     return graph;
   }
 
@@ -1651,15 +1659,33 @@ export class RunnableSequence<
 
   getGraph(config?: RunnableConfig): Graph {
     const graph = new Graph();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let currentLastNode: any = null;
 
-    const inputNode = graph.addNode(this.first);
+    this.steps.forEach((step, index) => {
+      const stepGraph = step.getGraph(config);
 
-    const runnableNode = graph.addNode(this); // Assuming `this` refers to an instance that can be treated as data for a node
+      if (index !== 0) {
+        stepGraph.trimFirstNode();
+      }
 
-    const outputNode = graph.addNode(this.last);
+      if (index !== this.steps.length - 1) {
+        stepGraph.trimLastNode();
+      }
 
-    graph.addEdge(inputNode, runnableNode);
-    graph.addEdge(runnableNode, outputNode);
+      graph.extend(stepGraph);
+
+      const stepFirstNode = stepGraph.firstNode();
+      if (!stepFirstNode) {
+        throw new Error(`Runnable ${step} has no first node`);
+      }
+
+      if (currentLastNode) {
+        graph.addEdge(currentLastNode, stepFirstNode);
+      }
+
+      currentLastNode = stepGraph.lastNode();
+    });
 
     return graph;
   }
