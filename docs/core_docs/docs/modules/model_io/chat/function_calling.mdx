@@ -1,116 +1,459 @@
-# OpenAI Function calling
+# Function calling
 
-import CodeBlock from "@theme/CodeBlock";
-import OpenAIFunctionsExample from "@examples/models/chat/openai_functions.ts";
-import OpenAIFunctionsZodExample from "@examples/models/chat/openai_functions_zod.ts";
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
 
-Function calling is a useful way to get structured output from an LLM for a wide range of purposes.
-By providing schemas for "functions", the LLM will choose one and attempt to output a response matching that schema.
+A growing number of chat models, like [OpenAI](/docs/integrations/chat/openai#tool-calling), [Mistral](/docs/integrations/chat/mistral#tool-calling), etc., have a function-calling
+API that lets you describe functions and their arguments, and have the model return a JSON object with a function to invoke and the inputs to that function.
+Function-calling is extremely useful for building [tool-using chains and agents](/docs/use_cases/tool_use/), and for getting structured outputs from models more generally.
 
-Though the name implies that the LLM is actually running code and calling a function, it is more accurate to say that the LLM is
-populating parameters that match the schema for the arguments a hypothetical function would take. We can use these
-structured responses for whatever we'd like!
+LangChain comes with a number of utilities to make function-calling easy. Namely, it comes with:
 
-Function calling serves as a building block for several other popular features in LangChain, including the [`OpenAI Functions agent`](/docs/modules/agents/agent_types/openai_functions_agent)
-and [`structured output chain`](/docs/modules/chains/popular/structured_output). In addition to these more specific use cases, you can also attach function parameters
-directly to the model and call it, as shown below.
+- simple syntax for binding functions to models
+- converters for formatting various types of objects to the expected function schemas
+- output parsers for extracting the function invocations from API responses
+- chains for getting structured outputs from a model, built on top of function calling
 
-## Usage
+We'll focus here on the first two points. For a detailed guide on output parsing check out the [OpenAI Tools output parsers](/docs/modules/model_io/output_parsers/types/openai_tools) and to
+see the structured output chains check out the Structured output guide ([OpenAI](/docs/integrations/chat/openai#withstructuredoutput--), [Mistral](/docs/integrations/chat/mistral#withstructuredoutput--)).
 
-There are two main ways to apply functions to your OpenAI calls.
-
-The first and most simple is by attaching a function directly to the `.invoke({})` method:
-
-```typescript
-/* Define your function schema */
-const extractionFunctionSchema = {...}
-
-/* Instantiate ChatOpenAI class */
-const model = new ChatOpenAI({ modelName: "gpt-4" });
-
-/**
- * Call the .invoke method on the model, directly passing
- * the function arguments as call args.
- */
-const result = await model.invoke([new HumanMessage("What a beautiful day!")], {
-  functions: [extractionFunctionSchema],
-  function_call: { name: "extractor" },
-});
-
-console.log({ result });
-```
-
-The second way is by directly binding the function to your model. Binding function arguments to your model is useful when you want to call the same function twice.
-Calling the `.bind({})` method attaches any call arguments passed in to all future calls to the model.
-
-```typescript
-/* Define your function schema */
-const extractionFunctionSchema = {...}
-
-/* Instantiate ChatOpenAI class and bind function arguments to the model */
-const model = new ChatOpenAI({ modelName: "gpt-4" }).bind({
-  functions: [extractionFunctionSchema],
-  function_call: { name: "extractor" },
-});
-
-/* Now we can call the model without having to pass the function arguments in again */
-const result = await model.invoke([new HumanMessage("What a beautiful day!")]);
-
-console.log({ result });
-```
-
-OpenAI requires parameter schemas in the format below, where `parameters` must be [JSON Schema](https://json-schema.org/).
-When adding call arguments to your model, specifying the `function_call` argument will force the model to return a response using the specified function.
-This is useful if you have multiple schemas you'd like the model to pick from.
-
-Example function schema:
-
-```typescript
-const extractionFunctionSchema = {
-  name: "extractor",
-  description: "Extracts fields from the input.",
-  parameters: {
-    type: "object",
-    properties: {
-      tone: {
-        type: "string",
-        enum: ["positive", "negative"],
-        description: "The overall tone of the input",
-      },
-      word_count: {
-        type: "number",
-        description: "The number of words in the input",
-      },
-      chat_response: {
-        type: "string",
-        description: "A response to the human's input",
-      },
-    },
-    required: ["tone", "word_count", "chat_response"],
-  },
-};
-```
-
-Now to put it all together:
+Before getting started make sure you have `@langchain/core` installed.
 
 import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
 
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm install @langchain/openai
+npm install @langchain/core
 ```
 
-<CodeBlock language="typescript">{OpenAIFunctionsExample}</CodeBlock>
-
-## Usage with Zod
-
-An alternative way to declare function schema is to use the [Zod](https://zod.dev) schema library with the
-[zod-to-json-schema](https://www.npmjs.com/package/zod-to-json-schema) utility package to translate it:
+We'll also use `zod-to-json-schema` frequently throughout this doc for converting Zod schemas to JSON schemas. Make sure you have it installed:
 
 ```bash npm2yarn
-npm install zod
 npm install zod-to-json-schema
 ```
 
-<CodeBlock language="typescript">{OpenAIFunctionsZodExample}</CodeBlock>
+A number of models implement helper methods that will take care of formatting and binding different function-like objects to the model.
+Let's take a look at how we might take the following Zod function schema and get different models to invoke it:
+
+```typescript
+import { z } from 'zod';
+
+/**
+ * Note that the descriptions here are crucial, as they will be passed along
+ * to the model along with the class name.
+ */
+const calculatorSchema = z
+  .object({
+    operation: z
+      .enum(["add", "subtract", "multiply", "divide"])
+      .describe("The type of operation to execute."),
+    number1: z.number().describe("The first number to operate on."),
+    number2: z.number().describe("The second number to operate on."),
+  });
+```
+
+<Tabs>
+  <TabItem value="openai" label="OpenAI" default>
+Set up dependencies and API keys:
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
+```env
+OPENAI_API_KEY=your-api-key
+```
+
+We can use the `ChatOpenAI.bind()` method to handle converting `calculatorSchema` to an OpenAI function and binding it to the model (i.e., passing it in each time the model is invoked).
+
+```typescript
+import { ChatOpenAI } from "@langchain/openai";
+import { zodToJsonSchema } from 'zod-to-json-schema';
+
+const llm = new ChatOpenAI({
+  modelName: "gpt-3.5-turbo-0125",
+  temperature: 0,
+});
+const llmWithTools = llm.bind({
+  tools: [{
+    type: "function" as const,
+    function: {
+      name: "calculator",
+      description: "A simple calculator tool",
+      parameters: zodToJsonSchema(calculatorSchema),
+    }
+  }],
+});
+const response = await llmWithTools.invoke("What is 3 * 12");
+console.log(JSON.stringify(response, null, 2));
+```
+
+```
+{
+  "kwargs": {
+    "content": "",
+    "additional_kwargs": {
+      "tool_calls": [
+        {
+          "id": "call_6xhPic54Hyj8fEzA28ySzrCi",
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "arguments": "{\"operation\":\"multiply\",\"number1\":3,\"number2\":12}"
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+:::tip
+See the LangSmith trace [here](https://smith.langchain.com/public/cb36c6e5-e478-463c-801a-0c1b09ace04d/r).
+:::
+
+We can add a tool parser to extract the tool calls from the generated message to JSON:
+
+```typescript
+import { JsonOutputToolsParser } from '@langchain/core/output_parsers/openai_tools';
+
+const toolChain = llmWithTools.pipe(new JsonOutputToolsParser());
+const response = await toolChain.invoke("What is 3 * 12");
+console.log(JSON.stringify(response, null, 2));
+```
+
+```
+[
+  {
+    "type": "calculator",
+    "args": {
+      "operation": "multiply",
+      "number1": 3,
+      "number2": 12
+    }
+  }
+]
+```
+
+:::tip
+See the LangSmith trace [here](https://smith.langchain.com/public/e2a3f796-0c8a-404b-8d90-e8a626242a24/r).
+:::
+
+If we wanted to force that a tool is used (and that it is used only once), we can set the `tool_choice` argument:
+
+```typescript
+const llmWithMultiply = llm.bind({
+  tools: [{
+    type: "function" as const,
+    function: {
+      name: "calculator",
+      description: "A simple calculator tool",
+      parameters: zodToJsonSchema(calculatorSchema),
+    }
+  }],
+  tool_choice: {
+    type: "function" as const,
+    function: {
+      name: "calculator",
+    }
+  }
+});
+const response = await llmWithMultiply.invoke("What is 3 * 12");
+console.log(JSON.stringify(response, null, 2));
+```
+
+```
+{
+  "kwargs": {
+    "content": "",
+    "additional_kwargs": {
+      "tool_calls": [
+        {
+          "id": "call_mEGxHCYbSx21vstZsYMkRquZ",
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "arguments": "{\"operation\":\"multiply\",\"number1\":3,\"number2\":12}"
+          }
+        }
+      ]
+    }
+  }
+}
+```
+  </TabItem>
+
+  <TabItem value="mistralai" label="MistralAI">
+Set up dependencies and API keys:
+
+```bash npm2yarn
+npm install @langchain/mistralai
+```
+
+```env
+MISTRALAI_API_KEY=your-api-key
+```
+
+We can use the `ChatMistralAI.bind()` method to handle converting `calculatorSchema` to a function and binding it to the model (i.e., passing it in each time the model is invoked).
+
+```typescript
+import { ChatMistralAI } from "@langchain/mistralai";
+import { zodToJsonSchema } from 'zod-to-json-schema';
+
+const llm = new ChatMistralAI({
+  modelName: "mistral-large-latest",
+  temperature: 0,
+});
+const llmWithTools = llm.bind({
+  tools: [{
+    type: "function" as const,
+    function: {
+      name: "calculator",
+      description: "A simple calculator tool",
+      parameters: zodToJsonSchema(calculatorSchema),
+    }
+  }],
+});
+const response = await llmWithTools.invoke("What is 3 * 12");
+console.log(JSON.stringify(response, null, 2));
+```
+
+```
+{
+  "kwargs": {
+    "content": "",
+    "additional_kwargs": {
+      "tool_calls": [
+        {
+          "id": "null",
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "arguments": "{\"operation\": \"multiply\", \"number1\": 3, \"number2\": 12}"
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+:::tip
+See the LangSmith trace [here](https://smith.langchain.com/public/ea36cd94-ff85-4972-a087-e5ac6d927141/r).
+:::
+
+We can add a tool parser to extract the tool calls from the generated message to JSON:
+
+```typescript
+import { JsonOutputToolsParser } from '@langchain/core/output_parsers/openai_tools';
+
+const toolChain = llmWithTools.pipe(new JsonOutputToolsParser());
+const response = await toolChain.invoke("What is 3 * 12");
+console.log(JSON.stringify(response, null, 2));
+```
+
+```
+[
+  {
+    "type": "calculator",
+    "args": {
+      "operation": "multiply",
+      "number1": 3,
+      "number2": 12
+    }
+  }
+]
+```
+
+:::tip
+See the LangSmith trace [here](https://smith.langchain.com/public/05893756-0689-4d38-933f-529920f86dbb/r).
+:::
+  </TabItem>
+
+  <TabItem value="togetherai" label="TogetherAI">
+Set up dependencies and API keys:
+
+```bash npm2yarn
+npm install @langchain/community
+```
+
+```env
+TOGETHER_AI_API_KEY=your-api-key
+```
+
+We can use the `ChatTogetherAI.bind()` method to handle converting `calculatorSchema` to a function and binding it to the model (i.e., passing it in each time the model is invoked).
+
+```typescript
+import { ChatTogetherAI } from "@langchain/community/chat_models/togetherai";
+import { zodToJsonSchema } from 'zod-to-json-schema';
+
+const llm = new ChatTogetherAI({
+  modelName: "mistralai/Mixtral-8x7B-Instruct-v0.1",
+  temperature: 0,
+});
+const llmWithTools = llm.bind({
+  tools: [{
+    type: "function" as const,
+    function: {
+      name: "calculator",
+      description: "A simple calculator tool",
+      parameters: zodToJsonSchema(calculatorSchema),
+    }
+  }],
+});
+const response = await llmWithTools.invoke("What is 3 * 12");
+console.log(JSON.stringify(response, null, 2));
+```
+
+```
+{
+  "kwargs": {
+    "content": "",
+    "additional_kwargs": {
+      "tool_calls": [
+        {
+          "id": "call_8ei1o2oxq2ctd8dk86ppg26h",
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "arguments": "{\"operation\":\"multiply\",\"number1\":3,\"number2\":12}"
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+:::tip
+See the LangSmith trace [here](https://smith.langchain.com/public/bf416507-a583-41e9-b262-cef219f3c803/r).
+:::
+
+We can add a tool parser to extract the tool calls from the generated message to JSON:
+
+```typescript
+import { JsonOutputToolsParser } from '@langchain/core/output_parsers/openai_tools';
+
+const toolChain = llmWithTools.pipe(new JsonOutputToolsParser());
+const response = await toolChain.invoke("What is 3 * 12");
+console.log(JSON.stringify(response, null, 2));
+```
+
+```
+[
+  {
+    "type": "calculator",
+    "args": {
+      "operation": "multiply",
+      "number1": 3,
+      "number2": 12
+    }
+  }
+]
+```
+
+:::tip
+See the LangSmith trace [here](https://smith.langchain.com/public/79ff4cf0-2a72-440e-a020-cec9213d5839/r).
+:::
+
+If we wanted to force that a tool is used (and that it is used only once), we can set the `tool_choice` argument:
+
+```typescript
+const llmWithMultiply = llm.bind({
+  tools: [{
+    type: "function" as const,
+    function: {
+      name: "calculator",
+      description: "A simple calculator tool",
+      parameters: zodToJsonSchema(calculatorSchema),
+    }
+  }],
+  tool_choice: {
+    type: "function" as const,
+    function: {
+      name: "calculator",
+    }
+  }
+});
+const response = await llmWithMultiply.invoke("What is 3 * 12");
+console.log(JSON.stringify(response, null, 2));
+```
+
+```
+{
+  "kwargs": {
+    "content": "",
+    "additional_kwargs": {
+      "tool_calls": [
+        {
+          "id": "call_843n1loq1wmp751z3g5pc6gp",
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "arguments": "{\"operation\":\"multiply\",\"number1\":3,\"number2\":12}"
+          }
+        }
+      ]
+    }
+  }
+}
+```
+  </TabItem>
+
+</Tabs>
+
+## Defining functions schemas
+
+In case you need to access function schemas directly, LangChain has a built-in converter that can turn Zod schemas with LangChain tools into the OpenAI format JSON schema:
+
+import CodeBlock from "@theme/CodeBlock";
+import LCToolToOAIFunc from "@examples/models/chat/function_calling/lc_tool_to_oai.ts"
+
+<CodeBlock language="typescript">{LCToolToOAIFunc}</CodeBlock>
+
+```
+{
+  "type": "function",
+  "function": {
+    "name": "calculator",
+    "description": "A simple calculator tool",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "operation": {
+          "type": "string",
+          "enum": [
+            "add",
+            "subtract",
+            "multiply",
+            "divide"
+          ],
+          "description": "The type of operation to execute."
+        },
+        "number1": {
+          "type": "number",
+          "description": "The first number to operate on."
+        },
+        "number2": {
+          "type": "number",
+          "description": "The second number to operate on."
+        }
+      },
+      "required": [
+        "operation",
+        "number1",
+        "number2"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  }
+}
+```
+
+## Next steps
+
+- **Output parsing**: See [OpenAI Tools output parsers](/docs/modules/model_io/output_parsers/types/openai_tools) to learn about extracting the function calling API responses into various formats.
+- **Structured output chains**: Some models have constructors that handle creating a structured output chain for you ([OpenAI](/docs/integrations/chat/openai#withstructuredoutput--), [Mistral](/docs/integrations/chat/mistral#withstructuredoutput--)).
+- **Tool use**: See how to construct chains and agents that actually call the invoked tools in [these guides](/docs/use_cases/tool_use/).
