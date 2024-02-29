@@ -1,4 +1,4 @@
-import {GoogleLLMResponse} from "../types.js";
+import { GoogleLLMResponse } from "../types.js";
 
 /**
  * A function that will take a response and return the, possibly modified,
@@ -6,10 +6,11 @@ import {GoogleLLMResponse} from "../types.js";
  *
  * @throws GoogleAISafetyError
  */
-export type GoogleAISafetyHandler = (response: GoogleLLMResponse) => GoogleLLMResponse;
+export type GoogleAISafetyHandler = (
+  response: GoogleLLMResponse
+) => GoogleLLMResponse;
 
 export class GoogleAISafetyError extends Error {
-
   response: GoogleLLMResponse;
 
   reply: any = "";
@@ -19,7 +20,6 @@ export class GoogleAISafetyError extends Error {
 
     this.response = response;
   }
-
 }
 
 export interface GoogleAISafetyParams {

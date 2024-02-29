@@ -31,8 +31,8 @@ import {
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
 import { GoogleBaseLLMInput } from "./llms.js";
 import { JsonStream } from "./utils/stream.js";
-import {ensureParams} from "./utils/failedHandler.js";
-import {GoogleAISafetyParams} from "./utils/safety.js";
+import { ensureParams } from "./utils/failedHandler.js";
+import { GoogleAISafetyParams } from "./utils/safety.js";
 
 class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   BaseMessage[],

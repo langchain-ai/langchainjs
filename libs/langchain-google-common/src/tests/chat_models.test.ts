@@ -1,8 +1,10 @@
 import { expect, test } from "@jest/globals";
 import {
-  AIMessage, BaseMessage,
+  AIMessage,
+  BaseMessage,
   BaseMessageLike,
-  HumanMessage, HumanMessageChunk,
+  HumanMessage,
+  HumanMessageChunk,
   MessageContentComplex,
   MessageContentText,
   SystemMessage,
@@ -11,7 +13,7 @@ import { ChatGoogleBase, ChatGoogleBaseInput } from "../chat_models.js";
 import { authOptions, MockClient, MockClientAuthInfo, mockId } from "./mock.js";
 import { GoogleAIBaseLLMInput } from "../types.js";
 import { GoogleAbstractedClient } from "../auth.js";
-import {GoogleAISafetyError} from "../utils/safety.js";
+import { GoogleAISafetyError } from "../utils/safety.js";
 
 class ChatGoogle extends ChatGoogleBase<MockClientAuthInfo> {
   constructor(fields?: ChatGoogleBaseInput<MockClientAuthInfo>) {
@@ -280,23 +282,23 @@ describe("Mock ChatGoogle", () => {
     };
     const model = new ChatGoogle({
       authOptions,
-      model: "gemini-pro-vision"
+      model: "gemini-pro-vision",
     });
 
     const message: MessageContentComplex[] = [
       {
         type: "text",
-        text: "What is in this image?"
+        text: "What is in this image?",
       },
       {
         type: "image_url",
-        image_url: `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH6AIbFwQSRaexCAAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAJklEQVQY02P8//8/A27AxIAXsEAor31f0CS2OfEQ1j2Q0owU+RsAGNUJD2/04PgAAAAASUVORK5CYII=`
-      }
-    ]
+        image_url: `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH6AIbFwQSRaexCAAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAJklEQVQY02P8//8/A27AxIAXsEAor31f0CS2OfEQ1j2Q0owU+RsAGNUJD2/04PgAAAAASUVORK5CYII=`,
+      },
+    ];
 
     const messages: BaseMessage[] = [
-      new HumanMessageChunk({content: message})
-    ]
+      new HumanMessageChunk({ content: message }),
+    ];
 
     const result = await model.invoke(messages);
 
@@ -312,8 +314,9 @@ describe("Mock ChatGoogle", () => {
     expect(parts[1].inlineData).toHaveProperty("mimeType");
     expect(parts[1].inlineData).toHaveProperty("data");
 
-    expect(result.content[0]).toHaveProperty("text")
-    expect((result.content[0] as MessageContentText).text).toEqual("A blue square.");
-  })
-
+    expect(result.content[0]).toHaveProperty("text");
+    expect((result.content[0] as MessageContentText).text).toEqual(
+      "A blue square."
+    );
+  });
 });

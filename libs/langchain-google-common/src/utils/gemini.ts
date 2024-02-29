@@ -26,10 +26,8 @@ import type {
   GeminiContent,
   GenerateContentResponseData,
 } from "../types.js";
-import type {
-  GoogleAISafetyHandler
-} from "./safety.js";
-import {GoogleAISafetyError} from "./safety.js";
+import type { GoogleAISafetyHandler } from "./safety.js";
+import { GoogleAISafetyError } from "./safety.js";
 
 function messageContentText(content: MessageContentText): GeminiPartText {
   return {
@@ -231,7 +229,7 @@ function safeResponseTo<RetType>(
     return responseTo(safeResponse);
   } catch (xx) {
     // eslint-disable-next-line no-instanceof/no-instanceof
-    if (xx instanceof GoogleAISafetyError){
+    if (xx instanceof GoogleAISafetyError) {
       const ret = responseTo(xx.response);
       xx.reply = ret;
     }
@@ -274,7 +272,7 @@ export function safeResponseToChatGeneration(
   response: GoogleLLMResponse,
   safetyHandler: GoogleAISafetyHandler
 ): ChatGenerationChunk {
-  return safeResponseTo( response, safetyHandler, responseToChatGeneration );
+  return safeResponseTo(response, safetyHandler, responseToChatGeneration);
 }
 
 export function chunkToString(chunk: BaseMessageChunk): string {
@@ -285,7 +283,7 @@ export function chunkToString(chunk: BaseMessageChunk): string {
   } else if (chunk.content.length === 0) {
     return "";
   } else if (chunk.content[0].type === "text") {
-    return chunk.content[0].text
+    return chunk.content[0].text;
   } else {
     throw new Error(`Unexpected chunk: ${chunk}`);
   }
@@ -375,8 +373,10 @@ export function isModelGemini(modelName: string): boolean {
   return modelName.toLowerCase().startsWith("gemini");
 }
 
-function defaultGeminiDataSafetyHandler( response: GoogleLLMResponse, data: GenerateContentResponseData ): GenerateContentResponseData {
-
+function defaultGeminiDataSafetyHandler(
+  response: GoogleLLMResponse,
+  data: GenerateContentResponseData
+): GenerateContentResponseData {
   // Check to see if our prompt was blocked in the first place
   const promptFeedback = data?.promptFeedback;
   const blockReason = promptFeedback?.blockReason;
@@ -385,11 +385,7 @@ function defaultGeminiDataSafetyHandler( response: GoogleLLMResponse, data: Gene
   }
 
   // Check to see if we finished for an exceptional reason
-  const ERROR_FINISH = [
-    "SAFETY",
-    "RECITATION",
-    "OTHER",
-  ]
+  const ERROR_FINISH = ["SAFETY", "RECITATION", "OTHER"];
 
   const firstCandidate = data?.candidates?.[0];
   const finishReason = firstCandidate?.finishReason;
@@ -400,19 +396,20 @@ function defaultGeminiDataSafetyHandler( response: GoogleLLMResponse, data: Gene
   return data;
 }
 
-export const defaultGeminiSafetyHandler: GoogleAISafetyHandler = (response: GoogleLLMResponse): GoogleLLMResponse => {
-
+export const defaultGeminiSafetyHandler: GoogleAISafetyHandler = (
+  response: GoogleLLMResponse
+): GoogleLLMResponse => {
   let newdata;
 
   if ("nextChunk" in response.data) {
     // TODO: This is a stream. How to handle?
     newdata = response.data;
-
   } else if (Array.isArray(response.data)) {
     // If it is an array, try to handle every item in the array
     try {
-      newdata = response.data.map( item => defaultGeminiDataSafetyHandler(response, item) );
-
+      newdata = response.data.map((item) =>
+        defaultGeminiDataSafetyHandler(response, item)
+      );
     } catch (xx) {
       // eslint-disable-next-line no-instanceof/no-instanceof
       if (xx instanceof GoogleAISafetyError) {
@@ -421,14 +418,13 @@ export const defaultGeminiSafetyHandler: GoogleAISafetyHandler = (response: Goog
         throw xx;
       }
     }
-
   } else {
     const data = response.data as GenerateContentResponseData;
-    newdata = defaultGeminiDataSafetyHandler( response, data );
+    newdata = defaultGeminiDataSafetyHandler(response, data);
   }
 
   return {
     ...response,
-    data: newdata
-  }
-}
+    data: newdata,
+  };
+};

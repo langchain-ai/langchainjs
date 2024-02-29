@@ -1,6 +1,6 @@
 import type { BaseLLMParams } from "@langchain/core/language_models/llms";
 import type { JsonStream } from "./utils/stream.js";
-import {GoogleAISafetyParams} from "./utils/safety.js";
+import { GoogleAISafetyParams } from "./utils/safety.js";
 
 /**
  * Parameters needed to setup the client connection.

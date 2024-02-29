@@ -1,14 +1,17 @@
 import { test } from "@jest/globals";
-import { AIMessage,
+import {
+  AIMessage,
   BaseMessage,
   HumanMessageChunk,
-  MessageContentComplex } from "@langchain/core/messages";
+  MessageContentComplex,
+} from "@langchain/core/messages";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
 import { GoogleLLM } from "../llms.js";
 
 const imgData = {
-  blueSquare: "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH6AIbFwQSRaexCAAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAJklEQVQY02P8//8/A27AxIAXsEAor31f0CS2OfEQ1j2Q0owU+RsAGNUJD2/04PgAAAAASUVORK5CYII=",
-}
+  blueSquare:
+    "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH6AIbFwQSRaexCAAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAJklEQVQY02P8//8/A27AxIAXsEAor31f0CS2OfEQ1j2Q0owU+RsAGNUJD2/04PgAAAAASUVORK5CYII=",
+};
 
 describe("Google APIKey LLM", () => {
   test("platform", async () => {
@@ -35,7 +38,7 @@ describe("Google APIKey LLM", () => {
     try {
       const res = await model.call("If the time is 1:00, what time is it?");
       expect(res.length).toBeGreaterThan(0);
-      expect(res.substring(0,4)).toEqual("1:00");
+      expect(res.substring(0, 4)).toEqual("1:00");
     } catch (xx) {
       console.error(xx);
       throw xx;
@@ -61,23 +64,23 @@ describe("Google APIKey LLM", () => {
     const message: MessageContentComplex[] = [
       {
         type: "text",
-        text: "What is in this image?"
+        text: "What is in this image?",
       },
       {
         type: "image_url",
-        image_url: `data:image/png;base64,${imgData.blueSquare}`
-      }
-    ]
+        image_url: `data:image/png;base64,${imgData.blueSquare}`,
+      },
+    ];
 
     const messages: BaseMessage[] = [
-      new HumanMessageChunk({content: message})
-    ]
+      new HumanMessageChunk({ content: message }),
+    ];
     const res = await model.predictMessages(messages);
     expect(res).toBeInstanceOf(AIMessage);
     expect(Array.isArray(res.content)).toEqual(true);
     expect(res.content[0]).toHaveProperty("text");
-    console.log("res",res)
-  })
+    console.log("res", res);
+  });
 
   test("invoke image", async () => {
     const model = new GoogleLLM({
@@ -86,24 +89,23 @@ describe("Google APIKey LLM", () => {
     const message: MessageContentComplex[] = [
       {
         type: "text",
-        text: "What is in this image?"
+        text: "What is in this image?",
       },
       {
         type: "image_url",
-        image_url: `data:image/png;base64,${imgData.blueSquare}`
-      }
-    ]
+        image_url: `data:image/png;base64,${imgData.blueSquare}`,
+      },
+    ];
 
     const messages: BaseMessage[] = [
-      new HumanMessageChunk({content: message})
-    ]
+      new HumanMessageChunk({ content: message }),
+    ];
     const input = new ChatPromptValue(messages);
     const res = await model.invoke(input);
     expect(res).toBeDefined();
     expect(res.length).toBeGreaterThan(0);
-    console.log("res",res)
-  })
-
+    console.log("res", res);
+  });
 });
 
 describe("Google WebAuth LLM", () => {
@@ -142,23 +144,23 @@ describe("Google WebAuth LLM", () => {
     const message: MessageContentComplex[] = [
       {
         type: "text",
-        text: "What is in this image?"
+        text: "What is in this image?",
       },
       {
         type: "image_url",
-        image_url: `data:image/png;base64,${imgData.blueSquare}`
-      }
-    ]
+        image_url: `data:image/png;base64,${imgData.blueSquare}`,
+      },
+    ];
 
     const messages: BaseMessage[] = [
-      new HumanMessageChunk({content: message})
-    ]
+      new HumanMessageChunk({ content: message }),
+    ];
     const res = await model.predictMessages(messages);
     expect(res).toBeInstanceOf(AIMessage);
     expect(Array.isArray(res.content)).toEqual(true);
     expect(res.content[0]).toHaveProperty("text");
-    console.log("res",res)
-  })
+    console.log("res", res);
+  });
 
   test("invoke image", async () => {
     const model = new GoogleLLM({
@@ -167,24 +169,23 @@ describe("Google WebAuth LLM", () => {
     const message: MessageContentComplex[] = [
       {
         type: "text",
-        text: "What is in this image?"
+        text: "What is in this image?",
       },
       {
         type: "image_url",
-        image_url: `data:image/png;base64,${imgData.blueSquare}`
-      }
-    ]
+        image_url: `data:image/png;base64,${imgData.blueSquare}`,
+      },
+    ];
 
     const messages: BaseMessage[] = [
-      new HumanMessageChunk({content: message})
-    ]
+      new HumanMessageChunk({ content: message }),
+    ];
     const input = new ChatPromptValue(messages);
     const res = await model.invoke(input);
     expect(res).toBeDefined();
     expect(res.length).toBeGreaterThan(0);
-    console.log("res",res)
-  })
-
+    console.log("res", res);
+  });
 });
 
 describe("Google WebAuth gai LLM", () => {
@@ -218,7 +219,7 @@ describe("Google WebAuth gai LLM", () => {
     try {
       const res = await model.call("If the time is 1:00, what time is it?");
       expect(res.length).toBeGreaterThan(0);
-      expect(res.substring(0,4)).toEqual("1:00");
+      expect(res.substring(0, 4)).toEqual("1:00");
     } catch (xx) {
       console.error(xx);
       throw xx;
@@ -247,23 +248,23 @@ describe("Google WebAuth gai LLM", () => {
     const message: MessageContentComplex[] = [
       {
         type: "text",
-        text: "What is in this image?"
+        text: "What is in this image?",
       },
       {
         type: "image_url",
-        image_url: `data:image/png;base64,${imgData.blueSquare}`
-      }
-    ]
+        image_url: `data:image/png;base64,${imgData.blueSquare}`,
+      },
+    ];
 
     const messages: BaseMessage[] = [
-      new HumanMessageChunk({content: message})
-    ]
+      new HumanMessageChunk({ content: message }),
+    ];
     const res = await model.predictMessages(messages);
     expect(res).toBeInstanceOf(AIMessage);
     expect(Array.isArray(res.content)).toEqual(true);
     expect(res.content[0]).toHaveProperty("text");
-    console.log("res",res)
-  })
+    console.log("res", res);
+  });
 
   test("invoke image", async () => {
     const model = new GoogleLLM({
@@ -273,22 +274,21 @@ describe("Google WebAuth gai LLM", () => {
     const message: MessageContentComplex[] = [
       {
         type: "text",
-        text: "What is in this image?"
+        text: "What is in this image?",
       },
       {
         type: "image_url",
-        image_url: `data:image/png;base64,${imgData.blueSquare}`
-      }
-    ]
+        image_url: `data:image/png;base64,${imgData.blueSquare}`,
+      },
+    ];
 
     const messages: BaseMessage[] = [
-      new HumanMessageChunk({content: message})
-    ]
+      new HumanMessageChunk({ content: message }),
+    ];
     const input = new ChatPromptValue(messages);
     const res = await model.invoke(input);
     expect(res).toBeDefined();
     expect(res.length).toBeGreaterThan(0);
-    console.log("res",res)
-  })
-
+    console.log("res", res);
+  });
 });

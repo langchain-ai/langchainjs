@@ -5,9 +5,13 @@ import {
 import { LLM } from "@langchain/core/language_models/llms";
 import {
   type BaseLanguageModelCallOptions,
-  BaseLanguageModelInput
+  BaseLanguageModelInput,
 } from "@langchain/core/language_models/base";
-import {BaseMessage, BaseMessageChunk, MessageContent} from "@langchain/core/messages";
+import {
+  BaseMessage,
+  BaseMessageChunk,
+  MessageContent,
+} from "@langchain/core/messages";
 import { GenerationChunk } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { IterableReadableStream } from "@langchain/core/utils/stream";
@@ -56,21 +60,18 @@ class GoogleLLMConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   }
 }
 
-type ProxyChatInput<AuthOptions> =
-  GoogleAIBaseLLMInput<AuthOptions> &
-  {
-    connection: GoogleLLMConnection<AuthOptions>;
-  }
+type ProxyChatInput<AuthOptions> = GoogleAIBaseLLMInput<AuthOptions> & {
+  connection: GoogleLLMConnection<AuthOptions>;
+};
 
-
-class ProxyChatGoogle<AuthOptions>
-  extends ChatGoogleBase<AuthOptions> {
-
+class ProxyChatGoogle<AuthOptions> extends ChatGoogleBase<AuthOptions> {
   constructor(fields: ProxyChatInput<AuthOptions>) {
     super(fields);
   }
 
-  buildAbstractedClient(fields: ProxyChatInput<AuthOptions>): GoogleAbstractedClient {
+  buildAbstractedClient(
+    fields: ProxyChatInput<AuthOptions>
+  ): GoogleAbstractedClient {
     return fields.connection.client;
   }
 }
@@ -220,7 +221,9 @@ export abstract class GoogleBaseLLM<AuthOptions>
       const output = await stream.nextChunk();
       const chunk =
         output !== null
-          ? new GenerationChunk(safeResponseToGeneration({ data: output }, this.safetyHandler))
+          ? new GenerationChunk(
+              safeResponseToGeneration({ data: output }, this.safetyHandler)
+            )
           : new GenerationChunk({
               text: "",
               generationInfo: { finishReason: "stop" },
@@ -240,27 +243,31 @@ export abstract class GoogleBaseLLM<AuthOptions>
       {},
       options as BaseLanguageModelCallOptions
     );
-    const ret = safeResponseToBaseMessage(result,this.safetyHandler);
+    const ret = safeResponseToBaseMessage(result, this.safetyHandler);
     return ret;
   }
 
-  createProxyChat(): ChatGoogleBase<AuthOptions>{
-    console.log("this",this);
+  createProxyChat(): ChatGoogleBase<AuthOptions> {
+    console.log("this", this);
     return new ProxyChatGoogle<AuthOptions>({
       ...this.originalFields,
       connection: this.connection,
-    })
+    });
   }
 
-
-  async invoke(input: BaseLanguageModelInput, options?: BaseLanguageModelCallOptions): Promise<string> {
+  async invoke(
+    input: BaseLanguageModelInput,
+    options?: BaseLanguageModelCallOptions
+  ): Promise<string> {
     const proxyChat = this.createProxyChat();
     const chunk = await proxyChat.invoke(input, options);
     return chunkToString(chunk);
   }
 
-
-  async stream(input: BaseLanguageModelInput, options?: Partial<BaseLanguageModelCallOptions>): Promise<IterableReadableStream<string>> {
+  async stream(
+    input: BaseLanguageModelInput,
+    options?: Partial<BaseLanguageModelCallOptions>
+  ): Promise<IterableReadableStream<string>> {
     const proxyChat = this.createProxyChat();
 
     const chatStream = await proxyChat.stream(input, options);
@@ -271,7 +278,7 @@ export abstract class GoogleBaseLLM<AuthOptions>
         const text = chunkToString(chunk);
         const encodedText = new TextEncoder().encode(text);
         controller.enqueue(encodedText);
-      }
+      },
     });
 
     const readableStream = chatStream.pipeThrough(transformStream);

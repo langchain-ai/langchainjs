@@ -1,4 +1,4 @@
-import {AsyncCallerParams} from "@langchain/core/utils/async_caller";
+import { AsyncCallerParams } from "@langchain/core/utils/async_caller";
 
 const STATUS_NO_RETRY = [
   400,
@@ -14,13 +14,12 @@ const STATUS_NO_RETRY = [
 ];
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function failedAttemptHandler(error: any){
-
+export function failedAttemptHandler(error: any) {
   const status = error?.response?.status ?? 0;
 
   if (status === 0) {
     // What is this?
-    console.error('failedAttemptHandler', error);
+    console.error("failedAttemptHandler", error);
   }
 
   // What errors shouldn't be retried?
@@ -36,5 +35,5 @@ export function ensureParams(params?: AsyncCallerParams): AsyncCallerParams {
   return {
     onFailedAttempt: failedAttemptHandler,
     ...base,
-  }
+  };
 }
