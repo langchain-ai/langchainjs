@@ -1301,7 +1301,7 @@
     "web-auth-library": "^1.0.3",
     "wikipedia": "^2.1.2",
     "youtube-transcript": "^1.0.6",
-    "youtubei.js": "^5.8.0"
+    "youtubei.js": "^9.1.0"
   },
   "peerDependencies": {
     "@aws-sdk/client-s3": "^3.310.0",
@@ -1353,7 +1353,7 @@
     "web-auth-library": "^1.0.3",
     "ws": "^8.14.2",
     "youtube-transcript": "^1.0.6",
-    "youtubei.js": "^5.8.0"
+    "youtubei.js": "^9.1.0"
   },
   "peerDependenciesMeta": {
     "@aws-sdk/client-s3": {
