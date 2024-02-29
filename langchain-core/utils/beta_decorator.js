@@ -1,1 +1,0 @@
-export * from '../dist/utils/beta_decorator.js'
