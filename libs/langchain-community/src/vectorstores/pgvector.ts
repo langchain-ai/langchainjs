@@ -59,8 +59,6 @@ export class PGVectorStore extends VectorStore {
 
   vectorColumnName: string;
 
-  computedTableName: string;
-
   contentColumnName: string;
 
   extensionSchemaName: string | null;
@@ -92,10 +90,6 @@ export class PGVectorStore extends VectorStore {
     this.collectionMetadata = config.collectionMetadata ?? null;
     this.schemaName = config.schemaName ?? null;
     this.extensionSchemaName = config.extensionSchemaName ?? null;
-    this.computedTableName =
-      this.schemaName == null
-        ? `${this.tableName}`
-        : `"${this.schemaName}"."${this.tableName}"`;
 
     this.filter = config.filter;
 
@@ -111,6 +105,12 @@ export class PGVectorStore extends VectorStore {
     this._verbose =
       getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true" ??
       !!config.verbose;
+  }
+
+  get computedTableName() {
+    return this.schemaName == null
+      ? `${this.tableName}`
+      : `"${this.schemaName}"."${this.tableName}"`;
   }
 
   /**
