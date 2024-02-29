@@ -60,6 +60,7 @@ export const config = {
     "utils/testing": "utils/testing/index",
     "utils/tiktoken": "utils/tiktoken",
     "utils/types": "utils/types",
+    "utils/beta_warning": "utils/beta_warning",
     vectorstores: "vectorstores",
   },
   tsConfigPath: resolve("./tsconfig.json"),

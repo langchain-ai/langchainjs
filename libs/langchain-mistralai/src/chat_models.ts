@@ -45,6 +45,7 @@ import {
   RunnableSequence,
 } from "@langchain/core/runnables";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import { betaWarning } from "@langchain/core/utils/beta_warning";
 
 interface TokenUsage {
   completionTokens?: number;
@@ -602,6 +603,7 @@ export class ChatMistralAI<
           parsed: RunOutput;
         }
       > {
+    betaWarning("withStructuredOutput");
     let llm: Runnable<BaseLanguageModelInput>;
     let outputParser: JsonOutputKeyToolsParser | JsonOutputParser<RunOutput>;
 
