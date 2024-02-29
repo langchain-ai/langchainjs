@@ -1,5 +1,6 @@
 /**
- * Decorator for logging a warning when a method is called.
+ * Util function for logging a warning when a method is called.
+ * @param {string} func The name of the function that is in beta.
  */
 export function betaWarning(func: string) {
   console.warn(
