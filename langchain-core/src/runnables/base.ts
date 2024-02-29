@@ -554,22 +554,7 @@ export abstract class Runnable<
   getGraph(config?: RunnableConfig): Graph {
     const graph = new Graph();
 
-    // TODO: what should the inputNode be?
-    const inputNode = graph.addNode({
-      type: "unknown",
-      config,
-    });
-
-    const runnableNode = graph.addNode(this); // Assuming `this` refers to an instance that can be treated as data for a node
-
-    // TODO: what should the outputNode be?
-    const outputNode = graph.addNode({
-      type: "unknown",
-      config,
-    });
-
-    graph.addEdge(inputNode, runnableNode);
-    graph.addEdge(runnableNode, outputNode);
+    graph.addNode(this); // Assuming `this` refers to an instance that can be treated as data for a node
 
     return graph;
   }
@@ -1662,6 +1647,21 @@ export class RunnableSequence<
       throw e;
     }
     await runManager?.handleChainEnd(_coerceToDict(finalOutput, "output"));
+  }
+
+  getGraph(config?: RunnableConfig): Graph {
+    const graph = new Graph();
+
+    const inputNode = graph.addNode(this.first);
+
+    const runnableNode = graph.addNode(this); // Assuming `this` refers to an instance that can be treated as data for a node
+
+    const outputNode = graph.addNode(this.last);
+
+    graph.addEdge(inputNode, runnableNode);
+    graph.addEdge(runnableNode, outputNode);
+
+    return graph;
   }
 
   pipe<NewRunOutput>(

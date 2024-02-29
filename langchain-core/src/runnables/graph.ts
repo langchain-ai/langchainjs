@@ -33,9 +33,9 @@ function nodeDataStr(node: Node): string {
 
 function nodeDataJson(node: Node): any {
   // if node.data is implements Runnable
-  if (node.data instanceof Runnable) {
+  if (Runnable.isRunnable(node.data)) {
     return {
-      type: "Runnable",
+      type: "runnable",
       data: {
         id: node.data.lc_id,
         name: node.data.getName(),
@@ -43,7 +43,7 @@ function nodeDataJson(node: Node): any {
     };
   }
 
-  if (node.data instanceof Object) {
+  if (typeof node.data === "object" && node.data !== null) {
     return {
       type: "schema",
       // we're just retuning the data instead of the schema for now.
@@ -59,6 +59,7 @@ function nodeDataJson(node: Node): any {
 
 export class Graph {
   nodes: Record<string, Node> = {};
+
   edges: Edge[] = [];
 
   // Convert the graph to a JSON-serializable format.
@@ -73,32 +74,42 @@ export class Graph {
         id: stableNodeIds[node.id],
         ...nodeDataJson(node),
       })),
-      edges: this.edges.map((edge) => ({
-        source: stableNodeIds[edge.source],
-        target: stableNodeIds[edge.target],
-        data: edge.data,
-      })),
+      edges: this.edges.map((edge) =>
+        edge.data
+          ? {
+              source: stableNodeIds[edge.source],
+              target: stableNodeIds[edge.target],
+              data: edge.data,
+            }
+          : {
+              source: stableNodeIds[edge.source],
+              target: stableNodeIds[edge.target],
+            }
+      ),
     };
   }
 
   addNode(data: any, id?: string): Node {
-    if (id !== undefined && this.nodes.hasOwnProperty(id)) {
+    if (
+      id !== undefined &&
+      Object.prototype.hasOwnProperty.call(this.nodes, id)
+    ) {
       throw new Error(`Node with id ${id} already exists`);
     }
     const nodeId = id || uuidv4();
-    const node: Node = { id: nodeId, data: data };
+    const node: Node = { id: nodeId, data };
     this.nodes[nodeId] = node;
     return node;
   }
 
   addEdge(source: Node, target: Node, data?: string): Edge {
-    if (!this.nodes.hasOwnProperty(source.id)) {
+    if (!Object.prototype.hasOwnProperty.call(this.nodes, source.id)) {
       throw new Error(`Source node ${source.id} not in graph`);
     }
-    if (!this.nodes.hasOwnProperty(target.id)) {
+    if (!Object.prototype.hasOwnProperty.call(this.nodes, target.id)) {
       throw new Error(`Target node ${target.id} not in graph`);
     }
-    const edge: Edge = { source: source.id, target: target.id, data: data };
+    const edge: Edge = { source: source.id, target: target.id, data };
     this.edges.push(edge);
     return edge;
   }
