@@ -19,12 +19,14 @@ export interface BaseRetrieverInput {
   verbose?: boolean;
 }
 
-export interface BaseRetrieverInterface
-  extends RunnableInterface<string, DocumentInterface[]> {
+export interface BaseRetrieverInterface<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Metadata extends Record<string, any> = Record<string, any>
+> extends RunnableInterface<string, DocumentInterface<Metadata>[]> {
   getRelevantDocuments(
     query: string,
     config?: Callbacks | BaseCallbackConfig
-  ): Promise<DocumentInterface[]>;
+  ): Promise<DocumentInterface<Metadata>[]>;
 }
 
 /**
@@ -32,8 +34,11 @@ export interface BaseRetrieverInterface
  * is defined as something that can take string queries and return the
  * most 'relevant' Documents from some source.
  */
-export abstract class BaseRetriever
-  extends Runnable<string, DocumentInterface[]>
+export abstract class BaseRetriever<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Metadata extends Record<string, any> = Record<string, any>
+  >
+  extends Runnable<string, DocumentInterface<Metadata>[]>
   implements BaseRetrieverInterface
 {
   callbacks?: Callbacks;
@@ -60,14 +65,14 @@ export abstract class BaseRetriever
   _getRelevantDocuments(
     _query: string,
     _callbacks?: CallbackManagerForRetrieverRun
-  ): Promise<DocumentInterface[]> {
+  ): Promise<DocumentInterface<Metadata>[]> {
     throw new Error("Not implemented!");
   }
 
   async invoke(
     input: string,
     options?: RunnableConfig
-  ): Promise<DocumentInterface[]> {
+  ): Promise<DocumentInterface<Metadata>[]> {
     return this.getRelevantDocuments(input, ensureConfig(options));
   }
 
@@ -84,7 +89,7 @@ export abstract class BaseRetriever
   async getRelevantDocuments(
     query: string,
     config?: Callbacks | BaseCallbackConfig
-  ): Promise<DocumentInterface[]> {
+  ): Promise<DocumentInterface<Metadata>[]> {
     const parsedConfig = ensureConfig(parseCallbackConfigArg(config));
     const callbackManager_ = await CallbackManager.configure(
       parsedConfig.callbacks,
