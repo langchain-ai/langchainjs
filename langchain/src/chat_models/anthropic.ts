@@ -76,6 +76,7 @@ export const DEFAULT_STOP_SEQUENCES = [HUMAN_PROMPT];
 
 /**
  * Input to AnthropicChat class.
+ * @deprecated Install and import from the "@langchain/anthropic" integration package instead.
  */
 export interface AnthropicInput {
   /** Amount of randomness injected into the response. Ranges
@@ -140,6 +141,8 @@ export interface AnthropicInput {
 type Kwargs = Record<string, any>;
 
 /**
+ * @deprecated Install and import from the "@langchain/anthropic" integration package instead.
+ *
  * Wrapper around Anthropic large language models.
  *
  * To use you should have the `@anthropic-ai/sdk` package installed, with the

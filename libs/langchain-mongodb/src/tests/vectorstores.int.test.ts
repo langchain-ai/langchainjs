@@ -7,7 +7,7 @@ import { setTimeout } from "timers/promises";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
 
-import { MongoDBAtlasVectorSearch } from "../mongodb_atlas.js";
+import { MongoDBAtlasVectorSearch } from "../vectorstores.js";
 
 /**
  * The following json can be used to create an index in atlas for Cohere embeddings.
@@ -27,7 +27,7 @@ import { MongoDBAtlasVectorSearch } from "../mongodb_atlas.js";
 }
 */
 
-test.skip("MongoDBAtlasVectorSearch with external ids", async () => {
+test("MongoDBAtlasVectorSearch with external ids", async () => {
   expect(process.env.MONGODB_ATLAS_URI).toBeDefined();
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -104,11 +104,8 @@ test.skip("MongoDBAtlasVectorSearch with external ids", async () => {
   }
 });
 
-test.skip("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () => {
+test("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () => {
   expect(process.env.MONGODB_ATLAS_URI).toBeDefined();
-  expect(
-    process.env.OPENAI_API_KEY || process.env.AZURE_OPENAI_API_KEY
-  ).toBeDefined();
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const client = new MongoClient(process.env.MONGODB_ATLAS_URI!);
@@ -176,7 +173,7 @@ test.skip("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () =
   }
 });
 
-test.skip("MongoDBAtlasVectorSearch upsert", async () => {
+test("MongoDBAtlasVectorSearch upsert", async () => {
   expect(process.env.MONGODB_ATLAS_URI).toBeDefined();
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

@@ -22,6 +22,7 @@ export {
   type RunnableConfig,
   getCallbackManagerForConfig,
   patchConfig,
+  ensureConfig,
 } from "./config.js";
 export { RunnablePassthrough } from "./passthrough.js";
 export { type RouterInput, RouterRunnable } from "./router.js";

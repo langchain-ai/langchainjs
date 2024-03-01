@@ -118,6 +118,10 @@ embeddings/cohere.cjs
 embeddings/cohere.js
 embeddings/cohere.d.ts
 embeddings/cohere.d.cts
+embeddings/fireworks.cjs
+embeddings/fireworks.js
+embeddings/fireworks.d.ts
+embeddings/fireworks.d.cts
 embeddings/googlepalm.cjs
 embeddings/googlepalm.js
 embeddings/googlepalm.d.ts
@@ -574,6 +578,10 @@ document_transformers/mozilla_readability.cjs
 document_transformers/mozilla_readability.js
 document_transformers/mozilla_readability.d.ts
 document_transformers/mozilla_readability.d.cts
+storage/cassandra.cjs
+storage/cassandra.js
+storage/cassandra.d.ts
+storage/cassandra.d.cts
 storage/convex.cjs
 storage/convex.js
 storage/convex.d.ts
@@ -598,6 +606,10 @@ stores/doc/in_memory.cjs
 stores/doc/in_memory.js
 stores/doc/in_memory.d.ts
 stores/doc/in_memory.d.cts
+stores/message/astradb.cjs
+stores/message/astradb.js
+stores/message/astradb.d.ts
+stores/message/astradb.d.cts
 stores/message/cassandra.cjs
 stores/message/cassandra.js
 stores/message/cassandra.d.ts
@@ -638,6 +650,10 @@ stores/message/planetscale.cjs
 stores/message/planetscale.js
 stores/message/planetscale.d.ts
 stores/message/planetscale.d.cts
+stores/message/postgres.cjs
+stores/message/postgres.js
+stores/message/postgres.d.ts
+stores/message/postgres.d.cts
 stores/message/redis.cjs
 stores/message/redis.js
 stores/message/redis.d.ts

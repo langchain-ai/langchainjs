@@ -66,6 +66,14 @@ output_parsers.cjs
 output_parsers.js
 output_parsers.d.ts
 output_parsers.d.cts
+output_parsers/openai_tools.cjs
+output_parsers/openai_tools.js
+output_parsers/openai_tools.d.ts
+output_parsers/openai_tools.d.cts
+output_parsers/openai_functions.cjs
+output_parsers/openai_functions.js
+output_parsers/openai_functions.d.ts
+output_parsers/openai_functions.d.cts
 outputs.cjs
 outputs.js
 outputs.d.ts
@@ -90,6 +98,10 @@ retrievers.cjs
 retrievers.js
 retrievers.d.ts
 retrievers.d.cts
+singletons.cjs
+singletons.js
+singletons.d.ts
+singletons.d.cts
 stores.cjs
 stores.js
 stores.d.ts
@@ -178,6 +190,10 @@ utils/types.cjs
 utils/types.js
 utils/types.d.ts
 utils/types.d.cts
+utils/beta_warning.cjs
+utils/beta_warning.js
+utils/beta_warning.d.ts
+utils/beta_warning.d.cts
 vectorstores.cjs
 vectorstores.js
 vectorstores.d.ts

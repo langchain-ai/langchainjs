@@ -14,6 +14,20 @@ export interface GoogleVertexAIConnectionParams<AuthOptions>
 
   /** The version of the API functions. Part of the path. */
   apiVersion?: string;
+
+  /**
+   * If you are planning to connect to a model that lives under a custom endpoint
+   * provide the "customModelURL" which will override the automatic URL building
+   *
+   * This is necessary in cases when you want to point to a fine-tuned model or
+   * a model that has been hidden under VertexAI Endpoints.
+   *
+   * In those cases, specifying the `GoogleVertexAIModelParams.model` param
+   * will not be necessary and will be ignored.
+   *
+   * @see GoogleVertexAILLMConnection.buildUrl
+   * */
+  customModelURL?: string;
 }
 
 export interface GoogleVertexAIModelParams {

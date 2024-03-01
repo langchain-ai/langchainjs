@@ -88,7 +88,7 @@ class IterableReadableStreamV0<T> extends ReadableStream<T> {
   }
 
   [Symbol.asyncIterator]() {
-    return this;
+    return this as any;
   }
 
   static fromReadableStream<T>(stream: ReadableStream<T>) {

@@ -5,7 +5,7 @@ import {
   RunnableMap,
   RunnableMapLike,
 } from "./base.js";
-import type { RunnableConfig } from "./config.js";
+import { ensureConfig, type RunnableConfig } from "./config.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type RunnablePassthroughFunc<RunInput = any> =
@@ -65,14 +65,15 @@ export class RunnablePassthrough<RunInput> extends Runnable<
     input: RunInput,
     options?: Partial<RunnableConfig>
   ): Promise<RunInput> {
+    const config = ensureConfig(options);
     if (this.func) {
-      await this.func(input, options);
+      await this.func(input, config);
     }
 
     return this._callWithConfig(
       (input: RunInput) => Promise.resolve(input),
       input,
-      options
+      config
     );
   }
 
@@ -80,13 +81,14 @@ export class RunnablePassthrough<RunInput> extends Runnable<
     generator: AsyncGenerator<RunInput>,
     options: Partial<RunnableConfig>
   ): AsyncGenerator<RunInput> {
+    const config = ensureConfig(options);
     let finalOutput: RunInput | undefined;
     let finalOutputSupported = true;
 
     for await (const chunk of this._transformStreamWithConfig(
       generator,
       (input: AsyncGenerator<RunInput>) => input,
-      options
+      config
     )) {
       yield chunk;
       if (finalOutputSupported) {
@@ -105,7 +107,7 @@ export class RunnablePassthrough<RunInput> extends Runnable<
     }
 
     if (this.func && finalOutput !== undefined) {
-      await this.func(finalOutput, options);
+      await this.func(finalOutput, config);
     }
   }
 
@@ -138,8 +140,8 @@ export class RunnablePassthrough<RunInput> extends Runnable<
    * ```
    */
   static assign<
-    RunInput extends Record<string, unknown>,
-    RunOutput extends Record<string, unknown>
+    RunInput extends Record<string, unknown> = Record<string, unknown>,
+    RunOutput extends Record<string, unknown> = Record<string, unknown>
   >(
     mapping: RunnableMapLike<RunInput, RunOutput>
   ): RunnableAssign<RunInput, RunInput & RunOutput> {

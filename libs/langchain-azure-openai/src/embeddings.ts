@@ -13,6 +13,7 @@ import {
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { AzureOpenAIInput, AzureOpenAIEmbeddingsParams } from "./types.js";
+import { USER_AGENT_PREFIX } from "./constants.js";
 
 export class AzureOpenAIEmbeddings
   extends Embeddings
@@ -96,12 +97,18 @@ export class AzureOpenAIEmbeddings
     if (isTokenCredential(azureCredential)) {
       this.client = new AzureOpenAIClient(
         this.azureOpenAIEndpoint ?? "",
-        azureCredential as TokenCredential
+        azureCredential as TokenCredential,
+        {
+          userAgentOptions: { userAgentPrefix: USER_AGENT_PREFIX },
+        }
       );
     } else {
       this.client = new AzureOpenAIClient(
         this.azureOpenAIEndpoint ?? "",
-        azureCredential as KeyCredential
+        azureCredential as KeyCredential,
+        {
+          userAgentOptions: { userAgentPrefix: USER_AGENT_PREFIX },
+        }
       );
     }
   }

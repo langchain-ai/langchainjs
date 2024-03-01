@@ -35,7 +35,7 @@ Let’s use a document loader to pull text from the docs:
 import { CheerioWebBaseLoader } from "langchain/document_loaders/web/cheerio";
 
 const loader = new CheerioWebBaseLoader(
-  "https://docs.smith.langchain.com/overview"
+  "https://docs.smith.langchain.com/user_guide"
 );
 
 const rawDocs = await loader.load();
@@ -81,7 +81,7 @@ console.log(docs);
   Document {
     pageContent: 'You can also quickly edit examples and add them to datasets to expand the surface area of your evaluation sets or to fine-tune a model for improved quality or reduced costs.Monitoring​After all this, your app might finally ready to go in production. LangSmith can also be used to monitor your application in much the same way that you used for debugging. You can log all traces, visualize latency and token usage statistics, and troubleshoot specific issues as they arise. Each run can also be',
     metadata: {
-      source: 'https://docs.smith.langchain.com/overview',
+      source: 'https://docs.smith.langchain.com/user_guide',
       loc: [Object]
     }
   },
@@ -91,21 +91,21 @@ console.log(docs);
       'that we’ve constructed along the way (see above). Alternatively, we could spend some\n' +
       'time constructing a small dataset by hand. For these situations, LangSmith simplifies',
     metadata: {
-      source: 'https://docs.smith.langchain.com/overview',
+      source: 'https://docs.smith.langchain.com/user_guide',
       loc: [Object]
     }
   },
   Document {
     pageContent: 'chains and agents up the level where they are reliable enough to be used in production.Over the past two months, we at LangChain have been building and using LangSmith with the goal of bridging this gap. This is our tactical user guide to outline effective ways to use LangSmith and maximize its benefits.On by default​At LangChain, all of us have LangSmith’s tracing running in the background by default. On the Python side, this is achieved by setting environment variables, which we establish',
     metadata: {
-      source: 'https://docs.smith.langchain.com/overview',
+      source: 'https://docs.smith.langchain.com/user_guide',
       loc: [Object]
     }
   },
   Document {
     pageContent: 'has helped us debug bugs in formatting logic, unexpected transformations to user input, and straight up missing user input.To a much lesser extent, this is also true of the output of an LLM. Oftentimes the output of an LLM is technically a string but that string may contain some structure (json, yaml) that is intended to be parsed into a structured representation. Understanding what the exact output is can help determine if there may be a need for different parsing.LangSmith provides a',
     metadata: {
-      source: 'https://docs.smith.langchain.com/overview',
+      source: 'https://docs.smith.langchain.com/user_guide',
       loc: [Object]
     }
   }
@@ -254,28 +254,28 @@ await retriever.invoke("Tell me more!");
   Document {
     pageContent: 'shadowRing,',
     metadata: {
-      source: 'https://docs.smith.langchain.com/overview',
+      source: 'https://docs.smith.langchain.com/user_guide',
       loc: [Object]
     }
   },
   Document {
     pageContent: 'Pro,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace;--joy-fontFamily-fallback:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI',
     metadata: {
-      source: 'https://docs.smith.langchain.com/overview',
+      source: 'https://docs.smith.langchain.com/user_guide',
       loc: [Object]
     }
   },
   Document {
     pageContent: 'y-fontSize-xl7:4.5rem;--joy-fontFamily-body:"Public',
     metadata: {
-      source: 'https://docs.smith.langchain.com/overview',
+      source: 'https://docs.smith.langchain.com/user_guide',
       loc: [Object]
     }
   },
   Document {
     pageContent: 'You can also quickly edit examples and add them to datasets to expand the surface area of your evaluation sets or to fine-tune a model for improved quality or reduced costs.Monitoring​After all this, your app might finally ready to go in production. LangSmith can also be used to monitor your application in much the same way that you used for debugging. You can log all traces, visualize latency and token usage statistics, and troubleshoot specific issues as they arise. Each run can also be',
     metadata: {
-      source: 'https://docs.smith.langchain.com/overview',
+      source: 'https://docs.smith.langchain.com/user_guide',
       loc: [Object]
     }
   }

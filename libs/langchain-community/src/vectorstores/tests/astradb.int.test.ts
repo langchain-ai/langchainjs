@@ -4,28 +4,29 @@ import { AstraDB } from "@datastax/astra-db-ts";
 import { faker } from "@faker-js/faker";
 import { Document } from "@langchain/core/documents";
 import { OpenAIEmbeddings } from "@langchain/openai";
+import { FakeEmbeddings } from "closevector-common/dist/fake.js";
 import { AstraDBVectorStore, AstraLibArgs } from "../astradb.js";
 
-const clientConfig = {
-  token: process.env.ASTRA_DB_APPLICATION_TOKEN ?? "dummy",
-  endpoint: process.env.ASTRA_DB_ENDPOINT ?? "dummy",
-  namespace: process.env.ASTRA_DB_NAMESPACE ?? "default_keyspace",
-};
-
-const client = new AstraDB(clientConfig.token, clientConfig.endpoint);
-
-const astraConfig: AstraLibArgs = {
-  ...clientConfig,
-  collection: process.env.ASTRA_DB_COLLECTION ?? "langchain_test",
-  collectionOptions: {
-    vector: {
-      dimension: 1536,
-      metric: "cosine",
-    },
-  },
-};
-
 describe.skip("AstraDBVectorStore", () => {
+  const clientConfig = {
+    token: process.env.ASTRA_DB_APPLICATION_TOKEN ?? "dummy",
+    endpoint: process.env.ASTRA_DB_ENDPOINT ?? "dummy",
+    namespace: process.env.ASTRA_DB_NAMESPACE ?? "default_keyspace",
+  };
+
+  const client = new AstraDB(clientConfig.token, clientConfig.endpoint);
+
+  const astraConfig: AstraLibArgs = {
+    ...clientConfig,
+    collection: process.env.ASTRA_DB_COLLECTION ?? "langchain_test",
+    collectionOptions: {
+      vector: {
+        dimension: 1536,
+        metric: "cosine",
+      },
+    },
+  };
+
   beforeEach(async () => {
     try {
       await client.dropCollection(astraConfig.collection);
@@ -133,4 +134,26 @@ describe.skip("AstraDBVectorStore", () => {
       "AstraDB is built on Apache Cassandra"
     );
   });
+
+  test("collection exists", async () => {
+    let store = new AstraDBVectorStore(new FakeEmbeddings(), astraConfig);
+    await store.initialize();
+    await store.initialize();
+    try {
+      store = new AstraDBVectorStore(new FakeEmbeddings(), {
+        ...astraConfig,
+        collectionOptions: {
+          vector: {
+            dimension: 8,
+            metric: "cosine",
+          },
+        },
+      });
+      await store.initialize();
+      fail("Should have thrown error");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      expect(e.message).toContain("already exists with different 'vector'");
+    }
+  }, 60000);
 });

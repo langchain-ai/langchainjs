@@ -324,11 +324,19 @@ export class ElasticVectorSearch extends VectorStore {
           value,
         }));
     for (const condition of filters) {
-      result.push({
-        [condition.operator]: {
-          [`metadata.${condition.field}`]: condition.value,
-        },
-      });
+      if (condition.operator === "exists") {
+        result.push({
+          [condition.operator]: {
+            field: `metadata.${condition.field}`,
+          },
+        });
+      } else {
+        result.push({
+          [condition.operator]: {
+            [`metadata.${condition.field}`]: condition.value,
+          },
+        });
+      }
     }
     return result;
   }

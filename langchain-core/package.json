@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "0.1.28",
+  "version": "0.1.40",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -43,7 +43,7 @@
     "camelcase": "6",
     "decamelize": "1.2.0",
     "js-tiktoken": "^1.0.8",
-    "langsmith": "~0.1.0",
+    "langsmith": "~0.1.7",
     "ml-distance": "^4.0.0",
     "p-queue": "^6.6.2",
     "p-retry": "4",
@@ -71,7 +71,8 @@
     "release-it": "^15.10.1",
     "rimraf": "^5.0.1",
     "turbo": "latest",
-    "typescript": "~5.1.6"
+    "typescript": "~5.1.6",
+    "web-streams-polyfill": "^3.3.3"
   },
   "publishConfig": {
     "access": "public"
@@ -244,6 +245,24 @@
       "import": "./output_parsers.js",
       "require": "./output_parsers.cjs"
     },
+    "./output_parsers/openai_tools": {
+      "types": {
+        "import": "./output_parsers/openai_tools.d.ts",
+        "require": "./output_parsers/openai_tools.d.cts",
+        "default": "./output_parsers/openai_tools.d.ts"
+      },
+      "import": "./output_parsers/openai_tools.js",
+      "require": "./output_parsers/openai_tools.cjs"
+    },
+    "./output_parsers/openai_functions": {
+      "types": {
+        "import": "./output_parsers/openai_functions.d.ts",
+        "require": "./output_parsers/openai_functions.d.cts",
+        "default": "./output_parsers/openai_functions.d.ts"
+      },
+      "import": "./output_parsers/openai_functions.js",
+      "require": "./output_parsers/openai_functions.cjs"
+    },
     "./outputs": {
       "types": {
         "import": "./outputs.d.ts",
@@ -297,6 +316,15 @@
       },
       "import": "./retrievers.js",
       "require": "./retrievers.cjs"
+    },
+    "./singletons": {
+      "types": {
+        "import": "./singletons.d.ts",
+        "require": "./singletons.d.cts",
+        "default": "./singletons.d.ts"
+      },
+      "import": "./singletons.js",
+      "require": "./singletons.cjs"
     },
     "./stores": {
       "types": {
@@ -496,6 +524,15 @@
       "import": "./utils/types.js",
       "require": "./utils/types.cjs"
     },
+    "./utils/beta_warning": {
+      "types": {
+        "import": "./utils/beta_warning.d.ts",
+        "require": "./utils/beta_warning.d.cts",
+        "default": "./utils/beta_warning.d.ts"
+      },
+      "import": "./utils/beta_warning.js",
+      "require": "./utils/beta_warning.cjs"
+    },
     "./vectorstores": {
       "types": {
         "import": "./vectorstores.d.ts",
@@ -577,6 +614,14 @@
     "output_parsers.js",
     "output_parsers.d.ts",
     "output_parsers.d.cts",
+    "output_parsers/openai_tools.cjs",
+    "output_parsers/openai_tools.js",
+    "output_parsers/openai_tools.d.ts",
+    "output_parsers/openai_tools.d.cts",
+    "output_parsers/openai_functions.cjs",
+    "output_parsers/openai_functions.js",
+    "output_parsers/openai_functions.d.ts",
+    "output_parsers/openai_functions.d.cts",
     "outputs.cjs",
     "outputs.js",
     "outputs.d.ts",
@@ -601,6 +646,10 @@
     "retrievers.js",
     "retrievers.d.ts",
     "retrievers.d.cts",
+    "singletons.cjs",
+    "singletons.js",
+    "singletons.d.ts",
+    "singletons.d.cts",
     "stores.cjs",
     "stores.js",
     "stores.d.ts",
@@ -689,6 +738,10 @@
     "utils/types.js",
     "utils/types.d.ts",
     "utils/types.d.cts",
+    "utils/beta_warning.cjs",
+    "utils/beta_warning.js",
+    "utils/beta_warning.d.ts",
+    "utils/beta_warning.d.cts",
     "vectorstores.cjs",
     "vectorstores.js",
     "vectorstores.d.ts",
