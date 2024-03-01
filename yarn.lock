@@ -18958,13 +18958,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cssom@npm:^0.5.0":
-  version: 0.5.0
-  resolution: "cssom@npm:0.5.0"
-  checksum: 823471aa30091c59e0a305927c30e7768939b6af70405808f8d2ce1ca778cddcb24722717392438329d1691f9a87cb0183b64b8d779b56a961546d54854fde01
-  languageName: node
-  linkType: hard
-
 "cssstyle@npm:^3.0.0":
   version: 3.0.0
   resolution: "cssstyle@npm:3.0.0"
@@ -23430,13 +23423,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"html-escaper@npm:^3.0.3":
-  version: 3.0.3
-  resolution: "html-escaper@npm:3.0.3"
-  checksum: a2678be42c15d2ef6e629775dac0925a729f4615c6593db8358b9262c7565c4627134987c00f548eb4eb76cbc3b3392f78475cd02b022f8ae7aeb9a88280831b
-  languageName: node
-  linkType: hard
-
 "html-minifier-terser@npm:^6.0.2, html-minifier-terser@npm:^6.1.0":
   version: 6.1.0
   resolution: "html-minifier-terser@npm:6.1.0"
@@ -26009,7 +25995,7 @@ __metadata:
     wikipedia: ^2.1.2
     yaml: ^2.2.1
     youtube-transcript: ^1.0.6
-    youtubei.js: ^5.8.0
+    youtubei.js: ^9.1.0
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.3
   peerDependencies:
@@ -26062,7 +26048,7 @@ __metadata:
     web-auth-library: ^1.0.3
     ws: ^8.14.2
     youtube-transcript: ^1.0.6
-    youtubei.js: ^5.8.0
+    youtubei.js: ^9.1.0
   peerDependenciesMeta:
     "@aws-sdk/client-s3":
       optional: true
@@ -26337,19 +26323,6 @@ __metadata:
   version: 1.2.4
   resolution: "lines-and-columns@npm:1.2.4"
   checksum: 0c37f9f7fa212b38912b7145e1cd16a5f3cd34d782441c3e6ca653485d326f58b3caccda66efce1c5812bde4961bbde3374fae4b0d11bf1226152337f3894aa5
-  languageName: node
-  linkType: hard
-
-"linkedom@npm:^0.14.12":
-  version: 0.14.26
-  resolution: "linkedom@npm:0.14.26"
-  dependencies:
-    css-select: ^5.1.0
-    cssom: ^0.5.0
-    html-escaper: ^3.0.3
-    htmlparser2: ^8.0.1
-    uhyphen: ^0.2.0
-  checksum: 828415ac9f848efb307f444c47b3966383f782bd6cc8e52cf839f6a901d3ef2dc56da11aee3454794b345f08b04960152a3a339753295cd7b72084608f7314a0
   languageName: node
   linkType: hard
 
@@ -34436,13 +34409,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"uhyphen@npm:^0.2.0":
-  version: 0.2.0
-  resolution: "uhyphen@npm:0.2.0"
-  checksum: b946e2c17989f50412d7cc07521a199a1edc52e0320813c06ef5eee21570cd46bbfeb98e82288f21150144a3ef9d4e99395533ab1c918030e5224f3e247cbe57
-  languageName: node
-  linkType: hard
-
 "unbox-primitive@npm:^1.0.2":
   version: 1.0.2
   resolution: "unbox-primitive@npm:1.0.2"
@@ -36204,15 +36170,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"youtubei.js@npm:^5.8.0":
-  version: 5.8.0
-  resolution: "youtubei.js@npm:5.8.0"
+"youtubei.js@npm:^9.1.0":
+  version: 9.1.0
+  resolution: "youtubei.js@npm:9.1.0"
   dependencies:
     jintr: ^1.1.0
-    linkedom: ^0.14.12
     tslib: ^2.5.0
     undici: ^5.19.1
-  checksum: 4321f102ba1141c5aaaf94852f2afe3e4d0b27d62a670b65959f16462e7d017b0d8195990dc5ded79285f04287533ff7739f8c154593356cc6aa6ed9a70782ee
+  checksum: 7a537d79435c362c3d4f0e101f85edca6b34c584b9cafeee28c4214fdcdcbb6b2ebba2571175e21a984cc5d66d0fe673d761f400dd232ecb16803bce878cb41d
   languageName: node
   linkType: hard
 
