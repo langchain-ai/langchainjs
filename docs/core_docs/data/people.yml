@@ -1,35 +1,30 @@
 maintainers:
-- login: bracesproul
-  count: 221
-  avatarUrl: https://avatars.githubusercontent.com/u/46789226?u=83f467441c4b542b900fe2bb8fe45e26bf918da0&v=4
-  twitterUsername: bracesproul
-  url: https://github.com/bracesproul
 - login: nfcampos
   count: 336
   avatarUrl: https://avatars.githubusercontent.com/u/56902?u=fdb30e802c68bc338dd9c0820f713e4fdac75db7&v=4
   twitterUsername: nfcampos
   url: https://github.com/nfcampos
+- login: bracesproul
+  count: 249
+  avatarUrl: https://avatars.githubusercontent.com/u/46789226?u=83f467441c4b542b900fe2bb8fe45e26bf918da0&v=4
+  twitterUsername: bracesproul
+  url: https://github.com/bracesproul
 - login: hwchase17
   count: 73
   avatarUrl: https://avatars.githubusercontent.com/u/11986836?u=f4c4f21a82b2af6c9f91e1f1d99ea40062f7a101&v=4
   twitterUsername: null
   url: https://github.com/hwchase17
+- login: jacoblee93
+  count: 717
+  avatarUrl: https://avatars.githubusercontent.com/u/6952323?u=d785f9406c5a78ebd75922567b2693fb643c3bb0&v=4
+  twitterUsername: hacubu
+  url: https://github.com/jacoblee93
 - login: dqbd
   count: 37
   avatarUrl: https://avatars.githubusercontent.com/u/1443449?u=fe32372ae8f497065ef0a1c54194d9dff36fb81d&v=4
   twitterUsername: __dqbd
   url: https://github.com/dqbd
-- login: jacoblee93
-  count: 695
-  avatarUrl: https://avatars.githubusercontent.com/u/6952323?u=d785f9406c5a78ebd75922567b2693fb643c3bb0&v=4
-  twitterUsername: hacubu
-  url: https://github.com/jacoblee93
 top_recent_contributors:
-- login: chasemcdo
-  count: 4.684440539338747
-  avatarUrl: https://avatars.githubusercontent.com/u/74692158?u=0a699ef84318269202aa63ae03980bec2ca13806&v=4
-  twitterUsername: null
-  url: https://github.com/chasemcdo
 - login: mieslep
   count: 4.267563910357078
   avatarUrl: https://avatars.githubusercontent.com/u/5420540?u=8f038c002fbce42427999eb715dc9f868cef1c84&v=4
@@ -40,21 +35,16 @@ top_recent_contributors:
   avatarUrl: https://avatars.githubusercontent.com/u/48515433?v=4
   twitterUsername: null
   url: https://github.com/MJDeligan
+- login: sinedied
+  count: 3.7602970156694924
+  avatarUrl: https://avatars.githubusercontent.com/u/593151?u=257e9958c122ee193dad2ef21d06837bb94fa3d3&v=4
+  twitterUsername: sinedied
+  url: https://github.com/sinedied
 - login: mfortman11
   count: 3.4525659246004334
   avatarUrl: https://avatars.githubusercontent.com/u/6100513?u=c758a02fc05dc36315fcfadfccd6208883436cb8&v=4
   twitterUsername: null
   url: https://github.com/mfortman11
-- login: sinedied
-  count: 3.3316395803895404
-  avatarUrl: https://avatars.githubusercontent.com/u/593151?u=257e9958c122ee193dad2ef21d06837bb94fa3d3&v=4
-  twitterUsername: sinedied
-  url: https://github.com/sinedied
-- login: tomasonjo
-  count: 2.4005853891433544
-  avatarUrl: https://avatars.githubusercontent.com/u/19948365?v=4
-  twitterUsername: tb_tomaz
-  url: https://github.com/tomasonjo
 - login: afirstenberg
   count: 1.9879348630643967
   avatarUrl: https://avatars.githubusercontent.com/u/3507578?v=4
@@ -65,11 +55,11 @@ top_recent_contributors:
   avatarUrl: https://avatars.githubusercontent.com/u/1572864?v=4
   twitterUsername: null
   url: https://github.com/alx13
-- login: nigel-daniels
-  count: 1.8055551421929712
-  avatarUrl: https://avatars.githubusercontent.com/u/4641452?v=4
-  twitterUsername: null
-  url: https://github.com/nigel-daniels
+- login: tomasonjo
+  count: 1.7951131914381468
+  avatarUrl: https://avatars.githubusercontent.com/u/19948365?v=4
+  twitterUsername: tb_tomaz
+  url: https://github.com/tomasonjo
 - login: kristianfreeman
   count: 1.677034693980017
   avatarUrl: https://avatars.githubusercontent.com/u/922353?u=ad00df1efd8f04a469de6087ee3cd7d7012533f7&v=4
@@ -105,11 +95,6 @@ top_recent_contributors:
   avatarUrl: https://avatars.githubusercontent.com/u/2857712?u=6809bef8bf07c46b39cd2fcd6027ed86e76372cd&v=4
   twitterUsername: null
   url: https://github.com/machulav
-- login: 1239uth
-  count: 1.3561536743354925
-  avatarUrl: https://avatars.githubusercontent.com/u/83053931?u=5c715d2d4f6786fa749276de8eced710be8bfa99&v=4
-  twitterUsername: null
-  url: https://github.com/1239uth
 - login: Jordan-Gilliam
   count: 1.3528138528138527
   avatarUrl: https://avatars.githubusercontent.com/u/25993686?u=319a6ed2119197d4d11301614a104ae686f9fc70&v=4
@@ -125,11 +110,6 @@ top_recent_contributors:
   avatarUrl: https://avatars.githubusercontent.com/u/780157?u=d5efec16b5e3a9913dc44967059a70d9a610755d&v=4
   twitterUsername: null
   url: https://github.com/jasonnathan
-- login: Maanethdesilva
-  count: 1.2846497764530551
-  avatarUrl: https://avatars.githubusercontent.com/u/94875583?v=4
-  twitterUsername: null
-  url: https://github.com/Maanethdesilva
 - login: fuleinist
   count: 1.2845103789266226
   avatarUrl: https://avatars.githubusercontent.com/u/1163738?v=4
@@ -145,11 +125,6 @@ top_recent_contributors:
   avatarUrl: https://avatars.githubusercontent.com/u/7506913?u=42c32ca59ae2e44532cd45027e5b62d2712cf2a2&v=4
   twitterUsername: null
   url: https://github.com/zhengxs2018
-- login: SananR
-  count: 1.1688741721854305
-  avatarUrl: https://avatars.githubusercontent.com/u/14956384?u=538ff9bf09497059b312067333f68eba75594802&v=4
-  twitterUsername: null
-  url: https://github.com/SananR
 - login: mattzcarey
   count: 1.1606442287838117
   avatarUrl: https://avatars.githubusercontent.com/u/77928207?u=fc8febe2a4b67384046eb4041b325bb34665d59c&v=4
@@ -160,11 +135,6 @@ top_recent_contributors:
   avatarUrl: https://avatars.githubusercontent.com/u/1585539?u=654a21985c875f78a20eda7e4884e8d64de86fba&v=4
   twitterUsername: null
   url: https://github.com/benjibc
-- login: Zeneos
-  count: 1.1119838542518954
-  avatarUrl: https://avatars.githubusercontent.com/u/95008961?v=4
-  twitterUsername: null
-  url: https://github.com/Zeneos
 - login: katarinasupe
   count: 1.0916808149405772
   avatarUrl: https://avatars.githubusercontent.com/u/61758502?u=20cdcb0bae81b9eb330c94f7cfae462327785219&v=4
@@ -271,6 +241,11 @@ top_contributors:
   avatarUrl: https://avatars.githubusercontent.com/u/20127759?v=4
   twitterUsername: zukerpie
   url: https://github.com/kwkr
+- login: sinedied
+  count: 3.7602970156694924
+  avatarUrl: https://avatars.githubusercontent.com/u/593151?u=257e9958c122ee193dad2ef21d06837bb94fa3d3&v=4
+  twitterUsername: sinedied
+  url: https://github.com/sinedied
 - login: ewfian
   count: 3.6525618490035825
   avatarUrl: https://avatars.githubusercontent.com/u/12423122?u=681de0c470e9b349963ee935ddfd6b2e097e7181&v=4
@@ -286,11 +261,6 @@ top_contributors:
   avatarUrl: https://avatars.githubusercontent.com/u/6100513?u=c758a02fc05dc36315fcfadfccd6208883436cb8&v=4
   twitterUsername: null
   url: https://github.com/mfortman11
-- login: sinedied
-  count: 3.3316395803895404
-  avatarUrl: https://avatars.githubusercontent.com/u/593151?u=257e9958c122ee193dad2ef21d06837bb94fa3d3&v=4
-  twitterUsername: sinedied
-  url: https://github.com/sinedied
 - login: jasondotparse
   count: 3.2458389391317124
   avatarUrl: https://avatars.githubusercontent.com/u/13938372?u=0e3f80aa515c41b7d9084b73d761cad378ebdc7a&v=4
@@ -601,11 +571,11 @@ top_contributors:
   avatarUrl: https://avatars.githubusercontent.com/u/6773706?u=738775762205a07fd7de297297c99f781e957c58&v=4
   twitterUsername: thinkolson
   url: https://github.com/frankolson
-- login: 1239uth
+- login: uthmanmoh
   count: 1.3561536743354925
   avatarUrl: https://avatars.githubusercontent.com/u/83053931?u=5c715d2d4f6786fa749276de8eced710be8bfa99&v=4
   twitterUsername: null
-  url: https://github.com/1239uth
+  url: https://github.com/uthmanmoh
 - login: Jordan-Gilliam
   count: 1.3528138528138527
   avatarUrl: https://avatars.githubusercontent.com/u/25993686?u=319a6ed2119197d4d11301614a104ae686f9fc70&v=4
