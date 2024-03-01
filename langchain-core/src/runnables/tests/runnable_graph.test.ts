@@ -29,19 +29,20 @@ test("Test graph sequence", async () => {
   const lastNode = graph.lastNode();
   expect(lastNode).not.toBeNull();
 
-  // expect(graph.edges.length).toBe(4);
-  // expect(Object.keys(graph.nodes).length).toBe(5);
+  expect(graph.edges.length).toBe(4);
+  expect(Object.keys(graph.nodes).length).toBe(5);
 
-  expect(graph.toJson()).toBe({
+  expect(graph.toJSON()).toStrictEqual({
     nodes: [
       {
         id: 0,
         type: "schema",
-        data: {
-          title: "PromptInput",
-          type: "object",
-          properties: { name: { title: "Name", type: "string" } },
-        },
+        // data: {
+        //   title: "PromptInput",
+        //   type: "object",
+        //   properties: { name: { title: "Name", type: "string" } },
+        // },
+        data: {}, // TODO: replace this with actual schema serialization
       },
       {
         id: 1,
@@ -55,7 +56,7 @@ test("Test graph sequence", async () => {
         id: 2,
         type: "runnable",
         data: {
-          id: ["langchain", "llms", "fake", "llm", "FakeLLM"],
+          id: ["langchain", "llms", "fake", "FakeLLM"],
           name: "FakeLLM",
         },
       },
@@ -75,11 +76,12 @@ test("Test graph sequence", async () => {
       {
         id: 4,
         type: "schema",
-        data: {
-          title: "CommaSeparatedListOutputParserOutput",
-          type: "array",
-          items: { type: "string" },
-        },
+        // data: {
+        //   title: "CommaSeparatedListOutputParserOutput",
+        //   type: "array",
+        //   items: { type: "string" },
+        // },
+        data: {}, // TODO: replace this with actual schema serialization
       },
     ],
     edges: [

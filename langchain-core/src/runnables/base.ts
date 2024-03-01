@@ -551,16 +551,16 @@ export abstract class Runnable<
     );
   }
 
-  getGraph(config?: RunnableConfig): Graph {
+  getGraph(_?: RunnableConfig): Graph {
     const graph = new Graph();
 
     // TODO: what is the inputNode here?
-    const inputNode = graph.addNode({});
+    const inputNode = graph.addNode({} as unknown as Runnable);
 
     const runnableNode = graph.addNode(this); // Assuming `this` refers to an instance that can be treated as data for a node
 
     // TODO: what is the outputNode here?
-    const outputNode = graph.addNode({});
+    const outputNode = graph.addNode({} as unknown as Runnable);
 
     graph.addEdge(inputNode, runnableNode);
     graph.addEdge(runnableNode, outputNode);

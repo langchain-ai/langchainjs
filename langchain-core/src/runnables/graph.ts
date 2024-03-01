@@ -1,5 +1,4 @@
 import { v4 as uuidv4, validate as isUuid } from "uuid";
-import { z } from "zod";
 import { type Runnable as RunnableType, Runnable } from "./base.js";
 
 interface Edge {
