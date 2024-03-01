@@ -282,7 +282,7 @@ export class RedisVectorStore extends VectorStore {
     metadatas: object[] | object,
     embeddings: EmbeddingsInterface,
     dbConfig: RedisVectorStoreConfig,
-    docsOptions?: RedisAddOptions,
+    docsOptions?: RedisAddOptions
   ): Promise<RedisVectorStore> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -293,7 +293,12 @@ export class RedisVectorStore extends VectorStore {
       });
       docs.push(newDoc);
     }
-    return RedisVectorStore.fromDocuments(docs, embeddings, dbConfig, docsOptions);
+    return RedisVectorStore.fromDocuments(
+      docs,
+      embeddings,
+      dbConfig,
+      docsOptions
+    );
   }
 
   /**
@@ -309,7 +314,7 @@ export class RedisVectorStore extends VectorStore {
     docs: Document[],
     embeddings: EmbeddingsInterface,
     dbConfig: RedisVectorStoreConfig,
-    docsOptions?: RedisAddOptions,
+    docsOptions?: RedisAddOptions
   ): Promise<RedisVectorStore> {
     const instance = new this(embeddings, dbConfig);
     await instance.addDocuments(docs, docsOptions);
