@@ -4,6 +4,9 @@ export interface BaseSerialized<T extends string> {
   lc: number;
   type: T;
   id: string[];
+  name?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  graph?: Record<string, any>;
 }
 
 export interface SerializedConstructor extends BaseSerialized<"constructor"> {

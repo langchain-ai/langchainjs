@@ -1,5 +1,6 @@
 import { v4 as uuidv4, validate as isUuid } from "uuid";
-import { Runnable } from "./base.js";
+import { z } from "zod";
+import { type Runnable as RunnableType, Runnable } from "./base.js";
 
 interface Edge {
   source: string;
@@ -9,29 +10,36 @@ interface Edge {
 
 interface Node {
   id: string;
-  data: any;
+
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  data: Function | RunnableType;
 }
 
 function nodeDataStr(node: Node): string {
   if (!isUuid(node.id)) {
     return node.id;
-  } else {
-    // Assuming `node.data` has a similar structure to the Python version
-    let data = node.data.toString();
-    if (
-      data.startsWith("<") ||
-      data[0] !== data[0].toUpperCase() ||
-      data.includes("\n")
-    ) {
-      data = node.data.constructor.name;
-    } else if (data.length > 42) {
-      data = `${data.substring(0, 42)}...`;
+  } else if (Runnable.isRunnable(node.data)) {
+    try {
+      let data = node.data.toString();
+      if (
+        data.startsWith("<") ||
+        data[0] !== data[0].toUpperCase() ||
+        data.split("\n").length > 1
+      ) {
+        data = node.data.constructor.name;
+      } else if (data.length > 42) {
+        data = `${data.substring(0, 42)}...`;
+      }
+      return data.startsWith("Runnable") ? data.substring(8) : data;
+    } catch (error) {
+      return node.data.constructor.name;
     }
-    return data.startsWith("Runnable") ? data.substring(8) : data;
+  } else {
+    return node.data.name; // Assuming `data` can be a class reference
   }
 }
 
-function nodeDataJson(node: Node): any {
+function nodeDataJson(node: Node) {
   // if node.data is implements Runnable
   if (Runnable.isRunnable(node.data)) {
     return {
@@ -63,7 +71,8 @@ export class Graph {
   edges: Edge[] = [];
 
   // Convert the graph to a JSON-serializable format.
-  toJson(): Record<string, Array<Record<string, any>>> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  toJSON(): any {
     const stableNodeIds: Record<string, string | number> = {};
     Object.values(this.nodes).forEach((node, i) => {
       stableNodeIds[node.id] = isUuid(node.id) ? i : node.id;
@@ -89,7 +98,7 @@ export class Graph {
     };
   }
 
-  addNode(data: any, id?: string): Node {
+  addNode(data: Runnable, id?: string): Node {
     if (
       id !== undefined &&
       Object.prototype.hasOwnProperty.call(this.nodes, id)
