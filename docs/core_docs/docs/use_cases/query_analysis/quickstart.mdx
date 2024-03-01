@@ -1,0 +1,110 @@
+---
+sidebar_position: 0
+---
+import CodeBlock from "@theme/CodeBlock";
+
+# Quickstart
+
+This example will show how to use query analysis in a basic end-to-end example.
+This will cover creating a simple index, showing a failure mode that occur when passing a raw user question to
+that index, and then an example of how query analysis can help address that issue. There are MANY different
+query analysis techniques and this end-to-end example will not show all of them.
+
+For the purpose of this example, we will do retrieval over the LangChain YouTube videos.
+
+## Setup
+#### Install dependencies
+
+```bash
+npm install langchain @langchain/community @langchain/openai youtubei.js youtube-transcript date-fns
+```
+
+#### Set environment variables
+
+We'll use OpenAI in this example:
+
+```env
+OPENAI_API_KEY=your-api-key
+
+# Optional, use LangSmith for best-in-class observability
+LANGSMITH_API_KEY=your-api-key
+LANGCHAIN_TRACING_V2=true
+```
+
+### Load documents
+
+We can use the `YouTubeLoader` to load transcripts of a few LangChain videos:
+
+import LoadYtVideos from "@examples/use_cases/query_analysis/load_yt_videos.ts";
+
+<CodeBlock language="typescript">{LoadYtVideos}</CodeBlock>
+
+Here's the metadata associated with each video.
+
+We can see that each document also has a title, view count, publication date, and length:
+
+import VideoMetadata from "@examples/use_cases/query_analysis/metadata.ts";
+
+<CodeBlock language="typescript">{VideoMetadata}</CodeBlock>
+
+### Indexing documents
+
+Whenever we perform retrieval we need to create an index of documents that we can query. We'll use a vector
+store to index our documents, and we'll chunk them first to make our retrievals more concise and precise:
+
+import IndexDocs from "@examples/use_cases/query_analysis/index_docs.ts";
+
+<CodeBlock language="typescript">{IndexDocs}</CodeBlock>
+
+## Retrieval without query analysis
+
+We can perform similarity search on a user question directly to find chunks relevant to the question:
+
+import WithoutQA from "@examples/use_cases/query_analysis/without_qa.ts";
+
+<CodeBlock language="typescript">{WithoutQA}</CodeBlock>
+
+This works pretty okay! Our first result is somewhat relevant to the question.
+
+What if we wanted to search for results from a specific time period?
+
+import WithoutQASpecificDate from "@examples/use_cases/query_analysis/without_qa_specific_date.ts";
+
+<CodeBlock language="typescript">{WithoutQASpecificDate}</CodeBlock>
+
+Our first result is from 2024, and not very relevant to the input. Since we're just searching against
+document contents, there's no way for the results to be filtered on any document attributes.
+
+This is just one failure mode that can arise. Let's now take a look at how a basic form of query
+analysis can fix it!
+
+## Query analysis
+
+To handle these failure modes we'll do some query structuring. This will involve defining a **query schema**
+that contains some date filters and use a function-calling model to convert a user question into a structured queries. 
+
+### Query schema
+
+In this case we'll have explicit min and max attributes for publication date so that it can be filtered on.
+
+import SearchTool from "@examples/use_cases/query_analysis/search_tool.ts";
+
+<CodeBlock language="typescript">{SearchTool}</CodeBlock>
+
+### Query generation
+
+To convert user questions to structured queries we'll make use of OpenAI's function-calling API.
+Specifically we'll use the new [ChatModel.withStructuredOutput()](/docs/integrations/chat/openai#withstructuredoutput--)
+constructor to handle passing the schema to the model and parsing the output.
+
+import Analyzer from "@examples/use_cases/query_analysis/analyzer.ts";
+
+<CodeBlock language="typescript">{Analyzer}</CodeBlock>
+
+## Retrieval with query analysis
+
+Our query analysis looks pretty good; now let's try using our generated queries to actually perform retrieval. 
+
+**Note:** in our example, we specified `tool_choice: "Search"`. This will force the LLM to call one - and only one - function,
+meaning that we will always have one optimized query to look up. Note that this is not always the case - see other guides for
+how to deal with situations when no - or multiple - optimized queries are returned.
