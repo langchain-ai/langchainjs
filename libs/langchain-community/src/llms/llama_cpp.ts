@@ -102,6 +102,7 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
   ): AsyncGenerator<GenerationChunk> {
     const promptOptions = {
       temperature: this?.temperature,
+      maxTokens: this?.maxTokens,
       topK: this?.topK,
       topP: this?.topP,
     };
