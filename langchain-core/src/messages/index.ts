@@ -85,6 +85,7 @@ export interface ToolCall {
 export interface BaseMessageFields {
   content: MessageContent;
   name?: string;
+  tool_call_id?: string;
   additional_kwargs?: {
     function_call?: FunctionCall;
     tool_calls?: ToolCall[];
