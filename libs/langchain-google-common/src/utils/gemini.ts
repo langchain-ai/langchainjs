@@ -225,7 +225,7 @@ function safeResponseTo<RetType>(
   responseTo: (response: GoogleLLMResponse) => RetType
 ): RetType {
   try {
-    const safeResponse = safetyHandler(response);
+    const safeResponse = safetyHandler.handle(response);
     return responseTo(safeResponse);
   } catch (xx) {
     // eslint-disable-next-line no-instanceof/no-instanceof
@@ -396,35 +396,37 @@ function defaultGeminiDataSafetyHandler(
   return data;
 }
 
-export const defaultGeminiSafetyHandler: GoogleAISafetyHandler = (
-  response: GoogleLLMResponse
-): GoogleLLMResponse => {
-  let newdata;
+export class DefaultGeminiSafetyHandler implements GoogleAISafetyHandler {
 
-  if ("nextChunk" in response.data) {
-    // TODO: This is a stream. How to handle?
-    newdata = response.data;
-  } else if (Array.isArray(response.data)) {
-    // If it is an array, try to handle every item in the array
-    try {
-      newdata = response.data.map((item) =>
-        defaultGeminiDataSafetyHandler(response, item)
-      );
-    } catch (xx) {
-      // eslint-disable-next-line no-instanceof/no-instanceof
-      if (xx instanceof GoogleAISafetyError) {
-        throw new GoogleAISafetyError(response, xx.message);
-      } else {
-        throw xx;
+  handle(response: GoogleLLMResponse): GoogleLLMResponse {
+    let newdata;
+
+    if ("nextChunk" in response.data) {
+      // TODO: This is a stream. How to handle?
+      newdata = response.data;
+    } else if (Array.isArray(response.data)) {
+      // If it is an array, try to handle every item in the array
+      try {
+        newdata = response.data.map((item) =>
+          defaultGeminiDataSafetyHandler(response, item)
+        );
+      } catch (xx) {
+        // eslint-disable-next-line no-instanceof/no-instanceof
+        if (xx instanceof GoogleAISafetyError) {
+          throw new GoogleAISafetyError(response, xx.message);
+        } else {
+          throw xx;
+        }
       }
+    } else {
+      const data = response.data as GenerateContentResponseData;
+      newdata = defaultGeminiDataSafetyHandler(response, data);
     }
-  } else {
-    const data = response.data as GenerateContentResponseData;
-    newdata = defaultGeminiDataSafetyHandler(response, data);
+
+    return {
+      ...response,
+      data: newdata,
+    };
   }
 
-  return {
-    ...response,
-    data: newdata,
-  };
-};
+}

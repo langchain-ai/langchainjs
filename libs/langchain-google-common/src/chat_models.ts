@@ -24,9 +24,9 @@ import {
 import { AbstractGoogleLLMConnection } from "./connection.js";
 import {
   baseMessageToContent,
-  defaultGeminiSafetyHandler,
   safeResponseToChatGeneration,
   safeResponseToChatResult,
+  DefaultGeminiSafetyHandler,
 } from "./utils/gemini.js";
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
 import { GoogleBaseLLMInput } from "./llms.js";
@@ -95,7 +95,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     super(ensureParams(fields));
 
     copyAndValidateModelParamsInto(fields, this);
-    this.safetyHandler = fields?.safetyHandler ?? defaultGeminiSafetyHandler;
+    this.safetyHandler = fields?.safetyHandler ?? new DefaultGeminiSafetyHandler();
 
     const client = this.buildClient(fields);
     this.buildConnection(fields ?? {}, client);

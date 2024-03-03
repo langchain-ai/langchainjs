@@ -30,11 +30,11 @@ import {
 } from "./utils/common.js";
 import {
   chunkToString,
-  defaultGeminiSafetyHandler,
   messageContentToParts,
   safeResponseToBaseMessage,
   safeResponseToGeneration,
   safeResponseToString,
+  DefaultGeminiSafetyHandler,
 } from "./utils/gemini.js";
 import { JsonStream } from "./utils/stream.js";
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
@@ -123,7 +123,7 @@ export abstract class GoogleBaseLLM<AuthOptions>
     this.originalFields = fields;
 
     copyAndValidateModelParamsInto(fields, this);
-    this.safetyHandler = fields?.safetyHandler ?? defaultGeminiSafetyHandler;
+    this.safetyHandler = fields?.safetyHandler ?? new DefaultGeminiSafetyHandler();
 
     const client = this.buildClient(fields);
     this.buildConnection(fields ?? {}, client);
