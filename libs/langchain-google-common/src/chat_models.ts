@@ -95,7 +95,8 @@ export abstract class ChatGoogleBase<AuthOptions>
     super(ensureParams(fields));
 
     copyAndValidateModelParamsInto(fields, this);
-    this.safetyHandler = fields?.safetyHandler ?? new DefaultGeminiSafetyHandler();
+    this.safetyHandler =
+      fields?.safetyHandler ?? new DefaultGeminiSafetyHandler();
 
     const client = this.buildClient(fields);
     this.buildConnection(fields ?? {}, client);

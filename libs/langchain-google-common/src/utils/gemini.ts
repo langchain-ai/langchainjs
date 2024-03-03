@@ -397,7 +397,6 @@ function defaultGeminiDataSafetyHandler(
 }
 
 export class DefaultGeminiSafetyHandler implements GoogleAISafetyHandler {
-
   handle(response: GoogleLLMResponse): GoogleLLMResponse {
     let newdata;
 
@@ -428,5 +427,4 @@ export class DefaultGeminiSafetyHandler implements GoogleAISafetyHandler {
       data: newdata,
     };
   }
-
 }
