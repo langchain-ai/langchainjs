@@ -518,7 +518,7 @@ export abstract class BaseLanguageModel<
    * Model wrapper that returns outputs formatted to match the given schema.
    *
    * @template {BaseLanguageModelInput} RunInput The input type for the Runnable, expected to be the same input for the LLM.
-   * @template {AnyObjectType} RunOutput The output type for the Runnable, expected to be a Zod schema object for structured output validation.
+   * @template {Record<string, any>} RunOutput The output type for the Runnable, expected to be a Zod schema object for structured output validation.
    *
    * @param {z.ZodEffects<RunOutput>} schema The schema for the structured output. Either as a Zod schema or a valid JSON schema object.
    * @param {string} name The name of the function to call.
