@@ -14,6 +14,7 @@ import {
   mockId,
 } from "./mock.js";
 import { GoogleAISafetyError } from "../utils/safety.js";
+import { MessageGeminiSafetyHandler } from "../utils/gemini.js";
 
 class GoogleLLM extends GoogleBaseLLM<MockClientAuthInfo> {
   constructor(fields?: GoogleBaseLLMInput<MockClientAuthInfo>) {
@@ -230,6 +231,7 @@ describe("Mock Google LLM", () => {
     const response = await model.stream("Hello world");
     const responseArray: string[] = [];
     for await (const value of response) {
+      expect(typeof value).toEqual("string");
       responseArray.push(value);
     }
 
@@ -237,7 +239,7 @@ describe("Mock Google LLM", () => {
     console.log("record", JSON.stringify(record, null, 2));
   });
 
-  test("4: streamGenerateContent - non-streaming - safety", async () => {
+  test("4: streamGenerateContent - non-streaming - safety exception", async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
@@ -264,7 +266,27 @@ describe("Mock Google LLM", () => {
     expect(caught).toEqual(true);
   });
 
-  test("5: streamGenerateContent - streaming - safety", async () => {
+  test("4: streamGenerateContent - non-streaming - safety message", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "llm-4-mock.json",
+    };
+    const safetyHandler = new MessageGeminiSafetyHandler({
+      msg: "I'm sorry Dave, but I can't do that.",
+    });
+    const model = new GoogleLLM({
+      authOptions,
+      safetyHandler,
+    });
+    const reply = await model.call("Hello world");
+    expect(reply).toContain("I'm sorry Dave, but I can't do that.");
+  });
+
+  test("5: streamGenerateContent - streaming - safety exception", async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
@@ -281,6 +303,7 @@ describe("Mock Google LLM", () => {
     let caught = false;
     try {
       for await (const value of response) {
+        expect(typeof value).toEqual("string");
         responseArray.push(value);
       }
     } catch (xx) {
@@ -292,6 +315,34 @@ describe("Mock Google LLM", () => {
     console.log("record", JSON.stringify(record, null, 2));
 
     expect(caught).toEqual(true);
+  });
+
+  test("5: streamGenerateContent - streaming - safety message", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "llm-5-mock.json",
+    };
+    const safetyHandler = new MessageGeminiSafetyHandler({
+      msg: "I'm sorry Dave, but I can't do that.",
+    });
+    const model = new GoogleLLM({
+      authOptions,
+      safetyHandler,
+    });
+    const response = await model.stream("Hello world");
+    const responseArray: string[] = [];
+    for await (const value of response) {
+      expect(typeof value).toEqual("string");
+      responseArray.push(value);
+    }
+
+    expect(responseArray).toHaveLength(6);
+    expect(responseArray[4]).toEqual("I'm sorry Dave, but I can't do that.");
+    console.log("record", JSON.stringify(record, null, 2));
   });
 
   test("6: predictMessages image blue-square", async () => {

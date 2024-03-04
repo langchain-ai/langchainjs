@@ -373,30 +373,52 @@ export function isModelGemini(modelName: string): boolean {
   return modelName.toLowerCase().startsWith("gemini");
 }
 
-function defaultGeminiDataSafetyHandler(
-  response: GoogleLLMResponse,
-  data: GenerateContentResponseData
-): GenerateContentResponseData {
-  // Check to see if our prompt was blocked in the first place
-  const promptFeedback = data?.promptFeedback;
-  const blockReason = promptFeedback?.blockReason;
-  if (blockReason) {
-    throw new GoogleAISafetyError(response, `Prompt blocked: ${blockReason}`);
-  }
-
-  // Check to see if we finished for an exceptional reason
-  const ERROR_FINISH = ["SAFETY", "RECITATION", "OTHER"];
-
-  const firstCandidate = data?.candidates?.[0];
-  const finishReason = firstCandidate?.finishReason;
-  if (ERROR_FINISH.includes(finishReason)) {
-    throw new GoogleAISafetyError(response, `Finish reason: ${finishReason}`);
-  }
-
-  return data;
+export interface DefaultGeminiSafetySettings {
+  errorFinish?: string[];
 }
 
 export class DefaultGeminiSafetyHandler implements GoogleAISafetyHandler {
+  errorFinish = ["SAFETY", "RECITATION", "OTHER"];
+
+  constructor(settings?: DefaultGeminiSafetySettings) {
+    this.errorFinish = settings?.errorFinish ?? this.errorFinish;
+  }
+
+  handleDataPromptFeedback(
+    response: GoogleLLMResponse,
+    data: GenerateContentResponseData
+  ): GenerateContentResponseData {
+    // Check to see if our prompt was blocked in the first place
+    const promptFeedback = data?.promptFeedback;
+    const blockReason = promptFeedback?.blockReason;
+    if (blockReason) {
+      throw new GoogleAISafetyError(response, `Prompt blocked: ${blockReason}`);
+    }
+    return data;
+  }
+
+  handleDataFinishReason(
+    response: GoogleLLMResponse,
+    data: GenerateContentResponseData
+  ): GenerateContentResponseData {
+    const firstCandidate = data?.candidates?.[0];
+    const finishReason = firstCandidate?.finishReason;
+    if (this.errorFinish.includes(finishReason)) {
+      throw new GoogleAISafetyError(response, `Finish reason: ${finishReason}`);
+    }
+    return data;
+  }
+
+  handleData(
+    response: GoogleLLMResponse,
+    data: GenerateContentResponseData
+  ): GenerateContentResponseData {
+    let ret = data;
+    ret = this.handleDataPromptFeedback(response, ret);
+    ret = this.handleDataFinishReason(response, ret);
+    return ret;
+  }
+
   handle(response: GoogleLLMResponse): GoogleLLMResponse {
     let newdata;
 
@@ -406,9 +428,7 @@ export class DefaultGeminiSafetyHandler implements GoogleAISafetyHandler {
     } else if (Array.isArray(response.data)) {
       // If it is an array, try to handle every item in the array
       try {
-        newdata = response.data.map((item) =>
-          defaultGeminiDataSafetyHandler(response, item)
-        );
+        newdata = response.data.map((item) => this.handleData(response, item));
       } catch (xx) {
         // eslint-disable-next-line no-instanceof/no-instanceof
         if (xx instanceof GoogleAISafetyError) {
@@ -419,12 +439,58 @@ export class DefaultGeminiSafetyHandler implements GoogleAISafetyHandler {
       }
     } else {
       const data = response.data as GenerateContentResponseData;
-      newdata = defaultGeminiDataSafetyHandler(response, data);
+      newdata = this.handleData(response, data);
     }
 
     return {
       ...response,
       data: newdata,
     };
+  }
+}
+
+export interface MessageGeminiSafetySettings
+  extends DefaultGeminiSafetySettings {
+  msg?: string;
+  forceNewMessage?: boolean;
+}
+
+export class MessageGeminiSafetyHandler extends DefaultGeminiSafetyHandler {
+  msg: string = "";
+
+  forceNewMessage = false;
+
+  constructor(settings?: MessageGeminiSafetySettings) {
+    super(settings);
+    this.msg = settings?.msg ?? this.msg;
+    this.forceNewMessage = settings?.forceNewMessage ?? this.forceNewMessage;
+  }
+
+  setMessage(data: GenerateContentResponseData): GenerateContentResponseData {
+    const ret = data;
+    if (
+      this.forceNewMessage ||
+      !data?.candidates?.[0]?.content?.parts?.length
+    ) {
+      ret.candidates = data.candidates ?? [];
+      ret.candidates[0] = data.candidates[0] ?? {};
+      ret.candidates[0].content = data.candidates[0].content ?? {};
+      ret.candidates[0].content = {
+        role: "model",
+        parts: [{ text: this.msg }],
+      };
+    }
+    return ret;
+  }
+
+  handleData(
+    response: GoogleLLMResponse,
+    data: GenerateContentResponseData
+  ): GenerateContentResponseData {
+    try {
+      return super.handleData(response, data);
+    } catch (xx) {
+      return this.setMessage(data);
+    }
   }
 }
