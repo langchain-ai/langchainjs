@@ -248,6 +248,7 @@ export type StructuredOutputMethodParams<
   RunOutput extends z.infer<AnyObjectType> = z.infer<AnyObjectType>,
   IncludeRaw extends boolean = false
 > = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   schema: z.ZodType<RunOutput> | Record<string, any>;
   name?: string;
   method?: "functionCalling" | "jsonMode";
