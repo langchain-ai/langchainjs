@@ -34,7 +34,6 @@ import { StructuredTool, ToolParams } from "../../tools.js";
 import { BaseTracer, Run } from "../../tracers/base.js";
 import { Embeddings, EmbeddingsParams } from "../../embeddings.js";
 import {
-  StructuredOutputType,
   StructuredOutputMethodParams,
   BaseLanguageModelInput,
 } from "../../language_models/base.js";
@@ -344,19 +343,22 @@ export class FakeListChatModel extends BaseChatModel {
   }
 
   withStructuredOutput<
-    RunOutput extends StructuredOutputType
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any>
   >({}: StructuredOutputMethodParams<RunOutput, false>): Runnable<
     BaseLanguageModelInput,
     RunOutput
   >;
   withStructuredOutput<
-    RunOutput extends StructuredOutputType
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any>
   >({}: StructuredOutputMethodParams<RunOutput, true>): Runnable<
     BaseLanguageModelInput,
     { raw: BaseMessage; parsed: RunOutput }
   >;
   withStructuredOutput<
-    RunOutput extends StructuredOutputType
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any>
   >({}: StructuredOutputMethodParams<RunOutput, boolean>):
     | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<

@@ -245,7 +245,8 @@ export type BaseLanguageModelInput =
 export type StructuredOutputType = z.infer<z.ZodObject<any, any, any, any>>;
 
 export type StructuredOutputMethodParams<
-  RunOutput extends StructuredOutputType = StructuredOutputType,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput extends Record<string, any> = Record<string, any>,
   IncludeRaw extends boolean = false
 > = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -488,7 +489,8 @@ export abstract class BaseLanguageModel<
   }
 
   withStructuredOutput?<
-    RunOutput extends StructuredOutputType = StructuredOutputType
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
   >({
     schema,
     name,
@@ -500,7 +502,8 @@ export abstract class BaseLanguageModel<
   >;
 
   withStructuredOutput?<
-    RunOutput extends StructuredOutputType = StructuredOutputType
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
   >({
     schema,
     name,
@@ -524,7 +527,8 @@ export abstract class BaseLanguageModel<
    * @returns {Runnable<RunInput, RunOutput> | Runnable<RunInput, { raw: BaseMessage; parsed: RunOutput }>} A new runnable that calls the LLM with structured output.
    */
   withStructuredOutput?<
-    RunOutput extends StructuredOutputType = StructuredOutputType
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
   >({
     schema,
     name,
