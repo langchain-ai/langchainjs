@@ -56,9 +56,12 @@ async function main() {
     const command = `yarn prettier --write ${allRenames.join(" ")}`;
     execSync(command);
   } catch (error) {
-    console.error({
-      error,
-    }, "Failed to format notebooks")
+    console.error(
+      {
+        error,
+      },
+      "Failed to format notebooks"
+    );
   }
 }
 
