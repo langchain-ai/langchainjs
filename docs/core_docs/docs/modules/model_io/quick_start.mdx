@@ -99,7 +99,7 @@ First we'll need to install the LangChain Anthropic integration package:
 npm install @langchain/anthropic
 ```
 
-Accessing the API requires an API key, which you can get by creating an account [here](https://www.anthropic.com/). Once we have a key we'll want to set it as an environment variable:
+Accessing the API requires an API key, which you can get by creating an account [here](https://console.anthropic.com/). Once we have a key we'll want to set it as an environment variable:
 
 ```bash
 ANTHROPIC_API_KEY="..."
@@ -111,7 +111,7 @@ We can then initialize the model:
 import { ChatAnthropic } from "@langchain/anthropic";
 
 const chatModel = new ChatAnthropic({
-  modelName: "claude-2.1",
+  modelName: "claude-3-sonnet-20240229",
 });
 ```
 

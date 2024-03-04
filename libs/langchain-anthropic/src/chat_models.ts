@@ -80,7 +80,7 @@ export interface AnthropicInput {
 
   /** Holds any additional parameters that are valid to pass to {@link
    * https://console.anthropic.com/docs/api/reference |
-   * `anthropic.complete`} that are not explicitly specified on this class.
+   * `anthropic.messages`} that are not explicitly specified on this class.
    */
   invocationKwargs?: Kwargs;
 }

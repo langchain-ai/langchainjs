@@ -38,8 +38,8 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.14.1",
-    "@langchain/core": "~0.1.5"
+    "@anthropic-ai/sdk": "^0.15.0",
+    "@langchain/core": "~0.1"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
