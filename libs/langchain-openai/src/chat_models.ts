@@ -873,7 +873,7 @@ export class ChatOpenAI<
     name: string;
     method?: "functionCalling" | "jsonMode";
     includeRaw: true;
-  }): Runnable<RunInput, { raw: BaseMessage; parsed: RunOutput }>;
+  }): Runnable<RunInput, { raw: BaseMessage; parsed: z.infer<RunOutput> }>;
 
   withStructuredOutput<
     RunInput = BaseLanguageModelInput,
@@ -891,7 +891,7 @@ export class ChatOpenAI<
     name: string;
     method?: "functionCalling" | "jsonMode";
     includeRaw?: false;
-  }): Runnable<RunInput, RunOutput>;
+  }): Runnable<RunInput, z.infer<RunOutput>>;
 
   /**
    * Model wrapper that returns outputs formatted to match the given schema.
@@ -902,7 +902,7 @@ export class ChatOpenAI<
    * @param {string} name The name of the function to call.
    * @param {"functionCalling" | "jsonMode"} method The method to use for getting the structured output. Defaults to "functionCalling".
    * @param {boolean | undefined} includeRaw Whether to include the raw output in the result. Defaults to false.
-   * @returns {Runnable<RunInput, RunOutput> | Runnable<RunInput, { raw: BaseMessage; parsed: RunOutput }>} A new runnable that calls the LLM with structured output.
+   * @returns {Runnable<RunInput, z.infer<RunOutput>> | Runnable<RunInput, { raw: BaseMessage; parsed: z.infer<RunOutput> }>} A new runnable that calls the LLM with structured output.
    */
   withStructuredOutput<
     RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
@@ -921,12 +921,12 @@ export class ChatOpenAI<
     method?: "functionCalling" | "jsonMode";
     includeRaw?: boolean;
   }):
-    | Runnable<RunInput, RunOutput>
+    | Runnable<RunInput, z.infer<RunOutput>>
     | Runnable<
         RunInput,
         {
           raw: BaseMessage;
-          parsed: RunOutput;
+          parsed: z.infer<RunOutput>;
         }
       > {
     betaWarning("withStructuredOutput");
@@ -991,7 +991,7 @@ export class ChatOpenAI<
     }
 
     if (!includeRaw) {
-      return llm.pipe(outputParser) as Runnable<RunInput, RunOutput>;
+      return llm.pipe(outputParser);
     }
 
     const parserAssign = RunnablePassthrough.assign({

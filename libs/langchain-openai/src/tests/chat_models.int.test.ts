@@ -983,4 +983,49 @@ describe("ChatOpenAI withStructuredOutput", () => {
         )
     ).toBe(true);
   });
+
+  test.only("withStructuredOutput function calling can return an array", async () => {
+    const model = new ChatOpenAI({
+      temperature: 0,
+      modelName: "gpt-4-turbo-preview",
+    });
+
+    const calculatorSchema = z.object({
+      operation: z.enum(["add", "subtract", "multiply", "divide"]),
+      number1: z.number(),
+      number2: z.number(),
+    });
+    const calcSchemaArray = z.object({
+      calculations: z.array(calculatorSchema),
+    })
+    const modelWithStructuredOutput = model.withStructuredOutput<
+      {
+        questions: string
+      },
+      typeof calcSchemaArray
+    >({
+      schema: calcSchemaArray,
+      name: "calculator",
+    });
+
+    const prompt = ChatPromptTemplate.fromMessages([
+      "system",
+      `You are VERY bad at math and must always use a calculator.`,
+      "human",
+      "Please help me!! {questions}",
+    ]);
+    const chain = prompt.pipe(modelWithStructuredOutput);
+    const result = await chain.invoke({
+      questions: "What is 2 + 2? What is 3 * 3?"
+    });
+    console.log(result.calculations);
+    expect(result.calculations.length).toBe(2);
+    expect("operation" in result.calculations[0]).toBe(true);
+    expect("number1" in result.calculations[0]).toBe(true);
+    expect("number2" in result.calculations[0]).toBe(true);
+
+    expect("operation" in result.calculations[1]).toBe(true);
+    expect("number1" in result.calculations[1]).toBe(true);
+    expect("number2" in result.calculations[1]).toBe(true);
+  });
 });
