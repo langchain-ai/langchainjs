@@ -953,7 +953,12 @@ export class ChatOpenAI<
               },
             },
           ],
-          tool_choice: "auto",
+          tool_choice: {
+            type: "function" as const,
+            function: {
+              name,
+            }
+          },
         } as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser<RunOutput>({
           returnSingle: true,
@@ -971,7 +976,12 @@ export class ChatOpenAI<
               },
             },
           ],
-          tool_choice: "auto",
+          tool_choice: {
+            type: "function" as const,
+            function: {
+              name,
+            }
+          },
         } as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser<RunOutput>({
           returnSingle: true,
