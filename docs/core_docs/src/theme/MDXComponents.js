@@ -1,6 +1,6 @@
 import React from 'react';
-import Feedback from './Feedback'; // Adjust the import path as needed
 import OriginalMDXComponents from '@theme-original/MDXComponents';
+import Feedback from './Feedback'; // Adjust the import path as needed
 
 export default {
   ...OriginalMDXComponents,
