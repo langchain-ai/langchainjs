@@ -1,6 +1,6 @@
 import { test } from "@jest/globals";
-import { FakeChatModel, FakeListChatModel } from "../../utils/testing/index.js";
 import { z } from "zod";
+import { FakeChatModel, FakeListChatModel } from "../../utils/testing/index.js";
 
 test("Test ChatModel uses callbacks", async () => {
   const model = new FakeChatModel({});
@@ -71,7 +71,7 @@ test("Test ChatModel withStructuredOutput", async () => {
     }),
   });
   const response = await model.invoke("Hello there!");
-  // @ts-expect-error
+  // @ts-expect-error not in run output type
   console.log(response.notthere);
   console.log(response.nested.somethingelse);
   expect(response).toEqual({
@@ -93,7 +93,7 @@ test("Test ChatModel withStructuredOutput with supplied type arg", async () => {
     }),
   });
   const response = await model.invoke("Hello there!");
-  // @ts-expect-error
+  // @ts-expect-error run output type forced to something else
   console.log(response.nested.somethingelse);
   // No error here
   console.log(response.forcedArg);

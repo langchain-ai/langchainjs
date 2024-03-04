@@ -344,22 +344,24 @@ export class FakeListChatModel extends BaseChatModel {
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any>
-  >({}: StructuredOutputMethodParams<RunOutput, false>): Runnable<
-    BaseLanguageModelInput,
-    RunOutput
-  >;
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    _params: StructuredOutputMethodParams<RunOutput, false>
+  ): Runnable<BaseLanguageModelInput, RunOutput>;
+
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any>
-  >({}: StructuredOutputMethodParams<RunOutput, true>): Runnable<
-    BaseLanguageModelInput,
-    { raw: BaseMessage; parsed: RunOutput }
-  >;
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    _params: StructuredOutputMethodParams<RunOutput, true>
+  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any>
-  >({}: StructuredOutputMethodParams<RunOutput, boolean>):
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    _params: StructuredOutputMethodParams<RunOutput, boolean>
+  ):
     | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<
         BaseLanguageModelInput,
