@@ -1,5 +1,6 @@
 const fs = require("node:fs/promises");
 const { glob } = require("glob");
+const { execSync } = require("node:child_process");
 
 async function main() {
   const allIpynb = await glob("./docs/**/*.ipynb");
@@ -46,6 +47,22 @@ async function main() {
   gitignore += "# AUTO_GENERATED_DOCS\n";
   gitignore += allRenames.join("\n");
   await fs.writeFile(pathToRootGitignore, gitignore);
+
+  try {
+    /**
+     * Run Prettier on all generated .ipynb -> .mdx because we don't
+     * currently have another way to format code written in notebooks.
+     */
+    const command = `yarn prettier --write ${allRenames.join(" ")}`;
+    execSync(command);
+  } catch (error) {
+    console.error(
+      {
+        error,
+      },
+      "Failed to format notebooks"
+    );
+  }
 }
 
 main().catch((e) => {
