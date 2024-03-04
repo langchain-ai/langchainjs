@@ -34,7 +34,7 @@
     "test:exports:docker": "docker compose -f environment_tests/docker-compose.yml up --force-recreate",
     "example": "yarn workspace examples start",
     "precommit": "turbo run precommit",
-    "docs": "cd docs/core_docs && yarn workspace core_docs start",
+    "docs": "yarn workspace core_docs start",
     "docs:api_refs": "yarn workspace api_refs start",
     "release": "node release_workspace.js --workspace"
   },
