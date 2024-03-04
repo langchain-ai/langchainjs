@@ -71,7 +71,32 @@ test("Test ChatModel withStructuredOutput", async () => {
     }),
   });
   const response = await model.invoke("Hello there!");
+  // @ts-expect-error
+  console.log(response.notthere);
   console.log(response.nested.somethingelse);
+  expect(response).toEqual({
+    test: true,
+    nested: { somethingelse: "somevalue" },
+  });
+});
+
+test("Test ChatModel withStructuredOutput with supplied type arg", async () => {
+  const model = new FakeListChatModel({
+    responses: [`{ "test": true, "nested": { "somethingelse": "somevalue" } }`],
+  }).withStructuredOutput<{ forcedArg: number }>({
+    includeRaw: false,
+    schema: z.object({
+      test: z.boolean(),
+      nested: z.object({
+        somethingelse: z.string(),
+      }),
+    }),
+  });
+  const response = await model.invoke("Hello there!");
+  // @ts-expect-error
+  console.log(response.nested.somethingelse);
+  // No error here
+  console.log(response.forcedArg);
   expect(response).toEqual({
     test: true,
     nested: { somethingelse: "somevalue" },
