@@ -957,7 +957,7 @@ export class ChatOpenAI<
             type: "function" as const,
             function: {
               name,
-            }
+            },
           },
         } as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser<RunOutput>({
@@ -980,7 +980,7 @@ export class ChatOpenAI<
             type: "function" as const,
             function: {
               name,
-            }
+            },
           },
         } as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser<RunOutput>({
