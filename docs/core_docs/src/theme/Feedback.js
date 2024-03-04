@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { gtag } from '../analytics';
+import gtag from '../analytics';
 
 function SvgThumbsUp() {
   return <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="#166534" style={{ width: "24px", height: "24px" }}>
@@ -44,7 +44,11 @@ export default function Feedback() {
           <h4>Help us out by providing feedback:</h4>
           <div style={{ display: 'flex', gap: '5px' }}>
             <div
-              {...defaultFields}
+            onMouseEnter={defaultFields.onMouseEnter}
+            onMouseLeave={defaultFields.onMouseLeave}
+            onMouseDown={defaultFields.onMouseDown}
+            onMouseUp={defaultFields.onMouseUp}
+            style={defaultFields.style}
               onClick={(e) => {
                 e.preventDefault();
                 handleFeedback('yes');
@@ -53,7 +57,11 @@ export default function Feedback() {
               Good <SvgThumbsUp />
             </div>
             <div
-              {...defaultFields}
+              onMouseEnter={defaultFields.onMouseEnter}
+              onMouseLeave={defaultFields.onMouseLeave}
+              onMouseDown={defaultFields.onMouseDown}
+              onMouseUp={defaultFields.onMouseUp}
+              style={defaultFields.style}
               onClick={(e) => {
                 e.preventDefault();
                 handleFeedback('no');
