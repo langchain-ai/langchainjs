@@ -77,6 +77,8 @@ export default function Feedback() {
       (e.currentTarget.style.backgroundColor = "transparent"),
     onMouseDown: (e) => (e.currentTarget.style.backgroundColor = "#d0d0d0"),
     onMouseUp: (e) => (e.currentTarget.style.backgroundColor = "#f0f0f0"),
+    role: "button", // Make it recognized as an interactive element
+    tabIndex: 0 // Make it focusable
   };
 
   return (
@@ -90,8 +92,6 @@ export default function Feedback() {
           <div style={{ display: "flex", gap: "5px" }}>
             <div
               {...defaultFields}
-              role="button" // Make it recognized as an interactive element
-              tabIndex={0} // Make it focusable
               onKeyDown={(e) => {
                 // Handle keyboard interaction
                 if (e.key === "Enter" || e.key === " ") {
@@ -108,8 +108,6 @@ export default function Feedback() {
             </div>
             <div
               {...defaultFields}
-              role="button" // Make it recognized as an interactive element
-              tabIndex={0} // Make it focusable
               onKeyDown={(e) => {
                 // Handle keyboard interaction
                 if (e.key === "Enter" || e.key === " ") {
