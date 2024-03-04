@@ -7,7 +7,7 @@ import CodeBlock from "@theme-original/CodeBlock";
 // parsing built-in npm2yarn markdown blocks
 export default function Npm2Yarn({ children }) {
   return (
-    <Tabs>
+    <Tabs groupId="npm2yarn">
       <TabItem value="npm" label="npm">
         <CodeBlock language="bash">npm i {children}</CodeBlock>
       </TabItem>
