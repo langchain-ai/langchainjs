@@ -150,6 +150,41 @@ describe("Mock ChatGoogle", () => {
     expect(data.contents[1].parts.length).toBeGreaterThanOrEqual(1);
   });
 
+  test("1. Invoke request format", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+    });
+    const messages: BaseMessageLike[] = [
+      new HumanMessage("Flip a coin and tell me H for heads and T for tails"),
+      new AIMessage("H"),
+      new HumanMessage("Flip it again"),
+    ];
+    const result = await model.invoke(messages);
+    console.log("record", JSON.stringify(record, null, 1));
+    console.log("result", JSON.stringify(result, null, 1));
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+    expect(data.contents).toBeDefined();
+    expect(data.contents.length).toEqual(3);
+    expect(data.contents[0].role).toEqual("user");
+    expect(data.contents[0].parts).toBeDefined();
+    expect(data.contents[0].parts.length).toBeGreaterThanOrEqual(1);
+    expect(data.contents[0].parts[0].text).toBeDefined();
+    expect(data.contents[1].role).toEqual("model");
+    expect(data.contents[1].parts).toBeDefined();
+    expect(data.contents[1].parts.length).toBeGreaterThanOrEqual(1);
+  });
+
   test("1. Response format", async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
@@ -168,6 +203,37 @@ describe("Mock ChatGoogle", () => {
       new HumanMessage("Flip it again"),
     ];
     const result = await model.call(messages);
+
+    expect(result._getType()).toEqual("ai");
+    const aiMessage = result as AIMessage;
+    expect(aiMessage.content).toBeDefined();
+    expect(aiMessage.content.length).toBeGreaterThanOrEqual(1);
+    expect(aiMessage.content[0]).toHaveProperty("type");
+
+    const complexContent = aiMessage.content[0] as MessageContentComplex;
+    expect(complexContent.type).toEqual("text");
+    const content = complexContent as MessageContentText;
+    expect(content.text).toEqual("T");
+  });
+
+  test("1. Invoke response format", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+    });
+    const messages: BaseMessageLike[] = [
+      new HumanMessage("Flip a coin and tell me H for heads and T for tails"),
+      new AIMessage("H"),
+      new HumanMessage("Flip it again"),
+    ];
+    const result = await model.invoke(messages);
 
     expect(result._getType()).toEqual("ai");
     const aiMessage = result as AIMessage;
