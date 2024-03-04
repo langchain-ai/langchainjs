@@ -34,7 +34,7 @@ import { StructuredTool, ToolParams } from "../../tools.js";
 import { BaseTracer, Run } from "../../tracers/base.js";
 import { Embeddings, EmbeddingsParams } from "../../embeddings.js";
 import {
-  AnyObjectType,
+  StructuredOutputType,
   StructuredOutputMethodParams,
   BaseLanguageModelInput,
 } from "../../language_models/base.js";
@@ -344,19 +344,19 @@ export class FakeListChatModel extends BaseChatModel {
   }
 
   withStructuredOutput<
-    RunOutput extends z.infer<AnyObjectType>
+    RunOutput extends StructuredOutputType
   >({}: StructuredOutputMethodParams<RunOutput, false>): Runnable<
     BaseLanguageModelInput,
     RunOutput
   >;
   withStructuredOutput<
-    RunOutput extends z.infer<AnyObjectType>
+    RunOutput extends StructuredOutputType
   >({}: StructuredOutputMethodParams<RunOutput, true>): Runnable<
     BaseLanguageModelInput,
     { raw: BaseMessage; parsed: RunOutput }
   >;
   withStructuredOutput<
-    RunOutput extends z.infer<AnyObjectType>
+    RunOutput extends StructuredOutputType
   >({}: StructuredOutputMethodParams<RunOutput, boolean>):
     | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<
