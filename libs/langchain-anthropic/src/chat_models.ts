@@ -456,7 +456,6 @@ export class ChatAnthropicMessages<
         maxRetries: 0,
       });
     }
-    // const configuration: Record<string, any> = {};
     const makeCompletionRequest = async () =>
       this.batchClient.messages.create({
         ...request,
