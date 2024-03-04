@@ -30,6 +30,7 @@ Here are the tools available:
 
 function formatAsXMLRepresentation(tool: FunctionDefinition) {
   const builder = new XMLBuilder();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const toolParamProps = (tool.parameters as any)?.properties;
   const parameterXml = Object.keys(toolParamProps)
     .map((key) => {
@@ -71,6 +72,7 @@ export const prepareAndParseFunctionCall = async ({
   llm,
 }: {
   messages: BaseMessage[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options: Record<string, any>;
   runManager?: CallbackManagerForLLMRun | undefined;
   systemPromptTemplate: BasePromptTemplate;
@@ -104,6 +106,7 @@ export const prepareAndParseFunctionCall = async ({
       }
       forced = true;
       const matchingFunction = options.functions.find(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (tool: any) => tool.name === functionCall
       );
       if (!matchingFunction) {
