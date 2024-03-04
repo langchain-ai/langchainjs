@@ -277,8 +277,7 @@ export abstract class GoogleBaseLLM<AuthOptions>
     const transformStream = new TransformStream({
       transform(chunk: BaseMessageChunk, controller) {
         const text = chunkToString(chunk);
-        const encodedText = new TextEncoder().encode(text);
-        controller.enqueue(encodedText);
+        controller.enqueue(text);
       },
     });
 
