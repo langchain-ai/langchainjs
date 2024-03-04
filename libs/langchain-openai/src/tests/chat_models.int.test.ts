@@ -1008,7 +1008,9 @@ describe("ChatOpenAI withStructuredOutput", () => {
       name: "calculator",
     });
 
-    const prompt = ChatPromptTemplate.fromMessages([
+    const prompt = ChatPromptTemplate.fromMessages<{
+      questions: string
+    }>([
       "system",
       `You are VERY bad at math and must always use a calculator.`,
       "human",

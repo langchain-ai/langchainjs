@@ -905,7 +905,7 @@ export class ChatOpenAI<
    * @returns {Runnable<RunInput, z.infer<RunOutput>> | Runnable<RunInput, { raw: BaseMessage; parsed: z.infer<RunOutput> }>} A new runnable that calls the LLM with structured output.
    */
   withStructuredOutput<
-    RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
+    RunInput = any,
     // prettier-ignore
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
