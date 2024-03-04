@@ -35,6 +35,7 @@ export const config = {
     "tools/brave_search": "tools/brave_search",
     "tools/connery": "tools/connery",
     "tools/dadjokeapi": "tools/dadjokeapi",
+    "tools/dalle_api_wrapper": "tools/dalle_api_wrapper",
     "tools/discord": "tools/discord",
     "tools/dynamic": "tools/dynamic",
     "tools/dataforseo_api_search": "tools/dataforseo_api_search",

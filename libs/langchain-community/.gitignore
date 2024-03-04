@@ -34,6 +34,10 @@ tools/dadjokeapi.cjs
 tools/dadjokeapi.js
 tools/dadjokeapi.d.ts
 tools/dadjokeapi.d.cts
+tools/dalle_api_wrapper.cjs
+tools/dalle_api_wrapper.js
+tools/dalle_api_wrapper.d.ts
+tools/dalle_api_wrapper.d.cts
 tools/discord.cjs
 tools/discord.js
 tools/discord.d.ts

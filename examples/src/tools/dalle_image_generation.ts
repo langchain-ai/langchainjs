@@ -3,11 +3,10 @@ import { DalleApiWrapper, DalleApiWrapperParams } from '@langchain/community/too
 const params: DalleApiWrapperParams = {
     prompt: "a painting of a cat",
     n: 1,
-    response_format: "json",
 };
 
-const tool = new DalleApiWrapper();
+const tool = new DalleApiWrapper(params);
 
-const imageArray = await tool.call(params);
+const imageArray = await tool.call("a painting of a cat");
 
 console.log(imageArray);

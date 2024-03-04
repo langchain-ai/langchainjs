@@ -594,6 +594,15 @@
       "import": "./tools/dadjokeapi.js",
       "require": "./tools/dadjokeapi.cjs"
     },
+    "./tools/dalle_api_wrapper": {
+      "types": {
+        "import": "./tools/dalle_api_wrapper.d.ts",
+        "require": "./tools/dalle_api_wrapper.d.cts",
+        "default": "./tools/dalle_api_wrapper.d.ts"
+      },
+      "import": "./tools/dalle_api_wrapper.js",
+      "require": "./tools/dalle_api_wrapper.cjs"
+    },
     "./tools/discord": {
       "types": {
         "import": "./tools/discord.d.ts",
@@ -2146,6 +2155,10 @@
     "tools/dadjokeapi.js",
     "tools/dadjokeapi.d.ts",
     "tools/dadjokeapi.d.cts",
+    "tools/dalle_api_wrapper.cjs",
+    "tools/dalle_api_wrapper.js",
+    "tools/dalle_api_wrapper.d.ts",
+    "tools/dalle_api_wrapper.d.cts",
     "tools/discord.cjs",
     "tools/discord.js",
     "tools/discord.d.ts",

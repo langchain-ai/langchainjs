@@ -115,6 +115,14 @@ export class DalleApiWrapper extends Tool {
 
     static readonly toolName = 'dalle_api_wrapper';
 
+    private model: DalleApiWrapperModelEnum = DalleApiWrapperModelEnum.DALLE_3;
+    private style: styleEnum = styleEnum.VIVID;
+    private quality: qualityEnum = qualityEnum.STANDARD;
+    private n: number = 1;
+    private size: sizeEnum = sizeEnum._1024x1024;
+    private response_format: responseFormatEnum = responseFormatEnum.URL;
+    private user: string | undefined;
+
     constructor(fields?: DalleApiWrapperParams) {
         super(fields);
         this.openAIApiKey = fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
@@ -129,19 +137,26 @@ export class DalleApiWrapper extends Tool {
             dangerouslyAllowBrowser: true,
           };
         this.client = new OpenAIClient(this.clientConfig);
+        this.model = fields?.model ?? DalleApiWrapperModelEnum.DALLE_3;
+        this.style = fields?.style ?? styleEnum.VIVID;
+        this.quality = fields?.quality ?? qualityEnum.STANDARD;
+        this.n = fields?.n ?? 1;
+        this.size = fields?.size ?? sizeEnum._1024x1024;
+        this.response_format = fields?.response_format ?? responseFormatEnum.URL;
+        this.user = fields?.user;
     }
 
     /** @ignore */
-    async _call(arg: DalleApiWrapperParams): Promise<string> {
+    async _call(input: string): Promise<string> {
         const response = await this.client.images.generate({
-            model: arg.model?.valueOf() ?? DalleApiWrapperModelEnum.DALLE_3,
-            prompt: arg.prompt,
-            n: arg.n ?? 1,
-            size: arg.size ?? sizeEnum._1024x1024,
-            response_format: arg.response_format ?? responseFormatEnum.URL,
-            style: arg.style ?? styleEnum.VIVID,
-            quality: arg.quality ?? qualityEnum.STANDARD,
-            user: arg.user,
+            model: this.model?.valueOf() ?? DalleApiWrapperModelEnum.DALLE_3,
+            prompt: input,
+            n: this.n ?? 1,
+            size: this.size ?? sizeEnum._1024x1024,
+            response_format: this.response_format ?? responseFormatEnum.URL,
+            style: this.style ?? styleEnum.VIVID,
+            quality: this.quality ?? qualityEnum.STANDARD,
+            user: this.user,
         });
     
         const urls = response.data.map(item => item.url) as string[];
