@@ -1,3 +1,4 @@
+import { v4 as uuidV4 } from "uuid";
 import { test, jest, expect, describe } from "@jest/globals";
 import {
   AIMessage,
@@ -5,6 +6,7 @@ import {
   ChatMessage,
   HumanMessage,
   SystemMessage,
+  ToolMessage,
 } from "@langchain/core/messages";
 import { ChatGeneration, LLMResult } from "@langchain/core/outputs";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
@@ -13,12 +15,14 @@ import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
+  MessagesPlaceholder,
 } from "@langchain/core/prompts";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { InMemoryCache } from "@langchain/core/caches";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import { RunnableSequence, RunnablePassthrough } from "@langchain/core/runnables";
 import { ChatOpenAI } from "../chat_models.js";
 
 test("Test ChatOpenAI", async () => {
@@ -985,42 +989,101 @@ describe("ChatOpenAI withStructuredOutput", () => {
   });
 
   test.only("withStructuredOutput function calling can return an array", async () => {
-    const model = new ChatOpenAI({
-      temperature: 0,
-      modelName: "gpt-4-turbo-preview",
-    });
-
-    const calculatorSchema = z.object({
-      operation: z.enum(["add", "subtract", "multiply", "divide"]),
-      number1: z.number(),
-      number2: z.number(),
-    });
-    const calcSchemaArray = z.object({
-      calculations: z.array(calculatorSchema),
-    })
-    const modelWithStructuredOutput = model.withStructuredOutput<
+    const examples = [
       {
-        messages: BaseMessage[]
+        input: "What's chat langchain, is it a langchain template?",
+        toolCalls: [
+          { subQuery: "What is chat langchain" },
+          { subQuery: "What is a langchain template" }
+        ]
       },
-      typeof calcSchemaArray
-    >({
-      schema: calcSchemaArray,
-      name: "calculator",
+      {
+        input: "How would I use LangGraph to build an automaton",
+        toolCalls: [ { subQuery: "How to build automaton with LangGraph" } ]
+      },
+      {
+        input: "How to build multi-agent system and stream intermediate steps from it",
+        toolCalls: [
+          { subQuery: "How to build multi-agent system" },
+          { subQuery: "How to stream intermediate steps" },
+          {
+            subQuery: "How to stream intermediate steps from multi-agent system"
+          }
+        ]
+      },
+      {
+        input: "What's the difference between LangChain agents and LangGraph?",
+        toolCalls: [
+          {
+            subQuery: "What's the difference between LangChain agents and LangGraph?"
+          },
+          { subQuery: "What are LangChain agents" },
+          { subQuery: "What is LangGraph" }
+        ]
+      }
+    ];
+    const subQuerySchema = z.object({
+      subQuery: z.string().describe("A very specific query against the database")
+    }).describe("Search over a database of tutorial videos about a software library");
+    const subQueryArraySchema = z.object({
+      queries: z.array(subQuerySchema).describe("A list of sub queries")
     });
+    const llm = new ChatOpenAI({
+      modelName: "gpt-3.5-turbo-0125",
+      temperature: 0
+    });
+    const llmWithTools = llm.withStructuredOutput({
+      schema: subQueryArraySchema,
+      name: "SubQuery"
+    })
 
-    const prompt = ChatPromptTemplate.fromMessages<{
-      questions: string
-    }>([
-      "system",
-      `You are VERY bad at math and must always use a calculator.`,
-      "human",
-      "Please help me!! {questions}",
-    ]);
-    const chain = prompt.pipe(modelWithStructuredOutput);
-    const result = await chain.invoke({
-      questions: "What is 2 + 2? What is 3 * 3?"
-    });
-    console.log(result.calculations);
+    const toolExampleToMessages = (example: Record<string, any>): Array<BaseMessage> => {
+      const messages: Array<BaseMessage> = [new HumanMessage({ content: example.input })];
+      const openaiToolCalls = example.toolCalls.map((toolCall) => ({
+          id: uuidV4(),
+          type: "function" as const,
+          function: {
+            name: "SubQuery",
+            arguments: JSON.stringify(toolCall),
+          },
+        }));
+    
+      messages.push(new AIMessage({ content: "", additional_kwargs: { tool_calls: openaiToolCalls } }));
+    
+      const toolOutputs = "toolOutputs" in example ? example.toolOutputs : Array(openaiToolCalls.length).fill("This is an example of a correct usage of this tool. Make sure to continue using the tool this way.");
+      toolOutputs.forEach((output, index) => {
+        messages.push(new ToolMessage({ content: output, tool_call_id: openaiToolCalls[index].id }));
+      });
+    
+      return messages;
+    };
+    
+    const exampleMessages = examples.map((ex) => toolExampleToMessages(ex)).flat();
+
+    const system = `You are an expert at converting user questions into database queries.
+You have access to a database of tutorial videos about a software library for building LLM-powered applications.
+
+Perform query decomposition. Given a user question, break it down into the most specific sub questions you can
+think of which will help you answer the original question. Each sub question should be about a single concept/fact/idea.
+
+If there are acronyms or words you are not familiar with, do not try to rephrase them.`;
+    const prompt = ChatPromptTemplate.fromMessages(
+      [
+        ["system", system],
+        new MessagesPlaceholder({ variableName: "examples", optional: true }),
+        ["human", "{question}"],
+      ]
+    )
+    const queryAnalyzerWithExamples = RunnableSequence.from([
+      {
+        question: new RunnablePassthrough(),
+        examples: () => exampleMessages,
+      },
+      prompt,
+      llmWithTools,
+    ])
+    const result = await queryAnalyzerWithExamples.invoke("what's the difference between web voyager and reflection agents? do they use langgraph?");
+    console.log(result);
     expect(result.calculations.length).toBe(2);
     expect("operation" in result.calculations[0]).toBe(true);
     expect("number1" in result.calculations[0]).toBe(true);
