@@ -29,10 +29,15 @@ import {
   ChatGenerationChunk,
 } from "../../outputs.js";
 import { BaseRetriever } from "../../retrievers.js";
-import { Runnable } from "../../runnables/base.js";
+import { Runnable, RunnableLambda } from "../../runnables/base.js";
 import { StructuredTool, ToolParams } from "../../tools.js";
 import { BaseTracer, Run } from "../../tracers/base.js";
 import { Embeddings, EmbeddingsParams } from "../../embeddings.js";
+import {
+  AnyObjectType,
+  StructuredOutputMethodParams,
+  BaseLanguageModelInput,
+} from "../../language_models/base.js";
 
 /**
  * Parser for comma-separated values. It splits the input text by commas
@@ -336,6 +341,32 @@ export class FakeListChatModel extends BaseChatModel {
     } else {
       this.i = 0;
     }
+  }
+
+  withStructuredOutput<
+    RunOutput extends z.infer<AnyObjectType>
+  >({}: StructuredOutputMethodParams<RunOutput, false>): Runnable<
+    BaseLanguageModelInput,
+    RunOutput
+  >;
+  withStructuredOutput<
+    RunOutput extends z.infer<AnyObjectType>
+  >({}: StructuredOutputMethodParams<RunOutput, true>): Runnable<
+    BaseLanguageModelInput,
+    { raw: BaseMessage; parsed: RunOutput }
+  >;
+  withStructuredOutput<
+    RunOutput extends z.infer<AnyObjectType>
+  >({}: StructuredOutputMethodParams<RunOutput, boolean>):
+    | Runnable<BaseLanguageModelInput, RunOutput>
+    | Runnable<
+        BaseLanguageModelInput,
+        { raw: BaseMessage; parsed: RunOutput }
+      > {
+    return RunnableLambda.from(async (input) => {
+      const message = await this.invoke(input);
+      return JSON.parse(message.content as string);
+    }) as Runnable;
   }
 }
 

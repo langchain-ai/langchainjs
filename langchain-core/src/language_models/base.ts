@@ -245,14 +245,13 @@ export type BaseLanguageModelInput =
 export type AnyObjectType = z.ZodObject<any, any, any, any>;
 
 export type StructuredOutputMethodParams<
-  RunOutput extends AnyObjectType,
-  IncludeRaw extends boolean
+  RunOutput extends z.infer<AnyObjectType> = z.infer<AnyObjectType>,
+  IncludeRaw extends boolean = false
 > = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  schema: z.ZodEffects<RunOutput> | Record<string, any>;
-  name: string;
+  schema: z.ZodType<RunOutput> | Record<string, any>;
+  name?: string;
   method?: "functionCalling" | "jsonMode";
-  includeRaw: IncludeRaw;
+  includeRaw?: IncludeRaw;
 };
 
 export interface BaseLanguageModelInterface<
@@ -487,17 +486,9 @@ export abstract class BaseLanguageModel<
     throw new Error("Use .toJSON() instead");
   }
 
-  withStructuredOutput?<RunOutput extends AnyObjectType = AnyObjectType>({
-    schema,
-    name,
-    method,
-    includeRaw,
-  }: StructuredOutputMethodParams<RunOutput, true>): Runnable<
-    BaseLanguageModelInput,
-    { raw: BaseMessage; parsed: RunOutput }
-  >;
-
-  withStructuredOutput?<RunOutput extends AnyObjectType = AnyObjectType>({
+  withStructuredOutput?<
+    RunOutput extends z.infer<AnyObjectType> = z.infer<AnyObjectType>
+  >({
     schema,
     name,
     method,
@@ -505,6 +496,18 @@ export abstract class BaseLanguageModel<
   }: StructuredOutputMethodParams<RunOutput, false>): Runnable<
     BaseLanguageModelInput,
     RunOutput
+  >;
+
+  withStructuredOutput?<
+    RunOutput extends z.infer<AnyObjectType> = z.infer<AnyObjectType>
+  >({
+    schema,
+    name,
+    method,
+    includeRaw,
+  }: StructuredOutputMethodParams<RunOutput, true>): Runnable<
+    BaseLanguageModelInput,
+    { raw: BaseMessage; parsed: RunOutput }
   >;
 
   /**
@@ -519,7 +522,9 @@ export abstract class BaseLanguageModel<
    * @param {boolean | undefined} [includeRaw=false] Whether to include the raw output in the result. Defaults to false.
    * @returns {Runnable<RunInput, RunOutput> | Runnable<RunInput, { raw: BaseMessage; parsed: RunOutput }>} A new runnable that calls the LLM with structured output.
    */
-  withStructuredOutput?<RunOutput extends AnyObjectType = AnyObjectType>({
+  withStructuredOutput?<
+    RunOutput extends z.infer<AnyObjectType> = z.infer<AnyObjectType>
+  >({
     schema,
     name,
     /**
@@ -530,7 +535,7 @@ export abstract class BaseLanguageModel<
      * @default false
      */
     includeRaw,
-  }: StructuredOutputMethodParams<RunOutput, boolean>):
+  }: StructuredOutputMethodParams<RunOutput>):
     | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<
         BaseLanguageModelInput,
