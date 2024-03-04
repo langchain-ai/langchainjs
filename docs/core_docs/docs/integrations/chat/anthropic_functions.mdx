@@ -8,10 +8,14 @@ LangChain offers an experimental wrapper around Anthropic that gives it the same
 
 ## Setup
 
-First, you'll need to install the popular [`fast-xml-parser`](https://www.npmjs.com/package/fast-xml-parser) package as a peer dependency:
+To start, install the `@langchain/anthropic` integration package.
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm install fast-xml-parser
+npm install @langchain/anthropic
 ```
 
 ## Initialize model
@@ -19,10 +23,11 @@ npm install fast-xml-parser
 You can initialize this wrapper the same way you'd initialize a standard `ChatAnthropic` instance:
 
 ```typescript
-import { AnthropicFunctions } from "langchain/experimental/chat_models/anthropic_functions";
+import { AnthropicFunctions } from "@langchain/anthropic/experimental";
 
 const model = new AnthropicFunctions({
   temperature: 0.1,
+  modelName: "claude-3-sonnet-20240229",
   anthropicApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.ANTHROPIC_API_KEY
 });
 ```

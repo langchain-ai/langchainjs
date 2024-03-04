@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
-import { AnthropicFunctions } from "langchain/experimental/chat_models/anthropic_functions";
+import { AnthropicFunctions } from "@langchain/anthropic/experimental";
 import { JsonOutputFunctionsParser } from "langchain/output_parsers";
 import { PromptTemplate } from "@langchain/core/prompts";
 
@@ -26,15 +26,13 @@ const schema = z.object({
 
 const model = new AnthropicFunctions({
   temperature: 0.1,
+  modelName: "claude-3-sonnet-20240229",
 }).bind({
   functions: [
     {
       name: "information_extraction",
       description: "Extracts the relevant information from the passage.",
-      parameters: {
-        type: "object",
-        properties: zodToJsonSchema(schema),
-      },
+      parameters: zodToJsonSchema(schema),
     },
   ],
   function_call: {
@@ -50,7 +48,7 @@ const response = await chain.invoke({
     "Alex is 5 feet tall. Claudia is 1 foot taller than Alex and jumps higher than him. Claudia is a brunette and Alex is blonde.",
 });
 
-console.log(response);
+console.log(JSON.stringify(response, null, 2));
 
 /*
   {

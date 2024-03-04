@@ -39,7 +39,8 @@
   "license": "MIT",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.15.0",
-    "@langchain/core": "~0.1"
+    "@langchain/core": "~0.1",
+    "fast-xml-parser": "^4.3.5"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
@@ -59,7 +60,9 @@
     "prettier": "^2.8.3",
     "release-it": "^15.10.1",
     "rimraf": "^5.0.1",
-    "typescript": "~5.1.6"
+    "typescript": "~5.1.6",
+    "zod": "^3.22.4",
+    "zod-to-json-schema": "^3.22.4"
   },
   "publishConfig": {
     "access": "public"
@@ -88,6 +91,15 @@
       "import": "./index.js",
       "require": "./index.cjs"
     },
+    "./experimental": {
+      "types": {
+        "import": "./experimental.d.ts",
+        "require": "./experimental.d.cts",
+        "default": "./experimental.d.ts"
+      },
+      "import": "./experimental.js",
+      "require": "./experimental.cjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -95,6 +107,10 @@
     "index.cjs",
     "index.js",
     "index.d.ts",
-    "index.d.cts"
+    "index.d.cts",
+    "experimental.cjs",
+    "experimental.js",
+    "experimental.d.ts",
+    "experimental.d.cts"
   ]
 }

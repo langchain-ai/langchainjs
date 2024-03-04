@@ -43,17 +43,20 @@ for the weather in SF you would respond:
 <tool>search</tool><tool_input><query>weather in SF</query></tool_input>
 <observation>64 degrees</observation>`);
 
+/** @deprecated Install and import from "@langchain/anthropic/experimental/function_calling" */
 export interface ChatAnthropicFunctionsCallOptions
   extends BaseFunctionCallOptions {
   tools?: StructuredToolInterface[];
 }
 
+/** @deprecated Install and import from "@langchain/anthropic/experimental/function_calling" */
 export type AnthropicFunctionsInput = Partial<AnthropicInput> &
   BaseChatModelParams & {
     llm?: BaseChatModel;
     systemPromptTemplate?: BasePromptTemplate;
   };
 
+/** @deprecated Install and import from "@langchain/anthropic/experimental/function_calling" */
 export class AnthropicFunctions extends BaseChatModel<ChatAnthropicFunctionsCallOptions> {
   llm: BaseChatModel;
 

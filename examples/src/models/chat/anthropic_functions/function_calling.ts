@@ -1,8 +1,9 @@
-import { AnthropicFunctions } from "langchain/experimental/chat_models/anthropic_functions";
+import { AnthropicFunctions } from "@langchain/anthropic/experimental";
 import { HumanMessage } from "@langchain/core/messages";
 
 const model = new AnthropicFunctions({
   temperature: 0.1,
+  modelName: "claude-3-sonnet-20240229",
 }).bind({
   functions: [
     {
