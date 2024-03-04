@@ -15,7 +15,7 @@ import { ChatAnthropic } from "../chat_models.js";
 
 test.skip("Test ChatAnthropic", async () => {
   const chat = new ChatAnthropic({
-    modelName: "claude-instant-1.2",
+    modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
   });
   const message = new HumanMessage("Hello!");
@@ -25,7 +25,7 @@ test.skip("Test ChatAnthropic", async () => {
 
 test("Test ChatAnthropic Generate", async () => {
   const chat = new ChatAnthropic({
-    modelName: "claude-instant-1.2",
+    modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
   });
   const message = new HumanMessage("Hello!");
@@ -42,7 +42,7 @@ test("Test ChatAnthropic Generate", async () => {
 
 test("Test ChatAnthropic Generate w/ ClientOptions", async () => {
   const chat = new ChatAnthropic({
-    modelName: "claude-instant-1.2",
+    modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
     clientOptions: {
       defaultHeaders: {
@@ -64,7 +64,7 @@ test("Test ChatAnthropic Generate w/ ClientOptions", async () => {
 
 test("Test ChatAnthropic Generate with a signal in call options", async () => {
   const chat = new ChatAnthropic({
-    modelName: "claude-instant-1.2",
+    modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
   });
   const controller = new AbortController();
@@ -86,7 +86,7 @@ test("Test ChatAnthropic tokenUsage with a batch", async () => {
   const model = new ChatAnthropic({
     temperature: 0,
     maxRetries: 0,
-    modelName: "claude-instant-1.2",
+    modelName: "claude-3-sonnet-20240229",
   });
   const res = await model.generate([
     [new HumanMessage(`Hello!`)],
@@ -100,7 +100,7 @@ test("Test ChatAnthropic in streaming mode", async () => {
   let streamedCompletion = "";
 
   const model = new ChatAnthropic({
-    modelName: "claude-instant-1.2",
+    modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
     streaming: true,
     callbacks: CallbackManager.fromHandlers({
@@ -123,7 +123,7 @@ test("Test ChatAnthropic in streaming mode with a signal", async () => {
   let streamedCompletion = "";
 
   const model = new ChatAnthropic({
-    modelName: "claude-instant-1.2",
+    modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
     streaming: true,
     callbacks: CallbackManager.fromHandlers({
@@ -152,7 +152,7 @@ test("Test ChatAnthropic in streaming mode with a signal", async () => {
 
 test("Test ChatAnthropic prompt value", async () => {
   const chat = new ChatAnthropic({
-    modelName: "claude-instant-1.2",
+    modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
   });
   const message = new HumanMessage("Hello!");
@@ -168,7 +168,7 @@ test("Test ChatAnthropic prompt value", async () => {
 
 test("ChatAnthropic, docs, prompt templates", async () => {
   const chat = new ChatAnthropic({
-    modelName: "claude-instant-1.2",
+    modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
     temperature: 0,
   });
@@ -195,7 +195,7 @@ test("ChatAnthropic, docs, prompt templates", async () => {
 
 test("ChatAnthropic, longer chain of messages", async () => {
   const chat = new ChatAnthropic({
-    modelName: "claude-1.3",
+    modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
     temperature: 0,
   });
@@ -219,7 +219,7 @@ test("ChatAnthropic, Anthropic apiUrl set manually via constructor", async () =>
   // Pass the default URL through (should use this, and work as normal)
   const anthropicApiUrl = "https://api.anthropic.com";
   const chat = new ChatAnthropic({
-    modelName: "claude-instant-1.2",
+    modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
     anthropicApiUrl,
   });
@@ -228,33 +228,11 @@ test("ChatAnthropic, Anthropic apiUrl set manually via constructor", async () =>
   console.log({ res });
 });
 
-test("ChatAnthropic, Claude V2", async () => {
-  const chat = new ChatAnthropic({
-    modelName: "claude-2.1",
-    maxRetries: 0,
-    temperature: 0,
-  });
-
-  const chatPrompt = ChatPromptTemplate.fromMessages([
-    HumanMessagePromptTemplate.fromTemplate(`Hi, my name is Joe!`),
-    AIMessagePromptTemplate.fromTemplate(`Nice to meet you, Joe!`),
-    HumanMessagePromptTemplate.fromTemplate("{text}"),
-  ]);
-
-  const responseA = await chat.generatePrompt([
-    await chatPrompt.formatPromptValue({
-      text: "What did I just say my name was?",
-    }),
-  ]);
-
-  console.log(responseA.generations);
-});
-
 test("Test ChatAnthropic stream method", async () => {
   const model = new ChatAnthropic({
     maxTokens: 50,
     maxRetries: 0,
-    modelName: "claude-instant-1.2",
+    modelName: "claude-3-sonnet-20240229",
   });
   const stream = await model.stream("Print hello world.");
   const chunks = [];
@@ -270,7 +248,7 @@ test("Test ChatAnthropic stream method with abort", async () => {
     const model = new ChatAnthropic({
       maxTokens: 500,
       maxRetries: 0,
-      modelName: "claude-instant-1.2",
+      modelName: "claude-3-sonnet-20240229",
     });
     const stream = await model.stream(
       "How is your day going? Be extremely verbose.",
@@ -288,7 +266,7 @@ test("Test ChatAnthropic stream method with early break", async () => {
   const model = new ChatAnthropic({
     maxTokens: 50,
     maxRetries: 0,
-    modelName: "claude-instant-1.2",
+    modelName: "claude-3-sonnet-20240229",
   });
   const stream = await model.stream(
     "How is your day going? Be extremely verbose."
@@ -305,7 +283,7 @@ test("Test ChatAnthropic stream method with early break", async () => {
 
 test("Test ChatAnthropic headers passed through", async () => {
   const chat = new ChatAnthropic({
-    modelName: "claude-instant-1.2",
+    modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
     anthropicApiKey: "NOT_REAL",
     clientOptions: {
