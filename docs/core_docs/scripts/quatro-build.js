@@ -48,12 +48,18 @@ async function main() {
   gitignore += allRenames.join("\n");
   await fs.writeFile(pathToRootGitignore, gitignore);
 
-  /**
-   * Run Prettier on all generated .ipynb -> .mdx because we don't
-   * currently have another way to format code written in notebooks.
-   */
-  const command = `yarn prettier --write ${allRenames.join(" ")}`;
-  execSync(command);
+  try {
+    /**
+     * Run Prettier on all generated .ipynb -> .mdx because we don't
+     * currently have another way to format code written in notebooks.
+     */
+    const command = `yarn prettier --write ${allRenames.join(" ")}`;
+    execSync(command);
+  } catch (error) {
+    console.error({
+      error,
+    }, "Failed to format notebooks")
+  }
 }
 
 main().catch((e) => {
