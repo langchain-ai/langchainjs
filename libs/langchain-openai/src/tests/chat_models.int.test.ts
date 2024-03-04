@@ -1000,7 +1000,7 @@ describe("ChatOpenAI withStructuredOutput", () => {
     })
     const modelWithStructuredOutput = model.withStructuredOutput<
       {
-        questions: string
+        messages: BaseMessage[]
       },
       typeof calcSchemaArray
     >({

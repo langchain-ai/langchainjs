@@ -858,7 +858,8 @@ export class ChatOpenAI<
   }
 
   withStructuredOutput<
-    RunInput = BaseLanguageModelInput,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunInput = any,
     // prettier-ignore
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
@@ -876,7 +877,8 @@ export class ChatOpenAI<
   }): Runnable<RunInput, { raw: BaseMessage; parsed: z.infer<RunOutput> }>;
 
   withStructuredOutput<
-    RunInput = BaseLanguageModelInput,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunInput = any,
     // prettier-ignore
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
@@ -905,6 +907,7 @@ export class ChatOpenAI<
    * @returns {Runnable<RunInput, z.infer<RunOutput>> | Runnable<RunInput, { raw: BaseMessage; parsed: z.infer<RunOutput> }>} A new runnable that calls the LLM with structured output.
    */
   withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunInput = any,
     // prettier-ignore
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -930,14 +933,14 @@ export class ChatOpenAI<
         }
       > {
     betaWarning("withStructuredOutput");
-    let llm: Runnable<BaseLanguageModelInput>;
-    let outputParser: JsonOutputKeyToolsParser | JsonOutputParser<RunOutput>;
+    let llm: Runnable<BaseLanguageModelInput, z.infer<RunOutput>>;
+    let outputParser: JsonOutputKeyToolsParser | JsonOutputParser<z.infer<RunOutput>>;
 
     if (method === "jsonMode") {
       llm = this.bind({
         response_format: { type: "json_object" },
       } as Partial<CallOptions>);
-      outputParser = new JsonOutputParser<RunOutput>();
+      outputParser = new JsonOutputParser<z.infer<RunOutput>>();
     } else {
       // Is function calling
       if (isZodSchema(schema)) {
@@ -960,7 +963,7 @@ export class ChatOpenAI<
             },
           },
         } as Partial<CallOptions>);
-        outputParser = new JsonOutputKeyToolsParser<RunOutput>({
+        outputParser = new JsonOutputKeyToolsParser<z.infer<RunOutput>>({
           returnSingle: true,
           keyName: name,
         });
@@ -983,7 +986,7 @@ export class ChatOpenAI<
             },
           },
         } as Partial<CallOptions>);
-        outputParser = new JsonOutputKeyToolsParser<RunOutput>({
+        outputParser = new JsonOutputKeyToolsParser<z.infer<RunOutput>>({
           returnSingle: true,
           keyName: name,
         });
@@ -991,7 +994,7 @@ export class ChatOpenAI<
     }
 
     if (!includeRaw) {
-      return llm.pipe(outputParser);
+      return llm.pipe(outputParser) as Runnable<RunInput, z.infer<RunOutput>>;
     }
 
     const parserAssign = RunnablePassthrough.assign({
@@ -1006,10 +1009,10 @@ export class ChatOpenAI<
     });
     return RunnableSequence.from<
       RunInput,
-      { raw: BaseMessage; parsed: RunOutput }
+      { raw: BaseMessage; parsed: z.infer<RunOutput> }
     >([
       {
-        raw: llm,
+        raw: llm as Runnable<RunInput, z.infer<RunOutput>>,
       },
       parsedWithFallback,
     ]);
