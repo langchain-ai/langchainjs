@@ -135,7 +135,7 @@ export const prepareAndParseToolCall = async ({
     delete options.tools;
   } else if (options.tool_choice !== undefined) {
     throw new Error(
-      `If "function_call" is provided, "functions" must also be.`
+      `If "tool_choice" is provided, "tools" must also be.`
     );
   }
   const chatResult = await llm._generate(promptMessages, options, runManager);
