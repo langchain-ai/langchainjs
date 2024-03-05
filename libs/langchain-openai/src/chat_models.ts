@@ -860,38 +860,38 @@ export class ChatOpenAI<
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>
-  >(
-    {
+  >({
     schema,
     name,
     method,
     includeRaw,
-  }: StructuredOutputMethodParams<RunOutput, false>
-  ): Runnable<BaseLanguageModelInput, RunOutput>;
+  }: StructuredOutputMethodParams<RunOutput, false>): Runnable<
+    BaseLanguageModelInput,
+    RunOutput
+  >;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>
-  >(
-    {
+  >({
     schema,
     name,
     method,
     includeRaw,
-  }: StructuredOutputMethodParams<RunOutput, true>
-  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+  }: StructuredOutputMethodParams<RunOutput, true>): Runnable<
+    BaseLanguageModelInput,
+    { raw: BaseMessage; parsed: RunOutput }
+  >;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>
-  >(
-    {
+  >({
     schema,
     name,
     method,
     includeRaw,
-  }: StructuredOutputMethodParams<RunOutput, boolean>
-  ):
+  }: StructuredOutputMethodParams<RunOutput, boolean>):
     | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<
         BaseLanguageModelInput,
@@ -959,7 +959,10 @@ export class ChatOpenAI<
     }
 
     if (!includeRaw) {
-      return llm.pipe(outputParser) as Runnable<BaseLanguageModelInput, RunOutput>;
+      return llm.pipe(outputParser) as Runnable<
+        BaseLanguageModelInput,
+        RunOutput
+      >;
     }
 
     const parserAssign = RunnablePassthrough.assign({
