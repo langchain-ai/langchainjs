@@ -470,11 +470,6 @@ export class ChatAnthropicMessages<
   _llmType() {
     return "anthropic";
   }
-
-  /** @ignore */
-  _combineLLMOutput() {
-    return [];
-  }
 }
 
 export class ChatAnthropic extends ChatAnthropicMessages {}

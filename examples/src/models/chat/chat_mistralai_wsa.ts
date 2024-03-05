@@ -39,8 +39,8 @@ const response = await chain.invoke({
 });
 console.log(response);
 /*
-{ operation: 'add', number1: 2, number2: 2 }
- */
+  { operation: 'add', number1: 2, number2: 2 }
+*/
 
 /**
  * Additionally, you can pass 'includeRaw' to get the raw
@@ -59,28 +59,28 @@ const includeRawResponse = await includeRawChain.invoke({
 });
 console.log(JSON.stringify(includeRawResponse, null, 2));
 /*
-{
-  "raw": {
-    "kwargs": {
-      "content": "",
-      "additional_kwargs": {
-        "tool_calls": [
-          {
-            "id": "null",
-            "type": "function",
-            "function": {
-              "name": "calculator",
-              "arguments": "{\"operation\": \"add\", \"number1\": 2, \"number2\": 2}"
+  {
+    "raw": {
+      "kwargs": {
+        "content": "",
+        "additional_kwargs": {
+          "tool_calls": [
+            {
+              "id": "null",
+              "type": "function",
+              "function": {
+                "name": "calculator",
+                "arguments": "{\"operation\": \"add\", \"number1\": 2, \"number2\": 2}"
+              }
             }
-          }
-        ]
+          ]
+        }
       }
+    },
+    "parsed": {
+      "operation": "add",
+      "number1": 2,
+      "number2": 2
     }
-  },
-  "parsed": {
-    "operation": "add",
-    "number1": 2,
-    "number2": 2
   }
-}
- */
+*/

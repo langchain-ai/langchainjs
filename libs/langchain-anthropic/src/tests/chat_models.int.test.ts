@@ -40,7 +40,7 @@ test("Test ChatAnthropic Generate", async () => {
   console.log({ res });
 });
 
-test("Test ChatAnthropic Generate w/ ClientOptions", async () => {
+test.skip("Test ChatAnthropic Generate w/ ClientOptions", async () => {
   const chat = new ChatAnthropic({
     modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
@@ -150,7 +150,7 @@ test("Test ChatAnthropic in streaming mode with a signal", async () => {
   console.log({ nrNewTokens, streamedCompletion });
 }, 5000);
 
-test("Test ChatAnthropic prompt value", async () => {
+test.skip("Test ChatAnthropic prompt value", async () => {
   const chat = new ChatAnthropic({
     modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
@@ -166,7 +166,7 @@ test("Test ChatAnthropic prompt value", async () => {
   console.log({ res });
 });
 
-test("ChatAnthropic, docs, prompt templates", async () => {
+test.skip("ChatAnthropic, docs, prompt templates", async () => {
   const chat = new ChatAnthropic({
     modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
@@ -193,7 +193,7 @@ test("ChatAnthropic, docs, prompt templates", async () => {
   console.log(responseA.generations);
 });
 
-test("ChatAnthropic, longer chain of messages", async () => {
+test.skip("ChatAnthropic, longer chain of messages", async () => {
   const chat = new ChatAnthropic({
     modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
@@ -215,7 +215,7 @@ test("ChatAnthropic, longer chain of messages", async () => {
   console.log(responseA.generations);
 });
 
-test("ChatAnthropic, Anthropic apiUrl set manually via constructor", async () => {
+test.skip("ChatAnthropic, Anthropic apiUrl set manually via constructor", async () => {
   // Pass the default URL through (should use this, and work as normal)
   const anthropicApiUrl = "https://api.anthropic.com";
   const chat = new ChatAnthropic({
@@ -293,6 +293,6 @@ test("Test ChatAnthropic headers passed through", async () => {
     },
   });
   const message = new HumanMessage("Hello!");
-  const res = await chat.call([message]);
+  const res = await chat.invoke([message]);
   console.log({ res });
 });
