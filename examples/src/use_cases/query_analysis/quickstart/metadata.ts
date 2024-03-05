@@ -18,7 +18,6 @@ console.log(docs[0].metadata);
 }
  */
 
-
 // And here's a sample from a document's contents:
 
 console.log(docs[0].pageContent.slice(0, 500));
