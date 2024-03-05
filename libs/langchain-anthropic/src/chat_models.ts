@@ -359,7 +359,7 @@ export class ChatAnthropicMessages<
               }
               return {
                 type: "image" as const,
-                source: source,
+                source,
               };
             } else {
               return contentPart;
