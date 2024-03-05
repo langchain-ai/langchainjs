@@ -3,7 +3,7 @@ import {
     VectorStore,
     MaxMarginalRelevanceSearchOptions,
   } from "@langchain/core/vectorstores";
-import { Document, DocumentInterface } from "@langchain/core/documents";
+import { Document} from "@langchain/core/documents";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 import * as hanaClient from '@sap/hana-client';
 
@@ -20,11 +20,11 @@ const HANA_DISTANCE_FUNCTION: Record<DistanceStrategy, [string, string]> = {
 };
 
 const defaultDistanceStrategy = DistanceStrategy.COSINE;
-const defaultTableName: string = "EMBEDDINGS";
-const defaultContentColumn: string = "VEC_TEXT";
-const defaultMetadataColumn: string = "VEC_META";
-const defaultVectorColumn: string = "VEC_VECTOR";
-const defaultVectorColumnLength: number = -1;  // -1 means dynamic length
+const defaultTableName = "EMBEDDINGS";
+const defaultContentColumn = "VEC_TEXT";
+const defaultMetadataColumn = "VEC_META";
+const defaultVectorColumn = "VEC_VECTOR";
+const defaultVectorColumnLength = -1;  // -1 means dynamic length
 
 interface Filter {
     [key: string]: boolean | string | number;
@@ -48,15 +48,24 @@ export interface HanaDBArgs {
 
 export class HanaDB extends VectorStore {
     private connection: hanaClient.Connection;
+
     private distanceStrategy: DistanceStrategy;
+
     // Compile pattern only once, for better performance
-    private static compiledPattern = new RegExp("^[a-zA-Z_][a-zA-Z0-9_]*$");
+    private static compiledPattern = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+
     private tableName: string;
+
     private contentColumn: string;
+
     private metadataColumn: string;
+
     private vectorColumn: string;
+
     private vectorColumnLength: number;
+
     declare FilterType: object | string;
+
     _vectorstoreType(): string {
         return "hanadb";
     }
@@ -90,6 +99,7 @@ export class HanaDB extends VectorStore {
      * @param inputStr The string to be sanitized.
      * @returns The sanitized string.
      */
+
     private sanitizeName(inputStr: string): string {
         return inputStr.replace(/[^a-zA-Z0-9_]/g, "").toUpperCase();
     }
@@ -99,9 +109,9 @@ export class HanaDB extends VectorStore {
      * @param inputInt The input to be sanitized.
      * @returns The sanitized integer.
      */
-    private sanitizeInt(inputInt: any): number {
+    private sanitizeInt(inputInt: number): number {
         const value = parseInt(inputInt, 10);
-        if (isNaN(value) || value < -1) {
+        if (Number.isNaN(value) || value < -1) {
             throw new Error(`Value (${value}) must not be smaller than -1`);
         }
         return value;
@@ -132,14 +142,14 @@ export class HanaDB extends VectorStore {
      * @returns {Record<string, any>} The original metadata object if all keys are valid.
      * @throws {Error} Throws an error if any metadata key is invalid.
      */
-    private sanitizeMetadataKeys(metadata: Record<string, any>): Record<string, any> {
-        Object.keys(metadata).forEach(key => {
-        if (!HanaDB.compiledPattern.test(key)) {
-            throw new Error(`Invalid metadata key ${key}`);
-        }
-        });
-        return metadata;
-    }
+    // private sanitizeMetadataKeys(metadata: Record<string, any>): Record<string, any> {
+    //     Object.keys(metadata).forEach(key => {
+    //     if (!HanaDB.compiledPattern.test(key)) {
+    //         throw new Error(`Invalid metadata key ${key}`);
+    //     }
+    //     });
+    //     return metadata;
+    // }
 
     /**
      * Parses a string representation of a float array and returns an array of numbers.
@@ -164,7 +174,7 @@ export class HanaDB extends VectorStore {
      * @param columnType The expected data type(s) of the column.
      * @param columnLength The expected length of the column. Optional.
      */
-    private async checkColumn(tableName: string, columnName: string, columnType: string | string[], columnLength?: number): Promise<void> {
+    private checkColumn(tableName: string, columnName: string, columnType: string | string[], columnLength?: number): void {
         const sqlStr = `
             SELECT DATA_TYPE_NAME, LENGTH 
             FROM SYS.TABLE_COLUMNS 
@@ -234,7 +244,7 @@ export class HanaDB extends VectorStore {
             // console.log(tableExistsSQL)
             const stm = client.prepare(tableExistsSQL);
             const resultSet = stm.execQuery();
-            while(resultSet.next()) {
+            while (resultSet.next()) {
                 const result = resultSet.getValue(0)
                 if (result === 1) {
                     // Table does  exist
@@ -256,7 +266,7 @@ export class HanaDB extends VectorStore {
      * @returns A tuple containing the WHERE clause string and an array of query parameters.
      */
     private createWhereByFilter(filter?: Filter): [string, Array<string | number>] {
-        let queryTuple: Array<string | number> = [];
+        const queryTuple: Array<string | number> = [];
         let whereStr = "";
         if (filter) {
         Object.keys(filter).forEach((key, i) => {
@@ -301,8 +311,9 @@ export class HanaDB extends VectorStore {
         const client = this.connection;
         await client.execute(sqlStr, queryTuple); 
         } 
-        finally {
-
+        catch (error) {
+            console.error("An error occurred while deleting:", error);
+            throw new Error("Deletion was unsuccessful");
         }
     }
 
@@ -344,8 +355,8 @@ export class HanaDB extends VectorStore {
         // console.log(embeddings)
         const client = this.connection; 
 
-        for (let i = 0; i < texts.length; i++) {
-            const text = texts[i];
+        for (const [i, text] of texts.entries()) {
+            // const text = texts[i];
             // console.log(text)
             
             const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
@@ -416,7 +427,7 @@ export class HanaDB extends VectorStore {
      */
     async similaritySearch(
         query: string,
-        k = 4,
+        k : number,
         filter?: Filter
     ): Promise<Document[]> {
         const results = await this.similaritySearchWithScore(query, k, filter);
@@ -432,7 +443,7 @@ export class HanaDB extends VectorStore {
                     Defaults to None.
      * @returns Promise that resolves to a list of documents and their corresponding similarity scores.
      */
-    async similaritySearchWithScore(query: string, k: number = 4, filter?:Filter): Promise<[Document, number][]> {
+    async similaritySearchWithScore(query: string, k: number, filter?:Filter): Promise<[Document, number][]> {
         const queryEmbedding = await this.embeddings.embedQuery(query);
         return this.similaritySearchVectorWithScore(queryEmbedding, k, filter);
         
@@ -459,17 +470,17 @@ export class HanaDB extends VectorStore {
      * @param filter Optional filter criteria to apply to the search query.
      * @returns A promise that resolves to an array of tuples, each containing a Document, its similarity score, and its vector.
      */
-    async similaritySearchWithScoreAndVectorByVector(embedding: number[], k: number = 4, filter?: Filter): Promise<Array<[Document, number, number[]]>> {
+    async similaritySearchWithScoreAndVectorByVector(embedding: number[], k: number, filter?: Filter): Promise<Array<[Document, number, number[]]>> {
         const result: Array<[Document, number, number[]]> = [];
         // Sanitize inputs
-        k = this.sanitizeInt(k);
-        embedding = this.sanitizeListFloat(embedding);
+        const sanitizedK = this.sanitizeInt(k);
+        const sanitizedEmbedding = this.sanitizeListFloat(embedding);
         // Determine the distance function based on the configured strategy
         const distanceFuncName = HANA_DISTANCE_FUNCTION[this.distanceStrategy][0];
-        console.log("Distance method " + distanceFuncName)
+        console.log(`Distance method ${distanceFuncName}`);
         // Convert the embedding vector to a string for SQL query
-        const embeddingAsString = embedding.join(",");
-        let sqlStr = `SELECT TOP ${k}
+        const embeddingAsString = sanitizedEmbedding.join(",");
+        let sqlStr = `SELECT TOP ${sanitizedK}
                     ${this.contentColumn}, 
                     ${this.metadataColumn}, 
                     TO_NVARCHAR(${this.vectorColumn}), 
@@ -488,7 +499,7 @@ export class HanaDB extends VectorStore {
         // const rows = await client.execute(sqlStr, queryTuple);
         // console.log(rows)
         const resultSet = stm.execQuery(queryTuple);
-        while(resultSet.next()){
+        while (resultSet.next()){
             const metadata = JSON.parse(resultSet.getValue(1));
             const doc: Document = { pageContent: resultSet.getValue(0), metadata };
             const resultVector = this.parseFloatArrayFromString(resultSet.getValue(2));
@@ -527,7 +538,7 @@ export class HanaDB extends VectorStore {
         fetchK
         );
 
-        //docs is an Array of tuples: [Document, number, number[]]
+        // docs is an Array of tuples: [Document, number, number[]]
         const embeddingList = docs.map((doc) => doc[2]); // Extracts the embedding from each tuple
 
         // Re-rank the results using MMR

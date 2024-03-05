@@ -1,8 +1,13 @@
+/* eslint-disable no-process-env */
 import * as hanaClient from "@sap/hana-client";
-import { HanaDB, HanaDBArgs } from "../hanavector.js";
-import { OpenAIEmbeddings } from "@langchain/openai";
-import { jest, test, expect } from "@jest/globals";
+// import hana = require("@sap/hana-client")
+// import { Connection } from "@sap/hana-client";
+
 import { Document } from "@langchain/core/documents";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { test, expect } from "@jest/globals";
+import { HanaDB, HanaDBArgs } from "../hanavector.js";
+
 // Connection parameters
 const connectionParams = {
   host: process.env.HANA_HOST,
@@ -23,12 +28,15 @@ beforeAll(async () => {
 
 test("test fromText", async () => {
   // Create a new client instance
+  // const con = new Connection();
+  // const conState = con.state();
+  // var conn = hana.createConnection();
   const client = hanaClient.createConnection();
   const args: HanaDBArgs = {
     connection: client,
-    tableName: 'test3',
+    tableName: 'test',
     };
-  client.connect(connectionParams);
+    client.connect(connectionParams);
   const vectorStore = await HanaDB.fromTexts(
     ["Bye bye", "Hello world", "hello nice world"],
     [
