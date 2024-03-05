@@ -17,6 +17,7 @@
     "youtubei.js": "npm:/youtubei.js",
     "youtube-transcript": "npm:/youtube-transcript",
     "chromadb": "npm:/chromadb",
-    "uuid": "npm:/uuid"
+    "uuid": "npm:/uuid",
+    "@faker-js/faker": "npm:@faker-js/faker"
   }
 }
