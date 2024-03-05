@@ -9,12 +9,10 @@ import {
 } from "@langchain/core/language_models/base";
 import {
   BaseMessage,
-  BaseMessageChunk,
   MessageContent,
 } from "@langchain/core/messages";
 import { GenerationChunk } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { IterableReadableStream } from "@langchain/core/utils/stream";
 
 import { AbstractGoogleLLMConnection } from "./connection.js";
 import {
@@ -234,6 +232,14 @@ export abstract class GoogleBaseLLM<AuthOptions>
     }
   }
 
+
+  async* _streamIterator(input: BaseLanguageModelInput, options?: BaseLanguageModelCallOptions): AsyncGenerator<string> {
+    const proxyChat = this.createProxyChat();
+    for await (const chunk of proxyChat._streamIterator(input, options)) {
+      yield chunkToString(chunk);
+    }
+  }
+
   async predictMessages(
     messages: BaseMessage[],
     options?: string[] | BaseLanguageModelCallOptions,
@@ -265,23 +271,4 @@ export abstract class GoogleBaseLLM<AuthOptions>
     return chunkToString(chunk);
   }
 
-  async stream(
-    input: BaseLanguageModelInput,
-    options?: Partial<BaseLanguageModelCallOptions>
-  ): Promise<IterableReadableStream<string>> {
-    const proxyChat = this.createProxyChat();
-
-    const chatStream = await proxyChat.stream(input, options);
-
-    // Based on code from Gemini Advanced
-    const transformStream = new TransformStream({
-      transform(chunk: BaseMessageChunk, controller) {
-        const text = chunkToString(chunk);
-        controller.enqueue(text);
-      },
-    });
-
-    const readableStream = chatStream.pipeThrough(transformStream);
-    return IterableReadableStream.fromReadableStream(readableStream);
-  }
 }
