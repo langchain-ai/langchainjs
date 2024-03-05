@@ -6,10 +6,12 @@ import {
   SystemMessage,
 } from "@langchain/core/messages";
 import { BasePromptTemplate, PromptTemplate } from "@langchain/core/prompts";
-import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
-import { FunctionDefinition } from "@langchain/core/language_models/base";
+import {
+  BaseLanguageModelCallOptions,
+  ToolDefinition,
+} from "@langchain/core/language_models/base";
 
 export const DEFAULT_TOOL_SYSTEM_PROMPT =
   /* #__PURE__ */ PromptTemplate.fromTemplate(`In this environment you have access to a set of tools you can use to answer the user's question.
@@ -28,10 +30,28 @@ You may call them like this:
 Here are the tools available:
 {tools}`);
 
-function formatAsXMLRepresentation(tool: FunctionDefinition) {
+export interface AnthropicToolCallingCallOptions
+  extends BaseLanguageModelCallOptions {
+  tools?: ToolDefinition[];
+  tool_choice?:
+    | "auto"
+    | {
+        function: {
+          name: string;
+        };
+        type: "function";
+      };
+}
+
+type ToolInvocation = {
+  tool_name: string;
+  parameters: Record<string, unknown>;
+};
+
+function formatAsXMLRepresentation(tool: ToolDefinition) {
   const builder = new XMLBuilder();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const toolParamProps = (tool.parameters as any)?.properties;
+  const toolParamProps = (tool.function.parameters as any)?.properties;
   const parameterXml = Object.keys(toolParamProps)
     .map((key) => {
       const parameterData = toolParamProps[key];
@@ -55,15 +75,15 @@ function formatAsXMLRepresentation(tool: FunctionDefinition) {
     })
     .join("\n");
   return `<tool_description>
-<tool_name>${tool.name}</tool_name>
-<description>${tool.description}</description>
+<tool_name>${tool.function.name}</tool_name>
+<description>${tool.function.description}</description>
 <parameters>
 ${parameterXml}
 </parameters>
 </tool_description>`;
 }
 
-export const prepareAndParseFunctionCall = async ({
+export const prepareAndParseToolCall = async ({
   messages,
   options,
   runManager,
@@ -72,8 +92,7 @@ export const prepareAndParseFunctionCall = async ({
   llm,
 }: {
   messages: BaseMessage[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  options: Record<string, any>;
+  options: AnthropicToolCallingCallOptions;
   runManager?: CallbackManagerForLLMRun | undefined;
   systemPromptTemplate: BasePromptTemplate;
   stopSequences: string[];
@@ -81,33 +100,23 @@ export const prepareAndParseFunctionCall = async ({
 }) => {
   let promptMessages = messages;
   let forced = false;
-  let functionCall: string | undefined;
-  if (options.tools) {
-    // eslint-disable-next-line no-param-reassign
-    options.functions = (options.functions ?? []).concat(
-      options.tools.map(convertToOpenAIFunction)
-    );
-  }
-  if (options.functions !== undefined && options.functions.length > 0) {
+  let toolCall: string | undefined;
+  if (options.tools !== undefined && options.tools.length > 0) {
     const content = await systemPromptTemplate.format({
-      tools: `<tools>\n${options.functions
+      tools: `<tools>\n${options.tools
         .map(formatAsXMLRepresentation)
         .join("\n\n")}</tools>`,
     });
     const systemMessage = new SystemMessage({ content });
     promptMessages = [systemMessage].concat(promptMessages);
     // eslint-disable-next-line no-param-reassign
-    options.stop = stopSequences.concat(["</parameters>"]);
-    if (options.function_call) {
-      if (typeof options.function_call === "string") {
-        functionCall = JSON.parse(options.function_call).name;
-      } else {
-        functionCall = options.function_call.name;
-      }
+    options.stop = stopSequences.concat(["</function_calls>"]);
+    if (options.tool_choice && options.tool_choice !== "auto") {
+      toolCall = options.tool_choice.function.name;
       forced = true;
-      const matchingFunction = options.functions.find(
+      const matchingFunction = options.tools.find(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (tool: any) => tool.name === functionCall
+        (tool) => tool.function.name === toolCall
       );
       if (!matchingFunction) {
         throw new Error(
@@ -116,15 +125,15 @@ export const prepareAndParseFunctionCall = async ({
       }
       promptMessages = promptMessages.concat([
         new AIMessage({
-          content: `<function_calls>\n<invoke><tool_name>${functionCall}</tool_name>`,
+          content: `<function_calls>\n<invoke><tool_name>${toolCall}</tool_name>`,
         }),
       ]);
       // eslint-disable-next-line no-param-reassign
-      delete options.function_call;
+      delete options.tool_choice;
     }
     // eslint-disable-next-line no-param-reassign
-    delete options.functions;
-  } else if (options.function_call !== undefined) {
+    delete options.tools;
+  } else if (options.tool_choice !== undefined) {
     throw new Error(
       `If "function_call" is provided, "functions" must also be.`
     );
@@ -135,19 +144,32 @@ export const prepareAndParseFunctionCall = async ({
     throw new Error("AnthropicFunctions does not support non-string output.");
   }
 
+  console.log(chatGenerationContent);
   if (forced) {
     const parser = new XMLParser();
-    const result = parser.parse(`${chatGenerationContent}</parameters>`);
-    if (functionCall === undefined) {
+    const result = parser.parse(
+      `<function_calls>\n<invoke><tool_name>${toolCall}</tool_name>${chatGenerationContent}</function_calls>`
+    );
+    console.log(result);
+    if (toolCall === undefined) {
       throw new Error(`Could not parse called function from model output.`);
     }
+    const invocations: ToolInvocation[] = Array.isArray(
+      result.function_calls?.invoke ?? []
+    )
+      ? result.function_calls.invoke
+      : [result.function_calls.invoke];
     const responseMessageWithFunctions = new AIMessage({
       content: "",
       additional_kwargs: {
-        function_call: {
-          name: functionCall,
-          arguments: result.parameters ? JSON.stringify(result.parameters) : "",
-        },
+        tool_calls: invocations.map((toolInvocation, i) => ({
+          id: i.toString(),
+          type: "function",
+          function: {
+            name: toolInvocation.tool_name,
+            arguments: JSON.stringify(toolInvocation.parameters),
+          },
+        })),
       },
     });
     return {
@@ -155,18 +177,23 @@ export const prepareAndParseFunctionCall = async ({
     };
   } else if (chatGenerationContent.includes("<function_calls>")) {
     const parser = new XMLParser();
-    const result = parser.parse(
-      `${chatGenerationContent}</parameters>\n</invoke>\n</function_calls>`
-    );
+    const result = parser.parse(`${chatGenerationContent}</function_calls>`);
+    const invocations: ToolInvocation[] = Array.isArray(
+      result.function_calls?.invoke ?? []
+    )
+      ? result.function_calls.invoke
+      : [result.function_calls.invoke];
     const responseMessageWithFunctions = new AIMessage({
       content: chatGenerationContent.split("<function_calls>")[0],
       additional_kwargs: {
-        function_call: {
-          name: result.function_calls?.invoke?.tool_name,
-          arguments: result.function_calls?.invoke?.parameters
-            ? JSON.stringify(result.function_calls.invoke.parameters)
-            : "",
-        },
+        tool_calls: invocations.map((toolInvocation, i) => ({
+          id: i.toString(),
+          type: "function",
+          function: {
+            name: toolInvocation.tool_name,
+            arguments: JSON.stringify(toolInvocation.parameters),
+          },
+        })),
       },
     });
     return {

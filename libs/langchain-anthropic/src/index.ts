@@ -1,2 +1,2 @@
 export * from "./chat_models.js";
-export * from "./experimental/function_calling.js";
+export * from "./experimental/tool_calling.js";

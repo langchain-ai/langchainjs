@@ -1,26 +1,19 @@
-import type { StructuredToolInterface } from "@langchain/core/tools";
-
 import { BaseMessage } from "@langchain/core/messages";
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import {
   BaseChatModel,
   BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
-import { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { BasePromptTemplate } from "@langchain/core/prompts";
 import { ChatAnthropic, type AnthropicInput } from "../chat_models.js";
 import {
   DEFAULT_TOOL_SYSTEM_PROMPT,
-  prepareAndParseFunctionCall,
-} from "../utils/function_calling.js";
+  prepareAndParseToolCall,
+  type AnthropicToolCallingCallOptions,
+} from "./utils/tool_calling.js";
 
-export interface ChatAnthropicFunctionsCallOptions
-  extends BaseFunctionCallOptions {
-  tools?: StructuredToolInterface[];
-}
-
-export type AnthropicFunctionsInput = Partial<AnthropicInput> &
+export type AnthropicToolCallingInput = Partial<AnthropicInput> &
   BaseChatModelParams & {
     llm?: BaseChatModel;
     systemPromptTemplate?: BasePromptTemplate;
@@ -30,7 +23,7 @@ export type AnthropicFunctionsInput = Partial<AnthropicInput> &
  * Experimental wrapper over Anthropic chat models that adds support for
  * a function calling interface.
  */
-export class AnthropicFunctions extends BaseChatModel<ChatAnthropicFunctionsCallOptions> {
+export class AnthropicToolCalling extends BaseChatModel<AnthropicToolCallingCallOptions> {
   llm: BaseChatModel;
 
   stopSequences?: string[];
@@ -40,10 +33,10 @@ export class AnthropicFunctions extends BaseChatModel<ChatAnthropicFunctionsCall
   lc_namespace = ["langchain", "experimental", "chat_models"];
 
   static lc_name(): string {
-    return "AnthropicFunctions";
+    return "AnthropicToolCalling";
   }
 
-  constructor(fields?: AnthropicFunctionsInput) {
+  constructor(fields?: AnthropicToolCallingInput) {
     super(fields ?? {});
     this.llm = fields?.llm ?? new ChatAnthropic(fields);
     this.systemPromptTemplate =
@@ -74,7 +67,7 @@ export class AnthropicFunctions extends BaseChatModel<ChatAnthropicFunctionsCall
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun | undefined
   ): Promise<ChatResult> {
-    return prepareAndParseFunctionCall({
+    return prepareAndParseToolCall({
       messages,
       options,
       runManager,
@@ -85,7 +78,7 @@ export class AnthropicFunctions extends BaseChatModel<ChatAnthropicFunctionsCall
   }
 
   _llmType(): string {
-    return "anthropic_functions";
+    return "anthropic_tool_calling";
   }
 
   /** @ignore */
