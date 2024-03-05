@@ -7,10 +7,7 @@ import {
   type BaseLanguageModelCallOptions,
   BaseLanguageModelInput,
 } from "@langchain/core/language_models/base";
-import {
-  BaseMessage,
-  MessageContent,
-} from "@langchain/core/messages";
+import { BaseMessage, MessageContent } from "@langchain/core/messages";
 import { GenerationChunk } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
@@ -232,8 +229,10 @@ export abstract class GoogleBaseLLM<AuthOptions>
     }
   }
 
-
-  async* _streamIterator(input: BaseLanguageModelInput, options?: BaseLanguageModelCallOptions): AsyncGenerator<string> {
+  async *_streamIterator(
+    input: BaseLanguageModelInput,
+    options?: BaseLanguageModelCallOptions
+  ): AsyncGenerator<string> {
     const proxyChat = this.createProxyChat();
     for await (const chunk of proxyChat._streamIterator(input, options)) {
       yield chunkToString(chunk);
@@ -270,5 +269,4 @@ export abstract class GoogleBaseLLM<AuthOptions>
     const chunk = await proxyChat.invoke(input, options);
     return chunkToString(chunk);
   }
-
 }
