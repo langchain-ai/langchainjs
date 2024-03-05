@@ -144,13 +144,11 @@ export const prepareAndParseToolCall = async ({
     throw new Error("AnthropicFunctions does not support non-string output.");
   }
 
-  console.log(chatGenerationContent);
   if (forced) {
     const parser = new XMLParser();
     const result = parser.parse(
       `<function_calls>\n<invoke><tool_name>${toolCall}</tool_name>${chatGenerationContent}</function_calls>`
     );
-    console.log(result);
     if (toolCall === undefined) {
       throw new Error(`Could not parse called function from model output.`);
     }
