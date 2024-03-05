@@ -6,12 +6,13 @@ import {
   SystemMessage,
 } from "@langchain/core/messages";
 import { BasePromptTemplate, PromptTemplate } from "@langchain/core/prompts";
-import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import {
   BaseLanguageModelCallOptions,
   ToolDefinition,
 } from "@langchain/core/language_models/base";
+import { RunnableConfig } from "@langchain/core/runnables";
+import { ChatResult } from "@langchain/core/outputs";
 
 export const DEFAULT_TOOL_SYSTEM_PROMPT =
   /* #__PURE__ */ PromptTemplate.fromTemplate(`In this environment you have access to a set of tools you can use to answer the user's question.
@@ -86,15 +87,15 @@ ${parameterXml}
 export const prepareAndParseToolCall = async ({
   messages,
   options,
-  runManager,
-  systemPromptTemplate,
+  config,
+  systemPromptTemplate = DEFAULT_TOOL_SYSTEM_PROMPT,
   stopSequences,
   llm,
 }: {
   messages: BaseMessage[];
   options: ChatAnthropicToolsCallOptions;
-  runManager?: CallbackManagerForLLMRun | undefined;
-  systemPromptTemplate: BasePromptTemplate;
+  config?: RunnableConfig;
+  systemPromptTemplate?: BasePromptTemplate;
   stopSequences: string[];
   llm: BaseChatModel;
 }) => {
@@ -134,12 +135,13 @@ export const prepareAndParseToolCall = async ({
     // eslint-disable-next-line no-param-reassign
     delete options.tools;
   } else if (options.tool_choice !== undefined) {
-    throw new Error(
-      `If "tool_choice" is provided, "tools" must also be.`
-    );
+    throw new Error(`If "tool_choice" is provided, "tools" must also be.`);
   }
-  const chatResult = await llm._generate(promptMessages, options, runManager);
-  const chatGenerationContent = chatResult.generations[0].message.content;
+  const outputMessage = await llm.invoke(promptMessages, {
+    ...config,
+    ...options,
+  });
+  const chatGenerationContent = outputMessage.content;
   if (typeof chatGenerationContent !== "string") {
     throw new Error("AnthropicFunctions does not support non-string output.");
   }
@@ -198,5 +200,7 @@ export const prepareAndParseToolCall = async ({
       generations: [{ message: responseMessageWithFunctions, text: "" }],
     };
   }
-  return chatResult;
+  return {
+    generations: [{ message: outputMessage, text: outputMessage.content }],
+  } as ChatResult;
 };

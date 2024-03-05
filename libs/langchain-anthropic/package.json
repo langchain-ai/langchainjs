@@ -40,7 +40,9 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.15.0",
     "@langchain/core": "~0.1",
-    "fast-xml-parser": "^4.3.5"
+    "fast-xml-parser": "^4.3.5",
+    "zod": "^3.22.4",
+    "zod-to-json-schema": "^3.22.4"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
@@ -61,9 +63,7 @@
     "prettier": "^2.8.3",
     "release-it": "^15.10.1",
     "rimraf": "^5.0.1",
-    "typescript": "~5.1.6",
-    "zod": "^3.22.4",
-    "zod-to-json-schema": "^3.22.4"
+    "typescript": "~5.1.6"
   },
   "publishConfig": {
     "access": "public"

@@ -65,12 +65,11 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
   async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun | undefined
+    _runManager?: CallbackManagerForLLMRun | undefined
   ): Promise<ChatResult> {
     return prepareAndParseToolCall({
       messages,
       options,
-      runManager,
       systemPromptTemplate: this.systemPromptTemplate,
       stopSequences: this.stopSequences ?? [],
       llm: this.llm,
