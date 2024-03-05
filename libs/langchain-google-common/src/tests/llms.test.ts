@@ -222,7 +222,7 @@ describe("Mock Google LLM", () => {
     expect(parts).toHaveLength(1);
     expect(parts[0]).toHaveProperty("text");
     expect(parts[0].text).toEqual("Hello world");
-  })
+  });
 
   test("2: streamGenerateContent - non-streaming", async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

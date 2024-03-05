@@ -40,6 +40,7 @@ import { JsonStream } from "./utils/stream.js";
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
 import { ensureParams } from "./utils/failedHandler.js";
 import { ChatGoogleBase } from "./chat_models.js";
+import { GoogleAISafetyHandler } from "./utils/safety.js";
 
 class GoogleLLMConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   MessageContent,
@@ -112,7 +113,7 @@ export abstract class GoogleBaseLLM<AuthOptions>
 
   safetySettings: GoogleAISafetySetting[] = [];
 
-  safetyHandler;
+  safetyHandler: GoogleAISafetyHandler;
 
   protected connection: GoogleLLMConnection<AuthOptions>;
 
@@ -249,7 +250,6 @@ export abstract class GoogleBaseLLM<AuthOptions>
   }
 
   createProxyChat(): ChatGoogleBase<AuthOptions> {
-    console.log("this", this);
     return new ProxyChatGoogle<AuthOptions>({
       ...this.originalFields,
       connection: this.connection,
