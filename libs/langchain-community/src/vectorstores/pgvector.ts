@@ -435,7 +435,7 @@ export class PGVectorStore extends VectorStore {
     const whereClauses = [];
 
     if (collectionId) {
-      whereClauses.push('collection_id = $3');
+      whereClauses.push("collection_id = $3");
       parameters.push(collectionId);
     }
 
