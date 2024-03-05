@@ -46,5 +46,5 @@ const response = await chain.invoke({
 });
 console.log(response);
 /*
-{ operation: 'add', number1: 2, number2: 2 }
- */
+  { operation: 'add', number1: 2, number2: 2 }
+*/

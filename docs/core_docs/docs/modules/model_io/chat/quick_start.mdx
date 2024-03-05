@@ -12,13 +12,12 @@ Rather than using a "text in, text out" API, they use an interface where "chat m
 
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
 
-<Tabs>
+<Tabs groupId="preferredModel">
   <TabItem value="openai" label="OpenAI" default>
 
 First we'll need to install the LangChain OpenAI integration package:
-
-import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
 
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
@@ -26,10 +25,10 @@ import IntegrationInstallTooltip from "@mdx_components/integration_install_toolt
 npm install @langchain/openai
 ```
 
-Accessing the API requires an API key, which you can get by creating an account and heading [here](https://platform.openai.com/account/api-keys). Once we have a key we'll want to set it as an environment variable by running:
+Accessing the API requires an API key, which you can get by creating an account and heading [here](https://platform.openai.com/account/api-keys). Once we have a key we'll want to set it as an environment variable:
 
 ```bash
-export OPENAI_API_KEY="..."
+OPENAI_API_KEY="..."
 ```
 
 If you'd prefer not to set an environment variable you can pass the key in directly via the `openAIApiKey` named parameter when initiating the OpenAI Chat Model class:
@@ -51,7 +50,7 @@ const chatModel = new ChatOpenAI();
 ```
 
   </TabItem>
-  <TabItem value="local" label="Local">
+  <TabItem value="local" label="Local (using Ollama)">
 
 [Ollama](https://ollama.ai/) allows you to run open-source large language models, such as Llama 2 and Mistral, locally.
 
@@ -77,6 +76,41 @@ const chatModel = new ChatOllama({
   baseUrl: "http://localhost:11434", // Default value
   model: "mistral",
 });
+```
+
+  </TabItem>
+  <TabItem value="anthropic" label="Anthropic" default>
+
+First we'll need to install the LangChain Anthropic integration package:
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/anthropic
+```
+
+Accessing the API requires an API key, which you can get by creating an account [here](https://console.anthropic.com/). Once we have a key we'll want to set it as an environment variable:
+
+```bash
+ANTHROPIC_API_KEY="..."
+```
+
+If you'd prefer not to set an environment variable you can pass the key in directly via the `anthropicApiKey` named parameter when initiating the `ChatAnthropic` class:
+
+```typescript
+import { ChatAnthropic } from "@langchain/anthropic";
+
+const chatModel = new ChatAnthropic({
+  anthropicApiKey: "...",
+});
+```
+
+Otherwise you can initialize without any params:
+
+```typescript
+import { ChatAnthropic } from "@langchain/anthropic";
+
+const chatModel = new ChatAnthropic();
 ```
 
   </TabItem>

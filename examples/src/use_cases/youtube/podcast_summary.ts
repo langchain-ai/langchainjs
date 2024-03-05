@@ -19,7 +19,7 @@ const splitter = new TokenTextSplitter({
 const docsSummary = await splitter.splitDocuments(docs);
 
 const llmSummary = new ChatAnthropic({
-  modelName: "claude-2.1",
+  modelName: "claude-3-sonnet-20240229",
   temperature: 0.3,
 });
 
