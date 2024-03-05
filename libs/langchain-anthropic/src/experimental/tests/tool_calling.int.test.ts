@@ -4,6 +4,7 @@ import { test } from "@jest/globals";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { BaseMessageChunk, HumanMessage } from "@langchain/core/messages";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatAnthropicTools } from "../tool_calling.js";
 
 test("Test ChatAnthropicTools", async () => {
@@ -230,4 +231,72 @@ test("Test ChatAnthropic withStructuredOutput", async () => {
   const res = await runnable.invoke([message]);
   console.log(JSON.stringify(res, null, 2));
   expect(res).toEqual({ name: "Alex", height: 5, hairColor: "blonde" });
+});
+
+test("Test ChatAnthropic withStructuredOutput on a single array item", async () => {
+  const runnable = new ChatAnthropicTools({
+    modelName: "claude-3-sonnet-20240229",
+    maxRetries: 0,
+  }).withStructuredOutput({
+    schema: z.object({
+      people: z.array(
+        z.object({
+          name: z.string().describe("The name of a person"),
+          height: z.number().describe("The person's height"),
+          hairColor: z.optional(z.string()).describe("The person's hair color"),
+        })
+      ),
+    }),
+  });
+  const message = new HumanMessage("Alex is 5 feet tall. Alex is blonde.");
+  const res = await runnable.invoke([message]);
+  console.log(JSON.stringify(res, null, 2));
+  expect(res).toEqual({
+    people: [{ hairColor: "blonde", height: 5, name: "Alex" }],
+  });
+});
+
+test("Test ChatAnthropic withStructuredOutput on a single array item", async () => {
+  const runnable = new ChatAnthropicTools({
+    modelName: "claude-3-sonnet-20240229",
+    maxRetries: 0,
+  }).withStructuredOutput({
+    schema: z.object({
+      sender: z
+        .optional(z.string())
+        .describe("The sender's name, if available"),
+      sender_phone_number: z
+        .optional(z.string())
+        .describe("The sender's phone number, if available"),
+      sender_address: z
+        .optional(z.string())
+        .describe("The sender's address, if available"),
+      action_items: z
+        .array(z.string())
+        .describe("A list of action items requested by the email"),
+      topic: z
+        .string()
+        .describe("High level description of what the email is about"),
+      tone: z.enum(["positive", "negative"]).describe("The tone of the email."),
+    }),
+    name: "Email",
+  });
+  const prompt = ChatPromptTemplate.fromMessages([
+    [
+      "human",
+      "What can you tell me about the following email? Make sure to answer in the correct format: {email}",
+    ],
+  ]);
+  const extractionChain = prompt.pipe(runnable);
+  const response = await extractionChain.invoke({
+    email:
+      "From: Erick. The email is about the new project. The tone is positive. The action items are to send the report and to schedule a meeting.",
+  });
+  console.log(JSON.stringify(response, null, 2));
+  expect(response).toEqual({
+    sender: "Erick",
+    action_items: [expect.any(String), expect.any(String)],
+    topic: expect.any(String),
+    tone: "positive",
+  });
 });

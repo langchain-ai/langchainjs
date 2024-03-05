@@ -23,13 +23,14 @@ import {
   RunnableSequence,
 } from "@langchain/core/runnables";
 import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { JsonSchema7ObjectType, zodToJsonSchema } from "zod-to-json-schema";
 import { z } from "zod";
 import { ChatAnthropic, type AnthropicInput } from "../chat_models.js";
 import {
   DEFAULT_TOOL_SYSTEM_PROMPT,
   ToolInvocation,
   formatAsXMLRepresentation,
+  fixArrayXMLParameters,
 } from "./utils/tool_calling.js";
 
 export interface ChatAnthropicToolsCallOptions
@@ -110,6 +111,7 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
     let promptMessages = messages;
     let forced = false;
     let toolCall: string | undefined;
+    const tools = options.tools === undefined ? [] : [...options.tools];
     if (options.tools !== undefined && options.tools.length > 0) {
       const content = await systemPromptTemplate.format({
         tools: `<tools>\n${options.tools
@@ -178,14 +180,29 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
       const responseMessageWithFunctions = new AIMessage({
         content: "",
         additional_kwargs: {
-          tool_calls: invocations.map((toolInvocation, i) => ({
-            id: i.toString(),
-            type: "function",
-            function: {
-              name: toolInvocation.tool_name,
-              arguments: JSON.stringify(toolInvocation.parameters),
-            },
-          })),
+          tool_calls: invocations.map((toolInvocation, i) => {
+            const calledTool = tools.find(
+              (tool) => tool.function.name === toolCall
+            );
+            if (calledTool === undefined) {
+              throw new Error(
+                `Called tool "${toolCall}" did not match an existing tool.`
+              );
+            }
+            return {
+              id: i.toString(),
+              type: "function",
+              function: {
+                name: toolInvocation.tool_name,
+                arguments: JSON.stringify(
+                  fixArrayXMLParameters(
+                    calledTool.function.parameters as JsonSchema7ObjectType,
+                    toolInvocation.parameters
+                  )
+                ),
+              },
+            };
+          }),
         },
       });
       return {
@@ -202,14 +219,29 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
       const responseMessageWithFunctions = new AIMessage({
         content: chatGenerationContent.split("<function_calls>")[0],
         additional_kwargs: {
-          tool_calls: invocations.map((toolInvocation, i) => ({
-            id: i.toString(),
-            type: "function",
-            function: {
-              name: toolInvocation.tool_name,
-              arguments: JSON.stringify(toolInvocation.parameters),
-            },
-          })),
+          tool_calls: invocations.map((toolInvocation, i) => {
+            const calledTool = tools.find(
+              (tool) => tool.function.name === toolInvocation.tool_name
+            );
+            if (calledTool === undefined) {
+              throw new Error(
+                `Called tool "${toolCall}" did not match an existing tool.`
+              );
+            }
+            return {
+              id: i.toString(),
+              type: "function",
+              function: {
+                name: toolInvocation.tool_name,
+                arguments: JSON.stringify(
+                  fixArrayXMLParameters(
+                    calledTool.function.parameters as JsonSchema7ObjectType,
+                    toolInvocation.parameters
+                  )
+                ),
+              },
+            };
+          }),
         },
       });
       return {
