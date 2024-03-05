@@ -4,10 +4,10 @@ import { test } from "@jest/globals";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { BaseMessageChunk, HumanMessage } from "@langchain/core/messages";
-import { AnthropicToolCalling } from "../tool_calling.js";
+import { ChatAnthropicTools } from "../tool_calling.js";
 
-test("Test AnthropicToolCalling", async () => {
-  const chat = new AnthropicToolCalling({
+test("Test ChatAnthropicTools", async () => {
+  const chat = new ChatAnthropicTools({
     modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
   });
@@ -16,8 +16,8 @@ test("Test AnthropicToolCalling", async () => {
   console.log(JSON.stringify(res));
 });
 
-test("Test AnthropicToolCalling streaming", async () => {
-  const chat = new AnthropicToolCalling({
+test("Test ChatAnthropicTools streaming", async () => {
+  const chat = new ChatAnthropicTools({
     modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
   });
@@ -31,8 +31,8 @@ test("Test AnthropicToolCalling streaming", async () => {
   expect(chunks.length).toBeGreaterThan(1);
 });
 
-test("Test AnthropicToolCalling with tools", async () => {
-  const chat = new AnthropicToolCalling({
+test("Test ChatAnthropicTools with tools", async () => {
+  const chat = new ChatAnthropicTools({
     modelName: "claude-3-sonnet-20240229",
     temperature: 0.1,
     maxRetries: 0,
@@ -70,8 +70,8 @@ test("Test AnthropicToolCalling with tools", async () => {
   );
 });
 
-test("Test AnthropicToolCalling with a forced function call", async () => {
-  const chat = new AnthropicToolCalling({
+test("Test ChatAnthropicTools with a forced function call", async () => {
+  const chat = new ChatAnthropicTools({
     modelName: "claude-3-sonnet-20240229",
     temperature: 0.1,
     maxRetries: 0,
@@ -116,7 +116,7 @@ test("Test AnthropicToolCalling with a forced function call", async () => {
   );
 });
 
-test("AnthropicToolCalling with Zod schema", async () => {
+test("ChatAnthropicTools with Zod schema", async () => {
   const schema = z.object({
     people: z.array(
       z.object({
@@ -126,7 +126,7 @@ test("AnthropicToolCalling with Zod schema", async () => {
       })
     ),
   });
-  const chat = new AnthropicToolCalling({
+  const chat = new ChatAnthropicTools({
     modelName: "claude-3-sonnet-20240229",
     temperature: 0.1,
     maxRetries: 0,
@@ -167,13 +167,13 @@ test("AnthropicToolCalling with Zod schema", async () => {
   });
 });
 
-test("AnthropicToolCalling with parallel tool calling", async () => {
+test("ChatAnthropicTools with parallel tool calling", async () => {
   const schema = z.object({
     name: z.string().describe("The name of a person"),
     height: z.number().describe("The person's height"),
     hairColor: z.optional(z.string()).describe("The person's hair color"),
   });
-  const chat = new AnthropicToolCalling({
+  const chat = new ChatAnthropicTools({
     modelName: "claude-3-sonnet-20240229",
     temperature: 0.1,
     maxRetries: 0,

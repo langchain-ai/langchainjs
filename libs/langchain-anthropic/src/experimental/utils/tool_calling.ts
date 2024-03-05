@@ -30,7 +30,7 @@ You may call them like this:
 Here are the tools available:
 {tools}`);
 
-export interface AnthropicToolCallingCallOptions
+export interface ChatAnthropicToolsCallOptions
   extends BaseLanguageModelCallOptions {
   tools?: ToolDefinition[];
   tool_choice?:
@@ -92,7 +92,7 @@ export const prepareAndParseToolCall = async ({
   llm,
 }: {
   messages: BaseMessage[];
-  options: AnthropicToolCallingCallOptions;
+  options: ChatAnthropicToolsCallOptions;
   runManager?: CallbackManagerForLLMRun | undefined;
   systemPromptTemplate: BasePromptTemplate;
   stopSequences: string[];

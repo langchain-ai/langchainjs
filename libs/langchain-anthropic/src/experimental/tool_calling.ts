@@ -10,10 +10,10 @@ import { ChatAnthropic, type AnthropicInput } from "../chat_models.js";
 import {
   DEFAULT_TOOL_SYSTEM_PROMPT,
   prepareAndParseToolCall,
-  type AnthropicToolCallingCallOptions,
+  type ChatAnthropicToolsCallOptions,
 } from "./utils/tool_calling.js";
 
-export type AnthropicToolCallingInput = Partial<AnthropicInput> &
+export type ChatAnthropicToolsInput = Partial<AnthropicInput> &
   BaseChatModelParams & {
     llm?: BaseChatModel;
     systemPromptTemplate?: BasePromptTemplate;
@@ -23,7 +23,7 @@ export type AnthropicToolCallingInput = Partial<AnthropicInput> &
  * Experimental wrapper over Anthropic chat models that adds support for
  * a function calling interface.
  */
-export class AnthropicToolCalling extends BaseChatModel<AnthropicToolCallingCallOptions> {
+export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOptions> {
   llm: BaseChatModel;
 
   stopSequences?: string[];
@@ -33,10 +33,10 @@ export class AnthropicToolCalling extends BaseChatModel<AnthropicToolCallingCall
   lc_namespace = ["langchain", "experimental", "chat_models"];
 
   static lc_name(): string {
-    return "AnthropicToolCalling";
+    return "ChatAnthropicTools";
   }
 
-  constructor(fields?: AnthropicToolCallingInput) {
+  constructor(fields?: ChatAnthropicToolsInput) {
     super(fields ?? {});
     this.llm = fields?.llm ?? new ChatAnthropic(fields);
     this.systemPromptTemplate =
