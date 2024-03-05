@@ -28,6 +28,24 @@ import Anthropic from "@examples/models/chat/integration_anthropic.ts";
 
 <CodeBlock language="typescript">{Anthropic}</CodeBlock>
 
+## `.withStructuredOutput({ ... })`
+
+:::info
+The `.withStructuredOutput` method is in beta. It is actively being worked on, so the API may change.
+:::
+
+Using the `.withStructuredOutput` method, you can make the LLM return structured output, given only a Zod or JSON schema:
+
+import WSAExample from "@examples/models/chat/anthropic_wsa.ts";
+
+<CodeBlock language="typescript">{WSAExample}</CodeBlock>
+
+### Using JSON schema:
+
+import WSAJSONExample from "@examples/models/chat/integration_anthropic_wsa_json.ts";
+
+<CodeBlock language="typescript">{WSAJSONExample}</CodeBlock>
+
 ## Custom headers
 
 You can pass custom headers in your requests like this:

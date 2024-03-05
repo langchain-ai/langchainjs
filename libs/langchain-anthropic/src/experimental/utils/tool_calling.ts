@@ -108,8 +108,15 @@ export const prepareAndParseToolCall = async ({
         .map(formatAsXMLRepresentation)
         .join("\n\n")}</tools>`,
     });
-    const systemMessage = new SystemMessage({ content });
-    promptMessages = [systemMessage].concat(promptMessages);
+    if (promptMessages.length && promptMessages[0]._getType() !== "system") {
+      const systemMessage = new SystemMessage({ content });
+      promptMessages = [systemMessage].concat(promptMessages);
+    } else {
+      const systemMessage = new SystemMessage({
+        content: `${content}\n\n${promptMessages[0].content}`,
+      });
+      promptMessages = [systemMessage].concat(promptMessages.slice(1));
+    }
     // eslint-disable-next-line no-param-reassign
     options.stop = stopSequences.concat(["</function_calls>"]);
     if (options.tool_choice && options.tool_choice !== "auto") {
