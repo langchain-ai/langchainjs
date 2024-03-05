@@ -163,7 +163,7 @@ export const getTableAndColumnsName = async (
   }
 
   if (
-    appDataSource.options.type === "mysql" || 
+    appDataSource.options.type === "mysql" ||
     appDataSource.options.type === "aurora-mysql"
   ) {
     sql =
