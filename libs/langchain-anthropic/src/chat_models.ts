@@ -21,6 +21,24 @@ type AnthropicStreamingMessageCreateParams =
   Anthropic.MessageCreateParamsStreaming;
 type AnthropicMessageStreamEvent = Anthropic.MessageStreamEvent;
 
+function _formatImage(imageUrl: string) {
+  const regex = /^data:(image\/.+);base64,(.+)$/;
+  const match = imageUrl.match(regex);
+  if (match === null) {
+    throw new Error(
+      [
+        "Anthropic only supports base64-encoded images currently.",
+        "Example: data:image/png;base64,/9j/4AAQSk...",
+      ].join("\n\n")
+    );
+  }
+  return {
+    type: "base64",
+    media_type: match[1] ?? "",
+    data: match[2] ?? "",
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any;
+}
 /**
  * Input to AnthropicChat class.
  */
@@ -80,7 +98,7 @@ export interface AnthropicInput {
 
   /** Holds any additional parameters that are valid to pass to {@link
    * https://console.anthropic.com/docs/api/reference |
-   * `anthropic.complete`} that are not explicitly specified on this class.
+   * `anthropic.messages`} that are not explicitly specified on this class.
    */
   invocationKwargs?: Kwargs;
 }
@@ -299,12 +317,10 @@ export class ChatAnthropicMessages<
     system?: string;
     messages: AnthropicMessage[];
   } {
-    let system;
+    let system: string | undefined;
     if (messages.length > 0 && messages[0]._getType() === "system") {
       if (typeof messages[0].content !== "string") {
-        throw new Error(
-          "Currently only string content messages are supported."
-        );
+        throw new Error("System message content must be a string.");
       }
       system = messages[0].content;
     }
@@ -312,11 +328,6 @@ export class ChatAnthropicMessages<
       system !== undefined ? messages.slice(1) : messages;
     const formattedMessages = conversationMessages.map((message) => {
       let role;
-      if (typeof message.content !== "string") {
-        throw new Error(
-          "Currently only string content messages are supported."
-        );
-      }
       if (message._getType() === "human") {
         role = "user" as const;
       } else if (message._getType() === "ai") {
@@ -330,10 +341,32 @@ export class ChatAnthropicMessages<
           `Message type "${message._getType()}" is not supported.`
         );
       }
-      return {
-        role,
-        content: message.content,
-      };
+      if (typeof message.content === "string") {
+        return {
+          role,
+          content: message.content,
+        };
+      } else {
+        return {
+          role,
+          content: message.content.map((contentPart) => {
+            if (contentPart.type === "image_url") {
+              let source;
+              if (typeof contentPart.image_url === "string") {
+                source = _formatImage(contentPart.image_url);
+              } else {
+                source = _formatImage(contentPart.image_url.url);
+              }
+              return {
+                type: "image" as const,
+                source,
+              };
+            } else {
+              return contentPart;
+            }
+          }),
+        };
+      }
     });
     return {
       messages: formattedMessages,
@@ -469,11 +502,6 @@ export class ChatAnthropicMessages<
 
   _llmType() {
     return "anthropic";
-  }
-
-  /** @ignore */
-  _combineLLMOutput() {
-    return [];
   }
 }
 
