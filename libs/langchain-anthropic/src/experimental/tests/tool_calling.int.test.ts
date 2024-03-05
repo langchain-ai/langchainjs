@@ -213,3 +213,21 @@ test("ChatAnthropicTools with parallel tool calling", async () => {
     ])
   );
 });
+
+test("Test ChatAnthropic withStructuredOutput", async () => {
+  const runnable = new ChatAnthropicTools({
+    modelName: "claude-3-sonnet-20240229",
+    maxRetries: 0,
+  }).withStructuredOutput({
+    schema: z.object({
+      name: z.string().describe("The name of a person"),
+      height: z.number().describe("The person's height"),
+      hairColor: z.optional(z.string()).describe("The person's hair color"),
+    }),
+    name: "person",
+  });
+  const message = new HumanMessage("Alex is 5 feet tall. Alex is blonde.");
+  const res = await runnable.invoke([message]);
+  console.log(JSON.stringify(res, null, 2));
+  expect(res).toEqual({ name: "Alex", height: 5, hairColor: "blonde" });
+});

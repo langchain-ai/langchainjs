@@ -1,4 +1,4 @@
-import { ChatAnthropic } from "@langchain/anthropic";
+import { ChatAnthropicTools } from "@langchain/anthropic/experimental";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 
 const calculatorJsonSchema = {

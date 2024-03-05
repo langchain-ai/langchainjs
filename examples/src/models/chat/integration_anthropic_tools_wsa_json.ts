@@ -1,4 +1,4 @@
-import { ChatAnthropic } from "@langchain/anthropic";
+import { ChatAnthropicTools } from "@langchain/anthropic/experimental";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 
 const calculatorJsonSchema = {
@@ -19,7 +19,7 @@ const calculatorJsonSchema = {
   description: "A simple calculator tool",
 };
 
-const model = new ChatAnthropic({
+const model = new ChatAnthropicTools({
   modelName: "claude-3-sonnet-20240229",
   temperature: 0.1,
 });
