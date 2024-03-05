@@ -39,7 +39,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1.39",
+    "@langchain/core": "~0.1.41",
     "js-tiktoken": "^1.0.7",
     "openai": "^4.26.0",
     "zod": "^3.22.4",
