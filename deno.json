@@ -1,8 +1,8 @@
 {
   "imports": {
-    "langchain/": "npm:/langchain@0.1.25/",
+    "langchain/": "npm:/langchain/",
     "@langchain/community/": "npm:/@langchain/community/",
-    "@langchain/openai": "npm:@langchain/openai",
+    "@langchain/openai": "npm:@langchain/openai@0.0.16",
     "@langchain/core/": "npm:/@langchain/core/",
     "dotenv/": "npm:/dotenv/",
     "cheerio": "npm:/cheerio",
