@@ -19064,6 +19064,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"date-fns@npm:^3.3.1":
+  version: 3.3.1
+  resolution: "date-fns@npm:3.3.1"
+  checksum: 6245e93a47de28ac96dffd4d62877f86e6b64854860ae1e00a4f83174d80bc8e59bd1259cf265223fb2ddce5c8e586dc9cc210f0d052faba2f7660e265877283
+  languageName: node
+  linkType: hard
+
 "dayjs@npm:^1.11.7":
   version: 1.11.9
   resolution: "dayjs@npm:1.11.9"
@@ -21302,6 +21309,7 @@ __metadata:
     axios: ^0.26.0
     chromadb: ^1.5.3
     convex: ^1.3.1
+    date-fns: ^3.3.1
     dotenv: ^16.0.3
     eslint: ^8.33.0
     eslint-config-airbnb-base: ^15.0.0

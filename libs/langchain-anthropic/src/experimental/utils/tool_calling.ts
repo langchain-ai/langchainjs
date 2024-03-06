@@ -1,5 +1,5 @@
 import { XMLBuilder } from "fast-xml-parser";
-
+import { JsonSchema7ObjectType } from "zod-to-json-schema";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { ToolDefinition } from "@langchain/core/language_models/base";
 
@@ -58,4 +58,44 @@ export function formatAsXMLRepresentation(tool: ToolDefinition) {
 ${parameterXml}
 </parameters>
 </tool_description>`;
+}
+
+export function fixArrayXMLParameters(
+  schema: JsonSchema7ObjectType,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  xmlParameters: Record<string, any>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): Record<string, any> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const fixedParameters: Record<string, any> = {};
+
+  for (const key of Object.keys(xmlParameters)) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const schemaType = (schema.properties[key] as any).type;
+    // Crawl for lists indistinguishable from single items
+    if (schema.properties && schema.properties[key] && schemaType === "array") {
+      fixedParameters[key] = Array.isArray(xmlParameters[key])
+        ? xmlParameters[key]
+        : [xmlParameters[key]];
+      // Crawl for objects like {"item": "my string"} that should really just be "my string"
+      if (
+        schemaType !== "object" &&
+        typeof xmlParameters[key] === "object" &&
+        !Array.isArray(xmlParameters[key]) &&
+        Object.keys(xmlParameters[key]).length === 1
+      ) {
+        // eslint-disable-next-line prefer-destructuring
+        fixedParameters[key] = Object.values(xmlParameters[key])[0];
+      }
+    } else if (
+      typeof xmlParameters[key] === "object" &&
+      xmlParameters[key] !== null
+    ) {
+      fixedParameters[key] = fixArrayXMLParameters(schema, xmlParameters[key]);
+    } else {
+      fixedParameters[key] = xmlParameters[key];
+    }
+  }
+
+  return fixedParameters;
 }
