@@ -406,15 +406,6 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
     this.handleParsingErrors =
       input.handleParsingErrors ?? this.handleParsingErrors;
     this.returnOnlyOutputs = returnOnlyOutputs;
-    if (this.agent._agentActionType() === "multi") {
-      for (const tool of this.tools) {
-        if (tool.returnDirect) {
-          throw new Error(
-            `Tool with return direct ${tool.name} not supported for multi-action agent.`
-          );
-        }
-      }
-    }
     this.returnIntermediateSteps =
       input.returnIntermediateSteps ?? this.returnIntermediateSteps;
     this.maxIterations = input.maxIterations ?? this.maxIterations;
