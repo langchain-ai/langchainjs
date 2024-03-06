@@ -24,6 +24,7 @@ void testChatModel(
   "anthropic.claude-v2",
   "What is your name?"
 );
+
 void testChatStreamingModel(
   "Test Bedrock chat model streaming: Claude-v2",
   "us-east-1",
@@ -35,6 +36,27 @@ void testChatHandleLLMNewToken(
   "Test Bedrock chat model HandleLLMNewToken: Claude-v2",
   "us-east-1",
   "anthropic.claude-v2",
+  "What is your name and something about yourself?"
+);
+
+void testChatModel(
+  "Test Bedrock chat model: Claude-3",
+  "us-east-1",
+  "anthropic.claude-3-sonnet-20240229-v1:0",
+  "What is your name?"
+);
+
+void testChatStreamingModel(
+  "Test Bedrock chat model streaming: Claude-3",
+  "us-east-1",
+  "anthropic.claude-3-sonnet-20240229-v1:0",
+  "What is your name and something about yourself?"
+);
+
+void testChatHandleLLMNewToken(
+  "Test Bedrock chat model HandleLLMNewToken: Claude-3",
+  "us-east-1",
+  "anthropic.claude-3-sonnet-20240229-v1:0",
   "What is your name and something about yourself?"
 );
 // void testChatHandleLLMNewToken(
@@ -72,7 +94,7 @@ async function testChatModel(
       },
     });
 
-    const res = await bedrock.call([new HumanMessage(message)]);
+    const res = await bedrock.invoke([new HumanMessage(message)]);
     console.log(res);
   });
 }
@@ -150,10 +172,13 @@ async function testChatHandleLLMNewToken(
           handleLLMNewToken: (token) => {
             tokens.push(token);
           },
+          handleLLMEnd(output) {
+            console.log(output);
+          },
         },
       ],
     });
-    const stream = await bedrock.call([new HumanMessage(message)]);
+    const stream = await bedrock.invoke([new HumanMessage(message)]);
     expect(tokens.length).toBeGreaterThan(1);
     expect(stream.content).toEqual(tokens.join(""));
   });
@@ -179,7 +204,7 @@ test.skip.each([
     },
   });
 
-  const res = await bedrock.call([new HumanMessage("What is your name?")]);
+  const res = await bedrock.invoke([new HumanMessage("What is your name?")]);
   console.log(res);
 
   expect(res.content.length).toBeGreaterThan(1);
