@@ -7,7 +7,6 @@ import { TextLoader } from "./text.js";
  * takes a `filePathOrBlob` parameter representing the path to the JSON
  * file or a `Blob` object, and an optional `pointers` parameter that
  * specifies the JSON pointers to extract.
- 
  * @inheritDoc
  */
 export class JSONLoader extends TextLoader {
@@ -149,7 +148,6 @@ export class JSONLoader extends TextLoader {
  * that takes a `filePathOrBlob` parameter representing the path to the
  * JSON Lines file or a `Blob` object, and a `pointer` parameter that
  * specifies the JSON pointer to extract.
- 
  * @inheritDoc
  */
 export class JSONLinesLoader extends TextLoader {

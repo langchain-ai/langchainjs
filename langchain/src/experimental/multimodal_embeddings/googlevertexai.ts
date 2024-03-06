@@ -69,7 +69,6 @@ export type MediaEmbeddings = {
  * Class for generating embeddings for text and images using Google's
  * Vertex AI. It extends the Embeddings base class and implements the
  * GoogleVertexAIMultimodalEmbeddingsParams interface.
- 
  * @inheritDoc
  */
 export class GoogleVertexAIMultimodalEmbeddings

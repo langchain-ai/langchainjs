@@ -30,7 +30,6 @@ interface AzureBlobStorageContainerLoaderConfig {
 /**
  * Class representing a document loader that loads documents from an Azure
  * Blob Storage container. It extends the BaseDocumentLoader class.
- 
  * @inheritDoc
  */
 export class AzureBlobStorageContainerLoader extends BaseDocumentLoader {

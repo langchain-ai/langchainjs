@@ -9,7 +9,6 @@ import { BaseDocumentLoader } from "../base.js";
  * `load()` method is implemented to read the buffer contents and metadata
  * based on the type of `filePathOrBlob`, and then calls the `parse()`
  * method to parse the buffer and return the documents.
- 
  * @inheritDoc
  */
 export abstract class BufferLoader extends BaseDocumentLoader {

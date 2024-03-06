@@ -28,7 +28,6 @@ export interface AutoGPTPromptInput {
  * account the AI's name, role, tools, token counter, and send token
  * limit. The class also handles the formatting of messages and the
  * construction of the full prompt.
- 
  * @inheritDoc
  */
 export class AutoGPTPrompt

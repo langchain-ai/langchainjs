@@ -28,7 +28,6 @@ export type TranslatorOpts = {
  * Abstract class that provides a blueprint for creating specific
  * translator classes. Defines two abstract methods: formatFunction and
  * mergeFilters.
- 
  * @inheritDoc
  */
 export abstract class BaseTranslator<
@@ -65,7 +64,6 @@ export abstract class BaseTranslator<
  * VisitStructuredQueryOutput, which are used as the return types for the
  * visitOperation, visitComparison, and visitStructuredQuery methods
  * respectively.
- 
  * @inheritDoc
  */
 export class BasicTranslator<

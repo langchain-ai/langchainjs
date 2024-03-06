@@ -63,7 +63,6 @@ export interface CacheBackedEmbeddingsFields extends AsyncCallerParams {
  * console.log(`Cached creation time: ${Date.now() - time}ms`);
  *
  * ```
- 
  * @inheritDoc
  */
 export class CacheBackedEmbeddings extends Embeddings {

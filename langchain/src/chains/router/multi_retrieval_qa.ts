@@ -62,7 +62,6 @@ export type MultiRetrievalDefaults = {
  *
  * console.log(result.sourceDocuments, result.text);
  * ```
- 
  * @inheritDoc
  */
 export class MultiRetrievalQAChain extends MultiRouteChain {

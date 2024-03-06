@@ -103,7 +103,6 @@ class SingleRunExtractor extends BaseTracer {
 
 /**
  * Wraps an evaluator function + implements the RunEvaluator interface.
- 
  * @inheritDoc
  */
 class DynamicRunEvaluator implements RunEvaluator {
@@ -156,7 +155,6 @@ type AnyTraceableFunction = TraceableFunction<(...any: any[]) => any>;
  *
  * The goal of this class is to ensure seamless interop when intergrated
  * with other Runnables.
- 
  * @inheritDoc
  */
 class CallbackManagerRunTree extends RunTree {
@@ -304,7 +302,6 @@ class RunnableTraceable<RunInput, RunOutput> extends Runnable<
  * Wraps an off-the-shelf evaluator (loaded using loadEvaluator; of EvaluatorType[T])
  * and composes with a prepareData function so the user can prepare the trace and
  * dataset data for the evaluator.
- 
  * @inheritDoc
  */
 class PreparedRunEvaluator implements RunEvaluator {

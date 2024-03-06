@@ -28,7 +28,6 @@ interface ChatResponse {
  * To analyze API_KEYS and logs of you usage visit
  *      https://api.neuralinternet.ai/api-keys
  *      https://api.neuralinternet.ai/logs
- 
  * @inheritDoc
  */
 export class NIBittensorLLM extends LLM implements BittensorInput {

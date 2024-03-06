@@ -6,7 +6,6 @@ import { TextLoader } from "./text.js";
  * document loader that loads documents from a directory in the Notion
  * format. It uses the TextLoader for loading '.md' files and ignores
  * unknown file types.
- 
  * @inheritDoc
  */
 export class NotionLoader extends DirectoryLoader {

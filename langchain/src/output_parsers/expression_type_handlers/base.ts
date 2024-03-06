@@ -3,7 +3,6 @@ import { GRAMMAR } from "./grammar/parser_grammar.js";
 /**
  * Abstract class for handling nodes in an expression language. Subclasses
  * must implement the `accepts` and `handle` methods.
- 
  * @inheritDoc
  */
 export abstract class NodeHandler {
@@ -30,7 +29,6 @@ export abstract class NodeHandler {
  * Utility class for parsing Abstract Syntax Trees (ASTs). Contains
  * methods for identifying the type of a given node and a method for
  * importing and generating a parser using the Peggy library.
- 
  * @inheritDoc
  */
 export class ASTParser {

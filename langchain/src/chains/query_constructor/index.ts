@@ -47,7 +47,6 @@ const queryInputSchema = /* #__PURE__ */ z.object({
 /**
  * A class that extends AsymmetricStructuredOutputParser to parse
  * structured query output.
- 
  * @inheritDoc
  */
 export class StructuredQueryOutputParser extends AsymmetricStructuredOutputParser<

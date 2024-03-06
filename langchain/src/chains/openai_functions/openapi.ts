@@ -397,7 +397,6 @@ type SimpleRequestChainExecutionMethod = (
 
 /**
  * A chain for making simple API requests.
- 
  * @inheritDoc
  */
 class SimpleRequestChain extends BaseChain {

@@ -17,7 +17,6 @@ export interface RequestTool {
  * Class for making GET requests. Extends the Tool class and implements
  * the RequestTool interface. The input should be a URL string, and the
  * output will be the text response of the GET request.
- 
  * @inheritDoc
  */
 export class RequestsGetTool extends Tool implements RequestTool {
@@ -56,7 +55,6 @@ export class RequestsGetTool extends Tool implements RequestTool {
  * the RequestTool interface. The input should be a JSON string with two
  * keys: 'url' and 'data'. The output will be the text response of the
  * POST request.
- 
  * @inheritDoc
  */
 export class RequestsPostTool extends Tool implements RequestTool {

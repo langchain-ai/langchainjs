@@ -181,7 +181,6 @@ export interface WebBrowserArgs extends ToolParams {
  * });
  * const result = await browser.invoke("https:exampleurl.com");
  * ```
- 
  * @inheritDoc
  */
 export class WebBrowser extends Tool {

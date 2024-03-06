@@ -23,7 +23,6 @@ export type JsonOutputToolsParserParams = {
 
 /**
  * Class for parsing the output of a tool-calling LLM into a JSON object.
- 
  * @inheritDoc
  */
 export class JsonOutputToolsParser extends BaseLLMOutputParser<
@@ -102,7 +101,6 @@ export type JsonOutputKeyToolsParserParams = {
 /**
  * Class for parsing the output of a tool-calling LLM into a JSON object if you are
  * expecting only a single tool to be called.
- 
  * @inheritDoc
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -36,7 +36,6 @@ type SearchApiParameters = {
  * });
  * const docs = await loader.load();
  * ```
- 
  * @inheritDoc
  */
 export class SearchApiLoader extends BaseDocumentLoader {

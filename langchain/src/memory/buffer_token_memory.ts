@@ -51,7 +51,6 @@ export interface ConversationTokenBufferMemoryInput
  * const result = await memory.loadMemoryVariables({});
  * console.log(result);
  * ```
- 
  * @inheritDoc
  */
 

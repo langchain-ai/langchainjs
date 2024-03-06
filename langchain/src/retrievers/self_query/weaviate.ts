@@ -71,7 +71,6 @@ export type WeaviateStructuredQueryResult = {
  *   "Which movies are rated higher than 8.5?",
  * );
  * ```
- 
  * @inheritDoc
  */
 export class WeaviateTranslator<

@@ -3,7 +3,6 @@ import type { MaskingParserConfig } from "./types.js";
 
 /**
  * MaskingParser class for handling the masking and rehydrating of messages.
- 
  * @inheritDoc
  */
 export class MaskingParser {

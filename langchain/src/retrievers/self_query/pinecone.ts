@@ -22,7 +22,6 @@ import { BasicTranslator } from "./base.js";
  *   "Which movies are directed by Greta Gerwig?",
  * );
  * ```
- 
  * @inheritDoc
  */
 export class PineconeTranslator<

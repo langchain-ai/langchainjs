@@ -65,7 +65,6 @@ export interface SqlDatabaseChainInput extends ChainInputs {
  *
  * const result = await chain.run("How many tracks are there?");
  * ```
- 
  * @inheritDoc
  */
 export class SqlDatabaseChain extends BaseChain {

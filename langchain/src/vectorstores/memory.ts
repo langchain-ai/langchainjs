@@ -28,7 +28,6 @@ export interface MemoryVectorStoreArgs {
  * Class that extends `VectorStore` to store vectors in memory. Provides
  * methods for adding documents, performing similarity searches, and
  * creating instances from texts, documents, or an existing index.
- 
  * @inheritDoc
  */
 export class MemoryVectorStore extends VectorStore {

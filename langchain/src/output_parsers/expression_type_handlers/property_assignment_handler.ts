@@ -4,7 +4,6 @@ import { PropertyAssignmentType } from "./types.js";
 /**
  * Handler for `PropertyAssignment` nodes in an AST. Extends the
  * `NodeHandler` base class.
- 
  * @inheritDoc
  */
 export class PropertyAssignmentHandler extends NodeHandler {

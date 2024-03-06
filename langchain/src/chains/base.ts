@@ -28,7 +28,6 @@ export interface ChainInputs extends BaseLangChainParams {
 
 /**
  * Base interface that all chains must implement.
- 
  * @inheritDoc
  */
 export abstract class BaseChain<

@@ -41,7 +41,6 @@ export type FunctionFilter = (document: Document) => boolean;
  *   "Which movies are rated higher than 8.5?",
  * );
  * ```
- 
  * @inheritDoc
  */
 export class FunctionalTranslator extends BaseTranslator {

@@ -11,7 +11,6 @@ export type HttpResponseOutputParserInput = {
 
 /**
  * OutputParser that formats chunks emitted from an LLM for different HTTP content types.
- 
  * @inheritDoc
  */
 export class HttpResponseOutputParser extends BaseTransformOutputParser<Uint8Array> {

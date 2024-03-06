@@ -5,7 +5,6 @@ import { CallExpressionType, MemberExpressionType } from "./types.js";
  * Handles call expressions in the AST parsed by the `ASTParser`. This
  * class is part of the LangChain Expression Language (LCEL), a
  * declarative way to compose chains together in LangChain.
- 
  * @inheritDoc
  */
 export class CallExpressionHandler extends NodeHandler {

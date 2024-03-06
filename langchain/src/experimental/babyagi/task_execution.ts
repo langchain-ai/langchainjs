@@ -1,8 +1,7 @@
 import { PromptTemplate } from "@langchain/core/prompts";
 import { LLMChain, LLMChainInput } from "../../chains/llm_chain.js";
 
-/** Chain to execute tasks. 
- * @inheritDoc
+/** Chain to execute tasks. * @inheritDoc
  */
 export class TaskExecutionChain extends LLMChain {
   static lc_name() {

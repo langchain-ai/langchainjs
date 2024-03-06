@@ -21,7 +21,6 @@ import { EVAL_CHAT_PROMPT, TOOL_FREE_EVAL_CHAT_PROMPT } from "./prompt.js";
 
 /**
  * A parser for the output of the TrajectoryEvalChain.
- 
  * @inheritDoc
  */
 export class TrajectoryOutputParser extends BaseLLMOutputParser<EvalOutputType> {
@@ -77,7 +76,6 @@ export class TrajectoryOutputParser extends BaseLLMOutputParser<EvalOutputType> 
  *
  * This chain is used to evaluate ReAct style agents by reasoning about
  * the sequence of actions taken and their outcomes.
- 
  * @inheritDoc
  */
 export class TrajectoryEvalChain extends AgentTrajectoryEvaluator {

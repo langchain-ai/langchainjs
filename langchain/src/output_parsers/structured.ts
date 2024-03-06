@@ -118,7 +118,6 @@ ${JSON.stringify(zodToJsonSchema(this.schema))}
 /**
  * A specific type of `StructuredOutputParser` that parses JSON data
  * formatted as a markdown code snippet.
- 
  * @inheritDoc
  */
 export class JsonMarkdownStructuredOutputParser<
@@ -239,7 +238,6 @@ export interface AsymmetricStructuredOutputParserFields<
 /**
  * A type of `StructuredOutputParser` that handles asymmetric input and
  * output schemas.
- 
  * @inheritDoc
  */
 export abstract class AsymmetricStructuredOutputParser<

@@ -51,7 +51,6 @@ export interface OpenAIModerationChainInput
  *   console.error("Naughty words detected!");
  * }
  * ```
- 
  * @inheritDoc
  */
 export class OpenAIModerationChain

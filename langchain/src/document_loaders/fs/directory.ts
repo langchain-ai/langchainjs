@@ -44,7 +44,6 @@ export interface LoadersMapping {
  * console.log({ docs });
  *
  * ```
- 
  * @inheritDoc
  */
 export class DirectoryLoader extends BaseDocumentLoader {

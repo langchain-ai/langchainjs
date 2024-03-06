@@ -6,7 +6,6 @@ import {
 /**
  * Class to parse the output of an LLM call to a date.
  * @augments BaseOutputParser
- 
  * @inheritDoc
  */
 export class DatetimeOutputParser extends BaseOutputParser<Date> {

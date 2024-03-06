@@ -50,7 +50,6 @@ type ValueType = {
  *   "Which movies are directed by Greta Gerwig?",
  * );
  * ```
- 
  * @inheritDoc
  */
 export class SupabaseTranslator<

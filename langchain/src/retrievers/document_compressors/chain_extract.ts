@@ -59,7 +59,6 @@ export interface LLMChainExtractorArgs {
 /**
  * A class that uses an LLM chain to extract relevant parts of documents.
  * It extends the BaseDocumentCompressor class.
- 
  * @inheritDoc
  */
 export class LLMChainExtractor extends BaseDocumentCompressor {

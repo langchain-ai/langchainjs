@@ -70,7 +70,6 @@ export interface EntityMemoryInput extends BaseChatMemoryInput {
  * });
  *
  * ```
- 
  * @inheritDoc
  */
 export class EntityMemory extends BaseChatMemory implements EntityMemoryInput {

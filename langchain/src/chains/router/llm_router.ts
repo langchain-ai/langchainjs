@@ -28,7 +28,6 @@ export interface LLMRouterChainInput extends ChainInputs {
  * It extends the RouterChain class and implements the LLMRouterChainInput
  * interface. It provides additional functionality specific to LLMs and
  * routing based on LLM predictions.
- 
  * @inheritDoc
  */
 export class LLMRouterChain extends RouterChain implements LLMRouterChainInput {

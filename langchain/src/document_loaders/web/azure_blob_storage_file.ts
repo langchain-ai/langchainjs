@@ -43,7 +43,6 @@ interface AzureBlobStorageFileLoaderConfig {
  * });
  * const docs = await loader.load();
  * ```
- 
  * @inheritDoc
  */
 export class AzureBlobStorageFileLoader extends BaseDocumentLoader {

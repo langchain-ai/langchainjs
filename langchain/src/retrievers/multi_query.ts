@@ -81,7 +81,6 @@ export interface MultiQueryRetrieverInput extends BaseRetrieverInput {
  *   "What are mitochondria made of?",
  * );
  * ```
- 
  * @inheritDoc
  */
 export class MultiQueryRetriever extends BaseRetriever {

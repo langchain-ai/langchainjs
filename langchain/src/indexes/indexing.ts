@@ -41,7 +41,6 @@ interface HashedDocumentArgs {
  * HashedDocument is a Document with hashes calculated.
  * Hashes are calculated based on page content and metadata.
  * It is used for indexing.
- 
  * @inheritDoc
  */
 export class _HashedDocument implements HashedDocumentInterface {

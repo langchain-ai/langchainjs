@@ -40,7 +40,6 @@ export interface FromLLMInput {
  * });
  * const res = await chain.run("Who played in Pulp Fiction?");
  * ```
- 
  * @inheritDoc
  */
 export class GraphCypherQAChain extends BaseChain {

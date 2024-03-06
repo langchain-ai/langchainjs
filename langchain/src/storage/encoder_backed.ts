@@ -5,7 +5,6 @@ import { BaseStore } from "@langchain/core/stores";
  * Class that provides a layer of abstraction over the base storage,
  * allowing for the encoding and decoding of keys and values. It extends
  * the BaseStore class.
- 
  * @inheritDoc
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

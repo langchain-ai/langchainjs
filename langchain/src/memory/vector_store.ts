@@ -51,7 +51,6 @@ export interface VectorStoreRetrieverMemoryParams {
  *   await memory.loadMemoryVariables({ prompt: "what sport should i watch?" }),
  * );
  * ```
- 
  * @inheritDoc
  */
 export class VectorStoreRetrieverMemory

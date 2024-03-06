@@ -59,7 +59,6 @@ export interface ConfluenceAPIResponse {
  * const documents = await loader.load();
  * console.log(documents);
  * ```
- 
  * @inheritDoc
  */
 export class ConfluencePagesLoader extends BaseDocumentLoader {

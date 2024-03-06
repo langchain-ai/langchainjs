@@ -4,7 +4,6 @@ import { MemberExpressionType } from "./types.js";
 /**
  * Handles member expressions in the LangChain Expression Language (LCEL).
  * Extends the NodeHandler base class.
- 
  * @inheritDoc
  */
 export class MemberExpressionHandler extends NodeHandler {

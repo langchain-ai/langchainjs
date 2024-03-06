@@ -76,7 +76,6 @@ export type CriteriaLike =
 
 /**
  * A parser for the output of the CriteriaEvalChain.
- 
  * @inheritDoc
  */
 export class CriteriaResultOutputParser extends BaseLLMOutputParser<EvalOutputType> {
@@ -284,7 +283,6 @@ export class CriteriaEvalChain extends LLMStringEvaluator {
 
 /**
  * Criteria evaluation chain that requires references.
- 
  * @inheritDoc
  */
 export class LabeledCriteriaEvalChain extends CriteriaEvalChain {

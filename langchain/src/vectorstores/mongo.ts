@@ -22,8 +22,7 @@ export type MongoVectorStoreQueryExtension = {
   postQueryPipelineSteps?: MongoDocument[];
 };
 
-/** @deprecated use `MongoDBAtlasVectorSearch` instead. 
- * @inheritDoc
+/** @deprecated use `MongoDBAtlasVectorSearch` instead. * @inheritDoc
  */
 export class MongoVectorStore extends VectorStore {
   declare FilterType: MongoVectorStoreQueryExtension;

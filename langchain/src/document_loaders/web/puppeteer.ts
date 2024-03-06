@@ -49,7 +49,6 @@ export type PuppeteerWebBaseLoaderOptions = {
  * });
  * const screenshot = await loader.screenshot();
  * ```
- 
  * @inheritDoc
  */
 export class PuppeteerWebBaseLoader

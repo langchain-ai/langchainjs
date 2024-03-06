@@ -19,7 +19,6 @@ interface SqlTool {
  * parameter and assigns it to the `db` property. The `_call` method is
  * used to run the SQL query and return the result. If the query is
  * incorrect, an error message is returned.
- 
  * @inheritDoc
  */
 export class QuerySqlTool extends Tool implements SqlTool {
@@ -56,7 +55,6 @@ export class QuerySqlTool extends Tool implements SqlTool {
  * `_call` method is used to retrieve the schema and sample rows for the
  * specified tables. If the tables do not exist, an error message is
  * returned.
- 
  * @inheritDoc
  */
 export class InfoSqlTool extends Tool implements SqlTool {
@@ -94,7 +92,6 @@ export class InfoSqlTool extends Tool implements SqlTool {
  * database as a parameter and assigns it to the `db` property. The
  * `_call` method is used to return a comma-separated list of all tables
  * in the database.
- 
  * @inheritDoc
  */
 export class ListTablesSqlTool extends Tool implements SqlTool {
@@ -152,7 +149,6 @@ type QueryCheckerToolArgs = {
  * LLMChain or QueryCheckerToolArgs as a parameter. The `_call` method is
  * used to check the input query for common mistakes and returns a
  * prediction.
- 
  * @inheritDoc
  */
 export class QueryCheckerTool extends Tool {

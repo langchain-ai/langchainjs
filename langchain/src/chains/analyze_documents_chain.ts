@@ -42,7 +42,6 @@ export interface AnalyzeDocumentChainInput extends Omit<ChainInputs, "memory"> {
  *
  * console.log({ res });
  * ```
- 
  * @inheritDoc
  */
 export class AnalyzeDocumentChain

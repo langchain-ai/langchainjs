@@ -64,7 +64,6 @@ export interface MatryoshkaRetrieverFields {
  *
  * This code implements MRL embeddings for efficient vector search by combining faster,
  * lower-dimensional initial search with accurate, high-dimensional re-ranking.
- 
  * @inheritDoc
  */
 export class MatryoshkaRetriever<

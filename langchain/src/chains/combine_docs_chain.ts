@@ -25,7 +25,6 @@ export interface StuffDocumentsChainInput extends ChainInputs {
  * Chain that combines documents by stuffing into context.
  * @augments BaseChain
  * @augments StuffDocumentsChainInput
- 
  * @inheritDoc
  */
 export class StuffDocumentsChain
@@ -129,7 +128,6 @@ export interface MapReduceDocumentsChainInput extends StuffDocumentsChainInput {
  * Combine documents by mapping a chain over them, then combining results.
  * @augments BaseChain
  * @augments StuffDocumentsChainInput
- 
  * @inheritDoc
  */
 export class MapReduceDocumentsChain
@@ -307,7 +305,6 @@ export interface RefineDocumentsChainInput extends StuffDocumentsChainInput {
  * Combine documents by doing a first pass and then refining on more documents.
  * @augments BaseChain
  * @augments RefineDocumentsChainInput
- 
  * @inheritDoc
  */
 export class RefineDocumentsChain

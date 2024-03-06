@@ -22,7 +22,6 @@ export interface ObsidianFileLoaderOptions {
  * Represents a loader for Obsidian markdown files. This loader extends the BaseDocumentLoader
  * and provides functionality to parse and extract metadata, tags, and dataview fields from
  * Obsidian markdown files.
- 
  * @inheritDoc
  */
 class ObsidianFileLoader extends BaseDocumentLoader {
@@ -245,7 +244,6 @@ class ObsidianFileLoader extends BaseDocumentLoader {
  * Represents a loader for directories containing Obsidian markdown files. This loader extends
  * the DirectoryLoader and provides functionality to load and parse '.md' files with YAML frontmatter,
  * Obsidian tags, and Dataview fields.
- 
  * @inheritDoc
  */
 export class ObsidianLoader extends DirectoryLoader {

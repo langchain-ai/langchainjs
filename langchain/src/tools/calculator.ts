@@ -11,7 +11,6 @@ import { Tool } from "@langchain/core/tools";
  * const sum = calculator.add(99, 99);
  * console.log("The sum of 99 and 99 is:", sum);
  * ```
- 
  * @inheritDoc
  */
 export class Calculator extends Tool {

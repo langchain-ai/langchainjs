@@ -6,7 +6,6 @@ import { BaseOutputParser } from "@langchain/core/output_parsers";
  * class and is part of the LangChain's output parsers module. This class
  * is useful in scenarios where the raw output of the Large Language
  * Models (LLMs) is required.
- 
  * @inheritDoc
  */
 export class NoOpOutputParser extends BaseOutputParser<string> {

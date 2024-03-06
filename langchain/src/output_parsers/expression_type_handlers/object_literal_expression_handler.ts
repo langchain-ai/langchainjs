@@ -5,7 +5,6 @@ import { ObjectLiteralType, PropertyAssignmentType } from "./types.js";
 /**
  * Handles object literal expressions in the LangChain Expression
  * Language. Extends the NodeHandler class.
- 
  * @inheritDoc
  */
 export class ObjectLiteralExpressionHandler extends NodeHandler {

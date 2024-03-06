@@ -36,7 +36,6 @@ export type APIChainOptions = {
 /**
  * Class that extends BaseChain and represents a chain specifically
  * designed for making API requests and processing API responses.
- 
  * @inheritDoc
  */
 export class APIChain extends BaseChain implements APIChainInput {

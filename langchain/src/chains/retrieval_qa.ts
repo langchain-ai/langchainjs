@@ -46,7 +46,6 @@ export interface RetrievalQAChainInput extends Omit<ChainInputs, "memory"> {
  * console.log({ res });
  *
  * ```
- 
  * @inheritDoc
  */
 export class RetrievalQAChain

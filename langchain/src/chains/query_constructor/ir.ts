@@ -96,7 +96,6 @@ export type VisitorStructuredQueryResult = {
 /**
  * Abstract class for visiting expressions. Subclasses must implement
  * visitOperation, visitComparison, and visitStructuredQuery methods.
- 
  * @inheritDoc
  */
 export abstract class Visitor<T extends VectorStore = VectorStore> {
@@ -124,7 +123,6 @@ export abstract class Visitor<T extends VectorStore = VectorStore> {
 /**
  * Abstract class representing an expression. Subclasses must implement
  * the exprName property and the accept method.
- 
  * @inheritDoc
  */
 export abstract class Expression {
@@ -146,7 +144,6 @@ export abstract class Expression {
 /**
  * Abstract class representing a filter directive. It extends the
  * Expression class.
- 
  * @inheritDoc
  */
 export abstract class FilterDirective extends Expression {}
@@ -154,7 +151,6 @@ export abstract class FilterDirective extends Expression {}
 /**
  * Class representing a comparison filter directive. It extends the
  * FilterDirective class.
- 
  * @inheritDoc
  */
 export class Comparison extends FilterDirective {
@@ -172,7 +168,6 @@ export class Comparison extends FilterDirective {
 /**
  * Class representing an operation filter directive. It extends the
  * FilterDirective class.
- 
  * @inheritDoc
  */
 export class Operation extends FilterDirective {
@@ -186,7 +181,6 @@ export class Operation extends FilterDirective {
 /**
  * Class representing a structured query expression. It extends the
  * Expression class.
- 
  * @inheritDoc
  */
 export class StructuredQuery extends Expression {

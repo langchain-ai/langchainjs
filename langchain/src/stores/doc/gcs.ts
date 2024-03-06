@@ -24,7 +24,6 @@ export interface GoogleCloudStorageDocstoreConfiguration {
  * Storage (GCS) as a document store. It extends the Docstore class and
  * implements methods to search, add, and add a document to the GCS
  * bucket.
- 
  * @inheritDoc
  */
 export class GoogleCloudStorageDocstore extends Docstore {

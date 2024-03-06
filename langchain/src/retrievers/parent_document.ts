@@ -54,7 +54,6 @@ export type ParentDocumentRetrieverFields = MultiVectorRetrieverInput & {
  * await retriever.addDocuments(parentDocuments);
  * const retrievedDocs = await retriever.getRelevantDocuments("justice breyer");
  * ```
- 
  * @inheritDoc
  */
 export class ParentDocumentRetriever extends MultiVectorRetriever {

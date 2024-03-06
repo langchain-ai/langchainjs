@@ -62,7 +62,6 @@ export interface SortXYZBlockchainAPIResponse {
  * console.log(`user > ${prompt}`);
  * console.log(`chatgpt > ${response}`);
  * ```
- 
  * @inheritDoc
  */
 export class SortXYZBlockchainLoader extends BaseDocumentLoader {

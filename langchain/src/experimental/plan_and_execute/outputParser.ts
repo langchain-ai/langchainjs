@@ -6,7 +6,6 @@ import { PLANNER_SYSTEM_PROMPT_MESSAGE_TEMPLATE } from "./prompt.js";
 /**
  * Specific implementation of the `BaseOutputParser` class designed to
  * parse the output text into a `Plan` object.
- 
  * @inheritDoc
  */
 export class PlanOutputParser extends BaseOutputParser<Plan> {

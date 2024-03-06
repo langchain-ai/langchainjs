@@ -44,7 +44,6 @@ export interface ConstitutionalChainInput extends ChainInputs {
  *
  * const output = await chain.run({ question: "How can I steal kittens?" });
  * ```
- 
  * @inheritDoc
  */
 export class ConstitutionalChain

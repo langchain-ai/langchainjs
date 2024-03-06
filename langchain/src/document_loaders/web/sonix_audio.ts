@@ -18,7 +18,6 @@ import { BaseDocumentLoader } from "../base.js";
  * });
  * const docs = await loader.load();
  * ```
- 
  * @inheritDoc
  */
 export class SonixAudioTranscriptionLoader extends BaseDocumentLoader {

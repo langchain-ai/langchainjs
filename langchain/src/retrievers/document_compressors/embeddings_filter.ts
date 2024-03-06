@@ -29,7 +29,6 @@ export interface EmbeddingsFilterParams {
  * );
  * console.log({ retrievedDocs });
  * ```
- 
  * @inheritDoc
  */
 export class EmbeddingsFilter extends BaseDocumentCompressor {

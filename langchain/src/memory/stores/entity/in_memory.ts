@@ -3,7 +3,6 @@ import { BaseEntityStore } from "./base.js";
 /**
  * An entity store that keeps data in memory. It extends from the
  * `BaseEntityStore` class and is used to store and manage entities.
- 
  * @inheritDoc
  */
 export class InMemoryEntityStore extends BaseEntityStore {

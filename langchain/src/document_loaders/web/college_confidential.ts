@@ -10,7 +10,6 @@ import { CheerioWebBaseLoader } from "./cheerio.js";
  * const docs = await loader.load();
  * console.log({ docs });
  * ```
- 
  * @inheritDoc
  */
 export class CollegeConfidentialLoader extends CheerioWebBaseLoader {

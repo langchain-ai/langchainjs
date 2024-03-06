@@ -60,7 +60,6 @@ export type HydeRetrieverOptions<V extends VectorStore> =
  *   "What is my favourite food?",
  * );
  * ```
- 
  * @inheritDoc
  */
 export class HydeRetriever<

@@ -14,7 +14,6 @@ interface GitbookLoaderParams {
 /**
  * Class representing a document loader specifically designed for loading
  * documents from Gitbook. It extends the CheerioWebBaseLoader.
- 
  * @inheritDoc
  */
 export class GitbookLoader extends CheerioWebBaseLoader {

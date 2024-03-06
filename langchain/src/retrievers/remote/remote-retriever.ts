@@ -31,7 +31,6 @@ export interface RemoteLangChainRetrieverParams extends RemoteRetrieverParams {
  * retrieve documents from a remote source using a JSON-based API. It
  * implements the `RemoteLangChainRetrieverParams` interface which defines
  * the keys used to interact with the JSON API.
- 
  * @inheritDoc
  */
 export class RemoteLangChainRetriever

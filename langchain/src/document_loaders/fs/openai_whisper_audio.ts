@@ -14,7 +14,6 @@ const MODEL_NAME = "whisper-1";
  * const docs = await loader.load();
  * console.log(docs);
  * ```
- 
  * @inheritDoc
  */
 export class OpenAIWhisperAudio extends BufferLoader {

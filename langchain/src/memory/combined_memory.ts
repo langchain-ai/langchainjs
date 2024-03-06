@@ -25,7 +25,6 @@ export interface CombinedMemoryInput extends BaseChatMemoryInput {
  * Class that manages and manipulates previous chat messages. It extends
  * from the BaseChatMemory class and implements the CombinedMemoryInput
  * interface.
- 
  * @inheritDoc
  */
 export class CombinedMemory

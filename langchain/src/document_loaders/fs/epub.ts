@@ -5,7 +5,6 @@ import { BaseDocumentLoader } from "../base.js";
 /**
  * A class that extends the `BaseDocumentLoader` class. It represents a
  * document loader that loads documents from EPUB files.
- 
  * @inheritDoc
  */
 export class EPubLoader extends BaseDocumentLoader {
