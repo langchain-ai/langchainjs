@@ -244,7 +244,7 @@ export class BedrockLLMInputOutputAdapter {
   static prepareMessagesOutput(
     provider: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    response: Record<string, any>
+    response: any
   ): ChatGenerationChunk | undefined {
     const responseBody = response ?? {};
     if (provider === "anthropic") {
@@ -295,6 +295,7 @@ export class BedrockLLMInputOutputAdapter {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function parseMessage(responseBody: any): ChatGenerationChunk {
   const { content, id, ...generationInfo } = responseBody;
   let parsedContent;
