@@ -53,6 +53,7 @@ export type StructuredChatAgentInput = Optional<AgentInput, "outputParser">;
  * Agent that interoperates with Structured Tools using React logic.
  * @augments Agent
  * @deprecated Use the {@link https://api.js.langchain.com/functions/langchain_agents.createStructuredChatAgent.html | createStructuredChatAgent method instead}.
+ * @inheritDoc
  */
 export class StructuredChatAgent extends Agent {
   static lc_name() {

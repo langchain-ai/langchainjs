@@ -13,6 +13,7 @@ function defaultGetInput(
   return { question: query, context: doc.pageContent };
 }
 
+/** @inheritDoc */
 class NoOutputParser extends BaseOutputParser<string> {
   lc_namespace = [
     "langchain",
@@ -58,6 +59,8 @@ export interface LLMChainExtractorArgs {
 /**
  * A class that uses an LLM chain to extract relevant parts of documents.
  * It extends the BaseDocumentCompressor class.
+ 
+ * @inheritDoc
  */
 export class LLMChainExtractor extends BaseDocumentCompressor {
   llmChain: LLMChain;

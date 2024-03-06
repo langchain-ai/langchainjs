@@ -45,6 +45,7 @@ const FINAL_ANSWER_AND_PARSABLE_ACTION_ERROR_MESSAGE =
  *   input: "whats the weather in pomfret?",
  * });
  * ```
+ * @inheritDoc
  */
 export class ReActSingleInputOutputParser extends AgentActionOutputParser {
   lc_namespace = ["langchain", "agents", "react"];

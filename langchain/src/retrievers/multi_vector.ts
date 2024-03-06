@@ -37,6 +37,8 @@ export interface MultiVectorRetrieverInput extends BaseRetrieverInput {
  * const retrieverResult = await retriever.getRelevantDocuments("justice breyer");
  * console.log(retrieverResult[0].pageContent.length);
  * ```
+ 
+ * @inheritDoc
  */
 export class MultiVectorRetriever extends BaseRetriever {
   static lc_name() {

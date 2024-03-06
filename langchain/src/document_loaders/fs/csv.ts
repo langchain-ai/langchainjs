@@ -48,6 +48,7 @@ type CSVLoaderOptions = {
  * file or a Blob object, and an optional `options` parameter of type
  * `CSVLoaderOptions` or a string representing the column to use as the
  * document's pageContent.
+ * @inheritDoc
  */
 export class CSVLoader extends TextLoader {
   protected options: CSVLoaderOptions = {};

@@ -6,6 +6,7 @@ import { Document } from "@langchain/core/documents";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { MultiRetrievalQAChain } from "../multi_retrieval_qa.js";
 
+/** @inheritDoc */
 class FakeRetrievers extends BaseRetriever {
   lc_namespace: string[] = [];
 
@@ -28,6 +29,7 @@ class FakeRetrievers extends BaseRetriever {
 
 let pickedRetriever: string;
 
+/** @inheritDoc */
 class FakeLLM extends BaseLLM {
   _llmType(): string {
     return "fake";

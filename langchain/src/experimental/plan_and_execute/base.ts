@@ -36,6 +36,8 @@ export type Plan = {
 /**
  * Abstract class that defines the structure for a planner. Planners are
  * responsible for generating a plan based on inputs.
+ 
+ * @inheritDoc
  */
 export abstract class BasePlanner {
   abstract plan(
@@ -47,6 +49,8 @@ export abstract class BasePlanner {
 /**
  * Abstract class that defines the structure for a step executor. Step
  * executors are responsible for executing a step based on inputs.
+ 
+ * @inheritDoc
  */
 export abstract class BaseStepExecutor {
   abstract step(
@@ -58,6 +62,8 @@ export abstract class BaseStepExecutor {
 /**
  * Abstract class that defines the structure for a step container. Step
  * containers are responsible for managing steps.
+ 
+ * @inheritDoc
  */
 export abstract class BaseStepContainer {
   abstract addStep(action: StepAction, result: StepResult): void;
@@ -71,6 +77,8 @@ export abstract class BaseStepContainer {
  * Class that extends BaseStepContainer and provides an implementation for
  * its methods. It maintains a list of steps and provides methods to add a
  * step, get all steps, and get the final response.
+ 
+ * @inheritDoc
  */
 export class ListStepContainer extends BaseStepContainer {
   private steps: Step[] = [];
@@ -92,6 +100,8 @@ export class ListStepContainer extends BaseStepContainer {
  * Class that extends BasePlanner and provides an implementation for the
  * plan method. It uses an instance of LLMChain and an output parser to
  * generate a plan.
+ 
+ * @inheritDoc
  */
 export class LLMPlanner extends BasePlanner {
   constructor(
@@ -110,6 +120,8 @@ export class LLMPlanner extends BasePlanner {
 /**
  * Class that extends BaseStepExecutor and provides an implementation for
  * the step method. It uses an instance of BaseChain to execute a step.
+ 
+ * @inheritDoc
  */
 export class ChainStepExecutor extends BaseStepExecutor {
   constructor(private chain: BaseChain) {

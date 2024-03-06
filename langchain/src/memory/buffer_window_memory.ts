@@ -43,6 +43,8 @@ export interface BufferWindowMemoryInput extends BaseChatMemoryInput {
  * const res2 = await chain.call({ input: "What's my name?" });
  * console.log({ res2 });
  * ```
+ 
+ * @inheritDoc
  */
 export class BufferWindowMemory
   extends BaseChatMemory

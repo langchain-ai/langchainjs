@@ -39,6 +39,8 @@ interface VideoMetadata {
  * );
  * const docs = await loader.load();
  * ```
+ 
+ * @inheritDoc
  */
 export class YoutubeLoader extends BaseDocumentLoader {
   private videoId: string;

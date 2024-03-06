@@ -56,6 +56,8 @@ export interface ConversationSummaryBufferMemoryInput
  *   prompt: chatPrompt,
  * });
  * ```
+ 
+ * @inheritDoc
  */
 export class ConversationSummaryBufferMemory
   extends BaseConversationSummaryMemory

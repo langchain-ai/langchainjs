@@ -2,6 +2,8 @@ import { MaskingTransformer } from "./transformer.js";
 import type { HashFunction, MaskingPattern } from "./types.js";
 /**
  * RegexMaskingTransformer class for masking and rehydrating messages with Regex.
+ 
+ * @inheritDoc
  */
 export class RegexMaskingTransformer extends MaskingTransformer {
   private patterns: { [key: string]: MaskingPattern };

@@ -6,6 +6,8 @@ import { BaseFileStore } from "./base.js";
  * This class is typically used in scenarios where temporary, in-memory
  * file storage is needed, such as during testing or for caching files in
  * memory for quick access.
+ 
+ * @inheritDoc
  */
 export class InMemoryFileStore extends BaseFileStore {
   lc_namespace = ["langchain", "stores", "file", "in_memory"];

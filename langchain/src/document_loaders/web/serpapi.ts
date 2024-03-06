@@ -22,6 +22,8 @@ interface SerpAPIParameters {
  * const loader = new SerpAPILoader({ q: "{query}", apiKey: "{apiKey}" });
  * const docs = await loader.load();
  * ```
+ 
+ * @inheritDoc
  */
 export class SerpAPILoader extends BaseDocumentLoader {
   private apiKey: string;

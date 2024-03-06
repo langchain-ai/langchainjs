@@ -57,6 +57,8 @@ export interface PlanAndExecuteAgentExecutorInput extends ChainInputs {
  * decides on the full sequence of actions upfront, then executes them all
  * without updating the plan. This is suitable for complex or long-running
  * tasks that require maintaining long-term objectives and focus.
+ 
+ * @inheritDoc
  */
 export class PlanAndExecuteAgentExecutor extends BaseChain {
   static lc_name() {

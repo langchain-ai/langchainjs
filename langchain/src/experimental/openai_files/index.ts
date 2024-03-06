@@ -6,6 +6,7 @@ export type OpenAIFilesInput = {
   clientOptions?: ClientOptions;
 };
 
+/** @inheritDoc */
 export class OpenAIFiles extends Serializable {
   lc_namespace = ["langchain", "experimental"];
 

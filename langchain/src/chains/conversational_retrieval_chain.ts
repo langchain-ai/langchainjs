@@ -65,6 +65,8 @@ export interface ConversationalRetrievalQAChainInput extends ChainInputs {
  * console.log(followUpRes);
  *
  * ```
+ 
+ * @inheritDoc
  */
 export class ConversationalRetrievalQAChain
   extends BaseChain

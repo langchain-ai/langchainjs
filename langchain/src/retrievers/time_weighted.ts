@@ -40,6 +40,8 @@ export const BUFFER_IDX = "buffer_idx";
  *   "What is my favourite food?",
  * );
  * ```
+ 
+ * @inheritDoc
  */
 export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
   static lc_name() {

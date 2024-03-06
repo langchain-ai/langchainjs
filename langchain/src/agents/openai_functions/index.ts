@@ -100,6 +100,7 @@ export interface OpenAIAgentCreatePromptArgs {
  * to the OpenAIAgent type.
  *
  * @deprecated Use the {@link https://api.js.langchain.com/functions/langchain_agents.createOpenAIFunctionsAgent.html | createOpenAIFunctionsAgent method instead}.
+ * @inheritDoc
  */
 export class OpenAIAgent extends Agent {
   static lc_name() {

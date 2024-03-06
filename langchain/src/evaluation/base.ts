@@ -40,6 +40,8 @@ export type EvalOutputType = Record<string, string | number | boolean>;
 
 /**
  * Base llm chain class for evaluators.
+ 
+ * @inheritDoc
  */
 export abstract class LLMEvalChain<
   T extends EvalOutputType = EvalOutputType,
@@ -75,6 +77,8 @@ export abstract class LLMEvalChain<
 
 /**
  * Base chain class for evaluators.
+ 
+ * @inheritDoc
  */
 export abstract class EvalChain<
   RunInput extends ChainValues = ChainValues,
@@ -158,6 +162,8 @@ export interface LLMTrajectoryEvaluatorArgs {
 /**
  * Grade, tag, or otherwise evaluate predictions relative to their inputs
  * and/or reference labels
+ 
+ * @inheritDoc
  */
 export abstract class LLMStringEvaluator<
   T extends EvalOutputType = EvalOutputType,
@@ -205,6 +211,8 @@ export abstract class LLMStringEvaluator<
 /**
  * Grade, tag, or otherwise evaluate predictions relative to their inputs
  * and/or reference labels
+ 
+ * @inheritDoc
  */
 export abstract class StringEvaluator extends EvalChain {
   /**
@@ -246,6 +254,8 @@ export abstract class StringEvaluator extends EvalChain {
 
 /**
  * Compare the output of two models (or two outputs of the same model).
+ 
+ * @inheritDoc
  */
 export abstract class PairwiseStringEvaluator extends EvalChain {
   /**
@@ -280,6 +290,8 @@ export abstract class PairwiseStringEvaluator extends EvalChain {
 
 /**
  * Compare the output of two models (or two outputs of the same model).
+ 
+ * @inheritDoc
  */
 export abstract class LLMPairwiseStringEvaluator extends LLMEvalChain {
   /**
@@ -319,6 +331,8 @@ export abstract class LLMPairwiseStringEvaluator extends LLMEvalChain {
 
 /**
  * Interface for evaluating agent trajectories.
+ 
+ * @inheritDoc
  */
 export abstract class AgentTrajectoryEvaluator extends LLMEvalChain {
   requiresInput = true;

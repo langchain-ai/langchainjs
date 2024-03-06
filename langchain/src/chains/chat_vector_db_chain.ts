@@ -38,7 +38,9 @@ export interface ChatVectorDBQAChainInput extends ChainInputs {
   k?: number;
 }
 
-/** @deprecated use `ConversationalRetrievalQAChain` instead. */
+/** @deprecated use `ConversationalRetrievalQAChain` instead. 
+ * @inheritDoc
+ */
 export class ChatVectorDBQAChain
   extends BaseChain
   implements ChatVectorDBQAChainInput

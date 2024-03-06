@@ -58,6 +58,8 @@ export type GenerativeAgentConfig = {
  *   "USER says Hello Tommie, how are you today?",
  * );
  * ```
+ 
+ * @inheritDoc
  */
 export class GenerativeAgent extends BaseChain {
   static lc_name() {

@@ -98,6 +98,8 @@ export type NotionAPILoaderOptions = {
  * });
  * const dbDocs = await dbLoader.load();
  * ```
+ 
+ * @inheritDoc
  */
 export class NotionAPILoader extends BaseDocumentLoader {
   private caller: AsyncCaller;

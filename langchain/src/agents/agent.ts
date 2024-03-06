@@ -32,6 +32,7 @@ export type OutputParserArgs = Record<string, any>;
 /**
  * Error class for parse errors in LangChain. Contains information about
  * the error message and the output that caused the error.
+ * @inheritDoc
  */
 class ParseError extends Error {
   output: string;
@@ -45,6 +46,7 @@ class ParseError extends Error {
 /**
  * Abstract base class for agents in LangChain. Provides common
  * functionality for agents, such as handling inputs and outputs.
+ * @inheritDoc
  */
 export abstract class BaseAgent extends Serializable {
   declare ToolType: StructuredToolInterface;
@@ -105,6 +107,7 @@ export abstract class BaseAgent extends Serializable {
  * Abstract base class for single action agents in LangChain. Extends the
  * BaseAgent class and provides additional functionality specific to
  * single action agents.
+ * @inheritDoc
  */
 export abstract class BaseSingleActionAgent extends BaseAgent {
   _agentActionType(): string {
@@ -132,6 +135,7 @@ export abstract class BaseSingleActionAgent extends BaseAgent {
  * Abstract base class for multi-action agents in LangChain. Extends the
  * BaseAgent class and provides additional functionality specific to
  * multi-action agents.
+ * @inheritDoc
  */
 export abstract class BaseMultiActionAgent extends BaseAgent {
   _agentActionType(): string {
@@ -163,6 +167,7 @@ function isAgentAction(input: unknown): input is AgentAction {
  * Class representing a single action agent which accepts runnables.
  * Extends the BaseMultiActionAgent class and provides methods for
  * planning agent actions with runnables.
+ * @inheritDoc
  */
 export class RunnableAgent extends BaseMultiActionAgent {
   protected lc_runnable = true;
@@ -247,6 +252,7 @@ export interface LLMSingleActionAgentInput {
  *     "Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?",
  * });
  * ```
+ * @inheritDoc
  */
 export class LLMSingleActionAgent extends BaseSingleActionAgent {
   lc_namespace = ["langchain", "agents"];
@@ -319,6 +325,7 @@ export interface AgentArgs {
  * intermediary work.
  *
  * @deprecated Use {@link https://js.langchain.com/docs/modules/agents/agent_types/ | new agent creation methods}.
+ * @inheritDoc
  */
 export abstract class Agent extends BaseSingleActionAgent {
   llmChain: LLMChain;

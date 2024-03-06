@@ -23,6 +23,7 @@ export interface JsonMarkdownFormatInstructionsOptions
   interpolationDepth?: number;
 }
 
+/** @inheritDoc */
 export class StructuredOutputParser<
   T extends z.ZodTypeAny
 > extends BaseOutputParser<z.infer<T>> {
@@ -117,6 +118,8 @@ ${JSON.stringify(zodToJsonSchema(this.schema))}
 /**
  * A specific type of `StructuredOutputParser` that parses JSON data
  * formatted as a markdown code snippet.
+ 
+ * @inheritDoc
  */
 export class JsonMarkdownStructuredOutputParser<
   T extends z.ZodTypeAny
@@ -236,6 +239,8 @@ export interface AsymmetricStructuredOutputParserFields<
 /**
  * A type of `StructuredOutputParser` that handles asymmetric input and
  * output schemas.
+ 
+ * @inheritDoc
  */
 export abstract class AsymmetricStructuredOutputParser<
   T extends z.ZodTypeAny,

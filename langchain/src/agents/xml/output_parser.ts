@@ -22,6 +22,7 @@ import { AgentActionOutputParser } from "../types.js";
  *   tools: [],
  * });
  * ```
+ * @inheritDoc
  */
 export class XMLAgentOutputParser extends AgentActionOutputParser {
   lc_namespace = ["langchain", "agents", "xml"];

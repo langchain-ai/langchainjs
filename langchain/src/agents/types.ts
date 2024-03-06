@@ -36,6 +36,7 @@ export interface RunnableAgentInput {
  * Abstract class representing an output parser specifically for agent
  * actions and finishes in LangChain. It extends the `BaseOutputParser`
  * class.
+ * @inheritDoc
  */
 export abstract class AgentActionOutputParser extends BaseOutputParser<
   AgentAction | AgentFinish
@@ -44,6 +45,7 @@ export abstract class AgentActionOutputParser extends BaseOutputParser<
 /**
  * Abstract class representing an output parser specifically for agents
  * that return multiple actions.
+ * @inheritDoc
  */
 export abstract class AgentMultiActionOutputParser extends BaseOutputParser<
   AgentAction[] | AgentFinish

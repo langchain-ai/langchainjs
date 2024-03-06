@@ -5,6 +5,8 @@ import { ArrayLiteralType } from "./types.js";
  * Handles array expressions in the LangChain Expression Language (LCEL).
  * It extends the NodeHandler base class, providing functionality to
  * accept and handle array expressions.
+ 
+ * @inheritDoc
  */
 export class ArrayLiteralExpressionHandler extends NodeHandler {
   /**

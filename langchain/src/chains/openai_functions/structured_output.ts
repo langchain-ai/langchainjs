@@ -48,6 +48,8 @@ function isJsonSchema7Type(
 /**
  * Class that extends the BaseLLMOutputParser class. It provides
  * functionality for parsing the structured output based on a JSON schema.
+ 
+ * @inheritDoc
  */
 export class FunctionCallStructuredOutputParser<
   T extends z.AnyZodObject

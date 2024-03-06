@@ -7,6 +7,7 @@ import { Calculator } from "../../../tools/calculator.js";
 import { ReadFileTool, WriteFileTool } from "../../../tools/fs.js";
 import { InMemoryFileStore } from "../../../stores/file/in_memory.js";
 
+/** @inheritDoc */
 class FakeBrowserTool extends StructuredTool {
   schema = z.object({
     url: z.string(),

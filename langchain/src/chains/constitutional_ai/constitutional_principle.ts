@@ -24,6 +24,8 @@ import { SerializedConstitutionalPrinciple } from "../serde.js";
  *
  * const output = await chain.invoke({ question: "How can I steal kittens?" });
  * ```
+ 
+ * @inheritDoc
  */
 export class ConstitutionalPrinciple {
   critiqueRequest: string;

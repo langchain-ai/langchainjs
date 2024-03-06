@@ -12,6 +12,8 @@ import { Generation } from "@langchain/core/outputs";
 /**
  * A cache that uses the local filesystem as the backing store.
  * This is useful for local development and testing. But it is not recommended for production use.
+ 
+ * @inheritDoc
  */
 export class LocalFileCache extends BaseCache {
   private cacheDir: string;

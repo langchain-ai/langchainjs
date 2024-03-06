@@ -4,6 +4,8 @@ import { StringLiteralType } from "./types.js";
 /**
  * Handler for string literal nodes in the LangChain Expression Language.
  * Extends the NodeHandler base class.
+ 
+ * @inheritDoc
  */
 export class StringLiteralHandler extends NodeHandler {
   /**

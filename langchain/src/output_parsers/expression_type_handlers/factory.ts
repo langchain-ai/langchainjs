@@ -28,6 +28,8 @@ const handlers = [
  * is capable of handling a specific type of node in the expression
  * language. The MasterHandler class uses these node handlers to process
  * nodes in the expression language.
+ 
+ * @inheritDoc
  */
 export class MasterHandler extends NodeHandler {
   nodeHandlers: NodeHandler[] = [];

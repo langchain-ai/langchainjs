@@ -14,6 +14,7 @@ interface LineList {
   lines: string[];
 }
 
+/** @inheritDoc */
 class LineListOutputParser extends BaseOutputParser<LineList> {
   static lc_name() {
     return "LineListOutputParser";
@@ -80,6 +81,8 @@ export interface MultiQueryRetrieverInput extends BaseRetrieverInput {
  *   "What are mitochondria made of?",
  * );
  * ```
+ 
+ * @inheritDoc
  */
 export class MultiQueryRetriever extends BaseRetriever {
   static lc_name() {

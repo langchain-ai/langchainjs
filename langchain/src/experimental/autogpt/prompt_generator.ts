@@ -5,6 +5,8 @@ import { ObjectTool, FINISH_NAME } from "./schema.js";
 /**
  * Class that generates prompts for generative agents. It maintains a list
  * of constraints, commands, resources, and performance evaluations.
+ 
+ * @inheritDoc
  */
 export class PromptGenerator {
   constraints: string[];

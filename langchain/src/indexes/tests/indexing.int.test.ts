@@ -7,6 +7,7 @@ import { index } from "../indexing.js";
 import { BaseDocumentLoader } from "../../document_loaders/base.js";
 import { sleep } from "../../util/time.js";
 
+/** @inheritDoc */
 class MockLoader extends BaseDocumentLoader {
   constructor(public docs: Document[]) {
     super();

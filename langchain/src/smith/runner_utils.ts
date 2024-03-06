@@ -51,6 +51,7 @@ export type ChainOrFactory =
   | (() => (obj: unknown) => unknown)
   | (() => (obj: unknown) => Promise<unknown>);
 
+/** @inheritDoc */
 class SingleRunIdExtractor {
   runIdPromiseResolver: (runId: string) => void;
 
@@ -75,6 +76,7 @@ class SingleRunIdExtractor {
   }
 }
 
+/** @inheritDoc */
 class SingleRunExtractor extends BaseTracer {
   runPromiseResolver: (run: Run) => void;
 
@@ -101,6 +103,8 @@ class SingleRunExtractor extends BaseTracer {
 
 /**
  * Wraps an evaluator function + implements the RunEvaluator interface.
+ 
+ * @inheritDoc
  */
 class DynamicRunEvaluator implements RunEvaluator {
   evaluator: RunnableLambda<DynamicRunEvaluatorParams, EvaluationResult>;
@@ -152,6 +156,8 @@ type AnyTraceableFunction = TraceableFunction<(...any: any[]) => any>;
  *
  * The goal of this class is to ensure seamless interop when intergrated
  * with other Runnables.
+ 
+ * @inheritDoc
  */
 class CallbackManagerRunTree extends RunTree {
   callbackManager: CallbackManager;
@@ -220,6 +226,7 @@ class CallbackManagerRunTree extends RunTree {
   }
 }
 
+/** @inheritDoc */
 class RunnableTraceable<RunInput, RunOutput> extends Runnable<
   RunInput,
   RunOutput
@@ -297,6 +304,8 @@ class RunnableTraceable<RunInput, RunOutput> extends Runnable<
  * Wraps an off-the-shelf evaluator (loaded using loadEvaluator; of EvaluatorType[T])
  * and composes with a prepareData function so the user can prepare the trace and
  * dataset data for the evaluator.
+ 
+ * @inheritDoc
  */
 class PreparedRunEvaluator implements RunEvaluator {
   evaluator: LLMStringEvaluator;
@@ -388,6 +397,7 @@ class PreparedRunEvaluator implements RunEvaluator {
   }
 }
 
+/** @inheritDoc */
 class LoadedEvalConfig {
   constructor(public evaluators: (RunEvaluator | DynamicRunEvaluator)[]) {}
 

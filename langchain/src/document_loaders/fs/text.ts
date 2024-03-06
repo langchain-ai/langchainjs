@@ -15,6 +15,8 @@ import { BaseDocumentLoader } from "../base.js";
  * const loader = new TextLoader("src/document_loaders/example_data/example.txt");
  * const docs = await loader.load();
  * ```
+ 
+ * @inheritDoc
  */
 export class TextLoader extends BaseDocumentLoader {
   constructor(public filePathOrBlob: string | Blob) {

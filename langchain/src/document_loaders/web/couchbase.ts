@@ -4,6 +4,8 @@ import { BaseDocumentLoader, DocumentLoader } from "../base.js";
 
 /**
  * loader for couchbase document
+ 
+ * @inheritDoc
  */
 export class CouchbaseDocumentLoader
   extends BaseDocumentLoader

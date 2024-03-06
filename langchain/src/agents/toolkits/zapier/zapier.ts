@@ -15,6 +15,7 @@ import { ZapierNLARunAction, ZapierNLAWrapper } from "../../../tools/zapier.js";
  *     "Summarize the last email I received regarding Silicon Valley Bank. Send the summary to the #test-zapier Slack channel.",
  * });
  * ```
+ * @inheritDoc
  */
 export class ZapierToolKit extends Toolkit {
   tools: ToolInterface[] = [];

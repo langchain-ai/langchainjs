@@ -13,6 +13,7 @@ export type CustomFormatPromptTemplateInput<RunInput extends InputValues> =
     renderer: (template: string, values: InputValues) => string;
   };
 
+/** @inheritDoc */
 export class CustomFormatPromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,

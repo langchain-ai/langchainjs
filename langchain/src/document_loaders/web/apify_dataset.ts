@@ -61,6 +61,8 @@ export interface ApifyDatasetLoaderConfig<Metadata extends Record<string, any>>
  * console.log(res.text);
  * console.log(res.sourceDocuments.map((d) => d.metadata.source));
  * ```
+ 
+ * @inheritDoc
  */
 export class ApifyDatasetLoader<Metadata extends Record<string, any>>
   extends BaseDocumentLoader

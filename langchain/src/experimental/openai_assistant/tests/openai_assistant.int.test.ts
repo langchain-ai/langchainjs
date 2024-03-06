@@ -24,6 +24,7 @@ function convertWeatherToHumanReadable(location: string, temperature: string) {
   return JSON.stringify({ location, temperature, readable: "cold" });
 }
 
+/** @inheritDoc */
 class WeatherTool extends StructuredTool {
   schema = z.object({
     location: z.string().describe("The city and state, e.g. San Francisco, CA"),
@@ -45,6 +46,7 @@ class WeatherTool extends StructuredTool {
   }
 }
 
+/** @inheritDoc */
 class HumanReadableChecker extends StructuredTool {
   schema = z.object({
     location: z.string().describe("The city and state, e.g. San Francisco, CA"),

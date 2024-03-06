@@ -47,6 +47,8 @@ export interface ChatGPTPluginRetrieverParams extends RemoteRetrieverParams {
  * });
  * const docs = await retriever.getRelevantDocuments("hello world");
  * ```
+ 
+ * @inheritDoc
  */
 export class ChatGPTPluginRetriever
   extends RemoteRetriever

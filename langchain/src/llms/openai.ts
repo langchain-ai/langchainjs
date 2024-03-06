@@ -21,9 +21,11 @@ export {
 export { OpenAI };
 
 /**
- * PromptLayer wrapper to OpenAI
- * @augments OpenAI
- */
+     * PromptLayer wrapper to OpenAI
+     * @augments OpenAI
+     
+     * @inheritDoc
+     */
 export class PromptLayerOpenAI extends OpenAI {
   get lc_secrets(): { [key: string]: string } | undefined {
     return {

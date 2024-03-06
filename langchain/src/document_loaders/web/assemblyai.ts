@@ -17,6 +17,8 @@ export type * from "../../types/assemblyai-types.js";
 
 /**
  * Base class for AssemblyAI loaders.
+ 
+ * @inheritDoc
  */
 abstract class AssemblyAILoader extends BaseDocumentLoader {
   protected client: AssemblyAI;
@@ -43,6 +45,7 @@ abstract class AssemblyAILoader extends BaseDocumentLoader {
   }
 }
 
+/** @inheritDoc */
 abstract class CreateTranscriptLoader extends AssemblyAILoader {
   protected transcribeParams?: TranscribeParams | CreateTranscriptParameters;
 
@@ -90,6 +93,8 @@ abstract class CreateTranscriptLoader extends AssemblyAILoader {
 
 /**
  * Transcribe audio and load the transcript as a document using AssemblyAI.
+ 
+ * @inheritDoc
  */
 export class AudioTranscriptLoader extends CreateTranscriptLoader {
   /**
@@ -111,6 +116,8 @@ export class AudioTranscriptLoader extends CreateTranscriptLoader {
 
 /**
  * Transcribe audio and load the paragraphs of the transcript, creating a document for each paragraph.
+ 
+ * @inheritDoc
  */
 export class AudioTranscriptParagraphsLoader extends CreateTranscriptLoader {
   /**
@@ -134,6 +141,8 @@ export class AudioTranscriptParagraphsLoader extends CreateTranscriptLoader {
 
 /**
  * Transcribe audio and load the sentences of the transcript, creating a document for each sentence.
+ 
+ * @inheritDoc
  */
 export class AudioTranscriptSentencesLoader extends CreateTranscriptLoader {
   /**
@@ -157,6 +166,8 @@ export class AudioTranscriptSentencesLoader extends CreateTranscriptLoader {
 
 /**
  * Transcribe audio and load subtitles for the transcript as `srt` or `vtt` format.
+ 
+ * @inheritDoc
  */
 export class AudioSubtitleLoader extends CreateTranscriptLoader {
   /**

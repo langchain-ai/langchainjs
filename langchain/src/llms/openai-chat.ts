@@ -15,9 +15,11 @@ export {
 export { OpenAIChat };
 
 /**
- * PromptLayer wrapper to OpenAIChat
- * @deprecated
- */
+     * PromptLayer wrapper to OpenAIChat
+     * @deprecated
+     
+     * @inheritDoc
+     */
 export class PromptLayerOpenAIChat extends OpenAIChat {
   get lc_secrets(): { [key: string]: string } | undefined {
     return {

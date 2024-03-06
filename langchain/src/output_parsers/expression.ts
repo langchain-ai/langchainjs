@@ -18,6 +18,8 @@ import { ASTParser } from "./expression_type_handlers/base.js";
  *                  Identifier
  *                  ExpressionLiterals
  *      ]
+ 
+ * @inheritDoc
  */
 
 export class ExpressionParser extends BaseOutputParser<ParsedType> {

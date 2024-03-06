@@ -28,6 +28,8 @@ export type TraverseType =
 
 /**
  * A class for transforming and parsing query expressions.
+ 
+ * @inheritDoc
  */
 export class QueryTransformer {
   constructor(

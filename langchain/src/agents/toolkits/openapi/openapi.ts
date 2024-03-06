@@ -21,6 +21,7 @@ import { createJsonAgent, JsonToolkit } from "../json/json.js";
 /**
  * Represents a toolkit for making HTTP requests. It initializes the
  * request tools based on the provided headers.
+ * @inheritDoc
  */
 export class RequestsToolkit extends Toolkit {
   tools: ToolInterface[];
@@ -54,6 +55,7 @@ export class RequestsToolkit extends Toolkit {
  * });
  * console.log(`Got output ${result.output}`);
  * ```
+ * @inheritDoc
  */
 export class OpenApiToolkit extends RequestsToolkit {
   constructor(

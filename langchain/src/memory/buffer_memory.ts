@@ -49,6 +49,8 @@ export interface BufferMemoryInput extends BaseChatMemoryInput {
  * console.log({ res });
  *
  * ```
+ 
+ * @inheritDoc
  */
 export class BufferMemory extends BaseChatMemory implements BufferMemoryInput {
   humanPrefix = "Human";

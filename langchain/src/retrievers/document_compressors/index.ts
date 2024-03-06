@@ -4,6 +4,8 @@ import { Callbacks } from "@langchain/core/callbacks/manager";
 
 /**
  * Base Document Compression class. All compressors should extend this class.
+ 
+ * @inheritDoc
  */
 export abstract class BaseDocumentCompressor {
   /**
@@ -55,6 +57,8 @@ export abstract class BaseDocumentCompressor {
  * );
  * console.log({ retrievedDocs });
  * ```
+ 
+ * @inheritDoc
  */
 export class DocumentCompressorPipeline extends BaseDocumentCompressor {
   transformers: (BaseDocumentTransformer | BaseDocumentCompressor)[];

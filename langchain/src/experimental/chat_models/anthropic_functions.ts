@@ -54,6 +54,7 @@ export type AnthropicFunctionsInput = Partial<AnthropicInput> &
     systemPromptTemplate?: BasePromptTemplate;
   };
 
+/** @inheritDoc */
 export class AnthropicFunctions extends BaseChatModel<ChatAnthropicFunctionsCallOptions> {
   llm: BaseChatModel;
 

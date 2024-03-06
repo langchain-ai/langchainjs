@@ -4,6 +4,7 @@ import { BufferLoader } from "./buffer.js";
 /**
  * A class that extends the `BufferLoader` class. It represents a document
  * loader that loads documents from DOCX files.
+ * @inheritDoc
  */
 export class DocxLoader extends BufferLoader {
   constructor(filePathOrBlob: string | Blob) {

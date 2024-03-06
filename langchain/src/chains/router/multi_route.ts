@@ -40,6 +40,8 @@ export interface MultiRouteChainInput extends ChainInputs {
  * A class that represents a router chain. It
  * extends the BaseChain class and provides functionality for routing
  * inputs to different chains.
+ 
+ * @inheritDoc
  */
 export abstract class RouterChain extends BaseChain {
   get outputKeys(): string[] {
@@ -59,6 +61,8 @@ export abstract class RouterChain extends BaseChain {
  * A class that represents a multi-route chain.
  * It extends the BaseChain class and provides functionality for routing
  * inputs to different chains based on a router chain.
+ 
+ * @inheritDoc
  */
 export class MultiRouteChain extends BaseChain {
   static lc_name() {

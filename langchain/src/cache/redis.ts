@@ -31,6 +31,8 @@ type RedisClientType =
  * const response = await model.invoke("Do something random!");
  * console.log(response);
  * ```
+ 
+ * @inheritDoc
  */
 export class RedisCache extends BaseCache {
   private redisClient: RedisClientType;

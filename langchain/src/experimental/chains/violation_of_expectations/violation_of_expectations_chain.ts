@@ -42,6 +42,8 @@ export interface ViolationOfExpectationsChainInput extends ChainInputs {
 /**
  * Chain that generates key insights/facts of a user based on a
  * a chat conversation with an AI.
+ 
+ * @inheritDoc
  */
 export class ViolationOfExpectationsChain
   extends BaseChain

@@ -37,6 +37,7 @@ function concatenateRows(message: ChatGPTMessage, title: string): string {
   return `${title} - ${sender} on ${date}: ${text}\n\n`;
 }
 
+/** @inheritDoc */
 export class ChatGPTLoader extends TextLoader {
   public numLogs: number;
 

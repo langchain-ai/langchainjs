@@ -30,6 +30,7 @@ export type OpenAIAgentTokenBufferMemoryFields = BaseChatMemoryInput & {
 
 /**
  * Memory used to save agent output and intermediate steps.
+ * @inheritDoc
  */
 export class OpenAIAgentTokenBufferMemory extends BaseChatMemory {
   humanPrefix = "Human";

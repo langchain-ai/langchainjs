@@ -4,6 +4,8 @@ import { NumericLiteralType } from "./types.js";
 /**
  * Handler for numeric literal nodes in an abstract syntax tree (AST).
  * Extends the NodeHandler class.
+ 
+ * @inheritDoc
  */
 export class NumericLiteralHandler extends NodeHandler {
   /**

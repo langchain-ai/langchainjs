@@ -29,6 +29,7 @@ type SiteMapElement = {
   priority?: string;
 };
 
+/** @inheritDoc */
 export class SitemapLoader
   extends CheerioWebBaseLoader
   implements SitemapLoaderParams

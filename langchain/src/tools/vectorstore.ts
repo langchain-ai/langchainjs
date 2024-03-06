@@ -15,6 +15,8 @@ interface VectorStoreTool {
  * A tool for the VectorDBQA chain to interact with a Vector Store. It is
  * used to answer questions about a specific topic. The input to this tool
  * should be a fully formed question.
+ 
+ * @inheritDoc
  */
 export class VectorStoreQATool extends Tool implements VectorStoreTool {
   static lc_name() {

@@ -81,6 +81,8 @@ export interface SequentialChainInput extends ChainInputs {
  * @deprecated
  * Switch to {@link https://js.langchain.com/docs/expression_language/ | expression language}.
  * Will be removed in 0.2.0
+ 
+ * @inheritDoc
  */
 export class SequentialChain extends BaseChain implements SequentialChainInput {
   static lc_name() {
@@ -290,6 +292,8 @@ export interface SimpleSequentialChainInput extends ChainInputs {
  * const review = await overallChain.run("Tragedy at sunset on the beach")
  * // the variable review contains resulting play review.
  * ```
+ 
+ * @inheritDoc
  */
 export class SimpleSequentialChain
   extends BaseChain

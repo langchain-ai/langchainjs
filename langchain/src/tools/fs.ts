@@ -12,6 +12,8 @@ interface ReadFileParams extends ToolParams {
 /**
  * Class for reading files from the disk. Extends the StructuredTool
  * class.
+ 
+ * @inheritDoc
  */
 export class ReadFileTool extends StructuredTool {
   static lc_name() {
@@ -49,6 +51,8 @@ interface WriteFileParams extends ToolParams {
 /**
  * Class for writing data to files on the disk. Extends the StructuredTool
  * class.
+ 
+ * @inheritDoc
  */
 export class WriteFileTool extends StructuredTool {
   static lc_name() {

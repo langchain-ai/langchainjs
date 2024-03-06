@@ -52,6 +52,8 @@ export interface SelfQueryRetrieverArgs<T extends VectorStore>
  *   "Which movies are directed by Greta Gerwig?",
  * );
  * ```
+ 
+ * @inheritDoc
  */
 export class SelfQueryRetriever<T extends VectorStore>
   extends BaseRetriever

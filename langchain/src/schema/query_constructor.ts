@@ -2,6 +2,7 @@
  * A simple data structure that holds information about an attribute. It
  * is typically used to provide metadata about attributes in other classes
  * or data structures within the LangChain framework.
+ * @inheritDoc
  */
 export class AttributeInfo {
   constructor(

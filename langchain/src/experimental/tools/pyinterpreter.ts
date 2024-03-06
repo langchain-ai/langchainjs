@@ -6,6 +6,7 @@ export type PythonInterpreterToolParams = Parameters<typeof loadPyodide>[0] &
     instance: PyodideInterface;
   };
 
+/** @inheritDoc */
 export class PythonInterpreterTool extends Tool {
   static lc_name() {
     return "PythonInterpreterTool";

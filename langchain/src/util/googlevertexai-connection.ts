@@ -16,6 +16,7 @@ import type {
   GoogleAbstractedClientOpsMethod,
 } from "../types/googlevertexai-types.js";
 
+/** @inheritDoc */
 export abstract class GoogleConnection<
   CallOptions extends AsyncCallerCallOptions,
   ResponseType extends GoogleResponse
@@ -69,6 +70,7 @@ export abstract class GoogleConnection<
   }
 }
 
+/** @inheritDoc */
 export abstract class GoogleVertexAIConnection<
     CallOptions extends AsyncCallerCallOptions,
     ResponseType extends GoogleResponse,
@@ -172,6 +174,7 @@ export function simpleValue(val: unknown): unknown {
   }
 }
 
+/** @inheritDoc */
 export class GoogleVertexAILLMConnection<
     CallOptions extends BaseLanguageModelCallOptions,
     InstanceType,
@@ -253,6 +256,7 @@ export interface GoogleVertexAILLMResponse<
   data: GoogleVertexAIStream | GoogleVertexAILLMPredictions<PredictionType>;
 }
 
+/** @inheritDoc */
 export class GoogleVertexAIStream {
   _buffer = "";
 

@@ -83,6 +83,8 @@ function _getLanguageModel(llmLike: RunnableInterface): BaseLanguageModel {
  * const prompt = PromptTemplate.fromTemplate("Tell me a {adjective} joke");
  * const llm = new LLMChain({ llm: new OpenAI(), prompt });
  * ```
+ 
+ * @inheritDoc
  */
 export class LLMChain<
     T extends string | object = string,

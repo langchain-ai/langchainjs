@@ -5,6 +5,8 @@ import { BufferLoader } from "./buffer.js";
 /**
  * A class that extends the `BufferLoader` class. It represents a document
  * loader that loads documents from PDF files.
+ 
+ * @inheritDoc
  */
 export class PPTXLoader extends BufferLoader {
   constructor(filePathOrBlob: string | Blob) {

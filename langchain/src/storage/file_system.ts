@@ -26,6 +26,8 @@ import { BaseStore } from "@langchain/core/stores";
  *   await store.mdelete([key]);
  * }
  * ```
+ 
+ * @inheritDoc
  */
 export class LocalFileStore extends BaseStore<string, Uint8Array> {
   lc_namespace = ["langchain", "storage"];

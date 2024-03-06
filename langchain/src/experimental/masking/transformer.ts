@@ -1,5 +1,6 @@
 /**
  * Abstract class representing a transformer used for masking and rehydrating messages.
+ * @inheritDoc
  */
 export abstract class MaskingTransformer {
   abstract transform(

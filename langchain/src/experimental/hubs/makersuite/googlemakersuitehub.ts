@@ -116,6 +116,8 @@ export type MakerSuitePromptData =
  * into a Template, a Model, and into a chain consisting of these two elements.
  * In general, this class should be created by the MakerSuiteHub class and
  * not instantiated manually.
+ 
+ * @inheritDoc
  */
 export class MakerSuitePrompt {
   promptType: MakerSuitePromptType;
@@ -304,6 +306,7 @@ interface DriveFileMakerSuiteResponse extends GoogleResponse {
   data: MakerSuitePromptData;
 }
 
+/** @inheritDoc */
 export class DriveFileReadConnection
   extends GoogleConnection<DriveCallOptions, DriveFileMakerSuiteResponse>
   implements DriveFileReadParams
@@ -357,6 +360,8 @@ export interface CacheEntry {
  * There is a basic cache that will store the prompt in memory for a time specified
  * in milliseconds. This defaults to 0, indicating the prompt should always be
  * pulled from Google Drive.
+ 
+ * @inheritDoc
  */
 export class MakerSuiteHub {
   cache: Record<string, CacheEntry> = {};

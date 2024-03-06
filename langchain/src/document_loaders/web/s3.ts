@@ -60,6 +60,8 @@ export interface S3LoaderParams {
  * });
  * const docs = await loader.load();
  * ```
+ 
+ * @inheritDoc
  */
 export class S3Loader extends BaseDocumentLoader {
   private bucket: string;

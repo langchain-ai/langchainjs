@@ -17,6 +17,7 @@ export type TextSplitterChunkHeaderOptions = {
   appendChunkOverlapHeader?: boolean;
 };
 
+/** @inheritDoc */
 export abstract class TextSplitter
   extends BaseDocumentTransformer
   implements TextSplitterParams
@@ -229,6 +230,7 @@ export interface CharacterTextSplitterParams extends TextSplitterParams {
   separator: string;
 }
 
+/** @inheritDoc */
 export class CharacterTextSplitter
   extends TextSplitter
   implements CharacterTextSplitterParams
@@ -278,6 +280,7 @@ export const SupportedTextSplitterLanguages = [
 export type SupportedTextSplitterLanguage =
   (typeof SupportedTextSplitterLanguages)[number];
 
+/** @inheritDoc */
 export class RecursiveCharacterTextSplitter
   extends TextSplitter
   implements RecursiveCharacterTextSplitterParams
@@ -716,6 +719,7 @@ export interface TokenTextSplitterParams extends TextSplitterParams {
 
 /**
  * Implementation of splitter which looks at tokens.
+ * @inheritDoc
  */
 export class TokenTextSplitter
   extends TextSplitter
@@ -772,6 +776,7 @@ export class TokenTextSplitter
 
 export type MarkdownTextSplitterParams = TextSplitterParams;
 
+/** @inheritDoc */
 export class MarkdownTextSplitter
   extends RecursiveCharacterTextSplitter
   implements MarkdownTextSplitterParams
@@ -787,6 +792,7 @@ export class MarkdownTextSplitter
 
 export type LatexTextSplitterParams = TextSplitterParams;
 
+/** @inheritDoc */
 export class LatexTextSplitter
   extends RecursiveCharacterTextSplitter
   implements LatexTextSplitterParams

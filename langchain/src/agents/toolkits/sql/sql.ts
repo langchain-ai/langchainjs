@@ -34,6 +34,7 @@ export interface SqlCreatePromptArgs extends ZeroShotCreatePromptArgs {
  * const result = await executor.invoke({ input: 'List the total sales per country. Which country's customers spent the most?' });
  * console.log(`Got output ${result.output}`);
  * ```
+ * @inheritDoc
  */
 export class SqlToolkit extends Toolkit {
   tools: ToolInterface[];

@@ -22,6 +22,7 @@ import { AgentExecutor } from "../../executor.js";
  *   input: 'What are the required parameters in the request body to the /completions endpoint?'
  * });
  * ```
+ * @inheritDoc
  */
 export class JsonToolkit extends Toolkit {
   tools: ToolInterface[];

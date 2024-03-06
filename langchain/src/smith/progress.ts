@@ -1,3 +1,4 @@
+/** @inheritDoc */
 export class ProgressBar {
   total: number;
 

@@ -27,6 +27,7 @@ export type OllamaFunctionsInput = Partial<ChatOllamaInput> &
     toolSystemPromptTemplate?: string;
   };
 
+/** @inheritDoc */
 export class OllamaFunctions extends BaseChatModel<ChatOllamaFunctionsCallOptions> {
   llm: ChatOllama;
 

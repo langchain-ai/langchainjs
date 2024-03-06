@@ -47,6 +47,7 @@ export type ToolsAgentStep = AgentStep & {
  * });
  *
  * ```
+ * @inheritDoc
  */
 export class OpenAIToolsAgentOutputParser extends AgentMultiActionOutputParser {
   lc_namespace = ["langchain", "agents", "openai"];

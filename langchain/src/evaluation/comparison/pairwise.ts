@@ -39,6 +39,8 @@ const SUPPORTED_CRITERIA: Record<Criteria, string> = {
 
 /**
  * A parser for the output of the PairwiseStringEvalChain.
+ 
+ * @inheritDoc
  */
 export class PairwiseStringResultOutputParser extends BaseLLMOutputParser<EvalOutputType> {
   static lc_name(): string {
@@ -94,6 +96,8 @@ export class PairwiseStringResultOutputParser extends BaseLLMOutputParser<EvalOu
 /**
  * A chain for comparing two outputs, such as the outputs
  * of two models, prompts, or outputs of a single model on similar inputs.
+ 
+ * @inheritDoc
  */
 export class PairwiseStringEvalChain extends LLMPairwiseStringEvaluator {
   static lc_name(): string {
@@ -231,6 +235,8 @@ To use references, use the LabeledPairwiseStringEvalChain instead.`;
  * A chain for comparing two outputs, such as the outputs
  * of two models, prompts, or outputs of a single model on similar inputs,
  * with labeled preferences.
+ 
+ * @inheritDoc
  */
 export class LabeledPairwiseStringEvalChain extends PairwiseStringEvalChain {
   static lc_name(): string {

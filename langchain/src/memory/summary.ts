@@ -42,6 +42,8 @@ export interface BaseConversationSummaryMemoryInput
  * Abstract class that provides a structure for storing and managing the
  * memory of a conversation. It includes methods for predicting a new
  * summary for the conversation given the existing messages and summary.
+ 
+ * @inheritDoc
  */
 export abstract class BaseConversationSummaryMemory extends BaseChatMemory {
   memoryKey = "history";
@@ -128,6 +130,8 @@ export abstract class BaseConversationSummaryMemory extends BaseChatMemory {
  * console.log({ res2, memory: await memory.loadMemoryVariables({}) });
  *
  * ```
+ 
+ * @inheritDoc
  */
 export class ConversationSummaryMemory extends BaseConversationSummaryMemory {
   buffer = "";

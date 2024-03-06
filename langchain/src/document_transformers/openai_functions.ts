@@ -17,6 +17,8 @@ import {
 
 /**
  * A transformer that tags metadata to a document using a tagging chain.
+ 
+ * @inheritDoc
  */
 export class MetadataTagger extends MappingDocumentTransformer {
   static lc_name() {

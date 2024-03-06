@@ -16,6 +16,8 @@ export interface FakeListInput extends BaseLLMParams {
 /**
  * A fake LLM that returns a predefined list of responses. It can be used for
  * testing purposes.
+ 
+ * @inheritDoc
  */
 export class FakeListLLM extends LLM {
   static lc_name() {

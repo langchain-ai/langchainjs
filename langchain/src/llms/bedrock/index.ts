@@ -8,6 +8,7 @@ import { logVersion010MigrationWarning } from "../../util/entrypoint_deprecation
   oldEntrypointName: "llms/bedrock",
 });
 
+/** @inheritDoc */
 export class Bedrock extends BaseBedrock {
   static lc_name() {
     return "Bedrock";

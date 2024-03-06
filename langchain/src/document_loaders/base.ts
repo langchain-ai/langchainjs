@@ -16,6 +16,7 @@ export interface DocumentLoader {
  * Abstract class that provides a default implementation for the
  * loadAndSplit() method from the DocumentLoader interface. The load()
  * method is left abstract and needs to be implemented by subclasses.
+ * @inheritDoc
  */
 export abstract class BaseDocumentLoader implements DocumentLoader {
   /**

@@ -13,6 +13,7 @@ export interface EvaluateArgs {
 const eqSet = (xs: Set<string>, ys: Set<string>) =>
   xs.size === ys.size && [...xs].every((x) => ys.has(x));
 
+/** @inheritDoc */
 export class QAEvalChain extends LLMChain {
   static lc_name() {
     return "QAEvalChain";

@@ -84,6 +84,8 @@ export function computeEvaluationScore(
 /**
  * Use embedding distances to score semantic difference between
  * a prediction and reference.
+ 
+ * @inheritDoc
  */
 export class EmbeddingDistanceEvalChain
   extends StringEvaluator
@@ -147,6 +149,8 @@ export class EmbeddingDistanceEvalChain
 
 /**
  * Use embedding distances to score semantic difference between two predictions.
+ 
+ * @inheritDoc
  */
 export class PairwiseEmbeddingDistanceEvalChain
   extends PairwiseStringEvaluator

@@ -52,6 +52,7 @@ export type ChatConversationalAgentInput = Optional<AgentInput, "outputParser">;
  * @augments Agent
  *
  * @deprecated Use the {@link https://api.js.langchain.com/functions/langchain_agents.createStructuredChatAgent.html | createStructuredChatAgent method instead}.
+ * @inheritDoc
  */
 export class ChatConversationalAgent extends Agent {
   static lc_name() {

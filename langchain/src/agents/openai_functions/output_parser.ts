@@ -45,6 +45,7 @@ export type FunctionsAgentAction = AgentAction & {
  * });
  *
  * ```
+ * @inheritDoc
  */
 export class OpenAIFunctionsAgentOutputParser extends AgentActionOutputParser {
   lc_namespace = ["langchain", "agents", "openai"];

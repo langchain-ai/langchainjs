@@ -15,6 +15,7 @@ import { OutputFixingParser } from "../../output_parsers/fix.js";
  * a StructuredChatAgent action. It extends the `AgentActionOutputParser`
  * class and extracts the action and action input from the text output,
  * returning an `AgentAction` or `AgentFinish` object.
+ * @inheritDoc
  */
 export class StructuredChatOutputParser extends AgentActionOutputParser {
   lc_namespace = ["langchain", "agents", "structured_chat"];
@@ -96,6 +97,7 @@ export interface StructuredChatOutputParserArgs {
  *  "What is a random number between 5 and 10 raised to the second power?"
  * );
  * ```
+ * @inheritDoc
  */
 export class StructuredChatOutputParserWithRetries extends AgentActionOutputParser {
   lc_namespace = ["langchain", "agents", "structured_chat"];

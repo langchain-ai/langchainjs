@@ -28,6 +28,7 @@ export type OpenAIAssistantRunnableInput<
   asAgent?: AsAgent;
 };
 
+/** @inheritDoc */
 export class OpenAIAssistantRunnable<
   AsAgent extends boolean | undefined,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

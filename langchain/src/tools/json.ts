@@ -15,6 +15,8 @@ export type JsonObject = { [key: string]: Json };
 /**
  * Represents a JSON object in the LangChain framework. Provides methods
  * to get keys and values from the JSON object.
+ 
+ * @inheritDoc
  */
 export class JsonSpec extends Serializable {
   lc_namespace = ["langchain", "tools", "json"];
@@ -84,6 +86,8 @@ export interface JsonToolFields extends ToolParams {
 /**
  * A tool in the LangChain framework that lists all keys at a given path
  * in a JSON object.
+ 
+ * @inheritDoc
  */
 export class JsonListKeysTool extends Tool {
   static lc_name() {
@@ -125,6 +129,8 @@ export class JsonListKeysTool extends Tool {
 /**
  * A tool in the LangChain framework that retrieves the value at a given
  * path in a JSON object.
+ 
+ * @inheritDoc
  */
 export class JsonGetValueTool extends Tool {
   static lc_name() {

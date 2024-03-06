@@ -8,6 +8,7 @@ import { LLMChain } from "../llm_chain.js";
 import { SequentialChain } from "../sequential_chain.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
 
+/** @inheritDoc */
 class FakeLLM1 extends BaseLLM {
   nrMapCalls = 0;
 
@@ -30,6 +31,7 @@ class FakeLLM1 extends BaseLLM {
   }
 }
 
+/** @inheritDoc */
 class FakeLLM2 extends BaseLLM {
   nrMapCalls = 0;
 
@@ -56,6 +58,7 @@ class FakeLLM2 extends BaseLLM {
   }
 }
 
+/** @inheritDoc */
 class FakeLLM3 extends BaseLLM {
   nrMapCalls = 0;
 

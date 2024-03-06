@@ -19,6 +19,8 @@ type SupabaseFilterProps = keyof SupabaseFilter;
  * contains methods to handle different types of operations such as "or",
  * "filter", "in", "contains", "textSearch", "match", "not", and default
  * operations.
+ 
+ * @inheritDoc
  */
 export class ProxyParamsDuplicator {
   duplicationAllowedOps: string[] = [

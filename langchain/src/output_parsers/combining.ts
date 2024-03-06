@@ -17,6 +17,8 @@ export interface CombiningOutputParserFields {
 /**
  * Class to combine multiple output parsers
  * @augments BaseOutputParser
+ 
+ * @inheritDoc
  */
 export class CombiningOutputParser extends BaseOutputParser<object> {
   static lc_name() {

@@ -21,6 +21,8 @@ export interface RegexParserFields {
 /**
  * Class to parse the output of an LLM call into a dictionary.
  * @augments BaseOutputParser
+ 
+ * @inheritDoc
  */
 export class RegexParser extends BaseOutputParser<Record<string, string>> {
   static lc_name() {

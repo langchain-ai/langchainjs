@@ -10,6 +10,8 @@ import { formatDocumentsAsString } from "../../util/document.js";
  * const docs = await loader.load();
  * console.log({ docs });
  * ```
+ 
+ * @inheritDoc
  */
 export class WebPDFLoader extends BaseDocumentLoader {
   protected blob: Blob;

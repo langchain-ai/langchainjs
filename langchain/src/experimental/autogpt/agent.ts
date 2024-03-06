@@ -56,6 +56,8 @@ export interface AutoGPTInput {
  * );
  * const result = await autogpt.run(["write a weather report for SF today"]);
  * ```
+ 
+ * @inheritDoc
  */
 export class AutoGPT {
   aiName: string;

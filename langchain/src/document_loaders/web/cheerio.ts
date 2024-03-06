@@ -45,6 +45,8 @@ export interface WebBaseLoaderParams extends AsyncCallerParams {
  * const docs = await loader.load();
  * console.log({ docs });
  * ```
+ 
+ * @inheritDoc
  */
 export class CheerioWebBaseLoader
   extends BaseDocumentLoader

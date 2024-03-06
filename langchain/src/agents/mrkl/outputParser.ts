@@ -8,6 +8,7 @@ export const FINAL_ANSWER_ACTION = "Final Answer:";
 /**
  * A class that extends `AgentActionOutputParser` to provide a custom
  * implementation for parsing the output of a ZeroShotAgent action.
+ * @inheritDoc
  */
 export class ZeroShotAgentOutputParser extends AgentActionOutputParser {
   lc_namespace = ["langchain", "agents", "mrkl"];

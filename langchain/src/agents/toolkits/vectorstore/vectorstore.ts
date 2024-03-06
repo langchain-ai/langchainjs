@@ -39,6 +39,7 @@ export interface VectorStoreInfo {
  * });
  * console.log(`Got output ${result.output}`);
  * ```
+ * @inheritDoc
  */
 export class VectorStoreToolkit extends Toolkit {
   tools: ToolInterface[];
@@ -68,6 +69,7 @@ export class VectorStoreToolkit extends Toolkit {
  * Class representing a toolkit for working with multiple vector stores.
  * It initializes multiple vector store QA tools based on the provided
  * vector store information and language model.
+ * @inheritDoc
  */
 export class VectorStoreRouterToolkit extends Toolkit {
   tools: ToolInterface[];

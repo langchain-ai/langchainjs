@@ -4,6 +4,8 @@ import { BooleanLiteralType } from "./types.js";
 /**
  * Handler for boolean literal nodes in the abstract syntax tree (AST).
  * Extends the NodeHandler class.
+ 
+ * @inheritDoc
  */
 export class BooleanLiteralHandler extends NodeHandler {
   /**

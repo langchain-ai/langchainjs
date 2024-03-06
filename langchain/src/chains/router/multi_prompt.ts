@@ -33,6 +33,8 @@ import { RouterOutputParser } from "../../output_parsers/router.js";
  *   input: "What is the speed of light?",
  * });
  * ```
+ 
+ * @inheritDoc
  */
 export class MultiPromptChain extends MultiRouteChain {
   /**

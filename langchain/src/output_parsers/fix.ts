@@ -12,6 +12,8 @@ import { NAIVE_FIX_PROMPT } from "./prompts.js";
  * Class that extends the BaseOutputParser to handle situations where the
  * initial parsing attempt fails. It contains a retryChain for retrying
  * the parsing process in case of a failure.
+ 
+ * @inheritDoc
  */
 export class OutputFixingParser<T> extends BaseOutputParser<T> {
   static lc_name() {

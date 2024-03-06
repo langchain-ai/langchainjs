@@ -31,6 +31,8 @@ export interface ContextualCompressionRetrieverArgs extends BaseRetrieverInput {
  *   "What did the speaker say about Justice Breyer?",
  * );
  * ```
+ 
+ * @inheritDoc
  */
 export class ContextualCompressionRetriever extends BaseRetriever {
   static lc_name() {

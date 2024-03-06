@@ -40,6 +40,7 @@ export const FINAL_ANSWER_ACTION = "Final Answer:";
  *     "Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?",
  * });
  * ```
+ * @inheritDoc
  */
 export class ChatAgentOutputParser extends AgentActionOutputParser {
   lc_namespace = ["langchain", "agents", "chat"];

@@ -4,6 +4,8 @@ import { IdentifierType } from "./types.js";
 /**
  * Handles identifiers in the LangChain Expression Language. Extends the
  * NodeHandler class.
+ 
+ * @inheritDoc
  */
 export class IdentifierHandler extends NodeHandler {
   /**

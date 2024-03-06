@@ -105,6 +105,8 @@ export interface GithubRepoLoaderParams extends AsyncCallerParams {
  * A class that extends the BaseDocumentLoader and implements the
  * GithubRepoLoaderParams interface. It represents a document loader for
  * loading files from a GitHub repository.
+ 
+ * @inheritDoc
  */
 export class GithubRepoLoader
   extends BaseDocumentLoader

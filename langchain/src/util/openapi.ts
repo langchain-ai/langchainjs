@@ -1,6 +1,7 @@
 import * as yaml from "js-yaml";
 import { OpenAPIV3, OpenAPIV3_1 } from "openapi-types";
 
+/** @inheritDoc */
 export class OpenAPISpec {
   constructor(public document: OpenAPIV3_1.Document) {}
 

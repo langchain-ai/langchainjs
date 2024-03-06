@@ -32,6 +32,8 @@ export interface TransformChainFields<
  * @deprecated
  * Switch to {@link https://js.langchain.com/docs/expression_language/ | expression language}.
  * Will be removed in 0.2.0
+ 
+ * @inheritDoc
  */
 export class TransformChain<
   I extends ChainValues,

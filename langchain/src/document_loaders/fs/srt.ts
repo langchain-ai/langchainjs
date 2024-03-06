@@ -14,6 +14,7 @@ import { TextLoader } from "./text.js";
  * const docs = await loader.load();
  * console.log({ docs });
  * ```
+ * @inheritDoc
  */
 export class SRTLoader extends TextLoader {
   constructor(filePathOrBlob: string | Blob) {

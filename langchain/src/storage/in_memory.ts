@@ -18,6 +18,8 @@ import { BaseStore } from "@langchain/core/stores";
  * const retrievedMessages = await store.mget(["message:id:0", "message:id:1"]);
  * await store.mdelete(await store.yieldKeys("message:id:").toArray());
  * ```
+ 
+ * @inheritDoc
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class InMemoryStore<T = any> extends BaseStore<string, T> {

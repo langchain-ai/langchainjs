@@ -7,6 +7,8 @@ import { BaseFileStore } from "./base.js";
 /**
  * Specific implementation of the `BaseFileStore` class for Node.js.
  * Provides methods to read and write files in a specific base path.
+ 
+ * @inheritDoc
  */
 export class NodeFileStore extends BaseFileStore {
   lc_namespace = ["langchain", "stores", "file", "node"];

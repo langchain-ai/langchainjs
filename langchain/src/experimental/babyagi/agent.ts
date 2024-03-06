@@ -51,6 +51,8 @@ export interface BabyAGIInputs
  *   objective: "Write a weather report for SF today",
  * });
  * ```
+ 
+ * @inheritDoc
  */
 export class BabyAGI extends BaseChain implements BabyAGIInputs {
   static lc_name() {

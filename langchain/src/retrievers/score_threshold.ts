@@ -14,6 +14,7 @@ export type ScoreThresholdRetrieverInput<V extends VectorStore> = Omit<
   minSimilarityScore: number;
 };
 
+/** @inheritDoc */
 export class ScoreThresholdRetriever<
   V extends VectorStore
 > extends VectorStoreRetriever<V> {

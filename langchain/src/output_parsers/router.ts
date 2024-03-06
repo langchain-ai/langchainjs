@@ -16,6 +16,8 @@ export type RouterOutputParserInput = {
  * JsonMarkdownStructuredOutputParser. It is used to parse the output of a
  * router in LangChain. The class takes a schema and an optional
  * RouterOutputParserInput object as parameters.
+ 
+ * @inheritDoc
  */
 export class RouterOutputParser<
   Y extends z.ZodTypeAny

@@ -36,6 +36,8 @@ export interface VectorDBQAChainInput extends Omit<ChainInputs, "memory"> {
  * @deprecated
  * Switch to {@link https://js.langchain.com/docs/modules/chains/ | createRetrievalChain}
  * Will be removed in 0.2.0
+ 
+ * @inheritDoc
  */
 export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
   static lc_name() {

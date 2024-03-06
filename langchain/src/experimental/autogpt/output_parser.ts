@@ -25,6 +25,8 @@ export function preprocessJsonInput(inputStr: string): string {
 /**
  * Class responsible for parsing the output of AutoGPT. It extends the
  * BaseOutputParser class.
+ 
+ * @inheritDoc
  */
 export class AutoGPTOutputParser extends BaseOutputParser<AutoGPTAction> {
   lc_namespace = ["langchain", "experimental", "autogpt"];

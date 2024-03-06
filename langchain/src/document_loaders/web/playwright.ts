@@ -33,6 +33,8 @@ export type PlaywrightWebBaseLoaderOptions = {
  * Class representing a document loader for scraping web pages using
  * Playwright. Extends the BaseDocumentLoader class and implements the
  * DocumentLoader interface.
+ 
+ * @inheritDoc
  */
 export class PlaywrightWebBaseLoader
   extends BaseDocumentLoader

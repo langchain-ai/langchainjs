@@ -49,6 +49,8 @@ interface NotionPage {
  * });
  * const docs = await loader.load();
  * ```
+ 
+ * @inheritDoc
  */
 export class NotionDBLoader
   extends BaseDocumentLoader

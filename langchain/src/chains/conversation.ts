@@ -26,6 +26,8 @@ AI:`;
  * const res2 = await chain.call({ input: "What's my name?" });
  * console.log({ res2 });
  * ```
+ 
+ * @inheritDoc
  */
 export class ConversationChain extends LLMChain {
   static lc_name() {

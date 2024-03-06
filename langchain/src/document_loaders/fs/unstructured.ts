@@ -123,6 +123,8 @@ type UnstructuredDirectoryLoaderOptions = UnstructuredLoaderOptions & {
  * partitioning request to the Unstructured API and retrieves the
  * partitioned elements. It creates a Document instance for each element
  * and returns an array of Document instances.
+ 
+ * @inheritDoc
  */
 export class UnstructuredLoader extends BaseDocumentLoader {
   public filePath: string;
@@ -305,6 +307,8 @@ export class UnstructuredLoader extends BaseDocumentLoader {
  * });
  * const docs = await loader.load();
  * ```
+ 
+ * @inheritDoc
  */
 export class UnstructuredDirectoryLoader extends DirectoryLoader {
   constructor(

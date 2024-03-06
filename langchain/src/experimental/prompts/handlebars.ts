@@ -60,6 +60,7 @@ export const interpolateHandlebars = (
 export type HandlebarsPromptTemplateInput<RunInput extends InputValues> =
   CustomFormatPromptTemplateInput<RunInput>;
 
+/** @inheritDoc */
 export class HandlebarsPromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any

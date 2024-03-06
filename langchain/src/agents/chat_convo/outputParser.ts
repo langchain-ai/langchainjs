@@ -19,6 +19,7 @@ export type ChatConversationalAgentOutputParserFormatInstructionsOptions =
  * Class that represents an output parser for the ChatConversationalAgent
  * class. It extends the AgentActionOutputParser class and provides
  * methods for parsing the output of the MRKL chain into agent actions.
+ * @inheritDoc
  */
 export class ChatConversationalAgentOutputParser extends AgentActionOutputParser {
   lc_namespace = ["langchain", "agents", "chat_convo"];
@@ -93,6 +94,7 @@ export type ChatConversationalAgentOutputParserArgs = {
  * ChatConversationalAgent class. It extends the AgentActionOutputParser
  * class and provides methods for parsing the output of the MRKL chain
  * into agent actions with retry functionality.
+ * @inheritDoc
  */
 export class ChatConversationalAgentOutputParserWithRetries extends AgentActionOutputParser {
   lc_namespace = ["langchain", "agents", "chat_convo"];

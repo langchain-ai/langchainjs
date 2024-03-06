@@ -24,6 +24,8 @@ export type GenerativeAgentMemoryConfig = {
  * or memories to the agent's memory, scoring the importance of a memory,
  * reflecting on recent events to add synthesized memories, and generating
  * insights on a topic of reflection based on pertinent memories.
+ 
+ * @inheritDoc
  */
 class GenerativeAgentMemoryChain extends BaseChain {
   static lc_name() {
@@ -311,6 +313,8 @@ class GenerativeAgentMemoryChain extends BaseChain {
  * );
  * const summary = await tommiesMemory.getSummary();
  * ```
+ 
+ * @inheritDoc
  */
 export class GenerativeAgentMemory extends BaseMemory {
   llm: BaseLanguageModelInterface;

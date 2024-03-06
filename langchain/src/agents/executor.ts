@@ -41,6 +41,7 @@ interface AgentExecutorIteratorInput {
   runManager?: CallbackManagerForChainRun;
 }
 
+/** @inheritDoc */
 export class AgentExecutorIterator
   extends Serializable
   implements AgentExecutorIteratorInput
@@ -314,6 +315,7 @@ export type AgentExecutorOutput = ChainValues;
 /**
  * Tool that just returns the query.
  * Used for exception tracking.
+ * @inheritDoc
  */
 export class ExceptionTool extends Tool {
   name = "_Exception";
@@ -342,6 +344,7 @@ export class ExceptionTool extends Tool {
  * });
  *
  * ```
+ * @inheritDoc
  */
 export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
   static lc_name() {

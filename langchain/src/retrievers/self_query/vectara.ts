@@ -40,6 +40,7 @@ function processValue(value: Value): string {
   }
 }
 
+/** @inheritDoc */
 export class VectaraTranslator<
   T extends VectaraStore
 > extends BaseTranslator<T> {

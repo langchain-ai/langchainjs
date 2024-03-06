@@ -12,6 +12,7 @@ export interface RecursiveUrlLoaderOptions {
   callerOptions?: ConstructorParameters<typeof AsyncCaller>[0];
 }
 
+/** @inheritDoc */
 export class RecursiveUrlLoader
   extends BaseDocumentLoader
   implements DocumentLoader

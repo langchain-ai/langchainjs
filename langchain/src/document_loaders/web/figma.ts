@@ -52,6 +52,8 @@ export interface FigmaLoaderParams {
  * });
  * const docs = await loader.load();
  * ```
+ 
+ * @inheritDoc
  */
 export class FigmaFileLoader
   extends BaseDocumentLoader
