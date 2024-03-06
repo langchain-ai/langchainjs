@@ -1,0 +1,687 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`serialize + deserialize custom classes 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain
+  - tests
+  - Person
+kwargs:
+  a_field: hello
+  api_key:
+    lc: 1
+    type: secret
+    id:
+      - PERSON_API_KEY
+  hello: 3
+"
+`;
+
+exports[`serialize + deserialize custom classes 2`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain
+  - tests
+  - SpecialPerson
+kwargs:
+  a_field: hello
+  api_key:
+    lc: 1
+    type: secret
+    id:
+      - PERSON_API_KEY
+  another_api_key:
+    lc: 1
+    type: secret
+    id:
+      - SPECIAL_PERSON_API_KEY
+  by: 4
+  hello: 3
+  inherited:
+    lc: 1
+    type: secret
+    id:
+      - SPECIAL_PERSON_INHERITED_API_KEY
+  nested:
+    api:
+      key:
+        lc: 1
+        type: secret
+        id:
+          - SPECIAL_PERSON_NESTED_API_KEY
+"
+`;
+
+exports[`serialize + deserialize llm 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain
+  - llms
+  - openai
+  - OpenAI
+kwargs:
+  temperature: 0.7
+  model: davinci
+  openai_api_key:
+    lc: 1
+    type: secret
+    id:
+      - OPENAI_API_KEY
+"
+`;
+
+exports[`serialize + deserialize llm chain chat prompt 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain
+  - chains
+  - llm
+  - LLMChain
+kwargs:
+  llm:
+    lc: 1
+    type: constructor
+    id:
+      - langchain
+      - chat_models
+      - openai
+      - ChatOpenAI
+    kwargs:
+      temperature: 0.5
+      model: gpt-4
+      streaming: true
+      azure_openai_api_key:
+        lc: 1
+        type: secret
+        id:
+          - AZURE_OPENAI_API_KEY
+      azure_openai_api_instance_name: openai-instance
+      azure_openai_api_deployment_name: openai-deployment
+      azure_openai_api_version: openai-version
+      prefix_messages:
+        - role: system
+          content: You're a nice assistant
+      openai_api_key:
+        lc: 1
+        type: secret
+        id:
+          - OPENAI_API_KEY
+  prompt:
+    lc: 1
+    type: constructor
+    id:
+      - langchain_core
+      - prompts
+      - chat
+      - ChatPromptTemplate
+    kwargs:
+      input_variables:
+        - name
+      messages:
+        - lc: 1
+          type: constructor
+          id:
+            - langchain_core
+            - prompts
+            - chat
+            - SystemMessagePromptTemplate
+          kwargs:
+            prompt:
+              lc: 1
+              type: constructor
+              id:
+                - langchain_core
+                - prompts
+                - prompt
+                - PromptTemplate
+              kwargs:
+                input_variables:
+                  - name
+                template_format: f-string
+                template: You are talking to {name}.
+        - lc: 1
+          type: constructor
+          id:
+            - langchain_core
+            - prompts
+            - chat
+            - HumanMessagePromptTemplate
+          kwargs:
+            prompt:
+              lc: 1
+              type: constructor
+              id:
+                - langchain_core
+                - prompts
+                - prompt
+                - PromptTemplate
+              kwargs:
+                input_variables: []
+                template_format: f-string
+                template: Hello, nice model.
+"
+`;
+
+exports[`serialize + deserialize llm chain few shot prompt w/ examples 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain
+  - chains
+  - llm
+  - LLMChain
+kwargs:
+  llm:
+    lc: 1
+    type: constructor
+    id:
+      - langchain
+      - llms
+      - openai
+      - OpenAI
+    kwargs:
+      temperature: 0.5
+      model: davinci
+      openai_api_key:
+        lc: 1
+        type: secret
+        id:
+          - OPENAI_API_KEY
+  prompt:
+    lc: 1
+    type: not_implemented
+    id:
+      - langchain_core
+      - prompts
+      - few_shot
+      - FewShotPromptTemplate
+"
+`;
+
+exports[`serialize + deserialize llm chain few shot prompt w/ selector 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain
+  - chains
+  - llm
+  - LLMChain
+kwargs:
+  llm:
+    lc: 1
+    type: constructor
+    id:
+      - langchain
+      - llms
+      - openai
+      - OpenAI
+    kwargs:
+      temperature: 0.5
+      model: davinci
+      openai_api_key:
+        lc: 1
+        type: secret
+        id:
+          - OPENAI_API_KEY
+  prompt:
+    lc: 1
+    type: not_implemented
+    id:
+      - langchain_core
+      - prompts
+      - few_shot
+      - FewShotPromptTemplate
+"
+`;
+
+exports[`serialize + deserialize llm chain string prompt 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain
+  - chains
+  - llm
+  - LLMChain
+kwargs:
+  llm:
+    lc: 1
+    type: constructor
+    id:
+      - langchain
+      - llms
+      - openai
+      - OpenAI
+    kwargs:
+      temperature: 0.5
+      model: davinci
+      openai_api_key:
+        lc: 1
+        type: secret
+        id:
+          - OPENAI_API_KEY
+  prompt:
+    lc: 1
+    type: constructor
+    id:
+      - langchain_core
+      - prompts
+      - prompt
+      - PromptTemplate
+    kwargs:
+      input_variables:
+        - name
+      template_format: f-string
+      template: Hello, {name}!
+"
+`;
+
+exports[`serialize + deserialize llm with optional deps 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain
+  - llms
+  - cohere
+  - Cohere
+kwargs:
+  temperature: 0.5
+  cohere_api_key:
+    lc: 1
+    type: secret
+    id:
+      - COHERE_API_KEY
+"
+`;
+
+exports[`serialize + deserialize llmchain with fix + combining output parser 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain
+  - chains
+  - llm
+  - LLMChain
+kwargs:
+  llm:
+    lc: 1
+    type: constructor
+    id:
+      - langchain
+      - llms
+      - openai
+      - OpenAI
+    kwargs:
+      temperature: 0.5
+      model: davinci
+      openai_api_key:
+        lc: 1
+        type: secret
+        id:
+          - OPENAI_API_KEY
+  prompt:
+    lc: 1
+    type: constructor
+    id:
+      - langchain_core
+      - prompts
+      - prompt
+      - PromptTemplate
+    kwargs:
+      input_variables:
+        - yo
+        - format_instructions
+      template_format: f-string
+      template: An example about {yo} {format_instructions}
+  output_parser:
+    lc: 1
+    type: constructor
+    id:
+      - langchain
+      - output_parsers
+      - fix
+      - OutputFixingParser
+    kwargs:
+      parser:
+        lc: 1
+        type: constructor
+        id:
+          - langchain
+          - output_parsers
+          - combining
+          - CombiningOutputParser
+        kwargs:
+          parsers:
+            - lc: 1
+              type: constructor
+              id:
+                - langchain
+                - output_parsers
+                - regex
+                - RegexParser
+              kwargs:
+                regex:
+                  pattern: "Number: (\\\\d+), Word: (.*)"
+                  flags: ""
+                output_keys:
+                  - confidence
+                  - explanation
+            - lc: 1
+              type: constructor
+              id:
+                - langchain
+                - output_parsers
+                - regex
+                - RegexParser
+              kwargs:
+                regex:
+                  pattern: "Confidence: (A|B|C), Explanation: (.*)"
+                  flags: ""
+                output_keys:
+                  - confidence
+                  - explanation
+      retry_chain:
+        lc: 1
+        type: constructor
+        id:
+          - langchain
+          - chains
+          - llm
+          - LLMChain
+        kwargs:
+          llm:
+            lc: 1
+            type: constructor
+            id:
+              - langchain
+              - llms
+              - openai
+              - OpenAI
+            kwargs:
+              temperature: 0.5
+              model: davinci
+              openai_api_key:
+                lc: 1
+                type: secret
+                id:
+                  - OPENAI_API_KEY
+          prompt:
+            lc: 1
+            type: constructor
+            id:
+              - langchain_core
+              - prompts
+              - prompt
+              - PromptTemplate
+            kwargs:
+              input_variables:
+                - instructions
+                - completion
+                - error
+              template_format: f-string
+              template: >-
+                Instructions:
+
+                --------------
+
+                {instructions}
+
+                --------------
+
+                Completion:
+
+                --------------
+
+                {completion}
+
+                --------------
+
+
+                Above, the Completion did not satisfy the constraints given in the Instructions.
+
+                Error:
+
+                --------------
+
+                {error}
+
+                --------------
+
+
+                Please try again. Please only respond with an answer that satisfies the constraints laid out in the Instructions:
+"
+`;
+
+exports[`serialize + deserialize llmchain with list output parser 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain
+  - chains
+  - llm
+  - LLMChain
+kwargs:
+  llm:
+    lc: 1
+    type: constructor
+    id:
+      - langchain
+      - llms
+      - openai
+      - OpenAI
+    kwargs:
+      temperature: 0.5
+      model: davinci
+      openai_api_key:
+        lc: 1
+        type: secret
+        id:
+          - OPENAI_API_KEY
+  prompt:
+    lc: 1
+    type: constructor
+    id:
+      - langchain_core
+      - prompts
+      - prompt
+      - PromptTemplate
+    kwargs:
+      input_variables:
+        - yo
+        - format_instructions
+      template_format: f-string
+      template: An example about {yo} {format_instructions}
+  output_parser:
+    lc: 1
+    type: constructor
+    id:
+      - langchain_core
+      - output_parsers
+      - list
+      - CommaSeparatedListOutputParser
+    kwargs: {}
+"
+`;
+
+exports[`serialize + deserialize llmchain with regex output parser 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain
+  - chains
+  - llm
+  - LLMChain
+kwargs:
+  llm:
+    lc: 1
+    type: constructor
+    id:
+      - langchain
+      - llms
+      - openai
+      - OpenAI
+    kwargs:
+      temperature: 0.5
+      model: davinci
+      openai_api_key:
+        lc: 1
+        type: secret
+        id:
+          - OPENAI_API_KEY
+  prompt:
+    lc: 1
+    type: constructor
+    id:
+      - langchain_core
+      - prompts
+      - prompt
+      - PromptTemplate
+    kwargs:
+      input_variables:
+        - yo
+        - format_instructions
+      template_format: f-string
+      template: An example about {yo} {format_instructions}
+  output_parser:
+    lc: 1
+    type: constructor
+    id:
+      - langchain
+      - output_parsers
+      - regex
+      - RegexParser
+    kwargs:
+      regex:
+        pattern: "Confidence: (A|B|C), Explanation: (.*)"
+        flags: ""
+      output_keys:
+        - confidence
+        - explanation
+"
+`;
+
+exports[`serialize + deserialize llmchain with struct output parser throws 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain
+  - chains
+  - llm
+  - LLMChain
+kwargs:
+  llm:
+    lc: 1
+    type: constructor
+    id:
+      - langchain
+      - llms
+      - openai
+      - OpenAI
+    kwargs:
+      temperature: 0.5
+      model: davinci
+      openai_api_key:
+        lc: 1
+        type: secret
+        id:
+          - OPENAI_API_KEY
+  prompt:
+    lc: 1
+    type: constructor
+    id:
+      - langchain_core
+      - prompts
+      - prompt
+      - PromptTemplate
+    kwargs:
+      input_variables:
+        - yo
+        - format_instructions
+      template_format: f-string
+      template: An example about {yo} {format_instructions}
+  output_parser:
+    lc: 1
+    type: not_implemented
+    id:
+      - langchain
+      - output_parsers
+      - structured
+      - StructuredOutputParser
+"
+`;
+
+exports[`serialize + deserialize runnable sequence with new and old ids 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain_core
+  - runnables
+  - RunnableSequence
+kwargs:
+  first:
+    lc: 1
+    type: constructor
+    id:
+      - langchain_core
+      - prompts
+      - chat
+      - ChatPromptTemplate
+    kwargs:
+      input_variables: []
+      messages:
+        - lc: 1
+          type: constructor
+          id:
+            - langchain_core
+            - prompts
+            - chat
+            - HumanMessagePromptTemplate
+          kwargs:
+            prompt:
+              lc: 1
+              type: constructor
+              id:
+                - langchain_core
+                - prompts
+                - prompt
+                - PromptTemplate
+              kwargs:
+                input_variables: []
+                template_format: f-string
+                template: hi there
+  middle: []
+  last:
+    lc: 1
+    type: constructor
+    id:
+      - langchain
+      - chat_models
+      - openai
+      - ChatOpenAI
+    kwargs:
+      openai_api_key:
+        lc: 1
+        type: secret
+        id:
+          - OPENAI_API_KEY
+"
+`;
+
+exports[`serialize + deserialize with new and old ids 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain_core
+  - prompts
+  - prompt
+  - PromptTemplate
+kwargs:
+  input_variables:
+    - name
+  template_format: f-string
+  template: Hello, {name}!
+"
+`;
