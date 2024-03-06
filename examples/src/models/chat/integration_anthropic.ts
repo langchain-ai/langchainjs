@@ -2,7 +2,7 @@ import { ChatAnthropic } from "@langchain/anthropic";
 
 const model = new ChatAnthropic({
   temperature: 0.9,
-  modelName: "claude-2.1",
+  modelName: "claude-3-sonnet-20240229",
   // In Node.js defaults to process.env.ANTHROPIC_API_KEY,
   // anthropicApiKey: "YOUR-API-KEY",
   maxTokens: 1024,
@@ -20,7 +20,7 @@ console.log(res);
       id: 'msg_01JuukTnjoXHuzQaPiSVvZQ1',
       type: 'message',
       role: 'assistant',
-      model: 'claude-2.1',
+      model: 'claude-3-sonnet-20240229',
       stop_reason: 'end_turn',
       stop_sequence: null,
       usage: { input_tokens: 15, output_tokens: 70 }

@@ -190,6 +190,10 @@ utils/types.cjs
 utils/types.js
 utils/types.d.ts
 utils/types.d.cts
+utils/beta_warning.cjs
+utils/beta_warning.js
+utils/beta_warning.d.ts
+utils/beta_warning.d.cts
 vectorstores.cjs
 vectorstores.js
 vectorstores.d.ts

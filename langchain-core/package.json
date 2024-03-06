@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "0.1.39",
+  "version": "0.1.41",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -524,6 +524,15 @@
       "import": "./utils/types.js",
       "require": "./utils/types.cjs"
     },
+    "./utils/beta_warning": {
+      "types": {
+        "import": "./utils/beta_warning.d.ts",
+        "require": "./utils/beta_warning.d.cts",
+        "default": "./utils/beta_warning.d.ts"
+      },
+      "import": "./utils/beta_warning.js",
+      "require": "./utils/beta_warning.cjs"
+    },
     "./vectorstores": {
       "types": {
         "import": "./vectorstores.d.ts",
@@ -729,6 +738,10 @@
     "utils/types.js",
     "utils/types.d.ts",
     "utils/types.d.cts",
+    "utils/beta_warning.cjs",
+    "utils/beta_warning.js",
+    "utils/beta_warning.d.ts",
+    "utils/beta_warning.d.cts",
     "vectorstores.cjs",
     "vectorstores.js",
     "vectorstores.d.ts",

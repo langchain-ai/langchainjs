@@ -89,6 +89,7 @@ export * from "langchain/retrievers/document_compressors/embeddings_filter";
 export * from "langchain/retrievers/hyde";
 export * from "langchain/retrievers/score_threshold";
 export * from "langchain/retrievers/vespa";
+export * from "langchain/retrievers/matryoshka_retriever";
 export * from "langchain/cache";
 export * from "langchain/stores/doc/in_memory";
 export * from "langchain/stores/file/in_memory";

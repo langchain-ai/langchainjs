@@ -90,8 +90,10 @@ export interface RedisAddOptions {
 /**
  * Type for the filter used in the RedisVectorStore. It is an array of
  * strings.
+ * If a string is passed instead of an array the value is used directly, this
+ * allows custom filters to be passed.
  */
-export type RedisVectorStoreFilterType = string[];
+export type RedisVectorStoreFilterType = string[] | string;
 
 /**
  * Class representing a RedisVectorStore. It extends the VectorStore class
@@ -272,13 +274,15 @@ export class RedisVectorStore extends VectorStore {
    * @param metadatas The metadata associated with the texts.
    * @param embeddings The embeddings to use.
    * @param dbConfig The configuration for the RedisVectorStore.
+   * @param docsOptions The document options to use.
    * @returns A promise that resolves to a new instance of RedisVectorStore.
    */
   static fromTexts(
     texts: string[],
     metadatas: object[] | object,
     embeddings: EmbeddingsInterface,
-    dbConfig: RedisVectorStoreConfig
+    dbConfig: RedisVectorStoreConfig,
+    docsOptions?: RedisAddOptions
   ): Promise<RedisVectorStore> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -289,7 +293,12 @@ export class RedisVectorStore extends VectorStore {
       });
       docs.push(newDoc);
     }
-    return RedisVectorStore.fromDocuments(docs, embeddings, dbConfig);
+    return RedisVectorStore.fromDocuments(
+      docs,
+      embeddings,
+      dbConfig,
+      docsOptions
+    );
   }
 
   /**
@@ -298,15 +307,17 @@ export class RedisVectorStore extends VectorStore {
    * @param docs The documents to add.
    * @param embeddings The embeddings to use.
    * @param dbConfig The configuration for the RedisVectorStore.
+   * @param docsOptions The document options to use.
    * @returns A promise that resolves to a new instance of RedisVectorStore.
    */
   static async fromDocuments(
     docs: Document[],
     embeddings: EmbeddingsInterface,
-    dbConfig: RedisVectorStoreConfig
+    dbConfig: RedisVectorStoreConfig,
+    docsOptions?: RedisAddOptions
   ): Promise<RedisVectorStore> {
     const instance = new this(embeddings, dbConfig);
-    await instance.addDocuments(docs);
+    await instance.addDocuments(docs, docsOptions);
     return instance;
   }
 
@@ -424,7 +435,10 @@ export class RedisVectorStore extends VectorStore {
   }
 
   private prepareFilter(filter: RedisVectorStoreFilterType) {
-    return filter.map(this.escapeSpecialChars).join("|");
+    if (Array.isArray(filter)) {
+      return filter.map(this.escapeSpecialChars).join("|");
+    }
+    return filter;
   }
 
   /**
