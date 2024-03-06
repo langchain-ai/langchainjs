@@ -9,7 +9,17 @@ sidebar_label: Bedrock
 
 ## Setup
 
-You'll need to install a few official AWS packages as peer dependencies:
+You'll need to install the `@langchain/community` package:
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/community
+```
+
+Then, you'll need to install a few official AWS packages as peer dependencies:
 
 ```bash npm2yarn
 npm install @aws-crypto/sha256-js @aws-sdk/credential-provider-node @smithy/protocol-http @smithy/signature-v4 @smithy/eventstream-codec @smithy/util-utf8 @aws-sdk/types
@@ -18,12 +28,8 @@ npm install @aws-crypto/sha256-js @aws-sdk/credential-provider-node @smithy/prot
 You can also use BedrockChat in web environments such as Edge functions or Cloudflare Workers by omitting the `@aws-sdk/credential-provider-node` dependency
 and using the `web` entrypoint:
 
-import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
-
-<IntegrationInstallTooltip></IntegrationInstallTooltip>
-
 ```bash npm2yarn
-npm install @aws-crypto/sha256-js @smithy/protocol-http @smithy/signature-v4 @smithy/eventstream-codec @smithy/util-utf8 @aws-sdk/types @langchain/community
+npm install @aws-crypto/sha256-js @smithy/protocol-http @smithy/signature-v4 @smithy/eventstream-codec @smithy/util-utf8 @aws-sdk/types
 ```
 
 ## Usage
@@ -34,3 +40,15 @@ import CodeBlock from "@theme/CodeBlock";
 import BedrockExample from "@examples/models/chat/integration_bedrock.ts";
 
 <CodeBlock language="typescript">{BedrockExample}</CodeBlock>
+
+## Multimodal inputs
+
+:::tip
+Multimodal inputs are currently only supported by Anthropic Claude-3 models.
+:::
+
+Anthropic Claude-3 models hosted on Bedrock have multimodal capabilities and can reason about images. Here's an example:
+
+import BedrockMultimodalExample from "@examples/models/chat/integration_bedrock_multimodal.ts";
+
+<CodeBlock language="typescript">{BedrockMultimodalExample}</CodeBlock>

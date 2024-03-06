@@ -436,6 +436,7 @@ export class PGVectorStore extends VectorStore {
     const whereClauses = [];
 
     if (collectionId) {
+      whereClauses.push("collection_id = $3");
       parameters.push(collectionId);
     }
 
@@ -479,7 +480,6 @@ export class PGVectorStore extends VectorStore {
       SELECT *, "${this.vectorColumnName}" ${operatorString} $1 as "_distance"
       FROM ${this.computedTableName}
       ${whereClause}
-      ${collectionId ? "AND collection_id = $3" : ""}
       ORDER BY "_distance" ASC
       LIMIT $2;
       `;

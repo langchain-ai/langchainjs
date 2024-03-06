@@ -10,7 +10,6 @@ const STATUS_NO_RETRY = [
   405, // Method Not Allowed
   406, // Not Acceptable
   407, // Proxy Authentication Required
-  408, // Request Timeout
   409, // Conflict
 ];
 
@@ -18,8 +17,6 @@ const STATUS_NO_RETRY = [
 const defaultFailedAttemptHandler = (error: any) => {
   if (
     error.message.startsWith("Cancel") ||
-    error.message.startsWith("TimeoutError") ||
-    error.name === "TimeoutError" ||
     error.message.startsWith("AbortError") ||
     error.name === "AbortError"
   ) {

@@ -162,7 +162,10 @@ export const getTableAndColumnsName = async (
     return formatToSqlTable(rep);
   }
 
-  if (appDataSource.options.type === "mysql") {
+  if (
+    appDataSource.options.type === "mysql" ||
+    appDataSource.options.type === "aurora-mysql"
+  ) {
     sql =
       "SELECT " +
       "TABLE_NAME AS table_name, " +

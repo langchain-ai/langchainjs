@@ -8796,6 +8796,7 @@ __metadata:
   dependencies:
     "@anthropic-ai/sdk": ^0.15.0
     "@jest/globals": ^29.5.0
+    "@langchain/community": "workspace:^"
     "@langchain/core": ~0.1
     "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
@@ -8808,12 +8809,15 @@ __metadata:
     eslint-plugin-jest: ^27.6.0
     eslint-plugin-no-instanceof: ^1.0.1
     eslint-plugin-prettier: ^4.2.1
+    fast-xml-parser: ^4.3.5
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     prettier: ^2.8.3
     release-it: ^15.10.1
     rimraf: ^5.0.1
     typescript: ~5.1.6
+    zod: ^3.22.4
+    zod-to-json-schema: ^3.22.4
   languageName: unknown
   linkType: soft
 
@@ -8914,7 +8918,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/community@workspace:*, @langchain/community@workspace:libs/langchain-community, @langchain/community@~0.0.33":
+"@langchain/community@workspace:*, @langchain/community@workspace:^, @langchain/community@workspace:libs/langchain-community, @langchain/community@~0.0.33":
   version: 0.0.0-use.local
   resolution: "@langchain/community@workspace:libs/langchain-community"
   dependencies:
@@ -8943,7 +8947,7 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1.36
+    "@langchain/core": ~0.1.41
     "@langchain/openai": ~0.0.14
     "@langchain/scripts": ~0.0
     "@mozilla/readability": ^0.4.4
@@ -9302,7 +9306,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.1, @langchain/core@~0.1.36, @langchain/core@~0.1.39, @langchain/core@~0.1.5, @langchain/core@~0.1.9":
+"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.1, @langchain/core@~0.1.41, @langchain/core@~0.1.5, @langchain/core@~0.1.9":
   version: 0.0.0-use.local
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
@@ -9534,7 +9538,7 @@ __metadata:
   resolution: "@langchain/mistralai@workspace:libs/langchain-mistralai"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1.39
+    "@langchain/core": ~0.1.41
     "@langchain/scripts": ~0.0
     "@mistralai/mistralai": ^0.1.3
     "@swc/core": ^1.3.90
@@ -9632,7 +9636,7 @@ __metadata:
   resolution: "@langchain/openai@workspace:libs/langchain-openai"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1.39
+    "@langchain/core": ~0.1.41
     "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -19060,6 +19064,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"date-fns@npm:^3.3.1":
+  version: 3.3.1
+  resolution: "date-fns@npm:3.3.1"
+  checksum: 6245e93a47de28ac96dffd4d62877f86e6b64854860ae1e00a4f83174d80bc8e59bd1259cf265223fb2ddce5c8e586dc9cc210f0d052faba2f7660e265877283
+  languageName: node
+  linkType: hard
+
 "dayjs@npm:^1.11.7":
   version: 1.11.9
   resolution: "dayjs@npm:1.11.9"
@@ -21298,6 +21309,7 @@ __metadata:
     axios: ^0.26.0
     chromadb: ^1.5.3
     convex: ^1.3.1
+    date-fns: ^3.3.1
     dotenv: ^16.0.3
     eslint: ^8.33.0
     eslint-config-airbnb-base: ^15.0.0
@@ -21676,6 +21688,17 @@ __metadata:
   bin:
     fxparser: src/cli/cli.js
   checksum: ab88177343f6d3d971d53462db3011003a83eb8a8db704840127ddaaf27105ea90cdf7903a0f9b2e1279ccc4adfca8dfc0277b33bae6262406f10c16bd60ccf9
+  languageName: node
+  linkType: hard
+
+"fast-xml-parser@npm:^4.3.5":
+  version: 4.3.5
+  resolution: "fast-xml-parser@npm:4.3.5"
+  dependencies:
+    strnum: ^1.0.5
+  bin:
+    fxparser: src/cli/cli.js
+  checksum: 852064985ca56aa2078be02c92509a675408b57bb9862f696689301bf7df786f9ce9116b812b032c627979a4de5755f9cbfeecc4b90ed9d56be76deccd97c0c6
   languageName: node
   linkType: hard
 
@@ -25925,7 +25948,7 @@ __metadata:
     "@google-cloud/storage": ^7.7.0
     "@jest/globals": ^29.5.0
     "@langchain/community": ~0.0.33
-    "@langchain/core": ~0.1.36
+    "@langchain/core": ~0.1.41
     "@langchain/openai": ~0.0.14
     "@langchain/scripts": ~0.0
     "@notionhq/client": ^2.2.10
@@ -26039,7 +26062,7 @@ __metadata:
     couchbase: ^4.2.10
     d3-dsv: ^2.0.0
     epub2: ^3.0.1
-    fast-xml-parser: ^4.2.7
+    fast-xml-parser: "*"
     google-auth-library: ^8.9.0
     handlebars: ^4.7.8
     html-to-text: ^9.0.5
