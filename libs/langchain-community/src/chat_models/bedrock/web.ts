@@ -16,7 +16,11 @@ import {
   AIMessage,
   ChatMessage,
 } from "@langchain/core/messages";
-import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
+import {
+  ChatGeneration,
+  ChatGenerationChunk,
+  ChatResult,
+} from "@langchain/core/outputs";
 
 import {
   BaseBedrockInput,
@@ -388,7 +392,9 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
             if (chunk === undefined) {
               continue;
             }
-            yield chunk;
+            if (isChatGenerationChunk(chunk)) {
+              yield chunk;
+            }
             // eslint-disable-next-line no-void
             void runManager?.handleLLMNewToken(chunk.text);
           } else {
@@ -466,6 +472,14 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
   _combineLLMOutput() {
     return {};
   }
+}
+
+function isChatGenerationChunk(
+  x?: ChatGenerationChunk | ChatGeneration
+): x is ChatGenerationChunk {
+  return (
+    x !== undefined && typeof (x as ChatGenerationChunk).concat === "function"
+  );
 }
 
 /**

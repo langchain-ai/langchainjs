@@ -44,3 +44,15 @@ import CodeBlock from "@theme/CodeBlock";
 import BedrockExample from "@examples/models/chat/integration_bedrock.ts";
 
 <CodeBlock language="typescript">{BedrockExample}</CodeBlock>
+
+## Multimodal inputs
+
+:::tip
+Multimodal inputs are currently only supported by Anthropic Claude-3 models.
+:::
+
+Anthropic Claude-3 models hosted on Bedrock have multimodal capabilities and can reason about images. Here's an example:
+
+import BedrockMultimodalExample from "@examples/models/chat/integration_bedrock_multimodal.ts";
+
+<CodeBlock language="typescript">{BedrockMultimodalExample}</CodeBlock>

@@ -1,6 +1,10 @@
 import type { AwsCredentialIdentity, Provider } from "@aws-sdk/types";
-import { AIMessageChunk, BaseMessage } from "@langchain/core/messages";
-import { ChatGenerationChunk } from "@langchain/core/outputs";
+import {
+  AIMessage,
+  AIMessageChunk,
+  BaseMessage,
+} from "@langchain/core/messages";
+import { ChatGeneration, ChatGenerationChunk } from "@langchain/core/outputs";
 
 export type CredentialType =
   | AwsCredentialIdentity
@@ -245,11 +249,11 @@ export class BedrockLLMInputOutputAdapter {
     provider: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     response: any
-  ): ChatGenerationChunk | undefined {
+  ): ChatGeneration | undefined {
     const responseBody = response ?? {};
     if (provider === "anthropic") {
       if (responseBody.type === "message_start") {
-        return parseMessage(responseBody.message);
+        return parseMessage(responseBody.message, true);
       } else if (
         (responseBody.type === "content_block_delta" &&
           responseBody.delta?.type === "text_delta",
@@ -296,7 +300,7 @@ export class BedrockLLMInputOutputAdapter {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function parseMessage(responseBody: any): ChatGenerationChunk {
+function parseMessage(responseBody: any, asChunk?: boolean): ChatGeneration {
   const { content, id, ...generationInfo } = responseBody;
   let parsedContent;
   if (
@@ -310,12 +314,23 @@ function parseMessage(responseBody: any): ChatGenerationChunk {
   } else {
     parsedContent = content;
   }
-  return new ChatGenerationChunk({
-    message: new AIMessageChunk({
-      content: parsedContent,
-      additional_kwargs: { id },
-    }),
-    text: typeof parsedContent === "string" ? parsedContent : "",
-    generationInfo,
-  });
+  if (asChunk) {
+    return new ChatGenerationChunk({
+      message: new AIMessageChunk({
+        content: parsedContent,
+        additional_kwargs: { id },
+      }),
+      text: typeof parsedContent === "string" ? parsedContent : "",
+      generationInfo,
+    });
+  } else {
+    return {
+      message: new AIMessage({
+        content: parsedContent,
+        additional_kwargs: { id },
+      }),
+      text: typeof parsedContent === "string" ? parsedContent : "",
+      generationInfo,
+    };
+  }
 }

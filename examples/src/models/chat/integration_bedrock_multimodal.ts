@@ -1,3 +1,5 @@
+import * as fs from "node:fs/promises";
+
 import { BedrockChat } from "@langchain/community/chat_models/bedrock";
 // Or, from web environments:
 // import { BedrockChat } from "@langchain/community/chat_models/bedrock/web";
@@ -21,57 +23,30 @@ const model = new BedrockChat({
   // },
 });
 
+const imageData = await fs.readFile("./hotdog.jpg");
+
 const res = await model.invoke([
-  new HumanMessage({ content: "Tell me a joke" }),
+  new HumanMessage({
+    content: [
+      {
+        type: "text",
+        text: "What's in this image?",
+      },
+      {
+        type: "image_url",
+        image_url: {
+          url: `data:image/jpeg;base64,${imageData.toString("base64")}`,
+        },
+      },
+    ],
+  }),
 ]);
 console.log(res);
 
 /*
   AIMessage {
-    content: "Here's a silly joke for you:\n" +
-      '\n' +
-      "Why can't a bicycle stand up by itself?\n" +
-      "Because it's two-tired!",
+    content: 'The image shows a hot dog or frankfurter. It has a reddish-pink sausage filling encased in a light brown bread-like bun. The hot dog bun is split open, revealing the sausage inside. This classic fast food item is a popular snack or meal, often served at events like baseball games or cookouts. The hot dog appears to be against a plain white background, allowing the details and textures of the food item to be clearly visible.',
     name: undefined,
-    additional_kwargs: { id: 'msg_01NYN7Rf39k4cgurqpZWYyDh' }
+    additional_kwargs: { id: 'msg_01XrLPL9vCb82U3Wrrpza18p' }
   }
-*/
-
-const stream = await model.stream([
-  new HumanMessage({ content: "Tell me a joke" }),
-]);
-
-for await (const chunk of stream) {
-  console.log(chunk.content);
-}
-
-/*
-  Here
-  's
-  a
-  silly
-  joke
-  for
-  you
-  :
-
-
-  Why
-  can
-  't
-  a
-  bicycle
-  stand
-  up
-  by
-  itself
-  ?
-
-  Because
-  it
-  's
-  two
-  -
-  tired
-  !
 */
