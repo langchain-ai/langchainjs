@@ -62,6 +62,8 @@ export type BranchLike<RunInput, RunOutput> = [
  *   question: "how do I use LangChain?",
  * });
  * ```
+ 
+ * @inheritDoc
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<

@@ -4,6 +4,8 @@ import { BaseTracer } from "./base.js";
 /**
  * A callback handler that collects traced runs and makes it easy to fetch the traced run object from calls through any langchain object.
  * For instance, it makes it easy to fetch the run ID and then do things with that, such as log feedback.
+ 
+ * @inheritDoc
  */
 export class RunCollectorCallbackHandler extends BaseTracer {
   /** The name of the callback handler. */

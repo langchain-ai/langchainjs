@@ -21,6 +21,8 @@ export interface ChatPromptValueInterface extends BasePromptValueInterface {
 
 /**
  * Base PromptValue class. All prompt values should extend this class.
+ 
+ * @inheritDoc
  */
 export abstract class BasePromptValue
   extends Serializable
@@ -34,6 +36,8 @@ export abstract class BasePromptValue
 /**
  * Represents a prompt value as a string. It extends the BasePromptValue
  * class and overrides the toString and toChatMessages methods.
+ 
+ * @inheritDoc
  */
 export class StringPromptValue
   extends BasePromptValue
@@ -73,6 +77,8 @@ export interface ChatPromptValueFields {
 /**
  * Class that represents a chat prompt value. It extends the
  * BasePromptValue and includes an array of BaseMessage instances.
+ 
+ * @inheritDoc
  */
 export class ChatPromptValue
   extends BasePromptValue
@@ -126,6 +132,8 @@ export interface ImagePromptValueFields {
 /**
  * Class that represents an image prompt value. It extends the
  * BasePromptValue and includes an ImageURL instance.
+ 
+ * @inheritDoc
  */
 export class ImagePromptValue extends BasePromptValue {
   lc_namespace = ["langchain_core", "prompt_values"];

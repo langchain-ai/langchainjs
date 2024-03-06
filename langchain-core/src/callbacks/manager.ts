@@ -74,6 +74,8 @@ export function parseCallbackConfigArg(
 
 /**
  * Manage callbacks from different components of LangChain.
+ 
+ * @inheritDoc
  */
 export abstract class BaseCallbackManager {
   abstract addHandler(handler: BaseCallbackHandler): void;
@@ -89,6 +91,8 @@ export abstract class BaseCallbackManager {
 
 /**
  * Base class for run manager in LangChain.
+ 
+ * @inheritDoc
  */
 class BaseRunManager {
   constructor(
@@ -126,6 +130,8 @@ class BaseRunManager {
 
 /**
  * Manages callbacks for retriever runs.
+ 
+ * @inheritDoc
  */
 export class CallbackManagerForRetrieverRun
   extends BaseRunManager
@@ -190,6 +196,7 @@ export class CallbackManagerForRetrieverRun
   }
 }
 
+/** @inheritDoc */
 export class CallbackManagerForLLMRun
   extends BaseRunManager
   implements BaseCallbackManagerMethods
@@ -273,6 +280,7 @@ export class CallbackManagerForLLMRun
   }
 }
 
+/** @inheritDoc */
 export class CallbackManagerForChainRun
   extends BaseRunManager
   implements BaseCallbackManagerMethods
@@ -396,6 +404,7 @@ export class CallbackManagerForChainRun
   }
 }
 
+/** @inheritDoc */
 export class CallbackManagerForToolRun
   extends BaseRunManager
   implements BaseCallbackManagerMethods
@@ -476,6 +485,8 @@ export class CallbackManagerForToolRun
  * });
  * console.log("The answer is:", result);
  * ```
+ 
+ * @inheritDoc
  */
 export class CallbackManager
   extends BaseCallbackManager
@@ -996,6 +1007,8 @@ export function ensureHandler(
  * processQuestions(questions).catch(console.error);
  *
  * ```
+ 
+ * @inheritDoc
  */
 export class TraceGroup {
   private runManager?: CallbackManagerForChainRun;

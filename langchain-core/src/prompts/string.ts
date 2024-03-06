@@ -12,6 +12,8 @@ import { BasePromptTemplate, type TypedPromptInputValues } from "./base.js";
  * Base class for string prompt templates. It extends the
  * BasePromptTemplate class and overrides the formatPromptValue method to
  * return a StringPromptValue.
+ 
+ * @inheritDoc
  */
 export abstract class BaseStringPromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -59,6 +59,8 @@ export interface LengthBasedExampleSelectorInput {
  *   }),
  * );
  * ```
+ 
+ * @inheritDoc
  */
 export class LengthBasedExampleSelector extends BaseExampleSelector {
   protected examples: Example[] = [];

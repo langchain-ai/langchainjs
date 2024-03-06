@@ -3,6 +3,8 @@ import type { Example } from "../prompts/base.js";
 
 /**
  * Base class for example selectors.
+ 
+ * @inheritDoc
  */
 export abstract class BaseExampleSelector extends Serializable {
   lc_namespace = ["langchain_core", "example_selectors", "base"];

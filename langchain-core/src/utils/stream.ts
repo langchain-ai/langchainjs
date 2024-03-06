@@ -8,6 +8,7 @@ export type IterableReadableStreamInterface<T> = ReadableStream<T> &
  * Support async iterator syntax for ReadableStreams in all environments.
  * Source: https://github.com/MattiasBuelens/web-streams-polyfill/pull/122#issuecomment-1627354490
  */
+/** @inheritDoc */
 export class IterableReadableStream<T>
   extends ReadableStream<T>
   implements IterableReadableStreamInterface<T>
@@ -171,6 +172,7 @@ export function concat<
   }
 }
 
+/** @inheritDoc */
 export class AsyncGeneratorWithSetup<
   S = unknown,
   T = unknown,

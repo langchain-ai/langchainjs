@@ -28,6 +28,8 @@ export interface EmbeddingsInterface {
 /**
  * An abstract class that provides methods for embedding documents and
  * queries using LangChain.
+ 
+ * @inheritDoc
  */
 export abstract class Embeddings implements EmbeddingsInterface {
   /**

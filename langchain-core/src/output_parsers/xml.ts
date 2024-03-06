@@ -36,6 +36,7 @@ export type XMLResult = {
   [key: string]: Content;
 };
 
+/** @inheritDoc */
 export class XMLOutputParser extends BaseCumulativeTransformOutputParser<XMLResult> {
   tags?: string[];
 

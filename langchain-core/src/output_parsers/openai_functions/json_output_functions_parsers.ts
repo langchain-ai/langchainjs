@@ -23,6 +23,8 @@ export type FunctionParameters = Optional<
 /**
  * Class for parsing the output of an LLM. Can be configured to return
  * only the arguments of the function call in the output.
+ 
+ * @inheritDoc
  */
 export class OutputFunctionsParser extends BaseLLMOutputParser<string> {
   static lc_name() {
@@ -77,6 +79,8 @@ export class OutputFunctionsParser extends BaseLLMOutputParser<string> {
 /**
  * Class for parsing the output of an LLM into a JSON object. Uses an
  * instance of `OutputFunctionsParser` to parse the output.
+ 
+ * @inheritDoc
  */
 export class JsonOutputFunctionsParser<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -172,6 +176,8 @@ export class JsonOutputFunctionsParser<
  * Class for parsing the output of an LLM into a JSON object and returning
  * a specific attribute. Uses an instance of `JsonOutputFunctionsParser`
  * to parse the output.
+ 
+ * @inheritDoc
  */
 export class JsonKeyOutputFunctionsParser<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -4,6 +4,8 @@ import { type BaseMessage, HumanMessage, AIMessage } from "./messages/index.js";
 /**
  * Base class for all chat message histories. All chat message histories
  * should extend this class.
+ 
+ * @inheritDoc
  */
 export abstract class BaseChatMessageHistory extends Serializable {
   public abstract getMessages(): Promise<BaseMessage[]>;
@@ -20,6 +22,8 @@ export abstract class BaseChatMessageHistory extends Serializable {
 /**
  * Base class for all list chat message histories. All list chat message
  * histories should extend this class.
+ 
+ * @inheritDoc
  */
 export abstract class BaseListChatMessageHistory extends Serializable {
   /** Returns a list of messages stored in the store. */

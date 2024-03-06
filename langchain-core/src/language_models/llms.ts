@@ -53,6 +53,8 @@ interface LLMGenerateCachedParameters<
 
 /**
  * LLM Wrapper. Takes in a prompt (or prompts) and returns a string.
+ 
+ * @inheritDoc
  */
 export abstract class BaseLLM<
   CallOptions extends BaseLLMCallOptions = BaseLLMCallOptions
@@ -544,6 +546,8 @@ export abstract class BaseLLM<
  * Requires only implementing a simpler {@link _call} method instead of {@link _generate}.
  *
  * @augments BaseLLM
+ 
+ * @inheritDoc
  */
 export abstract class LLM<
   CallOptions extends BaseLLMCallOptions = BaseLLMCallOptions

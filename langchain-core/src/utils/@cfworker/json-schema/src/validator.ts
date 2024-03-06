@@ -2,6 +2,7 @@ import { dereference } from "./dereference.js";
 import { Schema, SchemaDraft } from "./types.js";
 import { validate } from "./validate.js";
 
+/** @inheritDoc */
 export class Validator {
   private readonly lookup: ReturnType<typeof dereference>;
 

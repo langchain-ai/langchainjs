@@ -3,6 +3,8 @@ import { BaseTransformOutputParser } from "./transform.js";
 /**
  * OutputParser that parses LLMResult into the top likely string and
  * encodes it into bytes.
+ 
+ * @inheritDoc
  */
 export class BytesOutputParser extends BaseTransformOutputParser<Uint8Array> {
   static lc_name() {

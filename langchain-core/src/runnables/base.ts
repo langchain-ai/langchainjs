@@ -126,6 +126,8 @@ export function _coerceToDict(value: any, defaultKey: string) {
 /**
  * A Runnable is a generic unit of work that can be invoked, batched, streamed, and/or
  * transformed.
+ 
+ * @inheritDoc
  */
 export abstract class Runnable<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -933,6 +935,8 @@ export type RunnableBindingArgs<
 
 /**
  * A runnable that delegates calls to another runnable with a set of kwargs.
+ 
+ * @inheritDoc
  */
 export class RunnableBinding<
   RunInput,
@@ -1159,6 +1163,8 @@ export class RunnableBinding<
 /**
  * A runnable that delegates calls to another runnable
  * with each element of the input sequence.
+ 
+ * @inheritDoc
  */
 export class RunnableEach<
   RunInputItem,
@@ -1253,6 +1259,8 @@ export class RunnableEach<
 /**
  * Base class for runnables that can be retried a
  * specified number of times.
+ 
+ * @inheritDoc
  */
 export class RunnableRetry<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1433,6 +1441,8 @@ export class RunnableRetry<
  * const chain = RunnableSequence.from([promptTemplate, new ChatOpenAI({})]);
  * const result = await chain.invoke({ topic: "bears" });
  * ```
+ 
+ * @inheritDoc
  */
 export class RunnableSequence<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1703,6 +1713,8 @@ export class RunnableSequence<
  * });
  * const result = await mapChain.invoke({ topic: "bear" });
  * ```
+ 
+ * @inheritDoc
  */
 export class RunnableMap<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1845,6 +1857,8 @@ export class RunnableMap<
 
 /**
  * A runnable that runs a callable.
+ 
+ * @inheritDoc
  */
 export class RunnableLambda<RunInput, RunOutput> extends Runnable<
   RunInput,
@@ -2003,10 +2017,13 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
   }
 }
 
+/** @inheritDoc */
 export class RunnableParallel<RunInput> extends RunnableMap<RunInput> {}
 
 /**
  * A Runnable that can fallback to other Runnables if it fails.
+ 
+ * @inheritDoc
  */
 export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
   RunInput,
@@ -2201,6 +2218,8 @@ export interface RunnableAssignFields<RunInput> {
 
 /**
  * A runnable that assigns key-value pairs to inputs of type `Record<string, unknown>`.
+ 
+ * @inheritDoc
  */
 export class RunnableAssign<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -2313,6 +2332,8 @@ export interface RunnablePickFields {
 
 /**
  * A runnable that assigns key-value pairs to inputs of type `Record<string, unknown>`.
+ 
+ * @inheritDoc
  */
 export class RunnablePick<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

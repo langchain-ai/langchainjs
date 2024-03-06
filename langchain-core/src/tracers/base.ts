@@ -54,6 +54,7 @@ function convertToDottedOrderFormat(epoch: number, runId: string) {
   );
 }
 
+/** @inheritDoc */
 export abstract class BaseTracer extends BaseCallbackHandler {
   protected runMap: Map<string, Run> = new Map();
 

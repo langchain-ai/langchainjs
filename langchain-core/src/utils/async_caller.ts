@@ -81,6 +81,8 @@ export interface AsyncCallerCallOptions {
  * Retries are limited by the `maxRetries` parameter, which defaults to 6. This
  * means that by default, each call will be retried up to 6 times, with an
  * exponential backoff between each attempt.
+ 
+ * @inheritDoc
  */
 export class AsyncCaller {
   protected maxConcurrency: AsyncCallerParams["maxConcurrency"];

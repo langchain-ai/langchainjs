@@ -4,6 +4,8 @@ import { ChatGeneration, Generation } from "../outputs.js";
 
 /**
  * Class for parsing the output of an LLM into a JSON object.
+ 
+ * @inheritDoc
  */
 export class JsonOutputParser<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

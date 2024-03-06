@@ -1,6 +1,7 @@
 import { RunnableConfig } from "../runnables/config.js";
 import { BaseTracer, Run } from "./base.js";
 
+/** @inheritDoc */
 export class RootListenersTracer extends BaseTracer {
   name = "RootListenersTracer";
 

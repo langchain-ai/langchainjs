@@ -39,6 +39,8 @@ type RunnablePassthroughFunc<RunInput = any> =
  *   "I can pass a single string instead of an object since I'm using `RunnablePassthrough`."
  * );
  * ```
+ 
+ * @inheritDoc
  */
 export class RunnablePassthrough<RunInput> extends Runnable<
   RunInput,

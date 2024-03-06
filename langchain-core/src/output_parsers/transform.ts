@@ -15,6 +15,8 @@ import { deepCompareStrict } from "../utils/@cfworker/json-schema/index.js";
 
 /**
  * Class to parse the output of an LLM call that also allows streaming inputs.
+ 
+ * @inheritDoc
  */
 export abstract class BaseTransformOutputParser<
   T = unknown
@@ -67,6 +69,8 @@ export type BaseCumulativeTransformOutputParserInput = { diff?: boolean };
  * A base class for output parsers that can handle streaming input. It
  * extends the `BaseTransformOutputParser` class and provides a method for
  * converting parsed outputs into a diff format.
+ 
+ * @inheritDoc
  */
 export abstract class BaseCumulativeTransformOutputParser<
   T = unknown

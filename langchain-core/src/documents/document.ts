@@ -18,6 +18,8 @@ export interface DocumentInterface<
 
 /**
  * Interface for interacting with a document.
+ 
+ * @inheritDoc
  */
 export class Document<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

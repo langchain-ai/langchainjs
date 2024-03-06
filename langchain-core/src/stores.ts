@@ -33,6 +33,8 @@ export interface BaseStoreInterface<K, V> {
 
 /**
  * Abstract interface for a key-value store.
+ 
+ * @inheritDoc
  */
 export abstract class BaseStore<K, V>
   extends Serializable

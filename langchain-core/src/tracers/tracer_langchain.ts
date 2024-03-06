@@ -35,6 +35,7 @@ export interface LangChainTracerFields extends BaseCallbackHandlerInput {
   client?: Client;
 }
 
+/** @inheritDoc */
 export class LangChainTracer
   extends BaseTracer
   implements LangChainTracerFields

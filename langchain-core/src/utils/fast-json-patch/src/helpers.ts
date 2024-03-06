@@ -162,6 +162,7 @@ function patchErrorMessageFormatter(message: String, args: Object): string {
   }
   return messageParts.join("\n");
 }
+/** @inheritDoc */
 export class PatchError extends Error {
   constructor(
     message: string,

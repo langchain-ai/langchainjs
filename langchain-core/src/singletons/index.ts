@@ -6,6 +6,7 @@ export interface AsyncLocalStorageInterface {
   run: (store: any, callback: () => any) => any;
 }
 
+/** @inheritDoc */
 export class MockAsyncLocalStorage implements AsyncLocalStorageInterface {
   getStore(): any {
     return undefined;
@@ -16,6 +17,7 @@ export class MockAsyncLocalStorage implements AsyncLocalStorageInterface {
   }
 }
 
+/** @inheritDoc */
 class AsyncLocalStorageProvider {
   private asyncLocalStorage: AsyncLocalStorageInterface =
     new MockAsyncLocalStorage();

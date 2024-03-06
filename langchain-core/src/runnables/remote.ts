@@ -260,6 +260,7 @@ function serialize<RunInput>(input: RunInput): any {
   return input;
 }
 
+/** @inheritDoc */
 export class RemoteRunnable<
   RunInput,
   RunOutput,

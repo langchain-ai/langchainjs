@@ -73,6 +73,7 @@ export function get_lc_unique_name(
   }
 }
 
+/** @inheritDoc */
 export abstract class Serializable {
   lc_serializable = false;
 

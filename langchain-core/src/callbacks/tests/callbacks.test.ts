@@ -9,6 +9,7 @@ import type { AgentAction, AgentFinish } from "../../agents.js";
 import { BaseMessage, HumanMessage } from "../../messages/index.js";
 import type { LLMResult } from "../../outputs.js";
 
+/** @inheritDoc */
 class FakeCallbackHandler extends BaseCallbackHandler {
   name = `fake-${uuid.v4()}`;
 
@@ -150,6 +151,7 @@ class FakeCallbackHandler extends BaseCallbackHandler {
   }
 }
 
+/** @inheritDoc */
 class FakeCallbackHandlerWithChatStart extends FakeCallbackHandler {
   chatModelStarts = 0;
 

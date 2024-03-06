@@ -26,6 +26,8 @@ export type GenerationChunkFields = {
 
 /**
  * Chunk of a single generation. Used for streaming.
+ 
+ * @inheritDoc
  */
 export class GenerationChunk implements Generation {
   public text: string;
@@ -77,6 +79,7 @@ export type ChatGenerationChunkFields = GenerationChunkFields & {
   message: BaseMessageChunk;
 };
 
+/** @inheritDoc */
 export class ChatGenerationChunk
   extends GenerationChunk
   implements ChatGeneration

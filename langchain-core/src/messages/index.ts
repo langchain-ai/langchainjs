@@ -129,6 +129,8 @@ function mergeContent(
  * Base class for all types of messages in a conversation. It includes
  * properties like `content`, `name`, and `additional_kwargs`. It also
  * includes methods like `toDict()` and `_getType()`.
+ 
+ * @inheritDoc
  */
 export abstract class BaseMessage
   extends Serializable
@@ -233,6 +235,8 @@ function isOpenAIToolCallArray(value?: unknown): value is OpenAIToolCall[] {
  * additional keyword arguments from another `BaseMessageChunk` into this
  * one. It also overrides the `__add__()` method to support concatenation
  * of `BaseMessageChunk` instances.
+ 
+ * @inheritDoc
  */
 export abstract class BaseMessageChunk extends BaseMessage {
   abstract concat(chunk: BaseMessageChunk): BaseMessageChunk;
@@ -297,6 +301,8 @@ export abstract class BaseMessageChunk extends BaseMessage {
 
 /**
  * Represents a human message in a conversation.
+ 
+ * @inheritDoc
  */
 export class HumanMessage extends BaseMessage {
   static lc_name() {
@@ -311,6 +317,8 @@ export class HumanMessage extends BaseMessage {
 /**
  * Represents a chunk of a human message, which can be concatenated with
  * other human message chunks.
+ 
+ * @inheritDoc
  */
 export class HumanMessageChunk extends BaseMessageChunk {
   static lc_name() {
@@ -334,6 +342,8 @@ export class HumanMessageChunk extends BaseMessageChunk {
 
 /**
  * Represents an AI message in a conversation.
+ 
+ * @inheritDoc
  */
 export class AIMessage extends BaseMessage {
   static lc_name() {
@@ -348,6 +358,8 @@ export class AIMessage extends BaseMessage {
 /**
  * Represents a chunk of an AI message, which can be concatenated with
  * other AI message chunks.
+ 
+ * @inheritDoc
  */
 export class AIMessageChunk extends BaseMessageChunk {
   static lc_name() {
@@ -371,6 +383,8 @@ export class AIMessageChunk extends BaseMessageChunk {
 
 /**
  * Represents a system message in a conversation.
+ 
+ * @inheritDoc
  */
 export class SystemMessage extends BaseMessage {
   static lc_name() {
@@ -385,6 +399,8 @@ export class SystemMessage extends BaseMessage {
 /**
  * Represents a chunk of a system message, which can be concatenated with
  * other system message chunks.
+ 
+ * @inheritDoc
  */
 export class SystemMessageChunk extends BaseMessageChunk {
   static lc_name() {
@@ -408,6 +424,8 @@ export class SystemMessageChunk extends BaseMessageChunk {
 
 /**
  * Represents a function message in a conversation.
+ 
+ * @inheritDoc
  */
 export class FunctionMessage extends BaseMessage {
   static lc_name() {
@@ -442,6 +460,8 @@ export class FunctionMessage extends BaseMessage {
 /**
  * Represents a chunk of a function message, which can be concatenated
  * with other function message chunks.
+ 
+ * @inheritDoc
  */
 export class FunctionMessageChunk extends BaseMessageChunk {
   static lc_name() {
@@ -466,6 +486,8 @@ export class FunctionMessageChunk extends BaseMessageChunk {
 
 /**
  * Represents a tool message in a conversation.
+ 
+ * @inheritDoc
  */
 export class ToolMessage extends BaseMessage {
   static lc_name() {
@@ -512,6 +534,8 @@ export class ToolMessage extends BaseMessage {
 /**
  * Represents a chunk of a tool message, which can be concatenated
  * with other tool message chunks.
+ 
+ * @inheritDoc
  */
 export class ToolMessageChunk extends BaseMessageChunk {
   tool_call_id: string;
@@ -543,6 +567,8 @@ export class ToolMessageChunk extends BaseMessageChunk {
 
 /**
  * Represents a chat message in a conversation.
+ 
+ * @inheritDoc
  */
 export class ChatMessage
   extends BaseMessage
@@ -625,6 +651,8 @@ export function coerceMessageLikeToMessage(
 /**
  * Represents a chunk of a chat message, which can be concatenated with
  * other chat message chunks.
+ 
+ * @inheritDoc
  */
 export class ChatMessageChunk extends BaseMessageChunk {
   static lc_name() {

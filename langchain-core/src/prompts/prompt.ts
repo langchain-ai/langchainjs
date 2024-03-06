@@ -94,6 +94,8 @@ export type ParamsFromFString<T extends string> = {
  *   template: "Say {foo}",
  * });
  * ```
+ 
+ * @inheritDoc
  */
 export class PromptTemplate<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -21,6 +21,8 @@ export interface ToolParams extends BaseLangChainParams {}
  * Custom error class used to handle exceptions related to tool input parsing.
  * It extends the built-in `Error` class and adds an optional `output`
  * property that can hold the output that caused the exception.
+ 
+ * @inheritDoc
  */
 export class ToolInputParsingException extends Error {
   output?: string;
@@ -67,6 +69,8 @@ export interface StructuredToolInterface<
 
 /**
  * Base class for Tools that accept input of any shape defined by a Zod schema.
+ 
+ * @inheritDoc
  */
 export abstract class StructuredTool<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -181,6 +185,8 @@ export interface ToolInterface extends StructuredToolInterface {
 
 /**
  * Base class for Tools that accept input as a string.
+ 
+ * @inheritDoc
  */
 export abstract class Tool extends StructuredTool {
   schema = z
@@ -243,6 +249,8 @@ export interface DynamicStructuredToolInput<
 
 /**
  * A tool that can be created dynamically from a function, name, and description.
+ 
+ * @inheritDoc
  */
 export class DynamicTool extends Tool {
   static lc_name() {
@@ -289,6 +297,8 @@ export class DynamicTool extends Tool {
  * description, designed to work with structured data. It extends the
  * StructuredTool class and overrides the _call method to execute the
  * provided function when the tool is called.
+ 
+ * @inheritDoc
  */
 export class DynamicStructuredTool<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

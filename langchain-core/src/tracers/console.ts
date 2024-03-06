@@ -39,6 +39,8 @@ const { color } = styles;
  * });
  *
  * ```
+ 
+ * @inheritDoc
  */
 export class ConsoleCallbackHandler extends BaseTracer {
   name = "console_callback_handler" as const;

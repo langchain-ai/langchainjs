@@ -24,6 +24,8 @@ export type MemoryVariables = Record<string, any>;
  * the state in Chains. It can be used to store information about past
  * executions of a Chain and inject that information into the inputs of
  * future executions of the Chain.
+ 
+ * @inheritDoc
  */
 export abstract class BaseMemory {
   abstract get memoryKeys(): string[];

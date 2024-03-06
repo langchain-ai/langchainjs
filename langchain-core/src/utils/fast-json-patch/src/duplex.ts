@@ -24,6 +24,7 @@ export interface Observer<T> {
 
 var beforeDict = new WeakMap();
 
+/** @inheritDoc */
 class Mirror {
   obj: any;
   observers: Map<Function, ObserverInfo> = new Map();
@@ -34,6 +35,7 @@ class Mirror {
   }
 }
 
+/** @inheritDoc */
 class ObserverInfo {
   callback: Function;
   observer: ObserverInfo;
