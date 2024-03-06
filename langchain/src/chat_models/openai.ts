@@ -25,7 +25,7 @@ export {
 export { type ChatOpenAICallOptions, ChatOpenAI };
 
 /** @inheritDoc */
-    export class PromptLayerChatOpenAI extends ChatOpenAI {
+export class PromptLayerChatOpenAI extends ChatOpenAI {
   promptLayerApiKey?: string;
 
   plTags?: string[];
