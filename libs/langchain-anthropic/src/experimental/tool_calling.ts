@@ -15,6 +15,7 @@ import {
   BaseLanguageModelCallOptions,
   BaseLanguageModelInput,
   StructuredOutputMethodParams,
+  StructuredOutputMethodOptions,
   ToolDefinition,
 } from "@langchain/core/language_models/base";
 import {
@@ -271,43 +272,56 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>
-  >({
-    schema,
-    name,
-    method,
-    includeRaw,
-  }: StructuredOutputMethodParams<RunOutput, false>): Runnable<
-    BaseLanguageModelInput,
-    RunOutput
-  >;
+  >(
+    outputSchema:
+      | StructuredOutputMethodParams<RunOutput, false>
+      | z.ZodType<RunOutput>
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<false>
+  ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>
-  >({
-    schema,
-    name,
-    method,
-    includeRaw,
-  }: StructuredOutputMethodParams<RunOutput, true>): Runnable<
-    BaseLanguageModelInput,
-    { raw: BaseMessage; parsed: RunOutput }
-  >;
+  >(
+    outputSchema:
+      | StructuredOutputMethodParams<RunOutput, true>
+      | z.ZodType<RunOutput>
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<true>
+  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>
-  >({
-    schema,
-    name,
-    method,
-    includeRaw,
-  }: StructuredOutputMethodParams<RunOutput, boolean>):
+  >(
+    outputSchema:
+      | StructuredOutputMethodParams<RunOutput, boolean>
+      | z.ZodType<RunOutput>
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<boolean>
+  ):
     | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<
         BaseLanguageModelInput,
         { raw: BaseMessage; parsed: RunOutput }
       > {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let schema: z.ZodType<RunOutput> | Record<string, any>;
+    let name;
+    let method;
+    let includeRaw;
+    if (isStructuredOutputMethodParams(outputSchema)) {
+      schema = outputSchema.schema;
+      name = outputSchema.name;
+      method = outputSchema.method;
+      includeRaw = outputSchema.includeRaw;
+    } else {
+      schema = outputSchema;
+      name = config?.name;
+      method = config?.method;
+      includeRaw = config?.includeRaw;
+    }
     if (method === "jsonMode") {
       throw new Error(`Anthropic only supports "functionCalling" as a method.`);
     }
@@ -390,4 +404,16 @@ function isZodSchema<
 >(input: any): input is z.ZodType<RunOutput, z.ZodTypeDef, RunOutput> {
   // Check for a characteristic method of Zod schemas
   return typeof input?.parse === "function";
+}
+
+function isStructuredOutputMethodParams(
+  x: unknown
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): x is StructuredOutputMethodParams<Record<string, any>> {
+  return (
+    x !== undefined &&
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    typeof (x as StructuredOutputMethodParams<Record<string, any>>).schema ===
+      "object"
+  );
 }
