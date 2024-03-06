@@ -1,11 +1,11 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
+import { OpenAI as OpenAIClient } from "openai";
 import { Tool, ToolParams } from "@langchain/core/tools";
 
 /*
-    An enumerator for the Dall-E model to use with the OpenAI.
-    Dall-E 2 and 3 API
-    https://beta.openai.com/docs/api-reference/images/generate
+ *  An enumerator for the Dall-E model to use with the OpenAI.
+ *  Dall-E 2 and 3 API
+ *  @link {https://beta.openai.com/docs/api-reference/images/generate}
  */
 export enum DalleApiWrapperModelEnum {
     DALLE_2 = "dall-e-2",
@@ -13,44 +13,44 @@ export enum DalleApiWrapperModelEnum {
 }
 
 /*
-    An enumerator for the style of the generated images.
-    natural: causes the model to produce more natural, less hyper-real looking images.
-    vivid: causes the model to lean towards generating hyper-real and dramatic images.
+ *  An enumerator for the style of the generated images.
+ *  natural: causes the model to produce more natural, less hyper-real looking images.
+ *  vivid: causes the model to lean towards generating hyper-real and dramatic images.
  */
-export enum styleEnum {
+export enum DalleStyle {
     NATURAL = "natural",
     VIVID = "vivid"
 }
 
 /*
-    An enumerator for the quality of the image that will be generated.
-    standard: creates images with finer details and greater consistency across the image.
-    hd: creates images with finer details and greater consistency across the image.
+ *  An enumerator for the quality of the image that will be generated.
+ *  standard: creates images with finer details and greater consistency across the image.
+ *  hd: creates images with finer details and greater consistency across the image.
  */
-export enum qualityEnum { 
+export enum QualityEnum { 
     STANDARD = "standard",
     HD = "hd"
 }
 
 /*
-    An enumerator for the format in which the generated images are returned.
-    url: The format in which the generated images are returned.
-    b64_json: The format in which the generated images are returned.
+ *  An enumerator for the format in which the generated images are returned.
+ *  url: The format in which the generated images are returned.
+ *  b64_json: The format in which the generated images are returned.
  */
-export enum responseFormatEnum {
+export enum ResponseFormatEnum {
     URL = "url",
     B64_JSON = "b64_json"
 }
 
 /*
-    An enumerator for the size of the generated images.
-    256x256: The size of the generated images.
-    512x512: The size of the generated images.
-    1024x1024: The size of the generated images.
-    1792x1024: The size of the generated images.
-    1024x1792: The size of the generated images.
+ *  An enumerator for the size of the generated images.
+ *  256x256: The size of the generated images.
+ *  512x512: The size of the generated images.
+ *  1024x1024: The size of the generated images.
+ *  1792x1024: The size of the generated images.
+ *  1024x1792: The size of the generated images.
  */
-export enum sizeEnum {
+export enum SizeEnum {
     _256x256 = "256x256",
     _512x512 = "512x512",
     _1024x1024 = "1024x1024",
@@ -59,39 +59,75 @@ export enum sizeEnum {
 }
 
 /*
-    An interface for the Dall-E API Wrapper.
-
-    New parameters:
-    model (‘dall-e-2’ or ‘dall-e-3’): This is the model you’re generating with. Be careful to set it to ‘dall-e-3’ as it defaults to ‘dall-e-2’ if empty.
-    style (‘natural’ or ‘vivid’): The style of the generated images. Must be one of vivid or natural. Vivid causes the model to lean towards generating hyper-real and dramatic images. Natural causes the model to produce more natural, less hyper-real looking images. Defaults to ‘vivid’.
-    quality (‘standard’ or ‘hd’): The quality of the image that will be generated. ‘hd’ creates images with finer details and greater consistency across the image. Defaults to ‘standard’.
-
-    Other parameters:
-    prompt (str): A text description of the desired image(s). The maximum length is 1000 characters. Required field.
-    n (int): The number of images to generate. Must be between 1 and 10. Defaults to 1. For dall-e-3, only n=1 is supported.
-    size (...): The size of the generated images. Must be one of 256x256, 512x512, or 1024x1024 for DALL·E-2 models. Must be one of 1024x1024, 1792x1024, or 1024x1792 for DALL·E-3 models.
-    response_format ('url' or 'b64_json'): The format in which the generated images are returned. Must be one of "url" or "b64_json". Defaults to "url".
-    user (str): A unique identifier representing your end-user, which will help OpenAI to monitor and detect abuse. Learn more.
-*/
+ *  An interface for the Dall-E API Wrapper.
+ *
+ *  New parameters:
+ *  model (‘dall-e-2’ or ‘dall-e-3’): This is the model you’re generating with. Be careful to set it to ‘dall-e-3’ as it defaults to ‘dall-e-2’ if empty.
+ *  style (‘natural’ or ‘vivid’): The style of the generated images. Must be one of vivid or natural. Vivid causes the model to lean towards generating hyper-real and dramatic images. Natural causes the model to produce more natural, less hyper-real looking images. Defaults to ‘vivid’.
+ *  quality (‘standard’ or ‘hd’): The quality of the image that will be generated. ‘hd’ creates images with finer details and greater consistency across the image. Defaults to ‘standard’.
+ *
+ *  Other parameters:
+ *  prompt (string): A text description of the desired image(s). The maximum length is 1000 characters. Required field.
+ *  n (number): The number of images to generate. Must be between 1 and 10. Defaults to 1. For dall-e-3, only n=1 is supported.
+ *  size (...): The size of the generated images. Must be one of 256x256, 512x512, or 1024x1024 for DALL·E-2 models. Must be one of 1024x1024, 1792x1024, or 1024x1792 for DALL·E-3 models.
+ *  response_format ('url' or 'b64_json'): The format in which the generated images are returned. Must be one of "url" or "b64_json". Defaults to "url".
+ *  user (string): A unique identifier representing your end-user, which will help OpenAI to monitor and detect abuse. Learn more.
+ */
 export interface DalleApiWrapperParams extends ToolParams {
+    /**
+     * The OpenAI API key
+     */
     openAIApiKey?: string;
 
-    model?: DalleApiWrapperModelEnum;
+    /**
+     * The model to use
+     * @default "dalle-3"
+     */
+    modelName?: string;
 
-    style?: styleEnum;
+    /**
+     * The style of the generated images.
+     * @default "vivid"
+     */
+    style?: DalleStyle;
 
-    quality?: qualityEnum;
+    /**
+     * The quality of the image that will be generated.
+     * @default "standard"
+     */
+    quality?: QualityEnum;
 
+    /**
+     * A text description of the desired image(s). This value will be overridden by the input value.
+     */
     prompt: string;
 
+    /**
+     * The number of images to generate. Must be between 1 and 10. Defaults to 1. For dall-e-3, only n=1 is supported.
+     * @default 1
+     */
     n?: number;
 
-    size?: sizeEnum;
+    /**
+     * The size of the generated images.
+     * @default "1024x1024"
+     */
+    size?: SizeEnum;
 
-    response_format?: responseFormatEnum;
+    /**
+     * The response format in which the generated images are returned.
+     * @default "url"
+     */
+    responseFormat?: ResponseFormatEnum;
 
+    /**
+     * A unique identifier representing your end-user, which will help OpenAI to monitor and detect abuse.
+     */
     user?: string;
 
+    /**
+     * The organization to use
+     */
     organization?: string;
 }
 
@@ -109,40 +145,38 @@ export class DalleApiWrapper extends Tool {
 
     organization?: string;
 
-    protected openAIApiKey?: string;
     protected client: OpenAIClient;
-    private clientConfig: ClientOptions;
 
     static readonly toolName = 'dalle_api_wrapper';
 
-    private model: DalleApiWrapperModelEnum = DalleApiWrapperModelEnum.DALLE_3;
-    private style: styleEnum = styleEnum.VIVID;
-    private quality: qualityEnum = qualityEnum.STANDARD;
+    private model: string = DalleApiWrapperModelEnum.DALLE_3;
+    private style: DalleStyle = DalleStyle.VIVID;
+    private quality: QualityEnum = QualityEnum.STANDARD;
     private n: number = 1;
-    private size: sizeEnum = sizeEnum._1024x1024;
-    private response_format: responseFormatEnum = responseFormatEnum.URL;
+    private size: SizeEnum = SizeEnum._1024x1024;
+    private responseFormat: ResponseFormatEnum = ResponseFormatEnum.URL;
     private user: string | undefined;
 
     constructor(fields?: DalleApiWrapperParams) {
         super(fields);
-        this.openAIApiKey = fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
+        const openAIApiKey = fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
         
         this.organization =
             fields?.organization ??
             getEnvironmentVariable("OPENAI_ORGANIZATION");
 
-        this.clientConfig = {
-            apiKey: this.openAIApiKey,
+        const clientConfig = {
+            apiKey: openAIApiKey,
             organization: this.organization,
             dangerouslyAllowBrowser: true,
-          };
-        this.client = new OpenAIClient(this.clientConfig);
-        this.model = fields?.model ?? DalleApiWrapperModelEnum.DALLE_3;
-        this.style = fields?.style ?? styleEnum.VIVID;
-        this.quality = fields?.quality ?? qualityEnum.STANDARD;
+        };
+        this.client = new OpenAIClient(clientConfig);
+        this.model = fields?.modelName ?? DalleApiWrapperModelEnum.DALLE_3;
+        this.style = fields?.style ?? DalleStyle.VIVID;
+        this.quality = fields?.quality ?? QualityEnum.STANDARD;
         this.n = fields?.n ?? 1;
-        this.size = fields?.size ?? sizeEnum._1024x1024;
-        this.response_format = fields?.response_format ?? responseFormatEnum.URL;
+        this.size = fields?.size ?? SizeEnum._1024x1024;
+        this.responseFormat = fields?.responseFormat ?? ResponseFormatEnum.URL;
         this.user = fields?.user;
     }
 
@@ -152,10 +186,10 @@ export class DalleApiWrapper extends Tool {
             model: this.model?.valueOf() ?? DalleApiWrapperModelEnum.DALLE_3,
             prompt: input,
             n: this.n ?? 1,
-            size: this.size ?? sizeEnum._1024x1024,
-            response_format: this.response_format ?? responseFormatEnum.URL,
-            style: this.style ?? styleEnum.VIVID,
-            quality: this.quality ?? qualityEnum.STANDARD,
+            size: this.size ?? SizeEnum._1024x1024,
+            response_format: this.responseFormat ?? ResponseFormatEnum.URL,
+            style: this.style ?? DalleStyle.VIVID,
+            quality: this.quality ?? QualityEnum.STANDARD,
             user: this.user,
         });
     

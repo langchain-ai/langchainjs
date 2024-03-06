@@ -240,6 +240,7 @@
     "mysql2": "^3.3.3",
     "neo4j-driver": "*",
     "node-llama-cpp": "*",
+    "openai": "^4.26.0",
     "pg": "^8.11.0",
     "pg-copy-streams": "^6.0.5",
     "pickleparser": "^0.2.1",
@@ -464,6 +465,9 @@
       "optional": true
     },
     "node-llama-cpp": {
+      "optional": true
+    },
+    "openai": {
       "optional": true
     },
     "pg": {

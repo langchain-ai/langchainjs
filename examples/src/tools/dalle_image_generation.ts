@@ -7,6 +7,6 @@ const params: DalleApiWrapperParams = {
 
 const tool = new DalleApiWrapper(params);
 
-const imageArray = await tool.call("a painting of a cat");
+const imageURL = await tool.invoke("a painting of a cat");
 
-console.log(imageArray);
+console.log(imageURL);

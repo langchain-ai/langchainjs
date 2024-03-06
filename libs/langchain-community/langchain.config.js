@@ -227,6 +227,7 @@ export const config = {
     "tools/discord",
     "tools/gmail",
     "tools/google_calendar",
+    "tools/dalle_api_wrapper",
     "agents/toolkits/aws_sfn",
     "callbacks/handlers/llmonitor",
     "callbacks/handlers/lunary",
