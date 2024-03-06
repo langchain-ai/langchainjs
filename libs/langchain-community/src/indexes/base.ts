@@ -59,6 +59,7 @@ export interface RecordManagerInterface {
   deleteKeys(keys: string[]): Promise<void>;
 }
 
+/** @inheritDoc */
 export abstract class RecordManager
   extends Serializable
   implements RecordManagerInterface

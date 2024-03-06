@@ -300,6 +300,8 @@ export interface ChatMinimaxCallOptions extends BaseFunctionCallOptions {
  * console.log({ resB });
  *
  * ```
+ 
+ * @inheritDoc
  */
 export class ChatMinimax
   extends BaseChatModel<ChatMinimaxCallOptions>

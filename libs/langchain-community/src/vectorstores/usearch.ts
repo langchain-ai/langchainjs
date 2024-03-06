@@ -20,6 +20,8 @@ export interface USearchArgs {
  * Class that extends `SaveableVectorStore` and provides methods for
  * adding documents and vectors to a `usearch` index, performing
  * similarity searches, and saving the index.
+ 
+ * @inheritDoc
  */
 export class USearch extends SaveableVectorStore {
   _index?: usearch.Index;

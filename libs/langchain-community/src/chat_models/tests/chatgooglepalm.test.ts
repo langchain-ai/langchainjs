@@ -9,6 +9,7 @@ import {
 import { ChatGooglePaLM } from "../googlepalm.js";
 
 // Test class extending actual class to test private & protected methods
+/** @inheritDoc */
 class ChatGooglePaLMTest extends ChatGooglePaLM {
   public _getPalmContextInstruction(messages: BaseMessage[]) {
     return super._getPalmContextInstruction(messages);

@@ -30,6 +30,8 @@ interface SfnClientConstructorArgs {
 
 /**
  * Class for starting the execution of an AWS Step Function.
+ 
+ * @inheritDoc
  */
 export class StartExecutionAWSSfnTool extends Tool {
   static lc_name() {
@@ -100,6 +102,8 @@ export class StartExecutionAWSSfnTool extends Tool {
 
 /**
  * Class for checking the status of an AWS Step Function execution.
+ 
+ * @inheritDoc
  */
 export class DescribeExecutionAWSSfnTool extends Tool {
   static lc_name() {
@@ -154,6 +158,8 @@ export class DescribeExecutionAWSSfnTool extends Tool {
 /**
  * Class for sending a task success signal to an AWS Step Function
  * execution.
+ 
+ * @inheritDoc
  */
 export class SendTaskSuccessAWSSfnTool extends Tool {
   static lc_name() {

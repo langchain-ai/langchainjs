@@ -69,6 +69,7 @@ export function simpleValue(val: unknown): unknown {
   }
 }
 
+/** @inheritDoc */
 export class JsonStream {
   _buffer = "";
 
@@ -241,12 +242,14 @@ export class JsonStream {
   }
 }
 
+/** @inheritDoc */
 export class ComplexJsonStream extends JsonStream {
   _simplifyObject(obj: unknown): object {
     return simpleValue(obj) as object;
   }
 }
 
+/** @inheritDoc */
 export class ReadableJsonStream extends JsonStream {
   decoder: TextDecoder;
 

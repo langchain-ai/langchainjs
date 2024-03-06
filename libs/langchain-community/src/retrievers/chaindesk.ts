@@ -34,6 +34,8 @@ interface Berry {
  * });
  * const docs = await retriever.getRelevantDocuments("hello");
  * ```
+ 
+ * @inheritDoc
  */
 export class ChaindeskRetriever extends BaseRetriever {
   static lc_name() {

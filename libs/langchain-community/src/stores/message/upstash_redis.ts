@@ -21,6 +21,8 @@ export type UpstashRedisChatMessageHistoryInput = {
 /**
  * Class used to store chat message history in Redis. It provides methods
  * to add, get, and clear messages.
+ 
+ * @inheritDoc
  */
 export class UpstashRedisChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "upstash_redis"];

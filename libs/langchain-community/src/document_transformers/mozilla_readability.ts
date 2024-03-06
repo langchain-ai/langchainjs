@@ -27,6 +27,8 @@ import {
  *
  * console.log(newDocuments);
  * ```
+ 
+ * @inheritDoc
  */
 export class MozillaReadabilityTransformer extends MappingDocumentTransformer {
   static lc_name() {

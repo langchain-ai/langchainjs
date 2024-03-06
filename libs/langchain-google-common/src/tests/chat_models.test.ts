@@ -12,6 +12,7 @@ import { authOptions, MockClient, MockClientAuthInfo, mockId } from "./mock.js";
 import { GoogleAIBaseLLMInput } from "../types.js";
 import { GoogleAbstractedClient } from "../auth.js";
 
+/** @inheritDoc */
 class ChatGoogle extends ChatGoogleBase<MockClientAuthInfo> {
   constructor(fields?: ChatGoogleBaseInput<MockClientAuthInfo>) {
     super(fields);

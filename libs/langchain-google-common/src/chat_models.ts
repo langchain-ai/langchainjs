@@ -31,6 +31,7 @@ import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
 import { GoogleBaseLLMInput } from "./llms.js";
 import { JsonStream } from "./utils/stream.js";
 
+/** @inheritDoc */
 class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   BaseMessage[],
   AuthOptions
@@ -55,6 +56,8 @@ export interface ChatGoogleBaseInput<AuthOptions>
 
 /**
  * Integration with a chat model.
+ 
+ * @inheritDoc
  */
 export abstract class ChatGoogleBase<AuthOptions>
   extends BaseChatModel<BaseLanguageModelCallOptions>

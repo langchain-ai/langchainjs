@@ -114,6 +114,8 @@ type Kwargs = Record<string, any>;
  * const res = await model.invoke({ input: 'Hello!' });
  * console.log(res);
  * ```
+ 
+ * @inheritDoc
  */
 export class ChatAnthropicMessages<
     CallOptions extends BaseLanguageModelCallOptions = BaseLanguageModelCallOptions
@@ -477,4 +479,5 @@ export class ChatAnthropicMessages<
   }
 }
 
+/** @inheritDoc */
 export class ChatAnthropic extends ChatAnthropicMessages {}

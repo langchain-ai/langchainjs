@@ -15,6 +15,8 @@ type CloseVectorCredentials = {
  * 2. It adds features to upload and download the index to/from the CDN provided by CloseVector.
  *
  * For more information, check out https://closevector-docs.getmegaportal.com/
+ 
+ * @inheritDoc
  */
 
 /**

@@ -47,6 +47,8 @@ type MongoDBAtlasFilter = {
  * to store embeddings in MongoDB documents, create a vector search index,
  * and perform K-Nearest Neighbors (KNN) search with an approximate
  * nearest neighbor algorithm.
+ 
+ * @inheritDoc
  */
 export class MongoDBAtlasVectorSearch extends VectorStore {
   declare FilterType: MongoDBAtlasFilter;

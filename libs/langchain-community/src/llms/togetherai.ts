@@ -118,6 +118,7 @@ export interface TogetherAICallOptions
       | "stop"
     > {}
 
+/** @inheritDoc */
 export class TogetherAI extends LLM<TogetherAICallOptions> {
   lc_serializable = true;
 

@@ -27,6 +27,8 @@ const PRELUDE_TOTAL_LENGTH_BYTES = 4;
  * Services (AWS). It uses AWS credentials for authentication and can be
  * configured with various parameters such as the model to use, the AWS
  * region, and the maximum number of tokens to generate.
+ 
+ * @inheritDoc
  */
 export class Bedrock extends LLM implements BaseBedrockInput {
   model = "amazon.titan-tg1-large";

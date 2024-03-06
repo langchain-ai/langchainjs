@@ -58,6 +58,7 @@ import { Generation } from "@langchain/core/outputs";
 
 import { MomentoCache } from "../momento.js";
 
+/** @inheritDoc */
 class MockClient implements ICacheClient {
   private _cache: Map<string, string>;
 

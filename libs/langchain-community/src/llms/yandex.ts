@@ -33,7 +33,9 @@ export interface YandexGPTInputs extends BaseLLMParams {
   iamToken?: string;
 }
 
-/** @deprecated Prefer @langchain/yandex */
+/** @deprecated Prefer @langchain/yandex 
+ * @inheritDoc
+ */
 export class YandexGPT extends LLM implements YandexGPTInputs {
   lc_serializable = true;
 

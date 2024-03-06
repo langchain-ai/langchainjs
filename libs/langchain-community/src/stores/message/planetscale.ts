@@ -58,6 +58,8 @@ interface selectStoredMessagesDTO {
  * });
  * console.log({ response });
  * ```
+ 
+ * @inheritDoc
  */
 export class PlanetScaleChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "planetscale"];

@@ -61,6 +61,8 @@ export interface HFInput {
  * );
  * console.log({ res });
  * ```
+ 
+ * @inheritDoc
  */
 export class HuggingFaceInference extends LLM implements HFInput {
   lc_serializable = true;

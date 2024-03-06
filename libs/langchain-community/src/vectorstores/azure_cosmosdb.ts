@@ -52,6 +52,8 @@ export interface AzureCosmosDBConfig {
  *
  * Though you do need to create an index on the collection, which can be done
  * using the `createIndex` method.
+ 
+ * @inheritDoc
  */
 export class AzureCosmosDBVectorStore extends VectorStore {
   get lc_secrets(): { [key: string]: string } {

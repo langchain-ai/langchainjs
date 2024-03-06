@@ -40,6 +40,8 @@ export type RedisChatMessageHistoryInput = {
  * });
  * console.log({ response });
  * ```
+ 
+ * @inheritDoc
  */
 export class RedisChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "ioredis"];

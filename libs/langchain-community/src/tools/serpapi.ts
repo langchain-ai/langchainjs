@@ -288,6 +288,8 @@ type UrlParameters = Record<
  * Wrapper around SerpAPI.
  *
  * To use, you should have the `serpapi` package installed and the SERPAPI_API_KEY environment variable set.
+ 
+ * @inheritDoc
  */
 export class SerpAPI extends Tool {
   static lc_name() {

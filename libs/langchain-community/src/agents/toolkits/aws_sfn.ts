@@ -44,6 +44,8 @@ export interface AWSSfnToolkitArgs {
  * });
  *
  * ```
+ 
+ * @inheritDoc
  */
 export class AWSSfnToolkit extends Toolkit {
   tools: Tool[];

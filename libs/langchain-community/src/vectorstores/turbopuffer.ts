@@ -31,6 +31,7 @@ export interface TurbopufferQueryResult {
   attributes: Record<string, string>;
 }
 
+/** @inheritDoc */
 export class TurbopufferVectorStore extends VectorStore {
   declare FilterType: TurbopufferFilterType;
 

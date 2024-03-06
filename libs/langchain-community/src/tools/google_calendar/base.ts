@@ -13,6 +13,7 @@ export interface GoogleCalendarAgentParams {
   model?: BaseLLM;
 }
 
+/** @inheritDoc */
 export class GoogleCalendarBase extends Tool {
   name = "Google Calendar";
 

@@ -110,6 +110,8 @@ const DEFAULT_FIELD_METADATA_ATTRS = "attributes";
  * If you directly provide a `SearchClient` instance, you need to ensure that
  * an index has been created. When using and endpoint and key, the index will
  * be created automatically if it does not exist.
+ 
+ * @inheritDoc
  */
 export class AzureAISearchVectorStore extends VectorStore {
   declare FilterType: AzureAISearchFilterType;

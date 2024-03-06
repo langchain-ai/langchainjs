@@ -4,7 +4,7 @@ import { Project } from "ts-morph";
 // Initialize a new Project instance
 const project = new Project();
 
-const langchainGlob = glob.sync("../../langchain-core/src/**/*.ts");
+const langchainGlob = glob.sync("../../libs/**/src/**/*.ts");
 
 langchainGlob.forEach(filePath => {
     const sourceFile = project.addSourceFileAtPath(filePath);

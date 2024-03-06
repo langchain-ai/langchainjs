@@ -57,6 +57,8 @@ export interface DeleteProps {
  *
  * @remarks
  * To sign up for a free Momento account, visit https://console.gomomento.com.
+ 
+ * @inheritDoc
  */
 export class MomentoVectorIndex extends VectorStore {
   private client: IVectorIndexClient;

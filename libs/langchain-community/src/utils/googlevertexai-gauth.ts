@@ -6,6 +6,7 @@ import {
 } from "../types/googlevertexai-types.js";
 import { GoogleVertexAIStream } from "./googlevertexai-connection.js";
 
+/** @inheritDoc */
 class GoogleVertexAINodeStream extends GoogleVertexAIStream {
   constructor(data: Readable) {
     super();
@@ -15,6 +16,7 @@ class GoogleVertexAINodeStream extends GoogleVertexAIStream {
   }
 }
 
+/** @inheritDoc */
 export class GAuthClient implements GoogleAbstractedClient {
   gauth: GoogleAuth;
 

@@ -23,6 +23,8 @@ export interface GradientEmbeddingsParams extends EmbeddingsParams {
 /**
  * Class for generating embeddings using the Gradient AI's API. Extends the
  * Embeddings class and implements GradientEmbeddingsParams and
+ 
+ * @inheritDoc
  */
 export class GradientEmbeddings
   extends Embeddings

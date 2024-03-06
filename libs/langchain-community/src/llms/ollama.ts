@@ -34,6 +34,8 @@ export interface OllamaCallOptions extends BaseLanguageModelCallOptions {
  *
  * console.log(chunks.join(""));
  * ```
+ 
+ * @inheritDoc
  */
 export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
   static lc_name() {

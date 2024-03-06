@@ -3,6 +3,7 @@ import { z } from "zod";
 import { GmailBaseTool, GmailBaseToolParams } from "./base.js";
 import { SEARCH_DESCRIPTION } from "./descriptions.js";
 
+/** @inheritDoc */
 export class GmailSearch extends GmailBaseTool {
   name = "search_gmail";
 

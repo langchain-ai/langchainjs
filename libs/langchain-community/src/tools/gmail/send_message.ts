@@ -2,6 +2,7 @@ import { z } from "zod";
 import { GmailBaseTool, GmailBaseToolParams } from "./base.js";
 import { GET_MESSAGE_DESCRIPTION } from "./descriptions.js";
 
+/** @inheritDoc */
 export class GmailSendMessage extends GmailBaseTool {
   name = "gmail_send_message";
 

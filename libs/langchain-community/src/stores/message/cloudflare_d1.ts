@@ -59,6 +59,8 @@ interface selectStoredMessagesDTO {
  *   output: res,
  * });
  * ```
+ 
+ * @inheritDoc
  */
 export class CloudflareD1MessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "cloudflare_d1"];

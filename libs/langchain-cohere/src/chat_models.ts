@@ -106,6 +106,8 @@ function convertMessagesToCohereMessages(
  *   new HumanMessage("How tall are the largest pengiuns?")
  * ]);
  * ```
+ 
+ * @inheritDoc
  */
 export class ChatCohere<
     CallOptions extends CohereChatCallOptions = CohereChatCallOptions

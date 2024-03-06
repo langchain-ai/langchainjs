@@ -34,6 +34,8 @@ export interface VercelPostgresFields {
  * Class that provides an interface to a Vercel Postgres vector database. It
  * extends the `VectorStore` base class and implements methods for adding
  * documents and vectors and performing similarity searches.
+ 
+ * @inheritDoc
  */
 export class VercelPostgres extends VectorStore {
   declare FilterType: Metadata;

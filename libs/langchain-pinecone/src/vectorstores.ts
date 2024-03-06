@@ -47,6 +47,8 @@ export type PineconeDeleteParams = {
 /**
  * Class for managing and operating vector search applications with
  * Pinecone, the cloud-native high-scale vector database
+ 
+ * @inheritDoc
  */
 export class PineconeStore extends VectorStore {
   declare FilterType: PineconeMetadata;

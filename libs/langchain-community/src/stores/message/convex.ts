@@ -86,6 +86,7 @@ export type ConvexChatMessageHistoryInput<
   readonly deleteMany?: DeleteManyMutation;
 };
 
+/** @inheritDoc */
 export class ConvexChatMessageHistory<
   DataModel extends GenericDataModel,
   SessionIdFieldName extends FieldPaths<

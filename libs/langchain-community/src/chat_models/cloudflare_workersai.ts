@@ -45,6 +45,8 @@ export interface ChatCloudflareWorkersAICallOptions
  *
  * console.log(response);
  * ```
+ 
+ * @inheritDoc
  */
 export class ChatCloudflareWorkersAI
   extends SimpleChatModel

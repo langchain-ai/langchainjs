@@ -15,6 +15,7 @@ import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { AzureOpenAIInput, AzureOpenAIEmbeddingsParams } from "./types.js";
 import { USER_AGENT_PREFIX } from "./constants.js";
 
+/** @inheritDoc */
 export class AzureOpenAIEmbeddings
   extends Embeddings
   implements AzureOpenAIEmbeddingsParams, AzureOpenAIInput

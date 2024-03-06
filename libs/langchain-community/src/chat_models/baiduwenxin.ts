@@ -171,6 +171,8 @@ function messageToWenxinRole(message: BaseMessage): WenxinMessageRole {
  *
  * res = await ernie.call(messages);
  * ```
+ 
+ * @inheritDoc
  */
 export class ChatBaiduWenxin
   extends BaseChatModel

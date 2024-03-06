@@ -45,6 +45,8 @@ type ElasticFilter = object | { field: string; operator: string; value: any }[];
  * VectorStore base class and provides methods for adding documents and
  * vectors to the Elasticsearch database, performing similarity searches,
  * deleting documents, and more.
+ 
+ * @inheritDoc
  */
 export class ElasticVectorSearch extends VectorStore {
   declare FilterType: ElasticFilter;

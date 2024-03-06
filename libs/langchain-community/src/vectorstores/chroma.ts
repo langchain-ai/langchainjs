@@ -45,6 +45,8 @@ export interface ChromaDeleteParams<T> {
  * The main class that extends the `VectorStore` class. It provides
  * methods for interacting with the Chroma database, such as adding
  * documents, deleting documents, and searching for similar vectors.
+ 
+ * @inheritDoc
  */
 export class Chroma extends VectorStore {
   declare FilterType: Where;

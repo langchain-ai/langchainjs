@@ -19,6 +19,7 @@ export interface GoogleAbstractedClient {
   get clientType(): string;
 }
 
+/** @inheritDoc */
 export abstract class GoogleAbstractedFetchClient
   implements GoogleAbstractedClient
 {
@@ -75,6 +76,7 @@ export abstract class GoogleAbstractedFetchClient
   }
 }
 
+/** @inheritDoc */
 export class ApiKeyGoogleAuth extends GoogleAbstractedFetchClient {
   apiKey: string;
 

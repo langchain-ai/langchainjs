@@ -20,6 +20,8 @@ export interface FaissLibArgs {
  * A class that wraps the FAISS (Facebook AI Similarity Search) vector
  * database for efficient similarity search and clustering of dense
  * vectors.
+ 
+ * @inheritDoc
  */
 export class FaissStore extends SaveableVectorStore {
   _index?: IndexFlatL2;

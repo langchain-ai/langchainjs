@@ -13,6 +13,8 @@ export interface GoogleLLMInput extends GoogleBaseLLMInput<GoogleAuthOptions> {}
 
 /**
  * Integration with an LLM.
+ 
+ * @inheritDoc
  */
 export class GoogleLLM
   extends GoogleBaseLLM<GoogleAuthOptions>

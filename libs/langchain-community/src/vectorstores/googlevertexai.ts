@@ -27,6 +27,8 @@ export interface IdDocumentInput extends DocumentInput {
 
 /**
  * A Document that optionally includes the ID of the document.
+ 
+ * @inheritDoc
  */
 export class IdDocument extends Document implements IdDocumentInput {
   id?: string;
@@ -56,6 +58,7 @@ interface IndexEndpointResponse extends GoogleResponse {
   };
 }
 
+/** @inheritDoc */
 class IndexEndpointConnection extends GoogleVertexAIConnection<
   AsyncCallerCallOptions,
   IndexEndpointResponse,
@@ -107,6 +110,7 @@ interface RemoveDatapointResponse extends GoogleResponse {
   // Should be empty
 }
 
+/** @inheritDoc */
 class RemoveDatapointConnection extends GoogleVertexAIConnection<
   AsyncCallerCallOptions,
   RemoveDatapointResponse,
@@ -171,6 +175,7 @@ interface UpsertDatapointResponse extends GoogleResponse {
   // Should be empty
 }
 
+/** @inheritDoc */
 class UpsertDatapointConnection extends GoogleVertexAIConnection<
   AsyncCallerCallOptions,
   UpsertDatapointResponse,
@@ -247,6 +252,7 @@ interface FindNeighborsResponse extends GoogleResponse {
   };
 }
 
+/** @inheritDoc */
 class FindNeighborsConnection
   extends GoogleVertexAIConnection<
     AsyncCallerCallOptions,
@@ -315,6 +321,8 @@ export interface MatchingEngineArgs
 /**
  * A class that represents a connection to a Google Vertex AI Matching Engine
  * instance.
+ 
+ * @inheritDoc
  */
 export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
   declare FilterType: Restriction[];

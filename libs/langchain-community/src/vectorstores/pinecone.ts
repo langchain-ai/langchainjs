@@ -49,6 +49,8 @@ export type PineconeDeleteParams = {
  * @deprecated Install and import from @langchain/pinecone instead.
  * Class that extends the VectorStore class and provides methods to
  * interact with the Pinecone vector database.
+ 
+ * @inheritDoc
  */
 export class PineconeStore extends VectorStore {
   declare FilterType: PineconeMetadata;

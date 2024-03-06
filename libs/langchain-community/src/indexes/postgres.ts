@@ -11,6 +11,7 @@ export type PostgresRecordManagerOptions = {
   schema?: string;
 };
 
+/** @inheritDoc */
 export class PostgresRecordManager implements RecordManagerInterface {
   lc_namespace = ["langchain", "recordmanagers", "postgres"];
 

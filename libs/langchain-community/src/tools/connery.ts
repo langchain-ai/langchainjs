@@ -64,6 +64,8 @@ type RunActionResult = {
  * A LangChain Tool object wrapping a Connery action.
  * ConneryAction is a structured tool that can be used only in the agents supporting structured tools.
  * @extends StructuredTool
+ 
+ * @inheritDoc
  */
 export class ConneryAction extends StructuredTool {
   name: string;
@@ -127,6 +129,8 @@ export class ConneryAction extends StructuredTool {
 
 /**
  * A service for working with Connery Actions.
+ 
+ * @inheritDoc
  */
 export class ConneryService {
   protected runnerUrl: string;

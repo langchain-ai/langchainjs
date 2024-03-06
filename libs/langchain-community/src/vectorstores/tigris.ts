@@ -16,6 +16,8 @@ export type TigrisLibArgs = {
 /**
  * Class for managing and operating vector search applications with
  * Tigris, an open-source Serverless NoSQL Database and Search Platform.
+ 
+ * @inheritDoc
  */
 export class TigrisVectorStore extends VectorStore {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

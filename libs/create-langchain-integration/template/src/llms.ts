@@ -15,6 +15,8 @@ export interface LLMIntegrationInput extends BaseLLMParams {}
 
 /**
  * Integration with an LLM.
+ 
+ * @inheritDoc
  */
 export class LLMIntegration
   extends LLM<BaseLanguageModelCallOptions>

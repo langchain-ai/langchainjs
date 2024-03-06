@@ -48,6 +48,8 @@ export interface SupabaseLibArgs {
 /**
  * Class for interacting with a Supabase database to store and manage
  * vectors.
+ 
+ * @inheritDoc
  */
 export class SupabaseVectorStore extends VectorStore {
   declare FilterType: SupabaseMetadata | SupabaseFilterRPCCall;

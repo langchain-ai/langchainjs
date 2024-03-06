@@ -79,6 +79,8 @@ export type ConvexVectorStoreConfig<
  * and perform a vector search on them.
  *
  * ConvexVectorStore does NOT implement maxMarginalRelevanceSearch.
+ 
+ * @inheritDoc
  */
 export class ConvexVectorStore<
   DataModel extends GenericDataModel,

@@ -5,6 +5,8 @@ import { ConneryService } from "../../../tools/connery.js";
 /**
  * ConneryToolkit provides access to all the available actions from the Connery Runner.
  * @extends Toolkit
+ 
+ * @inheritDoc
  */
 export class ConneryToolkit extends Toolkit {
   tools: ToolInterface[];

@@ -26,6 +26,8 @@ export type TavilySearchAPIRetrieverFields = BaseRetrieverInput & {
 /**
  * A class for retrieving documents related to a given search term
  * using the Tavily Search API.
+ 
+ * @inheritDoc
  */
 export class TavilySearchAPIRetriever extends BaseRetriever {
   static lc_name() {

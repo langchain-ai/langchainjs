@@ -56,6 +56,8 @@ interface DynamoDBSerializedChatMessage {
  * Class providing methods to interact with a DynamoDB table to store and
  * retrieve chat messages. It extends the `BaseListChatMessageHistory`
  * class.
+ 
+ * @inheritDoc
  */
 export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "dynamodb"];

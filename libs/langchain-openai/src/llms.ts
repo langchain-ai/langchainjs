@@ -69,6 +69,8 @@ interface TokenUsage {
  * );
  * console.log({ res });
  * ```
+ 
+ * @inheritDoc
  */
 export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
   extends BaseLLM<CallOptions>

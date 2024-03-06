@@ -8,6 +8,7 @@ import {
 } from "@langchain/google-common";
 import { GoogleAuth, GoogleAuthOptions } from "google-auth-library";
 
+/** @inheritDoc */
 class NodeJsonStream extends JsonStream {
   constructor(data: Readable) {
     super();
@@ -17,6 +18,7 @@ class NodeJsonStream extends JsonStream {
   }
 }
 
+/** @inheritDoc */
 export class GAuthClient implements GoogleAbstractedClient {
   gauth: GoogleAuth;
 

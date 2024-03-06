@@ -42,6 +42,8 @@ export interface MistralAIEmbeddingsParams extends EmbeddingsParams {
 
 /**
  * Class for generating embeddings using the MistralAI API.
+ 
+ * @inheritDoc
  */
 export class MistralAIEmbeddings
   extends Embeddings

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { GmailBaseTool, GmailBaseToolParams } from "./base.js";
 import { GET_THREAD_DESCRIPTION } from "./descriptions.js";
 
+/** @inheritDoc */
 export class GmailGetThread extends GmailBaseTool {
   name = "gmail_get_thread";
 

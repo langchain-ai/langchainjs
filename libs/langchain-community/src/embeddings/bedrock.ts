@@ -47,6 +47,8 @@ export interface BedrockEmbeddingsParams extends EmbeddingsParams {
  * );
  * console.log({ res });
  * ```
+ 
+ * @inheritDoc
  */
 export class BedrockEmbeddings
   extends Embeddings

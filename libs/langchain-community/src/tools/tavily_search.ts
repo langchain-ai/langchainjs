@@ -13,6 +13,8 @@ export type TavilySearchAPIRetrieverFields = ToolParams & {
 
 /**
  * Tool for the Tavily search API.
+ 
+ * @inheritDoc
  */
 export class TavilySearchResults extends Tool {
   static lc_name(): string {

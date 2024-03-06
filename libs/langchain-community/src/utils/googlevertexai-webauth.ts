@@ -10,6 +10,7 @@ import type {
 } from "../types/googlevertexai-types.js";
 import { GoogleVertexAIStream } from "./googlevertexai-connection.js";
 
+/** @inheritDoc */
 class GoogleVertexAIResponseStream extends GoogleVertexAIStream {
   decoder: TextDecoder;
 
@@ -45,6 +46,7 @@ export type WebGoogleAuthOptions = {
   accessToken?: string;
 };
 
+/** @inheritDoc */
 export class WebGoogleAuth implements GoogleAbstractedClient {
   options: WebGoogleAuthOptions;
 

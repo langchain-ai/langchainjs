@@ -35,6 +35,8 @@ export interface VespaRetrieverParams extends RemoteRetrieverParams {
  * });
  * const result = await retriever.getRelevantDocuments("what is vespa?");
  * ```
+ 
+ * @inheritDoc
  */
 export class VespaRetriever extends RemoteRetriever {
   static lc_name() {

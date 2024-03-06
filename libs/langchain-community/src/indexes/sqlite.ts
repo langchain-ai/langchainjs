@@ -34,6 +34,7 @@ export type SQLiteRecordManagerOptions = {
   tableName: string;
 };
 
+/** @inheritDoc */
 export class SQLiteRecordManager implements RecordManagerInterface {
   lc_namespace = ["langchain", "recordmanagers", "sqlite"];
 

@@ -38,6 +38,8 @@ export type UpstashRedisCacheProps = {
  * await model.invoke("How are you today?");
  * const cachedValues = await cache.lookup("How are you today?", "llmKey");
  * ```
+ 
+ * @inheritDoc
  */
 export class UpstashRedisCache extends BaseCache {
   private redisClient: Redis;

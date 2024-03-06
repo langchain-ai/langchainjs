@@ -23,6 +23,8 @@ import { GAuthClient } from "../../utils/googlevertexai-gauth.js";
  * });
  * const result = await model.invoke("What is the capital of France?");
  * ```
+ 
+ * @inheritDoc
  */
 export class ChatGoogleVertexAI extends BaseChatGoogleVertexAI<GoogleAuthOptions> {
   static lc_name() {

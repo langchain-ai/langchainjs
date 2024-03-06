@@ -43,6 +43,8 @@ export interface RemoteRetrieverParams
 /**
  * Abstract class for interacting with a remote server to retrieve
  * relevant documents based on a given query.
+ 
+ * @inheritDoc
  */
 export abstract class RemoteRetriever
   extends BaseRetriever

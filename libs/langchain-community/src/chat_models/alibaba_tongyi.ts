@@ -196,6 +196,8 @@ function messageToTongyiRole(message: BaseMessage): TongyiMessageRole {
  *
  * await qwen.call(messages);
  * ```
+ 
+ * @inheritDoc
  */
 export class ChatAlibabaTongyi
   extends BaseChatModel

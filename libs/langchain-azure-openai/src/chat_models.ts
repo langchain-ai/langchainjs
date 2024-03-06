@@ -163,6 +163,7 @@ export interface ChatOpenAICallOptions
   seed?: number;
 }
 
+/** @inheritDoc */
 export class AzureChatOpenAI
   extends BaseChatModel<ChatOpenAICallOptions>
   implements OpenAIChatInput, AzureOpenAIInput

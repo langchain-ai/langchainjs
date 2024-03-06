@@ -174,6 +174,8 @@ declare interface IflytekXinghuoChatInput {
  *
  * @augments BaseChatModel
  * @augments IflytekXinghuoChatInput
+ 
+ * @inheritDoc
  */
 export abstract class BaseChatIflytekXinghuo
   extends BaseChatModel

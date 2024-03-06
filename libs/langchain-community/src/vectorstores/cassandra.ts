@@ -42,6 +42,8 @@ export interface CassandraLibArgs
  * VectorStore class and provides methods for adding vectors and
  * documents, searching for similar vectors, and creating instances from
  * texts or documents.
+ 
+ * @inheritDoc
  */
 export class CassandraStore extends VectorStore {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

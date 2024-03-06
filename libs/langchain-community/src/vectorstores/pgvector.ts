@@ -41,6 +41,8 @@ export interface PGVectorStoreArgs {
  * extends the `VectorStore` base class and implements methods for adding
  * documents and vectors, performing similarity searches, and ensuring the
  * existence of a table in the database.
+ 
+ * @inheritDoc
  */
 export class PGVectorStore extends VectorStore {
   declare FilterType: Metadata;

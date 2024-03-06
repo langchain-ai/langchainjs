@@ -41,6 +41,8 @@ const DEFAULT_DISTANCE_STRATEGY = "cosine";
  * ensure that the calling code cannot mutate or delete data.
  *
  * @link See https://js.langchain.com/docs/security for more information.
+ 
+ * @inheritDoc
  */
 export class Neo4jVectorStore extends VectorStore {
   private driver: neo4j.Driver;

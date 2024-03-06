@@ -15,6 +15,7 @@ interface PortkeyOptions {
 const readEnv = (env: string, default_val?: string): string | undefined =>
   getEnvironmentVariable(env) ?? default_val;
 
+/** @inheritDoc */
 export class PortkeySession {
   portkey: _Portkey;
 
@@ -85,6 +86,8 @@ export function getPortkeySession(options: PortkeyOptions = {}) {
  *   process.stdout.write(i);
  * }
  * ```
+ 
+ * @inheritDoc
  */
 export class Portkey extends BaseLLM {
   apiKey?: string = undefined;

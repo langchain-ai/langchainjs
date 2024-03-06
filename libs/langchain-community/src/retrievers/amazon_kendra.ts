@@ -46,6 +46,8 @@ export interface AmazonKendraRetrieverArgs {
  *
  * const docs = await retriever.getRelevantDocuments("How are clouds formed?");
  * ```
+ 
+ * @inheritDoc
  */
 export class AmazonKendraRetriever extends BaseRetriever {
   static lc_name() {

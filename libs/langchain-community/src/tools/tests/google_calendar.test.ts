@@ -25,6 +25,7 @@ jest.mock("@langchain/core/utils/env", () => ({
 //   runViewEvents: jest.fn(),
 // }));
 
+/** @inheritDoc */
 class FakeLLM extends LLM {
   _llmType() {
     return "fake";

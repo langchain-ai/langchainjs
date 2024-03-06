@@ -47,6 +47,8 @@ export interface AlephAlphaInput extends BaseLLMParams {
  * interact with the Aleph Alpha API. It extends the base LLM class and
  * includes a variety of parameters for customizing the behavior of the
  * Aleph Alpha model.
+ 
+ * @inheritDoc
  */
 export class AlephAlpha extends LLM implements AlephAlphaInput {
   lc_serializable = true;

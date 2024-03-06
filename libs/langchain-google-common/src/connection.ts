@@ -23,6 +23,7 @@ import {
   GoogleAbstractedClientOpsMethod,
 } from "./auth.js";
 
+/** @inheritDoc */
 export abstract class GoogleConnection<
   CallOptions extends AsyncCallerCallOptions,
   ResponseType extends GoogleResponse
@@ -104,6 +105,7 @@ export abstract class GoogleConnection<
   }
 }
 
+/** @inheritDoc */
 export abstract class GoogleHostConnection<
     CallOptions extends AsyncCallerCallOptions,
     ResponseType extends GoogleResponse,
@@ -151,6 +153,7 @@ export abstract class GoogleHostConnection<
   }
 }
 
+/** @inheritDoc */
 export abstract class GoogleAIConnection<
     CallOptions extends BaseLanguageModelCallOptions,
     MessageType,
@@ -230,6 +233,7 @@ export abstract class GoogleAIConnection<
   }
 }
 
+/** @inheritDoc */
 export abstract class AbstractGoogleLLMConnection<
   MessageType,
   AuthOptions

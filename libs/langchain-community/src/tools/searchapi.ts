@@ -61,6 +61,8 @@ export type SearchApiParameters = {
  * });
  * console.log(res);
  * ```
+ 
+ * @inheritDoc
  */
 export class SearchApi extends Tool {
   static lc_name() {

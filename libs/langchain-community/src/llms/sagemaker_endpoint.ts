@@ -38,6 +38,8 @@ import {
  *
  * }
  * ```
+ 
+ * @inheritDoc
  */
 export abstract class BaseSageMakerContentHandler<InputType, OutputType> {
   contentType = "text/plain";
@@ -108,6 +110,8 @@ export interface SageMakerEndpointInput extends BaseLLMParams {
  * from the ~/.aws/credentials file must be passed. The credentials or
  * roles used should have the required policies to access the SageMaker
  * endpoint.
+ 
+ * @inheritDoc
  */
 export class SageMakerEndpoint extends LLM<BaseLLMCallOptions> {
   lc_serializable = true;

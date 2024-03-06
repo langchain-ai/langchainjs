@@ -63,6 +63,8 @@ export interface MomentoCacheProps {
  * await model.invoke("How are you today?");
  * const cachedValues = await cache.lookup("How are you today?", "llmKey");
  * ```
+ 
+ * @inheritDoc
  */
 export class MomentoCache extends BaseCache {
   private client: ICacheClient;

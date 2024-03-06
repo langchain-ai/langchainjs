@@ -57,6 +57,8 @@ export interface IZepDeleteParams {
  * @property {ZepClient} client - The ZepClient instance used to interact with Zep's API.
  * @property {Promise<void>} initPromise - A promise that resolves when the collection is initialized.
  * @property {DocumentCollection} collection - The Zep document collection.
+ 
+ * @inheritDoc
  */
 export class ZepVectorStore extends VectorStore {
   public client: ZepClient;

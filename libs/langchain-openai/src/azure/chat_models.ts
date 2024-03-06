@@ -7,6 +7,7 @@ import {
   OpenAIChatInput,
 } from "../types.js";
 
+/** @inheritDoc */
 export class AzureChatOpenAI extends ChatOpenAI {
   _llmType(): string {
     return "azure_openai";

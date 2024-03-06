@@ -263,6 +263,8 @@ function _convertStructuredToolToMistralTool(
 
 /**
  * Integration with a chat model.
+ 
+ * @inheritDoc
  */
 export class ChatMistralAI<
     CallOptions extends MistralAICallOptions = MistralAICallOptions

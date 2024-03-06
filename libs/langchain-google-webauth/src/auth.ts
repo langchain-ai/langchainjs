@@ -17,6 +17,7 @@ export type WebGoogleAuthOptions = {
   accessToken?: string;
 };
 
+/** @inheritDoc */
 export class WebGoogleAuth extends GoogleAbstractedFetchClient {
   options: WebGoogleAuthOptions;
 

@@ -24,6 +24,8 @@ import { CREATE_TOOL_DESCRIPTION } from "./descriptions.js";
  * });
  * console.log("Create Result", createResult);
  * ```
+ 
+ * @inheritDoc
  */
 export class GoogleCalendarCreateTool extends GoogleCalendarBase {
   name = "google_calendar_create";

@@ -39,6 +39,7 @@ export function authOptions(
   );
 }
 
+/** @inheritDoc */
 export class MockClient implements GoogleAbstractedClient {
   projectId: string;
 

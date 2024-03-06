@@ -82,6 +82,8 @@ function withConnectAttributes(
  * Class for interacting with SingleStoreDB, a high-performance
  * distributed SQL database. It provides vector storage and vector
  * functions.
+ 
+ * @inheritDoc
  */
 export class SingleStoreVectorStore extends VectorStore {
   connectionPool: Pool;

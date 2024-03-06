@@ -34,6 +34,7 @@ export type AstraDeleteParams = {
   ids: string[];
 };
 
+/** @inheritDoc */
 export class AstraDBVectorStore extends VectorStore {
   declare FilterType: CollectionFilter;
 

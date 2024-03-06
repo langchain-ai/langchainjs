@@ -13,6 +13,8 @@ export interface GoogleCustomSearchParams {
  * Class that uses the Google Search API to perform custom searches.
  * Requires environment variables `GOOGLE_API_KEY` and `GOOGLE_CSE_ID` to
  * be set.
+ 
+ * @inheritDoc
  */
 export class GoogleCustomSearch extends Tool {
   static lc_name() {

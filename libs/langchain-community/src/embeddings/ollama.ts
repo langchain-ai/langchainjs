@@ -30,6 +30,7 @@ interface OllamaEmbeddingsParams extends EmbeddingsParams {
   requestOptions?: CamelCasedRequestOptions;
 }
 
+/** @inheritDoc */
 export class OllamaEmbeddings extends Embeddings {
   model = "llama2";
 

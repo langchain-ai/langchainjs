@@ -30,6 +30,8 @@ import { BaseStore } from "@langchain/core/stores";
  * console.log(yieldedKeys);
  * await store.mdelete(yieldedKeys);
  * ```
+ 
+ * @inheritDoc
  */
 export class RedisByteStore extends BaseStore<string, Uint8Array> {
   lc_namespace = ["langchain", "storage"];

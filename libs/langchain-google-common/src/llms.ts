@@ -29,6 +29,7 @@ import {
 import { JsonStream } from "./utils/stream.js";
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
 
+/** @inheritDoc */
 class GoogleLLMConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   MessageContent,
   AuthOptions
@@ -56,6 +57,8 @@ export interface GoogleBaseLLMInput<AuthOptions>
 
 /**
  * Integration with an LLM.
+ 
+ * @inheritDoc
  */
 export abstract class GoogleBaseLLM<AuthOptions>
   extends LLM<BaseLanguageModelCallOptions>

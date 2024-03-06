@@ -2,6 +2,7 @@ import { z } from "zod";
 import { GmailBaseTool, GmailBaseToolParams } from "./base.js";
 import { CREATE_DRAFT_DESCRIPTION } from "./descriptions.js";
 
+/** @inheritDoc */
 export class GmailCreateDraft extends GmailBaseTool {
   name = "create_gmail_draft";
 

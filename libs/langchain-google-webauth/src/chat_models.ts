@@ -14,6 +14,8 @@ export interface ChatGoogleInput
 
 /**
  * Integration with a chat model.
+ 
+ * @inheritDoc
  */
 export class ChatGoogle
   extends ChatGoogleBase<WebGoogleAuthOptions>

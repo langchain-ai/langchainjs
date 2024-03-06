@@ -157,6 +157,8 @@ export interface LLMonitorHandlerFields
  * ```
  * import { LunaryHandler } from "@langchain/community/callbacks/handlers/lunary";
  * ```
+ 
+ * @inheritDoc
  */
 export class LLMonitorHandler
   extends BaseCallbackHandler

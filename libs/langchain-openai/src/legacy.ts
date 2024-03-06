@@ -63,6 +63,8 @@ export interface OpenAIChatCallOptions extends OpenAICallOptions {
  * );
  * console.log({ res });
  * ```
+ 
+ * @inheritDoc
  */
 export class OpenAIChat
   extends LLM<OpenAIChatCallOptions>

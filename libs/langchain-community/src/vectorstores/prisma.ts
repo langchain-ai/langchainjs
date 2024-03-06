@@ -10,6 +10,7 @@ type ColumnSymbol = typeof IdColumnSymbol | typeof ContentColumnSymbol;
 declare type Value = unknown;
 declare type RawValue = Value | Sql;
 
+/** @inheritDoc */
 declare class Sql {
   strings: string[];
 
@@ -103,6 +104,8 @@ type DefaultPrismaVectorStore = PrismaVectorStore<
  * A specific implementation of the VectorStore class that is designed to
  * work with Prisma. It provides methods for adding models, documents, and
  * vectors, as well as for performing similarity searches.
+ 
+ * @inheritDoc
  */
 export class PrismaVectorStore<
   TModel extends Record<string, unknown>,

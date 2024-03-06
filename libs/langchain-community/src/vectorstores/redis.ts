@@ -106,6 +106,8 @@ export type RedisVectorStoreFilterType = string[];
  * Class representing a RedisVectorStore. It extends the VectorStore class
  * and includes methods for adding documents and vectors, performing
  * similarity searches, managing the index, and more.
+ 
+ * @inheritDoc
  */
 export class RedisVectorStore extends VectorStore {
   declare FilterType: RedisVectorStoreFilterType;

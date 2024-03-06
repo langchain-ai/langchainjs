@@ -5,6 +5,7 @@ interface MemoryRecord {
   groupId: string | null;
 }
 
+/** @inheritDoc */
 export class InMemoryRecordManager extends RecordManager {
   lc_namespace = ["langchain", "recordmanagers", "memory"];
 

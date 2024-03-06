@@ -37,6 +37,8 @@ export interface AmazonKnowledgeBaseRetrieverArgs {
  *
  * const docs = await retriever.getRelevantDocuments("How are clouds formed?");
  * ```
+ 
+ * @inheritDoc
  */
 export class AmazonKnowledgeBaseRetriever extends BaseRetriever {
   static lc_name() {

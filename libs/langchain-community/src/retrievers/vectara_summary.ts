@@ -18,6 +18,7 @@ export interface VectaraRetrieverInput extends BaseRetrieverInput {
   summaryConfig?: VectaraSummary;
 }
 
+/** @inheritDoc */
 export class VectaraSummaryRetriever extends BaseRetriever {
   static lc_name() {
     return "VectaraSummaryRetriever";

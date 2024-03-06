@@ -23,6 +23,8 @@ export interface BaseChatMemoryInput {
  * memory systems. It is designed to maintain the state of an application,
  * specifically the history of a conversation. This class is typically
  * extended by other classes to create specific types of memory systems.
+ 
+ * @inheritDoc
  */
 export abstract class BaseChatMemory extends BaseMemory {
   chatHistory: BaseChatMessageHistory;

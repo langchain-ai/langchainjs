@@ -36,6 +36,8 @@ export type VectorizeDeleteParams = {
  *
  * Class that extends the VectorStore class and provides methods to
  * interact with the Cloudflare Vectorize vector database.
+ 
+ * @inheritDoc
  */
 export class CloudflareVectorizeStore extends VectorStore {
   textKey: string;

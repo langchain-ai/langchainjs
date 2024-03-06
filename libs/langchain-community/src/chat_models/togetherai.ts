@@ -52,6 +52,8 @@ export interface ChatTogetherAIInput
  * const response = await model.invoke([new HumanMessage("Hello there!")]);
  * console.log(response);
  * ```
+ 
+ * @inheritDoc
  */
 export class ChatTogetherAI extends ChatOpenAI<ChatTogetherAICallOptions> {
   static lc_name() {

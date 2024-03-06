@@ -138,6 +138,8 @@ export interface GoogleGenerativeAIChatInput extends BaseChatModelParams {
  * const res = await model.call(questions);
  * console.log({ res });
  * ```
+ 
+ * @inheritDoc
  */
 export class ChatGoogleGenerativeAI
   extends BaseChatModel

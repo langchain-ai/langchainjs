@@ -5,6 +5,7 @@ import {
   WebSocketStreamOptions,
 } from "../../utils/iflytek_websocket_stream.js";
 
+/** @inheritDoc */
 class WebSocketStream extends BaseWebSocketStream {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
@@ -20,6 +21,8 @@ class WebSocketStream extends BaseWebSocketStream {
  * const response = await model.call([new HumanMessage("Nice to meet you!")]);
  * console.log(response);
  * ```
+ 
+ * @inheritDoc
  */
 export class ChatIflytekXinghuo extends BaseChatIflytekXinghuo {
   async openWebSocketStream<WebSocketStream>(

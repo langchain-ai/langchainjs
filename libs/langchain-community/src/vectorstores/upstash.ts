@@ -40,6 +40,8 @@ const CONCURRENT_UPSERT_LIMIT = 1000;
  * The main class that extends the 'VectorStore' class. It provides
  * methods for interacting with Upstash index, such as adding documents,
  * deleting documents, performing similarity search and more.
+ 
+ * @inheritDoc
  */
 export class UpstashVectorStore extends VectorStore {
   index: UpstashIndex;

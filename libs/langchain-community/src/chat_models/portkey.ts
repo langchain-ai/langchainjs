@@ -70,6 +70,7 @@ function _convertDeltaToMessageChunk(
   }
 }
 
+/** @inheritDoc */
 export class PortkeyChat extends BaseChatModel {
   apiKey?: string = undefined;
 

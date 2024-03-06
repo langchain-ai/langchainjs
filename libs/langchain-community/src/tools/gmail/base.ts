@@ -12,6 +12,7 @@ export interface GmailBaseToolParams {
   scopes?: string[];
 }
 
+/** @inheritDoc */
 export abstract class GmailBaseTool extends StructuredTool {
   private CredentialsSchema = z
     .object({

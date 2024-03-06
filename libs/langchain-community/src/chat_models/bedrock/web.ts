@@ -102,6 +102,8 @@ export function convertMessagesToPrompt(
  * const res = await model.invoke([{ content: "Tell me a joke" }]);
  * console.log(res);
  * ```
+ 
+ * @inheritDoc
  */
 export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
   model = "amazon.titan-tg1-large";

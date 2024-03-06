@@ -36,6 +36,8 @@ export interface CreateFireworksEmbeddingRequest {
 
 /**
  * A class for generating embeddings using the Fireworks AI API.
+ 
+ * @inheritDoc
  */
 export class FireworksEmbeddings
   extends Embeddings

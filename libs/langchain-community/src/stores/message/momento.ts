@@ -67,6 +67,8 @@ export interface MomentoChatMessageHistoryProps {
  * const messages = await chatHistory.getMessages();
  * console.log({ messages });
  * ```
+ 
+ * @inheritDoc
  */
 export class MomentoChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "momento"];

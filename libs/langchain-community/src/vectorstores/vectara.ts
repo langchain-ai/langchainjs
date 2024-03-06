@@ -132,6 +132,8 @@ export interface VectaraRetrieverInput {
 /**
  * Class for interacting with the Vectara API. Extends the VectorStore
  * class.
+ 
+ * @inheritDoc
  */
 export class VectaraStore extends VectorStore {
   get lc_secrets(): { [key: string]: string } {

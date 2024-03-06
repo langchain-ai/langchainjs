@@ -28,6 +28,8 @@ export type FireworksCallOptions = Partial<
  *
  * To use, you should have the `openai` package installed and
  * the `FIREWORKS_API_KEY` environment variable set.
+ 
+ * @inheritDoc
  */
 export class Fireworks extends OpenAI<FireworksCallOptions> {
   static lc_name() {

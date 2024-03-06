@@ -65,6 +65,8 @@ export interface StoredPostgresMessageData {
  *    }),
  * });
  * ```
+ 
+ * @inheritDoc
  */
 export class PostgresChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "postgres"];

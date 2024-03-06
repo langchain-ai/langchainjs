@@ -14,6 +14,8 @@ export type ExaSearchRetrieverFields<
 
 /**
  * Tool for the Exa search API.
+ 
+ * @inheritDoc
  */
 export class ExaSearchResults<
   T extends ContentsOptions = { text: true }
@@ -47,6 +49,7 @@ export class ExaSearchResults<
   }
 }
 
+/** @inheritDoc */
 export class ExaFindSimilarResults<
   T extends ContentsOptions = { text: true }
 > extends Tool {

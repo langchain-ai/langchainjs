@@ -37,6 +37,8 @@ export interface DriaRetrieverArgs
  * const docs = await retriever.getRelevantDocuments("What is a union type?");
  * console.log(docs);
  * ```
+ 
+ * @inheritDoc
  */
 export class DriaRetriever extends BaseRetriever {
   static lc_name() {

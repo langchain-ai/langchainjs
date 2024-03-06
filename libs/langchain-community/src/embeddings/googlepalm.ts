@@ -41,6 +41,8 @@ export interface GooglePaLMEmbeddingsParams extends EmbeddingsParams {
  * const documentRes = await model.embedDocuments(["Hello world", "Bye bye"]);
  * console.log({ documentRes });
  * ```
+ 
+ * @inheritDoc
  */
 export class GooglePaLMEmbeddings
   extends Embeddings

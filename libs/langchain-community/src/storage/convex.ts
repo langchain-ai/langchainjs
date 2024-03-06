@@ -76,6 +76,8 @@ export type ConvexKVStoreConfig<
  * Class that extends the BaseStore class to interact with a Convex
  * database. It provides methods for getting, setting, and deleting key value pairs,
  * as well as yielding keys from the database.
+ 
+ * @inheritDoc
  */
 export class ConvexKVStore<
   T extends Value,

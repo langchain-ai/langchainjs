@@ -26,6 +26,8 @@ RETURN *
  * ensure that the calling code cannot mutate or delete data.
  *
  * @link See https://js.langchain.com/docs/security for more information.
+ 
+ * @inheritDoc
  */
 class MemgraphGraph extends Neo4jGraph {
   constructor({

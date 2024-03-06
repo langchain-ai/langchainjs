@@ -33,6 +33,7 @@ export interface TokenUsage {
   totalTokens?: number;
 }
 
+/** @inheritDoc */
 export class AzureOpenAI<
     CallOptions extends OpenAICallOptions = OpenAICallOptions
   >

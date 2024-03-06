@@ -82,6 +82,8 @@ export interface GooglePaLMTextInput extends BaseLLMParams {
 
 /**
  * Google Palm 2 Language Model Wrapper to generate texts
+ 
+ * @inheritDoc
  */
 export class GooglePaLM extends LLM implements GooglePaLMTextInput {
   lc_serializable = true;

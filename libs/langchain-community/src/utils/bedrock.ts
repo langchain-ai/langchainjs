@@ -61,6 +61,8 @@ type Dict = { [key: string]: unknown };
  * preparing the input and output for the Bedrock service. It formats the
  * input prompt based on the provider (e.g., "anthropic", "ai21",
  * "amazon") and extracts the generated text from the service response.
+ 
+ * @inheritDoc
  */
 export class BedrockLLMInputOutputAdapter {
   /** Adapter class to prepare the inputs from Langchain to a format

@@ -4,6 +4,7 @@ import {
   BaseWebSocketStream,
 } from "../../utils/iflytek_websocket_stream.js";
 
+/** @inheritDoc */
 class WebSocketStream extends BaseWebSocketStream<string> {
   openWebSocket(url: string, options: WebSocketStreamOptions): WebSocket {
     return new WebSocket(url, options.protocols ?? []);
@@ -17,6 +18,8 @@ class WebSocketStream extends BaseWebSocketStream<string> {
  * const response = await model.call([new HumanMessage("Nice to meet you!")]);
  * console.log(response);
  * ```
+ 
+ * @inheritDoc
  */
 export class ChatIflytekXinghuo extends BaseChatIflytekXinghuo {
   async openWebSocketStream<WebSocketStream>(

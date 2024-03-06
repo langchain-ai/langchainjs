@@ -19,6 +19,8 @@ interface InternalDoc {
 /**
  * Class that extends `VectorStore`. It allows to perform similarity search using
  * Voi similarity search engine. The class requires passing Voy Client as an input parameter.
+ 
+ * @inheritDoc
  */
 export class VoyVectorStore extends VectorStore {
   client: VoyClient;

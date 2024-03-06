@@ -41,6 +41,8 @@ export interface HuggingFaceTransformersEmbeddingsParams
  * const documentRes = await model.embedDocuments(["Hello world", "Bye bye"]);
  * console.log({ documentRes });
  * ```
+ 
+ * @inheritDoc
  */
 export class HuggingFaceTransformersEmbeddings
   extends Embeddings

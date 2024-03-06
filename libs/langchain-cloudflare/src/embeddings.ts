@@ -31,6 +31,7 @@ export interface CloudflareWorkersAIEmbeddingsParams extends EmbeddingsParams {
   stripNewLines?: boolean;
 }
 
+/** @inheritDoc */
 export class CloudflareWorkersAIEmbeddings extends Embeddings {
   modelName = "@cf/baai/bge-base-en-v1.5";
 

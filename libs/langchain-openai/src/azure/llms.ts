@@ -7,6 +7,7 @@ import type {
   LegacyOpenAIInput,
 } from "../types.js";
 
+/** @inheritDoc */
 export class AzureOpenAI extends OpenAI {
   get lc_aliases(): Record<string, string> {
     return {
