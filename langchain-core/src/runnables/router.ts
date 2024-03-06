@@ -11,7 +11,6 @@ export type RouterInput = {
 /**
  * A runnable that routes to a set of runnables based on Input['key'].
  * Returns the output of the selected runnable.
- 
  * @inheritDoc
  */
 export class RouterRunnable<

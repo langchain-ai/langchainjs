@@ -39,7 +39,6 @@ export type ChatFireworksCallOptions = Partial<
  * const response = await model.invoke("Hello, how are you?");
  * console.log(response);
  * ```
- 
  * @inheritDoc
  */
 export class ChatFireworks extends ChatOpenAI<ChatFireworksCallOptions> {

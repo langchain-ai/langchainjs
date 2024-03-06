@@ -10,7 +10,6 @@ export interface GooglePlacesAPIParams {
 
 /**
  * Tool that queries the Google Places API
- 
  * @inheritDoc
  */
 export class GooglePlacesAPI extends Tool {

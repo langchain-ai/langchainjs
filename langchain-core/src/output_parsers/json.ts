@@ -4,7 +4,6 @@ import { ChatGeneration, Generation } from "../outputs.js";
 
 /**
  * Class for parsing the output of an LLM into a JSON object.
- 
  * @inheritDoc
  */
 export class JsonOutputParser<

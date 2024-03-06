@@ -126,7 +126,6 @@ export function _coerceToDict(value: any, defaultKey: string) {
 /**
  * A Runnable is a generic unit of work that can be invoked, batched, streamed, and/or
  * transformed.
- 
  * @inheritDoc
  */
 export abstract class Runnable<
@@ -935,7 +934,6 @@ export type RunnableBindingArgs<
 
 /**
  * A runnable that delegates calls to another runnable with a set of kwargs.
- 
  * @inheritDoc
  */
 export class RunnableBinding<
@@ -1163,7 +1161,6 @@ export class RunnableBinding<
 /**
  * A runnable that delegates calls to another runnable
  * with each element of the input sequence.
- 
  * @inheritDoc
  */
 export class RunnableEach<
@@ -1259,7 +1256,6 @@ export class RunnableEach<
 /**
  * Base class for runnables that can be retried a
  * specified number of times.
- 
  * @inheritDoc
  */
 export class RunnableRetry<
@@ -1441,7 +1437,6 @@ export class RunnableRetry<
  * const chain = RunnableSequence.from([promptTemplate, new ChatOpenAI({})]);
  * const result = await chain.invoke({ topic: "bears" });
  * ```
- 
  * @inheritDoc
  */
 export class RunnableSequence<
@@ -1713,7 +1708,6 @@ export class RunnableSequence<
  * });
  * const result = await mapChain.invoke({ topic: "bear" });
  * ```
- 
  * @inheritDoc
  */
 export class RunnableMap<
@@ -1857,7 +1851,6 @@ export class RunnableMap<
 
 /**
  * A runnable that runs a callable.
- 
  * @inheritDoc
  */
 export class RunnableLambda<RunInput, RunOutput> extends Runnable<
@@ -2022,7 +2015,6 @@ export class RunnableParallel<RunInput> extends RunnableMap<RunInput> {}
 
 /**
  * A Runnable that can fallback to other Runnables if it fails.
- 
  * @inheritDoc
  */
 export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
@@ -2218,7 +2210,6 @@ export interface RunnableAssignFields<RunInput> {
 
 /**
  * A runnable that assigns key-value pairs to inputs of type `Record<string, unknown>`.
- 
  * @inheritDoc
  */
 export class RunnableAssign<
@@ -2332,7 +2323,6 @@ export interface RunnablePickFields {
 
 /**
  * A runnable that assigns key-value pairs to inputs of type `Record<string, unknown>`.
- 
  * @inheritDoc
  */
 export class RunnablePick<

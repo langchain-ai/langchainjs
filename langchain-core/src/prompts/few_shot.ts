@@ -103,7 +103,6 @@ export interface FewShotPromptTemplateInput
  * console.log(await dynamicPrompt.format({ adjective: "rainy" }));
  *
  * ```
- 
  * @inheritDoc
  */
 export class FewShotPromptTemplate
@@ -333,7 +332,6 @@ export interface FewShotChatMessagePromptTemplateInput
  * Chat prompt template that contains few-shot examples.
  * @augments BasePromptTemplateInput
  * @augments FewShotChatMessagePromptTemplateInput
- 
  * @inheritDoc
  */
 export class FewShotChatMessagePromptTemplate<

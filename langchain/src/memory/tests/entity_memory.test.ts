@@ -7,7 +7,6 @@ import { BaseLLM } from "@langchain/core/language_models/llms";
 import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
 import { EntityMemory } from "../entity_memory.js";
 
-/** @inheritDoc */
 class FakeLLM extends BaseLLM {
   _llmType(): string {
     return "fake";

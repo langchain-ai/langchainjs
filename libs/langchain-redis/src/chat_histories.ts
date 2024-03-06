@@ -46,7 +46,6 @@ export type RedisChatMessageHistoryInput = {
  * });
  * console.log({ response });
  * ```
- 
  * @inheritDoc
  */
 export class RedisChatMessageHistory extends BaseListChatMessageHistory {

@@ -86,7 +86,6 @@ export function getPortkeySession(options: PortkeyOptions = {}) {
  *   process.stdout.write(i);
  * }
  * ```
- 
  * @inheritDoc
  */
 export class Portkey extends BaseLLM {

@@ -225,7 +225,6 @@ export interface ChatOpenAICallOptions
  * console.log(message);
  *
  * ```
- 
  * @inheritDoc
  */
 export class ChatOpenAI<

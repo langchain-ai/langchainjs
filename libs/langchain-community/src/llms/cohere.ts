@@ -37,7 +37,6 @@ export interface CohereInput extends BaseLLMParams {
  * console.log({ res });
  * ```
  * @deprecated Use `Cohere` from `@langchain/cohere` instead.
- 
  * @inheritDoc
  */
 export class Cohere extends LLM implements CohereInput {

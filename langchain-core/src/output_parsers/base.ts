@@ -14,7 +14,6 @@ export interface FormatInstructionsOptions {}
  * Abstract base class for parsing the output of a Large Language Model
  * (LLM) call. It provides methods for parsing the result of an LLM call
  * and invoking the parser with a given input.
- 
  * @inheritDoc
  */
 export abstract class BaseLLMOutputParser<T = unknown> extends Runnable<
@@ -92,7 +91,6 @@ export abstract class BaseLLMOutputParser<T = unknown> extends Runnable<
 
 /**
  * Class to parse the output of an LLM call.
- 
  * @inheritDoc
  */
 export abstract class BaseOutputParser<
@@ -159,7 +157,6 @@ export abstract class BaseOutputParser<
  *     model driving the agent the context that the previous output was improperly
  *     structured, in the hopes that it will update the output to the correct
  *     format.
- 
  * @inheritDoc
  */
 export class OutputParserException extends Error {

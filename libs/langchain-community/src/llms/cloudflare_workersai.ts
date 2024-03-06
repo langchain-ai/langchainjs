@@ -24,7 +24,6 @@ export interface CloudflareWorkersAIInput {
  * Class representing the CloudflareWorkersAI language model. It extends the LLM (Large
  * Language Model) class, providing a standard interface for interacting
  * with the CloudflareWorkersAI language model.
- 
  * @inheritDoc
  */
 export class CloudflareWorkersAI

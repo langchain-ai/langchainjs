@@ -39,7 +39,6 @@ interface ResponseItem {
  * });
  * const docs = await retriever.getRelevantDocuments("hello");
  * ```
- 
  * @inheritDoc
  */
 export class MetalRetriever extends BaseRetriever {

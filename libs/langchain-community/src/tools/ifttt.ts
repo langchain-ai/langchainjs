@@ -39,7 +39,6 @@ import { Tool } from "@langchain/core/tools";
  * This Then That) service. The IFTTT service allows users to create
  * chains of simple conditional statements, called applets, which are
  * triggered based on changes to other web services.
- 
  * @inheritDoc
  */
 export class IFTTTWebhook extends Tool {

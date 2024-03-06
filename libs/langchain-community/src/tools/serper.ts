@@ -16,7 +16,6 @@ export type SerperParameters = {
  * You can create a free API key at https://serper.dev.
  *
  * To use, you should have the SERPER_API_KEY environment variable set.
- 
  * @inheritDoc
  */
 export class Serper extends Tool {

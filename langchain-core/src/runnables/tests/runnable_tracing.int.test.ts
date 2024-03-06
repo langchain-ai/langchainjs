@@ -7,7 +7,6 @@ import {
 import { FakeChatModel } from "../../utils/testing/index.js";
 import { getEnvironmentVariable } from "../../utils/env.js";
 
-/** @inheritDoc */
 class FakeDateOutputParser extends BaseOutputParser<Date> {
   lc_namespace = ["langchain_core", "output_parsers", "testing"];
 

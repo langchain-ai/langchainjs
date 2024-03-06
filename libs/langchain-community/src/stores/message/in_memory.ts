@@ -5,7 +5,6 @@ import { BaseListChatMessageHistory } from "@langchain/core/chat_history";
  * Class for storing chat message history in-memory. It extends the
  * BaseListChatMessageHistory class and provides methods to get, add, and
  * clear messages.
- 
  * @inheritDoc
  */
 export class ChatMessageHistory extends BaseListChatMessageHistory {

@@ -70,7 +70,6 @@ export type RunState = {
  * be serialized as JSON and sent over the wire to reconstruct the log on the other
  * side. Reconstruction of the state can be done with any jsonpatch-compliant library,
  * see https://jsonpatch.com for more information.
- 
  * @inheritDoc
  */
 export class RunLogPatch {
@@ -290,7 +289,6 @@ function isChatGenerationChunk(
  * `langchain.callbacks.tracers.base` module. It represents a callback
  * handler that logs the execution of runs and emits `RunLog` instances to a
  * `RunLogStream`.
- 
  * @inheritDoc
  */
 export class LogStreamCallbackHandler extends BaseTracer {

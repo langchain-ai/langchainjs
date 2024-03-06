@@ -43,7 +43,6 @@ export function serializeGeneration(generation: Generation) {
 
 /**
  * Base class for all caches. All caches should extend this class.
- 
  * @inheritDoc
  */
 export abstract class BaseCache<T = Generation[]> {
@@ -56,7 +55,6 @@ const GLOBAL_MAP = new Map();
 
 /**
  * A cache for storing LLM generations that stores data in memory.
- 
  * @inheritDoc
  */
 export class InMemoryCache<T = Generation[]> extends BaseCache<T> {

@@ -97,7 +97,6 @@ export interface WeaviateFilter {
  * Class that extends the `VectorStore` base class. It provides methods to
  * interact with a Weaviate index, including adding vectors and documents,
  * deleting data, and performing similarity searches.
- 
  * @inheritDoc
  */
 export class WeaviateStore extends VectorStore {

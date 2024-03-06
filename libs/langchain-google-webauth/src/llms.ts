@@ -13,7 +13,6 @@ export interface GoogleLLMInput
 
 /**
  * Integration with an LLM.
- 
  * @inheritDoc
  */
 export class GoogleLLM

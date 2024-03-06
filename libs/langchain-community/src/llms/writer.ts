@@ -47,7 +47,6 @@ export interface WriterInput extends BaseLLMParams {
 /**
  * Class representing a Writer Large Language Model (LLM). It interacts
  * with the Writer API to generate text completions.
- 
  * @inheritDoc
  */
 export class Writer extends LLM implements WriterInput {

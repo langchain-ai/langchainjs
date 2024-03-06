@@ -65,7 +65,6 @@ export interface FirestoreDBChatMessageHistory {
  * });
  * console.log({ response });
  * ```
- 
  * @inheritDoc
  */
 export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {

@@ -29,7 +29,6 @@ export interface LlamaCppEmbeddingsParams
  * console.log(res);
  *
  * ```
- 
  * @inheritDoc
  */
 export class LlamaCppEmbeddings extends Embeddings {

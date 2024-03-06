@@ -51,8 +51,7 @@ export interface TracerSessionV1 extends BaseTracerSession {
   id: number;
 }
 
-/** @deprecated Use LangChainTracer instead. 
- * @inheritDoc
+/** @deprecated Use LangChainTracer instead. * @inheritDoc
  */
 export class LangChainTracerV1 extends BaseTracer {
   name = "langchain_tracer";

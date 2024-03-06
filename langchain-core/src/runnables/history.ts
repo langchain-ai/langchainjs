@@ -99,7 +99,6 @@ export interface RunnableWithMessageHistoryInputs<RunInput, RunOutput>
  *   }
  * );
  * ```
- 
  * @inheritDoc
  */
 export class RunnableWithMessageHistory<

@@ -40,7 +40,6 @@ export interface ImagePromptTemplateInput<
 
 /**
  * An image prompt template for a multimodal model.
- 
  * @inheritDoc
  */
 export class ImagePromptTemplate<

@@ -153,7 +153,6 @@ function _convertDeltaToMessageChunk(
  * const response = await model.invoke([new HumanMessage("Hello there!")]);
  * console.log(response);
  * ```
- 
  * @inheritDoc
  */
 export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {

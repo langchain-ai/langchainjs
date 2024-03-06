@@ -26,7 +26,6 @@ export interface CohereRerankArgs {
 
 /**
  * Document compressor that uses `Cohere Rerank API`.
- 
  * @inheritDoc
  */
 export class CohereRerank {

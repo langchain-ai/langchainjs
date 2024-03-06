@@ -57,7 +57,6 @@ export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
  * console.log({ res });
  *
  * ```
- 
  * @inheritDoc
  */
 export class OpenAIEmbeddings

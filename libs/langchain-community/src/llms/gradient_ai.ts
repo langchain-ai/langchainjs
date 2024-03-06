@@ -38,7 +38,6 @@ export interface GradientLLMParams extends BaseLLMParams {
 /**
  * The GradientLLM class is used to interact with Gradient AI inference Endpoint models.
  * This requires your Gradient AI Access Token which is autoloaded if not specified.
- 
  * @inheritDoc
  */
 export class GradientLLM extends LLM<BaseLLMCallOptions> {

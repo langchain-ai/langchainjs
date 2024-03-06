@@ -7,7 +7,6 @@ import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 /**
  * Generic Rockset vector storage error
- 
  * @inheritDoc
  */
 export class RocksetStoreError extends Error {
@@ -25,7 +24,6 @@ export class RocksetStoreError extends Error {
  * Error that is thrown when a RocksetStore function is called
  * after `destroy()` is called (meaning the collection would be
  * deleted).
- 
  * @inheritDoc
  */
 export class RocksetStoreDestroyedError extends RocksetStoreError {
@@ -97,7 +95,6 @@ export interface RocksetLibArgs {
 
 /**
  * Exposes Rockset's vector store/search functionality
- 
  * @inheritDoc
  */
 export class RocksetStore extends VectorStore {

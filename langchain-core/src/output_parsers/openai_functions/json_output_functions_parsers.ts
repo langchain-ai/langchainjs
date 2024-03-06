@@ -23,7 +23,6 @@ export type FunctionParameters = Optional<
 /**
  * Class for parsing the output of an LLM. Can be configured to return
  * only the arguments of the function call in the output.
- 
  * @inheritDoc
  */
 export class OutputFunctionsParser extends BaseLLMOutputParser<string> {
@@ -79,7 +78,6 @@ export class OutputFunctionsParser extends BaseLLMOutputParser<string> {
 /**
  * Class for parsing the output of an LLM into a JSON object. Uses an
  * instance of `OutputFunctionsParser` to parse the output.
- 
  * @inheritDoc
  */
 export class JsonOutputFunctionsParser<
@@ -176,7 +174,6 @@ export class JsonOutputFunctionsParser<
  * Class for parsing the output of an LLM into a JSON object and returning
  * a specific attribute. Uses an instance of `JsonOutputFunctionsParser`
  * to parse the output.
- 
  * @inheritDoc
  */
 export class JsonKeyOutputFunctionsParser<

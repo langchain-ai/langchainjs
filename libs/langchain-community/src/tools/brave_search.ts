@@ -14,7 +14,6 @@ export interface BraveSearchParams {
  * class and requires an API key to function. The API key can be passed in
  * during instantiation or set as an environment variable named
  * 'BRAVE_SEARCH_API_KEY'.
- 
  * @inheritDoc
  */
 export class BraveSearch extends Tool {

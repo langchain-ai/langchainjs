@@ -3,7 +3,6 @@ import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { jest, test, expect } from "@jest/globals";
 import { PrismaVectorStore } from "../prisma.js";
 
-/** @inheritDoc */
 class Sql {
   strings: string[];
 }

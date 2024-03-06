@@ -44,7 +44,6 @@ export interface ZepRetrieverConfig extends BaseRetrieverInput {
  * const query = "Can I drive red cars in France?";
  * const docs = await retriever.getRelevantDocuments(query);
  * ```
- 
  * @inheritDoc
  */
 export class ZepRetriever extends BaseRetriever {

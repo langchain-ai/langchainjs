@@ -36,7 +36,6 @@ export interface AI21Input extends BaseLLMParams {
  * Class representing the AI21 language model. It extends the LLM (Large
  * Language Model) class, providing a standard interface for interacting
  * with the AI21 language model.
- 
  * @inheritDoc
  */
 export class AI21 extends LLM implements AI21Input {

@@ -129,7 +129,6 @@ function mergeContent(
  * Base class for all types of messages in a conversation. It includes
  * properties like `content`, `name`, and `additional_kwargs`. It also
  * includes methods like `toDict()` and `_getType()`.
- 
  * @inheritDoc
  */
 export abstract class BaseMessage
@@ -235,7 +234,6 @@ function isOpenAIToolCallArray(value?: unknown): value is OpenAIToolCall[] {
  * additional keyword arguments from another `BaseMessageChunk` into this
  * one. It also overrides the `__add__()` method to support concatenation
  * of `BaseMessageChunk` instances.
- 
  * @inheritDoc
  */
 export abstract class BaseMessageChunk extends BaseMessage {
@@ -301,7 +299,6 @@ export abstract class BaseMessageChunk extends BaseMessage {
 
 /**
  * Represents a human message in a conversation.
- 
  * @inheritDoc
  */
 export class HumanMessage extends BaseMessage {
@@ -317,7 +314,6 @@ export class HumanMessage extends BaseMessage {
 /**
  * Represents a chunk of a human message, which can be concatenated with
  * other human message chunks.
- 
  * @inheritDoc
  */
 export class HumanMessageChunk extends BaseMessageChunk {
@@ -342,7 +338,6 @@ export class HumanMessageChunk extends BaseMessageChunk {
 
 /**
  * Represents an AI message in a conversation.
- 
  * @inheritDoc
  */
 export class AIMessage extends BaseMessage {
@@ -358,7 +353,6 @@ export class AIMessage extends BaseMessage {
 /**
  * Represents a chunk of an AI message, which can be concatenated with
  * other AI message chunks.
- 
  * @inheritDoc
  */
 export class AIMessageChunk extends BaseMessageChunk {
@@ -383,7 +377,6 @@ export class AIMessageChunk extends BaseMessageChunk {
 
 /**
  * Represents a system message in a conversation.
- 
  * @inheritDoc
  */
 export class SystemMessage extends BaseMessage {
@@ -399,7 +392,6 @@ export class SystemMessage extends BaseMessage {
 /**
  * Represents a chunk of a system message, which can be concatenated with
  * other system message chunks.
- 
  * @inheritDoc
  */
 export class SystemMessageChunk extends BaseMessageChunk {
@@ -424,7 +416,6 @@ export class SystemMessageChunk extends BaseMessageChunk {
 
 /**
  * Represents a function message in a conversation.
- 
  * @inheritDoc
  */
 export class FunctionMessage extends BaseMessage {
@@ -460,7 +451,6 @@ export class FunctionMessage extends BaseMessage {
 /**
  * Represents a chunk of a function message, which can be concatenated
  * with other function message chunks.
- 
  * @inheritDoc
  */
 export class FunctionMessageChunk extends BaseMessageChunk {
@@ -486,7 +476,6 @@ export class FunctionMessageChunk extends BaseMessageChunk {
 
 /**
  * Represents a tool message in a conversation.
- 
  * @inheritDoc
  */
 export class ToolMessage extends BaseMessage {
@@ -534,7 +523,6 @@ export class ToolMessage extends BaseMessage {
 /**
  * Represents a chunk of a tool message, which can be concatenated
  * with other tool message chunks.
- 
  * @inheritDoc
  */
 export class ToolMessageChunk extends BaseMessageChunk {
@@ -567,7 +555,6 @@ export class ToolMessageChunk extends BaseMessageChunk {
 
 /**
  * Represents a chat message in a conversation.
- 
  * @inheritDoc
  */
 export class ChatMessage
@@ -651,7 +638,6 @@ export function coerceMessageLikeToMessage(
 /**
  * Represents a chunk of a chat message, which can be concatenated with
  * other chat message chunks.
- 
  * @inheritDoc
  */
 export class ChatMessageChunk extends BaseMessageChunk {

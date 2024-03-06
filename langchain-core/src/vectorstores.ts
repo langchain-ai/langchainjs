@@ -71,7 +71,6 @@ export interface VectorStoreRetrieverInterface<
 /**
  * Class for performing document retrieval from a VectorStore. Can perform
  * similarity search or maximal marginal relevance search.
- 
  * @inheritDoc
  */
 export class VectorStoreRetriever<
@@ -225,7 +224,6 @@ export interface VectorStoreInterface extends Serializable {
  * Abstract class representing a store of vectors. Provides methods for
  * adding vectors and documents, deleting from the store, and searching
  * the store.
- 
  * @inheritDoc
  */
 export abstract class VectorStore
@@ -384,7 +382,6 @@ export abstract class VectorStore
 /**
  * Abstract class extending VectorStore with functionality for saving and
  * loading the vector store.
- 
  * @inheritDoc
  */
 export abstract class SaveableVectorStore extends VectorStore {

@@ -6,7 +6,6 @@ import { ConstitutionalChain } from "../constitutional_ai/constitutional_chain.j
 import { ConstitutionalPrinciple } from "../constitutional_ai/constitutional_principle.js";
 import { LLMChain } from "../llm_chain.js";
 
-/** @inheritDoc */
 class FakeLLM extends BaseLLM {
   nrMapCalls = 0;
 

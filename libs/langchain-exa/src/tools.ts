@@ -14,7 +14,6 @@ export type ExaSearchRetrieverFields<
 
 /**
  * Tool for the Exa search API.
- 
  * @inheritDoc
  */
 export class ExaSearchResults<

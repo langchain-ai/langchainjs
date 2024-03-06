@@ -68,7 +68,6 @@ interface GoogleVertexEmbeddingsResults extends GoogleVertexAIBasePrediction {
  * );
  * console.log({ res });
  * ```
- 
  * @inheritDoc
  */
 export class GoogleVertexAIEmbeddings

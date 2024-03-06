@@ -44,7 +44,6 @@ type QdrantSearchResponse = QdrantSchemas["ScoredPoint"] & {
  * Qdrant database. It includes methods for adding documents and vectors
  * to the Qdrant database, searching for similar vectors, and ensuring the
  * existence of a collection in the database.
- 
  * @inheritDoc
  */
 export class QdrantVectorStore extends VectorStore {

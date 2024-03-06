@@ -51,7 +51,6 @@ export interface ChatOllamaCallOptions extends BaseLanguageModelCallOptions {}
  * });
  *
  * ```
- 
  * @inheritDoc
  */
 export class ChatOllama

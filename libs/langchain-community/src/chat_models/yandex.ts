@@ -51,7 +51,6 @@ function _parseChatHistory(history: BaseMessage[]): [ParsedMessage[], string] {
  * ]);
  * console.log(res);
  * ```
- 
  * @inheritDoc
  */
 export class ChatYandexGPT extends BaseChatModel {

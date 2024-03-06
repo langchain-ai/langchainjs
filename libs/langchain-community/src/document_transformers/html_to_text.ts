@@ -24,7 +24,6 @@ import {
  *
  * console.log(newDocuments);
  * ```
- 
  * @inheritDoc
  */
 export class HtmlToTextTransformer extends MappingDocumentTransformer {

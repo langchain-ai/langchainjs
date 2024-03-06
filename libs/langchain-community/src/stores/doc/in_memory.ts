@@ -5,7 +5,6 @@ import { Docstore } from "./base.js";
 /**
  * Class for storing and retrieving documents in memory asynchronously.
  * Extends the Docstore class.
- 
  * @inheritDoc
  */
 export class InMemoryDocstore
@@ -73,7 +72,6 @@ export class InMemoryDocstore
 
 /**
  * Class for storing and retrieving documents in memory synchronously.
- 
  * @inheritDoc
  */
 export class SynchronousInMemoryDocstore {

@@ -66,7 +66,6 @@ interface FilterTypeValue {
  * search. It provides methods for adding documents and vectors to the
  * OpenSearch index, searching for similar vectors, and managing the
  * OpenSearch index.
- 
  * @inheritDoc
  */
 export class OpenSearchVectorStore extends VectorStore {

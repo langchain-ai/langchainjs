@@ -65,7 +65,6 @@ export interface StoredPostgresMessageData {
  *    }),
  * });
  * ```
- 
  * @inheritDoc
  */
 export class PostgresChatMessageHistory extends BaseListChatMessageHistory {

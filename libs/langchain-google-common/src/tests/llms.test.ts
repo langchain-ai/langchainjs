@@ -8,7 +8,6 @@ import {
   mockId,
 } from "./mock.js";
 
-/** @inheritDoc */
 class GoogleLLM extends GoogleBaseLLM<MockClientAuthInfo> {
   constructor(fields?: GoogleBaseLLMInput<MockClientAuthInfo>) {
     super(fields);

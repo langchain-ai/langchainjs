@@ -7,7 +7,6 @@ import { Tool } from "@langchain/core/tools";
  * perform the search operation. Requires an API key for Bing's search
  * engine, which can be set in the environment variables. Also accepts
  * additional parameters for the search query.
- 
  * @inheritDoc
  */
 class BingSerpAPI extends Tool {

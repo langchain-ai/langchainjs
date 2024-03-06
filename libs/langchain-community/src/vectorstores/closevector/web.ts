@@ -32,7 +32,6 @@ export interface CloseVectorWebArgs
  * Class that implements a vector store using CloseVector, It extends the SaveableVectorStore class and
  * provides methods for adding documents and vectors, performing
  * similarity searches, and saving and loading the vector store.
- 
  * @inheritDoc
  */
 export class CloseVectorWeb extends CloseVector<CloseVectorHNSWWeb> {

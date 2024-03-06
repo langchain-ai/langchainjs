@@ -32,7 +32,6 @@ export interface GoogleVertexAITextInput
  *   console.log(chunk);
  * }
  * ```
- 
  * @inheritDoc
  */
 export class GoogleVertexAI extends BaseGoogleVertexAI<WebGoogleAuthOptions> {

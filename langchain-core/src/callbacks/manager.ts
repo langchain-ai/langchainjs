@@ -74,7 +74,6 @@ export function parseCallbackConfigArg(
 
 /**
  * Manage callbacks from different components of LangChain.
- 
  * @inheritDoc
  */
 export abstract class BaseCallbackManager {
@@ -91,7 +90,6 @@ export abstract class BaseCallbackManager {
 
 /**
  * Base class for run manager in LangChain.
- 
  * @inheritDoc
  */
 class BaseRunManager {
@@ -130,7 +128,6 @@ class BaseRunManager {
 
 /**
  * Manages callbacks for retriever runs.
- 
  * @inheritDoc
  */
 export class CallbackManagerForRetrieverRun
@@ -485,7 +482,6 @@ export class CallbackManagerForToolRun
  * });
  * console.log("The answer is:", result);
  * ```
- 
  * @inheritDoc
  */
 export class CallbackManager
@@ -1007,7 +1003,6 @@ export function ensureHandler(
  * processQuestions(questions).catch(console.error);
  *
  * ```
- 
  * @inheritDoc
  */
 export class TraceGroup {

@@ -71,7 +71,6 @@ export interface TypesenseConfig extends AsyncCallerParams {
 
 /**
  * Typesense vector store.
- 
  * @inheritDoc
  */
 export class Typesense extends VectorStore {

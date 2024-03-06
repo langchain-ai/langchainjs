@@ -18,7 +18,6 @@ class WebSocketStream extends BaseWebSocketStream<string> {
  * const response = await model.call([new HumanMessage("Nice to meet you!")]);
  * console.log(response);
  * ```
- 
  * @inheritDoc
  */
 export class ChatIflytekXinghuo extends BaseChatIflytekXinghuo {

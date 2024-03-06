@@ -38,7 +38,6 @@ export function _getMetadata<T extends ContentsOptions = { text: true }>(
  * });
  * const docs = await retriever.getRelevantDocuments("hello");
  * ```
- 
  * @inheritDoc
  */
 export class ExaRetriever<

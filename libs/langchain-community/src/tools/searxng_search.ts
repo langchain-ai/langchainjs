@@ -110,7 +110,6 @@ interface SearxngSearchParams {
  *   input: `What is Langchain? Describe in 50 words`,
  * });
  * ```
- 
  * @inheritDoc
  */
 export class SearxngSearch extends Tool {

@@ -37,7 +37,6 @@ export interface ReplicateInput {
  * );
  * console.log({ res });
  * ```
- 
  * @inheritDoc
  */
 export class Replicate extends LLM implements ReplicateInput {

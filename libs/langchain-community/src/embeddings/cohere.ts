@@ -29,7 +29,6 @@ export interface CohereEmbeddingsParams extends EmbeddingsParams {
  * console.log({ res });
  * ```
  * @deprecated Use `CohereEmbeddings` from `@langchain/cohere` instead.
- 
  * @inheritDoc
  */
 export class CohereEmbeddings

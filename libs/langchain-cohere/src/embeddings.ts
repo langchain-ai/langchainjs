@@ -32,7 +32,6 @@ export interface CohereEmbeddingsParams extends EmbeddingsParams {
 
 /**
  * A class for generating embeddings using the Cohere API.
- 
  * @inheritDoc
  */
 export class CohereEmbeddings

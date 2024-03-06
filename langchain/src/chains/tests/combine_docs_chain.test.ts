@@ -5,7 +5,6 @@ import { LLMResult } from "@langchain/core/outputs";
 import { loadQAMapReduceChain } from "../question_answering/load.js";
 import { loadSummarizationChain } from "../index.js";
 
-/** @inheritDoc */
 class FakeLLM extends BaseLLM {
   nrMapCalls = 0;
 

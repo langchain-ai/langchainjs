@@ -25,7 +25,6 @@ import { Generation } from "@langchain/core/outputs";
  * });
  *
  * ```
- 
  * @inheritDoc
  */
 export class CloudflareKVCache extends BaseCache {

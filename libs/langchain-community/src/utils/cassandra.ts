@@ -112,7 +112,6 @@ export interface CassandraClientArgs extends DseClientOptions {
  * };
  * const cassandraClient = CassandraClientFactory.getClient(astraArgs);
  * ``` *
- 
  * @inheritDoc
  */
 export class CassandraClientFactory {
@@ -492,7 +491,6 @@ export interface CassandraTableArgs extends AsyncCallerParams {
  *
  * This class simplifies Cassandra database interactions, making it easier to perform robust data operations
  * while maintaining clear separation of concerns and promoting code reusability.
- 
  * @inheritDoc
  */
 export class CassandraTable {

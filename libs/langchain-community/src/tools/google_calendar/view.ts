@@ -23,7 +23,6 @@ import { runViewEvents } from "./commands/run-view-events.js";
  * const viewResult = await googleCalendarViewTool.invoke({ input: viewInput });
  * console.log("View Result", viewResult);
  * ```
- 
  * @inheritDoc
  */
 export class GoogleCalendarViewTool extends GoogleCalendarBase {

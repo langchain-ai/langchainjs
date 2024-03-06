@@ -6,7 +6,6 @@ import { StreamEvent } from "../tracers/log_stream.js";
  * a bit of typing in the streamEvents implementation.
  *
  * TODO: Refactor and remove.
- 
  * @inheritDoc
  */
 export class _RootEventFilter {

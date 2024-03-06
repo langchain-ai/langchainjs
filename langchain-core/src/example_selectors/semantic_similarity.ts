@@ -66,7 +66,6 @@ export type SemanticSimilarityExampleSelectorInput<
  * });
  * console.log(await dynamicPrompt.format({ adjective: "rainy" }));
  * ```
- 
  * @inheritDoc
  */
 export class SemanticSimilarityExampleSelector<

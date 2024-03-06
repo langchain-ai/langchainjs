@@ -24,7 +24,6 @@ const answers: { [question: string]: string } = {
   "What's the capital of Washington?": "Olympia",
 };
 
-/** @inheritDoc */
 class FakeLLM extends LLM {
   _llmType() {
     return "fake";
@@ -35,7 +34,6 @@ class FakeLLM extends LLM {
   }
 }
 
-/** @inheritDoc */
 export class FakeChatModel extends BaseChatModel {
   _combineLLMOutput() {
     return [];

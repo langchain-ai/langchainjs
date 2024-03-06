@@ -60,7 +60,6 @@ export interface LlamaCppCallOptions extends BaseLanguageModelCallOptions {
  * console.log({ response });
  *
  * ```
- 
  * @inheritDoc
  */
 export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {

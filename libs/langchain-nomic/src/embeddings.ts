@@ -58,7 +58,6 @@ export interface NomicEmbeddingsResult {
 
 /**
  * Class for generating embeddings using the Nomic API.
- 
  * @inheritDoc
  */
 export class NomicEmbeddings

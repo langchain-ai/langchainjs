@@ -42,7 +42,6 @@ test("LangChain V2 tracer does not throw errors for its methods", async () => {
   await tracer.handleLLMEnd({ generations: [[]] }, llmRunId3);
 });
 
-/** @inheritDoc */
 class FakeTracer extends LangChainTracer {
   createOperations: { [id: string]: Run } = {};
 

@@ -91,7 +91,6 @@ export interface CreateMinimaxEmbeddingRequest {
  * ]);
  * console.log(documentsEmbedding);
  * ```
- 
  * @inheritDoc
  */
 export class MinimaxEmbeddings

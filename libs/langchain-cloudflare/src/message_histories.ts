@@ -53,7 +53,6 @@ interface selectStoredMessagesDTO {
  *   output: res,
  * });
  * ```
- 
  * @inheritDoc
  */
 export class CloudflareD1MessageHistory extends BaseListChatMessageHistory {

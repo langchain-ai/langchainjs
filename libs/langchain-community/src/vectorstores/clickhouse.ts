@@ -47,7 +47,6 @@ export interface ClickHouseFilter {
  * VectorStore class and provides methods for adding vectors and
  * documents, searching for similar vectors, and creating instances from
  * texts or documents.
- 
  * @inheritDoc
  */
 export class ClickHouseStore extends VectorStore {

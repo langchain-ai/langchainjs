@@ -29,7 +29,6 @@ export interface TensorFlowEmbeddingsParams extends EmbeddingsParams {}
  *   documents.map((pageContent) => new Document({ pageContent }))
  * );
  * ```
- 
  * @inheritDoc
  */
 export class TensorFlowEmbeddings extends Embeddings {

@@ -21,7 +21,6 @@ export interface MongoDBChatMessageHistoryInput {
  * const messages = await chatHistory.getMessages();
  * await chatHistory.clear();
  * ```
- 
  * @inheritDoc
  */
 export class MongoDBChatMessageHistory extends BaseListChatMessageHistory {

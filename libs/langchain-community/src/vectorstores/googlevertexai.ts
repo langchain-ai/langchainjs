@@ -27,7 +27,6 @@ export interface IdDocumentInput extends DocumentInput {
 
 /**
  * A Document that optionally includes the ID of the document.
- 
  * @inheritDoc
  */
 export class IdDocument extends Document implements IdDocumentInput {
@@ -321,7 +320,6 @@ export interface MatchingEngineArgs
 /**
  * A class that represents a connection to a Google Vertex AI Matching Engine
  * instance.
- 
  * @inheritDoc
  */
 export class MatchingEngine extends VectorStore implements MatchingEngineArgs {

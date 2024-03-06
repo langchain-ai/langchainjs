@@ -22,7 +22,6 @@ import { BaseChatGoogleVertexAI, GoogleVertexAIChatInput } from "./common.js";
  *   "How do I implement a binary search algorithm in Python?",
  * );
  * ```
- 
  * @inheritDoc
  */
 export class ChatGoogleVertexAI extends BaseChatGoogleVertexAI<WebGoogleAuthOptions> {

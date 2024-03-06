@@ -44,7 +44,6 @@ export interface UpstashRedisStoreInput {
  * }
  * await store.mdelete(yieldedKeys);
  * ```
- 
  * @inheritDoc
  */
 export class UpstashRedisStore extends BaseStore<string, Uint8Array> {

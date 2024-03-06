@@ -61,7 +61,6 @@ export type GoogleVertexAIChatMessageFields = {
 
 /**
  * Represents a chat message in the Google Vertex AI chat model.
- 
  * @inheritDoc
  */
 export class GoogleVertexAIChatMessage {
@@ -183,7 +182,6 @@ export interface GoogleVertexAIChatInput<AuthOptions>
  * Base class for Google Vertex AI chat models.
  * Implemented subclasses must provide a GoogleVertexAILLMConnection
  * with appropriate auth client.
- 
  * @inheritDoc
  */
 export class BaseChatGoogleVertexAI<AuthOptions>

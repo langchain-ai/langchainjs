@@ -44,7 +44,6 @@ interface DiscordChannelSearchParams extends DiscordToolParams {
  * The _call method takes the discord channel ID as the input argument.
  * The bot must have read permissions to the given channel. It returns the
  * message content, author, and time the message was created for each message.
- 
  * @inheritDoc
  */
 export class DiscordGetMessagesTool extends Tool {
@@ -124,7 +123,6 @@ export class DiscordGetMessagesTool extends Tool {
  * base `Tool` class and implements the `_call` method to perform the retrieve
  * operation. Requires a bot token which can be set in the environment
  * variables.
- 
  * @inheritDoc
  */
 export class DiscordGetGuildsTool extends Tool {
@@ -189,7 +187,6 @@ export class DiscordGetGuildsTool extends Tool {
  * perform the retrieve operation. Requires a bot token which can be set in
  * the environment variables. The `_call` method takes a server/guild ID
  * to get its text channels.
- 
  * @inheritDoc
  */
 export class DiscordGetTextChannelsTool extends Tool {
@@ -256,7 +253,6 @@ export class DiscordGetTextChannelsTool extends Tool {
  * perform the retrieve operation. Requires a bot token and channelId which can be set
  * in the environment variables. The _call method takes the message to be
  * sent as the input argument.
- 
  * @inheritDoc
  */
 export class DiscordSendMessagesTool extends Tool {
@@ -343,7 +339,6 @@ export class DiscordSendMessagesTool extends Tool {
  * The _call method takes the search term as the input argument.
  * The bot must have read permissions to the given channel. It returns the
  * message content, author, and time the message was created for each message.
- 
  * @inheritDoc
  */
 export class DiscordChannelSearchTool extends Tool {

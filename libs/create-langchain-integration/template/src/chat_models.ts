@@ -23,7 +23,6 @@ export interface ChatIntegrationInput extends BaseChatModelParams {}
 
 /**
  * Integration with a chat model.
- 
  * @inheritDoc
  */
 export class ChatIntegration<

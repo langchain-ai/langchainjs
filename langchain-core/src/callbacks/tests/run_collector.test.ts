@@ -10,7 +10,6 @@ import { StringOutputParser } from "../../output_parsers/string.js";
 import type { LLMResult } from "../../outputs.js";
 import { RunCollectorCallbackHandler } from "../../tracers/run_collector.js";
 
-/** @inheritDoc */
 class FakeLLM extends BaseLLM {
   nrMapCalls = 0;
 

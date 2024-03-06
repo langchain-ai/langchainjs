@@ -64,7 +64,6 @@ export interface SupabaseHybridSearchParams {
  * Class for performing hybrid search operations on a Supabase database.
  * It extends the `BaseRetriever` class and implements methods for
  * similarity search, keyword search, and hybrid search.
- 
  * @inheritDoc
  */
 export class SupabaseHybridSearch extends BaseRetriever {

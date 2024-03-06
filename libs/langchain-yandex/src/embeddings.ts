@@ -35,7 +35,6 @@ export interface YandexGPTEmbeddingsParams extends EmbeddingsParams {
 /**
  * Class for generating embeddings using the YandexGPT Foundation models API. Extends the
  * Embeddings class and implements YandexGPTEmbeddings
- 
  * @inheritDoc
  */
 export class YandexGPTEmbeddings

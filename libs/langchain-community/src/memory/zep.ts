@@ -75,7 +75,6 @@ export interface ZepMemoryInput extends BaseChatMemoryInput {
  * console.log("Memory: ", await memory.loadMemoryVariables({}));
  *
  * ```
- 
  * @inheritDoc
  */
 export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {

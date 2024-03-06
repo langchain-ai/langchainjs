@@ -16,7 +16,6 @@ export type LanceDBArgs = {
  * A wrapper for an open-source database for vector-search with persistent
  * storage. It simplifies retrieval, filtering, and management of
  * embeddings.
- 
  * @inheritDoc
  */
 export class LanceDB extends VectorStore {

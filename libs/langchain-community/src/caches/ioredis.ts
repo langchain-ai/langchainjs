@@ -22,7 +22,6 @@ import { Generation } from "@langchain/core/outputs";
  * // Remember to disconnect the Redis client when done
  * await redisClient.disconnect();
  * ```
- 
  * @inheritDoc
  */
 export class RedisCache extends BaseCache {

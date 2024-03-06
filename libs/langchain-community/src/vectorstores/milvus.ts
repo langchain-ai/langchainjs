@@ -66,7 +66,6 @@ const MILVUS_COLLECTION_NAME_PREFIX = "langchain_col";
 /**
  * Class for interacting with a Milvus database. Extends the VectorStore
  * class.
- 
  * @inheritDoc
  */
 export class Milvus extends VectorStore {

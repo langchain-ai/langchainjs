@@ -20,7 +20,6 @@ export interface TypeORMVectorStoreArgs {
 /**
  * Class that extends the `Document` base class and adds an `embedding`
  * property. It represents a document in the vector store.
- 
  * @inheritDoc
  */
 export class TypeORMVectorStoreDocument extends Document {
@@ -36,7 +35,6 @@ const defaultDocumentTableName = "documents";
  * extends the `VectorStore` base class and implements methods for adding
  * documents and vectors, performing similarity searches, and ensuring the
  * existence of a table in the database.
- 
  * @inheritDoc
  */
 export class TypeORMVectorStore extends VectorStore {

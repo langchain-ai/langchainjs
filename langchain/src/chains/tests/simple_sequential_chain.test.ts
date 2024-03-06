@@ -10,7 +10,6 @@ import { AnalyzeDocumentChain } from "../analyze_documents_chain.js";
 import { ConversationalRetrievalQAChain } from "../conversational_retrieval_chain.js";
 import { MemoryVectorStore } from "../../vectorstores/memory.js";
 
-/** @inheritDoc */
 class FakeLLM1 extends BaseLLM {
   nrMapCalls = 0;
 
@@ -33,7 +32,6 @@ class FakeLLM1 extends BaseLLM {
   }
 }
 
-/** @inheritDoc */
 class FakeLLM2 extends BaseLLM {
   nrMapCalls = 0;
 

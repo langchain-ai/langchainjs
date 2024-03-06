@@ -16,7 +16,6 @@ export interface HuggingFaceInferenceEmbeddingsParams extends EmbeddingsParams {
  * Class that extends the Embeddings class and provides methods for
  * generating embeddings using Hugging Face models through the
  * HuggingFaceInference API.
- 
  * @inheritDoc
  */
 export class HuggingFaceInferenceEmbeddings

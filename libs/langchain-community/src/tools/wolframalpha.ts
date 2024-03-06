@@ -8,7 +8,6 @@ import { Tool, type ToolParams } from "@langchain/core/tools";
  * });
  * const res = await tool.invoke("What is 2 * 2?");
  * ```
- 
  * @inheritDoc
  */
 export class WolframAlphaTool extends Tool {

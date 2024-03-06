@@ -7,7 +7,6 @@ const OS_TOKEN_COUNT = 1536;
 
 const texts = ["foo", "bar", "baz", "This is the end of the world!"];
 
-/** @inheritDoc */
 class FakeEmbeddingsWithOsDimension extends FakeEmbeddings {
   async embedDocuments(documents: string[]): Promise<number[][]> {
     return Promise.resolve(

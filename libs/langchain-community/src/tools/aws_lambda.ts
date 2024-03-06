@@ -24,7 +24,6 @@ interface LambdaClientConstructorArgs {
 /**
  * Class for invoking AWS Lambda functions within the LangChain framework.
  * Extends the DynamicTool class.
- 
  * @inheritDoc
  */
 class AWSLambda extends DynamicTool {

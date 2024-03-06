@@ -64,7 +64,6 @@ interface TogetherAIEmbeddingsResult {
  *   "What would be a good company name a company that makes colorful socks?"
  * );
  * ```
- 
  * @inheritDoc
  */
 export class TogetherAIEmbeddings

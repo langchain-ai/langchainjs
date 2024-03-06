@@ -62,7 +62,6 @@ export interface GoogleGenerativeAIEmbeddingsParams extends EmbeddingsParams {
  * const documentRes = await model.embedDocuments(["Hello world", "Bye bye"]);
  * console.log({ documentRes });
  * ```
- 
  * @inheritDoc
  */
 export class GoogleGenerativeAIEmbeddings

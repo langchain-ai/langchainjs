@@ -48,7 +48,6 @@ interface RunnableInterfaceV0<RunInput, RunOutput, CallOptions = any> {
   ): AsyncGenerator<RunOutput>;
 }
 
-/** @inheritDoc */
 class IterableReadableStreamV0<T> extends ReadableStream<T> {
   public reader: ReadableStreamDefaultReader<T>;
 
@@ -136,8 +135,6 @@ class IterableReadableStreamV0<T> extends ReadableStream<T> {
  * Base class for all types of messages in a conversation. It includes
  * properties like `content`, `name`, and `additional_kwargs`. It also
  * includes methods like `toDict()` and `_getType()`.
- 
- * @inheritDoc
  */
 class AIMessageV0 {
   lc_namespace = ["langchain_core", "messages"];
@@ -160,7 +157,6 @@ class AIMessageV0 {
   }
 }
 
-/** @inheritDoc */
 class StringPromptValueV0 {
   lc_namespace = ["langchain_core", "prompt_values"];
 
@@ -177,7 +173,6 @@ class StringPromptValueV0 {
   }
 }
 
-/** @inheritDoc */
 class RunnableV0
   implements RunnableInterfaceV0<StringPromptValueV0, AIMessageV0>
 {

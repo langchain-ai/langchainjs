@@ -57,7 +57,6 @@ export interface GoogleBaseLLMInput<AuthOptions>
 
 /**
  * Integration with an LLM.
- 
  * @inheritDoc
  */
 export abstract class GoogleBaseLLM<AuthOptions>

@@ -34,7 +34,6 @@ export interface CassandraKVOptions extends CassandraClientArgs {
 /**
  * A concrete implementation of BaseStore for interacting with a Cassandra database.
  * It provides methods to get, set, delete, and yield keys based on specified criteria.
- 
  * @inheritDoc
  */
 export class CassandraKVStore extends BaseStore<string, Uint8Array> {

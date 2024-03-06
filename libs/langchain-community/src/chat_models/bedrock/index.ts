@@ -15,7 +15,6 @@ import { BedrockChat as BaseBedrockChat } from "./web.js";
  * const res = await model.invoke([{ content: "Tell me a joke" }]);
  * console.log(res);
  * ```
- 
  * @inheritDoc
  */
 export class BedrockChat extends BaseBedrockChat {

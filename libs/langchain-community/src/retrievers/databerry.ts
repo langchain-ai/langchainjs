@@ -35,7 +35,6 @@ interface Berry {
  * A specific implementation of a document retriever for the Databerry
  * API. It extends the BaseRetriever class, which is an abstract base
  * class for a document retrieval system in LangChain.
- 
  * @inheritDoc
  */
 /** @deprecated Use "langchain/retrievers/chaindesk" instead */

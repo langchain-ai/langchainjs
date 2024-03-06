@@ -79,7 +79,6 @@ const chatMemoryColumns: Schemas.Column[] = [
  * });
  * console.log({ response });
  * ```
- 
  * @inheritDoc
  */
 export class XataChatMessageHistory<

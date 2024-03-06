@@ -11,7 +11,6 @@ export type BaseGetPromptAsyncOptions = {
 /**
  * Abstract class that defines the interface for selecting a prompt for a
  * given language model.
- 
  * @inheritDoc
  */
 export abstract class BasePromptSelector {
@@ -44,7 +43,6 @@ export abstract class BasePromptSelector {
  * Concrete implementation of `BasePromptSelector` that selects a prompt
  * based on a set of conditions. It has a default prompt that it returns
  * if none of the conditions are met.
- 
  * @inheritDoc
  */
 export class ConditionalPromptSelector extends BasePromptSelector {

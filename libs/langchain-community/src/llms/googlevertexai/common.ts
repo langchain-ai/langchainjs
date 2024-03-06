@@ -54,7 +54,6 @@ interface TextPrediction extends GoogleVertexAIBasePrediction {
  * Base class for Google Vertex AI LLMs.
  * Implemented subclasses must provide a GoogleVertexAILLMConnection
  * with an appropriate auth client.
- 
  * @inheritDoc
  */
 export class BaseGoogleVertexAI<AuthOptions>

@@ -124,7 +124,6 @@ export interface BaseLangChainParams {
 
 /**
  * Base class for language models, chains, tools.
- 
  * @inheritDoc
  */
 export abstract class BaseLangChain<
@@ -313,7 +312,6 @@ export type LanguageModelLike = Runnable<
 
 /**
  * Base class for language models.
- 
  * @inheritDoc
  */
 export abstract class BaseLanguageModel<

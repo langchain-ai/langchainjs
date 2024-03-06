@@ -22,7 +22,6 @@ import { BaseStore } from "@langchain/core/stores";
  * }
  * await store.mdelete(yieldedKeys);
  * ```
- 
  * @inheritDoc
  */
 export class VercelKVStore extends BaseStore<string, Uint8Array> {

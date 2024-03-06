@@ -53,7 +53,6 @@ const endpointConstructor = (region: string, version: string) =>
  * The WatsonxAI class is used to interact with Watsonx AI
  * Inference Endpoint models. It uses IBM Cloud for authentication.
  * This requires your IBM Cloud API Key which is autoloaded if not specified.
- 
  * @inheritDoc
  */
 

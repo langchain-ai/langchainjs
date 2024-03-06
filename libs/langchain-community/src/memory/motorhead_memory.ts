@@ -40,7 +40,6 @@ const MANAGED_URL = "https://api.getmetal.io/v1/motorhead";
  * Class for managing chat message memory using the Motorhead service. It
  * extends BaseChatMemory and includes methods for initializing the
  * memory, loading memory variables, and saving the context.
- 
  * @inheritDoc
  */
 export class MotorheadMemory extends BaseChatMemory {

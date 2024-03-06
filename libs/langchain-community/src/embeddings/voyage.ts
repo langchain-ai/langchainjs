@@ -36,7 +36,6 @@ export interface CreateVoyageEmbeddingRequest {
 
 /**
  * A class for generating embeddings using the Voyage AI API.
- 
  * @inheritDoc
  */
 export class VoyageEmbeddings

@@ -11,7 +11,6 @@ import type { DocumentInterface } from "./document.js";
  *
  * One example of this is a text splitter that splits a large document into
  * many smaller documents.
- 
  * @inheritDoc
  */
 export abstract class BaseDocumentTransformer<
@@ -42,7 +41,6 @@ export abstract class BaseDocumentTransformer<
 /**
  * Class for document transformers that return exactly one transformed document
  * for each input document.
- 
  * @inheritDoc
  */
 export abstract class MappingDocumentTransformer extends BaseDocumentTransformer {

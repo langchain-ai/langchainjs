@@ -3,7 +3,6 @@ import { Embeddings } from "@langchain/core/embeddings";
 import { CacheBackedEmbeddings } from "../cache_backed.js";
 import { InMemoryStore } from "../../storage/in_memory.js";
 
-/** @inheritDoc */
 class RandomEmbeddings extends Embeddings {
   async embedDocuments(documents: string[]): Promise<number[][]> {
     const quoteUnquoteEmbeddings = [];

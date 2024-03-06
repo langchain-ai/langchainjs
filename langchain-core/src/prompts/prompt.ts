@@ -94,7 +94,6 @@ export type ParamsFromFString<T extends string> = {
  *   template: "Say {foo}",
  * });
  * ```
- 
  * @inheritDoc
  */
 export class PromptTemplate<

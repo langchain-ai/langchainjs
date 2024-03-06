@@ -21,7 +21,6 @@ type XataFilter = object;
  * Class for interacting with a Xata database as a VectorStore. Provides
  * methods to add documents and vectors to the database, delete entries,
  * and perform similarity searches.
- 
  * @inheritDoc
  */
 export class XataVectorSearch<

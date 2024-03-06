@@ -44,7 +44,6 @@ export interface AstraDBChatMessageHistoryProps {
  * const messages = await chatHistory.getMessages();
  *
  * await chatHistory.clear();
- 
  * @inheritDoc
  */
 export class AstraDBChatMessageHistory extends BaseListChatMessageHistory {

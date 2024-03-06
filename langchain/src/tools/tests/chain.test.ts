@@ -8,7 +8,6 @@ import { LLMChain } from "../../chains/llm_chain.js";
 import { VectorDBQAChain } from "../../chains/vector_db_qa.js";
 import { MemoryVectorStore } from "../../vectorstores/memory.js";
 
-/** @inheritDoc */
 class FakeLLM extends LLM {
   _llmType() {
     return "fake";

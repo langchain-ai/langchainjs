@@ -104,7 +104,6 @@ type DefaultPrismaVectorStore = PrismaVectorStore<
  * A specific implementation of the VectorStore class that is designed to
  * work with Prisma. It provides methods for adding models, documents, and
  * vectors, as well as for performing similarity searches.
- 
  * @inheritDoc
  */
 export class PrismaVectorStore<

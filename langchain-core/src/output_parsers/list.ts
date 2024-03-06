@@ -5,7 +5,6 @@ import { BaseTransformOutputParser } from "./transform.js";
 /**
  * Class to parse the output of an LLM call to a list.
  * @augments BaseOutputParser
- 
  * @inheritDoc
  */
 export abstract class ListOutputParser extends BaseTransformOutputParser<
@@ -62,7 +61,6 @@ export abstract class ListOutputParser extends BaseTransformOutputParser<
 /**
  * Class to parse the output of an LLM call as a comma-separated list.
  * @augments ListOutputParser
- 
  * @inheritDoc
  */
 export class CommaSeparatedListOutputParser extends ListOutputParser {
@@ -104,7 +102,6 @@ export class CommaSeparatedListOutputParser extends ListOutputParser {
 /**
  * Class to parse the output of an LLM call to a list with a specific length and separator.
  * @augments ListOutputParser
- 
  * @inheritDoc
  */
 export class CustomListOutputParser extends ListOutputParser {

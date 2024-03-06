@@ -17,7 +17,6 @@ const wait = (ms: number) =>
 
 /**
  * The RaycastAI class, which extends the LLM class and implements the RaycastAIInput interface.
- 
  * @inheritDoc
  */
 export class RaycastAI extends LLM implements RaycastAIInput {

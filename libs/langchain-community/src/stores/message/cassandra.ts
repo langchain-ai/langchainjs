@@ -48,7 +48,6 @@ export interface CassandraChatMessageHistoryOptions
  * });
  * console.log({ response });
  * ```
- 
  * @inheritDoc
  */
 export class CassandraChatMessageHistory extends BaseListChatMessageHistory {

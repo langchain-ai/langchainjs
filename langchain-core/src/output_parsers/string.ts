@@ -17,7 +17,6 @@ import { BaseTransformOutputParser } from "./transform.js";
  * const result = await chain.invoke({ topic: "bears" });
  * console.log("What do you call a bear with no teeth? A gummy bear!");
  * ```
- 
  * @inheritDoc
  */
 export class StringOutputParser extends BaseTransformOutputParser<string> {

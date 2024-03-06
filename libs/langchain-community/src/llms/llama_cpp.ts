@@ -32,7 +32,6 @@ export interface LlamaCppCallOptions extends BaseLLMCallOptions {
  *  This can be installed using `npm install -S node-llama-cpp` and the minimum
  *  version supported in version 2.0.0.
  *  This also requires that have a locally built version of Llama2 installed.
- 
  * @inheritDoc
  */
 export class LlamaCpp extends LLM<LlamaCppCallOptions> {

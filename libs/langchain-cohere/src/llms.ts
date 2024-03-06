@@ -43,7 +43,6 @@ interface CohereCallOptions
  * );
  * console.log({ res });
  * ```
- 
  * @inheritDoc
  */
 export class Cohere extends LLM<CohereCallOptions> implements CohereInput {

@@ -13,7 +13,6 @@ export interface AIPluginToolParams extends ToolParams {
 /**
  * Class for creating instances of AI tools from plugins. It extends the
  * Tool class and implements the AIPluginToolParams interface.
- 
  * @inheritDoc
  */
 export class AIPluginTool extends Tool implements AIPluginToolParams {

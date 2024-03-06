@@ -26,7 +26,6 @@ export type GenerationChunkFields = {
 
 /**
  * Chunk of a single generation. Used for streaming.
- 
  * @inheritDoc
  */
 export class GenerationChunk implements Generation {

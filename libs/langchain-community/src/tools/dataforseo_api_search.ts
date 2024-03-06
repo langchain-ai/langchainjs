@@ -95,7 +95,6 @@ type ApiResponse = {
  * @class DataForSeoAPISearch
  * @extends {Tool}
  * @description Represents a wrapper class to work with DataForSEO SERP API.
- 
  * @inheritDoc
  */
 export class DataForSeoAPISearch extends Tool {

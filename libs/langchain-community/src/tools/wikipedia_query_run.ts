@@ -63,7 +63,6 @@ interface PageResult {
  * });
  * const result = await wikipediaQuery.call("Langchain");
  * ```
- 
  * @inheritDoc
  */
 export class WikipediaQueryRun extends Tool {

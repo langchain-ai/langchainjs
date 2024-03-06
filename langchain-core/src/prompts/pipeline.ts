@@ -69,7 +69,6 @@ export type PipelinePromptTemplateInput<
  *   input: `What's your favorite social media site?`,
  * });
  * ```
- 
  * @inheritDoc
  */
 export class PipelinePromptTemplate<

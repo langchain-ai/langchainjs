@@ -56,7 +56,6 @@ export interface ChatGoogleBaseInput<AuthOptions>
 
 /**
  * Integration with a chat model.
- 
  * @inheritDoc
  */
 export abstract class ChatGoogleBase<AuthOptions>

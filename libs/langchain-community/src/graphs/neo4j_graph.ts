@@ -37,7 +37,6 @@ type PathType = { start: string; type: string; end: string };
  * ensure that the calling code cannot mutate or delete data.
  *
  * @link See https://js.langchain.com/docs/security for more information.
- 
  * @inheritDoc
  */
 export class Neo4jGraph {

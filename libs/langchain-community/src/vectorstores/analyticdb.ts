@@ -38,7 +38,6 @@ interface DataType {
  * documents in an AnalyticDB, adding documents or vectors to the
  * collection, performing similarity search on vectors, and creating an
  * instance of `AnalyticDBVectorStore` from texts or documents.
- 
  * @inheritDoc
  */
 export class AnalyticDBVectorStore extends VectorStore {

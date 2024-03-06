@@ -31,7 +31,6 @@ export interface HNSWLibArgs extends HNSWLibBase {
  * World (HNSW) graphs. It extends the SaveableVectorStore class and
  * provides methods for adding documents and vectors, performing
  * similarity searches, and saving and loading the vector store.
- 
  * @inheritDoc
  */
 export class HNSWLib extends SaveableVectorStore {

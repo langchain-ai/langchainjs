@@ -49,7 +49,6 @@ export type HandleLLMNewTokenCallbackFields = {
  * Abstract class that provides a set of optional methods that can be
  * overridden in derived classes to handle various events during the
  * execution of a LangChain application.
- 
  * @inheritDoc
  */
 abstract class BaseCallbackHandlerMethodsClass {
@@ -276,7 +275,6 @@ export type CallbackHandlerMethods = BaseCallbackHandlerMethodsClass;
  * framework. It provides a set of optional methods that can be overridden
  * in derived classes to handle various events during the execution of a
  * LangChain application.
- 
  * @inheritDoc
  */
 export abstract class BaseCallbackHandler

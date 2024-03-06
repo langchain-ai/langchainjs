@@ -33,7 +33,6 @@ import { parseFString } from "./template.js";
  * Abstract class that serves as a base for creating message prompt
  * templates. It defines how to format messages for different roles in a
  * conversation.
- 
  * @inheritDoc
  */
 export abstract class BaseMessagePromptTemplate<
@@ -86,7 +85,6 @@ export interface MessagesPlaceholderFields<T extends string> {
 /**
  * Class that represents a placeholder for messages in a chat prompt. It
  * extends the BaseMessagePromptTemplate.
- 
  * @inheritDoc
  */
 export class MessagesPlaceholder<
@@ -188,7 +186,6 @@ export interface MessageStringPromptTemplateFields<
 /**
  * Abstract class that serves as a base for creating message string prompt
  * templates. It extends the BaseMessagePromptTemplate.
- 
  * @inheritDoc
  */
 export abstract class BaseMessageStringPromptTemplate<
@@ -248,7 +245,6 @@ export abstract class BaseMessageStringPromptTemplate<
 /**
  * Abstract class that serves as a base for creating chat prompt
  * templates. It extends the BasePromptTemplate.
- 
  * @inheritDoc
  */
 export abstract class BaseChatPromptTemplate<
@@ -293,7 +289,6 @@ export interface ChatMessagePromptTemplateFields<T extends InputValues = any>
 /**
  * Class that represents a chat message prompt template. It extends the
  * BaseMessageStringPromptTemplate.
- 
  * @inheritDoc
  */
 export class ChatMessagePromptTemplate<
@@ -595,7 +590,6 @@ class _StringImageMessagePromptTemplate<
  *   text: "Hello world!",
  * });
  * ```
- 
  * @inheritDoc
  */
 export class HumanMessagePromptTemplate<
@@ -614,7 +608,6 @@ export class HumanMessagePromptTemplate<
 /**
  * Class that represents an AI message prompt template. It extends the
  * BaseMessageStringPromptTemplate.
- 
  * @inheritDoc
  */
 export class AIMessagePromptTemplate<
@@ -643,7 +636,6 @@ export class AIMessagePromptTemplate<
  *   text: "Hello world!",
  * });
  * ```
- 
  * @inheritDoc
  */
 export class SystemMessagePromptTemplate<
@@ -744,7 +736,6 @@ function isMessagesPlaceholder(
  *   text: "Hello world!",
  * });
  * ```
- 
  * @inheritDoc
  */
 export class ChatPromptTemplate<

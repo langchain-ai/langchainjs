@@ -32,8 +32,7 @@ export interface CloudflareWorkersAIEmbeddingsParams extends EmbeddingsParams {
   stripNewLines?: boolean;
 }
 
-/** @deprecated Install and import from "@langchain/cloudflare" instead. 
- * @inheritDoc
+/** @deprecated Install and import from "@langchain/cloudflare" instead. * @inheritDoc
  */
 export class CloudflareWorkersAIEmbeddings extends Embeddings {
   modelName = "@cf/baai/bge-base-en-v1.5";

@@ -18,7 +18,6 @@ export interface DocumentInterface<
 
 /**
  * Interface for interacting with a document.
- 
  * @inheritDoc
  */
 export class Document<

@@ -5,7 +5,6 @@ import { MultiPromptChain } from "../multi_prompt.js";
 
 let pickedPrompt: string;
 
-/** @inheritDoc */
 class FakeLLM extends BaseLLM {
   _llmType(): string {
     return "fake";

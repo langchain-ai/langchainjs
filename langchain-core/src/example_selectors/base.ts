@@ -3,7 +3,6 @@ import type { Example } from "../prompts/base.js";
 
 /**
  * Base class for example selectors.
- 
  * @inheritDoc
  */
 export abstract class BaseExampleSelector extends Serializable {

@@ -45,7 +45,6 @@ export interface ChatCloudflareWorkersAICallOptions
  *
  * console.log(response);
  * ```
- 
  * @inheritDoc
  */
 export class ChatCloudflareWorkersAI

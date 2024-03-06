@@ -58,7 +58,6 @@ interface selectStoredMessagesDTO {
  * });
  * console.log({ response });
  * ```
- 
  * @inheritDoc
  */
 export class PlanetScaleChatMessageHistory extends BaseListChatMessageHistory {

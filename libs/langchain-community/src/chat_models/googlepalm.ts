@@ -114,7 +114,6 @@ function getMessageAuthor(message: BaseMessage) {
  * const res = await model.call(questions);
  * console.log({ res });
  * ```
- 
  * @inheritDoc
  */
 export class ChatGooglePaLM

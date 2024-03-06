@@ -92,7 +92,6 @@ interface ChatModelGenerateCachedParameters<
 /**
  * Base class for chat models. It extends the BaseLanguageModel class and
  * provides methods for generating chat based on input messages.
- 
  * @inheritDoc
  */
 export abstract class BaseChatModel<
@@ -616,7 +615,6 @@ export abstract class BaseChatModel<
 /**
  * An abstract class that extends BaseChatModel and provides a simple
  * implementation of _generate.
- 
  * @inheritDoc
  */
 export abstract class SimpleChatModel<
