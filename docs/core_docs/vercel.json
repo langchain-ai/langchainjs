@@ -515,6 +515,10 @@
     {
       "source": "/docs/modules/memory/how_to(/.*)?",
       "destination": "/docs/modules/memory/types$1"
+    },
+    {
+      "source": "/docs/integrations/chat/anthropic_functions(/?)",
+      "destination": "/docs/integrations/chat/anthropic_tools/"
     }
   ]
 }

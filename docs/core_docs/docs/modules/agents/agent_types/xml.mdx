@@ -48,7 +48,6 @@ import type { PromptTemplate } from "@langchain/core/prompts";
 const prompt = await pull<PromptTemplate>("hwchase17/xml-agent-convo");
 
 const llm = new ChatAnthropic({
-  modelName: "claude-2.1",
   temperature: 0,
 });
 

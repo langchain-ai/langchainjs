@@ -14,6 +14,11 @@
     "@langchain/anthropic": "npm:@langchain/anthropic",
     "node-llama-cpp": "npm:/node-llama-cpp",
     "readline": "https://deno.land/x/readline@v1.1.0/mod.ts",
-    "ml-distance": "npm:/ml-distance"
+    "ml-distance": "npm:/ml-distance",
+    "youtubei.js": "npm:/youtubei.js",
+    "youtube-transcript": "npm:/youtube-transcript",
+    "chromadb": "npm:/chromadb",
+    "uuid": "npm:/uuid",
+    "@faker-js/faker": "npm:@faker-js/faker"
   }
 }

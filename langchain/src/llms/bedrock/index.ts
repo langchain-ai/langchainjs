@@ -1,6 +1,5 @@
 import { defaultProvider } from "@aws-sdk/credential-provider-node";
 import { BaseLLMParams } from "@langchain/core/language_models/llms";
-import { BaseBedrockInput } from "../../util/bedrock.js";
 import { Bedrock as BaseBedrock } from "./web.js";
 import { logVersion010MigrationWarning } from "../../util/entrypoint_deprecation.js";
 
@@ -13,7 +12,8 @@ export class Bedrock extends BaseBedrock {
     return "Bedrock";
   }
 
-  constructor(fields?: Partial<BaseBedrockInput> & BaseLLMParams) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  constructor(fields?: Partial<any> & BaseLLMParams) {
     super({
       ...fields,
       credentials: fields?.credentials ?? defaultProvider(),
