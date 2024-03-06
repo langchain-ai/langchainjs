@@ -18,26 +18,26 @@ import { BedrockChat } from "../bedrock/web.js";
 //   "What is your name and something about yourself?"
 // );
 
-// void testChatModel(
-//   "Test Bedrock chat model: Claude-v2",
-//   "us-east-1",
-//   "anthropic.claude-v2",
-//   "What is your name?"
-// );
+void testChatModel(
+  "Test Bedrock chat model: Claude-v2",
+  "us-east-1",
+  "anthropic.claude-v2",
+  "What is your name?"
+);
 
-// void testChatStreamingModel(
-//   "Test Bedrock chat model streaming: Claude-3",
-//   "us-east-1",
-//   "anthropic.claude-v2",
-//   "What is your name and something about yourself?"
-// );
+void testChatStreamingModel(
+  "Test Bedrock chat model streaming: Claude-v2",
+  "us-east-1",
+  "anthropic.claude-v2",
+  "What is your name and something about yourself?"
+);
 
-// void testChatHandleLLMNewToken(
-//   "Test Bedrock chat model HandleLLMNewToken: Claude-3",
-//   "us-east-1",
-//   "anthropic.claude-v2",
-//   "What is your name and something about yourself?"
-// );
+void testChatHandleLLMNewToken(
+  "Test Bedrock chat model HandleLLMNewToken: Claude-v2",
+  "us-east-1",
+  "anthropic.claude-v2",
+  "What is your name and something about yourself?"
+);
 
 void testChatModel(
   "Test Bedrock chat model: Claude-3",
