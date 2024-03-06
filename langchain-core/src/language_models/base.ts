@@ -258,7 +258,7 @@ export type StructuredOutputMethodParams<
 > = {
   /** @deprecated Pass schema in as the first argument */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  schema?: z.ZodType<RunOutput> | Record<string, any>;
+  schema: z.ZodType<RunOutput> | Record<string, any>;
   name?: string;
   method?: "functionCalling" | "jsonMode";
   includeRaw?: IncludeRaw;
