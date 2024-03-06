@@ -13,22 +13,25 @@ const jimChunkHeader = `DOC NAME: Jim Interview\\n---\\n`;
 const jimDocs = await splitter.createDocuments(
   [`My favorite color is blue.`],
   [{
+    // header for child docs
     chunkHeader: jimChunkHeader
   }],
   {
+    // header for parent doc
     chunkHeader: jimChunkHeader,
     appendChunkOverlapHeader: true,
   }
 );
 
-
 const pamChunkHeader = `DOC NAME: Pam Interview\\n---\\n`;
 const pamDocs = await splitter.createDocuments(
   [`My favorite color is red.`],
   [{
+    // header for child docs
     chunkHeader: pamChunkHeader
   }],
   {
+    // header for parent doc
     chunkHeader: pamChunkHeader,
     appendChunkOverlapHeader: true,
   }
@@ -46,7 +49,7 @@ const retriever = new ParentDocumentRetriever({
 });
 const documents = [].concat(jimDocs, pamDocs);
 
-// We pass additional option `chunkHeader` that will add metadata chunk header to documents
+// We pass additional option `chunkHeader` that will add metadata chunk header to child documents
 await retriever.addDocuments(documents, { chunkHeader: true });
 // Documents added to vector store have this, search friendly format
 /*
@@ -56,9 +59,11 @@ await retriever.addDocuments(documents, { chunkHeader: true });
   ]
 */
 
+// this will search child documents in vector store with the help of chunk header
 const retrievedDocs = await retriever.getRelevantDocuments("What is Pam's favorite color?");
 
-// Retrieved chunk is the larger parent chunk
+// Retrieved chunk is the larger parent chunk. We also added chunk header there so LLM can use it to provide correct
+// answer
 console.log(retrievedDocs);
 /*
   [
