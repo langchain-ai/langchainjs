@@ -267,8 +267,6 @@ describe.skip("PGVectorStore with collection", () => {
     await pgvectorVectorStore.end();
   });
 
-  test("Test creates tables", async () => {});
-
   test("Test embeddings creation", async () => {
     const documents = [
       {
