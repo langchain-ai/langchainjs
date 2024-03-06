@@ -13,6 +13,7 @@ const entrypoints = {
   index: "index",
   build: "build",
   migrations: "migrations/index",
+  "api_refs/update_all_jsdocs": "api_refs/update_all_jsdocs",
 };
 
 // Entrypoints in this list require an optional dependency to be installed.

@@ -7,6 +7,9 @@ build.d.ts
 migrations.cjs
 migrations.js
 migrations.d.ts
+api_refs/update_all_jsdocs.cjs
+api_refs/update_all_jsdocs.js
+api_refs/update_all_jsdocs.d.ts
 node_modules
 dist
 .yarn

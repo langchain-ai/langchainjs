@@ -83,6 +83,11 @@
       "import": "./migrations.js",
       "require": "./migrations.cjs"
     },
+    "./api_refs/update_all_jsdocs": {
+      "types": "./api_refs/update_all_jsdocs.d.ts",
+      "import": "./api_refs/update_all_jsdocs.js",
+      "require": "./api_refs/update_all_jsdocs.cjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -95,6 +100,9 @@
     "build.d.ts",
     "migrations.cjs",
     "migrations.js",
-    "migrations.d.ts"
+    "migrations.d.ts",
+    "api_refs/update_all_jsdocs.cjs",
+    "api_refs/update_all_jsdocs.js",
+    "api_refs/update_all_jsdocs.d.ts"
   ]
 }
