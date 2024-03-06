@@ -9,18 +9,29 @@ import { ScoreThresholdRetriever } from "langchain/retrievers/score_threshold";
 
 const splitter = new RecursiveCharacterTextSplitter({ chunkSize: 1500 });
 
+const jimChunkHeader = `DOC NAME: Jim Interview\\n---\\n`;
 const jimDocs = await splitter.createDocuments(
   [`My favorite color is blue.`],
   [{
-    chunkHeader: `DOC NAME: Jim Interview\\n---\\n`
-  }]
+    chunkHeader: jimChunkHeader
+  }],
+  {
+    chunkHeader: jimChunkHeader,
+    appendChunkOverlapHeader: true,
+  }
 );
 
+
+const pamChunkHeader = `DOC NAME: Pam Interview\\n---\\n`;
 const pamDocs = await splitter.createDocuments(
   [`My favorite color is red.`],
   [{
-    chunkHeader: `DOC NAME: Pam Interview\\n---\\n`
-  }]
+    chunkHeader: pamChunkHeader
+  }],
+  {
+    chunkHeader: pamChunkHeader,
+    appendChunkOverlapHeader: true,
+  }
 );
 
 const vectorstore = await HNSWLib.fromDocuments([], new OpenAIEmbeddings());
@@ -52,7 +63,7 @@ console.log(retrievedDocs);
 /*
   [
     Document {
-      pageContent: 'My favorite color is red.'
+      pageContent: 'DOC NAME: Pam Interview\n---\n My favorite color is red.'
     },
   ]
 */
