@@ -42,6 +42,7 @@ export * as chat_models__minimax from "../chat_models/minimax.js";
 export * as chat_models__ollama from "../chat_models/ollama.js";
 export * as chat_models__togetherai from "../chat_models/togetherai.js";
 export * as chat_models__yandex from "../chat_models/yandex.js";
+export * as chat_models__zhipuai from "../chat_models/zhipuai.js";
 export * as retrievers__chaindesk from "../retrievers/chaindesk.js";
 export * as retrievers__databerry from "../retrievers/databerry.js";
 export * as retrievers__remote from "../retrievers/remote/index.js";

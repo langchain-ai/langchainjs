@@ -1335,6 +1335,7 @@
     "ignore": "^5.2.0",
     "ioredis": "^5.3.2",
     "jsdom": "*",
+    "jsonwebtoken": "^9.0.2",
     "mammoth": "^1.6.0",
     "mongodb": ">=5.2.0",
     "node-llama-cpp": "*",

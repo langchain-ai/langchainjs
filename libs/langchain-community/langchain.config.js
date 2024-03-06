@@ -154,6 +154,7 @@ export const config = {
     "chat_models/portkey": "chat_models/portkey",
     "chat_models/togetherai": "chat_models/togetherai",
     "chat_models/yandex": "chat_models/yandex",
+    "chat_models/zhipuai": "chat_models/zhipuai",
     // callbacks
     "callbacks/handlers/llmonitor": "callbacks/handlers/llmonitor",
     "callbacks/handlers/lunary": "callbacks/handlers/lunary",

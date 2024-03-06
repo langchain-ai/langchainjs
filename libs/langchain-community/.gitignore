@@ -426,6 +426,10 @@ chat_models/alibaba_tongyi.cjs
 chat_models/alibaba_tongyi.js
 chat_models/alibaba_tongyi.d.ts
 chat_models/alibaba_tongyi.d.cts
+chat_models/zhipuai.cjs
+chat_models/zhipuai.js
+chat_models/zhipuai.d.ts
+chat_models/zhipuai.d.cts
 chat_models/baiduwenxin.cjs
 chat_models/baiduwenxin.js
 chat_models/baiduwenxin.d.ts
