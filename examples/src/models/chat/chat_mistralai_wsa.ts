@@ -18,9 +18,7 @@ const model = new ChatMistralAI({
 });
 
 // Pass the schema and tool name to the withStructuredOutput method
-const modelWithTool = model.withStructuredOutput(calculatorSchema, {
-  name: "calculator",
-});
+const modelWithTool = model.withStructuredOutput(calculatorSchema);
 
 const prompt = ChatPromptTemplate.fromMessages([
   [
@@ -42,10 +40,10 @@ console.log(response);
 */
 
 /**
- * Additionally, you can pass 'includeRaw' to get the raw
- * message back from the model too.
+ * You can supply a "name" field to give the LLM additional context
+ * around what you are trying to generate. You can also pass
+ * 'includeRaw' to get the raw message back from the model too.
  */
-
 const includeRawModel = model.withStructuredOutput(calculatorSchema, {
   name: "calculator",
   includeRaw: true,

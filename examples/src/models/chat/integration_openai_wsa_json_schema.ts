@@ -18,10 +18,9 @@ const calculatorSchema = {
   },
   required: ["operation", "number1", "number2"],
 };
-const modelWithStructuredOutput = model.withStructuredOutput(calculatorSchema, {
-  name: "calculator",
-  method: "jsonMode",
-});
+
+// Default mode is "functionCalling"
+const modelWithStructuredOutput = model.withStructuredOutput(calculatorSchema);
 
 const prompt = ChatPromptTemplate.fromMessages([
   "system",
@@ -43,7 +42,8 @@ console.log(result);
 
 /**
  * You can also specify 'includeRaw' to return the parsed
- * and raw output in the result.
+ * and raw output in the result, as well as a "name" field
+ * to give the LLM additional context as to what you are generating.
  */
 const includeRawModel = model.withStructuredOutput(calculatorSchema, {
   name: "calculator",
