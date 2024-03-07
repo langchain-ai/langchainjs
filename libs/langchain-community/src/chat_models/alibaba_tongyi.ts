@@ -267,6 +267,7 @@ export class ChatAlibabaTongyi
     this.seed = fields.seed;
     this.maxTokens = fields.maxTokens;
     this.repetitionPenalty = fields.repetitionPenalty;
+    this.enableSearch = fields.enableSearch;
     this.modelName = fields.modelName ?? "qwen-turbo";
   }
 
