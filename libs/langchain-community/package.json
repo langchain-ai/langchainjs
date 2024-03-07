@@ -150,7 +150,6 @@
     "mysql2": "^3.3.3",
     "neo4j-driver": "^5.17.0",
     "node-llama-cpp": "2.7.3",
-    "openai": "^4.28.4",
     "pg": "^8.11.0",
     "pg-copy-streams": "^6.0.5",
     "pickleparser": "^0.2.1",
@@ -241,7 +240,6 @@
     "mysql2": "^3.3.3",
     "neo4j-driver": "*",
     "node-llama-cpp": "*",
-    "openai": "^4.26.0",
     "pg": "^8.11.0",
     "pg-copy-streams": "^6.0.5",
     "pickleparser": "^0.2.1",
@@ -468,9 +466,6 @@
     "node-llama-cpp": {
       "optional": true
     },
-    "openai": {
-      "optional": true
-    },
     "pg": {
       "optional": true
     },
@@ -598,15 +593,6 @@
       },
       "import": "./tools/dadjokeapi.js",
       "require": "./tools/dadjokeapi.cjs"
-    },
-    "./tools/dalle_api_wrapper": {
-      "types": {
-        "import": "./tools/dalle_api_wrapper.d.ts",
-        "require": "./tools/dalle_api_wrapper.d.cts",
-        "default": "./tools/dalle_api_wrapper.d.ts"
-      },
-      "import": "./tools/dalle_api_wrapper.js",
-      "require": "./tools/dalle_api_wrapper.cjs"
     },
     "./tools/discord": {
       "types": {
@@ -2160,10 +2146,6 @@
     "tools/dadjokeapi.js",
     "tools/dadjokeapi.d.ts",
     "tools/dadjokeapi.d.cts",
-    "tools/dalle_api_wrapper.cjs",
-    "tools/dalle_api_wrapper.js",
-    "tools/dalle_api_wrapper.d.ts",
-    "tools/dalle_api_wrapper.d.cts",
     "tools/discord.cjs",
     "tools/discord.js",
     "tools/discord.d.ts",

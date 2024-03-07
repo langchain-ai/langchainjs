@@ -14,14 +14,14 @@ The Dall-E tool allows your agent to create images using OpenAI's Dall-E image g
 You will need an OpenAI API Key which you can get from the [OpenAI web site](https://openai.com)
 and then set the OPENAI_API_KEY environment variable to the key you just created.
 
-To use the Dall-E Tool you need to install the following official peer dependency:.
+To use the Dall-E Tool you need to install the LangChain OpenAI integration package:
 
 import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
 
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm install openai @langchain/community
+npm install @langchain/openai
 ```
 
 <CodeBlock language="typescript">{ToolExample}</CodeBlock>
