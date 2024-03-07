@@ -12,8 +12,8 @@ const calculatorSchema = z.object({
   number1: z.number(),
   number2: z.number(),
 });
-const modelWithStructuredOutput = model.withStructuredOutput({
-  schema: calculatorSchema,
+
+const modelWithStructuredOutput = model.withStructuredOutput(calculatorSchema, {
   name: "calculator",
 });
 
