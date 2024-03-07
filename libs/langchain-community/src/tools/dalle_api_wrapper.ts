@@ -5,7 +5,7 @@ import { Tool, ToolParams } from "@langchain/core/tools";
 /**
  * An interface for the Dall-E API Wrapper.
  */
-export interface DalleApiWrapperParams extends ToolParams {
+export interface DallEAPIWrapperParams extends ToolParams {
   /**
    * The OpenAI API key
    */
@@ -62,9 +62,9 @@ export interface DalleApiWrapperParams extends ToolParams {
 /**
  * A tool for generating images with Open AIs Dall-E 2 or 3 API.
  */
-export class DalleApiWrapper extends Tool {
+export class DallEAPIWrapper extends Tool {
   static lc_name() {
-    return "DalleApiWrapper";
+    return "DallEAPIWrapper";
   }
 
   name = "dalle_api_wrapper";
@@ -94,7 +94,7 @@ export class DalleApiWrapper extends Tool {
 
   private user?: string;
 
-  constructor(fields?: DalleApiWrapperParams) {
+  constructor(fields?: DallEAPIWrapperParams) {
     super(fields);
     const openAIApiKey =
       fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
