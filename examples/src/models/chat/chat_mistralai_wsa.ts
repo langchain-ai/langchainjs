@@ -18,8 +18,7 @@ const model = new ChatMistralAI({
 });
 
 // Pass the schema and tool name to the withStructuredOutput method
-const modelWithTool = model.withStructuredOutput({
-  schema: calculatorSchema,
+const modelWithTool = model.withStructuredOutput(calculatorSchema, {
   name: "calculator",
 });
 
@@ -47,8 +46,7 @@ console.log(response);
  * message back from the model too.
  */
 
-const includeRawModel = model.withStructuredOutput({
-  schema: calculatorSchema,
+const includeRawModel = model.withStructuredOutput(calculatorSchema, {
   name: "calculator",
   includeRaw: true,
 });

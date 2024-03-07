@@ -350,6 +350,7 @@ export class FakeListChatModel extends BaseChatModel {
     _params:
       | StructuredOutputMethodParams<RunOutput, false>
       | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
@@ -361,6 +362,7 @@ export class FakeListChatModel extends BaseChatModel {
     _params:
       | StructuredOutputMethodParams<RunOutput, true>
       | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
@@ -372,6 +374,7 @@ export class FakeListChatModel extends BaseChatModel {
     _params:
       | StructuredOutputMethodParams<RunOutput, boolean>
       | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     _config?: StructuredOutputMethodOptions<boolean>
   ):
