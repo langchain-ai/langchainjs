@@ -1,8 +1,5 @@
-import {
-  CallbackManagerForLLMRun,
-  Callbacks,
-} from "@langchain/core/callbacks/manager";
-import { LLM } from "@langchain/core/language_models/llms";
+import { CallbackManager, Callbacks } from "@langchain/core/callbacks/manager";
+import { BaseLLM, LLM } from "@langchain/core/language_models/llms";
 import {
   type BaseLanguageModelCallOptions,
   BaseLanguageModelInput,
@@ -27,13 +24,11 @@ import {
   chunkToString,
   messageContentToParts,
   safeResponseToBaseMessage,
-  safeResponseToGeneration,
   safeResponseToString,
   DefaultGeminiSafetyHandler,
 } from "./utils/gemini.js";
-import { JsonStream } from "./utils/stream.js";
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
-import { ensureParams } from "./utils/failedHandler.js";
+import { ensureParams } from "./utils/failed_handler.js";
 import { ChatGoogleBase } from "./chat_models.js";
 import { GoogleAISafetyHandler } from "./utils/safety.js";
 
@@ -183,60 +178,81 @@ export abstract class GoogleBaseLLM<AuthOptions>
 
   /**
    * For some given input string and options, return a string output.
+   *
+   * Despite the fact that `invoke` is overridden below, we still need this
+   * in order to handle public APi calls to `generate()`.
    */
   async _call(
-    _prompt: string,
-    _options: this["ParsedCallOptions"],
-    _runManager?: CallbackManagerForLLMRun
+    prompt: string,
+    options: this["ParsedCallOptions"]
   ): Promise<string> {
     const parameters = copyAIModelParams(this);
-    const result = await this.connection.request(_prompt, parameters, _options);
+    const result = await this.connection.request(prompt, parameters, options);
     const ret = safeResponseToString(result, this.safetyHandler);
     return ret;
   }
 
-  async *_streamResponseChunks(
-    _prompt: string,
-    _options: this["ParsedCallOptions"],
-    _runManager?: CallbackManagerForLLMRun
-  ): AsyncGenerator<GenerationChunk> {
-    // Make the call as a streaming request
-    const parameters = copyAIModelParams(this);
-    const result = await this.streamedConnection.request(
-      _prompt,
-      parameters,
-      _options
-    );
-
-    // Get the streaming parser of the response
-    const stream = result.data as JsonStream;
-
-    // Loop until the end of the stream
-    // During the loop, yield each time we get a chunk from the streaming parser
-    // that is either available or added to the queue
-    while (!stream.streamDone) {
-      const output = await stream.nextChunk();
-      const chunk =
-        output !== null
-          ? new GenerationChunk(
-              safeResponseToGeneration({ data: output }, this.safetyHandler)
-            )
-          : new GenerationChunk({
-              text: "",
-              generationInfo: { finishReason: "stop" },
-            });
-      yield chunk;
-    }
-  }
-
+  // Normally, you should not override this method and instead should override
+  // _streamResponseChunks. We are doing so here to allow for multimodal inputs into
+  // the LLM.
   async *_streamIterator(
     input: BaseLanguageModelInput,
     options?: BaseLanguageModelCallOptions
   ): AsyncGenerator<string> {
+    // TODO: Refactor callback setup and teardown code into core
+    const prompt = BaseLLM._convertInputToPromptValue(input);
+    const [runnableConfig, callOptions] =
+      this._separateRunnableConfigFromCallOptions(options);
+    const callbackManager_ = await CallbackManager.configure(
+      runnableConfig.callbacks,
+      this.callbacks,
+      runnableConfig.tags,
+      this.tags,
+      runnableConfig.metadata,
+      this.metadata,
+      { verbose: this.verbose }
+    );
+    const extra = {
+      options: callOptions,
+      invocation_params: this?.invocationParams(callOptions),
+      batch_size: 1,
+    };
+    const runManagers = await callbackManager_?.handleLLMStart(
+      this.toJSON(),
+      [prompt.toString()],
+      undefined,
+      undefined,
+      extra,
+      undefined,
+      undefined,
+      runnableConfig.runName
+    );
+    let generation = new GenerationChunk({
+      text: "",
+    });
     const proxyChat = this.createProxyChat();
-    for await (const chunk of proxyChat._streamIterator(input, options)) {
-      yield chunkToString(chunk);
+    try {
+      for await (const chunk of proxyChat._streamIterator(input, options)) {
+        const stringValue = chunkToString(chunk);
+        const generationChunk = new GenerationChunk({
+          text: stringValue,
+        });
+        generation = generation.concat(generationChunk);
+        yield stringValue;
+      }
+    } catch (err) {
+      await Promise.all(
+        (runManagers ?? []).map((runManager) => runManager?.handleLLMError(err))
+      );
+      throw err;
     }
+    await Promise.all(
+      (runManagers ?? []).map((runManager) =>
+        runManager?.handleLLMEnd({
+          generations: [[generation]],
+        })
+      )
+    );
   }
 
   async predictMessages(
@@ -254,19 +270,30 @@ export abstract class GoogleBaseLLM<AuthOptions>
     return ret;
   }
 
-  createProxyChat(): ChatGoogleBase<AuthOptions> {
+  /**
+   * Internal implementation detail to allow Google LLMs to support
+   * multimodal input by delegating to the chat model implementation.
+   *
+   * TODO: Replace with something less hacky.
+   */
+  protected createProxyChat(): ChatGoogleBase<AuthOptions> {
     return new ProxyChatGoogle<AuthOptions>({
       ...this.originalFields,
       connection: this.connection,
     });
   }
 
+  // TODO: Remove the need to override this - we are doing it to
+  // allow the LLM to handle multimodal types of input.
   async invoke(
     input: BaseLanguageModelInput,
     options?: BaseLanguageModelCallOptions
   ): Promise<string> {
-    const proxyChat = this.createProxyChat();
-    const chunk = await proxyChat.invoke(input, options);
-    return chunkToString(chunk);
+    const stream = await this._streamIterator(input, options);
+    let generatedOutput = "";
+    for await (const chunk of stream) {
+      generatedOutput += chunk;
+    }
+    return generatedOutput;
   }
 }
