@@ -1,16 +1,38 @@
-{
-  "candidates": [
-    {
-      "content": {
-        "parts": [
+[
+  {
+    "candidates": [
+      {
+        "content": {
+          "parts": [
+            {
+              "text": "A blue square."
+            }
+          ],
+          "role": "model"
+        },
+        "finishReason": "STOP",
+        "index": 0,
+        "safetyRatings": [
           {
-            "text": "A blue square."
+            "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+            "probability": "NEGLIGIBLE"
+          },
+          {
+            "category": "HARM_CATEGORY_HATE_SPEECH",
+            "probability": "NEGLIGIBLE"
+          },
+          {
+            "category": "HARM_CATEGORY_HARASSMENT",
+            "probability": "NEGLIGIBLE"
+          },
+          {
+            "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+            "probability": "NEGLIGIBLE"
           }
-        ],
-        "role": "model"
-      },
-      "finishReason": "STOP",
-      "index": 0,
+        ]
+      }
+    ],
+    "promptFeedback": {
       "safetyRatings": [
         {
           "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
@@ -30,25 +52,5 @@
         }
       ]
     }
-  ],
-  "promptFeedback": {
-    "safetyRatings": [
-      {
-        "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-        "probability": "NEGLIGIBLE"
-      },
-      {
-        "category": "HARM_CATEGORY_HATE_SPEECH",
-        "probability": "NEGLIGIBLE"
-      },
-      {
-        "category": "HARM_CATEGORY_HARASSMENT",
-        "probability": "NEGLIGIBLE"
-      },
-      {
-        "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-        "probability": "NEGLIGIBLE"
-      }
-    ]
   }
-}
+]
