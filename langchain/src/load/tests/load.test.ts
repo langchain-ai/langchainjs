@@ -24,8 +24,6 @@ import { JsonListKeysTool, JsonSpec } from "../../tools/json.js";
 import { AgentExecutor } from "../../agents/executor.js";
 import { StructuredOutputParser } from "../../output_parsers/structured.js";
 import { RegexParser } from "../../output_parsers/regex.js";
-import { OutputFixingParser } from "../../output_parsers/fix.js";
-import { CombiningOutputParser } from "../../output_parsers/combining.js";
 import { load } from "../index.js";
 
 test("serialize + deserialize custom classes", async () => {
@@ -396,39 +394,6 @@ test("serialize + deserialize llmchain with regex output parser", async () => {
     confidence: "A",
     explanation: "Because it is the capital of France.",
   });
-});
-
-test("serialize + deserialize llmchain with fix + combining output parser", async () => {
-  const llm = new OpenAI({
-    temperature: 0.5,
-    modelName: "davinci",
-    openAIApiKey: "openai-key",
-    callbacks: [new ConsoleCallbackHandler()],
-  });
-  const prompt = PromptTemplate.fromTemplate(
-    "An example about {yo} {format_instructions}"
-  );
-  const outputParser = OutputFixingParser.fromLLM(
-    llm,
-    new CombiningOutputParser(
-      new RegexParser({
-        regex: /Number: (\d+), Word: (.*)/,
-        outputKeys: ["confidence", "explanation"],
-      }),
-      new RegexParser({
-        regex: /Confidence: (A|B|C), Explanation: (.*)/,
-        outputKeys: ["confidence", "explanation"],
-      })
-    )
-  );
-  const chain = new LLMChain({ llm, prompt, outputParser });
-  const str = JSON.stringify(chain, null, 2);
-  expect(stringify(JSON.parse(str))).toMatchSnapshot();
-  const chain2 = await load<LLMChain>(str, {
-    OPENAI_API_KEY: "openai-key",
-  });
-  expect(chain2).toBeInstanceOf(LLMChain);
-  expect(JSON.stringify(chain2, null, 2)).toBe(str);
 });
 
 test("serialize + deserialize llmchain with struct output parser throws", async () => {

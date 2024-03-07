@@ -15,17 +15,30 @@ import {
 } from "@langchain/core/language_models/chat_models";
 import { type BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 
-type AnthropicMessage = Anthropic.Beta.MessageParam;
-type AnthropicMessageCreateParams = Omit<
-  Anthropic.Beta.MessageCreateParamsNonStreaming,
-  "anthropic-beta"
->;
-type AnthropicStreamingMessageCreateParams = Omit<
-  Anthropic.Beta.MessageCreateParamsStreaming,
-  "anthropic-beta"
->;
-type AnthropicMessageStreamEvent = Anthropic.Beta.MessageStreamEvent;
+type AnthropicMessage = Anthropic.MessageParam;
+type AnthropicMessageCreateParams = Anthropic.MessageCreateParamsNonStreaming;
+type AnthropicStreamingMessageCreateParams =
+  Anthropic.MessageCreateParamsStreaming;
+type AnthropicMessageStreamEvent = Anthropic.MessageStreamEvent;
 
+function _formatImage(imageUrl: string) {
+  const regex = /^data:(image\/.+);base64,(.+)$/;
+  const match = imageUrl.match(regex);
+  if (match === null) {
+    throw new Error(
+      [
+        "Anthropic only supports base64-encoded images currently.",
+        "Example: data:image/png;base64,/9j/4AAQSk...",
+      ].join("\n\n")
+    );
+  }
+  return {
+    type: "base64",
+    media_type: match[1] ?? "",
+    data: match[2] ?? "",
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any;
+}
 /**
  * Input to AnthropicChat class.
  */
@@ -85,7 +98,7 @@ export interface AnthropicInput {
 
   /** Holds any additional parameters that are valid to pass to {@link
    * https://console.anthropic.com/docs/api/reference |
-   * `anthropic.complete`} that are not explicitly specified on this class.
+   * `anthropic.messages`} that are not explicitly specified on this class.
    */
   invocationKwargs?: Kwargs;
 }
@@ -106,10 +119,12 @@ type Kwargs = Record<string, any>;
  * @remarks
  * Any parameters that are valid to be passed to {@link
  * https://console.anthropic.com/docs/api/reference |
- * `anthropic.beta.messages`} can be passed through {@link invocationKwargs},
+ * `anthropic.messages`} can be passed through {@link invocationKwargs},
  * even if not explicitly available on this class.
  * @example
  * ```typescript
+ * import { ChatAnthropic } from "@langchain/anthropic";
+ *
  * const model = new ChatAnthropic({
  *   temperature: 0.9,
  *   anthropicApiKey: 'YOUR-API-KEY',
@@ -203,7 +218,7 @@ export class ChatAnthropicMessages<
     options?: this["ParsedCallOptions"]
   ): Omit<
     AnthropicMessageCreateParams | AnthropicStreamingMessageCreateParams,
-    "messages" | "anthropic-beta"
+    "messages"
   > &
     Kwargs {
     return {
@@ -302,12 +317,10 @@ export class ChatAnthropicMessages<
     system?: string;
     messages: AnthropicMessage[];
   } {
-    let system;
+    let system: string | undefined;
     if (messages.length > 0 && messages[0]._getType() === "system") {
       if (typeof messages[0].content !== "string") {
-        throw new Error(
-          "Currently only string content messages are supported."
-        );
+        throw new Error("System message content must be a string.");
       }
       system = messages[0].content;
     }
@@ -315,11 +328,6 @@ export class ChatAnthropicMessages<
       system !== undefined ? messages.slice(1) : messages;
     const formattedMessages = conversationMessages.map((message) => {
       let role;
-      if (typeof message.content !== "string") {
-        throw new Error(
-          "Currently only string content messages are supported."
-        );
-      }
       if (message._getType() === "human") {
         role = "user" as const;
       } else if (message._getType() === "ai") {
@@ -333,10 +341,32 @@ export class ChatAnthropicMessages<
           `Message type "${message._getType()}" is not supported.`
         );
       }
-      return {
-        role,
-        content: message.content,
-      };
+      if (typeof message.content === "string") {
+        return {
+          role,
+          content: message.content,
+        };
+      } else {
+        return {
+          role,
+          content: message.content.map((contentPart) => {
+            if (contentPart.type === "image_url") {
+              let source;
+              if (typeof contentPart.image_url === "string") {
+                source = _formatImage(contentPart.image_url);
+              } else {
+                source = _formatImage(contentPart.image_url.url);
+              }
+              return {
+                type: "image" as const,
+                source,
+              };
+            } else {
+              return contentPart;
+            }
+          }),
+        };
+      }
     });
     return {
       messages: formattedMessages,
@@ -434,16 +464,11 @@ export class ChatAnthropicMessages<
       });
     }
     const makeCompletionRequest = async () =>
-      this.streamingClient.beta.messages.create(
-        // TODO: Fix typing once underlying SDK is fixed to not require unnecessary "anthropic-beta" param
-        {
-          ...request,
-          ...this.invocationKwargs,
-          stream: true,
-        } as AnthropicStreamingMessageCreateParams & {
-          "anthropic-beta": string;
-        }
-      );
+      this.streamingClient.messages.create({
+        ...request,
+        ...this.invocationKwargs,
+        stream: true,
+      } as AnthropicStreamingMessageCreateParams);
     return this.caller.call(makeCompletionRequest);
   }
 
@@ -451,7 +476,7 @@ export class ChatAnthropicMessages<
   protected async completionWithRetry(
     request: AnthropicMessageCreateParams & Kwargs,
     options: { signal?: AbortSignal }
-  ): Promise<Anthropic.Beta.Message> {
+  ): Promise<Anthropic.Message> {
     if (!this.anthropicApiKey) {
       throw new Error("Missing Anthropic API key.");
     }
@@ -465,13 +490,10 @@ export class ChatAnthropicMessages<
       });
     }
     const makeCompletionRequest = async () =>
-      this.batchClient.beta.messages.create(
-        // TODO: Fix typing once underlying SDK is fixed to not require unnecessary "anthropic-beta" param
-        {
-          ...request,
-          ...this.invocationKwargs,
-        } as AnthropicMessageCreateParams & { "anthropic-beta": string }
-      );
+      this.batchClient.messages.create({
+        ...request,
+        ...this.invocationKwargs,
+      } as AnthropicMessageCreateParams);
     return this.caller.callWithOptions(
       { signal: options.signal },
       makeCompletionRequest
@@ -480,11 +502,6 @@ export class ChatAnthropicMessages<
 
   _llmType() {
     return "anthropic";
-  }
-
-  /** @ignore */
-  _combineLLMOutput() {
-    return [];
   }
 }
 

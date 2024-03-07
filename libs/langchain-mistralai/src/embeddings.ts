@@ -1,7 +1,7 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
-import { type EmbeddingsResult as MistralAIEmbeddingsResult } from "@mistralai/mistralai";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
+import { EmbeddingResponse } from "@mistralai/mistralai";
 
 /**
  * Interface for MistralAIEmbeddings parameters. Extends EmbeddingsParams and
@@ -124,10 +124,10 @@ export class MistralAIEmbeddings
    */
   private async embeddingWithRetry(
     input: string | Array<string>
-  ): Promise<MistralAIEmbeddingsResult> {
+  ): Promise<EmbeddingResponse> {
+    const { MistralClient } = await this.imports();
+    const client = new MistralClient(this.apiKey, this.endpoint);
     return this.caller.call(async () => {
-      const { MistralClient } = await this.imports();
-      const client = new MistralClient(this.apiKey, this.endpoint);
       const res = await client.embeddings({
         model: this.modelName,
         input,
@@ -136,7 +136,8 @@ export class MistralAIEmbeddings
     });
   }
 
-  async imports() {
+  /** @ignore */
+  private async imports() {
     const { default: MistralClient } = await import("@mistralai/mistralai");
     return { MistralClient };
   }

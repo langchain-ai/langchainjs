@@ -1,0 +1,48 @@
+# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+
+name: Build Examples
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    # Only run if examples, langchain, core, or integration package code changes.
+    paths:
+      - 'examples/**'
+      - 'langchain/**'
+      - 'langchain-core/**'
+      - 'libs/**/**'
+  workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
+
+
+# If another push to the same PR or branch happens while this workflow is still running,
+# cancel the earlier run in favor of the next run.
+#
+# There's no point in testing an outdated version of the code. GitHub only allows
+# a limited number of job runners to be active at the same time, so it's better to cancel
+# pointless jobs early so that more useful jobs can run sooner.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build Core
+        run: yarn turbo:command build --filter=@langchain/core
+      - name: Build all except LangChain & Examples
+        run: yarn turbo:command build --filter=!examples --filter=!langchain --filter=!core_docs --filter=!api_refs --filter=!create-langchain-integration
+      - name: Build LangChain
+        run: yarn turbo:command build --filter=langchain
+      - name: Build examples
+        run: yarn turbo:command build --filter=examples

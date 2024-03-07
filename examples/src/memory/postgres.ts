@@ -49,31 +49,23 @@ const chainWithHistory = new RunnableWithMessageHistory({
 
 const res1 = await chainWithHistory.invoke(
   {
-    input: "Hi! I'm Jim.",
+    input: "Hi! I'm MJDeligan.",
   },
   { configurable: { sessionId: "langchain-test-session" } }
 );
-console.log({ res1 });
+console.log(res1);
 /*
-{
-  res1: {
-    text: "Hello Jim! It's nice to meet you. My name is AI. How may I assist you today?"
-  }
-}
+  "Hello MJDeligan! It's nice to meet you. My name is AI. How may I assist you today?"
 */
 
 const res2 = await chainWithHistory.invoke(
   { input: "What did I just say my name was?" },
   { configurable: { sessionId: "langchain-test-session" } }
 );
-console.log({ res2 });
+console.log(res2);
 
 /*
-{
-  res1: {
-    text: "You said your name was Jim."
-  }
-}
+  "You said your name was MJDeligan."
 */
 
 // If you provided a pool config you should close the created pool when you are done
