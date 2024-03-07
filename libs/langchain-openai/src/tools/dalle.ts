@@ -131,10 +131,17 @@ export class DallEAPIWrapper extends Tool {
       user: this.user,
     });
 
-    const urls = response.data
-      .map((item) => item.url)
-      .filter((url): url is string => url !== "undefined");
+    let data = "";
+    if (this.responseFormat === "url") {
+      [data] = response.data
+        .map((item) => item.url)
+        .filter((url): url is string => url !== "undefined");
+    } else {
+      [data] = response.data
+        .map((item) => item.b64_json)
+        .filter((b64_json): b64_json is string => b64_json !== "undefined");
+    }
 
-    return urls[0];
+    return data;
   }
 }
