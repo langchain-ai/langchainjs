@@ -219,14 +219,16 @@ test("Test ChatAnthropic withStructuredOutput", async () => {
   const runnable = new ChatAnthropicTools({
     modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
-  }).withStructuredOutput({
-    schema: z.object({
+  }).withStructuredOutput(
+    z.object({
       name: z.string().describe("The name of a person"),
       height: z.number().describe("The person's height"),
       hairColor: z.optional(z.string()).describe("The person's hair color"),
     }),
-    name: "person",
-  });
+    {
+      name: "person",
+    }
+  );
   const message = new HumanMessage("Alex is 5 feet tall. Alex is blonde.");
   const res = await runnable.invoke([message]);
   console.log(JSON.stringify(res, null, 2));
@@ -237,8 +239,8 @@ test("Test ChatAnthropic withStructuredOutput on a single array item", async () 
   const runnable = new ChatAnthropicTools({
     modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
-  }).withStructuredOutput({
-    schema: z.object({
+  }).withStructuredOutput(
+    z.object({
       people: z.array(
         z.object({
           name: z.string().describe("The name of a person"),
@@ -246,8 +248,8 @@ test("Test ChatAnthropic withStructuredOutput on a single array item", async () 
           hairColor: z.optional(z.string()).describe("The person's hair color"),
         })
       ),
-    }),
-  });
+    })
+  );
   const message = new HumanMessage("Alex is 5 feet tall. Alex is blonde.");
   const res = await runnable.invoke([message]);
   console.log(JSON.stringify(res, null, 2));
@@ -260,8 +262,8 @@ test("Test ChatAnthropic withStructuredOutput on a single array item", async () 
   const runnable = new ChatAnthropicTools({
     modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
-  }).withStructuredOutput({
-    schema: z.object({
+  }).withStructuredOutput(
+    z.object({
       sender: z
         .optional(z.string())
         .describe("The sender's name, if available"),
@@ -279,8 +281,10 @@ test("Test ChatAnthropic withStructuredOutput on a single array item", async () 
         .describe("High level description of what the email is about"),
       tone: z.enum(["positive", "negative"]).describe("The tone of the email."),
     }),
-    name: "Email",
-  });
+    {
+      name: "Email",
+    }
+  );
   const prompt = ChatPromptTemplate.fromMessages([
     [
       "human",

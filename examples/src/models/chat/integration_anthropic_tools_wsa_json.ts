@@ -25,8 +25,7 @@ const model = new ChatAnthropicTools({
 });
 
 // Pass the schema and tool name to the withStructuredOutput method
-const modelWithTool = model.withStructuredOutput({
-  schema: calculatorJsonSchema,
+const modelWithTool = model.withStructuredOutput(calculatorJsonSchema, {
   name: "calculator",
 });
 
