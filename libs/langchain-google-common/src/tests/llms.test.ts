@@ -194,7 +194,7 @@ describe("Mock Google LLM", () => {
     console.log("record", JSON.stringify(record, null, 2));
   });
 
-  test.only("1: invoke", async () => {
+  test("1: invoke", async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
