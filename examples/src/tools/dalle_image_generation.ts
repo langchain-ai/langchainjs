@@ -3,7 +3,7 @@ import { DallEAPIWrapper } from "@langchain/openai";
 
 const tool = new DallEAPIWrapper({
   n: 1, // Default
-  modelName: "dalle-3", // Default
+  modelName: "dall-e-3", // Default
   openAIApiKey: process.env.OPENAI_API_KEY, // Default
 });
 

@@ -12,7 +12,8 @@ export interface DallEAPIWrapperParams extends ToolParams {
   openAIApiKey?: string;
   /**
    * The model to use.
-   * @default "dalle-3"
+   * @params "dall-e-2" | "dall-e-3"
+   * @default "dall-e-3"
    */
   modelName?: string;
   /**
@@ -111,7 +112,7 @@ export class DallEAPIWrapper extends Tool {
     this.modelName = fields?.modelName ?? this.modelName;
     this.style = fields?.style ?? this.style;
     this.quality = fields?.quality ?? this.quality;
-    this.n = fields?.n ?? 1;
+    this.n = fields?.n ?? this.n;
     this.size = fields?.size ?? this.size;
     this.responseFormat = fields?.responseFormat ?? this.responseFormat;
     this.user = fields?.user;
@@ -130,7 +131,9 @@ export class DallEAPIWrapper extends Tool {
       user: this.user,
     });
 
-    const urls = response.data.map((item) => item.url) as string[];
+    const urls = response.data
+      .map((item) => item.url)
+      .filter((url): url is string => url !== "undefined");
 
     return urls[0];
   }
