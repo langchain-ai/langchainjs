@@ -898,6 +898,7 @@ export class ChatOpenAI<
         BaseLanguageModelInput,
         { raw: BaseMessage; parsed: RunOutput }
       > {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let schema: z.ZodType<RunOutput> | Record<string, any>;
     let name;
     let method;
