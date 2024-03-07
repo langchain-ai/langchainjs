@@ -18,8 +18,7 @@ const calculatorSchema = {
   },
   required: ["operation", "number1", "number2"],
 };
-const modelWithStructuredOutput = model.withStructuredOutput({
-  schema: calculatorSchema,
+const modelWithStructuredOutput = model.withStructuredOutput(calculatorSchema, {
   name: "calculator",
   method: "jsonMode",
 });
@@ -46,8 +45,7 @@ console.log(result);
  * You can also specify 'includeRaw' to return the parsed
  * and raw output in the result.
  */
-const includeRawModel = model.withStructuredOutput({
-  schema: calculatorSchema,
+const includeRawModel = model.withStructuredOutput(calculatorSchema, {
   name: "calculator",
   includeRaw: true,
   method: "jsonMode",
