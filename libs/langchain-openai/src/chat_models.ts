@@ -932,7 +932,7 @@ export class ChatOpenAI<
             {
               type: "function" as const,
               function: {
-                name,
+                name: functionName,
                 description: asZodSchema.description,
                 parameters: asZodSchema,
               },
@@ -955,7 +955,7 @@ export class ChatOpenAI<
             {
               type: "function" as const,
               function: {
-                name,
+                name: functionName,
                 description: schema.description,
                 parameters: schema,
               },
@@ -964,7 +964,7 @@ export class ChatOpenAI<
           tool_choice: {
             type: "function" as const,
             function: {
-              name,
+              name: functionName,
             },
           },
         } as Partial<CallOptions>);

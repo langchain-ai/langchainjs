@@ -16,9 +16,7 @@ const model = new ChatAnthropicTools({
 });
 
 // Pass the schema and tool name to the withStructuredOutput method
-const modelWithTool = model.withStructuredOutput(calculatorSchema, {
-  name: "calculator",
-});
+const modelWithTool = model.withStructuredOutput(calculatorSchema);
 
 const prompt = ChatPromptTemplate.fromMessages([
   [
