@@ -12,10 +12,8 @@ const calculatorSchema = z.object({
   number1: z.number(),
   number2: z.number(),
 });
-const modelWithStructuredOutput = model.withStructuredOutput({
-  schema: calculatorSchema,
-  name: "calculator",
-});
+
+const modelWithStructuredOutput = model.withStructuredOutput(calculatorSchema);
 
 const prompt = ChatPromptTemplate.fromMessages([
   "system",

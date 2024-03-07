@@ -25,9 +25,7 @@ const model = new ChatMistralAI({
 });
 
 // Pass the schema and tool name to the withStructuredOutput method
-const modelWithTool = model.withStructuredOutput(calculatorJsonSchema, {
-  name: "calculator",
-});
+const modelWithTool = model.withStructuredOutput(calculatorJsonSchema);
 
 const prompt = ChatPromptTemplate.fromMessages([
   [
