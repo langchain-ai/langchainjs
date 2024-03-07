@@ -9029,6 +9029,7 @@ __metadata:
     mysql2: ^3.3.3
     neo4j-driver: ^5.17.0
     node-llama-cpp: 2.7.3
+    openai: ^4.28.4
     pg: ^8.11.0
     pg-copy-streams: ^6.0.5
     pickleparser: ^0.2.1
@@ -9120,6 +9121,7 @@ __metadata:
     mysql2: ^3.3.3
     neo4j-driver: "*"
     node-llama-cpp: "*"
+    openai: ^4.26.0
     pg: ^8.11.0
     pg-copy-streams: ^6.0.5
     pickleparser: ^0.2.1
@@ -9274,6 +9276,8 @@ __metadata:
     neo4j-driver:
       optional: true
     node-llama-cpp:
+      optional: true
+    openai:
       optional: true
     pg:
       optional: true
@@ -28651,6 +28655,25 @@ __metadata:
   bin:
     openai: bin/cli
   checksum: 08252ccba461b55f621b2cd19f73d4cb1dcb183c4eeeab990c29daf97845124b0716c193943b538f6f738e8c6132e5a3ae0ebdaee526ab7ddcc8af2a38357f30
+  languageName: node
+  linkType: hard
+
+"openai@npm:^4.28.4":
+  version: 4.28.4
+  resolution: "openai@npm:4.28.4"
+  dependencies:
+    "@types/node": ^18.11.18
+    "@types/node-fetch": ^2.6.4
+    abort-controller: ^3.0.0
+    agentkeepalive: ^4.2.1
+    digest-fetch: ^1.3.0
+    form-data-encoder: 1.7.2
+    formdata-node: ^4.3.2
+    node-fetch: ^2.6.7
+    web-streams-polyfill: ^3.2.1
+  bin:
+    openai: bin/cli
+  checksum: 1eeb392bfb495a8ddc44622950de25d7782a3cc00f748919ec3bfca0775bef6653e32b0edb11cee028f140c352e1a123acad4996d7cfdcf8eec078f20e5e63d0
   languageName: node
   linkType: hard
 

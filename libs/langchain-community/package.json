@@ -150,6 +150,7 @@
     "mysql2": "^3.3.3",
     "neo4j-driver": "^5.17.0",
     "node-llama-cpp": "2.7.3",
+    "openai": "^4.28.4",
     "pg": "^8.11.0",
     "pg-copy-streams": "^6.0.5",
     "pickleparser": "^0.2.1",
