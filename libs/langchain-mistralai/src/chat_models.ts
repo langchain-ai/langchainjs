@@ -685,9 +685,11 @@ function isZodSchema<
 
 function isStructuredOutputMethodParams(
   x: unknown
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): x is StructuredOutputMethodParams<Record<string, any>> {
   return (
     x !== undefined &&
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     typeof (x as StructuredOutputMethodParams<Record<string, any>>).schema ===
       "object"
   );
