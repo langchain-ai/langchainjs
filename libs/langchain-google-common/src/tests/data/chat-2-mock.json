@@ -9,7 +9,7 @@
         ],
         "role": "model"
       },
-      "finishReason": "STOP",
+      "finishReason": "SAFETY",
       "index": 0,
       "safetyRatings": [
         {

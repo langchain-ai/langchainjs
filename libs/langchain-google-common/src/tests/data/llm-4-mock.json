@@ -133,7 +133,7 @@
         "content": {
           "role": "model"
         },
-        "finishReason": "STOP",
+        "finishReason": "SAFETY",
         "safetyRatings": [
           {
             "category": "HARM_CATEGORY_HARASSMENT",
@@ -145,7 +145,8 @@
           },
           {
             "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-            "probability": "MEDIUM"
+            "probability": "HIGH",
+            "blocked": true
           },
           {
             "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
