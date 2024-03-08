@@ -70,7 +70,7 @@ interface EmbeddingErrorResponse {
 
 export class AlibabaAIEmbeddings extends Embeddings implements AlibabaAIEmbeddingsParams {
     modelName: AlibabaAIEmbeddingsParams["modelName"] = "text-embedding-v2"
-    batchSize = 512
+    batchSize = 24
 
     // TODO: Update to `false` on next minor release (see: https://github.com/langchain-ai/langchainjs/pull/3612)
     stripNewLines = true
