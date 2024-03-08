@@ -12,10 +12,8 @@ const calculatorSchema = z.object({
   number1: z.number(),
   number2: z.number(),
 });
-const modelWithStructuredOutput = model.withStructuredOutput({
-  schema: calculatorSchema,
-  name: "calculator",
-});
+
+const modelWithStructuredOutput = model.withStructuredOutput(calculatorSchema);
 
 const prompt = ChatPromptTemplate.fromMessages([
   "system",
@@ -34,8 +32,7 @@ console.log(result);
  * You can also specify 'includeRaw' to return the parsed
  * and raw output in the result.
  */
-const includeRawModel = model.withStructuredOutput({
-  schema: calculatorSchema,
+const includeRawModel = model.withStructuredOutput(calculatorSchema, {
   name: "calculator",
   includeRaw: true,
 });

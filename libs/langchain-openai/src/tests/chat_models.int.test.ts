@@ -796,10 +796,12 @@ describe("ChatOpenAI withStructuredOutput", () => {
       number1: z.number(),
       number2: z.number(),
     });
-    const modelWithStructuredOutput = model.withStructuredOutput({
-      schema: calculatorSchema,
-      name: "calculator",
-    });
+    const modelWithStructuredOutput = model.withStructuredOutput(
+      calculatorSchema,
+      {
+        name: "calculator",
+      }
+    );
 
     const prompt = ChatPromptTemplate.fromMessages([
       "system",
@@ -826,11 +828,13 @@ describe("ChatOpenAI withStructuredOutput", () => {
       number1: z.number(),
       number2: z.number(),
     });
-    const modelWithStructuredOutput = model.withStructuredOutput({
-      schema: calculatorSchema,
-      name: "calculator",
-      method: "jsonMode",
-    });
+    const modelWithStructuredOutput = model.withStructuredOutput(
+      calculatorSchema,
+      {
+        name: "calculator",
+        method: "jsonMode",
+      }
+    );
 
     const prompt = ChatPromptTemplate.fromMessages([
       "system",
@@ -892,11 +896,13 @@ describe("ChatOpenAI withStructuredOutput", () => {
       number1: z.number(),
       number2: z.number(),
     });
-    const modelWithStructuredOutput = model.withStructuredOutput({
-      schema: zodToJsonSchema(calculatorSchema),
-      name: "calculator",
-      method: "jsonMode",
-    });
+    const modelWithStructuredOutput = model.withStructuredOutput(
+      zodToJsonSchema(calculatorSchema),
+      {
+        name: "calculator",
+        method: "jsonMode",
+      }
+    );
 
     const prompt = ChatPromptTemplate.fromMessages([
       "system",
@@ -928,11 +934,13 @@ describe("ChatOpenAI withStructuredOutput", () => {
       number1: z.number(),
       number2: z.number(),
     });
-    const modelWithStructuredOutput = model.withStructuredOutput({
-      schema: calculatorSchema,
-      name: "calculator",
-      includeRaw: true,
-    });
+    const modelWithStructuredOutput = model.withStructuredOutput(
+      calculatorSchema,
+      {
+        name: "calculator",
+        includeRaw: true,
+      }
+    );
 
     const prompt = ChatPromptTemplate.fromMessages([
       "system",

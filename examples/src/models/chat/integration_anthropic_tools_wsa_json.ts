@@ -24,9 +24,8 @@ const model = new ChatAnthropicTools({
   temperature: 0.1,
 });
 
-// Pass the schema and tool name to the withStructuredOutput method
-const modelWithTool = model.withStructuredOutput({
-  schema: calculatorJsonSchema,
+// Pass the schema and optionally, the tool name to the withStructuredOutput method
+const modelWithTool = model.withStructuredOutput(calculatorJsonSchema, {
   name: "calculator",
 });
 

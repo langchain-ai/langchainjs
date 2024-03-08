@@ -244,11 +244,19 @@ export type BaseLanguageModelInput =
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type StructuredOutputType = z.infer<z.ZodObject<any, any, any, any>>;
 
+export type StructuredOutputMethodOptions<IncludeRaw extends boolean = false> =
+  {
+    name?: string;
+    method?: "functionCalling" | "jsonMode";
+    includeRaw?: IncludeRaw;
+  };
+
+/** @deprecated Use StructuredOutputMethodOptions instead */
 export type StructuredOutputMethodParams<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends Record<string, any> = Record<string, any>,
+  RunOutput,
   IncludeRaw extends boolean = false
 > = {
+  /** @deprecated Pass schema in as the first argument */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   schema: z.ZodType<RunOutput> | Record<string, any>;
   name?: string;
@@ -491,28 +499,25 @@ export abstract class BaseLanguageModel<
   withStructuredOutput?<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>
-  >({
-    schema,
-    name,
-    method,
-    includeRaw,
-  }: StructuredOutputMethodParams<RunOutput, false>): Runnable<
-    BaseLanguageModelInput,
-    RunOutput
-  >;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  >(
+    schema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<false>
+  ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput?<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>
-  >({
-    schema,
-    name,
-    method,
-    includeRaw,
-  }: StructuredOutputMethodParams<RunOutput, true>): Runnable<
-    BaseLanguageModelInput,
-    { raw: BaseMessage; parsed: RunOutput }
-  >;
+  >(
+    schema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<true>
+  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   /**
    * Model wrapper that returns outputs formatted to match the given schema.
@@ -529,18 +534,13 @@ export abstract class BaseLanguageModel<
   withStructuredOutput?<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>
-  >({
-    schema,
-    name,
-    /**
-     * @default functionCalling
-     */
-    method,
-    /**
-     * @default false
-     */
-    includeRaw,
-  }: StructuredOutputMethodParams<RunOutput>):
+  >(
+    schema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<boolean>
+  ):
     | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<
         BaseLanguageModelInput,
