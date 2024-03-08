@@ -201,23 +201,15 @@ export class AlibabaAIEmbeddings extends Embeddings implements AlibabaAIEmbeddin
                 body: JSON.stringify(body)
             }
         ).then(async (response) => {
-            try {
-                if (response.status <= 200 && response.status >= 300)
-                    throw new Error(response.statusText)
+            const embeddingData: EmbeddingResponse | EmbeddingErrorResponse = await response.json()
 
-                const embeddingData: EmbeddingResponse | EmbeddingErrorResponse =
-                    await response.json()
-
-                if ("code" in embeddingData && embeddingData.code) {
-                    throw new Error(`${embeddingData.code}: ${embeddingData.message}`)
-                }
-
-                return (embeddingData as EmbeddingResponse).output.embeddings.map(
-                    ({ embedding }) => embedding
-                )
-            } catch (e) {
-                throw new Error("Could not generate embeddings")
+            if ("code" in embeddingData && embeddingData.code) {
+                throw new Error(`${embeddingData.code}: ${embeddingData.message}`)
             }
+
+            return (embeddingData as EmbeddingResponse).output.embeddings.map(
+                ({ embedding }) => embedding
+            )
         })
     }
 }
