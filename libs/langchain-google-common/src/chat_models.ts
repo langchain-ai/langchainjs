@@ -29,10 +29,13 @@ import {
   DefaultGeminiSafetyHandler,
 } from "./utils/gemini.js";
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
-import { GoogleBaseLLMInput } from "./llms.js";
 import { JsonStream } from "./utils/stream.js";
 import { ensureParams } from "./utils/failed_handler.js";
-import { GoogleAISafetyHandler, GoogleAISafetyParams } from "./utils/safety.js";
+import type {
+  GoogleBaseLLMInput,
+  GoogleAISafetyHandler,
+  GoogleAISafetyParams,
+} from "./types.js";
 
 class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   BaseMessage[],

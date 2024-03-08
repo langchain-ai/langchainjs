@@ -1,6 +1,5 @@
 import type { BaseLLMParams } from "@langchain/core/language_models/llms";
 import type { JsonStream } from "./utils/stream.js";
-import { GoogleAISafetyParams } from "./utils/safety.js";
 
 /**
  * Parameters needed to setup the client connection.
@@ -90,6 +89,12 @@ export interface GoogleAIBaseLLMInput<AuthOptions>
     GoogleConnectionParams<AuthOptions>,
     GoogleAIModelParams,
     GoogleAISafetyParams {}
+
+/**
+ * Input to LLM class.
+ */
+export interface GoogleBaseLLMInput<AuthOptions>
+  extends GoogleAIBaseLLMInput<AuthOptions> {}
 
 export interface GoogleResponse {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -207,4 +212,18 @@ export type GoogleLLMResponseData =
 
 export interface GoogleLLMResponse extends GoogleResponse {
   data: GoogleLLMResponseData;
+}
+
+export interface GoogleAISafetyHandler {
+  /**
+   * A function that will take a response and return the, possibly modified,
+   * response or throw an exception if there are safety issues.
+   *
+   * @throws GoogleAISafetyError
+   */
+  handle(response: GoogleLLMResponse): GoogleLLMResponse;
+}
+
+export interface GoogleAISafetyParams {
+  safetyHandler?: GoogleAISafetyHandler;
 }

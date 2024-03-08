@@ -30,7 +30,9 @@ import {
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
 import { ensureParams } from "./utils/failed_handler.js";
 import { ChatGoogleBase } from "./chat_models.js";
-import { GoogleAISafetyHandler } from "./utils/safety.js";
+import type { GoogleBaseLLMInput, GoogleAISafetyHandler } from "./types.js";
+
+export { GoogleBaseLLMInput };
 
 class GoogleLLMConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   MessageContent,
@@ -66,12 +68,6 @@ class ProxyChatGoogle<AuthOptions> extends ChatGoogleBase<AuthOptions> {
     return fields.connection.client;
   }
 }
-
-/**
- * Input to LLM class.
- */
-export interface GoogleBaseLLMInput<AuthOptions>
-  extends GoogleAIBaseLLMInput<AuthOptions> {}
 
 /**
  * Integration with an LLM.
