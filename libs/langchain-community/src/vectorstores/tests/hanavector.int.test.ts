@@ -2,8 +2,9 @@
 import hanaClient from "@sap/hana-client";
 import { Document } from "@langchain/core/documents";
 import { OpenAIEmbeddings } from "@langchain/openai";
+import { setTimeout } from "timers/promises";
 import { test, expect } from "@jest/globals";
-import { HanaDB, HanaDBArgs } from "../hanavector.js";
+import { HanaDB, HanaDBArgs, DistanceStrategy } from "../hanavector.js";
 
 // Connection parameters
 const connectionParams = {
@@ -29,7 +30,7 @@ beforeAll(async () => {
 
 
 describe("add documents and similarity search tests", () => {
-  test("test fromText and default similaritySearch", async () => {
+  test("test fromText and default similarity search", async () => {
     const args: HanaDBArgs = {
       connection: client,
       tableName: tableName,
@@ -45,8 +46,10 @@ describe("add documents and similarity search tests", () => {
       args
       );
     expect(vectorStore).toBeDefined();
+    // sleep 5 seconds to make sure the documents are indexed.
+    await setTimeout(5000);
     const results = await vectorStore.similaritySearch("hello world", 1);
-    console.log(results)
+    // console.log(results)
     expect(results).toHaveLength(1);
     expect(results).toEqual([
       new Document({
@@ -61,7 +64,7 @@ describe("add documents and similarity search tests", () => {
     const args: HanaDBArgs = {
       connection: client,
       tableName: tableName,
-      distanceStrategy: 'l2d'
+      distanceStrategy: DistanceStrategy.EUCLIDEAN_DISTANCE
       };
     const vectorStore = new HanaDB(embeddings, args);
     expect(vectorStore).toBeDefined();
@@ -101,12 +104,13 @@ describe("add documents and similarity search tests", () => {
       ],
     );
 
-
+    // sleep 5 seconds to make sure the documents are indexed.
+    await setTimeout(5000);
     const results: Document[] = await vectorStore.similaritySearch(
       "sandwich",
       1
     );
-
+    // console.log(results);
     expect(results.length).toEqual(1);
     expect(results).toMatchObject([
       {
@@ -135,7 +139,7 @@ describe("add documents and similarity search tests", () => {
   });
 });
 
-describe.skip("MMR search tests", () => {
+describe("MMR search tests", () => {
   test("test delete by filter", async () => {
     const args: HanaDBArgs = {
       connection: client,
@@ -157,13 +161,10 @@ describe.skip("MMR search tests", () => {
 
 
   test("performs max marginal relevance search", async () => {
-    const client = hanaClient.createConnection();
-    // const client = hanaClient.createConnection();
     const args: HanaDBArgs = {
       connection: client,
-      tableName: 'test',
+      tableName: tableName,
       };
-    client.connect(connectionParams);
     const texts = ["foo", "foo", "fox"];
     const vectorStore = await HanaDB.fromTexts(
       texts,
@@ -171,7 +172,8 @@ describe.skip("MMR search tests", () => {
       embeddings,
       args
     );
-
+    // sleep 5 seconds to make sure the documents are indexed.
+    await setTimeout(5000);
     const output = await vectorStore.maxMarginalRelevanceSearch("foo", {
       k: 3,
       fetchK: 20,
@@ -181,7 +183,7 @@ describe.skip("MMR search tests", () => {
     expect(output).toHaveLength(3);
 
     const actual = output.map((doc) => doc.pageContent);
-    console.log(actual);
+    // console.log(actual);
     const expected = ["foo", "fox", "foo"];
     expect(actual).toEqual(expected);
 
@@ -217,7 +219,7 @@ describe.skip("MMR search tests", () => {
   });
 });
 
-describe.skip("Filter tests", () => {
+describe("Filter tests", () => {
   test("test query documents with specific metadata", async () => {
     const args: HanaDBArgs = {
       connection: client,
@@ -239,6 +241,8 @@ describe.skip("Filter tests", () => {
     await vectorStore.addDocuments(docs)
     const filter = {"quality": "bad"};
     const query = "foobar"
+    // sleep 5 seconds to make sure the documents are indexed.
+    await setTimeout(5000);
     const results = await vectorStore.similaritySearch(query, 1, filter)
     expect(results.length).toEqual(1);
     expect(results).toMatchObject([

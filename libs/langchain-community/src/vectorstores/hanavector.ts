@@ -5,26 +5,25 @@ import {
   } from "@langchain/core/vectorstores";
 import { Document} from "@langchain/core/documents";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
-import * as hanaClient from '@sap/hana-client';
-import { filter } from "lodash";
+import hanaClient from '@sap/hana-client';
 
 
-// export enum DistanceStrategy {
-//     COSINE = "COSINE",
-//     EUCLIDEAN_DISTANCE = "EUCLIDEAN_DISTANCE",
-//   }
+export enum DistanceStrategy {
+    COSINE = "COSINE",
+    EUCLIDEAN_DISTANCE = "EUCLIDEAN_DISTANCE",
+  }
 
-const HANA_DISTANCE_FUNCTION: Record<string, [string, string]> = {
-    "cos": ["COSINE_SIMILARITY", "DESC"],
-    "l2d": ["L2DISTANCE", "ASC"],
-};
-
-// const HANA_DISTANCE_FUNCTION: Record<DistanceStrategy, [string, string]> = {
-// [DistanceStrategy.COSINE]: ["COSINE_SIMILARITY", "DESC"],
-// [DistanceStrategy.EUCLIDEAN_DISTANCE]: ["L2DISTANCE", "ASC"],
+// const HANA_DISTANCE_FUNCTION: Record<string, [string, string]> = {
+//     "cos": ["COSINE_SIMILARITY", "DESC"],
+//     "l2d": ["L2DISTANCE", "ASC"],
 // };
 
-const defaultDistanceStrategy = "cos";
+const HANA_DISTANCE_FUNCTION: Record<DistanceStrategy, [string, string]> = {
+[DistanceStrategy.COSINE]: ["COSINE_SIMILARITY", "DESC"],
+[DistanceStrategy.EUCLIDEAN_DISTANCE]: ["L2DISTANCE", "ASC"],
+};
+
+const defaultDistanceStrategy = DistanceStrategy.COSINE;
 const defaultTableName = "EMBEDDINGS";
 const defaultContentColumn = "VEC_TEXT";
 const defaultMetadataColumn = "VEC_META";
@@ -42,7 +41,7 @@ interface Filter {
  */
 export interface HanaDBArgs {
     connection: hanaClient.Connection;
-    distanceStrategy?: string;
+    distanceStrategy?: DistanceStrategy;
     tableName?: string ;
     contentColumn?: string;
     metadataColumn?: string;
@@ -54,7 +53,7 @@ export interface HanaDBArgs {
 export class HanaDB extends VectorStore {
     private connection: hanaClient.Connection;
 
-    private distanceStrategy: string;
+    private distanceStrategy: DistanceStrategy;
 
     // // Compile pattern only once, for better performance
     // private static compiledPattern = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
@@ -85,7 +84,7 @@ export class HanaDB extends VectorStore {
         this.vectorColumnLength = this.sanitizeInt(args.vectorColumnLength || defaultVectorColumnLength); // Using '??' to allow 0 as a valid value
 
         this.connection = args.connection;
-        // this.initialize();
+        this.initialize();
     }
 
     public async initialize(): Promise<void> {
@@ -232,7 +231,7 @@ export class HanaDB extends VectorStore {
     
     private async createTableIfNotExists(): Promise<void> {
         const tableExists = await this.tableExists(this.tableName);
-        console.log('Table exists:', tableExists);
+        // console.log('Table exists:', tableExists);
         if (!tableExists) {
             let sqlStr = `CREATE TABLE ${this.tableName} (` +
                 `${this.contentColumn} NCLOB, ` +
@@ -262,7 +261,7 @@ export class HanaDB extends VectorStore {
                 const result = resultSet.getValue(0)
                 if (result === 1) {
                     // Table does  exist
-                    console.log('Table does exist.');
+                    // console.log('Table does exist.');
                     return true;
                 }
 
@@ -350,7 +349,7 @@ export class HanaDB extends VectorStore {
             embeddings,
             dbConfig
         );
-        await instance.initialize();
+        // await instance.initialize();
         await instance.addTexts(texts, metadatas); // Embed and add texts to the database
         return instance;
         // return HanaDB.fromDocuments(docs, embeddings, dbConfig);
@@ -402,28 +401,35 @@ export class HanaDB extends VectorStore {
         dbConfig: HanaDBArgs
     ): Promise<HanaDB> {
         const instance = new this(embeddings, dbConfig);
-        await instance.initialize();
+        // await instance.initialize();
         await instance.addDocuments(docs);
         return instance;
     }
 
     /**
-     * Adds an array of documents to the collection. The documents are first
+     * Adds an array of documents to the table. The documents are first
      * converted to vectors using the `embedDocuments` method of the
      * `embeddings` instance.
-     * @param documents Array of Document instances to be added to the collection.
+     * @param documents Array of Document instances to be added to the table.
      * @returns Promise that resolves when the documents are added.
      */
+    // async addDocuments(documents: Document[]): Promise<void> {
+    //     const texts = documents.map(doc => doc.pageContent);
+    //     const metadatas = documents.map(doc => doc.metadata);
+    //     return this.addTexts(texts, metadatas);
+    //   }
     async addDocuments(documents: Document[]): Promise<void> {
-        const texts = documents.map(doc => doc.pageContent);
-        const metadatas = documents.map(doc => doc.metadata);
-        return this.addTexts(texts, metadatas);
-      }
+    const texts = documents.map(({ pageContent }) => pageContent);
+    return this.addVectors(
+        await this.embeddings.embedDocuments(texts),
+        documents
+    );
+    }
 
     /**
      * Adds an array of vectors and corresponding documents to the database.
      * The vectors and documents are batch inserted into the database.
-     * @param vectors Array of vectors to be added to the collection.
+     * @param vectors Array of vectors to be added to the table.
      * @param documents Array of Document instances corresponding to the vectors.
      * @returns Promise that resolves when the vectors and documents are added.
      */
@@ -511,7 +517,7 @@ export class HanaDB extends VectorStore {
         const sanitizedEmbedding = this.sanitizeListFloat(embedding);
         // Determine the distance function based on the configured strategy
         const distanceFuncName = HANA_DISTANCE_FUNCTION[this.distanceStrategy][0];
-        console.log(`Distance method ${distanceFuncName}`);
+        // console.log(`Distance method ${distanceFuncName}`);
         // Convert the embedding vector to a string for SQL query
         const embeddingAsString = sanitizedEmbedding.join(",");
         let sqlStr = `SELECT TOP ${sanitizedK}
@@ -565,7 +571,7 @@ export class HanaDB extends VectorStore {
         options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
     ): Promise<Document[]> {
         const { k, fetchK = 20, lambda = 0.5} = options;
-        console.log(options)
+        // console.log(options)
         const queryEmbedding = await this.embeddings.embedQuery(query);
 
         const docs = await this.similaritySearchWithScoreAndVectorByVector(
@@ -573,10 +579,10 @@ export class HanaDB extends VectorStore {
         fetchK
         );
         // console.log(docs)
-        console.log(docs.map(([doc, score]) => [doc, score]));
+        // console.log(docs.map(([doc, score]) => [doc, score]));
         // docs is an Array of tuples: [Document, number, number[]]
         const embeddingList = docs.map((doc) => doc[2]); // Extracts the embedding from each tuple
-        console.log(embeddingList.length) 
+        // console.log(embeddingList.length) 
         // Re-rank the results using MMR
         const mmrIndexes = maximalMarginalRelevance(
         queryEmbedding,
@@ -584,7 +590,7 @@ export class HanaDB extends VectorStore {
         lambda,
         k
         );
-        console.log(mmrIndexes)
+        // console.log(mmrIndexes)
         const mmrDocs = mmrIndexes.map((index) => docs[index][0]);
         return mmrDocs;
     }
