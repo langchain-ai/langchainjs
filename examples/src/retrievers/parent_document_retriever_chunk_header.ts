@@ -3,9 +3,6 @@ import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { InMemoryStore } from "langchain/storage/in_memory";
 import { ParentDocumentRetriever } from "langchain/retrievers/parent_document";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { TextLoader } from "langchain/document_loaders/fs/text";
-import { ScoreThresholdRetriever } from "langchain/retrievers/score_threshold";
-
 
 const splitter = new RecursiveCharacterTextSplitter({ chunkSize: 1500 });
 
