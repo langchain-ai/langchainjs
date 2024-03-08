@@ -4,7 +4,7 @@
       "content": {
         "parts": [
           {
-            "text": "T"
+            "text": "A blue square."
           }
         ],
         "role": "model"
@@ -18,11 +18,11 @@
         },
         {
           "category": "HARM_CATEGORY_HATE_SPEECH",
-          "probability": "LOW"
+          "probability": "NEGLIGIBLE"
         },
         {
           "category": "HARM_CATEGORY_HARASSMENT",
-          "probability": "MEDIUM"
+          "probability": "NEGLIGIBLE"
         },
         {
           "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
