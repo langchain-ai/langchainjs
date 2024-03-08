@@ -70,7 +70,7 @@ export class DallEAPIWrapper extends Tool {
 
   name = "dalle_api_wrapper";
 
-  description = `Dall-E tool. Useful for generating images with Open AIs Dall-E API.`;
+  description = "A wrapper around OpenAI DALL-E API. Useful for when you need to generate images from a text description. Input should be an image description.";
 
   protected client: OpenAIClient;
 
