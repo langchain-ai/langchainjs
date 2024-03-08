@@ -60,7 +60,9 @@ const prompt = ChatPromptTemplate.fromMessages([
   ["human", "{question}"],
 ]);
 
-const chain = prompt.pipe(new ChatAnthropic({ modelName: "claude-2.1" }));
+const chain = prompt.pipe(
+  new ChatAnthropic({ modelName: "claude-3-sonnet-20240229" })
+);
 ```
 
 ### Adding message history
@@ -136,7 +138,7 @@ console.log(result);
       id: 'msg_01QnnAkKEz7WvhJrwLWGbLBm',
       type: 'message',
       role: 'assistant',
-      model: 'claude-2.1',
+      model: 'claude-3-sonnet-20240229',
       stop_reason: 'end_turn',
       stop_sequence: null
     }
@@ -176,7 +178,7 @@ console.log(result2);
       id: 'msg_01PYRhpoUudApdJvxug6R13W',
       type: 'message',
       role: 'assistant',
-      model: 'claude-2.1',
+      model: 'claude-3-sonnet-20240229',
       stop_reason: 'end_turn',
       stop_sequence: null
     }

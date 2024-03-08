@@ -486,7 +486,7 @@ class _StringImageMessagePromptTemplate<
             item.type === "variable" ? [item.name] : []
           );
 
-          if (variables) {
+          if ((variables?.length ?? 0) > 0) {
             if (variables.length > 1) {
               throw new Error(
                 `Only one format variable allowed per image template.\nGot: ${variables}\nFrom: ${imgTemplate}`

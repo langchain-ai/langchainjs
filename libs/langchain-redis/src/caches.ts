@@ -21,6 +21,7 @@ type RedisClientType =
  * Represents a specific implementation of a caching mechanism using Redis
  * as the underlying storage system. It extends the `BaseCache` class and
  * overrides its methods to provide the Redis-specific logic.
+ *
  * @example
  * ```typescript
  * const model = new ChatOpenAI({
@@ -44,6 +45,7 @@ export class RedisCache extends BaseCache {
    * Retrieves data from the cache. It constructs a cache key from the given
    * `prompt` and `llmKey`, and retrieves the corresponding value from the
    * Redis database.
+   *
    * @param prompt The prompt used to construct the cache key.
    * @param llmKey The LLM key used to construct the cache key.
    * @returns An array of Generations if found, null otherwise.

@@ -301,6 +301,8 @@ export class OpenAIAssistantRunnable<
         return {
           returnValues: {
             output: answerString,
+            runId,
+            threadId,
           },
           log: "",
           runId,

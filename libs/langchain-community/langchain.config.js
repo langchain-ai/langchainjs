@@ -58,6 +58,7 @@ export const config = {
     "embeddings/bedrock": "embeddings/bedrock",
     "embeddings/cloudflare_workersai": "embeddings/cloudflare_workersai",
     "embeddings/cohere": "embeddings/cohere",
+    "embeddings/fireworks": "embeddings/fireworks",
     "embeddings/googlepalm": "embeddings/googlepalm",
     "embeddings/googlevertexai": "embeddings/googlevertexai",
     "embeddings/gradient_ai": "embeddings/gradient_ai",
@@ -183,6 +184,7 @@ export const config = {
     "document_transformers/mozilla_readability":
       "document_transformers/mozilla_readability",
     // storage
+    "storage/cassandra": "storage/cassandra",
     "storage/convex": "storage/convex",
     "storage/ioredis": "storage/ioredis",
     "storage/upstash_redis": "storage/upstash_redis",
@@ -190,6 +192,7 @@ export const config = {
     // stores
     "stores/doc/base": "stores/doc/base",
     "stores/doc/in_memory": "stores/doc/in_memory",
+    "stores/message/astradb": "stores/message/astradb",
     "stores/message/cassandra": "stores/message/cassandra",
     "stores/message/cloudflare_d1": "stores/message/cloudflare_d1",
     "stores/message/convex": "stores/message/convex",
@@ -200,6 +203,7 @@ export const config = {
     "stores/message/momento": "stores/message/momento",
     "stores/message/mongodb": "stores/message/mongodb",
     "stores/message/planetscale": "stores/message/planetscale",
+    "stores/message/postgres": "stores/message/postgres",
     "stores/message/redis": "stores/message/redis",
     "stores/message/upstash_redis": "stores/message/upstash_redis",
     "stores/message/xata": "stores/message/xata",
@@ -317,11 +321,13 @@ export const config = {
     "document_transformers/html_to_text",
     "document_transformers/mozilla_readability",
     // storage
+    "storage/cassandra",
     "storage/convex",
     "storage/ioredis",
     "storage/upstash_redis",
     "storage/vercel_kv",
     // stores
+    "stores/message/astradb",
     "stores/message/cassandra",
     "stores/message/cloudflare_d1",
     "stores/message/convex",
@@ -331,13 +337,16 @@ export const config = {
     "stores/message/momento",
     "stores/message/mongodb",
     "stores/message/planetscale",
+    "stores/message/postgres",
     "stores/message/redis",
     "stores/message/upstash_redis",
     "stores/message/xata",
     // memory
     "memory/motorhead_memory",
     "memory/zep",
+    // utils
     "util/convex",
+    "utils/cassandra",
     // indexes
     "indexes/postgres",
     "indexes/sqlite",

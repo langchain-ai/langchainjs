@@ -42,7 +42,7 @@ describe("webbrowser Test suite", () => {
     const browser = new WebBrowser({ model, embeddings });
     const result = await browser.call(`"",""`);
 
-    expect(result).toEqual("TypeError [ERR_INVALID_URL]: Invalid URL");
+    expect(result).toContain("Invalid URL");
   });
 
   test("error no protocol or malformed", async () => {
@@ -54,7 +54,7 @@ describe("webbrowser Test suite", () => {
       `"www.merriam-webster.com/word-of-the-day","word of the day"`
     );
 
-    expect(result).toEqual("TypeError [ERR_INVALID_URL]: Invalid URL");
+    expect(result).toContain("Invalid URL");
   });
 
   test("error bad site", async () => {

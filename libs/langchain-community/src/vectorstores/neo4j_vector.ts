@@ -519,8 +519,7 @@ export class Neo4jVectorStore extends VectorStore {
   ): Array<{ [key: string]: any }> {
     return values.sort(
       (a, b) =>
-        (a.index_name === indexName ? -1 : 0) -
-        (b.index_name === indexName ? -1 : 0)
+        (a.name === indexName ? -1 : 0) - (b.name === indexName ? -1 : 0)
     );
   }
 
@@ -578,13 +577,18 @@ export class Neo4jVectorStore extends VectorStore {
     );
   }
 
-  async similaritySearch(query: string, k = 4): Promise<Document[]> {
+  async similaritySearch(
+    query: string,
+    k = 4,
+    params: Record<string, any> = {}
+  ): Promise<Document[]> {
     const embedding = await this.embeddings.embedQuery(query);
 
     const results = await this.similaritySearchVectorWithScore(
       embedding,
       k,
-      query
+      query,
+      params
     );
 
     return results.map((result) => result[0]);
@@ -593,7 +597,8 @@ export class Neo4jVectorStore extends VectorStore {
   async similaritySearchVectorWithScore(
     vector: number[],
     k: number,
-    query: string
+    query: string,
+    params: Record<string, any> = {}
   ): Promise<[Document, number][]> {
     const defaultRetrieval = `
     RETURN node.${this.textNodeProperty} AS text, score,
@@ -615,6 +620,7 @@ export class Neo4jVectorStore extends VectorStore {
       embedding: vector,
       keyword_index: this.keywordIndexName,
       query: removeLuceneChars(query),
+      ...params,
     };
     const results = await this.query(readQuery, parameters);
 

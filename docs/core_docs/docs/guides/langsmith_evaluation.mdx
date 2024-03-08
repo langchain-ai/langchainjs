@@ -173,7 +173,7 @@ LLM is sure about what it has generated. You can perform much more sophisticated
 external APIs.
 
 ```typescript
-import type { RunEvalConfig, DynamicRunEvaluatorParams } from "langchain/smith";
+import type { RunEvalType, DynamicRunEvaluatorParams } from "langchain/smith";
 
 // An illustrative custom evaluator example
 const notUnsure = async ({
@@ -194,34 +194,26 @@ const notUnsure = async ({
   };
 };
 
-const evaluation: RunEvalConfig = {
-  // The 'evaluators' are loaded from LangChain's evaluation
-  // library.
-  evaluators: [
-    {
-      evaluatorType: "labeled_criteria",
-      criteria: "correctness",
-      feedbackKey: "correctness",
-      formatEvaluatorInputs: ({
-        rawInput,
-        rawPrediction,
-        rawReferenceOutput,
-      }) => {
-        return {
-          input: rawInput.input,
-          prediction: rawPrediction.output,
-          reference: rawReferenceOutput.output,
-        };
-      },
-    },
-  ],
+const evaluators: RunEvalType[] = [
+  // LangChain's built-in evaluators
+  LabeledCriteria("correctness"),
+
+  // (Optional) Format the raw input and output from the chain and example correctly
+  Criteria("conciseness", {
+    formatEvaluatorInputs: (run) => ({
+      input: run.rawInput.question,
+      prediction: run.rawPrediction.output,
+      reference: run.rawReferenceOutput.answer,
+    }),
+  }),
+
   // Custom evaluators can be user-defined RunEvaluator's
   // or a compatible function
-  customEvaluators: [notUnsure],
-};
+  notUnsure,
+];
 ```
 
-For predefined evaluators passed under the `evaluators` key, the passed `formatEvaluatorInputs` formats the raw input and output from the chain and example correctly.
+For prebuilt LangChain evaluators, passing `formatEvaluatorInputs` function will format the raw input and output from the chain and example correctly.
 These will most often be strings.
 
 This is not required for custom evaluators, which can perform their own parsing of run inputs and outputs.
@@ -240,7 +232,11 @@ The results will be visible in the LangSmith app.
 import { runOnDataset } from "langchain/smith";
 
 await runOnDataset(agentExecutor, datasetName, {
-  evaluationConfig: evaluation,
+  evaluators,
+
+  // (Optional) Provide a name of the evaluator run to be
+  // displayed in the LangSmith UI
+  projectName: "Name of the evaluation run",
 });
 ```
 

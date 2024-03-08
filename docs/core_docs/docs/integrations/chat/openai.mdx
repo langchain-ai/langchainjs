@@ -48,6 +48,34 @@ import OpenAITools from "@examples/models/chat/integration_openai_tool_calls.ts"
 
 <CodeBlock language="typescript">{OpenAITools}</CodeBlock>
 
+### `.withStructuredOutput({ ... })`
+
+:::info
+The `.withStructuredOutput` method is in beta. It is actively being worked on, so the API may change.
+:::
+
+You can also use the `.withStructuredOutput({ ... })` method to coerce `ChatOpenAI` into returning a structured output.
+
+The method allows for passing in either a Zod object, or a valid JSON schema (like what is returned from [`zodToJsonSchema`](https://www.npmjs.com/package/zod-to-json-schema)).
+
+Using the method is simple. Just define your LLM and call `.withStructuredOutput({ ... })` on it, passing the desired schema.
+
+Here is an example using a Zod schema and the `functionCalling` mode (default mode):
+
+import WSAZodExample from "@examples/models/chat/integration_openai_wsa_zod.ts";
+
+<CodeBlock language="typescript">{WSAZodExample}</CodeBlock>
+
+Additionally, you can pass in a JSON schema directly:
+
+:::info
+If using `jsonMode` as the `method` you must include context in your prompt about the structured output you want. This _must_ include the keyword: `JSON`.
+:::
+
+import WSAJSONSchemaExample from "@examples/models/chat/integration_openai_wsa_json_schema.ts";
+
+<CodeBlock language="typescript">{WSAJSONSchemaExample}</CodeBlock>
+
 ## Custom URLs
 
 You can customize the base URL the SDK sends requests to by passing a `configuration` parameter like this:

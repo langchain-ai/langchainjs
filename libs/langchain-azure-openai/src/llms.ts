@@ -22,6 +22,7 @@ import {
   isTokenCredential,
 } from "@azure/core-auth";
 import { AzureOpenAIInput, OpenAICallOptions, OpenAIInput } from "./types.js";
+import { USER_AGENT_PREFIX } from "./constants.js";
 
 /**
  * Interface for tracking token usage in OpenAI calls.
@@ -168,19 +169,25 @@ export class AzureOpenAI<
     const azureCredential =
       fields?.credentials ??
       (fields?.azureOpenAIApiKey ||
-        getEnvironmentVariable("AZURE_OPENAI_API_KEY"))
+      getEnvironmentVariable("AZURE_OPENAI_API_KEY")
         ? new AzureKeyCredential(this.azureOpenAIApiKey ?? "")
-        : new OpenAIKeyCredential(this.azureOpenAIApiKey ?? "");
+        : new OpenAIKeyCredential(this.azureOpenAIApiKey ?? ""));
 
     if (isTokenCredential(azureCredential)) {
       this.client = new AzureOpenAIClient(
         this.azureOpenAIEndpoint ?? "",
-        azureCredential as TokenCredential
+        azureCredential as TokenCredential,
+        {
+          userAgentOptions: { userAgentPrefix: USER_AGENT_PREFIX },
+        }
       );
     } else {
       this.client = new AzureOpenAIClient(
         this.azureOpenAIEndpoint ?? "",
-        azureCredential as KeyCredential
+        azureCredential as KeyCredential,
+        {
+          userAgentOptions: { userAgentPrefix: USER_AGENT_PREFIX },
+        }
       );
     }
   }

@@ -34,6 +34,7 @@ import { Run } from "../tracers/base.js";
 import { RootListenersTracer } from "../tracers/root_listener.js";
 import { BaseCallbackHandler } from "../callbacks/base.js";
 import { _RootEventFilter } from "./utils.js";
+import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 
 /**
  * Base interface implemented by all runnables.
@@ -98,7 +99,6 @@ export type RunnableMapLike<RunInput, RunOutput> = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type RunnableLike<RunInput = any, RunOutput = any> =
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   | RunnableInterface<RunInput, RunOutput>
   | RunnableFunc<RunInput, RunOutput>
   | RunnableMapLike<RunInput, RunOutput>;
@@ -322,7 +322,7 @@ export abstract class Runnable<
     // Buffer the first streamed chunk to allow for initial errors
     // to surface immediately.
     const wrappedGenerator = new AsyncGeneratorWithSetup(
-      this._streamIterator(input, options)
+      this._streamIterator(input, ensureConfig(options))
     );
     await wrappedGenerator.setup;
     return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
@@ -611,7 +611,7 @@ export abstract class Runnable<
         finalChunk = concat(finalChunk, chunk as any);
       }
     }
-    yield* this._streamIterator(finalChunk, options);
+    yield* this._streamIterator(finalChunk, ensureConfig(options));
   }
 
   /**
@@ -1474,7 +1474,8 @@ export class RunnableSequence<
   }
 
   async invoke(input: RunInput, options?: RunnableConfig): Promise<RunOutput> {
-    const callbackManager_ = await getCallbackManagerForConfig(options);
+    const config = ensureConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(config);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
@@ -1482,7 +1483,7 @@ export class RunnableSequence<
       undefined,
       undefined,
       undefined,
-      options?.runName
+      config?.runName
     );
     let nextStepInput = input;
     let finalOutput: RunOutput;
@@ -1492,7 +1493,7 @@ export class RunnableSequence<
         const step = initialSteps[i];
         nextStepInput = await step.invoke(
           nextStepInput,
-          patchConfig(options, {
+          patchConfig(config, {
             callbacks: runManager?.getChild(`seq:step:${i + 1}`),
           })
         );
@@ -1500,7 +1501,7 @@ export class RunnableSequence<
       // TypeScript can't detect that the last output of the sequence returns RunOutput, so call it out of the loop here
       finalOutput = await this.last.invoke(
         nextStepInput,
-        patchConfig(options, {
+        patchConfig(config, {
           callbacks: runManager?.getChild(`seq:step:${this.steps.length}`),
         })
       );
@@ -1745,7 +1746,8 @@ export class RunnableMap<
     input: RunInput,
     options?: Partial<RunnableConfig>
   ): Promise<RunOutput> {
-    const callbackManager_ = await getCallbackManagerForConfig(options);
+    const config = ensureConfig(options);
+    const callbackManager_ = await getCallbackManagerForConfig(config);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       {
@@ -1755,7 +1757,7 @@ export class RunnableMap<
       undefined,
       undefined,
       undefined,
-      options?.runName
+      config?.runName
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const output: Record<string, any> = {};
@@ -1764,7 +1766,7 @@ export class RunnableMap<
         Object.entries(this.steps).map(async ([key, runnable]) => {
           output[key] = await runnable.invoke(
             input,
-            patchConfig(options, {
+            patchConfig(config, {
               callbacks: runManager?.getChild(`map:key:${key}`),
             })
           );
@@ -1879,21 +1881,36 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     config?: Partial<RunnableConfig>,
     runManager?: CallbackManagerForChainRun
   ) {
-    let output = await this.func(input, { ...config, config });
-    if (output && Runnable.isRunnable(output)) {
-      if (config?.recursionLimit === 0) {
-        throw new Error("Recursion limit reached.");
-      }
-      output = await output.invoke(
-        input,
-        patchConfig(config, {
-          callbacks: runManager?.getChild(),
-          recursionLimit:
-            (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
-        })
+    return new Promise<RunOutput>((resolve, reject) => {
+      const childConfig = patchConfig(config, {
+        callbacks: runManager?.getChild(),
+        recursionLimit: (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
+      });
+      void AsyncLocalStorageProviderSingleton.getInstance().run(
+        childConfig,
+        async () => {
+          try {
+            let output = await this.func(input, {
+              ...childConfig,
+              config: childConfig,
+            });
+            if (output && Runnable.isRunnable(output)) {
+              if (config?.recursionLimit === 0) {
+                throw new Error("Recursion limit reached.");
+              }
+              output = await output.invoke(input, {
+                ...childConfig,
+                recursionLimit:
+                  (childConfig.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
+              });
+            }
+            resolve(output);
+          } catch (e) {
+            reject(e);
+          }
+        }
       );
-    }
-    return output;
+    });
   }
 
   async invoke(
@@ -1908,7 +1925,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     runManager?: CallbackManagerForChainRun,
     config?: Partial<RunnableConfig>
   ): AsyncGenerator<RunOutput> {
-    let finalChunk;
+    let finalChunk: RunInput | undefined;
     for await (const chunk of generator) {
       if (finalChunk === undefined) {
         finalChunk = chunk;
@@ -1922,14 +1939,30 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
         }
       }
     }
-
-    const output = await this.func(finalChunk, { ...config, config });
+    const output = await new Promise<RunOutput | Runnable>(
+      (resolve, reject) => {
+        void AsyncLocalStorageProviderSingleton.getInstance().run(
+          config,
+          async () => {
+            try {
+              const res = await this.func(finalChunk as RunInput, {
+                ...config,
+                config,
+              });
+              resolve(res);
+            } catch (e) {
+              reject(e);
+            }
+          }
+        );
+      }
+    );
     if (output && Runnable.isRunnable(output)) {
       if (config?.recursionLimit === 0) {
         throw new Error("Recursion limit reached.");
       }
       const stream = await output.stream(
-        finalChunk,
+        finalChunk as RunInput,
         patchConfig(config, {
           callbacks: runManager?.getChild(),
           recursionLimit:

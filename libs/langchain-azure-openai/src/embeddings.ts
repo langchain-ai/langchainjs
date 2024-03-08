@@ -13,6 +13,7 @@ import {
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { AzureOpenAIInput, AzureOpenAIEmbeddingsParams } from "./types.js";
+import { USER_AGENT_PREFIX } from "./constants.js";
 
 export class AzureOpenAIEmbeddings
   extends Embeddings
@@ -63,7 +64,7 @@ export class AzureOpenAIEmbeddings
       (getEnvironmentVariable("AZURE_OPENAI_API_KEY") ||
         getEnvironmentVariable("OPENAI_API_KEY"));
 
-    if (!this.azureOpenAIApiKey) {
+    if (!this.azureOpenAIApiKey && !fields?.credentials) {
       throw new Error("Azure OpenAI API key not found");
     }
 
@@ -89,19 +90,25 @@ export class AzureOpenAIEmbeddings
     const azureCredential =
       fields?.credentials ??
       (fields?.azureOpenAIApiKey ||
-        getEnvironmentVariable("AZURE_OPENAI_API_KEY"))
+      getEnvironmentVariable("AZURE_OPENAI_API_KEY")
         ? new AzureKeyCredential(this.azureOpenAIApiKey ?? "")
-        : new OpenAIKeyCredential(this.azureOpenAIApiKey ?? "");
+        : new OpenAIKeyCredential(this.azureOpenAIApiKey ?? ""));
 
     if (isTokenCredential(azureCredential)) {
       this.client = new AzureOpenAIClient(
         this.azureOpenAIEndpoint ?? "",
-        azureCredential as TokenCredential
+        azureCredential as TokenCredential,
+        {
+          userAgentOptions: { userAgentPrefix: USER_AGENT_PREFIX },
+        }
       );
     } else {
       this.client = new AzureOpenAIClient(
         this.azureOpenAIEndpoint ?? "",
-        azureCredential as KeyCredential
+        azureCredential as KeyCredential,
+        {
+          userAgentOptions: { userAgentPrefix: USER_AGENT_PREFIX },
+        }
       );
     }
   }

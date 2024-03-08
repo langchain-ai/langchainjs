@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
-    "start": "yarn build:typedoc && rimraf ./docs/api && NODE_OPTIONS=--max-old-space-size=7168 docusaurus start",
+    "start": "yarn build:typedoc && yarn quarto && rimraf ./docs/api && NODE_OPTIONS=--max-old-space-size=7168 docusaurus start",
     "build": "yarn clean && yarn build:typedoc && yarn quarto && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
     "build:vercel": "yarn clean && yarn build:typedoc:vercel && yarn quarto:vercel && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
     "build:typedoc": "yarn workspace api_refs build",
@@ -22,8 +22,8 @@
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,md,mdx}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,md,mdx}\"",
     "clean": "rm -rf .docusaurus/ .turbo/ .build/",
-    "quarto": "quarto render docs/ && node ./scripts/quatro-build.js",
-    "quarto:vercel": "bash ./scripts/vercel_build.sh && node ./scripts/quatro-build.js"
+    "quarto": "quarto render docs/ && node ./scripts/quarto-build.js",
+    "quarto:vercel": "bash ./scripts/vercel_build.sh && node ./scripts/quarto-build.js"
   },
   "dependencies": {
     "@docusaurus/core": "2.4.3",
@@ -31,6 +31,7 @@
     "@docusaurus/remark-plugin-npm2yarn": "2.4.3",
     "@mdx-js/react": "^1.6.22",
     "clsx": "^1.2.1",
+    "cookie": "^0.6.0",
     "json-loader": "^0.5.7",
     "process": "^0.11.10",
     "react": "^17.0.2",
@@ -40,6 +41,7 @@
   "devDependencies": {
     "@babel/eslint-parser": "^7.18.2",
     "@swc/core": "^1.3.62",
+    "@types/cookie": "^0",
     "docusaurus-plugin-typedoc": "1.0.0-next.5",
     "eslint": "^8.19.0",
     "eslint-config-airbnb": "^19.0.4",
@@ -54,7 +56,8 @@
     "rimraf": "^5.0.1",
     "swc-loader": "^0.2.3",
     "typedoc": "^0.24.4",
-    "typedoc-plugin-markdown": "next"
+    "typedoc-plugin-markdown": "next",
+    "yaml-loader": "^0.8.0"
   },
   "packageManager": "yarn@3.4.1",
   "browserslist": {
