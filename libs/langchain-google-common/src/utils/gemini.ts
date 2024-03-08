@@ -25,7 +25,9 @@ import type {
   GeminiRole,
   GeminiContent,
   GenerateContentResponseData,
+  GoogleAISafetyHandler,
 } from "../types.js";
+import { GoogleAISafetyError } from "./safety.js";
 
 function messageContentText(content: MessageContentText): GeminiPartText {
   return {
@@ -47,14 +49,18 @@ function messageContentImageUrl(
 
   if (url.startsWith("data:")) {
     return {
-      mimeType: url.split(":")[1].split(";")[0],
-      data: url.split(",")[1],
+      inlineData: {
+        mimeType: url.split(":")[1].split(";")[0],
+        data: url.split(",")[1],
+      },
     };
   } else {
     // FIXME - need some way to get mime type
     return {
-      mimeType: "image/png",
-      fileUri: url,
+      fileData: {
+        mimeType: "image/png",
+        fileUri: url,
+      },
     };
   }
 }
@@ -131,7 +137,7 @@ function inlineDataPartToMessageContent(
 ): MessageContentImageUrl {
   return {
     type: "image_url",
-    image_url: `data:${part.mimeType};base64,${part.data}`,
+    image_url: `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`,
   };
 }
 
@@ -140,18 +146,20 @@ function fileDataPartToMessageContent(
 ): MessageContentImageUrl {
   return {
     type: "image_url",
-    image_url: part.fileUri,
+    image_url: part.fileData.fileUri,
   };
 }
 
 export function partsToMessageContent(parts: GeminiPart[]): MessageContent {
   return parts
     .map((part) => {
-      if ("text" in part) {
+      if (part === undefined || part === null) {
+        return null;
+      } else if ("text" in part) {
         return textPartToMessageContent(part);
-      } else if ("mimeType" in part && "data" in part) {
+      } else if ("inlineData" in part) {
         return inlineDataPartToMessageContent(part);
-      } else if ("mimeType" in part && "fileUri" in part) {
+      } else if ("fileData" in part) {
         return fileDataPartToMessageContent(part);
       } else {
         return null;
@@ -211,11 +219,43 @@ export function responseToString(response: GoogleLLMResponse): string {
   return ret;
 }
 
+function safeResponseTo<RetType>(
+  response: GoogleLLMResponse,
+  safetyHandler: GoogleAISafetyHandler,
+  responseTo: (response: GoogleLLMResponse) => RetType
+): RetType {
+  try {
+    const safeResponse = safetyHandler.handle(response);
+    return responseTo(safeResponse);
+  } catch (xx) {
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    if (xx instanceof GoogleAISafetyError) {
+      const ret = responseTo(xx.response);
+      xx.reply = ret;
+    }
+    throw xx;
+  }
+}
+
+export function safeResponseToString(
+  response: GoogleLLMResponse,
+  safetyHandler: GoogleAISafetyHandler
+): string {
+  return safeResponseTo(response, safetyHandler, responseToString);
+}
+
 export function responseToGeneration(response: GoogleLLMResponse): Generation {
   return {
     text: responseToString(response),
     generationInfo: response,
   };
+}
+
+export function safeResponseToGeneration(
+  response: GoogleLLMResponse,
+  safetyHandler: GoogleAISafetyHandler
+): Generation {
+  return safeResponseTo(response, safetyHandler, responseToGeneration);
 }
 
 export function responseToChatGeneration(
@@ -226,6 +266,27 @@ export function responseToChatGeneration(
     message: partToMessage(responseToParts(response)[0]),
     generationInfo: response,
   });
+}
+
+export function safeResponseToChatGeneration(
+  response: GoogleLLMResponse,
+  safetyHandler: GoogleAISafetyHandler
+): ChatGenerationChunk {
+  return safeResponseTo(response, safetyHandler, responseToChatGeneration);
+}
+
+export function chunkToString(chunk: BaseMessageChunk): string {
+  if (chunk === null) {
+    return "";
+  } else if (typeof chunk.content === "string") {
+    return chunk.content;
+  } else if (chunk.content.length === 0) {
+    return "";
+  } else if (chunk.content[0].type === "text") {
+    return chunk.content[0].text;
+  } else {
+    throw new Error(`Unexpected chunk: ${chunk}`);
+  }
 }
 
 export function partToMessage(part: GeminiPart): BaseMessageChunk {
@@ -265,12 +326,26 @@ export function responseToBaseMessage(
   });
 }
 
+export function safeResponseToBaseMessage(
+  response: GoogleLLMResponse,
+  safetyHandler: GoogleAISafetyHandler
+): BaseMessage {
+  return safeResponseTo(response, safetyHandler, responseToBaseMessage);
+}
+
 export function responseToChatResult(response: GoogleLLMResponse): ChatResult {
   const generations = responseToChatGenerations(response);
   return {
     generations,
     llmOutput: response,
   };
+}
+
+export function safeResponseToChatResult(
+  response: GoogleLLMResponse,
+  safetyHandler: GoogleAISafetyHandler
+): ChatResult {
+  return safeResponseTo(response, safetyHandler, responseToChatResult);
 }
 
 export function validateGeminiParams(params: GoogleAIModelParams): void {
@@ -296,4 +371,126 @@ export function validateGeminiParams(params: GoogleAIModelParams): void {
 
 export function isModelGemini(modelName: string): boolean {
   return modelName.toLowerCase().startsWith("gemini");
+}
+
+export interface DefaultGeminiSafetySettings {
+  errorFinish?: string[];
+}
+
+export class DefaultGeminiSafetyHandler implements GoogleAISafetyHandler {
+  errorFinish = ["SAFETY", "RECITATION", "OTHER"];
+
+  constructor(settings?: DefaultGeminiSafetySettings) {
+    this.errorFinish = settings?.errorFinish ?? this.errorFinish;
+  }
+
+  handleDataPromptFeedback(
+    response: GoogleLLMResponse,
+    data: GenerateContentResponseData
+  ): GenerateContentResponseData {
+    // Check to see if our prompt was blocked in the first place
+    const promptFeedback = data?.promptFeedback;
+    const blockReason = promptFeedback?.blockReason;
+    if (blockReason) {
+      throw new GoogleAISafetyError(response, `Prompt blocked: ${blockReason}`);
+    }
+    return data;
+  }
+
+  handleDataFinishReason(
+    response: GoogleLLMResponse,
+    data: GenerateContentResponseData
+  ): GenerateContentResponseData {
+    const firstCandidate = data?.candidates?.[0];
+    const finishReason = firstCandidate?.finishReason;
+    if (this.errorFinish.includes(finishReason)) {
+      throw new GoogleAISafetyError(response, `Finish reason: ${finishReason}`);
+    }
+    return data;
+  }
+
+  handleData(
+    response: GoogleLLMResponse,
+    data: GenerateContentResponseData
+  ): GenerateContentResponseData {
+    let ret = data;
+    ret = this.handleDataPromptFeedback(response, ret);
+    ret = this.handleDataFinishReason(response, ret);
+    return ret;
+  }
+
+  handle(response: GoogleLLMResponse): GoogleLLMResponse {
+    let newdata;
+
+    if ("nextChunk" in response.data) {
+      // TODO: This is a stream. How to handle?
+      newdata = response.data;
+    } else if (Array.isArray(response.data)) {
+      // If it is an array, try to handle every item in the array
+      try {
+        newdata = response.data.map((item) => this.handleData(response, item));
+      } catch (xx) {
+        // eslint-disable-next-line no-instanceof/no-instanceof
+        if (xx instanceof GoogleAISafetyError) {
+          throw new GoogleAISafetyError(response, xx.message);
+        } else {
+          throw xx;
+        }
+      }
+    } else {
+      const data = response.data as GenerateContentResponseData;
+      newdata = this.handleData(response, data);
+    }
+
+    return {
+      ...response,
+      data: newdata,
+    };
+  }
+}
+
+export interface MessageGeminiSafetySettings
+  extends DefaultGeminiSafetySettings {
+  msg?: string;
+  forceNewMessage?: boolean;
+}
+
+export class MessageGeminiSafetyHandler extends DefaultGeminiSafetyHandler {
+  msg: string = "";
+
+  forceNewMessage = false;
+
+  constructor(settings?: MessageGeminiSafetySettings) {
+    super(settings);
+    this.msg = settings?.msg ?? this.msg;
+    this.forceNewMessage = settings?.forceNewMessage ?? this.forceNewMessage;
+  }
+
+  setMessage(data: GenerateContentResponseData): GenerateContentResponseData {
+    const ret = data;
+    if (
+      this.forceNewMessage ||
+      !data?.candidates?.[0]?.content?.parts?.length
+    ) {
+      ret.candidates = data.candidates ?? [];
+      ret.candidates[0] = data.candidates[0] ?? {};
+      ret.candidates[0].content = data.candidates[0].content ?? {};
+      ret.candidates[0].content = {
+        role: "model",
+        parts: [{ text: this.msg }],
+      };
+    }
+    return ret;
+  }
+
+  handleData(
+    response: GoogleLLMResponse,
+    data: GenerateContentResponseData
+  ): GenerateContentResponseData {
+    try {
+      return super.handleData(response, data);
+    } catch (xx) {
+      return this.setMessage(data);
+    }
+  }
 }
