@@ -26,7 +26,7 @@ import type {
   GeminiContent,
   GenerateContentResponseData,
 } from "../types.js";
-import type { GoogleAISafetyHandler } from "./safety.js";
+import type { GoogleAISafetyHandler } from "../types.js";
 import { GoogleAISafetyError } from "./safety.js";
 
 function messageContentText(content: MessageContentText): GeminiPartText {
