@@ -408,11 +408,13 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
 
 function isZodSchema<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends Record<string, any>
+  RunOutput extends Record<string, any> = Record<string, any>
+>(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
->(input: any): input is z.ZodType<RunOutput, z.ZodTypeDef, RunOutput> {
+  input: z.ZodType<RunOutput> | Record<string, any>
+): input is z.ZodType<RunOutput> {
   // Check for a characteristic method of Zod schemas
-  return typeof input?.parse === "function";
+  return typeof (input as z.ZodType<RunOutput>)?.parse === "function";
 }
 
 function isStructuredOutputMethodParams(
