@@ -24,6 +24,7 @@ import {
   RunnableSequence,
 } from "@langchain/core/runnables";
 import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
+import type { BaseLLMOutputParser } from "@langchain/core/output_parsers";
 import { JsonSchema7ObjectType, zodToJsonSchema } from "zod-to-json-schema";
 import { z } from "zod";
 import { ChatAnthropic, type AnthropicInput } from "../chat_models.js";
@@ -33,7 +34,6 @@ import {
   formatAsXMLRepresentation,
   fixArrayXMLParameters,
 } from "./utils/tool_calling.js";
-import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
 
 export interface ChatAnthropicToolsCallOptions
   extends BaseLanguageModelCallOptions {
@@ -407,7 +407,6 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
 }
 
 function isZodSchema<
-  // prettier-ignore
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput extends Record<string, any>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
