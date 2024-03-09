@@ -39,7 +39,11 @@ import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { StructuredToolInterface } from "@langchain/core/tools";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { z } from "zod";
-import { type BaseLLMOutputParser, JsonOutputParser, StructuredOutputParser } from "@langchain/core/output_parsers";
+import {
+  type BaseLLMOutputParser,
+  JsonOutputParser,
+  StructuredOutputParser,
+} from "@langchain/core/output_parsers";
 import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 import {
   Runnable,
