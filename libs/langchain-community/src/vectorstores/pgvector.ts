@@ -12,7 +12,8 @@ type Metadata = Record<string, unknown>;
  * table name, filter, and verbosity level.
  */
 export interface PGVectorStoreArgs {
-  postgresConnectionOptions: PoolConfig;
+  postgresConnectionOptions?: PoolConfig;
+  pool?: Pool;
   tableName: string;
   collectionTableName?: string;
   collectionName?: string;
@@ -98,7 +99,12 @@ export class PGVectorStore extends VectorStore {
     this.idColumnName = config.columns?.idColumnName ?? "id";
     this.metadataColumnName = config.columns?.metadataColumnName ?? "metadata";
 
-    const pool = new pg.Pool(config.postgresConnectionOptions);
+    if (!config.postgresConnectionOptions && !config.pool) {
+      throw new Error(
+        "You must provide either a `postgresConnectionOptions` object or a `pool` instance."
+      );
+    }
+    const pool = config.pool ?? new pg.Pool(config.postgresConnectionOptions);
     this.pool = pool;
     this.chunkSize = config.chunkSize ?? 500;
 
@@ -111,6 +117,12 @@ export class PGVectorStore extends VectorStore {
     return this.schemaName == null
       ? `${this.tableName}`
       : `"${this.schemaName}"."${this.tableName}"`;
+  }
+
+  get computedCollectionTableName() {
+    return this.schemaName == null
+      ? `${this.collectionTableName}`
+      : `"${this.schemaName}"."${this.collectionTableName}"`;
   }
 
   /**
@@ -170,7 +182,7 @@ export class PGVectorStore extends VectorStore {
    */
   async getOrCreateCollection(): Promise<string> {
     const queryString = `
-      SELECT uuid from ${this.collectionTableName}
+      SELECT uuid from ${this.computedCollectionTableName}
       WHERE name = $1;
     `;
     const queryResult = await this.pool.query(queryString, [
@@ -180,7 +192,7 @@ export class PGVectorStore extends VectorStore {
 
     if (!collectionId) {
       const insertString = `
-        INSERT INTO ${this.collectionTableName}(
+        INSERT INTO ${this.computedCollectionTableName}(
           uuid,
           name,
           cmetadata
@@ -539,7 +551,7 @@ export class PGVectorStore extends VectorStore {
   async ensureCollectionTableInDatabase(): Promise<void> {
     try {
       const queryString = `
-        CREATE TABLE IF NOT EXISTS ${this.collectionTableName} (
+        CREATE TABLE IF NOT EXISTS ${this.computedCollectionTableName} (
           uuid uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
           name character varying,
           cmetadata jsonb
@@ -551,7 +563,7 @@ export class PGVectorStore extends VectorStore {
         ALTER TABLE ${this.computedTableName}
           ADD CONSTRAINT ${this.tableName}_collection_id_fkey
           FOREIGN KEY (collection_id)
-          REFERENCES ${this.collectionTableName}(uuid)
+          REFERENCES ${this.computedCollectionTableName}(uuid)
           ON DELETE CASCADE;
       `;
       await this.pool.query(queryString);

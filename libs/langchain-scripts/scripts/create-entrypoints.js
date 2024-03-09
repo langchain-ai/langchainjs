@@ -38,6 +38,7 @@ const generateFiles = () => {
         ],
         [`${key}.js`, `export * from '${compiledPath}'`],
         [`${key}.d.ts`, `export * from '${compiledPath}'`],
+        [`${key}.d.cts`, `export * from '${compiledPath}'`],
       ];
     }
   );
@@ -55,8 +56,12 @@ const updateConfig = () => {
     exports: Object.assign(
       Object.fromEntries(
         [...Object.keys(entrypoints)].map((key) => {
-          let entryPoint = {
-            types: `./${key}.d.ts`,
+          const entryPoint = {
+            types: {
+              import: `./${key}.d.ts`,
+              require: `./${key}.d.cts`,
+              default: `./${key}.d.ts`,
+            },
             import: `./${key}.js`,
             require: `./${key}.cjs`,
           };

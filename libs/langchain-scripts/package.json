@@ -1,6 +1,6 @@
 {
   "name": "@langchain/scripts",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Shared scripts for LangChain.js",
   "type": "module",
   "engines": {
@@ -69,17 +69,29 @@
   },
   "exports": {
     ".": {
-      "types": "./index.d.ts",
+      "types": {
+        "import": "./index.d.ts",
+        "require": "./index.d.cts",
+        "default": "./index.d.ts"
+      },
       "import": "./index.js",
       "require": "./index.cjs"
     },
     "./build": {
-      "types": "./build.d.ts",
+      "types": {
+        "import": "./build.d.ts",
+        "require": "./build.d.cts",
+        "default": "./build.d.ts"
+      },
       "import": "./build.js",
       "require": "./build.cjs"
     },
     "./migrations": {
-      "types": "./migrations.d.ts",
+      "types": {
+        "import": "./migrations.d.ts",
+        "require": "./migrations.d.cts",
+        "default": "./migrations.d.ts"
+      },
       "import": "./migrations.js",
       "require": "./migrations.cjs"
     },
@@ -90,11 +102,14 @@
     "index.cjs",
     "index.js",
     "index.d.ts",
+    "index.d.cts",
     "build.cjs",
     "build.js",
     "build.d.ts",
+    "build.d.cts",
     "migrations.cjs",
     "migrations.js",
-    "migrations.d.ts"
+    "migrations.d.ts",
+    "migrations.d.cts"
   ]
 }
