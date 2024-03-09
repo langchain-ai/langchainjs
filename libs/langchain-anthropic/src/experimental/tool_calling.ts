@@ -33,6 +33,7 @@ import {
   formatAsXMLRepresentation,
   fixArrayXMLParameters,
 } from "./utils/tool_calling.js";
+import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
 
 export interface ChatAnthropicToolsCallOptions
   extends BaseLanguageModelCallOptions {
@@ -330,10 +331,7 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
     }
 
     const functionName = name ?? "extract";
-    const outputParser = new JsonOutputKeyToolsParser<RunOutput>({
-      returnSingle: true,
-      keyName: functionName,
-    });
+    let outputParser: BaseLLMOutputParser<RunOutput>;
     let tools: ToolDefinition[];
     if (isZodSchema(schema)) {
       const jsonSchema = zodToJsonSchema(schema);
@@ -347,6 +345,11 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
           },
         },
       ];
+      outputParser = new JsonOutputKeyToolsParser({
+        returnSingle: true,
+        keyName: functionName,
+        zodSchema: schema,
+      });
     } else {
       tools = [
         {
@@ -358,6 +361,10 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
           },
         },
       ];
+      outputParser = new JsonOutputKeyToolsParser<RunOutput>({
+        returnSingle: true,
+        keyName: functionName,
+      });
     }
     const llm = this.bind({
       tools,
