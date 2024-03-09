@@ -147,9 +147,11 @@ export class JsonOutputKeyToolsParser<
       return zodParsedResult.data;
     } else {
       throw new OutputParserException(
-        `Failed to parse. Text: "${result}". Error: ${JSON.stringify(
-          zodParsedResult.error.errors
-        )}`,
+        `Failed to parse. Text: "${JSON.stringify(
+          result,
+          null,
+          2
+        )}". Error: ${JSON.stringify(zodParsedResult.error.errors)}`,
         JSON.stringify(result, null, 2)
       );
     }
