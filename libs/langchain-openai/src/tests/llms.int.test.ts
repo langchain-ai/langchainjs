@@ -36,6 +36,7 @@ test("Test OpenAI with stop in object", async () => {
 test("Test OpenAI with timeout in call options", async () => {
   const model = new OpenAI({
     maxTokens: 5,
+    maxRetries: 0,
     modelName: "gpt-3.5-turbo-instruct",
   });
   await expect(() =>
@@ -48,6 +49,7 @@ test("Test OpenAI with timeout in call options", async () => {
 test("Test OpenAI with timeout in call options and node adapter", async () => {
   const model = new OpenAI({
     maxTokens: 5,
+    maxRetries: 0,
     modelName: "gpt-3.5-turbo-instruct",
   });
   await expect(() =>
@@ -277,6 +279,7 @@ test("Test OpenAI stream method with abort", async () => {
   await expect(async () => {
     const model = new OpenAI({
       maxTokens: 250,
+      maxRetries: 0,
       modelName: "gpt-3.5-turbo-instruct",
     });
     const stream = await model.stream(

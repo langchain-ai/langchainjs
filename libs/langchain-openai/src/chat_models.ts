@@ -38,7 +38,11 @@ import {
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
-import { JsonOutputParser } from "@langchain/core/output_parsers";
+import {
+  JsonOutputParser,
+  StructuredOutputParser,
+  type BaseLLMOutputParser,
+} from "@langchain/core/output_parsers";
 import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import type {
@@ -915,26 +919,30 @@ export class ChatOpenAI<
       includeRaw = config?.includeRaw;
     }
     let llm: Runnable<BaseLanguageModelInput>;
-    let outputParser: JsonOutputKeyToolsParser | JsonOutputParser<RunOutput>;
+    let outputParser: BaseLLMOutputParser<RunOutput>;
 
     if (method === "jsonMode") {
       llm = this.bind({
         response_format: { type: "json_object" },
       } as Partial<CallOptions>);
-      outputParser = new JsonOutputParser<RunOutput>();
+      if (isZodSchema(schema)) {
+        outputParser = StructuredOutputParser.fromZodSchema(schema);
+      } else {
+        outputParser = new JsonOutputParser<RunOutput>();
+      }
     } else {
       const functionName = name ?? "extract";
       // Is function calling
       if (isZodSchema(schema)) {
-        const asZodSchema = zodToJsonSchema(schema);
+        const asJsonSchema = zodToJsonSchema(schema);
         llm = this.bind({
           tools: [
             {
               type: "function" as const,
               function: {
                 name: functionName,
-                description: asZodSchema.description,
-                parameters: asZodSchema,
+                description: asJsonSchema.description,
+                parameters: asJsonSchema,
               },
             },
           ],
@@ -945,9 +953,10 @@ export class ChatOpenAI<
             },
           },
         } as Partial<CallOptions>);
-        outputParser = new JsonOutputKeyToolsParser<RunOutput>({
+        outputParser = new JsonOutputKeyToolsParser({
           returnSingle: true,
           keyName: functionName,
+          zodSchema: schema,
         });
       } else {
         llm = this.bind({
