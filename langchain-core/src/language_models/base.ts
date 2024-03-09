@@ -526,6 +526,7 @@ export abstract class BaseLanguageModel<
    * @template {Record<string, any>} RunOutput The output type for the Runnable, expected to be a Zod schema object for structured output validation.
    *
    * @param {z.ZodEffects<RunOutput>} schema The schema for the structured output. Either as a Zod schema or a valid JSON schema object.
+   *   If a Zod schema is passed, the returned attributes will be validated, whereas with JSON schema they will not be.
    * @param {string} name The name of the function to call.
    * @param {"functionCalling" | "jsonMode"} [method=functionCalling] The method to use for getting the structured output. Defaults to "functionCalling".
    * @param {boolean | undefined} [includeRaw=false] Whether to include the raw output in the result. Defaults to false.
