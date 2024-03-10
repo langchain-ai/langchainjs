@@ -7,7 +7,9 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatMistralAI } from "../chat_models.js";
 
 test("Test ChatMistralAI can invoke", async () => {
-  const model = new ChatMistralAI();
+  const model = new ChatMistralAI({
+    modelName: "mistral-tiny",
+  });
   const prompt = ChatPromptTemplate.fromMessages([
     ["system", "You are a helpful assistant"],
     ["human", "{input}"],
