@@ -7,3 +7,4 @@ export * from "./embeddings.js";
 export * from "./types.js";
 export * from "./utils/openai.js";
 export * from "./utils/azure.js";
+export * from "./tools/index.js";

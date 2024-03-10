@@ -1,5 +1,6 @@
+import { z } from "zod";
 import { ChatGeneration } from "../../outputs.js";
-import { BaseLLMOutputParser } from "../base.js";
+import { BaseLLMOutputParser, OutputParserException } from "../base.js";
 
 export type ParsedToolCall = {
   id?: string;
@@ -90,11 +91,15 @@ export class JsonOutputToolsParser extends BaseLLMOutputParser<
   }
 }
 
-export type JsonOutputKeyToolsParserParams = {
+export type JsonOutputKeyToolsParserParams<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends Record<string, any> = Record<string, any>
+> = {
   keyName: string;
   returnSingle?: boolean;
   /** Whether to return the tool call id. */
   returnId?: boolean;
+  zodSchema?: z.ZodType<T>;
 };
 
 /**
@@ -123,11 +128,33 @@ export class JsonOutputKeyToolsParser<
 
   initialParser: JsonOutputToolsParser;
 
-  constructor(params: JsonOutputKeyToolsParserParams) {
+  zodSchema?: z.ZodType<T>;
+
+  constructor(params: JsonOutputKeyToolsParserParams<T>) {
     super(params);
     this.keyName = params.keyName;
     this.returnSingle = params.returnSingle ?? this.returnSingle;
     this.initialParser = new JsonOutputToolsParser(params);
+    this.zodSchema = params.zodSchema;
+  }
+
+  protected async _validateResult(result: unknown): Promise<T> {
+    if (this.zodSchema === undefined) {
+      return result as T;
+    }
+    const zodParsedResult = await this.zodSchema.safeParseAsync(result);
+    if (zodParsedResult.success) {
+      return zodParsedResult.data;
+    } else {
+      throw new OutputParserException(
+        `Failed to parse. Text: "${JSON.stringify(
+          result,
+          null,
+          2
+        )}". Error: ${JSON.stringify(zodParsedResult.error.errors)}`,
+        JSON.stringify(result, null, 2)
+      );
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -143,8 +170,11 @@ export class JsonOutputKeyToolsParser<
       returnedValues = matchingResults.map((result) => result.args);
     }
     if (this.returnSingle) {
-      return returnedValues[0];
+      return this._validateResult(returnedValues[0]);
     }
-    return returnedValues;
+    const toolCallResults = await Promise.all(
+      returnedValues.map((value) => this._validateResult(value))
+    );
+    return toolCallResults;
   }
 }
