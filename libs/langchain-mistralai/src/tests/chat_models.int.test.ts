@@ -294,7 +294,7 @@ test("Can stream and concat responses for a complex tool", async () => {
   const toolCall = finalRes[0].additional_kwargs.tool_calls?.[0];
   expect(toolCall?.function.name).toBe("person_traits");
   const args = JSON.parse(toolCall?.function.arguments ?? "{}");
-  const person = args.person;
+  const { person } = args;
   expect(person).toBeDefined();
   expect(person.name).toBeDefined();
   expect(person.age).toBeDefined();
