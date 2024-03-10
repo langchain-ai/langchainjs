@@ -127,7 +127,7 @@ a built-in LangChain output parser that converts an OpenAI function-calling resp
 `{"type": "TOOL_NAME", "args": {...}}` objects with the tools to invoke and arguments to invoke them with.
 
 ```ts
-import { JsonOutputToolsParser } from "langchain/output_parsers";
+import { JsonOutputToolsParser } from "@langchain/core/output_parsers/openai_tools";
 
 const chain = modelWithTools.pipe(new JsonOutputToolsParser());
 
@@ -142,7 +142,7 @@ Since we know we’re always invoking the `multiply` tool, we can simplify our o
 To further simplify we’ll specify `returnSingle: true`, so that instead of a list of tool invocations our output parser returns only the first tool invocation.
 
 ```ts
-import { JsonOutputKeyToolsParser } from "langchain/output_parsers";
+import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 
 const chain2 = modelWithTools.pipe(
   new JsonOutputKeyToolsParser({ keyName: "multiply", returnSingle: true })

@@ -88,7 +88,7 @@ We can do this because LCEL allows runnables to return runnables themselves, whi
 ```ts
 import { ChatOpenAI } from "@langchain/openai";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
-import { JsonOutputToolsParser } from "langchain/output_parsers";
+import { JsonOutputToolsParser } from "@langchain/core/output_parsers/openai_tools";
 import {
   RunnableLambda,
   RunnablePassthrough,
