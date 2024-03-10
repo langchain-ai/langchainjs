@@ -1,4 +1,9 @@
 import { BaseTransformOutputParser } from "./transform.js";
+import {
+  MessageContentComplex,
+  MessageContentImageUrl,
+  MessageContentText,
+} from "../messages/index.js";
 
 /**
  * OutputParser that parses LLMResult into the top likely string.
@@ -41,5 +46,32 @@ export class StringOutputParser extends BaseTransformOutputParser<string> {
 
   getFormatInstructions(): string {
     return "";
+  }
+
+  _textContentToString(content: MessageContentText): string {
+    return content.text;
+  }
+
+  _imageUrlContentToString(_content: MessageContentImageUrl): string {
+    return "";
+  }
+
+  _messageContentComplexToString(content: MessageContentComplex): string {
+    switch (content.type) {
+      case "text":
+        return this._textContentToString(content);
+      case "image_url":
+        return this._imageUrlContentToString(content);
+      default:
+        return "";
+    }
+  }
+
+  _baseMessageContentToString(content: MessageContentComplex[]): string {
+    return content.reduce(
+      (acc: string, item: MessageContentComplex) =>
+        acc + this._messageContentComplexToString(item),
+      ""
+    );
   }
 }
