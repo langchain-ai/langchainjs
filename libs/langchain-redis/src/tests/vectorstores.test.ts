@@ -94,11 +94,42 @@ test("RedisVectorStore with filters", async () => {
 
   expect(store).toBeDefined();
 
-  await store.similaritySearch("hello", 1, ["a"]);
+  await store.similaritySearch("hello", 1, ["a", "b", "c"]);
 
   expect(client.ft.search).toHaveBeenCalledWith(
     "documents",
-    "@metadata:(a) => [KNN 1 @content_vector $vector AS vector_score]",
+    "@metadata:(a|b|c) => [KNN 1 @content_vector $vector AS vector_score]",
+    {
+      PARAMS: {
+        vector: Buffer.from(new Float32Array([0.1, 0.2, 0.3, 0.4]).buffer),
+      },
+      RETURN: ["metadata", "content", "vector_score"],
+      SORTBY: "vector_score",
+      DIALECT: 2,
+      LIMIT: {
+        from: 0,
+        size: 1,
+      },
+    }
+  );
+});
+
+test("RedisVectorStore with raw filter", async () => {
+  const client = createRedisClientMockup();
+  const embeddings = new FakeEmbeddings();
+
+  const store = new RedisVectorStore(embeddings, {
+    redisClient: client as any,
+    indexName: "documents",
+  });
+
+  expect(store).toBeDefined();
+
+  await store.similaritySearch("hello", 1, "a b c");
+
+  expect(client.ft.search).toHaveBeenCalledWith(
+    "documents",
+    "@metadata:(a b c) => [KNN 1 @content_vector $vector AS vector_score]",
     {
       PARAMS: {
         vector: Buffer.from(new Float32Array([0.1, 0.2, 0.3, 0.4]).buffer),

@@ -27,3 +27,24 @@ import CodeBlock from "@theme/CodeBlock";
 import Anthropic from "@examples/models/chat/integration_anthropic.ts";
 
 <CodeBlock language="typescript">{Anthropic}</CodeBlock>
+
+## Multimodal inputs
+
+Claude-3 models support image multimodal inputs. The passed input must be a base64 encoded image with the
+filetype as a prefix (e.g. `data:image/png;base64,{YOUR_BASE64_ENCODED_DATA}`).
+Here's an example:
+
+import AnthropicMultimodal from "@examples/models/chat/integration_anthropic_multimodal.ts";
+
+<CodeBlock language="typescript">{AnthropicMultimodal}</CodeBlock>
+
+See [the official docs](https://docs.anthropic.com/claude/docs/vision#what-image-file-types-does-claude-support)
+for a complete list of supported file types.
+
+## Custom headers
+
+You can pass custom headers in your requests like this:
+
+import AnthropicCustomHeaders from "@examples/models/chat/integration_anthropic_custom_headers.ts";
+
+<CodeBlock language="typescript">{AnthropicCustomHeaders}</CodeBlock>

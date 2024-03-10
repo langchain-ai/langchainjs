@@ -18,10 +18,7 @@ const model = new ChatMistralAI({
 });
 
 // Pass the schema and tool name to the withStructuredOutput method
-const modelWithTool = model.withStructuredOutput({
-  schema: calculatorSchema,
-  name: "calculator",
-});
+const modelWithTool = model.withStructuredOutput(calculatorSchema);
 
 const prompt = ChatPromptTemplate.fromMessages([
   [
@@ -39,16 +36,15 @@ const response = await chain.invoke({
 });
 console.log(response);
 /*
-{ operation: 'add', number1: 2, number2: 2 }
- */
+  { operation: 'add', number1: 2, number2: 2 }
+*/
 
 /**
- * Additionally, you can pass 'includeRaw' to get the raw
- * message back from the model too.
+ * You can supply a "name" field to give the LLM additional context
+ * around what you are trying to generate. You can also pass
+ * 'includeRaw' to get the raw message back from the model too.
  */
-
-const includeRawModel = model.withStructuredOutput({
-  schema: calculatorSchema,
+const includeRawModel = model.withStructuredOutput(calculatorSchema, {
   name: "calculator",
   includeRaw: true,
 });
@@ -59,28 +55,28 @@ const includeRawResponse = await includeRawChain.invoke({
 });
 console.log(JSON.stringify(includeRawResponse, null, 2));
 /*
-{
-  "raw": {
-    "kwargs": {
-      "content": "",
-      "additional_kwargs": {
-        "tool_calls": [
-          {
-            "id": "null",
-            "type": "function",
-            "function": {
-              "name": "calculator",
-              "arguments": "{\"operation\": \"add\", \"number1\": 2, \"number2\": 2}"
+  {
+    "raw": {
+      "kwargs": {
+        "content": "",
+        "additional_kwargs": {
+          "tool_calls": [
+            {
+              "id": "null",
+              "type": "function",
+              "function": {
+                "name": "calculator",
+                "arguments": "{\"operation\": \"add\", \"number1\": 2, \"number2\": 2}"
+              }
             }
-          }
-        ]
+          ]
+        }
       }
+    },
+    "parsed": {
+      "operation": "add",
+      "number1": 2,
+      "number2": 2
     }
-  },
-  "parsed": {
-    "operation": "add",
-    "number1": 2,
-    "number2": 2
   }
-}
- */
+*/

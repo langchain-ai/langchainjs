@@ -15,7 +15,9 @@ const prompt = ChatPromptTemplate.fromMessages([
   ["human", "{question}"],
 ]);
 
-const chain = prompt.pipe(new ChatAnthropic({ modelName: "claude-2.1" }));
+const chain = prompt.pipe(
+  new ChatAnthropic({ modelName: "claude-3-sonnet-20240229" })
+);
 
 const chainWithHistory = new RunnableWithMessageHistory({
   runnable: chain,

@@ -596,3 +596,51 @@ test.skip("Test multiple index", async () => {
   await barExistingIndex.close();
   await fooExistingIndex.close();
 });
+
+test.skip("Test retrievalQuery with params", async () => {
+  const url = process.env.NEO4J_URI as string;
+  const username = process.env.NEO4J_USERNAME as string;
+  const password = process.env.NEO4J_PASSWORD as string;
+
+  expect(url).toBeDefined();
+  expect(username).toBeDefined();
+  expect(password).toBeDefined();
+
+  const embeddings = new FakeEmbeddingsWithOsDimension();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const metadatas: any[] = [];
+
+  const neo4jVectorStore = await Neo4jVectorStore.fromTexts(
+    texts,
+    metadatas,
+    embeddings,
+    {
+      url,
+      username,
+      password,
+      indexName: "vector",
+      preDeleteCollection: true,
+      retrievalQuery: "RETURN $test AS text, score, {foo:$test1} AS metadata",
+    }
+  );
+
+  const output = await neo4jVectorStore.similaritySearch("foo", 2, {
+    test: "test",
+    test1: "test1",
+  });
+
+  const expectedResult = [
+    new Document({
+      pageContent: "test",
+      metadata: { foo: "test1" },
+    }),
+    new Document({
+      pageContent: "test",
+      metadata: { foo: "test1" },
+    }),
+  ];
+
+  expect(output).toStrictEqual(expectedResult);
+  await dropVectorIndexes(neo4jVectorStore);
+  await neo4jVectorStore.close();
+});

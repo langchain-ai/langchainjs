@@ -25,10 +25,7 @@ const model = new ChatMistralAI({
 });
 
 // Pass the schema and tool name to the withStructuredOutput method
-const modelWithTool = model.withStructuredOutput({
-  schema: calculatorJsonSchema,
-  name: "calculator",
-});
+const modelWithTool = model.withStructuredOutput(calculatorJsonSchema);
 
 const prompt = ChatPromptTemplate.fromMessages([
   [
@@ -46,5 +43,5 @@ const response = await chain.invoke({
 });
 console.log(response);
 /*
-{ operation: 'add', number1: 2, number2: 2 }
- */
+  { operation: 'add', number1: 2, number2: 2 }
+*/

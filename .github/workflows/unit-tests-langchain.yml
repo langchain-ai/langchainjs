@@ -9,7 +9,7 @@ on:
   pull_request:
     # Only run when LangChain, or LangChain Core code changes.
     paths:
-      - 'lanchain/**'
+      - 'langchain/**'
       - 'langchain-core/**'
   workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
 

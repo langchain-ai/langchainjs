@@ -64,7 +64,7 @@ export class AzureOpenAIEmbeddings
       (getEnvironmentVariable("AZURE_OPENAI_API_KEY") ||
         getEnvironmentVariable("OPENAI_API_KEY"));
 
-    if (!this.azureOpenAIApiKey) {
+    if (!this.azureOpenAIApiKey && !fields?.credentials) {
       throw new Error("Azure OpenAI API key not found");
     }
 
@@ -90,9 +90,9 @@ export class AzureOpenAIEmbeddings
     const azureCredential =
       fields?.credentials ??
       (fields?.azureOpenAIApiKey ||
-        getEnvironmentVariable("AZURE_OPENAI_API_KEY"))
+      getEnvironmentVariable("AZURE_OPENAI_API_KEY")
         ? new AzureKeyCredential(this.azureOpenAIApiKey ?? "")
-        : new OpenAIKeyCredential(this.azureOpenAIApiKey ?? "");
+        : new OpenAIKeyCredential(this.azureOpenAIApiKey ?? ""));
 
     if (isTokenCredential(azureCredential)) {
       this.client = new AzureOpenAIClient(

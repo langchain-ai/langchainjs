@@ -29,10 +29,15 @@ import {
   ChatGenerationChunk,
 } from "../../outputs.js";
 import { BaseRetriever } from "../../retrievers.js";
-import { Runnable } from "../../runnables/base.js";
+import { Runnable, RunnableLambda } from "../../runnables/base.js";
 import { StructuredTool, ToolParams } from "../../tools.js";
 import { BaseTracer, Run } from "../../tracers/base.js";
 import { Embeddings, EmbeddingsParams } from "../../embeddings.js";
+import {
+  StructuredOutputMethodParams,
+  BaseLanguageModelInput,
+  StructuredOutputMethodOptions,
+} from "../../language_models/base.js";
 
 /**
  * Parser for comma-separated values. It splits the input text by commas
@@ -336,6 +341,52 @@ export class FakeListChatModel extends BaseChatModel {
     } else {
       this.i = 0;
     }
+  }
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    _params:
+      | StructuredOutputMethodParams<RunOutput, false>
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<false>
+  ): Runnable<BaseLanguageModelInput, RunOutput>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    _params:
+      | StructuredOutputMethodParams<RunOutput, true>
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<true>
+  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    _params:
+      | StructuredOutputMethodParams<RunOutput, boolean>
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    _config?: StructuredOutputMethodOptions<boolean>
+  ):
+    | Runnable<BaseLanguageModelInput, RunOutput>
+    | Runnable<
+        BaseLanguageModelInput,
+        { raw: BaseMessage; parsed: RunOutput }
+      > {
+    return RunnableLambda.from(async (input) => {
+      const message = await this.invoke(input);
+      return JSON.parse(message.content as string);
+    }) as Runnable;
   }
 }
 

@@ -241,6 +241,29 @@ export type BaseLanguageModelInput =
   | string
   | BaseMessageLike[];
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type StructuredOutputType = z.infer<z.ZodObject<any, any, any, any>>;
+
+export type StructuredOutputMethodOptions<IncludeRaw extends boolean = false> =
+  {
+    name?: string;
+    method?: "functionCalling" | "jsonMode";
+    includeRaw?: IncludeRaw;
+  };
+
+/** @deprecated Use StructuredOutputMethodOptions instead */
+export type StructuredOutputMethodParams<
+  RunOutput,
+  IncludeRaw extends boolean = false
+> = {
+  /** @deprecated Pass schema in as the first argument */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  schema: z.ZodType<RunOutput> | Record<string, any>;
+  name?: string;
+  method?: "functionCalling" | "jsonMode";
+  includeRaw?: IncludeRaw;
+};
+
 export interface BaseLanguageModelInterface<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput = any,
@@ -474,79 +497,54 @@ export abstract class BaseLanguageModel<
   }
 
   withStructuredOutput?<
-    RunInput = BaseLanguageModelInput,
-    // prettier-ignore
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
-  >({
-    schema,
-    name,
-    method,
-    includeRaw,
-  }: {
+    RunOutput extends Record<string, any> = Record<string, any>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    schema: z.ZodEffects<RunOutput> | Record<string, any>;
-    name: string;
-    method?: "functionCalling" | "jsonMode";
-    includeRaw: true;
-  }): Runnable<RunInput, { raw: BaseMessage; parsed: RunOutput }>;
+  >(
+    schema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<false>
+  ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput?<
-    RunInput = BaseLanguageModelInput,
-    // prettier-ignore
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
-  >({
-    schema,
-    name,
-    method,
-    includeRaw,
-  }: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    schema: z.ZodEffects<RunOutput> | Record<string, any>;
-    name: string;
-    method?: "functionCalling" | "jsonMode";
-    includeRaw?: false;
-  }): Runnable<RunInput, RunOutput>;
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    schema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<true>
+  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   /**
    * Model wrapper that returns outputs formatted to match the given schema.
    *
    * @template {BaseLanguageModelInput} RunInput The input type for the Runnable, expected to be the same input for the LLM.
-   * @template {z.ZodObject<any, any, any, any>} RunOutput The output type for the Runnable, expected to be a Zod schema object for structured output validation.
+   * @template {Record<string, any>} RunOutput The output type for the Runnable, expected to be a Zod schema object for structured output validation.
    *
    * @param {z.ZodEffects<RunOutput>} schema The schema for the structured output. Either as a Zod schema or a valid JSON schema object.
+   *   If a Zod schema is passed, the returned attributes will be validated, whereas with JSON schema they will not be.
    * @param {string} name The name of the function to call.
    * @param {"functionCalling" | "jsonMode"} [method=functionCalling] The method to use for getting the structured output. Defaults to "functionCalling".
    * @param {boolean | undefined} [includeRaw=false] Whether to include the raw output in the result. Defaults to false.
    * @returns {Runnable<RunInput, RunOutput> | Runnable<RunInput, { raw: BaseMessage; parsed: RunOutput }>} A new runnable that calls the LLM with structured output.
    */
   withStructuredOutput?<
-    RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
-    // prettier-ignore
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
-  >({
-    schema,
-    name,
-    /**
-     * @default functionCalling
-     */
-    method,
-    /**
-     * @default false
-     */
-    includeRaw,
-  }: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    schema: z.ZodEffects<RunOutput> | Record<string, any>;
-    name: string;
-    method?: "functionCalling" | "jsonMode";
-    includeRaw?: boolean;
-  }):
-    | Runnable<RunInput, RunOutput>
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    schema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<boolean>
+  ):
+    | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<
-        RunInput,
+        BaseLanguageModelInput,
         {
           raw: BaseMessage;
           parsed: RunOutput;
