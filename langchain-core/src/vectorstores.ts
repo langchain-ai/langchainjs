@@ -206,7 +206,7 @@ export interface VectorStoreInterface extends Serializable {
   maxMarginalRelevanceSearch?(
     query: string,
     options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>,
-    callbacks: Callbacks | undefined
+    callbacks?: Callbacks | undefined
   ): Promise<DocumentInterface[]>;
 
   asRetriever(
@@ -311,7 +311,7 @@ export abstract class VectorStore
   async maxMarginalRelevanceSearch?(
     query: string,
     options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>,
-    _callbacks: Callbacks | undefined // implement passing to embedQuery later
+    _callbacks?: Callbacks | undefined // implement passing to embedQuery later
   ): Promise<DocumentInterface[]>;
 
   static fromTexts(
