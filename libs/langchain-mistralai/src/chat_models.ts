@@ -336,15 +336,14 @@ export class ChatMistralAI<
     options?: this["ParsedCallOptions"]
   ): Omit<MistralAIChatCompletionOptions, "messages"> {
     const { response_format, tools, tool_choice } = options ?? {};
-    const mistralAITools: MistralAIToolInput[] =
-      tools
-        ?.map((tool) => {
-          if ("lc_namespace" in tool) {
-            return _convertStructuredToolToMistralTool([tool]);
-          }
-          return tool;
-        })
-        .flat() ?? [];
+    const mistralAITools = tools
+      ?.map((tool) => {
+        if ("lc_namespace" in tool) {
+          return _convertStructuredToolToMistralTool([tool]);
+        }
+        return tool;
+      })
+      .flat();
     const params: Omit<MistralAIChatCompletionOptions, "messages"> = {
       model: this.modelName,
       tools: mistralAITools,
