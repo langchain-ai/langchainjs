@@ -131,9 +131,9 @@ export default function Feedback() {
     try {
       const ipAddress = await getIpAddress();
 
-    /** @type {Omit<Database["public"]["Tables"]["feedback"]["Row"], "id" | "created_at">}  */
-    const data = {
-        is_good: feedback === "good" ? true : false,
+      /** @type {Omit<Database["public"]["Tables"]["feedback"]["Row"], "id" | "created_at">}  */
+      const data = {
+        is_good: feedback === "good",
         url: window.location.pathname,
         user_ip: ipAddress,
         project: LANGCHAIN_PROJECT_NAME,
