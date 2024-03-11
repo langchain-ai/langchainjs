@@ -66,12 +66,6 @@ const config = {
         },
       }),
     }),
-    [
-      "docusaurus2-dotenv",
-      {
-        systemvars: true,
-      },
-    ],
   ],
 
   presets: [
