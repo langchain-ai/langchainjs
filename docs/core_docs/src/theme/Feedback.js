@@ -90,7 +90,13 @@ function SvgThumbsDown() {
   );
 }
 
+/**
+ * Generated type for the Supabase DB schema.
+ * @typedef {import('../../types/supabase').Database} Database
+ */
+
 const FEEDBACK_COOKIE_PREFIX = "feedbackSent";
+/** @type {Database["public"]["Enums"]["project_type"]} */
 const LANGCHAIN_PROJECT_NAME = "langchain_js_docs";
 
 /**
@@ -105,28 +111,19 @@ export default function Feedback() {
   const { setCookie, checkCookie } = useCookie();
   const [feedbackSent, setFeedbackSent] = useState(false);
 
-  /**
-   * @param {"good" | "bad"} feedback
-   */
+  /** @param {"good" | "bad"} feedback */
   const handleFeedback = async (feedback) => {
-    if (
-      !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-      !process.env.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY
-    ) {
-      console.error("Supabase not configured", process.env);
+    if (process.env.NODE_ENV !== "production") {
+      console.log("Feedback (dev)");
       return;
     }
-
-    // if (process.env.NODE_ENV !== "production") {
-    //   console.log("Feedback (dev)");
-    //   return;
-    // }
 
     const cookieName = `${FEEDBACK_COOKIE_PREFIX}_${window.location.pathname}`;
     if (checkCookie(cookieName)) {
       return;
     }
 
+    /** @type {Database} */
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY
@@ -134,8 +131,9 @@ export default function Feedback() {
     try {
       const ipAddress = await getIpAddress();
 
-      const data = {
-        type: feedback,
+    /** @type {Omit<Database["public"]["Tables"]["feedback"]["Row"], "id" | "created_at">}  */
+    const data = {
+        is_good: feedback === "good" ? true : false,
         url: window.location.pathname,
         user_ip: ipAddress,
         project: LANGCHAIN_PROJECT_NAME,
