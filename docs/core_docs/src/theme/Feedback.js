@@ -1,6 +1,7 @@
 /* eslint-disable no-return-assign, react/jsx-props-no-spreading */
 import React, { useState, useEffect } from "react";
 import gtag from "../analytics";
+import { createClient } from '@supabase/supabase-js'
 
 const useCookie = () => {
   /**
@@ -91,26 +92,75 @@ function SvgThumbsDown() {
 }
 
 const FEEDBACK_COOKIE_PREFIX = "feedbackSent";
+const LANGCHAIN_PROJECT_NAME = "langchain_js_docs";
+
+/**
+ * @returns {Promise<string>}
+ */
+const getIpAddress = async () => {
+  const response = await fetch("https://api.ipify.org?format=json");
+  return (await response.json()).ip;
+}
 
 export default function Feedback() {
   const { setCookie, checkCookie } = useCookie();
   const [feedbackSent, setFeedbackSent] = useState(false);
+  const [userIp, setUserIp] = useState("")
+
+  useEffect(() => {
+    try {
+      getIpAddress().then((ip) => setUserIp(ip));
+    } catch (e) {
+      console.error("Failed to fetch", {
+        e
+      })
+    }
+  }, [])
 
   /**
    * @param {"good" | "bad"} feedback
    */
-  const handleFeedback = (feedback) => {
+  const handleFeedback = async (feedback) => {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY) {
+      console.error("Supabase not configured", process.env);
+      return;
+    }
+
+    // if (process.env.NODE_ENV !== "production") {
+    //   console.log({
+    //     type: feedback,
+    //     url: window.location.pathname,
+    //     user_ip: userIp,
+    //     project: LANGCHAIN_PROJECT_NAME
+    //   }, "Feedback (dev)");
+    //   return;
+    // }
+
     const cookieName = `${FEEDBACK_COOKIE_PREFIX}_${window.location.pathname}`;
     if (checkCookie(cookieName)) {
       return;
     }
 
-    const feedbackEnv =
-      process.env.NODE_ENV === "production"
-        ? "page_feedback"
-        : "page_feedback_dev";
+    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY);
+    try {
+      const { error } = await supabase
+        .from('feedback')
+        .insert({
+          type: feedback,
+          url: window.location.pathname,
+          user_ip: userIp,
+          project: LANGCHAIN_PROJECT_NAME
+        });
+      if (error) {
+        throw error;
+      }
+    } catch (e) {
+      console.error("Failed to send feedback", {
+        e
+      });
+      return;
+    }
 
-    gtag("event", `${feedbackEnv}_${feedback}`, {});
     // Set a cookie to prevent feedback from being sent multiple times
     setCookie(cookieName, window.location.pathname, 1);
     setFeedbackSent(true);
@@ -161,16 +211,16 @@ export default function Feedback() {
               {...defaultFields}
               role="button" // Make it recognized as an interactive element
               tabIndex={0} // Make it focusable
-              onKeyDown={(e) => {
+              onKeyDown={async (e) => {
                 // Handle keyboard interaction
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  handleFeedback("good");
+                  await handleFeedback("good");
                 }
               }}
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.preventDefault();
-                handleFeedback("good");
+                await handleFeedback("good");
               }}
             >
               <SvgThumbsUp />
@@ -179,16 +229,16 @@ export default function Feedback() {
               {...defaultFields}
               role="button" // Make it recognized as an interactive element
               tabIndex={0} // Make it focusable
-              onKeyDown={(e) => {
+              onKeyDown={async (e) => {
                 // Handle keyboard interaction
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  handleFeedback("bad");
+                  await handleFeedback("bad");
                 }
               }}
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.preventDefault();
-                handleFeedback("bad");
+                await handleFeedback("bad");
               }}
             >
               <SvgThumbsDown />
