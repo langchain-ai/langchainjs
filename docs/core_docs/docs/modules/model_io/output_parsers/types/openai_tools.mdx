@@ -2,9 +2,6 @@
 title: OpenAI Tools
 ---
 
-
-
-
 These output parsers extract tool calls from OpenAI’s function calling
 API responses. This means they are only usable with models that support
 function calling, and specifically the latest `tools` and `tool_choice`
@@ -14,27 +11,26 @@ before reading this guide.
 
 There are a few different variants of output parsers:
 
--   [`JsonOutputToolsParser`](https://api.js.langchain.com/classes/langchain_output_parsers.JsonOutputToolsParser.html):
-    Returns the arguments of the function call as JSON
--   [`JsonOutputKeyToolsParser`](https://api.js.langchain.com/classes/langchain_output_parsers.JsonOutputKeyToolsParser.html):
-    Returns the value of specific key in the function call as JSON
+- [`JsonOutputToolsParser`](https://api.js.langchain.com/classes/langchain_output_parsers.JsonOutputToolsParser.html):
+  Returns the arguments of the function call as JSON
+- [`JsonOutputKeyToolsParser`](https://api.js.langchain.com/classes/langchain_output_parsers.JsonOutputKeyToolsParser.html):
+  Returns the value of specific key in the function call as JSON
 
 ```typescript
-import { ChatPromptTemplate } from '@langchain/core/prompts';
-import { ChatOpenAI } from '@langchain/openai';
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { ChatOpenAI } from "@langchain/openai";
 ```
-
 
 ```typescript
 const properties = {
   setup: {
     type: "string",
-    description: "The setup for the joke"
+    description: "The setup for the joke",
   },
   punchline: {
     type: "string",
-    description: "The joke's punchline"
-  }
+    description: "The joke's punchline",
+  },
 };
 
 const tool = {
@@ -47,12 +43,11 @@ const tool = {
       title: "Joke",
       type: "object",
       properties,
-      required: ["setup", "punchline"]
+      required: ["setup", "punchline"],
     },
   },
-}
+};
 ```
-
 
 ```typescript
 import { ChatPromptTemplate } from "@langchain/core/prompts";
@@ -68,9 +63,12 @@ const llmWithTools = llm.bind({
 });
 
 const prompt = ChatPromptTemplate.fromMessages([
-  ["system", "You are the funniest comedian, tell the user a joke about their topic."],
-  ["human", "Topic: {topic}"]
-])
+  [
+    "system",
+    "You are the funniest comedian, tell the user a joke about their topic.",
+  ],
+  ["human", "Topic: {topic}"],
+]);
 ```
 
 Now we can use LCEL to pipe our prompt and LLM together.
@@ -79,17 +77,15 @@ Now we can use LCEL to pipe our prompt and LLM together.
 const chain = prompt.pipe(llmWithTools);
 ```
 
-
 ```typescript
 const result = await chain.invoke({ topic: "Large Language Models" });
 ```
-
 
 ```typescript
 result.additional_kwargs;
 ```
 
-``` text
+```text
 {
   function_call: undefined,
   tool_calls: [
@@ -117,17 +113,15 @@ import { JsonOutputToolsParser } from "langchain/output_parsers";
 const outputParser = new JsonOutputToolsParser();
 ```
 
-
 ```typescript
 const chain = prompt.pipe(llmWithTools).pipe(outputParser);
 ```
-
 
 ```typescript
 await chain.invoke({ topic: "Large Language Models" });
 ```
 
-``` text
+```text
 [
   {
     type: "joke",
@@ -153,17 +147,15 @@ import { JsonOutputKeyToolsParser } from "langchain/output_parsers";
 const outputParser = new JsonOutputKeyToolsParser({ keyName: "joke" });
 ```
 
-
 ```typescript
 const chain = prompt.pipe(llmWithTools).pipe(outputParser);
 ```
 
-
 ```typescript
-await chain.invoke({ topic: "Large Language Models" })
+await chain.invoke({ topic: "Large Language Models" });
 ```
 
-``` text
+```text
 [
   {
     setup: "Why did the large language model go to therapy?",
@@ -186,22 +178,19 @@ const outputParserSingle = new JsonOutputKeyToolsParser({
 });
 ```
 
-
 ```typescript
 const chain = prompt.pipe(llmWithTools);
 ```
-
 
 ```typescript
 const response = await chain.invoke({ topic: "Large Language Models" });
 ```
 
-
 ```typescript
-await outputParserSingle.invoke(response)
+await outputParserSingle.invoke(response);
 ```
 
-``` text
+```text
 {
   setup: "Why did the large language model go on a diet?",
   punchline: "It wanted to shed some excess bytes!"

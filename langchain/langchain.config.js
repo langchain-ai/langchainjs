@@ -140,6 +140,7 @@ export const config = {
     "vectorstores/chroma": "vectorstores/chroma",
     "vectorstores/googlevertexai": "vectorstores/googlevertexai",
     "vectorstores/hnswlib": "vectorstores/hnswlib",
+    "vectorstores/hanavector": "vectorstores/hanavector",
     "vectorstores/faiss": "vectorstores/faiss",
     "vectorstores/weaviate": "vectorstores/weaviate",
     "vectorstores/lancedb": "vectorstores/lancedb",

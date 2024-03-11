@@ -2,9 +2,6 @@
 title: Using local models
 ---
 
-
-
-
 The popularity of projects like
 [PrivateGPT](https://github.com/imartinez/privateGPT),
 [llama.cpp](https://github.com/ggerganov/llama.cpp), and
@@ -60,19 +57,21 @@ import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { CheerioWebBaseLoader } from "langchain/document_loaders/web/cheerio";
 ```
 
-
 ```typescript
 const loader = new CheerioWebBaseLoader(
   "https://lilianweng.github.io/posts/2023-06-23-agent/"
 );
 const docs = await loader.load();
 
-const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 500, chunkOverlap: 0 });
+const textSplitter = new RecursiveCharacterTextSplitter({
+  chunkSize: 500,
+  chunkOverlap: 0,
+});
 const allSplits = await textSplitter.splitDocuments(docs);
-console.log(allSplits.length)
+console.log(allSplits.length);
 ```
 
-``` text
+```text
 146
 ```
 
@@ -85,7 +84,10 @@ import { OllamaEmbeddings } from "@langchain/community/embeddings/ollama";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 
 const embeddings = new OllamaEmbeddings();
-const vectorStore = await MemoryVectorStore.fromDocuments(allSplits, embeddings);
+const vectorStore = await MemoryVectorStore.fromDocuments(
+  allSplits,
+  embeddings
+);
 ```
 
 Test similarity search is working with our local embeddings.
@@ -93,10 +95,10 @@ Test similarity search is working with our local embeddings.
 ```typescript
 const question = "What are the approaches to Task Decomposition?";
 const docs = await vectorStore.similaritySearch(question);
-console.log(docs.length)
+console.log(docs.length);
 ```
 
-``` text
+```text
 4
 ```
 
@@ -113,16 +115,16 @@ const ollamaLlm = new ChatOllama({
   baseUrl: "http://localhost:11434", // Default value
   model: "llama2", // Default value
 });
-
 ```
 
-
 ```typescript
-const response = await ollamaLlm.invoke("Simulate a rap battle between Stephen Colbert and John Oliver");
+const response = await ollamaLlm.invoke(
+  "Simulate a rap battle between Stephen Colbert and John Oliver"
+);
 console.log(response.content);
 ```
 
-``` text
+```text
 
 [The stage is set for a fierce rap battle between two of the funniest men on television. Stephen Colbert and John Oliver are standing face to face, each with their own microphone and confident smirk on their face.]
 
@@ -184,15 +186,16 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
 
-const prompt = PromptTemplate.fromTemplate("Summarize the main themes in these retrieved docs: {context}");
+const prompt = PromptTemplate.fromTemplate(
+  "Summarize the main themes in these retrieved docs: {context}"
+);
 
 const chain = await createStuffDocumentsChain({
   llm: ollamaLlm,
   outputParser: new StringOutputParser(),
   prompt,
-})
+});
 ```
-
 
 ```typescript
 const question = "What are the approaches to Task Decomposition?";
@@ -202,7 +205,7 @@ await chain.invoke({
 });
 ```
 
-``` text
+```text
 "The main themes retrieved from the provided documents are:\n" +
   "\n" +
   "1. Sensory Memory: The ability to retain"... 1117 more characters
@@ -232,12 +235,11 @@ const chain = await createStuffDocumentsChain({
 });
 ```
 
-
 ```typescript
 await chain.invoke({ context: docs, question });
 ```
 
-``` text
+```text
 "Task decomposition is a crucial step in breaking down complex problems into manageable parts for eff"... 1095 more characters
 ```
 
@@ -252,7 +254,10 @@ from our vector store based on the user question.
 This will use a QA default prompt and will retrieve from the vectorDB.
 
 ```typescript
-import { RunnablePassthrough, RunnableSequence } from "@langchain/core/runnables";
+import {
+  RunnablePassthrough,
+  RunnableSequence,
+} from "@langchain/core/runnables";
 import { formatDocumentsAsString } from "langchain/util/document";
 
 const retriever = vectorStore.asRetriever();
@@ -273,7 +278,7 @@ const qaChain = RunnableSequence.from([
 await qaChain.invoke({ question });
 ```
 
-``` text
+```text
 "Based on the context provided, I understand that you are asking me to answer a question related to m"... 948 more characters
 ```
 

@@ -2,9 +2,6 @@
 title: Add chat history
 ---
 
-
-
-
 In many Q&A applications we want to allow the user to have a
 back-and-forth conversation, meaning the application needs some sort of
 “memory” of past questions and answers, and some logic for incorporating
@@ -78,14 +75,16 @@ export LANGCHAIN_API_KEY=YOUR_KEY
 import "cheerio";
 import { CheerioWebBaseLoader } from "langchain/document_loaders/web/cheerio";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { MemoryVectorStore } from "langchain/vectorstores/memory"
+import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
 import { pull } from "langchain/hub";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { RunnableSequence, RunnablePassthrough } from "@langchain/core/runnables";
+import {
+  RunnableSequence,
+  RunnablePassthrough,
+} from "@langchain/core/runnables";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 ```
-
 
 ```typescript
 import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
@@ -96,9 +95,15 @@ const loader = new CheerioWebBaseLoader(
 
 const docs = await loader.load();
 
-const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000, chunkOverlap: 200 });
+const textSplitter = new RecursiveCharacterTextSplitter({
+  chunkSize: 1000,
+  chunkOverlap: 200,
+});
 const splits = await textSplitter.splitDocuments(docs);
-const vectorStore = await MemoryVectorStore.fromDocuments(splits, new OpenAIEmbeddings());
+const vectorStore = await MemoryVectorStore.fromDocuments(
+  splits,
+  new OpenAIEmbeddings()
+);
 
 // Retrieve and generate using the relevant snippets of the blog.
 const retriever = vectorStore.asRetriever();
@@ -111,15 +116,14 @@ const ragChain = await createStuffDocumentsChain({
 });
 ```
 
-
 ```typescript
 await ragChain.invoke({
   context: await retriever.invoke("What is Task Decomposition?"),
-  question: "What is Task Decomposition?"
+  question: "What is Task Decomposition?",
 });
 ```
 
-``` text
+```text
 "Task decomposition is a technique used to break down complex tasks into smaller and simpler steps. I"... 208 more characters
 ```
 
@@ -136,7 +140,10 @@ be inserted after the system message and before the human message
 containing the latest question.
 
 ```typescript
-import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
 
 const contextualizeQSystemPrompt = `Given a chat history and the latest user question
 which might reference context in the chat history, formulate a standalone question
@@ -146,9 +153,11 @@ just reformulate it if needed and otherwise return it as is.`;
 const contextualizeQPrompt = ChatPromptTemplate.fromMessages([
   ["system", contextualizeQSystemPrompt],
   new MessagesPlaceholder("chat_history"),
-  ["human", "{question}"]
+  ["human", "{question}"],
 ]);
-const contextualizeQChain = contextualizeQPrompt.pipe(llm).pipe(new StringOutputParser());
+const contextualizeQChain = contextualizeQPrompt
+  .pipe(llm)
+  .pipe(new StringOutputParser());
 ```
 
 Using this chain we can ask follow-up questions that reference past
@@ -160,13 +169,13 @@ import { AIMessage, HumanMessage } from "@langchain/core/messages";
 await contextualizeQChain.invoke({
   chat_history: [
     new HumanMessage("What does LLM stand for?"),
-    new AIMessage("Large language model") 
+    new AIMessage("Large language model"),
   ],
   question: "What is meant by large",
-})
+});
 ```
 
-``` text
+```text
 'What is the definition of "large" in the context of a language model?'
 ```
 
@@ -180,8 +189,14 @@ advantage of the fact that if a function in an LCEL chain returns
 another chain, that chain will itself be invoked.
 
 ```typescript
-import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts"
-import { RunnablePassthrough, RunnableSequence } from "@langchain/core/runnables";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
+import {
+  RunnablePassthrough,
+  RunnableSequence,
+} from "@langchain/core/runnables";
 import { formatDocumentsAsString } from "langchain/util/document";
 
 const qaSystemPrompt = `You are an assistant for question-answering tasks.
@@ -189,12 +204,12 @@ Use the following pieces of retrieved context to answer the question.
 If you don't know the answer, just say that you don't know.
 Use three sentences maximum and keep the answer concise.
 
-{context}`
+{context}`;
 
 const qaPrompt = ChatPromptTemplate.fromMessages([
   ["system", qaSystemPrompt],
   new MessagesPlaceholder("chat_history"),
-  ["human", "{question}"]
+  ["human", "{question}"],
 ]);
 
 const contextualizedQuestion = (input: Record<string, unknown>) => {
@@ -215,24 +230,23 @@ const ragChain = RunnableSequence.from([
     },
   }),
   qaPrompt,
-  llm
-])
+  llm,
+]);
 ```
-
 
 ```typescript
 let chat_history = [];
 
 const question = "What is task decomposition?";
 const aiMsg = await ragChain.invoke({ question, chat_history });
-console.log(aiMsg)
+console.log(aiMsg);
 chat_history = chat_history.concat(aiMsg);
 
 const secondQuestion = "What are common ways of doing it?";
 await ragChain.invoke({ question: secondQuestion, chat_history });
 ```
 
-``` text
+```text
 AIMessage {
   lc_serializable: true,
   lc_kwargs: {
@@ -246,7 +260,7 @@ AIMessage {
 }
 ```
 
-``` text
+```text
 AIMessage {
   lc_serializable: true,
   lc_kwargs: {
@@ -273,12 +287,12 @@ inserting and updating it.
 
 For this we can use:
 
--   [BaseChatMessageHistory](../../../docs/modules/memory/chat_messages/):
-    Store chat history.
--   [RunnableWithMessageHistory](../../../docs/expression_language/how_to/message_history):
-    Wrapper for an LCEL chain and a `BaseChatMessageHistory` that
-    handles injecting chat history into inputs and updating it after
-    each invocation.
+- [BaseChatMessageHistory](../../../docs/modules/memory/chat_messages/):
+  Store chat history.
+- [RunnableWithMessageHistory](../../../docs/expression_language/how_to/message_history):
+  Wrapper for an LCEL chain and a `BaseChatMessageHistory` that
+  handles injecting chat history into inputs and updating it after
+  each invocation.
 
 For a detailed walkthrough of how to use these classes together to
 create a stateful conversational chain, head to the [How to add message

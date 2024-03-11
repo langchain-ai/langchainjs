@@ -3,9 +3,6 @@ sidebar_position: 3
 title: Streaming
 ---
 
-
-
-
 # Streaming With LangChain
 
 Streaming is critical in making applications based on LLMs feel
@@ -16,10 +13,10 @@ and agents implement the LangChain Runnable Interface.
 
 This interface provides two general approaches to stream content:
 
--   `.stream()`: a default implementation of streaming that streams the
-    final output from the chain.
--   `streamEvents()` and `streamLog()`: these provide a way to stream
-    both intermediate steps and final output from the chain.
+- `.stream()`: a default implementation of streaming that streams the
+  final output from the chain.
+- `streamEvents()` and `streamLog()`: these provide a way to stream
+  both intermediate steps and final output from the chain.
 
 Let’s take a look at both approaches!
 
@@ -55,7 +52,7 @@ by token.
 import "dotenv/config";
 ```
 
-``` text
+```text
 [Module: null prototype] { default: {} }
 ```
 
@@ -68,11 +65,11 @@ const stream = await model.stream("Hello! Tell me about yourself.");
 const chunks = [];
 for await (const chunk of stream) {
   chunks.push(chunk);
-  console.log(`${chunk.content}|`)
+  console.log(`${chunk.content}|`);
 }
 ```
 
-``` text
+```text
 |
 Hello|
 !|
@@ -171,10 +168,10 @@ AI|
 Let’s have a look at one of the raw chunks:
 
 ```typescript
-chunks[0]
+chunks[0];
 ```
 
-``` text
+```text
 AIMessageChunk {
   lc_serializable: true,
   lc_kwargs: { content: "", additional_kwargs: {} },
@@ -198,10 +195,10 @@ for (const chunk of chunks.slice(1, 5)) {
   finalChunk = finalChunk.concat(chunk);
 }
 
-finalChunk
+finalChunk;
 ```
 
-``` text
+```text
 AIMessageChunk {
   lc_serializable: true,
   lc_kwargs: { content: "Hello! I'm", additional_kwargs: {} },
@@ -235,7 +232,6 @@ Runnable interface.
 
 :::
 
-
 ```typescript
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
@@ -251,11 +247,11 @@ const stream = await chain.stream({
 });
 
 for await (const chunk of stream) {
-  console.log(`${chunk}|`)
+  console.log(`${chunk}|`);
 }
 ```
 
-``` text
+```text
 |
 Sure|
 !|
@@ -328,7 +324,7 @@ into a valid state.
 Let’s see such a parser in action to understand what this means.
 
 ```typescript
-import { JsonOutputParser } from "@langchain/core/output_parsers"
+import { JsonOutputParser } from "@langchain/core/output_parsers";
 
 const chain = model.pipe(new JsonOutputParser());
 const stream = await chain.stream(
@@ -340,7 +336,7 @@ for await (const chunk of stream) {
 }
 ```
 
-``` text
+```text
 { countries: [] }
 { countries: [ { name: "" } ] }
 { countries: [ { name: "France" } ] }
@@ -464,7 +460,6 @@ on **input streams** can break streaming functionality via `stream`.
 
 :::
 
-
 :::tip
 
 Later, we will discuss the `streamEvents` API which streams results from
@@ -473,7 +468,6 @@ even if the chain contains steps that only operate on **finalized
 inputs**.
 
 :::
-
 
 ```typescript
 // A function that operates on finalized inputs
@@ -485,7 +479,7 @@ const extractCountryNames = (inputs: Record<string, any>) => {
     return "";
   }
   return JSON.stringify(inputs.countries.map((country) => country.name));
-}
+};
 
 const chain = model.pipe(new JsonOutputParser()).pipe(extractCountryNames);
 
@@ -498,7 +492,7 @@ for await (const chunk of stream) {
 }
 ```
 
-``` text
+```text
 ["France","Spain","Japan"]
 ```
 
@@ -522,22 +516,23 @@ const prompt = ChatPromptTemplate.fromTemplate(template);
 const vectorstore = await MemoryVectorStore.fromTexts(
   ["mitochondria is the powerhouse of the cell", "buildings are made of brick"],
   [{}, {}],
-  new OpenAIEmbeddings(),
+  new OpenAIEmbeddings()
 );
 
 const retriever = vectorstore.asRetriever();
 
 const chunks = [];
 
-for await (const chunk of await retriever.stream("What is the powerhouse of the cell?")) {
+for await (const chunk of await retriever.stream(
+  "What is the powerhouse of the cell?"
+)) {
   chunks.push(chunk);
 }
 
 console.log(chunks);
-
 ```
 
-``` text
+```text
 [
   [
     Document {
@@ -569,18 +564,21 @@ starting after the last non-streaming step in the chain.
 Here’s an example of this:
 
 ```typescript
-import { RunnablePassthrough, RunnableSequence } from "@langchain/core/runnables";
+import {
+  RunnablePassthrough,
+  RunnableSequence,
+} from "@langchain/core/runnables";
 import type { Document } from "@langchain/core/documents";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 
 const formatDocs = (docs: Document[]) => {
-  return docs.map((doc) => doc.pageContent).join("\n-----\n")
-}
+  return docs.map((doc) => doc.pageContent).join("\n-----\n");
+};
 
 const retrievalChain = RunnableSequence.from([
   {
     context: retriever.pipe(formatDocs),
-    question: new RunnablePassthrough()
+    question: new RunnablePassthrough(),
   },
   prompt,
   model,
@@ -588,16 +586,17 @@ const retrievalChain = RunnableSequence.from([
 ]);
 ```
 
-
 ```typescript
-const stream = await retrievalChain.stream("What is the powerhouse of the cell?");
+const stream = await retrievalChain.stream(
+  "What is the powerhouse of the cell?"
+);
 
 for await (const chunk of stream) {
   console.log(`${chunk}|`);
 }
 ```
 
-``` text
+```text
 |
 The|
  powerhouse|
@@ -628,9 +627,9 @@ Introduced in (**langchain/core?**) **0.1.27**.
 
 For the `streamEvents` method to work properly:
 
--   Any custom functions / runnables must propragate callbacks
--   Set proper parameters on models to force the LLM to stream tokens.
--   Let us know if anything doesn’t work as expected!
+- Any custom functions / runnables must propragate callbacks
+- Set proper parameters on models to force the LLM to stream tokens.
+- Let us know if anything doesn’t work as expected!
 
 ### Event Reference
 
@@ -647,7 +646,7 @@ and rather than for `start` events.
 :::
 
 | event              | name               | chunk                                        | input                 | output                                          |
-|----------|---------|--------------|--------------------|---------------------|
+| ------------------ | ------------------ | -------------------------------------------- | --------------------- | ----------------------------------------------- |
 | on_llm_start       | \[model name\]     |                                              | {‘input’: ‘hello’}    |                                                 |
 | on_llm_stream      | \[model name\]     | ‘Hello’ `or` AIMessageChunk(content=“hello”) |                       |                                                 |
 | on_llm_end         | \[model name\]     |                                              | ‘Hello human!’        | {“generations”: \[…\], “llmOutput”: None, …}    |
@@ -677,7 +676,7 @@ for await (const event of eventStream) {
 }
 ```
 
-``` text
+```text
 13
 ```
 
@@ -702,7 +701,7 @@ events.
 events.slice(0, 3);
 ```
 
-``` text
+```text
 [
   {
     run_id: "ce08e556-e8e7-4bfb-b8c0-e51926fc9c0c",
@@ -753,7 +752,7 @@ events.slice(0, 3);
 events.slice(-2);
 ```
 
-``` text
+```text
 [
   {
     event: "on_llm_stream",
@@ -792,9 +791,8 @@ the streaming events API.
 const chain = model.pipe(new JsonOutputParser());
 const eventStream = await chain.streamEvents(
   `Output a list of the countries france, spain and japan and their populations in JSON format. Use a dict with an outer key of "countries" which contains a list of countries. Each country should have the key "name" and "population"`,
-  { version: "v1" },
+  { version: "v1" }
 );
-
 
 const events = [];
 for await (const event of eventStream) {
@@ -802,7 +800,7 @@ for await (const event of eventStream) {
 }
 ```
 
-``` text
+```text
 117
 ```
 
@@ -819,7 +817,7 @@ The three start events correspond to:
 events.slice(0, 3);
 ```
 
-``` text
+```text
 [
   {
     run_id: "c486d08d-b426-43c3-8fe0-a943db575133",
@@ -862,7 +860,7 @@ let eventCount = 0;
 
 const eventStream = await chain.streamEvents(
   `Output a list of the countries france, spain and japan and their populations in JSON format. Use a dict with an outer key of "countries" which contains a list of countries. Each country should have the key "name" and "population"`,
-  { version: "v1" },
+  { version: "v1" }
 );
 
 for await (const event of eventStream) {
@@ -880,15 +878,15 @@ for await (const event of eventStream) {
 }
 ```
 
-``` text
-Chat model chunk: 
+```text
+Chat model chunk:
 Chat model chunk: {"
 Chat model chunk: countries
 Chat model chunk: ":
 Parser chunk: {"countries":[]}
 Chat model chunk:  [
 
-Chat model chunk:    
+Chat model chunk:
 Chat model chunk:  {"
 Chat model chunk: name
 Chat model chunk: ":
@@ -921,16 +919,14 @@ You can filter by either component `name`, component `tags` or component
 #### By Name
 
 ```typescript
-const chain = model.withConfig({ runName: "model" })
-  .pipe(
-    new JsonOutputParser().withConfig({ runName: "my_parser" })
-  );
-
+const chain = model
+  .withConfig({ runName: "model" })
+  .pipe(new JsonOutputParser().withConfig({ runName: "my_parser" }));
 
 const eventStream = await chain.streamEvents(
   `Output a list of the countries france, spain and japan and their populations in JSON format. Use a dict with an outer key of "countries" which contains a list of countries. Each country should have the key "name" and "population"`,
   { version: "v1" },
-  { includeNames: ["my_parser"] },
+  { includeNames: ["my_parser"] }
 );
 
 let eventCount = 0;
@@ -945,7 +941,7 @@ for await (const event of eventStream) {
 }
 ```
 
-``` text
+```text
 {
   event: "on_parser_start",
   name: "my_parser",
@@ -1053,16 +1049,14 @@ for await (const event of eventStream) {
 #### By type
 
 ```typescript
-const chain = model.withConfig({ runName: "model" })
-  .pipe(
-    new JsonOutputParser().withConfig({ runName: "my_parser" })
-  );
-
+const chain = model
+  .withConfig({ runName: "model" })
+  .pipe(new JsonOutputParser().withConfig({ runName: "my_parser" }));
 
 const eventStream = await chain.streamEvents(
   `Output a list of the countries france, spain and japan and their populations in JSON format. Use a dict with an outer key of "countries" which contains a list of countries. Each country should have the key "name" and "population"`,
   { version: "v1" },
-  { includeTypes: ["llm"] },
+  { includeTypes: ["llm"] }
 );
 
 let eventCount = 0;
@@ -1077,7 +1071,7 @@ for await (const event of eventStream) {
 }
 ```
 
-``` text
+```text
 {
   event: "on_llm_start",
   name: "model",
@@ -1310,17 +1304,15 @@ If you’re using tags to filter, make sure that this is what you want.
 
 :::
 
-
 ```typescript
 const chain = model
   .pipe(new JsonOutputParser().withConfig({ runName: "my_parser" }))
   .withConfig({ tags: ["my_chain"] });
 
-
 const eventStream = await chain.streamEvents(
   `Output a list of the countries france, spain and japan and their populations in JSON format. Use a dict with an outer key of "countries" which contains a list of countries. Each country should have the key "name" and "population"`,
   { version: "v1" },
-  { includeTags: ["my_chain"] },
+  { includeTags: ["my_chain"] }
 );
 
 let eventCount = 0;
@@ -1335,7 +1327,7 @@ for await (const event of eventStream) {
 }
 ```
 
-``` text
+```text
 {
   run_id: "e7abe3de-2402-49f1-a9d7-622f6aa2f5b9",
   event: "on_chain_start",
@@ -1527,7 +1519,7 @@ const extractCountryNames = (inputs: Record<string, any>) => {
     return "";
   }
   return JSON.stringify(inputs.countries.map((country) => country.name));
-}
+};
 
 const chain = model.pipe(new JsonOutputParser()).pipe(extractCountryNames);
 
@@ -1540,7 +1532,7 @@ for await (const chunk of stream) {
 }
 ```
 
-``` text
+```text
 ["France","Spain","Japan"]
 ```
 
@@ -1553,7 +1545,7 @@ output from the model and the parser.
 ```typescript
 const eventStream = await chain.streamEvents(
   `output a list of the countries france, spain and japan and their populations in JSON format. Use a dict with an outer key of "countries" which contains a list of countries. Each country should have the key "name" and "population"`,
-  { version: "v1" },
+  { version: "v1" }
 );
 
 let eventCount = 0;
@@ -1573,23 +1565,23 @@ for await (const event of eventStream) {
 }
 ```
 
-``` text
-Chat model chunk: 
+```text
+Chat model chunk:
 Parser chunk: {}
 Chat model chunk: {
 
-Chat model chunk:  
+Chat model chunk:
 Chat model chunk:  "
 Chat model chunk: countries
 Chat model chunk: ":
 Parser chunk: {"countries":[]}
 Chat model chunk:  [
 
-Chat model chunk:    
+Chat model chunk:
 Parser chunk: {"countries":[{}]}
 Chat model chunk:  {
 
-Chat model chunk:      
+Chat model chunk:
 Chat model chunk:  "
 Chat model chunk: name
 Chat model chunk: ":
@@ -1599,7 +1591,7 @@ Parser chunk: {"countries":[{"name":"France"}]}
 Chat model chunk: France
 Chat model chunk: ",
 
-Chat model chunk:      
+Chat model chunk:
 Chat model chunk:  "
 Chat model chunk: population
 Chat model chunk: ":

@@ -2,9 +2,6 @@
 title: Streaming
 ---
 
-
-
-
 Often in Q&A applications it’s important to show users the sources that
 were used to generate the answer. The simplest way to do this is for the
 chain to return the Documents that were retrieved in each generation.
@@ -67,15 +64,18 @@ sources](../../../docs/use_cases/question_answering/sources) guide:
 import "cheerio";
 import { CheerioWebBaseLoader } from "langchain/document_loaders/web/cheerio";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { MemoryVectorStore } from "langchain/vectorstores/memory"
+import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
 import { pull } from "langchain/hub";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { formatDocumentsAsString } from "langchain/util/document";
-import { RunnableSequence, RunnablePassthrough, RunnableMap } from "@langchain/core/runnables";
+import {
+  RunnableSequence,
+  RunnablePassthrough,
+  RunnableMap,
+} from "@langchain/core/runnables";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 ```
-
 
 ```typescript
 const loader = new CheerioWebBaseLoader(
@@ -84,9 +84,15 @@ const loader = new CheerioWebBaseLoader(
 
 const docs = await loader.load();
 
-const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000, chunkOverlap: 200 });
+const textSplitter = new RecursiveCharacterTextSplitter({
+  chunkSize: 1000,
+  chunkOverlap: 200,
+});
 const splits = await textSplitter.splitDocuments(docs);
-const vectorStore = await MemoryVectorStore.fromDocuments(splits, new OpenAIEmbeddings());
+const vectorStore = await MemoryVectorStore.fromDocuments(
+  splits,
+  new OpenAIEmbeddings()
+);
 
 // Retrieve and generate using the relevant snippets of the blog.
 const retriever = vectorStore.asRetriever();
@@ -94,19 +100,23 @@ const prompt = await pull<ChatPromptTemplate>("rlm/rag-prompt");
 const llm = new ChatOpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 });
 
 const ragChainFromDocs = RunnableSequence.from([
-  RunnablePassthrough.assign({ context: (input) => formatDocumentsAsString(input.context) }),
+  RunnablePassthrough.assign({
+    context: (input) => formatDocumentsAsString(input.context),
+  }),
   prompt,
   llm,
-  new StringOutputParser()
+  new StringOutputParser(),
 ]);
 
-let ragChainWithSource = new RunnableMap({ steps: { context: retriever, question: new RunnablePassthrough() }})
+let ragChainWithSource = new RunnableMap({
+  steps: { context: retriever, question: new RunnablePassthrough() },
+});
 ragChainWithSource = ragChainWithSource.assign({ answer: ragChainFromDocs });
 
-await ragChainWithSource.invoke("What is Task Decomposition")
+await ragChainWithSource.invoke("What is Task Decomposition");
 ```
 
-``` text
+```text
 {
   question: "What is Task Decomposition",
   context: [
@@ -155,12 +165,14 @@ await ragChainWithSource.invoke("What is Task Decomposition")
 With LCEL it’s easy to stream final outputs:
 
 ```typescript
-for await (const chunk of await ragChainWithSource.stream("What is task decomposition?")) {
-  console.log(chunk)
+for await (const chunk of await ragChainWithSource.stream(
+  "What is task decomposition?"
+)) {
+  console.log(chunk);
 }
 ```
 
-``` text
+```text
 { question: "What is task decomposition?" }
 {
   context: [
@@ -263,7 +275,9 @@ We can add some logic to compile our stream as it’s being returned:
 const output = {};
 let currentKey: string | null = null;
 
-for await (const chunk of await ragChainWithSource.stream("What is task decomposition?")) {
+for await (const chunk of await ragChainWithSource.stream(
+  "What is task decomposition?"
+)) {
   for (const key of Object.keys(chunk)) {
     if (output[key] === undefined) {
       output[key] = chunk[key];
@@ -281,7 +295,7 @@ for await (const chunk of await ragChainWithSource.stream("What is task decompos
 }
 ```
 
-``` text
+```text
 
 
 question: "What is task decomposition?"
@@ -344,6 +358,6 @@ Task
 .
 ```
 
-``` text
+```text
 "answer"
 ```

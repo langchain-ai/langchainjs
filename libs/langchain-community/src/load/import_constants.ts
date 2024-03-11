@@ -47,6 +47,7 @@ export const optionalImportEntrypoints: string[] = [
   "langchain_community/vectorstores/faiss",
   "langchain_community/vectorstores/googlevertexai",
   "langchain_community/vectorstores/hnswlib",
+  "langchain_community/vectorstores/hanavector",
   "langchain_community/vectorstores/lancedb",
   "langchain_community/vectorstores/milvus",
   "langchain_community/vectorstores/momento_vector_index",

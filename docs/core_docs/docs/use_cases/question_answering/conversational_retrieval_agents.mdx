@@ -2,9 +2,6 @@
 title: Using agents
 ---
 
-
-
-
 This is an agent specifically optimized for doing retrieval when
 necessary and also holding a conversation.
 
@@ -67,20 +64,22 @@ const loader = new TextLoader("../../../../../examples/state_of_the_union.txt");
 const documents = await loader.load();
 ```
 
-
 ```typescript
 import { CharacterTextSplitter } from "langchain/text_splitter";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { OpenAIEmbeddings } from "@langchain/openai";
 
-const textSplitter = new CharacterTextSplitter({ chunkSize: 1000, chunkOverlap: 0 });
+const textSplitter = new CharacterTextSplitter({
+  chunkSize: 1000,
+  chunkOverlap: 0,
+});
 const texts = await textSplitter.splitDocuments(documents);
 console.log("texts.length", texts.length);
 const embeddings = new OpenAIEmbeddings();
 const db = await MemoryVectorStore.fromDocuments(texts, embeddings);
 ```
 
-``` text
+```text
 texts.length 41
 ```
 
@@ -119,10 +118,10 @@ import { pull } from "langchain/hub";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 
 const prompt = await pull<ChatPromptTemplate>("hwchase17/openai-tools-agent");
-prompt.promptMessages
+prompt.promptMessages;
 ```
 
-``` text
+```text
 [
   SystemMessagePromptTemplate {
     lc_serializable: true,
@@ -239,14 +238,13 @@ import { ChatOpenAI } from "@langchain/openai";
 const llm = new ChatOpenAI({ temperature: 0 });
 ```
 
-
 ```typescript
 import { createOpenAIToolsAgent, AgentExecutor } from "langchain/agents";
 
 const agent = await createOpenAIToolsAgent({
   llm,
   tools,
-  prompt
+  prompt,
 });
 const agentExecutor = new AgentExecutor({
   agent,
@@ -260,29 +258,27 @@ We can now try it out!
 const result1 = await agentExecutor.invoke({ input: "hi im bob" });
 ```
 
-
 ```typescript
-result1.output
+result1.output;
 ```
 
-``` text
+```text
 "Hello Bob! How can I assist you today?"
 ```
 
 Notice that it now does retrieval
 
 ```typescript
-const result2 = await agentExecutor.invoke({ 
-  input: `what did the president say about ketanji brown jackson in the most recent state of the union? The current date is ${new Date().toDateString()}`
+const result2 = await agentExecutor.invoke({
+  input: `what did the president say about ketanji brown jackson in the most recent state of the union? The current date is ${new Date().toDateString()}`,
 });
 ```
-
 
 ```typescript
 result2.output;
 ```
 
-``` text
+```text
 "In the most recent State of the Union, the President mentioned Ketanji Brown Jackson as his nominee "... 176 more characters
 ```
 
@@ -294,16 +290,16 @@ retrieved, so no need to do another retrieval
 
 ```typescript
 const result3 = await agentExecutor.invoke({
-  input: "how long ago did the president nominate ketanji brown jackson? Use all the tools to find the answer."
-})
+  input:
+    "how long ago did the president nominate ketanji brown jackson? Use all the tools to find the answer.",
+});
 ```
-
 
 ```typescript
 result3.output;
 ```
 
-``` text
+```text
 "The president nominated Ketanji Brown Jackson 4 days ago."
 ```
 

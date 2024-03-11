@@ -8,10 +8,11 @@ import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 import hanaClient from '@sap/hana-client';
 
 
-export enum DistanceStrategy {
-    COSINE = "COSINE",
-    EUCLIDEAN_DISTANCE = "EUCLIDEAN_DISTANCE",
-  }
+export type DistanceStrategy = "euclidean" | "cosine";
+// export enum DistanceStrategy {
+//     COSINE = "COSINE",
+//     EUCLIDEAN_DISTANCE = "EUCLIDEAN_DISTANCE",
+//   }
 
 // const HANA_DISTANCE_FUNCTION: Record<string, [string, string]> = {
 //     "cos": ["COSINE_SIMILARITY", "DESC"],
@@ -19,11 +20,11 @@ export enum DistanceStrategy {
 // };
 
 const HANA_DISTANCE_FUNCTION: Record<DistanceStrategy, [string, string]> = {
-[DistanceStrategy.COSINE]: ["COSINE_SIMILARITY", "DESC"],
-[DistanceStrategy.EUCLIDEAN_DISTANCE]: ["L2DISTANCE", "ASC"],
+    "cosine": ["COSINE_SIMILARITY", "DESC"],
+    "euclidean": ["L2DISTANCE", "ASC"],
 };
 
-const defaultDistanceStrategy = DistanceStrategy.COSINE;
+const defaultDistanceStrategy = "cosine";
 const defaultTableName = "EMBEDDINGS";
 const defaultContentColumn = "VEC_TEXT";
 const defaultMetadataColumn = "VEC_META";
@@ -77,11 +78,11 @@ export class HanaDB extends VectorStore {
     constructor(embeddings: EmbeddingsInterface, args: HanaDBArgs) {
         super(embeddings, args);
         this.distanceStrategy = args.distanceStrategy || defaultDistanceStrategy;
-        this.tableName = this.sanitizeName(args.tableName || defaultTableName);
-        this.contentColumn = this.sanitizeName(args.contentColumn || defaultContentColumn);
-        this.metadataColumn = this.sanitizeName(args.metadataColumn || defaultMetadataColumn);
-        this.vectorColumn = this.sanitizeName(args.vectorColumn || defaultVectorColumn);
-        this.vectorColumnLength = this.sanitizeInt(args.vectorColumnLength || defaultVectorColumnLength); // Using '??' to allow 0 as a valid value
+        this.tableName = HanaDB.sanitizeName(args.tableName || defaultTableName);
+        this.contentColumn = HanaDB.sanitizeName(args.contentColumn || defaultContentColumn);
+        this.metadataColumn = HanaDB.sanitizeName(args.metadataColumn || defaultMetadataColumn);
+        this.vectorColumn = HanaDB.sanitizeName(args.vectorColumn || defaultVectorColumn);
+        this.vectorColumnLength = HanaDB.sanitizeInt(args.vectorColumnLength || defaultVectorColumnLength); // Using '??' to allow 0 as a valid value
 
         this.connection = args.connection;
         this.initialize();
@@ -113,16 +114,16 @@ export class HanaDB extends VectorStore {
      * @returns The sanitized string.
      */
 
-    private sanitizeName(inputStr: string): string {
+    public static sanitizeName(inputStr: string): string {
         return inputStr.replace(/[^a-zA-Z0-9_]/g, "").toUpperCase();
     }
 
     /**
-     * Sanitizes the input integer. Throws an error if the value is less than -1.
+     * Sanitizes the input to integer. Throws an error if the value is less than -1.
      * @param inputInt The input to be sanitized.
      * @returns The sanitized integer.
      */
-    private sanitizeInt(inputInt: number): number {
+    public static sanitizeInt(inputInt: any): number {
         const value = parseInt(inputInt.toString(), 10);
         if (Number.isNaN(value) || value < -1) {
             throw new Error(`Value (${value}) must not be smaller than -1`);
@@ -138,7 +139,7 @@ export class HanaDB extends VectorStore {
      * @returns {number[]} The sanitized array of numbers (floats).
      * @throws {Error} Throws an error if any element is not a number.
      */
-    private sanitizeListFloat(embedding: number[]): number[] {
+    public static sanitizeListFloat(embedding: number[]): number[] {
         embedding.forEach((value) => {
         if (typeof value !== 'number') {
             throw new Error(`Value (${value}) does not have type number`);
@@ -171,7 +172,7 @@ export class HanaDB extends VectorStore {
      * @param {string} arrayAsString - The string representation of the array.
      * @returns {number[]} An array of floats parsed from the string.
      */
-    private parseFloatArrayFromString(arrayAsString: string): number[] {
+    public static parseFloatArrayFromString(arrayAsString: string): number[] {
         // Removing the leading and trailing brackets is not necessary if the input is "1.0,2.0,3.0"
         // If your input string includes brackets, uncomment the following line:
         const arrayWithoutBrackets = arrayAsString.slice(1, -1);
@@ -513,8 +514,8 @@ export class HanaDB extends VectorStore {
     async similaritySearchWithScoreAndVectorByVector(embedding: number[], k: number, filter?: Filter): Promise<Array<[Document, number, number[]]>> {
         const result: Array<[Document, number, number[]]> = [];
         // Sanitize inputs
-        const sanitizedK = this.sanitizeInt(k);
-        const sanitizedEmbedding = this.sanitizeListFloat(embedding);
+        const sanitizedK = HanaDB.sanitizeInt(k);
+        const sanitizedEmbedding = HanaDB.sanitizeListFloat(embedding);
         // Determine the distance function based on the configured strategy
         const distanceFuncName = HANA_DISTANCE_FUNCTION[this.distanceStrategy][0];
         // console.log(`Distance method ${distanceFuncName}`);
@@ -542,7 +543,7 @@ export class HanaDB extends VectorStore {
         while (resultSet.next()){
             const metadata = JSON.parse(resultSet.getValue(1));
             const doc: Document = { pageContent: resultSet.getValue(0), metadata };
-            const resultVector = this.parseFloatArrayFromString(resultSet.getValue(2));
+            const resultVector = HanaDB.parseFloatArrayFromString(resultSet.getValue(2));
             result.push([doc, resultSet.getValue(3), resultVector]);  
         }
         } catch (error) {
