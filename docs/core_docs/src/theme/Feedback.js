@@ -113,10 +113,10 @@ export default function Feedback() {
 
   /** @param {"good" | "bad"} feedback */
   const handleFeedback = async (feedback) => {
-    if (process.env.NODE_ENV !== "production") {
-      console.log("Feedback (dev)");
-      return;
-    }
+    // if (process.env.NODE_ENV !== "production") {
+    //   console.log("Feedback (dev)");
+    //   return;
+    // }
 
     const cookieName = `${FEEDBACK_COOKIE_PREFIX}_${window.location.pathname}`;
     if (checkCookie(cookieName)) {
