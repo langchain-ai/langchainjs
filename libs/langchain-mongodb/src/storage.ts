@@ -1,9 +1,6 @@
 import { BaseStore } from "@langchain/core/stores";
 import { Document, DocumentInterface } from "@langchain/core/documents";
-import {
-  Collection,
-  Document as MongoDocument,
-} from "mongodb";
+import { Collection, Document as MongoDocument } from "mongodb";
 
 /**
  * Type definition for the input parameters required to initialize an
@@ -78,14 +75,19 @@ export class MongoDBStore extends BaseStore<string, DocumentInterface> {
    */
   async mget(keys: string[]) {
     const prefixedKeys = keys.map(this._getPrefixedKey.bind(this));
-    const retrievedValues = await this.collection.find({
-      [this.primaryKey]: { $in: prefixedKeys }
-    }).toArray();
+    const retrievedValues = await this.collection
+      .find({
+        [this.primaryKey]: { $in: prefixedKeys },
+      })
+      .toArray();
 
-    const docs = retrievedValues.map((value) => new Document({
-      pageContent: value.pageContent,
-      metadata: value.metadata
-    }));
+    const docs = retrievedValues.map(
+      (value) =>
+        new Document({
+          pageContent: value.pageContent,
+          metadata: value.metadata,
+        })
+    );
 
     return docs;
   }
@@ -100,13 +102,15 @@ export class MongoDBStore extends BaseStore<string, DocumentInterface> {
       { [this.primaryKey]: this._getPrefixedKey(key) },
       { $set: { [this.primaryKey]: this._getPrefixedKey(key), ...value } },
     ]);
-    await this.collection.bulkWrite(updates.map(([filter, update]) => ({
-      updateOne: {
-        filter,
-        update,
-        upsert: true,
-      }
-    })))
+    await this.collection.bulkWrite(
+      updates.map(([filter, update]) => ({
+        updateOne: {
+          filter,
+          update,
+          upsert: true,
+        },
+      }))
+    );
   }
 
   /**
@@ -117,7 +121,7 @@ export class MongoDBStore extends BaseStore<string, DocumentInterface> {
   async mdelete(keys: string[]): Promise<void> {
     const allKeysWithPrefix = keys.map(this._getPrefixedKey.bind(this));
     await this.collection.deleteMany({
-      [this.primaryKey]: { $in: allKeysWithPrefix }
+      [this.primaryKey]: { $in: allKeysWithPrefix },
     });
   }
 
@@ -131,8 +135,10 @@ export class MongoDBStore extends BaseStore<string, DocumentInterface> {
     if (prefix) {
       // Convert wildcard (*) to regex equivalent (.*)
       // Escape special regex characters in prefix to ensure they are treated as literals
-      const escapedPrefix = prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regexPrefix = escapedPrefix.endsWith("*") ? escapedPrefix.slice(0, -1) : escapedPrefix;
+      const escapedPrefix = prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regexPrefix = escapedPrefix.endsWith("*")
+        ? escapedPrefix.slice(0, -1)
+        : escapedPrefix;
       regexPattern = `^${this._getPrefixedKey(regexPrefix)}.*`;
     } else {
       regexPattern = `^${this._getPrefixedKey(".*")}`;
@@ -140,24 +146,34 @@ export class MongoDBStore extends BaseStore<string, DocumentInterface> {
 
     let totalDocsYielded = 0;
 
-    let cursor = await this.collection.find({
-      [this.primaryKey]: { $regex: regexPattern }
-    }, {
-      batchSize: this.yieldKeysScanBatchSize
-    }).toArray();
+    let cursor = await this.collection
+      .find(
+        {
+          [this.primaryKey]: { $regex: regexPattern },
+        },
+        {
+          batchSize: this.yieldKeysScanBatchSize,
+        }
+      )
+      .toArray();
 
     for (const key of cursor) {
       yield this._getDeprefixedKey(key[this.primaryKey]);
     }
     totalDocsYielded += cursor.length;
     while (cursor.length !== 0) {
-      cursor = await this.collection.find({
-        [this.primaryKey]: { $regex: regexPattern }
-      }, {
-        batchSize: this.yieldKeysScanBatchSize,
-        skip: totalDocsYielded,
-      }).toArray();
-  
+      cursor = await this.collection
+        .find(
+          {
+            [this.primaryKey]: { $regex: regexPattern },
+          },
+          {
+            batchSize: this.yieldKeysScanBatchSize,
+            skip: totalDocsYielded,
+          }
+        )
+        .toArray();
+
       for (const key of cursor) {
         yield this._getDeprefixedKey(key[this.primaryKey]);
       }
