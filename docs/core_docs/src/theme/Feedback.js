@@ -1,7 +1,6 @@
 /* eslint-disable no-return-assign, react/jsx-props-no-spreading */
 import React, { useState, useEffect } from "react";
-import gtag from "../analytics";
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from "@supabase/supabase-js";
 
 const useCookie = () => {
   /**
@@ -100,28 +99,31 @@ const LANGCHAIN_PROJECT_NAME = "langchain_js_docs";
 const getIpAddress = async () => {
   const response = await fetch("https://api.ipify.org?format=json");
   return (await response.json()).ip;
-}
+};
 
 export default function Feedback() {
   const { setCookie, checkCookie } = useCookie();
   const [feedbackSent, setFeedbackSent] = useState(false);
-  const [userIp, setUserIp] = useState("")
+  const [userIp, setUserIp] = useState("");
 
   useEffect(() => {
     try {
       getIpAddress().then((ip) => setUserIp(ip));
     } catch (e) {
       console.error("Failed to fetch", {
-        e
-      })
+        e,
+      });
     }
-  }, [])
+  }, []);
 
   /**
    * @param {"good" | "bad"} feedback
    */
   const handleFeedback = async (feedback) => {
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY) {
+    if (
+      !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      !process.env.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY
+    ) {
       console.error("Supabase not configured", process.env);
       return;
     }
@@ -141,22 +143,23 @@ export default function Feedback() {
       return;
     }
 
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY);
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY
+    );
     try {
-      const { error } = await supabase
-        .from('feedback')
-        .insert({
-          type: feedback,
-          url: window.location.pathname,
-          user_ip: userIp,
-          project: LANGCHAIN_PROJECT_NAME
-        });
+      const { error } = await supabase.from("feedback").insert({
+        type: feedback,
+        url: window.location.pathname,
+        user_ip: userIp,
+        project: LANGCHAIN_PROJECT_NAME,
+      });
       if (error) {
         throw error;
       }
     } catch (e) {
       console.error("Failed to send feedback", {
-        e
+        e,
       });
       return;
     }
