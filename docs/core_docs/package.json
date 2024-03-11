@@ -25,7 +25,7 @@
     "quarto": "quarto render docs/ && node ./scripts/quarto-build.js",
     "quarto:vercel": "bash ./scripts/vercel_build.sh && node ./scripts/quarto-build.js",
     "gen": "yarn gen:supabase",
-    "gen:supabase": "npx supabase gen types typescript --project-id 'xsqpnijvmbodcxyapnyq' --schema public > ./supabase.d.ts"
+    "gen:supabase": "npx supabase gen types typescript --project-id 'xsqpnijvmbodcxyapnyq' --schema public > ./src/supabase.d.ts"
   },
   "dependencies": {
     "@docusaurus/core": "2.4.3",
