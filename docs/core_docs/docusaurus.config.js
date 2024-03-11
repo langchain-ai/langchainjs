@@ -66,6 +66,12 @@ const config = {
         },
       }),
     }),
+    [
+      "docusaurus2-dotenv",
+      {
+        systemvars: true,
+      },
+    ],
   ],
 
   presets: [
@@ -304,6 +310,11 @@ const config = {
       async: true,
     },
   ],
+
+  customFields: {
+    NEXT_PUBLIC_SUPABASE_PUBLIC_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY,
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  }
 };
 
 module.exports = config;

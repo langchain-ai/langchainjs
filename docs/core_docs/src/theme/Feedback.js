@@ -104,17 +104,6 @@ const getIpAddress = async () => {
 export default function Feedback() {
   const { setCookie, checkCookie } = useCookie();
   const [feedbackSent, setFeedbackSent] = useState(false);
-  const [userIp, setUserIp] = useState("");
-
-  useEffect(() => {
-    try {
-      getIpAddress().then((ip) => setUserIp(ip));
-    } catch (e) {
-      console.error("Failed to fetch", {
-        e,
-      });
-    }
-  }, []);
 
   /**
    * @param {"good" | "bad"} feedback
@@ -129,12 +118,7 @@ export default function Feedback() {
     }
 
     // if (process.env.NODE_ENV !== "production") {
-    //   console.log({
-    //     type: feedback,
-    //     url: window.location.pathname,
-    //     user_ip: userIp,
-    //     project: LANGCHAIN_PROJECT_NAME
-    //   }, "Feedback (dev)");
+    //   console.log("Feedback (dev)");
     //   return;
     // }
 
@@ -148,12 +132,16 @@ export default function Feedback() {
       process.env.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY
     );
     try {
-      const { error } = await supabase.from("feedback").insert({
+      const ipAddress = await getIpAddress();
+
+      const data = {
         type: feedback,
         url: window.location.pathname,
-        user_ip: userIp,
+        user_ip: ipAddress,
         project: LANGCHAIN_PROJECT_NAME,
-      });
+      };
+
+      const { error } = await supabase.from("feedback").insert(data);
       if (error) {
         throw error;
       }
