@@ -58,7 +58,6 @@
     "glob": "^10.3.10",
     "prettier": "^2.7.1",
     "rimraf": "^5.0.1",
-    "supabase": "^1.148.6",
     "swc-loader": "^0.2.3",
     "typedoc": "^0.24.4",
     "typedoc-plugin-markdown": "next",
