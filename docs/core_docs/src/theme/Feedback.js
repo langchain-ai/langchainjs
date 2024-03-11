@@ -116,7 +116,7 @@ export default function Feedback() {
   /** @param {"good" | "bad"} feedback */
   const handleFeedback = async (feedback) => {
     if (process.env.NODE_ENV !== "production") {
-      console.log("Feedback (dev)", siteConfig);
+      console.log("Feedback (dev)");
       return;
     }
 
