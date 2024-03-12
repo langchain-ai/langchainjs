@@ -1,7 +1,7 @@
 import { Runnable } from "../runnables/index.js";
 import type { RunnableConfig } from "../runnables/config.js";
 import type { BasePromptValueInterface } from "../prompt_values.js";
-import type { BaseMessage } from "../messages/index.js";
+import type { BaseMessage, MessageContentComplex } from "../messages/index.js";
 import type { Callbacks } from "../callbacks/manager.js";
 import type { Generation, ChatGeneration } from "../outputs.js";
 
@@ -48,6 +48,18 @@ export abstract class BaseLLMOutputParser<T = unknown> extends Runnable<
     return this.parseResult(generations, callbacks);
   }
 
+  protected _baseMessageToString(message: BaseMessage): string {
+    return typeof message.content === "string"
+      ? message.content
+      : this._baseMessageContentToString(message.content);
+  }
+
+  protected _baseMessageContentToString(
+    content: MessageContentComplex[]
+  ): string {
+    return JSON.stringify(content);
+  }
+
   /**
    * Calls the parser with a given input and optional configuration options.
    * If the input is a string, it creates a generation with the input as
@@ -75,10 +87,7 @@ export abstract class BaseLLMOutputParser<T = unknown> extends Runnable<
           this.parseResult([
             {
               message: input,
-              text:
-                typeof input.content === "string"
-                  ? input.content
-                  : JSON.stringify(input.content),
+              text: this._baseMessageToString(input),
             },
           ]),
         input,
