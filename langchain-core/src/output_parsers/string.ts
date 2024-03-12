@@ -65,7 +65,9 @@ export class StringOutputParser extends BaseTransformOutputParser<string> {
       case "image_url":
         return this._imageUrlContentToString(content);
       default:
-        return "";
+        throw new Error(
+          `Cannot coerce "${(content as any).type}" message part into a string.`
+        );
     }
   }
 
