@@ -53,7 +53,9 @@ export class StringOutputParser extends BaseTransformOutputParser<string> {
   }
 
   _imageUrlContentToString(_content: MessageContentImageUrl): string {
-    return "";
+    throw new Error(
+      `Cannot coerce a multimodal "image_url" message part into a string.`
+    );
   }
 
   _messageContentComplexToString(content: MessageContentComplex): string {

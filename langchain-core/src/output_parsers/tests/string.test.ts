@@ -55,7 +55,7 @@ describe("StringOutputParser", () => {
     expect(result).toEqual("hellothere");
   });
 
-  test("BaseMessage complex text and image type", async () => {
+  test("BaseMessage complex text and image type fails", async () => {
     const parser = new StringOutputParser();
     const content: MessageContentComplex[] = [
       {
@@ -70,30 +70,8 @@ describe("StringOutputParser", () => {
     const msg: BaseMessage = new AIMessage({
       content,
     });
-    const result = await parser.invoke(msg);
-    expect(result).toEqual("hello");
-  });
-
-  test("BaseMessage multiple complex text and image type", async () => {
-    const parser = new StringOutputParser();
-    const content: MessageContentComplex[] = [
-      {
-        type: "text",
-        text: "hello",
-      },
-      {
-        type: "image_url",
-        image_url: "https://example.com/example.png",
-      },
-      {
-        type: "text",
-        text: "there",
-      },
-    ];
-    const msg: BaseMessage = new AIMessage({
-      content,
-    });
-    const result = await parser.invoke(msg);
-    expect(result).toEqual("hellothere");
+    await expect(async () => {
+      await parser.invoke(msg);
+    }).rejects.toThrowError();
   });
 });

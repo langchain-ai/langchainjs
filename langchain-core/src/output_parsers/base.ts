@@ -48,13 +48,15 @@ export abstract class BaseLLMOutputParser<T = unknown> extends Runnable<
     return this.parseResult(generations, callbacks);
   }
 
-  _baseMessageToString(message: BaseMessage): string {
+  protected _baseMessageToString(message: BaseMessage): string {
     return typeof message.content === "string"
       ? message.content
       : this._baseMessageContentToString(message.content);
   }
 
-  _baseMessageContentToString(content: MessageContentComplex[]): string {
+  protected _baseMessageContentToString(
+    content: MessageContentComplex[]
+  ): string {
     return JSON.stringify(content);
   }
 
