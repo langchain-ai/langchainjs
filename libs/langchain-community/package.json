@@ -756,6 +756,15 @@
       "import": "./agents/toolkits/connery.js",
       "require": "./agents/toolkits/connery.cjs"
     },
+    "./embeddings/alibaba_tongyi": {
+      "types": {
+        "import": "./embeddings/alibaba_tongyi.d.ts",
+        "require": "./embeddings/alibaba_tongyi.d.cts",
+        "default": "./embeddings/alibaba_tongyi.d.ts"
+      },
+      "import": "./embeddings/alibaba_tongyi.js",
+      "require": "./embeddings/alibaba_tongyi.cjs"
+    },
     "./embeddings/bedrock": {
       "types": {
         "import": "./embeddings/bedrock.d.ts",
@@ -2218,6 +2227,10 @@
     "agents/toolkits/connery.js",
     "agents/toolkits/connery.d.ts",
     "agents/toolkits/connery.d.cts",
+    "embeddings/alibaba_tongyi.cjs",
+    "embeddings/alibaba_tongyi.js",
+    "embeddings/alibaba_tongyi.d.ts",
+    "embeddings/alibaba_tongyi.d.cts",
     "embeddings/bedrock.cjs",
     "embeddings/bedrock.js",
     "embeddings/bedrock.d.ts",

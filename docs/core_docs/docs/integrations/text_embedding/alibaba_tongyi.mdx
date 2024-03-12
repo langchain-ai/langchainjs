@@ -1,12 +1,10 @@
 ---
-sidebar_label: Alibaba Tongyi
+sidebar_class_name: node-only
 ---
 
-import CodeBlock from "@theme/CodeBlock";
+# Alibaba Tongyi
 
-# ChatAlibabaTongyi
-
-LangChain.js supports the Alibaba qwen family of models.
+The `AlibabaTongyiEmbeddings` class uses the Alibaba Tongyi API to generate embeddings for a given text.
 
 ## Setup
 
@@ -24,8 +22,7 @@ npm install @langchain/community
 
 ## Usage
 
-Here's an example:
+import CodeBlock from "@theme/CodeBlock";
+import AlibabaTongyiExample from "@examples/embeddings/alibaba_tongyi.ts";
 
-import Tongyi from "@examples/models/chat/integration_alitongyi.ts";
-
-<CodeBlock language="typescript">{Tongyi}</CodeBlock>
+<CodeBlock language="typescript">{AlibabaTongyiExample}</CodeBlock>
