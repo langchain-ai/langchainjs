@@ -55,6 +55,7 @@ export const config = {
     "agents/toolkits/base": "agents/toolkits/base",
     "agents/toolkits/connery": "agents/toolkits/connery/index",
     // embeddings
+    "embeddings/alibaba_tongyi": "embeddings/alibaba_tongyi",
     "embeddings/bedrock": "embeddings/bedrock",
     "embeddings/cloudflare_workersai": "embeddings/cloudflare_workersai",
     "embeddings/cohere": "embeddings/cohere",
