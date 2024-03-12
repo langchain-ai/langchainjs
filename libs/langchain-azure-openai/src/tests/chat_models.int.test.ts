@@ -219,7 +219,7 @@ test("OpenAI Chat, docs, prompt templates", async () => {
 
 test("Test OpenAI with stop", async () => {
   const model = new AzureChatOpenAI({ maxTokens: 5 });
-  const res = await model.invoke(
+  const res = await model.call(
     [new HumanMessage("Print hello world")],
     ["world"]
   );

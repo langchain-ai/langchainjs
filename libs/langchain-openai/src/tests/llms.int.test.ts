@@ -20,7 +20,7 @@ test("Test OpenAI with stop", async () => {
     maxTokens: 5,
     modelName: "gpt-3.5-turbo-instruct",
   });
-  const res = await model.invoke("Print hello world", ["world"]);
+  const res = await model.call("Print hello world", ["world"]);
   console.log({ res });
 });
 
@@ -111,7 +111,7 @@ test("Test OpenAI with maxTokens -1", async () => {
     maxTokens: -1,
     modelName: "gpt-3.5-turbo-instruct",
   });
-  const res = await model.invoke("Print hello world", ["world"]);
+  const res = await model.call("Print hello world", ["world"]);
   console.log({ res });
 });
 
