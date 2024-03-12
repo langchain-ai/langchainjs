@@ -48,17 +48,19 @@ export class StringOutputParser extends BaseTransformOutputParser<string> {
     return "";
   }
 
-  _textContentToString(content: MessageContentText): string {
+  protected _textContentToString(content: MessageContentText): string {
     return content.text;
   }
 
-  _imageUrlContentToString(_content: MessageContentImageUrl): string {
+  protected _imageUrlContentToString(_content: MessageContentImageUrl): string {
     throw new Error(
       `Cannot coerce a multimodal "image_url" message part into a string.`
     );
   }
 
-  _messageContentComplexToString(content: MessageContentComplex): string {
+  protected _messageContentComplexToString(
+    content: MessageContentComplex
+  ): string {
     switch (content.type) {
       case "text":
         return this._textContentToString(content);
@@ -71,7 +73,9 @@ export class StringOutputParser extends BaseTransformOutputParser<string> {
     }
   }
 
-  _baseMessageContentToString(content: MessageContentComplex[]): string {
+  protected _baseMessageContentToString(
+    content: MessageContentComplex[]
+  ): string {
     return content.reduce(
       (acc: string, item: MessageContentComplex) =>
         acc + this._messageContentComplexToString(item),
