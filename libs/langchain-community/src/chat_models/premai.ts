@@ -159,8 +159,8 @@ function _convertDeltaToMessageChunk(
  * Integration with a chat model.
  */
 export class ChatPrem<
-    CallOptions extends BaseLanguageModelCallOptions = BaseLanguageModelCallOptions
-  >
+  CallOptions extends BaseLanguageModelCallOptions = BaseLanguageModelCallOptions
+>
   extends SimpleChatModel<CallOptions>
   implements ChatPremInput
 {
