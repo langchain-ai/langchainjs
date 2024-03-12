@@ -136,10 +136,10 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
     config?: {
       ids?: string[];
       addToDocstore?: boolean;
-      chunkHeaderOptions?: TextSplitterChunkHeaderOptions;
+      childDocChunkHeaderOptions?: TextSplitterChunkHeaderOptions;
     }
   ): Promise<void> {
-    const { ids, addToDocstore = true, chunkHeaderOptions = {} } = config ?? {};
+    const { ids, addToDocstore = true, childDocChunkHeaderOptions = {} } = config ?? {};
     const parentDocs = this.parentSplitter
       ? await this.parentSplitter.splitDocuments(docs)
       : docs;
@@ -166,7 +166,7 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
       const parentDocId = parentDocIds[i];
       const subDocs = await this.childSplitter.splitDocuments(
         [parentDoc],
-        chunkHeaderOptions
+        childDocChunkHeaderOptions
       );
       const taggedSubDocs = subDocs.map(
         (subDoc: Document) =>

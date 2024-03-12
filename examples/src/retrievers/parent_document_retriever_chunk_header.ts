@@ -1,10 +1,13 @@
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { HNSWLib } from "langchain/vectorstores/hnswlib";
+import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { InMemoryStore } from "langchain/storage/in_memory";
 import { ParentDocumentRetriever } from "langchain/retrievers/parent_document";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 
-const splitter = new RecursiveCharacterTextSplitter({ chunkSize: 1500 });
+const splitter = new RecursiveCharacterTextSplitter({
+  chunkSize: 1500,
+  chunkOverlap: 0,
+});
 
 const jimDocs = await splitter.createDocuments([`My favorite color is blue.`]);
 const jimChunkHeaderOptions = {
@@ -24,39 +27,116 @@ const docstore = new InMemoryStore();
 const retriever = new ParentDocumentRetriever({
   vectorstore,
   docstore,
-  childSplitter: new RecursiveCharacterTextSplitter({ chunkSize: 150 }),
+  // Very small chunks for demo purposes.
+  // Use a bigger chunk size for serious use-cases.
+  childSplitter: new RecursiveCharacterTextSplitter({
+    chunkSize: 10,
+    chunkOverlap: 0,
+  }),
   childK: 50,
   parentK: 5,
 });
 
-// We pass additional option `chunkHeader` that will add metadata chunk header to child documents
+// We pass additional option `childDocChunkHeaderOptions`
+// that will add the chunk header to child documents
 await retriever.addDocuments(jimDocs, {
-  chunkHeaderOptions: jimChunkHeaderOptions,
+  childDocChunkHeaderOptions: jimChunkHeaderOptions,
 });
 await retriever.addDocuments(pamDocs, {
-  chunkHeaderOptions: pamChunkHeaderOptions,
+  childDocChunkHeaderOptions: pamChunkHeaderOptions,
 });
 
-// Documents added to vector store have this, search friendly format
-/*
-  [
-    Document { pageContent: 'DOC NAME: Jim Interview\n---\n My favorite color is blue.' },
-    Document { pageContent: 'DOC NAME: Pam Interview\n---\n My favorite color is red.' },
-  ]
-*/
-
-// this will search child documents in vector store with the help of chunk header
+// This will search child documents in vector store with the help of chunk header,
+// returning the unmodified parent documents
 const retrievedDocs = await retriever.getRelevantDocuments(
   "What is Pam's favorite color?"
 );
 
-// Retrieved chunk is the larger parent chunk. We also added chunk header there so LLM can use it to provide correct
-// answer
-console.log(retrievedDocs);
+// Pam's favorite color is returned first!
+console.log(JSON.stringify(retrievedDocs, null, 2));
 /*
   [
-    Document {
-      pageContent: 'My favorite color is red.'
+    {
+      "pageContent": "My favorite color is red.",
+      "metadata": {
+        "loc": {
+          "lines": {
+            "from": 1,
+            "to": 1
+          }
+        }
+      }
     },
+    {
+      "pageContent": "My favorite color is blue.",
+      "metadata": {
+        "loc": {
+          "lines": {
+            "from": 1,
+            "to": 1
+          }
+        }
+      }
+    }
+  ]
+*/
+
+const rawDocs = await vectorstore.similaritySearch(
+  "What is Pam's favorite color?"
+);
+
+// Raw docs in vectorstore are short but have chunk headers
+console.log(JSON.stringify(rawDocs, null, 2));
+
+/*
+  [
+    {
+      "pageContent": "DOC NAME: Pam Interview\n---\n(cont'd) color is",
+      "metadata": {
+        "loc": {
+          "lines": {
+            "from": 1,
+            "to": 1
+          }
+        },
+        "doc_id": "affdcbeb-6bfb-42e9-afe5-80f4f2e9f6aa"
+      }
+    },
+    {
+      "pageContent": "DOC NAME: Pam Interview\n---\n(cont'd) favorite",
+      "metadata": {
+        "loc": {
+          "lines": {
+            "from": 1,
+            "to": 1
+          }
+        },
+        "doc_id": "affdcbeb-6bfb-42e9-afe5-80f4f2e9f6aa"
+      }
+    },
+    {
+      "pageContent": "DOC NAME: Pam Interview\n---\n(cont'd) red.",
+      "metadata": {
+        "loc": {
+          "lines": {
+            "from": 1,
+            "to": 1
+          }
+        },
+        "doc_id": "affdcbeb-6bfb-42e9-afe5-80f4f2e9f6aa"
+      }
+    },
+    {
+      "pageContent": "DOC NAME: Pam Interview\n---\nMy",
+      "metadata": {
+        "loc": {
+          "lines": {
+            "from": 1,
+            "to": 1
+          }
+        },
+        "doc_id": "affdcbeb-6bfb-42e9-afe5-80f4f2e9f6aa"
+      }
+    }
   ]
 */
