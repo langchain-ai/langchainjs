@@ -52,7 +52,7 @@ export interface LlamaCppCallOptions extends BaseLanguageModelCallOptions {
  * });
  *
  * // Call the model with a message and await the response.
- * const response = await model.call([
+ * const response = await model.invoke([
  *   new HumanMessage({ content: "My name is John." }),
  * ]);
  *

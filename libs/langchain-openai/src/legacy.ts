@@ -58,7 +58,7 @@ export interface OpenAIChatCallOptions extends OpenAICallOptions {
  *   maxTokens: 50,
  * });
  *
- * const res = await model.call(
+ * const res = await model.invoke(
  *   "What would be a good company name for a company that makes colorful socks?"
  * );
  * console.log({ res });

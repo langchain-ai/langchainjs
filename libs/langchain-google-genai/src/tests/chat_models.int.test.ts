@@ -77,7 +77,7 @@ test("Test Google AI multimodal generation", async () => {
 test("Test Google AI handleLLMNewToken callback", async () => {
   const model = new ChatGoogleGenerativeAI({});
   let tokens = "";
-  const res = await model.call(
+  const res = await model.invoke(
     [new HumanMessage("what is 1 + 1?")],
     undefined,
     [
@@ -118,7 +118,7 @@ test("Test Google AI in streaming mode", async () => {
   const model = new ChatGoogleGenerativeAI({ streaming: true });
   let tokens = "";
   let nrNewTokens = 0;
-  const res = await model.call([new HumanMessage("Write a haiku?")], {
+  const res = await model.invoke([new HumanMessage("Write a haiku?")], {
     callbacks: [
       {
         handleLLMNewToken(token: string) {
