@@ -1,12 +1,10 @@
+import { NewTokenIndices } from "@langchain/core/callbacks/base";
+import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   BaseChatModel,
   BaseChatModelCallOptions,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
-import { type OpenAICoreRequestOptions } from "@langchain/openai";
-import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { NewTokenIndices } from "@langchain/core/callbacks/base";
-import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   AIMessage,
   AIMessageChunk,
@@ -17,18 +15,20 @@ import {
   SystemMessageChunk,
 } from "@langchain/core/messages";
 import {
-  ChatResult,
-  ChatGenerationChunk,
   ChatGeneration,
+  ChatGenerationChunk,
+  ChatResult,
 } from "@langchain/core/outputs";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { type OpenAICoreRequestOptions } from "@langchain/openai";
 import Groq from "groq-sdk";
+import { ChatCompletionChunk } from "groq-sdk/lib/chat_completions_ext";
 import {
   ChatCompletion,
   ChatCompletionCreateParams,
   ChatCompletionCreateParamsNonStreaming,
   ChatCompletionCreateParamsStreaming,
 } from "groq-sdk/resources/chat/completions";
-import { ChatCompletionChunk } from "groq-sdk/lib/chat_completions_ext";
 
 export interface ChatGroqCallOptions extends BaseChatModelCallOptions {}
 
@@ -51,7 +51,7 @@ export interface ChatGroqInput extends BaseChatModelParams {
   /**
    * Whether or not to stream responses.
    */
-  stream?: boolean;
+  streaming?: boolean;
   /**
    * The temperature to use for sampling.
    * @default 0.7
@@ -161,6 +161,10 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
 
   temperature = 0.7;
 
+  stop?: string[];
+
+  streaming = false;
+
   static lc_name() {
     return "ChatGroq";
   }
@@ -189,9 +193,13 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
 
     this.client = new Groq({
       apiKey,
+      dangerouslyAllowBrowser: true,
     });
     this.temperature = fields?.temperature ?? this.temperature;
     this.modelName = fields?.modelName ?? this.modelName;
+    this.streaming = fields?.streaming ?? this.streaming;
+    this.stop =
+      (typeof fields?.stop === "string" ? [fields.stop] : fields?.stop) ?? [];
   }
 
   async completionWithRetry(
@@ -219,6 +227,7 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
     const params = super.invocationParams(options);
     return {
       ...params,
+      stop: options.stop ?? this.stop,
       model: this.modelName,
       temperature: this.temperature,
     };
@@ -268,7 +277,7 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
     const params = this.invocationParams(options);
     const messagesMapped = convertMessagesToGroqParams(messages);
 
-    if (params.stream) {
+    if (this.streaming) {
       const stream = this._streamResponseChunks(messages, options, runManager);
       const finalChunks: Record<number, ChatGenerationChunk> = {};
       for await (const chunk of stream) {

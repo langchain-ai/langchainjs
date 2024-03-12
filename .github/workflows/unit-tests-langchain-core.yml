@@ -1,0 +1,60 @@
+# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+
+name: Unit Tests (LangChain Core)
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    # Only run when LangChain Core code changes.
+    paths:
+      - 'langchain-core/**'
+  workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
+
+
+# If another push to the same PR or branch happens while this workflow is still running,
+# cancel the earlier run in favor of the next run.
+#
+# There's no point in testing an outdated version of the code. GitHub only allows
+# a limited number of job runners to be active at the same time, so it's better to cancel
+# pointless jobs early so that more useful jobs can run sooner.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        node-version: [18.x, 20.x]
+        # See Node.js release schedule at https://nodejs.org/en/about/releases/
+        # include:
+          # - os: windows-latest
+          #   node-version: 20.x
+          # - os: macos-latest
+          #   node-version: 20.x
+    runs-on: ${{ matrix.os }}
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build
+        run: yarn run build --filter=@langchain/core
+      - name: Test
+        run: yarn run test:unit:ci --filter=@langchain/core --concurrency=1
+      #   run: yarn run test:unit:ci -- --coverage
+      # - name: Upload coverage reports to Codecov
+      #   uses: codecov/codecov-action@v3
+      #   env:
+      #     CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

@@ -5,6 +5,7 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 const { ProvidePlugin } = require("webpack");
 const path = require("path");
+require("dotenv").config();
 
 const examplesPath = path.resolve(__dirname, "..", "..", "examples", "src");
 const mdxComponentsPath = path.resolve(__dirname, "docs", "mdx_components");
@@ -199,16 +200,16 @@ const config = {
           },
           {
             type: "dropdown",
-            label: "Also by LangChain",
+            label: "🦜🔗",
             position: "right",
             items: [
               {
-                href: "https://chat.langchain.com",
-                label: "Chat our docs",
-              },
-              {
                 href: "https://smith.langchain.com",
                 label: "LangSmith",
+              },
+              {
+                href: "https://docs.smith.langchain.com",
+                label: "LangSmith Docs",
               },
               {
                 href: "https://smith.langchain.com/hub",
@@ -223,6 +224,11 @@ const config = {
                 label: "Python Docs",
               },
             ],
+          },
+          {
+            href: "https://chatjs.langchain.com",
+            label: "Chat",
+            position: "right",
           },
           // Please keep GitHub link to the right for consistency.
           {
@@ -299,6 +305,11 @@ const config = {
       async: true,
     },
   ],
+
+  customFields: {
+    supabasePublicKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY,
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  },
 };
 
 module.exports = config;

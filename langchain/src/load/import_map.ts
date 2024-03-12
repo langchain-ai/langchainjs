@@ -45,6 +45,7 @@ export * as retrievers__document_compressors__embeddings_filter from "../retriev
 export * as retrievers__hyde from "../retrievers/hyde.js";
 export * as retrievers__score_threshold from "../retrievers/score_threshold.js";
 export * as retrievers__vespa from "../retrievers/vespa.js";
+export * as retrievers__matryoshka_retriever from "../retrievers/matryoshka_retriever.js";
 export * as stores__doc__in_memory from "../stores/doc/in_memory.js";
 export * as stores__file__in_memory from "../stores/file/in_memory.js";
 export * as stores__message__in_memory from "../stores/message/in_memory.js";

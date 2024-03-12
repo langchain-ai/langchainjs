@@ -43,23 +43,3 @@ jobs:
     uses:
       ./.github/workflows/test-exports.yml
     secrets: inherit
-
-  examples-build:
-    name: Build examples
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18.x
-      - name: Install dependencies
-        run: yarn install --immutable
-      - name: Build Core
-        run: yarn turbo:command build --filter=@langchain/core
-      - name: Build all except LangChain
-        run: yarn turbo:command build --filter=!examples --filter=!langchain --filter=!core_docs --filter=!api_refs --filter=!create-langchain-integration
-      - name: Build LangChain
-        run: yarn turbo:command build --filter=langchain
-      - name: Build examples
-        run: yarn turbo:command build --filter=examples

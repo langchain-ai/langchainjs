@@ -1,18 +1,26 @@
 {
   "imports": {
     "langchain/": "npm:/langchain/",
+    "@faker-js/faker": "npm:@faker-js/faker",
+    "@langchain/anthropic": "npm:@langchain/anthropic",
     "@langchain/community/": "npm:/@langchain/community/",
-    "@langchain/openai": "npm:@langchain/openai",
-    "@langchain/core/": "npm:/@langchain/core/",
-    "dotenv/": "npm:/dotenv/",
-    "cheerio": "npm:/cheerio",
+    "@langchain/openai": "npm:@langchain/openai@0.0.18",
+    "@langchain/mistralai": "npm:@langchain/mistralai@0.0.11",
+    "@langchain/core/": "npm:/@langchain/core@0.1.43/",
     "@langchain/pinecone": "npm:@langchain/pinecone",
     "@pinecone-database/pinecone": "npm:@pinecone-database/pinecone",
+    "cheerio": "npm:/cheerio",
+    "chromadb": "npm:/chromadb",
+    "dotenv/": "npm:/dotenv/",
     "zod": "npm:/zod",
     "zod-to-json-schema": "npm:/zod-to-json-schema",
-    "@langchain/anthropic": "npm:@langchain/anthropic",
     "node-llama-cpp": "npm:/node-llama-cpp",
+    "ml-distance": "npm:/ml-distance",
+    "pdf-parse": "npm:/pdf-parse",
     "readline": "https://deno.land/x/readline@v1.1.0/mod.ts",
-    "ml-distance": "npm:/ml-distance"
+    "uuid": "npm:/uuid",
+    "youtubei.js": "npm:/youtubei.js",
+    "youtube-transcript": "npm:/youtube-transcript",
+    "neo4j-driver": "npm:/neo4j-driver"
   }
 }
