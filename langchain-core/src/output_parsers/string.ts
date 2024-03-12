@@ -68,6 +68,7 @@ export class StringOutputParser extends BaseTransformOutputParser<string> {
         return this._imageUrlContentToString(content);
       default:
         throw new Error(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           `Cannot coerce "${(content as any).type}" message part into a string.`
         );
     }
