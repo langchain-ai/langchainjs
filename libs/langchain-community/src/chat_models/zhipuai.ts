@@ -167,8 +167,6 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
     return undefined;
   }
 
-  lc_serializable: boolean;
-
   zhipuAIApiKey?: string;
 
   streaming: boolean;
@@ -200,7 +198,6 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
     }
 
     this.apiUrl = "https://open.bigmodel.cn/api/paas/v4/chat/completions";
-    this.lc_serializable = true;
     this.streaming = fields.streaming ?? false;
     this.messages = fields.messages ?? [];
     this.temperature = fields.temperature ?? 0.95;
