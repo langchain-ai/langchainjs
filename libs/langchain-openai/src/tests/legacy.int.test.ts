@@ -44,7 +44,7 @@ test("Test OpenAI in streaming mode", async () => {
 
 test("Test OpenAI with stop", async () => {
   const model = new OpenAIChat({ maxTokens: 5 });
-  const res = await model.invoke("Print hello world", ["world"]);
+  const res = await model.call("Print hello world", ["world"]);
   console.log({ res });
 });
 
