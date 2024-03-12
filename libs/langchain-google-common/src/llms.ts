@@ -1,9 +1,9 @@
+import { CallbackManager, Callbacks } from "@langchain/core/callbacks/manager";
+import { BaseLLM, LLM } from "@langchain/core/language_models/llms";
 import {
-  CallbackManagerForLLMRun,
-  Callbacks,
-} from "@langchain/core/callbacks/manager";
-import { LLM } from "@langchain/core/language_models/llms";
-import { type BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
+  type BaseLanguageModelCallOptions,
+  BaseLanguageModelInput,
+} from "@langchain/core/language_models/base";
 import { BaseMessage, MessageContent } from "@langchain/core/messages";
 import { GenerationChunk } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
@@ -21,13 +21,18 @@ import {
   copyAndValidateModelParamsInto,
 } from "./utils/common.js";
 import {
+  chunkToString,
   messageContentToParts,
-  responseToBaseMessage,
-  responseToGeneration,
-  responseToString,
+  safeResponseToBaseMessage,
+  safeResponseToString,
+  DefaultGeminiSafetyHandler,
 } from "./utils/gemini.js";
-import { JsonStream } from "./utils/stream.js";
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
+import { ensureParams } from "./utils/failed_handler.js";
+import { ChatGoogleBase } from "./chat_models.js";
+import type { GoogleBaseLLMInput, GoogleAISafetyHandler } from "./types.js";
+
+export { GoogleBaseLLMInput };
 
 class GoogleLLMConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   MessageContent,
@@ -48,11 +53,21 @@ class GoogleLLMConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   }
 }
 
-/**
- * Input to LLM class.
- */
-export interface GoogleBaseLLMInput<AuthOptions>
-  extends GoogleAIBaseLLMInput<AuthOptions> {}
+type ProxyChatInput<AuthOptions> = GoogleAIBaseLLMInput<AuthOptions> & {
+  connection: GoogleLLMConnection<AuthOptions>;
+};
+
+class ProxyChatGoogle<AuthOptions> extends ChatGoogleBase<AuthOptions> {
+  constructor(fields: ProxyChatInput<AuthOptions>) {
+    super(fields);
+  }
+
+  buildAbstractedClient(
+    fields: ProxyChatInput<AuthOptions>
+  ): GoogleAbstractedClient {
+    return fields.connection.client;
+  }
+}
 
 /**
  * Integration with an LLM.
@@ -65,6 +80,8 @@ export abstract class GoogleBaseLLM<AuthOptions>
   static lc_name() {
     return "GoogleLLM";
   }
+
+  originalFields?: GoogleBaseLLMInput<AuthOptions>;
 
   lc_serializable = true;
 
@@ -82,14 +99,19 @@ export abstract class GoogleBaseLLM<AuthOptions>
 
   safetySettings: GoogleAISafetySetting[] = [];
 
+  safetyHandler: GoogleAISafetyHandler;
+
   protected connection: GoogleLLMConnection<AuthOptions>;
 
   protected streamedConnection: GoogleLLMConnection<AuthOptions>;
 
   constructor(fields?: GoogleBaseLLMInput<AuthOptions>) {
-    super(fields ?? {});
+    super(ensureParams(fields));
+    this.originalFields = fields;
 
     copyAndValidateModelParamsInto(fields, this);
+    this.safetyHandler =
+      fields?.safetyHandler ?? new DefaultGeminiSafetyHandler();
 
     const client = this.buildClient(fields);
     this.buildConnection(fields ?? {}, client);
@@ -152,48 +174,81 @@ export abstract class GoogleBaseLLM<AuthOptions>
 
   /**
    * For some given input string and options, return a string output.
+   *
+   * Despite the fact that `invoke` is overridden below, we still need this
+   * in order to handle public APi calls to `generate()`.
    */
   async _call(
-    _prompt: string,
-    _options: this["ParsedCallOptions"],
-    _runManager?: CallbackManagerForLLMRun
+    prompt: string,
+    options: this["ParsedCallOptions"]
   ): Promise<string> {
     const parameters = copyAIModelParams(this);
-    const result = await this.connection.request(_prompt, parameters, _options);
-    const ret = responseToString(result);
+    const result = await this.connection.request(prompt, parameters, options);
+    const ret = safeResponseToString(result, this.safetyHandler);
     return ret;
   }
 
-  async *_streamResponseChunks(
-    _prompt: string,
-    _options: this["ParsedCallOptions"],
-    _runManager?: CallbackManagerForLLMRun
-  ): AsyncGenerator<GenerationChunk> {
-    // Make the call as a streaming request
-    const parameters = copyAIModelParams(this);
-    const result = await this.streamedConnection.request(
-      _prompt,
-      parameters,
-      _options
+  // Normally, you should not override this method and instead should override
+  // _streamResponseChunks. We are doing so here to allow for multimodal inputs into
+  // the LLM.
+  async *_streamIterator(
+    input: BaseLanguageModelInput,
+    options?: BaseLanguageModelCallOptions
+  ): AsyncGenerator<string> {
+    // TODO: Refactor callback setup and teardown code into core
+    const prompt = BaseLLM._convertInputToPromptValue(input);
+    const [runnableConfig, callOptions] =
+      this._separateRunnableConfigFromCallOptions(options);
+    const callbackManager_ = await CallbackManager.configure(
+      runnableConfig.callbacks,
+      this.callbacks,
+      runnableConfig.tags,
+      this.tags,
+      runnableConfig.metadata,
+      this.metadata,
+      { verbose: this.verbose }
     );
-
-    // Get the streaming parser of the response
-    const stream = result.data as JsonStream;
-
-    // Loop until the end of the stream
-    // During the loop, yield each time we get a chunk from the streaming parser
-    // that is either available or added to the queue
-    while (!stream.streamDone) {
-      const output = await stream.nextChunk();
-      const chunk =
-        output !== null
-          ? new GenerationChunk(responseToGeneration({ data: output }))
-          : new GenerationChunk({
-              text: "",
-              generationInfo: { finishReason: "stop" },
-            });
-      yield chunk;
+    const extra = {
+      options: callOptions,
+      invocation_params: this?.invocationParams(callOptions),
+      batch_size: 1,
+    };
+    const runManagers = await callbackManager_?.handleLLMStart(
+      this.toJSON(),
+      [prompt.toString()],
+      undefined,
+      undefined,
+      extra,
+      undefined,
+      undefined,
+      runnableConfig.runName
+    );
+    let generation = new GenerationChunk({
+      text: "",
+    });
+    const proxyChat = this.createProxyChat();
+    try {
+      for await (const chunk of proxyChat._streamIterator(input, options)) {
+        const stringValue = chunkToString(chunk);
+        const generationChunk = new GenerationChunk({
+          text: stringValue,
+        });
+        generation = generation.concat(generationChunk);
+        yield stringValue;
+      }
+    } catch (err) {
+      await Promise.all(
+        (runManagers ?? []).map((runManager) => runManager?.handleLLMError(err))
+      );
+      throw err;
     }
+    await Promise.all(
+      (runManagers ?? []).map((runManager) =>
+        runManager?.handleLLMEnd({
+          generations: [[generation]],
+        })
+      )
+    );
   }
 
   async predictMessages(
@@ -207,7 +262,34 @@ export abstract class GoogleBaseLLM<AuthOptions>
       {},
       options as BaseLanguageModelCallOptions
     );
-    const ret = responseToBaseMessage(result);
+    const ret = safeResponseToBaseMessage(result, this.safetyHandler);
     return ret;
+  }
+
+  /**
+   * Internal implementation detail to allow Google LLMs to support
+   * multimodal input by delegating to the chat model implementation.
+   *
+   * TODO: Replace with something less hacky.
+   */
+  protected createProxyChat(): ChatGoogleBase<AuthOptions> {
+    return new ProxyChatGoogle<AuthOptions>({
+      ...this.originalFields,
+      connection: this.connection,
+    });
+  }
+
+  // TODO: Remove the need to override this - we are doing it to
+  // allow the LLM to handle multimodal types of input.
+  async invoke(
+    input: BaseLanguageModelInput,
+    options?: BaseLanguageModelCallOptions
+  ): Promise<string> {
+    const stream = await this._streamIterator(input, options);
+    let generatedOutput = "";
+    for await (const chunk of stream) {
+      generatedOutput += chunk;
+    }
+    return generatedOutput;
   }
 }

@@ -256,7 +256,8 @@ export class AzureChatOpenAI
       getEnvironmentVariable("AZURE_OPENAI_API_ENDPOINT");
 
     this.azureOpenAIApiCompletionsDeploymentName =
-      fields?.azureOpenAIEmbeddingsApiDeploymentName ??
+      (fields?.azureOpenAIEmbeddingsApiDeploymentName ||
+        fields?.azureOpenAIApiDeploymentName) ??
       getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME");
 
     this.azureOpenAIApiKey =
@@ -265,7 +266,7 @@ export class AzureChatOpenAI
       (getEnvironmentVariable("AZURE_OPENAI_API_KEY") ||
         getEnvironmentVariable("OPENAI_API_KEY"));
 
-    if (!this.azureOpenAIApiKey) {
+    if (!this.azureOpenAIApiKey && !fields?.credentials) {
       throw new Error("Azure OpenAI API key not found");
     }
 
@@ -296,9 +297,9 @@ export class AzureChatOpenAI
     const azureCredential =
       fields?.credentials ??
       (fields?.azureOpenAIApiKey ||
-        getEnvironmentVariable("AZURE_OPENAI_API_KEY"))
+      getEnvironmentVariable("AZURE_OPENAI_API_KEY")
         ? new AzureKeyCredential(this.azureOpenAIApiKey ?? "")
-        : new OpenAIKeyCredential(this.azureOpenAIApiKey ?? "");
+        : new OpenAIKeyCredential(this.azureOpenAIApiKey ?? ""));
 
     if (isTokenCredential(azureCredential)) {
       this.client = new AzureOpenAIClient(

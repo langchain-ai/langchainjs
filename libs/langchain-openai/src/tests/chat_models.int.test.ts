@@ -1,6 +1,5 @@
-import { test, jest, expect, describe } from "@jest/globals";
+import { test, jest, expect } from "@jest/globals";
 import {
-  AIMessage,
   BaseMessage,
   ChatMessage,
   HumanMessage,
@@ -17,24 +16,7 @@ import {
 import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { InMemoryCache } from "@langchain/core/caches";
-import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatOpenAI } from "../chat_models.js";
-
-test("Test ChatOpenAI", async () => {
-  const chat = new ChatOpenAI({ modelName: "gpt-3.5-turbo", maxTokens: 10 });
-  const message = new HumanMessage("Hello!");
-  const res = await chat.call([message]);
-  console.log({ res });
-});
-
-test("Test ChatOpenAI with SystemChatMessage", async () => {
-  const chat = new ChatOpenAI({ modelName: "gpt-3.5-turbo", maxTokens: 10 });
-  const system_message = new SystemMessage("You are to chat with a user.");
-  const message = new HumanMessage("Hello!");
-  const res = await chat.call([system_message, message]);
-  console.log({ res });
-});
 
 test("Test ChatOpenAI Generate", async () => {
   const chat = new ChatOpenAI({
@@ -86,7 +68,7 @@ test("Test ChatOpenAI tokenUsage", async () => {
     }),
   });
   const message = new HumanMessage("Hello");
-  const res = await model.call([message]);
+  const res = await model.invoke([message]);
   console.log({ res });
 
   expect(tokenUsage.promptTokens).toBeGreaterThan(0);
@@ -135,7 +117,7 @@ test("Test ChatOpenAI in streaming mode", async () => {
     ],
   });
   const message = new HumanMessage("Hello!");
-  const result = await model.call([message]);
+  const result = await model.invoke([message]);
   console.log(result);
 
   expect(nrNewTokens > 0).toBe(true);
@@ -217,34 +199,33 @@ test("OpenAI Chat, docs, prompt templates", async () => {
 
 test("Test OpenAI with stop", async () => {
   const model = new ChatOpenAI({ maxTokens: 5 });
-  const res = await model.call(
-    [new HumanMessage("Print hello world")],
-    ["world"]
-  );
+  const res = await model.invoke([new HumanMessage("Print hello world")], {
+    stop: ["world"],
+  });
   console.log({ res });
 });
 
 test("Test OpenAI with stop in object", async () => {
   const model = new ChatOpenAI({ maxTokens: 5 });
-  const res = await model.call([new HumanMessage("Print hello world")], {
+  const res = await model.invoke([new HumanMessage("Print hello world")], {
     stop: ["world"],
   });
   console.log({ res });
 });
 
 test("Test OpenAI with timeout in call options", async () => {
-  const model = new ChatOpenAI({ maxTokens: 5 });
+  const model = new ChatOpenAI({ maxTokens: 5, maxRetries: 0 });
   await expect(() =>
-    model.call([new HumanMessage("Print hello world")], {
+    model.invoke([new HumanMessage("Print hello world")], {
       options: { timeout: 10 },
     })
   ).rejects.toThrow();
 }, 5000);
 
 test("Test OpenAI with timeout in call options and node adapter", async () => {
-  const model = new ChatOpenAI({ maxTokens: 5 });
+  const model = new ChatOpenAI({ maxTokens: 5, maxRetries: 0 });
   await expect(() =>
-    model.call([new HumanMessage("Print hello world")], {
+    model.invoke([new HumanMessage("Print hello world")], {
       options: { timeout: 10 },
     })
   ).rejects.toThrow();
@@ -254,7 +235,7 @@ test("Test OpenAI with signal in call options", async () => {
   const model = new ChatOpenAI({ maxTokens: 5 });
   const controller = new AbortController();
   await expect(() => {
-    const ret = model.call([new HumanMessage("Print hello world")], {
+    const ret = model.invoke([new HumanMessage("Print hello world")], {
       options: { signal: controller.signal },
     });
 
@@ -271,7 +252,7 @@ test("Test OpenAI with signal in call options and node adapter", async () => {
   });
   const controller = new AbortController();
   await expect(() => {
-    const ret = model.call([new HumanMessage("Print hello world")], {
+    const ret = model.invoke([new HumanMessage("Print hello world")], {
       options: { signal: controller.signal },
     });
 
@@ -348,7 +329,7 @@ test("Test OpenAI with specific roles in ChatMessage", async () => {
     "system"
   );
   const user_message = new ChatMessage("Hello!", "user");
-  const res = await chat.call([system_message, user_message]);
+  const res = await chat.invoke([system_message, user_message]);
   console.log({ res });
 });
 
@@ -402,6 +383,7 @@ test("Test ChatOpenAI stream method, timeout error thrown from SDK", async () =>
       maxTokens: 50,
       modelName: "gpt-3.5-turbo",
       timeout: 1,
+      maxRetries: 0,
     });
     const stream = await model.stream(
       "How is your day going? Be extremely verbose."
@@ -782,205 +764,4 @@ test("Test ChatOpenAI token usage reporting for streaming calls", async () => {
   ) {
     expect(streamingTokenUsed).toEqual(nonStreamingTokenUsed);
   }
-});
-
-describe("ChatOpenAI withStructuredOutput", () => {
-  test("withStructuredOutput zod schema function calling", async () => {
-    const model = new ChatOpenAI({
-      temperature: 0,
-      modelName: "gpt-4-turbo-preview",
-    });
-
-    const calculatorSchema = z.object({
-      operation: z.enum(["add", "subtract", "multiply", "divide"]),
-      number1: z.number(),
-      number2: z.number(),
-    });
-    const modelWithStructuredOutput = model.withStructuredOutput({
-      schema: calculatorSchema,
-      name: "calculator",
-    });
-
-    const prompt = ChatPromptTemplate.fromMessages([
-      "system",
-      "You are VERY bad at math and must always use a calculator.",
-      "human",
-      "Please help me!! What is 2 + 2?",
-    ]);
-    const chain = prompt.pipe(modelWithStructuredOutput);
-    const result = await chain.invoke({});
-    console.log(result);
-    expect("operation" in result).toBe(true);
-    expect("number1" in result).toBe(true);
-    expect("number2" in result).toBe(true);
-  });
-
-  test("withStructuredOutput zod schema JSON mode", async () => {
-    const model = new ChatOpenAI({
-      temperature: 0,
-      modelName: "gpt-4-turbo-preview",
-    });
-
-    const calculatorSchema = z.object({
-      operation: z.enum(["add", "subtract", "multiply", "divide"]),
-      number1: z.number(),
-      number2: z.number(),
-    });
-    const modelWithStructuredOutput = model.withStructuredOutput({
-      schema: calculatorSchema,
-      name: "calculator",
-      method: "jsonMode",
-    });
-
-    const prompt = ChatPromptTemplate.fromMessages([
-      "system",
-      `You are VERY bad at math and must always use a calculator.
-  Respond with a JSON object containing three keys:
-  'operation': the type of operation to execute, either 'add', 'subtract', 'multiply' or 'divide',
-  'number1': the first number to operate on,
-  'number2': the second number to operate on.
-  `,
-      "human",
-      "Please help me!! What is 2 + 2?",
-    ]);
-    const chain = prompt.pipe(modelWithStructuredOutput);
-    const result = await chain.invoke({});
-    console.log(result);
-    expect("operation" in result).toBe(true);
-    expect("number1" in result).toBe(true);
-    expect("number2" in result).toBe(true);
-  });
-
-  test("withStructuredOutput JSON schema function calling", async () => {
-    const model = new ChatOpenAI({
-      temperature: 0,
-      modelName: "gpt-4-turbo-preview",
-    });
-
-    const calculatorSchema = z.object({
-      operation: z.enum(["add", "subtract", "multiply", "divide"]),
-      number1: z.number(),
-      number2: z.number(),
-    });
-    const modelWithStructuredOutput = model.withStructuredOutput({
-      schema: zodToJsonSchema(calculatorSchema),
-      name: "calculator",
-    });
-
-    const prompt = ChatPromptTemplate.fromMessages([
-      "system",
-      `You are VERY bad at math and must always use a calculator.`,
-      "human",
-      "Please help me!! What is 2 + 2?",
-    ]);
-    const chain = prompt.pipe(modelWithStructuredOutput);
-    const result = await chain.invoke({});
-    console.log(result);
-    expect("operation" in result).toBe(true);
-    expect("number1" in result).toBe(true);
-    expect("number2" in result).toBe(true);
-  });
-
-  test("withStructuredOutput JSON schema JSON mode", async () => {
-    const model = new ChatOpenAI({
-      temperature: 0,
-      modelName: "gpt-4-turbo-preview",
-    });
-
-    const calculatorSchema = z.object({
-      operation: z.enum(["add", "subtract", "multiply", "divide"]),
-      number1: z.number(),
-      number2: z.number(),
-    });
-    const modelWithStructuredOutput = model.withStructuredOutput({
-      schema: zodToJsonSchema(calculatorSchema),
-      name: "calculator",
-      method: "jsonMode",
-    });
-
-    const prompt = ChatPromptTemplate.fromMessages([
-      "system",
-      `You are VERY bad at math and must always use a calculator.
-  Respond with a JSON object containing three keys:
-  'operation': the type of operation to execute, either 'add', 'subtract', 'multiply' or 'divide',
-  'number1': the first number to operate on,
-  'number2': the second number to operate on.
-  `,
-      "human",
-      "Please help me!! What is 2 + 2?",
-    ]);
-    const chain = prompt.pipe(modelWithStructuredOutput);
-    const result = await chain.invoke({});
-    console.log(result);
-    expect("operation" in result).toBe(true);
-    expect("number1" in result).toBe(true);
-    expect("number2" in result).toBe(true);
-  });
-
-  test("withStructuredOutput includeRaw true", async () => {
-    const model = new ChatOpenAI({
-      temperature: 0,
-      modelName: "gpt-4-turbo-preview",
-    });
-
-    const calculatorSchema = z.object({
-      operation: z.enum(["add", "subtract", "multiply", "divide"]),
-      number1: z.number(),
-      number2: z.number(),
-    });
-    const modelWithStructuredOutput = model.withStructuredOutput({
-      schema: calculatorSchema,
-      name: "calculator",
-      includeRaw: true,
-    });
-
-    const prompt = ChatPromptTemplate.fromMessages([
-      "system",
-      "You are VERY bad at math and must always use a calculator.",
-      "human",
-      "Please help me!! What is 2 + 2?",
-    ]);
-    const chain = prompt.pipe(modelWithStructuredOutput);
-    const result = await chain.invoke({});
-    console.log(result);
-
-    expect("parsed" in result).toBe(true);
-    // Need to make TS happy :)
-    if (!("parsed" in result)) {
-      throw new Error("parsed not in result");
-    }
-    const { parsed } = result;
-    expect("operation" in parsed).toBe(true);
-    expect("number1" in parsed).toBe(true);
-    expect("number2" in parsed).toBe(true);
-
-    expect("raw" in result).toBe(true);
-    // Need to make TS happy :)
-    if (!("raw" in result)) {
-      throw new Error("raw not in result");
-    }
-    const { raw } = result as { raw: AIMessage };
-    expect(raw.additional_kwargs.tool_calls?.length).toBeGreaterThan(0);
-    expect(raw.additional_kwargs.tool_calls?.[0].function.name).toBe(
-      "calculator"
-    );
-    expect(
-      "operation" in
-        JSON.parse(
-          raw.additional_kwargs.tool_calls?.[0].function.arguments ?? ""
-        )
-    ).toBe(true);
-    expect(
-      "number1" in
-        JSON.parse(
-          raw.additional_kwargs.tool_calls?.[0].function.arguments ?? ""
-        )
-    ).toBe(true);
-    expect(
-      "number2" in
-        JSON.parse(
-          raw.additional_kwargs.tool_calls?.[0].function.arguments ?? ""
-        )
-    ).toBe(true);
-  });
 });

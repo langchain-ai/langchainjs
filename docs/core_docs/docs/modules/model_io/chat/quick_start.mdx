@@ -128,7 +128,7 @@ Chat models implement the [Runnable interface](/docs/expression_language/interfa
 Chat models accept `BaseMessage[]` as inputs, or objects which can be coerced to messages, including `string` (converted to `HumanMessage`) and `PromptValue`.
 
 ```typescript
-import { HumanMessage, SystemMessage } from "langchain/chat_models/messages";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
 const messages = [
   new SystemMessage("You're a helpful assistant"),
