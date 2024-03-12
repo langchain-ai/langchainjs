@@ -74,9 +74,18 @@ export function fixArrayXMLParameters(
     const schemaType = (schema.properties[key] as any).type;
     // Crawl for lists indistinguishable from single items
     if (schema.properties && schema.properties[key] && schemaType === "array") {
-      fixedParameters[key] = Array.isArray(xmlParameters[key])
-        ? xmlParameters[key]
-        : [xmlParameters[key]];
+      const value = xmlParameters[key];
+      if (Array.isArray(value)) {
+          fixedParameters[key] = value;
+      } else if (typeof value === 'string') {
+        if (value.startsWith("[") && value.endsWith("]")) {
+          fixedParameters[key] = JSON.parse(value);
+        } else {
+          fixedParameters[key] = value.split(",");
+        }
+      } else {
+        fixedParameters[key] = [value];
+      }
       // Crawl for objects like {"item": "my string"} that should really just be "my string"
       if (
         schemaType !== "object" &&
@@ -91,7 +100,7 @@ export function fixArrayXMLParameters(
       typeof xmlParameters[key] === "object" &&
       xmlParameters[key] !== null
     ) {
-      fixedParameters[key] = fixArrayXMLParameters(schema, xmlParameters[key]);
+      fixedParameters[key] = fixArrayXMLParameters(schema.properties[key], xmlParameters[key]);
     } else {
       fixedParameters[key] = xmlParameters[key];
     }
