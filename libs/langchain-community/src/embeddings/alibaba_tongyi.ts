@@ -7,20 +7,18 @@ export interface AlibabaTongyiEmbeddingsParams extends EmbeddingsParams {
   modelName: "text-embedding-v2";
 
   /**
-   * Timeout to use when making requests to OpenAI.
+   * Timeout to use when making requests to AlibabaTongyi.
    */
   timeout?: number;
 
   /**
    * The maximum number of documents to embed in a single request. This is
-   * limited by the OpenAI API to a maximum of 2048.
+   * limited by the AlibabaTongyi API to a maximum of 2048.
    */
   batchSize?: number;
 
   /**
-   * Whether to strip new lines from the input text. This is recommended by
-   * OpenAI for older models, but may not be suitable for all use cases.
-   * See: https://github.com/openai/openai-python/issues/418#issuecomment-1525939500
+   * Whether to strip new lines from the input text.
    */
   stripNewLines?: boolean;
 
@@ -71,7 +69,6 @@ export class AlibabaTongyiEmbeddings
 
   batchSize = 24;
 
-  // TODO: Update to `false` on next minor release (see: https://github.com/langchain-ai/langchainjs/pull/3612)
   stripNewLines = true;
 
   apiKey: string;
