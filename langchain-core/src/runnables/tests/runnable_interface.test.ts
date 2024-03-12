@@ -46,6 +46,10 @@ interface RunnableInterfaceV0<RunInput, RunOutput, CallOptions = any> {
     generator: AsyncGenerator<RunInput>,
     options: Partial<CallOptions>
   ): AsyncGenerator<RunOutput>;
+
+  getName(suffix?: string): string;
+
+  get lc_id(): string[];
 }
 
 class IterableReadableStreamV0<T> extends ReadableStream<T> {
@@ -236,6 +240,14 @@ class RunnableV0
     _options: Partial<any>
   ): AsyncGenerator<AIMessageV0> {
     throw new Error("Not implemented");
+  }
+
+  getName(): string {
+    return "TEST";
+  }
+
+  get lc_id(): string[] {
+    return ["TEST"];
   }
 }
 
