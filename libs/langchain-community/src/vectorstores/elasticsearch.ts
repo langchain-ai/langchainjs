@@ -310,11 +310,10 @@ export class ElasticVectorSearch extends VectorStore {
     await this.client.indices.create(request);
   }
 
-  private buildMetadataTerms(
-    filter?: ElasticFilter
+  private buildMetadataTerms(filter?: ElasticFilter): {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): {
     must: { [operator: string]: { [field: string]: any } }[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     must_not: { [operator: string]: { [field: string]: any } }[];
   } {
     if (filter == null) return { must: [], must_not: [] };
