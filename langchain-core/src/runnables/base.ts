@@ -1,3 +1,4 @@
+import { z } from "zod";
 import pRetry from "p-retry";
 
 import {
@@ -108,6 +109,11 @@ export type RunnableBatchOptions = {
   /** @deprecated Pass in via the standard runnable config object instead */
   maxConcurrency?: number;
   returnExceptions?: boolean;
+};
+
+export type RunnableIOSchema = {
+  name?: string;
+  schema: z.ZodType;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -554,13 +560,19 @@ export abstract class Runnable<
   getGraph(_?: RunnableConfig): Graph {
     const graph = new Graph();
 
-    // TODO: what is the inputNode here?
-    const inputNode = graph.addNode({} as unknown as Runnable);
+    // TODO: Add input schema for runnables
+    const inputNode = graph.addNode({
+      name: `${this.getName()}Input`,
+      schema: z.any(),
+    });
 
-    const runnableNode = graph.addNode(this); // Assuming `this` refers to an instance that can be treated as data for a node
+    const runnableNode = graph.addNode(this);
 
-    // TODO: what is the outputNode here?
-    const outputNode = graph.addNode({} as unknown as Runnable);
+    // TODO: Add output schemas for runnables
+    const outputNode = graph.addNode({
+      name: `${this.getName()}Output`,
+      schema: z.any(),
+    });
 
     graph.addEdge(inputNode, runnableNode);
     graph.addEdge(runnableNode, outputNode);

@@ -37,12 +37,10 @@ test("Test graph sequence", async () => {
       {
         id: 0,
         type: "schema",
-        // data: {
-        //   title: "PromptInput",
-        //   type: "object",
-        //   properties: { name: { title: "Name", type: "string" } },
-        // },
-        data: {}, // TODO: replace this with actual schema serialization
+        data: {
+          title: "PromptTemplateInput",
+          $schema: "http://json-schema.org/draft-07/schema#",
+        },
       },
       {
         id: 1,
@@ -76,12 +74,10 @@ test("Test graph sequence", async () => {
       {
         id: 4,
         type: "schema",
-        // data: {
-        //   title: "CommaSeparatedListOutputParserOutput",
-        //   type: "array",
-        //   items: { type: "string" },
-        // },
-        data: {}, // TODO: replace this with actual schema serialization
+        data: {
+          title: "CommaSeparatedListOutputParserOutput",
+          $schema: "http://json-schema.org/draft-07/schema#",
+        },
       },
     ],
     edges: [

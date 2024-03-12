@@ -1,5 +1,6 @@
+import { zodToJsonSchema } from "zod-to-json-schema";
 import { v4 as uuidv4, validate as isUuid } from "uuid";
-import { type Runnable as RunnableType, Runnable } from "./base.js";
+import { Runnable, type RunnableIOSchema } from "./base.js";
 
 interface Edge {
   source: string;
@@ -10,11 +11,12 @@ interface Edge {
 interface Node {
   id: string;
 
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  data: Function | RunnableType;
+  data: RunnableIOSchema | Runnable;
 }
 
-function nodeDataStr(node: Node): string {
+const MAX_DATA_DISPLAY_NAME_LENGTH = 42;
+
+export function nodeDataStr(node: Node): string {
   if (!isUuid(node.id)) {
     return node.id;
   } else if (Runnable.isRunnable(node.data)) {
@@ -25,16 +27,16 @@ function nodeDataStr(node: Node): string {
         data[0] !== data[0].toUpperCase() ||
         data.split("\n").length > 1
       ) {
-        data = node.data.constructor.name;
-      } else if (data.length > 42) {
-        data = `${data.substring(0, 42)}...`;
+        data = node.data.getName();
+      } else if (data.length > MAX_DATA_DISPLAY_NAME_LENGTH) {
+        data = `${data.substring(0, MAX_DATA_DISPLAY_NAME_LENGTH)}...`;
       }
-      return data.startsWith("Runnable") ? data.substring(8) : data;
+      return data.startsWith("Runnable") ? data.slice("Runnable".length) : data;
     } catch (error) {
-      return node.data.constructor.name;
+      return node.data.getName();
     }
   } else {
-    return node.data.name; // Assuming `data` can be a class reference
+    return node.data.name ?? "UnknownSchema";
   }
 }
 
@@ -48,20 +50,12 @@ function nodeDataJson(node: Node) {
         name: node.data.getName(),
       },
     };
-  }
-
-  if (typeof node.data === "object" && node.data !== null) {
+  } else {
     return {
       type: "schema",
-      // we're just retuning the data instead of the schema for now.
-      data: node.data,
+      data: { ...zodToJsonSchema(node.data.schema), title: node.data.name },
     };
   }
-
-  return {
-    type: "unknown",
-    data: nodeDataStr(node),
-  };
 }
 
 export class Graph {
@@ -71,7 +65,7 @@ export class Graph {
 
   // Convert the graph to a JSON-serializable format.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  toJSON(): any {
+  toJSON(): Record<string, any> {
     const stableNodeIds: Record<string, string | number> = {};
     Object.values(this.nodes).forEach((node, i) => {
       stableNodeIds[node.id] = isUuid(node.id) ? i : node.id;
@@ -97,11 +91,8 @@ export class Graph {
     };
   }
 
-  addNode(data: Runnable, id?: string): Node {
-    if (
-      id !== undefined &&
-      Object.prototype.hasOwnProperty.call(this.nodes, id)
-    ) {
+  addNode(data: Runnable | RunnableIOSchema, id?: string): Node {
+    if (id !== undefined && this.nodes[id] !== undefined) {
       throw new Error(`Node with id ${id} already exists`);
     }
     const nodeId = id || uuidv4();
@@ -121,10 +112,10 @@ export class Graph {
   }
 
   addEdge(source: Node, target: Node, data?: string): Edge {
-    if (!Object.prototype.hasOwnProperty.call(this.nodes, source.id)) {
+    if (this.nodes[source.id] === undefined) {
       throw new Error(`Source node ${source.id} not in graph`);
     }
-    if (!Object.prototype.hasOwnProperty.call(this.nodes, target.id)) {
+    if (this.nodes[target.id] === undefined) {
       throw new Error(`Target node ${target.id} not in graph`);
     }
     const edge: Edge = { source: source.id, target: target.id, data };
@@ -132,7 +123,7 @@ export class Graph {
     return edge;
   }
 
-  firstNode(): Node | null {
+  firstNode(): Node | undefined {
     const targets = new Set(this.edges.map((edge) => edge.target));
     const found: Node[] = [];
     Object.values(this.nodes).forEach((node) => {
@@ -140,10 +131,10 @@ export class Graph {
         found.push(node);
       }
     });
-    return found.length === 1 ? found[0] : null;
+    return found[0];
   }
 
-  lastNode(): Node | null {
+  lastNode(): Node | undefined {
     const sources = new Set(this.edges.map((edge) => edge.source));
     const found: Node[] = [];
     Object.values(this.nodes).forEach((node) => {
@@ -151,7 +142,7 @@ export class Graph {
         found.push(node);
       }
     });
-    return found.length === 1 ? found[0] : null;
+    return found[0];
   }
 
   extend(graph: Graph): void {
