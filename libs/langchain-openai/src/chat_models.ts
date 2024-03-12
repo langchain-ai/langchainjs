@@ -27,6 +27,7 @@ import {
 import type {
   BaseFunctionCallOptions,
   BaseLanguageModelInput,
+  StructuredOutputMethodOptions,
   StructuredOutputMethodParams,
 } from "@langchain/core/language_models/base";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
@@ -37,7 +38,11 @@ import {
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
-import { JsonOutputParser } from "@langchain/core/output_parsers";
+import {
+  JsonOutputParser,
+  StructuredOutputParser,
+  type BaseLLMOutputParser,
+} from "@langchain/core/output_parsers";
 import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import type {
@@ -860,64 +865,84 @@ export class ChatOpenAI<
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>
-  >({
-    schema,
-    name,
-    method,
-    includeRaw,
-  }: StructuredOutputMethodParams<RunOutput, false>): Runnable<
-    BaseLanguageModelInput,
-    RunOutput
-  >;
+  >(
+    outputSchema:
+      | StructuredOutputMethodParams<RunOutput, false>
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<false>
+  ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>
-  >({
-    schema,
-    name,
-    method,
-    includeRaw,
-  }: StructuredOutputMethodParams<RunOutput, true>): Runnable<
-    BaseLanguageModelInput,
-    { raw: BaseMessage; parsed: RunOutput }
-  >;
+  >(
+    outputSchema:
+      | StructuredOutputMethodParams<RunOutput, true>
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<true>
+  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>
-  >({
-    schema,
-    name,
-    method,
-    includeRaw,
-  }: StructuredOutputMethodParams<RunOutput, boolean>):
+  >(
+    outputSchema:
+      | StructuredOutputMethodParams<RunOutput, boolean>
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<boolean>
+  ):
     | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<
         BaseLanguageModelInput,
         { raw: BaseMessage; parsed: RunOutput }
       > {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let schema: z.ZodType<RunOutput> | Record<string, any>;
+    let name;
+    let method;
+    let includeRaw;
+    if (isStructuredOutputMethodParams(outputSchema)) {
+      schema = outputSchema.schema;
+      name = outputSchema.name;
+      method = outputSchema.method;
+      includeRaw = outputSchema.includeRaw;
+    } else {
+      schema = outputSchema;
+      name = config?.name;
+      method = config?.method;
+      includeRaw = config?.includeRaw;
+    }
     let llm: Runnable<BaseLanguageModelInput>;
-    let outputParser: JsonOutputKeyToolsParser | JsonOutputParser<RunOutput>;
+    let outputParser: BaseLLMOutputParser<RunOutput>;
 
     if (method === "jsonMode") {
       llm = this.bind({
         response_format: { type: "json_object" },
       } as Partial<CallOptions>);
-      outputParser = new JsonOutputParser<RunOutput>();
+      if (isZodSchema(schema)) {
+        outputParser = StructuredOutputParser.fromZodSchema(schema);
+      } else {
+        outputParser = new JsonOutputParser<RunOutput>();
+      }
     } else {
       const functionName = name ?? "extract";
       // Is function calling
       if (isZodSchema(schema)) {
-        const asZodSchema = zodToJsonSchema(schema);
+        const asJsonSchema = zodToJsonSchema(schema);
         llm = this.bind({
           tools: [
             {
               type: "function" as const,
               function: {
-                name,
-                description: asZodSchema.description,
-                parameters: asZodSchema,
+                name: functionName,
+                description: asJsonSchema.description,
+                parameters: asJsonSchema,
               },
             },
           ],
@@ -928,9 +953,10 @@ export class ChatOpenAI<
             },
           },
         } as Partial<CallOptions>);
-        outputParser = new JsonOutputKeyToolsParser<RunOutput>({
+        outputParser = new JsonOutputKeyToolsParser({
           returnSingle: true,
           keyName: functionName,
+          zodSchema: schema,
         });
       } else {
         llm = this.bind({
@@ -938,7 +964,7 @@ export class ChatOpenAI<
             {
               type: "function" as const,
               function: {
-                name,
+                name: functionName,
                 description: schema.description,
                 parameters: schema,
               },
@@ -947,7 +973,7 @@ export class ChatOpenAI<
           tool_choice: {
             type: "function" as const,
             function: {
-              name,
+              name: functionName,
             },
           },
         } as Partial<CallOptions>);
@@ -988,11 +1014,24 @@ export class ChatOpenAI<
 }
 
 function isZodSchema<
-  // prettier-ignore
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
+  RunOutput extends Record<string, any> = Record<string, any>
+>(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
->(input: any): input is z.ZodEffects<RunOutput> {
+  input: z.ZodType<RunOutput> | Record<string, any>
+): input is z.ZodType<RunOutput> {
   // Check for a characteristic method of Zod schemas
-  return typeof input?.parse === "function";
+  return typeof (input as z.ZodType<RunOutput>)?.parse === "function";
+}
+
+function isStructuredOutputMethodParams(
+  x: unknown
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): x is StructuredOutputMethodParams<Record<string, any>> {
+  return (
+    x !== undefined &&
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    typeof (x as StructuredOutputMethodParams<Record<string, any>>).schema ===
+      "object"
+  );
 }

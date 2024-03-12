@@ -87,7 +87,14 @@ export interface GoogleAIModelParams {
 export interface GoogleAIBaseLLMInput<AuthOptions>
   extends BaseLLMParams,
     GoogleConnectionParams<AuthOptions>,
-    GoogleAIModelParams {}
+    GoogleAIModelParams,
+    GoogleAISafetyParams {}
+
+/**
+ * Input to LLM class.
+ */
+export interface GoogleBaseLLMInput<AuthOptions>
+  extends GoogleAIBaseLLMInput<AuthOptions> {}
 
 export interface GoogleResponse {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -99,26 +106,34 @@ export interface GeminiPartText {
 }
 
 export interface GeminiPartInlineData {
-  mimeType: string;
-  data: string;
+  inlineData: {
+    mimeType: string;
+    data: string;
+  };
 }
 
 // Vertex AI only
 export interface GeminiPartFileData {
-  mimeType: string;
-  fileUri: string;
+  fileData: {
+    mimeType: string;
+    fileUri: string;
+  };
 }
 
 // AI Studio only?
 export interface GeminiPartFunctionCall {
-  name: string;
-  args?: object;
+  functionCall: {
+    name: string;
+    args?: object;
+  };
 }
 
 // AI Studio Only?
 export interface GeminiPartFunctionResponse {
-  name: string;
-  response: object;
+  functionResponse: {
+    name: string;
+    response: object;
+  };
 }
 
 export type GeminiPart =
@@ -179,6 +194,7 @@ interface GeminiResponseCandidate {
 }
 
 interface GeminiResponsePromptFeedback {
+  blockReason?: string;
   safetyRatings: GeminiSafetyRating[];
 }
 
@@ -196,4 +212,18 @@ export type GoogleLLMResponseData =
 
 export interface GoogleLLMResponse extends GoogleResponse {
   data: GoogleLLMResponseData;
+}
+
+export interface GoogleAISafetyHandler {
+  /**
+   * A function that will take a response and return the, possibly modified,
+   * response or throw an exception if there are safety issues.
+   *
+   * @throws GoogleAISafetyError
+   */
+  handle(response: GoogleLLMResponse): GoogleLLMResponse;
+}
+
+export interface GoogleAISafetyParams {
+  safetyHandler?: GoogleAISafetyHandler;
 }

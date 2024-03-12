@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.1.25",
+  "version": "0.1.26",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -1512,9 +1512,9 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.9.1",
-    "@langchain/community": "~0.0.33",
-    "@langchain/core": "~0.1.41",
-    "@langchain/openai": "~0.0.14",
+    "@langchain/community": "~0.0.36",
+    "@langchain/core": "~0.1.44",
+    "@langchain/openai": "~0.0.19",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
     "js-tiktoken": "^1.0.7",
