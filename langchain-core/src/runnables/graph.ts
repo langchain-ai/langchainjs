@@ -1,6 +1,7 @@
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { v4 as uuidv4, validate as isUuid } from "uuid";
-import { Runnable, type RunnableIOSchema } from "./base.js";
+import type { RunnableInterface, RunnableIOSchema } from "./types.js";
+import { isRunnableInterface } from "./utils.js";
 
 interface Edge {
   source: string;
@@ -11,7 +12,7 @@ interface Edge {
 interface Node {
   id: string;
 
-  data: RunnableIOSchema | Runnable;
+  data: RunnableIOSchema | RunnableInterface;
 }
 
 const MAX_DATA_DISPLAY_NAME_LENGTH = 42;
@@ -19,7 +20,7 @@ const MAX_DATA_DISPLAY_NAME_LENGTH = 42;
 export function nodeDataStr(node: Node): string {
   if (!isUuid(node.id)) {
     return node.id;
-  } else if (Runnable.isRunnable(node.data)) {
+  } else if (isRunnableInterface(node.data)) {
     try {
       let data = node.data.toString();
       if (
@@ -42,7 +43,7 @@ export function nodeDataStr(node: Node): string {
 
 function nodeDataJson(node: Node) {
   // if node.data is implements Runnable
-  if (Runnable.isRunnable(node.data)) {
+  if (isRunnableInterface(node.data)) {
     return {
       type: "runnable",
       data: {
@@ -91,7 +92,7 @@ export class Graph {
     };
   }
 
-  addNode(data: Runnable | RunnableIOSchema, id?: string): Node {
+  addNode(data: RunnableInterface | RunnableIOSchema, id?: string): Node {
     if (id !== undefined && this.nodes[id] !== undefined) {
       throw new Error(`Node with id ${id} already exists`);
     }

@@ -76,6 +76,10 @@ export function get_lc_unique_name(
   }
 }
 
+export interface SerializableInterface {
+  get lc_id(): string[];
+}
+
 export abstract class Serializable {
   lc_serializable = false;
 
