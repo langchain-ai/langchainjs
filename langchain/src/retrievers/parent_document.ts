@@ -139,7 +139,11 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
       childDocChunkHeaderOptions?: TextSplitterChunkHeaderOptions;
     }
   ): Promise<void> {
-    const { ids, addToDocstore = true, childDocChunkHeaderOptions = {} } = config ?? {};
+    const {
+      ids,
+      addToDocstore = true,
+      childDocChunkHeaderOptions = {},
+    } = config ?? {};
     const parentDocs = this.parentSplitter
       ? await this.parentSplitter.splitDocuments(docs)
       : docs;
