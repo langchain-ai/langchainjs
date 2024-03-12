@@ -68,7 +68,7 @@ interface ChatCompletionResponse {
 /**
  * Interface defining the input to the ZhipuAIChatInput class.
  */
-interface ZhipuAIChatInput {
+export interface ChatZhipuAIParams {
   /**
    * @default "glm-3-turbo"
    */
@@ -143,7 +143,7 @@ function messageToRole(message: BaseMessage): ZhipuMessageRole {
   }
 }
 
-export class ChatZhipuAI extends BaseChatModel implements ZhipuAIChatInput {
+export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
 
   static lc_name() {
     return "ChatZhipuAI";
@@ -186,7 +186,7 @@ export class ChatZhipuAI extends BaseChatModel implements ZhipuAIChatInput {
   stop?: string[];
 
   constructor(
-    fields: Partial<ZhipuAIChatInput> & BaseChatModelParams = {}
+    fields: Partial<ChatZhipuAIParams> & BaseChatModelParams = {}
   ) {
     super(fields);
 
