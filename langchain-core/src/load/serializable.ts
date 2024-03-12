@@ -80,7 +80,7 @@ export interface SerializableInterface {
   get lc_id(): string[];
 }
 
-export abstract class Serializable {
+export abstract class Serializable implements SerializableInterface {
   lc_serializable = false;
 
   lc_kwargs: SerializedFields;
