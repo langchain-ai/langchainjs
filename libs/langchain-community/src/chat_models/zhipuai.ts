@@ -1,10 +1,16 @@
-import { BaseChatModel, type BaseChatModelParams } from "@langchain/core/language_models/chat_models";
-import { AIMessage, type BaseMessage, ChatMessage } from "@langchain/core/messages";
+import {
+  BaseChatModel,
+  type BaseChatModelParams,
+} from "@langchain/core/language_models/chat_models";
+import {
+  AIMessage,
+  type BaseMessage,
+  ChatMessage,
+} from "@langchain/core/messages";
 import { type ChatResult } from "@langchain/core/outputs";
 import { type CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-// eslint-disable-next-line import/no-extraneous-dependencies
-import * as jwt from 'jsonwebtoken';
+import * as jwt from "jsonwebtoken";
 
 export type ZhipuMessageRole = "system" | "assistant" | "user";
 
@@ -18,18 +24,18 @@ interface ZhipuMessage {
  *
  * See https://open.bigmodel.cn/dev/howuse/model
  */
-type ModelName = | (string & NonNullable<unknown>)
-  // will be deprecated models 
-  | "chatglm_pro"  // deprecated in 2024-12-31T23:59:59+0800，point to glm-4
-  | "chatglm_std"  // deprecated in 2024-12-31T23:59:59+0800，point to glm-3-turbo
+type ModelName =
+  | (string & NonNullable<unknown>)
+  // will be deprecated models
+  | "chatglm_pro" // deprecated in 2024-12-31T23:59:59+0800，point to glm-4
+  | "chatglm_std" // deprecated in 2024-12-31T23:59:59+0800，point to glm-3-turbo
   | "chatglm_lite" // deprecated in 2024-12-31T23:59:59+0800，point to glm-3-turbo
   // GLM-4 more powerful on Q/A and text generation, suitable for complex dialog interactions and deep content creation design.
-  | "glm-4"  // context size: 128k
+  | "glm-4" // context size: 128k
   | "glm-4v" // context size: 2k
   // ChatGLM-Turbo
-  | "glm-3-turbo"   // context size: 128k
-  | "chatglm_turbo" // context size: 32k
-  ;
+  | "glm-3-turbo" // context size: 128k
+  | "chatglm_turbo"; // context size: 32k
 interface ChatCompletionRequest {
   model: ModelName;
   input: {
@@ -104,7 +110,7 @@ export interface ChatZhipuAIParams {
   requestId?: string;
 
   /**
-   * turn on sampling strategy when do_sample is true, 
+   * turn on sampling strategy when do_sample is true,
    * do_sample is false, temperature、top_p will not take effect
    */
   doSample?: boolean;
@@ -115,7 +121,6 @@ export interface ChatZhipuAIParams {
   maxTokens?: number;
 
   stop?: string[];
-
 }
 
 function messageToRole(message: BaseMessage): ZhipuMessageRole {
@@ -144,7 +149,6 @@ function messageToRole(message: BaseMessage): ZhipuMessageRole {
 }
 
 export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
-
   static lc_name() {
     return "ChatZhipuAI";
   }
@@ -185,12 +189,12 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
 
   stop?: string[];
 
-  constructor(
-    fields: Partial<ChatZhipuAIParams> & BaseChatModelParams = {}
-  ) {
+  constructor(fields: Partial<ChatZhipuAIParams> & BaseChatModelParams = {}) {
     super(fields);
 
-    this.zhipuAIApiKey = ChatZhipuAI.encodeApiKey(fields?.zhipuAIApiKey ?? getEnvironmentVariable("ZHIPUAI_API_KEY"));
+    this.zhipuAIApiKey = ChatZhipuAI.encodeApiKey(
+      fields?.zhipuAIApiKey ?? getEnvironmentVariable("ZHIPUAI_API_KEY")
+    );
     if (!this.zhipuAIApiKey) {
       throw new Error("ZhipuAI API key not found");
     }
@@ -344,7 +348,7 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
   }
 
   static encodeApiKey(apiKey: string | undefined) {
-    if (!apiKey) throw Error('Invalid api key');
+    if (!apiKey) throw Error("Invalid api key");
     const [key, secret] = apiKey.split(".");
     const API_TOKEN_TTL_SECONDS = 3 * 60;
     const now = new Date().valueOf();
@@ -355,11 +359,11 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const options: any = {
-      algorithm: 'HS256',
+      algorithm: "HS256",
       header: {
-        alg: 'HS256',
-        sign_type: 'SIGN'
-      }
+        alg: "HS256",
+        sign_type: "SIGN",
+      },
     };
     return jwt.sign(payload, secret, options);
   }

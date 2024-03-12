@@ -9115,6 +9115,7 @@ __metadata:
     html-to-text: ^9.0.5
     ioredis: ^5.3.2
     jsdom: "*"
+    jsonwebtoken: ^9.0.2
     llmonitor: ^0.5.9
     lodash: ^4.17.21
     lunary: ^0.6.11
@@ -9262,6 +9263,8 @@ __metadata:
     ioredis:
       optional: true
     jsdom:
+      optional: true
+    jsonwebtoken:
       optional: true
     llmonitor:
       optional: true
