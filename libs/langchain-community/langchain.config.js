@@ -67,6 +67,7 @@ export const config = {
     "embeddings/llama_cpp": "embeddings/llama_cpp",
     "embeddings/minimax": "embeddings/minimax",
     "embeddings/ollama": "embeddings/ollama",
+    "embeddings/premai": "embeddings/premai",
     "embeddings/tensorflow": "embeddings/tensorflow",
     "embeddings/togetherai": "embeddings/togetherai",
     "embeddings/voyage": "embeddings/voyage",
@@ -152,6 +153,7 @@ export const config = {
     "chat_models/minimax": "chat_models/minimax",
     "chat_models/ollama": "chat_models/ollama",
     "chat_models/portkey": "chat_models/portkey",
+    "chat_models/premai": "chat_models/premai",
     "chat_models/togetherai": "chat_models/togetherai",
     "chat_models/yandex": "chat_models/yandex",
     // callbacks

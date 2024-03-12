@@ -154,6 +154,7 @@
     "pg-copy-streams": "^6.0.5",
     "pickleparser": "^0.2.1",
     "portkey-ai": "^0.1.11",
+    "@premai/prem-sdk": "^0.3.19",
     "prettier": "^2.8.3",
     "redis": "^4.6.6",
     "release-it": "^15.10.1",
@@ -244,6 +245,7 @@
     "pg-copy-streams": "^6.0.5",
     "pickleparser": "^0.2.1",
     "portkey-ai": "^0.1.11",
+    "@premai/prem-sdk": "^0.3.19",
     "redis": "*",
     "replicate": "^0.18.0",
     "typeorm": "^0.3.12",
@@ -476,6 +478,9 @@
       "optional": true
     },
     "portkey-ai": {
+      "optional": true
+    },
+    "premai": {
       "optional": true
     },
     "redis": {
