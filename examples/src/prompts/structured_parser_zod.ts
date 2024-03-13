@@ -27,7 +27,7 @@ const model = new OpenAI({ temperature: 0 });
 const input = await prompt.format({
   question: "What is the capital of France?",
 });
-const response = await model.call(input);
+const response = await model.invoke(input);
 
 console.log(input);
 /*

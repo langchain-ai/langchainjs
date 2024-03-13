@@ -35,7 +35,7 @@ export const run = async () => {
 
   const nftPrompt =
     "Describe the character with the attributes from the following json document in a 4 sentence story. ";
-  const nftResponse = await model.call(
+  const nftResponse = await model.invoke(
     nftPrompt + JSON.stringify(nftMetadataDocs[0], null, 2)
   );
   console.log(`user > ${nftPrompt}`);
@@ -57,7 +57,7 @@ export const run = async () => {
 
   const latestPrompt =
     "Describe the following json documents in only 4 sentences per document. Include as much detail as possible. ";
-  const latestResponse = await model.call(
+  const latestResponse = await model.invoke(
     latestPrompt + JSON.stringify(latestTransactionsDocs[0], null, 2)
   );
   console.log(`\n\nuser > ${nftPrompt}`);
@@ -76,7 +76,7 @@ export const run = async () => {
 
   const sqlPrompt =
     "Describe the character with the attributes from the following json document in an ad for a new coffee shop. ";
-  const sqlResponse = await model.call(
+  const sqlResponse = await model.invoke(
     sqlPrompt + JSON.stringify(sqlDocs[0], null, 2)
   );
   console.log(`\n\nuser > ${sqlPrompt}`);

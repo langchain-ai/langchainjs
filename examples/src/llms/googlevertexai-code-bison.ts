@@ -17,5 +17,7 @@ const model = new GoogleVertexAI({
   model: "code-bison",
   maxOutputTokens: 2048,
 });
-const res = await model.call("A Javascript function that counts from 1 to 10.");
+const res = await model.invoke(
+  "A Javascript function that counts from 1 to 10."
+);
 console.log({ res });
