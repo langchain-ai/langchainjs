@@ -60,7 +60,7 @@ export class VercelPostgres extends VectorStore {
     return "vercel";
   }
 
-  private constructor(
+  constructor(
     embeddings: EmbeddingsInterface,
     config: VercelPostgresFields
   ) {

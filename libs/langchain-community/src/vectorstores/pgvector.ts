@@ -80,7 +80,7 @@ export class PGVectorStore extends VectorStore {
     return "pgvector";
   }
 
-  private constructor(
+  constructor(
     embeddings: EmbeddingsInterface,
     config: PGVectorStoreArgs
   ) {
