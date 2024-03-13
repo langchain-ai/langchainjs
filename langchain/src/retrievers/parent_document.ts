@@ -86,7 +86,7 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
 
   documentCompressor: BaseDocumentCompressor | undefined;
 
-  protected documentCompressorrMinRelevanceScore?: number = 0.5;
+  protected documentCompressorrMinRelevanceScore?: number = 0.4;
 
   constructor(fields: ParentDocumentRetrieverFields) {
     super(fields);
