@@ -320,7 +320,7 @@ export class LogStreamCallbackHandler extends BaseTracer {
   name = "log_stream_tracer";
 
   constructor(fields?: LogStreamCallbackHandlerInput) {
-    super(fields);
+    super({ _awaitHandler: true, ...fields });
     this.autoClose = fields?.autoClose ?? true;
     this.includeNames = fields?.includeNames;
     this.includeTypes = fields?.includeTypes;
