@@ -155,6 +155,7 @@ export const config = {
     "chat_models/portkey": "chat_models/portkey",
     "chat_models/togetherai": "chat_models/togetherai",
     "chat_models/yandex": "chat_models/yandex",
+    "chat_models/zhipuai": "chat_models/zhipuai",
     // callbacks
     "callbacks/handlers/llmonitor": "callbacks/handlers/llmonitor",
     "callbacks/handlers/lunary": "callbacks/handlers/lunary",
@@ -304,6 +305,7 @@ export const config = {
     "chat_models/portkey",
     "chat_models/iflytek_xinghuo",
     "chat_models/iflytek_xinghuo/web",
+    "chat_models/zhipuai",
     "retrievers/amazon_kendra",
     "retrievers/amazon_knowledge_base",
     "retrievers/dria",

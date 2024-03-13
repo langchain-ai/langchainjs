@@ -97,6 +97,7 @@
     "@types/flat": "^5.0.2",
     "@types/html-to-text": "^9",
     "@types/jsdom": "^21.1.1",
+    "@types/jsonwebtoken": "^9",
     "@types/lodash": "^4",
     "@types/mozilla-readability": "^0.2.1",
     "@types/pg": "^8.11.0",
@@ -143,6 +144,7 @@
     "jest": "^29.5.0",
     "jest-environment-node": "^29.6.4",
     "jsdom": "^22.1.0",
+    "jsonwebtoken": "^9.0.2",
     "llmonitor": "^0.5.9",
     "lodash": "^4.17.21",
     "lunary": "^0.6.11",
@@ -233,6 +235,7 @@
     "html-to-text": "^9.0.5",
     "ioredis": "^5.3.2",
     "jsdom": "*",
+    "jsonwebtoken": "^9.0.2",
     "llmonitor": "^0.5.9",
     "lodash": "^4.17.21",
     "lunary": "^0.6.11",
@@ -443,6 +446,9 @@
       "optional": true
     },
     "jsdom": {
+      "optional": true
+    },
+    "jsonwebtoken": {
       "optional": true
     },
     "llmonitor": {
@@ -1629,6 +1635,15 @@
       "import": "./chat_models/yandex.js",
       "require": "./chat_models/yandex.cjs"
     },
+    "./chat_models/zhipuai": {
+      "types": {
+        "import": "./chat_models/zhipuai.d.ts",
+        "require": "./chat_models/zhipuai.d.cts",
+        "default": "./chat_models/zhipuai.d.ts"
+      },
+      "import": "./chat_models/zhipuai.js",
+      "require": "./chat_models/zhipuai.cjs"
+    },
     "./callbacks/handlers/llmonitor": {
       "types": {
         "import": "./callbacks/handlers/llmonitor.d.ts",
@@ -2615,6 +2630,10 @@
     "chat_models/yandex.js",
     "chat_models/yandex.d.ts",
     "chat_models/yandex.d.cts",
+    "chat_models/zhipuai.cjs",
+    "chat_models/zhipuai.js",
+    "chat_models/zhipuai.d.ts",
+    "chat_models/zhipuai.d.cts",
     "callbacks/handlers/llmonitor.cjs",
     "callbacks/handlers/llmonitor.js",
     "callbacks/handlers/llmonitor.d.ts",
