@@ -19,6 +19,7 @@ export interface DatastoreChatMessageHistoryProps {
 
 export class DatastoreChatMessageHistory extends BaseListChatMessageHistory {
   readonly lc_namespace = ['langchain', 'stores', 'message', 'datastore']
+
   readonly sessionId: string
 
   private readonly datastore: Datastore
