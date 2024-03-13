@@ -1,5 +1,7 @@
+import { z } from "zod";
 import pRetry from "p-retry";
 
+import type { RunnableInterface, RunnableBatchOptions } from "./types.js";
 import {
   CallbackManager,
   CallbackManagerForChainRun,
@@ -16,7 +18,6 @@ import { Serializable } from "../load/serializable.js";
 import {
   IterableReadableStream,
   concat,
-  type IterableReadableStreamInterface,
   atee,
   pipeGeneratorWithSetup,
   AsyncGeneratorWithSetup,
@@ -33,54 +34,11 @@ import { AsyncCaller } from "../utils/async_caller.js";
 import { Run } from "../tracers/base.js";
 import { RootListenersTracer } from "../tracers/root_listener.js";
 import { BaseCallbackHandler } from "../callbacks/base.js";
-import { _RootEventFilter } from "./utils.js";
+import { _RootEventFilter, isRunnableInterface } from "./utils.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
+import { Graph } from "./graph.js";
 
-/**
- * Base interface implemented by all runnables.
- * Used for cross-compatibility between different versions of LangChain core.
- *
- * Should not change on patch releases.
- */
-export interface RunnableInterface<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunInput = any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput = any,
-  CallOptions extends RunnableConfig = RunnableConfig
-> {
-  lc_serializable: boolean;
-
-  invoke(input: RunInput, options?: Partial<CallOptions>): Promise<RunOutput>;
-
-  batch(
-    inputs: RunInput[],
-    options?: Partial<CallOptions> | Partial<CallOptions>[],
-    batchOptions?: RunnableBatchOptions & { returnExceptions?: false }
-  ): Promise<RunOutput[]>;
-
-  batch(
-    inputs: RunInput[],
-    options?: Partial<CallOptions> | Partial<CallOptions>[],
-    batchOptions?: RunnableBatchOptions & { returnExceptions: true }
-  ): Promise<(RunOutput | Error)[]>;
-
-  batch(
-    inputs: RunInput[],
-    options?: Partial<CallOptions> | Partial<CallOptions>[],
-    batchOptions?: RunnableBatchOptions
-  ): Promise<(RunOutput | Error)[]>;
-
-  stream(
-    input: RunInput,
-    options?: Partial<CallOptions>
-  ): Promise<IterableReadableStreamInterface<RunOutput>>;
-
-  transform(
-    generator: AsyncGenerator<RunInput>,
-    options: Partial<CallOptions>
-  ): AsyncGenerator<RunOutput>;
-}
+export { type RunnableInterface, RunnableBatchOptions };
 
 // TODO: Make `options` just take `RunnableConfig`
 export type RunnableFunc<RunInput, RunOutput> = (
@@ -102,12 +60,6 @@ export type RunnableLike<RunInput = any, RunOutput = any> =
   | RunnableInterface<RunInput, RunOutput>
   | RunnableFunc<RunInput, RunOutput>
   | RunnableMapLike<RunInput, RunOutput>;
-
-export type RunnableBatchOptions = {
-  /** @deprecated Pass in via the standard runnable config object instead */
-  maxConcurrency?: number;
-  returnExceptions?: boolean;
-};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type RunnableRetryFailedAttemptHandler = (error: any) => any;
@@ -550,6 +502,28 @@ export abstract class Runnable<
     );
   }
 
+  getGraph(_?: RunnableConfig): Graph {
+    const graph = new Graph();
+
+    // TODO: Add input schema for runnables
+    const inputNode = graph.addNode({
+      name: `${this.getName()}Input`,
+      schema: z.any(),
+    });
+
+    const runnableNode = graph.addNode(this);
+
+    // TODO: Add output schemas for runnables
+    const outputNode = graph.addNode({
+      name: `${this.getName()}Output`,
+      schema: z.any(),
+    });
+
+    graph.addEdge(inputNode, runnableNode);
+    graph.addEdge(runnableNode, outputNode);
+    return graph;
+  }
+
   /**
    * Create a new runnable sequence that runs each individual runnable in series,
    * piping the output of one runnable into another runnable or runnable-like.
@@ -877,7 +851,7 @@ export abstract class Runnable<
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static isRunnable(thing: any): thing is Runnable {
-    return thing ? thing.lc_runnable : false;
+    return isRunnableInterface(thing);
   }
 
   /**
@@ -1638,6 +1612,39 @@ export class RunnableSequence<
       throw e;
     }
     await runManager?.handleChainEnd(_coerceToDict(finalOutput, "output"));
+  }
+
+  getGraph(config?: RunnableConfig): Graph {
+    const graph = new Graph();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let currentLastNode: any = null;
+
+    this.steps.forEach((step, index) => {
+      const stepGraph = step.getGraph(config);
+
+      if (index !== 0) {
+        stepGraph.trimFirstNode();
+      }
+
+      if (index !== this.steps.length - 1) {
+        stepGraph.trimLastNode();
+      }
+
+      graph.extend(stepGraph);
+
+      const stepFirstNode = stepGraph.firstNode();
+      if (!stepFirstNode) {
+        throw new Error(`Runnable ${step} has no first node`);
+      }
+
+      if (currentLastNode) {
+        graph.addEdge(currentLastNode, stepFirstNode);
+      }
+
+      currentLastNode = stepGraph.lastNode();
+    });
+
+    return graph;
   }
 
   pipe<NewRunOutput>(

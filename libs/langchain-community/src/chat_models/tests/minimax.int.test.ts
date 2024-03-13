@@ -95,7 +95,7 @@ test.skip("Test ChatMinimax tokenUsage", async () => {
     }),
   });
   const message = new HumanMessage("Hello");
-  const res = await model.call([message]);
+  const res = await model.invoke([message]);
   console.log({ res });
 
   expect(tokenUsage.totalTokens).toBeGreaterThan(0);
@@ -153,7 +153,7 @@ test.skip("Test ChatMinimax in streaming mode", async () => {
     ],
   });
   const message = new HumanMessage("Hello!");
-  const result = await model.call([message]);
+  const result = await model.invoke([message]);
   console.log(result);
 
   expect(nrNewTokens > 0).toBe(true);
@@ -190,7 +190,7 @@ test.skip("Test OpenAI with signal in call options", async () => {
   const model = new ChatMinimax({ tokensToGenerate: 5 });
   const controller = new AbortController();
   await expect(() => {
-    const ret = model.call([new HumanMessage("Print hello world")], {
+    const ret = model.invoke([new HumanMessage("Print hello world")], {
       signal: controller.signal,
     });
 

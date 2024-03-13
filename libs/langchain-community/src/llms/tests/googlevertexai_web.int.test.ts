@@ -4,7 +4,7 @@ import { GoogleVertexAI } from "../googlevertexai/web.js";
 describe("Web Vertex AI", () => {
   test("Test Google Vertex", async () => {
     const model = new GoogleVertexAI({ maxOutputTokens: 50 });
-    const res = await model.call("1 + 1 = ");
+    const res = await model.invoke("1 + 1 = ");
     console.log({ res });
   });
 
@@ -34,7 +34,7 @@ describe("Web Vertex AI", () => {
     expect(model.temperature).toEqual(0.2);
     expect(model.maxOutputTokens).toEqual(64);
 
-    const res = await model.call("for( let co = 0");
+    const res = await model.invoke("for( let co = 0");
     console.log(res);
   });
 
@@ -45,7 +45,7 @@ describe("Web Vertex AI", () => {
     });
     expect(model.model).toEqual("code-bison");
 
-    const res = await model.call("Count to 10 in JavaScript.");
+    const res = await model.invoke("Count to 10 in JavaScript.");
     console.log(res);
   });
 
@@ -54,7 +54,7 @@ describe("Web Vertex AI", () => {
       model: "text-bison-32k",
       maxOutputTokens: 50,
     });
-    const res = await model.call("1 + 1 = ");
+    const res = await model.invoke("1 + 1 = ");
     console.log({ res });
   });
 

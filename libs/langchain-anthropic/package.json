@@ -1,6 +1,6 @@
 {
   "name": "@langchain/anthropic",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Anthropic integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -29,6 +29,7 @@
     "test": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
     "test:watch": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
     "test:single": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 100000",
+    "test:int": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
     "format": "prettier --config .prettierrc --write \"src\"",
     "format:check": "prettier --config .prettierrc --check \"src\"",
     "move-cjs-to-dist": "yarn lc-build --config ./langchain.config.js --move-cjs-dist",
@@ -38,7 +39,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.15.0",
+    "@anthropic-ai/sdk": "^0.17.2",
     "@langchain/core": "~0.1.44",
     "fast-xml-parser": "^4.3.5",
     "zod": "^3.22.4",

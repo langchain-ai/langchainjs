@@ -8,6 +8,7 @@
 .docusaurus
 .cache-loader
 docs/api
+src/supabase.d.ts
 
 # Misc
 .DS_Store
@@ -42,6 +43,8 @@ docs/use_cases/question_answering/sources.md
 docs/use_cases/question_answering/sources.mdx
 docs/use_cases/question_answering/quickstart.md
 docs/use_cases/question_answering/quickstart.mdx
+docs/use_cases/question_answering/per_user.md
+docs/use_cases/question_answering/per_user.mdx
 docs/use_cases/question_answering/local_retrieval_qa.md
 docs/use_cases/question_answering/local_retrieval_qa.mdx
 docs/use_cases/question_answering/conversational_retrieval_agents.md
@@ -54,6 +57,16 @@ docs/use_cases/query_analysis/quickstart.md
 docs/use_cases/query_analysis/quickstart.mdx
 docs/use_cases/query_analysis/index.md
 docs/use_cases/query_analysis/index.mdx
+docs/use_cases/graph/semantic.md
+docs/use_cases/graph/semantic.mdx
+docs/use_cases/graph/quickstart.md
+docs/use_cases/graph/quickstart.mdx
+docs/use_cases/graph/prompting.md
+docs/use_cases/graph/prompting.mdx
+docs/use_cases/graph/mapping.md
+docs/use_cases/graph/mapping.mdx
+docs/use_cases/graph/index.md
+docs/use_cases/graph/index.mdx
 docs/use_cases/extraction/quickstart.md
 docs/use_cases/extraction/quickstart.mdx
 docs/use_cases/extraction/index.md
@@ -92,12 +105,12 @@ docs/use_cases/extraction/how_to/handle_files.md
 docs/use_cases/extraction/how_to/handle_files.mdx
 docs/use_cases/extraction/how_to/examples.md
 docs/use_cases/extraction/how_to/examples.mdx
+docs/modules/memory/chat_messages/custom.md
+docs/modules/memory/chat_messages/custom.mdx
 docs/modules/model_io/output_parsers/custom.md
 docs/modules/model_io/output_parsers/custom.mdx
 docs/modules/model_io/chat/function_calling.md
 docs/modules/model_io/chat/function_calling.mdx
-docs/modules/memory/chat_messages/custom.md
-docs/modules/memory/chat_messages/custom.mdx
 docs/modules/data_connection/vectorstores/custom.md
 docs/modules/data_connection/vectorstores/custom.mdx
 docs/modules/model_io/output_parsers/types/openai_tools.md

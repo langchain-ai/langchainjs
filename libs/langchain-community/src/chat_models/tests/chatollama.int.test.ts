@@ -70,11 +70,11 @@ test.skip("should abort the request", async () => {
 
 test.skip("Test multiple messages", async () => {
   const model = new ChatOllama({ baseUrl: "http://localhost:11434" });
-  const res = await model.call([
+  const res = await model.invoke([
     new HumanMessage({ content: "My name is Jonas" }),
   ]);
   console.log({ res });
-  const res2 = await model.call([
+  const res2 = await model.invoke([
     new HumanMessage("My name is Jonas"),
     new AIMessage(
       "Hello Jonas! It's nice to meet you. Is there anything I can help you with?"

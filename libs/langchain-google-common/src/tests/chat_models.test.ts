@@ -167,7 +167,7 @@ describe("Mock ChatGoogle", () => {
       new AIMessage("H"),
       new HumanMessage("Flip it again"),
     ];
-    const result = await model.invoke(messages);
+    const result = await model.call(messages);
     console.log("record", JSON.stringify(record, null, 1));
     console.log("result", JSON.stringify(result, null, 1));
 
@@ -233,7 +233,7 @@ describe("Mock ChatGoogle", () => {
       new AIMessage("H"),
       new HumanMessage("Flip it again"),
     ];
-    const result = await model.invoke(messages);
+    const result = await model.call(messages);
 
     expect(result._getType()).toEqual("ai");
     const aiMessage = result as AIMessage;
@@ -366,7 +366,7 @@ describe("Mock ChatGoogle", () => {
       new HumanMessageChunk({ content: message }),
     ];
 
-    const result = await model.invoke(messages);
+    const result = await model.call(messages);
 
     expect(record.opts).toHaveProperty("data");
     expect(record.opts.data).toHaveProperty("contents");

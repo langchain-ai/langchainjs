@@ -11,7 +11,7 @@ test.skip("Test Replicate", async () => {
     },
   });
 
-  const res = await model.call("Hello, my name is ");
+  const res = await model.invoke("Hello, my name is ");
 
   console.log({ res });
 
