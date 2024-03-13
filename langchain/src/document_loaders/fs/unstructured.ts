@@ -243,7 +243,10 @@ export class UnstructuredLoader extends BaseDocumentLoader {
       formData.append("chunking_strategy", this.chunkingStrategy);
     }
     if (this.multiPageSections !== undefined) {
-      formData.append("multipage_sections", this.multiPageSections ? "true" : "false");
+      formData.append(
+        "multipage_sections",
+        this.multiPageSections ? "true" : "false"
+      );
     }
     if (this.combineUnderNChars !== undefined) {
       formData.append("combine_under_n_chars", String(this.combineUnderNChars));
