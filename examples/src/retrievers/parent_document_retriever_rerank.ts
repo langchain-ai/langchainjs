@@ -48,7 +48,7 @@ const retriever = new ParentDocumentRetriever({
   // We add Reranker
   documentCompressor: reranker,
   // optional parameter, default to 0.4
-  documentCompressorrMinRelevanceScore: 0.9,
+  documentCompressorMinRelevanceScore: 0.9,
 });
 
 const docs = jimDocs.concat(pamDocs);

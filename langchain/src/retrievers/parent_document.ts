@@ -28,7 +28,7 @@ export type ParentDocumentRetrieverFields = MultiVectorRetrieverInput & {
    */
   childDocumentRetriever?: VectorStoreRetrieverInterface<VectorStoreInterface>;
   documentCompressor?: BaseDocumentCompressor | undefined;
-  documentCompressorrMinRelevanceScore?: number;
+  documentCompressorMinRelevanceScore?: number;
 };
 
 /**
@@ -86,7 +86,7 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
 
   documentCompressor: BaseDocumentCompressor | undefined;
 
-  protected documentCompressorrMinRelevanceScore?: number = 0.4;
+  protected documentCompressorMinRelevanceScore?: number = 0.4;
 
   constructor(fields: ParentDocumentRetrieverFields) {
     super(fields);
@@ -98,9 +98,9 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
     this.parentK = fields.parentK;
     this.childDocumentRetriever = fields.childDocumentRetriever;
     this.documentCompressor = fields.documentCompressor;
-    this.documentCompressorrMinRelevanceScore =
-      fields.documentCompressorrMinRelevanceScore ??
-      this.documentCompressorrMinRelevanceScore;
+    this.documentCompressorMinRelevanceScore =
+      fields.documentCompressorMinRelevanceScore ??
+      this.documentCompressorMinRelevanceScore;
   }
 
   async _getRelevantDocuments(query: string): Promise<Document[]> {
@@ -136,7 +136,7 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
       outputParentDocs = outputParentDocs.filter(
         (doc) =>
           (doc?.metadata?.relevanceScore ?? 1) >=
-          (this.documentCompressorrMinRelevanceScore ?? 0)
+          (this.documentCompressorMinRelevanceScore ?? 0)
       );
     }
 
