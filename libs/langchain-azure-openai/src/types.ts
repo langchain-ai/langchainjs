@@ -33,6 +33,9 @@ export declare interface AzureOpenAIInput {
    */
   azureOpenAIApiDeploymentName?: string;
 
+  /** @deprecated Use "azureOpenAIApiDeploymentName" instead. */
+  azureOpenAIEmbeddingsApiDeploymentName?: string;
+
   /**
    * API version to use when making requests to Azure OpenAI.
    */

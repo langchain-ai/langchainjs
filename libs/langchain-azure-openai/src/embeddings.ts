@@ -49,8 +49,10 @@ export class AzureOpenAIEmbeddings
     super(fieldsWithDefaults);
 
     this.azureOpenAIApiDeploymentName =
-      fieldsWithDefaults?.azureOpenAIApiDeploymentName ??
-      getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME");
+      (fieldsWithDefaults?.azureOpenAIEmbeddingsApiDeploymentName ||
+        fieldsWithDefaults?.azureOpenAIApiDeploymentName) ??
+      (getEnvironmentVariable("AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME") ||
+        getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME"));
 
     this.azureOpenAIEndpoint =
       fields?.azureOpenAIEndpoint ??

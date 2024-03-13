@@ -256,7 +256,8 @@ export class AzureChatOpenAI
       getEnvironmentVariable("AZURE_OPENAI_API_ENDPOINT");
 
     this.azureOpenAIApiDeploymentName =
-      fields?.azureOpenAIApiDeploymentName ??
+      (fields?.azureOpenAIEmbeddingsApiDeploymentName ||
+        fields?.azureOpenAIApiDeploymentName) ??
       getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME");
 
     this.azureOpenAIApiKey =
