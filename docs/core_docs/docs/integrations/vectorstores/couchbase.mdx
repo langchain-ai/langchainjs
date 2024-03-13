@@ -1,0 +1,347 @@
+---
+hide_table_of_contents: true
+sidebar_class_name: node-only
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# Couchbase
+
+:::tip Compatibility
+Only available on Node.js.
+:::
+
+[Couchbase](http://couchbase.com/) is an award-winning distributed NoSQL cloud database that delivers unmatched versatility, performance, scalability, and financial value for all of your cloud, mobile,
+AI, and edge computing applications. Couchbase embraces AI with coding assistance for developers and vector search for their applications.
+
+Vector search is a part of the [Full Text Service](https://docs.couchbase.com/server/current/learn/services-and-indexes/services/search-service.html)(FTS) in Couchbase.
+
+This tutorial explains how to use vector search in Couchbase. You can work with both [Couchbase Capella](https://www.couchbase.com/products/capella/) and your self-managed Couchbase server.
+
+## Installation
+
+You will need couchbase and langchain community to use couchbase vector store. For this tutorial, we will use OpenAI embeddings
+
+```bash npm2yarn
+npm install couchbase @langchain/openai @langchain/community
+```
+
+## Create Couchbase Connection Object
+
+We create a connection to the Couchbase cluster initially and then pass the cluster object to the Vector Store. Here, we are connecting using the username and password.
+You can also connect using any other supported way to your cluster.
+
+For more information on connecting to the Couchbase cluster, please check the [Node SDK documentation](https://docs.couchbase.com/nodejs-sdk/current/hello-world/start-using-sdk.html#connect).
+
+```typescript
+import { Cluster } from "couchbase";
+
+const connectionString = "couchbase://localhost"; // valid couchbase connection string
+const dbUsername = "Administrator"; // valid database user with read access to the bucket being queried
+const dbPassword = "Password"; // password for the database user
+
+const couchbaseClient = await Cluster.connect(connectionString, {
+  username: dbUsername,
+  password: dbPassword,
+  configProfile: "wanDevelopment",
+});
+```
+
+## Create the Vector Index
+
+Currently, the vector index needs to be created from the Couchbase Capella or Server UI or using the REST interface.
+
+Let us define a vector index with the name `vector-index` on the testing bucket
+
+For this example, let us use the Import Index feature on the Full Text Search on the UI.
+We are defining an index on the `testing` bucket's `_default` scope on the `_default` collection with the vector field set to `embedding` and text field set to `text`.
+We are also indexing and storing all the fields under `metadata` in the document dynamically. The similarity metric is set to `dot_product`.
+
+How to Import an Index to the Full Text Search service?
+
+- Couchbase Server: Click on Search -> Add Index -> Import
+  - Copy the following Index definition in the Import screen
+- [Couchbase Capella](https://docs.couchbase.com/cloud/search/import-search-index.html)
+  - Copy the following index definition to a new file `index.json` and import that file in Capella using the instructions in the documentation.
+
+### Index Definition
+
+```json
+{
+  "name": "vector-index",
+  "type": "fulltext-index",
+  "params": {
+    "doc_config": {
+      "docid_prefix_delim": "",
+      "docid_regexp": "",
+      "mode": "type_field",
+      "type_field": "type"
+    },
+    "mapping": {
+      "default_analyzer": "standard",
+      "default_datetime_parser": "dateTimeOptional",
+      "default_field": "_all",
+      "default_mapping": {
+        "dynamic": true,
+        "enabled": true,
+        "properties": {
+          "metadata": {
+            "dynamic": true,
+            "enabled": true
+          },
+          "embedding": {
+            "enabled": true,
+            "dynamic": false,
+            "fields": [
+              {
+                "dims": 1536,
+                "index": true,
+                "name": "embedding",
+                "similarity": "dot_product",
+                "type": "vector",
+                "vector_index_optimized_for": "recall"
+              }
+            ]
+          },
+          "text": {
+            "enabled": true,
+            "dynamic": false,
+            "fields": [
+              {
+                "index": true,
+                "name": "text",
+                "store": true,
+                "type": "text"
+              }
+            ]
+          }
+        }
+      },
+      "default_type": "_default",
+      "docvalues_dynamic": false,
+      "index_dynamic": true,
+      "store_dynamic": true,
+      "type_field": "_type"
+    },
+    "store": {
+      "indexType": "scorch",
+      "segmentVersion": 16
+    }
+  },
+  "sourceType": "gocbcore",
+  "sourceName": "testing",
+  "sourceParams": {},
+  "planParams": {
+    "maxPartitionsPerPIndex": 103,
+    "indexPartitions": 10,
+    "numReplicas": 0
+  }
+}
+```
+
+For more details on how to create an FTS index with support for Vector fields, please refer to the documentation:
+
+- [Couchbase Capella](https://docs.couchbase.com/cloud/search/create-search-indexes.html)
+- [Couchbase Server](https://docs.couchbase.com/server/current/search/create-search-indexes.html)
+
+For using this vector store, CouchbaseVectorStoreArgs needs to be configured.
+
+```typescript
+const couchbaseConfig: CouchbaseVectorStoreArgs = {
+  cluster: couchbaseClient,
+  bucketName: "testing",
+  scopeName: "_default",
+  collectionName: "_default",
+  indexName: "vector-index",
+  textKey: "text",
+  embeddingKey: "embedding",
+};
+```
+
+## Similarity Search
+
+The following example showcases how to use couchbase vector search and perform similarity search.
+For this example, we are going to load the "state_of_the_union.txt" file via the RecursiveCharacterTextSplitter, create langchain documents from the chunks and send to couchbase vector store.
+After the data is indexed, we perform a simple query to find the top 4 chunks that are similar to the query "What did president say about Ketanji Brown Jackson".
+This example at the end, also shows how to get similarity score
+
+import SimilaritySearch from "@examples/indexes/vector_stores/couchbase/similaritySearch.ts";
+
+<CodeBlock language="typescript">{SimilaritySearch}</CodeBlock>
+
+## Specifying Fields to Return
+
+You can specify the fields to return from the document using `fields` parameter in the filter during searches.
+These fields are returned as part of the `metadata` object. You can fetch any field that is stored in the index.
+The `textKey` of the document is returned as part of the document's `pageContent`.
+
+If you do not specify any fields to be fetched, all the fields stored in the index are returned.
+
+If you want to fetch one of the fields in the metadata, you need to specify it using `.`
+For example, to fetch the `source` field in the metadata, you need to use `metadata.source`.
+
+```typescript
+const result = await store.similaritySearch(query, 1, {
+  fields: ["metadata.source"],
+});
+console.log(result[0]);
+```
+
+## Hybrid Search
+
+Couchbase allows you to do hybrid searches by combining vector search results with searches on non-vector fields of the document like the `metadata` object.
+
+The results will be based on the combination of the results from both vector search and the searches supported by full text search service.
+The scores of each of the component searches are added up to get the total score of the result.
+
+To perform hybrid searches, there is an optional key, `searchOptions` in `fields` parameter that can be passed to all the similarity searches.  
+The different search/query possibilities for the `searchOptions` can be found [here](https://docs.couchbase.com/server/current/search/search-request-params.html#query-object).
+
+### Create Diverse Metadata for Hybrid Search
+
+In order to simulate hybrid search, let us create some random metadata from the existing documents.
+We uniformly add three fields to the metadata, `date` between 2010 & 2020, `rating` between 1 & 5 and `author` set to either John Doe or Jane Doe.
+We will also declare few sample queries.
+
+```typescript
+for (let i = 0; i < docs.length; i += 1) {
+  docs[i].metadata.date = `${2010 + (i % 10)}-01-01`;
+  docs[i].metadata.rating = 1 + (i % 5);
+  docs[i].metadata.author = ["John Doe", "Jane Doe"][i % 2];
+}
+
+const store = await CouchbaseVectorStore.fromDocuments(
+  docs,
+  embeddings,
+  couchbaseConfig
+);
+
+const query = "What did the president say about Ketanji Brown Jackson";
+const independenceQuery = "Any mention about independence?";
+```
+
+### Example: Search by Exact Value
+
+We can search for exact matches on a textual field like the author in the `metadata` object.
+
+```typescript
+const exactValueResult = await store.similaritySearch(query, 4, {
+  fields: ["metadata.author"],
+  searchOptions: {
+    query: { field: "metadata.author", match: "John Doe" },
+  },
+});
+console.log(exactValueResult[0]);
+```
+
+### Example: Search by Partial Match
+
+We can search for partial matches by specifying a fuzziness for the search. This is useful when you want to search for slight variations or misspellings of a search query.
+
+Here, "Jae" is close (fuzziness of 1) to "Jane".
+
+```typescript
+const partialMatchResult = await store.similaritySearch(query, 4, {
+  fields: ["metadata.author"],
+  searchOptions: {
+    query: { field: "metadata.author", match: "Johny", fuzziness: 1 },
+  },
+});
+console.log(partialMatchResult[0]);
+```
+
+### Example: Search by Date Range Query
+
+We can search for documents that are within a date range query on a date field like `metadata.date`.
+
+```typescript
+const dateRangeResult = await store.similaritySearch(independenceQuery, 4, {
+  fields: ["metadata.date", "metadata.author"],
+  searchOptions: {
+    query: {
+      start: "2022-12-31",
+      end: "2023-01-02",
+      inclusiveStart: true,
+      inclusiveEnd: false,
+      field: "metadata.date",
+    },
+  },
+});
+console.log(dateRangeResult[0]);
+```
+
+### Example: Search by Numeric Range Query
+
+We can search for documents that are within a range for a numeric field like `metadata.rating`.
+
+```typescript
+const ratingRangeResult = await store.similaritySearch(independenceQuery, 4, {
+  fields: ["metadata.rating"],
+  searchOptions: {
+    query: {
+      min: 3,
+      max: 5,
+      inclusiveMin: false,
+      inclusiveMax: true,
+      field: "metadata.rating",
+    },
+  },
+});
+console.log(ratingRangeResult[0]);
+```
+
+### Example: Combining Multiple Search Conditions
+
+Different queries can by combined using AND (conjuncts) or OR (disjuncts) operators.
+
+In this example, we are checking for documents with a rating between 3 & 4 and dated between 2015 & 2018.
+
+```typescript
+const multipleConditionsResult = await store.similaritySearch(texts[0], 4, {
+  fields: ["metadata.rating", "metadata.date"],
+  searchOptions: {
+    query: {
+      conjuncts: [
+        { min: 3, max: 4, inclusive_max: true, field: "metadata.rating" },
+        { start: "2016-12-31", end: "2017-01-02", field: "metadata.date" },
+      ],
+    },
+  },
+});
+console.log(multipleConditionsResult[0]);
+```
+
+### Other Queries
+
+Similarly, you can use any of the supported Query methods like Geo Distance, Polygon Search, Wildcard, Regular Expressions, etc in the `search_options` parameter. Please refer to the documentation for more details on the available query methods and their syntax.
+
+- [Couchbase Capella](https://docs.couchbase.com/cloud/search/search-request-params.html#query-object)
+- [Couchbase Server](https://docs.couchbase.com/server/current/search/search-request-params.html#query-object)
+
+<br />
+<br />
+
+# Frequently Asked Questions
+
+## Question: Should I create the FTS index before creating the CouchbaseVectorStore object?
+
+Yes, currently you need to create the FTS index before creating the `CouchbaseVectoreStore` object.
+
+## Question: I am not seeing all the fields that I specified in my search results.
+
+In Couchbase, we can only return the fields stored in the FTS index. Please ensure that the field that you are trying to access in the search results is part of the index.
+
+One way to handle this is to store a document's fields dynamically in the index. To do that, you need to select `Store Dynamic Fields` in the Advanced Settings of the FTS index.
+
+Similarly, if you want to search on dynamic fields, you must index those fields by selecting the option `Index Dynamic Fields` in the FTS index settings.
+
+Note that these options will increase the size of the index.
+
+## Question: I am unable to see the metadata object in my search results.
+
+This is most likely due to the `metadata` field in the document not being indexed by the Couchbase FTS index. In order to index the `metadata` field in the document, you need to add it to the index as a mapping.
+
+If you select to map all the fields in the mapping, you will be able to search by all metadata fields. Alternatively, you can select the specific fields inside `metadata` object to be indexed. You can refer to the docs to learn more about indexing child mappings.
+
+- [Couchbase Capella](https://docs.couchbase.com/cloud/search/create-child-mapping.html)
+- [Couchbase Server](https://docs.couchbase.com/server/current/fts/fts-creating-index-from-UI-classic-editor-dynamic.html)
