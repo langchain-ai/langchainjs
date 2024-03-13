@@ -97,12 +97,13 @@ export class GitbookLoader extends CheerioWebBaseLoader {
 
     const documents: Document[] = [];
     for (const url of urls) {
-      const buildUrl =
-        url.includes(this.baseUrl) ?
-          url :
-          this.baseUrl + url;
+      const buildUrl = url.includes(this.baseUrl) ? url : this.baseUrl + url;
       console.log(`Fetching text from ${buildUrl}`);
-      const html = await GitbookLoader._scrape(buildUrl, this.caller, this.timeout);
+      const html = await GitbookLoader._scrape(
+        buildUrl,
+        this.caller,
+        this.timeout
+      );
       documents.push(...this.loadPath(html, buildUrl));
     }
     console.log(`Fetched ${documents.length} documents.`);
