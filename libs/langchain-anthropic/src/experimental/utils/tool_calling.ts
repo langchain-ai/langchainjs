@@ -76,8 +76,8 @@ export function fixArrayXMLParameters(
     if (schema.properties && schema.properties[key] && schemaType === "array") {
       const value = xmlParameters[key];
       if (Array.isArray(value)) {
-          fixedParameters[key] = value;
-      } else if (typeof value === 'string') {
+        fixedParameters[key] = value;
+      } else if (typeof value === "string") {
         if (value.startsWith("[") && value.endsWith("]")) {
           fixedParameters[key] = JSON.parse(value);
         } else {
@@ -100,10 +100,13 @@ export function fixArrayXMLParameters(
       typeof xmlParameters[key] === "object" &&
       xmlParameters[key] !== null
     ) {
-      fixedParameters[key] = fixArrayXMLParameters({
-        ...schema.properties[key],
-        definitions: schema.definitions,
-      }, xmlParameters[key]);
+      fixedParameters[key] = fixArrayXMLParameters(
+        {
+          ...schema.properties[key],
+          definitions: schema.definitions,
+        },
+        xmlParameters[key]
+      );
     } else {
       fixedParameters[key] = xmlParameters[key];
     }
