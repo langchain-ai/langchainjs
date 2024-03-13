@@ -142,7 +142,7 @@ export class AzureOpenAI<
     }
 
     if (!this.azureOpenAIApiDeploymentName) {
-      throw new Error("Azure OpenAI Completion Deployment name not found");
+      throw new Error("Azure OpenAI Deployment name not found");
     }
 
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;

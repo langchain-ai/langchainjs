@@ -238,7 +238,7 @@ export class AzureChatOpenAI
 
   azureOpenAIApiKey?: string;
 
-  azureOpenAIApiCompletionsDeploymentName?: string;
+  azureOpenAIApiDeploymentName?: string;
 
   private client: AzureOpenAIClient;
 
@@ -255,7 +255,7 @@ export class AzureChatOpenAI
       fields?.azureOpenAIEndpoint ??
       getEnvironmentVariable("AZURE_OPENAI_API_ENDPOINT");
 
-    this.azureOpenAIApiCompletionsDeploymentName =
+    this.azureOpenAIApiDeploymentName =
       (fields?.azureOpenAIEmbeddingsApiDeploymentName ||
         fields?.azureOpenAIApiDeploymentName) ??
       getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME");
@@ -274,8 +274,8 @@ export class AzureChatOpenAI
       throw new Error("Azure OpenAI Endpoint not found");
     }
 
-    if (!this.azureOpenAIApiCompletionsDeploymentName) {
-      throw new Error("Azure OpenAI Completion Deployment name not found");
+    if (!this.azureOpenAIApiDeploymentName) {
+      throw new Error("Azure OpenAI Deployment name not found");
     }
 
     this.modelName = fields?.modelName ?? this.modelName;
@@ -339,11 +339,11 @@ export class AzureChatOpenAI
     options: this["ParsedCallOptions"]
   ): Promise<EventStream<ChatCompletions>> {
     return this.caller.call(async () => {
-      if (!this.azureOpenAIApiCompletionsDeploymentName) {
-        throw new Error("Azure OpenAI Completion Deployment name not found");
+      if (!this.azureOpenAIApiDeploymentName) {
+        throw new Error("Azure OpenAI Deployment name not found");
       }
       const res = await this.client.streamChatCompletions(
-        this.azureOpenAIApiCompletionsDeploymentName,
+        this.azureOpenAIApiDeploymentName,
         azureOpenAIMessages,
         {
           functions: options?.functions,
@@ -434,10 +434,10 @@ export class AzureChatOpenAI
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
-    if (!this.azureOpenAIApiCompletionsDeploymentName) {
-      throw new Error("Azure OpenAI Completion Deployment name not found");
+    if (!this.azureOpenAIApiDeploymentName) {
+      throw new Error("Azure OpenAI Deployment name not found");
     }
-    const deploymentName = this.azureOpenAIApiCompletionsDeploymentName;
+    const deploymentName = this.azureOpenAIApiDeploymentName;
     const tokenUsage: TokenUsage = {};
     const azureOpenAIMessages: ChatRequestMessage[] =
       this.formatMessages(messages);
