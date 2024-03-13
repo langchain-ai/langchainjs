@@ -123,8 +123,13 @@ export class MongoDBStore extends BaseStore<string, Uint8Array> {
       const decodedValue = decoder.decode(value);
       return [
         { [this.primaryKey]: this._getPrefixedKey(key) },
-        { $set: { [this.primaryKey]: this._getPrefixedKey(key), ...{ value: decodedValue } } },
-      ]
+        {
+          $set: {
+            [this.primaryKey]: this._getPrefixedKey(key),
+            ...{ value: decodedValue },
+          },
+        },
+      ];
     });
     await this.collection.bulkWrite(
       updates.map(([filter, update]) => ({

@@ -21,7 +21,7 @@ test("MongoDBStore can set and retrieve", async () => {
     console.error("Failed to connect");
     throw Error(e as string);
   }
-  
+
   const namespace = "langchain.test";
   const [dbName, collectionName] = namespace.split(".");
   const collection = client.db(dbName).collection(collectionName);
@@ -38,18 +38,21 @@ test("MongoDBStore can set and retrieve", async () => {
     ];
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
-    const docsAsKVPairs: Array<[string, Uint8Array]> = docs.map(
-      (doc) => [doc[0], encoder.encode(doc[1])]
-    );
+    const docsAsKVPairs: Array<[string, Uint8Array]> = docs.map((doc) => [
+      doc[0],
+      encoder.encode(doc[1]),
+    ]);
     await store.mset(docsAsKVPairs);
-    const retrievedDocs = (await store.mget(docs.map((doc) => doc[0]))).flatMap((doc) => {
-      if (doc !== undefined) {
-        const decodedDoc = decoder.decode(doc);
-        const parsedDoc = JSON.parse(decodedDoc);
-        return [parsedDoc]
+    const retrievedDocs = (await store.mget(docs.map((doc) => doc[0]))).flatMap(
+      (doc) => {
+        if (doc !== undefined) {
+          const decodedDoc = decoder.decode(doc);
+          const parsedDoc = JSON.parse(decodedDoc);
+          return [parsedDoc];
+        }
+        return [];
       }
-      return []
-    });
+    );
 
     expect(retrievedDocs.sort()).toEqual(docs.map((doc) => doc[1]).sort());
   } finally {
@@ -90,9 +93,10 @@ test("MongoDBStore can delete", async () => {
       [uuidv4(), "Cats are tough."],
     ];
     const encoder = new TextEncoder();
-    const docsAsKVPairs: Array<[string, Uint8Array]> = docs.map(
-      (doc) => [doc[0], encoder.encode(doc[1])]
-    );
+    const docsAsKVPairs: Array<[string, Uint8Array]> = docs.map((doc) => [
+      doc[0],
+      encoder.encode(doc[1]),
+    ]);
     await store.mset(docsAsKVPairs);
 
     const docIds = docs.map((doc) => doc[0]);
@@ -139,9 +143,10 @@ test("MongoDBStore can yield keys", async () => {
       [uuidv4(), "Cats are tough."],
     ];
     const encoder = new TextEncoder();
-    const docsAsKVPairs: Array<[string, Uint8Array]> = docs.map(
-      (doc) => [doc[0], encoder.encode(doc[1])]
-    );
+    const docsAsKVPairs: Array<[string, Uint8Array]> = docs.map((doc) => [
+      doc[0],
+      encoder.encode(doc[1]),
+    ]);
     await store.mset(docsAsKVPairs);
 
     const keys = store.yieldKeys();
@@ -186,9 +191,10 @@ test("MongoDBStore can yield keys with prefix", async () => {
       ["not_dis_one", "Cats are tough."],
     ];
     const encoder = new TextEncoder();
-    const docsAsKVPairs: Array<[string, Uint8Array]> = docs.map(
-      (doc) => [doc[0], encoder.encode(doc[1])]
-    );
+    const docsAsKVPairs: Array<[string, Uint8Array]> = docs.map((doc) => [
+      doc[0],
+      encoder.encode(doc[1]),
+    ]);
     await store.mset(docsAsKVPairs);
 
     const keys = store.yieldKeys("dis_one");
@@ -198,7 +204,6 @@ test("MongoDBStore can yield keys with prefix", async () => {
       yieldedKeys.push(key);
     }
     expect(yieldedKeys).toEqual(["dis_one"]);
-
   } finally {
     const keys = store.yieldKeys();
     const yieldedKeys = [];
