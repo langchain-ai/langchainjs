@@ -1,4 +1,10 @@
 import { StreamEvent } from "../tracers/log_stream.js";
+import type { RunnableInterface } from "./types.js";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isRunnableInterface(thing: any): thing is RunnableInterface {
+  return thing ? thing.lc_runnable : false;
+}
 
 /**
  * Utility to filter the root event in the streamEvents implementation.

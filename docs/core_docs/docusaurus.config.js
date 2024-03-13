@@ -5,6 +5,7 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 const { ProvidePlugin } = require("webpack");
 const path = require("path");
+require("dotenv").config();
 
 const examplesPath = path.resolve(__dirname, "..", "..", "examples", "src");
 const mdxComponentsPath = path.resolve(__dirname, "docs", "mdx_components");
@@ -304,6 +305,11 @@ const config = {
       async: true,
     },
   ],
+
+  customFields: {
+    supabasePublicKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY,
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  },
 };
 
 module.exports = config;

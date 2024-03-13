@@ -10,7 +10,7 @@ export const run = async () => {
     ],
     maxTokens: 50,
   });
-  const res = await model.call(
+  const res = await model.invoke(
     "What would be a good company name a company that makes colorful socks?"
   );
   console.log({ res });

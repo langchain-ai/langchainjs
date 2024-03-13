@@ -56,7 +56,7 @@ export interface HFInput {
  *   maxTokens: 50,
  * });
  *
- * const res = await model.call(
+ * const res = await model.invoke(
  *   "Question: What would be a good company name for a company that makes colorful socks?\nAnswer:"
  * );
  * console.log({ res });

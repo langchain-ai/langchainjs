@@ -161,6 +161,8 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
 
   temperature = 0.7;
 
+  stop?: string[];
+
   streaming = false;
 
   static lc_name() {
@@ -196,6 +198,8 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
     this.temperature = fields?.temperature ?? this.temperature;
     this.modelName = fields?.modelName ?? this.modelName;
     this.streaming = fields?.streaming ?? this.streaming;
+    this.stop =
+      (typeof fields?.stop === "string" ? [fields.stop] : fields?.stop) ?? [];
   }
 
   async completionWithRetry(
@@ -223,6 +227,7 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
     const params = super.invocationParams(options);
     return {
       ...params,
+      stop: options.stop ?? this.stop,
       model: this.modelName,
       temperature: this.temperature,
     };

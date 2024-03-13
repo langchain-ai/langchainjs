@@ -531,14 +531,10 @@ export class Neo4jVectorStore extends VectorStore {
     ids?: string[]
   ): Promise<string[]> {
     let _ids = ids;
-    let _metadatas = metadatas;
+    const _metadatas = metadatas;
 
     if (!_ids) {
       _ids = documents.map(() => uuid.v1());
-    }
-
-    if (!metadatas) {
-      _metadatas = documents.map(() => ({}));
     }
 
     const importQuery = `

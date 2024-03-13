@@ -14,7 +14,7 @@ class WebSocketStream extends BaseWebSocketStream<string> {
  * @example
  * ```typescript
  * const model = new ChatIflytekXinghuo();
- * const response = await model.call([new HumanMessage("Nice to meet you!")]);
+ * const response = await model.invoke([new HumanMessage("Nice to meet you!")]);
  * console.log(response);
  * ```
  */

@@ -15,6 +15,7 @@ import {
 } from "../load/serializable.js";
 import type { SerializedFields } from "../load/map_keys.js";
 import type { DocumentInterface } from "../documents/document.js";
+import { getEnvironmentVariable } from "../utils/env.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Error = any;
@@ -29,6 +30,7 @@ export interface BaseCallbackHandlerInput {
   ignoreChain?: boolean;
   ignoreAgent?: boolean;
   ignoreRetriever?: boolean;
+  _awaitHandler?: boolean;
 }
 
 /**
@@ -330,10 +332,7 @@ export abstract class BaseCallbackHandler
   ignoreRetriever = false;
 
   awaitHandlers =
-    typeof process !== "undefined"
-      ? // eslint-disable-next-line no-process-env
-        process.env?.LANGCHAIN_CALLBACKS_BACKGROUND !== "true"
-      : true;
+    getEnvironmentVariable("LANGCHAIN_CALLBACKS_BACKGROUND") !== "true";
 
   constructor(input?: BaseCallbackHandlerInput) {
     super();
@@ -343,6 +342,7 @@ export abstract class BaseCallbackHandler
       this.ignoreChain = input.ignoreChain ?? this.ignoreChain;
       this.ignoreAgent = input.ignoreAgent ?? this.ignoreAgent;
       this.ignoreRetriever = input.ignoreRetriever ?? this.ignoreRetriever;
+      this.awaitHandlers = input._awaitHandler ?? this.awaitHandlers;
     }
   }
 

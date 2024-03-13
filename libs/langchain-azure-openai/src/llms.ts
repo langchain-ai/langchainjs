@@ -142,7 +142,7 @@ export class AzureOpenAI<
     }
 
     if (!this.azureOpenAIApiDeploymentName) {
-      throw new Error("Azure OpenAI Completion Deployment name not found");
+      throw new Error("Azure OpenAI Deployment name not found");
     }
 
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
@@ -169,9 +169,9 @@ export class AzureOpenAI<
     const azureCredential =
       fields?.credentials ??
       (fields?.azureOpenAIApiKey ||
-        getEnvironmentVariable("AZURE_OPENAI_API_KEY"))
+      getEnvironmentVariable("AZURE_OPENAI_API_KEY")
         ? new AzureKeyCredential(this.azureOpenAIApiKey ?? "")
-        : new OpenAIKeyCredential(this.azureOpenAIApiKey ?? "");
+        : new OpenAIKeyCredential(this.azureOpenAIApiKey ?? ""));
 
     if (isTokenCredential(azureCredential)) {
       this.client = new AzureOpenAIClient(

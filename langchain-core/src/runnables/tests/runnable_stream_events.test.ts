@@ -1,4 +1,5 @@
 /* eslint-disable no-promise-executor-return */
+/* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { test } from "@jest/globals";
@@ -23,6 +24,12 @@ function reverse(s: string) {
   // Reverse a string.
   return s.split("").reverse().join("");
 }
+
+const originalCallbackValue = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
+
+afterEach(() => {
+  process.env.LANGCHAIN_CALLBACKS_BACKGROUND = originalCallbackValue;
+});
 
 test("Runnable streamEvents method", async () => {
   const chain = RunnableLambda.from(reverse).withConfig({
@@ -62,6 +69,119 @@ test("Runnable streamEvents method", async () => {
 });
 
 test("Runnable streamEvents method with three runnables", async () => {
+  const r = RunnableLambda.from(reverse);
+
+  const chain = r
+    .withConfig({ runName: "1" })
+    .pipe(r.withConfig({ runName: "2" }))
+    .pipe(r.withConfig({ runName: "3" }));
+
+  const events = [];
+  for await (const event of chain.streamEvents("hello", { version: "v1" })) {
+    events.push(event);
+  }
+  expect(events).toEqual([
+    {
+      data: { input: "hello" },
+      event: "on_chain_start",
+      metadata: {},
+      name: "RunnableSequence",
+      run_id: expect.any(String),
+      tags: [],
+    },
+    {
+      data: {},
+      event: "on_chain_start",
+      metadata: {},
+      name: "1",
+      run_id: expect.any(String),
+      tags: ["seq:step:1"],
+    },
+    {
+      data: { chunk: "olleh" },
+      event: "on_chain_stream",
+      metadata: {},
+      name: "1",
+      run_id: expect.any(String),
+      tags: ["seq:step:1"],
+    },
+    {
+      data: {},
+      event: "on_chain_start",
+      metadata: {},
+      name: "2",
+      run_id: expect.any(String),
+      tags: ["seq:step:2"],
+    },
+    {
+      data: { input: "hello", output: "olleh" },
+      event: "on_chain_end",
+      metadata: {},
+      name: "1",
+      run_id: expect.any(String),
+      tags: ["seq:step:1"],
+    },
+    {
+      data: { chunk: "hello" },
+      event: "on_chain_stream",
+      metadata: {},
+      name: "2",
+      run_id: expect.any(String),
+      tags: ["seq:step:2"],
+    },
+    {
+      data: {},
+      event: "on_chain_start",
+      metadata: {},
+      name: "3",
+      run_id: expect.any(String),
+      tags: ["seq:step:3"],
+    },
+    {
+      data: { input: "olleh", output: "hello" },
+      event: "on_chain_end",
+      metadata: {},
+      name: "2",
+      run_id: expect.any(String),
+      tags: ["seq:step:2"],
+    },
+    {
+      data: { chunk: "olleh" },
+      event: "on_chain_stream",
+      metadata: {},
+      name: "3",
+      run_id: expect.any(String),
+      tags: ["seq:step:3"],
+    },
+    {
+      data: { chunk: "olleh" },
+      event: "on_chain_stream",
+      metadata: {},
+      name: "RunnableSequence",
+      run_id: expect.any(String),
+      tags: [],
+    },
+    {
+      data: { input: "hello", output: "olleh" },
+      event: "on_chain_end",
+      metadata: {},
+      name: "3",
+      run_id: expect.any(String),
+      tags: ["seq:step:3"],
+    },
+    {
+      data: { output: "olleh" },
+      event: "on_chain_end",
+      metadata: {},
+      name: "RunnableSequence",
+      run_id: expect.any(String),
+      tags: [],
+    },
+  ]);
+});
+
+test("Runnable streamEvents method with three runnables with backgrounded callbacks set to true", async () => {
+  process.env.LANGCHAIN_CALLBACKS_BACKGROUND = "true";
   const r = RunnableLambda.from(reverse);
 
   const chain = r

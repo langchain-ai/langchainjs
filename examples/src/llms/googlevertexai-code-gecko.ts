@@ -16,5 +16,5 @@ import { GoogleVertexAI } from "@langchain/community/llms/googlevertexai";
 const model = new GoogleVertexAI({
   model: "code-gecko",
 });
-const res = await model.call("for (let co=0;");
+const res = await model.invoke("for (let co=0;");
 console.log({ res });

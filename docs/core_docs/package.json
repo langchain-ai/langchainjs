@@ -23,13 +23,16 @@
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,md,mdx}\"",
     "clean": "rm -rf .docusaurus/ .turbo/ .build/",
     "quarto": "quarto render docs/ && node ./scripts/quarto-build.js",
-    "quarto:vercel": "bash ./scripts/vercel_build.sh && node ./scripts/quarto-build.js"
+    "quarto:vercel": "bash ./scripts/vercel_build.sh && node ./scripts/quarto-build.js",
+    "gen": "yarn gen:supabase",
+    "gen:supabase": "npx supabase gen types typescript --project-id 'xsqpnijvmbodcxyapnyq' --schema public > ./src/supabase.d.ts"
   },
   "dependencies": {
     "@docusaurus/core": "2.4.3",
     "@docusaurus/preset-classic": "2.4.3",
     "@docusaurus/remark-plugin-npm2yarn": "2.4.3",
     "@mdx-js/react": "^1.6.22",
+    "@supabase/supabase-js": "^2.39.7",
     "clsx": "^1.2.1",
     "cookie": "^0.6.0",
     "json-loader": "^0.5.7",
@@ -43,6 +46,7 @@
     "@swc/core": "^1.3.62",
     "@types/cookie": "^0",
     "docusaurus-plugin-typedoc": "1.0.0-next.5",
+    "dotenv": "^16.4.5",
     "eslint": "^8.19.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-prettier": "^8.5.0",
@@ -54,6 +58,7 @@
     "glob": "^10.3.10",
     "prettier": "^2.7.1",
     "rimraf": "^5.0.1",
+    "supabase": "^1.148.6",
     "swc-loader": "^0.2.3",
     "typedoc": "^0.24.4",
     "typedoc-plugin-markdown": "next",
