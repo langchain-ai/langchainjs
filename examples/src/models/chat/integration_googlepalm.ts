@@ -30,6 +30,6 @@ export const run = async () => {
   ];
 
   // You can also use the model as part of a chain
-  const res = await model.call(questions);
+  const res = await model.invoke(questions);
   console.log({ res });
 };

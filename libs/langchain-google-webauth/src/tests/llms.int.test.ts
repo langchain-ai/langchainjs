@@ -24,7 +24,7 @@ describe("Google APIKey LLM", () => {
    */
   test.skip("call", async () => {
     const model = new GoogleLLM();
-    const res = await model.call("1 + 1 = ");
+    const res = await model.invoke("1 + 1 = ");
     if (res.length === 1) {
       expect(res).toBe("2");
     } else {
@@ -36,7 +36,7 @@ describe("Google APIKey LLM", () => {
   test("call", async () => {
     const model = new GoogleLLM();
     try {
-      const res = await model.call("If the time is 1:00, what time is it?");
+      const res = await model.invoke("If the time is 1:00, what time is it?");
       expect(res.length).toBeGreaterThan(0);
       expect(res.substring(0, 4)).toEqual("1:00");
     } catch (xx) {
@@ -116,7 +116,7 @@ describe("Google WebAuth LLM", () => {
 
   test("call", async () => {
     const model = new GoogleLLM();
-    const res = await model.call("1 + 1 = ");
+    const res = await model.invoke("1 + 1 = ");
     if (res.length === 1) {
       expect(res).toBe("2");
     } else {
@@ -203,7 +203,7 @@ describe("Google WebAuth gai LLM", () => {
     const model = new GoogleLLM({
       platformType: "gai",
     });
-    const res = await model.call("1 + 1 = ");
+    const res = await model.invoke("1 + 1 = ");
     if (res.length === 1) {
       expect(res).toBe("2");
     } else {
@@ -217,7 +217,7 @@ describe("Google WebAuth gai LLM", () => {
       platformType: "gai",
     });
     try {
-      const res = await model.call("If the time is 1:00, what time is it?");
+      const res = await model.invoke("If the time is 1:00, what time is it?");
       expect(res.length).toBeGreaterThan(0);
       expect(res.substring(0, 4)).toEqual("1:00");
     } catch (xx) {

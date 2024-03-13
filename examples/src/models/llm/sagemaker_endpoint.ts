@@ -60,7 +60,7 @@ const model = new SageMakerEndpoint({
   },
 });
 
-const res = await model.call(
+const res = await model.invoke(
   "Hello, my name is John Doe, tell me a joke about llamas "
 );
 

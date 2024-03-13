@@ -7,7 +7,7 @@ const model = new OpenAI({
   streaming: true,
 });
 
-const response = await model.call("Tell me a joke.", {
+const response = await model.invoke("Tell me a joke.", {
   callbacks: [
     {
       handleLLMNewToken(token: string) {
