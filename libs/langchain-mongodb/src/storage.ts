@@ -29,6 +29,22 @@ export interface MongoDBStoreInput {
  * as well as yielding keys from the database.
  * @example
  * ```typescript
+ * const client = new MongoClient(process.env.MONGODB_ATLAS_URI);
+ * const collection = client.db("dbName").collection("collectionName");
+
+ * const store = new MongoDBStore({
+ *   collection,
+ * });
+ * 
+ * const docs = [
+ *   [uuidv4(), "Dogs are tough."],
+ *   [uuidv4(), "Cats are tough."],
+ * ];
+ * const encoder = new TextEncoder();
+ * const docsAsKVPairs: Array<[string, Uint8Array]> = docs.map(
+ *   (doc) => [doc[0], encoder.encode(doc[1])]
+ * );
+ * await store.mset(docsAsKVPairs);
  * ```
  */
 export class MongoDBStore extends BaseStore<string, Uint8Array> {
