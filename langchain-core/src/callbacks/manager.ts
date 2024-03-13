@@ -21,10 +21,11 @@ import { Serialized } from "../load/serializable.js";
 import type { DocumentInterface } from "../documents/document.js";
 
 if (
-  getEnvironmentVariable("LANGCHAIN_TRACING_V2") === "true" &&
-  getEnvironmentVariable("LANGCHAIN_CALLBACKS_BACKGROUND") !== "true"
+  /* #__PURE__ */ getEnvironmentVariable("LANGCHAIN_TRACING_V2") === "true" &&
+  /* #__PURE__ */ getEnvironmentVariable("LANGCHAIN_CALLBACKS_BACKGROUND") !==
+    "true"
 ) {
-  console.warn(
+  /* #__PURE__ */ console.warn(
     [
       "[WARN]: You have enabled LangSmith tracing without backgrounding callbacks.",
       "[WARN]: If you are not using a serverless environment where you must wait for tracing calls to finish,",
