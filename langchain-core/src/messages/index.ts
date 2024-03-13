@@ -8,6 +8,9 @@ export interface StoredMessageData {
   tool_call_id: string | undefined;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   additional_kwargs?: Record<string, any>;
+  /** Response metadata. For example: response headers, logprobs, token counts. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  response_metadata?: Record<string, any>;
 }
 
 export interface StoredMessage {
@@ -90,6 +93,9 @@ export interface BaseMessageFields {
     tool_calls?: ToolCall[];
     [key: string]: unknown;
   };
+  /** Response metadata. For example: response headers, logprobs, token counts. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  response_metadata?: Record<string, any>;
 }
 
 export interface ChatMessageFieldsWithRole extends BaseMessageFields {
@@ -140,7 +146,10 @@ export abstract class BaseMessage
 
   get lc_aliases(): Record<string, string> {
     // exclude snake case conversion to pascal case
-    return { additional_kwargs: "additional_kwargs" };
+    return {
+      additional_kwargs: "additional_kwargs",
+      response_metadata: "response_metadata",
+    };
   }
 
   /**
@@ -160,6 +169,9 @@ export abstract class BaseMessage
   /** Additional keyword arguments */
   additional_kwargs: NonNullable<BaseMessageFields["additional_kwargs"]>;
 
+  /** Response metadata. For example: response headers, logprobs, token counts. */
+  response_metadata: NonNullable<BaseMessageFields["response_metadata"]>;
+
   /** The type of the message. */
   abstract _getType(): MessageType;
 
@@ -170,17 +182,26 @@ export abstract class BaseMessage
   ) {
     if (typeof fields === "string") {
       // eslint-disable-next-line no-param-reassign
-      fields = { content: fields, additional_kwargs: kwargs };
+      fields = {
+        content: fields,
+        additional_kwargs: kwargs,
+        response_metadata: {},
+      };
     }
     // Make sure the default value for additional_kwargs is passed into super() for serialization
     if (!fields.additional_kwargs) {
       // eslint-disable-next-line no-param-reassign
       fields.additional_kwargs = {};
     }
+    if (!fields.response_metadata) {
+      // eslint-disable-next-line no-param-reassign
+      fields.response_metadata = {};
+    }
     super(fields);
     this.name = fields.name;
     this.content = fields.content;
     this.additional_kwargs = fields.additional_kwargs;
+    this.response_metadata = fields.response_metadata;
   }
 
   toDict(): StoredMessage {
