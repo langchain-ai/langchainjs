@@ -48,7 +48,7 @@ export interface MongoDBStoreInput {
  * ```
  */
 export class MongoDBStore extends BaseStore<string, Uint8Array> {
-  lc_namespace = ["langchain", "storage"];
+  lc_namespace = ["langchain", "storage", "mongodb"];
 
   collection: Collection<MongoDocument>;
 
