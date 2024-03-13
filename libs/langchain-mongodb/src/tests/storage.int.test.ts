@@ -1,7 +1,6 @@
 /* eslint-disable no-process-env */
 import { v4 as uuidv4 } from "uuid";
 import { MongoClient, ServerApiVersion } from "mongodb";
-import { Document, DocumentInterface } from "@langchain/core/documents";
 import { MongoDBStore } from "../storage.js";
 
 test("MongoDBStore can set and retrieve", async () => {
@@ -22,40 +21,45 @@ test("MongoDBStore can set and retrieve", async () => {
     console.error("Failed to connect");
     throw Error(e as string);
   }
+  
+  const namespace = "langchain.test";
+  const [dbName, collectionName] = namespace.split(".");
+  const collection = client.db(dbName).collection(collectionName);
+
+  const store = new MongoDBStore({
+    collection,
+  });
+  expect(store).toBeDefined();
 
   try {
-    const namespace = "langchain.test";
-    const [dbName, collectionName] = namespace.split(".");
-    const collection = client.db(dbName).collection(collectionName);
-
-    const store = new MongoDBStore({
-      collection,
-    });
-
-    expect(store).toBeDefined();
-
     const docs = [
-      new Document({
-        pageContent: "Dogs are tough.",
-        metadata: {
-          id: uuidv4(),
-        },
-      }),
-      new Document({
-        pageContent: "Cats are tough.",
-        metadata: {
-          id: uuidv4(),
-        },
-      }),
+      [uuidv4(), "Dogs are tough."],
+      [uuidv4(), "Cats are tough."],
     ];
-    const docsAsKVPairs: Array<[string, DocumentInterface]> = docs.map(
-      (doc) => [doc.metadata.id, doc]
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder();
+    const docsAsKVPairs: Array<[string, Uint8Array]> = docs.map(
+      (doc) => [doc[0], encoder.encode(doc[1])]
     );
     await store.mset(docsAsKVPairs);
-    const retrievedDocs = await store.mget(docs.map((doc) => doc.metadata.id));
+    const retrievedDocs = (await store.mget(docs.map((doc) => doc[0]))).flatMap((doc) => {
+      if (doc !== undefined) {
+        const decodedDoc = decoder.decode(doc);
+        const parsedDoc = JSON.parse(decodedDoc);
+        return [parsedDoc]
+      }
+      return []
+    });
 
-    expect(retrievedDocs).toEqual(docs);
+    expect(retrievedDocs.sort()).toEqual(docs.map((doc) => doc[1]).sort());
   } finally {
+    const keys = store.yieldKeys();
+    const yieldedKeys = [];
+    for await (const key of keys) {
+      yieldedKeys.push(key);
+    }
+    await store.mdelete(yieldedKeys);
+
     await client.close();
   }
 });
@@ -76,37 +80,35 @@ test("MongoDBStore can delete", async () => {
   const [dbName, collectionName] = namespace.split(".");
   const collection = client.db(dbName).collection(collectionName);
 
-  try {
-    const store = new MongoDBStore({
-      collection,
-    });
+  const store = new MongoDBStore({
+    collection,
+  });
 
+  try {
     const docs = [
-      new Document({
-        pageContent: "Dogs are tough.",
-        metadata: {
-          id: uuidv4(),
-        },
-      }),
-      new Document({
-        pageContent: "Cats are tough.",
-        metadata: {
-          id: uuidv4(),
-        },
-      }),
+      [uuidv4(), "Dogs are tough."],
+      [uuidv4(), "Cats are tough."],
     ];
-    const docsAsKVPairs: Array<[string, DocumentInterface]> = docs.map(
-      (doc) => [doc.metadata.id, doc]
+    const encoder = new TextEncoder();
+    const docsAsKVPairs: Array<[string, Uint8Array]> = docs.map(
+      (doc) => [doc[0], encoder.encode(doc[1])]
     );
     await store.mset(docsAsKVPairs);
 
-    const docIds = docs.map((doc) => doc.metadata.id);
+    const docIds = docs.map((doc) => doc[0]);
     await store.mdelete(docIds);
 
-    const retrievedDocs = await store.mget(docs.map((doc) => doc.metadata.id));
+    const retrievedDocs = await store.mget(docs.map((doc) => doc[0]));
 
     expect(retrievedDocs.length).toBe(0);
   } finally {
+    const keys = store.yieldKeys();
+    const yieldedKeys = [];
+    for await (const key of keys) {
+      yieldedKeys.push(key);
+    }
+    await store.mdelete(yieldedKeys);
+
     await client.close();
   }
 });
@@ -133,21 +135,12 @@ test("MongoDBStore can yield keys", async () => {
     });
 
     const docs = [
-      new Document({
-        pageContent: "Dogs are tough.",
-        metadata: {
-          id: uuidv4(),
-        },
-      }),
-      new Document({
-        pageContent: "Cats are tough.",
-        metadata: {
-          id: uuidv4(),
-        },
-      }),
+      [uuidv4(), "Dogs are tough."],
+      [uuidv4(), "Cats are tough."],
     ];
-    const docsAsKVPairs: Array<[string, DocumentInterface]> = docs.map(
-      (doc) => [doc.metadata.id, doc]
+    const encoder = new TextEncoder();
+    const docsAsKVPairs: Array<[string, Uint8Array]> = docs.map(
+      (doc) => [doc[0], encoder.encode(doc[1])]
     );
     await store.mset(docsAsKVPairs);
 
@@ -155,13 +148,13 @@ test("MongoDBStore can yield keys", async () => {
 
     const yieldedKeys = [];
     for await (const key of keys) {
-      console.log("key in test");
       yieldedKeys.push(key);
     }
-    expect(yieldedKeys).toEqual(docs.map((doc) => doc.metadata.id));
+
+    expect(yieldedKeys.sort()).toEqual(docs.map((doc) => doc[0]).sort());
 
     // delete
-    await store.mdelete(docs.map((doc) => doc.metadata.id));
+    await store.mdelete(yieldedKeys);
   } finally {
     await client.close();
   }
@@ -183,27 +176,18 @@ test("MongoDBStore can yield keys with prefix", async () => {
   const [dbName, collectionName] = namespace.split(".");
   const collection = client.db(dbName).collection(collectionName);
 
-  try {
-    const store = new MongoDBStore({
-      collection,
-    });
+  const store = new MongoDBStore({
+    collection,
+  });
 
+  try {
     const docs = [
-      new Document({
-        pageContent: "Dogs are tough.",
-        metadata: {
-          id: "dis_one",
-        },
-      }),
-      new Document({
-        pageContent: "Cats are tough.",
-        metadata: {
-          id: "not_dis_one",
-        },
-      }),
+      ["dis_one", "Dogs are tough."],
+      ["not_dis_one", "Cats are tough."],
     ];
-    const docsAsKVPairs: Array<[string, DocumentInterface]> = docs.map(
-      (doc) => [doc.metadata.id, doc]
+    const encoder = new TextEncoder();
+    const docsAsKVPairs: Array<[string, Uint8Array]> = docs.map(
+      (doc) => [doc[0], encoder.encode(doc[1])]
     );
     await store.mset(docsAsKVPairs);
 
@@ -215,9 +199,13 @@ test("MongoDBStore can yield keys with prefix", async () => {
     }
     expect(yieldedKeys).toEqual(["dis_one"]);
 
-    // delete
-    await store.mdelete(docs.map((doc) => doc.metadata.id));
   } finally {
+    const keys = store.yieldKeys();
+    const yieldedKeys = [];
+    for await (const key of keys) {
+      yieldedKeys.push(key);
+    }
+    await store.mdelete(yieldedKeys);
     await client.close();
   }
 });

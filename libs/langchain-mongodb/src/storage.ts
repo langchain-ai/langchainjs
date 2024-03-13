@@ -1,5 +1,4 @@
 import { BaseStore } from "@langchain/core/stores";
-import { Document, DocumentInterface } from "@langchain/core/documents";
 import { Collection, Document as MongoDocument } from "mongodb";
 
 /**
@@ -32,7 +31,7 @@ export interface MongoDBStoreInput {
  * ```typescript
  * ```
  */
-export class MongoDBStore extends BaseStore<string, DocumentInterface> {
+export class MongoDBStore extends BaseStore<string, Uint8Array> {
   lc_namespace = ["langchain", "storage"];
 
   collection: Collection<MongoDocument>;
@@ -81,15 +80,19 @@ export class MongoDBStore extends BaseStore<string, DocumentInterface> {
       })
       .toArray();
 
-    const docs = retrievedValues.map(
-      (value) =>
-        new Document({
-          pageContent: value.pageContent,
-          metadata: value.metadata,
-        })
-    );
-
-    return docs;
+    const encoder = new TextEncoder();
+    return retrievedValues.map((value) => {
+      if (!("value" in value)) {
+        return undefined;
+      }
+      if (value === undefined || value === null) {
+        return undefined;
+      } else if (typeof value === "object") {
+        return encoder.encode(JSON.stringify(value.value));
+      } else {
+        throw new Error("Unexpected value type");
+      }
+    });
   }
 
   /**
@@ -97,11 +100,16 @@ export class MongoDBStore extends BaseStore<string, DocumentInterface> {
    * @param keyValuePairs Array of key-value pairs to be set.
    * @returns Promise that resolves when all keys have been set.
    */
-  async mset(keyValuePairs: [string, DocumentInterface][]): Promise<void> {
-    const updates = keyValuePairs.map(([key, value]) => [
-      { [this.primaryKey]: this._getPrefixedKey(key) },
-      { $set: { [this.primaryKey]: this._getPrefixedKey(key), ...value } },
-    ]);
+  async mset(keyValuePairs: [string, Uint8Array][]): Promise<void> {
+    const decoder = new TextDecoder();
+
+    const updates = keyValuePairs.map(([key, value]) => {
+      const decodedValue = decoder.decode(value);
+      return [
+        { [this.primaryKey]: this._getPrefixedKey(key) },
+        { $set: { [this.primaryKey]: this._getPrefixedKey(key), ...{ value: decodedValue } } },
+      ]
+    });
     await this.collection.bulkWrite(
       updates.map(([filter, update]) => ({
         updateOne: {
