@@ -146,7 +146,10 @@ export abstract class BaseMessage
 
   get lc_aliases(): Record<string, string> {
     // exclude snake case conversion to pascal case
-    return { additional_kwargs: "additional_kwargs", response_metadata: "response_metadata" };
+    return {
+      additional_kwargs: "additional_kwargs",
+      response_metadata: "response_metadata",
+    };
   }
 
   /**
@@ -179,7 +182,11 @@ export abstract class BaseMessage
   ) {
     if (typeof fields === "string") {
       // eslint-disable-next-line no-param-reassign
-      fields = { content: fields, additional_kwargs: kwargs, response_metadata: {} };
+      fields = {
+        content: fields,
+        additional_kwargs: kwargs,
+        response_metadata: {},
+      };
     }
     // Make sure the default value for additional_kwargs is passed into super() for serialization
     if (!fields.additional_kwargs) {
