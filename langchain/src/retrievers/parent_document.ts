@@ -5,6 +5,7 @@ import {
   type VectorStoreRetrieverInterface,
 } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
+import { type BaseDocumentCompressor } from "./document_compressors/index.js";
 import {
   TextSplitter,
   TextSplitterChunkHeaderOptions,
@@ -26,6 +27,8 @@ export type ParentDocumentRetrieverFields = MultiVectorRetrieverInput & {
    * the `.similaritySearch` method of the vectorstore.
    */
   childDocumentRetriever?: VectorStoreRetrieverInterface<VectorStoreInterface>;
+  documentCompressor?: BaseDocumentCompressor | undefined;
+  documentCompressorrMinRelevanceScore?: number;
 };
 
 /**
@@ -81,6 +84,10 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
     | VectorStoreRetrieverInterface<VectorStoreInterface>
     | undefined;
 
+  documentCompressor: BaseDocumentCompressor | undefined;
+
+  protected documentCompressorrMinRelevanceScore?: number = 0.5;
+
   constructor(fields: ParentDocumentRetrieverFields) {
     super(fields);
     this.vectorstore = fields.vectorstore;
@@ -90,6 +97,10 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
     this.childK = fields.childK;
     this.parentK = fields.parentK;
     this.childDocumentRetriever = fields.childDocumentRetriever;
+    this.documentCompressor = fields.documentCompressor;
+    this.documentCompressorrMinRelevanceScore =
+      fields.documentCompressorrMinRelevanceScore ??
+      this.documentCompressorrMinRelevanceScore;
   }
 
   async _getRelevantDocuments(query: string): Promise<Document[]> {
@@ -114,7 +125,22 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
       (doc?: Document): doc is Document => doc !== undefined
     );
     parentDocs.push(...retrievedDocs);
-    return parentDocs.slice(0, this.parentK);
+
+    let outputParentDocs = parentDocs.slice(0, this.parentK);
+
+    if (this.documentCompressor) {
+      outputParentDocs = await this.documentCompressor.compressDocuments(
+        outputParentDocs,
+        query
+      );
+      outputParentDocs = outputParentDocs.filter(
+        (doc) =>
+          (doc?.metadata?.relevanceScore ?? 1) >=
+          (this.documentCompressorrMinRelevanceScore ?? 0)
+      );
+    }
+
+    return outputParentDocs;
   }
 
   /**
