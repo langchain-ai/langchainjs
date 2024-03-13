@@ -1,3 +1,5 @@
+/* eslint-disable no-promise-executor-return */
+
 import { test } from "@jest/globals";
 import { FakeLLM } from "../../utils/testing/index.js";
 
@@ -33,6 +35,8 @@ test("Test FakeLLM uses callbacks with a cache", async () => {
       },
     ],
   });
+  // If callbacks are backgrounded
+  await new Promise((resolve) => setTimeout(resolve, 1000));
   expect(response).toEqual(response2);
   expect(response2).toEqual(acc);
 });
