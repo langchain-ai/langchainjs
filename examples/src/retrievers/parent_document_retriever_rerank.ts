@@ -9,27 +9,13 @@ import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 const reranker = new CohereRerank({ topN: 50 });
 
 const splitter = new RecursiveCharacterTextSplitter({
-  chunkSize: 1500,
+  chunkSize: 500,
   chunkOverlap: 0,
 });
 
-const jimDocs = await splitter.createDocuments(
-  [`My favorite color is blue.`],
-  undefined,
-  {
-    chunkHeader: "DOC NAME: Jim Interview\n---\n",
-    appendChunkOverlapHeader: true,
-  }
-);
+const jimDocs = await splitter.createDocuments([`Jim favorite color is blue.`]);
 
-const pamDocs = await splitter.createDocuments(
-  [`My favorite color is red.`],
-  undefined,
-  {
-    chunkHeader: "DOC NAME: Pan Interview\n---\n",
-    appendChunkOverlapHeader: true,
-  }
-);
+const pamDocs = await splitter.createDocuments([`Pam favorite color is red.`]);
 
 const vectorstore = await HNSWLib.fromDocuments([], new OpenAIEmbeddings());
 const docstore = new InMemoryStore();
