@@ -60,10 +60,7 @@ export class VercelPostgres extends VectorStore {
     return "vercel";
   }
 
-  private constructor(
-    embeddings: EmbeddingsInterface,
-    config: VercelPostgresFields
-  ) {
+  constructor(embeddings: EmbeddingsInterface, config: VercelPostgresFields) {
     super(embeddings, config);
     this.tableName = config.tableName ?? "langchain_vectors";
     this.filter = config.filter;

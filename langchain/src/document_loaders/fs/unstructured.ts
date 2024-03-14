@@ -109,6 +109,10 @@ export type UnstructuredLoaderOptions = {
   hiResModelName?: StringWithAutocomplete<HiResModelName>;
   includePageBreaks?: boolean;
   chunkingStrategy?: StringWithAutocomplete<ChunkingStrategy>;
+  multiPageSections?: boolean;
+  combineUnderNChars?: number;
+  newAfterNChars?: number;
+  maxCharacters?: number;
 };
 
 type UnstructuredDirectoryLoaderOptions = UnstructuredLoaderOptions & {
@@ -154,6 +158,14 @@ export class UnstructuredLoader extends BaseDocumentLoader {
 
   private chunkingStrategy?: StringWithAutocomplete<ChunkingStrategy>;
 
+  private multiPageSections?: boolean;
+
+  private combineUnderNChars?: number;
+
+  private newAfterNChars?: number;
+
+  private maxCharacters?: number;
+
   constructor(
     filePathOrLegacyApiUrl: string,
     optionsOrLegacyFilePath: UnstructuredLoaderOptions | string = {}
@@ -181,6 +193,10 @@ export class UnstructuredLoader extends BaseDocumentLoader {
       this.hiResModelName = options.hiResModelName;
       this.includePageBreaks = options.includePageBreaks;
       this.chunkingStrategy = options.chunkingStrategy;
+      this.multiPageSections = options.multiPageSections;
+      this.combineUnderNChars = options.combineUnderNChars;
+      this.newAfterNChars = options.newAfterNChars;
+      this.maxCharacters = options.maxCharacters;
     }
   }
 
@@ -225,6 +241,21 @@ export class UnstructuredLoader extends BaseDocumentLoader {
     }
     if (this.chunkingStrategy) {
       formData.append("chunking_strategy", this.chunkingStrategy);
+    }
+    if (this.multiPageSections !== undefined) {
+      formData.append(
+        "multipage_sections",
+        this.multiPageSections ? "true" : "false"
+      );
+    }
+    if (this.combineUnderNChars !== undefined) {
+      formData.append("combine_under_n_chars", String(this.combineUnderNChars));
+    }
+    if (this.newAfterNChars !== undefined) {
+      formData.append("new_after_n_chars", String(this.newAfterNChars));
+    }
+    if (this.maxCharacters !== undefined) {
+      formData.append("max_characters", String(this.maxCharacters));
     }
 
     const headers = {
