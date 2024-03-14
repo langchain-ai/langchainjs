@@ -161,5 +161,5 @@ export async function checkBrokenLinks(
     const errorMsg = results.join("\n");
     throw new Error(errorMsg);
   }
-  console.log("No broken links found!");
+  console.log("No broken links found! 🎉🎉🎉");
 }
