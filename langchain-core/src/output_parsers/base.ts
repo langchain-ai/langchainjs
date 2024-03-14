@@ -64,14 +64,14 @@ export abstract class BaseLLMOutputParser<T = unknown> extends Runnable<
   ): Promise<T> {
     if (typeof input === "string") {
       return this._callWithConfig(
-        async (input: string): Promise<T> =>
+        async (input: string, options): Promise<T> =>
           this.parseResult([{ text: input }], options?.callbacks),
         input,
         { ...options, runType: "parser" }
       );
     } else {
       return this._callWithConfig(
-        async (input: BaseMessage): Promise<T> =>
+        async (input: BaseMessage, options): Promise<T> =>
           this.parseResult([
             {
               message: input,

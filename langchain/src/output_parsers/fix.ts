@@ -88,7 +88,7 @@ export class OutputFixingParser<T> extends BaseOutputParser<T> {
         if (this.retryChain instanceof LLMChain) {
           const result = await this.retryChain.call(retryInput, callbacks);
           const newCompletion: string = result[this.retryChain.outputKey];
-          return this.parser.parse(newCompletion);
+          return this.parser.parse(newCompletion, callbacks);
         } else {
           const result = await this.retryChain.invoke(retryInput, { callbacks });
           return result;
