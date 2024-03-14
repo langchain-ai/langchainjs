@@ -18,6 +18,6 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable --mode=skip-build
       - name: Build scripts
-        run: --filter=@langchain/scripts
+        run: yarn build --filter=@langchain/scripts
       - name: Check broken links
         run: yarn workspace core_docs check-broken-links
