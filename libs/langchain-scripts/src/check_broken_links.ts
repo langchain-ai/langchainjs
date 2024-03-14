@@ -2,7 +2,13 @@ import { glob } from "glob";
 import fs from "node:fs/promises";
 import axios from "axios";
 
-const DEFAULT_WHITELIST = ["openai.com", "ibm.com", "x.com", "twitter.com", "npmjs.com"]
+const DEFAULT_WHITELIST = [
+  "openai.com",
+  "ibm.com",
+  "x.com",
+  "twitter.com",
+  "npmjs.com",
+];
 
 type CheckBrokenLinksOptions = {
   logErrors?: boolean;
@@ -53,9 +59,17 @@ export const extractLinks = (content: string): string[] => {
   return links;
 };
 
-export const checkUrl = async (url: string, options?: CheckBrokenLinksOptions) => {
+export const checkUrl = async (
+  url: string,
+  options?: CheckBrokenLinksOptions
+) => {
   const timeout = options?.timeout || 3000;
-  if ([...DEFAULT_WHITELIST, ...(options?.whitelist ? options.whitelist : [])].some((domain) => url.includes(domain))) {
+  if (
+    [
+      ...DEFAULT_WHITELIST,
+      ...(options?.whitelist ? options.whitelist : []),
+    ].some((domain) => url.includes(domain))
+  ) {
     return true;
   }
 
