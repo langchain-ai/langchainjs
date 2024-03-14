@@ -314,7 +314,7 @@ export class RunnableMultiActionAgent extends BaseMultiActionAgent {
           ].join("\n")
         );
       }
-      return finalOutput;
+      output = finalOutput;
     } else {
       output = await this.runnable.invoke(combinedInput, combinedConfig);
     }
