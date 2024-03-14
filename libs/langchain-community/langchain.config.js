@@ -71,6 +71,7 @@ export const config = {
     "embeddings/tensorflow": "embeddings/tensorflow",
     "embeddings/togetherai": "embeddings/togetherai",
     "embeddings/voyage": "embeddings/voyage",
+    "embeddings/zhipuai": "embeddings/zhipuai",
     // llms
     "llms/ai21": "llms/ai21",
     "llms/aleph_alpha": "llms/aleph_alpha",
@@ -241,6 +242,7 @@ export const config = {
     "embeddings/hf_transformers",
     "embeddings/llama_cpp",
     "embeddings/gradient_ai",
+    "embeddings/zhipuai",
     "llms/load",
     "llms/cohere",
     "llms/googlevertexai",
