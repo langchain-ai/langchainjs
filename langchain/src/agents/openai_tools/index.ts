@@ -15,6 +15,7 @@ import {
   OpenAIToolsAgentOutputParser,
   type ToolsAgentStep,
 } from "../openai/output_parser.js";
+import { RunnableMultiActionAgent } from "../agent.js";
 
 export { OpenAIToolsAgentOutputParser, type ToolsAgentStep };
 
@@ -37,6 +38,11 @@ export type CreateOpenAIToolsAgentParams = {
   tools: StructuredToolInterface[];
   /** The prompt to use, must have an input key of `agent_scratchpad`. */
   prompt: ChatPromptTemplate;
+  /**
+   * Whether to invoke the underlying model in streaming mode,
+   * allowing streaming of intermediate steps. Defaults to true.
+   */
+  streamRunnable?: boolean;
 };
 
 /**
@@ -99,6 +105,7 @@ export async function createOpenAIToolsAgent({
   llm,
   tools,
   prompt,
+  streamRunnable,
 }: CreateOpenAIToolsAgentParams) {
   if (!prompt.inputVariables.includes("agent_scratchpad")) {
     throw new Error(
@@ -118,5 +125,9 @@ export async function createOpenAIToolsAgent({
     modelWithTools,
     new OpenAIToolsAgentOutputParser(),
   ]);
-  return agent;
+  return new RunnableMultiActionAgent({
+    runnable: agent,
+    defaultRunName: "OpenAIToolsAgent",
+    streamRunnable,
+  });
 }
