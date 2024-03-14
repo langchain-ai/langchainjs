@@ -13,9 +13,9 @@ test("Test Bedrock identifying params", async () => {
     model,
     maxRetries: 0,
     credentials: {
-      accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
-      secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
-      sessionToken: process.env.BEDROCK_AWS_SESSION_TOKEN,
+      accessKeyId: "unused",
+      secretAccessKey: "unused",
+      sessionToken: "unused",
     },
   });
 
