@@ -391,7 +391,6 @@ export class AIMessageChunk extends BaseMessageChunk {
   }
 
   concat(chunk: AIMessageChunk) {
-    console.log("CONCATTING", this, chunk);
     return new AIMessageChunk({
       content: mergeContent(this.content, chunk.content),
       additional_kwargs: _mergeDicts(
