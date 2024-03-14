@@ -26,7 +26,9 @@
     "quarto:vercel": "bash ./scripts/vercel_build.sh && node ./scripts/quarto-build.js",
     "gen": "yarn gen:supabase",
     "gen:supabase": "npx supabase gen types typescript --project-id 'xsqpnijvmbodcxyapnyq' --schema public > ./src/supabase.d.ts",
-    "check-broken-links": "yarn quarto && node ./scripts/check-broken-links.js"
+    "broken-links": "yarn check-broken-links",
+    "check:broken-links": "yarn quarto && yarn broken-links",
+    "check:broken-links:ci": "yarn quarto:vercel && yarn broken-links"
   },
   "dependencies": {
     "@docusaurus/core": "2.4.3",
