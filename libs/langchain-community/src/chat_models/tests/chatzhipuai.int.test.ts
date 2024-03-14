@@ -60,7 +60,7 @@ const runTest = async ({
       return;
     }
 
-    const res = await chat.invoke(messages);
+    const res = await chat.invoke(messages, passedConfig);
     console.log({ res });
 
     if (passedConfig.streaming) {

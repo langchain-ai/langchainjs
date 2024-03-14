@@ -1,4 +1,4 @@
-import * as jwt from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 
 export function encodeApiKey(apiKey: string | undefined) {
   if (!apiKey) throw Error("Invalid api key");
