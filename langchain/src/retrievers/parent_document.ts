@@ -112,6 +112,15 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
       subDocs = await this.vectorstore.similaritySearch(query, this.childK);
     }
 
+    if (this.documentCompressor) {
+      subDocs = await this.documentCompressor.compressDocuments(subDocs, query);
+      subDocs = subDocs.filter(
+        (doc) =>
+          (doc?.metadata?.relevanceScore ?? 1) >=
+          (this.documentCompressorMinRelevanceScore ?? 0)
+      );
+    }
+
     // Maintain order
     const parentDocIds: string[] = [];
     for (const doc of subDocs) {
@@ -125,22 +134,7 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
       (doc?: Document): doc is Document => doc !== undefined
     );
     parentDocs.push(...retrievedDocs);
-
-    let outputParentDocs = parentDocs.slice(0, this.parentK);
-
-    if (this.documentCompressor) {
-      outputParentDocs = await this.documentCompressor.compressDocuments(
-        outputParentDocs,
-        query
-      );
-      outputParentDocs = outputParentDocs.filter(
-        (doc) =>
-          (doc?.metadata?.relevanceScore ?? 1) >=
-          (this.documentCompressorMinRelevanceScore ?? 0)
-      );
-    }
-
-    return outputParentDocs;
+    return parentDocs.slice(0, this.parentK);
   }
 
   /**

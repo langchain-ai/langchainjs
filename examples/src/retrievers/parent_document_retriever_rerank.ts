@@ -6,7 +6,7 @@ import { ParentDocumentRetriever } from "langchain/retrievers/parent_document";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 
 // init Cohere Rerank. Remember to add COHERE_API_KEY to your .env
-const reranker = new CohereRerank({ topN: 5 });
+const reranker = new CohereRerank({ topN: 50 });
 
 const splitter = new RecursiveCharacterTextSplitter({
   chunkSize: 1500,
