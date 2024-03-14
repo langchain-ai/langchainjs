@@ -37,6 +37,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
+    "axios": "^1.6.7",
     "commander": "^11.1.0",
     "glob": "^10.3.10",
     "rollup": "^4.5.2",

@@ -1,16 +1,34 @@
 import { glob } from "glob";
 import fs from "node:fs/promises";
+import axios from "axios";
 
-export const readFile = async (
-  path: string,
-  options?: { logErrors?: boolean }
+type CheckBrokenLinksOptions = {
+  logErrors?: boolean;
+};
+
+const batchArray = <T>(array: T[], batchSize: number): T[][] => {
+  const batches = [];
+  for (let i = 0; i < array.length; i += batchSize) {
+    batches.push(array.slice(i, i + batchSize));
+  }
+  return batches;
+};
+
+const readFile = async (
+  pathName: string,
+  options?: CheckBrokenLinksOptions
 ): Promise<string | null> => {
   try {
-    const fileContent = await fs.readFile(path, "utf-8");
+    const fileContent = await fs.readFile(pathName, "utf-8");
     return fileContent;
   } catch (e) {
     if (options?.logErrors) {
-      console.error(e);
+      console.error(
+        {
+          error: e,
+        },
+        `Error reading file: ${pathName}`
+      );
     }
     return null;
   }
@@ -31,89 +49,117 @@ export const extractLinks = (content: string): string[] => {
   return links;
 };
 
-export const fetchUrl = async (
-  url: string,
-  options?: { logErrors?: boolean }
-): Promise<boolean> => {
+const checkUrl = async (url: string, options?: CheckBrokenLinksOptions) => {
+  const timeout = 3000;
   try {
-    const timeout = (ms: number) =>
-      new Promise((_, reject) =>
-        // eslint-disable-next-line no-promise-executor-return
-        setTimeout(() => reject(new Error("timeout")), ms)
-      );
-    const response = await Promise.race([fetch(url), timeout(3000)]);
-    return (response as { ok: boolean }).ok;
-  } catch (e) {
-    if (options?.logErrors) {
-      console.error(
-        {
-          error: e,
-        },
-        `Error fetching url: ${url}`
-      );
+    const response = await axios.get(url, {
+      // Allow up to 5 redirects
+      maxRedirects: 5,
+      // Allow status codes in the 200 and 300 range
+      validateStatus: (status) => status >= 200 && status < 400,
+      // Set a timeout so the request doesn't hang
+      timeout,
+    });
+
+    if (response.status >= 200 && response.status < 300) {
+      return true;
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (e: any) {
+    if (options?.logErrors) {
+      if ("cause" in e) {
+        console.error(
+          {
+            error: e.cause,
+          },
+          `Error fetching url: ${url}`
+        );
+      } else {
+        console.error(
+          {
+            error: e,
+          },
+          `Error fetching url: ${url}`
+        );
+      }
+    }
+    return false;
   }
   return false;
 };
 
+const checkLinksInFile = async (
+  filePath: string,
+  options?: CheckBrokenLinksOptions
+): Promise<string | number> => {
+  const content = await readFile(filePath);
+  if (!content) {
+    if (options?.logErrors) {
+      console.error(`Could not read file: ${filePath}`);
+    }
+    return 0; // Return 0 links checked for this file
+  }
+  const links = extractLinks(content);
+  const brokenLinks = (
+    await Promise.all(
+      links.map(async (link) => {
+        const isOk = await checkUrl(link, options);
+        if (!isOk) {
+          return link;
+        }
+        return null;
+      })
+    )
+  ).filter((l): l is string => l !== null);
+  if (brokenLinks.length) {
+    return `Found ${
+      brokenLinks.length
+    } broken links in ${filePath}:\nLinks:\n - ${brokenLinks.join("\n - ")}`;
+  }
+  return links.length; // Return the number of links checked for this file
+};
+
 export async function checkBrokenLinks(
   mdxDirPath: string,
-  options?: { logErrors?: boolean }
+  options?: CheckBrokenLinksOptions
 ) {
+  const startTime = Date.now();
   const allMdxFiles = await glob(`${mdxDirPath}/**/*.mdx`);
+  const fileCount = allMdxFiles.length;
+  let linksChecked = 0;
 
-  // Batch into 10 files at a time
   const batchSize = 10;
-  const batches = [];
-  for (let i = 0; i < allMdxFiles.length; i += batchSize) {
-    batches.push(allMdxFiles.slice(i, i + batchSize));
-  }
+  const batches = batchArray(allMdxFiles, batchSize);
 
-  let results: string[] = [];
+  const results: string[] = [];
 
   for await (const batch of batches) {
-    const result = (
-      await Promise.all(
-        batch.map(async (filePath) => {
-          const content = await readFile(filePath);
-          if (!content) {
-            if (options?.logErrors) {
-              console.error(`Could not read file: ${filePath}`);
-            }
-            return;
-          }
-          const links = extractLinks(content);
-          if (links.length) {
-            const brokenLinks = (
-              await Promise.all(
-                links.map(async (link) => {
-                  const isOk = await fetchUrl(link);
-                  if (!isOk) {
-                    return link;
-                  }
-                  return null;
-                })
-              )
-            ).filter((l): l is string => l !== null);
-            if (brokenLinks.length) {
-              return `Found ${
-                brokenLinks.length
-              } broken links in ${filePath}:\nLinks:\n - ${brokenLinks.join(
-                "\n - "
-              )}`;
-            }
-          }
-          return null;
-        })
-      )
-    ).filter((l): l is string => l !== null);
-    results = results.concat(result);
+    const batchLinksChecked = batch.map((filePath) =>
+      checkLinksInFile(filePath, options)
+    );
+
+    const batchResults = await Promise.all(batchLinksChecked);
+    const batchLinksCount = batchResults.reduce<number>((acc, result) => {
+      if (typeof result === "number") {
+        return acc + result;
+      } else {
+        results.push(result);
+        return acc;
+      }
+    }, 0);
+
+    linksChecked += batchLinksCount;
   }
 
+  const endTime = Date.now();
+  const totalTimeInSeconds = (endTime - startTime) / 1000;
+  console.log(
+    `Checked ${linksChecked} links inside ${fileCount} files. Took ${totalTimeInSeconds} seconds.`
+  );
+
   if (results.length) {
-    console.error(results.join("\n"));
-    process.exit(1);
+    const errorMsg = results.join("\n");
+    throw new Error(errorMsg);
   }
   console.log("No broken links found!");
-  process.exit(0);
 }
