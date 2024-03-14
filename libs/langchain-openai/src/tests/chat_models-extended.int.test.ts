@@ -66,6 +66,18 @@ test("Test ChatOpenAI tool calling", async () => {
   expect(res.additional_kwargs.tool_calls?.length).toBeGreaterThan(1);
 });
 
+test("Test ChatOpenAI streaming logprobs", async () => {
+  const model = new ChatOpenAI({
+    maxTokens: 50,
+    modelName: "gpt-3.5-turbo",
+    streaming: true,
+    logprobs: true,
+  });
+  const res = await model.invoke("Print hello world.");
+  console.log(res.response_metadata.logprobs.content);
+  expect(res.response_metadata.logprobs.content.length).toBeGreaterThan(0);
+});
+
 test("Test ChatOpenAI tool calling with ToolMessages", async () => {
   function getCurrentWeather(location: string) {
     if (location.toLowerCase().includes("tokyo")) {
