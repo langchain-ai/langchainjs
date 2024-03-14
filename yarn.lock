@@ -9739,7 +9739,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/scripts@0.0.7, @langchain/scripts@workspace:*, @langchain/scripts@workspace:libs/langchain-scripts, @langchain/scripts@~0.0":
+"@langchain/scripts@workspace:*, @langchain/scripts@workspace:libs/langchain-scripts, @langchain/scripts@~0.0":
   version: 0.0.0-use.local
   resolution: "@langchain/scripts@workspace:libs/langchain-scripts"
   dependencies:
@@ -18675,7 +18675,7 @@ __metadata:
     "@docusaurus/core": 2.4.3
     "@docusaurus/preset-classic": 2.4.3
     "@docusaurus/remark-plugin-npm2yarn": 2.4.3
-    "@langchain/scripts": 0.0.7
+    "@langchain/scripts": "workspace:*"
     "@mdx-js/react": ^1.6.22
     "@supabase/supabase-js": ^2.39.7
     "@swc/core": ^1.3.62

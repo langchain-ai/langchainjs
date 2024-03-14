@@ -2,8 +2,12 @@ import { glob } from "glob";
 import fs from "node:fs/promises";
 import axios from "axios";
 
+const DEFAULT_WHITELIST = ["openai.com", "ibm.com", "x.com", "twitter.com", "npmjs.com"]
+
 type CheckBrokenLinksOptions = {
   logErrors?: boolean;
+  timeout?: number;
+  whitelist?: string[];
 };
 
 const batchArray = <T>(array: T[], batchSize: number): T[][] => {
@@ -16,7 +20,7 @@ const batchArray = <T>(array: T[], batchSize: number): T[][] => {
 
 const readFile = async (
   pathName: string,
-  options?: CheckBrokenLinksOptions
+  options?: { logErrors?: boolean }
 ): Promise<string | null> => {
   try {
     const fileContent = await fs.readFile(pathName, "utf-8");
@@ -49,8 +53,12 @@ export const extractLinks = (content: string): string[] => {
   return links;
 };
 
-const checkUrl = async (url: string, options?: CheckBrokenLinksOptions) => {
-  const timeout = 3000;
+export const checkUrl = async (url: string, options?: CheckBrokenLinksOptions) => {
+  const timeout = options?.timeout || 3000;
+  if ([...DEFAULT_WHITELIST, ...(options?.whitelist ? options.whitelist : [])].some((domain) => url.includes(domain))) {
+    return true;
+  }
+
   try {
     const response = await axios.get(url, {
       // Allow up to 5 redirects
@@ -92,7 +100,7 @@ const checkLinksInFile = async (
   filePath: string,
   options?: CheckBrokenLinksOptions
 ): Promise<string | number> => {
-  const content = await readFile(filePath);
+  const content = await readFile(filePath, { logErrors: options?.logErrors });
   if (!content) {
     if (options?.logErrors) {
       console.error(`Could not read file: ${filePath}`);
@@ -158,7 +166,7 @@ export async function checkBrokenLinks(
   );
 
   if (results.length) {
-    const errorMsg = results.join("\n");
+    const errorMsg = results.join("\n\n");
     throw new Error(errorMsg);
   }
   console.log("No broken links found! 🎉🎉🎉");
