@@ -906,6 +906,15 @@
       "import": "./embeddings/voyage.js",
       "require": "./embeddings/voyage.cjs"
     },
+    "./embeddings/zhipuai": {
+      "types": {
+        "import": "./embeddings/zhipuai.d.ts",
+        "require": "./embeddings/zhipuai.d.cts",
+        "default": "./embeddings/zhipuai.d.ts"
+      },
+      "import": "./embeddings/zhipuai.js",
+      "require": "./embeddings/zhipuai.cjs"
+    },
     "./llms/ai21": {
       "types": {
         "import": "./llms/ai21.d.ts",
@@ -2306,6 +2315,10 @@
     "embeddings/voyage.js",
     "embeddings/voyage.d.ts",
     "embeddings/voyage.d.cts",
+    "embeddings/zhipuai.cjs",
+    "embeddings/zhipuai.js",
+    "embeddings/zhipuai.d.ts",
+    "embeddings/zhipuai.d.cts",
     "llms/ai21.cjs",
     "llms/ai21.js",
     "llms/ai21.d.ts",

@@ -170,6 +170,10 @@ embeddings/voyage.cjs
 embeddings/voyage.js
 embeddings/voyage.d.ts
 embeddings/voyage.d.cts
+embeddings/zhipuai.cjs
+embeddings/zhipuai.js
+embeddings/zhipuai.d.ts
+embeddings/zhipuai.d.cts
 llms/ai21.cjs
 llms/ai21.js
 llms/ai21.d.ts
