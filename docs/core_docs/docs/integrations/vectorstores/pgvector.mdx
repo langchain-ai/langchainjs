@@ -26,9 +26,24 @@ Create a file below named `docker-compose.yml`:
 import CodeBlock from "@theme/CodeBlock";
 import DockerExample from "@examples/indexes/vector_stores/pgvector_vectorstore/docker-compose.example.yml";
 
-<CodeBlock language="yml" name="docker-compose.yml">
-  {DockerExample}
-</CodeBlock>
+```yml
+# Run this command to start the database:
+# docker-compose up --build
+version: "3"
+services:
+  db:
+    hostname: 127.0.0.1
+    image: ankane/pgvector
+    ports:
+      - 5432:5432
+    restart: always
+    environment:
+      - POSTGRES_DB=api
+      - POSTGRES_USER=myuser
+      - POSTGRES_PASSWORD=ChangeMe
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+```
 
 And then in the same directory, run `docker compose up` to start the container.
 
@@ -46,3 +61,16 @@ import Example from "@examples/indexes/vector_stores/pgvector_vectorstore/pgvect
 One complete example of using `PGVectorStore` is the following:
 
 <CodeBlock language="typescript">{Example}</CodeBlock>
+
+You can also specify a `collectionTableName` and a `collectionName` to partition vectors between multiple users or namespaces.
+
+### Advanced: reusing connections
+
+You can reuse connections by creating a pool, then creating new `PGVectorStore` instances directly via the constructor.
+
+Note that you should call `.initialize()` to set up your database at least once to set up your tables properly
+before using the constructor.
+
+import ConnectionReuseExample from "@examples/indexes/vector_stores/pgvector_vectorstore/pgvector_pool.ts";
+
+<CodeBlock language="typescript">{ConnectionReuseExample}</CodeBlock>
