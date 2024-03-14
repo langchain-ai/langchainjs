@@ -199,6 +199,8 @@ export abstract class BaseChatModel<
           callOptions,
           runManagers?.[0]
         )) {
+          chunk.message.response_metadata =
+            _combineGenerationInfoAndMetadata(chunk);
           yield chunk.message;
           if (!generationChunk) {
             generationChunk = chunk;
@@ -277,6 +279,10 @@ export abstract class BaseChatModel<
       results.map(async (pResult, i) => {
         if (pResult.status === "fulfilled") {
           const result = pResult.value;
+          for (const generation of result.generations) {
+            generation.message.response_metadata =
+              _combineGenerationInfoAndMetadata(generation);
+          }
           generations[i] = result.generations;
           llmOutputs[i] = result.llmOutput;
           return runManagers?.[i]?.handleLLMEnd({
@@ -645,4 +651,11 @@ export abstract class SimpleChatModel<
       ],
     };
   }
+}
+
+function _combineGenerationInfoAndMetadata(generation: ChatGeneration) {
+  return {
+    ...generation.generationInfo,
+    ...generation.message.response_metadata,
+  };
 }
