@@ -7,16 +7,12 @@ import CodeBlock from "@theme/CodeBlock";
 
 # Couchbase
 
-:::tip Compatibility
-Only available on Node.js.
-:::
-
 [Couchbase](http://couchbase.com/) is an award-winning distributed NoSQL cloud database that delivers unmatched versatility, performance, scalability, and financial value for all of your cloud, mobile,
 AI, and edge computing applications. Couchbase embraces AI with coding assistance for developers and vector search for their applications.
 
-Vector search is a part of the [Full Text Service](https://docs.couchbase.com/server/current/learn/services-and-indexes/services/search-service.html)(FTS) in Couchbase.
+Vector Search is a part of the [Full Text Search Service](https://docs.couchbase.com/server/current/learn/services-and-indexes/services/search-service.html) (Search Service) in Couchbase.
 
-This tutorial explains how to use vector search in Couchbase. You can work with both [Couchbase Capella](https://www.couchbase.com/products/capella/) and your self-managed Couchbase server.
+This tutorial explains how to use Vector Search in Couchbase. You can work with both [Couchbase Capella](https://www.couchbase.com/products/capella/) and your self-managed Couchbase Server.
 
 ## Installation
 
@@ -47,22 +43,26 @@ const couchbaseClient = await Cluster.connect(connectionString, {
 });
 ```
 
-## Create the Vector Index
+## Create the Search Index
 
-Currently, the vector index needs to be created from the Couchbase Capella or Server UI or using the REST interface.
+Currently, the Search index needs to be created from the Couchbase Capella or Server UI or using the REST interface.
 
-Let us define a vector index with the name `vector-index` on the testing bucket
+For this example, let us use the Import Index feature on the Search Service on the UI.
 
-For this example, let us use the Import Index feature on the Full Text Search on the UI.
-We are defining an index on the `testing` bucket's `_default` scope on the `_default` collection with the vector field set to `embedding` and text field set to `text`.
-We are also indexing and storing all the fields under `metadata` in the document dynamically. The similarity metric is set to `dot_product`.
+Let us define a Search index with the name `vector-index` on the testing bucket.
+We are defining an index on the `testing` bucket's `_default` scope on the `_default` collection with the vector field set to `embedding` with 1536 dimensions and the text field set to `text`.
+We are also indexing and storing all the fields under `metadata` in the document as a dynamic mapping to account for varying document structures. The similarity metric is set to `dot_product`.
 
-How to Import an Index to the Full Text Search service?
+### How to Import an Index to the Full Text Search service?
 
-- Couchbase Server: Click on Search -> Add Index -> Import
+- [Couchbase Server](https://docs.couchbase.com/server/current/search/import-search-index.html)
+  - Click on Search -> Add Index -> Import
   - Copy the following Index definition in the Import screen
+  - Click on Create Index to create the index.
 - [Couchbase Capella](https://docs.couchbase.com/cloud/search/import-search-index.html)
-  - Copy the following index definition to a new file `index.json` and import that file in Capella using the instructions in the documentation.
+  - Copy the fllowing index definition to a new file `index.json`
+  - Import the file in Capella using the instructions in the documentation.
+  - Click on Create Index to create the index.
 
 ### Index Definition
 
@@ -145,6 +145,7 @@ For more details on how to create an FTS index with support for Vector fields, p
 - [Couchbase Server](https://docs.couchbase.com/server/current/search/create-search-indexes.html)
 
 For using this vector store, CouchbaseVectorStoreArgs needs to be configured.
+textKey and embeddingKey are optional fields, required if you want to use specific keys
 
 ```typescript
 const couchbaseConfig: CouchbaseVectorStoreArgs = {
@@ -158,10 +159,22 @@ const couchbaseConfig: CouchbaseVectorStoreArgs = {
 };
 ```
 
-## Similarity Search
+## Create Vector Store
+
+We create the vector store object with the cluster information and the search index name.
+
+```typescript
+const store = await CouchbaseVectorStore.initialize(
+  embeddings, // embeddings object to create embeddings from text
+  couchbaseConfig
+);
+```
+
+## Basic Vector Search Example
 
 The following example showcases how to use couchbase vector search and perform similarity search.
-For this example, we are going to load the "state_of_the_union.txt" file via the RecursiveCharacterTextSplitter, create langchain documents from the chunks and send to couchbase vector store.
+For this example, we are going to load the "state_of_the_union.txt" file via the RecursiveCharacterTextSplitter,
+create langchain documents from the chunks and send to couchbase vector store.
 After the data is indexed, we perform a simple query to find the top 4 chunks that are similar to the query "What did president say about Ketanji Brown Jackson".
 This example at the end, also shows how to get similarity score
 
@@ -238,7 +251,7 @@ console.log(exactValueResult[0]);
 
 We can search for partial matches by specifying a fuzziness for the search. This is useful when you want to search for slight variations or misspellings of a search query.
 
-Here, "Jae" is close (fuzziness of 1) to "Jane".
+Here, "Johny" is close (fuzziness of 1) to "John Doe".
 
 ```typescript
 const partialMatchResult = await store.similaritySearch(query, 4, {
@@ -259,8 +272,8 @@ const dateRangeResult = await store.similaritySearch(independenceQuery, 4, {
   fields: ["metadata.date", "metadata.author"],
   searchOptions: {
     query: {
-      start: "2022-12-31",
-      end: "2023-01-02",
+      start: "2016-12-31",
+      end: "2017-01-02",
       inclusiveStart: true,
       inclusiveEnd: false,
       field: "metadata.date",
@@ -313,7 +326,8 @@ console.log(multipleConditionsResult[0]);
 
 ### Other Queries
 
-Similarly, you can use any of the supported Query methods like Geo Distance, Polygon Search, Wildcard, Regular Expressions, etc in the `search_options` parameter. Please refer to the documentation for more details on the available query methods and their syntax.
+Similarly, you can use any of the supported Query methods like Geo Distance, Polygon Search, Wildcard, Regular Expressions, etc in the `searchOptions` Key of `filter` parameter.
+Please refer to the documentation for more details on the available query methods and their syntax.
 
 - [Couchbase Capella](https://docs.couchbase.com/cloud/search/search-request-params.html#query-object)
 - [Couchbase Server](https://docs.couchbase.com/server/current/search/search-request-params.html#query-object)
@@ -329,19 +343,25 @@ Yes, currently you need to create the FTS index before creating the `CouchbaseVe
 
 ## Question: I am not seeing all the fields that I specified in my search results.
 
-In Couchbase, we can only return the fields stored in the FTS index. Please ensure that the field that you are trying to access in the search results is part of the index.
+In Couchbase, we can only return the fields stored in the Search index. Please ensure that the field that you are trying to access in the search results is part of the Search index.
 
-One way to handle this is to store a document's fields dynamically in the index. To do that, you need to select `Store Dynamic Fields` in the Advanced Settings of the FTS index.
+One way to handle this is to index and store a document's fields dynamically in the index.
 
-Similarly, if you want to search on dynamic fields, you must index those fields by selecting the option `Index Dynamic Fields` in the FTS index settings.
+- In Capella, you need to go to "Advanced Mode" then under the chevron "General Settings" you can check "[X] Store Dynamic Fields" or "[X] Index Dynamic Fields"
+- In Couchbase Server, in the Index Editor (not Quick Editor) under the chevron "Advanced" you can check "[X] Store Dynamic Fields" or "[X] Index Dynamic Fields"
 
 Note that these options will increase the size of the index.
 
+For more details on dynamic mappings, please refer to the [documentation](https://docs.couchbase.com/cloud/search/customize-index.html).
+
 ## Question: I am unable to see the metadata object in my search results.
 
-This is most likely due to the `metadata` field in the document not being indexed by the Couchbase FTS index. In order to index the `metadata` field in the document, you need to add it to the index as a mapping.
+This is most likely due to the `metadata` field in the document not being indexed and/or stored by the Couchbase Search index. In order to index the `metadata` field in the document, you need to add it to the index as a child mapping.
 
-If you select to map all the fields in the mapping, you will be able to search by all metadata fields. Alternatively, you can select the specific fields inside `metadata` object to be indexed. You can refer to the docs to learn more about indexing child mappings.
+If you select to map all the fields in the mapping, you will be able to search by all metadata fields. Alternatively, to optimize the index, you can select the specific fields inside `metadata` object to be indexed.
+You can refer to the [docs](https://docs.couchbase.com/cloud/search/customize-index.html) to learn more about indexing child mappings.
+
+To create Child Mappings, you can refer to the following docs -
 
 - [Couchbase Capella](https://docs.couchbase.com/cloud/search/create-child-mapping.html)
 - [Couchbase Server](https://docs.couchbase.com/server/current/fts/fts-creating-index-from-UI-classic-editor-dynamic.html)

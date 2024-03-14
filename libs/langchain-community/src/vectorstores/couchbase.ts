@@ -33,7 +33,7 @@ export interface AddVectorOptions {
  * @property {string} collectionName - The name of the collection within the scope.
  * @property {string} indexName - The name of the index to be used for vector search.
  * @property {string} textKey - The key to be used for text in the documents. Defaults to "text".
- * @property {string} embeddingKey - The key to be used for embeddings in the documents. If not provided, defaults to undefined.
+ * @property {string} embeddingKey - The key to be used for embeddings in the documents. Defaults to "embedding".
  * @property {boolean} scopedIndex - Whether to use a scoped index for vector search. Defaults to true.
  * @property {AddVectorOptions} addVectorOptions - Options for adding vectors with specific id/metadata
  */
@@ -76,6 +76,8 @@ export class CouchbaseVectorStore extends VectorStore {
 
   private readonly defaultScopedIndex = true;
 
+  private readonly defaultEmbeddingKey = "embedding";
+
   private cluster: Cluster;
 
   private _bucket: Bucket;
@@ -92,9 +94,9 @@ export class CouchbaseVectorStore extends VectorStore {
 
   private indexName: string;
 
-  private textKey = "text";
+  private textKey = this.defaultTextKey;
 
-  private embeddingKey: string;
+  private embeddingKey = this.defaultEmbeddingKey;
 
   private scopedIndex: boolean;
 
@@ -151,7 +153,7 @@ export class CouchbaseVectorStore extends VectorStore {
     if (embeddingKey) {
       store.embeddingKey = embeddingKey;
     } else {
-      store.embeddingKey = `${store.textKey}_embedding`;
+      store.embeddingKey = store.defaultEmbeddingKey;
     }
 
     if (scopedIndex !== undefined) {
