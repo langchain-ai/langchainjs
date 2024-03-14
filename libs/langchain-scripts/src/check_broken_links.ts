@@ -2,7 +2,8 @@ import { glob } from "glob";
 import fs from "node:fs/promises";
 
 export const readFile = async (
-  path: string, options?: { logErrors?: boolean }
+  path: string,
+  options?: { logErrors?: boolean }
 ): Promise<string | null> => {
   try {
     const fileContent = await fs.readFile(path, "utf-8");
@@ -31,7 +32,8 @@ export const extractLinks = (content: string): string[] => {
 };
 
 export const fetchUrl = async (
-  url: string, options?: { logErrors?: boolean }
+  url: string,
+  options?: { logErrors?: boolean }
 ): Promise<boolean> => {
   try {
     const timeout = (ms: number) =>
@@ -54,7 +56,10 @@ export const fetchUrl = async (
   return false;
 };
 
-export async function checkBrokenLinks(mdxDirPath: string, options?: { logErrors?: boolean }) {
+export async function checkBrokenLinks(
+  mdxDirPath: string,
+  options?: { logErrors?: boolean }
+) {
   const allMdxFiles = await glob(`${mdxDirPath}/**/*.mdx`);
 
   // Batch into 10 files at a time
@@ -67,29 +72,41 @@ export async function checkBrokenLinks(mdxDirPath: string, options?: { logErrors
   let results: string[] = [];
 
   for await (const batch of batches) {
-    const result = (await Promise.all(batch.map(async (filePath) => {
-      const content = await readFile(filePath);
-      if (!content) {
-        if (options?.logErrors) {
-          console.error(`Could not read file: ${filePath}`);
-        }
-        return;
-      }
-      const links = extractLinks(content);
-      if (links.length) {
-        const brokenLinks = (await Promise.all(links.map(async (link) => {
-          const isOk = await fetchUrl(link);
-          if (!isOk) {
-            return link;
+    const result = (
+      await Promise.all(
+        batch.map(async (filePath) => {
+          const content = await readFile(filePath);
+          if (!content) {
+            if (options?.logErrors) {
+              console.error(`Could not read file: ${filePath}`);
+            }
+            return;
+          }
+          const links = extractLinks(content);
+          if (links.length) {
+            const brokenLinks = (
+              await Promise.all(
+                links.map(async (link) => {
+                  const isOk = await fetchUrl(link);
+                  if (!isOk) {
+                    return link;
+                  }
+                  return null;
+                })
+              )
+            ).filter((l): l is string => l !== null);
+            if (brokenLinks.length) {
+              return `Found ${
+                brokenLinks.length
+              } broken links in ${filePath}:\nLinks:\n - ${brokenLinks.join(
+                "\n - "
+              )}`;
+            }
           }
           return null;
-        }))).filter((l): l is string => l !== null);
-        if (brokenLinks.length) {
-          return `Found ${brokenLinks.length} broken links in ${filePath}:\nLinks:\n - ${brokenLinks.join("\n - ")}`
-        }
-      }
-      return null;
-    }))).filter((l): l is string => l !== null);
+        })
+      )
+    ).filter((l): l is string => l !== null);
     results = results.concat(result);
   }
 
