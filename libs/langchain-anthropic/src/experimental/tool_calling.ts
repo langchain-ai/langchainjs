@@ -2,14 +2,23 @@ import { XMLParser } from "fast-xml-parser";
 import {
   AIMessage,
   BaseMessage,
+  BaseMessageLike,
   SystemMessage,
+  coerceMessageLikeToMessage,
 } from "@langchain/core/messages";
-import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
+import type {
+  ChatGenerationChunk,
+  ChatResult,
+  LLMResult,
+} from "@langchain/core/outputs";
 import {
   BaseChatModel,
   BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
-import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import {
+  CallbackManagerForLLMRun,
+  Callbacks,
+} from "@langchain/core/callbacks/manager";
 import { BasePromptTemplate } from "@langchain/core/prompts";
 import {
   BaseLanguageModelCallOptions,
@@ -72,6 +81,9 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
   }
 
   constructor(fields?: ChatAnthropicToolsInput) {
+    if (fields?.cache !== undefined) {
+      throw new Error("Caching is not supported for this model.");
+    }
     super(fields ?? {});
     this.llm = fields?.llm ?? new ChatAnthropic(fields);
     this.systemPromptTemplate =
@@ -100,16 +112,14 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
   async _prepareAndParseToolCall({
     messages,
     options,
-    runManager,
     systemPromptTemplate = DEFAULT_TOOL_SYSTEM_PROMPT,
     stopSequences,
   }: {
     messages: BaseMessage[];
     options: ChatAnthropicToolsCallOptions;
-    runManager?: CallbackManagerForLLMRun;
     systemPromptTemplate?: BasePromptTemplate;
     stopSequences: string[];
-  }) {
+  }): Promise<ChatResult> {
     let promptMessages = messages;
     let forced = false;
     let toolCall: string | undefined;
@@ -156,12 +166,10 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
     } else if (options.tool_choice !== undefined) {
       throw new Error(`If "tool_choice" is provided, "tools" must also be.`);
     }
-    const chatResult = await this.llm._generate(
-      promptMessages,
-      options,
-      runManager
-    );
-    const chatGenerationContent = chatResult.generations[0].message.content;
+    const chatResult = await this.llm
+      .withConfig({ runName: "ChatAnthropicTools" })
+      .invoke(promptMessages, options);
+    const chatGenerationContent = chatResult.content;
     if (typeof chatGenerationContent !== "string") {
       throw new Error("AnthropicFunctions does not support non-string output.");
     }
@@ -250,20 +258,42 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
         generations: [{ message: responseMessageWithFunctions, text: "" }],
       };
     }
-    return chatResult;
+    return { generations: [{ message: chatResult, text: "" }] };
+  }
+
+  async generate(
+    messages: BaseMessageLike[][],
+    parsedOptions?: ChatAnthropicToolsCallOptions,
+    callbacks?: Callbacks
+  ): Promise<LLMResult> {
+    const baseMessages = messages.map((messageList) =>
+      messageList.map(coerceMessageLikeToMessage)
+    );
+
+    // generate results
+    const chatResults = await Promise.all(
+      baseMessages.map((messageList) =>
+        this._prepareAndParseToolCall({
+          messages: messageList,
+          options: { callbacks, ...parsedOptions },
+          systemPromptTemplate: this.systemPromptTemplate,
+          stopSequences: this.stopSequences ?? [],
+        })
+      )
+    );
+    // create combined output
+    const output: LLMResult = {
+      generations: chatResults.map((chatResult) => chatResult.generations),
+    };
+    return output;
   }
 
   async _generate(
-    messages: BaseMessage[],
-    options: this["ParsedCallOptions"],
+    _messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
     _runManager?: CallbackManagerForLLMRun | undefined
   ): Promise<ChatResult> {
-    return this._prepareAndParseToolCall({
-      messages,
-      options,
-      systemPromptTemplate: this.systemPromptTemplate,
-      stopSequences: this.stopSequences ?? [],
-    });
+    throw new Error("Unused.");
   }
 
   _llmType(): string {
@@ -279,7 +309,7 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
       | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<false>
+    config?: StructuredOutputMethodOptions<false> & { force?: boolean }
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
@@ -291,7 +321,7 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
       | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<true>
+    config?: StructuredOutputMethodOptions<true> & { force?: boolean }
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
@@ -303,7 +333,7 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
       | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<boolean>
+    config?: StructuredOutputMethodOptions<boolean> & { force?: boolean }
   ):
     | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<
@@ -315,6 +345,7 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
     let name;
     let method;
     let includeRaw;
+    let force;
     if (isStructuredOutputMethodParams(outputSchema)) {
       schema = outputSchema.schema;
       name = outputSchema.name;
@@ -325,6 +356,7 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
       name = config?.name;
       method = config?.method;
       includeRaw = config?.includeRaw;
+      force = config?.force ?? true;
     }
     if (method === "jsonMode") {
       throw new Error(`Anthropic only supports "functionCalling" as a method.`);
@@ -368,12 +400,14 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
     }
     const llm = this.bind({
       tools,
-      tool_choice: {
-        type: "function",
-        function: {
-          name: functionName,
-        },
-      },
+      tool_choice: force
+        ? {
+            type: "function",
+            function: {
+              name: functionName,
+            },
+          }
+        : "auto",
     });
 
     if (!includeRaw) {
