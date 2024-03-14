@@ -11,7 +11,7 @@ import { type ChatResult } from "@langchain/core/outputs";
 import { type CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
-import { encodeApiKey } from "../utils/zhipuai.js"
+import { encodeApiKey } from "../utils/zhipuai.js";
 
 export type ZhipuMessageRole = "system" | "assistant" | "user";
 
@@ -80,7 +80,7 @@ interface ChatCompletionResponse extends BaseResponse {
     completion_tokens: number;
     prompt_tokens: number;
     total_tokens: number;
-  },
+  };
   output: {
     text: string;
     finish_reason: "stop" | "length" | "null" | null;
@@ -229,7 +229,7 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams(): Omit<ChatCompletionRequest, 'messages'> {
+  invocationParams(): Omit<ChatCompletionRequest, "messages"> {
     return {
       model: this.modelName,
       request_id: this.requestId,
@@ -291,7 +291,7 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
               if (!response) {
                 response = {
                   ...data,
-                  output: { text, finish_reason }
+                  output: { text, finish_reason },
                 };
               } else {
                 response.output.text += text;
@@ -328,11 +328,15 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
           const text = message.content;
           return {
             ...data,
-            output: { text, finish_reason }
+            output: { text, finish_reason },
           };
         });
 
-    const { prompt_tokens = 0, completion_tokens = 0, total_tokens = 0 } = data.usage;
+    const {
+      prompt_tokens = 0,
+      completion_tokens = 0,
+      total_tokens = 0,
+    } = data.usage;
 
     const { text } = data.output;
 

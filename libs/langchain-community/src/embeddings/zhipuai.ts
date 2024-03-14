@@ -37,13 +37,15 @@ interface TokenUsage {
 
 export interface ZhipuAIEmbeddingsResult {
   model: string;
-  data: EmbeddingData[],
+  data: EmbeddingData[];
   object: string;
-  usage: TokenUsage
+  usage: TokenUsage;
 }
 
-export class ZhipuAIEmbeddings extends Embeddings implements ZhipuAIEmbeddingsParams {
-
+export class ZhipuAIEmbeddings
+  extends Embeddings
+  implements ZhipuAIEmbeddingsParams
+{
   modelName: ZhipuAIEmbeddingsParams["modelName"] = "embedding-2";
 
   apiKey?: string;
@@ -57,7 +59,9 @@ export class ZhipuAIEmbeddings extends Embeddings implements ZhipuAIEmbeddingsPa
 
     this.modelName = fields?.modelName ?? this.modelName;
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
-    this.apiKey = encodeApiKey(fields?.apiKey ?? getEnvironmentVariable("ZHIPUAI_API_KEY"));
+    this.apiKey = encodeApiKey(
+      fields?.apiKey ?? getEnvironmentVariable("ZHIPUAI_API_KEY")
+    );
 
     if (!this.apiKey) {
       throw new Error("ZhipuAI API key not found");
@@ -70,16 +74,17 @@ export class ZhipuAIEmbeddings extends Embeddings implements ZhipuAIEmbeddingsPa
    * @param {string} input The input text to embed.
    * @returns Promise that resolves to the response from the API.
    * @TODO Figure out return type and statically type it.
-  */
-  private async embeddingWithRetry(input: string): Promise<ZhipuAIEmbeddingsResult> {
-
+   */
+  private async embeddingWithRetry(
+    input: string
+  ): Promise<ZhipuAIEmbeddingsResult> {
     const text = this.stripNewLines ? input.replace(/\n/g, " ") : input;
 
     const body = JSON.stringify({ input: text, model: this.modelName });
     const headers = {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-      'Authorization': encodeApiKey(this.apiKey),
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      Authorization: encodeApiKey(this.apiKey),
     };
 
     return this.caller.call(async () => {
@@ -113,16 +118,14 @@ export class ZhipuAIEmbeddings extends Embeddings implements ZhipuAIEmbeddingsPa
     return data[0].embedding;
   }
 
-   /**
+  /**
    * Method that takes an array of documents as input and returns a promise
    * that resolves to a 2D array of embeddings for each document. It calls
    * the embedQuery method for each document in the array.
    * @param documents Array of documents for which to generate embeddings.
    * @returns Promise that resolves to a 2D array of embeddings for each input document.
    */
-   embedDocuments(documents: string[]): Promise<number[][]> {
+  embedDocuments(documents: string[]): Promise<number[][]> {
     return Promise.all(documents.map((doc) => this.embedQuery(doc)));
   }
-
 }
-
