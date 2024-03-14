@@ -4,7 +4,7 @@
 import { BedrockChat } from "../bedrock/web.js";
 
 test("Test Bedrock identifying params", async () => {
-  const region = process.env.BEDROCK_AWS_REGION!;
+  const region = "us-east-1";
   const model = "anthropic.claude-v2";
 
   const bedrock = new BedrockChat({
