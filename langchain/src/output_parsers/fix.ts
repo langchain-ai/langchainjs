@@ -15,6 +15,14 @@ interface OutputFixingParserRetryInput {
   error: OutputParserException;
 }
 
+function isLLMChain<T>(
+  x: LLMChain | Runnable<OutputFixingParserRetryInput, T>
+): x is LLMChain {
+  return (
+    (x as LLMChain).prompt !== undefined && (x as LLMChain).llm !== undefined
+  );
+}
+
 /**
  * Class that extends the BaseOutputParser to handle situations where the
  * initial parsing attempt fails. It contains a retryChain for retrying
@@ -85,12 +93,14 @@ export class OutputFixingParser<T> extends BaseOutputParser<T> {
           error: e,
         };
 
-        if (this.retryChain instanceof LLMChain) {
+        if (isLLMChain(this.retryChain)) {
           const result = await this.retryChain.call(retryInput, callbacks);
           const newCompletion: string = result[this.retryChain.outputKey];
           return this.parser.parse(newCompletion, callbacks);
         } else {
-          const result = await this.retryChain.invoke(retryInput, { callbacks });
+          const result = await this.retryChain.invoke(retryInput, {
+            callbacks,
+          });
           return result;
         }
       }
