@@ -13,6 +13,7 @@ const entrypoints = {
   index: "index",
   build: "build",
   migrations: "migrations/index",
+  check_broken_links: "check_broken_links",
 };
 
 // Entrypoints in this list require an optional dependency to be installed.

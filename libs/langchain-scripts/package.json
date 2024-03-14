@@ -37,6 +37,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
+    "axios": "^1.6.7",
     "commander": "^11.1.0",
     "glob": "^10.3.10",
     "rollup": "^4.5.2",
@@ -95,6 +96,15 @@
       "import": "./migrations.js",
       "require": "./migrations.cjs"
     },
+    "./check_broken_links": {
+      "types": {
+        "import": "./check_broken_links.d.ts",
+        "require": "./check_broken_links.d.cts",
+        "default": "./check_broken_links.d.ts"
+      },
+      "import": "./check_broken_links.js",
+      "require": "./check_broken_links.cjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -110,6 +120,10 @@
     "migrations.cjs",
     "migrations.js",
     "migrations.d.ts",
-    "migrations.d.cts"
+    "migrations.d.cts",
+    "check_broken_links.cjs",
+    "check_broken_links.js",
+    "check_broken_links.d.ts",
+    "check_broken_links.d.cts"
   ]
 }
