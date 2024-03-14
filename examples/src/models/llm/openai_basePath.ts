@@ -5,7 +5,7 @@ const model = new OpenAI(
   { baseURL: "https://oai.hconeai.com/v1" }
 );
 
-const res = await model.call(
+const res = await model.invoke(
   "What would be a good company name a company that makes colorful socks?"
 );
 console.log(res);

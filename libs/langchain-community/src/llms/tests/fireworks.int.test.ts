@@ -4,7 +4,7 @@ import { Fireworks } from "../fireworks.js";
 describe("Fireworks", () => {
   test("call", async () => {
     const model = new Fireworks({ maxTokens: 50 });
-    const res = await model.call("1 + 1 = ");
+    const res = await model.invoke("1 + 1 = ");
     console.log({ res });
   });
 

@@ -63,7 +63,7 @@ describe.skip("Google Maker Suite Hub Integration", () => {
       const prompt = new MakerSuitePrompt(chatFile);
       const model = prompt.toModel() as ChatGooglePaLM;
       const message = new HumanMessage("Hello!");
-      const result = await model.call([message]);
+      const result = await model.invoke([message]);
       expect(result).toBeTruthy();
       console.log({ result });
     });
@@ -86,7 +86,7 @@ describe.skip("Google Maker Suite Hub Integration", () => {
     test("text model", async () => {
       const prompt = await hub.pull("1gxLasQIeQdwR4wxtV_nb93b_g9f0GaMm");
       const model = prompt.toModel() as GooglePaLM;
-      const result = await model.call(
+      const result = await model.invoke(
         "What would be a good name for a company that makes socks"
       );
       console.log("text chain result", result);

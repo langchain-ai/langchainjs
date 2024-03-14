@@ -19,7 +19,7 @@ const input = await prompt.format({
   subject: "great fiction books (book, author)",
 });
 
-const response = await model.call(input);
+const response = await model.invoke(input);
 
 console.log(input);
 /*

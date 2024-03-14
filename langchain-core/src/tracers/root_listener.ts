@@ -35,7 +35,7 @@ export class RootListenersTracer extends BaseTracer {
     onEnd?: (run: Run, config?: RunnableConfig) => void | Promise<void>;
     onError?: (run: Run, config?: RunnableConfig) => void | Promise<void>;
   }) {
-    super();
+    super({ _awaitHandler: true });
     this.config = config;
     this.argOnStart = onStart;
     this.argOnEnd = onEnd;

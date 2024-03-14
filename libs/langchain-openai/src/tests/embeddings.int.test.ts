@@ -38,6 +38,7 @@ test("Test timeout error thrown from SDK", async () => {
   await expect(async () => {
     const model = new OpenAIEmbeddings({
       timeout: 1,
+      maxRetries: 0,
     });
     await model.embedDocuments([
       "Hello world",

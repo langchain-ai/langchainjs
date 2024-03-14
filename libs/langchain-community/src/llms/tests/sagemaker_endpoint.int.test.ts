@@ -65,7 +65,7 @@ describe.skip("Test SageMaker LLM", () => {
       },
     });
 
-    const response = await model.call(
+    const response = await model.invoke(
       "hello, my name is John Doe, tell me a fun story about llamas."
     );
 
@@ -119,7 +119,7 @@ describe.skip("Test SageMaker LLM", () => {
       },
     });
 
-    const response = await model.call(
+    const response = await model.invoke(
       "hello, my name is John Doe, tell me a fun story about llamas in 3 paragraphs"
     );
 
