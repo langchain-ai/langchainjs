@@ -5,8 +5,15 @@ import {
   OutputParserException,
 } from "@langchain/core/output_parsers";
 import { BasePromptTemplate } from "@langchain/core/prompts";
+import { Runnable } from "@langchain/core/runnables";
 import { LLMChain } from "../chains/llm_chain.js";
 import { NAIVE_FIX_PROMPT } from "./prompts.js";
+
+interface OutputFixingParserRetryInput {
+  instructions: string;
+  completion: string;
+  error: OutputParserException;
+}
 
 /**
  * Class that extends the BaseOutputParser to handle situations where the
@@ -24,7 +31,7 @@ export class OutputFixingParser<T> extends BaseOutputParser<T> {
 
   parser: BaseOutputParser<T>;
 
-  retryChain: LLMChain;
+  retryChain: LLMChain | Runnable<OutputFixingParserRetryInput, T>;
 
   /**
    * Static method to create a new instance of OutputFixingParser using a
@@ -51,7 +58,7 @@ export class OutputFixingParser<T> extends BaseOutputParser<T> {
     retryChain,
   }: {
     parser: BaseOutputParser<T>;
-    retryChain: LLMChain;
+    retryChain: LLMChain | Runnable<OutputFixingParserRetryInput, T>;
   }) {
     super(...arguments);
     this.parser = parser;
@@ -72,16 +79,20 @@ export class OutputFixingParser<T> extends BaseOutputParser<T> {
     } catch (e) {
       // eslint-disable-next-line no-instanceof/no-instanceof
       if (e instanceof OutputParserException) {
-        const result = await this.retryChain.call(
-          {
-            instructions: this.parser.getFormatInstructions(),
-            completion,
-            error: e,
-          },
-          callbacks
-        );
-        const newCompletion: string = result[this.retryChain.outputKey];
-        return this.parser.parse(newCompletion);
+        const retryInput = {
+          instructions: this.parser.getFormatInstructions(),
+          completion,
+          error: e,
+        };
+
+        if (this.retryChain instanceof LLMChain) {
+          const result = await this.retryChain.call(retryInput, callbacks);
+          const newCompletion: string = result[this.retryChain.outputKey];
+          return this.parser.parse(newCompletion);
+        } else {
+          const result = await this.retryChain.invoke(retryInput, { callbacks });
+          return result;
+        }
       }
       throw e;
     }

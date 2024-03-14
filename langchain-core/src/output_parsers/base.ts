@@ -65,7 +65,7 @@ export abstract class BaseLLMOutputParser<T = unknown> extends Runnable<
     if (typeof input === "string") {
       return this._callWithConfig(
         async (input: string): Promise<T> =>
-          this.parseResult([{ text: input }]),
+          this.parseResult([{ text: input }], options?.callbacks),
         input,
         { ...options, runType: "parser" }
       );
@@ -80,7 +80,7 @@ export abstract class BaseLLMOutputParser<T = unknown> extends Runnable<
                   ? input.content
                   : JSON.stringify(input.content),
             },
-          ]),
+          ], options?.callbacks),
         input,
         { ...options, runType: "parser" }
       );
