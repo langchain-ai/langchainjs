@@ -111,7 +111,7 @@ test("Test ChatAnthropic in streaming mode", async () => {
     }),
   });
   const message = new HumanMessage("Hello!");
-  const res = await model.call([message]);
+  const res = await model.invoke([message]);
   console.log({ res });
 
   expect(nrNewTokens > 0).toBe(true);
@@ -138,7 +138,7 @@ test("Test ChatAnthropic in streaming mode with a signal", async () => {
     "Hello! Give me an extremely verbose response"
   );
   await expect(() => {
-    const res = model.call([message], {
+    const res = model.invoke([message], {
       signal: controller.signal,
     });
     setTimeout(() => {

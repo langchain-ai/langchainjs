@@ -4,6 +4,9 @@ export interface BaseSerialized<T extends string> {
   lc: number;
   type: T;
   id: string[];
+  name?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  graph?: Record<string, any>;
 }
 
 export interface SerializedConstructor extends BaseSerialized<"constructor"> {
@@ -73,7 +76,11 @@ export function get_lc_unique_name(
   }
 }
 
-export abstract class Serializable {
+export interface SerializableInterface {
+  get lc_id(): string[];
+}
+
+export abstract class Serializable implements SerializableInterface {
   lc_serializable = false;
 
   lc_kwargs: SerializedFields;

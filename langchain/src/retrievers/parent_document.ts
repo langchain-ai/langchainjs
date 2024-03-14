@@ -5,7 +5,10 @@ import {
   type VectorStoreRetrieverInterface,
 } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
-import { TextSplitter } from "../text_splitter.js";
+import {
+  TextSplitter,
+  TextSplitterChunkHeaderOptions,
+} from "../text_splitter.js";
 import {
   MultiVectorRetriever,
   type MultiVectorRetrieverInput,
@@ -126,15 +129,21 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
    * This can be false if and only if `ids` are provided. You may want
    *   to set this to False if the documents are already in the docstore
    *   and you don't want to re-add them.
+   * @param config.chunkHeaderOptions Object with options for adding Contextual chunk headers
    */
   async addDocuments(
     docs: Document[],
     config?: {
       ids?: string[];
       addToDocstore?: boolean;
+      childDocChunkHeaderOptions?: TextSplitterChunkHeaderOptions;
     }
   ): Promise<void> {
-    const { ids, addToDocstore = true } = config ?? {};
+    const {
+      ids,
+      addToDocstore = true,
+      childDocChunkHeaderOptions = {},
+    } = config ?? {};
     const parentDocs = this.parentSplitter
       ? await this.parentSplitter.splitDocuments(docs)
       : docs;
@@ -159,7 +168,10 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
     for (let i = 0; i < parentDocs.length; i += 1) {
       const parentDoc = parentDocs[i];
       const parentDocId = parentDocIds[i];
-      const subDocs = await this.childSplitter.splitDocuments([parentDoc]);
+      const subDocs = await this.childSplitter.splitDocuments(
+        [parentDoc],
+        childDocChunkHeaderOptions
+      );
       const taggedSubDocs = subDocs.map(
         (subDoc: Document) =>
           new Document({

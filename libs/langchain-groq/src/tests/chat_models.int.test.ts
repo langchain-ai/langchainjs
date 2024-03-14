@@ -1,8 +1,8 @@
 import { describe, test } from "@jest/globals";
-import { ChatMessage, HumanMessage } from "@langchain/core/messages";
+import { HumanMessage } from "@langchain/core/messages";
 import { ChatGroq } from "../chat_models.js";
 
-describe.skip("ChatGroq", () => {
+describe("ChatGroq", () => {
   test("invoke", async () => {
     const chat = new ChatGroq({
       maxRetries: 0,
@@ -13,19 +13,23 @@ describe.skip("ChatGroq", () => {
     expect(res.content.length).toBeGreaterThan(10);
   });
 
+  test("invoke with stop sequence", async () => {
+    const chat = new ChatGroq({
+      maxRetries: 0,
+    });
+    const message = new HumanMessage("Count to ten.");
+    const res = await chat.bind({ stop: ["5", "five"] }).invoke([message]);
+    console.log({ res });
+    expect((res.content as string).toLowerCase()).not.toContain("6");
+    expect((res.content as string).toLowerCase()).not.toContain("six");
+  });
+
   test("generate", async () => {
     const chat = new ChatGroq();
     const message = new HumanMessage("Hello!");
     const res = await chat.generate([[message]]);
     console.log(JSON.stringify(res, null, 2));
     expect(res.generations[0][0].text.length).toBeGreaterThan(10);
-  });
-
-  test("custom messages", async () => {
-    const chat = new ChatGroq();
-    const res = await chat.invoke([new ChatMessage("Hello!", "user")]);
-    console.log({ res });
-    expect(res.content.length).toBeGreaterThan(10);
   });
 
   test("streaming", async () => {

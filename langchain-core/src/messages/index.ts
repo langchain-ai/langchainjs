@@ -8,6 +8,9 @@ export interface StoredMessageData {
   tool_call_id: string | undefined;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   additional_kwargs?: Record<string, any>;
+  /** Response metadata. For example: response headers, logprobs, token counts. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  response_metadata?: Record<string, any>;
 }
 
 export interface StoredMessage {
@@ -90,6 +93,9 @@ export interface BaseMessageFields {
     tool_calls?: ToolCall[];
     [key: string]: unknown;
   };
+  /** Response metadata. For example: response headers, logprobs, token counts. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  response_metadata?: Record<string, any>;
 }
 
 export interface ChatMessageFieldsWithRole extends BaseMessageFields {
@@ -140,7 +146,10 @@ export abstract class BaseMessage
 
   get lc_aliases(): Record<string, string> {
     // exclude snake case conversion to pascal case
-    return { additional_kwargs: "additional_kwargs" };
+    return {
+      additional_kwargs: "additional_kwargs",
+      response_metadata: "response_metadata",
+    };
   }
 
   /**
@@ -160,6 +169,9 @@ export abstract class BaseMessage
   /** Additional keyword arguments */
   additional_kwargs: NonNullable<BaseMessageFields["additional_kwargs"]>;
 
+  /** Response metadata. For example: response headers, logprobs, token counts. */
+  response_metadata: NonNullable<BaseMessageFields["response_metadata"]>;
+
   /** The type of the message. */
   abstract _getType(): MessageType;
 
@@ -170,17 +182,26 @@ export abstract class BaseMessage
   ) {
     if (typeof fields === "string") {
       // eslint-disable-next-line no-param-reassign
-      fields = { content: fields, additional_kwargs: kwargs };
+      fields = {
+        content: fields,
+        additional_kwargs: kwargs,
+        response_metadata: {},
+      };
     }
     // Make sure the default value for additional_kwargs is passed into super() for serialization
     if (!fields.additional_kwargs) {
       // eslint-disable-next-line no-param-reassign
       fields.additional_kwargs = {};
     }
+    if (!fields.response_metadata) {
+      // eslint-disable-next-line no-param-reassign
+      fields.response_metadata = {};
+    }
     super(fields);
     this.name = fields.name;
     this.content = fields.content;
     this.additional_kwargs = fields.additional_kwargs;
+    this.response_metadata = fields.response_metadata;
   }
 
   toDict(): StoredMessage {
@@ -227,6 +248,70 @@ function isOpenAIToolCallArray(value?: unknown): value is OpenAIToolCall[] {
   );
 }
 
+function _mergeDicts(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  left: Record<string, any>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  right: Record<string, any>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): Record<string, any> {
+  const merged = { ...left };
+  for (const [key, value] of Object.entries(right)) {
+    if (merged[key] == null) {
+      merged[key] = value;
+    } else if (value == null) {
+      continue;
+    } else if (
+      typeof merged[key] !== typeof value ||
+      Array.isArray(merged[key]) !== Array.isArray(value)
+    ) {
+      throw new Error(
+        `field[${key}] already exists in the message chunk, but with a different type.`
+      );
+    } else if (typeof merged[key] === "string") {
+      merged[key] = (merged[key] as string) + value;
+    } else if (!Array.isArray(merged[key]) && typeof merged[key] === "object") {
+      merged[key] = _mergeDicts(merged[key], value);
+    } else if (
+      key === "tool_calls" &&
+      isOpenAIToolCallArray(merged[key]) &&
+      isOpenAIToolCallArray(value)
+    ) {
+      for (const toolCall of value) {
+        if (merged[key]?.[toolCall.index] !== undefined) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          merged[key] = merged[key]?.map((value: any, i: number) => {
+            if (i !== toolCall.index) {
+              return value;
+            }
+            return {
+              ...value,
+              ...toolCall,
+              function: {
+                name: toolCall.function.name ?? value.function.name,
+                arguments:
+                  (value.function.arguments ?? "") +
+                  (toolCall.function.arguments ?? ""),
+              },
+            };
+          });
+        } else {
+          (merged[key] as OpenAIToolCall[])[toolCall.index] = toolCall;
+        }
+      }
+    } else if (Array.isArray(merged[key])) {
+      merged[key] = merged[key].concat(value);
+    } else if (merged[key] === value) {
+      continue;
+    } else {
+      console.warn(
+        `field[${key}] already exists in this message chunk and value has unsupported type.`
+      );
+    }
+  }
+  return merged;
+}
+
 /**
  * Represents a chunk of a message, which can be concatenated with other
  * message chunks. It includes a method `_merge_kwargs_dict()` for merging
@@ -236,63 +321,6 @@ function isOpenAIToolCallArray(value?: unknown): value is OpenAIToolCall[] {
  */
 export abstract class BaseMessageChunk extends BaseMessage {
   abstract concat(chunk: BaseMessageChunk): BaseMessageChunk;
-
-  static _mergeAdditionalKwargs(
-    left: NonNullable<BaseMessageFields["additional_kwargs"]>,
-    right: NonNullable<BaseMessageFields["additional_kwargs"]>
-  ): NonNullable<BaseMessageFields["additional_kwargs"]> {
-    const merged = { ...left };
-    for (const [key, value] of Object.entries(right)) {
-      if (merged[key] === undefined) {
-        merged[key] = value;
-      } else if (typeof merged[key] !== typeof value) {
-        throw new Error(
-          `additional_kwargs[${key}] already exists in the message chunk, but with a different type.`
-        );
-      } else if (typeof merged[key] === "string") {
-        merged[key] = (merged[key] as string) + value;
-      } else if (
-        !Array.isArray(merged[key]) &&
-        typeof merged[key] === "object"
-      ) {
-        merged[key] = this._mergeAdditionalKwargs(
-          merged[key] as NonNullable<BaseMessageFields["additional_kwargs"]>,
-          value as NonNullable<BaseMessageFields["additional_kwargs"]>
-        );
-      } else if (
-        key === "tool_calls" &&
-        isOpenAIToolCallArray(merged[key]) &&
-        isOpenAIToolCallArray(value)
-      ) {
-        for (const toolCall of value) {
-          if (merged[key]?.[toolCall.index] !== undefined) {
-            merged[key] = merged[key]?.map((value, i) => {
-              if (i !== toolCall.index) {
-                return value;
-              }
-              return {
-                ...value,
-                ...toolCall,
-                function: {
-                  name: toolCall.function.name ?? value.function.name,
-                  arguments:
-                    (value.function.arguments ?? "") +
-                    (toolCall.function.arguments ?? ""),
-                },
-              };
-            });
-          } else {
-            (merged[key] as OpenAIToolCall[])[toolCall.index] = toolCall;
-          }
-        }
-      } else {
-        throw new Error(
-          `additional_kwargs[${key}] already exists in this message chunk.`
-        );
-      }
-    }
-    return merged;
-  }
 }
 
 /**
@@ -324,9 +352,13 @@ export class HumanMessageChunk extends BaseMessageChunk {
   concat(chunk: HumanMessageChunk) {
     return new HumanMessageChunk({
       content: mergeContent(this.content, chunk.content),
-      additional_kwargs: HumanMessageChunk._mergeAdditionalKwargs(
+      additional_kwargs: _mergeDicts(
         this.additional_kwargs,
         chunk.additional_kwargs
+      ),
+      response_metadata: _mergeDicts(
+        this.response_metadata,
+        chunk.response_metadata
       ),
     });
   }
@@ -361,9 +393,13 @@ export class AIMessageChunk extends BaseMessageChunk {
   concat(chunk: AIMessageChunk) {
     return new AIMessageChunk({
       content: mergeContent(this.content, chunk.content),
-      additional_kwargs: AIMessageChunk._mergeAdditionalKwargs(
+      additional_kwargs: _mergeDicts(
         this.additional_kwargs,
         chunk.additional_kwargs
+      ),
+      response_metadata: _mergeDicts(
+        this.response_metadata,
+        chunk.response_metadata
       ),
     });
   }
@@ -398,9 +434,13 @@ export class SystemMessageChunk extends BaseMessageChunk {
   concat(chunk: SystemMessageChunk) {
     return new SystemMessageChunk({
       content: mergeContent(this.content, chunk.content),
-      additional_kwargs: SystemMessageChunk._mergeAdditionalKwargs(
+      additional_kwargs: _mergeDicts(
         this.additional_kwargs,
         chunk.additional_kwargs
+      ),
+      response_metadata: _mergeDicts(
+        this.response_metadata,
+        chunk.response_metadata
       ),
     });
   }
@@ -455,9 +495,13 @@ export class FunctionMessageChunk extends BaseMessageChunk {
   concat(chunk: FunctionMessageChunk) {
     return new FunctionMessageChunk({
       content: mergeContent(this.content, chunk.content),
-      additional_kwargs: FunctionMessageChunk._mergeAdditionalKwargs(
+      additional_kwargs: _mergeDicts(
         this.additional_kwargs,
         chunk.additional_kwargs
+      ),
+      response_metadata: _mergeDicts(
+        this.response_metadata,
+        chunk.response_metadata
       ),
       name: this.name ?? "",
     });
@@ -532,9 +576,13 @@ export class ToolMessageChunk extends BaseMessageChunk {
   concat(chunk: ToolMessageChunk) {
     return new ToolMessageChunk({
       content: mergeContent(this.content, chunk.content),
-      additional_kwargs: ToolMessageChunk._mergeAdditionalKwargs(
+      additional_kwargs: _mergeDicts(
         this.additional_kwargs,
         chunk.additional_kwargs
+      ),
+      response_metadata: _mergeDicts(
+        this.response_metadata,
+        chunk.response_metadata
       ),
       tool_call_id: this.tool_call_id,
     });
@@ -653,9 +701,13 @@ export class ChatMessageChunk extends BaseMessageChunk {
   concat(chunk: ChatMessageChunk) {
     return new ChatMessageChunk({
       content: mergeContent(this.content, chunk.content),
-      additional_kwargs: ChatMessageChunk._mergeAdditionalKwargs(
+      additional_kwargs: _mergeDicts(
         this.additional_kwargs,
         chunk.additional_kwargs
+      ),
+      response_metadata: _mergeDicts(
+        this.response_metadata,
+        chunk.response_metadata
       ),
       role: this.role,
     });

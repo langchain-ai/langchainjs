@@ -1,10 +1,8 @@
 export {
   type RunnableFunc,
   type RunnableLike,
-  type RunnableBatchOptions,
   type RunnableRetryFailedAttemptHandler,
   Runnable,
-  type RunnableInterface,
   type RunnableBindingArgs,
   RunnableBinding,
   RunnableEach,
@@ -18,6 +16,11 @@ export {
   RunnablePick,
   _coerceToRunnable,
 } from "./base.js";
+export {
+  type RunnableBatchOptions,
+  type RunnableInterface,
+  type RunnableIOSchema,
+} from "./types.js";
 export {
   type RunnableConfig,
   getCallbackManagerForConfig,
