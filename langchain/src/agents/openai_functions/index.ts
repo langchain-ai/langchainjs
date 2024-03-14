@@ -33,7 +33,7 @@ import {
   BasePromptTemplate,
 } from "@langchain/core/prompts";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
-import { Agent, AgentArgs } from "../agent.js";
+import { Agent, AgentArgs, RunnableSingleActionAgent } from "../agent.js";
 import { AgentInput } from "../types.js";
 import { PREFIX } from "./prompt.js";
 import { LLMChain } from "../../chains/llm_chain.js";
@@ -272,6 +272,11 @@ export type CreateOpenAIFunctionsAgentParams = {
   tools: StructuredToolInterface[];
   /** The prompt to use, must have an input key for `agent_scratchpad`. */
   prompt: ChatPromptTemplate;
+  /**
+   * Whether to invoke the underlying model in streaming mode,
+   * allowing streaming of intermediate steps. Defaults to true.
+   */
+  streamRunnable?: boolean;
 };
 
 /**
@@ -333,6 +338,7 @@ export async function createOpenAIFunctionsAgent({
   llm,
   tools,
   prompt,
+  streamRunnable,
 }: CreateOpenAIFunctionsAgentParams) {
   if (!prompt.inputVariables.includes("agent_scratchpad")) {
     throw new Error(
@@ -354,5 +360,9 @@ export async function createOpenAIFunctionsAgent({
     llmWithTools,
     new OpenAIFunctionsAgentOutputParser(),
   ]);
-  return agent;
+  return new RunnableSingleActionAgent({
+    runnable: agent,
+    defaultRunName: "OpenAIFunctionsAgent",
+    streamRunnable,
+  });
 }
