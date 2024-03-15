@@ -55,6 +55,7 @@ export const config = {
     "agents/toolkits/base": "agents/toolkits/base",
     "agents/toolkits/connery": "agents/toolkits/connery/index",
     // embeddings
+    "embeddings/alibaba_tongyi": "embeddings/alibaba_tongyi",
     "embeddings/bedrock": "embeddings/bedrock",
     "embeddings/cloudflare_workersai": "embeddings/cloudflare_workersai",
     "embeddings/cohere": "embeddings/cohere",
@@ -71,6 +72,7 @@ export const config = {
     "embeddings/tensorflow": "embeddings/tensorflow",
     "embeddings/togetherai": "embeddings/togetherai",
     "embeddings/voyage": "embeddings/voyage",
+    "embeddings/zhipuai": "embeddings/zhipuai",
     // llms
     "llms/ai21": "llms/ai21",
     "llms/aleph_alpha": "llms/aleph_alpha",
@@ -156,6 +158,7 @@ export const config = {
     "chat_models/premai": "chat_models/premai",
     "chat_models/togetherai": "chat_models/togetherai",
     "chat_models/yandex": "chat_models/yandex",
+    "chat_models/zhipuai": "chat_models/zhipuai",
     // callbacks
     "callbacks/handlers/llmonitor": "callbacks/handlers/llmonitor",
     "callbacks/handlers/lunary": "callbacks/handlers/lunary",
@@ -241,6 +244,7 @@ export const config = {
     "embeddings/hf_transformers",
     "embeddings/llama_cpp",
     "embeddings/gradient_ai",
+    "embeddings/zhipuai",
     "llms/load",
     "llms/cohere",
     "llms/googlevertexai",
@@ -305,6 +309,7 @@ export const config = {
     "chat_models/portkey",
     "chat_models/iflytek_xinghuo",
     "chat_models/iflytek_xinghuo/web",
+    "chat_models/zhipuai",
     "retrievers/amazon_kendra",
     "retrievers/amazon_knowledge_base",
     "retrievers/dria",

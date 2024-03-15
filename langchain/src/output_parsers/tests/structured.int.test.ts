@@ -169,7 +169,7 @@ test("StructuredOutputParser handles a longer and more complex schema", async ()
   const input = await prompt.format({
     inputText: "A man, living in Poland.",
   });
-  const response = await model.call(input);
+  const response = await model.invoke(input);
   console.log("response", response);
 
   const parsed = await parser.parse(response);

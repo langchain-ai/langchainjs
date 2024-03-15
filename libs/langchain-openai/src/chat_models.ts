@@ -509,10 +509,18 @@ export class ChatOpenAI<
         );
         continue;
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const generationInfo: Record<string, any> = { ...newTokenIndices };
+      if (choice.finish_reason !== undefined) {
+        generationInfo.finish_reason = choice.finish_reason;
+      }
+      if (this.logprobs) {
+        generationInfo.logprobs = choice.logprobs;
+      }
       const generationChunk = new ChatGenerationChunk({
         message: chunk,
         text: chunk.content,
-        generationInfo: newTokenIndices,
+        generationInfo,
       });
       yield generationChunk;
       // eslint-disable-next-line no-void
@@ -553,6 +561,10 @@ export class ChatOpenAI<
       const stream = this._streamResponseChunks(messages, options, runManager);
       const finalChunks: Record<number, ChatGenerationChunk> = {};
       for await (const chunk of stream) {
+        chunk.message.response_metadata = {
+          ...chunk.generationInfo,
+          ...chunk.message.response_metadata,
+        };
         const index =
           (chunk.generationInfo as NewTokenIndices)?.completion ?? 0;
         if (finalChunks[index] === undefined) {

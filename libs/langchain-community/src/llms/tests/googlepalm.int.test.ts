@@ -3,7 +3,7 @@ import { GooglePaLM } from "../googlepalm.js";
 
 test.skip("Test Google Palm", async () => {
   const model = new GooglePaLM();
-  const res = await model.call("what is 1 + 1?");
+  const res = await model.invoke("what is 1 + 1?");
   console.log({ res });
   expect(res).toBeTruthy();
 });

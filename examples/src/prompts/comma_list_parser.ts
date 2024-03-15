@@ -17,7 +17,7 @@ export const run = async () => {
   const model = new OpenAI({ temperature: 0 });
 
   const input = await prompt.format({ subject: "ice cream flavors" });
-  const response = await model.call(input);
+  const response = await model.invoke(input);
 
   console.log(input);
   /*

@@ -9,7 +9,7 @@ const prompt = `
 User: How much wood would a woodchuck chuck if a wood chuck could chuck wood?
 Assistant:`;
 
-const res = await model.call(prompt);
+const res = await model.invoke(prompt);
 console.log({ res });
 /*
   {

@@ -5,7 +5,7 @@ async function test() {
     model: "bedrock-model-name",
     region: "aws-region",
   });
-  const res = await model.call(
+  const res = await model.invoke(
     "Question: What would be a good company name a company that makes colorful socks?\nAnswer:"
   );
   console.log(res);

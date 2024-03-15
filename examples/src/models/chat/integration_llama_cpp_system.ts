@@ -5,7 +5,7 @@ const llamaPath = "/Replace/with/path/to/your/model/gguf-llama2-q4_0.bin";
 
 const model = new ChatLlamaCpp({ modelPath: llamaPath });
 
-const response = await model.call([
+const response = await model.invoke([
   new SystemMessage(
     "You are a pirate, responses must be very verbose and in pirate dialect, add 'Arr, m'hearty!' to each sentence."
   ),

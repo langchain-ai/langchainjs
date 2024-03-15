@@ -111,7 +111,7 @@ function getMessageAuthor(message: BaseMessage) {
  *   ),
  *   new HumanMessage("What is your favorite food?"),
  * ];
- * const res = await model.call(questions);
+ * const res = await model.invoke(questions);
  * console.log({ res });
  * ```
  */

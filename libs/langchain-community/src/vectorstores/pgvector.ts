@@ -80,12 +80,17 @@ export class PGVectorStore extends VectorStore {
     return "pgvector";
   }
 
-  private constructor(
-    embeddings: EmbeddingsInterface,
-    config: PGVectorStoreArgs
-  ) {
+  constructor(embeddings: EmbeddingsInterface, config: PGVectorStoreArgs) {
     super(embeddings, config);
     this.tableName = config.tableName;
+    if (
+      config.collectionName !== undefined &&
+      config.collectionTableName === undefined
+    ) {
+      throw new Error(
+        `If supplying a "collectionName", you must also supply a "collectionTableName".`
+      );
+    }
     this.collectionTableName = config.collectionTableName;
     this.collectionName = config.collectionName ?? "langchain";
     this.collectionMetadata = config.collectionMetadata ?? null;

@@ -211,9 +211,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@anthropic-ai/sdk@npm:^0.15.0":
-  version: 0.15.0
-  resolution: "@anthropic-ai/sdk@npm:0.15.0"
+"@anthropic-ai/sdk@npm:^0.17.2":
+  version: 0.17.2
+  resolution: "@anthropic-ai/sdk@npm:0.17.2"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
@@ -224,7 +224,7 @@ __metadata:
     formdata-node: ^4.3.2
     node-fetch: ^2.6.7
     web-streams-polyfill: ^3.2.1
-  checksum: aaaeeb27042981170a04d03b9c03b29779909767cf88d89bc06433aee9c03f1fb18bc131fbbebbbb1bbec92227c03c37a896856b551462a074a3da73e52a9e2e
+  checksum: 33480adddbbf905aadcb310bdbca2baa9e3ca25ae554c94c52b189bd8e8afe89577775dbcf902ab6fa252d3b3c6e4fe5e4973a7caaa2d3e5a813d3727cf98499
   languageName: node
   linkType: hard
 
@@ -8794,7 +8794,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/anthropic@workspace:libs/langchain-anthropic"
   dependencies:
-    "@anthropic-ai/sdk": ^0.15.0
+    "@anthropic-ai/sdk": ^0.17.2
     "@jest/globals": ^29.5.0
     "@langchain/community": "workspace:^"
     "@langchain/core": ~0.1.44
@@ -8899,7 +8899,7 @@ __metadata:
     "@tsconfig/recommended": ^1.0.3
     "@typescript-eslint/eslint-plugin": ^6.12.0
     "@typescript-eslint/parser": ^6.12.0
-    cohere-ai: ^7.6.2
+    cohere-ai: ^7.8.0
     dotenv: ^16.3.1
     dpdm: ^3.12.0
     eslint: ^8.33.0
@@ -8954,6 +8954,7 @@ __metadata:
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^1.1.0
     "@planetscale/database": ^1.8.0
+    "@premai/prem-sdk": ^0.3.19
     "@qdrant/js-client-rest": ^1.2.0
     "@raycast/api": ^1.55.2
     "@rockset/client": ^0.9.1
@@ -8974,6 +8975,7 @@ __metadata:
     "@types/flat": ^5.0.2
     "@types/html-to-text": ^9
     "@types/jsdom": ^21.1.1
+    "@types/jsonwebtoken": ^9
     "@types/lodash": ^4
     "@types/mozilla-readability": ^0.2.1
     "@types/pg": ^8.11.0
@@ -9021,6 +9023,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     jsdom: ^22.1.0
+    jsonwebtoken: ^9.0.2
     langsmith: ~0.1.1
     llmonitor: ^0.5.9
     lodash: ^4.17.21
@@ -9075,6 +9078,7 @@ __metadata:
     "@opensearch-project/opensearch": "*"
     "@pinecone-database/pinecone": "*"
     "@planetscale/database": ^1.8.0
+    "@premai/prem-sdk": ^0.3.19
     "@qdrant/js-client-rest": ^1.2.0
     "@raycast/api": ^1.55.2
     "@rockset/client": ^0.9.1
@@ -9113,6 +9117,7 @@ __metadata:
     html-to-text: ^9.0.5
     ioredis: ^5.3.2
     jsdom: "*"
+    jsonwebtoken: ^9.0.2
     llmonitor: ^0.5.9
     lodash: ^4.17.21
     lunary: ^0.6.11
@@ -9261,6 +9266,8 @@ __metadata:
       optional: true
     jsdom:
       optional: true
+    jsonwebtoken:
+      optional: true
     llmonitor:
       optional: true
     lodash:
@@ -9282,6 +9289,8 @@ __metadata:
     pickleparser:
       optional: true
     portkey-ai:
+      optional: true
+    premai:
       optional: true
     redis:
       optional: true
@@ -9306,7 +9315,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.1, @langchain/core@~0.1.44, @langchain/core@~0.1.5, @langchain/core@~0.1.9":
+"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.1, @langchain/core@~0.1.44, @langchain/core@~0.1.45, @langchain/core@~0.1.5, @langchain/core@~0.1.9":
   version: 0.0.0-use.local
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
@@ -9525,7 +9534,7 @@ __metadata:
     eslint-plugin-import: ^2.27.5
     eslint-plugin-no-instanceof: ^1.0.1
     eslint-plugin-prettier: ^4.2.1
-    groq-sdk: ^0.3.0
+    groq-sdk: ^0.3.2
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     prettier: ^2.8.3
@@ -9580,6 +9589,7 @@ __metadata:
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
+    "@types/uuid": ^9
     "@typescript-eslint/eslint-plugin": ^6.12.0
     "@typescript-eslint/parser": ^6.12.0
     dotenv: ^16.3.1
@@ -9598,6 +9608,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
+    uuid: ^9.0.1
   languageName: unknown
   linkType: soft
 
@@ -9639,7 +9650,7 @@ __metadata:
   resolution: "@langchain/openai@workspace:libs/langchain-openai"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1.44
+    "@langchain/core": ~0.1.45
     "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9742,6 +9753,7 @@ __metadata:
     "@tsconfig/recommended": ^1.0.3
     "@typescript-eslint/eslint-plugin": ^6.12.0
     "@typescript-eslint/parser": ^6.12.0
+    axios: ^1.6.7
     commander: ^11.1.0
     dotenv: ^16.3.1
     dpdm: ^3.12.0
@@ -9756,6 +9768,7 @@ __metadata:
     jest-environment-node: ^29.6.4
     prettier: ^2.8.3
     release-it: ^15.10.1
+    rimraf: ^5.0.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     ts-morph: ^21.0.1
@@ -14322,6 +14335,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/jsonwebtoken@npm:^9":
+  version: 9.0.6
+  resolution: "@types/jsonwebtoken@npm:9.0.6"
+  dependencies:
+    "@types/node": "*"
+  checksum: a568e7cb1c703bcb015eff8bf5996e276e748d2b39ddc47edf5ddccd1378f5792179c43302a1c803e47a54b0220f9ecaae445ec444d28bf81b88856f899e85b9
+  languageName: node
+  linkType: hard
+
 "@types/jsonwebtoken@npm:^9.0.0":
   version: 9.0.2
   resolution: "@types/jsonwebtoken@npm:9.0.2"
@@ -18167,16 +18189,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cohere-ai@npm:^7.6.2":
-  version: 7.6.2
-  resolution: "cohere-ai@npm:7.6.2"
+"cohere-ai@npm:^7.8.0":
+  version: 7.8.0
+  resolution: "cohere-ai@npm:7.8.0"
   dependencies:
     form-data: 4.0.0
     js-base64: 3.7.2
     node-fetch: 2.7.0
     qs: 6.11.2
     url-join: 4.0.1
-  checksum: cf70c115ddc50162f9fa7df5d2d569417ab68000dc4ca1a93646c457b61f691fd91cf5f73d69fd225d8224c05c105f74d7ca5a7700e6c0f4b37df70aa3d4fb48
+  checksum: dc2f612fe209329542a45c0c600cc5eb65cce138f935e9a254c0a992000de28d298ed961acb9d58d19d84b26e981c6fa39f8ac29adb82f2ffe5495b11dc58766
   languageName: node
   linkType: hard
 
@@ -18666,6 +18688,7 @@ __metadata:
     "@docusaurus/core": 2.4.3
     "@docusaurus/preset-classic": 2.4.3
     "@docusaurus/remark-plugin-npm2yarn": 2.4.3
+    "@langchain/scripts": "workspace:*"
     "@mdx-js/react": ^1.6.22
     "@supabase/supabase-js": ^2.39.7
     "@swc/core": ^1.3.62
@@ -23203,9 +23226,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"groq-sdk@npm:^0.3.0":
-  version: 0.3.0
-  resolution: "groq-sdk@npm:0.3.0"
+"groq-sdk@npm:^0.3.2":
+  version: 0.3.2
+  resolution: "groq-sdk@npm:0.3.2"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
@@ -23216,7 +23239,7 @@ __metadata:
     formdata-node: ^4.3.2
     node-fetch: ^2.6.7
     web-streams-polyfill: ^3.2.1
-  checksum: a56b3ee8226391e9049bc85f8edf761baebfc77d76afa5235cd7b38e8fe3a35b8039b79f4b95d8c9a4b7f283aff4f87a0c95251b748cdaf290a2683d026fb8b1
+  checksum: 78cdc02ac8e87d5c47c2857def55d14249ee1b698f11d06db01a86227716a3e4e2312224996168f7edee51992862082dd4dfcdfec54b765d698855db9971e525
   languageName: node
   linkType: hard
 
@@ -25916,6 +25939,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jsonwebtoken@npm:^9.0.2":
+  version: 9.0.2
+  resolution: "jsonwebtoken@npm:9.0.2"
+  dependencies:
+    jws: ^3.2.2
+    lodash.includes: ^4.3.0
+    lodash.isboolean: ^3.0.3
+    lodash.isinteger: ^4.0.4
+    lodash.isnumber: ^3.0.3
+    lodash.isplainobject: ^4.0.6
+    lodash.isstring: ^4.0.1
+    lodash.once: ^4.0.0
+    ms: ^2.1.1
+    semver: ^7.5.4
+  checksum: fc739a6a8b33f1974f9772dca7f8493ca8df4cc31c5a09dcfdb7cff77447dcf22f4236fb2774ef3fe50df0abeb8e1c6f4c41eba82f500a804ab101e2fbc9d61a
+  languageName: node
+  linkType: hard
+
 "jsx-ast-utils@npm:^2.4.1 || ^3.0.0, jsx-ast-utils@npm:^3.3.3, jsx-ast-utils@npm:^3.3.5":
   version: 3.3.5
   resolution: "jsx-ast-utils@npm:3.3.5"
@@ -26050,38 +26091,6 @@ __metadata:
   checksum: 9e10b5a1659f9ed8761d38df3c35effabffbd19fc6107324095238e4ef0ff044392cae9ac64a1c2dda26e532426485342226b93806bd97504b174b0dcf04ed81
   languageName: node
   linkType: hard
-
-"langchain-premai@workspace:libs/langchain-prem":
-  version: 0.0.0-use.local
-  resolution: "langchain-premai@workspace:libs/langchain-prem"
-  dependencies:
-    "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1
-    "@langchain/scripts": ~0.0
-    "@premai/prem-sdk": ^0.3.19
-    "@swc/core": ^1.3.90
-    "@swc/jest": ^0.2.29
-    "@tsconfig/recommended": ^1.0.3
-    "@typescript-eslint/eslint-plugin": ^6.12.0
-    "@typescript-eslint/parser": ^6.12.0
-    axios: ^1.6.7
-    dotenv: ^16.3.1
-    dpdm: ^3.12.0
-    eslint: ^8.33.0
-    eslint-config-airbnb-base: ^15.0.0
-    eslint-config-prettier: ^8.6.0
-    eslint-plugin-import: ^2.27.5
-    eslint-plugin-no-instanceof: ^1.0.1
-    eslint-plugin-prettier: ^4.2.1
-    jest: ^29.5.0
-    jest-environment-node: ^29.6.4
-    prettier: ^2.8.3
-    release-it: ^15.10.1
-    rollup: ^4.5.2
-    ts-jest: ^29.1.0
-    typescript: <5.2.0
-  languageName: unknown
-  linkType: soft
 
 "langchain@workspace:*, langchain@workspace:langchain":
   version: 0.0.0-use.local
@@ -26713,6 +26722,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"lodash.includes@npm:^4.3.0":
+  version: 4.3.0
+  resolution: "lodash.includes@npm:4.3.0"
+  checksum: 71092c130515a67ab3bd928f57f6018434797c94def7f46aafa417771e455ce3a4834889f4267b17887d7f75297dfabd96231bf704fd2b8c5096dc4a913568b6
+  languageName: node
+  linkType: hard
+
 "lodash.invokemap@npm:^4.6.0":
   version: 4.6.0
   resolution: "lodash.invokemap@npm:4.6.0"
@@ -26727,10 +26743,31 @@ __metadata:
   languageName: node
   linkType: hard
 
+"lodash.isboolean@npm:^3.0.3":
+  version: 3.0.3
+  resolution: "lodash.isboolean@npm:3.0.3"
+  checksum: b70068b4a8b8837912b54052557b21fc4774174e3512ed3c5b94621e5aff5eb6c68089d0a386b7e801d679cd105d2e35417978a5e99071750aa2ed90bffd0250
+  languageName: node
+  linkType: hard
+
 "lodash.isequal@npm:^4.5.0":
   version: 4.5.0
   resolution: "lodash.isequal@npm:4.5.0"
   checksum: da27515dc5230eb1140ba65ff8de3613649620e8656b19a6270afe4866b7bd461d9ba2ac8a48dcc57f7adac4ee80e1de9f965d89d4d81a0ad52bb3eec2609644
+  languageName: node
+  linkType: hard
+
+"lodash.isinteger@npm:^4.0.4":
+  version: 4.0.4
+  resolution: "lodash.isinteger@npm:4.0.4"
+  checksum: 6034821b3fc61a2ffc34e7d5644bb50c5fd8f1c0121c554c21ac271911ee0c0502274852845005f8651d51e199ee2e0cfebfe40aaa49c7fe617f603a8a0b1691
+  languageName: node
+  linkType: hard
+
+"lodash.isnumber@npm:^3.0.3":
+  version: 3.0.3
+  resolution: "lodash.isnumber@npm:3.0.3"
+  checksum: 913784275b565346255e6ae6a6e30b760a0da70abc29f3e1f409081585875105138cda4a429ff02577e1bc0a7ae2a90e0a3079a37f3a04c3d6c5aaa532f4cab2
   languageName: node
   linkType: hard
 
@@ -26759,6 +26796,13 @@ __metadata:
   version: 4.6.2
   resolution: "lodash.merge@npm:4.6.2"
   checksum: ad580b4bdbb7ca1f7abf7e1bce63a9a0b98e370cf40194b03380a46b4ed799c9573029599caebc1b14e3f24b111aef72b96674a56cfa105e0f5ac70546cdc005
+  languageName: node
+  linkType: hard
+
+"lodash.once@npm:^4.0.0":
+  version: 4.1.1
+  resolution: "lodash.once@npm:4.1.1"
+  checksum: d768fa9f9b4e1dc6453be99b753906f58990e0c45e7b2ca5a3b40a33111e5d17f6edf2f768786e2716af90a8e78f8f91431ab8435f761fef00f9b0c256f6d245
   languageName: node
   linkType: hard
 

@@ -12,6 +12,7 @@ import { AgentStep } from "@langchain/core/agents";
 import { renderTextDescription } from "../../tools/render.js";
 import { formatLogToString } from "../format_scratchpad/log.js";
 import { ReActSingleInputOutputParser } from "./output_parser.js";
+import { RunnableSingleActionAgent } from "../agent.js";
 
 /**
  * Params used by the createXmlAgent function.
@@ -26,6 +27,11 @@ export type CreateReactAgentParams = {
    * `tools`, `tool_names`, and `agent_scratchpad`.
    */
   prompt: BasePromptTemplate;
+  /**
+   * Whether to invoke the underlying model in streaming mode,
+   * allowing streaming of intermediate steps. Defaults to true.
+   */
+  streamRunnable?: boolean;
 };
 
 /**
@@ -75,6 +81,7 @@ export async function createReactAgent({
   llm,
   tools,
   prompt,
+  streamRunnable,
 }: CreateReactAgentParams) {
   const missingVariables = ["tools", "tool_names", "agent_scratchpad"].filter(
     (v) => !prompt.inputVariables.includes(v)
@@ -106,5 +113,9 @@ export async function createReactAgent({
       toolNames,
     }),
   ]);
-  return agent;
+  return new RunnableSingleActionAgent({
+    runnable: agent,
+    defaultRunName: "ReactAgent",
+    streamRunnable,
+  });
 }

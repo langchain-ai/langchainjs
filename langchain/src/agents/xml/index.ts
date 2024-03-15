@@ -17,7 +17,11 @@ import {
 } from "@langchain/core/prompts";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { LLMChain } from "../../chains/llm_chain.js";
-import { AgentArgs, BaseSingleActionAgent } from "../agent.js";
+import {
+  AgentArgs,
+  BaseSingleActionAgent,
+  RunnableSingleActionAgent,
+} from "../agent.js";
 import { AGENT_INSTRUCTIONS } from "./prompt.js";
 import { XMLAgentOutputParser } from "./output_parser.js";
 import { renderTextDescription } from "../../tools/render.js";
@@ -139,6 +143,11 @@ export type CreateXmlAgentParams = {
    * `tools` and `agent_scratchpad`.
    */
   prompt: BasePromptTemplate;
+  /**
+   * Whether to invoke the underlying model in streaming mode,
+   * allowing streaming of intermediate steps. Defaults to true.
+   */
+  streamRunnable?: boolean;
 };
 
 /**
@@ -195,6 +204,7 @@ export async function createXmlAgent({
   llm,
   tools,
   prompt,
+  streamRunnable,
 }: CreateXmlAgentParams) {
   const missingVariables = ["tools", "agent_scratchpad"].filter(
     (v) => !prompt.inputVariables.includes(v)
@@ -222,5 +232,9 @@ export async function createXmlAgent({
     llmWithStop,
     new XMLAgentOutputParser(),
   ]);
-  return agent;
+  return new RunnableSingleActionAgent({
+    runnable: agent,
+    defaultRunName: "XMLAgent",
+    streamRunnable,
+  });
 }

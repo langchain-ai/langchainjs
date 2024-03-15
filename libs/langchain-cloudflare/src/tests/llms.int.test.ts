@@ -4,7 +4,7 @@ import { CloudflareWorkersAI } from "../llms.js";
 
 test("Test CloudflareWorkersAI", async () => {
   const model = new CloudflareWorkersAI({});
-  const res = await model.call("1 + 1 =");
+  const res = await model.invoke("1 + 1 =");
   console.log(res);
 }, 50000);
 
@@ -13,7 +13,7 @@ test("generate with streaming true", async () => {
     streaming: true,
   });
   const tokens: string[] = [];
-  const res = await model.call("What is 2 + 2?", {
+  const res = await model.invoke("What is 2 + 2?", {
     callbacks: [
       {
         handleLLMNewToken: (token) => {
@@ -45,6 +45,6 @@ test.skip("Test custom base url", async () => {
       "CLOUDFLARE_ACCOUNT_ID"
     )}/lang-chainjs/workers-ai/`,
   });
-  const res = await model.call("1 + 1 =");
+  const res = await model.invoke("1 + 1 =");
   console.log(res);
 });

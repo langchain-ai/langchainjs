@@ -11,7 +11,7 @@ test("Test OpenAI", async () => {
     maxTokens: 5,
     modelName: "gpt-3.5-turbo-instruct",
   });
-  const res = await model.call("Print hello world");
+  const res = await model.invoke("Print hello world");
   console.log({ res });
 });
 
@@ -29,7 +29,7 @@ test("Test OpenAI with stop in object", async () => {
     maxTokens: 5,
     modelName: "gpt-3.5-turbo-instruct",
   });
-  const res = await model.call("Print hello world", { stop: ["world"] });
+  const res = await model.invoke("Print hello world", { stop: ["world"] });
   console.log({ res });
 });
 
@@ -40,7 +40,7 @@ test("Test OpenAI with timeout in call options", async () => {
     modelName: "gpt-3.5-turbo-instruct",
   });
   await expect(() =>
-    model.call("Print hello world", {
+    model.invoke("Print hello world", {
       timeout: 10,
     })
   ).rejects.toThrow();
@@ -53,7 +53,7 @@ test("Test OpenAI with timeout in call options and node adapter", async () => {
     modelName: "gpt-3.5-turbo-instruct",
   });
   await expect(() =>
-    model.call("Print hello world", {
+    model.invoke("Print hello world", {
       timeout: 10,
     })
   ).rejects.toThrow();
@@ -66,7 +66,7 @@ test("Test OpenAI with signal in call options", async () => {
   });
   const controller = new AbortController();
   await expect(() => {
-    const ret = model.call("Print hello world", {
+    const ret = model.invoke("Print hello world", {
       signal: controller.signal,
     });
 
@@ -83,7 +83,7 @@ test("Test OpenAI with signal in call options and node adapter", async () => {
   });
   const controller = new AbortController();
   await expect(() => {
-    const ret = model.call("Print hello world", {
+    const ret = model.invoke("Print hello world", {
       signal: controller.signal,
     });
 
@@ -100,8 +100,8 @@ test("Test OpenAI with concurrency == 1", async () => {
     maxConcurrency: 1,
   });
   const res = await Promise.all([
-    model.call("Print hello world"),
-    model.call("Print hello world"),
+    model.invoke("Print hello world"),
+    model.invoke("Print hello world"),
   ]);
   console.log({ res });
 });
@@ -118,7 +118,7 @@ test("Test OpenAI with maxTokens -1", async () => {
 test("Test OpenAI with chat model returns OpenAIChat", async () => {
   const model = new OpenAI({ modelName: "gpt-3.5-turbo" });
   expect(model).toBeInstanceOf(OpenAIChat);
-  const res = await model.call("Print hello world");
+  const res = await model.invoke("Print hello world");
   console.log({ res });
   expect(typeof res).toBe("string");
 });
@@ -126,7 +126,7 @@ test("Test OpenAI with chat model returns OpenAIChat", async () => {
 test("Test OpenAI with instruct model returns OpenAI", async () => {
   const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
   expect(model).toBeInstanceOf(OpenAI);
-  const res = await model.call("Print hello world");
+  const res = await model.invoke("Print hello world");
   console.log({ res });
   expect(typeof res).toBe("string");
 });
@@ -134,7 +134,7 @@ test("Test OpenAI with instruct model returns OpenAI", async () => {
 test("Test OpenAI with versioned instruct model returns OpenAI", async () => {
   const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct-0914" });
   expect(model).toBeInstanceOf(OpenAI);
-  const res = await model.call("Print hello world");
+  const res = await model.invoke("Print hello world");
   console.log({ res });
   expect(typeof res).toBe("string");
 });
@@ -155,7 +155,7 @@ test("Test ChatOpenAI tokenUsage", async () => {
       },
     }),
   });
-  const res = await model.call("Hello");
+  const res = await model.invoke("Hello");
   console.log({ res });
 
   expect(tokenUsage.promptTokens).toBe(1);
@@ -176,7 +176,7 @@ test("Test OpenAI in streaming mode", async () => {
       },
     }),
   });
-  const res = await model.call("Print hello world");
+  const res = await model.invoke("Print hello world");
   console.log({ res });
 
   expect(nrNewTokens > 0).toBe(true);
