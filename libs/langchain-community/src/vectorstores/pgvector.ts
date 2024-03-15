@@ -509,13 +509,8 @@ export class PGVectorStore extends VectorStore {
       ? `WHERE ${whereClauses.join(" AND ")}`
       : "";
 
-    const operatorString =
-      this.extensionSchemaName !== null
-        ? `OPERATOR(${this.extensionSchemaName}.${this.computedOperatorString})`
-        : this.computedOperatorString;
-
     const queryString = `
-      SELECT *, "${this.vectorColumnName}" ${operatorString} $1 as "_distance"
+      SELECT *, "${this.vectorColumnName}" ${this.computedOperatorString} $1 as "_distance"
       FROM ${this.computedTableName}
       ${whereClause}
       ORDER BY "_distance" ASC

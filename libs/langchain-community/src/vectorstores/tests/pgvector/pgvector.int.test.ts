@@ -234,15 +234,21 @@ describe("PGVectorStore", () => {
     // verify with extensionSchemaName
     pgvectorVectorStore.vectorType = "cosine";
     pgvectorVectorStore.extensionSchemaName = "schema1";
-    expect(pgvectorVectorStore.computedOperatorString).toEqual("OPERATOR(schema1.<=>)");
+    expect(pgvectorVectorStore.computedOperatorString).toEqual(
+      "OPERATOR(schema1.<=>)"
+    );
 
     pgvectorVectorStore.vectorType = "innerProduct";
     pgvectorVectorStore.extensionSchemaName = "schema2";
-    expect(pgvectorVectorStore.computedOperatorString).toEqual("OPERATOR(schema2.<#>)");
+    expect(pgvectorVectorStore.computedOperatorString).toEqual(
+      "OPERATOR(schema2.<#>)"
+    );
 
     pgvectorVectorStore.vectorType = "euclidean";
     pgvectorVectorStore.extensionSchemaName = "schema3";
-    expect(pgvectorVectorStore.computedOperatorString).toEqual("OPERATOR(schema3.<->)");
+    expect(pgvectorVectorStore.computedOperatorString).toEqual(
+      "OPERATOR(schema3.<->)"
+    );
   });
 });
 
