@@ -56,7 +56,7 @@ export class StructuredPrompt<
       return super.pipe(coerceable.withStructuredOutput(this.schema));
     } else {
       throw new Error(
-        "Structured prompts need to be piped to a language model."
+        `Structured prompts need to be piped to a language model that supports the "withStructuredOutput()" method.`
       );
     }
   }
