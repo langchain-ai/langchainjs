@@ -1,10 +1,12 @@
 const {
   Application,
+  CommentTag,
   Converter,
   Context,
   ReflectionKind,
   DeclarationReflection,
   RendererEvent,
+  Comment,
 } = require("typedoc");
 const fs = require("fs");
 const path = require("path");
@@ -55,6 +57,13 @@ function load(application) {
    */
   let reflectionsToHide = [];
 
+  /**
+   * A list of reflection names which DID not contain a `@deprecated` tag
+   * before inheriting parent properties.
+   * @type {Array<string>}
+   */
+  const reflectionWithoutDeprecatedTag = [];
+
   application.converter.on(
     Converter.EVENT_CREATE_DECLARATION,
     resolveReflection
@@ -86,6 +95,37 @@ function load(application) {
     if (project && langchainVersion) {
       project.packageVersion = langchainVersion;
     }
+
+    const allClasses = project.getReflectionsByKind(ReflectionKind.Class);
+    allClasses.forEach((reflection) => {
+      const commentTag = new CommentTag("@inheritDoc", []);
+
+      if (reflection.comment) {
+        // Add the inherit doc tag to all classes
+        reflection.comment.blockTags.push(commentTag);
+
+        // Check if the reflection contains a deprecated tag
+        const deprecatedTag = reflection.comment.blockTags.find(
+          (tag) => tag.tag === "@deprecated"
+        );
+        if (!deprecatedTag) {
+          return;
+        }
+
+        const reflectionName = reflection.name;
+
+        // Verify this reflection was added to the `reflectionWithoutDeprecatedTag` array
+        const reflectionWasAdded = reflectionWithoutDeprecatedTag.find((ref) => ref === reflectionName);
+        if (!reflectionWasAdded) {
+          return;
+        }
+        // Remove the deprecated tag from the reflection
+        reflection.comment.blockTags = reflection.comment.blockTags.filter((tag) => tag.name !== "deprecated");
+      } else {
+        // No comment already existed, add a new comment with `@inheritDoc` tag
+        reflection = new DeclarationReflection(reflection.name, ReflectionKind.Class, reflection.parent).comment = new Comment(undefined, [commentTag]);
+      }
+    });
   }
 
   /**
@@ -93,8 +133,9 @@ function load(application) {
    * @returns {void}
    */
   function onBeginResolve(context) {
+    const { project } = context;
+
     reflectionsToHide.forEach((reflection) => {
-      const { project } = context;
       // Remove the property from documentation
       project.removeReflection(reflection);
     });
@@ -120,6 +161,18 @@ function load(application) {
     }
     if (reflection.name.startsWith("libs/")) {
       reflection.name = reflection.name.replace("libs/", "");
+    }
+
+    if (reflection.kind === ReflectionKind.Class) {
+      if (reflection.comment) {
+        // Check if it already contains a `@deprecated` tag
+        const deprecatedTag = reflection.comment.blockTags.find(
+          (tag) => tag.tag === "@deprecated"
+        );
+        if (!deprecatedTag) {
+          reflectionWithoutDeprecatedTag.push(reflection.name);
+        }
+      }
     }
   }
 
