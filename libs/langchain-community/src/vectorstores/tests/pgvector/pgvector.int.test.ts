@@ -219,6 +219,37 @@ describe("PGVectorStore", () => {
       throw e;
     }
   });
+
+  test("PGvector supports different vector types", async () => {
+    // verify by asserting different pgvector operators based on vector type
+    pgvectorVectorStore.distanceStrategy = "cosine";
+    expect(pgvectorVectorStore.computedOperatorString).toEqual("<=>");
+
+    pgvectorVectorStore.distanceStrategy = "innerProduct";
+    expect(pgvectorVectorStore.computedOperatorString).toEqual("<#>");
+
+    pgvectorVectorStore.distanceStrategy = "euclidean";
+    expect(pgvectorVectorStore.computedOperatorString).toEqual("<->");
+
+    // verify with extensionSchemaName
+    pgvectorVectorStore.distanceStrategy = "cosine";
+    pgvectorVectorStore.extensionSchemaName = "schema1";
+    expect(pgvectorVectorStore.computedOperatorString).toEqual(
+      "OPERATOR(schema1.<=>)"
+    );
+
+    pgvectorVectorStore.distanceStrategy = "innerProduct";
+    pgvectorVectorStore.extensionSchemaName = "schema2";
+    expect(pgvectorVectorStore.computedOperatorString).toEqual(
+      "OPERATOR(schema2.<#>)"
+    );
+
+    pgvectorVectorStore.distanceStrategy = "euclidean";
+    pgvectorVectorStore.extensionSchemaName = "schema3";
+    expect(pgvectorVectorStore.computedOperatorString).toEqual(
+      "OPERATOR(schema3.<->)"
+    );
+  });
 });
 
 describe.skip("PGVectorStore with collection", () => {
