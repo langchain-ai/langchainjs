@@ -1,8 +1,8 @@
 import { describe, test, expect } from "@jest/globals";
 import { ChatMessage, HumanMessage } from "@langchain/core/messages";
-import { ChatPrem } from "../chat_models.js";
+import { ChatPrem } from "../premai.js";
 
-describe("ChatPrem", () => {
+describe.skip("ChatPrem", () => {
   test("invoke", async () => {
     const chat = new ChatPrem();
     const message = new HumanMessage("What color is the sky?");

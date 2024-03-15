@@ -14,7 +14,7 @@ import {
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   type BaseChatModelParams,
-  SimpleChatModel,
+  BaseChatModel,
 } from "@langchain/core/language_models/chat_models";
 
 import Prem, {
@@ -161,7 +161,7 @@ function _convertDeltaToMessageChunk(
 export class ChatPrem<
   CallOptions extends BaseLanguageModelCallOptions = BaseLanguageModelCallOptions
 >
-  extends SimpleChatModel<CallOptions>
+  extends BaseChatModel<CallOptions>
   implements ChatPremInput
 {
   client: Prem;
@@ -279,18 +279,7 @@ export class ChatPrem<
 
   // Replace
   _llmType() {
-    return "chat_prem";
-  }
-
-  /**
-   * For some given input messages and options, return a string output.
-   */
-  _call(
-    _messages: BaseMessage[],
-    _options: this["ParsedCallOptions"],
-    _runManager?: CallbackManagerForLLMRun
-  ): Promise<string> {
-    throw new Error("Not implemented.");
+    return "prem";
   }
 
   async completionWithRetry(
