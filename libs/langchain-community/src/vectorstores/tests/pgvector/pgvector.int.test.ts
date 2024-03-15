@@ -219,6 +219,31 @@ describe("PGVectorStore", () => {
       throw e;
     }
   });
+
+  test("PGvector supports different vector types", async () => {
+    // verify by asserting different pgvector operators based on vector type
+    pgvectorVectorStore.vectorType = "cosine";
+    expect(pgvectorVectorStore.computedOperatorString).toEqual("<=>");
+
+    pgvectorVectorStore.vectorType = "innerProduct";
+    expect(pgvectorVectorStore.computedOperatorString).toEqual("<#>");
+
+    pgvectorVectorStore.vectorType = "euclidean";
+    expect(pgvectorVectorStore.computedOperatorString).toEqual("<->");
+
+    // verify with extensionSchemaName
+    pgvectorVectorStore.vectorType = "cosine";
+    pgvectorVectorStore.extensionSchemaName = "schema1";
+    expect(pgvectorVectorStore.computedOperatorString).toEqual("OPERATOR(schema1.<=>)");
+
+    pgvectorVectorStore.vectorType = "innerProduct";
+    pgvectorVectorStore.extensionSchemaName = "schema2";
+    expect(pgvectorVectorStore.computedOperatorString).toEqual("OPERATOR(schema2.<#>)");
+
+    pgvectorVectorStore.vectorType = "euclidean";
+    pgvectorVectorStore.extensionSchemaName = "schema3";
+    expect(pgvectorVectorStore.computedOperatorString).toEqual("OPERATOR(schema3.<->)");
+  });
 });
 
 describe.skip("PGVectorStore with collection", () => {

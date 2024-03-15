@@ -6,6 +6,8 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 type Metadata = Record<string, unknown>;
 
+type SupportedVectorTypes = "cosine" | "innerProduct" | "euclidean";
+
 /**
  * Interface that defines the arguments required to create a
  * `PGVectorStore` instance. It includes Postgres connection options,
@@ -35,6 +37,7 @@ export interface PGVectorStoreArgs {
    */
   chunkSize?: number;
   ids?: string[];
+  vectorType?: SupportedVectorTypes;
 }
 
 /**
@@ -76,6 +79,8 @@ export class PGVectorStore extends VectorStore {
 
   chunkSize = 500;
 
+  vectorType?: SupportedVectorTypes = "cosine";
+
   _vectorstoreType(): string {
     return "pgvector";
   }
@@ -107,6 +112,7 @@ export class PGVectorStore extends VectorStore {
     const pool = config.pool ?? new pg.Pool(config.postgresConnectionOptions);
     this.pool = pool;
     this.chunkSize = config.chunkSize ?? 500;
+    this.vectorType = config.vectorType ?? this.vectorType;
 
     this._verbose =
       getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true" ??
@@ -123,6 +129,27 @@ export class PGVectorStore extends VectorStore {
     return this.schemaName == null
       ? `${this.collectionTableName}`
       : `"${this.schemaName}"."${this.collectionTableName}"`;
+  }
+
+  get computedOperatorString() {
+    let operator: string;
+    switch (this.vectorType) {
+      case "cosine":
+        operator = "<=>";
+        break;
+      case "innerProduct":
+        operator = "<#>";
+        break;
+      case "euclidean":
+        operator = "<->";
+        break;
+      default:
+        throw new Error(`Unknown search type: ${this.vectorType}`);
+    }
+
+    return this.extensionSchemaName !== null
+      ? `OPERATOR(${this.extensionSchemaName}.${operator})`
+      : operator;
   }
 
   /**
@@ -484,8 +511,8 @@ export class PGVectorStore extends VectorStore {
 
     const operatorString =
       this.extensionSchemaName !== null
-        ? `OPERATOR(${this.extensionSchemaName}.<=>)`
-        : "<=>";
+        ? `OPERATOR(${this.extensionSchemaName}.${this.computedOperatorString})`
+        : this.computedOperatorString;
 
     const queryString = `
       SELECT *, "${this.vectorColumnName}" ${operatorString} $1 as "_distance"
