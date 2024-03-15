@@ -100,13 +100,21 @@ import OpenAIFineTuned from "@examples/models/chat/integration_openai_fine_tune.
 
 ## Generation metadata
 
-If you need additional information like logprobs or token usage using a callback or by calling the lower level `.generate()` method.
-Here are some examples:
+If you need additional information like logprobs or token usage, these will be returned directly in the `.invoke` response.
 
-import OpenAICallbacks from "@examples/models/chat/integration_openai_callbacks.ts";
+:::tip
+Requires `@langchain/core` version >=0.1.48.
+:::
+
+import OpenAIInvokeInfo from "@examples/models/chat/integration_openai_invoke_info.ts";
 import OpenAIGenerationInfo from "@examples/models/chat/integration_openai_generation_info.ts";
+import OpenAICallbacks from "@examples/models/chat/integration_openai_callbacks.ts";
+
+<CodeBlock language="typescript">{OpenAIInvokeInfo}</CodeBlock>
 
 ### With callbacks
+
+You can also use the callbacks system:
 
 <CodeBlock language="typescript">{OpenAICallbacks}</CodeBlock>
 
