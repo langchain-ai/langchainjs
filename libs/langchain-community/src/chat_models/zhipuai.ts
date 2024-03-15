@@ -10,7 +10,8 @@ import {
 import { type ChatResult } from "@langchain/core/outputs";
 import { type CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import * as jwt from "jsonwebtoken";
+
+import { encodeApiKey } from "../utils/zhipuai.js";
 
 export type ZhipuMessageRole = "system" | "assistant" | "user";
 
@@ -38,31 +39,46 @@ type ModelName =
   | "chatglm_turbo"; // context size: 32k
 interface ChatCompletionRequest {
   model: ModelName;
-  input: {
-    messages: ZhipuMessage[];
-  };
-  parameters: {
-    stream?: boolean;
-    request_id?: string;
-    result_format?: "text" | "message";
-    max_tokens?: number | null;
-    top_p?: number | null;
-    top_k?: number | null;
-    temperature?: number | null;
-    incremental_output?: boolean | null;
-  };
+  messages?: ZhipuMessage[];
+  do_sample?: boolean;
+  stream?: boolean;
+  request_id?: string;
+  max_tokens?: number | null;
+  top_p?: number | null;
+  top_k?: number | null;
+  temperature?: number | null;
+  stop?: string[];
+}
+
+interface BaseResponse {
+  code?: string;
+  message?: string;
+}
+
+interface ChoiceMessage {
+  role: string;
+  content: string;
+}
+
+interface ResponseChoice {
+  index: number;
+  finish_reason: "stop" | "length" | "null" | null;
+  delta: ChoiceMessage;
+  message: ChoiceMessage;
 }
 
 /**
  * Interface representing a response from a chat completion.
  */
-interface ChatCompletionResponse {
-  code?: string;
-  message?: string;
+interface ChatCompletionResponse extends BaseResponse {
+  choices: ResponseChoice[];
+  created: number;
+  id: string;
+  model: string;
   request_id: string;
   usage: {
-    output_tokens: number;
-    input_tokens: number;
+    completion_tokens: number;
+    prompt_tokens: number;
     total_tokens: number;
   };
   output: {
@@ -171,6 +187,8 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
 
   streaming: boolean;
 
+  doSample?: boolean;
+
   messages?: ZhipuMessage[];
 
   requestId?: string;
@@ -190,7 +208,7 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
   constructor(fields: Partial<ChatZhipuAIParams> & BaseChatModelParams = {}) {
     super(fields);
 
-    this.zhipuAIApiKey = ChatZhipuAI.encodeApiKey(
+    this.zhipuAIApiKey = encodeApiKey(
       fields?.zhipuAIApiKey ?? getEnvironmentVariable("ZHIPUAI_API_KEY")
     );
     if (!this.zhipuAIApiKey) {
@@ -205,37 +223,30 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
     this.stop = fields.stop;
     this.maxTokens = fields.maxTokens;
     this.modelName = fields.modelName ?? "glm-3-turbo";
+    this.doSample = fields.doSample;
   }
 
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams(): ChatCompletionRequest["parameters"] {
-    const parameters: ChatCompletionRequest["parameters"] = {
-      stream: this.streaming,
+  invocationParams(): Omit<ChatCompletionRequest, "messages"> {
+    return {
+      model: this.modelName,
       request_id: this.requestId,
+      do_sample: this.doSample,
+      stream: this.streaming,
       temperature: this.temperature,
       top_p: this.topP,
       max_tokens: this.maxTokens,
-      result_format: "text",
+      stop: this.stop,
     };
-
-    if (this.streaming) {
-      parameters.incremental_output = true;
-    }
-
-    return parameters;
   }
 
   /**
    * Get the identifying parameters for the model
    */
-  identifyingParams(): ChatCompletionRequest["parameters"] &
-    Pick<ChatCompletionRequest, "model"> {
-    return {
-      model: this.modelName,
-      ...this.invocationParams(),
-    };
+  identifyingParams(): Omit<ChatCompletionRequest, "messages"> {
+    return this.invocationParams();
   }
 
   /** @ignore */
@@ -258,11 +269,8 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
           let resolved = false;
           this.completionWithRetry(
             {
-              model: this.modelName,
-              parameters,
-              input: {
-                messages: messagesMapped,
-              },
+              ...parameters,
+              messages: messagesMapped,
             },
             true,
             options?.signal,
@@ -277,10 +285,14 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
                 return;
               }
 
-              const { text, finish_reason } = data.output;
+              const { delta, finish_reason } = data.choices[0];
+              const text = delta.content;
 
               if (!response) {
-                response = data;
+                response = {
+                  ...data,
+                  output: { text, finish_reason },
+                };
               } else {
                 response.output.text += text;
                 response.output.finish_reason = finish_reason;
@@ -303,11 +315,8 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
         })
       : await this.completionWithRetry(
           {
-            model: this.modelName,
-            parameters,
-            input: {
-              messages: messagesMapped,
-            },
+            ...parameters,
+            messages: messagesMapped,
           },
           false,
           options?.signal
@@ -315,13 +324,17 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
           if (data?.code) {
             throw new Error(data?.message);
           }
-
-          return data;
+          const { finish_reason, message } = data.choices[0];
+          const text = message.content;
+          return {
+            ...data,
+            output: { text, finish_reason },
+          };
         });
 
     const {
-      input_tokens = 0,
-      output_tokens = 0,
+      prompt_tokens = 0,
+      completion_tokens = 0,
       total_tokens = 0,
     } = data.usage;
 
@@ -336,33 +349,12 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
       ],
       llmOutput: {
         tokenUsage: {
-          promptTokens: input_tokens,
-          completionTokens: output_tokens,
+          promptTokens: prompt_tokens,
+          completionTokens: completion_tokens,
           totalTokens: total_tokens,
         },
       },
     };
-  }
-
-  static encodeApiKey(apiKey: string | undefined) {
-    if (!apiKey) throw Error("Invalid api key");
-    const [key, secret] = apiKey.split(".");
-    const API_TOKEN_TTL_SECONDS = 3 * 60;
-    const now = new Date().valueOf();
-    const payload = {
-      api_key: key,
-      exp: now + API_TOKEN_TTL_SECONDS * 1000,
-      timestamp: now,
-    };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const options: any = {
-      algorithm: "HS256",
-      header: {
-        alg: "HS256",
-        sign_type: "SIGN",
-      },
-    };
-    return jwt.sign(payload, secret, options);
   }
 
   /** @ignore */
@@ -421,9 +413,12 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
             const line = data.slice(0, newlineIndex);
             data = data.slice(newlineIndex + 1);
             if (line.startsWith("data:")) {
-              const event = new MessageEvent("message", {
-                data: line.slice("data:".length).trim(),
-              });
+              const value = line.slice("data:".length).trim();
+              if (value === "[DONE]") {
+                continueReading = false;
+                break;
+              }
+              const event = new MessageEvent("message", { data: value });
               onmessage?.(event);
             }
           }

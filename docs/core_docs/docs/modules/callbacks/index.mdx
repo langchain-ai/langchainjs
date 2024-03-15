@@ -9,7 +9,7 @@ LangChain provides a callbacks system that allows you to hook into the various s
 
 import CodeBlock from "@theme/CodeBlock";
 
-You can subscribe to these events by using the `callbacks` argument available throughout the API. This method accepts a list of handler objects, which are expected to implement [one or more of the methods described in the API docs](https://api.js.langchain.com/interfaces/callbacks.CallbackHandlerMethods.html).
+You can subscribe to these events by using the `callbacks` argument available throughout the API. This method accepts a list of handler objects, which are expected to implement [one or more of the methods described in the API docs](https://api.js.langchain.com/interfaces/langchain_core_callbacks_base.CallbackHandlerMethods.html).
 
 ## How to use callbacks
 
@@ -64,7 +64,7 @@ import ConsoleExample from "@examples/callbacks/console_handler.ts";
 
 ### One-off handlers
 
-You can create a one-off handler inline by passing a plain object to the `callbacks` argument. This object should implement the [`CallbackHandlerMethods`](https://api.js.langchain.com/interfaces/callbacks.CallbackHandlerMethods.html) interface. This is useful if eg. you need to create a handler that you will use only for a single request, eg to stream the output of an LLM/Agent/etc to a websocket.
+You can create a one-off handler inline by passing a plain object to the `callbacks` argument. This object should implement the [`CallbackHandlerMethods`](https://api.js.langchain.com/interfaces/langchain_core_callbacks_base.CallbackHandlerMethods.html) interface. This is useful if eg. you need to create a handler that you will use only for a single request, eg to stream the output of an LLM/Agent/etc to a websocket.
 
 import StreamingExample from "@examples/models/llm/llm_streaming.ts";
 

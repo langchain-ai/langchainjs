@@ -153,6 +153,12 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
     return { region: this.region };
   }
 
+  _identifyingParams(): Record<string, string> {
+    return {
+      model: this.model,
+    };
+  }
+
   _llmType() {
     return "bedrock";
   }

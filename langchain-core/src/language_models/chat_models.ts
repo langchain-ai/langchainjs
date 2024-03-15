@@ -199,8 +199,10 @@ export abstract class BaseChatModel<
           callOptions,
           runManagers?.[0]
         )) {
-          chunk.message.response_metadata =
-            _combineGenerationInfoAndMetadata(chunk);
+          chunk.message.response_metadata = {
+            ...chunk.generationInfo,
+            ...chunk.message.response_metadata,
+          };
           yield chunk.message;
           if (!generationChunk) {
             generationChunk = chunk;
@@ -280,8 +282,16 @@ export abstract class BaseChatModel<
         if (pResult.status === "fulfilled") {
           const result = pResult.value;
           for (const generation of result.generations) {
-            generation.message.response_metadata =
-              _combineGenerationInfoAndMetadata(generation);
+            generation.message.response_metadata = {
+              ...generation.generationInfo,
+              ...generation.message.response_metadata,
+            };
+          }
+          if (result.generations.length === 1) {
+            result.generations[0].message.response_metadata = {
+              ...result.llmOutput,
+              ...result.generations[0].message.response_metadata,
+            };
           }
           generations[i] = result.generations;
           llmOutputs[i] = result.llmOutput;
@@ -651,11 +661,4 @@ export abstract class SimpleChatModel<
       ],
     };
   }
-}
-
-function _combineGenerationInfoAndMetadata(generation: ChatGeneration) {
-  return {
-    ...generation.generationInfo,
-    ...generation.message.response_metadata,
-  };
 }
