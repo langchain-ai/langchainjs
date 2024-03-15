@@ -6,9 +6,9 @@ const model = new ChatOpenAI({
   // topLogprobs: 5,
 });
 
-const generations = await model.invoke("Hi there!");
+const responseMessage = await model.invoke("Hi there!");
 
-console.log(JSON.stringify(generations, null, 2));
+console.log(JSON.stringify(responseMessage, null, 2));
 
 /*
   {
