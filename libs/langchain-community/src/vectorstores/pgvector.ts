@@ -6,7 +6,7 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 type Metadata = Record<string, unknown>;
 
-type SupportedVectorTypes = "cosine" | "innerProduct" | "euclidean";
+export type DistanceStrategy = "cosine" | "innerProduct" | "euclidean";
 
 /**
  * Interface that defines the arguments required to create a
@@ -37,7 +37,7 @@ export interface PGVectorStoreArgs {
    */
   chunkSize?: number;
   ids?: string[];
-  vectorType?: SupportedVectorTypes;
+  distanceStrategy?: DistanceStrategy;
 }
 
 /**
@@ -79,7 +79,7 @@ export class PGVectorStore extends VectorStore {
 
   chunkSize = 500;
 
-  vectorType?: SupportedVectorTypes = "cosine";
+  distanceStrategy?: DistanceStrategy = "cosine";
 
   _vectorstoreType(): string {
     return "pgvector";
@@ -112,7 +112,7 @@ export class PGVectorStore extends VectorStore {
     const pool = config.pool ?? new pg.Pool(config.postgresConnectionOptions);
     this.pool = pool;
     this.chunkSize = config.chunkSize ?? 500;
-    this.vectorType = config.vectorType ?? this.vectorType;
+    this.distanceStrategy = config.distanceStrategy ?? this.distanceStrategy;
 
     this._verbose =
       getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true" ??
@@ -133,7 +133,7 @@ export class PGVectorStore extends VectorStore {
 
   get computedOperatorString() {
     let operator: string;
-    switch (this.vectorType) {
+    switch (this.distanceStrategy) {
       case "cosine":
         operator = "<=>";
         break;
@@ -144,7 +144,7 @@ export class PGVectorStore extends VectorStore {
         operator = "<->";
         break;
       default:
-        throw new Error(`Unknown search type: ${this.vectorType}`);
+        throw new Error(`Unknown distance strategy: ${this.distanceStrategy}`);
     }
 
     return this.extensionSchemaName !== null
