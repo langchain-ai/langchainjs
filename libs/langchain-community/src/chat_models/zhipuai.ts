@@ -413,9 +413,12 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
             const line = data.slice(0, newlineIndex);
             data = data.slice(newlineIndex + 1);
             if (line.startsWith("data:")) {
-              const event = new MessageEvent("message", {
-                data: line.slice("data:".length).trim(),
-              });
+              const value = line.slice("data:".length).trim();
+              if (value === "[DONE]") {
+                continueReading = false;
+                break;
+              }
+              const event = new MessageEvent("message", { data: value });
               onmessage?.(event);
             }
           }
