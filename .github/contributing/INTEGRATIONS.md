@@ -10,49 +10,37 @@ The following guidelines apply broadly to all type of integrations:
 
 ### Creating a separate entrypoint
 
-You should generally not export your new module from an `index.ts` file that contains many other exports. Instead, you should add a separate entrypoint for your integration in [`libs/langchain-community/scripts/create-entrypoints.js`](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-community/scripts/create-entrypoints.js) within the `entrypoints` object:
+You should generally not export your new module from an `index.ts` file that contains many other exports. Instead, you should add a separate entrypoint for your integration in [`libs/langchain-community/langchain.config.js`](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-community/langchain.config.js) within the `entrypoints` field in the config object:
 
 ```js
-import * as fs from "fs";
-import * as path from "path";
-
-// This lists all the entrypoints for the library. Each key corresponds to an
-// importable path, eg. `import { AgentExecutor } from "langchain/agents"`.
-// The value is the path to the file in `src/` that exports the entrypoint.
-// This is used to generate the `exports` field in package.json.
-// Order is not important.
-const entrypoints = {
-  // agents
-  agents: "agents/index",
-  "agents/load": "agents/load",
+export const config = {
+  internals: [ ... ],
+  entrypoints: {
+    load: "load/index",
+    ...
+    "vectorstores/chroma": "vectorstores/chroma",
+    "vectorstores/hnswlib": "vectorstores/hnswlib",
+    ...
+  },
   ...
-  "vectorstores/chroma": "vectorstores/chroma",
-  "vectorstores/hnswlib": "vectorstores/hnswlib",
-  ...
-};
+}
 ```
 
 The entrypoint name should conform to its path in the repo. For example, if you were adding a new vector store for a hypothetical provider "langco", you might create it under `vectorstores/langco.ts`. You should add it above as:
 
 ```js
-import * as fs from "fs";
-import * as path from "path";
-
-// This lists all the entrypoints for the library. Each key corresponds to an
-// importable path, eg. `import { AgentExecutor } from "langchain/agents"`.
-// The value is the path to the file in `src/` that exports the entrypoint.
-// This is used to generate the `exports` field in package.json.
-// Order is not important.
-const entrypoints = {
-  // agents
-  agents: "agents/index",
-  "agents/load": "agents/load",
+export const config = {
+  internals: [ ... ],
+  entrypoints: {
+    load: "load/index",
+    ...
+    "vectorstores/chroma": "vectorstores/chroma",
+    "vectorstores/hnswlib": "vectorstores/hnswlib",
+    "vectorstores/langco": "vectorstores/langco",
+    ...
+  },
   ...
-  "vectorstores/chroma": "vectorstores/chroma",
-  "vectorstores/hnswlib": "vectorstores/hnswlib",
-  "vectorstores/langco": "vectorstores/langco",
-  ...
-};
+}
 ```
 
 A user would then import your new vector store as `import { LangCoVectorStore } from "@langchain/community/vectorstores/langco";`.
@@ -65,19 +53,26 @@ We suggest using caret syntax (`^`) for peer dependencies to support a wider ran
 
 Please make sure all introduced dependencies are permissively licensed (MIT is recommended) and well-supported and maintained.
 
-You must also add your new entrypoint under `requiresOptionalDependency` in the [`create-entrypoints.js`](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-community/scripts/create-entrypoints.js) file to avoid breaking the build:
+You must also add your new entrypoint under `requiresOptionalDependency` in the [`langchain.config.js`](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-community/langchain.config.js) file to avoid breaking the build:
 
 ```js
-// Entrypoints in this list require an optional dependency to be installed.
-// Therefore they are not tested in the generated test-exports-* packages.
-const requiresOptionalDependency = [
-  "agents/load",
+export const config = {
+  internals: [ ... ],
+  entrypoints: {
+    load: "load/index",
+    ...
+    "vectorstores/chroma": "vectorstores/chroma",
+    "vectorstores/hnswlib": "vectorstores/hnswlib",
+    "vectorstores/langco": "vectorstores/langco",
+    ...
+  },
+  requiresOptionalDependency: [
+    ...
+    "vectorstores/langco",
+    ...
+  ],
   ...
-  "vectorstores/chroma",
-  "vectorstores/hnswlib",
-  "vectorstores/langco",
-  ...
-];
+}
 ```
 
 If you have conformed to all of the above guidelines, you can just import your dependency as normal in your integration's file in the LangChain repo. Developers who import your entrypoint will then see an error message if they are missing the required peer dependency.

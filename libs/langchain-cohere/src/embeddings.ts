@@ -86,7 +86,8 @@ export class CohereEmbeddings
       this.embeddingWithRetry({
         model: this.model,
         texts: batch,
-        inputType: this.inputType,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        inputType: this.inputType as any,
       })
     );
 
@@ -118,7 +119,8 @@ export class CohereEmbeddings
     const { embeddings } = await this.embeddingWithRetry({
       model: this.model,
       texts: [text],
-      inputType: this.inputType,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      inputType: this.inputType as any,
     });
     if ("float" in embeddings && embeddings.float) {
       return embeddings.float[0];

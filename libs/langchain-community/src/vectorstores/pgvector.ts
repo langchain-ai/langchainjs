@@ -6,6 +6,8 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 type Metadata = Record<string, unknown>;
 
+export type DistanceStrategy = "cosine" | "innerProduct" | "euclidean";
+
 /**
  * Interface that defines the arguments required to create a
  * `PGVectorStore` instance. It includes Postgres connection options,
@@ -35,6 +37,7 @@ export interface PGVectorStoreArgs {
    */
   chunkSize?: number;
   ids?: string[];
+  distanceStrategy?: DistanceStrategy;
 }
 
 /**
@@ -76,6 +79,8 @@ export class PGVectorStore extends VectorStore {
 
   chunkSize = 500;
 
+  distanceStrategy?: DistanceStrategy = "cosine";
+
   _vectorstoreType(): string {
     return "pgvector";
   }
@@ -112,6 +117,7 @@ export class PGVectorStore extends VectorStore {
     const pool = config.pool ?? new pg.Pool(config.postgresConnectionOptions);
     this.pool = pool;
     this.chunkSize = config.chunkSize ?? 500;
+    this.distanceStrategy = config.distanceStrategy ?? this.distanceStrategy;
 
     this._verbose =
       getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true" ??
@@ -128,6 +134,27 @@ export class PGVectorStore extends VectorStore {
     return this.schemaName == null
       ? `${this.collectionTableName}`
       : `"${this.schemaName}"."${this.collectionTableName}"`;
+  }
+
+  get computedOperatorString() {
+    let operator: string;
+    switch (this.distanceStrategy) {
+      case "cosine":
+        operator = "<=>";
+        break;
+      case "innerProduct":
+        operator = "<#>";
+        break;
+      case "euclidean":
+        operator = "<->";
+        break;
+      default:
+        throw new Error(`Unknown distance strategy: ${this.distanceStrategy}`);
+    }
+
+    return this.extensionSchemaName !== null
+      ? `OPERATOR(${this.extensionSchemaName}.${operator})`
+      : operator;
   }
 
   /**
@@ -487,13 +514,8 @@ export class PGVectorStore extends VectorStore {
       ? `WHERE ${whereClauses.join(" AND ")}`
       : "";
 
-    const operatorString =
-      this.extensionSchemaName !== null
-        ? `OPERATOR(${this.extensionSchemaName}.<=>)`
-        : "<=>";
-
     const queryString = `
-      SELECT *, "${this.vectorColumnName}" ${operatorString} $1 as "_distance"
+      SELECT *, "${this.vectorColumnName}" ${this.computedOperatorString} $1 as "_distance"
       FROM ${this.computedTableName}
       ${whereClause}
       ORDER BY "_distance" ASC

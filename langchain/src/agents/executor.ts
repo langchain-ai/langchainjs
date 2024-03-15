@@ -23,7 +23,8 @@ import { StoppingMethod } from "./types.js";
 import {
   BaseMultiActionAgent,
   BaseSingleActionAgent,
-  RunnableAgent,
+  RunnableMultiActionAgent,
+  isRunnableAgent,
 } from "./agent.js";
 import { BaseChain, ChainInputs } from "../chains/base.js";
 
@@ -393,10 +394,13 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
     let agent: BaseSingleActionAgent | BaseMultiActionAgent;
     let returnOnlyOutputs = true;
     if (Runnable.isRunnable(input.agent)) {
-      agent = new RunnableAgent({ runnable: input.agent });
+      agent = new RunnableMultiActionAgent({ runnable: input.agent });
       // TODO: Update BaseChain implementation on breaking change
       returnOnlyOutputs = false;
     } else {
+      if (isRunnableAgent(input.agent)) {
+        returnOnlyOutputs = false;
+      }
       agent = input.agent;
     }
 

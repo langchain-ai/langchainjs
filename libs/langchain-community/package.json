@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.0.38",
+  "version": "0.0.39",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -910,6 +910,15 @@
       },
       "import": "./embeddings/voyage.js",
       "require": "./embeddings/voyage.cjs"
+    },
+    "./embeddings/zhipuai": {
+      "types": {
+        "import": "./embeddings/zhipuai.d.ts",
+        "require": "./embeddings/zhipuai.d.cts",
+        "default": "./embeddings/zhipuai.d.ts"
+      },
+      "import": "./embeddings/zhipuai.js",
+      "require": "./embeddings/zhipuai.cjs"
     },
     "./llms/ai21": {
       "types": {
@@ -2320,6 +2329,10 @@
     "embeddings/voyage.js",
     "embeddings/voyage.d.ts",
     "embeddings/voyage.d.cts",
+    "embeddings/zhipuai.cjs",
+    "embeddings/zhipuai.js",
+    "embeddings/zhipuai.d.ts",
+    "embeddings/zhipuai.d.cts",
     "llms/ai21.cjs",
     "llms/ai21.js",
     "llms/ai21.d.ts",
