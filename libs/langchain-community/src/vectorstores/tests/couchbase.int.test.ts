@@ -10,13 +10,14 @@ import {
 } from "../couchbase.js";
 
 describe.skip("Couchbase vector store", () => {
-  const connectionString = process.env.DB_CONN_STR ?? "couchbase://localhost";
-  const databaseUsername = process.env.DB_USERNAME ?? "Administrator";
-  const databasePassword = process.env.DB_PASSWORD ?? "Password";
-  const bucketName = process.env.DB_BUCKET_NAME ?? "testing";
-  const scopeName = process.env.DB_SCOPE_NAME ?? "_default";
-  const collectionName = process.env.DB_COLLECTION_NAME ?? "_default";
-  const indexName = process.env.DB_INDEX_NAME ?? "vector-index";
+  const connectionString =
+    process.env.COUCHBASE_DB_CONN_STR ?? "couchbase://localhost";
+  const databaseUsername = process.env.COUCHBASE_DB_USERNAME ?? "Administrator";
+  const databasePassword = process.env.COUCHBASE_DB_PASSWORD ?? "Password";
+  const bucketName = process.env.COUCHBASE_DB_BUCKET_NAME ?? "testing";
+  const scopeName = process.env.COUCHBASE_DB_SCOPE_NAME ?? "_default";
+  const collectionName = process.env.COUCHBASE_DB_COLLECTION_NAME ?? "_default";
+  const indexName = process.env.COUCHBASE_DB_INDEX_NAME ?? "vector-index";
   const textFieldKey = "text";
   const embeddingFieldKey = "embedding";
   const isScopedIndex = true;

@@ -7,9 +7,10 @@ import { Cluster } from "couchbase";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { CharacterTextSplitter } from "langchain/text_splitter";
 
-const connectionString = process.env.DB_CONN_STR ?? "couchbase://localhost";
-const databaseUsername = process.env.DB_USERNAME ?? "Administrator";
-const databasePassword = process.env.DB_PASSWORD ?? "Password";
+const connectionString =
+  process.env.COUCHBASE_DB_CONN_STR ?? "couchbase://localhost";
+const databaseUsername = process.env.COUCHBASE_DB_USERNAME ?? "Administrator";
+const databasePassword = process.env.COUCHBASE_DB_PASSWORD ?? "Password";
 
 // Load documents from file
 const loader = new TextLoader("./state_of_the_union.txt");
