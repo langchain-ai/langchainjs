@@ -884,6 +884,15 @@
       "import": "./embeddings/ollama.js",
       "require": "./embeddings/ollama.cjs"
     },
+    "./embeddings/premai": {
+      "types": {
+        "import": "./embeddings/premai.d.ts",
+        "require": "./embeddings/premai.d.cts",
+        "default": "./embeddings/premai.d.ts"
+      },
+      "import": "./embeddings/premai.js",
+      "require": "./embeddings/premai.cjs"
+    },
     "./embeddings/tensorflow": {
       "types": {
         "import": "./embeddings/tensorflow.d.ts",
@@ -1631,6 +1640,15 @@
       "import": "./chat_models/portkey.js",
       "require": "./chat_models/portkey.cjs"
     },
+    "./chat_models/premai": {
+      "types": {
+        "import": "./chat_models/premai.d.ts",
+        "require": "./chat_models/premai.d.cts",
+        "default": "./chat_models/premai.d.ts"
+      },
+      "import": "./chat_models/premai.js",
+      "require": "./chat_models/premai.cjs"
+    },
     "./chat_models/togetherai": {
       "types": {
         "import": "./chat_models/togetherai.d.ts",
@@ -2308,6 +2326,10 @@
     "embeddings/ollama.js",
     "embeddings/ollama.d.ts",
     "embeddings/ollama.d.cts",
+    "embeddings/premai.cjs",
+    "embeddings/premai.js",
+    "embeddings/premai.d.ts",
+    "embeddings/premai.d.cts",
     "embeddings/tensorflow.cjs",
     "embeddings/tensorflow.js",
     "embeddings/tensorflow.d.ts",
@@ -2640,6 +2662,10 @@
     "chat_models/portkey.js",
     "chat_models/portkey.d.ts",
     "chat_models/portkey.d.cts",
+    "chat_models/premai.cjs",
+    "chat_models/premai.js",
+    "chat_models/premai.d.ts",
+    "chat_models/premai.d.cts",
     "chat_models/togetherai.cjs",
     "chat_models/togetherai.js",
     "chat_models/togetherai.d.ts",
