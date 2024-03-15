@@ -100,7 +100,10 @@ export function fixArrayXMLParameters(
       typeof xmlParameters[key] === "object" &&
       xmlParameters[key] !== null
     ) {
-      fixedParameters[key] = fixArrayXMLParameters(schema, xmlParameters[key]);
+      fixedParameters[key] = fixArrayXMLParameters(
+        schema.properties[key] as JsonSchema7ObjectType,
+        xmlParameters[key]
+      );
     } else {
       fixedParameters[key] = xmlParameters[key];
     }
