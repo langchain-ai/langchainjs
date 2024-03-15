@@ -20,4 +20,4 @@ jobs:
       - name: Build scripts
         run: yarn build --filter=@langchain/scripts
       - name: Check broken links
-        run: yarn workspace core_docs check-broken-links
+        run: yarn workspace core_docs check:broken-links:ci
