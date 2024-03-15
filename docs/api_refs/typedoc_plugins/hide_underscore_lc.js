@@ -115,15 +115,23 @@ function load(application) {
         const reflectionName = reflection.name;
 
         // Verify this reflection was added to the `reflectionWithoutDeprecatedTag` array
-        const reflectionWasAdded = reflectionWithoutDeprecatedTag.find((ref) => ref === reflectionName);
+        const reflectionWasAdded = reflectionWithoutDeprecatedTag.find(
+          (ref) => ref === reflectionName
+        );
         if (!reflectionWasAdded) {
           return;
         }
         // Remove the deprecated tag from the reflection
-        reflection.comment.blockTags = reflection.comment.blockTags.filter((tag) => tag.name !== "deprecated");
+        reflection.comment.blockTags = reflection.comment.blockTags.filter(
+          (tag) => tag.name !== "deprecated"
+        );
       } else {
         // No comment already existed, add a new comment with `@inheritDoc` tag
-        reflection = new DeclarationReflection(reflection.name, ReflectionKind.Class, reflection.parent).comment = new Comment(undefined, [commentTag]);
+        reflection = new DeclarationReflection(
+          reflection.name,
+          ReflectionKind.Class,
+          reflection.parent
+        ).comment = new Comment(undefined, [commentTag]);
       }
     });
   }
