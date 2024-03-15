@@ -102,7 +102,7 @@ function load(application) {
 
       if (reflection.comment) {
         // Add the inherit doc tag to all classes
-        reflection.comment.blockTags.push(commentTag);
+        // reflection.comment.blockTags.push(commentTag);
 
         // Check if the reflection contains a deprecated tag
         const deprecatedTag = reflection.comment.blockTags.find(
@@ -123,7 +123,7 @@ function load(application) {
         }
         // Remove the deprecated tag from the reflection
         reflection.comment.blockTags = reflection.comment.blockTags.filter(
-          (tag) => tag.name !== "deprecated"
+          (tag) => tag.tag !== "@deprecated"
         );
       } else {
         // No comment already existed, add a new comment with `@inheritDoc` tag
@@ -173,11 +173,14 @@ function load(application) {
 
     if (reflection.kind === ReflectionKind.Class) {
       if (reflection.comment) {
+        reflection.comment.blockTags.push(new CommentTag("@inheritDoc", []));
+
         // Check if it already contains a `@deprecated` tag
         const deprecatedTag = reflection.comment.blockTags.find(
           (tag) => tag.tag === "@deprecated"
         );
         if (!deprecatedTag) {
+          // reflection.comment.blockTags.push(new CommentTag("@inheritDoc", []));
           reflectionWithoutDeprecatedTag.push(reflection.name);
         }
       }
