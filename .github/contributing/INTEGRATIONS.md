@@ -53,7 +53,7 @@ We suggest using caret syntax (`^`) for peer dependencies to support a wider ran
 
 Please make sure all introduced dependencies are permissively licensed (MIT is recommended) and well-supported and maintained.
 
-You must also add your new entrypoint under `requiresOptionalDependency` in the [`create-entrypoints.js`](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-community/scripts/create-entrypoints.js) file to avoid breaking the build:
+You must also add your new entrypoint under `requiresOptionalDependency` in the [`langchain.config.js`](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-community/langchain.config.js) file to avoid breaking the build:
 
 ```js
 export const config = {
