@@ -199,7 +199,7 @@ export abstract class BaseChatModel<
           callOptions,
           runManagers?.[0]
         )) {
-          chunk.message.response_metadata = chunk.message.response_metadata = {
+          chunk.message.response_metadata = {
             ...chunk.generationInfo,
             ...chunk.message.response_metadata,
           };
