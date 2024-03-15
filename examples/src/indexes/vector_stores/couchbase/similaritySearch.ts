@@ -4,15 +4,21 @@ import {
   CouchbaseVectorStore,
 } from "@langchain/community/vectorstores/couchbase";
 import { Cluster } from "couchbase";
-import { readFileSync } from "fs";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { TextLoader } from "langchain/document_loaders/fs/text";
+import { CharacterTextSplitter } from "langchain/text_splitter";
 
 const connectionString = process.env.DB_CONN_STR ?? "couchbase://localhost";
 const databaseUsername = process.env.DB_USERNAME ?? "Administrator";
 const databasePassword = process.env.DB_PASSWORD ?? "Password";
 
-const text = readFileSync("state_of_the_union.txt", "utf8");
-const docs = await new RecursiveCharacterTextSplitter().createDocuments([text]);
+// Load documents from file
+const loader = new TextLoader("./state_of_the_union.txt");
+const rawDocuments = await loader.load();
+const splitter = new CharacterTextSplitter({
+  chunkSize: 500,
+  chunkOverlap: 0,
+});
+const docs = await splitter.splitDocuments(rawDocuments);
 
 const couchbaseClient = await Cluster.connect(connectionString, {
   username: databaseUsername,

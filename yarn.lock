@@ -6645,44 +6645,44 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@couchbase/couchbase-darwin-arm64-napi@npm:4.2.11":
-  version: 4.2.11
-  resolution: "@couchbase/couchbase-darwin-arm64-napi@npm:4.2.11"
+"@couchbase/couchbase-darwin-arm64-napi@npm:4.3.0":
+  version: 4.3.0
+  resolution: "@couchbase/couchbase-darwin-arm64-napi@npm:4.3.0"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@couchbase/couchbase-darwin-x64-napi@npm:4.2.11":
-  version: 4.2.11
-  resolution: "@couchbase/couchbase-darwin-x64-napi@npm:4.2.11"
+"@couchbase/couchbase-darwin-x64-napi@npm:4.3.0":
+  version: 4.3.0
+  resolution: "@couchbase/couchbase-darwin-x64-napi@npm:4.3.0"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@couchbase/couchbase-linux-arm64-napi@npm:4.2.11":
-  version: 4.2.11
-  resolution: "@couchbase/couchbase-linux-arm64-napi@npm:4.2.11"
+"@couchbase/couchbase-linux-arm64-napi@npm:4.3.0":
+  version: 4.3.0
+  resolution: "@couchbase/couchbase-linux-arm64-napi@npm:4.3.0"
   conditions: os=linux & cpu=arm64
   languageName: node
   linkType: hard
 
-"@couchbase/couchbase-linux-x64-napi@npm:4.2.11":
-  version: 4.2.11
-  resolution: "@couchbase/couchbase-linux-x64-napi@npm:4.2.11"
+"@couchbase/couchbase-linux-x64-napi@npm:4.3.0":
+  version: 4.3.0
+  resolution: "@couchbase/couchbase-linux-x64-napi@npm:4.3.0"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"@couchbase/couchbase-linuxmusl-x64-napi@npm:4.2.11":
-  version: 4.2.11
-  resolution: "@couchbase/couchbase-linuxmusl-x64-napi@npm:4.2.11"
+"@couchbase/couchbase-linuxmusl-x64-napi@npm:4.3.0":
+  version: 4.3.0
+  resolution: "@couchbase/couchbase-linuxmusl-x64-napi@npm:4.3.0"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"@couchbase/couchbase-win32-x64-napi@npm:4.2.11":
-  version: 4.2.11
-  resolution: "@couchbase/couchbase-win32-x64-napi@npm:4.2.11"
+"@couchbase/couchbase-win32-x64-napi@npm:4.3.0":
+  version: 4.3.0
+  resolution: "@couchbase/couchbase-win32-x64-napi@npm:4.3.0"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -8999,7 +8999,7 @@ __metadata:
     closevector-web: 0.1.6
     cohere-ai: ">=6.0.0"
     convex: ^1.3.1
-    couchbase: ^4.2.11
+    couchbase: ^4.3.0
     discord.js: ^14.14.1
     dotenv: ^16.0.3
     dpdm: ^3.12.0
@@ -9106,7 +9106,7 @@ __metadata:
     closevector-web: 0.1.6
     cohere-ai: "*"
     convex: ^1.3.1
-    couchbase: ^4.2.11
+    couchbase: ^4.3.0
     discord.js: ^14.14.1
     dria: ^0.0.3
     faiss-node: ^0.5.1
@@ -18776,16 +18776,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"couchbase@npm:^4.2.11":
-  version: 4.2.11
-  resolution: "couchbase@npm:4.2.11"
+"couchbase@npm:^4.3.0":
+  version: 4.3.0
+  resolution: "couchbase@npm:4.3.0"
   dependencies:
-    "@couchbase/couchbase-darwin-arm64-napi": 4.2.11
-    "@couchbase/couchbase-darwin-x64-napi": 4.2.11
-    "@couchbase/couchbase-linux-arm64-napi": 4.2.11
-    "@couchbase/couchbase-linux-x64-napi": 4.2.11
-    "@couchbase/couchbase-linuxmusl-x64-napi": 4.2.11
-    "@couchbase/couchbase-win32-x64-napi": 4.2.11
+    "@couchbase/couchbase-darwin-arm64-napi": 4.3.0
+    "@couchbase/couchbase-darwin-x64-napi": 4.3.0
+    "@couchbase/couchbase-linux-arm64-napi": 4.3.0
+    "@couchbase/couchbase-linux-x64-napi": 4.3.0
+    "@couchbase/couchbase-linuxmusl-x64-napi": 4.3.0
+    "@couchbase/couchbase-win32-x64-napi": 4.3.0
     cmake-js: ^7.2.1
     node-addon-api: ^7.0.0
   dependenciesMeta:
@@ -18801,7 +18801,7 @@ __metadata:
       optional: true
     "@couchbase/couchbase-win32-x64-napi":
       optional: true
-  checksum: f1987b8cbe1763d2f30fcd5a51ab5fb1c6c3828ab3e7fa744bc4911e091f3aac89c918960f4664d539e57ff4b2b30d1a7fe5a69c44dc02f60062794c5d45c6de
+  checksum: 99c24663cd7ab524668f26f151f92a78ecf850ddeca919b71f26eebe1134c492218639f9f491ff95e749628bd108164f78f13884e85a1de27959152247f8ecab
   languageName: node
   linkType: hard
 
@@ -21432,7 +21432,7 @@ __metadata:
     axios: ^0.26.0
     chromadb: ^1.5.3
     convex: ^1.3.1
-    couchbase: ^4.2.11
+    couchbase: ^4.3.0
     date-fns: ^3.3.1
     dotenv: ^16.0.3
     eslint: ^8.33.0
@@ -26129,7 +26129,7 @@ __metadata:
     cheerio: ^1.0.0-rc.12
     chromadb: ^1.5.3
     convex: ^1.3.1
-    couchbase: ^4.2.11
+    couchbase: ^4.3.0
     d3-dsv: ^2.0.0
     dotenv: ^16.0.3
     dpdm: ^3.12.0
@@ -26211,7 +26211,7 @@ __metadata:
     cheerio: ^1.0.0-rc.12
     chromadb: "*"
     convex: ^1.3.1
-    couchbase: ^4.2.11
+    couchbase: ^4.3.0
     d3-dsv: ^2.0.0
     epub2: ^3.0.1
     fast-xml-parser: "*"

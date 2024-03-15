@@ -32,7 +32,7 @@ For more information on connecting to the Couchbase cluster, please check the [N
 ```typescript
 import { Cluster } from "couchbase";
 
-const connectionString = "couchbase://localhost"; // valid couchbase connection string
+const connectionString = "couchbase://localhost"; // or couchbases://localhost if you are using TLS
 const dbUsername = "Administrator"; // valid database user with read access to the bucket being queried
 const dbPassword = "Password"; // password for the database user
 
@@ -139,7 +139,7 @@ We are also indexing and storing all the fields under `metadata` in the document
 }
 ```
 
-For more details on how to create an FTS index with support for Vector fields, please refer to the documentation:
+For more details on how to create a search index with support for Vector fields, please refer to the documentation:
 
 - [Couchbase Capella](https://docs.couchbase.com/cloud/search/create-search-indexes.html)
 - [Couchbase Server](https://docs.couchbase.com/server/current/search/create-search-indexes.html)
@@ -173,10 +173,12 @@ const store = await CouchbaseVectorStore.initialize(
 ## Basic Vector Search Example
 
 The following example showcases how to use couchbase vector search and perform similarity search.
-For this example, we are going to load the "state_of_the_union.txt" file via the RecursiveCharacterTextSplitter,
-create langchain documents from the chunks and send to couchbase vector store.
-After the data is indexed, we perform a simple query to find the top 4 chunks that are similar to the query "What did president say about Ketanji Brown Jackson".
-This example at the end, also shows how to get similarity score
+For this example, we are going to load the "state_of_the_union.txt" file via the TextLoader,
+chunk the text into 500 character chunks with no overlaps and index all these chunks into Couchbase.
+
+After the data is indexed, we perform a simple query to find the top 4 chunks that are similar to the
+query "What did president say about Ketanji Brown Jackson".
+At the emd, also shows how to get similarity score
 
 import SimilaritySearch from "@examples/indexes/vector_stores/couchbase/similaritySearch.ts";
 
@@ -337,9 +339,9 @@ Please refer to the documentation for more details on the available query method
 
 # Frequently Asked Questions
 
-## Question: Should I create the FTS index before creating the CouchbaseVectorStore object?
+## Question: Should I create the Search index before creating the CouchbaseVectorStore object?
 
-Yes, currently you need to create the FTS index before creating the `CouchbaseVectoreStore` object.
+Yes, currently you need to create the Search index before creating the `CouchbaseVectoreStore` object.
 
 ## Question: I am not seeing all the fields that I specified in my search results.
 
