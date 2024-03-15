@@ -104,6 +104,36 @@ test("withStructuredOutput JSON schema function calling", async () => {
   expect("number2" in result).toBe(true);
 });
 
+test("withStructuredOutput OpenAI function definition function calling", async () => {
+  const model = new ChatOpenAI({
+    temperature: 0,
+    modelName: "gpt-4-turbo-preview",
+  });
+
+  const calculatorSchema = z.object({
+    operation: z.enum(["add", "subtract", "multiply", "divide"]),
+    number1: z.number(),
+    number2: z.number(),
+  });
+  const modelWithStructuredOutput = model.withStructuredOutput({
+    name: "calculator",
+    parameters: zodToJsonSchema(calculatorSchema),
+  });
+
+  const prompt = ChatPromptTemplate.fromMessages([
+    "system",
+    `You are VERY bad at math and must always use a calculator.`,
+    "human",
+    "Please help me!! What is 2 + 2?",
+  ]);
+  const chain = prompt.pipe(modelWithStructuredOutput);
+  const result = await chain.invoke({});
+  console.log(result);
+  expect("operation" in result).toBe(true);
+  expect("number1" in result).toBe(true);
+  expect("number2" in result).toBe(true);
+});
+
 test("withStructuredOutput JSON schema JSON mode", async () => {
   const model = new ChatOpenAI({
     temperature: 0,
