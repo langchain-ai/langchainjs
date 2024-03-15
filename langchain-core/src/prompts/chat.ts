@@ -741,7 +741,7 @@ export class ChatPromptTemplate<
     return "ChatPromptTemplate";
   }
 
-  get lc_aliases() {
+  get lc_aliases(): Record<string, string> {
     return {
       promptMessages: "messages",
     };
@@ -925,12 +925,19 @@ export class ChatPromptTemplate<
    * @param promptMessages Messages to be passed to the chat model
    * @returns A new ChatPromptTemplate
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  static fromMessages<RunInput extends InputValues = any>(
+  static fromMessages<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunInput extends InputValues = any,
+    Extra extends ChatPromptTemplateInput<RunInput> = ChatPromptTemplateInput<RunInput>
+  >(
     promptMessages: (
       | ChatPromptTemplate<InputValues, string>
       | BaseMessagePromptTemplateLike
-    )[]
+    )[],
+    extra?: Omit<
+      Extra,
+      "inputVariables" | "promptMessages" | "partialVariables"
+    >
   ): ChatPromptTemplate<RunInput> {
     const flattenedMessages = promptMessages.reduce(
       (acc: Array<BaseMessagePromptTemplate | BaseMessage>, promptMessage) =>
@@ -961,7 +968,8 @@ export class ChatPromptTemplate<
         inputVariables.add(inputVariable);
       }
     }
-    return new ChatPromptTemplate<RunInput>({
+    return new this<RunInput>({
+      ...extra,
       inputVariables: [...inputVariables] as Extract<keyof RunInput, string>[],
       promptMessages: flattenedMessages,
       partialVariables: flattenedPartialVariables,
