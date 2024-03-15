@@ -113,7 +113,6 @@ export class Cohere extends LLM<CohereCallOptions> implements CohereInput {
       frequencyPenalty: options.frequencyPenalty,
       presencePenalty: options.presencePenalty,
       returnLikelihoods: options.returnLikelihoods,
-      logitBias: options.logitBias,
     };
     // Filter undefined entries
     return Object.fromEntries(
