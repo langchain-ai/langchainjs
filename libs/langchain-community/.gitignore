@@ -306,6 +306,10 @@ vectorstores/convex.cjs
 vectorstores/convex.js
 vectorstores/convex.d.ts
 vectorstores/convex.d.cts
+vectorstores/couchbase.cjs
+vectorstores/couchbase.js
+vectorstores/couchbase.d.ts
+vectorstores/couchbase.d.cts
 vectorstores/elasticsearch.cjs
 vectorstores/elasticsearch.js
 vectorstores/elasticsearch.d.ts
