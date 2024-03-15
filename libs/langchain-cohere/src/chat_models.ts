@@ -150,13 +150,12 @@ export class ChatCohere<
   invocationParams(options: this["ParsedCallOptions"]) {
     const params = {
       model: this.model,
-      preambleOverride: options.preambleOverride,
+      preamble: options.preamble,
       conversationId: options.conversationId,
       promptTruncation: options.promptTruncation,
       connectors: options.connectors,
       searchQueriesOnly: options.searchQueriesOnly,
       documents: options.documents,
-      citationQuality: options.citationQuality,
       temperature: options.temperature ?? this.temperature,
     };
     // Filter undefined entries
