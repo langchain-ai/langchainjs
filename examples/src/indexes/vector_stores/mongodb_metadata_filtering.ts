@@ -5,7 +5,7 @@ import { MongoClient } from "mongodb";
 import { sleep } from "langchain/util/time";
 
 const client = new MongoClient(process.env.MONGODB_ATLAS_URI || "");
-const namespace = "pdftochat.default";
+const namespace = "langchain.test";
 const [dbName, collectionName] = namespace.split(".");
 const collection = client.db(dbName).collection(collectionName);
 
