@@ -58,13 +58,6 @@ function load(application) {
    */
   let reflectionsToHide = [];
 
-  /**
-   * A list of reflection names which DID not contain a `@deprecated` tag
-   * before inheriting parent properties.
-   * @type {Array<string>}
-   */
-  const reflectionWithoutDeprecatedTag = [];
-
   application.converter.on(
     Converter.EVENT_CREATE_DECLARATION,
     resolveReflection
@@ -172,6 +165,7 @@ function load(application) {
         if (parent && checkParentIsDeprecated(parent)) {
           // no-op
         } else if (!isDeprecated) {
+          console.log("Adding comment tag for", reflection.name);
           reflection.comment.blockTags.push(commentTag);
         }
       } else {
