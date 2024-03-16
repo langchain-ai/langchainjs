@@ -105,7 +105,7 @@ function load(application) {
   }
 
   /**
-   * @param {Comment} comment 
+   * @param {Comment} comment
    * @returns {boolean}
    */
   const hasDeprecatedTag = (comment) => {
@@ -113,10 +113,10 @@ function load(application) {
       (tag) => tag.tag === "@deprecated"
     );
     return !!hasDeprecated;
-  }
+  };
 
   /**
-   * 
+   *
    * @param {Reflection} reflection
    * @returns {boolean} true if the parent is deprecated else false
    */
@@ -131,7 +131,7 @@ function load(application) {
       return checkParentIsDeprecated(parent);
     }
     return false;
-  }
+  };
 
   /**
    * @param {Context} _context
