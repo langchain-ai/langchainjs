@@ -124,6 +124,41 @@ const model = new ChatAnthropic({
 ```
 
   </TabItem>
+  <TabItem value="google" label="Google GenAI" default>
+
+First we'll need to install the LangChain Google GenAI integration package:
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/google-genai
+```
+
+Accessing the API requires an API key, which you can get by creating an account [here](https://ai.google.dev/tutorials/setup). Once we have a key we'll want to set it as an environment variable:
+
+```bash
+GOOGLE_API_KEY="..."
+```
+
+We can then initialize the model:
+
+```typescript
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+
+const chatModel = new ChatGoogleGenerativeAI({
+  modelName: "gemini-1.0-pro",
+});
+```
+
+If you'd prefer not to set an environment variable you can pass the key in directly via the `apiKey` named parameter when initiating the `ChatGoogleGenerativeAI` class:
+
+```typescript
+const model = new ChatGoogleGenerativeAI({
+  apiKey: "<your key here>",
+});
+```
+
+  </TabItem>
 </Tabs>
 
 These classes represent configuration for a particular model.
