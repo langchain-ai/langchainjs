@@ -33,29 +33,27 @@ Create and name a cluster when prompted, then find it under `Database`. Select `
 
 After configuring your cluster, you'll need to create an index on the collection field you want to search over.
 
-Go to the `Atlas Search` tab within your cluster, then create a plain `Atlas Search` index (not an `Atlas Vector Search` Index!)
-using the JSON editor option.
+Switch to the `Atlas Search` tab and click `Create Search Index`. From there, make sure you select `Atlas Vector Search - JSON Editor`,
+then select the appropriate database and collection and paste the following into the textbox:
+
+```json
+{
+  "fields": [
+    {
+      "numDimensions": 1024,
+      "path": "embedding",
+      "similarity": "euclidean",
+      "type": "vector"
+    }
+  ]
+}
+```
 
 Note that the `dimensions` property should match the dimensionality of the embeddings you are using.
 For example, Cohere embeddings have 1024 dimensions, and by default OpenAI embeddings have 1536:
 
-```json
-{
-  "mappings": {
-    "fields": {
-      "embedding": [
-        {
-          "dimensions": 1024,
-          "similarity": "euclidean",
-          "type": "knnVector"
-        }
-      ]
-    }
-  }
-}
-```
-
-**Note:** By default the vector store expects an index name of `default`, an indexed collection field name of `embedding`, and a raw text field name of `text`. You should initialize the vector store with field names matching your collection schema as shown below.
+**Note:** By default the vector store expects an index name of `default`, an indexed collection field name of `embedding`, and a raw text field name of `text`.
+You should initialize the vector store with field names matching your index name collection schema as shown below.
 
 Finally, proceed to build the index.
 
@@ -87,3 +85,34 @@ import Search from "@examples/indexes/vector_stores/mongodb_atlas_search.ts";
 import MMRExample from "@examples/indexes/vector_stores/mongodb_mmr.ts";
 
 <CodeBlock language="typescript">{MMRExample}</CodeBlock>
+
+### Metadata filtering
+
+MongoDB Atlas supports pre-filtering of results on other fields. They require you to define which metadata fields
+you plan to filter on by updating the index. Here's an example:
+
+```json
+{
+  "fields": [
+    {
+      "numDimensions": 1024,
+      "path": "embedding",
+      "similarity": "euclidean",
+      "type": "vector"
+    },
+    {
+      "path": "docstore_document_id",
+      "type": "filter"
+    }
+  ]
+}
+```
+
+Above, the first item in `fields` is the vector index, and the second item is the metadata property you want to filter on.
+The name of the property is `path`, so the above index would allow us to search on a metadata field named `docstore_document_id`.
+
+Then, in your code you can use [MQL Query Operators](https://www.mongodb.com/docs/manual/reference/operator/query/) for filtering. Here's an example:
+
+import MetadataExample from "@examples/indexes/vector_stores/mongodb_metadata_filtering.ts";
+
+<CodeBlock language="typescript">{MetadataExample}</CodeBlock>
