@@ -97,43 +97,6 @@ function load(application) {
     }
 
     const allClasses = project.getReflectionsByKind(ReflectionKind.Class);
-    allClasses.forEach((reflection) => {
-      const commentTag = new CommentTag("@inheritDoc", []);
-
-      if (reflection.comment) {
-        // Add the inherit doc tag to all classes
-        // reflection.comment.blockTags.push(commentTag);
-
-        // Check if the reflection contains a deprecated tag
-        const deprecatedTag = reflection.comment.blockTags.find(
-          (tag) => tag.tag === "@deprecated"
-        );
-        if (!deprecatedTag) {
-          return;
-        }
-
-        const reflectionName = reflection.name;
-
-        // Verify this reflection was added to the `reflectionWithoutDeprecatedTag` array
-        const reflectionWasAdded = reflectionWithoutDeprecatedTag.find(
-          (ref) => ref === reflectionName
-        );
-        if (!reflectionWasAdded) {
-          return;
-        }
-        // Remove the deprecated tag from the reflection
-        reflection.comment.blockTags = reflection.comment.blockTags.filter(
-          (tag) => tag.tag !== "@deprecated"
-        );
-      } else {
-        // No comment already existed, add a new comment with `@inheritDoc` tag
-        reflection = new DeclarationReflection(
-          reflection.name,
-          ReflectionKind.Class,
-          reflection.parent
-        ).comment = new Comment(undefined, [commentTag]);
-      }
-    });
   }
 
   /**
@@ -172,17 +135,22 @@ function load(application) {
     }
 
     if (reflection.kind === ReflectionKind.Class) {
+      const commentTag = new CommentTag("@inheritDoc", []);
       if (reflection.comment) {
-        reflection.comment.blockTags.push(new CommentTag("@inheritDoc", []));
-
         // Check if it already contains a `@deprecated` tag
         const deprecatedTag = reflection.comment.blockTags.find(
           (tag) => tag.tag === "@deprecated"
         );
         if (!deprecatedTag) {
-          // reflection.comment.blockTags.push(new CommentTag("@inheritDoc", []));
-          reflectionWithoutDeprecatedTag.push(reflection.name);
+          reflection.comment.blockTags.push(commentTag);
         }
+      } else {
+        // No comment already existed, add a new comment with `@inheritDoc` tag
+        reflection = new DeclarationReflection(
+          reflection.name,
+          ReflectionKind.Class,
+          reflection.parent
+        ).comment = new Comment(undefined, [commentTag]);
       }
     }
   }
