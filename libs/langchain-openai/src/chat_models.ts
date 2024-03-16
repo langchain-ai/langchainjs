@@ -730,14 +730,21 @@ export class ChatOpenAI<
           );
         }
         if (openAIMessage.additional_kwargs.function_call?.arguments) {
-          count += await this.getNumTokens(
-            // Remove newlines and spaces
-            JSON.stringify(
-              JSON.parse(
-                openAIMessage.additional_kwargs.function_call?.arguments
+          try {
+            count += await this.getNumTokens(
+              // Remove newlines and spaces
+              JSON.stringify(
+                JSON.parse(
+                  openAIMessage.additional_kwargs.function_call?.arguments
+                )
               )
-            )
-          );
+            );
+          } catch (error) {
+            console.error("Error parsing function arguments", error, JSON.stringify(openAIMessage.additional_kwargs.function_call));
+            count += await this.getNumTokens(
+              openAIMessage.additional_kwargs.function_call?.arguments
+            );
+          }
         }
 
         totalCount += count;
