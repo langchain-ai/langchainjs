@@ -7,6 +7,7 @@ const {
   DeclarationReflection,
   RendererEvent,
   Comment,
+  Reflection,
 } = require("typedoc");
 const fs = require("fs");
 const path = require("path");
@@ -95,8 +96,6 @@ function load(application) {
     if (project && langchainVersion) {
       project.packageVersion = langchainVersion;
     }
-
-    const allClasses = project.getReflectionsByKind(ReflectionKind.Class);
   }
 
   /**
@@ -110,6 +109,35 @@ function load(application) {
       // Remove the property from documentation
       project.removeReflection(reflection);
     });
+  }
+
+  /**
+   * @param {Comment} comment 
+   * @returns {boolean}
+   */
+  const hasDeprecatedTag = (comment) => {
+    const hasDeprecated = comment.blockTags.find(
+      (tag) => tag.tag === "@deprecated"
+    );
+    return !!hasDeprecated;
+  }
+
+  /**
+   * 
+   * @param {Reflection} reflection
+   * @returns {boolean} true if the parent is deprecated else false
+   */
+  const checkParentIsDeprecated = (reflection) => {
+    if (reflection.comment) {
+      if (hasDeprecatedTag(reflection.comment)) {
+        return true;
+      }
+    }
+    const parent = reflection.parent;
+    if (parent) {
+      return checkParentIsDeprecated(parent);
+    }
+    return false;
   }
 
   /**
@@ -137,20 +165,25 @@ function load(application) {
     if (reflection.kind === ReflectionKind.Class) {
       const commentTag = new CommentTag("@inheritDoc", []);
       if (reflection.comment) {
-        // Check if it already contains a `@deprecated` tag
-        const deprecatedTag = reflection.comment.blockTags.find(
+        const isDeprecated = reflection.comment.blockTags.find(
           (tag) => tag.tag === "@deprecated"
         );
-        if (!deprecatedTag) {
+        const parent = reflection.parent;
+        if (parent && checkParentIsDeprecated(parent)) {
+          // no-op
+        } else if (!isDeprecated) {
           reflection.comment.blockTags.push(commentTag);
         }
       } else {
-        // No comment already existed, add a new comment with `@inheritDoc` tag
-        reflection = new DeclarationReflection(
-          reflection.name,
-          ReflectionKind.Class,
-          reflection.parent
-        ).comment = new Comment(undefined, [commentTag]);
+        const parent = reflection.parent;
+        if (!parent || !checkParentIsDeprecated(parent)) {
+          // No comment already existed, add a new comment with `@inheritDoc` tag
+          reflection = new DeclarationReflection(
+            reflection.name,
+            ReflectionKind.Class,
+            reflection.parent
+          ).comment = new Comment(undefined, [commentTag]);
+        }
       }
     }
   }
