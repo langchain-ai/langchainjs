@@ -404,6 +404,9 @@
     "cassandra-driver": {
       "optional": true
     },
+    "cborg": {
+      "optional": true
+    },
     "chromadb": {
       "optional": true
     },
@@ -420,6 +423,9 @@
       "optional": true
     },
     "convex": {
+      "optional": true
+    },
+    "datastore-core": {
       "optional": true
     },
     "discord.js": {
@@ -446,7 +452,13 @@
     "html-to-text": {
       "optional": true
     },
+    "interface-datastore": {
+      "optional": true
+    },
     "ioredis": {
+      "optional": true
+    },
+    "it-all": {
       "optional": true
     },
     "jsdom": {
