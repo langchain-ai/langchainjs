@@ -27,6 +27,7 @@ import {
 import type {
   BaseFunctionCallOptions,
   BaseLanguageModelInput,
+  FunctionDefinition,
   StructuredOutputMethodOptions,
   StructuredOutputMethodParams,
 } from "@langchain/core/language_models/base";
@@ -509,10 +510,18 @@ export class ChatOpenAI<
         );
         continue;
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const generationInfo: Record<string, any> = { ...newTokenIndices };
+      if (choice.finish_reason !== undefined) {
+        generationInfo.finish_reason = choice.finish_reason;
+      }
+      if (this.logprobs) {
+        generationInfo.logprobs = choice.logprobs;
+      }
       const generationChunk = new ChatGenerationChunk({
         message: chunk,
         text: chunk.content,
-        generationInfo: newTokenIndices,
+        generationInfo,
       });
       yield generationChunk;
       // eslint-disable-next-line no-void
@@ -553,6 +562,10 @@ export class ChatOpenAI<
       const stream = this._streamResponseChunks(messages, options, runManager);
       const finalChunks: Record<number, ChatGenerationChunk> = {};
       for await (const chunk of stream) {
+        chunk.message.response_metadata = {
+          ...chunk.generationInfo,
+          ...chunk.message.response_metadata,
+        };
         const index =
           (chunk.generationInfo as NewTokenIndices)?.completion ?? 0;
         if (finalChunks[index] === undefined) {
@@ -931,7 +944,7 @@ export class ChatOpenAI<
         outputParser = new JsonOutputParser<RunOutput>();
       }
     } else {
-      const functionName = name ?? "extract";
+      let functionName = name ?? "extract";
       // Is function calling
       if (isZodSchema(schema)) {
         const asJsonSchema = zodToJsonSchema(schema);
@@ -959,15 +972,26 @@ export class ChatOpenAI<
           zodSchema: schema,
         });
       } else {
+        let openAIFunctionDefinition: FunctionDefinition;
+        if (
+          typeof schema.name === "string" &&
+          typeof schema.parameters === "object" &&
+          schema.parameters != null
+        ) {
+          openAIFunctionDefinition = schema as FunctionDefinition;
+          functionName = schema.name;
+        } else {
+          openAIFunctionDefinition = {
+            name: functionName,
+            description: schema.description ?? "",
+            parameters: schema,
+          };
+        }
         llm = this.bind({
           tools: [
             {
               type: "function" as const,
-              function: {
-                name: functionName,
-                description: schema.description,
-                parameters: schema,
-              },
+              function: openAIFunctionDefinition,
             },
           ],
           tool_choice: {

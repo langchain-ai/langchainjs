@@ -1,6 +1,6 @@
 {
   "name": "@langchain/groq",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Groq integration for LangChain.js",
   "type": "module",
   "engines": {
@@ -41,7 +41,7 @@
   "dependencies": {
     "@langchain/core": "~0.1",
     "@langchain/openai": "^0.0.14",
-    "groq-sdk": "^0.3.0"
+    "groq-sdk": "^0.3.2"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",

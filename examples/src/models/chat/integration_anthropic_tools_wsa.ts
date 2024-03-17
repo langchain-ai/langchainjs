@@ -18,6 +18,12 @@ const model = new ChatAnthropicTools({
 // Pass the schema and tool name to the withStructuredOutput method
 const modelWithTool = model.withStructuredOutput(calculatorSchema);
 
+// You can also set force: false to allow the model scratchpad space.
+// This may improve reasoning capabilities.
+// const modelWithTool = model.withStructuredOutput(calculatorSchema, {
+//   force: false,
+// });
+
 const prompt = ChatPromptTemplate.fromMessages([
   [
     "system",

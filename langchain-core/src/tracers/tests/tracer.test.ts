@@ -97,6 +97,7 @@ test("Test Chat Model Run", async () => {
               "kwargs": {
                 "additional_kwargs": {},
                 "content": "Avast",
+                "response_metadata": {},
               },
               "lc": 1,
               "type": "constructor",

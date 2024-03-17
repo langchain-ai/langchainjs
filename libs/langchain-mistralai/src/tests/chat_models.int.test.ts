@@ -417,6 +417,41 @@ describe("withStructuredOutput", () => {
     expect("number2" in result).toBe(true);
   });
 
+  test("withStructuredOutput OpenAI function definition function calling", async () => {
+    const model = new ChatMistralAI({
+      temperature: 0,
+      modelName: "mistral-large",
+    });
+
+    const calculatorSchema = z
+      .object({
+        operation: z
+          .enum(["add", "subtract", "multiply", "divide"])
+          .describe("The type of operation to execute."),
+        number1: z.number().describe("The first number to operate on."),
+        number2: z.number().describe("The second number to operate on."),
+      })
+      .describe("A calculator schema");
+
+    const modelWithStructuredOutput = model.withStructuredOutput({
+      name: "calculator",
+      parameters: zodToJsonSchema(calculatorSchema),
+    });
+
+    const prompt = ChatPromptTemplate.fromMessages([
+      "system",
+      `You are VERY bad at math and must always use a calculator.`,
+      "human",
+      "Please help me!! What is 2 + 2?",
+    ]);
+    const chain = prompt.pipe(modelWithStructuredOutput);
+    const result = await chain.invoke({});
+    console.log(result);
+    expect("operation" in result).toBe(true);
+    expect("number1" in result).toBe(true);
+    expect("number2" in result).toBe(true);
+  });
+
   test("withStructuredOutput JSON schema JSON mode", async () => {
     const model = new ChatMistralAI({
       temperature: 0,
