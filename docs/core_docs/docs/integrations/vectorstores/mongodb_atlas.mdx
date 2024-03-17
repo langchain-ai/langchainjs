@@ -6,7 +6,6 @@ sidebar_class_name: node-only
 
 :::tip Compatibility
 Only available on Node.js.
-:::
 
 You can still create API routes that use MongoDB with Next.js by setting the `runtime` variable to `nodejs` like so:
 
@@ -15,6 +14,7 @@ export const runtime = "nodejs";
 ```
 
 You can read more about Edge runtimes in the Next.js documentation [here](https://nextjs.org/docs/app/building-your-application/rendering/edge-and-nodejs-runtimes).
+:::
 
 LangChain.js supports MongoDB Atlas as a vector store, and supports both standard similarity search and maximal marginal relevance search,
 which takes a combination of documents are most similar to the inputs, then reranks and optimizes for diversity.

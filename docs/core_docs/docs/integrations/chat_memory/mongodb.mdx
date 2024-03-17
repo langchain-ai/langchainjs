@@ -9,7 +9,6 @@ import CodeBlock from "@theme/CodeBlock";
 
 :::tip Compatibility
 Only available on Node.js.
-:::
 
 You can still create API routes that use MongoDB with Next.js by setting the `runtime` variable to `nodejs` like so:
 
@@ -18,6 +17,7 @@ export const runtime = "nodejs";
 ```
 
 You can read more about Edge runtimes in the Next.js documentation [here](https://nextjs.org/docs/app/building-your-application/rendering/edge-and-nodejs-runtimes).
+:::
 
 For longer-term persistence across chat sessions, you can swap out the default in-memory `chatHistory` that backs chat memory classes like `BufferMemory` for a MongoDB instance.
 
