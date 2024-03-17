@@ -8,23 +8,23 @@ import * as cborg from 'cborg'
 import { type Datastore, Key } from 'interface-datastore'
 import all from 'it-all'
 
-export interface DatastoreChatMessageHistoryInput {
+export interface IPFSDatastoreChatMessageHistoryInput {
   sessionId: string
 }
 
-export interface DatastoreChatMessageHistoryProps {
+export interface IPFSDatastoreChatMessageHistoryProps {
   datastore: Datastore;
   sessionId: string;
 }
 
-export class DatastoreChatMessageHistory extends BaseListChatMessageHistory {
+export class IPFSDatastoreChatMessageHistory extends BaseListChatMessageHistory {
   readonly lc_namespace = ['langchain', 'stores', 'message', 'datastore']
 
   readonly sessionId: string
 
   private readonly datastore: Datastore
 
-  constructor ({ datastore, sessionId }: DatastoreChatMessageHistoryProps) {
+  constructor ({ datastore, sessionId }: IPFSDatastoreChatMessageHistoryProps) {
     super({ sessionId })
 
     this.datastore = datastore

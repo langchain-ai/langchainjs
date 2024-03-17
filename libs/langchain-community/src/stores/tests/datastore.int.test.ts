@@ -4,13 +4,13 @@ import { test, expect } from "@jest/globals";
 
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { MemoryDatastore } from "datastore-core";
-import { DatastoreChatMessageHistory } from "../message/datastore.js";
+import { IPFSDatastoreChatMessageHistory } from "../message/ipfs_datastore.js";
 
-describe.skip("DatastoreChatMessageHistory", () => {
+describe.skip("IPFSDatastoreChatMessageHistory", () => {
   const datastore = new MemoryDatastore()
 
-  test("DatastoreChatMessageHistory: empty history", async () => {
-    const messageHistory = new DatastoreChatMessageHistory({
+  test("IPFSDatastoreChatMessageHistory: empty history", async () => {
+    const messageHistory = new IPFSDatastoreChatMessageHistory({
       datastore,
       sessionId: "test_session_A123"
     });
@@ -18,8 +18,8 @@ describe.skip("DatastoreChatMessageHistory", () => {
     expect(await messageHistory.getMessages()).toEqual([]);
   });
 
-  test("DatastoreChatMessageHistory: add and get messages", async () => {
-    const messageHistory = new DatastoreChatMessageHistory({
+  test("IPFSDatastoreChatMessageHistory: add and get messages", async () => {
+    const messageHistory = new IPFSDatastoreChatMessageHistory({
       datastore,
       sessionId: "test_session_B123"
     });
@@ -38,13 +38,13 @@ describe.skip("DatastoreChatMessageHistory", () => {
 
     expect(await messageHistory.getMessages()).toEqual(expectedMessages);
 
-    const messageHistoryDifferentSession = new DatastoreChatMessageHistory({
+    const messageHistoryDifferentSession = new IPFSDatastoreChatMessageHistory({
       datastore,
       sessionId: "test_session_B456"
     });
     expect(await messageHistoryDifferentSession.getMessages()).toEqual([]);
 
-    const messageHistorySameSession = new DatastoreChatMessageHistory({
+    const messageHistorySameSession = new IPFSDatastoreChatMessageHistory({
       datastore,
       sessionId: "test_session_B123",
     });
@@ -53,8 +53,8 @@ describe.skip("DatastoreChatMessageHistory", () => {
     );
   });
 
-  test("DatastoreChatMessageHistory: clear messages", async () => {
-    const messageHistory = new DatastoreChatMessageHistory({
+  test("IPFSDatastoreChatMessageHistory: clear messages", async () => {
+    const messageHistory = new IPFSDatastoreChatMessageHistory({
       datastore,
       sessionId: "test_session_C123",
     });
@@ -69,7 +69,7 @@ describe.skip("DatastoreChatMessageHistory", () => {
       new HumanMessage("We will see about that."),
     ];
 
-    const messageHistoryToClear = new DatastoreChatMessageHistory({
+    const messageHistoryToClear = new IPFSDatastoreChatMessageHistory({
       datastore,
       sessionId: "test_session_C789",
     });

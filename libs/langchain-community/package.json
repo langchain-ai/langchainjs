@@ -1939,14 +1939,14 @@
       "import": "./stores/message/cassandra.js",
       "require": "./stores/message/cassandra.cjs"
     },
-    "./stores/message/datastore": {
+    "./stores/message/ipfs_datastore": {
       "types": {
-        "import": "./stores/message/datastore.d.ts",
-        "require": "./stores/message/datastore.d.cts",
-        "default": "./stores/message/datastore.d.ts"
+        "import": "./stores/message/ipfs_datastore.d.ts",
+        "require": "./stores/message/ipfs_datastore.d.cts",
+        "default": "./stores/message/ipfs_datastore.d.ts"
       },
-      "import": "./stores/message/datastore.js",
-      "require": "./stores/message/datastore.cjs"
+      "import": "./stores/message/ipfs_datastore.js",
+      "require": "./stores/message/ipfs_datastore.cjs"
     },
     "./stores/message/cloudflare_d1": {
       "types": {
