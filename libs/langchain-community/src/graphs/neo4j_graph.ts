@@ -14,7 +14,7 @@ interface StructuredSchema {
   nodeProps: { [key: NodeType["labels"]]: NodeType["properties"] };
   relProps: { [key: RelType["type"]]: RelType["properties"] };
   relationships: PathType[];
-  metadata: {
+  metadata?: {
     constraint: Record<string, any>, 
     index: Record<string, any>
   },
