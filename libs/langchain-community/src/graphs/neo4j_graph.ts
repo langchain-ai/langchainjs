@@ -20,18 +20,24 @@ interface StructuredSchema {
   },
 }
 
-type NodeType = {
+export interface AddGraphDocumentsConfig {
+  baseEntityLabel?: boolean,
+  includeSource?: boolean,
+}
+
+export type NodeType = {
   labels: string;
   properties: { property: string; type: string }[];
 };
-type RelType = {
+
+export type RelType = {
   type: string;
   properties: { property: string; type: string }[];
 };
-type PathType = { start: string; type: string; end: string };
 
+export type PathType = { start: string; type: string; end: string };
 
-const BASE_ENTITY_LABEL = "__Entity__"
+export const BASE_ENTITY_LABEL = "__Entity__"
 
 const INCLUDE_DOCS_QUERY = `
   MERGE (d:Document {id:$document.metadata.id}) 
@@ -237,9 +243,10 @@ export class Neo4jGraph {
 
   async addGraphDocuments(
     graphDocuments: GraphDocument[],
-    includeSource: boolean = false,
-    baseEntityLabel: boolean = false
+    config: AddGraphDocumentsConfig = {}
   ): Promise<void> {
+    const { baseEntityLabel } = config;
+
     if (baseEntityLabel) {
       const constraintExists = this.structuredSchema?.metadata?.constraint?.some((el: any) => {
         return JSON.stringify(el.labelsOrTypes) === JSON.stringify([BASE_ENTITY_LABEL]) 
@@ -248,15 +255,15 @@ export class Neo4jGraph {
 
       if(!constraintExists) {
         await this.query(`
-          CREATE CONSTRAINT IF NOT EXISTS FOR (b:{BASE_ENTITY_LABEL})
+          CREATE CONSTRAINT IF NOT EXISTS FOR (b:${BASE_ENTITY_LABEL})
           REQUIRE b.id IS UNIQUE;          
         `)
         await this.refreshSchema()
       }
     }
 
-    const nodeImportQuery = getNodeImportQuery(baseEntityLabel, includeSource)
-    const relImportQuery = getRelImportQuery(baseEntityLabel)
+    const nodeImportQuery = getNodeImportQuery(config)
+    const relImportQuery = getRelImportQuery(config)
 
     for (const document of graphDocuments) {
       if (!document.source.metadata.id) {
@@ -292,9 +299,7 @@ export class Neo4jGraph {
 }
 
 
-
-
-function getNodeImportQuery(baseEntityLabel: boolean, includeSource: boolean): string {
+function getNodeImportQuery({baseEntityLabel, includeSource}: AddGraphDocumentsConfig): string {
   if (baseEntityLabel) {
       return `
           ${includeSource ? INCLUDE_DOCS_QUERY : ''}
@@ -318,7 +323,7 @@ function getNodeImportQuery(baseEntityLabel: boolean, includeSource: boolean): s
   }
 }
 
-function getRelImportQuery(baseEntityLabel: boolean): string {
+function getRelImportQuery({baseEntityLabel}: AddGraphDocumentsConfig): string {
   if (baseEntityLabel) {
       return `
           UNWIND $data AS row
