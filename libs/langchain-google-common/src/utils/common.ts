@@ -22,6 +22,8 @@ export function copyAIModelParamsInto(
   ret.stopSequences = params?.stopSequences ?? target.stopSequences;
   ret.safetySettings = params?.safetySettings ?? target.safetySettings;
 
+  ret.tools = params?.tools ?? target.tools;
+
   return ret;
 }
 

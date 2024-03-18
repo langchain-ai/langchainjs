@@ -1,4 +1,5 @@
 import type { BaseLLMParams } from "@langchain/core/language_models/llms";
+import {StructuredToolInterface} from "@langchain/core/tools";
 import type { JsonStream } from "./utils/stream.js";
 
 /**
@@ -82,6 +83,8 @@ export interface GoogleAIModelParams {
   stopSequences?: string[];
 
   safetySettings?: GoogleAISafetySetting[];
+
+  tools?: StructuredToolInterface[] | GeminiTool[]
 }
 
 export interface GoogleAIBaseLLMInput<AuthOptions>
@@ -163,8 +166,33 @@ export interface GeminiContent {
 }
 
 export interface GeminiTool {
-  // TODO: Implement
+  functionDeclarations?: GeminiFunctionDeclaration[];
 }
+
+export interface GeminiFunctionDeclaration {
+  name: string;
+  description: string;
+  parameters?: GeminiFunctionSchema;
+}
+
+export interface GeminiFunctionSchema {
+  type: GeminiFunctionSchemaType;
+  format?: string;
+  description?: string;
+  nullable?: boolean;
+  enum?: string[];
+  properties?: Record<string, GeminiFunctionSchema>;
+  required?: string[];
+  items?: GeminiFunctionSchema;
+}
+
+export type GeminiFunctionSchemaType =
+  "string" |
+  "number" |
+  "integer" |
+  "boolean" |
+  "array" |
+  "object" ;
 
 export interface GeminiGenerationConfig {
   stopSequences?: string[];

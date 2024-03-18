@@ -4,6 +4,7 @@ import {
   AsyncCallerCallOptions,
 } from "@langchain/core/utils/async_caller";
 import { getRuntimeEnvironment } from "@langchain/core/utils/env";
+import {StructuredToolInterface} from "@langchain/core/tools";
 import type {
   GoogleAIBaseLLMInput,
   GoogleAIModelParams,
@@ -16,12 +17,15 @@ import type {
   GeminiGenerationConfig,
   GeminiRequest,
   GeminiSafetySetting,
+  GeminiTool,
+  GeminiFunctionDeclaration, GeminiFunctionSchema,
 } from "./types.js";
 import {
   GoogleAbstractedClient,
   GoogleAbstractedClientOps,
   GoogleAbstractedClientOpsMethod,
 } from "./auth.js";
+import {zodToJsonSchema} from "zod-to-json-schema";
 
 export abstract class GoogleConnection<
   CallOptions extends AsyncCallerCallOptions,
@@ -277,6 +281,50 @@ export abstract class AbstractGoogleLLMConnection<
     return parameters.safetySettings ?? [];
   }
 
+  // Borrowed from the OpenAI invocation params test
+  isStructuredToolArray(
+    tools?: unknown[]
+  ): tools is StructuredToolInterface[] {
+    return (
+      tools !== undefined &&
+      tools.every((tool) =>
+        Array.isArray((tool as StructuredToolInterface).lc_namespace)
+      )
+    );
+  }
+
+  structuredToolToFunctionDeclaration(tool: StructuredToolInterface): GeminiFunctionDeclaration {
+    return {
+      name: tool.name,
+      description: tool.description,
+      parameters: zodToJsonSchema(tool.schema) as GeminiFunctionSchema,
+    }
+  }
+
+  structuredToolsToGeminiTools(tools: StructuredToolInterface[]): GeminiTool[] {
+    return [
+      {
+        functionDeclarations: tools.map(this.structuredToolToFunctionDeclaration)
+      }
+    ]
+  }
+
+  formatTools(
+    _input: MessageType,
+    parameters: GoogleAIModelParams
+  ): GeminiTool[] {
+    const tools = parameters?.tools;
+    if (!tools || tools.length === 0) {
+      return [];
+    }
+
+    if (this.isStructuredToolArray(tools)) {
+      return this.structuredToolsToGeminiTools(tools);
+    } else {
+      return tools as GeminiTool[];
+    }
+  }
+
   formatData(
     input: MessageType,
     parameters: GoogleAIModelParams
@@ -292,12 +340,16 @@ export abstract class AbstractGoogleLLMConnection<
     */
     const contents = this.formatContents(input, parameters);
     const generationConfig = this.formatGenerationConfig(input, parameters);
+    const tools = this.formatTools(input, parameters);
     const safetySettings = this.formatSafetySettings(input, parameters);
 
     const ret: GeminiRequest = {
       contents,
       generationConfig,
     };
+    if (tools && tools.length) {
+      ret.tools = tools;
+    }
     if (safetySettings && safetySettings.length) {
       ret.safetySettings = safetySettings;
     }

@@ -2,6 +2,7 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { type BaseMessage } from "@langchain/core/messages";
 import { type BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import {StructuredToolInterface} from "@langchain/core/tools";
 
 import {
   BaseChatModel,
@@ -15,7 +16,7 @@ import {
   GoogleAISafetySetting,
   GoogleConnectionParams,
   GooglePlatformType,
-  GeminiContent,
+  GeminiContent, GeminiTool,
 } from "./types.js";
 import {
   copyAIModelParams,
@@ -89,6 +90,8 @@ export abstract class ChatGoogleBase<AuthOptions>
   safetySettings: GoogleAISafetySetting[] = [];
 
   safetyHandler: GoogleAISafetyHandler;
+
+  tools: StructuredToolInterface[] | GeminiTool[];
 
   protected connection: ChatConnection<AuthOptions>;
 
