@@ -89,6 +89,7 @@ export interface GithubRepoLoaderParams extends AsyncCallerParams {
   accessToken?: string;
   ignoreFiles?: (string | RegExp)[];
   ignorePaths?: string[];
+  onlyAllowFileTypes?: string[];
   verbose?: boolean;
   /**
    * The maximum number of concurrent calls that can be made. Defaults to 2.
@@ -146,6 +147,8 @@ export class GithubRepoLoader
 
   public ignorePaths?: string[];
 
+  public onlyAllowFileTypes?: string[];
+
   private submoduleInfos: SubmoduleInfo[];
 
   constructor(
@@ -159,6 +162,7 @@ export class GithubRepoLoader
       processSubmodules = false,
       unknown = UnknownHandling.Warn,
       ignoreFiles = [],
+      onlyAllowFileTypes = [],
       ignorePaths,
       verbose = false,
       maxConcurrency = 2,
@@ -175,6 +179,7 @@ export class GithubRepoLoader
     this.initialPath = path;
     this.branch = branch;
     this.recursive = recursive;
+    this.onlyAllowFileTypes = onlyAllowFileTypes;
     // processing submodules without processing contents of other directories makes no sense
     if (processSubmodules && !recursive) {
       throw new Error(
@@ -392,6 +397,7 @@ export class GithubRepoLoader
         processSubmodules: this.processSubmodules,
         unknown: this.unknown,
         ignoreFiles: this.ignoreFiles,
+        onlyAllowFileTypes: this.onlyAllowFileTypes,
         ignorePaths: this.ignorePaths,
         verbose: this.verbose,
         maxConcurrency: this.maxConcurrency,
@@ -454,6 +460,9 @@ export class GithubRepoLoader
     }
     if (this.ignore !== undefined) {
       return this.ignore.ignores(path);
+    }
+    if (this.onlyAllowFileTypes && this.onlyAllowFileTypes.length > 0) {
+      return !this.onlyAllowFileTypes.includes(fileType);
     }
     return (
       fileType !== "dir" &&
