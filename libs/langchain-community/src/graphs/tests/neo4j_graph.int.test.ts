@@ -19,7 +19,7 @@ const TEST_DATA = [
   )
 ]
 
-describe("Neo4j Graph Tests", () => {
+describe.skip("Neo4j Graph Tests", () => {
   const url = process.env.NEO4J_URI as string;
   const username = process.env.NEO4J_USERNAME as string;
   const password = process.env.NEO4J_PASSWORD as string;
