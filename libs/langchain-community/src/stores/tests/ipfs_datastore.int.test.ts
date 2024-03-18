@@ -7,12 +7,12 @@ import { MemoryDatastore } from "datastore-core";
 import { IPFSDatastoreChatMessageHistory } from "../message/ipfs_datastore.js";
 
 describe.skip("IPFSDatastoreChatMessageHistory", () => {
-  const datastore = new MemoryDatastore()
+  const datastore = new MemoryDatastore();
 
   test("IPFSDatastoreChatMessageHistory: empty history", async () => {
     const messageHistory = new IPFSDatastoreChatMessageHistory({
       datastore,
-      sessionId: "test_session_A123"
+      sessionId: "test_session_A123",
     });
 
     expect(await messageHistory.getMessages()).toEqual([]);
@@ -21,7 +21,7 @@ describe.skip("IPFSDatastoreChatMessageHistory", () => {
   test("IPFSDatastoreChatMessageHistory: add and get messages", async () => {
     const messageHistory = new IPFSDatastoreChatMessageHistory({
       datastore,
-      sessionId: "test_session_B123"
+      sessionId: "test_session_B123",
     });
 
     await messageHistory.addUserMessage("I am a nice human.");
@@ -40,7 +40,7 @@ describe.skip("IPFSDatastoreChatMessageHistory", () => {
 
     const messageHistoryDifferentSession = new IPFSDatastoreChatMessageHistory({
       datastore,
-      sessionId: "test_session_B456"
+      sessionId: "test_session_B456",
     });
     expect(await messageHistoryDifferentSession.getMessages()).toEqual([]);
 

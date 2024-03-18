@@ -17,11 +17,10 @@ import IntegrationInstallTooltip from "@mdx_components/integration_install_toolt
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm install cborg interface-datastore it-all @langchain/community
+npm install cborg interface-datastore it-all datastore-core @langchain/community
 ```
 
-Now you can install and use an IPFS Datastore of your choice, here are some options:
-
+Now you can install and use an IPFS Datastore of your choice. Here are some options:
 
 - [datastore-core](https://github.com/ipfs/js-stores/blob/main/packages/datastore-core) Datastore in-memory implementation.
 - [datastore-fs](https://github.com/ipfs/js-stores/blob/main/packages/datastore-fs) Datastore implementation with file system backend.
@@ -33,11 +32,11 @@ Now you can install and use an IPFS Datastore of your choice, here are some opti
 
 ```typescript
 // Replace FsDatastore with the IPFS Datastore of your choice.
-import { FsDatastore } from 'datastore-fs'
-import { DatastoreChatMessageHistory } from '@langchain/community/stores/message/datastore'
+import { FsDatastore } from "datastore-fs";
+import { IPFSDatastoreChatMessageHistory } from "@langchain/community/stores/message/ifps_datastore";
 
-const datastore = new FsDatastore('path/to/store')
-const sessionId = 'my-session'
+const datastore = new FsDatastore("path/to/store");
+const sessionId = "my-session";
 
-const history = new DatastoreChatMessageHistory({ datastore, sessionId })
+const history = new IPFSDatastoreChatMessageHistory({ datastore, sessionId });
 ```
