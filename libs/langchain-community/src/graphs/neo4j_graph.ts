@@ -16,15 +16,15 @@ interface StructuredSchema {
   relationships: PathType[];
   metadata?: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    constraint: Record<string, any>, 
+    constraint: Record<string, any>;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    index: Record<string, any>
-  },
+    index: Record<string, any>;
+  };
 }
 
 export interface AddGraphDocumentsConfig {
-  baseEntityLabel?: boolean,
-  includeSource?: boolean,
+  baseEntityLabel?: boolean;
+  includeSource?: boolean;
 }
 
 export type NodeType = {
@@ -39,7 +39,7 @@ export type RelType = {
 
 export type PathType = { start: string; type: string; end: string };
 
-export const BASE_ENTITY_LABEL = "__Entity__"
+export const BASE_ENTITY_LABEL = "__Entity__";
 
 const INCLUDE_DOCS_QUERY = `
   MERGE (d:Document {id:$document.metadata.id}) 
@@ -77,8 +77,8 @@ export class Neo4jGraph {
     relationships: [],
     metadata: {
       constraint: {},
-      index: {}
-    }
+      index: {},
+    },
   };
 
   constructor({
@@ -192,9 +192,9 @@ export class Neo4jGraph {
       await this.query<{ output: PathType }>(relQuery)
     )?.map((el) => el.output);
 
-    const constraint = await this.query("SHOW CONSTRAINTS")
-    
-    const index = await this.query("SHOW INDEXES YIELD *")
+    const constraint = await this.query("SHOW CONSTRAINTS");
+
+    const index = await this.query("SHOW INDEXES YIELD *");
 
     // Structured schema similar to Python's dictionary comprehension
     this.structuredSchema = {
@@ -207,8 +207,8 @@ export class Neo4jGraph {
       relationships: relationships || [],
       metadata: {
         constraint,
-        index
-      }
+        index,
+      },
     };
 
     // Format node properties
@@ -251,26 +251,31 @@ export class Neo4jGraph {
 
     if (baseEntityLabel) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const constraintExists = this.structuredSchema?.metadata?.constraint?.some((el: any) => JSON.stringify(el.labelsOrTypes) === JSON.stringify([BASE_ENTITY_LABEL]) 
-            && JSON.stringify(el.properties) === JSON.stringify(["id"])) ?? false;
+      const constraintExists =
+        this.structuredSchema?.metadata?.constraint?.some(
+          (el: any) =>
+            JSON.stringify(el.labelsOrTypes) ===
+              JSON.stringify([BASE_ENTITY_LABEL]) &&
+            JSON.stringify(el.properties) === JSON.stringify(["id"])
+        ) ?? false;
 
       if (!constraintExists) {
         await this.query(`
           CREATE CONSTRAINT IF NOT EXISTS FOR (b:${BASE_ENTITY_LABEL})
           REQUIRE b.id IS UNIQUE;          
-        `)
-        await this.refreshSchema()
+        `);
+        await this.refreshSchema();
       }
     }
 
-    const nodeImportQuery = getNodeImportQuery(config)
-    const relImportQuery = getRelImportQuery(config)
+    const nodeImportQuery = getNodeImportQuery(config);
+    const relImportQuery = getRelImportQuery(config);
 
     for (const document of graphDocuments) {
       if (!document.source.metadata.id) {
-        document.source.metadata.id = createHash('md5')
-          .update(document.source.pageContent, 'utf-8')
-          .digest('hex');
+        document.source.metadata.id = createHash("md5")
+          .update(document.source.pageContent, "utf-8")
+          .digest("hex");
       }
 
       // Import nodes
@@ -288,47 +293,50 @@ export class Neo4jGraph {
           source_label: el.source.type,
           target: el.target.id,
           target_label: el.target.type,
-          type: el.type.replace(/ /g, '_').toUpperCase(),
+          type: el.type.replace(/ /g, "_").toUpperCase(),
           properties: el.properties,
         })),
       });
     }
   }
 
-
   async close() {
     await this.driver.close();
   }
 }
 
-
-function getNodeImportQuery({baseEntityLabel, includeSource}: AddGraphDocumentsConfig): string {
+function getNodeImportQuery({
+  baseEntityLabel,
+  includeSource,
+}: AddGraphDocumentsConfig): string {
   if (baseEntityLabel) {
-      return `
-          ${includeSource ? INCLUDE_DOCS_QUERY : ''}
+    return `
+          ${includeSource ? INCLUDE_DOCS_QUERY : ""}
           UNWIND $data AS row
           MERGE (source:\`${BASE_ENTITY_LABEL}\` {id: row.id})
           SET source += row.properties
-          ${includeSource ? 'MERGE (d)-[:MENTIONS]->(source)' : ''}
+          ${includeSource ? "MERGE (d)-[:MENTIONS]->(source)" : ""}
           WITH source, row
           CALL apoc.create.addLabels(source, [row.type]) YIELD node
           RETURN distinct 'done' AS result
       `;
   } else {
-      return `
-          ${includeSource ? INCLUDE_DOCS_QUERY : ''}
+    return `
+          ${includeSource ? INCLUDE_DOCS_QUERY : ""}
           UNWIND $data AS row
           CALL apoc.merge.node([row.type], {id: row.id},
           row.properties, {}) YIELD node
-          ${includeSource ? 'MERGE (d)-[:MENTIONS]->(node)' : ''}
+          ${includeSource ? "MERGE (d)-[:MENTIONS]->(node)" : ""}
           RETURN distinct 'done' AS result
       `;
   }
 }
 
-function getRelImportQuery({baseEntityLabel}: AddGraphDocumentsConfig): string {
+function getRelImportQuery({
+  baseEntityLabel,
+}: AddGraphDocumentsConfig): string {
   if (baseEntityLabel) {
-      return `
+    return `
           UNWIND $data AS row
           MERGE (source:\`${BASE_ENTITY_LABEL}\` {id: row.source})
           MERGE (target:\`${BASE_ENTITY_LABEL}\` {id: row.target})
@@ -338,7 +346,7 @@ function getRelImportQuery({baseEntityLabel}: AddGraphDocumentsConfig): string {
           RETURN distinct 'done'
       `;
   } else {
-      return `
+    return `
           UNWIND $data AS row
           CALL apoc.merge.node([row.source_label], {id: row.source},
           {}, {}) YIELD node as source

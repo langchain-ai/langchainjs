@@ -7,17 +7,11 @@ import { GraphDocument, Relationship, Node } from "../graph_document.js";
 
 const TEST_DATA = [
   new GraphDocument(
-      [new Node("foo", "foo"), new Node("bar", "bar")],
-      [
-          new Relationship(
-              new Node("foo", "foo"),
-              new Node("bar", "bar"),
-              "REL",
-          )
-      ],
-      new Document({pageContent: "source document"}),
-  )
-]
+    [new Node("foo", "foo"), new Node("bar", "bar")],
+    [new Relationship(new Node("foo", "foo"), new Node("bar", "bar"), "REL")],
+    new Document({ pageContent: "source document" })
+  ),
+];
 
 describe.skip("Neo4j Graph Tests", () => {
   const url = process.env.NEO4J_URI as string;
@@ -27,11 +21,11 @@ describe.skip("Neo4j Graph Tests", () => {
   let graph: Neo4jGraph;
 
   beforeEach(async () => {
-   graph = await Neo4jGraph.initialize({ url, username, password });
+    graph = await Neo4jGraph.initialize({ url, username, password });
   });
 
   afterEach(async () => {
-   await graph.close();
+    await graph.close();
   });
 
   test("Schema generation works correctly", async () => {
@@ -89,8 +83,7 @@ describe.skip("Neo4j Graph Tests", () => {
     await graph.close();
   });
 
-  test("Test that neo4j correctly import graph document.", async () => { 
-
+  test("Test that neo4j correctly import graph document.", async () => {
     expect(url).toBeDefined();
     expect(username).toBeDefined();
     expect(password).toBeDefined();
@@ -102,17 +95,16 @@ describe.skip("Neo4j Graph Tests", () => {
 
     const output = await graph.query(
       "MATCH (n) RETURN labels(n) AS label, count(*) AS count ORDER BY label"
-    )
+    );
 
     expect(output).toEqual([
       { label: ["bar"], count: "1" },
-      { label: ["foo"], count: "1" }
+      { label: ["foo"], count: "1" },
     ]);
     expect(graph.getStructuredSchema().metadata?.constraint).toEqual([]);
-  })
+  });
 
-  test("Test that neo4j correctly import graph document with source.", async () => { 
-
+  test("Test that neo4j correctly import graph document with source.", async () => {
     expect(url).toBeDefined();
     expect(username).toBeDefined();
     expect(password).toBeDefined();
@@ -127,15 +119,14 @@ describe.skip("Neo4j Graph Tests", () => {
     );
 
     expect(output).toEqual([
-        { label: ["Document"], count: "1" },
-        { label: ["bar"], count: "1" },
-        { label: ["foo"], count: "1" }
+      { label: ["Document"], count: "1" },
+      { label: ["bar"], count: "1" },
+      { label: ["foo"], count: "1" },
     ]);
     expect(graph.getStructuredSchema().metadata?.constraint).toEqual([]);
   });
 
-  test("Test that neo4j correctly import graph document with base_entity.", async () => { 
-
+  test("Test that neo4j correctly import graph document with base_entity.", async () => {
     expect(url).toBeDefined();
     expect(username).toBeDefined();
     expect(password).toBeDefined();
@@ -147,14 +138,14 @@ describe.skip("Neo4j Graph Tests", () => {
 
     const output = await graph.query(
       "MATCH (n) RETURN apoc.coll.sort(labels(n)) AS label, count(*) AS count ORDER BY label"
-    )
+    );
 
     expect(output).toEqual([
       { label: [BASE_ENTITY_LABEL, "bar"], count: "1" },
-      { label: [BASE_ENTITY_LABEL, "foo"], count: "1" }
+      { label: [BASE_ENTITY_LABEL, "foo"], count: "1" },
     ]);
     expect(graph.getStructuredSchema().metadata?.constraint).not.toEqual([]);
-  })
+  });
 
   test("Test that neo4j correctly import graph document with base_entity and source.", async () => {
     expect(url).toBeDefined();
@@ -164,11 +155,14 @@ describe.skip("Neo4j Graph Tests", () => {
     await graph.query("MATCH (n) DETACH DELETE n");
     await graph.query("CALL apoc.schema.assert({}, {})");
     await graph.refreshSchema();
-    await graph.addGraphDocuments(TEST_DATA, { baseEntityLabel: true, includeSource: true });
+    await graph.addGraphDocuments(TEST_DATA, {
+      baseEntityLabel: true,
+      includeSource: true,
+    });
 
     const output = await graph.query(
       "MATCH (n) RETURN apoc.coll.sort(labels(n)) AS label, count(*) AS count ORDER BY label"
-    )
+    );
 
     expect(output).toEqual([
       { label: ["Document"], count: "1" },
@@ -176,6 +170,5 @@ describe.skip("Neo4j Graph Tests", () => {
       { label: [BASE_ENTITY_LABEL, "foo"], count: "1" },
     ]);
     expect(graph.getStructuredSchema().metadata?.constraint).not.toEqual([]);
-  })
-
+  });
 });
