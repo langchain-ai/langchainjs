@@ -28,8 +28,7 @@ import {
   ChatGenerationChunk,
   ChatResult,
 } from "@langchain/core/outputs";
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { AxiosRequestConfig } from "axios";
+
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 
 export type RoleEnum = "user" | "assistant";
@@ -284,17 +283,20 @@ export class ChatPrem<
 
   async completionWithRetry(
     request: ChatCompletionCreateParamsStreaming,
-    options?: AxiosRequestConfig
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    options?: any
   ): Promise<AsyncIterable<ChatCompletionStreamingCompletionData>>;
 
   async completionWithRetry(
     request: ChatCompletionCreateParams,
-    options?: AxiosRequestConfig
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    options?: any
   ): Promise<CreateChatCompletionResponse>;
 
   async completionWithRetry(
     request: ChatCompletionCreateParamsStreaming,
-    options?: AxiosRequestConfig
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    options?: any
   ): Promise<
     | AsyncIterable<ChatCompletionStreamingCompletionData>
     | CreateChatCompletionResponse
