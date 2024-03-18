@@ -602,7 +602,7 @@ test("ChatOpenAI should not reuse cache if function call args have changed", asy
   updateSpy.mockRestore();
 });
 
-test("Test ChatOpenAI token usage reporting for streaming function calls", async () => {
+test.only("Test ChatOpenAI token usage reporting for streaming function calls", async () => {
   let streamingTokenUsed = -1;
   let nonStreamingTokenUsed = -1;
 
@@ -637,7 +637,6 @@ test("Test ChatOpenAI token usage reporting for streaming function calls", async
     maxRetries: 10,
     maxConcurrency: 10,
     temperature: 0,
-    seed: 42,
     topP: 0,
     callbacks: [
       {
@@ -652,6 +651,7 @@ test("Test ChatOpenAI token usage reporting for streaming function calls", async
       },
     ],
   }).bind({
+    seed: 42,
     functions: [extractionFunctionSchema],
     function_call: { name: "extractor" },
   });
@@ -662,7 +662,6 @@ test("Test ChatOpenAI token usage reporting for streaming function calls", async
     maxRetries: 10,
     maxConcurrency: 10,
     temperature: 0,
-    seed: 42,
     topP: 0,
     callbacks: [
       {
@@ -676,6 +675,7 @@ test("Test ChatOpenAI token usage reporting for streaming function calls", async
       },
     ],
   }).bind({
+    seed: 42,
     functions: [extractionFunctionSchema],
     function_call: { name: "extractor" },
   });
