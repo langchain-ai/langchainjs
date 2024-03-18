@@ -18,7 +18,9 @@ You may call them like this:
 </function_calls>
 
 Here are the tools available:
-{tools}`);
+{tools}
+
+If the schema above contains a property typed as an enum, you must only return values matching an allowed value for that enum.`);
 
 export type ToolInvocation = {
   tool_name: string;
@@ -100,7 +102,15 @@ export function fixArrayXMLParameters(
       typeof xmlParameters[key] === "object" &&
       xmlParameters[key] !== null
     ) {
-      fixedParameters[key] = fixArrayXMLParameters(schema, xmlParameters[key]);
+      fixedParameters[key] = fixArrayXMLParameters(
+        {
+          ...schema.properties[key],
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          definitions: (schema as any).definitions,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+        xmlParameters[key]
+      );
     } else {
       fixedParameters[key] = xmlParameters[key];
     }

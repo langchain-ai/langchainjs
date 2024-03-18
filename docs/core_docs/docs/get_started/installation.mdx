@@ -54,6 +54,10 @@ that these integration packages extend.
 To ensure that all integrations and their types interact with each other properly, it is important that they all use the same version of `@langchain/core`.
 The best way to guarantee this is to add a `"resolutions"` or `"overrides"` field like the following in your project's `package.json`. The name will depend on your package manager:
 
+:::tip
+The `resolutions` or `pnpm.overrides` fields for `yarn` or `pnpm` must be set in the root `package.json` file.
+:::
+
 If you are using `yarn`:
 
 ```json title="yarn package.json"

@@ -27,6 +27,7 @@ import {
 import type {
   BaseFunctionCallOptions,
   BaseLanguageModelInput,
+  FunctionDefinition,
   StructuredOutputMethodOptions,
   StructuredOutputMethodParams,
 } from "@langchain/core/language_models/base";
@@ -943,7 +944,7 @@ export class ChatOpenAI<
         outputParser = new JsonOutputParser<RunOutput>();
       }
     } else {
-      const functionName = name ?? "extract";
+      let functionName = name ?? "extract";
       // Is function calling
       if (isZodSchema(schema)) {
         const asJsonSchema = zodToJsonSchema(schema);
@@ -971,15 +972,26 @@ export class ChatOpenAI<
           zodSchema: schema,
         });
       } else {
+        let openAIFunctionDefinition: FunctionDefinition;
+        if (
+          typeof schema.name === "string" &&
+          typeof schema.parameters === "object" &&
+          schema.parameters != null
+        ) {
+          openAIFunctionDefinition = schema as FunctionDefinition;
+          functionName = schema.name;
+        } else {
+          openAIFunctionDefinition = {
+            name: functionName,
+            description: schema.description ?? "",
+            parameters: schema,
+          };
+        }
         llm = this.bind({
           tools: [
             {
               type: "function" as const,
-              function: {
-                name: functionName,
-                description: schema.description,
-                parameters: schema,
-              },
+              function: openAIFunctionDefinition,
             },
           ],
           tool_choice: {

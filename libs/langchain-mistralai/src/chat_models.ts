@@ -17,11 +17,12 @@ import {
   ToolMessageChunk,
   ChatMessageChunk,
 } from "@langchain/core/messages";
-import {
+import type {
   BaseLanguageModelInput,
-  type BaseLanguageModelCallOptions,
+  BaseLanguageModelCallOptions,
   StructuredOutputMethodParams,
   StructuredOutputMethodOptions,
+  FunctionDefinition,
 } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -603,7 +604,7 @@ export class ChatMistralAI<
         outputParser = new JsonOutputParser<RunOutput>();
       }
     } else {
-      const functionName = name ?? "extract";
+      let functionName = name ?? "extract";
       // Is function calling
       if (isZodSchema(schema)) {
         const asJsonSchema = zodToJsonSchema(schema);
@@ -626,15 +627,26 @@ export class ChatMistralAI<
           zodSchema: schema,
         });
       } else {
+        let openAIFunctionDefinition: FunctionDefinition;
+        if (
+          typeof schema.name === "string" &&
+          typeof schema.parameters === "object" &&
+          schema.parameters != null
+        ) {
+          openAIFunctionDefinition = schema as FunctionDefinition;
+          functionName = schema.name;
+        } else {
+          openAIFunctionDefinition = {
+            name: functionName,
+            description: schema.description ?? "",
+            parameters: schema,
+          };
+        }
         llm = this.bind({
           tools: [
             {
               type: "function" as const,
-              function: {
-                name: functionName,
-                description: schema.description,
-                parameters: schema,
-              },
+              function: openAIFunctionDefinition,
             },
           ],
           tool_choice: "auto",

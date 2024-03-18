@@ -12,7 +12,7 @@ Only available on Node.js.
 
 [Faiss](https://github.com/facebookresearch/faiss) is a library for efficient similarity search and clustering of dense vectors.
 
-Langchainjs supports using Faiss as a vectorstore that can be saved to file. It also provides the ability to read the saved file from [Python's implementation](https://python.langchain.com/en/latest/modules/indexes/vectorstores/examples/faiss.html#saving-and-loading).
+Langchainjs supports using Faiss as a vectorstore that can be saved to file. It also provides the ability to read the saved file from [Python's implementation](https://python.langchain.com/docs/integrations/vectorstores/faiss#saving-and-loading).
 
 ## Setup
 
@@ -22,7 +22,7 @@ Install the [faiss-node](https://github.com/ewfian/faiss-node), which is a Node.
 npm install -S faiss-node
 ```
 
-To enable the ability to read the saved file from [Python's implementation](https://python.langchain.com/en/latest/modules/indexes/vectorstores/examples/faiss.html#saving-and-loading), the [pickleparser](https://github.com/ewfian/pickleparser) also needs to install.
+To enable the ability to read the saved file from [Python's implementation](https://python.langchain.com/docs/integrations/vectorstores/faiss#saving-and-loading), the [pickleparser](https://github.com/ewfian/pickleparser) also needs to install.
 
 ```bash npm2yarn
 npm install -S pickleparser
@@ -68,7 +68,7 @@ import ExampleSave from "@examples/indexes/vector_stores/faiss_saveload.ts";
 
 <CodeBlock language="typescript">{ExampleSave}</CodeBlock>
 
-### Load the saved file from [Python's implementation](https://python.langchain.com/en/latest/modules/indexes/vectorstores/examples/faiss.html#saving-and-loading)
+### Load the saved file from [Python's implementation](https://python.langchain.com/docs/integrations/vectorstores/faiss#saving-and-loading)
 
 import ExamplePython from "@examples/indexes/vector_stores/faiss_loadfrompython.ts";
 

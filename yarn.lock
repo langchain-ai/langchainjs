@@ -6645,44 +6645,44 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@couchbase/couchbase-darwin-arm64-napi@npm:4.2.10":
-  version: 4.2.10
-  resolution: "@couchbase/couchbase-darwin-arm64-napi@npm:4.2.10"
+"@couchbase/couchbase-darwin-arm64-napi@npm:4.3.0":
+  version: 4.3.0
+  resolution: "@couchbase/couchbase-darwin-arm64-napi@npm:4.3.0"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@couchbase/couchbase-darwin-x64-napi@npm:4.2.10":
-  version: 4.2.10
-  resolution: "@couchbase/couchbase-darwin-x64-napi@npm:4.2.10"
+"@couchbase/couchbase-darwin-x64-napi@npm:4.3.0":
+  version: 4.3.0
+  resolution: "@couchbase/couchbase-darwin-x64-napi@npm:4.3.0"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@couchbase/couchbase-linux-arm64-napi@npm:4.2.10":
-  version: 4.2.10
-  resolution: "@couchbase/couchbase-linux-arm64-napi@npm:4.2.10"
+"@couchbase/couchbase-linux-arm64-napi@npm:4.3.0":
+  version: 4.3.0
+  resolution: "@couchbase/couchbase-linux-arm64-napi@npm:4.3.0"
   conditions: os=linux & cpu=arm64
   languageName: node
   linkType: hard
 
-"@couchbase/couchbase-linux-x64-napi@npm:4.2.10":
-  version: 4.2.10
-  resolution: "@couchbase/couchbase-linux-x64-napi@npm:4.2.10"
+"@couchbase/couchbase-linux-x64-napi@npm:4.3.0":
+  version: 4.3.0
+  resolution: "@couchbase/couchbase-linux-x64-napi@npm:4.3.0"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"@couchbase/couchbase-linuxmusl-x64-napi@npm:4.2.10":
-  version: 4.2.10
-  resolution: "@couchbase/couchbase-linuxmusl-x64-napi@npm:4.2.10"
+"@couchbase/couchbase-linuxmusl-x64-napi@npm:4.3.0":
+  version: 4.3.0
+  resolution: "@couchbase/couchbase-linuxmusl-x64-napi@npm:4.3.0"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"@couchbase/couchbase-win32-x64-napi@npm:4.2.10":
-  version: 4.2.10
-  resolution: "@couchbase/couchbase-win32-x64-napi@npm:4.2.10"
+"@couchbase/couchbase-win32-x64-napi@npm:4.3.0":
+  version: 4.3.0
+  resolution: "@couchbase/couchbase-win32-x64-napi@npm:4.3.0"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -8899,7 +8899,7 @@ __metadata:
     "@tsconfig/recommended": ^1.0.3
     "@typescript-eslint/eslint-plugin": ^6.12.0
     "@typescript-eslint/parser": ^6.12.0
-    cohere-ai: ^7.6.2
+    cohere-ai: ^7.8.0
     dotenv: ^16.3.1
     dpdm: ^3.12.0
     eslint: ^8.33.0
@@ -8999,6 +8999,7 @@ __metadata:
     closevector-web: 0.1.6
     cohere-ai: ">=6.0.0"
     convex: ^1.3.1
+    couchbase: ^4.3.0
     discord.js: ^14.14.1
     dotenv: ^16.0.3
     dpdm: ^3.12.0
@@ -9105,6 +9106,7 @@ __metadata:
     closevector-web: 0.1.6
     cohere-ai: "*"
     convex: ^1.3.1
+    couchbase: ^4.3.0
     discord.js: ^14.14.1
     dria: ^0.0.3
     faiss-node: ^0.5.1
@@ -9243,6 +9245,8 @@ __metadata:
     cohere-ai:
       optional: true
     convex:
+      optional: true
+    couchbase:
       optional: true
     discord.js:
       optional: true
@@ -9530,7 +9534,7 @@ __metadata:
     eslint-plugin-import: ^2.27.5
     eslint-plugin-no-instanceof: ^1.0.1
     eslint-plugin-prettier: ^4.2.1
-    groq-sdk: ^0.3.0
+    groq-sdk: ^0.3.2
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     prettier: ^2.8.3
@@ -9749,6 +9753,7 @@ __metadata:
     "@tsconfig/recommended": ^1.0.3
     "@typescript-eslint/eslint-plugin": ^6.12.0
     "@typescript-eslint/parser": ^6.12.0
+    axios: ^1.6.7
     commander: ^11.1.0
     dotenv: ^16.3.1
     dpdm: ^3.12.0
@@ -9763,6 +9768,7 @@ __metadata:
     jest-environment-node: ^29.6.4
     prettier: ^2.8.3
     release-it: ^15.10.1
+    rimraf: ^5.0.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     ts-morph: ^21.0.1
@@ -16689,7 +16695,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^1.6.5":
+"axios@npm:^1.6.5, axios@npm:^1.6.7":
   version: 1.6.7
   resolution: "axios@npm:1.6.7"
   dependencies:
@@ -18174,16 +18180,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cohere-ai@npm:^7.6.2":
-  version: 7.6.2
-  resolution: "cohere-ai@npm:7.6.2"
+"cohere-ai@npm:^7.8.0":
+  version: 7.8.0
+  resolution: "cohere-ai@npm:7.8.0"
   dependencies:
     form-data: 4.0.0
     js-base64: 3.7.2
     node-fetch: 2.7.0
     qs: 6.11.2
     url-join: 4.0.1
-  checksum: cf70c115ddc50162f9fa7df5d2d569417ab68000dc4ca1a93646c457b61f691fd91cf5f73d69fd225d8224c05c105f74d7ca5a7700e6c0f4b37df70aa3d4fb48
+  checksum: dc2f612fe209329542a45c0c600cc5eb65cce138f935e9a254c0a992000de28d298ed961acb9d58d19d84b26e981c6fa39f8ac29adb82f2ffe5495b11dc58766
   languageName: node
   linkType: hard
 
@@ -18673,6 +18679,7 @@ __metadata:
     "@docusaurus/core": 2.4.3
     "@docusaurus/preset-classic": 2.4.3
     "@docusaurus/remark-plugin-npm2yarn": 2.4.3
+    "@langchain/scripts": "workspace:*"
     "@mdx-js/react": ^1.6.22
     "@supabase/supabase-js": ^2.39.7
     "@swc/core": ^1.3.62
@@ -18772,16 +18779,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"couchbase@npm:^4.2.10":
-  version: 4.2.10
-  resolution: "couchbase@npm:4.2.10"
+"couchbase@npm:^4.3.0":
+  version: 4.3.0
+  resolution: "couchbase@npm:4.3.0"
   dependencies:
-    "@couchbase/couchbase-darwin-arm64-napi": 4.2.10
-    "@couchbase/couchbase-darwin-x64-napi": 4.2.10
-    "@couchbase/couchbase-linux-arm64-napi": 4.2.10
-    "@couchbase/couchbase-linux-x64-napi": 4.2.10
-    "@couchbase/couchbase-linuxmusl-x64-napi": 4.2.10
-    "@couchbase/couchbase-win32-x64-napi": 4.2.10
+    "@couchbase/couchbase-darwin-arm64-napi": 4.3.0
+    "@couchbase/couchbase-darwin-x64-napi": 4.3.0
+    "@couchbase/couchbase-linux-arm64-napi": 4.3.0
+    "@couchbase/couchbase-linux-x64-napi": 4.3.0
+    "@couchbase/couchbase-linuxmusl-x64-napi": 4.3.0
+    "@couchbase/couchbase-win32-x64-napi": 4.3.0
     cmake-js: ^7.2.1
     node-addon-api: ^7.0.0
   dependenciesMeta:
@@ -18797,7 +18804,7 @@ __metadata:
       optional: true
     "@couchbase/couchbase-win32-x64-napi":
       optional: true
-  checksum: 1cc4725c5f16c3173691a9e4f702e479df545473deac694f7a8627f58a63a92718824d018730b51a7d4d6a0a8e125b0ef5f3f81cf995a831b8a3adfa05e9ecc7
+  checksum: 99c24663cd7ab524668f26f151f92a78ecf850ddeca919b71f26eebe1134c492218639f9f491ff95e749628bd108164f78f13884e85a1de27959152247f8ecab
   languageName: node
   linkType: hard
 
@@ -21428,6 +21435,7 @@ __metadata:
     axios: ^0.26.0
     chromadb: ^1.5.3
     convex: ^1.3.1
+    couchbase: ^4.3.0
     date-fns: ^3.3.1
     dotenv: ^16.0.3
     eslint: ^8.33.0
@@ -23210,9 +23218,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"groq-sdk@npm:^0.3.0":
-  version: 0.3.0
-  resolution: "groq-sdk@npm:0.3.0"
+"groq-sdk@npm:^0.3.2":
+  version: 0.3.2
+  resolution: "groq-sdk@npm:0.3.2"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
@@ -23223,7 +23231,7 @@ __metadata:
     formdata-node: ^4.3.2
     node-fetch: ^2.6.7
     web-streams-polyfill: ^3.2.1
-  checksum: a56b3ee8226391e9049bc85f8edf761baebfc77d76afa5235cd7b38e8fe3a35b8039b79f4b95d8c9a4b7f283aff4f87a0c95251b748cdaf290a2683d026fb8b1
+  checksum: 78cdc02ac8e87d5c47c2857def55d14249ee1b698f11d06db01a86227716a3e4e2312224996168f7edee51992862082dd4dfcdfec54b765d698855db9971e525
   languageName: node
   linkType: hard
 
@@ -26124,7 +26132,7 @@ __metadata:
     cheerio: ^1.0.0-rc.12
     chromadb: ^1.5.3
     convex: ^1.3.1
-    couchbase: ^4.2.10
+    couchbase: ^4.3.0
     d3-dsv: ^2.0.0
     dotenv: ^16.0.3
     dpdm: ^3.12.0
@@ -26206,7 +26214,7 @@ __metadata:
     cheerio: ^1.0.0-rc.12
     chromadb: "*"
     convex: ^1.3.1
-    couchbase: ^4.2.10
+    couchbase: ^4.3.0
     d3-dsv: ^2.0.0
     epub2: ^3.0.1
     fast-xml-parser: "*"
