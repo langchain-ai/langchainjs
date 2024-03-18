@@ -3,14 +3,18 @@ import { Document } from "@langchain/core/documents";
 
 export class Node extends Serializable {
     id: string | number;
+
     type: string;
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     properties: Record<string, any>;
 
     lc_namespace = ["langchain", "graph", "document_node"];
 
     constructor(
         id: string | number,
-        type: string = "Node",
+        type = "Node",
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         properties: Record<string, any> = {}
     ) {
         super()
@@ -22,8 +26,12 @@ export class Node extends Serializable {
 
 export class Relationship extends Serializable {
     source: Node;
+
     target: Node;
+
     type: string;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     properties: Record<string, any>;
 
     lc_namespace = ["langchain", "graph", "document_relationship"];
@@ -32,6 +40,7 @@ export class Relationship extends Serializable {
         source: Node, 
         target: Node, 
         type: string, 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         properties: Record<string, any> = {}
     ) {
         super()
@@ -44,7 +53,9 @@ export class Relationship extends Serializable {
 
 export class GraphDocument extends Serializable {
     nodes: Node[];
+
     relationships: Relationship[];
+
     source: Document;
 
     lc_namespace = ["langchain", "graph", "document_node"];

@@ -1,8 +1,8 @@
 /* eslint-disable no-process-env */
 
 import { test } from "@jest/globals";
-import { BASE_ENTITY_LABEL, Neo4jGraph } from "../neo4j_graph.js";
 import { Document } from "@langchain/core/documents";
+import { BASE_ENTITY_LABEL, Neo4jGraph } from "../neo4j_graph.js";
 import { GraphDocument, Relationship, Node } from "../graph_document.js";
 
 const TEST_DATA = [
@@ -108,7 +108,7 @@ describe.skip("Neo4j Graph Tests", () => {
       { label: ["bar"], count: "1" },
       { label: ["foo"], count: "1" }
     ]);
-    expect(graph.getStructuredSchema().metadata.constraint).toEqual([]);
+    expect(graph.getStructuredSchema().metadata?.constraint).toEqual([]);
   })
 
   test("Test that neo4j correctly import graph document with source.", async () => { 
@@ -131,7 +131,7 @@ describe.skip("Neo4j Graph Tests", () => {
         { label: ["bar"], count: "1" },
         { label: ["foo"], count: "1" }
     ]);
-    expect(graph.getStructuredSchema().metadata.constraint).toEqual([]);
+    expect(graph.getStructuredSchema().metadata?.constraint).toEqual([]);
   });
 
   test("Test that neo4j correctly import graph document with base_entity.", async () => { 
@@ -153,7 +153,7 @@ describe.skip("Neo4j Graph Tests", () => {
       { label: [BASE_ENTITY_LABEL, "bar"], count: "1" },
       { label: [BASE_ENTITY_LABEL, "foo"], count: "1" }
     ]);
-    expect(graph.getStructuredSchema().metadata.constraint).not.toEqual([]);
+    expect(graph.getStructuredSchema().metadata?.constraint).not.toEqual([]);
   })
 
   test("Test that neo4j correctly import graph document with base_entity and source.", async () => {
@@ -175,7 +175,7 @@ describe.skip("Neo4j Graph Tests", () => {
       { label: [BASE_ENTITY_LABEL, "bar"], count: "1" },
       { label: [BASE_ENTITY_LABEL, "foo"], count: "1" },
     ]);
-    expect(graph.getStructuredSchema().metadata.constraint).not.toEqual([]);
+    expect(graph.getStructuredSchema().metadata?.constraint).not.toEqual([]);
   })
 
 });

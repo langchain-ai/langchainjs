@@ -15,7 +15,9 @@ interface StructuredSchema {
   relProps: { [key: RelType["type"]]: RelType["properties"] };
   relationships: PathType[];
   metadata?: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     constraint: Record<string, any>, 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     index: Record<string, any>
   },
 }
@@ -248,12 +250,11 @@ export class Neo4jGraph {
     const { baseEntityLabel } = config;
 
     if (baseEntityLabel) {
-      const constraintExists = this.structuredSchema?.metadata?.constraint?.some((el: any) => {
-        return JSON.stringify(el.labelsOrTypes) === JSON.stringify([BASE_ENTITY_LABEL]) 
-            && JSON.stringify(el.properties) === JSON.stringify(["id"])
-      }) ?? false;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const constraintExists = this.structuredSchema?.metadata?.constraint?.some((el: any) => JSON.stringify(el.labelsOrTypes) === JSON.stringify([BASE_ENTITY_LABEL]) 
+            && JSON.stringify(el.properties) === JSON.stringify(["id"])) ?? false;
 
-      if(!constraintExists) {
+      if (!constraintExists) {
         await this.query(`
           CREATE CONSTRAINT IF NOT EXISTS FOR (b:${BASE_ENTITY_LABEL})
           REQUIRE b.id IS UNIQUE;          
@@ -274,12 +275,14 @@ export class Neo4jGraph {
 
       // Import nodes
       await this.query(nodeImportQuery, {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         data: document.nodes.map((el: any) => ({ ...el })),
         document: { ...document.source },
       });
 
       // Import relationships
       await this.query(relImportQuery, {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         data: document.relationships.map((el: any) => ({
           source: el.source.id,
           source_label: el.source.type,
