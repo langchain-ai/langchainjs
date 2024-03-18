@@ -442,9 +442,9 @@ export class RedisVectorStore extends VectorStore {
   }
 
   /**
-   * Escapes all '-' characters.
-   * RediSearch considers '-' as a negative operator, hence we need
-   * to escape it
+   * Escapes all '-', ':', and '"' characters.
+   * RediSearch considers these all as special characters, so we need
+   * to escape them
    * @see https://redis.io/docs/stack/search/reference/query_syntax
    *
    * @param str
@@ -455,7 +455,7 @@ export class RedisVectorStore extends VectorStore {
   }
 
   /**
-   * Unescapes all '-' characters, returning the original string
+   * Unescapes all '-', ':', and '"' characters, returning the original string
    *
    * @param str
    * @returns
