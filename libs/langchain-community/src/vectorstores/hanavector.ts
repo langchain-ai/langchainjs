@@ -167,16 +167,11 @@ export class HanaDB extends VectorStore {
 
     /**
      * Parses a string representation of a float array and returns an array of numbers.
-     * Assumes the input string is formatted like "1.0,2.0,3.0" (without brackets).
-     * 
      * @param {string} arrayAsString - The string representation of the array.
      * @returns {number[]} An array of floats parsed from the string.
      */
     public static parseFloatArrayFromString(arrayAsString: string): number[] {
-        // Removing the leading and trailing brackets is not necessary if the input is "1.0,2.0,3.0"
-        // If your input string includes brackets, uncomment the following line:
         const arrayWithoutBrackets = arrayAsString.slice(1, -1);
-        // Use arrayWithoutBrackets.split(",") if you've uncommented the above line.
         return arrayWithoutBrackets.split(",").map(x => parseFloat(x));
     }
   
@@ -357,7 +352,7 @@ export class HanaDB extends VectorStore {
     }
 
     /**
-     * Instance method to add more texts to the vector store. This method optionally accepts pre-generated embeddings.
+     * Instance method to add more texts to the vector store. This method optionally accepts pre-generated embeddings (to-do).
      * @param texts Iterable of strings/text to add to the vector store.
      * @param metadatas Optional list of metadata corresponding to each text.
      * @param embeddings Optional pre-generated embeddings for the texts.
@@ -595,7 +590,4 @@ export class HanaDB extends VectorStore {
         const mmrDocs = mmrIndexes.map((index) => docs[index][0]);
         return mmrDocs;
     }
-
-
-
 }

@@ -2,7 +2,7 @@ import hanaClient from "@sap/hana-client";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { setTimeout } from "timers/promises";
 import { HanaDB, HanaDBArgs} from "@langchain/community/vectorstores/hanavector";
-
+import { setTimeout } from "timers/promises";
 const connectionParams = {
     host: process.env.HANA_HOST,
     port: process.env.HANA_PORT,
@@ -33,6 +33,8 @@ const docs: Document[] = [
 
 // Create a LangChain VectorStore interface for the HANA database and specify the table (collection) to use in args.
 const vectorStore = new HanaDB(embeddings, args);
+// sleep 5 seconds to make sure the table is created.
+await setTimeout(5000);
 // Delete already existing documents from the table
 await vectorStore.delete({filter : {}})
 await vectorStore.addDocuments(docs);
@@ -43,6 +45,7 @@ const filter = {"quality": "bad"};
 const query = "foobar"
 // With filtering on {"quality": "bad"}, only one document should be returned
 const results = await vectorStore.similaritySearch(query, 1, filter)
+console.log(results);
 /*
     [  {
         pageContent: "foo",
@@ -54,3 +57,7 @@ const results = await vectorStore.similaritySearch(query, 1, filter)
 await vectorStore.delete({filter : filter});
 // Now the similarity search with the same filter will return no results
 const results1 = await vectorStore.similaritySearch(query, 1, filter)
+console.log(results1);
+/*
+    []
+*/
