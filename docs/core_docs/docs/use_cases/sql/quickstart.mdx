@@ -33,21 +33,9 @@ import IntegrationInstallTooltip from "@mdx_components/integration_install_toolt
 
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
-import CodeBlock from "@theme/CodeBlock";
-
-<Tabs>
-  <TabItem value="npm" label="npm" default>
-    <CodeBlock language="bash">npm install -S langchain @langchain/community @langchain/openai</CodeBlock>
-  </TabItem>
-  <TabItem value="yarn" label="Yarn">
-    <CodeBlock language="bash">yarn add langchain @langchain/community @langchain/openai</CodeBlock>
-  </TabItem>
-  <TabItem value="pnpm" label="pnpm">
-    <CodeBlock language="bash">pnpm add langchain @langchain/community @langchain/openai</CodeBlock>
-  </TabItem>
-</Tabs>
+```bash npm2yarn
+npm i langchain @langchain/community @langchain/openai
+```
 
 We default to OpenAI models in this guide.
 
