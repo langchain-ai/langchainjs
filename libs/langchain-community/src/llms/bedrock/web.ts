@@ -249,7 +249,7 @@ export class Bedrock extends LLM implements BaseBedrockInput {
     const provider = this.model.split(".")[0];
     const bedrockMethod =
       provider === "anthropic" ||
-      rovider === "cohere" ||
+      provider === "cohere" ||
       provider === "meta" ||
       provider === "mistral"
         ? "invoke-with-response-stream"

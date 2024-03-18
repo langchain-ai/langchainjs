@@ -262,9 +262,9 @@ export class BedrockLLMInputOutputAdapter {
       if (responseBody.type === "message_start") {
         return parseMessage(responseBody.message, true);
       } else if (
-        (responseBody.type === "content_block_delta" &&
-          responseBody.delta?.type === "text_delta",
-          typeof responseBody.delta?.text === "string")
+        responseBody.type === "content_block_delta" &&
+        responseBody.delta?.type === "text_delta" &&
+        typeof responseBody.delta?.text === "string"
       ) {
         return new ChatGenerationChunk({
           message: new AIMessageChunk({
