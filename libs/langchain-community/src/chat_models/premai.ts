@@ -287,9 +287,8 @@ export class ChatPrem<
     options?: AxiosRequestConfig
   ): Promise<AsyncIterable<ChatCompletionStreamingCompletionData>>;
 
-  // @ts-expect-error - TS doesn't like the overloads
   async completionWithRetry(
-    request: ChatCompletionCreateParamsNonStreaming,
+    request: ChatCompletionCreateParams,
     options?: AxiosRequestConfig
   ): Promise<CreateChatCompletionResponse>;
 
