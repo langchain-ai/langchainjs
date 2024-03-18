@@ -90,7 +90,7 @@ test("Test ChatOpenAI tokenUsage", async () => {
     }),
   });
   const message = new HumanMessage("Hello");
-  const res = await model.call([message]);
+  const res = await model.invoke([message]);
   console.log({ res });
 
   expect(tokenUsage.promptTokens).toBeGreaterThan(0);
@@ -139,7 +139,7 @@ test("Test ChatOpenAI in streaming mode", async () => {
     ],
   });
   const message = new HumanMessage("Hello!");
-  const result = await model.call([message]);
+  const result = await model.invoke([message]);
 
   expect(nrNewTokens > 0).toBe(true);
   expect(result.content).toBe(streamedCompletion);
@@ -228,7 +228,7 @@ test("Test OpenAI with stop", async () => {
 
 test("Test OpenAI with stop in object", async () => {
   const model = new AzureChatOpenAI({ maxTokens: 5 });
-  const res = await model.call([new HumanMessage("Print hello world")], {
+  const res = await model.invoke([new HumanMessage("Print hello world")], {
     stop: ["world"],
   });
   console.log({ res });
@@ -237,14 +237,14 @@ test("Test OpenAI with stop in object", async () => {
 test("Test OpenAI with timeout in call options", async () => {
   const model = new AzureChatOpenAI({ maxTokens: 5 });
   await expect(() =>
-    model.call([new HumanMessage("Print hello world")], { timeout: 10 })
+    model.invoke([new HumanMessage("Print hello world")], { timeout: 10 })
   ).rejects.toThrow();
 }, 5000);
 
 test("Test OpenAI with timeout in call options and node adapter", async () => {
   const model = new AzureChatOpenAI({ maxTokens: 5 });
   await expect(() =>
-    model.call([new HumanMessage("Print hello world")], { timeout: 10 })
+    model.invoke([new HumanMessage("Print hello world")], { timeout: 10 })
   ).rejects.toThrow();
 }, 5000);
 
@@ -252,7 +252,7 @@ test("Test OpenAI with signal in call options", async () => {
   const model = new AzureChatOpenAI({ maxTokens: 5 });
   const controller = new AbortController();
   await expect(() => {
-    const ret = model.call([new HumanMessage("Print hello world")], {
+    const ret = model.invoke([new HumanMessage("Print hello world")], {
       signal: controller.signal,
     });
 
@@ -269,7 +269,7 @@ test("Test OpenAI with signal in call options and node adapter", async () => {
   });
   const controller = new AbortController();
   await expect(() => {
-    const ret = model.call([new HumanMessage("Print hello world")], {
+    const ret = model.invoke([new HumanMessage("Print hello world")], {
       signal: controller.signal,
     });
 

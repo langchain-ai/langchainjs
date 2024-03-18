@@ -4,7 +4,7 @@ import { OpenAIChat } from "../legacy.js";
 
 test("Test OpenAI", async () => {
   const model = new OpenAIChat({ modelName: "gpt-3.5-turbo", maxTokens: 10 });
-  const res = await model.call("Print hello world");
+  const res = await model.invoke("Print hello world");
   console.log({ res });
 });
 
@@ -16,7 +16,7 @@ test("Test OpenAI with prefix messages", async () => {
     ],
     maxTokens: 10,
   });
-  const res = await model.call("What is my name");
+  const res = await model.invoke("What is my name");
   console.log({ res });
 });
 
@@ -35,7 +35,7 @@ test("Test OpenAI in streaming mode", async () => {
       },
     }),
   });
-  const res = await model.call("Print hello world");
+  const res = await model.invoke("Print hello world");
   console.log({ res });
 
   expect(nrNewTokens > 0).toBe(true);
@@ -50,14 +50,14 @@ test("Test OpenAI with stop", async () => {
 
 test("Test OpenAI with stop in object", async () => {
   const model = new OpenAIChat({ maxTokens: 5 });
-  const res = await model.call("Print hello world", { stop: ["world"] });
+  const res = await model.invoke("Print hello world", { stop: ["world"] });
   console.log({ res });
 });
 
 test("Test OpenAI with timeout in call options", async () => {
   const model = new OpenAIChat({ maxTokens: 5 });
   await expect(() =>
-    model.call("Print hello world", {
+    model.invoke("Print hello world", {
       timeout: 10,
     })
   ).rejects.toThrow();
@@ -66,7 +66,7 @@ test("Test OpenAI with timeout in call options", async () => {
 test("Test OpenAI with timeout in call options and node adapter", async () => {
   const model = new OpenAIChat({ maxTokens: 5 });
   await expect(() =>
-    model.call("Print hello world", {
+    model.invoke("Print hello world", {
       timeout: 10,
     })
   ).rejects.toThrow();
@@ -76,7 +76,7 @@ test("Test OpenAI with signal in call options", async () => {
   const model = new OpenAIChat({ maxTokens: 5 });
   const controller = new AbortController();
   await expect(() => {
-    const ret = model.call("Print hello world", {
+    const ret = model.invoke("Print hello world", {
       signal: controller.signal,
     });
 
@@ -90,7 +90,7 @@ test("Test OpenAI with signal in call options and node adapter", async () => {
   const model = new OpenAIChat({ maxTokens: 5 });
   const controller = new AbortController();
   await expect(() => {
-    const ret = model.call("Print hello world", {
+    const ret = model.invoke("Print hello world", {
       signal: controller.signal,
     });
 

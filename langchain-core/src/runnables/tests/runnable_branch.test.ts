@@ -53,6 +53,8 @@ test("RunnableBranch handles error", async () => {
       },
     ],
   });
+  // If callbacks are backgrounded
+  await new Promise((resolve) => setTimeout(resolve, 1000));
   expect(result).toBe("branch passed");
   expect(error).toBeUndefined();
   await expect(async () => {

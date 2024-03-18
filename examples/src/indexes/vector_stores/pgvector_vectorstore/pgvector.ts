@@ -1,5 +1,8 @@
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { PGVectorStore } from "@langchain/community/vectorstores/pgvector";
+import {
+  DistanceStrategy,
+  PGVectorStore,
+} from "@langchain/community/vectorstores/pgvector";
 import { PoolConfig } from "pg";
 
 // First, follow set-up instructions at
@@ -21,6 +24,8 @@ const config = {
     contentColumnName: "content",
     metadataColumnName: "metadata",
   },
+  // supported distance strategies: cosine (default), innerProduct, or euclidean
+  distanceStrategy: "cosine" as DistanceStrategy,
 };
 
 const pgvectorStore = await PGVectorStore.initialize(

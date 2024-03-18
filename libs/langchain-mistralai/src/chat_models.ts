@@ -17,11 +17,12 @@ import {
   ToolMessageChunk,
   ChatMessageChunk,
 } from "@langchain/core/messages";
-import {
+import type {
   BaseLanguageModelInput,
-  type BaseLanguageModelCallOptions,
+  BaseLanguageModelCallOptions,
   StructuredOutputMethodParams,
   StructuredOutputMethodOptions,
+  FunctionDefinition,
 } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -39,7 +40,11 @@ import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { StructuredToolInterface } from "@langchain/core/tools";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { z } from "zod";
-import { JsonOutputParser } from "@langchain/core/output_parsers";
+import {
+  type BaseLLMOutputParser,
+  JsonOutputParser,
+  StructuredOutputParser,
+} from "@langchain/core/output_parsers";
 import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 import {
   Runnable,
@@ -332,15 +337,14 @@ export class ChatMistralAI<
     options?: this["ParsedCallOptions"]
   ): Omit<MistralAIChatCompletionOptions, "messages"> {
     const { response_format, tools, tool_choice } = options ?? {};
-    const mistralAITools: MistralAIToolInput[] =
-      tools
-        ?.map((tool) => {
-          if ("lc_namespace" in tool) {
-            return _convertStructuredToolToMistralTool([tool]);
-          }
-          return tool;
-        })
-        .flat() ?? [];
+    const mistralAITools = tools
+      ?.map((tool) => {
+        if ("lc_namespace" in tool) {
+          return _convertStructuredToolToMistralTool([tool]);
+        }
+        return tool;
+      })
+      .flat();
     const params: Omit<MistralAIChatCompletionOptions, "messages"> = {
       model: this.modelName,
       tools: mistralAITools,
@@ -588,45 +592,61 @@ export class ChatMistralAI<
       includeRaw = config?.includeRaw;
     }
     let llm: Runnable<BaseLanguageModelInput>;
-    let outputParser: JsonOutputKeyToolsParser | JsonOutputParser<RunOutput>;
+    let outputParser: BaseLLMOutputParser<RunOutput>;
 
     if (method === "jsonMode") {
       llm = this.bind({
         response_format: { type: "json_object" },
       } as Partial<CallOptions>);
-      outputParser = new JsonOutputParser<RunOutput>();
+      if (isZodSchema(schema)) {
+        outputParser = StructuredOutputParser.fromZodSchema(schema);
+      } else {
+        outputParser = new JsonOutputParser<RunOutput>();
+      }
     } else {
-      const functionName = name ?? "extract";
+      let functionName = name ?? "extract";
       // Is function calling
       if (isZodSchema(schema)) {
-        const asZodSchema = zodToJsonSchema(schema);
+        const asJsonSchema = zodToJsonSchema(schema);
         llm = this.bind({
           tools: [
             {
               type: "function" as const,
               function: {
                 name: functionName,
-                description: asZodSchema.description,
-                parameters: asZodSchema,
+                description: asJsonSchema.description,
+                parameters: asJsonSchema,
               },
             },
           ],
           tool_choice: "auto",
         } as Partial<CallOptions>);
-        outputParser = new JsonOutputKeyToolsParser<RunOutput>({
+        outputParser = new JsonOutputKeyToolsParser({
           returnSingle: true,
           keyName: functionName,
+          zodSchema: schema,
         });
       } else {
+        let openAIFunctionDefinition: FunctionDefinition;
+        if (
+          typeof schema.name === "string" &&
+          typeof schema.parameters === "object" &&
+          schema.parameters != null
+        ) {
+          openAIFunctionDefinition = schema as FunctionDefinition;
+          functionName = schema.name;
+        } else {
+          openAIFunctionDefinition = {
+            name: functionName,
+            description: schema.description ?? "",
+            parameters: schema,
+          };
+        }
         llm = this.bind({
           tools: [
             {
               type: "function" as const,
-              function: {
-                name: functionName,
-                description: schema.description,
-                parameters: schema,
-              },
+              function: openAIFunctionDefinition,
             },
           ],
           tool_choice: "auto",
@@ -674,13 +694,14 @@ export class ChatMistralAI<
 }
 
 function isZodSchema<
-  // prettier-ignore
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
+  RunOutput extends Record<string, any> = Record<string, any>
+>(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
->(input: any): input is z.ZodEffects<RunOutput> {
+  input: z.ZodType<RunOutput> | Record<string, any>
+): input is z.ZodType<RunOutput> {
   // Check for a characteristic method of Zod schemas
-  return typeof input?.parse === "function";
+  return typeof (input as z.ZodType<RunOutput>)?.parse === "function";
 }
 
 function isStructuredOutputMethodParams(

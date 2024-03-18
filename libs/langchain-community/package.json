@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.0.35",
+  "version": "0.0.40",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -39,8 +39,8 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1.41",
-    "@langchain/openai": "~0.0.14",
+    "@langchain/core": "~0.1.44",
+    "@langchain/openai": "~0.0.19",
     "flat": "^5.0.2",
     "langsmith": "~0.1.1",
     "uuid": "^9.0.0",
@@ -97,6 +97,7 @@
     "@types/flat": "^5.0.2",
     "@types/html-to-text": "^9",
     "@types/jsdom": "^21.1.1",
+    "@types/jsonwebtoken": "^9",
     "@types/lodash": "^4",
     "@types/mozilla-readability": "^0.2.1",
     "@types/pg": "^8.11.0",
@@ -121,6 +122,7 @@
     "closevector-web": "0.1.6",
     "cohere-ai": ">=6.0.0",
     "convex": "^1.3.1",
+    "couchbase": "^4.3.0",
     "discord.js": "^14.14.1",
     "dotenv": "^16.0.3",
     "dpdm": "^3.12.0",
@@ -143,6 +145,7 @@
     "jest": "^29.5.0",
     "jest-environment-node": "^29.6.4",
     "jsdom": "^22.1.0",
+    "jsonwebtoken": "^9.0.2",
     "llmonitor": "^0.5.9",
     "lodash": "^4.17.21",
     "lunary": "^0.6.11",
@@ -223,6 +226,7 @@
     "closevector-web": "0.1.6",
     "cohere-ai": "*",
     "convex": "^1.3.1",
+    "couchbase": "^4.3.0",
     "discord.js": "^14.14.1",
     "dria": "^0.0.3",
     "faiss-node": "^0.5.1",
@@ -233,6 +237,7 @@
     "html-to-text": "^9.0.5",
     "ioredis": "^5.3.2",
     "jsdom": "*",
+    "jsonwebtoken": "^9.0.2",
     "llmonitor": "^0.5.9",
     "lodash": "^4.17.21",
     "lunary": "^0.6.11",
@@ -415,6 +420,9 @@
     "convex": {
       "optional": true
     },
+    "couchbase": {
+      "optional": true
+    },
     "discord.js": {
       "optional": true
     },
@@ -443,6 +451,9 @@
       "optional": true
     },
     "jsdom": {
+      "optional": true
+    },
+    "jsonwebtoken": {
       "optional": true
     },
     "llmonitor": {
@@ -756,6 +767,15 @@
       "import": "./agents/toolkits/connery.js",
       "require": "./agents/toolkits/connery.cjs"
     },
+    "./embeddings/alibaba_tongyi": {
+      "types": {
+        "import": "./embeddings/alibaba_tongyi.d.ts",
+        "require": "./embeddings/alibaba_tongyi.d.cts",
+        "default": "./embeddings/alibaba_tongyi.d.ts"
+      },
+      "import": "./embeddings/alibaba_tongyi.js",
+      "require": "./embeddings/alibaba_tongyi.cjs"
+    },
     "./embeddings/bedrock": {
       "types": {
         "import": "./embeddings/bedrock.d.ts",
@@ -890,6 +910,15 @@
       },
       "import": "./embeddings/voyage.js",
       "require": "./embeddings/voyage.cjs"
+    },
+    "./embeddings/zhipuai": {
+      "types": {
+        "import": "./embeddings/zhipuai.d.ts",
+        "require": "./embeddings/zhipuai.d.cts",
+        "default": "./embeddings/zhipuai.d.ts"
+      },
+      "import": "./embeddings/zhipuai.js",
+      "require": "./embeddings/zhipuai.cjs"
     },
     "./llms/ai21": {
       "types": {
@@ -1187,6 +1216,15 @@
       },
       "import": "./vectorstores/convex.js",
       "require": "./vectorstores/convex.cjs"
+    },
+    "./vectorstores/couchbase": {
+      "types": {
+        "import": "./vectorstores/couchbase.d.ts",
+        "require": "./vectorstores/couchbase.d.cts",
+        "default": "./vectorstores/couchbase.d.ts"
+      },
+      "import": "./vectorstores/couchbase.js",
+      "require": "./vectorstores/couchbase.cjs"
     },
     "./vectorstores/elasticsearch": {
       "types": {
@@ -1619,6 +1657,15 @@
       },
       "import": "./chat_models/yandex.js",
       "require": "./chat_models/yandex.cjs"
+    },
+    "./chat_models/zhipuai": {
+      "types": {
+        "import": "./chat_models/zhipuai.d.ts",
+        "require": "./chat_models/zhipuai.d.cts",
+        "default": "./chat_models/zhipuai.d.ts"
+      },
+      "import": "./chat_models/zhipuai.js",
+      "require": "./chat_models/zhipuai.cjs"
     },
     "./callbacks/handlers/llmonitor": {
       "types": {
@@ -2218,6 +2265,10 @@
     "agents/toolkits/connery.js",
     "agents/toolkits/connery.d.ts",
     "agents/toolkits/connery.d.cts",
+    "embeddings/alibaba_tongyi.cjs",
+    "embeddings/alibaba_tongyi.js",
+    "embeddings/alibaba_tongyi.d.ts",
+    "embeddings/alibaba_tongyi.d.cts",
     "embeddings/bedrock.cjs",
     "embeddings/bedrock.js",
     "embeddings/bedrock.d.ts",
@@ -2278,6 +2329,10 @@
     "embeddings/voyage.js",
     "embeddings/voyage.d.ts",
     "embeddings/voyage.d.cts",
+    "embeddings/zhipuai.cjs",
+    "embeddings/zhipuai.js",
+    "embeddings/zhipuai.d.ts",
+    "embeddings/zhipuai.d.cts",
     "llms/ai21.cjs",
     "llms/ai21.js",
     "llms/ai21.d.ts",
@@ -2410,6 +2465,10 @@
     "vectorstores/convex.js",
     "vectorstores/convex.d.ts",
     "vectorstores/convex.d.cts",
+    "vectorstores/couchbase.cjs",
+    "vectorstores/couchbase.js",
+    "vectorstores/couchbase.d.ts",
+    "vectorstores/couchbase.d.cts",
     "vectorstores/elasticsearch.cjs",
     "vectorstores/elasticsearch.js",
     "vectorstores/elasticsearch.d.ts",
@@ -2602,6 +2661,10 @@
     "chat_models/yandex.js",
     "chat_models/yandex.d.ts",
     "chat_models/yandex.d.cts",
+    "chat_models/zhipuai.cjs",
+    "chat_models/zhipuai.js",
+    "chat_models/zhipuai.d.ts",
+    "chat_models/zhipuai.d.cts",
     "callbacks/handlers/llmonitor.cjs",
     "callbacks/handlers/llmonitor.js",
     "callbacks/handlers/llmonitor.d.ts",

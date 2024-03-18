@@ -7,7 +7,9 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatMistralAI } from "../chat_models.js";
 
 test("Test ChatMistralAI can invoke", async () => {
-  const model = new ChatMistralAI();
+  const model = new ChatMistralAI({
+    modelName: "mistral-tiny",
+  });
   const prompt = ChatPromptTemplate.fromMessages([
     ["system", "You are a helpful assistant"],
     ["human", "{input}"],
@@ -294,11 +296,13 @@ test("Can stream and concat responses for a complex tool", async () => {
   const toolCall = finalRes[0].additional_kwargs.tool_calls?.[0];
   expect(toolCall?.function.name).toBe("person_traits");
   const args = JSON.parse(toolCall?.function.arguments ?? "{}");
-  expect(args.name).toBeDefined();
-  expect(args.age).toBeDefined();
-  expect(args.friends.length).toBeGreaterThan(0);
-  expect(args.friendsCount).toBeDefined();
-  expect(args.areFriendsCool).toBeDefined();
+  const { person } = args;
+  expect(person).toBeDefined();
+  expect(person.name).toBeDefined();
+  expect(person.age).toBeDefined();
+  expect(person.friends.length).toBeGreaterThan(0);
+  expect(person.friendsCount).toBeDefined();
+  expect(person.areFriendsCool).toBeDefined();
 });
 
 describe("withStructuredOutput", () => {
@@ -398,6 +402,41 @@ describe("withStructuredOutput", () => {
         name: "calculator",
       }
     );
+
+    const prompt = ChatPromptTemplate.fromMessages([
+      "system",
+      `You are VERY bad at math and must always use a calculator.`,
+      "human",
+      "Please help me!! What is 2 + 2?",
+    ]);
+    const chain = prompt.pipe(modelWithStructuredOutput);
+    const result = await chain.invoke({});
+    console.log(result);
+    expect("operation" in result).toBe(true);
+    expect("number1" in result).toBe(true);
+    expect("number2" in result).toBe(true);
+  });
+
+  test("withStructuredOutput OpenAI function definition function calling", async () => {
+    const model = new ChatMistralAI({
+      temperature: 0,
+      modelName: "mistral-large",
+    });
+
+    const calculatorSchema = z
+      .object({
+        operation: z
+          .enum(["add", "subtract", "multiply", "divide"])
+          .describe("The type of operation to execute."),
+        number1: z.number().describe("The first number to operate on."),
+        number2: z.number().describe("The second number to operate on."),
+      })
+      .describe("A calculator schema");
+
+    const modelWithStructuredOutput = model.withStructuredOutput({
+      name: "calculator",
+      parameters: zodToJsonSchema(calculatorSchema),
+    });
 
     const prompt = ChatPromptTemplate.fromMessages([
       "system",

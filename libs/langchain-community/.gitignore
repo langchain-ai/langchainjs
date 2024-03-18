@@ -106,6 +106,10 @@ agents/toolkits/connery.cjs
 agents/toolkits/connery.js
 agents/toolkits/connery.d.ts
 agents/toolkits/connery.d.cts
+embeddings/alibaba_tongyi.cjs
+embeddings/alibaba_tongyi.js
+embeddings/alibaba_tongyi.d.ts
+embeddings/alibaba_tongyi.d.cts
 embeddings/bedrock.cjs
 embeddings/bedrock.js
 embeddings/bedrock.d.ts
@@ -166,6 +170,10 @@ embeddings/voyage.cjs
 embeddings/voyage.js
 embeddings/voyage.d.ts
 embeddings/voyage.d.cts
+embeddings/zhipuai.cjs
+embeddings/zhipuai.js
+embeddings/zhipuai.d.ts
+embeddings/zhipuai.d.cts
 llms/ai21.cjs
 llms/ai21.js
 llms/ai21.d.ts
@@ -298,6 +306,10 @@ vectorstores/convex.cjs
 vectorstores/convex.js
 vectorstores/convex.d.ts
 vectorstores/convex.d.cts
+vectorstores/couchbase.cjs
+vectorstores/couchbase.js
+vectorstores/couchbase.d.ts
+vectorstores/couchbase.d.cts
 vectorstores/elasticsearch.cjs
 vectorstores/elasticsearch.js
 vectorstores/elasticsearch.d.ts
@@ -490,6 +502,10 @@ chat_models/yandex.cjs
 chat_models/yandex.js
 chat_models/yandex.d.ts
 chat_models/yandex.d.cts
+chat_models/zhipuai.cjs
+chat_models/zhipuai.js
+chat_models/zhipuai.d.ts
+chat_models/zhipuai.d.cts
 callbacks/handlers/llmonitor.cjs
 callbacks/handlers/llmonitor.js
 callbacks/handlers/llmonitor.d.ts

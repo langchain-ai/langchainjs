@@ -1,6 +1,6 @@
 {
   "name": "@langchain/scripts",
-  "version": "0.0.5",
+  "version": "0.0.9",
   "description": "Shared scripts for LangChain.js",
   "type": "module",
   "engines": {
@@ -17,26 +17,31 @@
     "lc-build": "./build.js"
   },
   "scripts": {
-    "build": "yarn clean && yarn build:esm && yarn build:scripts",
+    "build": "yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/",
-    "build:watch": "node scripts/create-entrypoints.js && tsc --outDir dist/ --watch",
-    "build:scripts": "node scripts/create-entrypoints.js && node scripts/check-tree-shaking.js",
+    "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rimraf dist-cjs",
+    "build:watch": "yarn create-entrypoints && tsc --outDir dist/ --watch",
+    "build:scripts": "yarn create-entrypoints && yarn check-tree-shaking",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
     "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "yarn lint:eslint && yarn lint:dpdm",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
-    "clean": "rm -rf dist/ && NODE_OPTIONS=--max-old-space-size=4096 node scripts/create-entrypoints.js pre",
+    "clean": "rimraf .turbo/ dist/ && NODE_OPTIONS=--max-old-space-size=4096 npx tsx ./src/build.ts --config ./langchain.config.js --create-entrypoints --pre",
     "prepack": "yarn build",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
     "test:single": "NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 100000",
     "test:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
-    "format": "prettier --write \"src\" \"scripts\"",
-    "format:check": "prettier --check \"src\" \"scripts\""
+    "format": "prettier --write \"src\"",
+    "format:check": "prettier --check \"src\"",
+    "move-cjs-to-dist": "npx tsx ./src/build.ts --config ./langchain.config.js --move-cjs-dist",
+    "create-entrypoints": "npx tsx ./src/build.ts --config ./langchain.config.js --create-entrypoints",
+    "check-tree-shaking": "npx tsx ./src/build.ts --config ./langchain.config.js --tree-shaking"
   },
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
+    "axios": "^1.6.7",
     "commander": "^11.1.0",
     "glob": "^10.3.10",
     "rollup": "^4.5.2",
@@ -62,6 +67,7 @@
     "jest-environment-node": "^29.6.4",
     "prettier": "^2.8.3",
     "release-it": "^15.10.1",
+    "rimraf": "^5.0.1",
     "ts-jest": "^29.1.0"
   },
   "publishConfig": {
@@ -69,19 +75,40 @@
   },
   "exports": {
     ".": {
-      "types": "./index.d.ts",
+      "types": {
+        "import": "./index.d.ts",
+        "require": "./index.d.cts",
+        "default": "./index.d.ts"
+      },
       "import": "./index.js",
       "require": "./index.cjs"
     },
     "./build": {
-      "types": "./build.d.ts",
+      "types": {
+        "import": "./build.d.ts",
+        "require": "./build.d.cts",
+        "default": "./build.d.ts"
+      },
       "import": "./build.js",
       "require": "./build.cjs"
     },
     "./migrations": {
-      "types": "./migrations.d.ts",
+      "types": {
+        "import": "./migrations.d.ts",
+        "require": "./migrations.d.cts",
+        "default": "./migrations.d.ts"
+      },
       "import": "./migrations.js",
       "require": "./migrations.cjs"
+    },
+    "./check_broken_links": {
+      "types": {
+        "import": "./check_broken_links.d.ts",
+        "require": "./check_broken_links.d.cts",
+        "default": "./check_broken_links.d.ts"
+      },
+      "import": "./check_broken_links.js",
+      "require": "./check_broken_links.cjs"
     },
     "./package.json": "./package.json"
   },
@@ -90,11 +117,18 @@
     "index.cjs",
     "index.js",
     "index.d.ts",
+    "index.d.cts",
     "build.cjs",
     "build.js",
     "build.d.ts",
+    "build.d.cts",
     "migrations.cjs",
     "migrations.js",
-    "migrations.d.ts"
+    "migrations.d.ts",
+    "migrations.d.cts",
+    "check_broken_links.cjs",
+    "check_broken_links.js",
+    "check_broken_links.d.ts",
+    "check_broken_links.d.cts"
   ]
 }
