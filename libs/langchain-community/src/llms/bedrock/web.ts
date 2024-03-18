@@ -248,7 +248,10 @@ export class Bedrock extends LLM implements BaseBedrockInput {
   ): AsyncGenerator<GenerationChunk> {
     const provider = this.model.split(".")[0];
     const bedrockMethod =
-      provider === "anthropic" || provider === "cohere" || provider === "meta"
+      provider === "anthropic" ||
+      rovider === "cohere" ||
+      provider === "meta" ||
+      provider === "mistral"
         ? "invoke-with-response-stream"
         : "invoke";
 
@@ -274,7 +277,8 @@ export class Bedrock extends LLM implements BaseBedrockInput {
     if (
       provider === "anthropic" ||
       provider === "cohere" ||
-      provider === "meta"
+      provider === "meta" ||
+      provider === "mistral"
     ) {
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();

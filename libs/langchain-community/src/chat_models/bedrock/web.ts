@@ -353,7 +353,10 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
       this.endpointHost ?? `${service}.${this.region}.amazonaws.com`;
 
     const bedrockMethod =
-      provider === "anthropic" || provider === "cohere" || provider === "meta"
+      provider === "anthropic" ||
+      provider === "cohere" ||
+      provider === "meta" ||
+      provider === "mistral"
         ? "invoke-with-response-stream"
         : "invoke";
 
@@ -374,7 +377,8 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
     if (
       provider === "anthropic" ||
       provider === "cohere" ||
-      provider === "meta"
+      provider === "meta" ||
+      provider === "mistral"
     ) {
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
