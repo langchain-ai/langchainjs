@@ -602,7 +602,7 @@ test("ChatOpenAI should not reuse cache if function call args have changed", asy
   updateSpy.mockRestore();
 });
 
-test.only("Test ChatOpenAI token usage reporting for streaming function calls", async () => {
+test("Test ChatOpenAI token usage reporting for streaming function calls", async () => {
   let streamingTokenUsed = -1;
   let nonStreamingTokenUsed = -1;
 
