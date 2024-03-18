@@ -757,7 +757,11 @@ export class ChatOpenAI<
               )
             );
           } catch (error) {
-            console.error("Error parsing function arguments", error, JSON.stringify(openAIMessage.additional_kwargs.function_call));
+            console.error(
+              "Error parsing function arguments",
+              error,
+              JSON.stringify(openAIMessage.additional_kwargs.function_call)
+            );
             count += await this.getNumTokens(
               openAIMessage.additional_kwargs.function_call?.arguments
             );
