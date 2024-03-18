@@ -190,6 +190,11 @@ export class BedrockLLMInputOutputAdapter {
       if (bedrockMethod === "invoke-with-response-stream") {
         inputBody.stream = true;
       }
+    } else if (provider === "mistral") {
+      inputBody.prompt = prompt;
+      inputBody.max_tokens = maxTokens;
+      inputBody.temperature = temperature;
+      inputBody.stop = stopSequences;
     }
     return { ...inputBody, ...modelKwargs };
   }
@@ -239,6 +244,8 @@ export class BedrockLLMInputOutputAdapter {
       return responseBody?.generations?.[0]?.text ?? responseBody?.text ?? "";
     } else if (provider === "meta") {
       return responseBody.generation;
+    } else if (provider === "mistral") {
+      return responseBody?.outputs?.[0]?.text;
     }
 
     // I haven't been able to get a response with more than one result in it.
@@ -255,9 +262,9 @@ export class BedrockLLMInputOutputAdapter {
       if (responseBody.type === "message_start") {
         return parseMessage(responseBody.message, true);
       } else if (
-        (responseBody.type === "content_block_delta" &&
-          responseBody.delta?.type === "text_delta",
-        typeof responseBody.delta?.text === "string")
+        responseBody.type === "content_block_delta" &&
+        responseBody.delta?.type === "text_delta" &&
+        typeof responseBody.delta?.text === "string"
       ) {
         return new ChatGenerationChunk({
           message: new AIMessageChunk({

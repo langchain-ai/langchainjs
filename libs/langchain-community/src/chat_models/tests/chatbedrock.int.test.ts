@@ -21,21 +21,21 @@ import { BedrockChat } from "../bedrock/web.js";
 void testChatModel(
   "Test Bedrock chat model: Claude-v2",
   "us-east-1",
-  "anthropic.claude-v2",
+  "mistral.mistral-7b-instruct-v0:2",
   "What is your name?"
 );
 
 void testChatStreamingModel(
   "Test Bedrock chat model streaming: Claude-v2",
   "us-east-1",
-  "anthropic.claude-v2",
+  "mistral.mistral-7b-instruct-v0:2",
   "What is your name and something about yourself?"
 );
 
 void testChatHandleLLMNewToken(
   "Test Bedrock chat model HandleLLMNewToken: Claude-v2",
   "us-east-1",
-  "anthropic.claude-v2",
+  "mistral.mistral-7b-instruct-v0:2",
   "What is your name and something about yourself?"
 );
 
