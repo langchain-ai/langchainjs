@@ -451,7 +451,7 @@ export class RedisVectorStore extends VectorStore {
    * @returns
    */
   private escapeSpecialChars(str: string) {
-    return str.replaceAll("-", "\\-");
+    return str.replaceAll("-", "\\-").replaceAll(":", "\\:").replaceAll(`"`, `\\"`);
   }
 
   /**
@@ -461,7 +461,7 @@ export class RedisVectorStore extends VectorStore {
    * @returns
    */
   private unEscapeSpecialChars(str: string) {
-    return str.replaceAll("\\-", "-");
+    return str.replaceAll("\\-", "-").replaceAll("\\:", ":").replaceAll(`\\"`, `"`);
   }
 
   /**
