@@ -6,11 +6,20 @@ import { BASE_ENTITY_LABEL, Neo4jGraph } from "../neo4j_graph.js";
 import { GraphDocument, Relationship, Node } from "../graph_document.js";
 
 const TEST_DATA = [
-  new GraphDocument(
-    [new Node("foo", "foo"), new Node("bar", "bar")],
-    [new Relationship(new Node("foo", "foo"), new Node("bar", "bar"), "REL")],
-    new Document({ pageContent: "source document" })
-  ),
+  new GraphDocument({
+    nodes: [
+      new Node({ id: "foo", type: "foo" }),
+      new Node({ id: "bar", type: "bar" }),
+    ],
+    relationships: [
+      new Relationship({
+        source: new Node({ id: "foo", type: "foo" }),
+        target: new Node({ id: "bar", type: "bar" }),
+        type: "REL",
+      }),
+    ],
+    source: new Document({ pageContent: "source document" }),
+  }),
 ];
 
 describe.skip("Neo4j Graph Tests", () => {
@@ -38,7 +47,7 @@ describe.skip("Neo4j Graph Tests", () => {
 
     await graph.query(
       "CREATE (a:Actor {name:'Bruce Willis'})" +
-        "-[:ACTED_IN {roles: ['Butch Coolidge']}]->(:Movie {title: 'Pulp Fiction'})"
+      "-[:ACTED_IN {roles: ['Butch Coolidge']}]->(:Movie {title: 'Pulp Fiction'})"
     );
 
     await graph.refreshSchema();

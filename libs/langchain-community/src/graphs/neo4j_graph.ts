@@ -1,5 +1,5 @@
 import neo4j, { RoutingControl } from "neo4j-driver";
-import { createHash } from "crypto";
+import { insecureHash } from "@langchain/core/utils/hash";
 import { GraphDocument } from "./graph_document.js";
 
 interface Neo4jGraphConfig {
@@ -273,9 +273,7 @@ export class Neo4jGraph {
 
     for (const document of graphDocuments) {
       if (!document.source.metadata.id) {
-        document.source.metadata.id = createHash("md5")
-          .update(document.source.pageContent, "utf-8")
-          .digest("hex");
+        document.source.metadata.id = insecureHash(document.source.pageContent);
       }
 
       // Import nodes

@@ -11,12 +11,16 @@ export class Node extends Serializable {
 
   lc_namespace = ["langchain", "graph", "document_node"];
 
-  constructor(
-    id: string | number,
+  constructor({
+    id,
     type = "Node",
+    properties = {},
+  }: {
+    id: string | number;
+    type: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    properties: Record<string, any> = {}
-  ) {
+    properties?: Record<string, any>;
+  }) {
     super();
     this.id = id;
     this.type = type;
@@ -36,13 +40,18 @@ export class Relationship extends Serializable {
 
   lc_namespace = ["langchain", "graph", "document_relationship"];
 
-  constructor(
-    source: Node,
-    target: Node,
-    type: string,
+  constructor({
+    source,
+    target,
+    type,
+    properties = {},
+  }: {
+    source: Node;
+    target: Node;
+    type: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    properties: Record<string, any> = {}
-  ) {
+    properties?: Record<string, any>;
+  }) {
     super();
     this.source = source;
     this.target = target;
@@ -51,7 +60,7 @@ export class Relationship extends Serializable {
   }
 }
 
-export class GraphDocument extends Serializable {
+export class GraphDocument extends Document {
   nodes: Node[];
 
   relationships: Relationship[];
@@ -60,8 +69,16 @@ export class GraphDocument extends Serializable {
 
   lc_namespace = ["langchain", "graph", "document_node"];
 
-  constructor(nodes: Node[], relationships: Relationship[], source: Document) {
-    super();
+  constructor({
+    nodes,
+    relationships,
+    source,
+  }: {
+    nodes: Node[];
+    relationships: Relationship[];
+    source: Document;
+  }) {
+    super(source);
     this.nodes = nodes;
     this.relationships = relationships;
     this.source = source;
