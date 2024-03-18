@@ -20,12 +20,13 @@ import {
   Callbacks,
 } from "@langchain/core/callbacks/manager";
 import { BasePromptTemplate } from "@langchain/core/prompts";
-import {
+import type {
   BaseLanguageModelCallOptions,
   BaseLanguageModelInput,
   StructuredOutputMethodParams,
   StructuredOutputMethodOptions,
   ToolDefinition,
+  FunctionDefinition,
 } from "@langchain/core/language_models/base";
 import {
   Runnable,
@@ -356,13 +357,13 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
       name = config?.name;
       method = config?.method;
       includeRaw = config?.includeRaw;
-      force = config?.force ?? true;
+      force = config?.force ?? false;
     }
     if (method === "jsonMode") {
       throw new Error(`Anthropic only supports "functionCalling" as a method.`);
     }
 
-    const functionName = name ?? "extract";
+    let functionName = name ?? "extract";
     let outputParser: BaseLLMOutputParser<RunOutput>;
     let tools: ToolDefinition[];
     if (isZodSchema(schema)) {
@@ -383,14 +384,25 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
         zodSchema: schema,
       });
     } else {
+      let openAIFunctionDefinition: FunctionDefinition;
+      if (
+        typeof schema.name === "string" &&
+        typeof schema.parameters === "object" &&
+        schema.parameters != null
+      ) {
+        openAIFunctionDefinition = schema as FunctionDefinition;
+        functionName = schema.name;
+      } else {
+        openAIFunctionDefinition = {
+          name: functionName,
+          description: schema.description ?? "",
+          parameters: schema,
+        };
+      }
       tools = [
         {
           type: "function" as const,
-          function: {
-            name: functionName,
-            description: schema.description,
-            parameters: schema,
-          },
+          function: openAIFunctionDefinition,
         },
       ];
       outputParser = new JsonOutputKeyToolsParser<RunOutput>({
