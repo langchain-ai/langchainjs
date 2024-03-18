@@ -651,6 +651,7 @@ test("Test ChatOpenAI token usage reporting for streaming function calls", async
       },
     ],
   }).bind({
+    seed: 42,
     functions: [extractionFunctionSchema],
     function_call: { name: "extractor" },
   });
@@ -674,6 +675,7 @@ test("Test ChatOpenAI token usage reporting for streaming function calls", async
       },
     ],
   }).bind({
+    seed: 42,
     functions: [extractionFunctionSchema],
     function_call: { name: "extractor" },
   });
