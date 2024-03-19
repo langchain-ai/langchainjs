@@ -252,6 +252,12 @@ export class ChatBaiduWenxin
     } else if (this.modelName === "ERNIE-Bot-4") {
       this.apiUrl =
         "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions_pro";
+    } else if (this.modelName === "ERNIE-Speed-8K") {
+      this.apiUrl =
+        "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie_speed";
+    } else if (this.modelName === "ERNIE-Speed-128K") {
+      this.apiUrl =
+        "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie-speed-128k";
     } else {
       throw new Error(`Invalid model name: ${this.modelName}`);
     }
