@@ -33,6 +33,7 @@ export const config = {
     "tools/aws_sfn": "tools/aws_sfn",
     "tools/bingserpapi": "tools/bingserpapi",
     "tools/brave_search": "tools/brave_search",
+    "tools/calculator": "tools/calculator",
     "tools/connery": "tools/connery",
     "tools/dadjokeapi": "tools/dadjokeapi",
     "tools/discord": "tools/discord",

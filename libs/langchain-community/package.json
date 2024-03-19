@@ -41,6 +41,7 @@
   "dependencies": {
     "@langchain/core": "~0.1.44",
     "@langchain/openai": "~0.0.19",
+    "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
     "langsmith": "~0.1.1",
     "uuid": "^9.0.0",
@@ -586,6 +587,15 @@
       },
       "import": "./tools/brave_search.js",
       "require": "./tools/brave_search.cjs"
+    },
+    "./tools/calculator": {
+      "types": {
+        "import": "./tools/calculator.d.ts",
+        "require": "./tools/calculator.d.cts",
+        "default": "./tools/calculator.d.ts"
+      },
+      "import": "./tools/calculator.js",
+      "require": "./tools/calculator.cjs"
     },
     "./tools/connery": {
       "types": {
@@ -2185,6 +2195,10 @@
     "tools/brave_search.js",
     "tools/brave_search.d.ts",
     "tools/brave_search.d.cts",
+    "tools/calculator.cjs",
+    "tools/calculator.js",
+    "tools/calculator.d.ts",
+    "tools/calculator.d.cts",
     "tools/connery.cjs",
     "tools/connery.js",
     "tools/connery.d.ts",
