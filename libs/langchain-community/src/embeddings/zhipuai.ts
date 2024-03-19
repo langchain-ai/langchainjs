@@ -48,7 +48,7 @@ export class ZhipuAIEmbeddings
 {
   modelName: ZhipuAIEmbeddingsParams["modelName"] = "embedding-2";
 
-  apiKey?: string;
+  apiKey: string;
 
   stripNewLines = true;
 
@@ -84,7 +84,7 @@ export class ZhipuAIEmbeddings
     const headers = {
       Accept: "application/json",
       "Content-Type": "application/json",
-      Authorization: encodeApiKey(this.apiKey),
+      Authorization: this.apiKey,
     };
 
     return this.caller.call(async () => {
