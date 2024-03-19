@@ -59,8 +59,8 @@ export interface ChatGoogleBaseInput<AuthOptions>
     GoogleConnectionParams<AuthOptions>,
     GoogleAIModelParams,
     GoogleAISafetyParams {
-modelName?: string;
-    }
+  modelName?: string;
+}
 
 /**
  * Integration with a chat model.
