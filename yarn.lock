@@ -9510,7 +9510,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-vertexai-web@workspace:libs/langchain-google-vertexai-web":
+"@langchain/google-vertexai-web@workspace:*, @langchain/google-vertexai-web@workspace:libs/langchain-google-vertexai-web":
   version: 0.0.0-use.local
   resolution: "@langchain/google-vertexai-web@workspace:libs/langchain-google-vertexai-web"
   dependencies:
@@ -9541,7 +9541,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-vertexai@workspace:libs/langchain-google-vertexai":
+"@langchain/google-vertexai@workspace:*, @langchain/google-vertexai@workspace:libs/langchain-google-vertexai":
   version: 0.0.0-use.local
   resolution: "@langchain/google-vertexai@workspace:libs/langchain-google-vertexai"
   dependencies:
@@ -21605,6 +21605,8 @@ __metadata:
     "@langchain/core": "workspace:*"
     "@langchain/exa": "workspace:*"
     "@langchain/google-genai": "workspace:*"
+    "@langchain/google-vertexai": "workspace:*"
+    "@langchain/google-vertexai-web": "workspace:*"
     "@langchain/groq": "workspace:*"
     "@langchain/mistralai": "workspace:*"
     "@langchain/mongodb": "workspace:*"
