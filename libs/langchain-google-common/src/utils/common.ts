@@ -1,19 +1,17 @@
 import type { GoogleAIModelParams, GoogleLLMModelFamily } from "../types.js";
 import { isModelGemini, validateGeminiParams } from "./gemini.js";
 
-type GoogleAIParamsWithModelName = GoogleAIModelParams & { modelName?: string };
-
 export function copyAIModelParams(
-  params: GoogleAIParamsWithModelName | undefined
-): GoogleAIParamsWithModelName {
+  params: GoogleAIModelParams | undefined
+): GoogleAIModelParams {
   return copyAIModelParamsInto(params, {});
 }
 
 export function copyAIModelParamsInto(
-  params: GoogleAIParamsWithModelName | undefined,
-  target: GoogleAIParamsWithModelName
-): GoogleAIParamsWithModelName {
-  const ret: GoogleAIParamsWithModelName = target || {};
+  params: GoogleAIModelParams | undefined,
+  target: GoogleAIModelParams
+): GoogleAIModelParams {
+  const ret: GoogleAIModelParams = target || {};
 
   ret.model = params?.modelName ?? params?.model ?? target.model;
 
@@ -40,9 +38,9 @@ export function modelToFamily(
 }
 
 export function validateModelParams(
-  params: GoogleAIParamsWithModelName | undefined
+  params: GoogleAIModelParams | undefined
 ): void {
-  const testParams: GoogleAIParamsWithModelName = params ?? {};
+  const testParams: GoogleAIModelParams = params ?? {};
   const model = testParams.modelName ?? testParams.model;
   switch (modelToFamily(model)) {
     case "gemini":
@@ -55,9 +53,9 @@ export function validateModelParams(
 }
 
 export function copyAndValidateModelParamsInto(
-  params: GoogleAIParamsWithModelName | undefined,
-  target: GoogleAIParamsWithModelName
-): GoogleAIParamsWithModelName {
+  params: GoogleAIModelParams | undefined,
+  target: GoogleAIModelParams
+): GoogleAIModelParams {
   copyAIModelParamsInto(params, target);
   validateModelParams(target);
   return target;

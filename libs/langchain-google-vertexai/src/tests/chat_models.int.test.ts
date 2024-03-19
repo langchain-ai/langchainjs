@@ -12,11 +12,11 @@ import {
   SystemMessage,
 } from "@langchain/core/messages";
 import { ChatVertexAI } from "../chat_models.js";
-import { VertexAILLM } from "../llms.js";
+import { VertexAI } from "../llms.js";
 
 describe("GAuth Chat", () => {
   test("platform", async () => {
-    const model = new VertexAILLM();
+    const model = new VertexAI();
     expect(model.platform).toEqual("gcp");
   });
 

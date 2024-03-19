@@ -6,7 +6,7 @@ import {
   MessageContentComplex,
 } from "@langchain/core/messages";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
-import { VertexAILLM } from "../llms.js";
+import { VertexAI } from "../llms.js";
 
 const imgData = {
   blueSquare:
@@ -15,7 +15,7 @@ const imgData = {
 
 describe("Google APIKey LLM", () => {
   test("platform", async () => {
-    const model = new VertexAILLM();
+    const model = new VertexAI();
     expect(model.platform).toEqual("gai");
   });
 
@@ -23,7 +23,7 @@ describe("Google APIKey LLM", () => {
    * This test currently fails in AI Studio due to zealous safety systems
    */
   test("call", async () => {
-    const model = new VertexAILLM();
+    const model = new VertexAI();
     const res = await model.invoke("1 + 1 = ");
     if (res.length === 1) {
       expect(res).toBe("2");
@@ -34,7 +34,7 @@ describe("Google APIKey LLM", () => {
   });
 
   test("call", async () => {
-    const model = new VertexAILLM();
+    const model = new VertexAI();
     try {
       const res = await model.invoke("If the time is 1:00, what time is it?");
       expect(res.length).toBeGreaterThan(0);
@@ -46,7 +46,7 @@ describe("Google APIKey LLM", () => {
   });
 
   test("stream", async () => {
-    const model = new VertexAILLM();
+    const model = new VertexAI();
     const stream = await model.stream(
       "What is the answer to live, the universe, and everything? Be verbose."
     );
@@ -58,7 +58,7 @@ describe("Google APIKey LLM", () => {
   });
 
   test("predictMessage image", async () => {
-    const model = new VertexAILLM({
+    const model = new VertexAI({
       model: "gemini-pro-vision",
     });
     const message: MessageContentComplex[] = [
@@ -83,7 +83,7 @@ describe("Google APIKey LLM", () => {
   });
 
   test("invoke image", async () => {
-    const model = new VertexAILLM({
+    const model = new VertexAI({
       model: "gemini-pro-vision",
     });
     const message: MessageContentComplex[] = [
@@ -110,12 +110,12 @@ describe("Google APIKey LLM", () => {
 
 describe("Google WebAuth LLM", () => {
   test("platform", async () => {
-    const model = new VertexAILLM();
+    const model = new VertexAI();
     expect(model.platform).toEqual("gcp");
   });
 
   test("call", async () => {
-    const model = new VertexAILLM();
+    const model = new VertexAI();
     const res = await model.invoke("1 + 1 = ");
     if (res.length === 1) {
       expect(res).toBe("2");
@@ -126,7 +126,7 @@ describe("Google WebAuth LLM", () => {
   });
 
   test("stream", async () => {
-    const model = new VertexAILLM();
+    const model = new VertexAI();
     const stream = await model.stream(
       "What is the answer to live, the universe, and everything? Be verbose."
     );
@@ -138,7 +138,7 @@ describe("Google WebAuth LLM", () => {
   });
 
   test("predictMessage image", async () => {
-    const model = new VertexAILLM({
+    const model = new VertexAI({
       model: "gemini-pro-vision",
     });
     const message: MessageContentComplex[] = [
@@ -163,7 +163,7 @@ describe("Google WebAuth LLM", () => {
   });
 
   test("invoke image", async () => {
-    const model = new VertexAILLM({
+    const model = new VertexAI({
       model: "gemini-pro-vision",
     });
     const message: MessageContentComplex[] = [
@@ -190,7 +190,7 @@ describe("Google WebAuth LLM", () => {
 
 describe("Google WebAuth gai LLM", () => {
   test("platform", async () => {
-    const model = new VertexAILLM({
+    const model = new VertexAI({
       platformType: "gai",
     });
     expect(model.platform).toEqual("gai");
@@ -200,7 +200,7 @@ describe("Google WebAuth gai LLM", () => {
    * This test currently fails in AI Studio due to zealous safety systems
    */
   test("call", async () => {
-    const model = new VertexAILLM({
+    const model = new VertexAI({
       platformType: "gai",
     });
     const res = await model.invoke("1 + 1 = ");
@@ -213,7 +213,7 @@ describe("Google WebAuth gai LLM", () => {
   });
 
   test("call", async () => {
-    const model = new VertexAILLM({
+    const model = new VertexAI({
       platformType: "gai",
     });
     try {
@@ -227,7 +227,7 @@ describe("Google WebAuth gai LLM", () => {
   });
 
   test("stream", async () => {
-    const model = new VertexAILLM({
+    const model = new VertexAI({
       platformType: "gai",
     });
     const stream = await model.stream(
@@ -241,7 +241,7 @@ describe("Google WebAuth gai LLM", () => {
   });
 
   test("predictMessage image", async () => {
-    const model = new VertexAILLM({
+    const model = new VertexAI({
       platformType: "gai",
       model: "gemini-pro-vision",
     });
@@ -267,7 +267,7 @@ describe("Google WebAuth gai LLM", () => {
   });
 
   test("invoke image", async () => {
-    const model = new VertexAILLM({
+    const model = new VertexAI({
       platformType: "gai",
       model: "gemini-pro-vision",
     });

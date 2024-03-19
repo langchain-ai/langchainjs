@@ -49,11 +49,11 @@ GOOGLE_VERTEX_AI_WEB_CREDENTIALS={"type":"service_account","project_id":"YOUR_PR
 You can also pass your credentials directly in code like this:
 
 ```typescript
-import { VertexAILLM } from "@langchain/google-vertexai";
+import { VertexAI } from "@langchain/google-vertexai";
 // Or uncomment this line if you're using the web version:
-// import { VertexAILLM } from "@langchain/google-vertexai-web";
+// import { VertexAI } from "@langchain/google-vertexai-web";
 
-const model = new VertexAILLM({
+const model = new VertexAI({
   authOptions: {
     credentials: {"type":"service_account","project_id":"YOUR_PROJECT-12345",...},
   },

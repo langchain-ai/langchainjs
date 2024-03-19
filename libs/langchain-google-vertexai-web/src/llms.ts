@@ -3,17 +3,17 @@ import { type GoogleLLMInput, GoogleLLM } from "@langchain/google-webauth";
 /**
  * Input to LLM model class.
  */
-export interface VertexAILLMInput extends GoogleLLMInput {}
+export interface VertexAIInput extends GoogleLLMInput {}
 
 /**
  * Integration with a LLM model.
  */
-export class VertexAILLM extends GoogleLLM {
+export class VertexAI extends GoogleLLM {
   static lc_name() {
-    return "ChatVertexAI";
+    return "VertexAI";
   }
 
-  constructor(fields?: VertexAILLMInput) {
+  constructor(fields?: VertexAIInput) {
     super(fields);
   }
 }

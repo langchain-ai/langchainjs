@@ -58,9 +58,7 @@ export interface ChatGoogleBaseInput<AuthOptions>
   extends BaseChatModelParams,
     GoogleConnectionParams<AuthOptions>,
     GoogleAIModelParams,
-    GoogleAISafetyParams {
-  modelName?: string;
-}
+    GoogleAISafetyParams {}
 
 /**
  * Integration with a chat model.

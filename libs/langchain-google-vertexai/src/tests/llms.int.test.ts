@@ -6,7 +6,7 @@ import {
   MessageContentComplex,
 } from "@langchain/core/messages";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
-import { VertexAILLM } from "../llms.js";
+import { VertexAI } from "../llms.js";
 
 const imgData = {
   blueSquare:
@@ -15,12 +15,12 @@ const imgData = {
 
 describe("GAuth LLM", () => {
   test("platform", async () => {
-    const model = new VertexAILLM();
+    const model = new VertexAI();
     expect(model.platform).toEqual("gcp");
   });
 
   test("call", async () => {
-    const model = new VertexAILLM();
+    const model = new VertexAI();
     try {
       const res = await model.invoke("1 + 1 = ");
       if (res.length === 1) {
@@ -36,7 +36,7 @@ describe("GAuth LLM", () => {
   });
 
   test("generate", async () => {
-    const model = new VertexAILLM();
+    const model = new VertexAI();
     const res = await model.generate(["Print hello world."]);
     expect(res).toHaveProperty("generations");
     expect(res.generations.length).toBeGreaterThan(0);
@@ -46,7 +46,7 @@ describe("GAuth LLM", () => {
   });
 
   test("stream", async () => {
-    const model = new VertexAILLM();
+    const model = new VertexAI();
     const stream = await model.stream(
       "What is the answer to live, the universe, and everything? Be verbose."
     );
@@ -58,7 +58,7 @@ describe("GAuth LLM", () => {
   });
 
   test("predictMessage image", async () => {
-    const model = new VertexAILLM({
+    const model = new VertexAI({
       model: "gemini-pro-vision",
     });
     const message: MessageContentComplex[] = [
@@ -83,7 +83,7 @@ describe("GAuth LLM", () => {
   });
 
   test("invoke image", async () => {
-    const model = new VertexAILLM({
+    const model = new VertexAI({
       model: "gemini-pro-vision",
     });
     const message: MessageContentComplex[] = [
@@ -110,7 +110,7 @@ describe("GAuth LLM", () => {
 
 describe("GAuth LLM gai", () => {
   test("platform", async () => {
-    const model = new VertexAILLM({
+    const model = new VertexAI({
       platformType: "gai",
     });
     expect(model.platform).toEqual("gai");
@@ -120,7 +120,7 @@ describe("GAuth LLM gai", () => {
    * This test currently fails in AI Studio due to zealous safety systems
    */
   test.skip("call", async () => {
-    const model = new VertexAILLM({
+    const model = new VertexAI({
       platformType: "gai",
     });
     try {
@@ -138,7 +138,7 @@ describe("GAuth LLM gai", () => {
   });
 
   test("call", async () => {
-    const model = new VertexAILLM({
+    const model = new VertexAI({
       platformType: "gai",
     });
     try {
@@ -152,7 +152,7 @@ describe("GAuth LLM gai", () => {
   });
 
   test("generate", async () => {
-    const model = new VertexAILLM({
+    const model = new VertexAI({
       platformType: "gai",
     });
     const res = await model.generate(["Print hello world."]);
@@ -164,7 +164,7 @@ describe("GAuth LLM gai", () => {
   });
 
   test("stream", async () => {
-    const model = new VertexAILLM({
+    const model = new VertexAI({
       platformType: "gai",
     });
     const stream = await model.stream(
@@ -183,7 +183,7 @@ describe("GAuth LLM gai", () => {
   });
 
   test("predictMessage image", async () => {
-    const model = new VertexAILLM({
+    const model = new VertexAI({
       platformType: "gai",
       model: "gemini-pro-vision",
     });
@@ -209,7 +209,7 @@ describe("GAuth LLM gai", () => {
   });
 
   test("invoke image", async () => {
-    const model = new VertexAILLM({
+    const model = new VertexAI({
       platformType: "gai",
       model: "gemini-pro-vision",
     });

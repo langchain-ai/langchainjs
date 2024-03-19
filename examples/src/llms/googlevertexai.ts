@@ -1,8 +1,8 @@
-import { VertexAILLM } from "@langchain/google-vertexai";
+import { VertexAI } from "@langchain/google-vertexai";
 // Or, if using the web entrypoint:
-// import { VertexAILLM } from "@langchain/google-vertexai-web";
+// import { VertexAI } from "@langchain/google-vertexai-web";
 
-const model = new VertexAILLM({
+const model = new VertexAI({
   temperature: 0.7,
 });
 const res = await model.invoke(
