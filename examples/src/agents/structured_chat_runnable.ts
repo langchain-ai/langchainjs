@@ -4,7 +4,7 @@ import {
   AgentExecutor,
   StructuredChatOutputParserWithRetries,
 } from "langchain/agents";
-import { Calculator } from "@langchain/community/tools/calculator"
+import { Calculator } from "@langchain/community/tools/calculator";
 import { renderTextDescriptionAndArgs } from "langchain/tools/render";
 import { formatLogToString } from "langchain/agents/format_scratchpad/log";
 import {

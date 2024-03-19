@@ -1,6 +1,6 @@
 import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
-import { Calculator } from "@langchain/community/tools/calculator"
+import { Calculator } from "@langchain/community/tools/calculator";
 import { WebBrowser } from "langchain/tools/webbrowser";
 import { SerpAPI } from "@langchain/community/tools/serpapi";
 

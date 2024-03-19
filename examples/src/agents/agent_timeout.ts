@@ -1,6 +1,6 @@
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { OpenAI } from "@langchain/openai";
-import { Calculator } from "@langchain/community/tools/calculator"
+import { Calculator } from "@langchain/community/tools/calculator";
 import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 const model = new OpenAI({ temperature: 0 });

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ChatOpenAI } from "@langchain/openai";
-import { Calculator } from "@langchain/community/tools/calculator"
+import { Calculator } from "@langchain/community/tools/calculator";
 import { AgentExecutor } from "langchain/agents";
 import { formatToOpenAIToolMessages } from "langchain/agents/format_scratchpad/openai_tools";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";

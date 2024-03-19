@@ -1,7 +1,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 import type { BasePromptTemplate } from "@langchain/core/prompts";
 
-import { Calculator } from "@langchain/community/tools/calculator"
+import { Calculator } from "@langchain/community/tools/calculator";
 import { pull } from "langchain/hub";
 import { AgentExecutor, createReactAgent } from "langchain/agents";
 
