@@ -1,17 +1,19 @@
 import type { GoogleAIModelParams, GoogleLLMModelFamily } from "../types.js";
 import { isModelGemini, validateGeminiParams } from "./gemini.js";
 
+type GoogleAIParamsWithModelName = GoogleAIModelParams & { modelName?: string };
+
 export function copyAIModelParams(
-  params: (GoogleAIModelParams & { modelName?: string }) | undefined
-): GoogleAIModelParams & { modelName?: string } {
+  params: GoogleAIParamsWithModelName | undefined
+): GoogleAIParamsWithModelName {
   return copyAIModelParamsInto(params, {});
 }
 
 export function copyAIModelParamsInto(
-  params: (GoogleAIModelParams & { modelName?: string }) | undefined,
-  target: GoogleAIModelParams & { modelName?: string }
-): GoogleAIModelParams & { modelName?: string } {
-  const ret: GoogleAIModelParams & { modelName?: string } = target || {};
+  params: GoogleAIParamsWithModelName | undefined,
+  target: GoogleAIParamsWithModelName
+): GoogleAIParamsWithModelName {
+  const ret: GoogleAIParamsWithModelName = target || {};
 
   ret.model = params?.modelName ?? params?.model ?? target.model;
 
@@ -38,9 +40,9 @@ export function modelToFamily(
 }
 
 export function validateModelParams(
-  params: (GoogleAIModelParams & { modelName?: string }) | undefined
+  params: GoogleAIParamsWithModelName | undefined
 ): void {
-  const testParams: GoogleAIModelParams & { modelName?: string } = params ?? {};
+  const testParams: GoogleAIParamsWithModelName = params ?? {};
   const model = testParams.modelName ?? testParams.model;
   switch (modelToFamily(model)) {
     case "gemini":
@@ -53,9 +55,9 @@ export function validateModelParams(
 }
 
 export function copyAndValidateModelParamsInto(
-  params: (GoogleAIModelParams & { modelName?: string }) | undefined,
-  target: GoogleAIModelParams & { modelName?: string }
-): GoogleAIModelParams & { modelName?: string } {
+  params: GoogleAIParamsWithModelName | undefined,
+  target: GoogleAIParamsWithModelName
+): GoogleAIParamsWithModelName {
   copyAIModelParamsInto(params, target);
   validateModelParams(target);
   return target;
