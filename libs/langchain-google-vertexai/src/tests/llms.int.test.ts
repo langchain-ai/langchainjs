@@ -6,21 +6,21 @@ import {
   MessageContentComplex,
 } from "@langchain/core/messages";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
-import { GoogleLLM } from "../llms.js";
+import { VertexAILLM } from "../llms.js";
 
 const imgData = {
   blueSquare:
     "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH6AIbFwQSRaexCAAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAJklEQVQY02P8//8/A27AxIAXsEAor31f0CS2OfEQ1j2Q0owU+RsAGNUJD2/04PgAAAAASUVORK5CYII=",
 };
 
-describe.skip("GAuth LLM", () => {
+describe("GAuth LLM", () => {
   test("platform", async () => {
-    const model = new GoogleLLM();
+    const model = new VertexAILLM();
     expect(model.platform).toEqual("gcp");
   });
 
   test("call", async () => {
-    const model = new GoogleLLM();
+    const model = new VertexAILLM();
     try {
       const res = await model.invoke("1 + 1 = ");
       if (res.length === 1) {
@@ -36,7 +36,7 @@ describe.skip("GAuth LLM", () => {
   });
 
   test("generate", async () => {
-    const model = new GoogleLLM();
+    const model = new VertexAILLM();
     const res = await model.generate(["Print hello world."]);
     expect(res).toHaveProperty("generations");
     expect(res.generations.length).toBeGreaterThan(0);
@@ -46,7 +46,7 @@ describe.skip("GAuth LLM", () => {
   });
 
   test("stream", async () => {
-    const model = new GoogleLLM();
+    const model = new VertexAILLM();
     const stream = await model.stream(
       "What is the answer to live, the universe, and everything? Be verbose."
     );
@@ -58,7 +58,7 @@ describe.skip("GAuth LLM", () => {
   });
 
   test("predictMessage image", async () => {
-    const model = new GoogleLLM({
+    const model = new VertexAILLM({
       model: "gemini-pro-vision",
     });
     const message: MessageContentComplex[] = [
@@ -83,7 +83,7 @@ describe.skip("GAuth LLM", () => {
   });
 
   test("invoke image", async () => {
-    const model = new GoogleLLM({
+    const model = new VertexAILLM({
       model: "gemini-pro-vision",
     });
     const message: MessageContentComplex[] = [
@@ -108,9 +108,9 @@ describe.skip("GAuth LLM", () => {
   });
 });
 
-describe.skip("GAuth LLM gai", () => {
+describe("GAuth LLM gai", () => {
   test("platform", async () => {
-    const model = new GoogleLLM({
+    const model = new VertexAILLM({
       platformType: "gai",
     });
     expect(model.platform).toEqual("gai");
@@ -120,7 +120,7 @@ describe.skip("GAuth LLM gai", () => {
    * This test currently fails in AI Studio due to zealous safety systems
    */
   test.skip("call", async () => {
-    const model = new GoogleLLM({
+    const model = new VertexAILLM({
       platformType: "gai",
     });
     try {
@@ -138,7 +138,7 @@ describe.skip("GAuth LLM gai", () => {
   });
 
   test("call", async () => {
-    const model = new GoogleLLM({
+    const model = new VertexAILLM({
       platformType: "gai",
     });
     try {
@@ -152,7 +152,7 @@ describe.skip("GAuth LLM gai", () => {
   });
 
   test("generate", async () => {
-    const model = new GoogleLLM({
+    const model = new VertexAILLM({
       platformType: "gai",
     });
     const res = await model.generate(["Print hello world."]);
@@ -164,7 +164,7 @@ describe.skip("GAuth LLM gai", () => {
   });
 
   test("stream", async () => {
-    const model = new GoogleLLM({
+    const model = new VertexAILLM({
       platformType: "gai",
     });
     const stream = await model.stream(
@@ -183,7 +183,7 @@ describe.skip("GAuth LLM gai", () => {
   });
 
   test("predictMessage image", async () => {
-    const model = new GoogleLLM({
+    const model = new VertexAILLM({
       platformType: "gai",
       model: "gemini-pro-vision",
     });
@@ -209,7 +209,7 @@ describe.skip("GAuth LLM gai", () => {
   });
 
   test("invoke image", async () => {
-    const model = new GoogleLLM({
+    const model = new VertexAILLM({
       platformType: "gai",
       model: "gemini-pro-vision",
     });

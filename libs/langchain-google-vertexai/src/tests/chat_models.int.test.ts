@@ -11,17 +11,17 @@ import {
   MessageContentText,
   SystemMessage,
 } from "@langchain/core/messages";
-import { ChatGoogle } from "../chat_models.js";
-import { GoogleLLM } from "../llms.js";
+import { ChatVertexAI } from "../chat_models.js";
+import { VertexAILLM } from "../llms.js";
 
-describe.skip("GAuth Chat", () => {
+describe("GAuth Chat", () => {
   test("platform", async () => {
-    const model = new GoogleLLM();
+    const model = new VertexAILLM();
     expect(model.platform).toEqual("gcp");
   });
 
   test("invoke", async () => {
-    const model = new ChatGoogle();
+    const model = new ChatVertexAI();
     try {
       const res = await model.invoke("What is 1 + 1?");
       expect(res).toBeDefined();
@@ -46,7 +46,7 @@ describe.skip("GAuth Chat", () => {
   });
 
   test("generate", async () => {
-    const model = new ChatGoogle();
+    const model = new ChatVertexAI();
     try {
       const messages: BaseMessage[] = [
         new SystemMessage(
@@ -79,7 +79,7 @@ describe.skip("GAuth Chat", () => {
   });
 
   test("stream", async () => {
-    const model = new ChatGoogle();
+    const model = new ChatVertexAI();
     try {
       const input: BaseLanguageModelInput = new ChatPromptValue([
         new SystemMessage(
