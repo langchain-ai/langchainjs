@@ -2,18 +2,18 @@ import type { GoogleAIModelParams, GoogleLLMModelFamily } from "../types.js";
 import { isModelGemini, validateGeminiParams } from "./gemini.js";
 
 export function copyAIModelParams(
-  params: GoogleAIModelParams | undefined
-): GoogleAIModelParams {
+  params: GoogleAIModelParams & { modelName?: string } | undefined
+): GoogleAIModelParams & { modelName?: string } {
   return copyAIModelParamsInto(params, {});
 }
 
 export function copyAIModelParamsInto(
-  params: GoogleAIModelParams | undefined,
-  target: GoogleAIModelParams
-): GoogleAIModelParams {
-  const ret: GoogleAIModelParams = target || {};
+  params: GoogleAIModelParams & { modelName?: string } | undefined,
+  target: GoogleAIModelParams & { modelName?: string }
+): GoogleAIModelParams & { modelName?: string } {
+  const ret: GoogleAIModelParams & { modelName?: string } = target || {};
 
-  ret.model = params?.model ?? target.model;
+  ret.model = params?.modelName ?? params?.model ?? target.model;
 
   ret.temperature = params?.temperature ?? target.temperature;
   ret.maxOutputTokens = params?.maxOutputTokens ?? target.maxOutputTokens;
@@ -38,10 +38,11 @@ export function modelToFamily(
 }
 
 export function validateModelParams(
-  params: GoogleAIModelParams | undefined
+  params: GoogleAIModelParams & { modelName?: string } | undefined
 ): void {
-  const testParams: GoogleAIModelParams = params ?? {};
-  switch (modelToFamily(testParams.model)) {
+  const testParams: GoogleAIModelParams & { modelName?: string } = params ?? {};
+  const model = testParams.modelName ?? testParams.model;
+  switch (modelToFamily(model)) {
     case "gemini":
       return validateGeminiParams(testParams);
     default:
@@ -52,9 +53,9 @@ export function validateModelParams(
 }
 
 export function copyAndValidateModelParamsInto(
-  params: GoogleAIModelParams | undefined,
-  target: GoogleAIModelParams
-): GoogleAIModelParams {
+  params: GoogleAIModelParams & { modelName?: string } | undefined,
+  target: GoogleAIModelParams & { modelName?: string }
+): GoogleAIModelParams & { modelName?: string } {
   copyAIModelParamsInto(params, target);
   validateModelParams(target);
   return target;
