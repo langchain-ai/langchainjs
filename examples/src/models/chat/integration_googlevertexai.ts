@@ -11,7 +11,7 @@ const response = await model.invoke("Why is the ocean blue?");
 console.log(response);
 /*
 AIMessageChunk {
-  content: [{ type: 'text', text: 'The ocean appears blue because of a phenomenon called Rayleigh scattering. This occurs when sunlight' }],
+  content: [{ type: 'text', text: 'The ocean appears blue due to a phenomenon called Rayleigh scattering. This occurs when sunlight' }],
   additional_kwargs: {},
   response_metadata: {}
 }
