@@ -24,37 +24,38 @@ function InstallationInfo({ children }) {
  * @param {{ openaiParams?: string, anthropicParams?: string, fireworksParams?: string, mistralParams?: string, hideOpenai?: boolean, hideAnthropic?: boolean, hideFireworks?: boolean, hideMistral?: boolean }} props 
  */
 export default function ChatModelTabs(props) {
+  const { openaiParams, anthropicParams, fireworksParams, mistralParams, hideOpenai, hideAnthropic, hideFireworks, hideMistral } = props;
   // OpenAI
   const openAIText = `import { ChatOpenAI } from "@langchain/openai";
   
-const model = new ChatOpenAI(${props.openaiParams ?? "{}"});`;
+const model = new ChatOpenAI(${openaiParams ?? "{}"});`;
   const openAIEnvText = `OPENAI_API_KEY=your-api-key`
   const openAIProps = { value: "OpenAI", label: "OpenAI", default: true };
 
   // Anthropic
   const anthropicText = `import { ChatAnthropic } from "@langchain/anthropic";
   
-const model = new ChatAnthropic(${props.anthropicParams ?? "{}"});`
+const model = new ChatAnthropic(${anthropicParams ?? "{}"});`
   const anthropicEnvText = `ANTHROPIC_API_KEY=your-api-key`
   const anthropicProps = { value: "Anthropic", label: "Anthropic" };
 
   // FireworksAI
   const fireworksText = `import { ChatFireworks } from "@langchain/community/chat_models/fireworks";
   
-const model = new ChatFireworks(${props.fireworksParams ?? "{}"});`;
+const model = new ChatFireworks(${fireworksParams ?? "{}"});`;
   const fireworksEnvText = `FIREWORKS_API_KEY=your-api-key`
   const fireworksProps = { value: "FireworksAI", label: "FireworksAI" };
 
   // MistralAI
   const mistralText = `import { ChatMistralAI } from "@langchain/mistralai";
   
-const model = new ChatMistralAI(${props.mistralParams ?? "{}"});`;
+const model = new ChatMistralAI(${mistralParams ?? "{}"});`;
   const mistralEnvText = `MISTRAL_API_KEY=your-api-key`
   const mistralProps = { value: "MistralAI", label: "MistralAI" };
 
   return (
     <Tabs groupId="modelTabs">
-      {props.hideOpenai ? null : (
+      {hideOpenai ? null : (
         <TabItem {...openAIProps}>
           <InstallationInfo>
             @langchain/openai
@@ -67,7 +68,7 @@ const model = new ChatMistralAI(${props.mistralParams ?? "{}"});`;
           </CodeBlock>
         </TabItem>
       )}
-      {props.hideAnthropic ? null : (
+      {hideAnthropic ? null : (
         <TabItem {...anthropicProps}>
           <InstallationInfo>
             @langchain/anthropic
@@ -80,7 +81,7 @@ const model = new ChatMistralAI(${props.mistralParams ?? "{}"});`;
           </CodeBlock>
         </TabItem>
       )}
-      {props.hideFireworks ? null : (
+      {hideFireworks ? null : (
         <TabItem {...fireworksProps}>
           <InstallationInfo>
             @langchain/community
@@ -93,7 +94,7 @@ const model = new ChatMistralAI(${props.mistralParams ?? "{}"});`;
           </CodeBlock>
         </TabItem>
       )}
-      {props.hideMistral ? null : (
+      {hideMistral ? null : (
         <TabItem {...mistralProps}>
           <InstallationInfo>
             @langchain/mistralai
