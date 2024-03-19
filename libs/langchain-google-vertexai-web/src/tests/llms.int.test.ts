@@ -6,24 +6,24 @@ import {
   MessageContentComplex,
 } from "@langchain/core/messages";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
-import { GoogleLLM } from "../llms.js";
+import { VertexAILLM } from "../llms.js";
 
 const imgData = {
   blueSquare:
     "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH6AIbFwQSRaexCAAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAJklEQVQY02P8//8/A27AxIAXsEAor31f0CS2OfEQ1j2Q0owU+RsAGNUJD2/04PgAAAAASUVORK5CYII=",
 };
 
-describe.skip("Google APIKey LLM", () => {
+describe("Google APIKey LLM", () => {
   test("platform", async () => {
-    const model = new GoogleLLM();
+    const model = new VertexAILLM();
     expect(model.platform).toEqual("gai");
   });
 
   /*
    * This test currently fails in AI Studio due to zealous safety systems
    */
-  test.skip("call", async () => {
-    const model = new GoogleLLM();
+  test("call", async () => {
+    const model = new VertexAILLM();
     const res = await model.invoke("1 + 1 = ");
     if (res.length === 1) {
       expect(res).toBe("2");
@@ -34,7 +34,7 @@ describe.skip("Google APIKey LLM", () => {
   });
 
   test("call", async () => {
-    const model = new GoogleLLM();
+    const model = new VertexAILLM();
     try {
       const res = await model.invoke("If the time is 1:00, what time is it?");
       expect(res.length).toBeGreaterThan(0);
@@ -46,7 +46,7 @@ describe.skip("Google APIKey LLM", () => {
   });
 
   test("stream", async () => {
-    const model = new GoogleLLM();
+    const model = new VertexAILLM();
     const stream = await model.stream(
       "What is the answer to live, the universe, and everything? Be verbose."
     );
@@ -58,7 +58,7 @@ describe.skip("Google APIKey LLM", () => {
   });
 
   test("predictMessage image", async () => {
-    const model = new GoogleLLM({
+    const model = new VertexAILLM({
       model: "gemini-pro-vision",
     });
     const message: MessageContentComplex[] = [
@@ -83,7 +83,7 @@ describe.skip("Google APIKey LLM", () => {
   });
 
   test("invoke image", async () => {
-    const model = new GoogleLLM({
+    const model = new VertexAILLM({
       model: "gemini-pro-vision",
     });
     const message: MessageContentComplex[] = [
@@ -108,14 +108,14 @@ describe.skip("Google APIKey LLM", () => {
   });
 });
 
-describe.skip("Google WebAuth LLM", () => {
+describe("Google WebAuth LLM", () => {
   test("platform", async () => {
-    const model = new GoogleLLM();
+    const model = new VertexAILLM();
     expect(model.platform).toEqual("gcp");
   });
 
   test("call", async () => {
-    const model = new GoogleLLM();
+    const model = new VertexAILLM();
     const res = await model.invoke("1 + 1 = ");
     if (res.length === 1) {
       expect(res).toBe("2");
@@ -126,7 +126,7 @@ describe.skip("Google WebAuth LLM", () => {
   });
 
   test("stream", async () => {
-    const model = new GoogleLLM();
+    const model = new VertexAILLM();
     const stream = await model.stream(
       "What is the answer to live, the universe, and everything? Be verbose."
     );
@@ -138,7 +138,7 @@ describe.skip("Google WebAuth LLM", () => {
   });
 
   test("predictMessage image", async () => {
-    const model = new GoogleLLM({
+    const model = new VertexAILLM({
       model: "gemini-pro-vision",
     });
     const message: MessageContentComplex[] = [
@@ -163,7 +163,7 @@ describe.skip("Google WebAuth LLM", () => {
   });
 
   test("invoke image", async () => {
-    const model = new GoogleLLM({
+    const model = new VertexAILLM({
       model: "gemini-pro-vision",
     });
     const message: MessageContentComplex[] = [
@@ -188,9 +188,9 @@ describe.skip("Google WebAuth LLM", () => {
   });
 });
 
-describe.skip("Google WebAuth gai LLM", () => {
+describe("Google WebAuth gai LLM", () => {
   test("platform", async () => {
-    const model = new GoogleLLM({
+    const model = new VertexAILLM({
       platformType: "gai",
     });
     expect(model.platform).toEqual("gai");
@@ -199,8 +199,8 @@ describe.skip("Google WebAuth gai LLM", () => {
   /*
    * This test currently fails in AI Studio due to zealous safety systems
    */
-  test.skip("call", async () => {
-    const model = new GoogleLLM({
+  test("call", async () => {
+    const model = new VertexAILLM({
       platformType: "gai",
     });
     const res = await model.invoke("1 + 1 = ");
@@ -213,7 +213,7 @@ describe.skip("Google WebAuth gai LLM", () => {
   });
 
   test("call", async () => {
-    const model = new GoogleLLM({
+    const model = new VertexAILLM({
       platformType: "gai",
     });
     try {
@@ -227,7 +227,7 @@ describe.skip("Google WebAuth gai LLM", () => {
   });
 
   test("stream", async () => {
-    const model = new GoogleLLM({
+    const model = new VertexAILLM({
       platformType: "gai",
     });
     const stream = await model.stream(
@@ -241,7 +241,7 @@ describe.skip("Google WebAuth gai LLM", () => {
   });
 
   test("predictMessage image", async () => {
-    const model = new GoogleLLM({
+    const model = new VertexAILLM({
       platformType: "gai",
       model: "gemini-pro-vision",
     });
@@ -267,7 +267,7 @@ describe.skip("Google WebAuth gai LLM", () => {
   });
 
   test("invoke image", async () => {
-    const model = new GoogleLLM({
+    const model = new VertexAILLM({
       platformType: "gai",
       model: "gemini-pro-vision",
     });

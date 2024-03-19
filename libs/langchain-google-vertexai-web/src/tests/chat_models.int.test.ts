@@ -11,11 +11,11 @@ import {
 } from "@langchain/core/messages";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
-import { ChatGoogle } from "../chat_models.js";
+import { ChatVertexAI } from "../chat_models.js";
 
-describe.skip("Google APIKey Chat", () => {
+describe("Google APIKey Chat", () => {
   test("invoke", async () => {
-    const model = new ChatGoogle();
+    const model = new ChatVertexAI();
     try {
       const res = await model.invoke("What is 1 + 1?");
       expect(res).toBeDefined();
@@ -40,7 +40,7 @@ describe.skip("Google APIKey Chat", () => {
   });
 
   test("generate", async () => {
-    const model = new ChatGoogle();
+    const model = new ChatVertexAI();
     try {
       const messages: BaseMessage[] = [
         new SystemMessage(
@@ -73,7 +73,7 @@ describe.skip("Google APIKey Chat", () => {
   });
 
   test("stream", async () => {
-    const model = new ChatGoogle();
+    const model = new ChatVertexAI();
     try {
       const input: BaseLanguageModelInput = new ChatPromptValue([
         new SystemMessage(
@@ -105,9 +105,9 @@ describe.skip("Google APIKey Chat", () => {
   });
 });
 
-describe.skip("Google Webauth Chat", () => {
+describe("Google Webauth Chat", () => {
   test("invoke", async () => {
-    const model = new ChatGoogle();
+    const model = new ChatVertexAI();
     try {
       const res = await model.invoke("What is 1 + 1?");
       expect(res).toBeDefined();
@@ -132,7 +132,7 @@ describe.skip("Google Webauth Chat", () => {
   });
 
   test("generate", async () => {
-    const model = new ChatGoogle();
+    const model = new ChatVertexAI();
     try {
       const messages: BaseMessage[] = [
         new SystemMessage(
@@ -165,7 +165,7 @@ describe.skip("Google Webauth Chat", () => {
   });
 
   test("stream", async () => {
-    const model = new ChatGoogle();
+    const model = new ChatVertexAI();
     try {
       const input: BaseLanguageModelInput = new ChatPromptValue([
         new SystemMessage(
