@@ -2007,6 +2007,15 @@
       "import": "./stores/message/in_memory.js",
       "require": "./stores/message/in_memory.cjs"
     },
+    "./stores/message/ipfs_datastore": {
+      "types": {
+        "import": "./stores/message/ipfs_datastore.d.ts",
+        "require": "./stores/message/ipfs_datastore.d.cts",
+        "default": "./stores/message/ipfs_datastore.d.ts"
+      },
+      "import": "./stores/message/ipfs_datastore.js",
+      "require": "./stores/message/ipfs_datastore.cjs"
+    },
     "./stores/message/ioredis": {
       "types": {
         "import": "./stores/message/ioredis.d.ts",
@@ -2825,6 +2834,10 @@
     "stores/message/in_memory.js",
     "stores/message/in_memory.d.ts",
     "stores/message/in_memory.d.cts",
+    "stores/message/ipfs_datastore.cjs",
+    "stores/message/ipfs_datastore.js",
+    "stores/message/ipfs_datastore.d.ts",
+    "stores/message/ipfs_datastore.d.cts",
     "stores/message/ioredis.cjs",
     "stores/message/ioredis.js",
     "stores/message/ioredis.d.ts",
