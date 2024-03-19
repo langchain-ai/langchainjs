@@ -1,12 +1,12 @@
 import { type GoogleLLMInput, GoogleLLM } from "@langchain/google-gauth";
 
 /**
- * Input to chat model class.
+ * Input to LLM model class.
  */
 export interface VertexAILLMInput extends GoogleLLMInput {}
 
 /**
- * Integration with a chat model.
+ * Integration with a LLM model.
  */
 export class VertexAILLM extends GoogleLLM {
   static lc_name() {
