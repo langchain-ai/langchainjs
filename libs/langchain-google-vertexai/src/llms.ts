@@ -3,7 +3,7 @@ import { type GoogleLLMInput, GoogleLLM } from "@langchain/google-gauth";
 /**
  * Input to chat model class.
  */
-export interface VertexAILLMInput extends GoogleLLMInput {};
+export interface VertexAILLMInput extends GoogleLLMInput {}
 
 /**
  * Integration with a chat model.
@@ -13,8 +13,7 @@ export class VertexAILLM extends GoogleLLM {
     return "ChatVertexAI";
   }
 
-
-constructor(fields?: VertexAILLMInput) {
-  super(fields);
-}
+  constructor(fields?: VertexAILLMInput) {
+    super(fields);
+  }
 }
