@@ -409,11 +409,6 @@ export class HanaDB extends VectorStore {
      * @param documents Array of Document instances to be added to the table.
      * @returns Promise that resolves when the documents are added.
      */
-    // async addDocuments(documents: Document[]): Promise<void> {
-    //     const texts = documents.map(doc => doc.pageContent);
-    //     const metadatas = documents.map(doc => doc.metadata);
-    //     return this.addTexts(texts, metadatas);
-    //   }
     async addDocuments(documents: Document[]): Promise<void> {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
