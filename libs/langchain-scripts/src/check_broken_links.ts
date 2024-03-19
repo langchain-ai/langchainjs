@@ -193,16 +193,14 @@ export async function checkBrokenLinks(
   }
 
   if (options?.retryFailed && failedUrls.length) {
-    console.log(
-      `Retrying ${failedUrls.length} failed urls...`
-    );
+    console.log(`Retrying ${failedUrls.length} failed urls...`);
 
     const uniqueFailedUrls = [...new Set(failedUrls)];
-    const stillFailed: string[] = []
+    const stillFailed: string[] = [];
     for await (const url of uniqueFailedUrls) {
       const isOk = await checkUrl(url, options);
       if (!isOk) {
-        stillFailed.push(url)
+        stillFailed.push(url);
       }
     }
 
@@ -210,9 +208,7 @@ export async function checkBrokenLinks(
       results.push(
         `Found ${
           stillFailed.length
-        } broken links after retrying:\nLinks:\n - ${stillFailed.join(
-          "\n - "
-        )}`
+        } broken links after retrying:\nLinks:\n - ${stillFailed.join("\n - ")}`
       );
     }
   }
