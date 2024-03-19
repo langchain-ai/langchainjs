@@ -1,6 +1,6 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
-import { Calculator } from "langchain/tools/calculator";
+import { Calculator } from "@langchain/community/tools/calculator"
 import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 export const run = async () => {

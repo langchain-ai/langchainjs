@@ -1,6 +1,6 @@
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { OpenAI } from "@langchain/openai";
-import { Calculator } from "langchain/tools/calculator";
+import { Calculator } from "@langchain/community/tools/calculator"
 import {
   GoogleCalendarCreateTool,
   GoogleCalendarViewTool,

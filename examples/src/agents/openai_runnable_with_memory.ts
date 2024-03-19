@@ -1,6 +1,6 @@
 import { AgentExecutor } from "langchain/agents";
 import { ChatOpenAI } from "@langchain/openai";
-import { Calculator } from "langchain/tools/calculator";
+import { Calculator } from "@langchain/community/tools/calculator"
 import { OpenAIFunctionsAgentOutputParser } from "langchain/agents/openai/output_parser";
 import { BufferMemory } from "langchain/memory";
 import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";

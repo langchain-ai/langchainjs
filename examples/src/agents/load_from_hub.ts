@@ -1,7 +1,7 @@
 import { OpenAI } from "@langchain/openai";
 import { AgentExecutor } from "langchain/agents";
 import { loadAgent } from "langchain/agents/load";
-import { Calculator } from "langchain/tools/calculator";
+import { Calculator } from "@langchain/community/tools/calculator"
 import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 export const run = async () => {

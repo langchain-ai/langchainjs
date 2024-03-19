@@ -1,7 +1,7 @@
 import { AgentExecutor } from "langchain/agents";
 import { formatLogToString } from "langchain/agents/format_scratchpad/log";
 import { OpenAI } from "@langchain/openai";
-import { Calculator } from "langchain/tools/calculator";
+import { Calculator } from "@langchain/community/tools/calculator"
 import { PromptTemplate } from "@langchain/core/prompts";
 import { AgentAction, AgentFinish, AgentStep } from "@langchain/core/agents";
 import { BaseMessage, HumanMessage } from "@langchain/core/messages";
