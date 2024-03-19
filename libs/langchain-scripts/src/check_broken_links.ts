@@ -8,6 +8,7 @@ const DEFAULT_WHITELIST = [
   "x.com",
   "twitter.com",
   "npmjs.com",
+  "microsoft.com",
 ];
 
 type CheckBrokenLinksOptions = {
