@@ -45,10 +45,10 @@ await vectorStore.addDocuments(docs);
 // sleep 5 seconds to make sure the documents are indexed.
 await setTimeout(5000);
 // Query documents with specific metadata.
-const filterF = { quality: "bad" };
+const filterMeta = { quality: "bad" };
 const query = "foobar";
 // With filtering on {"quality": "bad"}, only one document should be returned
-const results = await vectorStore.similaritySearch(query, 1, filter);
+const results = await vectorStore.similaritySearch(query, 1, filterMeta);
 console.log(results);
 /*
     [  {
@@ -58,10 +58,10 @@ console.log(results);
     ]
 */
 // Delete documents with specific metadata.
-await vectorStore.delete({ filter: filterF });
+await vectorStore.delete({ filter: filterMeta });
 // Now the similarity search with the same filter will return no results
-const results1 = await vectorStore.similaritySearch(query, 1, filter);
-console.log(results1);
+const resultsAfterFilter = await vectorStore.similaritySearch(query, 1, filterMeta);
+console.log(resultsAfterFilter);
 /*
     []
 */
