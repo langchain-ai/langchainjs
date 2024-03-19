@@ -8934,7 +8934,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/community@workspace:*, @langchain/community@workspace:^, @langchain/community@workspace:libs/langchain-community, @langchain/community@~0.0.36":
+"@langchain/community@workspace:*, @langchain/community@workspace:^, @langchain/community@workspace:libs/langchain-community, @langchain/community@~0.0.41":
   version: 0.0.0-use.local
   resolution: "@langchain/community@workspace:libs/langchain-community"
   dependencies:
@@ -26356,7 +26356,7 @@ __metadata:
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^7.7.0
     "@jest/globals": ^29.5.0
-    "@langchain/community": ~0.0.36
+    "@langchain/community": ~0.0.41
     "@langchain/core": ~0.1.44
     "@langchain/openai": ~0.0.19
     "@langchain/scripts": ~0.0
@@ -26398,7 +26398,6 @@ __metadata:
     eslint-plugin-jest: ^27.6.0
     eslint-plugin-no-instanceof: ^1.0.1
     eslint-plugin-prettier: ^4.2.1
-    expr-eval: ^2.0.2
     fast-xml-parser: ^4.2.7
     google-auth-library: ^8.9.0
     handlebars: ^4.7.8
