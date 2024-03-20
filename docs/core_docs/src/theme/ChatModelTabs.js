@@ -38,64 +38,61 @@ export default function ChatModelTabs(props) {
     hideFireworks,
     hideMistral,
   } = props;
-  // OpenAI
-  const openAIText = `import { ChatOpenAI } from "@langchain/openai";
-  
-const model = new ChatOpenAI(${openaiParams ?? "{}"});`;
-  const openAIEnvText = `OPENAI_API_KEY=your-api-key`;
-  const openAIProps = { value: "OpenAI", label: "OpenAI", default: true };
 
-  // Anthropic
-  const anthropicText = `import { ChatAnthropic } from "@langchain/anthropic";
-  
-const model = new ChatAnthropic(${anthropicParams ?? "{}"});`;
-  const anthropicEnvText = `ANTHROPIC_API_KEY=your-api-key`;
-  const anthropicProps = { value: "Anthropic", label: "Anthropic" };
-
-  // FireworksAI
-  const fireworksText = `import { ChatFireworks } from "@langchain/community/chat_models/fireworks";
-  
-const model = new ChatFireworks(${fireworksParams ?? "{}"});`;
-  const fireworksEnvText = `FIREWORKS_API_KEY=your-api-key`;
-  const fireworksProps = { value: "FireworksAI", label: "FireworksAI" };
-
-  // MistralAI
-  const mistralText = `import { ChatMistralAI } from "@langchain/mistralai";
-  
-const model = new ChatMistralAI(${mistralParams ?? "{}"});`;
-  const mistralEnvText = `MISTRAL_API_KEY=your-api-key`;
-  const mistralProps = { value: "MistralAI", label: "MistralAI" };
+  const tabs = [
+    {
+      value: "OpenAI",
+      label: "OpenAI",
+      default: true,
+      text: `import { ChatOpenAI } from "@langchain/openai";\n\nconst model = new ChatOpenAI(${openaiParams ?? "{}"});`,
+      envs: `OPENAI_API_KEY=your-api-key`,
+      dependencies: "@langchain/openai",
+      shouldHide: hideOpenai,
+    },
+    {
+      value: "Anthropic",
+      label: "Anthropic",
+      default: false,
+      text: `import { ChatAnthropic } from "@langchain/anthropic";\n\nconst model = new ChatAnthropic(${anthropicParams ?? "{}"});`,
+      envs: `ANTHROPIC_API_KEY=your-api-key`,
+      dependencies: "@langchain/anthropic",
+      shouldHide: hideAnthropic,
+    },
+    {
+      value: "FireworksAI",
+      label: "FireworksAI",
+      default: false,
+      text: `import { ChatFireworks } from "@langchain/community/chat_models/fireworks";\n\nconst model = new ChatFireworks(${fireworksParams ?? "{}"});`,
+      envs: `FIREWORKS_API_KEY=your-api-key`,
+      dependencies: "@langchain/community",
+      shouldHide: hideFireworks,
+    },
+    {
+      value: "MistralAI",
+      label: "MistralAI",
+      default: false,
+      text: `import { ChatMistralAI } from "@langchain/mistralai";\n\nconst model = new ChatMistralAI(${mistralParams ?? "{}"});`,
+      envs: `MISTRAL_API_KEY=your-api-key`,
+      dependencies: "@langchain/mistralai",
+      shouldHide: hideMistral,
+    },
+  ]
 
   return (
-    <Tabs groupId="modelTabs">
-      {hideOpenai ? null : (
-        <TabItem {...openAIProps}>
-          <InstallationInfo>@langchain/openai</InstallationInfo>
-          <CodeBlock language="bash">{openAIEnvText}</CodeBlock>
-          <CodeBlock language="typescript">{openAIText}</CodeBlock>
-        </TabItem>
-      )}
-      {hideAnthropic ? null : (
-        <TabItem {...anthropicProps}>
-          <InstallationInfo>@langchain/anthropic</InstallationInfo>
-          <CodeBlock language="bash">{anthropicEnvText}</CodeBlock>
-          <CodeBlock language="typescript">{anthropicText}</CodeBlock>
-        </TabItem>
-      )}
-      {hideFireworks ? null : (
-        <TabItem {...fireworksProps}>
-          <InstallationInfo>@langchain/community</InstallationInfo>
-          <CodeBlock language="bash">{fireworksEnvText}</CodeBlock>
-          <CodeBlock language="typescript">{fireworksText}</CodeBlock>
-        </TabItem>
-      )}
-      {hideMistral ? null : (
-        <TabItem {...mistralProps}>
-          <InstallationInfo>@langchain/mistralai</InstallationInfo>
-          <CodeBlock language="bash">{mistralEnvText}</CodeBlock>
-          <CodeBlock language="typescript">{mistralText}</CodeBlock>
-        </TabItem>
-      )}
-    </Tabs>
+    <div>
+      <h3>Pick your chat model:</h3>
+      <Tabs groupId="modelTabs">
+        {tabs.filter(tab => !tab.shouldHide).map((tab) => (
+          <TabItem value={tab.value} label={tab.label} key={tab.value}>
+            <h4>Install dependencies</h4>
+            <InstallationInfo>{tab.dependencies}</InstallationInfo>
+            <h4>Add environment variables</h4>
+            <CodeBlock language="bash">{tab.envs}</CodeBlock>
+            <h4>Instantiate the model</h4>
+            <CodeBlock language="typescript">{tab.text}</CodeBlock>
+          </TabItem>
+        ))}
+      </Tabs>
+    </div>
   );
 }
