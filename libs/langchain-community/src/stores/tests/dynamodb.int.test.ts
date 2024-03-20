@@ -61,7 +61,10 @@ test("Test DynamoDB message history store", async () => {
 
   expect(await messageHistory2.getMessages()).toEqual(expectedMessages);
 
-  // await messageHistory.clear();
+  await messageHistory.clear();
 
-  // expect(await messageHistory.getMessages()).toEqual([]);
+  expect(await messageHistory.getMessages()).toEqual([]);
+
+  await messageHistory.addMessages(expectedMessages);
+  expect(await messageHistory2.getMessages()).toEqual(expectedMessages);
 });

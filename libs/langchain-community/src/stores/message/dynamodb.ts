@@ -205,21 +205,6 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
   }
 
   /**
-   * Deletes all messages from the DynamoDB table.
-   */
-  async clear(): Promise<void> {
-    try {
-      const params: DeleteItemCommandInput = {
-        TableName: this.tableName,
-        Key: this.dynamoKey,
-      };
-      await this.client.send(new DeleteItemCommand(params));
-    } catch (error) {
-      console.error("Error clearing messages:", error);
-    }
-  }
-
-  /**
    * Adds a new message to the DynamoDB table.
    * @param message The message to be added to the DynamoDB table.
    */
@@ -247,6 +232,55 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
       await this.client.send(new UpdateItemCommand(params));
     } catch (error) {
       console.error("Error adding message:", error);
+    }
+  }
+
+  /**
+   * Adds new messages to the DynamoDB table.
+   * @param messages The messages to be added to the DynamoDB table.
+   */
+  async addMessages(messages: BaseMessage[]): Promise<void> {
+    try {
+      const storedMessages = mapChatMessagesToStoredMessages(messages);
+      const dynamoMessages = storedMessages.map(
+        this.createDynamoDBSerializedChatMessage
+      );
+
+      const params: UpdateItemCommandInput = {
+        TableName: this.tableName,
+        Key: this.dynamoKey,
+        ExpressionAttributeNames: {
+          "#m": this.messageAttributeName,
+        },
+        ExpressionAttributeValues: {
+          ":empty_list": {
+            L: [],
+          },
+          ":m": {
+            L: dynamoMessages,
+          },
+        },
+        UpdateExpression:
+          "SET #m = list_append(if_not_exists(#m, :empty_list), :m)",
+      };
+      await this.client.send(new UpdateItemCommand(params));
+    } catch (error) {
+      console.error("Error adding messages:", error);
+    }
+  }
+
+  /**
+   * Deletes all messages from the DynamoDB table.
+   */
+  async clear(): Promise<void> {
+    try {
+      const params: DeleteItemCommandInput = {
+        TableName: this.tableName,
+        Key: this.dynamoKey,
+      };
+      await this.client.send(new DeleteItemCommand(params));
+    } catch (error) {
+      console.error("Error clearing messages:", error);
     }
   }
 }
