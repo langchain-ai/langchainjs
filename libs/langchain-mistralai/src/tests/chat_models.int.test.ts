@@ -568,18 +568,21 @@ describe("ChatMistralAI aborting", () => {
   test("ChatMistralAI can abort request", async () => {
     const controller = new AbortController();
     const model = new ChatMistralAI().bind({
-      signal: controller.signal
-    })
+      signal: controller.signal,
+    });
     const prompt = ChatPromptTemplate.fromMessages([
       ["system", "You're super good at counting!"],
-      ["human", "Count from 0-100, remember to say 'woof' after every even number!"]
+      [
+        "human",
+        "Count from 0-100, remember to say 'woof' after every even number!",
+      ],
     ]);
-  
+
     const stream = await prompt.pipe(model).stream({});
-  
+
     let finalRes = "";
     let iters = 0;
-  
+
     try {
       for await (const item of stream) {
         finalRes += item.content;
@@ -588,45 +591,52 @@ describe("ChatMistralAI aborting", () => {
         controller.abort();
       }
       // If the loop completes without error, fail the test
-      fail("Expected for-await loop to throw an error due to abort, but it did not.");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      fail(
+        "Expected for-await loop to throw an error due to abort, but it did not."
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       // Check if the error is due to the abort action
       expect(error.message).toBe("AbortError");
     }
     expect(iters).toBe(1);
-  })
-  
+  });
+
   test("ChatMistralAI can timeout requests", async () => {
     const model = new ChatMistralAI().bind({
       timeout: 1000,
-    })
+    });
     const prompt = ChatPromptTemplate.fromMessages([
       ["system", "You're super good at counting!"],
-      ["human", "Count from 0-100, remember to say 'woof' after every even number!"]
+      [
+        "human",
+        "Count from 0-100, remember to say 'woof' after every even number!",
+      ],
     ]);
     let didError = false;
     let finalRes = "";
     let iters = 0;
-  
+
     try {
       // Stream is inside the for-await loop because sometimes
       // the abort will occur before the first stream event is emitted
       const stream = await prompt.pipe(model).stream({});
-  
+
       for await (const item of stream) {
         finalRes += item.content;
         console.log(finalRes);
         iters += 1;
       }
       // If the loop completes without error, fail the test
-      fail("Expected for-await loop to throw an error due to abort, but it did not.");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      fail(
+        "Expected for-await loop to throw an error due to abort, but it did not."
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       didError = true;
       // Check if the error is due to the abort action
       expect(error.message).toBe("AbortError");
     }
     expect(didError).toBeTruthy();
-  })
+  });
 });

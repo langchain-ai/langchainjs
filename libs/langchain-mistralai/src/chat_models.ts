@@ -87,7 +87,8 @@ type MistralAIChatCompletionOptions = {
   responseFormat?: ResponseFormat;
 };
 
-interface MistralAICallOptions extends Omit<BaseLanguageModelCallOptions, "stop"> {
+interface MistralAICallOptions
+  extends Omit<BaseLanguageModelCallOptions, "stop"> {
   response_format?: {
     type: "text" | "json_object";
   };
@@ -528,7 +529,6 @@ export class ChatMistralAI<
         { chunk: generationChunk }
       );
     }
-
   }
 
   /** @ignore */
