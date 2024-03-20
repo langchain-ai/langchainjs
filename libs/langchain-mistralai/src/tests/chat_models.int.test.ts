@@ -565,7 +565,7 @@ describe("withStructuredOutput", () => {
 });
 
 describe("ChatMistralAI aborting", () => {
-  test("ChatMistralAI can abort request", async () => {
+  test("ChatMistralAI can abort request via .stream", async () => {
     const controller = new AbortController();
     const model = new ChatMistralAI().bind({
       signal: controller.signal,
@@ -602,7 +602,7 @@ describe("ChatMistralAI aborting", () => {
     expect(iters).toBe(1);
   });
 
-  test("ChatMistralAI can timeout requests", async () => {
+  test("ChatMistralAI can timeout requests via .stream", async () => {
     const model = new ChatMistralAI().bind({
       timeout: 1000,
     });
@@ -627,6 +627,67 @@ describe("ChatMistralAI aborting", () => {
         console.log(finalRes);
         iters += 1;
       }
+      // If the loop completes without error, fail the test
+      fail(
+        "Expected for-await loop to throw an error due to abort, but it did not."
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      didError = true;
+      // Check if the error is due to the abort action
+      expect(error.message).toBe("AbortError");
+    }
+    expect(didError).toBeTruthy();
+  });
+
+  test("ChatMistralAI can abort request via .invoke", async () => {
+    const controller = new AbortController();
+    const model = new ChatMistralAI().bind({
+      signal: controller.signal,
+    });
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "You're super good at counting!"],
+      [
+        "human",
+        "Count from 0-100, remember to say 'woof' after every even number!",
+      ],
+    ]);
+
+    let didError = false;
+
+    setTimeout(() => controller.abort(), 1000); // Abort after 1 second
+
+    try {
+      await prompt.pipe(model).invoke({});
+
+      // If the loop completes without error, fail the test
+      fail(
+        "Expected for-await loop to throw an error due to abort, but it did not."
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      didError = true;
+      // Check if the error is due to the abort action
+      expect(error.message).toBe("AbortError");
+    }
+    expect(didError).toBeTruthy();
+  });
+
+  test("ChatMistralAI can timeout requests via .invoke", async () => {
+    const model = new ChatMistralAI().bind({
+      timeout: 1000,
+    });
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "You're super good at counting!"],
+      [
+        "human",
+        "Count from 0-100, remember to say 'woof' after every even number!",
+      ],
+    ]);
+    let didError = false;
+
+    try {
+      await prompt.pipe(model).invoke({});
       // If the loop completes without error, fail the test
       fail(
         "Expected for-await loop to throw an error due to abort, but it did not."

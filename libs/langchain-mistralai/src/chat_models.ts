@@ -412,8 +412,11 @@ export class ChatMistralAI<
       messages: mistralMessages,
     };
 
+    const shouldStream = !!options.signal ?? !!options.timeout;
+
     // Handle streaming
-    if (this.streaming) {
+    if (this.streaming || shouldStream) {
+      console.log("should stream!")
       const stream = this._streamResponseChunks(messages, options, runManager);
       const finalChunks: Record<number, ChatGenerationChunk> = {};
       for await (const chunk of stream) {
