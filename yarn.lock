@@ -9598,6 +9598,7 @@ __metadata:
     eslint-plugin-prettier: ^4.2.1
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
+    langchain: "workspace:^"
     prettier: ^2.8.3
     release-it: ^15.10.1
     rollup: ^4.5.2
@@ -26338,7 +26339,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"langchain@workspace:*, langchain@workspace:langchain":
+"langchain@workspace:*, langchain@workspace:^, langchain@workspace:langchain":
   version: 0.0.0-use.local
   resolution: "langchain@workspace:langchain"
   dependencies:
