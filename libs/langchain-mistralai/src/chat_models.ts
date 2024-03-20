@@ -87,7 +87,7 @@ type MistralAIChatCompletionOptions = {
   responseFormat?: ResponseFormat;
 };
 
-interface MistralAICallOptions extends BaseLanguageModelCallOptions {
+interface MistralAICallOptions extends Omit<BaseLanguageModelCallOptions, "stop"> {
   response_format?: {
     type: "text" | "json_object";
   };
@@ -491,6 +491,9 @@ export class ChatMistralAI<
 
     const streamIterable = await this.completionWithRetry(input, true);
     for await (const data of streamIterable) {
+      if (options.signal?.aborted) {
+        throw new Error("AbortError");
+      }
       const choice = data?.choices[0];
       if (!choice || !("delta" in choice)) {
         continue;
@@ -525,9 +528,7 @@ export class ChatMistralAI<
         { chunk: generationChunk }
       );
     }
-    if (options.signal?.aborted) {
-      throw new Error("AbortError");
-    }
+
   }
 
   /** @ignore */
