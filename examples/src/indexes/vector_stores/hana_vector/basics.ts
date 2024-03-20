@@ -60,7 +60,11 @@ console.log(results);
 // Delete documents with specific metadata.
 await vectorStore.delete({ filter: filterMeta });
 // Now the similarity search with the same filter will return no results
-const resultsAfterFilter = await vectorStore.similaritySearch(query, 1, filterMeta);
+const resultsAfterFilter = await vectorStore.similaritySearch(
+  query,
+  1,
+  filterMeta
+);
 console.log(resultsAfterFilter);
 /*
     []
