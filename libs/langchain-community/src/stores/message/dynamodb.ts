@@ -38,7 +38,7 @@ export interface DynamoDBChatMessageHistoryFields {
  * Interface defining the structure of a chat message as it is stored in
  * DynamoDB.
  */
-interface DynamoDBSerializedChatMessage extends AttributeValue {
+interface DynamoDBSerializedChatMessage {
   M: {
     type: {
       S: string;
