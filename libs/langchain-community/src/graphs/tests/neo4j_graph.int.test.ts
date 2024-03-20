@@ -47,7 +47,7 @@ describe.skip("Neo4j Graph Tests", () => {
 
     await graph.query(
       "CREATE (a:Actor {name:'Bruce Willis'})" +
-      "-[:ACTED_IN {roles: ['Butch Coolidge']}]->(:Movie {title: 'Pulp Fiction'})"
+        "-[:ACTED_IN {roles: ['Butch Coolidge']}]->(:Movie {title: 'Pulp Fiction'})"
     );
 
     await graph.refreshSchema();
