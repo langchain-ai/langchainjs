@@ -8,15 +8,6 @@ import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 import hanaClient from "@sap/hana-client";
 
 export type DistanceStrategy = "euclidean" | "cosine";
-// export enum DistanceStrategy {
-//     COSINE = "COSINE",
-//     EUCLIDEAN_DISTANCE = "EUCLIDEAN_DISTANCE",
-//   }
-
-// const HANA_DISTANCE_FUNCTION: Record<string, [string, string]> = {
-//     "cos": ["COSINE_SIMILARITY", "DESC"],
-//     "l2d": ["L2DISTANCE", "ASC"],
-// };
 
 const HANA_DISTANCE_FUNCTION: Record<DistanceStrategy, [string, string]> = {
   cosine: ["COSINE_SIMILARITY", "DESC"],
@@ -66,8 +57,6 @@ export class HanaDB extends VectorStore {
 
   private vectorColumnLength: number;
 
-  private readonly initPromise: Promise<void>;
-
   declare FilterType: object | string;
 
   _vectorstoreType(): string {
@@ -93,13 +82,10 @@ export class HanaDB extends VectorStore {
 
     this.connection = args.connection;
 
-    // Start initialization, but don't wait for it to finish here
-    this.initPromise = this.initialize().catch((error) => {
-      console.error("Error during HANA DB index initialization:", error);
-    });
+    this.initialize();
   }
 
-  protected async initialize(): Promise<void> {
+  private initialize() {
     try {
       let valid_distance = false;
       for (const key in HANA_DISTANCE_FUNCTION) {
@@ -112,7 +98,7 @@ export class HanaDB extends VectorStore {
           `Unsupported distance_strategy: ${this.distanceStrategy}`
         );
       }
-      await this.createTableIfNotExists();
+      this.createTableIfNotExists();
       this.checkColumn(this.tableName, this.contentColumn, [
         "NCLOB",
         "NVARCHAR",
@@ -258,8 +244,8 @@ export class HanaDB extends VectorStore {
     }
   }
 
-  private async createTableIfNotExists(): Promise<void> {
-    const tableExists = await this.tableExists(this.tableName);
+  private createTableIfNotExists() {
+    const tableExists = this.tableExists(this.tableName);
     // console.log('Table exists:', tableExists);
     if (!tableExists) {
       let sqlStr =
@@ -275,7 +261,7 @@ export class HanaDB extends VectorStore {
       console.log(sqlStr);
       try {
         const client = this.connection;
-        await client.exec(sqlStr);
+        client.exec(sqlStr);
       } catch (error) {
         console.error("Error creating table:", error);
         throw error;
@@ -283,7 +269,7 @@ export class HanaDB extends VectorStore {
     }
   }
 
-  private async tableExists(tableName: string): Promise<boolean> {
+  private tableExists(tableName: string): boolean {
     const tableExistsSQL = `SELECT COUNT(*) AS COUNT FROM SYS.TABLES WHERE SCHEMA_NAME = CURRENT_SCHEMA AND TABLE_NAME = '${tableName.toUpperCase()}'`;
     try {
       const client = this.connection; // Get the connection object
@@ -321,10 +307,7 @@ export class HanaDB extends VectorStore {
         whereStr += ` JSON_VALUE(${this.metadataColumn}, '$.${key}') = ?`;
 
         const value = filter[key];
-        if (typeof value === "boolean") {
-          // queryTuple.push(value ? "true" : "false");
-          queryTuple.push(value);
-        } else if (typeof value === "number" || typeof value === "string") {
+        if (typeof value === "number" || typeof value === "string" ||typeof value === "boolean") {
           queryTuple.push(value);
         } else {
           throw new Error(`Unsupported filter data-type: ${typeof value}`);
@@ -347,7 +330,6 @@ export class HanaDB extends VectorStore {
     ids?: string[];
     filter?: Filter;
   }): Promise<void> {
-    await this.initPromise;
     const { ids, filter } = options;
     if (ids) {
       throw new Error("Deletion via IDs is not supported");
@@ -361,7 +343,7 @@ export class HanaDB extends VectorStore {
     // console.log(sqlStr, queryTuple)
     try {
       const client = this.connection;
-      await client.execute(sqlStr, queryTuple);
+      client.execute(sqlStr, queryTuple);
     } catch (error) {
       console.error("An error occurred while deleting:", error);
       throw new Error("Deletion was unsuccessful");
@@ -384,7 +366,6 @@ export class HanaDB extends VectorStore {
     dbConfig: HanaDBArgs
   ): Promise<HanaDB> {
     const instance = new HanaDB(embeddings, dbConfig);
-    // await instance.initialize();
     await instance.addTexts(texts, metadatas); // Embed and add texts to the database
     return instance;
     // return HanaDB.fromDocuments(docs, embeddings, dbConfig);
@@ -398,7 +379,6 @@ export class HanaDB extends VectorStore {
    * @returns A Promise that resolves when texts are added successfully.
    */
   async addTexts(texts: string[], metadatas: object[] | object): Promise<void> {
-    await this.initPromise;
     // Generate embeddings if not provided
     const embeddings = await this.embeddings.embedDocuments(texts);
     // console.log(embeddings)
@@ -418,7 +398,7 @@ export class HanaDB extends VectorStore {
       const sqlStr = `INSERT INTO ${this.tableName} (${this.contentColumn}, ${this.metadataColumn}, ${this.vectorColumn}) VALUES (?, ?, TO_REAL_VECTOR(?));`;
       // console.log(sqlStr)
 
-      await client.execute(sqlStr, [text, metadataJson, `[${embedding}]`]);
+      client.execute(sqlStr, [text, metadataJson, `[${embedding}]`]);
     }
   }
 
@@ -436,7 +416,6 @@ export class HanaDB extends VectorStore {
     dbConfig: HanaDBArgs
   ): Promise<HanaDB> {
     const instance = new this(embeddings, dbConfig);
-    // await instance.initialize();
     await instance.addDocuments(docs);
     return instance;
   }
@@ -449,7 +428,6 @@ export class HanaDB extends VectorStore {
    * @returns Promise that resolves when the documents are added.
    */
   async addDocuments(documents: Document[]): Promise<void> {
-    await this.initPromise;
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
@@ -465,7 +443,6 @@ export class HanaDB extends VectorStore {
    * @returns Promise that resolves when the vectors and documents are added.
    */
   async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
-    await this.initPromise;
     const texts = documents.map((doc) => doc.pageContent);
     const metadatas = documents.map((doc) => doc.metadata);
     // console.log(embeddings)
@@ -485,7 +462,7 @@ export class HanaDB extends VectorStore {
       const sqlStr = `INSERT INTO ${this.tableName} (${this.contentColumn}, ${this.metadataColumn}, ${this.vectorColumn}) VALUES (?, ?, TO_REAL_VECTOR(?));`;
       // console.log(sqlStr)
 
-      await client.execute(sqlStr, [text, metadataJson, `[${embedding}]`]);
+      client.execute(sqlStr, [text, metadataJson, `[${embedding}]`]);
     }
   }
 
@@ -502,7 +479,6 @@ export class HanaDB extends VectorStore {
     k: number,
     filter?: Filter
   ): Promise<Document[]> {
-    await this.initPromise;
     const results = await this.similaritySearchWithScore(query, k, filter);
     // console.log(results)
     return results.map((result) => result[0]);
@@ -586,8 +562,6 @@ export class HanaDB extends VectorStore {
     const client = this.connection;
     const stm = client.prepare(sqlStr);
     try {
-      // const rows = await client.execute(sqlStr, queryTuple);
-      // console.log(rows)
       const resultSet = stm.execQuery(queryTuple);
       while (resultSet.next()) {
         const metadata = JSON.parse(resultSet.getValue(1));
@@ -621,7 +595,6 @@ export class HanaDB extends VectorStore {
     query: string,
     options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
   ): Promise<Document[]> {
-    await this.initPromise;
     const { k, fetchK = 20, lambda = 0.5 } = options;
     // console.log(options)
     const queryEmbedding = await this.embeddings.embedQuery(query);

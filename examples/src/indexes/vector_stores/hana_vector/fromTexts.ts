@@ -1,6 +1,5 @@
 import { OpenAIEmbeddings } from "@langchain/openai";
 import hanaClient from "@sap/hana-client";
-import { setTimeout } from "timers/promises";
 import {
   HanaDB,
   HanaDBArgs,
@@ -33,9 +32,6 @@ const vectorStore = await HanaDB.fromTexts(
   embeddings,
   args
 );
-
-// sleep 5 seconds to make sure the documents are indexed.
-await setTimeout(5000);
 
 const response = await vectorStore.similaritySearch("hello world", 2);
 

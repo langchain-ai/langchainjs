@@ -1,6 +1,5 @@
 import { OpenAIEmbeddings } from "@langchain/openai";
 import hanaClient from "@sap/hana-client";
-import { setTimeout } from "timers/promises";
 import { Document } from "@langchain/core/documents";
 import {
   HanaDB,
@@ -37,13 +36,9 @@ const docs: Document[] = [
 
 // Create a LangChain VectorStore interface for the HANA database and specify the table (collection) to use in args.
 const vectorStore = new HanaDB(embeddings, args);
-// sleep 5 seconds to make sure the table is created.
-await setTimeout(5000);
 // Delete already existing documents from the table
 await vectorStore.delete({ filter: {} });
 await vectorStore.addDocuments(docs);
-// sleep 5 seconds to make sure the documents are indexed.
-await setTimeout(5000);
 // Query documents with specific metadata.
 const filterMeta = { quality: "bad" };
 const query = "foobar";

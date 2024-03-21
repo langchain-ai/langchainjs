@@ -4,7 +4,6 @@ import {
   HanaDBArgs,
 } from "@langchain/community/vectorstores/hanavector";
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { setTimeout } from "timers/promises";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { CharacterTextSplitter } from "langchain/text_splitter";
 
@@ -34,13 +33,10 @@ const splitter = new CharacterTextSplitter({
 const documents = await splitter.splitDocuments(rawDocuments);
 // Create a LangChain VectorStore interface for the HANA database and specify the table (collection) to use in args.
 const vectorStore = new HanaDB(embeddings, args);
-await setTimeout(5000);
 // Delete already existing documents from the table
 await vectorStore.delete({ filter: {} });
 // add the loaded document chunks
 await vectorStore.addDocuments(documents);
-// sleep 5 seconds to make sure the documents are indexed.
-await setTimeout(5000);
 
 // similarity search (default:“Cosine Similarity”, options:["euclidean", "cosine"])
 const query = "What did the president say about Ketanji Brown Jackson";

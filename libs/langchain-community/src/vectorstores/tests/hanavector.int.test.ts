@@ -2,7 +2,6 @@
 import hanaClient from "@sap/hana-client";
 import { Document } from "@langchain/core/documents";
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { setTimeout } from "timers/promises";
 import { test, expect } from "@jest/globals";
 import { HanaDB, HanaDBArgs } from "../hanavector.js";
 
@@ -45,8 +44,7 @@ describe("add documents and similarity search tests", () => {
       args
     );
     expect(vectorStore).toBeDefined();
-    // sleep 5 seconds to make sure the documents are indexed.
-    await setTimeout(5000);
+
     const results = await vectorStore.similaritySearch("hello world", 1);
     // console.log(results)
     expect(results).toHaveLength(1);
@@ -100,8 +98,6 @@ describe("add documents and similarity search tests", () => {
       },
     ]);
 
-    // sleep 5 seconds to make sure the documents are indexed.
-    await setTimeout(5000);
     const results: Document[] = await vectorStore.similaritySearch(
       "sandwich",
       1
@@ -162,8 +158,7 @@ describe("MMR search tests", () => {
     };
     const texts = ["foo", "foo", "fox"];
     const vectorStore = await HanaDB.fromTexts(texts, {}, embeddings, args);
-    // sleep 5 seconds to make sure the documents are indexed.
-    await setTimeout(5000);
+
     const output = await vectorStore.maxMarginalRelevanceSearch("foo", {
       k: 3,
       fetchK: 20,
@@ -231,8 +226,7 @@ describe("Filter tests", () => {
     await vectorStore.addDocuments(docs);
     const filter = { quality: "bad" };
     const query = "foobar";
-    // sleep 5 seconds to make sure the documents are indexed.
-    await setTimeout(5000);
+
     const results = await vectorStore.similaritySearch(query, 1, filter);
     expect(results.length).toEqual(1);
     expect(results).toMatchObject([
