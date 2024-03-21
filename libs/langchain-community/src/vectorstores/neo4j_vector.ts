@@ -303,8 +303,8 @@ export class Neo4jVectorStore extends VectorStore {
         RETURN reduce(str='', k IN ${JSON.stringify(textNodeProperties)} |
         str + '\\n' + k + ': ' + coalesce(node[k], '')) AS text,
         node {.*, \`${embeddingNodeProperty}\`: Null, id: Null, ${textNodeProperties
-        .map((prop) => `\`${prop}\`: Null`)
-        .join(", ")} } AS metadata, score
+          .map((prop) => `\`${prop}\`: Null`)
+          .join(", ")} } AS metadata, score
       `;
     }
 
@@ -735,7 +735,11 @@ function getSearchIndexQuery(searchType: SearchType): string {
   return typeToQueryMap[searchType];
 }
 
-function removeLuceneChars(text: string): string {
+function removeLuceneChars(text: string | null) {
+  if (text === undefined || text === null) {
+    return null
+  }
+
   // Remove Lucene special characters
   const specialChars = [
     "+",
