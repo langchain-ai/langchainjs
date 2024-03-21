@@ -87,7 +87,8 @@ type MistralAIChatCompletionOptions = {
   responseFormat?: ResponseFormat;
 };
 
-interface MistralAICallOptions extends BaseLanguageModelCallOptions {
+interface MistralAICallOptions
+  extends Omit<BaseLanguageModelCallOptions, "stop"> {
   response_format?: {
     type: "text" | "json_object";
   };
@@ -411,8 +412,12 @@ export class ChatMistralAI<
       messages: mistralMessages,
     };
 
+    // Enable streaming for signal controller or timeout due
+    // to SDK limitations on canceling requests.
+    const shouldStream = !!options.signal ?? !!options.timeout;
+
     // Handle streaming
-    if (this.streaming) {
+    if (this.streaming || shouldStream) {
       const stream = this._streamResponseChunks(messages, options, runManager);
       const finalChunks: Record<number, ChatGenerationChunk> = {};
       for await (const chunk of stream) {
@@ -491,6 +496,9 @@ export class ChatMistralAI<
 
     const streamIterable = await this.completionWithRetry(input, true);
     for await (const data of streamIterable) {
+      if (options.signal?.aborted) {
+        throw new Error("AbortError");
+      }
       const choice = data?.choices[0];
       if (!choice || !("delta" in choice)) {
         continue;
@@ -524,9 +532,6 @@ export class ChatMistralAI<
         undefined,
         { chunk: generationChunk }
       );
-    }
-    if (options.signal?.aborted) {
-      throw new Error("AbortError");
     }
   }
 
