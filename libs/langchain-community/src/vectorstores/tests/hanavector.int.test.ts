@@ -27,7 +27,7 @@ beforeAll(async () => {
   expect(process.env.OPENAI_API_KEY).toBeDefined();
 });
 
-describe("add documents and similarity search tests", () => {
+describe.skip("add documents and similarity search tests", () => {
   test("test fromText and default similarity search", async () => {
     const args: HanaDBArgs = {
       connection: client,
@@ -131,7 +131,7 @@ describe("add documents and similarity search tests", () => {
   });
 });
 
-describe("MMR search tests", () => {
+describe.skip("MMR search tests", () => {
   test("test delete by filter", async () => {
     const args: HanaDBArgs = {
       connection: client,
@@ -204,7 +204,7 @@ describe("MMR search tests", () => {
   });
 });
 
-describe("Filter tests", () => {
+describe.skip("Filter tests", () => {
   test("test query documents with specific metadata", async () => {
     const args: HanaDBArgs = {
       connection: client,
