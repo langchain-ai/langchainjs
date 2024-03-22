@@ -7,7 +7,6 @@
     "typedoc:build": "npx typedoc --options typedoc.json",
     "build:scripts": "node ./scripts/create-entrypoints.js && yarn typedoc:build && node ./scripts/update-typedoc-css.js",
     "build": "yarn clean && yarn build:scripts && next build",
-    "build:vercel": "yarn clean && yarn build:scripts && next build",
     "start": "yarn build && next start -p 3001",
     "lint": "next lint",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx}\"",

@@ -1,10 +1,13 @@
 const {
   Application,
+  CommentTag,
   Converter,
   Context,
   ReflectionKind,
   DeclarationReflection,
   RendererEvent,
+  Comment,
+  Reflection,
 } = require("typedoc");
 const fs = require("fs");
 const path = require("path");
@@ -93,12 +96,42 @@ function load(application) {
    * @returns {void}
    */
   function onBeginResolve(context) {
+    const { project } = context;
+
     reflectionsToHide.forEach((reflection) => {
-      const { project } = context;
       // Remove the property from documentation
       project.removeReflection(reflection);
     });
   }
+
+  /**
+   * @param {Comment} comment
+   * @returns {boolean}
+   */
+  const hasDeprecatedTag = (comment) => {
+    const hasDeprecated = comment.blockTags.find(
+      (tag) => tag.tag === "@deprecated"
+    );
+    return !!hasDeprecated;
+  };
+
+  /**
+   *
+   * @param {Reflection} reflection
+   * @returns {boolean} true if the parent is deprecated else false
+   */
+  const checkParentIsDeprecated = (reflection) => {
+    if (reflection.comment) {
+      if (hasDeprecatedTag(reflection.comment)) {
+        return true;
+      }
+    }
+    const parent = reflection.parent;
+    if (parent) {
+      return checkParentIsDeprecated(parent);
+    }
+    return false;
+  };
 
   /**
    * @param {Context} _context
@@ -120,6 +153,32 @@ function load(application) {
     }
     if (reflection.name.startsWith("libs/")) {
       reflection.name = reflection.name.replace("libs/", "");
+    }
+
+    if (reflection.kind === ReflectionKind.Class) {
+      const commentTag = new CommentTag("@inheritDoc", []);
+      if (reflection.comment) {
+        const isDeprecated = reflection.comment.blockTags.find(
+          (tag) => tag.tag === "@deprecated"
+        );
+        const parent = reflection.parent;
+        if (parent && checkParentIsDeprecated(parent)) {
+          // no-op
+        } else if (!isDeprecated) {
+          console.log("Adding comment tag for", reflection.name);
+          reflection.comment.blockTags.push(commentTag);
+        }
+      } else {
+        const parent = reflection.parent;
+        if (!parent || !checkParentIsDeprecated(parent)) {
+          // No comment already existed, add a new comment with `@inheritDoc` tag
+          reflection = new DeclarationReflection(
+            reflection.name,
+            ReflectionKind.Class,
+            reflection.parent
+          ).comment = new Comment(undefined, [commentTag]);
+        }
+      }
     }
   }
 
