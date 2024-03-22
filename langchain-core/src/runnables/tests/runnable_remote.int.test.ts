@@ -46,6 +46,25 @@ test("streamLog hosted langserve with concat syntax", async () => {
   console.log("totalByteSize", totalByteSize);
 });
 
+test("stream events hosted langserve with concat syntax", async () => {
+  const remote = new RemoteRunnable({
+    url: `http://localhost:8100/joke`,
+  });
+  const result = await remote.streamEvents({
+    input: "What is a document loader?",
+  });
+  let totalByteSize = 0;
+  const state = [];
+  for await (const chunk of result) {
+    state.push(chunk);
+    const jsonString = JSON.stringify(chunk);
+    const byteSize = Buffer.byteLength(jsonString, "utf-8");
+    totalByteSize += byteSize;
+  }
+  console.log("final state", state);
+  console.log("totalByteSize", totalByteSize);
+});
+
 test.skip("streamLog with raw messages", async () => {
   const chain = new RemoteRunnable({
     url: "https://aimor-deployment-bf1e4ebc87365334b3b8a6b175fb4151-ffoprvkqsa-uc.a.run.app/",

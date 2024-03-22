@@ -7,6 +7,7 @@ import {
   LogStreamCallbackHandler,
   RunLogPatch,
   type LogStreamCallbackHandlerInput,
+  type StreamEvent,
 } from "../tracers/log_stream.js";
 import {
   AIMessage,
@@ -487,6 +488,70 @@ export class RemoteRunnable<
     for await (const log of runnableStream) {
       const chunk = revive(JSON.parse(log));
       yield new RunLogPatch({ ops: chunk.ops });
+    }
+  }
+
+  async *streamEvents(
+    input: RunInput,
+    options?: Partial<CallOptions>,
+    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
+  ): AsyncGenerator<StreamEvent> {
+    const [config, kwargs] =
+      this._separateRunnableConfigFromCallOptions(options);
+    const stream = new LogStreamCallbackHandler({
+      ...streamOptions,
+      autoClose: false,
+      _schemaFormat: "streaming_events"
+    });
+    const { callbacks } = config;
+    if (callbacks === undefined) {
+      config.callbacks = [stream];
+    } else if (Array.isArray(callbacks)) {
+      config.callbacks = callbacks.concat([stream]);
+    } else {
+      const copiedCallbacks = callbacks.copy();
+      copiedCallbacks.inheritableHandlers.push(stream);
+      config.callbacks = copiedCallbacks;
+    }
+    // The type is in camelCase but the API only accepts snake_case.
+    const camelCaseStreamOptions = {
+      include_names: streamOptions?.includeNames,
+      include_types: streamOptions?.includeTypes,
+      include_tags: streamOptions?.includeTags,
+      exclude_names: streamOptions?.excludeNames,
+      exclude_types: streamOptions?.excludeTypes,
+      exclude_tags: streamOptions?.excludeTags,
+    };
+    const response = await this.post<{
+      input: RunInput;
+      config?: RunnableConfig;
+      kwargs?: Omit<Partial<CallOptions>, keyof RunnableConfig>;
+      diff: false;
+    }>("/stream_events", {
+      input,
+      config: removeCallbacks(config),
+      kwargs,
+      ...camelCaseStreamOptions,
+      diff: false,
+    });
+    const { body } = response;
+    if (!body) {
+      throw new Error(
+        "Could not begin remote stream events. Please check the given URL and try again."
+      );
+    }
+    const runnableStream = convertEventStreamToIterableReadableDataStream(body);
+    for await (const log of runnableStream) {
+      const chunk = revive(JSON.parse(log));
+      yield {
+        event: chunk.event,
+        name: chunk.name,
+        run_id: chunk.id,
+        tags: chunk.tags,
+        metadata: chunk.metadata,
+        data: chunk.data,
+      }
+
     }
   }
 }
