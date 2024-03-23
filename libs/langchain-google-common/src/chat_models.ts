@@ -1,6 +1,5 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { type BaseMessage } from "@langchain/core/messages";
-import { type BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {StructuredToolInterface} from "@langchain/core/tools";
 
@@ -16,7 +15,7 @@ import {
   GoogleAISafetySetting,
   GoogleConnectionParams,
   GooglePlatformType,
-  GeminiContent, GeminiTool,
+  GeminiContent, GeminiTool, GoogleAIBaseLanguageModelCallOptions,
 } from "./types.js";
 import {
   copyAIModelParams,
@@ -65,7 +64,7 @@ export interface ChatGoogleBaseInput<AuthOptions>
  * Integration with a chat model.
  */
 export abstract class ChatGoogleBase<AuthOptions>
-  extends BaseChatModel<BaseLanguageModelCallOptions>
+  extends BaseChatModel<GoogleAIBaseLanguageModelCallOptions>
   implements ChatGoogleBaseInput<AuthOptions>
 {
   // Used for tracing, replace with the same name as your class
@@ -164,7 +163,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     options: this["ParsedCallOptions"],
     _runManager: CallbackManagerForLLMRun | undefined
   ): Promise<ChatResult> {
-    const parameters = copyAIModelParams(this);
+    const parameters = copyAIModelParams(this, options);
     const response = await this.connection.request(
       messages,
       parameters,
@@ -176,15 +175,15 @@ export abstract class ChatGoogleBase<AuthOptions>
 
   async *_streamResponseChunks(
     _messages: BaseMessage[],
-    _options: this["ParsedCallOptions"],
+    options: this["ParsedCallOptions"],
     _runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     // Make the call as a streaming request
-    const parameters = copyAIModelParams(this);
+    const parameters = copyAIModelParams(this, options);
     const response = await this.streamedConnection.request(
       _messages,
       parameters,
-      _options
+      options
     );
 
     // Get the streaming parser of the response

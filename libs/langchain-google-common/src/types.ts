@@ -1,4 +1,5 @@
 import type { BaseLLMParams } from "@langchain/core/language_models/llms";
+import {BaseLanguageModelCallOptions} from "@langchain/core/language_models/base";
 import {StructuredToolInterface} from "@langchain/core/tools";
 import type { JsonStream } from "./utils/stream.js";
 
@@ -90,6 +91,11 @@ export interface GoogleAIModelParams {
 export interface GoogleAIBaseLLMInput<AuthOptions>
   extends BaseLLMParams,
     GoogleConnectionParams<AuthOptions>,
+    GoogleAIModelParams,
+    GoogleAISafetyParams {}
+
+export interface GoogleAIBaseLanguageModelCallOptions
+  extends BaseLanguageModelCallOptions,
     GoogleAIModelParams,
     GoogleAISafetyParams {}
 

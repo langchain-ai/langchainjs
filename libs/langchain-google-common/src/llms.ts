@@ -182,7 +182,7 @@ export abstract class GoogleBaseLLM<AuthOptions>
     prompt: string,
     options: this["ParsedCallOptions"]
   ): Promise<string> {
-    const parameters = copyAIModelParams(this);
+    const parameters = copyAIModelParams(this, options);
     const result = await this.connection.request(prompt, parameters, options);
     const ret = safeResponseToString(result, this.safetyHandler);
     return ret;

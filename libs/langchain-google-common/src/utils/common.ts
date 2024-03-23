@@ -1,28 +1,30 @@
-import type { GoogleAIModelParams, GoogleLLMModelFamily } from "../types.js";
+import type {GoogleAIBaseLanguageModelCallOptions, GoogleAIModelParams, GoogleLLMModelFamily} from "../types.js";
 import { isModelGemini, validateGeminiParams } from "./gemini.js";
 
 export function copyAIModelParams(
-  params: GoogleAIModelParams | undefined
+  params: GoogleAIModelParams | undefined,
+  options: GoogleAIBaseLanguageModelCallOptions | undefined
 ): GoogleAIModelParams {
-  return copyAIModelParamsInto(params, {});
+  return copyAIModelParamsInto(params, options, {});
 }
 
 export function copyAIModelParamsInto(
   params: GoogleAIModelParams | undefined,
+  options: GoogleAIBaseLanguageModelCallOptions | undefined,
   target: GoogleAIModelParams
 ): GoogleAIModelParams {
   const ret: GoogleAIModelParams = target || {};
 
-  ret.model = params?.model ?? target.model;
+  ret.model = options?.model ?? params?.model ?? target.model;
 
-  ret.temperature = params?.temperature ?? target.temperature;
-  ret.maxOutputTokens = params?.maxOutputTokens ?? target.maxOutputTokens;
-  ret.topP = params?.topP ?? target.topP;
-  ret.topK = params?.topK ?? target.topK;
-  ret.stopSequences = params?.stopSequences ?? target.stopSequences;
-  ret.safetySettings = params?.safetySettings ?? target.safetySettings;
+  ret.temperature = options?.temperature ?? params?.temperature ?? target.temperature;
+  ret.maxOutputTokens = options?.maxOutputTokens ?? params?.maxOutputTokens ?? target.maxOutputTokens;
+  ret.topP = options?.topP ?? params?.topP ?? target.topP;
+  ret.topK = options?.topK ?? params?.topK ?? target.topK;
+  ret.stopSequences = options?.stopSequences ?? params?.stopSequences ?? target.stopSequences;
+  ret.safetySettings = options?.safetySettings ?? params?.safetySettings ?? target.safetySettings;
 
-  ret.tools = params?.tools ?? target.tools;
+  ret.tools = options ?.tools ?? params?.tools ?? target.tools;
 
   return ret;
 }
@@ -57,7 +59,7 @@ export function copyAndValidateModelParamsInto(
   params: GoogleAIModelParams | undefined,
   target: GoogleAIModelParams
 ): GoogleAIModelParams {
-  copyAIModelParamsInto(params, target);
+  copyAIModelParamsInto(params, undefined, target);
   validateModelParams(target);
   return target;
 }

@@ -466,6 +466,86 @@ describe("Mock ChatGoogle", () => {
 
   })
 
+  test("4. Functions Bind - Gemini format request", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-4-mock.json",
+    };
+
+    const tools: GeminiTool[] = [
+      {
+        functionDeclarations: [
+          {
+            name: "test",
+            description: "Run a test with a specific name and get if it passed or failed",
+            parameters: {
+              type: "object",
+              properties: {
+                testName: {
+                  type: "string",
+                  description: "The name of the test that should be run.",
+                }
+              },
+              required: [
+                "testName"
+              ]
+            }
+          }
+        ]
+      }
+    ];
+
+    const baseModel = new ChatGoogle({
+      authOptions,
+    });
+    const model = baseModel.bind({
+      tools,
+    })
+
+    const result = await model.invoke("What?");
+
+    console.log(JSON.stringify(record, null, 1));
+
+    expect(result).toBeDefined();
+
+    const toolsResult = record?.opts?.data?.tools;
+    expect(toolsResult).toBeDefined();
+    expect(Array.isArray(toolsResult)).toBeTruthy();
+    expect(toolsResult).toHaveLength(1);
+
+    const toolResult = toolsResult[0];
+    expect(toolResult).toBeDefined();
+    expect(toolResult).toHaveProperty("functionDeclarations");
+    expect(Array.isArray(toolResult.functionDeclarations)).toBeTruthy();
+    expect(toolResult.functionDeclarations).toHaveLength(1);
+
+    const functionDeclaration = toolResult.functionDeclarations[0];
+    expect(functionDeclaration.name).toBe("test");
+    expect(functionDeclaration.description).toBe("Run a test with a specific name and get if it passed or failed");
+    expect(functionDeclaration.parameters).toBeDefined();
+    expect(typeof functionDeclaration.parameters).toBe("object");
+
+    const parameters = functionDeclaration?.parameters;
+    expect(parameters.type).toBe("object");
+    expect(parameters).toHaveProperty("properties");
+    expect(typeof parameters.properties).toBe("object");
+
+    expect(parameters.properties.testName).toBeDefined();
+    expect(typeof parameters.properties.testName).toBe("object");
+    expect(parameters.properties.testName.type).toBe("string");
+    expect(parameters.properties.testName.description).toBe("The name of the test that should be run.");
+
+    expect(parameters.required).toBeDefined();
+    expect(Array.isArray(parameters.required)).toBeTruthy();
+    expect(parameters.required).toHaveLength(1);
+    expect(parameters.required[0]).toBe("testName")
+
+  })
+
   test("4. Functions - zod format request", async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
