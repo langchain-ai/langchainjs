@@ -7,7 +7,7 @@ import {
   HumanMessageChunk,
   MessageContentComplex,
   MessageContentText,
-  SystemMessage,
+  SystemMessage, ToolMessage,
 } from "@langchain/core/messages";
 import {StructuredToolInterface} from "@langchain/core/tools";
 import {FakeTool} from "@langchain/core/utils/testing";
@@ -172,7 +172,7 @@ describe("Mock ChatGoogle", () => {
       new AIMessage("H"),
       new HumanMessage("Flip it again"),
     ];
-    const result = await model.call(messages);
+    const result = await model.invoke(messages);
     console.log("record", JSON.stringify(record, null, 1));
     console.log("result", JSON.stringify(result, null, 1));
 
@@ -238,7 +238,7 @@ describe("Mock ChatGoogle", () => {
       new AIMessage("H"),
       new HumanMessage("Flip it again"),
     ];
-    const result = await model.call(messages);
+    const result = await model.invoke(messages);
 
     expect(result._getType()).toEqual("ai");
     const aiMessage = result as AIMessage;
@@ -391,7 +391,7 @@ describe("Mock ChatGoogle", () => {
     );
   });
 
-  test("4. Functions - Gemini format", async () => {
+  test("4. Functions - Gemini format request", async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
@@ -430,6 +430,7 @@ describe("Mock ChatGoogle", () => {
     });
 
     const result = await model.invoke("What?");
+    expect(result).toBeDefined();
 
     const toolsResult = record?.opts?.data?.tools;
     expect(toolsResult).toBeDefined();
@@ -463,10 +464,9 @@ describe("Mock ChatGoogle", () => {
     expect(parameters.required).toHaveLength(1);
     expect(parameters.required[0]).toBe("testName")
 
-    console.log(result);
   })
 
-  test("4. Functions - zod format", async () => {
+  test("4. Functions - zod format request", async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
@@ -477,7 +477,7 @@ describe("Mock ChatGoogle", () => {
     };
 
     const zodSchema = z.object({
-      testName: z.string().optional().describe("The name of the test that should be run.")
+      testName: z.string().describe("The name of the test that should be run.")
     })
     const tools: StructuredToolInterface[] = [
       new FakeTool({
@@ -530,4 +530,127 @@ describe("Mock ChatGoogle", () => {
     console.log(result);
   })
 
+  test("4. Functions - results", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-4-mock.json",
+    };
+
+    const tools: GeminiTool[] = [
+      {
+        functionDeclarations: [
+          {
+            name: "test",
+            description: "Run a test with a specific name and get if it passed or failed",
+            parameters: {
+              type: "object",
+              properties: {
+                testName: {
+                  type: "string",
+                  description: "The name of the test that should be run.",
+                }
+              },
+              required: [
+                "testName"
+              ]
+            }
+          }
+        ]
+      }
+    ];
+
+    const model = new ChatGoogle({
+      authOptions,
+      tools,
+    });
+
+    const result = await model.invoke("What?");
+
+    console.log(JSON.stringify(result,null,1));
+    expect(result).toHaveProperty("content");
+    expect(Array.isArray(result.content)).toBeTruthy();
+    expect(result.content).toHaveLength(0);
+    const args = result?.lc_kwargs?.additional_kwargs;
+    expect(args).toBeDefined();
+    expect(args).toHaveProperty("tool_calls");
+    expect(Array.isArray(args.tool_calls)).toBeTruthy();
+    expect(args.tool_calls).toHaveLength(1);
+    const call = args.tool_calls[0];
+    expect(call).toHaveProperty("type");
+    expect(call.type).toBe("function");
+    expect(call).toHaveProperty("function");
+    const func = call.function;
+    expect(func).toBeDefined();
+    expect(func).toHaveProperty("name");
+    expect(func.name).toBe("test");
+    expect(func).toHaveProperty("arguments");
+    expect(typeof func.arguments).toBe("string");
+    expect(func.arguments.replaceAll("\n","")).toBe("{\"testName\":\"cobalt\"}");
+  })
+
+  test("5. Functions - function reply", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-5-mock.json",
+    };
+
+    const tools: GeminiTool[] = [
+      {
+        functionDeclarations: [
+          {
+            name: "test",
+            description: "Run a test with a specific name and get if it passed or failed",
+            parameters: {
+              type: "object",
+              properties: {
+                testName: {
+                  type: "string",
+                  description: "The name of the test that should be run.",
+                }
+              },
+              required: [
+                "testName"
+              ]
+            }
+          }
+        ]
+      }
+    ];
+
+    const model = new ChatGoogle({
+      authOptions,
+      tools,
+    });
+    const toolResult = {
+      testPassed: true,
+    }
+    const messages: BaseMessageLike[] = [
+      new HumanMessage("Run a test on the cobalt project."),
+      new AIMessage("", {
+        "tool_calls": [
+          {
+            "id": "test",
+            "type": "function",
+            "function": {
+              "name": "test",
+              "arguments": "{\"testName\":\"cobalt\"}"
+            }
+          }
+        ]
+      }),
+      new ToolMessage(JSON.stringify(toolResult), "test"),
+    ];
+    const result = await model.invoke(messages);
+    expect(result).toBeDefined();
+
+    console.log(JSON.stringify(record?.opts?.data, null, 1));
+  })
 });

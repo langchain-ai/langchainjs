@@ -156,7 +156,7 @@ export interface GeminiSafetyRating {
   probability: string;
 }
 
-export type GeminiRole = "user" | "model";
+export type GeminiRole = "user" | "model" | "function";
 
 // Vertex AI requires the role
 

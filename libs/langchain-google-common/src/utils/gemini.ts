@@ -2,12 +2,12 @@ import {
   AIMessage,
   AIMessageChunk,
   BaseMessage,
-  BaseMessageChunk,
+  BaseMessageChunk, BaseMessageFields,
   MessageContent,
   MessageContentComplex,
   MessageContentImageUrl,
   MessageContentText,
-  SystemMessage,
+  SystemMessage, ToolMessage,
 } from "@langchain/core/messages";
 import {
   ChatGeneration,
@@ -25,14 +25,18 @@ import type {
   GeminiRole,
   GeminiContent,
   GenerateContentResponseData,
-  GoogleAISafetyHandler,
+  GoogleAISafetyHandler, GeminiPartFunctionCall,
 } from "../types.js";
 import { GoogleAISafetyError } from "./safety.js";
 
-function messageContentText(content: MessageContentText): GeminiPartText {
-  return {
-    text: content.text,
-  };
+function messageContentText(content: MessageContentText): GeminiPartText | null {
+  if (content?.text && content?.text.length > 0) {
+    return {
+      text: content.text,
+    };
+  } else {
+    return null;
+  }
 }
 
 function messageContentImageUrl(
@@ -78,27 +82,68 @@ export function messageContentToParts(content: MessageContent): GeminiPart[] {
       : content;
 
   // eslint-disable-next-line array-callback-return
-  const parts: GeminiPart[] = messageContent.map((content) => {
-    // eslint-disable-next-line default-case
-    switch (content.type) {
-      case "text":
-        return messageContentText(content);
-      case "image_url":
-        return messageContentImageUrl(content);
-    }
-  });
+  const parts: GeminiPart[] = messageContent
+    .map((content) => {
+      // eslint-disable-next-line default-case
+      switch (content.type) {
+        case "text":
+          return messageContentText(content);
+        case "image_url":
+          return messageContentImageUrl(content);
+      }
+    })
+    .reduce((acc: GeminiPart[], val: GeminiPart | null | undefined) => {
+      if (val) {
+        return [...acc, val];
+      } else {
+        return acc;
+      }
+    }, []);
 
   return parts;
+}
+
+function messageToolCallsToParts(toolCalls: ToolCall[]): GeminiPart[] {
+  if (!toolCalls || toolCalls.length === 0) {
+    return [];
+  }
+
+  return toolCalls.map((tool: ToolCall) => {
+    let args = {};
+    if (tool?.function?.arguments) {
+      const argStr = tool.function.arguments;
+      args = JSON.parse(argStr);
+    }
+    return {
+      functionCall: {
+        name: tool.function.name,
+        args,
+      }
+    }
+  });
+}
+
+function messageKwargsToParts(kwargs: Record<string, unknown>): GeminiPart[] {
+  const ret: GeminiPart[] = [];
+
+  if (kwargs?.tool_calls) {
+    ret.push(...messageToolCallsToParts(kwargs.tool_calls as ToolCall[]));
+  }
+
+  return ret;
 }
 
 function roleMessageToContent(
   role: GeminiRole,
   message: BaseMessage
 ): GeminiContent[] {
+  const contentParts: GeminiPart[] = messageContentToParts(message.content);
+  const toolParts: GeminiPart[] = messageKwargsToParts(message.additional_kwargs);
+  const parts: GeminiPart[] = [...contentParts, ...toolParts];
   return [
     {
       role,
-      parts: messageContentToParts(message.content),
+      parts,
     },
   ];
 }
@@ -110,6 +155,32 @@ function systemMessageToContent(message: SystemMessage): GeminiContent[] {
   ];
 }
 
+function toolMessageToContent(message: ToolMessage): GeminiContent[] {
+  const contentStr = typeof message.content === "string"
+    ? message.content
+    : message.content.reduce((acc: string, content: MessageContentComplex) => {
+      if (content.type === "text") {
+        return acc+content.text;
+      } else {
+        return acc;
+      }
+    }, "");
+  const content = JSON.parse(contentStr);
+  return [
+    {
+      role: "function",
+      parts: [
+        {
+          functionResponse: {
+            name: message.tool_call_id,
+            response: content,
+          }
+        }
+      ]
+    }
+  ]
+}
+
 export function baseMessageToContent(message: BaseMessage): GeminiContent[] {
   const type = message._getType();
   switch (type) {
@@ -119,6 +190,8 @@ export function baseMessageToContent(message: BaseMessage): GeminiContent[] {
       return roleMessageToContent("user", message);
     case "ai":
       return roleMessageToContent("model", message);
+    case "tool":
+      return toolMessageToContent(message as ToolMessage);
     default:
       console.log(`Unsupported message type: ${type}`);
       return [];
@@ -171,6 +244,75 @@ export function partsToMessageContent(parts: GeminiPart[]): MessageContent {
       }
       return acc;
     }, [] as MessageContentComplex[]);
+}
+
+interface FunctionCall {
+  name: string;
+  arguments: string;
+}
+
+interface ToolCall {
+  id: string;
+  type: "function";
+  function: FunctionCall;
+}
+
+interface FunctionCallRaw {
+  name: string;
+  arguments: object;
+}
+
+interface ToolCallRaw {
+  id: string;
+  type: "function";
+  function: FunctionCallRaw;
+}
+
+function toolRawToTool(raw: ToolCallRaw): ToolCall {
+  return {
+    id: raw.id,
+    type: raw.type,
+    function: {
+      name: raw.function.name,
+      arguments: JSON.stringify(raw.function.arguments)
+    }
+  }
+}
+
+function functionCallPartToToolRaw(
+  part: GeminiPartFunctionCall
+): ToolCallRaw {
+  return {
+    id: part?.functionCall?.name ?? "",
+    type: "function",
+    function: {
+      name: part.functionCall.name,
+      arguments: part.functionCall.args ?? {},
+    }
+  }
+}
+
+export function partsToToolsRaw(parts: GeminiPart[]): ToolCallRaw[] {
+  return parts
+    .map((part: GeminiPart) => {
+      if (part === undefined || part === null) {
+        return null;
+      } else if ("functionCall" in part) {
+        return functionCallPartToToolRaw(part)
+      } else {
+        return null;
+      }
+    })
+    .reduce((acc, content) => {
+      if (content) {
+        acc.push(content);
+      }
+      return acc;
+    }, [] as ToolCallRaw[]);
+}
+
+export function toolsRawToTools(raws: ToolCallRaw[]): ToolCall[] {
+  return raws.map(raw => toolRawToTool(raw));
 }
 
 export function responseToGenerateContentResponseData(
@@ -290,8 +432,8 @@ export function chunkToString(chunk: BaseMessageChunk): string {
 }
 
 export function partToMessage(part: GeminiPart): BaseMessageChunk {
-  const content = partsToMessageContent([part]);
-  return new AIMessageChunk({ content });
+  const fields = partsToBaseMessageFields([part]);
+  return new AIMessageChunk(fields);
 }
 
 export function partToChatGeneration(part: GeminiPart): ChatGeneration {
@@ -311,19 +453,36 @@ export function responseToChatGenerations(
   return ret;
 }
 
-export function responseToMessageContent(
+export function responseToBaseMessageFields(
   response: GoogleLLMResponse
-): MessageContent {
+): BaseMessageFields {
   const parts = responseToParts(response);
-  return partsToMessageContent(parts);
+  return partsToBaseMessageFields(parts);
+}
+
+export function partsToBaseMessageFields(
+  parts: GeminiPart[]
+): BaseMessageFields {
+  const fields: BaseMessageFields = {
+    content: partsToMessageContent(parts),
+  }
+
+  const rawTools = partsToToolsRaw(parts);
+  if (rawTools.length > 0) {
+    const tools = toolsRawToTools(rawTools);
+    fields.additional_kwargs = {
+      tool_calls: tools,
+      tool_calls_raw: rawTools,
+    }
+  }
+  return fields;
 }
 
 export function responseToBaseMessage(
   response: GoogleLLMResponse
 ): BaseMessage {
-  return new AIMessage({
-    content: responseToMessageContent(response),
-  });
+  const fields = responseToBaseMessageFields(response);
+  return new AIMessage(fields);
 }
 
 export function safeResponseToBaseMessage(
