@@ -5,6 +5,7 @@ import {
 } from "@langchain/core/utils/async_caller";
 import { getRuntimeEnvironment } from "@langchain/core/utils/env";
 import {StructuredToolInterface} from "@langchain/core/tools";
+import {zodToJsonSchema} from "zod-to-json-schema";
 import type {
   GoogleAIBaseLLMInput,
   GoogleAIModelParams,
@@ -18,14 +19,13 @@ import type {
   GeminiRequest,
   GeminiSafetySetting,
   GeminiTool,
-  GeminiFunctionDeclaration, GeminiFunctionSchema,
+  GeminiFunctionDeclaration,
 } from "./types.js";
 import {
   GoogleAbstractedClient,
   GoogleAbstractedClientOps,
   GoogleAbstractedClientOpsMethod,
 } from "./auth.js";
-import {zodToJsonSchema} from "zod-to-json-schema";
 
 export abstract class GoogleConnection<
   CallOptions extends AsyncCallerCallOptions,
@@ -294,10 +294,19 @@ export abstract class AbstractGoogleLLMConnection<
   }
 
   structuredToolToFunctionDeclaration(tool: StructuredToolInterface): GeminiFunctionDeclaration {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const jsonSchema = zodToJsonSchema(tool.schema) as any;
+    // Gemini doesn't accept either the $schema or additionalProperties
+    // attributes, so we need to explicitly remove them.
+    const {
+      $schema,
+      additionalProperties,
+      ...parameters
+    } = jsonSchema;
     return {
       name: tool.name,
       description: tool.description,
-      parameters: zodToJsonSchema(tool.schema) as GeminiFunctionSchema,
+      parameters,
     }
   }
 

@@ -515,6 +515,8 @@ describe("Mock ChatGoogle", () => {
     const parameters = functionDeclaration?.parameters;
     expect(parameters.type).toBe("object");
     expect(parameters).toHaveProperty("properties");
+    expect(parameters).not.toHaveProperty("additionalProperties");
+    expect(parameters).not.toHaveProperty("$schema");
     expect(typeof parameters.properties).toBe("object");
 
     expect(parameters.properties.testName).toBeDefined();
