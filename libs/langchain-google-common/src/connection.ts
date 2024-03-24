@@ -4,8 +4,8 @@ import {
   AsyncCallerCallOptions,
 } from "@langchain/core/utils/async_caller";
 import { getRuntimeEnvironment } from "@langchain/core/utils/env";
-import {StructuredToolInterface} from "@langchain/core/tools";
-import {zodToJsonSchema} from "zod-to-json-schema";
+import { StructuredToolInterface } from "@langchain/core/tools";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import type {
   GoogleAIBaseLLMInput,
   GoogleAIModelParams,
@@ -282,9 +282,7 @@ export abstract class AbstractGoogleLLMConnection<
   }
 
   // Borrowed from the OpenAI invocation params test
-  isStructuredToolArray(
-    tools?: unknown[]
-  ): tools is StructuredToolInterface[] {
+  isStructuredToolArray(tools?: unknown[]): tools is StructuredToolInterface[] {
     return (
       tools !== undefined &&
       tools.every((tool) =>
@@ -293,29 +291,29 @@ export abstract class AbstractGoogleLLMConnection<
     );
   }
 
-  structuredToolToFunctionDeclaration(tool: StructuredToolInterface): GeminiFunctionDeclaration {
+  structuredToolToFunctionDeclaration(
+    tool: StructuredToolInterface
+  ): GeminiFunctionDeclaration {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const jsonSchema = zodToJsonSchema(tool.schema) as any;
     // Gemini doesn't accept either the $schema or additionalProperties
     // attributes, so we need to explicitly remove them.
-    const {
-      $schema,
-      additionalProperties,
-      ...parameters
-    } = jsonSchema;
+    const { $schema, additionalProperties, ...parameters } = jsonSchema;
     return {
       name: tool.name,
       description: tool.description,
       parameters,
-    }
+    };
   }
 
   structuredToolsToGeminiTools(tools: StructuredToolInterface[]): GeminiTool[] {
     return [
       {
-        functionDeclarations: tools.map(this.structuredToolToFunctionDeclaration)
-      }
-    ]
+        functionDeclarations: tools.map(
+          this.structuredToolToFunctionDeclaration
+        ),
+      },
+    ];
   }
 
   formatTools(

@@ -1,24 +1,28 @@
-import {expect, test} from "@jest/globals";
+import { expect, test } from "@jest/globals";
 import {
   AIMessage,
   AIMessageChunk,
   BaseMessage,
-  BaseMessageChunk, BaseMessageLike,
+  BaseMessageChunk,
+  BaseMessageLike,
   HumanMessage,
   MessageContentComplex,
   MessageContentText,
-  SystemMessage, ToolMessage,
+  SystemMessage,
+  ToolMessage,
 } from "@langchain/core/messages";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
-import {GeminiTool, GoogleAISafetySetting} from "@langchain/google-common";
+import { GeminiTool, GoogleAISafetySetting } from "@langchain/google-common";
 import { ChatGoogle } from "../chat_models.js";
 
 describe("Google APIKey Chat", () => {
   test("invoke", async () => {
     const model = new ChatGoogle();
     try {
-      const res = await model.invoke("What is the answer to life the universe and everything? Answer briefly.");
+      const res = await model.invoke(
+        "What is the answer to life the universe and everything? Answer briefly."
+      );
       expect(res).toBeDefined();
       expect(res._getType()).toEqual("ai");
 
@@ -43,23 +47,23 @@ describe("Google APIKey Chat", () => {
   test("generate", async () => {
     const safetySettings: GoogleAISafetySetting[] = [
       {
-        "category": "HARM_CATEGORY_HARASSMENT",
-        "threshold": "BLOCK_ONLY_HIGH"
+        category: "HARM_CATEGORY_HARASSMENT",
+        threshold: "BLOCK_ONLY_HIGH",
       },
       {
-        "category": "HARM_CATEGORY_HATE_SPEECH",
-        "threshold": "BLOCK_ONLY_HIGH"
+        category: "HARM_CATEGORY_HATE_SPEECH",
+        threshold: "BLOCK_ONLY_HIGH",
       },
       {
-        "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-        "threshold": "BLOCK_ONLY_HIGH"
+        category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+        threshold: "BLOCK_ONLY_HIGH",
       },
       {
-        "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-        "threshold": "BLOCK_ONLY_HIGH"
+        category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+        threshold: "BLOCK_ONLY_HIGH",
       },
     ];
-    const model = new ChatGoogle({safetySettings});
+    const model = new ChatGoogle({ safetySettings });
     try {
       const messages: BaseMessage[] = [
         new SystemMessage(
@@ -86,7 +90,7 @@ describe("Google APIKey Chat", () => {
       expect(textContent.text).toBeDefined();
       expect(["H", "T"]).toContainEqual(textContent.text);
     } catch (e) {
-      console.error(JSON.stringify(e,null,1));
+      console.error(JSON.stringify(e, null, 1));
       throw e;
     }
   });
@@ -94,23 +98,23 @@ describe("Google APIKey Chat", () => {
   test("stream", async () => {
     const safetySettings: GoogleAISafetySetting[] = [
       {
-        "category": "HARM_CATEGORY_HARASSMENT",
-        "threshold": "BLOCK_ONLY_HIGH"
+        category: "HARM_CATEGORY_HARASSMENT",
+        threshold: "BLOCK_ONLY_HIGH",
       },
       {
-        "category": "HARM_CATEGORY_HATE_SPEECH",
-        "threshold": "BLOCK_ONLY_HIGH"
+        category: "HARM_CATEGORY_HATE_SPEECH",
+        threshold: "BLOCK_ONLY_HIGH",
       },
       {
-        "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-        "threshold": "BLOCK_ONLY_HIGH"
+        category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+        threshold: "BLOCK_ONLY_HIGH",
       },
       {
-        "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-        "threshold": "BLOCK_ONLY_HIGH"
+        category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+        threshold: "BLOCK_ONLY_HIGH",
       },
     ];
-    const model = new ChatGoogle({safetySettings});
+    const model = new ChatGoogle({ safetySettings });
     try {
       const input: BaseLanguageModelInput = new ChatPromptValue([
         new SystemMessage(
@@ -136,7 +140,7 @@ describe("Google APIKey Chat", () => {
 
       console.log(JSON.stringify(resArray, null, 2));
     } catch (e) {
-      console.error(JSON.stringify(e,null,1));
+      console.error(JSON.stringify(e, null, 1));
       throw e;
     }
   });
@@ -147,27 +151,26 @@ describe("Google APIKey Chat", () => {
         functionDeclarations: [
           {
             name: "test",
-            description: "Run a test with a specific name and get if it passed or failed",
+            description:
+              "Run a test with a specific name and get if it passed or failed",
             parameters: {
               type: "object",
               properties: {
                 testName: {
                   type: "string",
                   description: "The name of the test that should be run.",
-                }
+                },
               },
-              required: [
-                "testName"
-              ]
-            }
-          }
-        ]
-      }
+              required: ["testName"],
+            },
+          },
+        ],
+      },
     ];
     const model = new ChatGoogle({
       apiVersion: "v1beta",
       tools,
-    })
+    });
     const result = await model.invoke("Run a test on the cobalt project");
     expect(result).toHaveProperty("content");
     expect(Array.isArray(result.content)).toBeTruthy();
@@ -187,8 +190,8 @@ describe("Google APIKey Chat", () => {
     expect(func.name).toBe("test");
     expect(func).toHaveProperty("arguments");
     expect(typeof func.arguments).toBe("string");
-    expect(func.arguments.replaceAll("\n","")).toBe("{\"testName\":\"cobalt\"}");
-  })
+    expect(func.arguments.replaceAll("\n", "")).toBe('{"testName":"cobalt"}');
+  });
 
   test("function reply", async () => {
     const tools: GeminiTool[] = [
@@ -196,43 +199,42 @@ describe("Google APIKey Chat", () => {
         functionDeclarations: [
           {
             name: "test",
-            description: "Run a test with a specific name and get if it passed or failed",
+            description:
+              "Run a test with a specific name and get if it passed or failed",
             parameters: {
               type: "object",
               properties: {
                 testName: {
                   type: "string",
                   description: "The name of the test that should be run.",
-                }
+                },
               },
-              required: [
-                "testName"
-              ]
-            }
-          }
-        ]
-      }
+              required: ["testName"],
+            },
+          },
+        ],
+      },
     ];
     const model = new ChatGoogle({
       apiVersion: "v1beta",
       tools,
-    })
+    });
     const toolResult = {
       testPassed: true,
-    }
+    };
     const messages: BaseMessageLike[] = [
       new HumanMessage("Run a test on the cobalt project."),
       new AIMessage("", {
-        "tool_calls": [
+        tool_calls: [
           {
-            "id": "test",
-            "type": "function",
-            "function": {
-              "name": "test",
-              "arguments": "{\"testName\":\"cobalt\"}"
-            }
-          }
-        ]
+            id: "test",
+            type: "function",
+            function: {
+              name: "test",
+              arguments: '{"testName":"cobalt"}',
+            },
+          },
+        ],
       }),
       new ToolMessage(JSON.stringify(toolResult), "test"),
     ];
@@ -242,8 +244,7 @@ describe("Google APIKey Chat", () => {
       resArray.push(chunk);
     }
     console.log(JSON.stringify(resArray, null, 2));
-  })
-
+  });
 });
 
 describe("Google Webauth Chat", () => {
@@ -343,26 +344,25 @@ describe("Google Webauth Chat", () => {
         functionDeclarations: [
           {
             name: "test",
-            description: "Run a test with a specific name and get if it passed or failed",
+            description:
+              "Run a test with a specific name and get if it passed or failed",
             parameters: {
               type: "object",
               properties: {
                 testName: {
                   type: "string",
                   description: "The name of the test that should be run.",
-                }
+                },
               },
-              required: [
-                "testName"
-              ]
-            }
-          }
-        ]
-      }
+              required: ["testName"],
+            },
+          },
+        ],
+      },
     ];
     const model = new ChatGoogle({
       tools,
-    })
+    });
     const result = await model.invoke("Run a test on the cobalt project");
     expect(result).toHaveProperty("content");
     expect(Array.isArray(result.content)).toBeTruthy();
@@ -382,8 +382,8 @@ describe("Google Webauth Chat", () => {
     expect(func.name).toBe("test");
     expect(func).toHaveProperty("arguments");
     expect(typeof func.arguments).toBe("string");
-    expect(func.arguments.replaceAll("\n","")).toBe("{\"testName\":\"cobalt\"}");
-  })
+    expect(func.arguments.replaceAll("\n", "")).toBe('{"testName":"cobalt"}');
+  });
 
   test("function reply", async () => {
     const tools: GeminiTool[] = [
@@ -391,42 +391,41 @@ describe("Google Webauth Chat", () => {
         functionDeclarations: [
           {
             name: "test",
-            description: "Run a test with a specific name and get if it passed or failed",
+            description:
+              "Run a test with a specific name and get if it passed or failed",
             parameters: {
               type: "object",
               properties: {
                 testName: {
                   type: "string",
                   description: "The name of the test that should be run.",
-                }
+                },
               },
-              required: [
-                "testName"
-              ]
-            }
-          }
-        ]
-      }
+              required: ["testName"],
+            },
+          },
+        ],
+      },
     ];
     const model = new ChatGoogle({
       tools,
-    })
+    });
     const toolResult = {
       testPassed: true,
-    }
+    };
     const messages: BaseMessageLike[] = [
       new HumanMessage("Run a test on the cobalt project."),
       new AIMessage("", {
-        "tool_calls": [
+        tool_calls: [
           {
-            "id": "test",
-            "type": "function",
-            "function": {
-              "name": "test",
-              "arguments": "{\"testName\":\"cobalt\"}"
-            }
-          }
-        ]
+            id: "test",
+            type: "function",
+            function: {
+              name: "test",
+              arguments: '{"testName":"cobalt"}',
+            },
+          },
+        ],
       }),
       new ToolMessage(JSON.stringify(toolResult), "test"),
     ];
@@ -436,6 +435,5 @@ describe("Google Webauth Chat", () => {
       resArray.push(chunk);
     }
     console.log(JSON.stringify(resArray, null, 2));
-  })
-
+  });
 });

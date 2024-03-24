@@ -7,16 +7,17 @@ import {
   HumanMessageChunk,
   MessageContentComplex,
   MessageContentText,
-  SystemMessage, ToolMessage,
+  SystemMessage,
+  ToolMessage,
 } from "@langchain/core/messages";
-import {StructuredToolInterface} from "@langchain/core/tools";
-import {FakeTool} from "@langchain/core/utils/testing";
+import { StructuredToolInterface } from "@langchain/core/tools";
+import { FakeTool } from "@langchain/core/utils/testing";
 // eslint-disable-next-line import/no-extraneous-dependencies
-import {z} from "zod";
+import { z } from "zod";
 
 import { ChatGoogleBase, ChatGoogleBaseInput } from "../chat_models.js";
 import { authOptions, MockClient, MockClientAuthInfo, mockId } from "./mock.js";
-import {GeminiTool, GoogleAIBaseLLMInput} from "../types.js";
+import { GeminiTool, GoogleAIBaseLLMInput } from "../types.js";
 import { GoogleAbstractedClient } from "../auth.js";
 import { GoogleAISafetyError } from "../utils/safety.js";
 
@@ -406,22 +407,21 @@ describe("Mock ChatGoogle", () => {
         functionDeclarations: [
           {
             name: "test",
-            description: "Run a test with a specific name and get if it passed or failed",
+            description:
+              "Run a test with a specific name and get if it passed or failed",
             parameters: {
               type: "object",
               properties: {
                 testName: {
                   type: "string",
                   description: "The name of the test that should be run.",
-                }
+                },
               },
-              required: [
-                "testName"
-              ]
-            }
-          }
-        ]
-      }
+              required: ["testName"],
+            },
+          },
+        ],
+      },
     ];
 
     const model = new ChatGoogle({
@@ -445,7 +445,9 @@ describe("Mock ChatGoogle", () => {
 
     const functionDeclaration = toolResult.functionDeclarations[0];
     expect(functionDeclaration.name).toBe("test");
-    expect(functionDeclaration.description).toBe("Run a test with a specific name and get if it passed or failed");
+    expect(functionDeclaration.description).toBe(
+      "Run a test with a specific name and get if it passed or failed"
+    );
     expect(functionDeclaration.parameters).toBeDefined();
     expect(typeof functionDeclaration.parameters).toBe("object");
 
@@ -457,14 +459,15 @@ describe("Mock ChatGoogle", () => {
     expect(parameters.properties.testName).toBeDefined();
     expect(typeof parameters.properties.testName).toBe("object");
     expect(parameters.properties.testName.type).toBe("string");
-    expect(parameters.properties.testName.description).toBe("The name of the test that should be run.");
+    expect(parameters.properties.testName.description).toBe(
+      "The name of the test that should be run."
+    );
 
     expect(parameters.required).toBeDefined();
     expect(Array.isArray(parameters.required)).toBeTruthy();
     expect(parameters.required).toHaveLength(1);
-    expect(parameters.required[0]).toBe("testName")
-
-  })
+    expect(parameters.required[0]).toBe("testName");
+  });
 
   test("4. Functions Bind - Gemini format request", async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -481,22 +484,21 @@ describe("Mock ChatGoogle", () => {
         functionDeclarations: [
           {
             name: "test",
-            description: "Run a test with a specific name and get if it passed or failed",
+            description:
+              "Run a test with a specific name and get if it passed or failed",
             parameters: {
               type: "object",
               properties: {
                 testName: {
                   type: "string",
                   description: "The name of the test that should be run.",
-                }
+                },
               },
-              required: [
-                "testName"
-              ]
-            }
-          }
-        ]
-      }
+              required: ["testName"],
+            },
+          },
+        ],
+      },
     ];
 
     const baseModel = new ChatGoogle({
@@ -504,7 +506,7 @@ describe("Mock ChatGoogle", () => {
     });
     const model = baseModel.bind({
       tools,
-    })
+    });
 
     const result = await model.invoke("What?");
 
@@ -525,7 +527,9 @@ describe("Mock ChatGoogle", () => {
 
     const functionDeclaration = toolResult.functionDeclarations[0];
     expect(functionDeclaration.name).toBe("test");
-    expect(functionDeclaration.description).toBe("Run a test with a specific name and get if it passed or failed");
+    expect(functionDeclaration.description).toBe(
+      "Run a test with a specific name and get if it passed or failed"
+    );
     expect(functionDeclaration.parameters).toBeDefined();
     expect(typeof functionDeclaration.parameters).toBe("object");
 
@@ -537,14 +541,15 @@ describe("Mock ChatGoogle", () => {
     expect(parameters.properties.testName).toBeDefined();
     expect(typeof parameters.properties.testName).toBe("object");
     expect(parameters.properties.testName.type).toBe("string");
-    expect(parameters.properties.testName.description).toBe("The name of the test that should be run.");
+    expect(parameters.properties.testName.description).toBe(
+      "The name of the test that should be run."
+    );
 
     expect(parameters.required).toBeDefined();
     expect(Array.isArray(parameters.required)).toBeTruthy();
     expect(parameters.required).toHaveLength(1);
-    expect(parameters.required[0]).toBe("testName")
-
-  })
+    expect(parameters.required[0]).toBe("testName");
+  });
 
   test("4. Functions - zod format request", async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -557,15 +562,16 @@ describe("Mock ChatGoogle", () => {
     };
 
     const zodSchema = z.object({
-      testName: z.string().describe("The name of the test that should be run.")
-    })
+      testName: z.string().describe("The name of the test that should be run."),
+    });
     const tools: StructuredToolInterface[] = [
       new FakeTool({
         name: "test",
-        description: "Run a test with a specific name and get if it passed or failed",
+        description:
+          "Run a test with a specific name and get if it passed or failed",
         schema: zodSchema,
-      })
-    ]
+      }),
+    ];
 
     const model = new ChatGoogle({
       authOptions,
@@ -575,7 +581,7 @@ describe("Mock ChatGoogle", () => {
     const result = await model.invoke("What?");
 
     const toolsResult = record?.opts?.data?.tools;
-    console.log('toolsResult', JSON.stringify(toolsResult,null,1));
+    console.log("toolsResult", JSON.stringify(toolsResult, null, 1));
     expect(toolsResult).toBeDefined();
     expect(Array.isArray(toolsResult)).toBeTruthy();
     expect(toolsResult).toHaveLength(1);
@@ -588,7 +594,9 @@ describe("Mock ChatGoogle", () => {
 
     const functionDeclaration = toolResult.functionDeclarations[0];
     expect(functionDeclaration.name).toBe("test");
-    expect(functionDeclaration.description).toBe("Run a test with a specific name and get if it passed or failed");
+    expect(functionDeclaration.description).toBe(
+      "Run a test with a specific name and get if it passed or failed"
+    );
     expect(functionDeclaration.parameters).toBeDefined();
     expect(typeof functionDeclaration.parameters).toBe("object");
 
@@ -602,15 +610,17 @@ describe("Mock ChatGoogle", () => {
     expect(parameters.properties.testName).toBeDefined();
     expect(typeof parameters.properties.testName).toBe("object");
     expect(parameters.properties.testName.type).toBe("string");
-    expect(parameters.properties.testName.description).toBe("The name of the test that should be run.");
+    expect(parameters.properties.testName.description).toBe(
+      "The name of the test that should be run."
+    );
 
     expect(parameters.required).toBeDefined();
     expect(Array.isArray(parameters.required)).toBeTruthy();
     expect(parameters.required).toHaveLength(1);
-    expect(parameters.required[0]).toBe("testName")
+    expect(parameters.required[0]).toBe("testName");
 
     console.log(result);
-  })
+  });
 
   test("4. Functions - results", async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -627,22 +637,21 @@ describe("Mock ChatGoogle", () => {
         functionDeclarations: [
           {
             name: "test",
-            description: "Run a test with a specific name and get if it passed or failed",
+            description:
+              "Run a test with a specific name and get if it passed or failed",
             parameters: {
               type: "object",
               properties: {
                 testName: {
                   type: "string",
                   description: "The name of the test that should be run.",
-                }
+                },
               },
-              required: [
-                "testName"
-              ]
-            }
-          }
-        ]
-      }
+              required: ["testName"],
+            },
+          },
+        ],
+      },
     ];
 
     const model = new ChatGoogle({
@@ -652,7 +661,7 @@ describe("Mock ChatGoogle", () => {
 
     const result = await model.invoke("What?");
 
-    console.log(JSON.stringify(result,null,1));
+    console.log(JSON.stringify(result, null, 1));
     expect(result).toHaveProperty("content");
     expect(Array.isArray(result.content)).toBeTruthy();
     expect(result.content).toHaveLength(0);
@@ -671,8 +680,8 @@ describe("Mock ChatGoogle", () => {
     expect(func.name).toBe("test");
     expect(func).toHaveProperty("arguments");
     expect(typeof func.arguments).toBe("string");
-    expect(func.arguments.replaceAll("\n","")).toBe("{\"testName\":\"cobalt\"}");
-  })
+    expect(func.arguments.replaceAll("\n", "")).toBe('{"testName":"cobalt"}');
+  });
 
   test("5. Functions - function reply", async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -689,22 +698,21 @@ describe("Mock ChatGoogle", () => {
         functionDeclarations: [
           {
             name: "test",
-            description: "Run a test with a specific name and get if it passed or failed",
+            description:
+              "Run a test with a specific name and get if it passed or failed",
             parameters: {
               type: "object",
               properties: {
                 testName: {
                   type: "string",
                   description: "The name of the test that should be run.",
-                }
+                },
               },
-              required: [
-                "testName"
-              ]
-            }
-          }
-        ]
-      }
+              required: ["testName"],
+            },
+          },
+        ],
+      },
     ];
 
     const model = new ChatGoogle({
@@ -713,20 +721,20 @@ describe("Mock ChatGoogle", () => {
     });
     const toolResult = {
       testPassed: true,
-    }
+    };
     const messages: BaseMessageLike[] = [
       new HumanMessage("Run a test on the cobalt project."),
       new AIMessage("", {
-        "tool_calls": [
+        tool_calls: [
           {
-            "id": "test",
-            "type": "function",
-            "function": {
-              "name": "test",
-              "arguments": "{\"testName\":\"cobalt\"}"
-            }
-          }
-        ]
+            id: "test",
+            type: "function",
+            function: {
+              name: "test",
+              arguments: '{"testName":"cobalt"}',
+            },
+          },
+        ],
       }),
       new ToolMessage(JSON.stringify(toolResult), "test"),
     ];
@@ -734,5 +742,5 @@ describe("Mock ChatGoogle", () => {
     expect(result).toBeDefined();
 
     console.log(JSON.stringify(record?.opts?.data, null, 1));
-  })
+  });
 });

@@ -1,7 +1,7 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { type BaseMessage } from "@langchain/core/messages";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
-import {StructuredToolInterface} from "@langchain/core/tools";
+import { StructuredToolInterface } from "@langchain/core/tools";
 
 import {
   BaseChatModel,
@@ -15,7 +15,9 @@ import {
   GoogleAISafetySetting,
   GoogleConnectionParams,
   GooglePlatformType,
-  GeminiContent, GeminiTool, GoogleAIBaseLanguageModelCallOptions,
+  GeminiContent,
+  GeminiTool,
+  GoogleAIBaseLanguageModelCallOptions,
 } from "./types.js";
 import {
   copyAIModelParams,

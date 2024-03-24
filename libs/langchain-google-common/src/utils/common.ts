@@ -1,4 +1,8 @@
-import type {GoogleAIBaseLanguageModelCallOptions, GoogleAIModelParams, GoogleLLMModelFamily} from "../types.js";
+import type {
+  GoogleAIBaseLanguageModelCallOptions,
+  GoogleAIModelParams,
+  GoogleLLMModelFamily,
+} from "../types.js";
 import { isModelGemini, validateGeminiParams } from "./gemini.js";
 
 export function copyAIModelParams(
@@ -17,14 +21,20 @@ export function copyAIModelParamsInto(
 
   ret.model = options?.model ?? params?.model ?? target.model;
 
-  ret.temperature = options?.temperature ?? params?.temperature ?? target.temperature;
-  ret.maxOutputTokens = options?.maxOutputTokens ?? params?.maxOutputTokens ?? target.maxOutputTokens;
+  ret.temperature =
+    options?.temperature ?? params?.temperature ?? target.temperature;
+  ret.maxOutputTokens =
+    options?.maxOutputTokens ??
+    params?.maxOutputTokens ??
+    target.maxOutputTokens;
   ret.topP = options?.topP ?? params?.topP ?? target.topP;
   ret.topK = options?.topK ?? params?.topK ?? target.topK;
-  ret.stopSequences = options?.stopSequences ?? params?.stopSequences ?? target.stopSequences;
-  ret.safetySettings = options?.safetySettings ?? params?.safetySettings ?? target.safetySettings;
+  ret.stopSequences =
+    options?.stopSequences ?? params?.stopSequences ?? target.stopSequences;
+  ret.safetySettings =
+    options?.safetySettings ?? params?.safetySettings ?? target.safetySettings;
 
-  ret.tools = options ?.tools ?? params?.tools ?? target.tools;
+  ret.tools = options?.tools ?? params?.tools ?? target.tools;
 
   return ret;
 }

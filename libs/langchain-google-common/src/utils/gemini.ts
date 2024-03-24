@@ -2,12 +2,14 @@ import {
   AIMessage,
   AIMessageChunk,
   BaseMessage,
-  BaseMessageChunk, BaseMessageFields,
+  BaseMessageChunk,
+  BaseMessageFields,
   MessageContent,
   MessageContentComplex,
   MessageContentImageUrl,
   MessageContentText,
-  SystemMessage, ToolMessage,
+  SystemMessage,
+  ToolMessage,
 } from "@langchain/core/messages";
 import {
   ChatGeneration,
@@ -25,11 +27,14 @@ import type {
   GeminiRole,
   GeminiContent,
   GenerateContentResponseData,
-  GoogleAISafetyHandler, GeminiPartFunctionCall,
+  GoogleAISafetyHandler,
+  GeminiPartFunctionCall,
 } from "../types.js";
 import { GoogleAISafetyError } from "./safety.js";
 
-function messageContentText(content: MessageContentText): GeminiPartText | null {
+function messageContentText(
+  content: MessageContentText
+): GeminiPartText | null {
   if (content?.text && content?.text.length > 0) {
     return {
       text: content.text,
@@ -118,8 +123,8 @@ function messageToolCallsToParts(toolCalls: ToolCall[]): GeminiPart[] {
       functionCall: {
         name: tool.function.name,
         args,
-      }
-    }
+      },
+    };
   });
 }
 
@@ -138,7 +143,9 @@ function roleMessageToContent(
   message: BaseMessage
 ): GeminiContent[] {
   const contentParts: GeminiPart[] = messageContentToParts(message.content);
-  const toolParts: GeminiPart[] = messageKwargsToParts(message.additional_kwargs);
+  const toolParts: GeminiPart[] = messageKwargsToParts(
+    message.additional_kwargs
+  );
   const parts: GeminiPart[] = [...contentParts, ...toolParts];
   return [
     {
@@ -156,15 +163,19 @@ function systemMessageToContent(message: SystemMessage): GeminiContent[] {
 }
 
 function toolMessageToContent(message: ToolMessage): GeminiContent[] {
-  const contentStr = typeof message.content === "string"
-    ? message.content
-    : message.content.reduce((acc: string, content: MessageContentComplex) => {
-      if (content.type === "text") {
-        return acc+content.text;
-      } else {
-        return acc;
-      }
-    }, "");
+  const contentStr =
+    typeof message.content === "string"
+      ? message.content
+      : message.content.reduce(
+          (acc: string, content: MessageContentComplex) => {
+            if (content.type === "text") {
+              return acc + content.text;
+            } else {
+              return acc;
+            }
+          },
+          ""
+        );
   const content = JSON.parse(contentStr);
   return [
     {
@@ -174,11 +185,11 @@ function toolMessageToContent(message: ToolMessage): GeminiContent[] {
           functionResponse: {
             name: message.tool_call_id,
             response: content,
-          }
-        }
-      ]
-    }
-  ]
+          },
+        },
+      ],
+    },
+  ];
 }
 
 export function baseMessageToContent(message: BaseMessage): GeminiContent[] {
@@ -274,22 +285,20 @@ function toolRawToTool(raw: ToolCallRaw): ToolCall {
     type: raw.type,
     function: {
       name: raw.function.name,
-      arguments: JSON.stringify(raw.function.arguments)
-    }
-  }
+      arguments: JSON.stringify(raw.function.arguments),
+    },
+  };
 }
 
-function functionCallPartToToolRaw(
-  part: GeminiPartFunctionCall
-): ToolCallRaw {
+function functionCallPartToToolRaw(part: GeminiPartFunctionCall): ToolCallRaw {
   return {
     id: part?.functionCall?.name ?? "",
     type: "function",
     function: {
       name: part.functionCall.name,
       arguments: part.functionCall.args ?? {},
-    }
-  }
+    },
+  };
 }
 
 export function partsToToolsRaw(parts: GeminiPart[]): ToolCallRaw[] {
@@ -298,7 +307,7 @@ export function partsToToolsRaw(parts: GeminiPart[]): ToolCallRaw[] {
       if (part === undefined || part === null) {
         return null;
       } else if ("functionCall" in part) {
-        return functionCallPartToToolRaw(part)
+        return functionCallPartToToolRaw(part);
       } else {
         return null;
       }
@@ -312,7 +321,7 @@ export function partsToToolsRaw(parts: GeminiPart[]): ToolCallRaw[] {
 }
 
 export function toolsRawToTools(raws: ToolCallRaw[]): ToolCall[] {
-  return raws.map(raw => toolRawToTool(raw));
+  return raws.map((raw) => toolRawToTool(raw));
 }
 
 export function responseToGenerateContentResponseData(
@@ -465,7 +474,7 @@ export function partsToBaseMessageFields(
 ): BaseMessageFields {
   const fields: BaseMessageFields = {
     content: partsToMessageContent(parts),
-  }
+  };
 
   const rawTools = partsToToolsRaw(parts);
   if (rawTools.length > 0) {
@@ -473,7 +482,7 @@ export function partsToBaseMessageFields(
     fields.additional_kwargs = {
       tool_calls: tools,
       tool_calls_parsed: rawTools,
-    }
+    };
   }
   return fields;
 }
