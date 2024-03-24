@@ -45,6 +45,7 @@
     "zod-to-json-schema": "^3.22.4"
   },
   "devDependencies": {
+    "langchain": "workspace:^",
     "@jest/globals": "^29.5.0",
     "@langchain/scripts": "~0.0",
     "@swc/core": "^1.3.90",
