@@ -235,6 +235,9 @@ export function convertEventStreamToIterableReadableDataStream(
   const dataStream = new ReadableStream({
     async start(controller) {
       const enqueueLine = getMessages((msg) => {
+        if (msg.event === "error") {
+          throw new Error(msg.data ?? "Unspecified event streaming error.");
+        }
         if (msg.data) controller.enqueue(msg.data);
       });
       const onLine = (

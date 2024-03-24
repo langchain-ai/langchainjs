@@ -306,6 +306,9 @@ export class RemoteRunnable<
       config: removeCallbacks(config),
       kwargs: kwargs ?? {},
     });
+    if (!response.ok) {
+      throw new Error(`${response.status} Error: ${await response.text()}`);
+    }
     return revive((await response.json()).output) as RunOutput;
   }
 
@@ -346,6 +349,9 @@ export class RemoteRunnable<
         .map((config) => ({ ...config, ...batchOptions })),
       kwargs,
     });
+    if (!response.ok) {
+      throw new Error(`${response.status} Error: ${await response.text()}`);
+    }
     const body = await response.json();
 
     if (!body.output) throw new Error("Invalid response from remote runnable");
@@ -478,7 +484,10 @@ export class RemoteRunnable<
       ...camelCaseStreamOptions,
       diff: false,
     });
-    const { body } = response;
+    const { body, ok } = response;
+    if (!ok) {
+      throw new Error(`${response.status} Error: ${await response.text()}`);
+    }
     if (!body) {
       throw new Error(
         "Could not begin remote stream log. Please check the given URL and try again."
@@ -493,26 +502,16 @@ export class RemoteRunnable<
 
   async *streamEvents(
     input: RunInput,
-    options?: Partial<CallOptions>,
+    options: Partial<CallOptions> & { version: "v1" },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
   ): AsyncGenerator<StreamEvent> {
+    if (options?.version !== "v1") {
+      throw new Error(
+        `Only version "v1" of the events schema is currently supported.`
+      );
+    }
     const [config, kwargs] =
       this._separateRunnableConfigFromCallOptions(options);
-    const stream = new LogStreamCallbackHandler({
-      ...streamOptions,
-      autoClose: false,
-      _schemaFormat: "streaming_events"
-    });
-    const { callbacks } = config;
-    if (callbacks === undefined) {
-      config.callbacks = [stream];
-    } else if (Array.isArray(callbacks)) {
-      config.callbacks = callbacks.concat([stream]);
-    } else {
-      const copiedCallbacks = callbacks.copy();
-      copiedCallbacks.inheritableHandlers.push(stream);
-      config.callbacks = copiedCallbacks;
-    }
     // The type is in camelCase but the API only accepts snake_case.
     const camelCaseStreamOptions = {
       include_names: streamOptions?.includeNames,
@@ -534,7 +533,10 @@ export class RemoteRunnable<
       ...camelCaseStreamOptions,
       diff: false,
     });
-    const { body } = response;
+    const { body, ok } = response;
+    if (!ok) {
+      throw new Error(`${response.status} Error: ${await response.text()}`);
+    }
     if (!body) {
       throw new Error(
         "Could not begin remote stream events. Please check the given URL and try again."
@@ -542,7 +544,7 @@ export class RemoteRunnable<
     }
     const runnableStream = convertEventStreamToIterableReadableDataStream(body);
     for await (const log of runnableStream) {
-      const chunk = revive(JSON.parse(log));
+      const chunk = JSON.parse(log);
       yield {
         event: chunk.event,
         name: chunk.name,
@@ -550,8 +552,7 @@ export class RemoteRunnable<
         tags: chunk.tags,
         metadata: chunk.metadata,
         data: chunk.data,
-      }
-
+      };
     }
   }
 }
