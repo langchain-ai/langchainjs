@@ -1,6 +1,6 @@
 {
   "name": "@langchain/mistralai",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "description": "MistralAI integration for LangChain.js",
   "type": "module",
   "engines": {
