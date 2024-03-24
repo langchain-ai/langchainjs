@@ -37,7 +37,7 @@ export type RoleEnum = "user" | "assistant";
  * Input to chat model class.
  */
 export interface ChatPremInput extends BaseChatModelParams {
-  project_id?: number;
+  project_id?: number | string;
   session_id?: string;
   messages?: {
     role: "user" | "assistant";
