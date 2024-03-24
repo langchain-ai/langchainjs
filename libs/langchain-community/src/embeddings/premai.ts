@@ -19,7 +19,7 @@ export interface PremEmbeddingsParams extends EmbeddingsParams {
   /**
    * The ID of the project to use.
    */
-  project_id?: number;
+  project_id?: number | string;
   /**
    * The model to generate the embeddings.
    */
@@ -59,7 +59,7 @@ export class PremEmbeddings extends Embeddings implements PremEmbeddingsParams {
     const projectId =
       fields?.project_id ??
       parseInt(getEnvironmentVariable("PREM_PROJECT_ID") ?? "-1", 10);
-    if (!projectId || projectId === -1 || Number.isNaN(projectId)) {
+    if (!projectId || projectId === -1 || typeof projectId !== "number") {
       throw new Error(
         `Prem project ID not found. Please set the PREM_PROJECT_ID environment variable or provide the key into "project_id"`
       );

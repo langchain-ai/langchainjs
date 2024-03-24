@@ -245,7 +245,7 @@ export class ChatPrem<
     const projectId =
       fields?.project_id ??
       parseInt(getEnvironmentVariable("PREM_PROJECT_ID") ?? "-1", 10);
-    if (!projectId || projectId === -1 || Number.isNaN(projectId)) {
+    if (!projectId || projectId === -1 || typeof projectId !== "number") {
       throw new Error(
         `Prem project ID not found. Please set the PREM_PROJECT_ID environment variable or provide the key into "project_id"`
       );
