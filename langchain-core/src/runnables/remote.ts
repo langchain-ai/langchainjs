@@ -25,12 +25,7 @@ import {
   isBaseMessage,
 } from "../messages/index.js";
 import { GenerationChunk, ChatGenerationChunk, RUN_KEY } from "../outputs.js";
-import {
-  getBytes,
-  getLines,
-  getMessages,
-  convertEventStreamToIterableReadableDataStream,
-} from "../utils/event_source_parse.js";
+import { convertEventStreamToIterableReadableDataStream } from "../utils/event_source_parse.js";
 import { IterableReadableStream } from "../utils/stream.js";
 
 type RemoteRunnableOptions = {
@@ -423,23 +418,13 @@ export class RemoteRunnable<
         "Could not begin remote stream. Please check the given URL and try again."
       );
     }
-    const stream = new ReadableStream({
-      async start(controller) {
-        const enqueueLine = getMessages((msg) => {
-          if (msg.data) controller.enqueue(deserialize(msg.data));
-        });
-        const onLine = (
-          line: Uint8Array,
-          fieldLength: number,
-          flush?: boolean
-        ) => {
-          enqueueLine(line, fieldLength, flush);
-          if (flush) controller.close();
-        };
-        await getBytes(body, getLines(onLine));
-      },
-    });
-    return IterableReadableStream.fromReadableStream(stream);
+    const runnableStream = convertEventStreamToIterableReadableDataStream(body);
+    async function* wrapper(): AsyncGenerator<RunOutput> {
+      for await (const chunk of runnableStream) {
+        yield deserialize(chunk);
+      }
+    }
+    return IterableReadableStream.fromAsyncGenerator(wrapper());
   }
 
   async *streamLog(

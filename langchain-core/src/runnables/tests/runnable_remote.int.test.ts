@@ -23,6 +23,37 @@ test("invoke hosted langserve error handling", async () => {
   }).rejects.toThrowError();
 });
 
+test("stream hosted langserve", async () => {
+  const remote = new RemoteRunnable({
+    url: `https://chat-langchain-backend.langchain.dev/chat`,
+  });
+  const result = await remote.stream({
+    question: "What is a document loader?",
+  });
+  let totalByteSize = 0;
+  for await (const chunk of result) {
+    console.log(chunk);
+    const jsonString = JSON.stringify(chunk);
+    const byteSize = Buffer.byteLength(jsonString, "utf-8");
+    totalByteSize += byteSize;
+  }
+  console.log("totalByteSize", totalByteSize);
+});
+
+test("stream error handling hosted langserve", async () => {
+  const remote = new RemoteRunnable({
+    url: `https://chat-langchain-backend.langchain.dev/nonexistent`,
+  });
+  await expect(async () => {
+    const result = await remote.stream({
+      question: "What is a document loader?",
+    });
+    for await (const chunk of result) {
+      console.log(chunk);
+    }
+  }).rejects.toThrowError();
+});
+
 test("streamLog hosted langserve", async () => {
   const remote = new RemoteRunnable({
     url: `https://chat-langchain-backend.langchain.dev/chat`,
