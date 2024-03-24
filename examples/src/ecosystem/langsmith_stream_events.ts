@@ -1,7 +1,7 @@
 import { RemoteRunnable } from "@langchain/core/runnables/remote";
 
 const remoteChain = new RemoteRunnable({
-  // url: "https://your_hostname.com/path",
+  url: "https://your_hostname.com/path",
 });
 
 const logStream = await remoteChain.streamEvents(
@@ -43,7 +43,14 @@ for await (const chunk of logStream) {
     run_id: undefined,
     tags: [],
     metadata: {},
-    data: { input: { chat_history: [], text: null } }
+    data: {
+      input: StringPromptValue {
+        lc_serializable: true,
+        lc_kwargs: [Object],
+        lc_namespace: [Array],
+        value: null
+      }
+    }
   }
   {
     event: 'on_prompt_start',
@@ -51,7 +58,14 @@ for await (const chunk of logStream) {
     run_id: undefined,
     tags: [ 'seq:step:1' ],
     metadata: {},
-    data: { input: { chat_history: [], text: null } }
+    data: {
+      input: StringPromptValue {
+        lc_serializable: true,
+        lc_kwargs: [Object],
+        lc_namespace: [Array],
+        value: null
+      }
+    }
   }
   {
     event: 'on_prompt_end',
@@ -60,8 +74,18 @@ for await (const chunk of logStream) {
     tags: [ 'seq:step:1' ],
     metadata: {},
     data: {
-      input: { chat_history: [], text: null },
-      output: { messages: [Array] }
+      input: StringPromptValue {
+        lc_serializable: true,
+        lc_kwargs: [Object],
+        lc_namespace: [Array],
+        value: null
+      },
+      output: ChatPromptValue {
+        lc_serializable: true,
+        lc_kwargs: [Object],
+        lc_namespace: [Array],
+        messages: [Array]
+      }
     }
   }
   {
@@ -70,7 +94,14 @@ for await (const chunk of logStream) {
     run_id: undefined,
     tags: [ 'seq:step:2' ],
     metadata: {},
-    data: { input: { messages: [Array] } }
+    data: {
+      input: ChatPromptValue {
+        lc_serializable: true,
+        lc_kwargs: [Object],
+        lc_namespace: [Array],
+        messages: [Array]
+      }
+    }
   }
   {
     event: 'on_chat_model_stream',
@@ -79,13 +110,14 @@ for await (const chunk of logStream) {
     tags: [ 'seq:step:2' ],
     metadata: {},
     data: {
-      chunk: {
+      chunk: AIMessageChunk {
+        lc_serializable: true,
+        lc_kwargs: [Object],
+        lc_namespace: [Array],
         content: '',
+        name: undefined,
         additional_kwargs: {},
-        type: 'AIMessageChunk',
-        name: null,
-        id: null,
-        example: false
+        response_metadata: {}
       }
     }
   }
@@ -96,13 +128,14 @@ for await (const chunk of logStream) {
     tags: [],
     metadata: {},
     data: {
-      chunk: {
+      chunk: AIMessageChunk {
+        lc_serializable: true,
+        lc_kwargs: [Object],
+        lc_namespace: [Array],
         content: '',
+        name: undefined,
         additional_kwargs: {},
-        type: 'AIMessageChunk',
-        name: null,
-        id: null,
-        example: false
+        response_metadata: {}
       }
     }
   }
@@ -113,13 +146,14 @@ for await (const chunk of logStream) {
     tags: [ 'seq:step:2' ],
     metadata: {},
     data: {
-      chunk: {
+      chunk: AIMessageChunk {
+        lc_serializable: true,
+        lc_kwargs: [Object],
+        lc_namespace: [Array],
         content: 'Arr',
+        name: undefined,
         additional_kwargs: {},
-        type: 'AIMessageChunk',
-        name: null,
-        id: null,
-        example: false
+        response_metadata: {}
       }
     }
   }
@@ -130,13 +164,14 @@ for await (const chunk of logStream) {
     tags: [],
     metadata: {},
     data: {
-      chunk: {
+      chunk: AIMessageChunk {
+        lc_serializable: true,
+        lc_kwargs: [Object],
+        lc_namespace: [Array],
         content: 'Arr',
+        name: undefined,
         additional_kwargs: {},
-        type: 'AIMessageChunk',
-        name: null,
-        id: null,
-        example: false
+        response_metadata: {}
       }
     }
   }
@@ -147,13 +182,14 @@ for await (const chunk of logStream) {
     tags: [ 'seq:step:2' ],
     metadata: {},
     data: {
-      chunk: {
+      chunk: AIMessageChunk {
+        lc_serializable: true,
+        lc_kwargs: [Object],
+        lc_namespace: [Array],
         content: 'r',
+        name: undefined,
         additional_kwargs: {},
-        type: 'AIMessageChunk',
-        name: null,
-        id: null,
-        example: false
+        response_metadata: {}
       }
     }
   }
@@ -164,13 +200,32 @@ for await (const chunk of logStream) {
     tags: [],
     metadata: {},
     data: {
-      chunk: {
+      chunk: AIMessageChunk {
+        lc_serializable: true,
+        lc_kwargs: [Object],
+        lc_namespace: [Array],
         content: 'r',
+        name: undefined,
         additional_kwargs: {},
-        type: 'AIMessageChunk',
-        name: null,
-        id: null,
-        example: false
+        response_metadata: {}
+      }
+    }
+  }
+  {
+    event: 'on_chat_model_stream',
+    name: 'ChatOpenAI',
+    run_id: undefined,
+    tags: [ 'seq:step:2' ],
+    metadata: {},
+    data: {
+      chunk: AIMessageChunk {
+        lc_serializable: true,
+        lc_kwargs: [Object],
+        lc_namespace: [Array],
+        content: ' mate',
+        name: undefined,
+        additional_kwargs: {},
+        response_metadata: {}
       }
     }
   }
@@ -182,7 +237,12 @@ for await (const chunk of logStream) {
     tags: [ 'seq:step:2' ],
     metadata: {},
     data: {
-      input: { messages: [Array] },
+      input: ChatPromptValue {
+        lc_serializable: true,
+        lc_kwargs: [Object],
+        lc_namespace: [Array],
+        messages: [Array]
+      },
       output: { generations: [Array], llm_output: null, run: null }
     }
   }
@@ -193,13 +253,14 @@ for await (const chunk of logStream) {
     tags: [],
     metadata: {},
     data: {
-      output: {
-        content: "Arrr matey, be ye needin' any help or information from this old salty dog? Speak up, lest ye be walkin' the plank!",
+      output: AIMessageChunk {
+        lc_serializable: true,
+        lc_kwargs: [Object],
+        lc_namespace: [Array],
+        content: "Arrr matey, why be ye holdin' back on me? Speak up, what be ye wantin' to know?",
+        name: undefined,
         additional_kwargs: {},
-        type: 'AIMessageChunk',
-        name: null,
-        id: null,
-        example: false
+        response_metadata: {}
       }
     }
   }

@@ -544,7 +544,7 @@ export class RemoteRunnable<
     }
     const runnableStream = convertEventStreamToIterableReadableDataStream(body);
     for await (const log of runnableStream) {
-      const chunk = JSON.parse(log);
+      const chunk = revive(JSON.parse(log));
       yield {
         event: chunk.event,
         name: chunk.name,
