@@ -1,6 +1,6 @@
 {
   "name": "@langchain/groq",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Groq integration for LangChain.js",
   "type": "module",
   "engines": {
@@ -14,7 +14,7 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-groq/",
   "scripts": {
-    "build": "yarn clean && yarn build:deps && yarn build:esm && yarn build:cjs && yarn build:scripts",
+    "build": "yarn build:deps && yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
     "build:deps": "yarn run turbo:command build --filter=@langchain/core",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rm -rf dist/tests dist/**/tests",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rm -rf dist-cjs",
@@ -41,7 +41,7 @@
   "dependencies": {
     "@langchain/core": "~0.1",
     "@langchain/openai": "^0.0.14",
-    "groq-sdk": "^0.3.0"
+    "groq-sdk": "^0.3.2"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",

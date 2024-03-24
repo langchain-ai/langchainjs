@@ -15,10 +15,11 @@ import {
   type RunnableConfig,
 } from "@langchain/core/runnables";
 import { LLMChain } from "../chains/llm_chain.js";
-import {
+import type {
   AgentActionOutputParser,
   AgentInput,
-  RunnableAgentInput,
+  RunnableMultiActionAgentInput,
+  RunnableSingleActionAgentInput,
   SerializedAgent,
   StoppingMethod,
 } from "./types.js";
@@ -159,14 +160,99 @@ function isAgentAction(input: unknown): input is AgentAction {
   return !Array.isArray(input) && (input as AgentAction)?.tool !== undefined;
 }
 
+export function isRunnableAgent(x: BaseAgent) {
+  return (
+    (x as RunnableMultiActionAgent | RunnableSingleActionAgent).runnable !==
+    undefined
+  );
+}
+
 /**
- * Class representing a single action agent which accepts runnables.
+ * Class representing a single-action agent powered by runnables.
+ * Extends the BaseSingleActionAgent class and provides methods for
+ * planning agent actions with runnables.
+ */
+export class RunnableSingleActionAgent extends BaseSingleActionAgent {
+  lc_namespace = ["langchain", "agents", "runnable"];
+
+  runnable: Runnable<
+    ChainValues & { steps: AgentStep[] },
+    AgentAction | AgentFinish
+  >;
+
+  get inputKeys(): string[] {
+    return [];
+  }
+
+  /**
+   * Whether to stream from the runnable or not.
+   * If true, the underlying LLM is invoked in a streaming fashion to make it
+   * possible to get access to the individual LLM tokens when using
+   * `streamLog` with the Agent Executor. If false then LLM is invoked in a
+   * non-streaming fashion and individual LLM tokens will not be available
+   * in `streamLog`.
+   *
+   * Note that the runnable should still only stream a single action or
+   * finish chunk.
+   */
+  streamRunnable = true;
+
+  defaultRunName = "RunnableAgent";
+
+  constructor(fields: RunnableSingleActionAgentInput) {
+    super(fields);
+    this.runnable = fields.runnable;
+    this.defaultRunName = fields.defaultRunName ?? this.defaultRunName;
+    this.streamRunnable = fields.streamRunnable ?? this.streamRunnable;
+  }
+
+  async plan(
+    steps: AgentStep[],
+    inputs: ChainValues,
+    callbackManager?: CallbackManager,
+    config?: RunnableConfig
+  ): Promise<AgentAction | AgentFinish> {
+    const combinedInput = { ...inputs, steps };
+    const combinedConfig = patchConfig(config, {
+      callbacks: callbackManager,
+      runName: this.defaultRunName,
+    });
+    if (this.streamRunnable) {
+      const stream = await this.runnable.stream(combinedInput, combinedConfig);
+      let finalOutput: AgentAction | AgentFinish | undefined;
+      for await (const chunk of stream) {
+        if (finalOutput === undefined) {
+          finalOutput = chunk;
+        } else {
+          throw new Error(
+            [
+              `Multiple agent actions/finishes received in streamed agent output.`,
+              `Set "streamRunnable: false" when initializing the agent to invoke this agent in non-streaming mode.`,
+            ].join("\n")
+          );
+        }
+      }
+      if (finalOutput === undefined) {
+        throw new Error(
+          [
+            "No streaming output received from underlying runnable.",
+            `Set "streamRunnable: false" when initializing the agent to invoke this agent in non-streaming mode.`,
+          ].join("\n")
+        );
+      }
+      return finalOutput;
+    } else {
+      return this.runnable.invoke(combinedInput, combinedConfig);
+    }
+  }
+}
+
+/**
+ * Class representing a multi-action agent powered by runnables.
  * Extends the BaseMultiActionAgent class and provides methods for
  * planning agent actions with runnables.
  */
-export class RunnableAgent extends BaseMultiActionAgent {
-  protected lc_runnable = true;
-
+export class RunnableMultiActionAgent extends BaseMultiActionAgent {
   lc_namespace = ["langchain", "agents", "runnable"];
 
   // TODO: Rename input to "intermediate_steps"
@@ -175,16 +261,22 @@ export class RunnableAgent extends BaseMultiActionAgent {
     AgentAction[] | AgentAction | AgentFinish
   >;
 
+  defaultRunName = "RunnableAgent";
+
   stop?: string[];
+
+  streamRunnable = true;
 
   get inputKeys(): string[] {
     return [];
   }
 
-  constructor(fields: RunnableAgentInput) {
-    super();
+  constructor(fields: RunnableMultiActionAgentInput) {
+    super(fields);
     this.runnable = fields.runnable;
     this.stop = fields.stop;
+    this.defaultRunName = fields.defaultRunName ?? this.defaultRunName;
+    this.streamRunnable = fields.streamRunnable ?? this.streamRunnable;
   }
 
   async plan(
@@ -193,14 +285,39 @@ export class RunnableAgent extends BaseMultiActionAgent {
     callbackManager?: CallbackManager,
     config?: RunnableConfig
   ): Promise<AgentAction[] | AgentFinish> {
-    const invokeInput = { ...inputs, steps };
-    const output = await this.runnable.invoke(
-      invokeInput,
-      patchConfig(config, {
-        callbacks: callbackManager,
-        runName: "RunnableAgent",
-      })
-    );
+    const combinedInput = { ...inputs, steps };
+    const combinedConfig = patchConfig(config, {
+      callbacks: callbackManager,
+      runName: this.defaultRunName,
+    });
+    let output;
+    if (this.streamRunnable) {
+      const stream = await this.runnable.stream(combinedInput, combinedConfig);
+      let finalOutput: AgentAction | AgentFinish | AgentAction[] | undefined;
+      for await (const chunk of stream) {
+        if (finalOutput === undefined) {
+          finalOutput = chunk;
+        } else {
+          throw new Error(
+            [
+              `Multiple agent actions/finishes received in streamed agent output.`,
+              `Set "streamRunnable: false" when initializing the agent to invoke this agent in non-streaming mode.`,
+            ].join("\n")
+          );
+        }
+      }
+      if (finalOutput === undefined) {
+        throw new Error(
+          [
+            "No streaming output received from underlying runnable.",
+            `Set "streamRunnable: false" when initializing the agent to invoke this agent in non-streaming mode.`,
+          ].join("\n")
+        );
+      }
+      output = finalOutput;
+    } else {
+      output = await this.runnable.invoke(combinedInput, combinedConfig);
+    }
 
     if (isAgentAction(output)) {
       return [output];
@@ -209,6 +326,9 @@ export class RunnableAgent extends BaseMultiActionAgent {
     return output;
   }
 }
+
+/** @deprecated Renamed to RunnableMultiActionAgent. */
+export class RunnableAgent extends RunnableMultiActionAgent {}
 
 /**
  * Interface for input data for creating a LLMSingleActionAgent.

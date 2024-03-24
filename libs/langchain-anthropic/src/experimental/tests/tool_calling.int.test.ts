@@ -304,3 +304,23 @@ test("Test ChatAnthropic withStructuredOutput on a single array item", async () 
     tone: "positive",
   });
 });
+
+test("Test ChatAnthropicTools", async () => {
+  const chat = new ChatAnthropicTools({
+    modelName: "claude-3-sonnet-20240229",
+    maxRetries: 0,
+  });
+  const structured = chat.withStructuredOutput(
+    z.object({
+      nested: z.array(z.number()),
+    }),
+    { force: false }
+  );
+  const res = await structured.invoke(
+    "What are the first five natural numbers?"
+  );
+  console.log(res);
+  expect(res).toEqual({
+    nested: [1, 2, 3, 4, 5],
+  });
+});

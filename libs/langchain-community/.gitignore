@@ -26,6 +26,10 @@ tools/brave_search.cjs
 tools/brave_search.js
 tools/brave_search.d.ts
 tools/brave_search.d.cts
+tools/calculator.cjs
+tools/calculator.js
+tools/calculator.d.ts
+tools/calculator.d.cts
 tools/connery.cjs
 tools/connery.js
 tools/connery.d.ts
@@ -170,6 +174,10 @@ embeddings/voyage.cjs
 embeddings/voyage.js
 embeddings/voyage.d.ts
 embeddings/voyage.d.cts
+embeddings/zhipuai.cjs
+embeddings/zhipuai.js
+embeddings/zhipuai.d.ts
+embeddings/zhipuai.d.cts
 llms/ai21.cjs
 llms/ai21.js
 llms/ai21.d.ts
@@ -302,6 +310,10 @@ vectorstores/convex.cjs
 vectorstores/convex.js
 vectorstores/convex.d.ts
 vectorstores/convex.d.cts
+vectorstores/couchbase.cjs
+vectorstores/couchbase.js
+vectorstores/couchbase.d.ts
+vectorstores/couchbase.d.cts
 vectorstores/elasticsearch.cjs
 vectorstores/elasticsearch.js
 vectorstores/elasticsearch.d.ts
@@ -642,6 +654,10 @@ stores/message/in_memory.cjs
 stores/message/in_memory.js
 stores/message/in_memory.d.ts
 stores/message/in_memory.d.cts
+stores/message/ipfs_datastore.cjs
+stores/message/ipfs_datastore.js
+stores/message/ipfs_datastore.d.ts
+stores/message/ipfs_datastore.d.cts
 stores/message/ioredis.cjs
 stores/message/ioredis.js
 stores/message/ioredis.d.ts

@@ -417,6 +417,41 @@ describe("withStructuredOutput", () => {
     expect("number2" in result).toBe(true);
   });
 
+  test("withStructuredOutput OpenAI function definition function calling", async () => {
+    const model = new ChatMistralAI({
+      temperature: 0,
+      modelName: "mistral-large",
+    });
+
+    const calculatorSchema = z
+      .object({
+        operation: z
+          .enum(["add", "subtract", "multiply", "divide"])
+          .describe("The type of operation to execute."),
+        number1: z.number().describe("The first number to operate on."),
+        number2: z.number().describe("The second number to operate on."),
+      })
+      .describe("A calculator schema");
+
+    const modelWithStructuredOutput = model.withStructuredOutput({
+      name: "calculator",
+      parameters: zodToJsonSchema(calculatorSchema),
+    });
+
+    const prompt = ChatPromptTemplate.fromMessages([
+      "system",
+      `You are VERY bad at math and must always use a calculator.`,
+      "human",
+      "Please help me!! What is 2 + 2?",
+    ]);
+    const chain = prompt.pipe(modelWithStructuredOutput);
+    const result = await chain.invoke({});
+    console.log(result);
+    expect("operation" in result).toBe(true);
+    expect("number1" in result).toBe(true);
+    expect("number2" in result).toBe(true);
+  });
+
   test("withStructuredOutput JSON schema JSON mode", async () => {
     const model = new ChatMistralAI({
       temperature: 0,
@@ -526,5 +561,143 @@ describe("withStructuredOutput", () => {
           raw.additional_kwargs.tool_calls?.[0].function.arguments ?? ""
         )
     ).toBe(true);
+  });
+});
+
+describe("ChatMistralAI aborting", () => {
+  test("ChatMistralAI can abort request via .stream", async () => {
+    const controller = new AbortController();
+    const model = new ChatMistralAI().bind({
+      signal: controller.signal,
+    });
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "You're super good at counting!"],
+      [
+        "human",
+        "Count from 0-100, remember to say 'woof' after every even number!",
+      ],
+    ]);
+
+    const stream = await prompt.pipe(model).stream({});
+
+    let finalRes = "";
+    let iters = 0;
+
+    try {
+      for await (const item of stream) {
+        finalRes += item.content;
+        console.log(finalRes);
+        iters += 1;
+        controller.abort();
+      }
+      // If the loop completes without error, fail the test
+      fail(
+        "Expected for-await loop to throw an error due to abort, but it did not."
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      // Check if the error is due to the abort action
+      expect(error.message).toBe("AbortError");
+    }
+    expect(iters).toBe(1);
+  });
+
+  test("ChatMistralAI can timeout requests via .stream", async () => {
+    const model = new ChatMistralAI().bind({
+      timeout: 1000,
+    });
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "You're super good at counting!"],
+      [
+        "human",
+        "Count from 0-100, remember to say 'woof' after every even number!",
+      ],
+    ]);
+    let didError = false;
+    let finalRes = "";
+    let iters = 0;
+
+    try {
+      // Stream is inside the for-await loop because sometimes
+      // the abort will occur before the first stream event is emitted
+      const stream = await prompt.pipe(model).stream({});
+
+      for await (const item of stream) {
+        finalRes += item.content;
+        console.log(finalRes);
+        iters += 1;
+      }
+      // If the loop completes without error, fail the test
+      fail(
+        "Expected for-await loop to throw an error due to abort, but it did not."
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      didError = true;
+      // Check if the error is due to the abort action
+      expect(error.message).toBe("AbortError");
+    }
+    expect(didError).toBeTruthy();
+  });
+
+  test("ChatMistralAI can abort request via .invoke", async () => {
+    const controller = new AbortController();
+    const model = new ChatMistralAI().bind({
+      signal: controller.signal,
+    });
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "You're super good at counting!"],
+      [
+        "human",
+        "Count from 0-100, remember to say 'woof' after every even number!",
+      ],
+    ]);
+
+    let didError = false;
+
+    setTimeout(() => controller.abort(), 1000); // Abort after 1 second
+
+    try {
+      await prompt.pipe(model).invoke({});
+
+      // If the loop completes without error, fail the test
+      fail(
+        "Expected for-await loop to throw an error due to abort, but it did not."
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      didError = true;
+      // Check if the error is due to the abort action
+      expect(error.message).toBe("AbortError");
+    }
+    expect(didError).toBeTruthy();
+  });
+
+  test("ChatMistralAI can timeout requests via .invoke", async () => {
+    const model = new ChatMistralAI().bind({
+      timeout: 1000,
+    });
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "You're super good at counting!"],
+      [
+        "human",
+        "Count from 0-100, remember to say 'woof' after every even number!",
+      ],
+    ]);
+    let didError = false;
+
+    try {
+      await prompt.pipe(model).invoke({});
+      // If the loop completes without error, fail the test
+      fail(
+        "Expected for-await loop to throw an error due to abort, but it did not."
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      didError = true;
+      // Check if the error is due to the abort action
+      expect(error.message).toBe("AbortError");
+    }
+    expect(didError).toBeTruthy();
   });
 });

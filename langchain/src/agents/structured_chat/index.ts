@@ -19,7 +19,12 @@ import {
 import { AgentStep } from "@langchain/core/agents";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { Optional } from "../../types/type-utils.js";
-import { Agent, AgentArgs, OutputParserArgs } from "../agent.js";
+import {
+  Agent,
+  AgentArgs,
+  OutputParserArgs,
+  RunnableSingleActionAgent,
+} from "../agent.js";
 import { AgentInput } from "../types.js";
 import { StructuredChatOutputParserWithRetries } from "./outputParser.js";
 import { FORMAT_INSTRUCTIONS, PREFIX, SUFFIX } from "./prompt.js";
@@ -243,6 +248,11 @@ export type CreateStructuredChatAgentParams = {
    * `tools`, `tool_names`, and `agent_scratchpad`.
    */
   prompt: BasePromptTemplate;
+  /**
+   * Whether to invoke the underlying model in streaming mode,
+   * allowing streaming of intermediate steps. Defaults to true.
+   */
+  streamRunnable?: boolean;
 };
 
 /**
@@ -305,6 +315,7 @@ export async function createStructuredChatAgent({
   llm,
   tools,
   prompt,
+  streamRunnable,
 }: CreateStructuredChatAgentParams) {
   const missingVariables = ["tools", "tool_names", "agent_scratchpad"].filter(
     (v) => !prompt.inputVariables.includes(v)
@@ -336,5 +347,9 @@ export async function createStructuredChatAgent({
       toolNames,
     }),
   ]);
-  return agent;
+  return new RunnableSingleActionAgent({
+    runnable: agent,
+    defaultRunName: "StructuredChatAgent",
+    streamRunnable,
+  });
 }

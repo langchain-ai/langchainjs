@@ -17,11 +17,12 @@ import {
   ToolMessageChunk,
   ChatMessageChunk,
 } from "@langchain/core/messages";
-import {
+import type {
   BaseLanguageModelInput,
-  type BaseLanguageModelCallOptions,
+  BaseLanguageModelCallOptions,
   StructuredOutputMethodParams,
   StructuredOutputMethodOptions,
+  FunctionDefinition,
 } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -86,7 +87,8 @@ type MistralAIChatCompletionOptions = {
   responseFormat?: ResponseFormat;
 };
 
-interface MistralAICallOptions extends BaseLanguageModelCallOptions {
+interface MistralAICallOptions
+  extends Omit<BaseLanguageModelCallOptions, "stop"> {
   response_format?: {
     type: "text" | "json_object";
   };
@@ -410,8 +412,12 @@ export class ChatMistralAI<
       messages: mistralMessages,
     };
 
+    // Enable streaming for signal controller or timeout due
+    // to SDK limitations on canceling requests.
+    const shouldStream = !!options.signal ?? !!options.timeout;
+
     // Handle streaming
-    if (this.streaming) {
+    if (this.streaming || shouldStream) {
       const stream = this._streamResponseChunks(messages, options, runManager);
       const finalChunks: Record<number, ChatGenerationChunk> = {};
       for await (const chunk of stream) {
@@ -490,6 +496,9 @@ export class ChatMistralAI<
 
     const streamIterable = await this.completionWithRetry(input, true);
     for await (const data of streamIterable) {
+      if (options.signal?.aborted) {
+        throw new Error("AbortError");
+      }
       const choice = data?.choices[0];
       if (!choice || !("delta" in choice)) {
         continue;
@@ -523,9 +532,6 @@ export class ChatMistralAI<
         undefined,
         { chunk: generationChunk }
       );
-    }
-    if (options.signal?.aborted) {
-      throw new Error("AbortError");
     }
   }
 
@@ -603,7 +609,7 @@ export class ChatMistralAI<
         outputParser = new JsonOutputParser<RunOutput>();
       }
     } else {
-      const functionName = name ?? "extract";
+      let functionName = name ?? "extract";
       // Is function calling
       if (isZodSchema(schema)) {
         const asJsonSchema = zodToJsonSchema(schema);
@@ -626,15 +632,26 @@ export class ChatMistralAI<
           zodSchema: schema,
         });
       } else {
+        let openAIFunctionDefinition: FunctionDefinition;
+        if (
+          typeof schema.name === "string" &&
+          typeof schema.parameters === "object" &&
+          schema.parameters != null
+        ) {
+          openAIFunctionDefinition = schema as FunctionDefinition;
+          functionName = schema.name;
+        } else {
+          openAIFunctionDefinition = {
+            name: functionName,
+            description: schema.description ?? "",
+            parameters: schema,
+          };
+        }
         llm = this.bind({
           tools: [
             {
               type: "function" as const,
-              function: {
-                name: functionName,
-                description: schema.description,
-                parameters: schema,
-              },
+              function: openAIFunctionDefinition,
             },
           ],
           tool_choice: "auto",
