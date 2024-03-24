@@ -5,7 +5,7 @@ import {
 } from "langchain/agents";
 import { LLMChain } from "langchain/chains";
 import { ChatOpenAI } from "@langchain/openai";
-import { Calculator } from "langchain/tools/calculator";
+import { Calculator } from "@langchain/community/tools/calculator";
 import {
   BaseChatPromptTemplate,
   SerializedBasePromptTemplate,

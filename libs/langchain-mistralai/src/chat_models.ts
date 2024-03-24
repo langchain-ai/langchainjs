@@ -5,6 +5,7 @@ import {
   ToolChoice as MistralAIToolChoice,
   ResponseFormat,
   ChatCompletionResponseChunk,
+  ToolType,
 } from "@mistralai/mistralai";
 import {
   MessageType,
@@ -16,12 +17,15 @@ import {
   AIMessageChunk,
   ToolMessageChunk,
   ChatMessageChunk,
+  FunctionMessageChunk,
+  ToolCall,
 } from "@langchain/core/messages";
-import {
+import type {
   BaseLanguageModelInput,
-  type BaseLanguageModelCallOptions,
+  BaseLanguageModelCallOptions,
   StructuredOutputMethodParams,
   StructuredOutputMethodOptions,
+  FunctionDefinition,
 } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -86,7 +90,8 @@ type MistralAIChatCompletionOptions = {
   responseFormat?: ResponseFormat;
 };
 
-interface MistralAICallOptions extends BaseLanguageModelCallOptions {
+interface MistralAICallOptions
+  extends Omit<BaseLanguageModelCallOptions, "stop"> {
   response_format?: {
     type: "text" | "json_object";
   };
@@ -163,6 +168,10 @@ function convertMessagesToMistralMessages(
         return "assistant";
       case "system":
         return "system";
+      case "tool":
+        return "tool";
+      case "function":
+        return "assistant";
       default:
         throw new Error(`Unknown message type: ${role}`);
     }
@@ -181,9 +190,17 @@ function convertMessagesToMistralMessages(
     );
   };
 
+  const getTools = (toolCalls: ToolCall[] | undefined): MistralAIToolCalls[] =>
+    toolCalls?.map((toolCall) => ({
+      id: "null",
+      type: "function" as ToolType.function,
+      function: toolCall.function,
+    })) || [];
+
   return messages.map((message) => ({
     role: getRole(message._getType()),
     content: getContent(message.content),
+    tool_calls: getTools(message.additional_kwargs.tool_calls),
   }));
 }
 
@@ -233,7 +250,7 @@ function _convertDeltaToMessageChunk(delta: {
   if (delta.role) {
     role = delta.role;
   } else if (toolCallsWithIndex) {
-    role = "tool";
+    role = "function";
   }
   const content = delta.content ?? "";
   let additional_kwargs;
@@ -254,6 +271,11 @@ function _convertDeltaToMessageChunk(delta: {
       content,
       additional_kwargs,
       tool_call_id: toolCallsWithIndex?.[0].id ?? "",
+    });
+  } else if (role === "function") {
+    return new FunctionMessageChunk({
+      content,
+      additional_kwargs,
     });
   } else {
     return new ChatMessageChunk({ content, role });
@@ -410,8 +432,12 @@ export class ChatMistralAI<
       messages: mistralMessages,
     };
 
+    // Enable streaming for signal controller or timeout due
+    // to SDK limitations on canceling requests.
+    const shouldStream = !!options.signal ?? !!options.timeout;
+
     // Handle streaming
-    if (this.streaming) {
+    if (this.streaming || shouldStream) {
       const stream = this._streamResponseChunks(messages, options, runManager);
       const finalChunks: Record<number, ChatGenerationChunk> = {};
       for await (const chunk of stream) {
@@ -490,6 +516,9 @@ export class ChatMistralAI<
 
     const streamIterable = await this.completionWithRetry(input, true);
     for await (const data of streamIterable) {
+      if (options.signal?.aborted) {
+        throw new Error("AbortError");
+      }
       const choice = data?.choices[0];
       if (!choice || !("delta" in choice)) {
         continue;
@@ -523,9 +552,6 @@ export class ChatMistralAI<
         undefined,
         { chunk: generationChunk }
       );
-    }
-    if (options.signal?.aborted) {
-      throw new Error("AbortError");
     }
   }
 
@@ -603,7 +629,7 @@ export class ChatMistralAI<
         outputParser = new JsonOutputParser<RunOutput>();
       }
     } else {
-      const functionName = name ?? "extract";
+      let functionName = name ?? "extract";
       // Is function calling
       if (isZodSchema(schema)) {
         const asJsonSchema = zodToJsonSchema(schema);
@@ -626,15 +652,26 @@ export class ChatMistralAI<
           zodSchema: schema,
         });
       } else {
+        let openAIFunctionDefinition: FunctionDefinition;
+        if (
+          typeof schema.name === "string" &&
+          typeof schema.parameters === "object" &&
+          schema.parameters != null
+        ) {
+          openAIFunctionDefinition = schema as FunctionDefinition;
+          functionName = schema.name;
+        } else {
+          openAIFunctionDefinition = {
+            name: functionName,
+            description: schema.description ?? "",
+            parameters: schema,
+          };
+        }
         llm = this.bind({
           tools: [
             {
               type: "function" as const,
-              function: {
-                name: functionName,
-                description: schema.description,
-                parameters: schema,
-              },
+              function: openAIFunctionDefinition,
             },
           ],
           tool_choice: "auto",

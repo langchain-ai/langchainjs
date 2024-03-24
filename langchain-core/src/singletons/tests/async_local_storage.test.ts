@@ -2,6 +2,7 @@ import { test, expect } from "@jest/globals";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { AsyncLocalStorageProviderSingleton } from "../index.js";
 import { RunnableLambda } from "../../runnables/base.js";
+import { FakeListChatModel } from "../../utils/testing/index.js";
 
 test("Config should be automatically populated after setting global async local storage", async () => {
   const inner = RunnableLambda.from((_, config) => config);
@@ -110,4 +111,25 @@ test("Config should be automatically populated after setting global async local 
     }
   );
   expect(res4?.tags).toEqual(["tester_with_config"]);
+
+  const chatModel = new FakeListChatModel({ responses: ["test"] }).bind({
+    stop: [],
+  });
+  const outer4 = RunnableLambda.from(async () => {
+    const res = await chatModel.invoke("hey");
+    return res;
+  });
+
+  const eventStream = await outer4.streamEvents(
+    { hi: true },
+    { version: "v1" }
+  );
+  const events = [];
+  for await (const event of eventStream) {
+    console.log(event);
+    events.push(event);
+  }
+  expect(
+    events.filter((event) => event.event === "on_llm_start").length
+  ).toEqual(1);
 });

@@ -128,6 +128,14 @@ const testConfigs: TestConfig[] = [
     modelName: "ERNIE-Bot-4",
     config: {},
   },
+  {
+    modelName: "ERNIE-Speed-8K",
+    config: {},
+  },
+  {
+    modelName: "ERNIE-Speed-128K",
+    config: {},
+  },
 ];
 
 testConfigs.forEach((testConfig) => {

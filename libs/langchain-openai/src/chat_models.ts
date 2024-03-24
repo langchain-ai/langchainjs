@@ -27,6 +27,7 @@ import {
 import type {
   BaseFunctionCallOptions,
   BaseLanguageModelInput,
+  FunctionDefinition,
   StructuredOutputMethodOptions,
   StructuredOutputMethodParams,
 } from "@langchain/core/language_models/base";
@@ -174,17 +175,26 @@ function _convertDeltaToMessageChunk(
 
 function convertMessagesToOpenAIParams(messages: BaseMessage[]) {
   // TODO: Function messages do not support array content, fix cast
-  return messages.map(
-    (message) =>
-      ({
-        role: messageToOpenAIRole(message),
-        content: message.content,
-        name: message.name,
-        function_call: message.additional_kwargs.function_call,
-        tool_calls: message.additional_kwargs.tool_calls,
-        tool_call_id: (message as ToolMessage).tool_call_id,
-      } as OpenAICompletionParam)
-  );
+  return messages.map((message) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const completionParam: Record<string, any> = {
+      role: messageToOpenAIRole(message),
+      content: message.content,
+    };
+    if (message.name != null) {
+      completionParam.name = message.name;
+    }
+    if (message.additional_kwargs.function_call != null) {
+      completionParam.function_call = message.additional_kwargs.function_call;
+    }
+    if (message.additional_kwargs.tool_calls != null) {
+      completionParam.tool_calls = message.additional_kwargs.tool_calls;
+    }
+    if ((message as ToolMessage).tool_call_id != null) {
+      completionParam.tool_call_id = (message as ToolMessage).tool_call_id;
+    }
+    return completionParam as OpenAICompletionParam;
+  });
 }
 
 export interface ChatOpenAICallOptions
@@ -746,14 +756,25 @@ export class ChatOpenAI<
           );
         }
         if (openAIMessage.additional_kwargs.function_call?.arguments) {
-          count += await this.getNumTokens(
-            // Remove newlines and spaces
-            JSON.stringify(
-              JSON.parse(
-                openAIMessage.additional_kwargs.function_call?.arguments
+          try {
+            count += await this.getNumTokens(
+              // Remove newlines and spaces
+              JSON.stringify(
+                JSON.parse(
+                  openAIMessage.additional_kwargs.function_call?.arguments
+                )
               )
-            )
-          );
+            );
+          } catch (error) {
+            console.error(
+              "Error parsing function arguments",
+              error,
+              JSON.stringify(openAIMessage.additional_kwargs.function_call)
+            );
+            count += await this.getNumTokens(
+              openAIMessage.additional_kwargs.function_call?.arguments
+            );
+          }
         }
 
         totalCount += count;
@@ -943,7 +964,7 @@ export class ChatOpenAI<
         outputParser = new JsonOutputParser<RunOutput>();
       }
     } else {
-      const functionName = name ?? "extract";
+      let functionName = name ?? "extract";
       // Is function calling
       if (isZodSchema(schema)) {
         const asJsonSchema = zodToJsonSchema(schema);
@@ -971,15 +992,26 @@ export class ChatOpenAI<
           zodSchema: schema,
         });
       } else {
+        let openAIFunctionDefinition: FunctionDefinition;
+        if (
+          typeof schema.name === "string" &&
+          typeof schema.parameters === "object" &&
+          schema.parameters != null
+        ) {
+          openAIFunctionDefinition = schema as FunctionDefinition;
+          functionName = schema.name;
+        } else {
+          openAIFunctionDefinition = {
+            name: functionName,
+            description: schema.description ?? "",
+            parameters: schema,
+          };
+        }
         llm = this.bind({
           tools: [
             {
               type: "function" as const,
-              function: {
-                name: functionName,
-                description: schema.description,
-                parameters: schema,
-              },
+              function: openAIFunctionDefinition,
             },
           ],
           tool_choice: {
