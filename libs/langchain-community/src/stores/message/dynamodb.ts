@@ -95,29 +95,30 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
   private createDynamoDBSerializedChatMessage(
     message: StoredMessage
   ): DynamoDBSerializedChatMessage {
+    const {
+      type,
+      data: { content, role, additional_kwargs },
+    } = message;
+
+    const isAdditionalKwargs =
+      additional_kwargs && Object.keys(additional_kwargs).length;
+
     const dynamoSerializedMessage: DynamoDBSerializedChatMessage = {
       M: {
         type: {
-          S: message.type,
+          S: type,
         },
         text: {
-          S: message.data.content,
+          S: content,
         },
+        additional_kwargs: isAdditionalKwargs
+          ? { S: JSON.stringify(additional_kwargs) }
+          : { S: "{}" },
       },
     };
 
-    const isAdditionalKwargs =
-      message.data.additional_kwargs &&
-      Object.keys(message.data.additional_kwargs).length;
-
-    if (message.data.role) {
-      dynamoSerializedMessage.M.role = { S: message.data.role };
-    }
-
-    if (isAdditionalKwargs) {
-      dynamoSerializedMessage.M.additional_kwargs = {
-        S: JSON.stringify(message.data.additional_kwargs),
-      };
+    if (role) {
+      dynamoSerializedMessage.M.role = { S: role };
     }
 
     return dynamoSerializedMessage;
