@@ -87,10 +87,16 @@ Click [here](/docs/integrations/chat/google_generativeai) for the `@langchain/go
 npm install @langchain/google-vertexai
 ```
 
-Configure your API key.
+Then, you'll need to add your service account credentials, either directly as a `GOOGLE_VERTEX_AI_WEB_CREDENTIALS` environment variable:
 
 ```
-export GOOGLE_API_KEY=your-api-key
+GOOGLE_VERTEX_AI_WEB_CREDENTIALS={"type":"service_account","project_id":"YOUR_PROJECT-12345",...}
+```
+
+or as a file path:
+
+```
+GOOGLE_VERTEX_AI_WEB_CREDENTIALS_FILE=/path/to/your/credentials.json
 ```
 
 ```typescript
@@ -119,7 +125,7 @@ const visionModel = new ChatVertexAI({
   modelName: "gemini-pro-vision",
   maxOutputTokens: 2048,
 });
-const image = fs.readFileSync("./hotdog.jpg").toString("base64");
+const image = fs.readFileSync("./hotdog.png").toString("base64");
 const input2 = [
   new HumanMessage({
     content: [

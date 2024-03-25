@@ -13,7 +13,7 @@ export function copyAIModelParamsInto(
 ): GoogleAIModelParams {
   const ret: GoogleAIModelParams = target || {};
 
-  ret.model = params?.modelName ?? params?.model ?? target.model;
+  ret.modelName = params?.modelName ?? params?.modelName ?? target.modelName;
 
   ret.temperature = params?.temperature ?? target.temperature;
   ret.maxOutputTokens = params?.maxOutputTokens ?? target.maxOutputTokens;
@@ -41,7 +41,7 @@ export function validateModelParams(
   params: GoogleAIModelParams | undefined
 ): void {
   const testParams: GoogleAIModelParams = params ?? {};
-  const model = testParams.modelName ?? testParams.model;
+  const model = testParams.modelName ?? testParams.modelName;
   switch (modelToFamily(model)) {
     case "gemini":
       return validateGeminiParams(testParams);

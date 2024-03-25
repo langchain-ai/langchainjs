@@ -59,7 +59,7 @@ describe.skip("Google APIKey LLM", () => {
 
   test("predictMessage image", async () => {
     const model = new GoogleLLM({
-      model: "gemini-pro-vision",
+      modelName: "gemini-pro-vision",
     });
     const message: MessageContentComplex[] = [
       {
@@ -84,7 +84,7 @@ describe.skip("Google APIKey LLM", () => {
 
   test("invoke image", async () => {
     const model = new GoogleLLM({
-      model: "gemini-pro-vision",
+      modelName: "gemini-pro-vision",
     });
     const message: MessageContentComplex[] = [
       {
@@ -139,7 +139,7 @@ describe.skip("Google WebAuth LLM", () => {
 
   test("predictMessage image", async () => {
     const model = new GoogleLLM({
-      model: "gemini-pro-vision",
+      modelName: "gemini-pro-vision",
     });
     const message: MessageContentComplex[] = [
       {
@@ -164,7 +164,7 @@ describe.skip("Google WebAuth LLM", () => {
 
   test("invoke image", async () => {
     const model = new GoogleLLM({
-      model: "gemini-pro-vision",
+      modelName: "gemini-pro-vision",
     });
     const message: MessageContentComplex[] = [
       {
@@ -243,7 +243,7 @@ describe.skip("Google WebAuth gai LLM", () => {
   test("predictMessage image", async () => {
     const model = new GoogleLLM({
       platformType: "gai",
-      model: "gemini-pro-vision",
+      modelName: "gemini-pro-vision",
     });
     const message: MessageContentComplex[] = [
       {
@@ -269,7 +269,7 @@ describe.skip("Google WebAuth gai LLM", () => {
   test("invoke image", async () => {
     const model = new GoogleLLM({
       platformType: "gai",
-      model: "gemini-pro-vision",
+      modelName: "gemini-pro-vision",
     });
     const message: MessageContentComplex[] = [
       {

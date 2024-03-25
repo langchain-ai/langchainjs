@@ -2,9 +2,9 @@
 
 This package contains resources to access Google AI/ML models
 and other Google services via Vertex AI. Authorization to these
-services use either an API Key or service account credentials
-that are either stored on the local file system or are provided
-through the Google Cloud Platform environment it is running on.
+services use service account credentials stored on the local
+file system or provided through the Google Cloud Platform
+environment it is running on.
 
 If you are running this on a platform where the credentials cannot
 be provided this way, consider using the @langchain/google-vertexai-web
@@ -21,9 +21,7 @@ $ yarn add @langchain/google-vertexai
 
 ## Authorization
 
-Authorization is either done through the use of an API Key, if it is
-supported for the service you're using, or a Google Cloud Service
-Account.
+Authorization is done through a Google Cloud Service Account.
 
 To handle service accounts, this package uses the `google-auth-library`
 package, and you may wish to consult the documentation for that library

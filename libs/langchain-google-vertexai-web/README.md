@@ -21,9 +21,7 @@ $ yarn add @langchain/google-vertexai-web
 
 ## Authorization
 
-Authorization is either done through the use of an API Key, if it is
-supported for the service you're using, or a Google Cloud Service
-Account.
+Authorization is done through a Google Cloud Service Account.
 
 To handle service accounts, this package uses the `google-auth-library`
 package, and you may wish to consult the documentation for that library

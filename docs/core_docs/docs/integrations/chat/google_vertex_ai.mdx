@@ -36,8 +36,6 @@ Google Cloud using one of these methods:
 - You have downloaded the credentials for a service account that is permitted
   to the project and set the `GOOGLE_APPLICATION_CREDENTIALS` environment
   variable to the path of this file.
-  **or**
-- You set the `GOOGLE_API_KEY` environment variable to the API key for the project.
 
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
@@ -58,12 +56,6 @@ Then, you'll need to add your service account credentials directly as a `GOOGLE_
 
 ```
 GOOGLE_VERTEX_AI_WEB_CREDENTIALS={"type":"service_account","project_id":"YOUR_PROJECT-12345",...}
-```
-
-Alternatively, you can set an API key as a `GOOGLE_API_KEY` environment variable:
-
-```
-GOOGLE_API_KEY=YOUR_API_KEY
 ```
 
 Lastly, you may also pass your credentials directly in code like this:

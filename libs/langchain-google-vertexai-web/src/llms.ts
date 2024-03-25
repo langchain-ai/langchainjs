@@ -14,6 +14,9 @@ export class VertexAI extends GoogleLLM {
   }
 
   constructor(fields?: VertexAIInput) {
-    super(fields);
+    super({
+      ...fields,
+      platformType: "gcp",
+    });
   }
 }

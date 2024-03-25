@@ -14,6 +14,9 @@ export class ChatVertexAI extends ChatGoogle {
   }
 
   constructor(fields?: ChatVertexAIInput) {
-    super(fields);
+    super({
+      ...fields,
+      platformType: "gcp",
+    });
   }
 }

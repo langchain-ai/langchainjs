@@ -47,7 +47,6 @@ export interface GoogleAISafetySetting {
 
 export interface GoogleAIModelParams {
   /** Model to use */
-  model?: string;
   modelName?: string;
 
   /** Sampling temperature to use */
