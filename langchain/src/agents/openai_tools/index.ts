@@ -27,8 +27,11 @@ export type CreateOpenAIToolsAgentParams = {
    */
   llm: BaseChatModel<
     BaseChatModelCallOptions & {
-      tools?: StructuredToolInterface[] | OpenAIClient.ChatCompletionTool[];
-      tool_choice?: OpenAIClient.ChatCompletionToolChoiceOption;
+      tools?:
+        | StructuredToolInterface[]
+        | OpenAIClient.ChatCompletionTool[]
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        | any[];
     }
   >;
   /** Tools this agent has access to. */
