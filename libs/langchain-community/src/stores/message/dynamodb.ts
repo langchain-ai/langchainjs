@@ -199,8 +199,7 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
         );
       return mapStoredMessagesToChatMessages(messages);
     } catch (error) {
-      console.error("Error getting messages:", error);
-      return [];
+      throw new Error("Error getting messages: " + error);
     }
   }
 
@@ -231,7 +230,7 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
       };
       await this.client.send(new UpdateItemCommand(params));
     } catch (error) {
-      console.error("Error adding message:", error);
+      throw new Error("Error adding message: " + error);
     }
   }
 
@@ -265,7 +264,7 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
       };
       await this.client.send(new UpdateItemCommand(params));
     } catch (error) {
-      console.error("Error adding messages:", error);
+      throw new Error("Error adding messages: " + error);
     }
   }
 
@@ -280,7 +279,7 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
       };
       await this.client.send(new DeleteItemCommand(params));
     } catch (error) {
-      console.error("Error clearing messages:", error);
+      throw new Error("Error clearing messages: " + error);
     }
   }
 }
