@@ -1,4 +1,4 @@
-/* eslint-disable react/jsx-props-no-spreading */
+/* eslint-disable react/jsx-props-no-spreading, react/destructuring-assignment */
 import React from "react";
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
@@ -29,7 +29,7 @@ const DEFAULTS = {
   anthropicParams: `{\n  modelName: "claude-3-sonnet-20240229",\n  temperature: 0\n}`,
   fireworksParams: `{\n  modelName: "accounts/fireworks/models/firefunction-v1",\n  temperature: 0\n}`,
   mistralParams: `{\n  modelName: "mistral-large-latest",\n  temperature: 0\n}`,
-}
+};
 
 /**
  * @typedef {Object} ChatModelTabsProps - Component props.
@@ -100,22 +100,24 @@ export default function ChatModelTabs(props) {
       dependencies: "@langchain/mistralai",
       shouldHide: hideMistral,
     },
-  ]
+  ];
 
   return (
     <div>
       <h3>Pick your chat model:</h3>
       <Tabs groupId="modelTabs">
-        {tabs.filter(tab => !tab.shouldHide).map((tab) => (
-          <TabItem value={tab.value} label={tab.label} key={tab.value}>
-            <h4>Install dependencies</h4>
-            <InstallationInfo>{tab.dependencies}</InstallationInfo>
-            <h4>Add environment variables</h4>
-            <CodeBlock language="bash">{tab.envs}</CodeBlock>
-            <h4>Instantiate the model</h4>
-            <CodeBlock language="typescript">{tab.text}</CodeBlock>
-          </TabItem>
-        ))}
+        {tabs
+          .filter((tab) => !tab.shouldHide)
+          .map((tab) => (
+            <TabItem value={tab.value} label={tab.label} key={tab.value}>
+              <h4>Install dependencies</h4>
+              <InstallationInfo>{tab.dependencies}</InstallationInfo>
+              <h4>Add environment variables</h4>
+              <CodeBlock language="bash">{tab.envs}</CodeBlock>
+              <h4>Instantiate the model</h4>
+              <CodeBlock language="typescript">{tab.text}</CodeBlock>
+            </TabItem>
+          ))}
       </Tabs>
     </div>
   );
