@@ -55,7 +55,7 @@ test("RedisVectorStore with external keys", async () => {
   expect(client.hSet).toHaveBeenCalledWith("id1", {
     content_vector: Buffer.from(new Float32Array([0.1, 0.2, 0.3, 0.4]).buffer),
     content: "hello",
-    metadata: JSON.stringify({ a: 1, b: { nested: [1, { a: 4 }] } }),
+    metadata: `{\\"a\\"\\:1,\\"b\\"\\:{\\"nested\\"\\:[1,{\\"a\\"\\:4}]}}`,
   });
 
   const results = await store.similaritySearch("goodbye", 1);

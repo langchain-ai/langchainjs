@@ -8970,6 +8970,7 @@ __metadata:
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^1.1.0
     "@planetscale/database": ^1.8.0
+    "@premai/prem-sdk": ^0.3.25
     "@qdrant/js-client-rest": ^1.2.0
     "@raycast/api": ^1.55.2
     "@rockset/client": ^0.9.1
@@ -9099,6 +9100,7 @@ __metadata:
     "@opensearch-project/opensearch": "*"
     "@pinecone-database/pinecone": "*"
     "@planetscale/database": ^1.8.0
+    "@premai/prem-sdk": ^0.3.25
     "@qdrant/js-client-rest": ^1.2.0
     "@raycast/api": ^1.55.2
     "@rockset/client": ^0.9.1
@@ -9213,6 +9215,8 @@ __metadata:
     "@pinecone-database/pinecone":
       optional: true
     "@planetscale/database":
+      optional: true
+    "@premai/prem-sdk":
       optional: true
     "@qdrant/js-client-rest":
       optional: true
@@ -9660,6 +9664,7 @@ __metadata:
     eslint-plugin-prettier: ^4.2.1
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
+    langchain: "workspace:^"
     prettier: ^2.8.3
     release-it: ^15.10.1
     rollup: ^4.5.2
@@ -10797,6 +10802,15 @@ __metadata:
   version: 1.0.0-next.23
   resolution: "@polka/url@npm:1.0.0-next.23"
   checksum: 4b0330de1ceecd1002c7e7449094d0c41f2ed0e21765f4835ccc7b003f2f024ac557d503b9ffdf0918cf50b80d5b8c99dfc5a91927e7b3c468b09c6bb42a3c41
+  languageName: node
+  linkType: hard
+
+"@premai/prem-sdk@npm:^0.3.25":
+  version: 0.3.25
+  resolution: "@premai/prem-sdk@npm:0.3.25"
+  dependencies:
+    axios: ^1.6.2
+  checksum: e52bd2a1d44df773ca76c6267ef23dbbd94af4ad4f8cd3eb123772179c62358115c4e53bbc1373772529c08bc888df1fdcb994bfd9b57b8ee8206cd4808aa77d
   languageName: node
   linkType: hard
 
@@ -16853,6 +16867,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"axios@npm:^1.6.2":
+  version: 1.6.8
+  resolution: "axios@npm:1.6.8"
+  dependencies:
+    follow-redirects: ^1.15.6
+    form-data: ^4.0.0
+    proxy-from-env: ^1.1.0
+  checksum: bf007fa4b207d102459300698620b3b0873503c6d47bf5a8f6e43c0c64c90035a4f698b55027ca1958f61ab43723df2781c38a99711848d232cad7accbcdfcdd
+  languageName: node
+  linkType: hard
+
 "axios@npm:^1.6.5, axios@npm:^1.6.7":
   version: 1.6.7
   resolution: "axios@npm:1.6.7"
@@ -22403,6 +22428,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"follow-redirects@npm:^1.15.6":
+  version: 1.15.6
+  resolution: "follow-redirects@npm:1.15.6"
+  peerDependenciesMeta:
+    debug:
+      optional: true
+  checksum: a62c378dfc8c00f60b9c80cab158ba54e99ba0239a5dd7c81245e5a5b39d10f0c35e249c3379eae719ff0285fff88c365dd446fab19dee771f1d76252df1bbf5
+  languageName: node
+  linkType: hard
+
 "for-each@npm:^0.3.3":
   version: 0.3.3
   resolution: "for-each@npm:0.3.3"
@@ -26402,7 +26437,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"langchain@workspace:*, langchain@workspace:langchain":
+"langchain@workspace:*, langchain@workspace:^, langchain@workspace:langchain":
   version: 0.0.0-use.local
   resolution: "langchain@workspace:langchain"
   dependencies:

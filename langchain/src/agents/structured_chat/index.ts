@@ -4,10 +4,7 @@ import type {
   BaseLanguageModel,
   BaseLanguageModelInterface,
 } from "@langchain/core/language_models/base";
-import {
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
+import { RunnablePassthrough } from "@langchain/core/runnables";
 import type { BasePromptTemplate } from "@langchain/core/prompts";
 import {
   BaseMessagePromptTemplate,
@@ -22,8 +19,8 @@ import { Optional } from "../../types/type-utils.js";
 import {
   Agent,
   AgentArgs,
+  AgentRunnableSequence,
   OutputParserArgs,
-  RunnableSingleActionAgent,
 } from "../agent.js";
 import { AgentInput } from "../types.js";
 import { StructuredChatOutputParserWithRetries } from "./outputParser.js";
@@ -336,20 +333,23 @@ export async function createStructuredChatAgent({
   const llmWithStop = (llm as BaseLanguageModel).bind({
     stop: ["Observation"],
   });
-  const agent = RunnableSequence.from([
-    RunnablePassthrough.assign({
-      agent_scratchpad: (input: { steps: AgentStep[] }) =>
-        formatLogToString(input.steps),
-    }),
-    partialedPrompt,
-    llmWithStop,
-    StructuredChatOutputParserWithRetries.fromLLM(llm, {
-      toolNames,
-    }),
-  ]);
-  return new RunnableSingleActionAgent({
-    runnable: agent,
-    defaultRunName: "StructuredChatAgent",
-    streamRunnable,
-  });
+  const agent = AgentRunnableSequence.fromRunnables(
+    [
+      RunnablePassthrough.assign({
+        agent_scratchpad: (input: { steps: AgentStep[] }) =>
+          formatLogToString(input.steps),
+      }),
+      partialedPrompt,
+      llmWithStop,
+      StructuredChatOutputParserWithRetries.fromLLM(llm, {
+        toolNames,
+      }),
+    ],
+    {
+      name: "StructuredChatAgent",
+      streamRunnable,
+      singleAction: true,
+    }
+  );
+  return agent;
 }
