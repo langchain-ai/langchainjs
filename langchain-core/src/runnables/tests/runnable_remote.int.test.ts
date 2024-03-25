@@ -113,7 +113,7 @@ test("streamLog hosted langserve with concat syntax", async () => {
   console.log("totalByteSize", totalByteSize);
 });
 
-test.skip("stream events hosted langserve with concat syntax", async () => {
+test("stream events hosted langserve with concat syntax", async () => {
   const remote = new RemoteRunnable({
     url: `https://privateurl.com/pirate-speak/`,
   });
@@ -127,13 +127,12 @@ test.skip("stream events hosted langserve with concat syntax", async () => {
   let totalByteSize = 0;
   const state = [];
   for await (const chunk of result) {
-    console.log(chunk);
     state.push(chunk);
     const jsonString = JSON.stringify(chunk);
     const byteSize = Buffer.byteLength(jsonString, "utf-8");
     totalByteSize += byteSize;
   }
-  // console.log("final state", state);
+  console.log("final state", state);
   console.log("totalByteSize", totalByteSize);
 });
 
