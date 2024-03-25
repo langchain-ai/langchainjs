@@ -24,27 +24,35 @@ function InstallationInfo({ children }) {
   );
 }
 
+const DEFAULTS = {
+  openaiParams: `{\n  modelName: "gpt-3.5-turbo-0125",\n  temperature: 0\n}`,
+  anthropicParams: `{\n  modelName: "claude-3-sonnet-20240229",\n  temperature: 0\n}`,
+  fireworksParams: `{\n  modelName: "accounts/fireworks/models/firefunction-v1",\n  temperature: 0\n}`,
+  mistralParams: `{\n  modelName: "mistral-large-latest",\n  temperature: 0\n}`,
+}
+
 /**
  * @param {{ openaiParams?: string, anthropicParams?: string, fireworksParams?: string, mistralParams?: string, hideOpenai?: boolean, hideAnthropic?: boolean, hideFireworks?: boolean, hideMistral?: boolean }} props
  */
 export default function ChatModelTabs(props) {
   const {
-    openaiParams,
-    anthropicParams,
-    fireworksParams,
-    mistralParams,
     hideOpenai,
     hideAnthropic,
     hideFireworks,
     hideMistral,
   } = props;
 
+  const openaiParams = props.openaiParams ?? DEFAULTS.openaiParams;
+  const anthropicParams = props.anthropicParams ?? DEFAULTS.anthropicParams;
+  const fireworksParams = props.fireworksParams ?? DEFAULTS.fireworksParams;
+  const mistralParams = props.mistralParams ?? DEFAULTS.mistralParams;
+
   const tabs = [
     {
       value: "OpenAI",
       label: "OpenAI",
       default: true,
-      text: `import { ChatOpenAI } from "@langchain/openai";\n\nconst model = new ChatOpenAI(${openaiParams ?? "{}"});`,
+      text: `import { ChatOpenAI } from "@langchain/openai";\n\nconst model = new ChatOpenAI(${openaiParams});`,
       envs: `OPENAI_API_KEY=your-api-key`,
       dependencies: "@langchain/openai",
       shouldHide: hideOpenai,
@@ -53,7 +61,7 @@ export default function ChatModelTabs(props) {
       value: "Anthropic",
       label: "Anthropic",
       default: false,
-      text: `import { ChatAnthropic } from "@langchain/anthropic";\n\nconst model = new ChatAnthropic(${anthropicParams ?? "{}"});`,
+      text: `import { ChatAnthropic } from "@langchain/anthropic";\n\nconst model = new ChatAnthropic(${anthropicParams});`,
       envs: `ANTHROPIC_API_KEY=your-api-key`,
       dependencies: "@langchain/anthropic",
       shouldHide: hideAnthropic,
@@ -62,7 +70,7 @@ export default function ChatModelTabs(props) {
       value: "FireworksAI",
       label: "FireworksAI",
       default: false,
-      text: `import { ChatFireworks } from "@langchain/community/chat_models/fireworks";\n\nconst model = new ChatFireworks(${fireworksParams ?? "{}"});`,
+      text: `import { ChatFireworks } from "@langchain/community/chat_models/fireworks";\n\nconst model = new ChatFireworks(${fireworksParams});`,
       envs: `FIREWORKS_API_KEY=your-api-key`,
       dependencies: "@langchain/community",
       shouldHide: hideFireworks,
@@ -71,7 +79,7 @@ export default function ChatModelTabs(props) {
       value: "MistralAI",
       label: "MistralAI",
       default: false,
-      text: `import { ChatMistralAI } from "@langchain/mistralai";\n\nconst model = new ChatMistralAI(${mistralParams ?? "{}"});`,
+      text: `import { ChatMistralAI } from "@langchain/mistralai";\n\nconst model = new ChatMistralAI(${mistralParams});`,
       envs: `MISTRAL_API_KEY=your-api-key`,
       dependencies: "@langchain/mistralai",
       shouldHide: hideMistral,
