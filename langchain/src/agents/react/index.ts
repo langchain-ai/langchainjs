@@ -4,15 +4,12 @@ import type {
   BaseLanguageModel,
   BaseLanguageModelInterface,
 } from "@langchain/core/language_models/base";
-import {
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
+import { RunnablePassthrough } from "@langchain/core/runnables";
 import { AgentStep } from "@langchain/core/agents";
 import { renderTextDescription } from "../../tools/render.js";
 import { formatLogToString } from "../format_scratchpad/log.js";
 import { ReActSingleInputOutputParser } from "./output_parser.js";
-import { RunnableSingleActionAgent } from "../agent.js";
+import { AgentRunnableSequence } from "../agent.js";
 
 /**
  * Params used by the createXmlAgent function.
@@ -102,20 +99,23 @@ export async function createReactAgent({
   const llmWithStop = (llm as BaseLanguageModel).bind({
     stop: ["\nObservation:"],
   });
-  const agent = RunnableSequence.from([
-    RunnablePassthrough.assign({
-      agent_scratchpad: (input: { steps: AgentStep[] }) =>
-        formatLogToString(input.steps),
-    }),
-    partialedPrompt,
-    llmWithStop,
-    new ReActSingleInputOutputParser({
-      toolNames,
-    }),
-  ]);
-  return new RunnableSingleActionAgent({
-    runnable: agent,
-    defaultRunName: "ReactAgent",
-    streamRunnable,
-  });
+  const agent = AgentRunnableSequence.fromRunnables(
+    [
+      RunnablePassthrough.assign({
+        agent_scratchpad: (input: { steps: AgentStep[] }) =>
+          formatLogToString(input.steps),
+      }),
+      partialedPrompt,
+      llmWithStop,
+      new ReActSingleInputOutputParser({
+        toolNames,
+      }),
+    ],
+    {
+      name: "ReactAgent",
+      streamRunnable,
+      singleAction: true,
+    }
+  );
+  return agent;
 }
