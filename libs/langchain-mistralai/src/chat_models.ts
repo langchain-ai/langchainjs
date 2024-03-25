@@ -5,6 +5,7 @@ import {
   ToolChoice as MistralAIToolChoice,
   ResponseFormat,
   ChatCompletionResponseChunk,
+  ToolType,
 } from "@mistralai/mistralai";
 import {
   MessageType,
@@ -16,6 +17,8 @@ import {
   AIMessageChunk,
   ToolMessageChunk,
   ChatMessageChunk,
+  FunctionMessageChunk,
+  ToolCall,
 } from "@langchain/core/messages";
 import type {
   BaseLanguageModelInput,
@@ -165,6 +168,10 @@ function convertMessagesToMistralMessages(
         return "assistant";
       case "system":
         return "system";
+      case "tool":
+        return "tool";
+      case "function":
+        return "assistant";
       default:
         throw new Error(`Unknown message type: ${role}`);
     }
@@ -183,9 +190,17 @@ function convertMessagesToMistralMessages(
     );
   };
 
+  const getTools = (toolCalls: ToolCall[] | undefined): MistralAIToolCalls[] =>
+    toolCalls?.map((toolCall) => ({
+      id: "null",
+      type: "function" as ToolType.function,
+      function: toolCall.function,
+    })) || [];
+
   return messages.map((message) => ({
     role: getRole(message._getType()),
     content: getContent(message.content),
+    tool_calls: getTools(message.additional_kwargs.tool_calls),
   }));
 }
 
@@ -235,7 +250,7 @@ function _convertDeltaToMessageChunk(delta: {
   if (delta.role) {
     role = delta.role;
   } else if (toolCallsWithIndex) {
-    role = "tool";
+    role = "function";
   }
   const content = delta.content ?? "";
   let additional_kwargs;
@@ -256,6 +271,11 @@ function _convertDeltaToMessageChunk(delta: {
       content,
       additional_kwargs,
       tool_call_id: toolCallsWithIndex?.[0].id ?? "",
+    });
+  } else if (role === "function") {
+    return new FunctionMessageChunk({
+      content,
+      additional_kwargs,
     });
   } else {
     return new ChatMessageChunk({ content, role });

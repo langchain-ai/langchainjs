@@ -175,17 +175,26 @@ function _convertDeltaToMessageChunk(
 
 function convertMessagesToOpenAIParams(messages: BaseMessage[]) {
   // TODO: Function messages do not support array content, fix cast
-  return messages.map(
-    (message) =>
-      ({
-        role: messageToOpenAIRole(message),
-        content: message.content,
-        name: message.name,
-        function_call: message.additional_kwargs.function_call,
-        tool_calls: message.additional_kwargs.tool_calls,
-        tool_call_id: (message as ToolMessage).tool_call_id,
-      } as OpenAICompletionParam)
-  );
+  return messages.map((message) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const completionParam: Record<string, any> = {
+      role: messageToOpenAIRole(message),
+      content: message.content,
+    };
+    if (message.name != null) {
+      completionParam.name = message.name;
+    }
+    if (message.additional_kwargs.function_call != null) {
+      completionParam.function_call = message.additional_kwargs.function_call;
+    }
+    if (message.additional_kwargs.tool_calls != null) {
+      completionParam.tool_calls = message.additional_kwargs.tool_calls;
+    }
+    if ((message as ToolMessage).tool_call_id != null) {
+      completionParam.tool_call_id = (message as ToolMessage).tool_call_id;
+    }
+    return completionParam as OpenAICompletionParam;
+  });
 }
 
 export interface ChatOpenAICallOptions
