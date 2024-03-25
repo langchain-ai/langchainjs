@@ -9,6 +9,7 @@ import { BaseOutputParser } from "@langchain/core/output_parsers";
 import { PromptTemplate, BasePromptTemplate } from "@langchain/core/prompts";
 import { CallbackManagerForRetrieverRun } from "@langchain/core/callbacks/manager";
 import { LLMChain } from "../chains/llm_chain.js";
+import type { BaseDocumentCompressor } from "./document_compressors/index.js";
 
 interface LineList {
   lines: string[];
@@ -66,6 +67,8 @@ export interface MultiQueryRetrieverInput extends BaseRetrieverInput {
   llmChain: LLMChain<LineList>;
   queryCount?: number;
   parserKey?: string;
+  documentCompressor?: BaseDocumentCompressor | undefined;
+  documentCompressorMinRelevanceScore?: number;
 }
 
 /**
@@ -96,12 +99,20 @@ export class MultiQueryRetriever extends BaseRetriever {
 
   private parserKey = "lines";
 
+  documentCompressor: BaseDocumentCompressor | undefined;
+
+  protected documentCompressorMinRelevanceScore?: number = 0.4;
+
   constructor(fields: MultiQueryRetrieverInput) {
     super(fields);
     this.retriever = fields.retriever;
     this.llmChain = fields.llmChain;
     this.queryCount = fields.queryCount ?? this.queryCount;
     this.parserKey = fields.parserKey ?? this.parserKey;
+    this.documentCompressor = fields.documentCompressor;
+    this.documentCompressorMinRelevanceScore =
+      fields.documentCompressorMinRelevanceScore ??
+      this.documentCompressorMinRelevanceScore;
   }
 
   static fromLLM(
@@ -145,13 +156,15 @@ export class MultiQueryRetriever extends BaseRetriever {
     runManager?: CallbackManagerForRetrieverRun
   ): Promise<Document[]> {
     const documents: Document[] = [];
-    for (const query of queries) {
-      const docs = await this.retriever.getRelevantDocuments(
-        query,
-        runManager?.getChild()
-      );
-      documents.push(...docs);
-    }
+    await Promise.all(
+      queries.map(async (query) => {
+        const docs = await this.retriever.getRelevantDocuments(
+          query,
+          runManager?.getChild()
+        );
+        documents.push(...docs);
+      })
+    );
     return documents;
   }
 
@@ -177,6 +190,20 @@ export class MultiQueryRetriever extends BaseRetriever {
     const queries = await this._generateQueries(question, runManager);
     const documents = await this._retrieveDocuments(queries, runManager);
     const uniqueDocuments = this._uniqueUnion(documents);
-    return uniqueDocuments;
+
+    let outputDocs = uniqueDocuments;
+    if (this.documentCompressor) {
+      outputDocs = await this.documentCompressor.compressDocuments(
+        uniqueDocuments,
+        question
+      );
+      outputDocs = outputDocs.filter(
+        (doc) =>
+          (doc?.metadata?.relevanceScore ?? 1) >=
+          (this.documentCompressorMinRelevanceScore ?? 0)
+      );
+    }
+
+    return outputDocs;
   }
 }
