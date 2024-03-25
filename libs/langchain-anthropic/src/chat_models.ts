@@ -288,7 +288,10 @@ export class ChatAnthropicMessages<
         yield new ChatGenerationChunk({
           message: new AIMessageChunk({
             content: "",
-            additional_kwargs: { ...data.delta },
+            additional_kwargs: { 
+              ...data.delta,
+              usage: data.usage
+            },
           }),
           text: "",
         });
