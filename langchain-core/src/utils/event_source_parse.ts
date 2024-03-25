@@ -230,12 +230,19 @@ function newMessage(): EventSourceMessage {
 }
 
 export function convertEventStreamToIterableReadableDataStream(
-  stream: ReadableStream
+  stream: ReadableStream,
+  onMetadataEvent?: (e: unknown) => unknown
 ) {
   const dataStream = new ReadableStream({
     async start(controller) {
       const enqueueLine = getMessages((msg) => {
-        if (msg.data) controller.enqueue(msg.data);
+        if (msg.event === "error") {
+          throw new Error(msg.data ?? "Unspecified event streaming error.");
+        } else if (msg.event === "metadata") {
+          onMetadataEvent?.(msg);
+        } else {
+          if (msg.data) controller.enqueue(msg.data);
+        }
       });
       const onLine = (
         line: Uint8Array,

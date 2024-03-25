@@ -141,6 +141,7 @@ cd libs/langchain-community
 ```
 
 ### Setup
+**Prerequisite**: Node version 18+ is required. Please check node version `node -v` and update it if required.
 
 To get started, you will need to install the dependencies for the project. To do so, run:
 
