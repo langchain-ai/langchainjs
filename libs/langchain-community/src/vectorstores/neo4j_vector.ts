@@ -735,7 +735,11 @@ function getSearchIndexQuery(searchType: SearchType): string {
   return typeToQueryMap[searchType];
 }
 
-function removeLuceneChars(text: string): string {
+function removeLuceneChars(text: string | null) {
+  if (text === undefined || text === null) {
+    return null;
+  }
+
   // Remove Lucene special characters
   const specialChars = [
     "+",
