@@ -432,6 +432,7 @@ export class DefaultGeminiSafetyHandler implements GoogleAISafetyHandler {
       } catch (xx) {
         // eslint-disable-next-line no-instanceof/no-instanceof
         if (xx instanceof GoogleAISafetyError) {
+          console.error("err", xx)
           throw new GoogleAISafetyError(response, xx.message);
         } else {
           throw xx;
