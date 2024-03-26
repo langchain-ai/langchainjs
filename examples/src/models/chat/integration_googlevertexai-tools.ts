@@ -44,19 +44,5 @@ console.log(JSON.stringify(response.additional_kwargs, null, 2));
       }
     }
   ],
-  "tool_calls_parsed": [
-    {
-      "id": "calculator",
-      "type": "function",
-      "function": {
-        "name": "calculator",
-        "arguments": {
-          "number2": 81623836,
-          "number1": 1628253239,
-          "operation": "multiply"
-        }
-      }
-    }
-  ]
 }
  */

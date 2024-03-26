@@ -484,7 +484,6 @@ export function partsToBaseMessageFields(
     const tools = toolsRawToTools(rawTools);
     fields.additional_kwargs = {
       tool_calls: tools,
-      tool_calls_parsed: rawTools,
     };
   }
   return fields;
