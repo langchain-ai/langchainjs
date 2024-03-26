@@ -70,7 +70,7 @@ test("Test OpenAIEmbeddings.embedQuery with TokenCredentials", async () => {
   expect(typeof res[0]).toBe("number");
 });
 
-test.only("Test OpenAIEmbeddings.embedQuery with OpenAI API key credentials", async () => {
+test("Test OpenAIEmbeddings.embedQuery with OpenAI API key credentials", async () => {
   const openAiKey: string = getEnvironmentVariable("OPENAI_API_KEY") ?? "";
   const credentials = new OpenAIKeyCredential(openAiKey);
 
