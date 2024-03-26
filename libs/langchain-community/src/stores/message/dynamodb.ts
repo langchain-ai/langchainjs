@@ -177,7 +177,7 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
             item.M !== undefined
         )
         .map((item) => {
-          let data: {
+          const data: {
             role?: string;
             content: string | undefined;
             additional_kwargs?: Record<string, unknown>;
@@ -191,7 +191,7 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
 
           return {
             type: item.M?.type.S,
-            data: data,
+            data,
           };
         })
         .filter(
@@ -199,8 +199,9 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
             x.type !== undefined && x.data.content !== undefined
         );
       return mapStoredMessagesToChatMessages(messages);
-    } catch (error) {
-      throw new Error("Error getting messages: " + error);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      throw new Error(`Error getting messages: ${error.message}`);
     }
   }
 
@@ -230,8 +231,9 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
           "SET #m = list_append(if_not_exists(#m, :empty_list), :m)",
       };
       await this.client.send(new UpdateItemCommand(params));
-    } catch (error) {
-      throw new Error("Error adding message: " + error);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      throw new Error(`Error adding message: ${error.message}`);
     }
   }
 
@@ -264,8 +266,9 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
           "SET #m = list_append(if_not_exists(#m, :empty_list), :m)",
       };
       await this.client.send(new UpdateItemCommand(params));
-    } catch (error) {
-      throw new Error("Error adding messages: " + error);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      throw new Error(`Error adding messages: ${error.message}`);
     }
   }
 
@@ -279,8 +282,9 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
         Key: this.dynamoKey,
       };
       await this.client.send(new DeleteItemCommand(params));
-    } catch (error) {
-      throw new Error("Error clearing messages: " + error);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      throw new Error(`Error clearing messages: ${error.message}`);
     }
   }
 }
