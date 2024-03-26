@@ -171,7 +171,7 @@ describe.skip("Google APIKey Chat", () => {
       apiVersion: "v1beta",
     }).bind({
       tools,
-    })
+    });
     const result = await model.invoke("Run a test on the cobalt project");
     expect(result).toHaveProperty("content");
     expect(Array.isArray(result.content)).toBeTruthy();
@@ -220,7 +220,7 @@ describe.skip("Google APIKey Chat", () => {
       apiVersion: "v1beta",
     }).bind({
       tools,
-    })
+    });
     const toolResult = {
       testPassed: true,
     };

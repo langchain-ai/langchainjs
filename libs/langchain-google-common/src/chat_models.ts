@@ -294,7 +294,8 @@ export abstract class ChatGoogleBase<AuthOptions>
     if (isZodSchema(schema)) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const jsonSchema = zodToJsonSchema(schema) as any;
-      const { $schema, additionalProperties, ...schemaWithoutExtras } = jsonSchema;
+      const { $schema, additionalProperties, ...schemaWithoutExtras } =
+        jsonSchema;
       tools = [
         {
           functionDeclarations: [

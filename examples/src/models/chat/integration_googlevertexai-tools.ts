@@ -19,8 +19,8 @@ const geminiCalculatorTool: GeminiTool = {
       name: "calculator",
       description: "A simple calculator tool",
       parameters: zodToGeminiParameters(calculatorSchema),
-    }
-  ]
+    },
+  ],
 };
 
 const model = new ChatVertexAI({
