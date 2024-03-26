@@ -262,6 +262,7 @@ export class ChatAnthropicMessages<
       ...this.formatMessagesForAnthropic(messages),
       stream: true,
     });
+    let usageData = { input_tokens: 0, output_tokens: 0 };
     for await (const data of stream) {
       if (options.signal?.aborted) {
         stream.controller.abort();
@@ -269,7 +270,7 @@ export class ChatAnthropicMessages<
       }
       if (data.type === "message_start") {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { content, ...additionalKwargs } = data.message;
+        const { content, usage, ...additionalKwargs } = data.message;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const filteredAdditionalKwargs: Record<string, any> = {};
         for (const [key, value] of Object.entries(additionalKwargs)) {
@@ -277,6 +278,7 @@ export class ChatAnthropicMessages<
             filteredAdditionalKwargs[key] = value;
           }
         }
+        usageData = usage;
         yield new ChatGenerationChunk({
           message: new AIMessageChunk({
             content: "",
@@ -288,13 +290,14 @@ export class ChatAnthropicMessages<
         yield new ChatGenerationChunk({
           message: new AIMessageChunk({
             content: "",
-            additional_kwargs: {
-              ...data.delta,
-              usage: data.usage,
-            },
+            additional_kwargs: { ...data.delta },
           }),
           text: "",
         });
+        if (data?.usage !== undefined) {
+          usageData.output_tokens =
+            usageData.output_tokens + data.usage.output_tokens;
+        }
       } else if (data.type === "content_block_delta") {
         const content = data.delta?.text;
         if (content !== undefined) {
@@ -309,6 +312,13 @@ export class ChatAnthropicMessages<
         }
       }
     }
+    yield new ChatGenerationChunk({
+      message: new AIMessageChunk({
+        content: "",
+        additional_kwargs: { usage: usageData },
+      }),
+      text: "",
+    });
   }
 
   /**
