@@ -133,7 +133,7 @@ describe("RemoteRunnable", () => {
     expect(fetch).toHaveBeenCalledWith(
       `${BASE_URL}/a/invoke`,
       expect.objectContaining({
-        body: '{"input":{"text":"string"},"config":{},"kwargs":{}}',
+        body: '{"input":{"text":"string"},"config":{"tags":[],"metadata":{},"recursionLimit":25},"kwargs":{}}',
       })
     );
     expect(result).toEqual(["a", "b", "c"]);
