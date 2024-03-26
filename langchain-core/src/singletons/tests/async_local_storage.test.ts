@@ -112,9 +112,7 @@ test("Config should be automatically populated after setting global async local 
   );
   expect(res4?.tags).toEqual(["tester_with_config"]);
 
-  const chatModel = new FakeListChatModel({ responses: ["test"] }).bind({
-    stop: [],
-  });
+  const chatModel = new FakeListChatModel({ responses: ["test"] });
   const outer4 = RunnableLambda.from(async () => {
     const res = await chatModel.invoke("hey");
     return res;

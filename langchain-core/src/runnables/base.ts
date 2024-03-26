@@ -281,18 +281,23 @@ export abstract class Runnable<
   }
 
   protected _separateRunnableConfigFromCallOptions(
-    options: Partial<CallOptions> = {}
+    options?: Partial<CallOptions>
   ): [RunnableConfig, Omit<Partial<CallOptions>, keyof RunnableConfig>] {
-    const runnableConfig: RunnableConfig = ensureConfig({
-      callbacks: options.callbacks,
-      tags: options.tags,
-      metadata: options.metadata,
-      runName: options.runName,
-      configurable: options.configurable,
-      recursionLimit: options.recursionLimit,
-      maxConcurrency: options.maxConcurrency,
-    });
-    const callOptions = { ...options };
+    let runnableConfig;
+    if (options === undefined) {
+      runnableConfig = ensureConfig(options);
+    } else {
+      runnableConfig = ensureConfig({
+        callbacks: options.callbacks,
+        tags: options.tags,
+        metadata: options.metadata,
+        runName: options.runName,
+        configurable: options.configurable,
+        recursionLimit: options.recursionLimit,
+        maxConcurrency: options.maxConcurrency,
+      });
+    }
+    const callOptions = { ...(options as Partial<CallOptions>) };
     delete callOptions.callbacks;
     delete callOptions.tags;
     delete callOptions.metadata;

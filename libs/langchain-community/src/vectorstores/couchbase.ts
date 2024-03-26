@@ -457,6 +457,47 @@ export class CouchbaseVectorStore extends VectorStore {
   }
 
   /**
+   * upsert documents asynchronously into a couchbase collection
+   * @param documentsToInsert Documents to be inserted into couchbase collection with embeddings, original text and metadata
+   * @returns DocIds of the inserted documents
+   */
+  private async upsertDocuments(
+    documentsToInsert: {
+      [x: string]: any;
+    }[]
+  ) {
+    // Create promises for each document to be upserted
+    const upsertDocumentsPromises = documentsToInsert.map((document) => {
+      const currentDocumentKey = Object.keys(document)[0];
+      return this._collection
+        .upsert(currentDocumentKey, document[currentDocumentKey])
+        .then(() => currentDocumentKey)
+        .catch((e) => {
+          console.error("error received while upserting document", e);
+          throw new Error(`Upsert failed with error: ${e}`);
+        });
+    });
+
+    try {
+      // Upsert all documents asynchronously
+      const docIds = await Promise.all(upsertDocumentsPromises);
+      const successfulDocIds: string[] = [];
+      for (const id of docIds) {
+        if (id) {
+          successfulDocIds.push(id);
+        }
+      }
+      return successfulDocIds;
+    } catch (e) {
+      console.error(
+        "An error occurred with Promise.all at upserting all documents",
+        e
+      );
+      throw e;
+    }
+  }
+
+  /**
    * Add vectors and corresponding documents to a couchbase collection
    * If the document IDs are passed, the existing documents (if any) will be
    * overwritten with the new ones.
@@ -492,18 +533,12 @@ export class CouchbaseVectorStore extends VectorStore {
       },
     }));
 
-    const docIds: string[] = [];
-    for (const document of documentsToInsert) {
-      try {
-        const currentDocumentKey = Object.keys(document)[0];
-        await this._collection.upsert(
-          currentDocumentKey,
-          document[currentDocumentKey]
-        );
-        docIds.push(currentDocumentKey);
-      } catch (e) {
-        console.log("error received while upserting document", e);
-      }
+    let docIds: string[] = [];
+    try {
+      docIds = await this.upsertDocuments(documentsToInsert);
+    } catch (err) {
+      console.error("Error while adding vectors", err);
+      throw err;
     }
 
     return docIds;
@@ -586,7 +621,7 @@ export class CouchbaseVectorStore extends VectorStore {
   }
 
   /**
-   * Delete documents from the collection.
+   * Delete documents asynchronously from the collection.
    * This function will attempt to remove each document in the provided list of IDs from the collection.
    * If an error occurs during the deletion of a document, an error will be thrown with the ID of the document and the error message.
    * @param ids - An array of document IDs to be deleted from the collection.
@@ -594,15 +629,17 @@ export class CouchbaseVectorStore extends VectorStore {
    * @returns - A promise that resolves when all documents have been attempted to be deleted. If a document could not be deleted, an error is thrown.
    */
   public async delete(ids: string[]): Promise<void> {
-    for (let i = 0; i < ids.length; i += 1) {
-      const removeId = ids[i];
-      try {
-        await this._collection.remove(removeId);
-      } catch (err) {
+    const deleteDocumentsPromises = ids.map((id) =>
+      this._collection.remove(id).catch((err) => {
         throw new Error(
-          `Error while deleting document - Document Id: ${ids[i]}, Error: ${err}`
+          `Error while deleting document - Document Id: ${id}, Error: ${err}`
         );
-      }
+      })
+    );
+    try {
+      await Promise.all(deleteDocumentsPromises);
+    } catch (err) {
+      throw new Error(`Error while deleting documents, Error: ${err}`);
     }
   }
 }
