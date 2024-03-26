@@ -295,8 +295,7 @@ export class ChatAnthropicMessages<
           text: "",
         });
         if (data?.usage !== undefined) {
-          usageData.output_tokens =
-            usageData.output_tokens + data.usage.output_tokens;
+          usageData.output_tokens += data.usage.output_tokens;
         }
       } else if (data.type === "content_block_delta") {
         const content = data.delta?.text;
