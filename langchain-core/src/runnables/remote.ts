@@ -533,7 +533,7 @@ export class RemoteRunnable<
       yield {
         event: chunk.event,
         name: chunk.name,
-        run_id: chunk.id,
+        run_id: chunk.run_id,
         tags: chunk.tags,
         metadata: chunk.metadata,
         data: chunk.data,
