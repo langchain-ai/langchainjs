@@ -144,17 +144,13 @@ export class AzureOpenAIEmbeddings
     const deploymentName = this.azureOpenAIApiDeploymentName || this.modelName;
 
     const res = await this.caller.call(() =>
-      this.client.getEmbeddings(
-        deploymentName,
-        input,
-        {
-          user: this.user,
-          model: this.modelName,
-          requestOptions: {
-            timeout: this.timeout,
-          },
-        }
-      )
+      this.client.getEmbeddings(deploymentName, input, {
+        user: this.user,
+        model: this.modelName,
+        requestOptions: {
+          timeout: this.timeout,
+        },
+      })
     );
 
     return res.data[0].embedding;
