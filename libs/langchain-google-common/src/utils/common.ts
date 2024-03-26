@@ -1,6 +1,7 @@
 import type {
   GoogleAIBaseLanguageModelCallOptions,
   GoogleAIModelParams,
+  GoogleAIModelRequestParams,
   GoogleLLMModelFamily,
 } from "../types.js";
 import { isModelGemini, validateGeminiParams } from "./gemini.js";
@@ -8,7 +9,7 @@ import { isModelGemini, validateGeminiParams } from "./gemini.js";
 export function copyAIModelParams(
   params: GoogleAIModelParams | undefined,
   options: GoogleAIBaseLanguageModelCallOptions | undefined
-): GoogleAIModelParams {
+): GoogleAIModelRequestParams {
   return copyAIModelParamsInto(params, options, {});
 }
 
@@ -16,8 +17,8 @@ export function copyAIModelParamsInto(
   params: GoogleAIModelParams | undefined,
   options: GoogleAIBaseLanguageModelCallOptions | undefined,
   target: GoogleAIModelParams
-): GoogleAIModelParams {
-  const ret: GoogleAIModelParams = target || {};
+): GoogleAIModelRequestParams {
+  const ret: GoogleAIModelRequestParams = target || {};
 
   ret.model = options?.model ?? params?.model ?? target.model;
 
@@ -34,7 +35,7 @@ export function copyAIModelParamsInto(
   ret.safetySettings =
     options?.safetySettings ?? params?.safetySettings ?? target.safetySettings;
 
-  ret.tools = options?.tools ?? params?.tools ?? target.tools;
+  ret.tools = options?.tools;
 
   return ret;
 }

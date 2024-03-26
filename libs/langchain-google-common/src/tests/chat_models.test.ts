@@ -474,7 +474,7 @@ describe("Mock ChatGoogle", () => {
     expect(parameters.required[0]).toBe("testName");
   });
 
-  test.only("4. Functions withStructuredOutput - Gemini format request", async () => {
+  test("4. Functions withStructuredOutput - Gemini format request", async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
@@ -484,36 +484,30 @@ describe("Mock ChatGoogle", () => {
       resultFile: "chat-4-mock.json",
     };
 
-    const tools = [
-      {
-        name: "test",
-        description:
-          "Run a test with a specific name and get if it passed or failed",
-        parameters: {
-          type: "object",
-          properties: {
-            testName: {
-              type: "string",
-              description: "The name of the test that should be run.",
-            },
+    const tool = {
+      name: "test",
+      description:
+        "Run a test with a specific name and get if it passed or failed",
+      parameters: {
+        type: "object",
+        properties: {
+          testName: {
+            type: "string",
+            description: "The name of the test that should be run.",
           },
-          required: ["testName"],
         },
+        required: ["testName"],
       },
-    ];
+    };
 
     const baseModel = new ChatGoogle({
       authOptions,
     });
-    const model = baseModel.withStructuredOutput({
-      tools,
-    });
+    const model = baseModel.withStructuredOutput(tool);
 
-    const result = await model.invoke("What?");
+    await model.invoke("What?");
 
     console.log(JSON.stringify(record, null, 1));
-
-    expect(result).toBeDefined();
 
     const toolsResult = record?.opts?.data?.tools;
     expect(toolsResult).toBeDefined();

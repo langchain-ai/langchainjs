@@ -8,7 +8,6 @@ import { StructuredToolInterface } from "@langchain/core/tools";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import type {
   GoogleAIBaseLLMInput,
-  GoogleAIModelParams,
   GoogleConnectionParams,
   GoogleLLMModelFamily,
   GooglePlatformType,
@@ -20,6 +19,7 @@ import type {
   GeminiSafetySetting,
   GeminiTool,
   GeminiFunctionDeclaration,
+  GoogleAIModelRequestParams,
 } from "./types.js";
 import {
   GoogleAbstractedClient,
@@ -220,12 +220,12 @@ export abstract class GoogleAIConnection<
 
   abstract formatData(
     input: MessageType,
-    parameters: GoogleAIModelParams
+    parameters: GoogleAIModelRequestParams
   ): unknown;
 
   async request(
     input: MessageType,
-    parameters: GoogleAIModelParams,
+    parameters: GoogleAIModelRequestParams,
     options: CallOptions
   ): Promise<GoogleLLMResponse> {
     const data = this.formatData(input, parameters);
@@ -258,12 +258,12 @@ export abstract class AbstractGoogleLLMConnection<
 
   abstract formatContents(
     input: MessageType,
-    parameters: GoogleAIModelParams
+    parameters: GoogleAIModelRequestParams
   ): GeminiContent[];
 
   formatGenerationConfig(
     _input: MessageType,
-    parameters: GoogleAIModelParams
+    parameters: GoogleAIModelRequestParams
   ): GeminiGenerationConfig {
     return {
       temperature: parameters.temperature,
@@ -276,7 +276,7 @@ export abstract class AbstractGoogleLLMConnection<
 
   formatSafetySettings(
     _input: MessageType,
-    parameters: GoogleAIModelParams
+    parameters: GoogleAIModelRequestParams
   ): GeminiSafetySetting[] {
     return parameters.safetySettings ?? [];
   }
@@ -318,7 +318,7 @@ export abstract class AbstractGoogleLLMConnection<
 
   formatTools(
     _input: MessageType,
-    parameters: GoogleAIModelParams
+    parameters: GoogleAIModelRequestParams
   ): GeminiTool[] {
     const tools = parameters?.tools;
     if (!tools || tools.length === 0) {
@@ -334,7 +334,7 @@ export abstract class AbstractGoogleLLMConnection<
 
   formatData(
     input: MessageType,
-    parameters: GoogleAIModelParams
+    parameters: GoogleAIModelRequestParams
   ): GeminiRequest {
     /*
     const parts = messageContentToParts(input);

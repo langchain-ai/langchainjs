@@ -86,6 +86,13 @@ export interface GoogleAIModelParams {
   safetySettings?: GoogleAISafetySetting[];
 }
 
+/**
+ * The params which can be passed to the API at request time.
+ */
+export interface GoogleAIModelRequestParams extends GoogleAIModelParams {
+  tools?: StructuredToolInterface[] | GeminiTool[];
+}
+
 export interface GoogleAIBaseLLMInput<AuthOptions>
   extends BaseLLMParams,
     GoogleConnectionParams<AuthOptions>,
@@ -94,10 +101,8 @@ export interface GoogleAIBaseLLMInput<AuthOptions>
 
 export interface GoogleAIBaseLanguageModelCallOptions
   extends BaseLanguageModelCallOptions,
-    GoogleAIModelParams,
-    GoogleAISafetyParams {
-  tools?: StructuredToolInterface[] | GeminiTool[];
-}
+    GoogleAIModelRequestParams,
+    GoogleAISafetyParams {}
 
 /**
  * Input to LLM class.

@@ -1,7 +1,6 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { type BaseMessage } from "@langchain/core/messages";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
-import { StructuredToolInterface } from "@langchain/core/tools";
 
 import {
   BaseChatModel,
@@ -107,8 +106,6 @@ export abstract class ChatGoogleBase<AuthOptions>
   safetySettings: GoogleAISafetySetting[] = [];
 
   safetyHandler: GoogleAISafetyHandler;
-
-  tools: StructuredToolInterface[] | GeminiTool[];
 
   protected connection: ChatConnection<AuthOptions>;
 
@@ -288,7 +285,7 @@ export abstract class ChatGoogleBase<AuthOptions>
       includeRaw = config?.includeRaw;
     }
     if (method === "jsonMode") {
-      throw new Error(`Anthropic only supports "functionCalling" as a method.`);
+      throw new Error(`Google only supports "functionCalling" as a method.`);
     }
 
     let functionName = name ?? "extract";
@@ -347,7 +344,7 @@ export abstract class ChatGoogleBase<AuthOptions>
 
     if (!includeRaw) {
       return llm.pipe(outputParser).withConfig({
-        runName: "ChatAnthropicStructuredOutput",
+        runName: "ChatGoogleStructuredOutput",
       }) as Runnable<BaseLanguageModelInput, RunOutput>;
     }
 

@@ -135,9 +135,7 @@ describe("GAuth Chat", () => {
         ],
       },
     ];
-    const model = new ChatGoogle({
-      tools,
-    });
+    const model = new ChatGoogle().bind({ tools });
     const result = await model.invoke("Run a test on the cobalt project");
     expect(result).toHaveProperty("content");
     expect(Array.isArray(result.content)).toBeTruthy();
@@ -182,9 +180,7 @@ describe("GAuth Chat", () => {
         ],
       },
     ];
-    const model = new ChatGoogle({
-      tools,
-    });
+    const model = new ChatGoogle().bind({ tools });
     const toolResult = {
       testPassed: true,
     };
@@ -210,5 +206,26 @@ describe("GAuth Chat", () => {
       resArray.push(chunk);
     }
     console.log(JSON.stringify(resArray, null, 2));
+  });
+
+  test("withStructuredOutput", async () => {
+    const tool = {
+      name: "test",
+      description:
+        "Run a test with a specific name and get if it passed or failed",
+      parameters: {
+        type: "object",
+        properties: {
+          testName: {
+            type: "string",
+            description: "The name of the test that should be run.",
+          },
+        },
+        required: ["testName"],
+      },
+    };
+    const model = new ChatGoogle().withStructuredOutput(tool);
+    const result = await model.invoke("Run a test on the cobalt project");
+    expect(result).toHaveProperty("testName");
   });
 });

@@ -95,9 +95,8 @@ export function messageContentToParts(content: MessageContent): GeminiPart[] {
         case "image_url":
           return messageContentImageUrl(content);
         default:
-          // @ts-expect-error All possible values of content.type are covered above. This is future-proofing.
           throw new Error(
-            `Unsupported type received while converting message to message parts: ${content.type}`
+            `Unsupported type received while converting message to message parts`
           );
       }
     })
