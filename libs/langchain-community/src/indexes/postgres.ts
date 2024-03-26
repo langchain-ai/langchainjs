@@ -6,7 +6,8 @@ import {
 } from "./base.js";
 
 export type PostgresRecordManagerOptions = {
-  postgresConnectionOptions: PoolConfig;
+  postgresConnectionOptions?: PoolConfig;
+  pool?: Pool
   tableName?: string;
   schema?: string;
 };
@@ -23,9 +24,19 @@ export class PostgresRecordManager implements RecordManagerInterface {
   finalTableName: string;
 
   constructor(namespace: string, config: PostgresRecordManagerOptions) {
-    const { postgresConnectionOptions, tableName } = config;
+    const { postgresConnectionOptions, pool, tableName } = config;
     this.namespace = namespace;
-    this.pool = new pg.Pool(postgresConnectionOptions);
+    if (pool instanceof Pool) {
+      this.pool = pool
+    } else {
+      try {
+        this.pool = new pg.Pool(postgresConnectionOptions);
+      } catch (err: unknown) {
+        const error = err as Error
+        console.error('Got neither a valid Pool nor PoolConfig to use for PostgresRecordManager', error.message)
+        throw error
+      }
+    }
     this.tableName = tableName || "upsertion_records";
     this.finalTableName = config.schema
       ? `"${config.schema}"."${tableName}"`
