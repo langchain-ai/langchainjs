@@ -48,6 +48,8 @@ export interface GoogleAISafetySetting {
 }
 
 export interface GoogleAIModelParams {
+  /** @deprecated Prefer `modelName` */
+  model?: string;
   /** Model to use */
   modelName?: string;
 

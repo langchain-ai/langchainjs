@@ -26,6 +26,7 @@ import {
   GoogleAbstractedClientOps,
   GoogleAbstractedClientOpsMethod,
 } from "./auth.js";
+import { zodToGeminiParameters } from "./utils/zod_to_gemini_parameters.js";
 
 export abstract class GoogleConnection<
   CallOptions extends AsyncCallerCallOptions,
@@ -163,6 +164,9 @@ export abstract class GoogleAIConnection<
   extends GoogleHostConnection<CallOptions, GoogleLLMResponse, AuthOptions>
   implements GoogleAIBaseLLMInput<AuthOptions>
 {
+  /** @deprecated Prefer `modelName` */
+  model: string;
+
   modelName: string;
 
   client: GoogleAbstractedClient;
@@ -175,7 +179,7 @@ export abstract class GoogleAIConnection<
   ) {
     super(fields, caller, client, streaming);
     this.client = client;
-    this.modelName = fields?.modelName ?? this.modelName;
+    this.modelName = fields?.modelName ?? fields?.model ?? this.modelName;
   }
 
   get modelFamily(): GoogleLLMModelFamily {
@@ -294,15 +298,11 @@ export abstract class AbstractGoogleLLMConnection<
   structuredToolToFunctionDeclaration(
     tool: StructuredToolInterface
   ): GeminiFunctionDeclaration {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const jsonSchema = zodToJsonSchema(tool.schema) as any;
-    // Gemini doesn't accept either the $schema or additionalProperties
-    // attributes, so we need to explicitly remove them.
-    const { $schema, additionalProperties, ...parameters } = jsonSchema;
+    const jsonSchema = zodToGeminiParameters(tool.schema);
     return {
       name: tool.name,
       description: tool.description,
-      parameters,
+      parameters: jsonSchema,
     };
   }
 
