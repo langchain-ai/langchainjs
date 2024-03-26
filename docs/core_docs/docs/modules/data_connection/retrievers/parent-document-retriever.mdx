@@ -6,7 +6,6 @@ import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/retrievers/parent_document_retriever.ts";
 import ExampleWithScoreThreshold from "@examples/retrievers/parent_document_retriever_score_threshold.ts";
 import ExampleWithChunkHeader from "@examples/retrievers/parent_document_retriever_chunk_header.ts";
-import ExampleWithRerank from "@examples/retrievers/parent_document_retriever_rerank.ts";
 
 # Parent Document Retriever
 
@@ -51,12 +50,3 @@ Tagging each document with metadata is a solution if you know what to filter aga
 This is particularly important if you have several fine-grained child chunks that need to be correctly retrieved from the vector store.
 
 <CodeBlock language="typescript">{ExampleWithChunkHeader}</CodeBlock>
-
-## With Reranking
-
-With many documents from the vector store that are passed to LLM, final answers sometimes consist of information from
-irrelevant chunks, making it less precise and sometimes incorrect. Also, passing multiple irrelevant documents makes it
-more expensive.
-So there are two reasons to use rerank - precision and costs.
-
-<CodeBlock language="typescript">{ExampleWithRerank}</CodeBlock>
