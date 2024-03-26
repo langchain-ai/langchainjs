@@ -38,6 +38,8 @@
     "@langchain/core": "workspace:*",
     "@langchain/exa": "workspace:*",
     "@langchain/google-genai": "workspace:*",
+    "@langchain/google-vertexai": "workspace:*",
+    "@langchain/google-vertexai-web": "workspace:*",
     "@langchain/groq": "workspace:*",
     "@langchain/mistralai": "workspace:*",
     "@langchain/mongodb": "workspace:*",

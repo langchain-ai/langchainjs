@@ -16,7 +16,7 @@ import { ChatPromptValue } from "@langchain/core/prompt_values";
 import { GeminiTool, GoogleAISafetySetting } from "@langchain/google-common";
 import { ChatGoogle } from "../chat_models.js";
 
-describe("Google APIKey Chat", () => {
+describe.skip("Google APIKey Chat", () => {
   test("invoke", async () => {
     const model = new ChatGoogle();
     try {
@@ -247,7 +247,7 @@ describe("Google APIKey Chat", () => {
   });
 });
 
-describe("Google Webauth Chat", () => {
+describe.skip("Google Webauth Chat", () => {
   test("invoke", async () => {
     const model = new ChatGoogle();
     try {

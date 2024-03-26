@@ -91,7 +91,7 @@ export abstract class ChatGoogleBase<AuthOptions>
 
   lc_serializable = true;
 
-  model = "gemini-pro";
+  modelName = "gemini-pro";
 
   temperature = 0.7;
 

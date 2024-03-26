@@ -82,7 +82,7 @@ describe("Mock ChatGoogle", () => {
       new AIMessage("H"),
       new HumanMessage("Flip it again"),
     ];
-    await model.call(messages);
+    await model.invoke(messages);
 
     expect(record?.opts?.headers).toHaveProperty("User-Agent");
     expect(record.opts.headers["User-Agent"]).toMatch(
@@ -138,7 +138,7 @@ describe("Mock ChatGoogle", () => {
       new AIMessage("H"),
       new HumanMessage("Flip it again"),
     ];
-    const result = await model.call(messages);
+    const result = await model.invoke(messages);
     console.log("record", JSON.stringify(record, null, 1));
     console.log("result", JSON.stringify(result, null, 1));
 
@@ -208,7 +208,7 @@ describe("Mock ChatGoogle", () => {
       new AIMessage("H"),
       new HumanMessage("Flip it again"),
     ];
-    const result = await model.call(messages);
+    const result = await model.invoke(messages);
 
     expect(result._getType()).toEqual("ai");
     const aiMessage = result as AIMessage;
@@ -275,7 +275,7 @@ describe("Mock ChatGoogle", () => {
       new AIMessage("H"),
       new HumanMessage("Flip it again"),
     ];
-    const result = await model.call(messages);
+    const result = await model.invoke(messages);
     console.log("record", JSON.stringify(record, null, 1));
     console.log("result", JSON.stringify(result, null, 1));
 
@@ -315,7 +315,7 @@ describe("Mock ChatGoogle", () => {
     ];
     let caught = false;
     try {
-      await model.call(messages);
+      await model.invoke(messages);
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (xx: any) {
@@ -354,7 +354,7 @@ describe("Mock ChatGoogle", () => {
     };
     const model = new ChatGoogle({
       authOptions,
-      model: "gemini-pro-vision",
+      modelName: "gemini-pro-vision",
     });
 
     const message: MessageContentComplex[] = [
@@ -372,7 +372,7 @@ describe("Mock ChatGoogle", () => {
       new HumanMessageChunk({ content: message }),
     ];
 
-    const result = await model.call(messages);
+    const result = await model.invoke(messages);
 
     expect(record.opts).toHaveProperty("data");
     expect(record.opts.data).toHaveProperty("contents");

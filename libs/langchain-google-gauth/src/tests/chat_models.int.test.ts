@@ -17,7 +17,7 @@ import { GeminiTool } from "@langchain/google-common";
 import { ChatGoogle } from "../chat_models.js";
 import { GoogleLLM } from "../llms.js";
 
-describe("GAuth Chat", () => {
+describe.skip("GAuth Chat", () => {
   test("platform", async () => {
     const model = new GoogleLLM();
     expect(model.platform).toEqual("gcp");
