@@ -292,8 +292,9 @@ export abstract class ChatGoogleBase<AuthOptions>
     let outputParser: BaseLLMOutputParser<RunOutput>;
     let tools: GeminiTool[];
     if (isZodSchema(schema)) {
-      const jsonSchema = zodToJsonSchema(schema);
-      const { $schema, definitions, ...schemaWithoutExtras } = jsonSchema;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const jsonSchema = zodToJsonSchema(schema) as any;
+      const { $schema, additionalProperties, ...schemaWithoutExtras } = jsonSchema;
       tools = [
         {
           functionDeclarations: [

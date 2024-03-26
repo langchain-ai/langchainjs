@@ -95,3 +95,28 @@ import ChatVertexAIStreaming from "@examples/models/chat/integration_googleverte
 :::tip
 See the LangSmith trace for the example above [here](https://smith.langchain.com/public/ba4cb190-3f60-49aa-a6f8-7d31316d94cf/r).
 :::
+
+### Tool calling
+
+`ChatVertexAI` also supports calling the model with a tool:
+
+import ChatVertexAITool from "@examples/models/chat/integration_googlevertexai-tools.ts";
+
+<CodeBlock language="typescript">{ChatVertexAITool}</CodeBlock>
+
+:::tip
+See the LangSmith trace for the example above [here](https://smith.langchain.com/public/49e1c32c-395a-45e2-afba-913aa3389137/r).
+:::
+
+
+### `withStructuredOutput`
+
+Alternatively, you can also use the `withStructuredOutput` method:
+
+import ChatVertexAIWSA from "@examples/models/chat/integration_googlevertexai-wsa.ts";
+
+<CodeBlock language="typescript">{ChatVertexAIWSA}</CodeBlock>
+
+:::tip
+See the LangSmith trace for the example above [here](https://smith.langchain.com/public/41bbbddb-f357-4bfa-a111-def8294a4514/r).
+:::

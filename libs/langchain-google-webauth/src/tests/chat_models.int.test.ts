@@ -169,8 +169,9 @@ describe.skip("Google APIKey Chat", () => {
     ];
     const model = new ChatGoogle({
       apiVersion: "v1beta",
+    }).bind({
       tools,
-    });
+    })
     const result = await model.invoke("Run a test on the cobalt project");
     expect(result).toHaveProperty("content");
     expect(Array.isArray(result.content)).toBeTruthy();
@@ -217,8 +218,9 @@ describe.skip("Google APIKey Chat", () => {
     ];
     const model = new ChatGoogle({
       apiVersion: "v1beta",
+    }).bind({
       tools,
-    });
+    })
     const toolResult = {
       testPassed: true,
     };
@@ -360,7 +362,7 @@ describe.skip("Google Webauth Chat", () => {
         ],
       },
     ];
-    const model = new ChatGoogle({
+    const model = new ChatGoogle().bind({
       tools,
     });
     const result = await model.invoke("Run a test on the cobalt project");
@@ -407,7 +409,7 @@ describe.skip("Google Webauth Chat", () => {
         ],
       },
     ];
-    const model = new ChatGoogle({
+    const model = new ChatGoogle().bind({
       tools,
     });
     const toolResult = {
