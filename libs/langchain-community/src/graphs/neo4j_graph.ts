@@ -250,12 +250,12 @@ export class Neo4jGraph {
     const { baseEntityLabel } = config;
 
     if (baseEntityLabel) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const constraintExists =
         this.structuredSchema?.metadata?.constraint?.some(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (el: any) =>
             JSON.stringify(el.labelsOrTypes) ===
-              JSON.stringify([BASE_ENTITY_LABEL]) &&
+            JSON.stringify([BASE_ENTITY_LABEL]) &&
             JSON.stringify(el.properties) === JSON.stringify(["id"])
         ) ?? false;
 
