@@ -5,6 +5,7 @@ import {
   type VectorStoreRetrieverInterface,
 } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
+import type { BaseDocumentCompressor } from "./document_compressors/index.js";
 import {
   TextSplitter,
   TextSplitterChunkHeaderOptions,
@@ -26,6 +27,8 @@ export type ParentDocumentRetrieverFields = MultiVectorRetrieverInput & {
    * the `.similaritySearch` method of the vectorstore.
    */
   childDocumentRetriever?: VectorStoreRetrieverInterface<VectorStoreInterface>;
+  documentCompressor?: BaseDocumentCompressor | undefined;
+  documentCompressorMinRelevanceScore?: number;
 };
 
 /**
@@ -81,6 +84,10 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
     | VectorStoreRetrieverInterface<VectorStoreInterface>
     | undefined;
 
+  documentCompressor: BaseDocumentCompressor | undefined;
+
+  protected documentCompressorMinRelevanceScore?: number = 0.4;
+
   constructor(fields: ParentDocumentRetrieverFields) {
     super(fields);
     this.vectorstore = fields.vectorstore;
@@ -90,6 +97,10 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
     this.childK = fields.childK;
     this.parentK = fields.parentK;
     this.childDocumentRetriever = fields.childDocumentRetriever;
+    this.documentCompressor = fields.documentCompressor;
+    this.documentCompressorMinRelevanceScore =
+      fields.documentCompressorMinRelevanceScore ??
+      this.documentCompressorMinRelevanceScore;
   }
 
   async _getRelevantDocuments(query: string): Promise<Document[]> {
@@ -99,6 +110,15 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
       subDocs = await this.childDocumentRetriever.getRelevantDocuments(query);
     } else {
       subDocs = await this.vectorstore.similaritySearch(query, this.childK);
+    }
+
+    if (this.documentCompressor) {
+      subDocs = await this.documentCompressor.compressDocuments(subDocs, query);
+      subDocs = subDocs.filter(
+        (doc) =>
+          (doc?.metadata?.relevanceScore ?? 1) >=
+          (this.documentCompressorMinRelevanceScore ?? 0)
+      );
     }
 
     // Maintain order
