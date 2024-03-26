@@ -89,12 +89,14 @@ export function messageContentToParts(content: MessageContent): GeminiPart[] {
   // eslint-disable-next-line array-callback-return
   const parts: GeminiPart[] = messageContent
     .map((content) => {
-      // eslint-disable-next-line default-case
       switch (content.type) {
         case "text":
           return messageContentText(content);
         case "image_url":
           return messageContentImageUrl(content);
+        default:
+          // @ts-expect-error All possible values of content.type are covered above. This is future-proofing.
+          throw new Error(`Unsupported type received while converting message to message parts: ${content.type}`)
       }
     })
     .reduce((acc: GeminiPart[], val: GeminiPart | null | undefined) => {
