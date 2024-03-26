@@ -9,6 +9,12 @@ import {
 } from "@langchain/core/language_models/chat_models";
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import { AIMessageChunk } from "@langchain/core/messages";
+import { BaseLanguageModelInput, StructuredOutputMethodOptions, StructuredOutputMethodParams } from "@langchain/core/language_models/base";
+import type { z } from "zod";
+import { Runnable, RunnablePassthrough, RunnableSequence } from "@langchain/core/runnables";
+import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
+import { zodToJsonSchema } from "zod-to-json-schema";
+import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
 import {
   GoogleAIBaseLLMInput,
   GoogleAIModelParams,
@@ -37,6 +43,8 @@ import type {
   GoogleBaseLLMInput,
   GoogleAISafetyHandler,
   GoogleAISafetyParams,
+  GeminiFunctionDeclaration,
+  GeminiFunctionSchema,
 } from "./types.js";
 
 class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
@@ -214,4 +222,166 @@ export abstract class ChatGoogleBase<AuthOptions>
   _combineLLMOutput() {
     return [];
   }
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | StructuredOutputMethodParams<RunOutput, false>
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<false>
+  ): Runnable<BaseLanguageModelInput, RunOutput>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | StructuredOutputMethodParams<RunOutput, true>
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<true>
+  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | StructuredOutputMethodParams<RunOutput, boolean>
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<boolean>
+  ):
+    | Runnable<BaseLanguageModelInput, RunOutput>
+    | Runnable<
+        BaseLanguageModelInput,
+        { raw: BaseMessage; parsed: RunOutput }
+      > {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let schema: z.ZodType<RunOutput> | Record<string, any>;
+    let name;
+    let method;
+    let includeRaw;
+    if (isStructuredOutputMethodParams(outputSchema)) {
+      schema = outputSchema.schema;
+      name = outputSchema.name;
+      method = outputSchema.method;
+      includeRaw = outputSchema.includeRaw;
+    } else {
+      schema = outputSchema;
+      name = config?.name;
+      method = config?.method;
+      includeRaw = config?.includeRaw;
+    }
+    if (method === "jsonMode") {
+      throw new Error(`Anthropic only supports "functionCalling" as a method.`);
+    }
+
+    let functionName = name ?? "extract";
+    let outputParser: BaseLLMOutputParser<RunOutput>;
+    let tools: GeminiTool[];
+    if (isZodSchema(schema)) {
+      const jsonSchema = zodToJsonSchema(schema);
+      const { $schema, definitions, ...schemaWithoutExtras } = jsonSchema;
+      tools = [
+        {
+          functionDeclarations: [{
+            name: functionName,
+            description: schemaWithoutExtras.description ?? "A function available to call.",
+            parameters: schemaWithoutExtras as GeminiFunctionSchema,
+          }]
+        }
+      ];
+      outputParser = new JsonOutputKeyToolsParser({
+        returnSingle: true,
+        keyName: functionName,
+        zodSchema: schema,
+      });
+    } else {
+      let geminiFunctionDefinition: GeminiFunctionDeclaration;
+      if (
+        typeof schema.name === "string" &&
+        typeof schema.parameters === "object" &&
+        schema.parameters != null
+      ) {
+        geminiFunctionDefinition = schema as GeminiFunctionDeclaration;
+        functionName = schema.name;
+      } else {
+        geminiFunctionDefinition = {
+          name: functionName,
+          description: schema.description ?? "",
+          parameters: schema as GeminiFunctionSchema,
+        };
+      }
+      tools = [
+        {
+          functionDeclarations: [geminiFunctionDefinition]
+        }
+      ];
+      outputParser = new JsonOutputKeyToolsParser<RunOutput>({
+        returnSingle: true,
+        keyName: functionName,
+      });
+    }
+    const llm = this.bind({
+      tools,
+    });
+
+    if (!includeRaw) {
+      return llm.pipe(outputParser).withConfig({
+        runName: "ChatAnthropicStructuredOutput",
+      }) as Runnable<BaseLanguageModelInput, RunOutput>;
+    }
+
+    const parserAssign = RunnablePassthrough.assign({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
+    });
+    const parserNone = RunnablePassthrough.assign({
+      parsed: () => null,
+    });
+    const parsedWithFallback = parserAssign.withFallbacks({
+      fallbacks: [parserNone],
+    });
+    return RunnableSequence.from<
+      BaseLanguageModelInput,
+      { raw: BaseMessage; parsed: RunOutput }
+    >([
+      {
+        raw: llm,
+      },
+      parsedWithFallback,
+    ]).withConfig({
+      runName: "StructuredOutputRunnable",
+    });
+  }
+}
+
+function isZodSchema<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput extends Record<string, any> = Record<string, any>
+>(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  input: z.ZodType<RunOutput> | Record<string, any>
+): input is z.ZodType<RunOutput> {
+  // Check for a characteristic method of Zod schemas
+  return typeof (input as z.ZodType<RunOutput>)?.parse === "function";
+}
+
+function isStructuredOutputMethodParams(
+  x: unknown
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): x is StructuredOutputMethodParams<Record<string, any>> {
+  return (
+    x !== undefined &&
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    typeof (x as StructuredOutputMethodParams<Record<string, any>>).schema ===
+      "object"
+  );
 }

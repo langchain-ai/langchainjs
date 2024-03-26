@@ -84,8 +84,6 @@ export interface GoogleAIModelParams {
   stopSequences?: string[];
 
   safetySettings?: GoogleAISafetySetting[];
-
-  tools?: StructuredToolInterface[] | GeminiTool[];
 }
 
 export interface GoogleAIBaseLLMInput<AuthOptions>
@@ -97,7 +95,9 @@ export interface GoogleAIBaseLLMInput<AuthOptions>
 export interface GoogleAIBaseLanguageModelCallOptions
   extends BaseLanguageModelCallOptions,
     GoogleAIModelParams,
-    GoogleAISafetyParams {}
+    GoogleAISafetyParams {
+  tools?: StructuredToolInterface[] | GeminiTool[];
+    }
 
 /**
  * Input to LLM class.
