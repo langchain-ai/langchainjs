@@ -540,4 +540,14 @@ export class RemoteRunnable<
       };
     }
   }
+
+  async *_streamIterator(
+    input: RunInput,
+    options?: Partial<CallOptions>
+  ): AsyncGenerator<RunOutput> {
+    const stream = await this.stream(input, options);
+    for await (const chunk of stream) {
+      yield chunk;
+    }
+  }
 }
