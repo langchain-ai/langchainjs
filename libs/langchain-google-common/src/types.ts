@@ -97,7 +97,7 @@ export interface GoogleAIBaseLanguageModelCallOptions
     GoogleAIModelParams,
     GoogleAISafetyParams {
   tools?: StructuredToolInterface[] | GeminiTool[];
-    }
+}
 
 /**
  * Input to LLM class.

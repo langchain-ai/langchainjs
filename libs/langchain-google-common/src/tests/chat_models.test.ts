@@ -578,7 +578,7 @@ describe("Mock ChatGoogle", () => {
       authOptions,
     }).bind({
       tools,
-    })
+    });
 
     const result = await model.invoke("What?");
 
@@ -660,7 +660,7 @@ describe("Mock ChatGoogle", () => {
       authOptions,
     }).bind({
       tools,
-    })
+    });
 
     const result = await model.invoke("What?");
 
@@ -722,7 +722,7 @@ describe("Mock ChatGoogle", () => {
       authOptions,
     }).bind({
       tools,
-    })
+    });
     const toolResult = {
       testPassed: true,
     };

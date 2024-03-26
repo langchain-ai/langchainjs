@@ -9,9 +9,17 @@ import {
 } from "@langchain/core/language_models/chat_models";
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import { AIMessageChunk } from "@langchain/core/messages";
-import { BaseLanguageModelInput, StructuredOutputMethodOptions, StructuredOutputMethodParams } from "@langchain/core/language_models/base";
+import {
+  BaseLanguageModelInput,
+  StructuredOutputMethodOptions,
+  StructuredOutputMethodParams,
+} from "@langchain/core/language_models/base";
 import type { z } from "zod";
-import { Runnable, RunnablePassthrough, RunnableSequence } from "@langchain/core/runnables";
+import {
+  Runnable,
+  RunnablePassthrough,
+  RunnableSequence,
+} from "@langchain/core/runnables";
 import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
@@ -291,12 +299,16 @@ export abstract class ChatGoogleBase<AuthOptions>
       const { $schema, definitions, ...schemaWithoutExtras } = jsonSchema;
       tools = [
         {
-          functionDeclarations: [{
-            name: functionName,
-            description: schemaWithoutExtras.description ?? "A function available to call.",
-            parameters: schemaWithoutExtras as GeminiFunctionSchema,
-          }]
-        }
+          functionDeclarations: [
+            {
+              name: functionName,
+              description:
+                schemaWithoutExtras.description ??
+                "A function available to call.",
+              parameters: schemaWithoutExtras as GeminiFunctionSchema,
+            },
+          ],
+        },
       ];
       outputParser = new JsonOutputKeyToolsParser({
         returnSingle: true,
@@ -321,8 +333,8 @@ export abstract class ChatGoogleBase<AuthOptions>
       }
       tools = [
         {
-          functionDeclarations: [geminiFunctionDefinition]
-        }
+          functionDeclarations: [geminiFunctionDefinition],
+        },
       ];
       outputParser = new JsonOutputKeyToolsParser<RunOutput>({
         returnSingle: true,
