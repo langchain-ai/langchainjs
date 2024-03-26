@@ -23,8 +23,7 @@ export class AzureOpenAIEmbeddings
 
   batchSize = 512;
 
-  // TODO: Update to `false` on next minor release (see: https://github.com/langchain-ai/langchainjs/pull/3612)
-  stripNewLines = true;
+  stripNewLines = false;
 
   timeout?: number;
 
