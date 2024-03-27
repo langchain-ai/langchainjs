@@ -44,8 +44,8 @@ export class HanaDB extends VectorStore {
 
   private distanceStrategy: DistanceStrategy;
 
-  // // Compile pattern only once, for better performance
-  // private static compiledPattern = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+  // Compile pattern only once, for better performance
+  private static compiledPattern = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
 
   private tableName: string;
 
@@ -91,6 +91,7 @@ export class HanaDB extends VectorStore {
       for (const key in HANA_DISTANCE_FUNCTION) {
         if (key === this.distanceStrategy) {
           valid_distance = true;
+          break; // Added to exit loop once a match is found
         }
       }
       if (!valid_distance) {
@@ -115,6 +116,7 @@ export class HanaDB extends VectorStore {
       );
     } catch (error) {
       console.error("Initialization error:", error);
+      throw error; // Re-throw the caught error to allow it to bubble up
     }
   }
   /**
@@ -124,7 +126,7 @@ export class HanaDB extends VectorStore {
    */
 
   public static sanitizeName(inputStr: string): string {
-    return inputStr.replace(/[^a-zA-Z0-9_]/g, "").toUpperCase();
+    return inputStr.replace(/[^a-zA-Z0-9_]/g, "");
   }
 
   /**
@@ -166,14 +168,19 @@ export class HanaDB extends VectorStore {
    * @returns {Record<string, any>} The original metadata object if all keys are valid.
    * @throws {Error} Throws an error if any metadata key is invalid.
    */
-  // private sanitizeMetadataKeys(metadata: Record<string, any>): Record<string, any> {
-  //     Object.keys(metadata).forEach(key => {
-  //     if (!HanaDB.compiledPattern.test(key)) {
-  //         throw new Error(`Invalid metadata key ${key}`);
-  //     }
-  //     });
-  //     return metadata;
-  // }
+  private sanitizeMetadataKeys(
+    metadata: object[] | object
+  ): object[] | object {
+    if (!metadata) {
+      return {};
+    }
+    Object.keys(metadata).forEach((key) => {
+      if (!HanaDB.compiledPattern.test(key)) {
+        throw new Error(`Invalid metadata key ${key}`);
+      }
+    });
+    return metadata;
+  }
 
   /**
    * Parses a string representation of a float array and returns an array of numbers.
@@ -192,7 +199,7 @@ export class HanaDB extends VectorStore {
    * @param columnType The expected data type(s) of the column.
    * @param columnLength The expected length of the column. Optional.
    */
-  private checkColumn(
+  public checkColumn(
     tableName: string,
     columnName: string,
     columnType: string | string[],
@@ -204,7 +211,6 @@ export class HanaDB extends VectorStore {
             WHERE SCHEMA_NAME = CURRENT_SCHEMA 
             AND TABLE_NAME = ? 
             AND COLUMN_NAME = ?`;
-
     try {
       const client = this.connection; // Get the connection object
       // Prepare the statement with parameter placeholders
@@ -230,7 +236,7 @@ export class HanaDB extends VectorStore {
         }
 
         // Check length, if parameter was provided
-        if (columnLength != null && length !== columnLength) {
+        if (columnLength !== undefined && length !== columnLength) {
           throw new Error(
             `Column ${columnName} has the wrong length: ${length}`
           );
@@ -249,16 +255,16 @@ export class HanaDB extends VectorStore {
     // console.log('Table exists:', tableExists);
     if (!tableExists) {
       let sqlStr =
-        `CREATE TABLE ${this.tableName} (` +
-        `${this.contentColumn} NCLOB, ` +
-        `${this.metadataColumn} NCLOB, ` +
-        `${this.vectorColumn} REAL_VECTOR`;
+        `CREATE TABLE "${this.tableName}" (` +
+        `"${this.contentColumn}" NCLOB, ` +
+        `"${this.metadataColumn}" NCLOB, ` +
+        `"${this.vectorColumn}" REAL_VECTOR`;
 
       sqlStr +=
         this.vectorColumnLength === -1
           ? ");"
           : `(${this.vectorColumnLength}));`;
-      console.log(sqlStr);
+      // console.log(sqlStr);
       try {
         const client = this.connection;
         client.exec(sqlStr);
@@ -269,13 +275,13 @@ export class HanaDB extends VectorStore {
     }
   }
 
-  private tableExists(tableName: string): boolean {
-    const tableExistsSQL = `SELECT COUNT(*) AS COUNT FROM SYS.TABLES WHERE SCHEMA_NAME = CURRENT_SCHEMA AND TABLE_NAME = '${tableName.toUpperCase()}'`;
+  public tableExists(tableName: string): boolean {
+    const tableExistsSQL = `SELECT COUNT(*) AS COUNT FROM SYS.TABLES WHERE SCHEMA_NAME = CURRENT_SCHEMA AND TABLE_NAME = ?`;
     try {
       const client = this.connection; // Get the connection object
       // console.log(tableExistsSQL)
       const stm = client.prepare(tableExistsSQL);
-      const resultSet = stm.execQuery();
+      const resultSet = stm.execQuery([tableName]);
       while (resultSet.next()) {
         const result = resultSet.getValue(0);
         if (result === 1) {
@@ -307,7 +313,11 @@ export class HanaDB extends VectorStore {
         whereStr += ` JSON_VALUE(${this.metadataColumn}, '$.${key}') = ?`;
 
         const value = filter[key];
-        if (typeof value === "number" || typeof value === "string" ||typeof value === "boolean") {
+        if (
+          typeof value === "number" ||
+          typeof value === "string" ||
+          typeof value === "boolean"
+        ) {
           queryTuple.push(value);
         } else {
           throw new Error(`Unsupported filter data-type: ${typeof value}`);
@@ -339,7 +349,7 @@ export class HanaDB extends VectorStore {
     }
 
     const [whereStr, queryTuple] = this.createWhereByFilter(filter);
-    const sqlStr = `DELETE FROM ${this.tableName}${whereStr}`;
+    const sqlStr = `DELETE FROM "${this.tableName}" ${whereStr}`;
     // console.log(sqlStr, queryTuple)
     try {
       const client = this.connection;
@@ -354,7 +364,7 @@ export class HanaDB extends VectorStore {
    * Static method to create a HanaDB instance from raw texts. This method embeds the documents,
    * creates a table if it does not exist, and adds the documents to the table.
    * @param texts Array of text documents to add.
-   * @param metadatas Optional metadata for each text document.
+   * @param metadatas metadata for each text document.
    * @param embedding EmbeddingsInterface instance for document embedding.
    * @param dbConfig Configuration for the HanaDB.
    * @returns A Promise that resolves to an instance of HanaDB.
@@ -378,27 +388,41 @@ export class HanaDB extends VectorStore {
    * @param embeddings Optional pre-generated embeddings for the texts.
    * @returns A Promise that resolves when texts are added successfully.
    */
-  async addTexts(texts: string[], metadatas: object[] | object): Promise<void> {
+  async addTexts(
+    texts: string[],
+    metadatas?: object[] | object,
+    embeddingsInput?: number[][]
+  ): Promise<void> {
+    let embeddings = embeddingsInput;
     // Generate embeddings if not provided
-    const embeddings = await this.embeddings.embedDocuments(texts);
+    if (!embeddings) {
+      embeddings = await this.embeddings.embedDocuments(texts);
+    }
+    // const embeddings = await this.embeddings.embedDocuments(texts);
     // console.log(embeddings)
     const client = this.connection;
+    try {
+      for (const [i, text] of texts.entries()) {
+        // const text = texts[i];
+        // console.log(text)
 
-    for (const [i, text] of texts.entries()) {
-      // const text = texts[i];
-      // console.log(text)
+        const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
+        // console.log(metadata)
+        // Serialize the 'metadata' object to a JSON string for inclusion in the SQL query
+        const metadataJson = JSON.stringify(
+          this.sanitizeMetadataKeys(metadata)
+        );
+        const embedding = embeddings[i].join(", "); // Convert embedding array to string representation
 
-      const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
-      // console.log(metadata)
-      // Serialize the 'metadata' object to a JSON string for inclusion in the SQL query
-      const metadataJson = JSON.stringify(metadata);
-      const embedding = embeddings[i].join(", "); // Convert embedding array to string representation
+        // SQL query to insert the document, metadata, and embedding into the table
+        const sqlStr = `INSERT INTO "${this.tableName}" ("${this.contentColumn}", "${this.metadataColumn}", "${this.vectorColumn}") VALUES (?, ?, TO_REAL_VECTOR(?));`;
+        // console.log(sqlStr)
 
-      // SQL query to insert the document, metadata, and embedding into the table
-      const sqlStr = `INSERT INTO ${this.tableName} (${this.contentColumn}, ${this.metadataColumn}, ${this.vectorColumn}) VALUES (?, ?, TO_REAL_VECTOR(?));`;
-      // console.log(sqlStr)
-
-      client.execute(sqlStr, [text, metadataJson, `[${embedding}]`]);
+        client.execute(sqlStr, [text, metadataJson, `[${embedding}]`]);
+      }
+    } catch (error) {
+      console.error("An error occurred while adding text:", error);
+      throw new Error("Add texts was unsuccessful");
     }
   }
 
@@ -415,7 +439,7 @@ export class HanaDB extends VectorStore {
     embeddings: EmbeddingsInterface,
     dbConfig: HanaDBArgs
   ): Promise<HanaDB> {
-    const instance = new this(embeddings, dbConfig);
+    const instance = new HanaDB(embeddings, dbConfig);
     await instance.addDocuments(docs);
     return instance;
   }
@@ -459,7 +483,7 @@ export class HanaDB extends VectorStore {
       const embedding = vectors[i].join(", "); // Convert embedding array to string representation
 
       // SQL query to insert the document, metadata, and embedding into the table
-      const sqlStr = `INSERT INTO ${this.tableName} (${this.contentColumn}, ${this.metadataColumn}, ${this.vectorColumn}) VALUES (?, ?, TO_REAL_VECTOR(?));`;
+      const sqlStr = `INSERT INTO "${this.tableName}" ("${this.contentColumn}", "${this.metadataColumn}", "${this.vectorColumn}") VALUES (?, ?, TO_REAL_VECTOR(?));`;
       // console.log(sqlStr)
 
       client.execute(sqlStr, [text, metadataJson, `[${embedding}]`]);
@@ -545,11 +569,11 @@ export class HanaDB extends VectorStore {
     // Convert the embedding vector to a string for SQL query
     const embeddingAsString = sanitizedEmbedding.join(",");
     let sqlStr = `SELECT TOP ${sanitizedK}
-                    ${this.contentColumn}, 
-                    ${this.metadataColumn}, 
-                    TO_NVARCHAR(${this.vectorColumn}), 
-                    ${distanceFuncName}(${this.vectorColumn}, TO_REAL_VECTOR('[${embeddingAsString}]')) AS CS
-                    FROM ${this.tableName}`;
+                    "${this.contentColumn}", 
+                    "${this.metadataColumn}", 
+                    TO_NVARCHAR("${this.vectorColumn}"), 
+                    ${distanceFuncName}("${this.vectorColumn}", TO_REAL_VECTOR('[${embeddingAsString}]')) AS CS
+                    FROM "${this.tableName}"`;
     // Add order by clause to sort by similarity
     const orderStr = ` ORDER BY CS ${
       HANA_DISTANCE_FUNCTION[this.distanceStrategy][1]
