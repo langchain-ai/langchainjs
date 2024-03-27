@@ -1002,7 +1002,7 @@ export class ChatOpenAI<
           functionName = schema.name;
         } else {
           openAIFunctionDefinition = {
-            name: functionName,
+            name: schema.title ?? functionName,
             description: schema.description ?? "",
             parameters: schema,
           };
