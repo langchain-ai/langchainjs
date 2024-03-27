@@ -1,5 +1,5 @@
-import { Runnable, RunnableBatchOptions } from "./base.js";
-import type { RunnableConfig } from "./config.js";
+import { Runnable, RunnableBatchOptions, _coerceToDict } from "./base.js";
+import { getCallbackManagerForConfig, type RunnableConfig } from "./config.js";
 import { Document } from "../documents/index.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 import { ChatPromptValue, StringPromptValue } from "../prompt_values.js";
@@ -26,7 +26,7 @@ import {
 } from "../messages/index.js";
 import { GenerationChunk, ChatGenerationChunk, RUN_KEY } from "../outputs.js";
 import { convertEventStreamToIterableReadableDataStream } from "../utils/event_source_parse.js";
-import { IterableReadableStream } from "../utils/stream.js";
+import { concat } from "../utils/stream.js";
 
 type RemoteRunnableOptions = {
   timeout?: number;
@@ -286,10 +286,11 @@ export class RemoteRunnable<
     });
   }
 
-  async invoke(
+  async _invoke(
     input: RunInput,
-    options?: Partial<CallOptions>
-  ): Promise<RunOutput> {
+    options?: Partial<CallOptions>,
+    _?: CallbackManagerForChainRun
+  ) {
     const [config, kwargs] =
       this._separateRunnableConfigFromCallOptions(options);
     const response = await this.post<{
@@ -305,6 +306,13 @@ export class RemoteRunnable<
       throw new Error(`${response.status} Error: ${await response.text()}`);
     }
     return revive((await response.json()).output) as RunOutput;
+  }
+
+  async invoke(
+    input: RunInput,
+    options?: Partial<CallOptions>
+  ): Promise<RunOutput> {
+    return this._callWithConfig(this._invoke, input, options);
   }
 
   async _batch(
@@ -388,43 +396,73 @@ export class RemoteRunnable<
     );
   }
 
-  async stream(
+  async *_streamIterator(
     input: RunInput,
     options?: Partial<CallOptions>
-  ): Promise<IterableReadableStream<RunOutput>> {
+  ): AsyncGenerator<RunOutput> {
     const [config, kwargs] =
       this._separateRunnableConfigFromCallOptions(options);
-    const response = await this.post<{
-      input: RunInput;
-      config?: RunnableConfig;
-      kwargs?: Omit<Partial<CallOptions>, keyof RunnableConfig>;
-    }>("/stream", {
-      input,
-      config: removeCallbacks(config),
-      kwargs,
-    });
-    if (!response.ok) {
-      const json = await response.json();
-      const error = new Error(
-        `RemoteRunnable call failed with status code ${response.status}: ${json.message}`
-      );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (error as any).response = response;
-      throw error;
-    }
-    const { body } = response;
-    if (!body) {
-      throw new Error(
-        "Could not begin remote stream. Please check the given URL and try again."
-      );
-    }
-    const runnableStream = convertEventStreamToIterableReadableDataStream(body);
-    async function* wrapper(): AsyncGenerator<RunOutput> {
-      for await (const chunk of runnableStream) {
-        yield deserialize(chunk);
+    const callbackManager_ = await getCallbackManagerForConfig(options);
+    const runManager = await callbackManager_?.handleChainStart(
+      this.toJSON(),
+      _coerceToDict(input, "input"),
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      options?.runName
+    );
+    let finalOutput: RunOutput | undefined;
+    let finalOutputSupported = true;
+    try {
+      const response = await this.post<{
+        input: RunInput;
+        config?: RunnableConfig;
+        kwargs?: Omit<Partial<CallOptions>, keyof RunnableConfig>;
+      }>("/stream", {
+        input,
+        config: removeCallbacks(config),
+        kwargs,
+      });
+      if (!response.ok) {
+        const json = await response.json();
+        const error = new Error(
+          `RemoteRunnable call failed with status code ${response.status}: ${json.message}`
+        );
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (error as any).response = response;
+        throw error;
       }
+      const { body } = response;
+      if (!body) {
+        throw new Error(
+          "Could not begin remote stream. Please check the given URL and try again."
+        );
+      }
+      const runnableStream =
+        convertEventStreamToIterableReadableDataStream(body);
+      for await (const chunk of runnableStream) {
+        const deserializedChunk = deserialize(chunk) as RunOutput;
+        yield deserializedChunk;
+        if (finalOutputSupported) {
+          if (finalOutput === undefined) {
+            finalOutput = deserializedChunk;
+          } else {
+            try {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              finalOutput = concat(finalOutput, deserializedChunk as any);
+            } catch {
+              finalOutput = undefined;
+              finalOutputSupported = false;
+            }
+          }
+        }
+      }
+    } catch (err) {
+      await runManager?.handleChainError(err);
+      throw err;
     }
-    return IterableReadableStream.fromAsyncGenerator(wrapper());
+    await runManager?.handleChainEnd(finalOutput ?? {});
   }
 
   async *streamLog(
@@ -538,16 +576,6 @@ export class RemoteRunnable<
         metadata: chunk.metadata,
         data: chunk.data,
       };
-    }
-  }
-
-  async *_streamIterator(
-    input: RunInput,
-    options?: Partial<CallOptions>
-  ): AsyncGenerator<RunOutput> {
-    const stream = await this.stream(input, options);
-    for await (const chunk of stream) {
-      yield chunk;
     }
   }
 }
