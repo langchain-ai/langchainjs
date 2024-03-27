@@ -1,6 +1,8 @@
-import { GoogleVertexAI } from "@langchain/community/llms/googlevertexai";
+import { VertexAI } from "@langchain/google-vertexai";
+// Or, if using the web entrypoint:
+// import { VertexAI } from "@langchain/google-vertexai-web";
 
-const model = new GoogleVertexAI({
+const model = new VertexAI({
   temperature: 0.7,
 });
 const stream = await model.stream(
@@ -12,33 +14,31 @@ for await (const chunk of stream) {
 }
 
 /*
-  ---------
-  Chunk:
-  ---------
-    1. Toe-tally Awesome Socks
-  2. The Sock Drawer
-  3. Happy Feet
-  4. 
+---------
+Chunk:
+---------
+ * Kaleidoscope Toes
+* Huephoria
+* Soleful Spectrum
+*
 
-  ---------
-  Chunk:
-  ---------
-  Sock It to Me
-  5. Crazy Color Socks
-  6. Wild and Wacky Socks
-  7. Fu
+---------
+Chunk:
+---------
+  Colorwave Hosiery
+* Chromatic Threads
+* Rainbow Rhapsody
+* Vibrant Soles
+* Toe-tally Colorful
+* Socktacular Hues
+*
 
-  ---------
-  Chunk:
-  ---------
-  nky Feet
-  8. Mismatched Socks
-  9. Rainbow Socks
-  10. Sole Mates
+---------
+Chunk:
+---------
+  Threads of Joy
 
-  ---------
-  Chunk:
-  ---------
-  
-
+---------
+Chunk:
+---------
 */

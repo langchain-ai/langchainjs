@@ -1,26 +1,40 @@
-import type { GoogleAIModelParams, GoogleLLMModelFamily } from "../types.js";
+import type {
+  GoogleAIBaseLanguageModelCallOptions,
+  GoogleAIModelParams,
+  GoogleAIModelRequestParams,
+  GoogleLLMModelFamily,
+} from "../types.js";
 import { isModelGemini, validateGeminiParams } from "./gemini.js";
 
 export function copyAIModelParams(
-  params: GoogleAIModelParams | undefined
-): GoogleAIModelParams {
-  return copyAIModelParamsInto(params, {});
+  params: GoogleAIModelParams | undefined,
+  options: GoogleAIBaseLanguageModelCallOptions | undefined
+): GoogleAIModelRequestParams {
+  return copyAIModelParamsInto(params, options, {});
 }
 
 export function copyAIModelParamsInto(
   params: GoogleAIModelParams | undefined,
+  options: GoogleAIBaseLanguageModelCallOptions | undefined,
   target: GoogleAIModelParams
-): GoogleAIModelParams {
-  const ret: GoogleAIModelParams = target || {};
+): GoogleAIModelRequestParams {
+  const ret: GoogleAIModelRequestParams = target || {};
 
-  ret.model = params?.model ?? target.model;
+  ret.modelName = options?.modelName ?? params?.modelName ?? target.modelName;
+  ret.temperature =
+    options?.temperature ?? params?.temperature ?? target.temperature;
+  ret.maxOutputTokens =
+    options?.maxOutputTokens ??
+    params?.maxOutputTokens ??
+    target.maxOutputTokens;
+  ret.topP = options?.topP ?? params?.topP ?? target.topP;
+  ret.topK = options?.topK ?? params?.topK ?? target.topK;
+  ret.stopSequences =
+    options?.stopSequences ?? params?.stopSequences ?? target.stopSequences;
+  ret.safetySettings =
+    options?.safetySettings ?? params?.safetySettings ?? target.safetySettings;
 
-  ret.temperature = params?.temperature ?? target.temperature;
-  ret.maxOutputTokens = params?.maxOutputTokens ?? target.maxOutputTokens;
-  ret.topP = params?.topP ?? target.topP;
-  ret.topK = params?.topK ?? target.topK;
-  ret.stopSequences = params?.stopSequences ?? target.stopSequences;
-  ret.safetySettings = params?.safetySettings ?? target.safetySettings;
+  ret.tools = options?.tools;
 
   return ret;
 }
@@ -41,7 +55,7 @@ export function validateModelParams(
   params: GoogleAIModelParams | undefined
 ): void {
   const testParams: GoogleAIModelParams = params ?? {};
-  switch (modelToFamily(testParams.model)) {
+  switch (modelToFamily(testParams.modelName)) {
     case "gemini":
       return validateGeminiParams(testParams);
     default:
@@ -55,7 +69,7 @@ export function copyAndValidateModelParamsInto(
   params: GoogleAIModelParams | undefined,
   target: GoogleAIModelParams
 ): GoogleAIModelParams {
-  copyAIModelParamsInto(params, target);
+  copyAIModelParamsInto(params, undefined, target);
   validateModelParams(target);
   return target;
 }
