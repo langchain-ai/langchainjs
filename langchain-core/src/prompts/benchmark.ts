@@ -1,33 +1,25 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import { Bench } from 'tinybench';
 import { PromptTemplate } from './prompt.js';
 import { DynamicPromptTemplate } from './dynamic.js';
 
-// (async () => {
+type NestedInput = {
+	foo: {
+		bar: {
+			baz: string;
+		};
+	};
+};
 
-//   const promptTemplate = `
-//   Simple: {simple}
-//   Nested:
-//   - {nested.a}
-//   - {nested.b}`;
+const nestedDynamicPrompt = DynamicPromptTemplate.fromTemplate<NestedInput>(`{foo.bar.baz}`);
 
-//   const nativePromptFormatted = await nativePrompt.format({
-//     simple: 'simple',
-//     nested: { a: '1', b: '2' },
-//     'nested.a': 'A',
-//     'nested.b': 'B',
-//   });
-//   console.log(nativePromptFormatted);
-
-//   const dynamicPromptFormatted = await dynamicPrompt.format({
-//     simple: 'simple',
-//     nested: { a: '1', b: '2' },
-//     'nested.a': 'A',
-//     'nested.b': 'B',
-//   });
-//   console.log(dynamicPromptFormatted);
-// })();
-
-
+const formatted = nestedDynamicPrompt.format({
+	foo: {
+		bar: {
+			baz: 'baz',
+		},
+	},
+});
 
 type SimpleInput = { foo: string; bar: string };
 const simpleInput: SimpleInput = { foo: 'foo', bar: 'bar' };
@@ -48,13 +40,11 @@ const complexPromptTemplate = Object.entries(complexInput)
 const complexNativePrompt = PromptTemplate.fromTemplate<ComplexInput>(complexPromptTemplate);
 const complexDynamicPrompt = DynamicPromptTemplate.fromTemplate<ComplexInput>(complexPromptTemplate);
 
-
-
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
 (async () => {
-	const bench = new Bench({ time: 1000 });
+	const simple = new Bench({ time: 1000 });
 	// simple prompts
-	bench
+	simple
 		.add('DynamicPromptTemplate: simple', async () => {
 			await simpleDynamicPrompt.format(simpleInput);
 		})
@@ -62,18 +52,15 @@ const complexDynamicPrompt = DynamicPromptTemplate.fromTemplate<ComplexInput>(co
 			await simpleNativePrompt.format(simpleInput);
 		});
 
-	await bench.warmup();
-	await bench.run();
+	await simple.warmup();
+	await simple.run();
 
 	console.log("Simple prompts:")
-	console.table(bench.table());
-})();
+	console.table(simple.table());
 
-// eslint-disable-next-line @typescript-eslint/no-floating-promises
-(async () => {
-	const bench = new Bench({ time: 1000 });
+	const complex = new Bench({ time: 1000 });
 	// complex prompts
-	bench
+	complex
 		.add('DynamicPromptTemplate: complex', async () => {
 			await complexDynamicPrompt.format(complexInput);
 		})
@@ -81,9 +68,10 @@ const complexDynamicPrompt = DynamicPromptTemplate.fromTemplate<ComplexInput>(co
 			await complexNativePrompt.format(complexInput);
 		});
 
-	await bench.warmup();
-	await bench.run();
+	await complex.warmup();
+	await complex.run();
 
 	console.log("Complex prompts:")
-	console.table(bench.table());
+	console.table(complex.table());
 })();
+
