@@ -5,7 +5,6 @@ import {
 } from "@langchain/core/utils/async_caller";
 import { getRuntimeEnvironment } from "@langchain/core/utils/env";
 import { StructuredToolInterface } from "@langchain/core/tools";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import type {
   GoogleAIBaseLLMInput,
   GoogleConnectionParams,
