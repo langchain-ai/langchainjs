@@ -40,7 +40,7 @@
   "license": "MIT",
   "dependencies": {
     "@langchain/core": "~0.1.1",
-    "@langchain/google-common": "~0.0.0",
+    "@langchain/google-common": "~0.0.2",
     "google-auth-library": "^8.9.0"
   },
   "devDependencies": {
