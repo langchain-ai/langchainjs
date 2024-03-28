@@ -30,7 +30,9 @@ import {
   ChatCompletionCreateParamsStreaming,
 } from "groq-sdk/resources/chat/completions";
 
-export interface ChatGroqCallOptions extends BaseChatModelCallOptions {}
+export interface ChatGroqCallOptions extends BaseChatModelCallOptions {
+  headers?: Record<string, string>;
+}
 
 export interface ChatGroqInput extends BaseChatModelParams {
   /**
@@ -246,7 +248,10 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
         messages: messagesMapped,
         stream: true,
       },
-      params
+      {
+        signal: options?.signal,
+        headers: options?.headers,
+      }
     );
     for await (const data of response) {
       const choice = data?.choices[0];
@@ -303,6 +308,7 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
         },
         {
           signal: options?.signal,
+          headers: options?.headers,
         }
       );
 

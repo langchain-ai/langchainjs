@@ -7,7 +7,15 @@ you're running in a Node.js environment or a web environment.
 
 ### Node.js
 
-To call Vertex AI models in Node, you'll need to install [Google's official auth client](https://www.npmjs.com/package/google-auth-library) as a peer dependency.
+To call Vertex AI models in Node, you'll need to install the `@langchain/google-vertexai` package:
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/google-vertexai
+```
 
 You should make sure the Vertex AI API is
 enabled for the relevant project and that you've authenticated to
@@ -20,18 +28,16 @@ Google Cloud using one of these methods:
 - You have downloaded the credentials for a service account that is permitted
   to the project and set the `GOOGLE_APPLICATION_CREDENTIALS` environment
   variable to the path of this file.
-
-```bash npm2yarn
-npm install google-auth-library
-```
+  **or**
+- You set the `GOOGLE_API_KEY` environment variable to the API key for the project.
 
 ### Web
 
 To call Vertex AI models in web environments (like Edge functions), you'll need to install
-the [`web-auth-library`](https://github.com/kriasoft/web-auth-library) pacakge as a peer dependency:
+the `@langchain/google-vertexai-web` package:
 
 ```bash npm2yarn
-npm install web-auth-library
+npm install @langchain/google-vertexai-web
 ```
 
 Then, you'll need to add your service account credentials directly as a `GOOGLE_VERTEX_AI_WEB_CREDENTIALS` environment variable:
@@ -42,18 +48,12 @@ GOOGLE_VERTEX_AI_WEB_CREDENTIALS={"type":"service_account","project_id":"YOUR_PR
 
 You can also pass your credentials directly in code like this:
 
-import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
-
-<IntegrationInstallTooltip></IntegrationInstallTooltip>
-
-```bash npm2yarn
-npm install @langchain/community
-```
-
 ```typescript
-import { GoogleVertexAI } from "@langchain/community/llms/googlevertexai";
+import { VertexAI } from "@langchain/google-vertexai";
+// Or uncomment this line if you're using the web version:
+// import { VertexAI } from "@langchain/google-vertexai-web";
 
-const model = new GoogleVertexAI({
+const model = new VertexAI({
   authOptions: {
     credentials: {"type":"service_account","project_id":"YOUR_PROJECT-12345",...},
   },
@@ -62,38 +62,17 @@ const model = new GoogleVertexAI({
 
 ## Usage
 
-Several models are available and can be specified by the `model` attribute
-in the constructor. These include:
-
-- text-bison (default)
-- text-bison-32k
-- code-gecko
-- code-bison
+The entire family of `gemini` models are available by specifying the `modelName` parameter.
 
 import CodeBlock from "@theme/CodeBlock";
-import GoogleVertexAIExample from "@examples/llms/googlevertexai.ts";
+import VertexAILLMExample from "@examples/llms/googlevertexai.ts";
 
-<CodeBlock language="typescript">{GoogleVertexAIExample}</CodeBlock>
-
-Google also has separate models for their "Codey" code generation models.
-
-The "code-gecko" model is useful for code completion:
-
-import GoogleVertexAICodeGeckoExample from "@examples/llms/googlevertexai-code-gecko.ts";
-
-<CodeBlock language="typescript">{GoogleVertexAICodeGeckoExample}</CodeBlock>
-
-While the "code-bison" model is better at larger code generation based on
-a text prompt:
-
-import GoogleVertexAICodeBisonExample from "@examples/llms/googlevertexai-code-bison.ts";
-
-<CodeBlock language="typescript">{GoogleVertexAICodeBisonExample}</CodeBlock>
+<CodeBlock language="typescript">{VertexAILLMExample}</CodeBlock>
 
 ### Streaming
 
 Streaming in multiple chunks is supported for faster responses:
 
-import GoogleVertexAIStreaming from "@examples/llms/googlevertexai-streaming.ts";
+import VertexAILLMStreaming from "@examples/llms/googlevertexai-streaming.ts";
 
-<CodeBlock language="typescript">{GoogleVertexAIStreaming}</CodeBlock>
+<CodeBlock language="typescript">{VertexAILLMStreaming}</CodeBlock>
