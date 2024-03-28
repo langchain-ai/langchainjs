@@ -57,7 +57,7 @@ export class HanaDB extends VectorStore {
 
   private vectorColumnLength: number;
 
-  declare FilterType: object | string;
+  declare FilterType: Filter;
 
   _vectorstoreType(): string {
     return "hanadb";
@@ -165,12 +165,10 @@ export class HanaDB extends VectorStore {
    * Throws an error if any key does not match the pattern.
    *
    * @param {Record<string, any>} metadata - The metadata object with keys to be validated.
-   * @returns {Record<string, any>} The original metadata object if all keys are valid.
+   * @returns {object[] | object} The original metadata object if all keys are valid.
    * @throws {Error} Throws an error if any metadata key is invalid.
    */
-  private sanitizeMetadataKeys(
-    metadata: object[] | object
-  ): object[] | object {
+  private sanitizeMetadataKeys(metadata: object[] | object): object[] | object {
     if (!metadata) {
       return {};
     }
@@ -399,7 +397,6 @@ export class HanaDB extends VectorStore {
       embeddings = await this.embeddings.embedDocuments(texts);
     }
     // const embeddings = await this.embeddings.embedDocuments(texts);
-    // console.log(embeddings)
     const client = this.connection;
     try {
       for (const [i, text] of texts.entries()) {
