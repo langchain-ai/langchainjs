@@ -176,5 +176,6 @@ export const optionalImportEntrypoints: string[] = [
   "langchain/experimental/llms/bittensor",
   "langchain/experimental/hubs/makersuite/googlemakersuitehub",
   "langchain/experimental/prompts/handlebars",
+  "langchain/experimental/prompts/lodash",
   "langchain/experimental/tools/pyinterpreter",
 ];
