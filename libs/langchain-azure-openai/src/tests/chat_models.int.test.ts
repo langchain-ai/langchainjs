@@ -16,6 +16,8 @@ import {
 import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { InMemoryCache } from "@langchain/core/caches";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { OpenAIKeyCredential } from "@azure/openai";
 import { AzureChatOpenAI } from "../chat_models.js";
 
 test("Test ChatOpenAI", async () => {
@@ -789,4 +791,20 @@ test("Test ChatOpenAI token usage reporting for streaming calls", async () => {
   ) {
     expect(streamingTokenUsed).toEqual(nonStreamingTokenUsed);
   }
+});
+
+test("Test ChatOpenAI with OpenAI API key credentials", async () => {
+  const openAiKey: string = getEnvironmentVariable("OPENAI_API_KEY") ?? "";
+  const credentials = new OpenAIKeyCredential(openAiKey);
+
+  const chat = new AzureChatOpenAI({
+    modelName: "gpt-3.5-turbo",
+    maxTokens: 5,
+    credentials,
+    azureOpenAIEndpoint: "",
+    azureOpenAIApiDeploymentName: "",
+  });
+  const message = new HumanMessage("Hello!");
+  const res = await chat.invoke([["system", "Say hi"], message]);
+  console.log(res);
 });
