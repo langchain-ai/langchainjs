@@ -35,7 +35,8 @@ export type MessageType =
   | "generic"
   | "system"
   | "function"
-  | "tool";
+  | "tool"
+  | "placeholder";
 
 type ImageDetail = "auto" | "low" | "high";
 
@@ -405,6 +406,39 @@ export class AIMessageChunk extends BaseMessageChunk {
   }
 }
 
+export class PlaceholderMessage extends BaseMessage {
+  static lc_name() {
+    return "PlaceholderMessage";
+  }
+
+  _getType(): MessageType {
+    return "placeholder";
+  }
+}
+
+export class PlaceholderMessageChunk extends BaseMessageChunk {
+  static lc_name() {
+    return "PlaceholderMessageChunk";
+  }
+
+  _getType(): MessageType {
+    return "placeholder";
+  }
+
+  concat(chunk: PlaceholderMessageChunk) {
+    return new PlaceholderMessageChunk({
+      content: mergeContent(this.content, chunk.content),
+      additional_kwargs: _mergeDicts(
+        this.additional_kwargs,
+        chunk.additional_kwargs
+      ),
+      response_metadata: _mergeDicts(
+        this.response_metadata,
+        chunk.response_metadata
+      ),
+    });
+  }
+}
 /**
  * Represents a system message in a conversation.
  */
@@ -663,6 +697,8 @@ export function coerceMessageLikeToMessage(
     return new AIMessage({ content });
   } else if (type === "system") {
     return new SystemMessage({ content });
+  } else if (type === "placeholder") {
+    return new PlaceholderMessage({ content });
   } else {
     throw new Error(
       `Unable to coerce message from array: only human, AI, or system message coercion is currently supported.`

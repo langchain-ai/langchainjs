@@ -6,6 +6,7 @@ import {
   AIMessage,
   HumanMessage,
   SystemMessage,
+  PlaceholderMessage,
   BaseMessage,
   ChatMessage,
   type BaseMessageLike,
@@ -347,7 +348,8 @@ interface _ImageTemplateParam {
 type MessageClass =
   | typeof HumanMessage
   | typeof AIMessage
-  | typeof SystemMessage;
+  | typeof SystemMessage
+  | typeof PlaceholderMessage;
 
 type ChatMessageClass = typeof ChatMessage;
 
@@ -642,6 +644,19 @@ export class SystemMessagePromptTemplate<
   }
 }
 
+export class MessagesPlaceholderPromptTemplate<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends InputValues = any
+> extends MessagesPlaceholder<RunInput> {
+  static _messageClass(): typeof PlaceholderMessage {
+    return PlaceholderMessage;
+  }
+
+  static lc_name() {
+    return "MessagesPlaceholderPromptTemplate";
+  }
+}
+
 /**
  * Interface for the input of a ChatPromptTemplate.
  */
@@ -693,6 +708,8 @@ function _coerceMessagePromptTemplateLike(
     return AIMessagePromptTemplate.fromTemplate(message.content);
   } else if (message._getType() === "system") {
     return SystemMessagePromptTemplate.fromTemplate(message.content);
+  } else if (message._getType() === "placeholder") {
+    return new MessagesPlaceholderPromptTemplate(message.content as string);
   } else if (ChatMessage.isInstance(message)) {
     return ChatMessagePromptTemplate.fromTemplate(
       message.content as string,
