@@ -361,6 +361,7 @@ export const config = {
     "experimental/masking": "experimental/masking/index",
     "experimental/prompts/custom_format": "experimental/prompts/custom_format",
     "experimental/prompts/handlebars": "experimental/prompts/handlebars",
+    "experimental/prompts/lodash": "experimental/prompts/lodash",
     "experimental/tools/pyinterpreter": "experimental/tools/pyinterpreter",
     // evaluation
     evaluation: "evaluation/index",
@@ -723,6 +724,7 @@ export const config = {
     "experimental/llms/bittensor",
     "experimental/hubs/makersuite/googlemakersuitehub",
     "experimental/prompts/handlebars",
+    "experimental/prompts/lodash",
     "experimental/tools/pyinterpreter",
     "util/convex",
   ],

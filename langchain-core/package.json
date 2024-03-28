@@ -44,7 +44,6 @@
     "decamelize": "1.2.0",
     "js-tiktoken": "^1.0.8",
     "langsmith": "~0.1.7",
-    "lodash.template": "^4.5.0",
     "ml-distance": "^4.0.0",
     "p-queue": "^6.6.2",
     "p-retry": "4",
@@ -72,7 +71,6 @@
     "prettier": "^2.8.3",
     "release-it": "^15.10.1",
     "rimraf": "^5.0.1",
-    "tinybench": "^2.6.0",
     "turbo": "latest",
     "typescript": "~5.1.6",
     "web-streams-polyfill": "^3.3.3"
