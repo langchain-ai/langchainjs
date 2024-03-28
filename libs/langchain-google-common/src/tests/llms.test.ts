@@ -387,7 +387,7 @@ describe("Mock Google LLM", () => {
 
     const model = new GoogleLLM({
       authOptions,
-      model: "gemini-pro-vision",
+      modelName: "gemini-pro-vision",
     });
 
     const message: MessageContentComplex[] = [
@@ -439,7 +439,7 @@ describe("Mock Google LLM", () => {
 
     const model = new GoogleLLM({
       authOptions,
-      model: "gemini-pro-vision",
+      modelName: "gemini-pro-vision",
     });
 
     const message: MessageContentComplex[] = [
@@ -491,7 +491,7 @@ describe("Mock Google LLM", () => {
     };
     const model = new GoogleLLM({
       authOptions,
-      model: "gemini-pro-image",
+      modelName: "gemini-pro-image",
     });
 
     const message: MessageContentComplex[] = [

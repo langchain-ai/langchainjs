@@ -5,11 +5,7 @@ import type {
 } from "@langchain/core/language_models/base";
 import type { StructuredToolInterface } from "@langchain/core/tools";
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
-import {
-  Runnable,
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
+import { Runnable, RunnablePassthrough } from "@langchain/core/runnables";
 import { ChatOpenAI, ChatOpenAICallOptions } from "@langchain/openai";
 import type {
   AgentAction,
@@ -33,7 +29,7 @@ import {
   BasePromptTemplate,
 } from "@langchain/core/prompts";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
-import { Agent, AgentArgs, RunnableSingleActionAgent } from "../agent.js";
+import { Agent, AgentArgs, AgentRunnableSequence } from "../agent.js";
 import { AgentInput } from "../types.js";
 import { PREFIX } from "./prompt.js";
 import { LLMChain } from "../../chains/llm_chain.js";
@@ -351,18 +347,21 @@ export async function createOpenAIFunctionsAgent({
   const llmWithTools = llm.bind({
     functions: tools.map(convertToOpenAIFunction),
   });
-  const agent = RunnableSequence.from([
-    RunnablePassthrough.assign({
-      agent_scratchpad: (input: { steps: AgentStep[] }) =>
-        formatToOpenAIFunctionMessages(input.steps),
-    }),
-    prompt,
-    llmWithTools,
-    new OpenAIFunctionsAgentOutputParser(),
-  ]);
-  return new RunnableSingleActionAgent({
-    runnable: agent,
-    defaultRunName: "OpenAIFunctionsAgent",
-    streamRunnable,
-  });
+  const agent = AgentRunnableSequence.fromRunnables(
+    [
+      RunnablePassthrough.assign({
+        agent_scratchpad: (input: { steps: AgentStep[] }) =>
+          formatToOpenAIFunctionMessages(input.steps),
+      }),
+      prompt,
+      llmWithTools,
+      new OpenAIFunctionsAgentOutputParser(),
+    ],
+    {
+      name: "OpenAIFunctionsAgent",
+      streamRunnable,
+      singleAction: true,
+    }
+  );
+  return agent;
 }

@@ -1,6 +1,13 @@
 import { test } from "@jest/globals";
-import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { StructuredTool } from "@langchain/core/tools";
+import {
+  ChatPromptTemplate,
+  HumanMessagePromptTemplate,
+  MessagesPlaceholder,
+  SystemMessagePromptTemplate,
+} from "@langchain/core/prompts";
+import { AgentExecutor, createOpenAIToolsAgent } from "langchain/agents";
+import { BaseChatModel } from "langchain/chat_models/base";
+import { DynamicStructuredTool, StructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
 import { AIMessage, BaseMessage } from "@langchain/core/messages";
 import { zodToJsonSchema } from "zod-to-json-schema";
@@ -561,5 +568,191 @@ describe("withStructuredOutput", () => {
           raw.additional_kwargs.tool_calls?.[0].function.arguments ?? ""
         )
     ).toBe(true);
+  });
+
+  test("Model is compatible with OpenAI tools agent and Agent Executor", async () => {
+    const llm: BaseChatModel = new ChatMistralAI({
+      temperature: 0,
+      modelName: "mistral-large-latest",
+    });
+
+    const systemMessage = SystemMessagePromptTemplate.fromTemplate(
+      "You are an agent capable of retrieving current weather information."
+    );
+    const humanMessage = HumanMessagePromptTemplate.fromTemplate("{input}");
+    const agentScratchpad = new MessagesPlaceholder("agent_scratchpad");
+
+    const prompt = ChatPromptTemplate.fromMessages([
+      systemMessage,
+      humanMessage,
+      agentScratchpad,
+    ]);
+
+    const currentWeatherTool = new DynamicStructuredTool({
+      name: "get_current_weather",
+      description: "Get the current weather in a given location",
+      schema: z.object({
+        location: z
+          .string()
+          .describe("The city and state, e.g. San Francisco, CA"),
+      }),
+      func: async () => Promise.resolve("28 °C"),
+    });
+
+    const agent = await createOpenAIToolsAgent({
+      llm,
+      tools: [currentWeatherTool],
+      prompt,
+    });
+
+    const agentExecutor = new AgentExecutor({
+      agent,
+      tools: [currentWeatherTool],
+    });
+
+    const input = "What's the weather like in Paris?";
+    const { output } = await agentExecutor.invoke({ input });
+
+    console.log(output);
+    expect(output).toBeDefined();
+    expect(output).toContain("The current temperature in Paris is 28 °C");
+  });
+});
+
+describe("ChatMistralAI aborting", () => {
+  test("ChatMistralAI can abort request via .stream", async () => {
+    const controller = new AbortController();
+    const model = new ChatMistralAI().bind({
+      signal: controller.signal,
+    });
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "You're super good at counting!"],
+      [
+        "human",
+        "Count from 0-100, remember to say 'woof' after every even number!",
+      ],
+    ]);
+
+    const stream = await prompt.pipe(model).stream({});
+
+    let finalRes = "";
+    let iters = 0;
+
+    try {
+      for await (const item of stream) {
+        finalRes += item.content;
+        console.log(finalRes);
+        iters += 1;
+        controller.abort();
+      }
+      // If the loop completes without error, fail the test
+      fail(
+        "Expected for-await loop to throw an error due to abort, but it did not."
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      // Check if the error is due to the abort action
+      expect(error.message).toBe("AbortError");
+    }
+    expect(iters).toBe(1);
+  });
+
+  test("ChatMistralAI can timeout requests via .stream", async () => {
+    const model = new ChatMistralAI().bind({
+      timeout: 1000,
+    });
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "You're super good at counting!"],
+      [
+        "human",
+        "Count from 0-100, remember to say 'woof' after every even number!",
+      ],
+    ]);
+    let didError = false;
+    let finalRes = "";
+    let iters = 0;
+
+    try {
+      // Stream is inside the for-await loop because sometimes
+      // the abort will occur before the first stream event is emitted
+      const stream = await prompt.pipe(model).stream({});
+
+      for await (const item of stream) {
+        finalRes += item.content;
+        console.log(finalRes);
+        iters += 1;
+      }
+      // If the loop completes without error, fail the test
+      fail(
+        "Expected for-await loop to throw an error due to abort, but it did not."
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      didError = true;
+      // Check if the error is due to the abort action
+      expect(error.message).toBe("AbortError");
+    }
+    expect(didError).toBeTruthy();
+  });
+
+  test("ChatMistralAI can abort request via .invoke", async () => {
+    const controller = new AbortController();
+    const model = new ChatMistralAI().bind({
+      signal: controller.signal,
+    });
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "You're super good at counting!"],
+      [
+        "human",
+        "Count from 0-100, remember to say 'woof' after every even number!",
+      ],
+    ]);
+
+    let didError = false;
+
+    setTimeout(() => controller.abort(), 1000); // Abort after 1 second
+
+    try {
+      await prompt.pipe(model).invoke({});
+
+      // If the loop completes without error, fail the test
+      fail(
+        "Expected for-await loop to throw an error due to abort, but it did not."
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      didError = true;
+      // Check if the error is due to the abort action
+      expect(error.message).toBe("AbortError");
+    }
+    expect(didError).toBeTruthy();
+  });
+
+  test("ChatMistralAI can timeout requests via .invoke", async () => {
+    const model = new ChatMistralAI().bind({
+      timeout: 1000,
+    });
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "You're super good at counting!"],
+      [
+        "human",
+        "Count from 0-100, remember to say 'woof' after every even number!",
+      ],
+    ]);
+    let didError = false;
+
+    try {
+      await prompt.pipe(model).invoke({});
+      // If the loop completes without error, fail the test
+      fail(
+        "Expected for-await loop to throw an error due to abort, but it did not."
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      didError = true;
+      // Check if the error is due to the abort action
+      expect(error.message).toBe("AbortError");
+    }
+    expect(didError).toBeTruthy();
   });
 });

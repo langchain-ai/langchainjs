@@ -14,6 +14,8 @@ export const config = {
   internals: [/node\:/, /@langchain\/core\//, /web-auth-library\/google/],
   entrypoints: {
     index: "index",
+    utils: "utils",
+    types: "types",
   },
   tsConfigPath: resolve("./tsconfig.json"),
   cjsSource: "./dist-cjs",

@@ -256,6 +256,7 @@ export class Neo4jGraph {
           (el: any) =>
             JSON.stringify(el.labelsOrTypes) ===
             JSON.stringify([BASE_ENTITY_LABEL]) &&
+
             JSON.stringify(el.properties) === JSON.stringify(["id"])
         ) ?? false;
 
