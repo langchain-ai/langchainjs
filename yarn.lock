@@ -10747,18 +10747,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pinecone-database/pinecone@npm:^2.0.0":
-  version: 2.0.1
-  resolution: "@pinecone-database/pinecone@npm:2.0.1"
-  dependencies:
-    "@sinclair/typebox": ^0.29.0
-    ajv: ^8.12.0
-    cross-fetch: ^3.1.5
-    encoding: ^0.1.13
-  checksum: 43ece04cd66a597281a92d189561bd8eed133a541c32c9d2f8a7c10b2b6c899eeaaf3c7a14387ba62e05f0fa5c441bd3588a9a6c36dddd265699587a9eea8cd1
-  languageName: node
-  linkType: hard
-
 "@pinecone-database/pinecone@npm:^2.2.0":
   version: 2.2.0
   resolution: "@pinecone-database/pinecone@npm:2.2.0"
@@ -21658,7 +21646,7 @@ __metadata:
     "@langchain/weaviate": "workspace:*"
     "@langchain/yandex": "workspace:*"
     "@opensearch-project/opensearch": ^2.2.0
-    "@pinecone-database/pinecone": ^2.0.0
+    "@pinecone-database/pinecone": ^2.2.0
     "@planetscale/database": ^1.8.0
     "@prisma/client": ^4.11.0
     "@raycast/api": ^1.55.2
