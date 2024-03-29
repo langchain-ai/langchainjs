@@ -39,7 +39,7 @@
   "license": "MIT",
   "dependencies": {
     "@langchain/core": "~0.1",
-    "@pinecone-database/pinecone": "^2.0.0",
+    "@pinecone-database/pinecone": "^2.2.0",
     "flat": "^5.0.2",
     "uuid": "^9.0.0"
   },
