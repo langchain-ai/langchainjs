@@ -960,6 +960,15 @@
       "import": "./embeddings/zhipuai.js",
       "require": "./embeddings/zhipuai.cjs"
     },
+    "./embeddings/baidu_qianfan": {
+      "types": {
+        "import": "./embeddings/baidu_qianfan.d.ts",
+        "require": "./embeddings/baidu_qianfan.d.cts",
+        "default": "./embeddings/baidu_qianfan.d.ts"
+      },
+      "import": "./embeddings/baidu_qianfan.js",
+      "require": "./embeddings/baidu_qianfan.cjs"
+    },
     "./llms/ai21": {
       "types": {
         "import": "./llms/ai21.d.ts",
