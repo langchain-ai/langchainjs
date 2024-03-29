@@ -21,13 +21,25 @@ export const parseFString = (template: string): ParsedFStringNode[] => {
   const chars = template.split("");
   const nodes: ParsedFStringNode[] = [];
 
-  const nextBracket = (bracket: "}" | "{" | "{}", start: number) => {
+  const nextBracket = (bracket, start) => {
     for (let i = start; i < chars.length; i += 1) {
       if (bracket.includes(chars[i])) {
-        return i;
+        // Before returning the index of the bracket, check if it is escaped.
+        if (chars[i] === "}" && i > 0 && chars[i-1] === "\\") {
+          // Check if the backslash is escaped (even number of backslashes means it's not escaping the bracket)
+          let backslashCount = 0;
+          for (let j = i - 1; j >= 0 && chars[j] === "\\"; j--) {
+            backslashCount++;
+          }
+          if (backslashCount % 2 === 0) {
+            return i; 
+          }
+        } else {
+            return i; 
+        }
       }
     }
-    return -1;
+    return -1; 
   };
 
   let i = 0;
@@ -43,7 +55,7 @@ export const parseFString = (template: string): ParsedFStringNode[] => {
       nodes.push({ type: "literal", text: "}" });
       i += 2;
     } else if (chars[i] === "{") {
-      const j = nextBracket("}", i);
+      const j = nextBracket("}", i + 1);
       if (j < 0) {
         throw new Error("Unclosed '{' in template.");
       }
