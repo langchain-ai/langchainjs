@@ -112,7 +112,7 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
       subDocs = await this.vectorstore.similaritySearch(query, this.childK);
     }
 
-    if (this.documentCompressor) {
+    if (this.documentCompressor && subDocs.length) {
       subDocs = await this.documentCompressor.compressDocuments(subDocs, query);
       subDocs = subDocs.filter(
         (doc) =>

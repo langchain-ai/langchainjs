@@ -192,7 +192,7 @@ export class MultiQueryRetriever extends BaseRetriever {
     const uniqueDocuments = this._uniqueUnion(documents);
 
     let outputDocs = uniqueDocuments;
-    if (this.documentCompressor) {
+    if (this.documentCompressor && uniqueDocuments.length) {
       outputDocs = await this.documentCompressor.compressDocuments(
         uniqueDocuments,
         question
