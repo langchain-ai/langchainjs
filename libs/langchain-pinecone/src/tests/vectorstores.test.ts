@@ -118,3 +118,50 @@ test("PineconeStore with string arrays", async () => {
     },
   ]);
 });
+
+test("PineconeStore can instantiate without passing in client", async () => {
+  const embeddings = new FakeEmbeddings();
+
+  const store = new PineconeStore(embeddings, {
+    pineconeConfig: {
+      indexName: "indexName",
+      config: {
+        apiKey: "apiKey",
+      },
+    },
+  });
+
+  expect(store.pineconeIndex).toBeDefined();
+});
+
+test("PineconeStore throws when no config or index is passed", async () => {
+  const embeddings = new FakeEmbeddings();
+
+  expect(() => new PineconeStore(embeddings, {})).toThrow();
+});
+
+test("PineconeStore throws when config and index is passed", async () => {
+  const upsert = jest.fn();
+  const client = {
+    namespace: jest.fn<any>().mockReturnValue({
+      upsert,
+      query: jest.fn<any>().mockResolvedValue({
+        matches: [],
+      }),
+    }),
+  };
+  const embeddings = new FakeEmbeddings();
+
+  expect(
+    () =>
+      new PineconeStore(embeddings, {
+        pineconeIndex: client as any,
+        pineconeConfig: {
+          indexName: "indexName",
+          config: {
+            apiKey: "apiKey",
+          },
+        },
+      })
+  ).toThrow();
+});
