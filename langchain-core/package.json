@@ -318,6 +318,15 @@
       "import": "./retrievers.js",
       "require": "./retrievers.cjs"
     },
+    "./retrievers/document_compressors/base": {
+      "types": {
+        "import": "./retrievers/document_compressors/base.d.ts",
+        "require": "./retrievers/document_compressors/base.d.cts",
+        "default": "./retrievers/document_compressors/base.d.ts"
+      },
+      "import": "./retrievers/document_compressors/base.js",
+      "require": "./retrievers/document_compressors/base.cjs"
+    },
     "./singletons": {
       "types": {
         "import": "./singletons.d.ts",
@@ -647,6 +656,10 @@
     "retrievers.js",
     "retrievers.d.ts",
     "retrievers.d.cts",
+    "retrievers/document_compressors/base.cjs",
+    "retrievers/document_compressors/base.js",
+    "retrievers/document_compressors/base.d.ts",
+    "retrievers/document_compressors/base.d.cts",
     "singletons.cjs",
     "singletons.js",
     "singletons.d.ts",

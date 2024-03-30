@@ -28,7 +28,7 @@ import {
   type ChatResult,
   ChatGenerationChunk,
 } from "../../outputs.js";
-import { BaseRetriever } from "../../retrievers.js";
+import { BaseRetriever } from "../../retrievers/index.js";
 import { Runnable, RunnableLambda } from "../../runnables/base.js";
 import { StructuredTool, ToolParams } from "../../tools.js";
 import { BaseTracer, Run } from "../../tracers/base.js";
