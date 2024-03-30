@@ -52,7 +52,7 @@
     "@langchain/weaviate": "workspace:*",
     "@langchain/yandex": "workspace:*",
     "@opensearch-project/opensearch": "^2.2.0",
-    "@pinecone-database/pinecone": "^2.0.0",
+    "@pinecone-database/pinecone": "^2.2.0",
     "@planetscale/database": "^1.8.0",
     "@prisma/client": "^4.11.0",
     "@raycast/api": "^1.55.2",
