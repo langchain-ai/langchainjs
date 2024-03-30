@@ -10,6 +10,7 @@ import {
 
 import { RemoteRunnable } from "../remote.js";
 import { ChatPromptValue } from "../../prompt_values.js";
+import { PromptTemplate } from "../../prompts/prompt.js";
 
 const BASE_URL = "http://my-langserve-endpoint";
 
@@ -213,6 +214,25 @@ describe("RemoteRunnable", () => {
     );
     expect((chunks[1] as ChatPromptValue).messages[1]).toBeInstanceOf(
       AIMessage
+    );
+  });
+
+  test("Streaming in a chain with model output", async () => {
+    const remote = new RemoteRunnable({ url: `${BASE_URL}/b` });
+    const prompt = PromptTemplate.fromTemplate("");
+    const chunks = await prompt
+      .pipe(remote)
+      .stream({ text: "What are the 5 best apples?" });
+    let chunkCount = 0;
+    let accumulator: AIMessageChunk | null = null;
+    for await (const chunk of chunks) {
+      const innerChunk = chunk as AIMessageChunk;
+      accumulator = accumulator ? accumulator.concat(innerChunk) : innerChunk;
+      chunkCount += 1;
+    }
+    expect(chunkCount).toBe(18);
+    expect(accumulator?.content).toEqual(
+      '"object1, object2, object3, object4, object5"'
     );
   });
 });
