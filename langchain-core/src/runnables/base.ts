@@ -930,7 +930,7 @@ export class RunnableBinding<
 
   config: RunnableConfig;
 
-  protected kwargs?: Partial<CallOptions>;
+  kwargs?: Partial<CallOptions>;
 
   configFactories?: Array<
     (config: RunnableConfig) => RunnableConfig | Promise<RunnableConfig>
