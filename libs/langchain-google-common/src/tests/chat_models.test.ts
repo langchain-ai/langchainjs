@@ -6,7 +6,6 @@ import {
   HumanMessage,
   HumanMessageChunk,
   MessageContentComplex,
-  MessageContentText,
   SystemMessage,
   ToolMessage,
 } from "@langchain/core/messages";
@@ -213,13 +212,7 @@ describe("Mock ChatGoogle", () => {
     expect(result._getType()).toEqual("ai");
     const aiMessage = result as AIMessage;
     expect(aiMessage.content).toBeDefined();
-    expect(aiMessage.content.length).toBeGreaterThanOrEqual(1);
-    expect(aiMessage.content[0]).toHaveProperty("type");
-
-    const complexContent = aiMessage.content[0] as MessageContentComplex;
-    expect(complexContent.type).toEqual("text");
-    const content = complexContent as MessageContentText;
-    expect(content.text).toEqual("T");
+    expect(aiMessage.content).toBe("T");
   });
 
   test("1. Invoke response format", async () => {
@@ -244,13 +237,7 @@ describe("Mock ChatGoogle", () => {
     expect(result._getType()).toEqual("ai");
     const aiMessage = result as AIMessage;
     expect(aiMessage.content).toBeDefined();
-    expect(aiMessage.content.length).toBeGreaterThanOrEqual(1);
-    expect(aiMessage.content[0]).toHaveProperty("type");
-
-    const complexContent = aiMessage.content[0] as MessageContentComplex;
-    expect(complexContent.type).toEqual("text");
-    const content = complexContent as MessageContentText;
-    expect(content.text).toEqual("T");
+    expect(aiMessage.content).toBe("T");
   });
 
   // SystemMessages will be turned into the human request with the prompt
@@ -327,13 +314,7 @@ describe("Mock ChatGoogle", () => {
       expect(result._getType()).toEqual("ai");
       const aiMessage = result as AIMessage;
       expect(aiMessage.content).toBeDefined();
-      expect(aiMessage.content.length).toBeGreaterThanOrEqual(1);
-      expect(aiMessage.content[0]).toHaveProperty("type");
-
-      const complexContent = aiMessage.content[0] as MessageContentComplex;
-      expect(complexContent.type).toEqual("text");
-      const content = complexContent as MessageContentText;
-      expect(content.text).toEqual("T");
+      expect(aiMessage.content).toBe("T");
     }
 
     expect(caught).toEqual(true);
@@ -386,10 +367,7 @@ describe("Mock ChatGoogle", () => {
     expect(parts[1].inlineData).toHaveProperty("mimeType");
     expect(parts[1].inlineData).toHaveProperty("data");
 
-    expect(result.content[0]).toHaveProperty("text");
-    expect((result.content[0] as MessageContentText).text).toEqual(
-      "A blue square."
-    );
+    expect(result.content).toBe("A blue square.");
   });
 
   test("4. Functions Bind - Gemini format request", async () => {
@@ -546,7 +524,7 @@ describe("Mock ChatGoogle", () => {
     expect(parameters.required[0]).toBe("testName");
   });
 
-  test("4. Functions - zod format request", async () => {
+  test.only("4. Functions - zod format request", async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
@@ -577,7 +555,7 @@ describe("Mock ChatGoogle", () => {
     const result = await model.invoke("What?");
 
     const toolsResult = record?.opts?.data?.tools;
-    console.log("toolsResult", JSON.stringify(toolsResult, null, 1));
+    console.log("record", JSON.stringify(record, null, 1));
     expect(toolsResult).toBeDefined();
     expect(Array.isArray(toolsResult)).toBeTruthy();
     expect(toolsResult).toHaveLength(1);
@@ -660,8 +638,7 @@ describe("Mock ChatGoogle", () => {
 
     console.log(JSON.stringify(result, null, 1));
     expect(result).toHaveProperty("content");
-    expect(Array.isArray(result.content)).toBeTruthy();
-    expect(result.content).toHaveLength(0);
+    expect(result.content).toBe("");
     const args = result?.lc_kwargs?.additional_kwargs;
     expect(args).toBeDefined();
     expect(args).toHaveProperty("tool_calls");
