@@ -81,12 +81,14 @@ export class OpenAIToolsAgentOutputParser extends AgentMultiActionOutputParser {
 
     if (Array.isArray(messageContent)) {
       // Account for `MessageContentText` response types.
-      const messageTexts = messageContent.map((item) => {
-        if ("text" in item) {
-          return item.text;
-        }
-        return null;
-      }).filter((item): item is string => item !== null);
+      const messageTexts = messageContent
+        .map((item) => {
+          if ("text" in item) {
+            return item.text;
+          }
+          return null;
+        })
+        .filter((item): item is string => item !== null);
       // If we were to join above, then messageContent would always be
       // at least a single, empty string because `.map` always returns an array.
       // This way we only set messageContent if there are actually texts.

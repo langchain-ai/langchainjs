@@ -38,47 +38,61 @@ export function copyAIModelParamsInto(
 
   ret.tools = options?.tools;
   // Ensure tools are formatted properly for Gemini
-  const geminiTools = options?.tools?.map((tool) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ("function" in tool && "parameters" in (tool.function as Record<string, any>)) {
-      // Tool is in OpenAI format. Convert to Gemini then return.
-
+  const geminiTools = options?.tools
+    ?.map((tool) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const castTool = tool.function as Record<string, any>;
-      const cleanedParameters = castTool.parameters;
-      if ("$schema" in cleanedParameters) {
-        delete cleanedParameters.$schema;
-      }
-      if ("additionalProperties" in cleanedParameters) {
-        delete cleanedParameters.additionalProperties;
-      }
-      const toolInGeminiFormat: GeminiTool = {
-        functionDeclarations: [
-          {
-            name: castTool.name,
-            description: castTool.description,
-            parameters: cleanedParameters,
-          }
-        ]
-      }
-      return toolInGeminiFormat;
-    } else if ("functionDeclarations" in tool) {
-      return tool;
-    } else {
-      return null;
-    }
-  }).filter((tool): tool is GeminiTool => tool !== null);
+      if (
+        "function" in tool &&
+        "parameters" in (tool.function as Record<string, any>)
+      ) {
+        // Tool is in OpenAI format. Convert to Gemini then return.
 
-  const structuredOutputTools = options?.tools?.map((tool) => {
-    if ("lc_namespace" in tool) {
-      return tool;
-    } else {
-      return null;
-    }
-  }).filter((tool): tool is StructuredToolInterface => tool !== null);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const castTool = tool.function as Record<string, any>;
+        const cleanedParameters = castTool.parameters;
+        if ("$schema" in cleanedParameters) {
+          delete cleanedParameters.$schema;
+        }
+        if ("additionalProperties" in cleanedParameters) {
+          delete cleanedParameters.additionalProperties;
+        }
+        const toolInGeminiFormat: GeminiTool = {
+          functionDeclarations: [
+            {
+              name: castTool.name,
+              description: castTool.description,
+              parameters: cleanedParameters,
+            },
+          ],
+        };
+        return toolInGeminiFormat;
+      } else if ("functionDeclarations" in tool) {
+        return tool;
+      } else {
+        return null;
+      }
+    })
+    .filter((tool): tool is GeminiTool => tool !== null);
 
-  if (structuredOutputTools && structuredOutputTools.length > 0 && geminiTools && geminiTools.length > 0) {
-    throw new Error(`Cannot mix structured tools with Gemini tools.\nReceived ${structuredOutputTools.length} structured tools and ${geminiTools.length} Gemini tools.`);
+  const structuredOutputTools = options?.tools
+    ?.map((tool) => {
+      if ("lc_namespace" in tool) {
+        return tool;
+      } else {
+        return null;
+      }
+    })
+    .filter((tool): tool is StructuredToolInterface => tool !== null);
+
+  if (
+    structuredOutputTools &&
+    structuredOutputTools.length > 0 &&
+    geminiTools &&
+    geminiTools.length > 0
+  ) {
+    throw new Error(
+      `Cannot mix structured tools with Gemini tools.\nReceived ${structuredOutputTools.length} structured tools and ${geminiTools.length} Gemini tools.`
+    );
   }
   ret.tools = geminiTools ?? structuredOutputTools;
 
