@@ -40,9 +40,9 @@ export function copyAIModelParamsInto(
   // Ensure tools are formatted properly for Gemini
   const geminiTools = options?.tools
     ?.map((tool) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (
         "function" in tool &&
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         "parameters" in (tool.function as Record<string, any>)
       ) {
         // Tool is in OpenAI format. Convert to Gemini then return.
