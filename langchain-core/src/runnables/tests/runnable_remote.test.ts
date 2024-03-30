@@ -219,8 +219,10 @@ describe("RemoteRunnable", () => {
 
   test("Streaming in a chain with model output", async () => {
     const remote = new RemoteRunnable({ url: `${BASE_URL}/b` });
-    const prompt = PromptTemplate.fromTemplate('');
-    const chunks = await prompt.pipe(remote).stream({ text: "What are the 5 best apples?" });
+    const prompt = PromptTemplate.fromTemplate("");
+    const chunks = await prompt
+      .pipe(remote)
+      .stream({ text: "What are the 5 best apples?" });
     let chunkCount = 0;
     let accumulator: AIMessageChunk | null = null;
     for await (const chunk of chunks) {
