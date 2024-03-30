@@ -179,20 +179,39 @@ function toolMessageToContent(message: ToolMessage): GeminiContent[] {
           },
           ""
         );
-  const content = JSON.parse(contentStr);
-  return [
-    {
-      role: "function",
-      parts: [
-        {
-          functionResponse: {
-            name: message.tool_call_id,
-            response: content,
+
+  try {
+    const content = JSON.parse(contentStr);
+    return [
+      {
+        role: "function",
+        parts: [
+          {
+            functionResponse: {
+              name: message.tool_call_id,
+              response: content,
+            },
           },
-        },
-      ],
-    },
-  ];
+        ],
+      },
+    ];
+  } catch (_) {
+    return [
+      {
+        role: "function",
+        parts: [
+          {
+            functionResponse: {
+              name: message.tool_call_id,
+              response: {
+                response: contentStr,
+              },
+            },
+          },
+        ],
+      },
+    ];
+  }
 }
 
 export function baseMessageToContent(message: BaseMessage): GeminiContent[] {
