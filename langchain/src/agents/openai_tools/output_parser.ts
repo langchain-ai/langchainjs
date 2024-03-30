@@ -77,26 +77,7 @@ export class OpenAIToolsAgentOutputParser extends AgentMultiActionOutputParser {
    * @returns A ToolsAgentAction[] or AgentFinish object.
    */
   parseAIMessage(message: BaseMessage): ToolsAgentAction[] | AgentFinish {
-    let messageContent = message.content;
-
-    if (Array.isArray(messageContent)) {
-      // Account for `MessageContentText` response types.
-      const messageTexts = messageContent
-        .map((item) => {
-          if ("text" in item) {
-            return item.text;
-          }
-          return null;
-        })
-        .filter((item): item is string => item !== null);
-      // If we were to join above, then messageContent would always be
-      // at least a single, empty string because `.map` always returns an array.
-      // This way we only set messageContent if there are actually texts.
-      if (messageTexts.length) {
-        messageContent = messageTexts.join("");
-      }
-    }
-    if (messageContent && typeof messageContent !== "string") {
+    if (message.content && typeof message.content !== "string") {
       throw new Error("This agent cannot parse non-string model responses.");
     }
 
@@ -115,7 +96,7 @@ export class OpenAIToolsAgentOutputParser extends AgentMultiActionOutputParser {
             toolCallId: toolCall.id,
             log: `Invoking "${toolCall.function.name}" with ${
               toolCall.function.arguments ?? "{}"
-            }\n${messageContent}`,
+            }\n${message.content}`,
             messageLog,
           };
         });
@@ -128,8 +109,8 @@ export class OpenAIToolsAgentOutputParser extends AgentMultiActionOutputParser {
       }
     } else {
       return {
-        returnValues: { output: messageContent },
-        log: messageContent,
+        returnValues: { output: message.content },
+        log: message.content,
       };
     }
   }

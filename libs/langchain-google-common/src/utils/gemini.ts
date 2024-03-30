@@ -464,6 +464,15 @@ export function chunkToString(chunk: BaseMessageChunk): string {
 
 export function partToMessage(part: GeminiPart): BaseMessageChunk {
   const fields = partsToBaseMessageFields([part]);
+  if (typeof fields.content === "string") {
+    return new AIMessageChunk(fields);
+  } else if (fields.content.every((item) => item.type === "text")) {
+    const newContent = fields.content.map((item) => "text" in item ? item.text : "").join("");
+    return new AIMessageChunk({
+      ...fields,
+      content: newContent,
+    });
+  }
   return new AIMessageChunk(fields);
 }
 
