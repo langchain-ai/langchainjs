@@ -200,6 +200,7 @@
     "@google-ai/generativelanguage": "^0.2.1",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
+    "@layerup/layerup-security": "*",
     "@mozilla/readability": "*",
     "@opensearch-project/opensearch": "*",
     "@pinecone-database/pinecone": "*",

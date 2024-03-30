@@ -9096,6 +9096,7 @@ __metadata:
     "@google-ai/generativelanguage": ^0.2.1
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
+    "@layerup/layerup-security": "*"
     "@mozilla/readability": "*"
     "@opensearch-project/opensearch": "*"
     "@pinecone-database/pinecone": "*"
@@ -9939,6 +9940,17 @@ __metadata:
     typescript: <5.2.0
   languageName: unknown
   linkType: soft
+
+"@layerup/layerup-security@npm:^1.5.6":
+  version: 1.5.6
+  resolution: "@layerup/layerup-security@npm:1.5.6"
+  dependencies:
+    axios: ^1.6.8
+  peerDependencies:
+    openai: ^4.30.0
+  checksum: abc1aa029baacd5a8cfe3b35f6ab85b7a0f0603bcc4ef62ab8e8269aa28b9cf96ed4ae19125dc2003cc3e687e0e58146bbe6f3fe70d1e0d6d376b89939ae734c
+  languageName: node
+  linkType: hard
 
 "@leichtgewicht/ip-codec@npm:^2.0.1":
   version: 2.0.4
@@ -16869,7 +16881,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^1.6.2":
+"axios@npm:^1.6.2, axios@npm:^1.6.8":
   version: 1.6.8
   resolution: "axios@npm:1.6.8"
   dependencies:
@@ -26726,6 +26738,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "langchainjs@workspace:."
   dependencies:
+    "@layerup/layerup-security": ^1.5.6
     "@tsconfig/recommended": ^1.0.2
     "@types/jest": ^29.5.3
     "@types/semver": ^7
