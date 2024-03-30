@@ -6,7 +6,6 @@ import {
   AIMessage,
   HumanMessage,
   SystemMessage,
-  PlaceholderMessage,
   BaseMessage,
   ChatMessage,
   type BaseMessageLike,
@@ -348,8 +347,7 @@ interface _ImageTemplateParam {
 type MessageClass =
   | typeof HumanMessage
   | typeof AIMessage
-  | typeof SystemMessage
-  | typeof PlaceholderMessage;
+  | typeof SystemMessage;
 
 type ChatMessageClass = typeof ChatMessage;
 
@@ -644,19 +642,6 @@ export class SystemMessagePromptTemplate<
   }
 }
 
-export class MessagesPlaceholderPromptTemplate<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunInput extends InputValues = any
-> extends MessagesPlaceholder<RunInput> {
-  static _messageClass(): typeof PlaceholderMessage {
-    return PlaceholderMessage;
-  }
-
-  static lc_name() {
-    return "MessagesPlaceholderPromptTemplate";
-  }
-}
-
 /**
  * Interface for the input of a ChatPromptTemplate.
  */
@@ -701,6 +686,23 @@ function _coerceMessagePromptTemplateLike(
   ) {
     return messagePromptTemplateLike;
   }
+  if (
+    Array.isArray(messagePromptTemplateLike) &&
+    messagePromptTemplateLike[0] === "placeholder"
+  ) {
+    const messageContent = messagePromptTemplateLike[1];
+    if (
+      typeof messageContent !== "string" ||
+      messageContent[0] !== "{" ||
+      messageContent[messageContent.length - 1] !== "}"
+    ) {
+      throw new Error(
+        `Invalid placeholder template: "${messagePromptTemplateLike[1]}". Expected a variable name surrounded by curly braces.`
+      );
+    }
+    const variableName = messageContent.slice(1, -1);
+    return new MessagesPlaceholder({ variableName, optional: true });
+  }
   const message = coerceMessageLikeToMessage(messagePromptTemplateLike);
   if (message._getType() === "human") {
     return HumanMessagePromptTemplate.fromTemplate(message.content);
@@ -708,8 +710,6 @@ function _coerceMessagePromptTemplateLike(
     return AIMessagePromptTemplate.fromTemplate(message.content);
   } else if (message._getType() === "system") {
     return SystemMessagePromptTemplate.fromTemplate(message.content);
-  } else if (message._getType() === "placeholder") {
-    return new MessagesPlaceholderPromptTemplate(message.content as string);
   } else if (ChatMessage.isInstance(message)) {
     return ChatMessagePromptTemplate.fromTemplate(
       message.content as string,
