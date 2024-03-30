@@ -61,6 +61,7 @@ export const config = {
     "utils/tiktoken": "utils/tiktoken",
     "utils/types": "utils/types",
     "utils/beta_warning": "utils/beta_warning",
+    "utils/is_zod_schema": "utils/is_zod_schema",
     vectorstores: "vectorstores",
   },
   tsConfigPath: resolve("./tsconfig.json"),

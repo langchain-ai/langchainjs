@@ -194,6 +194,10 @@ utils/beta_warning.cjs
 utils/beta_warning.js
 utils/beta_warning.d.ts
 utils/beta_warning.d.cts
+utils/is_zod_schema.cjs
+utils/is_zod_schema.js
+utils/is_zod_schema.d.ts
+utils/is_zod_schema.d.cts
 vectorstores.cjs
 vectorstores.js
 vectorstores.d.ts
