@@ -1,5 +1,4 @@
 import { LLM, type BaseLLMParams } from "@langchain/core/language_models/llms";
-import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   GuardrailResponse,
   LayerupSecurity as LayerupSecuritySDK,
@@ -66,17 +65,14 @@ export class LayerupSecurity extends LLM {
   constructor(options: LayerupSecurityOptions) {
     super(options);
 
-    const layerupApiKey =
-      options.layerupApiKey ?? getEnvironmentVariable("LAYERUP_API_KEY");
-
     if (!options.llm) {
       throw new Error("Layerup Security requires an LLM to be provided.");
-    } else if (!layerupApiKey) {
+    } else if (!options.layerupApiKey) {
       throw new Error("Layerup Security requires an API key to be provided.");
     }
 
     this.llm = options.llm;
-    this.layerupApiKey = layerupApiKey;
+    this.layerupApiKey = options.layerupApiKey;
     this.layerupApiBaseUrl =
       options.layerupApiBaseUrl || this.layerupApiBaseUrl;
     this.promptGuardrails = options.promptGuardrails || this.promptGuardrails;
