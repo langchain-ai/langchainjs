@@ -80,7 +80,6 @@ export class OpenAIToolsAgentOutputParser extends AgentMultiActionOutputParser {
     if (message.content && typeof message.content !== "string") {
       throw new Error("This agent cannot parse non-string model responses.");
     }
-
     if (message.additional_kwargs.tool_calls) {
       const toolCalls: OpenAIClient.Chat.ChatCompletionMessageToolCall[] =
         message.additional_kwargs.tool_calls;
