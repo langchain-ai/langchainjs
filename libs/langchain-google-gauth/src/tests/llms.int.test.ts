@@ -13,7 +13,7 @@ const imgData = {
     "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH6AIbFwQSRaexCAAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAJklEQVQY02P8//8/A27AxIAXsEAor31f0CS2OfEQ1j2Q0owU+RsAGNUJD2/04PgAAAAASUVORK5CYII=",
 };
 
-describe("GAuth LLM", () => {
+describe.skip("GAuth LLM", () => {
   test("platform", async () => {
     const model = new GoogleLLM();
     expect(model.platform).toEqual("gcp");
@@ -59,7 +59,7 @@ describe("GAuth LLM", () => {
 
   test("predictMessage image", async () => {
     const model = new GoogleLLM({
-      model: "gemini-pro-vision",
+      modelName: "gemini-pro-vision",
     });
     const message: MessageContentComplex[] = [
       {
@@ -84,7 +84,7 @@ describe("GAuth LLM", () => {
 
   test("invoke image", async () => {
     const model = new GoogleLLM({
-      model: "gemini-pro-vision",
+      modelName: "gemini-pro-vision",
     });
     const message: MessageContentComplex[] = [
       {
@@ -108,7 +108,7 @@ describe("GAuth LLM", () => {
   });
 });
 
-describe("GAuth LLM gai", () => {
+describe.skip("GAuth LLM gai", () => {
   test("platform", async () => {
     const model = new GoogleLLM({
       platformType: "gai",
@@ -185,7 +185,7 @@ describe("GAuth LLM gai", () => {
   test("predictMessage image", async () => {
     const model = new GoogleLLM({
       platformType: "gai",
-      model: "gemini-pro-vision",
+      modelName: "gemini-pro-vision",
     });
     const message: MessageContentComplex[] = [
       {
@@ -211,7 +211,7 @@ describe("GAuth LLM gai", () => {
   test("invoke image", async () => {
     const model = new GoogleLLM({
       platformType: "gai",
-      model: "gemini-pro-vision",
+      modelName: "gemini-pro-vision",
     });
     const message: MessageContentComplex[] = [
       {

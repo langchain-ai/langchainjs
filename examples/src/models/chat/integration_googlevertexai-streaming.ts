@@ -1,8 +1,8 @@
-import { ChatGoogleVertexAI } from "@langchain/community/chat_models/googlevertexai";
+import { ChatVertexAI } from "@langchain/google-vertexai";
 // Or, if using the web entrypoint:
-// import { ChatGoogleVertexAI } from "@langchain/community/chat_models/googlevertexai/web";
+// import { ChatVertexAI } from "@langchain/google-vertexai-web";
 
-const model = new ChatGoogleVertexAI({
+const model = new ChatVertexAI({
   temperature: 0.7,
 });
 const stream = await model.stream([
@@ -16,16 +16,18 @@ for await (const chunk of stream) {
 
 /*
 AIMessageChunk {
-  content: ' Ahoy there, matey! My favorite food be fish, cooked any way ye ',
-  additional_kwargs: {}
+  content: [{ type: 'text', text: 'Ahoy there, matey! Me favorite grub be fish and chips, with' }],
+  additional_kwargs: {},
+  response_metadata: { data: { candidates: [Array], promptFeedback: [Object] } }
 }
 AIMessageChunk {
-  content: 'like!',
-  additional_kwargs: {}
+  content: [{ type: 'text', text: " a hearty pint o' grog to wash it down. What be yer fancy, landlubber?" }],
+  additional_kwargs: {},
+  response_metadata: { data: { candidates: [Array] } }
 }
 AIMessageChunk {
   content: '',
-  name: undefined,
-  additional_kwargs: {}
+  additional_kwargs: {},
+  response_metadata: { finishReason: 'stop' }
 }
 */
