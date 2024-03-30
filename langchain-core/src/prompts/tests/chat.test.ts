@@ -306,13 +306,13 @@ test("Test MessagesPlaceholder not optional", async () => {
   );
 });
 
-test.only("Test MessagesPlaceholder shorthand in a chat prompt template should throw for invalid syntax", async () => {
+test("Test MessagesPlaceholder shorthand in a chat prompt template should throw for invalid syntax", async () => {
   expect(() =>
     ChatPromptTemplate.fromMessages([["placeholder", "foo"]])
   ).toThrow();
 });
 
-test.only("Test MessagesPlaceholder shorthand in a chat prompt template", async () => {
+test("Test MessagesPlaceholder shorthand in a chat prompt template", async () => {
   const prompt = ChatPromptTemplate.fromMessages([["placeholder", "{foo}"]]);
   const messages = await prompt.formatMessages({
     foo: [new HumanMessage("Hi there!"), new AIMessage("how r u")],
