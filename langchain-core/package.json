@@ -534,15 +534,6 @@
       "import": "./utils/beta_warning.js",
       "require": "./utils/beta_warning.cjs"
     },
-    "./utils/is_zod_schema": {
-      "types": {
-        "import": "./utils/is_zod_schema.d.ts",
-        "require": "./utils/is_zod_schema.d.cts",
-        "default": "./utils/is_zod_schema.d.ts"
-      },
-      "import": "./utils/is_zod_schema.js",
-      "require": "./utils/is_zod_schema.cjs"
-    },
     "./vectorstores": {
       "types": {
         "import": "./vectorstores.d.ts",
@@ -752,10 +743,6 @@
     "utils/beta_warning.js",
     "utils/beta_warning.d.ts",
     "utils/beta_warning.d.cts",
-    "utils/is_zod_schema.cjs",
-    "utils/is_zod_schema.js",
-    "utils/is_zod_schema.d.ts",
-    "utils/is_zod_schema.d.cts",
     "vectorstores.cjs",
     "vectorstores.js",
     "vectorstores.d.ts",
