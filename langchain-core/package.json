@@ -318,14 +318,14 @@
       "import": "./retrievers.js",
       "require": "./retrievers.cjs"
     },
-    "./retrievers/document_compressors/base": {
+    "./retrievers/document_compressors": {
       "types": {
-        "import": "./retrievers/document_compressors/base.d.ts",
-        "require": "./retrievers/document_compressors/base.d.cts",
-        "default": "./retrievers/document_compressors/base.d.ts"
+        "import": "./retrievers/document_compressors.d.ts",
+        "require": "./retrievers/document_compressors.d.cts",
+        "default": "./retrievers/document_compressors.d.ts"
       },
-      "import": "./retrievers/document_compressors/base.js",
-      "require": "./retrievers/document_compressors/base.cjs"
+      "import": "./retrievers/document_compressors.js",
+      "require": "./retrievers/document_compressors.cjs"
     },
     "./singletons": {
       "types": {
@@ -656,10 +656,10 @@
     "retrievers.js",
     "retrievers.d.ts",
     "retrievers.d.cts",
-    "retrievers/document_compressors/base.cjs",
-    "retrievers/document_compressors/base.js",
-    "retrievers/document_compressors/base.d.ts",
-    "retrievers/document_compressors/base.d.cts",
+    "retrievers/document_compressors.cjs",
+    "retrievers/document_compressors.js",
+    "retrievers/document_compressors.d.ts",
+    "retrievers/document_compressors.d.cts",
     "singletons.cjs",
     "singletons.js",
     "singletons.d.ts",
