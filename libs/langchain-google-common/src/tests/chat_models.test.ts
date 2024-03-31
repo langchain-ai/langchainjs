@@ -9,10 +9,6 @@ import {
   SystemMessage,
   ToolMessage,
 } from "@langchain/core/messages";
-import { StructuredToolInterface } from "@langchain/core/tools";
-import { FakeTool } from "@langchain/core/utils/testing";
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { z } from "zod";
 
 import { ChatGoogleBase, ChatGoogleBaseInput } from "../chat_models.js";
 import { authOptions, MockClient, MockClientAuthInfo, mockId } from "./mock.js";

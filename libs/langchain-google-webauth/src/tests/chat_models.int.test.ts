@@ -16,7 +16,7 @@ import { ChatPromptValue } from "@langchain/core/prompt_values";
 import { GeminiTool, GoogleAISafetySetting } from "@langchain/google-common";
 import { ChatGoogle } from "../chat_models.js";
 
-describe.skip("Google APIKey Chat", () => {
+describe("Google APIKey Chat", () => {
   test("invoke", async () => {
     const model = new ChatGoogle();
     try {
@@ -28,16 +28,7 @@ describe.skip("Google APIKey Chat", () => {
 
       const aiMessage = res as AIMessageChunk;
       expect(aiMessage.content).toBeDefined();
-      expect(aiMessage.content.length).toBeGreaterThan(0);
-      expect(aiMessage.content[0]).toBeDefined();
-
-      const content = aiMessage.content[0] as MessageContentComplex;
-      expect(content).toHaveProperty("type");
-      expect(content.type).toEqual("text");
-
-      const textContent = content as MessageContentText;
-      expect(textContent.text).toBeDefined();
-      expect(textContent.text).toEqual("42");
+      expect(aiMessage.content).toBe("42");
     } catch (e) {
       console.error(e);
       throw e;
@@ -79,16 +70,7 @@ describe.skip("Google APIKey Chat", () => {
 
       const aiMessage = res as AIMessageChunk;
       expect(aiMessage.content).toBeDefined();
-      expect(aiMessage.content.length).toBeGreaterThan(0);
-      expect(aiMessage.content[0]).toBeDefined();
-
-      const content = aiMessage.content[0] as MessageContentComplex;
-      expect(content).toHaveProperty("type");
-      expect(content.type).toEqual("text");
-
-      const textContent = content as MessageContentText;
-      expect(textContent.text).toBeDefined();
-      expect(["H", "T"]).toContainEqual(textContent.text);
+      expect(["H", "T"]).toContainEqual(aiMessage.content);
     } catch (e) {
       console.error(JSON.stringify(e, null, 1));
       throw e;
@@ -167,15 +149,10 @@ describe.skip("Google APIKey Chat", () => {
         ],
       },
     ];
-    const model = new ChatGoogle({
-      apiVersion: "v1beta",
-    }).bind({
-      tools,
-    });
+    const model = new ChatGoogle().bind({ tools });
     const result = await model.invoke("Run a test on the cobalt project");
     expect(result).toHaveProperty("content");
-    expect(Array.isArray(result.content)).toBeTruthy();
-    expect(result.content).toHaveLength(0);
+    expect(result.content).toBe("");
     const args = result?.lc_kwargs?.additional_kwargs;
     expect(args).toBeDefined();
     expect(args).toHaveProperty("tool_calls");
@@ -216,11 +193,7 @@ describe.skip("Google APIKey Chat", () => {
         ],
       },
     ];
-    const model = new ChatGoogle({
-      apiVersion: "v1beta",
-    }).bind({
-      tools,
-    });
+    const model = new ChatGoogle().bind({ tools });
     const toolResult = {
       testPassed: true,
     };
@@ -246,6 +219,27 @@ describe.skip("Google APIKey Chat", () => {
       resArray.push(chunk);
     }
     console.log(JSON.stringify(resArray, null, 2));
+  });
+
+  test("withStructuredOutput", async () => {
+    const tool = {
+      name: "get_weather",
+      description:
+        "Get the weather of a specific location and return the temperature in Celsius.",
+      parameters: {
+        type: "object",
+        properties: {
+          location: {
+            type: "string",
+            description: "The name of city to get the weather for.",
+          },
+        },
+        required: ["location"],
+      },
+    };
+    const model = new ChatGoogle().withStructuredOutput(tool);
+    const result = await model.invoke("What is the weather in Paris?");
+    expect(result).toHaveProperty("location");
   });
 });
 
