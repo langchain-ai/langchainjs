@@ -10,7 +10,7 @@ const tools = [new TavilySearchResults({ maxResults: 1 })];
 test("createXmlAgent works", async () => {
   const prompt = await pull<PromptTemplate>("hwchase17/xml-agent-convo");
   const llm = new ChatAnthropic({
-    modelName: "claude-3-opus-20240229",
+    modelName: "claude-2",
     temperature: 0,
   });
   const agent = await createXmlAgent({

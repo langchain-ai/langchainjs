@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-webauth",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Web-based authentication support for Google services",
   "type": "module",
   "engines": {
@@ -15,7 +15,7 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-google-webauth/",
   "scripts": {
     "build": "yarn run build:deps && yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
-    "build:deps": "yarn run turbo:command build --filter=@langchain/core --filter=@langchain/google-common",
+    "build:deps": "yarn run turbo:command build --filter=@langchain/google-common",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rm -rf dist/tests dist/**/tests",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rm -rf dist-cjs",
     "build:watch": "yarn create-entrypoints && tsc --outDir dist/ --watch",
@@ -40,7 +40,7 @@
   "license": "MIT",
   "dependencies": {
     "@langchain/core": "~0.1.1",
-    "@langchain/google-common": "~0.0.0",
+    "@langchain/google-common": "~0.0.2",
     "web-auth-library": "^1.0.3"
   },
   "devDependencies": {
@@ -80,6 +80,24 @@
       "import": "./index.js",
       "require": "./index.cjs"
     },
+    "./utils": {
+      "types": {
+        "import": "./utils.d.ts",
+        "require": "./utils.d.cts",
+        "default": "./utils.d.ts"
+      },
+      "import": "./utils.js",
+      "require": "./utils.cjs"
+    },
+    "./types": {
+      "types": {
+        "import": "./types.d.ts",
+        "require": "./types.d.cts",
+        "default": "./types.d.ts"
+      },
+      "import": "./types.js",
+      "require": "./types.cjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -87,6 +105,14 @@
     "index.cjs",
     "index.js",
     "index.d.ts",
-    "index.d.cts"
+    "index.d.cts",
+    "utils.cjs",
+    "utils.js",
+    "utils.d.ts",
+    "utils.d.cts",
+    "types.cjs",
+    "types.js",
+    "types.d.ts",
+    "types.d.cts"
   ]
 }

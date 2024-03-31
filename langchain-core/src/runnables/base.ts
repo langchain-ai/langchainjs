@@ -281,18 +281,23 @@ export abstract class Runnable<
   }
 
   protected _separateRunnableConfigFromCallOptions(
-    options: Partial<CallOptions> = {}
+    options?: Partial<CallOptions>
   ): [RunnableConfig, Omit<Partial<CallOptions>, keyof RunnableConfig>] {
-    const runnableConfig: RunnableConfig = ensureConfig({
-      callbacks: options.callbacks,
-      tags: options.tags,
-      metadata: options.metadata,
-      runName: options.runName,
-      configurable: options.configurable,
-      recursionLimit: options.recursionLimit,
-      maxConcurrency: options.maxConcurrency,
-    });
-    const callOptions = { ...options };
+    let runnableConfig;
+    if (options === undefined) {
+      runnableConfig = ensureConfig(options);
+    } else {
+      runnableConfig = ensureConfig({
+        callbacks: options.callbacks,
+        tags: options.tags,
+        metadata: options.metadata,
+        runName: options.runName,
+        configurable: options.configurable,
+        recursionLimit: options.recursionLimit,
+        maxConcurrency: options.maxConcurrency,
+      });
+    }
+    const callOptions = { ...(options as Partial<CallOptions>) };
     delete callOptions.callbacks;
     delete callOptions.tags;
     delete callOptions.metadata;
@@ -925,7 +930,7 @@ export class RunnableBinding<
 
   config: RunnableConfig;
 
-  protected kwargs?: Partial<CallOptions>;
+  kwargs?: Partial<CallOptions>;
 
   configFactories?: Array<
     (config: RunnableConfig) => RunnableConfig | Promise<RunnableConfig>
@@ -999,7 +1004,7 @@ export class RunnableBinding<
   ): Promise<RunOutput> {
     return this.bound.invoke(
       input,
-      await this._mergeConfig(options, this.kwargs)
+      await this._mergeConfig(ensureConfig(options), this.kwargs)
     );
   }
 
@@ -1029,10 +1034,10 @@ export class RunnableBinding<
     const mergedOptions = Array.isArray(options)
       ? await Promise.all(
           options.map(async (individualOption) =>
-            this._mergeConfig(individualOption, this.kwargs)
+            this._mergeConfig(ensureConfig(individualOption), this.kwargs)
           )
         )
-      : await this._mergeConfig(options, this.kwargs);
+      : await this._mergeConfig(ensureConfig(options), this.kwargs);
     return this.bound.batch(inputs, mergedOptions, batchOptions);
   }
 
@@ -1042,7 +1047,7 @@ export class RunnableBinding<
   ) {
     yield* this.bound._streamIterator(
       input,
-      await this._mergeConfig(options, this.kwargs)
+      await this._mergeConfig(ensureConfig(options), this.kwargs)
     );
   }
 
@@ -1052,7 +1057,7 @@ export class RunnableBinding<
   ): Promise<IterableReadableStream<RunOutput>> {
     return this.bound.stream(
       input,
-      await this._mergeConfig(options, this.kwargs)
+      await this._mergeConfig(ensureConfig(options), this.kwargs)
     );
   }
 
@@ -1063,7 +1068,7 @@ export class RunnableBinding<
   ): AsyncGenerator<RunOutput> {
     yield* this.bound.transform(
       generator,
-      await this._mergeConfig(options, this.kwargs)
+      await this._mergeConfig(ensureConfig(options), this.kwargs)
     );
   }
 
@@ -1075,7 +1080,7 @@ export class RunnableBinding<
     yield* this.bound.streamEvents(
       input,
       {
-        ...(await this._mergeConfig(options, this.kwargs)),
+        ...(await this._mergeConfig(ensureConfig(options), this.kwargs)),
         version: options.version,
       },
       streamOptions

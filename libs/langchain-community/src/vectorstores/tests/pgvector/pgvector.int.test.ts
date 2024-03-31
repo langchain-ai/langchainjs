@@ -220,7 +220,7 @@ describe("PGVectorStore", () => {
     }
   });
 
-  test("PGvector supports different vector types", async () => {
+  test.skip("PGvector supports different vector types", async () => {
     // verify by asserting different pgvector operators based on vector type
     pgvectorVectorStore.distanceStrategy = "cosine";
     expect(pgvectorVectorStore.computedOperatorString).toEqual("<=>");

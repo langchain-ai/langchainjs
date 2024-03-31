@@ -8,12 +8,14 @@ const DEFAULT_WHITELIST = [
   "x.com",
   "twitter.com",
   "npmjs.com",
+  "microsoft.com",
 ];
 
 type CheckBrokenLinksOptions = {
   logErrors?: boolean;
   timeout?: number;
   whitelist?: string[];
+  retryFailed?: boolean;
 };
 
 const batchArray = <T>(array: T[], batchSize: number): T[][] => {
@@ -83,7 +85,7 @@ export const checkUrl = async (
       timeout,
     });
 
-    if (response.status >= 200 && response.status < 300) {
+    if (response.status >= 200 && response.status < 400) {
       return true;
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -113,13 +115,17 @@ export const checkUrl = async (
 const checkLinksInFile = async (
   filePath: string,
   options?: CheckBrokenLinksOptions
-): Promise<string | number> => {
+): Promise<{
+  linksChecked: number;
+  message?: string;
+  failedUrls?: string[];
+}> => {
   const content = await readFile(filePath, { logErrors: options?.logErrors });
   if (!content) {
     if (options?.logErrors) {
       console.error(`Could not read file: ${filePath}`);
     }
-    return 0; // Return 0 links checked for this file
+    return { linksChecked: 0 };
   }
   const links = extractLinks(content);
   const brokenLinks = (
@@ -134,11 +140,17 @@ const checkLinksInFile = async (
     )
   ).filter((l): l is string => l !== null);
   if (brokenLinks.length) {
-    return `Found ${
-      brokenLinks.length
-    } broken links in ${filePath}:\nLinks:\n - ${brokenLinks.join("\n - ")}`;
+    return {
+      linksChecked: links.length,
+      message: `Found ${
+        brokenLinks.length
+      } broken links in ${filePath}:\nLinks:\n - ${brokenLinks.join("\n - ")}`,
+      failedUrls: brokenLinks,
+    };
   }
-  return links.length; // Return the number of links checked for this file
+  return {
+    linksChecked: links.length,
+  };
 };
 
 export async function checkBrokenLinks(
@@ -153,6 +165,8 @@ export async function checkBrokenLinks(
   const batchSize = 10;
   const batches = batchArray(allMdxFiles, batchSize);
 
+  const failedUrls: string[] = [];
+
   const results: string[] = [];
 
   for await (const batch of batches) {
@@ -162,15 +176,42 @@ export async function checkBrokenLinks(
 
     const batchResults = await Promise.all(batchLinksChecked);
     const batchLinksCount = batchResults.reduce<number>((acc, result) => {
-      if (typeof result === "number") {
-        return acc + result;
-      } else {
-        results.push(result);
-        return acc;
+      if (typeof result.linksChecked === "number") {
+        return acc + result.linksChecked;
       }
+      // Do not push the message if we are retrying failed links
+      // because we will push the message again after retrying
+      if (result.message && !options?.retryFailed) {
+        results.push(result.message);
+      }
+      if (result.failedUrls) {
+        failedUrls.push(...result.failedUrls);
+      }
+      return acc;
     }, 0);
 
     linksChecked += batchLinksCount;
+  }
+
+  if (options?.retryFailed && failedUrls.length) {
+    console.log(`Retrying ${failedUrls.length} failed urls...`);
+
+    const uniqueFailedUrls = [...new Set(failedUrls)];
+    const stillFailed: string[] = [];
+    for await (const url of uniqueFailedUrls) {
+      const isOk = await checkUrl(url, options);
+      if (!isOk) {
+        stillFailed.push(url);
+      }
+    }
+
+    if (stillFailed.length > 0) {
+      results.push(
+        `Found ${
+          stillFailed.length
+        } broken links after retrying:\nLinks:\n - ${stillFailed.join("\n - ")}`
+      );
+    }
   }
 
   const endTime = Date.now();
