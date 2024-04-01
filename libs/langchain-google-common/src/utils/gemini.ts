@@ -179,20 +179,39 @@ function toolMessageToContent(message: ToolMessage): GeminiContent[] {
           },
           ""
         );
-  const content = JSON.parse(contentStr);
-  return [
-    {
-      role: "function",
-      parts: [
-        {
-          functionResponse: {
-            name: message.tool_call_id,
-            response: content,
+
+  try {
+    const content = JSON.parse(contentStr);
+    return [
+      {
+        role: "function",
+        parts: [
+          {
+            functionResponse: {
+              name: message.tool_call_id,
+              response: content,
+            },
           },
-        },
-      ],
-    },
-  ];
+        ],
+      },
+    ];
+  } catch (_) {
+    return [
+      {
+        role: "function",
+        parts: [
+          {
+            functionResponse: {
+              name: message.tool_call_id,
+              response: {
+                response: contentStr,
+              },
+            },
+          },
+        ],
+      },
+    ];
+  }
 }
 
 export function baseMessageToContent(message: BaseMessage): GeminiContent[] {
@@ -445,6 +464,17 @@ export function chunkToString(chunk: BaseMessageChunk): string {
 
 export function partToMessage(part: GeminiPart): BaseMessageChunk {
   const fields = partsToBaseMessageFields([part]);
+  if (typeof fields.content === "string") {
+    return new AIMessageChunk(fields);
+  } else if (fields.content.every((item) => item.type === "text")) {
+    const newContent = fields.content
+      .map((item) => ("text" in item ? item.text : ""))
+      .join("");
+    return new AIMessageChunk({
+      ...fields,
+      content: newContent,
+    });
+  }
   return new AIMessageChunk(fields);
 }
 
