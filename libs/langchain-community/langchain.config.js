@@ -18,6 +18,7 @@ export const config = {
     "convex/values",
     "@rockset/client/dist/codegen/api.js",
     "discord.js",
+    "duck-duck-scrape",
     "mysql2/promise",
     "web-auth-library/google",
     "firebase-admin/app",
@@ -33,6 +34,7 @@ export const config = {
     "tools/aws_sfn": "tools/aws_sfn",
     "tools/bingserpapi": "tools/bingserpapi",
     "tools/brave_search": "tools/brave_search",
+    "tools/duckduckgo_search": "tools/duckduckgo_search",
     "tools/calculator": "tools/calculator",
     "tools/connery": "tools/connery",
     "tools/dadjokeapi": "tools/dadjokeapi",
@@ -231,6 +233,7 @@ export const config = {
   requiresOptionalDependency: [
     "tools/aws_sfn",
     "tools/aws_lambda",
+    "tools/duckduckgo_search",
     "tools/discord",
     "tools/gmail",
     "tools/google_calendar",
