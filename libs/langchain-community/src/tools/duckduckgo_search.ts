@@ -1,12 +1,5 @@
-import { Tool } from "@langchain/core/tools";
+import { Tool, ToolParams } from "@langchain/core/tools";
 import { search, SearchOptions } from "duck-duck-scrape";
-
-/**
- * Class for interacting with the DuckDuckGoSearch engine
- * It extends the base Tool class and implements the _call method to
- * perform the retrieve operation.
- *
- */
 
 export {
   SafeSearchType,
@@ -14,38 +7,37 @@ export {
   SearchTimeType,
 } from "duck-duck-scrape";
 
-export interface DuckDuckGoSearchParameters {
+export interface DuckDuckGoSearchParameters extends ToolParams {
   /**
    * The search options for the search using the SearchOptions interface
    * from the duck-duck-scrape package.
-   * */
-
+   */
   searchOptions?: SearchOptions;
   /**
-   * @default 10
-   * The maximum number of results to return from the search. 
+   * The maximum number of results to return from the search.
    * Limiting to 10 to avoid context overload.
-   * */
+   * @default 10
+   */
   maxResults?: number;
 }
 
 const DEFAULT_MAX_RESULTS = 10;
 
+/**
+ * Class for interacting with the DuckDuckGo search engine
+ * It extends the base Tool class to perform retrieval.
+ */
 export class DuckDuckGoSearch extends Tool {
   private searchOptions?: SearchOptions;
 
-  private maxResults?: number;
+  private maxResults = DEFAULT_MAX_RESULTS;
 
-  constructor(params? : DuckDuckGoSearchParameters) {
-    super();
-    if (params) {
-      const { searchOptions, maxResults } = params;
+  constructor(params?: DuckDuckGoSearchParameters) {
+    super(params ?? {});
 
-      this.searchOptions = searchOptions;
-      this.maxResults = maxResults || DEFAULT_MAX_RESULTS;
-    } else {
-      this.maxResults = DEFAULT_MAX_RESULTS;
-    }
+    const { searchOptions, maxResults } = params ?? {};
+    this.searchOptions = searchOptions;
+    this.maxResults = maxResults || this.maxResults;
   }
 
   static lc_name() {
@@ -55,7 +47,7 @@ export class DuckDuckGoSearch extends Tool {
   name = "duckduckgo-search";
 
   description =
-    "a search engine. useful for when you need to answer questions about current events. input should be a search query.";
+    "A search engine. Useful for when you need to answer questions about current events. Input should be a search query.";
 
   async _call(input: string): Promise<string> {
     const { results } = await search(input, this.searchOptions);
