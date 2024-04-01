@@ -133,6 +133,7 @@ export function ensureConfig<CallOptions extends RunnableConfig>(
     metadata: {},
     callbacks: undefined,
     recursionLimit: 25,
+    runId: undefined,
   };
   if (loadedConfig) {
     empty = { ...empty, ...loadedConfig };
@@ -164,6 +165,7 @@ export function patchConfig<CallOptions extends RunnableConfig>(
     recursionLimit,
     runName,
     configurable,
+    runId,
   }: RunnableConfig = {}
 ): Partial<CallOptions> {
   const newConfig = ensureConfig(config);
@@ -186,6 +188,9 @@ export function patchConfig<CallOptions extends RunnableConfig>(
   }
   if (configurable !== undefined) {
     newConfig.configurable = { ...newConfig.configurable, ...configurable };
+  }
+  if (runId !== undefined) {
+    delete newConfig.runId;
   }
   return newConfig;
 }

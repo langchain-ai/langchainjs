@@ -103,12 +103,13 @@ export abstract class BaseRetriever<
     const runManager = await callbackManager_?.handleRetrieverStart(
       this.toJSON(),
       query,
-      undefined,
+      parsedConfig.runId,
       undefined,
       undefined,
       undefined,
       parsedConfig.runName
     );
+    delete parsedConfig.runId;
     try {
       const results = await this._getRelevantDocuments(query, runManager);
       await runManager?.handleRetrieverEnd(results);

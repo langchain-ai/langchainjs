@@ -185,13 +185,14 @@ export abstract class BaseChatModel<
       const runManagers = await callbackManager_?.handleChatModelStart(
         this.toJSON(),
         [messages],
-        undefined,
+        runnableConfig.runId,
         undefined,
         extra,
         undefined,
         undefined,
         runnableConfig.runName
       );
+      delete runnableConfig.runId;
       let generationChunk: ChatGenerationChunk | undefined;
       try {
         for await (const chunk of this._streamResponseChunks(
@@ -257,13 +258,15 @@ export abstract class BaseChatModel<
     const runManagers = await callbackManager_?.handleChatModelStart(
       this.toJSON(),
       baseMessages,
-      undefined,
+      handledOptions.runId,
       undefined,
       extra,
       undefined,
       undefined,
       handledOptions.runName
     );
+    // eslint-disable-next-line no-param-reassign
+    delete handledOptions.runId;
     // generate results
     const results = await Promise.allSettled(
       baseMessages.map((messageList, i) =>
@@ -354,13 +357,16 @@ export abstract class BaseChatModel<
     const runManagers = await callbackManager_?.handleChatModelStart(
       this.toJSON(),
       baseMessages,
-      undefined,
+      handledOptions.runId,
       undefined,
       extra,
       undefined,
       undefined,
       handledOptions.runName
     );
+
+    // eslint-disable-next-line no-param-reassign
+    delete handledOptions.runId;
 
     // generate results
     const missingPromptIndices: number[] = [];

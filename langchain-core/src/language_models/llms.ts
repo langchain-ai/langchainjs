@@ -140,13 +140,14 @@ export abstract class BaseLLM<
       const runManagers = await callbackManager_?.handleLLMStart(
         this.toJSON(),
         [prompt.toString()],
-        undefined,
+        runnableConfig.runId,
         undefined,
         extra,
         undefined,
         undefined,
         runnableConfig.runName
       );
+      delete runnableConfig.runId;
       let generation = new GenerationChunk({
         text: "",
       });
@@ -249,7 +250,8 @@ export abstract class BaseLLM<
   async _generateUncached(
     prompts: string[],
     parsedOptions: this["ParsedCallOptions"],
-    handledOptions: BaseCallbackConfig
+    handledOptions: BaseCallbackConfig,
+    runId: string | (string | undefined)[] | undefined = undefined,
   ): Promise<LLMResult> {
     const callbackManager_ = await CallbackManager.configure(
       handledOptions.callbacks,
@@ -265,6 +267,10 @@ export abstract class BaseLLM<
       invocation_params: this?.invocationParams(parsedOptions),
       batch_size: prompts.length,
     };
+    /**
+     * How to handle like in PY?
+     */
+    const _runIdList = BaseLLM._getRunIdsArray(runId, prompts);
     const runManagers = await callbackManager_?.handleLLMStart(
       this.toJSON(),
       prompts,
@@ -330,14 +336,15 @@ export abstract class BaseLLM<
     const runManagers = await callbackManager_?.handleLLMStart(
       this.toJSON(),
       prompts,
-      undefined,
+      handledOptions.runId,
       undefined,
       extra,
       undefined,
       undefined,
       handledOptions?.runName
     );
-
+    // eslint-disable-next-line no-param-reassign
+    delete handledOptions.runId;
     // generate results
     const missingPromptIndices: number[] = [];
     const results = await Promise.allSettled(
@@ -397,6 +404,19 @@ export abstract class BaseLLM<
     });
 
     return output;
+  }
+
+  static _getRunIdsArray(runId: string | (string | undefined)[] | undefined, prompts: string[]): (string | undefined)[] {
+    if (!runId) {
+      return Array(prompts.length).fill(undefined);
+    }
+    if (Array.isArray(runId)) {
+      if (runId.length !== prompts.length) {
+        throw new Error(`Number of manually provided runId's does not match batch length.\n${runId.length} !== ${prompts.length}`);
+      }
+      return runId;
+    }
+    return [runId, ...Array(prompts.length - 1).fill(null)];
   }
 
   /**
