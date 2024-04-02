@@ -119,3 +119,16 @@ import ChatVertexAIWSA from "@examples/models/chat/integration_googlevertexai-ws
 :::tip
 See the LangSmith trace for the example above [here](https://smith.langchain.com/public/41bbbddb-f357-4bfa-a111-def8294a4514/r).
 :::
+
+### VertexAI tools agent
+
+The Gemini family of models not only support tool calling, but can also be used in the OpenAI Tools agent.
+Here's an example:
+
+import AgentsExample from "@examples/models/chat/chat_mistralai_agents.ts";
+
+<CodeBlock language="typescript">{AgentsExample}</CodeBlock>
+
+:::tip
+See the LangSmith trace for the agent example above [here](https://smith.langchain.com/public/3294d553-c961-4088-acfe-62252ab17d9a/r).
+:::
