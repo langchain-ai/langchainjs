@@ -140,14 +140,13 @@ export abstract class BaseLLM<
       const runManagers = await callbackManager_?.handleLLMStart(
         this.toJSON(),
         [prompt.toString()],
-        runnableConfig.runId,
+        undefined,
         undefined,
         extra,
         undefined,
         undefined,
         runnableConfig.runName
       );
-      delete runnableConfig.runId;
       let generation = new GenerationChunk({
         text: "",
       });
@@ -250,8 +249,7 @@ export abstract class BaseLLM<
   async _generateUncached(
     prompts: string[],
     parsedOptions: this["ParsedCallOptions"],
-    handledOptions: BaseCallbackConfig,
-    runId: string | (string | undefined)[] | undefined = undefined
+    handledOptions: BaseCallbackConfig
   ): Promise<LLMResult> {
     const callbackManager_ = await CallbackManager.configure(
       handledOptions.callbacks,
@@ -267,10 +265,6 @@ export abstract class BaseLLM<
       invocation_params: this?.invocationParams(parsedOptions),
       batch_size: prompts.length,
     };
-    /**
-     * How to handle like in PY?
-     */
-    const _runIdList = BaseLLM._getRunIdsArray(runId, prompts);
     const runManagers = await callbackManager_?.handleLLMStart(
       this.toJSON(),
       prompts,
@@ -336,15 +330,14 @@ export abstract class BaseLLM<
     const runManagers = await callbackManager_?.handleLLMStart(
       this.toJSON(),
       prompts,
-      handledOptions.runId,
+      undefined,
       undefined,
       extra,
       undefined,
       undefined,
       handledOptions?.runName
     );
-    // eslint-disable-next-line no-param-reassign
-    delete handledOptions.runId;
+
     // generate results
     const missingPromptIndices: number[] = [];
     const results = await Promise.allSettled(
@@ -406,6 +399,9 @@ export abstract class BaseLLM<
     return output;
   }
 
+  /**
+   * @TODO implement inside generate methods.
+   */
   static _getRunIdsArray(
     runId: string | (string | undefined)[] | undefined,
     prompts: string[]
