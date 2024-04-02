@@ -265,8 +265,6 @@ export abstract class BaseChatModel<
       undefined,
       handledOptions.runName
     );
-    // eslint-disable-next-line no-param-reassign
-    delete handledOptions.runId;
     // generate results
     const results = await Promise.allSettled(
       baseMessages.map((messageList, i) =>

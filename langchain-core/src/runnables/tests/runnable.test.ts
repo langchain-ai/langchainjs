@@ -2,9 +2,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Run } from "langsmith";
+import { v4 as uuidv4 } from "uuid";
 import { jest } from "@jest/globals";
 import { createChatMessageChunkEncoderStream } from "../../language_models/chat_models.js";
-import { BaseMessage } from "../../messages/index.js";
+import { BaseMessage, HumanMessage } from "../../messages/index.js";
 import { OutputParserException } from "../../output_parsers/base.js";
 import { StringOutputParser } from "../../output_parsers/string.js";
 import {
@@ -24,6 +25,7 @@ import { RunnableSequence, RunnableLambda } from "../base.js";
 import { RouterRunnable } from "../router.js";
 import { RunnableConfig } from "../config.js";
 import { JsonOutputParser } from "../../output_parsers/json.js";
+import { BaseTracer } from "../../tracers/base.js";
 
 test("Test batch", async () => {
   const llm = new FakeLLM({});
@@ -411,3 +413,75 @@ test("Should aggregate properly", async () => {
   expect(chunks.length).toEqual(1);
   expect(chunks[0]).toEqual(["France", "Spain", "Japan"]);
 });
+
+class SingleRunExtractor extends BaseTracer {
+  runPromiseResolver: (run: Run) => void;
+
+  runPromise: Promise<Run>;
+
+  /** The name of the callback handler. */
+  name = "single_run_extractor";
+
+  constructor() {
+    super();
+    this.runPromise = new Promise<Run>((extract) => {
+      this.runPromiseResolver = extract;
+    });
+  }
+
+  async persistRun(run: Run) {
+    this.runPromiseResolver(run);
+  }
+
+  async extract(): Promise<Run> {
+    return this.runPromise;
+  }
+}
+
+describe("runId config", () => {
+  test("invoke", async () => {
+    const tracer = new SingleRunExtractor();
+    const llm = new FakeChatModel({});
+    const testId = uuidv4();
+    await llm.invoke("gg", {
+      callbacks: [tracer],
+      runId: testId
+    });
+    const run = await tracer.extract();
+    expect(run.id).toBe(testId)
+  });
+
+  test("batch", async () => {
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const tracer = new SingleRunExtractor();
+    const llm = new FakeChatModel({});
+    const message = new HumanMessage("hello world");
+    const testId = uuidv4();
+    const res = await llm.batch([[message], [message]], {
+      callbacks: [tracer],
+      runId: testId
+    });
+    const run = await tracer.extract();
+    expect(run.id).toBe(testId)
+    expect(res.length).toBe(2);
+    // .batch will warn if a runId is passed
+    // along with multiple messages
+    expect(console.warn).toBeCalled();
+  });
+
+  test("stream", async () => {
+    const tracer = new SingleRunExtractor();
+    const llm = new FakeStreamingLLM({});
+    const testId = uuidv4();
+    const stream = await llm.stream("gg", {
+      callbacks: [tracer],
+      runId: testId
+    });
+    for await (const _ of stream) {
+      // no-op
+    }
+    const run = await tracer.extract();
+    expect(run.id).toBe(testId)
+  });
+})

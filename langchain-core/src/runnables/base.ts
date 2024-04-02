@@ -181,13 +181,24 @@ export abstract class Runnable<
     options: Partial<O> | Partial<O>[],
     length = 0
   ): Partial<O>[] {
+    if (Array.isArray(options) && options.length !== length) {
+      throw new Error(
+        `Passed "options" must be an array with the same length as the inputs, but got ${options.length} options for ${length} inputs`
+      );
+    }
+
     if (Array.isArray(options)) {
-      if (options.length !== length) {
-        throw new Error(
-          `Passed "options" must be an array with the same length as the inputs, but got ${options.length} options for ${length} inputs`
-        );
-      }
       return options.map(ensureConfig);
+    }
+    if (length > 1 && !Array.isArray(options) && options.runId) {
+      console.warn("Provided runId will be used only for the first element of the batch.");
+      const subsequent = Object.fromEntries(
+        Object.entries(options).filter(([key]) => key !== 'runId')
+      );
+  
+      return Array.from({ length }, (_, i) =>
+        ensureConfig(i === 0 ? options : subsequent)
+      ) as Partial<O>[];  
     }
     return Array.from({ length }, () => ensureConfig(options));
   }
@@ -295,6 +306,7 @@ export abstract class Runnable<
         configurable: options.configurable,
         recursionLimit: options.recursionLimit,
         maxConcurrency: options.maxConcurrency,
+        runId: options.runId,
       });
     }
     const callOptions = { ...(options as Partial<CallOptions>) };
@@ -369,8 +381,8 @@ export abstract class Runnable<
       optionsList.map(getCallbackManagerForConfig)
     );
     const runManagers = await Promise.all(
-      callbackManagers.map((callbackManager, i) => {
-        const handleStartPromise = callbackManager?.handleChainStart(
+      callbackManagers.map(async (callbackManager, i) => {
+        const handleStartRes = await callbackManager?.handleChainStart(
           this.toJSON(),
           _coerceToDict(inputs[i], "input"),
           optionsList[i].runId,
@@ -380,7 +392,7 @@ export abstract class Runnable<
           optionsList[i].runName ?? this.getName()
         );
         delete optionsList[i].runId;
-        return handleStartPromise;
+        return handleStartRes;
       })
     );
     let outputs: (RunOutput | Error)[];
@@ -1525,8 +1537,8 @@ export class RunnableSequence<
       configList.map(getCallbackManagerForConfig)
     );
     const runManagers = await Promise.all(
-      callbackManagers.map((callbackManager, i) => {
-        const handleStartPromise = callbackManager?.handleChainStart(
+      callbackManagers.map(async (callbackManager, i) => {
+        const handleStartRes = await callbackManager?.handleChainStart(
           this.toJSON(),
           _coerceToDict(inputs[i], "input"),
           configList[i].runId,
@@ -1536,7 +1548,7 @@ export class RunnableSequence<
           configList[i].runName
         );
         delete configList[i].runId;
-        return handleStartPromise;
+        return handleStartRes;
       })
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -2143,8 +2155,8 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
       )
     );
     const runManagers = await Promise.all(
-      callbackManagers.map((callbackManager, i) => {
-        const handleStartPromise = callbackManager?.handleChainStart(
+      callbackManagers.map(async (callbackManager, i) => {
+        const handleStartRes = await callbackManager?.handleChainStart(
           this.toJSON(),
           _coerceToDict(inputs[i], "input"),
           configList[i].runId,
@@ -2154,7 +2166,7 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
           configList[i].runName
         );
         delete configList[i].runId;
-        return handleStartPromise;
+        return handleStartRes;
       })
     );
 
