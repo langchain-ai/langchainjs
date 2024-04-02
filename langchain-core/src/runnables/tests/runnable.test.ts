@@ -106,8 +106,7 @@ test("Callback order with transform streaming", async () => {
       {
         callbacks: [
           {
-            handleChainStart: (chain) =>
-              order.push(chain.id[chain.id.length - 1]),
+            handleChainStart: (chain) => order.push(chain.id[chain.id.length - 1]),
             handleLLMStart: (llm) => order.push(llm.id[llm.id.length - 1]),
           },
         ],
@@ -472,7 +471,7 @@ describe("runId config", () => {
 
   test("stream", async () => {
     const tracer = new SingleRunExtractor();
-    const llm = new FakeStreamingLLM({});
+    const llm = new FakeChatModel({});
     const testId = uuidv4();
     const stream = await llm.stream("gg", {
       callbacks: [tracer],
