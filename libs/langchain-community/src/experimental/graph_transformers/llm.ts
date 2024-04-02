@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { Document } from "@langchain/core/documents";
@@ -6,8 +7,7 @@ import {
   Node,
   Relationship,
   GraphDocument,
-} from "@langchain/community/graphs/graph_document";
-import { zodToJsonSchema } from "zod-to-json-schema";
+} from "../../graphs/graph_document.js";
 
 export const SYSTEM_PROMPT = `
 # Knowledge Graph Instructions for GPT-4\n

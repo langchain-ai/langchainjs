@@ -45,7 +45,8 @@
     "flat": "^5.0.2",
     "langsmith": "~0.1.1",
     "uuid": "^9.0.0",
-    "zod": "^3.22.3"
+    "zod": "^3.22.3",
+    "zod-to-json-schema": "^3.22.5"
   },
   "devDependencies": {
     "@aws-crypto/sha256-js": "^5.0.0",
