@@ -120,25 +120,25 @@ function createSchema(allowedNodes: string[], allowedRelationships: string[]) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapToBaseNode(node: any): Node {
-  return {
+  return new Node({
     id: node.id,
     type: node.type.replace(" ", "_").toUpperCase(),
-  };
+  });
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapToBaseRelationship(relationship: any): Relationship {
-  return {
-    source: {
+  return new Relationship({
+    source: new Node({
       id: relationship.sourceNodeId,
       type: relationship.sourceNodeType.replace(" ", "_").toUpperCase(),
-    },
-    target: {
+    }),
+    target: new Node({
       id: relationship.targetNodeId,
       type: relationship.targetNodeType.replace(" ", "_").toUpperCase(),
-    },
+    }),
     type: relationship.relationshipType.replace(" ", "_").toUpperCase(),
-  };
+  });
 }
 
 export interface LLMGraphTransformerProps {
@@ -188,7 +188,7 @@ export class LLMGraphTransformer {
    * @param document The document to process.
    * @returns A promise that resolves to a graph document.
    */
-  async processResponse(document: Document): GraphDocument {
+  async processResponse(document: Document) {
     const text = document.pageContent;
 
     const rawSchema = await this.chain.invoke({ input: text });
@@ -240,11 +240,11 @@ export class LLMGraphTransformer {
       }
     }
 
-    return {
+    return new GraphDocument({
       nodes,
       relationships,
       source: document,
-    };
+    });
   }
 
   /**

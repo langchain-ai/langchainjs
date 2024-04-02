@@ -1,6 +1,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
 import { LLMGraphTransformer } from "./llm.js";
+import { Node, Relationship } from "../../graphs/graph_document.js";
 
 test.skip("convertToGraphDocuments", async () => {
   const model = new ChatOpenAI({
@@ -40,17 +41,17 @@ test.skip("convertToGraphDocuments with allowed", async () => {
   expect(result).toEqual([
     {
       nodes: [
-        { id: "Elon Musk", type: "PERSON" },
-        { id: "OpenAI", type: "ORGANIZATION" },
+        new Node({ id: "Elon Musk", type: "PERSON" }),
+        new Node({ id: "OpenAI", type: "ORGANIZATION" }),
       ],
       relationships: [
-        {
-          source: { id: "Elon Musk", type: "PERSON" },
-          target: { id: "OpenAI", type: "ORGANIZATION" },
+        new Relationship({
+          source: new Node({ id: "Elon Musk", type: "PERSON" }),
+          target: new Node({ id: "OpenAI", type: "ORGANIZATION" }),
           type: "SUES",
-        },
+        }),
       ],
-      source: { pageContent: "Elon Musk is suing OpenAI", metadata: {} },
+      source: new Document({ pageContent: "Elon Musk is suing OpenAI", metadata: {} }),
     },
   ]);
 });
