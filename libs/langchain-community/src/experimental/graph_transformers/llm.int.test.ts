@@ -1,7 +1,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
 import { LLMGraphTransformer } from "./llm.js";
-import { Node, Relationship } from "../../graphs/graph_document.js";
+import { GraphDocument, Node, Relationship } from "../../graphs/graph_document.js";
 
 test.skip("convertToGraphDocuments", async () => {
   const model = new ChatOpenAI({
@@ -20,7 +20,7 @@ test.skip("convertToGraphDocuments", async () => {
   console.log(result);
 });
 
-test.skip("convertToGraphDocuments with allowed", async () => {
+test("convertToGraphDocuments with allowed", async () => {
   const model = new ChatOpenAI({
     temperature: 0,
     modelName: "gpt-4-turbo-preview",
@@ -39,7 +39,7 @@ test.skip("convertToGraphDocuments with allowed", async () => {
   console.log(JSON.stringify(result));
 
   expect(result).toEqual([
-    {
+    new GraphDocument({
       nodes: [
         new Node({ id: "Elon Musk", type: "PERSON" }),
         new Node({ id: "OpenAI", type: "ORGANIZATION" }),
@@ -52,6 +52,6 @@ test.skip("convertToGraphDocuments with allowed", async () => {
         }),
       ],
       source: new Document({ pageContent: "Elon Musk is suing OpenAI", metadata: {} }),
-    },
+    }),
   ]);
 });

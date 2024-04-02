@@ -203,39 +203,17 @@ export class LLMGraphTransformer {
       relationships = rawSchema.relationships.map(mapToBaseRelationship);
     }
 
-    if (
-      this.strictMode &&
-      (this.allowedNodes.length > 0 || this.allowedRelationships.length > 0)
-    ) {
-      if (
-        this.allowedNodes.length > 0 &&
-        this.allowedRelationships.length > 0
-      ) {
-        nodes = nodes.filter((node) => this.allowedNodes.includes(node.type));
-        relationships = relationships.filter(
-          (rel) =>
-            this.allowedRelationships.includes(rel.type) &&
-            this.allowedNodes.includes(rel.source.type) &&
-            this.allowedNodes.includes(rel.target.type)
-        );
-      } else if (
-        this.allowedNodes.length > 0 &&
-        this.allowedRelationships.length === 0
-      ) {
-        nodes = nodes.filter((node) => this.allowedNodes.includes(node.type));
-        relationships = relationships.filter(
-          (rel) =>
-            this.allowedNodes.includes(rel.source.type) &&
-            this.allowedNodes.includes(rel.target.type)
+    if (this.strictMode && (this.allowedNodes.length > 0 || this.allowedRelationships.length > 0)) {
+      if (this.allowedNodes.length > 0) {
+        nodes = nodes.filter(node => this.allowedNodes.includes(node.type));
+        relationships = relationships.filter(rel =>
+          this.allowedNodes.includes(rel.source.type) &&
+          this.allowedNodes.includes(rel.target.type),
         );
       }
-
-      if (
-        this.allowedNodes.length === 0 &&
-        this.allowedRelationships.length > 0
-      ) {
-        relationships = relationships.filter((rel) =>
-          this.allowedRelationships.includes(rel.type)
+      if (this.allowedRelationships.length > 0) {
+        relationships = relationships.filter(rel =>
+          this.allowedRelationships.includes(rel.type),
         );
       }
     }
