@@ -133,15 +133,27 @@ export class AzureOpenAI<
       (getEnvironmentVariable("AZURE_OPENAI_API_KEY") ||
         getEnvironmentVariable("OPENAI_API_KEY"));
 
+    const azureCredential =
+      fields?.credentials ??
+      (fields?.azureOpenAIApiKey ||
+      getEnvironmentVariable("AZURE_OPENAI_API_KEY")
+        ? new AzureKeyCredential(this.azureOpenAIApiKey ?? "")
+        : new OpenAIKeyCredential(this.azureOpenAIApiKey ?? ""));
+
+    const isOpenAIApiKey =
+      fields?.azureOpenAIApiKey ||
+      // eslint-disable-next-line no-instanceof/no-instanceof
+      azureCredential instanceof OpenAIKeyCredential;
+
     if (!this.azureOpenAIApiKey && !fields?.credentials) {
       throw new Error("Azure OpenAI API key not found");
     }
 
-    if (!this.azureOpenAIEndpoint) {
+    if (!this.azureOpenAIEndpoint && !isOpenAIApiKey) {
       throw new Error("Azure OpenAI Endpoint not found");
     }
 
-    if (!this.azureOpenAIApiDeploymentName) {
+    if (!this.azureOpenAIApiDeploymentName && !isOpenAIApiKey) {
       throw new Error("Azure OpenAI Deployment name not found");
     }
 
@@ -166,28 +178,25 @@ export class AzureOpenAI<
       throw new Error("Cannot stream results when bestOf > 1");
     }
 
-    const azureCredential =
-      fields?.credentials ??
-      (fields?.azureOpenAIApiKey ||
-      getEnvironmentVariable("AZURE_OPENAI_API_KEY")
-        ? new AzureKeyCredential(this.azureOpenAIApiKey ?? "")
-        : new OpenAIKeyCredential(this.azureOpenAIApiKey ?? ""));
+    const options = {
+      userAgentOptions: { userAgentPrefix: USER_AGENT_PREFIX },
+    };
 
-    if (isTokenCredential(azureCredential)) {
+    if (isOpenAIApiKey) {
+      this.client = new AzureOpenAIClient(
+        azureCredential as OpenAIKeyCredential
+      );
+    } else if (isTokenCredential(azureCredential)) {
       this.client = new AzureOpenAIClient(
         this.azureOpenAIEndpoint ?? "",
         azureCredential as TokenCredential,
-        {
-          userAgentOptions: { userAgentPrefix: USER_AGENT_PREFIX },
-        }
+        options
       );
     } else {
       this.client = new AzureOpenAIClient(
         this.azureOpenAIEndpoint ?? "",
         azureCredential as KeyCredential,
-        {
-          userAgentOptions: { userAgentPrefix: USER_AGENT_PREFIX },
-        }
+        options
       );
     }
   }
@@ -197,11 +206,7 @@ export class AzureOpenAI<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<GenerationChunk> {
-    if (!this.azureOpenAIApiDeploymentName) {
-      throw new Error("Azure OpenAI Completion Deployment name not found");
-    }
-
-    const deploymentName = this.azureOpenAIApiDeploymentName;
+    const deploymentName = this.azureOpenAIApiDeploymentName || this.modelName;
 
     const stream = await this.caller.call(() =>
       this.client.streamCompletions(deploymentName, [input], {
@@ -251,11 +256,7 @@ export class AzureOpenAI<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult> {
-    if (!this.azureOpenAIApiDeploymentName) {
-      throw new Error("Azure OpenAI Completion Deployment name not found");
-    }
-
-    const deploymentName = this.azureOpenAIApiDeploymentName;
+    const deploymentName = this.azureOpenAIApiDeploymentName || this.modelName;
 
     if (this.maxTokens === -1) {
       if (prompts.length !== 1) {

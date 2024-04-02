@@ -9037,7 +9037,7 @@ __metadata:
     google-auth-library: ^8.9.0
     googleapis: ^126.0.1
     graphql: ^16.6.0
-    hnswlib-node: ^1.4.2
+    hnswlib-node: ^3.0.0
     html-to-text: ^9.0.5
     interface-datastore: ^8.2.11
     ioredis: ^5.3.2
@@ -9421,7 +9421,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-common@workspace:*, @langchain/google-common@workspace:libs/langchain-google-common, @langchain/google-common@~0.0.2":
+"@langchain/google-common@workspace:*, @langchain/google-common@workspace:libs/langchain-google-common, @langchain/google-common@~0.0.3":
   version: 0.0.0-use.local
   resolution: "@langchain/google-common@workspace:libs/langchain-google-common"
   dependencies:
@@ -9453,13 +9453,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-gauth@workspace:libs/langchain-google-gauth, @langchain/google-gauth@~0.0.1":
+"@langchain/google-gauth@workspace:libs/langchain-google-gauth, @langchain/google-gauth@~0.0.2":
   version: 0.0.0-use.local
   resolution: "@langchain/google-gauth@workspace:libs/langchain-google-gauth"
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.1
-    "@langchain/google-common": ~0.0.2
+    "@langchain/google-common": ~0.0.3
     "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9523,7 +9523,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.1
-    "@langchain/google-webauth": ~0.0.1
+    "@langchain/google-webauth": ~0.0.2
     "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9554,7 +9554,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.1
-    "@langchain/google-gauth": ~0.0.1
+    "@langchain/google-gauth": ~0.0.2
     "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9579,13 +9579,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-webauth@workspace:libs/langchain-google-webauth, @langchain/google-webauth@~0.0.1":
+"@langchain/google-webauth@workspace:libs/langchain-google-webauth, @langchain/google-webauth@~0.0.2":
   version: 0.0.0-use.local
   resolution: "@langchain/google-webauth@workspace:libs/langchain-google-webauth"
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.1
-    "@langchain/google-common": ~0.0.2
+    "@langchain/google-common": ~0.0.3
     "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9783,7 +9783,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1
     "@langchain/scripts": ~0.0
-    "@pinecone-database/pinecone": ^2.0.0
+    "@pinecone-database/pinecone": ^2.2.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -10748,15 +10748,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pinecone-database/pinecone@npm:^2.0.0":
-  version: 2.0.1
-  resolution: "@pinecone-database/pinecone@npm:2.0.1"
+"@pinecone-database/pinecone@npm:^2.2.0":
+  version: 2.2.0
+  resolution: "@pinecone-database/pinecone@npm:2.2.0"
   dependencies:
     "@sinclair/typebox": ^0.29.0
     ajv: ^8.12.0
     cross-fetch: ^3.1.5
     encoding: ^0.1.13
-  checksum: 43ece04cd66a597281a92d189561bd8eed133a541c32c9d2f8a7c10b2b6c899eeaaf3c7a14387ba62e05f0fa5c441bd3588a9a6c36dddd265699587a9eea8cd1
+  checksum: c1844eaa716746a3895871499cbf3fa6ecf20deb0b236999d28285cfb9b438fb053fb41a4c9c17f96b28f0dab9c09be59308476a1534d4a8f35518b761a1a148
   languageName: node
   linkType: hard
 
@@ -21647,7 +21647,7 @@ __metadata:
     "@langchain/weaviate": "workspace:*"
     "@langchain/yandex": "workspace:*"
     "@opensearch-project/opensearch": ^2.2.0
-    "@pinecone-database/pinecone": ^2.0.0
+    "@pinecone-database/pinecone": ^2.2.0
     "@planetscale/database": ^1.8.0
     "@prisma/client": ^4.11.0
     "@raycast/api": ^1.55.2
@@ -23784,6 +23784,17 @@ __metadata:
     node-addon-api: ^6.0.0
     node-gyp: latest
   checksum: 3beb3533a562ef9e6614228391dcbc2c98626ac4acf04638afb2703d4b4cd804e883c31102937ea013c68b6b52a520beb220213da57531d18b394d29540dca07
+  languageName: node
+  linkType: hard
+
+"hnswlib-node@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "hnswlib-node@npm:3.0.0"
+  dependencies:
+    bindings: ^1.5.0
+    node-addon-api: ^8.0.0
+    node-gyp: latest
+  checksum: 539a12581cae4efc99d0bfb36a6413a17021b68601c2ea47628ac40fd431b6fc01a259392e6fd997f2ca47b18194fd6985017a8714c99c390880e53e5f8dc622
   languageName: node
   linkType: hard
 
@@ -28540,6 +28551,15 @@ __metadata:
   dependencies:
     node-gyp: latest
   checksum: 4349465d737e284b280fc0e5fd2384f9379bca6b7f2a5a1460bea676ba5b90bf563e7d02a9254c35b9ed808641c81d9b4ca9e1da17d2849cd07727660b00b332
+  languageName: node
+  linkType: hard
+
+"node-addon-api@npm:^8.0.0":
+  version: 8.0.0
+  resolution: "node-addon-api@npm:8.0.0"
+  dependencies:
+    node-gyp: latest
+  checksum: 4996f919b40125b435beff2744a43d846e649421f97321c58a7e205c125514b2bb0f5b299291876fdbcecb47ecf06e507e9f59d2848b6e495abf99fe585e8a47
   languageName: node
   linkType: hard
 
