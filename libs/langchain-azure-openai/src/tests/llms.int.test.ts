@@ -6,6 +6,7 @@ import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { ClientSecretCredential } from "@azure/identity";
 import { TokenCredential } from "@azure/core-auth";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { OpenAIKeyCredential } from "@azure/openai";
 import { AzureOpenAI } from "../llms.js";
 
 test("Test OpenAI", async () => {
@@ -321,6 +322,21 @@ test("Test OpenAI with Token credentials ", async () => {
     maxTokens: 5,
     modelName: "gpt-3.5-turbo-instruct",
     credentials,
+  });
+  const res = await model.invoke("Print hello world");
+  console.log({ res });
+});
+
+test("Test OpenAI with OpenAI API key credentials ", async () => {
+  const openAiKey: string = getEnvironmentVariable("OPENAI_API_KEY") ?? "";
+  const credentials = new OpenAIKeyCredential(openAiKey);
+
+  const model = new AzureOpenAI({
+    maxTokens: 5,
+    modelName: "davinci-002",
+    credentials,
+    azureOpenAIEndpoint: "",
+    azureOpenAIApiDeploymentName: "",
   });
   const res = await model.invoke("Print hello world");
   console.log({ res });
