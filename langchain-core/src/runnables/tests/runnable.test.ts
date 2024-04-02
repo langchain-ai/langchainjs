@@ -106,7 +106,8 @@ test("Callback order with transform streaming", async () => {
       {
         callbacks: [
           {
-            handleChainStart: (chain) => order.push(chain.id[chain.id.length - 1]),
+            handleChainStart: (chain) =>
+              order.push(chain.id[chain.id.length - 1]),
             handleLLMStart: (llm) => order.push(llm.id[llm.id.length - 1]),
           },
         ],
