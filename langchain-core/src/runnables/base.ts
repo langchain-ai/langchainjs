@@ -191,14 +191,16 @@ export abstract class Runnable<
       return options.map(ensureConfig);
     }
     if (length > 1 && !Array.isArray(options) && options.runId) {
-      console.warn("Provided runId will be used only for the first element of the batch.");
-      const subsequent = Object.fromEntries(
-        Object.entries(options).filter(([key]) => key !== 'runId')
+      console.warn(
+        "Provided runId will be used only for the first element of the batch."
       );
-  
+      const subsequent = Object.fromEntries(
+        Object.entries(options).filter(([key]) => key !== "runId")
+      );
+
       return Array.from({ length }, (_, i) =>
         ensureConfig(i === 0 ? options : subsequent)
-      ) as Partial<O>[];  
+      ) as Partial<O>[];
     }
     return Array.from({ length }, () => ensureConfig(options));
   }

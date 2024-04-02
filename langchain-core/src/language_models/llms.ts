@@ -251,7 +251,7 @@ export abstract class BaseLLM<
     prompts: string[],
     parsedOptions: this["ParsedCallOptions"],
     handledOptions: BaseCallbackConfig,
-    runId: string | (string | undefined)[] | undefined = undefined,
+    runId: string | (string | undefined)[] | undefined = undefined
   ): Promise<LLMResult> {
     const callbackManager_ = await CallbackManager.configure(
       handledOptions.callbacks,
@@ -406,13 +406,18 @@ export abstract class BaseLLM<
     return output;
   }
 
-  static _getRunIdsArray(runId: string | (string | undefined)[] | undefined, prompts: string[]): (string | undefined)[] {
+  static _getRunIdsArray(
+    runId: string | (string | undefined)[] | undefined,
+    prompts: string[]
+  ): (string | undefined)[] {
     if (!runId) {
       return Array(prompts.length).fill(undefined);
     }
     if (Array.isArray(runId)) {
       if (runId.length !== prompts.length) {
-        throw new Error(`Number of manually provided runId's does not match batch length.\n${runId.length} !== ${prompts.length}`);
+        throw new Error(
+          `Number of manually provided runId's does not match batch length.\n${runId.length} !== ${prompts.length}`
+        );
       }
       return runId;
     }

@@ -445,14 +445,14 @@ describe("runId config", () => {
     const testId = uuidv4();
     await llm.invoke("gg", {
       callbacks: [tracer],
-      runId: testId
+      runId: testId,
     });
     const run = await tracer.extract();
-    expect(run.id).toBe(testId)
+    expect(run.id).toBe(testId);
   });
 
   test("batch", async () => {
-    jest.spyOn(console, 'warn').mockImplementation(() => {});
+    jest.spyOn(console, "warn").mockImplementation(() => {});
 
     const tracer = new SingleRunExtractor();
     const llm = new FakeChatModel({});
@@ -460,10 +460,10 @@ describe("runId config", () => {
     const testId = uuidv4();
     const res = await llm.batch([[message], [message]], {
       callbacks: [tracer],
-      runId: testId
+      runId: testId,
     });
     const run = await tracer.extract();
-    expect(run.id).toBe(testId)
+    expect(run.id).toBe(testId);
     expect(res.length).toBe(2);
     // .batch will warn if a runId is passed
     // along with multiple messages
@@ -476,12 +476,12 @@ describe("runId config", () => {
     const testId = uuidv4();
     const stream = await llm.stream("gg", {
       callbacks: [tracer],
-      runId: testId
+      runId: testId,
     });
     for await (const _ of stream) {
       // no-op
     }
     const run = await tracer.extract();
-    expect(run.id).toBe(testId)
+    expect(run.id).toBe(testId);
   });
-})
+});

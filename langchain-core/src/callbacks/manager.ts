@@ -557,7 +557,7 @@ export class CallbackManager
     extraParams: Record<string, unknown> | undefined = undefined,
     _tags: string[] | undefined = undefined,
     _metadata: Record<string, unknown> | undefined = undefined,
-    runName: string | undefined = undefined,
+    runName: string | undefined = undefined
   ): Promise<CallbackManagerForLLMRun[]> {
     return Promise.all(
       prompts.map(async (prompt, idx) => {
@@ -611,7 +611,7 @@ export class CallbackManager
     extraParams: Record<string, unknown> | undefined = undefined,
     _tags: string[] | undefined = undefined,
     _metadata: Record<string, unknown> | undefined = undefined,
-    runName: string | undefined = undefined,
+    runName: string | undefined = undefined
   ): Promise<CallbackManagerForLLMRun[]> {
     return Promise.all(
       messages.map(async (messageGroup, idx) => {
