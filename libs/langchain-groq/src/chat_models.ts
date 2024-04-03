@@ -16,6 +16,7 @@ import {
   HumanMessageChunk,
   SystemMessageChunk,
   ToolCall,
+  ToolMessage,
 } from "@langchain/core/messages";
 import {
   ChatGeneration,
@@ -85,6 +86,11 @@ export interface ChatGroqInput extends BaseChatModelParams {
    * @default 0.7
    */
   temperature?: number;
+  /**
+   * The maximum number of tokens that the model can process in a single response.
+   * This limits ensures computational efficiency and resource management.
+   */
+  maxTokens?: number;
 }
 
 type GroqRoleEnum = "system" | "assistant" | "user" | "function";
@@ -106,6 +112,9 @@ export function messageToGroqRole(message: BaseMessage): GroqRoleEnum {
       return "user";
     case "function":
       return "function";
+    case "tool":
+      // Not yet supported as a type
+      return "tool" as GroqRoleEnum;
     default:
       throw new Error(`Unknown message type: ${type}`);
   }
@@ -123,6 +132,8 @@ function convertMessagesToGroqParams(
       content: message.content,
       name: message.name,
       function_call: message.additional_kwargs.function_call,
+      tool_calls: message.additional_kwargs.tool_calls,
+      tool_call_id: (message as ToolMessage).tool_call_id,
     };
   });
 }
@@ -201,6 +212,8 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
 
   stop?: string[];
 
+  maxTokens?: number;
+
   streaming = false;
 
   static lc_name() {
@@ -238,6 +251,7 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
     this.streaming = fields?.streaming ?? this.streaming;
     this.stop =
       (typeof fields?.stop === "string" ? [fields.stop] : fields?.stop) ?? [];
+    this.maxTokens = fields?.maxTokens;
   }
 
   async completionWithRetry(
@@ -277,57 +291,77 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
       stop: options.stop ?? this.stop,
       model: this.modelName,
       temperature: this.temperature,
+      max_tokens: this.maxTokens,
     };
   }
 
-  async *_streamResponseChunks(
+  override async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const params = this.invocationParams(options);
     const messagesMapped = convertMessagesToGroqParams(messages);
-    const response = await this.completionWithRetry(
-      {
-        ...params,
-        messages: messagesMapped,
-        stream: true,
-      },
-      {
-        signal: options?.signal,
-        headers: options?.headers,
+    if (options.tools !== undefined && options.tools.length > 0) {
+      const result = await this._generateNonStreaming(
+        messages,
+        options,
+        runManager
+      );
+      const generationMessage = result.generations[0].message;
+      if (
+        generationMessage === undefined ||
+        typeof generationMessage.content !== "string"
+      ) {
+        throw new Error("Could not parse Groq output.");
       }
-    );
-    for await (const data of response) {
-      const choice = data?.choices[0];
-      if (!choice) {
-        continue;
-      }
-      const chunk = new ChatGenerationChunk({
-        message: _convertDeltaToMessageChunk(choice.delta ?? {}),
-        text: choice.delta.content ?? "",
-        generationInfo: {
-          finishReason: choice.finish_reason,
-        },
+      yield new ChatGenerationChunk({
+        message: new AIMessageChunk({
+          content: generationMessage.content,
+          additional_kwargs: generationMessage.additional_kwargs,
+        }),
+        text: generationMessage.content,
       });
-      yield chunk;
-      void runManager?.handleLLMNewToken(chunk.text ?? "");
-    }
-    if (options.signal?.aborted) {
-      throw new Error("AbortError");
+    } else {
+      const response = await this.completionWithRetry(
+        {
+          ...params,
+          messages: messagesMapped,
+          stream: true,
+        },
+        {
+          signal: options?.signal,
+          headers: options?.headers,
+        }
+      );
+      for await (const data of response) {
+        const choice = data?.choices[0];
+        if (!choice) {
+          continue;
+        }
+        const chunk = new ChatGenerationChunk({
+          message: _convertDeltaToMessageChunk(choice.delta ?? {}),
+          text: choice.delta.content ?? "",
+          generationInfo: {
+            finishReason: choice.finish_reason,
+          },
+        });
+        yield chunk;
+        void runManager?.handleLLMNewToken(chunk.text ?? "");
+      }
+      if (options.signal?.aborted) {
+        throw new Error("AbortError");
+      }
     }
   }
 
-  async _generate(
+  override async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
-    const tokenUsage: TokenUsage = {};
-    const params = this.invocationParams(options);
-    const messagesMapped = convertMessagesToGroqParams(messages);
-
     if (this.streaming) {
+      const tokenUsage: TokenUsage = {};
       const stream = this._streamResponseChunks(messages, options, runManager);
       const finalChunks: Record<number, ChatGenerationChunk> = {};
       for await (const chunk of stream) {
@@ -345,66 +379,75 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
 
       return { generations, llmOutput: { estimatedTokenUsage: tokenUsage } };
     } else {
-      const data = await this.completionWithRetry(
-        {
-          ...params,
-          stream: false,
-          messages: messagesMapped,
-        },
-        {
-          signal: options?.signal,
-          headers: options?.headers,
-        }
-      );
-
-      if ("usage" in data && data.usage) {
-        const {
-          completion_tokens: completionTokens,
-          prompt_tokens: promptTokens,
-          total_tokens: totalTokens,
-        } = data.usage as ChatCompletion.Usage;
-
-        if (completionTokens) {
-          tokenUsage.completionTokens =
-            (tokenUsage.completionTokens ?? 0) + completionTokens;
-        }
-
-        if (promptTokens) {
-          tokenUsage.promptTokens =
-            (tokenUsage.promptTokens ?? 0) + promptTokens;
-        }
-
-        if (totalTokens) {
-          tokenUsage.totalTokens = (tokenUsage.totalTokens ?? 0) + totalTokens;
-        }
-      }
-
-      const generations: ChatGeneration[] = [];
-
-      if ("choices" in data && data.choices) {
-        for (const part of (data as ChatCompletion).choices) {
-          const text = part.message?.content ?? "";
-          const generation: ChatGeneration = {
-            text,
-            message: groqResponseToChatMessage(
-              part.message ?? { role: "assistant" }
-            ),
-          };
-          generation.generationInfo = {
-            ...(part.finish_reason
-              ? { finish_reason: part.finish_reason }
-              : {}),
-            ...(part.logprobs ? { logprobs: part.logprobs } : {}),
-          };
-          generations.push(generation);
-        }
-      }
-
-      return {
-        generations,
-        llmOutput: { tokenUsage },
-      };
+      return this._generateNonStreaming(messages, options, runManager);
     }
+  }
+
+  async _generateNonStreaming(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): Promise<ChatResult> {
+    const tokenUsage: TokenUsage = {};
+    const params = this.invocationParams(options);
+    const messagesMapped = convertMessagesToGroqParams(messages);
+
+    const data = await this.completionWithRetry(
+      {
+        ...params,
+        stream: false,
+        messages: messagesMapped,
+      },
+      {
+        signal: options?.signal,
+        headers: options?.headers,
+      }
+    );
+
+    if ("usage" in data && data.usage) {
+      const {
+        completion_tokens: completionTokens,
+        prompt_tokens: promptTokens,
+        total_tokens: totalTokens,
+      } = data.usage as ChatCompletion.Usage;
+
+      if (completionTokens) {
+        tokenUsage.completionTokens =
+          (tokenUsage.completionTokens ?? 0) + completionTokens;
+      }
+
+      if (promptTokens) {
+        tokenUsage.promptTokens = (tokenUsage.promptTokens ?? 0) + promptTokens;
+      }
+
+      if (totalTokens) {
+        tokenUsage.totalTokens = (tokenUsage.totalTokens ?? 0) + totalTokens;
+      }
+    }
+
+    const generations: ChatGeneration[] = [];
+
+    if ("choices" in data && data.choices) {
+      for (const part of (data as ChatCompletion).choices) {
+        const text = part.message?.content ?? "";
+        const generation: ChatGeneration = {
+          text,
+          message: groqResponseToChatMessage(
+            part.message ?? { role: "assistant" }
+          ),
+        };
+        generation.generationInfo = {
+          ...(part.finish_reason ? { finish_reason: part.finish_reason } : {}),
+          ...(part.logprobs ? { logprobs: part.logprobs } : {}),
+        };
+        generations.push(generation);
+      }
+    }
+
+    return {
+      generations,
+      llmOutput: { tokenUsage },
+    };
   }
 
   withStructuredOutput<
