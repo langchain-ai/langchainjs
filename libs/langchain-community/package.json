@@ -2226,6 +2226,15 @@
       "import": "./utils/cassandra.js",
       "require": "./utils/cassandra.cjs"
     },
+    "./experimental/graph_transformers/llm": {
+      "types": {
+        "import": "./experimental/graph_transformers/llm.d.ts",
+        "require": "./experimental/graph_transformers/llm.d.cts",
+        "default": "./experimental/graph_transformers/llm.d.ts"
+      },
+      "import": "./experimental/graph_transformers/llm.js",
+      "require": "./experimental/graph_transformers/llm.cjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -2973,6 +2982,10 @@
     "utils/cassandra.cjs",
     "utils/cassandra.js",
     "utils/cassandra.d.ts",
-    "utils/cassandra.d.cts"
+    "utils/cassandra.d.cts",
+    "experimental/graph_transformers/llm.cjs",
+    "experimental/graph_transformers/llm.js",
+    "experimental/graph_transformers/llm.d.ts",
+    "experimental/graph_transformers/llm.d.cts"
   ]
 }

@@ -229,6 +229,7 @@ export const config = {
     "util/convex": "utils/convex",
     "utils/event_source_parse": "utils/event_source_parse",
     "utils/cassandra": "utils/cassandra",
+    "experimental/graph_transformers/llm": "experimental/graph_transformers/llm",
   },
   requiresOptionalDependency: [
     "tools/aws_sfn",

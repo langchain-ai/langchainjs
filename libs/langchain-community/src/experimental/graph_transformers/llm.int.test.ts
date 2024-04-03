@@ -1,7 +1,11 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
 import { LLMGraphTransformer } from "./llm.js";
-import { GraphDocument, Node, Relationship } from "../../graphs/graph_document.js";
+import {
+  GraphDocument,
+  Node,
+  Relationship,
+} from "../../graphs/graph_document.js";
 
 test.skip("convertToGraphDocuments", async () => {
   const model = new ChatOpenAI({
@@ -51,7 +55,10 @@ test("convertToGraphDocuments with allowed", async () => {
           type: "SUES",
         }),
       ],
-      source: new Document({ pageContent: "Elon Musk is suing OpenAI", metadata: {} }),
+      source: new Document({
+        pageContent: "Elon Musk is suing OpenAI",
+        metadata: {},
+      }),
     }),
   ]);
 });
