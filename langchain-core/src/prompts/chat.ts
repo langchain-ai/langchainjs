@@ -686,6 +686,23 @@ function _coerceMessagePromptTemplateLike(
   ) {
     return messagePromptTemplateLike;
   }
+  if (
+    Array.isArray(messagePromptTemplateLike) &&
+    messagePromptTemplateLike[0] === "placeholder"
+  ) {
+    const messageContent = messagePromptTemplateLike[1];
+    if (
+      typeof messageContent !== "string" ||
+      messageContent[0] !== "{" ||
+      messageContent[messageContent.length - 1] !== "}"
+    ) {
+      throw new Error(
+        `Invalid placeholder template: "${messagePromptTemplateLike[1]}". Expected a variable name surrounded by curly braces.`
+      );
+    }
+    const variableName = messageContent.slice(1, -1);
+    return new MessagesPlaceholder({ variableName, optional: true });
+  }
   const message = coerceMessageLikeToMessage(messagePromptTemplateLike);
   if (message._getType() === "human") {
     return HumanMessagePromptTemplate.fromTemplate(message.content);

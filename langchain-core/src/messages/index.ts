@@ -630,7 +630,12 @@ export class ChatMessage
 
 export type BaseMessageLike =
   | BaseMessage
-  | [StringWithAutocomplete<MessageType | "user" | "assistant">, MessageContent]
+  | [
+      StringWithAutocomplete<
+        MessageType | "user" | "assistant" | "placeholder"
+      >,
+      MessageContent
+    ]
   | string;
 
 export function isBaseMessage(

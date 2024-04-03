@@ -1,0 +1,47 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# DuckDuckGoSearch
+
+DuckDuckGoSearch offers a privacy-focused search API designed for LLM Agents. It provides seamless integration with a wide range of data sources, prioritizing user privacy and relevant search results.
+
+## Setup
+
+Install the `@langchain/community` package, along with the `duck-duck-scrape` dependency:
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/community
+```
+
+```bash npm2yarn
+npm install duck-duck-scrape
+```
+
+## Usage
+
+You can call `.invoke` on `DuckDuckGoSearch` to search for a query:
+
+import SimpleQueryExample from "@examples/tools/duckduckgo_search_simple.ts";
+
+<CodeBlock language="typescript">{SimpleQueryExample}</CodeBlock>
+
+:::tip
+See the LangSmith trace [here](https://smith.langchain.com/public/c352faaf-e617-4779-a943-96f963dc19a5/r)
+:::
+
+### With an agent
+
+import ToolExample from "@examples/tools/duckduckgo_search_agent.ts";
+
+<CodeBlock language="typescript">{ToolExample}</CodeBlock>
+
+:::tip
+See the LangSmith trace for the Agent example [here](https://smith.langchain.com/public/48f84a32-4fb5-4863-a8cd-324abebfce91/r)
+:::

@@ -131,6 +131,7 @@
     "dotenv": "^16.0.3",
     "dpdm": "^3.12.0",
     "dria": "^0.0.3",
+    "duck-duck-scrape": "^2.2.5",
     "eslint": "^8.33.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^8.6.0",
@@ -237,6 +238,7 @@
     "couchbase": "^4.3.0",
     "discord.js": "^14.14.1",
     "dria": "^0.0.3",
+    "duck-duck-scrape": "^2.2.5",
     "faiss-node": "^0.5.1",
     "firebase-admin": "^11.9.0 || ^12.0.0",
     "google-auth-library": "^8.9.0",
@@ -445,6 +447,9 @@
     "dria": {
       "optional": true
     },
+    "duck-duck-scrape": {
+      "optional": true
+    },
     "faiss-node": {
       "optional": true
     },
@@ -608,6 +613,15 @@
       },
       "import": "./tools/brave_search.js",
       "require": "./tools/brave_search.cjs"
+    },
+    "./tools/duckduckgo_search": {
+      "types": {
+        "import": "./tools/duckduckgo_search.d.ts",
+        "require": "./tools/duckduckgo_search.d.cts",
+        "default": "./tools/duckduckgo_search.d.ts"
+      },
+      "import": "./tools/duckduckgo_search.js",
+      "require": "./tools/duckduckgo_search.cjs"
     },
     "./tools/calculator": {
       "types": {
@@ -2243,6 +2257,10 @@
     "tools/brave_search.js",
     "tools/brave_search.d.ts",
     "tools/brave_search.d.cts",
+    "tools/duckduckgo_search.cjs",
+    "tools/duckduckgo_search.js",
+    "tools/duckduckgo_search.d.ts",
+    "tools/duckduckgo_search.d.cts",
     "tools/calculator.cjs",
     "tools/calculator.js",
     "tools/calculator.d.ts",
