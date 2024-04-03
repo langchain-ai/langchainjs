@@ -26,6 +26,10 @@ tools/brave_search.cjs
 tools/brave_search.js
 tools/brave_search.d.ts
 tools/brave_search.d.cts
+tools/duckduckgo_search.cjs
+tools/duckduckgo_search.js
+tools/duckduckgo_search.d.ts
+tools/duckduckgo_search.d.cts
 tools/calculator.cjs
 tools/calculator.js
 tools/calculator.d.ts
