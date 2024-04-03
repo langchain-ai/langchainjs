@@ -1,6 +1,6 @@
 import { MessageContent } from "../messages/index.js";
 import { ImagePromptValue, ImageContent } from "../prompt_values.js";
-import type { InputValues, PartialValues } from "../utils/types.js";
+import type { InputValues, PartialValues } from "../utils/types/index.js";
 import {
   BasePromptTemplate,
   BasePromptTemplateInput,

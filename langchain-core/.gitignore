@@ -98,6 +98,10 @@ retrievers.cjs
 retrievers.js
 retrievers.d.ts
 retrievers.d.cts
+retrievers/document_compressors.cjs
+retrievers/document_compressors.js
+retrievers/document_compressors.d.ts
+retrievers/document_compressors.d.cts
 singletons.cjs
 singletons.js
 singletons.d.ts
@@ -142,6 +146,10 @@ utils/async_caller.cjs
 utils/async_caller.js
 utils/async_caller.d.ts
 utils/async_caller.d.cts
+utils/beta_warning.cjs
+utils/beta_warning.js
+utils/beta_warning.d.ts
+utils/beta_warning.d.cts
 utils/chunk_array.cjs
 utils/chunk_array.js
 utils/chunk_array.d.ts
@@ -190,10 +198,6 @@ utils/types.cjs
 utils/types.js
 utils/types.d.ts
 utils/types.d.cts
-utils/beta_warning.cjs
-utils/beta_warning.js
-utils/beta_warning.d.ts
-utils/beta_warning.d.cts
 vectorstores.cjs
 vectorstores.js
 vectorstores.d.ts

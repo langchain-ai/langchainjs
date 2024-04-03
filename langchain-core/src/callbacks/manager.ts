@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import { AgentAction, AgentFinish } from "../agents.js";
-import type { ChainValues } from "../utils/types.js";
+import type { ChainValues } from "../utils/types/index.js";
 import { LLMResult } from "../outputs.js";
 import {
   BaseCallbackHandler,
