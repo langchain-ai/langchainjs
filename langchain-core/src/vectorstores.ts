@@ -4,7 +4,7 @@ import {
   BaseRetriever,
   BaseRetrieverInterface,
   type BaseRetrieverInput,
-} from "./retrievers.js";
+} from "./retrievers/index.js";
 import { Serializable } from "./load/serializable.js";
 import {
   CallbackManagerForRetrieverRun,
