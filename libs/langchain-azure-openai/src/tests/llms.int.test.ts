@@ -327,6 +327,20 @@ test("Test OpenAI with Token credentials ", async () => {
   console.log({ res });
 });
 
+test("Test Azure OpenAI with key credentials ", async () => {
+  const model = new AzureOpenAI({
+    maxTokens: 5,
+    modelName: "davinci-002",
+    azureOpenAIApiKey: getEnvironmentVariable("AZURE_OPENAI_API_KEY") ?? "",
+    azureOpenAIEndpoint:
+      getEnvironmentVariable("AZURE_OPENAI_API_ENDPOINT") ?? "",
+    azureOpenAIApiDeploymentName:
+      getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME") ?? "",
+  });
+  const res = await model.invoke("Print hello world");
+  console.log({ res });
+});
+
 test("Test OpenAI with OpenAI API key credentials ", async () => {
   const openAiKey: string = getEnvironmentVariable("OPENAI_API_KEY") ?? "";
   const credentials = new OpenAIKeyCredential(openAiKey);

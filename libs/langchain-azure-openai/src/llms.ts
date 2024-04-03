@@ -127,23 +127,22 @@ export class AzureOpenAI<
       fields?.azureOpenAIApiDeploymentName ??
       getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME");
 
+    const openAiApiKey =
+      fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
+
     this.azureOpenAIApiKey =
       fields?.azureOpenAIApiKey ??
-      fields?.openAIApiKey ??
-      (getEnvironmentVariable("AZURE_OPENAI_API_KEY") ||
-        getEnvironmentVariable("OPENAI_API_KEY"));
+      getEnvironmentVariable("AZURE_OPENAI_API_KEY") ??
+      openAiApiKey;
 
     const azureCredential =
       fields?.credentials ??
-      (fields?.azureOpenAIApiKey ||
-      getEnvironmentVariable("AZURE_OPENAI_API_KEY")
-        ? new AzureKeyCredential(this.azureOpenAIApiKey ?? "")
-        : new OpenAIKeyCredential(this.azureOpenAIApiKey ?? ""));
+      (this.azureOpenAIApiKey === openAiApiKey
+        ? new OpenAIKeyCredential(this.azureOpenAIApiKey ?? "")
+        : new AzureKeyCredential(this.azureOpenAIApiKey ?? ""));
 
-    const isOpenAIApiKey =
-      fields?.azureOpenAIApiKey ||
-      // eslint-disable-next-line no-instanceof/no-instanceof
-      azureCredential instanceof OpenAIKeyCredential;
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    const isOpenAIApiKey = azureCredential instanceof OpenAIKeyCredential;
 
     if (!this.azureOpenAIApiKey && !fields?.credentials) {
       throw new Error("Azure OpenAI API key not found");
