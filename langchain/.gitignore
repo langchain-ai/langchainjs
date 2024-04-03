@@ -1146,6 +1146,10 @@ experimental/prompts/handlebars.cjs
 experimental/prompts/handlebars.js
 experimental/prompts/handlebars.d.ts
 experimental/prompts/handlebars.d.cts
+experimental/prompts/lodash.cjs
+experimental/prompts/lodash.js
+experimental/prompts/lodash.d.ts
+experimental/prompts/lodash.d.cts
 experimental/tools/pyinterpreter.cjs
 experimental/tools/pyinterpreter.js
 experimental/tools/pyinterpreter.d.ts
