@@ -319,6 +319,7 @@ export abstract class Runnable<
     delete callOptions.configurable;
     delete callOptions.recursionLimit;
     delete callOptions.maxConcurrency;
+    delete callOptions.runId;
     return [runnableConfig, callOptions];
   }
 
