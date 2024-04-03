@@ -86,38 +86,30 @@ export class HanaDB extends VectorStore {
   }
 
   private initialize() {
-    try {
-      let valid_distance = false;
-      for (const key in HANA_DISTANCE_FUNCTION) {
-        if (key === this.distanceStrategy) {
-          valid_distance = true;
-          break; // Added to exit loop once a match is found
-        }
+    let valid_distance = false;
+    for (const key in HANA_DISTANCE_FUNCTION) {
+      if (key === this.distanceStrategy) {
+        valid_distance = true;
+        break; // Added to exit loop once a match is found
       }
-      if (!valid_distance) {
-        throw new Error(
-          `Unsupported distance_strategy: ${this.distanceStrategy}`
-        );
-      }
-      this.createTableIfNotExists();
-      this.checkColumn(this.tableName, this.contentColumn, [
-        "NCLOB",
-        "NVARCHAR",
-      ]);
-      this.checkColumn(this.tableName, this.metadataColumn, [
-        "NCLOB",
-        "NVARCHAR",
-      ]);
-      this.checkColumn(
-        this.tableName,
-        this.vectorColumn,
-        ["REAL_VECTOR"],
-        this.vectorColumnLength
-      );
-    } catch (error) {
-      console.error("Initialization error:", error);
-      throw error; // Re-throw the caught error to allow it to bubble up
     }
+    if (!valid_distance) {
+      throw new Error(
+        `Unsupported distance_strategy: ${this.distanceStrategy}`
+      );
+    }
+    this.createTableIfNotExists();
+    this.checkColumn(this.tableName, this.contentColumn, ["NCLOB", "NVARCHAR"]);
+    this.checkColumn(this.tableName, this.metadataColumn, [
+      "NCLOB",
+      "NVARCHAR",
+    ]);
+    this.checkColumn(
+      this.tableName,
+      this.vectorColumn,
+      ["REAL_VECTOR"],
+      this.vectorColumnLength
+    );
   }
   /**
    * Sanitizes the input string by removing characters that are not alphanumeric or underscores.
@@ -209,48 +201,36 @@ export class HanaDB extends VectorStore {
             WHERE SCHEMA_NAME = CURRENT_SCHEMA 
             AND TABLE_NAME = ? 
             AND COLUMN_NAME = ?`;
-    try {
-      const client = this.connection; // Get the connection object
-      // Prepare the statement with parameter placeholders
-      const stm = client.prepare(sqlStr);
-      // Execute the query with actual parameters to avoid SQL injection
-      const resultSet = stm.execQuery([tableName, columnName]);
+    const client = this.connection; // Get the connection object
+    // Prepare the statement with parameter placeholders
+    const stm = client.prepare(sqlStr);
+    // Execute the query with actual parameters to avoid SQL injection
+    const resultSet = stm.execQuery([tableName, columnName]);
 
-      if (!resultSet.next()) {
-        throw new Error(`Column ${columnName} does not exist`);
-      } else {
-        // Safely assert the type of the returned value to string
-        const dataType: string = resultSet.getValue(0) as string;
-        const length: number = resultSet.getValue(1) as number;
+    if (!resultSet.next()) {
+      throw new Error(`Column ${columnName} does not exist`);
+    } else {
+      // Safely assert the type of the returned value to string
+      const dataType: string = resultSet.getValue(0) as string;
+      const length: number = resultSet.getValue(1) as number;
 
-        // Check if dataType is within columnType
-        const isValidType = Array.isArray(columnType)
-          ? columnType.includes(dataType)
-          : columnType === dataType;
-        if (!isValidType) {
-          throw new Error(
-            `Column ${columnName} has the wrong type: ${dataType}`
-          );
-        }
-
-        // Check length, if parameter was provided
-        if (columnLength !== undefined && length !== columnLength) {
-          throw new Error(
-            `Column ${columnName} has the wrong length: ${length}`
-          );
-        }
+      // Check if dataType is within columnType
+      const isValidType = Array.isArray(columnType)
+        ? columnType.includes(dataType)
+        : columnType === dataType;
+      if (!isValidType) {
+        throw new Error(`Column ${columnName} has the wrong type: ${dataType}`);
       }
-    } catch (error) {
-      console.error("Error checking column:", error);
-      throw error; // Rethrow or handle as needed
-    } finally {
-      // Ensure resources are cleaned up properly
+
+      // Check length, if parameter was provided
+      if (columnLength !== undefined && length !== columnLength) {
+        throw new Error(`Column ${columnName} has the wrong length: ${length}`);
+      }
     }
   }
 
   private createTableIfNotExists() {
     const tableExists = this.tableExists(this.tableName);
-    // console.log('Table exists:', tableExists);
     if (!tableExists) {
       let sqlStr =
         `CREATE TABLE "${this.tableName}" (` +
@@ -262,35 +242,22 @@ export class HanaDB extends VectorStore {
         this.vectorColumnLength === -1
           ? ");"
           : `(${this.vectorColumnLength}));`;
-      // console.log(sqlStr);
-      try {
-        const client = this.connection;
-        client.exec(sqlStr);
-      } catch (error) {
-        console.error("Error creating table:", error);
-        throw error;
-      }
+      const client = this.connection;
+      client.exec(sqlStr);
     }
   }
 
   public tableExists(tableName: string): boolean {
     const tableExistsSQL = `SELECT COUNT(*) AS COUNT FROM SYS.TABLES WHERE SCHEMA_NAME = CURRENT_SCHEMA AND TABLE_NAME = ?`;
-    try {
-      const client = this.connection; // Get the connection object
-      // console.log(tableExistsSQL)
-      const stm = client.prepare(tableExistsSQL);
-      const resultSet = stm.execQuery([tableName]);
-      while (resultSet.next()) {
-        const result = resultSet.getValue(0);
-        if (result === 1) {
-          // Table does  exist
-          // console.log('Table does exist.');
-          return true;
-        }
+    const client = this.connection; // Get the connection object
+    const stm = client.prepare(tableExistsSQL);
+    const resultSet = stm.execQuery([tableName]);
+    while (resultSet.next()) {
+      const result = resultSet.getValue(0);
+      if (result === 1) {
+        // Table does  exist
+        return true;
       }
-    } catch (error) {
-      console.error("Error checking table existence:", error);
-      throw error;
     }
     return false;
   }
@@ -311,14 +278,22 @@ export class HanaDB extends VectorStore {
         whereStr += ` JSON_VALUE(${this.metadataColumn}, '$.${key}') = ?`;
 
         const value = filter[key];
-        if (
-          typeof value === "number" ||
-          typeof value === "string" ||
-          typeof value === "boolean"
-        ) {
+        if (typeof value === "number") {
+          if (Number.isInteger(value)) {
+            queryTuple.push(value);
+          } else {
+            throw new Error(
+              `Unsupported filter data-type: wrong number type for key ${key}`
+            );
+          }
+        } else if (typeof value === "string") {
           queryTuple.push(value);
+        } else if (typeof value === "boolean") {
+          queryTuple.push(value.toString());
         } else {
-          throw new Error(`Unsupported filter data-type: ${typeof value}`);
+          throw new Error(
+            `Unsupported filter data-type: ${typeof value} for key ${key}`
+          );
         }
       });
     }
@@ -348,14 +323,8 @@ export class HanaDB extends VectorStore {
 
     const [whereStr, queryTuple] = this.createWhereByFilter(filter);
     const sqlStr = `DELETE FROM "${this.tableName}" ${whereStr}`;
-    // console.log(sqlStr, queryTuple)
-    try {
-      const client = this.connection;
-      client.execute(sqlStr, queryTuple);
-    } catch (error) {
-      console.error("An error occurred while deleting:", error);
-      throw new Error("Deletion was unsuccessful");
-    }
+    const client = this.connection;
+    client.execute(sqlStr, queryTuple);
   }
 
   /**
@@ -376,7 +345,6 @@ export class HanaDB extends VectorStore {
     const instance = new HanaDB(embeddings, dbConfig);
     await instance.addTexts(texts, metadatas); // Embed and add texts to the database
     return instance;
-    // return HanaDB.fromDocuments(docs, embeddings, dbConfig);
   }
 
   /**
@@ -396,31 +364,32 @@ export class HanaDB extends VectorStore {
     if (!embeddings) {
       embeddings = await this.embeddings.embedDocuments(texts);
     }
-    // const embeddings = await this.embeddings.embedDocuments(texts);
-    const client = this.connection;
-    try {
-      for (const [i, text] of texts.entries()) {
-        // const text = texts[i];
-        // console.log(text)
-
-        const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
-        // console.log(metadata)
-        // Serialize the 'metadata' object to a JSON string for inclusion in the SQL query
-        const metadataJson = JSON.stringify(
-          this.sanitizeMetadataKeys(metadata)
+    const sqlParams: [string, string, string][] = texts.map((text, i) => {
+      const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
+      // Ensure embedding is generated or provided
+      if (!embeddings) {
+        throw new Error(
+          "Embeddings are required but were not provided or generated."
         );
-        const embedding = embeddings[i].join(", "); // Convert embedding array to string representation
-
-        // SQL query to insert the document, metadata, and embedding into the table
-        const sqlStr = `INSERT INTO "${this.tableName}" ("${this.contentColumn}", "${this.metadataColumn}", "${this.vectorColumn}") VALUES (?, ?, TO_REAL_VECTOR(?));`;
-        // console.log(sqlStr)
-
-        client.execute(sqlStr, [text, metadataJson, `[${embedding}]`]);
       }
-    } catch (error) {
-      console.error("An error occurred while adding text:", error);
-      throw new Error("Add texts was unsuccessful");
-    }
+      const embedding = embeddings[i];
+      if (!embedding) {
+        throw new Error(`No embedding found for the text at index ${i}.`);
+      }
+      const embeddingString = `[${embedding.join(", ")}]`;
+      // Prepare the SQL parameters
+      return [
+        text,
+        JSON.stringify(this.sanitizeMetadataKeys(metadata)),
+        embeddingString,
+      ];
+    });
+    // Insert data into the table
+    const client = this.connection;
+    const sqlStr = `INSERT INTO "${this.tableName}" ("${this.contentColumn}", "${this.metadataColumn}", "${this.vectorColumn}") 
+                    VALUES (?, ?, TO_REAL_VECTOR(?));`;
+    const stm = client.prepare(sqlStr);
+    stm.execBatch(sqlParams);
   }
 
   /**
@@ -466,25 +435,23 @@ export class HanaDB extends VectorStore {
   async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
     const texts = documents.map((doc) => doc.pageContent);
     const metadatas = documents.map((doc) => doc.metadata);
-    // console.log(embeddings)
     const client = this.connection;
-
-    for (const [i, text] of texts.entries()) {
-      // const text = texts[i];
-      // console.log(text)
-
+    const sqlParams: [string, string, string][] = texts.map((text, i) => {
       const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
-      // console.log(metadata)
-      // Serialize the 'metadata' object to a JSON string for inclusion in the SQL query
-      const metadataJson = JSON.stringify(metadata);
-      const embedding = vectors[i].join(", "); // Convert embedding array to string representation
-
-      // SQL query to insert the document, metadata, and embedding into the table
-      const sqlStr = `INSERT INTO "${this.tableName}" ("${this.contentColumn}", "${this.metadataColumn}", "${this.vectorColumn}") VALUES (?, ?, TO_REAL_VECTOR(?));`;
-      // console.log(sqlStr)
-
-      client.execute(sqlStr, [text, metadataJson, `[${embedding}]`]);
-    }
+      // Ensure embedding is generated or provided
+      const embeddingString = `[${vectors[i].join(", ")}]`;
+      // Prepare the SQL parameters
+      return [
+        text,
+        JSON.stringify(this.sanitizeMetadataKeys(metadata)),
+        embeddingString,
+      ];
+    });
+    // Insert data into the table, bulk insert.
+    const sqlStr = `INSERT INTO "${this.tableName}" ("${this.contentColumn}", "${this.metadataColumn}", "${this.vectorColumn}") 
+                    VALUES (?, ?, TO_REAL_VECTOR(?));`;
+    const stm = client.prepare(sqlStr);
+    stm.execBatch(sqlParams);
   }
 
   /**
@@ -562,7 +529,6 @@ export class HanaDB extends VectorStore {
     const sanitizedEmbedding = HanaDB.sanitizeListFloat(embedding);
     // Determine the distance function based on the configured strategy
     const distanceFuncName = HANA_DISTANCE_FUNCTION[this.distanceStrategy][0];
-    // console.log(`Distance method ${distanceFuncName}`);
     // Convert the embedding vector to a string for SQL query
     const embeddingAsString = sanitizedEmbedding.join(",");
     let sqlStr = `SELECT TOP ${sanitizedK}
@@ -578,24 +544,20 @@ export class HanaDB extends VectorStore {
 
     // Prepare and execute the SQL query
     const [whereStr, queryTuple] = this.createWhereByFilter(filter);
+
     sqlStr += whereStr + orderStr;
-    // console.log([whereStr, queryTuple]);
+    // console.log(sqlStr, queryTuple);
     const client = this.connection;
     const stm = client.prepare(sqlStr);
-    try {
-      const resultSet = stm.execQuery(queryTuple);
-      while (resultSet.next()) {
-        const metadata = JSON.parse(resultSet.getValue(1));
-        const doc: Document = { pageContent: resultSet.getValue(0), metadata };
-        const resultVector = HanaDB.parseFloatArrayFromString(
-          resultSet.getValue(2)
-        );
-        result.push([doc, resultSet.getValue(3), resultVector]);
-      }
-    } catch (error) {
-      console.error("Failed to execute similarity search", error);
+    const resultSet = stm.execQuery(queryTuple);
+    while (resultSet.next()) {
+      const metadata = JSON.parse(resultSet.getValue(1));
+      const doc: Document = { pageContent: resultSet.getValue(0), metadata };
+      const resultVector = HanaDB.parseFloatArrayFromString(
+        resultSet.getValue(2)
+      );
+      result.push([doc, resultSet.getValue(3), resultVector]);
     }
-    // console.log(result);
     return result;
   }
 
@@ -624,11 +586,8 @@ export class HanaDB extends VectorStore {
       queryEmbedding,
       fetchK
     );
-    // console.log(docs)
-    // console.log(docs.map(([doc, score]) => [doc, score]));
     // docs is an Array of tuples: [Document, number, number[]]
     const embeddingList = docs.map((doc) => doc[2]); // Extracts the embedding from each tuple
-    // console.log(embeddingList.length)
     // Re-rank the results using MMR
     const mmrIndexes = maximalMarginalRelevance(
       queryEmbedding,
@@ -636,7 +595,6 @@ export class HanaDB extends VectorStore {
       lambda,
       k
     );
-    // console.log(mmrIndexes)
     const mmrDocs = mmrIndexes.map((index) => docs[index][0]);
     return mmrDocs;
   }

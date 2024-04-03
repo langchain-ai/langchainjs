@@ -1,7 +1,6 @@
 /* eslint-disable no-process-env */
 import hanaClient from "@sap/hana-client";
 import { Document } from "@langchain/core/documents";
-import { OpenAIEmbeddings } from "@langchain/openai";
 import { test, expect } from "@jest/globals";
 import { FakeEmbeddings } from "closevector-common/dist/fake.js";
 import { HanaDB, HanaDBArgs } from "../hanavector.js";
@@ -14,7 +13,47 @@ const connectionParams = {
   pwd: process.env.HANA_PWD,
 };
 
-// const embeddings = new OpenAIEmbeddings();
+//  Fake normalized embeddings which remember all the texts seen so far to return consistent vectors for the same texts.
+class NormalizedConsistentFakeEmbeddings extends FakeEmbeddings {
+  private knownTexts: string[];
+
+  private dimensionality: number;
+
+  constructor(dimensionality = 10) {
+    super();
+    this.knownTexts = [];
+    this.dimensionality = dimensionality;
+  }
+
+  private normalize(vector: number[]): number[] {
+    const norm = Math.sqrt(vector.reduce((acc, val) => acc + val * val, 0));
+    return vector.map((v) => v / norm);
+  }
+
+  public async embedDocuments(texts: string[]): Promise<number[][]> {
+    const outVectors: number[][] = texts.map((text) => {
+      let index = this.knownTexts.indexOf(text);
+      if (index === -1) {
+        this.knownTexts.push(text);
+        index = this.knownTexts.length - 1;
+      }
+      // Create an embedding with `dimensionality - 1` elements set to 1.0, and the last element set to the index
+      const vector = new Array(this.dimensionality - 1).fill(1.0).concat(index);
+      return this.normalize(vector);
+    });
+
+    return Promise.resolve(outVectors);
+  }
+
+  public async embedQuery(text: string): Promise<number[]> {
+    const embedding = this.embedDocuments([text]).then(
+      (embeddings) => embeddings[0]
+    );
+    return embedding;
+  }
+}
+
+const embeddings = new NormalizedConsistentFakeEmbeddings();
 
 const client = hanaClient.createConnection();
 client.connect(connectionParams);
@@ -24,7 +63,6 @@ beforeAll(async () => {
   expect(process.env.HANA_PORT).toBeDefined();
   expect(process.env.HANA_UID).toBeDefined();
   expect(process.env.HANA_PWD).toBeDefined();
-  expect(process.env.OPENAI_API_KEY).toBeDefined();
 });
 
 afterAll(async () => {
@@ -56,12 +94,12 @@ describe("add documents and similarity search tests", () => {
         { id: 1, name: "1" },
         { id: 3, name: "3" },
       ],
-      new OpenAIEmbeddings(),
+      embeddings,
       args
     );
     expect(vectorStore).toBeDefined();
 
-    const results = await vectorStore.similaritySearch("hello world", 1);
+    const results = await vectorStore.similaritySearch("Hello world", 1);
     // console.log(results)
     expect(results).toHaveLength(1);
     expect(results).toEqual([
@@ -79,7 +117,7 @@ describe("add documents and similarity search tests", () => {
       connection: client,
       tableName: tableNameTest,
     };
-    const vectorStore = new HanaDB(new OpenAIEmbeddings(), args);
+    const vectorStore = new HanaDB(embeddings, args);
     expect(vectorStore).toBeDefined();
     await vectorStore.addTexts(
       ["Bye bye", "Hello world", "hello nice world"],
@@ -105,7 +143,7 @@ describe("add documents and similarity search tests", () => {
       tableName: tableNameTest,
       distanceStrategy: "euclidean",
     };
-    const vectorStore = new HanaDB(new OpenAIEmbeddings(), args);
+    const vectorStore = new HanaDB(embeddings, args);
     expect(vectorStore).toBeDefined();
     await vectorStore.addDocuments([
       {
@@ -142,7 +180,7 @@ describe("add documents and similarity search tests", () => {
     ]);
 
     const results: Document[] = await vectorStore.similaritySearch(
-      "sandwich",
+      "Sandwiches taste good.",
       1
     );
     // console.log(results);
@@ -181,12 +219,7 @@ describe("add documents and similarity search tests", () => {
       tableName: tableNameTest,
     };
     const texts = ["foo", "foo", "fox"];
-    const vectorStore = await HanaDB.fromTexts(
-      texts,
-      {},
-      new OpenAIEmbeddings(),
-      args
-    );
+    const vectorStore = await HanaDB.fromTexts(texts, {}, embeddings, args);
 
     const output = await vectorStore.maxMarginalRelevanceSearch("foo", {
       k: 3,
@@ -240,28 +273,90 @@ describe("add documents and similarity search tests", () => {
       tableName: tableNameTest,
     };
     // client.connect(connectionParams);
-    const vectorStore = new HanaDB(new OpenAIEmbeddings(), args);
+    const vectorStore = new HanaDB(embeddings, args);
     expect(vectorStore).toBeDefined();
     const docs: Document[] = [
       {
         pageContent: "foo",
-        metadata: { start: 100, end: 150, docName: "foo.txt", quality: "bad" },
+        metadata: {
+          start: 100,
+          end: 150,
+          docName: "foo.txt",
+          quality: "bad",
+          ready: true,
+        },
       },
       {
         pageContent: "bar",
-        metadata: { start: 200, end: 250, docName: "bar.txt", quality: "good" },
+        metadata: {
+          start: 200,
+          end: 250,
+          docName: "bar.txt",
+          quality: "good",
+          ready: false,
+        },
       },
     ];
     await vectorStore.addDocuments(docs);
-    const filter = { quality: "bad" };
-    const query = "foobar";
+    const filterString = { quality: "bad" };
+    const query = "foo";
 
-    const results = await vectorStore.similaritySearch(query, 1, filter);
-    expect(results.length).toEqual(1);
-    expect(results).toMatchObject([
+    const resultsString = await vectorStore.similaritySearch(
+      query,
+      1,
+      filterString
+    );
+    expect(resultsString.length).toEqual(1);
+    expect(resultsString).toMatchObject([
       {
         pageContent: "foo",
-        metadata: { start: 100, end: 150, docName: "foo.txt", quality: "bad" },
+        metadata: {
+          start: 100,
+          end: 150,
+          docName: "foo.txt",
+          quality: "bad",
+          ready: true,
+        },
+      },
+    ]);
+
+    const filterNumber = { start: 100, end: 150 };
+    const resultsNumber = await vectorStore.similaritySearch(
+      query,
+      1,
+      filterNumber
+    );
+    expect(resultsNumber.length).toEqual(1);
+    expect(resultsNumber).toMatchObject([
+      {
+        pageContent: "foo",
+        metadata: {
+          start: 100,
+          end: 150,
+          docName: "foo.txt",
+          quality: "bad",
+          ready: true,
+        },
+      },
+    ]);
+
+    const filterBool = { ready: true };
+    const resultsBool = await vectorStore.similaritySearch(
+      query,
+      1,
+      filterBool
+    );
+    expect(resultsBool.length).toEqual(1);
+    expect(resultsBool).toMatchObject([
+      {
+        pageContent: "foo",
+        metadata: {
+          start: 100,
+          end: 150,
+          docName: "foo.txt",
+          quality: "bad",
+          ready: true,
+        },
       },
     ]);
   });
@@ -276,12 +371,7 @@ describe("Deletion tests", () => {
     };
     dropTable(tableNameTest);
     const texts = ["foo", "foo", "fox"];
-    const vectorStore = await HanaDB.fromTexts(
-      texts,
-      {},
-      new FakeEmbeddings(),
-      args
-    );
+    const vectorStore = await HanaDB.fromTexts(texts, {}, embeddings, args);
 
     // Delete without filter parameter
     let exceptionOccurred = false;
@@ -315,7 +405,7 @@ describe("Deletion tests", () => {
       tableName: tableNameTest,
     };
     // client.connect(connectionParams);
-    const vectorStore = new HanaDB(new FakeEmbeddings(), args);
+    const vectorStore = new HanaDB(embeddings, args);
     expect(vectorStore).toBeDefined();
     const docs: Document[] = [
       {
@@ -348,7 +438,7 @@ describe("Deletion tests", () => {
       tableName: tableNameTest,
     };
     // client.connect(connectionParams);
-    const vectorStore = new HanaDB(new FakeEmbeddings(), args);
+    const vectorStore = new HanaDB(embeddings, args);
     expect(vectorStore).toBeDefined();
     await vectorStore.addTexts(texts, []);
     const filterTest = {};
@@ -371,7 +461,7 @@ describe("Tests on HANA side", () => {
       connection: client,
       tableName: tableNameTest,
     };
-    const vectordb = new HanaDB(new FakeEmbeddings(), args);
+    const vectordb = new HanaDB(embeddings, args);
     expect(vectordb.tableExists(tableNameTest)).toBe(true);
   });
 
@@ -379,14 +469,14 @@ describe("Tests on HANA side", () => {
     const tableNameTest = "EXISTING_MISSING_COLS";
 
     // Drop the table if it exists and create a new one with a wrong column
-    try {
-      dropTable(tableNameTest);
-      const sqlStr = `CREATE TABLE ${tableNameTest} (WRONG_COL NVARCHAR(500));`;
-      client.execute(sqlStr);
-    } catch (error) {
-      console.error("Error while setting up the table:", error);
-      throw error;
-    }
+    // try {
+    dropTable(tableNameTest);
+    const sqlStr = `CREATE TABLE ${tableNameTest} (WRONG_COL NVARCHAR(500));`;
+    client.execute(sqlStr);
+    // } catch (error) {
+    //   console.error("Error while setting up the table:", error);
+    //   throw error;
+    // }
 
     // Check if an error is raised when trying to create HanaDB instance
     let exceptionOccurred = false;
@@ -396,9 +486,10 @@ describe("Tests on HANA side", () => {
     };
     try {
       // eslint-disable-next-line no-new
-      new HanaDB(new FakeEmbeddings(), args);
+      new HanaDB(embeddings, args);
     } catch (error) {
       // An Error is expected here
+      console.log(error);
       exceptionOccurred = true;
     }
 
@@ -433,9 +524,10 @@ describe("Tests on HANA side", () => {
     };
     try {
       // eslint-disable-next-line no-new
-      new HanaDB(new FakeEmbeddings(), args);
+      new HanaDB(embeddings, args);
     } catch (error) {
       // An Error is expected here
+      console.log(error);
       exceptionOccurred = true;
     }
 
@@ -455,7 +547,7 @@ describe("Tests on HANA side", () => {
       vectorColumn: vectorColumnTest,
       vectorColumnLength: vectorColumnLengthTest,
     };
-    const vectorStore = new HanaDB(new FakeEmbeddings(), args);
+    const vectorStore = new HanaDB(embeddings, args);
     expect(vectorStore.tableExists(tableNameTest)).toBe(true);
     vectorStore.checkColumn(
       tableNameTest,
@@ -488,7 +580,7 @@ describe("Tests on HANA side", () => {
       },
     ];
 
-    await HanaDB.fromDocuments(docs, new FakeEmbeddings(), args);
+    await HanaDB.fromDocuments(docs, embeddings, args);
 
     // Query for JSON_VALUE(VEC_META, '$.start') = '100'
     let sqlStr = `SELECT * FROM ${tableNameTest} WHERE JSON_VALUE(VEC_META, '$.start') = '100'`;
@@ -557,7 +649,7 @@ describe("Tests on HANA side", () => {
       contentColumn: contentColumnTest,
       vectorColumn: vectorColumnTest,
     };
-    const vectordb = new HanaDB(new FakeEmbeddings(), args);
+    const vectordb = new HanaDB(embeddings, args);
     const texts = ["foo", "foo", "fox"];
     await vectordb.addTexts(texts);
 
@@ -588,10 +680,11 @@ describe("Tests on HANA side", () => {
       await HanaDB.fromTexts(
         ["foo", "bar", "baz"],
         invalidMetadatas1,
-        new FakeEmbeddings(),
+        embeddings,
         args
       );
     } catch (error) {
+      console.log(error);
       exceptionOccurred = true;
     }
     expect(exceptionOccurred).toBe(true);
@@ -605,10 +698,34 @@ describe("Tests on HANA side", () => {
       await HanaDB.fromTexts(
         ["foo", "bar", "baz"],
         invalidMetadatas2,
-        new FakeEmbeddings(),
+        embeddings,
         args
       );
     } catch (error) {
+      console.log(error);
+      exceptionOccurred = true;
+    }
+    expect(exceptionOccurred).toBe(true);
+  });
+
+  test("test hanavector similarity search with metadata filter invalid type", async () => {
+    const tableNameTest = "TEST_TABLE_FILTER_INVALID_TYPE";
+    const args: HanaDBArgs = {
+      connection: client,
+      tableName: tableNameTest,
+    };
+    dropTable(tableNameTest);
+    let exceptionOccurred = false;
+    const vector = await HanaDB.fromTexts(
+      ["foo", "bar", "baz"],
+      {},
+      embeddings,
+      args
+    );
+    try {
+      await vector.similaritySearch("foo", 3, { wrong_type: 0.1 });
+    } catch (error) {
+      console.log(error);
       exceptionOccurred = true;
     }
     expect(exceptionOccurred).toBe(true);
