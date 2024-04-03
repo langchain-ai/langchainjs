@@ -1,4 +1,4 @@
-import type { InputValues, PartialValues } from "../utils/types.js";
+import type { InputValues, PartialValues } from "../utils/types/index.js";
 import type { SerializedBasePromptTemplate } from "./serde.js";
 import { BasePromptTemplate, type BasePromptTemplateInput } from "./base.js";
 import { ChatPromptTemplate } from "./chat.js";
