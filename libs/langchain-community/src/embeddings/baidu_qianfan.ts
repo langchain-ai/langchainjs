@@ -1,13 +1,13 @@
-import { Embeddings, type EmbeddingsParams } from '@langchain/core/embeddings';
-import { chunkArray } from '@langchain/core/utils/chunk_array';
-import { getEnvironmentVariable } from '@langchain/core/utils/env';
+import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
+import { chunkArray } from "@langchain/core/utils/chunk_array";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
-export interface BaiduQianFanEmbeddingsParams extends EmbeddingsParams {
+export interface BaiduQianfanEmbeddingsParams extends EmbeddingsParams {
   /** Model name to use */
-  modelName: 'embedding-v1' | 'bge_large_zh' | 'bge-large-en' | 'tao-8k';
+  modelName: "embedding-v1" | "bge_large_zh" | "bge-large-en" | "tao-8k";
 
   /**
-   * Timeout to use when making requests to BaiduQianFan.
+   * Timeout to use when making requests to BaiduQianfan.
    */
   timeout?: number;
 
@@ -33,7 +33,7 @@ interface EmbeddingCreateParams {
 }
 
 interface EmbeddingResponse {
-  data: { object: 'embedding'; index: number; embedding: number[] }[];
+  data: { object: "embedding"; index: number; embedding: number[] }[];
 
   usage: {
     prompt_tokens: number;
@@ -48,8 +48,11 @@ interface EmbeddingErrorResponse {
   error_msg: string;
 }
 
-export class BaiduQianFanEmbeddings extends Embeddings implements BaiduQianFanEmbeddingsParams {
-  modelName: BaiduQianFanEmbeddingsParams['modelName'] = 'embedding-v1';
+export class BaiduQianfanEmbeddings
+  extends Embeddings
+  implements BaiduQianfanEmbeddingsParams
+{
+  modelName: BaiduQianfanEmbeddingsParams["modelName"] = "embedding-v1";
 
   batchSize = 16;
 
@@ -62,25 +65,29 @@ export class BaiduQianFanEmbeddings extends Embeddings implements BaiduQianFanEm
   accessToken: string;
 
   constructor(
-    fields?: Partial<BaiduQianFanEmbeddingsParams> & {
+    fields?: Partial<BaiduQianfanEmbeddingsParams> & {
       verbose?: boolean;
       baiduApiKey?: string;
       baiduSecretKey?: string;
-    },
+    }
   ) {
     const fieldsWithDefaults = { maxConcurrency: 2, ...fields };
     super(fieldsWithDefaults);
 
-    const baiduApiKey = fieldsWithDefaults?.baiduApiKey ?? getEnvironmentVariable('BAIDU_API_KEY');
+    const baiduApiKey =
+      fieldsWithDefaults?.baiduApiKey ??
+      getEnvironmentVariable("BAIDU_API_KEY");
 
-    const baiduSecretKey = fieldsWithDefaults?.baiduSecretKey ?? getEnvironmentVariable('BAIDU_SECRET_KEY');
+    const baiduSecretKey =
+      fieldsWithDefaults?.baiduSecretKey ??
+      getEnvironmentVariable("BAIDU_SECRET_KEY");
 
     if (!baiduApiKey) {
-      throw new Error('Baidu API key not found');
+      throw new Error("Baidu API key not found");
     }
 
     if (!baiduSecretKey) {
-      throw new Error('Baidu Secret key not found');
+      throw new Error("Baidu Secret key not found");
     }
 
     this.baiduApiKey = baiduApiKey;
@@ -88,17 +95,19 @@ export class BaiduQianFanEmbeddings extends Embeddings implements BaiduQianFanEm
 
     this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
 
-    if (this.modelName === 'tao-8k' && !!fieldsWithDefaults?.batchSize) {
+    if (this.modelName === "tao-8k") {
+      if (fieldsWithDefaults?.batchSize && fieldsWithDefaults.batchSize !== 1) {
+        throw new Error(
+          "tao-8k model supports only a batchSize of 1. Please adjust your batchSize accordingly"
+        );
+      }
       this.batchSize = 1;
+    } else {
+      this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
     }
 
-    this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
-
-    if (this.batchSize > 1 && fieldsWithDefaults?.modelName === 'tao-8k') {
-      throw new Error('tao-8k" model supports only 1 text per request');
-    }
-
-    this.stripNewLines = fieldsWithDefaults?.stripNewLines ?? this.stripNewLines;
+    this.stripNewLines =
+      fieldsWithDefaults?.stripNewLines ?? this.stripNewLines;
   }
 
   /**
@@ -109,7 +118,10 @@ export class BaiduQianFanEmbeddings extends Embeddings implements BaiduQianFanEm
    * @returns Promise that resolves to a 2D array of embeddings for each document.
    */
   async embedDocuments(texts: string[]): Promise<number[][]> {
-    const batches = chunkArray(this.stripNewLines ? texts.map((t) => t.replace(/\n/g, ' ')) : texts, this.batchSize);
+    const batches = chunkArray(
+      this.stripNewLines ? texts.map((t) => t.replace(/\n/g, " ")) : texts,
+      this.batchSize
+    );
 
     const batchRequests = batches.map((batch) => {
       const params = this.getParams(batch);
@@ -139,7 +151,9 @@ export class BaiduQianFanEmbeddings extends Embeddings implements BaiduQianFanEm
    * @returns Promise that resolves to an embedding for the document.
    */
   async embedQuery(text: string): Promise<number[]> {
-    const params = this.getParams([this.stripNewLines ? text.replace(/\n/g, ' ') : text]);
+    const params = this.getParams([
+      this.stripNewLines ? text.replace(/\n/g, " ") : text,
+    ]);
 
     const embeddings = (await this.embeddingWithRetry(params)) || [[]];
     return embeddings[0];
@@ -150,7 +164,9 @@ export class BaiduQianFanEmbeddings extends Embeddings implements BaiduQianFanEm
    * @param texts Array of documents to generate embeddings for.
    * @returns an embedding params.
    */
-  private getParams(texts: EmbeddingCreateParams['input']): EmbeddingCreateParams {
+  private getParams(
+    texts: EmbeddingCreateParams["input"]
+  ): EmbeddingCreateParams {
     return {
       input: texts,
     };
@@ -171,20 +187,25 @@ export class BaiduQianFanEmbeddings extends Embeddings implements BaiduQianFanEm
     return fetch(
       `https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/embeddings/${this.modelName}?access_token=${this.accessToken}`,
       {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(body),
-      },
+      }
     ).then(async (response) => {
-      const embeddingData: EmbeddingResponse | EmbeddingErrorResponse = await response.json();
+      const embeddingData: EmbeddingResponse | EmbeddingErrorResponse =
+        await response.json();
 
-      if ('error_code' in embeddingData && embeddingData.error_code) {
-        throw new Error(`${embeddingData.error_code}: ${embeddingData.error_msg}`);
+      if ("error_code" in embeddingData && embeddingData.error_code) {
+        throw new Error(
+          `${embeddingData.error_code}: ${embeddingData.error_msg}`
+        );
       }
 
-      return (embeddingData as EmbeddingResponse).data.map(({ embedding }) => embedding);
+      return (embeddingData as EmbeddingResponse).data.map(
+        ({ embedding }) => embedding
+      );
     });
   }
 
@@ -196,15 +217,17 @@ export class BaiduQianFanEmbeddings extends Embeddings implements BaiduQianFanEm
   private async getAccessToken() {
     const url = `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${this.baiduApiKey}&client_secret=${this.baiduSecretKey}`;
     const response = await fetch(url, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
+        "Content-Type": "application/json",
+        Accept: "application/json",
       },
     });
     if (!response.ok) {
       const text = await response.text();
-      const error = new Error(`Baidu get access token failed with status code ${response.status}, response: ${text}`);
+      const error = new Error(
+        `Baidu get access token failed with status code ${response.status}, response: ${text}`
+      );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (error as any).response = response;
       throw error;
