@@ -1,10 +1,10 @@
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { ChatOpenAI } from "@langchain/openai";
+import { ChatGroq } from "@langchain/groq";
 import { z } from "zod";
 
-const model = new ChatOpenAI({
+const model = new ChatGroq({
   temperature: 0,
-  modelName: "gpt-4-turbo-preview",
+  modelName: "mixtral-8x7b-32768",
 });
 
 const calculatorSchema = z.object({
@@ -23,8 +23,8 @@ const chain = prompt.pipe(modelWithStructuredOutput);
 const result = await chain.invoke({});
 console.log(result);
 /*
-{ operation: 'add', number1: 2, number2: 2 }
- */
+  { operation: 'add', number1: 2, number2: 2 }
+*/
 
 /**
  * You can also specify 'includeRaw' to return the parsed
@@ -37,30 +37,32 @@ const includeRawModel = model.withStructuredOutput(calculatorSchema, {
 
 const includeRawChain = prompt.pipe(includeRawModel);
 const includeRawResult = await includeRawChain.invoke({});
-console.log(JSON.stringify(includeRawResult, null, 2));
+console.log(includeRawResult);
 /*
-{
-  "raw": {
-    "kwargs": {
-      "content": "",
-      "additional_kwargs": {
-        "tool_calls": [
+  {
+    raw: AIMessage {
+      content: '',
+      additional_kwargs: {
+        tool_calls: [
           {
-            "id": "call_A8yzNBDMiRrCB8dFYqJLhYW7",
+            "id": "call_01htk094ktfgxtkwj40n0ehg61",
             "type": "function",
             "function": {
               "name": "calculator",
-              "arguments": "{\"operation\":\"add\",\"number1\":2,\"number2\":2}"
+              "arguments": "{\"operation\": \"add\", \"number1\": 2, \"number2\": 2}"
             }
           }
         ]
+      },
+      response_metadata: {
+        "tokenUsage": {
+          "completionTokens": 197,
+          "promptTokens": 1214,
+          "totalTokens": 1411
+        },
+        "finish_reason": "tool_calls"
       }
-    }
-  },
-  "parsed": {
-    "operation": "add",
-    "number1": 2,
-    "number2": 2
+    },
+    parsed: { operation: 'add', number1: 2, number2: 2 }
   }
-}
- */
+*/

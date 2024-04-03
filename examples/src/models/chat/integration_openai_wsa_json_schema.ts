@@ -23,15 +23,16 @@ const calculatorSchema = {
 const modelWithStructuredOutput = model.withStructuredOutput(calculatorSchema);
 
 const prompt = ChatPromptTemplate.fromMessages([
-  "system",
-  `You are VERY bad at math and must always use a calculator.
+  [
+    "system",
+    `You are VERY bad at math and must always use a calculator.
 Respond with a JSON object containing three keys:
 'operation': the type of operation to execute, either 'add', 'subtract', 'multiply' or 'divide',
 'number1': the first number to operate on,
 'number2': the second number to operate on.
 `,
-  "human",
-  "Please help me!! What is 2 + 2?",
+  ],
+  ["human", "Please help me!! What is 2 + 2?"],
 ]);
 const chain = prompt.pipe(modelWithStructuredOutput);
 const result = await chain.invoke({});

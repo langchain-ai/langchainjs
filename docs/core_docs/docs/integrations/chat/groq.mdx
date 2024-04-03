@@ -30,7 +30,34 @@ import ChatGroqExample from "@examples/models/chat/chat_groq.ts";
 You can see a LangSmith trace of this example [here](https://smith.langchain.com/public/2ba59207-1383-4e42-b6a6-c1ddcfcd5710/r)
 :::
 
-### Streaming
+## Tool calling
+
+Groq chat models support calling multiple functions to get all required data to answer a question.
+Here's an example:
+
+import GroqTools from "@examples/models/chat/integration_groq_tool_calls.ts";
+
+<CodeBlock language="typescript">{GroqTools}</CodeBlock>
+
+### `.withStructuredOutput({ ... })`
+
+:::info
+The `.withStructuredOutput` method is in beta. It is actively being worked on, so the API may change.
+:::
+
+You can also use the `.withStructuredOutput({ ... })` method to coerce `ChatGroq` into returning a structured output.
+
+The method allows for passing in either a Zod object, or a valid JSON schema (like what is returned from [`zodToJsonSchema`](https://www.npmjs.com/package/zod-to-json-schema)).
+
+Using the method is simple. Just define your LLM and call `.withStructuredOutput({ ... })` on it, passing the desired schema.
+
+Here is an example using a Zod schema and the `functionCalling` mode (default mode):
+
+import WSAZodExample from "@examples/models/chat/integration_groq_wsa_zod.ts";
+
+<CodeBlock language="typescript">{WSAZodExample}</CodeBlock>
+
+## Streaming
 
 Groq's API also supports streaming token responses. The example below demonstrates how to use this feature.
 
