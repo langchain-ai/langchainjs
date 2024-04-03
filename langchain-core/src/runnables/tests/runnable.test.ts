@@ -20,12 +20,12 @@ import {
   FakeSplitIntoListParser,
   FakeRunnable,
   FakeListChatModel,
+  SingleRunExtractor,
 } from "../../utils/testing/index.js";
 import { RunnableSequence, RunnableLambda } from "../base.js";
 import { RouterRunnable } from "../router.js";
 import { RunnableConfig } from "../config.js";
 import { JsonOutputParser } from "../../output_parsers/json.js";
-import { BaseTracer } from "../../tracers/base.js";
 
 test("Test batch", async () => {
   const llm = new FakeLLM({});
@@ -413,30 +413,6 @@ test("Should aggregate properly", async () => {
   expect(chunks.length).toEqual(1);
   expect(chunks[0]).toEqual(["France", "Spain", "Japan"]);
 });
-
-class SingleRunExtractor extends BaseTracer {
-  runPromiseResolver: (run: Run) => void;
-
-  runPromise: Promise<Run>;
-
-  /** The name of the callback handler. */
-  name = "single_run_extractor";
-
-  constructor() {
-    super();
-    this.runPromise = new Promise<Run>((extract) => {
-      this.runPromiseResolver = extract;
-    });
-  }
-
-  async persistRun(run: Run) {
-    this.runPromiseResolver(run);
-  }
-
-  async extract(): Promise<Run> {
-    return this.runPromise;
-  }
-}
 
 describe("runId config", () => {
   test("invoke", async () => {

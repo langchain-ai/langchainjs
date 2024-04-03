@@ -109,7 +109,6 @@ export abstract class BaseRetriever<
       undefined,
       parsedConfig.runName
     );
-    delete parsedConfig.runId;
     try {
       const results = await this._getRelevantDocuments(query, runManager);
       await runManager?.handleRetrieverEnd(results);
