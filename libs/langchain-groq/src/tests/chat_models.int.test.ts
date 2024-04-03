@@ -69,4 +69,73 @@ describe("ChatGroq", () => {
     console.log({ finalRes, iters });
     expect(iters).toBeGreaterThan(1);
   });
+
+  test("invoke with bound tools", async () => {
+    const chat = new ChatGroq({
+      maxRetries: 0,
+    });
+    const message = new HumanMessage("What is the current weather in Hawaii?");
+    const res = await chat
+      .bind({
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "get_current_weather",
+              description: "Get the current weather in a given location",
+              parameters: {
+                type: "object",
+                properties: {
+                  location: {
+                    type: "string",
+                    description: "The city and state, e.g. San Francisco, CA",
+                  },
+                  unit: { type: "string", enum: ["celsius", "fahrenheit"] },
+                },
+                required: ["location"],
+              },
+            },
+          },
+        ],
+        tool_choice: "auto",
+      })
+      .invoke([message]);
+    console.log(JSON.stringify(res));
+    expect(res.additional_kwargs.tool_calls?.length).toBeGreaterThan(0);
+  });
+
+  test.skip("stream with bound tools - not supported yet!", async () => {
+    const chat = new ChatGroq({
+      maxRetries: 0,
+    });
+    const message = new HumanMessage("What is the current weather in Hawaii?");
+    const stream = await chat
+      .bind({
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "get_current_weather",
+              description: "Get the current weather in a given location",
+              parameters: {
+                type: "object",
+                properties: {
+                  location: {
+                    type: "string",
+                    description: "The city and state, e.g. San Francisco, CA",
+                  },
+                  unit: { type: "string", enum: ["celsius", "fahrenheit"] },
+                },
+                required: ["location"],
+              },
+            },
+          },
+        ],
+        tool_choice: "auto",
+      })
+      .stream([message]);
+    for await (const chunk of stream) {
+      console.log(JSON.stringify(chunk));
+    }
+  });
 });

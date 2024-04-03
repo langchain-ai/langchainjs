@@ -1,3 +1,5 @@
+import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -13,6 +15,7 @@ import {
   ChatMessageChunk,
   HumanMessageChunk,
   SystemMessageChunk,
+  ToolCall,
 } from "@langchain/core/messages";
 import {
   ChatGeneration,
@@ -20,7 +23,11 @@ import {
   ChatResult,
 } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { type OpenAICoreRequestOptions } from "@langchain/openai";
+import {
+  type OpenAICoreRequestOptions,
+  type OpenAIClient,
+} from "@langchain/openai";
+import { isZodSchema } from "@langchain/core/utils/types";
 import Groq from "groq-sdk";
 import { ChatCompletionChunk } from "groq-sdk/lib/chat_completions_ext";
 import {
@@ -29,9 +36,28 @@ import {
   ChatCompletionCreateParamsNonStreaming,
   ChatCompletionCreateParamsStreaming,
 } from "groq-sdk/resources/chat/completions";
+import {
+  Runnable,
+  RunnablePassthrough,
+  RunnableSequence,
+} from "@langchain/core/runnables";
+import {
+  BaseLanguageModelInput,
+  FunctionDefinition,
+  StructuredOutputMethodOptions,
+} from "@langchain/core/language_models/base";
+import {
+  BaseLLMOutputParser,
+  JsonOutputParser,
+  StructuredOutputParser,
+} from "@langchain/core/output_parsers";
+import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 
 export interface ChatGroqCallOptions extends BaseChatModelCallOptions {
   headers?: Record<string, string>;
+  tools?: OpenAIClient.ChatCompletionTool[];
+  tool_choice?: OpenAIClient.ChatCompletionToolChoiceOption;
+  response_format?: { type: "json_object" };
 }
 
 export interface ChatGroqInput extends BaseChatModelParams {
@@ -104,9 +130,15 @@ function convertMessagesToGroqParams(
 function groqResponseToChatMessage(
   message: ChatCompletion.Choice.Message
 ): BaseMessage {
+  const toolCalls: ToolCall[] | undefined = message.tool_calls as
+    | ToolCall[]
+    | undefined;
   switch (message.role) {
     case "assistant":
-      return new AIMessage(message.content || "");
+      return new AIMessage({
+        content: message.content || "",
+        additional_kwargs: { tool_calls: toolCalls },
+      });
     default:
       return new ChatMessage(message.content || "", message.role ?? "unknown");
   }
@@ -122,6 +154,10 @@ function _convertDeltaToMessageChunk(
   if (delta.function_call) {
     additional_kwargs = {
       function_call: delta.function_call,
+    };
+  } else if (delta.tool_calls) {
+    additional_kwargs = {
+      tool_calls: delta.tool_calls,
     };
   } else {
     additional_kwargs = {};
@@ -227,6 +263,15 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
     options: this["ParsedCallOptions"]
   ): ChatCompletionCreateParams {
     const params = super.invocationParams(options);
+    if (options.tool_choice !== undefined) {
+      params.tool_choice = options.tool_choice;
+    }
+    if (options.tools !== undefined) {
+      params.tools = options.tools;
+    }
+    if (options.response_format !== undefined) {
+      params.response_format = options.response_format;
+    }
     return {
       ...params,
       stop: options.stop ?? this.stop,
@@ -360,5 +405,154 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
         llmOutput: { tokenUsage },
       };
     }
+  }
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<false>
+  ): Runnable<BaseLanguageModelInput, RunOutput>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<true>
+  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<boolean>
+  ):
+    | Runnable<BaseLanguageModelInput, RunOutput>
+    | Runnable<
+        BaseLanguageModelInput,
+        { raw: BaseMessage; parsed: RunOutput }
+      > {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
+    const name = config?.name;
+    const method = config?.method;
+    const includeRaw = config?.includeRaw;
+
+    let functionName = name ?? "extract";
+    let outputParser: BaseLLMOutputParser<RunOutput>;
+    let llm: Runnable<BaseLanguageModelInput>;
+
+    if (method === "jsonMode") {
+      llm = this.bind({
+        response_format: { type: "json_object" },
+      });
+      if (isZodSchema(schema)) {
+        outputParser = StructuredOutputParser.fromZodSchema(schema);
+      } else {
+        outputParser = new JsonOutputParser<RunOutput>();
+      }
+    } else {
+      if (isZodSchema(schema)) {
+        const asJsonSchema = zodToJsonSchema(schema);
+        llm = this.bind({
+          tools: [
+            {
+              type: "function" as const,
+              function: {
+                name: functionName,
+                description: asJsonSchema.description,
+                parameters: asJsonSchema,
+              },
+            },
+          ],
+          tool_choice: {
+            type: "function" as const,
+            function: {
+              name: functionName,
+            },
+          },
+        });
+        outputParser = new JsonOutputKeyToolsParser({
+          returnSingle: true,
+          keyName: functionName,
+          zodSchema: schema,
+        });
+      } else {
+        let openAIFunctionDefinition: FunctionDefinition;
+        if (
+          typeof schema.name === "string" &&
+          typeof schema.parameters === "object" &&
+          schema.parameters != null
+        ) {
+          openAIFunctionDefinition = schema as FunctionDefinition;
+          functionName = schema.name;
+        } else {
+          functionName = schema.title ?? functionName;
+          openAIFunctionDefinition = {
+            name: functionName,
+            description: schema.description ?? "",
+            parameters: schema,
+          };
+        }
+        llm = this.bind({
+          tools: [
+            {
+              type: "function" as const,
+              function: openAIFunctionDefinition,
+            },
+          ],
+          tool_choice: {
+            type: "function" as const,
+            function: {
+              name: functionName,
+            },
+          },
+        });
+        outputParser = new JsonOutputKeyToolsParser<RunOutput>({
+          returnSingle: true,
+          keyName: functionName,
+        });
+      }
+    }
+
+    if (!includeRaw) {
+      return llm.pipe(outputParser).withConfig({
+        runName: "ChatGroqStructuredOutput",
+      });
+    }
+
+    const parserAssign = RunnablePassthrough.assign({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
+    });
+    const parserNone = RunnablePassthrough.assign({
+      parsed: () => null,
+    });
+    const parsedWithFallback = parserAssign.withFallbacks({
+      fallbacks: [parserNone],
+    });
+    return RunnableSequence.from<
+      BaseLanguageModelInput,
+      { raw: BaseMessage; parsed: RunOutput }
+    >([
+      {
+        raw: llm,
+      },
+      parsedWithFallback,
+    ]).withConfig({
+      runName: "ChatGroqStructuredOutput",
+    });
   }
 }
