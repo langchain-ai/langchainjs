@@ -484,4 +484,31 @@ describe("runId config", () => {
     const run = await tracer.extract();
     expect(run.id).toBe(testId);
   });
+
+  test("stream (via llm)", async () => {
+    const tracer = new SingleRunExtractor();
+    const llm = new FakeStreamingLLM({});
+    const testId = uuidv4();
+    const stream = await llm.stream("gg", {
+      callbacks: [tracer],
+      runId: testId,
+    });
+    for await (const _ of stream) {
+      // no-op
+    }
+    const run = await tracer.extract();
+    expect(run.id).toBe(testId);
+  });
+
+  test("invoke (via llm)", async () => {
+    const tracer = new SingleRunExtractor();
+    const llm = new FakeLLM({});
+    const testId = uuidv4();
+    await llm.invoke("gg", {
+      callbacks: [tracer],
+      runId: testId,
+    });
+    const run = await tracer.extract();
+    expect(run.id).toBe(testId);
+  });
 });

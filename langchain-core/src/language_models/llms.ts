@@ -49,6 +49,7 @@ interface LLMGenerateCachedParameters<
   llmStringKey: string;
   parsedOptions: T["ParsedCallOptions"];
   handledOptions: RunnableConfig;
+  runId?: string;
 }
 
 /**
@@ -140,7 +141,7 @@ export abstract class BaseLLM<
       const runManagers = await callbackManager_?.handleLLMStart(
         this.toJSON(),
         [prompt.toString()],
-        undefined,
+        runnableConfig.runId,
         undefined,
         extra,
         undefined,
@@ -268,7 +269,7 @@ export abstract class BaseLLM<
     const runManagers = await callbackManager_?.handleLLMStart(
       this.toJSON(),
       prompts,
-      undefined,
+      parsedOptions.runId,
       undefined,
       extra,
       undefined,
@@ -309,6 +310,7 @@ export abstract class BaseLLM<
     llmStringKey,
     parsedOptions,
     handledOptions,
+    runId,
   }: LLMGenerateCachedParameters<typeof this>): Promise<
     LLMResult & { missingPromptIndices: number[] }
   > {
@@ -330,7 +332,7 @@ export abstract class BaseLLM<
     const runManagers = await callbackManager_?.handleLLMStart(
       this.toJSON(),
       prompts,
-      undefined,
+      runId,
       undefined,
       extra,
       undefined,
@@ -400,27 +402,6 @@ export abstract class BaseLLM<
   }
 
   /**
-   * @TODO implement inside generate methods.
-   */
-  static _getRunIdsArray(
-    runId: string | (string | undefined)[] | undefined,
-    prompts: string[]
-  ): (string | undefined)[] {
-    if (!runId) {
-      return Array(prompts.length).fill(undefined);
-    }
-    if (Array.isArray(runId)) {
-      if (runId.length !== prompts.length) {
-        throw new Error(
-          `Number of manually provided runId's does not match batch length.\n${runId.length} !== ${prompts.length}`
-        );
-      }
-      return runId;
-    }
-    return [runId, ...Array(prompts.length - 1).fill(null)];
-  }
-
-  /**
    * Run the LLM on the given prompts and input, handling caching.
    */
   async generate(
@@ -456,6 +437,7 @@ export abstract class BaseLLM<
       llmStringKey,
       parsedOptions: callOptions,
       handledOptions: runnableConfig,
+      runId: runnableConfig.runId,
     });
 
     let llmOutput = {};
