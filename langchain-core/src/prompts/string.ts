@@ -1,7 +1,7 @@
 // Default generic "any" values are for backwards compatibility.
 // Replace with "string" when we are comfortable with a breaking change.
 
-import type { InputValues } from "../utils/types.js";
+import type { InputValues } from "../utils/types/index.js";
 import {
   type StringPromptValueInterface,
   StringPromptValue,
