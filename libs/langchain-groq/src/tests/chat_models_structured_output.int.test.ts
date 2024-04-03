@@ -23,10 +23,8 @@ test("withStructuredOutput zod schema function calling", async () => {
   );
 
   const prompt = ChatPromptTemplate.fromMessages([
-    "system",
-    "You are VERY bad at math and must always use a calculator.",
-    "human",
-    "Please help me!! What is 2 + 2?",
+    ["system", "You are VERY bad at math and must always use a calculator."],
+    ["human", "Please help me!! What is 2 + 2?"],
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
@@ -56,15 +54,16 @@ test("withStructuredOutput zod schema JSON mode", async () => {
   );
 
   const prompt = ChatPromptTemplate.fromMessages([
-    "system",
-    `You are VERY bad at math and must always use a calculator.
+    [
+      "system",
+      `You are VERY bad at math and must always use a calculator.
 Respond with a JSON object containing three keys:
 'operation': the type of operation to execute, either 'add', 'subtract', 'multiply' or 'divide',
 'number1': the first number to operate on,
 'number2': the second number to operate on.
 `,
-    "human",
-    "Please help me!! What is 2 + 2?",
+    ],
+    ["human", "Please help me!! What is 2 + 2?"],
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
@@ -85,16 +84,16 @@ test("withStructuredOutput JSON schema function calling", async () => {
     number1: z.number(),
     number2: z.number(),
   });
-  const modelWithStructuredOutput = model.withStructuredOutput({
-    schema: zodToJsonSchema(calculatorSchema),
-    name: "calculator",
-  });
+  const modelWithStructuredOutput = model.withStructuredOutput(
+    zodToJsonSchema(calculatorSchema),
+    {
+      name: "calculator",
+    }
+  );
 
   const prompt = ChatPromptTemplate.fromMessages([
-    "system",
-    `You are VERY bad at math and must always use a calculator.`,
-    "human",
-    "Please help me!! What is 2 + 2?",
+    ["system", `You are VERY bad at math and must always use a calculator.`],
+    ["human", "Please help me!! What is 2 + 2?"],
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
@@ -154,15 +153,16 @@ test("withStructuredOutput JSON schema JSON mode", async () => {
   );
 
   const prompt = ChatPromptTemplate.fromMessages([
-    "system",
-    `You are VERY bad at math and must always use a calculator.
+    [
+      "system",
+      `You are VERY bad at math and must always use a calculator.
 Respond with a JSON object containing three keys:
 'operation': the type of operation to execute, either 'add', 'subtract', 'multiply' or 'divide',
 'number1': the first number to operate on,
 'number2': the second number to operate on.
 `,
-    "human",
-    "Please help me!! What is 2 + 2?",
+    ],
+    ["human", "Please help me!! What is 2 + 2?"],
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
@@ -194,15 +194,16 @@ test("withStructuredOutput JSON schema", async () => {
   const modelWithStructuredOutput = model.withStructuredOutput(jsonSchema);
 
   const prompt = ChatPromptTemplate.fromMessages([
-    "system",
-    `You are VERY bad at math and must always use a calculator.
+    [
+      "system",
+      `You are VERY bad at math and must always use a calculator.
 Respond with a JSON object containing three keys:
 'operation': the type of operation to execute, either 'add', 'subtract', 'multiply' or 'divide',
 'number1': the first number to operate on,
 'number2': the second number to operate on.
 `,
-    "human",
-    "Please help me!! What is 2 + 2?",
+    ],
+    ["human", "Please help me!! What is 2 + 2?"],
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
@@ -232,10 +233,8 @@ test("withStructuredOutput includeRaw true", async () => {
   );
 
   const prompt = ChatPromptTemplate.fromMessages([
-    "system",
-    "You are VERY bad at math and must always use a calculator.",
-    "human",
-    "Please help me!! What is 2 + 2?",
+    ["system", "You are VERY bad at math and must always use a calculator."],
+    ["human", "Please help me!! What is 2 + 2?"],
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
