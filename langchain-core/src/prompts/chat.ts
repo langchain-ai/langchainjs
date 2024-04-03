@@ -17,7 +17,7 @@ import {
   type ChatPromptValueInterface,
   ChatPromptValue,
 } from "../prompt_values.js";
-import type { InputValues, PartialValues } from "../utils/types/typings.js";
+import type { InputValues, PartialValues } from "../utils/types/index.js";
 import { Runnable } from "../runnables/base.js";
 import { BaseStringPromptTemplate } from "./string.js";
 import {

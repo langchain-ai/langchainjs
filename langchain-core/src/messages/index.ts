@@ -1,5 +1,5 @@
 import { Serializable, SerializedConstructor } from "../load/serializable.js";
-import type { StringWithAutocomplete } from "../utils/types/typings.js";
+import type { StringWithAutocomplete } from "../utils/types/index.js";
 
 export interface StoredMessageData {
   content: string;
