@@ -99,7 +99,7 @@ function anthropicResponseToChatMessages(
     const castMessage = messages as any;
     const generations: ChatGeneration[] = [
       {
-        text: "s",
+        text: "",
         message: new AIMessage({
           content: castMessage,
           additional_kwargs: additionalKwargs,
