@@ -14,7 +14,7 @@ import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { StructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
-import { ChatAnthropic } from "../chat_models.js";
+import { AnthropicToolResponse, ChatAnthropic } from "../chat_models.js";
 
 test.skip("Test ChatAnthropic", async () => {
   const chat = new ChatAnthropic({
@@ -377,19 +377,30 @@ describe("Tool calling", () => {
     const result = await modelWithTools.invoke(
       "What is the weather in London today?"
     );
-    expect(result.additional_kwargs.tool_calls).toBeTruthy();
-    const { tool_calls } = result.additional_kwargs;
-    if (!tool_calls || !tool_calls.length) {
-      throw new Error("No tool calls returned");
-    }
     console.log(
       {
-        tool_calls: JSON.stringify(tool_calls, null, 2),
+        tool_calls: JSON.stringify(result.content, null, 2),
       },
       "Can bind & invoke StructuredTools"
     );
-    expect(tool_calls[0].function.name).toBe("get_weather");
-    expect(JSON.parse(tool_calls[0].function.arguments).location).toBeTruthy();
+    expect(Array.isArray(result.content)).toBeTruthy();
+    if (!Array.isArray(result.content)) {
+      throw new Error("Content is not an array");
+    }
+    let toolCall: AnthropicToolResponse | undefined;
+    result.content.forEach((item) => {
+      if (item.type === "tool_use") {
+        toolCall = item as AnthropicToolResponse;
+      }
+    });
+    if (!toolCall) {
+      throw new Error("No tool call found");
+    }
+    expect(toolCall).toBeTruthy();
+    const { name, input } = toolCall;
+    expect(name).toBe("get_weather");
+    expect(input).toBeTruthy();
+    expect(input.location).toBeTruthy();
   });
 
   test("Can bind & invoke AnthropicTools", async () => {
@@ -400,19 +411,30 @@ describe("Tool calling", () => {
     const result = await modelWithTools.invoke(
       "What is the weather in London today?"
     );
-    expect(result.additional_kwargs.tool_calls).toBeTruthy();
-    const { tool_calls } = result.additional_kwargs;
-    if (!tool_calls || !tool_calls.length) {
-      throw new Error("No tool calls returned");
-    }
     console.log(
       {
-        tool_calls: JSON.stringify(tool_calls, null, 2),
+        tool_calls: JSON.stringify(result.content, null, 2),
       },
-      "Can bind & invoke AnthropicTools"
+      "Can bind & invoke StructuredTools"
     );
-    expect(tool_calls[0].function.name).toBe("get_weather");
-    expect(JSON.parse(tool_calls[0].function.arguments).location).toBeTruthy();
+    expect(Array.isArray(result.content)).toBeTruthy();
+    if (!Array.isArray(result.content)) {
+      throw new Error("Content is not an array");
+    }
+    let toolCall: AnthropicToolResponse | undefined;
+    result.content.forEach((item) => {
+      if (item.type === "tool_use") {
+        toolCall = item as AnthropicToolResponse;
+      }
+    });
+    if (!toolCall) {
+      throw new Error("No tool call found");
+    }
+    expect(toolCall).toBeTruthy();
+    const { name, input } = toolCall;
+    expect(name).toBe("get_weather");
+    expect(input).toBeTruthy();
+    expect(input.location).toBeTruthy();
   });
 
   test("Can bind & stream AnthropicTools", async () => {
@@ -433,19 +455,30 @@ describe("Tool calling", () => {
       throw new Error("No final message returned");
     }
 
-    expect(finalMessage.additional_kwargs.tool_calls).toBeTruthy();
-    const { tool_calls } = finalMessage.additional_kwargs;
-    if (!tool_calls || !tool_calls.length) {
-      throw new Error("No tool calls returned");
-    }
     console.log(
       {
-        tool_calls: JSON.stringify(tool_calls, null, 2),
+        tool_calls: JSON.stringify(finalMessage.content, null, 2),
       },
-      "Can bind & invoke AnthropicTools"
+      "Can bind & invoke StructuredTools"
     );
-    expect(tool_calls[0].function.name).toBe("get_weather");
-    expect(JSON.parse(tool_calls[0].function.arguments).location).toBeTruthy();
+    expect(Array.isArray(finalMessage.content)).toBeTruthy();
+    if (!Array.isArray(finalMessage.content)) {
+      throw new Error("Content is not an array");
+    }
+    let toolCall: AnthropicToolResponse | undefined;
+    finalMessage.content.forEach((item) => {
+      if (item.type === "tool_use") {
+        toolCall = item as AnthropicToolResponse;
+      }
+    });
+    if (!toolCall) {
+      throw new Error("No tool call found");
+    }
+    expect(toolCall).toBeTruthy();
+    const { name, input } = toolCall;
+    expect(name).toBe("get_weather");
+    expect(input).toBeTruthy();
+    expect(input.location).toBeTruthy();
   });
 
   test("withStructuredOutput with zod schema", async () => {

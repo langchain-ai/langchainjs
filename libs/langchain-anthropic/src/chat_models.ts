@@ -5,7 +5,6 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   AIMessage,
   AIMessageChunk,
-  ToolCall,
   type BaseMessage,
 } from "@langchain/core/messages";
 import {
@@ -55,15 +54,17 @@ interface ChatAnthropicCallOptions extends BaseLanguageModelCallOptions {
   tools?: StructuredToolInterface[] | AnthropicTool[];
 }
 
+export type AnthropicToolResponse = {
+  type: "tool_use";
+  id: string;
+  name: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  input: Record<string, any>;
+};
+
 type AnthropicMessageResponse =
   | Anthropic.ContentBlock
-  | ({
-      type: "tool_use";
-      id: string;
-      name: string;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      input: Record<string, any>;
-    } & Record<string, unknown>);
+  | AnthropicToolResponse;
 
 function _formatImage(imageUrl: string) {
   const regex = /^data:(image\/.+);base64,(.+)$/;
@@ -88,34 +89,27 @@ function anthropicResponseToChatMessages(
   messages: AnthropicMessageResponse[],
   additionalKwargs: Record<string, unknown>
 ): ChatGeneration[] {
-  let contentText = "";
-  const tools: ToolCall[] = [];
-
-  messages.forEach((msg) => {
-    if (msg.type === "text") {
-      contentText += msg.text;
-    } else if (msg.type === "tool_use") {
-      tools.push({
-        id: msg.id,
-        type: "function",
-        function: {
-          arguments: JSON.stringify(msg.input),
-          name: msg.name,
-        },
-      });
-    }
-  });
-
-  const generations: ChatGeneration[] = [
-    {
-      text: contentText,
-      message: new AIMessage(contentText, {
-        ...additionalKwargs,
-        tool_calls: tools,
-      }),
-    },
-  ];
-  return generations;
+  if (messages.length === 1 && messages[0].type === "text") {
+    return [
+      {
+        text: messages[0].text,
+        message: new AIMessage(messages[0].text, additionalKwargs),
+      },
+    ]
+  } else {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const castMessage = messages as any;
+    const generations: ChatGeneration[] = [
+      {
+        text: "s",
+        message: new AIMessage({
+          content: castMessage,
+          additional_kwargs: additionalKwargs
+        }),
+      }
+    ]
+    return generations;
+  }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -421,21 +415,8 @@ export class ChatAnthropicMessages<
         },
         options
       );
-      const response = await this.completionWithRetry(
-        {
-          ...params,
-          stream: false,
-          ...this.formatMessagesForAnthropic(messages),
-        },
-        requestOptions
-      );
+      const generations = await this._generateNonStreaming(messages, params, requestOptions);
 
-      const { content, ...additionalKwargs } = response;
-
-      const generations = anthropicResponseToChatMessages(
-        content,
-        additionalKwargs
-      );
       yield new ChatGenerationChunk({
         message: new AIMessageChunk({
           content: generations[0].message.content,
@@ -551,32 +532,65 @@ export class ChatAnthropicMessages<
           role,
           content: message.content,
         };
-      } else {
+      } else if ("type" in message.content) {
+        const contentBlocks = message.content.map((contentPart) => {
+          if (contentPart.type === "image_url") {
+            let source;
+            if (typeof contentPart.image_url === "string") {
+              source = _formatImage(contentPart.image_url);
+            } else {
+              source = _formatImage(contentPart.image_url.url);
+            }
+            return {
+              type: "image" as const, // Explicitly setting the type as "image"
+              source,
+            };
+          } else if (contentPart.type === "text") {
+            // Assuming contentPart is of type MessageContentText here
+            return {
+              type: "text" as const, // Explicitly setting the type as "text"
+              text: contentPart.text,
+            };
+          } else {
+            throw new Error("Unsupported message content format");
+          }
+        });
         return {
           role,
-          content: message.content.map((contentPart) => {
-            if (contentPart.type === "image_url") {
-              let source;
-              if (typeof contentPart.image_url === "string") {
-                source = _formatImage(contentPart.image_url);
-              } else {
-                source = _formatImage(contentPart.image_url.url);
-              }
-              return {
-                type: "image" as const,
-                source,
-              };
-            } else {
-              return contentPart;
-            }
-          }),
+          content: contentBlocks,
         };
+      } else {
+        throw new Error("Unsupported message content format");
       }
     });
     return {
       messages: formattedMessages,
       system,
     };
+  }
+
+  /** @ignore */
+  async _generateNonStreaming(
+    messages: BaseMessage[],
+    params: Omit<Anthropic.Messages.MessageCreateParamsNonStreaming | Anthropic.Messages.MessageCreateParamsStreaming, "messages"> & Kwargs,
+    requestOptions: AnthropicRequestOptions,
+  ) {
+    const response = await this.completionWithRetry(
+      {
+        ...params,
+        stream: false,
+        ...this.formatMessagesForAnthropic(messages),
+      },
+      requestOptions
+    );
+
+    const { content, ...additionalKwargs } = response;
+
+    const generations = anthropicResponseToChatMessages(
+      content,
+      additionalKwargs
+    );
+    return generations;
   }
 
   /** @ignore */
@@ -622,22 +636,7 @@ export class ChatAnthropicMessages<
         },
         options
       );
-      const response = await this.completionWithRetry(
-        {
-          ...params,
-          stream: false,
-          ...this.formatMessagesForAnthropic(messages),
-        },
-        requestOptions
-      );
-
-      const { content, ...additionalKwargs } = response;
-
-      const generations = anthropicResponseToChatMessages(
-        content,
-        additionalKwargs
-      );
-
+      const generations = await this._generateNonStreaming(messages, params, requestOptions);
       return {
         generations,
       };
