@@ -5,21 +5,65 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   AIMessage,
   AIMessageChunk,
+  ToolCall,
   type BaseMessage,
 } from "@langchain/core/messages";
-import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
+import {
+  ChatGeneration,
+  ChatGenerationChunk,
+  type ChatResult,
+} from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   BaseChatModel,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
-import { type BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
+import {
+  StructuredOutputMethodOptions,
+  type BaseLanguageModelCallOptions,
+  BaseLanguageModelInput,
+} from "@langchain/core/language_models/base";
+import { StructuredToolInterface } from "@langchain/core/tools";
+import { zodToJsonSchema } from "zod-to-json-schema";
+import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
+import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
+import {
+  Runnable,
+  RunnablePassthrough,
+  RunnableSequence,
+} from "@langchain/core/runnables";
+import { isZodSchema } from "@langchain/core/utils/types";
+import { z } from "zod";
+
+type AnthropicTool = {
+  name: string;
+  description: string;
+  /**
+   * JSON schema.
+   */
+  input_schema: Record<string, unknown>;
+};
 
 type AnthropicMessage = Anthropic.MessageParam;
 type AnthropicMessageCreateParams = Anthropic.MessageCreateParamsNonStreaming;
 type AnthropicStreamingMessageCreateParams =
   Anthropic.MessageCreateParamsStreaming;
 type AnthropicMessageStreamEvent = Anthropic.MessageStreamEvent;
+type AnthropicRequestOptions = Anthropic.RequestOptions;
+
+interface ChatAnthropicCallOptions extends BaseLanguageModelCallOptions {
+  tools?: StructuredToolInterface[] | AnthropicTool[];
+}
+
+type AnthropicMessageResponse =
+  | Anthropic.ContentBlock
+  | ({
+      type: "tool_use";
+      id: string;
+      name: string;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      input: Record<string, any>;
+    } & Record<string, unknown>);
 
 function _formatImage(imageUrl: string) {
   const regex = /^data:(image\/.+);base64,(.+)$/;
@@ -39,6 +83,46 @@ function _formatImage(imageUrl: string) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any;
 }
+
+function anthropicResponseToChatMessages(
+  messages: AnthropicMessageResponse[],
+  additionalKwargs: Record<string, unknown>
+): ChatGeneration[] {
+  let contentText = "";
+  const tools: ToolCall[] = [];
+
+  messages.forEach((msg) => {
+    if (msg.type === "text") {
+      contentText += msg.text;
+    } else if (msg.type === "tool_use") {
+      tools.push({
+        id: msg.id,
+        type: "function",
+        function: {
+          arguments: JSON.stringify(msg.input),
+          name: msg.name,
+        },
+      });
+    }
+  });
+
+  const generations: ChatGeneration[] = [
+    {
+      text: contentText,
+      message: new AIMessage(contentText, {
+        ...additionalKwargs,
+        tool_calls: tools,
+      }),
+    },
+  ];
+  return generations;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function isAnthropicTool(tool: any): tool is AnthropicTool {
+  return "input_schema" in tool;
+}
+
 /**
  * Input to AnthropicChat class.
  */
@@ -134,7 +218,7 @@ type Kwargs = Record<string, any>;
  * ```
  */
 export class ChatAnthropicMessages<
-    CallOptions extends BaseLanguageModelCallOptions = BaseLanguageModelCallOptions
+    CallOptions extends ChatAnthropicCallOptions = ChatAnthropicCallOptions
   >
   extends BaseChatModel<CallOptions>
   implements AnthropicInput
@@ -212,6 +296,40 @@ export class ChatAnthropicMessages<
   }
 
   /**
+   * Formats LangChain StructuredTools to AnthropicTools.
+   *
+   * @param {ChatAnthropicCallOptions["tools"]} tools The tools to format
+   * @returns {AnthropicTool[] | undefined} The formatted tools, or undefined if none are passed.
+   * @throws {Error} If a mix of AnthropicTools and StructuredTools are passed.
+   */
+  formatStructuredToolToAnthropic(
+    tools: ChatAnthropicCallOptions["tools"]
+  ): AnthropicTool[] | undefined {
+    if (!tools || !tools.length) {
+      return undefined;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((tools as any[]).every((tool) => isAnthropicTool(tool))) {
+      // If the tool is already an anthropic tool, return it
+      return tools as AnthropicTool[];
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((tools as any[]).some((tool) => isAnthropicTool(tool))) {
+      throw new Error(
+        `Can not pass in a mix of AnthropicTools and StructuredTools`
+      );
+    }
+
+    return (tools as StructuredToolInterface[]).map((tool) => ({
+      name: tool.name,
+      description: tool.description,
+      input_schema: zodToJsonSchema(tool.schema),
+    }));
+  }
+
+  /**
    * Get the parameters used to invoke the model
    */
   invocationParams(
@@ -230,6 +348,35 @@ export class ChatAnthropicMessages<
       stream: this.streaming,
       max_tokens: this.maxTokens,
       ...this.invocationKwargs,
+    };
+  }
+
+  invocationOptions(
+    request: Omit<
+      AnthropicMessageCreateParams | AnthropicStreamingMessageCreateParams,
+      "messages"
+    > &
+      Kwargs,
+    options: this["ParsedCallOptions"]
+  ): AnthropicRequestOptions {
+    const toolUseBetaHeader = {
+      "anthropic-beta": "tools-2024-04-04",
+    };
+    const tools = this.formatStructuredToolToAnthropic(options?.tools);
+    // If tools are present, populate the body with the message request params.
+    // This is because Anthropic overwrites the message request params if a body
+    // is passed.
+    const body = tools
+      ? {
+          ...request,
+          tools,
+        }
+      : undefined;
+    const headers = tools ? toolUseBetaHeader : undefined;
+    return {
+      signal: options.signal,
+      ...(body ? { body } : {}),
+      ...(headers ? { headers } : {}),
     };
   }
 
@@ -257,67 +404,111 @@ export class ChatAnthropicMessages<
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const params = this.invocationParams(options);
-    const stream = await this.createStreamWithRetry({
-      ...params,
-      ...this.formatMessagesForAnthropic(messages),
-      stream: true,
-    });
-    let usageData = { input_tokens: 0, output_tokens: 0 };
-    for await (const data of stream) {
-      if (options.signal?.aborted) {
-        stream.controller.abort();
-        throw new Error("AbortError: User aborted the request.");
-      }
-      if (data.type === "message_start") {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { content, usage, ...additionalKwargs } = data.message;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const filteredAdditionalKwargs: Record<string, any> = {};
-        for (const [key, value] of Object.entries(additionalKwargs)) {
-          if (value !== undefined && value !== null) {
-            filteredAdditionalKwargs[key] = value;
+    const requestOptions = this.invocationOptions(
+      {
+        ...params,
+        stream: false,
+        ...this.formatMessagesForAnthropic(messages),
+      },
+      options
+    );
+    if (options.tools !== undefined && options.tools.length > 0) {
+      const requestOptions = this.invocationOptions(
+        {
+          ...params,
+          stream: false,
+          ...this.formatMessagesForAnthropic(messages),
+        },
+        options
+      );
+      const response = await this.completionWithRetry(
+        {
+          ...params,
+          stream: false,
+          ...this.formatMessagesForAnthropic(messages),
+        },
+        requestOptions
+      );
+
+      const { content, ...additionalKwargs } = response;
+
+      const generations = anthropicResponseToChatMessages(
+        content,
+        additionalKwargs
+      );
+      yield new ChatGenerationChunk({
+        message: new AIMessageChunk({
+          content: generations[0].message.content,
+          additional_kwargs: generations[0].message.additional_kwargs,
+        }),
+        text: generations[0].text,
+      });
+    } else {
+      const stream = await this.createStreamWithRetry(
+        {
+          ...params,
+          ...this.formatMessagesForAnthropic(messages),
+          stream: true,
+        },
+        requestOptions
+      );
+      let usageData = { input_tokens: 0, output_tokens: 0 };
+      for await (const data of stream) {
+        if (options.signal?.aborted) {
+          stream.controller.abort();
+          throw new Error("AbortError: User aborted the request.");
+        }
+        if (data.type === "message_start") {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { content, usage, ...additionalKwargs } = data.message;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const filteredAdditionalKwargs: Record<string, any> = {};
+          for (const [key, value] of Object.entries(additionalKwargs)) {
+            if (value !== undefined && value !== null) {
+              filteredAdditionalKwargs[key] = value;
+            }
           }
-        }
-        usageData = usage;
-        yield new ChatGenerationChunk({
-          message: new AIMessageChunk({
-            content: "",
-            additional_kwargs: filteredAdditionalKwargs,
-          }),
-          text: "",
-        });
-      } else if (data.type === "message_delta") {
-        yield new ChatGenerationChunk({
-          message: new AIMessageChunk({
-            content: "",
-            additional_kwargs: { ...data.delta },
-          }),
-          text: "",
-        });
-        if (data?.usage !== undefined) {
-          usageData.output_tokens += data.usage.output_tokens;
-        }
-      } else if (data.type === "content_block_delta") {
-        const content = data.delta?.text;
-        if (content !== undefined) {
+          usageData = usage;
           yield new ChatGenerationChunk({
             message: new AIMessageChunk({
-              content,
-              additional_kwargs: {},
+              content: "",
+              additional_kwargs: filteredAdditionalKwargs,
             }),
-            text: content,
+            text: "",
           });
-          await runManager?.handleLLMNewToken(content);
+        } else if (data.type === "message_delta") {
+          yield new ChatGenerationChunk({
+            message: new AIMessageChunk({
+              content: "",
+              additional_kwargs: { ...data.delta },
+            }),
+            text: "",
+          });
+          if (data?.usage !== undefined) {
+            usageData.output_tokens += data.usage.output_tokens;
+          }
+        } else if (data.type === "content_block_delta") {
+          const content = data.delta?.text;
+          if (content !== undefined) {
+            yield new ChatGenerationChunk({
+              message: new AIMessageChunk({
+                content,
+                additional_kwargs: {},
+              }),
+              text: content,
+            });
+            await runManager?.handleLLMNewToken(content);
+          }
         }
       }
+      yield new ChatGenerationChunk({
+        message: new AIMessageChunk({
+          content: "",
+          additional_kwargs: { usage: usageData },
+        }),
+        text: "",
+      });
     }
-    yield new ChatGenerationChunk({
-      message: new AIMessageChunk({
-        content: "",
-        additional_kwargs: { usage: usageData },
-      }),
-      text: "",
-    });
   }
 
   /**
@@ -344,6 +535,8 @@ export class ChatAnthropicMessages<
         role = "user" as const;
       } else if (message._getType() === "ai") {
         role = "assistant" as const;
+      } else if (message._getType() === "tool") {
+        role = "user" as const;
       } else if (message._getType() === "system") {
         throw new Error(
           "System messages are only permitted as the first passed message."
@@ -401,11 +594,7 @@ export class ChatAnthropicMessages<
     const params = this.invocationParams(options);
     if (params.stream) {
       let finalChunk: ChatGenerationChunk | undefined;
-      const stream = await this._streamResponseChunks(
-        messages,
-        options,
-        runManager
-      );
+      const stream = this._streamResponseChunks(messages, options, runManager);
       for await (const chunk of stream) {
         if (finalChunk === undefined) {
           finalChunk = chunk;
@@ -425,34 +614,32 @@ export class ChatAnthropicMessages<
         ],
       };
     } else {
+      const requestOptions = this.invocationOptions(
+        {
+          ...params,
+          stream: false,
+          ...this.formatMessagesForAnthropic(messages),
+        },
+        options
+      );
       const response = await this.completionWithRetry(
         {
           ...params,
           stream: false,
           ...this.formatMessagesForAnthropic(messages),
         },
-        { signal: options.signal }
+        requestOptions
       );
 
       const { content, ...additionalKwargs } = response;
 
-      if (!Array.isArray(content) || content.length !== 1) {
-        console.log(content);
-        throw new Error(
-          "Received multiple content parts in Anthropic response. Only single part messages are currently supported."
-        );
-      }
+      const generations = anthropicResponseToChatMessages(
+        content,
+        additionalKwargs
+      );
 
       return {
-        generations: [
-          {
-            text: content[0].text,
-            message: new AIMessage({
-              content: content[0].text,
-              additional_kwargs: additionalKwargs,
-            }),
-          },
-        ],
+        generations,
       };
     }
   }
@@ -463,31 +650,35 @@ export class ChatAnthropicMessages<
    * @returns A streaming request.
    */
   protected async createStreamWithRetry(
-    request: AnthropicStreamingMessageCreateParams & Kwargs
+    request: AnthropicStreamingMessageCreateParams & Kwargs,
+    options?: AnthropicRequestOptions
   ): Promise<Stream<AnthropicMessageStreamEvent>> {
     if (!this.streamingClient) {
-      const options = this.apiUrl ? { baseURL: this.apiUrl } : undefined;
+      const options_ = this.apiUrl ? { baseURL: this.apiUrl } : undefined;
       this.streamingClient = new Anthropic({
         ...this.clientOptions,
-        ...options,
+        ...options_,
         apiKey: this.anthropicApiKey,
         // Prefer LangChain built-in retries
         maxRetries: 0,
       });
     }
     const makeCompletionRequest = async () =>
-      this.streamingClient.messages.create({
-        ...request,
-        ...this.invocationKwargs,
-        stream: true,
-      } as AnthropicStreamingMessageCreateParams);
+      this.streamingClient.messages.create(
+        {
+          ...request,
+          ...this.invocationKwargs,
+          stream: true,
+        } as AnthropicStreamingMessageCreateParams,
+        options
+      );
     return this.caller.call(makeCompletionRequest);
   }
 
   /** @ignore */
   protected async completionWithRetry(
     request: AnthropicMessageCreateParams & Kwargs,
-    options: { signal?: AbortSignal }
+    options: AnthropicRequestOptions
   ): Promise<Anthropic.Message> {
     if (!this.anthropicApiKey) {
       throw new Error("Missing Anthropic API key.");
@@ -502,18 +693,141 @@ export class ChatAnthropicMessages<
       });
     }
     const makeCompletionRequest = async () =>
-      this.batchClient.messages.create({
-        ...request,
-        ...this.invocationKwargs,
-      } as AnthropicMessageCreateParams);
+      this.batchClient.messages.create(
+        {
+          ...request,
+          ...this.invocationKwargs,
+        } as AnthropicMessageCreateParams,
+        options
+      );
     return this.caller.callWithOptions(
-      { signal: options.signal },
+      { signal: options.signal ?? undefined },
       makeCompletionRequest
     );
   }
 
   _llmType() {
     return "anthropic";
+  }
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<false>
+  ): Runnable<BaseLanguageModelInput, RunOutput>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<true>
+  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<boolean>
+  ):
+    | Runnable<BaseLanguageModelInput, RunOutput>
+    | Runnable<
+        BaseLanguageModelInput,
+        { raw: BaseMessage; parsed: RunOutput }
+      > {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
+    const name = config?.name;
+    const method = config?.method;
+    const includeRaw = config?.includeRaw;
+    if (method === "jsonMode") {
+      throw new Error(`Anthropic only supports "functionCalling" as a method.`);
+    }
+
+    let functionName = name ?? "extract";
+    let outputParser: BaseLLMOutputParser<RunOutput>;
+    let tools: AnthropicTool[];
+    if (isZodSchema(schema)) {
+      const jsonSchema = zodToJsonSchema(schema);
+      tools = [
+        {
+          name: functionName,
+          description:
+            jsonSchema.description ?? "A function available to call.",
+          input_schema: jsonSchema,
+        },
+      ];
+      outputParser = new JsonOutputKeyToolsParser({
+        returnSingle: true,
+        keyName: functionName,
+        zodSchema: schema,
+      });
+    } else {
+      let anthropicTools: AnthropicTool;
+      if (
+        typeof schema.name === "string" &&
+        typeof schema.description === "string" &&
+        typeof schema.input_schema === "object" &&
+        schema.input_schema != null
+      ) {
+        anthropicTools = schema as AnthropicTool;
+        functionName = schema.name;
+      } else {
+        anthropicTools = {
+          name: functionName,
+          description: schema.description ?? "",
+          input_schema: schema,
+        };
+      }
+      tools = [anthropicTools];
+      outputParser = new JsonOutputKeyToolsParser<RunOutput>({
+        returnSingle: true,
+        keyName: functionName,
+      });
+    }
+    const llm = this.bind({
+      tools,
+    } as Partial<CallOptions>);
+
+    if (!includeRaw) {
+      return llm.pipe(outputParser).withConfig({
+        runName: "ChatAnthropicStructuredOutput",
+      }) as Runnable<BaseLanguageModelInput, RunOutput>;
+    }
+
+    const parserAssign = RunnablePassthrough.assign({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
+    });
+    const parserNone = RunnablePassthrough.assign({
+      parsed: () => null,
+    });
+    const parsedWithFallback = parserAssign.withFallbacks({
+      fallbacks: [parserNone],
+    });
+    return RunnableSequence.from<
+      BaseLanguageModelInput,
+      { raw: BaseMessage; parsed: RunOutput }
+    >([
+      {
+        raw: llm,
+      },
+      parsedWithFallback,
+    ]).withConfig({
+      runName: "StructuredOutputRunnable",
+    });
   }
 }
 
