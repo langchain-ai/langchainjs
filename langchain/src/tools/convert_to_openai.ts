@@ -1,5 +1,4 @@
 import { zodToJsonSchema } from "zod-to-json-schema";
-import type { OpenAIClient } from "@langchain/openai";
 import type { StructuredToolInterface } from "@langchain/core/tools";
 import {
   convertToOpenAIFunction,
@@ -13,7 +12,7 @@ export {
 
 export function formatToOpenAIAssistantTool(
   tool: StructuredToolInterface
-): OpenAIClient.Beta.AssistantCreateParams.AssistantToolsFunction {
+) {
   return {
     type: "function",
     function: {

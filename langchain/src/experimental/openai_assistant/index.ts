@@ -9,9 +9,8 @@ import type {
   OpenAIToolType,
 } from "./schema.js";
 
-type ThreadMessage = OpenAIClient.Beta.Threads.ThreadMessage;
-type RequiredActionFunctionToolCall =
-  OpenAIClient.Beta.Threads.RequiredActionFunctionToolCall;
+type ThreadMessage = any;
+type RequiredActionFunctionToolCall = any;
 
 type ExtractRunOutput<AsAgent extends boolean | undefined> =
   AsAgent extends true
@@ -96,7 +95,7 @@ export class OpenAIAssistantRunnable<
     input: RunInput,
     _options?: RunnableConfig
   ): Promise<ExtractRunOutput<AsAgent>> {
-    let run: OpenAIClient.Beta.Threads.Run;
+    let run: any;
     if (this.asAgent && input.steps && input.steps.length > 0) {
       const parsedStepsInput = await this._parseStepsInput(input);
       run = await this.client.beta.threads.runs.submitToolOutputs(
@@ -199,7 +198,8 @@ export class OpenAIAssistantRunnable<
     if (!toolCalls) {
       return input;
     }
-    const toolOutputs = toolCalls.flatMap((toolCall) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const toolOutputs = toolCalls.flatMap((toolCall: any) => {
       const matchedAction = (
         input.steps as {
           action: OpenAIAssistantAction;
@@ -259,7 +259,8 @@ export class OpenAIAssistantRunnable<
 
   private async _waitForRun(runId: string, threadId: string) {
     let inProgress = true;
-    let run = {} as OpenAIClient.Beta.Threads.Run;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let run = {} as any;
     while (inProgress) {
       run = await this.client.beta.threads.runs.retrieve(threadId, runId);
       inProgress = ["in_progress", "queued"].includes(run.status);
@@ -314,7 +315,8 @@ export class OpenAIAssistantRunnable<
         return run.required_action?.submit_tool_outputs.tool_calls ?? [];
       }
       const actions: OpenAIAssistantAction[] = [];
-      run.required_action?.submit_tool_outputs.tool_calls.forEach((item) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      run.required_action?.submit_tool_outputs.tool_calls.forEach((item: any) => {
         const functionCall = item.function;
         const args = JSON.parse(functionCall.arguments);
         actions.push({
