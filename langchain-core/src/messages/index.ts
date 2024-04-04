@@ -53,9 +53,9 @@ export type MessageContentComplex =
   | MessageContentText
   | MessageContentImageUrl
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  | Record<string, any> & { type?: "text" | "image_url" | string }
+  | (Record<string, any> & { type?: "text" | "image_url" | string })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  | Record<string, any> & { type?: never };
+  | (Record<string, any> & { type?: never });
 
 export type MessageContent = string | MessageContentComplex[];
 
@@ -205,7 +205,7 @@ export abstract class BaseMessage
     }
     super(fields);
     this.name = fields.name;
-    console.log("Assigning content", fields.content)
+    console.log("Assigning content", fields.content);
     this.content = fields.content;
     this.additional_kwargs = fields.additional_kwargs;
     this.response_metadata = fields.response_metadata;

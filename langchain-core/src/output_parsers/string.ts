@@ -63,18 +63,22 @@ export class StringOutputParser extends BaseTransformOutputParser<string> {
   ): string {
     switch (content.type) {
       case "text":
-        if ("text" in content) { // Type guard for MessageContentText
+        if ("text" in content) {
+          // Type guard for MessageContentText
           return this._textContentToString(content as MessageContentText);
         }
         break;
       case "image_url":
-        if ("url" in content) { // Type guard for MessageContentImageUrl
-          return this._imageUrlContentToString(content as MessageContentImageUrl);
+        if ("url" in content) {
+          // Type guard for MessageContentImageUrl
+          return this._imageUrlContentToString(
+            content as MessageContentImageUrl
+          );
         }
         break;
       default:
         throw new Error(
-          `Cannot coerce "${(content).type}" message part into a string.`
+          `Cannot coerce "${content.type}" message part into a string.`
         );
     }
     throw new Error(`Invalid content type: ${content.type}`);

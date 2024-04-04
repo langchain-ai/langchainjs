@@ -62,9 +62,7 @@ export type AnthropicToolResponse = {
   input: Record<string, any>;
 };
 
-type AnthropicMessageResponse =
-  | Anthropic.ContentBlock
-  | AnthropicToolResponse;
+type AnthropicMessageResponse = Anthropic.ContentBlock | AnthropicToolResponse;
 
 function _formatImage(imageUrl: string) {
   const regex = /^data:(image\/.+);base64,(.+)$/;
@@ -95,7 +93,7 @@ function anthropicResponseToChatMessages(
         text: messages[0].text,
         message: new AIMessage(messages[0].text, additionalKwargs),
       },
-    ]
+    ];
   } else {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const castMessage = messages as any;
@@ -104,10 +102,10 @@ function anthropicResponseToChatMessages(
         text: "s",
         message: new AIMessage({
           content: castMessage,
-          additional_kwargs: additionalKwargs
+          additional_kwargs: additionalKwargs,
         }),
-      }
-    ]
+      },
+    ];
     return generations;
   }
 }
@@ -415,7 +413,11 @@ export class ChatAnthropicMessages<
         },
         options
       );
-      const generations = await this._generateNonStreaming(messages, params, requestOptions);
+      const generations = await this._generateNonStreaming(
+        messages,
+        params,
+        requestOptions
+      );
 
       yield new ChatGenerationChunk({
         message: new AIMessageChunk({
@@ -572,8 +574,13 @@ export class ChatAnthropicMessages<
   /** @ignore */
   async _generateNonStreaming(
     messages: BaseMessage[],
-    params: Omit<Anthropic.Messages.MessageCreateParamsNonStreaming | Anthropic.Messages.MessageCreateParamsStreaming, "messages"> & Kwargs,
-    requestOptions: AnthropicRequestOptions,
+    params: Omit<
+      | Anthropic.Messages.MessageCreateParamsNonStreaming
+      | Anthropic.Messages.MessageCreateParamsStreaming,
+      "messages"
+    > &
+      Kwargs,
+    requestOptions: AnthropicRequestOptions
   ) {
     const response = await this.completionWithRetry(
       {
@@ -636,7 +643,11 @@ export class ChatAnthropicMessages<
         },
         options
       );
-      const generations = await this._generateNonStreaming(messages, params, requestOptions);
+      const generations = await this._generateNonStreaming(
+        messages,
+        params,
+        requestOptions
+      );
       return {
         generations,
       };

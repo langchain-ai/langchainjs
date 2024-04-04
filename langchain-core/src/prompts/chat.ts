@@ -704,19 +704,21 @@ function _coerceMessagePromptTemplateLike(
     return new MessagesPlaceholder({ variableName, optional: true });
   }
   const message = coerceMessageLikeToMessage(messagePromptTemplateLike);
-  let templateData: string | (string | _TextTemplateParam | _ImageTemplateParam)[];
-  
+  let templateData:
+    | string
+    | (string | _TextTemplateParam | _ImageTemplateParam)[];
+
   if (typeof message.content === "string") {
     templateData = message.content;
   } else {
     // Assuming message.content is an array of complex objects, transform it.
-    templateData = message.content.map(item => {
-      if ('text' in item) {
+    templateData = message.content.map((item) => {
+      if ("text" in item) {
         return { text: item.text };
-      } else if ('image_url' in item) {
+      } else if ("image_url" in item) {
         return { image_url: item.image_url };
       } else {
-        throw new Error("Invalid message content")
+        throw new Error("Invalid message content");
       }
     });
   }
