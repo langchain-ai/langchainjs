@@ -7,7 +7,7 @@ interface AnthropicToolsOutputParserParams
   extends JsonOutputKeyToolsParserParams {}
 
 export class AnthropicToolsOutputParser<
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends Record<string, any> = Record<string, any>
 > extends BaseLLMOutputParser<T> {
   static lc_name() {
