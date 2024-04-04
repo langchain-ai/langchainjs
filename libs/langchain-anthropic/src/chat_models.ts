@@ -33,6 +33,7 @@ import {
 import { isZodSchema } from "@langchain/core/utils/types";
 import { z } from "zod";
 import { AnthropicToolsOutputParser } from "./output_parsers.js";
+import { AnthropicToolResponse } from "./types.js";
 
 type AnthropicTool = {
   name: string;
@@ -53,14 +54,6 @@ type AnthropicRequestOptions = Anthropic.RequestOptions;
 interface ChatAnthropicCallOptions extends BaseLanguageModelCallOptions {
   tools?: StructuredToolInterface[] | AnthropicTool[];
 }
-
-export type AnthropicToolResponse = {
-  type: "tool_use";
-  id: string;
-  name: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  input: Record<string, any>;
-};
 
 type AnthropicMessageResponse = Anthropic.ContentBlock | AnthropicToolResponse;
 

@@ -1,7 +1,7 @@
 import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
 import { JsonOutputKeyToolsParserParams } from "@langchain/core/output_parsers/openai_tools";
 import { ChatGeneration } from "@langchain/core/outputs";
-import { AnthropicToolResponse } from "./chat_models.js";
+import { AnthropicToolResponse } from "./types.js";
 
 interface AnthropicToolsOutputParserParams
   extends JsonOutputKeyToolsParserParams {}

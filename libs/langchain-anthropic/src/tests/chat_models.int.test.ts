@@ -14,7 +14,8 @@ import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { StructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
-import { AnthropicToolResponse, ChatAnthropic } from "../chat_models.js";
+import { ChatAnthropic } from "../chat_models.js";
+import { AnthropicToolResponse } from "../types.js";
 
 test.skip("Test ChatAnthropic", async () => {
   const chat = new ChatAnthropic({
