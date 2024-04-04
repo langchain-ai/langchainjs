@@ -177,10 +177,8 @@ test.skip("Created OpenAIAssistantRunnable is invokeable", async () => {
       }
     ]
    */
-  const content = (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    assistantResponse as any[]
-  ).flatMap((res) => res.content);
+  const content = // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (assistantResponse as any[]).flatMap((res) => res.content);
   console.log(content);
   /**
     [

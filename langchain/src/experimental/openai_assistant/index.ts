@@ -9,7 +9,9 @@ import type {
   OpenAIToolType,
 } from "./schema.js";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ThreadMessage = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type RequiredActionFunctionToolCall = any;
 
 type ExtractRunOutput<AsAgent extends boolean | undefined> =
@@ -95,6 +97,7 @@ export class OpenAIAssistantRunnable<
     input: RunInput,
     _options?: RunnableConfig
   ): Promise<ExtractRunOutput<AsAgent>> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let run: any;
     if (this.asAgent && input.steps && input.steps.length > 0) {
       const parsedStepsInput = await this._parseStepsInput(input);
@@ -315,19 +318,21 @@ export class OpenAIAssistantRunnable<
         return run.required_action?.submit_tool_outputs.tool_calls ?? [];
       }
       const actions: OpenAIAssistantAction[] = [];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      run.required_action?.submit_tool_outputs.tool_calls.forEach((item: any) => {
-        const functionCall = item.function;
-        const args = JSON.parse(functionCall.arguments);
-        actions.push({
-          tool: functionCall.name,
-          toolInput: args,
-          toolCallId: item.id,
-          log: "",
-          runId,
-          threadId,
-        });
-      });
+      run.required_action?.submit_tool_outputs.tool_calls.forEach(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (item: any) => {
+          const functionCall = item.function;
+          const args = JSON.parse(functionCall.arguments);
+          actions.push({
+            tool: functionCall.name,
+            toolInput: args,
+            toolCallId: item.id,
+            log: "",
+            runId,
+            threadId,
+          });
+        }
+      );
       return actions;
     }
     const runInfo = JSON.stringify(run, null, 2);

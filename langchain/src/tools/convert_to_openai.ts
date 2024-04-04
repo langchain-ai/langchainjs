@@ -10,9 +10,7 @@ export {
   convertToOpenAITool as formatToOpenAITool,
 };
 
-export function formatToOpenAIAssistantTool(
-  tool: StructuredToolInterface
-) {
+export function formatToOpenAIAssistantTool(tool: StructuredToolInterface) {
   return {
     type: "function",
     function: {
