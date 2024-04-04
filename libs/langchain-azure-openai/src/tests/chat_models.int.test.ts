@@ -793,6 +793,20 @@ test("Test ChatOpenAI token usage reporting for streaming calls", async () => {
   }
 });
 
+test("Test Azure ChatOpenAI with key credentials ", async () => {
+  const model = new AzureChatOpenAI({
+    maxTokens: 5,
+    modelName: "davinci-002",
+    azureOpenAIApiKey: getEnvironmentVariable("AZURE_OPENAI_API_KEY") ?? "",
+    azureOpenAIEndpoint:
+      getEnvironmentVariable("AZURE_OPENAI_API_ENDPOINT") ?? "",
+    azureOpenAIApiDeploymentName:
+      getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME") ?? "",
+  });
+  const res = await model.invoke("Print hello world");
+  console.log({ res });
+});
+
 test("Test ChatOpenAI with OpenAI API key credentials", async () => {
   const openAiKey: string = getEnvironmentVariable("OPENAI_API_KEY") ?? "";
   const credentials = new OpenAIKeyCredential(openAiKey);
