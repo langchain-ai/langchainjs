@@ -269,7 +269,7 @@ export abstract class BaseLLM<
     const runManagers = await callbackManager_?.handleLLMStart(
       this.toJSON(),
       prompts,
-      parsedOptions.runId,
+      handledOptions.runId,
       undefined,
       extra,
       undefined,
