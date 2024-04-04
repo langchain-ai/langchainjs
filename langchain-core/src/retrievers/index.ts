@@ -103,7 +103,7 @@ export abstract class BaseRetriever<
     const runManager = await callbackManager_?.handleRetrieverStart(
       this.toJSON(),
       query,
-      undefined,
+      parsedConfig.runId,
       undefined,
       undefined,
       undefined,

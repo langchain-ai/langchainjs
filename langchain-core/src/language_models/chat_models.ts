@@ -185,7 +185,7 @@ export abstract class BaseChatModel<
       const runManagers = await callbackManager_?.handleChatModelStart(
         this.toJSON(),
         [messages],
-        undefined,
+        runnableConfig.runId,
         undefined,
         extra,
         undefined,
@@ -257,7 +257,7 @@ export abstract class BaseChatModel<
     const runManagers = await callbackManager_?.handleChatModelStart(
       this.toJSON(),
       baseMessages,
-      undefined,
+      handledOptions.runId,
       undefined,
       extra,
       undefined,
@@ -354,7 +354,7 @@ export abstract class BaseChatModel<
     const runManagers = await callbackManager_?.handleChatModelStart(
       this.toJSON(),
       baseMessages,
-      undefined,
+      handledOptions.runId,
       undefined,
       extra,
       undefined,
