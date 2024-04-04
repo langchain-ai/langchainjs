@@ -11,7 +11,11 @@ import {
   SystemMessagePromptTemplate,
 } from "@langchain/core/prompts";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
+import { StructuredTool } from "@langchain/core/tools";
+import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatAnthropic } from "../chat_models.js";
+import { AnthropicToolResponse } from "../types.js";
 
 test.skip("Test ChatAnthropic", async () => {
   const chat = new ChatAnthropic({
@@ -316,4 +320,226 @@ test("Test ChatAnthropic multimodal", async () => {
     }),
   ]);
   console.log(res);
+});
+
+describe("Tool calling", () => {
+  const zodSchema = z
+    .object({
+      location: z.string().describe("The name of city to get the weather for."),
+    })
+    .describe(
+      "Get the weather of a specific location and return the temperature in Celsius."
+    );
+
+  class WeatherTool extends StructuredTool {
+    schema = z.object({
+      location: z.string().describe("The name of city to get the weather for."),
+    });
+
+    description =
+      "Get the weather of a specific location and return the temperature in Celsius.";
+
+    name = "get_weather";
+
+    async _call(input: z.infer<typeof this.schema>) {
+      console.log(`WeatherTool called with input: ${input}`);
+      return `The weather in ${input.location} is 25°C`;
+    }
+  }
+
+  const model = new ChatAnthropic({
+    modelName: "claude-3-sonnet-20240229",
+    temperature: 0,
+  });
+
+  const anthropicTool = {
+    name: "get_weather",
+    description:
+      "Get the weather of a specific location and return the temperature in Celsius.",
+    input_schema: {
+      type: "object",
+      properties: {
+        location: {
+          type: "string",
+          description: "The name of city to get the weather for.",
+        },
+      },
+      required: ["location"],
+    },
+  };
+
+  test("Can bind & invoke StructuredTools", async () => {
+    const tools = [new WeatherTool()];
+
+    const modelWithTools = model.bind({
+      tools,
+    });
+
+    const result = await modelWithTools.invoke(
+      "What is the weather in London today?"
+    );
+    console.log(
+      {
+        tool_calls: JSON.stringify(result.content, null, 2),
+      },
+      "Can bind & invoke StructuredTools"
+    );
+    expect(Array.isArray(result.content)).toBeTruthy();
+    if (!Array.isArray(result.content)) {
+      throw new Error("Content is not an array");
+    }
+    let toolCall: AnthropicToolResponse | undefined;
+    result.content.forEach((item) => {
+      if (item.type === "tool_use") {
+        toolCall = item as AnthropicToolResponse;
+      }
+    });
+    if (!toolCall) {
+      throw new Error("No tool call found");
+    }
+    expect(toolCall).toBeTruthy();
+    const { name, input } = toolCall;
+    expect(name).toBe("get_weather");
+    expect(input).toBeTruthy();
+    expect(input.location).toBeTruthy();
+  });
+
+  test("Can bind & invoke AnthropicTools", async () => {
+    const modelWithTools = model.bind({
+      tools: [anthropicTool],
+    });
+
+    const result = await modelWithTools.invoke(
+      "What is the weather in London today?"
+    );
+    console.log(
+      {
+        tool_calls: JSON.stringify(result.content, null, 2),
+      },
+      "Can bind & invoke StructuredTools"
+    );
+    expect(Array.isArray(result.content)).toBeTruthy();
+    if (!Array.isArray(result.content)) {
+      throw new Error("Content is not an array");
+    }
+    let toolCall: AnthropicToolResponse | undefined;
+    result.content.forEach((item) => {
+      if (item.type === "tool_use") {
+        toolCall = item as AnthropicToolResponse;
+      }
+    });
+    if (!toolCall) {
+      throw new Error("No tool call found");
+    }
+    expect(toolCall).toBeTruthy();
+    const { name, input } = toolCall;
+    expect(name).toBe("get_weather");
+    expect(input).toBeTruthy();
+    expect(input.location).toBeTruthy();
+  });
+
+  test("Can bind & stream AnthropicTools", async () => {
+    const modelWithTools = model.bind({
+      tools: [anthropicTool],
+    });
+
+    const result = await modelWithTools.stream(
+      "What is the weather in London today?"
+    );
+    let finalMessage;
+    for await (const item of result) {
+      console.log("item", JSON.stringify(item, null, 2));
+      finalMessage = item;
+    }
+
+    if (!finalMessage) {
+      throw new Error("No final message returned");
+    }
+
+    console.log(
+      {
+        tool_calls: JSON.stringify(finalMessage.content, null, 2),
+      },
+      "Can bind & invoke StructuredTools"
+    );
+    expect(Array.isArray(finalMessage.content)).toBeTruthy();
+    if (!Array.isArray(finalMessage.content)) {
+      throw new Error("Content is not an array");
+    }
+    let toolCall: AnthropicToolResponse | undefined;
+    finalMessage.content.forEach((item) => {
+      if (item.type === "tool_use") {
+        toolCall = item as AnthropicToolResponse;
+      }
+    });
+    if (!toolCall) {
+      throw new Error("No tool call found");
+    }
+    expect(toolCall).toBeTruthy();
+    const { name, input } = toolCall;
+    expect(name).toBe("get_weather");
+    expect(input).toBeTruthy();
+    expect(input.location).toBeTruthy();
+  });
+
+  test("withStructuredOutput with zod schema", async () => {
+    const modelWithTools = model.withStructuredOutput<{ location: string }>(
+      zodSchema,
+      {
+        name: "get_weather",
+      }
+    );
+
+    const result = await modelWithTools.invoke(
+      "What is the weather in London today?"
+    );
+    console.log(
+      {
+        result,
+      },
+      "withStructuredOutput with zod schema"
+    );
+    expect(typeof result.location).toBe("string");
+  });
+
+  test("withStructuredOutput with AnthropicTool", async () => {
+    const modelWithTools = model.withStructuredOutput<{ location: string }>(
+      anthropicTool,
+      {
+        name: anthropicTool.name,
+      }
+    );
+
+    const result = await modelWithTools.invoke(
+      "What is the weather in London today?"
+    );
+    console.log(
+      {
+        result,
+      },
+      "withStructuredOutput with AnthropicTool"
+    );
+    expect(typeof result.location).toBe("string");
+  });
+
+  test("withStructuredOutput JSON Schema only", async () => {
+    const jsonSchema = zodToJsonSchema(zodSchema);
+    const modelWithTools = model.withStructuredOutput<{ location: string }>(
+      jsonSchema,
+      {
+        name: "get_weather",
+      }
+    );
+
+    const result = await modelWithTools.invoke(
+      "What is the weather in London today?"
+    );
+    console.log(
+      {
+        result,
+      },
+      "withStructuredOutput JSON Schema only"
+    );
+    expect(typeof result.location).toBe("string");
+  });
 });

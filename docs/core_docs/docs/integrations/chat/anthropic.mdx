@@ -48,3 +48,37 @@ You can pass custom headers in your requests like this:
 import AnthropicCustomHeaders from "@examples/models/chat/integration_anthropic_custom_headers.ts";
 
 <CodeBlock language="typescript">{AnthropicCustomHeaders}</CodeBlock>
+
+## Tools
+
+The Anthropic API supports tool calling, along with multi-tool calling. The following examples demonstrate how to call tools:
+
+### Single Tool
+
+import AnthropicSingleTool from "@examples/models/chat/integration_anthropic_single_tool.ts";
+
+<CodeBlock language="typescript">{AnthropicSingleTool}</CodeBlock>
+
+:::tip
+See the LangSmith trace [here](https://smith.langchain.com/public/90c03ed0-154b-4a50-afbf-83dcbf302647/r)
+:::
+
+### Multi-Tool
+
+import AnthropicMultiTool from "@examples/models/chat/integration_anthropic_multi_tool.ts";
+
+<CodeBlock language="typescript">{AnthropicMultiTool}</CodeBlock>
+
+:::tip
+See the LangSmith trace [here](https://smith.langchain.com/public/1349bb57-df1b-48b5-89c2-e6d5bd8f694a/r)
+:::
+
+### `withStructuredOutput`
+
+import AnthropicWSA from "@examples/models/chat/integration_anthropic_wsa.ts";
+
+<CodeBlock language="typescript">{AnthropicWSA}</CodeBlock>
+
+:::tip
+See the LangSmith trace [here](https://smith.langchain.com/public/efbd11c5-886e-4e07-be1a-951690fa8a27/r)
+:::

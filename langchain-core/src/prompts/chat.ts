@@ -704,12 +704,31 @@ function _coerceMessagePromptTemplateLike(
     return new MessagesPlaceholder({ variableName, optional: true });
   }
   const message = coerceMessageLikeToMessage(messagePromptTemplateLike);
+  let templateData:
+    | string
+    | (string | _TextTemplateParam | _ImageTemplateParam)[];
+
+  if (typeof message.content === "string") {
+    templateData = message.content;
+  } else {
+    // Assuming message.content is an array of complex objects, transform it.
+    templateData = message.content.map((item) => {
+      if ("text" in item) {
+        return { text: item.text };
+      } else if ("image_url" in item) {
+        return { image_url: item.image_url };
+      } else {
+        throw new Error("Invalid message content");
+      }
+    });
+  }
+
   if (message._getType() === "human") {
-    return HumanMessagePromptTemplate.fromTemplate(message.content);
+    return HumanMessagePromptTemplate.fromTemplate(templateData);
   } else if (message._getType() === "ai") {
-    return AIMessagePromptTemplate.fromTemplate(message.content);
+    return AIMessagePromptTemplate.fromTemplate(templateData);
   } else if (message._getType() === "system") {
-    return SystemMessagePromptTemplate.fromTemplate(message.content);
+    return SystemMessagePromptTemplate.fromTemplate(templateData);
   } else if (ChatMessage.isInstance(message)) {
     return ChatMessagePromptTemplate.fromTemplate(
       message.content as string,

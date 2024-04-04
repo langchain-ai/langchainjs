@@ -63,15 +63,25 @@ export class StringOutputParser extends BaseTransformOutputParser<string> {
   ): string {
     switch (content.type) {
       case "text":
-        return this._textContentToString(content);
+        if ("text" in content) {
+          // Type guard for MessageContentText
+          return this._textContentToString(content as MessageContentText);
+        }
+        break;
       case "image_url":
-        return this._imageUrlContentToString(content);
+        if ("image_url" in content) {
+          // Type guard for MessageContentImageUrl
+          return this._imageUrlContentToString(
+            content as MessageContentImageUrl
+          );
+        }
+        break;
       default:
         throw new Error(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          `Cannot coerce "${(content as any).type}" message part into a string.`
+          `Cannot coerce "${content.type}" message part into a string.`
         );
     }
+    throw new Error(`Invalid content type: ${content.type}`);
   }
 
   protected _baseMessageContentToString(
