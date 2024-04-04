@@ -119,6 +119,7 @@ export class LayerupSecurity extends LLM {
       const securityResponse = await this.layerup.executeGuardrails(
         this.promptGuardrails,
         messages,
+        input,
         this.metadata
       );
 
@@ -147,6 +148,7 @@ export class LayerupSecurity extends LLM {
       const securityResponse = await this.layerup.executeGuardrails(
         this.responseGuardrails,
         messages,
+        result,
         this.metadata
       );
 
