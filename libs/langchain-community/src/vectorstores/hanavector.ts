@@ -144,6 +144,11 @@ export class HanaDB extends VectorStore {
    * @throws {Error} Throws an error if any element is not a number.
    */
   public static sanitizeListFloat(embedding: number[]): number[] {
+    if (!Array.isArray(embedding)) {
+      throw new Error(
+        `Expected 'embedding' to be an array, but received ${typeof embedding}`
+      );
+    }
     embedding.forEach((value) => {
       if (typeof value !== "number") {
         throw new Error(`Value (${value}) does not have type number`);

@@ -377,6 +377,61 @@ describe("add documents and similarity search tests", () => {
       },
     ]);
   });
+
+  test("test similarity search with score", async () => {
+    const tableNameTest = "TEST_TABLE_SCORE";
+    const args: HanaDBArgs = {
+      connection: client,
+      tableName: tableNameTest,
+    };
+    dropTable(tableNameTest);
+    const texts = ["foo", "bar", "baz"];
+    const vectorDB = await HanaDB.fromTexts(texts, {}, embeddings, args);
+
+    const searchResult = await vectorDB.similaritySearchWithScore(texts[0], 3);
+    expect(searchResult[0][0].pageContent).toEqual(texts[0]);
+    expect(searchResult[0][1]).toEqual(1.0);
+    expect(searchResult[1][1]).toBeLessThanOrEqual(searchResult[0][1]);
+    expect(searchResult[2][1]).toBeLessThanOrEqual(searchResult[1][1]);
+    expect(searchResult[2][1]).toBeGreaterThanOrEqual(0.0);
+  });
+
+  test("test similarity search with score with euclidian distance", async () => {
+    const tableNameTest = "TEST_TABLE_SCORE_DISTANCE";
+    const args: HanaDBArgs = {
+      connection: client,
+      tableName: tableNameTest,
+      distanceStrategy: "euclidean",
+    };
+    dropTable(tableNameTest);
+    const texts = ["foo", "bar", "baz"];
+    const vectorDB = await HanaDB.fromTexts(texts, {}, embeddings, args);
+
+    const searchResult = await vectorDB.similaritySearchWithScore(texts[0], 3);
+    expect(searchResult[0][0].pageContent).toEqual(texts[0]);
+    expect(searchResult[0][1]).toEqual(0.0);
+    expect(searchResult[1][1]).toBeGreaterThanOrEqual(searchResult[0][1]);
+    expect(searchResult[2][1]).toBeGreaterThanOrEqual(searchResult[1][1]);
+  });
+
+  test("test similarity search by vector", async () => {
+    const tableNameTest = "TEST_TABLE_SEARCH_SIMPLE_VECTOR";
+    const args: HanaDBArgs = {
+      connection: client,
+      tableName: tableNameTest,
+    };
+    dropTable(tableNameTest);
+    const texts = ["foo", "bar", "baz"];
+    const vectorDB = await HanaDB.fromTexts(texts, {}, embeddings, args);
+    const vector = await embeddings.embedQuery(texts[0]);
+    const searchResult = await vectorDB.similaritySearchVectorWithScore(
+      vector,
+      1
+    );
+    console.log(searchResult);
+    expect(searchResult[0][0].pageContent).toEqual(texts[0]);
+    expect(texts[1]).not.toEqual(searchResult[0][0].pageContent);
+  });
 });
 
 describe("Deletion tests", () => {
