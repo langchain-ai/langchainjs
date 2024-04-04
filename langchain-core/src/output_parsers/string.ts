@@ -69,7 +69,7 @@ export class StringOutputParser extends BaseTransformOutputParser<string> {
         }
         break;
       case "image_url":
-        if ("url" in content) {
+        if ("image_url" in content) {
           // Type guard for MessageContentImageUrl
           return this._imageUrlContentToString(
             content as MessageContentImageUrl
