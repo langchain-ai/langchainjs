@@ -110,8 +110,8 @@ describe("add documents and similarity search tests", () => {
     ]);
   });
 
-  test("test addText with provided embedding", async () => {
-    const tableNameTest = "TEST_ADD_TEXT_WITH_EMBEDDING";
+  test("test addVector with provided embedding", async () => {
+    const tableNameTest = "TEST_ADD_VEC_WITH_EMBEDDING";
     dropTable(tableNameTest);
     const args: HanaDBArgs = {
       connection: client,
@@ -119,17 +119,34 @@ describe("add documents and similarity search tests", () => {
     };
     const vectorStore = new HanaDB(embeddings, args);
     expect(vectorStore).toBeDefined();
-    await vectorStore.addTexts(
-      ["Bye bye", "Hello world", "hello nice world"],
-      [
-        { id: 2, name: "2" },
-        { id: 1, name: "1" },
-        { id: 3, name: "3" },
-      ],
+    await vectorStore.addVectors(
       [
         [1, 2],
         [3, 4],
         [3, 5],
+      ],
+      [
+        {
+          pageContent: "Bye bye",
+          metadata: {
+            id: 2,
+            name: "2",
+          },
+        },
+        {
+          pageContent: "Hello world",
+          metadata: {
+            id: 1,
+            name: "1",
+          },
+        },
+        {
+          pageContent: "hello nice world",
+          metadata: {
+            id: 3,
+            name: "3",
+          },
+        },
       ]
     );
     expect(vectorStore.tableExists(tableNameTest)).toBe(true);
@@ -437,10 +454,8 @@ describe("Deletion tests", () => {
       connection: client,
       tableName: tableNameTest,
     };
-    // client.connect(connectionParams);
-    const vectorStore = new HanaDB(embeddings, args);
-    expect(vectorStore).toBeDefined();
-    await vectorStore.addTexts(texts, []);
+    // // client.connect(connectionParams);
+    const vectorStore = await HanaDB.fromTexts(texts, [], embeddings, args);
     const filterTest = {};
     await vectorStore.delete({ filter: filterTest });
     const sql = `SELECT COUNT(*) AS row_count FROM "${args.tableName}"`;
@@ -649,10 +664,8 @@ describe("Tests on HANA side", () => {
       contentColumn: contentColumnTest,
       vectorColumn: vectorColumnTest,
     };
-    const vectordb = new HanaDB(embeddings, args);
     const texts = ["foo", "foo", "fox"];
-    await vectordb.addTexts(texts);
-
+    await HanaDB.fromTexts(texts, [], embeddings, args);
     // Check that embeddings have been created in the table
     const numberOfTexts = texts.length;
     let numberOfRows = -1;

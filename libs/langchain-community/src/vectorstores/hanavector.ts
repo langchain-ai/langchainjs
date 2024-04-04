@@ -342,54 +342,16 @@ export class HanaDB extends VectorStore {
     embeddings: EmbeddingsInterface,
     dbConfig: HanaDBArgs
   ): Promise<HanaDB> {
-    const instance = new HanaDB(embeddings, dbConfig);
-    await instance.addTexts(texts, metadatas); // Embed and add texts to the database
-    return instance;
-  }
-
-  /**
-   * Instance method to add more texts to the vector store. This method optionally accepts pre-generated embeddings (to-do).
-   * @param texts Iterable of strings/text to add to the vector store.
-   * @param metadatas Optional list of metadata corresponding to each text.
-   * @param embeddings Optional pre-generated embeddings for the texts.
-   * @returns A Promise that resolves when texts are added successfully.
-   */
-  async addTexts(
-    texts: string[],
-    metadatas?: object[] | object,
-    embeddingsInput?: number[][]
-  ): Promise<void> {
-    let embeddings = embeddingsInput;
-    // Generate embeddings if not provided
-    if (!embeddings) {
-      embeddings = await this.embeddings.embedDocuments(texts);
-    }
-    const sqlParams: [string, string, string][] = texts.map((text, i) => {
+    const docs: Document[] = [];
+    for (let i = 0; i < texts.length; i += 1) {
       const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
-      // Ensure embedding is generated or provided
-      if (!embeddings) {
-        throw new Error(
-          "Embeddings are required but were not provided or generated."
-        );
-      }
-      const embedding = embeddings[i];
-      if (!embedding) {
-        throw new Error(`No embedding found for the text at index ${i}.`);
-      }
-      const embeddingString = `[${embedding.join(", ")}]`;
-      // Prepare the SQL parameters
-      return [
-        text,
-        JSON.stringify(this.sanitizeMetadataKeys(metadata)),
-        embeddingString,
-      ];
-    });
-    // Insert data into the table
-    const client = this.connection;
-    const sqlStr = `INSERT INTO "${this.tableName}" ("${this.contentColumn}", "${this.metadataColumn}", "${this.vectorColumn}") 
-                    VALUES (?, ?, TO_REAL_VECTOR(?));`;
-    const stm = client.prepare(sqlStr);
-    stm.execBatch(sqlParams);
+      const newDoc = new Document({
+        pageContent: texts[i],
+        metadata,
+      });
+      docs.push(newDoc);
+    }
+    return HanaDB.fromDocuments(docs, embeddings, dbConfig);
   }
 
   /**
@@ -433,6 +395,9 @@ export class HanaDB extends VectorStore {
    * @returns Promise that resolves when the vectors and documents are added.
    */
   async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
+    if (vectors.length !== documents.length) {
+      throw new Error(`Vectors and metadatas must have the same length`);
+    }
     const texts = documents.map((doc) => doc.pageContent);
     const metadatas = documents.map((doc) => doc.metadata);
     const client = this.connection;
