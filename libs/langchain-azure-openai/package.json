@@ -1,6 +1,6 @@
 {
   "name": "@langchain/azure-openai",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Azure SDK for OpenAI integrations for LangChain.js",
   "type": "module",
   "engines": {
