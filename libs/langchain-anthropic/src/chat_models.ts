@@ -25,7 +25,6 @@ import {
 import { StructuredToolInterface } from "@langchain/core/tools";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
-import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 import {
   Runnable,
   RunnablePassthrough,
@@ -33,6 +32,7 @@ import {
 } from "@langchain/core/runnables";
 import { isZodSchema } from "@langchain/core/utils/types";
 import { z } from "zod";
+import { AnthropicToolsOutputParser } from "./output_parsers.js";
 
 type AnthropicTool = {
   name: string;
@@ -779,7 +779,7 @@ export class ChatAnthropicMessages<
           input_schema: jsonSchema,
         },
       ];
-      outputParser = new JsonOutputKeyToolsParser({
+      outputParser = new AnthropicToolsOutputParser({
         returnSingle: true,
         keyName: functionName,
         zodSchema: schema,
@@ -802,7 +802,7 @@ export class ChatAnthropicMessages<
         };
       }
       tools = [anthropicTools];
-      outputParser = new JsonOutputKeyToolsParser<RunOutput>({
+      outputParser = new AnthropicToolsOutputParser<RunOutput>({
         returnSingle: true,
         keyName: functionName,
       });

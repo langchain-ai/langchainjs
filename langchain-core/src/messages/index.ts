@@ -205,7 +205,6 @@ export abstract class BaseMessage
     }
     super(fields);
     this.name = fields.name;
-    console.log("Assigning content", fields.content);
     this.content = fields.content;
     this.additional_kwargs = fields.additional_kwargs;
     this.response_metadata = fields.response_metadata;
