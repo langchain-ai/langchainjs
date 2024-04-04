@@ -91,14 +91,24 @@ export function messageContentToParts(content: MessageContent): GeminiPart[] {
     .map((content) => {
       switch (content.type) {
         case "text":
-          return messageContentText(content);
+          if ("text" in content) {
+            return messageContentText(content as MessageContentText);
+          }
+          break;
         case "image_url":
-          return messageContentImageUrl(content);
+          if ("image_url" in content) {
+            // Type guard for MessageContentImageUrl
+            return messageContentImageUrl(content as MessageContentImageUrl);
+          }
+          break;
         default:
           throw new Error(
             `Unsupported type received while converting message to message parts`
           );
       }
+      throw new Error(
+        `Cannot coerce "${content.type}" message part into a string.`
+      );
     })
     .reduce((acc: GeminiPart[], val: GeminiPart | null | undefined) => {
       if (val) {
