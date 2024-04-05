@@ -1587,14 +1587,15 @@ export class RunnableSequence<
     options?: RunnableConfig
   ): AsyncGenerator<RunOutput> {
     const callbackManager_ = await getCallbackManagerForConfig(options);
+    const { runId, ...otherOptions } = options ?? {};
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
+      runId,
       undefined,
       undefined,
       undefined,
-      undefined,
-      options?.runName
+      otherOptions?.runName
     );
     const steps = [this.first, ...this.middle, this.last];
     let concatSupported = true;
@@ -1605,7 +1606,7 @@ export class RunnableSequence<
     try {
       let finalGenerator = steps[0].transform(
         inputGenerator(),
-        patchConfig(options, {
+        patchConfig(otherOptions, {
           callbacks: runManager?.getChild(`seq:step:1`),
         })
       );
@@ -1613,7 +1614,7 @@ export class RunnableSequence<
         const step = steps[i];
         finalGenerator = await step.transform(
           finalGenerator,
-          patchConfig(options, {
+          patchConfig(otherOptions, {
             callbacks: runManager?.getChild(`seq:step:${i + 1}`),
           })
         );
@@ -2086,23 +2087,22 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
       undefined,
       options?.metadata
     );
+    const { runId, ...otherOptions } = options ?? {};
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
-      options?.runId,
+      runId,
       undefined,
       undefined,
       undefined,
-      options?.runName
+      otherOptions?.runName
     );
-    // eslint-disable-next-line no-param-reassign
-    delete options?.runId;
     let firstError;
     for (const runnable of this.runnables()) {
       try {
         const output = await runnable.invoke(
           input,
-          patchConfig(options, { callbacks: runManager?.getChild() })
+          patchConfig(otherOptions, { callbacks: runManager?.getChild() })
         );
         await runManager?.handleChainEnd(_coerceToDict(output, "output"));
         return output;
