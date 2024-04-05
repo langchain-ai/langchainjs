@@ -1,8 +1,8 @@
 /* eslint-disable no-process-env */
 import hanaClient from "@sap/hana-client";
 import { Document } from "@langchain/core/documents";
+import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { test, expect } from "@jest/globals";
-import { FakeEmbeddings } from "closevector-common/dist/fake.js";
 import { HanaDB, HanaDBArgs } from "../hanavector.js";
 
 // Connection parameters

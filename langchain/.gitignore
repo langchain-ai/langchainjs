@@ -390,10 +390,6 @@ vectorstores/hnswlib.cjs
 vectorstores/hnswlib.js
 vectorstores/hnswlib.d.ts
 vectorstores/hnswlib.d.cts
-vectorstores/hanavector.cjs
-vectorstores/hanavector.js
-vectorstores/hanavector.d.ts
-vectorstores/hanavector.d.cts
 vectorstores/faiss.cjs
 vectorstores/faiss.js
 vectorstores/faiss.d.ts

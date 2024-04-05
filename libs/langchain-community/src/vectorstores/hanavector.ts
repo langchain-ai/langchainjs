@@ -5,7 +5,7 @@ import {
 } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
-import hanaClient from "@sap/hana-client";
+import type hanaClient from "@sap/hana-client";
 
 export type DistanceStrategy = "euclidean" | "cosine";
 
@@ -438,7 +438,6 @@ export class HanaDB extends VectorStore {
     filter?: Filter
   ): Promise<Document[]> {
     const results = await this.similaritySearchWithScore(query, k, filter);
-    // console.log(results)
     return results.map((result) => result[0]);
   }
 
