@@ -67,6 +67,8 @@ export class GraphDocument extends Serializable {
 
   source: Document;
 
+  lc_namespace = ["langchain", "graph", "graph_document"];
+
   constructor({
     nodes,
     relationships,
