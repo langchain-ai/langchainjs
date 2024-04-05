@@ -39,12 +39,10 @@ async function getEntrypointsFromFile(
     const exportedSymbolsMap = newFile.getExportedDeclarations();
     const exportedSymbols = Array.from(exportedSymbolsMap.entries())
       .filter(([_, declarations]) => declarations.length > 0)
-      .map(
-      ([symbol, declarations]) => ({
+      .map(([symbol, declarations]) => ({
         kind: declarations[0].getKind(),
         symbol,
-      })
-    );
+      }));
     return {
       entrypoint: key,
       exportedSymbols,
