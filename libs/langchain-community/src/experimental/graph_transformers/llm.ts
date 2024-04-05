@@ -215,8 +215,10 @@ export class LLMGraphTransformer {
       (this.allowedNodes.length > 0 || this.allowedRelationships.length > 0)
     ) {
       if (this.allowedNodes.length > 0) {
-        const allowedNodesLowerCase = this.allowedNodes.map((node) => node.toLowerCase());
-        
+        const allowedNodesLowerCase = this.allowedNodes.map((node) =>
+          node.toLowerCase()
+        );
+
         // For nodes, compare lowercased types
         nodes = nodes.filter((node) =>
           allowedNodesLowerCase.includes(node.type.toLowerCase())
