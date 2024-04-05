@@ -21,6 +21,7 @@ import {
   FakeRunnable,
   FakeListChatModel,
   SingleRunExtractor,
+  FakeStreamingChatModel,
 } from "../../utils/testing/index.js";
 import { RunnableSequence, RunnableLambda } from "../base.js";
 import { RouterRunnable } from "../router.js";
@@ -448,7 +449,7 @@ describe("runId config", () => {
 
   test("stream", async () => {
     const tracer = new SingleRunExtractor();
-    const llm = new FakeChatModel({});
+    const llm = new FakeStreamingChatModel({});
     const testId = uuidv4();
     const stream = await llm.stream("gg", {
       callbacks: [tracer],
