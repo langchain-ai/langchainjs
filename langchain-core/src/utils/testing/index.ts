@@ -219,22 +219,24 @@ export class FakeStreamingChatModel extends BaseChatModel {
     messages: BaseMessage[],
     _options: this["ParsedCallOptions"],
     _runManager?: CallbackManagerForLLMRun
-    ): Promise<ChatResult> {
+  ): Promise<ChatResult> {
     if (this.thrownErrorString) {
       throw new Error(this.thrownErrorString);
     }
 
     const content = this.responses?.[0].content ?? messages[0].content;
     const generation: ChatResult = {
-      generations: [{
-        text: "",
-        message: new AIMessage({
-          content,
-        })
-      }]
-    }
+      generations: [
+        {
+          text: "",
+          message: new AIMessage({
+            content,
+          }),
+        },
+      ],
+    };
 
-    return generation
+    return generation;
   }
 
   async *_streamResponseChunks(
@@ -253,7 +255,7 @@ export class FakeStreamingChatModel extends BaseChatModel {
           message: new AIMessageChunk({
             content,
           }),
-        })
+        });
       }
     } else {
       for (const _ of this.responses ?? messages) {
@@ -262,7 +264,7 @@ export class FakeStreamingChatModel extends BaseChatModel {
           message: new AIMessageChunk({
             content,
           }),
-        })
+        });
       }
     }
   }
