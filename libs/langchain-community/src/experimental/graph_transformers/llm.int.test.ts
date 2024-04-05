@@ -45,13 +45,52 @@ test("convertToGraphDocuments with allowed", async () => {
   expect(result).toEqual([
     new GraphDocument({
       nodes: [
-        new Node({ id: "Elon Musk", type: "PERSON" }),
-        new Node({ id: "OpenAI", type: "ORGANIZATION" }),
+        new Node({ id: "Elon Musk", type: "Person" }),
+        new Node({ id: "OpenAI", type: "Organization" }),
       ],
       relationships: [
         new Relationship({
-          source: new Node({ id: "Elon Musk", type: "PERSON" }),
-          target: new Node({ id: "OpenAI", type: "ORGANIZATION" }),
+          source: new Node({ id: "Elon Musk", type: "Person" }),
+          target: new Node({ id: "OpenAI", type: "Organization" }),
+          type: "SUES",
+        }),
+      ],
+      source: new Document({
+        pageContent: "Elon Musk is suing OpenAI",
+        metadata: {},
+      }),
+    }),
+  ]);
+});
+
+test("convertToGraphDocuments with allowed lowercased", async () => {
+  const model = new ChatOpenAI({
+    temperature: 0,
+    modelName: "gpt-4-turbo-preview",
+  });
+
+  const llmGraphTransformer = new LLMGraphTransformer({
+    llm: model,
+    allowedNodes: ["Person", "Organization"],
+    allowedRelationships: ["SUES"],
+  });
+
+  const result = await llmGraphTransformer.convertToGraphDocuments([
+    new Document({ pageContent: "Elon Musk is suing OpenAI" }),
+  ]);
+
+  console.log(JSON.stringify(result));
+
+  expect(result).toEqual([
+    new GraphDocument({
+      nodes: [
+        new Node({ id: "Elon Musk", type: "Person" }),
+        new Node({ id: "OpenAI", type: "Organization" }),
+      ],
+      relationships: [
+        new Relationship({
+          source: new Node({ id: "Elon Musk", type: "Person" }),
+          target: new Node({ id: "OpenAI", type: "Organization" }),
           type: "SUES",
         }),
       ],
