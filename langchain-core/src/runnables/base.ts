@@ -1590,12 +1590,14 @@ export class RunnableSequence<
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
-      undefined,
+      options?.runId,
       undefined,
       undefined,
       undefined,
       options?.runName
     );
+    // eslint-disable-next-line no-param-reassign
+    delete options?.runId;
     const steps = [this.first, ...this.middle, this.last];
     let concatSupported = true;
     let finalOutput;
