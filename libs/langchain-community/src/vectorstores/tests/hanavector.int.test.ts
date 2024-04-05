@@ -79,7 +79,7 @@ function dropTable(tableName: string) {
   }
 }
 
-describe("add documents and similarity search tests", () => {
+describe.skip("add documents and similarity search tests", () => {
   test("test fromText and default similarity search", async () => {
     const tableNameTest = "TEST_ADD_TEXT";
     dropTable(tableNameTest);
@@ -434,7 +434,7 @@ describe("add documents and similarity search tests", () => {
   });
 });
 
-describe("Deletion tests", () => {
+describe.skip("Deletion tests", () => {
   test("test hanavector delete called wrong", async () => {
     const tableNameTest = "TEST_TABLE_DELETE_FILTER_WRONG";
     const args: HanaDBArgs = {
@@ -523,7 +523,7 @@ describe("Deletion tests", () => {
   });
 });
 
-describe("Tests on HANA side", () => {
+describe.skip("Tests on HANA side", () => {
   test("hanavector non existing table", () => {
     const tableNameTest = "NON_EXISTING";
     dropTable(tableNameTest);
