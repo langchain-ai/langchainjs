@@ -191,6 +191,83 @@ export class FakeChatModel extends BaseChatModel {
   }
 }
 
+export class FakeStreamingChatModel extends BaseChatModel {
+  sleep?: number = 50;
+
+  responses?: BaseMessage[];
+
+  thrownErrorString?: string;
+
+  constructor(
+    fields: {
+      sleep?: number;
+      responses?: BaseMessage[];
+      thrownErrorString?: string;
+    } & BaseLLMParams
+  ) {
+    super(fields);
+    this.sleep = fields.sleep ?? this.sleep;
+    this.responses = fields.responses;
+    this.thrownErrorString = fields.thrownErrorString;
+  }
+
+  _llmType() {
+    return "fake";
+  }
+
+  async _generate(
+    messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+    ): Promise<ChatResult> {
+    if (this.thrownErrorString) {
+      throw new Error(this.thrownErrorString);
+    }
+
+    const content = this.responses?.[0].content ?? messages[0].content;
+    const generation: ChatResult = {
+      generations: [{
+        text: "",
+        message: new AIMessage({
+          content,
+        })
+      }]
+    }
+
+    return generation
+  }
+
+  async *_streamResponseChunks(
+    messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    if (this.thrownErrorString) {
+      throw new Error(this.thrownErrorString);
+    }
+    const content = this.responses?.[0].content ?? messages[0].content;
+    if (typeof content !== "string") {
+      for (const _ of this.responses ?? messages) {
+        yield new ChatGenerationChunk({
+          text: "",
+          message: new AIMessageChunk({
+            content,
+          }),
+        })
+      }
+    } else {
+      for (const _ of this.responses ?? messages) {
+        yield new ChatGenerationChunk({
+          text: content,
+          message: new AIMessageChunk({
+            content,
+          }),
+        })
+      }
+    }
+  }
+}
+
 export class FakeRetriever extends BaseRetriever {
   lc_namespace = ["test", "fake"];
 
