@@ -16,6 +16,8 @@ import {
 import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { InMemoryCache } from "@langchain/core/caches";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { OpenAIKeyCredential } from "@azure/openai";
 import { AzureChatOpenAI } from "../chat_models.js";
 
 test("Test ChatOpenAI", async () => {
@@ -90,7 +92,7 @@ test("Test ChatOpenAI tokenUsage", async () => {
     }),
   });
   const message = new HumanMessage("Hello");
-  const res = await model.call([message]);
+  const res = await model.invoke([message]);
   console.log({ res });
 
   expect(tokenUsage.promptTokens).toBeGreaterThan(0);
@@ -139,7 +141,7 @@ test("Test ChatOpenAI in streaming mode", async () => {
     ],
   });
   const message = new HumanMessage("Hello!");
-  const result = await model.call([message]);
+  const result = await model.invoke([message]);
 
   expect(nrNewTokens > 0).toBe(true);
   expect(result.content).toBe(streamedCompletion);
@@ -228,7 +230,7 @@ test("Test OpenAI with stop", async () => {
 
 test("Test OpenAI with stop in object", async () => {
   const model = new AzureChatOpenAI({ maxTokens: 5 });
-  const res = await model.call([new HumanMessage("Print hello world")], {
+  const res = await model.invoke([new HumanMessage("Print hello world")], {
     stop: ["world"],
   });
   console.log({ res });
@@ -237,14 +239,14 @@ test("Test OpenAI with stop in object", async () => {
 test("Test OpenAI with timeout in call options", async () => {
   const model = new AzureChatOpenAI({ maxTokens: 5 });
   await expect(() =>
-    model.call([new HumanMessage("Print hello world")], { timeout: 10 })
+    model.invoke([new HumanMessage("Print hello world")], { timeout: 10 })
   ).rejects.toThrow();
 }, 5000);
 
 test("Test OpenAI with timeout in call options and node adapter", async () => {
   const model = new AzureChatOpenAI({ maxTokens: 5 });
   await expect(() =>
-    model.call([new HumanMessage("Print hello world")], { timeout: 10 })
+    model.invoke([new HumanMessage("Print hello world")], { timeout: 10 })
   ).rejects.toThrow();
 }, 5000);
 
@@ -252,7 +254,7 @@ test("Test OpenAI with signal in call options", async () => {
   const model = new AzureChatOpenAI({ maxTokens: 5 });
   const controller = new AbortController();
   await expect(() => {
-    const ret = model.call([new HumanMessage("Print hello world")], {
+    const ret = model.invoke([new HumanMessage("Print hello world")], {
       signal: controller.signal,
     });
 
@@ -269,7 +271,7 @@ test("Test OpenAI with signal in call options and node adapter", async () => {
   });
   const controller = new AbortController();
   await expect(() => {
-    const ret = model.call([new HumanMessage("Print hello world")], {
+    const ret = model.invoke([new HumanMessage("Print hello world")], {
       signal: controller.signal,
     });
 
@@ -789,4 +791,34 @@ test("Test ChatOpenAI token usage reporting for streaming calls", async () => {
   ) {
     expect(streamingTokenUsed).toEqual(nonStreamingTokenUsed);
   }
+});
+
+test("Test Azure ChatOpenAI with key credentials ", async () => {
+  const model = new AzureChatOpenAI({
+    maxTokens: 5,
+    modelName: "davinci-002",
+    azureOpenAIApiKey: getEnvironmentVariable("AZURE_OPENAI_API_KEY") ?? "",
+    azureOpenAIEndpoint:
+      getEnvironmentVariable("AZURE_OPENAI_API_ENDPOINT") ?? "",
+    azureOpenAIApiDeploymentName:
+      getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME") ?? "",
+  });
+  const res = await model.invoke("Print hello world");
+  console.log({ res });
+});
+
+test("Test ChatOpenAI with OpenAI API key credentials", async () => {
+  const openAiKey: string = getEnvironmentVariable("OPENAI_API_KEY") ?? "";
+  const credentials = new OpenAIKeyCredential(openAiKey);
+
+  const chat = new AzureChatOpenAI({
+    modelName: "gpt-3.5-turbo",
+    maxTokens: 5,
+    credentials,
+    azureOpenAIEndpoint: "",
+    azureOpenAIApiDeploymentName: "",
+  });
+  const message = new HumanMessage("Hello!");
+  const res = await chat.invoke([["system", "Say hi"], message]);
+  console.log(res);
 });

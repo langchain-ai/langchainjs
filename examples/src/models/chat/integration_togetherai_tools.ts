@@ -1,7 +1,7 @@
 import { ChatTogetherAI } from "@langchain/community/chat_models/togetherai";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
-import { Calculator } from "langchain/tools/calculator";
+import { Calculator } from "@langchain/community/tools/calculator";
 
 // Use a pre-built tool
 const calculatorTool = convertToOpenAITool(new Calculator());

@@ -8,5 +8,5 @@ test.skip("Iflytek Xinghuo Call", async () => {
     iflytekApiSecret: "",
   });
   const messages = [new HumanMessage("Nice to meet you!")];
-  await model.call(messages);
+  await model.invoke(messages);
 });

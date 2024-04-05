@@ -5,11 +5,7 @@ import type {
 } from "@langchain/core/language_models/base";
 import type { StructuredToolInterface } from "@langchain/core/tools";
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
-import {
-  Runnable,
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
+import { Runnable, RunnablePassthrough } from "@langchain/core/runnables";
 import { ChatOpenAI, ChatOpenAICallOptions } from "@langchain/openai";
 import type {
   AgentAction,
@@ -33,7 +29,7 @@ import {
   BasePromptTemplate,
 } from "@langchain/core/prompts";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
-import { Agent, AgentArgs } from "../agent.js";
+import { Agent, AgentArgs, AgentRunnableSequence } from "../agent.js";
 import { AgentInput } from "../types.js";
 import { PREFIX } from "./prompt.js";
 import { LLMChain } from "../../chains/llm_chain.js";
@@ -272,6 +268,11 @@ export type CreateOpenAIFunctionsAgentParams = {
   tools: StructuredToolInterface[];
   /** The prompt to use, must have an input key for `agent_scratchpad`. */
   prompt: ChatPromptTemplate;
+  /**
+   * Whether to invoke the underlying model in streaming mode,
+   * allowing streaming of intermediate steps. Defaults to true.
+   */
+  streamRunnable?: boolean;
 };
 
 /**
@@ -333,6 +334,7 @@ export async function createOpenAIFunctionsAgent({
   llm,
   tools,
   prompt,
+  streamRunnable,
 }: CreateOpenAIFunctionsAgentParams) {
   if (!prompt.inputVariables.includes("agent_scratchpad")) {
     throw new Error(
@@ -345,14 +347,21 @@ export async function createOpenAIFunctionsAgent({
   const llmWithTools = llm.bind({
     functions: tools.map(convertToOpenAIFunction),
   });
-  const agent = RunnableSequence.from([
-    RunnablePassthrough.assign({
-      agent_scratchpad: (input: { steps: AgentStep[] }) =>
-        formatToOpenAIFunctionMessages(input.steps),
-    }),
-    prompt,
-    llmWithTools,
-    new OpenAIFunctionsAgentOutputParser(),
-  ]);
+  const agent = AgentRunnableSequence.fromRunnables(
+    [
+      RunnablePassthrough.assign({
+        agent_scratchpad: (input: { steps: AgentStep[] }) =>
+          formatToOpenAIFunctionMessages(input.steps),
+      }),
+      prompt,
+      llmWithTools,
+      new OpenAIFunctionsAgentOutputParser(),
+    ],
+    {
+      name: "OpenAIFunctionsAgent",
+      streamRunnable,
+      singleAction: true,
+    }
+  );
   return agent;
 }

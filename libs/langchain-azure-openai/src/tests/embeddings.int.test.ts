@@ -1,6 +1,7 @@
 import { test, expect } from "@jest/globals";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { ClientSecretCredential, TokenCredential } from "@azure/identity";
+import { OpenAIKeyCredential } from "@azure/openai";
 import { AzureOpenAIEmbeddings } from "../embeddings.js";
 
 test("Test OpenAIEmbeddings.embedQuery", async () => {
@@ -65,6 +66,33 @@ test("Test OpenAIEmbeddings.embedQuery with TokenCredentials", async () => {
   );
 
   const embeddings = new AzureOpenAIEmbeddings({ credentials });
+  const res = await embeddings.embedQuery("Hello world");
+  expect(typeof res[0]).toBe("number");
+});
+
+test("Test OpenAIEmbeddings.embedQuery with key credentials ", async () => {
+  const embeddings = new AzureOpenAIEmbeddings({
+    modelName: "text-embedding-ada-002",
+    azureOpenAIApiKey: getEnvironmentVariable("AZURE_OPENAI_API_KEY") ?? "",
+    azureOpenAIEndpoint:
+      getEnvironmentVariable("AZURE_OPENAI_API_ENDPOINT") ?? "",
+    azureOpenAIApiDeploymentName:
+      getEnvironmentVariable("AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME") ??
+      "",
+  });
+  const res = await embeddings.embedQuery("Hello world");
+  expect(typeof res[0]).toBe("number");
+});
+
+test("Test OpenAIEmbeddings.embedQuery with OpenAI API key credentials", async () => {
+  const openAiKey: string = getEnvironmentVariable("OPENAI_API_KEY") ?? "";
+  const credentials = new OpenAIKeyCredential(openAiKey);
+
+  const embeddings = new AzureOpenAIEmbeddings({
+    credentials,
+    azureOpenAIEndpoint: "",
+    azureOpenAIApiDeploymentName: "",
+  });
   const res = await embeddings.embedQuery("Hello world");
   expect(typeof res[0]).toBe("number");
 });

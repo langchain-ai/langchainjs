@@ -3,10 +3,7 @@ import type {
   BaseLanguageModelInterface,
 } from "@langchain/core/language_models/base";
 import type { ToolInterface } from "@langchain/core/tools";
-import {
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
+import { RunnablePassthrough } from "@langchain/core/runnables";
 import type { BasePromptTemplate } from "@langchain/core/prompts";
 import { AgentStep, AgentAction, AgentFinish } from "@langchain/core/agents";
 import { ChainValues } from "@langchain/core/utils/types";
@@ -17,7 +14,11 @@ import {
 } from "@langchain/core/prompts";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { LLMChain } from "../../chains/llm_chain.js";
-import { AgentArgs, BaseSingleActionAgent } from "../agent.js";
+import {
+  AgentArgs,
+  AgentRunnableSequence,
+  BaseSingleActionAgent,
+} from "../agent.js";
 import { AGENT_INSTRUCTIONS } from "./prompt.js";
 import { XMLAgentOutputParser } from "./output_parser.js";
 import { renderTextDescription } from "../../tools/render.js";
@@ -139,6 +140,11 @@ export type CreateXmlAgentParams = {
    * `tools` and `agent_scratchpad`.
    */
   prompt: BasePromptTemplate;
+  /**
+   * Whether to invoke the underlying model in streaming mode,
+   * allowing streaming of intermediate steps. Defaults to true.
+   */
+  streamRunnable?: boolean;
 };
 
 /**
@@ -195,6 +201,7 @@ export async function createXmlAgent({
   llm,
   tools,
   prompt,
+  streamRunnable,
 }: CreateXmlAgentParams) {
   const missingVariables = ["tools", "agent_scratchpad"].filter(
     (v) => !prompt.inputVariables.includes(v)
@@ -213,14 +220,21 @@ export async function createXmlAgent({
   const llmWithStop = (llm as BaseLanguageModel).bind({
     stop: ["</tool_input>", "</final_answer>"],
   });
-  const agent = RunnableSequence.from([
-    RunnablePassthrough.assign({
-      agent_scratchpad: (input: { steps: AgentStep[] }) =>
-        formatXml(input.steps),
-    }),
-    partialedPrompt,
-    llmWithStop,
-    new XMLAgentOutputParser(),
-  ]);
+  const agent = AgentRunnableSequence.fromRunnables(
+    [
+      RunnablePassthrough.assign({
+        agent_scratchpad: (input: { steps: AgentStep[] }) =>
+          formatXml(input.steps),
+      }),
+      partialedPrompt,
+      llmWithStop,
+      new XMLAgentOutputParser(),
+    ],
+    {
+      name: "XMLAgent",
+      streamRunnable,
+      singleAction: true,
+    }
+  );
   return agent;
 }

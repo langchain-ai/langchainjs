@@ -5,7 +5,7 @@ import { SystemMessage, HumanMessage } from "@langchain/core/messages";
 export const run = async () => {
   process.env.LANGCHAIN_HANDLER = "langchain";
   const model = new OpenAI({ temperature: 0.9 });
-  const resA = await model.call(
+  const resA = await model.invoke(
     "What would be a good company name a company that makes colorful socks?"
   );
   console.log({ resA });

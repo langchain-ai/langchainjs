@@ -3,7 +3,7 @@ import { pull } from "langchain/hub";
 import { ChatOpenAI } from "@langchain/openai";
 import type { ChatPromptTemplate } from "@langchain/core/prompts";
 import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
-import { Calculator } from "langchain/tools/calculator";
+import { Calculator } from "@langchain/community/tools/calculator";
 
 const tools = [new TavilySearchResults(), new Calculator()];
 const prompt = await pull<ChatPromptTemplate>("hwchase17/openai-tools-agent");

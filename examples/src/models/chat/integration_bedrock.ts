@@ -21,6 +21,12 @@ const model = new BedrockChat({
   // },
 });
 
+// Other model names include:
+// "mistral.mistral-7b-instruct-v0:2"
+// "mistral.mixtral-8x7b-instruct-v0:1"
+//
+// For a full list, see the Bedrock page in AWS.
+
 const res = await model.invoke([
   new HumanMessage({ content: "Tell me a joke" }),
 ]);

@@ -30,7 +30,7 @@ export const run = async () => {
   Joke: What time is the appointment? Tooth hurt-y.
   */
 
-  const response = await model.call(input);
+  const response = await model.invoke(input);
   console.log(response);
   /*
   Humor: 8, Sophistication: D

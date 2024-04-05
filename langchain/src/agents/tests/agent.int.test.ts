@@ -216,7 +216,7 @@ test("Run agent with incorrect api key should throw error", async () => {
   // Test that the model throws an error
   await expect(async () => {
     try {
-      await model.call(input);
+      await model.invoke(input);
     } catch (e) {
       error = e;
       throw e;

@@ -17,7 +17,7 @@ import {
   type ChatPromptValueInterface,
   ChatPromptValue,
 } from "../prompt_values.js";
-import type { InputValues, PartialValues } from "../utils/types.js";
+import type { InputValues, PartialValues } from "../utils/types/index.js";
 import { Runnable } from "../runnables/base.js";
 import { BaseStringPromptTemplate } from "./string.js";
 import {
@@ -686,13 +686,49 @@ function _coerceMessagePromptTemplateLike(
   ) {
     return messagePromptTemplateLike;
   }
+  if (
+    Array.isArray(messagePromptTemplateLike) &&
+    messagePromptTemplateLike[0] === "placeholder"
+  ) {
+    const messageContent = messagePromptTemplateLike[1];
+    if (
+      typeof messageContent !== "string" ||
+      messageContent[0] !== "{" ||
+      messageContent[messageContent.length - 1] !== "}"
+    ) {
+      throw new Error(
+        `Invalid placeholder template: "${messagePromptTemplateLike[1]}". Expected a variable name surrounded by curly braces.`
+      );
+    }
+    const variableName = messageContent.slice(1, -1);
+    return new MessagesPlaceholder({ variableName, optional: true });
+  }
   const message = coerceMessageLikeToMessage(messagePromptTemplateLike);
+  let templateData:
+    | string
+    | (string | _TextTemplateParam | _ImageTemplateParam)[];
+
+  if (typeof message.content === "string") {
+    templateData = message.content;
+  } else {
+    // Assuming message.content is an array of complex objects, transform it.
+    templateData = message.content.map((item) => {
+      if ("text" in item) {
+        return { text: item.text };
+      } else if ("image_url" in item) {
+        return { image_url: item.image_url };
+      } else {
+        throw new Error("Invalid message content");
+      }
+    });
+  }
+
   if (message._getType() === "human") {
-    return HumanMessagePromptTemplate.fromTemplate(message.content);
+    return HumanMessagePromptTemplate.fromTemplate(templateData);
   } else if (message._getType() === "ai") {
-    return AIMessagePromptTemplate.fromTemplate(message.content);
+    return AIMessagePromptTemplate.fromTemplate(templateData);
   } else if (message._getType() === "system") {
-    return SystemMessagePromptTemplate.fromTemplate(message.content);
+    return SystemMessagePromptTemplate.fromTemplate(templateData);
   } else if (ChatMessage.isInstance(message)) {
     return ChatMessagePromptTemplate.fromTemplate(
       message.content as string,
@@ -741,7 +777,7 @@ export class ChatPromptTemplate<
     return "ChatPromptTemplate";
   }
 
-  get lc_aliases() {
+  get lc_aliases(): Record<string, string> {
     return {
       promptMessages: "messages",
     };
@@ -925,12 +961,19 @@ export class ChatPromptTemplate<
    * @param promptMessages Messages to be passed to the chat model
    * @returns A new ChatPromptTemplate
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  static fromMessages<RunInput extends InputValues = any>(
+  static fromMessages<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunInput extends InputValues = any,
+    Extra extends ChatPromptTemplateInput<RunInput> = ChatPromptTemplateInput<RunInput>
+  >(
     promptMessages: (
       | ChatPromptTemplate<InputValues, string>
       | BaseMessagePromptTemplateLike
-    )[]
+    )[],
+    extra?: Omit<
+      Extra,
+      "inputVariables" | "promptMessages" | "partialVariables"
+    >
   ): ChatPromptTemplate<RunInput> {
     const flattenedMessages = promptMessages.reduce(
       (acc: Array<BaseMessagePromptTemplate | BaseMessage>, promptMessage) =>
@@ -961,7 +1004,8 @@ export class ChatPromptTemplate<
         inputVariables.add(inputVariable);
       }
     }
-    return new ChatPromptTemplate<RunInput>({
+    return new this<RunInput>({
+      ...extra,
       inputVariables: [...inputVariables] as Extract<keyof RunInput, string>[],
       promptMessages: flattenedMessages,
       partialVariables: flattenedPartialVariables,

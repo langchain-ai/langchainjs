@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.0.35",
+  "version": "0.0.44",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -39,12 +39,14 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1.41",
-    "@langchain/openai": "~0.0.14",
+    "@langchain/core": "~0.1.44",
+    "@langchain/openai": "~0.0.19",
+    "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
     "langsmith": "~0.1.1",
     "uuid": "^9.0.0",
-    "zod": "^3.22.3"
+    "zod": "^3.22.3",
+    "zod-to-json-schema": "^3.22.5"
   },
   "devDependencies": {
     "@aws-crypto/sha256-js": "^5.0.0",
@@ -77,6 +79,7 @@
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^1.1.0",
     "@planetscale/database": "^1.8.0",
+    "@premai/prem-sdk": "^0.3.25",
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",
     "@rockset/client": "^0.9.1",
@@ -98,6 +101,7 @@
     "@types/flat": "^5.0.2",
     "@types/html-to-text": "^9",
     "@types/jsdom": "^21.1.1",
+    "@types/jsonwebtoken": "^9",
     "@types/lodash": "^4",
     "@types/mozilla-readability": "^0.2.1",
     "@types/pg": "^8.11.0",
@@ -116,16 +120,20 @@
     "@zilliz/milvus2-sdk-node": ">=2.2.11",
     "better-sqlite3": "^9.4.0",
     "cassandra-driver": "^4.7.2",
-    "chromadb": "^1.5.3",
+    "cborg": "^4.1.1",
+    "chromadb": "^1.8.1",
     "closevector-common": "0.1.3",
     "closevector-node": "0.1.6",
     "closevector-web": "0.1.6",
     "cohere-ai": ">=6.0.0",
     "convex": "^1.3.1",
+    "couchbase": "^4.3.0",
+    "datastore-core": "^9.2.9",
     "discord.js": "^14.14.1",
     "dotenv": "^16.0.3",
     "dpdm": "^3.12.0",
     "dria": "^0.0.3",
+    "duck-duck-scrape": "^2.2.5",
     "eslint": "^8.33.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^8.6.0",
@@ -138,12 +146,15 @@
     "google-auth-library": "^8.9.0",
     "googleapis": "^126.0.1",
     "graphql": "^16.6.0",
-    "hnswlib-node": "^1.4.2",
+    "hnswlib-node": "^3.0.0",
     "html-to-text": "^9.0.5",
+    "interface-datastore": "^8.2.11",
     "ioredis": "^5.3.2",
+    "it-all": "^3.0.4",
     "jest": "^29.5.0",
     "jest-environment-node": "^29.6.4",
     "jsdom": "^22.1.0",
+    "jsonwebtoken": "^9.0.2",
     "llmonitor": "^0.5.9",
     "lodash": "^4.17.21",
     "lunary": "^0.6.11",
@@ -196,6 +207,7 @@
     "@opensearch-project/opensearch": "*",
     "@pinecone-database/pinecone": "*",
     "@planetscale/database": "^1.8.0",
+    "@premai/prem-sdk": "^0.3.25",
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",
     "@rockset/client": "^0.9.1",
@@ -219,22 +231,28 @@
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "better-sqlite3": "^9.4.0",
     "cassandra-driver": "^4.7.2",
+    "cborg": "^4.1.1",
     "chromadb": "*",
     "closevector-common": "0.1.3",
     "closevector-node": "0.1.6",
     "closevector-web": "0.1.6",
     "cohere-ai": "*",
     "convex": "^1.3.1",
+    "couchbase": "^4.3.0",
     "discord.js": "^14.14.1",
     "dria": "^0.0.3",
+    "duck-duck-scrape": "^2.2.5",
     "faiss-node": "^0.5.1",
     "firebase-admin": "^11.9.0 || ^12.0.0",
     "google-auth-library": "^8.9.0",
     "googleapis": "^126.0.1",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
+    "interface-datastore": "^8.2.11",
     "ioredis": "^5.3.2",
+    "it-all": "^3.0.4",
     "jsdom": "*",
+    "jsonwebtoken": "^9.0.2",
     "llmonitor": "^0.5.9",
     "lodash": "^4.17.21",
     "lunary": "^0.6.11",
@@ -333,6 +351,9 @@
     "@planetscale/database": {
       "optional": true
     },
+    "@premai/prem-sdk": {
+      "optional": true
+    },
     "@qdrant/js-client-rest": {
       "optional": true
     },
@@ -402,6 +423,9 @@
     "cassandra-driver": {
       "optional": true
     },
+    "cborg": {
+      "optional": true
+    },
     "chromadb": {
       "optional": true
     },
@@ -420,10 +444,16 @@
     "convex": {
       "optional": true
     },
+    "couchbase": {
+      "optional": true
+    },
     "discord.js": {
       "optional": true
     },
     "dria": {
+      "optional": true
+    },
+    "duck-duck-scrape": {
       "optional": true
     },
     "faiss-node": {
@@ -444,10 +474,19 @@
     "html-to-text": {
       "optional": true
     },
+    "interface-datastore": {
+      "optional": true
+    },
     "ioredis": {
       "optional": true
     },
+    "it-all": {
+      "optional": true
+    },
     "jsdom": {
+      "optional": true
+    },
+    "jsonwebtoken": {
       "optional": true
     },
     "llmonitor": {
@@ -580,6 +619,24 @@
       },
       "import": "./tools/brave_search.js",
       "require": "./tools/brave_search.cjs"
+    },
+    "./tools/duckduckgo_search": {
+      "types": {
+        "import": "./tools/duckduckgo_search.d.ts",
+        "require": "./tools/duckduckgo_search.d.cts",
+        "default": "./tools/duckduckgo_search.d.ts"
+      },
+      "import": "./tools/duckduckgo_search.js",
+      "require": "./tools/duckduckgo_search.cjs"
+    },
+    "./tools/calculator": {
+      "types": {
+        "import": "./tools/calculator.d.ts",
+        "require": "./tools/calculator.d.cts",
+        "default": "./tools/calculator.d.ts"
+      },
+      "import": "./tools/calculator.js",
+      "require": "./tools/calculator.cjs"
     },
     "./tools/connery": {
       "types": {
@@ -761,6 +818,15 @@
       "import": "./agents/toolkits/connery.js",
       "require": "./agents/toolkits/connery.cjs"
     },
+    "./embeddings/alibaba_tongyi": {
+      "types": {
+        "import": "./embeddings/alibaba_tongyi.d.ts",
+        "require": "./embeddings/alibaba_tongyi.d.cts",
+        "default": "./embeddings/alibaba_tongyi.d.ts"
+      },
+      "import": "./embeddings/alibaba_tongyi.js",
+      "require": "./embeddings/alibaba_tongyi.cjs"
+    },
     "./embeddings/bedrock": {
       "types": {
         "import": "./embeddings/bedrock.d.ts",
@@ -869,6 +935,15 @@
       "import": "./embeddings/ollama.js",
       "require": "./embeddings/ollama.cjs"
     },
+    "./embeddings/premai": {
+      "types": {
+        "import": "./embeddings/premai.d.ts",
+        "require": "./embeddings/premai.d.cts",
+        "default": "./embeddings/premai.d.ts"
+      },
+      "import": "./embeddings/premai.js",
+      "require": "./embeddings/premai.cjs"
+    },
     "./embeddings/tensorflow": {
       "types": {
         "import": "./embeddings/tensorflow.d.ts",
@@ -895,6 +970,15 @@
       },
       "import": "./embeddings/voyage.js",
       "require": "./embeddings/voyage.cjs"
+    },
+    "./embeddings/zhipuai": {
+      "types": {
+        "import": "./embeddings/zhipuai.d.ts",
+        "require": "./embeddings/zhipuai.d.cts",
+        "default": "./embeddings/zhipuai.d.ts"
+      },
+      "import": "./embeddings/zhipuai.js",
+      "require": "./embeddings/zhipuai.cjs"
     },
     "./llms/ai21": {
       "types": {
@@ -1192,6 +1276,15 @@
       },
       "import": "./vectorstores/convex.js",
       "require": "./vectorstores/convex.cjs"
+    },
+    "./vectorstores/couchbase": {
+      "types": {
+        "import": "./vectorstores/couchbase.d.ts",
+        "require": "./vectorstores/couchbase.d.cts",
+        "default": "./vectorstores/couchbase.d.ts"
+      },
+      "import": "./vectorstores/couchbase.js",
+      "require": "./vectorstores/couchbase.cjs"
     },
     "./vectorstores/elasticsearch": {
       "types": {
@@ -1616,6 +1709,15 @@
       "import": "./chat_models/portkey.js",
       "require": "./chat_models/portkey.cjs"
     },
+    "./chat_models/premai": {
+      "types": {
+        "import": "./chat_models/premai.d.ts",
+        "require": "./chat_models/premai.d.cts",
+        "default": "./chat_models/premai.d.ts"
+      },
+      "import": "./chat_models/premai.js",
+      "require": "./chat_models/premai.cjs"
+    },
     "./chat_models/togetherai": {
       "types": {
         "import": "./chat_models/togetherai.d.ts",
@@ -1633,6 +1735,15 @@
       },
       "import": "./chat_models/yandex.js",
       "require": "./chat_models/yandex.cjs"
+    },
+    "./chat_models/zhipuai": {
+      "types": {
+        "import": "./chat_models/zhipuai.d.ts",
+        "require": "./chat_models/zhipuai.d.cts",
+        "default": "./chat_models/zhipuai.d.ts"
+      },
+      "import": "./chat_models/zhipuai.js",
+      "require": "./chat_models/zhipuai.cjs"
     },
     "./callbacks/handlers/llmonitor": {
       "types": {
@@ -1958,6 +2069,15 @@
       "import": "./stores/message/in_memory.js",
       "require": "./stores/message/in_memory.cjs"
     },
+    "./stores/message/ipfs_datastore": {
+      "types": {
+        "import": "./stores/message/ipfs_datastore.d.ts",
+        "require": "./stores/message/ipfs_datastore.d.cts",
+        "default": "./stores/message/ipfs_datastore.d.ts"
+      },
+      "import": "./stores/message/ipfs_datastore.js",
+      "require": "./stores/message/ipfs_datastore.cjs"
+    },
     "./stores/message/ioredis": {
       "types": {
         "import": "./stores/message/ioredis.d.ts",
@@ -2120,6 +2240,15 @@
       "import": "./utils/cassandra.js",
       "require": "./utils/cassandra.cjs"
     },
+    "./experimental/graph_transformers/llm": {
+      "types": {
+        "import": "./experimental/graph_transformers/llm.d.ts",
+        "require": "./experimental/graph_transformers/llm.d.cts",
+        "default": "./experimental/graph_transformers/llm.d.ts"
+      },
+      "import": "./experimental/graph_transformers/llm.js",
+      "require": "./experimental/graph_transformers/llm.cjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -2152,6 +2281,14 @@
     "tools/brave_search.js",
     "tools/brave_search.d.ts",
     "tools/brave_search.d.cts",
+    "tools/duckduckgo_search.cjs",
+    "tools/duckduckgo_search.js",
+    "tools/duckduckgo_search.d.ts",
+    "tools/duckduckgo_search.d.cts",
+    "tools/calculator.cjs",
+    "tools/calculator.js",
+    "tools/calculator.d.ts",
+    "tools/calculator.d.cts",
     "tools/connery.cjs",
     "tools/connery.js",
     "tools/connery.d.ts",
@@ -2232,6 +2369,10 @@
     "agents/toolkits/connery.js",
     "agents/toolkits/connery.d.ts",
     "agents/toolkits/connery.d.cts",
+    "embeddings/alibaba_tongyi.cjs",
+    "embeddings/alibaba_tongyi.js",
+    "embeddings/alibaba_tongyi.d.ts",
+    "embeddings/alibaba_tongyi.d.cts",
     "embeddings/bedrock.cjs",
     "embeddings/bedrock.js",
     "embeddings/bedrock.d.ts",
@@ -2280,6 +2421,10 @@
     "embeddings/ollama.js",
     "embeddings/ollama.d.ts",
     "embeddings/ollama.d.cts",
+    "embeddings/premai.cjs",
+    "embeddings/premai.js",
+    "embeddings/premai.d.ts",
+    "embeddings/premai.d.cts",
     "embeddings/tensorflow.cjs",
     "embeddings/tensorflow.js",
     "embeddings/tensorflow.d.ts",
@@ -2292,6 +2437,10 @@
     "embeddings/voyage.js",
     "embeddings/voyage.d.ts",
     "embeddings/voyage.d.cts",
+    "embeddings/zhipuai.cjs",
+    "embeddings/zhipuai.js",
+    "embeddings/zhipuai.d.ts",
+    "embeddings/zhipuai.d.cts",
     "llms/ai21.cjs",
     "llms/ai21.js",
     "llms/ai21.d.ts",
@@ -2424,6 +2573,10 @@
     "vectorstores/convex.js",
     "vectorstores/convex.d.ts",
     "vectorstores/convex.d.cts",
+    "vectorstores/couchbase.cjs",
+    "vectorstores/couchbase.js",
+    "vectorstores/couchbase.d.ts",
+    "vectorstores/couchbase.d.cts",
     "vectorstores/elasticsearch.cjs",
     "vectorstores/elasticsearch.js",
     "vectorstores/elasticsearch.d.ts",
@@ -2612,6 +2765,10 @@
     "chat_models/portkey.js",
     "chat_models/portkey.d.ts",
     "chat_models/portkey.d.cts",
+    "chat_models/premai.cjs",
+    "chat_models/premai.js",
+    "chat_models/premai.d.ts",
+    "chat_models/premai.d.cts",
     "chat_models/togetherai.cjs",
     "chat_models/togetherai.js",
     "chat_models/togetherai.d.ts",
@@ -2620,6 +2777,10 @@
     "chat_models/yandex.js",
     "chat_models/yandex.d.ts",
     "chat_models/yandex.d.cts",
+    "chat_models/zhipuai.cjs",
+    "chat_models/zhipuai.js",
+    "chat_models/zhipuai.d.ts",
+    "chat_models/zhipuai.d.cts",
     "callbacks/handlers/llmonitor.cjs",
     "callbacks/handlers/llmonitor.js",
     "callbacks/handlers/llmonitor.d.ts",
@@ -2764,6 +2925,10 @@
     "stores/message/in_memory.js",
     "stores/message/in_memory.d.ts",
     "stores/message/in_memory.d.cts",
+    "stores/message/ipfs_datastore.cjs",
+    "stores/message/ipfs_datastore.js",
+    "stores/message/ipfs_datastore.d.ts",
+    "stores/message/ipfs_datastore.d.cts",
     "stores/message/ioredis.cjs",
     "stores/message/ioredis.js",
     "stores/message/ioredis.d.ts",
@@ -2835,6 +3000,10 @@
     "utils/cassandra.cjs",
     "utils/cassandra.js",
     "utils/cassandra.d.ts",
-    "utils/cassandra.d.cts"
+    "utils/cassandra.d.cts",
+    "experimental/graph_transformers/llm.cjs",
+    "experimental/graph_transformers/llm.js",
+    "experimental/graph_transformers/llm.d.ts",
+    "experimental/graph_transformers/llm.d.cts"
   ]
 }

@@ -1,4 +1,9 @@
 import { BaseTransformOutputParser } from "./transform.js";
+import {
+  MessageContentComplex,
+  MessageContentImageUrl,
+  MessageContentText,
+} from "../messages/index.js";
 
 /**
  * OutputParser that parses LLMResult into the top likely string.
@@ -41,5 +46,51 @@ export class StringOutputParser extends BaseTransformOutputParser<string> {
 
   getFormatInstructions(): string {
     return "";
+  }
+
+  protected _textContentToString(content: MessageContentText): string {
+    return content.text;
+  }
+
+  protected _imageUrlContentToString(_content: MessageContentImageUrl): string {
+    throw new Error(
+      `Cannot coerce a multimodal "image_url" message part into a string.`
+    );
+  }
+
+  protected _messageContentComplexToString(
+    content: MessageContentComplex
+  ): string {
+    switch (content.type) {
+      case "text":
+        if ("text" in content) {
+          // Type guard for MessageContentText
+          return this._textContentToString(content as MessageContentText);
+        }
+        break;
+      case "image_url":
+        if ("image_url" in content) {
+          // Type guard for MessageContentImageUrl
+          return this._imageUrlContentToString(
+            content as MessageContentImageUrl
+          );
+        }
+        break;
+      default:
+        throw new Error(
+          `Cannot coerce "${content.type}" message part into a string.`
+        );
+    }
+    throw new Error(`Invalid content type: ${content.type}`);
+  }
+
+  protected _baseMessageContentToString(
+    content: MessageContentComplex[]
+  ): string {
+    return content.reduce(
+      (acc: string, item: MessageContentComplex) =>
+        acc + this._messageContentComplexToString(item),
+      ""
+    );
   }
 }

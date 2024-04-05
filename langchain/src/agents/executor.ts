@@ -21,9 +21,12 @@ import { Serializable } from "@langchain/core/load/serializable";
 import { SerializedLLMChain } from "../chains/serde.js";
 import { StoppingMethod } from "./types.js";
 import {
+  AgentRunnableSequence,
   BaseMultiActionAgent,
   BaseSingleActionAgent,
-  RunnableAgent,
+  RunnableMultiActionAgent,
+  RunnableSingleActionAgent,
+  isRunnableAgent,
 } from "./agent.js";
 import { BaseChain, ChainInputs } from "../chains/base.js";
 
@@ -393,10 +396,27 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
     let agent: BaseSingleActionAgent | BaseMultiActionAgent;
     let returnOnlyOutputs = true;
     if (Runnable.isRunnable(input.agent)) {
-      agent = new RunnableAgent({ runnable: input.agent });
+      if (AgentRunnableSequence.isAgentRunnableSequence(input.agent)) {
+        if (input.agent.singleAction) {
+          agent = new RunnableSingleActionAgent({
+            runnable: input.agent,
+            streamRunnable: input.agent.streamRunnable,
+          });
+        } else {
+          agent = new RunnableMultiActionAgent({
+            runnable: input.agent,
+            streamRunnable: input.agent.streamRunnable,
+          });
+        }
+      } else {
+        agent = new RunnableMultiActionAgent({ runnable: input.agent });
+      }
       // TODO: Update BaseChain implementation on breaking change
       returnOnlyOutputs = false;
     } else {
+      if (isRunnableAgent(input.agent)) {
+        returnOnlyOutputs = false;
+      }
       agent = input.agent;
     }
 

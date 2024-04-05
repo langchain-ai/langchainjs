@@ -4,10 +4,7 @@ import type {
   BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import {
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
+import { RunnablePassthrough } from "@langchain/core/runnables";
 import { OpenAIClient } from "@langchain/openai";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { formatToOpenAIToolMessages } from "../format_scratchpad/openai_tools.js";
@@ -15,6 +12,7 @@ import {
   OpenAIToolsAgentOutputParser,
   type ToolsAgentStep,
 } from "../openai/output_parser.js";
+import { AgentRunnableSequence } from "../agent.js";
 
 export { OpenAIToolsAgentOutputParser, type ToolsAgentStep };
 
@@ -29,14 +27,22 @@ export type CreateOpenAIToolsAgentParams = {
    */
   llm: BaseChatModel<
     BaseChatModelCallOptions & {
-      tools?: StructuredToolInterface[] | OpenAIClient.ChatCompletionTool[];
-      tool_choice?: OpenAIClient.ChatCompletionToolChoiceOption;
+      tools?:
+        | StructuredToolInterface[]
+        | OpenAIClient.ChatCompletionTool[]
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        | any[];
     }
   >;
   /** Tools this agent has access to. */
   tools: StructuredToolInterface[];
   /** The prompt to use, must have an input key of `agent_scratchpad`. */
   prompt: ChatPromptTemplate;
+  /**
+   * Whether to invoke the underlying model in streaming mode,
+   * allowing streaming of intermediate steps. Defaults to true.
+   */
+  streamRunnable?: boolean;
 };
 
 /**
@@ -99,6 +105,7 @@ export async function createOpenAIToolsAgent({
   llm,
   tools,
   prompt,
+  streamRunnable,
 }: CreateOpenAIToolsAgentParams) {
   if (!prompt.inputVariables.includes("agent_scratchpad")) {
     throw new Error(
@@ -109,14 +116,21 @@ export async function createOpenAIToolsAgent({
     );
   }
   const modelWithTools = llm.bind({ tools: tools.map(convertToOpenAITool) });
-  const agent = RunnableSequence.from([
-    RunnablePassthrough.assign({
-      agent_scratchpad: (input: { steps: ToolsAgentStep[] }) =>
-        formatToOpenAIToolMessages(input.steps),
-    }),
-    prompt,
-    modelWithTools,
-    new OpenAIToolsAgentOutputParser(),
-  ]);
+  const agent = AgentRunnableSequence.fromRunnables(
+    [
+      RunnablePassthrough.assign({
+        agent_scratchpad: (input: { steps: ToolsAgentStep[] }) =>
+          formatToOpenAIToolMessages(input.steps),
+      }),
+      prompt,
+      modelWithTools,
+      new OpenAIToolsAgentOutputParser(),
+    ],
+    {
+      name: "OpenAIToolsAgent",
+      streamRunnable,
+      singleAction: false,
+    }
+  );
   return agent;
 }

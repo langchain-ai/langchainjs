@@ -37,14 +37,16 @@ export async function getCallbackManagerForConfig(config?: RunnableConfig) {
 export function mergeConfigs<CallOptions extends RunnableConfig>(
   ...configs: (CallOptions | RunnableConfig | undefined | null)[]
 ): Partial<CallOptions> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const copy: Partial<CallOptions> = ensureConfig();
+  // We do not want to call ensureConfig on the empty state here as this may cause
+  // double loading of callbacks if async local storage is being used.
+  const copy: Partial<CallOptions> = {};
   for (const options of configs.filter((c): c is CallOptions => !!c)) {
     for (const key of Object.keys(options)) {
       if (key === "metadata") {
         copy[key] = { ...copy[key], ...options[key] };
       } else if (key === "tags") {
-        copy[key] = [...new Set(copy[key]!.concat(options[key] ?? []))];
+        const baseKeys: string[] = copy[key] ?? [];
+        copy[key] = [...new Set(baseKeys.concat(options[key] ?? []))];
       } else if (key === "configurable") {
         copy[key] = { ...copy[key], ...options[key] };
       } else if (key === "callbacks") {
@@ -117,6 +119,9 @@ const PRIMITIVES = new Set(["string", "number", "boolean"]);
 
 /**
  * Ensure that a passed config is an object with all required keys present.
+ *
+ * Note: To make sure async local storage loading works correctly, this
+ * should not be called with a default or prepopulated config argument.
  */
 export function ensureConfig<CallOptions extends RunnableConfig>(
   config?: CallOptions
@@ -128,6 +133,7 @@ export function ensureConfig<CallOptions extends RunnableConfig>(
     metadata: {},
     callbacks: undefined,
     recursionLimit: 25,
+    runId: undefined,
   };
   if (loadedConfig) {
     empty = { ...empty, ...loadedConfig };
@@ -159,6 +165,7 @@ export function patchConfig<CallOptions extends RunnableConfig>(
     recursionLimit,
     runName,
     configurable,
+    runId,
   }: RunnableConfig = {}
 ): Partial<CallOptions> {
   const newConfig = ensureConfig(config);
@@ -181,6 +188,9 @@ export function patchConfig<CallOptions extends RunnableConfig>(
   }
   if (configurable !== undefined) {
     newConfig.configurable = { ...newConfig.configurable, ...configurable };
+  }
+  if (runId !== undefined) {
+    delete newConfig.runId;
   }
   return newConfig;
 }

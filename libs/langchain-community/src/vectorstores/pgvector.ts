@@ -6,13 +6,16 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 type Metadata = Record<string, unknown>;
 
+export type DistanceStrategy = "cosine" | "innerProduct" | "euclidean";
+
 /**
  * Interface that defines the arguments required to create a
  * `PGVectorStore` instance. It includes Postgres connection options,
  * table name, filter, and verbosity level.
  */
 export interface PGVectorStoreArgs {
-  postgresConnectionOptions: PoolConfig;
+  postgresConnectionOptions?: PoolConfig;
+  pool?: Pool;
   tableName: string;
   collectionTableName?: string;
   collectionName?: string;
@@ -34,6 +37,7 @@ export interface PGVectorStoreArgs {
    */
   chunkSize?: number;
   ids?: string[];
+  distanceStrategy?: DistanceStrategy;
 }
 
 /**
@@ -75,16 +79,23 @@ export class PGVectorStore extends VectorStore {
 
   chunkSize = 500;
 
+  distanceStrategy?: DistanceStrategy = "cosine";
+
   _vectorstoreType(): string {
     return "pgvector";
   }
 
-  private constructor(
-    embeddings: EmbeddingsInterface,
-    config: PGVectorStoreArgs
-  ) {
+  constructor(embeddings: EmbeddingsInterface, config: PGVectorStoreArgs) {
     super(embeddings, config);
     this.tableName = config.tableName;
+    if (
+      config.collectionName !== undefined &&
+      config.collectionTableName === undefined
+    ) {
+      throw new Error(
+        `If supplying a "collectionName", you must also supply a "collectionTableName".`
+      );
+    }
     this.collectionTableName = config.collectionTableName;
     this.collectionName = config.collectionName ?? "langchain";
     this.collectionMetadata = config.collectionMetadata ?? null;
@@ -98,9 +109,15 @@ export class PGVectorStore extends VectorStore {
     this.idColumnName = config.columns?.idColumnName ?? "id";
     this.metadataColumnName = config.columns?.metadataColumnName ?? "metadata";
 
-    const pool = new pg.Pool(config.postgresConnectionOptions);
+    if (!config.postgresConnectionOptions && !config.pool) {
+      throw new Error(
+        "You must provide either a `postgresConnectionOptions` object or a `pool` instance."
+      );
+    }
+    const pool = config.pool ?? new pg.Pool(config.postgresConnectionOptions);
     this.pool = pool;
     this.chunkSize = config.chunkSize ?? 500;
+    this.distanceStrategy = config.distanceStrategy ?? this.distanceStrategy;
 
     this._verbose =
       getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true" ??
@@ -111,6 +128,33 @@ export class PGVectorStore extends VectorStore {
     return this.schemaName == null
       ? `${this.tableName}`
       : `"${this.schemaName}"."${this.tableName}"`;
+  }
+
+  get computedCollectionTableName() {
+    return this.schemaName == null
+      ? `${this.collectionTableName}`
+      : `"${this.schemaName}"."${this.collectionTableName}"`;
+  }
+
+  get computedOperatorString() {
+    let operator: string;
+    switch (this.distanceStrategy) {
+      case "cosine":
+        operator = "<=>";
+        break;
+      case "innerProduct":
+        operator = "<#>";
+        break;
+      case "euclidean":
+        operator = "<->";
+        break;
+      default:
+        throw new Error(`Unknown distance strategy: ${this.distanceStrategy}`);
+    }
+
+    return this.extensionSchemaName !== null
+      ? `OPERATOR(${this.extensionSchemaName}.${operator})`
+      : operator;
   }
 
   /**
@@ -170,7 +214,7 @@ export class PGVectorStore extends VectorStore {
    */
   async getOrCreateCollection(): Promise<string> {
     const queryString = `
-      SELECT uuid from ${this.collectionTableName}
+      SELECT uuid from ${this.computedCollectionTableName}
       WHERE name = $1;
     `;
     const queryResult = await this.pool.query(queryString, [
@@ -180,7 +224,7 @@ export class PGVectorStore extends VectorStore {
 
     if (!collectionId) {
       const insertString = `
-        INSERT INTO ${this.collectionTableName}(
+        INSERT INTO ${this.computedCollectionTableName}(
           uuid,
           name,
           cmetadata
@@ -470,13 +514,8 @@ export class PGVectorStore extends VectorStore {
       ? `WHERE ${whereClauses.join(" AND ")}`
       : "";
 
-    const operatorString =
-      this.extensionSchemaName !== null
-        ? `OPERATOR(${this.extensionSchemaName}.<=>)`
-        : "<=>";
-
     const queryString = `
-      SELECT *, "${this.vectorColumnName}" ${operatorString} $1 as "_distance"
+      SELECT *, "${this.vectorColumnName}" ${this.computedOperatorString} $1 as "_distance"
       FROM ${this.computedTableName}
       ${whereClause}
       ORDER BY "_distance" ASC
@@ -539,7 +578,7 @@ export class PGVectorStore extends VectorStore {
   async ensureCollectionTableInDatabase(): Promise<void> {
     try {
       const queryString = `
-        CREATE TABLE IF NOT EXISTS ${this.collectionTableName} (
+        CREATE TABLE IF NOT EXISTS ${this.computedCollectionTableName} (
           uuid uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
           name character varying,
           cmetadata jsonb
@@ -551,7 +590,7 @@ export class PGVectorStore extends VectorStore {
         ALTER TABLE ${this.computedTableName}
           ADD CONSTRAINT ${this.tableName}_collection_id_fkey
           FOREIGN KEY (collection_id)
-          REFERENCES ${this.collectionTableName}(uuid)
+          REFERENCES ${this.computedCollectionTableName}(uuid)
           ON DELETE CASCADE;
       `;
       await this.pool.query(queryString);

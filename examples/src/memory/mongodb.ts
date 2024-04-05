@@ -4,7 +4,9 @@ import { ChatOpenAI } from "@langchain/openai";
 import { ConversationChain } from "langchain/chains";
 import { MongoDBChatMessageHistory } from "@langchain/mongodb";
 
-const client = new MongoClient(process.env.MONGODB_ATLAS_URI || "");
+const client = new MongoClient(process.env.MONGODB_ATLAS_URI || "", {
+  driverInfo: { name: "langchainjs" },
+});
 await client.connect();
 const collection = client.db("langchain").collection("memory");
 

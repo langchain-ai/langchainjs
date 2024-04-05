@@ -29,10 +29,7 @@ export abstract class BaseTransformOutputParser<
         yield this.parseResult([
           {
             message: chunk,
-            text:
-              typeof chunk.content === "string"
-                ? chunk.content
-                : JSON.stringify(chunk.content),
+            text: this._baseMessageToString(chunk),
           },
         ]);
       }

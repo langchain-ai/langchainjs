@@ -107,8 +107,10 @@ export class Chroma extends VectorStore {
   async ensureCollection(): Promise<Collection> {
     if (!this.collection) {
       if (!this.index) {
-        const { ChromaClient } = await Chroma.imports();
-        this.index = new ChromaClient({ path: this.url });
+        const chromaClient = new (await Chroma.imports()).ChromaClient({
+          path: this.url,
+        });
+        this.index = chromaClient;
       }
       try {
         this.collection = await this.index.getOrCreateCollection({

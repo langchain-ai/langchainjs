@@ -23,8 +23,7 @@ export class AzureOpenAIEmbeddings
 
   batchSize = 512;
 
-  // TODO: Update to `false` on next minor release (see: https://github.com/langchain-ai/langchainjs/pull/3612)
-  stripNewLines = true;
+  stripNewLines = false;
 
   timeout?: number;
 
@@ -34,7 +33,7 @@ export class AzureOpenAIEmbeddings
 
   azureOpenAIEndpoint?: string;
 
-  azureOpenAIEmbeddingsApiDeploymentName?: string;
+  azureOpenAIApiDeploymentName?: string;
 
   private client: AzureOpenAIClient;
 
@@ -48,7 +47,7 @@ export class AzureOpenAIEmbeddings
 
     super(fieldsWithDefaults);
 
-    this.azureOpenAIEmbeddingsApiDeploymentName =
+    this.azureOpenAIApiDeploymentName =
       (fieldsWithDefaults?.azureOpenAIEmbeddingsApiDeploymentName ||
         fieldsWithDefaults?.azureOpenAIApiDeploymentName) ??
       (getEnvironmentVariable("AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME") ||
@@ -58,22 +57,33 @@ export class AzureOpenAIEmbeddings
       fields?.azureOpenAIEndpoint ??
       getEnvironmentVariable("AZURE_OPENAI_API_ENDPOINT");
 
+    const openAiApiKey =
+      fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
+
     this.azureOpenAIApiKey =
       fields?.azureOpenAIApiKey ??
-      fields?.openAIApiKey ??
-      (getEnvironmentVariable("AZURE_OPENAI_API_KEY") ||
-        getEnvironmentVariable("OPENAI_API_KEY"));
+      getEnvironmentVariable("AZURE_OPENAI_API_KEY") ??
+      openAiApiKey;
+
+    const azureCredential =
+      fields?.credentials ??
+      (this.azureOpenAIApiKey === openAiApiKey
+        ? new OpenAIKeyCredential(this.azureOpenAIApiKey ?? "")
+        : new AzureKeyCredential(this.azureOpenAIApiKey ?? ""));
+
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    const isOpenAIApiKey = azureCredential instanceof OpenAIKeyCredential;
 
     if (!this.azureOpenAIApiKey && !fields?.credentials) {
       throw new Error("Azure OpenAI API key not found");
     }
 
-    if (!this.azureOpenAIEmbeddingsApiDeploymentName) {
-      throw new Error("Azure OpenAI Completion Deployment name not found");
+    if (!this.azureOpenAIEndpoint && !isOpenAIApiKey) {
+      throw new Error("Azure OpenAI Endpoint not found");
     }
 
-    if (!this.azureOpenAIEndpoint) {
-      throw new Error("Azure OpenAI Endpoint not found");
+    if (!this.azureOpenAIApiDeploymentName && !isOpenAIApiKey) {
+      throw new Error("Azure OpenAI Deployment name not found");
     }
 
     this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
@@ -87,28 +97,25 @@ export class AzureOpenAIEmbeddings
 
     this.timeout = fieldsWithDefaults?.timeout;
 
-    const azureCredential =
-      fields?.credentials ??
-      (fields?.azureOpenAIApiKey ||
-      getEnvironmentVariable("AZURE_OPENAI_API_KEY")
-        ? new AzureKeyCredential(this.azureOpenAIApiKey ?? "")
-        : new OpenAIKeyCredential(this.azureOpenAIApiKey ?? ""));
+    const options = {
+      userAgentOptions: { userAgentPrefix: USER_AGENT_PREFIX },
+    };
 
-    if (isTokenCredential(azureCredential)) {
+    if (isOpenAIApiKey) {
+      this.client = new AzureOpenAIClient(
+        azureCredential as OpenAIKeyCredential
+      );
+    } else if (isTokenCredential(azureCredential)) {
       this.client = new AzureOpenAIClient(
         this.azureOpenAIEndpoint ?? "",
         azureCredential as TokenCredential,
-        {
-          userAgentOptions: { userAgentPrefix: USER_AGENT_PREFIX },
-        }
+        options
       );
     } else {
       this.client = new AzureOpenAIClient(
         this.azureOpenAIEndpoint ?? "",
         azureCredential as KeyCredential,
-        {
-          userAgentOptions: { userAgentPrefix: USER_AGENT_PREFIX },
-        }
+        options
       );
     }
   }
@@ -133,22 +140,16 @@ export class AzureOpenAIEmbeddings
   }
 
   private async getEmbeddings(input: string[]) {
-    if (!this.azureOpenAIEmbeddingsApiDeploymentName) {
-      throw new Error("Azure OpenAI Completion Deployment name not found");
-    }
+    const deploymentName = this.azureOpenAIApiDeploymentName || this.modelName;
 
     const res = await this.caller.call(() =>
-      this.client.getEmbeddings(
-        this.azureOpenAIEmbeddingsApiDeploymentName ?? "",
-        input,
-        {
-          user: this.user,
-          model: this.modelName,
-          requestOptions: {
-            timeout: this.timeout,
-          },
-        }
-      )
+      this.client.getEmbeddings(deploymentName, input, {
+        user: this.user,
+        model: this.modelName,
+        requestOptions: {
+          timeout: this.timeout,
+        },
+      })
     );
 
     return res.data[0].embedding;

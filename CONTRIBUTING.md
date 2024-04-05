@@ -77,7 +77,7 @@ good code into the codebase.
 
 ### 🏭 Release process
 
-As of now, LangChain has an ad hoc release process: releases are cut with high frequency via by
+As of now, LangChain has an ad hoc release process: releases are cut with high frequency by
 a developer and published to [npm](https://www.npmjs.com/package/langchain).
 
 LangChain follows the [semver](https://semver.org/) versioning standard. However, as pre-1.0 software,
@@ -141,6 +141,7 @@ cd libs/langchain-community
 ```
 
 ### Setup
+**Prerequisite**: Node version 18+ is required. Please check node version `node -v` and update it if required.
 
 To get started, you will need to install the dependencies for the project. To do so, run:
 

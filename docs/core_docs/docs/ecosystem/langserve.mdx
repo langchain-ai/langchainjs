@@ -3,7 +3,7 @@
 [LangServe](https://python.langchain.com/docs/langserve) is a Python framework that helps developers deploy LangChain [runnables and chains](/docs/expression_language/)
 as REST APIs.
 
-If you have a deployed LangServe route, you can use the [RemoteRunnable](https://api.js.langchain.com/classes/langchain_runnables_remote.RemoteRunnable.html) class to interact
+If you have a deployed LangServe route, you can use the [RemoteRunnable](https://api.js.langchain.com/classes/langchain_core_runnables_remote.RemoteRunnable.html) class to interact
 with it as if it were a local chain. This allows you to more easily call hosted LangServe instances from JavaScript environments (like in the browser on the frontend).
 
 ## Setup
@@ -41,8 +41,16 @@ import Example from "@examples/ecosystem/langsmith.ts";
 
 <CodeBlock language="typescript">{Example}</CodeBlock>
 
-[`streamLog`](/docs/expression_language/interface) is a lower level method for streaming chain intermediate steps as partial JSONPatch chunks.
+[`streamEvents`](/docs/expression_language/interface) allows you to stream chain intermediate steps as events such as `on_llm_start`, and `on_chain_stream`.
+See the [table here](/docs/expression_language/interface#stream-events) for a full list of events you can handle.
 This method allows for a few extra options as well to only include or exclude certain named steps:
+
+import StreamEventsExample from "@examples/ecosystem/langsmith_stream_events.ts";
+
+<CodeBlock language="typescript">{StreamEventsExample}</CodeBlock>
+
+[`streamLog`](/docs/expression_language/interface) is a lower level method for streaming chain intermediate steps as partial JSONPatch chunks.
+Like `streamEvents`, this method also allows for a few extra options as well to only include or exclude certain named steps:
 
 import StreamLogExample from "@examples/ecosystem/langsmith_stream_log.ts";
 

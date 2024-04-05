@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import { AgentAction, AgentFinish } from "../agents.js";
-import type { ChainValues } from "../utils/types.js";
+import type { ChainValues } from "../utils/types/index.js";
 import { LLMResult } from "../outputs.js";
 import {
   BaseCallbackHandler,
@@ -19,6 +19,20 @@ import {
 import { consumeCallback } from "./promises.js";
 import { Serialized } from "../load/serializable.js";
 import type { DocumentInterface } from "../documents/document.js";
+
+if (
+  /* #__PURE__ */ getEnvironmentVariable("LANGCHAIN_TRACING_V2") === "true" &&
+  /* #__PURE__ */ getEnvironmentVariable("LANGCHAIN_CALLBACKS_BACKGROUND") !==
+    "true"
+) {
+  /* #__PURE__ */ console.warn(
+    [
+      "[WARN]: You have enabled LangSmith tracing without backgrounding callbacks.",
+      "[WARN]: If you are not using a serverless environment where you must wait for tracing calls to finish,",
+      `[WARN]: we suggest setting "process.env.LANGCHAIN_CALLBACKS_BACKGROUND=true" to avoid additional latency.`,
+    ].join("\n")
+  );
+}
 
 type BaseCallbackManagerMethods = {
   [K in keyof CallbackHandlerMethods]?: (
@@ -58,6 +72,12 @@ export interface BaseCallbackConfig {
    * Tags are passed to all callbacks, metadata is passed to handle*Start callbacks.
    */
   callbacks?: Callbacks;
+
+  /**
+   * Unique identifier for the tracer run for this call. If not provided, a new UUID
+   * will be generated.
+   */
+  runId?: string;
 }
 
 export function parseCallbackConfigArg(
@@ -532,7 +552,7 @@ export class CallbackManager
   async handleLLMStart(
     llm: Serialized,
     prompts: string[],
-    _runId: string | undefined = undefined,
+    runId: string | undefined = undefined,
     _parentRunId: string | undefined = undefined,
     extraParams: Record<string, unknown> | undefined = undefined,
     _tags: string[] | undefined = undefined,
@@ -540,8 +560,9 @@ export class CallbackManager
     runName: string | undefined = undefined
   ): Promise<CallbackManagerForLLMRun[]> {
     return Promise.all(
-      prompts.map(async (prompt) => {
-        const runId = uuidv4();
+      prompts.map(async (prompt, idx) => {
+        // Can't have duplicate runs with the same run ID (if provided)
+        const runId_ = idx === 0 && runId ? runId : uuidv4();
 
         await Promise.all(
           this.handlers.map((handler) =>
@@ -551,7 +572,7 @@ export class CallbackManager
                   await handler.handleLLMStart?.(
                     llm,
                     [prompt],
-                    runId,
+                    runId_,
                     this._parentRunId,
                     extraParams,
                     this.tags,
@@ -569,7 +590,7 @@ export class CallbackManager
         );
 
         return new CallbackManagerForLLMRun(
-          runId,
+          runId_,
           this.handlers,
           this.inheritableHandlers,
           this.tags,
@@ -585,7 +606,7 @@ export class CallbackManager
   async handleChatModelStart(
     llm: Serialized,
     messages: BaseMessage[][],
-    _runId: string | undefined = undefined,
+    runId: string | undefined = undefined,
     _parentRunId: string | undefined = undefined,
     extraParams: Record<string, unknown> | undefined = undefined,
     _tags: string[] | undefined = undefined,
@@ -593,8 +614,9 @@ export class CallbackManager
     runName: string | undefined = undefined
   ): Promise<CallbackManagerForLLMRun[]> {
     return Promise.all(
-      messages.map(async (messageGroup) => {
-        const runId = uuidv4();
+      messages.map(async (messageGroup, idx) => {
+        // Can't have duplicate runs with the same run ID (if provided)
+        const runId_ = idx === 0 && runId ? runId : uuidv4();
 
         await Promise.all(
           this.handlers.map((handler) =>
@@ -605,7 +627,7 @@ export class CallbackManager
                     await handler.handleChatModelStart?.(
                       llm,
                       [messageGroup],
-                      runId,
+                      runId_,
                       this._parentRunId,
                       extraParams,
                       this.tags,
@@ -617,7 +639,7 @@ export class CallbackManager
                     await handler.handleLLMStart?.(
                       llm,
                       [messageString],
-                      runId,
+                      runId_,
                       this._parentRunId,
                       extraParams,
                       this.tags,
@@ -636,7 +658,7 @@ export class CallbackManager
         );
 
         return new CallbackManagerForLLMRun(
-          runId,
+          runId_,
           this.handlers,
           this.inheritableHandlers,
           this.tags,

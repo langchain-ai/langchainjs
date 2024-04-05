@@ -531,14 +531,10 @@ export class Neo4jVectorStore extends VectorStore {
     ids?: string[]
   ): Promise<string[]> {
     let _ids = ids;
-    let _metadatas = metadatas;
+    const _metadatas = metadatas;
 
     if (!_ids) {
       _ids = documents.map(() => uuid.v1());
-    }
-
-    if (!metadatas) {
-      _metadatas = documents.map(() => ({}));
     }
 
     const importQuery = `
@@ -580,6 +576,7 @@ export class Neo4jVectorStore extends VectorStore {
   async similaritySearch(
     query: string,
     k = 4,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     params: Record<string, any> = {}
   ): Promise<Document[]> {
     const embedding = await this.embeddings.embedQuery(query);
@@ -598,6 +595,7 @@ export class Neo4jVectorStore extends VectorStore {
     vector: number[],
     k: number,
     query: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     params: Record<string, any> = {}
   ): Promise<[Document, number][]> {
     const defaultRetrieval = `
@@ -739,7 +737,11 @@ function getSearchIndexQuery(searchType: SearchType): string {
   return typeToQueryMap[searchType];
 }
 
-function removeLuceneChars(text: string): string {
+function removeLuceneChars(text: string | null) {
+  if (text === undefined || text === null) {
+    return null;
+  }
+
   // Remove Lucene special characters
   const specialChars = [
     "+",
