@@ -822,6 +822,15 @@
       "import": "./embeddings/alibaba_tongyi.js",
       "require": "./embeddings/alibaba_tongyi.cjs"
     },
+    "./embeddings/baidu_qianfan": {
+      "types": {
+        "import": "./embeddings/baidu_qianfan.d.ts",
+        "require": "./embeddings/baidu_qianfan.d.cts",
+        "default": "./embeddings/baidu_qianfan.d.ts"
+      },
+      "import": "./embeddings/baidu_qianfan.js",
+      "require": "./embeddings/baidu_qianfan.cjs"
+    },
     "./embeddings/bedrock": {
       "types": {
         "import": "./embeddings/bedrock.d.ts",
@@ -974,15 +983,6 @@
       },
       "import": "./embeddings/zhipuai.js",
       "require": "./embeddings/zhipuai.cjs"
-    },
-    "./embeddings/baidu_qianfan": {
-      "types": {
-        "import": "./embeddings/baidu_qianfan.d.ts",
-        "require": "./embeddings/baidu_qianfan.d.cts",
-        "default": "./embeddings/baidu_qianfan.d.ts"
-      },
-      "import": "./embeddings/baidu_qianfan.js",
-      "require": "./embeddings/baidu_qianfan.cjs"
     },
     "./llms/ai21": {
       "types": {
@@ -2368,6 +2368,10 @@
     "embeddings/alibaba_tongyi.js",
     "embeddings/alibaba_tongyi.d.ts",
     "embeddings/alibaba_tongyi.d.cts",
+    "embeddings/baidu_qianfan.cjs",
+    "embeddings/baidu_qianfan.js",
+    "embeddings/baidu_qianfan.d.ts",
+    "embeddings/baidu_qianfan.d.cts",
     "embeddings/bedrock.cjs",
     "embeddings/bedrock.js",
     "embeddings/bedrock.d.ts",
