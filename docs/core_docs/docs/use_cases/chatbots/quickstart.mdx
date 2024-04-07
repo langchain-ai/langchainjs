@@ -183,7 +183,7 @@ AIMessage {
 ```
 
 ```ts
-await demoEphemeralChatMessageHistory.addMessage(responseMessage);
+await demoEphemeralChatMessageHistory.addMessage(new AIMessage(responseMessage));
 
 await demoEphemeralChatMessageHistory.addMessage(
   new HumanMessage("What did you just say?")
