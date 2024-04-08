@@ -603,7 +603,7 @@ export abstract class Agent extends BaseSingleActionAgent {
       newInputs.stop = this._stop();
     }
 
-    const output = await this.llmChain.predict(newInputs, callbackManager);
+    const output = await this.llmChain.invoke(newInputs, callbackManager);
     if (!this.outputParser) {
       throw new Error("Output parser not set");
     }

@@ -22,7 +22,7 @@ const documents = [
 // so that the correct access history metadata is populated
 await retriever.addDocuments(documents);
 
-const results1 = await retriever.getRelevantDocuments(
+const results1 = await retriever.invoke(
   "What is my favourite food?"
 );
 
@@ -34,7 +34,7 @@ console.log(results1);
 ]
  */
 
-const results2 = await retriever.getRelevantDocuments(
+const results2 = await retriever.invoke(
   "What is my favourite food?"
 );
 

@@ -10,7 +10,7 @@ const chat = new ChatOpenAI({
 });
 
 async function TranslatorAgent(query: string) {
-  const res = await chat.call([
+  const res = await chat.invoke([
     new SystemMessage(
       "You are a translator agent that hides jokes in each translation."
     ),

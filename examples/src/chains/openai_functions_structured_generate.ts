@@ -39,7 +39,7 @@ const chain = createStructuredOutputChainFromZod(zodSchema, {
   outputKey: "person",
 });
 
-const response = await chain.call({
+const response = await chain.invoke({
   inputText:
     "Please generate a diverse group of people, but don't generate anyone who likes video games.",
 });

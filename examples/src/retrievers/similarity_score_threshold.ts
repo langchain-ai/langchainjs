@@ -22,7 +22,7 @@ const retriever = ScoreThresholdRetriever.fromVectorStore(vectorStore, {
   kIncrement: 2, // How much to increase K by each time. It'll fetch N results, then N + kIncrement, then N + kIncrement * 2, etc.
 });
 
-const result = await retriever.getRelevantDocuments(
+const result = await retriever.invoke(
   "What are buildings made out of?"
 );
 

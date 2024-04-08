@@ -80,7 +80,7 @@ const concurrencyLevel = 4; // How many concurrent agents to run. May need to de
 const batch = [];
 for (const example of dataset) {
   batch.push(
-    Promise.all(agents.map((agent) => agent.call({ input: example })))
+    Promise.all(agents.map((agent) => agent.invoke({ input: example })))
   );
   if (batch.length >= concurrencyLevel) {
     const batchResults = await Promise.all(batch);

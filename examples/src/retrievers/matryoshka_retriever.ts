@@ -56,7 +56,7 @@ const allDocs = [...irrelevantDocs, ...relevantDocs];
 await retriever.addDocuments(allDocs);
 
 const query = "What is LangChain?";
-const results = await retriever.getRelevantDocuments(query);
+const results = await retriever.invoke(query);
 console.log(results.map(({ pageContent }) => pageContent).join("\n"));
 /**
 I heart LangChain

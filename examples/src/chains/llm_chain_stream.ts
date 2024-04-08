@@ -10,12 +10,14 @@ const prompt = PromptTemplate.fromTemplate(
 const chain = new LLMChain({ llm: model, prompt });
 
 // Call the chain with the inputs and a callback for the streamed tokens
-const res = await chain.call({ product: "colorful socks" }, [
-  {
-    handleLLMNewToken(token: string) {
-      process.stdout.write(token);
+const res = await chain.invoke({ product: "colorful socks" }, {
+  callbacks: [
+    {
+      handleLLMNewToken(token: string) {
+        process.stdout.write(token);
+      },
     },
-  },
-]);
+  ]
+});
 console.log({ res });
 // { res: { text: '\n\nKaleidoscope Socks' } }

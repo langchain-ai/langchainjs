@@ -37,7 +37,7 @@ const vectorstore = await MemoryVectorStore.fromDocuments(
 );
 const retriever = vectorstore.asRetriever();
 
-const retrieverResult = await retriever.getRelevantDocuments(
+const retrieverResult = await retriever.invoke(
   "how to upload a dataset"
 );
 console.log(retrieverResult[0]);

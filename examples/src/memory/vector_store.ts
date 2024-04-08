@@ -46,7 +46,7 @@ Human: {input}
 AI:`);
 const chain = new LLMChain({ llm: model, prompt, memory });
 
-const res1 = await chain.call({ input: "Hi, my name is Perry, what's up?" });
+const res1 = await chain.invoke({ input: "Hi, my name is Perry, what's up?" });
 console.log({ res1 });
 /*
 {
@@ -56,13 +56,13 @@ console.log({ res1 });
 }
 */
 
-const res2 = await chain.call({ input: "what's my favorite sport?" });
+const res2 = await chain.invoke({ input: "what's my favorite sport?" });
 console.log({ res2 });
 /*
 { res2: { text: ' You said your favorite sport is soccer.' } }
 */
 
-const res3 = await chain.call({ input: "what's my name?" });
+const res3 = await chain.invoke({ input: "what's my name?" });
 console.log({ res3 });
 /*
 { res3: { text: ' Your name is Perry.' } }

@@ -35,9 +35,9 @@ export const run = async () => {
   );
   /* Ask it a question */
   const question = "What did the president say about Justice Breyer?";
-  const res = await chain.call({ question });
+  const res = await chain.invoke({ question });
   console.log(res);
 
-  const followUpRes = await chain.call({ question: "Was that nice?" });
+  const followUpRes = await chain.invoke({ question: "Was that nice?" });
   console.log(followUpRes);
 };
