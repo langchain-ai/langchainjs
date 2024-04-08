@@ -1,4 +1,8 @@
-import { LLM, type BaseLLMParams } from "@langchain/core/language_models/llms";
+import {
+  LLM,
+  BaseLLM,
+  type BaseLLMParams,
+} from "@langchain/core/language_models/llms";
 import {
   GuardrailResponse,
   LayerupSecurity as LayerupSecuritySDK,
@@ -6,7 +10,7 @@ import {
 } from "@layerup/layerup-security";
 
 export interface LayerupSecurityOptions extends BaseLLMParams {
-  llm: LLM;
+  llm: BaseLLM;
   layerupApiKey?: string;
   layerupApiBaseUrl?: string;
   promptGuardrails?: string[];
