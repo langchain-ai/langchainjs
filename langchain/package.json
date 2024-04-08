@@ -290,6 +290,10 @@
     "llms/fireworks.js",
     "llms/fireworks.d.ts",
     "llms/fireworks.d.cts",
+    "llms/friendli.cjs",
+    "llms/friendli.js",
+    "llms/friendli.d.ts",
+    "llms/friendli.d.cts",
     "llms/googlevertexai.cjs",
     "llms/googlevertexai.js",
     "llms/googlevertexai.d.ts",
@@ -750,6 +754,10 @@
     "chat_models/fireworks.js",
     "chat_models/fireworks.d.ts",
     "chat_models/fireworks.d.cts",
+    "chat_models/friendli.cjs",
+    "chat_models/friendli.js",
+    "chat_models/friendli.d.ts",
+    "chat_models/friendli.d.cts",
     "chat_models/baiduwenxin.cjs",
     "chat_models/baiduwenxin.js",
     "chat_models/baiduwenxin.d.ts",
@@ -2177,6 +2185,15 @@
       "import": "./llms/fireworks.js",
       "require": "./llms/fireworks.cjs"
     },
+    "./llms/friendli": {
+      "types": {
+        "import": "./llms/friendli.d.ts",
+        "require": "./llms/friendli.d.cts",
+        "default": "./llms/friendli.d.ts"
+      },
+      "import": "./llms/friendli.js",
+      "require": "./llms/friendli.cjs"
+    },
     "./llms/googlevertexai": {
       "types": {
         "import": "./llms/googlevertexai.d.ts",
@@ -3211,6 +3228,15 @@
       },
       "import": "./chat_models/fireworks.js",
       "require": "./chat_models/fireworks.cjs"
+    },
+    "./chat_models/friendli": {
+      "types": {
+        "import": "./chat_models/friendli.d.ts",
+        "require": "./chat_models/friendli.d.cts",
+        "default": "./chat_models/friendli.d.ts"
+      },
+      "import": "./chat_models/friendli.js",
+      "require": "./chat_models/friendli.cjs"
     },
     "./chat_models/baiduwenxin": {
       "types": {
