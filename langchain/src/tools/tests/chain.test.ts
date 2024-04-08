@@ -44,7 +44,7 @@ test("chain tool with llm chain and local callback", async () => {
     prompt: PromptTemplate.fromTemplate("hello world"),
   });
   const tool = new ChainTool({ chain, name: "fake", description: "fake" });
-  const result = await tool.call("hi", [
+  const result = await tool.invoke("hi", [
     {
       awaitHandlers: true,
       handleToolStart,
@@ -100,7 +100,7 @@ test("chain tool with vectordbqa chain", async () => {
     await MemoryVectorStore.fromExistingIndex(new FakeEmbeddings())
   );
   const tool = new ChainTool({ chain, name: "fake", description: "fake" });
-  const result = await tool.call("hi", [
+  const result = await tool.invoke("hi", [
     {
       awaitHandlers: true,
       handleToolStart,

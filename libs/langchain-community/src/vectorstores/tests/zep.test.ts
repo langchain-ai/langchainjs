@@ -177,7 +177,7 @@ describe("ZepVectorStore", () => {
     const originalFromDocuments = ZepVectorStore.fromDocuments;
     ZepVectorStore.fromDocuments = jest.fn(
       async (docs, embeddings, zepConfig) => {
-        const zepVectorStore = await originalFromDocuments.call(
+        const zepVectorStore = await originalFromDocuments.invoke(
           ZepVectorStore,
           docs as Document[],
           embeddings as EmbeddingsInterface,
@@ -189,7 +189,7 @@ describe("ZepVectorStore", () => {
     );
 
     const zepVectorStore = await ZepVectorStore.fromTexts(
-      texts,
+      texts,.
       metadatas,
       embeddings,
       zepConfig
