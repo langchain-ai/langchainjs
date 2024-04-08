@@ -20,7 +20,7 @@ const chat = new ChatOpenAI({
   modelName: "gpt-3.5-turbo",
 });
 
-const messages = prompts.map((prompt) => [new HumanMessage(prompt)]);
+const messages = prompts.map((prompt) => new HumanMessage(prompt));
 
 const res2 = await chat.invoke(messages);
 console.log({ res2 });

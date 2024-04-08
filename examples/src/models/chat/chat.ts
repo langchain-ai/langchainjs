@@ -26,22 +26,18 @@ export const run = async () => {
 
   // Similar to LLMs, you can also use `generate` to generate chat completions for multiple sets of messages.
   const responseC = await chat.invoke([
-    [
       new SystemMessage(
         "You are a helpful assistant that translates English to French."
       ),
       new HumanMessage(
         "Translate this sentence from English to French. I love programming."
       ),
-    ],
-    [
       new SystemMessage(
         "You are a helpful assistant that translates English to French."
       ),
       new HumanMessage(
         "Translate this sentence from English to French. I love artificial intelligence."
       ),
-    ],
   ]);
   console.log(responseC);
   /*
