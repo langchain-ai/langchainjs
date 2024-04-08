@@ -251,3 +251,69 @@ test(`Chat model dataset`, async () => {
     })
   );
 });
+
+test("Thrown errors should not interrupt dataset run", async () => {
+  async function ragPipeline(_: string): Promise<string> {
+    throw new Error("I don't know, I am learning from aliens.");
+  }
+
+  const examples = [
+    [
+      "When was the Apple Vision Pro released in the US?",
+      "The Apple Vision Pro was released in the United States on February 2, 2024.",
+    ],
+    [
+      "What is LangChain?",
+      "LangChain is an open-source framework for building applications using large language models.",
+    ],
+    [
+      "Who is the chairman of OpenAI?",
+      "Bret Taylor is the chairman of the OpenAI",
+    ],
+  ];
+
+  const lsClient = new Client();
+  const datasetName = "JS run on dataset integration test";
+  let dataset: Dataset;
+  try {
+    dataset = await lsClient.readDataset({ datasetName });
+  } catch (e) {
+    dataset = await lsClient.createDataset(datasetName);
+    await Promise.all(
+      examples.map(async ([question, answer]) => {
+        await lsClient.createExample(
+          { question },
+          { answer },
+          { datasetId: dataset.id }
+        );
+      })
+    );
+  }
+
+  // An illustrative custom evaluator example
+  const dummy = async (_: DynamicRunEvaluatorParams) => {
+    console.log("RUNNING EVAL");
+    throw new Error("Expected error");
+  };
+
+  const evaluation: RunEvalConfig = {
+    // Custom evaluators can be user-defined RunEvaluator's
+    // or a compatible function
+    customEvaluators: [dummy],
+  };
+
+  const wrappedRagPipeline = async ({
+    question,
+  }: {
+    question: string;
+  }): Promise<string> => {
+    return ragPipeline(question);
+  };
+
+  console.log(
+    await runOnDataset(wrappedRagPipeline, datasetName, {
+      evaluationConfig: evaluation,
+      maxConcurrency: 1,
+    })
+  );
+});
