@@ -109,11 +109,11 @@ test("JsonGetValueTool, paths containing escaped characters", async () => {
     "2"
   );
 
-  expect(await jsonGetValueTool.invoke("/paths/~0~1IDSGenericFXCrossRate")).toBe(
-    "3"
-  );
+  expect(
+    await jsonGetValueTool.invoke("/paths/~0~1IDSGenericFXCrossRate")
+  ).toBe("3");
 
-  expect(await jsonGetValueTool.invoke("/paths/~1~0IDSGenericFXCrossRate")).toBe(
-    "4"
-  );
+  expect(
+    await jsonGetValueTool.invoke("/paths/~1~0IDSGenericFXCrossRate")
+  ).toBe("4");
 });

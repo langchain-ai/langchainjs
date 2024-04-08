@@ -403,7 +403,7 @@ export abstract class BaseLLM<
 
   /**
    * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
-   * 
+   *
    * Run the LLM on the given prompts and input, handling caching.
    */
   async generate(

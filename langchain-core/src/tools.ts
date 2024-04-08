@@ -44,7 +44,7 @@ export interface StructuredToolInterface<
 
   /**
    * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
-   * 
+   *
    * Calls the tool with the provided argument, configuration, and tags. It
    * parses the input according to the schema, handles any errors, and
    * manages callbacks.
@@ -108,7 +108,7 @@ export abstract class StructuredTool<
 
   /**
    * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
-   * 
+   *
    * Calls the tool with the provided argument, configuration, and tags. It
    * parses the input according to the schema, handles any errors, and
    * manages callbacks.
@@ -173,7 +173,7 @@ export abstract class StructuredTool<
 export interface ToolInterface extends StructuredToolInterface {
   /**
    * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
-   * 
+   *
    * Calls the tool with the provided argument and callbacks. It handles
    * string inputs specifically.
    * @param arg The input argument for the tool, which can be a string, undefined, or an input of the tool's schema.
@@ -200,7 +200,7 @@ export abstract class Tool extends StructuredTool {
 
   /**
    * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
-   * 
+   *
    * Calls the tool with the provided argument and callbacks. It handles
    * string inputs specifically.
    * @param arg The input argument for the tool, which can be a string, undefined, or an input of the tool's schema.

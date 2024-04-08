@@ -430,7 +430,7 @@ export abstract class BaseChatModel<
 
   /**
    * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
-   * 
+   *
    * Generates chat based on the input messages.
    * @param messages An array of arrays of BaseMessage instances.
    * @param options The call options or an array of stop sequences.
