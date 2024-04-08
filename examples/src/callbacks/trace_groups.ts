@@ -22,7 +22,10 @@ export const run = async () => {
     async (manager: CallbackManager, questions: string[]) => {
       await chain.invoke({ question: questions[0] }, manager);
       await chain.invoke({ question: questions[1] }, manager);
-      const finalResult = await chain.invoke({ question: questions[2] }, manager);
+      const finalResult = await chain.invoke(
+        { question: questions[2] },
+        manager
+      );
       return finalResult;
     },
     [

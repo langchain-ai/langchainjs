@@ -20,11 +20,13 @@ try {
   const res = await chain.invoke(
     { product: "colorful socks", signal: controller.signal },
     {
-      callbacks: [{
-        handleLLMNewToken(token: string) {
-          process.stdout.write(token);
-        }
-      }],
+      callbacks: [
+        {
+          handleLLMNewToken(token: string) {
+            process.stdout.write(token);
+          },
+        },
+      ],
     }
   );
 } catch (e) {

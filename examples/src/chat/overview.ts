@@ -38,19 +38,18 @@ export const run = async () => {
   // Sending two separate prompts in parallel, receiving two responses back
 
   const responseA = await chat.invoke([
-    
-      new SystemMessage(
-        "You are a helpful assistant that translates English to French."
-      ),
-      new HumanMessage(
-        "Translate this sentence from English to French. I love programming."
-      ),
-      new SystemMessage(
-        "You are a helpful assistant that translates English to French."
-      ),
-      new HumanMessage(
-        "Translate this sentence from English to French. I love artificial intelligence."
-      ),
+    new SystemMessage(
+      "You are a helpful assistant that translates English to French."
+    ),
+    new HumanMessage(
+      "Translate this sentence from English to French. I love programming."
+    ),
+    new SystemMessage(
+      "You are a helpful assistant that translates English to French."
+    ),
+    new HumanMessage(
+      "Translate this sentence from English to French. I love artificial intelligence."
+    ),
   ]);
 
   console.log(responseA);
