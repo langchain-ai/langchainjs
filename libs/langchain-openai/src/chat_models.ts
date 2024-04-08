@@ -205,6 +205,7 @@ export interface ChatOpenAICallOptions
   promptIndex?: number;
   response_format?: { type: "json_object" };
   seed?: number;
+  n?: number;
 }
 
 /**
@@ -451,7 +452,7 @@ export class ChatOpenAI<
       max_tokens: this.maxTokens === -1 ? undefined : this.maxTokens,
       logprobs: this.logprobs,
       top_logprobs: this.topLogprobs,
-      n: this.n,
+      n: options?.n ?? this.n,
       logit_bias: this.logitBias,
       stop: options?.stop ?? this.stop,
       user: this.user,
