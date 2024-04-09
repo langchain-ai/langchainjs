@@ -256,7 +256,7 @@ export class RedisVectorStore extends VectorStore {
               new Document({
                 pageContent: (document[this.contentKey] ?? "") as string,
                 metadata: Object.keys(this.metadataSchema).reduce((acc: any, key) => {
-                  let str: string = this.unEscapeSpecialChars(document[key] as string);
+                  const str: string = this.unEscapeSpecialChars((document[key] || "") as string);
                   switch(this.metadataSchema[key]) {
                       case SchemaFieldTypes.NUMERIC:
                           acc[key] = parseFloat(str);
