@@ -10,7 +10,7 @@ import { PromptLayerOpenAI } from "langchain/llms/openai";
 
 const model = new PromptLayerOpenAI({
   temperature: 0.9,
-  openAIApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.OPENAI_API_KEY
+  apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.OPENAI_API_KEY
   promptLayerApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.PROMPTLAYER_API_KEY
 });
 const res = await model.invoke(
@@ -27,7 +27,7 @@ import { PromptLayerOpenAI } from "langchain/llms/openai";
 
 const model = new PromptLayerOpenAI({
   temperature: 0.9,
-  azureOpenAIApiKey: "YOUR-AOAI-API-KEY", // In Node.js defaults to process.env.AZURE_OPENAI_API_KEY
+  apiKey: "YOUR-AOAI-API-KEY", // In Node.js defaults to process.env.AZURE_OPENAI_API_KEY
   azureOpenAIApiInstanceName: "YOUR-AOAI-INSTANCE-NAME", // In Node.js defaults to process.env.AZURE_OPENAI_API_INSTANCE_NAME
   azureOpenAIApiDeploymentName: "YOUR-AOAI-DEPLOYMENT-NAME", // In Node.js defaults to process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME
   azureOpenAIApiCompletionsDeploymentName:

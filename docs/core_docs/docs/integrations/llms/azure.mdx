@@ -35,7 +35,7 @@ import { AzureOpenAI } from "@langchain/azure-openai";
 
 const model = new AzureOpenAI({
   azureOpenAIEndpoint: "<your_endpoint>",
-  azureOpenAIApiKey: "<your_key>",
+  apiKey: "<your_key>",
   azureOpenAIApiDeploymentName: "<your_deployment_name",
 });
 ```
@@ -67,7 +67,7 @@ const model = new AzureOpenAI({
   credentials,
   azureOpenAIEndpoint: "<your_endpoint>",
   azureOpenAIApiDeploymentName: "<your_deployment_name",
-  modelName: "<your_model>",
+  model: "<your_model>",
 });
 ```
 
@@ -103,7 +103,7 @@ import { OpenAI } from "@langchain/openai";
 
 const model = new OpenAI({
   temperature: 0.9,
-  azureOpenAIApiKey: "YOUR-API-KEY",
+  apiKey: "YOUR-API-KEY",
   azureOpenAIApiVersion: "YOUR-API-VERSION",
   azureOpenAIApiInstanceName: "{MY_INSTANCE_NAME}",
   azureOpenAIApiDeploymentName: "{DEPLOYMENT_NAME}",
@@ -122,7 +122,7 @@ import { OpenAI } from "@langchain/openai";
 
 const model = new OpenAI({
   temperature: 0.9,
-  azureOpenAIApiKey: "YOUR-API-KEY",
+  apiKey: "YOUR-API-KEY",
   azureOpenAIApiVersion: "YOUR-API-VERSION",
   azureOpenAIApiDeploymentName: "{DEPLOYMENT_NAME}",
   azureOpenAIBasePath:

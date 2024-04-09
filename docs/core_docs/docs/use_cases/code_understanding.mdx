@@ -144,7 +144,7 @@ import { ChatOpenAI } from "@langchain/openai";
 Pipe the `StringOutputParser` through since both chains which use this model will also need this output parser.
 
 ```typescript
-const model = new ChatOpenAI({ modelName: "gpt-4" }).pipe(
+const model = new ChatOpenAI({ model: "gpt-4" }).pipe(
   new StringOutputParser()
 );
 ```

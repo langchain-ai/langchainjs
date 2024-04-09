@@ -48,7 +48,7 @@ import { OpenAIEmbeddings } from "@langchain/openai";
 
 ```typescript
 const embeddings = new OpenAIEmbeddings({
-  azureOpenAIApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.AZURE_OPENAI_API_KEY
+  apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.AZURE_OPENAI_API_KEY
   azureOpenAIApiVersion: "YOUR-API-VERSION", // In Node.js defaults to process.env.AZURE_OPENAI_API_VERSION
   azureOpenAIApiInstanceName: "{MY_INSTANCE_NAME}", // In Node.js defaults to process.env.AZURE_OPENAI_API_INSTANCE_NAME
   azureOpenAIApiDeploymentName: "{DEPLOYMENT_NAME}", // In Node.js defaults to process.env.AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME
@@ -68,7 +68,7 @@ import { ChatOpenAI } from "@langchain/openai";
 ```typescript
 const model = new ChatOpenAI({
   temperature: 0.9,
-  azureOpenAIApiKey: "SOME_SECRET_VALUE", // In Node.js defaults to process.env.AZURE_OPENAI_API_KEY
+  apiKey: "SOME_SECRET_VALUE", // In Node.js defaults to process.env.AZURE_OPENAI_API_KEY
   azureOpenAIApiVersion: "YOUR-API-VERSION", // In Node.js defaults to process.env.AZURE_OPENAI_API_VERSION
   azureOpenAIApiInstanceName: "{MY_INSTANCE_NAME}", // In Node.js defaults to process.env.AZURE_OPENAI_API_INSTANCE_NAME
   azureOpenAIApiDeploymentName: "{DEPLOYMENT_NAME}", // In Node.js defaults to process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME
