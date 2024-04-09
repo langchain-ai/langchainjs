@@ -86,6 +86,8 @@ export class AzureOpenAI<
 
   modelName = "gpt-3.5-turbo-instruct";
 
+  model = "gpt-3.5-turbo-instruct";
+
   modelKwargs?: OpenAIInput["modelKwargs"];
 
   batchSize = 20;
@@ -94,11 +96,15 @@ export class AzureOpenAI<
 
   stop?: string[];
 
+  stopSequences?: string[];
+
   user?: string;
 
   streaming = false;
 
   azureOpenAIApiKey?: string;
+
+  apiKey?: string;
 
   azureOpenAIEndpoint?: string;
 
@@ -134,17 +140,18 @@ export class AzureOpenAI<
       fields?.azureOpenAIApiKey ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY") ??
       openAiApiKey;
+    this.apiKey = this.azureOpenAIApiKey;
 
     const azureCredential =
       fields?.credentials ??
-      (this.azureOpenAIApiKey === openAiApiKey
-        ? new OpenAIKeyCredential(this.azureOpenAIApiKey ?? "")
-        : new AzureKeyCredential(this.azureOpenAIApiKey ?? ""));
+      (this.apiKey === openAiApiKey
+        ? new OpenAIKeyCredential(this.apiKey ?? "")
+        : new AzureKeyCredential(this.apiKey ?? ""));
 
     // eslint-disable-next-line no-instanceof/no-instanceof
     const isOpenAIApiKey = azureCredential instanceof OpenAIKeyCredential;
 
-    if (!this.azureOpenAIApiKey && !fields?.credentials) {
+    if (!this.apiKey && !fields?.credentials) {
       throw new Error("Azure OpenAI API key not found");
     }
 
@@ -164,11 +171,13 @@ export class AzureOpenAI<
     this.n = fields?.n ?? this.n;
     this.logprobs = fields?.logprobs;
     this.echo = fields?.echo;
-    this.stop = fields?.stop;
+    this.stop = fields?.stopSequences ?? fields?.stop;
+    this.stopSequences = this.stop;
     this.presencePenalty = fields?.presencePenalty ?? this.presencePenalty;
     this.frequencyPenalty = fields?.frequencyPenalty ?? this.frequencyPenalty;
     this.bestOf = fields?.bestOf ?? this.bestOf;
-    this.modelName = fields?.modelName ?? this.modelName;
+    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
+    this.model = this.modelName;
     this.modelKwargs = fields?.modelKwargs ?? {};
     this.streaming = fields?.streaming ?? false;
     this.batchSize = fields?.batchSize ?? this.batchSize;
@@ -205,7 +214,7 @@ export class AzureOpenAI<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<GenerationChunk> {
-    const deploymentName = this.azureOpenAIApiDeploymentName || this.modelName;
+    const deploymentName = this.azureOpenAIApiDeploymentName || this.model;
 
     const stream = await this.caller.call(() =>
       this.client.streamCompletions(deploymentName, [input], {
@@ -217,7 +226,7 @@ export class AzureOpenAI<
         n: this.n,
         logprobs: this.logprobs,
         echo: this.echo,
-        stop: this.stop,
+        stop: this.stopSequences,
         presencePenalty: this.presencePenalty,
         frequencyPenalty: this.frequencyPenalty,
         bestOf: this.bestOf,
@@ -255,7 +264,7 @@ export class AzureOpenAI<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult> {
-    const deploymentName = this.azureOpenAIApiDeploymentName || this.modelName;
+    const deploymentName = this.azureOpenAIApiDeploymentName || this.model;
 
     if (this.maxTokens === -1) {
       if (prompts.length !== 1) {
@@ -266,7 +275,7 @@ export class AzureOpenAI<
       this.maxTokens = await calculateMaxTokens({
         prompt: prompts[0],
         // Cast here to allow for other models that may not fit the union
-        modelName: this.modelName as TiktokenModel,
+        modelName: this.model as TiktokenModel,
       });
     }
 
@@ -288,7 +297,7 @@ export class AzureOpenAI<
             n: this.n,
             logprobs: this.logprobs,
             echo: this.echo,
-            stop: this.stop,
+            stop: this.stopSequences,
             presencePenalty: this.presencePenalty,
             frequencyPenalty: this.frequencyPenalty,
             bestOf: this.bestOf,
@@ -363,7 +372,7 @@ export class AzureOpenAI<
             n: this.n,
             logprobs: this.logprobs,
             echo: this.echo,
-            stop: this.stop,
+            stop: this.stopSequences,
             presencePenalty: this.presencePenalty,
             frequencyPenalty: this.frequencyPenalty,
             bestOf: this.bestOf,

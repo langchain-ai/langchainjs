@@ -18,7 +18,7 @@ const tool = {
 };
 
 const model = new ChatAnthropic({
-  anthropicApiKey: process.env.ANTHROPIC_API_KEY,
+  apiKey: process.env.ANTHROPIC_API_KEY,
   modelName: "claude-3-haiku-20240307",
 }).bind({
   tools: [tool],

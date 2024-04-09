@@ -17,8 +17,13 @@ export interface CloudflareWorkersAIEmbeddingsParams extends EmbeddingsParams {
   /** Binding */
   binding: Fetcher;
 
-  /** Model name to use */
+  /**
+   * Model name to use
+   * Alias for `model`
+   */
   modelName?: string;
+  /** Model name to use */
+  model?: string;
 
   /**
    * The maximum number of documents to embed in a single request.
@@ -36,6 +41,8 @@ export interface CloudflareWorkersAIEmbeddingsParams extends EmbeddingsParams {
 export class CloudflareWorkersAIEmbeddings extends Embeddings {
   modelName = "@cf/baai/bge-base-en-v1.5";
 
+  model = "@cf/baai/bge-base-en-v1.5";
+
   batchSize = 50;
 
   stripNewLines = true;
@@ -51,7 +58,8 @@ export class CloudflareWorkersAIEmbeddings extends Embeddings {
       );
     }
     this.ai = new Ai(fields.binding);
-    this.modelName = fields.modelName ?? this.modelName;
+    this.modelName = fields?.model ?? fields.modelName ?? this.model;
+    this.model = this.modelName;
     this.stripNewLines = fields.stripNewLines ?? this.stripNewLines;
   }
 
@@ -85,7 +93,7 @@ export class CloudflareWorkersAIEmbeddings extends Embeddings {
   private async runEmbedding(texts: string[]) {
     return this.caller.call(async () => {
       const response: AiTextEmbeddingsOutput = await this.ai.run(
-        this.modelName,
+        this.model,
         {
           text: texts,
         } as AiTextEmbeddingsInput

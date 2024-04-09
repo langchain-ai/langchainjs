@@ -33,7 +33,7 @@ import { ChatAnthropicTools } from "@langchain/anthropic/experimental";
 const model = new ChatAnthropicTools({
   temperature: 0.1,
   modelName: "claude-3-sonnet-20240229",
-  anthropicApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.ANTHROPIC_API_KEY
+  apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.ANTHROPIC_API_KEY
 });
 ```
 

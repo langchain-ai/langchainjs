@@ -17,8 +17,13 @@ export declare interface AzureOpenAIInput {
 
   /**
    * API key to use when making requests to Azure OpenAI.
+   * Alias for `apiKey`
    */
   azureOpenAIApiKey?: string;
+  /**
+   * API key to use when making requests to Azure OpenAI.
+   */
+  apiKey?: string;
 
   /**
    * Endpoint to use when making requests to Azure OpenAI
@@ -111,12 +116,16 @@ export declare interface OpenAIBaseInput {
 
   /** A collection of textual sequences that will end completions generation. */
   stop?: string[];
+  /** A collection of textual sequences that will end completions generation. */
+  stopSequences?: string[];
 
   /** Whether to stream the results or not. Enabling disables tokenUsage reporting */
   streaming: boolean;
 
   /** Model name to use */
   modelName: string;
+  /** Model name to use */
+  model?: string;
 
   /** Holds any additional parameters that are valid to pass to {@link
    * https://platform.openai.com/docs/api-reference/completions/create |
@@ -188,6 +197,12 @@ export interface AzureOpenAIEmbeddingsParams extends EmbeddingsParams {
    * resource URI that's connected to.
    */
   modelName?: string;
+  /**
+   * The model name to provide as part of this embeddings request.
+   * Not applicable to Azure OpenAI, where deployment information should be included in the Azure
+   * resource URI that's connected to.
+   */
+  model?: string;
 
   /**
    * The maximum number of documents to embed in a single request. This is
