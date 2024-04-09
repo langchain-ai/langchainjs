@@ -137,7 +137,8 @@ export class AzureOpenAI<
     const openAiApiKey =
       fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
 
-    this.azureOpenAIApiKey = fields?.apiKey ??
+    this.azureOpenAIApiKey =
+      fields?.apiKey ??
       fields?.azureOpenAIApiKey ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY") ??
       openAiApiKey;
