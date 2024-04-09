@@ -71,7 +71,7 @@ describe("Mock Google LLM", () => {
     const model = new GoogleLLM({
       authOptions,
     });
-    await model.invoke("Hello world");
+    await model.call("Hello world");
 
     expect(record?.opts?.headers).toHaveProperty("User-Agent");
     expect(record.opts.headers["User-Agent"]).toMatch(
@@ -283,7 +283,7 @@ describe("Mock Google LLM", () => {
     });
     let caught = false;
     try {
-      await model.invoke("Hello world");
+      await model.call("Hello world");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (xx: any) {
       caught = true;
