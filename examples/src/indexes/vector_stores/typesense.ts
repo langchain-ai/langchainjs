@@ -50,7 +50,7 @@ const typesenseVectorStoreConfig = {
   //   for (let i = 0; i < data.length; i += chunkSize) {
   //     const chunk = data.slice(i, i + chunkSize);
 
-  //     await this.caller.invoke(async () => {
+  //     await this.caller.call(async () => {
   //       await this.client
   //         .collections<T>(collectionName)
   //         .documents()
