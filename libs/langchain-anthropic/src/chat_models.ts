@@ -546,13 +546,13 @@ export class ChatAnthropicMessages<
               type: "text" as const, // Explicitly setting the type as "text"
               text: contentPart.text,
             };
-          } else if (contentPart.type === "tool_use") {
+          } else if (
+            contentPart.type === "tool_use" ||
+            contentPart.type === "tool_result"
+          ) {
             // TODO: Fix when SDK types are fixed
             return {
-              type: "tool_use" as const,
-              id: contentPart.id,
-              name: contentPart.name,
-              input: contentPart.input,
+              ...contentPart,
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } as any;
           } else {
