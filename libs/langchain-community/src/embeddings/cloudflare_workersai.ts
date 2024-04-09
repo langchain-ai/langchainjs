@@ -92,12 +92,9 @@ export class CloudflareWorkersAIEmbeddings extends Embeddings {
 
   private async runEmbedding(texts: string[]) {
     return this.caller.call(async () => {
-      const response: AiTextEmbeddingsOutput = await this.ai.run(
-        this.model,
-        {
-          text: texts,
-        } as AiTextEmbeddingsInput
-      );
+      const response: AiTextEmbeddingsOutput = await this.ai.run(this.model, {
+        text: texts,
+      } as AiTextEmbeddingsInput);
       return response.data;
     });
   }

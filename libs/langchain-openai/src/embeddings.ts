@@ -119,7 +119,8 @@ export class OpenAIEmbeddings
 
     super(fieldsWithDefaults);
 
-    let apiKey = fieldsWithDefaults?.apiKey ??
+    let apiKey =
+      fieldsWithDefaults?.apiKey ??
       fieldsWithDefaults?.openAIApiKey ??
       getEnvironmentVariable("OPENAI_API_KEY");
 
@@ -152,7 +153,8 @@ export class OpenAIEmbeddings
       fieldsWithDefaults?.configuration?.organization ??
       getEnvironmentVariable("OPENAI_ORGANIZATION");
 
-    this.modelName = fieldsWithDefaults?.model ?? fieldsWithDefaults?.modelName ?? this.model;
+    this.modelName =
+      fieldsWithDefaults?.model ?? fieldsWithDefaults?.modelName ?? this.model;
     this.model = this.modelName;
     this.batchSize =
       fieldsWithDefaults?.batchSize ?? (azureApiKey ? 1 : this.batchSize);

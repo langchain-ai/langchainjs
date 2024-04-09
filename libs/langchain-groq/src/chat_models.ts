@@ -266,8 +266,10 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;
     this.streaming = fields?.streaming ?? this.streaming;
-    this.stop = fields?.stopSequences ??
-      (typeof fields?.stop === "string" ? [fields.stop] : fields?.stop) ?? [];
+    this.stop =
+      fields?.stopSequences ??
+      (typeof fields?.stop === "string" ? [fields.stop] : fields?.stop) ??
+      [];
     this.stopSequences = this.stop;
     this.maxTokens = fields?.maxTokens;
   }

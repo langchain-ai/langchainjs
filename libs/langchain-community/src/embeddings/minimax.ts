@@ -143,14 +143,17 @@ export class MinimaxEmbeddings
       throw new Error("Minimax GroupID  not found");
     }
 
-    this.minimaxApiKey = fields?.apiKey ??
-      fields?.minimaxApiKey ?? getEnvironmentVariable("MINIMAX_API_KEY");
+    this.minimaxApiKey =
+      fields?.apiKey ??
+      fields?.minimaxApiKey ??
+      getEnvironmentVariable("MINIMAX_API_KEY");
     this.apiKey = this.minimaxApiKey;
     if (!this.apiKey) {
       throw new Error("Minimax ApiKey not found");
     }
 
-    this.modelName = fieldsWithDefaults?.model ?? fieldsWithDefaults?.modelName ?? this.model;
+    this.modelName =
+      fieldsWithDefaults?.model ?? fieldsWithDefaults?.modelName ?? this.model;
     this.model = this.modelName;
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
     this.type = fieldsWithDefaults?.type ?? this.type;

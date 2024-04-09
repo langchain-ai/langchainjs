@@ -85,15 +85,17 @@ export class ChatTogetherAI extends ChatOpenAI<ChatTogetherAICallOptions> {
         /**
          * Prefer `apiKey`
          */
-        togetherAIApiKey?: string,
+        togetherAIApiKey?: string;
         /**
          * The TogetherAI API key to use.
          */
-        apiKey?: string,
+        apiKey?: string;
       }
   ) {
-    const togetherAIApiKey = fields?.apiKey ||
-      fields?.togetherAIApiKey || getEnvironmentVariable("TOGETHER_AI_API_KEY");
+    const togetherAIApiKey =
+      fields?.apiKey ||
+      fields?.togetherAIApiKey ||
+      getEnvironmentVariable("TOGETHER_AI_API_KEY");
 
     if (!togetherAIApiKey) {
       throw new Error(

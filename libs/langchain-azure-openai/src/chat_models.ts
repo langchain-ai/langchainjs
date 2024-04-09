@@ -241,7 +241,7 @@ export class AzureChatOpenAI
   azureOpenAIEndpoint?: string;
 
   azureOpenAIApiKey?: string;
-  
+
   apiKey?: string;
 
   azureOpenAIApiDeploymentName?: string;
@@ -269,7 +269,8 @@ export class AzureChatOpenAI
     const openAiApiKey =
       fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
 
-    this.azureOpenAIApiKey = fields?.apiKey ??
+    this.azureOpenAIApiKey =
+      fields?.apiKey ??
       fields?.azureOpenAIApiKey ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY") ??
       openAiApiKey;
@@ -356,8 +357,7 @@ export class AzureChatOpenAI
     options: this["ParsedCallOptions"]
   ): Promise<EventStream<ChatCompletions>> {
     return this.caller.call(async () => {
-      const deploymentName =
-        this.azureOpenAIApiDeploymentName || this.model;
+      const deploymentName = this.azureOpenAIApiDeploymentName || this.model;
 
       const res = await this.client.streamChatCompletions(
         deploymentName,

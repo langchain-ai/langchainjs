@@ -354,7 +354,9 @@ export class ChatOpenAI<
     super(fields ?? {});
 
     this.openAIApiKey =
-      fields?.apiKey ?? fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
+      fields?.apiKey ??
+      fields?.openAIApiKey ??
+      getEnvironmentVariable("OPENAI_API_KEY");
     this.apiKey = this.openAIApiKey;
 
     this.azureOpenAIApiKey =

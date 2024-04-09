@@ -70,15 +70,17 @@ export class ChatFireworks extends ChatOpenAI<ChatFireworksCallOptions> {
         /**
          * Prefer `apiKey`
          */
-        fireworksApiKey?: string,
+        fireworksApiKey?: string;
         /**
          * The Fireworks API key to use.
          */
-        apiKey?: string,
+        apiKey?: string;
       }
   ) {
-    const fireworksApiKey = fields?.apiKey ||
-      fields?.fireworksApiKey || getEnvironmentVariable("FIREWORKS_API_KEY");
+    const fireworksApiKey =
+      fields?.apiKey ||
+      fields?.fireworksApiKey ||
+      getEnvironmentVariable("FIREWORKS_API_KEY");
 
     if (!fireworksApiKey) {
       throw new Error(
@@ -88,8 +90,7 @@ export class ChatFireworks extends ChatOpenAI<ChatFireworksCallOptions> {
 
     super({
       ...fields,
-      modelName:
-        fields?.model || "accounts/fireworks/models/llama-v2-13b-chat",
+      modelName: fields?.model || "accounts/fireworks/models/llama-v2-13b-chat",
       openAIApiKey: fireworksApiKey,
       configuration: {
         baseURL: "https://api.fireworks.ai/inference/v1",

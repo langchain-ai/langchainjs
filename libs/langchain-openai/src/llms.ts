@@ -170,8 +170,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
   ) {
     let model = fields?.model ?? fields?.modelName;
     if (
-      (model?.startsWith("gpt-3.5-turbo") ||
-      model?.startsWith("gpt-4")) &&
+      (model?.startsWith("gpt-3.5-turbo") || model?.startsWith("gpt-4")) &&
       !model?.includes("-instruct")
     ) {
       // eslint-disable-next-line no-constructor-return
@@ -183,8 +182,10 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
     super(fields ?? {});
     model = model ?? this.model;
 
-    this.openAIApiKey = fields?.apiKey ??
-      fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
+    this.openAIApiKey =
+      fields?.apiKey ??
+      fields?.openAIApiKey ??
+      getEnvironmentVariable("OPENAI_API_KEY");
     this.apiKey = this.openAIApiKey;
 
     this.azureOpenAIApiKey =

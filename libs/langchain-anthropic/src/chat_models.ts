@@ -232,7 +232,7 @@ export class ChatAnthropicMessages<
   lc_serializable = true;
 
   anthropicApiKey?: string;
-  
+
   apiKey?: string;
 
   apiUrl?: string;
@@ -267,7 +267,9 @@ export class ChatAnthropicMessages<
     super(fields ?? {});
 
     this.anthropicApiKey =
-      fields?.apiKey ?? fields?.anthropicApiKey ?? getEnvironmentVariable("ANTHROPIC_API_KEY");
+      fields?.apiKey ??
+      fields?.anthropicApiKey ??
+      getEnvironmentVariable("ANTHROPIC_API_KEY");
     if (!this.anthropicApiKey) {
       throw new Error("Anthropic API key not found");
     }

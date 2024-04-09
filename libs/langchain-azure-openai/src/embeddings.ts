@@ -64,7 +64,8 @@ export class AzureOpenAIEmbeddings
     const openAiApiKey =
       fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
 
-    this.azureOpenAIApiKey = fields?.apiKey ??
+    this.azureOpenAIApiKey =
+      fields?.apiKey ??
       fields?.azureOpenAIApiKey ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY") ??
       openAiApiKey;
@@ -91,12 +92,12 @@ export class AzureOpenAIEmbeddings
       throw new Error("Azure OpenAI Deployment name not found");
     }
 
-    this.modelName = fieldsWithDefaults?.model ?? fieldsWithDefaults?.modelName ?? this.model;
+    this.modelName =
+      fieldsWithDefaults?.model ?? fieldsWithDefaults?.modelName ?? this.model;
     this.model = this.modelName;
 
     this.batchSize =
-      fieldsWithDefaults?.batchSize ??
-      (this.apiKey ? 1 : this.batchSize);
+      fieldsWithDefaults?.batchSize ?? (this.apiKey ? 1 : this.batchSize);
 
     this.stripNewLines =
       fieldsWithDefaults?.stripNewLines ?? this.stripNewLines;

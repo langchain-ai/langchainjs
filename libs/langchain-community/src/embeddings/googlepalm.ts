@@ -10,7 +10,7 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 export interface GooglePaLMEmbeddingsParams extends EmbeddingsParams {
   /**
    * Model Name to use
-   * 
+   *
    * Alias for `model`
    *
    * Note: The format must follow the pattern - `models/{model}`
