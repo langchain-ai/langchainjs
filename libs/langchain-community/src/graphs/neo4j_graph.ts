@@ -43,7 +43,7 @@ export const BASE_ENTITY_LABEL = "__Entity__";
 
 const INCLUDE_DOCS_QUERY = `
   MERGE (d:Document {id:$document.metadata.id}) 
-  SET d.text = $document.page_content 
+  SET d.text = $document.pageContent 
   SET d += $document.metadata 
   WITH d 
 `;
