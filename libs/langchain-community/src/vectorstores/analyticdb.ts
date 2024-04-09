@@ -168,10 +168,12 @@ export class AnalyticDBVectorStore extends VectorStore {
    * @returns Promise that resolves when the documents are added.
    */
   async addDocuments(documents: Document[]): Promise<void> {
-    const texts = documents.map(({ pageContent }) => pageContent);
+    // When the pageContent is empty in certain scenarios (such as when using unstructuredIo), an error occurs during embedding.
+    const filteredDocs = documents.filter((doc) => doc.pageContent);
+    const texts = filteredDocs.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
-      documents
+      filteredDocs
     );
   }
 
