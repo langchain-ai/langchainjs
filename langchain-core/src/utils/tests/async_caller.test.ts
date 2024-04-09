@@ -6,7 +6,7 @@ test("AsyncCaller passes on arguments and returns return value", async () => {
   const callable = jest.fn((arg1, arg2) => Promise.resolve([arg2, arg1]));
 
   const resultDirect = await callable(1, 2);
-  const resultWrapped = await caller.invoke(callable, 1, 2);
+  const resultWrapped = await caller.call(callable, 1, 2);
 
   expect(resultDirect).toEqual([2, 1]);
   expect(resultWrapped).toEqual([2, 1]);
@@ -29,7 +29,7 @@ test("AsyncCaller retries on failure", async () => {
     .mockRejectedValueOnce("error")
     .mockResolvedValueOnce([2, 1]);
 
-  const resultWrapped = await caller.invoke(callable);
+  const resultWrapped = await caller.call(callable);
 
   expect(resultWrapped).toEqual([2, 1]);
   expect(callable.mock.calls).toHaveLength(2);
