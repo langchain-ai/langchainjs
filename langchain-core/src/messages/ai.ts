@@ -24,9 +24,11 @@ export type AIMessageFields = BaseMessageFields & {
  * Represents an AI message in a conversation.
  */
 export class AIMessage extends BaseMessage {
-  tool_calls: ToolCall[] = [];
+  // These are typed as optional to avoid breaking changes and allow for casting
+  // from BaseMessage.
+  tool_calls?: ToolCall[] = [];
 
-  invalid_tool_calls: InvalidToolCall[] = [];
+  invalid_tool_calls?: InvalidToolCall[] = [];
 
   get lc_aliases(): Record<string, string> {
     // exclude snake case conversion to pascal case
@@ -37,10 +39,19 @@ export class AIMessage extends BaseMessage {
     };
   }
 
-  constructor(fields: string | AIMessageFields) {
-    let initParams;
+  constructor(
+    fields: string | AIMessageFields,
+    /** @deprecated */
+    kwargs?: Record<string, unknown>
+  ) {
+    let initParams: AIMessageFields;
     if (typeof fields === "string") {
-      initParams = { content: fields, tool_calls: [], invalid_tool_calls: [] };
+      initParams = {
+        content: fields,
+        tool_calls: [],
+        invalid_tool_calls: [],
+        additional_kwargs: kwargs ?? {},
+      };
     } else {
       initParams = fields;
       const rawToolCalls = initParams.additional_kwargs?.tool_calls;
@@ -103,12 +114,14 @@ export type AIMessageChunkFields = AIMessageFields & {
  * other AI message chunks.
  */
 export class AIMessageChunk extends BaseMessageChunk {
-  // Must redeclare tool call fields since there is no multiple inhertiance in JS.
-  tool_calls: ToolCall[] = [];
+  // Must redeclare tool call fields since there is no multiple inheritance in JS.
+  // These are typed as optional to avoid breaking changes and allow for casting
+  // from BaseMessage.
+  tool_calls?: ToolCall[] = [];
 
-  invalid_tool_calls: InvalidToolCall[] = [];
+  invalid_tool_calls?: InvalidToolCall[] = [];
 
-  tool_call_chunks: ToolCallChunk[] = [];
+  tool_call_chunks?: ToolCallChunk[] = [];
 
   constructor(fields: string | AIMessageChunkFields) {
     let initParams: AIMessageChunkFields;
