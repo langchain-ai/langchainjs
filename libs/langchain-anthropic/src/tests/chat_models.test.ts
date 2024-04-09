@@ -8,6 +8,7 @@ test("withStructuredOutput with output validation", async () => {
   const model = new ChatAnthropic({
     modelName: "claude-3-haiku-20240307",
     temperature: 0,
+    anthropicApiKey: "testing",
   });
   jest
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -58,6 +59,7 @@ test("withStructuredOutput with proper output", async () => {
   const model = new ChatAnthropic({
     modelName: "claude-3-haiku-20240307",
     temperature: 0,
+    anthropicApiKey: "testing",
   });
   jest
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
