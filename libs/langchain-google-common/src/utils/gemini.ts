@@ -501,7 +501,21 @@ export function responseToChatGenerations(
   response: GoogleLLMResponse
 ): ChatGeneration[] {
   const parts = responseToParts(response);
-  const ret = parts.map((part) => partToChatGeneration(part));
+  let ret = parts.map((part) => partToChatGeneration(part));
+  if (ret.every((item) => typeof item.message.content === "string")) {
+    const combinedContent = ret.map((item) => item.message.content).join("");
+    const combinedText = ret.map((item) => item.text).join("");
+    ret = [
+      new ChatGenerationChunk({
+        message: new AIMessageChunk({
+          content: combinedContent,
+          additional_kwargs: ret[ret.length - 1].message.additional_kwargs,
+        }),
+        text: combinedText,
+        generationInfo: ret[ret.length - 1].generationInfo,
+      }),
+    ];
+  }
   return ret;
 }
 

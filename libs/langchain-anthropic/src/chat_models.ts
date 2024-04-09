@@ -527,7 +527,7 @@ export class ChatAnthropicMessages<
           role,
           content: message.content,
         };
-      } else if ("type" in message.content) {
+      } else {
         const contentBlocks = message.content.map((contentPart) => {
           if (contentPart.type === "image_url") {
             let source;
@@ -546,6 +546,15 @@ export class ChatAnthropicMessages<
               type: "text" as const, // Explicitly setting the type as "text"
               text: contentPart.text,
             };
+          } else if (
+            contentPart.type === "tool_use" ||
+            contentPart.type === "tool_result"
+          ) {
+            // TODO: Fix when SDK types are fixed
+            return {
+              ...contentPart,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } as any;
           } else {
             throw new Error("Unsupported message content format");
           }
@@ -554,8 +563,6 @@ export class ChatAnthropicMessages<
           role,
           content: contentBlocks,
         };
-      } else {
-        throw new Error("Unsupported message content format");
       }
     });
     return {
