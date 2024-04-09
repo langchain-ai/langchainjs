@@ -113,6 +113,7 @@ export interface TogetherAICallOptions
     Pick<
       TogetherAIInputs,
       | "modelName"
+      | "model"
       | "temperature"
       | "topP"
       | "topK"
