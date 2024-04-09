@@ -255,11 +255,20 @@ export class RedisVectorStore extends VectorStore {
             result.push([
               new Document({
                 pageContent: (document[this.contentKey] ?? "") as string,
-                metadata: JSON.parse(
-                  this.unEscapeSpecialChars(
-                    (document.metadata ?? "{}") as string
-                  )
-                ),
+                metadata: Object.keys(this.metadataSchema).reduce((acc: any, key) => {
+                  let str: string = this.unEscapeSpecialChars(document[key] as string);
+                  switch(this.metadataSchema[key]) {
+                      case SchemaFieldTypes.NUMERIC:
+                          acc[key] = parseFloat(str);
+                          break;
+                      case SchemaFieldTypes.TAG:
+                          acc[key] = str.split(",");
+                          break;
+                      default:
+                          acc[key] = str;
+                  }
+                  return acc;
+                }, {}),
               }),
               Number(document.vector_score),
             ]);
