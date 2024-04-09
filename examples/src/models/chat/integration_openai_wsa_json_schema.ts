@@ -3,7 +3,7 @@ import { ChatOpenAI } from "@langchain/openai";
 
 const model = new ChatOpenAI({
   temperature: 0,
-  modelName: "gpt-4-turbo-preview",
+  model: "gpt-4-turbo-preview",
 });
 
 const calculatorSchema = {

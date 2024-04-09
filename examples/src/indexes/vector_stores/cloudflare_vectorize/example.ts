@@ -21,7 +21,7 @@ export default {
     const { pathname } = new URL(request.url);
     const embeddings = new CloudflareWorkersAIEmbeddings({
       binding: env.AI,
-      modelName: "@cf/baai/bge-small-en-v1.5",
+      model: "@cf/baai/bge-small-en-v1.5",
     });
     const store = new CloudflareVectorizeStore(embeddings, {
       index: env.VECTORIZE_INDEX,

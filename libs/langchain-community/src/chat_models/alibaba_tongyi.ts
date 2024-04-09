@@ -90,10 +90,17 @@ interface ChatCompletionResponse {
  * Interface defining the input to the ChatAlibabaTongyi class.
  */
 interface AlibabaTongyiChatInput {
-  /** Model name to use. Available options are: qwen-turbo, qwen-plus, qwen-max, or Other compatible models.
+  /**
+   * Model name to use. Available options are: qwen-turbo, qwen-plus, qwen-max, or Other compatible models.
+   * Alias for `model`
    * @default "qwen-turbo"
    */
   modelName: string;
+
+    /** Model name to use. Available options are: qwen-turbo, qwen-plus, qwen-max, or Other compatible models.
+   * @default "qwen-turbo"
+   */
+    model: string;
 
   /** Whether to stream the results or not. Defaults to false. */
   streaming?: boolean;
@@ -187,7 +194,7 @@ function messageToTongyiRole(message: BaseMessage): TongyiMessageRole {
  * });
  *
  * const qwen = new ChatAlibabaTongyi({
- *   modelName: "qwen-turbo",
+ *   model: "qwen-turbo",
  *   temperature: 1,
  *   alibabaApiKey: "YOUR-API-KEY",
  * });
@@ -229,6 +236,8 @@ export class ChatAlibabaTongyi
 
   modelName: ChatCompletionRequest["model"];
 
+  model: ChatCompletionRequest["model"];
+
   apiUrl: string;
 
   maxTokens?: number | undefined;
@@ -268,7 +277,8 @@ export class ChatAlibabaTongyi
     this.maxTokens = fields.maxTokens;
     this.repetitionPenalty = fields.repetitionPenalty;
     this.enableSearch = fields.enableSearch;
-    this.modelName = fields.modelName ?? "qwen-turbo";
+    this.modelName = fields?.model ?? fields.modelName ?? "qwen-turbo";
+    this.model = this.modelName;
   }
 
   /**
@@ -301,9 +311,9 @@ export class ChatAlibabaTongyi
   identifyingParams(): ChatCompletionRequest["parameters"] &
     Pick<ChatCompletionRequest, "model"> {
     return {
-      model: this.modelName,
+      model: this.model,
       ...this.invocationParams(),
-    };
+  };
   }
 
   /** @ignore */
@@ -326,7 +336,7 @@ export class ChatAlibabaTongyi
           let resolved = false;
           this.completionWithRetry(
             {
-              model: this.modelName,
+              model: this.model,
               parameters,
               input: {
                 messages: messagesMapped,
@@ -373,7 +383,7 @@ export class ChatAlibabaTongyi
         })
       : await this.completionWithRetry(
           {
-            model: this.modelName,
+            model: this.model,
             parameters,
             input: {
               messages: messagesMapped,

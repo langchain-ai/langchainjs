@@ -331,7 +331,7 @@ describe("Mock ChatGoogle", () => {
     };
     const model = new ChatGoogle({
       authOptions,
-      modelName: "gemini-pro-vision",
+      model: "gemini-pro-vision",
     });
 
     const message: MessageContentComplex[] = [

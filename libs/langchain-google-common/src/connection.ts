@@ -163,7 +163,6 @@ export abstract class GoogleAIConnection<
   extends GoogleHostConnection<CallOptions, GoogleLLMResponse, AuthOptions>
   implements GoogleAIBaseLLMInput<AuthOptions>
 {
-  /** @deprecated Prefer `modelName` */
   model: string;
 
   modelName: string;
@@ -178,11 +177,12 @@ export abstract class GoogleAIConnection<
   ) {
     super(fields, caller, client, streaming);
     this.client = client;
-    this.modelName = fields?.modelName ?? fields?.model ?? this.modelName;
+    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
+    this.model = this.modelName;
   }
 
   get modelFamily(): GoogleLLMModelFamily {
-    if (this.modelName.startsWith("gemini")) {
+    if (this.model.startsWith("gemini")) {
       return "gemini";
     } else {
       return null;
@@ -201,14 +201,14 @@ export abstract class GoogleAIConnection<
 
   async buildUrlGenerativeLanguage(): Promise<string> {
     const method = await this.buildUrlMethod();
-    const url = `https://generativelanguage.googleapis.com/${this.apiVersion}/models/${this.modelName}:${method}`;
+    const url = `https://generativelanguage.googleapis.com/${this.apiVersion}/models/${this.model}:${method}`;
     return url;
   }
 
   async buildUrlVertex(): Promise<string> {
     const projectId = await this.client.getProjectId();
     const method = await this.buildUrlMethod();
-    const url = `https://${this.endpoint}/${this.apiVersion}/projects/${projectId}/locations/${this.location}/publishers/google/models/${this.modelName}:${method}`;
+    const url = `https://${this.endpoint}/${this.apiVersion}/projects/${projectId}/locations/${this.location}/publishers/google/models/${this.model}:${method}`;
     return url;
   }
 

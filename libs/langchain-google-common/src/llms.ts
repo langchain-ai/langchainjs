@@ -87,6 +87,8 @@ export abstract class GoogleBaseLLM<AuthOptions>
 
   modelName = "gemini-pro";
 
+  model = "gemini-pro";
+
   temperature = 0.7;
 
   maxOutputTokens = 1024;

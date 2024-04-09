@@ -21,7 +21,7 @@ const outputParser = StructuredOutputParser.fromZodSchema(
 );
 
 const chatModel = new ChatOpenAI({
-  modelName: "gpt-4", // Or gpt-3.5-turbo
+  model: "gpt-4", // Or gpt-3.5-turbo
   temperature: 0, // For best results with the output fixing parser
 });
 

@@ -9,10 +9,18 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 export interface GooglePaLMTextInput extends BaseLLMParams {
   /**
    * Model Name to use
+   * 
+   * Alias for `model`
    *
    * Note: The format must follow the pattern - `models/{model}`
    */
   modelName?: string;
+    /**
+   * Model Name to use
+   *
+   * Note: The format must follow the pattern - `models/{model}`
+   */
+    model?: string;
 
   /**
    * Controls the randomness of the output.
@@ -94,6 +102,8 @@ export class GooglePaLM extends LLM implements GooglePaLMTextInput {
 
   modelName = "models/text-bison-001";
 
+  model = "models/text-bison-001";
+
   temperature?: number; // default value chosen based on model
 
   maxOutputTokens?: number; // defaults to 64
@@ -113,7 +123,8 @@ export class GooglePaLM extends LLM implements GooglePaLMTextInput {
   constructor(fields?: GooglePaLMTextInput) {
     super(fields ?? {});
 
-    this.modelName = fields?.modelName ?? this.modelName;
+    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
+    this.model = this.modelName;
 
     this.temperature = fields?.temperature ?? this.temperature;
     if (this.temperature && (this.temperature < 0 || this.temperature > 1)) {
@@ -186,7 +197,7 @@ export class GooglePaLM extends LLM implements GooglePaLMTextInput {
     prompt: string
   ): Promise<string | null | undefined> {
     const res = await this.client.generateText({
-      model: this.modelName,
+      model: this.model,
       temperature: this.temperature,
       candidateCount: 1,
       topK: this.topK,

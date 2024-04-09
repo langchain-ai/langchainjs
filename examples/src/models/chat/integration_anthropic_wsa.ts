@@ -14,7 +14,7 @@ const calculatorSchema = z
 
 const model = new ChatAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
-  modelName: "claude-3-haiku-20240307",
+  model: "claude-3-haiku-20240307",
 });
 
 // Pass the schema and tool name to the withStructuredOutput method

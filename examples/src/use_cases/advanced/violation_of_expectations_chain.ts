@@ -47,7 +47,7 @@ const retriever = vectorStore.asRetriever();
 
 // Instantiate the LLM,
 const llm = new ChatOpenAI({
-  modelName: "gpt-4",
+  model: "gpt-4",
 });
 
 // And the chain.

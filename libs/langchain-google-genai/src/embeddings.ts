@@ -11,10 +11,18 @@ import { chunkArray } from "@langchain/core/utils/chunk_array";
 export interface GoogleGenerativeAIEmbeddingsParams extends EmbeddingsParams {
   /**
    * Model Name to use
+   * 
+   * Alias for `model`
    *
    * Note: The format must follow the pattern - `{model}`
    */
   modelName?: string;
+  /**
+   * Model Name to use
+   *
+   * Note: The format must follow the pattern - `{model}`
+   */
+  model?: string;
 
   /**
    * Type of task for which the embedding will be used
@@ -71,6 +79,8 @@ export class GoogleGenerativeAIEmbeddings
 
   modelName = "embedding-001";
 
+  model = "embedding-001";
+
   taskType?: TaskType;
 
   title?: string;
@@ -84,8 +94,9 @@ export class GoogleGenerativeAIEmbeddings
   constructor(fields?: GoogleGenerativeAIEmbeddingsParams) {
     super(fields ?? {});
 
-    this.modelName =
+    this.modelName = fields?.model?.replace(/^models\//, "") ??
       fields?.modelName?.replace(/^models\//, "") ?? this.modelName;
+    this.model = this.modelName;
 
     this.taskType = fields?.taskType ?? this.taskType;
 
@@ -108,7 +119,7 @@ export class GoogleGenerativeAIEmbeddings
     }
 
     this.client = new GoogleGenerativeAI(this.apiKey).getGenerativeModel({
-      model: this.modelName,
+      model: this.model,
     });
   }
 

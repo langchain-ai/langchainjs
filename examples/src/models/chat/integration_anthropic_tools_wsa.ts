@@ -11,7 +11,7 @@ const calculatorSchema = z.object({
 });
 
 const model = new ChatAnthropicTools({
-  modelName: "claude-3-sonnet-20240229",
+  model: "claude-3-sonnet-20240229",
   temperature: 0.1,
 });
 

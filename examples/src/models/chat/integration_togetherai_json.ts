@@ -17,7 +17,7 @@ const responseSchema = {
 const modelWithJsonSchema = new ChatTogetherAI({
   temperature: 0,
   togetherAIApiKey: process.env.TOGETHER_AI_API_KEY,
-  modelName: "mistralai/Mixtral-8x7B-Instruct-v0.1",
+  model: "mistralai/Mixtral-8x7B-Instruct-v0.1",
 }).bind({
   response_format: {
     type: "json_object", // Define the response format as a JSON object
