@@ -157,7 +157,7 @@ type Kwargs = Record<string, any>;
  * ```typescript
  * const model = new ChatAnthropic({
  *   temperature: 0.9,
- *   apiKey: 'YOUR-API-KEY',
+ *   anthropicApiKey: 'YOUR-API-KEY',
  * });
  * const res = await model.invoke({ input: 'Hello!' });
  * console.log(res);
@@ -175,7 +175,7 @@ export class ChatAnthropic<
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
-      apiKey: "ANTHROPIC_API_KEY",
+      anthropicApiKey: "ANTHROPIC_API_KEY",
     };
   }
 

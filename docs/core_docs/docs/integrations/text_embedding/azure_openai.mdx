@@ -85,7 +85,7 @@ npm install @langchain/openai
 import { OpenAIEmbeddings } from "@langchain/openai";
 
 const embeddings = new OpenAIEmbeddings({
-  apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.AZURE_OPENAI_API_KEY
+  azureOpenAIApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.AZURE_OPENAI_API_KEY
   azureOpenAIApiVersion: "YOUR-API-VERSION", // In Node.js defaults to process.env.AZURE_OPENAI_API_VERSION
   azureOpenAIApiInstanceName: "{MY_INSTANCE_NAME}", // In Node.js defaults to process.env.AZURE_OPENAI_API_INSTANCE_NAME
   azureOpenAIApiDeploymentName: "{DEPLOYMENT_NAME}", // In Node.js defaults to process.env.AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME
@@ -103,7 +103,7 @@ For example, here's how you would connect to the domain `https://westeurope.api.
 import { OpenAIEmbeddings } from "@langchain/openai";
 
 const embeddings = new OpenAIEmbeddings({
-  apiKey: "YOUR-API-KEY",
+  azureOpenAIApiKey: "YOUR-API-KEY",
   azureOpenAIApiVersion: "YOUR-API-VERSION",
   azureOpenAIApiDeploymentName: "{DEPLOYMENT_NAME}",
   azureOpenAIBasePath:

@@ -196,7 +196,7 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
 
   private constructBody(prompt: string, options?: this["ParsedCallOptions"]) {
     const body = {
-      model: options?.modelName ?? this?.model,
+      model: options?.model ?? options?.modelName ?? this?.model,
       prompt,
       temperature: this?.temperature ?? options?.temperature,
       top_k: this?.topK ?? options?.topK,

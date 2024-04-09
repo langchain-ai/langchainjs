@@ -51,6 +51,7 @@ export class AzureOpenAI<
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
+      apiKey: "AZURE_OPENAI_API_KEY",
       openAIApiKey: "OPENAI_API_KEY",
       azureOpenAIApiKey: "AZURE_OPENAI_API_KEY",
       azureOpenAIEndpoint: "AZURE_OPENAI_API_ENDPOINT",
@@ -136,7 +137,7 @@ export class AzureOpenAI<
     const openAiApiKey =
       fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
 
-    this.azureOpenAIApiKey =
+    this.azureOpenAIApiKey = fields?.apiKey ??
       fields?.azureOpenAIApiKey ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY") ??
       openAiApiKey;

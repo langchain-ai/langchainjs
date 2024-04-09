@@ -33,7 +33,7 @@ export type ChatFireworksCallOptions = Partial<
  * ```typescript
  * const model = new ChatFireworks({
  *   temperature: 0.9,
- *   fireworksApiKey: "YOUR-API-KEY",
+ *   apiKey: "YOUR-API-KEY",
  * });
  *
  * const response = await model.invoke("Hello, how are you?");
@@ -90,8 +90,8 @@ export class ChatFireworks extends ChatOpenAI<ChatFireworksCallOptions> {
 
     super({
       ...fields,
-      modelName: fields?.model || "accounts/fireworks/models/llama-v2-13b-chat",
-      openAIApiKey: fireworksApiKey,
+      model: fields?.model || "accounts/fireworks/models/llama-v2-13b-chat",
+      apiKey: fireworksApiKey,
       configuration: {
         baseURL: "https://api.fireworks.ai/inference/v1",
       },

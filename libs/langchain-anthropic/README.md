@@ -64,7 +64,7 @@ import { ChatAnthropicMessages } from "@langchain/anthropic";
 
 const model = new ChatAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
-  modelName: "claude-3-sonnet-20240229",
+  model: "claude-3-sonnet-20240229",
 });
 const response = await model.stream(new HumanMessage("Hello world!"));
 ```

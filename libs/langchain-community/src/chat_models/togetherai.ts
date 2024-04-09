@@ -105,8 +105,8 @@ export class ChatTogetherAI extends ChatOpenAI<ChatTogetherAICallOptions> {
 
     super({
       ...fields,
-      modelName: fields?.model || "mistralai/Mixtral-8x7B-Instruct-v0.1",
-      openAIApiKey: togetherAIApiKey,
+      model: fields?.model || "mistralai/Mixtral-8x7B-Instruct-v0.1",
+      apiKey: togetherAIApiKey,
       configuration: {
         baseURL: "https://api.together.xyz/v1/",
       },
