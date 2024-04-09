@@ -211,20 +211,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@anthropic-ai/sdk@npm:^0.17.2":
-  version: 0.17.2
-  resolution: "@anthropic-ai/sdk@npm:0.17.2"
+"@anthropic-ai/sdk@npm:^0.20.1":
+  version: 0.20.1
+  resolution: "@anthropic-ai/sdk@npm:0.20.1"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
     abort-controller: ^3.0.0
     agentkeepalive: ^4.2.1
-    digest-fetch: ^1.3.0
     form-data-encoder: 1.7.2
     formdata-node: ^4.3.2
     node-fetch: ^2.6.7
     web-streams-polyfill: ^3.2.1
-  checksum: 33480adddbbf905aadcb310bdbca2baa9e3ca25ae554c94c52b189bd8e8afe89577775dbcf902ab6fa252d3b3c6e4fe5e4973a7caaa2d3e5a813d3727cf98499
+  checksum: a880088ffeb993ea835f3ec250d53bf6ba23e97c3dfc54c915843aa8cb4778849fb7b85de0a359155c36595a5a5cc1db64139d407d2e36a2423284ebfe763cce
   languageName: node
   linkType: hard
 
@@ -8810,7 +8809,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/anthropic@workspace:libs/langchain-anthropic"
   dependencies:
-    "@anthropic-ai/sdk": ^0.17.2
+    "@anthropic-ai/sdk": ^0.20.1
     "@jest/globals": ^29.5.0
     "@langchain/community": "workspace:^"
     "@langchain/core": ~0.1.54
@@ -9425,7 +9424,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-common@workspace:*, @langchain/google-common@workspace:libs/langchain-google-common, @langchain/google-common@~0.0.3":
+"@langchain/google-common@workspace:*, @langchain/google-common@workspace:libs/langchain-google-common, @langchain/google-common@~0.0.4":
   version: 0.0.0-use.local
   resolution: "@langchain/google-common@workspace:libs/langchain-google-common"
   dependencies:
@@ -9457,13 +9456,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-gauth@workspace:libs/langchain-google-gauth, @langchain/google-gauth@~0.0.2":
+"@langchain/google-gauth@workspace:libs/langchain-google-gauth, @langchain/google-gauth@~0.0.3":
   version: 0.0.0-use.local
   resolution: "@langchain/google-gauth@workspace:libs/langchain-google-gauth"
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.1
-    "@langchain/google-common": ~0.0.3
+    "@langchain/google-common": ~0.0.4
     "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9527,7 +9526,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.1
-    "@langchain/google-webauth": ~0.0.2
+    "@langchain/google-webauth": ~0.0.3
     "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9558,7 +9557,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.1
-    "@langchain/google-gauth": ~0.0.2
+    "@langchain/google-gauth": ~0.0.3
     "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9583,13 +9582,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-webauth@workspace:libs/langchain-google-webauth, @langchain/google-webauth@~0.0.2":
+"@langchain/google-webauth@workspace:libs/langchain-google-webauth, @langchain/google-webauth@~0.0.3":
   version: 0.0.0-use.local
   resolution: "@langchain/google-webauth@workspace:libs/langchain-google-webauth"
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.1
-    "@langchain/google-common": ~0.0.3
+    "@langchain/google-common": ~0.0.4
     "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
