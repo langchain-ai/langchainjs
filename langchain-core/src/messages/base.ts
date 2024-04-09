@@ -76,7 +76,7 @@ export interface FunctionCall {
 
 /**
  * @deprecated
- * Use the class with the same name in "@langchain/core/messages/tools" instead.
+ * Import as "OpenAIToolCall" instead
  */
 export interface ToolCall {
   /**
@@ -209,29 +209,6 @@ export abstract class BaseMessage
         .kwargs as StoredMessageData,
     };
   }
-
-  // toChunk(): BaseMessageChunk {
-  //   const type = this._getType();
-  //   if (type === "human") {
-  //     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-  //     return new HumanMessageChunk({ ...this });
-  //   } else if (type === "ai") {
-  //     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-  //     return new AIMessageChunk({ ...this });
-  //   } else if (type === "system") {
-  //     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-  //     return new SystemMessageChunk({ ...this });
-  //   } else if (type === "function") {
-  //     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-  //     return new FunctionMessageChunk({ ...this });
-  //     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-  //   } else if (ChatMessage.isInstance(this)) {
-  //     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-  //     return new ChatMessageChunk({ ...this });
-  //   } else {
-  //     throw new Error("Unknown message type.");
-  //   }
-  // }
 }
 
 // TODO: Deprecate when SDK typing is updated

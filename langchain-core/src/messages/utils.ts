@@ -5,11 +5,19 @@ import {
   StoredMessage,
   StoredMessageV1,
 } from "./base.js";
-import { HumanMessage } from "./human.js";
-import { AIMessage } from "./ai.js";
-import { SystemMessage } from "./system.js";
-import { ChatMessage, ChatMessageFieldsWithRole } from "./chat.js";
-import { FunctionMessage, FunctionMessageFieldsWithName } from "./function.js";
+import { HumanMessage, HumanMessageChunk } from "./human.js";
+import { AIMessage, AIMessageChunk } from "./ai.js";
+import { SystemMessage, SystemMessageChunk } from "./system.js";
+import {
+  ChatMessage,
+  ChatMessageChunk,
+  ChatMessageFieldsWithRole,
+} from "./chat.js";
+import {
+  FunctionMessage,
+  FunctionMessageChunk,
+  FunctionMessageFieldsWithName,
+} from "./function.js";
 import { ToolMessage, ToolMessageFieldsWithToolCallId } from "./tool.js";
 
 export function coerceMessageLikeToMessage(
@@ -152,4 +160,27 @@ export function mapChatMessagesToStoredMessages(
   messages: BaseMessage[]
 ): StoredMessage[] {
   return messages.map((message) => message.toDict());
+}
+
+export function convertToChunk(message: BaseMessage) {
+  const type = message._getType();
+  if (type === "human") {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    return new HumanMessageChunk({ ...message });
+  } else if (type === "ai") {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    return new AIMessageChunk({ ...message });
+  } else if (type === "system") {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    return new SystemMessageChunk({ ...message });
+  } else if (type === "function") {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    return new FunctionMessageChunk({ ...message });
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+  } else if (ChatMessage.isInstance(message)) {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    return new ChatMessageChunk({ ...message });
+  } else {
+    throw new Error("Unknown message type.");
+  }
 }

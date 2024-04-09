@@ -6,7 +6,6 @@ import {
   _mergeDicts,
   type MessageType,
 } from "./base.js";
-import { Serializable } from "../load/serializable.js";
 
 export interface ToolMessageFieldsWithToolCallId extends BaseMessageFields {
   tool_call_id: string;
@@ -93,55 +92,19 @@ export class ToolMessageChunk extends BaseMessageChunk {
   }
 }
 
-export type ToolCallFields = {
-  name: string;
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  args: Record<string, any>;
-
-  id?: string;
-
-  index?: number;
-};
-
 /**
  * A call to a tool.
  * @property {string} name - The name of the tool to be called
- * @property {Object} args - The arguments to the tool call
+ * @property {Record<string, any>} args - The arguments to the tool call
  * @property {string} [id] - If provided, an identifier associated with the tool call
- * @property {number} [index] - If provided, the index of the tool call in a sequence of content
  */
-export class ToolCall extends Serializable implements ToolCallFields {
-  lc_serializable = true;
-
-  lc_namespace = ["langchain_core", "messages"];
-
+export type ToolCall = {
   name: string;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   args: Record<string, any>;
 
   id?: string;
-
-  index?: number;
-
-  constructor(fields: ToolCallFields) {
-    super(fields);
-    this.name = fields.name;
-    this.args = fields.args;
-    this.id = fields.id;
-    this.index = fields.index;
-  }
-}
-
-export type ToolCallChunkFields = {
-  name?: string;
-
-  args?: string;
-
-  id?: string;
-
-  index?: number;
 };
 
 /**
@@ -153,11 +116,11 @@ export type ToolCallChunkFields = {
  * @example
  * ```ts
  * const leftChunks = [
- *   new ToolCallChunk({
+ *   {
  *     name: "foo",
  *     args: '{"a":',
  *     index: 0
- *   })
+ *   }
  * ];
  *
  * const leftAIMessageChunk = new AIMessageChunk({
@@ -166,11 +129,11 @@ export type ToolCallChunkFields = {
  * });
  *
  * const rightChunks = [
- *   new ToolCallChunk({
+ *   {
  *     name: undefined,
  *     args: '1}',
  *     index: 0
- *   })
+ *   }
  * ];
  *
  * const rightAIMessageChunk = new AIMessageChunk({
@@ -181,11 +144,11 @@ export type ToolCallChunkFields = {
  * const result = leftAIMessageChunk.concat(rightAIMessageChunk);
  * // result.tool_call_chunks is equal to:
  * // [
- * //   new ToolCallChunk({
+ * //   {
  * //     name: "foo",
  * //     args: '{"a":1}'
  * //     index: 0
- * //   })
+ * //   }
  * // ]
  * ```
  *
@@ -194,11 +157,7 @@ export type ToolCallChunkFields = {
  * @property {string} [id] - If provided, a substring of an identifier for the tool call
  * @property {number} [index] - If provided, the index of the tool call in a sequence
  */
-export class ToolCallChunk extends Serializable implements ToolCallChunkFields {
-  lc_serializable = true;
-
-  lc_namespace = ["langchain_core", "messages"];
-
+export type ToolCallChunk = {
   name?: string;
 
   args?: string;
@@ -206,87 +165,43 @@ export class ToolCallChunk extends Serializable implements ToolCallChunkFields {
   id?: string;
 
   index?: number;
-
-  constructor(fields: ToolCallChunkFields) {
-    super(fields);
-    this.name = fields.name;
-    this.args = fields.args;
-    this.id = fields.id;
-    this.index = fields.index;
-  }
-}
-
-export type InvalidToolCallFields = {
-  name?: string;
-  args?: string;
-  id?: string;
-  index?: number;
-  error?: string;
 };
 
-/**
- * Allowance for errors made by LLM.
- * Here we add an `error` key to surface errors made during generation
- * (e.g., invalid JSON arguments.)
- */
-export class InvalidToolCall
-  extends Serializable
-  implements InvalidToolCallFields
-{
-  lc_serializable = true;
-
-  lc_namespace = ["langchain_core", "messages"];
-
+export type InvalidToolCall = {
   name?: string;
-
   args?: string;
-
   id?: string;
-
-  index?: number;
-
   error?: string;
-
-  constructor(fields: InvalidToolCallFields) {
-    super(fields);
-    this.name = fields.name;
-    this.args = fields.args;
-    this.id = fields.id;
-    this.index = fields.index;
-    this.error = fields.error;
-  }
-}
+};
 
 export function defaultToolCallParser(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   rawToolCalls: Record<string, any>[]
-): ToolCall[] {
-  return rawToolCalls.map((toolCall) => {
-    const functionArgs = toolCall.function?.arguments
-      ? JSON.parse(toolCall?.function.arguments)
-      : {};
-    const functionName = toolCall.function?.name ?? "";
-    return new ToolCall({
-      name: functionName,
-      args: functionArgs,
-      id: toolCall.id,
-      index: toolCall.index,
-    });
-  });
-}
-
-export function defaultToolCallChunkParser(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  rawToolCalls: Record<string, any>[]
-): ToolCallChunk[] {
-  return rawToolCalls.map((toolCall) => {
-    const functionArgs: string = toolCall.function?.arguments;
-    const functionName: string = toolCall.function?.name;
-    return new ToolCallChunk({
-      name: functionName,
-      args: functionArgs,
-      id: toolCall.id,
-      index: toolCall.index,
-    });
-  });
+): [ToolCall[], InvalidToolCall[]] {
+  const toolCalls: ToolCall[] = [];
+  const invalidToolCalls: InvalidToolCall[] = [];
+  for (const toolCall of rawToolCalls) {
+    if (!toolCall.function) {
+      continue;
+    } else {
+      const functionName = toolCall.function.name;
+      try {
+        const functionArgs = JSON.parse(toolCall.function.arguments);
+        const parsed = {
+          name: functionName || "",
+          args: functionArgs || {},
+          id: toolCall.id,
+        };
+        toolCalls.push(parsed);
+      } catch (error) {
+        invalidToolCalls.push({
+          name: functionName,
+          args: toolCall.function.arguments,
+          id: toolCall.id,
+          error: "Malformed args.",
+        });
+      }
+    }
+  }
+  return [toolCalls, invalidToolCalls];
 }

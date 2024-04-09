@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { ChatGeneration } from "../../outputs.js";
 import { BaseLLMOutputParser, OutputParserException } from "../base.js";
+import { parsePartialJson } from "../json.js";
 
 export type ParsedToolCall = {
   id?: string;
@@ -14,13 +15,55 @@ export type ParsedToolCall = {
   name: string;
 
   /** @deprecated Use `args` instead. Will be removed in 0.2.0. */
-  arguments: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  arguments: Record<string, any>;
 };
 
 export type JsonOutputToolsParserParams = {
   /** Whether to return the tool call id. */
   returnId?: boolean;
 };
+
+export function parseToolCall(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  rawToolCall: Record<string, any>,
+  options?: { returnId?: boolean }
+) {
+  if (rawToolCall.function === undefined) {
+    return undefined;
+  }
+  let functionArgs;
+  try {
+    functionArgs = parsePartialJson(rawToolCall.function.arguments ?? "{}");
+  } catch (e) {
+    return undefined;
+  }
+  // @ts-expect-error name and arguemnts are defined by Object.defineProperty
+  const parsedToolCall: ParsedToolCall = {
+    type: rawToolCall.function.name,
+    args: functionArgs,
+  };
+
+  if (options?.returnId) {
+    parsedToolCall.id = rawToolCall.id;
+  }
+
+  // backward-compatibility with previous
+  // versions of Langchain JS, which uses `name` and `arguments`
+  Object.defineProperty(parsedToolCall, "name", {
+    get() {
+      return this.type;
+    },
+  });
+
+  Object.defineProperty(parsedToolCall, "arguments", {
+    get() {
+      return this.args;
+    },
+  });
+
+  return parsedToolCall;
+}
 
 /**
  * Class for parsing the output of a tool-calling LLM into a JSON object.
@@ -59,31 +102,8 @@ export class JsonOutputToolsParser extends BaseLLMOutputParser<
     const clonedToolCalls = JSON.parse(JSON.stringify(toolCalls));
     const parsedToolCalls = [];
     for (const toolCall of clonedToolCalls) {
-      if (toolCall.function !== undefined) {
-        // @ts-expect-error name and arguemnts are defined by Object.defineProperty
-        const parsedToolCall: ParsedToolCall = {
-          type: toolCall.function.name,
-          args: JSON.parse(toolCall.function.arguments),
-        };
-
-        if (this.returnId) {
-          parsedToolCall.id = toolCall.id;
-        }
-
-        // backward-compatibility with previous
-        // versions of Langchain JS, which uses `name` and `arguments`
-        Object.defineProperty(parsedToolCall, "name", {
-          get() {
-            return this.type;
-          },
-        });
-
-        Object.defineProperty(parsedToolCall, "arguments", {
-          get() {
-            return this.args;
-          },
-        });
-
+      const parsedToolCall = parseToolCall(toolCall);
+      if (parsedToolCall !== undefined) {
         parsedToolCalls.push(parsedToolCall);
       }
     }
