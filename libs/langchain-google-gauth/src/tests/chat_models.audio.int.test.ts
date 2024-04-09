@@ -1,0 +1,33 @@
+import fs from 'fs';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
+import { ChatGoogle } from '../chat_models.js';
+
+function convertMp3ToBase64(filePath: string): string {
+  const fileData = fs.readFileSync(filePath);
+  const base64String = Buffer.from(fileData).toString('base64');
+  return base64String;
+}
+
+test("Gemini can understand audio", async () => {
+  const model = new ChatGoogle({
+    model: "gemini-1.5-pro",
+    temperature: 0,
+  });
+
+  const audioPath = "./src/tests/data/audio.mp3";
+  const audioBase64 = convertMp3ToBase64(audioPath);
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["human", [{
+      type: "audio",
+      data: {
+        type: "audio/mp3",
+        base64: audioBase64,
+      }
+    }]],
+    ["human", "Summarize this audio. Be very concise."],
+  ]);
+
+  const chain = prompt.pipe(model);
+  const response = await chain.invoke({});
+  console.log("response", response)
+})

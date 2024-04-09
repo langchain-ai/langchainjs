@@ -717,6 +717,8 @@ function _coerceMessagePromptTemplateLike(
         return { text: item.text };
       } else if ("image_url" in item) {
         return { image_url: item.image_url };
+      } else if ("data" in item) {
+        return { data: item.data };
       } else {
         throw new Error("Invalid message content");
       }

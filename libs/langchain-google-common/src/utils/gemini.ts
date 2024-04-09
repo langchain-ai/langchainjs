@@ -5,6 +5,7 @@ import {
   BaseMessageChunk,
   BaseMessageFields,
   MessageContent,
+  MessageContentAudio,
   MessageContentComplex,
   MessageContentImageUrl,
   MessageContentText,
@@ -74,6 +75,17 @@ function messageContentImageUrl(
   }
 }
 
+function messageContentToAudio(
+  content: MessageContentAudio
+): GeminiPartInlineData {
+  return {
+    inlineData: {
+      mimeType: content.data.type,
+      data: content.data.base64,
+    }
+  }
+}
+
 export function messageContentToParts(content: MessageContent): GeminiPart[] {
   // Convert a string to a text type MessageContent if needed
   const messageContent: MessageContent =
@@ -99,6 +111,12 @@ export function messageContentToParts(content: MessageContent): GeminiPart[] {
           if ("image_url" in content) {
             // Type guard for MessageContentImageUrl
             return messageContentImageUrl(content as MessageContentImageUrl);
+          }
+          break;
+        case "audio":
+          if ("audio" in content) {
+            console.log("Mapping to audio content yo!")
+            return messageContentToAudio(content as MessageContentAudio);
           }
           break;
         default:
