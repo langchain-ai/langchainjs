@@ -239,8 +239,10 @@ export class ChatBaiduWenxin
   constructor(fields?: Partial<BaiduWenxinChatInput> & BaseChatModelParams) {
     super(fields ?? {});
 
-    this.baiduApiKey = fields?.apiKey ??
-      fields?.baiduApiKey ?? getEnvironmentVariable("BAIDU_API_KEY");
+    this.baiduApiKey =
+      fields?.apiKey ??
+      fields?.baiduApiKey ??
+      getEnvironmentVariable("BAIDU_API_KEY");
     if (!this.baiduApiKey) {
       throw new Error("Baidu API key not found");
     }

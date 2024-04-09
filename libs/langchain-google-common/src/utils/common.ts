@@ -22,7 +22,8 @@ export function copyAIModelParamsInto(
 ): GoogleAIModelRequestParams {
   const ret: GoogleAIModelRequestParams = target || {};
   const model = options?.model ?? params?.model ?? target.model;
-  ret.modelName = model ?? options?.modelName ?? params?.modelName ?? target.modelName;
+  ret.modelName =
+    model ?? options?.modelName ?? params?.modelName ?? target.modelName;
   ret.temperature =
     options?.temperature ?? params?.temperature ?? target.temperature;
   ret.maxOutputTokens =

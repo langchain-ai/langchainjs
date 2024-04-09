@@ -110,8 +110,10 @@ export class DallEAPIWrapper extends Tool {
 
   constructor(fields?: DallEAPIWrapperParams) {
     super(fields);
-    const openAIApiKey = fields?.apiKey ??
-      fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
+    const openAIApiKey =
+      fields?.apiKey ??
+      fields?.openAIApiKey ??
+      getEnvironmentVariable("OPENAI_API_KEY");
 
     const organization =
       fields?.organization ?? getEnvironmentVariable("OPENAI_ORGANIZATION");

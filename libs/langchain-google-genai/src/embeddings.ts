@@ -11,7 +11,7 @@ import { chunkArray } from "@langchain/core/utils/chunk_array";
 export interface GoogleGenerativeAIEmbeddingsParams extends EmbeddingsParams {
   /**
    * Model Name to use
-   * 
+   *
    * Alias for `model`
    *
    * Note: The format must follow the pattern - `{model}`
@@ -94,8 +94,10 @@ export class GoogleGenerativeAIEmbeddings
   constructor(fields?: GoogleGenerativeAIEmbeddingsParams) {
     super(fields ?? {});
 
-    this.modelName = fields?.model?.replace(/^models\//, "") ??
-      fields?.modelName?.replace(/^models\//, "") ?? this.modelName;
+    this.modelName =
+      fields?.model?.replace(/^models\//, "") ??
+      fields?.modelName?.replace(/^models\//, "") ??
+      this.modelName;
     this.model = this.modelName;
 
     this.taskType = fields?.taskType ?? this.taskType;

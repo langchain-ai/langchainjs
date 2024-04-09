@@ -410,8 +410,10 @@ export class ChatMinimax
       throw new Error("Minimax GroupID not found");
     }
 
-    this.minimaxApiKey = fields?.apiKey ??
-      fields?.minimaxApiKey ?? getEnvironmentVariable("MINIMAX_API_KEY");
+    this.minimaxApiKey =
+      fields?.apiKey ??
+      fields?.minimaxApiKey ??
+      getEnvironmentVariable("MINIMAX_API_KEY");
 
     if (!this.minimaxApiKey) {
       throw new Error("Minimax ApiKey not found");

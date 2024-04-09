@@ -97,10 +97,10 @@ interface AlibabaTongyiChatInput {
    */
   modelName: string;
 
-    /** Model name to use. Available options are: qwen-turbo, qwen-plus, qwen-max, or Other compatible models.
+  /** Model name to use. Available options are: qwen-turbo, qwen-plus, qwen-max, or Other compatible models.
    * @default "qwen-turbo"
    */
-    model: string;
+  model: string;
 
   /** Whether to stream the results or not. Defaults to false. */
   streaming?: boolean;
@@ -313,7 +313,7 @@ export class ChatAlibabaTongyi
     return {
       model: this.model,
       ...this.invocationParams(),
-  };
+    };
   }
 
   /** @ignore */

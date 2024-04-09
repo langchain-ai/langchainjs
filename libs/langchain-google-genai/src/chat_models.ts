@@ -35,7 +35,7 @@ export type BaseMessageExamplePair = {
 export interface GoogleGenerativeAIChatInput extends BaseChatModelParams {
   /**
    * Model Name to use
-   * 
+   *
    * Alias for `model`
    *
    * Note: The format must follow the pattern - `{model}`
@@ -192,8 +192,10 @@ export class ChatGoogleGenerativeAI
   constructor(fields?: GoogleGenerativeAIChatInput) {
     super(fields ?? {});
 
-    this.modelName = fields?.model?.replace(/^models\//, "") ??
-      fields?.modelName?.replace(/^models\//, "") ?? this.model;
+    this.modelName =
+      fields?.model?.replace(/^models\//, "") ??
+      fields?.modelName?.replace(/^models\//, "") ??
+      this.model;
     this.model = this.modelName;
 
     this.maxOutputTokens = fields?.maxOutputTokens ?? this.maxOutputTokens;

@@ -9,18 +9,18 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 export interface GooglePaLMTextInput extends BaseLLMParams {
   /**
    * Model Name to use
-   * 
+   *
    * Alias for `model`
    *
    * Note: The format must follow the pattern - `models/{model}`
    */
   modelName?: string;
-    /**
+  /**
    * Model Name to use
    *
    * Note: The format must follow the pattern - `models/{model}`
    */
-    model?: string;
+  model?: string;
 
   /**
    * Controls the randomness of the output.

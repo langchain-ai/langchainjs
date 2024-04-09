@@ -114,11 +114,11 @@ export interface ChatZhipuAIParams {
    */
   zhipuAIApiKey?: string;
 
-    /**
+  /**
    * API key to use when making requests. Defaults to the value of
    * `ZHIPUAI_API_KEY` environment variable.
    */
-    apiKey?: string;
+  apiKey?: string;
 
   /** Amount of randomness injected into the response. Ranges
    * from 0 to 1 (0 is not included). Use temp closer to 0 for analytical /
@@ -226,7 +226,9 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
     super(fields);
 
     this.zhipuAIApiKey = encodeApiKey(
-      fields?.apiKey ?? fields?.zhipuAIApiKey ?? getEnvironmentVariable("ZHIPUAI_API_KEY")
+      fields?.apiKey ??
+        fields?.zhipuAIApiKey ??
+        getEnvironmentVariable("ZHIPUAI_API_KEY")
     );
     this.apiKey = this.zhipuAIApiKey;
     if (!this.apiKey) {
