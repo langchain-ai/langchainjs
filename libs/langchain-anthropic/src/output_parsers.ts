@@ -1,10 +1,15 @@
-import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
+import { z } from "zod";
+import {
+  BaseLLMOutputParser,
+  OutputParserException,
+} from "@langchain/core/output_parsers";
 import { JsonOutputKeyToolsParserParams } from "@langchain/core/output_parsers/openai_tools";
 import { ChatGeneration } from "@langchain/core/outputs";
 import { AnthropicToolResponse } from "./types.js";
 
-interface AnthropicToolsOutputParserParams
-  extends JsonOutputKeyToolsParserParams {}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+interface AnthropicToolsOutputParserParams<T extends Record<string, any>>
+  extends JsonOutputKeyToolsParserParams<T> {}
 
 export class AnthropicToolsOutputParser<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -24,10 +29,32 @@ export class AnthropicToolsOutputParser<
   /** Whether to return only the first tool call. */
   returnSingle = false;
 
-  constructor(params: AnthropicToolsOutputParserParams) {
+  zodSchema?: z.ZodType<T>;
+
+  constructor(params: AnthropicToolsOutputParserParams<T>) {
     super(params);
     this.keyName = params.keyName;
     this.returnSingle = params.returnSingle ?? this.returnSingle;
+    this.zodSchema = params.zodSchema;
+  }
+
+  protected async _validateResult(result: unknown): Promise<T> {
+    if (this.zodSchema === undefined) {
+      return result as T;
+    }
+    const zodParsedResult = await this.zodSchema.safeParseAsync(result);
+    if (zodParsedResult.success) {
+      return zodParsedResult.data;
+    } else {
+      throw new OutputParserException(
+        `Failed to parse. Text: "${JSON.stringify(
+          result,
+          null,
+          2
+        )}". Error: ${JSON.stringify(zodParsedResult.error.errors)}`,
+        JSON.stringify(result, null, 2)
+      );
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -45,10 +72,14 @@ export class AnthropicToolsOutputParser<
         | undefined;
       return tool;
     });
-    if (tools.length === 0 || !tools[0]) {
-      throw new Error("No tools provided to AnthropicToolsOutputParser.");
+    console.log(tools, generations);
+    if (tools[0] === undefined) {
+      throw new Error(
+        "No parseable tool calls provided to AnthropicToolsOutputParser."
+      );
     }
     const [tool] = tools;
-    return tool.input as T;
+    const validatedResult = await this._validateResult(tool.input);
+    return validatedResult;
   }
 }
