@@ -72,7 +72,6 @@ export class AnthropicToolsOutputParser<
         | undefined;
       return tool;
     });
-    console.log(tools, generations);
     if (tools[0] === undefined) {
       throw new Error(
         "No parseable tool calls provided to AnthropicToolsOutputParser."
