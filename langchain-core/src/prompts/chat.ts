@@ -455,21 +455,14 @@ class _StringImageMessagePromptTemplate<
   }
 
   static fromTemplate(
-    template:
-      | string
-      | Array<
-          | string
-          | _TextTemplateParam
-          | _ImageTemplateParam
-        >,
+    template: string | Array<string | _TextTemplateParam | _ImageTemplateParam>,
     additionalOptions?: Record<string, unknown>
   ) {
     if (typeof template === "string") {
       return new this(PromptTemplate.fromTemplate(template));
     }
     const prompt: Array<
-      | PromptTemplate<InputValues>
-      | ImagePromptTemplate<InputValues>
+      PromptTemplate<InputValues> | ImagePromptTemplate<InputValues>
     > = [];
     for (const item of template) {
       if (
