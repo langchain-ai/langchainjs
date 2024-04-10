@@ -13,6 +13,7 @@ import {
   ToolMessage,
   ToolMessageChunk,
   OpenAIToolCall,
+  isAIMessage,
 } from "@langchain/core/messages";
 import {
   type ChatGeneration,
@@ -227,11 +228,29 @@ function convertMessagesToOpenAIParams(messages: BaseMessage[]) {
     if (message.additional_kwargs.function_call != null) {
       completionParam.function_call = message.additional_kwargs.function_call;
     }
-    if (message.additional_kwargs.tool_calls != null) {
-      completionParam.tool_calls = message.additional_kwargs.tool_calls;
-    }
-    if ((message as ToolMessage).tool_call_id != null) {
-      completionParam.tool_call_id = (message as ToolMessage).tool_call_id;
+    if (isAIMessage(message) && !!message.tool_calls?.length) {
+      completionParam.tool_calls = message.tool_calls.map(
+        (toolCall): OpenAIClient.ChatCompletionMessageToolCall => {
+          if (toolCall.id === undefined) {
+            throw new Error(`All OpenAI tool calls must have an "id" field.`);
+          }
+          return {
+            id: toolCall.id,
+            type: "function",
+            function: {
+              name: toolCall.name,
+              arguments: JSON.stringify(toolCall.args),
+            },
+          };
+        }
+      );
+    } else {
+      if (message.additional_kwargs.tool_calls != null) {
+        completionParam.tool_calls = message.additional_kwargs.tool_calls;
+      }
+      if ((message as ToolMessage).tool_call_id != null) {
+        completionParam.tool_call_id = (message as ToolMessage).tool_call_id;
+      }
     }
     return completionParam as OpenAICompletionParam;
   });

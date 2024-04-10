@@ -105,6 +105,10 @@ export class AIMessage extends BaseMessage {
   }
 }
 
+export function isAIMessage(x: BaseMessage): x is AIMessage {
+  return x._getType() === "ai";
+}
+
 export type AIMessageChunkFields = AIMessageFields & {
   tool_call_chunks?: ToolCallChunk[];
 };

@@ -14,7 +14,7 @@ test("createToolCallingAgent works", async () => {
     ["placeholder", "{agent_scratchpad}"],
   ]);
   const llm = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-0125",
+    modelName: "gpt-4-turbo",
     temperature: 0,
   });
   const agent = await createToolCallingAgent({
