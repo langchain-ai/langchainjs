@@ -331,29 +331,35 @@ function _formatMessagesForAnthropic(messages: BaseMessage[]): {
       throw new Error(`Message type "${message._getType()}" is not supported.`);
     }
     if (isAIMessage(message) && !!message.tool_calls?.length) {
-      const rawContent = _formatContent(message.content);
-      if (typeof rawContent === "string") {
+      if (message.content === "") {
         return {
           role,
-          content: [
-            { type: "text", text: rawContent },
-            ...message.tool_calls.map(_convertLangChainToolCallToAnthropic),
-          ],
+          content: message.tool_calls.map(_convertLangChainToolCallToAnthropic),
         };
-      } else {
-        const missingToolCallBlocks = message.tool_calls.filter(
-          (toolCall) =>
-            !!rawContent.find(
-              (contentPart) =>
-                contentPart === "tool_use" && toolCall.id === contentPart.id
-            )
+      } else if (typeof message.content === "string") {
+        console.warn(
+          `The "tool_calls" field on a message is only respected if content is an empty string.`
         );
         return {
           role,
-          content: [
-            ...rawContent,
-            ...missingToolCallBlocks.map(_convertLangChainToolCallToAnthropic),
-          ],
+          content: _formatContent(message.content),
+        };
+      } else {
+        const { content } = message;
+        const hasMismatchedToolCalls = !message.tool_calls.every((toolCall) =>
+          content.find(
+            (contentPart) =>
+              contentPart.type === "tool_use" && contentPart.id === toolCall.id
+          )
+        );
+        if (hasMismatchedToolCalls) {
+          console.warn(
+            `The "tool_calls" field on a message is only respected if content is an empty string.`
+          );
+        }
+        return {
+          role,
+          content: _formatContent(message.content),
         };
       }
     } else {
@@ -601,11 +607,12 @@ export class ChatAnthropicMessages<
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const params = this.invocationParams(options);
+    const formattedMessages = _formatMessagesForAnthropic(messages);
     const requestOptions = this.invocationOptions(
       {
         ...params,
         stream: false,
-        ..._formatMessagesForAnthropic(messages),
+        ...formattedMessages,
       },
       options
     );
@@ -614,7 +621,7 @@ export class ChatAnthropicMessages<
         {
           ...params,
           stream: false,
-          ..._formatMessagesForAnthropic(messages),
+          ...formattedMessages,
         },
         options
       );
@@ -644,7 +651,7 @@ export class ChatAnthropicMessages<
       const stream = await this.createStreamWithRetry(
         {
           ...params,
-          ..._formatMessagesForAnthropic(messages),
+          ...formattedMessages,
           stream: true,
         },
         requestOptions

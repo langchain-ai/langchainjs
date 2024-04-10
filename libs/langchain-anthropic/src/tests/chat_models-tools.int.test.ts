@@ -58,11 +58,11 @@ test("Few shotting with tool calls", async () => {
   const res = await chat.invoke([
     new HumanMessage("What is the weather in SF?"),
     new AIMessage({
-      content: "Let me look that up!",
+      content: "",
       tool_calls: [
         {
           id: "toolu_feiwjf9u98r389u498",
-          name: "get_current_weather",
+          name: "get_weather",
           args: {
             location: "SF",
           },
@@ -88,7 +88,7 @@ test("Can bind & invoke StructuredTools", async () => {
   const modelWithTools = model.bindTools(tools);
 
   const result = await modelWithTools.invoke(
-    "What is the weather in London today?"
+    "What is the weather in SF today?"
   );
   console.log(
     {
@@ -116,17 +116,21 @@ test("Can bind & invoke StructuredTools", async () => {
   expect(input).toBeTruthy();
   expect(input.location).toBeTruthy();
   const result2 = await modelWithTools.invoke([
-    new HumanMessage("What is the weather in London today?"),
+    new HumanMessage("What is the weather in SF today?"),
     result,
     new ToolMessage({
       tool_call_id: result.tool_calls?.[0].id ?? "",
-      content: "The weather in London is currently 98 degrees and sunny.",
+      content:
+        "The weather in San Francisco is currently 59 degrees and sunny.",
     }),
-    new AIMessage("The weather in London is currently 98 degrees and sunny."),
-    new HumanMessage("What did you just say the weather was?"),
+    new AIMessage(
+      "The weather in San Francisco is currently 59 degrees and sunny."
+    ),
+    new HumanMessage("What did you say the weather was?"),
   ]);
   console.log(result2);
-  expect(result2.content).toContain("98");
+  // This should work, but Anthorpic is too skeptical
+  expect(result2.content).toContain("59");
 });
 
 test("Can bind & invoke AnthropicTools", async () => {
