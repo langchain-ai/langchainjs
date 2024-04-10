@@ -22,7 +22,7 @@ const schema = z.object({
 
 const model = new ChatAnthropicTools({
   temperature: 0.1,
-  model: "claude-3-sonnet-20240229",
+  modelName: "claude-3-sonnet-20240229",
 }).bind({
   tools: [
     {

@@ -5,7 +5,7 @@ import { HumanMessage } from "@langchain/core/messages";
 
 const imageData = await fs.readFile("./hotdog.jpg");
 const chat = new ChatAnthropic({
-  model: "claude-3-sonnet-20240229",
+  modelName: "claude-3-sonnet-20240229",
 });
 const message = new HumanMessage({
   content: [

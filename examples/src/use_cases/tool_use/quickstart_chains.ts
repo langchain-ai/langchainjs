@@ -21,7 +21,7 @@ console.log(await multiplyTool.invoke({ firstInt: 4, secondInt: 5 }));
 import { ChatOpenAI } from "@langchain/openai";
 
 const model = new ChatOpenAI({
-  model: "gpt-3.5-turbo-1106",
+  modelName: "gpt-3.5-turbo-1106",
 });
 
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";

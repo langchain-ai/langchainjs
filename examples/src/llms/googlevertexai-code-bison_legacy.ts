@@ -14,7 +14,7 @@ import { GoogleVertexAI } from "@langchain/community/llms/googlevertexai";
  */
 
 const model = new GoogleVertexAI({
-  model: "code-bison",
+  modelName: "code-bison",
   maxOutputTokens: 2048,
 });
 const res = await model.invoke(

@@ -144,7 +144,7 @@ import { ChatOpenAI } from "@langchain/openai";
 Pipe the `StringOutputParser` through since both chains which use this model will also need this output parser.
 
 ```typescript
-const model = new ChatOpenAI({ model: "gpt-4" }).pipe(new StringOutputParser());
+const model = new ChatOpenAI({ modelName: "gpt-4" }).pipe(new StringOutputParser());
 ```
 
 We're going to use `BufferMemory` as our memory chain. All this will do is take in inputs/outputs from the LLM and store them in memory.

@@ -6,7 +6,7 @@ import {
 import { HumanMessage } from "@langchain/core/messages";
 
 const model = new ChatMinimax({
-  model: "abab5.5-chat",
+  modelName: "abab5.5-chat",
   botSetting: [
     {
       bot_name: "MM Assistant",
@@ -52,7 +52,7 @@ AIMessage {
 // use json_value
 
 const modelMinimax = new ChatMinimax({
-  model: "abab5.5-chat",
+  modelName: "abab5.5-chat",
   botSetting: [
     {
       bot_name: "MM Assistant",

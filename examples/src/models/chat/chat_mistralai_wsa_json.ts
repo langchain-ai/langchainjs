@@ -21,7 +21,7 @@ const calculatorJsonSchema = {
 
 const model = new ChatMistralAI({
   apiKey: process.env.MISTRAL_API_KEY,
-  model: "mistral-large",
+  modelName: "mistral-large",
 });
 
 // Pass the schema and tool name to the withStructuredOutput method

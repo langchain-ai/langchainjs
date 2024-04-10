@@ -12,7 +12,7 @@ const extractionFunctionZodSchema = z.object({
 // We translate the above Zod schema into JSON schema using the "zodToJsonSchema" package.
 
 const model = new ChatMinimax({
-  model: "abab5.5-chat",
+  modelName: "abab5.5-chat",
   botSetting: [
     {
       bot_name: "MM Assistant",

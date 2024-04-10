@@ -20,7 +20,7 @@ const calculatorJsonSchema = {
 };
 
 const model = new ChatAnthropicTools({
-  model: "claude-3-sonnet-20240229",
+  modelName: "claude-3-sonnet-20240229",
   temperature: 0.1,
 });
 

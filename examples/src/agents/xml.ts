@@ -14,7 +14,7 @@ const tools = [new TavilySearchResults({ maxResults: 1 })];
 const prompt = await pull<PromptTemplate>("hwchase17/xml-agent-convo");
 
 const llm = new ChatAnthropic({
-  model: "claude-3-opus-20240229",
+  modelName: "claude-3-opus-20240229",
   temperature: 0,
 });
 

@@ -42,7 +42,7 @@ import type { PromptTemplate } from "@langchain/core/prompts";
 const prompt = await pull<PromptTemplate>("hwchase17/react");
 
 const llm = new OpenAI({
-  model: "gpt-3.5-turbo-instruct",
+  modelName: "gpt-3.5-turbo-instruct",
   temperature: 0,
 });
 

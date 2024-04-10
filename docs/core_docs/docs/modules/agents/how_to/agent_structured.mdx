@@ -37,7 +37,7 @@ Next, we initialize an LLM and a search tool that wraps our web search retriever
 
 ```typescript
 const llm = new ChatOpenAI({
-  model: "gpt-4-1106-preview",
+  modelName: "gpt-4-1106-preview",
 });
 
 const searchTool = new DynamicTool({

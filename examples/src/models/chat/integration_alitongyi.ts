@@ -8,7 +8,7 @@ const qwenTurbo = new ChatAlibabaTongyi({
 
 // Use qwen-plus
 const qwenPlus = new ChatAlibabaTongyi({
-  model: "qwen-plus", // Available models: qwen-turbo, qwen-plus, qwen-max
+  modelName: "qwen-plus", // Available models: qwen-turbo, qwen-plus, qwen-max
   temperature: 1,
   alibabaApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.ALIBABA_API_KEY
 });

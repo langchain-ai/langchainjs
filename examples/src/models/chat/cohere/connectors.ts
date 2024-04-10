@@ -3,7 +3,7 @@ import { HumanMessage } from "@langchain/core/messages";
 
 const model = new ChatCohere({
   apiKey: process.env.COHERE_API_KEY, // Default
-  model: "command", // Default
+  modelName: "command", // Default
 });
 
 const response = await model.invoke(

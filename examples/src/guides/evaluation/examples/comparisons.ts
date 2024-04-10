@@ -43,7 +43,7 @@ const dataset = [
 
 const model = new ChatOpenAI({
   temperature: 0,
-  model: "gpt-3.5-turbo-16k-0613",
+  modelName: "gpt-3.5-turbo-16k-0613",
 });
 const serpAPI = new SerpAPI(process.env.SERPAPI_API_KEY, {
   location: "Austin,Texas,United States",

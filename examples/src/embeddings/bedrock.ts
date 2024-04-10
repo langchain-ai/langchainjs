@@ -7,7 +7,7 @@ const embeddings = new BedrockEmbeddings({
     accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
     secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
   },
-  model: "amazon.titan-embed-text-v1", // Default value
+  modelName: "amazon.titan-embed-text-v1", // Default value
 });
 
 const res = await embeddings.embedQuery(

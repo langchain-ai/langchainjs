@@ -61,7 +61,7 @@ const retrieverTool = createRetrieverTool(retriever, {
 const tools = [searchTool, retrieverTool];
 
 const llm = new ChatOpenAI({
-  model: "gpt-3.5-turbo-1106",
+  modelName: "gpt-3.5-turbo-1106",
   temperature: 0,
 });
 

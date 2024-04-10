@@ -1,7 +1,7 @@
 import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/hf_transformers";
 
 const model = new HuggingFaceTransformersEmbeddings({
-  model: "Xenova/all-MiniLM-L6-v2",
+  modelName: "Xenova/all-MiniLM-L6-v2",
 });
 
 /* Embed queries */

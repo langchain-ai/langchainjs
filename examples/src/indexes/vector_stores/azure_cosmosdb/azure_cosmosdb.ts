@@ -52,7 +52,7 @@ console.log(resultDocuments[0].pageContent);
 */
 
 // Use the store as part of a chain
-const model = new ChatOpenAI({ model: "gpt-3.5-turbo-1106" });
+const model = new ChatOpenAI({ modelName: "gpt-3.5-turbo-1106" });
 const questionAnsweringPrompt = ChatPromptTemplate.fromMessages([
   [
     "system",

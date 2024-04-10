@@ -5,7 +5,7 @@ import { HumanMessage } from "@langchain/core/messages";
 
 const imageData = await fs.readFile("./hotdog.jpg");
 const chat = new ChatOpenAI({
-  model: "gpt-4-vision-preview",
+  modelName: "gpt-4-vision-preview",
   maxTokens: 1024,
 });
 const message = new HumanMessage({

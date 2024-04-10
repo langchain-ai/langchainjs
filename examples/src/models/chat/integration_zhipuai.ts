@@ -8,7 +8,7 @@ const glm3turbo = new ChatZhipuAI({
 
 // Use glm-4
 const glm4 = new ChatZhipuAI({
-  model: "glm-4", // Available models:
+  modelName: "glm-4", // Available models:
   temperature: 1,
   zhipuAIApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.ZHIPUAI_API_KEY
 });

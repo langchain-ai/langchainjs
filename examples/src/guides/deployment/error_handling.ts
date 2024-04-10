@@ -10,7 +10,7 @@ const prompt = ChatPromptTemplate.fromTemplate(TEMPLATE);
 
 const model = new ChatOpenAI({
   temperature: 0.8,
-  model: "gpt-3.5-turbo-1106",
+  modelName: "gpt-3.5-turbo-1106",
   apiKey: "INVALID_KEY",
 });
 

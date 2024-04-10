@@ -6,11 +6,15 @@ Here's an example of calling a HugggingFaceInference model as an LLM:
 npm install @huggingface/inference@2
 ```
 
+import UnifiedModelParamsTooltip from "@mdx_components/unified_model_params_tooltip.mdx";
+
+<UnifiedModelParamsTooltip></UnifiedModelParamsTooltip>
+
 ```typescript
 import { HuggingFaceInference } from "langchain/llms/hf";
 
 const model = new HuggingFaceInference({
-  model: "gpt2",
+  modelName: "gpt2",
   apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.HUGGINGFACEHUB_API_KEY
 });
 const res = await model.invoke("1 + 1 =");

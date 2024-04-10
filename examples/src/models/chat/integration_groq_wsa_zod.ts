@@ -4,7 +4,7 @@ import { z } from "zod";
 
 const model = new ChatGroq({
   temperature: 0,
-  model: "mixtral-8x7b-32768",
+  modelName: "mixtral-8x7b-32768",
 });
 
 const calculatorSchema = z.object({

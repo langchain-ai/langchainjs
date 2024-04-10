@@ -14,6 +14,10 @@ import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
 
+import UnifiedModelParamsTooltip from "@mdx_components/unified_model_params_tooltip.mdx";
+
+<UnifiedModelParamsTooltip></UnifiedModelParamsTooltip>
+
 <Tabs groupId="preferredModel">
   <TabItem value="openai" label="OpenAI" default>
 
@@ -74,7 +78,7 @@ import { ChatOllama } from "@langchain/community/chat_models/ollama";
 
 const chatModel = new ChatOllama({
   baseUrl: "http://localhost:11434", // Default value
-  model: "mistral",
+  modelName: "mistral",
 });
 ```
 

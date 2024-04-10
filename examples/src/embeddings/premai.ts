@@ -5,7 +5,7 @@ const embeddings = new PremEmbeddings({
   apiKey: "YOUR-API-KEY",
   // In Node.js defaults to process.env.PREM_PROJECT_ID
   project_id: "YOUR-PROJECT_ID",
-  model: "@cf/baai/bge-small-en-v1.5", // The model to generate the embeddings
+  modelName: "@cf/baai/bge-small-en-v1.5", // The model to generate the embeddings
 });
 
 const res = await embeddings.embedQuery(

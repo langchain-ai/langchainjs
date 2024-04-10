@@ -2,7 +2,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 
 const model = new ChatOpenAI({
-  model: "badmodel",
+  modelName: "badmodel",
 });
 const promptTemplate = PromptTemplate.fromTemplate(
   "Tell me a joke about {topic}"

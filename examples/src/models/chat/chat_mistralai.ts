@@ -3,7 +3,7 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 
 const model = new ChatMistralAI({
   apiKey: process.env.MISTRAL_API_KEY,
-  model: "mistral-small",
+  modelName: "mistral-small",
 });
 const prompt = ChatPromptTemplate.fromMessages([
   ["system", "You are a helpful assistant"],

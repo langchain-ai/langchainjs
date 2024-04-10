@@ -9,7 +9,7 @@ import type { ChatPromptTemplate } from "@langchain/core/prompts";
 
 const llm: any = new ChatMistralAI({
   temperature: 0,
-  model: "mistral-large-latest",
+  modelName: "mistral-large-latest",
 });
 
 // Get the prompt to use - you can modify this!

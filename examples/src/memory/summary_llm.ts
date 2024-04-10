@@ -6,7 +6,7 @@ import { PromptTemplate } from "@langchain/core/prompts";
 export const run = async () => {
   const memory = new ConversationSummaryMemory({
     memoryKey: "chat_history",
-    llm: new OpenAI({ model: "gpt-3.5-turbo", temperature: 0 }),
+    llm: new OpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 }),
   });
 
   const model = new OpenAI({ temperature: 0.9 });

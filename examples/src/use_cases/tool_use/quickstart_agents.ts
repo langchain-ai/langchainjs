@@ -51,7 +51,7 @@ const exponentiateTool = new DynamicStructuredTool({
 });
 
 const model = new ChatOpenAI({
-  model: "gpt-3.5-turbo-1106",
+  modelName: "gpt-3.5-turbo-1106",
   temperature: 0,
 });
 

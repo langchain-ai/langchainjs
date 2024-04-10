@@ -20,7 +20,7 @@ import { SerpAPI } from "@langchain/community/tools/serpapi";
 const tools = [new Calculator(), new SerpAPI()];
 
 const model = new ChatOpenAI({
-  model: "gpt-4",
+  modelName: "gpt-4",
   streaming: true,
   temperature: 0,
 });

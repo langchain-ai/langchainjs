@@ -50,7 +50,7 @@ import {
 } from "@langchain/core/runnables";
 
 const model = new ChatOpenAI({
-  model: "gpt-3.5-turbo-1106",
+  modelName: "gpt-3.5-turbo-1106",
 });
 
 const tools = [multiplyTool, exponentiateTool, addTool];

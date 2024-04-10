@@ -17,7 +17,7 @@ const datasource = new DataSource({
 const db = await SqlDatabase.fromDataSourceParams({
   appDataSource: datasource,
 });
-const llm = new ChatOpenAI({ model: "gpt-4", temperature: 0 });
+const llm = new ChatOpenAI({ modelName: "gpt-4", temperature: 0 });
 
 const Table = z.object({
   names: z.array(z.string()).describe("Names of tables in SQL database"),

@@ -26,7 +26,7 @@ const schema = z.object({
 
 const model = new OllamaFunctions({
   temperature: 0.1,
-  model: "mistral",
+  modelName: "mistral",
 }).bind({
   functions: [
     {

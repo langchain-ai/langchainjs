@@ -10,7 +10,7 @@ const model = new ChatOpenAI({
 // https://platform.openai.com/docs/guides/gpt/function-calling
 
 const modelForFunctionCalling = new ChatOpenAI({
-  model: "gpt-4",
+  modelName: "gpt-4",
   temperature: 0,
 });
 
@@ -56,7 +56,7 @@ AIMessage {
 // Coerce response type with JSON mode.
 // Requires "gpt-4-1106-preview" or later
 const jsonModeModel = new ChatOpenAI({
-  model: "gpt-4-1106-preview",
+  modelName: "gpt-4-1106-preview",
   maxTokens: 128,
 }).bind({
   response_format: {

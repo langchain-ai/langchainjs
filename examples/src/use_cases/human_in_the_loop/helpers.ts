@@ -38,7 +38,7 @@ class SendEmail extends StructuredTool {
 
 const tools = [new CountEmails(), new SendEmail()];
 export const model = new ChatOpenAI({
-  model: "gpt-3.5-turbo",
+  modelName: "gpt-3.5-turbo",
   temperature: 0,
 }).bind({
   tools,

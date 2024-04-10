@@ -10,11 +10,15 @@ import IntegrationInstallTooltip from "@mdx_components/integration_install_toolt
 npm install @langchain/openai
 ```
 
+import UnifiedModelParamsTooltip from "@mdx_components/unified_model_params_tooltip.mdx";
+
+<UnifiedModelParamsTooltip></UnifiedModelParamsTooltip>
+
 ```typescript
 import { OpenAI } from "@langchain/openai";
 
 const model = new OpenAI({
-  model: "gpt-3.5-turbo-instruct", // Defaults to "gpt-3.5-turbo-instruct" if no model provided.
+  modelName: "gpt-3.5-turbo-instruct", // Defaults to "gpt-3.5-turbo-instruct" if no model provided.
   temperature: 0.9,
   apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.OPENAI_API_KEY
 });

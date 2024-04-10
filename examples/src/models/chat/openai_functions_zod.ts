@@ -22,7 +22,7 @@ const extractionFunctionSchema = {
 };
 
 const model = new ChatOpenAI({
-  model: "gpt-4",
+  modelName: "gpt-4",
 }).bind({
   functions: [extractionFunctionSchema],
   function_call: { name: "extractor" },

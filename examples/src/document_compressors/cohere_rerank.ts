@@ -27,7 +27,7 @@ const docs = [
 
 const cohereRerank = new CohereRerank({
   apiKey: process.env.COHERE_API_KEY, // Default
-  model: "rerank-english-v2.0", // Default
+  modelName: "rerank-english-v2.0", // Default
 });
 
 const rerankedDocuments = await cohereRerank.rerank(docs, query, {

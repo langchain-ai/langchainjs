@@ -16,7 +16,7 @@ import { ChatOpenAI } from "@langchain/openai";
 
 // To make the caching really obvious, lets use a slower model.
 const model = new ChatOpenAI({
-  model: "gpt-4",
+  modelName: "gpt-4",
   cache: true,
 });
 ```

@@ -3,7 +3,7 @@ import { HumanMessage } from "@langchain/core/messages";
 
 // Use abab5.5
 const abab5_5 = new ChatMinimax({
-  model: "abab5.5-chat",
+  modelName: "abab5.5-chat",
   botSetting: [
     {
       bot_name: "MM Assistant",
@@ -32,7 +32,7 @@ AIChatMessage {
 // use abab5
 const abab5 = new ChatMinimax({
   proVersion: false,
-  model: "abab5-chat",
+  modelName: "abab5-chat",
   minimaxGroupId: process.env.MINIMAX_GROUP_ID, // In Node.js defaults to process.env.MINIMAX_GROUP_ID
   minimaxApiKey: process.env.MINIMAX_API_KEY, // In Node.js defaults to process.env.MINIMAX_API_KEY
 });

@@ -5,7 +5,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 
 const chat = new ChatOpenAI({
-  model: "gpt-3.5-turbo-1106",
+  modelName: "gpt-3.5-turbo-1106",
 });
 
 import { HumanMessage, AIMessage } from "@langchain/core/messages";

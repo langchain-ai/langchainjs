@@ -12,7 +12,7 @@ import { HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
 
 // Text
 const model = new ChatGoogleGenerativeAI({
-  model: "gemini-pro",
+  modelName: "gemini-pro",
   maxOutputTokens: 2048,
   safetySettings: [
     {

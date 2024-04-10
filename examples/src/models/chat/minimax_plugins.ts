@@ -2,7 +2,7 @@ import { ChatMinimax } from "@langchain/community/chat_models/minimax";
 import { HumanMessage } from "@langchain/core/messages";
 
 const model = new ChatMinimax({
-  model: "abab5.5-chat",
+  modelName: "abab5.5-chat",
   botSetting: [
     {
       bot_name: "MM Assistant",

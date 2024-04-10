@@ -8,7 +8,7 @@ import { createRetrievalChain } from "langchain/chains/retrieval";
 
 // Initialize the necessary components
 const llm = new ChatOpenAI({
-  model: "gpt-3.5-turbo-1106",
+  modelName: "gpt-3.5-turbo-1106",
 });
 const embeddings = new OpenAIEmbeddings();
 const apiKey = "Your SearchApi API key";

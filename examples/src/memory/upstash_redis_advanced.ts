@@ -19,7 +19,7 @@ const memory = new BufferMemory({
 });
 
 const model = new ChatOpenAI({
-  model: "gpt-3.5-turbo",
+  modelName: "gpt-3.5-turbo",
   temperature: 0,
 });
 

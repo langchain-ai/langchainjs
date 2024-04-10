@@ -40,7 +40,7 @@ Question: {question}`);
 // Llama 2 7b wrapped by Ollama
 const model = new Ollama({
   baseUrl: "http://localhost:11434",
-  model: "llama2",
+  modelName: "llama2",
 });
 
 const chain = RunnableSequence.from([

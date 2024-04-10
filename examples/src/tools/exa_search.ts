@@ -21,7 +21,7 @@ const prompt = await pull<ChatPromptTemplate>(
 );
 
 const llm = new ChatOpenAI({
-  model: "gpt-3.5-turbo-1106",
+  modelName: "gpt-3.5-turbo-1106",
   temperature: 0,
 });
 

@@ -2,7 +2,7 @@ import { TogetherAI } from "@langchain/community/llms/togetherai";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 
 const model = new TogetherAI({
-  model: "mistralai/Mixtral-8x7B-Instruct-v0.1",
+  modelName: "mistralai/Mixtral-8x7B-Instruct-v0.1",
   streaming: true,
 });
 const prompt = ChatPromptTemplate.fromMessages([

@@ -15,7 +15,7 @@ const prompt = await pull<ChatPromptTemplate>(
   "hwchase17/openai-functions-agent"
 );
 const llm = new ChatOpenAI({
-  model: "gpt-4-turbo-preview",
+  modelName: "gpt-4-turbo-preview",
   temperature: 0,
 });
 const agent = await createOpenAIFunctionsAgent({

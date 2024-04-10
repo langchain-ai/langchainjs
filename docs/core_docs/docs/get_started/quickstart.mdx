@@ -114,7 +114,7 @@ import { ChatOllama } from "@langchain/community/chat_models/ollama";
 
 const chatModel = new ChatOllama({
   baseUrl: "http://localhost:11434", // Default value
-  model: "mistral",
+  modelName: "mistral",
 });
 ```
 
@@ -327,7 +327,7 @@ Make sure you have Ollama running (same set up as with the model).
 import { OllamaEmbeddings } from "@langchain/community/embeddings/ollama";
 
 const embeddings = new OllamaEmbeddings({
-  model: "nomic-embed-text",
+  modelName: "nomic-embed-text",
   maxConcurrency: 5,
 });
 ```
@@ -602,7 +602,7 @@ const agentPrompt = await pull<ChatPromptTemplate>(
 );
 
 const agentModel = new ChatOpenAI({
-  model: "gpt-3.5-turbo-1106",
+  modelName: "gpt-3.5-turbo-1106",
   temperature: 0,
 });
 

@@ -2,7 +2,7 @@ import { ChatOpenAI } from "@langchain/openai";
 
 const model = new ChatOpenAI({
   temperature: 0.9,
-  model: "ft:gpt-3.5-turbo-0613:{ORG_NAME}::{MODEL_ID}",
+  modelName: "ft:gpt-3.5-turbo-0613:{ORG_NAME}::{MODEL_ID}",
 });
 
 const message = await model.invoke("Hi there!");

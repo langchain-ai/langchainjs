@@ -1,7 +1,7 @@
 import { CloudflareWorkersAI } from "@langchain/cloudflare";
 
 const model = new CloudflareWorkersAI({
-  model: "@cf/meta/llama-2-7b-chat-int8", // Default value
+  modelName: "@cf/meta/llama-2-7b-chat-int8", // Default value
   cloudflareAccountId: process.env.CLOUDFLARE_ACCOUNT_ID,
   cloudflareApiToken: process.env.CLOUDFLARE_API_TOKEN,
   // Pass a custom base URL to use Cloudflare AI Gateway

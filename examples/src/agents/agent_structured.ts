@@ -20,7 +20,7 @@ import {
 import { DynamicTool } from "@langchain/core/tools";
 
 const llm = new ChatOpenAI({
-  model: "gpt-4-1106-preview",
+  modelName: "gpt-4-1106-preview",
 });
 
 const searchTool = new DynamicTool({

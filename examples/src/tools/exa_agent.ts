@@ -25,7 +25,7 @@ const searchTool = createRetrieverTool(exaRetriever, {
 });
 
 const tools = [searchTool];
-const llm = new ChatOpenAI({ model: "gpt-4", temperature: 0 });
+const llm = new ChatOpenAI({ modelName: "gpt-4", temperature: 0 });
 const prompt = ChatPromptTemplate.fromMessages([
   [
     "system",

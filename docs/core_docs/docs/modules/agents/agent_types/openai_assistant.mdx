@@ -23,7 +23,7 @@ Creating an assistant is easy. Use the `createAssistant` method and pass in a mo
 import { OpenAIAssistantRunnable } from "langchain/experimental/openai_assistant";
 
 const assistant = await OpenAIAssistantRunnable.createAssistant({
-  model: "gpt-4-1106-preview",
+  modelName: "gpt-4-1106-preview",
 });
 const assistantResponse = await assistant.invoke({
   content: "Hello world!",
@@ -53,7 +53,7 @@ If you run into an apiKey error, you can try to pass it directly as clientOption
 ```typescript
 const assistant = await OpenAIAssistantRunnable.createAssistant({
   clientOptions: { apiKey: OPENAI_API_KEY },
-  model: "gpt-4-1106-preview",
+  modelName: "gpt-4-1106-preview",
 });
 ```
 
@@ -127,7 +127,7 @@ Next, we construct the `OpenAIAssistantRunnable` and pass it to the `AgentExecut
 
 ```typescript
 const agent = await OpenAIAssistantRunnable.createAssistant({
-  model: "gpt-3.5-turbo-1106",
+  modelName: "gpt-3.5-turbo-1106",
   instructions:
     "You are a weather bot. Use the provided functions to answer questions.",
   name: "Weather Assistant",
@@ -169,7 +169,7 @@ You can offer these tools to the assistant simply by passing them in as part of 
 
 ```typescript
 const assistant = await OpenAIAssistantRunnable.createAssistant({
-  model: "gpt-3.5-turbo-1106",
+  modelName: "gpt-3.5-turbo-1106",
   instructions:
     "You are a helpful assistant that provides answers to math problems.",
   name: "Math Assistant",
@@ -230,7 +230,7 @@ import { OpenAIAssistantRunnable } from "langchain/experimental/openai_assistant
 
 const assistant = await OpenAIAssistantRunnable.createAssistant({
   name: "Personal Assistant",
-  model: "gpt-4-1106-preview",
+  modelName: "gpt-4-1106-preview",
 });
 const assistantModified = await assistant.modifyAssistant({
   name: "Personal Assistant 2",
@@ -246,7 +246,7 @@ import { OpenAIAssistantRunnable } from "langchain/experimental/openai_assistant
 
 const assistant = await OpenAIAssistantRunnable.createAssistant({
   name: "Personal Assistant",
-  model: "gpt-4-1106-preview",
+  modelName: "gpt-4-1106-preview",
 });
 const deleteStatus = await assistant.deleteAssistant();
 ```
@@ -316,7 +316,7 @@ const file = await openAIFiles.createFile({
 });
 
 const agent = await OpenAIAssistantRunnable.createAssistant({
-  model: "gpt-3.5-turbo-1106",
+  modelName: "gpt-3.5-turbo-1106",
   instructions:
     "You are a weather bot. Use the provided functions to answer questions.",
   name: "Weather Assistant",

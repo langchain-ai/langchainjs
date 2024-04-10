@@ -57,7 +57,7 @@ const complexTool = new DynamicStructuredTool({
 import { ChatOpenAI } from "@langchain/openai";
 
 const model = new ChatOpenAI({
-  model: "gpt-3.5-turbo-1106",
+  modelName: "gpt-3.5-turbo-1106",
   temperature: 0,
 });
 
@@ -107,7 +107,7 @@ One way to solve this is to fallback to a better model in the event of a tool in
 
 ```ts
 const betterModel = new ChatOpenAI({
-  model: "gpt-4-1106-preview",
+  modelName: "gpt-4-1106-preview",
   temperature: 0,
 }).bind({
   tools: formattedTools,

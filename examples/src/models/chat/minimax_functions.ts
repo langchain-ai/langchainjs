@@ -55,7 +55,7 @@ AIMessage {
 // Alternatively, you can pass function call arguments as an additional argument as a one-off:
 
 const minimax = new ChatMinimax({
-  model: "abab5.5-chat",
+  modelName: "abab5.5-chat",
   botSetting: [
     {
       bot_name: "MM Assistant",

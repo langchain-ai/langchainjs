@@ -14,7 +14,7 @@ export default {
       const cache = new CloudflareKVCache(env.KV_NAMESPACE);
       const model = new OpenAI({
         cache,
-        model: "gpt-3.5-turbo-instruct",
+        modelName: "gpt-3.5-turbo-instruct",
         apiKey: env.OPENAI_API_KEY,
       });
       const response = await model.invoke("How are you today?");

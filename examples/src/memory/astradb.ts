@@ -8,7 +8,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { AstraDBChatMessageHistory } from "@langchain/community/stores/message/astradb";
 
 const model = new ChatOpenAI({
-  model: "gpt-3.5-turbo",
+  modelName: "gpt-3.5-turbo",
   temperature: 0,
 });
 

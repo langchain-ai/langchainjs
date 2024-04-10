@@ -33,7 +33,7 @@ class CalculatorTool extends StructuredTool {
 
 const model = new ChatMistralAI({
   apiKey: process.env.MISTRAL_API_KEY,
-  model: "mistral-large",
+  modelName: "mistral-large",
 });
 
 // Bind the tool to the model

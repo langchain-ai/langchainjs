@@ -2,7 +2,7 @@ import { HuggingFaceInference } from "@langchain/community/llms/hf";
 
 export const run = async () => {
   const model = new HuggingFaceInference({
-    model: "gpt2",
+    modelName: "gpt2",
     temperature: 0.7,
     maxTokens: 50,
   });

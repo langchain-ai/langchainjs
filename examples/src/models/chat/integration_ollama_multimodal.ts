@@ -4,7 +4,7 @@ import * as fs from "node:fs/promises";
 
 const imageData = await fs.readFile("./hotdog.jpg");
 const chat = new ChatOllama({
-  model: "llava",
+  modelName: "llava",
   baseUrl: "http://127.0.0.1:11434",
 });
 const res = await chat.invoke([

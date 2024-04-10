@@ -25,7 +25,7 @@ const geminiCalculatorTool: GeminiTool = {
 
 const model = new ChatVertexAI({
   temperature: 0.7,
-  model: "gemini-1.0-pro",
+  modelName: "gemini-1.0-pro",
 }).bind({
   tools: [geminiCalculatorTool],
 });

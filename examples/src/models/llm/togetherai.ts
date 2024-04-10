@@ -2,7 +2,7 @@ import { TogetherAI } from "@langchain/community/llms/togetherai";
 import { PromptTemplate } from "@langchain/core/prompts";
 
 const model = new TogetherAI({
-  model: "mistralai/Mixtral-8x7B-Instruct-v0.1",
+  modelName: "mistralai/Mixtral-8x7B-Instruct-v0.1",
 });
 const prompt = PromptTemplate.fromTemplate(`System: You are a helpful assistant.
 User: {input}.

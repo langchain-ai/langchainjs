@@ -9,7 +9,7 @@ import { HumanMessage } from "@langchain/core/messages";
 // modelKwargs are additional parameters passed to the model when it
 // is invoked.
 const model = new BedrockChat({
-  model: "anthropic.claude-3-sonnet-20240229-v1:0",
+  modelName: "anthropic.claude-3-sonnet-20240229-v1:0",
   region: "us-east-1",
   // endpointUrl: "custom.amazonaws.com",
   // credentials: {

@@ -11,7 +11,7 @@ import { ChatVertexAI } from "@langchain/google-vertexai";
 
 const llm: any = new ChatVertexAI({
   temperature: 0,
-  model: "gemini-1.0-pro",
+  modelName: "gemini-1.0-pro",
 });
 
 // Get the prompt to use - you can modify this!

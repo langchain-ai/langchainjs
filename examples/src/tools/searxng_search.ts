@@ -8,7 +8,7 @@ import { SearxngSearch } from "@langchain/community/tools/searxng_search";
 
 const model = new ChatOpenAI({
   maxTokens: 1000,
-  model: "gpt-4",
+  modelName: "gpt-4",
 });
 
 // `apiBase` will be automatically parsed from .env file, set "SEARXNG_API_BASE" in .env,
