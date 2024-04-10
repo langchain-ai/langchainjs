@@ -12,6 +12,7 @@ import {
   SystemMessageChunk,
   ToolMessage,
   ToolMessageChunk,
+  BaseMessageChunk,
 } from "@langchain/core/messages";
 import {
   type ChatGeneration,
@@ -555,6 +556,31 @@ export class ChatOpenAI<
    */
   identifyingParams() {
     return this._identifyingParams();
+  }
+
+  async batch(
+    inputs: BaseLanguageModelInput[],
+    options?: CallOptions
+  ): Promise<BaseMessageChunk[]> {
+    const promptValues = inputs.map((i) =>
+      BaseChatModel._convertInputToPromptValue(i)
+    );
+
+    const promptValuesToString = promptValues.map((p) => p.toString());
+    // if prompts are the same, we can send them in one request
+    if (promptValuesToString.every((p) => p === promptValuesToString[0])) {
+      const result = await this.generatePrompt(
+        promptValues,
+        { ...options, n: inputs.length } as CallOptions,
+        options?.callbacks
+      );
+      // TODO: Remove cast after figuring out inheritance
+      return result.generations
+        .map((g) => g[0] as ChatGeneration)
+        .map((cg) => cg.message as BaseMessageChunk);
+    } else {
+      return super.batch(inputs, options);
+    }
   }
 
   /** @ignore */

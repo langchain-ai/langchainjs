@@ -99,6 +99,42 @@ test("Test ChatOpenAI tokenUsage with a batch", async () => {
   expect(tokenUsage.promptTokens).toBeGreaterThan(0);
 });
 
+test("Test ChatOpenAI batch sends prompt to API with n option if prompts are the same", async () => {
+  const model = new ChatOpenAI({
+    temperature: 2,
+    modelName: "gpt-3.5-turbo",
+    maxTokens: 10,
+  });
+
+  const generatePromptSpy = jest.spyOn(model, "generatePrompt");
+  const res = await model.batch([
+    [new HumanMessage("Hello!")],
+    [new HumanMessage("Hello!")],
+  ]);
+  console.log(res);
+  expect(res).toHaveLength(2);
+
+  expect(generatePromptSpy).toHaveBeenCalledTimes(1);
+});
+
+test("Test ChatOpenAI batch sends prompt to API in separate requests if prompts are different", async () => {
+  const model = new ChatOpenAI({
+    temperature: 2,
+    modelName: "gpt-3.5-turbo",
+    maxTokens: 10,
+  });
+
+  const generatePromptSpy = jest.spyOn(model, "generatePrompt");
+  const res = await model.batch([
+    [new HumanMessage("Hello!")],
+    [new HumanMessage("Hi")],
+  ]);
+  console.log(res);
+  expect(res).toHaveLength(2);
+
+  expect(generatePromptSpy).toHaveBeenCalledTimes(2);
+});
+
 test("Test ChatOpenAI in streaming mode", async () => {
   let nrNewTokens = 0;
   let streamedCompletion = "";
