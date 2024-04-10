@@ -559,7 +559,6 @@ class _StringImageMessagePromptTemplate<
             inputs as TypedPromptInputValues<RunInput>
           );
           content.push({ type: "image_url", image_url: formatted });
-          // eslint-disable-next-line no-instanceof/no-instanceof
         }
       }
 

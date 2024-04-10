@@ -135,8 +135,6 @@ export const checkValidTemplate = (
             const imageUrl = message.image_url.url;
             renderTemplate(imageUrl, templateFormat, dummyInputs);
           }
-        } else if (message.type === "generic") {
-          // no-op
         } else {
           throw new Error(
             `Invalid message template received. ${JSON.stringify(
