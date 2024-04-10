@@ -62,7 +62,9 @@ export class GenericObjectPromptTemplate<
 
   validateTemplate = true;
 
-  constructor(input: GenericObjectPromptTemplateInput<RunInput, PartialVariableName>) {
+  constructor(
+    input: GenericObjectPromptTemplateInput<RunInput, PartialVariableName>
+  ) {
     super(input);
     this.template = input.template;
     this.templateFormat = input.templateFormat ?? this.templateFormat;
@@ -76,9 +78,7 @@ export class GenericObjectPromptTemplate<
         );
       }
       checkValidTemplate(
-        [
-          { type: "generic", data: this.template },
-        ] as unknown as MessageContent,
+        [{ type: "generic", data: this.template }] as unknown as MessageContent,
         this.templateFormat,
         totalInputVariables
       );

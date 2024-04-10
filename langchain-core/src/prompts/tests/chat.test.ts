@@ -570,7 +570,7 @@ test("Multi-modal, multi part chat prompt works with instances of BaseMessage", 
 });
 
 test.only("Gemini can understand audio", async () => {
-  const audioBase64 = `fs.readFileSync(audioPath, "base64");`
+  const audioBase64 = `fs.readFileSync(audioPath, "base64");`;
 
   const prompt = ChatPromptTemplate.fromMessages([
     [
@@ -591,5 +591,5 @@ test.only("Gemini can understand audio", async () => {
   ]);
 
   const pInvoke = await prompt.invoke({});
-  console.log(JSON.stringify(pInvoke, null, 2))
+  console.log(JSON.stringify(pInvoke, null, 2));
 });

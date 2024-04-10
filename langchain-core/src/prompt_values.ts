@@ -199,14 +199,13 @@ export class GenericObjectPromptValue extends BasePromptValue {
   /** @ignore */
   value: string;
 
-
   constructor(fields: GenericObjectPromptValueFields) {
     super(fields);
     this.data = fields.data;
   }
 
   toString() {
-    return JSON.stringify(this.data, null, 2)
+    return JSON.stringify(this.data, null, 2);
   }
 
   toChatMessages() {

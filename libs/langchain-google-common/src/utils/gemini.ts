@@ -87,7 +87,7 @@ function messageContentToAudio(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   content: Record<string, any>
 ): GeminiPartInlineData | GeminiPartFileData {
-  const {url} = content.data;
+  const { url } = content.data;
 
   if (!url) {
     throw new Error("Missing Audio URL");

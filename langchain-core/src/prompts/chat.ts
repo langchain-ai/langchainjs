@@ -347,7 +347,7 @@ interface _ImageTemplateParam {
 
 interface _GenericObjectTemplateParam {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  data:  Record<string, any>;
+  data: Record<string, any>;
 }
 
 type MessageClass =
@@ -465,14 +465,23 @@ class _StringImageMessagePromptTemplate<
   }
 
   static fromTemplate(
-    template: string | Array<string | _TextTemplateParam | _ImageTemplateParam | _GenericObjectTemplateParam>,
+    template:
+      | string
+      | Array<
+          | string
+          | _TextTemplateParam
+          | _ImageTemplateParam
+          | _GenericObjectTemplateParam
+        >,
     additionalOptions?: Record<string, unknown>
   ) {
     if (typeof template === "string") {
       return new this(PromptTemplate.fromTemplate(template));
     }
     const prompt: Array<
-      PromptTemplate<InputValues> | ImagePromptTemplate<InputValues> | GenericObjectPromptTemplate<InputValues>
+      | PromptTemplate<InputValues>
+      | ImagePromptTemplate<InputValues>
+      | GenericObjectPromptTemplate<InputValues>
     > = [];
     for (const item of template) {
       if (
@@ -531,7 +540,12 @@ class _StringImageMessagePromptTemplate<
         prompt.push(imgTemplateObject);
       } else if (typeof item === "object" && "data" in item) {
         const genericTemplate = item.data;
-        prompt.push(new GenericObjectPromptTemplate<InputValues>({ template: genericTemplate, inputVariables: [] }));
+        prompt.push(
+          new GenericObjectPromptTemplate<InputValues>({
+            template: genericTemplate,
+            inputVariables: [],
+          })
+        );
       }
     }
     return new this({ prompt, additionalOptions });
@@ -577,7 +591,7 @@ class _StringImageMessagePromptTemplate<
           const formatted = await prompt.format(
             inputs as TypedPromptInputValues<RunInput>
           );
-          console.log("formatted", formatted)
+          console.log("formatted", formatted);
           content.push({ type: "generic", data: formatted });
         }
       }
@@ -726,7 +740,12 @@ function _coerceMessagePromptTemplateLike(
   const message = coerceMessageLikeToMessage(messagePromptTemplateLike);
   let templateData:
     | string
-    | (string | _TextTemplateParam | _ImageTemplateParam | _GenericObjectTemplateParam)[];
+    | (
+        | string
+        | _TextTemplateParam
+        | _ImageTemplateParam
+        | _GenericObjectTemplateParam
+      )[];
 
   if (typeof message.content === "string") {
     templateData = message.content;
@@ -740,9 +759,7 @@ function _coerceMessagePromptTemplateLike(
       } else if ("data" in item) {
         return { data: item.data };
       } else {
-        throw new Error(
-          "Invalid message content"
-        );
+        throw new Error("Invalid message content");
       }
     });
   }
