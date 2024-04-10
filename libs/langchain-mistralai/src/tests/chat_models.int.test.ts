@@ -9,7 +9,12 @@ import { AgentExecutor, createOpenAIToolsAgent } from "langchain/agents";
 import { BaseChatModel } from "langchain/chat_models/base";
 import { DynamicStructuredTool, StructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
-import { AIMessage, BaseMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  BaseMessage,
+  HumanMessage,
+  ToolMessage,
+} from "@langchain/core/messages";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatMistralAI } from "../chat_models.js";
 
@@ -316,6 +321,57 @@ test("Can stream and concat responses for a complex tool", async () => {
   expect(person.friends.length).toBeGreaterThan(0);
   expect(person.friendsCount).toBeDefined();
   expect(person.areFriendsCool).toBeDefined();
+});
+
+test("Few shotting with tool calls", async () => {
+  const chat = new ChatMistralAI({
+    modelName: "mistral-large",
+    temperature: 0,
+  }).bind({
+    tools: [
+      {
+        type: "function",
+        function: {
+          name: "get_current_weather",
+          description: "Get the current weather in a given location",
+          parameters: {
+            type: "object",
+            properties: {
+              location: {
+                type: "string",
+                description: "The city and state, e.g. San Francisco, CA",
+              },
+              unit: { type: "string", enum: ["celsius", "fahrenheit"] },
+            },
+            required: ["location"],
+          },
+        },
+      },
+    ],
+  });
+  const res = await chat.invoke([
+    new HumanMessage("What is the weather in SF?"),
+    new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          id: "12345",
+          name: "get_current_weather",
+          args: {
+            location: "SF",
+          },
+        },
+      ],
+    }),
+    new ToolMessage({
+      tool_call_id: "12345",
+      content: "It is currently 24 degrees with hail in SF.",
+    }),
+    new AIMessage("It is currently 24 degrees in SF with hail in SF."),
+    new HumanMessage("What did you say the weather was?"),
+  ]);
+  console.log(res);
+  expect(res.content).toContain("24");
 });
 
 describe("withStructuredOutput", () => {

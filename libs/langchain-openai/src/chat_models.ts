@@ -49,6 +49,7 @@ import {
 } from "@langchain/core/output_parsers";
 import {
   JsonOutputKeyToolsParser,
+  convertLangChainToolCallToOpenAI,
   makeInvalidToolCall,
   parseToolCall,
 } from "@langchain/core/output_parsers/openai_tools";
@@ -230,19 +231,7 @@ function convertMessagesToOpenAIParams(messages: BaseMessage[]) {
     }
     if (isAIMessage(message) && !!message.tool_calls?.length) {
       completionParam.tool_calls = message.tool_calls.map(
-        (toolCall): OpenAIClient.ChatCompletionMessageToolCall => {
-          if (toolCall.id === undefined) {
-            throw new Error(`All OpenAI tool calls must have an "id" field.`);
-          }
-          return {
-            id: toolCall.id,
-            type: "function",
-            function: {
-              name: toolCall.name,
-              arguments: JSON.stringify(toolCall.args),
-            },
-          };
-        }
+        convertLangChainToolCallToOpenAI
       );
     } else {
       if (message.additional_kwargs.tool_calls != null) {

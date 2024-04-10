@@ -19,6 +19,7 @@ import {
   ChatMessageChunk,
   FunctionMessageChunk,
   OpenAIToolCall,
+  isAIMessage,
 } from "@langchain/core/messages";
 import type {
   BaseLanguageModelInput,
@@ -50,6 +51,7 @@ import {
 } from "@langchain/core/output_parsers";
 import {
   JsonOutputKeyToolsParser,
+  convertLangChainToolCallToOpenAI,
   makeInvalidToolCall,
   parseToolCall,
 } from "@langchain/core/output_parsers/openai_tools";
@@ -206,19 +208,27 @@ function convertMessagesToMistralMessages(
     );
   };
 
-  const getTools = (
-    toolCalls: Omit<OpenAIToolCall, "index">[] | undefined
-  ): MistralAIToolCalls[] =>
-    toolCalls?.map((toolCall) => ({
-      id: "null",
-      type: "function" as ToolType.function,
-      function: toolCall.function,
-    })) || [];
+  const getTools = (message: BaseMessage): MistralAIToolCalls[] => {
+    if (isAIMessage(message) && !!message.tool_calls?.length) {
+      return message.tool_calls
+        .map((toolCall) => ({ ...toolCall, id: "null" }))
+        .map(convertLangChainToolCallToOpenAI) as MistralAIToolCalls[];
+    }
+    const toolCalls: Omit<OpenAIToolCall, "index">[] =
+      message.additional_kwargs.tool_calls ?? [];
+    return (
+      toolCalls?.map((toolCall) => ({
+        id: "null",
+        type: "function" as ToolType.function,
+        function: toolCall.function,
+      })) || []
+    );
+  };
 
   return messages.map((message) => ({
     role: getRole(message._getType()),
     content: getContent(message.content),
-    tool_calls: getTools(message.additional_kwargs.tool_calls),
+    tool_calls: getTools(message),
   }));
 }
 

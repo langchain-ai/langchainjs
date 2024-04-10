@@ -228,7 +228,7 @@ test("ChatOpenAI in JSON mode can cache generations", async () => {
   updateSpy.mockRestore();
 });
 
-test.only("Few shotting with tool calls", async () => {
+test("Few shotting with tool calls", async () => {
   const chat = new ChatOpenAI({
     modelName: "gpt-3.5-turbo-1106",
     temperature: 1,
@@ -277,4 +277,5 @@ test.only("Few shotting with tool calls", async () => {
     new HumanMessage("What did you say the weather was?"),
   ]);
   console.log(res);
+  expect(res.content).toContain("24");
 });

@@ -80,6 +80,20 @@ export function parseToolCall(
   return parsedToolCall;
 }
 
+export function convertLangChainToolCallToOpenAI(toolCall: ToolCall) {
+  if (toolCall.id === undefined) {
+    throw new Error(`All OpenAI tool calls must have an "id" field.`);
+  }
+  return {
+    id: toolCall.id,
+    type: "function",
+    function: {
+      name: toolCall.name,
+      arguments: JSON.stringify(toolCall.args),
+    },
+  };
+}
+
 export function makeInvalidToolCall(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   rawToolCall: Record<string, any>,

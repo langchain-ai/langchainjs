@@ -17,6 +17,7 @@ import {
   SystemMessageChunk,
   ToolMessage,
   OpenAIToolCall,
+  isAIMessage,
 } from "@langchain/core/messages";
 import {
   ChatGeneration,
@@ -57,6 +58,7 @@ import {
   JsonOutputKeyToolsParser,
   parseToolCall,
   makeInvalidToolCall,
+  convertLangChainToolCallToOpenAI,
 } from "@langchain/core/output_parsers/openai_tools";
 import { StructuredToolInterface } from "@langchain/core/tools";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
@@ -142,11 +144,12 @@ export function messageToGroqRole(message: BaseMessage): GroqRoleEnum {
 function convertMessagesToGroqParams(
   messages: BaseMessage[]
 ): Array<ChatCompletion.Choice.Message> {
-  return messages.map((message) => {
+  return messages.map((message): ChatCompletion.Choice.Message => {
     if (typeof message.content !== "string") {
       throw new Error("Non string message content not supported");
     }
-    return {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const completionParam: Record<string, any> = {
       role: messageToGroqRole(message),
       content: message.content,
       name: message.name,
@@ -154,6 +157,19 @@ function convertMessagesToGroqParams(
       tool_calls: message.additional_kwargs.tool_calls,
       tool_call_id: (message as ToolMessage).tool_call_id,
     };
+    if (isAIMessage(message) && !!message.tool_calls?.length) {
+      completionParam.tool_calls = message.tool_calls.map(
+        convertLangChainToolCallToOpenAI
+      );
+    } else {
+      if (message.additional_kwargs.tool_calls != null) {
+        completionParam.tool_calls = message.additional_kwargs.tool_calls;
+      }
+      if ((message as ToolMessage).tool_call_id != null) {
+        completionParam.tool_call_id = (message as ToolMessage).tool_call_id;
+      }
+    }
+    return completionParam as ChatCompletion.Choice.Message;
   });
 }
 

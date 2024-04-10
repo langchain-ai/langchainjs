@@ -9,6 +9,8 @@ import {
   type BaseMessage,
   HumanMessage,
   ToolMessage,
+  isAIMessage,
+  MessageContent,
 } from "@langchain/core/messages";
 import {
   ChatGeneration,
@@ -241,6 +243,59 @@ function _mergeMessages(
   return merged;
 }
 
+export function _convertLangChainToolCallToAnthropic(
+  toolCall: ToolCall
+): AnthropicToolResponse {
+  if (toolCall.id === undefined) {
+    throw new Error(`Anthropic requires all tool calls to have an "id".`);
+  }
+  return {
+    type: "tool_use",
+    id: toolCall.id,
+    name: toolCall.name,
+    input: toolCall.args,
+  };
+}
+
+function _formatContent(content: MessageContent) {
+  if (typeof content === "string") {
+    return content;
+  } else {
+    const contentBlocks = content.map((contentPart) => {
+      if (contentPart.type === "image_url") {
+        let source;
+        if (typeof contentPart.image_url === "string") {
+          source = _formatImage(contentPart.image_url);
+        } else {
+          source = _formatImage(contentPart.image_url.url);
+        }
+        return {
+          type: "image" as const, // Explicitly setting the type as "image"
+          source,
+        };
+      } else if (contentPart.type === "text") {
+        // Assuming contentPart is of type MessageContentText here
+        return {
+          type: "text" as const, // Explicitly setting the type as "text"
+          text: contentPart.text,
+        };
+      } else if (
+        contentPart.type === "tool_use" ||
+        contentPart.type === "tool_result"
+      ) {
+        // TODO: Fix when SDK types are fixed
+        return {
+          ...contentPart,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any;
+      } else {
+        throw new Error("Unsupported message content format");
+      }
+    });
+    return contentBlocks;
+  }
+}
+
 /**
  * Formats messages as a prompt for the model.
  * @param messages The base messages to format as a prompt.
@@ -266,6 +321,8 @@ function _formatMessagesForAnthropic(messages: BaseMessage[]): {
       role = "user" as const;
     } else if (message._getType() === "ai") {
       role = "assistant" as const;
+    } else if (message._getType() === "tool") {
+      role = "user" as const;
     } else if (message._getType() === "system") {
       throw new Error(
         "System messages are only permitted as the first passed message."
@@ -273,49 +330,40 @@ function _formatMessagesForAnthropic(messages: BaseMessage[]): {
     } else {
       throw new Error(`Message type "${message._getType()}" is not supported.`);
     }
-    if (typeof message.content === "string") {
-      return {
-        role,
-        content: message.content,
-      };
+    if (isAIMessage(message) && !!message.tool_calls?.length) {
+      const rawContent = _formatContent(message.content);
+      if (typeof rawContent === "string") {
+        return {
+          role,
+          content: [
+            { type: "text", text: rawContent },
+            ...message.tool_calls.map(_convertLangChainToolCallToAnthropic),
+          ],
+        };
+      } else {
+        const missingToolCallBlocks = message.tool_calls.filter(
+          (toolCall) =>
+            !!rawContent.find(
+              (contentPart) =>
+                contentPart === "tool_use" && toolCall.id === contentPart.id
+            )
+        );
+        return {
+          role,
+          content: [
+            ...rawContent,
+            ...missingToolCallBlocks.map(_convertLangChainToolCallToAnthropic),
+          ],
+        };
+      }
     } else {
-      const contentBlocks = message.content.map((contentPart) => {
-        if (contentPart.type === "image_url") {
-          let source;
-          if (typeof contentPart.image_url === "string") {
-            source = _formatImage(contentPart.image_url);
-          } else {
-            source = _formatImage(contentPart.image_url.url);
-          }
-          return {
-            type: "image" as const, // Explicitly setting the type as "image"
-            source,
-          };
-        } else if (contentPart.type === "text") {
-          // Assuming contentPart is of type MessageContentText here
-          return {
-            type: "text" as const, // Explicitly setting the type as "text"
-            text: contentPart.text,
-          };
-        } else if (
-          contentPart.type === "tool_use" ||
-          contentPart.type === "tool_result"
-        ) {
-          // TODO: Fix when SDK types are fixed
-          return {
-            ...contentPart,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          } as any;
-        } else {
-          throw new Error("Unsupported message content format");
-        }
-      });
       return {
         role,
-        content: contentBlocks,
+        content: _formatContent(message.content),
       };
     }
   });
+  console.log(JSON.stringify(formattedMessages));
   return {
     messages: formattedMessages,
     system,
