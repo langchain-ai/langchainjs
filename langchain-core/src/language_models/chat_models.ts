@@ -28,6 +28,8 @@ import {
 } from "../callbacks/manager.js";
 import type { RunnableConfig } from "../runnables/config.js";
 import type { BaseCache } from "../caches.js";
+import { StructuredToolInterface } from "../tools.js";
+import { RunnableInterface } from "../runnables/types.js";
 
 /**
  * Represents a serialized chat model.
@@ -124,6 +126,19 @@ export abstract class BaseChatModel<
     }
     return [runnableConfig, callOptions as this["ParsedCallOptions"]];
   }
+
+  /**
+   * Bind tool-like objects to this chat model.
+   *
+   * @param tools A list of tool definitions to bind to this chat model.
+   * Can be a structured tool or an object matching the provider's
+   * specific tool schema.
+   * @param kwargs Any additional parameters to bind.
+   */
+  bindTools?(
+    tools: (StructuredToolInterface | Record<string, unknown>)[],
+    kwargs?: Partial<CallOptions>
+  ): RunnableInterface<BaseLanguageModelInput, OutputMessageType, CallOptions>;
 
   /**
    * Invokes the chat model with a single input.

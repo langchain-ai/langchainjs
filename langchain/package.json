@@ -1229,6 +1229,7 @@
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^7.7.0",
     "@jest/globals": "^29.5.0",
+    "@langchain/anthropic": "workspace:^",
     "@langchain/scripts": "~0.0",
     "@notionhq/client": "^2.2.10",
     "@pinecone-database/pinecone": "^1.1.0",

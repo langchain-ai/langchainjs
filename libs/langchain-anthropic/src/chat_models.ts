@@ -5,7 +5,10 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   AIMessage,
   AIMessageChunk,
+  SystemMessage,
   type BaseMessage,
+  HumanMessage,
+  ToolMessage,
 } from "@langchain/core/messages";
 import {
   ChatGeneration,
@@ -27,6 +30,7 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
 import {
   Runnable,
+  RunnableInterface,
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
@@ -56,7 +60,7 @@ type AnthropicMessageStreamEvent = Anthropic.MessageStreamEvent;
 type AnthropicRequestOptions = Anthropic.RequestOptions;
 
 interface ChatAnthropicCallOptions extends BaseLanguageModelCallOptions {
-  tools?: StructuredToolInterface[] | AnthropicTool[];
+  tools?: (StructuredToolInterface | AnthropicTool)[];
 }
 
 type AnthropicMessageResponse = Anthropic.ContentBlock | AnthropicToolResponse;
@@ -183,6 +187,136 @@ export interface AnthropicInput {
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Kwargs = Record<string, any>;
+
+function _mergeMessages(
+  messages: BaseMessage[]
+): (SystemMessage | HumanMessage | AIMessage)[] {
+  // Merge runs of human/tool messages into single human messages with content blocks.
+  const merged = [];
+  for (const message of messages) {
+    if (message._getType() === "tool") {
+      if (typeof message.content === "string") {
+        merged.push(
+          new HumanMessage({
+            content: [
+              {
+                type: "tool_result",
+                content: message.content,
+                tool_use_id: (message as ToolMessage).tool_call_id,
+              },
+            ],
+          })
+        );
+      } else {
+        merged.push(new HumanMessage({ content: message.content }));
+      }
+    } else {
+      const previousMessage = merged[merged.length - 1];
+      if (
+        previousMessage?._getType() === "human" &&
+        message._getType() === "human"
+      ) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let combinedContent: Record<string, any>[];
+        if (typeof previousMessage.content === "string") {
+          combinedContent = [{ type: "text", text: previousMessage.content }];
+        } else {
+          combinedContent = previousMessage.content;
+        }
+        if (typeof message.content === "string") {
+          combinedContent.push({ type: "text", text: message.content });
+        } else {
+          combinedContent = combinedContent.concat(message.content);
+        }
+        previousMessage.content = combinedContent;
+      } else {
+        merged.push(message);
+      }
+    }
+  }
+  return merged;
+}
+
+/**
+ * Formats messages as a prompt for the model.
+ * @param messages The base messages to format as a prompt.
+ * @returns The formatted prompt.
+ */
+function _formatMessagesForAnthropic(messages: BaseMessage[]): {
+  system?: string;
+  messages: AnthropicMessage[];
+} {
+  const mergedMessages = _mergeMessages(messages);
+  let system: string | undefined;
+  if (mergedMessages.length > 0 && mergedMessages[0]._getType() === "system") {
+    if (typeof messages[0].content !== "string") {
+      throw new Error("System message content must be a string.");
+    }
+    system = messages[0].content;
+  }
+  const conversationMessages =
+    system !== undefined ? mergedMessages.slice(1) : mergedMessages;
+  const formattedMessages = conversationMessages.map((message) => {
+    let role;
+    if (message._getType() === "human") {
+      role = "user" as const;
+    } else if (message._getType() === "ai") {
+      role = "assistant" as const;
+    } else if (message._getType() === "system") {
+      throw new Error(
+        "System messages are only permitted as the first passed message."
+      );
+    } else {
+      throw new Error(`Message type "${message._getType()}" is not supported.`);
+    }
+    if (typeof message.content === "string") {
+      return {
+        role,
+        content: message.content,
+      };
+    } else {
+      const contentBlocks = message.content.map((contentPart) => {
+        if (contentPart.type === "image_url") {
+          let source;
+          if (typeof contentPart.image_url === "string") {
+            source = _formatImage(contentPart.image_url);
+          } else {
+            source = _formatImage(contentPart.image_url.url);
+          }
+          return {
+            type: "image" as const, // Explicitly setting the type as "image"
+            source,
+          };
+        } else if (contentPart.type === "text") {
+          // Assuming contentPart is of type MessageContentText here
+          return {
+            type: "text" as const, // Explicitly setting the type as "text"
+            text: contentPart.text,
+          };
+        } else if (
+          contentPart.type === "tool_use" ||
+          contentPart.type === "tool_result"
+        ) {
+          // TODO: Fix when SDK types are fixed
+          return {
+            ...contentPart,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          } as any;
+        } else {
+          throw new Error("Unsupported message content format");
+        }
+      });
+      return {
+        role,
+        content: contentBlocks,
+      };
+    }
+  });
+  return {
+    messages: formattedMessages,
+    system,
+  };
+}
 
 /**
  * Wrapper around Anthropic large language models.
@@ -319,6 +453,16 @@ export class ChatAnthropicMessages<
     }));
   }
 
+  override bindTools(
+    tools: (AnthropicTool | StructuredToolInterface)[],
+    kwargs?: Partial<CallOptions>
+  ): RunnableInterface<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
+    return this.bind({
+      tools: this.formatStructuredToolToAnthropic(tools),
+      ...kwargs,
+    } as Partial<CallOptions>);
+  }
+
   /**
    * Get the parameters used to invoke the model
    */
@@ -398,7 +542,7 @@ export class ChatAnthropicMessages<
       {
         ...params,
         stream: false,
-        ...this.formatMessagesForAnthropic(messages),
+        ..._formatMessagesForAnthropic(messages),
       },
       options
     );
@@ -407,7 +551,7 @@ export class ChatAnthropicMessages<
         {
           ...params,
           stream: false,
-          ...this.formatMessagesForAnthropic(messages),
+          ..._formatMessagesForAnthropic(messages),
         },
         options
       );
@@ -437,7 +581,7 @@ export class ChatAnthropicMessages<
       const stream = await this.createStreamWithRetry(
         {
           ...params,
-          ...this.formatMessagesForAnthropic(messages),
+          ..._formatMessagesForAnthropic(messages),
           stream: true,
         },
         requestOptions
@@ -501,90 +645,6 @@ export class ChatAnthropicMessages<
     }
   }
 
-  /**
-   * Formats messages as a prompt for the model.
-   * @param messages The base messages to format as a prompt.
-   * @returns The formatted prompt.
-   */
-  protected formatMessagesForAnthropic(messages: BaseMessage[]): {
-    system?: string;
-    messages: AnthropicMessage[];
-  } {
-    let system: string | undefined;
-    if (messages.length > 0 && messages[0]._getType() === "system") {
-      if (typeof messages[0].content !== "string") {
-        throw new Error("System message content must be a string.");
-      }
-      system = messages[0].content;
-    }
-    const conversationMessages =
-      system !== undefined ? messages.slice(1) : messages;
-    const formattedMessages = conversationMessages.map((message) => {
-      let role;
-      if (message._getType() === "human") {
-        role = "user" as const;
-      } else if (message._getType() === "ai") {
-        role = "assistant" as const;
-      } else if (message._getType() === "tool") {
-        role = "user" as const;
-      } else if (message._getType() === "system") {
-        throw new Error(
-          "System messages are only permitted as the first passed message."
-        );
-      } else {
-        throw new Error(
-          `Message type "${message._getType()}" is not supported.`
-        );
-      }
-      if (typeof message.content === "string") {
-        return {
-          role,
-          content: message.content,
-        };
-      } else {
-        const contentBlocks = message.content.map((contentPart) => {
-          if (contentPart.type === "image_url") {
-            let source;
-            if (typeof contentPart.image_url === "string") {
-              source = _formatImage(contentPart.image_url);
-            } else {
-              source = _formatImage(contentPart.image_url.url);
-            }
-            return {
-              type: "image" as const, // Explicitly setting the type as "image"
-              source,
-            };
-          } else if (contentPart.type === "text") {
-            // Assuming contentPart is of type MessageContentText here
-            return {
-              type: "text" as const, // Explicitly setting the type as "text"
-              text: contentPart.text,
-            };
-          } else if (
-            contentPart.type === "tool_use" ||
-            contentPart.type === "tool_result"
-          ) {
-            // TODO: Fix when SDK types are fixed
-            return {
-              ...contentPart,
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            } as any;
-          } else {
-            throw new Error("Unsupported message content format");
-          }
-        });
-        return {
-          role,
-          content: contentBlocks,
-        };
-      }
-    });
-    return {
-      messages: formattedMessages,
-      system,
-    };
-  }
-
   /** @ignore */
   async _generateNonStreaming(
     messages: BaseMessage[],
@@ -600,7 +660,7 @@ export class ChatAnthropicMessages<
       {
         ...params,
         stream: false,
-        ...this.formatMessagesForAnthropic(messages),
+        ..._formatMessagesForAnthropic(messages),
       },
       requestOptions
     );
@@ -653,7 +713,7 @@ export class ChatAnthropicMessages<
         {
           ...params,
           stream: false,
-          ...this.formatMessagesForAnthropic(messages),
+          ..._formatMessagesForAnthropic(messages),
         },
         options
       );

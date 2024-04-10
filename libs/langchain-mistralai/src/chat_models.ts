@@ -40,7 +40,7 @@ import {
 } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
-import { StructuredToolInterface } from "@langchain/core/tools";
+import { StructuredTool, StructuredToolInterface } from "@langchain/core/tools";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { z } from "zod";
 import {
@@ -55,6 +55,7 @@ import {
 } from "@langchain/core/output_parsers/openai_tools";
 import {
   Runnable,
+  RunnableInterface,
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
@@ -412,6 +413,24 @@ export class ChatMistralAI<
       responseFormat: response_format as ResponseFormat,
     };
     return params;
+  }
+
+  override bindTools(
+    tools: (Record<string, unknown> | StructuredToolInterface)[],
+    kwargs?: Partial<CallOptions>
+  ): RunnableInterface<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
+    const mistralAITools = tools
+      ?.map((tool) => {
+        if ("lc_namespace" in tool) {
+          return _convertStructuredToolToMistralTool([tool as StructuredTool]);
+        }
+        return tool;
+      })
+      .flat();
+    return this.bind({
+      tools: mistralAITools,
+      ...kwargs,
+    } as CallOptions);
   }
 
   /**

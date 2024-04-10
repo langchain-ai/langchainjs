@@ -39,6 +39,7 @@ import {
 } from "groq-sdk/resources/chat/completions";
 import {
   Runnable,
+  RunnableInterface,
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
@@ -57,6 +58,8 @@ import {
   parseToolCall,
   makeInvalidToolCall,
 } from "@langchain/core/output_parsers/openai_tools";
+import { StructuredToolInterface } from "@langchain/core/tools";
+import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 
 export interface ChatGroqCallOptions extends BaseChatModelCallOptions {
   headers?: Record<string, string>;
@@ -220,7 +223,10 @@ function _convertDeltaToMessageChunk(
  * console.log(response);
  * ```
  */
-export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
+export class ChatGroq extends BaseChatModel<
+  ChatGroqCallOptions,
+  AIMessageChunk
+> {
   client: Groq;
 
   modelName = "llama2-70b-4096";
@@ -310,6 +316,20 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
       temperature: this.temperature,
       max_tokens: this.maxTokens,
     };
+  }
+
+  override bindTools(
+    tools: (Record<string, unknown> | StructuredToolInterface)[],
+    kwargs?: Partial<ChatGroqCallOptions>
+  ): RunnableInterface<
+    BaseLanguageModelInput,
+    AIMessageChunk,
+    ChatGroqCallOptions
+  > {
+    return this.bind({
+      tools: tools.map(convertToOpenAITool),
+      ...kwargs,
+    });
   }
 
   override async *_streamResponseChunks(

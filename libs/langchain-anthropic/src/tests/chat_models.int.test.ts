@@ -399,7 +399,7 @@ describe("Tool calling", () => {
     }
     expect(toolCall).toBeTruthy();
     const { name, input } = toolCall;
-    expect(toolCall.input).toEqual(result.tool_calls[0].args);
+    expect(toolCall.input).toEqual(result.tool_calls?.[0].args);
     expect(name).toBe("get_weather");
     expect(input).toBeTruthy();
     expect(input.location).toBeTruthy();

@@ -65,13 +65,13 @@ test("Test ChatOpenAI tool calling", async () => {
   console.log(JSON.stringify(res));
   expect(res.additional_kwargs.tool_calls?.length).toEqual(3);
   expect(res.tool_calls?.[0].args).toEqual(
-    JSON.parse(res.additional_kwargs.tool_calls?.[0].function.arguments)
+    JSON.parse(res.additional_kwargs.tool_calls?.[0].function.arguments ?? "{}")
   );
   expect(res.tool_calls?.[1].args).toEqual(
-    JSON.parse(res.additional_kwargs.tool_calls?.[1].function.arguments)
+    JSON.parse(res.additional_kwargs.tool_calls?.[1].function.arguments ?? "{}")
   );
   expect(res.tool_calls?.[2].args).toEqual(
-    JSON.parse(res.additional_kwargs.tool_calls?.[2].function.arguments)
+    JSON.parse(res.additional_kwargs.tool_calls?.[2].function.arguments ?? "{}")
   );
 });
 

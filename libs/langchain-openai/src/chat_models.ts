@@ -37,6 +37,7 @@ import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { z } from "zod";
 import {
   Runnable,
+  RunnableInterface,
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
@@ -460,6 +461,16 @@ export class ChatOpenAI<
       ...configuration,
       ...fields?.configuration,
     };
+  }
+
+  override bindTools(
+    tools: (Record<string, unknown> | StructuredToolInterface)[],
+    kwargs?: Partial<CallOptions>
+  ): RunnableInterface<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
+    return this.bind({
+      tools: tools.map(convertToOpenAITool),
+      ...kwargs,
+    } as Partial<CallOptions>);
   }
 
   /**
