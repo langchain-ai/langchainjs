@@ -83,30 +83,27 @@ function messageContentImageUrl(
   }
 }
 
-function messageContentToAudio(
+function messageContentToMedia(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   content: Record<string, any>
 ): GeminiPartInlineData | GeminiPartFileData {
-  const { url } = content.data;
-
-  if (!url) {
-    throw new Error("Missing Audio URL");
-  }
-
-  const mineTypeAndData = extractMimeType(url);
-  if (mineTypeAndData) {
+  if ("mimeType" in content && "data" in content) {
     return {
-      inlineData: mineTypeAndData,
+      inlineData: {
+        mimeType: content.mimeType,
+        data: content.data,
+      },
     };
-  } else {
-    // FIXME - need some way to get mime type
+  } else if ("mimeType" in content && "fileUri" in content) {
     return {
       fileData: {
-        mimeType: "audio/mpeg",
-        fileUri: url,
+        mimeType: content.mimeType,
+        fileUri: content.fileUri,
       },
     };
   }
+
+  throw new Error("Invalid audio content");
 }
 
 export function messageContentToParts(content: MessageContent): GeminiPart[] {
@@ -136,11 +133,8 @@ export function messageContentToParts(content: MessageContent): GeminiPart[] {
             return messageContentImageUrl(content as MessageContentImageUrl);
           }
           break;
-        case "audio":
-          if ("data" in content) {
-            return messageContentToAudio(content);
-          }
-          break;
+        case "media":
+          return messageContentToMedia(content);
         default:
           throw new Error(
             `Unsupported type received while converting message to message parts`
