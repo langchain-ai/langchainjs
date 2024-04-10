@@ -566,9 +566,8 @@ export class ChatOpenAI<
       BaseChatModel._convertInputToPromptValue(i)
     );
 
-    const promptValuesToString = promptValues.map((p) => p.toString());
-    // if prompts are the same, we can send them in one request
-    if (promptValuesToString.every((p) => p === promptValuesToString[0])) {
+    const promptValueStrings = promptValues.map((p) => p.toString());
+    if (promptValueStrings.every((p) => p === promptValueStrings[0])) {
       const result = await this.generatePrompt(
         promptValues,
         { ...options, n: inputs.length } as CallOptions,
