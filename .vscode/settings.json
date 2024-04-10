@@ -12,7 +12,6 @@
   "typescript.tsdk": "node_modules/typescript/lib",
   "cSpell.words": [
     "AILLM",
-    "helicunate",
     "Upstash"
   ],
   "cSpell.enableFiletypes": [
