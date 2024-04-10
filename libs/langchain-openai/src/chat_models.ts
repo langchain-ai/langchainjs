@@ -129,7 +129,7 @@ function openAIResponseToChatMessage(
     | OpenAIToolCall[]
     | undefined;
   switch (message.role) {
-    case "assistant":
+    case "assistant": {
       const toolCalls = [];
       const invalidToolCalls = [];
       for (const rawToolCall of rawToolCalls ?? []) {
@@ -149,6 +149,7 @@ function openAIResponseToChatMessage(
           tool_calls: rawToolCalls,
         },
       });
+    }
     default:
       return new ChatMessage(message.content || "", message.role ?? "unknown");
   }

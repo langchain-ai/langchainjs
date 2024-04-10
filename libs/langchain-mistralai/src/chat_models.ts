@@ -222,7 +222,7 @@ function mistralAIResponseToChatMessage(
     rawToolCalls = message.tool_calls as MistralAIToolCalls[];
   }
   switch (message.role) {
-    case "assistant":
+    case "assistant": {
       const toolCalls = [];
       const invalidToolCalls = [];
       for (const rawToolCall of rawToolCalls) {
@@ -242,6 +242,7 @@ function mistralAIResponseToChatMessage(
           tool_calls: rawToolCalls,
         },
       });
+    }
     default:
       return new HumanMessage(message.content ?? "");
   }

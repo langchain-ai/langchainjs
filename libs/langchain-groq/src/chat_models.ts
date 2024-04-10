@@ -55,8 +55,8 @@ import {
 import {
   JsonOutputKeyToolsParser,
   parseToolCall,
+  makeInvalidToolCall,
 } from "@langchain/core/output_parsers/openai_tools";
-import { makeInvalidToolCall } from "@langchain/core/output_parsers/openai_tools";
 
 export interface ChatGroqCallOptions extends BaseChatModelCallOptions {
   headers?: Record<string, string>;
@@ -149,7 +149,7 @@ function groqResponseToChatMessage(
     | OpenAIToolCall[]
     | undefined;
   switch (message.role) {
-    case "assistant":
+    case "assistant": {
       const toolCalls = [];
       const invalidToolCalls = [];
       for (const rawToolCall of rawToolCalls ?? []) {
@@ -166,6 +166,7 @@ function groqResponseToChatMessage(
         tool_calls: toolCalls,
         invalid_tool_calls: invalidToolCalls,
       });
+    }
     default:
       return new ChatMessage(message.content || "", message.role ?? "unknown");
   }
