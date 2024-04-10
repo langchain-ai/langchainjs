@@ -115,9 +115,15 @@ export interface ChatMistralAIInput extends BaseChatModelParams {
   apiKey?: string;
   /**
    * The name of the model to use.
+   * Alias for `model`
    * @default {"mistral-small-latest"}
    */
   modelName?: string;
+  /**
+   * The name of the model to use.
+   * @default {"mistral-small-latest"}
+   */
+  model?: string;
   /**
    * Override the default endpoint.
    */
@@ -158,8 +164,13 @@ export interface ChatMistralAIInput extends BaseChatModelParams {
   safePrompt?: boolean;
   /**
    * The seed to use for random sampling. If set, different calls will generate deterministic results.
+   * Alias for `seed`
    */
   randomSeed?: number;
+  /**
+   * The seed to use for random sampling. If set, different calls will generate deterministic results.
+   */
+  seed?: number;
 }
 
 function convertMessagesToMistralMessages(
@@ -338,6 +349,8 @@ export class ChatMistralAI<
 
   modelName = "mistral-small-latest";
 
+  model = "mistral-small-latest";
+
   apiKey: string;
 
   endpoint?: string;
@@ -359,6 +372,8 @@ export class ChatMistralAI<
 
   randomSeed?: number;
 
+  seed?: number;
+
   lc_serializable = true;
 
   constructor(fields?: ChatMistralAIInput) {
@@ -377,8 +392,10 @@ export class ChatMistralAI<
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
     this.safeMode = fields?.safeMode ?? this.safeMode;
     this.safePrompt = fields?.safePrompt ?? this.safePrompt;
-    this.randomSeed = fields?.randomSeed ?? this.randomSeed;
-    this.modelName = fields?.modelName ?? this.modelName;
+    this.randomSeed = fields?.seed ?? fields?.randomSeed ?? this.seed;
+    this.seed = this.randomSeed;
+    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
+    this.model = this.modelName;
   }
 
   _llmType() {
@@ -401,12 +418,12 @@ export class ChatMistralAI<
       })
       .flat();
     const params: Omit<MistralAIChatCompletionOptions, "messages"> = {
-      model: this.modelName,
+      model: this.model,
       tools: mistralAITools,
       temperature: this.temperature,
       maxTokens: this.maxTokens,
       topP: this.topP,
-      randomSeed: this.randomSeed,
+      randomSeed: this.seed,
       safeMode: this.safeMode,
       safePrompt: this.safePrompt,
       toolChoice: tool_choice,

@@ -2,12 +2,12 @@ import { ChatOpenAI } from "@langchain/openai";
 
 // Use a model with a shorter context window
 const shorterLlm = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo",
+  model: "gpt-3.5-turbo",
   maxRetries: 0,
 });
 
 const longerLlm = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo-16k",
+  model: "gpt-3.5-turbo-16k",
 });
 
 const modelWithFallback = shorterLlm.withFallbacks({

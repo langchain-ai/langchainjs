@@ -164,12 +164,16 @@ export interface AnthropicInput {
 
   /** Anthropic API key */
   anthropicApiKey?: string;
+  /** Anthropic API key */
+  apiKey?: string;
 
   /** Anthropic API URL */
   anthropicApiUrl?: string;
 
   /** Model name to use */
   modelName: string;
+  /** Model name to use */
+  model: string;
 
   /** Overridable Anthropic ClientOptions */
   clientOptions: ClientOptions;
@@ -335,7 +339,7 @@ function _formatMessagesForAnthropic(messages: BaseMessage[]): {
  *
  * const model = new ChatAnthropic({
  *   temperature: 0.9,
- *   anthropicApiKey: 'YOUR-API-KEY',
+ *   apiKey: 'YOUR-API-KEY',
  * });
  * const res = await model.invoke({ input: 'Hello!' });
  * console.log(res);
@@ -354,6 +358,7 @@ export class ChatAnthropicMessages<
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       anthropicApiKey: "ANTHROPIC_API_KEY",
+      apiKey: "ANTHROPIC_API_KEY",
     };
   }
 
@@ -367,6 +372,8 @@ export class ChatAnthropicMessages<
 
   anthropicApiKey?: string;
 
+  apiKey?: string;
+
   apiUrl?: string;
 
   temperature = 1;
@@ -378,6 +385,8 @@ export class ChatAnthropicMessages<
   maxTokens = 2048;
 
   modelName = "claude-2.1";
+
+  model = "claude-2.1";
 
   invocationKwargs?: Kwargs;
 
@@ -397,15 +406,22 @@ export class ChatAnthropicMessages<
     super(fields ?? {});
 
     this.anthropicApiKey =
-      fields?.anthropicApiKey ?? getEnvironmentVariable("ANTHROPIC_API_KEY");
+      fields?.apiKey ??
+      fields?.anthropicApiKey ??
+      getEnvironmentVariable("ANTHROPIC_API_KEY");
     if (!this.anthropicApiKey) {
       throw new Error("Anthropic API key not found");
     }
+    /** Keep anthropicApiKey for backwards compatibility */
+    this.apiKey = this.anthropicApiKey;
 
     // Support overriding the default API URL (i.e., https://api.anthropic.com)
     this.apiUrl = fields?.anthropicApiUrl;
 
-    this.modelName = fields?.modelName ?? this.modelName;
+    /** Keep modelName for backwards compatibility */
+    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
+    this.model = this.modelName;
+
     this.invocationKwargs = fields?.invocationKwargs ?? {};
 
     this.temperature = fields?.temperature ?? this.temperature;
@@ -474,7 +490,7 @@ export class ChatAnthropicMessages<
   > &
     Kwargs {
     return {
-      model: this.modelName,
+      model: this.model,
       temperature: this.temperature,
       top_k: this.topK,
       top_p: this.topP,
@@ -517,7 +533,7 @@ export class ChatAnthropicMessages<
   /** @ignore */
   _identifyingParams() {
     return {
-      model_name: this.modelName,
+      model_name: this.model,
       ...this.invocationParams(),
     };
   }
@@ -527,7 +543,7 @@ export class ChatAnthropicMessages<
    */
   identifyingParams() {
     return {
-      model_name: this.modelName,
+      model_name: this.model,
       ...this.invocationParams(),
     };
   }
@@ -742,7 +758,7 @@ export class ChatAnthropicMessages<
       this.streamingClient = new Anthropic({
         ...this.clientOptions,
         ...options_,
-        apiKey: this.anthropicApiKey,
+        apiKey: this.apiKey,
         // Prefer LangChain built-in retries
         maxRetries: 0,
       });
@@ -764,7 +780,7 @@ export class ChatAnthropicMessages<
     request: AnthropicMessageCreateParams & Kwargs,
     options: AnthropicRequestOptions
   ): Promise<Anthropic.Message> {
-    if (!this.anthropicApiKey) {
+    if (!this.apiKey) {
       throw new Error("Missing Anthropic API key.");
     }
     if (!this.batchClient) {
@@ -772,7 +788,7 @@ export class ChatAnthropicMessages<
       this.batchClient = new Anthropic({
         ...this.clientOptions,
         ...options,
-        apiKey: this.anthropicApiKey,
+        apiKey: this.apiKey,
         maxRetries: 0,
       });
     }

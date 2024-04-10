@@ -58,10 +58,16 @@ interface ChatCompletionResponse {
  * Interface defining the input to the ChatBaiduWenxin class.
  */
 declare interface BaiduWenxinChatInput {
-  /** Model name to use. Available options are: ERNIE-Bot, ERNIE-Bot-turbo, ERNIE-Bot-4
+  /**
+   * Model name to use. Available options are: ERNIE-Bot, ERNIE-Bot-turbo, ERNIE-Bot-4
+   * Alias for `model`
    * @default "ERNIE-Bot-turbo"
    */
   modelName: string;
+  /** Model name to use. Available options are: ERNIE-Bot, ERNIE-Bot-turbo, ERNIE-Bot-4
+   * @default "ERNIE-Bot-turbo"
+   */
+  model: string;
 
   /** Whether to stream the results or not. Defaults to false. */
   streaming?: boolean;
@@ -77,8 +83,14 @@ declare interface BaiduWenxinChatInput {
   /**
    * API key to use when making requests. Defaults to the value of
    * `BAIDU_API_KEY` environment variable.
+   * Alias for `apiKey`
    */
   baiduApiKey?: string;
+  /**
+   * API key to use when making requests. Defaults to the value of
+   * `BAIDU_API_KEY` environment variable.
+   */
+  apiKey?: string;
 
   /**
    * Secret key to use when making requests. Defaults to the value of
@@ -154,14 +166,14 @@ function messageToWenxinRole(message: BaseMessage): WenxinMessageRole {
  * @example
  * ```typescript
  * const ernieTurbo = new ChatBaiduWenxin({
- *   baiduApiKey: "YOUR-API-KEY",
+ *   apiKey: "YOUR-API-KEY",
  *   baiduSecretKey: "YOUR-SECRET-KEY",
  * });
  *
  * const ernie = new ChatBaiduWenxin({
- *   modelName: "ERNIE-Bot",
+ *   model: "ERNIE-Bot",
  *   temperature: 1,
- *   baiduApiKey: "YOUR-API-KEY",
+ *   apiKey: "YOUR-API-KEY",
  *   baiduSecretKey: "YOUR-SECRET-KEY",
  * });
  *
@@ -187,6 +199,7 @@ export class ChatBaiduWenxin
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       baiduApiKey: "BAIDU_API_KEY",
+      apiKey: "BAIDU_API_KEY",
       baiduSecretKey: "BAIDU_SECRET_KEY",
     };
   }
@@ -198,6 +211,8 @@ export class ChatBaiduWenxin
   lc_serializable = true;
 
   baiduApiKey?: string;
+
+  apiKey?: string;
 
   baiduSecretKey?: string;
 
@@ -211,6 +226,8 @@ export class ChatBaiduWenxin
 
   modelName = "ERNIE-Bot-turbo";
 
+  model = "ERNIE-Bot-turbo";
+
   apiUrl: string;
 
   temperature?: number | undefined;
@@ -223,10 +240,13 @@ export class ChatBaiduWenxin
     super(fields ?? {});
 
     this.baiduApiKey =
-      fields?.baiduApiKey ?? getEnvironmentVariable("BAIDU_API_KEY");
+      fields?.apiKey ??
+      fields?.baiduApiKey ??
+      getEnvironmentVariable("BAIDU_API_KEY");
     if (!this.baiduApiKey) {
       throw new Error("Baidu API key not found");
     }
+    this.apiKey = this.baiduApiKey;
 
     this.baiduSecretKey =
       fields?.baiduSecretKey ?? getEnvironmentVariable("BAIDU_SECRET_KEY");
@@ -241,25 +261,26 @@ export class ChatBaiduWenxin
     this.topP = fields?.topP ?? this.topP;
     this.penaltyScore = fields?.penaltyScore ?? this.penaltyScore;
 
-    this.modelName = fields?.modelName ?? this.modelName;
+    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
+    this.model = this.modelName;
 
-    if (this.modelName === "ERNIE-Bot") {
+    if (this.model === "ERNIE-Bot") {
       this.apiUrl =
         "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions";
-    } else if (this.modelName === "ERNIE-Bot-turbo") {
+    } else if (this.model === "ERNIE-Bot-turbo") {
       this.apiUrl =
         "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/eb-instant";
-    } else if (this.modelName === "ERNIE-Bot-4") {
+    } else if (this.model === "ERNIE-Bot-4") {
       this.apiUrl =
         "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions_pro";
-    } else if (this.modelName === "ERNIE-Speed-8K") {
+    } else if (this.model === "ERNIE-Speed-8K") {
       this.apiUrl =
         "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie_speed";
-    } else if (this.modelName === "ERNIE-Speed-128K") {
+    } else if (this.model === "ERNIE-Speed-128K") {
       this.apiUrl =
         "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie-speed-128k";
     } else {
-      throw new Error(`Invalid model name: ${this.modelName}`);
+      throw new Error(`Invalid model name: ${this.model}`);
     }
   }
 
@@ -270,7 +291,7 @@ export class ChatBaiduWenxin
    * @returns The access token for making requests to the Baidu API.
    */
   async getAccessToken(options?: this["ParsedCallOptions"]) {
-    const url = `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${this.baiduApiKey}&client_secret=${this.baiduSecretKey}`;
+    const url = `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${this.apiKey}&client_secret=${this.baiduSecretKey}`;
     const response = await fetch(url, {
       method: "POST",
       headers: {
@@ -310,7 +331,7 @@ export class ChatBaiduWenxin
    */
   identifyingParams() {
     return {
-      model_name: this.modelName,
+      model_name: this.model,
       ...this.invocationParams(),
     };
   }
