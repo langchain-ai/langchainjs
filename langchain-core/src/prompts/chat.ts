@@ -388,9 +388,9 @@ class _StringImageMessagePromptTemplate<
             InputValues<Extract<keyof RunInput, string>>
           >
         | AudioPromptTemplate<
-          InputValues<Extract<keyof RunInput, string>>,
-          string
-        >
+            InputValues<Extract<keyof RunInput, string>>,
+            string
+          >
       >;
 
   protected messageClass?: MessageClass;
@@ -465,14 +465,23 @@ class _StringImageMessagePromptTemplate<
   }
 
   static fromTemplate(
-    template: string | Array<string | _TextTemplateParam | _ImageTemplateParam | _AudioTemplateParam>,
+    template:
+      | string
+      | Array<
+          | string
+          | _TextTemplateParam
+          | _ImageTemplateParam
+          | _AudioTemplateParam
+        >,
     additionalOptions?: Record<string, unknown>
   ) {
     if (typeof template === "string") {
       return new this(PromptTemplate.fromTemplate(template));
     }
     const prompt: Array<
-      PromptTemplate<InputValues> | ImagePromptTemplate<InputValues> | AudioPromptTemplate<InputValues>
+      | PromptTemplate<InputValues>
+      | ImagePromptTemplate<InputValues>
+      | AudioPromptTemplate<InputValues>
     > = [];
     for (const item of template) {
       if (
@@ -766,7 +775,12 @@ function _coerceMessagePromptTemplateLike(
   const message = coerceMessageLikeToMessage(messagePromptTemplateLike);
   let templateData:
     | string
-    | (string | _TextTemplateParam | _ImageTemplateParam | _AudioTemplateParam)[];
+    | (
+        | string
+        | _TextTemplateParam
+        | _ImageTemplateParam
+        | _AudioTemplateParam
+      )[];
 
   if (typeof message.content === "string") {
     templateData = message.content;
@@ -947,7 +961,7 @@ export class ChatPromptTemplate<
   ): Promise<BaseMessage[]> {
     const allValues = await this.mergePartialAndUserVariables(values);
     let resultMessages: BaseMessage[] = [];
-    console.log("FORMAT MESSAGES", this.promptMessages)
+    console.log("FORMAT MESSAGES", this.promptMessages);
 
     for (const promptMessage of this.promptMessages) {
       // eslint-disable-next-line no-instanceof/no-instanceof

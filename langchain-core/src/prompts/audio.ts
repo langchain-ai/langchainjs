@@ -1,5 +1,9 @@
 import { MessageContent } from "../messages/index.js";
-import { AudioPromptValue, StringPromptValue, AudioContent } from "../prompt_values.js";
+import {
+  AudioPromptValue,
+  StringPromptValue,
+  AudioContent,
+} from "../prompt_values.js";
 import type { InputValues, PartialValues } from "../utils/types/index.js";
 import {
   BasePromptTemplate,

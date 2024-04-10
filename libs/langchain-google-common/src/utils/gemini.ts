@@ -83,15 +83,15 @@ function messageContentToAudio(
       inlineData: {
         mimeType: content.audio_url.format,
         data: content.audio_url.url,
-      }
-    }
+      },
+    };
   } else {
     return {
       inlineData: {
         mimeType: "audio/mpeg",
         data: content.audio_url,
-      }
-    }
+      },
+    };
   }
 }
 
@@ -124,7 +124,7 @@ export function messageContentToParts(content: MessageContent): GeminiPart[] {
           break;
         case "audio_url":
           if ("audio_url" in content) {
-            console.log("Mapping to audio content yo!")
+            console.log("Mapping to audio content yo!");
             return messageContentToAudio(content as MessageContentAudio);
           }
           break;

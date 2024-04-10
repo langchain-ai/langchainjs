@@ -575,7 +575,6 @@ test("Multi-modal, multi part chat prompt works with instances of BaseMessage", 
 //   return base64String;
 // }
 
-
 // test.only("ImagePrompt", async () => {
 //   const audioPath = "../libs/langchain-google-gauth/src/tests/data/audio.mp3";
 //   const audioBase64 = convertMp3ToBase64(audioPath);

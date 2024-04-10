@@ -53,10 +53,12 @@ type AudioMimeType = "audio/mpeg" | "audio/mp3" | "audio/wav";
 
 export type MessageContentAudio = {
   type: "audio_url";
-  audio_url: string | {
-    format: AudioMimeType,
-    url: string;
-  }
+  audio_url:
+    | string
+    | {
+        format: AudioMimeType;
+        url: string;
+      };
 };
 
 export type MessageContentComplex =
