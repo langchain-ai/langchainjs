@@ -1,8 +1,8 @@
 import { test, expect } from "@jest/globals";
-import { ChatOpenAI } from "@langchain/openai";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
-import { AgentExecutor, createToolCallingAgent } from "../index.js";
+import { AgentExecutor, createToolCallingAgent } from "langchain/agents";
+import { ChatAnthropic } from "../index.js";
 
 const tools = [new TavilySearchResults({ maxResults: 1 })];
 
@@ -13,8 +13,8 @@ test("createToolCallingAgent works", async () => {
     ["human", "{input}"],
     ["placeholder", "{agent_scratchpad}"],
   ]);
-  const llm = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-0125",
+  const llm = new ChatAnthropic({
+    modelName: "claude-3-sonnet-20240229",
     temperature: 0,
   });
   const agent = await createToolCallingAgent({

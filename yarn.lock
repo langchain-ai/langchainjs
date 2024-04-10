@@ -8805,7 +8805,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/anthropic@workspace:*, @langchain/anthropic@workspace:^, @langchain/anthropic@workspace:libs/langchain-anthropic":
+"@langchain/anthropic@workspace:*, @langchain/anthropic@workspace:libs/langchain-anthropic":
   version: 0.0.0-use.local
   resolution: "@langchain/anthropic@workspace:libs/langchain-anthropic"
   dependencies:
@@ -8827,6 +8827,7 @@ __metadata:
     fast-xml-parser: ^4.3.5
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
+    langchain: "workspace:^"
     prettier: ^2.8.3
     release-it: ^15.10.1
     rimraf: ^5.0.1
@@ -26515,7 +26516,6 @@ __metadata:
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^7.7.0
     "@jest/globals": ^29.5.0
-    "@langchain/anthropic": "workspace:^"
     "@langchain/community": ~0.0.41
     "@langchain/core": ~0.1.44
     "@langchain/openai": ~0.0.26

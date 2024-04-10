@@ -1190,7 +1190,7 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/langchain/",
   "scripts": {
     "build": "yarn run build:deps && yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
-    "build:deps": "yarn run turbo:command build --filter=@langchain/anthropic --filter=@langchain/openai --filter=@langchain/community --concurrency=1",
+    "build:deps": "yarn run turbo:command build --filter=@langchain/openai --filter=@langchain/community --concurrency=1",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rimraf dist/tests dist/**/tests",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rimraf dist-cjs",
     "build:watch": "yarn create-entrypoints && tsc --outDir dist/ --watch",
@@ -1229,7 +1229,6 @@
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^7.7.0",
     "@jest/globals": "^29.5.0",
-    "@langchain/anthropic": "workspace:^",
     "@langchain/scripts": "~0.0",
     "@notionhq/client": "^2.2.10",
     "@pinecone-database/pinecone": "^1.1.0",
