@@ -961,7 +961,6 @@ export class ChatPromptTemplate<
   ): Promise<BaseMessage[]> {
     const allValues = await this.mergePartialAndUserVariables(values);
     let resultMessages: BaseMessage[] = [];
-    console.log("FORMAT MESSAGES", this.promptMessages);
 
     for (const promptMessage of this.promptMessages) {
       // eslint-disable-next-line no-instanceof/no-instanceof

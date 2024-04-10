@@ -177,9 +177,6 @@ export class ImagePromptValue extends BasePromptValue {
 }
 
 export type AudioContent = {
-  /** Specifies the format of the audio data. */
-  format?: "audio/mpeg" | "audio/mp3" | "audio/wav";
-
   /** Either a URL of the audio or the base64 encoded audio data. */
   url: string;
 };
@@ -231,7 +228,6 @@ export class AudioPromptValue extends BasePromptValue {
           {
             type: "audio_url",
             audio_url: {
-              format: this.audioUrl.format,
               url: this.audioUrl.url,
             },
           },

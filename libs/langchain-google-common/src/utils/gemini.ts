@@ -5,7 +5,7 @@ import {
   BaseMessageChunk,
   BaseMessageFields,
   MessageContent,
-  MessageContentAudio,
+  MessageContentAudioUrl,
   MessageContentComplex,
   MessageContentImageUrl,
   MessageContentText,
@@ -45,6 +45,16 @@ function messageContentText(
   }
 }
 
+const extractMimeType = (str: string): { mimeType: string, data: string } | null => {
+  if (str.startsWith("data:")) {
+    return {
+      mimeType: str.split(":")[1].split(";")[0],
+      data: str.split(",")[1],
+    }
+  }
+  return null;
+}
+
 function messageContentImageUrl(
   content: MessageContentImageUrl
 ): GeminiPartInlineData | GeminiPartFileData {
@@ -57,12 +67,10 @@ function messageContentImageUrl(
     throw new Error("Missing Image URL");
   }
 
-  if (url.startsWith("data:")) {
+  const mineTypeAndData = extractMimeType(url);
+  if (mineTypeAndData) {
     return {
-      inlineData: {
-        mimeType: url.split(":")[1].split(";")[0],
-        data: url.split(",")[1],
-      },
+      inlineData: mineTypeAndData,
     };
   } else {
     // FIXME - need some way to get mime type
@@ -76,20 +84,28 @@ function messageContentImageUrl(
 }
 
 function messageContentToAudio(
-  content: MessageContentAudio
-): GeminiPartInlineData {
-  if (typeof content.audio_url !== "string") {
+  content: MessageContentAudioUrl
+): GeminiPartInlineData | GeminiPartFileData {
+  const url: string =
+  typeof content.audio_url === "string"
+    ? content.audio_url
+    : content.audio_url.url;
+
+  if (!url) {
+    throw new Error("Missing Audio URL");
+  }
+
+  const mineTypeAndData = extractMimeType(url);
+  if (mineTypeAndData) {
     return {
-      inlineData: {
-        mimeType: content.audio_url.format,
-        data: content.audio_url.url,
-      },
+      inlineData: mineTypeAndData,
     };
   } else {
+    // FIXME - need some way to get mime type
     return {
-      inlineData: {
+      fileData: {
         mimeType: "audio/mpeg",
-        data: content.audio_url,
+        fileUri: url,
       },
     };
   }
@@ -124,8 +140,7 @@ export function messageContentToParts(content: MessageContent): GeminiPart[] {
           break;
         case "audio_url":
           if ("audio_url" in content) {
-            console.log("Mapping to audio content yo!");
-            return messageContentToAudio(content as MessageContentAudio);
+            return messageContentToAudio(content as MessageContentAudioUrl);
           }
           break;
         default:

@@ -49,14 +49,11 @@ export type MessageContentImageUrl = {
   image_url: string | { url: string; detail?: ImageDetail };
 };
 
-type AudioMimeType = "audio/mpeg" | "audio/mp3" | "audio/wav";
-
-export type MessageContentAudio = {
+export type MessageContentAudioUrl = {
   type: "audio_url";
   audio_url:
     | string
     | {
-        format: AudioMimeType;
         url: string;
       };
 };
@@ -64,7 +61,7 @@ export type MessageContentAudio = {
 export type MessageContentComplex =
   | MessageContentText
   | MessageContentImageUrl
-  | MessageContentAudio
+  | MessageContentAudioUrl
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   | (Record<string, any> & { type?: "text" | "image_url" | string })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

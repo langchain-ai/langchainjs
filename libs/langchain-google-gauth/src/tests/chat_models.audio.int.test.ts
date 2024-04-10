@@ -14,8 +14,9 @@ test("Gemini can understand audio", async () => {
     temperature: 0,
   });
 
-  const audioPath = "./src/tests/data/audio_lance.mp3";
+  const audioPath = "./src/tests/data/audio.mp3";
   const audioBase64 = convertMp3ToBase64(audioPath);
+
   const prompt = ChatPromptTemplate.fromMessages([
     [
       "human",
@@ -23,8 +24,7 @@ test("Gemini can understand audio", async () => {
         {
           type: "audio_url",
           audio_url: {
-            format: "audio/mp3",
-            url: audioBase64,
+            url: `data:audio/mp3;base64,${audioBase64}`,
           },
         },
         {

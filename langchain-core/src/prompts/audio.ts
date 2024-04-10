@@ -140,17 +140,9 @@ export class AudioPromptTemplate<
         formatted[key] = value;
       }
     }
-    const format = values.format || formatted.format;
     const url = values.url || formatted.url;
-    if (!format) {
-      throw new Error("Must provide an audio format type.");
-    }
 
-    const output: AudioContent = { url };
-    if (format) {
-      output.format = format;
-    }
-    return output as FormatOutput;
+    return { url } as FormatOutput;
   }
 
   /**
