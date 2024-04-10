@@ -32,6 +32,18 @@ import type {
 } from "../types.js";
 import { GoogleAISafetyError } from "./safety.js";
 
+const extractMimeType = (
+  str: string
+): { mimeType: string; data: string } | null => {
+  if (str.startsWith("data:")) {
+    return {
+      mimeType: str.split(":")[1].split(";")[0],
+      data: str.split(",")[1],
+    };
+  }
+  return null;
+};
+
 function messageContentText(
   content: MessageContentText
 ): GeminiPartText | null {
@@ -51,23 +63,46 @@ function messageContentImageUrl(
     typeof content.image_url === "string"
       ? content.image_url
       : content.image_url.url;
-
   if (!url) {
     throw new Error("Missing Image URL");
   }
 
-  if (url.startsWith("data:")) {
+  const mineTypeAndData = extractMimeType(url);
+  if (mineTypeAndData) {
     return {
-      inlineData: {
-        mimeType: url.split(":")[1].split(";")[0],
-        data: url.split(",")[1],
-      },
+      inlineData: mineTypeAndData,
     };
   } else {
     // FIXME - need some way to get mime type
     return {
       fileData: {
         mimeType: "image/png",
+        fileUri: url,
+      },
+    };
+  }
+}
+
+function messageContentToAudio(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  content: Record<string, any>
+): GeminiPartInlineData | GeminiPartFileData {
+  const {url} = content.data;
+
+  if (!url) {
+    throw new Error("Missing Audio URL");
+  }
+
+  const mineTypeAndData = extractMimeType(url);
+  if (mineTypeAndData) {
+    return {
+      inlineData: mineTypeAndData,
+    };
+  } else {
+    // FIXME - need some way to get mime type
+    return {
+      fileData: {
+        mimeType: "audio/mpeg",
         fileUri: url,
       },
     };
@@ -99,6 +134,11 @@ export function messageContentToParts(content: MessageContent): GeminiPart[] {
           if ("image_url" in content) {
             // Type guard for MessageContentImageUrl
             return messageContentImageUrl(content as MessageContentImageUrl);
+          }
+          break;
+        case "generic":
+          if ("data" in content) {
+            return messageContentToAudio(content);
           }
           break;
         default:

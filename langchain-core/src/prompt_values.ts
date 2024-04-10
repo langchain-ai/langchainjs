@@ -175,3 +175,50 @@ export class ImagePromptValue extends BasePromptValue {
     ];
   }
 }
+
+export interface GenericObjectPromptValueFields {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data: Record<string, any>;
+}
+
+/**
+ * Class that represents a generic object prompt value.
+ */
+export class GenericObjectPromptValue extends BasePromptValue {
+  lc_namespace = ["langchain_core", "prompt_values"];
+
+  lc_serializable = true;
+
+  static lc_name() {
+    return "GenericObjectPromptValue";
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data: Record<string, any>;
+
+  /** @ignore */
+  value: string;
+
+
+  constructor(fields: GenericObjectPromptValueFields) {
+    super(fields);
+    this.data = fields.data;
+  }
+
+  toString() {
+    return JSON.stringify(this.data, null, 2)
+  }
+
+  toChatMessages() {
+    return [
+      new HumanMessage({
+        content: [
+          {
+            type: "generic",
+            data: this.data,
+          },
+        ],
+      }),
+    ];
+  }
+}

@@ -568,3 +568,28 @@ test("Multi-modal, multi part chat prompt works with instances of BaseMessage", 
   });
   expect(messages).toMatchSnapshot();
 });
+
+test.only("Gemini can understand audio", async () => {
+  const audioBase64 = `fs.readFileSync(audioPath, "base64");`
+
+  const prompt = ChatPromptTemplate.fromMessages([
+    [
+      "human",
+      [
+        {
+          type: "generic",
+          data: {
+            url: `data:audio/mp3;base64,${audioBase64}`,
+          },
+        },
+        {
+          type: "text",
+          text: "Summarize this audio. Be very concise.",
+        },
+      ],
+    ],
+  ]);
+
+  const pInvoke = await prompt.invoke({});
+  console.log(JSON.stringify(pInvoke, null, 2))
+});
