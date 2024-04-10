@@ -569,14 +569,13 @@ export class ChatOpenAI<
     const promptValueStrings = promptValues.map((p) => p.toString());
     if (promptValueStrings.every((p) => p === promptValueStrings[0])) {
       const result = await this.generatePrompt(
-        promptValues,
+        [promptValues[0]],
         { ...options, n: inputs.length } as CallOptions,
         options?.callbacks
       );
       // TODO: Remove cast after figuring out inheritance
-      return result.generations
-        .map((g) => g[0] as ChatGeneration)
-        .map((cg) => cg.message as BaseMessageChunk);
+      const chatGenerations = result.generations[0] as ChatGeneration[];
+      return chatGenerations.map((g) => g.message as BaseMessageChunk);
     } else {
       return super.batch(inputs, options);
     }
