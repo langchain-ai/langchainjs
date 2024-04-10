@@ -31,8 +31,12 @@ import {
   RunnableSequence,
 } from "@langchain/core/runnables";
 import { isZodSchema } from "@langchain/core/utils/types";
+import { ToolCall } from "@langchain/core/messages/tool";
 import { z } from "zod";
-import { AnthropicToolsOutputParser } from "./output_parsers.js";
+import {
+  AnthropicToolsOutputParser,
+  extractToolCalls,
+} from "./output_parsers.js";
 import { AnthropicToolResponse } from "./types.js";
 
 type AnthropicTool = {
@@ -88,14 +92,15 @@ function anthropicResponseToChatMessages(
       },
     ];
   } else {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const castMessage = messages as any;
+    const toolCalls = extractToolCalls(messages);
     const generations: ChatGeneration[] = [
       {
         text: "",
         message: new AIMessage({
-          content: castMessage,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          content: messages as any,
           additional_kwargs: additionalKwargs,
+          tool_calls: toolCalls,
         }),
       },
     ];
@@ -205,7 +210,7 @@ type Kwargs = Record<string, any>;
 export class ChatAnthropicMessages<
     CallOptions extends ChatAnthropicCallOptions = ChatAnthropicCallOptions
   >
-  extends BaseChatModel<CallOptions>
+  extends BaseChatModel<CallOptions, AIMessageChunk>
   implements AnthropicInput
 {
   static lc_name() {
@@ -411,11 +416,20 @@ export class ChatAnthropicMessages<
         params,
         requestOptions
       );
-
+      const result = generations[0].message as AIMessage;
+      const toolCallChunks = result.tool_calls?.map(
+        (toolCall: ToolCall, index: number) => ({
+          name: toolCall.name,
+          args: JSON.stringify(toolCall.args),
+          id: toolCall.id,
+          index,
+        })
+      );
       yield new ChatGenerationChunk({
         message: new AIMessageChunk({
-          content: generations[0].message.content,
-          additional_kwargs: generations[0].message.additional_kwargs,
+          content: result.content,
+          additional_kwargs: result.additional_kwargs,
+          tool_call_chunks: toolCallChunks,
         }),
         text: generations[0].text,
       });

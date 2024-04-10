@@ -18,7 +18,7 @@ import {
   ToolMessageChunk,
   ChatMessageChunk,
   FunctionMessageChunk,
-  ToolCall,
+  OpenAIToolCall,
 } from "@langchain/core/messages";
 import type {
   BaseLanguageModelInput,
@@ -48,7 +48,11 @@ import {
   JsonOutputParser,
   StructuredOutputParser,
 } from "@langchain/core/output_parsers";
-import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
+import {
+  JsonOutputKeyToolsParser,
+  makeInvalidToolCall,
+  parseToolCall,
+} from "@langchain/core/output_parsers/openai_tools";
 import {
   Runnable,
   RunnablePassthrough,
@@ -190,7 +194,9 @@ function convertMessagesToMistralMessages(
     );
   };
 
-  const getTools = (toolCalls: ToolCall[] | undefined): MistralAIToolCalls[] =>
+  const getTools = (
+    toolCalls: Omit<OpenAIToolCall, "index">[] | undefined
+  ): MistralAIToolCalls[] =>
     toolCalls?.map((toolCall) => ({
       id: "null",
       type: "function" as ToolType.function,
@@ -211,16 +217,29 @@ function mistralAIResponseToChatMessage(
   // MistralAI SDK does not include tool_calls in the non
   // streaming return type, so we need to extract it like this
   // to satisfy typescript.
-  let toolCalls: MistralAIToolCalls[] = [];
-  if ("tool_calls" in message) {
-    toolCalls = message.tool_calls as MistralAIToolCalls[];
+  let rawToolCalls: MistralAIToolCalls[] = [];
+  if ("tool_calls" in message && Array.isArray(message.tool_calls)) {
+    rawToolCalls = message.tool_calls as MistralAIToolCalls[];
   }
   switch (message.role) {
     case "assistant":
+      const toolCalls = [];
+      const invalidToolCalls = [];
+      for (const rawToolCall of rawToolCalls) {
+        try {
+          const parsed = parseToolCall(rawToolCall, { returnId: true });
+          toolCalls.push({ ...parsed, id: undefined });
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (e: any) {
+          invalidToolCalls.push(makeInvalidToolCall(rawToolCall, e.message));
+        }
+      }
       return new AIMessage({
         content: message.content ?? "",
+        tool_calls: toolCalls,
+        invalid_tool_calls: invalidToolCalls,
         additional_kwargs: {
-          tool_calls: toolCalls,
+          tool_calls: rawToolCalls,
         },
       });
     default:
@@ -239,7 +258,7 @@ function _convertDeltaToMessageChunk(delta: {
   // Our merge additional kwargs util function will throw unless there
   // is an index key in each tool object (as seen in OpenAI's) so we
   // need to insert it here.
-  const toolCallsWithIndex = delta.tool_calls?.length
+  const rawToolCallChunksWithIndex = delta.tool_calls?.length
     ? delta.tool_calls?.map((toolCall, index) => ({
         ...toolCall,
         index,
@@ -249,15 +268,24 @@ function _convertDeltaToMessageChunk(delta: {
   let role = "assistant";
   if (delta.role) {
     role = delta.role;
-  } else if (toolCallsWithIndex) {
+  } else if (rawToolCallChunksWithIndex !== undefined) {
     role = "function";
   }
   const content = delta.content ?? "";
   let additional_kwargs;
-  if (toolCallsWithIndex) {
+  const toolCallChunks = [];
+  if (rawToolCallChunksWithIndex !== undefined) {
     additional_kwargs = {
-      tool_calls: toolCallsWithIndex,
+      tool_calls: rawToolCallChunksWithIndex,
     };
+    for (const rawToolCallChunk of rawToolCallChunksWithIndex) {
+      toolCallChunks.push({
+        name: rawToolCallChunk.function?.name,
+        args: rawToolCallChunk.function?.arguments,
+        id: rawToolCallChunk.id,
+        index: rawToolCallChunk.index,
+      });
+    }
   } else {
     additional_kwargs = {};
   }
@@ -265,12 +293,16 @@ function _convertDeltaToMessageChunk(delta: {
   if (role === "user") {
     return new HumanMessageChunk({ content });
   } else if (role === "assistant") {
-    return new AIMessageChunk({ content, additional_kwargs });
+    return new AIMessageChunk({
+      content,
+      tool_call_chunks: toolCallChunks,
+      additional_kwargs,
+    });
   } else if (role === "tool") {
     return new ToolMessageChunk({
       content,
       additional_kwargs,
-      tool_call_id: toolCallsWithIndex?.[0].id ?? "",
+      tool_call_id: rawToolCallChunksWithIndex?.[0].id ?? "",
     });
   } else if (role === "function") {
     return new FunctionMessageChunk({
@@ -294,7 +326,7 @@ function _convertStructuredToolToMistralTool(
 export class ChatMistralAI<
     CallOptions extends MistralAICallOptions = MistralAICallOptions
   >
-  extends BaseChatModel<CallOptions>
+  extends BaseChatModel<CallOptions, AIMessageChunk>
   implements ChatMistralAIInput
 {
   // Used for tracing, replace with the same name as your class

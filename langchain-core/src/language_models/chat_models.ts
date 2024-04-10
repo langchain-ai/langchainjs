@@ -94,8 +94,10 @@ interface ChatModelGenerateCachedParameters<
  * provides methods for generating chat based on input messages.
  */
 export abstract class BaseChatModel<
-  CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions
-> extends BaseLanguageModel<BaseMessageChunk, CallOptions> {
+  CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
+  // TODO: Fix the parameter order on the next minor version.
+  OutputMessageType extends BaseMessageChunk = BaseMessageChunk
+> extends BaseLanguageModel<OutputMessageType, CallOptions> {
   declare ParsedCallOptions: Omit<
     CallOptions,
     keyof RunnableConfig & "timeout"
@@ -132,7 +134,7 @@ export abstract class BaseChatModel<
   async invoke(
     input: BaseLanguageModelInput,
     options?: CallOptions
-  ): Promise<BaseMessageChunk> {
+  ): Promise<OutputMessageType> {
     const promptValue = BaseChatModel._convertInputToPromptValue(input);
     const result = await this.generatePrompt(
       [promptValue],
@@ -141,7 +143,7 @@ export abstract class BaseChatModel<
     );
     const chatGeneration = result.generations[0][0] as ChatGeneration;
     // TODO: Remove cast after figuring out inheritance
-    return chatGeneration.message as BaseMessageChunk;
+    return chatGeneration.message as OutputMessageType;
   }
 
   // eslint-disable-next-line require-yield
@@ -156,7 +158,7 @@ export abstract class BaseChatModel<
   async *_streamIterator(
     input: BaseLanguageModelInput,
     options?: CallOptions
-  ): AsyncGenerator<BaseMessageChunk> {
+  ): AsyncGenerator<OutputMessageType> {
     // Subclass check required to avoid double callbacks with default implementation
     if (
       this._streamResponseChunks ===
@@ -203,7 +205,7 @@ export abstract class BaseChatModel<
             ...chunk.generationInfo,
             ...chunk.message.response_metadata,
           };
-          yield chunk.message;
+          yield chunk.message as OutputMessageType;
           if (!generationChunk) {
             generationChunk = chunk;
           } else {

@@ -107,7 +107,10 @@ describe("ChatGroq", () => {
       })
       .invoke([message]);
     console.log(JSON.stringify(res));
-    expect(res.additional_kwargs.tool_calls?.length).toBeGreaterThan(0);
+    expect(res.additional_kwargs.tool_calls?.length).toEqual(1);
+    expect(
+      JSON.parse(res.additional_kwargs.tool_calls[0].function.arguments)
+    ).toEqual(res.tool_calls[0].args);
   });
 
   test.skip("Model is compatible with OpenAI tools agent and Agent Executor", async () => {

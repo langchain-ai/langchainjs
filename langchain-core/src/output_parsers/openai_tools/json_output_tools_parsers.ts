@@ -2,6 +2,7 @@ import { z } from "zod";
 import { ChatGeneration } from "../../outputs.js";
 import { BaseLLMOutputParser, OutputParserException } from "../base.js";
 import { parsePartialJson } from "../json.js";
+import { InvalidToolCall, ToolCall } from "../../messages/tool.js";
 
 export type ParsedToolCall = {
   id?: string;
@@ -27,20 +28,48 @@ export type JsonOutputToolsParserParams = {
 export function parseToolCall(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   rawToolCall: Record<string, any>,
-  options?: { returnId?: boolean }
-) {
+  options: { returnId?: boolean; partial: true }
+): ToolCall | undefined;
+export function parseToolCall(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  rawToolCall: Record<string, any>,
+  options?: { returnId?: boolean; partial?: false }
+): ToolCall;
+export function parseToolCall(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  rawToolCall: Record<string, any>,
+  options?: { returnId?: boolean; partial?: boolean }
+): ToolCall | undefined {
   if (rawToolCall.function === undefined) {
     return undefined;
   }
   let functionArgs;
-  try {
-    functionArgs = parsePartialJson(rawToolCall.function.arguments ?? "{}");
-  } catch (e) {
-    return undefined;
+  if (options?.partial) {
+    try {
+      functionArgs = parsePartialJson(rawToolCall.function.arguments ?? "{}");
+    } catch (e) {
+      return undefined;
+    }
+  } else {
+    try {
+      functionArgs = JSON.parse(rawToolCall.function.arguments);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      throw new OutputParserException(
+        [
+          `Function "${rawToolCall.function.name}" arguments:`,
+          ``,
+          rawToolCall.function.arguments,
+          ``,
+          `are not valid JSON.`,
+          `Error: ${e.message}`,
+        ].join("\n")
+      );
+    }
   }
-  // @ts-expect-error name and arguemnts are defined by Object.defineProperty
-  const parsedToolCall: ParsedToolCall = {
-    type: rawToolCall.function.name,
+
+  const parsedToolCall: ToolCall = {
+    name: rawToolCall.function.name,
     args: functionArgs,
   };
 
@@ -48,21 +77,20 @@ export function parseToolCall(
     parsedToolCall.id = rawToolCall.id;
   }
 
-  // backward-compatibility with previous
-  // versions of Langchain JS, which uses `name` and `arguments`
-  Object.defineProperty(parsedToolCall, "name", {
-    get() {
-      return this.type;
-    },
-  });
-
-  Object.defineProperty(parsedToolCall, "arguments", {
-    get() {
-      return this.args;
-    },
-  });
-
   return parsedToolCall;
+}
+
+export function makeInvalidToolCall(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  rawToolCall: Record<string, any>,
+  errorMsg?: string
+): InvalidToolCall {
+  return {
+    name: rawToolCall.function?.name,
+    args: rawToolCall.function?.arguments,
+    id: rawToolCall.id,
+    error: errorMsg,
+  };
 }
 
 /**
@@ -102,9 +130,28 @@ export class JsonOutputToolsParser extends BaseLLMOutputParser<
     const clonedToolCalls = JSON.parse(JSON.stringify(toolCalls));
     const parsedToolCalls = [];
     for (const toolCall of clonedToolCalls) {
-      const parsedToolCall = parseToolCall(toolCall);
+      const parsedToolCall = parseToolCall(toolCall, { partial: true });
       if (parsedToolCall !== undefined) {
-        parsedToolCalls.push(parsedToolCall);
+        // backward-compatibility with previous
+        // versions of Langchain JS, which uses `name` and `arguments`
+        // @ts-expect-error name and arguemnts are defined by Object.defineProperty
+        const backwardsCompatibleToolCall: ParsedToolCall = {
+          type: parsedToolCall.name,
+          args: parsedToolCall.args,
+          id: parsedToolCall.id,
+        };
+        Object.defineProperty(backwardsCompatibleToolCall, "name", {
+          get() {
+            return this.type;
+          },
+        });
+
+        Object.defineProperty(backwardsCompatibleToolCall, "arguments", {
+          get() {
+            return this.args;
+          },
+        });
+        parsedToolCalls.push(backwardsCompatibleToolCall);
       }
     }
     return parsedToolCalls;

@@ -12,6 +12,7 @@ import {
   SystemMessageChunk,
   ToolMessage,
   ToolMessageChunk,
+  OpenAIToolCall,
 } from "@langchain/core/messages";
 import {
   type ChatGeneration,
@@ -44,7 +45,11 @@ import {
   StructuredOutputParser,
   type BaseLLMOutputParser,
 } from "@langchain/core/output_parsers";
-import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
+import {
+  JsonOutputKeyToolsParser,
+  makeInvalidToolCall,
+  parseToolCall,
+} from "@langchain/core/output_parsers/openai_tools";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import type {
   AzureOpenAIInput,
@@ -120,11 +125,29 @@ export function messageToOpenAIRole(message: BaseMessage): OpenAIRoleEnum {
 function openAIResponseToChatMessage(
   message: OpenAIClient.Chat.Completions.ChatCompletionMessage
 ): BaseMessage {
+  const rawToolCalls: OpenAIToolCall[] | undefined = message.tool_calls as
+    | OpenAIToolCall[]
+    | undefined;
   switch (message.role) {
     case "assistant":
-      return new AIMessage(message.content || "", {
-        function_call: message.function_call,
-        tool_calls: message.tool_calls,
+      const toolCalls = [];
+      const invalidToolCalls = [];
+      for (const rawToolCall of rawToolCalls ?? []) {
+        try {
+          toolCalls.push(parseToolCall(rawToolCall, { returnId: true }));
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (e: any) {
+          invalidToolCalls.push(makeInvalidToolCall(rawToolCall, e.message));
+        }
+      }
+      return new AIMessage({
+        content: message.content || "",
+        tool_calls: toolCalls,
+        invalid_tool_calls: invalidToolCalls,
+        additional_kwargs: {
+          function_call: message.function_call,
+          tool_calls: rawToolCalls,
+        },
       });
     default:
       return new ChatMessage(message.content || "", message.role ?? "unknown");
@@ -153,7 +176,22 @@ function _convertDeltaToMessageChunk(
   if (role === "user") {
     return new HumanMessageChunk({ content });
   } else if (role === "assistant") {
-    return new AIMessageChunk({ content, additional_kwargs });
+    const toolCallChunks = [];
+    if (Array.isArray(delta.tool_calls)) {
+      for (const rawToolCall of delta.tool_calls) {
+        toolCallChunks.push({
+          name: rawToolCall.function?.name,
+          args: rawToolCall.function?.arguments,
+          id: rawToolCall.id,
+          index: rawToolCall.index,
+        });
+      }
+    }
+    return new AIMessageChunk({
+      content,
+      tool_call_chunks: toolCallChunks,
+      additional_kwargs,
+    });
   } else if (role === "system") {
     return new SystemMessageChunk({ content });
   } else if (role === "function") {
@@ -244,7 +282,7 @@ export interface ChatOpenAICallOptions
 export class ChatOpenAI<
     CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions
   >
-  extends BaseChatModel<CallOptions>
+  extends BaseChatModel<CallOptions, AIMessageChunk>
   implements OpenAIChatInput, AzureOpenAIInput
 {
   static lc_name() {

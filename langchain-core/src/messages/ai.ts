@@ -63,11 +63,11 @@ export class AIMessage extends BaseMessage {
       ) {
         console.warn(
           [
-            "New LangChain packages are available that more efficiently handle ",
-            "tool calling. Please upgrade your packages to versions that set ",
-            "message tool calls. e.g., `yarn add @langchain/anthropic`, ",
+            "New LangChain packages are available that more efficiently handle",
+            "tool calling.\n\nPlease upgrade your packages to versions that set",
+            "message tool calls. e.g., `yarn add @langchain/anthropic`,",
             "yarn add @langchain/openai`, etc.",
-          ].join("\n")
+          ].join(" ")
         );
       }
       try {

@@ -127,8 +127,14 @@ test("Can call tools", async () => {
   ]);
   const chain = prompt.pipe(model);
   const response = await chain.invoke({});
+  console.log(response);
+  expect(response.tool_calls?.length).toEqual(1);
+  expect(response.tool_calls?.[0].args).toEqual(
+    JSON.parse(
+      response.additional_kwargs.tool_calls?.[0].function.arguments ?? "{}"
+    )
+  );
   expect("tool_calls" in response.additional_kwargs).toBe(true);
-  console.log(response.additional_kwargs.tool_calls?.[0]);
   expect(response.additional_kwargs.tool_calls?.[0].function.name).toBe(
     "calculator"
   );

@@ -15,7 +15,7 @@ type FireworksUnsupportedArgs =
   | "logitBias"
   | "functions";
 
-type FireworksUnsupportedCallOptions = "functions" | "function_call" | "tools";
+type FireworksUnsupportedCallOptions = "functions" | "function_call";
 
 export type ChatFireworksCallOptions = Partial<
   Omit<ChatOpenAICallOptions, FireworksUnsupportedCallOptions>

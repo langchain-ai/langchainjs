@@ -15,8 +15,8 @@ import {
   ChatMessageChunk,
   HumanMessageChunk,
   SystemMessageChunk,
-  ToolCall,
   ToolMessage,
+  OpenAIToolCall,
 } from "@langchain/core/messages";
 import {
   ChatGeneration,
@@ -52,7 +52,11 @@ import {
   JsonOutputParser,
   StructuredOutputParser,
 } from "@langchain/core/output_parsers";
-import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
+import {
+  JsonOutputKeyToolsParser,
+  parseToolCall,
+} from "@langchain/core/output_parsers/openai_tools";
+import { makeInvalidToolCall } from "@langchain/core/output_parsers/openai_tools";
 
 export interface ChatGroqCallOptions extends BaseChatModelCallOptions {
   headers?: Record<string, string>;
@@ -141,14 +145,26 @@ function convertMessagesToGroqParams(
 function groqResponseToChatMessage(
   message: ChatCompletion.Choice.Message
 ): BaseMessage {
-  const toolCalls: ToolCall[] | undefined = message.tool_calls as
-    | ToolCall[]
+  const rawToolCalls: OpenAIToolCall[] | undefined = message.tool_calls as
+    | OpenAIToolCall[]
     | undefined;
   switch (message.role) {
     case "assistant":
+      const toolCalls = [];
+      const invalidToolCalls = [];
+      for (const rawToolCall of rawToolCalls ?? []) {
+        try {
+          toolCalls.push(parseToolCall(rawToolCall, { returnId: true }));
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (e: any) {
+          invalidToolCalls.push(makeInvalidToolCall(rawToolCall, e.message));
+        }
+      }
       return new AIMessage({
         content: message.content || "",
-        additional_kwargs: { tool_calls: toolCalls },
+        additional_kwargs: { tool_calls: rawToolCalls },
+        tool_calls: toolCalls,
+        invalid_tool_calls: invalidToolCalls,
       });
     default:
       return new ChatMessage(message.content || "", message.role ?? "unknown");
@@ -308,17 +324,26 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
         options,
         runManager
       );
-      const generationMessage = result.generations[0].message;
+      const generationMessage = result.generations[0].message as AIMessage;
       if (
         generationMessage === undefined ||
         typeof generationMessage.content !== "string"
       ) {
         throw new Error("Could not parse Groq output.");
       }
+      const toolCallChunks = generationMessage.tool_calls?.map(
+        (toolCall, i) => ({
+          name: toolCall.name,
+          args: JSON.stringify(toolCall.args),
+          id: toolCall.id,
+          index: i,
+        })
+      );
       yield new ChatGenerationChunk({
         message: new AIMessageChunk({
           content: generationMessage.content,
           additional_kwargs: generationMessage.additional_kwargs,
+          tool_call_chunks: toolCallChunks,
         }),
         text: generationMessage.content,
       });

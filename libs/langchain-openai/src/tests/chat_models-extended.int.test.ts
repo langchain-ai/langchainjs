@@ -63,7 +63,16 @@ test("Test ChatOpenAI tool calling", async () => {
     ["human", "What's the weather like in San Francisco, Tokyo, and Paris?"],
   ]);
   console.log(JSON.stringify(res));
-  expect(res.additional_kwargs.tool_calls?.length).toBeGreaterThan(1);
+  expect(res.additional_kwargs.tool_calls?.length).toEqual(3);
+  expect(res.tool_calls[0].args).toEqual(
+    JSON.parse(res.additional_kwargs.tool_calls[0].function.arguments)
+  );
+  expect(res.tool_calls[1].args).toEqual(
+    JSON.parse(res.additional_kwargs.tool_calls[1].function.arguments)
+  );
+  expect(res.tool_calls[2].args).toEqual(
+    JSON.parse(res.additional_kwargs.tool_calls[2].function.arguments)
+  );
 });
 
 test("Test ChatOpenAI streaming logprobs", async () => {
