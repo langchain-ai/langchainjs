@@ -1,4 +1,7 @@
-import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
 import { ChatVertexAI } from "@langchain/google-vertexai";
 import { HumanMessage } from "@langchain/core/messages";
 import fs from "fs";
