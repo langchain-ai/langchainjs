@@ -363,7 +363,6 @@ function _formatMessagesForAnthropic(messages: BaseMessage[]): {
       };
     }
   });
-  console.log(JSON.stringify(formattedMessages));
   return {
     messages: formattedMessages,
     system,
