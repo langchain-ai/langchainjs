@@ -45,15 +45,17 @@ function messageContentText(
   }
 }
 
-const extractMimeType = (str: string): { mimeType: string, data: string } | null => {
+const extractMimeType = (
+  str: string
+): { mimeType: string; data: string } | null => {
   if (str.startsWith("data:")) {
     return {
       mimeType: str.split(":")[1].split(";")[0],
       data: str.split(",")[1],
-    }
+    };
   }
   return null;
-}
+};
 
 function messageContentImageUrl(
   content: MessageContentImageUrl
@@ -87,9 +89,9 @@ function messageContentToAudio(
   content: MessageContentAudioUrl
 ): GeminiPartInlineData | GeminiPartFileData {
   const url: string =
-  typeof content.audio_url === "string"
-    ? content.audio_url
-    : content.audio_url.url;
+    typeof content.audio_url === "string"
+      ? content.audio_url
+      : content.audio_url.url;
 
   if (!url) {
     throw new Error("Missing Audio URL");
