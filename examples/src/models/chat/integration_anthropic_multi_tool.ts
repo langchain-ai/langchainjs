@@ -33,7 +33,7 @@ const tools = [
 
 const model = new ChatAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
-  modelName: "claude-3-opus-20240229",
+  model: "claude-3-opus-20240229",
 }).bind({
   tools,
 });

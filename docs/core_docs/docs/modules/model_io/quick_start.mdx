@@ -39,10 +39,10 @@ We can then initialize the model:
 import { OpenAI, ChatOpenAI } from "@langchain/openai";
 
 const llm = new OpenAI({
-  modelName: "gpt-3.5-turbo-instruct",
+  model: "gpt-3.5-turbo-instruct",
 });
 const chatModel = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo",
+  model: "gpt-3.5-turbo",
 });
 ```
 
@@ -80,11 +80,11 @@ import { ChatOllama } from "@langchain/community/chat_models/ollama";
 
 const llm = new Ollama({
   baseUrl: "http://localhost:11434", // Default value
-  modelName: "mistral",
+  model: "mistral",
 });
 const chatModel = new ChatOllama({
   baseUrl: "http://localhost:11434", // Default value
-  modelName: "mistral",
+  model: "mistral",
 });
 ```
 
@@ -111,7 +111,7 @@ We can then initialize the model:
 import { ChatAnthropic } from "@langchain/anthropic";
 
 const chatModel = new ChatAnthropic({
-  modelName: "claude-3-sonnet-20240229",
+  model: "claude-3-sonnet-20240229",
 });
 ```
 
@@ -146,7 +146,7 @@ We can then initialize the model:
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 
 const chatModel = new ChatGoogleGenerativeAI({
-  modelName: "gemini-1.0-pro",
+  model: "gemini-1.0-pro",
 });
 ```
 

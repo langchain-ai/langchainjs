@@ -7,7 +7,7 @@ export const run = async () => {
       {
         provider: "openai",
         virtual_key: "open-ai-key-1234",
-        modelName: "text-davinci-003",
+        model: "text-davinci-003",
         max_tokens: 2000,
       },
     ],

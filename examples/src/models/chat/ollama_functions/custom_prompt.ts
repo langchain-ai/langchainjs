@@ -15,7 +15,7 @@ To use a tool, respond with a JSON object with the following structure:
 
 const model = new OllamaFunctions({
   temperature: 0.1,
-  modelName: "mistral",
+  model: "mistral",
   toolSystemPromptTemplate,
 }).bind({
   functions: [

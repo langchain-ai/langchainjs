@@ -28,7 +28,7 @@ const retriever = vectorstore.asRetriever();
 // Llama 2 7b wrapped by Ollama
 const model = new Ollama({
   baseUrl: "http://localhost:11434",
-  modelName: "llama2",
+  model: "llama2",
 });
 
 const template = `Use the following pieces of context to answer the question at the end.

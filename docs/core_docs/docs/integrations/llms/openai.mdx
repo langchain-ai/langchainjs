@@ -18,7 +18,7 @@ import UnifiedModelParamsTooltip from "@mdx_components/unified_model_params_tool
 import { OpenAI } from "@langchain/openai";
 
 const model = new OpenAI({
-  modelName: "gpt-3.5-turbo-instruct", // Defaults to "gpt-3.5-turbo-instruct" if no model provided.
+  model: "gpt-3.5-turbo-instruct", // Defaults to "gpt-3.5-turbo-instruct" if no model provided.
   temperature: 0.9,
   apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.OPENAI_API_KEY
 });

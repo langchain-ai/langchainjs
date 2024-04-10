@@ -18,7 +18,7 @@ const memory = new MotorheadMemory({
 });
 
 const model = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo",
+  model: "gpt-3.5-turbo",
   temperature: 0,
 });
 

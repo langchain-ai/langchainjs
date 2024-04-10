@@ -21,7 +21,7 @@ const textSplitterQA = new TokenTextSplitter({
 const docsQA = await textSplitterQA.splitDocuments(docs);
 
 const llm = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo-1106",
+  model: "gpt-3.5-turbo-1106",
   temperature: 0.2,
 });
 

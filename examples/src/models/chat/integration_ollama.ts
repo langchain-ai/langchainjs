@@ -3,7 +3,7 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 
 const model = new ChatOllama({
   baseUrl: "http://localhost:11434", // Default value
-  modelName: "llama2", // Default value
+  model: "llama2", // Default value
 });
 
 const stream = await model

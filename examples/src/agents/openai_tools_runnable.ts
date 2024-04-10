@@ -16,7 +16,7 @@ import { RunnableSequence } from "@langchain/core/runnables";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 
 const model = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo-1106",
+  model: "gpt-3.5-turbo-1106",
   temperature: 0,
 });
 

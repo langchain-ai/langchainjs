@@ -6,7 +6,7 @@ import { Tool } from "@langchain/core/tools";
 
 const model = new RaycastAI({
   rateLimitPerMinute: 10, // It is 10 by default so you can omit this line
-  modelName: "gpt-3.5-turbo",
+  model: "gpt-3.5-turbo",
   creativity: 0, // `creativity` is a term used by Raycast which is equivalent to `temperature` in some other LLMs
 });
 

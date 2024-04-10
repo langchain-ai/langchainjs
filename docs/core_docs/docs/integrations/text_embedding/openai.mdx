@@ -16,7 +16,7 @@ import { OpenAIEmbeddings } from "@langchain/openai";
 const embeddings = new OpenAIEmbeddings({
   apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.OPENAI_API_KEY
   batchSize: 512, // Default value if omitted is 512. Max is 2048
-  modelName: "text-embedding-3-large",
+  model: "text-embedding-3-large",
 });
 ```
 
@@ -29,7 +29,7 @@ With the `text-embedding-3` class of models, you can specify the size of the emb
 
 ```typescript
 const embeddings = new OpenAIEmbeddings({
-  modelName: "text-embedding-3-large",
+  model: "text-embedding-3-large",
 });
 
 const vectors = await embeddings.embedDocuments(["some text"]);
@@ -44,7 +44,7 @@ But by passing in `dimensions: 1024` we can reduce the size of our embeddings to
 
 ```typescript
 const embeddings1024 = new OpenAIEmbeddings({
-  modelName: "text-embedding-3-large",
+  model: "text-embedding-3-large",
   dimensions: 1024,
 });
 

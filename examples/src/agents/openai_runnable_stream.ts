@@ -19,7 +19,7 @@ import { SerpAPI } from "@langchain/community/tools/serpapi";
 /** Define your list of tools. */
 const tools = [new Calculator(), new SerpAPI()];
 
-const model = new ChatOpenAI({ modelName: "gpt-4", temperature: 0 });
+const model = new ChatOpenAI({ model: "gpt-4", temperature: 0 });
 
 const prompt = ChatPromptTemplate.fromMessages([
   ["ai", "You are a helpful assistant"],

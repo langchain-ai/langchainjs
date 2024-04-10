@@ -3,7 +3,7 @@ import { HumanMessage } from "@langchain/core/messages";
 
 const model = new OllamaFunctions({
   temperature: 0.1,
-  modelName: "mistral",
+  model: "mistral",
 }).bind({
   functions: [
     {

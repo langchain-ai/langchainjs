@@ -5,7 +5,7 @@ import { Bedrock } from "@langchain/community/llms/bedrock";
 // If no credentials are provided, the default credentials from
 // @aws-sdk/credential-provider-node will be used.
 const model = new Bedrock({
-  modelName: "ai21.j2-grande-instruct", // You can also do e.g. "anthropic.claude-v2"
+  model: "ai21.j2-grande-instruct", // You can also do e.g. "anthropic.claude-v2"
   region: "us-east-1",
   // endpointUrl: "custom.amazonaws.com",
   // credentials: {
