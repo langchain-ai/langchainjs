@@ -52,10 +52,10 @@ export type MessageContentImageUrl = {
 type AudioMimeType = "audio/mpeg" | "audio/mp3" | "audio/wav";
 
 export type MessageContentAudio = {
-  type: "audio";
-  data: {
-    type: AudioMimeType,
-    base64: string;
+  type: "audio_url";
+  audio_url: string | {
+    format: AudioMimeType,
+    url: string;
   }
 };
 

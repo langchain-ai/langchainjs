@@ -135,6 +135,13 @@ export const checkValidTemplate = (
             const imageUrl = message.image_url.url;
             renderTemplate(imageUrl, templateFormat, dummyInputs);
           }
+        } else if (message.type === "audio_url") {
+          if (typeof message.audio_url === "string") {
+            renderTemplate(message.audio_url, templateFormat, dummyInputs);
+          } else {
+            const audioUrl = message.audio_url.url;
+            renderTemplate(audioUrl, templateFormat, dummyInputs);
+          }
         } else {
           throw new Error(
             `Invalid message template received. ${JSON.stringify(

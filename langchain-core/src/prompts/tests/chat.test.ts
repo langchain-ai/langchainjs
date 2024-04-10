@@ -568,3 +568,28 @@ test("Multi-modal, multi part chat prompt works with instances of BaseMessage", 
   });
   expect(messages).toMatchSnapshot();
 });
+
+// function convertMp3ToBase64(filePath: string): string {
+//   const fileData = fs.readFileSync(filePath);
+//   const base64String = Buffer.from(fileData).toString('base64');
+//   return base64String;
+// }
+
+
+// test.only("ImagePrompt", async () => {
+//   const audioPath = "../libs/langchain-google-gauth/src/tests/data/audio.mp3";
+//   const audioBase64 = convertMp3ToBase64(audioPath);
+//   const prompt = ChatPromptTemplate.fromMessages([
+//     ["human", [{
+//       type: "audio_url",
+//       audio_url: {
+//         format: "audio/mp3",
+//         url: "audioBase64",
+//       }
+//     }]],
+//     ["human", "Summarize this audio. Be very concise."],
+//   ]);
+
+//   const invokedPrompt = await prompt.invoke({});
+//   console.log("invokedPrompt", invokedPrompt)
+// })

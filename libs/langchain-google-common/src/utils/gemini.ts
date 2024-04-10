@@ -78,10 +78,19 @@ function messageContentImageUrl(
 function messageContentToAudio(
   content: MessageContentAudio
 ): GeminiPartInlineData {
-  return {
-    inlineData: {
-      mimeType: content.data.type,
-      data: content.data.base64,
+  if (typeof content.audio_url !== "string") {
+    return {
+      inlineData: {
+        mimeType: content.audio_url.format,
+        data: content.audio_url.url,
+      }
+    }
+  } else {
+    return {
+      inlineData: {
+        mimeType: "audio/mpeg",
+        data: content.audio_url,
+      }
     }
   }
 }
@@ -113,8 +122,8 @@ export function messageContentToParts(content: MessageContent): GeminiPart[] {
             return messageContentImageUrl(content as MessageContentImageUrl);
           }
           break;
-        case "audio":
-          if ("audio" in content) {
+        case "audio_url":
+          if ("audio_url" in content) {
             console.log("Mapping to audio content yo!")
             return messageContentToAudio(content as MessageContentAudio);
           }

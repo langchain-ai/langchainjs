@@ -175,3 +175,68 @@ export class ImagePromptValue extends BasePromptValue {
     ];
   }
 }
+
+export type AudioContent = {
+  /** Specifies the format of the audio data. */
+  format?: "audio/mpeg" | "audio/mp3" | "audio/wav";
+
+  /** Either a URL of the audio or the base64 encoded audio data. */
+  url: string;
+};
+
+export interface AudioPromptValueFields {
+  audioUrl: AudioContent;
+}
+
+/**
+ * Class that represents an audio prompt value. It extends the
+ * BasePromptValue and includes an AudioURL instance.
+ */
+export class AudioPromptValue extends BasePromptValue {
+  lc_namespace = ["langchain_core", "prompt_values"];
+
+  lc_serializable = true;
+
+  static lc_name() {
+    return "AudioPromptValue";
+  }
+
+  audioUrl: AudioContent;
+
+  /** @ignore */
+  value: string;
+
+  constructor(fields: AudioPromptValueFields);
+
+  constructor(fields: AudioContent);
+
+  constructor(fields: AudioContent | AudioPromptValueFields) {
+    if (!("audioUrl" in fields)) {
+      // eslint-disable-next-line no-param-reassign
+      fields = { audioUrl: fields };
+    }
+
+    super(fields);
+    this.audioUrl = fields.audioUrl;
+  }
+
+  toString() {
+    return this.audioUrl.url;
+  }
+
+  toChatMessages() {
+    return [
+      new HumanMessage({
+        content: [
+          {
+            type: "audio_url",
+            audio_url: {
+              format: this.audioUrl.format,
+              url: this.audioUrl.url,
+            },
+          },
+        ],
+      }),
+    ];
+  }
+}

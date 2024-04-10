@@ -28,6 +28,7 @@ import {
 import { PromptTemplate, type ParamsFromFString } from "./prompt.js";
 import { ImagePromptTemplate } from "./image.js";
 import { parseFString } from "./template.js";
+import { AudioPromptTemplate } from "./audio.js";
 
 /**
  * Abstract class that serves as a base for creating message prompt
@@ -344,6 +345,11 @@ interface _ImageTemplateParam {
   image_url?: string | Record<string, any>;
 }
 
+interface _AudioTemplateParam {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  audio_url?: string | Record<string, any>;
+}
+
 type MessageClass =
   | typeof HumanMessage
   | typeof AIMessage
@@ -381,6 +387,10 @@ class _StringImageMessagePromptTemplate<
         | MessageStringPromptTemplateFields<
             InputValues<Extract<keyof RunInput, string>>
           >
+        | AudioPromptTemplate<
+          InputValues<Extract<keyof RunInput, string>>,
+          string
+        >
       >;
 
   protected messageClass?: MessageClass;
@@ -455,14 +465,14 @@ class _StringImageMessagePromptTemplate<
   }
 
   static fromTemplate(
-    template: string | Array<string | _TextTemplateParam | _ImageTemplateParam>,
+    template: string | Array<string | _TextTemplateParam | _ImageTemplateParam | _AudioTemplateParam>,
     additionalOptions?: Record<string, unknown>
   ) {
     if (typeof template === "string") {
       return new this(PromptTemplate.fromTemplate(template));
     }
     const prompt: Array<
-      PromptTemplate<InputValues> | ImagePromptTemplate<InputValues>
+      PromptTemplate<InputValues> | ImagePromptTemplate<InputValues> | AudioPromptTemplate<InputValues>
     > = [];
     for (const item of template) {
       if (
@@ -519,6 +529,50 @@ class _StringImageMessagePromptTemplate<
           throw new Error("Invalid image template");
         }
         prompt.push(imgTemplateObject);
+      } else if (typeof item === "object" && "audio_url" in item) {
+        const castItem = item as _AudioTemplateParam;
+        let audioTemplate = castItem.audio_url ?? "";
+        let audioTemplateObject: AudioPromptTemplate<InputValues>;
+        let inputVariables: string[] = [];
+        if (typeof audioTemplate === "string") {
+          const parsedTemplate = parseFString(audioTemplate);
+          const variables = parsedTemplate.flatMap((item) =>
+            item.type === "variable" ? [item.name] : []
+          );
+
+          if ((variables?.length ?? 0) > 0) {
+            if (variables.length > 1) {
+              throw new Error(
+                `Only one format variable allowed per audio template.\nGot: ${variables}\nFrom: ${audioTemplate}`
+              );
+            }
+            inputVariables = [variables[0]];
+          } else {
+            inputVariables = [];
+          }
+
+          audioTemplate = { url: audioTemplate };
+          audioTemplateObject = new AudioPromptTemplate<InputValues>({
+            template: audioTemplate,
+            inputVariables,
+          });
+        } else if (typeof audioTemplate === "object") {
+          if ("url" in audioTemplate) {
+            const parsedTemplate = parseFString(audioTemplate.url);
+            inputVariables = parsedTemplate.flatMap((item) =>
+              item.type === "variable" ? [item.name] : []
+            );
+          } else {
+            inputVariables = [];
+          }
+          audioTemplateObject = new AudioPromptTemplate<InputValues>({
+            template: audioTemplate,
+            inputVariables,
+          });
+        } else {
+          throw new Error("Invalid audio template");
+        }
+        prompt.push(audioTemplateObject);
       }
     }
     return new this({ prompt, additionalOptions });
@@ -559,6 +613,12 @@ class _StringImageMessagePromptTemplate<
             inputs as TypedPromptInputValues<RunInput>
           );
           content.push({ type: "image_url", image_url: formatted });
+          // eslint-disable-next-line no-instanceof/no-instanceof
+        } else if (prompt instanceof AudioPromptTemplate) {
+          const formatted = await prompt.format(
+            inputs as TypedPromptInputValues<RunInput>
+          );
+          content.push({ type: "audio_url", audio_url: formatted });
         }
       }
 
@@ -706,7 +766,7 @@ function _coerceMessagePromptTemplateLike(
   const message = coerceMessageLikeToMessage(messagePromptTemplateLike);
   let templateData:
     | string
-    | (string | _TextTemplateParam | _ImageTemplateParam)[];
+    | (string | _TextTemplateParam | _ImageTemplateParam | _AudioTemplateParam)[];
 
   if (typeof message.content === "string") {
     templateData = message.content;
@@ -717,8 +777,8 @@ function _coerceMessagePromptTemplateLike(
         return { text: item.text };
       } else if ("image_url" in item) {
         return { image_url: item.image_url };
-      } else if ("data" in item) {
-        return { data: item.data };
+      } else if ("audio_url" in item) {
+        return { audio_url: item.audio_url };
       } else {
         throw new Error("Invalid message content");
       }
@@ -887,6 +947,7 @@ export class ChatPromptTemplate<
   ): Promise<BaseMessage[]> {
     const allValues = await this.mergePartialAndUserVariables(values);
     let resultMessages: BaseMessage[] = [];
+    console.log("FORMAT MESSAGES", this.promptMessages)
 
     for (const promptMessage of this.promptMessages) {
       // eslint-disable-next-line no-instanceof/no-instanceof
