@@ -90,7 +90,6 @@ export abstract class ChatGoogleBase<AuthOptions>
 
   lc_serializable = true;
 
-  /** @deprecated Prefer `modelName` */
   model = "gemini-pro";
 
   modelName = "gemini-pro";

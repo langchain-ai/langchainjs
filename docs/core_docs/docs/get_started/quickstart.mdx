@@ -71,13 +71,13 @@ Accessing the API requires an API key, which you can get by creating an account 
 OPENAI_API_KEY="..."
 ```
 
-If you'd prefer not to set an environment variable you can pass the key in directly via the `openAIApiKey` named parameter when initiating the OpenAI Chat Model class:
+If you'd prefer not to set an environment variable you can pass the key in directly via the `apiKey` named parameter when initiating the OpenAI Chat Model class:
 
 ```typescript
 import { ChatOpenAI } from "@langchain/openai";
 
 const chatModel = new ChatOpenAI({
-  openAIApiKey: "...",
+  apiKey: "...",
 });
 ```
 
@@ -135,13 +135,13 @@ Accessing the API requires an API key, which you can get by creating an account 
 ANTHROPIC_API_KEY="..."
 ```
 
-If you'd prefer not to set an environment variable you can pass the key in directly via the `anthropicApiKey` named parameter when initiating the Anthropic Chat Model class:
+If you'd prefer not to set an environment variable you can pass the key in directly via the `apiKey` named parameter when initiating the Anthropic Chat Model class:
 
 ```typescript
 import { ChatAnthropic } from "@langchain/anthropic";
 
 const chatModel = new ChatAnthropic({
-  anthropicApiKey: "...",
+  apiKey: "...",
 });
 ```
 
@@ -602,7 +602,7 @@ const agentPrompt = await pull<ChatPromptTemplate>(
 );
 
 const agentModel = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo-1106",
+  model: "gpt-3.5-turbo-1106",
   temperature: 0,
 });
 

@@ -7,7 +7,7 @@ import { z } from "zod";
 import { DynamicTool, DynamicStructuredTool } from "@langchain/core/tools";
 
 const llm = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo",
+  model: "gpt-3.5-turbo",
   temperature: 0,
 });
 

@@ -25,18 +25,18 @@ function InstallationInfo({ children }) {
 }
 
 const DEFAULTS = {
-  openaiParams: `{\n  modelName: "gpt-3.5-turbo-0125",\n  temperature: 0\n}`,
-  anthropicParams: `{\n  modelName: "claude-3-sonnet-20240229",\n  temperature: 0\n}`,
-  fireworksParams: `{\n  modelName: "accounts/fireworks/models/firefunction-v1",\n  temperature: 0\n}`,
-  mistralParams: `{\n  modelName: "mistral-large-latest",\n  temperature: 0\n}`,
+  openaiParams: `{\n  model: "gpt-3.5-turbo-0125",\n  temperature: 0\n}`,
+  anthropicParams: `{\n  model: "claude-3-sonnet-20240229",\n  temperature: 0\n}`,
+  fireworksParams: `{\n  model: "accounts/fireworks/models/firefunction-v1",\n  temperature: 0\n}`,
+  mistralParams: `{\n  model: "mistral-large-latest",\n  temperature: 0\n}`,
 };
 
 /**
  * @typedef {Object} ChatModelTabsProps - Component props.
- * @property {string} [openaiParams] - Parameters for OpenAI chat model. Defaults to `"{\n  modelName: "gpt-3.5-turbo-0125",\n  temperature: 0\n}"`
- * @property {string} [anthropicParams] - Parameters for Anthropic chat model. Defaults to `"{\n  modelName: "claude-3-sonnet-20240229",\n  temperature: 0\n}"`
- * @property {string} [fireworksParams] - Parameters for Fireworks chat model. Defaults to `"{\n  modelName: "accounts/fireworks/models/firefunction-v1",\n  temperature: 0\n}"`
- * @property {string} [mistralParams] - Parameters for Mistral chat model. Defaults to `"{\n  modelName: "mistral-large-latest",\n  temperature: 0\n}"`
+ * @property {string} [openaiParams] - Parameters for OpenAI chat model. Defaults to `"{\n  model: "gpt-3.5-turbo-0125",\n  temperature: 0\n}"`
+ * @property {string} [anthropicParams] - Parameters for Anthropic chat model. Defaults to `"{\n  model: "claude-3-sonnet-20240229",\n  temperature: 0\n}"`
+ * @property {string} [fireworksParams] - Parameters for Fireworks chat model. Defaults to `"{\n  model: "accounts/fireworks/models/firefunction-v1",\n  temperature: 0\n}"`
+ * @property {string} [mistralParams] - Parameters for Mistral chat model. Defaults to `"{\n  model: "mistral-large-latest",\n  temperature: 0\n}"`
  * @property {boolean} [hideOpenai] - Whether or not to hide OpenAI chat model.
  * @property {boolean} [hideAnthropic] - Whether or not to hide Anthropic chat model.
  * @property {boolean} [hideFireworks] - Whether or not to hide Fireworks chat model.

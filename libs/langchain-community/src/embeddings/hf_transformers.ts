@@ -4,8 +4,13 @@ import { chunkArray } from "@langchain/core/utils/chunk_array";
 
 export interface HuggingFaceTransformersEmbeddingsParams
   extends EmbeddingsParams {
-  /** Model name to use */
+  /**
+   * Model name to use
+   * Alias for `model`
+   */
   modelName: string;
+  /** Model name to use */
+  model: string;
 
   /**
    * Timeout to use when making requests to OpenAI.
@@ -28,7 +33,7 @@ export interface HuggingFaceTransformersEmbeddingsParams
  * @example
  * ```typescript
  * const model = new HuggingFaceTransformersEmbeddings({
- *   modelName: "Xenova/all-MiniLM-L6-v2",
+ *   model: "Xenova/all-MiniLM-L6-v2",
  * });
  *
  * // Embed a single query
@@ -48,6 +53,8 @@ export class HuggingFaceTransformersEmbeddings
 {
   modelName = "Xenova/all-MiniLM-L6-v2";
 
+  model = "Xenova/all-MiniLM-L6-v2";
+
   batchSize = 512;
 
   stripNewLines = true;
@@ -59,7 +66,8 @@ export class HuggingFaceTransformersEmbeddings
   constructor(fields?: Partial<HuggingFaceTransformersEmbeddingsParams>) {
     super(fields ?? {});
 
-    this.modelName = fields?.modelName ?? this.modelName;
+    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
+    this.model = this.modelName;
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
     this.timeout = fields?.timeout;
   }
@@ -94,7 +102,7 @@ export class HuggingFaceTransformersEmbeddings
   private async runEmbedding(texts: string[]) {
     const pipe = await (this.pipelinePromise ??= pipeline(
       "feature-extraction",
-      this.modelName
+      this.model
     ));
 
     return this.caller.call(async () => {

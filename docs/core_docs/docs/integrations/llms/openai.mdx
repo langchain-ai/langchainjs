@@ -14,9 +14,9 @@ npm install @langchain/openai
 import { OpenAI } from "@langchain/openai";
 
 const model = new OpenAI({
-  modelName: "gpt-3.5-turbo-instruct", // Defaults to "gpt-3.5-turbo-instruct" if no model provided.
+  model: "gpt-3.5-turbo-instruct", // Defaults to "gpt-3.5-turbo-instruct" if no model provided.
   temperature: 0.9,
-  openAIApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.OPENAI_API_KEY
+  apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.OPENAI_API_KEY
 });
 const res = await model.invoke(
   "What would be a good company name a company that makes colorful socks?"

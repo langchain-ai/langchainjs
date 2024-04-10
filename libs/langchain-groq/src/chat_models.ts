@@ -69,14 +69,26 @@ export interface ChatGroqInput extends BaseChatModelParams {
   apiKey?: string;
   /**
    * The name of the model to use.
+   * Alias for `model`
    * @default "llama2-70b-4096"
    */
   modelName?: string;
   /**
+   * The name of the model to use.
+   * @default "llama2-70b-4096"
+   */
+  model?: string;
+  /**
+   * Up to 4 sequences where the API will stop generating further tokens. The
+   * returned text will not contain the stop sequence.
+   * Alias for `stopSequences`
+   */
+  stop?: string | null | Array<string>;
+  /**
    * Up to 4 sequences where the API will stop generating further tokens. The
    * returned text will not contain the stop sequence.
    */
-  stop?: string | null | Array<string>;
+  stopSequences?: Array<string>;
   /**
    * Whether or not to stream responses.
    */
@@ -208,9 +220,13 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
 
   modelName = "llama2-70b-4096";
 
+  model = "llama2-70b-4096";
+
   temperature = 0.7;
 
   stop?: string[];
+
+  stopSequences?: string[];
 
   maxTokens?: number;
 
@@ -247,10 +263,14 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
       dangerouslyAllowBrowser: true,
     });
     this.temperature = fields?.temperature ?? this.temperature;
-    this.modelName = fields?.modelName ?? this.modelName;
+    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
+    this.model = this.modelName;
     this.streaming = fields?.streaming ?? this.streaming;
     this.stop =
-      (typeof fields?.stop === "string" ? [fields.stop] : fields?.stop) ?? [];
+      fields?.stopSequences ??
+      (typeof fields?.stop === "string" ? [fields.stop] : fields?.stop) ??
+      [];
+    this.stopSequences = this.stop;
     this.maxTokens = fields?.maxTokens;
   }
 
@@ -288,8 +308,8 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
     }
     return {
       ...params,
-      stop: options.stop ?? this.stop,
-      model: this.modelName,
+      stop: options.stop ?? this.stopSequences,
+      model: this.model,
       temperature: this.temperature,
       max_tokens: this.maxTokens,
     };
