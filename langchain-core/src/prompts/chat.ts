@@ -28,7 +28,6 @@ import {
 import { PromptTemplate, type ParamsFromFString } from "./prompt.js";
 import { ImagePromptTemplate } from "./image.js";
 import { parseFString } from "./template.js";
-import { GenericObjectPromptTemplate } from "./generic_object.js";
 
 /**
  * Abstract class that serves as a base for creating message prompt
@@ -345,11 +344,6 @@ interface _ImageTemplateParam {
   image_url?: string | Record<string, any>;
 }
 
-interface _GenericObjectTemplateParam {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  data: Record<string, any>;
-}
-
 type MessageClass =
   | typeof HumanMessage
   | typeof AIMessage
@@ -386,10 +380,6 @@ class _StringImageMessagePromptTemplate<
           >
         | MessageStringPromptTemplateFields<
             InputValues<Extract<keyof RunInput, string>>
-          >
-        | GenericObjectPromptTemplate<
-            InputValues<Extract<keyof RunInput, string>>,
-            string
           >
       >;
 
@@ -471,7 +461,6 @@ class _StringImageMessagePromptTemplate<
           | string
           | _TextTemplateParam
           | _ImageTemplateParam
-          | _GenericObjectTemplateParam
         >,
     additionalOptions?: Record<string, unknown>
   ) {
@@ -481,7 +470,6 @@ class _StringImageMessagePromptTemplate<
     const prompt: Array<
       | PromptTemplate<InputValues>
       | ImagePromptTemplate<InputValues>
-      | GenericObjectPromptTemplate<InputValues>
     > = [];
     for (const item of template) {
       if (
@@ -538,14 +526,6 @@ class _StringImageMessagePromptTemplate<
           throw new Error("Invalid image template");
         }
         prompt.push(imgTemplateObject);
-      } else if (typeof item === "object" && "data" in item) {
-        const genericTemplate = item.data;
-        prompt.push(
-          new GenericObjectPromptTemplate<InputValues>({
-            template: genericTemplate,
-            inputVariables: [],
-          })
-        );
       }
     }
     return new this({ prompt, additionalOptions });
@@ -587,12 +567,6 @@ class _StringImageMessagePromptTemplate<
           );
           content.push({ type: "image_url", image_url: formatted });
           // eslint-disable-next-line no-instanceof/no-instanceof
-        } else if (prompt instanceof GenericObjectPromptTemplate) {
-          const formatted = await prompt.format(
-            inputs as TypedPromptInputValues<RunInput>
-          );
-          console.log("formatted", formatted);
-          content.push({ type: "generic", data: formatted });
         }
       }
 
@@ -744,7 +718,8 @@ function _coerceMessagePromptTemplateLike(
         | string
         | _TextTemplateParam
         | _ImageTemplateParam
-        | _GenericObjectTemplateParam
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        | Record<string, any>
       )[];
 
   if (typeof message.content === "string") {
@@ -756,10 +731,8 @@ function _coerceMessagePromptTemplateLike(
         return { text: item.text };
       } else if ("image_url" in item) {
         return { image_url: item.image_url };
-      } else if ("data" in item) {
-        return { data: item.data };
       } else {
-        throw new Error("Invalid message content");
+        return item;
       }
     });
   }

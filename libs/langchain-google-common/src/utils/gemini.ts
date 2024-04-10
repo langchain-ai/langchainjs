@@ -136,7 +136,7 @@ export function messageContentToParts(content: MessageContent): GeminiPart[] {
             return messageContentImageUrl(content as MessageContentImageUrl);
           }
           break;
-        case "generic":
+        case "audio":
           if ("data" in content) {
             return messageContentToAudio(content);
           }
