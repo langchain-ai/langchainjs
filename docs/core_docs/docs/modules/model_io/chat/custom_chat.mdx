@@ -15,7 +15,7 @@ You can also implement the following optional method:
 
 - A `_streamResponseChunks` method that returns an `AsyncGenerator` and yields [`ChatGenerationChunks`](https://api.js.langchain.com/classes/langchain_core_outputs.ChatGenerationChunk.html). This allows the LLM to support streaming outputs.
 
-Let’s implement a very simple custom chat model that just echoes back the first `n` characters of the input.
+Let's implement a very simple custom chat model that just echoes back the first `n` characters of the input.
 
 ```typescript
 import {
