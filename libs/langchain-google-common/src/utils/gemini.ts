@@ -35,6 +35,18 @@ import type {
 } from "../types.js";
 import { GoogleAISafetyError } from "./safety.js";
 
+const extractMimeType = (
+  str: string
+): { mimeType: string; data: string } | null => {
+  if (str.startsWith("data:")) {
+    return {
+      mimeType: str.split(":")[1].split(";")[0],
+      data: str.split(",")[1],
+    };
+  }
+  return null;
+};
+
 function messageContentText(
   content: MessageContentText
 ): GeminiPartText | null {
@@ -54,17 +66,14 @@ function messageContentImageUrl(
     typeof content.image_url === "string"
       ? content.image_url
       : content.image_url.url;
-
   if (!url) {
     throw new Error("Missing Image URL");
   }
 
-  if (url.startsWith("data:")) {
+  const mineTypeAndData = extractMimeType(url);
+  if (mineTypeAndData) {
     return {
-      inlineData: {
-        mimeType: url.split(":")[1].split(";")[0],
-        data: url.split(",")[1],
-      },
+      inlineData: mineTypeAndData,
     };
   } else {
     // FIXME - need some way to get mime type
@@ -75,6 +84,29 @@ function messageContentImageUrl(
       },
     };
   }
+}
+
+function messageContentMedia(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  content: Record<string, any>
+): GeminiPartInlineData | GeminiPartFileData {
+  if ("mimeType" in content && "data" in content) {
+    return {
+      inlineData: {
+        mimeType: content.mimeType,
+        data: content.data,
+      },
+    };
+  } else if ("mimeType" in content && "fileUri" in content) {
+    return {
+      fileData: {
+        mimeType: content.mimeType,
+        fileUri: content.fileUri,
+      },
+    };
+  }
+
+  throw new Error("Invalid media content");
 }
 
 export function messageContentToParts(content: MessageContent): GeminiPart[] {
@@ -104,6 +136,8 @@ export function messageContentToParts(content: MessageContent): GeminiPart[] {
             return messageContentImageUrl(content as MessageContentImageUrl);
           }
           break;
+        case "media":
+          return messageContentMedia(content);
         default:
           throw new Error(
             `Unsupported type received while converting message to message parts`
