@@ -11,7 +11,7 @@ function abs(relativePath) {
 
 
 export const config = {
-  internals: [/node\:/, /@langchain\/core\//],
+  internals: [/node\:/, /@langchain\/core\//, /@langchain\/google-common/],
   entrypoints: {
     index: "index",
     utils: "utils",
