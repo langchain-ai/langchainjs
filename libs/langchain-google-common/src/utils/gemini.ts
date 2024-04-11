@@ -83,7 +83,7 @@ function messageContentImageUrl(
   }
 }
 
-function messageContentToMedia(
+function messageContentMedia(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   content: Record<string, any>
 ): GeminiPartInlineData | GeminiPartFileData {
@@ -103,7 +103,7 @@ function messageContentToMedia(
     };
   }
 
-  throw new Error("Invalid audio content");
+  throw new Error("Invalid media content");
 }
 
 export function messageContentToParts(content: MessageContent): GeminiPart[] {
@@ -134,7 +134,7 @@ export function messageContentToParts(content: MessageContent): GeminiPart[] {
           }
           break;
         case "media":
-          return messageContentToMedia(content);
+          return messageContentMedia(content);
         default:
           throw new Error(
             `Unsupported type received while converting message to message parts`
