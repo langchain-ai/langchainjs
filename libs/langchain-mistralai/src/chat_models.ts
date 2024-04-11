@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from "uuid";
 import {
   ChatCompletionResponse,
   Function as MistralAIFunction,
@@ -250,7 +251,10 @@ function mistralAIResponseToChatMessage(
       for (const rawToolCall of rawToolCalls) {
         try {
           const parsed = parseToolCall(rawToolCall, { returnId: true });
-          toolCalls.push({ ...parsed, id: undefined });
+          toolCalls.push({
+            ...parsed,
+            id: parsed.id ?? uuidv4().replace(/-/g, ""),
+          });
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
           invalidToolCalls.push(makeInvalidToolCall(rawToolCall, e.message));
@@ -282,17 +286,19 @@ function _convertDeltaToMessageChunk(delta: {
   // is an index key in each tool object (as seen in OpenAI's) so we
   // need to insert it here.
   const rawToolCallChunksWithIndex = delta.tool_calls?.length
-    ? delta.tool_calls?.map((toolCall, index) => ({
-        ...toolCall,
-        index,
-      }))
+    ? delta.tool_calls?.map(
+        (toolCall, index): OpenAIToolCall => ({
+          ...toolCall,
+          index,
+          id: toolCall.id ?? uuidv4().replace(/-/g, ""),
+          type: "function",
+        })
+      )
     : undefined;
 
   let role = "assistant";
   if (delta.role) {
     role = delta.role;
-  } else if (rawToolCallChunksWithIndex !== undefined) {
-    role = "function";
   }
   const content = delta.content ?? "";
   let additional_kwargs;

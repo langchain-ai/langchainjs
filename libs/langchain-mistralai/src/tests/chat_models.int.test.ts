@@ -77,10 +77,11 @@ test("Can call tools using structured tools", async () => {
   });
 
   const prompt = ChatPromptTemplate.fromMessages([
-    "system",
-    "you are very bad at math and always must use a calculator",
-    "human",
-    "what is the sum of 223 + 228 divided by 718236 multiplied by 1234?",
+    ["system", "you are very bad at math and always must use a calculator"],
+    [
+      "human",
+      "what is the sum of 223 + 228 divided by 718236 multiplied by 1234?",
+    ],
   ]);
 
   const chain = prompt.pipe(model);
@@ -97,7 +98,7 @@ test("Can call tools using structured tools", async () => {
   ).toBeDefined();
 });
 
-test("Can call tools", async () => {
+test.only("Can call tools", async () => {
   const tools = [
     {
       type: "function",
@@ -125,10 +126,11 @@ test("Can call tools", async () => {
   });
 
   const prompt = ChatPromptTemplate.fromMessages([
-    "system",
-    "you are very bad at math and always must use a calculator",
-    "human",
-    "what is the sum of 223 + 228 divided by 718236 multiplied by 1234?",
+    ["system", "you are very bad at math and always must use a calculator"],
+    [
+      "human",
+      "what is the sum of 223 + 228 divided by 718236 multiplied by 1234?",
+    ],
   ]);
   const chain = prompt.pipe(model);
   const response = await chain.invoke({});
@@ -174,10 +176,11 @@ test("Can call .stream with tool calling", async () => {
   });
 
   const prompt = ChatPromptTemplate.fromMessages([
-    "system",
-    "you are very bad at math and always must use a calculator",
-    "human",
-    "what is the sum of 223 + 228 divided by 718236 multiplied by 1234?",
+    ["system", "you are very bad at math and always must use a calculator"],
+    [
+      "human",
+      "what is the sum of 223 + 228 divided by 718236 multiplied by 1234?",
+    ],
   ]);
 
   const chain = prompt.pipe(model);
@@ -216,8 +219,10 @@ test("Can use json mode response format", async () => {
     "system",
     `you are very bad at math and always must use a calculator.
 To use a calculator respond with valid JSON containing a single key: 'calculator' which should contain the math equation to calculate the answer for.`,
-    "human",
-    "what is the sum of 223 + 228 divided by 718236 multiplied by 1234?",
+    [
+      "human",
+      "what is the sum of 223 + 228 divided by 718236 multiplied by 1234?",
+    ],
   ]);
 
   const chain = prompt.pipe(model);
@@ -241,8 +246,10 @@ test("Can call .stream with json mode", async () => {
     "system",
     `you are very bad at math and always must use a calculator.
 To use a calculator respond with valid JSON containing a single key: 'calculator' which should contain the math equation to calculate the answer for.`,
-    "human",
-    "what is the sum of 223 + 228 divided by 718236 multiplied by 1234?",
+    [
+      "human",
+      "what is the sum of 223 + 228 divided by 718236 multiplied by 1234?",
+    ],
   ]);
 
   const chain = prompt.pipe(model);
@@ -732,7 +739,6 @@ describe("ChatMistralAI aborting", () => {
     ]);
     let didError = false;
     let finalRes = "";
-    let iters = 0;
 
     try {
       // Stream is inside the for-await loop because sometimes
@@ -742,7 +748,6 @@ describe("ChatMistralAI aborting", () => {
       for await (const item of stream) {
         finalRes += item.content;
         console.log(finalRes);
-        iters += 1;
       }
       // If the loop completes without error, fail the test
       fail(

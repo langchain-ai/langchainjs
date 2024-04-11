@@ -58,14 +58,13 @@ export function parseAIMessageToToolAction(
     }
   }
   return toolCalls.map((toolCall, i) => {
-    const toolInput = JSON.stringify(toolCall.args);
     const messageLog = i === 0 ? [message] : [];
     const log = `Invoking "${toolCall.name}" with ${JSON.stringify(
       toolCall.args ?? {}
     )}\n${stringifiedMessageContent}`;
     return {
       tool: toolCall.name as string,
-      toolInput,
+      toolInput: toolCall.args,
       toolCallId: toolCall.id ?? "",
       log,
       messageLog,

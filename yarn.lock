@@ -9451,6 +9451,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
+    uuid: ^9.0.0
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.4
   languageName: unknown
@@ -9548,6 +9549,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
+    zod: ^3.22.4
   languageName: unknown
   linkType: soft
 
@@ -9679,6 +9681,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
+    uuid: ^9.0.0
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.4
   languageName: unknown

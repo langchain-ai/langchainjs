@@ -535,7 +535,7 @@ export class ChatAnthropicMessages<
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams(
+  override invocationParams(
     options?: this["ParsedCallOptions"]
   ): Omit<
     AnthropicMessageCreateParams | AnthropicStreamingMessageCreateParams,
@@ -550,36 +550,8 @@ export class ChatAnthropicMessages<
       stop_sequences: options?.stop ?? this.stopSequences,
       stream: this.streaming,
       max_tokens: this.maxTokens,
+      tools: this.formatStructuredToolToAnthropic(options?.tools),
       ...this.invocationKwargs,
-    };
-  }
-
-  invocationOptions(
-    request: Omit<
-      AnthropicMessageCreateParams | AnthropicStreamingMessageCreateParams,
-      "messages"
-    > &
-      Kwargs,
-    options: this["ParsedCallOptions"]
-  ): AnthropicRequestOptions {
-    const toolUseBetaHeader = {
-      "anthropic-beta": "tools-2024-04-04",
-    };
-    const tools = this.formatStructuredToolToAnthropic(options?.tools);
-    // If tools are present, populate the body with the message request params.
-    // This is because Anthropic overwrites the message request params if a body
-    // is passed.
-    const body = tools
-      ? {
-          ...request,
-          tools,
-        }
-      : undefined;
-    const headers = tools ? toolUseBetaHeader : undefined;
-    return {
-      signal: options.signal,
-      ...(body ? { body } : {}),
-      ...(headers ? { headers } : {}),
     };
   }
 
@@ -608,28 +580,10 @@ export class ChatAnthropicMessages<
   ): AsyncGenerator<ChatGenerationChunk> {
     const params = this.invocationParams(options);
     const formattedMessages = _formatMessagesForAnthropic(messages);
-    const requestOptions = this.invocationOptions(
-      {
-        ...params,
-        stream: false,
-        ...formattedMessages,
-      },
-      options
-    );
     if (options.tools !== undefined && options.tools.length > 0) {
-      const requestOptions = this.invocationOptions(
-        {
-          ...params,
-          stream: false,
-          ...formattedMessages,
-        },
-        options
-      );
-      const generations = await this._generateNonStreaming(
-        messages,
-        params,
-        requestOptions
-      );
+      const generations = await this._generateNonStreaming(messages, params, {
+        signal: options.signal,
+      });
       const result = generations[0].message as AIMessage;
       const toolCallChunks = result.tool_calls?.map(
         (toolCall: ToolCall, index: number) => ({
@@ -648,14 +602,11 @@ export class ChatAnthropicMessages<
         text: generations[0].text,
       });
     } else {
-      const stream = await this.createStreamWithRetry(
-        {
-          ...params,
-          ...formattedMessages,
-          stream: true,
-        },
-        requestOptions
-      );
+      const stream = await this.createStreamWithRetry({
+        ...params,
+        ...formattedMessages,
+        stream: true,
+      });
       let usageData = { input_tokens: 0, output_tokens: 0 };
       for await (const data of stream) {
         if (options.signal?.aborted) {
@@ -726,13 +677,23 @@ export class ChatAnthropicMessages<
       Kwargs,
     requestOptions: AnthropicRequestOptions
   ) {
+    const options =
+      params.tools !== undefined
+        ? {
+            ...requestOptions,
+            headers: {
+              ...requestOptions.headers,
+              "anthropic-beta": "tools-2024-04-04",
+            },
+          }
+        : requestOptions;
     const response = await this.completionWithRetry(
       {
         ...params,
         stream: false,
         ..._formatMessagesForAnthropic(messages),
       },
-      requestOptions
+      options
     );
 
     const { content, ...additionalKwargs } = response;
@@ -779,19 +740,9 @@ export class ChatAnthropicMessages<
         ],
       };
     } else {
-      const requestOptions = this.invocationOptions(
-        {
-          ...params,
-          stream: false,
-          ..._formatMessagesForAnthropic(messages),
-        },
-        options
-      );
-      const generations = await this._generateNonStreaming(
-        messages,
-        params,
-        requestOptions
-      );
+      const generations = await this._generateNonStreaming(messages, params, {
+        signal: options.signal,
+      });
       return {
         generations,
       };
