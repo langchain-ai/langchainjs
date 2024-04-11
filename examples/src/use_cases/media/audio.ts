@@ -40,6 +40,7 @@ const response = await chain.invoke({
         mimeType: "audio/mp3",
         data: mozartInBase64,
       },
+
       {
         type: "text",
         text: `The following audio is a song by Mozart. Respond with a list of instruments you hear in the song.

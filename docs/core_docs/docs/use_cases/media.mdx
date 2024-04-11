@@ -25,10 +25,10 @@ npm install @langchain/google-vertexai @langchain/core
 
 ## Video
 
-This example takes a screen recording of a [LangChain YouTube video on datasets and testing in LangSmith](https://www.youtube.com/watch?v=N9hjO-Uy1Vo) sped up to 1.5x speed.
-It is then converted to `base64` format like the example above, and sent to Gemini with a prompt asking for structured output of tasks I can do to followup on the video.
+This example uses a [LangChain YouTube video on datasets and testing in LangSmith](https://www.youtube.com/watch?v=N9hjO-Uy1Vo) sped up to 1.5x speed.
+It's then converted to `base64`, and sent to Gemini with a prompt asking for structured output of tasks I can do to improve my knowledge of datasets and testing in LangSmith.
 
-We create a new tool for this, and pass it to the model via the `withStructuredOutput` method.
+We create a new tool for this using Zod, and pass it to the model via the `withStructuredOutput` method.
 
 import CodeBlock from "@theme/CodeBlock";
 
@@ -53,4 +53,4 @@ The Requiem is scored for 2 basset horns in F, 2 bassoons, 2 trumpets in D, 3 tr
 timpani (2 drums), violins, viola, and basso continuo (cello, double bass, and organ).
 ```
 
-Gemini did pretty well here! For music not being it's primary focus, it was able to identify a few of the instruments used in the song, and didn't hallucinate any!
+Gemini did pretty well here! For music not being its primary focus, it was able to identify a few of the instruments used in the song, and didn't hallucinate any!
