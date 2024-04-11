@@ -27,7 +27,7 @@ test("createToolCallingAgent works", async () => {
   //   agent,
   //   tools,
   // });
-  // const input = "what is the current weather in SF and New York?";
+  // const input = "what is the current weather in SF?";
   // const result = await agentExecutor.invoke({
   //   input,
   // });

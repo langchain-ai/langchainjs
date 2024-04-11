@@ -45,6 +45,18 @@ import AnthropicMultimodal from "@examples/models/chat/integration_anthropic_mul
 See [the official docs](https://docs.anthropic.com/claude/docs/vision#what-image-file-types-does-claude-support)
 for a complete list of supported file types.
 
+## Agents
+
+Anthropic models that support tool calling can be used in the [Tool Calling agent](/docs/modules/agents/agent_types/tool_calling/). Here's an example:
+
+import AnthropicToolCallingAgent from "@examples/models/chat/integration_anthropic_tool_calling_agent.ts";
+
+<CodeBlock language="typescript">{AnthropicToolCallingAgent}</CodeBlock>
+
+:::tip
+See the LangSmith trace [here](https://smith.langchain.com/public/e93ff7f6-03f7-4eb1-96c8-09a17dee1462/r)
+:::
+
 ## Custom headers
 
 You can pass custom headers in your requests like this:
@@ -65,16 +77,6 @@ import AnthropicSingleTool from "@examples/models/chat/integration_anthropic_sin
 
 :::tip
 See the LangSmith trace [here](https://smith.langchain.com/public/90c03ed0-154b-4a50-afbf-83dcbf302647/r)
-:::
-
-### Multi-Tool
-
-import AnthropicMultiTool from "@examples/models/chat/integration_anthropic_multi_tool.ts";
-
-<CodeBlock language="typescript">{AnthropicMultiTool}</CodeBlock>
-
-:::tip
-See the LangSmith trace [here](https://smith.langchain.com/public/1349bb57-df1b-48b5-89c2-e6d5bd8f694a/r)
 :::
 
 ### `withStructuredOutput`
