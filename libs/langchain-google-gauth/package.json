@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-gauth",
-  "version": "0.0.0",
+  "version": "0.0.5",
   "description": "Google auth based authentication support for Google services",
   "type": "module",
   "engines": {
@@ -39,8 +39,8 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1.1",
-    "@langchain/google-common": "~0.0.0",
+    "@langchain/core": "~0.1.56",
+    "@langchain/google-common": "~0.0.5",
     "google-auth-library": "^8.9.0"
   },
   "devDependencies": {
@@ -65,7 +65,8 @@
     "release-it": "^15.10.1",
     "rollup": "^4.5.2",
     "ts-jest": "^29.1.0",
-    "typescript": "<5.2.0"
+    "typescript": "<5.2.0",
+    "zod": "^3.22.4"
   },
   "publishConfig": {
     "access": "public"
@@ -80,6 +81,24 @@
       "import": "./index.js",
       "require": "./index.cjs"
     },
+    "./utils": {
+      "types": {
+        "import": "./utils.d.ts",
+        "require": "./utils.d.cts",
+        "default": "./utils.d.ts"
+      },
+      "import": "./utils.js",
+      "require": "./utils.cjs"
+    },
+    "./types": {
+      "types": {
+        "import": "./types.d.ts",
+        "require": "./types.d.cts",
+        "default": "./types.d.ts"
+      },
+      "import": "./types.js",
+      "require": "./types.cjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -87,6 +106,14 @@
     "index.cjs",
     "index.js",
     "index.d.ts",
-    "index.d.cts"
+    "index.d.cts",
+    "utils.cjs",
+    "utils.js",
+    "utils.d.ts",
+    "utils.d.cts",
+    "types.cjs",
+    "types.js",
+    "types.d.ts",
+    "types.d.cts"
   ]
 }

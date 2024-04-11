@@ -7,7 +7,7 @@ import { BaseMessageChunk, HumanMessage } from "@langchain/core/messages";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatAnthropicTools } from "../tool_calling.js";
 
-test("Test ChatAnthropicTools", async () => {
+test.skip("Test ChatAnthropicTools", async () => {
   const chat = new ChatAnthropicTools({
     modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
@@ -17,7 +17,7 @@ test("Test ChatAnthropicTools", async () => {
   console.log(JSON.stringify(res));
 });
 
-test("Test ChatAnthropicTools streaming", async () => {
+test.skip("Test ChatAnthropicTools streaming", async () => {
   const chat = new ChatAnthropicTools({
     modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
@@ -32,7 +32,7 @@ test("Test ChatAnthropicTools streaming", async () => {
   expect(chunks.length).toBeGreaterThan(1);
 });
 
-test("Test ChatAnthropicTools with tools", async () => {
+test.skip("Test ChatAnthropicTools with tools", async () => {
   const chat = new ChatAnthropicTools({
     modelName: "claude-3-sonnet-20240229",
     temperature: 0.1,
@@ -71,7 +71,7 @@ test("Test ChatAnthropicTools with tools", async () => {
   );
 });
 
-test("Test ChatAnthropicTools with a forced function call", async () => {
+test.skip("Test ChatAnthropicTools with a forced function call", async () => {
   const chat = new ChatAnthropicTools({
     modelName: "claude-3-sonnet-20240229",
     temperature: 0.1,
@@ -117,7 +117,7 @@ test("Test ChatAnthropicTools with a forced function call", async () => {
   );
 });
 
-test("ChatAnthropicTools with Zod schema", async () => {
+test.skip("ChatAnthropicTools with Zod schema", async () => {
   const schema = z.object({
     people: z.array(
       z.object({
@@ -168,7 +168,7 @@ test("ChatAnthropicTools with Zod schema", async () => {
   });
 });
 
-test("ChatAnthropicTools with parallel tool calling", async () => {
+test.skip("ChatAnthropicTools with parallel tool calling", async () => {
   const schema = z.object({
     name: z.string().describe("The name of a person"),
     height: z.number().describe("The person's height"),
@@ -215,7 +215,7 @@ test("ChatAnthropicTools with parallel tool calling", async () => {
   );
 });
 
-test("Test ChatAnthropic withStructuredOutput", async () => {
+test.skip("Test ChatAnthropic withStructuredOutput", async () => {
   const runnable = new ChatAnthropicTools({
     modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
@@ -235,7 +235,7 @@ test("Test ChatAnthropic withStructuredOutput", async () => {
   expect(res).toEqual({ name: "Alex", height: 5, hairColor: "blonde" });
 });
 
-test("Test ChatAnthropic withStructuredOutput on a single array item", async () => {
+test.skip("Test ChatAnthropic withStructuredOutput on a single array item", async () => {
   const runnable = new ChatAnthropicTools({
     modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
@@ -258,7 +258,7 @@ test("Test ChatAnthropic withStructuredOutput on a single array item", async () 
   });
 });
 
-test("Test ChatAnthropic withStructuredOutput on a single array item", async () => {
+test.skip("Test ChatAnthropic withStructuredOutput on a single array item", async () => {
   const runnable = new ChatAnthropicTools({
     modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
@@ -305,7 +305,7 @@ test("Test ChatAnthropic withStructuredOutput on a single array item", async () 
   });
 });
 
-test("Test ChatAnthropicTools", async () => {
+test.skip("Test ChatAnthropicTools", async () => {
   const chat = new ChatAnthropicTools({
     modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,

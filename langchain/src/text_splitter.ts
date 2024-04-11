@@ -188,7 +188,7 @@ export abstract class TextSplitter
     for (const d of splits) {
       const _len = await this.lengthFunction(d);
       if (
-        total + _len + (currentDoc.length > 0 ? separator.length : 0) >
+        total + _len + currentDoc.length * separator.length >
         this.chunkSize
       ) {
         if (total > this.chunkSize) {
@@ -207,7 +207,9 @@ which is longer than the specified ${this.chunkSize}`
           // - or if we still have any chunks and the length is long
           while (
             total > this.chunkOverlap ||
-            (total + _len > this.chunkSize && total > 0)
+            (total + _len + currentDoc.length * separator.length >
+              this.chunkSize &&
+              total > 0)
           ) {
             total -= await this.lengthFunction(currentDoc[0]);
             currentDoc.shift();

@@ -49,6 +49,9 @@ interface DynamoDBSerializedChatMessage {
     role?: {
       S: string;
     };
+    additional_kwargs?: {
+      S: string;
+    };
   };
 }
 
@@ -81,6 +84,45 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
   private messageAttributeName = "messages";
 
   private dynamoKey: Record<string, AttributeValue> = {};
+
+  /**
+   * Transforms a `StoredMessage` into a `DynamoDBSerializedChatMessage`.
+   * The `DynamoDBSerializedChatMessage` format is suitable for storing in DynamoDB.
+   *
+   * @param message - The `StoredMessage` to be transformed.
+   * @returns The transformed `DynamoDBSerializedChatMessage`.
+   */
+  private createDynamoDBSerializedChatMessage(
+    message: StoredMessage
+  ): DynamoDBSerializedChatMessage {
+    const {
+      type,
+      data: { content, role, additional_kwargs },
+    } = message;
+
+    const isAdditionalKwargs =
+      additional_kwargs && Object.keys(additional_kwargs).length;
+
+    const dynamoSerializedMessage: DynamoDBSerializedChatMessage = {
+      M: {
+        type: {
+          S: type,
+        },
+        text: {
+          S: content,
+        },
+        additional_kwargs: isAdditionalKwargs
+          ? { S: JSON.stringify(additional_kwargs) }
+          : { S: "{}" },
+      },
+    };
+
+    if (role) {
+      dynamoSerializedMessage.M.role = { S: role };
+    }
+
+    return dynamoSerializedMessage;
+  }
 
   constructor({
     tableName,
@@ -117,39 +159,50 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
    * @returns Array of stored messages
    */
   async getMessages(): Promise<BaseMessage[]> {
-    const params: GetItemCommandInput = {
-      TableName: this.tableName,
-      Key: this.dynamoKey,
-    };
+    try {
+      const params: GetItemCommandInput = {
+        TableName: this.tableName,
+        Key: this.dynamoKey,
+      };
 
-    const response = await this.client.send(new GetItemCommand(params));
-    const items = response.Item
-      ? response.Item[this.messageAttributeName]?.L ?? []
-      : [];
-    const messages = items
-      .map((item) => ({
-        type: item.M?.type.S,
-        data: {
-          role: item.M?.role?.S,
-          content: item.M?.text.S,
-        },
-      }))
-      .filter(
-        (x): x is StoredMessage =>
-          x.type !== undefined && x.data.content !== undefined
-      );
-    return mapStoredMessagesToChatMessages(messages);
-  }
+      const response = await this.client.send(new GetItemCommand(params));
+      const items = response.Item
+        ? response.Item[this.messageAttributeName]?.L ?? []
+        : [];
+      const messages = items
+        .filter(
+          (
+            item
+          ): item is AttributeValue & { M: DynamoDBSerializedChatMessage } =>
+            item.M !== undefined
+        )
+        .map((item) => {
+          const data: {
+            role?: string;
+            content: string | undefined;
+            additional_kwargs?: Record<string, unknown>;
+          } = {
+            role: item.M?.role?.S,
+            content: item.M?.text.S,
+            additional_kwargs: item.M?.additional_kwargs?.S
+              ? JSON.parse(item.M?.additional_kwargs.S)
+              : undefined,
+          };
 
-  /**
-   * Deletes all messages from the DynamoDB table.
-   */
-  async clear(): Promise<void> {
-    const params: DeleteItemCommandInput = {
-      TableName: this.tableName,
-      Key: this.dynamoKey,
-    };
-    await this.client.send(new DeleteItemCommand(params));
+          return {
+            type: item.M?.type.S,
+            data,
+          };
+        })
+        .filter(
+          (x): x is StoredMessage =>
+            x.type !== undefined && x.data.content !== undefined
+        );
+      return mapStoredMessagesToChatMessages(messages);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      throw new Error(`Error getting messages: ${error.message}`);
+    }
   }
 
   /**
@@ -157,40 +210,81 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
    * @param message The message to be added to the DynamoDB table.
    */
   async addMessage(message: BaseMessage) {
-    const messages = mapChatMessagesToStoredMessages([message]);
+    try {
+      const messages = mapChatMessagesToStoredMessages([message]);
 
-    const params: UpdateItemCommandInput = {
-      TableName: this.tableName,
-      Key: this.dynamoKey,
-      ExpressionAttributeNames: {
-        "#m": this.messageAttributeName,
-      },
-      ExpressionAttributeValues: {
-        ":empty_list": {
-          L: [],
+      const params: UpdateItemCommandInput = {
+        TableName: this.tableName,
+        Key: this.dynamoKey,
+        ExpressionAttributeNames: {
+          "#m": this.messageAttributeName,
         },
-        ":m": {
-          L: messages.map((message) => {
-            const dynamoSerializedMessage: DynamoDBSerializedChatMessage = {
-              M: {
-                type: {
-                  S: message.type,
-                },
-                text: {
-                  S: message.data.content,
-                },
-              },
-            };
-            if (message.data.role) {
-              dynamoSerializedMessage.M.role = { S: message.data.role };
-            }
-            return dynamoSerializedMessage;
-          }),
+        ExpressionAttributeValues: {
+          ":empty_list": {
+            L: [],
+          },
+          ":m": {
+            L: messages.map(this.createDynamoDBSerializedChatMessage),
+          },
         },
-      },
-      UpdateExpression:
-        "SET #m = list_append(if_not_exists(#m, :empty_list), :m)",
-    };
-    await this.client.send(new UpdateItemCommand(params));
+        UpdateExpression:
+          "SET #m = list_append(if_not_exists(#m, :empty_list), :m)",
+      };
+      await this.client.send(new UpdateItemCommand(params));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      throw new Error(`Error adding message: ${error.message}`);
+    }
+  }
+
+  /**
+   * Adds new messages to the DynamoDB table.
+   * @param messages The messages to be added to the DynamoDB table.
+   */
+  async addMessages(messages: BaseMessage[]): Promise<void> {
+    try {
+      const storedMessages = mapChatMessagesToStoredMessages(messages);
+      const dynamoMessages = storedMessages.map(
+        this.createDynamoDBSerializedChatMessage
+      );
+
+      const params: UpdateItemCommandInput = {
+        TableName: this.tableName,
+        Key: this.dynamoKey,
+        ExpressionAttributeNames: {
+          "#m": this.messageAttributeName,
+        },
+        ExpressionAttributeValues: {
+          ":empty_list": {
+            L: [],
+          },
+          ":m": {
+            L: dynamoMessages,
+          },
+        },
+        UpdateExpression:
+          "SET #m = list_append(if_not_exists(#m, :empty_list), :m)",
+      };
+      await this.client.send(new UpdateItemCommand(params));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      throw new Error(`Error adding messages: ${error.message}`);
+    }
+  }
+
+  /**
+   * Deletes all messages from the DynamoDB table.
+   */
+  async clear(): Promise<void> {
+    try {
+      const params: DeleteItemCommandInput = {
+        TableName: this.tableName,
+        Key: this.dynamoKey,
+      };
+      await this.client.send(new DeleteItemCommand(params));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      throw new Error(`Error clearing messages: ${error.message}`);
+    }
   }
 }

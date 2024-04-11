@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-common",
-  "version": "0.0.1",
+  "version": "0.0.8",
   "description": "Core types and classes for Google services.",
   "type": "module",
   "engines": {
@@ -39,7 +39,9 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1.1"
+    "@langchain/core": "~0.1.56",
+    "uuid": "^9.0.0",
+    "zod-to-json-schema": "^3.22.4"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
@@ -63,7 +65,8 @@
     "release-it": "^15.10.1",
     "rollup": "^4.5.2",
     "ts-jest": "^29.1.0",
-    "typescript": "<5.2.0"
+    "typescript": "<5.2.0",
+    "zod": "^3.22.4"
   },
   "publishConfig": {
     "access": "public"
@@ -78,6 +81,24 @@
       "import": "./index.js",
       "require": "./index.cjs"
     },
+    "./utils": {
+      "types": {
+        "import": "./utils.d.ts",
+        "require": "./utils.d.cts",
+        "default": "./utils.d.ts"
+      },
+      "import": "./utils.js",
+      "require": "./utils.cjs"
+    },
+    "./types": {
+      "types": {
+        "import": "./types.d.ts",
+        "require": "./types.d.cts",
+        "default": "./types.d.ts"
+      },
+      "import": "./types.js",
+      "require": "./types.cjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -85,6 +106,14 @@
     "index.cjs",
     "index.js",
     "index.d.ts",
-    "index.d.cts"
+    "index.d.cts",
+    "utils.cjs",
+    "utils.js",
+    "utils.d.ts",
+    "utils.d.cts",
+    "types.cjs",
+    "types.js",
+    "types.d.ts",
+    "types.d.cts"
   ]
 }

@@ -119,6 +119,9 @@ const PRIMITIVES = new Set(["string", "number", "boolean"]);
 
 /**
  * Ensure that a passed config is an object with all required keys present.
+ *
+ * Note: To make sure async local storage loading works correctly, this
+ * should not be called with a default or prepopulated config argument.
  */
 export function ensureConfig<CallOptions extends RunnableConfig>(
   config?: CallOptions
@@ -130,6 +133,7 @@ export function ensureConfig<CallOptions extends RunnableConfig>(
     metadata: {},
     callbacks: undefined,
     recursionLimit: 25,
+    runId: undefined,
   };
   if (loadedConfig) {
     empty = { ...empty, ...loadedConfig };
@@ -161,6 +165,7 @@ export function patchConfig<CallOptions extends RunnableConfig>(
     recursionLimit,
     runName,
     configurable,
+    runId,
   }: RunnableConfig = {}
 ): Partial<CallOptions> {
   const newConfig = ensureConfig(config);
@@ -183,6 +188,9 @@ export function patchConfig<CallOptions extends RunnableConfig>(
   }
   if (configurable !== undefined) {
     newConfig.configurable = { ...newConfig.configurable, ...configurable };
+  }
+  if (runId !== undefined) {
+    delete newConfig.runId;
   }
   return newConfig;
 }

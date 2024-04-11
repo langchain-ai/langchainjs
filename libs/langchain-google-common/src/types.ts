@@ -1,4 +1,6 @@
 import type { BaseLLMParams } from "@langchain/core/language_models/llms";
+import { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
+import { StructuredToolInterface } from "@langchain/core/tools";
 import type { JsonStream } from "./utils/stream.js";
 
 /**
@@ -48,6 +50,11 @@ export interface GoogleAISafetySetting {
 export interface GoogleAIModelParams {
   /** Model to use */
   model?: string;
+  /**
+   * Model to use
+   * Alias for `model`
+   */
+  modelName?: string;
 
   /** Sampling temperature to use */
   temperature?: number;
@@ -84,10 +91,22 @@ export interface GoogleAIModelParams {
   safetySettings?: GoogleAISafetySetting[];
 }
 
+/**
+ * The params which can be passed to the API at request time.
+ */
+export interface GoogleAIModelRequestParams extends GoogleAIModelParams {
+  tools?: StructuredToolInterface[] | GeminiTool[];
+}
+
 export interface GoogleAIBaseLLMInput<AuthOptions>
   extends BaseLLMParams,
     GoogleConnectionParams<AuthOptions>,
     GoogleAIModelParams,
+    GoogleAISafetyParams {}
+
+export interface GoogleAIBaseLanguageModelCallOptions
+  extends BaseLanguageModelCallOptions,
+    GoogleAIModelRequestParams,
     GoogleAISafetyParams {}
 
 /**
@@ -153,7 +172,7 @@ export interface GeminiSafetyRating {
   probability: string;
 }
 
-export type GeminiRole = "user" | "model";
+export type GeminiRole = "user" | "model" | "function";
 
 // Vertex AI requires the role
 
@@ -163,8 +182,33 @@ export interface GeminiContent {
 }
 
 export interface GeminiTool {
-  // TODO: Implement
+  functionDeclarations?: GeminiFunctionDeclaration[];
 }
+
+export interface GeminiFunctionDeclaration {
+  name: string;
+  description: string;
+  parameters?: GeminiFunctionSchema;
+}
+
+export interface GeminiFunctionSchema {
+  type: GeminiFunctionSchemaType;
+  format?: string;
+  description?: string;
+  nullable?: boolean;
+  enum?: string[];
+  properties?: Record<string, GeminiFunctionSchema>;
+  required?: string[];
+  items?: GeminiFunctionSchema;
+}
+
+export type GeminiFunctionSchemaType =
+  | "string"
+  | "number"
+  | "integer"
+  | "boolean"
+  | "array"
+  | "object";
 
 export interface GeminiGenerationConfig {
   stopSequences?: string[];

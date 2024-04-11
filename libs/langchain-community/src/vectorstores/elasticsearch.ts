@@ -193,7 +193,8 @@ export class ElasticVectorSearch extends VectorStore {
         _index: this.indexName,
       },
     }));
-    await this.client.bulk({ refresh: true, operations });
+    if (operations.length > 0)
+      await this.client.bulk({ refresh: true, operations });
   }
 
   /**

@@ -1,4 +1,4 @@
-/* eslint-disable react/jsx-props-no-spreading */
+/* eslint-disable react/jsx-props-no-spreading, react/destructuring-assignment */
 import React from "react";
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
@@ -24,78 +24,99 @@ function InstallationInfo({ children }) {
   );
 }
 
+const DEFAULTS = {
+  openaiParams: `{\n  model: "gpt-3.5-turbo-0125",\n  temperature: 0\n}`,
+  anthropicParams: `{\n  model: "claude-3-sonnet-20240229",\n  temperature: 0\n}`,
+  fireworksParams: `{\n  model: "accounts/fireworks/models/firefunction-v1",\n  temperature: 0\n}`,
+  mistralParams: `{\n  model: "mistral-large-latest",\n  temperature: 0\n}`,
+};
+
 /**
- * @param {{ openaiParams?: string, anthropicParams?: string, fireworksParams?: string, mistralParams?: string, hideOpenai?: boolean, hideAnthropic?: boolean, hideFireworks?: boolean, hideMistral?: boolean }} props
+ * @typedef {Object} ChatModelTabsProps - Component props.
+ * @property {string} [openaiParams] - Parameters for OpenAI chat model. Defaults to `"{\n  model: "gpt-3.5-turbo-0125",\n  temperature: 0\n}"`
+ * @property {string} [anthropicParams] - Parameters for Anthropic chat model. Defaults to `"{\n  model: "claude-3-sonnet-20240229",\n  temperature: 0\n}"`
+ * @property {string} [fireworksParams] - Parameters for Fireworks chat model. Defaults to `"{\n  model: "accounts/fireworks/models/firefunction-v1",\n  temperature: 0\n}"`
+ * @property {string} [mistralParams] - Parameters for Mistral chat model. Defaults to `"{\n  model: "mistral-large-latest",\n  temperature: 0\n}"`
+ * @property {boolean} [hideOpenai] - Whether or not to hide OpenAI chat model.
+ * @property {boolean} [hideAnthropic] - Whether or not to hide Anthropic chat model.
+ * @property {boolean} [hideFireworks] - Whether or not to hide Fireworks chat model.
+ * @property {boolean} [hideMistral] - Whether or not to hide Mistral chat model.
+ * @property {string} [customVarName] - Custom variable name for the model. Defaults to `"model"`.
+ */
+
+/**
+ * @param {ChatModelTabsProps} props - Component props.
  */
 export default function ChatModelTabs(props) {
-  const {
-    openaiParams,
-    anthropicParams,
-    fireworksParams,
-    mistralParams,
-    hideOpenai,
-    hideAnthropic,
-    hideFireworks,
-    hideMistral,
-  } = props;
-  // OpenAI
-  const openAIText = `import { ChatOpenAI } from "@langchain/openai";
-  
-const model = new ChatOpenAI(${openaiParams ?? "{}"});`;
-  const openAIEnvText = `OPENAI_API_KEY=your-api-key`;
-  const openAIProps = { value: "OpenAI", label: "OpenAI", default: true };
+  const { customVarName, additionalDependencies } = props;
 
-  // Anthropic
-  const anthropicText = `import { ChatAnthropic } from "@langchain/anthropic";
-  
-const model = new ChatAnthropic(${anthropicParams ?? "{}"});`;
-  const anthropicEnvText = `ANTHROPIC_API_KEY=your-api-key`;
-  const anthropicProps = { value: "Anthropic", label: "Anthropic" };
+  const llmVarName = customVarName ?? "model";
 
-  // FireworksAI
-  const fireworksText = `import { ChatFireworks } from "@langchain/community/chat_models/fireworks";
-  
-const model = new ChatFireworks(${fireworksParams ?? "{}"});`;
-  const fireworksEnvText = `FIREWORKS_API_KEY=your-api-key`;
-  const fireworksProps = { value: "FireworksAI", label: "FireworksAI" };
+  const openaiParams = props.openaiParams ?? DEFAULTS.openaiParams;
+  const anthropicParams = props.anthropicParams ?? DEFAULTS.anthropicParams;
+  const fireworksParams = props.fireworksParams ?? DEFAULTS.fireworksParams;
+  const mistralParams = props.mistralParams ?? DEFAULTS.mistralParams;
+  const providers = props.providers ?? [
+    "openai",
+    "anthropic",
+    "fireworks",
+    "mistral",
+  ];
 
-  // MistralAI
-  const mistralText = `import { ChatMistralAI } from "@langchain/mistralai";
-  
-const model = new ChatMistralAI(${mistralParams ?? "{}"});`;
-  const mistralEnvText = `MISTRAL_API_KEY=your-api-key`;
-  const mistralProps = { value: "MistralAI", label: "MistralAI" };
+  const tabs = {
+    openai: {
+      value: "OpenAI",
+      label: "OpenAI",
+      default: true,
+      text: `import { ChatOpenAI } from "@langchain/openai";\n\nconst ${llmVarName} = new ChatOpenAI(${openaiParams});`,
+      envs: `OPENAI_API_KEY=your-api-key`,
+      dependencies: "@langchain/openai",
+    },
+    anthropic: {
+      value: "Anthropic",
+      label: "Anthropic",
+      default: false,
+      text: `import { ChatAnthropic } from "@langchain/anthropic";\n\nconst ${llmVarName} = new ChatAnthropic(${anthropicParams});`,
+      envs: `ANTHROPIC_API_KEY=your-api-key`,
+      dependencies: "@langchain/anthropic",
+    },
+    fireworks: {
+      value: "FireworksAI",
+      label: "FireworksAI",
+      default: false,
+      text: `import { ChatFireworks } from "@langchain/community/chat_models/fireworks";\n\nconst ${llmVarName} = new ChatFireworks(${fireworksParams});`,
+      envs: `FIREWORKS_API_KEY=your-api-key`,
+      dependencies: "@langchain/community",
+    },
+    mistral: {
+      value: "MistralAI",
+      label: "MistralAI",
+      default: false,
+      text: `import { ChatMistralAI } from "@langchain/mistralai";\n\nconst ${llmVarName} = new ChatMistralAI(${mistralParams});`,
+      envs: `MISTRAL_API_KEY=your-api-key`,
+      dependencies: "@langchain/mistralai",
+    },
+  };
+
+  const displayedTabs = providers.map((provider) => tabs[provider]);
 
   return (
-    <Tabs groupId="modelTabs">
-      {hideOpenai ? null : (
-        <TabItem {...openAIProps}>
-          <InstallationInfo>@langchain/openai</InstallationInfo>
-          <CodeBlock language="bash">{openAIEnvText}</CodeBlock>
-          <CodeBlock language="typescript">{openAIText}</CodeBlock>
-        </TabItem>
-      )}
-      {hideAnthropic ? null : (
-        <TabItem {...anthropicProps}>
-          <InstallationInfo>@langchain/anthropic</InstallationInfo>
-          <CodeBlock language="bash">{anthropicEnvText}</CodeBlock>
-          <CodeBlock language="typescript">{anthropicText}</CodeBlock>
-        </TabItem>
-      )}
-      {hideFireworks ? null : (
-        <TabItem {...fireworksProps}>
-          <InstallationInfo>@langchain/community</InstallationInfo>
-          <CodeBlock language="bash">{fireworksEnvText}</CodeBlock>
-          <CodeBlock language="typescript">{fireworksText}</CodeBlock>
-        </TabItem>
-      )}
-      {hideMistral ? null : (
-        <TabItem {...mistralProps}>
-          <InstallationInfo>@langchain/mistralai</InstallationInfo>
-          <CodeBlock language="bash">{mistralEnvText}</CodeBlock>
-          <CodeBlock language="typescript">{mistralText}</CodeBlock>
-        </TabItem>
-      )}
-    </Tabs>
+    <div>
+      <h3>Pick your chat model:</h3>
+      <Tabs groupId="modelTabs">
+        {displayedTabs.map((tab) => (
+          <TabItem value={tab.value} label={tab.label} key={tab.value}>
+            <h4>Install dependencies</h4>
+            <InstallationInfo>
+              {[tab.dependencies, additionalDependencies].join(" ")}
+            </InstallationInfo>
+            <h4>Add environment variables</h4>
+            <CodeBlock language="bash">{tab.envs}</CodeBlock>
+            <h4>Instantiate the model</h4>
+            <CodeBlock language="typescript">{tab.text}</CodeBlock>
+          </TabItem>
+        ))}
+      </Tabs>
+    </div>
   );
 }

@@ -210,4 +210,40 @@ describe.skip("PineconeStore", () => {
     expect(results.length).toEqual(1);
     expect(results[0].metadata.foo).toBe(id1);
   });
+
+  test("auto instantiated pinecone index class", async () => {
+    const documentId = uuid.v4();
+    const pageContent = faker.lorem.sentence(5);
+    const embeddings = new SyntheticEmbeddings({
+      vectorSize: 1536,
+    });
+
+    const store = new PineconeStore(embeddings, {
+      pineconeConfig: {
+        indexName: testIndexName,
+        config: {
+          apiKey: process.env.PINECONE_API_KEY!,
+        },
+      },
+    });
+
+    await store.addDocuments([{ pageContent, metadata: {} }], [documentId]);
+    await sleep(35000);
+
+    const results = await store.similaritySearch(pageContent, 1);
+
+    expect(results).toEqual([new Document({ metadata: {}, pageContent })]);
+
+    await store.addDocuments(
+      [{ pageContent: `${pageContent} upserted`, metadata: {} }],
+      [documentId]
+    );
+    await sleep(35000);
+
+    const results2 = await store.similaritySearch(pageContent, 1);
+
+    expect(results2).toEqual([
+      new Document({ metadata: {}, pageContent: `${pageContent} upserted` }),
+    ]);
+  });
 });

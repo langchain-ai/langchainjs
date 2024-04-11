@@ -141,12 +141,13 @@ export abstract class StructuredTool<
     const runManager = await callbackManager_?.handleToolStart(
       this.toJSON(),
       typeof parsed === "string" ? parsed : JSON.stringify(parsed),
-      undefined,
+      config.runId,
       undefined,
       undefined,
       undefined,
       config.runName
     );
+    delete config.runId;
     let result;
     try {
       result = await this._call(parsed, runManager, config);

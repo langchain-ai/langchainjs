@@ -36,6 +36,6 @@ describe("Test RedisCache", () => {
     const response1 = await model.invoke("What is something random?");
     const response2 = await model.invoke("What is something random?");
     expect(response1).not.toBeUndefined();
-    expect(response1).toEqual(response2);
+    expect(JSON.stringify(response1)).toEqual(JSON.stringify(response2));
   });
 });

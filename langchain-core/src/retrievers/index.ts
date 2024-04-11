@@ -4,10 +4,10 @@ import {
   CallbackManagerForRetrieverRun,
   Callbacks,
   parseCallbackConfigArg,
-} from "./callbacks/manager.js";
-import type { DocumentInterface } from "./documents/document.js";
-import { Runnable, type RunnableInterface } from "./runnables/base.js";
-import { RunnableConfig, ensureConfig } from "./runnables/config.js";
+} from "../callbacks/manager.js";
+import type { DocumentInterface } from "../documents/document.js";
+import { Runnable, type RunnableInterface } from "../runnables/base.js";
+import { RunnableConfig, ensureConfig } from "../runnables/config.js";
 
 /**
  * Base Retriever class. All indexes should extend this class.
@@ -103,7 +103,7 @@ export abstract class BaseRetriever<
     const runManager = await callbackManager_?.handleRetrieverStart(
       this.toJSON(),
       query,
-      undefined,
+      parsedConfig.runId,
       undefined,
       undefined,
       undefined,

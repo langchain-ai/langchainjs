@@ -11,9 +11,11 @@ function abs(relativePath) {
 
 
 export const config = {
-  internals: [/node\:/, /@langchain\/core\//, /web-auth-library\/google/],
+  internals: [/node\:/, /@langchain\/core\//, /web-auth-library\/google/, /@langchain\/google-common/],
   entrypoints: {
     index: "index",
+    utils: "utils",
+    types: "types",
   },
   tsConfigPath: resolve("./tsconfig.json"),
   cjsSource: "./dist-cjs",

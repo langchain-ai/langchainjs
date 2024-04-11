@@ -1,12 +1,40 @@
 import { ChatPromptValueInterface } from "../prompt_values.js";
-import { RunnableLike, Runnable } from "../runnables/base.js";
+import {
+  RunnableLike,
+  Runnable,
+  type RunnableBinding,
+} from "../runnables/base.js";
 import { RunnableConfig } from "../runnables/config.js";
-import { InputValues } from "../utils/types.js";
+import { InputValues } from "../utils/types/index.js";
 import {
   BaseMessagePromptTemplateLike,
   ChatPromptTemplate,
   ChatPromptTemplateInput,
 } from "./chat.js";
+
+function isWithStructuredOutput(
+  x: unknown
+  // eslint-disable-next-line @typescript-eslint/ban-types
+): x is {
+  withStructuredOutput: (...arg: unknown[]) => Runnable;
+} {
+  return (
+    typeof x === "object" &&
+    x != null &&
+    "withStructuredOutput" in x &&
+    typeof x.withStructuredOutput === "function"
+  );
+}
+
+function isRunnableBinding(x: unknown): x is RunnableBinding<unknown, unknown> {
+  return (
+    typeof x === "object" &&
+    x != null &&
+    "lc_id" in x &&
+    Array.isArray(x.lc_id) &&
+    x.lc_id.join("/") === "langchain_core/runnables/RunnableBinding"
+  );
+}
 
 /**
  * Interface for the input of a ChatPromptTemplate.
@@ -33,6 +61,8 @@ export class StructuredPrompt<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   schema: Record<string, any>;
 
+  lc_namespace = ["langchain_core", "prompts", "structured"];
+
   get lc_aliases(): Record<string, string> {
     return {
       ...super.lc_aliases,
@@ -48,17 +78,25 @@ export class StructuredPrompt<
   pipe<NewRunOutput>(
     coerceable: RunnableLike<ChatPromptValueInterface, NewRunOutput>
   ): Runnable<RunInput, Exclude<NewRunOutput, Error>, RunnableConfig> {
-    if (
-      typeof coerceable === "object" &&
-      "withStructuredOutput" in coerceable &&
-      typeof coerceable.withStructuredOutput === "function"
-    ) {
+    if (isWithStructuredOutput(coerceable)) {
       return super.pipe(coerceable.withStructuredOutput(this.schema));
-    } else {
-      throw new Error(
-        `Structured prompts need to be piped to a language model that supports the "withStructuredOutput()" method.`
+    }
+
+    if (
+      isRunnableBinding(coerceable) &&
+      isWithStructuredOutput(coerceable.bound)
+    ) {
+      return super.pipe(
+        coerceable.bound
+          .withStructuredOutput(this.schema)
+          .bind(coerceable.kwargs ?? {})
+          .withConfig(coerceable.config)
       );
     }
+
+    throw new Error(
+      `Structured prompts need to be piped to a language model that supports the "withStructuredOutput()" method.`
+    );
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

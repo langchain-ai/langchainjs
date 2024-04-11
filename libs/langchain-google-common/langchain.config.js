@@ -14,6 +14,8 @@ export const config = {
   internals: [/node\:/, /@langchain\/core\//],
   entrypoints: {
     index: "index",
+    utils: "utils/index",
+    types: "types",
   },
   tsConfigPath: resolve("./tsconfig.json"),
   cjsSource: "./dist-cjs",

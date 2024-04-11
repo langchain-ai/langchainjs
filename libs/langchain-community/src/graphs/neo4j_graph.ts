@@ -1,4 +1,6 @@
 import neo4j, { RoutingControl } from "neo4j-driver";
+import { insecureHash } from "@langchain/core/utils/hash";
+import { GraphDocument } from "./graph_document.js";
 
 interface Neo4jGraphConfig {
   url: string;
@@ -12,17 +14,39 @@ interface StructuredSchema {
   nodeProps: { [key: NodeType["labels"]]: NodeType["properties"] };
   relProps: { [key: RelType["type"]]: RelType["properties"] };
   relationships: PathType[];
+  metadata?: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    constraint: Record<string, any>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    index: Record<string, any>;
+  };
 }
 
-type NodeType = {
+export interface AddGraphDocumentsConfig {
+  baseEntityLabel?: boolean;
+  includeSource?: boolean;
+}
+
+export type NodeType = {
   labels: string;
   properties: { property: string; type: string }[];
 };
-type RelType = {
+
+export type RelType = {
   type: string;
   properties: { property: string; type: string }[];
 };
-type PathType = { start: string; type: string; end: string };
+
+export type PathType = { start: string; type: string; end: string };
+
+export const BASE_ENTITY_LABEL = "__Entity__";
+
+const INCLUDE_DOCS_QUERY = `
+  MERGE (d:Document {id:$document.metadata.id}) 
+  SET d.text = $document.pageContent 
+  SET d += $document.metadata 
+  WITH d 
+`;
 
 /**
  * @security *Security note*: Make sure that the database connection uses credentials
@@ -51,6 +75,10 @@ export class Neo4jGraph {
     nodeProps: {},
     relProps: {},
     relationships: [],
+    metadata: {
+      constraint: {},
+      index: {},
+    },
   };
 
   constructor({
@@ -164,6 +192,10 @@ export class Neo4jGraph {
       await this.query<{ output: PathType }>(relQuery)
     )?.map((el) => el.output);
 
+    const constraint = await this.query("SHOW CONSTRAINTS");
+
+    const index = await this.query("SHOW INDEXES YIELD *");
+
     // Structured schema similar to Python's dictionary comprehension
     this.structuredSchema = {
       nodeProps: Object.fromEntries(
@@ -173,6 +205,10 @@ export class Neo4jGraph {
         relationshipsProperties?.map((el) => [el.type, el.properties]) || []
       ),
       relationships: relationships || [],
+      metadata: {
+        constraint,
+        index,
+      },
     };
 
     // Format node properties
@@ -207,8 +243,117 @@ export class Neo4jGraph {
     ].join("\n");
   }
 
+  async addGraphDocuments(
+    graphDocuments: GraphDocument[],
+    config: AddGraphDocumentsConfig = {}
+  ): Promise<void> {
+    const { baseEntityLabel } = config;
+
+    if (baseEntityLabel) {
+      const constraintExists =
+        this.structuredSchema?.metadata?.constraint?.some(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (el: any) =>
+            JSON.stringify(el.labelsOrTypes) ===
+              JSON.stringify([BASE_ENTITY_LABEL]) &&
+            JSON.stringify(el.properties) === JSON.stringify(["id"])
+        ) ?? false;
+
+      if (!constraintExists) {
+        await this.query(`
+          CREATE CONSTRAINT IF NOT EXISTS FOR (b:${BASE_ENTITY_LABEL})
+          REQUIRE b.id IS UNIQUE;          
+        `);
+        await this.refreshSchema();
+      }
+    }
+
+    const nodeImportQuery = getNodeImportQuery(config);
+    const relImportQuery = getRelImportQuery(config);
+
+    for (const document of graphDocuments) {
+      if (!document.source.metadata.id) {
+        document.source.metadata.id = insecureHash(document.source.pageContent);
+      }
+
+      // Import nodes
+      await this.query(nodeImportQuery, {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        data: document.nodes.map((el: any) => ({ ...el })),
+        document: { ...document.source },
+      });
+
+      // Import relationships
+      await this.query(relImportQuery, {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        data: document.relationships.map((el: any) => ({
+          source: el.source.id,
+          source_label: el.source.type,
+          target: el.target.id,
+          target_label: el.target.type,
+          type: el.type.replace(/ /g, "_").toUpperCase(),
+          properties: el.properties,
+        })),
+      });
+    }
+  }
+
   async close() {
     await this.driver.close();
+  }
+}
+
+function getNodeImportQuery({
+  baseEntityLabel,
+  includeSource,
+}: AddGraphDocumentsConfig): string {
+  if (baseEntityLabel) {
+    return `
+          ${includeSource ? INCLUDE_DOCS_QUERY : ""}
+          UNWIND $data AS row
+          MERGE (source:\`${BASE_ENTITY_LABEL}\` {id: row.id})
+          SET source += row.properties
+          ${includeSource ? "MERGE (d)-[:MENTIONS]->(source)" : ""}
+          WITH source, row
+          CALL apoc.create.addLabels(source, [row.type]) YIELD node
+          RETURN distinct 'done' AS result
+      `;
+  } else {
+    return `
+          ${includeSource ? INCLUDE_DOCS_QUERY : ""}
+          UNWIND $data AS row
+          CALL apoc.merge.node([row.type], {id: row.id},
+          row.properties, {}) YIELD node
+          ${includeSource ? "MERGE (d)-[:MENTIONS]->(node)" : ""}
+          RETURN distinct 'done' AS result
+      `;
+  }
+}
+
+function getRelImportQuery({
+  baseEntityLabel,
+}: AddGraphDocumentsConfig): string {
+  if (baseEntityLabel) {
+    return `
+          UNWIND $data AS row
+          MERGE (source:\`${BASE_ENTITY_LABEL}\` {id: row.source})
+          MERGE (target:\`${BASE_ENTITY_LABEL}\` {id: row.target})
+          WITH source, target, row
+          CALL apoc.merge.relationship(source, row.type,
+          {}, row.properties, target) YIELD rel
+          RETURN distinct 'done'
+      `;
+  } else {
+    return `
+          UNWIND $data AS row
+          CALL apoc.merge.node([row.source_label], {id: row.source},
+          {}, {}) YIELD node as source
+          CALL apoc.merge.node([row.target_label], {id: row.target},
+          {}, {}) YIELD node as target
+          CALL apoc.merge.relationship(source, row.type,
+          {}, row.properties, target) YIELD rel
+          RETURN distinct 'done'
+      `;
   }
 }
 

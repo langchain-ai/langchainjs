@@ -4,7 +4,7 @@ import { z } from "zod";
 
 const model = new ChatOpenAI({
   temperature: 0,
-  modelName: "gpt-4-turbo-preview",
+  model: "gpt-4-turbo-preview",
 });
 
 const calculatorSchema = z.object({
@@ -16,10 +16,8 @@ const calculatorSchema = z.object({
 const modelWithStructuredOutput = model.withStructuredOutput(calculatorSchema);
 
 const prompt = ChatPromptTemplate.fromMessages([
-  "system",
-  "You are VERY bad at math and must always use a calculator.",
-  "human",
-  "Please help me!! What is 2 + 2?",
+  ["system", "You are VERY bad at math and must always use a calculator."],
+  ["human", "Please help me!! What is 2 + 2?"],
 ]);
 const chain = prompt.pipe(modelWithStructuredOutput);
 const result = await chain.invoke({});

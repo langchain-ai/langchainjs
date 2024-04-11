@@ -25,10 +25,24 @@ export function convertToOpenAIFunction(
  * schema, which is then used as the parameters for the OpenAI tool.
  */
 export function convertToOpenAITool(
-  tool: StructuredToolInterface
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  tool: StructuredToolInterface | Record<string, any>
 ): ToolDefinition {
-  return {
-    type: "function",
-    function: convertToOpenAIFunction(tool),
-  };
+  if (isStructuredTool(tool)) {
+    return {
+      type: "function",
+      function: convertToOpenAIFunction(tool),
+    };
+  }
+  return tool as ToolDefinition;
+}
+
+export function isStructuredTool(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  tool?: StructuredToolInterface | Record<string, any>
+): tool is StructuredToolInterface {
+  return (
+    tool !== undefined &&
+    Array.isArray((tool as StructuredToolInterface).lc_namespace)
+  );
 }

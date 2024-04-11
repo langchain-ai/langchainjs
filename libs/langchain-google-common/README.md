@@ -27,14 +27,14 @@ file storage.
 ## Google services supported
 
 * Gemini model through LLM and Chat classes (both through Google AI Studio and 
-  Google Cloud Vertex AI)
+  Google Cloud Vertex AI). Including:
+  * Function/Tool support 
 
 
 ## TODO
 
 Tasks and services still to be implemented:
 
-* Functions for Gemini
 * PaLM Vertex AI support and backwards compatibility
 * PaLM MakerSuite support and backwards compatibility
 * Semantic Retrieval / AQA model
@@ -43,5 +43,10 @@ Tasks and services still to be implemented:
 * Multimodal embeddings
 * Vertex AI Search
 * Vertex AI Model Garden
+  * Online prediction endpoints
+    * Gemma
+  * Google managed models
+    * Claude
+* AI Studio Tuned Models
 * MakerSuite / Google Drive Hub
 * Google Cloud Vector Store

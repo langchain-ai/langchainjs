@@ -85,6 +85,8 @@ export abstract class GoogleBaseLLM<AuthOptions>
 
   lc_serializable = true;
 
+  modelName = "gemini-pro";
+
   model = "gemini-pro";
 
   temperature = 0.7;
@@ -182,7 +184,7 @@ export abstract class GoogleBaseLLM<AuthOptions>
     prompt: string,
     options: this["ParsedCallOptions"]
   ): Promise<string> {
-    const parameters = copyAIModelParams(this);
+    const parameters = copyAIModelParams(this, options);
     const result = await this.connection.request(prompt, parameters, options);
     const ret = safeResponseToString(result, this.safetyHandler);
     return ret;

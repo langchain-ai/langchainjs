@@ -8,24 +8,28 @@ import { FakeEmbeddings } from "closevector-common/dist/fake.js";
 import { AstraDBVectorStore, AstraLibArgs } from "../astradb.js";
 
 describe.skip("AstraDBVectorStore", () => {
-  const clientConfig = {
-    token: process.env.ASTRA_DB_APPLICATION_TOKEN ?? "dummy",
-    endpoint: process.env.ASTRA_DB_ENDPOINT ?? "dummy",
-    namespace: process.env.ASTRA_DB_NAMESPACE ?? "default_keyspace",
-  };
+  let client: AstraDB;
+  let astraConfig: AstraLibArgs;
+  beforeAll(() => {
+    const clientConfig = {
+      token: process.env.ASTRA_DB_APPLICATION_TOKEN ?? "dummy",
+      endpoint: process.env.ASTRA_DB_ENDPOINT ?? "dummy",
+      namespace: process.env.ASTRA_DB_NAMESPACE ?? "default_keyspace",
+    };
 
-  const client = new AstraDB(clientConfig.token, clientConfig.endpoint);
+    client = new AstraDB(clientConfig.token, clientConfig.endpoint);
 
-  const astraConfig: AstraLibArgs = {
-    ...clientConfig,
-    collection: process.env.ASTRA_DB_COLLECTION ?? "langchain_test",
-    collectionOptions: {
-      vector: {
-        dimension: 1536,
-        metric: "cosine",
+    astraConfig = {
+      ...clientConfig,
+      collection: process.env.ASTRA_DB_COLLECTION ?? "langchain_test",
+      collectionOptions: {
+        vector: {
+          dimension: 1536,
+          metric: "cosine",
+        },
       },
-    },
-  };
+    };
+  });
 
   beforeEach(async () => {
     try {

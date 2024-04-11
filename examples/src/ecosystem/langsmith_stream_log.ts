@@ -9,7 +9,7 @@ const logStream = await remoteChain.streamLog(
   {
     question: "What is a document loader?",
   },
-  // LangChain runnable config properties
+  // LangChain runnable config properties, if supported by the chain
   {
     configurable: {
       llm: "openai_gpt_3_5_turbo",

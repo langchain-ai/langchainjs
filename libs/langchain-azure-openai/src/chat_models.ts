@@ -226,9 +226,13 @@ export class AzureChatOpenAI
 
   stop?: string[] | undefined;
 
+  stopSequences?: string[] | undefined;
+
   streaming: boolean;
 
   modelName: string;
+
+  model: string;
 
   modelKwargs?: OpenAIChatInput["modelKwargs"];
 
@@ -237,6 +241,8 @@ export class AzureChatOpenAI
   azureOpenAIEndpoint?: string;
 
   azureOpenAIApiKey?: string;
+
+  apiKey?: string;
 
   azureOpenAIApiDeploymentName?: string;
 
@@ -260,25 +266,39 @@ export class AzureChatOpenAI
         fields?.azureOpenAIApiDeploymentName) ??
       getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME");
 
-    this.azureOpenAIApiKey =
-      fields?.azureOpenAIApiKey ??
-      fields?.openAIApiKey ??
-      (getEnvironmentVariable("AZURE_OPENAI_API_KEY") ||
-        getEnvironmentVariable("OPENAI_API_KEY"));
+    const openAiApiKey =
+      fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
 
-    if (!this.azureOpenAIApiKey && !fields?.credentials) {
+    this.azureOpenAIApiKey =
+      fields?.apiKey ??
+      fields?.azureOpenAIApiKey ??
+      getEnvironmentVariable("AZURE_OPENAI_API_KEY") ??
+      openAiApiKey;
+    this.apiKey = this.azureOpenAIApiKey;
+
+    const azureCredential =
+      fields?.credentials ??
+      (this.apiKey === openAiApiKey
+        ? new OpenAIKeyCredential(this.apiKey ?? "")
+        : new AzureKeyCredential(this.apiKey ?? ""));
+
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    const isOpenAIApiKey = azureCredential instanceof OpenAIKeyCredential;
+
+    if (!this.apiKey && !fields?.credentials) {
       throw new Error("Azure OpenAI API key not found");
     }
 
-    if (!this.azureOpenAIEndpoint) {
+    if (!this.azureOpenAIEndpoint && !isOpenAIApiKey) {
       throw new Error("Azure OpenAI Endpoint not found");
     }
 
-    if (!this.azureOpenAIApiDeploymentName) {
+    if (!this.azureOpenAIApiDeploymentName && !isOpenAIApiKey) {
       throw new Error("Azure OpenAI Deployment name not found");
     }
 
-    this.modelName = fields?.modelName ?? this.modelName;
+    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
+    this.model = this.modelName;
     this.modelKwargs = fields?.modelKwargs ?? {};
     this.timeout = fields?.timeout;
     this.temperature = fields?.temperature ?? this.temperature;
@@ -288,34 +308,32 @@ export class AzureChatOpenAI
     this.maxTokens = fields?.maxTokens;
     this.n = fields?.n ?? this.n;
     this.logitBias = fields?.logitBias;
-    this.stop = fields?.stop;
+    this.stop = fields?.stopSequences ?? fields?.stop;
+    this.stopSequences = this.stop;
     this.user = fields?.user;
     this.azureExtensionOptions = fields?.azureExtensionOptions;
 
     this.streaming = fields?.streaming ?? false;
 
-    const azureCredential =
-      fields?.credentials ??
-      (fields?.azureOpenAIApiKey ||
-      getEnvironmentVariable("AZURE_OPENAI_API_KEY")
-        ? new AzureKeyCredential(this.azureOpenAIApiKey ?? "")
-        : new OpenAIKeyCredential(this.azureOpenAIApiKey ?? ""));
+    const options = {
+      userAgentOptions: { userAgentPrefix: USER_AGENT_PREFIX },
+    };
 
-    if (isTokenCredential(azureCredential)) {
+    if (isOpenAIApiKey) {
+      this.client = new AzureOpenAIClient(
+        azureCredential as OpenAIKeyCredential
+      );
+    } else if (isTokenCredential(azureCredential)) {
       this.client = new AzureOpenAIClient(
         this.azureOpenAIEndpoint ?? "",
         azureCredential as TokenCredential,
-        {
-          userAgentOptions: { userAgentPrefix: USER_AGENT_PREFIX },
-        }
+        options
       );
     } else {
       this.client = new AzureOpenAIClient(
         this.azureOpenAIEndpoint ?? "",
         azureCredential as KeyCredential,
-        {
-          userAgentOptions: { userAgentPrefix: USER_AGENT_PREFIX },
-        }
+        options
       );
     }
   }
@@ -339,11 +357,10 @@ export class AzureChatOpenAI
     options: this["ParsedCallOptions"]
   ): Promise<EventStream<ChatCompletions>> {
     return this.caller.call(async () => {
-      if (!this.azureOpenAIApiDeploymentName) {
-        throw new Error("Azure OpenAI Deployment name not found");
-      }
+      const deploymentName = this.azureOpenAIApiDeploymentName || this.model;
+
       const res = await this.client.streamChatCompletions(
-        this.azureOpenAIApiDeploymentName,
+        deploymentName,
         azureOpenAIMessages,
         {
           functions: options?.functions,
@@ -354,7 +371,7 @@ export class AzureChatOpenAI
           logitBias: this.logitBias,
           user: this.user,
           n: this.n,
-          stop: this.stop,
+          stop: this.stopSequences,
           presencePenalty: this.presencePenalty,
           frequencyPenalty: this.frequencyPenalty,
           azureExtensionOptions: this.azureExtensionOptions,
@@ -434,10 +451,7 @@ export class AzureChatOpenAI
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
-    if (!this.azureOpenAIApiDeploymentName) {
-      throw new Error("Azure OpenAI Deployment name not found");
-    }
-    const deploymentName = this.azureOpenAIApiDeploymentName;
+    const deploymentName = this.azureOpenAIApiDeploymentName || this.model;
     const tokenUsage: TokenUsage = {};
     const azureOpenAIMessages: ChatRequestMessage[] =
       this.formatMessages(messages);
@@ -453,7 +467,7 @@ export class AzureChatOpenAI
           logitBias: this.logitBias,
           user: this.user,
           n: this.n,
-          stop: this.stop,
+          stop: this.stopSequences,
           presencePenalty: this.presencePenalty,
           frequencyPenalty: this.frequencyPenalty,
           azureExtensionOptions: this.azureExtensionOptions,
@@ -610,7 +624,7 @@ export class AzureChatOpenAI
     let tokensPerName = 0;
 
     // From: https://github.com/openai/openai-cookbook/blob/main/examples/How_to_format_inputs_to_ChatGPT_models.ipynb
-    if (this.modelName === "gpt-3.5-turbo-0301") {
+    if (this.model === "gpt-3.5-turbo-0301") {
       tokensPerMessage = 4;
       tokensPerName = -1;
     } else {

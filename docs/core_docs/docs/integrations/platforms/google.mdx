@@ -8,12 +8,17 @@ Functionality related to [Google Cloud Platform](https://cloud.google.com/)
 
 ## Chat models
 
-### ChatGoogleGenerativeAI
+### Gemini Models
 
-Access Gemini models such as `gemini-pro` and `gemini-pro-vision` through the [`ChatGoogleGenerativeAI`](/docs/integrations/chat/google_generativeai) class.
+Access Gemini models such as `gemini-pro` and `gemini-pro-vision` through the [`ChatGoogleGenerativeAI`](/docs/integrations/chat/google_generativeai),
+or if using VertexAI, via the [`ChatVertexAI`](/docs/integrations/chat/google_vertex_ai) class.
 
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
 import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
 
+<Tabs>
+<TabItem value="genai" label="GenAI" default>
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
@@ -30,7 +35,7 @@ export GOOGLE_API_KEY=your-api-key
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 
 const model = new ChatGoogleGenerativeAI({
-  modelName: "gemini-pro",
+  model: "gemini-pro",
   maxOutputTokens: 2048,
 });
 
@@ -47,7 +52,7 @@ Gemini vision models support image inputs when providing a single human message.
 
 ```typescript
 const visionModel = new ChatGoogleGenerativeAI({
-  modelName: "gemini-pro-vision",
+  model: "gemini-pro-vision",
   maxOutputTokens: 2048,
 });
 const image = fs.readFileSync("./hotdog.jpg").toString("base64");
@@ -69,33 +74,90 @@ const input2 = [
 const res = await visionModel.invoke(input2);
 ```
 
-The value of image_url must be a base64 encoded image (e.g., data:image/png;base64,abcd124).
+:::tip
+Click [here](/docs/integrations/chat/google_generativeai) for the `@langchain/google-genai` specific integration docs
+:::
 
-### Vertex AI
+</TabItem>
 
-Access PaLM chat models like `chat-bison` and `codechat-bison` via Google Cloud.
+<TabItem value="vertexai" label="VertexAI" default>
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
 
-```typescript
-import { ChatGoogleVertexAI } from "langchain/chat_models/googlevertexai";
+```bash npm2yarn
+npm install @langchain/google-vertexai
 ```
 
-## LLMs
+Then, you'll need to add your service account credentials, either directly as a `GOOGLE_VERTEX_AI_WEB_CREDENTIALS` environment variable:
 
-### Vertex AI
-
-Access PaLM LLMs like `text-bison` and `code-bison` via Google Cloud.
-
-```typescript
-import { GoogleVertexAI } from "langchain/llms/googlevertexai";
+```
+GOOGLE_VERTEX_AI_WEB_CREDENTIALS={"type":"service_account","project_id":"YOUR_PROJECT-12345",...}
 ```
 
-### Model Garden
+or as a file path:
 
-Access PaLM and hundreds of OSS models via Vertex AI Model Garden.
+```
+GOOGLE_VERTEX_AI_WEB_CREDENTIALS_FILE=/path/to/your/credentials.json
+```
 
 ```typescript
-import { GoogleVertexAI } from "langchain/llms/googlevertexai";
+import { ChatVertexAI } from "@langchain/google-vertexai";
+// Or, if using the web entrypoint:
+// import { ChatVertexAI } from "@langchain/google-vertexai-web";
+
+const model = new ChatVertexAI({
+  model: "gemini-1.0-pro",
+  maxOutputTokens: 2048,
+});
+
+// Batch and stream are also supported
+const res = await model.invoke([
+  [
+    "human",
+    "What would be a good company name for a company that makes colorful socks?",
+  ],
+]);
 ```
+
+Gemini vision models support image inputs when providing a single human message. For example:
+
+```typescript
+const visionModel = new ChatVertexAI({
+  model: "gemini-pro-vision",
+  maxOutputTokens: 2048,
+});
+const image = fs.readFileSync("./hotdog.png").toString("base64");
+const input2 = [
+  new HumanMessage({
+    content: [
+      {
+        type: "text",
+        text: "Describe the following image.",
+      },
+      {
+        type: "image_url",
+        image_url: `data:image/png;base64,${image}`,
+      },
+    ],
+  }),
+];
+
+const res = await visionModel.invoke(input2);
+```
+
+:::tip
+Click [here](/docs/integrations/chat/google_vertex_ai) for the `@langchain/google-vertexai` specific integration docs
+:::
+
+</TabItem>
+</Tabs>
+
+The value of `image_url` must be a base64 encoded image (e.g., `data:image/png;base64,abcd124`).
+
+### Vertex AI (Legacy)
+
+:::tip
+See the legacy Google PaLM and VertexAI documentation [here](/docs/integrations/chat/google_palm) for chat, and [here](/docs/integrations/llms/google_palm) for LLMs.
+:::
 
 ## Vector Store
 

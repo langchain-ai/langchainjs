@@ -86,3 +86,39 @@ test.skip("test multi-mesage streaming call", async () => {
 
   expect(chunks.length).toBeGreaterThan(1);
 });
+
+test.skip("test multi-mesage streaming call and abort after 5s", async () => {
+  const llamaCpp = new ChatLlamaCpp({ modelPath: llamaPath, temperature: 0.7 });
+  const controller = new AbortController();
+  setTimeout(() => {
+    controller.abort();
+  }, 5000);
+  const chunks: string[] = [];
+  try {
+    await llamaCpp.invoke(
+      [
+        new SystemMessage(
+          "You are a pirate, responses must be very verbose and in pirate dialect."
+        ),
+        new HumanMessage("Tell me about Llamas?"),
+      ],
+      {
+        signal: controller.signal,
+        callbacks: [
+          {
+            handleLLMNewToken(token) {
+              console.log(token);
+              chunks.push(token);
+            },
+          },
+        ],
+      }
+    );
+  } catch (err) {
+    if ((err as Error).message === "AbortError") {
+      expect(chunks.length).toBeGreaterThan(0);
+    } else {
+      throw err;
+    }
+  }
+});

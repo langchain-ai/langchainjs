@@ -23,7 +23,7 @@ const tools = [new Calculator(), new SerpAPI()];
  * In this example we'll use gpt-4 as it is much better
  * at following directions in an agent than other models.
  */
-const model = new ChatOpenAI({ modelName: "gpt-4", temperature: 0 });
+const model = new ChatOpenAI({ model: "gpt-4", temperature: 0 });
 /**
  * Define your prompt for the agent to follow
  * Here we're using `MessagesPlaceholder` to contain our agent scratchpad

@@ -5,7 +5,7 @@ import type {
   InputValues,
   PartialValues,
   StringWithAutocomplete,
-} from "../utils/types.js";
+} from "../utils/types/index.js";
 import { type BasePromptValueInterface } from "../prompt_values.js";
 import { BaseOutputParser } from "../output_parsers/index.js";
 import type { SerializedFields } from "../load/map_keys.js";

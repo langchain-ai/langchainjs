@@ -67,6 +67,7 @@ export type ChatAnthropicToolsInput = Partial<AnthropicInput> &
 /**
  * Experimental wrapper over Anthropic chat models that adds support for
  * a function calling interface.
+ * @deprecated Prefer traditional tool use through ChatAnthropic.
  */
 export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOptions> {
   llm: BaseChatModel;

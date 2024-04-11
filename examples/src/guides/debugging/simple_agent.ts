@@ -8,7 +8,7 @@ import { Calculator } from "@langchain/community/tools/calculator";
 const tools = [new TavilySearchResults(), new Calculator()];
 const prompt = await pull<ChatPromptTemplate>("hwchase17/openai-tools-agent");
 const llm = new ChatOpenAI({
-  modelName: "gpt-4-1106-preview",
+  model: "gpt-4-1106-preview",
   temperature: 0,
 });
 const agent = await createOpenAIToolsAgent({

@@ -337,6 +337,19 @@ Bye!\n\n-H.`;
   });
 });
 
+test("Separator length is considered correctly for chunk size", async () => {
+  const text = "aa ab ac ba bb";
+  const splitter = new RecursiveCharacterTextSplitter({
+    keepSeparator: false,
+    chunkSize: 7,
+    chunkOverlap: 3,
+  });
+  const output = await splitter.splitText(text);
+  const expectedOutput = ["aa ab", "ab ac", "ac ba", "ba bb"];
+
+  expect(output).toEqual(expectedOutput);
+});
+
 test("Token text splitter", async () => {
   const text = "foo bar baz a a";
   const splitter = new TokenTextSplitter({

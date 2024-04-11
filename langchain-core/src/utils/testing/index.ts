@@ -1,5 +1,7 @@
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { z } from "zod";
 import {
   BaseCallbackConfig,
@@ -28,7 +30,7 @@ import {
   type ChatResult,
   ChatGenerationChunk,
 } from "../../outputs.js";
-import { BaseRetriever } from "../../retrievers.js";
+import { BaseRetriever } from "../../retrievers/index.js";
 import { Runnable, RunnableLambda } from "../../runnables/base.js";
 import { StructuredTool, ToolParams } from "../../tools.js";
 import { BaseTracer, Run } from "../../tracers/base.js";
@@ -188,6 +190,85 @@ export class FakeChatModel extends BaseChatModel {
       ],
       llmOutput: {},
     };
+  }
+}
+
+export class FakeStreamingChatModel extends BaseChatModel {
+  sleep?: number = 50;
+
+  responses?: BaseMessage[];
+
+  thrownErrorString?: string;
+
+  constructor(
+    fields: {
+      sleep?: number;
+      responses?: BaseMessage[];
+      thrownErrorString?: string;
+    } & BaseLLMParams
+  ) {
+    super(fields);
+    this.sleep = fields.sleep ?? this.sleep;
+    this.responses = fields.responses;
+    this.thrownErrorString = fields.thrownErrorString;
+  }
+
+  _llmType() {
+    return "fake";
+  }
+
+  async _generate(
+    messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): Promise<ChatResult> {
+    if (this.thrownErrorString) {
+      throw new Error(this.thrownErrorString);
+    }
+
+    const content = this.responses?.[0].content ?? messages[0].content;
+    const generation: ChatResult = {
+      generations: [
+        {
+          text: "",
+          message: new AIMessage({
+            content,
+          }),
+        },
+      ],
+    };
+
+    return generation;
+  }
+
+  async *_streamResponseChunks(
+    messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    if (this.thrownErrorString) {
+      throw new Error(this.thrownErrorString);
+    }
+    const content = this.responses?.[0].content ?? messages[0].content;
+    if (typeof content !== "string") {
+      for (const _ of this.responses ?? messages) {
+        yield new ChatGenerationChunk({
+          text: "",
+          message: new AIMessageChunk({
+            content,
+          }),
+        });
+      }
+    } else {
+      for (const _ of this.responses ?? messages) {
+        yield new ChatGenerationChunk({
+          text: content,
+          message: new AIMessageChunk({
+            content,
+          }),
+        });
+      }
+    }
   }
 }
 
@@ -590,5 +671,29 @@ export class SyntheticEmbeddings
     });
 
     return ret;
+  }
+}
+
+export class SingleRunExtractor extends BaseTracer {
+  runPromiseResolver: (run: Run) => void;
+
+  runPromise: Promise<Run>;
+
+  /** The name of the callback handler. */
+  name = "single_run_extractor";
+
+  constructor() {
+    super();
+    this.runPromise = new Promise<Run>((extract) => {
+      this.runPromiseResolver = extract;
+    });
+  }
+
+  async persistRun(run: Run) {
+    this.runPromiseResolver(run);
+  }
+
+  async extract(): Promise<Run> {
+    return this.runPromise;
   }
 }

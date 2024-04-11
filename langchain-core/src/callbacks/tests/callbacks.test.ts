@@ -4,7 +4,7 @@ import { CallbackManager } from "../manager.js";
 import { BaseCallbackHandler, type BaseCallbackHandlerInput } from "../base.js";
 import type { Serialized } from "../../load/serializable.js";
 import { Document } from "../../documents/document.js";
-import type { ChainValues } from "../../utils/types.js";
+import type { ChainValues } from "../../utils/types/index.js";
 import type { AgentAction, AgentFinish } from "../../agents.js";
 import { BaseMessage, HumanMessage } from "../../messages/index.js";
 import type { LLMResult } from "../../outputs.js";

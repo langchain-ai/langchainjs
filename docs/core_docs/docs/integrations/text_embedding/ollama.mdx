@@ -6,12 +6,20 @@ The `OllamaEmbeddings` class uses the `/api/embeddings` route of a locally hoste
 
 Follow [these instructions](https://github.com/jmorganca/ollama) to set up and run a local Ollama instance.
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/community
+```
+
 # Usage
 
 Basic usage:
 
 ```typescript
-import { OllamaEmbeddings } from "langchain/embeddings/ollama";
+import { OllamaEmbeddings } from "@langchain/community/embeddings/ollama";
 
 const embeddings = new OllamaEmbeddings({
   model: "llama2", // default value
@@ -22,7 +30,7 @@ const embeddings = new OllamaEmbeddings({
 Ollama [model parameters](https://github.com/jmorganca/ollama/blob/main/docs/modelfile.md#valid-parameters-and-values) are also supported:
 
 ```typescript
-import { OllamaEmbeddings } from "langchain/embeddings/ollama";
+import { OllamaEmbeddings } from "@langchain/community/embeddings/ollama";
 
 const embeddings = new OllamaEmbeddings({
   model: "llama2", // default value
@@ -38,7 +46,7 @@ const embeddings = new OllamaEmbeddings({
 # Example usage:
 
 ```typescript
-import { OllamaEmbeddings } from "langchain/embeddings/ollama";
+import { OllamaEmbeddings } from "@langchain/community/embeddings/ollama";
 
 const embeddings = new OllamaEmbeddings({
   model: "llama2", // default value
@@ -53,4 +61,6 @@ const embeddings = new OllamaEmbeddings({
 const documents = ["Hello World!", "Bye Bye"];
 
 const documentEmbeddings = await embeddings.embedDocuments(documents);
+
+console.log(documentEmbeddings);
 ```

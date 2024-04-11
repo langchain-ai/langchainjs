@@ -13,6 +13,8 @@ import {
   Runnable,
   patchConfig,
   type RunnableConfig,
+  RunnableSequence,
+  RunnableLike,
 } from "@langchain/core/runnables";
 import { LLMChain } from "../chains/llm_chain.js";
 import type {
@@ -167,6 +169,43 @@ export function isRunnableAgent(x: BaseAgent) {
   );
 }
 
+// TODO: Remove in the future. Only for backwards compatibility.
+// Allows for the creation of runnables with properties that will
+// be passed to the agent executor constructor.
+export class AgentRunnableSequence<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput = any
+> extends RunnableSequence<RunInput, RunOutput> {
+  streamRunnable?: boolean;
+
+  singleAction: boolean;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static fromRunnables<RunInput = any, RunOutput = any>(
+    [first, ...runnables]: [
+      RunnableLike<RunInput>,
+      ...RunnableLike[],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      RunnableLike<any, RunOutput>
+    ],
+    config: { singleAction: boolean; streamRunnable?: boolean; name?: string }
+  ): AgentRunnableSequence<RunInput, Exclude<RunOutput, Error>> {
+    const sequence = RunnableSequence.from(
+      [first, ...runnables],
+      config.name
+    ) as AgentRunnableSequence<RunInput, Exclude<RunOutput, Error>>;
+    sequence.singleAction = config.singleAction;
+    sequence.streamRunnable = config.streamRunnable;
+    return sequence;
+  }
+
+  static isAgentRunnableSequence(x: Runnable): x is AgentRunnableSequence {
+    return typeof (x as AgentRunnableSequence).singleAction === "boolean";
+  }
+}
+
 /**
  * Class representing a single-action agent powered by runnables.
  * Extends the BaseSingleActionAgent class and provides methods for
@@ -202,7 +241,8 @@ export class RunnableSingleActionAgent extends BaseSingleActionAgent {
   constructor(fields: RunnableSingleActionAgentInput) {
     super(fields);
     this.runnable = fields.runnable;
-    this.defaultRunName = fields.defaultRunName ?? this.defaultRunName;
+    this.defaultRunName =
+      fields.defaultRunName ?? this.runnable.name ?? this.defaultRunName;
     this.streamRunnable = fields.streamRunnable ?? this.streamRunnable;
   }
 
@@ -275,7 +315,8 @@ export class RunnableMultiActionAgent extends BaseMultiActionAgent {
     super(fields);
     this.runnable = fields.runnable;
     this.stop = fields.stop;
-    this.defaultRunName = fields.defaultRunName ?? this.defaultRunName;
+    this.defaultRunName =
+      fields.defaultRunName ?? this.runnable.name ?? this.defaultRunName;
     this.streamRunnable = fields.streamRunnable ?? this.streamRunnable;
   }
 

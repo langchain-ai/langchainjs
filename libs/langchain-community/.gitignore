@@ -26,6 +26,10 @@ tools/brave_search.cjs
 tools/brave_search.js
 tools/brave_search.d.ts
 tools/brave_search.d.cts
+tools/duckduckgo_search.cjs
+tools/duckduckgo_search.js
+tools/duckduckgo_search.d.ts
+tools/duckduckgo_search.d.cts
 tools/calculator.cjs
 tools/calculator.js
 tools/calculator.d.ts
@@ -114,6 +118,10 @@ embeddings/alibaba_tongyi.cjs
 embeddings/alibaba_tongyi.js
 embeddings/alibaba_tongyi.d.ts
 embeddings/alibaba_tongyi.d.cts
+embeddings/baidu_qianfan.cjs
+embeddings/baidu_qianfan.js
+embeddings/baidu_qianfan.d.ts
+embeddings/baidu_qianfan.d.cts
 embeddings/bedrock.cjs
 embeddings/bedrock.js
 embeddings/bedrock.d.ts
@@ -162,6 +170,10 @@ embeddings/ollama.cjs
 embeddings/ollama.js
 embeddings/ollama.d.ts
 embeddings/ollama.d.cts
+embeddings/premai.cjs
+embeddings/premai.js
+embeddings/premai.d.ts
+embeddings/premai.d.cts
 embeddings/tensorflow.cjs
 embeddings/tensorflow.js
 embeddings/tensorflow.d.ts
@@ -498,6 +510,10 @@ chat_models/portkey.cjs
 chat_models/portkey.js
 chat_models/portkey.d.ts
 chat_models/portkey.d.cts
+chat_models/premai.cjs
+chat_models/premai.js
+chat_models/premai.d.ts
+chat_models/premai.d.cts
 chat_models/togetherai.cjs
 chat_models/togetherai.js
 chat_models/togetherai.d.ts
@@ -730,6 +746,10 @@ utils/cassandra.cjs
 utils/cassandra.js
 utils/cassandra.d.ts
 utils/cassandra.d.cts
+experimental/graph_transformers/llm.cjs
+experimental/graph_transformers/llm.js
+experimental/graph_transformers/llm.d.ts
+experimental/graph_transformers/llm.d.cts
 node_modules
 dist
 .yarn

@@ -4,18 +4,15 @@ import type {
   BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import {
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
+import { RunnablePassthrough } from "@langchain/core/runnables";
 import { OpenAIClient } from "@langchain/openai";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { formatToOpenAIToolMessages } from "../format_scratchpad/openai_tools.js";
 import {
   OpenAIToolsAgentOutputParser,
   type ToolsAgentStep,
-} from "../openai/output_parser.js";
-import { RunnableMultiActionAgent } from "../agent.js";
+} from "./output_parser.js";
+import { AgentRunnableSequence } from "../agent.js";
 
 export { OpenAIToolsAgentOutputParser, type ToolsAgentStep };
 
@@ -30,8 +27,11 @@ export type CreateOpenAIToolsAgentParams = {
    */
   llm: BaseChatModel<
     BaseChatModelCallOptions & {
-      tools?: StructuredToolInterface[] | OpenAIClient.ChatCompletionTool[];
-      tool_choice?: OpenAIClient.ChatCompletionToolChoiceOption;
+      tools?:
+        | StructuredToolInterface[]
+        | OpenAIClient.ChatCompletionTool[]
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        | any[];
     }
   >;
   /** Tools this agent has access to. */
@@ -116,18 +116,21 @@ export async function createOpenAIToolsAgent({
     );
   }
   const modelWithTools = llm.bind({ tools: tools.map(convertToOpenAITool) });
-  const agent = RunnableSequence.from([
-    RunnablePassthrough.assign({
-      agent_scratchpad: (input: { steps: ToolsAgentStep[] }) =>
-        formatToOpenAIToolMessages(input.steps),
-    }),
-    prompt,
-    modelWithTools,
-    new OpenAIToolsAgentOutputParser(),
-  ]);
-  return new RunnableMultiActionAgent({
-    runnable: agent,
-    defaultRunName: "OpenAIToolsAgent",
-    streamRunnable,
-  });
+  const agent = AgentRunnableSequence.fromRunnables(
+    [
+      RunnablePassthrough.assign({
+        agent_scratchpad: (input: { steps: ToolsAgentStep[] }) =>
+          formatToOpenAIToolMessages(input.steps),
+      }),
+      prompt,
+      modelWithTools,
+      new OpenAIToolsAgentOutputParser(),
+    ],
+    {
+      name: "OpenAIToolsAgent",
+      streamRunnable,
+      singleAction: false,
+    }
+  );
+  return agent;
 }

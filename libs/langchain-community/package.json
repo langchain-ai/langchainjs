@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.0.41",
+  "version": "0.0.47",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -15,7 +15,7 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-community/",
   "scripts": {
     "build": "yarn run build:deps && yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
-    "build:deps": "yarn run turbo:command build --filter=@langchain/core --filter=@langchain/anthropic --filter=@langchain/openai --concurrency=1",
+    "build:deps": "yarn run turbo:command build --filter=@langchain/core --filter=@langchain/openai --concurrency=1",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rm -rf dist/tests dist/**/tests",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rm -rf dist-cjs",
     "build:watch": "yarn create-entrypoints && tsc --outDir dist/ --watch",
@@ -39,13 +39,14 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1.44",
-    "@langchain/openai": "~0.0.19",
+    "@langchain/core": "~0.1.56",
+    "@langchain/openai": "~0.0.28",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
     "langsmith": "~0.1.1",
     "uuid": "^9.0.0",
-    "zod": "^3.22.3"
+    "zod": "^3.22.3",
+    "zod-to-json-schema": "^3.22.5"
   },
   "devDependencies": {
     "@aws-crypto/sha256-js": "^5.0.0",
@@ -78,6 +79,7 @@
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^1.1.0",
     "@planetscale/database": "^1.8.0",
+    "@premai/prem-sdk": "^0.3.25",
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",
     "@rockset/client": "^0.9.1",
@@ -118,7 +120,7 @@
     "better-sqlite3": "^9.4.0",
     "cassandra-driver": "^4.7.2",
     "cborg": "^4.1.1",
-    "chromadb": "^1.5.3",
+    "chromadb": "^1.8.1",
     "closevector-common": "0.1.3",
     "closevector-node": "0.1.6",
     "closevector-web": "0.1.6",
@@ -130,6 +132,7 @@
     "dotenv": "^16.0.3",
     "dpdm": "^3.12.0",
     "dria": "^0.0.3",
+    "duck-duck-scrape": "^2.2.5",
     "eslint": "^8.33.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^8.6.0",
@@ -142,7 +145,7 @@
     "google-auth-library": "^8.9.0",
     "googleapis": "^126.0.1",
     "graphql": "^16.6.0",
-    "hnswlib-node": "^1.4.2",
+    "hnswlib-node": "^3.0.0",
     "html-to-text": "^9.0.5",
     "interface-datastore": "^8.2.11",
     "ioredis": "^5.3.2",
@@ -203,6 +206,7 @@
     "@opensearch-project/opensearch": "*",
     "@pinecone-database/pinecone": "*",
     "@planetscale/database": "^1.8.0",
+    "@premai/prem-sdk": "^0.3.25",
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",
     "@rockset/client": "^0.9.1",
@@ -235,6 +239,7 @@
     "couchbase": "^4.3.0",
     "discord.js": "^14.14.1",
     "dria": "^0.0.3",
+    "duck-duck-scrape": "^2.2.5",
     "faiss-node": "^0.5.1",
     "firebase-admin": "^11.9.0 || ^12.0.0",
     "google-auth-library": "^8.9.0",
@@ -344,6 +349,9 @@
     "@planetscale/database": {
       "optional": true
     },
+    "@premai/prem-sdk": {
+      "optional": true
+    },
     "@qdrant/js-client-rest": {
       "optional": true
     },
@@ -438,6 +446,9 @@
       "optional": true
     },
     "dria": {
+      "optional": true
+    },
+    "duck-duck-scrape": {
       "optional": true
     },
     "faiss-node": {
@@ -603,6 +614,15 @@
       },
       "import": "./tools/brave_search.js",
       "require": "./tools/brave_search.cjs"
+    },
+    "./tools/duckduckgo_search": {
+      "types": {
+        "import": "./tools/duckduckgo_search.d.ts",
+        "require": "./tools/duckduckgo_search.d.cts",
+        "default": "./tools/duckduckgo_search.d.ts"
+      },
+      "import": "./tools/duckduckgo_search.js",
+      "require": "./tools/duckduckgo_search.cjs"
     },
     "./tools/calculator": {
       "types": {
@@ -802,6 +822,15 @@
       "import": "./embeddings/alibaba_tongyi.js",
       "require": "./embeddings/alibaba_tongyi.cjs"
     },
+    "./embeddings/baidu_qianfan": {
+      "types": {
+        "import": "./embeddings/baidu_qianfan.d.ts",
+        "require": "./embeddings/baidu_qianfan.d.cts",
+        "default": "./embeddings/baidu_qianfan.d.ts"
+      },
+      "import": "./embeddings/baidu_qianfan.js",
+      "require": "./embeddings/baidu_qianfan.cjs"
+    },
     "./embeddings/bedrock": {
       "types": {
         "import": "./embeddings/bedrock.d.ts",
@@ -909,6 +938,15 @@
       },
       "import": "./embeddings/ollama.js",
       "require": "./embeddings/ollama.cjs"
+    },
+    "./embeddings/premai": {
+      "types": {
+        "import": "./embeddings/premai.d.ts",
+        "require": "./embeddings/premai.d.cts",
+        "default": "./embeddings/premai.d.ts"
+      },
+      "import": "./embeddings/premai.js",
+      "require": "./embeddings/premai.cjs"
     },
     "./embeddings/tensorflow": {
       "types": {
@@ -1666,6 +1704,15 @@
       "import": "./chat_models/portkey.js",
       "require": "./chat_models/portkey.cjs"
     },
+    "./chat_models/premai": {
+      "types": {
+        "import": "./chat_models/premai.d.ts",
+        "require": "./chat_models/premai.d.cts",
+        "default": "./chat_models/premai.d.ts"
+      },
+      "import": "./chat_models/premai.js",
+      "require": "./chat_models/premai.cjs"
+    },
     "./chat_models/togetherai": {
       "types": {
         "import": "./chat_models/togetherai.d.ts",
@@ -2188,6 +2235,15 @@
       "import": "./utils/cassandra.js",
       "require": "./utils/cassandra.cjs"
     },
+    "./experimental/graph_transformers/llm": {
+      "types": {
+        "import": "./experimental/graph_transformers/llm.d.ts",
+        "require": "./experimental/graph_transformers/llm.d.cts",
+        "default": "./experimental/graph_transformers/llm.d.ts"
+      },
+      "import": "./experimental/graph_transformers/llm.js",
+      "require": "./experimental/graph_transformers/llm.cjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -2220,6 +2276,10 @@
     "tools/brave_search.js",
     "tools/brave_search.d.ts",
     "tools/brave_search.d.cts",
+    "tools/duckduckgo_search.cjs",
+    "tools/duckduckgo_search.js",
+    "tools/duckduckgo_search.d.ts",
+    "tools/duckduckgo_search.d.cts",
     "tools/calculator.cjs",
     "tools/calculator.js",
     "tools/calculator.d.ts",
@@ -2308,6 +2368,10 @@
     "embeddings/alibaba_tongyi.js",
     "embeddings/alibaba_tongyi.d.ts",
     "embeddings/alibaba_tongyi.d.cts",
+    "embeddings/baidu_qianfan.cjs",
+    "embeddings/baidu_qianfan.js",
+    "embeddings/baidu_qianfan.d.ts",
+    "embeddings/baidu_qianfan.d.cts",
     "embeddings/bedrock.cjs",
     "embeddings/bedrock.js",
     "embeddings/bedrock.d.ts",
@@ -2356,6 +2420,10 @@
     "embeddings/ollama.js",
     "embeddings/ollama.d.ts",
     "embeddings/ollama.d.cts",
+    "embeddings/premai.cjs",
+    "embeddings/premai.js",
+    "embeddings/premai.d.ts",
+    "embeddings/premai.d.cts",
     "embeddings/tensorflow.cjs",
     "embeddings/tensorflow.js",
     "embeddings/tensorflow.d.ts",
@@ -2692,6 +2760,10 @@
     "chat_models/portkey.js",
     "chat_models/portkey.d.ts",
     "chat_models/portkey.d.cts",
+    "chat_models/premai.cjs",
+    "chat_models/premai.js",
+    "chat_models/premai.d.ts",
+    "chat_models/premai.d.cts",
     "chat_models/togetherai.cjs",
     "chat_models/togetherai.js",
     "chat_models/togetherai.d.ts",
@@ -2923,6 +2995,10 @@
     "utils/cassandra.cjs",
     "utils/cassandra.js",
     "utils/cassandra.d.ts",
-    "utils/cassandra.d.cts"
+    "utils/cassandra.d.cts",
+    "experimental/graph_transformers/llm.cjs",
+    "experimental/graph_transformers/llm.js",
+    "experimental/graph_transformers/llm.d.ts",
+    "experimental/graph_transformers/llm.d.cts"
   ]
 }

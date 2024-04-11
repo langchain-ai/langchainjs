@@ -113,6 +113,8 @@ export class OpenAIChat
 
   modelName = "gpt-3.5-turbo";
 
+  model = "gpt-3.5-turbo";
+
   prefixMessages?: OpenAIClient.Chat.ChatCompletionMessageParam[];
 
   modelKwargs?: OpenAIChatInput["modelKwargs"];

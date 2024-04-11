@@ -10,14 +10,74 @@ LangChain.js supports integration with [Azure OpenAI](https://azure.microsoft.co
 
 You can learn more about Azure OpenAI and its difference with the OpenAI API on [this page](https://learn.microsoft.com/azure/ai-services/openai/overview). If you don't have an Azure account, you can [create a free account](https://azure.microsoft.com/free/) to get started.
 
-## Using the OpenAI SDK
+## Using Azure OpenAI SDK
+
+You'll first need to install the [`@langchain/azure-openai`](https://www.npmjs.com/package/@langchain/azure-openai) package:
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install -S @langchain/azure-openai
+```
+
+import UnifiedModelParamsTooltip from "@mdx_components/unified_model_params_tooltip.mdx";
+
+<UnifiedModelParamsTooltip></UnifiedModelParamsTooltip>
+
+You'll also need to have an Azure OpenAI instance deployed. You can deploy a version on Azure Portal following [this guide](https://learn.microsoft.com/azure/ai-services/openai/how-to/create-resource?pivots=web-portal).
+
+Once you have your instance running, make sure you have the endpoint and key. You can find them in the Azure Portal, under the "Keys and Endpoint" section of your instance.
+
+You can then define the following environment variables to use the service:
+
+```bash
+AZURE_OPENAI_API_ENDPOINT=<YOUR_ENDPOINT>
+AZURE_OPENAI_API_KEY=<YOUR_KEY>
+AZURE_OPENAI_API_EMBEDDING_DEPLOYMENT_NAME=<YOUR_EMBEDDING_DEPLOYMENT_NAME>
+```
+
+Alternatively, you can pass the values directly to the `AzureOpenAI` constructor:
+
+```typescript
+import { AzureOpenAI } from "@langchain/azure-openai";
+
+const model = new AzureOpenAI({
+  azureOpenAIEndpoint: "<your_endpoint>",
+  apiKey: "<your_key>",
+  azureOpenAIApiDeploymentName: "<your_embedding_deployment_name",
+});
+```
+
+If you're using Azure Managed Identity, you can also pass the credentials directly to the constructor:
+
+```typescript
+import { DefaultAzureCredential } from "@azure/identity";
+import { AzureOpenAI } from "@langchain/azure-openai";
+
+const credentials = new DefaultAzureCredential();
+
+const model = new AzureOpenAI({
+  credentials,
+  azureOpenAIEndpoint: "<your_endpoint>",
+  azureOpenAIApiDeploymentName: "<your_embedding_deployment_name",
+});
+```
+
+### Usage example
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/embeddings/azure_openai.ts";
+
+<CodeBlock language="text">{Example}</CodeBlock>
+
+## Using OpenAI SDK
 
 The `OpenAIEmbeddings` class can also use the OpenAI API on Azure to generate embeddings for a given text. By default it strips new line characters from the text, as recommended by OpenAI, but you can disable this by passing `stripNewLines: false` to the constructor.
 
 For example, if your Azure instance is hosted under `https://{MY_INSTANCE_NAME}.openai.azure.com/openai/deployments/{DEPLOYMENT_NAME}`, you
 could initialize your instance like this:
-
-import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
 
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
@@ -54,61 +114,3 @@ const embeddings = new OpenAIEmbeddings({
     "https://westeurope.api.microsoft.com/openai/deployments", // In Node.js defaults to process.env.AZURE_OPENAI_BASE_PATH
 });
 ```
-
-## Using the Azure OpenAI SDK
-
-You'll first need to install the [`@langchain/azure-openai`](https://www.npmjs.com/package/@langchain/azure-openai) package:
-
-<IntegrationInstallTooltip></IntegrationInstallTooltip>
-
-```bash npm2yarn
-npm install -S @langchain/azure-openai
-```
-
-You'll also need to have an Azure OpenAI instance deployed. You can deploy a version on Azure Portal following [this guide](https://learn.microsoft.com/azure/ai-services/openai/how-to/create-resource?pivots=web-portal).
-
-Once you have your instance running, make sure you have the endpoint and key. You can find them in the Azure Portal, under the "Keys and Endpoint" section of your instance.
-
-You can then define the following environment variables to use the service:
-
-```bash
-AZURE_OPENAI_API_ENDPOINT=<YOUR_ENDPOINT>
-AZURE_OPENAI_API_KEY=<YOUR_KEY>
-AZURE_OPENAI_API_EMBEDDING_DEPLOYMENT_NAME=<YOUR_EMBEDDING_DEPLOYMENT_NAME>
-```
-
-Alternatively, you can pass the values directly to the `AzureOpenAI` constructor:
-
-```typescript
-import { AzureOpenAI } from "@langchain/azure-openai";
-
-const model = new AzureOpenAI({
-  azureOpenAIEndpoint: "<your_endpoint>",
-  azureOpenAIApiKey: "<your_key>",
-  azureOpenAIApiDeploymentName: "<your_embedding_deployment_name",
-  modelName: "<your_model>",
-});
-```
-
-If you're using Azure Managed Identity, you can also pass the credentials directly to the constructor:
-
-```typescript
-import { DefaultAzureCredential } from "@azure/identity";
-import { AzureOpenAI } from "@langchain/azure-openai";
-
-const credentials = new DefaultAzureCredential();
-
-const model = new AzureOpenAI({
-  credentials,
-  azureOpenAIEndpoint: "<your_endpoint>",
-  azureOpenAIApiDeploymentName: "<your_embedding_deployment_name",
-  modelName: "<your_model>",
-});
-```
-
-### Usage example
-
-import CodeBlock from "@theme/CodeBlock";
-import Example from "@examples/llms/azure_openai.ts";
-
-<CodeBlock language="text">{Example}</CodeBlock>

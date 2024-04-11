@@ -23,14 +23,33 @@ import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
 type PineconeMetadata = Record<string, any>;
 
+type HTTPHeaders = {
+  [key: string]: string;
+};
+
 /**
  * Database config for your vectorstore.
  */
 export interface PineconeStoreParams extends AsyncCallerParams {
-  pineconeIndex: PineconeIndex;
+  /**
+   * The Pinecone index to use.
+   * Either this or pineconeConfig must be provided.
+   */
+  pineconeIndex?: PineconeIndex;
   textKey?: string;
   namespace?: string;
   filter?: PineconeMetadata;
+  /**
+   * Configuration for the Pinecone index.
+   * Either this or pineconeIndex must be provided.
+   */
+  pineconeConfig?: {
+    indexName: ConstructorParameters<typeof PineconeIndex>[0];
+    config: ConstructorParameters<typeof PineconeIndex>[1];
+    namespace?: string;
+    indexHostUrl?: string;
+    additionalHeaders?: HTTPHeaders;
+  };
 }
 
 /**
@@ -69,10 +88,39 @@ export class PineconeStore extends VectorStore {
     super(embeddings, params);
     this.embeddings = embeddings;
 
-    const { namespace, pineconeIndex, textKey, filter, ...asyncCallerArgs } =
-      params;
+    const {
+      namespace,
+      pineconeIndex,
+      textKey,
+      filter,
+      pineconeConfig,
+      ...asyncCallerArgs
+    } = params;
     this.namespace = namespace;
-    this.pineconeIndex = pineconeIndex;
+    if (!pineconeIndex && !pineconeConfig) {
+      throw new Error("pineconeConfig or pineconeIndex must be provided.");
+    }
+    if (pineconeIndex && pineconeConfig) {
+      throw new Error(
+        "Only one of pineconeConfig or pineconeIndex can be provided."
+      );
+    }
+
+    if (pineconeIndex) {
+      this.pineconeIndex = pineconeIndex;
+    } else if (pineconeConfig) {
+      this.pineconeIndex = new PineconeIndex(
+        pineconeConfig.indexName,
+        {
+          ...pineconeConfig.config,
+          sourceTag: "langchainjs",
+        },
+        pineconeConfig.namespace,
+        pineconeConfig.indexHostUrl,
+        pineconeConfig.additionalHeaders
+      );
+    }
+
     this.textKey = textKey ?? "text";
     this.filter = filter;
     this.caller = new AsyncCaller(asyncCallerArgs);

@@ -17,7 +17,7 @@ import {
   type ChatPromptValueInterface,
   ChatPromptValue,
 } from "../prompt_values.js";
-import type { InputValues, PartialValues } from "../utils/types.js";
+import type { InputValues, PartialValues } from "../utils/types/index.js";
 import { Runnable } from "../runnables/base.js";
 import { BaseStringPromptTemplate } from "./string.js";
 import {
@@ -686,13 +686,55 @@ function _coerceMessagePromptTemplateLike(
   ) {
     return messagePromptTemplateLike;
   }
+  if (
+    Array.isArray(messagePromptTemplateLike) &&
+    messagePromptTemplateLike[0] === "placeholder"
+  ) {
+    const messageContent = messagePromptTemplateLike[1];
+    if (
+      typeof messageContent !== "string" ||
+      messageContent[0] !== "{" ||
+      messageContent[messageContent.length - 1] !== "}"
+    ) {
+      throw new Error(
+        `Invalid placeholder template: "${messagePromptTemplateLike[1]}". Expected a variable name surrounded by curly braces.`
+      );
+    }
+    const variableName = messageContent.slice(1, -1);
+    return new MessagesPlaceholder({ variableName, optional: true });
+  }
   const message = coerceMessageLikeToMessage(messagePromptTemplateLike);
+  let templateData:
+    | string
+    | (
+        | string
+        | _TextTemplateParam
+        | _ImageTemplateParam
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        | Record<string, any>
+      )[];
+
+  if (typeof message.content === "string") {
+    templateData = message.content;
+  } else {
+    // Assuming message.content is an array of complex objects, transform it.
+    templateData = message.content.map((item) => {
+      if ("text" in item) {
+        return { text: item.text };
+      } else if ("image_url" in item) {
+        return { image_url: item.image_url };
+      } else {
+        return item;
+      }
+    });
+  }
+
   if (message._getType() === "human") {
-    return HumanMessagePromptTemplate.fromTemplate(message.content);
+    return HumanMessagePromptTemplate.fromTemplate(templateData);
   } else if (message._getType() === "ai") {
-    return AIMessagePromptTemplate.fromTemplate(message.content);
+    return AIMessagePromptTemplate.fromTemplate(templateData);
   } else if (message._getType() === "system") {
-    return SystemMessagePromptTemplate.fromTemplate(message.content);
+    return SystemMessagePromptTemplate.fromTemplate(templateData);
   } else if (ChatMessage.isInstance(message)) {
     return ChatMessagePromptTemplate.fromTemplate(
       message.content as string,

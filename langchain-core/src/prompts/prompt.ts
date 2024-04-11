@@ -13,7 +13,7 @@ import {
   type TemplateFormat,
 } from "./template.js";
 import type { SerializedPromptTemplate } from "./serde.js";
-import type { InputValues, PartialValues } from "../utils/types.js";
+import type { InputValues, PartialValues } from "../utils/types/index.js";
 import { MessageContent } from "../messages/index.js";
 
 /**
