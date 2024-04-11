@@ -49,11 +49,8 @@ const DEFAULTS = {
  */
 export default function ChatModelTabs(props) {
   const {
-    hideOpenai,
-    hideAnthropic,
-    hideFireworks,
-    hideMistral,
     customVarName,
+    additionalDependencies
   } = props;
 
   const llmVarName = customVarName ?? "model";
@@ -62,56 +59,54 @@ export default function ChatModelTabs(props) {
   const anthropicParams = props.anthropicParams ?? DEFAULTS.anthropicParams;
   const fireworksParams = props.fireworksParams ?? DEFAULTS.fireworksParams;
   const mistralParams = props.mistralParams ?? DEFAULTS.mistralParams;
+  const providers = props.providers ?? ["openai", "anthropic", "fireworks", "mistral"];
 
-  const tabs = [
-    {
+  const tabs = {
+    openai: {
       value: "OpenAI",
       label: "OpenAI",
       default: true,
       text: `import { ChatOpenAI } from "@langchain/openai";\n\nconst ${llmVarName} = new ChatOpenAI(${openaiParams});`,
       envs: `OPENAI_API_KEY=your-api-key`,
       dependencies: "@langchain/openai",
-      shouldHide: hideOpenai,
     },
-    {
+    anthropic: {
       value: "Anthropic",
       label: "Anthropic",
       default: false,
       text: `import { ChatAnthropic } from "@langchain/anthropic";\n\nconst ${llmVarName} = new ChatAnthropic(${anthropicParams});`,
       envs: `ANTHROPIC_API_KEY=your-api-key`,
       dependencies: "@langchain/anthropic",
-      shouldHide: hideAnthropic,
     },
-    {
+    fireworks: {
       value: "FireworksAI",
       label: "FireworksAI",
       default: false,
       text: `import { ChatFireworks } from "@langchain/community/chat_models/fireworks";\n\nconst ${llmVarName} = new ChatFireworks(${fireworksParams});`,
       envs: `FIREWORKS_API_KEY=your-api-key`,
       dependencies: "@langchain/community",
-      shouldHide: hideFireworks,
     },
-    {
+    mistral: {
       value: "MistralAI",
       label: "MistralAI",
       default: false,
       text: `import { ChatMistralAI } from "@langchain/mistralai";\n\nconst ${llmVarName} = new ChatMistralAI(${mistralParams});`,
       envs: `MISTRAL_API_KEY=your-api-key`,
       dependencies: "@langchain/mistralai",
-      shouldHide: hideMistral,
     },
-  ];
+  };
+  
+  const displayedTabs = providers.map((provider) => tabs[provider]);
 
   return (
     <div>
       <h3>Pick your chat model:</h3>
       <Tabs groupId="modelTabs">
-        {tabs
-          .filter((tab) => !tab.shouldHide)
+        {displayedTabs
           .map((tab) => (
             <TabItem value={tab.value} label={tab.label} key={tab.value}>
               <h4>Install dependencies</h4>
-              <InstallationInfo>{tab.dependencies}</InstallationInfo>
+              <InstallationInfo>{[tab.dependencies, additionalDependencies].join(" ")}</InstallationInfo>
               <h4>Add environment variables</h4>
               <CodeBlock language="bash">{tab.envs}</CodeBlock>
               <h4>Instantiate the model</h4>
