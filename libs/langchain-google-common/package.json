@@ -39,7 +39,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1.1",
+    "@langchain/core": "~0.1.56",
     "uuid": "^9.0.0",
     "zod-to-json-schema": "^3.22.4"
   },
