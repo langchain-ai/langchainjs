@@ -24,6 +24,7 @@ export function copyAIModelParamsInto(
   const model = options?.model ?? params?.model ?? target.model;
   ret.modelName =
     model ?? options?.modelName ?? params?.modelName ?? target.modelName;
+  ret.model = model;
   ret.temperature =
     options?.temperature ?? params?.temperature ?? target.temperature;
   ret.maxOutputTokens =

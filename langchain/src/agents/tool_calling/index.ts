@@ -118,14 +118,5 @@ export function createToolCallingAgent({
       singleAction: false,
     }
   );
-
-  // agent = (
-  //     RunnablePassthrough.assign(
-  //         agent_scratchpad=lambda x: format_to_tool_messages(x["intermediate_steps"])
-  //     )
-  //     | prompt
-  //     | llm_with_tools
-  //     | ToolsAgentOutputParser()
-  // )
   return agent;
 }
