@@ -48,10 +48,7 @@ const DEFAULTS = {
  * @param {ChatModelTabsProps} props - Component props.
  */
 export default function ChatModelTabs(props) {
-  const {
-    customVarName,
-    additionalDependencies
-  } = props;
+  const { customVarName, additionalDependencies } = props;
 
   const llmVarName = customVarName ?? "model";
 
@@ -59,7 +56,12 @@ export default function ChatModelTabs(props) {
   const anthropicParams = props.anthropicParams ?? DEFAULTS.anthropicParams;
   const fireworksParams = props.fireworksParams ?? DEFAULTS.fireworksParams;
   const mistralParams = props.mistralParams ?? DEFAULTS.mistralParams;
-  const providers = props.providers ?? ["openai", "anthropic", "fireworks", "mistral"];
+  const providers = props.providers ?? [
+    "openai",
+    "anthropic",
+    "fireworks",
+    "mistral",
+  ];
 
   const tabs = {
     openai: {
@@ -95,24 +97,25 @@ export default function ChatModelTabs(props) {
       dependencies: "@langchain/mistralai",
     },
   };
-  
+
   const displayedTabs = providers.map((provider) => tabs[provider]);
 
   return (
     <div>
       <h3>Pick your chat model:</h3>
       <Tabs groupId="modelTabs">
-        {displayedTabs
-          .map((tab) => (
-            <TabItem value={tab.value} label={tab.label} key={tab.value}>
-              <h4>Install dependencies</h4>
-              <InstallationInfo>{[tab.dependencies, additionalDependencies].join(" ")}</InstallationInfo>
-              <h4>Add environment variables</h4>
-              <CodeBlock language="bash">{tab.envs}</CodeBlock>
-              <h4>Instantiate the model</h4>
-              <CodeBlock language="typescript">{tab.text}</CodeBlock>
-            </TabItem>
-          ))}
+        {displayedTabs.map((tab) => (
+          <TabItem value={tab.value} label={tab.label} key={tab.value}>
+            <h4>Install dependencies</h4>
+            <InstallationInfo>
+              {[tab.dependencies, additionalDependencies].join(" ")}
+            </InstallationInfo>
+            <h4>Add environment variables</h4>
+            <CodeBlock language="bash">{tab.envs}</CodeBlock>
+            <h4>Instantiate the model</h4>
+            <CodeBlock language="typescript">{tab.text}</CodeBlock>
+          </TabItem>
+        ))}
       </Tabs>
     </div>
   );

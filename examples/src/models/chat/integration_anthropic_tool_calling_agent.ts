@@ -1,14 +1,14 @@
 import { z } from "zod";
 
-import { ChatMistralAI } from "@langchain/mistralai";
+import { ChatAnthropic } from "@langchain/anthropic";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { AgentExecutor, createToolCallingAgent } from "langchain/agents";
 
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 
-const llm = new ChatMistralAI({
+const llm = new ChatAnthropic({
+  model: "claude-3-sonnet-20240229",
   temperature: 0,
-  model: "mistral-large-latest",
 });
 
 // Prompt template must have "input" and "agent_scratchpad input variables"
@@ -39,11 +39,11 @@ const agentExecutor = new AgentExecutor({
   tools: [currentWeatherTool],
 });
 
-const input = "What's the weather like in Paris?";
+const input = "What's the weather like in SF?";
 const { output } = await agentExecutor.invoke({ input });
 
 console.log(output);
 
 /* 
-  The current weather in Paris is 28 °C.
+  The current weather in San Francisco, CA is 28°C.
 */

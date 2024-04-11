@@ -244,7 +244,6 @@ function toolMessageToContent(
     (isAIMessage(prevMessage) && !!prevMessage.tool_calls?.length
       ? prevMessage.tool_calls[0].name
       : prevMessage.name) ?? message.tool_call_id;
-  console.log(contentStr);
   try {
     const content = JSON.parse(contentStr);
     return [
