@@ -39,7 +39,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1.44",
+    "@langchain/core": "~0.1.56",
     "@langchain/openai": "~0.0.19",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",

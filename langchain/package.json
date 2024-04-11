@@ -1513,7 +1513,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.9.1",
     "@langchain/community": "~0.0.41",
-    "@langchain/core": "~0.1.44",
+    "@langchain/core": "~0.1.56",
     "@langchain/openai": "~0.0.26",
     "binary-extensions": "^2.2.0",
     "js-tiktoken": "^1.0.7",

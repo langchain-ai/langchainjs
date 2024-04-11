@@ -39,7 +39,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1.53",
+    "@langchain/core": "~0.1.56",
     "@langchain/openai": "~0.0.25",
     "groq-sdk": "^0.3.2",
     "zod": "^3.22.4",
