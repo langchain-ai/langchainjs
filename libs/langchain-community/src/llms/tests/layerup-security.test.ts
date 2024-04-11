@@ -18,7 +18,7 @@ export class MockLLM extends LLM {
     return "mock_llm";
   }
 
-  async _call(input: string, options?: BaseLLMParams): Promise<string> {
+  async _call(_input: string, _options?: BaseLLMParams): Promise<string> {
     return "Hi Bob! How are you?";
   }
 }

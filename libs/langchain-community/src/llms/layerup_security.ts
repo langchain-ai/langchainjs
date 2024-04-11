@@ -43,7 +43,7 @@ export class LayerupSecurity extends LLM {
 
   lc_serializable = true;
 
-  llm: LLM;
+  llm: BaseLLM;
 
   layerupApiKey: string;
 
