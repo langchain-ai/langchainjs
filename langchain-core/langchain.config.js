@@ -28,6 +28,7 @@ export const config = {
     "load/serializable": "load/serializable",
     memory: "memory",
     messages: "messages/index",
+    "messages/tool": "messages/tool",
     output_parsers: "output_parsers/index",
     "output_parsers/openai_tools": "output_parsers/openai_tools/index",
     "output_parsers/openai_functions": "output_parsers/openai_functions/index",

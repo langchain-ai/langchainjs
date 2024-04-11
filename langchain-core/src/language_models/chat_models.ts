@@ -28,6 +28,8 @@ import {
 } from "../callbacks/manager.js";
 import type { RunnableConfig } from "../runnables/config.js";
 import type { BaseCache } from "../caches.js";
+import { StructuredToolInterface } from "../tools.js";
+import { RunnableInterface } from "../runnables/types.js";
 
 /**
  * Represents a serialized chat model.
@@ -94,8 +96,10 @@ interface ChatModelGenerateCachedParameters<
  * provides methods for generating chat based on input messages.
  */
 export abstract class BaseChatModel<
-  CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions
-> extends BaseLanguageModel<BaseMessageChunk, CallOptions> {
+  CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
+  // TODO: Fix the parameter order on the next minor version.
+  OutputMessageType extends BaseMessageChunk = BaseMessageChunk
+> extends BaseLanguageModel<OutputMessageType, CallOptions> {
   declare ParsedCallOptions: Omit<
     CallOptions,
     keyof RunnableConfig & "timeout"
@@ -124,6 +128,19 @@ export abstract class BaseChatModel<
   }
 
   /**
+   * Bind tool-like objects to this chat model.
+   *
+   * @param tools A list of tool definitions to bind to this chat model.
+   * Can be a structured tool or an object matching the provider's
+   * specific tool schema.
+   * @param kwargs Any additional parameters to bind.
+   */
+  bindTools?(
+    tools: (StructuredToolInterface | Record<string, unknown>)[],
+    kwargs?: Partial<CallOptions>
+  ): RunnableInterface<BaseLanguageModelInput, OutputMessageType, CallOptions>;
+
+  /**
    * Invokes the chat model with a single input.
    * @param input The input for the language model.
    * @param options The call options.
@@ -132,7 +149,7 @@ export abstract class BaseChatModel<
   async invoke(
     input: BaseLanguageModelInput,
     options?: CallOptions
-  ): Promise<BaseMessageChunk> {
+  ): Promise<OutputMessageType> {
     const promptValue = BaseChatModel._convertInputToPromptValue(input);
     const result = await this.generatePrompt(
       [promptValue],
@@ -141,7 +158,7 @@ export abstract class BaseChatModel<
     );
     const chatGeneration = result.generations[0][0] as ChatGeneration;
     // TODO: Remove cast after figuring out inheritance
-    return chatGeneration.message as BaseMessageChunk;
+    return chatGeneration.message as OutputMessageType;
   }
 
   // eslint-disable-next-line require-yield
@@ -156,7 +173,7 @@ export abstract class BaseChatModel<
   async *_streamIterator(
     input: BaseLanguageModelInput,
     options?: CallOptions
-  ): AsyncGenerator<BaseMessageChunk> {
+  ): AsyncGenerator<OutputMessageType> {
     // Subclass check required to avoid double callbacks with default implementation
     if (
       this._streamResponseChunks ===
@@ -203,7 +220,7 @@ export abstract class BaseChatModel<
             ...chunk.generationInfo,
             ...chunk.message.response_metadata,
           };
-          yield chunk.message;
+          yield chunk.message as OutputMessageType;
           if (!generationChunk) {
             generationChunk = chunk;
           } else {

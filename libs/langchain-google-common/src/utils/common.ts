@@ -97,6 +97,7 @@ export function copyAIModelParamsInto(
   }
   ret.tools = geminiTools ?? structuredOutputTools;
 
+  console.log(ret);
   return ret;
 }
 

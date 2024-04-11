@@ -1,6 +1,8 @@
+import { v4 as uuidv4 } from "uuid";
 import {
   AIMessage,
   AIMessageChunk,
+  AIMessageFields,
   BaseMessage,
   BaseMessageChunk,
   BaseMessageFields,
@@ -10,6 +12,7 @@ import {
   MessageContentText,
   SystemMessage,
   ToolMessage,
+  isAIMessage,
 } from "@langchain/core/messages";
 import {
   ChatGeneration,
@@ -156,9 +159,19 @@ function roleMessageToContent(
   message: BaseMessage
 ): GeminiContent[] {
   const contentParts: GeminiPart[] = messageContentToParts(message.content);
-  const toolParts: GeminiPart[] = messageKwargsToParts(
-    message.additional_kwargs
-  );
+  let toolParts: GeminiPart[];
+  if (isAIMessage(message) && !!message.tool_calls?.length) {
+    toolParts = message.tool_calls.map(
+      (toolCall): GeminiPart => ({
+        functionCall: {
+          name: toolCall.name,
+          args: toolCall.args,
+        },
+      })
+    );
+  } else {
+    toolParts = messageKwargsToParts(message.additional_kwargs);
+  }
   const parts: GeminiPart[] = [...contentParts, ...toolParts];
   return [
     {
@@ -175,7 +188,10 @@ function systemMessageToContent(message: SystemMessage): GeminiContent[] {
   ];
 }
 
-function toolMessageToContent(message: ToolMessage): GeminiContent[] {
+function toolMessageToContent(
+  message: ToolMessage,
+  prevMessage: BaseMessage
+): GeminiContent[] {
   const contentStr =
     typeof message.content === "string"
       ? message.content
@@ -189,7 +205,12 @@ function toolMessageToContent(message: ToolMessage): GeminiContent[] {
           },
           ""
         );
-
+  // Hacky :(
+  const responseName =
+    (isAIMessage(prevMessage) && !!prevMessage.tool_calls?.length
+      ? prevMessage.tool_calls[0].name
+      : prevMessage.name) ?? message.tool_call_id;
+  console.log(contentStr);
   try {
     const content = JSON.parse(contentStr);
     return [
@@ -198,8 +219,8 @@ function toolMessageToContent(message: ToolMessage): GeminiContent[] {
         parts: [
           {
             functionResponse: {
-              name: message.tool_call_id,
-              response: content,
+              name: responseName,
+              response: { content },
             },
           },
         ],
@@ -212,10 +233,8 @@ function toolMessageToContent(message: ToolMessage): GeminiContent[] {
         parts: [
           {
             functionResponse: {
-              name: message.tool_call_id,
-              response: {
-                response: contentStr,
-              },
+              name: responseName,
+              response: { content: contentStr },
             },
           },
         ],
@@ -224,7 +243,10 @@ function toolMessageToContent(message: ToolMessage): GeminiContent[] {
   }
 }
 
-export function baseMessageToContent(message: BaseMessage): GeminiContent[] {
+export function baseMessageToContent(
+  message: BaseMessage,
+  prevMessage?: BaseMessage
+): GeminiContent[] {
   const type = message._getType();
   switch (type) {
     case "system":
@@ -234,7 +256,12 @@ export function baseMessageToContent(message: BaseMessage): GeminiContent[] {
     case "ai":
       return roleMessageToContent("model", message);
     case "tool":
-      return toolMessageToContent(message as ToolMessage);
+      if (!prevMessage) {
+        throw new Error(
+          "Tool messages cannot be the first message passed to the model."
+        );
+      }
+      return toolMessageToContent(message as ToolMessage, prevMessage);
     default:
       console.log(`Unsupported message type: ${type}`);
       return [];
@@ -324,7 +351,7 @@ function toolRawToTool(raw: ToolCallRaw): ToolCall {
 
 function functionCallPartToToolRaw(part: GeminiPartFunctionCall): ToolCallRaw {
   return {
-    id: part?.functionCall?.name ?? "",
+    id: uuidv4().replace(/-/g, ""),
     type: "function",
     function: {
       name: part.functionCall.name,
@@ -446,7 +473,7 @@ export function responseToChatGeneration(
 ): ChatGenerationChunk {
   return new ChatGenerationChunk({
     text: responseToString(response),
-    message: partToMessage(responseToParts(response)[0]),
+    message: partToMessageChunk(responseToParts(response)[0]),
     generationInfo: response,
   });
 }
@@ -472,7 +499,7 @@ export function chunkToString(chunk: BaseMessageChunk): string {
   }
 }
 
-export function partToMessage(part: GeminiPart): BaseMessageChunk {
+export function partToMessageChunk(part: GeminiPart): BaseMessageChunk {
   const fields = partsToBaseMessageFields([part]);
   if (typeof fields.content === "string") {
     return new AIMessageChunk(fields);
@@ -489,7 +516,7 @@ export function partToMessage(part: GeminiPart): BaseMessageChunk {
 }
 
 export function partToChatGeneration(part: GeminiPart): ChatGeneration {
-  const message = partToMessage(part);
+  const message = partToMessageChunk(part);
   const text = partToText(part);
   return new ChatGenerationChunk({
     text,
@@ -505,11 +532,20 @@ export function responseToChatGenerations(
   if (ret.every((item) => typeof item.message.content === "string")) {
     const combinedContent = ret.map((item) => item.message.content).join("");
     const combinedText = ret.map((item) => item.text).join("");
+    const toolCallChunks = ret[
+      ret.length - 1
+    ].message.additional_kwargs?.tool_calls?.map((toolCall, i) => ({
+      name: toolCall.function.name,
+      args: toolCall.function.arguments,
+      id: toolCall.id,
+      index: i,
+    }));
     ret = [
       new ChatGenerationChunk({
         message: new AIMessageChunk({
           content: combinedContent,
           additional_kwargs: ret[ret.length - 1].message.additional_kwargs,
+          tool_call_chunks: toolCallChunks,
         }),
         text: combinedText,
         generationInfo: ret[ret.length - 1].generationInfo,
@@ -526,16 +562,33 @@ export function responseToBaseMessageFields(
   return partsToBaseMessageFields(parts);
 }
 
-export function partsToBaseMessageFields(
-  parts: GeminiPart[]
-): BaseMessageFields {
-  const fields: BaseMessageFields = {
+export function partsToBaseMessageFields(parts: GeminiPart[]): AIMessageFields {
+  const fields: AIMessageFields = {
     content: partsToMessageContent(parts),
+    tool_calls: [],
+    invalid_tool_calls: [],
   };
 
   const rawTools = partsToToolsRaw(parts);
   if (rawTools.length > 0) {
     const tools = toolsRawToTools(rawTools);
+    for (const tool of tools) {
+      try {
+        fields.tool_calls?.push({
+          name: tool.function.name,
+          args: JSON.parse(tool.function.arguments),
+          id: tool.id,
+        });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (e: any) {
+        fields.invalid_tool_calls?.push({
+          name: tool.function.name,
+          args: JSON.parse(tool.function.arguments),
+          id: tool.id,
+          error: e.message,
+        });
+      }
+    }
     fields.additional_kwargs = {
       tool_calls: tools,
     };

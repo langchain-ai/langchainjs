@@ -1,6 +1,7 @@
 export type AgentAction = {
   tool: string;
-  toolInput: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  toolInput: string | Record<string, any>;
   log: string;
 };
 
