@@ -312,6 +312,10 @@ export class GithubRepoLoader
   private async parseGitmodules(
     gitmodulesContent: string
   ): Promise<SubmoduleInfo[]> {
+    // in case the .gitmodules file does not end with a newline, we add one to make the regex work
+    if (!gitmodulesContent.endsWith("\n")) {
+      gitmodulesContent += "\n";
+    }
     // catches the initial line of submodule entries
     const submodulePattern = /\[submodule "(.*?)"]\n((\s+.*?\s*=\s*.*?\n)*)/g;
     // catches the properties of a submodule
