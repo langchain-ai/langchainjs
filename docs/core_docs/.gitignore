@@ -115,7 +115,7 @@ docs/modules/memory/chat_messages/custom.md
 docs/modules/memory/chat_messages/custom.mdx
 docs/modules/data_connection/vectorstores/custom.md
 docs/modules/data_connection/vectorstores/custom.mdx
-docs/modules/agents/agent_types/tool_calling_agent.md
-docs/modules/agents/agent_types/tool_calling_agent.mdx
+docs/modules/agents/agent_types/tool_calling.md
+docs/modules/agents/agent_types/tool_calling.mdx
 docs/modules/model_io/output_parsers/types/openai_tools.md
 docs/modules/model_io/output_parsers/types/openai_tools.mdx
