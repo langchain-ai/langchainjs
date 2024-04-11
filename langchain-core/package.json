@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "0.1.55",
+  "version": "0.1.56",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -236,6 +236,15 @@
       },
       "import": "./messages.js",
       "require": "./messages.cjs"
+    },
+    "./messages/tool": {
+      "types": {
+        "import": "./messages/tool.d.ts",
+        "require": "./messages/tool.d.cts",
+        "default": "./messages/tool.d.ts"
+      },
+      "import": "./messages/tool.js",
+      "require": "./messages/tool.cjs"
     },
     "./output_parsers": {
       "types": {
@@ -620,6 +629,10 @@
     "messages.js",
     "messages.d.ts",
     "messages.d.cts",
+    "messages/tool.cjs",
+    "messages/tool.js",
+    "messages/tool.d.ts",
+    "messages/tool.d.cts",
     "output_parsers.cjs",
     "output_parsers.js",
     "output_parsers.d.ts",

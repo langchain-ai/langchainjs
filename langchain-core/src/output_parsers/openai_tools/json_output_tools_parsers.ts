@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { ChatGeneration } from "../../outputs.js";
 import { BaseLLMOutputParser, OutputParserException } from "../base.js";
+import { parsePartialJson } from "../json.js";
+import { InvalidToolCall, ToolCall } from "../../messages/tool.js";
 
 export type ParsedToolCall = {
   id?: string;
@@ -14,13 +16,96 @@ export type ParsedToolCall = {
   name: string;
 
   /** @deprecated Use `args` instead. Will be removed in 0.2.0. */
-  arguments: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  arguments: Record<string, any>;
 };
 
 export type JsonOutputToolsParserParams = {
   /** Whether to return the tool call id. */
   returnId?: boolean;
 };
+
+export function parseToolCall(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  rawToolCall: Record<string, any>,
+  options: { returnId?: boolean; partial: true }
+): ToolCall | undefined;
+export function parseToolCall(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  rawToolCall: Record<string, any>,
+  options?: { returnId?: boolean; partial?: false }
+): ToolCall;
+export function parseToolCall(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  rawToolCall: Record<string, any>,
+  options?: { returnId?: boolean; partial?: boolean }
+): ToolCall | undefined {
+  if (rawToolCall.function === undefined) {
+    return undefined;
+  }
+  let functionArgs;
+  if (options?.partial) {
+    try {
+      functionArgs = parsePartialJson(rawToolCall.function.arguments ?? "{}");
+    } catch (e) {
+      return undefined;
+    }
+  } else {
+    try {
+      functionArgs = JSON.parse(rawToolCall.function.arguments);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      throw new OutputParserException(
+        [
+          `Function "${rawToolCall.function.name}" arguments:`,
+          ``,
+          rawToolCall.function.arguments,
+          ``,
+          `are not valid JSON.`,
+          `Error: ${e.message}`,
+        ].join("\n")
+      );
+    }
+  }
+
+  const parsedToolCall: ToolCall = {
+    name: rawToolCall.function.name,
+    args: functionArgs,
+  };
+
+  if (options?.returnId) {
+    parsedToolCall.id = rawToolCall.id;
+  }
+
+  return parsedToolCall;
+}
+
+export function convertLangChainToolCallToOpenAI(toolCall: ToolCall) {
+  if (toolCall.id === undefined) {
+    throw new Error(`All OpenAI tool calls must have an "id" field.`);
+  }
+  return {
+    id: toolCall.id,
+    type: "function",
+    function: {
+      name: toolCall.name,
+      arguments: JSON.stringify(toolCall.args),
+    },
+  };
+}
+
+export function makeInvalidToolCall(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  rawToolCall: Record<string, any>,
+  errorMsg?: string
+): InvalidToolCall {
+  return {
+    name: rawToolCall.function?.name,
+    args: rawToolCall.function?.arguments,
+    id: rawToolCall.id,
+    error: errorMsg,
+  };
+}
 
 /**
  * Class for parsing the output of a tool-calling LLM into a JSON object.
@@ -59,32 +144,28 @@ export class JsonOutputToolsParser extends BaseLLMOutputParser<
     const clonedToolCalls = JSON.parse(JSON.stringify(toolCalls));
     const parsedToolCalls = [];
     for (const toolCall of clonedToolCalls) {
-      if (toolCall.function !== undefined) {
-        // @ts-expect-error name and arguemnts are defined by Object.defineProperty
-        const parsedToolCall: ParsedToolCall = {
-          type: toolCall.function.name,
-          args: JSON.parse(toolCall.function.arguments),
-        };
-
-        if (this.returnId) {
-          parsedToolCall.id = toolCall.id;
-        }
-
+      const parsedToolCall = parseToolCall(toolCall, { partial: true });
+      if (parsedToolCall !== undefined) {
         // backward-compatibility with previous
         // versions of Langchain JS, which uses `name` and `arguments`
-        Object.defineProperty(parsedToolCall, "name", {
+        // @ts-expect-error name and arguemnts are defined by Object.defineProperty
+        const backwardsCompatibleToolCall: ParsedToolCall = {
+          type: parsedToolCall.name,
+          args: parsedToolCall.args,
+          id: parsedToolCall.id,
+        };
+        Object.defineProperty(backwardsCompatibleToolCall, "name", {
           get() {
             return this.type;
           },
         });
 
-        Object.defineProperty(parsedToolCall, "arguments", {
+        Object.defineProperty(backwardsCompatibleToolCall, "arguments", {
           get() {
             return this.args;
           },
         });
-
-        parsedToolCalls.push(parsedToolCall);
+        parsedToolCalls.push(backwardsCompatibleToolCall);
       }
     }
     return parsedToolCalls;

@@ -1,24 +1,3 @@
-import {
-  type BaseMessage,
-  ToolMessage,
-  AIMessage,
-} from "@langchain/core/messages";
-import type { ToolsAgentStep } from "../openai/output_parser.js";
+import { formatToToolMessages as formatToOpenAIToolMessages } from "./tool_calling.js";
 
-export function formatToOpenAIToolMessages(
-  steps: ToolsAgentStep[]
-): BaseMessage[] {
-  return steps.flatMap(({ action, observation }) => {
-    if ("messageLog" in action && action.messageLog !== undefined) {
-      const log = action.messageLog as BaseMessage[];
-      return log.concat(
-        new ToolMessage({
-          content: observation,
-          tool_call_id: action.toolCallId,
-        })
-      );
-    } else {
-      return [new AIMessage(action.log)];
-    }
-  });
-}
+export { formatToOpenAIToolMessages };

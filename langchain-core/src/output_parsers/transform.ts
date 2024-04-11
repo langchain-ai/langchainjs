@@ -3,7 +3,8 @@ import {
   type BaseMessage,
   isBaseMessage,
   isBaseMessageChunk,
-} from "../messages/index.js";
+} from "../messages/base.js";
+import { convertToChunk } from "../messages/utils.js";
 import type { BaseCallbackConfig } from "../callbacks/manager.js";
 import {
   type Generation,
@@ -105,7 +106,7 @@ export abstract class BaseCumulativeTransformOutputParser<
           throw new Error("Cannot handle non-string message output.");
         }
         chunkGen = new ChatGenerationChunk({
-          message: chunk.toChunk(),
+          message: convertToChunk(chunk),
           text: chunk.content,
         });
       } else {
