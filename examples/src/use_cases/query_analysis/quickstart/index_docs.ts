@@ -7,7 +7,7 @@ const docs = await getDocs();
 const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 2000 });
 const chunkedDocs = await textSplitter.splitDocuments(docs);
 const embeddings = new OpenAIEmbeddings({
-  modelName: "text-embedding-3-small",
+  model: "text-embedding-3-small",
 });
 const vectorStore = await Chroma.fromDocuments(chunkedDocs, embeddings, {
   collectionName: "yt-videos",

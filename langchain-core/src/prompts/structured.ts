@@ -5,7 +5,7 @@ import {
   type RunnableBinding,
 } from "../runnables/base.js";
 import { RunnableConfig } from "../runnables/config.js";
-import { InputValues } from "../utils/types.js";
+import { InputValues } from "../utils/types/index.js";
 import {
   BaseMessagePromptTemplateLike,
   ChatPromptTemplate,

@@ -13,7 +13,7 @@ import { BaseMessage } from "@langchain/core/messages";
 import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 /** Define your chat model */
-const model = new ChatOpenAI({ modelName: "gpt-4" });
+const model = new ChatOpenAI({ model: "gpt-4" });
 /** Bind a stop token to the model */
 const modelWithStop = model.bind({
   stop: ["\nObservation"],

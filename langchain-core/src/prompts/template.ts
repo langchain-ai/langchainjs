@@ -1,5 +1,5 @@
 import { MessageContent } from "../messages/index.js";
-import type { InputValues } from "../utils/types.js";
+import type { InputValues } from "../utils/types/index.js";
 
 /**
  * Type that specifies the format of a template. Only

@@ -60,14 +60,14 @@ export class Relationship extends Serializable {
   }
 }
 
-export class GraphDocument extends Document {
+export class GraphDocument extends Serializable {
   nodes: Node[];
 
   relationships: Relationship[];
 
   source: Document;
 
-  lc_namespace = ["langchain", "graph", "document_node"];
+  lc_namespace = ["langchain", "graph", "graph_document"];
 
   constructor({
     nodes,
@@ -78,7 +78,11 @@ export class GraphDocument extends Document {
     relationships: Relationship[];
     source: Document;
   }) {
-    super(source);
+    super({
+      nodes,
+      relationships,
+      source,
+    });
     this.nodes = nodes;
     this.relationships = relationships;
     this.source = source;

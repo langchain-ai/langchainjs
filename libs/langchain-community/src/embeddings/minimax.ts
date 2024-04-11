@@ -8,8 +8,13 @@ import { ConfigurationParameters } from "../chat_models/minimax.js";
  * defines additional parameters specific to the MinimaxEmbeddings class.
  */
 export interface MinimaxEmbeddingsParams extends EmbeddingsParams {
-  /** Model name to use */
+  /**
+   * Model name to use
+   * Alias for `model`
+   */
   modelName: string;
+  /** Model name to use */
+  model: string;
 
   /**
    * API key to use when making requests. Defaults to the value of
@@ -20,8 +25,14 @@ export interface MinimaxEmbeddingsParams extends EmbeddingsParams {
   /**
    * Secret key to use when making requests. Defaults to the value of
    * `MINIMAX_API_KEY` environment variable.
+   * Alias for `apiKey`
    */
   minimaxApiKey?: string;
+  /**
+   * Secret key to use when making requests. Defaults to the value of
+   * `MINIMAX_API_KEY` environment variable.
+   */
+  apiKey?: string;
 
   /**
    * The maximum number of documents to embed in a single request. This is
@@ -98,6 +109,8 @@ export class MinimaxEmbeddings
 {
   modelName = "embo-01";
 
+  model = "embo-01";
+
   batchSize = 512;
 
   stripNewLines = true;
@@ -105,6 +118,8 @@ export class MinimaxEmbeddings
   minimaxGroupId?: string;
 
   minimaxApiKey?: string;
+
+  apiKey?: string;
 
   type: "db" | "query" = "db";
 
@@ -129,13 +144,17 @@ export class MinimaxEmbeddings
     }
 
     this.minimaxApiKey =
-      fields?.minimaxApiKey ?? getEnvironmentVariable("MINIMAX_API_KEY");
-
-    if (!this.minimaxApiKey) {
+      fields?.apiKey ??
+      fields?.minimaxApiKey ??
+      getEnvironmentVariable("MINIMAX_API_KEY");
+    this.apiKey = this.minimaxApiKey;
+    if (!this.apiKey) {
       throw new Error("Minimax ApiKey not found");
     }
 
-    this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
+    this.modelName =
+      fieldsWithDefaults?.model ?? fieldsWithDefaults?.modelName ?? this.model;
+    this.model = this.modelName;
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
     this.type = fieldsWithDefaults?.type ?? this.type;
     this.stripNewLines =
@@ -160,7 +179,7 @@ export class MinimaxEmbeddings
 
     const batchRequests = batches.map((batch) =>
       this.embeddingWithRetry({
-        model: this.modelName,
+        model: this.model,
         texts: batch,
         type: this.type,
       })
@@ -186,7 +205,7 @@ export class MinimaxEmbeddings
    */
   async embedQuery(text: string): Promise<number[]> {
     const { vectors } = await this.embeddingWithRetry({
-      model: this.modelName,
+      model: this.model,
       texts: [this.stripNewLines ? text.replace(/\n/g, " ") : text],
       type: this.type,
     });
@@ -207,7 +226,7 @@ export class MinimaxEmbeddings
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${this.minimaxApiKey}`,
+          Authorization: `Bearer ${this.apiKey}`,
           ...this.headers,
         },
         body: JSON.stringify(request),

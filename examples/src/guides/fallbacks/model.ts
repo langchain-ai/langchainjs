@@ -3,7 +3,7 @@ import { ChatAnthropic } from "@langchain/anthropic";
 
 // Use a fake model name that will always throw an error
 const fakeOpenAIModel = new ChatOpenAI({
-  modelName: "potato!",
+  model: "potato!",
   maxRetries: 0,
 });
 

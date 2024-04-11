@@ -9,7 +9,6 @@ import {
   BaseMessageLike,
   HumanMessage,
   MessageContentComplex,
-  MessageContentText,
   SystemMessage,
   ToolMessage,
 } from "@langchain/core/messages";
@@ -17,7 +16,7 @@ import { GeminiTool } from "@langchain/google-common";
 import { ChatGoogle } from "../chat_models.js";
 import { GoogleLLM } from "../llms.js";
 
-describe.skip("GAuth Chat", () => {
+describe("GAuth Chat", () => {
   test("platform", async () => {
     const model = new GoogleLLM();
     expect(model.platform).toEqual("gcp");
@@ -36,12 +35,8 @@ describe.skip("GAuth Chat", () => {
       expect(aiMessage.content[0]).toBeDefined();
 
       const content = aiMessage.content[0] as MessageContentComplex;
-      expect(content).toHaveProperty("type");
-      expect(content.type).toEqual("text");
-
-      const textContent = content as MessageContentText;
-      expect(textContent.text).toBeDefined();
-      expect(textContent.text).toEqual("2");
+      expect(typeof content).toBe("string");
+      expect(content).toBe("2");
     } catch (e) {
       console.error(e);
       throw e;
@@ -65,16 +60,7 @@ describe.skip("GAuth Chat", () => {
 
       const aiMessage = res as AIMessageChunk;
       expect(aiMessage.content).toBeDefined();
-      expect(aiMessage.content.length).toBeGreaterThan(0);
-      expect(aiMessage.content[0]).toBeDefined();
-
-      const content = aiMessage.content[0] as MessageContentComplex;
-      expect(content).toHaveProperty("type");
-      expect(content.type).toEqual("text");
-
-      const textContent = content as MessageContentText;
-      expect(textContent.text).toBeDefined();
-      expect(["H", "T"]).toContainEqual(textContent.text);
+      expect(["H", "T"]).toContainEqual(aiMessage.content);
     } catch (e) {
       console.error(e);
       throw e;
@@ -138,8 +124,7 @@ describe.skip("GAuth Chat", () => {
     const model = new ChatGoogle().bind({ tools });
     const result = await model.invoke("Run a test on the cobalt project");
     expect(result).toHaveProperty("content");
-    expect(Array.isArray(result.content)).toBeTruthy();
-    expect(result.content).toHaveLength(0);
+    expect(result.content).toBe("");
     const args = result?.lc_kwargs?.additional_kwargs;
     expect(args).toBeDefined();
     expect(args).toHaveProperty("tool_calls");
@@ -210,22 +195,22 @@ describe.skip("GAuth Chat", () => {
 
   test("withStructuredOutput", async () => {
     const tool = {
-      name: "test",
+      name: "get_weather",
       description:
-        "Run a test with a specific name and get if it passed or failed",
+        "Get the weather of a specific location and return the temperature in Celsius.",
       parameters: {
         type: "object",
         properties: {
-          testName: {
+          location: {
             type: "string",
-            description: "The name of the test that should be run.",
+            description: "The name of city to get the weather for.",
           },
         },
-        required: ["testName"],
+        required: ["location"],
       },
     };
     const model = new ChatGoogle().withStructuredOutput(tool);
-    const result = await model.invoke("Run a test on the cobalt project");
-    expect(result).toHaveProperty("testName");
+    const result = await model.invoke("What is the weather in Paris?");
+    expect(result).toHaveProperty("location");
   });
 });

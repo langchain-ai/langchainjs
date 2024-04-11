@@ -37,12 +37,12 @@ async function getEntrypointsFromFile(
       path.join(packagePath, "src", `${value}.ts`)
     );
     const exportedSymbolsMap = newFile.getExportedDeclarations();
-    const exportedSymbols = Array.from(exportedSymbolsMap.entries()).map(
-      ([symbol, declarations]) => ({
+    const exportedSymbols = Array.from(exportedSymbolsMap.entries())
+      .filter(([_, declarations]) => declarations.length > 0)
+      .map(([symbol, declarations]) => ({
         kind: declarations[0].getKind(),
         symbol,
-      })
-    );
+      }));
     return {
       entrypoint: key,
       exportedSymbols,

@@ -15,11 +15,14 @@ import {
 import type { z } from "zod";
 import {
   Runnable,
+  RunnableInterface,
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
 import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
+import { isStructuredTool } from "@langchain/core/utils/function_calling";
+import { StructuredToolInterface } from "@langchain/core/tools";
 import {
   GoogleAIBaseLLMInput,
   GoogleAIModelParams,
@@ -62,7 +65,7 @@ class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
     _parameters: GoogleAIModelParams
   ): GeminiContent[] {
     return input
-      .map((msg) => baseMessageToContent(msg))
+      .map((msg, i) => baseMessageToContent(msg, input[i - 1]))
       .reduce((acc, cur) => [...acc, ...cur]);
   }
 }
@@ -76,11 +79,33 @@ export interface ChatGoogleBaseInput<AuthOptions>
     GoogleAIModelParams,
     GoogleAISafetyParams {}
 
+function convertToGeminiTools(
+  structuredTools: (StructuredToolInterface | Record<string, unknown>)[]
+): GeminiTool[] {
+  return [
+    {
+      functionDeclarations: structuredTools.map(
+        (structuredTool): GeminiFunctionDeclaration => {
+          if (isStructuredTool(structuredTool)) {
+            const jsonSchema = zodToGeminiParameters(structuredTool.schema);
+            return {
+              name: structuredTool.name,
+              description: structuredTool.description,
+              parameters: jsonSchema as GeminiFunctionSchema,
+            };
+          }
+          return structuredTool as unknown as GeminiFunctionDeclaration;
+        }
+      ),
+    },
+  ];
+}
+
 /**
  * Integration with a chat model.
  */
 export abstract class ChatGoogleBase<AuthOptions>
-  extends BaseChatModel<GoogleAIBaseLanguageModelCallOptions>
+  extends BaseChatModel<GoogleAIBaseLanguageModelCallOptions, AIMessageChunk>
   implements ChatGoogleBaseInput<AuthOptions>
 {
   // Used for tracing, replace with the same name as your class
@@ -90,7 +115,6 @@ export abstract class ChatGoogleBase<AuthOptions>
 
   lc_serializable = true;
 
-  /** @deprecated Prefer `modelName` */
   model = "gemini-pro";
 
   modelName = "gemini-pro";
@@ -170,9 +194,27 @@ export abstract class ChatGoogleBase<AuthOptions>
     return this.connection.platform;
   }
 
+  override bindTools(
+    tools: (StructuredToolInterface | Record<string, unknown>)[],
+    kwargs?: Partial<GoogleAIBaseLanguageModelCallOptions>
+  ): RunnableInterface<
+    BaseLanguageModelInput,
+    AIMessageChunk,
+    GoogleAIBaseLanguageModelCallOptions
+  > {
+    return this.bind({ tools: convertToGeminiTools(tools), ...kwargs });
+  }
+
   // Replace
   _llmType() {
     return "chat_integration";
+  }
+
+  /**
+   * Get the parameters used to invoke the model
+   */
+  override invocationParams(options?: this["ParsedCallOptions"]) {
+    return copyAIModelParams(this, options);
   }
 
   async _generate(
@@ -180,7 +222,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     options: this["ParsedCallOptions"],
     _runManager: CallbackManagerForLLMRun | undefined
   ): Promise<ChatResult> {
-    const parameters = copyAIModelParams(this, options);
+    const parameters = this.invocationParams(options);
     const response = await this.connection.request(
       messages,
       parameters,
@@ -196,7 +238,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     _runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     // Make the call as a streaming request
-    const parameters = copyAIModelParams(this, options);
+    const parameters = this.invocationParams(options);
     const response = await this.streamedConnection.request(
       _messages,
       parameters,

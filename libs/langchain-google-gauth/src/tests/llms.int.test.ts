@@ -13,7 +13,7 @@ const imgData = {
     "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH6AIbFwQSRaexCAAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAJklEQVQY02P8//8/A27AxIAXsEAor31f0CS2OfEQ1j2Q0owU+RsAGNUJD2/04PgAAAAASUVORK5CYII=",
 };
 
-describe.skip("GAuth LLM", () => {
+describe("GAuth LLM", () => {
   test("platform", async () => {
     const model = new GoogleLLM();
     expect(model.platform).toEqual("gcp");

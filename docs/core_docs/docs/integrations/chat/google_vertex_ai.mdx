@@ -25,6 +25,10 @@ import IntegrationInstallTooltip from "@mdx_components/integration_install_toolt
 npm install @langchain/google-vertexai
 ```
 
+import UnifiedModelParamsTooltip from "@mdx_components/unified_model_params_tooltip.mdx";
+
+<UnifiedModelParamsTooltip></UnifiedModelParamsTooltip>
+
 You should make sure the Vertex AI API is
 enabled for the relevant project and that you've authenticated to
 Google Cloud using one of these methods:
@@ -118,4 +122,17 @@ import ChatVertexAIWSA from "@examples/models/chat/integration_googlevertexai-ws
 
 :::tip
 See the LangSmith trace for the example above [here](https://smith.langchain.com/public/41bbbddb-f357-4bfa-a111-def8294a4514/r).
+:::
+
+### VertexAI tools agent
+
+The Gemini family of models not only support tool calling, but can also be used in the [Tool Calling agent](/docs/modules/agents/agent_types/tool_calling/).
+Here's an example:
+
+import AgentsExample from "@examples/models/chat/chat_vertexai_agents.ts";
+
+<CodeBlock language="typescript">{AgentsExample}</CodeBlock>
+
+:::tip
+See the LangSmith trace for the agent example above [here](https://smith.langchain.com/public/5615ee35-ba76-433b-8639-9b321cb6d4bf/r).
 :::

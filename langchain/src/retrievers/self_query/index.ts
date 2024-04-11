@@ -123,16 +123,12 @@ export class SelfQueryRetriever<T extends VectorStore>
       myQuery = generatedQuery;
     }
 
-    if (!filter) {
-      return [];
-    } else {
-      return this.vectorStore.similaritySearch(
-        myQuery,
-        this.searchParams?.k,
-        filter,
-        runManager?.getChild("vectorstore")
-      );
-    }
+    return this.vectorStore.similaritySearch(
+      myQuery,
+      this.searchParams?.k,
+      filter,
+      runManager?.getChild("vectorstore")
+    );
   }
 
   /**

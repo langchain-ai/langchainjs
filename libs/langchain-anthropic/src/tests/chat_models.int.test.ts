@@ -285,7 +285,7 @@ test("Test ChatAnthropic headers passed through", async () => {
   const chat = new ChatAnthropic({
     modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
-    anthropicApiKey: "NOT_REAL",
+    apiKey: "NOT_REAL",
     clientOptions: {
       defaultHeaders: {
         "X-Api-Key": process.env.ANTHROPIC_API_KEY,

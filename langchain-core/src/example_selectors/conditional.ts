@@ -2,7 +2,7 @@ import type { BaseChatModel } from "../language_models/chat_models.js";
 import type { BasePromptTemplate } from "../prompts/base.js";
 import type { BaseLanguageModelInterface } from "../language_models/base.js";
 import type { BaseLLM } from "../language_models/llms.js";
-import type { PartialValues } from "../utils/types.js";
+import type { PartialValues } from "../utils/types/index.js";
 
 export type BaseGetPromptAsyncOptions = {
   partialVariables?: PartialValues;

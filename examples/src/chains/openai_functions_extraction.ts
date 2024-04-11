@@ -10,7 +10,7 @@ const zodSchema = z.object({
   "dog-breed": z.string().optional(),
 });
 const chatModel = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo-0613",
+  model: "gpt-3.5-turbo-0613",
   temperature: 0,
 });
 const chain = createExtractionChainFromZod(zodSchema, chatModel);

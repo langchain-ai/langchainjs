@@ -15,7 +15,7 @@ const bufferMemory = new BufferMemory({
 
 // summary memory
 const summaryMemory = new ConversationSummaryMemory({
-  llm: new ChatOpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 }),
+  llm: new ChatOpenAI({ model: "gpt-3.5-turbo", temperature: 0 }),
   inputKey: "input",
   memoryKey: "conversation_summary",
 });
