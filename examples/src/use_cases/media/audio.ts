@@ -8,16 +8,14 @@ import fs from "fs";
 import { z } from "zod";
 
 function fileToBase64(filePath: string): string {
-  const fileData = fs.readFileSync(filePath);
-  const base64String = Buffer.from(fileData).toString("base64");
-  return base64String;
+  return fs.readFileSync(filePath, "base64");
 }
 
 const mozartMp3File = "Mozart_Requiem_D_minor.mp3";
 const mozartInBase64 = fileToBase64(mozartMp3File);
 
 const tool = z.object({
-  tasks: z
+  instruments: z
     .array(z.string())
     .describe("A list of instruments found in the audio."),
 });
@@ -55,5 +53,14 @@ Use the "instruments_list_tool" to return a list of tasks.`,
 
 console.log("response", response);
 /*
-response { tasks: [ 'violin', 'viola', 'cello', 'double bass' ] }
+response {
+  instruments: [
+    'violin',   'viola',
+    'cello',    'double bass',
+    'flute',    'oboe',
+    'clarinet', 'bassoon',
+    'horn',     'trumpet',
+    'timpani'
+  ]
+}
 */

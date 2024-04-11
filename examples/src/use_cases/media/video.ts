@@ -8,9 +8,7 @@ import fs from "fs";
 import { z } from "zod";
 
 function fileToBase64(filePath: string): string {
-  const fileData = fs.readFileSync(filePath);
-  const base64String = Buffer.from(fileData).toString("base64");
-  return base64String;
+  return fs.readFileSync(filePath, "base64");
 }
 
 const lanceLsEvalsVideo = "lance_ls_eval_video.mp4";
