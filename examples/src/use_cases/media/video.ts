@@ -5,6 +5,7 @@ import {
 import { ChatVertexAI } from "@langchain/google-vertexai";
 import { HumanMessage } from "@langchain/core/messages";
 import fs from "fs";
+import { z } from "zod";
 
 function fileToBase64(filePath: string): string {
   const fileData = fs.readFileSync(filePath);
@@ -15,17 +16,16 @@ function fileToBase64(filePath: string): string {
 const lanceLsEvalsVideo = "lance_ls_eval_video.mp4";
 const lanceInBase64 = fileToBase64(lanceLsEvalsVideo);
 
+const tool = z.object({
+  tasks: z.array(z.string()).describe("A list of tasks."),
+});
+
 const model = new ChatVertexAI({
   model: "gemini-1.5-pro-preview-0409",
   temperature: 0,
+}).withStructuredOutput(tool, {
+  name: "tasks_list_tool",
 });
-
-const lancePrompt = `The following video is an overview of how to build datasets in LangSmith.
-Given the following video, come up with three tasks I should do to further improve my knowledge around using datasets in LangSmith.
-
-Rules:
-Respond ONLY with an array of strings, with each string being a single task.
-Do NOT include any additional content or text besides the array.`;
 
 const prompt = ChatPromptTemplate.fromMessages([
   new MessagesPlaceholder("video"),
@@ -42,17 +42,25 @@ const response = await chain.invoke({
       },
       {
         type: "text",
-        text: lancePrompt,
+        text: `The following video is an overview of how to build datasets in LangSmith.
+Given the following video, come up with three tasks I should do to further improve my knowledge around using datasets in LangSmith.
+Only reference features that were outlined or described in the video.
+
+Rules:
+Use the "tasks_list_tool" to return a list of tasks.
+Your tasks should be tailored for an engineer who is looking to improve their knowledge around using datasets and evaluations, specifically with LangSmith.`,
       },
     ],
   }),
 });
 
-console.log("response", response.content);
+console.log("response", response);
 /*
-response [
-  "Explore the different dataset types available in LangSmith, such as key-value, chat, and LLM datasets, and understand their specific use cases and structures.",
-  "Learn how to use the LangSmith SDK to create, edit, and manage datasets programmatically, allowing for automation and integration with other tools.",
-  "Investigate the versioning capabilities of LangSmith datasets and understand how to track changes, revert to previous versions, and collaborate effectively on dataset development."
-]
+response {
+  tasks: [
+    'Explore the LangSmith SDK documentation for in-depth understanding of dataset creation, manipulation, and versioning functionalities.',
+    'Experiment with different dataset types like Key-Value, Chat, and LLM to understand their structures and use cases.',
+    'Try uploading a CSV file containing question-answer pairs to LangSmith and create a new dataset from it.'
+  ]
+}
 */

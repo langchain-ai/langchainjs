@@ -1,6 +1,8 @@
-# Multi-Media
+# Audio/Video Structured Extraction
 
-Google's Gemini API offers support for audio and video input.
+Google's Gemini API offers support for audio and video input, along with function calling.
+Together, we can pair these API features to extract structured data given audio or video input.
+
 In the following examples, we'll demonstrate how to read and send MP3 and MP4 files to the Gemini API, and receive structured output as a response.
 
 ## Setup
@@ -21,11 +23,24 @@ import IntegrationInstallTooltip from "@mdx_components/integration_install_toolt
 npm install @langchain/google-vertexai @langchain/core
 ```
 
-## Audio
+## Video
 
-The first example loads an audio (MP3) file containing Mozart's Requiem in D Minor and prompts Gemini to return a single array of strings, with each string being an instrument from the song.
+This example takes a screen recording of a [LangChain YouTube video on datasets and testing in LangSmith](https://www.youtube.com/watch?v=N9hjO-Uy1Vo) sped up to 1.5x speed.
+It is then converted to `base64` format like the example above, and sent to Gemini with a prompt asking for structured output of tasks I can do to followup on the video.
+
+We create a new tool for this, and pass it to the model via the `withStructuredOutput` method.
 
 import CodeBlock from "@theme/CodeBlock";
+
+import VideoExample from "@examples/use_cases/media/video.ts";
+
+<CodeBlock language="typescript">{VideoExample}</CodeBlock>
+
+## Audio
+
+The next example loads an audio (MP3) file containing Mozart's Requiem in D Minor and prompts Gemini to return a single array of strings, with each string being an instrument from the song.
+
+Here, we'll also use the `withStructuredOutput` method to get structured output from the model.
 
 import AudioExample from "@examples/use_cases/media/audio.ts";
 
@@ -39,14 +54,3 @@ timpani (2 drums), violins, viola, and basso continuo (cello, double bass, and o
 ```
 
 Gemini did pretty well here! For music not being it's primary focus, it was able to identify a few of the instruments used in the song, and didn't hallucinate any!
-
-## Video
-
-This example takes a screen recording of a [LangChain YouTube video on datasets and testing in LangSmith](https://www.youtube.com/watch?v=N9hjO-Uy1Vo) sped up to 1.5x speed.
-It is then converted to `base64` format like the example above, and sent to Gemini with a prompt asking for structured output of tasks I can do to followup on the video.
-
-import VideoExample from "@examples/use_cases/media/video.ts";
-
-<CodeBlock language="typescript">{VideoExample}</CodeBlock>
-
-Here it also did well, giving me three tasks, just like I requested. It also responded with a valid JSON array, even though no function calling was used!

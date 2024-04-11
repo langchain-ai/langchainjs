@@ -5,6 +5,7 @@ import {
 import { ChatVertexAI } from "@langchain/google-vertexai";
 import { HumanMessage } from "@langchain/core/messages";
 import fs from "fs";
+import { z } from "zod";
 
 function fileToBase64(filePath: string): string {
   const fileData = fs.readFileSync(filePath);
@@ -15,16 +16,18 @@ function fileToBase64(filePath: string): string {
 const mozartMp3File = "Mozart_Requiem_D_minor.mp3";
 const mozartInBase64 = fileToBase64(mozartMp3File);
 
+const tool = z.object({
+  tasks: z
+    .array(z.string())
+    .describe("A list of instruments found in the audio."),
+});
+
 const model = new ChatVertexAI({
   model: "gemini-1.5-pro-preview-0409",
   temperature: 0,
+}).withStructuredOutput(tool, {
+  name: "instruments_list_tool",
 });
-
-const mozartPrompt = `The following audio is a song by Mozart. Respond with a list of instruments you hear in the song.
-
-Rules:
-Respond ONLY with an array of strings, with each string being a single task.
-Do NOT include any additional content or text besides the array.`;
 
 const prompt = ChatPromptTemplate.fromMessages([
   new MessagesPlaceholder("audio"),
@@ -41,18 +44,16 @@ const response = await chain.invoke({
       },
       {
         type: "text",
-        text: mozartPrompt,
+        text: `The following audio is a song by Mozart. Respond with a list of instruments you hear in the song.
+
+Rules:
+Use the "instruments_list_tool" to return a list of tasks.`,
       },
     ],
   }),
 });
 
-console.log("response", response.content);
+console.log("response", response);
 /*
-response [
- "violin",
- "viola",
- "cello",
- "double bass"
-]
+response { tasks: [ 'violin', 'viola', 'cello', 'double bass' ] }
 */
