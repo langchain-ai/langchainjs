@@ -1,11 +1,11 @@
+import mustache from "mustache";
 import { MessageContent } from "../messages/index.js";
 import type { InputValues } from "../utils/types/index.js";
 
 /**
- * Type that specifies the format of a template. Only
- * "f-string" is supported currently.
+ * Type that specifies the format of a template.
  */
-export type TemplateFormat = "f-string";
+export type TemplateFormat = "f-string" | "mustache";
 
 /**
  * Type that represents a node in a parsed format string. It can be either
@@ -65,17 +65,38 @@ export const parseFString = (template: string): ParsedFStringNode[] => {
   return nodes;
 };
 
+const mustacheTemplateToNodes = (
+  template: mustache.TemplateSpans
+): ParsedFStringNode[] =>
+  template.map((temp) => {
+    if (temp[0] === "name") {
+      const name = temp[1].includes(".") ? temp[1].split(".")[0] : temp[1];
+      return { type: "variable", name };
+    } else if (temp[0] === "#") {
+      return { type: "variable", name: temp[1] };
+    } else {
+      return { type: "literal", text: temp[1] };
+    }
+  });
+
+export const parseMustache = (template: string) => {
+  const parsed = mustache.parse(template);
+  return mustacheTemplateToNodes(parsed);
+};
+
 export const interpolateFString = (template: string, values: InputValues) =>
   parseFString(template).reduce((res, node) => {
     if (node.type === "variable") {
       if (node.name in values) {
         return res + values[node.name];
       }
-      throw new Error(`Missing value for input ${node.name}`);
+      throw new Error(`(f-string) Missing value for input ${node.name}`);
     }
 
     return res + node.text;
   }, "");
+
+export const interpolateMustache = (template: string, values: InputValues) => mustache.render(template, values)
 
 /**
  * Type that represents a function that takes a template string and a set
@@ -92,10 +113,12 @@ type Parser = (template: string) => ParsedFStringNode[];
 
 export const DEFAULT_FORMATTER_MAPPING: Record<TemplateFormat, Interpolator> = {
   "f-string": interpolateFString,
+  mustache: interpolateMustache,
 };
 
 export const DEFAULT_PARSER_MAPPING: Record<TemplateFormat, Parser> = {
   "f-string": parseFString,
+  mustache: parseMustache,
 };
 
 export const renderTemplate = (

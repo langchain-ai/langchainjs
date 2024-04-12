@@ -119,6 +119,9 @@ export class PromptTemplate<
     Object.assign(this, input);
 
     if (this.validateTemplate) {
+      if (this.templateFormat === "mustache") {
+        throw new Error("Mustache templates cannot be validated.");
+      }
       let totalInputVariables: string[] = this.inputVariables;
       if (this.partialVariables) {
         totalInputVariables = totalInputVariables.concat(

@@ -27,7 +27,7 @@ import {
 } from "./base.js";
 import { PromptTemplate, type ParamsFromFString } from "./prompt.js";
 import { ImagePromptTemplate } from "./image.js";
-import { parseFString } from "./template.js";
+import { TemplateFormat, parseFString } from "./template.js";
 
 /**
  * Abstract class that serves as a base for creating message prompt
@@ -329,8 +329,17 @@ export class ChatMessagePromptTemplate<
     return new ChatMessage(await this.prompt.format(values), this.role);
   }
 
-  static fromTemplate(template: string, role: string) {
-    return new this(PromptTemplate.fromTemplate(template), role);
+  static fromTemplate(
+    template: string,
+    role: string,
+    options?: { templateFormat?: TemplateFormat }
+  ) {
+    return new this(
+      PromptTemplate.fromTemplate(template, {
+        templateFormat: options?.templateFormat,
+      }),
+      role
+    );
   }
 }
 
@@ -351,6 +360,11 @@ type MessageClass =
 
 type ChatMessageClass = typeof ChatMessage;
 
+interface _StringImageMessagePromptTemplateOptions
+  extends Record<string, unknown> {
+  templateFormat?: TemplateFormat;
+}
+
 class _StringImageMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
@@ -362,7 +376,7 @@ class _StringImageMessagePromptTemplate<
 
   inputVariables: Array<Extract<keyof RunInput, string>> = [];
 
-  additionalOptions: Record<string, unknown> = {};
+  additionalOptions: _StringImageMessagePromptTemplateOptions = {};
 
   prompt:
     | BaseStringPromptTemplate<
@@ -399,7 +413,7 @@ class _StringImageMessagePromptTemplate<
     /** @TODO When we come up with a better way to type prompt templates, fix this */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     fields: any,
-    additionalOptions?: Record<string, unknown>
+    additionalOptions?: _StringImageMessagePromptTemplateOptions
   ) {
     if (!("prompt" in fields)) {
       // eslint-disable-next-line no-param-reassign
@@ -456,10 +470,10 @@ class _StringImageMessagePromptTemplate<
 
   static fromTemplate(
     template: string | Array<string | _TextTemplateParam | _ImageTemplateParam>,
-    additionalOptions?: Record<string, unknown>
+    additionalOptions?: _StringImageMessagePromptTemplateOptions
   ) {
     if (typeof template === "string") {
-      return new this(PromptTemplate.fromTemplate(template));
+      return new this(PromptTemplate.fromTemplate(template, additionalOptions));
     }
     const prompt: Array<
       PromptTemplate<InputValues> | ImagePromptTemplate<InputValues>
@@ -662,6 +676,12 @@ export interface ChatPromptTemplateInput<
    * @defaultValue `true`
    */
   validateTemplate?: boolean;
+
+  /**
+   * The formatting method to use on the prompt.
+   * @default "f-string"
+   */
+  templateFormat?: TemplateFormat;
 }
 
 export type BaseMessagePromptTemplateLike =
@@ -677,8 +697,13 @@ function _isBaseMessagePromptTemplate(
   );
 }
 
-function _coerceMessagePromptTemplateLike(
-  messagePromptTemplateLike: BaseMessagePromptTemplateLike
+function _coerceMessagePromptTemplateLike<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends InputValues = any,
+  Extra extends ChatPromptTemplateInput<RunInput> = ChatPromptTemplateInput<RunInput>
+>(
+  messagePromptTemplateLike: BaseMessagePromptTemplateLike,
+  extra?: Omit<Extra, "inputVariables" | "promptMessages" | "partialVariables">
 ): BaseMessagePromptTemplate | BaseMessage {
   if (
     _isBaseMessagePromptTemplate(messagePromptTemplateLike) ||
@@ -730,15 +755,16 @@ function _coerceMessagePromptTemplateLike(
   }
 
   if (message._getType() === "human") {
-    return HumanMessagePromptTemplate.fromTemplate(templateData);
+    return HumanMessagePromptTemplate.fromTemplate(templateData, extra);
   } else if (message._getType() === "ai") {
-    return AIMessagePromptTemplate.fromTemplate(templateData);
+    return AIMessagePromptTemplate.fromTemplate(templateData, extra);
   } else if (message._getType() === "system") {
-    return SystemMessagePromptTemplate.fromTemplate(templateData);
+    return SystemMessagePromptTemplate.fromTemplate(templateData, extra);
   } else if (ChatMessage.isInstance(message)) {
     return ChatMessagePromptTemplate.fromTemplate(
       message.content as string,
-      message.role
+      message.role,
+      extra
     );
   } else {
     throw new Error(
@@ -793,9 +819,12 @@ export class ChatPromptTemplate<
 
   validateTemplate = true;
 
+  templateFormat: TemplateFormat = "f-string";
+
   constructor(input: ChatPromptTemplateInput<RunInput, PartialVariableName>) {
     super(input);
     Object.assign(this, input);
+    this.templateFormat = input.templateFormat ?? this.templateFormat;
 
     if (this.validateTemplate) {
       const inputVariablesMessages = new Set<string>();
@@ -987,7 +1016,12 @@ export class ChatPromptTemplate<
           // eslint-disable-next-line no-instanceof/no-instanceof
           promptMessage instanceof ChatPromptTemplate
             ? promptMessage.promptMessages
-            : [_coerceMessagePromptTemplateLike(promptMessage)]
+            : [
+                _coerceMessagePromptTemplateLike<RunInput, Extra>(
+                  promptMessage,
+                  extra
+                ),
+              ]
         ),
       []
     );
@@ -1015,6 +1049,7 @@ export class ChatPromptTemplate<
       inputVariables: [...inputVariables] as Extract<keyof RunInput, string>[],
       promptMessages: flattenedMessages,
       partialVariables: flattenedPartialVariables,
+      templateFormat: extra?.templateFormat,
     });
   }
 
