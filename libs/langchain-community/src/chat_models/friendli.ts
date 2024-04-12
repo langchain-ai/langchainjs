@@ -108,6 +108,10 @@ export interface ChatFriendliParams extends BaseChatModelParams {
    */
   model?: string;
   /**
+   * Base endpoint url.
+   */
+  baseUrl?: string;
+  /**
    * Friendli personal access token to run as.
    */
   friendliToken?: string;
@@ -172,6 +176,8 @@ export class ChatFriendli extends BaseChatModel<BaseChatModelCallOptions> {
 
   model = "llama-2-13b-chat";
 
+  baseUrl = "https://inference.friendli.ai";
+
   friendliToken?: string;
 
   friendliTeam?: string;
@@ -190,6 +196,7 @@ export class ChatFriendli extends BaseChatModel<BaseChatModelCallOptions> {
     super(fields);
 
     this.model = fields?.model ?? this.model;
+    this.baseUrl = fields?.baseUrl ?? this.baseUrl;
     this.friendliToken =
       fields?.friendliToken ?? getEnvironmentVariable("FRIENDLI_TOKEN");
     this.friendliTeam =
@@ -249,7 +256,7 @@ export class ChatFriendli extends BaseChatModel<BaseChatModelCallOptions> {
     });
 
     const response = (await this.caller.call(async () =>
-      fetch("https://inference.friendli.ai/v1/chat/completions", {
+      fetch(`${this.baseUrl}/v1/chat/completions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -316,7 +323,7 @@ export class ChatFriendli extends BaseChatModel<BaseChatModelCallOptions> {
     });
 
     const response = await this.caller.call(async () =>
-      fetch("https://inference.friendli.ai/v1/chat/completions", {
+      fetch(`${this.baseUrl}/v1/chat/completions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

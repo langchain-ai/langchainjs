@@ -18,6 +18,10 @@ export interface FriendliParams extends BaseLLMParams {
    */
   model?: string;
   /**
+   * Base endpoint url.
+   */
+  baseUrl?: string;
+  /**
    * Friendli personal access token to run as.
    */
   friendliToken?: string;
@@ -82,6 +86,8 @@ export class Friendli extends LLM<BaseLLMCallOptions> {
 
   model = "mixtral-8x7b-instruct-v0-1";
 
+  baseUrl = "https://inference.friendli.ai";
+
   friendliToken?: string;
 
   friendliTeam?: string;
@@ -100,6 +106,7 @@ export class Friendli extends LLM<BaseLLMCallOptions> {
     super(fields);
 
     this.model = fields?.model ?? this.model;
+    this.baseUrl = fields?.baseUrl ?? this.baseUrl;
     this.friendliToken =
       fields?.friendliToken ?? getEnvironmentVariable("FRIENDLI_TOKEN");
     this.friendliTeam =
@@ -144,7 +151,7 @@ export class Friendli extends LLM<BaseLLMCallOptions> {
     }
 
     const response = (await this.caller.call(async () =>
-      fetch("https://inference.friendli.ai/v1/completions", {
+      fetch(`${this.baseUrl}/v1/completions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -196,7 +203,7 @@ export class Friendli extends LLM<BaseLLMCallOptions> {
     }
 
     const response = await this.caller.call(async () =>
-      fetch("https://inference.friendli.ai/v1/completions", {
+      fetch(`${this.baseUrl}/v1/completions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
