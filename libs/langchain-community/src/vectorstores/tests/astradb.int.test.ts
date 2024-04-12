@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
 import { describe, expect, test } from "@jest/globals";
-import { AstraDB } from "@datastax/astra-db-ts";
+import { AstraDB, DataAPIClient } from "@datastax/astra-db-ts";
 import { faker } from "@faker-js/faker";
 import { Document } from "@langchain/core/documents";
 import { OpenAIEmbeddings } from "@langchain/openai";
@@ -17,12 +17,14 @@ describe.skip("AstraDBVectorStore", () => {
       namespace: process.env.ASTRA_DB_NAMESPACE ?? "default_keyspace",
     };
 
-    client = new AstraDB(clientConfig.token, clientConfig.endpoint);
+    const dataAPIClient = new DataAPIClient(clientConfig.token);
+    client = dataAPIClient.db(clientConfig.endpoint)
 
     astraConfig = {
       ...clientConfig,
       collection: process.env.ASTRA_DB_COLLECTION ?? "langchain_test",
       collectionOptions: {
+        checkExists: false,
         vector: {
           dimension: 1536,
           metric: "cosine",
@@ -147,6 +149,7 @@ describe.skip("AstraDBVectorStore", () => {
       store = new AstraDBVectorStore(new FakeEmbeddings(), {
         ...astraConfig,
         collectionOptions: {
+          checkExists: false,
           vector: {
             dimension: 8,
             metric: "cosine",
@@ -157,7 +160,7 @@ describe.skip("AstraDBVectorStore", () => {
       fail("Should have thrown error");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
-      expect(e.message).toContain("already exists with different 'vector'");
+      expect(e.message).toContain("already exists with different collection options");
     }
   }, 60000);
 });

@@ -1,8 +1,6 @@
 import * as uuid from "uuid";
 
-import { AstraDB } from "@datastax/astra-db-ts";
-import { Collection } from "@datastax/astra-db-ts/dist/collections";
-import { CreateCollectionOptions } from "@datastax/astra-db-ts/dist/collections/options.js";
+import { Collection, DataAPIClient, CreateCollectionOptions, Db } from "@datastax/astra-db-ts";
 
 import {
   AsyncCaller,
@@ -26,7 +24,7 @@ export interface AstraLibArgs extends AsyncCallerParams {
   namespace?: string;
   idKey?: string;
   contentKey?: string;
-  collectionOptions?: CreateCollectionOptions;
+  collectionOptions?: CreateCollectionOptions<any>;
   batchSize?: number;
 }
 
@@ -37,13 +35,13 @@ export type AstraDeleteParams = {
 export class AstraDBVectorStore extends VectorStore {
   declare FilterType: CollectionFilter;
 
-  private astraDBClient: AstraDB;
+  private astraDBClient: Db;
 
   private collectionName: string;
 
   private collection: Collection | undefined;
 
-  private collectionOptions: CreateCollectionOptions | undefined;
+  private collectionOptions: CreateCollectionOptions<any> | undefined;
 
   private readonly idKey: string;
 
@@ -71,8 +69,8 @@ export class AstraDBVectorStore extends VectorStore {
       batchSize,
       ...callerArgs
     } = args;
-
-    this.astraDBClient = new AstraDB(token, endpoint, namespace);
+    const dataAPIClient = new DataAPIClient(token);
+    this.astraDBClient = dataAPIClient.db(endpoint, { namespace })
     this.collectionName = collection;
     this.collectionOptions = collectionOptions;
     this.idKey = idKey ?? "_id";
@@ -189,8 +187,7 @@ export class AstraDBVectorStore extends VectorStore {
     });
 
     const results: [Document, number][] = [];
-
-    await cursor.forEach(async (row: Record<string, unknown>) => {
+    for await (const row of cursor) {
       const {
         $similarity: similarity,
         [this.contentKey]: content,
@@ -203,8 +200,7 @@ export class AstraDBVectorStore extends VectorStore {
       });
 
       results.push([doc, similarity as number]);
-    });
-
+    }
     return results;
   }
 
