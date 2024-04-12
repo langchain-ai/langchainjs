@@ -7,7 +7,6 @@ import {
 } from "@langchain/core/messages";
 import { DataAPIClient, Collection } from "@datastax/astra-db-ts";
 
-
 export interface AstraDBChatMessageHistoryInput {
   token: string;
   endpoint: string;

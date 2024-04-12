@@ -1,6 +1,11 @@
 import * as uuid from "uuid";
 
-import { Collection, DataAPIClient, CreateCollectionOptions, Db } from "@datastax/astra-db-ts";
+import {
+  Collection,
+  DataAPIClient,
+  CreateCollectionOptions,
+  Db,
+} from "@datastax/astra-db-ts";
 
 import {
   AsyncCaller,
@@ -69,8 +74,8 @@ export class AstraDBVectorStore extends VectorStore {
       batchSize,
       ...callerArgs
     } = args;
-    const dataAPIClient = new DataAPIClient(token, { caller: ["langchainjs"]});
-    this.astraDBClient = dataAPIClient.db(endpoint, { namespace })
+    const dataAPIClient = new DataAPIClient(token, { caller: ["langchainjs"] });
+    this.astraDBClient = dataAPIClient.db(endpoint, { namespace });
     this.collectionName = collection;
     this.collectionOptions = collectionOptions;
     this.idKey = idKey ?? "_id";

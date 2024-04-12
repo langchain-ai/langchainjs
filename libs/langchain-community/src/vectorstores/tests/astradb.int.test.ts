@@ -18,7 +18,7 @@ describe.skip("AstraDBVectorStore", () => {
     };
 
     const dataAPIClient = new DataAPIClient(clientConfig.token);
-    db = dataAPIClient.db(clientConfig.endpoint)
+    db = dataAPIClient.db(clientConfig.endpoint);
 
     astraConfig = {
       ...clientConfig,
@@ -160,7 +160,9 @@ describe.skip("AstraDBVectorStore", () => {
       fail("Should have thrown error");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
-      expect(e.message).toContain("already exists with different collection options");
+      expect(e.message).toContain(
+        "already exists with different collection options"
+      );
     }
   }, 60000);
 });

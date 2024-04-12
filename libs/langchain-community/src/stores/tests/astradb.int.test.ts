@@ -10,8 +10,12 @@ describe.skip("AstraDBChatMessageHistory", () => {
     expect(process.env.ASTRA_DB_APPLICATION_TOKEN).toBeDefined();
     expect(process.env.ASTRA_DB_ENDPOINT).toBeDefined();
 
-    const client = new DataAPIClient(process.env.ASTRA_DB_APPLICATION_TOKEN as string);
-    db = client.db(process.env.ASTRA_DB_ENDPOINT as string, { namespace: process.env.ASTRA_DB_NAMESPACE});
+    const client = new DataAPIClient(
+      process.env.ASTRA_DB_APPLICATION_TOKEN as string
+    );
+    db = client.db(process.env.ASTRA_DB_ENDPOINT as string, {
+      namespace: process.env.ASTRA_DB_NAMESPACE,
+    });
   });
 
   beforeEach(async () => {
