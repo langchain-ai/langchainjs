@@ -1,6 +1,6 @@
 import { OpenAIEmbeddings } from "@langchain/openai";
 import hanaClient from "hdb";
-// or import another node.js driver 
+// or import another node.js driver
 // import hanaClient from "@sap/haha-client";
 import { Document } from "@langchain/core/documents";
 import {
@@ -17,15 +17,16 @@ const connectionParams = {
 };
 const client = hanaClient.createClient(connectionParams);
 // connet to hanaDB
-await new Promise<void> ((resolve, reject) => {
-  client.connect((err: Error) => {  // Use arrow function here
-  if (err) {
-    reject(err);
-  } else {
-    console.log("Connected to SAP HANA successfully.");
-    resolve();
-  }
-});
+await new Promise<void>((resolve, reject) => {
+  client.connect((err: Error) => {
+    // Use arrow function here
+    if (err) {
+      reject(err);
+    } else {
+      console.log("Connected to SAP HANA successfully.");
+      resolve();
+    }
+  });
 });
 const embeddings = new OpenAIEmbeddings();
 // define instance args

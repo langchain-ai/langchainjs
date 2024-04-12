@@ -16,15 +16,16 @@ const connectionParams = {
 };
 const client = hanaClient.createClient(connectionParams);
 // connet to hanaDB
-await new Promise<void> ((resolve, reject) => {
-  client.connect((err: Error) => {  // Use arrow function here
-  if (err) {
-    reject(err);
-  } else {
-    console.log("Connected to SAP HANA successfully.");
-    resolve();
-  }
-});
+await new Promise<void>((resolve, reject) => {
+  client.connect((err: Error) => {
+    // Use arrow function here
+    if (err) {
+      reject(err);
+    } else {
+      console.log("Connected to SAP HANA successfully.");
+      resolve();
+    }
+  });
 });
 const embeddings = new OpenAIEmbeddings();
 const args: HanaDBArgs = {

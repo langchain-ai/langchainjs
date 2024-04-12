@@ -8973,7 +8973,6 @@ __metadata:
     "@qdrant/js-client-rest": ^1.2.0
     "@raycast/api": ^1.55.2
     "@rockset/client": ^0.9.1
-    "@sap/hana-client": ^2.19.21
     "@smithy/eventstream-codec": ^2.0.5
     "@smithy/protocol-http": ^3.0.6
     "@smithy/signature-v4": ^2.0.10
@@ -9038,6 +9037,7 @@ __metadata:
     google-auth-library: ^8.9.0
     googleapis: ^126.0.1
     graphql: ^16.6.0
+    hdb: 0.19.8
     hnswlib-node: ^3.0.0
     html-to-text: ^9.0.5
     interface-datastore: ^8.2.11
@@ -9106,7 +9106,6 @@ __metadata:
     "@qdrant/js-client-rest": ^1.2.0
     "@raycast/api": ^1.55.2
     "@rockset/client": ^0.9.1
-    "@sap/hana-client": ^2.19.21
     "@smithy/eventstream-codec": ^2.0.5
     "@smithy/protocol-http": ^3.0.6
     "@smithy/signature-v4": ^2.0.10
@@ -9141,6 +9140,7 @@ __metadata:
     firebase-admin: ^11.9.0 || ^12.0.0
     google-auth-library: ^8.9.0
     googleapis: ^126.0.1
+    hdb: 0.19.8
     hnswlib-node: ^1.4.2
     html-to-text: ^9.0.5
     interface-datastore: ^8.2.11
@@ -9228,8 +9228,6 @@ __metadata:
       optional: true
     "@rockset/client":
       optional: true
-    "@sap/hana-client":
-      optional: true
     "@smithy/eventstream-codec":
       optional: true
     "@smithy/protocol-http":
@@ -9297,6 +9295,8 @@ __metadata:
     google-auth-library:
       optional: true
     googleapis:
+      optional: true
+    hdb:
       optional: true
     hnswlib-node:
       optional: true
@@ -11183,15 +11183,6 @@ __metadata:
   version: 1.5.1
   resolution: "@rushstack/eslint-patch@npm:1.5.1"
   checksum: e4c25322312dbaa29e835a7ab4fbac53c8731dd0da65e46646e38945e296429e7fb91c2ef3da5af5d5938d44b0cde1d5290438ebb3dcb015e02b80b5e2530d24
-  languageName: node
-  linkType: hard
-
-"@sap/hana-client@npm:^2.19.21":
-  version: 2.19.21
-  resolution: "@sap/hana-client@npm:2.19.21"
-  dependencies:
-    debug: 3.1.0
-  checksum: 747647addf8e2f5977130909cb42391284dcf1e9da87178b2b37b126cb90b79d06a3bb069730599bd2d7acff751f571d236dbfe62581aea7b8d0427b1cfdf8bf
   languageName: node
   linkType: hard
 
@@ -19474,15 +19465,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"debug@npm:3.1.0":
-  version: 3.1.0
-  resolution: "debug@npm:3.1.0"
-  dependencies:
-    ms: 2.0.0
-  checksum: 0b52718ab957254a5b3ca07fc34543bc778f358620c206a08452251eb7fc193c3ea3505072acbf4350219c14e2d71ceb7bdaa0d3370aa630b50da790458d08b3
-  languageName: node
-  linkType: hard
-
 "debug@npm:4, debug@npm:4.3.4, debug@npm:^4, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.1, debug@npm:^4.3.2, debug@npm:^4.3.3, debug@npm:^4.3.4":
   version: 4.3.4
   resolution: "debug@npm:4.3.4"
@@ -21715,7 +21697,6 @@ __metadata:
     "@prisma/client": ^4.11.0
     "@raycast/api": ^1.55.2
     "@rockset/client": ^0.9.1
-    "@sap/hana-client": ^2.19.21
     "@supabase/supabase-js": ^2.10.0
     "@tensorflow/tfjs-backend-cpu": ^4.4.0
     "@tsconfig/recommended": ^1.0.2
@@ -21745,6 +21726,7 @@ __metadata:
     faiss-node: ^0.5.1
     firebase-admin: ^12.0.0
     graphql: ^16.6.0
+    hdb: ^0.19.8
     ioredis: ^5.3.2
     js-yaml: ^4.1.0
     langchain: "workspace:*"
@@ -23811,6 +23793,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"hdb@npm:0.19.8, hdb@npm:^0.19.8":
+  version: 0.19.8
+  resolution: "hdb@npm:0.19.8"
+  dependencies:
+    iconv-lite: ^0.4.18
+  checksum: c3c88903c032221753fd95b9560aab0c7022a25b4a51da9f26f8cc5e7f793c100baada32bf15280de9401fe12fe73d7ac009b81ae4eed0fcb061b367ff4335a2
+  languageName: node
+  linkType: hard
+
 "he@npm:^1.2.0":
   version: 1.2.0
   resolution: "he@npm:1.2.0"
@@ -24176,7 +24167,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"iconv-lite@npm:0.4, iconv-lite@npm:0.4.24, iconv-lite@npm:^0.4.24":
+"iconv-lite@npm:0.4, iconv-lite@npm:0.4.24, iconv-lite@npm:^0.4.18, iconv-lite@npm:^0.4.24":
   version: 0.4.24
   resolution: "iconv-lite@npm:0.4.24"
   dependencies:

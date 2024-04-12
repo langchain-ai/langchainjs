@@ -62,7 +62,8 @@ const client = hdbClient.createClient(connectionParams);
 async function connectToHANA() {
   try {
     await new Promise<void>((resolve, reject) => {
-      client.connect((err: Error) => {  // Use arrow function here
+      client.connect((err: Error) => {
+        // Use arrow function here
         if (err) {
           reject(err);
         } else {
@@ -75,7 +76,6 @@ async function connectToHANA() {
     console.error("Connect error", error);
   }
 }
-
 
 function executeQuery(client: any, query: string): Promise<any> {
   return new Promise((resolve, reject) => {

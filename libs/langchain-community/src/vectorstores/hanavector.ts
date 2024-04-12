@@ -5,7 +5,6 @@ import {
 } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
-// import type hanaClient from "@sap/hana-client";
 
 export type DistanceStrategy = "euclidean" | "cosine";
 
@@ -83,8 +82,6 @@ export class HanaDB extends VectorStore {
     ); // Using '??' to allow 0 as a valid value
 
     this.connection = args.connection;
-
-    // this.initialize();
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -100,7 +97,7 @@ export class HanaDB extends VectorStore {
       });
     });
   }
-  
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private prepareQuery(client: any, query: string): Promise<any> {
     return new Promise((resolve, reject) => {
@@ -329,7 +326,7 @@ export class HanaDB extends VectorStore {
         if (typeof value === "number") {
           if (Number.isInteger(value)) {
             // hdb requires string while sap/hana-client doesn't
-            queryTuple.push(value.toString()); 
+            queryTuple.push(value.toString());
           } else {
             throw new Error(
               `Unsupported filter data-type: wrong number type for key ${key}`
