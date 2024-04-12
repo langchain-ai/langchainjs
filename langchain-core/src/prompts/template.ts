@@ -96,7 +96,8 @@ export const interpolateFString = (template: string, values: InputValues) =>
     return res + node.text;
   }, "");
 
-export const interpolateMustache = (template: string, values: InputValues) => mustache.render(template, values)
+export const interpolateMustache = (template: string, values: InputValues) =>
+  mustache.render(template, values);
 
 /**
  * Type that represents a function that takes a template string and a set
