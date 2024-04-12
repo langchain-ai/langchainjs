@@ -170,6 +170,13 @@ export class AnalyticDBVectorStore extends VectorStore {
   async addDocuments(documents: Document[]): Promise<void> {
     // When the pageContent is empty in certain scenarios (such as when using unstructuredIo), an error occurs during embedding.
     const filteredDocs = documents.filter((doc) => doc.pageContent);
+    if (filteredDocs.length !== documents.length) {
+      console.warn(
+        `[AnalyticDB]: Filtered out ${
+          documents.length - filteredDocs.length
+        } empty documents.`
+      );
+    }
     const texts = filteredDocs.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
