@@ -1,5 +1,6 @@
 import { StructuredToolInterface } from "@langchain/core/tools";
 import type {
+  GeminiFunctionSchema,
   GeminiTool,
   GoogleAIBaseLanguageModelCallOptions,
   GoogleAIModelParams,
@@ -13,6 +14,68 @@ export function copyAIModelParams(
   options: GoogleAIBaseLanguageModelCallOptions | undefined
 ): GoogleAIModelRequestParams {
   return copyAIModelParamsInto(params, options, {});
+}
+
+interface ToolFunction {
+  name: string;
+  description: string;
+  parameters: Record<string, unknown>;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function isToolWithFunction(tool: any): tool is { function: ToolFunction } {
+  return "function" in tool && "parameters" in tool.function;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function isToolWithFunctionDeclarations(tool: any): tool is GeminiTool {
+  return "functionDeclarations" in tool;
+}
+
+function cleanParameters(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  parameters: Record<string, any>
+): GeminiFunctionSchema {
+  const cleanedParameters = { ...parameters };
+  delete cleanedParameters.$schema;
+  delete cleanedParameters.additionalProperties;
+  if (
+    !("type" in cleanedParameters) ||
+    typeof cleanedParameters.type !== "string"
+  ) {
+    throw new Error("Missing 'type' field in parameters");
+  }
+  return cleanedParameters as GeminiFunctionSchema;
+}
+
+function convertToolToGeminiFormat(tool: {
+  function: ToolFunction;
+}): GeminiTool {
+  const { name, description, parameters } = tool.function;
+  return {
+    functionDeclarations: [
+      {
+        name,
+        description,
+        parameters: cleanParameters(parameters),
+      },
+    ],
+  };
+}
+
+function updateGeminiTools(
+  geminiTools: GeminiTool[],
+  tool: GeminiTool
+): GeminiTool[] {
+  if (!geminiTools.length) {
+    return [tool];
+  } else {
+    const firstTool = geminiTools[0];
+    if (firstTool.functionDeclarations) {
+      firstTool.functionDeclarations.push(...(tool.functionDeclarations ?? []));
+    }
+    return geminiTools;
+  }
 }
 
 export function copyAIModelParamsInto(
@@ -39,42 +102,15 @@ export function copyAIModelParamsInto(
     options?.safetySettings ?? params?.safetySettings ?? target.safetySettings;
 
   ret.tools = options?.tools;
-  // Ensure tools are formatted properly for Gemini
-  const geminiTools = options?.tools
-    ?.map((tool) => {
-      if (
-        "function" in tool &&
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        "parameters" in (tool.function as Record<string, any>)
-      ) {
-        // Tool is in OpenAI format. Convert to Gemini then return.
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const castTool = tool.function as Record<string, any>;
-        const cleanedParameters = castTool.parameters;
-        if ("$schema" in cleanedParameters) {
-          delete cleanedParameters.$schema;
-        }
-        if ("additionalProperties" in cleanedParameters) {
-          delete cleanedParameters.additionalProperties;
-        }
-        const toolInGeminiFormat: GeminiTool = {
-          functionDeclarations: [
-            {
-              name: castTool.name,
-              description: castTool.description,
-              parameters: cleanedParameters,
-            },
-          ],
-        };
-        return toolInGeminiFormat;
-      } else if ("functionDeclarations" in tool) {
-        return tool;
-      } else {
-        return null;
-      }
-    })
-    .filter((tool): tool is GeminiTool => tool !== null);
+  let geminiTools: GeminiTool[] = [];
+  options?.tools?.forEach((tool) => {
+    if (isToolWithFunction(tool)) {
+      const geminiTool = convertToolToGeminiFormat(tool);
+      geminiTools = updateGeminiTools(geminiTools, geminiTool);
+    } else if (isToolWithFunctionDeclarations(tool)) {
+      geminiTools = updateGeminiTools(geminiTools, tool);
+    }
+  });
 
   const structuredOutputTools = options?.tools
     ?.map((tool) => {

@@ -5,6 +5,7 @@ import { AgentExecutor, createToolCallingAgent } from "langchain/agents";
 
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatVertexAI } from "@langchain/google-vertexai";
+import { Calculator } from "@langchain/community/tools/calculator";
 // Uncomment this if you're running inside a web/edge environment.
 // import { ChatVertexAI } from "@langchain/google-vertexai-web";
 
@@ -28,23 +29,26 @@ const currentWeatherTool = new DynamicStructuredTool({
   }),
   func: async () => Promise.resolve("28 °C"),
 });
+const calculatorTool = new Calculator();
+
+const tools = [currentWeatherTool, calculatorTool];
 
 const agent = await createToolCallingAgent({
   llm,
-  tools: [currentWeatherTool],
+  tools,
   prompt,
 });
 
 const agentExecutor = new AgentExecutor({
   agent,
-  tools: [currentWeatherTool],
+  tools,
 });
 
-const input = "What's the weather like in Paris?";
+const input = "What's the weather like in Paris? Also, use a calculator to get the answer to 723639 times 173927.";
 const { output } = await agentExecutor.invoke({ input });
 
 console.log(output);
 
 /* 
-It's 28 degrees Celsius in Paris.
+The weather in Paris is 28 degrees Celsius. Also, 723639 times 173927 is 125860360353.
 */
