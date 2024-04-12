@@ -1,7 +1,7 @@
 import { ChatAnthropic } from "@langchain/anthropic";
 
 const model = new ChatAnthropic({
-  modelName: "claude-3-sonnet-20240229",
+  model: "claude-3-sonnet-20240229",
   maxTokens: 1024,
   clientOptions: {
     defaultHeaders: {

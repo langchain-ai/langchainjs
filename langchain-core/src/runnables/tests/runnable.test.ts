@@ -1,5 +1,6 @@
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { Run } from "langsmith";
 import { v4 as uuidv4 } from "uuid";

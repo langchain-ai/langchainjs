@@ -15,8 +15,13 @@ import { wrapOpenAIClientError } from "./utils/openai.js";
  * defines additional parameters specific to the OpenAIEmbeddings class.
  */
 export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
-  /** Model name to use */
+  /**
+   * Model name to use
+   * Alias for `model`
+   */
   modelName: string;
+  /** Model name to use */
+  model: string;
 
   /**
    * The number of dimensions the resulting output embeddings should have.
@@ -64,6 +69,8 @@ export class OpenAIEmbeddings
 {
   modelName = "text-embedding-ada-002";
 
+  model = "text-embedding-ada-002";
+
   batchSize = 512;
 
   // TODO: Update to `false` on next minor release (see: https://github.com/langchain-ai/langchainjs/pull/3612)
@@ -97,7 +104,13 @@ export class OpenAIEmbeddings
     fields?: Partial<OpenAIEmbeddingsParams> &
       Partial<AzureOpenAIInput> & {
         verbose?: boolean;
+        /**
+         * The OpenAI API key to use.
+         * Alias for `apiKey`.
+         */
         openAIApiKey?: string;
+        /** The OpenAI API key to use. */
+        apiKey?: string;
         configuration?: ClientOptions;
       },
     configuration?: ClientOptions & LegacyOpenAIInput
@@ -107,6 +120,7 @@ export class OpenAIEmbeddings
     super(fieldsWithDefaults);
 
     let apiKey =
+      fieldsWithDefaults?.apiKey ??
       fieldsWithDefaults?.openAIApiKey ??
       getEnvironmentVariable("OPENAI_API_KEY");
 
@@ -139,7 +153,9 @@ export class OpenAIEmbeddings
       fieldsWithDefaults?.configuration?.organization ??
       getEnvironmentVariable("OPENAI_ORGANIZATION");
 
-    this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
+    this.modelName =
+      fieldsWithDefaults?.model ?? fieldsWithDefaults?.modelName ?? this.model;
+    this.model = this.modelName;
     this.batchSize =
       fieldsWithDefaults?.batchSize ?? (azureApiKey ? 1 : this.batchSize);
     this.stripNewLines =
@@ -192,7 +208,7 @@ export class OpenAIEmbeddings
 
     const batchRequests = batches.map((batch) => {
       const params: OpenAIClient.EmbeddingCreateParams = {
-        model: this.modelName,
+        model: this.model,
         input: batch,
       };
       if (this.dimensions) {
@@ -221,7 +237,7 @@ export class OpenAIEmbeddings
    */
   async embedQuery(text: string): Promise<number[]> {
     const params: OpenAIClient.EmbeddingCreateParams = {
-      model: this.modelName,
+      model: this.model,
       input: this.stripNewLines ? text.replace(/\n/g, " ") : text,
     };
     if (this.dimensions) {

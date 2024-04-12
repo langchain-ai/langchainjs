@@ -29,7 +29,7 @@ const couchbaseClient = await Cluster.connect(connectionString, {
 
 // Open AI API Key is required to use OpenAIEmbeddings, some other embeddings may also be used
 const embeddings = new OpenAIEmbeddings({
-  openAIApiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 const couchbaseConfig: CouchbaseVectorStoreArgs = {

@@ -2,7 +2,7 @@ import { GooglePaLMEmbeddings } from "@langchain/community/embeddings/googlepalm
 
 const model = new GooglePaLMEmbeddings({
   apiKey: "<YOUR API KEY>", // or set it in environment variable as `GOOGLE_PALM_API_KEY`
-  modelName: "models/embedding-gecko-001", // OPTIONAL
+  model: "models/embedding-gecko-001", // OPTIONAL
 });
 /* Embed queries */
 const res = await model.embedQuery(

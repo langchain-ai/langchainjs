@@ -14,7 +14,7 @@ import { DynamicTool } from "@langchain/core/tools";
 /**
  * Define your chat model to use.
  */
-const model = new ChatOpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 });
+const model = new ChatOpenAI({ model: "gpt-3.5-turbo", temperature: 0 });
 
 const customTool = new DynamicTool({
   name: "get_word_length",

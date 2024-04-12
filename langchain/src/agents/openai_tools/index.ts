@@ -11,7 +11,7 @@ import { formatToOpenAIToolMessages } from "../format_scratchpad/openai_tools.js
 import {
   OpenAIToolsAgentOutputParser,
   type ToolsAgentStep,
-} from "../openai/output_parser.js";
+} from "./output_parser.js";
 import { AgentRunnableSequence } from "../agent.js";
 
 export { OpenAIToolsAgentOutputParser, type ToolsAgentStep };

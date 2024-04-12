@@ -706,7 +706,13 @@ function _coerceMessagePromptTemplateLike(
   const message = coerceMessageLikeToMessage(messagePromptTemplateLike);
   let templateData:
     | string
-    | (string | _TextTemplateParam | _ImageTemplateParam)[];
+    | (
+        | string
+        | _TextTemplateParam
+        | _ImageTemplateParam
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        | Record<string, any>
+      )[];
 
   if (typeof message.content === "string") {
     templateData = message.content;
@@ -718,7 +724,7 @@ function _coerceMessagePromptTemplateLike(
       } else if ("image_url" in item) {
         return { image_url: item.image_url };
       } else {
-        throw new Error("Invalid message content");
+        return item;
       }
     });
   }

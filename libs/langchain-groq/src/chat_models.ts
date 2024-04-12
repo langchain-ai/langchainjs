@@ -15,8 +15,9 @@ import {
   ChatMessageChunk,
   HumanMessageChunk,
   SystemMessageChunk,
-  ToolCall,
   ToolMessage,
+  OpenAIToolCall,
+  isAIMessage,
 } from "@langchain/core/messages";
 import {
   ChatGeneration,
@@ -39,6 +40,7 @@ import {
 } from "groq-sdk/resources/chat/completions";
 import {
   Runnable,
+  RunnableInterface,
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
@@ -52,7 +54,14 @@ import {
   JsonOutputParser,
   StructuredOutputParser,
 } from "@langchain/core/output_parsers";
-import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
+import {
+  JsonOutputKeyToolsParser,
+  parseToolCall,
+  makeInvalidToolCall,
+  convertLangChainToolCallToOpenAI,
+} from "@langchain/core/output_parsers/openai_tools";
+import { StructuredToolInterface } from "@langchain/core/tools";
+import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 
 export interface ChatGroqCallOptions extends BaseChatModelCallOptions {
   headers?: Record<string, string>;
@@ -69,14 +78,26 @@ export interface ChatGroqInput extends BaseChatModelParams {
   apiKey?: string;
   /**
    * The name of the model to use.
+   * Alias for `model`
    * @default "llama2-70b-4096"
    */
   modelName?: string;
   /**
+   * The name of the model to use.
+   * @default "llama2-70b-4096"
+   */
+  model?: string;
+  /**
+   * Up to 4 sequences where the API will stop generating further tokens. The
+   * returned text will not contain the stop sequence.
+   * Alias for `stopSequences`
+   */
+  stop?: string | null | Array<string>;
+  /**
    * Up to 4 sequences where the API will stop generating further tokens. The
    * returned text will not contain the stop sequence.
    */
-  stop?: string | null | Array<string>;
+  stopSequences?: Array<string>;
   /**
    * Whether or not to stream responses.
    */
@@ -123,11 +144,12 @@ export function messageToGroqRole(message: BaseMessage): GroqRoleEnum {
 function convertMessagesToGroqParams(
   messages: BaseMessage[]
 ): Array<ChatCompletion.Choice.Message> {
-  return messages.map((message) => {
+  return messages.map((message): ChatCompletion.Choice.Message => {
     if (typeof message.content !== "string") {
       throw new Error("Non string message content not supported");
     }
-    return {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const completionParam: Record<string, any> = {
       role: messageToGroqRole(message),
       content: message.content,
       name: message.name,
@@ -135,21 +157,47 @@ function convertMessagesToGroqParams(
       tool_calls: message.additional_kwargs.tool_calls,
       tool_call_id: (message as ToolMessage).tool_call_id,
     };
+    if (isAIMessage(message) && !!message.tool_calls?.length) {
+      completionParam.tool_calls = message.tool_calls.map(
+        convertLangChainToolCallToOpenAI
+      );
+    } else {
+      if (message.additional_kwargs.tool_calls != null) {
+        completionParam.tool_calls = message.additional_kwargs.tool_calls;
+      }
+      if ((message as ToolMessage).tool_call_id != null) {
+        completionParam.tool_call_id = (message as ToolMessage).tool_call_id;
+      }
+    }
+    return completionParam as ChatCompletion.Choice.Message;
   });
 }
 
 function groqResponseToChatMessage(
   message: ChatCompletion.Choice.Message
 ): BaseMessage {
-  const toolCalls: ToolCall[] | undefined = message.tool_calls as
-    | ToolCall[]
+  const rawToolCalls: OpenAIToolCall[] | undefined = message.tool_calls as
+    | OpenAIToolCall[]
     | undefined;
   switch (message.role) {
-    case "assistant":
+    case "assistant": {
+      const toolCalls = [];
+      const invalidToolCalls = [];
+      for (const rawToolCall of rawToolCalls ?? []) {
+        try {
+          toolCalls.push(parseToolCall(rawToolCall, { returnId: true }));
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (e: any) {
+          invalidToolCalls.push(makeInvalidToolCall(rawToolCall, e.message));
+        }
+      }
       return new AIMessage({
         content: message.content || "",
-        additional_kwargs: { tool_calls: toolCalls },
+        additional_kwargs: { tool_calls: rawToolCalls },
+        tool_calls: toolCalls,
+        invalid_tool_calls: invalidToolCalls,
       });
+    }
     default:
       return new ChatMessage(message.content || "", message.role ?? "unknown");
   }
@@ -203,14 +251,21 @@ function _convertDeltaToMessageChunk(
  * console.log(response);
  * ```
  */
-export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
+export class ChatGroq extends BaseChatModel<
+  ChatGroqCallOptions,
+  AIMessageChunk
+> {
   client: Groq;
 
   modelName = "llama2-70b-4096";
 
+  model = "llama2-70b-4096";
+
   temperature = 0.7;
 
   stop?: string[];
+
+  stopSequences?: string[];
 
   maxTokens?: number;
 
@@ -247,10 +302,14 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
       dangerouslyAllowBrowser: true,
     });
     this.temperature = fields?.temperature ?? this.temperature;
-    this.modelName = fields?.modelName ?? this.modelName;
+    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
+    this.model = this.modelName;
     this.streaming = fields?.streaming ?? this.streaming;
     this.stop =
-      (typeof fields?.stop === "string" ? [fields.stop] : fields?.stop) ?? [];
+      fields?.stopSequences ??
+      (typeof fields?.stop === "string" ? [fields.stop] : fields?.stop) ??
+      [];
+    this.stopSequences = this.stop;
     this.maxTokens = fields?.maxTokens;
   }
 
@@ -288,11 +347,25 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
     }
     return {
       ...params,
-      stop: options.stop ?? this.stop,
-      model: this.modelName,
+      stop: options.stop ?? this.stopSequences,
+      model: this.model,
       temperature: this.temperature,
       max_tokens: this.maxTokens,
     };
+  }
+
+  override bindTools(
+    tools: (Record<string, unknown> | StructuredToolInterface)[],
+    kwargs?: Partial<ChatGroqCallOptions>
+  ): RunnableInterface<
+    BaseLanguageModelInput,
+    AIMessageChunk,
+    ChatGroqCallOptions
+  > {
+    return this.bind({
+      tools: tools.map(convertToOpenAITool),
+      ...kwargs,
+    });
   }
 
   override async *_streamResponseChunks(
@@ -308,17 +381,26 @@ export class ChatGroq extends BaseChatModel<ChatGroqCallOptions> {
         options,
         runManager
       );
-      const generationMessage = result.generations[0].message;
+      const generationMessage = result.generations[0].message as AIMessage;
       if (
         generationMessage === undefined ||
         typeof generationMessage.content !== "string"
       ) {
         throw new Error("Could not parse Groq output.");
       }
+      const toolCallChunks = generationMessage.tool_calls?.map(
+        (toolCall, i) => ({
+          name: toolCall.name,
+          args: JSON.stringify(toolCall.args),
+          id: toolCall.id,
+          index: i,
+        })
+      );
       yield new ChatGenerationChunk({
         message: new AIMessageChunk({
           content: generationMessage.content,
           additional_kwargs: generationMessage.additional_kwargs,
+          tool_call_chunks: toolCallChunks,
         }),
         text: generationMessage.content,
       });

@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.0.44",
+  "version": "0.0.47",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -15,7 +15,7 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-community/",
   "scripts": {
     "build": "yarn run build:deps && yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
-    "build:deps": "yarn run turbo:command build --filter=@langchain/core --filter=@langchain/anthropic --filter=@langchain/openai --concurrency=1",
+    "build:deps": "yarn run turbo:command build --filter=@langchain/core --filter=@langchain/openai --concurrency=1",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rm -rf dist/tests dist/**/tests",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rm -rf dist-cjs",
     "build:watch": "yarn create-entrypoints && tsc --outDir dist/ --watch",
@@ -39,8 +39,8 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1.44",
-    "@langchain/openai": "~0.0.19",
+    "@langchain/core": "~0.1.56",
+    "@langchain/openai": "~0.0.28",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
     "langsmith": "~0.1.1",
@@ -826,6 +826,15 @@
       },
       "import": "./embeddings/alibaba_tongyi.js",
       "require": "./embeddings/alibaba_tongyi.cjs"
+    },
+    "./embeddings/baidu_qianfan": {
+      "types": {
+        "import": "./embeddings/baidu_qianfan.d.ts",
+        "require": "./embeddings/baidu_qianfan.d.cts",
+        "default": "./embeddings/baidu_qianfan.d.ts"
+      },
+      "import": "./embeddings/baidu_qianfan.js",
+      "require": "./embeddings/baidu_qianfan.cjs"
     },
     "./embeddings/bedrock": {
       "types": {
@@ -2373,6 +2382,10 @@
     "embeddings/alibaba_tongyi.js",
     "embeddings/alibaba_tongyi.d.ts",
     "embeddings/alibaba_tongyi.d.cts",
+    "embeddings/baidu_qianfan.cjs",
+    "embeddings/baidu_qianfan.js",
+    "embeddings/baidu_qianfan.d.ts",
+    "embeddings/baidu_qianfan.d.cts",
     "embeddings/bedrock.cjs",
     "embeddings/bedrock.js",
     "embeddings/bedrock.d.ts",
