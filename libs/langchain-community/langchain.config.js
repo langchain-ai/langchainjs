@@ -257,7 +257,6 @@ export const config = {
     "embeddings/zhipuai",
     "llms/load",
     "llms/cohere",
-    "llms/friendli",
     "llms/googlevertexai",
     "llms/googlevertexai/web",
     "llms/googlepalm",
