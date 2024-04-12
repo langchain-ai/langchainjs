@@ -44,7 +44,8 @@ const agentExecutor = new AgentExecutor({
   tools,
 });
 
-const input = "What's the weather like in Paris? Also, use a calculator to get the answer to 723639 times 173927.";
+const input =
+  "What's the weather like in Paris? Also, use a calculator to get the answer to 723639 times 173927.";
 const { output } = await agentExecutor.invoke({ input });
 
 console.log(output);
