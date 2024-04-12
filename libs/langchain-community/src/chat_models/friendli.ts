@@ -75,7 +75,7 @@ function _convertDeltaToMessageChunk(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   delta: Record<string, any>
 ) {
-  const { role } = delta;
+  const role = delta.role ?? "assistant";
   const content = delta.content ?? "";
   let additional_kwargs;
 
