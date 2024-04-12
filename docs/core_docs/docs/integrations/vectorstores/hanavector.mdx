@@ -1,0 +1,48 @@
+# SAP HANA Cloud Vector Engine
+
+[SAP HANA Cloud Vector Engine](https://www.sap.com/events/teched/news-guide/ai.html#article8) is a vector store fully integrated into the `SAP HANA Cloud database`.
+
+## Setup
+
+You'll first need to install either the [`@sap/hana-client`](https://www.npmjs.com/package/@sap/hana-client) or the [`hdb`](https://www.npmjs.com/package/hdb) package, and the [`@langchain/community`](https://www.npmjs.com/package/@langchain/community) package:
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install -S @langchain/community @sap/hana-client
+# or
+npm install -S @langchain/community hdb
+```
+
+You'll also need to have database connection to a HANA Cloud instance.
+
+import CodeBlock from "@theme/CodeBlock";
+import EnvVars from "@examples/indexes/vector_stores/hana_vector/.env.example";
+
+<CodeBlock language="text">{EnvVars}</CodeBlock>
+
+## Create a new index from texts
+
+import ExampleTexts from "@examples/indexes/vector_stores/hana_vector/fromTexts.ts";
+
+<CodeBlock language="typescript">{ExampleTexts}</CodeBlock>
+
+## Create a new index from a loader and perform similarity searches
+
+import ExampleLoader from "@examples/indexes/vector_stores/hana_vector/fromDocs.ts";
+
+<CodeBlock language="typescript">{ExampleLoader}</CodeBlock>
+
+## Basic Vectorstore Operations
+
+import ExampleBasic from "@examples/indexes/vector_stores/hana_vector/basics.ts";
+
+<CodeBlock language="typescript">{ExampleBasic}</CodeBlock>
+
+## Using a VectorStore as a retriever in chains for retrieval augmented generation (RAG)
+
+import ExampleChain from "@examples/indexes/vector_stores/hana_vector/chains.ts";
+
+<CodeBlock language="typescript">{ExampleChain}</CodeBlock>

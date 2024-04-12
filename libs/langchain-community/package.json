@@ -145,6 +145,7 @@
     "google-auth-library": "^8.9.0",
     "googleapis": "^126.0.1",
     "graphql": "^16.6.0",
+    "hdb": "0.19.8",
     "hnswlib-node": "^3.0.0",
     "html-to-text": "^9.0.5",
     "interface-datastore": "^8.2.11",
@@ -1325,6 +1326,15 @@
       },
       "import": "./vectorstores/hnswlib.js",
       "require": "./vectorstores/hnswlib.cjs"
+    },
+    "./vectorstores/hanavector": {
+      "types": {
+        "import": "./vectorstores/hanavector.d.ts",
+        "require": "./vectorstores/hanavector.d.cts",
+        "default": "./vectorstores/hanavector.d.ts"
+      },
+      "import": "./vectorstores/hanavector.js",
+      "require": "./vectorstores/hanavector.cjs"
     },
     "./vectorstores/lancedb": {
       "types": {
@@ -2592,6 +2602,10 @@
     "vectorstores/hnswlib.js",
     "vectorstores/hnswlib.d.ts",
     "vectorstores/hnswlib.d.cts",
+    "vectorstores/hanavector.cjs",
+    "vectorstores/hanavector.js",
+    "vectorstores/hanavector.d.ts",
+    "vectorstores/hanavector.d.cts",
     "vectorstores/lancedb.cjs",
     "vectorstores/lancedb.js",
     "vectorstores/lancedb.d.ts",

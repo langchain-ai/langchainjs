@@ -9032,6 +9032,7 @@ __metadata:
     google-auth-library: ^8.9.0
     googleapis: ^126.0.1
     graphql: ^16.6.0
+    hdb: 0.19.8
     hnswlib-node: ^3.0.0
     html-to-text: ^9.0.5
     interface-datastore: ^8.2.11
@@ -21745,6 +21746,7 @@ __metadata:
     faiss-node: ^0.5.1
     firebase-admin: ^12.0.0
     graphql: ^16.6.0
+    hdb: ^0.19.8
     ioredis: ^5.3.2
     js-yaml: ^4.1.0
     langchain: "workspace:*"
@@ -23826,6 +23828,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"hdb@npm:0.19.8, hdb@npm:^0.19.8":
+  version: 0.19.8
+  resolution: "hdb@npm:0.19.8"
+  dependencies:
+    iconv-lite: ^0.4.18
+  checksum: c3c88903c032221753fd95b9560aab0c7022a25b4a51da9f26f8cc5e7f793c100baada32bf15280de9401fe12fe73d7ac009b81ae4eed0fcb061b367ff4335a2
+  languageName: node
+  linkType: hard
+
 "he@npm:^1.2.0":
   version: 1.2.0
   resolution: "he@npm:1.2.0"
@@ -24191,7 +24202,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"iconv-lite@npm:0.4, iconv-lite@npm:0.4.24, iconv-lite@npm:^0.4.24":
+"iconv-lite@npm:0.4, iconv-lite@npm:0.4.24, iconv-lite@npm:^0.4.18, iconv-lite@npm:^0.4.24":
   version: 0.4.24
   resolution: "iconv-lite@npm:0.4.24"
   dependencies:
