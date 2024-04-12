@@ -245,7 +245,6 @@
     "firebase-admin": "^11.9.0 || ^12.0.0",
     "google-auth-library": "^8.9.0",
     "googleapis": "^126.0.1",
-    "hdb": "0.19.8",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "interface-datastore": "^8.2.11",
@@ -463,9 +462,6 @@
       "optional": true
     },
     "googleapis": {
-      "optional": true
-    },
-    "hdb": {
       "optional": true
     },
     "hnswlib-node": {
