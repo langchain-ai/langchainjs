@@ -29,6 +29,10 @@ import IntegrationInstallTooltip from "@mdx_components/integration_install_toolt
 npm install @langchain/openai
 ```
 
+import UnifiedModelParamsTooltip from "@mdx_components/unified_model_params_tooltip.mdx";
+
+<UnifiedModelParamsTooltip></UnifiedModelParamsTooltip>
+
 <CodeBlock language="typescript">{AzureOpenAI}</CodeBlock>
 
 If your instance is hosted under a domain other than the default `openai.azure.com`, you'll need to use the alternate `AZURE_OPENAI_BASE_PATH` environment variable.
@@ -67,9 +71,9 @@ import { AzureChatOpenAI } from "@langchain/azure-openai";
 
 const model = new AzureChatOpenAI({
   azureOpenAIEndpoint: "<your_endpoint>",
-  azureOpenAIApiKey: "<your_key>",
+  apiKey: "<your_key>",
   azureOpenAIApiDeploymentName: "<your_embedding_deployment_name",
-  modelName: "<your_model>",
+  model: "<your_model>",
 });
 ```
 
@@ -85,7 +89,7 @@ const model = new AzureChatOpenAI({
   credentials,
   azureOpenAIEndpoint: "<your_endpoint>",
   azureOpenAIApiDeploymentName: "<your_embedding_deployment_name",
-  modelName: "<your_model>",
+  model: "<your_model>",
 });
 ```
 

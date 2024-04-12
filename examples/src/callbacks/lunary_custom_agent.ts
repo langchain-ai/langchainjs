@@ -5,7 +5,7 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import lunary from "lunary";
 
 const chat = new ChatOpenAI({
-  modelName: "gpt-4",
+  model: "gpt-4",
   callbacks: [new LunaryHandler()],
 });
 

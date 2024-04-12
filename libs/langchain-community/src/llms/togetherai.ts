@@ -50,8 +50,13 @@ export interface TogetherAIInputs extends BaseLLMParams {
   apiKey?: string;
   /**
    * The name of the model to query.
+   * Alias for `model`
    */
-  modelName: string;
+  modelName?: string;
+  /**
+   * The name of the model to query.
+   */
+  model?: string;
   /**
    * A decimal number that determines the degree of randomness in the response.
    * A value of 1 will always yield the same output.
@@ -108,6 +113,7 @@ export interface TogetherAICallOptions
     Pick<
       TogetherAIInputs,
       | "modelName"
+      | "model"
       | "temperature"
       | "topP"
       | "topK"
@@ -130,6 +136,8 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
   topK = 50;
 
   modelName: string;
+
+  model: string;
 
   streaming = false;
 
@@ -158,11 +166,15 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
     if (!apiKey) {
       throw new Error("TOGETHER_AI_API_KEY not found.");
     }
+    if (!inputs.model && !inputs.modelName) {
+      throw new Error("Model name is required for TogetherAI.");
+    }
     this.apiKey = apiKey;
     this.temperature = inputs?.temperature ?? this.temperature;
     this.topK = inputs?.topK ?? this.topK;
     this.topP = inputs?.topP ?? this.topP;
-    this.modelName = inputs.modelName;
+    this.modelName = inputs.model ?? inputs.modelName ?? "";
+    this.model = this.modelName;
     this.streaming = inputs.streaming ?? this.streaming;
     this.repetitionPenalty = inputs.repetitionPenalty ?? this.repetitionPenalty;
     this.logprobs = inputs.logprobs;
@@ -185,7 +197,7 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
 
   private constructBody(prompt: string, options?: this["ParsedCallOptions"]) {
     const body = {
-      model: options?.modelName ?? this?.modelName,
+      model: options?.model ?? options?.modelName ?? this?.model,
       prompt,
       temperature: this?.temperature ?? options?.temperature,
       top_k: this?.topK ?? options?.topK,

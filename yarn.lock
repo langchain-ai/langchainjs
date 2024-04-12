@@ -211,20 +211,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@anthropic-ai/sdk@npm:^0.17.2":
-  version: 0.17.2
-  resolution: "@anthropic-ai/sdk@npm:0.17.2"
+"@anthropic-ai/sdk@npm:^0.20.1":
+  version: 0.20.1
+  resolution: "@anthropic-ai/sdk@npm:0.20.1"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
     abort-controller: ^3.0.0
     agentkeepalive: ^4.2.1
-    digest-fetch: ^1.3.0
     form-data-encoder: 1.7.2
     formdata-node: ^4.3.2
     node-fetch: ^2.6.7
     web-streams-polyfill: ^3.2.1
-  checksum: 33480adddbbf905aadcb310bdbca2baa9e3ca25ae554c94c52b189bd8e8afe89577775dbcf902ab6fa252d3b3c6e4fe5e4973a7caaa2d3e5a813d3727cf98499
+  checksum: a880088ffeb993ea835f3ec250d53bf6ba23e97c3dfc54c915843aa8cb4778849fb7b85de0a359155c36595a5a5cc1db64139d407d2e36a2423284ebfe763cce
   languageName: node
   linkType: hard
 
@@ -8810,10 +8809,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/anthropic@workspace:libs/langchain-anthropic"
   dependencies:
-    "@anthropic-ai/sdk": ^0.17.2
+    "@anthropic-ai/sdk": ^0.20.1
     "@jest/globals": ^29.5.0
     "@langchain/community": "workspace:^"
-    "@langchain/core": ~0.1.54
+    "@langchain/core": ~0.1.56
     "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -8934,7 +8933,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/community@workspace:*, @langchain/community@workspace:^, @langchain/community@workspace:libs/langchain-community, @langchain/community@~0.0.41":
+"@langchain/community@workspace:*, @langchain/community@workspace:^, @langchain/community@workspace:libs/langchain-community, @langchain/community@~0.0.47":
   version: 0.0.0-use.local
   resolution: "@langchain/community@workspace:libs/langchain-community"
   dependencies:
@@ -8963,8 +8962,8 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1.44
-    "@langchain/openai": ~0.0.19
+    "@langchain/core": ~0.1.56
+    "@langchain/openai": ~0.0.28
     "@langchain/scripts": ~0.0
     "@mozilla/readability": ^0.4.4
     "@opensearch-project/opensearch": ^2.2.0
@@ -9354,7 +9353,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.1, @langchain/core@~0.1.44, @langchain/core@~0.1.45, @langchain/core@~0.1.5, @langchain/core@~0.1.53, @langchain/core@~0.1.54, @langchain/core@~0.1.9":
+"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.5, @langchain/core@~0.1.56, @langchain/core@~0.1.9":
   version: 0.0.0-use.local
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
@@ -9425,12 +9424,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-common@workspace:*, @langchain/google-common@workspace:libs/langchain-google-common, @langchain/google-common@~0.0.3":
+"@langchain/google-common@workspace:*, @langchain/google-common@workspace:libs/langchain-google-common, @langchain/google-common@~0.0.5":
   version: 0.0.0-use.local
   resolution: "@langchain/google-common@workspace:libs/langchain-google-common"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1.1
+    "@langchain/core": ~0.1.56
     "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9452,18 +9451,19 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
+    uuid: ^9.0.0
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.4
   languageName: unknown
   linkType: soft
 
-"@langchain/google-gauth@workspace:libs/langchain-google-gauth, @langchain/google-gauth@~0.0.2":
+"@langchain/google-gauth@workspace:libs/langchain-google-gauth, @langchain/google-gauth@~0.0.5":
   version: 0.0.0-use.local
   resolution: "@langchain/google-gauth@workspace:libs/langchain-google-gauth"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1.1
-    "@langchain/google-common": ~0.0.3
+    "@langchain/core": ~0.1.56
+    "@langchain/google-common": ~0.0.5
     "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9486,6 +9486,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
+    zod: ^3.22.4
   languageName: unknown
   linkType: soft
 
@@ -9526,8 +9527,8 @@ __metadata:
   resolution: "@langchain/google-vertexai-web@workspace:libs/langchain-google-vertexai-web"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1.1
-    "@langchain/google-webauth": ~0.0.2
+    "@langchain/core": ~0.1.56
+    "@langchain/google-webauth": ~0.0.5
     "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9549,6 +9550,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
+    zod: ^3.22.4
   languageName: unknown
   linkType: soft
 
@@ -9557,8 +9559,8 @@ __metadata:
   resolution: "@langchain/google-vertexai@workspace:libs/langchain-google-vertexai"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1.1
-    "@langchain/google-gauth": ~0.0.2
+    "@langchain/core": ~0.1.56
+    "@langchain/google-gauth": ~0.0.5
     "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9583,13 +9585,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-webauth@workspace:libs/langchain-google-webauth, @langchain/google-webauth@~0.0.2":
+"@langchain/google-webauth@workspace:libs/langchain-google-webauth, @langchain/google-webauth@~0.0.5":
   version: 0.0.0-use.local
   resolution: "@langchain/google-webauth@workspace:libs/langchain-google-webauth"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1.1
-    "@langchain/google-common": ~0.0.3
+    "@langchain/core": ~0.1.56
+    "@langchain/google-common": ~0.0.5
     "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9620,7 +9622,7 @@ __metadata:
   resolution: "@langchain/groq@workspace:libs/langchain-groq"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1.53
+    "@langchain/core": ~0.1.56
     "@langchain/openai": "workspace:^"
     "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
@@ -9656,7 +9658,7 @@ __metadata:
   resolution: "@langchain/mistralai@workspace:libs/langchain-mistralai"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1.44
+    "@langchain/core": ~0.1.56
     "@langchain/scripts": ~0.0
     "@mistralai/mistralai": ^0.1.3
     "@swc/core": ^1.3.90
@@ -9680,6 +9682,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
+    uuid: ^9.0.0
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.4
   languageName: unknown
@@ -9752,12 +9755,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai, @langchain/openai@~0.0.19, @langchain/openai@~0.0.26":
+"@langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai, @langchain/openai@~0.0.28":
   version: 0.0.0-use.local
   resolution: "@langchain/openai@workspace:libs/langchain-openai"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1.45
+    "@langchain/core": ~0.1.56
     "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -26516,9 +26519,9 @@ __metadata:
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^7.7.0
     "@jest/globals": ^29.5.0
-    "@langchain/community": ~0.0.41
-    "@langchain/core": ~0.1.44
-    "@langchain/openai": ~0.0.26
+    "@langchain/community": ~0.0.47
+    "@langchain/core": ~0.1.56
+    "@langchain/openai": ~0.0.28
     "@langchain/scripts": ~0.0
     "@notionhq/client": ^2.2.10
     "@pinecone-database/pinecone": ^1.1.0

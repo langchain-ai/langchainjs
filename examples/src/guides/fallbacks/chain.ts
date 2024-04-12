@@ -12,7 +12,7 @@ const chatPrompt = ChatPromptTemplate.fromMessages<{ animal: string }>([
 
 // Use a fake model name that will always throw an error
 const fakeOpenAIChatModel = new ChatOpenAI({
-  modelName: "potato!",
+  model: "potato!",
   maxRetries: 0,
 });
 

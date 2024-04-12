@@ -7,7 +7,7 @@ import { ContextualCompressionRetriever } from "langchain/retrievers/contextual_
 import { LLMChainExtractor } from "langchain/retrievers/document_compressors/chain_extract";
 
 const model = new OpenAI({
-  modelName: "gpt-3.5-turbo-instruct",
+  model: "gpt-3.5-turbo-instruct",
 });
 const baseCompressor = LLMChainExtractor.fromLLM(model);
 

@@ -62,6 +62,10 @@ messages.cjs
 messages.js
 messages.d.ts
 messages.d.cts
+messages/tool.cjs
+messages/tool.js
+messages/tool.d.ts
+messages/tool.d.cts
 output_parsers.cjs
 output_parsers.js
 output_parsers.d.ts

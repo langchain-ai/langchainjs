@@ -38,8 +38,13 @@ export declare interface OpenAIBaseInput {
   /** Whether to stream the results or not. Enabling disables tokenUsage reporting */
   streaming: boolean;
 
-  /** Model name to use */
+  /**
+   * Model name to use
+   * Alias for `model`
+   */
   modelName: string;
+  /** Model name to use */
+  model: string;
 
   /** Holds any additional parameters that are valid to pass to {@link
    * https://platform.openai.com/docs/api-reference/completions/create |
@@ -48,8 +53,13 @@ export declare interface OpenAIBaseInput {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   modelKwargs?: Record<string, any>;
 
-  /** List of stop words to use when generating */
+  /**
+   * List of stop words to use when generating
+   * Alias for `stopSequences`
+   */
   stop?: string[];
+  /** List of stop words to use when generating */
+  stopSequences?: string[];
 
   /**
    * Timeout to use when making requests to OpenAI.
@@ -59,8 +69,14 @@ export declare interface OpenAIBaseInput {
   /**
    * API key to use when making requests to OpenAI. Defaults to the value of
    * `OPENAI_API_KEY` environment variable.
+   * Alias for `apiKey`
    */
   openAIApiKey?: string;
+  /**
+   * API key to use when making requests to OpenAI. Defaults to the value of
+   * `OPENAI_API_KEY` environment variable.
+   */
+  apiKey?: string;
 }
 
 // TODO use OpenAI.Core.RequestOptions when SDK is updated to make it available

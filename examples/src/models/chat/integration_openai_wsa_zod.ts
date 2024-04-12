@@ -4,7 +4,7 @@ import { z } from "zod";
 
 const model = new ChatOpenAI({
   temperature: 0,
-  modelName: "gpt-4-turbo-preview",
+  model: "gpt-4-turbo-preview",
 });
 
 const calculatorSchema = z.object({
