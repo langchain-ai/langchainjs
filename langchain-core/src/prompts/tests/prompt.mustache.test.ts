@@ -5,7 +5,6 @@ test("Single input variable.", async () => {
   const template = "This is a {{foo}} test.";
   const prompt = PromptTemplate.fromTemplate(template, {
     templateFormat: "mustache",
-    validateTemplate: false,
   });
   const formattedPrompt = await prompt.format({ foo: "bar" });
   expect(formattedPrompt).toBe("This is a bar test.");
@@ -16,7 +15,6 @@ test("Multiple input variables.", async () => {
   const template = "This {{bar}} is a {{foo}} test.";
   const prompt = PromptTemplate.fromTemplate(template, {
     templateFormat: "mustache",
-    validateTemplate: false,
   });
   const formattedPrompt = await prompt.format({ bar: "baz", foo: "bar" });
   expect(formattedPrompt).toBe("This baz is a bar test.");
@@ -27,7 +25,6 @@ test("Multiple input variables with repeats.", async () => {
   const template = "This {{bar}} is a {{foo}} test {{foo}}.";
   const prompt = PromptTemplate.fromTemplate(template, {
     templateFormat: "mustache",
-    validateTemplate: false,
   });
   const formattedPrompt = await prompt.format({ bar: "baz", foo: "bar" });
   expect(formattedPrompt).toBe("This baz is a bar test bar.");
@@ -39,7 +36,6 @@ test("Nested variables.", async () => {
     "This {{obj.bar}} is a {{obj.foo}} test {{foo.bar.baz}}. Single: {{single}}";
   const prompt = PromptTemplate.fromTemplate(template, {
     templateFormat: "mustache",
-    validateTemplate: false,
   });
   const formattedPrompt = await prompt.format({
     obj: { bar: "foo", foo: "bar" },
@@ -60,7 +56,6 @@ test("section/context variables", async () => {
 {{/foo}}is a test.`;
   const prompt = PromptTemplate.fromTemplate(template, {
     templateFormat: "mustache",
-    validateTemplate: false,
   });
   const formattedPrompt = await prompt.format({ foo: { bar: "yo" } });
   expect(formattedPrompt).toEqual(`This
@@ -75,7 +70,6 @@ test("section/context variables with repeats", async () => {
 {{/foo}}is a test.`;
   const promptWithRepeats = PromptTemplate.fromTemplate(template, {
     templateFormat: "mustache",
-    validateTemplate: false,
   });
   const formattedPrompt = await promptWithRepeats.format({
     foo: [{ bar: "yo" }, { bar: "hello" }],

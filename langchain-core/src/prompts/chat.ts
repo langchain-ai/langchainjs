@@ -700,10 +700,16 @@ function _isBaseMessagePromptTemplate(
 function _coerceMessagePromptTemplateLike<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
-  Extra extends ChatPromptTemplateInput<RunInput> = ChatPromptTemplateInput<RunInput>
+  Extra extends Omit<
+    ChatPromptTemplateInput<RunInput>,
+    "inputVariables" | "promptMessages" | "partialVariables"
+  > = Omit<
+    ChatPromptTemplateInput<RunInput>,
+    "inputVariables" | "promptMessages" | "partialVariables"
+  >
 >(
   messagePromptTemplateLike: BaseMessagePromptTemplateLike,
-  extra?: Omit<Extra, "inputVariables" | "promptMessages" | "partialVariables">
+  extra?: Extra
 ): BaseMessagePromptTemplate | BaseMessage {
   if (
     _isBaseMessagePromptTemplate(messagePromptTemplateLike) ||
@@ -823,8 +829,14 @@ export class ChatPromptTemplate<
 
   constructor(input: ChatPromptTemplateInput<RunInput, PartialVariableName>) {
     super(input);
+    // If input is mustache and validateTemplate is not defined, set it to false
+    if (
+      input.templateFormat === "mustache" &&
+      input.validateTemplate === undefined
+    ) {
+      this.validateTemplate = false;
+    }
     Object.assign(this, input);
-    this.templateFormat = input.templateFormat ?? this.templateFormat;
 
     if (this.validateTemplate) {
       const inputVariablesMessages = new Set<string>();
@@ -1017,10 +1029,13 @@ export class ChatPromptTemplate<
           promptMessage instanceof ChatPromptTemplate
             ? promptMessage.promptMessages
             : [
-                _coerceMessagePromptTemplateLike<RunInput, Extra>(
-                  promptMessage,
-                  extra
-                ),
+                _coerceMessagePromptTemplateLike<
+                  RunInput,
+                  Omit<
+                    Extra,
+                    "inputVariables" | "promptMessages" | "partialVariables"
+                  >
+                >(promptMessage, extra),
               ]
         ),
       []

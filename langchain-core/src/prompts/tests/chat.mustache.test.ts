@@ -14,7 +14,6 @@ test("Test creating a chat prompt template from role string messages", async () 
     ],
     {
       templateFormat: "mustache",
-      validateTemplate: false,
     }
   );
 

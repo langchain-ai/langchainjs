@@ -116,6 +116,12 @@ export class PromptTemplate<
 
   constructor(input: PromptTemplateInput<RunInput, PartialVariableName>) {
     super(input);
+    if (
+      input.templateFormat === "mustache" &&
+      input.validateTemplate === undefined
+    ) {
+      this.validateTemplate = false;
+    }
     Object.assign(this, input);
 
     if (this.validateTemplate) {
