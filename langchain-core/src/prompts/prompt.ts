@@ -116,6 +116,7 @@ export class PromptTemplate<
 
   constructor(input: PromptTemplateInput<RunInput, PartialVariableName>) {
     super(input);
+    // If input is mustache and validateTemplate is not defined, set it to false
     if (
       input.templateFormat === "mustache" &&
       input.validateTemplate === undefined
