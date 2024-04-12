@@ -355,12 +355,11 @@ export class ChatFriendli extends BaseChatModel<BaseChatModelCallOptions> {
     );
 
     for await (const chunk of stream) {
-      if (
-        chunk !== "[DONE]" &&
-        (JSON.parse(chunk) as ChatFriendliResponse).choices[0].finish_reason ===
-          null
-      ) {
-        const parsedChunk = JSON.parse(chunk) as ChatFriendliResponse;
+      if (chunk === "[DONE]") break;
+
+      const parsedChunk = JSON.parse(chunk) as ChatFriendliResponse;
+
+      if (parsedChunk.choices[0].finish_reason === null) {
         const generationChunk = new ChatGenerationChunk({
           message: _convertDeltaToMessageChunk(parsedChunk.choices[0].delta),
           text: parsedChunk.choices[0].delta.content ?? "",

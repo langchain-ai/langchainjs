@@ -186,6 +186,21 @@ export class Friendli extends LLM<BaseLLMCallOptions> {
       token: number;
     }
 
+    interface FriendliCompleteResponse {
+      event: string;
+      choices: {
+        index: number;
+        seed: number;
+        text: string;
+        tokens: number[];
+      }[];
+      usage: {
+        prompt_tokens: number;
+        completion_tokens: number;
+        total_tokens: number;
+      };
+    }
+
     const response = await this.caller.call(async () =>
       fetch("https://inference.friendli.ai/v1/completions", {
         method: "POST",
@@ -229,6 +244,17 @@ export class Friendli extends LLM<BaseLLMCallOptions> {
         yield generationChunk;
 
         void runManager?.handleLLMNewToken(generationChunk.text ?? "");
+      } else {
+        const parsedChunk = JSON.parse(chunk) as FriendliCompleteResponse;
+        const generationChunk = new GenerationChunk({
+          text: "",
+          generationInfo: {
+            choices: parsedChunk.choices,
+            usage: parsedChunk.usage,
+          },
+        });
+
+        yield generationChunk;
       }
     }
   }
