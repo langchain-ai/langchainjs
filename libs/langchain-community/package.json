@@ -193,7 +193,7 @@
     "@azure/search-documents": "^12.0.0",
     "@clickhouse/client": "^0.2.5",
     "@cloudflare/ai": "*",
-    "@datastax/astra-db-ts": "^0.1.4",
+    "@datastax/astra-db-ts": "^1.0.0",
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-js": "^0.9.0",

@@ -69,7 +69,7 @@ export class AstraDBVectorStore extends VectorStore {
       batchSize,
       ...callerArgs
     } = args;
-    const dataAPIClient = new DataAPIClient(token);
+    const dataAPIClient = new DataAPIClient(token, { caller: ["langchainjs"]});
     this.astraDBClient = dataAPIClient.db(endpoint, { namespace })
     this.collectionName = collection;
     this.collectionOptions = collectionOptions;

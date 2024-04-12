@@ -6715,7 +6715,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@datastax/astra-db-ts@npm:1.0.0":
+"@datastax/astra-db-ts@npm:^1.0.0":
   version: 1.0.0
   resolution: "@datastax/astra-db-ts@npm:1.0.0"
   dependencies:
@@ -8946,7 +8946,7 @@ __metadata:
     "@clickhouse/client": ^0.2.5
     "@cloudflare/ai": ^1.0.12
     "@cloudflare/workers-types": ^4.20230922.0
-    "@datastax/astra-db-ts": 1.0.0
+    "@datastax/astra-db-ts": ^1.0.0
     "@elastic/elasticsearch": ^8.4.0
     "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": ^4.0.0
@@ -9083,7 +9083,7 @@ __metadata:
     "@azure/search-documents": ^12.0.0
     "@clickhouse/client": ^0.2.5
     "@cloudflare/ai": "*"
-    "@datastax/astra-db-ts": ^0.1.4
+    "@datastax/astra-db-ts": ^1.0.0
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": "*"
     "@getzep/zep-js": ^0.9.0

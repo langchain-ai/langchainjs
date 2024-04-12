@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
 import { describe, expect, test } from "@jest/globals";
-import { AstraDB, DataAPIClient } from "@datastax/astra-db-ts";
+import { DataAPIClient, Db } from "@datastax/astra-db-ts";
 import { faker } from "@faker-js/faker";
 import { Document } from "@langchain/core/documents";
 import { OpenAIEmbeddings } from "@langchain/openai";
@@ -8,7 +8,7 @@ import { FakeEmbeddings } from "closevector-common/dist/fake.js";
 import { AstraDBVectorStore, AstraLibArgs } from "../astradb.js";
 
 describe.skip("AstraDBVectorStore", () => {
-  let client: AstraDB;
+  let db: Db;
   let astraConfig: AstraLibArgs;
   beforeAll(() => {
     const clientConfig = {
@@ -18,7 +18,7 @@ describe.skip("AstraDBVectorStore", () => {
     };
 
     const dataAPIClient = new DataAPIClient(clientConfig.token);
-    client = dataAPIClient.db(clientConfig.endpoint)
+    db = dataAPIClient.db(clientConfig.endpoint)
 
     astraConfig = {
       ...clientConfig,
@@ -35,7 +35,7 @@ describe.skip("AstraDBVectorStore", () => {
 
   beforeEach(async () => {
     try {
-      await client.dropCollection(astraConfig.collection);
+      await db.dropCollection(astraConfig.collection);
     } catch (e) {
       console.debug("Collection doesn't exist yet, skipping drop");
     }
