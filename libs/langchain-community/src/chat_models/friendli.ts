@@ -326,7 +326,7 @@ export class ChatFriendli extends BaseChatModel<BaseChatModelCallOptions> {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Accept: "application/json",
+          Accept: "text/event-stream",
           Authorization: `Bearer ${this.friendliToken}`,
           ...(this.friendliTeam
             ? { "X-Friendli-Team": this.friendliTeam }
