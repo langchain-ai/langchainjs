@@ -220,9 +220,8 @@ export class Friendli extends LLM<BaseLLMCallOptions> {
     );
 
     for await (const chunk of stream) {
-      const parsedChunk = JSON.parse(chunk) as FriendliResponse;
-
-      if (parsedChunk.event !== "complete") {
+      if (chunk.event !== "complete") {
+        const parsedChunk = JSON.parse(chunk) as FriendliResponse;
         const generationChunk = new GenerationChunk({
           text: parsedChunk.text ?? "",
         });

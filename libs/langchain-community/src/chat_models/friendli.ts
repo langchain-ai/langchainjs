@@ -301,10 +301,10 @@ export class ChatFriendli extends BaseChatModel<BaseChatModelCallOptions> {
       choices: {
         index: number;
         delta: {
-          role: FriendliMessageRole;
-          content: string;
+          role?: FriendliMessageRole;
+          content?: string;
         };
-        finish_reason: string;
+        finish_reason: string | null;
       }[];
       created: number;
     }
