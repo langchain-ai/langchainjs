@@ -1,34 +1,35 @@
 /* eslint-disable no-process-env */
-import { AstraDB } from "@datastax/astra-db-ts";
+import { DataAPIClient, Db } from "@datastax/astra-db-ts";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
 import { AstraDBChatMessageHistory } from "../message/astradb.js";
 
-let client: AstraDB;
+let db: Db;
 
 describe.skip("AstraDBChatMessageHistory", () => {
   beforeAll(() => {
     expect(process.env.ASTRA_DB_APPLICATION_TOKEN).toBeDefined();
     expect(process.env.ASTRA_DB_ENDPOINT).toBeDefined();
 
-    client = new AstraDB(
-      process.env.ASTRA_DB_APPLICATION_TOKEN,
-      process.env.ASTRA_DB_ENDPOINT,
-      process.env.ASTRA_DB_NAMESPACE
+    const client = new DataAPIClient(
+      process.env.ASTRA_DB_APPLICATION_TOKEN as string
     );
+    db = client.db(process.env.ASTRA_DB_ENDPOINT as string, {
+      namespace: process.env.ASTRA_DB_NAMESPACE,
+    });
   });
 
   beforeEach(async () => {
     try {
-      await client.dropCollection("test_messages");
+      await db.dropCollection("test_messages");
     } catch (e) {
       console.debug("Collection doesn't exist yet, skipping drop");
     }
 
-    await client.createCollection("test_messages");
+    await db.createCollection("test_messages");
   });
 
   test("Test Asta DB Chat History", async () => {
-    const collection = await client.collection("test_messages");
+    const collection = await db.collection("test_messages");
 
     const sessionId = "langchain_test_messages_session";
 
