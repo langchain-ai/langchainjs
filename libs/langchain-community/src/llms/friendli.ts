@@ -54,6 +54,10 @@ export interface FriendliParams extends BaseLLMParams {
    */
   stop?: string[];
   /**
+   * Whether to enable streaming mode.
+   */
+  streaming?: boolean;
+  /**
    * Sampling temperature. Smaller temperature makes the generation result closer to
    * greedy, argmax (i.e., `top_k = 1`) sampling. If it is `None`, then 1.0 is used.
    */
@@ -98,6 +102,8 @@ export class Friendli extends LLM<BaseLLMCallOptions> {
 
   stop?: string[];
 
+  streaming?: boolean;
+
   temperature?: number;
 
   topP?: number;
@@ -114,6 +120,7 @@ export class Friendli extends LLM<BaseLLMCallOptions> {
     this.frequencyPenalty = fields?.frequencyPenalty ?? this.frequencyPenalty;
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
     this.stop = fields?.stop ?? this.stop;
+    this.streaming = fields?.streaming ?? this.streaming;
     this.temperature = fields?.temperature ?? this.temperature;
     this.topP = fields?.topP ?? this.topP;
 
@@ -161,11 +168,11 @@ export class Friendli extends LLM<BaseLLMCallOptions> {
         },
         body: JSON.stringify({
           prompt,
-          stream: false,
           model: this.model,
           max_tokens: this.maxTokens,
           frequency_penalty: this.frequencyPenalty,
           stop: this.stop,
+          stream: this.streaming,
           temperature: this.temperature,
           top_p: this.topP,
         }),
@@ -213,11 +220,11 @@ export class Friendli extends LLM<BaseLLMCallOptions> {
         },
         body: JSON.stringify({
           prompt,
-          stream: true,
           model: this.model,
           max_tokens: this.maxTokens,
           frequency_penalty: this.frequencyPenalty,
           stop: this.stop,
+          stream: this.streaming,
           temperature: this.temperature,
           top_p: this.topP,
         }),
