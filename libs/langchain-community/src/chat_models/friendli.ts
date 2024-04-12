@@ -144,10 +144,6 @@ export interface ChatFriendliParams extends BaseChatModelParams {
    */
   stop?: string[];
   /**
-   * Whether to enable streaming mode.
-   */
-  streaming?: boolean;
-  /**
    * Sampling temperature. Smaller temperature makes the generation result closer to
    * greedy, argmax (i.e., `top_k = 1`) sampling. If it is `None`, then 1.0 is used.
    */
@@ -196,8 +192,6 @@ export class ChatFriendli extends BaseChatModel<BaseChatModelCallOptions> {
 
   stop?: string[];
 
-  streaming?: boolean;
-
   temperature?: number;
 
   topP?: number;
@@ -216,7 +210,6 @@ export class ChatFriendli extends BaseChatModel<BaseChatModelCallOptions> {
     this.frequencyPenalty = fields?.frequencyPenalty ?? this.frequencyPenalty;
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
     this.stop = fields?.stop ?? this.stop;
-    this.streaming = fields?.streaming ?? this.streaming;
     this.temperature = fields?.temperature ?? this.temperature;
     this.topP = fields?.topP ?? this.topP;
     this.modelKwargs = fields?.modelKwargs ?? {};
@@ -230,10 +223,10 @@ export class ChatFriendli extends BaseChatModel<BaseChatModelCallOptions> {
     return "friendli";
   }
 
-  private constructHeaders() {
+  private constructHeaders(stream: boolean) {
     return {
       "Content-Type": "application/json",
-      Accept: this.streaming ? "text/event-stream" : "application/json",
+      Accept: stream ? "text/event-stream" : "application/json",
       Authorization: `Bearer ${this.friendliToken}`,
       "X-Friendli-Team": this.friendliTeam ?? "",
     };
@@ -241,6 +234,7 @@ export class ChatFriendli extends BaseChatModel<BaseChatModelCallOptions> {
 
   private constructBody(
     messages: BaseMessage[],
+    stream: boolean,
     _options?: this["ParsedCallOptions"]
   ) {
     const messageList = messages.map((message) => {
@@ -257,11 +251,11 @@ export class ChatFriendli extends BaseChatModel<BaseChatModelCallOptions> {
 
     const body = JSON.stringify({
       messages: messageList,
+      stream,
       model: this.model,
       max_tokens: this.maxTokens,
       frequency_penalty: this.frequencyPenalty,
       stop: this.stop,
-      stream: this.streaming,
       temperature: this.temperature,
       top_p: this.topP,
       ...this.modelKwargs,
@@ -299,8 +293,8 @@ export class ChatFriendli extends BaseChatModel<BaseChatModelCallOptions> {
     const response = (await this.caller.call(async () =>
       fetch(`${this.baseUrl}/v1/chat/completions`, {
         method: "POST",
-        headers: this.constructHeaders(),
-        body: this.constructBody(messages, _options),
+        headers: this.constructHeaders(false),
+        body: this.constructBody(messages, false, _options),
       }).then((res) => res.json())
     )) as ChatFriendliResponse;
 
@@ -340,8 +334,8 @@ export class ChatFriendli extends BaseChatModel<BaseChatModelCallOptions> {
     const response = await this.caller.call(async () =>
       fetch(`${this.baseUrl}/v1/chat/completions`, {
         method: "POST",
-        headers: this.constructHeaders(),
-        body: this.constructBody(messages, _options),
+        headers: this.constructHeaders(true),
+        body: this.constructBody(messages, true, _options),
       })
     );
 
