@@ -314,7 +314,6 @@ export const config = {
     "vectorstores/zep",
     "chat_models/bedrock",
     "chat_models/bedrock/web",
-    "chat_models/friendli",
     "chat_models/googlevertexai",
     "chat_models/googlevertexai/web",
     "chat_models/googlepalm",
