@@ -133,6 +133,29 @@ export class Friendli extends LLM<BaseLLMCallOptions> {
     return "friendli";
   }
 
+  private constructHeaders() {
+    return {
+      "Content-Type": "application/json",
+      Accept: this.streaming ? "text/event-stream" : "application/json",
+      Authorization: `Bearer ${this.friendliToken}`,
+      "X-Friendli-Team": this.friendliTeam ?? "",
+    };
+  }
+
+  private constructBody(prompt: string, _options?: this["ParsedCallOptions"]) {
+    const body = JSON.stringify({
+      prompt,
+      model: this.model,
+      max_tokens: this.maxTokens,
+      frequency_penalty: this.frequencyPenalty,
+      stop: this.stop,
+      stream: this.streaming,
+      temperature: this.temperature,
+      top_p: this.topP,
+    });
+    return body;
+  }
+
   /**
    * Calls the Friendli endpoint and retrieves the result.
    * @param {string} prompt The input prompt.
@@ -160,22 +183,8 @@ export class Friendli extends LLM<BaseLLMCallOptions> {
     const response = (await this.caller.call(async () =>
       fetch(`${this.baseUrl}/v1/completions`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${this.friendliToken}`,
-          "X-Friendli-Team": this.friendliTeam ?? "",
-        },
-        body: JSON.stringify({
-          prompt,
-          model: this.model,
-          max_tokens: this.maxTokens,
-          frequency_penalty: this.frequencyPenalty,
-          stop: this.stop,
-          stream: this.streaming,
-          temperature: this.temperature,
-          top_p: this.topP,
-        }),
+        headers: this.constructHeaders(),
+        body: this.constructBody(prompt, _options),
       }).then((res) => res.json())
     )) as FriendliResponse;
 
@@ -212,22 +221,8 @@ export class Friendli extends LLM<BaseLLMCallOptions> {
     const response = await this.caller.call(async () =>
       fetch(`${this.baseUrl}/v1/completions`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "text/event-stream",
-          Authorization: `Bearer ${this.friendliToken}`,
-          "X-Friendli-Team": this.friendliTeam ?? "",
-        },
-        body: JSON.stringify({
-          prompt,
-          model: this.model,
-          max_tokens: this.maxTokens,
-          frequency_penalty: this.frequencyPenalty,
-          stop: this.stop,
-          stream: this.streaming,
-          temperature: this.temperature,
-          top_p: this.topP,
-        }),
+        headers: this.constructHeaders(),
+        body: this.constructBody(prompt, _options),
       })
     );
 
