@@ -158,6 +158,10 @@ export interface ChatFriendliParams extends BaseChatModelParams {
    * is used by default.
    */
   topP?: number;
+  /**
+   * Additional kwargs to pass to the model.
+   */
+  modelKwargs?: Record<string, unknown>;
 }
 
 /**
@@ -198,6 +202,8 @@ export class ChatFriendli extends BaseChatModel<BaseChatModelCallOptions> {
 
   topP?: number;
 
+  modelKwargs?: Record<string, unknown>;
+
   constructor(fields: ChatFriendliParams) {
     super(fields);
 
@@ -213,6 +219,7 @@ export class ChatFriendli extends BaseChatModel<BaseChatModelCallOptions> {
     this.streaming = fields?.streaming ?? this.streaming;
     this.temperature = fields?.temperature ?? this.temperature;
     this.topP = fields?.topP ?? this.topP;
+    this.modelKwargs = fields?.modelKwargs ?? {};
 
     if (!this.friendliToken) {
       throw new Error("Missing Friendli Token");
@@ -257,6 +264,7 @@ export class ChatFriendli extends BaseChatModel<BaseChatModelCallOptions> {
       stream: this.streaming,
       temperature: this.temperature,
       top_p: this.topP,
+      ...this.modelKwargs,
     });
     return body;
   }

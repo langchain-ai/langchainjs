@@ -68,6 +68,10 @@ export interface FriendliParams extends BaseLLMParams {
    * is used by default.
    */
   topP?: number;
+  /**
+   * Additional kwargs to pass to the model.
+   */
+  modelKwargs?: Record<string, unknown>;
 }
 
 /**
@@ -108,6 +112,8 @@ export class Friendli extends LLM<BaseLLMCallOptions> {
 
   topP?: number;
 
+  modelKwargs?: Record<string, unknown>;
+
   constructor(fields: FriendliParams) {
     super(fields);
 
@@ -123,6 +129,7 @@ export class Friendli extends LLM<BaseLLMCallOptions> {
     this.streaming = fields?.streaming ?? this.streaming;
     this.temperature = fields?.temperature ?? this.temperature;
     this.topP = fields?.topP ?? this.topP;
+    this.modelKwargs = fields?.modelKwargs ?? {};
 
     if (!this.friendliToken) {
       throw new Error("Missing Friendli Token");
@@ -152,6 +159,7 @@ export class Friendli extends LLM<BaseLLMCallOptions> {
       stream: this.streaming,
       temperature: this.temperature,
       top_p: this.topP,
+      ...this.modelKwargs,
     });
     return body;
   }
