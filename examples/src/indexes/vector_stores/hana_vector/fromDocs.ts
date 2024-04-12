@@ -1,4 +1,4 @@
-import hanaClient from "@sap/hana-client";
+import hanaClient from "hdb";
 import {
   HanaDB,
   HanaDBArgs,
@@ -7,18 +7,26 @@ import { OpenAIEmbeddings } from "@langchain/openai";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { CharacterTextSplitter } from "langchain/text_splitter";
 
-// Connection parameters
 const connectionParams = {
   host: process.env.HANA_HOST,
   port: process.env.HANA_PORT,
-  uid: process.env.HANA_UID,
-  pwd: process.env.HANA_PWD,
+  user: process.env.HANA_UID,
+  password: process.env.HANA_PWD,
+  // useCesu8 : false
 };
-
-const embeddings = new OpenAIEmbeddings();
+const client = hanaClient.createClient(connectionParams);
 // connet to hanaDB
-const client = hanaClient.createConnection();
-client.connect(connectionParams);
+await new Promise<void> ((resolve, reject) => {
+  client.connect((err: Error) => {  // Use arrow function here
+  if (err) {
+    reject(err);
+  } else {
+    console.log("Connected to SAP HANA successfully.");
+    resolve();
+  }
+});
+});
+const embeddings = new OpenAIEmbeddings();
 const args: HanaDBArgs = {
   connection: client,
   tableName: "test_fromDocs",
@@ -33,6 +41,7 @@ const splitter = new CharacterTextSplitter({
 const documents = await splitter.splitDocuments(rawDocuments);
 // Create a LangChain VectorStore interface for the HANA database and specify the table (collection) to use in args.
 const vectorStore = new HanaDB(embeddings, args);
+await vectorStore.initialize();
 // Delete already existing documents from the table
 await vectorStore.delete({ filter: {} });
 // add the loaded document chunks
@@ -100,3 +109,4 @@ docsMMR.forEach((docsMMR) => {
 
   Let each of us here tonight in this Chamber send an unmistakable signal to Ukraine and to the world.
 */
+client.disconnect();

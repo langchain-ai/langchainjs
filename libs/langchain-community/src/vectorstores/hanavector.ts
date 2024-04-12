@@ -5,7 +5,7 @@ import {
 } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
-import type hanaClient from "@sap/hana-client";
+// import type hanaClient from "@sap/hana-client";
 
 export type DistanceStrategy = "euclidean" | "cosine";
 
@@ -30,7 +30,8 @@ interface Filter {
  * `HanaDB`.
  */
 export interface HanaDBArgs {
-  connection: hanaClient.Connection;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  connection: any;
   distanceStrategy?: DistanceStrategy;
   tableName?: string;
   contentColumn?: string;
@@ -40,7 +41,8 @@ export interface HanaDBArgs {
 }
 
 export class HanaDB extends VectorStore {
-  private connection: hanaClient.Connection;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private connection: any;
 
   private distanceStrategy: DistanceStrategy;
 
@@ -82,10 +84,52 @@ export class HanaDB extends VectorStore {
 
     this.connection = args.connection;
 
-    this.initialize();
+    // this.initialize();
   }
 
-  private initialize() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private executeQuery(client: any, query: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      client.exec(query, (err: Error, result: any) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(result);
+        }
+      });
+    });
+  }
+  
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private prepareQuery(client: any, query: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      client.prepare(query, (err: Error, statement: any) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(statement);
+        }
+      });
+    });
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private executeStatement(statement: any, params: any): Promise<any> {
+    return new Promise((resolve, reject) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      statement.exec(params, (err: Error, res: any) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(res);
+        }
+      });
+    });
+  }
+
+  public async initialize() {
     let valid_distance = false;
     for (const key in HANA_DISTANCE_FUNCTION) {
       if (key === this.distanceStrategy) {
@@ -98,13 +142,16 @@ export class HanaDB extends VectorStore {
         `Unsupported distance_strategy: ${this.distanceStrategy}`
       );
     }
-    this.createTableIfNotExists();
-    this.checkColumn(this.tableName, this.contentColumn, ["NCLOB", "NVARCHAR"]);
-    this.checkColumn(this.tableName, this.metadataColumn, [
+    await this.createTableIfNotExists();
+    await this.checkColumn(this.tableName, this.contentColumn, [
       "NCLOB",
       "NVARCHAR",
     ]);
-    this.checkColumn(
+    await this.checkColumn(this.tableName, this.metadataColumn, [
+      "NCLOB",
+      "NVARCHAR",
+    ]);
+    await this.checkColumn(
       this.tableName,
       this.vectorColumn,
       ["REAL_VECTOR"],
@@ -194,12 +241,12 @@ export class HanaDB extends VectorStore {
    * @param columnType The expected data type(s) of the column.
    * @param columnLength The expected length of the column. Optional.
    */
-  public checkColumn(
+  public async checkColumn(
     tableName: string,
     columnName: string,
     columnType: string | string[],
     columnLength?: number
-  ): void {
+  ): Promise<void> {
     const sqlStr = `
             SELECT DATA_TYPE_NAME, LENGTH 
             FROM SYS.TABLE_COLUMNS 
@@ -208,16 +255,14 @@ export class HanaDB extends VectorStore {
             AND COLUMN_NAME = ?`;
     const client = this.connection; // Get the connection object
     // Prepare the statement with parameter placeholders
-    const stm = client.prepare(sqlStr);
+    const stm = await this.prepareQuery(client, sqlStr);
     // Execute the query with actual parameters to avoid SQL injection
-    const resultSet = stm.execQuery([tableName, columnName]);
-
-    if (!resultSet.next()) {
+    const resultSet = await this.executeStatement(stm, [tableName, columnName]);
+    if (resultSet.length === 0) {
       throw new Error(`Column ${columnName} does not exist`);
     } else {
-      // Safely assert the type of the returned value to string
-      const dataType: string = resultSet.getValue(0) as string;
-      const length: number = resultSet.getValue(1) as number;
+      const dataType: string = resultSet[0].DATA_TYPE_NAME;
+      const length: number = resultSet[0].LENGTH;
 
       // Check if dataType is within columnType
       const isValidType = Array.isArray(columnType)
@@ -234,8 +279,8 @@ export class HanaDB extends VectorStore {
     }
   }
 
-  private createTableIfNotExists() {
-    const tableExists = this.tableExists(this.tableName);
+  private async createTableIfNotExists() {
+    const tableExists = await this.tableExists(this.tableName);
     if (!tableExists) {
       let sqlStr =
         `CREATE TABLE "${this.tableName}" (` +
@@ -248,21 +293,19 @@ export class HanaDB extends VectorStore {
           ? ");"
           : `(${this.vectorColumnLength}));`;
       const client = this.connection;
-      client.exec(sqlStr);
+      await this.executeQuery(client, sqlStr);
     }
   }
 
-  public tableExists(tableName: string): boolean {
+  public async tableExists(tableName: string): Promise<boolean> {
     const tableExistsSQL = `SELECT COUNT(*) AS COUNT FROM SYS.TABLES WHERE SCHEMA_NAME = CURRENT_SCHEMA AND TABLE_NAME = ?`;
     const client = this.connection; // Get the connection object
-    const stm = client.prepare(tableExistsSQL);
-    const resultSet = stm.execQuery([tableName]);
-    while (resultSet.next()) {
-      const result = resultSet.getValue(0);
-      if (result === 1) {
-        // Table does  exist
-        return true;
-      }
+
+    const stm = await this.prepareQuery(client, tableExistsSQL);
+    const resultSet = await this.executeStatement(stm, [tableName]);
+    if (resultSet[0].COUNT === 1) {
+      // Table does  exist
+      return true;
     }
     return false;
   }
@@ -285,7 +328,8 @@ export class HanaDB extends VectorStore {
         const value = filter[key];
         if (typeof value === "number") {
           if (Number.isInteger(value)) {
-            queryTuple.push(value);
+            // hdb requires string while sap/hana-client doesn't
+            queryTuple.push(value.toString()); 
           } else {
             throw new Error(
               `Unsupported filter data-type: wrong number type for key ${key}`
@@ -329,7 +373,8 @@ export class HanaDB extends VectorStore {
     const [whereStr, queryTuple] = this.createWhereByFilter(filter);
     const sqlStr = `DELETE FROM "${this.tableName}" ${whereStr}`;
     const client = this.connection;
-    client.execute(sqlStr, queryTuple);
+    const stm = await this.prepareQuery(client, sqlStr);
+    await this.executeStatement(stm, queryTuple);
   }
 
   /**
@@ -373,6 +418,7 @@ export class HanaDB extends VectorStore {
     dbConfig: HanaDBArgs
   ): Promise<HanaDB> {
     const instance = new HanaDB(embeddings, dbConfig);
+    await instance.initialize();
     await instance.addDocuments(docs);
     return instance;
   }
@@ -420,8 +466,9 @@ export class HanaDB extends VectorStore {
     // Insert data into the table, bulk insert.
     const sqlStr = `INSERT INTO "${this.tableName}" ("${this.contentColumn}", "${this.metadataColumn}", "${this.vectorColumn}") 
                     VALUES (?, ?, TO_REAL_VECTOR(?));`;
-    const stm = client.prepare(sqlStr);
-    stm.execBatch(sqlParams);
+    const stm = await this.prepareQuery(client, sqlStr);
+    await this.executeStatement(stm, sqlParams);
+    // stm.execBatch(sqlParams);
   }
 
   /**
@@ -492,7 +539,7 @@ export class HanaDB extends VectorStore {
     k: number,
     filter?: Filter
   ): Promise<Array<[Document, number, number[]]>> {
-    const result: Array<[Document, number, number[]]> = [];
+    // const result: Array<[Document, number, number[]]> = [];
     // Sanitize inputs
     const sanitizedK = HanaDB.sanitizeInt(k);
     const sanitizedEmbedding = HanaDB.sanitizeListFloat(embedding);
@@ -503,7 +550,7 @@ export class HanaDB extends VectorStore {
     let sqlStr = `SELECT TOP ${sanitizedK}
                     "${this.contentColumn}", 
                     "${this.metadataColumn}", 
-                    TO_NVARCHAR("${this.vectorColumn}"), 
+                    TO_NVARCHAR("${this.vectorColumn}") AS VECTOR, 
                     ${distanceFuncName}("${this.vectorColumn}", TO_REAL_VECTOR('[${embeddingAsString}]')) AS CS
                     FROM "${this.tableName}"`;
     // Add order by clause to sort by similarity
@@ -515,18 +562,23 @@ export class HanaDB extends VectorStore {
     const [whereStr, queryTuple] = this.createWhereByFilter(filter);
 
     sqlStr += whereStr + orderStr;
-    // console.log(sqlStr, queryTuple);
     const client = this.connection;
-    const stm = client.prepare(sqlStr);
-    const resultSet = stm.execQuery(queryTuple);
-    while (resultSet.next()) {
-      const metadata = JSON.parse(resultSet.getValue(1));
-      const doc: Document = { pageContent: resultSet.getValue(0), metadata };
-      const resultVector = HanaDB.parseFloatArrayFromString(
-        resultSet.getValue(2)
-      );
-      result.push([doc, resultSet.getValue(3), resultVector]);
-    }
+    const stm = await this.prepareQuery(client, sqlStr);
+    const resultSet = await this.executeStatement(stm, queryTuple);
+    const result: Array<[Document, number, number[]]> = resultSet.map(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (row: any) => {
+        const metadata = JSON.parse(row[this.metadataColumn].toString("utf8"));
+        const doc: Document = {
+          pageContent: row[this.contentColumn].toString("utf8"),
+          metadata,
+        };
+        const resultVector = HanaDB.parseFloatArrayFromString(row.VECTOR);
+        const score = row.CS;
+        return [doc, score, resultVector];
+      }
+    );
+
     return result;
   }
 

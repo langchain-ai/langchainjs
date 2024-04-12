@@ -1,5 +1,5 @@
 import { OpenAIEmbeddings } from "@langchain/openai";
-import hanaClient from "@sap/hana-client";
+import hanaClient from "hdb";
 import {
   HanaDB,
   HanaDBArgs,
@@ -8,14 +8,23 @@ import {
 const connectionParams = {
   host: process.env.HANA_HOST,
   port: process.env.HANA_PORT,
-  uid: process.env.HANA_UID,
-  pwd: process.env.HANA_PWD,
+  user: process.env.HANA_UID,
+  password: process.env.HANA_PWD,
+  // useCesu8 : false
 };
-const embeddings = new OpenAIEmbeddings();
+const client = hanaClient.createClient(connectionParams);
 // connet to hanaDB
-const client = hanaClient.createConnection();
-client.connect(connectionParams);
-// define instance args
+await new Promise<void> ((resolve, reject) => {
+  client.connect((err: Error) => {  // Use arrow function here
+  if (err) {
+    reject(err);
+  } else {
+    console.log("Connected to SAP HANA successfully.");
+    resolve();
+  }
+});
+});
+const embeddings = new OpenAIEmbeddings();
 const args: HanaDBArgs = {
   connection: client,
   tableName: "test_fromTexts",
@@ -43,3 +52,4 @@ console.log(response);
     { pageContent: 'hello nice world', metadata: { id: 3, name: '3' } }
   ]
 */
+client.disconnect();

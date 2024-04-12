@@ -57,7 +57,6 @@
     "@prisma/client": "^4.11.0",
     "@raycast/api": "^1.55.2",
     "@rockset/client": "^0.9.1",
-    "@sap/hana-client": "^2.19.21",
     "@supabase/supabase-js": "^2.10.0",
     "@tensorflow/tfjs-backend-cpu": "^4.4.0",
     "@upstash/redis": "^1.20.6",

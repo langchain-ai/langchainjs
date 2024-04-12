@@ -83,7 +83,6 @@
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",
     "@rockset/client": "^0.9.1",
-    "@sap/hana-client": "^2.19.21",
     "@smithy/eventstream-codec": "^2.0.5",
     "@smithy/protocol-http": "^3.0.6",
     "@smithy/signature-v4": "^2.0.10",
@@ -146,6 +145,7 @@
     "google-auth-library": "^8.9.0",
     "googleapis": "^126.0.1",
     "graphql": "^16.6.0",
+    "hdb": "0.19.8",
     "hnswlib-node": "^3.0.0",
     "html-to-text": "^9.0.5",
     "interface-datastore": "^8.2.11",
@@ -211,7 +211,6 @@
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",
     "@rockset/client": "^0.9.1",
-    "@sap/hana-client": "^2.19.21",
     "@smithy/eventstream-codec": "^2.0.5",
     "@smithy/protocol-http": "^3.0.6",
     "@smithy/signature-v4": "^2.0.10",
@@ -246,6 +245,7 @@
     "firebase-admin": "^11.9.0 || ^12.0.0",
     "google-auth-library": "^8.9.0",
     "googleapis": "^126.0.1",
+    "hdb": "0.19.8",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "interface-datastore": "^8.2.11",
@@ -363,9 +363,6 @@
     "@rockset/client": {
       "optional": true
     },
-    "@sap/hana-client": {
-      "optional": true
-    },
     "@smithy/eventstream-codec": {
       "optional": true
     },
@@ -466,6 +463,9 @@
       "optional": true
     },
     "googleapis": {
+      "optional": true
+    },
+    "hdb": {
       "optional": true
     },
     "hnswlib-node": {

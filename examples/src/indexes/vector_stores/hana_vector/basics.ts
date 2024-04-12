@@ -1,5 +1,7 @@
 import { OpenAIEmbeddings } from "@langchain/openai";
-import hanaClient from "@sap/hana-client";
+import hanaClient from "hdb";
+// or import another node.js driver 
+// import hanaClient from "@sap/haha-client";
 import { Document } from "@langchain/core/documents";
 import {
   HanaDB,
@@ -9,13 +11,23 @@ import {
 const connectionParams = {
   host: process.env.HANA_HOST,
   port: process.env.HANA_PORT,
-  uid: process.env.HANA_UID,
-  pwd: process.env.HANA_PWD,
+  user: process.env.HANA_UID,
+  password: process.env.HANA_PWD,
+  // useCesu8 : false
 };
-const embeddings = new OpenAIEmbeddings();
+const client = hanaClient.createClient(connectionParams);
 // connet to hanaDB
-const client = hanaClient.createConnection();
-client.connect(connectionParams);
+await new Promise<void> ((resolve, reject) => {
+  client.connect((err: Error) => {  // Use arrow function here
+  if (err) {
+    reject(err);
+  } else {
+    console.log("Connected to SAP HANA successfully.");
+    resolve();
+  }
+});
+});
+const embeddings = new OpenAIEmbeddings();
 // define instance args
 const args: HanaDBArgs = {
   connection: client,
@@ -36,6 +48,8 @@ const docs: Document[] = [
 
 // Create a LangChain VectorStore interface for the HANA database and specify the table (collection) to use in args.
 const vectorStore = new HanaDB(embeddings, args);
+// need to initialize once an instance is created.
+await vectorStore.initialize();
 // Delete already existing documents from the table
 await vectorStore.delete({ filter: {} });
 await vectorStore.addDocuments(docs);
@@ -64,3 +78,4 @@ console.log(resultsAfterFilter);
 /*
     []
 */
+client.disconnect();

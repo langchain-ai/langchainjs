@@ -1,5 +1,6 @@
 /* eslint-disable no-process-env */
-import hanaClient from "@sap/hana-client";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import hdbClient from "hdb";
 import { Document } from "@langchain/core/documents";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { test, expect } from "@jest/globals";
@@ -9,8 +10,9 @@ import { HanaDB, HanaDBArgs } from "../hanavector.js";
 const connectionParams = {
   host: process.env.HANA_HOST,
   port: process.env.HANA_PORT,
-  uid: process.env.HANA_UID,
-  pwd: process.env.HANA_PWD,
+  user: process.env.HANA_UID,
+  password: process.env.HANA_PWD,
+  // useCesu8 : false
 };
 
 //  Fake normalized embeddings which remember all the texts seen so far to return consistent vectors for the same texts.
@@ -55,34 +57,104 @@ class NormalizedConsistentFakeEmbeddings extends FakeEmbeddings {
 
 const embeddings = new NormalizedConsistentFakeEmbeddings();
 
-const client = hanaClient.createConnection();
-client.connect(connectionParams);
+const client = hdbClient.createClient(connectionParams);
+
+async function connectToHANA() {
+  try {
+    await new Promise<void>((resolve, reject) => {
+      client.connect((err: Error) => {  // Use arrow function here
+        if (err) {
+          reject(err);
+        } else {
+          console.log("Connected to SAP HANA successfully.");
+          resolve();
+        }
+      });
+    });
+  } catch (error) {
+    console.error("Connect error", error);
+  }
+}
+
+
+function executeQuery(client: any, query: string): Promise<any> {
+  return new Promise((resolve, reject) => {
+    client.exec(query, (err: Error, result: any) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(result);
+      }
+    });
+  });
+}
+
+function prepareQuery(client: any, query: string): Promise<any> {
+  return new Promise((resolve, reject) => {
+    client.prepare(query, (err: Error, statement: any) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(statement);
+      }
+    });
+  });
+}
+
+function executeStatement(statement: any, params: any): Promise<any> {
+  return new Promise((resolve, reject) => {
+    statement.exec(params, (err: Error, res: any) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(res);
+      }
+    });
+  });
+}
 
 beforeAll(async () => {
   expect(process.env.HANA_HOST).toBeDefined();
   expect(process.env.HANA_PORT).toBeDefined();
   expect(process.env.HANA_UID).toBeDefined();
   expect(process.env.HANA_PWD).toBeDefined();
+  await connectToHANA();
 });
 
 afterAll(async () => {
   client.disconnect();
 });
 
-function dropTable(tableName: string) {
+async function dropTable(client: any, tableName: string) {
   try {
     const query = `DROP TABLE "${tableName}"`;
-    client.exec(query);
+    await executeQuery(client, query);
     // console.log(`Table ${tableName} dropped successfully.`);
   } catch (error) {
     // console.error(`Error dropping table ${tableName}:`, error);
   }
 }
 
-describe.skip("add documents and similarity search tests", () => {
+test("test initialization and table non-exist", async () => {
+  const tableNameTest = "TABLE_INITIALIZE";
+  const args: HanaDBArgs = {
+    connection: client,
+    tableName: tableNameTest,
+  };
+  const vectorStore = new HanaDB(embeddings, args);
+  expect(vectorStore).toBeDefined();
+  await dropTable(client, tableNameTest);
+  let result = await vectorStore.tableExists(tableNameTest);
+  expect(result).toEqual(false);
+  await vectorStore.initialize();
+  result = await vectorStore.tableExists(tableNameTest);
+  expect(result).toEqual(true);
+});
+
+describe("add documents and similarity search tests", () => {
   test("test fromText and default similarity search", async () => {
     const tableNameTest = "TEST_ADD_TEXT";
-    dropTable(tableNameTest);
+    await dropTable(client, tableNameTest);
     const args: HanaDBArgs = {
       connection: client,
       tableName: tableNameTest,
@@ -112,12 +184,13 @@ describe.skip("add documents and similarity search tests", () => {
 
   test("test addVector with provided embedding", async () => {
     const tableNameTest = "TEST_ADD_VEC_WITH_EMBEDDING";
-    dropTable(tableNameTest);
+    await dropTable(client, tableNameTest);
     const args: HanaDBArgs = {
       connection: client,
       tableName: tableNameTest,
     };
     const vectorStore = new HanaDB(embeddings, args);
+    await vectorStore.initialize();
     expect(vectorStore).toBeDefined();
     await vectorStore.addVectors(
       [
@@ -149,18 +222,19 @@ describe.skip("add documents and similarity search tests", () => {
         },
       ]
     );
-    expect(vectorStore.tableExists(tableNameTest)).toBe(true);
+    expect(await vectorStore.tableExists(tableNameTest)).toBe(true);
   });
 
   test("performs addDocument and user defined similarity search", async () => {
     const tableNameTest = "TEST_ADD_DOC";
-    dropTable(tableNameTest);
+    await dropTable(client, tableNameTest);
     const args: HanaDBArgs = {
       connection: client,
       tableName: tableNameTest,
       distanceStrategy: "euclidean",
     };
     const vectorStore = new HanaDB(embeddings, args);
+    await vectorStore.initialize();
     expect(vectorStore).toBeDefined();
     await vectorStore.addDocuments([
       {
@@ -230,7 +304,7 @@ describe.skip("add documents and similarity search tests", () => {
 
   test("performs max marginal relevance search", async () => {
     const tableNameTest = "TEST_MRR";
-    dropTable(tableNameTest);
+    await dropTable(client, tableNameTest);
     const args: HanaDBArgs = {
       connection: client,
       tableName: tableNameTest,
@@ -284,13 +358,14 @@ describe.skip("add documents and similarity search tests", () => {
 
   test("test query documents with specific metadata", async () => {
     const tableNameTest = "TEST_FILTER";
-    dropTable(tableNameTest);
+    await dropTable(client, tableNameTest);
     const args: HanaDBArgs = {
       connection: client,
       tableName: tableNameTest,
     };
     // client.connect(connectionParams);
     const vectorStore = new HanaDB(embeddings, args);
+    await vectorStore.initialize();
     expect(vectorStore).toBeDefined();
     const docs: Document[] = [
       {
@@ -384,7 +459,7 @@ describe.skip("add documents and similarity search tests", () => {
       connection: client,
       tableName: tableNameTest,
     };
-    dropTable(tableNameTest);
+    await dropTable(client, tableNameTest);
     const texts = ["foo", "bar", "baz"];
     const vectorDB = await HanaDB.fromTexts(texts, {}, embeddings, args);
 
@@ -403,7 +478,7 @@ describe.skip("add documents and similarity search tests", () => {
       tableName: tableNameTest,
       distanceStrategy: "euclidean",
     };
-    dropTable(tableNameTest);
+    await dropTable(client, tableNameTest);
     const texts = ["foo", "bar", "baz"];
     const vectorDB = await HanaDB.fromTexts(texts, {}, embeddings, args);
 
@@ -420,7 +495,7 @@ describe.skip("add documents and similarity search tests", () => {
       connection: client,
       tableName: tableNameTest,
     };
-    dropTable(tableNameTest);
+    await dropTable(client, tableNameTest);
     const texts = ["foo", "bar", "baz"];
     const vectorDB = await HanaDB.fromTexts(texts, {}, embeddings, args);
     const vector = await embeddings.embedQuery(texts[0]);
@@ -428,24 +503,21 @@ describe.skip("add documents and similarity search tests", () => {
       vector,
       1
     );
-    console.log(searchResult);
     expect(searchResult[0][0].pageContent).toEqual(texts[0]);
     expect(texts[1]).not.toEqual(searchResult[0][0].pageContent);
   });
 });
 
-describe.skip("Deletion tests", () => {
+describe("Deletion tests", () => {
   test("test hanavector delete called wrong", async () => {
     const tableNameTest = "TEST_TABLE_DELETE_FILTER_WRONG";
     const args: HanaDBArgs = {
       connection: client,
       tableName: tableNameTest,
     };
-    dropTable(tableNameTest);
     const texts = ["foo", "foo", "fox"];
+    await dropTable(client, tableNameTest);
     const vectorStore = await HanaDB.fromTexts(texts, {}, embeddings, args);
-
-    // Delete without filter parameter
     let exceptionOccurred = false;
     try {
       await vectorStore.delete({});
@@ -471,14 +543,16 @@ describe.skip("Deletion tests", () => {
 
   test("test delete documents with specific metadata", async () => {
     const tableNameTest = "DELETE_WITH_META";
-    dropTable(tableNameTest);
     const args: HanaDBArgs = {
       connection: client,
       tableName: tableNameTest,
     };
     // client.connect(connectionParams);
     const vectorStore = new HanaDB(embeddings, args);
+    await dropTable(client, tableNameTest);
+    await vectorStore.initialize();
     expect(vectorStore).toBeDefined();
+
     const docs: Document[] = [
       {
         pageContent: "foo",
@@ -490,59 +564,53 @@ describe.skip("Deletion tests", () => {
       },
     ];
     await vectorStore.addDocuments(docs);
-    const filterTest = { quality: "good" };
+    const filterTest = { end: 250 };
     await vectorStore.delete({ filter: filterTest });
-    const sql = `SELECT COUNT(*) AS row_count FROM "${args.tableName}" WHERE  JSON_VALUE(VEC_META, '$.quality') = 'good'`;
-    const stm = client.prepare(sql);
-    const resultSet = stm.execQuery();
-    while (resultSet.next()) {
-      const result = resultSet.getValue(0);
-      expect(result).toEqual(0);
-    }
+    const sql = `SELECT COUNT(*) AS ROW_COUNT FROM "${args.tableName}" WHERE  JSON_VALUE(VEC_META, '$.quality') = ?`;
+    const statement = await prepareQuery(client, sql);
+    const result = await executeStatement(statement, ["good"]);
+    expect(result[0].ROW_COUNT).toEqual(0);
   });
 
   test("test delete with empty filter", async () => {
     const tableNameTest = "TEST_DELETE_ALL";
     const texts = ["foo", "bar", "baz"];
-    dropTable(tableNameTest);
     const args: HanaDBArgs = {
       connection: client,
       tableName: tableNameTest,
     };
     // // client.connect(connectionParams);
+    await dropTable(client, tableNameTest);
     const vectorStore = await HanaDB.fromTexts(texts, [], embeddings, args);
     const filterTest = {};
     await vectorStore.delete({ filter: filterTest });
-    const sql = `SELECT COUNT(*) AS row_count FROM "${args.tableName}"`;
-    const stm = client.prepare(sql);
-    const resultSet = stm.execQuery();
-    while (resultSet.next()) {
-      const result = resultSet.getValue(0);
-      expect(result).toEqual(0);
-    }
+    const sql = `SELECT COUNT(*) AS ROW_COUNT FROM "${args.tableName}"`;
+    const result = await executeQuery(client, sql);
+    expect(result[0].ROW_COUNT).toEqual(0);
   });
 });
 
-describe.skip("Tests on HANA side", () => {
-  test("hanavector non existing table", () => {
+describe("Tests on HANA side", () => {
+  test("hanavector non existing table", async () => {
     const tableNameTest = "NON_EXISTING";
-    dropTable(tableNameTest);
+    await dropTable(client, tableNameTest);
     const args: HanaDBArgs = {
       connection: client,
       tableName: tableNameTest,
     };
     const vectordb = new HanaDB(embeddings, args);
-    expect(vectordb.tableExists(tableNameTest)).toBe(true);
+    await vectordb.initialize();
+    expect(await vectordb.tableExists(tableNameTest)).toBe(true);
   });
 
-  test("hanavector table with missing columns", () => {
+  test("hanavector table with missing columns", async () => {
     const tableNameTest = "EXISTING_MISSING_COLS";
 
     // Drop the table if it exists and create a new one with a wrong column
     // try {
-    dropTable(tableNameTest);
+    await dropTable(client, tableNameTest);
     const sqlStr = `CREATE TABLE ${tableNameTest} (WRONG_COL NVARCHAR(500));`;
-    client.execute(sqlStr);
+    await executeQuery(client, sqlStr);
     // } catch (error) {
     //   console.error("Error while setting up the table:", error);
     //   throw error;
@@ -556,7 +624,8 @@ describe.skip("Tests on HANA side", () => {
     };
     try {
       // eslint-disable-next-line no-new
-      new HanaDB(embeddings, args);
+      const vectordb = new HanaDB(embeddings, args);
+      await vectordb.initialize();
     } catch (error) {
       // An Error is expected here
       console.log(error);
@@ -567,21 +636,16 @@ describe.skip("Tests on HANA side", () => {
     expect(exceptionOccurred).toBe(true);
   });
 
-  test("hanavector table with wrong typed columns", () => {
+  test("hanavector table with wrong typed columns", async () => {
     const tableNameTest = "EXISTING_WRONG_TYPES";
     const contentColumnTest = "DOC_TEXT";
     const metadataColumnTest = "DOC_META";
     const vectorColumnTest = "DOC_VECTOR";
     // Drop the table if it exists and create a new one with a wrong column
-    try {
-      dropTable(tableNameTest);
-      const sqlStr = `CREATE TABLE ${tableNameTest} (${contentColumnTest} INTEGER, 
+    await dropTable(client, tableNameTest);
+    const sqlStr = `CREATE TABLE ${tableNameTest} (${contentColumnTest} INTEGER, 
         ${metadataColumnTest} INTEGER, ${vectorColumnTest} INTEGER);`;
-      client.execute(sqlStr);
-    } catch (error) {
-      console.error("Error while setting up the table:", error);
-      throw error;
-    }
+    await executeQuery(client, sqlStr);
 
     // Check if an error is raised when trying to create HanaDB instance
     let exceptionOccurred = false;
@@ -594,7 +658,8 @@ describe.skip("Tests on HANA side", () => {
     };
     try {
       // eslint-disable-next-line no-new
-      new HanaDB(embeddings, args);
+      const vectordb = new HanaDB(embeddings, args);
+      await vectordb.initialize();
     } catch (error) {
       // An Error is expected here
       console.log(error);
@@ -605,12 +670,12 @@ describe.skip("Tests on HANA side", () => {
     expect(exceptionOccurred).toBe(true);
   });
 
-  test("hanavector non existing table fixed vector length", () => {
+  test("hanavector non existing table fixed vector length", async () => {
     const tableNameTest = "NON_EXISTING";
     const vectorColumnTest = "MY_VECTOR";
     const vectorColumnLengthTest = 42;
     // Drop the table if it exists and create a new one with a wrong column
-    dropTable(tableNameTest);
+    await dropTable(client, tableNameTest);
     const args: HanaDBArgs = {
       connection: client,
       tableName: tableNameTest,
@@ -618,8 +683,9 @@ describe.skip("Tests on HANA side", () => {
       vectorColumnLength: vectorColumnLengthTest,
     };
     const vectorStore = new HanaDB(embeddings, args);
-    expect(vectorStore.tableExists(tableNameTest)).toBe(true);
-    vectorStore.checkColumn(
+    await vectorStore.initialize();
+    expect(await vectorStore.tableExists(tableNameTest)).toBe(true);
+    await vectorStore.checkColumn(
       tableNameTest,
       vectorColumnTest,
       "REAL_VECTOR",
@@ -630,7 +696,7 @@ describe.skip("Tests on HANA side", () => {
   test("test hanavector filter prepared statement params", async () => {
     const tableNameTest = "TEST_TABLE_FILTER_PARAM";
     // Delete table if it exists
-    dropTable(tableNameTest); // Assuming dropTable function is defined elsewhere
+    await dropTable(client, tableNameTest); // Assuming dropTable function is defined elsewhere
     const args: HanaDBArgs = {
       connection: client,
       tableName: tableNameTest,
@@ -654,56 +720,58 @@ describe.skip("Tests on HANA side", () => {
 
     // Query for JSON_VALUE(VEC_META, '$.start') = '100'
     let sqlStr = `SELECT * FROM ${tableNameTest} WHERE JSON_VALUE(VEC_META, '$.start') = '100'`;
-    let stm = client.prepare(sqlStr);
-    let resultSet = stm.execQuery();
-    let rowCount = resultSet.getRowCount();
-    expect(rowCount).toBe(1);
+    let result = await executeQuery(client, sqlStr);
+    expect(result.length).toBe(1);
+    // let stm = client.prepare(sqlStr);
+    // let resultSet = stm.execQuery();
+    // let rowCount = resultSet.getRowCount();
+    // expect(rowCount).toBe(1);
 
     // Using prepared statement parameter for query_value = 100
     const queryValue1 = 100;
     sqlStr = `SELECT * FROM ${tableNameTest} WHERE JSON_VALUE(VEC_META, '$.start') = ?`;
-    stm = client.prepare(sqlStr);
-    resultSet = stm.execQuery([queryValue1]);
-    rowCount = resultSet.getRowCount();
-    expect(rowCount).toBe(1);
+    // stm = client.prepare(sqlStr);
+    // resultSet = stm.execQuery([queryValue1]);
+    // rowCount = resultSet.getRowCount();
+    // expect(rowCount).toBe(1);
+    let stm = await prepareQuery(client, sqlStr);
+    result = await executeStatement(stm, [queryValue1.toString()]);
+    expect(result.length).toBe(1);
 
     // Query for JSON_VALUE(VEC_META, '$.quality') = 'good'
     sqlStr = `SELECT * FROM ${tableNameTest} WHERE JSON_VALUE(VEC_META, '$.quality') = 'good'`;
-    stm = client.prepare(sqlStr);
-    resultSet = stm.execQuery();
-    rowCount = resultSet.getRowCount();
-    expect(rowCount).toBe(1);
+    // stm = client.prepare(sqlStr);
+    // resultSet = stm.execQuery();
+    // rowCount = resultSet.getRowCount();
+    // expect(rowCount).toBe(1);
+    result = await executeQuery(client, sqlStr);
+    expect(result.length).toBe(1);
 
     // Using prepared statement parameter for query_value = "good"
     const queryValue2 = "good";
     sqlStr = `SELECT * FROM ${tableNameTest} WHERE JSON_VALUE(VEC_META, '$.quality') = ?`;
-    stm = client.prepare(sqlStr);
-    resultSet = stm.execQuery([queryValue2]);
-    rowCount = resultSet.getRowCount();
-    expect(rowCount).toBe(1);
+    stm = await prepareQuery(client, sqlStr);
+    result = await executeStatement(stm, [queryValue2]);
+    expect(result.length).toBe(1);
 
     // Query for JSON_VALUE(VEC_META, '$.ready') = false
     sqlStr = `SELECT * FROM ${tableNameTest} WHERE JSON_VALUE(VEC_META, '$.ready') = false`;
-    stm = client.prepare(sqlStr);
-    resultSet = stm.execQuery();
-    rowCount = resultSet.getRowCount();
-    expect(rowCount).toBe(1);
+    result = await executeQuery(client, sqlStr);
+    expect(result.length).toBe(1);
 
     // Using prepared statement parameter for query_value = "true"
     const queryValue3 = "true";
     sqlStr = `SELECT * FROM ${tableNameTest} WHERE JSON_VALUE(VEC_META, '$.ready') = ?`;
-    stm = client.prepare(sqlStr);
-    resultSet = stm.execQuery([queryValue3]);
-    rowCount = resultSet.getRowCount();
-    expect(rowCount).toBe(2);
+    stm = await prepareQuery(client, sqlStr);
+    result = await executeStatement(stm, [queryValue3]);
+    expect(result.length).toBe(2);
 
     // Using prepared statement parameter for query_value = "false"
     const queryValue4 = "false";
     sqlStr = `SELECT * FROM ${tableNameTest} WHERE JSON_VALUE(VEC_META, '$.ready') = ?`;
-    stm = client.prepare(sqlStr);
-    resultSet = stm.execQuery([queryValue4]);
-    rowCount = resultSet.getRowCount();
-    expect(rowCount).toBe(1);
+    stm = await prepareQuery(client, sqlStr);
+    result = await executeStatement(stm, [queryValue4]);
+    expect(result.length).toBe(1);
   });
 
   test("test hanavector table mixed case names", async () => {
@@ -711,7 +779,7 @@ describe.skip("Tests on HANA side", () => {
     const contentColumnTest = "TextColumn";
     const metadataColumnTest = "MetaColumn";
     const vectorColumnTest = "VectorColumn";
-    dropTable(tableNameTest);
+    await dropTable(client, tableNameTest);
     const args: HanaDBArgs = {
       connection: client,
       tableName: tableNameTest,
@@ -723,14 +791,15 @@ describe.skip("Tests on HANA side", () => {
     await HanaDB.fromTexts(texts, [], embeddings, args);
     // Check that embeddings have been created in the table
     const numberOfTexts = texts.length;
-    let numberOfRows = -1;
-    const sqlStr = `SELECT COUNT(*) FROM "${tableNameTest}"`;
-    const stm = client.prepare(sqlStr);
-    const resultSet = stm.execQuery();
-    while (resultSet.next()) {
-      numberOfRows = resultSet.getValue(0);
-      expect(numberOfRows).toBe(numberOfTexts);
-    }
+    const sqlStr = `SELECT COUNT(*) AS COUNT FROM "${tableNameTest}"`;
+    const result = await executeQuery(client, sqlStr);
+    expect(result[0].COUNT).toBe(numberOfTexts);
+    // const stm = client.prepare(sqlStr);
+    // const resultSet = stm.execQuery();
+    // while (resultSet.next()) {
+    //   numberOfRows = resultSet.getValue(0);
+    //   expect(numberOfRows).toBe(numberOfTexts);
+    // }
   });
 
   test("test invalid metadata keys", async () => {
@@ -739,7 +808,7 @@ describe.skip("Tests on HANA side", () => {
       connection: client,
       tableName: tableNameTest,
     };
-    dropTable(tableNameTest);
+    await dropTable(client, tableNameTest);
     const invalidMetadatas1 = [
       { "sta rt": 0, end: 100, quality: "good", ready: true },
     ];
@@ -782,7 +851,7 @@ describe.skip("Tests on HANA side", () => {
       connection: client,
       tableName: tableNameTest,
     };
-    dropTable(tableNameTest);
+    await dropTable(client, tableNameTest);
     let exceptionOccurred = false;
     const vector = await HanaDB.fromTexts(
       ["foo", "bar", "baz"],
