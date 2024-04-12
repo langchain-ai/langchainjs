@@ -113,10 +113,6 @@ export class Friendli extends LLM<BaseLLMCallOptions> {
     if (!this.friendliToken) {
       throw new Error("Missing Friendli Token");
     }
-
-    if (!this.friendliTeam) {
-      throw new Error("Missing Friendli Team");
-    }
   }
 
   _llmType() {
@@ -154,9 +150,7 @@ export class Friendli extends LLM<BaseLLMCallOptions> {
           "Content-Type": "application/json",
           Accept: "application/json",
           Authorization: `Bearer ${this.friendliToken}`,
-          ...(this.friendliTeam
-            ? { "X-Friendli-Team": this.friendliTeam }
-            : {}),
+          "X-Friendli-Team": this.friendliTeam ?? "",
         },
         body: JSON.stringify({
           prompt,
@@ -208,9 +202,7 @@ export class Friendli extends LLM<BaseLLMCallOptions> {
           "Content-Type": "application/json",
           Accept: "text/event-stream",
           Authorization: `Bearer ${this.friendliToken}`,
-          ...(this.friendliTeam
-            ? { "X-Friendli-Team": this.friendliTeam }
-            : {}),
+          "X-Friendli-Team": this.friendliTeam ?? "",
         },
         body: JSON.stringify({
           prompt,

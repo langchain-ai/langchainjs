@@ -203,10 +203,6 @@ export class ChatFriendli extends BaseChatModel<BaseChatModelCallOptions> {
     if (!this.friendliToken) {
       throw new Error("Missing Friendli Token");
     }
-
-    if (!this.friendliTeam) {
-      throw new Error("Missing Friendli Team");
-    }
   }
 
   _llmType() {
@@ -259,9 +255,7 @@ export class ChatFriendli extends BaseChatModel<BaseChatModelCallOptions> {
           "Content-Type": "application/json",
           Accept: "application/json",
           Authorization: `Bearer ${this.friendliToken}`,
-          ...(this.friendliTeam
-            ? { "X-Friendli-Team": this.friendliTeam }
-            : {}),
+          "X-Friendli-Team": this.friendliTeam ?? "",
         },
         body: JSON.stringify({
           messages: messageList,
@@ -328,9 +322,7 @@ export class ChatFriendli extends BaseChatModel<BaseChatModelCallOptions> {
           "Content-Type": "application/json",
           Accept: "text/event-stream",
           Authorization: `Bearer ${this.friendliToken}`,
-          ...(this.friendliTeam
-            ? { "X-Friendli-Team": this.friendliTeam }
-            : {}),
+          "X-Friendli-Team": this.friendliTeam ?? "",
         },
         body: JSON.stringify({
           messages: messageList,
