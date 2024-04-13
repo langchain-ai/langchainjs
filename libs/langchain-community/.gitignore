@@ -118,6 +118,10 @@ embeddings/alibaba_tongyi.cjs
 embeddings/alibaba_tongyi.js
 embeddings/alibaba_tongyi.d.ts
 embeddings/alibaba_tongyi.d.cts
+embeddings/baidu_qianfan.cjs
+embeddings/baidu_qianfan.js
+embeddings/baidu_qianfan.d.ts
+embeddings/baidu_qianfan.d.cts
 embeddings/bedrock.cjs
 embeddings/bedrock.js
 embeddings/bedrock.d.ts
@@ -342,6 +346,10 @@ vectorstores/hnswlib.cjs
 vectorstores/hnswlib.js
 vectorstores/hnswlib.d.ts
 vectorstores/hnswlib.d.cts
+vectorstores/hanavector.cjs
+vectorstores/hanavector.js
+vectorstores/hanavector.d.ts
+vectorstores/hanavector.d.cts
 vectorstores/lancedb.cjs
 vectorstores/lancedb.js
 vectorstores/lancedb.d.ts

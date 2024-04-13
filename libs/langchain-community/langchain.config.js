@@ -59,6 +59,7 @@ export const config = {
     "agents/toolkits/connery": "agents/toolkits/connery/index",
     // embeddings
     "embeddings/alibaba_tongyi": "embeddings/alibaba_tongyi",
+    "embeddings/baidu_qianfan": "embeddings/baidu_qianfan",
     "embeddings/bedrock": "embeddings/bedrock",
     "embeddings/cloudflare_workersai": "embeddings/cloudflare_workersai",
     "embeddings/cohere": "embeddings/cohere",
@@ -117,6 +118,7 @@ export const config = {
     "vectorstores/faiss": "vectorstores/faiss",
     "vectorstores/googlevertexai": "vectorstores/googlevertexai",
     "vectorstores/hnswlib": "vectorstores/hnswlib",
+    "vectorstores/hanavector": "vectorstores/hanavector",
     "vectorstores/lancedb": "vectorstores/lancedb",
     "vectorstores/milvus": "vectorstores/milvus",
     "vectorstores/momento_vector_index": "vectorstores/momento_vector_index",
@@ -287,6 +289,7 @@ export const config = {
     "vectorstores/faiss",
     "vectorstores/googlevertexai",
     "vectorstores/hnswlib",
+    "vectorstores/hanavector",
     "vectorstores/lancedb",
     "vectorstores/milvus",
     "vectorstores/momento_vector_index",

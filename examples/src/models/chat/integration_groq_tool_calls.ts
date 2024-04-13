@@ -17,7 +17,7 @@ function getCurrentWeather(location: string, _unit?: string) {
 
 // Bind function to the model as a tool
 const chat = new ChatGroq({
-  modelName: "mixtral-8x7b-32768",
+  model: "mixtral-8x7b-32768",
   maxTokens: 128,
 }).bind({
   tools: [

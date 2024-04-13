@@ -8,14 +8,26 @@ import { Tool, ToolParams } from "@langchain/core/tools";
 export interface DallEAPIWrapperParams extends ToolParams {
   /**
    * The OpenAI API key
+   * Alias for `apiKey`
    */
   openAIApiKey?: string;
+  /**
+   * The OpenAI API key
+   */
+  apiKey?: string;
+  /**
+   * The model to use.
+   * Alias for `model`
+   * @params "dall-e-2" | "dall-e-3"
+   * @default "dall-e-3"
+   */
+  modelName?: string;
   /**
    * The model to use.
    * @params "dall-e-2" | "dall-e-3"
    * @default "dall-e-3"
    */
-  modelName?: string;
+  model?: string;
   /**
    * The style of the generated images. Must be one of vivid or natural.
    * Vivid causes the model to lean towards generating hyper-real and dramatic images.
@@ -77,7 +89,7 @@ export class DallEAPIWrapper extends Tool {
 
   static readonly toolName = "dalle_api_wrapper";
 
-  private modelName = "dall-e-3";
+  private model = "dall-e-3";
 
   private style: "natural" | "vivid" = "vivid";
 
@@ -99,7 +111,9 @@ export class DallEAPIWrapper extends Tool {
   constructor(fields?: DallEAPIWrapperParams) {
     super(fields);
     const openAIApiKey =
-      fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
+      fields?.apiKey ??
+      fields?.openAIApiKey ??
+      getEnvironmentVariable("OPENAI_API_KEY");
 
     const organization =
       fields?.organization ?? getEnvironmentVariable("OPENAI_ORGANIZATION");
@@ -110,7 +124,7 @@ export class DallEAPIWrapper extends Tool {
       dangerouslyAllowBrowser: true,
     };
     this.client = new OpenAIClient(clientConfig);
-    this.modelName = fields?.modelName ?? this.modelName;
+    this.model = fields?.model ?? fields?.modelName ?? this.model;
     this.style = fields?.style ?? this.style;
     this.quality = fields?.quality ?? this.quality;
     this.n = fields?.n ?? this.n;
@@ -122,7 +136,7 @@ export class DallEAPIWrapper extends Tool {
   /** @ignore */
   async _call(input: string): Promise<string> {
     const response = await this.client.images.generate({
-      model: this.modelName,
+      model: this.model,
       prompt: input,
       n: this.n,
       size: this.size,

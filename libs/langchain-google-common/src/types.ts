@@ -48,9 +48,12 @@ export interface GoogleAISafetySetting {
 }
 
 export interface GoogleAIModelParams {
-  /** @deprecated Prefer `modelName` */
-  model?: string;
   /** Model to use */
+  model?: string;
+  /**
+   * Model to use
+   * Alias for `model`
+   */
   modelName?: string;
 
   /** Sampling temperature to use */

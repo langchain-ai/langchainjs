@@ -9,11 +9,11 @@ const prompt = PromptTemplate.fromTemplate(
 
 const badModel = new OpenAI({
   maxRetries: 0,
-  modelName: "gpt-3.5-turbo-instruct",
+  model: "gpt-3.5-turbo-instruct",
 });
 
 const normalModel = new ChatOpenAI({
-  modelName: "gpt-4",
+  model: "gpt-4",
 });
 
 const outputParser = StructuredOutputParser.fromZodSchema(

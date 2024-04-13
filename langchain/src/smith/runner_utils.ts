@@ -541,7 +541,7 @@ const applyEvaluators = async ({
   for (let i = 0; i < runs.length; i += 1) {
     const run = runs[i];
     const example = examples[i];
-    const evaluatorResults = await Promise.all(
+    const evaluatorResults = await Promise.allSettled(
       evaluators.map((evaluator) =>
         client.evaluateRun(run, evaluator, {
           referenceExample: example,
@@ -555,7 +555,9 @@ const applyEvaluators = async ({
         run?.end_time && run.start_time
           ? run.end_time - run.start_time
           : undefined,
-      feedback: evaluatorResults,
+      feedback: evaluatorResults.map((evalResult) =>
+        evalResult.status === "fulfilled" ? evalResult.value : evalResult.reason
+      ),
       run_id: run.id,
     };
   }

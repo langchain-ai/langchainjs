@@ -53,6 +53,7 @@
   "../../langchain/src/vectorstores/chroma.ts",
   "../../langchain/src/vectorstores/googlevertexai.ts",
   "../../langchain/src/vectorstores/hnswlib.ts",
+  "../../langchain/src/vectorstores/hanavector.ts",
   "../../langchain/src/vectorstores/faiss.ts",
   "../../langchain/src/vectorstores/weaviate.ts",
   "../../langchain/src/vectorstores/lancedb.ts",

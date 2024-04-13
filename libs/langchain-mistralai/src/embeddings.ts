@@ -15,9 +15,15 @@ export interface MistralAIEmbeddingsParams extends EmbeddingsParams {
   apiKey?: string;
   /**
    * The name of the model to use.
+   * Alias for `model`.
    * @default {"mistral-embed"}
    */
   modelName?: string;
+  /**
+   * The name of the model to use.
+   * @default {"mistral-embed"}
+   */
+  model?: string;
   /**
    * The format of the output data.
    * @default {"float"}
@@ -49,6 +55,8 @@ export class MistralAIEmbeddings
 {
   modelName = "mistral-embed";
 
+  model = "mistral-embed";
+
   encodingFormat = "float";
 
   batchSize = 512;
@@ -67,7 +75,8 @@ export class MistralAIEmbeddings
     }
     this.apiKey = apiKey;
     this.endpoint = fields?.endpoint;
-    this.modelName = fields?.modelName ?? this.modelName;
+    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
+    this.model = this.modelName;
     this.encodingFormat = fields?.encodingFormat ?? this.encodingFormat;
     this.batchSize = fields?.batchSize ?? this.batchSize;
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
@@ -129,7 +138,7 @@ export class MistralAIEmbeddings
     const client = new MistralClient(this.apiKey, this.endpoint);
     return this.caller.call(async () => {
       const res = await client.embeddings({
-        model: this.modelName,
+        model: this.model,
         input,
       });
       return res;

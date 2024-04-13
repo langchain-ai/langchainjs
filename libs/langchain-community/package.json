@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.0.44",
+  "version": "0.0.48",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -15,7 +15,7 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-community/",
   "scripts": {
     "build": "yarn run build:deps && yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
-    "build:deps": "yarn run turbo:command build --filter=@langchain/core --filter=@langchain/anthropic --filter=@langchain/openai --concurrency=1",
+    "build:deps": "yarn run turbo:command build --filter=@langchain/core --filter=@langchain/openai --concurrency=1",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rm -rf dist/tests dist/**/tests",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rm -rf dist-cjs",
     "build:watch": "yarn create-entrypoints && tsc --outDir dist/ --watch",
@@ -39,8 +39,8 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1.44",
-    "@langchain/openai": "~0.0.19",
+    "@langchain/core": "~0.1.56",
+    "@langchain/openai": "~0.0.28",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
     "langsmith": "~0.1.1",
@@ -63,7 +63,7 @@
     "@clickhouse/client": "^0.2.5",
     "@cloudflare/ai": "^1.0.12",
     "@cloudflare/workers-types": "^4.20230922.0",
-    "@datastax/astra-db-ts": "^0.1.4",
+    "@datastax/astra-db-ts": "^1.0.0",
     "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
@@ -145,6 +145,7 @@
     "google-auth-library": "^8.9.0",
     "googleapis": "^126.0.1",
     "graphql": "^16.6.0",
+    "hdb": "0.19.8",
     "hnswlib-node": "^3.0.0",
     "html-to-text": "^9.0.5",
     "interface-datastore": "^8.2.11",
@@ -193,7 +194,7 @@
     "@azure/search-documents": "^12.0.0",
     "@clickhouse/client": "^0.2.5",
     "@cloudflare/ai": "*",
-    "@datastax/astra-db-ts": "^0.1.4",
+    "@datastax/astra-db-ts": "^1.0.0",
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-js": "^0.9.0",
@@ -822,6 +823,15 @@
       "import": "./embeddings/alibaba_tongyi.js",
       "require": "./embeddings/alibaba_tongyi.cjs"
     },
+    "./embeddings/baidu_qianfan": {
+      "types": {
+        "import": "./embeddings/baidu_qianfan.d.ts",
+        "require": "./embeddings/baidu_qianfan.d.cts",
+        "default": "./embeddings/baidu_qianfan.d.ts"
+      },
+      "import": "./embeddings/baidu_qianfan.js",
+      "require": "./embeddings/baidu_qianfan.cjs"
+    },
     "./embeddings/bedrock": {
       "types": {
         "import": "./embeddings/bedrock.d.ts",
@@ -1325,6 +1335,15 @@
       },
       "import": "./vectorstores/hnswlib.js",
       "require": "./vectorstores/hnswlib.cjs"
+    },
+    "./vectorstores/hanavector": {
+      "types": {
+        "import": "./vectorstores/hanavector.d.ts",
+        "require": "./vectorstores/hanavector.d.cts",
+        "default": "./vectorstores/hanavector.d.ts"
+      },
+      "import": "./vectorstores/hanavector.js",
+      "require": "./vectorstores/hanavector.cjs"
     },
     "./vectorstores/lancedb": {
       "types": {
@@ -2377,6 +2396,10 @@
     "embeddings/alibaba_tongyi.js",
     "embeddings/alibaba_tongyi.d.ts",
     "embeddings/alibaba_tongyi.d.cts",
+    "embeddings/baidu_qianfan.cjs",
+    "embeddings/baidu_qianfan.js",
+    "embeddings/baidu_qianfan.d.ts",
+    "embeddings/baidu_qianfan.d.cts",
     "embeddings/bedrock.cjs",
     "embeddings/bedrock.js",
     "embeddings/bedrock.d.ts",
@@ -2601,6 +2624,10 @@
     "vectorstores/hnswlib.js",
     "vectorstores/hnswlib.d.ts",
     "vectorstores/hnswlib.d.cts",
+    "vectorstores/hanavector.cjs",
+    "vectorstores/hanavector.js",
+    "vectorstores/hanavector.d.ts",
+    "vectorstores/hanavector.d.cts",
     "vectorstores/lancedb.cjs",
     "vectorstores/lancedb.js",
     "vectorstores/lancedb.d.ts",

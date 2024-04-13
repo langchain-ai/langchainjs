@@ -1,26 +1,19 @@
 import type { OpenAIClient } from "@langchain/openai";
-import { AgentAction, AgentFinish, AgentStep } from "@langchain/core/agents";
+import { AgentAction, AgentFinish } from "@langchain/core/agents";
 import { BaseMessage, isBaseMessage } from "@langchain/core/messages";
 import { ChatGeneration } from "@langchain/core/outputs";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { AgentMultiActionOutputParser } from "../types.js";
+import {
+  ToolsAgentAction,
+  ToolsAgentStep,
+} from "../tool_calling/output_parser.js";
 
-/**
- * Type that represents an agent action with an optional message log.
- */
-export type ToolsAgentAction = AgentAction & {
-  toolCallId: string;
-  messageLog?: BaseMessage[];
-};
-
-export type ToolsAgentStep = AgentStep & {
-  action: ToolsAgentAction;
-};
+export type { ToolsAgentAction, ToolsAgentStep };
 
 /**
  * @example
  * ```typescript
- *
  * const prompt = ChatPromptTemplate.fromMessages([
  *   ["ai", "You are a helpful assistant"],
  *   ["human", "{input}"],
@@ -45,7 +38,6 @@ export type ToolsAgentStep = AgentStep & {
  *   input:
  *     "What is the sum of the current temperature in San Francisco, New York, and Tokyo?",
  * });
- *
  * ```
  */
 export class OpenAIToolsAgentOutputParser extends AgentMultiActionOutputParser {

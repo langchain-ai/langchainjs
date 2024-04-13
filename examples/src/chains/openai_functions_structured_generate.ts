@@ -31,7 +31,7 @@ const prompt = new ChatPromptTemplate({
   inputVariables: ["inputText"],
 });
 
-const llm = new ChatOpenAI({ modelName: "gpt-3.5-turbo-0613", temperature: 1 });
+const llm = new ChatOpenAI({ model: "gpt-3.5-turbo-0613", temperature: 1 });
 
 const chain = createStructuredOutputChainFromZod(zodSchema, {
   prompt,
