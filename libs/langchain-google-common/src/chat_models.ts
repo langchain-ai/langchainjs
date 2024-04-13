@@ -76,8 +76,23 @@ class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   }
 
   get computeUseSystemInstruction(): boolean {
-    // FIXME - compute this based on... model? Platform? something?
-    return false;
+    // This works on models from April 2024 and later
+    //   Vertex AI: gemini-1.5-pro and gemini-1.0-002 and later
+    //   AI Studio: gemini-1.5-pro-latest
+    console.log('computeUseSystemInstruction', this.modelFamily, this.modelName, this.platform);
+    if (this.modelFamily === "palm") {
+      return false;
+    } else if (this.modelName === "gemini-1.0-pro-001") {
+      return false;
+    } else if (this.modelName.startsWith("gemini-pro-vision")) {
+      return false;
+    } else if (this.modelName.startsWith("gemini-1.0-pro-vision")) {
+      return false;
+    } else if (this.modelName === "gemini-pro" && this.platform === "gai") {
+      // on AI Studio gemini-pro is still pointing at gemini-1.0-pro-001
+      return false;
+    }
+    return true;
   }
 
   formatContents(
@@ -92,7 +107,6 @@ class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
         // Filter out the system content, since those don't belong
         // in the actual content.
         const hasNoSystem = cur.every(content => content.role !== "system");
-        console.log('hasNoSystem', hasNoSystem, cur);
         return hasNoSystem ? [...acc, ...cur] : acc;
       }, []);
   }
@@ -156,7 +170,8 @@ export abstract class ChatGoogleBase<AuthOptions>
 
   lc_serializable = true;
 
-  model = "gemini-pro";
+  // Set based on modelName
+  model: string;
 
   modelName = "gemini-pro";
 

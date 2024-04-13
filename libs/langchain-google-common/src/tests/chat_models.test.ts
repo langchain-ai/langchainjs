@@ -238,10 +238,10 @@ describe("Mock ChatGoogle", () => {
     expect(aiMessage.content).toBe("T");
   });
 
-  // The default model does not support systemInstruction, so
+  // The older models don't support systemInstruction, so
   // SystemMessages will be turned into the human request with the prompt
   // from the system message and a faked ai response saying "Ok".
-  test("1. System request format default", async () => {
+  test("1. System request format old model", async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
@@ -252,6 +252,7 @@ describe("Mock ChatGoogle", () => {
     };
     const model = new ChatGoogle({
       authOptions,
+      modelName: "gemini-1.0-pro-001",
     });
     const messages: BaseMessageLike[] = [
       new SystemMessage(
