@@ -39,9 +39,11 @@ import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { z } from "zod";
 import {
   Runnable,
+  RunnableBatchOptions,
   RunnableInterface,
   RunnablePassthrough,
   RunnableSequence,
+  getCallbackManagerForConfig,
 } from "@langchain/core/runnables";
 import {
   JsonOutputParser,
@@ -255,6 +257,10 @@ export interface ChatOpenAICallOptions
   response_format?: { type: "json_object" };
   seed?: number;
   n?: number;
+}
+
+export interface ChatOpenAIBatchOptions extends RunnableBatchOptions {
+  preferSingleRequests?: boolean;
 }
 
 /**
@@ -631,25 +637,119 @@ export class ChatOpenAI<
 
   async batch(
     inputs: BaseLanguageModelInput[],
-    options?: CallOptions
-  ): Promise<BaseMessageChunk[]> {
+    options?: Partial<CallOptions> | Partial<CallOptions>[],
+    batchOptions?: ChatOpenAIBatchOptions & { returnExceptions?: false }
+  ): Promise<BaseMessageChunk[]>;
+
+  async batch(
+    inputs: BaseLanguageModelInput[],
+    options?: Partial<CallOptions> | Partial<CallOptions>[],
+    batchOptions?: ChatOpenAIBatchOptions & { returnExceptions: true }
+  ): Promise<(BaseMessageChunk | Error)[]>;
+
+  async batch(
+    inputs: BaseLanguageModelInput[],
+    options?: Partial<CallOptions> | Partial<CallOptions>[],
+    batchOptions?: ChatOpenAIBatchOptions
+  ): Promise<(BaseMessageChunk | Error)[]>;
+
+  async batch(
+    inputs: BaseLanguageModelInput[],
+    options?: Partial<CallOptions> | Partial<CallOptions>[],
+    batchOptions?: ChatOpenAIBatchOptions
+  ): Promise<(BaseMessageChunk | Error)[]> {
+    if (!batchOptions?.preferSingleRequests || Array.isArray(options)) {
+      return super.batch(inputs, options, batchOptions);
+    }
     const promptValues = inputs.map((i) =>
       BaseChatModel._convertInputToPromptValue(i)
     );
-
     const promptValueStrings = promptValues.map((p) => p.toString());
-    if (promptValueStrings.every((p) => p === promptValueStrings[0])) {
-      const result = await this.generatePrompt(
-        [promptValues[0]],
-        { ...options, n: inputs.length } as CallOptions,
-        options?.callbacks
-      );
-      // TODO: Remove cast after figuring out inheritance
-      const chatGenerations = result.generations[0] as ChatGeneration[];
-      return chatGenerations.map((g) => g.message as BaseMessageChunk);
-    } else {
-      return super.batch(inputs, options);
+    if (!promptValueStrings.every((p) => p === promptValueStrings[0])) {
+      return super.batch(inputs, options, batchOptions);
     }
+    const maxConcurrency =
+      options?.maxConcurrency ?? batchOptions?.maxConcurrency ?? inputs.length;
+    const batchCount = Math.ceil(inputs.length / maxConcurrency);
+    const results: (BaseMessageChunk | Error)[] = [];
+    for (let i = 0; i < batchCount; i += 1) {
+      const concurrency = Math.min(
+        inputs.length - results.length,
+        maxConcurrency
+      );
+      const optionsList = this._getOptionsList(options ?? {}, concurrency);
+      const callbackManagers = await Promise.all(
+        optionsList.map(getCallbackManagerForConfig)
+      );
+      const runManagers = await Promise.all(
+        callbackManagers.map(async (callbackManager, j) => {
+          const handleStartRes = await callbackManager?.handleChatModelStart(
+            this.toJSON(),
+            [promptValues[0].toChatMessages()],
+            optionsList[j].runId,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            optionsList[j].runName ?? this.getName()
+          );
+          delete optionsList[j].runId;
+          return handleStartRes;
+        })
+      );
+      try {
+        const { generations, llmOutput } = await this._generateNonStreaming(
+          promptValues[0].toChatMessages(),
+          { ...options, n: concurrency } as CallOptions
+        );
+        results.push(
+          ...generations.map(
+            (generation) => generation.message as BaseMessageChunk
+          )
+        );
+        await Promise.all(
+          runManagers.map((subRunManagers, j) =>
+            (subRunManagers ?? []).map((runManager) => {
+              if (j === 0) {
+                return runManager.handleLLMEnd({
+                  generations: [generations],
+                  llmOutput,
+                });
+              }
+              return runManager.handleLLMEnd({
+                generations: [generations],
+                llmOutput: {
+                  ...llmOutput,
+                  tokenUsage: {
+                    promptTokens: 0,
+                    completionTokens: 0,
+                    totalTokens: 0,
+                  },
+                },
+              });
+            })
+          )
+        );
+      } catch (e) {
+        await Promise.all(
+          runManagers.map((subRunManagers) =>
+            Promise.all(
+              (subRunManagers ?? []).map((runManager) =>
+                runManager?.handleLLMError(e)
+              )
+            )
+          )
+        );
+        if (batchOptions?.returnExceptions) {
+          for (let j = 0; j < concurrency; j += 1) {
+            results.push(e as Error);
+          }
+        } else {
+          throw e;
+        }
+      }
+    }
+    return results;
   }
 
   /** @ignore */
@@ -660,8 +760,6 @@ export class ChatOpenAI<
   ): Promise<ChatResult> {
     const tokenUsage: TokenUsage = {};
     const params = this.invocationParams(options);
-    const messagesMapped: OpenAICompletionParam[] =
-      convertMessagesToOpenAIParams(messages);
 
     if (params.stream) {
       const stream = this._streamResponseChunks(messages, options, runManager);
@@ -702,56 +800,67 @@ export class ChatOpenAI<
       tokenUsage.totalTokens = promptTokenUsage + completionTokenUsage;
       return { generations, llmOutput: { estimatedTokenUsage: tokenUsage } };
     } else {
-      const data = await this.completionWithRetry(
-        {
-          ...params,
-          stream: false,
-          messages: messagesMapped,
-        },
-        {
-          signal: options?.signal,
-          ...options?.options,
-        }
-      );
-      const {
-        completion_tokens: completionTokens,
-        prompt_tokens: promptTokens,
-        total_tokens: totalTokens,
-      } = data?.usage ?? {};
-
-      if (completionTokens) {
-        tokenUsage.completionTokens =
-          (tokenUsage.completionTokens ?? 0) + completionTokens;
-      }
-
-      if (promptTokens) {
-        tokenUsage.promptTokens = (tokenUsage.promptTokens ?? 0) + promptTokens;
-      }
-
-      if (totalTokens) {
-        tokenUsage.totalTokens = (tokenUsage.totalTokens ?? 0) + totalTokens;
-      }
-
-      const generations: ChatGeneration[] = [];
-      for (const part of data?.choices ?? []) {
-        const text = part.message?.content ?? "";
-        const generation: ChatGeneration = {
-          text,
-          message: openAIResponseToChatMessage(
-            part.message ?? { role: "assistant" }
-          ),
-        };
-        generation.generationInfo = {
-          ...(part.finish_reason ? { finish_reason: part.finish_reason } : {}),
-          ...(part.logprobs ? { logprobs: part.logprobs } : {}),
-        };
-        generations.push(generation);
-      }
-      return {
-        generations,
-        llmOutput: { tokenUsage },
-      };
+      return this._generateNonStreaming(messages, options);
     }
+  }
+
+  private async _generateNonStreaming(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"]
+  ) {
+    const tokenUsage: TokenUsage = {};
+    const params = this.invocationParams(options);
+    const messagesMapped: OpenAICompletionParam[] =
+      convertMessagesToOpenAIParams(messages);
+    const data = await this.completionWithRetry(
+      {
+        ...params,
+        stream: false,
+        messages: messagesMapped,
+      },
+      {
+        signal: options?.signal,
+        ...options?.options,
+      }
+    );
+    const {
+      completion_tokens: completionTokens,
+      prompt_tokens: promptTokens,
+      total_tokens: totalTokens,
+    } = data?.usage ?? {};
+
+    if (completionTokens) {
+      tokenUsage.completionTokens =
+        (tokenUsage.completionTokens ?? 0) + completionTokens;
+    }
+
+    if (promptTokens) {
+      tokenUsage.promptTokens = (tokenUsage.promptTokens ?? 0) + promptTokens;
+    }
+
+    if (totalTokens) {
+      tokenUsage.totalTokens = (tokenUsage.totalTokens ?? 0) + totalTokens;
+    }
+
+    const generations: ChatGeneration[] = [];
+    for (const part of data?.choices ?? []) {
+      const text = part.message?.content ?? "";
+      const generation: ChatGeneration = {
+        text,
+        message: openAIResponseToChatMessage(
+          part.message ?? { role: "assistant" }
+        ),
+      };
+      generation.generationInfo = {
+        ...(part.finish_reason ? { finish_reason: part.finish_reason } : {}),
+        ...(part.logprobs ? { logprobs: part.logprobs } : {}),
+      };
+      generations.push(generation);
+    }
+    return {
+      generations,
+      llmOutput: { tokenUsage },
+    };
   }
 
   /**
@@ -1175,4 +1284,15 @@ function isStructuredOutputMethodParams(
     typeof (x as StructuredOutputMethodParams<Record<string, any>>).schema ===
       "object"
   );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function _coerceToDict(value: any, defaultKey: string) {
+  return value &&
+    !Array.isArray(value) &&
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    !(value instanceof Date) &&
+    typeof value === "object"
+    ? value
+    : { [defaultKey]: value };
 }

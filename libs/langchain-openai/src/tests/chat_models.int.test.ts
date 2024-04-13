@@ -106,15 +106,20 @@ test("Test ChatOpenAI batch sends prompt to API with n option if prompts are the
     maxTokens: 10,
   });
 
-  const generatePromptSpy = jest.spyOn(model, "generatePrompt");
-  const res = await model.batch([
-    [new HumanMessage("Hello!")],
-    [new HumanMessage("Hello!")],
-  ]);
+  const completionSpy = jest.spyOn(model, "completionWithRetry");
+  const res = await model.batch(
+    [
+      [new HumanMessage("Hello!")],
+      [new HumanMessage("Hello!")],
+      [new HumanMessage("Hello!")],
+    ],
+    undefined,
+    { preferSingleRequests: true }
+  );
   console.log(res);
-  expect(res).toHaveLength(2);
+  expect(res).toHaveLength(3);
 
-  expect(generatePromptSpy).toHaveBeenCalledTimes(1);
+  expect(completionSpy).toHaveBeenCalledTimes(1);
 });
 
 test("Test ChatOpenAI batch sends prompt to API in separate requests if prompts are different", async () => {
@@ -124,7 +129,7 @@ test("Test ChatOpenAI batch sends prompt to API in separate requests if prompts 
     maxTokens: 10,
   });
 
-  const generatePromptSpy = jest.spyOn(model, "generatePrompt");
+  const completionSpy = jest.spyOn(model, "completionWithRetry");
   const res = await model.batch([
     [new HumanMessage("Hello!")],
     [new HumanMessage("Hi")],
@@ -132,7 +137,7 @@ test("Test ChatOpenAI batch sends prompt to API in separate requests if prompts 
   console.log(res);
   expect(res).toHaveLength(2);
 
-  expect(generatePromptSpy).toHaveBeenCalledTimes(2);
+  expect(completionSpy).toHaveBeenCalledTimes(2);
 });
 
 test("Test ChatOpenAI in streaming mode", async () => {
