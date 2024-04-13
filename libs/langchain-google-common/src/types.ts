@@ -89,6 +89,8 @@ export interface GoogleAIModelParams {
   stopSequences?: string[];
 
   safetySettings?: GoogleAISafetySetting[];
+
+  convertSystemMessageToHumanContent?: boolean;
 }
 
 /**
@@ -172,9 +174,8 @@ export interface GeminiSafetyRating {
   probability: string;
 }
 
-export type GeminiRole = "user" | "model" | "function";
-
-// Vertex AI requires the role
+// The "system" content appears to only be valid in the systemInstruction
+export type GeminiRole = "system" | "user" | "model" | "function";
 
 export interface GeminiContent {
   parts: GeminiPart[];
@@ -221,6 +222,7 @@ export interface GeminiGenerationConfig {
 
 export interface GeminiRequest {
   contents?: GeminiContent[];
+  systemInstruction?: GeminiContent;
   tools?: GeminiTool[];
   safetySettings?: GeminiSafetySetting[];
   generationConfig?: GeminiGenerationConfig;

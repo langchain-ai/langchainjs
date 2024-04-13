@@ -22,6 +22,7 @@ import {
 import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
 import { isStructuredTool } from "@langchain/core/utils/function_calling";
+import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { StructuredToolInterface } from "@langchain/core/tools";
 import {
   GoogleAIBaseLLMInput,
@@ -60,14 +61,54 @@ class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   BaseMessage[],
   AuthOptions
 > {
+
+  convertSystemMessageToHumanContent: boolean | undefined;
+
+  constructor(fields: GoogleAIBaseLLMInput<AuthOptions> | undefined, caller: AsyncCaller, client: GoogleAbstractedClient, streaming: boolean) {
+    super(fields, caller, client, streaming);
+    this.convertSystemMessageToHumanContent = fields?.convertSystemMessageToHumanContent;
+  }
+
+  get useSystemInstruction(): boolean {
+    return typeof this.convertSystemMessageToHumanContent === "boolean"
+      ? !this.convertSystemMessageToHumanContent
+      : this.computeUseSystemInstruction;
+  }
+
+  get computeUseSystemInstruction(): boolean {
+    // FIXME - compute this based on... model? Platform? something?
+    return false;
+  }
+
   formatContents(
     input: BaseMessage[],
     _parameters: GoogleAIModelParams
   ): GeminiContent[] {
     return input
-      .map((msg, i) => baseMessageToContent(msg, input[i - 1]))
-      .reduce((acc, cur) => [...acc, ...cur]);
+      .map((msg, i) =>
+        baseMessageToContent(msg, input[i - 1], this.useSystemInstruction)
+      )
+      .reduce((acc, cur) => {
+        // Filter out the system content, since those don't belong
+        // in the actual content.
+        const hasNoSystem = cur.every(content => content.role !== "system");
+        console.log('hasNoSystem', hasNoSystem, cur);
+        return hasNoSystem ? [...acc, ...cur] : acc;
+      }, []);
   }
+
+  formatSystemInstruction(
+    input: BaseMessage[],
+    _parameters: GoogleAIModelParams
+  ): GeminiContent {
+    const firstInput = input[0];
+    if (firstInput._getType() === "system" && this.useSystemInstruction) {
+      return baseMessageToContent(firstInput, undefined, true)[0];
+    } else {
+      return {} as GeminiContent;
+    }
+  }
+
 }
 
 /**
@@ -130,6 +171,9 @@ export abstract class ChatGoogleBase<AuthOptions>
   stopSequences: string[] = [];
 
   safetySettings: GoogleAISafetySetting[] = [];
+
+  // May intentionally be undefined, meaning to compute this.
+  convertSystemMessageToHumanContent: boolean | undefined;
 
   safetyHandler: GoogleAISafetyHandler;
 
