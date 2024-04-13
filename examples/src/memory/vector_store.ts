@@ -70,7 +70,10 @@ console.log({ res3 });
 
 // Sometimes we might want to save metadata along with the conversation snippets
 const memoryWithMetadata = new VectorStoreRetrieverMemory({
-  vectorStoreRetriever: vectorStore.asRetriever(1, { userId: "1" }),
+  vectorStoreRetriever: vectorStore.asRetriever(
+    1,
+    (doc) => doc.metadata?.userId === "1"
+  ),
   memoryKey: "history",
   metadata: { userId: "1", groupId: "42" },
 });
@@ -91,7 +94,10 @@ console.log(
 
 // If we have a retriever whose filter does not match our metadata, our previous messages won't appear
 const memoryWithoutMatchingMetadata = new VectorStoreRetrieverMemory({
-  vectorStoreRetriever: vectorStore.asRetriever(1, { userId: "2" }),
+  vectorStoreRetriever: vectorStore.asRetriever(
+    1,
+    (doc) => doc.metadata?.userId === "2"
+  ),
   memoryKey: "history",
 });
 
