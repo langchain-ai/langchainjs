@@ -366,6 +366,8 @@ export class ChatOpenAI<
 
   maxTokens?: number;
 
+  maxRetries?: number;
+
   logprobs?: boolean;
 
   topLogprobs?: number;
@@ -435,8 +437,14 @@ export class ChatOpenAI<
       fields?.configuration?.organization ??
       getEnvironmentVariable("OPENAI_ORGANIZATION");
 
+<<<<<<< Updated upstream
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;
+=======
+    // OpenAi ClientOptions interface defaults to 2
+    this.maxRetries = fields?.configuration?.maxRetries ?? 6;
+    this.modelName = fields?.modelName ?? this.modelName;
+>>>>>>> Stashed changes
     this.modelKwargs = fields?.modelKwargs ?? {};
     this.timeout = fields?.timeout;
 
@@ -480,6 +488,7 @@ export class ChatOpenAI<
         configuration?.baseOptions?.params ??
         fields?.configuration?.baseOptions?.params,
       ...configuration,
+      maxRetries: this.maxRetries,
       ...fields?.configuration,
     };
   }
@@ -912,8 +921,7 @@ export class ChatOpenAI<
       const params = {
         ...this.clientConfig,
         baseURL: endpoint,
-        timeout: this.timeout,
-        maxRetries: 0,
+        timeout: this.timeout
       };
       if (!params.baseURL) {
         delete params.baseURL;

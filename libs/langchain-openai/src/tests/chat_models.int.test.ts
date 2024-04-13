@@ -231,6 +231,15 @@ test("Test OpenAI with timeout in call options and node adapter", async () => {
   ).rejects.toThrow();
 }, 5000);
 
+test("Test OpenAI with maxRetries in call options and node adapter", async () => {
+  const model = new ChatOpenAI({ maxTokens: 5, maxRetries: 2 });
+  await expect(() =>
+    model.invoke([new HumanMessage("Print hello world")], {
+      options: { timeout: 10 },
+    })
+  ).rejects.toThrow();
+}, 5000);
+
 test("Test OpenAI with signal in call options", async () => {
   const model = new ChatOpenAI({ maxTokens: 5 });
   const controller = new AbortController();
