@@ -800,7 +800,9 @@ export const config = {
       path: "@langchain/core/prompts",
     },
     {
-      modules: ["ImagePromptTemplate"],
+      modules: [
+        "ImagePromptTemplate"
+      ],
       alias: ["prompts", "image"],
       path: "@langchain/core/prompts",
     },

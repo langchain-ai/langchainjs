@@ -289,6 +289,7 @@
     "llms/fireworks.cjs",
     "llms/fireworks.js",
     "llms/fireworks.d.ts",
+    "llms/fireworks.d.cts",
     "llms/googlevertexai.cjs",
     "llms/googlevertexai.js",
     "llms/googlevertexai.d.ts",
