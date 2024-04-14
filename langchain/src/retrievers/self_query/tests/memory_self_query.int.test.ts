@@ -78,7 +78,7 @@ test("Memory Vector Store Self Query Retriever Test", async () => {
   });
   const documentContents = "Brief summary of a movie";
   const vectorStore = await MemoryVectorStore.fromDocuments(docs, embeddings);
-  const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+  const selfQueryRetriever = SelfQueryRetriever.fromLLM({
     llm,
     vectorStore,
     documentContents,
@@ -208,7 +208,7 @@ test("Memory Vector Store Self Query Retriever Test With Default Filter Or Merge
   });
   const documentContents = "Brief summary of a movie";
   const vectorStore = await MemoryVectorStore.fromDocuments(docs, embeddings);
-  const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+  const selfQueryRetriever = SelfQueryRetriever.fromLLM({
     llm,
     vectorStore,
     documentContents,
@@ -349,7 +349,7 @@ test("Memory Vector Store Self Query Retriever Test With Default Filter And Merg
   });
   const documentContents = "Brief summary of a movie";
   const vectorStore = await MemoryVectorStore.fromDocuments(docs, embeddings);
-  const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+  const selfQueryRetriever = SelfQueryRetriever.fromLLM({
     llm,
     vectorStore,
     documentContents,
