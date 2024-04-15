@@ -367,7 +367,11 @@ export abstract class AbstractGoogleLLMConnection<
     if (safetySettings && safetySettings.length) {
       ret.safetySettings = safetySettings;
     }
-    if (systemInstruction?.role && systemInstruction?.parts && systemInstruction?.parts?.length) {
+    if (
+      systemInstruction?.role &&
+      systemInstruction?.parts &&
+      systemInstruction?.parts?.length
+    ) {
       ret.systemInstruction = systemInstruction;
     }
     return ret;

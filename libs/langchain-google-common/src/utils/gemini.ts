@@ -215,13 +215,16 @@ function roleMessageToContent(
   ];
 }
 
-function systemMessageToContent(message: SystemMessage, useSystemInstruction: boolean): GeminiContent[] {
+function systemMessageToContent(
+  message: SystemMessage,
+  useSystemInstruction: boolean
+): GeminiContent[] {
   return useSystemInstruction
     ? roleMessageToContent("system", message)
     : [
-    ...roleMessageToContent("user", message),
-    ...roleMessageToContent("model", new AIMessage("Ok")),
-  ];
+        ...roleMessageToContent("user", message),
+        ...roleMessageToContent("model", new AIMessage("Ok")),
+      ];
 }
 
 function toolMessageToContent(
@@ -286,7 +289,10 @@ export function baseMessageToContent(
   const type = message._getType();
   switch (type) {
     case "system":
-      return systemMessageToContent(message as SystemMessage, useSystemInstruction);
+      return systemMessageToContent(
+        message as SystemMessage,
+        useSystemInstruction
+      );
     case "human":
       return roleMessageToContent("user", message);
     case "ai":

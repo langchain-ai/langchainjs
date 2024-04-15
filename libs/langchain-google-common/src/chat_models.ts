@@ -61,12 +61,17 @@ class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   BaseMessage[],
   AuthOptions
 > {
-
   convertSystemMessageToHumanContent: boolean | undefined;
 
-  constructor(fields: GoogleAIBaseLLMInput<AuthOptions> | undefined, caller: AsyncCaller, client: GoogleAbstractedClient, streaming: boolean) {
+  constructor(
+    fields: GoogleAIBaseLLMInput<AuthOptions> | undefined,
+    caller: AsyncCaller,
+    client: GoogleAbstractedClient,
+    streaming: boolean
+  ) {
     super(fields, caller, client, streaming);
-    this.convertSystemMessageToHumanContent = fields?.convertSystemMessageToHumanContent;
+    this.convertSystemMessageToHumanContent =
+      fields?.convertSystemMessageToHumanContent;
   }
 
   get useSystemInstruction(): boolean {
@@ -105,7 +110,7 @@ class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
       .reduce((acc, cur) => {
         // Filter out the system content, since those don't belong
         // in the actual content.
-        const hasNoSystem = cur.every(content => content.role !== "system");
+        const hasNoSystem = cur.every((content) => content.role !== "system");
         return hasNoSystem ? [...acc, ...cur] : acc;
       }, []);
   }
@@ -121,7 +126,6 @@ class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
       return {} as GeminiContent;
     }
   }
-
 }
 
 /**

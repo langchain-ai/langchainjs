@@ -360,14 +360,12 @@ describe("Mock ChatGoogle", () => {
     expect(data.contents[0].role).toEqual("user");
     expect(data.contents[0].parts).toBeDefined();
     expect(data.contents[0].parts.length).toBeGreaterThanOrEqual(1);
-    expect(data.contents[0].parts[0].text).toEqual(
-      "Flip it"
-    );
+    expect(data.contents[0].parts[0].text).toEqual("Flip it");
     expect(data.contents[1].role).toEqual("model");
     expect(data.contents[1].parts).toBeDefined();
     expect(data.contents[1].parts.length).toBeGreaterThanOrEqual(1);
     expect(data.contents[1].parts[0].text).toEqual("H");
-    expect(data.systemInstruction).toBeDefined()
+    expect(data.systemInstruction).toBeDefined();
   });
 
   test("1. System request format new model", async () => {
@@ -403,14 +401,12 @@ describe("Mock ChatGoogle", () => {
     expect(data.contents[0].role).toEqual("user");
     expect(data.contents[0].parts).toBeDefined();
     expect(data.contents[0].parts.length).toBeGreaterThanOrEqual(1);
-    expect(data.contents[0].parts[0].text).toEqual(
-      "Flip it"
-    );
+    expect(data.contents[0].parts[0].text).toEqual("Flip it");
     expect(data.contents[1].role).toEqual("model");
     expect(data.contents[1].parts).toBeDefined();
     expect(data.contents[1].parts.length).toBeGreaterThanOrEqual(1);
     expect(data.contents[1].parts[0].text).toEqual("H");
-    expect(data.systemInstruction).toBeDefined()
+    expect(data.systemInstruction).toBeDefined();
   });
 
   test("2. Response format - safety", async () => {
