@@ -9956,17 +9956,6 @@ __metadata:
   resolution: "@layerup/layerup-security@npm:1.5.9"
   dependencies:
     axios: ^1.6.8
-  peerDependencies:
-    openai: ^4.30.0
-  checksum: abc1aa029baacd5a8cfe3b35f6ab85b7a0f0603bcc4ef62ab8e8269aa28b9cf96ed4ae19125dc2003cc3e687e0e58146bbe6f3fe70d1e0d6d376b89939ae734c
-  languageName: node
-  linkType: hard
-
-"@layerup/layerup-security@npm:^1.5.9":
-  version: 1.5.9
-  resolution: "@layerup/layerup-security@npm:1.5.9"
-  dependencies:
-    axios: ^1.6.8
     openai: ^4.30.0
   checksum: 9200759a8e523db23b5110dc9b8ff0841c54329d6eb32d976b4a06700ebfb733c2736e95806d0dd79607344e80c155ce969bb5aeb14b0c68bab13aaa903fcc79
   languageName: node
