@@ -71,7 +71,7 @@ export class AIMessage extends BaseMessage {
         );
       }
       try {
-        if (!(rawToolCalls == null)  && toolCalls === undefined) {
+        if (!(rawToolCalls == null) && toolCalls === undefined) {
           const [toolCalls, invalidToolCalls] =
             defaultToolCallParser(rawToolCalls);
           initParams.tool_calls = toolCalls ?? [];
