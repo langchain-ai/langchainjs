@@ -64,13 +64,15 @@ function convertMessagesToCohereMessages(
 ): Array<Cohere.ChatMessage> {
   const getRole = (role: MessageType) => {
     switch (role) {
+      case "system":
+        return "SYSTEM";
       case "human":
         return "USER";
       case "ai":
         return "CHATBOT";
       default:
         throw new Error(
-          `Unknown message type: '${role}'. Accepted types: 'human', 'ai'`
+          `Unknown message type: '${role}'. Accepted types: 'human', 'ai', 'system'`
         );
     }
   };

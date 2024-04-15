@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
 import { describe, expect, test } from "@jest/globals";
-import { AstraDB } from "@datastax/astra-db-ts";
+import { DataAPIClient, Db } from "@datastax/astra-db-ts";
 import { faker } from "@faker-js/faker";
 import { Document } from "@langchain/core/documents";
 import { OpenAIEmbeddings } from "@langchain/openai";
@@ -8,7 +8,7 @@ import { FakeEmbeddings } from "closevector-common/dist/fake.js";
 import { AstraDBVectorStore, AstraLibArgs } from "../astradb.js";
 
 describe.skip("AstraDBVectorStore", () => {
-  let client: AstraDB;
+  let db: Db;
   let astraConfig: AstraLibArgs;
   beforeAll(() => {
     const clientConfig = {
@@ -17,12 +17,14 @@ describe.skip("AstraDBVectorStore", () => {
       namespace: process.env.ASTRA_DB_NAMESPACE ?? "default_keyspace",
     };
 
-    client = new AstraDB(clientConfig.token, clientConfig.endpoint);
+    const dataAPIClient = new DataAPIClient(clientConfig.token);
+    db = dataAPIClient.db(clientConfig.endpoint);
 
     astraConfig = {
       ...clientConfig,
       collection: process.env.ASTRA_DB_COLLECTION ?? "langchain_test",
       collectionOptions: {
+        checkExists: false,
         vector: {
           dimension: 1536,
           metric: "cosine",
@@ -33,7 +35,7 @@ describe.skip("AstraDBVectorStore", () => {
 
   beforeEach(async () => {
     try {
-      await client.dropCollection(astraConfig.collection);
+      await db.dropCollection(astraConfig.collection);
     } catch (e) {
       console.debug("Collection doesn't exist yet, skipping drop");
     }
@@ -147,6 +149,7 @@ describe.skip("AstraDBVectorStore", () => {
       store = new AstraDBVectorStore(new FakeEmbeddings(), {
         ...astraConfig,
         collectionOptions: {
+          checkExists: false,
           vector: {
             dimension: 8,
             metric: "cosine",
@@ -157,7 +160,9 @@ describe.skip("AstraDBVectorStore", () => {
       fail("Should have thrown error");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
-      expect(e.message).toContain("already exists with different 'vector'");
+      expect(e.message).toContain(
+        "already exists with different collection options"
+      );
     }
   }, 60000);
 });
