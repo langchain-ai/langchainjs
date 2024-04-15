@@ -112,7 +112,7 @@ test("Supabase Store Self Query Retriever Test", async () => {
   // idempotency
   const opts = { ids: docs.map((_, idx) => idx) };
   await vectorStore.addDocuments(docs, opts);
-  const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+  const selfQueryRetriever = SelfQueryRetriever.fromLLM({
     llm,
     vectorStore,
     documentContents,
@@ -259,7 +259,7 @@ test("Supabase Store Self Query Retriever Test With Default Filter And Merge Ope
   // idempotency
   const opts = { ids: docs.map((_, idx) => idx) };
   await vectorStore.addDocuments(docs, opts);
-  const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+  const selfQueryRetriever = SelfQueryRetriever.fromLLM({
     llm,
     vectorStore,
     documentContents,
@@ -412,7 +412,7 @@ test("Supabase Store Self Query Retriever Test With Default Filter Or Merge Oper
   // idempotency
   const opts = { ids: docs.map((_, idx) => idx) };
   await vectorStore.addDocuments(docs, opts);
-  const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+  const selfQueryRetriever = SelfQueryRetriever.fromLLM({
     llm,
     vectorStore,
     documentContents,
@@ -567,7 +567,7 @@ test("Supabase Store Self Query Retriever Test With Default Filter And Merge Ope
   // idempotency
   const opts = { ids: docs.map((_, idx) => idx) };
   await vectorStore.addDocuments(docs, opts);
-  const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+  const selfQueryRetriever = SelfQueryRetriever.fromLLM({
     llm,
     vectorStore,
     documentContents,
