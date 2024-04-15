@@ -326,7 +326,8 @@ export abstract class AbstractGoogleLLMConnection<
     _input: MessageType,
     parameters: GoogleAIModelRequestParams
   ): GeminiTool[] {
-    const tools = parameters?.tools;
+    const tools: StructuredToolInterface[] | GeminiTool[] | undefined =
+      parameters?.tools;
     if (!tools || tools.length === 0) {
       return [];
     }
@@ -334,6 +335,9 @@ export abstract class AbstractGoogleLLMConnection<
     if (this.isStructuredToolArray(tools)) {
       return this.structuredToolsToGeminiTools(tools);
     } else {
+      if (tools.length === 1 && !tools[0].functionDeclarations?.length) {
+        return [];
+      }
       return tools as GeminiTool[];
     }
   }
@@ -342,15 +346,6 @@ export abstract class AbstractGoogleLLMConnection<
     input: MessageType,
     parameters: GoogleAIModelRequestParams
   ): GeminiRequest {
-    /*
-    const parts = messageContentToParts(input);
-    const contents: GeminiContent[] = [
-      {
-        role: "user",    // Required by Vertex AI
-        parts,
-      }
-    ]
-    */
     const contents = this.formatContents(input, parameters);
     const generationConfig = this.formatGenerationConfig(input, parameters);
     const tools = this.formatTools(input, parameters);
