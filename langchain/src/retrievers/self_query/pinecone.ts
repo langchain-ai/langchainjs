@@ -10,7 +10,7 @@ import { BasicTranslator } from "./base.js";
  * queries and compare results.
  * @example
  * ```typescript
- * const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+ * const selfQueryRetriever = SelfQueryRetriever.fromLLM({
  *   llm: new ChatOpenAI(),
  *   vectorStore: new PineconeStore(),
  *   documentContents: "Brief summary of a movie",

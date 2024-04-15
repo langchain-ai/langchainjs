@@ -102,7 +102,7 @@ const vectorStore = await VectaraStore.fromDocuments(
 const llm = new OpenAI();
 const documentContents = "Brief summary of a movie";
 
-const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+const selfQueryRetriever = SelfQueryRetriever.fromLLM({
   llm,
   vectorStore,
   documentContents,

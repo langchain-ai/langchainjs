@@ -45,7 +45,7 @@ with or as a fallback to the generated query. For example, if you wanted to ensu
 you could initialize the above retriever as follows:
 
 ```typescript
-const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+const selfQueryRetriever = SelfQueryRetriever.fromLLM({
   llm,
   vectorStore,
   documentContents,
