@@ -437,14 +437,9 @@ export class ChatOpenAI<
       fields?.configuration?.organization ??
       getEnvironmentVariable("OPENAI_ORGANIZATION");
 
-<<<<<<< Updated upstream
+    this.maxRetries = fields?.configuration?.maxRetries ?? 6;
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;
-=======
-    // OpenAi ClientOptions interface defaults to 2
-    this.maxRetries = fields?.configuration?.maxRetries ?? 6;
-    this.modelName = fields?.modelName ?? this.modelName;
->>>>>>> Stashed changes
     this.modelKwargs = fields?.modelKwargs ?? {};
     this.timeout = fields?.timeout;
 
@@ -921,7 +916,8 @@ export class ChatOpenAI<
       const params = {
         ...this.clientConfig,
         baseURL: endpoint,
-        timeout: this.timeout
+        timeout: this.timeout,
+        maxRetries: 0,// 0 to avoid using the default SDK retry policy. We retry using the more generalized AsyncCaller
       };
       if (!params.baseURL) {
         delete params.baseURL;
