@@ -53,9 +53,26 @@ export abstract class GoogleConnection<
 
   async _clientInfoHeaders(): Promise<Record<string, string>> {
     const clientLibraryVersion = await this._clientLibraryVersion();
+    const clientInfo= await this._getclientInfo();
     return {
       "User-Agent": clientLibraryVersion,
+      "Client-Info": clientInfo.toString(),
     };
+  }
+
+  async _getclientInfo(): Promise<Record<string, string>> {
+   const userAgent = await this._clientLibraryVersion();
+   const env = await getRuntimeEnvironment();
+      const langchainVersion = env?.libraryVersion ?? "0";
+   const moduleName = await this._moduleName();
+   let clientLibraryVersion = `${langchainVersion}`;
+   if (moduleName && moduleName.length) {
+    clientLibraryVersion = `${clientLibraryVersion}-${moduleName}`;
+  }
+  return {
+    "User-Agent": userAgent,
+    "client_library_version": clientLibraryVersion,
+  };
   }
 
   async _clientLibraryVersion(): Promise<string> {
