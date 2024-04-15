@@ -39,7 +39,7 @@
   "license": "MIT",
   "dependencies": {
     "@langchain/core": "~0.1",
-    "cohere-ai": "^7.8.0"
+    "cohere-ai": "^7.9.3"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
