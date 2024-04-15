@@ -79,7 +79,6 @@ class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
     // This works on models from April 2024 and later
     //   Vertex AI: gemini-1.5-pro and gemini-1.0-002 and later
     //   AI Studio: gemini-1.5-pro-latest
-    console.log('computeUseSystemInstruction', this.modelFamily, this.modelName, this.platform);
     if (this.modelFamily === "palm") {
       return false;
     } else if (this.modelName === "gemini-1.0-pro-001") {
