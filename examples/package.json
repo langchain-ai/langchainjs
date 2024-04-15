@@ -51,7 +51,7 @@
     "@langchain/scripts": "workspace:*",
     "@langchain/weaviate": "workspace:*",
     "@langchain/yandex": "workspace:*",
-    "@layerup/layerup-security": "^1.5.6",
+    "@layerup/layerup-security": "^1.5.9",
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^2.2.0",
     "@planetscale/database": "^1.8.0",

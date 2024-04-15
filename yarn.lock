@@ -9955,9 +9955,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@layerup/layerup-security@npm:^1.5.6":
-  version: 1.5.6
-  resolution: "@layerup/layerup-security@npm:1.5.6"
+"@layerup/layerup-security@npm:^1.5.9":
+  version: 1.5.9
+  resolution: "@layerup/layerup-security@npm:1.5.9"
   dependencies:
     axios: ^1.6.8
   peerDependencies:
@@ -21712,7 +21712,7 @@ __metadata:
     "@langchain/scripts": "workspace:*"
     "@langchain/weaviate": "workspace:*"
     "@langchain/yandex": "workspace:*"
-    "@layerup/layerup-security": ^1.5.6
+    "@layerup/layerup-security": ^1.5.9
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^2.2.0
     "@planetscale/database": ^1.8.0
