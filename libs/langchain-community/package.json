@@ -1048,6 +1048,15 @@
       "import": "./llms/fireworks.js",
       "require": "./llms/fireworks.cjs"
     },
+    "./llms/friendli": {
+      "types": {
+        "import": "./llms/friendli.d.ts",
+        "require": "./llms/friendli.d.cts",
+        "default": "./llms/friendli.d.ts"
+      },
+      "import": "./llms/friendli.js",
+      "require": "./llms/friendli.cjs"
+    },
     "./llms/googlepalm": {
       "types": {
         "import": "./llms/googlepalm.d.ts",
@@ -1632,6 +1641,15 @@
       },
       "import": "./chat_models/fireworks.js",
       "require": "./chat_models/fireworks.cjs"
+    },
+    "./chat_models/friendli": {
+      "types": {
+        "import": "./chat_models/friendli.d.ts",
+        "require": "./chat_models/friendli.d.cts",
+        "default": "./chat_models/friendli.d.ts"
+      },
+      "import": "./chat_models/friendli.js",
+      "require": "./chat_models/friendli.cjs"
     },
     "./chat_models/googlevertexai": {
       "types": {
@@ -2478,6 +2496,10 @@
     "llms/fireworks.js",
     "llms/fireworks.d.ts",
     "llms/fireworks.d.cts",
+    "llms/friendli.cjs",
+    "llms/friendli.js",
+    "llms/friendli.d.ts",
+    "llms/friendli.d.cts",
     "llms/googlepalm.cjs",
     "llms/googlepalm.js",
     "llms/googlepalm.d.ts",
@@ -2738,6 +2760,10 @@
     "chat_models/fireworks.js",
     "chat_models/fireworks.d.ts",
     "chat_models/fireworks.d.cts",
+    "chat_models/friendli.cjs",
+    "chat_models/friendli.js",
+    "chat_models/friendli.d.ts",
+    "chat_models/friendli.d.cts",
     "chat_models/googlevertexai.cjs",
     "chat_models/googlevertexai.js",
     "chat_models/googlevertexai.d.ts",
