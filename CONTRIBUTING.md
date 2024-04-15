@@ -95,8 +95,8 @@ You can invoke the script by calling `yarn release`.
 There are three parameters which can be passed to this script, one required and two optional.
 
 - __Required__: `<workspace name>`. eg: `@langchain/core` The name of the package to release. Can be found in the `name` value of the package's `package.json`
-- __Optional__: `--bump-deps` eg `--bump-deps` Will find all packages in the repo which depend on this workspace and checkout a new branch, update the dep version, run yarn install, commit & push to new branch.
-- __Optional__: `--tag <tag>` eg `--tag beta` Add a tag to the NPM release.
+- __Optional__: `--bump-deps` eg `--bump-deps` Will find all packages in the repo which depend on this workspace and checkout a new branch, update the dep version, run yarn install, commit & push to new branch. Generally, this is not necessary.
+- __Optional__: `--tag <tag>` eg `--tag beta` Add a tag to the NPM release. Useful if you want to push a release candidate.
 
 This script automatically bumps the package version, creates a new release branch with the changes, pushes the branch to GitHub, uses `release-it` to automatically release to NPM, and more depending on the flags passed.
 
@@ -106,7 +106,7 @@ Halfway through this script, you'll be prompted to enter an NPM OTP (typically f
 
 Docker must be running if releasing one of `langchain`, `@langchain/core` or `@langchain/community`. These packages run LangChain's export tests, which run inside docker containers.
 
-Full example: `yarn release @langchain/core --bump-deps --tag beta`.
+Full example: `yarn release @langchain/core`.
 
 ### 🛠️ Tooling
 
