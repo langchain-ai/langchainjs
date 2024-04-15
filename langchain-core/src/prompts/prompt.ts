@@ -24,7 +24,8 @@ export interface PromptTemplateInput<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  PartialVariableName extends string = any
+  PartialVariableName extends string = any,
+  Format extends TemplateFormat = TemplateFormat
 > extends BasePromptTemplateInput<RunInput, PartialVariableName> {
   /**
    * The prompt template
@@ -36,7 +37,7 @@ export interface PromptTemplateInput<
    *
    * @defaultValue 'f-string'
    */
-  templateFormat?: TemplateFormat;
+  templateFormat?: Format;
 
   /**
    * Whether or not to try validating the template on initialization
@@ -194,17 +195,16 @@ export class PromptTemplate<
   static fromTemplate<
     // eslint-disable-next-line @typescript-eslint/ban-types
     RunInput extends InputValues = Symbol,
-    T extends string = string
-  >(
-    template: T,
-    {
-      templateFormat = "f-string",
-      ...rest
-    }: Omit<
-      PromptTemplateInput<RunInput, string>,
-      "template" | "inputVariables"
-    > = {}
+    T extends string = string,
+    Format extends TemplateFormat = TemplateFormat
+    >(
+      template: T,
+      options: Omit<
+        PromptTemplateInput<RunInput, string, Format>,
+        "template" | "inputVariables"
+      > = {}
   ) {
+    const {templateFormat = "f-string", ...rest} = options;
     const names = new Set<string>();
     parseTemplate(template, templateFormat).forEach((node) => {
       if (node.type === "variable") {
@@ -213,7 +213,8 @@ export class PromptTemplate<
     });
     return new PromptTemplate<
       // eslint-disable-next-line @typescript-eslint/ban-types
-      RunInput extends Symbol ? ParamsFromFString<T> : RunInput
+      RunInput extends Symbol ? (Format extends "mustache" ? RunInput : ParamsFromFString<T>) : RunInput
+      // RunInput extends Symbol ? ParamsFromFString<T> : RunInput
     >({
       // Rely on extracted types
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
