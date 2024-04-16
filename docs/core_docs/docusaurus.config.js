@@ -161,14 +161,20 @@ const config = {
           {
             type: "docSidebar",
             position: "left",
-            sidebarId: "use_cases",
-            label: "Use cases",
+            sidebarId: "components",
+            label: "Components",
           },
           {
             type: "docSidebar",
             position: "left",
             sidebarId: "integrations",
             label: "Integrations",
+          },
+          {
+            type: "docSidebar",
+            position: "left",
+            sidebarId: "guides",
+            label: "Guides",
           },
           {
             href: "https://api.js.langchain.com",
