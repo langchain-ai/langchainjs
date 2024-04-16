@@ -15,6 +15,9 @@ interface LineList {
   lines: string[];
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type MultiDocs = Document<Record<string, any>>[];
+
 class LineListOutputParser extends BaseOutputParser<LineList> {
   static lc_name() {
     return "LineListOutputParser";
@@ -68,7 +71,7 @@ export interface MultiQueryRetrieverInput extends BaseRetrieverInput {
   queryCount?: number;
   parserKey?: string;
   documentCompressor?: BaseDocumentCompressor | undefined;
-  documentCompressorMinRelevanceScore?: number;
+  documentCompressorFilteringFn?: (docs: MultiDocs) => MultiDocs | undefined;
 }
 
 /**
@@ -101,7 +104,7 @@ export class MultiQueryRetriever extends BaseRetriever {
 
   documentCompressor: BaseDocumentCompressor | undefined;
 
-  protected documentCompressorMinRelevanceScore?: number;
+  documentCompressorFilteringFn?: MultiQueryRetrieverInput["documentCompressorFilteringFn"];
 
   constructor(fields: MultiQueryRetrieverInput) {
     super(fields);
@@ -110,9 +113,7 @@ export class MultiQueryRetriever extends BaseRetriever {
     this.queryCount = fields.queryCount ?? this.queryCount;
     this.parserKey = fields.parserKey ?? this.parserKey;
     this.documentCompressor = fields.documentCompressor;
-    this.documentCompressorMinRelevanceScore =
-      fields.documentCompressorMinRelevanceScore ??
-      this.documentCompressorMinRelevanceScore;
+    this.documentCompressorFilteringFn = fields.documentCompressorFilteringFn;
   }
 
   static fromLLM(
@@ -197,11 +198,9 @@ export class MultiQueryRetriever extends BaseRetriever {
         uniqueDocuments,
         question
       );
-      outputDocs = outputDocs.filter(
-        (doc) =>
-          (doc?.metadata?.relevanceScore ?? 1) >=
-          (this.documentCompressorMinRelevanceScore ?? 0)
-      );
+      if (this.documentCompressorFilteringFn) {
+        outputDocs = this.documentCompressorFilteringFn(outputDocs);
+      }
     }
 
     return outputDocs;

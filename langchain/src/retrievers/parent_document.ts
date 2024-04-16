@@ -15,6 +15,9 @@ import {
   type MultiVectorRetrieverInput,
 } from "./multi_vector.js";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type SubDocs = Document<Record<string, any>>[];
+
 /**
  * Interface for the fields required to initialize a
  * ParentDocumentRetriever instance.
@@ -28,7 +31,7 @@ export type ParentDocumentRetrieverFields = MultiVectorRetrieverInput & {
    */
   childDocumentRetriever?: VectorStoreRetrieverInterface<VectorStoreInterface>;
   documentCompressor?: BaseDocumentCompressor | undefined;
-  documentCompressorMinRelevanceScore?: number;
+  documentCompressorFilteringFn?: (docs: SubDocs) => SubDocs | undefined;
 };
 
 /**
@@ -86,7 +89,7 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
 
   documentCompressor: BaseDocumentCompressor | undefined;
 
-  protected documentCompressorMinRelevanceScore?: number;
+  documentCompressorFilteringFn?: ParentDocumentRetrieverFields["documentCompressorFilteringFn"];
 
   constructor(fields: ParentDocumentRetrieverFields) {
     super(fields);
@@ -98,14 +101,11 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
     this.parentK = fields.parentK;
     this.childDocumentRetriever = fields.childDocumentRetriever;
     this.documentCompressor = fields.documentCompressor;
-    this.documentCompressorMinRelevanceScore =
-      fields.documentCompressorMinRelevanceScore ??
-      this.documentCompressorMinRelevanceScore;
+    this.documentCompressorFilteringFn = fields.documentCompressorFilteringFn;
   }
 
   async _getRelevantDocuments(query: string): Promise<Document[]> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let subDocs: Document<Record<string, any>>[] = [];
+    let subDocs: SubDocs = [];
     if (this.childDocumentRetriever) {
       subDocs = await this.childDocumentRetriever.getRelevantDocuments(query);
     } else {
@@ -114,11 +114,9 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
 
     if (this.documentCompressor && subDocs.length) {
       subDocs = await this.documentCompressor.compressDocuments(subDocs, query);
-      subDocs = subDocs.filter(
-        (doc) =>
-          (doc?.metadata?.relevanceScore ?? 1) >=
-          (this.documentCompressorMinRelevanceScore ?? 0)
-      );
+      if (this.documentCompressorFilteringFn) {
+        subDocs = this.documentCompressorFilteringFn(subDocs);
+      }
     }
 
     // Maintain order
