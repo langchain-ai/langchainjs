@@ -8960,7 +8960,7 @@ __metadata:
     "@langchain/core": ~0.1.56
     "@langchain/openai": ~0.0.28
     "@langchain/scripts": ~0.0
-    "@layerup/layerup-security": ^1.5.9
+    "@layerup/layerup-security": ^1.5.10
     "@mozilla/readability": ^0.4.4
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^1.1.0
@@ -9094,7 +9094,7 @@ __metadata:
     "@google-ai/generativelanguage": ^0.2.1
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
-    "@layerup/layerup-security": ^1.5.9
+    "@layerup/layerup-security": ^1.5.10
     "@mozilla/readability": "*"
     "@opensearch-project/opensearch": "*"
     "@pinecone-database/pinecone": "*"
@@ -9951,13 +9951,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@layerup/layerup-security@npm:^1.5.9":
-  version: 1.5.9
-  resolution: "@layerup/layerup-security@npm:1.5.9"
+"@layerup/layerup-security@npm:^1.5.10":
+  version: 1.5.10
+  resolution: "@layerup/layerup-security@npm:1.5.10"
   dependencies:
     axios: ^1.6.8
-    openai: ^4.30.0
-  checksum: 9200759a8e523db23b5110dc9b8ff0841c54329d6eb32d976b4a06700ebfb733c2736e95806d0dd79607344e80c155ce969bb5aeb14b0c68bab13aaa903fcc79
+    openai: ^4.32.1
+  checksum: 5fa2e500b481e802d3063020a96868d07bb7d3c22e5557c9d0f02e424f38b7366011aaa892b1d593a433f877df90fe25fee1858230d513bbca61c214fa731487
   languageName: node
   linkType: hard
 
@@ -21725,7 +21725,7 @@ __metadata:
     "@langchain/scripts": "workspace:*"
     "@langchain/weaviate": "workspace:*"
     "@langchain/yandex": "workspace:*"
-    "@layerup/layerup-security": ^1.5.9
+    "@layerup/layerup-security": ^1.5.10
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^2.2.0
     "@planetscale/database": ^1.8.0
@@ -29332,7 +29332,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openai@npm:^4.30.0, openai@npm:^4.32.1":
+"openai@npm:^4.32.1":
   version: 4.32.1
   resolution: "openai@npm:4.32.1"
   dependencies:
