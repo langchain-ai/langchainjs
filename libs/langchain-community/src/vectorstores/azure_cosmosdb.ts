@@ -4,6 +4,7 @@ import {
   Document as MongoDBDocument,
   MongoClient,
   Db,
+  Filter,
 } from "mongodb";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import {
@@ -205,16 +206,22 @@ export class AzureCosmosDBVectorStore extends VectorStore {
 
   /**
    * Removes specified documents from the AzureCosmosDBVectorStore.
-   * @param ids IDs of the documents to be removed. If no IDs are specified,
-   *     all documents will be removed.
+   * @param filterOrIds A MongoDB filter object or list of IDs for the
+   *     documents to be removed. If no IDs or filter are specified, all
+   *     documents will be removed.
    * @returns A promise that resolves when the documents have been removed.
    */
-  async delete(ids?: string[]): Promise<void> {
+  async delete(filterOrIds?: string[] | Filter<MongoDBDocument>): Promise<void> {
     await this.initPromise;
+
+    const ids = Array.isArray(filterOrIds) ? filterOrIds : undefined;
+    const filter = !ids ? filterOrIds : undefined;
 
     if (ids) {
       const objectIds = ids.map((id) => new ObjectId(id));
       await this.collection.deleteMany({ _id: { $in: objectIds } });
+    } if (filter) {
+      await this.collection.deleteMany(filter);
     } else {
       await this.collection.deleteMany({});
     }
