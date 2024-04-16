@@ -243,27 +243,28 @@ export class AzureCosmosDBVectorStore extends VectorStore {
    * Method for adding vectors to the AzureCosmosDBVectorStore.
    * @param vectors Vectors to be added.
    * @param documents Corresponding documents to be added.
-   * @returns A promise that resolves when the vectors and documents have been added.
+   * @returns A promise that resolves to the added documents IDs.
    */
-  async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
+  async addVectors(vectors: number[][], documents: Document[]): Promise<string[]> {
     const docs = vectors.map((embedding, idx) => ({
       [this.textKey]: documents[idx].pageContent,
       [this.embeddingKey]: embedding,
       ...documents[idx].metadata,
     }));
     await this.initPromise;
-    await this.collection.insertMany(docs);
+    const result = await this.collection.insertMany(docs);
+    return Object.values(result.insertedIds).map((id) => String(id));
   }
 
   /**
    * Method for adding documents to the AzureCosmosDBVectorStore. It first converts
    * the documents to texts and then adds them as vectors.
    * @param documents The documents to add.
-   * @returns A promise that resolves when the documents have been added.
+   * @returns A promise that resolves to the added documents IDs.
    */
-  async addDocuments(documents: Document[]): Promise<void> {
+  async addDocuments(documents: Document[]): Promise<string[]> {
     const texts = documents.map(({ pageContent }) => pageContent);
-    await this.addVectors(
+    return this.addVectors(
       await this.embeddings.embedDocuments(texts),
       documents
     );
