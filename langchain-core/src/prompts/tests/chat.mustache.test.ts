@@ -37,3 +37,33 @@ test("Test creating a chat prompt template from role string messages", async () 
     }),
   ]);
 });
+
+test("Multiple input variables with repeats.", async () => {
+  const template = "This {{bar}} is a {{foo}} test {{foo}}.";
+  const prompt = ChatPromptTemplate.fromTemplate(template, {
+    templateFormat: "mustache",
+  });
+  expect(prompt.inputVariables).toEqual(["bar", "foo"]);
+  const formattedPrompt = await prompt.formatPromptValue({
+    bar: "baz",
+    foo: "bar",
+  });
+  expect(formattedPrompt.toChatMessages()).toEqual([
+    new HumanMessage("This baz is a bar test bar."),
+  ]);
+});
+
+test("Ignores f-string inputs input variables with repeats.", async () => {
+  const template = "This {bar} is a {foo} test {foo}.";
+  const prompt = ChatPromptTemplate.fromTemplate(template, {
+    templateFormat: "mustache",
+  });
+  expect(prompt.inputVariables).toEqual([]);
+  const formattedPrompt = await prompt.formatPromptValue({
+    bar: "baz",
+    foo: "bar",
+  });
+  expect(formattedPrompt.toChatMessages()).toEqual([
+    new HumanMessage("This {bar} is a {foo} test {foo}."),
+  ]);
+});

@@ -25,7 +25,12 @@ import {
   type BasePromptTemplateInput,
   type TypedPromptInputValues,
 } from "./base.js";
-import { PromptTemplate, type ParamsFromFString } from "./prompt.js";
+import {
+  PromptTemplate,
+  type ParamsFromFString,
+  PromptTemplateInput,
+  ExtractedFStringParams,
+} from "./prompt.js";
 import { ImagePromptTemplate } from "./image.js";
 import { TemplateFormat, parseFString } from "./template.js";
 
@@ -360,9 +365,10 @@ type MessageClass =
 
 type ChatMessageClass = typeof ChatMessage;
 
-interface _StringImageMessagePromptTemplateOptions
-  extends Record<string, unknown> {
-  templateFormat?: TemplateFormat;
+interface _StringImageMessagePromptTemplateOptions<
+  Format extends TemplateFormat = TemplateFormat
+> extends Record<string, unknown> {
+  templateFormat?: Format;
 }
 
 class _StringImageMessagePromptTemplate<
@@ -993,8 +999,50 @@ export class ChatPromptTemplate<
     // eslint-disable-next-line @typescript-eslint/ban-types
     RunInput extends InputValues = Symbol,
     T extends string = string
-  >(template: T) {
-    const prompt = PromptTemplate.fromTemplate(template);
+  >(
+    template: T,
+    options?: Omit<
+      PromptTemplateInput<RunInput, string, "f-string">,
+      "template" | "inputVariables"
+    >
+  ): ChatPromptTemplate<ExtractedFStringParams<T, RunInput>>;
+
+  static fromTemplate<
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    RunInput extends InputValues = Symbol,
+    T extends string = string
+  >(
+    template: T,
+    options?: Omit<
+      PromptTemplateInput<RunInput, string>,
+      "template" | "inputVariables"
+    >
+  ): ChatPromptTemplate<ExtractedFStringParams<T, RunInput>>;
+
+  static fromTemplate<
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    RunInput extends InputValues = Symbol,
+    T extends string = string
+  >(
+    template: T,
+    options?: Omit<
+      PromptTemplateInput<RunInput, string, "mustache">,
+      "template" | "inputVariables"
+    >
+  ): ChatPromptTemplate<InputValues>;
+
+  static fromTemplate<
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    RunInput extends InputValues = Symbol,
+    T extends string = string
+  >(
+    template: T,
+    options?: Omit<
+      PromptTemplateInput<RunInput, string, TemplateFormat>,
+      "template" | "inputVariables"
+    >
+  ): ChatPromptTemplate<ExtractedFStringParams<T, RunInput> | InputValues> {
+    const prompt = PromptTemplate.fromTemplate(template, options);
     const humanTemplate = new HumanMessagePromptTemplate({ prompt });
     return this.fromMessages<
       // eslint-disable-next-line @typescript-eslint/ban-types

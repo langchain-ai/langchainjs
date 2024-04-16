@@ -31,6 +31,16 @@ test("Multiple input variables with repeats.", async () => {
   expect(prompt.inputVariables).toEqual(["bar", "foo"]);
 });
 
+test("Ignores f-string inputs input variables with repeats.", async () => {
+  const template = "This {bar} is a {foo} test {foo}.";
+  const prompt = PromptTemplate.fromTemplate(template, {
+    templateFormat: "mustache",
+  });
+  const formattedPrompt = await prompt.format({ bar: "baz", foo: "bar" });
+  expect(formattedPrompt).toBe("This {bar} is a {foo} test {foo}.");
+  expect(prompt.inputVariables).toEqual([]);
+});
+
 test("Nested variables.", async () => {
   const template =
     "This {{obj.bar}} is a {{obj.foo}} test {{foo.bar.baz}}. Single: {{single}}";

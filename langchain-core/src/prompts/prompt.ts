@@ -33,9 +33,7 @@ export interface PromptTemplateInput<
   template: MessageContent;
 
   /**
-   * The format of the prompt template. Options are 'f-string'
-   *
-   * @defaultValue 'f-string'
+   * The format of the prompt template. Options are "f-string" and "mustache"
    */
   templateFormat?: Format;
 
@@ -80,6 +78,13 @@ export type ParamsFromFString<T extends string> = {
     | ExtractTemplateParamsRecursive<T>[number]
     | (string & Record<never, never>)]: string;
 };
+
+export type ExtractedFStringParams<
+  T extends string,
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  RunInput extends InputValues = Symbol
+  // eslint-disable-next-line @typescript-eslint/ban-types
+> = RunInput extends Symbol ? ParamsFromFString<T> : RunInput;
 
 /**
  * Schema to represent a basic prompt for an LLM.
@@ -195,27 +200,58 @@ export class PromptTemplate<
   static fromTemplate<
     // eslint-disable-next-line @typescript-eslint/ban-types
     RunInput extends InputValues = Symbol,
-    T extends string = string,
-    Format extends TemplateFormat = TemplateFormat
-    >(
-      template: T,
-      options: Omit<
-        PromptTemplateInput<RunInput, string, Format>,
-        "template" | "inputVariables"
-      > = {}
-  ) {
-    const {templateFormat = "f-string", ...rest} = options;
+    T extends string = string
+  >(
+    template: T,
+    options?: Omit<
+      PromptTemplateInput<RunInput, string, "f-string">,
+      "template" | "inputVariables"
+    >
+  ): PromptTemplate<ExtractedFStringParams<T, RunInput>>;
+
+  static fromTemplate<
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    RunInput extends InputValues = Symbol,
+    T extends string = string
+  >(
+    template: T,
+    options?: Omit<
+      PromptTemplateInput<RunInput, string>,
+      "template" | "inputVariables"
+    >
+  ): PromptTemplate<ExtractedFStringParams<T, RunInput>>;
+
+  static fromTemplate<
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    RunInput extends InputValues = Symbol,
+    T extends string = string
+  >(
+    template: T,
+    options?: Omit<
+      PromptTemplateInput<RunInput, string, "mustache">,
+      "template" | "inputVariables"
+    >
+  ): PromptTemplate<InputValues>;
+
+  static fromTemplate<
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    RunInput extends InputValues = Symbol,
+    T extends string = string
+  >(
+    template: T,
+    options?: Omit<
+      PromptTemplateInput<RunInput, string, TemplateFormat>,
+      "template" | "inputVariables"
+    >
+  ): PromptTemplate<ExtractedFStringParams<T, RunInput> | InputValues> {
+    const { templateFormat = "f-string", ...rest } = options ?? {};
     const names = new Set<string>();
     parseTemplate(template, templateFormat).forEach((node) => {
       if (node.type === "variable") {
         names.add(node.name);
       }
     });
-    return new PromptTemplate<
-      // eslint-disable-next-line @typescript-eslint/ban-types
-      RunInput extends Symbol ? (Format extends "mustache" ? RunInput : ParamsFromFString<T>) : RunInput
-      // RunInput extends Symbol ? ParamsFromFString<T> : RunInput
-    >({
+    return new PromptTemplate({
       // Rely on extracted types
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       inputVariables: [...names] as any[],
