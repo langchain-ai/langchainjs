@@ -88,9 +88,9 @@ If you have a Twitter account you would like us to mention, please let us know i
 
 #### Integration releases
 
-The release script can be executed only while on a fresh `main` branch, with no un-committed changes, from the package root.
+The release script can be executed only while on a fresh `main` branch, with no un-committed changes, from the package root. If working from a fork of the repository, make sure to sync the forked `main` branch with the upstream `main` branch first.
 
-You can invoke the script by calling `yarn release`.
+You can invoke the script by calling `yarn release`. If new dependencies have been added to the integration package, install them first (i.e. run `yarn`, then `yarn release`).
 
 There are three parameters which can be passed to this script, one required and two optional.
 
@@ -102,7 +102,7 @@ This script automatically bumps the package version, creates a new release branc
 
 Halfway through this script, you'll be prompted to enter an NPM OTP (typically from an authenticator app). This value is not stored anywhere and is only used to authenticate the NPM release.
 
-> **Note** Unless releasing one of `langchain`, `@langchain/core` or `@langchain/community`, `no` should be answered to all prompts following `Publish @langchain/<package> to npm?`. Then, the change should be manually committed with the following commit message: `<package>[patch]: Release <new version>`. E.g.: `groq[patch]: Release 0.0.1`.
+> **Note** Unless releasing `langchain`, `no` should be answered to all prompts following `Publish @langchain/<package> to npm?`. Then, the change should be manually committed with the following commit message: `<package>[patch]: Release <new version>`. E.g.: `groq[patch]: Release 0.0.1`.
 
 Docker must be running if releasing one of `langchain`, `@langchain/core` or `@langchain/community`. These packages run LangChain's export tests, which run inside docker containers.
 
