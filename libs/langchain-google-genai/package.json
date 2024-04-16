@@ -39,7 +39,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@google/generative-ai": "^0.1.3",
+    "@google/generative-ai": "^0.7.0",
     "@langchain/core": "~0.1.5"
   },
   "devDependencies": {
