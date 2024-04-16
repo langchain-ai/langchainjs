@@ -220,7 +220,7 @@ export class AzureCosmosDBVectorStore extends VectorStore {
     if (ids) {
       const objectIds = ids.map((id) => new ObjectId(id));
       await this.collection.deleteMany({ _id: { $in: objectIds } });
-    } if (filter) {
+    } else if (filter) {
       await this.collection.deleteMany(filter);
     } else {
       await this.collection.deleteMany({});
