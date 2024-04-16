@@ -409,6 +409,73 @@ describe("Mock ChatGoogle", () => {
     expect(data.systemInstruction).toBeDefined();
   });
 
+  test("1. System request - multiple", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      convertSystemMessageToHumanContent: false,
+    });
+    const messages: BaseMessageLike[] = [
+      new SystemMessage(
+        "I will ask you to flip a coin and tell me H for heads and T for tails"
+      ),
+      new HumanMessage("Flip it"),
+      new AIMessage("H"),
+      new SystemMessage(
+        "Now tell me Z for heads and Q for tails"
+      ),
+      new HumanMessage("Flip it again"),
+    ];
+
+    let caught = false;
+    try {
+      const result = await model.invoke(messages);
+      console.log(result)
+    } catch (xx) {
+      caught = true;
+    }
+    expect(caught).toBeTruthy();
+  });
+
+  test("1. System request - not first", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      convertSystemMessageToHumanContent: false,
+    });
+    const messages: BaseMessageLike[] = [
+      new HumanMessage("Flip it"),
+      new AIMessage("H"),
+      new SystemMessage(
+        "Now tell me Z for heads and Q for tails"
+      ),
+      new HumanMessage("Flip it again"),
+    ];
+
+    let caught = false;
+    try {
+      const result = await model.invoke(messages);
+      console.log(result)
+    } catch (xx) {
+      caught = true;
+    }
+    expect(caught).toBeTruthy();
+  });
+
   test("2. Response format - safety", async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};

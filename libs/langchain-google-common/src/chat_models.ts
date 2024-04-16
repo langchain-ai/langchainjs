@@ -119,12 +119,25 @@ class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
     input: BaseMessage[],
     _parameters: GoogleAIModelParams
   ): GeminiContent {
-    const firstInput = input[0];
-    if (firstInput._getType() === "system" && this.useSystemInstruction) {
-      return baseMessageToContent(firstInput, undefined, true)[0];
-    } else {
+    if (!this.useSystemInstruction) {
       return {} as GeminiContent;
     }
+
+    let ret = {} as GeminiContent;
+    input.forEach( (message, index) => {
+      if (message._getType() === "system") {
+        // For system types, we only want it if it is the first message,
+        // if it appears anywhere else, it should be an error.
+        if (index === 0) {
+          // eslint-disable-next-line prefer-destructuring
+          ret = baseMessageToContent(message, undefined, true)[0];
+        } else {
+          throw new Error("System messages are only permitted as the first passed message.");
+        }
+      }
+    });
+
+    return ret;
   }
 }
 
