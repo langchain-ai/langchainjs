@@ -6,7 +6,7 @@ import { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { UpstashVectorStore } from "../upstash.js";
 import { sleep } from "../../utils/time.js";
 
-describe.skip("UpstashVectorStore", () => {
+describe("UpstashVectorStore", () => {
   let store: UpstashVectorStore;
   let embeddings: EmbeddingsInterface;
   let index: Index;
@@ -97,26 +97,15 @@ describe.skip("UpstashVectorStore", () => {
     // Sleeping for a second to make sure that all the indexing operations are finished.
     await sleep(1000);
 
-    const results1 = await store.similaritySearchWithScore(
-      "banana",
-      3,
-      `creationTime = ${createdAt + 1}`
-    );
+    const results1 = await store.similaritySearchWithScore("banana", 3, `creationTime = ${createdAt + 1}`);
     expect(results1).toHaveLength(1);
 
     expect([results1[0][0]]).toEqual([
-      new Document({
-        metadata: { creationTime: createdAt + 1 },
-        pageContent: "banana",
-      }),
+      new Document({ metadata: { creationTime: createdAt + 1 }, pageContent: "banana" }),
     ]);
 
-    const results2 = await store.similaritySearchWithScore(
-      "car",
-      4,
-      `creationTime = ${createdAt - 1}`
-    );
+    const results2 = await store.similaritySearchWithScore("car", 4, `creationTime = ${createdAt - 1}`);
 
     expect(results2).toHaveLength(0);
-  });
+  })
 });
