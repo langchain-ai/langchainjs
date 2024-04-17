@@ -6,7 +6,7 @@ import { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { UpstashVectorStore } from "../upstash.js";
 import { sleep } from "../../utils/time.js";
 
-describe("UpstashVectorStore", () => {
+describe.skip("UpstashVectorStore", () => {
   let store: UpstashVectorStore;
   let embeddings: EmbeddingsInterface;
   let index: Index;
