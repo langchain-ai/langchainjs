@@ -2,9 +2,10 @@
   "imports": {
     "langchain/": "npm:/langchain/",
     "@faker-js/faker": "npm:@faker-js/faker",
-    "@langchain/anthropic": "npm:@langchain/anthropic",
+    "@langchain/anthropic": "npm:@langchain/anthropic@0.1.16",
     "@langchain/community/": "npm:/@langchain/community/",
     "@langchain/openai": "npm:@langchain/openai@0.0.28",
+    "@langchain/google-vertexai-web": "npm:@langchain/google-vertexai-web@0.0.5",
     "@langchain/mistralai": "npm:@langchain/mistralai@0.0.18",
     "@langchain/core/": "npm:/@langchain/core@0.1.56/",
     "@langchain/pinecone": "npm:@langchain/pinecone",
