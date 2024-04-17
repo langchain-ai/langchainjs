@@ -331,19 +331,23 @@ function _formatMessagesForAnthropic(messages: BaseMessage[]): {
       throw new Error(`Message type "${message._getType()}" is not supported.`);
     }
     if (isAIMessage(message) && !!message.tool_calls?.length) {
-      if (message.content === "") {
-        return {
-          role,
-          content: message.tool_calls.map(_convertLangChainToolCallToAnthropic),
-        };
-      } else if (typeof message.content === "string") {
-        console.warn(
-          `The "tool_calls" field on a message is only respected if content is an empty string.`
-        );
-        return {
-          role,
-          content: _formatContent(message.content),
-        };
+      if (typeof message.content === "string") {
+        if (message.content === "") {
+          return {
+            role,
+            content: message.tool_calls.map(
+              _convertLangChainToolCallToAnthropic
+            ),
+          };
+        } else {
+          return {
+            role,
+            content: [
+              { type: "text", text: message.content },
+              ...message.tool_calls.map(_convertLangChainToolCallToAnthropic),
+            ],
+          };
+        }
       } else {
         const { content } = message;
         const hasMismatchedToolCalls = !message.tool_calls.every((toolCall) =>
@@ -354,7 +358,7 @@ function _formatMessagesForAnthropic(messages: BaseMessage[]): {
         );
         if (hasMismatchedToolCalls) {
           console.warn(
-            `The "tool_calls" field on a message is only respected if content is an empty string.`
+            `The "tool_calls" field on a message is only respected if content is a string.`
           );
         }
         return {
