@@ -36,6 +36,9 @@ npm install @langchain/anthropic
 
 ## Using callbacks
 
-You can also use a callback to see the same information:
+You can also use the `handleLLMEnd` callback to get the full output from the LLM, including token usage for supported models.
+Here's an example of how you could do that:
 
-import Example from "@examples/models/chat/token_usage_tracking_callback.ts";
+import CallbackExample from "@examples/models/chat/token_usage_tracking_callback.ts";
+
+<CodeBlock language="typescript">{CallbackExample}</CodeBlock>
