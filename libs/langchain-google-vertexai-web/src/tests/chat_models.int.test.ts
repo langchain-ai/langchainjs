@@ -39,6 +39,7 @@ describe("Google APIKey Chat", () => {
     const model = new ChatVertexAI();
     try {
       const res = await model.invoke("What is 1 + 1?");
+      console.log(res);
       expect(res).toBeDefined();
       expect(res._getType()).toEqual("ai");
 

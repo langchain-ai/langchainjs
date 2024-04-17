@@ -19,6 +19,8 @@ export interface SecretMap {
   COHERE_API_KEY?: string;
   DATABERRY_API_KEY?: string;
   FIREWORKS_API_KEY?: string;
+  FRIENDLI_TOKEN?: string;
+  FRIENDLI_TEAM?: string;
   GOOGLE_API_KEY?: string;
   GOOGLE_PALM_API_KEY?: string;
   GOOGLE_PLACES_API_KEY?: string;

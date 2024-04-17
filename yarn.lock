@@ -8909,7 +8909,7 @@ __metadata:
     "@tsconfig/recommended": ^1.0.3
     "@typescript-eslint/eslint-plugin": ^6.12.0
     "@typescript-eslint/parser": ^6.12.0
-    cohere-ai: ^7.8.0
+    cohere-ai: ^7.9.3
     dotenv: ^16.3.1
     dpdm: ^3.12.0
     eslint: ^8.33.0
@@ -9357,6 +9357,7 @@ __metadata:
     "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
+    "@types/mustache": ^4
     ansi-styles: ^5.0.0
     camelcase: 6
     decamelize: 1.2.0
@@ -9374,6 +9375,7 @@ __metadata:
     langsmith: ~0.1.7
     ml-distance: ^4.0.0
     ml-matrix: ^6.10.4
+    mustache: ^4.2.0
     p-queue: ^6.6.2
     p-retry: 4
     prettier: ^2.8.3
@@ -14618,6 +14620,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/mustache@npm:^4":
+  version: 4.2.5
+  resolution: "@types/mustache@npm:4.2.5"
+  checksum: 0ff1d52022fd3ab0db1c97964ca0c24b45ad74e81ec62e05d27eab5b66ef1d78ff257f4cfb481c72b8b511f15520ca48717e000dc5fa8c3fdf732790b28f05cb
+  languageName: node
+  linkType: hard
+
 "@types/node-fetch@npm:^2.5.0, @types/node-fetch@npm:^2.5.10, @types/node-fetch@npm:^2.6.4":
   version: 2.6.4
   resolution: "@types/node-fetch@npm:2.6.4"
@@ -18430,16 +18439,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cohere-ai@npm:^7.8.0":
-  version: 7.8.0
-  resolution: "cohere-ai@npm:7.8.0"
+"cohere-ai@npm:^7.9.3":
+  version: 7.9.3
+  resolution: "cohere-ai@npm:7.9.3"
   dependencies:
     form-data: 4.0.0
     js-base64: 3.7.2
     node-fetch: 2.7.0
     qs: 6.11.2
     url-join: 4.0.1
-  checksum: dc2f612fe209329542a45c0c600cc5eb65cce138f935e9a254c0a992000de28d298ed961acb9d58d19d84b26e981c6fa39f8ac29adb82f2ffe5495b11dc58766
+  checksum: 89c7356680a484fe46b8999b05e97d5329efa96105d0f9658cdc84147ea278a53320db9b6db5af31a231ae980161b1c3341bba4f07b69e152d3a6b776e6179a9
   languageName: node
   linkType: hard
 

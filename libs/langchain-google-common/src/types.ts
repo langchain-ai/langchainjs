@@ -167,10 +167,10 @@ export interface GeminiSafetySetting {
   threshold: string;
 }
 
-export interface GeminiSafetyRating {
+export type GeminiSafetyRating = {
   category: string;
   probability: string;
-}
+} & Record<string, unknown>;
 
 export type GeminiRole = "user" | "model" | "function";
 
@@ -245,6 +245,7 @@ interface GeminiResponsePromptFeedback {
 export interface GenerateContentResponseData {
   candidates: GeminiResponseCandidate[];
   promptFeedback: GeminiResponsePromptFeedback;
+  usageMetadata: Record<string, unknown>;
 }
 
 export type GoogleLLMModelFamily = null | "palm" | "gemini";
