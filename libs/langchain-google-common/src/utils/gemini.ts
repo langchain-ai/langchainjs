@@ -487,10 +487,32 @@ export function safeResponseToString(
   return safeResponseTo(response, safetyHandler, responseToString);
 }
 
+export function responseToGenerationInfo(response: GoogleLLMResponse) {
+  if (!Array.isArray(response.data)) {
+    return {};
+  }
+  const data = response.data[0];
+  return {
+    usage_metadata: {
+      prompt_token_count: data.usageMetadata?.promptTokenCount,
+      candidates_token_count: data.usageMetadata?.candidatesTokenCount,
+      total_token_count: data.usageMetadata?.totalTokenCount,
+    },
+    safety_ratings: data.candidates[0]?.safetyRatings?.map((rating) => ({
+      category: rating.category,
+      probability: rating.probability,
+      probability_score: rating.probabilityScore,
+      severity: rating.severity,
+      severity_score: rating.severityScore,
+    })),
+    finish_reason: data.candidates[0]?.finishReason,
+  };
+}
+
 export function responseToGeneration(response: GoogleLLMResponse): Generation {
   return {
     text: responseToString(response),
-    generationInfo: response,
+    generationInfo: responseToGenerationInfo(response),
   };
 }
 
@@ -507,7 +529,7 @@ export function responseToChatGeneration(
   return new ChatGenerationChunk({
     text: responseToString(response),
     message: partToMessageChunk(responseToParts(response)[0]),
-    generationInfo: response,
+    generationInfo: responseToGenerationInfo(response),
   });
 }
 
@@ -567,7 +589,7 @@ export function responseToChatGenerations(
     const combinedText = ret.map((item) => item.text).join("");
     const toolCallChunks = ret[
       ret.length - 1
-    ].message.additional_kwargs?.tool_calls?.map((toolCall, i) => ({
+    ]?.message.additional_kwargs?.tool_calls?.map((toolCall, i) => ({
       name: toolCall.function.name,
       args: toolCall.function.arguments,
       id: toolCall.id,
@@ -577,7 +599,7 @@ export function responseToChatGenerations(
       new ChatGenerationChunk({
         message: new AIMessageChunk({
           content: combinedContent,
-          additional_kwargs: ret[ret.length - 1].message.additional_kwargs,
+          additional_kwargs: ret[ret.length - 1]?.message.additional_kwargs,
           tool_call_chunks: toolCallChunks,
         }),
         text: combinedText,
@@ -647,7 +669,7 @@ export function responseToChatResult(response: GoogleLLMResponse): ChatResult {
   const generations = responseToChatGenerations(response);
   return {
     generations,
-    llmOutput: response,
+    llmOutput: responseToGenerationInfo(response),
   };
 }
 
