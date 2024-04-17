@@ -31,9 +31,9 @@ export type UpstashQueryMetadata = UpstashMetadata & {
  */
 export type UpstashDeleteParams =
   | {
-    ids: string | string[];
-    deleteAll?: never;
-  }
+      ids: string | string[];
+      deleteAll?: never;
+    }
   | { deleteAll: boolean; ids?: never };
 
 const CONCURRENT_UPSERT_LIMIT = 1000;
@@ -64,7 +64,7 @@ export class UpstashVectorStore extends VectorStore {
 
     this.index = index;
     this.caller = new AsyncCaller(asyncCallerArgs);
-    this.filter = args.filter
+    this.filter = args.filter;
   }
 
   /**
@@ -145,7 +145,6 @@ export class UpstashVectorStore extends VectorStore {
     k: number,
     filter: string,
     options?: { includeVectors: boolean }
-
   ) {
     const queryResult = await this.index.query<UpstashQueryMetadata>({
       vector: query,
