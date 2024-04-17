@@ -14,6 +14,7 @@ import {
  */
 export interface UpstashVectorLibArgs extends AsyncCallerParams {
   index: UpstashIndex;
+  filter?: string;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -30,9 +31,9 @@ export type UpstashQueryMetadata = UpstashMetadata & {
  */
 export type UpstashDeleteParams =
   | {
-      ids: string | string[];
-      deleteAll?: never;
-    }
+    ids: string | string[];
+    deleteAll?: never;
+  }
   | { deleteAll: boolean; ids?: never };
 
 const CONCURRENT_UPSERT_LIMIT = 1000;
@@ -48,6 +49,8 @@ export class UpstashVectorStore extends VectorStore {
 
   embeddings: EmbeddingsInterface;
 
+  filter?: string;
+
   _vectorstoreType(): string {
     return "upstash";
   }
@@ -61,6 +64,7 @@ export class UpstashVectorStore extends VectorStore {
 
     this.index = index;
     this.caller = new AsyncCaller(asyncCallerArgs);
+    this.filter = args.filter
   }
 
   /**
@@ -139,12 +143,15 @@ export class UpstashVectorStore extends VectorStore {
   protected async _runUpstashQuery(
     query: number[],
     k: number,
+    filter: string,
     options?: { includeVectors: boolean }
+
   ) {
     const queryResult = await this.index.query<UpstashQueryMetadata>({
       vector: query,
       topK: k,
       includeMetadata: true,
+      filter,
       ...options,
     });
 
@@ -162,9 +169,10 @@ export class UpstashVectorStore extends VectorStore {
    */
   async similaritySearchVectorWithScore(
     query: number[],
-    k: number
+    k: number,
+    filter?: string
   ): Promise<[DocumentInterface, number][]> {
-    const results = await this._runUpstashQuery(query, k);
+    const results = await this._runUpstashQuery(query, k, filter);
 
     const searchResult: [DocumentInterface, number][] = results.map((res) => {
       const { _pageContentLC, ...metadata } = (res.metadata ??
