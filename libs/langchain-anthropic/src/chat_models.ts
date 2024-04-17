@@ -585,9 +585,13 @@ export class ChatAnthropicMessages<
     const params = this.invocationParams(options);
     const formattedMessages = _formatMessagesForAnthropic(messages);
     if (options.tools !== undefined && options.tools.length > 0) {
-      const generations = await this._generateNonStreaming(messages, params, {
-        signal: options.signal,
-      });
+      const { generations } = await this._generateNonStreaming(
+        messages,
+        params,
+        {
+          signal: options.signal,
+        }
+      );
       const result = generations[0].message as AIMessage;
       const toolCallChunks = result.tool_calls?.map(
         (toolCall: ToolCall, index: number) => ({
@@ -706,7 +710,8 @@ export class ChatAnthropicMessages<
       content,
       additionalKwargs
     );
-    return generations;
+    const { role: _role, type: _type, ...rest } = additionalKwargs;
+    return { generations, llmOutput: rest };
   }
 
   /** @ignore */
@@ -744,12 +749,9 @@ export class ChatAnthropicMessages<
         ],
       };
     } else {
-      const generations = await this._generateNonStreaming(messages, params, {
+      return this._generateNonStreaming(messages, params, {
         signal: options.signal,
       });
-      return {
-        generations,
-      };
     }
   }
 
