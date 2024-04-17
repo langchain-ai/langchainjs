@@ -534,23 +534,22 @@ const applyEvaluators = async ({
     total: examples.length,
     format: "Running Evaluators: {bar} {percentage}% | {value}/{total}\n",
   });
-  const results: Record<
-    string,
-    { run_id: string; execution_time?: number; feedback: Feedback[] }
-  > = {};
-  for (let i = 0; i < runs.length; i += 1) {
-    const run = runs[i];
-    const example = examples[i];
+
+  const results = await Promise.all(runs.map(async (run, i): Promise<{
+    run_id: string;
+    execution_time?: number;
+    feedback: Feedback[];
+  }> => {
     const evaluatorResults = await Promise.allSettled(
       evaluators.map((evaluator) =>
         client.evaluateRun(run, evaluator, {
-          referenceExample: example,
+          referenceExample: examples[i],
           loadChildRuns: false,
         })
       )
     );
     progress.increment();
-    results[example.id] = {
+    return {
       execution_time:
         run?.end_time && run.start_time
           ? run.end_time - run.start_time
@@ -560,8 +559,12 @@ const applyEvaluators = async ({
       ),
       run_id: run.id,
     };
-  }
-  return results;
+  }));
+
+  return results.reduce((acc, result, i) => ({
+    ...acc,
+    [examples[i].id]: result,
+  }));
 };
 
 export type EvalResults = {
