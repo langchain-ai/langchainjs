@@ -115,7 +115,7 @@ console.log(
 const memoryWithMetadataFunction = new VectorStoreRetrieverMemory({
   vectorStoreRetriever: vectorStore.asRetriever(1),
   memoryKey: "history",
-  metadata: (inputValues, outputValues) => ({
+  metadata: (inputValues, _outputValues) => ({
     firstWord: inputValues?.input.split(" ")[0], // First word of the input
     createdAt: new Date().toLocaleDateString(), // Date when the message was saved
     userId: "1", // Hardcoded userId
