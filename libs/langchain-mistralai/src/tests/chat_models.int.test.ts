@@ -98,7 +98,7 @@ test("Can call tools using structured tools", async () => {
   ).toBeDefined();
 });
 
-test.only("Can call tools", async () => {
+test("Can call tools", async () => {
   const tools = [
     {
       type: "function",
