@@ -284,6 +284,13 @@ export abstract class AbstractGoogleLLMConnection<
     return parameters.safetySettings ?? [];
   }
 
+  formatSystemInstruction(
+    _input: MessageType,
+    _parameters: GoogleAIModelRequestParams
+  ): GeminiContent {
+    return {} as GeminiContent;
+  }
+
   // Borrowed from the OpenAI invocation params test
   isStructuredToolArray(tools?: unknown[]): tools is StructuredToolInterface[] {
     return (
@@ -343,6 +350,7 @@ export abstract class AbstractGoogleLLMConnection<
     const generationConfig = this.formatGenerationConfig(input, parameters);
     const tools = this.formatTools(input, parameters);
     const safetySettings = this.formatSafetySettings(input, parameters);
+    const systemInstruction = this.formatSystemInstruction(input, parameters);
 
     const ret: GeminiRequest = {
       contents,
@@ -353,6 +361,13 @@ export abstract class AbstractGoogleLLMConnection<
     }
     if (safetySettings && safetySettings.length) {
       ret.safetySettings = safetySettings;
+    }
+    if (
+      systemInstruction?.role &&
+      systemInstruction?.parts &&
+      systemInstruction?.parts?.length
+    ) {
+      ret.systemInstruction = systemInstruction;
     }
     return ret;
   }
