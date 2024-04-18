@@ -43,13 +43,15 @@ const CONCURRENT_UPSERT_LIMIT = 1000;
  * deleting documents, performing similarity search and more.
  */
 export class UpstashVectorStore extends VectorStore {
+  declare FilterType: string;
+
   index: UpstashIndex;
 
   caller: AsyncCaller;
 
   embeddings: EmbeddingsInterface;
 
-  filter?: string;
+  filter?: this["FilterType"];
 
   _vectorstoreType(): string {
     return "upstash";
@@ -143,7 +145,7 @@ export class UpstashVectorStore extends VectorStore {
   protected async _runUpstashQuery(
     query: number[],
     k: number,
-    filter: string,
+    filter?: this["FilterType"],
     options?: { includeVectors: boolean }
   ) {
     const queryResult = await this.index.query<UpstashQueryMetadata>({
@@ -169,7 +171,7 @@ export class UpstashVectorStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: string
+    filter?: this["FilterType"]
   ): Promise<[DocumentInterface, number][]> {
     const results = await this._runUpstashQuery(query, k, filter);
 
