@@ -428,16 +428,14 @@ describe("Mock ChatGoogle", () => {
       ),
       new HumanMessage("Flip it"),
       new AIMessage("H"),
-      new SystemMessage(
-        "Now tell me Z for heads and Q for tails"
-      ),
+      new SystemMessage("Now tell me Z for heads and Q for tails"),
       new HumanMessage("Flip it again"),
     ];
 
     let caught = false;
     try {
       const result = await model.invoke(messages);
-      console.log(result)
+      console.log(result);
     } catch (xx) {
       caught = true;
     }
@@ -460,16 +458,14 @@ describe("Mock ChatGoogle", () => {
     const messages: BaseMessageLike[] = [
       new HumanMessage("Flip it"),
       new AIMessage("H"),
-      new SystemMessage(
-        "Now tell me Z for heads and Q for tails"
-      ),
+      new SystemMessage("Now tell me Z for heads and Q for tails"),
       new HumanMessage("Flip it again"),
     ];
 
     let caught = false;
     try {
       const result = await model.invoke(messages);
-      console.log(result)
+      console.log(result);
     } catch (xx) {
       caught = true;
     }
