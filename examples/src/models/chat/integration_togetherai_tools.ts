@@ -9,9 +9,9 @@ const calculatorTool = convertToOpenAITool(new Calculator());
 const modelWithCalculator = new ChatTogetherAI({
   temperature: 0,
   // This is the default env variable name it will look for if none is passed.
-  togetherAIApiKey: process.env.TOGETHER_AI_API_KEY,
+  apiKey: process.env.TOGETHER_AI_API_KEY,
   // Together JSON mode/tool calling only supports a select number of models
-  modelName: "mistralai/Mixtral-8x7B-Instruct-v0.1",
+  model: "mistralai/Mixtral-8x7B-Instruct-v0.1",
 }).bind({
   // Bind the tool to the model.
   tools: [calculatorTool],

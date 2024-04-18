@@ -9,6 +9,10 @@ LangChain provides an optional caching layer for chat models. This is useful for
 It can save you money by reducing the number of API calls you make to the LLM provider, if you're often requesting the same completion multiple times.
 It can speed up your application by reducing the number of API calls you make to the LLM provider.
 
+import UnifiedModelParamsTooltip from "@mdx_components/unified_model_params_tooltip.mdx";
+
+<UnifiedModelParamsTooltip></UnifiedModelParamsTooltip>
+
 import CodeBlock from "@theme/CodeBlock";
 
 ```typescript
@@ -16,7 +20,7 @@ import { ChatOpenAI } from "@langchain/openai";
 
 // To make the caching really obvious, lets use a slower model.
 const model = new ChatOpenAI({
-  modelName: "gpt-4",
+  model: "gpt-4",
   cache: true,
 });
 ```

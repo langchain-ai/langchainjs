@@ -1,3 +1,6 @@
+/* eslint-disable import/no-extraneous-dependencies */
+
+import { z } from "zod";
 import { test } from "@jest/globals";
 import {
   AIMessage,
@@ -8,16 +11,35 @@ import {
   MessageContentComplex,
   MessageContentText,
   SystemMessage,
+  ToolMessage,
 } from "@langchain/core/messages";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
+import { StructuredTool } from "@langchain/core/tools";
 import { ChatVertexAI } from "../chat_models.js";
+
+class WeatherTool extends StructuredTool {
+  schema = z.object({
+    location: z.string().describe("The name of city to get the weather for."),
+  });
+
+  description =
+    "Get the weather of a specific location and return the temperature in Celsius.";
+
+  name = "get_weather";
+
+  async _call(input: z.infer<typeof this.schema>) {
+    console.log(`WeatherTool called with input: ${input}`);
+    return `The weather in ${input.location} is 25°C`;
+  }
+}
 
 describe("Google APIKey Chat", () => {
   test("invoke", async () => {
     const model = new ChatVertexAI();
     try {
       const res = await model.invoke("What is 1 + 1?");
+      console.log(res);
       expect(res).toBeDefined();
       expect(res._getType()).toEqual("ai");
 
@@ -102,6 +124,45 @@ describe("Google APIKey Chat", () => {
       console.error(e);
       throw e;
     }
+  });
+
+  test("Tool call", async () => {
+    const chat = new ChatVertexAI().bindTools([new WeatherTool()]);
+    const res = await chat.invoke("What is the weather in SF");
+    console.log(res);
+    expect(res.tool_calls?.length).toEqual(1);
+    expect(res.tool_calls?.[0].args).toEqual(
+      JSON.parse(res.additional_kwargs.tool_calls?.[0].function.arguments ?? "")
+    );
+  });
+
+  test("Few shotting with tool calls", async () => {
+    const chat = new ChatVertexAI().bindTools([new WeatherTool()]);
+    const res = await chat.invoke("What is the weather in SF");
+    console.log(res);
+    const res2 = await chat.invoke([
+      new HumanMessage("What is the weather in SF?"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            id: "12345",
+            name: "get_current_weather",
+            args: {
+              location: "SF",
+            },
+          },
+        ],
+      }),
+      new ToolMessage({
+        tool_call_id: "12345",
+        content: "It is currently 24 degrees with hail in SF.",
+      }),
+      new AIMessage("It is currently 24 degrees in SF with hail in SF."),
+      new HumanMessage("What did you say the weather was?"),
+    ]);
+    console.log(res2);
+    expect(res2.content).toContain("24");
   });
 });
 

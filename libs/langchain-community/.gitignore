@@ -218,6 +218,10 @@ llms/fireworks.cjs
 llms/fireworks.js
 llms/fireworks.d.ts
 llms/fireworks.d.cts
+llms/friendli.cjs
+llms/friendli.js
+llms/friendli.d.ts
+llms/friendli.d.cts
 llms/googlepalm.cjs
 llms/googlepalm.js
 llms/googlepalm.d.ts
@@ -342,6 +346,10 @@ vectorstores/hnswlib.cjs
 vectorstores/hnswlib.js
 vectorstores/hnswlib.d.ts
 vectorstores/hnswlib.d.cts
+vectorstores/hanavector.cjs
+vectorstores/hanavector.js
+vectorstores/hanavector.d.ts
+vectorstores/hanavector.d.cts
 vectorstores/lancedb.cjs
 vectorstores/lancedb.js
 vectorstores/lancedb.d.ts
@@ -474,6 +482,10 @@ chat_models/fireworks.cjs
 chat_models/fireworks.js
 chat_models/fireworks.d.ts
 chat_models/fireworks.d.cts
+chat_models/friendli.cjs
+chat_models/friendli.js
+chat_models/friendli.d.ts
+chat_models/friendli.d.cts
 chat_models/googlevertexai.cjs
 chat_models/googlevertexai.js
 chat_models/googlevertexai.d.ts

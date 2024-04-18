@@ -82,7 +82,7 @@ const prompt = ChatPromptTemplate.fromMessages([
   ["human", "{input}"],
   new MessagesPlaceholder("agent_scratchpad"),
 ]);
-const llm = new ChatOpenAI({ modelName: "gpt-4", temperature: 0 });
+const llm = new ChatOpenAI({ model: "gpt-4", temperature: 0 });
 const sqlToolKit = new SqlToolkit(db, llm);
 const newPrompt = await prompt.partial({
   dialect: sqlToolKit.dialect,

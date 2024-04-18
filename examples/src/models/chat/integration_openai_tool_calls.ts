@@ -18,7 +18,7 @@ function getCurrentWeather(location: string, _unit?: string) {
 
 // Bind function to the model as a tool
 const chat = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo-1106",
+  model: "gpt-3.5-turbo-1106",
   maxTokens: 128,
 }).bind({
   tools: [

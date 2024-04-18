@@ -103,7 +103,7 @@ const vectorStore = await WeaviateStore.fromDocuments(docs, embeddings, {
   textKey: "text",
   metadataKeys: ["year", "director", "rating", "genre"],
 });
-const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+const selfQueryRetriever = SelfQueryRetriever.fromLLM({
   llm,
   vectorStore,
   documentContents,

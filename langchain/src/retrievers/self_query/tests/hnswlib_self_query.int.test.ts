@@ -79,7 +79,7 @@ test("HNSWLib Store Self Query Retriever Test", async () => {
   });
   const documentContents = "Brief summary of a movie";
   const vectorStore = await HNSWLib.fromDocuments(docs, embeddings);
-  const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+  const selfQueryRetriever = SelfQueryRetriever.fromLLM({
     llm,
     vectorStore,
     documentContents,
@@ -174,7 +174,7 @@ test("HNSWLib shouldn't throw an error if a filter can't be generated, but shoul
   });
   const documentContents = "Brief summary of a movie";
   const vectorStore = await HNSWLib.fromDocuments(docs, embeddings);
-  const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+  const selfQueryRetriever = SelfQueryRetriever.fromLLM({
     llm,
     vectorStore,
     documentContents,

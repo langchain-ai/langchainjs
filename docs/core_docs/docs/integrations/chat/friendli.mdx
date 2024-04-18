@@ -1,0 +1,29 @@
+# Friendli
+
+> [Friendli](https://friendli.ai/) enhances AI application performance and optimizes cost savings with scalable, efficient deployment options, tailored for high-demand AI workloads.
+
+This tutorial guides you through integrating `ChatFriendli` for chat applications using LangChain. `ChatFriendli` offers a flexible approach to generating conversational AI responses, supporting both synchronous and asynchronous calls.
+
+## Setup
+
+Ensure the `@langchain/community` is installed.
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/community
+```
+
+Sign in to [Friendli Suite](https://suite.friendli.ai/) to create a Personal Access Token, and set it as the `FRIENDLI_TOKEN` environment.
+You can set team id as `FRIENDLI_TEAM` environment.
+
+You can initialize a Friendli chat model with selecting the model you want to use. The default model is `llama-2-13b-chat`. You can check the available models at [docs.friendli.ai](https://docs.friendli.ai/guides/serverless_endpoints/pricing#text-generation-models).
+
+## Usage
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/models/chat/friendli.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>

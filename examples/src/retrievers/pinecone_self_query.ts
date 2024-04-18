@@ -104,7 +104,7 @@ const documentContents = "Brief summary of a movie";
 const vectorStore = await PineconeStore.fromDocuments(docs, embeddings, {
   pineconeIndex: index,
 });
-const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+const selfQueryRetriever = SelfQueryRetriever.fromLLM({
   llm,
   vectorStore,
   documentContents,
