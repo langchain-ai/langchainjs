@@ -80,9 +80,13 @@ describe("Mock ChatGoogle", () => {
     await model.invoke(messages);
 
     expect(record?.opts?.headers).toHaveProperty("User-Agent");
+    expect(record?.opts?.headers).toHaveProperty("Client-Info");
     expect(record.opts.headers["User-Agent"]).toMatch(
       /langchain-js\/[0-9.]+-ChatConnection/
     );
+    expect(record.opts.headers["Client-Info"]).toMatch(
+      /langchain-[a-zA-Z0-9.-]+\/[0-9.]+\/[a-zA-Z0-9.-]+/
+      );
   });
 
   test("platform default", async () => {
