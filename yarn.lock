@@ -8961,6 +8961,7 @@ __metadata:
     "@langchain/openai": ~0.0.28
     "@langchain/scripts": ~0.0
     "@mozilla/readability": ^0.4.4
+    "@neondatabase/serverless": ^0.9.1
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^1.1.0
     "@planetscale/database": ^1.8.0
@@ -9094,6 +9095,7 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@mozilla/readability": "*"
+    "@neondatabase/serverless": "*"
     "@opensearch-project/opensearch": "*"
     "@pinecone-database/pinecone": "*"
     "@planetscale/database": ^1.8.0
@@ -9207,6 +9209,8 @@ __metadata:
     "@huggingface/inference":
       optional: true
     "@mozilla/readability":
+      optional: true
+    "@neondatabase/serverless":
       optional: true
     "@opensearch-project/opensearch":
       optional: true
@@ -10125,6 +10129,15 @@ __metadata:
   dependencies:
     "@types/pg": 8.6.6
   checksum: 25b81ba6b37e0ac56a746a1219de6107dd74d6f2d093bc23dc33b6fb8f33d00f80cb37eb0648afacd32ab0020b20c1809e3ec6e5c34d23fa21ae5b76d6041332
+  languageName: node
+  linkType: hard
+
+"@neondatabase/serverless@npm:^0.9.1":
+  version: 0.9.1
+  resolution: "@neondatabase/serverless@npm:0.9.1"
+  dependencies:
+    "@types/pg": 8.6.6
+  checksum: b74b30386006d80d02d9d70bbfd7b25be4265ca731e6d716b7ee7801524489b10411969ef2ece03cc858e558c24ae32ecb11fa151bded1218f3dec0ffdd0e26d
   languageName: node
   linkType: hard
 
