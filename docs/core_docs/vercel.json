@@ -520,11 +520,5 @@
       "source": "/docs/integrations/chat/anthropic_functions(/?)",
       "destination": "/docs/integrations/chat/anthropic_tools/"
     }
-  ],
-  "build": {
-    "env": {
-      "PYTHON_VERSION": "3.8"
-    }
-  },
-  "buildCommand": "pip install distutils && yarn install && yarn build:vercel"
+  ]
 }
