@@ -209,14 +209,17 @@ function convertMessagesToMistralMessages(
     );
   };
 
-  const getTools = (message: BaseMessage): MistralAIToolCalls[] => {
+  const getTools = (message: BaseMessage): MistralAIToolCalls[] | undefined => {
     if (isAIMessage(message) && !!message.tool_calls?.length) {
       return message.tool_calls
         .map((toolCall) => ({ ...toolCall, id: "null" }))
         .map(convertLangChainToolCallToOpenAI) as MistralAIToolCalls[];
     }
+    if (message.additional_kwargs.tool_calls === undefined) {
+      return undefined;
+    }
     const toolCalls: Omit<OpenAIToolCall, "index">[] =
-      message.additional_kwargs.tool_calls ?? [];
+      message.additional_kwargs.tool_calls;
     return (
       toolCalls?.map((toolCall) => ({
         id: "null",

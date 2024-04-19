@@ -117,6 +117,13 @@ declare interface BaiduWenxinChatInput {
 }
 
 /**
+ * Interface maps model names and their API endpoints.
+ */
+interface Models {
+  [key: string]: string;
+}
+
+/**
  * Function that extracts the custom role of a generic chat message.
  * @param message Chat message from which to extract the custom role.
  * @returns The custom role of the chat message.
@@ -264,21 +271,25 @@ export class ChatBaiduWenxin
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;
 
-    if (this.model === "ERNIE-Bot") {
-      this.apiUrl =
-        "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions";
-    } else if (this.model === "ERNIE-Bot-turbo") {
-      this.apiUrl =
-        "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/eb-instant";
-    } else if (this.model === "ERNIE-Bot-4") {
-      this.apiUrl =
-        "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions_pro";
-    } else if (this.model === "ERNIE-Speed-8K") {
-      this.apiUrl =
-        "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie_speed";
-    } else if (this.model === "ERNIE-Speed-128K") {
-      this.apiUrl =
-        "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie-speed-128k";
+    const models: Models = {
+      "ERNIE-Bot": "completions",
+      "ERNIE-Bot-turbo": "eb-instant",
+      "ERNIE-Bot-4": "completions_pro",
+      "ERNIE-Speed-8K": "ernie_speed",
+      "ERNIE-Speed-128K": "ernie-speed-128k",
+      "ERNIE-4.0-8K": "completions_pro",
+      "ERNIE-4.0-8K-Preview": "ernie-4.0-8k-preview",
+      "ERNIE-3.5-8K": "completions",
+      "ERNIE-3.5-8K-Preview": "ernie-3.5-8k-preview",
+      "ERNIE-Lite-8K": "eb-instant",
+      "ERNIE-Tiny-8K": "ernie-tiny-8k",
+      "ERNIE-Character-8K": "ernie-char-8",
+      "ERNIE Speed-AppBuilder": "ai_apaas",
+    };
+    if (this.model in models) {
+      this.apiUrl = `https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/${
+        models[this.model]
+      }`;
     } else {
       throw new Error(`Invalid model name: ${this.model}`);
     }

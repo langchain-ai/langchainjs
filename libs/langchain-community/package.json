@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.0.49",
+  "version": "0.0.50",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -111,7 +111,7 @@
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
     "@upstash/redis": "^1.20.6",
-    "@upstash/vector": "^1.0.2",
+    "@upstash/vector": "^1.0.7",
     "@vercel/kv": "^0.2.3",
     "@vercel/postgres": "^0.5.0",
     "@writerai/writer-sdk": "^0.40.2",
@@ -223,7 +223,7 @@
     "@tensorflow/tfjs-converter": "*",
     "@tensorflow/tfjs-core": "*",
     "@upstash/redis": "^1.20.6",
-    "@upstash/vector": "^1.0.2",
+    "@upstash/vector": "^1.0.7",
     "@vercel/kv": "^0.2.3",
     "@vercel/postgres": "^0.5.0",
     "@writerai/writer-sdk": "^0.40.2",

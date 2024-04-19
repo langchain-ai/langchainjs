@@ -129,7 +129,7 @@ function createSchema(allowedNodes: string[], allowedRelationships: string[]) {
 function mapToBaseNode(node: any): Node {
   return new Node({
     id: node.id,
-    type: toTitleCase(node.type),
+    type: toTitleCase(node.type || ""),
   });
 }
 
@@ -138,11 +138,11 @@ function mapToBaseRelationship(relationship: any): Relationship {
   return new Relationship({
     source: new Node({
       id: relationship.sourceNodeId,
-      type: toTitleCase(relationship.sourceNodeType),
+      type: toTitleCase(relationship.sourceNodeType || ""),
     }),
     target: new Node({
       id: relationship.targetNodeId,
-      type: toTitleCase(relationship.targetNodeType),
+      type: toTitleCase(relationship.targetNodeType || ""),
     }),
     type: relationship.relationshipType.replace(" ", "_").toUpperCase(),
   });
@@ -201,12 +201,12 @@ export class LLMGraphTransformer {
     const rawSchema = await this.chain.invoke({ input: text });
 
     let nodes: Node[] = [];
-    if (rawSchema.nodes) {
+    if (rawSchema?.nodes) {
       nodes = rawSchema.nodes.map(mapToBaseNode);
     }
 
     let relationships: Relationship[] = [];
-    if (rawSchema.relationships) {
+    if (rawSchema?.relationships) {
       relationships = rawSchema.relationships.map(mapToBaseRelationship);
     }
 
