@@ -71,7 +71,7 @@ export interface MultiQueryRetrieverInput extends BaseRetrieverInput {
   queryCount?: number;
   parserKey?: string;
   documentCompressor?: BaseDocumentCompressor | undefined;
-  documentCompressorFilteringFn?: (docs: MultiDocs) => MultiDocs | undefined;
+  documentCompressorFilteringFn?: (docs: MultiDocs) => MultiDocs;
 }
 
 /**

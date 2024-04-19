@@ -31,7 +31,7 @@ export type ParentDocumentRetrieverFields = MultiVectorRetrieverInput & {
    */
   childDocumentRetriever?: VectorStoreRetrieverInterface<VectorStoreInterface>;
   documentCompressor?: BaseDocumentCompressor | undefined;
-  documentCompressorFilteringFn?: (docs: SubDocs) => SubDocs | undefined;
+  documentCompressorFilteringFn?: (docs: SubDocs) => SubDocs;
 };
 
 /**
