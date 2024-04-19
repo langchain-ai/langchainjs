@@ -4,7 +4,10 @@
 yum install -y python311
 
 # Install pip for Python 3.11
-yum install -y python3-pip
+python3.11 -m ensurepip
+
+# Upgrade pip to the latest version
+python3.11 -m pip install --upgrade pip
 
 # Install setuptools using pip
 python3.11 -m pip install setuptools
