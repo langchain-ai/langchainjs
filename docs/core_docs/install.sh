@@ -4,6 +4,6 @@
 yum install -y python311
 
 # Install setuptools using pip
-python3.11 -m pip install setuptools
+python3.11 -m pip3 install setuptools
 
 yarn install
