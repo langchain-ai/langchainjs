@@ -525,5 +525,6 @@
     "env": {
       "PYTHON_VERSION": "3.8"
     }
-  }
+  },
+  "buildCommand": "pip install distutils && yarn install && yarn build:vercel"
 }
