@@ -17,7 +17,7 @@ import {
   type ChatPromptValueInterface,
   ChatPromptValue,
 } from "../prompt_values.js";
-import type { InputValues, PartialValues } from "../utils/types/index.js";
+import type { InputValues, InputValues_FSTRING, PartialValues } from "../utils/types/index.js";
 import { Runnable } from "../runnables/base.js";
 import { BaseStringPromptTemplate } from "./string.js";
 import {
@@ -28,6 +28,11 @@ import {
 import { PromptTemplate, type ParamsFromFString } from "./prompt.js";
 import { ImagePromptTemplate } from "./image.js";
 import { parseFString } from "./template.js";
+
+
+type ObjectTupleIntersection<A, T extends [...unknown[]]> = T['length'] extends 0
+  ? A
+  : ObjectTupleIntersection<A & T[0], T extends [unknown, ...infer R] ? R : []>;
 
 /**
  * Abstract class that serves as a base for creating message prompt
@@ -86,12 +91,11 @@ export interface MessagesPlaceholderFields<T extends string> {
  * extends the BaseMessagePromptTemplate.
  */
 export class MessagesPlaceholder<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunInput extends InputValues = any
-  >
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends InputValues = any
+>
   extends BaseMessagePromptTemplate<RunInput>
-  implements MessagesPlaceholderFields<Extract<keyof RunInput, string>>
-{
+  implements MessagesPlaceholderFields<Extract<keyof RunInput, string>> {
   static lc_name() {
     return "MessagesPlaceholder";
   }
@@ -209,12 +213,12 @@ export abstract class BaseMessageStringPromptTemplate<
   constructor(
     fields:
       | MessageStringPromptTemplateFields<
-          InputValues<Extract<keyof RunInput, string>>
-        >
+        InputValues<Extract<keyof RunInput, string>>
+      >
       | BaseStringPromptTemplate<
-          InputValues<Extract<keyof RunInput, string>>,
-          string
-        >
+        InputValues<Extract<keyof RunInput, string>>,
+        string
+      >
   ) {
     if (!("prompt" in fields)) {
       // eslint-disable-next-line no-param-reassign
@@ -312,8 +316,8 @@ export class ChatMessagePromptTemplate<
   constructor(
     fields:
       | ChatMessagePromptTemplateFields<
-          InputValues<Extract<keyof RunInput, string>>
-        >
+        InputValues<Extract<keyof RunInput, string>>
+      >
       | BaseStringPromptTemplate<InputValues<Extract<keyof RunInput, string>>>,
     role?: string
   ) {
@@ -351,6 +355,25 @@ type MessageClass =
 
 type ChatMessageClass = typeof ChatMessage;
 
+type _StringImageMessagePromptTemplatePrompt<RunInput extends InputValues> =
+  | BaseStringPromptTemplate<
+    RunInput,
+    string
+  > | PromptTemplate<RunInput>
+  | Array<
+    | BaseStringPromptTemplate<
+      RunInput,
+      string
+    >
+    | ImagePromptTemplate<
+      RunInput,
+      string
+    >
+    | MessageStringPromptTemplateFields<
+      RunInput
+    >
+  >;
+
 class _StringImageMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
@@ -360,28 +383,11 @@ class _StringImageMessagePromptTemplate<
 
   lc_serializable = true;
 
-  inputVariables: Array<Extract<keyof RunInput, string>> = [];
-
   additionalOptions: Record<string, unknown> = {};
 
-  prompt:
-    | BaseStringPromptTemplate<
-        InputValues<Extract<keyof RunInput, string>>,
-        string
-      >
-    | Array<
-        | BaseStringPromptTemplate<
-            InputValues<Extract<keyof RunInput, string>>,
-            string
-          >
-        | ImagePromptTemplate<
-            InputValues<Extract<keyof RunInput, string>>,
-            string
-          >
-        | MessageStringPromptTemplateFields<
-            InputValues<Extract<keyof RunInput, string>>
-          >
-      >;
+  prompt: _StringImageMessagePromptTemplatePrompt<RunInput>;
+
+  inputVariables: Array<Extract<keyof RunInput, string>> = [];
 
   protected messageClass?: MessageClass;
 
@@ -396,9 +402,12 @@ class _StringImageMessagePromptTemplate<
   protected chatMessageClass?: ChatMessageClass;
 
   constructor(
-    /** @TODO When we come up with a better way to type prompt templates, fix this */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    fields: any,
+    fields:
+      | {
+        prompt: _StringImageMessagePromptTemplatePrompt<RunInput>;
+        additionalOptions?: Record<string, unknown>;
+      }
+      | _StringImageMessagePromptTemplatePrompt<RunInput>,
     additionalOptions?: Record<string, unknown>
   ) {
     if (!("prompt" in fields)) {
@@ -454,15 +463,16 @@ class _StringImageMessagePromptTemplate<
     }
   }
 
-  static fromTemplate(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static fromTemplate<RunInput extends InputValues = any>(
     template: string | Array<string | _TextTemplateParam | _ImageTemplateParam>,
     additionalOptions?: Record<string, unknown>
   ) {
     if (typeof template === "string") {
-      return new this(PromptTemplate.fromTemplate(template));
+      return new this(PromptTemplate.fromTemplate<RunInput>(template));
     }
     const prompt: Array<
-      PromptTemplate<InputValues> | ImagePromptTemplate<InputValues>
+      PromptTemplate<RunInput> | ImagePromptTemplate<RunInput>
     > = [];
     for (const item of template) {
       if (
@@ -475,10 +485,10 @@ class _StringImageMessagePromptTemplate<
         } else if (typeof item.text === "string") {
           text = item.text ?? "";
         }
-        prompt.push(PromptTemplate.fromTemplate(text));
+        prompt.push(PromptTemplate.fromTemplate(text) as typeof prompt[number]);
       } else if (typeof item === "object" && "image_url" in item) {
         let imgTemplate = item.image_url ?? "";
-        let imgTemplateObject: ImagePromptTemplate<InputValues>;
+        let imgTemplateObject: ImagePromptTemplate;
         let inputVariables: string[] = [];
         if (typeof imgTemplate === "string") {
           const parsedTemplate = parseFString(imgTemplate);
@@ -498,7 +508,7 @@ class _StringImageMessagePromptTemplate<
           }
 
           imgTemplate = { url: imgTemplate };
-          imgTemplateObject = new ImagePromptTemplate<InputValues>({
+          imgTemplateObject = new ImagePromptTemplate({
             template: imgTemplate,
             inputVariables,
           });
@@ -511,7 +521,7 @@ class _StringImageMessagePromptTemplate<
           } else {
             inputVariables = [];
           }
-          imgTemplateObject = new ImagePromptTemplate<InputValues>({
+          imgTemplateObject = new ImagePromptTemplate({
             template: imgTemplate,
             inputVariables,
           });
@@ -664,8 +674,13 @@ export interface ChatPromptTemplateInput<
   validateTemplate?: boolean;
 }
 
-export type BaseMessagePromptTemplateLike =
-  | BaseMessagePromptTemplate
+type ChatPromptTemplateLike<RunInput extends InputValues> =
+  | ChatPromptTemplate<RunInput, string>
+  | BaseMessagePromptTemplateLike<RunInput>;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type BaseMessagePromptTemplateLike<RunInput extends InputValues = any> =
+  | BaseMessagePromptTemplate<RunInput>
   | BaseMessageLike;
 
 function _isBaseMessagePromptTemplate(
@@ -765,14 +780,13 @@ function isMessagesPlaceholder(
  * ```
  */
 export class ChatPromptTemplate<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunInput extends InputValues = any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    PartialVariableName extends string = any
-  >
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends InputValues = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  PartialVariableName extends string = any
+>
   extends BaseChatPromptTemplate<RunInput, PartialVariableName>
-  implements ChatPromptTemplateInput<RunInput, PartialVariableName>
-{
+  implements ChatPromptTemplateInput<RunInput, PartialVariableName> {
   static lc_name() {
     return "ChatPromptTemplate";
   }
@@ -944,14 +958,14 @@ export class ChatPromptTemplate<
    */
   static fromTemplate<
     // eslint-disable-next-line @typescript-eslint/ban-types
-    RunInput extends InputValues = Symbol,
+    RunInput extends InputValues = InputValues_FSTRING,
     T extends string = string
   >(template: T) {
-    const prompt = PromptTemplate.fromTemplate(template);
+    const prompt = PromptTemplate.fromTemplate<RunInput>(template);
     const humanTemplate = new HumanMessagePromptTemplate({ prompt });
     return this.fromMessages<
       // eslint-disable-next-line @typescript-eslint/ban-types
-      RunInput extends Symbol ? ParamsFromFString<T> : RunInput
+      RunInput extends InputValues_FSTRING ? ParamsFromFString<T> : RunInput
     >([humanTemplate]);
   }
 
@@ -1010,6 +1024,16 @@ export class ChatPromptTemplate<
       promptMessages: flattenedMessages,
       partialVariables: flattenedPartialVariables,
     });
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static fromTypedMessages<const Prompts extends ChatPromptTemplateLike<any>[]>(messages: Prompts): ChatPromptTemplate<
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    ObjectTupleIntersection<{}, {
+      [P in keyof Prompts]: Prompts[P] extends ChatPromptTemplateLike<infer I> ? I : never
+    }>
+  > {
+    return this.fromMessages(messages);
   }
 
   /** @deprecated Renamed to .fromMessages */

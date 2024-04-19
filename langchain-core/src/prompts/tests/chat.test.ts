@@ -568,3 +568,29 @@ test("Multi-modal, multi part chat prompt works with instances of BaseMessage", 
   });
   expect(messages).toMatchSnapshot();
 });
+
+test("fromTypedMessages combines message input types", () => {
+  const x = new SystemMessagePromptTemplate<{ x: string }>({
+    prompt: PromptTemplate.fromTemplate(""),
+  });
+  const y = new SystemMessagePromptTemplate<{ y: string }>({
+    prompt: PromptTemplate.fromTemplate(""),
+  });
+
+  const xy = ChatPromptTemplate.fromTypedMessages([x, y]);
+  ((test: ChatPromptTemplate<{ x: string; y: string }>) => test)(xy);
+});
+
+test("_StringImageMessagePromptTemplate infers RunInput from child prompt", () => {
+  const x = new SystemMessagePromptTemplate({
+    prompt: PromptTemplate.fromTemplate<{ x: number; y: boolean }>(""),
+  });
+
+  ((test: SystemMessagePromptTemplate<{ x: number; y: boolean }>) => test)(x);
+
+  // @ts-expect-error - nope
+  ((test: SystemMessagePromptTemplate<{ x: number; z: number }>) => test)(x);
+
+  // @ts-expect-error - nope
+  ((test: SystemMessagePromptTemplate<{ x: string; y: string }>) => test)(x);
+});

@@ -6,6 +6,8 @@ import {
   TypedPromptInputValues,
 } from "@langchain/core/prompts";
 
+export type InputValues_FSTRING = InputValues & { __FSTRING: true }; 
+
 export type CustomFormatPromptTemplateInput<RunInput extends InputValues> =
   Omit<PromptTemplateInput<RunInput, string>, "templateFormat"> & {
     customParser: (template: string) => ParsedFStringNode[];
@@ -74,7 +76,7 @@ export class CustomFormatPromptTemplate<
       }
     }
     // eslint-disable-next-line @typescript-eslint/ban-types
-    return new this<RunInput extends Symbol ? never : RunInput>({
+    return new this<RunInput extends InputValues_FSTRING ? never : RunInput>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       inputVariables: [...names] as any[],
       template,

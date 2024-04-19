@@ -7,7 +7,9 @@ export * from "./is_zod_schema.js";
 export type StringWithAutocomplete<T> = T | (string & Record<never, never>);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type InputValues<K extends string = string> = Record<K, any>;
+export type InputValues<K extends string = string, V = any> = Record<K, V>;
+
+export type InputValues_FSTRING = InputValues & { __FSTRING: true };
 
 export type PartialValues<K extends string = string> = Record<
   K,

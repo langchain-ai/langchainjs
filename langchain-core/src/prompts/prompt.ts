@@ -13,7 +13,11 @@ import {
   type TemplateFormat,
 } from "./template.js";
 import type { SerializedPromptTemplate } from "./serde.js";
-import type { InputValues, PartialValues } from "../utils/types/index.js";
+import type {
+  InputValues,
+  InputValues_FSTRING,
+  PartialValues,
+} from "../utils/types/index.js";
 import { MessageContent } from "../messages/index.js";
 
 /**
@@ -183,7 +187,7 @@ export class PromptTemplate<
    */
   static fromTemplate<
     // eslint-disable-next-line @typescript-eslint/ban-types
-    RunInput extends InputValues = Symbol,
+    RunInput extends InputValues = InputValues_FSTRING,
     T extends string = string
   >(
     template: T,
@@ -203,7 +207,7 @@ export class PromptTemplate<
     });
     return new PromptTemplate<
       // eslint-disable-next-line @typescript-eslint/ban-types
-      RunInput extends Symbol ? ParamsFromFString<T> : RunInput
+      RunInput extends InputValues_FSTRING ? ParamsFromFString<T> : RunInput
     >({
       // Rely on extracted types
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
