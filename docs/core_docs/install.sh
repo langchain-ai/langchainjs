@@ -10,7 +10,7 @@ python3.11 -m ensurepip
 python3.11 -m pip install --upgrade pip
 
 # Install setuptools using pip
-python3.11 -m pip install setuptools
+python3.11 -m pip install setuptools distutils
 
 # Install remaining dependencies
 yarn install
