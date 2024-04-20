@@ -926,6 +926,10 @@
     "retrievers/self_query/pinecone.js",
     "retrievers/self_query/pinecone.d.ts",
     "retrievers/self_query/pinecone.d.cts",
+    "retrievers/self_query/qdrant.cjs",
+    "retrievers/self_query/qdrant.js",
+    "retrievers/self_query/qdrant.d.ts",
+    "retrievers/self_query/qdrant.d.cts",
     "retrievers/self_query/supabase.cjs",
     "retrievers/self_query/supabase.js",
     "retrievers/self_query/supabase.d.ts",
@@ -1232,6 +1236,7 @@
     "@langchain/scripts": "~0.0",
     "@notionhq/client": "^2.2.10",
     "@pinecone-database/pinecone": "^1.1.0",
+    "@qdrant/js-client-rest": "^1.8.2",
     "@supabase/supabase-js": "^2.10.0",
     "@swc/core": "^1.3.90",
     "@swc/jest": "^0.2.29",
@@ -1316,6 +1321,7 @@
     "@google-cloud/storage": "^6.10.1 || ^7.7.0",
     "@notionhq/client": "^2.2.10",
     "@pinecone-database/pinecone": "*",
+    "@qdrant/js-client-rest": "^1.8.2",
     "@supabase/supabase-js": "^2.10.0",
     "@vercel/kv": "^0.2.3",
     "@xata.io/client": "^0.28.0",
@@ -1390,6 +1396,9 @@
       "optional": true
     },
     "@pinecone-database/pinecone": {
+      "optional": true
+    },
+    "@qdrant/js-client-rest": {
       "optional": true
     },
     "@supabase/supabase-js": {
@@ -3607,6 +3616,15 @@
       },
       "import": "./retrievers/self_query/pinecone.js",
       "require": "./retrievers/self_query/pinecone.cjs"
+    },
+    "./retrievers/self_query/qdrant": {
+      "types": {
+        "import": "./retrievers/self_query/qdrant.d.ts",
+        "require": "./retrievers/self_query/qdrant.d.cts",
+        "default": "./retrievers/self_query/qdrant.d.ts"
+      },
+      "import": "./retrievers/self_query/qdrant.js",
+      "require": "./retrievers/self_query/qdrant.cjs"
     },
     "./retrievers/self_query/supabase": {
       "types": {
