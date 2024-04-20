@@ -1,19 +1,33 @@
 import * as querystring from 'querystring';
 import { Tool } from "@langchain/core/tools";
 
-interface Question {
-    item_type: string;
-    title: string;
-    excerpt: string;
-    question_id: number;
-}
+export interface StackExchangeAnswer {
+    items: StackExchangeItem[]
+    has_more: boolean
+    quota_max: number
+    quota_remaining: number
+  }
+  
+export interface StackExchangeItem {
+    tags: string[]
+    question_score: number
+    is_accepted: boolean
+    has_accepted_answer?: boolean
+    answer_count?: number
+    is_answered: boolean
+    question_id: number
+    item_type: string
+    score: number
+    last_activity_date: number
+    creation_date: number
+    body: string
+    excerpt: string
+    title: string
+    answer_id?: number
+  }
 
-interface Answer {
-    item_type: string;
-    question_id: number;
-    is_accepted: boolean;
-    excerpt: string;
-}
+type StackExchangeOptions = Record<string, string | number | boolean>
+
 export interface StackExchangeAPIParams {
     /**
    * The maximum number of results to return from the search.
@@ -30,7 +44,7 @@ export interface StackExchangeAPIParams {
     /**
      * Additional params to pass to the StackExchange API
      */
-    options?: Record<string, unknown>
+    options?: StackExchangeOptions
     /**
      * Separator between question,answer pairs.
      * @default "\n\n"
@@ -42,7 +56,6 @@ export interface StackExchangeAPIParams {
  * Class for interacting with the StackExchange API
  * It extends the base Tool class to perform retrieval.
  */
-
 export class StackExchangeAPI extends Tool {
     name: 'stackexchange';
 
@@ -64,7 +77,7 @@ export class StackExchangeAPI extends Tool {
 
     private queryType = 'all'
 
-    private options?: Record<string, unknown> = {}
+    private options?: StackExchangeOptions = {}
 
     private resultSeparator?: string = "\n\n";
 
@@ -85,20 +98,20 @@ export class StackExchangeAPI extends Tool {
             site: this.site,
             ...this.options
         }
-        const output = await this._fetch("search/excerpts", params);
+        const output = await this._fetch<StackExchangeAnswer>("search/excerpts", params);
         if (output.items.length < 1) {
             return `No relevant results found for '${query}' on Stack Overflow.`
         }
-        const questions: Question[] = output.items.filter((item: Question) => item.item_type === "question").slice(0, this.maxResult);
-        const answers: Answer[] = output.items.filter((item: Answer) => item.item_type === "answer");
+        const questions = output.items.filter((item) => item.item_type === "question").slice(0, this.maxResult);
+        const answers = output.items.filter((item) => item.item_type === "answer");
 
         const results: string[] = [];
 
         for (const question of questions) {
             let res_text = `Question: ${question.title}\n${question.excerpt}`;
 
-            const relevant_answers: Answer[] = answers.filter((answer: Answer) => answer.question_id === question.question_id);
-            const accepted_answers: Answer[] = relevant_answers.filter((answer: Answer) => answer.is_accepted);
+            const relevant_answers = answers.filter((answer) => answer.question_id === question.question_id);
+            const accepted_answers = relevant_answers.filter((answer) => answer.is_accepted);
 
             if (relevant_answers.length > 0) {
                 const top_answer = accepted_answers.length > 0 ? accepted_answers[0] : relevant_answers[0];
@@ -112,13 +125,20 @@ export class StackExchangeAPI extends Tool {
         return results.join(this.resultSeparator);
     }
 
-
-    private async _fetch(endpoint: string, params: Record<string, unknown> = {}, page = 1, filter = "default"): Promise<any> {
+    /**
+     * Call the StackExchange API
+     * @param endpoint Name of the endpoint from StackExchange API
+     * @param params Additional parameters passed to the endpoint
+     * @param page Number of the page to retrieve
+     * @param filter Filtering properties
+     * @returns
+     */
+    private async _fetch<T>(endpoint: string, params: StackExchangeOptions = {}, page = 1, filter = "default"): Promise<T> {
         try {
             if (!endpoint) {
-                return new Error("No end point provided.");
+                throw new Error("No end point provided.");
             }
-            const queryParams: Record<string, any> = {
+            const queryParams: StackExchangeOptions = {
                 pagesize: this.pageSize,
                 page,
                 filter,
@@ -135,13 +155,18 @@ export class StackExchangeAPI extends Tool {
             const queryParamsString = querystring.stringify(queryParams);
 
             const endpointUrl = `${this.baseUrl}${endpoint}?${queryParamsString}`;
-            return await this.makeRequest(endpointUrl);
+            return await this._makeRequest(endpointUrl);
         } catch (e) {
-            return new Error("Error while calling Stack Exchange API")
+            throw new Error("Error while calling Stack Exchange API")
         }
     }
 
-    private async makeRequest(endpointUrl: string): Promise<any> {
+    /**
+     * Fetch the result of a specific endpoint
+     * @param endpointUrl Endpoint to call
+     * @returns 
+     */
+    private async _makeRequest<T>(endpointUrl: string): Promise<T> {
         try {
             const response = await fetch(endpointUrl);
             if (response.status !== 200) {
@@ -149,7 +174,7 @@ export class StackExchangeAPI extends Tool {
             }
             return await response.json();
         } catch (e) {
-            return new Error(`Error while calling Stack Exchange API: ${endpointUrl}`)
+            throw new Error(`Error while calling Stack Exchange API: ${endpointUrl}`)
         }
     }
 }
