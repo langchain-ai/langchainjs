@@ -9,7 +9,7 @@ test("StackAPITool returns a string for valid query", async () => {
 
 test("StackAPITool returns non-empty string for valid query", async () => {
   const tool = new StackExchangeAPI({
-    queryType: 'title'
+    queryType: "title",
   });
   const result = await tool.call("zsh: command not found: python");
   expect(result).toContain("zsh: command not found: python");
@@ -18,5 +18,7 @@ test("StackAPITool returns non-empty string for valid query", async () => {
 test("StackAPITool returns 'No relevant results found for 'sjefbsmnazdkhbazkbdoaencopebfoubaef' on Stack Overflow for bad query", async () => {
   const tool = new StackExchangeAPI();
   const result = await tool.call("sjefbsmnazdkhbazkbdoaencopebfoubaef");
-  expect(result).toBe("No relevant results found for 'sjefbsmnazdkhbazkbdoaencopebfoubaef' on Stack Overflow.");
+  expect(result).toBe(
+    "No relevant results found for 'sjefbsmnazdkhbazkbdoaencopebfoubaef' on Stack Overflow."
+  );
 });
