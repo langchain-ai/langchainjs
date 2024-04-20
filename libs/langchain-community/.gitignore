@@ -70,6 +70,10 @@ tools/google_places.cjs
 tools/google_places.js
 tools/google_places.d.ts
 tools/google_places.d.cts
+tools/google_routes.cjs
+tools/google_routes.js
+tools/google_routes.d.ts
+tools/google_routes.d.cts
 tools/ifttt.cjs
 tools/ifttt.js
 tools/ifttt.d.ts

@@ -715,6 +715,15 @@
       "import": "./tools/google_places.js",
       "require": "./tools/google_places.cjs"
     },
+    "./tools/google_routes": {
+      "types": {
+        "import": "./tools/google_routes.d.ts",
+        "require": "./tools/google_routes.d.cts",
+        "default": "./tools/google_routes.d.ts"
+      },
+      "import": "./tools/google_routes.js",
+      "require": "./tools/google_routes.cjs"
+    },
     "./tools/ifttt": {
       "types": {
         "import": "./tools/ifttt.d.ts",
@@ -2348,6 +2357,10 @@
     "tools/google_places.js",
     "tools/google_places.d.ts",
     "tools/google_places.d.cts",
+    "tools/google_routes.cjs",
+    "tools/google_routes.js",
+    "tools/google_routes.d.ts",
+    "tools/google_routes.d.cts",
     "tools/ifttt.cjs",
     "tools/ifttt.js",
     "tools/ifttt.d.ts",
