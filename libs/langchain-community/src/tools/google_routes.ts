@@ -8,55 +8,6 @@ export interface GoogleRoutesAPIParams {
   apiKey?: string;
 }
 
-interface LatLng {
-  latitude: number;
-  longitude: number;
-}
-
-interface NavigationInstruction {
-  maneuver: string;
-  instructions: string;
-}
-
-interface LocalizedValues {
-  distance: {
-    text: string;
-  };
-  staticDuration: {
-    text: string;
-  };
-}
-
-interface Step {
-  distanceMeters: number;
-  staticDuration: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  polyline: any | null;
-  startLocation: {
-    latLng: LatLng;
-  };
-  endLocation: {
-    latLng: LatLng;
-  };
-  navigationInstruction: NavigationInstruction;
-  localizedValues: LocalizedValues;
-  travelMode: string;
-}
-
-interface Leg {
-  steps: Step[];
-}
-
-interface Route {
-  legs: Leg[];
-  distanceMeters: number;
-  duration: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  polyline: any | null;
-  description: string;
-  routeLabels: string[];
-}
-
 /**
  * Tool that queries the Google Places API
  */
@@ -108,15 +59,13 @@ export class GoogleRoutesAPI extends Tool {
     };
 
     let fieldMask =
-      "routes.duration,routes.distanceMeters,routes.routeLabels,routes.description,routes.polyline";
+      "routes.routeLabels,routes.description,routes.localizedValues,routes.travelAdvisory";
 
     if (travel_mode === "TRANSIT") {
-      fieldMask +=
-        ",routes.legs.steps.transitDetails,routes.legs.stepsOverview";
+      fieldMask += ",routes.legs.stepsOverview";
     }
 
     if (travel_mode === "DRIVE" || travel_mode === "TWO_WHEELER") {
-      fieldMask += ",routes.legs.steps";
       body.routing_preference = "TRAFFIC_AWARE";
     }
 
@@ -147,48 +96,8 @@ export class GoogleRoutesAPI extends Tool {
       );
     }
 
-    const json = await res.json();
+    console.dir(res, { depth: null });
 
-    const routes = json.routes.map((route: Route) => {
-      const legs = route.legs.map((leg: Leg) => {
-        const steps = leg.steps
-          ? leg.steps.map((step: Step) => ({
-              distanceMeters: step.distanceMeters,
-              staticDuration: step.staticDuration,
-              polyline: step.polyline ? step.polyline.encodedPolyline : null,
-              startLocation: {
-                latitude: step.startLocation.latLng.latitude,
-                longitude: step.startLocation.latLng.longitude,
-              },
-              endLocation: {
-                latitude: step.endLocation.latLng.latitude,
-                longitude: step.endLocation.latLng.longitude,
-              },
-              maneuver: step.navigationInstruction.maneuver,
-              instructions: step.navigationInstruction.instructions,
-              distanceText: step.localizedValues.distance.text,
-              durationText: step.localizedValues.staticDuration.text,
-              travelMode: step.travelMode,
-            }))
-          : [];
-
-        return {
-          steps,
-        };
-      });
-
-      return {
-        legs,
-        distanceMeters: route.distanceMeters,
-        duration: route.duration,
-        polyline: route.polyline ? route.polyline.encodedPolyline : null,
-        description: route.description,
-        routeLabels: route.routeLabels,
-      };
-    });
-
-    console.dir(routes, { depth: null });
-
-    return JSON.stringify(routes);
+    return JSON.stringify(res);
   }
 }
