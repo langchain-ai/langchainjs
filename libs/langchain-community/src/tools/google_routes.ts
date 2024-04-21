@@ -49,6 +49,14 @@ interface localizedValues {
   transitDetails: transitDetails;
 } */
 
+/* interface DriveRoute {
+  description: string;
+  distance: string;
+  duration: string;
+  routeLabel: string[];
+  warnings?: string[];
+} */
+
 /**
  * Tool that queries the Google Places API
  */
@@ -97,6 +105,7 @@ export class GoogleRoutesAPI extends Tool {
         address: destination,
       },
       travel_mode,
+      computeAlternativeRoutes: false,
     };
 
     let fieldMask =
@@ -139,55 +148,70 @@ export class GoogleRoutesAPI extends Tool {
 
     const json = await res.json();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const routes = json.routes.map((route: any) => {
-      const transitStep = route.legs[0].steps.find(
-        (step: any) => step.transitDetails
-      );
-      const departure: Departure = {
-        departureTime: transitStep.transitDetails.stopDetails.departureTime,
-        localizedTime:
-          transitStep.transitDetails.localizedValues.departureTime.time.text,
-        localizedTimezone:
-          transitStep.transitDetails.localizedValues.departureTime.timeZone,
-        departureAddress:
-          transitStep.transitDetails.stopDetails.departureStop.name,
-      };
-      const arrival: Arrival = {
-        arrivalTime: transitStep.transitDetails.stopDetails.arrivalTime,
-        localizedTime:
-          transitStep.transitDetails.localizedValues.arrivalTime.time.text,
-        localizedTimezone:
-          transitStep.transitDetails.localizedValues.arrivalTime.timeZone,
-        arrivalAddress: transitStep.transitDetails.stopDetails.arrivalStop.name,
-      };
-      const travelInstructions: travelInstructions[] =
-        route.legs[0].stepsOverview.multiModalSegments.map((segment: any) => ({
-          navigationInstruction: segment.navigationInstruction
-            ? segment.navigationInstruction.instructions
-            : "",
-          travelMode: segment.travelMode,
-        }));
-      const { routeLabels } = route;
-      const localizedValues: localizedValues = {
+    let routes;
+
+    if (travel_mode === "TRANSIT") {
+      routes = json.routes.map((route: any) => {
+        const transitStep = route.legs[0].steps.find(
+          (step: any) => step.transitDetails
+        );
+        const departure: Departure = {
+          departureTime: transitStep.transitDetails.stopDetails.departureTime,
+          localizedTime:
+            transitStep.transitDetails.localizedValues.departureTime.time.text,
+          localizedTimezone:
+            transitStep.transitDetails.localizedValues.departureTime.timeZone,
+          departureAddress:
+            transitStep.transitDetails.stopDetails.departureStop.name,
+        };
+        const arrival: Arrival = {
+          arrivalTime: transitStep.transitDetails.stopDetails.arrivalTime,
+          localizedTime:
+            transitStep.transitDetails.localizedValues.arrivalTime.time.text,
+          localizedTimezone:
+            transitStep.transitDetails.localizedValues.arrivalTime.timeZone,
+          arrivalAddress:
+            transitStep.transitDetails.stopDetails.arrivalStop.name,
+        };
+        const travelInstructions: travelInstructions[] =
+          route.legs[0].stepsOverview.multiModalSegments.map(
+            (segment: any) => ({
+              navigationInstruction: segment.navigationInstruction
+                ? segment.navigationInstruction.instructions
+                : "",
+              travelMode: segment.travelMode,
+            })
+          );
+        const { routeLabels } = route;
+        const localizedValues: localizedValues = {
+          distance: route.localizedValues.distance.text,
+          duration: route.localizedValues.duration.text,
+          transitFare: route.localizedValues.transitFare.text || "",
+        };
+        const transitDetails: transitDetails = {
+          routeName: transitStep.transitDetails.transitLine.name,
+          routeNameShort: transitStep.transitDetails.transitLine.nameShort,
+          routeType: transitStep.transitDetails.transitLine.vehicle.type,
+        };
+        const routeLabel = route.routeLabels;
+        return {
+          departure,
+          arrival,
+          travelInstructions,
+          routeLabels,
+          localizedValues,
+          transitDetails,
+          routeLabel,
+        };
+      });
+    } else {
+      routes = json.routes.map((route: any) => ({
+        description: route.description,
         distance: route.localizedValues.distance.text,
         duration: route.localizedValues.duration.text,
-        transitFare: route.localizedValues.transitFare.text || "",
-      };
-      const transitDetails: transitDetails = {
-        routeName: transitStep.transitDetails.transitLine.name,
-        routeNameShort: transitStep.transitDetails.transitLine.nameShort,
-        routeType: transitStep.transitDetails.transitLine.vehicle.type,
-      };
-      return {
-        departure,
-        arrival,
-        travelInstructions,
-        routeLabels,
-        localizedValues,
-        transitDetails,
-      };
-    });
+        routeLabel: route.routeLabels,
+      }));
+    }
 
     console.dir(routes, { depth: null });
 
