@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Tool } from "@langchain/core/tools";
 
@@ -7,6 +8,46 @@ import { Tool } from "@langchain/core/tools";
 export interface GoogleRoutesAPIParams {
   apiKey?: string;
 }
+
+interface Arrival {
+  arrivalTime: string;
+  localizedTime: string;
+  localizedTimezone: string;
+  arrivalAddress: string;
+}
+
+interface Departure {
+  departureTime: string;
+  localizedTime: string;
+  localizedTimezone: string;
+  departureAddress: string;
+}
+
+interface transitDetails {
+  routeName: string;
+  routeNameShort: string;
+  routeType: string;
+}
+
+interface travelInstructions {
+  navigationInstruction: string;
+  travelMode: string;
+}
+
+interface localizedValues {
+  distance: string;
+  duration: string;
+  transitFare: string;
+}
+
+/* interface Route {
+  departure: Departure;
+  arrival: Arrival;
+  travelInstructions: travelInstructions[];
+  routeLabels: string[];
+  localizedValues: localizedValues;
+  transitDetails: transitDetails;
+} */
 
 /**
  * Tool that queries the Google Places API
@@ -59,7 +100,7 @@ export class GoogleRoutesAPI extends Tool {
     };
 
     let fieldMask =
-      "routes.routeLabels,routes.description,routes.localizedValues,routes.travelAdvisory";
+      "routes.routeLabels,routes.description,routes.localizedValues,routes.travelAdvisory,routes.warnings,routes.legs.steps.transitDetails";
 
     if (travel_mode === "TRANSIT") {
       fieldMask += ",routes.legs.stepsOverview";
@@ -96,8 +137,60 @@ export class GoogleRoutesAPI extends Tool {
       );
     }
 
-    console.dir(res, { depth: null });
+    const json = await res.json();
 
-    return JSON.stringify(res);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const routes = json.routes.map((route: any) => {
+      const transitStep = route.legs[0].steps.find(
+        (step: any) => step.transitDetails
+      );
+      const departure: Departure = {
+        departureTime: transitStep.transitDetails.stopDetails.departureTime,
+        localizedTime:
+          transitStep.transitDetails.localizedValues.departureTime.time.text,
+        localizedTimezone:
+          transitStep.transitDetails.localizedValues.departureTime.timeZone,
+        departureAddress:
+          transitStep.transitDetails.stopDetails.departureStop.name,
+      };
+      const arrival: Arrival = {
+        arrivalTime: transitStep.transitDetails.stopDetails.arrivalTime,
+        localizedTime:
+          transitStep.transitDetails.localizedValues.arrivalTime.time.text,
+        localizedTimezone:
+          transitStep.transitDetails.localizedValues.arrivalTime.timeZone,
+        arrivalAddress: transitStep.transitDetails.stopDetails.arrivalStop.name,
+      };
+      const travelInstructions: travelInstructions[] =
+        route.legs[0].stepsOverview.multiModalSegments.map((segment: any) => ({
+          navigationInstruction: segment.navigationInstruction
+            ? segment.navigationInstruction.instructions
+            : "",
+          travelMode: segment.travelMode,
+        }));
+      const { routeLabels } = route;
+      const localizedValues: localizedValues = {
+        distance: route.localizedValues.distance.text,
+        duration: route.localizedValues.duration.text,
+        transitFare: route.localizedValues.transitFare.text || "",
+      };
+      const transitDetails: transitDetails = {
+        routeName: transitStep.transitDetails.transitLine.name,
+        routeNameShort: transitStep.transitDetails.transitLine.nameShort,
+        routeType: transitStep.transitDetails.transitLine.vehicle.type,
+      };
+      return {
+        departure,
+        arrival,
+        travelInstructions,
+        routeLabels,
+        localizedValues,
+        transitDetails,
+      };
+    });
+
+    console.dir(routes, { depth: null });
+
+    return JSON.stringify(routes);
   }
 }
