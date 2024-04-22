@@ -1368,6 +1368,7 @@ export class RunnableRetry<
             if (result instanceof Error) {
               if (firstException === undefined) {
                 firstException = result;
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (firstException as any).input = remainingInputs[i];
               }
             }
