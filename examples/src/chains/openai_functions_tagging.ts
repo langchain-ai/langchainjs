@@ -12,7 +12,7 @@ const schema: FunctionParameters = {
   required: ["tone"],
 };
 
-const chatModel = new ChatOpenAI({ modelName: "gpt-4-0613", temperature: 0 });
+const chatModel = new ChatOpenAI({ model: "gpt-4-0613", temperature: 0 });
 
 const chain = createTaggingChain(schema, chatModel);
 

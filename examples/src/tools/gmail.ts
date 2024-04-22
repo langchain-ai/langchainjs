@@ -12,7 +12,7 @@ import { StructuredTool } from "@langchain/core/tools";
 export async function run() {
   const model = new OpenAI({
     temperature: 0,
-    openAIApiKey: process.env.OPENAI_API_KEY,
+    apiKey: process.env.OPENAI_API_KEY,
   });
 
   // These are the default parameters for the Gmail tools

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import type { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { GeminiFunctionSchema } from "../types.js";

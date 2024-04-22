@@ -11,7 +11,7 @@ const tools = [
 ];
 const prompt = await pull<ChatPromptTemplate>("hwchase17/openai-tools-agent");
 const llm = new ChatOpenAI({
-  modelName: "gpt-4-1106-preview",
+  model: "gpt-4-1106-preview",
   temperature: 0,
   verbose: true,
 });

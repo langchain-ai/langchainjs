@@ -12,10 +12,10 @@ export const run = async () => {
   const docs = await textSplitter.createDocuments([text]);
   const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
   const fasterModel = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
   });
   const slowerModel = new ChatOpenAI({
-    modelName: "gpt-4",
+    model: "gpt-4",
   });
   const chain = ConversationalRetrievalQAChain.fromLLM(
     slowerModel,

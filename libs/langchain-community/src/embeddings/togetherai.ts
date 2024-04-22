@@ -15,9 +15,15 @@ export interface TogetherAIEmbeddingsParams extends EmbeddingsParams {
 
   /**
    * Model name to use
+   * Alias for `model`
    * @default {"togethercomputer/m2-bert-80M-8k-retrieval"}
    */
   modelName?: string;
+  /**
+   * Model name to use
+   * @default {"togethercomputer/m2-bert-80M-8k-retrieval"}
+   */
+  model?: string;
 
   /**
    * Timeout to use when making requests to TogetherAI.
@@ -71,6 +77,8 @@ export class TogetherAIEmbeddings
 {
   modelName = "togethercomputer/m2-bert-80M-8k-retrieval";
 
+  model = "togethercomputer/m2-bert-80M-8k-retrieval";
+
   apiKey: string;
 
   batchSize = 512;
@@ -91,7 +99,8 @@ export class TogetherAIEmbeddings
     }
 
     this.apiKey = apiKey;
-    this.modelName = fields?.modelName ?? this.modelName;
+    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
+    this.model = this.modelName;
     this.timeout = fields?.timeout;
     this.batchSize = fields?.batchSize ?? this.batchSize;
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
@@ -107,7 +116,7 @@ export class TogetherAIEmbeddings
 
   private constructBody(input: string) {
     const body = {
-      model: this?.modelName,
+      model: this?.model,
       input,
     };
     return body;

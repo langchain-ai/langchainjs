@@ -16,6 +16,10 @@ import TabItem from "@theme/TabItem";
 import CodeBlock from "@theme/CodeBlock";
 import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
 
+import UnifiedModelParamsTooltip from "@mdx_components/unified_model_params_tooltip.mdx";
+
+<UnifiedModelParamsTooltip></UnifiedModelParamsTooltip>
+
 <Tabs groupId="preferredModel">
   <TabItem value="openai" label="OpenAI" default>
 
@@ -39,18 +43,18 @@ We can then initialize the model:
 import { OpenAI, ChatOpenAI } from "@langchain/openai";
 
 const llm = new OpenAI({
-  modelName: "gpt-3.5-turbo-instruct",
+  model: "gpt-3.5-turbo-instruct",
 });
 const chatModel = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo",
+  model: "gpt-3.5-turbo",
 });
 ```
 
-If you can't or would prefer not to set an environment variable, you can pass the key in directly via the `openAIApiKey` named parameter when initiating the OpenAI LLM class:
+If you can't or would prefer not to set an environment variable, you can pass the key in directly via the `apiKey` named parameter when initiating the OpenAI LLM class:
 
 ```typescript
 const model = new ChatOpenAI({
-  openAIApiKey: "<your key here>",
+  apiKey: "<your key here>",
 });
 ```
 
@@ -111,15 +115,15 @@ We can then initialize the model:
 import { ChatAnthropic } from "@langchain/anthropic";
 
 const chatModel = new ChatAnthropic({
-  modelName: "claude-3-sonnet-20240229",
+  model: "claude-3-sonnet-20240229",
 });
 ```
 
-If you can't or would prefer not to set an environment variable, you can pass the key in directly via the `anthropicApiKey` named parameter when initiating the ChatAnthropic class:
+If you can't or would prefer not to set an environment variable, you can pass the key in directly via the `apiKey` named parameter when initiating the ChatAnthropic class:
 
 ```typescript
 const model = new ChatAnthropic({
-  anthropicApiKey: "<your key here>",
+  apiKey: "<your key here>",
 });
 ```
 
@@ -146,7 +150,7 @@ We can then initialize the model:
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 
 const chatModel = new ChatGoogleGenerativeAI({
-  modelName: "gemini-1.0-pro",
+  model: "gemini-1.0-pro",
 });
 ```
 

@@ -65,7 +65,7 @@ Standalone question:`
 
 // Initialize fast and slow LLMs, along with chains for each
 const fasterModel = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo",
+  model: "gpt-3.5-turbo",
 });
 const fasterChain = new LLMChain({
   llm: fasterModel,
@@ -73,7 +73,7 @@ const fasterChain = new LLMChain({
 });
 
 const slowerModel = new ChatOpenAI({
-  modelName: "gpt-4",
+  model: "gpt-4",
 });
 const slowerChain = new LLMChain({
   llm: slowerModel,
