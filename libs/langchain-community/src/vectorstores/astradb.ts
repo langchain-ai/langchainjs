@@ -88,7 +88,9 @@ export class AstraDBVectorStore extends VectorStore {
     this.caller = new AsyncCaller(callerArgs);
     this.skipCollectionProvisioning = skipCollectionProvisioning ?? false;
     if (this.skipCollectionProvisioning && this.collectionOptions) {
-      throw new Error("If 'skipCollectionProvisioning' has been set to true, 'collectionOptions' must not be defined");
+      throw new Error(
+        "If 'skipCollectionProvisioning' has been set to true, 'collectionOptions' must not be defined"
+      );
     }
   }
 
@@ -102,7 +104,7 @@ export class AstraDBVectorStore extends VectorStore {
     if (!this.skipCollectionProvisioning) {
       await this.astraDBClient.createCollection(
         this.collectionName,
-        this.collectionOptions,
+        this.collectionOptions
       );
     }
     this.collection = await this.astraDBClient.collection(this.collectionName);
@@ -119,7 +121,7 @@ export class AstraDBVectorStore extends VectorStore {
   async addVectors(
     vectors: number[][],
     documents: Document[],
-    options?: string[],
+    options?: string[]
   ) {
     if (!this.collection) {
       throw new Error("Must connect to a collection before adding vectors");
@@ -134,7 +136,7 @@ export class AstraDBVectorStore extends VectorStore {
 
     const chunkedDocs = chunkArray(docs, this.batchSize);
     const batchCalls = chunkedDocs.map((chunk) =>
-      this.caller.call(async () => this.collection?.insertMany(chunk)),
+      this.caller.call(async () => this.collection?.insertMany(chunk))
     );
 
     await Promise.all(batchCalls);
@@ -155,7 +157,7 @@ export class AstraDBVectorStore extends VectorStore {
     return this.addVectors(
       await this.embeddings.embedDocuments(documents.map((d) => d.pageContent)),
       documents,
-      options,
+      options
     );
   }
 
@@ -189,7 +191,7 @@ export class AstraDBVectorStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: CollectionFilter,
+    filter?: CollectionFilter
   ): Promise<[Document, number][]> {
     if (!this.collection) {
       throw new Error("Must connect to a collection before adding vectors");
@@ -235,7 +237,7 @@ export class AstraDBVectorStore extends VectorStore {
    */
   async maxMarginalRelevanceSearch(
     query: string,
-    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>,
+    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
   ): Promise<Document[]> {
     if (!this.collection) {
       throw new Error("Must connect to a collection before adding vectors");
@@ -251,14 +253,14 @@ export class AstraDBVectorStore extends VectorStore {
 
     const results = (await cursor.toArray()) ?? [];
     const embeddingList: number[][] = results.map(
-      (row) => row.$vector as number[],
+      (row) => row.$vector as number[]
     );
 
     const mmrIndexes = maximalMarginalRelevance(
       queryEmbedding,
       embeddingList,
       options.lambda,
-      options.k,
+      options.k
     );
 
     const topMmrMatches = mmrIndexes.map((idx) => results[idx]);
@@ -291,7 +293,7 @@ export class AstraDBVectorStore extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: EmbeddingsInterface,
-    dbConfig: AstraLibArgs,
+    dbConfig: AstraLibArgs
   ): Promise<AstraDBVectorStore> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -316,7 +318,7 @@ export class AstraDBVectorStore extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: EmbeddingsInterface,
-    dbConfig: AstraLibArgs,
+    dbConfig: AstraLibArgs
   ): Promise<AstraDBVectorStore> {
     const instance = new this(embeddings, dbConfig);
     await instance.initialize();
@@ -334,7 +336,7 @@ export class AstraDBVectorStore extends VectorStore {
    */
   static async fromExistingIndex(
     embeddings: EmbeddingsInterface,
-    dbConfig: AstraLibArgs,
+    dbConfig: AstraLibArgs
   ): Promise<AstraDBVectorStore> {
     const instance = new this(embeddings, dbConfig);
 
