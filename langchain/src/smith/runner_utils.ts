@@ -10,6 +10,7 @@ import {
 import { LangChainTracer } from "@langchain/core/tracers/tracer_langchain";
 import { BaseTracer } from "@langchain/core/tracers/base";
 import { ChainValues } from "@langchain/core/utils/types";
+import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import {
   Client,
   Example,
@@ -522,46 +523,71 @@ const applyEvaluators = async ({
   runs,
   examples,
   client,
+  maxConcurrency,
 }: {
   evaluation: LoadedEvalConfig;
   runs: Run[];
   examples: Example[];
   client: Client;
-}) => {
+  maxConcurrency: number;
+}): Promise<{
+  [key: string]: {
+    execution_time?: number;
+    run_id: string;
+    feedback: Feedback[];
+  };
+}> => {
   // TODO: Parallelize and/or put in callbacks to speed up evals.
   const { evaluators } = evaluation;
   const progress = new ProgressBar({
     total: examples.length,
     format: "Running Evaluators: {bar} {percentage}% | {value}/{total}\n",
   });
-  const results: Record<
-    string,
-    { run_id: string; execution_time?: number; feedback: Feedback[] }
-  > = {};
-  for (let i = 0; i < runs.length; i += 1) {
-    const run = runs[i];
-    const example = examples[i];
-    const evaluatorResults = await Promise.allSettled(
-      evaluators.map((evaluator) =>
-        client.evaluateRun(run, evaluator, {
-          referenceExample: example,
-          loadChildRuns: false,
-        })
-      )
-    );
-    progress.increment();
-    results[example.id] = {
-      execution_time:
-        run?.end_time && run.start_time
-          ? run.end_time - run.start_time
-          : undefined,
-      feedback: evaluatorResults.map((evalResult) =>
-        evalResult.status === "fulfilled" ? evalResult.value : evalResult.reason
-      ),
-      run_id: run.id,
-    };
-  }
-  return results;
+  const caller = new AsyncCaller({
+    maxConcurrency,
+  });
+  const requests = runs.map(
+    async (
+      run,
+      i
+    ): Promise<{
+      run_id: string;
+      execution_time?: number;
+      feedback: Feedback[];
+    }> =>
+      caller.call(async () => {
+        const evaluatorResults = await Promise.allSettled(
+          evaluators.map((evaluator) =>
+            client.evaluateRun(run, evaluator, {
+              referenceExample: examples[i],
+              loadChildRuns: false,
+            })
+          )
+        );
+        progress.increment();
+        return {
+          execution_time:
+            run?.end_time && run.start_time
+              ? run.end_time - run.start_time
+              : undefined,
+          feedback: evaluatorResults.map((evalResult) =>
+            evalResult.status === "fulfilled"
+              ? evalResult.value
+              : evalResult.reason
+          ),
+          run_id: run.id,
+        };
+      })
+  );
+  const results = await Promise.all(requests);
+
+  return results.reduce(
+    (acc, result, i) => ({
+      ...acc,
+      [examples[i].id]: result,
+    }),
+    {}
+  );
 };
 
 export type EvalResults = {
@@ -733,6 +759,7 @@ export async function runOnDataset(
       runs,
       examples,
       client: testClient,
+      maxConcurrency: testConcurrency,
     });
   }
   const results: EvalResults = {
