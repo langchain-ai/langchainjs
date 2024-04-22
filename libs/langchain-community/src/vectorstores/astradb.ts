@@ -29,6 +29,7 @@ export interface AstraLibArgs extends AsyncCallerParams {
   namespace?: string;
   idKey?: string;
   contentKey?: string;
+  skipCollectionProvisioning?: boolean;
   collectionOptions?: CreateCollectionOptions<any>;
   batchSize?: number;
 }
@@ -56,6 +57,8 @@ export class AstraDBVectorStore extends VectorStore {
 
   caller: AsyncCaller;
 
+  private readonly skipCollectionProvisioning: boolean;
+
   _vectorstoreType(): string {
     return "astradb";
   }
@@ -72,6 +75,7 @@ export class AstraDBVectorStore extends VectorStore {
       idKey,
       contentKey,
       batchSize,
+      skipCollectionProvisioning,
       ...callerArgs
     } = args;
     const dataAPIClient = new DataAPIClient(token, { caller: ["langchainjs"] });
@@ -91,6 +95,12 @@ export class AstraDBVectorStore extends VectorStore {
     this.contentKey = contentKey ?? "text";
     this.batchSize = batchSize && batchSize <= 20 ? batchSize : 20;
     this.caller = new AsyncCaller(callerArgs);
+    this.skipCollectionProvisioning = skipCollectionProvisioning ?? false;
+    if (this.skipCollectionProvisioning && this.collectionOptions) {
+      throw new Error(
+        "If 'skipCollectionProvisioning' has been set to true, 'collectionOptions' must not be defined"
+      );
+    }
   }
 
   /**
@@ -100,10 +110,12 @@ export class AstraDBVectorStore extends VectorStore {
    * @returns Promise that resolves if connected to the collection.
    */
   async initialize(): Promise<void> {
-    await this.astraDBClient.createCollection(
-      this.collectionName,
-      this.collectionOptions
-    );
+    if (!this.skipCollectionProvisioning) {
+      await this.astraDBClient.createCollection(
+        this.collectionName,
+        this.collectionOptions
+      );
+    }
     this.collection = await this.astraDBClient.collection(this.collectionName);
     console.debug("Connected to Astra DB collection");
   }
