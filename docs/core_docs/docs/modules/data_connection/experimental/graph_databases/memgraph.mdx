@@ -18,7 +18,7 @@ npm install @langchain/openai neo4j-driver @langchain/community
 
 Memgraph bundles the database along with various analytical tools into distinct
 Docker images. If you're new to Memgraph or you're in a developing stage, we
-recommend using the `memgraph-platform` image. Besides the database, it also
+recommend running Memgraph Platform with Docker Compose. Besides the database, it also
 includes all the tools you might need to analyze your data, such as command-line
 interface [mgconsole](https://memgraph.com/docs/getting-started/cli), web
 interface [Memgraph Lab](https://memgraph.com/docs/data-visualization) and a
@@ -28,8 +28,14 @@ complete set of algorithms within a
 With the Docker running in the background, run the following command in the
 console:
 
+Linux/MacOS:
 ```bash
-docker run -p 7687:7687 -p 7444:7444 -p 3000:3000 --name memgraph memgraph/memgraph-platform
+curl https://install.memgraph.com | sh
+```
+
+Windows:
+```
+iwr https://windows.memgraph.com | iex
 ```
 
 For other options of installation, check the [Getting started guide](https://memgraph.com/docs/getting-started).
