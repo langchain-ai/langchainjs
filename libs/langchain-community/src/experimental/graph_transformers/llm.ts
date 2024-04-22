@@ -129,7 +129,7 @@ function createSchema(allowedNodes: string[], allowedRelationships: string[]) {
 function mapToBaseNode(node: any): Node {
   return new Node({
     id: node.id,
-    type: toTitleCase(node.type || ""),
+    type: node.type ? toTitleCase(node.type) : "",
   });
 }
 
@@ -138,11 +138,15 @@ function mapToBaseRelationship(relationship: any): Relationship {
   return new Relationship({
     source: new Node({
       id: relationship.sourceNodeId,
-      type: toTitleCase(relationship.sourceNodeType || ""),
+      type: relationship.sourceNodeType
+        ? toTitleCase(relationship.sourceNodeType)
+        : "",
     }),
     target: new Node({
       id: relationship.targetNodeId,
-      type: toTitleCase(relationship.targetNodeType || ""),
+      type: relationship.targetNodeType
+        ? toTitleCase(relationship.targetNodeType)
+        : "",
     }),
     type: relationship.relationshipType.replace(" ", "_").toUpperCase(),
   });
