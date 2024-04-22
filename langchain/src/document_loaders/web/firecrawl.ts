@@ -20,20 +20,6 @@ interface FirecrawlDocument {
   markdown: string;
   metadata: Record<string, unknown>;
 }
-interface ScrapeResponse {
-  success: boolean;
-  data?: FirecrawlDocument;
-  error?: string;
-}
-/**
- * Response interface for crawling operations.
- */
-interface CrawlResponse {
-  success: boolean;
-  jobId?: string;
-  data?: FirecrawlDocument[];
-  error?: string;
-}
 
 /**
  * Class representing a document loader for loading data from
@@ -82,32 +68,17 @@ export class FirecrawlLoader extends BaseDocumentLoader {
     const app = new FirecrawlApp({ apiKey: this.apiKey });
     let firecrawlDocs: FirecrawlDocument[];
 
-    const processResponse = (
-      response: ScrapeResponse | CrawlResponse
-    ): FirecrawlDocument[] => {
+    if (this.mode === "scrape") {
+      const response = await app.scrapeUrl(this.url, this.params);
       if (!response.success) {
         throw new Error(
-          `Failed to ${this.mode} the URL using FirecrawlLoader. Error: ${response.error}`
+          `Firecrawl: Failed to scrape URL. Error: ${response.error}`
         );
       }
-      if (!response.data) {
-        throw new Error(
-          `Failed to ${this.mode} the URL using FirecrawlLoader. No data returned.`
-        );
-      }
-      return this.mode === "scrape"
-        ? ([response.data] as FirecrawlDocument[])
-        : (response.data as FirecrawlDocument[]);
-    };
-
-    if (this.mode === "scrape") {
-      firecrawlDocs = processResponse(
-        await app.scrapeUrl(this.url, this.params)
-      );
+      firecrawlDocs = [response.data as FirecrawlDocument];
     } else if (this.mode === "crawl") {
-      firecrawlDocs = processResponse(
-        await app.crawlUrl(this.url, this.params, true)
-      );
+      const response = await app.crawlUrl(this.url, this.params, true);
+      firecrawlDocs = response as FirecrawlDocument[];
     } else {
       throw new Error(
         `Unrecognized mode '${this.mode}'. Expected one of 'crawl', 'scrape'.`
