@@ -69,9 +69,9 @@ export function convertMessageContentToParts(
       }
       let source;
       if (typeof c.image_url === "string") {
-        source = c.image_url
+        source = c.image_url;
       } else if (typeof c.image_url === "object" && "url" in c.image_url) {
-        source = c.image_url.url
+        source = c.image_url.url;
       } else {
         throw new Error("Please provide image as base64 encoded data URL");
       }
