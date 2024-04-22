@@ -245,7 +245,7 @@
     "firebase-admin": "^11.9.0 || ^12.0.0",
     "google-auth-library": "^8.9.0",
     "googleapis": "^126.0.1",
-    "hnswlib-node": "^1.4.2",
+    "hnswlib-node": "^3.0.0",
     "html-to-text": "^9.0.5",
     "interface-datastore": "^8.2.11",
     "ioredis": "^5.3.2",
