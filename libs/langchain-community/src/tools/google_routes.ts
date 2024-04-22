@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Tool } from "@langchain/core/tools";
 
@@ -40,22 +39,33 @@ interface localizedValues {
   transitFare?: string;
 }
 
-/* interface Route {
+interface FilteredTransitRoute {
   departure: Departure;
   arrival: Arrival;
   travelInstructions: travelInstructions[];
   routeLabels: string[];
   localizedValues: localizedValues;
   transitDetails: transitDetails;
-} */
+  routeLabel: string[];
+}
 
-/* interface DriveRoute {
+interface FilteredRoute {
   description: string;
   distance: string;
   duration: string;
   routeLabel: string[];
-  warnings?: string[];
-} */
+}
+
+interface Body {
+  origin: {
+    address: string;
+  };
+  destination: {
+    address: string;
+  };
+  travel_mode: string;
+  routing_preference?: string;
+}
 
 /**
  * Tool that queries the Google Places API
@@ -75,9 +85,10 @@ export class GoogleRoutesAPI extends Tool {
 
   protected apiKey: string;
 
-  description = `A wrapper around Google Routes API. Useful for when you need to get routes between destinations. Input should be an array with the origin, destination and travel mode. 
-  An example is ["1600 Amphitheatre Parkway, Mountain View, CA", "450 Serra Mall, Stanford, CA 94305, USA", "DRIVE"]. 
-  Travel mode can be "DRIVE", "WALK", "BICYCLE", "TRANSIT", "TWO_WHEELER".`;
+  description = `A wrapper around Google Routes API. It provides an easy way to retrieve routing information between two destinations. 
+  The input to this tool should be an array consisting of the origin address, destination address, and the desired travel mode. For example, 
+  ["1600 Amphitheatre Parkway, Mountain View, CA", "450 Serra Mall, Stanford, CA 94305, USA", "DRIVE"]. 
+  The travel mode can be one of the following: "DRIVE", "WALK", "BICYCLE", "TRANSIT", or "TWO_WHEELER".`;
 
   constructor(fields?: GoogleRoutesAPIParams) {
     super(...arguments);
@@ -96,7 +107,7 @@ export class GoogleRoutesAPI extends Tool {
     console.log("Tool input:", parsedInput);
     const [origin, destination, travel_mode] = parsedInput;
 
-    const body: any = {
+    const body: Body = {
       origin: {
         address: origin,
       },
@@ -107,7 +118,7 @@ export class GoogleRoutesAPI extends Tool {
     };
 
     let fieldMask =
-      "routes.routeLabels,routes.description,routes.localizedValues,routes.travelAdvisory,routes.warnings,routes.legs.steps.transitDetails";
+      "routes.routeLabels,routes.description,routes.localizedValues,routes.travelAdvisory,routes.legs.steps.transitDetails";
 
     if (travel_mode === "TRANSIT") {
       fieldMask += ",routes.legs.stepsOverview";
@@ -146,11 +157,13 @@ export class GoogleRoutesAPI extends Tool {
 
     const json = await res.json();
 
-    let routes;
+    let routes: FilteredTransitRoute[] | FilteredRoute[];
 
     if (travel_mode === "TRANSIT") {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       routes = json.routes.map((route: any) => {
         const transitStep = route.legs[0].steps.find(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (step: any) => step.transitDetails
         );
         const departure: Departure = {
@@ -173,6 +186,7 @@ export class GoogleRoutesAPI extends Tool {
         };
         const travelInstructions: travelInstructions[] =
           route.legs[0].stepsOverview.multiModalSegments.map(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (segment: any) => ({
               ...(segment.navigationInstruction
                 ? {
@@ -196,7 +210,6 @@ export class GoogleRoutesAPI extends Tool {
           routeNameShort: transitStep.transitDetails.transitLine.nameShort,
           routeType: transitStep.transitDetails.transitLine.vehicle.type,
         };
-        const routeLabel = route.routeLabels;
         return {
           departure,
           arrival,
@@ -204,10 +217,10 @@ export class GoogleRoutesAPI extends Tool {
           routeLabels,
           localizedValues,
           transitDetails,
-          routeLabel,
         };
       });
     } else {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       routes = json.routes.map((route: any) => ({
         description: route.description,
         distance: route.localizedValues.distance.text,
