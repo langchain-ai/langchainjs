@@ -30,7 +30,7 @@ export interface AlibabaTongyiEmbeddingsParams extends EmbeddingsParams {
      * 	底库文本（document）类型, 聚类、分类等对称任务可以不用特殊指定，
      * 	采用系统默认值"document"即可
      */
-    text_type?: "text" | "document";
+    text_type?: "query" | "document";
   };
 }
 

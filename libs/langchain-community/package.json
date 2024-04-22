@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.0.49",
+  "version": "0.0.51",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -63,7 +63,7 @@
     "@clickhouse/client": "^0.2.5",
     "@cloudflare/ai": "^1.0.12",
     "@cloudflare/workers-types": "^4.20230922.0",
-    "@datastax/astra-db-ts": "^1.0.0",
+    "@datastax/astra-db-ts": "^1.0.1",
     "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
@@ -76,6 +76,7 @@
     "@jest/globals": "^29.5.0",
     "@langchain/scripts": "~0.0",
     "@mozilla/readability": "^0.4.4",
+    "@neondatabase/serverless": "^0.9.1",
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^1.1.0",
     "@planetscale/database": "^1.8.0",
@@ -110,7 +111,7 @@
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
     "@upstash/redis": "^1.20.6",
-    "@upstash/vector": "^1.0.2",
+    "@upstash/vector": "^1.0.7",
     "@vercel/kv": "^0.2.3",
     "@vercel/postgres": "^0.5.0",
     "@writerai/writer-sdk": "^0.40.2",
@@ -204,6 +205,7 @@
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
     "@mozilla/readability": "*",
+    "@neondatabase/serverless": "*",
     "@opensearch-project/opensearch": "*",
     "@pinecone-database/pinecone": "*",
     "@planetscale/database": "^1.8.0",
@@ -221,7 +223,7 @@
     "@tensorflow/tfjs-converter": "*",
     "@tensorflow/tfjs-core": "*",
     "@upstash/redis": "^1.20.6",
-    "@upstash/vector": "^1.0.2",
+    "@upstash/vector": "^1.0.7",
     "@vercel/kv": "^0.2.3",
     "@vercel/postgres": "^0.5.0",
     "@writerai/writer-sdk": "^0.40.2",
@@ -245,7 +247,7 @@
     "firebase-admin": "^11.9.0 || ^12.0.0",
     "google-auth-library": "^8.9.0",
     "googleapis": "^126.0.1",
-    "hnswlib-node": "^1.4.2",
+    "hnswlib-node": "^3.0.0",
     "html-to-text": "^9.0.5",
     "interface-datastore": "^8.2.11",
     "ioredis": "^5.3.2",
@@ -339,6 +341,9 @@
       "optional": true
     },
     "@mozilla/readability": {
+      "optional": true
+    },
+    "@neondatabase/serverless": {
       "optional": true
     },
     "@opensearch-project/opensearch": {
@@ -1398,6 +1403,15 @@
       },
       "import": "./vectorstores/neo4j_vector.js",
       "require": "./vectorstores/neo4j_vector.cjs"
+    },
+    "./vectorstores/neon": {
+      "types": {
+        "import": "./vectorstores/neon.d.ts",
+        "require": "./vectorstores/neon.d.cts",
+        "default": "./vectorstores/neon.d.ts"
+      },
+      "import": "./vectorstores/neon.js",
+      "require": "./vectorstores/neon.cjs"
     },
     "./vectorstores/opensearch": {
       "types": {
@@ -2652,6 +2666,10 @@
     "vectorstores/neo4j_vector.js",
     "vectorstores/neo4j_vector.d.ts",
     "vectorstores/neo4j_vector.d.cts",
+    "vectorstores/neon.cjs",
+    "vectorstores/neon.js",
+    "vectorstores/neon.d.ts",
+    "vectorstores/neon.d.cts",
     "vectorstores/opensearch.cjs",
     "vectorstores/opensearch.js",
     "vectorstores/opensearch.d.ts",
