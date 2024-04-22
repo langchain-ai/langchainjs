@@ -29,6 +29,7 @@ export interface AstraLibArgs extends AsyncCallerParams {
   namespace?: string;
   idKey?: string;
   contentKey?: string;
+  skipCollectionProvisioning?: boolean;
   collectionOptions?: CreateCollectionOptions<any>;
   batchSize?: number;
 }
@@ -56,6 +57,8 @@ export class AstraDBVectorStore extends VectorStore {
 
   caller: AsyncCaller;
 
+  private readonly skipCollectionProvisioning: boolean;
+
   _vectorstoreType(): string {
     return "astradb";
   }
@@ -72,6 +75,7 @@ export class AstraDBVectorStore extends VectorStore {
       idKey,
       contentKey,
       batchSize,
+      skipCollectionProvisioning,
       ...callerArgs
     } = args;
     const dataAPIClient = new DataAPIClient(token, { caller: ["langchainjs"] });
@@ -82,6 +86,10 @@ export class AstraDBVectorStore extends VectorStore {
     this.contentKey = contentKey ?? "text";
     this.batchSize = batchSize && batchSize <= 20 ? batchSize : 20;
     this.caller = new AsyncCaller(callerArgs);
+    this.skipCollectionProvisioning = skipCollectionProvisioning ?? false;
+    if (this.skipCollectionProvisioning && this.collectionOptions) {
+      throw new Error("If 'skipCollectionProvisioning' has been set to true, 'collectionOptions' must not be defined");
+    }
   }
 
   /**
@@ -91,10 +99,12 @@ export class AstraDBVectorStore extends VectorStore {
    * @returns Promise that resolves if connected to the collection.
    */
   async initialize(): Promise<void> {
-    await this.astraDBClient.createCollection(
-      this.collectionName,
-      this.collectionOptions
-    );
+    if (!this.skipCollectionProvisioning) {
+      await this.astraDBClient.createCollection(
+        this.collectionName,
+        this.collectionOptions,
+      );
+    }
     this.collection = await this.astraDBClient.collection(this.collectionName);
     console.debug("Connected to Astra DB collection");
   }
@@ -109,7 +119,7 @@ export class AstraDBVectorStore extends VectorStore {
   async addVectors(
     vectors: number[][],
     documents: Document[],
-    options?: string[]
+    options?: string[],
   ) {
     if (!this.collection) {
       throw new Error("Must connect to a collection before adding vectors");
@@ -124,7 +134,7 @@ export class AstraDBVectorStore extends VectorStore {
 
     const chunkedDocs = chunkArray(docs, this.batchSize);
     const batchCalls = chunkedDocs.map((chunk) =>
-      this.caller.call(async () => this.collection?.insertMany(chunk))
+      this.caller.call(async () => this.collection?.insertMany(chunk)),
     );
 
     await Promise.all(batchCalls);
@@ -145,7 +155,7 @@ export class AstraDBVectorStore extends VectorStore {
     return this.addVectors(
       await this.embeddings.embedDocuments(documents.map((d) => d.pageContent)),
       documents,
-      options
+      options,
     );
   }
 
@@ -179,7 +189,7 @@ export class AstraDBVectorStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: CollectionFilter
+    filter?: CollectionFilter,
   ): Promise<[Document, number][]> {
     if (!this.collection) {
       throw new Error("Must connect to a collection before adding vectors");
@@ -225,7 +235,7 @@ export class AstraDBVectorStore extends VectorStore {
    */
   async maxMarginalRelevanceSearch(
     query: string,
-    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
+    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>,
   ): Promise<Document[]> {
     if (!this.collection) {
       throw new Error("Must connect to a collection before adding vectors");
@@ -241,14 +251,14 @@ export class AstraDBVectorStore extends VectorStore {
 
     const results = (await cursor.toArray()) ?? [];
     const embeddingList: number[][] = results.map(
-      (row) => row.$vector as number[]
+      (row) => row.$vector as number[],
     );
 
     const mmrIndexes = maximalMarginalRelevance(
       queryEmbedding,
       embeddingList,
       options.lambda,
-      options.k
+      options.k,
     );
 
     const topMmrMatches = mmrIndexes.map((idx) => results[idx]);
@@ -281,7 +291,7 @@ export class AstraDBVectorStore extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: EmbeddingsInterface,
-    dbConfig: AstraLibArgs
+    dbConfig: AstraLibArgs,
   ): Promise<AstraDBVectorStore> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -306,7 +316,7 @@ export class AstraDBVectorStore extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: EmbeddingsInterface,
-    dbConfig: AstraLibArgs
+    dbConfig: AstraLibArgs,
   ): Promise<AstraDBVectorStore> {
     const instance = new this(embeddings, dbConfig);
     await instance.initialize();
@@ -324,7 +334,7 @@ export class AstraDBVectorStore extends VectorStore {
    */
   static async fromExistingIndex(
     embeddings: EmbeddingsInterface,
-    dbConfig: AstraLibArgs
+    dbConfig: AstraLibArgs,
   ): Promise<AstraDBVectorStore> {
     const instance = new this(embeddings, dbConfig);
 
