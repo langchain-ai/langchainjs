@@ -78,10 +78,13 @@ export class AstraDBVectorStore extends VectorStore {
     this.astraDBClient = dataAPIClient.db(endpoint, { namespace });
     this.collectionName = collection;
     this.collectionOptions = collectionOptions;
-    if (!this.collectionOptions || this.collectionOptions.checkExists === undefined) {
+    if (
+      !this.collectionOptions ||
+      this.collectionOptions.checkExists === undefined
+    ) {
       this.collectionOptions = {
         checkExists: false,
-        ...this.collectionOptions || {},
+        ...(this.collectionOptions || {}),
       };
     }
     this.idKey = idKey ?? "_id";
