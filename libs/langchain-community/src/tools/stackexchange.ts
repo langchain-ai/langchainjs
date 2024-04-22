@@ -57,9 +57,9 @@ export interface StackExchangeAPIParams {
  * It extends the base Tool class to perform retrieval.
  */
 export class StackExchangeAPI extends Tool {
-  name: "stackexchange";
+  name = "stackexchange";
 
-  description: "Stack Exchange API Implementation";
+  description = "Stack Exchange API Implementation";
 
   private pageSize: number;
 
