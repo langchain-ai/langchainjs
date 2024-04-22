@@ -65,7 +65,7 @@ export abstract class GoogleConnection<
   }> {
     const env = await getRuntimeEnvironment();   
     const langchain = env?.library ?? "langchain-js";
-    const langchainVersion = env?.libraryVersion ?? "0";; 
+    const langchainVersion = env?.libraryVersion ?? "0";
     const moduleName = await this._moduleName();
     let clientLibraryVersion = `${langchain}/${langchainVersion}`;
     if (moduleName && moduleName.length) {
