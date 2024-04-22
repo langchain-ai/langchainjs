@@ -16,6 +16,24 @@ interface FirecrawlLoaderParameters {
   mode?: "crawl" | "scrape";
   params?: Record<string, unknown>;
 }
+interface FirecrawlDocument {
+  markdown: string;
+  metadata: Record<string, unknown>;
+}
+interface ScrapeResponse {
+  success: boolean;
+  data?: FirecrawlDocument;
+  error?: string;
+}
+/**
+ * Response interface for crawling operations.
+ */
+interface CrawlResponse {
+  success: boolean;
+  jobId?: string;
+  data?: FirecrawlDocument[];
+  error?: string;
+}
 
 /**
  * Class representing a document loader for loading data from
@@ -28,8 +46,11 @@ interface FirecrawlLoaderParameters {
  */
 export class FirecrawlLoader extends BaseDocumentLoader {
   private apiKey: string;
+
   private url: string;
+
   private mode: "crawl" | "scrape";
+
   private params?: Record<string, unknown>;
 
   constructor(loaderParams: FirecrawlLoaderParameters) {
@@ -59,15 +80,24 @@ export class FirecrawlLoader extends BaseDocumentLoader {
    */
   public async load(): Promise<Document[]> {
     const app = new FirecrawlApp({ apiKey: this.apiKey });
-    let firecrawlDocs: any[];
+    let firecrawlDocs: FirecrawlDocument[];
 
-    const processResponse = (response: any) => {
+    const processResponse = (
+      response: ScrapeResponse | CrawlResponse
+    ): FirecrawlDocument[] => {
       if (!response.success) {
         throw new Error(
           `Failed to ${this.mode} the URL using FirecrawlLoader. Error: ${response.error}`
         );
       }
-      return this.mode === "scrape" ? [response.data] : response.data;
+      if (!response.data) {
+        throw new Error(
+          `Failed to ${this.mode} the URL using FirecrawlLoader. No data returned.`
+        );
+      }
+      return this.mode === "scrape"
+        ? ([response.data] as FirecrawlDocument[])
+        : (response.data as FirecrawlDocument[]);
     };
 
     if (this.mode === "scrape") {
