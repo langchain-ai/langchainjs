@@ -90,7 +90,7 @@ test("Test format", async () => {
   const revived: StructuredPrompt = await load(JSON.stringify(prompt));
 
   expect(JSON.stringify(prompt)).toEqual(
-    '{"lc":1,"type":"constructor","id":["langchain_core","prompts","structured","StructuredPrompt"],"kwargs":{"schema_":{"name":"yo","description":"a structured output","parameters":{"name":{"type":"string"},"value":{"type":"integer"}}},"input_variables":[],"messages":[{"lc":1,"type":"constructor","id":["langchain_core","prompts","chat","HumanMessagePromptTemplate"],"kwargs":{"prompt":{"lc":1,"type":"constructor","id":["langchain_core","prompts","prompt","PromptTemplate"],"kwargs":{"input_variables":[],"template_format":"f-string","template":"I\'m very structured, how about you?"}}}}]}}'
+    '{"lc":1,"type":"constructor","id":["langchain_core","prompts","structured","StructuredPrompt"],"kwargs":{"schema_":{"name":"yo","description":"a structured output","parameters":{"name":{"type":"string"},"value":{"type":"integer"}}},"input_variables":[],"messages":[{"lc":1,"type":"constructor","id":["langchain_core","prompts","chat","HumanMessagePromptTemplate"],"kwargs":{"prompt":{"lc":1,"type":"constructor","id":["langchain_core","prompts","prompt","PromptTemplate"],"kwargs":{"input_variables":[],"template_format":"f-string","template":"I\'m very structured, how about you?","schema":{"name":"yo","description":"a structured output","parameters":{"name":{"type":"string"},"value":{"type":"integer"}}}}}}}]}}'
   );
 
   const revivedChain = revived.pipe(model);

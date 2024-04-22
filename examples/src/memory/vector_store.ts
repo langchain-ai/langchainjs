@@ -67,3 +67,57 @@ console.log({ res3 });
 /*
 { res3: { text: ' Your name is Perry.' } }
 */
+
+// Sometimes we might want to save metadata along with the conversation snippets
+const memoryWithMetadata = new VectorStoreRetrieverMemory({
+  vectorStoreRetriever: vectorStore.asRetriever(
+    1,
+    (doc) => doc.metadata?.userId === "1"
+  ),
+  memoryKey: "history",
+  metadata: { userId: "1", groupId: "42" },
+});
+
+await memoryWithMetadata.saveContext(
+  { input: "Community is my favorite TV Show" },
+  { output: "6 seasons and a movie!" }
+);
+
+console.log(
+  await memoryWithMetadata.loadMemoryVariables({
+    prompt: "what show should i watch? ",
+  })
+);
+/*
+{ history: 'input: Community is my favorite TV Show\noutput: 6 seasons and a movie!' }
+*/
+
+// If we have a retriever whose filter does not match our metadata, our previous messages won't appear
+const memoryWithoutMatchingMetadata = new VectorStoreRetrieverMemory({
+  vectorStoreRetriever: vectorStore.asRetriever(
+    1,
+    (doc) => doc.metadata?.userId === "2"
+  ),
+  memoryKey: "history",
+});
+
+// There are no messages saved for userId 2
+console.log(
+  await memoryWithoutMatchingMetadata.loadMemoryVariables({
+    prompt: "what show should i watch? ",
+  })
+);
+/*
+{ history: '' }
+*/
+
+// If we need the metadata to be dynamic, we can pass a function instead
+const memoryWithMetadataFunction = new VectorStoreRetrieverMemory({
+  vectorStoreRetriever: vectorStore.asRetriever(1),
+  memoryKey: "history",
+  metadata: (inputValues, _outputValues) => ({
+    firstWord: inputValues?.input.split(" ")[0], // First word of the input
+    createdAt: new Date().toLocaleDateString(), // Date when the message was saved
+    userId: "1", // Hardcoded userId
+  }),
+});

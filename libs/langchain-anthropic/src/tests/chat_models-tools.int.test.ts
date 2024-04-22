@@ -58,7 +58,7 @@ test("Few shotting with tool calls", async () => {
   const res = await chat.invoke([
     new HumanMessage("What is the weather in SF?"),
     new AIMessage({
-      content: "",
+      content: "Let me look up the current weather.",
       tool_calls: [
         {
           id: "toolu_feiwjf9u98r389u498",

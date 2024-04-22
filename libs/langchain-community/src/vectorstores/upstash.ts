@@ -14,6 +14,7 @@ import {
  */
 export interface UpstashVectorLibArgs extends AsyncCallerParams {
   index: UpstashIndex;
+  filter?: string;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -42,11 +43,15 @@ const CONCURRENT_UPSERT_LIMIT = 1000;
  * deleting documents, performing similarity search and more.
  */
 export class UpstashVectorStore extends VectorStore {
+  declare FilterType: string;
+
   index: UpstashIndex;
 
   caller: AsyncCaller;
 
   embeddings: EmbeddingsInterface;
+
+  filter?: this["FilterType"];
 
   _vectorstoreType(): string {
     return "upstash";
@@ -61,6 +66,7 @@ export class UpstashVectorStore extends VectorStore {
 
     this.index = index;
     this.caller = new AsyncCaller(asyncCallerArgs);
+    this.filter = args.filter;
   }
 
   /**
@@ -139,12 +145,14 @@ export class UpstashVectorStore extends VectorStore {
   protected async _runUpstashQuery(
     query: number[],
     k: number,
+    filter?: this["FilterType"],
     options?: { includeVectors: boolean }
   ) {
     const queryResult = await this.index.query<UpstashQueryMetadata>({
       vector: query,
       topK: k,
       includeMetadata: true,
+      filter,
       ...options,
     });
 
@@ -162,9 +170,10 @@ export class UpstashVectorStore extends VectorStore {
    */
   async similaritySearchVectorWithScore(
     query: number[],
-    k: number
+    k: number,
+    filter?: this["FilterType"]
   ): Promise<[DocumentInterface, number][]> {
-    const results = await this._runUpstashQuery(query, k);
+    const results = await this._runUpstashQuery(query, k, filter);
 
     const searchResult: [DocumentInterface, number][] = results.map((res) => {
       const { _pageContentLC, ...metadata } = (res.metadata ??

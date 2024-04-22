@@ -37,6 +37,10 @@ export function copyAIModelParamsInto(
     options?.stopSequences ?? params?.stopSequences ?? target.stopSequences;
   ret.safetySettings =
     options?.safetySettings ?? params?.safetySettings ?? target.safetySettings;
+  ret.convertSystemMessageToHumanContent =
+    options?.convertSystemMessageToHumanContent ??
+    params?.convertSystemMessageToHumanContent ??
+    target?.convertSystemMessageToHumanContent;
 
   ret.tools = options?.tools;
   // Ensure tools are formatted properly for Gemini

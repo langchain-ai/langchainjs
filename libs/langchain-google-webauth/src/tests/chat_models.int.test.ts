@@ -243,7 +243,7 @@ describe("Google APIKey Chat", () => {
   });
 });
 
-describe.skip("Google Webauth Chat", () => {
+describe("Google Webauth Chat", () => {
   test("invoke", async () => {
     const model = new ChatGoogle();
     try {

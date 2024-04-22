@@ -284,6 +284,13 @@ export abstract class AbstractGoogleLLMConnection<
     return parameters.safetySettings ?? [];
   }
 
+  formatSystemInstruction(
+    _input: MessageType,
+    _parameters: GoogleAIModelRequestParams
+  ): GeminiContent {
+    return {} as GeminiContent;
+  }
+
   // Borrowed from the OpenAI invocation params test
   isStructuredToolArray(tools?: unknown[]): tools is StructuredToolInterface[] {
     return (
@@ -319,7 +326,8 @@ export abstract class AbstractGoogleLLMConnection<
     _input: MessageType,
     parameters: GoogleAIModelRequestParams
   ): GeminiTool[] {
-    const tools = parameters?.tools;
+    const tools: StructuredToolInterface[] | GeminiTool[] | undefined =
+      parameters?.tools;
     if (!tools || tools.length === 0) {
       return [];
     }
@@ -327,6 +335,9 @@ export abstract class AbstractGoogleLLMConnection<
     if (this.isStructuredToolArray(tools)) {
       return this.structuredToolsToGeminiTools(tools);
     } else {
+      if (tools.length === 1 && !tools[0].functionDeclarations?.length) {
+        return [];
+      }
       return tools as GeminiTool[];
     }
   }
@@ -335,19 +346,11 @@ export abstract class AbstractGoogleLLMConnection<
     input: MessageType,
     parameters: GoogleAIModelRequestParams
   ): GeminiRequest {
-    /*
-    const parts = messageContentToParts(input);
-    const contents: GeminiContent[] = [
-      {
-        role: "user",    // Required by Vertex AI
-        parts,
-      }
-    ]
-    */
     const contents = this.formatContents(input, parameters);
     const generationConfig = this.formatGenerationConfig(input, parameters);
     const tools = this.formatTools(input, parameters);
     const safetySettings = this.formatSafetySettings(input, parameters);
+    const systemInstruction = this.formatSystemInstruction(input, parameters);
 
     const ret: GeminiRequest = {
       contents,
@@ -358,6 +361,13 @@ export abstract class AbstractGoogleLLMConnection<
     }
     if (safetySettings && safetySettings.length) {
       ret.safetySettings = safetySettings;
+    }
+    if (
+      systemInstruction?.role &&
+      systemInstruction?.parts &&
+      systemInstruction?.parts?.length
+    ) {
+      ret.systemInstruction = systemInstruction;
     }
     return ret;
   }

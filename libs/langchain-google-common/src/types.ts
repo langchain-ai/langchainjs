@@ -89,6 +89,8 @@ export interface GoogleAIModelParams {
   stopSequences?: string[];
 
   safetySettings?: GoogleAISafetySetting[];
+
+  convertSystemMessageToHumanContent?: boolean;
 }
 
 /**
@@ -167,14 +169,13 @@ export interface GeminiSafetySetting {
   threshold: string;
 }
 
-export interface GeminiSafetyRating {
+export type GeminiSafetyRating = {
   category: string;
   probability: string;
-}
+} & Record<string, unknown>;
 
-export type GeminiRole = "user" | "model" | "function";
-
-// Vertex AI requires the role
+// The "system" content appears to only be valid in the systemInstruction
+export type GeminiRole = "system" | "user" | "model" | "function";
 
 export interface GeminiContent {
   parts: GeminiPart[];
@@ -221,6 +222,7 @@ export interface GeminiGenerationConfig {
 
 export interface GeminiRequest {
   contents?: GeminiContent[];
+  systemInstruction?: GeminiContent;
   tools?: GeminiTool[];
   safetySettings?: GeminiSafetySetting[];
   generationConfig?: GeminiGenerationConfig;
@@ -245,6 +247,7 @@ interface GeminiResponsePromptFeedback {
 export interface GenerateContentResponseData {
   candidates: GeminiResponseCandidate[];
   promptFeedback: GeminiResponsePromptFeedback;
+  usageMetadata: Record<string, unknown>;
 }
 
 export type GoogleLLMModelFamily = null | "palm" | "gemini";

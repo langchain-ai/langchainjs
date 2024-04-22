@@ -331,19 +331,23 @@ function _formatMessagesForAnthropic(messages: BaseMessage[]): {
       throw new Error(`Message type "${message._getType()}" is not supported.`);
     }
     if (isAIMessage(message) && !!message.tool_calls?.length) {
-      if (message.content === "") {
-        return {
-          role,
-          content: message.tool_calls.map(_convertLangChainToolCallToAnthropic),
-        };
-      } else if (typeof message.content === "string") {
-        console.warn(
-          `The "tool_calls" field on a message is only respected if content is an empty string.`
-        );
-        return {
-          role,
-          content: _formatContent(message.content),
-        };
+      if (typeof message.content === "string") {
+        if (message.content === "") {
+          return {
+            role,
+            content: message.tool_calls.map(
+              _convertLangChainToolCallToAnthropic
+            ),
+          };
+        } else {
+          return {
+            role,
+            content: [
+              { type: "text", text: message.content },
+              ...message.tool_calls.map(_convertLangChainToolCallToAnthropic),
+            ],
+          };
+        }
       } else {
         const { content } = message;
         const hasMismatchedToolCalls = !message.tool_calls.every((toolCall) =>
@@ -354,7 +358,7 @@ function _formatMessagesForAnthropic(messages: BaseMessage[]): {
         );
         if (hasMismatchedToolCalls) {
           console.warn(
-            `The "tool_calls" field on a message is only respected if content is an empty string.`
+            `The "tool_calls" field on a message is only respected if content is a string.`
           );
         }
         return {
@@ -581,9 +585,13 @@ export class ChatAnthropicMessages<
     const params = this.invocationParams(options);
     const formattedMessages = _formatMessagesForAnthropic(messages);
     if (options.tools !== undefined && options.tools.length > 0) {
-      const generations = await this._generateNonStreaming(messages, params, {
-        signal: options.signal,
-      });
+      const { generations } = await this._generateNonStreaming(
+        messages,
+        params,
+        {
+          signal: options.signal,
+        }
+      );
       const result = generations[0].message as AIMessage;
       const toolCallChunks = result.tool_calls?.map(
         (toolCall: ToolCall, index: number) => ({
@@ -702,7 +710,8 @@ export class ChatAnthropicMessages<
       content,
       additionalKwargs
     );
-    return generations;
+    const { role: _role, type: _type, ...rest } = additionalKwargs;
+    return { generations, llmOutput: rest };
   }
 
   /** @ignore */
@@ -740,12 +749,9 @@ export class ChatAnthropicMessages<
         ],
       };
     } else {
-      const generations = await this._generateNonStreaming(messages, params, {
+      return this._generateNonStreaming(messages, params, {
         signal: options.signal,
       });
-      return {
-        generations,
-      };
     }
   }
 

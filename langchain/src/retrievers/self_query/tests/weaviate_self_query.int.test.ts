@@ -97,7 +97,7 @@ test.skip("Weaviate Self Query Retriever Test", async () => {
     textKey: "text",
     metadataKeys: ["year", "director", "rating", "genre"],
   });
-  const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+  const selfQueryRetriever = SelfQueryRetriever.fromLLM({
     llm,
     vectorStore,
     documentContents,
@@ -239,7 +239,7 @@ test.skip("Weaviate Vector Store Self Query Retriever Test With Default Filter O
     metadataKeys: ["year", "director", "rating", "genre", "type"],
   });
 
-  const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+  const selfQueryRetriever = SelfQueryRetriever.fromLLM({
     llm,
     vectorStore,
     documentContents,
@@ -386,7 +386,7 @@ test.skip("Weaviate Vector Store Self Query Retriever Test With Default Filter A
     metadataKeys: ["year", "director", "rating", "genre", "type"],
   });
 
-  const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+  const selfQueryRetriever = SelfQueryRetriever.fromLLM({
     llm,
     vectorStore,
     documentContents,
