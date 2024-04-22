@@ -199,7 +199,7 @@ Here is the JSON Schema instance your output must adhere to. Include the enclosi
 `);
 });
 
-test("StructuredOutputParser.fromZodSchema", async () => {
+test("StructuredOutputParser.fromZodSchema parsing newlines", async () => {
   const parser = StructuredOutputParser.fromZodSchema(
     z
       .object({
@@ -218,5 +218,3 @@ test("StructuredOutputParser.fromZodSchema", async () => {
     summary: "line1,\nline2,\nline3",
   });
 });
-
-
