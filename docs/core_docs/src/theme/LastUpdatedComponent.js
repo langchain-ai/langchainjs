@@ -1,9 +1,10 @@
 /* eslint-disable react/jsx-props-no-spreading, react/destructuring-assignment */
 import React from "react";
 
-const BASE_GIT_URL = "https://api.github.com/repos/langchain-ai/langchainjs/commits?path=docs/core_docs"
+const BASE_GIT_URL =
+  "https://api.github.com/repos/langchain-ai/langchainjs/commits?path=docs/core_docs";
 
-const LAST_UPDATED_ELEMENT_ID = "lc_last_updated"
+const LAST_UPDATED_ELEMENT_ID = "lc_last_updated";
 
 /**
  * NOTE: This component file can NOT be named `LastUpdated` as it
@@ -16,7 +17,7 @@ export default function LastUpdatedComponent() {
     if (typeof window === "undefined") return;
     try {
       const currentPath = window.location.pathname;
-      let apiUrl = ""
+      let apiUrl = "";
       if (currentPath.endsWith("/")) {
         apiUrl = `${BASE_GIT_URL}${currentPath}index.ipynb`;
       } else {
@@ -26,12 +27,13 @@ export default function LastUpdatedComponent() {
       fetch(apiUrl)
         .then((response) => response.json())
         .then((data) => {
-          if (!data || data.length === 0 || !data[0]?.commit?.author?.date) return;
+          if (!data || data.length === 0 || !data[0]?.commit?.author?.date)
+            return;
           const lastCommitDate = new Date(data[0]?.commit?.author?.date);
-          const formattedDate = lastCommitDate.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
+          const formattedDate = lastCommitDate.toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
           });
           if (formattedDate !== "Invalid Date") {
             setLastUpdatedDate(formattedDate);
@@ -40,13 +42,20 @@ export default function LastUpdatedComponent() {
     } catch (_) {
       // no-op
     }
-  }, [])
+  }, []);
 
   if (!lastUpdatedDate) return null;
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'flex-end' }} id={LAST_UPDATED_ELEMENT_ID}>
-      <p style={{ fontSize: 13.3333 }}><i>Last updated on <strong>{lastUpdatedDate}</strong></i></p>
+    <div
+      style={{ display: "flex", justifyContent: "flex-end" }}
+      id={LAST_UPDATED_ELEMENT_ID}
+    >
+      <p style={{ fontSize: 13.3333 }}>
+        <i>
+          Last updated on <strong>{lastUpdatedDate}</strong>
+        </i>
+      </p>
     </div>
   );
 }
