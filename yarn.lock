@@ -8895,7 +8895,7 @@ __metadata:
   resolution: "@langchain/cohere@workspace:libs/langchain-cohere"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1
+    "@langchain/core": ~0.1.58
     "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9346,7 +9346,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.5, @langchain/core@~0.1.56, @langchain/core@~0.1.9":
+"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.5, @langchain/core@~0.1.56, @langchain/core@~0.1.58, @langchain/core@~0.1.9":
   version: 0.0.0-use.local
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
