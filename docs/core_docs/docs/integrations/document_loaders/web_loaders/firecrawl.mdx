@@ -1,0 +1,53 @@
+---
+hide_table_of_contents: true
+---
+
+# Firecrawl
+
+This guide shows how to use [Firecrawl](https://firecrawl.dev) with LangChain to load web data into an LLM-ready format using Firecrawl.
+
+## Overview
+
+[FireCrawl](https://firecrawl.dev) crawls and convert any website into LLM-ready data. It crawls all accessible subpages and give you clean markdown and metadata for each. No sitemap required.
+
+FireCrawl handles complex tasks such as reverse proxies, caching, rate limits, and content blocked by JavaScript. Built by the [mendable.ai](https://mendable.ai) team.
+
+This guide shows how to scrap and crawl entire websites and load them using the `FireCrawlLoader` in LangChain.
+
+## Setup
+
+You'll need to sign up and retrieve your [FireCrawl API key](https://firecrawl.dev).
+
+## Installation
+
+You will need to install the `@mendableai/firecrawl-js` package:
+
+```bash
+npm install @mendableai/firecrawl-js
+```
+
+## Usage
+
+Here's an example of how to use the `FireCrawlLoader` to load web search results:
+
+Firecrawl offers 2 modes: `scrape` and `crawl`. In `scrape` mode, Firecrawl will only scrape the page you provide. In `crawl` mode, Firecrawl will crawl the entire website.
+
+```typescript
+import { FireCrawlLoader } from "langchain/document_loaders/web/firecrawl";
+
+const loader = new FireCrawlLoader({
+    url: "https://firecrawl.dev",
+    apiKey: process.env.FIRECRAWL_API_KEY,
+    mode: "scrape",
+    params: {
+        // optional parameters based on Firecrawl API docs
+    }
+  });
+
+const docs = await loader.load();
+```
+
+
+### Additional Parameters
+
+For `params` you can pass any of the params according to the [Firecrawl documentation](https://docs.firecrawl.dev).

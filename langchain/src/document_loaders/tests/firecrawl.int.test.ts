@@ -2,10 +2,10 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { test } from "@jest/globals";
 import { Document } from "@langchain/core/documents";
-import { FirecrawlLoader } from "../web/firecrawl.js";
+import { FireCrawlLoader } from "../web/firecrawl.js";
 
-test("Test FirecrawlLoader load method with scrape mode", async () => {
-  const loader = new FirecrawlLoader({
+test("Test FireCrawlLoader load method with scrape mode", async () => {
+  const loader = new FireCrawlLoader({
     url: "https://firecrawl.dev",
     apiKey: process.env.FIRECRAWL_API_KEY,
     mode: "scrape",
@@ -19,8 +19,8 @@ test("Test FirecrawlLoader load method with scrape mode", async () => {
   expect(document.metadata).toBeTruthy();
 });
 
-test("Test FirecrawlLoader load method with crawl mode", async () => {
-  const loader = new FirecrawlLoader({
+test("Test FireCrawlLoader load method with crawl mode", async () => {
+  const loader = new FireCrawlLoader({
     url: "https://firecrawl.dev",
     apiKey: process.env.FIRECRAWL_API_KEY,
     mode: "crawl",
