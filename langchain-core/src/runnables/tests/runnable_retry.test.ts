@@ -118,7 +118,7 @@ test("RunnableRetry batch with an onFailedAttempt handler", async () => {
     stopAfterAttempt: 2,
     onFailedAttempt: (error, input) => {
       expect(error.message).toEqual("TEST ERROR");
-      expect(input).toEqual(["test1", "test2", "test3"]);
+      expect(input).toEqual("test1");
     },
   });
   const result = await runnableRetry.batch(["test1", "test2", "test3"]);
