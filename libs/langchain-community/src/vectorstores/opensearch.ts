@@ -96,9 +96,9 @@ export class OpenSearchVectorStore extends VectorStore {
 
   private readonly vectorFieldName: string;
 
-  private readonly textFieldName: any;
+  private readonly textFieldName: string;
 
-  private readonly metadataFieldName: any;
+  private readonly metadataFieldName: string;
 
   _vectorstoreType(): string {
     return "opensearch";
