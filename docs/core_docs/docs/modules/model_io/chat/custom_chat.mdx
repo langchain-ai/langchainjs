@@ -78,6 +78,7 @@ export class CustomChatModel extends SimpleChatModel {
         }),
         text: letter,
       });
+      // Trigger the appropriate callback for new chunks
       await runManager?.handleLLMNewToken(letter);
     }
   }
@@ -243,6 +244,71 @@ for await (const event of eventStream) {
         }
       }
     }
+  }
+}
+```
+
+## Tracing (advanced)
+
+If you are implementing a custom chat model and want to use it with a tracing service like [LangSmith](https://smith.langchain.com/),
+you can automatically log params used for a given invocation by implementing the `invocationParams()` method on the model.
+
+This method is purely optional, but anything it returns will be logged as metadata for the trace.
+
+Here's one pattern you might use:
+
+```ts
+export interface CustomChatModelOptions extends BaseChatModelCallOptions {
+  // Some required or optional inner args
+  tools: Record<string, any>[];
+}
+
+export interface CustomChatModelParams extends BaseChatModelParams {
+  temperature: number;
+}
+
+export class CustomChatModel extends BaseChatModel<CustomChatModelOptions> {
+  temperature: number;
+
+  static lc_name(): string {
+    return "CustomChatModel";
+  }
+
+  constructor(fields: CustomChatModelParams) {
+    super(fields);
+    this.temperature = fields.temperature;
+  }
+
+  // Anything returned in this method will be logged as metadata in the trace.
+  // It is common to pass it any options used to invoke the function.
+  invocationParams(options?: this["ParsedCallOptions"]) {
+    return {
+      tools: options?.tools,
+      n: this.n,
+    };
+  }
+
+  async _generate(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): Promise<ChatResult> {
+    if (!messages.length) {
+      throw new Error("No messages provided.");
+    }
+    if (typeof messages[0].content !== "string") {
+      throw new Error("Multimodal messages are not supported.");
+    }
+    const additionalParams = this.invocationParams(options);
+    const content = await someAPIRequest(messages, additionalParams);
+    return {
+      generations: [{ message: new AIMessage({ content }), text: content }],
+      llmOutput: {},
+    };
+  }
+
+  _llmType(): string {
+    return "advanced_custom_chat_model";
   }
 }
 ```

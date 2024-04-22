@@ -100,7 +100,7 @@ const client = createClient(
 const vectorStore = await SupabaseVectorStore.fromDocuments(docs, embeddings, {
   client,
 });
-const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+const selfQueryRetriever = SelfQueryRetriever.fromLLM({
   llm,
   vectorStore,
   documentContents,
