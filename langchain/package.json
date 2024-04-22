@@ -1230,6 +1230,7 @@
     "@google-cloud/storage": "^7.7.0",
     "@jest/globals": "^29.5.0",
     "@langchain/scripts": "~0.0",
+    "@mendable/firecrawl-js": "0.0.11",
     "@notionhq/client": "^2.2.10",
     "@pinecone-database/pinecone": "^1.1.0",
     "@supabase/supabase-js": "^2.10.0",
@@ -1314,6 +1315,7 @@
     "@gomomento/sdk-web": "^1.51.1",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1 || ^7.7.0",
+    "@mendable/firecrawl-js": "0.0.11",
     "@notionhq/client": "^2.2.10",
     "@pinecone-database/pinecone": "*",
     "@supabase/supabase-js": "^2.10.0",
@@ -1384,6 +1386,9 @@
       "optional": true
     },
     "@google-cloud/storage": {
+      "optional": true
+    },
+    "@mendable/firecrawl-js": {
       "optional": true
     },
     "@notionhq/client": {
