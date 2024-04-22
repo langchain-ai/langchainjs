@@ -24,7 +24,6 @@ describe.skip("AstraDBVectorStore", () => {
       ...clientConfig,
       collection: process.env.ASTRA_DB_COLLECTION ?? "langchain_test",
       collectionOptions: {
-        checkExists: false,
         vector: {
           dimension: 1536,
           metric: "cosine",
@@ -149,7 +148,6 @@ describe.skip("AstraDBVectorStore", () => {
       store = new AstraDBVectorStore(new FakeEmbeddings(), {
         ...astraConfig,
         collectionOptions: {
-          checkExists: false,
           vector: {
             dimension: 8,
             metric: "cosine",
