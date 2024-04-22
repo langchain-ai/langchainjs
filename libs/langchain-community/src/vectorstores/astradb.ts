@@ -81,16 +81,7 @@ export class AstraDBVectorStore extends VectorStore {
     const dataAPIClient = new DataAPIClient(token, { caller: ["langchainjs"] });
     this.astraDBClient = dataAPIClient.db(endpoint, { namespace });
     this.collectionName = collection;
-    this.collectionOptions = collectionOptions;
-    if (
-      !this.collectionOptions ||
-      this.collectionOptions.checkExists === undefined
-    ) {
-      this.collectionOptions = {
-        checkExists: false,
-        ...(this.collectionOptions || {}),
-      };
-    }
+    this.collectionOptions = AstraDBVectorStore.applyCollectionOptionsDefaults(collectionOptions);
     this.idKey = idKey ?? "_id";
     this.contentKey = contentKey ?? "text";
     this.batchSize = batchSize && batchSize <= 20 ? batchSize : 20;
@@ -101,6 +92,19 @@ export class AstraDBVectorStore extends VectorStore {
         "If 'skipCollectionProvisioning' has been set to true, 'collectionOptions' must not be defined"
       );
     }
+  }
+
+  private static applyCollectionOptionsDefaults(fromUser?: CreateCollectionOptions<any>): CreateCollectionOptions<any> {
+    const copy: CreateCollectionOptions<any> = fromUser ? {...fromUser} : {};
+    if (copy.checkExists === undefined) {
+      copy.checkExists = false;
+    }
+    if (copy.indexing === undefined) {
+      // same default as langchain python AstraDBVectorStore.
+      // this enables to create the collection in python/ts and use it in ts/python with default options.
+      copy.indexing = {allow: ["metadata"]}
+    }
+    return copy
   }
 
   /**
