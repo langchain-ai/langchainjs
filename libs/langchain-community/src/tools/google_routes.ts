@@ -37,7 +37,7 @@ interface travelInstructions {
 interface localizedValues {
   distance: string;
   duration: string;
-  transitFare: string;
+  transitFare?: string;
 }
 
 /* interface Route {
@@ -75,8 +75,8 @@ export class GoogleRoutesAPI extends Tool {
 
   protected apiKey: string;
 
-  description = `A wrapper around Google Routes API. Useful for when you need to get routes between destinations. Input should be an array with the origin, 
-  destination and travel mode. An example is ["1600 Amphitheatre Parkway, Mountain View, CA", "450 Serra Mall, Stanford, CA 94305, USA", "DRIVE"]. 
+  description = `A wrapper around Google Routes API. Useful for when you need to get routes between destinations. Input should be an array with the origin, destination and travel mode. 
+  An example is ["1600 Amphitheatre Parkway, Mountain View, CA", "450 Serra Mall, Stanford, CA 94305, USA", "DRIVE"]. 
   Travel mode can be "DRIVE", "WALK", "BICYCLE", "TRANSIT", "TWO_WHEELER".`;
 
   constructor(fields?: GoogleRoutesAPIParams) {
@@ -96,7 +96,6 @@ export class GoogleRoutesAPI extends Tool {
     console.log("Tool input:", parsedInput);
     const [origin, destination, travel_mode] = parsedInput;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const body: any = {
       origin: {
         address: origin,
@@ -105,7 +104,6 @@ export class GoogleRoutesAPI extends Tool {
         address: destination,
       },
       travel_mode,
-      computeAlternativeRoutes: false,
     };
 
     let fieldMask =
@@ -176,9 +174,12 @@ export class GoogleRoutesAPI extends Tool {
         const travelInstructions: travelInstructions[] =
           route.legs[0].stepsOverview.multiModalSegments.map(
             (segment: any) => ({
-              navigationInstruction: segment.navigationInstruction
-                ? segment.navigationInstruction.instructions
-                : "",
+              ...(segment.navigationInstruction
+                ? {
+                    navigationInstruction:
+                      segment.navigationInstruction.instructions,
+                  }
+                : {}),
               travelMode: segment.travelMode,
             })
           );
@@ -186,7 +187,9 @@ export class GoogleRoutesAPI extends Tool {
         const localizedValues: localizedValues = {
           distance: route.localizedValues.distance.text,
           duration: route.localizedValues.duration.text,
-          transitFare: route.localizedValues.transitFare.text || "",
+          ...(route.localizedValues.transitFare.text
+            ? { transitFare: route.localizedValues.transitFare.text }
+            : {}),
         };
         const transitDetails: transitDetails = {
           routeName: transitStep.transitDetails.transitLine.name,
