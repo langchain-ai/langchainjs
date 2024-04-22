@@ -25,7 +25,7 @@ export function documentCompressorFiltering({
         (doc) => doc?.metadata?.relevanceScore
       );
       outputDocs = docs.filter(
-        (doc, index) =>
+        (_doc, index) =>
           (docsRelevanceScoreValues?.[index] || 1) >= relevanceScore
       );
     }
