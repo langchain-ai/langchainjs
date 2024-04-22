@@ -8124,17 +8124,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@google/generative-ai@npm:^0.1.0":
-  version: 0.1.0
-  resolution: "@google/generative-ai@npm:0.1.0"
-  checksum: 80a3eebcd831ad894e6c7a828a0519c7974eee10aa5c765aa837dc7dab36017e5dc3a08470acc4955a5b44013b77358760d5b197e83016f416d1c3b39d265a79
-  languageName: node
-  linkType: hard
-
-"@google/generative-ai@npm:^0.1.3":
-  version: 0.1.3
-  resolution: "@google/generative-ai@npm:0.1.3"
-  checksum: 6ab4e214c5f792c9dce66aa00268dd75295be093ec9305ccb8e2251210e5a6680a17ec9f041d8108ee3a2ce49e2f26bc9a30ef97e17a2d83818a92a824f6efd1
+"@google/generative-ai@npm:^0.7.0":
+  version: 0.7.1
+  resolution: "@google/generative-ai@npm:0.7.1"
+  checksum: 536c7c75545c93731f0ab1fa9be6c88c64ead6ab6b24e70763e592e163041444f9ae78e2095019cd0e27fc18cbdc1ecaf1fdfd3561ca0a61577f720ddbaba1f2
   languageName: node
   linkType: hard
 
@@ -9496,7 +9489,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/google-genai@workspace:libs/langchain-google-genai"
   dependencies:
-    "@google/generative-ai": ^0.1.3
+    "@google/generative-ai": ^0.7.0
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.5
     "@langchain/scripts": ~0.0
@@ -21723,7 +21716,7 @@ __metadata:
     "@getmetal/metal-sdk": ^4.0.0
     "@getzep/zep-js": ^0.9.0
     "@gomomento/sdk": ^1.51.1
-    "@google/generative-ai": ^0.1.0
+    "@google/generative-ai": ^0.7.0
     "@langchain/anthropic": "workspace:*"
     "@langchain/azure-openai": "workspace:*"
     "@langchain/cloudflare": "workspace:*"
