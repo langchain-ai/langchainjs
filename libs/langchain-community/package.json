@@ -76,6 +76,7 @@
     "@jest/globals": "^29.5.0",
     "@langchain/scripts": "~0.0",
     "@mozilla/readability": "^0.4.4",
+    "@neondatabase/serverless": "^0.9.1",
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^1.1.0",
     "@planetscale/database": "^1.8.0",
@@ -204,6 +205,7 @@
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
     "@mozilla/readability": "*",
+    "@neondatabase/serverless": "*",
     "@opensearch-project/opensearch": "*",
     "@pinecone-database/pinecone": "*",
     "@planetscale/database": "^1.8.0",
@@ -339,6 +341,9 @@
       "optional": true
     },
     "@mozilla/readability": {
+      "optional": true
+    },
+    "@neondatabase/serverless": {
       "optional": true
     },
     "@opensearch-project/opensearch": {
@@ -1398,6 +1403,15 @@
       },
       "import": "./vectorstores/neo4j_vector.js",
       "require": "./vectorstores/neo4j_vector.cjs"
+    },
+    "./vectorstores/neon": {
+      "types": {
+        "import": "./vectorstores/neon.d.ts",
+        "require": "./vectorstores/neon.d.cts",
+        "default": "./vectorstores/neon.d.ts"
+      },
+      "import": "./vectorstores/neon.js",
+      "require": "./vectorstores/neon.cjs"
     },
     "./vectorstores/opensearch": {
       "types": {
@@ -2652,6 +2666,10 @@
     "vectorstores/neo4j_vector.js",
     "vectorstores/neo4j_vector.d.ts",
     "vectorstores/neo4j_vector.d.cts",
+    "vectorstores/neon.cjs",
+    "vectorstores/neon.js",
+    "vectorstores/neon.d.ts",
+    "vectorstores/neon.d.cts",
     "vectorstores/opensearch.cjs",
     "vectorstores/opensearch.js",
     "vectorstores/opensearch.d.ts",
