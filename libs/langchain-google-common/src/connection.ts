@@ -63,10 +63,9 @@ export abstract class GoogleConnection<
     userAgent: string;
     clientLibraryVersion: string;
   }> {
-    const env = await getRuntimeEnvironment();
-    const packageJson = require('../package.json');    
+    const env = await getRuntimeEnvironment();   
     const langchain = env?.library ?? "langchain-js";
-    const langchainVersion = packageJson.dependencies["@langchain/core"] ?? "0";
+    const langchainVersion = env?.libraryVersion ?? "0";; // Since we are not getting libraryVersion from env right now, it will always be 0
     const moduleName = await this._moduleName();
     let clientLibraryVersion = `${langchain}/${langchainVersion}`;
     if (moduleName && moduleName.length) {
