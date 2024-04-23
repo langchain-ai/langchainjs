@@ -85,8 +85,8 @@ describe("Mock ChatGoogle", () => {
       /langchain-js\/[0-9.]+-ChatConnection/
     );
     expect(record.opts.headers["Client-Info"]).toMatch(
-      /\d+(\.\d+)?-ChatConnection/  // Since we are not getting libraryVersion from env right now, it will always be 0
-      );
+      /\d+(\.\d+)?-ChatConnection/ // Since we are not getting libraryVersion from env right now, it will always be 0
+    );
   });
 
   test("platform default", async () => {

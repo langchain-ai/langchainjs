@@ -63,7 +63,7 @@ export abstract class GoogleConnection<
     userAgent: string;
     clientLibraryVersion: string;
   }> {
-    const env = await getRuntimeEnvironment();   
+    const env = await getRuntimeEnvironment();
     const langchain = env?.library ?? "langchain-js";
     // TODO: Add an API for getting the current LangChain version
     const langchainVersion = "0";
