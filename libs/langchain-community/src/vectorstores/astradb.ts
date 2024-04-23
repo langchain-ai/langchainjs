@@ -87,24 +87,27 @@ export class AstraDBVectorStore extends VectorStore {
       );
     }
     this.collectionName = collection;
-    this.collectionOptions = AstraDBVectorStore.applyCollectionOptionsDefaults(collectionOptions);
+    this.collectionOptions =
+      AstraDBVectorStore.applyCollectionOptionsDefaults(collectionOptions);
     this.idKey = idKey ?? "_id";
     this.contentKey = contentKey ?? "text";
     this.batchSize = batchSize && batchSize <= 20 ? batchSize : 20;
     this.caller = new AsyncCaller(callerArgs);
   }
 
-  private static applyCollectionOptionsDefaults(fromUser?: CreateCollectionOptions<any>): CreateCollectionOptions<any> {
-    const copy: CreateCollectionOptions<any> = fromUser ? {...fromUser} : {};
+  private static applyCollectionOptionsDefaults(
+    fromUser?: CreateCollectionOptions<any>
+  ): CreateCollectionOptions<any> {
+    const copy: CreateCollectionOptions<any> = fromUser ? { ...fromUser } : {};
     if (copy.checkExists === undefined) {
       copy.checkExists = false;
     }
     if (copy.indexing === undefined) {
       // same default as langchain python AstraDBVectorStore.
       // this enables to create the collection in python/ts and use it in ts/python with default options.
-      copy.indexing = {allow: ["metadata"]}
+      copy.indexing = { allow: ["metadata"] };
     }
-    return copy
+    return copy;
   }
 
   /**
