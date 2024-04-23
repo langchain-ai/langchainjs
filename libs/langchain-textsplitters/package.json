@@ -1,7 +1,7 @@
 {
-  "name": "@langchain/google-genai",
-  "version": "0.0.12",
-  "description": "Sample integration for LangChain.js",
+  "name": "@langchain/textsplitters",
+  "version": "0.0.0",
+  "description": "Various implementations of LangChain.js text splitters",
   "type": "module",
   "engines": {
     "node": ">=18"
@@ -12,10 +12,9 @@
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
-  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-google-genai/",
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-INTEGRATION_NAME/",
   "scripts": {
-    "build": "yarn run build:deps && yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
-    "build:deps": "yarn run turbo:command build --filter=@langchain/core",
+    "build": "yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rm -rf dist/tests dist/**/tests",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rm -rf dist-cjs",
     "build:watch": "yarn create-entrypoints && tsc --outDir dist/ --watch",
@@ -39,8 +38,8 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@google/generative-ai": "^0.7.0",
-    "@langchain/core": "~0.1.5"
+    "@langchain/core": "~0.1",
+    "js-tiktoken": "^1.0.11"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
@@ -58,7 +57,6 @@
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
-    "hnswlib-node": "^3.0.0",
     "jest": "^29.5.0",
     "jest-environment-node": "^29.6.4",
     "prettier": "^2.8.3",

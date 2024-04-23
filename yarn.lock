@@ -4629,10 +4629,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@google/generative-ai@npm:^0.1.0, @google/generative-ai@npm:^0.1.3":
-  version: 0.1.3
-  resolution: "@google/generative-ai@npm:0.1.3"
-  checksum: 6ab4e214c5f792c9dce66aa00268dd75295be093ec9305ccb8e2251210e5a6680a17ec9f041d8108ee3a2ce49e2f26bc9a30ef97e17a2d83818a92a824f6efd1
+"@google/generative-ai@npm:^0.7.0":
+  version: 0.7.1
+  resolution: "@google/generative-ai@npm:0.7.1"
+  checksum: 536c7c75545c93731f0ab1fa9be6c88c64ead6ab6b24e70763e592e163041444f9ae78e2095019cd0e27fc18cbdc1ecaf1fdfd3561ca0a61577f720ddbaba1f2
   languageName: node
   linkType: hard
 
@@ -5271,7 +5271,7 @@ __metadata:
   resolution: "@langchain/cohere@workspace:libs/langchain-cohere"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1
+    "@langchain/core": ~0.1.58
     "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -5722,7 +5722,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.5, @langchain/core@~0.1.56, @langchain/core@~0.1.9":
+"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.5, @langchain/core@~0.1.56, @langchain/core@~0.1.58, @langchain/core@~0.1.9":
   version: 0.0.0-use.local
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
@@ -5865,7 +5865,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/google-genai@workspace:libs/langchain-google-genai"
   dependencies:
-    "@google/generative-ai": ^0.1.3
+    "@google/generative-ai": ^0.7.0
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.5
     "@langchain/scripts": ~0.0
@@ -6256,6 +6256,37 @@ __metadata:
     typescript: <5.2.0
   bin:
     lc-build: ./build.js
+  languageName: unknown
+  linkType: soft
+
+"@langchain/textsplitters@workspace:libs/langchain-textsplitters, @langchain/textsplitters@~0.0.0":
+  version: 0.0.0-use.local
+  resolution: "@langchain/textsplitters@workspace:libs/langchain-textsplitters"
+  dependencies:
+    "@jest/globals": ^29.5.0
+    "@langchain/core": ~0.1
+    "@langchain/scripts": ~0.0
+    "@swc/core": ^1.3.90
+    "@swc/jest": ^0.2.29
+    "@tsconfig/recommended": ^1.0.3
+    "@typescript-eslint/eslint-plugin": ^6.12.0
+    "@typescript-eslint/parser": ^6.12.0
+    dotenv: ^16.3.1
+    dpdm: ^3.12.0
+    eslint: ^8.33.0
+    eslint-config-airbnb-base: ^15.0.0
+    eslint-config-prettier: ^8.6.0
+    eslint-plugin-import: ^2.27.5
+    eslint-plugin-no-instanceof: ^1.0.1
+    eslint-plugin-prettier: ^4.2.1
+    jest: ^29.5.0
+    jest-environment-node: ^29.6.4
+    js-tiktoken: ^1.0.11
+    prettier: ^2.8.3
+    release-it: ^15.10.1
+    rollup: ^4.5.2
+    ts-jest: ^29.1.0
+    typescript: <5.2.0
   languageName: unknown
   linkType: soft
 
@@ -16928,7 +16959,7 @@ __metadata:
     "@getmetal/metal-sdk": ^4.0.0
     "@getzep/zep-js": ^0.9.0
     "@gomomento/sdk": ^1.51.1
-    "@google/generative-ai": ^0.1.0
+    "@google/generative-ai": ^0.7.0
     "@langchain/anthropic": "workspace:*"
     "@langchain/azure-openai": "workspace:*"
     "@langchain/cloudflare": "workspace:*"
@@ -21851,7 +21882,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"js-tiktoken@npm:^1.0.7, js-tiktoken@npm:^1.0.8":
+"js-tiktoken@npm:^1.0.11, js-tiktoken@npm:^1.0.7, js-tiktoken@npm:^1.0.8":
   version: 1.0.11
   resolution: "js-tiktoken@npm:1.0.11"
   dependencies:
@@ -22331,6 +22362,7 @@ __metadata:
     "@langchain/core": ~0.1.56
     "@langchain/openai": ~0.0.28
     "@langchain/scripts": ~0.0
+    "@langchain/textsplitters": ~0.0.0
     "@mendable/firecrawl-js": ^0.0.13
     "@notionhq/client": ^2.2.10
     "@pinecone-database/pinecone": ^1.1.0
@@ -34158,9 +34190,9 @@ __metadata:
   linkType: hard
 
 "zod@npm:^3.22.3, zod@npm:^3.22.4":
-  version: 3.23.3
-  resolution: "zod@npm:3.23.3"
-  checksum: c5be5a79ec31c712db47ec8343140e626dcd647e91a896ae98a1ab29d0f17b09f4b2d6adb9db2c0f82aacacedc73e89f0c14453c7da02d70ea79a4298c1bbaa4
+  version: 3.23.4
+  resolution: "zod@npm:3.23.4"
+  checksum: 58f6e298c51d9ae01a1b1a1692ac7f00774b466d9a287a1ff8d61ff1fbe0ae9b0f050ae1cf1a8f71e4c6ccd0333a3cc340f339360fab5f5046cc954d10525a54
   languageName: node
   linkType: hard
 
