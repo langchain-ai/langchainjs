@@ -26,7 +26,11 @@ interface FirecrawlDocument {
  * Firecrawl (firecrawl.dev). It extends the BaseDocumentLoader class.
  * @example
  * ```typescript
- * const loader = new FireCrawlLoader({ url: "{url}", apiKey: "{apiKey}", mode: "crawl" });
+ * const loader = new FireCrawlLoader({
+ *   url: "{url}",
+ *   apiKey: "{apiKey}",
+ *   mode: "crawl"
+ * });
  * const docs = await loader.load();
  * ```
  */
