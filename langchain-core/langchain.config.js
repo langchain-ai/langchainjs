@@ -24,7 +24,7 @@ export const config = {
     "language_models/base": "language_models/base",
     "language_models/chat_models": "language_models/chat_models",
     "language_models/llms": "language_models/llms",
-    "legacy/chains": "legacy/chains",
+    "legacy/chains": "legacy/chains/index",
     load: "load/index",
     "load/serializable": "load/serializable",
     memory: "memory",

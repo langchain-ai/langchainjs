@@ -203,6 +203,15 @@
       "import": "./language_models/llms.js",
       "require": "./language_models/llms.cjs"
     },
+    "./legacy/chains": {
+      "types": {
+        "import": "./legacy/chains.d.ts",
+        "require": "./legacy/chains.d.cts",
+        "default": "./legacy/chains.d.ts"
+      },
+      "import": "./legacy/chains.js",
+      "require": "./legacy/chains.cjs"
+    },
     "./load": {
       "types": {
         "import": "./load.d.ts",
@@ -615,6 +624,10 @@
     "language_models/llms.js",
     "language_models/llms.d.ts",
     "language_models/llms.d.cts",
+    "legacy/chains.cjs",
+    "legacy/chains.js",
+    "legacy/chains.d.ts",
+    "legacy/chains.d.cts",
     "load.cjs",
     "load.js",
     "load.d.ts",

@@ -46,6 +46,10 @@ language_models/llms.cjs
 language_models/llms.js
 language_models/llms.d.ts
 language_models/llms.d.cts
+legacy/chains.cjs
+legacy/chains.js
+legacy/chains.d.ts
+legacy/chains.d.cts
 load.cjs
 load.js
 load.d.ts

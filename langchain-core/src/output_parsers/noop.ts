@@ -1,4 +1,4 @@
-import { BaseOutputParser } from "@langchain/core/output_parsers";
+import { BaseOutputParser } from "./base.js";
 
 /**
  * @deprecated Use StringOutputParser instead
