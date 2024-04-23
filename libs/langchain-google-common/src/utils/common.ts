@@ -41,6 +41,11 @@ export function copyAIModelParamsInto(
     options?.convertSystemMessageToHumanContent ??
     params?.convertSystemMessageToHumanContent ??
     target?.convertSystemMessageToHumanContent;
+  ret.responseMimeType =
+    options?.responseMimeType ??
+    params?.responseMimeType ??
+    target?.responseMimeType ??
+    "text/plain";
 
   ret.tools = options?.tools;
   // Ensure tools are formatted properly for Gemini

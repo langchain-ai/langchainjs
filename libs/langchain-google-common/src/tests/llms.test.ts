@@ -521,4 +521,30 @@ describe("Mock Google LLM", () => {
     expect(responseArray).toHaveLength(3);
     console.log("record", JSON.stringify(record, null, 2));
   });
+
+  test("8: streamGenerateContent - streaming - json responseMimeType", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "llm-8-mock.json",
+    };
+    const model = new GoogleLLM({
+      authOptions,
+      responseMimeType: "application/json",
+    });
+    const response = await model.stream("Give me a recipe for banana bread.");
+    const responseArray: string[] = [];
+    for await (const value of response) {
+      expect(typeof value).toEqual("string");
+      responseArray.push(value);
+    }
+
+    expect(responseArray).toHaveLength(10);
+    expect(typeof JSON.parse(responseArray.join(''))).toEqual('object');
+
+    console.log("record", JSON.stringify(record, null, 2));
+  });
 });
