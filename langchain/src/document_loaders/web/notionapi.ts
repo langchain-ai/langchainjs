@@ -84,12 +84,15 @@ export type NotionAPILoaderOptions = {
  * document loader for loading documents from Notion using the Notion API.
  * @example
  * ```typescript
+ * import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+ *
  * const pageLoader = new NotionAPILoader({
  *   clientOptions: { auth: "<NOTION_INTEGRATION_TOKEN>" },
  *   id: "<PAGE_ID>",
  *   type: "page",
  * });
- * const pageDocs = await pageLoader.loadAndSplit();
+ * const splitter = new RecursiveCharacterTextSplitter();
+ * const pageDocs = await pageLoader.loadAndSplit(splitter);
  * const dbLoader = new NotionAPILoader({
  *   clientOptions: { auth: "<NOTION_INTEGRATION_TOKEN>" },
  *   id: "<DATABASE_ID>",

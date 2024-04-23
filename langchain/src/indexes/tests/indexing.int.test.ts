@@ -3,7 +3,7 @@ import { PGVectorStore } from "@langchain/community/vectorstores/pgvector";
 import { Document } from "@langchain/core/documents";
 
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
-import { index } from "../indexing.js";
+import { index } from "../index.js";
 import { BaseDocumentLoader } from "../../document_loaders/base.js";
 import { sleep } from "../../util/time.js";
 
