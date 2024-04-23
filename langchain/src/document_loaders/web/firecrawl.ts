@@ -1,5 +1,5 @@
 import FirecrawlApp from "@mendable/firecrawl-js";
-import { Document } from "@langchain/core/documents";
+import { DocumentInterface } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { BaseDocumentLoader } from "../base.js";
 
@@ -12,7 +12,15 @@ interface FirecrawlLoaderParameters {
    * URL to scrape or crawl
    */
   url: string;
+
+  /**
+   * API key for Firecrawl. If not provided, the default value is the value of the FIRECRAWL_API_KEY environment variable.
+   */
   apiKey?: string;
+
+  /**
+   * Mode of operation. Can be either "crawl" or "scrape". If not provided, the default value is "crawl".
+   */
   mode?: "crawl" | "scrape";
   params?: Record<string, unknown>;
 }
@@ -68,7 +76,7 @@ export class FireCrawlLoader extends BaseDocumentLoader {
    * @returns An array of Documents representing the retrieved data.
    * @throws An error if the data could not be loaded.
    */
-  public async load(): Promise<Document[]> {
+  public async load(): Promise<DocumentInterface[]> {
     const app = new FirecrawlApp({ apiKey: this.apiKey });
     let firecrawlDocs: FirecrawlDocument[];
 
