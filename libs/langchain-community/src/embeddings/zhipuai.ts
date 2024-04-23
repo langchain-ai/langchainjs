@@ -59,9 +59,7 @@ export class ZhipuAIEmbeddings
 
     this.modelName = fields?.modelName ?? this.modelName;
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
-    this.apiKey = encodeApiKey(
-      fields?.apiKey ?? getEnvironmentVariable("ZHIPUAI_API_KEY")
-    );
+    this.apiKey = fields?.apiKey ?? getEnvironmentVariable("ZHIPUAI_API_KEY");
 
     if (!this.apiKey) {
       throw new Error("ZhipuAI API key not found");
@@ -84,7 +82,7 @@ export class ZhipuAIEmbeddings
     const headers = {
       Accept: "application/json",
       "Content-Type": "application/json",
-      Authorization: this.apiKey,
+      Authorization: encodeApiKey(this.apiKey),
     };
 
     return this.caller.call(async () => {

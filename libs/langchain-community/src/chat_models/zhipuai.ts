@@ -225,13 +225,8 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
   constructor(fields: Partial<ChatZhipuAIParams> & BaseChatModelParams = {}) {
     super(fields);
 
-    this.zhipuAIApiKey = encodeApiKey(
-      fields?.apiKey ??
-        fields?.zhipuAIApiKey ??
-        getEnvironmentVariable("ZHIPUAI_API_KEY")
-    );
-    this.apiKey = this.zhipuAIApiKey;
-    if (!this.apiKey) {
+    this.zhipuAIApiKey = fields?.apiKey ?? fields?.zhipuAIApiKey ?? getEnvironmentVariable("ZHIPUAI_API_KEY");
+    if (!this.zhipuAIApiKey) {
       throw new Error("ZhipuAI API key not found");
     }
 
@@ -390,7 +385,7 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
         method: "POST",
         headers: {
           ...(stream ? { Accept: "text/event-stream" } : {}),
-          Authorization: `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${encodeApiKey(this.zhipuAIApiKey)}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(request),
