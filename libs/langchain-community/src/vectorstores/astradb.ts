@@ -80,18 +80,18 @@ export class AstraDBVectorStore extends VectorStore {
     } = args;
     const dataAPIClient = new DataAPIClient(token, { caller: ["langchainjs"] });
     this.astraDBClient = dataAPIClient.db(endpoint, { namespace });
+    this.skipCollectionProvisioning = skipCollectionProvisioning ?? false;
+    if (this.skipCollectionProvisioning && collectionOptions) {
+      throw new Error(
+        "If 'skipCollectionProvisioning' has been set to true, 'collectionOptions' must not be defined"
+      );
+    }
     this.collectionName = collection;
     this.collectionOptions = AstraDBVectorStore.applyCollectionOptionsDefaults(collectionOptions);
     this.idKey = idKey ?? "_id";
     this.contentKey = contentKey ?? "text";
     this.batchSize = batchSize && batchSize <= 20 ? batchSize : 20;
     this.caller = new AsyncCaller(callerArgs);
-    this.skipCollectionProvisioning = skipCollectionProvisioning ?? false;
-    if (this.skipCollectionProvisioning && this.collectionOptions) {
-      throw new Error(
-        "If 'skipCollectionProvisioning' has been set to true, 'collectionOptions' must not be defined"
-      );
-    }
   }
 
   private static applyCollectionOptionsDefaults(fromUser?: CreateCollectionOptions<any>): CreateCollectionOptions<any> {
