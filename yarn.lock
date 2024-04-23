@@ -10068,7 +10068,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mendable/firecrawl-js@npm:0.0.13":
+"@mendable/firecrawl-js@npm:^0.0.13":
   version: 0.0.13
   resolution: "@mendable/firecrawl-js@npm:0.0.13"
   dependencies:
@@ -26646,7 +26646,7 @@ __metadata:
     "@langchain/core": ~0.1.56
     "@langchain/openai": ~0.0.28
     "@langchain/scripts": ~0.0
-    "@mendable/firecrawl-js": 0.0.13
+    "@mendable/firecrawl-js": ^0.0.13
     "@notionhq/client": ^2.2.10
     "@pinecone-database/pinecone": ^1.1.0
     "@supabase/supabase-js": ^2.10.0
@@ -26743,7 +26743,7 @@ __metadata:
     "@gomomento/sdk-web": ^1.51.1
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1 || ^7.7.0
-    "@mendable/firecrawl-js": 0.0.13
+    "@mendable/firecrawl-js": ^0.0.13
     "@notionhq/client": ^2.2.10
     "@pinecone-database/pinecone": "*"
     "@supabase/supabase-js": ^2.10.0
