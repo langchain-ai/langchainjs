@@ -7,6 +7,7 @@ import { SerializedBaseChain } from "./serde.js";
 
 export type { LoadValues, ChainInputs };
 
+/** @deprecated Compose using LangChain Expression Language instead. */
 export abstract class BaseChain extends CoreBaseChain {
   /**
    * Return a json-like object representing this chain.

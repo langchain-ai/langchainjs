@@ -26,6 +26,7 @@ export interface ChainInputs extends BaseLangChainParams {
 }
 
 /**
+ * @deprecated Compose using LangChain Expression Language instead.
  * Base interface that all chains must implement.
  */
 export abstract class BaseChain<

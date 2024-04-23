@@ -30,6 +30,7 @@ type LLMType =
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type CallOptionsIfAvailable<T> = T extends { CallOptions: infer CO } ? CO : any;
 /**
+ * @deprecated Compose using LangChain Expression Language instead.
  * Interface for the input parameters of the LLMChain class.
  */
 export interface LLMChainInput<
@@ -71,6 +72,7 @@ function _getLanguageModel(llmLike: RunnableInterface): BaseLanguageModel {
 }
 
 /**
+ * @deprecated Compose using LangChain Expression Language instead.
  * Chain to run queries against LLMs.
  *
  * @example
