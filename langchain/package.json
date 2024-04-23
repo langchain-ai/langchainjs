@@ -1190,7 +1190,7 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/langchain/",
   "scripts": {
     "build": "yarn run build:deps && yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
-    "build:deps": "yarn run turbo:command build --filter=@langchain/openai --filter=@langchain/community --concurrency=1",
+    "build:deps": "yarn run turbo:command build --filter=@langchain/openai --filter=@langchain/community --filter=@langchain/textsplitters --concurrency=1",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rimraf dist/tests dist/**/tests",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rimraf dist-cjs",
     "build:watch": "yarn create-entrypoints && tsc --outDir dist/ --watch",
@@ -1515,6 +1515,7 @@
     "@langchain/community": "~0.0.47",
     "@langchain/core": "~0.1.56",
     "@langchain/openai": "~0.0.28",
+    "@langchain/textsplitters": "~0.0.0",
     "binary-extensions": "^2.2.0",
     "js-tiktoken": "^1.0.7",
     "js-yaml": "^4.1.0",
