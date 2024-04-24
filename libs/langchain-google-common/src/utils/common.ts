@@ -44,8 +44,7 @@ export function copyAIModelParamsInto(
   ret.responseMimeType =
     options?.responseMimeType ??
     params?.responseMimeType ??
-    target?.responseMimeType ??
-    "text/plain";
+    target?.responseMimeType;
 
   ret.tools = options?.tools;
   // Ensure tools are formatted properly for Gemini
