@@ -1,0 +1,427 @@
+[
+  {
+    "candidates": [
+      {
+        "content": {
+          "role": "model",
+          "parts": [
+            {
+              "text": "\n{\n  \""
+            }
+          ]
+        },
+        "safetyRatings": [
+          {
+            "category": "HARM_CATEGORY_HATE_SPEECH",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.023509452,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.1261379
+          },
+          {
+            "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.1504028,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.1308397
+          },
+          {
+            "category": "HARM_CATEGORY_HARASSMENT",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.083890386,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.03926875
+          },
+          {
+            "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.06536579,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.075858176
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "candidates": [
+      {
+        "content": {
+          "role": "model",
+          "parts": [
+            {
+              "text": "recipe\": {\n    \"name\": \"Classic Banana Bread\",\n    \"ingredients\": [\n      {\n        \"name\": \"Ripe bananas\","
+            }
+          ]
+        },
+        "safetyRatings": [
+          {
+            "category": "HARM_CATEGORY_HATE_SPEECH",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.11496335,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.122838534
+          },
+          {
+            "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.18374005,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.18097353
+          },
+          {
+            "category": "HARM_CATEGORY_HARASSMENT",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.0999963,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.04560694
+          },
+          {
+            "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.08834723,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.16105618
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "candidates": [
+      {
+        "content": {
+          "role": "model",
+          "parts": [
+            {
+              "text": "\n        \"quantity\": \"3\",\n        \"unit\": \"medium\"\n      },\n      {\n        \"name\": \"All-purpose flour\",\n"
+            }
+          ]
+        },
+        "safetyRatings": [
+          {
+            "category": "HARM_CATEGORY_HATE_SPEECH",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.12064587,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.108566426
+          },
+          {
+            "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.1301748,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.13963085
+          },
+          {
+            "category": "HARM_CATEGORY_HARASSMENT",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.1112412,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.04385456
+          },
+          {
+            "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.08021325,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.101055905
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "candidates": [
+      {
+        "content": {
+          "role": "model",
+          "parts": [
+            {
+              "text": "        \"quantity\": \"1 1/2\",\n        \"unit\": \"cups\"\n      },\n      {\n        \"name\": \"Baking soda\",\n        \"quantity\": \"1\",\n        \"unit\": \"teaspoon\"\n      },\n      {\n        \"name\": \""
+            }
+          ]
+        },
+        "safetyRatings": [
+          {
+            "category": "HARM_CATEGORY_HATE_SPEECH",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.13139598,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.10875559
+          },
+          {
+            "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.18227993,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.17567945
+          },
+          {
+            "category": "HARM_CATEGORY_HARASSMENT",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.12570794,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.060086653
+          },
+          {
+            "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.10338596,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.100878626
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "candidates": [
+      {
+        "content": {
+          "role": "model",
+          "parts": [
+            {
+              "text": "Ground cinnamon\",\n        \"quantity\": \"1/2\",\n        \"unit\": \"teaspoon\"\n      },\n      {\n        \"name\": \"Salt\",\n        \"quantity\": \"1/4\",\n        \"unit\": \"teaspoon\"\n      },\n      {\n"
+            }
+          ]
+        },
+        "safetyRatings": [
+          {
+            "category": "HARM_CATEGORY_HATE_SPEECH",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.13488984,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.11066323
+          },
+          {
+            "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.16532344,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.15241031
+          },
+          {
+            "category": "HARM_CATEGORY_HARASSMENT",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.11951086,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.06301947
+          },
+          {
+            "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.114368536,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.0996453
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "candidates": [
+      {
+        "content": {
+          "role": "model",
+          "parts": [
+            {
+              "text": "        \"name\": \"Unsalted butter\",\n        \"quantity\": \"1/2\",\n        \"unit\": \"cup\",\n        \"additional_info\": \"softened\"\n      },\n      {\n        \"name\": \"Granulated sugar\",\n        \"quantity\": \"3/4\",\n        \"unit\": \"cup\"\n      },\n      {\n        \"name\": \""
+            }
+          ]
+        },
+        "safetyRatings": [
+          {
+            "category": "HARM_CATEGORY_HATE_SPEECH",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.13432105,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.11008788
+          },
+          {
+            "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.17511447,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.13206616
+          },
+          {
+            "category": "HARM_CATEGORY_HARASSMENT",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.13614832,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.065604836
+          },
+          {
+            "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.13352816,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.1066906
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "candidates": [
+      {
+        "content": {
+          "role": "model",
+          "parts": [
+            {
+              "text": "Large eggs\",\n        \"quantity\": \"2\"\n      },\n      {\n        \"name\": \"Vanilla extract\",\n        \"quantity\": \"1\",\n        \"unit\": \"teaspoon\"\n      }\n    ],\n    \"instructions\": [\n      \"Preheat oven to 350°F (175°C). Grease and flour a 9x5 inch loaf pan.\",\n      \""
+            }
+          ]
+        },
+        "safetyRatings": [
+          {
+            "category": "HARM_CATEGORY_HATE_SPEECH",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.18227993,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.12962292
+          },
+          {
+            "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.22473529,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.16626887
+          },
+          {
+            "category": "HARM_CATEGORY_HARASSMENT",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.19605546,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.09041373
+          },
+          {
+            "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.16384642,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.11940814
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "candidates": [
+      {
+        "content": {
+          "role": "model",
+          "parts": [
+            {
+              "text": "Mash the bananas in a large bowl. In a separate bowl, whisk together the flour, baking soda, cinnamon, and salt.\",\n      \"In a third bowl, cream together the butter and sugar until light and fluffy. Beat in the eggs one at a time, then stir in the vanilla extract.\",\n      \"Gradually add the dry ingredients to the wet ingredients, mixing until just combined. Fold in the mashed bananas.\",\n      \"Pour the batter into the prepared loaf pan and bake for 50-60 minutes, or until a toothpick inserted"
+            }
+          ]
+        },
+        "safetyRatings": [
+          {
+            "category": "HARM_CATEGORY_HATE_SPEECH",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.14780101,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.124745145
+          },
+          {
+            "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.16532344,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.1435475
+          },
+          {
+            "category": "HARM_CATEGORY_HARASSMENT",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.18447348,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.08359067
+          },
+          {
+            "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.15674922,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.15203226
+          }
+        ],
+        "citationMetadata": {
+          "citations": [
+            {
+              "startIndex": 1255,
+              "endIndex": 1478,
+              "uri": "https://themarketatdelval.com/how-to-make-pressed-fig-cakes/"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "candidates": [
+      {
+        "content": {
+          "role": "model",
+          "parts": [
+            {
+              "text": " into the center comes out clean. Let the bread cool in the pan for 10 minutes before inverting it onto a wire rack to cool completely.\"\n    ]\n  }\n}\n"
+            }
+          ]
+        },
+        "finishReason": "STOP",
+        "safetyRatings": [
+          {
+            "category": "HARM_CATEGORY_HATE_SPEECH",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.1510278,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.13061775
+          },
+          {
+            "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.16817278,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.1534223
+          },
+          {
+            "category": "HARM_CATEGORY_HARASSMENT",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.17582092,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.082401514
+          },
+          {
+            "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.14780101,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.16118816
+          }
+        ],
+        "citationMetadata": {
+          "citations": [
+            {
+              "startIndex": 1507,
+              "endIndex": 1637,
+              "uri": "https://dessertdonelight.com/healthy-hawaiian-banana-bread/"
+            },
+            {
+              "startIndex": 1569,
+              "endIndex": 1691,
+              "uri": "https://www.dish-it-up.com/web-stories/banana-bread-recipe/"
+            }
+          ]
+        }
+      }
+    ],
+    "usageMetadata": {
+      "promptTokenCount": 8,
+      "candidatesTokenCount": 526,
+      "totalTokenCount": 534
+    }
+  }
+]
