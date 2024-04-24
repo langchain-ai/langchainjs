@@ -337,3 +337,16 @@ export class DynamicStructuredTool<
     return this.func(arg, runManager, config);
   }
 }
+
+/**
+ * Abstract base class for toolkits in LangChain. Toolkits are collections
+ * of tools that agents can use. Subclasses must implement the `tools`
+ * property to provide the specific tools for the toolkit.
+ */
+export abstract class BaseToolkit {
+  abstract tools: StructuredToolInterface[];
+
+  getTools(): StructuredToolInterface[] {
+    return this.tools;
+  }
+}

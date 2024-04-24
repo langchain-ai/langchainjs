@@ -356,6 +356,15 @@
       "import": "./stores.js",
       "require": "./stores.cjs"
     },
+    "./structured_query": {
+      "types": {
+        "import": "./structured_query.d.ts",
+        "require": "./structured_query.d.cts",
+        "default": "./structured_query.d.ts"
+      },
+      "import": "./structured_query.js",
+      "require": "./structured_query.cjs"
+    },
     "./tools": {
       "types": {
         "import": "./tools.d.ts",
@@ -683,6 +692,10 @@
     "stores.js",
     "stores.d.ts",
     "stores.d.cts",
+    "structured_query.cjs",
+    "structured_query.js",
+    "structured_query.d.ts",
+    "structured_query.d.cts",
     "tools.cjs",
     "tools.js",
     "tools.d.ts",
