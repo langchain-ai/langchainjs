@@ -457,7 +457,7 @@ export abstract class BaseLanguageModel<
    * @returns A unique cache key.
    */
   protected _getSerializedCacheKeyParametersForCall(
-    callOptions: CallOptions
+    { config, ...callOptions }: CallOptions
   ): string {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const params: Record<string, any> = {
