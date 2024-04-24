@@ -66,9 +66,6 @@ export const config = {
     "utils/types": "utils/types/index",
     vectorstores: "vectorstores",
   },
-  requiresOptionalDependency: [
-    "structured_query",
-  ],
   tsConfigPath: resolve("./tsconfig.json"),
   packageSuffix: "core",
   cjsSource: "./dist-cjs",
