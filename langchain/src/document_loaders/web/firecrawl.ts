@@ -1,5 +1,5 @@
 import FirecrawlApp from "@mendable/firecrawl-js";
-import { DocumentInterface } from "@langchain/core/documents";
+import { Document, type DocumentInterface } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { BaseDocumentLoader } from "../base.js";
 
