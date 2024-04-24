@@ -24,7 +24,9 @@ const prompt = ChatPromptTemplate.fromMessages([
 ]);
 const outputParser = new JsonOutputFunctionsParser();
 
-const runnable = prompt.pipe(model.withStructuredOutput(jsonSchema)).pipe(outputParser);
+const runnable = prompt
+  .pipe(model.withStructuredOutput(jsonSchema))
+  .pipe(outputParser);
 
 const response = await runnable.invoke({
   description:

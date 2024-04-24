@@ -60,14 +60,17 @@ We’ll just ask the model to choose between categories “Music” and “Busin
  */
 
 const prompt2 = ChatPromptTemplate.fromMessages([
-  ["system", `Return the names of the SQL tables that are relevant to the user question.
+  [
+    "system",
+    `Return the names of the SQL tables that are relevant to the user question.
   The tables are:
   
   Music
-  Business`],
+  Business`,
+  ],
   ["human", "{input}"],
-])
-const categoryChain = prompt2.pipe(llm.withStructuredOutput(Table))
+]);
+const categoryChain = prompt2.pipe(llm.withStructuredOutput(Table));
 console.log(
   await categoryChain.invoke({
     input: "What are all the genres of Alanis Morisette songs?",
