@@ -4,7 +4,6 @@ import {
   RunnableSequence,
 } from "@langchain/core/runnables";
 import { ChatOpenAI } from "@langchain/openai";
-import { createStructuredOutputRunnable } from "langchain/chains/openai_functions";
 import { createSqlQueryChain } from "langchain/chains/sql_db";
 import { SqlDatabase } from "langchain/sql_db";
 import { DataSource } from "typeorm";
@@ -31,14 +30,12 @@ ${tableNames}
 
 Remember to include ALL POTENTIALLY RELEVANT tables, even if you're not sure that they're needed.`;
 
-const tableChain = createStructuredOutputRunnable({
-  llm,
-  outputSchema: Table,
-  prompt: ChatPromptTemplate.fromMessages([
-    ["system", system],
-    ["human", "{input}"],
-  ]),
-});
+const prompt = ChatPromptTemplate.fromMessages([
+  ["system", system],
+  ["human", "{input}"],
+]);
+const tableChain = prompt.pipe(llm.withStructuredOutput(Table));
+
 console.log(
   await tableChain.invoke({
     input: "What are all the genres of Alanis Morisette songs?",
@@ -62,22 +59,18 @@ In this case, we might think to simplify our model’s job by grouping the table
 We’ll just ask the model to choose between categories “Music” and “Business”, and then take care of selecting all the relevant tables from there:
  */
 
-const system2 = `Return the names of the SQL tables that are relevant to the user question.
-The tables are:
-
-Music
-Business`;
-const categoryChain = createStructuredOutputRunnable<
-  { input: string },
-  z.infer<typeof Table>
->({
-  llm,
-  outputSchema: Table,
-  prompt: ChatPromptTemplate.fromMessages([
-    ["system", system2],
-    ["human", "{input}"],
-  ]),
-});
+const prompt2 = ChatPromptTemplate.fromMessages([
+  [
+    "system",
+    `Return the names of the SQL tables that are relevant to the user question.
+  The tables are:
+  
+  Music
+  Business`,
+  ],
+  ["human", "{input}"],
+]);
+const categoryChain = prompt2.pipe(llm.withStructuredOutput(Table));
 console.log(
   await categoryChain.invoke({
     input: "What are all the genres of Alanis Morisette songs?",
