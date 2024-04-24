@@ -88,7 +88,7 @@ interface ResultRow {
  */
 export interface WeaviateFilter {
   distance?: number;
-  where: WhereFilter;
+  where?: WhereFilter;
 }
 
 /**
