@@ -478,7 +478,7 @@ describe.skip("AzureAISearchVectorStore integration tests", () => {
       embeddings,
       {
         indexName: INDEX_NAME,
-        credentials: new AzureKeyCredential(process.env.AZURE_AISEARCH_KEY!)
+        credentials: new AzureKeyCredential(process.env.AZURE_AISEARCH_KEY!),
       }
     );
 
