@@ -40,7 +40,7 @@ export type AzureAISearchQueryType =
  * Azure AI Search settings.
  */
 export interface AzureAISearchQueryOptions {
-  readonly type: AzureAISearchQueryType;
+  readonly type?: AzureAISearchQueryType;
   readonly semanticConfigurationName?: string;
 }
 
@@ -174,7 +174,7 @@ export class AzureAISearchVectorStore extends VectorStore {
       this.client = config.client;
     }
 
-    this.options = config.search;
+    this.options = config.search ?? {};
     this.embeddings = embeddings;
   }
 
@@ -339,6 +339,7 @@ export class AzureAISearchVectorStore extends VectorStore {
 
   /**
    * Performs a similarity search using query type specified in configuration.
+   * If the query type is not specified, it defaults to similarity search.
    * @param query Query text for the similarity search.
    * @param k=4 Number of nearest neighbors to return.
    * @param filter Optional filter options for the documents.
@@ -356,6 +357,7 @@ export class AzureAISearchVectorStore extends VectorStore {
 
   /**
    * Performs a similarity search using query type specified in configuration.
+   * If the query type is not specified, it defaults to similarity search.
    * @param query Query text for the similarity search.
    * @param k=4 Number of nearest neighbors to return.
    * @param filter Optional filter options for the documents.
@@ -366,7 +368,7 @@ export class AzureAISearchVectorStore extends VectorStore {
     k = 4,
     filter: this["FilterType"] | undefined = undefined
   ): Promise<[Document, number][]> {
-    const searchType = this.options.type;
+    const searchType = this.options.type ?? AzureAISearchQueryType.Similarity;
 
     if (searchType === AzureAISearchQueryType.Similarity) {
       return this.similaritySearchVectorWithScore(
