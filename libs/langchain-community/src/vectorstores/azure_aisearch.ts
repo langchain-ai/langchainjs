@@ -141,7 +141,7 @@ export class AzureAISearchVectorStore extends VectorStore {
     const endpoint =
       config.endpoint ?? getEnvironmentVariable("AZURE_AISEARCH_ENDPOINT");
     const key = config.key ?? getEnvironmentVariable("AZURE_AISEARCH_KEY");
-    let credentials = config.credentials;
+    let { credentials } = config;
 
     if (!config.client && (!endpoint || (!key && !credentials))) {
       throw new Error(
