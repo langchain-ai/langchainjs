@@ -8,6 +8,7 @@ import {
   SearchIndexingBufferedSender,
   VectorFilterMode,
 } from "@azure/search-documents";
+import type { KeyCredential, TokenCredential } from "@azure/core-auth";
 import {
   MaxMarginalRelevanceSearchOptions,
   VectorStore,
@@ -51,7 +52,8 @@ export interface AzureAISearchConfig {
   readonly indexName?: string;
   readonly endpoint?: string;
   readonly key?: string;
-  readonly search: AzureAISearchQueryOptions;
+  readonly credentials?: KeyCredential | TokenCredential;
+  readonly search?: AzureAISearchQueryOptions;
 }
 
 /**
@@ -139,10 +141,11 @@ export class AzureAISearchVectorStore extends VectorStore {
     const endpoint =
       config.endpoint ?? getEnvironmentVariable("AZURE_AISEARCH_ENDPOINT");
     const key = config.key ?? getEnvironmentVariable("AZURE_AISEARCH_KEY");
+    let credentials = config.credentials;
 
-    if (!config.client && (!endpoint || !key)) {
+    if (!config.client && (!endpoint || (!key && !credentials))) {
       throw new Error(
-        "Azure AI Search client or endpoint and key must be set."
+        "Azure AI Search client or endpoint and key/credentials must be set."
       );
     }
 
@@ -150,13 +153,13 @@ export class AzureAISearchVectorStore extends VectorStore {
 
     if (!config.client) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const credential = new AzureKeyCredential(key!);
+      credentials ??= new AzureKeyCredential(key!)
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this.client = new SearchClient(endpoint!, this.indexName, credential, {
+      this.client = new SearchClient(endpoint!, this.indexName, credentials, {
         userAgentOptions: { userAgentPrefix: USER_AGENT_PREFIX },
       });
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const indexClient = new SearchIndexClient(endpoint!, credential, {
+      const indexClient = new SearchIndexClient(endpoint!, credentials, {
         userAgentOptions: { userAgentPrefix: USER_AGENT_PREFIX },
       });
 
