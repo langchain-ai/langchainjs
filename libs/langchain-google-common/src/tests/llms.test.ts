@@ -547,4 +547,25 @@ describe("Mock Google LLM", () => {
 
     console.log("record", JSON.stringify(record, null, 2));
   });
+
+  test("9: streamGenerateContent - non-streaming - check json responseMimeType", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "llm-9-mock.json",
+    };
+    const model = new GoogleLLM({
+      authOptions,
+      responseMimeType: "application/json",
+    });
+    const response = await model.invoke("Give me a recipe for banana bread.");
+
+    expect(typeof JSON.parse(response)).toEqual('object');
+    expect(record.opts.data.generationConfig.responseMimeType).toEqual("application/json");
+
+    console.log("record", JSON.stringify(record, null, 2));
+  });
 });
