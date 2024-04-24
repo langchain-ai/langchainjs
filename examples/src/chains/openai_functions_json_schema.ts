@@ -1,6 +1,5 @@
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
-import { createStructuredOutputRunnable } from "langchain/chains/openai_functions";
 import { JsonOutputFunctionsParser } from "langchain/output_parsers";
 
 const jsonSchema = {
@@ -25,12 +24,10 @@ const prompt = ChatPromptTemplate.fromMessages([
 ]);
 const outputParser = new JsonOutputFunctionsParser();
 
-const runnable = createStructuredOutputRunnable({
-  outputSchema: jsonSchema,
-  llm: model,
-  prompt,
-  outputParser,
-});
+const runnable = prompt
+  .pipe(model.withStructuredOutput(jsonSchema))
+  .pipe(outputParser);
+
 const response = await runnable.invoke({
   description:
     "My name's John Doe and I'm 30 years old. My favorite kind of food are chocolate chip cookies.",
