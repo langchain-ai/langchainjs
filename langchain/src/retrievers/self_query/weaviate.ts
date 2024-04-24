@@ -14,7 +14,12 @@ import {
   Visitor,
 } from "../../chains/query_constructor/ir.js";
 import { BaseTranslator } from "./base.js";
-import { isFilterEmpty, isString, isInt, isFloat } from "./utils.js";
+import {
+  isFilterEmpty,
+  isString,
+  isInt,
+  isFloat,
+} from "@langchain/core/query_translators";
 
 type AllowedOperator = Exclude<Operator, NOT>;
 

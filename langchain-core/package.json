@@ -70,12 +70,21 @@
     "jest": "^29.5.0",
     "jest-environment-node": "^29.6.4",
     "ml-matrix": "^6.10.4",
+    "peggy": "^3.0.2",
     "prettier": "^2.8.3",
     "release-it": "^15.10.1",
     "rimraf": "^5.0.1",
     "turbo": "latest",
     "typescript": "~5.1.6",
     "web-streams-polyfill": "^3.3.3"
+  },
+  "peerDependencies": {
+    "peggy": "^3.0.2"
+  },
+  "peerDependenciesMeta": {
+    "peggy": {
+      "optional": true
+    }
   },
   "publishConfig": {
     "access": "public"
@@ -203,15 +212,6 @@
       "import": "./language_models/llms.js",
       "require": "./language_models/llms.cjs"
     },
-    "./legacy/chains": {
-      "types": {
-        "import": "./legacy/chains.d.ts",
-        "require": "./legacy/chains.d.cts",
-        "default": "./legacy/chains.d.ts"
-      },
-      "import": "./legacy/chains.js",
-      "require": "./legacy/chains.cjs"
-    },
     "./load": {
       "types": {
         "import": "./load.d.ts",
@@ -284,6 +284,15 @@
       "import": "./output_parsers/openai_functions.js",
       "require": "./output_parsers/openai_functions.cjs"
     },
+    "./output_parsers/expression": {
+      "types": {
+        "import": "./output_parsers/expression.d.ts",
+        "require": "./output_parsers/expression.d.cts",
+        "default": "./output_parsers/expression.d.ts"
+      },
+      "import": "./output_parsers/expression.js",
+      "require": "./output_parsers/expression.cjs"
+    },
     "./outputs": {
       "types": {
         "import": "./outputs.d.ts",
@@ -310,6 +319,15 @@
       },
       "import": "./prompt_values.js",
       "require": "./prompt_values.cjs"
+    },
+    "./query_translators": {
+      "types": {
+        "import": "./query_translators.d.ts",
+        "require": "./query_translators.d.cts",
+        "default": "./query_translators.d.ts"
+      },
+      "import": "./query_translators.js",
+      "require": "./query_translators.cjs"
     },
     "./runnables": {
       "types": {
@@ -624,10 +642,6 @@
     "language_models/llms.js",
     "language_models/llms.d.ts",
     "language_models/llms.d.cts",
-    "legacy/chains.cjs",
-    "legacy/chains.js",
-    "legacy/chains.d.ts",
-    "legacy/chains.d.cts",
     "load.cjs",
     "load.js",
     "load.d.ts",
@@ -660,6 +674,10 @@
     "output_parsers/openai_functions.js",
     "output_parsers/openai_functions.d.ts",
     "output_parsers/openai_functions.d.cts",
+    "output_parsers/expression.cjs",
+    "output_parsers/expression.js",
+    "output_parsers/expression.d.ts",
+    "output_parsers/expression.d.cts",
     "outputs.cjs",
     "outputs.js",
     "outputs.d.ts",
@@ -672,6 +690,10 @@
     "prompt_values.js",
     "prompt_values.d.ts",
     "prompt_values.d.cts",
+    "query_translators.cjs",
+    "query_translators.js",
+    "query_translators.d.ts",
+    "query_translators.d.cts",
     "runnables.cjs",
     "runnables.js",
     "runnables.d.ts",

@@ -4,6 +4,13 @@ import type {
   SupabaseVectorStore,
 } from "@langchain/community/vectorstores/supabase";
 import {
+  isFilterEmpty,
+  isFloat,
+  isInt,
+  isObject,
+  isString,
+} from "@langchain/core/query_translators";
+import {
   Comparator,
   Comparators,
   Comparison,
@@ -13,7 +20,6 @@ import {
   StructuredQuery,
 } from "../../chains/query_constructor/ir.js";
 import { BaseTranslator } from "./base.js";
-import { isFilterEmpty, isFloat, isInt, isObject, isString } from "./utils.js";
 import {
   ProxyParamsDuplicator,
   convertObjectFilterToStructuredQuery,

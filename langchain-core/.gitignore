@@ -46,10 +46,6 @@ language_models/llms.cjs
 language_models/llms.js
 language_models/llms.d.ts
 language_models/llms.d.cts
-legacy/chains.cjs
-legacy/chains.js
-legacy/chains.d.ts
-legacy/chains.d.cts
 load.cjs
 load.js
 load.d.ts
@@ -82,6 +78,10 @@ output_parsers/openai_functions.cjs
 output_parsers/openai_functions.js
 output_parsers/openai_functions.d.ts
 output_parsers/openai_functions.d.cts
+output_parsers/expression.cjs
+output_parsers/expression.js
+output_parsers/expression.d.ts
+output_parsers/expression.d.cts
 outputs.cjs
 outputs.js
 outputs.d.ts
@@ -94,6 +94,10 @@ prompt_values.cjs
 prompt_values.js
 prompt_values.d.ts
 prompt_values.d.cts
+query_translators.cjs
+query_translators.js
+query_translators.d.ts
+query_translators.d.cts
 runnables.cjs
 runnables.js
 runnables.d.ts

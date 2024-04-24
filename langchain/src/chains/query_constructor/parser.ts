@@ -11,7 +11,7 @@ import {
   CallExpressionType,
   ExpressionParser,
   ParsedType,
-} from "../../output_parsers/expression.js";
+} from "@langchain/core/output_parsers/expression";
 
 /**
  * A type representing the possible types that can be traversed in an
