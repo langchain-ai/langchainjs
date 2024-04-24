@@ -17,7 +17,7 @@ describe("UpstashVectorStore", () => {
       token: process.env.UPSTASH_VECTOR_REST_TOKEN,
     });
 
-    await index.reset()
+    await index.reset();
 
     embeddings = new SyntheticEmbeddings({
       vectorSize: 384,
@@ -123,7 +123,10 @@ describe("UpstashVectorStore", () => {
   });
 
   test("UpstashVectorStore with Upstash Embedding configuration, the embeddings will be created by Upstash's service", async () => {
-    const vectorStoreWithUpstashEmbeddings = new UpstashVectorStore("UpstashEmbeddings", { index })
+    const vectorStoreWithUpstashEmbeddings = new UpstashVectorStore(
+      "UpstashEmbeddings",
+      { index }
+    );
 
     const createdAt = new Date().getTime();
 
@@ -137,21 +140,33 @@ describe("UpstashVectorStore", () => {
     // Sleeping for a second to make sure that all the indexing operations are finished.
     await sleep(1000);
 
-    const results1 = await vectorStoreWithUpstashEmbeddings.similaritySearchVectorWithScore("hello!", 1);
+    const results1 =
+      await vectorStoreWithUpstashEmbeddings.similaritySearchVectorWithScore(
+        "hello!",
+        1
+      );
     expect(results1).toHaveLength(1);
 
     expect([results1[0][0]]).toEqual([
       new Document({ metadata: { a: createdAt + 1 }, pageContent: "hello" }),
     ]);
 
-    const results2 = await vectorStoreWithUpstashEmbeddings.similaritySearchVectorWithScore("testing!", 6);
+    const results2 =
+      await vectorStoreWithUpstashEmbeddings.similaritySearchVectorWithScore(
+        "testing!",
+        6
+      );
 
     expect(results2).toHaveLength(4);
 
     await vectorStoreWithUpstashEmbeddings.delete({ ids: ids.slice(2) });
 
-    const results3 = await vectorStoreWithUpstashEmbeddings.similaritySearchVectorWithScore("testing again!", 6);
+    const results3 =
+      await vectorStoreWithUpstashEmbeddings.similaritySearchVectorWithScore(
+        "testing again!",
+        6
+      );
 
     expect(results3).toHaveLength(2);
-  })
+  });
 });

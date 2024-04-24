@@ -3,10 +3,9 @@ import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
 import { UpstashVectorStore } from "@langchain/community/vectorstores/upstash";
 
-
 const index = new Index({
-	url: process.env.UPSTASH_VECTOR_REST_URL as string,
-	token: process.env.UPSTASH_VECTOR_REST_TOKEN as string,
+  url: process.env.UPSTASH_VECTOR_REST_URL as string,
+  token: process.env.UPSTASH_VECTOR_REST_TOKEN as string,
 });
 
 // Initializing the UpstashVectorStore with the Upstash Embeddings configuration.
@@ -15,22 +14,22 @@ const UpstashVector = new UpstashVectorStore("UpstashEmbeddings", { index });
 // Creating the docs to be indexed.
 const id = new Date().getTime();
 const documents = [
-	new Document({
-		metadata: { name: id },
-		pageContent: "Hello there!",
-	}),
-	new Document({
-		metadata: { name: id },
-		pageContent: "What are you building?",
-	}),
-	new Document({
-		metadata: { time: id },
-		pageContent: "Upstash Vector is great for building AI applications.",
-	}),
-	new Document({
-		metadata: { time: id },
-		pageContent: "To be, or not to be, that is the question.",
-	}),
+  new Document({
+    metadata: { name: id },
+    pageContent: "Hello there!",
+  }),
+  new Document({
+    metadata: { name: id },
+    pageContent: "What are you building?",
+  }),
+  new Document({
+    metadata: { time: id },
+    pageContent: "Upstash Vector is great for building AI applications.",
+  }),
+  new Document({
+    metadata: { time: id },
+    pageContent: "To be, or not to be, that is the question.",
+  }),
 ];
 
 // Creating embeddings from the provided documents, and adding them to Upstash database.
@@ -41,8 +40,8 @@ await UpstashVector.addDocuments(documents);
 await new Promise((resolve) => setTimeout(resolve, 1000));
 
 const queryResult = await UpstashVector.similaritySearchWithScore(
-	"Vector database",
-	2
+  "Vector database",
+  2
 );
 
 console.log(queryResult);

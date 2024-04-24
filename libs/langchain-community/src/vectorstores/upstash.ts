@@ -31,11 +31,10 @@ export type UpstashQueryMetadata = UpstashMetadata & {
  */
 export type UpstashDeleteParams =
   | {
-    ids: string | string[];
-    deleteAll?: never;
-  }
+      ids: string | string[];
+      deleteAll?: never;
+    }
   | { deleteAll: boolean; ids?: never };
-
 
 const CONCURRENT_UPSERT_LIMIT = 1000;
 
@@ -45,7 +44,7 @@ class NoOpEmbeddings implements EmbeddingsInterface {
   }
 
   embedQuery(_document: string): Promise<number[]> {
-    return Promise.resolve([])
+    return Promise.resolve([]);
   }
 }
 
@@ -71,7 +70,10 @@ export class UpstashVectorStore extends VectorStore {
     return "upstash";
   }
 
-  constructor(embeddings: EmbeddingsInterface | "UpstashEmbeddings", args: UpstashVectorLibArgs) {
+  constructor(
+    embeddings: EmbeddingsInterface | "UpstashEmbeddings",
+    args: UpstashVectorLibArgs
+  ) {
     if (embeddings === "UpstashEmbeddings") {
       super(new NoOpEmbeddings(), args);
       this.upstashEmbeddingsConfig = true;
@@ -96,7 +98,7 @@ export class UpstashVectorStore extends VectorStore {
    */
   async addDocuments(
     documents: DocumentInterface[],
-    options?: { ids?: string[], UpstashEmbeddings?: boolean }
+    options?: { ids?: string[]; UpstashEmbeddings?: boolean }
   ) {
     const texts = documents.map(({ pageContent }) => pageContent);
 
@@ -169,7 +171,10 @@ export class UpstashVectorStore extends VectorStore {
       };
     });
 
-    const vectorChunks = chunkArray(upstashVectorsWithData, CONCURRENT_UPSERT_LIMIT);
+    const vectorChunks = chunkArray(
+      upstashVectorsWithData,
+      CONCURRENT_UPSERT_LIMIT
+    );
 
     const batchRequests = vectorChunks.map((chunk) =>
       this.caller.call(async () => this.index.upsert(chunk))
@@ -201,33 +206,27 @@ export class UpstashVectorStore extends VectorStore {
     options?: { includeVectors: boolean }
   ) {
     let queryResult: QueryResult<UpstashQueryMetadata>[] = [];
-    console.log(typeof query)
-    if (typeof query === 'string') {
 
+    if (typeof query === "string") {
       queryResult = await this.index.query<UpstashQueryMetadata>({
         data: query,
         topK: k,
         includeMetadata: true,
         filter,
         ...options,
-      })
-
+      });
     } else {
-
       queryResult = await this.index.query<UpstashQueryMetadata>({
         vector: query,
         topK: k,
         includeMetadata: true,
         filter,
         ...options,
-      })
-
+      });
     }
 
     return queryResult;
   }
-
-
 
   /**
    * This method performs a similarity search in the Upstash database
@@ -243,7 +242,6 @@ export class UpstashVectorStore extends VectorStore {
     k: number,
     filter?: this["FilterType"]
   ): Promise<[DocumentInterface, number][]> {
-    console.log(query)
     const results = await this._runUpstashQuery(query, k, filter);
 
     const searchResult: [DocumentInterface, number][] = results.map((res) => {
@@ -287,7 +285,6 @@ export class UpstashVectorStore extends VectorStore {
       });
       docs.push(newDocument);
     }
-
 
     return this.fromDocuments(docs, embeddings, dbConfig);
   }
