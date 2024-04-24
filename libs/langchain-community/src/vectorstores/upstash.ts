@@ -201,7 +201,7 @@ export class UpstashVectorStore extends VectorStore {
     options?: { includeVectors: boolean }
   ) {
     let queryResult: QueryResult<UpstashQueryMetadata>[] = [];
-
+    console.log(typeof query)
     if (typeof query === 'string') {
 
       queryResult = await this.index.query<UpstashQueryMetadata>({
@@ -243,6 +243,7 @@ export class UpstashVectorStore extends VectorStore {
     k: number,
     filter?: this["FilterType"]
   ): Promise<[DocumentInterface, number][]> {
+    console.log(query)
     const results = await this._runUpstashQuery(query, k, filter);
 
     const searchResult: [DocumentInterface, number][] = results.map((res) => {

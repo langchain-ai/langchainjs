@@ -3,6 +3,7 @@ import CreateClientExample from "@examples/indexes/vector_stores/upstash/create_
 import IndexQueryExample from "@examples/indexes/vector_stores/upstash/index_and_query_docs.ts";
 import DeleteExample from "@examples/indexes/vector_stores/upstash/delete_docs.ts";
 import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+import UpstashEmbeddingsExample from "@mdx_components/upstash-embeddings.mdx";
 
 # Upstash Vector
 
@@ -41,8 +42,17 @@ You can index the LangChain documents with any model of your choice, and perform
 
 <CodeBlock language="typescript">{IndexQueryExample}</CodeBlock>
 
+## Upstash embeddings
+
+It's possible to use the embeddings service of Upstash, which is based on the embedding model of choice when creating the vector database. You don't need to create the embeddings manually, as the Upstash Vector service will handle this for you.
+
+<CodeBlock language="typescript">{UpstashEmbeddingsExample}</CodeBlock>
+
+```typescript
+
 ## Delete Documents
 
 You can also delete the documents you've indexed previously.
 
 <CodeBlock language="typescript">{DeleteExample}</CodeBlock>
+```
