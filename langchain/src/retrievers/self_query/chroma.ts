@@ -1,9 +1,6 @@
 import { Chroma } from "@langchain/community/vectorstores/chroma";
-import {
-  BasicTranslator,
-  Comparators,
-  Operators,
-} from "@langchain/core/structured_query";
+import { Comparators, Operators } from "../../chains/query_constructor/ir.js";
+import { BasicTranslator } from "./base.js";
 
 /**
  * Specialized translator for the Chroma vector database. It extends the

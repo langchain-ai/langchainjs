@@ -1,21 +1,18 @@
-import { RunnableInterface } from "@langchain/core/runnables";
 import {
   BaseRetriever,
   type BaseRetrieverInput,
 } from "@langchain/core/retrievers";
 import { Document } from "@langchain/core/documents";
 import { VectorStore } from "@langchain/core/vectorstores";
+import { CallbackManagerForRetrieverRun } from "@langchain/core/callbacks/manager";
+import { LLMChain } from "../../chains/llm_chain.js";
 import {
-  BaseTranslator,
-  BasicTranslator,
-  FunctionalTranslator,
-  StructuredQuery,
-} from "@langchain/core/structured_query";
-import { CallbackManagerForRetrieverRun } from "../../callbacks/manager.js";
-import {
-  loadQueryConstructorRunnable,
-  QueryConstructorRunnableOptions,
+  QueryConstructorChainOptions,
+  loadQueryConstructorChain,
 } from "../../chains/query_constructor/index.js";
+import { StructuredQuery } from "../../chains/query_constructor/ir.js";
+import { FunctionalTranslator } from "./functional.js";
+import { BaseTranslator, BasicTranslator } from "./base.js";
 
 export { BaseTranslator, BasicTranslator, FunctionalTranslator };
 
@@ -27,7 +24,7 @@ export interface SelfQueryRetrieverArgs<T extends VectorStore>
   extends BaseRetrieverInput {
   vectorStore: T;
   structuredQueryTranslator: BaseTranslator<T>;
-  queryConstructor: RunnableInterface<{ query: string }, StructuredQuery>;
+  llmChain: LLMChain;
   verbose?: boolean;
   useOriginalQuery?: boolean;
   searchParams?: {
@@ -70,7 +67,7 @@ export class SelfQueryRetriever<T extends VectorStore>
 
   vectorStore: T;
 
-  queryConstructor: RunnableInterface<{ query: string }, StructuredQuery>;
+  llmChain: LLMChain;
 
   verbose?: boolean;
 
@@ -88,7 +85,7 @@ export class SelfQueryRetriever<T extends VectorStore>
   constructor(options: SelfQueryRetrieverArgs<T>) {
     super(options);
     this.vectorStore = options.vectorStore;
-    this.queryConstructor = options.queryConstructor;
+    this.llmChain = options.llmChain;
     this.verbose = options.verbose ?? false;
     this.searchParams = options.searchParams ?? this.searchParams;
     this.useOriginalQuery = options.useOriginalQuery ?? this.useOriginalQuery;
@@ -99,10 +96,14 @@ export class SelfQueryRetriever<T extends VectorStore>
     query: string,
     runManager?: CallbackManagerForRetrieverRun
   ): Promise<Document<Record<string, unknown>>[]> {
-    const generatedStructuredQuery = await this.queryConstructor.invoke(
-      { query },
-      runManager?.getChild("query_constructor")
+    const { [this.llmChain.outputKey]: output } = await this.llmChain.call(
+      {
+        [this.llmChain.inputKeys[0]]: query,
+      },
+      runManager?.getChild("llm_chain")
     );
+
+    const generatedStructuredQuery = output as StructuredQuery;
 
     const nextArg = this.structuredQueryTranslator.visitStructuredQuery(
       generatedStructuredQuery
@@ -140,8 +141,8 @@ export class SelfQueryRetriever<T extends VectorStore>
    * @returns A new instance of SelfQueryRetriever.
    */
   static fromLLM<T extends VectorStore>(
-    options: QueryConstructorRunnableOptions &
-      Omit<SelfQueryRetrieverArgs<T>, "queryConstructor">
+    options: QueryConstructorChainOptions &
+      Omit<SelfQueryRetrieverArgs<T>, "llmChain">
   ): SelfQueryRetriever<T> {
     const {
       structuredQueryTranslator,
@@ -154,7 +155,7 @@ export class SelfQueryRetriever<T extends VectorStore>
       vectorStore,
       ...rest
     } = options;
-    const queryConstructor = loadQueryConstructorRunnable({
+    const llmChain = loadQueryConstructorChain({
       llm,
       documentContents,
       attributeInfo,
@@ -166,7 +167,7 @@ export class SelfQueryRetriever<T extends VectorStore>
     });
     return new SelfQueryRetriever<T>({
       ...rest,
-      queryConstructor,
+      llmChain,
       vectorStore,
       structuredQueryTranslator,
     });

@@ -3,11 +3,6 @@ import {
   WeaviateStore,
 } from "@langchain/community/vectorstores/weaviate";
 import {
-  isFilterEmpty,
-  isString,
-  isInt,
-  isFloat,
-  BaseTranslator,
   Comparator,
   Comparators,
   Comparison,
@@ -17,7 +12,9 @@ import {
   Operators,
   StructuredQuery,
   Visitor,
-} from "@langchain/core/structured_query";
+} from "../../chains/query_constructor/ir.js";
+import { BaseTranslator } from "./base.js";
+import { isFilterEmpty, isString, isInt, isFloat } from "./utils.js";
 
 type AllowedOperator = Exclude<Operator, NOT>;
 

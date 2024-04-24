@@ -1,9 +1,6 @@
 import type { VectorStoreInterface } from "@langchain/core/vectorstores";
-import {
-  BasicTranslator,
-  Comparators,
-  Operators,
-} from "@langchain/core/structured_query";
+import { Comparators, Operators } from "../../chains/query_constructor/ir.js";
+import { BasicTranslator } from "./base.js";
 
 /**
  * Specialized translator class that extends the BasicTranslator. It is

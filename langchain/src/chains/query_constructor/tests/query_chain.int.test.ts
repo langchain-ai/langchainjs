@@ -1,6 +1,6 @@
 import { test } from "@jest/globals";
 import { OpenAI } from "@langchain/openai";
-import { loadQueryConstructorRunnable } from "../index.js";
+import { loadQueryConstructorChain } from "../index.js";
 import {
   Comparators,
   Comparison,
@@ -76,11 +76,8 @@ test("Query Chain Test", async () => {
 
   const allowedComparators = Object.values(Comparators);
   const allowedOperators = Object.values(Operators);
-  const llm = new OpenAI({
-    modelName: "gpt-3.5-turbo-instruct",
-    temperature: 0,
-  });
-  const queryChain = loadQueryConstructorRunnable({
+  const llm = new OpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 });
+  const queryChain = loadQueryConstructorChain({
     llm,
     documentContents,
     attributeInfo,
@@ -88,21 +85,26 @@ test("Query Chain Test", async () => {
     allowedOperators,
   });
 
-  const c1 = queryChain.invoke({
+  const c1 = queryChain.call({
     query: "Which movies are less than 90 minutes?",
   });
-  const c3 = queryChain.invoke({
+  const c3 = queryChain.call({
     query: "Which movies are rated higher than 8.5?",
   });
-  const c4 = queryChain.invoke({
+  const c4 = queryChain.call({
     query: "Which movies are directed by Greta Gerwig?",
   });
-  const c5 = queryChain.invoke({
+  const c5 = queryChain.call({
     query:
       "Which movies are either comedy or drama and are less than 90 minutes?",
   });
 
-  const [r1, r3, r4, r5] = await Promise.all([c1, c3, c4, c5]);
+  const [
+    { [queryChain.outputKey]: r1 },
+    { [queryChain.outputKey]: r3 },
+    { [queryChain.outputKey]: r4 },
+    { [queryChain.outputKey]: r5 },
+  ] = await Promise.all([c1, c3, c4, c5]);
 
   expect(r1).toMatchObject(sq1);
   expect(r3).toMatchObject(sq3);
@@ -110,10 +112,18 @@ test("Query Chain Test", async () => {
   expect(r5).toMatchObject(sq5);
   const testTranslator = new BasicTranslator();
 
-  const { filter: parsedFilter1 } = testTranslator.visitStructuredQuery(r1);
-  const { filter: parsedFilter3 } = testTranslator.visitStructuredQuery(r3);
-  const { filter: parsedFilter4 } = testTranslator.visitStructuredQuery(r4);
-  const { filter: parsedFilter5 } = testTranslator.visitStructuredQuery(r5);
+  const { filter: parsedFilter1 } = testTranslator.visitStructuredQuery(
+    r1 as StructuredQuery
+  );
+  const { filter: parsedFilter3 } = testTranslator.visitStructuredQuery(
+    r3 as StructuredQuery
+  );
+  const { filter: parsedFilter4 } = testTranslator.visitStructuredQuery(
+    r4 as StructuredQuery
+  );
+  const { filter: parsedFilter5 } = testTranslator.visitStructuredQuery(
+    r5 as StructuredQuery
+  );
 
   expect(parsedFilter1).toMatchObject(filter1);
   expect(parsedFilter3).toMatchObject(filter3);
