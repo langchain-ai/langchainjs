@@ -9375,7 +9375,6 @@ __metadata:
     mustache: ^4.2.0
     p-queue: ^6.6.2
     p-retry: 4
-    peggy: ^3.0.2
     prettier: ^2.8.3
     release-it: ^15.10.1
     rimraf: ^5.0.1
@@ -9385,11 +9384,6 @@ __metadata:
     web-streams-polyfill: ^3.3.3
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.3
-  peerDependencies:
-    peggy: ^3.0.2
-  peerDependenciesMeta:
-    peggy:
-      optional: true
   languageName: unknown
   linkType: soft
 
