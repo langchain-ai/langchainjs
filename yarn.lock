@@ -8950,7 +8950,7 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1.56
+    "@langchain/core": ~0.1.60
     "@langchain/openai": ~0.0.28
     "@langchain/scripts": ~0.0
     "@mozilla/readability": ^0.4.4
@@ -9346,7 +9346,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.5, @langchain/core@~0.1.56, @langchain/core@~0.1.58, @langchain/core@~0.1.9":
+"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.5, @langchain/core@~0.1.56, @langchain/core@~0.1.58, @langchain/core@~0.1.60, @langchain/core@~0.1.9":
   version: 0.0.0-use.local
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
@@ -26666,7 +26666,7 @@ __metadata:
     "@google-cloud/storage": ^7.7.0
     "@jest/globals": ^29.5.0
     "@langchain/community": ~0.0.47
-    "@langchain/core": ~0.1.56
+    "@langchain/core": ~0.1.60
     "@langchain/openai": ~0.0.28
     "@langchain/scripts": ~0.0
     "@langchain/textsplitters": ~0.0.0
