@@ -47,6 +47,10 @@ export interface GoogleAISafetySetting {
   threshold: string;
 }
 
+export type GoogleAIResponseMimeType =
+  "text/plain" |
+  "application/json";
+
 export interface GoogleAIModelParams {
   /** Model to use */
   model?: string;
@@ -99,7 +103,7 @@ export interface GoogleAIModelParams {
    *     text/plain: (default) Text output.
    *     application/json: JSON response in the candidates.
    */
-  responseMimeType?: "text/plain" | "application/json"
+  responseMimeType?: GoogleAIResponseMimeType;
 }
 
 /**
@@ -227,7 +231,7 @@ export interface GeminiGenerationConfig {
   temperature?: number;
   topP?: number;
   topK?: number;
-  responseMimeType?: "text/plain" | "application/json"
+  responseMimeType?: GoogleAIResponseMimeType;
 }
 
 export interface GeminiRequest {
