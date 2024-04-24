@@ -19,7 +19,7 @@ import {
   isString,
   isInt,
   isFloat,
-} from "@langchain/core/query_translators";
+} from "@langchain/core/structured_query";
 
 type AllowedOperator = Exclude<Operator, NOT>;
 

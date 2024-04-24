@@ -94,10 +94,6 @@ prompt_values.cjs
 prompt_values.js
 prompt_values.d.ts
 prompt_values.d.cts
-query_translators.cjs
-query_translators.js
-query_translators.d.ts
-query_translators.d.cts
 runnables.cjs
 runnables.js
 runnables.d.ts
@@ -122,6 +118,10 @@ stores.cjs
 stores.js
 stores.d.ts
 stores.d.cts
+structured_query.cjs
+structured_query.js
+structured_query.d.ts
+structured_query.d.cts
 tools.cjs
 tools.js
 tools.d.ts

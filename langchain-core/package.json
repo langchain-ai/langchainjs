@@ -320,15 +320,6 @@
       "import": "./prompt_values.js",
       "require": "./prompt_values.cjs"
     },
-    "./query_translators": {
-      "types": {
-        "import": "./query_translators.d.ts",
-        "require": "./query_translators.d.cts",
-        "default": "./query_translators.d.ts"
-      },
-      "import": "./query_translators.js",
-      "require": "./query_translators.cjs"
-    },
     "./runnables": {
       "types": {
         "import": "./runnables.d.ts",
@@ -382,6 +373,15 @@
       },
       "import": "./stores.js",
       "require": "./stores.cjs"
+    },
+    "./structured_query": {
+      "types": {
+        "import": "./structured_query.d.ts",
+        "require": "./structured_query.d.cts",
+        "default": "./structured_query.d.ts"
+      },
+      "import": "./structured_query.js",
+      "require": "./structured_query.cjs"
     },
     "./tools": {
       "types": {
@@ -690,10 +690,6 @@
     "prompt_values.js",
     "prompt_values.d.ts",
     "prompt_values.d.cts",
-    "query_translators.cjs",
-    "query_translators.js",
-    "query_translators.d.ts",
-    "query_translators.d.cts",
     "runnables.cjs",
     "runnables.js",
     "runnables.d.ts",
@@ -718,6 +714,10 @@
     "stores.js",
     "stores.d.ts",
     "stores.d.cts",
+    "structured_query.cjs",
+    "structured_query.js",
+    "structured_query.d.ts",
+    "structured_query.d.cts",
     "tools.cjs",
     "tools.js",
     "tools.d.ts",

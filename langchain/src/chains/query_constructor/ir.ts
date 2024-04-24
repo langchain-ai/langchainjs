@@ -1,1 +1,1 @@
-export * from "@langchain/core/query_translators";
+export * from "@langchain/core/structured_query";

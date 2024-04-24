@@ -2,7 +2,7 @@ import {
   VectaraFilter,
   VectaraStore,
 } from "@langchain/community/vectorstores/vectara";
-import { isFilterEmpty } from "@langchain/core/query_translators";
+import { isFilterEmpty } from "@langchain/core/structured_query";
 import {
   Comparator,
   Comparators,
