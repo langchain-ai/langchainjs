@@ -9,8 +9,7 @@ import {
   isInt,
   isObject,
   isString,
-} from "@langchain/core/structured_query";
-import {
+  BaseTranslator,
   Comparator,
   Comparators,
   Comparison,
@@ -18,8 +17,7 @@ import {
   Operator,
   Operators,
   StructuredQuery,
-} from "../../chains/query_constructor/ir.js";
-import { BaseTranslator } from "./base.js";
+} from "@langchain/core/structured_query";
 import {
   ProxyParamsDuplicator,
   convertObjectFilterToStructuredQuery,

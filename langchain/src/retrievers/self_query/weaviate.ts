@@ -7,8 +7,7 @@ import {
   isString,
   isInt,
   isFloat,
-} from "@langchain/core/structured_query";
-import {
+  BaseTranslator,
   Comparator,
   Comparators,
   Comparison,
@@ -18,8 +17,7 @@ import {
   Operators,
   StructuredQuery,
   Visitor,
-} from "../../chains/query_constructor/ir.js";
-import { BaseTranslator } from "./base.js";
+} from "@langchain/core/structured_query";
 
 type AllowedOperator = Exclude<Operator, NOT>;
 

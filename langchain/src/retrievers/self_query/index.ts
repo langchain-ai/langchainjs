@@ -5,14 +5,17 @@ import {
 } from "@langchain/core/retrievers";
 import { Document } from "@langchain/core/documents";
 import { VectorStore } from "@langchain/core/vectorstores";
+import {
+  BaseTranslator,
+  BasicTranslator,
+  FunctionalTranslator,
+  StructuredQuery,
+} from "@langchain/core/structured_query";
 import { CallbackManagerForRetrieverRun } from "../../callbacks/manager.js";
 import {
   loadQueryConstructorRunnable,
   QueryConstructorRunnableOptions,
 } from "../../chains/query_constructor/index.js";
-import { StructuredQuery } from "../../chains/query_constructor/ir.js";
-import { FunctionalTranslator } from "./functional.js";
-import { BaseTranslator, BasicTranslator } from "./base.js";
 
 export { BaseTranslator, BasicTranslator, FunctionalTranslator };
 
