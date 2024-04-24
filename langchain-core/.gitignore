@@ -78,10 +78,6 @@ output_parsers/openai_functions.cjs
 output_parsers/openai_functions.js
 output_parsers/openai_functions.d.ts
 output_parsers/openai_functions.d.cts
-output_parsers/expression.cjs
-output_parsers/expression.js
-output_parsers/expression.d.ts
-output_parsers/expression.d.cts
 outputs.cjs
 outputs.js
 outputs.d.ts

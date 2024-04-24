@@ -32,7 +32,6 @@ export const config = {
     output_parsers: "output_parsers/index",
     "output_parsers/openai_tools": "output_parsers/openai_tools/index",
     "output_parsers/openai_functions": "output_parsers/openai_functions/index",
-    "output_parsers/expression": "output_parsers/expression/index",
     outputs: "outputs",
     prompts: "prompts/index",
     prompt_values: "prompt_values",
@@ -69,7 +68,6 @@ export const config = {
   },
   requiresOptionalDependency: [
     "structured_query",
-    "output_parsers/expression",
   ],
   tsConfigPath: resolve("./tsconfig.json"),
   packageSuffix: "core",
