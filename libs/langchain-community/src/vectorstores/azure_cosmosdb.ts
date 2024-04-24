@@ -189,7 +189,7 @@ export class AzureCosmosDBVectorStore extends VectorStore {
    *    which has limited performance
    * @param dimensions Number of dimensions for vector similarity.
    *    The maximum number of supported dimensions is 2000.
-   *    If not number is provided, it will be determined automatically by
+   *    If no number is provided, it will be determined automatically by
    *    embedding a short text.
    * @param similarity Similarity metric to use with the IVF index.
    *    Possible options are:
