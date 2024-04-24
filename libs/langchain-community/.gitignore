@@ -374,6 +374,10 @@ vectorstores/neo4j_vector.cjs
 vectorstores/neo4j_vector.js
 vectorstores/neo4j_vector.d.ts
 vectorstores/neo4j_vector.d.cts
+vectorstores/neon.cjs
+vectorstores/neon.js
+vectorstores/neon.d.ts
+vectorstores/neon.d.cts
 vectorstores/opensearch.cjs
 vectorstores/opensearch.js
 vectorstores/opensearch.d.ts

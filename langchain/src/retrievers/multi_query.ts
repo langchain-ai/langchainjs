@@ -9,10 +9,14 @@ import { BaseOutputParser } from "@langchain/core/output_parsers";
 import { PromptTemplate, BasePromptTemplate } from "@langchain/core/prompts";
 import { CallbackManagerForRetrieverRun } from "@langchain/core/callbacks/manager";
 import { LLMChain } from "../chains/llm_chain.js";
+import type { BaseDocumentCompressor } from "./document_compressors/index.js";
 
 interface LineList {
   lines: string[];
 }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type MultiDocs = Document<Record<string, any>>[];
 
 class LineListOutputParser extends BaseOutputParser<LineList> {
   static lc_name() {
@@ -66,6 +70,8 @@ export interface MultiQueryRetrieverInput extends BaseRetrieverInput {
   llmChain: LLMChain<LineList>;
   queryCount?: number;
   parserKey?: string;
+  documentCompressor?: BaseDocumentCompressor | undefined;
+  documentCompressorFilteringFn?: (docs: MultiDocs) => MultiDocs;
 }
 
 /**
@@ -96,12 +102,18 @@ export class MultiQueryRetriever extends BaseRetriever {
 
   private parserKey = "lines";
 
+  documentCompressor: BaseDocumentCompressor | undefined;
+
+  documentCompressorFilteringFn?: MultiQueryRetrieverInput["documentCompressorFilteringFn"];
+
   constructor(fields: MultiQueryRetrieverInput) {
     super(fields);
     this.retriever = fields.retriever;
     this.llmChain = fields.llmChain;
     this.queryCount = fields.queryCount ?? this.queryCount;
     this.parserKey = fields.parserKey ?? this.parserKey;
+    this.documentCompressor = fields.documentCompressor;
+    this.documentCompressorFilteringFn = fields.documentCompressorFilteringFn;
   }
 
   static fromLLM(
@@ -145,13 +157,15 @@ export class MultiQueryRetriever extends BaseRetriever {
     runManager?: CallbackManagerForRetrieverRun
   ): Promise<Document[]> {
     const documents: Document[] = [];
-    for (const query of queries) {
-      const docs = await this.retriever.getRelevantDocuments(
-        query,
-        runManager?.getChild()
-      );
-      documents.push(...docs);
-    }
+    await Promise.all(
+      queries.map(async (query) => {
+        const docs = await this.retriever.getRelevantDocuments(
+          query,
+          runManager?.getChild()
+        );
+        documents.push(...docs);
+      })
+    );
     return documents;
   }
 
@@ -177,6 +191,18 @@ export class MultiQueryRetriever extends BaseRetriever {
     const queries = await this._generateQueries(question, runManager);
     const documents = await this._retrieveDocuments(queries, runManager);
     const uniqueDocuments = this._uniqueUnion(documents);
-    return uniqueDocuments;
+
+    let outputDocs = uniqueDocuments;
+    if (this.documentCompressor && uniqueDocuments.length) {
+      outputDocs = await this.documentCompressor.compressDocuments(
+        uniqueDocuments,
+        question
+      );
+      if (this.documentCompressorFilteringFn) {
+        outputDocs = this.documentCompressorFilteringFn(outputDocs);
+      }
+    }
+
+    return outputDocs;
   }
 }

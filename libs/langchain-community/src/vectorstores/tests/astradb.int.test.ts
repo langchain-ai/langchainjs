@@ -24,7 +24,6 @@ describe.skip("AstraDBVectorStore", () => {
       ...clientConfig,
       collection: process.env.ASTRA_DB_COLLECTION ?? "langchain_test",
       collectionOptions: {
-        checkExists: false,
         vector: {
           dimension: 1536,
           metric: "cosine",
@@ -149,7 +148,6 @@ describe.skip("AstraDBVectorStore", () => {
       store = new AstraDBVectorStore(new FakeEmbeddings(), {
         ...astraConfig,
         collectionOptions: {
-          checkExists: false,
           vector: {
             dimension: 8,
             metric: "cosine",
@@ -165,4 +163,33 @@ describe.skip("AstraDBVectorStore", () => {
       );
     }
   }, 60000);
+
+  test("skipCollectionProvisioning", async () => {
+    let store = new AstraDBVectorStore(new FakeEmbeddings(), {
+      ...astraConfig,
+      skipCollectionProvisioning: true,
+      collectionOptions: undefined,
+    });
+    await store.initialize();
+    try {
+      await store.similaritySearch("test");
+      fail("Should have thrown error");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      expect(e.message).toContain("'default_keyspace.langchain_test'");
+    }
+    store = new AstraDBVectorStore(new FakeEmbeddings(), {
+      ...astraConfig,
+      skipCollectionProvisioning: false,
+      collectionOptions: {
+        checkExists: false,
+        vector: {
+          dimension: 4,
+          metric: "cosine",
+        },
+      },
+    });
+    await store.initialize();
+    await store.similaritySearch("test");
+  });
 });
