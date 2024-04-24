@@ -57,7 +57,9 @@ describe.skip("AzureCosmosDBVectorStore", () => {
     // Delete any existing index
     try {
       await collection.dropIndex(INDEX_NAME);
-    } catch {}
+    } catch {
+      // Ignore error if the index does not exist
+    }
 
     await client.close();
   });
@@ -67,6 +69,9 @@ describe.skip("AzureCosmosDBVectorStore", () => {
       databaseName: DATABASE_NAME,
       collectionName: COLLECTION_NAME,
       indexName: INDEX_NAME,
+      indexOptions: {
+        numLists: 1,
+      },
     });
 
     expect(vectorStore).toBeDefined();
@@ -77,9 +82,6 @@ describe.skip("AzureCosmosDBVectorStore", () => {
       { pageContent: "Sandwiches taste good.", metadata: { c: 1 } },
       { pageContent: "The house is open", metadata: { d: 1, e: 2 } },
     ]);
-
-    // Make sure the index is created
-    await vectorStore.createIndex(1);
 
     const results: Document[] = await vectorStore.similaritySearch(
       "sandwich",
@@ -113,11 +115,11 @@ describe.skip("AzureCosmosDBVectorStore", () => {
         databaseName: DATABASE_NAME,
         collectionName: COLLECTION_NAME,
         indexName: INDEX_NAME,
+        indexOptions: {
+          numLists: 1,
+        },
       }
     );
-
-    // Make sure the index is created
-    await vectorStore.createIndex(1);
 
     const output = await vectorStore.maxMarginalRelevanceSearch("foo", {
       k: 10,
@@ -169,23 +171,23 @@ describe.skip("AzureCosmosDBVectorStore", () => {
       databaseName: DATABASE_NAME,
       collectionName: COLLECTION_NAME,
       indexName: INDEX_NAME,
+      indexOptions: {
+        numLists: 1,
+      },
     });
 
     const ids = await vectorStore.addDocuments([
       { pageContent: "This book is about politics", metadata: { a: 1 } },
-      { pageContent: "The is the house of parliament", metadata: { d: 1, e: 2 } },
+      {
+        pageContent: "The is the house of parliament",
+        metadata: { d: 1, e: 2 },
+      },
     ]);
-    
-    // Make sure the index is created
-    await vectorStore.createIndex(1);
-    
+
     // Delete document matching specified ids
     await vectorStore.delete(ids.slice(0, 1));
 
-    const results = await vectorStore.similaritySearch(
-      "politics",
-      10
-    );
+    const results = await vectorStore.similaritySearch("politics", 10);
 
     expect(results.length).toEqual(1);
     expect(results[0].pageContent).toEqual("The is the house of parliament");
@@ -198,23 +200,23 @@ describe.skip("AzureCosmosDBVectorStore", () => {
       databaseName: DATABASE_NAME,
       collectionName: COLLECTION_NAME,
       indexName: INDEX_NAME,
+      indexOptions: {
+        numLists: 1,
+      },
     });
 
     await vectorStore.addDocuments([
       { pageContent: "This book is about politics", metadata: { a: 1 } },
-      { pageContent: "The is the house of parliament", metadata: { d: 1, e: 2 } },
+      {
+        pageContent: "The is the house of parliament",
+        metadata: { d: 1, e: 2 },
+      },
     ]);
 
-    // Make sure the index is created
-    await vectorStore.createIndex(1);
-
     // Delete document matching the filter
-    await vectorStore.delete({ "a": 1 });
+    await vectorStore.delete({ a: 1 });
 
-    const results = await vectorStore.similaritySearch(
-      "politics",
-      10
-    );
+    const results = await vectorStore.similaritySearch("politics", 10);
 
     expect(results.length).toEqual(1);
     expect(results[0].pageContent).toEqual("The is the house of parliament");

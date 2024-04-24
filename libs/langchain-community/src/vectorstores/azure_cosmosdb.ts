@@ -29,6 +29,18 @@ export const AzureCosmosDBSimilarityType = {
 export type AzureCosmosDBSimilarityType =
   (typeof AzureCosmosDBSimilarityType)[keyof typeof AzureCosmosDBSimilarityType];
 
+/** Azure Cosmos DB Index Options. */
+export type AzureCosmosDBIndexOptions = {
+  /** Skips automatic index creation. */
+  readonly skipCreate?: boolean;
+  /** Number of clusters that the inverted file (IVF) index uses to group the vector data. */
+  readonly numLists?: number;
+  /** Number of dimensions for vector similarity. */
+  readonly dimensions?: number;
+  /** Similarity metric to use with the IVF index. */
+  readonly similarity?: AzureCosmosDBSimilarityType;
+};
+
 /**
  * Configuration options for the `AzureCosmosDBVectorStore` constructor.
  */
@@ -40,6 +52,7 @@ export interface AzureCosmosDBConfig {
   readonly indexName?: string;
   readonly textKey?: string;
   readonly embeddingKey?: string;
+  readonly indexOptions?: AzureCosmosDBIndexOptions;
 }
 
 /**
@@ -61,6 +74,8 @@ export class AzureCosmosDBVectorStore extends VectorStore {
     };
   }
 
+  private connectPromise: Promise<void>;
+
   private readonly initPromise: Promise<void>;
 
   private readonly client: MongoClient | undefined;
@@ -74,6 +89,8 @@ export class AzureCosmosDBVectorStore extends VectorStore {
   readonly textKey: string;
 
   readonly embeddingKey: string;
+
+  private readonly indexOptions: AzureCosmosDBIndexOptions;
 
   _vectorstoreType(): string {
     return "azure_cosmosdb";
@@ -106,6 +123,7 @@ export class AzureCosmosDBVectorStore extends VectorStore {
     this.indexName = dbConfig.indexName ?? "vectorSearchIndex";
     this.textKey = dbConfig.textKey ?? "textContent";
     this.embeddingKey = dbConfig.embeddingKey ?? "vectorContent";
+    this.indexOptions = dbConfig.indexOptions ?? {};
 
     // Start initialization, but don't wait for it to finish here
     this.initPromise = this.init(client, databaseName, collectionName).catch(
@@ -170,7 +188,9 @@ export class AzureCosmosDBVectorStore extends VectorStore {
    *    Using a numLists value of 1 is akin to performing brute-force search,
    *    which has limited performance
    * @param dimensions Number of dimensions for vector similarity.
-   *    The maximum number of supported dimensions is 2000
+   *    The maximum number of supported dimensions is 2000.
+   *    If not number is provided, it will be determined automatically by
+   *    embedding a short text.
    * @param similarity Similarity metric to use with the IVF index.
    *    Possible options are:
    *    - CosmosDBSimilarityType.COS (cosine distance)
@@ -180,10 +200,17 @@ export class AzureCosmosDBVectorStore extends VectorStore {
    */
   async createIndex(
     numLists = 100,
-    dimensions = 1536,
+    dimensions: number | undefined = undefined,
     similarity: AzureCosmosDBSimilarityType = AzureCosmosDBSimilarityType.COS
   ): Promise<void> {
-    await this.initPromise;
+    await this.connectPromise;
+
+    let vectorLength = dimensions;
+
+    if (vectorLength === undefined) {
+      const queryEmbedding = await this.embeddings.embedQuery("test");
+      vectorLength = queryEmbedding.length;
+    }
 
     const createIndexCommands = {
       createIndexes: this.collection.collectionName,
@@ -195,7 +222,7 @@ export class AzureCosmosDBVectorStore extends VectorStore {
             kind: "vector-ivf",
             numLists,
             similarity,
-            dimensions,
+            dimensions: vectorLength,
           },
         },
       ],
@@ -211,7 +238,9 @@ export class AzureCosmosDBVectorStore extends VectorStore {
    *     documents will be removed.
    * @returns A promise that resolves when the documents have been removed.
    */
-  async delete(filterOrIds?: string[] | Filter<MongoDBDocument>): Promise<void> {
+  async delete(
+    filterOrIds?: string[] | Filter<MongoDBDocument>
+  ): Promise<void> {
     await this.initPromise;
 
     const ids = Array.isArray(filterOrIds) ? filterOrIds : undefined;
@@ -245,7 +274,10 @@ export class AzureCosmosDBVectorStore extends VectorStore {
    * @param documents Corresponding documents to be added.
    * @returns A promise that resolves to the added documents IDs.
    */
-  async addVectors(vectors: number[][], documents: Document[]): Promise<string[]> {
+  async addVectors(
+    vectors: number[][],
+    documents: Document[]
+  ): Promise<string[]> {
     const docs = vectors.map((embedding, idx) => ({
       [this.textKey]: documents[idx].pageContent,
       [this.embeddingKey]: embedding,
@@ -363,9 +395,21 @@ export class AzureCosmosDBVectorStore extends VectorStore {
     databaseName: string,
     collectionName: string
   ): Promise<void> {
-    await client.connect();
-    this.database = client.db(databaseName);
-    this.collection = this.database.collection(collectionName);
+    this.connectPromise = (async () => {
+      await client.connect();
+      this.database = client.db(databaseName);
+      this.collection = this.database.collection(collectionName);
+    })();
+
+    // Unless skipCreate is set, create the index
+    // This operation is no-op if the index already exists
+    if (!this.indexOptions.skipCreate) {
+      await this.createIndex(
+        this.indexOptions.numLists,
+        this.indexOptions.dimensions,
+        this.indexOptions.similarity
+      );
+    }
   }
 
   /**

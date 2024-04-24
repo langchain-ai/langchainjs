@@ -25,14 +25,13 @@ const store = await AzureCosmosDBVectorStore.fromDocuments(
   {
     databaseName: "langchain",
     collectionName: "documents",
+    indexOptions: {
+      numLists: 100,
+      dimensions: 1536,
+      similarity: AzureCosmosDBSimilarityType.COS,
+    },
   }
 );
-
-// Create the index
-const numLists = 100;
-const dimensions = 1536;
-const similarity = AzureCosmosDBSimilarityType.COS;
-await store.createIndex(numLists, dimensions, similarity);
 
 // Performs a similarity search
 const resultDocuments = await store.similaritySearch(
