@@ -22,11 +22,15 @@ export abstract class BaseDocumentLoader implements DocumentLoader {
   abstract load(): Promise<Document[]>;
 
   /**
+   * @deprecated Use `this.load()` and `splitter.splitDocuments()` individually.
    * Loads the documents and splits them using a specified text splitter.
    * @param textSplitter The TextSplitter instance to use for splitting the loaded documents. Defaults to a RecursiveCharacterTextSplitter instance.
    * @returns A Promise that resolves with an array of Document instances, each split according to the provided TextSplitter.
    */
-  async loadAndSplit(splitter: BaseDocumentTransformer): Promise<Document[]> {
+  async loadAndSplit(splitter?: BaseDocumentTransformer): Promise<Document[]> {
+    if (splitter === undefined) {
+      throw new Error("You must pass a text splitter to use this method.");
+    }
     const docs = await this.load();
     return splitter.invoke(docs);
   }
