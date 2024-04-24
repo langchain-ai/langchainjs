@@ -1,13 +1,9 @@
-import { VectorStore } from "@langchain/core/vectorstores";
 import { v5 as uuidv5 } from "uuid";
-import {
-  RecordManagerInterface,
-  UUIDV5_NAMESPACE,
-} from "@langchain/community/indexes/base";
-import { insecureHash } from "@langchain/core/utils/hash";
-import { DocumentInterface } from "@langchain/core/documents";
+import { VectorStore } from "../vectorstores.js";
+import { RecordManagerInterface, UUIDV5_NAMESPACE } from "./record_manager.js";
+import { insecureHash } from "../utils/hash.js";
+import { DocumentInterface, Document } from "../documents/document.js";
 import { BaseDocumentLoader } from "../document_loaders/base.js";
-import { Document } from "../document.js";
 
 type Metadata = Record<string, unknown>;
 

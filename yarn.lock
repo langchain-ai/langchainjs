@@ -9883,7 +9883,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/textsplitters@workspace:libs/langchain-textsplitters, @langchain/textsplitters@~0.0.0":
+"@langchain/textsplitters@workspace:*, @langchain/textsplitters@workspace:libs/langchain-textsplitters, @langchain/textsplitters@~0.0.0":
   version: 0.0.0-use.local
   resolution: "@langchain/textsplitters@workspace:libs/langchain-textsplitters"
   dependencies:
@@ -21777,6 +21777,7 @@ __metadata:
     "@langchain/pinecone": "workspace:*"
     "@langchain/redis": "workspace:*"
     "@langchain/scripts": "workspace:*"
+    "@langchain/textsplitters": "workspace:*"
     "@langchain/weaviate": "workspace:*"
     "@langchain/yandex": "workspace:*"
     "@opensearch-project/opensearch": ^2.2.0
