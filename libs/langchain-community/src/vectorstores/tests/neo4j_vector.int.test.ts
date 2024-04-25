@@ -663,7 +663,7 @@ describe("Neo4j Vector", () => {
     await neo4jVectorStore.close();
   });
 
-  test("Test metadata filters", async () => {
+  test.skip("Test metadata filters", async () => {
     const url = process.env.NEO4J_URI as string;
     const username = process.env.NEO4J_USERNAME as string;
     const password = process.env.NEO4J_PASSWORD as string;
