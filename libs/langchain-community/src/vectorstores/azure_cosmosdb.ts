@@ -233,27 +233,27 @@ export class AzureCosmosDBVectorStore extends VectorStore {
 
   /**
    * Removes specified documents from the AzureCosmosDBVectorStore.
-   * @param filterOrIds A MongoDB filter object or list of IDs for the
-   *     documents to be removed. If no IDs or filter are specified, all
-   *     documents will be removed.
+   * If no IDs or filter are specified, all documents will be removed.
+   * @param ids A list of IDs for the documents to be removed.
+   * @param filter A MongoDB filter object or list of IDs for the documents to be removed.
    * @returns A promise that resolves when the documents have been removed.
    */
   async delete(
-    filterOrIds?: string[] | Filter<MongoDBDocument>
+    ids?: string | string[],
+    filter?: Filter<MongoDBDocument>
   ): Promise<void> {
     await this.initPromise;
 
-    const ids = Array.isArray(filterOrIds) ? filterOrIds : undefined;
-    const filter = !ids ? filterOrIds : undefined;
+    const idsArray = Array.isArray(ids) ? ids : [ids];
+    const deleteIds = ids && idsArray.length > 0 ? idsArray : undefined;
+    let deleteFilter = filter ?? {};
 
-    if (ids) {
-      const objectIds = ids.map((id) => new ObjectId(id));
-      await this.collection.deleteMany({ _id: { $in: objectIds } });
-    } else if (filter) {
-      await this.collection.deleteMany(filter);
-    } else {
-      await this.collection.deleteMany({});
+    if (deleteIds) {
+      const objectIds = deleteIds.map((id) => new ObjectId(id));
+      deleteFilter = { _id: { $in: objectIds }, ...deleteFilter };
     }
+
+    await this.collection.deleteMany(deleteFilter);
   }
 
   /**

@@ -214,12 +214,40 @@ describe.skip("AzureCosmosDBVectorStore", () => {
     ]);
 
     // Delete document matching the filter
-    await vectorStore.delete({ a: 1 });
+    await vectorStore.delete(undefined, { a: 1 });
 
     const results = await vectorStore.similaritySearch("politics", 10);
 
     expect(results.length).toEqual(1);
     expect(results[0].pageContent).toEqual("The is the house of parliament");
+
+    await vectorStore.close();
+  });
+
+  test("deletes all documents", async () => {
+    const vectorStore = new AzureCosmosDBVectorStore(new OpenAIEmbeddings(), {
+      databaseName: DATABASE_NAME,
+      collectionName: COLLECTION_NAME,
+      indexName: INDEX_NAME,
+      indexOptions: {
+        numLists: 1,
+      },
+    });
+
+    await vectorStore.addDocuments([
+      { pageContent: "This book is about politics", metadata: { a: 1 } },
+      {
+        pageContent: "The is the house of parliament",
+        metadata: { d: 1, e: 2 },
+      },
+    ]);
+
+    // Delete all documents
+    await vectorStore.delete();
+
+    const results = await vectorStore.similaritySearch("politics", 10);
+
+    expect(results.length).toEqual(0);
 
     await vectorStore.close();
   });
