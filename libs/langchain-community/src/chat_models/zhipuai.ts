@@ -225,7 +225,10 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
   constructor(fields: Partial<ChatZhipuAIParams> & BaseChatModelParams = {}) {
     super(fields);
 
-    this.zhipuAIApiKey = fields?.apiKey ?? fields?.zhipuAIApiKey ?? getEnvironmentVariable("ZHIPUAI_API_KEY");
+    this.zhipuAIApiKey =
+      fields?.apiKey ??
+      fields?.zhipuAIApiKey ??
+      getEnvironmentVariable("ZHIPUAI_API_KEY");
     if (!this.zhipuAIApiKey) {
       throw new Error("ZhipuAI API key not found");
     }
