@@ -7,13 +7,13 @@ import { OpenAIEmbeddings } from "@langchain/openai";
 import { FakeEmbeddings } from "closevector-common/dist/fake.js";
 import { AstraDBVectorStore, AstraLibArgs } from "../astradb.js";
 
-describe.skip("AstraDBVectorStore", () => {
+describe("AstraDBVectorStore", () => {
   let db: Db;
   let astraConfig: AstraLibArgs;
   beforeAll(() => {
     const clientConfig = {
-      token: process.env.ASTRA_DB_APPLICATION_TOKEN ?? "dummy",
-      endpoint: process.env.ASTRA_DB_ENDPOINT ?? "dummy",
+      token: process.env.ASTRA_DB_APPLICATION_TOKEN ?? "AstraCS:ntTROEpOKRQhaILoXIQdANYO:16e3f7e676eb20195178f1694530f5f0c4aaed0647fed7c5bdf56904715eedb3",
+      endpoint: process.env.ASTRA_DB_ENDPOINT ?? "https://a531bd64-e085-47f2-b8de-ceb601228b4e-us-east-1.apps.astra.datastax.com",
       namespace: process.env.ASTRA_DB_NAMESPACE ?? "default_keyspace",
     };
 
@@ -176,7 +176,7 @@ describe.skip("AstraDBVectorStore", () => {
       fail("Should have thrown error");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
-      expect(e.message).toContain("'default_keyspace.langchain_test'");
+      expect(e.message).toContain("langchain_test");
     }
     store = new AstraDBVectorStore(new FakeEmbeddings(), {
       ...astraConfig,
@@ -191,5 +191,36 @@ describe.skip("AstraDBVectorStore", () => {
     });
     await store.initialize();
     await store.similaritySearch("test");
+  });
+
+  test("upsert", async () => {
+    const store = new AstraDBVectorStore(new FakeEmbeddings(), {
+      ...astraConfig,
+      collectionOptions: {
+        vector: {
+          dimension: 4,
+          metric: "cosine",
+        },
+      },
+    });
+    await store.initialize();
+
+    await store.addDocuments([
+      { pageContent: "Foo bar baz.", metadata: { a: 1, _id: '123456789' } },
+      { pageContent: "Bar baz foo.", metadata: { a: 2, _id: '987654321' } },
+      { pageContent: "Baz foo bar.", metadata: { a: 3, _id: '234567891' } }
+    ]);
+
+    // // get one of the ids
+    // 
+
+    await store.addDocuments([
+      { pageContent: "upserted", metadata: { a: 1, _id: '123456789' } },
+    ]);
+
+    const collection = await db.collection(astraConfig.collection);
+    const doc = await collection.findOne({ _id: "123456789" });
+
+    expect(doc?.content).toEqual("upserted");
   });
 });

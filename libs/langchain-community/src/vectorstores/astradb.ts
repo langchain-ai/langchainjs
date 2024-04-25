@@ -5,6 +5,7 @@ import {
   DataAPIClient,
   CreateCollectionOptions,
   Db,
+  InsertManyError
 } from "@datastax/astra-db-ts";
 
 import {
@@ -13,7 +14,6 @@ import {
 } from "@langchain/core/utils/async_caller";
 import { Document } from "@langchain/core/documents";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
-import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 import {
   MaxMarginalRelevanceSearchOptions,
@@ -53,8 +53,6 @@ export class AstraDBVectorStore extends VectorStore {
 
   private readonly contentKey: string; // if undefined the entirety of the content aside from the id and embedding will be stored as content
 
-  private readonly batchSize: number; // insertMany has a limit of 20 documents
-
   caller: AsyncCaller;
 
   private readonly skipCollectionProvisioning: boolean;
@@ -74,7 +72,6 @@ export class AstraDBVectorStore extends VectorStore {
       namespace,
       idKey,
       contentKey,
-      batchSize,
       skipCollectionProvisioning,
       ...callerArgs
     } = args;
@@ -91,7 +88,6 @@ export class AstraDBVectorStore extends VectorStore {
       AstraDBVectorStore.applyCollectionOptionsDefaults(collectionOptions);
     this.idKey = idKey ?? "_id";
     this.contentKey = contentKey ?? "text";
-    this.batchSize = batchSize && batchSize <= 20 ? batchSize : 20;
     this.caller = new AsyncCaller(callerArgs);
   }
 
@@ -150,12 +146,32 @@ export class AstraDBVectorStore extends VectorStore {
       ...documents[idx].metadata,
     }));
 
-    const chunkedDocs = chunkArray(docs, this.batchSize);
-    const batchCalls = chunkedDocs.map((chunk) =>
-      this.caller.call(async () => this.collection?.insertMany(chunk))
-    );
+    let insertResults;
 
-    await Promise.all(batchCalls);
+    const isInsertManyError = (error: any): error is InsertManyError => error.name === 'InsertManyError';
+
+    try {
+      insertResults = await this.collection.insertMany(docs, { ordered: false });
+    } catch (error) {
+      if (isInsertManyError(error)) {
+        insertResults = error.partialResult;
+      } else {
+        throw error;
+      }
+    }
+    
+    const insertedIds = insertResults.insertedIds as string[];
+
+    const missingDocs = docs.filter(doc => !insertedIds.includes(doc[this.idKey]));
+
+    for (let i = 0; i < missingDocs.length; i += 1) {
+      await this.caller.call(async () => {
+        await this.collection?.replaceOne(
+          { [this.idKey]: missingDocs[i][this.idKey] },
+          missingDocs[i]
+        );
+      });
+    }
   }
 
   /**
@@ -188,12 +204,8 @@ export class AstraDBVectorStore extends VectorStore {
       throw new Error("Must connect to a collection before deleting");
     }
 
-    for (const id of params.ids) {
-      console.debug(`Deleting document with id ${id}`);
-      await this.collection.deleteOne({
-        [this.idKey]: id,
-      });
-    }
+    await this.collection.deleteMany({ [this.idKey]: { $in: params.ids } });
+    console.log(`Deleted ${params.ids.length} documents`);
   }
 
   /**
