@@ -11,7 +11,7 @@ export type SearchType = "vector" | "hybrid";
 
 export enum IndexType {
   NODE = "NODE",
-  RELATIONSHIP = "RELATIONSHIP"
+  RELATIONSHIP = "RELATIONSHIP",
 }
 
 export type DistanceStrategy = "euclidean" | "cosine";
@@ -171,7 +171,7 @@ export class Neo4jVectorStore extends VectorStore {
       if (isVersionLessThan(version, targetVersion)) {
         throw new Error(
           "Version index is only supported in Neo4j version 5.11 or greater"
-        )
+        );
       }
 
       const metadataTargetVersion = [5, 18, 0];
@@ -180,7 +180,6 @@ export class Neo4jVectorStore extends VectorStore {
       }
 
       this.isEnterprise = data[0].edition === "enterprise";
-
     } catch (error) {
       console.error("Database version check failed:", error);
     }
@@ -356,8 +355,8 @@ export class Neo4jVectorStore extends VectorStore {
         RETURN reduce(str='', k IN ${JSON.stringify(textNodeProperties)} |
         str + '\\n' + k + ': ' + coalesce(node[k], '')) AS text,
         node {.*, \`${embeddingNodeProperty}\`: Null, id: Null, ${textNodeProperties
-          .map((prop) => `\`${prop}\`: Null`)
-          .join(", ")} } AS metadata, score
+        .map((prop) => `\`${prop}\`: Null`)
+        .join(", ")} } AS metadata, score
       `;
     }
 
@@ -636,7 +635,7 @@ export class Neo4jVectorStore extends VectorStore {
       k,
       query,
       params,
-      filter,
+      filter
     );
 
     return results.map((result) => result[0]);
@@ -654,11 +653,15 @@ export class Neo4jVectorStore extends VectorStore {
 
     if (filter) {
       if (!this.supportMetadataFilter) {
-        throw new Error("Metadata filtering is only supported in Neo4j version 5.18 or greater.");
+        throw new Error(
+          "Metadata filtering is only supported in Neo4j version 5.18 or greater."
+        );
       }
 
       if (this.searchType === "hybrid") {
-        throw new Error("Metadata filtering can't be use in combination with a hybrid search approach.");
+        throw new Error(
+          "Metadata filtering can't be use in combination with a hybrid search approach."
+        );
       }
 
       const parallelQuery = this.isEnterprise
@@ -682,12 +685,10 @@ export class Neo4jVectorStore extends VectorStore {
 
       indexQuery = baseIndexQuery + fSnippets + baseCosineQuery;
       filterParams = fParams;
-
     } else {
       indexQuery = getSearchIndexQuery(this.searchType, this.indexType);
       filterParams = {};
     }
-
 
     let defaultRetrieval: string;
 
@@ -696,7 +697,7 @@ export class Neo4jVectorStore extends VectorStore {
         RETURN relationship.${this.textNodeProperty} AS text, score,
         relationship {.*, ${this.textNodeProperty}: Null,
         ${this.embeddingNodeProperty}: Null, id: Null } AS metadata
-      `
+      `;
     } else {
       defaultRetrieval = `
         RETURN node.${this.textNodeProperty} AS text, score,
@@ -705,7 +706,9 @@ export class Neo4jVectorStore extends VectorStore {
       `;
     }
 
-    const retrievalQuery = this.retrievalQuery ? this.retrievalQuery : defaultRetrieval;
+    const retrievalQuery = this.retrievalQuery
+      ? this.retrievalQuery
+      : defaultRetrieval;
     const readQuery = `${indexQuery} ${retrievalQuery}`;
 
     const parameters = {
@@ -715,7 +718,7 @@ export class Neo4jVectorStore extends VectorStore {
       keyword_index: this.keywordIndexName,
       query: removeLuceneChars(query),
       ...params,
-      ...filterParams
+      ...filterParams,
     };
 
     const results = await this.query(readQuery, parameters);
@@ -804,7 +807,10 @@ function extractPathForRows(path: neo4j.Path) {
   );
 }
 
-function getSearchIndexQuery(searchType: SearchType, indexType: IndexType = DEFAULT_INDEX_TYPE): string {
+function getSearchIndexQuery(
+  searchType: SearchType,
+  indexType: IndexType = DEFAULT_INDEX_TYPE
+): string {
   if (indexType === IndexType.NODE) {
     const typeToQueryMap: { [key in SearchType]: string } = {
       vector:
@@ -830,7 +836,7 @@ function getSearchIndexQuery(searchType: SearchType, indexType: IndexType = DEFA
     return `
       CALL db.index.vector.queryRelationships($index, $k, $embedding)
       YIELD relationship, score
-    `
+    `;
   }
 }
 
@@ -882,31 +888,23 @@ function isVersionLessThan(v1: number[], v2: number[]): boolean {
 // Filter utils
 
 const COMPARISONS_TO_NATIVE: Record<string, string> = {
-  "$eq": "=",
-  "$ne": "<>",
-  "$lt": "<",
-  "$lte": "<=",
-  "$gt": ">",
-  "$gte": ">=",
+  $eq: "=",
+  $ne: "<>",
+  $lt: "<",
+  $lte: "<=",
+  $gt: ">",
+  $gte: ">=",
 };
 
-const COMPARISONS_TO_NATIVE_OPERATORS = new Set(Object.keys(COMPARISONS_TO_NATIVE));
+const COMPARISONS_TO_NATIVE_OPERATORS = new Set(
+  Object.keys(COMPARISONS_TO_NATIVE)
+);
 
-const TEXT_OPERATORS = new Set([
-  "$like",
-  "$ilike",
-]);
+const TEXT_OPERATORS = new Set(["$like", "$ilike"]);
 
-const LOGICAL_OPERATORS = new Set([
-  "$and",
-  "$or"
-]);
+const LOGICAL_OPERATORS = new Set(["$and", "$or"]);
 
-const SPECIAL_CASED_OPERATORS = new Set([
-  "$in",
-  "$nin",
-  "$between",
-]);
+const SPECIAL_CASED_OPERATORS = new Set(["$in", "$nin", "$between"]);
 
 const SUPPORTED_OPERATORS = new Set([
   ...COMPARISONS_TO_NATIVE_OPERATORS,
@@ -917,7 +915,10 @@ const SUPPORTED_OPERATORS = new Set([
 
 const IS_IDENTIFIER_REGEX = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
 
-function combineQueries(inputQueries: [string, Record<string, Any>][], operator: string): [string, Record<string, Any>] {
+function combineQueries(
+  inputQueries: [string, Record<string, Any>][],
+  operator: string
+): [string, Record<string, Any>] {
   let combinedQuery = "";
   const combinedParams: Record<string, Any> = {};
   const paramCounter: Record<string, number> = {};
@@ -945,7 +946,9 @@ function combineQueries(inputQueries: [string, Record<string, Any>][], operator:
   return [combinedQuery, combinedParams];
 }
 
-function collectParams(inputData: [string, Record<string, string>][]): [string[], Record<string, Any>] {
+function collectParams(
+  inputData: [string, Record<string, string>][]
+): [string[], Record<string, Any>] {
   const queryParts: string[] = [];
   const params: Record<string, Any> = {};
 
@@ -957,44 +960,57 @@ function collectParams(inputData: [string, Record<string, string>][]): [string[]
   return [queryParts, params];
 }
 
-function handleFieldFilter(field: string, value: Any, paramNumber = 1): [string, Record<string, Any>] {
-  if (typeof field !== 'string') {
-    throw new Error(`field should be a string but got: ${typeof field} with value: ${field}`);
+function handleFieldFilter(
+  field: string,
+  value: Any,
+  paramNumber = 1
+): [string, Record<string, Any>] {
+  if (typeof field !== "string") {
+    throw new Error(
+      `field should be a string but got: ${typeof field} with value: ${field}`
+    );
   }
 
   if (field.startsWith("$")) {
-    throw new Error(`Invalid filter condition. Expected a field but got an operator: ${field}`);
+    throw new Error(
+      `Invalid filter condition. Expected a field but got an operator: ${field}`
+    );
   }
 
   // Allow [a - zA - Z0 -9_], disallow $ for now until we support escape characters
   if (!IS_IDENTIFIER_REGEX.test(field)) {
-    throw new Error(`Invalid field name: ${field}. Expected a valid identifier.`);
+    throw new Error(
+      `Invalid field name: ${field}. Expected a valid identifier.`
+    );
   }
-
 
   let operator: string;
   let filterValue: Any;
 
-  if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+  if (typeof value === "object" && value !== null && !Array.isArray(value)) {
     const keys = Object.keys(value);
 
     if (keys.length !== 1) {
       throw new Error(`Invalid filter condition. Expected a value which is a dictionary
         with a single key that corresponds to an operator but got a dictionary
-        with ${keys.length} keys. The first few keys are: ${keys.slice(0, 3).join(", ")}
+        with ${keys.length} keys. The first few keys are: ${keys
+        .slice(0, 3)
+        .join(", ")}
       `);
     }
 
     // eslint-disable-next-line prefer-destructuring
     operator = keys[0];
-    filterValue = value[operator]
+    filterValue = value[operator];
 
     if (!SUPPORTED_OPERATORS.has(operator)) {
-      throw new Error(`Invalid operator: ${operator}. Expected one of ${SUPPORTED_OPERATORS}`);
+      throw new Error(
+        `Invalid operator: ${operator}. Expected one of ${SUPPORTED_OPERATORS}`
+      );
     }
   } else {
-    operator = "$eq"
-    filterValue = value
+    operator = "$eq";
+    filterValue = value;
   }
 
   if (COMPARISONS_TO_NATIVE_OPERATORS.has(operator)) {
@@ -1003,7 +1019,6 @@ function handleFieldFilter(field: string, value: Any, paramNumber = 1): [string,
     const queryParam = { [`param_${paramNumber}`]: filterValue };
 
     return [querySnippet, queryParam];
-
   } else if (operator === "$between") {
     const [low, high] = filterValue;
     const querySnippet = `$param_${paramNumber}_low <= n.${field} <= $param_${paramNumber}_high`;
@@ -1013,11 +1028,14 @@ function handleFieldFilter(field: string, value: Any, paramNumber = 1): [string,
     };
 
     return [querySnippet, queryParam];
-
   } else if (["$in", "$nin", "$like", "$ilike"].includes(operator)) {
     if (["$in", "$nin"].includes(operator)) {
       filterValue.forEach((val: any) => {
-        if (typeof val !== 'string' && typeof val !== 'number' && typeof val !== 'boolean') {
+        if (
+          typeof val !== "string" &&
+          typeof val !== "number" &&
+          typeof val !== "boolean"
+        ) {
           throw new Error(`Unsupported type: ${typeof val} for value: ${val}`);
         }
       });
@@ -1047,7 +1065,9 @@ function handleFieldFilter(field: string, value: Any, paramNumber = 1): [string,
   }
 }
 
-function constructMetadataFilter(filter: Record<string, Any>): [string, Record<string, Any>] {
+function constructMetadataFilter(
+  filter: Record<string, Any>
+): [string, Record<string, Any>] {
   if (typeof filter !== "object" || filter === null) {
     throw new Error("Expected a dictionary representing the filter condition.");
   }
@@ -1059,38 +1079,49 @@ function constructMetadataFilter(filter: Record<string, Any>): [string, Record<s
 
     if (key.startsWith("$")) {
       if (!["$and", "$or"].includes(key.toLowerCase())) {
-        throw new Error(`Invalid filter condition. Expected $and or $or but got: ${key}`);
+        throw new Error(
+          `Invalid filter condition. Expected $and or $or but got: ${key}`
+        );
       }
 
       if (!Array.isArray(value)) {
-        throw new Error(`Expected an array for logical conditions, but got ${typeof value} for value: ${value}`);
+        throw new Error(
+          `Expected an array for logical conditions, but got ${typeof value} for value: ${value}`
+        );
       }
 
       const operation = key.toLowerCase() === "$and" ? "AND" : "OR";
-      const combinedQueries = combineQueries(value.map(v => constructMetadataFilter(v)), operation);
+      const combinedQueries = combineQueries(
+        value.map((v) => constructMetadataFilter(v)),
+        operation
+      );
 
       return combinedQueries;
     } else {
       return handleFieldFilter(key, value);
     }
-
   } else if (entries.length > 1) {
     for (const [key] of entries) {
       if (key.startsWith("$")) {
-        throw new Error(`Invalid filter condition. Expected a field but got an operator: ${key}`);
+        throw new Error(
+          `Invalid filter condition. Expected a field but got an operator: ${key}`
+        );
       }
     }
 
     const and_multiple = collectParams(
-      entries.map(([field, val], index) => handleFieldFilter(field, val, index + 1))
+      entries.map(([field, val], index) =>
+        handleFieldFilter(field, val, index + 1)
+      )
     );
 
     if (and_multiple.length >= 1) {
-      return [and_multiple[0].join(" AND "), and_multiple[1]]
+      return [and_multiple[0].join(" AND "), and_multiple[1]];
     } else {
-      throw Error("Invalid filter condition. Expected a dictionary but got an empty dictionary")
+      throw Error(
+        "Invalid filter condition. Expected a dictionary but got an empty dictionary"
+      );
     }
-
   } else {
     throw new Error("Filter condition contains no entries.");
   }

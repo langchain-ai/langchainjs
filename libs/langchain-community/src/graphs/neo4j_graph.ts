@@ -255,7 +255,7 @@ export class Neo4jGraph {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (el: any) =>
             JSON.stringify(el.labelsOrTypes) ===
-            JSON.stringify([BASE_ENTITY_LABEL]) &&
+              JSON.stringify([BASE_ENTITY_LABEL]) &&
             JSON.stringify(el.properties) === JSON.stringify(["id"])
         ) ?? false;
 

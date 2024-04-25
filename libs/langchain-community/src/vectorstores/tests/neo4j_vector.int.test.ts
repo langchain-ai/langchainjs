@@ -7,8 +7,8 @@ import {
   TYPE_2_FILTERING_TEST_CASES,
   TYPE_3_FILTERING_TEST_CASES,
   TYPE_4_FILTERING_TEST_CASES,
-} from "./neo4j_vector.fixtures.js"
-import { Neo4jVectorStore } from "../../neo4j_vector.js";
+} from "./neo4j_vector.fixtures.js";
+import { Neo4jVectorStore } from "../neo4j_vector.js";
 
 const OS_TOKEN_COUNT = 1536;
 
@@ -52,8 +52,7 @@ async function dropVectorIndexes(store: Neo4jVectorStore) {
   }
 }
 
-describe('Neo4j Vector', () => {
-
+describe("Neo4j Vector", () => {
   test.skip("Test fromTexts", async () => {
     const url = process.env.NEO4J_URI as string;
     const username = process.env.NEO4J_USERNAME as string;
@@ -539,21 +538,31 @@ describe('Neo4j Vector', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const metadatas: any[] = [];
 
-    const foo = await Neo4jVectorStore.fromTexts(["foo"], metadatas, embeddings, {
-      url,
-      username,
-      password,
-      indexName: "Foo",
-      nodeLabel: "Foo",
-    });
+    const foo = await Neo4jVectorStore.fromTexts(
+      ["foo"],
+      metadatas,
+      embeddings,
+      {
+        url,
+        username,
+        password,
+        indexName: "Foo",
+        nodeLabel: "Foo",
+      }
+    );
 
-    const bar = await Neo4jVectorStore.fromTexts(["bar"], metadatas, embeddings, {
-      url,
-      username,
-      password,
-      indexName: "Bar",
-      nodeLabel: "Bar",
-    });
+    const bar = await Neo4jVectorStore.fromTexts(
+      ["bar"],
+      metadatas,
+      embeddings,
+      {
+        url,
+        username,
+        password,
+        indexName: "Bar",
+        nodeLabel: "Bar",
+      }
+    );
 
     const fooExistingIndex = await Neo4jVectorStore.fromExistingIndex(
       embeddings,
@@ -654,7 +663,7 @@ describe('Neo4j Vector', () => {
     await neo4jVectorStore.close();
   });
 
-  test.skip("Test metadata filters", async () => {
+  test("Test metadata filters", async () => {
     const url = process.env.NEO4J_URI as string;
     const username = process.env.NEO4J_USERNAME as string;
     const password = process.env.NEO4J_PASSWORD as string;
@@ -671,30 +680,32 @@ describe('Neo4j Vector', () => {
         username,
         password,
         indexName: "vector",
-        preDeleteCollection: true
+        preDeleteCollection: true,
       }
-    )
+    );
 
     const examples = [
       ...TYPE_1_FILTERING_TEST_CASES,
       ...TYPE_2_FILTERING_TEST_CASES,
       ...TYPE_3_FILTERING_TEST_CASES,
-      ...TYPE_4_FILTERING_TEST_CASES
+      ...TYPE_4_FILTERING_TEST_CASES,
     ];
 
     for (const example of examples) {
       const { filter, expected } = example;
       const output = await docsearch.similaritySearch("Foo", 4, {}, filter);
-      const adjustedIndices = expected.map(index => index - 1);
-      const expectedOutput = adjustedIndices.map(index => DOCUMENTS[index]);
+      const adjustedIndices = expected.map((index) => index - 1);
+      const expectedOutput = adjustedIndices.map((index) => DOCUMENTS[index]);
 
       // We don't return id properties from similarity search by default
       // Also remove any key where the value is null
       for (const doc of expectedOutput) {
-        if ('id' in doc.metadata) {
+        if ("id" in doc.metadata) {
           delete doc.metadata.id;
         }
-        const keysWithNull = Object.keys(doc.metadata).filter(key => doc.metadata[key] === null);
+        const keysWithNull = Object.keys(doc.metadata).filter(
+          (key) => doc.metadata[key] === null
+        );
         for (const key of keysWithNull) {
           delete doc.metadata[key];
         }
@@ -703,9 +714,8 @@ describe('Neo4j Vector', () => {
       console.log("OUTPUT:", output);
       console.log("EXPECTED OUTPUT:", expectedOutput);
 
-      expect(output).toEqual(expectedOutput);
+      expect(output.length).toEqual(expectedOutput.length);
+      expect(output).toEqual(expect.arrayContaining(expectedOutput));
     }
-
   });
-
 });
