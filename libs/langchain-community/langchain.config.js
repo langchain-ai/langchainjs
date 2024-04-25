@@ -13,6 +13,7 @@ export const config = {
   internals: [
     /node\:/,
     /@langchain\/core\//,
+    /langchain\//,
     "convex",
     "convex/server",
     "convex/values",
