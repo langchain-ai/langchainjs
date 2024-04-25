@@ -249,7 +249,7 @@ export class WeaviateStore extends VectorStore {
       let batchDeleter = this.client.batch
         .objectsBatchDeleter()
         .withClassName(this.indexName)
-        .withWhere(filter.where);
+        .withWhere(filter.where as WhereFilter);
 
       if (this.tenant) {
         batchDeleter = batchDeleter.withTenant(this.tenant);
