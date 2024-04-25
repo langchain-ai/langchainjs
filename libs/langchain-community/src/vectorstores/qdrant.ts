@@ -6,6 +6,9 @@ import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
+const CONTENT_KEY = "content";
+const METADATA_KEY = "metadata";
+
 /**
  * Interface for the arguments that can be passed to the
  * `QdrantVectorStore` constructor. It includes options for specifying a
@@ -20,6 +23,8 @@ export interface QdrantLibArgs {
   collectionConfig?: QdrantSchemas["CreateCollection"];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   customPayload?: Record<string, any>[];
+  contentPayloadKey?: string;
+  metadataPayloadKey?: string;
 }
 
 export type QdrantAddDocumentOptions = {
@@ -63,6 +68,10 @@ export class QdrantVectorStore extends VectorStore {
 
   collectionConfig?: QdrantSchemas["CreateCollection"];
 
+  contentPayloadKey: string;
+
+  metadataPayloadKey: string;
+
   _vectorstoreType(): string {
     return "qdrant";
   }
@@ -87,6 +96,10 @@ export class QdrantVectorStore extends VectorStore {
     this.collectionName = args.collectionName ?? "documents";
 
     this.collectionConfig = args.collectionConfig;
+
+    this.contentPayloadKey = args.contentPayloadKey ?? CONTENT_KEY;
+
+    this.metadataPayloadKey = args.metadataPayloadKey ?? METADATA_KEY;
   }
 
   /**
@@ -133,8 +146,8 @@ export class QdrantVectorStore extends VectorStore {
       id: uuid(),
       vector: embedding,
       payload: {
-        content: documents[idx].pageContent,
-        metadata: documents[idx].metadata,
+        [this.contentPayloadKey]: documents[idx].pageContent,
+        [this.metadataPayloadKey]: documents[idx].metadata,
         customPayload: documentOptions?.customPayload[idx],
       },
     }));
@@ -185,8 +198,9 @@ export class QdrantVectorStore extends VectorStore {
       results as QdrantSearchResponse[]
     ).map((res) => [
       new Document({
-        metadata: res.payload.metadata,
-        pageContent: res.payload.content,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        metadata: res.payload[this.metadataPayloadKey] as Record<string, any>,
+        pageContent: res.payload[this.contentPayloadKey] as string,
       }),
       res.score,
     ]);
