@@ -78,7 +78,7 @@ test.skip("Chroma Store Self Query Retriever Test", async () => {
   const vectorStore = await Chroma.fromDocuments(docs, embeddings, {
     collectionName: "a-movie-collection",
   });
-  const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+  const selfQueryRetriever = SelfQueryRetriever.fromLLM({
     llm,
     vectorStore,
     documentContents,

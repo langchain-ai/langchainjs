@@ -1,10 +1,11 @@
 ---
 sidebar_label: Google Vertex AI
+keywords: [gemini, gemini-pro, ChatVertexAI, vertex]
 ---
 
 import CodeBlock from "@theme/CodeBlock";
 
-# ChatGoogleVertexAI
+# ChatVertexAI
 
 LangChain.js supports Google Vertex AI chat models as an integration.
 It supports two different methods of authentication based on whether you're running
@@ -14,7 +15,19 @@ in a Node environment or a web environment.
 
 ### Node
 
-To call Vertex AI models in Node, you'll need to install [Google's official auth client](https://www.npmjs.com/package/google-auth-library) as a peer dependency.
+To call Vertex AI models in Node, you'll need to install the `@langchain/google-vertexai` package:
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/google-vertexai
+```
+
+import UnifiedModelParamsTooltip from "@mdx_components/unified_model_params_tooltip.mdx";
+
+<UnifiedModelParamsTooltip></UnifiedModelParamsTooltip>
 
 You should make sure the Vertex AI API is
 enabled for the relevant project and that you've authenticated to
@@ -28,21 +41,19 @@ Google Cloud using one of these methods:
   to the project and set the `GOOGLE_APPLICATION_CREDENTIALS` environment
   variable to the path of this file.
 
-import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
-
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm install google-auth-library @langchain/community
+npm install @langchain/google-vertexai
 ```
 
 ### Web
 
 To call Vertex AI models in web environments (like Edge functions), you'll need to install
-the [`web-auth-library`](https://github.com/kriasoft/web-auth-library) pacakge as a peer dependency:
+the `@langchain/google-vertexai-web` package:
 
 ```bash npm2yarn
-npm install web-auth-library
+npm install @langchain/google-vertexai-web
 ```
 
 Then, you'll need to add your service account credentials directly as a `GOOGLE_VERTEX_AI_WEB_CREDENTIALS` environment variable:
@@ -51,12 +62,12 @@ Then, you'll need to add your service account credentials directly as a `GOOGLE_
 GOOGLE_VERTEX_AI_WEB_CREDENTIALS={"type":"service_account","project_id":"YOUR_PROJECT-12345",...}
 ```
 
-You can also pass your credentials directly in code like this:
+Lastly, you may also pass your credentials directly in code like this:
 
 ```typescript
-import { ChatGoogleVertexAI } from "@langchain/community/chat_models/googlevertexai";
+import { ChatVertexAI } from "@langchain/google-vertexai-web";
 
-const model = new ChatGoogleVertexAI({
+const model = new ChatVertexAI({
   authOptions: {
     credentials: {"type":"service_account","project_id":"YOUR_PROJECT-12345",...},
   },
@@ -65,37 +76,63 @@ const model = new ChatGoogleVertexAI({
 
 ## Usage
 
-Several models are available and can be specified by the `model` attribute
-in the constructor. These include:
+The entire family of `gemini` models are available by specifying the `modelName` parameter.
 
-- code-bison (default)
-- code-bison-32k
+For example:
 
-The ChatGoogleVertexAI class works just like other chat-based LLMs,
-with a few exceptions:
+import ChatVertexAI from "@examples/models/chat/integration_googlevertexai.ts";
 
-1. The first `SystemMessage` passed in is mapped to the "context" parameter that the PaLM model expects.
-   No other `SystemMessages` are allowed.
-2. After the first `SystemMessage`, there must be an odd number of messages, representing a conversation between a human and the model.
-3. Human messages must alternate with AI messages.
+<CodeBlock language="typescript">{ChatVertexAI}</CodeBlock>
 
-import ChatGoogleVertexAI from "@examples/models/chat/integration_googlevertexai.ts";
-
-<CodeBlock language="typescript">{ChatGoogleVertexAI}</CodeBlock>
+:::tip
+See the LangSmith trace for the example above [here](https://smith.langchain.com/public/9fb579d8-4987-4302-beca-29a684ae2f4c/r).
+:::
 
 ### Streaming
 
-ChatGoogleVertexAI also supports streaming in multiple chunks for faster responses:
+`ChatVertexAI` also supports streaming in multiple chunks for faster responses:
 
-import ChatGoogleVertexAIStreaming from "@examples/models/chat/integration_googlevertexai-streaming.ts";
+import ChatVertexAIStreaming from "@examples/models/chat/integration_googlevertexai-streaming.ts";
 
-<CodeBlock language="typescript">{ChatGoogleVertexAIStreaming}</CodeBlock>
+<CodeBlock language="typescript">{ChatVertexAIStreaming}</CodeBlock>
 
-### Examples
+:::tip
+See the LangSmith trace for the example above [here](https://smith.langchain.com/public/ba4cb190-3f60-49aa-a6f8-7d31316d94cf/r).
+:::
 
-There is also an optional `examples` constructor parameter that can help the model understand what an appropriate response
-looks like.
+### Tool calling
 
-import ChatGoogleVertexAIExamples from "@examples/models/chat/integration_googlevertexai-examples.ts";
+`ChatVertexAI` also supports calling the model with a tool:
 
-<CodeBlock language="typescript">{ChatGoogleVertexAIExamples}</CodeBlock>
+import ChatVertexAITool from "@examples/models/chat/integration_googlevertexai-tools.ts";
+
+<CodeBlock language="typescript">{ChatVertexAITool}</CodeBlock>
+
+:::tip
+See the LangSmith trace for the example above [here](https://smith.langchain.com/public/49e1c32c-395a-45e2-afba-913aa3389137/r).
+:::
+
+### `withStructuredOutput`
+
+Alternatively, you can also use the `withStructuredOutput` method:
+
+import ChatVertexAIWSA from "@examples/models/chat/integration_googlevertexai-wsa.ts";
+
+<CodeBlock language="typescript">{ChatVertexAIWSA}</CodeBlock>
+
+:::tip
+See the LangSmith trace for the example above [here](https://smith.langchain.com/public/41bbbddb-f357-4bfa-a111-def8294a4514/r).
+:::
+
+### VertexAI tools agent
+
+The Gemini family of models not only support tool calling, but can also be used in the [Tool Calling agent](/docs/modules/agents/agent_types/tool_calling/).
+Here's an example:
+
+import AgentsExample from "@examples/models/chat/chat_vertexai_agents.ts";
+
+<CodeBlock language="typescript">{AgentsExample}</CodeBlock>
+
+:::tip
+See the LangSmith trace for the agent example above [here](https://smith.langchain.com/public/5615ee35-ba76-433b-8639-9b321cb6d4bf/r).
+:::

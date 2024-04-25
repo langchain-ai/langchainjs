@@ -1,4 +1,6 @@
 import type { BaseLLMParams } from "@langchain/core/language_models/llms";
+import { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
+import { StructuredToolInterface } from "@langchain/core/tools";
 import type { JsonStream } from "./utils/stream.js";
 
 /**
@@ -48,6 +50,11 @@ export interface GoogleAISafetySetting {
 export interface GoogleAIModelParams {
   /** Model to use */
   model?: string;
+  /**
+   * Model to use
+   * Alias for `model`
+   */
+  modelName?: string;
 
   /** Sampling temperature to use */
   temperature?: number;
@@ -82,12 +89,26 @@ export interface GoogleAIModelParams {
   stopSequences?: string[];
 
   safetySettings?: GoogleAISafetySetting[];
+
+  convertSystemMessageToHumanContent?: boolean;
+}
+
+/**
+ * The params which can be passed to the API at request time.
+ */
+export interface GoogleAIModelRequestParams extends GoogleAIModelParams {
+  tools?: StructuredToolInterface[] | GeminiTool[];
 }
 
 export interface GoogleAIBaseLLMInput<AuthOptions>
   extends BaseLLMParams,
     GoogleConnectionParams<AuthOptions>,
     GoogleAIModelParams,
+    GoogleAISafetyParams {}
+
+export interface GoogleAIBaseLanguageModelCallOptions
+  extends BaseLanguageModelCallOptions,
+    GoogleAIModelRequestParams,
     GoogleAISafetyParams {}
 
 /**
@@ -148,14 +169,13 @@ export interface GeminiSafetySetting {
   threshold: string;
 }
 
-export interface GeminiSafetyRating {
+export type GeminiSafetyRating = {
   category: string;
   probability: string;
-}
+} & Record<string, unknown>;
 
-export type GeminiRole = "user" | "model";
-
-// Vertex AI requires the role
+// The "system" content appears to only be valid in the systemInstruction
+export type GeminiRole = "system" | "user" | "model" | "function";
 
 export interface GeminiContent {
   parts: GeminiPart[];
@@ -163,8 +183,33 @@ export interface GeminiContent {
 }
 
 export interface GeminiTool {
-  // TODO: Implement
+  functionDeclarations?: GeminiFunctionDeclaration[];
 }
+
+export interface GeminiFunctionDeclaration {
+  name: string;
+  description: string;
+  parameters?: GeminiFunctionSchema;
+}
+
+export interface GeminiFunctionSchema {
+  type: GeminiFunctionSchemaType;
+  format?: string;
+  description?: string;
+  nullable?: boolean;
+  enum?: string[];
+  properties?: Record<string, GeminiFunctionSchema>;
+  required?: string[];
+  items?: GeminiFunctionSchema;
+}
+
+export type GeminiFunctionSchemaType =
+  | "string"
+  | "number"
+  | "integer"
+  | "boolean"
+  | "array"
+  | "object";
 
 export interface GeminiGenerationConfig {
   stopSequences?: string[];
@@ -177,6 +222,7 @@ export interface GeminiGenerationConfig {
 
 export interface GeminiRequest {
   contents?: GeminiContent[];
+  systemInstruction?: GeminiContent;
   tools?: GeminiTool[];
   safetySettings?: GeminiSafetySetting[];
   generationConfig?: GeminiGenerationConfig;
@@ -201,6 +247,7 @@ interface GeminiResponsePromptFeedback {
 export interface GenerateContentResponseData {
   candidates: GeminiResponseCandidate[];
   promptFeedback: GeminiResponsePromptFeedback;
+  usageMetadata: Record<string, unknown>;
 }
 
 export type GoogleLLMModelFamily = null | "palm" | "gemini";

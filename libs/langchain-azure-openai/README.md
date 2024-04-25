@@ -19,7 +19,7 @@ You can do so by adding appropriate fields to your project's `package.json` like
   "name": "your-project",
   "version": "0.0.0",
   "dependencies": {
-    "@langchain/openai": "^0.0.9",
+    "@langchain/azure-openai": "^0.0.4",
     "langchain": "0.0.207"
   },
   "resolutions": {
@@ -56,7 +56,6 @@ Then initialize the model and make the calls:
 import { AzureChatOpenAI } from "@langchain/azure-openai";
 
 const model = new AzureChatOpenAI({
-  modelName: "gpt-4-1106-preview",
   // Note that the following are optional, and will default to the values below
   // if not provided.
   azureOpenAIEndpoint: process.env.AZURE_OPENAI_API_ENDPOINT,
@@ -72,7 +71,6 @@ const response = await model.invoke(new HumanMessage("Hello world!"));
 import { AzureChatOpenAI } from "@langchain/azure-openai";
 
 const model = new AzureChatOpenAI({
-  modelName: "gpt-4-1106-preview",
   // Note that the following are optional, and will default to the values below
   // if not provided.
   azureOpenAIEndpoint: process.env.AZURE_OPENAI_API_ENDPOINT,
@@ -94,9 +92,39 @@ const embeddings = new AzureOpenAIEmbeddings({
   // if not provided.
   azureOpenAIEndpoint: process.env.AZURE_OPENAI_API_ENDPOINT,
   azureOpenAIApiKey: process.env.AZURE_OPENAI_API_KEY,
-  azureOpenAIApiDeploymentName: process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME,
+  azureOpenAIApiDeploymentName: process.env.AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME,
 });
 const res = await embeddings.embedQuery("Hello world");
+```
+
+## Using Azure managed identity
+
+If you're using [Azure Managed Identity](https://learn.microsoft.com/azure/ai-services/openai/how-to/managed-identity), you can also pass the credentials directly to the constructor:
+
+```typescript
+import { DefaultAzureCredential } from "@azure/identity";
+import { AzureOpenAI } from "@langchain/azure-openai";
+
+const credentials = new DefaultAzureCredential();
+
+const model = new AzureOpenAI({
+  credentials,
+  azureOpenAIEndpoint: process.env.AZURE_OPENAI_API_ENDPOINT,
+  azureOpenAIApiDeploymentName: process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME,
+});
+```
+
+## Compatibility with OpenAI API
+
+This library is provides compatibility with the OpenAI API. You can use an API key from OpenAI's developer portal like in the example below:
+
+```typescript
+import { AzureOpenAI, OpenAIKeyCredential } from "@langchain/azure-openai";
+
+const model = new AzureOpenAI({
+  modelName: "gpt-3.5-turbo",
+  credentials: new OpenAIKeyCredential("<your_openai_api_key>"),
+});
 ```
 
 ## Development

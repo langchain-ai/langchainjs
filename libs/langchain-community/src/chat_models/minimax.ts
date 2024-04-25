@@ -96,10 +96,17 @@ export declare interface ConfigurationParameters {
  * Interface defining the input to the ChatMinimax class.
  */
 declare interface MinimaxChatInputBase {
-  /** Model name to use
+  /**
+   * Model name to use
+   * Alias for `model`
    * @default "abab5.5-chat"
    */
   modelName: string;
+  /**
+   * Model name to use
+   * @default "abab5.5-chat"
+   */
+  model: string;
 
   /** Whether to stream the results or not. Defaults to false. */
   streaming?: boolean;
@@ -115,8 +122,14 @@ declare interface MinimaxChatInputBase {
   /**
    * Secret key to use when making requests. Defaults to the value of
    * `MINIMAX_API_KEY` environment variable.
+   * Alias for `apiKey`
    */
   minimaxApiKey?: string;
+  /**
+   * Secret key to use when making requests. Defaults to the value of
+   * `MINIMAX_API_KEY` environment variable.
+   */
+  apiKey?: string;
 
   /** Amount of randomness injected into the response. Ranges
    * from 0 to 1 (0 is not included). Use temp closer to 0 for analytical /
@@ -326,6 +339,7 @@ export class ChatMinimax
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       minimaxApiKey: "MINIMAX_API_KEY",
+      apiKey: "MINIMAX_API_KEY",
       minimaxGroupId: "MINIMAX_GROUP_ID",
     };
   }
@@ -336,11 +350,15 @@ export class ChatMinimax
 
   minimaxApiKey?: string;
 
+  apiKey?: string;
+
   streaming = false;
 
   prompt?: string;
 
   modelName = "abab5.5-chat";
+
+  model = "abab5.5-chat";
 
   defaultBotName?: string = "Assistant";
 
@@ -393,11 +411,14 @@ export class ChatMinimax
     }
 
     this.minimaxApiKey =
-      fields?.minimaxApiKey ?? getEnvironmentVariable("MINIMAX_API_KEY");
+      fields?.apiKey ??
+      fields?.minimaxApiKey ??
+      getEnvironmentVariable("MINIMAX_API_KEY");
 
     if (!this.minimaxApiKey) {
       throw new Error("Minimax ApiKey not found");
     }
+    this.apiKey = this.minimaxApiKey;
 
     this.streaming = fields?.streaming ?? this.streaming;
     this.prompt = fields?.prompt ?? this.prompt;
@@ -417,7 +438,8 @@ export class ChatMinimax
     this.replyConstraints = fields?.replyConstraints ?? this.replyConstraints;
     this.defaultBotName = fields?.defaultBotName ?? this.defaultBotName;
 
-    this.modelName = fields?.modelName ?? this.modelName;
+    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
+    this.model = this.modelName;
     this.basePath = fields?.configuration?.basePath ?? this.basePath;
     this.headers = fields?.configuration?.headers ?? this.headers;
     this.proVersion = fields?.proVersion ?? this.proVersion;
@@ -460,7 +482,7 @@ export class ChatMinimax
     options?: this["ParsedCallOptions"]
   ): Omit<MinimaxChatCompletionRequest, "messages"> {
     return {
-      model: this.modelName,
+      model: this.model,
       stream: this.streaming,
       prompt: this.prompt,
       temperature: this.temperature,
@@ -674,7 +696,7 @@ export class ChatMinimax
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${this.minimaxApiKey}`,
+          Authorization: `Bearer ${this.apiKey}`,
           ...this.headers,
         },
         body: JSON.stringify(request),

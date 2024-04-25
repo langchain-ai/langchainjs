@@ -1,8 +1,4 @@
-import {
-  APIConnectionTimeoutError,
-  APIUserAbortError,
-  type OpenAI as OpenAIClient,
-} from "openai";
+import { APIConnectionTimeoutError, APIUserAbortError } from "openai";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import type { StructuredToolInterface } from "@langchain/core/tools";
 import {
@@ -30,9 +26,7 @@ export {
   convertToOpenAITool as formatToOpenAITool,
 };
 
-export function formatToOpenAIAssistantTool(
-  tool: StructuredToolInterface
-): OpenAIClient.Beta.AssistantCreateParams.AssistantToolsFunction {
+export function formatToOpenAIAssistantTool(tool: StructuredToolInterface) {
   return {
     type: "function",
     function: {

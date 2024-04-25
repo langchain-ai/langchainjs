@@ -25,7 +25,7 @@ You can also initialize the retriever with default search parameters that apply 
 addition to the generated query:
 
 ```typescript
-const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+const selfQueryRetriever = SelfQueryRetriever.fromLLM({
   llm,
   vectorStore,
   documentContents,

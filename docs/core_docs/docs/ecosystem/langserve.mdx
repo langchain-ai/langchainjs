@@ -41,8 +41,16 @@ import Example from "@examples/ecosystem/langsmith.ts";
 
 <CodeBlock language="typescript">{Example}</CodeBlock>
 
-[`streamLog`](/docs/expression_language/interface) is a lower level method for streaming chain intermediate steps as partial JSONPatch chunks.
+[`streamEvents`](/docs/expression_language/interface) allows you to stream chain intermediate steps as events such as `on_llm_start`, and `on_chain_stream`.
+See the [table here](/docs/expression_language/interface#stream-events) for a full list of events you can handle.
 This method allows for a few extra options as well to only include or exclude certain named steps:
+
+import StreamEventsExample from "@examples/ecosystem/langsmith_stream_events.ts";
+
+<CodeBlock language="typescript">{StreamEventsExample}</CodeBlock>
+
+[`streamLog`](/docs/expression_language/interface) is a lower level method for streaming chain intermediate steps as partial JSONPatch chunks.
+Like `streamEvents`, this method also allows for a few extra options as well to only include or exclude certain named steps:
 
 import StreamLogExample from "@examples/ecosystem/langsmith_stream_log.ts";
 

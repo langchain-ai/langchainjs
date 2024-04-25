@@ -190,7 +190,7 @@ export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
-      undefined,
+      config?.runId,
       undefined,
       undefined,
       undefined,

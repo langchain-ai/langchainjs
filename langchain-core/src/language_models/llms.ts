@@ -49,6 +49,7 @@ interface LLMGenerateCachedParameters<
   llmStringKey: string;
   parsedOptions: T["ParsedCallOptions"];
   handledOptions: RunnableConfig;
+  runId?: string;
 }
 
 /**
@@ -140,7 +141,7 @@ export abstract class BaseLLM<
       const runManagers = await callbackManager_?.handleLLMStart(
         this.toJSON(),
         [prompt.toString()],
-        undefined,
+        runnableConfig.runId,
         undefined,
         extra,
         undefined,
@@ -268,7 +269,7 @@ export abstract class BaseLLM<
     const runManagers = await callbackManager_?.handleLLMStart(
       this.toJSON(),
       prompts,
-      undefined,
+      handledOptions.runId,
       undefined,
       extra,
       undefined,
@@ -309,6 +310,7 @@ export abstract class BaseLLM<
     llmStringKey,
     parsedOptions,
     handledOptions,
+    runId,
   }: LLMGenerateCachedParameters<typeof this>): Promise<
     LLMResult & { missingPromptIndices: number[] }
   > {
@@ -330,7 +332,7 @@ export abstract class BaseLLM<
     const runManagers = await callbackManager_?.handleLLMStart(
       this.toJSON(),
       prompts,
-      undefined,
+      runId,
       undefined,
       extra,
       undefined,
@@ -435,6 +437,7 @@ export abstract class BaseLLM<
       llmStringKey,
       parsedOptions: callOptions,
       handledOptions: runnableConfig,
+      runId: runnableConfig.runId,
     });
 
     let llmOutput = {};

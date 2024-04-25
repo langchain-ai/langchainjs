@@ -6,56 +6,6 @@ LangChain.js supports integration with [Azure OpenAI](https://azure.microsoft.co
 
 You can learn more about Azure OpenAI and its difference with the OpenAI API on [this page](https://learn.microsoft.com/azure/ai-services/openai/overview). If you don't have an Azure account, you can [create a free account](https://azure.microsoft.com/free/) to get started.
 
-## Using the OpenAI SDK
-
-You can also use the `OpenAI` class to call OpenAI models hosted on Azure.
-
-For example, if your Azure instance is hosted under `https://{MY_INSTANCE_NAME}.openai.azure.com/openai/deployments/{DEPLOYMENT_NAME}`, you could initialize your instance like this:
-
-import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
-
-<IntegrationInstallTooltip></IntegrationInstallTooltip>
-
-```bash npm2yarn
-npm install @langchain/openai
-```
-
-```typescript
-import { OpenAI } from "@langchain/openai";
-
-const model = new OpenAI({
-  temperature: 0.9,
-  azureOpenAIApiKey: "YOUR-API-KEY",
-  azureOpenAIApiVersion: "YOUR-API-VERSION",
-  azureOpenAIApiInstanceName: "{MY_INSTANCE_NAME}",
-  azureOpenAIApiDeploymentName: "{DEPLOYMENT_NAME}",
-});
-const res = await model.invoke(
-  "What would be a good company name for a company that makes colorful socks?"
-);
-console.log({ res });
-```
-
-If your instance is hosted under a domain other than the default `openai.azure.com`, you'll need to use the alternate `AZURE_OPENAI_BASE_PATH` environment variable.
-For example, here's how you would connect to the domain `https://westeurope.api.microsoft.com/openai/deployments/{DEPLOYMENT_NAME}`:
-
-```typescript
-import { OpenAI } from "@langchain/openai";
-
-const model = new OpenAI({
-  temperature: 0.9,
-  azureOpenAIApiKey: "YOUR-API-KEY",
-  azureOpenAIApiVersion: "YOUR-API-VERSION",
-  azureOpenAIApiDeploymentName: "{DEPLOYMENT_NAME}",
-  azureOpenAIBasePath:
-    "https://westeurope.api.microsoft.com/openai/deployments", // In Node.js defaults to process.env.AZURE_OPENAI_BASE_PATH
-});
-const res = await model.invoke(
-  "What would be a good company name for a company that makes colorful socks?"
-);
-console.log({ res });
-```
-
 ## Using the Azure OpenAI SDK
 
 You'll first need to install the [`@langchain/azure-openai`](https://www.npmjs.com/package/@langchain/azure-openai) package:
@@ -65,6 +15,10 @@ You'll first need to install the [`@langchain/azure-openai`](https://www.npmjs.c
 ```bash npm2yarn
 npm install -S @langchain/azure-openai
 ```
+
+import UnifiedModelParamsTooltip from "@mdx_components/unified_model_params_tooltip.mdx";
+
+<UnifiedModelParamsTooltip></UnifiedModelParamsTooltip>
 
 You'll also need to have an Azure OpenAI instance deployed. You can deploy a version on Azure Portal following [this guide](https://learn.microsoft.com/azure/ai-services/openai/how-to/create-resource?pivots=web-portal).
 
@@ -85,9 +39,8 @@ import { AzureOpenAI } from "@langchain/azure-openai";
 
 const model = new AzureOpenAI({
   azureOpenAIEndpoint: "<your_endpoint>",
-  azureOpenAIApiKey: "<your_key>",
+  apiKey: "<your_key>",
   azureOpenAIApiDeploymentName: "<your_deployment_name",
-  modelName: "<your_model>",
 });
 ```
 
@@ -103,7 +56,22 @@ const model = new AzureOpenAI({
   credentials,
   azureOpenAIEndpoint: "<your_endpoint>",
   azureOpenAIApiDeploymentName: "<your_deployment_name",
-  modelName: "<your_model>",
+});
+```
+
+If you're using Azure Managed Identity, you can also pass the credentials directly to the constructor:
+
+```typescript
+import { DefaultAzureCredential } from "@azure/identity";
+import { AzureOpenAI } from "@langchain/azure-openai";
+
+const credentials = new DefaultAzureCredential();
+
+const model = new AzureOpenAI({
+  credentials,
+  azureOpenAIEndpoint: "<your_endpoint>",
+  azureOpenAIApiDeploymentName: "<your_deployment_name",
+  model: "<your_model>",
 });
 ```
 
@@ -113,3 +81,59 @@ import CodeBlock from "@theme/CodeBlock";
 import LLMExample from "@examples/llms/azure_openai.ts";
 
 <CodeBlock language="text">{LLMExample}</CodeBlock>
+
+### Chat usage example
+
+import ChatExample from "@examples/llms/azure_openai-chat.ts";
+
+<CodeBlock language="text">{ChatExample}</CodeBlock>
+
+## Using OpenAI SDK
+
+You can also use the `OpenAI` class to call OpenAI models hosted on Azure.
+
+For example, if your Azure instance is hosted under `https://{MY_INSTANCE_NAME}.openai.azure.com/openai/deployments/{DEPLOYMENT_NAME}`, you could initialize your instance like this:
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
+```typescript
+import { OpenAI } from "@langchain/openai";
+
+const model = new OpenAI({
+  temperature: 0.9,
+  apiKey: "YOUR-API-KEY",
+  azureOpenAIApiVersion: "YOUR-API-VERSION",
+  azureOpenAIApiInstanceName: "{MY_INSTANCE_NAME}",
+  azureOpenAIApiDeploymentName: "{DEPLOYMENT_NAME}",
+});
+const res = await model.invoke(
+  "What would be a good company name for a company that makes colorful socks?"
+);
+console.log({ res });
+```
+
+If your instance is hosted under a domain other than the default `openai.azure.com`, you'll need to use the alternate `AZURE_OPENAI_BASE_PATH` environment variable.
+For example, here's how you would connect to the domain `https://westeurope.api.microsoft.com/openai/deployments/{DEPLOYMENT_NAME}`:
+
+```typescript
+import { OpenAI } from "@langchain/openai";
+
+const model = new OpenAI({
+  temperature: 0.9,
+  apiKey: "YOUR-API-KEY",
+  azureOpenAIApiVersion: "YOUR-API-VERSION",
+  azureOpenAIApiDeploymentName: "{DEPLOYMENT_NAME}",
+  azureOpenAIBasePath:
+    "https://westeurope.api.microsoft.com/openai/deployments", // In Node.js defaults to process.env.AZURE_OPENAI_BASE_PATH
+});
+const res = await model.invoke(
+  "What would be a good company name for a company that makes colorful socks?"
+);
+console.log({ res });
+```

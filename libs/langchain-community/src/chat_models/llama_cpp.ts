@@ -120,7 +120,8 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
   /** @ignore */
   async _call(
     messages: BaseMessage[],
-    options: this["ParsedCallOptions"]
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
     let prompt = "";
 
@@ -141,7 +142,11 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
 
     try {
       const promptOptions = {
-        onToken: options.onToken,
+        signal: options.signal,
+        onToken: async (tokens: number[]) => {
+          options.onToken?.(tokens);
+          await runManager?.handleLLMNewToken(this._context.decode(tokens));
+        },
         maxTokens: this?.maxTokens,
         temperature: this?.temperature,
         topK: this?.topK,
@@ -152,6 +157,12 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
       const completion = await this._session.prompt(prompt, promptOptions);
       return completion;
     } catch (e) {
+      if (typeof e === "object") {
+        const error = e as Error;
+        if (error.message === "AbortError") {
+          throw error;
+        }
+      }
       throw new Error("Error getting prompt completion.");
     }
   }

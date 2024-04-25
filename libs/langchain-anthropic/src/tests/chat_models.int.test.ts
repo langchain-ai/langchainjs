@@ -13,7 +13,7 @@ import {
 import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { ChatAnthropic } from "../chat_models.js";
 
-test.skip("Test ChatAnthropic", async () => {
+test("Test ChatAnthropic", async () => {
   const chat = new ChatAnthropic({
     modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
@@ -21,6 +21,7 @@ test.skip("Test ChatAnthropic", async () => {
   const message = new HumanMessage("Hello!");
   const res = await chat.invoke([message]);
   console.log({ res });
+  expect(res.response_metadata.usage).toBeDefined();
 });
 
 test("Test ChatAnthropic Generate", async () => {
@@ -285,7 +286,7 @@ test("Test ChatAnthropic headers passed through", async () => {
   const chat = new ChatAnthropic({
     modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
-    anthropicApiKey: "NOT_REAL",
+    apiKey: "NOT_REAL",
     clientOptions: {
       defaultHeaders: {
         "X-Api-Key": process.env.ANTHROPIC_API_KEY,

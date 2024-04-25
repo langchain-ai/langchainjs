@@ -1,6 +1,11 @@
 ---
 sidebar_label: Anthropic Tools
+sidebar_class_name: hidden
 ---
+
+:::warning
+This API is deprecated as Anthropic now officially supports tools. [Click here to read the documentation](/docs/integrations/chat/anthropic#tools).
+:::
 
 # Anthropic Tools
 
@@ -22,13 +27,17 @@ npm install @langchain/anthropic
 
 You can initialize this wrapper the same way you'd initialize a standard `ChatAnthropic` instance:
 
+import UnifiedModelParamsTooltip from "@mdx_components/unified_model_params_tooltip.mdx";
+
+<UnifiedModelParamsTooltip></UnifiedModelParamsTooltip>
+
 ```typescript
 import { ChatAnthropicTools } from "@langchain/anthropic/experimental";
 
 const model = new ChatAnthropicTools({
   temperature: 0.1,
-  modelName: "claude-3-sonnet-20240229",
-  anthropicApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.ANTHROPIC_API_KEY
+  model: "claude-3-sonnet-20240229",
+  apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.ANTHROPIC_API_KEY
 });
 ```
 

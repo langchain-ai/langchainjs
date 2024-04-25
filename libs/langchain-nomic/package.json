@@ -1,6 +1,6 @@
 {
   "name": "@langchain/nomic",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Nomic integration for LangChain.js",
   "type": "module",
   "engines": {

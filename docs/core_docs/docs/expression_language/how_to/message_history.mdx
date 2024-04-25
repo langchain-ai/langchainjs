@@ -61,7 +61,7 @@ const prompt = ChatPromptTemplate.fromMessages([
 ]);
 
 const chain = prompt.pipe(
-  new ChatAnthropic({ modelName: "claude-3-sonnet-20240229" })
+  new ChatAnthropic({ model: "claude-3-sonnet-20240229" })
 );
 ```
 

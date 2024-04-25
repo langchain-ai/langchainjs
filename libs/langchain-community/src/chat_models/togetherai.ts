@@ -29,9 +29,15 @@ export interface ChatTogetherAIInput
     BaseChatModelParams {
   /**
    * The TogetherAI API key to use for requests.
+   * Alias for `apiKey`
    * @default process.env.TOGETHER_AI_API_KEY
    */
   togetherAIApiKey?: string;
+  /**
+   * The TogetherAI API key to use for requests.
+   * @default process.env.TOGETHER_AI_API_KEY
+   */
+  apiKey?: string;
 }
 
 /**
@@ -46,7 +52,7 @@ export interface ChatTogetherAIInput
  * ```typescript
  * const model = new ChatTogetherAI({
  *   temperature: 0.9,
- *   togetherAIApiKey: process.env.TOGETHER_AI_API_KEY,
+ *   apiKey: process.env.TOGETHER_AI_API_KEY,
  * });
  *
  * const response = await model.invoke([new HumanMessage("Hello there!")]);
@@ -65,6 +71,7 @@ export class ChatTogetherAI extends ChatOpenAI<ChatTogetherAICallOptions> {
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       togetherAIApiKey: "TOGETHER_AI_API_KEY",
+      apiKey: "TOGETHER_AI_API_KEY",
     };
   }
 
@@ -74,10 +81,21 @@ export class ChatTogetherAI extends ChatOpenAI<ChatTogetherAICallOptions> {
     fields?: Partial<
       Omit<OpenAIChatInput, "openAIApiKey" | TogetherAIUnsupportedArgs>
     > &
-      BaseChatModelParams & { togetherAIApiKey?: string }
+      BaseChatModelParams & {
+        /**
+         * Prefer `apiKey`
+         */
+        togetherAIApiKey?: string;
+        /**
+         * The TogetherAI API key to use.
+         */
+        apiKey?: string;
+      }
   ) {
     const togetherAIApiKey =
-      fields?.togetherAIApiKey || getEnvironmentVariable("TOGETHER_AI_API_KEY");
+      fields?.apiKey ||
+      fields?.togetherAIApiKey ||
+      getEnvironmentVariable("TOGETHER_AI_API_KEY");
 
     if (!togetherAIApiKey) {
       throw new Error(
@@ -87,8 +105,8 @@ export class ChatTogetherAI extends ChatOpenAI<ChatTogetherAICallOptions> {
 
     super({
       ...fields,
-      modelName: fields?.modelName || "mistralai/Mixtral-8x7B-Instruct-v0.1",
-      openAIApiKey: togetherAIApiKey,
+      model: fields?.model || "mistralai/Mixtral-8x7B-Instruct-v0.1",
+      apiKey: togetherAIApiKey,
       configuration: {
         baseURL: "https://api.together.xyz/v1/",
       },

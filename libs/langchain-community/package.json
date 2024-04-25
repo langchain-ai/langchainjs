@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.0.41",
+  "version": "0.0.52",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -15,7 +15,7 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-community/",
   "scripts": {
     "build": "yarn run build:deps && yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
-    "build:deps": "yarn run turbo:command build --filter=@langchain/core --filter=@langchain/anthropic --filter=@langchain/openai --concurrency=1",
+    "build:deps": "yarn run turbo:command build --filter=@langchain/core --filter=@langchain/openai --concurrency=1",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rm -rf dist/tests dist/**/tests",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rm -rf dist-cjs",
     "build:watch": "yarn create-entrypoints && tsc --outDir dist/ --watch",
@@ -39,13 +39,14 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1.44",
-    "@langchain/openai": "~0.0.19",
+    "@langchain/core": "~0.1.60",
+    "@langchain/openai": "~0.0.28",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
     "langsmith": "~0.1.1",
     "uuid": "^9.0.0",
-    "zod": "^3.22.3"
+    "zod": "^3.22.3",
+    "zod-to-json-schema": "^3.22.5"
   },
   "devDependencies": {
     "@aws-crypto/sha256-js": "^5.0.0",
@@ -62,7 +63,7 @@
     "@clickhouse/client": "^0.2.5",
     "@cloudflare/ai": "^1.0.12",
     "@cloudflare/workers-types": "^4.20230922.0",
-    "@datastax/astra-db-ts": "^0.1.4",
+    "@datastax/astra-db-ts": "^1.0.1",
     "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
@@ -75,9 +76,11 @@
     "@jest/globals": "^29.5.0",
     "@langchain/scripts": "~0.0",
     "@mozilla/readability": "^0.4.4",
+    "@neondatabase/serverless": "^0.9.1",
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^1.1.0",
     "@planetscale/database": "^1.8.0",
+    "@premai/prem-sdk": "^0.3.25",
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",
     "@rockset/client": "^0.9.1",
@@ -108,7 +111,7 @@
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
     "@upstash/redis": "^1.20.6",
-    "@upstash/vector": "^1.0.2",
+    "@upstash/vector": "^1.0.7",
     "@vercel/kv": "^0.2.3",
     "@vercel/postgres": "^0.5.0",
     "@writerai/writer-sdk": "^0.40.2",
@@ -118,7 +121,7 @@
     "better-sqlite3": "^9.4.0",
     "cassandra-driver": "^4.7.2",
     "cborg": "^4.1.1",
-    "chromadb": "^1.5.3",
+    "chromadb": "^1.8.1",
     "closevector-common": "0.1.3",
     "closevector-node": "0.1.6",
     "closevector-web": "0.1.6",
@@ -130,6 +133,7 @@
     "dotenv": "^16.0.3",
     "dpdm": "^3.12.0",
     "dria": "^0.0.3",
+    "duck-duck-scrape": "^2.2.5",
     "eslint": "^8.33.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^8.6.0",
@@ -142,7 +146,8 @@
     "google-auth-library": "^8.9.0",
     "googleapis": "^126.0.1",
     "graphql": "^16.6.0",
-    "hnswlib-node": "^1.4.2",
+    "hdb": "0.19.8",
+    "hnswlib-node": "^3.0.0",
     "html-to-text": "^9.0.5",
     "interface-datastore": "^8.2.11",
     "ioredis": "^5.3.2",
@@ -190,7 +195,7 @@
     "@azure/search-documents": "^12.0.0",
     "@clickhouse/client": "^0.2.5",
     "@cloudflare/ai": "*",
-    "@datastax/astra-db-ts": "^0.1.4",
+    "@datastax/astra-db-ts": "^1.0.0",
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-js": "^0.9.0",
@@ -200,9 +205,11 @@
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
     "@mozilla/readability": "*",
+    "@neondatabase/serverless": "*",
     "@opensearch-project/opensearch": "*",
     "@pinecone-database/pinecone": "*",
     "@planetscale/database": "^1.8.0",
+    "@premai/prem-sdk": "^0.3.25",
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",
     "@rockset/client": "^0.9.1",
@@ -216,7 +223,7 @@
     "@tensorflow/tfjs-converter": "*",
     "@tensorflow/tfjs-core": "*",
     "@upstash/redis": "^1.20.6",
-    "@upstash/vector": "^1.0.2",
+    "@upstash/vector": "^1.0.7",
     "@vercel/kv": "^0.2.3",
     "@vercel/postgres": "^0.5.0",
     "@writerai/writer-sdk": "^0.40.2",
@@ -235,11 +242,12 @@
     "couchbase": "^4.3.0",
     "discord.js": "^14.14.1",
     "dria": "^0.0.3",
+    "duck-duck-scrape": "^2.2.5",
     "faiss-node": "^0.5.1",
     "firebase-admin": "^11.9.0 || ^12.0.0",
     "google-auth-library": "^8.9.0",
     "googleapis": "^126.0.1",
-    "hnswlib-node": "^1.4.2",
+    "hnswlib-node": "^3.0.0",
     "html-to-text": "^9.0.5",
     "interface-datastore": "^8.2.11",
     "ioredis": "^5.3.2",
@@ -335,6 +343,9 @@
     "@mozilla/readability": {
       "optional": true
     },
+    "@neondatabase/serverless": {
+      "optional": true
+    },
     "@opensearch-project/opensearch": {
       "optional": true
     },
@@ -342,6 +353,9 @@
       "optional": true
     },
     "@planetscale/database": {
+      "optional": true
+    },
+    "@premai/prem-sdk": {
       "optional": true
     },
     "@qdrant/js-client-rest": {
@@ -438,6 +452,9 @@
       "optional": true
     },
     "dria": {
+      "optional": true
+    },
+    "duck-duck-scrape": {
       "optional": true
     },
     "faiss-node": {
@@ -603,6 +620,15 @@
       },
       "import": "./tools/brave_search.js",
       "require": "./tools/brave_search.cjs"
+    },
+    "./tools/duckduckgo_search": {
+      "types": {
+        "import": "./tools/duckduckgo_search.d.ts",
+        "require": "./tools/duckduckgo_search.d.cts",
+        "default": "./tools/duckduckgo_search.d.ts"
+      },
+      "import": "./tools/duckduckgo_search.js",
+      "require": "./tools/duckduckgo_search.cjs"
     },
     "./tools/calculator": {
       "types": {
@@ -802,6 +828,15 @@
       "import": "./embeddings/alibaba_tongyi.js",
       "require": "./embeddings/alibaba_tongyi.cjs"
     },
+    "./embeddings/baidu_qianfan": {
+      "types": {
+        "import": "./embeddings/baidu_qianfan.d.ts",
+        "require": "./embeddings/baidu_qianfan.d.cts",
+        "default": "./embeddings/baidu_qianfan.d.ts"
+      },
+      "import": "./embeddings/baidu_qianfan.js",
+      "require": "./embeddings/baidu_qianfan.cjs"
+    },
     "./embeddings/bedrock": {
       "types": {
         "import": "./embeddings/bedrock.d.ts",
@@ -910,6 +945,15 @@
       "import": "./embeddings/ollama.js",
       "require": "./embeddings/ollama.cjs"
     },
+    "./embeddings/premai": {
+      "types": {
+        "import": "./embeddings/premai.d.ts",
+        "require": "./embeddings/premai.d.cts",
+        "default": "./embeddings/premai.d.ts"
+      },
+      "import": "./embeddings/premai.js",
+      "require": "./embeddings/premai.cjs"
+    },
     "./embeddings/tensorflow": {
       "types": {
         "import": "./embeddings/tensorflow.d.ts",
@@ -1008,6 +1052,15 @@
       },
       "import": "./llms/fireworks.js",
       "require": "./llms/fireworks.cjs"
+    },
+    "./llms/friendli": {
+      "types": {
+        "import": "./llms/friendli.d.ts",
+        "require": "./llms/friendli.d.cts",
+        "default": "./llms/friendli.d.ts"
+      },
+      "import": "./llms/friendli.js",
+      "require": "./llms/friendli.cjs"
     },
     "./llms/googlepalm": {
       "types": {
@@ -1288,6 +1341,15 @@
       "import": "./vectorstores/hnswlib.js",
       "require": "./vectorstores/hnswlib.cjs"
     },
+    "./vectorstores/hanavector": {
+      "types": {
+        "import": "./vectorstores/hanavector.d.ts",
+        "require": "./vectorstores/hanavector.d.cts",
+        "default": "./vectorstores/hanavector.d.ts"
+      },
+      "import": "./vectorstores/hanavector.js",
+      "require": "./vectorstores/hanavector.cjs"
+    },
     "./vectorstores/lancedb": {
       "types": {
         "import": "./vectorstores/lancedb.d.ts",
@@ -1341,6 +1403,15 @@
       },
       "import": "./vectorstores/neo4j_vector.js",
       "require": "./vectorstores/neo4j_vector.cjs"
+    },
+    "./vectorstores/neon": {
+      "types": {
+        "import": "./vectorstores/neon.d.ts",
+        "require": "./vectorstores/neon.d.cts",
+        "default": "./vectorstores/neon.d.ts"
+      },
+      "import": "./vectorstores/neon.js",
+      "require": "./vectorstores/neon.cjs"
     },
     "./vectorstores/opensearch": {
       "types": {
@@ -1585,6 +1656,15 @@
       "import": "./chat_models/fireworks.js",
       "require": "./chat_models/fireworks.cjs"
     },
+    "./chat_models/friendli": {
+      "types": {
+        "import": "./chat_models/friendli.d.ts",
+        "require": "./chat_models/friendli.d.cts",
+        "default": "./chat_models/friendli.d.ts"
+      },
+      "import": "./chat_models/friendli.js",
+      "require": "./chat_models/friendli.cjs"
+    },
     "./chat_models/googlevertexai": {
       "types": {
         "import": "./chat_models/googlevertexai.d.ts",
@@ -1665,6 +1745,15 @@
       },
       "import": "./chat_models/portkey.js",
       "require": "./chat_models/portkey.cjs"
+    },
+    "./chat_models/premai": {
+      "types": {
+        "import": "./chat_models/premai.d.ts",
+        "require": "./chat_models/premai.d.cts",
+        "default": "./chat_models/premai.d.ts"
+      },
+      "import": "./chat_models/premai.js",
+      "require": "./chat_models/premai.cjs"
     },
     "./chat_models/togetherai": {
       "types": {
@@ -2188,6 +2277,15 @@
       "import": "./utils/cassandra.js",
       "require": "./utils/cassandra.cjs"
     },
+    "./experimental/graph_transformers/llm": {
+      "types": {
+        "import": "./experimental/graph_transformers/llm.d.ts",
+        "require": "./experimental/graph_transformers/llm.d.cts",
+        "default": "./experimental/graph_transformers/llm.d.ts"
+      },
+      "import": "./experimental/graph_transformers/llm.js",
+      "require": "./experimental/graph_transformers/llm.cjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -2220,6 +2318,10 @@
     "tools/brave_search.js",
     "tools/brave_search.d.ts",
     "tools/brave_search.d.cts",
+    "tools/duckduckgo_search.cjs",
+    "tools/duckduckgo_search.js",
+    "tools/duckduckgo_search.d.ts",
+    "tools/duckduckgo_search.d.cts",
     "tools/calculator.cjs",
     "tools/calculator.js",
     "tools/calculator.d.ts",
@@ -2308,6 +2410,10 @@
     "embeddings/alibaba_tongyi.js",
     "embeddings/alibaba_tongyi.d.ts",
     "embeddings/alibaba_tongyi.d.cts",
+    "embeddings/baidu_qianfan.cjs",
+    "embeddings/baidu_qianfan.js",
+    "embeddings/baidu_qianfan.d.ts",
+    "embeddings/baidu_qianfan.d.cts",
     "embeddings/bedrock.cjs",
     "embeddings/bedrock.js",
     "embeddings/bedrock.d.ts",
@@ -2356,6 +2462,10 @@
     "embeddings/ollama.js",
     "embeddings/ollama.d.ts",
     "embeddings/ollama.d.cts",
+    "embeddings/premai.cjs",
+    "embeddings/premai.js",
+    "embeddings/premai.d.ts",
+    "embeddings/premai.d.cts",
     "embeddings/tensorflow.cjs",
     "embeddings/tensorflow.js",
     "embeddings/tensorflow.d.ts",
@@ -2400,6 +2510,10 @@
     "llms/fireworks.js",
     "llms/fireworks.d.ts",
     "llms/fireworks.d.cts",
+    "llms/friendli.cjs",
+    "llms/friendli.js",
+    "llms/friendli.d.ts",
+    "llms/friendli.d.cts",
     "llms/googlepalm.cjs",
     "llms/googlepalm.js",
     "llms/googlepalm.d.ts",
@@ -2524,6 +2638,10 @@
     "vectorstores/hnswlib.js",
     "vectorstores/hnswlib.d.ts",
     "vectorstores/hnswlib.d.cts",
+    "vectorstores/hanavector.cjs",
+    "vectorstores/hanavector.js",
+    "vectorstores/hanavector.d.ts",
+    "vectorstores/hanavector.d.cts",
     "vectorstores/lancedb.cjs",
     "vectorstores/lancedb.js",
     "vectorstores/lancedb.d.ts",
@@ -2548,6 +2666,10 @@
     "vectorstores/neo4j_vector.js",
     "vectorstores/neo4j_vector.d.ts",
     "vectorstores/neo4j_vector.d.cts",
+    "vectorstores/neon.cjs",
+    "vectorstores/neon.js",
+    "vectorstores/neon.d.ts",
+    "vectorstores/neon.d.cts",
     "vectorstores/opensearch.cjs",
     "vectorstores/opensearch.js",
     "vectorstores/opensearch.d.ts",
@@ -2656,6 +2778,10 @@
     "chat_models/fireworks.js",
     "chat_models/fireworks.d.ts",
     "chat_models/fireworks.d.cts",
+    "chat_models/friendli.cjs",
+    "chat_models/friendli.js",
+    "chat_models/friendli.d.ts",
+    "chat_models/friendli.d.cts",
     "chat_models/googlevertexai.cjs",
     "chat_models/googlevertexai.js",
     "chat_models/googlevertexai.d.ts",
@@ -2692,6 +2818,10 @@
     "chat_models/portkey.js",
     "chat_models/portkey.d.ts",
     "chat_models/portkey.d.cts",
+    "chat_models/premai.cjs",
+    "chat_models/premai.js",
+    "chat_models/premai.d.ts",
+    "chat_models/premai.d.cts",
     "chat_models/togetherai.cjs",
     "chat_models/togetherai.js",
     "chat_models/togetherai.d.ts",
@@ -2923,6 +3053,10 @@
     "utils/cassandra.cjs",
     "utils/cassandra.js",
     "utils/cassandra.d.ts",
-    "utils/cassandra.d.cts"
+    "utils/cassandra.d.cts",
+    "experimental/graph_transformers/llm.cjs",
+    "experimental/graph_transformers/llm.js",
+    "experimental/graph_transformers/llm.d.ts",
+    "experimental/graph_transformers/llm.d.cts"
   ]
 }

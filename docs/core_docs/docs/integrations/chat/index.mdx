@@ -22,22 +22,22 @@ Additionally, some chat models support additional ways of guaranteeing structure
 [Function calling and parallel function calling](/docs/modules/model_io/chat/function_calling) (tool calling) are two common ones, and those capabilities allow you to use the chat model as the LLM in [certain types of agents](/docs/modules/agents/agent_types/).
 Some models in LangChain have also implemented a `withStructuredOutput()` method that unifies many of these different ways of constraining output to a schema.
 
-The table shows, for each integration, which features have been implemented with native support.
+The table shows, for each integration, which features have been implemented with native support. Yellow circles (🟡) indicates partial support - for example, if the model supports tool calling but not tool messages for agents.
 
 | Model                   | Invoke | Stream | Batch | Function Calling | Tool Calling | `withStructuredOutput()` |
 | :---------------------- | :----: | :----: | :---: | :--------------: | :----------: | :----------------------: |
 | BedrockChat             |   ✅   |   ✅   |  ✅   |        ❌        |      ❌      |            ❌            |
 | ChatAlibabaTongyi       |   ✅   |   ❌   |  ✅   |        ❌        |      ❌      |            ❌            |
-| ChatAnthropic           |   ✅   |   ✅   |  ✅   |        ❌        |      ❌      |            ❌            |
-| ChatAnthropicTools      |   ✅   |   ✅   |  ✅   |        ❌        |      ✅      |            ✅            |
+| ChatAnthropic           |   ✅   |   ✅   |  ✅   |        ❌        |      ✅      |            ✅            |
 | ChatBaiduWenxin         |   ✅   |   ❌   |  ✅   |        ❌        |      ❌      |            ❌            |
 | ChatCloudflareWorkersAI |   ✅   |   ✅   |  ✅   |        ❌        |      ❌      |            ❌            |
 | ChatCohere              |   ✅   |   ✅   |  ✅   |        ❌        |      ❌      |            ❌            |
-| ChatFireworks           |   ✅   |   ✅   |  ✅   |        ✅        |      ❌      |            ❌            |
+| ChatFireworks           |   ✅   |   ✅   |  ✅   |        ✅        |      ✅      |            ❌            |
 | ChatGoogleGenerativeAI  |   ✅   |   ✅   |  ✅   |        ❌        |      ❌      |            ❌            |
 | ChatGoogleVertexAI      |   ✅   |   ✅   |  ✅   |        ❌        |      ❌      |            ❌            |
+| ChatVertexAI            |   ✅   |   ✅   |  ✅   |        ❌        |      ✅      |            ✅            |
 | ChatGooglePaLM          |   ✅   |   ❌   |  ✅   |        ❌        |      ❌      |            ❌            |
-| ChatGroq                |   ✅   |   ✅   |  ✅   |        ❌        |      ❌      |            ❌            |
+| ChatGroq                |   ✅   |   ✅   |  ✅   |        ❌        |      🟡      |            ✅            |
 | ChatLlamaCpp            |   ✅   |   ✅   |  ✅   |        ❌        |      ❌      |            ❌            |
 | ChatMinimax             |   ✅   |   ❌   |  ✅   |        ✅        |      ❌      |            ❌            |
 | ChatMistralAI           |   ✅   |   ❌   |  ✅   |        ❌        |      ✅      |            ✅            |

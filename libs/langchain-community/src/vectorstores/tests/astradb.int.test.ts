@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
 import { describe, expect, test } from "@jest/globals";
-import { AstraDB } from "@datastax/astra-db-ts";
+import { DataAPIClient, Db } from "@datastax/astra-db-ts";
 import { faker } from "@faker-js/faker";
 import { Document } from "@langchain/core/documents";
 import { OpenAIEmbeddings } from "@langchain/openai";
@@ -8,28 +8,33 @@ import { FakeEmbeddings } from "closevector-common/dist/fake.js";
 import { AstraDBVectorStore, AstraLibArgs } from "../astradb.js";
 
 describe.skip("AstraDBVectorStore", () => {
-  const clientConfig = {
-    token: process.env.ASTRA_DB_APPLICATION_TOKEN ?? "dummy",
-    endpoint: process.env.ASTRA_DB_ENDPOINT ?? "dummy",
-    namespace: process.env.ASTRA_DB_NAMESPACE ?? "default_keyspace",
-  };
+  let db: Db;
+  let astraConfig: AstraLibArgs;
+  beforeAll(() => {
+    const clientConfig = {
+      token: process.env.ASTRA_DB_APPLICATION_TOKEN ?? "dummy",
+      endpoint: process.env.ASTRA_DB_ENDPOINT ?? "dummy",
+      namespace: process.env.ASTRA_DB_NAMESPACE ?? "default_keyspace",
+    };
 
-  const client = new AstraDB(clientConfig.token, clientConfig.endpoint);
+    const dataAPIClient = new DataAPIClient(clientConfig.token);
+    db = dataAPIClient.db(clientConfig.endpoint);
 
-  const astraConfig: AstraLibArgs = {
-    ...clientConfig,
-    collection: process.env.ASTRA_DB_COLLECTION ?? "langchain_test",
-    collectionOptions: {
-      vector: {
-        dimension: 1536,
-        metric: "cosine",
+    astraConfig = {
+      ...clientConfig,
+      collection: process.env.ASTRA_DB_COLLECTION ?? "langchain_test",
+      collectionOptions: {
+        vector: {
+          dimension: 1536,
+          metric: "cosine",
+        },
       },
-    },
-  };
+    };
+  });
 
   beforeEach(async () => {
     try {
-      await client.dropCollection(astraConfig.collection);
+      await db.dropCollection(astraConfig.collection);
     } catch (e) {
       console.debug("Collection doesn't exist yet, skipping drop");
     }
@@ -153,7 +158,38 @@ describe.skip("AstraDBVectorStore", () => {
       fail("Should have thrown error");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
-      expect(e.message).toContain("already exists with different 'vector'");
+      expect(e.message).toContain(
+        "already exists with different collection options"
+      );
     }
   }, 60000);
+
+  test("skipCollectionProvisioning", async () => {
+    let store = new AstraDBVectorStore(new FakeEmbeddings(), {
+      ...astraConfig,
+      skipCollectionProvisioning: true,
+      collectionOptions: undefined,
+    });
+    await store.initialize();
+    try {
+      await store.similaritySearch("test");
+      fail("Should have thrown error");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      expect(e.message).toContain("'default_keyspace.langchain_test'");
+    }
+    store = new AstraDBVectorStore(new FakeEmbeddings(), {
+      ...astraConfig,
+      skipCollectionProvisioning: false,
+      collectionOptions: {
+        checkExists: false,
+        vector: {
+          dimension: 4,
+          metric: "cosine",
+        },
+      },
+    });
+    await store.initialize();
+    await store.similaritySearch("test");
+  });
 });

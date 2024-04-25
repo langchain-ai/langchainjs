@@ -198,3 +198,23 @@ Here is the JSON Schema instance your output must adhere to. Include the enclosi
 "
 `);
 });
+
+test("StructuredOutputParser.fromZodSchema parsing newlines", async () => {
+  const parser = StructuredOutputParser.fromZodSchema(
+    z
+      .object({
+        url: z.string().describe("A link to the resource"),
+        summary: z.string().describe("A summary"),
+      })
+      .describe("Only One object")
+  );
+
+  expect(
+    await parser.parse(
+      '```\n{"url": "value", "summary": "line1,\nline2,\nline3"}```'
+    )
+  ).toEqual({
+    url: "value",
+    summary: "line1,\nline2,\nline3",
+  });
+});

@@ -108,7 +108,7 @@ test("Should drop metadata keys from docs with non-string metadata", async () =>
     },
     {
       pageContent: "goodbye",
-      metadata: { created_at: { time: (createdAt + 1).toString() } },
+      metadata: { created_at: (createdAt + 1).toString() },
     },
   ]);
 

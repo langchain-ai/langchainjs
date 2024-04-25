@@ -45,3 +45,4 @@ docs/build/
 docs/api_refs/typedoc.json
 
 .tool-versions
+credentials.json

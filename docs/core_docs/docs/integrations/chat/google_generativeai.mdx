@@ -1,5 +1,5 @@
 ---
-sidebar_label: Google AI
+sidebar_label: Google GenAI
 keywords: [gemini, gemini-pro, ChatGoogleGenerativeAI]
 ---
 
@@ -10,6 +10,12 @@ import CodeBlock from "@theme/CodeBlock";
 You can access Google's `gemini` and `gemini-vision` models, as well as other
 generative models in LangChain through `ChatGoogleGenerativeAI` class in the
 `@langchain/google-genai` integration package.
+
+:::tip
+You can also access Google's `gemini` family of models via the LangChain VertexAI and VertexAI-web integrations.
+
+Click [here](/docs/integrations/chat/google_vertex_ai) to read the docs.
+:::
 
 Get an API key here: https://ai.google.dev/tutorials/setup
 
@@ -24,6 +30,10 @@ npm install @langchain/google-genai
 ```
 
 ## Usage
+
+import UnifiedModelParamsTooltip from "@mdx_components/unified_model_params_tooltip.mdx";
+
+<UnifiedModelParamsTooltip></UnifiedModelParamsTooltip>
 
 import GoogleGenerativeAI from "@examples/models/chat/googlegenerativeai.ts";
 

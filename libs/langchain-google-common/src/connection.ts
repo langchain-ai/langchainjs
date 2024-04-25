@@ -4,9 +4,9 @@ import {
   AsyncCallerCallOptions,
 } from "@langchain/core/utils/async_caller";
 import { getRuntimeEnvironment } from "@langchain/core/utils/env";
+import { StructuredToolInterface } from "@langchain/core/tools";
 import type {
   GoogleAIBaseLLMInput,
-  GoogleAIModelParams,
   GoogleConnectionParams,
   GoogleLLMModelFamily,
   GooglePlatformType,
@@ -16,12 +16,16 @@ import type {
   GeminiGenerationConfig,
   GeminiRequest,
   GeminiSafetySetting,
+  GeminiTool,
+  GeminiFunctionDeclaration,
+  GoogleAIModelRequestParams,
 } from "./types.js";
 import {
   GoogleAbstractedClient,
   GoogleAbstractedClientOps,
   GoogleAbstractedClientOpsMethod,
 } from "./auth.js";
+import { zodToGeminiParameters } from "./utils/zod_to_gemini_parameters.js";
 
 export abstract class GoogleConnection<
   CallOptions extends AsyncCallerCallOptions,
@@ -161,6 +165,8 @@ export abstract class GoogleAIConnection<
 {
   model: string;
 
+  modelName: string;
+
   client: GoogleAbstractedClient;
 
   constructor(
@@ -171,7 +177,8 @@ export abstract class GoogleAIConnection<
   ) {
     super(fields, caller, client, streaming);
     this.client = client;
-    this.model = fields?.model ?? this.model;
+    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
+    this.model = this.modelName;
   }
 
   get modelFamily(): GoogleLLMModelFamily {
@@ -216,12 +223,12 @@ export abstract class GoogleAIConnection<
 
   abstract formatData(
     input: MessageType,
-    parameters: GoogleAIModelParams
+    parameters: GoogleAIModelRequestParams
   ): unknown;
 
   async request(
     input: MessageType,
-    parameters: GoogleAIModelParams,
+    parameters: GoogleAIModelRequestParams,
     options: CallOptions
   ): Promise<GoogleLLMResponse> {
     const data = this.formatData(input, parameters);
@@ -254,12 +261,12 @@ export abstract class AbstractGoogleLLMConnection<
 
   abstract formatContents(
     input: MessageType,
-    parameters: GoogleAIModelParams
+    parameters: GoogleAIModelRequestParams
   ): GeminiContent[];
 
   formatGenerationConfig(
     _input: MessageType,
-    parameters: GoogleAIModelParams
+    parameters: GoogleAIModelRequestParams
   ): GeminiGenerationConfig {
     return {
       temperature: parameters.temperature,
@@ -272,34 +279,95 @@ export abstract class AbstractGoogleLLMConnection<
 
   formatSafetySettings(
     _input: MessageType,
-    parameters: GoogleAIModelParams
+    parameters: GoogleAIModelRequestParams
   ): GeminiSafetySetting[] {
     return parameters.safetySettings ?? [];
   }
 
+  formatSystemInstruction(
+    _input: MessageType,
+    _parameters: GoogleAIModelRequestParams
+  ): GeminiContent {
+    return {} as GeminiContent;
+  }
+
+  // Borrowed from the OpenAI invocation params test
+  isStructuredToolArray(tools?: unknown[]): tools is StructuredToolInterface[] {
+    return (
+      tools !== undefined &&
+      tools.every((tool) =>
+        Array.isArray((tool as StructuredToolInterface).lc_namespace)
+      )
+    );
+  }
+
+  structuredToolToFunctionDeclaration(
+    tool: StructuredToolInterface
+  ): GeminiFunctionDeclaration {
+    const jsonSchema = zodToGeminiParameters(tool.schema);
+    return {
+      name: tool.name,
+      description: tool.description,
+      parameters: jsonSchema,
+    };
+  }
+
+  structuredToolsToGeminiTools(tools: StructuredToolInterface[]): GeminiTool[] {
+    return [
+      {
+        functionDeclarations: tools.map(
+          this.structuredToolToFunctionDeclaration
+        ),
+      },
+    ];
+  }
+
+  formatTools(
+    _input: MessageType,
+    parameters: GoogleAIModelRequestParams
+  ): GeminiTool[] {
+    const tools: StructuredToolInterface[] | GeminiTool[] | undefined =
+      parameters?.tools;
+    if (!tools || tools.length === 0) {
+      return [];
+    }
+
+    if (this.isStructuredToolArray(tools)) {
+      return this.structuredToolsToGeminiTools(tools);
+    } else {
+      if (tools.length === 1 && !tools[0].functionDeclarations?.length) {
+        return [];
+      }
+      return tools as GeminiTool[];
+    }
+  }
+
   formatData(
     input: MessageType,
-    parameters: GoogleAIModelParams
+    parameters: GoogleAIModelRequestParams
   ): GeminiRequest {
-    /*
-    const parts = messageContentToParts(input);
-    const contents: GeminiContent[] = [
-      {
-        role: "user",    // Required by Vertex AI
-        parts,
-      }
-    ]
-    */
     const contents = this.formatContents(input, parameters);
     const generationConfig = this.formatGenerationConfig(input, parameters);
+    const tools = this.formatTools(input, parameters);
     const safetySettings = this.formatSafetySettings(input, parameters);
+    const systemInstruction = this.formatSystemInstruction(input, parameters);
 
     const ret: GeminiRequest = {
       contents,
       generationConfig,
     };
+    if (tools && tools.length) {
+      ret.tools = tools;
+    }
     if (safetySettings && safetySettings.length) {
       ret.safetySettings = safetySettings;
+    }
+    if (
+      systemInstruction?.role &&
+      systemInstruction?.parts &&
+      systemInstruction?.parts?.length
+    ) {
+      ret.systemInstruction = systemInstruction;
     }
     return ret;
   }

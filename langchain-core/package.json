@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "0.1.49",
+  "version": "0.1.60",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -14,7 +14,8 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/langchain-core/",
   "scripts": {
-    "build": "yarn clean && yarn build:esm && yarn build:cjs && yarn run build:scripts",
+    "build": "yarn build:deps && yarn clean && yarn build:esm && yarn build:cjs && yarn run build:scripts",
+    "build:deps": "yarn turbo:command build --filter=@langchain/scripts",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rimraf dist/tests dist/**/tests",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rimraf dist-cjs",
     "build:watch": "yarn create-entrypoints && tsc --outDir dist/ --watch",
@@ -45,6 +46,7 @@
     "js-tiktoken": "^1.0.8",
     "langsmith": "~0.1.7",
     "ml-distance": "^4.0.0",
+    "mustache": "^4.2.0",
     "p-queue": "^6.6.2",
     "p-retry": "4",
     "uuid": "^9.0.0",
@@ -56,6 +58,7 @@
     "@langchain/scripts": "~0.0",
     "@swc/core": "^1.3.90",
     "@swc/jest": "^0.2.29",
+    "@types/mustache": "^4",
     "dpdm": "^3.12.0",
     "eslint": "^8.33.0",
     "eslint-config-airbnb-base": "^15.0.0",
@@ -236,6 +239,15 @@
       "import": "./messages.js",
       "require": "./messages.cjs"
     },
+    "./messages/tool": {
+      "types": {
+        "import": "./messages/tool.d.ts",
+        "require": "./messages/tool.d.cts",
+        "default": "./messages/tool.d.ts"
+      },
+      "import": "./messages/tool.js",
+      "require": "./messages/tool.cjs"
+    },
     "./output_parsers": {
       "types": {
         "import": "./output_parsers.d.ts",
@@ -317,6 +329,15 @@
       "import": "./retrievers.js",
       "require": "./retrievers.cjs"
     },
+    "./retrievers/document_compressors": {
+      "types": {
+        "import": "./retrievers/document_compressors.d.ts",
+        "require": "./retrievers/document_compressors.d.cts",
+        "default": "./retrievers/document_compressors.d.ts"
+      },
+      "import": "./retrievers/document_compressors.js",
+      "require": "./retrievers/document_compressors.cjs"
+    },
     "./singletons": {
       "types": {
         "import": "./singletons.d.ts",
@@ -334,6 +355,15 @@
       },
       "import": "./stores.js",
       "require": "./stores.cjs"
+    },
+    "./structured_query": {
+      "types": {
+        "import": "./structured_query.d.ts",
+        "require": "./structured_query.d.cts",
+        "default": "./structured_query.d.ts"
+      },
+      "import": "./structured_query.js",
+      "require": "./structured_query.cjs"
     },
     "./tools": {
       "types": {
@@ -415,6 +445,15 @@
       },
       "import": "./utils/async_caller.js",
       "require": "./utils/async_caller.cjs"
+    },
+    "./utils/beta_warning": {
+      "types": {
+        "import": "./utils/beta_warning.d.ts",
+        "require": "./utils/beta_warning.d.cts",
+        "default": "./utils/beta_warning.d.ts"
+      },
+      "import": "./utils/beta_warning.js",
+      "require": "./utils/beta_warning.cjs"
     },
     "./utils/chunk_array": {
       "types": {
@@ -524,15 +563,6 @@
       "import": "./utils/types.js",
       "require": "./utils/types.cjs"
     },
-    "./utils/beta_warning": {
-      "types": {
-        "import": "./utils/beta_warning.d.ts",
-        "require": "./utils/beta_warning.d.cts",
-        "default": "./utils/beta_warning.d.ts"
-      },
-      "import": "./utils/beta_warning.js",
-      "require": "./utils/beta_warning.cjs"
-    },
     "./vectorstores": {
       "types": {
         "import": "./vectorstores.d.ts",
@@ -610,6 +640,10 @@
     "messages.js",
     "messages.d.ts",
     "messages.d.cts",
+    "messages/tool.cjs",
+    "messages/tool.js",
+    "messages/tool.d.ts",
+    "messages/tool.d.cts",
     "output_parsers.cjs",
     "output_parsers.js",
     "output_parsers.d.ts",
@@ -646,6 +680,10 @@
     "retrievers.js",
     "retrievers.d.ts",
     "retrievers.d.cts",
+    "retrievers/document_compressors.cjs",
+    "retrievers/document_compressors.js",
+    "retrievers/document_compressors.d.ts",
+    "retrievers/document_compressors.d.cts",
     "singletons.cjs",
     "singletons.js",
     "singletons.d.ts",
@@ -654,6 +692,10 @@
     "stores.js",
     "stores.d.ts",
     "stores.d.cts",
+    "structured_query.cjs",
+    "structured_query.js",
+    "structured_query.d.ts",
+    "structured_query.d.cts",
     "tools.cjs",
     "tools.js",
     "tools.d.ts",
@@ -690,6 +732,10 @@
     "utils/async_caller.js",
     "utils/async_caller.d.ts",
     "utils/async_caller.d.cts",
+    "utils/beta_warning.cjs",
+    "utils/beta_warning.js",
+    "utils/beta_warning.d.ts",
+    "utils/beta_warning.d.cts",
     "utils/chunk_array.cjs",
     "utils/chunk_array.js",
     "utils/chunk_array.d.ts",
@@ -738,10 +784,6 @@
     "utils/types.js",
     "utils/types.d.ts",
     "utils/types.d.cts",
-    "utils/beta_warning.cjs",
-    "utils/beta_warning.js",
-    "utils/beta_warning.d.ts",
-    "utils/beta_warning.d.cts",
     "vectorstores.cjs",
     "vectorstores.js",
     "vectorstores.d.ts",

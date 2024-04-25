@@ -396,7 +396,10 @@ Let's define the nodes, as well as a function to decide how what conditional edg
 ```typescript
 import { FunctionMessage } from "@langchain/core/messages";
 import { AgentAction } from "@langchain/core/agents";
-import type { RunnableConfig } from "@langchain/core/runnables";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
 
 // Define the function that determines whether to continue or not
 const shouldContinue = (state: { messages: Array<BaseMessage> }) => {
@@ -428,7 +431,7 @@ const _getAction = (state: { messages: Array<BaseMessage> }): AgentAction => {
   // We construct an AgentAction from the function_call
   return {
     tool: lastMessage.additional_kwargs.function_call.name,
-    toolInput: JSON.stringify(
+    toolInput: JSON.parse(
       lastMessage.additional_kwargs.function_call.arguments
     ),
     log: "",
@@ -436,25 +439,25 @@ const _getAction = (state: { messages: Array<BaseMessage> }): AgentAction => {
 };
 
 // Define the function that calls the model
-const callModel = async (
-  state: { messages: Array<BaseMessage> },
-  config?: RunnableConfig
-) => {
+const callModel = async (state: { messages: Array<BaseMessage> }) => {
   const { messages } = state;
-  const response = await newModel.invoke(messages, config);
+  // You can use a prompt here to tweak model behavior.
+  // You can also just pass messages to the model directly.
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "You are a helpful assistant."],
+    new MessagesPlaceholder("messages"),
+  ]);
+  const response = await prompt.pipe(newModel).invoke({ messages });
   // We return a list, because this will get added to the existing list
   return {
     messages: [response],
   };
 };
 
-const callTool = async (
-  state: { messages: Array<BaseMessage> },
-  config?: RunnableConfig
-) => {
+const callTool = async (state: { messages: Array<BaseMessage> }) => {
   const action = _getAction(state);
   // We call the tool_executor and get back a response
-  const response = await toolExecutor.invoke(action, config);
+  const response = await toolExecutor.invoke(action);
   // We use the response to create a FunctionMessage
   const functionMessage = new FunctionMessage({
     content: response,
@@ -532,7 +535,7 @@ const inputs = {
 const result = await app.invoke(inputs);
 ```
 
-See a LangSmith trace of this run [here](https://smith.langchain.com/public/2562d46e-da94-4c9d-9b14-3759a26aec9b/r).
+See a LangSmith trace of this run [here](https://smith.langchain.com/public/144af8a3-b496-43aa-ba9d-f0d5894196e2/r).
 
 This may take a little bit - it's making a few calls behind the scenes.
 In order to start seeing some intermediate results as they happen, we can use streaming - see below for more information on that.
@@ -555,7 +558,7 @@ for await (const output of await app.stream(inputs)) {
 }
 ```
 
-See a LangSmith trace of this run [here](https://smith.langchain.com/public/9afacb13-b9dc-416e-abbe-6ed2a0811afe/r).
+See a LangSmith trace of this run [here](https://smith.langchain.com/public/968cd1bf-0db2-410f-a5b4-0e73066cf06e/r).
 
 ## Running Examples
 

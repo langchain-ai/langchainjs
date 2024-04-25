@@ -3,10 +3,7 @@ import type {
   BaseLanguageModelInterface,
 } from "@langchain/core/language_models/base";
 import type { ToolInterface } from "@langchain/core/tools";
-import {
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
+import { RunnablePassthrough } from "@langchain/core/runnables";
 import type { BasePromptTemplate } from "@langchain/core/prompts";
 import { AgentStep, AgentAction, AgentFinish } from "@langchain/core/agents";
 import { ChainValues } from "@langchain/core/utils/types";
@@ -19,8 +16,8 @@ import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { LLMChain } from "../../chains/llm_chain.js";
 import {
   AgentArgs,
+  AgentRunnableSequence,
   BaseSingleActionAgent,
-  RunnableSingleActionAgent,
 } from "../agent.js";
 import { AGENT_INSTRUCTIONS } from "./prompt.js";
 import { XMLAgentOutputParser } from "./output_parser.js";
@@ -223,18 +220,21 @@ export async function createXmlAgent({
   const llmWithStop = (llm as BaseLanguageModel).bind({
     stop: ["</tool_input>", "</final_answer>"],
   });
-  const agent = RunnableSequence.from([
-    RunnablePassthrough.assign({
-      agent_scratchpad: (input: { steps: AgentStep[] }) =>
-        formatXml(input.steps),
-    }),
-    partialedPrompt,
-    llmWithStop,
-    new XMLAgentOutputParser(),
-  ]);
-  return new RunnableSingleActionAgent({
-    runnable: agent,
-    defaultRunName: "XMLAgent",
-    streamRunnable,
-  });
+  const agent = AgentRunnableSequence.fromRunnables(
+    [
+      RunnablePassthrough.assign({
+        agent_scratchpad: (input: { steps: AgentStep[] }) =>
+          formatXml(input.steps),
+      }),
+      partialedPrompt,
+      llmWithStop,
+      new XMLAgentOutputParser(),
+    ],
+    {
+      name: "XMLAgent",
+      streamRunnable,
+      singleAction: true,
+    }
+  );
+  return agent;
 }
