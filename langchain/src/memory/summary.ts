@@ -4,10 +4,7 @@ import {
   SystemMessage,
   getBufferString,
 } from "@langchain/core/messages";
-import {
-  BaseChatMemory,
-  BaseChatMemoryInput,
-} from "@langchain/community/memory/chat_memory";
+import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 import { BasePromptTemplate } from "@langchain/core/prompts";
 import {
   InputValues,

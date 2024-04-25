@@ -3,6 +3,12 @@ import type { LaunchOptions, Page, Browser, Response } from "playwright";
 import { Document } from "@langchain/core/documents";
 import { BaseDocumentLoader } from "../base.js";
 import type { DocumentLoader } from "../base.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/web/playwright",
+  newPackageName: "@langchain/community",
+});
 
 export { Page, Browser, Response };
 

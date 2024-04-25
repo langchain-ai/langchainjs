@@ -231,11 +231,15 @@ export const config = {
     "indexes/memory": "indexes/memory",
     "indexes/sqlite": "indexes/sqlite",
     // utils
-    "util/convex": "utils/convex",
+    "utils/convex": "utils/convex",
     "utils/event_source_parse": "utils/event_source_parse",
     "utils/cassandra": "utils/cassandra",
     "experimental/graph_transformers/llm":
       "experimental/graph_transformers/llm",
+    "experimental/multimodal_embeddings/googlevertexai":
+      "experimental/multimodal_embeddings/googlevertexai",
+    "experimental/hubs/makersuite/googlemakersuitehub":
+      "experimental/hubs/makersuite/googlemakersuitehub",
   },
   requiresOptionalDependency: [
     "tools/aws_sfn",
@@ -369,11 +373,14 @@ export const config = {
     "memory/motorhead_memory",
     "memory/zep",
     // utils
-    "util/convex",
+    "utils/convex",
     "utils/cassandra",
     // indexes
     "indexes/postgres",
     "indexes/sqlite",
+    // experimental
+    "experimental/multimodal_embeddings/googlevertexai",
+    "experimental/hubs/makersuite/googlemakersuitehub",
   ],
   packageSuffix: "community",
   tsConfigPath: resolve("./tsconfig.json"),

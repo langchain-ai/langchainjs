@@ -1,8 +1,5 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
-import {
-  BaseChatMemory,
-  BaseChatMemoryInput,
-} from "@langchain/community/memory/chat_memory";
+import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 import {
   InputValues,
   MemoryVariables,

@@ -15,7 +15,7 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-community/",
   "scripts": {
     "build": "yarn run build:deps && yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
-    "build:deps": "yarn run turbo:command build --filter=@langchain/core --filter=@langchain/openai --concurrency=1",
+    "build:deps": "yarn run turbo:command build --filter=@langchain/core --filter=@langchain/openai --filter=langchain --concurrency=1",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rm -rf dist/tests dist/**/tests",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rm -rf dist-cjs",
     "build:watch": "yarn create-entrypoints && tsc --outDir dist/ --watch",
@@ -43,6 +43,7 @@
     "@langchain/openai": "~0.0.28",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
+    "langchain": "workspace:*",
     "langsmith": "~0.1.1",
     "uuid": "^9.0.0",
     "zod": "^3.22.3",
@@ -118,6 +119,7 @@
     "@xata.io/client": "^0.28.0",
     "@xenova/transformers": "^2.5.4",
     "@zilliz/milvus2-sdk-node": ">=2.2.11",
+    "assemblyai": "^4.0.0",
     "better-sqlite3": "^9.4.0",
     "cassandra-driver": "^4.7.2",
     "cborg": "^4.1.1",
@@ -144,6 +146,7 @@
     "faiss-node": "^0.5.1",
     "firebase-admin": "^11.9.0 || ^12.0.0",
     "google-auth-library": "^8.9.0",
+    "@google-cloud/storage": "^7.7.0",
     "googleapis": "^126.0.1",
     "graphql": "^16.6.0",
     "hdb": "0.19.8",
@@ -202,6 +205,7 @@
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
     "@google-ai/generativelanguage": "^0.2.1",
+    "@google-cloud/storage": "^6.10.1 || ^7.7.0",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
     "@mozilla/readability": "*",
@@ -230,6 +234,7 @@
     "@xata.io/client": "^0.28.0",
     "@xenova/transformers": "^2.5.4",
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
+    "assemblyai": "^4.0.0",
     "better-sqlite3": "^9.4.0",
     "cassandra-driver": "^4.7.2",
     "cborg": "^4.1.1",
@@ -334,6 +339,9 @@
     "@google-ai/generativelanguage": {
       "optional": true
     },
+    "@google-cloud/storage": {
+      "optional": true
+    },
     "@gradientai/nodejs-sdk": {
       "optional": true
     },
@@ -416,6 +424,9 @@
       "optional": true
     },
     "@zilliz/milvus2-sdk-node": {
+      "optional": true
+    },
+    "assemblyai": {
       "optional": true
     },
     "better-sqlite3": {
@@ -2250,14 +2261,14 @@
       "import": "./indexes/sqlite.js",
       "require": "./indexes/sqlite.cjs"
     },
-    "./util/convex": {
+    "./utils/convex": {
       "types": {
-        "import": "./util/convex.d.ts",
-        "require": "./util/convex.d.cts",
-        "default": "./util/convex.d.ts"
+        "import": "./utils/convex.d.ts",
+        "require": "./utils/convex.d.cts",
+        "default": "./utils/convex.d.ts"
       },
-      "import": "./util/convex.js",
-      "require": "./util/convex.cjs"
+      "import": "./utils/convex.js",
+      "require": "./utils/convex.cjs"
     },
     "./utils/event_source_parse": {
       "types": {
@@ -2285,6 +2296,24 @@
       },
       "import": "./experimental/graph_transformers/llm.js",
       "require": "./experimental/graph_transformers/llm.cjs"
+    },
+    "./experimental/multimodal_embeddings/googlevertexai": {
+      "types": {
+        "import": "./experimental/multimodal_embeddings/googlevertexai.d.ts",
+        "require": "./experimental/multimodal_embeddings/googlevertexai.d.cts",
+        "default": "./experimental/multimodal_embeddings/googlevertexai.d.ts"
+      },
+      "import": "./experimental/multimodal_embeddings/googlevertexai.js",
+      "require": "./experimental/multimodal_embeddings/googlevertexai.cjs"
+    },
+    "./experimental/hubs/makersuite/googlemakersuitehub": {
+      "types": {
+        "import": "./experimental/hubs/makersuite/googlemakersuitehub.d.ts",
+        "require": "./experimental/hubs/makersuite/googlemakersuitehub.d.cts",
+        "default": "./experimental/hubs/makersuite/googlemakersuitehub.d.ts"
+      },
+      "import": "./experimental/hubs/makersuite/googlemakersuitehub.js",
+      "require": "./experimental/hubs/makersuite/googlemakersuitehub.cjs"
     },
     "./package.json": "./package.json"
   },
@@ -3042,10 +3071,10 @@
     "indexes/sqlite.js",
     "indexes/sqlite.d.ts",
     "indexes/sqlite.d.cts",
-    "util/convex.cjs",
-    "util/convex.js",
-    "util/convex.d.ts",
-    "util/convex.d.cts",
+    "utils/convex.cjs",
+    "utils/convex.js",
+    "utils/convex.d.ts",
+    "utils/convex.d.cts",
     "utils/event_source_parse.cjs",
     "utils/event_source_parse.js",
     "utils/event_source_parse.d.ts",
@@ -3057,6 +3086,14 @@
     "experimental/graph_transformers/llm.cjs",
     "experimental/graph_transformers/llm.js",
     "experimental/graph_transformers/llm.d.ts",
-    "experimental/graph_transformers/llm.d.cts"
+    "experimental/graph_transformers/llm.d.cts",
+    "experimental/multimodal_embeddings/googlevertexai.cjs",
+    "experimental/multimodal_embeddings/googlevertexai.js",
+    "experimental/multimodal_embeddings/googlevertexai.d.ts",
+    "experimental/multimodal_embeddings/googlevertexai.d.cts",
+    "experimental/hubs/makersuite/googlemakersuitehub.cjs",
+    "experimental/hubs/makersuite/googlemakersuitehub.js",
+    "experimental/hubs/makersuite/googlemakersuitehub.d.ts",
+    "experimental/hubs/makersuite/googlemakersuitehub.d.cts"
   ]
 }

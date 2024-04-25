@@ -1,4 +1,10 @@
 import { TextLoader } from "./text.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/fs/csv",
+  newPackageName: "@langchain/community",
+});
 
 /**
  * Loads a CSV file into a list of documents.

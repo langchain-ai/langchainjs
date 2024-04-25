@@ -8,7 +8,7 @@ import {
   Operators,
   StructuredQuery,
 } from "../ir.js";
-import { AttributeInfo } from "../../../schema/query_constructor.js";
+import { AttributeInfo } from "../index.js";
 import { BasicTranslator } from "../../../retrievers/self_query/base.js";
 
 test("Query Chain Test", async () => {

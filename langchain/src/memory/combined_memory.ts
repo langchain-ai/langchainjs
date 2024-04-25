@@ -1,7 +1,4 @@
-import {
-  BaseChatMemory,
-  BaseChatMemoryInput,
-} from "@langchain/community/memory/chat_memory";
+import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 import {
   InputValues,
   MemoryVariables,

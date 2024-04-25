@@ -4,7 +4,7 @@ import { AIMessage, HumanMessage } from "@langchain/core/messages";
 import { LLMResult } from "@langchain/core/outputs";
 import { BaseLLM } from "@langchain/core/language_models/llms";
 
-import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
+import { InMemoryChatMessageHistory as ChatMessageHistory } from "@langchain/core/chat_history";
 import { EntityMemory } from "../entity_memory.js";
 
 class FakeLLM extends BaseLLM {
