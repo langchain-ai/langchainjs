@@ -48,7 +48,7 @@ export class ZhipuAIEmbeddings
 {
   modelName: ZhipuAIEmbeddingsParams["modelName"] = "embedding-2";
 
-  apiKey: string;
+  apiKey?: string;
 
   stripNewLines = true;
 
