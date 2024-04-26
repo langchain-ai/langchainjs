@@ -286,6 +286,8 @@ export const config = {
       "experimental/multimodal_embeddings/googlevertexai",
     "experimental/hubs/makersuite/googlemakersuitehub":
       "experimental/hubs/makersuite/googlemakersuitehub",
+    // chains
+    "chains/graph_qa/cypher": "chains/graph_qa/cypher"
   },
   requiresOptionalDependency: [
     "tools/aws_sfn",
@@ -462,6 +464,8 @@ export const config = {
     // experimental
     "experimental/multimodal_embeddings/googlevertexai",
     "experimental/hubs/makersuite/googlemakersuitehub",
+    // chains
+    "chains/graph_qa/cypher"
   ],
   packageSuffix: "community",
   tsConfigPath: resolve("./tsconfig.json"),

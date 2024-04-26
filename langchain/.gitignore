@@ -126,10 +126,10 @@ embeddings/fake.cjs
 embeddings/fake.js
 embeddings/fake.d.ts
 embeddings/fake.d.cts
-prompts/load.cjs
-prompts/load.js
-prompts/load.d.ts
-prompts/load.d.cts
+prompts/index.cjs
+prompts/index.js
+prompts/index.d.ts
+prompts/index.d.cts
 vectorstores/memory.cjs
 vectorstores/memory.js
 vectorstores/memory.d.ts
@@ -138,6 +138,10 @@ text_splitter.cjs
 text_splitter.js
 text_splitter.d.ts
 text_splitter.d.cts
+memory/index.cjs
+memory/index.js
+memory/index.d.ts
+memory/index.d.cts
 memory/chat_memory.cjs
 memory/chat_memory.js
 memory/chat_memory.d.ts

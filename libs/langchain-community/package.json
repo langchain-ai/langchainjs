@@ -2736,6 +2736,15 @@
       "import": "./experimental/hubs/makersuite/googlemakersuitehub.js",
       "require": "./experimental/hubs/makersuite/googlemakersuitehub.cjs"
     },
+    "./chains/graph_qa/cypher": {
+      "types": {
+        "import": "./chains/graph_qa/cypher.d.ts",
+        "require": "./chains/graph_qa/cypher.d.cts",
+        "default": "./chains/graph_qa/cypher.d.ts"
+      },
+      "import": "./chains/graph_qa/cypher.js",
+      "require": "./chains/graph_qa/cypher.cjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -3663,6 +3672,10 @@
     "experimental/hubs/makersuite/googlemakersuitehub.cjs",
     "experimental/hubs/makersuite/googlemakersuitehub.js",
     "experimental/hubs/makersuite/googlemakersuitehub.d.ts",
-    "experimental/hubs/makersuite/googlemakersuitehub.d.cts"
+    "experimental/hubs/makersuite/googlemakersuitehub.d.cts",
+    "chains/graph_qa/cypher.cjs",
+    "chains/graph_qa/cypher.js",
+    "chains/graph_qa/cypher.d.ts",
+    "chains/graph_qa/cypher.d.cts"
   ]
 }

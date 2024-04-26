@@ -138,10 +138,10 @@
     "embeddings/fake.js",
     "embeddings/fake.d.ts",
     "embeddings/fake.d.cts",
-    "prompts/load.cjs",
-    "prompts/load.js",
-    "prompts/load.d.ts",
-    "prompts/load.d.cts",
+    "prompts/index.cjs",
+    "prompts/index.js",
+    "prompts/index.d.ts",
+    "prompts/index.d.cts",
     "vectorstores/memory.cjs",
     "vectorstores/memory.js",
     "vectorstores/memory.d.ts",
@@ -150,6 +150,10 @@
     "text_splitter.js",
     "text_splitter.d.ts",
     "text_splitter.d.cts",
+    "memory/index.cjs",
+    "memory/index.js",
+    "memory/index.d.ts",
+    "memory/index.d.cts",
     "memory/chat_memory.cjs",
     "memory/chat_memory.js",
     "memory/chat_memory.d.ts",
@@ -1182,14 +1186,14 @@
       "import": "./embeddings/fake.js",
       "require": "./embeddings/fake.cjs"
     },
-    "./prompts/load": {
+    "./prompts/index": {
       "types": {
-        "import": "./prompts/load.d.ts",
-        "require": "./prompts/load.d.cts",
-        "default": "./prompts/load.d.ts"
+        "import": "./prompts/index.d.ts",
+        "require": "./prompts/index.d.cts",
+        "default": "./prompts/index.d.ts"
       },
-      "import": "./prompts/load.js",
-      "require": "./prompts/load.cjs"
+      "import": "./prompts/index.js",
+      "require": "./prompts/index.cjs"
     },
     "./vectorstores/memory": {
       "types": {
@@ -1208,6 +1212,15 @@
       },
       "import": "./text_splitter.js",
       "require": "./text_splitter.cjs"
+    },
+    "./memory/index": {
+      "types": {
+        "import": "./memory/index.d.ts",
+        "require": "./memory/index.d.cts",
+        "default": "./memory/index.d.ts"
+      },
+      "import": "./memory/index.js",
+      "require": "./memory/index.cjs"
     },
     "./memory/chat_memory": {
       "types": {

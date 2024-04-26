@@ -68,12 +68,13 @@ export const config = {
     "embeddings/cache_backed": "embeddings/cache_backed",
     "embeddings/fake": "embeddings/fake",
     // prompts
-    "prompts/load": "prompts/load",
+    "prompts/index": "prompts/index",
     // vectorstores
     "vectorstores/memory": "vectorstores/memory",
     // text_splitter
     text_splitter: "text_splitter",
     // memory
+    "memory/index": "memory/index",
     "memory/chat_memory": "memory/chat_memory",
     // document
     document: "document",
