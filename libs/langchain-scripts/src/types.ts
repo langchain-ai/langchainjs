@@ -124,6 +124,11 @@ export interface LangChainConfig {
    */
   extraImportMapEntries?: Array<ExtraImportMapEntry>;
   /**
+   * Import map entries that require non-explicit dependencies and
+   * therefore a dynamic import
+   */
+  dynamicImportMapEntries?: Array<ExtraImportMapEntry>;
+  /**
    * The absolute path to the tsconfig.json file.
    */
   tsConfigPath: string;

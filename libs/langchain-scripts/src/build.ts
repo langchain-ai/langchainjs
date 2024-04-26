@@ -96,6 +96,7 @@ async function main() {
       packageSuffix: config.packageSuffix,
       shouldTestExports: config.shouldTestExports,
       extraImportMapEntries: config.extraImportMapEntries,
+      dynamicImportMapEntries: config.dynamicImportMapEntries,
       absTsConfigPath: config.tsConfigPath,
       isPre,
       shouldGenMaps,
