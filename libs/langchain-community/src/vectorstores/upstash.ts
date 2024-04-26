@@ -4,6 +4,7 @@ import { VectorStore } from "@langchain/core/vectorstores";
 import { Index as UpstashIndex, type QueryResult } from "@upstash/vector";
 import { Document, DocumentInterface } from "@langchain/core/documents";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
+import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import {
   AsyncCaller,
   AsyncCallerParams,
@@ -31,22 +32,14 @@ export type UpstashQueryMetadata = UpstashMetadata & {
  */
 export type UpstashDeleteParams =
   | {
-      ids: string | string[];
-      deleteAll?: never;
-    }
+    ids: string | string[];
+    deleteAll?: never;
+  }
   | { deleteAll: boolean; ids?: never };
 
 const CONCURRENT_UPSERT_LIMIT = 1000;
 
-class NoOpEmbeddings implements EmbeddingsInterface {
-  embedDocuments(_documents: string[]): Promise<number[][]> {
-    return Promise.resolve([]);
-  }
 
-  embedQuery(_document: string): Promise<number[]> {
-    return Promise.resolve([]);
-  }
-}
 
 /**
  * The main class that extends the 'VectorStore' class. It provides
@@ -75,7 +68,7 @@ export class UpstashVectorStore extends VectorStore {
     args: UpstashVectorLibArgs
   ) {
     if (embeddings === "UpstashEmbeddings") {
-      super(new NoOpEmbeddings(), args);
+      super(new FakeEmbeddings(), args);
       this.upstashEmbeddingsConfig = true;
     } else {
       super(embeddings, args);
@@ -152,6 +145,12 @@ export class UpstashVectorStore extends VectorStore {
     return documentIds;
   }
 
+  /**
+   * This method adds the provided documents to Upstash database. The pageContent of the documents will be embedded by Upstash Embeddings.
+   * @param documents Array of Document objects to be added to the Upstash database.
+   * @param options Optional object containing the array of ids for the documents.
+   * @returns Promise that resolves with the ids of the provided documents when the upsert operation is done.
+   */
   async addData(documents: DocumentInterface[], options?: { ids?: string[] }) {
     const documentIds =
       options?.ids ?? Array.from({ length: documents.length }, () => uuid.v4());
