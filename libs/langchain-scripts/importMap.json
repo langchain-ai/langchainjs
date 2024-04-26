@@ -1,0 +1,822 @@
+[
+  {
+    "old": "langchain/vectorstores/zep",
+    "new": "@langchain/community/vectorstores/zep"
+  },
+  {
+    "old": "langchain/vectorstores/xata",
+    "new": "@langchain/community/vectorstores/xata"
+  },
+  {
+    "old": "langchain/vectorstores/weaviate",
+    "new": "@langchain/weaviate"
+  },
+  {
+    "old": "langchain/vectorstores/voy",
+    "new": "@langchain/community/vectorstores/voy"
+  },
+  {
+    "old": "langchain/vectorstores/vercel_postgres",
+    "new": "@langchain/community/vectorstores/vercel_postgres"
+  },
+  {
+    "old": "langchain/vectorstores/vectara",
+    "new": "@langchain/community/vectorstores/vectara"
+  },
+  {
+    "old": "langchain/vectorstores/usearch",
+    "new": "@langchain/community/vectorstores/usearch"
+  },
+  {
+    "old": "langchain/vectorstores/typesense",
+    "new": "@langchain/community/vectorstores/typesense"
+  },
+  {
+    "old": "langchain/vectorstores/typeorm",
+    "new": "@langchain/community/vectorstores/typeorm"
+  },
+  {
+    "old": "langchain/vectorstores/tigris",
+    "new": "@langchain/community/vectorstores/tigris"
+  },
+  {
+    "old": "langchain/vectorstores/supabase",
+    "new": "@langchain/community/vectorstores/supabase"
+  },
+  {
+    "old": "langchain/vectorstores/singlestore",
+    "new": "@langchain/community/vectorstores/singlestore"
+  },
+  {
+    "old": "langchain/vectorstores/rockset",
+    "new": "@langchain/community/vectorstores/rockset"
+  },
+  {
+    "old": "langchain/vectorstores/redis",
+    "new": "@langchain/redis"
+  },
+  {
+    "old": "langchain/vectorstores/qdrant",
+    "new": "@langchain/community/vectorstores/qdrant"
+  },
+  {
+    "old": "langchain/vectorstores/prisma",
+    "new": "@langchain/community/vectorstores/prisma"
+  },
+  {
+    "old": "langchain/vectorstores/pinecone",
+    "new": "@langchain/pinecone"
+  },
+  {
+    "old": "langchain/vectorstores/pgvector",
+    "new": "@langchain/community/vectorstores/pgvector"
+  },
+  {
+    "old": "langchain/vectorstores/opensearch",
+    "new": "@langchain/community/vectorstores/opensearch"
+  },
+  {
+    "old": "langchain/vectorstores/neo4j_vector",
+    "new": "@langchain/community/vectorstores/neo4j_vector"
+  },
+  {
+    "old": "langchain/vectorstores/myscale",
+    "new": "@langchain/community/vectorstores/myscale"
+  },
+  {
+    "old": "langchain/vectorstores/mongodb_atlas",
+    "new": "@langchain/mongodb"
+  },
+  {
+    "old": "langchain/vectorstores/momento_vector_index",
+    "new": "@langchain/community/vectorstores/momento_vector_index"
+  },
+  {
+    "old": "langchain/vectorstores/milvus",
+    "new": "@langchain/community/vectorstores/milvus"
+  },
+  {
+    "old": "langchain/vectorstores/lancedb",
+    "new": "@langchain/community/vectorstores/lancedb"
+  },
+  {
+    "old": "langchain/vectorstores/hnswlib",
+    "new": "@langchain/community/vectorstores/hnswlib"
+  },
+  {
+    "old": "langchain/vectorstores/googlevertexai",
+    "new": "@langchain/community/vectorstores/googlevertexai"
+  },
+  {
+    "old": "langchain/vectorstores/faiss",
+    "new": "@langchain/community/vectorstores/faiss"
+  },
+  {
+    "old": "langchain/vectorstores/elasticsearch",
+    "new": "@langchain/community/vectorstores/elasticsearch"
+  },
+  {
+    "old": "langchain/vectorstores/convex",
+    "new": "@langchain/community/vectorstores/convex"
+  },
+  {
+    "old": "langchain/vectorstores/cloudflare_vectorize",
+    "new": "@langchain/cloudflare"
+  },
+  {
+    "old": "langchain/vectorstores/clickhouse",
+    "new": "@langchain/community/vectorstores/clickhouse"
+  },
+  {
+    "old": "langchain/vectorstores/chroma",
+    "new": "@langchain/community/vectorstores/chroma"
+  },
+  {
+    "old": "langchain/vectorstores/cassandra",
+    "new": "@langchain/community/vectorstores/cassandra"
+  },
+  {
+    "old": "langchain/vectorstores/base",
+    "new": "@langchain/core/vectorstores"
+  },
+  {
+    "old": "langchain/vectorstores/analyticdb",
+    "new": "@langchain/community/vectorstores/analyticdb"
+  },
+  {
+    "old": "langchain/vectorstores/closevector/web",
+    "new": "@langchain/community/vectorstores/closevector/web"
+  },
+  {
+    "old": "langchain/vectorstores/closevector/node",
+    "new": "@langchain/community/vectorstores/closevector/node"
+  },
+  {
+    "old": "langchain/util/convex",
+    "new": "@langchain/community/util/convex"
+  },
+  {
+    "old": "langchain/tools/wolframalpha",
+    "new": "@langchain/community/tools/wolframalpha"
+  },
+  {
+    "old": "langchain/tools/wikipedia_query_run",
+    "new": "@langchain/community/tools/wikipedia_query_run"
+  },
+  {
+    "old": "langchain/tools/serper",
+    "new": "@langchain/community/tools/serper"
+  },
+  {
+    "old": "langchain/tools/serpapi",
+    "new": "@langchain/community/tools/serpapi"
+  },
+  {
+    "old": "langchain/tools/searxng_search",
+    "new": "@langchain/community/tools/searxng_search"
+  },
+  {
+    "old": "langchain/tools/searchapi",
+    "new": "@langchain/community/tools/searchapi"
+  },
+  {
+    "old": "langchain/tools/google_places",
+    "new": "@langchain/community/tools/google_places"
+  },
+  {
+    "old": "langchain/tools/google_custom_search",
+    "new": "@langchain/community/tools/google_custom_search"
+  },
+  {
+    "old": "langchain/tools/dataforseo_api_search",
+    "new": "@langchain/community/tools/dataforseo_api_search"
+  },
+  {
+    "old": "langchain/tools/dadjokeapi",
+    "new": "@langchain/community/tools/dadjokeapi"
+  },
+  {
+    "old": "langchain/tools/connery",
+    "new": "@langchain/community/tools/connery"
+  },
+  {
+    "old": "langchain/tools/calculator",
+    "new": "@langchain/community/tools/calculator"
+  },
+  {
+    "old": "langchain/tools/brave_search",
+    "new": "@langchain/community/tools/brave_search"
+  },
+  {
+    "old": "langchain/tools/bingserpapi",
+    "new": "@langchain/community/tools/bingserpapi"
+  },
+  {
+    "old": "langchain/tools/aws_sfn",
+    "new": "@langchain/community/tools/aws_sfn"
+  },
+  {
+    "old": "langchain/tools/aws_lambda",
+    "new": "@langchain/community/tools/aws_lambda"
+  },
+  {
+    "old": "langchain/tools/aiplugin",
+    "new": "@langchain/community/tools/aiplugin"
+  },
+  {
+    "old": "langchain/tools/ifttt",
+    "new": "@langchain/community/tools/ifttt"
+  },
+  {
+    "old": "langchain/tools/gmail",
+    "new": "@langchain/community/tools/gmail"
+  },
+  {
+    "old": "langchain/stores/message/xata",
+    "new": "@langchain/community/stores/message/xata"
+  },
+  {
+    "old": "langchain/stores/message/upstash_redis",
+    "new": "@langchain/community/stores/message/upstash_redis"
+  },
+  {
+    "old": "langchain/stores/message/redis",
+    "new": "@langchain/redis"
+  },
+  {
+    "old": "langchain/stores/message/planetscale",
+    "new": "@langchain/community/stores/message/planetscale"
+  },
+  {
+    "old": "langchain/stores/message/mongodb",
+    "new": "@langchain/mongodb"
+  },
+  {
+    "old": "langchain/stores/message/momento",
+    "new": "@langchain/community/stores/message/momento"
+  },
+  {
+    "old": "langchain/stores/message/ioredis",
+    "new": "@langchain/community/stores/message/ioredis"
+  },
+  {
+    "old": "langchain/stores/message/firestore",
+    "new": "@langchain/community/stores/message/firestore"
+  },
+  {
+    "old": "langchain/stores/message/dynamodb",
+    "new": "@langchain/community/stores/message/dynamodb"
+  },
+  {
+    "old": "langchain/stores/message/convex",
+    "new": "@langchain/community/stores/message/convex"
+  },
+  {
+    "old": "langchain/stores/message/cloudflare_d1",
+    "new": "@langchain/cloudflare"
+  },
+  {
+    "old": "langchain/stores/message/cassandra",
+    "new": "@langchain/community/stores/message/cassandra"
+  },
+  {
+    "old": "langchain/storage/vercel_kv",
+    "new": "@langchain/community/storage/vercel_kv"
+  },
+  {
+    "old": "langchain/storage/upstash_redis",
+    "new": "@langchain/community/storage/upstash_redis"
+  },
+  {
+    "old": "langchain/storage/ioredis",
+    "new": "@langchain/community/storage/ioredis"
+  },
+  {
+    "old": "langchain/storage/convex",
+    "new": "@langchain/community/storage/convex"
+  },
+  {
+    "old": "langchain/schema/storage",
+    "new": "@langchain/core/stores"
+  },
+  {
+    "old": "langchain/schema/retriever",
+    "new": "@langchain/core/retrievers"
+  },
+  {
+    "old": "langchain/schema/output_parser",
+    "new": "@langchain/core/output_parsers"
+  },
+  {
+    "old": "langchain/schema/document",
+    "new": "@langchain/core/documents"
+  },
+  {
+    "old": "langchain/schema/runnable",
+    "new": "@langchain/core/runnables"
+  },
+  {
+    "old": "langchain/runnables",
+    "new": "@langchain/core/runnables"
+  },
+  {
+    "old": "langchain/retrievers/zep",
+    "new": "@langchain/community/retrievers/zep"
+  },
+  {
+    "old": "langchain/retrievers/vectara_summary",
+    "new": "@langchain/community/retrievers/vectara_summary"
+  },
+  {
+    "old": "langchain/retrievers/tavily_search_api",
+    "new": "@langchain/community/retrievers/tavily_search_api"
+  },
+  {
+    "old": "langchain/retrievers/supabase",
+    "new": "@langchain/community/retrievers/supabase"
+  },
+  {
+    "old": "langchain/retrievers/metal",
+    "new": "@langchain/community/retrievers/metal"
+  },
+  {
+    "old": "langchain/retrievers/databerry",
+    "new": "@langchain/community/retrievers/databerry"
+  },
+  {
+    "old": "langchain/retrievers/chaindesk",
+    "new": "@langchain/community/retrievers/chaindesk"
+  },
+  {
+    "old": "langchain/retrievers/amazon_kendra",
+    "new": "@langchain/community/retrievers/amazon_kendra"
+  },
+  {
+    "old": "langchain/prompts",
+    "new": "@langchain/core/prompts"
+  },
+  {
+    "old": "langchain/memory/zep",
+    "new": "@langchain/community/memory/zep"
+  },
+  {
+    "old": "langchain/load/serializable",
+    "new": "@langchain/core/load/serializable"
+  },
+  {
+    "old": "langchain/llms/yandex",
+    "new": "@langchain/yandex"
+  },
+  {
+    "old": "langchain/llms/writer",
+    "new": "@langchain/community/llms/writer"
+  },
+  {
+    "old": "langchain/llms/watsonx_ai",
+    "new": "@langchain/community/llms/watsonx_ai"
+  },
+  {
+    "old": "langchain/llms/sagemaker_endpoint",
+    "new": "@langchain/community/llms/sagemaker_endpoint"
+  },
+  {
+    "old": "langchain/llms/replicate",
+    "new": "@langchain/community/llms/replicate"
+  },
+  {
+    "old": "langchain/llms/raycast",
+    "new": "@langchain/community/llms/raycast"
+  },
+  {
+    "old": "langchain/llms/portkey",
+    "new": "@langchain/community/llms/portkey"
+  },
+  {
+    "old": "langchain/llms/openai",
+    "new": "@langchain/openai"
+  },
+  {
+    "old": "langchain/llms/ollama",
+    "new": "@langchain/community/llms/ollama"
+  },
+  {
+    "old": "langchain/llms/llama_cpp",
+    "new": "@langchain/community/llms/llama_cpp"
+  },
+  {
+    "old": "langchain/llms/hf",
+    "new": "@langchain/community/llms/hf"
+  },
+  {
+    "old": "langchain/llms/gradient_ai",
+    "new": "@langchain/community/llms/gradient_ai"
+  },
+  {
+    "old": "langchain/llms/googlepalm",
+    "new": "@langchain/community/llms/googlepalm"
+  },
+  {
+    "old": "langchain/llms/fireworks",
+    "new": "@langchain/community/llms/fireworks"
+  },
+  {
+    "old": "langchain/llms/cohere",
+    "new": "@langchain/cohere"
+  },
+  {
+    "old": "langchain/llms/cloudflare_workersai",
+    "new": "@langchain/cloudflare"
+  },
+  {
+    "old": "langchain/llms/base",
+    "new": "@langchain/core/language_models/llms"
+  },
+  {
+    "old": "langchain/llms/aleph_alpha",
+    "new": "@langchain/community/llms/aleph_alpha"
+  },
+  {
+    "old": "langchain/llms/ai21",
+    "new": "@langchain/community/llms/ai21"
+  },
+  {
+    "old": "langchain/llms/googlevertexai/web",
+    "new": "@langchain/community/llms/googlevertexai/web"
+  },
+  {
+    "old": "langchain/llms/googlevertexai",
+    "new": "@langchain/community/llms/googlevertexai"
+  },
+  {
+    "old": "langchain/llms/bedrock/web",
+    "new": "@langchain/community/llms/bedrock/web"
+  },
+  {
+    "old": "langchain/llms/bedrock",
+    "new": "@langchain/community/llms/bedrock"
+  },
+  {
+    "old": "langchain/graphs/neo4j_graph",
+    "new": "@langchain/community/graphs/neo4j_graph"
+  },
+  {
+    "old": "langchain/embeddings/voyage",
+    "new": "@langchain/community/embeddings/voyage"
+  },
+  {
+    "old": "langchain/embeddings/tensorflow",
+    "new": "@langchain/community/embeddings/tensorflow"
+  },
+  {
+    "old": "langchain/embeddings/openai",
+    "new": "@langchain/openai"
+  },
+  {
+    "old": "langchain/embeddings/ollama",
+    "new": "@langchain/community/embeddings/ollama"
+  },
+  {
+    "old": "langchain/embeddings/minimax",
+    "new": "@langchain/community/embeddings/minimax"
+  },
+  {
+    "old": "langchain/embeddings/llama_cpp",
+    "new": "@langchain/community/embeddings/llama_cpp"
+  },
+  {
+    "old": "langchain/embeddings/hf_transformers",
+    "new": "@langchain/community/embeddings/hf_transformers"
+  },
+  {
+    "old": "langchain/embeddings/hf",
+    "new": "@langchain/community/embeddings/hf"
+  },
+  {
+    "old": "langchain/embeddings/gradient_ai",
+    "new": "@langchain/community/embeddings/gradient_ai"
+  },
+  {
+    "old": "langchain/embeddings/googlevertexai",
+    "new": "@langchain/community/embeddings/googlevertexai"
+  },
+  {
+    "old": "langchain/embeddings/googlepalm",
+    "new": "@langchain/community/embeddings/googlepalm"
+  },
+  {
+    "old": "langchain/embeddings/cohere",
+    "new": "@langchain/cohere"
+  },
+  {
+    "old": "langchain/embeddings/cloudflare_workersai",
+    "new": "@langchain/cloudflare"
+  },
+  {
+    "old": "langchain/embeddings/bedrock",
+    "new": "@langchain/community/embeddings/bedrock"
+  },
+  {
+    "old": "langchain/embeddings/base",
+    "new": "@langchain/core/embeddings"
+  },
+  {
+    "old": "langchain/document_transformers/mozilla_readability",
+    "new": "@langchain/community/document_transformers/mozilla_readability"
+  },
+  {
+    "old": "langchain/document_transformers/html_to_text",
+    "new": "@langchain/community/document_transformers/html_to_text"
+  },
+  {
+    "old": "langchain/chat_models/yandex",
+    "new": "@langchain/yandex"
+  },
+  {
+    "old": "langchain/chat_models/portkey",
+    "new": "@langchain/community/chat_models/portkey"
+  },
+  {
+    "old": "langchain/chat_models/openai",
+    "new": "@langchain/openai"
+  },
+  {
+    "old": "langchain/chat_models/ollama",
+    "new": "@langchain/community/chat_models/ollama"
+  },
+  {
+    "old": "langchain/chat_models/minimax",
+    "new": "@langchain/community/chat_models/minimax"
+  },
+  {
+    "old": "langchain/chat_models/llama_cpp",
+    "new": "@langchain/community/chat_models/llama_cpp"
+  },
+  {
+    "old": "langchain/chat_models/googlepalm",
+    "new": "@langchain/community/chat_models/googlepalm"
+  },
+  {
+    "old": "langchain/chat_models/fireworks",
+    "new": "@langchain/community/chat_models/fireworks"
+  },
+  {
+    "old": "langchain/chat_models/fake",
+    "new": "@langchain/core/utils/testing"
+  },
+  {
+    "old": "langchain/chat_models/cloudflare_workersai",
+    "new": "@langchain/cloudflare"
+  },
+  {
+    "old": "langchain/chat_models/base",
+    "new": "@langchain/core/language_models/chat_models"
+  },
+  {
+    "old": "langchain/chat_models/baiduwenxin",
+    "new": "@langchain/community/chat_models/baiduwenxin"
+  },
+  {
+    "old": "langchain/chat_models/iflytek_xinghuo/web",
+    "new": "@langchain/community/chat_models/iflytek_xinghuo/web"
+  },
+  {
+    "old": "langchain/chat_models/iflytek_xinghuo",
+    "new": "@langchain/community/chat_models/iflytek_xinghuo"
+  },
+  {
+    "old": "langchain/chat_models/googlevertexai/web",
+    "new": "@langchain/community/chat_models/googlevertexai/web"
+  },
+  {
+    "old": "langchain/chat_models/googlevertexai",
+    "new": "@langchain/community/chat_models/googlevertexai"
+  },
+  {
+    "old": "langchain/chat_models/bedrock/web",
+    "new": "@langchain/community/chat_models/bedrock/web"
+  },
+  {
+    "old": "langchain/chat_models/bedrock",
+    "new": "@langchain/community/chat_models/bedrock"
+  },
+  {
+    "old": "langchain/callbacks",
+    "new": "@langchain/core/callbacks/manager"
+  },
+  {
+    "old": "langchain/callbacks",
+    "new": "@langchain/core/callbacks/base"
+  },
+  {
+    "old": "langchain/callbacks/handlers/log_stream",
+    "new": "@langchain/core/tracers/log_stream"
+  },
+  {
+    "old": "langchain/callbacks/handlers/llmonitor",
+    "new": "@langchain/community/callbacks/handlers/llmonitor"
+  },
+  {
+    "old": "langchain/callbacks/handlers/initialize",
+    "new": "@langchain/core/tracers/initialize"
+  },
+  {
+    "old": "langchain/cache/upstash_redis",
+    "new": "@langchain/community/caches/upstash_redis"
+  },
+  {
+    "old": "langchain/cache/momento",
+    "new": "@langchain/community/caches/momento"
+  },
+  {
+    "old": "langchain/cache/ioredis",
+    "new": "@langchain/community/caches/ioredis"
+  },
+  {
+    "old": "langchain/cache",
+    "new": "@langchain/core/caches"
+  },
+  {
+    "old": "langchain/cache/cloudflare_kv",
+    "new": "@langchain/cloudflare"
+  },
+  {
+    "old": "langchain/base_language",
+    "new": "@langchain/core/language_models/base"
+  },
+  {
+    "old": "langchain/agents/toolkits/connery",
+    "new": "@langchain/community/agents/toolkits/connery"
+  },
+  {
+    "old": "langchain/retrievers/self_query/weaviate",
+    "new": "@langchain/weaviate"
+  },
+  {
+    "old": "langchain/retrievers/self_query/vectara",
+    "new": "@langchain/community/retrievers/self_query/vectara"
+  },
+  {
+    "old": "langchain/retrievers/self_query/supabase",
+    "new": "@langchain/community/retrievers/self_query/supabase"
+  },
+  {
+    "old": "langchain/retrievers/self_query/pinecone",
+    "new": "@langchain/pinecone"
+  },
+  {
+    "old": "langchain/retrievers/self_query/chroma",
+    "new": "@langchain/community/retrievers/self_query/chroma"
+  },
+  {
+    "old": "langchain/document_loaders/web/youtube",
+    "new": "@langchain/community/document_loaders/web/youtube"
+  },
+  {
+    "old": "langchain/document_loaders/web/sortxyz_blockchain",
+    "new": "@langchain/community/document_loaders/web/sortxyz_blockchain"
+  },
+  {
+    "old": "langchain/document_loaders/web/sonix_audio",
+    "new": "@langchain/community/document_loaders/web/sonix_audio"
+  },
+  {
+    "old": "langchain/document_loaders/web/sitemap",
+    "new": "@langchain/community/document_loaders/web/sitemap"
+  },
+  {
+    "old": "langchain/document_loaders/web/serpapi",
+    "new": "@langchain/community/document_loaders/web/serpapi"
+  },
+  {
+    "old": "langchain/document_loaders/web/searchapi",
+    "new": "@langchain/community/document_loaders/web/searchapi"
+  },
+  {
+    "old": "langchain/document_loaders/web/s3",
+    "new": "@langchain/community/document_loaders/web/s3"
+  },
+  {
+    "old": "langchain/document_loaders/web/recursive_url",
+    "new": "@langchain/community/document_loaders/web/recursive_url"
+  },
+  {
+    "old": "langchain/document_loaders/web/puppeteer",
+    "new": "@langchain/community/document_loaders/web/puppeteer"
+  },
+  {
+    "old": "langchain/document_loaders/web/playwright",
+    "new": "@langchain/community/document_loaders/web/playwright"
+  },
+  {
+    "old": "langchain/document_loaders/web/pdf",
+    "new": "@langchain/community/document_loaders/web/pdf"
+  },
+  {
+    "old": "langchain/document_loaders/web/notionapi",
+    "new": "@langchain/community/document_loaders/web/notionapi"
+  },
+  {
+    "old": "langchain/document_loaders/web/imsdb",
+    "new": "@langchain/community/document_loaders/web/imsdb"
+  },
+  {
+    "old": "langchain/document_loaders/web/hn",
+    "new": "@langchain/community/document_loaders/web/hn"
+  },
+  {
+    "old": "langchain/document_loaders/web/github",
+    "new": "@langchain/community/document_loaders/web/github"
+  },
+  {
+    "old": "langchain/document_loaders/web/gitbook",
+    "new": "@langchain/community/document_loaders/web/gitbook"
+  },
+  {
+    "old": "langchain/document_loaders/web/firecrawl",
+    "new": "@langchain/community/document_loaders/web/firecrawl"
+  },
+  {
+    "old": "langchain/document_loaders/web/figma",
+    "new": "@langchain/community/document_loaders/web/figma"
+  },
+  {
+    "old": "langchain/document_loaders/web/couchbase",
+    "new": "@langchain/community/document_loaders/web/couchbase"
+  },
+  {
+    "old": "langchain/document_loaders/web/confluence",
+    "new": "@langchain/community/document_loaders/web/confluence"
+  },
+  {
+    "old": "langchain/document_loaders/web/college_confidential",
+    "new": "@langchain/community/document_loaders/web/college_confidential"
+  },
+  {
+    "old": "langchain/document_loaders/web/cheerio",
+    "new": "@langchain/community/document_loaders/web/cheerio"
+  },
+  {
+    "old": "langchain/document_loaders/web/azure_blog_storage_file",
+    "new": "@langchain/community/document_loaders/web/azure_blog_storage_file"
+  },
+  {
+    "old": "langchain/document_loaders/web/azure_blog_storage_container",
+    "new": "@langchain/community/document_loaders/web/azure_blog_storage_container"
+  },
+  {
+    "old": "langchain/document_loaders/web/assemblyai",
+    "new": "@langchain/community/document_loaders/web/assemblyai"
+  },
+  {
+    "old": "langchain/document_loaders/web/apify_dataset",
+    "new": "@langchain/community/document_loaders/web/apify_dataset"
+  },
+  {
+    "old": "langchain/document_loaders/fs/unstructured",
+    "new": "@langchain/community/document_loaders/fs/unstructured"
+  },
+  {
+    "old": "langchain/document_loaders/fs/srt",
+    "new": "@langchain/community/document_loaders/fs/srt"
+  },
+  {
+    "old": "langchain/document_loaders/fs/pptx",
+    "new": "@langchain/community/document_loaders/fs/pptx"
+  },
+  {
+    "old": "langchain/document_loaders/fs/pdf",
+    "new": "@langchain/community/document_loaders/fs/pdf"
+  },
+  {
+    "old": "langchain/document_loaders/fs/openai_whisper_audio",
+    "new": "@langchain/community/document_loaders/fs/openai_whisper_audio"
+  },
+  {
+    "old": "langchain/document_loaders/fs/obsidian",
+    "new": "@langchain/community/document_loaders/fs/obsidian"
+  },
+  {
+    "old": "langchain/document_loaders/fs/notion",
+    "new": "@langchain/community/document_loaders/fs/notion"
+  },
+  {
+    "old": "langchain/document_loaders/fs/epub",
+    "new": "@langchain/community/document_loaders/fs/epub"
+  },
+  {
+    "old": "langchain/document_loaders/fs/docx",
+    "new": "@langchain/community/document_loaders/fs/docx"
+  },
+  {
+    "old": "langchain/document_loaders/fs/csv",
+    "new": "@langchain/community/document_loaders/fs/csv"
+  },
+  {
+    "old": "langchain/document_loaders/fs/chatgpt",
+    "new": "@langchain/community/document_loaders/fs/chatgpt"
+  },
+  {
+    "old": "langchain/chains/graph_qa/cypher",
+    "new": "@langchain/community/chains/graph_qa/cypher"
+  }
+]
