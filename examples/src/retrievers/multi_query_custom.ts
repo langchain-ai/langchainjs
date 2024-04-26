@@ -68,7 +68,7 @@ const retriever = new MultiQueryRetriever({
 });
 
 const query = "What are mitochondria made of?";
-const retrievedDocs = await retriever.getRelevantDocuments(query);
+const retrievedDocs = await retriever.invoke(query);
 
 /*
   Generated queries: Was besteht ein Mitochondrium?,Aus welchen Komponenten setzt sich ein Mitochondrium zusammen?  ,Welche Moleküle finden sich in einem Mitochondrium?

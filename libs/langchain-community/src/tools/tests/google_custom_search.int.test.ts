@@ -4,7 +4,7 @@ import { GoogleCustomSearch } from "../google_custom_search.js";
 test.skip("GoogleCustomSearchTool", async () => {
   const tool = new GoogleCustomSearch();
 
-  const result = await tool.call("What is Langchain?");
+  const result = await tool.invoke("What is Langchain?");
 
   console.log({ result });
 });

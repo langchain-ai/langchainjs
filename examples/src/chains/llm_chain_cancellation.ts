@@ -17,15 +17,17 @@ setTimeout(() => {
 
 try {
   // Call the chain with the inputs and a callback for the streamed tokens
-  const res = await chain.call(
+  const res = await chain.invoke(
     { product: "colorful socks", signal: controller.signal },
-    [
-      {
-        handleLLMNewToken(token: string) {
-          process.stdout.write(token);
+    {
+      callbacks: [
+        {
+          handleLLMNewToken(token: string) {
+            process.stdout.write(token);
+          },
         },
-      },
-    ]
+      ],
+    }
   );
 } catch (e) {
   console.log(e);
