@@ -25,7 +25,7 @@ const memory = new BufferMemory({
 const model = new ChatOpenAI();
 const chain = new ConversationChain({ llm: model, memory });
 
-const res1 = await chain.call({ input: "Hi! I'm Jonathan." });
+const res1 = await chain.invoke({ input: "Hi! I'm Jonathan." });
 console.log({ res1 });
 /*
 {
@@ -35,7 +35,7 @@ console.log({ res1 });
 }
 */
 
-const res2 = await chain.call({ input: "What did I just say my name was?" });
+const res2 = await chain.invoke({ input: "What did I just say my name was?" });
 console.log({ res2 });
 
 /*

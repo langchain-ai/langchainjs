@@ -56,7 +56,7 @@ export async function run() {
     k: 1,
     returnSourceDocuments: true,
   });
-  const response = await chain.call({ query: "What is Xata?" });
+  const response = await chain.invoke({ query: "What is Xata?" });
 
   console.log(JSON.stringify(response, null, 2));
 

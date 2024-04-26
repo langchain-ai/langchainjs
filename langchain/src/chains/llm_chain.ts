@@ -72,16 +72,21 @@ function _getLanguageModel(llmLike: RunnableInterface): BaseLanguageModel {
 }
 
 /**
+ * @deprecated This class will be removed in 0.3.0. Use the LangChain Expression Language (LCEL) instead.
+ * See the example below for how to use LCEL with the LLMChain class:
+ *
  * Chain to run queries against LLMs.
  *
  * @example
  * ```ts
- * import { LLMChain } from "langchain/chains";
- * import { OpenAI } from "langchain/llms/openai";
- * import { PromptTemplate } from "langchain/prompts";
+ * import { ChatPromptTemplate } from "@langchain/core/prompts";
+ * import { ChatOpenAI } from "@langchain/openai";
  *
- * const prompt = PromptTemplate.fromTemplate("Tell me a {adjective} joke");
- * const llm = new LLMChain({ llm: new OpenAI(), prompt });
+ * const prompt = ChatPromptTemplate.fromTemplate("Tell me a {adjective} joke");
+ * const llm = new ChatOpenAI();
+ * const chain = prompt.pipe(llm);
+ *
+ * const response = await chain.invoke({ adjective: "funny" });
  * ```
  */
 export class LLMChain<

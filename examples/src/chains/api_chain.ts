@@ -39,7 +39,7 @@ export async function run() {
     },
   });
 
-  const res = await chain.call({
+  const res = await chain.invoke({
     question:
       "What is the weather like right now in Munich, Germany in degrees Farenheit?",
   });
