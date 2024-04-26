@@ -266,7 +266,7 @@
     "pickleparser": "^0.2.1",
     "portkey-ai": "^0.1.11",
     "redis": "*",
-    "replicate": "^0.18.0",
+    "replicate": "^0.29.1",
     "typeorm": "^0.3.12",
     "typesense": "^1.5.3",
     "usearch": "^1.1.1",

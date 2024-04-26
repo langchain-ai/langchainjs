@@ -18,6 +18,23 @@ test("Test Replicate", async () => {
   expect(typeof res).toBe("string");
 });
 
+test("Test Replicate Streaming", async () => {
+  const model = new Replicate({
+    model:
+      "a16z-infra/llama13b-v2-chat",
+    input: {
+      max_length: 10,
+    },
+    streaming: true,
+  });
+
+  const res = await model.invoke("Hello, my name is ");
+
+  console.log({ res });
+
+  expect(typeof res).toBe("string");
+});
+
 test.skip("Serialise Replicate", () => {
   const model = new Replicate({
     model:

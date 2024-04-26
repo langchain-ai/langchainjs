@@ -19,6 +19,12 @@ export interface ReplicateInput {
 
   /** The key used to pass prompts to the model. */
   promptKey?: string;
+
+  /**
+   * Whether or not to stream tokens as they are generated.
+   * @default {false}
+   */
+  streaming?: boolean;
 }
 
 /**
@@ -59,6 +65,8 @@ export class Replicate extends LLM implements ReplicateInput {
 
   promptKey?: string;
 
+  streaming: boolean;
+
   constructor(fields: ReplicateInput & BaseLLMParams) {
     super(fields);
 
@@ -77,6 +85,7 @@ export class Replicate extends LLM implements ReplicateInput {
     this.model = fields.model;
     this.input = fields.input ?? {};
     this.promptKey = fields.promptKey;
+    this.streaming = fields.streaming ?? this.streaming;
   }
 
   _llmType() {
@@ -128,7 +137,7 @@ export class Replicate extends LLM implements ReplicateInput {
       { signal: options.signal },
       async () => {  // Ensuring the function is explicitly marked as async
         try {
-          for await (const event of replicate.stream("meta/meta-llama-3-70b-instruct", {
+          for await (const event of replicate.stream(this.model, {
             input: {
               // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
               [this.promptKey!]: prompt,
@@ -159,7 +168,8 @@ export class Replicate extends LLM implements ReplicateInput {
     Replicate: typeof import("replicate").default;
   }> {
     try {
-      const { default: Replicate } = await import("replicate");
+      // eslint-disable-next-line @typescript-eslint/no-var-requires,global-require
+      const Replicate = require("replicate");
       return { Replicate };
     } catch (e) {
       throw new Error(
