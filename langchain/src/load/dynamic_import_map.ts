@@ -3,7 +3,9 @@
 export async function getDynamicImportMap() {
   const chat_models__fireworks: Record<string, any> = {};
   try {
-    const dynamicImports = await import("@langchain/community/chat_models/fireworks");
+    const dynamicImports = await import(
+      "@langchain/community/chat_models/fireworks"
+    );
     chat_models__fireworks.ChatFireworks = dynamicImports.ChatFireworks;
   } catch (e) {}
 
@@ -15,7 +17,9 @@ export async function getDynamicImportMap() {
 
   const chat_models__bedrock: Record<string, any> = {};
   try {
-    const dynamicImports = await import("@langchain/community/chat_models/bedrock");
+    const dynamicImports = await import(
+      "@langchain/community/chat_models/bedrock"
+    );
     chat_models__bedrock.BedrockChat = dynamicImports.BedrockChat;
   } catch (e) {}
 
@@ -42,6 +46,6 @@ export async function getDynamicImportMap() {
     chat_models__bedrock,
     llms__bedrock,
     chat_models__anthropic,
-    llms__replicate
+    llms__replicate,
   };
 }
