@@ -42,23 +42,40 @@ type MigrationUpdate = {
    * The updated import statement.
    */
   updatedImport: string;
-}
+};
 
-export async function updateEntrypointsFrom0_x_xTo0_2_x(fields: UpdateLangChainFields): Promise<Array<MigrationUpdate> | null> {
-  if (fields.projectPath && fields.files && fields.files.length > 0 && fields.tsConfigPath) {
-    throw new Error("Only one of `projectPath`, `tsConfigPath`, or `files` can be provided.");
+export async function updateEntrypointsFrom0_x_xTo0_2_x(
+  fields: UpdateLangChainFields
+): Promise<Array<MigrationUpdate> | null> {
+  if (
+    fields.projectPath &&
+    fields.files &&
+    fields.files.length > 0 &&
+    fields.tsConfigPath
+  ) {
+    throw new Error(
+      "Only one of `projectPath`, `tsConfigPath`, or `files` can be provided."
+    );
   }
-  if (!fields.projectPath && (!fields.files || fields.files.length === 0) && !fields.tsConfigPath) {
-    throw new Error("One of `projectPath`, `tsConfigPath`, or `files` must be provided.");
+  if (
+    !fields.projectPath &&
+    (!fields.files || fields.files.length === 0) &&
+    !fields.tsConfigPath
+  ) {
+    throw new Error(
+      "One of `projectPath`, `tsConfigPath`, or `files` must be provided."
+    );
   }
 
-  const importMap: Array<{ old: string, new: string }> = JSON.parse(
+  const importMap: Array<{ old: string; new: string }> = JSON.parse(
     fs.readFileSync("importMap.json", "utf-8")
   );
 
   let projectFiles: string[] | null = null;
   if (fields.projectPath) {
-    projectFiles = glob.sync(path.join(fields.projectPath, "/**/*.{ts,tsx,js,jsx}"));
+    projectFiles = glob.sync(
+      path.join(fields.projectPath, "/**/*.{ts,tsx,js,jsx}")
+    );
   } else if (fields.files) {
     projectFiles = fields.files;
   }
@@ -81,9 +98,14 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(fields: UpdateLangChainF
       allImports.forEach((importDeclaration) => {
         const importPath = importDeclaration.getModuleSpecifierValue();
         const importPathText = importDeclaration.getModuleSpecifier().getText();
-        const importPathTextWithoutQuotes = importPathText.slice(1, importPathText.length - 1);
-  
-        const deprecatedEntrypoint = importMap.find((entrypoint) => entrypoint.old === importPathTextWithoutQuotes);
+        const importPathTextWithoutQuotes = importPathText.slice(
+          1,
+          importPathText.length - 1
+        );
+
+        const deprecatedEntrypoint = importMap.find(
+          (entrypoint) => entrypoint.old === importPathTextWithoutQuotes
+        );
         if (!deprecatedEntrypoint) {
           // no-op
           return;
@@ -93,7 +115,9 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(fields: UpdateLangChainF
         // now get the full updated import
         const filePath = sourceFile.getFilePath();
         if (fields.shouldLog) {
-          console.log(`Updated import: ${importPath} to ${deprecatedEntrypoint.new} inside ${filePath}`);
+          console.log(
+            `Updated import: ${importPath} to ${deprecatedEntrypoint.new} inside ${filePath}`
+          );
         }
         updates.push({
           path: filePath,
@@ -102,10 +126,13 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(fields: UpdateLangChainF
         });
       });
     } catch (e) {
-      console.error({
-        path: sourceFile.getFilePath(),
-        error: e,
-      }, "Error updating imports.");
+      console.error(
+        {
+          path: sourceFile.getFilePath(),
+          error: e,
+        },
+        "Error updating imports."
+      );
     }
   });
 
@@ -114,9 +141,12 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(fields: UpdateLangChainF
     await project.save();
     return updates;
   } catch (e) {
-    console.error({
-      error: e,
-    }, "Error saving changes.");
+    console.error(
+      {
+        error: e,
+      },
+      "Error saving changes."
+    );
     return null;
   }
 }
