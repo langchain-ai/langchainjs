@@ -10987,6 +10987,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@qdrant/js-client-rest@npm:^1.8.2":
+  version: 1.9.0
+  resolution: "@qdrant/js-client-rest@npm:1.9.0"
+  dependencies:
+    "@qdrant/openapi-typescript-fetch": 1.2.6
+    "@sevinf/maybe": 0.5.0
+    undici: ~5.28.4
+  peerDependencies:
+    typescript: ">=4.7"
+  checksum: 3ac6526a961f85e96eaa0cd17059cafcca208c7aaa6df96fa99caab75c53c79903eafa611be99b52732970f4bef65d93922537916194fe0b9edf0f256e42fa9a
+  languageName: node
+  linkType: hard
+
+"@qdrant/openapi-typescript-fetch@npm:1.2.6":
+  version: 1.2.6
+  resolution: "@qdrant/openapi-typescript-fetch@npm:1.2.6"
+  checksum: 038c26b64da656ec6c16a92c2d90ad13bb154312ea0442f49c476d31ba66e7ac43344dcc3e580980c0bfba9ad37266f4341c254fb648197f92872e694b9205d7
+  languageName: node
+  linkType: hard
+
 "@qdrant/openapi-typescript-fetch@npm:^1.2.0":
   version: 1.2.0
   resolution: "@qdrant/openapi-typescript-fetch@npm:1.2.0"
@@ -11263,7 +11283,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sevinf/maybe@npm:^0.5.0":
+"@sevinf/maybe@npm:0.5.0, @sevinf/maybe@npm:^0.5.0":
   version: 0.5.0
   resolution: "@sevinf/maybe@npm:0.5.0"
   checksum: 406151dde7af0e05c51f2650eb0ccff429afe776f88e7c3cecb72197f28eb96f906eacace17d780052ce5aa6d2cd4b04a045a5ffabe3364ad6cdb9dfe42af3eb
@@ -26683,6 +26703,7 @@ __metadata:
     "@mendable/firecrawl-js": ^0.0.13
     "@notionhq/client": ^2.2.10
     "@pinecone-database/pinecone": ^1.1.0
+    "@qdrant/js-client-rest": ^1.8.2
     "@supabase/supabase-js": ^2.10.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -26780,6 +26801,7 @@ __metadata:
     "@mendable/firecrawl-js": ^0.0.13
     "@notionhq/client": ^2.2.10
     "@pinecone-database/pinecone": "*"
+    "@qdrant/js-client-rest": ^1.8.2
     "@supabase/supabase-js": ^2.10.0
     "@vercel/kv": ^0.2.3
     "@xata.io/client": ^0.28.0
@@ -26844,6 +26866,8 @@ __metadata:
     "@notionhq/client":
       optional: true
     "@pinecone-database/pinecone":
+      optional: true
+    "@qdrant/js-client-rest":
       optional: true
     "@supabase/supabase-js":
       optional: true
@@ -35456,6 +35480,15 @@ __metadata:
   dependencies:
     busboy: ^1.6.0
   checksum: 048a3365f622be44fb319316cedfaa241c59cf7f3368ae7667a12323447e1822e8cc3d00f6956c852d1478a6fde1cbbe753f49e05f2fdaed229693e716ebaf35
+  languageName: node
+  linkType: hard
+
+"undici@npm:~5.28.4":
+  version: 5.28.4
+  resolution: "undici@npm:5.28.4"
+  dependencies:
+    "@fastify/busboy": ^2.0.0
+  checksum: a8193132d84540e4dc1895ecc8dbaa176e8a49d26084d6fbe48a292e28397cd19ec5d13bc13e604484e76f94f6e334b2bdc740d5f06a6e50c44072818d0c19f9
   languageName: node
   linkType: hard
 

@@ -55,6 +55,8 @@ type QdrantSearchResponse = QdrantSchemas["ScoredPoint"] & {
  * existence of a collection in the database.
  */
 export class QdrantVectorStore extends VectorStore {
+  declare FilterType: QdrantFilter;
+
   get lc_secrets(): { [key: string]: string } {
     return {
       apiKey: "QDRANT_API_KEY",
@@ -180,7 +182,7 @@ export class QdrantVectorStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k?: number,
-    filter?: QdrantFilter
+    filter?: this["FilterType"]
   ): Promise<[Document, number][]> {
     if (!query) {
       return [];
