@@ -930,10 +930,6 @@
     "retrievers/self_query/pinecone.js",
     "retrievers/self_query/pinecone.d.ts",
     "retrievers/self_query/pinecone.d.cts",
-    "retrievers/self_query/qdrant.cjs",
-    "retrievers/self_query/qdrant.js",
-    "retrievers/self_query/qdrant.d.ts",
-    "retrievers/self_query/qdrant.d.cts",
     "retrievers/self_query/supabase.cjs",
     "retrievers/self_query/supabase.js",
     "retrievers/self_query/supabase.d.ts",
@@ -3630,15 +3626,6 @@
       },
       "import": "./retrievers/self_query/pinecone.js",
       "require": "./retrievers/self_query/pinecone.cjs"
-    },
-    "./retrievers/self_query/qdrant": {
-      "types": {
-        "import": "./retrievers/self_query/qdrant.d.ts",
-        "require": "./retrievers/self_query/qdrant.d.cts",
-        "default": "./retrievers/self_query/qdrant.d.ts"
-      },
-      "import": "./retrievers/self_query/qdrant.js",
-      "require": "./retrievers/self_query/qdrant.cjs"
     },
     "./retrievers/self_query/supabase": {
       "types": {
