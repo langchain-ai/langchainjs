@@ -1,7 +1,5 @@
-import {
-  VectaraFilter,
-  VectaraStore,
-} from "@langchain/community/vectorstores/vectara";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import {
   BaseTranslator,
   isFilterEmpty,
@@ -15,6 +13,13 @@ import {
   StructuredQuery,
   Visitor,
 } from "@langchain/core/structured_query";
+import { VectorStore } from "@langchain/core/vectorstores";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "retrievers/self_query/vectara",
+  newPackageName: "@langchain/community",
+});
 
 type AllowedOperator = Exclude<Operator, NOT>;
 
@@ -40,8 +45,10 @@ function processValue(value: Value): string {
   }
 }
 
+type VectaraFilter = any;
+
 export class VectaraTranslator<
-  T extends VectaraStore
+  T extends VectorStore
 > extends BaseTranslator<T> {
   declare VisitOperationOutput: VectaraOperationResult;
 

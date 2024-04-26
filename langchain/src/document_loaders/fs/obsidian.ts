@@ -5,6 +5,12 @@ import { Document } from "@langchain/core/documents";
 import { getEnv } from "@langchain/core/utils/env";
 import { DirectoryLoader, UnknownHandling } from "./directory.js";
 import { BaseDocumentLoader } from "../base.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/fs/obsidian",
+  newPackageName: "@langchain/community",
+});
 
 export type FrontMatter = {
   title?: string;

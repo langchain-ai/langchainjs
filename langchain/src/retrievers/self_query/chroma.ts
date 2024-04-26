@@ -1,9 +1,15 @@
-import { Chroma } from "@langchain/community/vectorstores/chroma";
 import {
   BasicTranslator,
   Comparators,
   Operators,
 } from "@langchain/core/structured_query";
+import { VectorStore } from "@langchain/core/vectorstores";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "retrievers/self_query/chroma",
+  newPackageName: "@langchain/community",
+});
 
 /**
  * Specialized translator for the Chroma vector database. It extends the
@@ -26,7 +32,10 @@ import {
  * );
  * ```
  */
-export class ChromaTranslator<T extends Chroma> extends BasicTranslator<T> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export class ChromaTranslator<
+  T extends VectorStore
+> extends BasicTranslator<T> {
   constructor() {
     super({
       allowedOperators: [Operators.and, Operators.or],

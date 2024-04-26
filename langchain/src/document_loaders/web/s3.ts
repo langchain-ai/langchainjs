@@ -5,6 +5,12 @@ import { Readable } from "node:stream";
 import { S3Client, GetObjectCommand, S3ClientConfig } from "@aws-sdk/client-s3";
 import { BaseDocumentLoader } from "../base.js";
 import { UnstructuredLoader as UnstructuredLoaderDefault } from "../fs/unstructured.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/web/s3",
+  newPackageName: "@langchain/community",
+});
 
 /**
  * Represents the configuration options for the S3 client. It extends the
