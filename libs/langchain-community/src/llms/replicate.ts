@@ -1,3 +1,4 @@
+import * as ReplicateModel from "replicate";
 import { LLM, type BaseLLMParams } from "@langchain/core/language_models/llms";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
@@ -97,9 +98,7 @@ export class Replicate extends LLM implements ReplicateInput {
     prompt: string,
     options: this["ParsedCallOptions"]
   ): Promise<string> {
-    const imports = await Replicate.imports();
-
-    const replicate = new imports.Replicate({
+    const replicate = new ReplicateModel.default({
       userAgent: "langchain",
       auth: this.apiKey,
     });
@@ -108,15 +107,15 @@ export class Replicate extends LLM implements ReplicateInput {
       const [modelString, versionString] = this.model.split(":");
 
       let inputProperties: { "x-order": number | undefined }[] | undefined;
-      if ( versionString !== undefined )
-      {
+      if (versionString !== undefined) {
         const version = await replicate.models.versions.get(
           modelString.split("/")[0],
           modelString.split("/")[1],
           versionString
         );
         const openapiSchema = version.openapi_schema;
-        inputProperties = (openapiSchema as any)?.components?.schemas?.Input?.properties;
+        inputProperties = (openapiSchema as any)?.components?.schemas?.Input
+          ?.properties;
       }
 
       if (inputProperties === undefined) {
@@ -133,26 +132,23 @@ export class Replicate extends LLM implements ReplicateInput {
       }
     }
     let output = "";
-     await this.caller.callWithOptions(
-      { signal: options.signal },
-      async () => {  // Ensuring the function is explicitly marked as async
-        try {
-          for await (const event of replicate.stream(this.model, {
-            input: {
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-              [this.promptKey!]: prompt,
-              ...this.input,
-            },
-          })) {
-            output += event.toString();
-          }
-        } catch (error) {
-          console.error('Error occurred while processing stream:', error);
-          // Handle or rethrow error as necessary
+    await this.caller.callWithOptions({ signal: options.signal }, async () => {
+      // Ensuring the function is explicitly marked as async
+      try {
+        for await (const event of replicate.stream(this.model, {
+          input: {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            [this.promptKey!]: prompt,
+            ...this.input,
+          },
+        })) {
+          output += event.toString();
         }
+      } catch (error) {
+        console.error("Error occurred while processing stream:", error);
+        // Handle or rethrow error as necessary
       }
-    );
-
+    });
 
     if (typeof output === "string") {
       return output;
@@ -160,21 +156,6 @@ export class Replicate extends LLM implements ReplicateInput {
       // Note this is a little odd, but the output format is not consistent
       // across models, so it makes some amount of sense.
       return String(output);
-    }
-  }
-
-  /** @ignore */
-  static async imports(): Promise<{
-    Replicate: typeof import("replicate").default;
-  }> {
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires,global-require
-      const Replicate = require("replicate");
-      return { Replicate };
-    } catch (e) {
-      throw new Error(
-        "Please install replicate as a dependency with, e.g. `yarn add replicate`"
-      );
     }
   }
 }
