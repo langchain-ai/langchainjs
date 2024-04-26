@@ -15,6 +15,7 @@ export const config = {
     /js-tiktoken/,
     /@langchain\/core/,
     /langsmith/,
+    /@langchain\/anthropic/,
     /@langchain\/community/,
     "axios", // axios is a dependency of openai
     "@rockset/client/dist/codegen/api.js",
@@ -388,6 +389,38 @@ export const config = {
       alias: ["schema", "output"],
       path: "@langchain/core/outputs",
     }
+  ],
+  dynamicImportMapEntries: [
+    {
+      modules: ["ChatFireworks"],
+      alias: ["chat_models", "fireworks"],
+      path: "@langchain/community/chat_models/fireworks",
+    },
+    {
+      modules: ["Fireworks"],
+      alias: ["llms", "fireworks"],
+      path: "@langchain/community/llms/fireworks",
+    },
+    {
+      modules: ["BedrockChat"],
+      alias: ["chat_models", "bedrock"],
+      path: "@langchain/community/chat_models/bedrock"
+    },
+    {
+      modules: ["Bedrock"],
+      alias: ["llms", "bedrock"],
+      path: "@langchain/community/llms/bedrock"
+    },
+    {
+      modules: ["ChatAnthropic"],
+      alias: ["chat_models", "anthropic"],
+      path: "@langchain/anthropic"
+    },
+    {
+      modules: ["Replicate"],
+      alias: ["llms", "replicate"],
+      path: "@langchain/community/llms/replicate"
+    },
   ],
   shouldTestExports: true,
   tsConfigPath: resolve("./tsconfig.json"),
