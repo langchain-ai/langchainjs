@@ -21,7 +21,7 @@ test.skip("Test predict", async () => {
 test.skip("Test call", async () => {
   const llamaCpp = new ChatLlamaCpp({ modelPath: llamaPath });
 
-  const response = await llamaCpp.call([
+  const response = await llamaCpp.invoke([
     new HumanMessage({ content: "My name is Nigel." }),
   ]);
   console.log({ response });
@@ -30,7 +30,7 @@ test.skip("Test call", async () => {
 test.skip("Test multiple messages", async () => {
   const llamaCpp = new ChatLlamaCpp({ modelPath: llamaPath });
 
-  const response = await llamaCpp.call([
+  const response = await llamaCpp.invoke([
     new HumanMessage("My name is Nigel."),
     new AIMessage(
       "Hello Nigel! It is great to meet you, how can I help you today?"
@@ -43,7 +43,7 @@ test.skip("Test multiple messages", async () => {
 test.skip("Test system message", async () => {
   const llamaCpp = new ChatLlamaCpp({ modelPath: llamaPath });
 
-  const response = await llamaCpp.call([
+  const response = await llamaCpp.invoke([
     new SystemMessage(
       "You are a pirate, responses must be very verbose and in pirate dialect, add 'Arr, m'hearty!' to each sentence."
     ),

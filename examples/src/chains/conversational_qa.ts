@@ -57,7 +57,7 @@ const chain = RunnableSequence.from([
     chatHistory: (input: { question: string; chatHistory?: string }) =>
       input.chatHistory ?? "",
     context: async (input: { question: string; chatHistory?: string }) => {
-      const relevantDocs = await retriever.getRelevantDocuments(input.question);
+      const relevantDocs = await retriever.invoke(input.question);
       const serialized = formatDocumentsAsString(relevantDocs);
       return serialized;
     },

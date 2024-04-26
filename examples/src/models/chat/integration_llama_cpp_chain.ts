@@ -11,7 +11,7 @@ const prompt = PromptTemplate.fromTemplate(
 );
 const chain = new LLMChain({ llm: model, prompt });
 
-const response = await chain.call({ product: "colorful socks" });
+const response = await chain.invoke({ product: "colorful socks" });
 
 console.log({ response });
 

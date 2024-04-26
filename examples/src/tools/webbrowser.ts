@@ -21,7 +21,7 @@ export async function run() {
 
   const browser = new WebBrowser({ model, embeddings });
 
-  const result = await browser.call(
+  const result = await browser.invoke(
     `"https://www.themarginalian.org/2015/04/09/find-your-bliss-joseph-campbell-power-of-myth","who is joseph campbell"`
   );
 
