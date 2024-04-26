@@ -2007,14 +2007,41 @@
       "import": "./retrievers/zep.js",
       "require": "./retrievers/zep.cjs"
     },
-    "./retrievers/self_query/qdrant": {
+    "./structured_query/chroma": {
       "types": {
-        "import": "./retrievers/self_query/qdrant.d.ts",
-        "require": "./retrievers/self_query/qdrant.d.cts",
-        "default": "./retrievers/self_query/qdrant.d.ts"
+        "import": "./structured_query/chroma.d.ts",
+        "require": "./structured_query/chroma.d.cts",
+        "default": "./structured_query/chroma.d.ts"
       },
-      "import": "./retrievers/self_query/qdrant.js",
-      "require": "./retrievers/self_query/qdrant.cjs"
+      "import": "./structured_query/chroma.js",
+      "require": "./structured_query/chroma.cjs"
+    },
+    "./structured_query/qdrant": {
+      "types": {
+        "import": "./structured_query/qdrant.d.ts",
+        "require": "./structured_query/qdrant.d.cts",
+        "default": "./structured_query/qdrant.d.ts"
+      },
+      "import": "./structured_query/qdrant.js",
+      "require": "./structured_query/qdrant.cjs"
+    },
+    "./structured_query/supabase": {
+      "types": {
+        "import": "./structured_query/supabase.d.ts",
+        "require": "./structured_query/supabase.d.cts",
+        "default": "./structured_query/supabase.d.ts"
+      },
+      "import": "./structured_query/supabase.js",
+      "require": "./structured_query/supabase.cjs"
+    },
+    "./structured_query/vectara": {
+      "types": {
+        "import": "./structured_query/vectara.d.ts",
+        "require": "./structured_query/vectara.d.cts",
+        "default": "./structured_query/vectara.d.ts"
+      },
+      "import": "./structured_query/vectara.js",
+      "require": "./structured_query/vectara.cjs"
     },
     "./caches/cloudflare_kv": {
       "types": {
@@ -3358,10 +3385,22 @@
     "retrievers/zep.js",
     "retrievers/zep.d.ts",
     "retrievers/zep.d.cts",
-    "retrievers/self_query/qdrant.cjs",
-    "retrievers/self_query/qdrant.js",
-    "retrievers/self_query/qdrant.d.ts",
-    "retrievers/self_query/qdrant.d.cts",
+    "structured_query/chroma.cjs",
+    "structured_query/chroma.js",
+    "structured_query/chroma.d.ts",
+    "structured_query/chroma.d.cts",
+    "structured_query/qdrant.cjs",
+    "structured_query/qdrant.js",
+    "structured_query/qdrant.d.ts",
+    "structured_query/qdrant.d.cts",
+    "structured_query/supabase.cjs",
+    "structured_query/supabase.js",
+    "structured_query/supabase.d.ts",
+    "structured_query/supabase.d.cts",
+    "structured_query/vectara.cjs",
+    "structured_query/vectara.js",
+    "structured_query/vectara.d.ts",
+    "structured_query/vectara.d.cts",
     "caches/cloudflare_kv.cjs",
     "caches/cloudflare_kv.js",
     "caches/cloudflare_kv.d.ts",

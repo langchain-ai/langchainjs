@@ -18,6 +18,7 @@ import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation
 
 /* #__PURE__ */ logVersion020MigrationWarning({
   oldEntrypointName: "retrievers/self_query/vectara",
+  newEntrypointName: "structured_query/vectara",
   newPackageName: "@langchain/community",
 });
 

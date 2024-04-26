@@ -3,7 +3,7 @@ import {
   Comparators,
   Operators,
 } from "@langchain/core/structured_query";
-import { Chroma } from "../../vectorstores/chroma.js";
+import { Chroma } from "../vectorstores/chroma.js";
 
 /**
  * Specialized translator for the Chroma vector database. It extends the

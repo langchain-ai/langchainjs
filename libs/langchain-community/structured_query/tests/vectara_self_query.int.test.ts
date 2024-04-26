@@ -1,12 +1,14 @@
+/* eslint-disable no-process-env */
 import { test } from "@jest/globals";
 import { Document } from "@langchain/core/documents";
-import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
+import { OpenAI } from "@langchain/openai";
+import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { AttributeInfo } from "langchain/chains/query_constructor";
 import { SelfQueryRetriever } from "langchain/retrievers/self_query";
-import { Chroma } from "../../../vectorstores/chroma.js";
-import { ChromaTranslator } from "../chroma.js";
+import { VectaraStore } from "../../vectorstores/vectara.js";
+import { VectaraTranslator } from "../vectara.js";
 
-test.skip("Chroma Store Self Query Retriever Test", async () => {
+test.skip("Vectara Self Query Retriever Test", async () => {
   const docs = [
     new Document({
       pageContent:
@@ -37,9 +39,9 @@ test.skip("Chroma Store Self Query Retriever Test", async () => {
         "Three men walk into the Zone, three men walk out of the Zone",
       metadata: {
         year: 1979,
+        rating: 9.9,
         director: "Andrei Tarkovsky",
         genre: "science fiction",
-        rating: 9.9,
       },
     }),
   ];
@@ -65,38 +67,47 @@ test.skip("Chroma Store Self Query Retriever Test", async () => {
       description: "The rating of the movie (1-10)",
       type: "number",
     },
-    {
-      name: "length",
-      description: "The length of the movie in minutes",
-      type: "number",
-    },
   ];
+  const config = {
+    customerId: Number(process.env.VECTARA_CUSTOMER_ID),
+    corpusId: Number(process.env.VECTARA_CORPUS_ID),
+    apiKey: String(process.env.VECTARA_API_KEY),
+    verbose: true,
+  };
 
-  const embeddings = new OpenAIEmbeddings();
+  const vectorStore = await VectaraStore.fromDocuments(
+    docs,
+    new FakeEmbeddings(),
+    config
+  );
+
   const llm = new OpenAI();
   const documentContents = "Brief summary of a movie";
-  const vectorStore = await Chroma.fromDocuments(docs, embeddings, {
-    collectionName: "a-movie-collection",
-  });
+
   const selfQueryRetriever = SelfQueryRetriever.fromLLM({
     llm,
     vectorStore,
     documentContents,
     attributeInfo,
-    structuredQueryTranslator: new ChromaTranslator(),
+
+    structuredQueryTranslator: new VectaraTranslator(),
   });
 
   const query1 = await selfQueryRetriever.getRelevantDocuments(
-    "Which movies are less than 90 minutes?"
+    "I want to watch a movie rated higher than 8.5"
   );
   const query2 = await selfQueryRetriever.getRelevantDocuments(
-    "Which movies are rated higher than 8.5?"
-  );
-  const query3 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are directed by Greta Gerwig?"
   );
+  const query3 = await selfQueryRetriever.getRelevantDocuments(
+    "Which movies are either comedy or science fiction and are rated higher than 8.5?"
+  );
   const query4 = await selfQueryRetriever.getRelevantDocuments(
-    "Which movies are either comedy or drama and are less than 90 minutes?"
+    "Wau wau wau wau hello gello hello?"
   );
   console.log(query1, query2, query3, query4);
+  expect(query1.length).toBe(2);
+  expect(query2.length).toBe(1);
+  expect(query3.length).toBe(1);
+  expect(query4.length).toBe(0);
 });

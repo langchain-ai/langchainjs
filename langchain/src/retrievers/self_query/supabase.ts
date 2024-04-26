@@ -24,6 +24,7 @@ import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation
 
 /* #__PURE__ */ logVersion020MigrationWarning({
   oldEntrypointName: "retrievers/self_query/supabase",
+  newEntrypointName: "structured_query/supabase",
   newPackageName: "@langchain/community",
 });
 

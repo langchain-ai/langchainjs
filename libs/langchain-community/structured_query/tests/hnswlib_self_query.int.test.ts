@@ -6,7 +6,7 @@ import {
   FunctionalTranslator,
   SelfQueryRetriever,
 } from "langchain/retrievers/self_query";
-import { HNSWLib } from "../../../vectorstores/hnswlib.js";
+import { HNSWLib } from "../../vectorstores/hnswlib.js";
 
 test("HNSWLib Store Self Query Retriever Test", async () => {
   const docs = [

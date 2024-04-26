@@ -8,6 +8,7 @@ import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation
 
 /* #__PURE__ */ logVersion020MigrationWarning({
   oldEntrypointName: "retrievers/self_query/chroma",
+  newEntrypointName: "structured_query/chroma",
   newPackageName: "@langchain/community",
 });
 
