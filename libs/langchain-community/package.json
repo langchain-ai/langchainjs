@@ -81,7 +81,7 @@
     "@pinecone-database/pinecone": "^1.1.0",
     "@planetscale/database": "^1.8.0",
     "@premai/prem-sdk": "^0.3.25",
-    "@qdrant/js-client-rest": "^1.2.0",
+    "@qdrant/js-client-rest": "^1.8.2",
     "@raycast/api": "^1.55.2",
     "@rockset/client": "^0.9.1",
     "@smithy/eventstream-codec": "^2.0.5",
@@ -1908,6 +1908,15 @@
       "import": "./retrievers/zep.js",
       "require": "./retrievers/zep.cjs"
     },
+    "./retrievers/self_query/qdrant": {
+      "types": {
+        "import": "./retrievers/self_query/qdrant.d.ts",
+        "require": "./retrievers/self_query/qdrant.d.cts",
+        "default": "./retrievers/self_query/qdrant.d.ts"
+      },
+      "import": "./retrievers/self_query/qdrant.js",
+      "require": "./retrievers/self_query/qdrant.cjs"
+    },
     "./caches/cloudflare_kv": {
       "types": {
         "import": "./caches/cloudflare_kv.d.ts",
@@ -2890,6 +2899,10 @@
     "retrievers/zep.js",
     "retrievers/zep.d.ts",
     "retrievers/zep.d.cts",
+    "retrievers/self_query/qdrant.cjs",
+    "retrievers/self_query/qdrant.js",
+    "retrievers/self_query/qdrant.d.ts",
+    "retrievers/self_query/qdrant.d.cts",
     "caches/cloudflare_kv.cjs",
     "caches/cloudflare_kv.js",
     "caches/cloudflare_kv.d.ts",
