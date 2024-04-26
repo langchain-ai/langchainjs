@@ -23,9 +23,9 @@ interface Departure {
 }
 
 interface transitDetails {
-  routeName: string;
-  routeNameShort: string;
-  routeType: string;
+  transitName: string;
+  transitNameCode: string;
+  transitVehicleType: string;
 }
 
 interface travelInstructions {
@@ -43,17 +43,14 @@ interface FilteredTransitRoute {
   departure: Departure;
   arrival: Arrival;
   travelInstructions: travelInstructions[];
-  routeLabels: string[];
   localizedValues: localizedValues;
   transitDetails: transitDetails;
-  routeLabel: string[];
 }
 
 interface FilteredRoute {
   description: string;
   distance: string;
   duration: string;
-  routeLabel: string[];
 }
 
 interface Body {
@@ -85,10 +82,28 @@ export class GoogleRoutesAPI extends Tool {
 
   protected apiKey: string;
 
-  description = `A wrapper around Google Routes API. It provides an easy way to retrieve routing information between two destinations. 
-  The input to this tool should be an array consisting of the origin address, destination address, and the desired travel mode. For example, 
-  ["1600 Amphitheatre Parkway, Mountain View, CA", "450 Serra Mall, Stanford, CA 94305, USA", "DRIVE"]. 
-  The travel mode can be one of the following: "DRIVE", "WALK", "BICYCLE", "TRANSIT", or "TWO_WHEELER".`;
+  description = `A tool for retrieving routing information between two destinations using Google Routes API.
+
+  INPUT examples:
+
+  "action": "google_routes",
+  "action_input": "1600 Amphitheatre Parkway, Mountain View, CA|450 Serra Mall, Stanford, CA 94305, USA|DRIVE"
+
+  "action": "google_routes",
+  "action_input": "Big Ben|Buckingham Palace|WALK"
+
+  "action": "google_routes",
+  "action_input": "Westfield London, Ariel Way|Wembley Stadium|TRANSIT"
+
+  OUTPUT:
+  - For "DRIVE", "WALK", "BICYCLE", and "TWO_WHEELER" travel modes, your output is the information about the route, including the description, distance, and duration.
+  - For "TRANSIT" travel mode, your output is the information about the route, including the departure and arrival details, travel instructions, transit fare (if included in the API), and transit details.
+
+  Note:
+  - The travel mode can be one of the following: "DRIVE", "WALK", "BICYCLE", "TRANSIT", or "TWO_WHEELER".
+  - Do not use any tool to convert or parse your output. The output should be based on the API response.
+  - The API will only return one route for the given input. You must only tell the user about that route.
+  `;
 
   constructor(fields?: GoogleRoutesAPIParams) {
     super(...arguments);
@@ -103,7 +118,7 @@ export class GoogleRoutesAPI extends Tool {
   }
 
   async _call(input: string) {
-    const parsedInput = JSON.parse(input);
+    const parsedInput = input.split("|");
     console.log("Tool input:", parsedInput);
     const [origin, destination, travel_mode] = parsedInput;
 
@@ -118,7 +133,7 @@ export class GoogleRoutesAPI extends Tool {
     };
 
     let fieldMask =
-      "routes.routeLabels,routes.description,routes.localizedValues,routes.travelAdvisory,routes.legs.steps.transitDetails";
+      "routes.description,routes.localizedValues,routes.travelAdvisory,routes.legs.steps.transitDetails";
 
     if (travel_mode === "TRANSIT") {
       fieldMask += ",routes.legs.stepsOverview";
@@ -156,6 +171,10 @@ export class GoogleRoutesAPI extends Tool {
     }
 
     const json = await res.json();
+
+    if (Object.keys(json).length === 0) {
+      return "Invalid route. No data returned from the API.";
+    }
 
     let routes: FilteredTransitRoute[] | FilteredRoute[];
 
@@ -197,7 +216,6 @@ export class GoogleRoutesAPI extends Tool {
               travelMode: segment.travelMode,
             })
           );
-        const { routeLabels } = route;
         const localizedValues: localizedValues = {
           distance: route.localizedValues.distance.text,
           duration: route.localizedValues.duration.text,
@@ -206,15 +224,15 @@ export class GoogleRoutesAPI extends Tool {
             : {}),
         };
         const transitDetails: transitDetails = {
-          routeName: transitStep.transitDetails.transitLine.name,
-          routeNameShort: transitStep.transitDetails.transitLine.nameShort,
-          routeType: transitStep.transitDetails.transitLine.vehicle.type,
+          transitName: transitStep.transitDetails.transitLine.name,
+          transitNameCode: transitStep.transitDetails.transitLine.nameShort,
+          transitVehicleType:
+            transitStep.transitDetails.transitLine.vehicle.type,
         };
         return {
           departure,
           arrival,
           travelInstructions,
-          routeLabels,
           localizedValues,
           transitDetails,
         };
@@ -225,7 +243,6 @@ export class GoogleRoutesAPI extends Tool {
         description: route.description,
         distance: route.localizedValues.distance.text,
         duration: route.localizedValues.duration.text,
-        routeLabel: route.routeLabels,
       }));
     }
 
