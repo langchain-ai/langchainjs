@@ -186,6 +186,7 @@ export const config = {
     "retrievers/vectara_summary": "retrievers/vectara_summary",
     "retrievers/vespa": "retrievers/vespa",
     "retrievers/zep": "retrievers/zep",
+    "retrievers/self_query/qdrant": "retrievers/self_query/qdrant",
     // cache
     "caches/cloudflare_kv": "caches/cloudflare_kv",
     "caches/ioredis": "caches/ioredis",
@@ -387,6 +388,7 @@ export const config = {
     "retrievers/supabase",
     "retrievers/vectara_summary",
     "retrievers/zep",
+    "retrievers/self_query/qdrant",
     "cache/cloudflare_kv",
     "cache/momento",
     "cache/upstash_redis",

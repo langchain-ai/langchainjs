@@ -500,6 +500,22 @@ export class ChatBaiduWenxin
       this.accessToken = await this.getAccessToken();
     }
 
+    const findFirstNewlineIndex = (data: Uint8Array) => {
+      for (let i = 0; i < data.length; ) {
+        if (data[i] === 10) return i;
+        if ((data[i] & 0b11100000) === 0b11000000) {
+          i += 2;
+        } else if ((data[i] & 0b11110000) === 0b11100000) {
+          i += 3;
+        } else if ((data[i] & 0b11111000) === 0b11110000) {
+          i += 4;
+        } else {
+          i += 1;
+        }
+      }
+      return -1;
+    };
+
     const makeCompletionRequest = async () => {
       const url = `${this.apiUrl}?access_token=${this.accessToken}`;
       const response = await fetch(url, {
@@ -532,7 +548,7 @@ export class ChatBaiduWenxin
           const reader = response.body.getReader();
 
           const decoder = new TextDecoder("utf-8");
-          let data = "";
+          let dataArrayBuffer = new Uint8Array(0);
 
           let continueReading = true;
           while (continueReading) {
@@ -541,17 +557,30 @@ export class ChatBaiduWenxin
               continueReading = false;
               break;
             }
-            data += decoder.decode(value);
+            // merge the data first then decode in case of the Chinese characters are split between chunks
+            const mergedArray = new Uint8Array(
+              dataArrayBuffer.length + value.length
+            );
+            mergedArray.set(dataArrayBuffer);
+            mergedArray.set(value, dataArrayBuffer.length);
+            dataArrayBuffer = mergedArray;
 
             let continueProcessing = true;
             while (continueProcessing) {
-              const newlineIndex = data.indexOf("\n");
+              const newlineIndex = findFirstNewlineIndex(dataArrayBuffer);
               if (newlineIndex === -1) {
                 continueProcessing = false;
                 break;
               }
-              const line = data.slice(0, newlineIndex);
-              data = data.slice(newlineIndex + 1);
+
+              const lineArrayBuffer = dataArrayBuffer.slice(
+                0,
+                findFirstNewlineIndex(dataArrayBuffer)
+              );
+              const line = decoder.decode(lineArrayBuffer);
+              dataArrayBuffer = dataArrayBuffer.slice(
+                findFirstNewlineIndex(dataArrayBuffer) + 1
+              );
 
               if (line.startsWith("data:")) {
                 const event = new MessageEvent("message", {

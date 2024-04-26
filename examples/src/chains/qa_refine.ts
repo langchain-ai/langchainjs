@@ -20,7 +20,7 @@ const question = "What did the president say about Justice Breyer";
 const relevantDocs = await store.similaritySearch(question);
 
 // Call the chain
-const res = await chain.call({
+const res = await chain.invoke({
   input_documents: relevantDocs,
   question,
 });

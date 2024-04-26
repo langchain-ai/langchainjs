@@ -1,11 +1,11 @@
-import weaviate from "weaviate-ts-client";
-
 import { AttributeInfo } from "langchain/schema/query_constructor";
 import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
 import { SelfQueryRetriever } from "langchain/retrievers/self_query";
-import { WeaviateStore } from "@langchain/community/vectorstores/weaviate";
-import { WeaviateTranslator } from "langchain/retrievers/self_query/weaviate";
+import { QdrantVectorStore } from "@langchain/community/vectorstores/qdrant";
+import { QdrantTranslator } from "@langchain/community/retrievers/self_query/qdrant";
 import { Document } from "@langchain/core/documents";
+
+import { QdrantClient } from "@qdrant/js-client-rest";
 
 /**
  * First, we create a bunch of documents. You can load your own documents here instead.
@@ -83,25 +83,20 @@ const attributeInfo: AttributeInfo[] = [
 
 /**
  * Next, we instantiate a vector store. This is where we store the embeddings of the documents.
+ * We also need to provide an embeddings object. This is used to embed the documents.
  */
+
+const QDRANT_URL = "http://127.0.0.1:6333";
+const QDRANT_COLLECTION_NAME = "some-collection-name";
+
+const client = new QdrantClient({ url: QDRANT_URL });
+
 const embeddings = new OpenAIEmbeddings();
 const llm = new OpenAI();
 const documentContents = "Brief summary of a movie";
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const client = (weaviate as any).client({
-  scheme: process.env.WEAVIATE_SCHEME || "https",
-  host: process.env.WEAVIATE_HOST || "localhost",
-  apiKey: process.env.WEAVIATE_API_KEY
-    ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      new (weaviate as any).ApiKey(process.env.WEAVIATE_API_KEY)
-    : undefined,
-});
-
-const vectorStore = await WeaviateStore.fromDocuments(docs, embeddings, {
+const vectorStore = await QdrantVectorStore.fromDocuments(docs, embeddings, {
   client,
-  indexName: "Test",
-  textKey: "text",
-  metadataKeys: ["year", "director", "rating", "genre"],
+  collectionName: QDRANT_COLLECTION_NAME,
 });
 const selfQueryRetriever = SelfQueryRetriever.fromLLM({
   llm,
@@ -109,10 +104,13 @@ const selfQueryRetriever = SelfQueryRetriever.fromLLM({
   documentContents,
   attributeInfo,
   /**
-   * We need to use a translator that translates the queries into a
-   * filter format that the vector store can understand. LangChain provides one here.
+   * We need to create a basic translator that translates the queries into a
+   * filter format that the vector store can understand. We provide a basic translator
+   * translator here, but you can create your own translator by extending BaseTranslator
+   * abstract class. Note that the vector store needs to support filtering on the metadata
+   * attributes you want to query on.
    */
-  structuredQueryTranslator: new WeaviateTranslator(),
+  structuredQueryTranslator: new QdrantTranslator(),
 });
 
 /**
@@ -120,15 +118,17 @@ const selfQueryRetriever = SelfQueryRetriever.fromLLM({
  * We can ask questions like "Which movies are less than 90 minutes?" or "Which movies are rated higher than 8.5?".
  * We can also ask questions like "Which movies are either comedy or drama and are less than 90 minutes?".
  * The retriever will automatically convert these questions into queries that can be used to retrieve documents.
- *
- * Note that unlike other vector stores, you have to make sure each metadata keys are actually presnt in the database,
- * meaning that Weaviate will throw an error if the self query chain generate a query with a metadata key that does
- * not exist in your Weaviate database.
  */
-const query1 = await selfQueryRetriever.invoke(
+const query1 = await selfQueryRetriever.getRelevantDocuments(
+  "Which movies are less than 90 minutes?"
+);
+const query2 = await selfQueryRetriever.getRelevantDocuments(
   "Which movies are rated higher than 8.5?"
 );
-const query2 = await selfQueryRetriever.invoke(
-  "Which movies are directed by Greta Gerwig?"
+const query3 = await selfQueryRetriever.getRelevantDocuments(
+  "Which cool movies are directed by Greta Gerwig?"
 );
-console.log(query1, query2);
+const query4 = await selfQueryRetriever.getRelevantDocuments(
+  "Which movies are either comedy or drama and are less than 90 minutes?"
+);
+console.log(query1, query2, query3, query4);
