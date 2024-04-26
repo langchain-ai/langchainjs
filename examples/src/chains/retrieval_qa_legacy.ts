@@ -18,7 +18,7 @@ const vectorStoreRetriever = vectorStore.asRetriever();
 
 // Create a chain that uses the OpenAI LLM and HNSWLib vector store.
 const chain = RetrievalQAChain.fromLLM(model, vectorStoreRetriever);
-const res = await chain.call({
+const res = await chain.invoke({
   query: "What did the president say about Justice Breyer?",
 });
 console.log({ res });

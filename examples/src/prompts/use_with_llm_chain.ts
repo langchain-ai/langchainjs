@@ -43,7 +43,7 @@ const answerFormattingChain = new LLMChain({
   outputParser: outputFixingParser,
 });
 
-const result = await answerFormattingChain.call({
+const result = await answerFormattingChain.invoke({
   query: "List 5 countries.",
 });
 
