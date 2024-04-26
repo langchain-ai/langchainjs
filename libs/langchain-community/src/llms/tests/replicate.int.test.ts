@@ -2,10 +2,10 @@ import { test, expect } from "@jest/globals";
 import { Replicate } from "../replicate.js";
 
 // Test skipped because Replicate appears to be timing out often when called
-test.skip("Test Replicate", async () => {
+test("Test Replicate", async () => {
   const model = new Replicate({
     model:
-      "a16z-infra/llama13b-v2-chat:df7690f1994d94e96ad9d568eac121aecf50684a0b0963b25a41cc40061269e5",
+      "a16z-infra/llama13b-v2-chat",
     input: {
       max_length: 10,
     },

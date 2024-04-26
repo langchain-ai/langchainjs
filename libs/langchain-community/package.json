@@ -170,7 +170,7 @@
     "prettier": "^2.8.3",
     "redis": "^4.6.6",
     "release-it": "^15.10.1",
-    "replicate": "^0.18.0",
+    "replicate": "^0.29.1",
     "rollup": "^3.19.1",
     "ts-jest": "^29.1.0",
     "typeorm": "^0.3.12",
