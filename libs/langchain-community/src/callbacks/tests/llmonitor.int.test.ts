@@ -10,14 +10,14 @@ test.skip("Test traced chat call with tags", async () => {
     callbacks: [new LLMonitorHandler({ verbose: true })],
   });
 
-  const response = await chat.call([
+  const response = await chat.invoke([
     new HumanMessage(
       "What is a good name for a company that makes colorful socks?"
     ),
   ]);
   console.log(response.content);
 
-  const response2 = await chat.call([
+  const response2 = await chat.invoke([
     new SystemMessage(
       "You are a helpful assistant that translates English to French."
     ),

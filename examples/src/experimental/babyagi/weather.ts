@@ -10,7 +10,7 @@ const babyAGI = BabyAGI.fromLLM({
   maxIterations: 3,
 });
 
-await babyAGI.call({ objective: "Write a weather report for SF today" });
+await babyAGI.invoke({ objective: "Write a weather report for SF today" });
 /*
 
 *****TASK LIST*****

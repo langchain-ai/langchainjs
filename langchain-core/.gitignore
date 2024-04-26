@@ -114,6 +114,10 @@ stores.cjs
 stores.js
 stores.d.ts
 stores.d.cts
+structured_query.cjs
+structured_query.js
+structured_query.d.ts
+structured_query.d.cts
 tools.cjs
 tools.js
 tools.d.ts

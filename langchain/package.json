@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.1.35",
+  "version": "0.1.36",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -578,6 +578,10 @@
     "document_loaders/web/figma.js",
     "document_loaders/web/figma.d.ts",
     "document_loaders/web/figma.d.cts",
+    "document_loaders/web/firecrawl.cjs",
+    "document_loaders/web/firecrawl.js",
+    "document_loaders/web/firecrawl.d.ts",
+    "document_loaders/web/firecrawl.d.cts",
     "document_loaders/web/github.cjs",
     "document_loaders/web/github.js",
     "document_loaders/web/github.d.ts",
@@ -1230,6 +1234,7 @@
     "@google-cloud/storage": "^7.7.0",
     "@jest/globals": "^29.5.0",
     "@langchain/scripts": "~0.0",
+    "@mendable/firecrawl-js": "^0.0.13",
     "@notionhq/client": "^2.2.10",
     "@pinecone-database/pinecone": "^1.1.0",
     "@supabase/supabase-js": "^2.10.0",
@@ -1314,6 +1319,7 @@
     "@gomomento/sdk-web": "^1.51.1",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1 || ^7.7.0",
+    "@mendable/firecrawl-js": "^0.0.13",
     "@notionhq/client": "^2.2.10",
     "@pinecone-database/pinecone": "*",
     "@supabase/supabase-js": "^2.10.0",
@@ -1384,6 +1390,9 @@
       "optional": true
     },
     "@google-cloud/storage": {
+      "optional": true
+    },
+    "@mendable/firecrawl-js": {
       "optional": true
     },
     "@notionhq/client": {
@@ -1513,7 +1522,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.9.1",
     "@langchain/community": "~0.0.47",
-    "@langchain/core": "~0.1.56",
+    "@langchain/core": "~0.1.60",
     "@langchain/openai": "~0.0.28",
     "@langchain/textsplitters": "~0.0.0",
     "binary-extensions": "^2.2.0",
@@ -2825,6 +2834,15 @@
       },
       "import": "./document_loaders/web/figma.js",
       "require": "./document_loaders/web/figma.cjs"
+    },
+    "./document_loaders/web/firecrawl": {
+      "types": {
+        "import": "./document_loaders/web/firecrawl.d.ts",
+        "require": "./document_loaders/web/firecrawl.d.cts",
+        "default": "./document_loaders/web/firecrawl.d.ts"
+      },
+      "import": "./document_loaders/web/firecrawl.js",
+      "require": "./document_loaders/web/firecrawl.cjs"
     },
     "./document_loaders/web/github": {
       "types": {

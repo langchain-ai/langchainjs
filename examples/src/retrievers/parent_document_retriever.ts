@@ -33,7 +33,7 @@ const parentDocuments = await textLoader.load();
 // We must add the parent documents via the retriever's addDocuments method
 await retriever.addDocuments(parentDocuments);
 
-const retrievedDocs = await retriever.getRelevantDocuments("justice breyer");
+const retrievedDocs = await retriever.invoke("justice breyer");
 
 // Retrieved chunks are the larger parent chunks
 console.log(retrievedDocs);
