@@ -35,7 +35,7 @@ export interface ConversationalRetrievalQAChainInput extends ChainInputs {
 /**
  * @deprecated This class is deprecated. See below for an example implementation using
  * `createRetrievalChain`.
- * 
+ *
  * Class for conducting conversational question-answering tasks with a
  * retrieval component. Extends the BaseChain class and implements the
  * ConversationalRetrievalQAChainInput interface.
@@ -50,10 +50,10 @@ export interface ConversationalRetrievalQAChainInput extends ChainInputs {
  * import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
  * import { createHistoryAwareRetriever } from "langchain/chains/history_aware_retriever";
  * import { createRetrievalChain } from "langchain/chains/retrieval";
- * 
+ *
  * const retriever = ...your retriever;
  * const llm = new ChatAnthropic();
- * 
+ *
  * // Contextualize question
  * const contextualizeQSystemPrompt = `
  * Given a chat history and the latest user question
@@ -71,13 +71,13 @@ export interface ConversationalRetrievalQAChainInput extends ChainInputs {
  *   retriever,
  *   rephrasePrompt: contextualizeQPrompt,
  * });
- * 
+ *
  * // Answer question
  * const qaSystemPrompt = `
  * You are an assistant for question-answering tasks. Use
  * the following pieces of retrieved context to answer the
  * question. If you don't know the answer, just say that you
- * don't know. Use three sentences maximum and keep the answer 
+ * don't know. Use three sentences maximum and keep the answer
  * concise.
  * \n\n
  * {context}`;
@@ -86,7 +86,7 @@ export interface ConversationalRetrievalQAChainInput extends ChainInputs {
  *   new MessagesPlaceholder("chat_history"),
  *   ["human", "{input}"],
  * ]);
- * 
+ *
  * // Below we use createStuffDocuments_chain to feed all retrieved context
  * // into the LLM. Note that we can also use StuffDocumentsChain and other
  * // instances of BaseCombineDocumentsChain.
@@ -94,12 +94,12 @@ export interface ConversationalRetrievalQAChainInput extends ChainInputs {
  *   llm,
  *   prompt: qaPrompt,
  * });
- * 
+ *
  * const ragChain = await createRetrievalChain({
  *   retriever: historyAwareRetriever,
  *   combineDocsChain: questionAnswerChain,
  * });
- * 
+ *
  * // Usage:
  * const chat_history: BaseMessage[] = [];
  * const response = await ragChain.invoke({

@@ -83,7 +83,7 @@ function _getLanguageModel(llmLike: RunnableInterface): BaseLanguageModel {
  * const prompt = ChatPromptTemplate.fromTemplate("Tell me a {adjective} joke");
  * const llm = new ChatOpenAI();
  * const chain = prompt.pipe(llm);
- * 
+ *
  * const response = await chain.invoke({ adjective: "funny" });
  * ```
  */
