@@ -2,9 +2,9 @@ import { ChatAnthropic } from "@langchain/anthropic";
 
 const model = new ChatAnthropic({
   temperature: 0.9,
-  modelName: "claude-3-sonnet-20240229",
+  model: "claude-3-sonnet-20240229",
   // In Node.js defaults to process.env.ANTHROPIC_API_KEY,
-  // anthropicApiKey: "YOUR-API-KEY",
+  // apiKey: "YOUR-API-KEY",
   maxTokens: 1024,
 });
 

@@ -11,7 +11,7 @@ function abs(relativePath) {
 
 
 export const config = {
-  internals: [/node\:/, /@langchain\/core\//, /web-auth-library\/google/],
+  internals: [/node\:/, /@langchain\/core\//, /web-auth-library\/google/, /@langchain\/google-common/],
   entrypoints: {
     index: "index",
     utils: "utils",

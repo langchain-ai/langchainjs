@@ -1,7 +1,7 @@
 import { createOpenAPIChain } from "langchain/chains";
 import { ChatOpenAI } from "@langchain/openai";
 
-const chatModel = new ChatOpenAI({ modelName: "gpt-4-0613", temperature: 0 });
+const chatModel = new ChatOpenAI({ model: "gpt-4-0613", temperature: 0 });
 
 const chain = await createOpenAPIChain("https://api.speak.com/openapi.yaml", {
   llm: chatModel,

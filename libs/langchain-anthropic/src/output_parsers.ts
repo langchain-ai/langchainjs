@@ -5,7 +5,7 @@ import {
 } from "@langchain/core/output_parsers";
 import { JsonOutputKeyToolsParserParams } from "@langchain/core/output_parsers/openai_tools";
 import { ChatGeneration } from "@langchain/core/outputs";
-import { AnthropicToolResponse } from "./types.js";
+import { ToolCall } from "@langchain/core/messages/tool";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface AnthropicToolsOutputParserParams<T extends Record<string, any>>
@@ -57,19 +57,13 @@ export class AnthropicToolsOutputParser<
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async parseResult(generations: ChatGeneration[]): Promise<T> {
     const tools = generations.flatMap((generation) => {
       const { message } = generation;
-      if (typeof message === "string") {
-        return [];
-      }
       if (!Array.isArray(message.content)) {
         return [];
       }
-      const tool = message.content.find((item) => item.type === "tool_use") as
-        | AnthropicToolResponse
-        | undefined;
+      const tool = extractToolCalls(message.content)[0];
       return tool;
     });
     if (tools[0] === undefined) {
@@ -78,7 +72,18 @@ export class AnthropicToolsOutputParser<
       );
     }
     const [tool] = tools;
-    const validatedResult = await this._validateResult(tool.input);
+    const validatedResult = await this._validateResult(tool.args);
     return validatedResult;
   }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function extractToolCalls(content: Record<string, any>[]) {
+  const toolCalls: ToolCall[] = [];
+  for (const block of content) {
+    if (block.type === "tool_use") {
+      toolCalls.push({ name: block.name, args: block.input, id: block.id });
+    }
+  }
+  return toolCalls;
 }

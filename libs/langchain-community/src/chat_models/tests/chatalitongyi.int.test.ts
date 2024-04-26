@@ -57,11 +57,11 @@ const runTest = async ({
     messages.push(new HumanMessage(message));
 
     if (shouldThrow) {
-      await expect(chat.call(messages)).rejects.toThrow();
+      await expect(chat.invoke(messages)).rejects.toThrow();
       return;
     }
 
-    const res = await chat.call(messages);
+    const res = await chat.invoke(messages);
     console.log({ res });
 
     if (passedConfig.streaming) {

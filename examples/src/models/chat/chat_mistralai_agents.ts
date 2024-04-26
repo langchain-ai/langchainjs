@@ -1,21 +1,23 @@
 import { z } from "zod";
 
-import { pull } from "langchain/hub";
 import { ChatMistralAI } from "@langchain/mistralai";
 import { DynamicStructuredTool } from "@langchain/core/tools";
-import { AgentExecutor, createOpenAIToolsAgent } from "langchain/agents";
+import { AgentExecutor, createToolCallingAgent } from "langchain/agents";
 
-import type { ChatPromptTemplate } from "@langchain/core/prompts";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
 
-const llm: any = new ChatMistralAI({
+const llm = new ChatMistralAI({
   temperature: 0,
-  modelName: "mistral-large-latest",
+  model: "mistral-large-latest",
 });
 
-// Get the prompt to use - you can modify this!
-// If you want to see the prompt in full, you can at:
-// https://smith.langchain.com/hub/hwchase17/openai-tools-agent
-const prompt = await pull<ChatPromptTemplate>("hwchase17/openai-tools-agent");
+// Prompt template must have "input" and "agent_scratchpad input variables"
+const prompt = ChatPromptTemplate.fromMessages([
+  ["system", "You are a helpful assistant"],
+  ["placeholder", "{chat_history}"],
+  ["human", "{input}"],
+  ["placeholder", "{agent_scratchpad}"],
+]);
 
 const currentWeatherTool = new DynamicStructuredTool({
   name: "get_current_weather",
@@ -26,7 +28,7 @@ const currentWeatherTool = new DynamicStructuredTool({
   func: async () => Promise.resolve("28 °C"),
 });
 
-const agent = await createOpenAIToolsAgent({
+const agent = await createToolCallingAgent({
   llm,
   tools: [currentWeatherTool],
   prompt,

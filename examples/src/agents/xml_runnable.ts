@@ -18,7 +18,7 @@ import { SerpAPI } from "@langchain/community/tools/serpapi";
  * In this case we'll use Claude since it preforms well on XML related tasks
  */
 const model = new ChatAnthropic({
-  modelName: "claude-3-opus-20240229",
+  model: "claude-3-opus-20240229",
   temperature: 0,
 }).bind({
   stop: ["</tool_input>", "</final_answer>"],

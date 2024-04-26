@@ -9,7 +9,12 @@ import { AgentExecutor, createOpenAIToolsAgent } from "langchain/agents";
 import { BaseChatModel } from "langchain/chat_models/base";
 import { DynamicStructuredTool, StructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
-import { AIMessage, BaseMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  BaseMessage,
+  HumanMessage,
+  ToolMessage,
+} from "@langchain/core/messages";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatMistralAI } from "../chat_models.js";
 
@@ -72,10 +77,11 @@ test("Can call tools using structured tools", async () => {
   });
 
   const prompt = ChatPromptTemplate.fromMessages([
-    "system",
-    "you are very bad at math and always must use a calculator",
-    "human",
-    "what is the sum of 223 + 228 divided by 718236 multiplied by 1234?",
+    ["system", "you are very bad at math and always must use a calculator"],
+    [
+      "human",
+      "what is the sum of 223 + 228 divided by 718236 multiplied by 1234?",
+    ],
   ]);
 
   const chain = prompt.pipe(model);
@@ -120,15 +126,22 @@ test("Can call tools", async () => {
   });
 
   const prompt = ChatPromptTemplate.fromMessages([
-    "system",
-    "you are very bad at math and always must use a calculator",
-    "human",
-    "what is the sum of 223 + 228 divided by 718236 multiplied by 1234?",
+    ["system", "you are very bad at math and always must use a calculator"],
+    [
+      "human",
+      "what is the sum of 223 + 228 divided by 718236 multiplied by 1234?",
+    ],
   ]);
   const chain = prompt.pipe(model);
   const response = await chain.invoke({});
+  console.log(response);
+  expect(response.tool_calls?.length).toEqual(1);
+  expect(response.tool_calls?.[0].args).toEqual(
+    JSON.parse(
+      response.additional_kwargs.tool_calls?.[0].function.arguments ?? "{}"
+    )
+  );
   expect("tool_calls" in response.additional_kwargs).toBe(true);
-  console.log(response.additional_kwargs.tool_calls?.[0]);
   expect(response.additional_kwargs.tool_calls?.[0].function.name).toBe(
     "calculator"
   );
@@ -163,10 +176,11 @@ test("Can call .stream with tool calling", async () => {
   });
 
   const prompt = ChatPromptTemplate.fromMessages([
-    "system",
-    "you are very bad at math and always must use a calculator",
-    "human",
-    "what is the sum of 223 + 228 divided by 718236 multiplied by 1234?",
+    ["system", "you are very bad at math and always must use a calculator"],
+    [
+      "human",
+      "what is the sum of 223 + 228 divided by 718236 multiplied by 1234?",
+    ],
   ]);
 
   const chain = prompt.pipe(model);
@@ -205,8 +219,10 @@ test("Can use json mode response format", async () => {
     "system",
     `you are very bad at math and always must use a calculator.
 To use a calculator respond with valid JSON containing a single key: 'calculator' which should contain the math equation to calculate the answer for.`,
-    "human",
-    "what is the sum of 223 + 228 divided by 718236 multiplied by 1234?",
+    [
+      "human",
+      "what is the sum of 223 + 228 divided by 718236 multiplied by 1234?",
+    ],
   ]);
 
   const chain = prompt.pipe(model);
@@ -230,8 +246,10 @@ test("Can call .stream with json mode", async () => {
     "system",
     `you are very bad at math and always must use a calculator.
 To use a calculator respond with valid JSON containing a single key: 'calculator' which should contain the math equation to calculate the answer for.`,
-    "human",
-    "what is the sum of 223 + 228 divided by 718236 multiplied by 1234?",
+    [
+      "human",
+      "what is the sum of 223 + 228 divided by 718236 multiplied by 1234?",
+    ],
   ]);
 
   const chain = prompt.pipe(model);
@@ -310,6 +328,57 @@ test("Can stream and concat responses for a complex tool", async () => {
   expect(person.friends.length).toBeGreaterThan(0);
   expect(person.friendsCount).toBeDefined();
   expect(person.areFriendsCool).toBeDefined();
+});
+
+test("Few shotting with tool calls", async () => {
+  const chat = new ChatMistralAI({
+    modelName: "mistral-large",
+    temperature: 0,
+  }).bind({
+    tools: [
+      {
+        type: "function",
+        function: {
+          name: "get_current_weather",
+          description: "Get the current weather in a given location",
+          parameters: {
+            type: "object",
+            properties: {
+              location: {
+                type: "string",
+                description: "The city and state, e.g. San Francisco, CA",
+              },
+              unit: { type: "string", enum: ["celsius", "fahrenheit"] },
+            },
+            required: ["location"],
+          },
+        },
+      },
+    ],
+  });
+  const res = await chat.invoke([
+    new HumanMessage("What is the weather in SF?"),
+    new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          id: "12345",
+          name: "get_current_weather",
+          args: {
+            location: "SF",
+          },
+        },
+      ],
+    }),
+    new ToolMessage({
+      tool_call_id: "12345",
+      content: "It is currently 24 degrees with hail in SF.",
+    }),
+    new AIMessage("It is currently 24 degrees in SF with hail in SF."),
+    new HumanMessage("What did you say the weather was?"),
+  ]);
+  console.log(res);
+  expect(res.content).toContain("24");
 });
 
 describe("withStructuredOutput", () => {
@@ -670,7 +739,6 @@ describe("ChatMistralAI aborting", () => {
     ]);
     let didError = false;
     let finalRes = "";
-    let iters = 0;
 
     try {
       // Stream is inside the for-await loop because sometimes
@@ -680,7 +748,6 @@ describe("ChatMistralAI aborting", () => {
       for await (const item of stream) {
         finalRes += item.content;
         console.log(finalRes);
-        iters += 1;
       }
       // If the loop completes without error, fail the test
       fail(

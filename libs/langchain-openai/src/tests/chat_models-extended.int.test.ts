@@ -1,5 +1,5 @@
 import { test, expect, jest } from "@jest/globals";
-import { HumanMessage, ToolMessage } from "@langchain/core/messages";
+import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { InMemoryCache } from "@langchain/core/caches";
 import { ChatOpenAI } from "../chat_models.js";
 
@@ -63,7 +63,16 @@ test("Test ChatOpenAI tool calling", async () => {
     ["human", "What's the weather like in San Francisco, Tokyo, and Paris?"],
   ]);
   console.log(JSON.stringify(res));
-  expect(res.additional_kwargs.tool_calls?.length).toBeGreaterThan(1);
+  expect(res.additional_kwargs.tool_calls?.length).toEqual(3);
+  expect(res.tool_calls?.[0].args).toEqual(
+    JSON.parse(res.additional_kwargs.tool_calls?.[0].function.arguments ?? "{}")
+  );
+  expect(res.tool_calls?.[1].args).toEqual(
+    JSON.parse(res.additional_kwargs.tool_calls?.[1].function.arguments ?? "{}")
+  );
+  expect(res.tool_calls?.[2].args).toEqual(
+    JSON.parse(res.additional_kwargs.tool_calls?.[2].function.arguments ?? "{}")
+  );
 });
 
 test("Test ChatOpenAI streaming logprobs", async () => {
@@ -217,4 +226,56 @@ test("ChatOpenAI in JSON mode can cache generations", async () => {
 
   lookupSpy.mockRestore();
   updateSpy.mockRestore();
+});
+
+test("Few shotting with tool calls", async () => {
+  const chat = new ChatOpenAI({
+    modelName: "gpt-3.5-turbo-1106",
+    temperature: 1,
+  }).bind({
+    tools: [
+      {
+        type: "function",
+        function: {
+          name: "get_current_weather",
+          description: "Get the current weather in a given location",
+          parameters: {
+            type: "object",
+            properties: {
+              location: {
+                type: "string",
+                description: "The city and state, e.g. San Francisco, CA",
+              },
+              unit: { type: "string", enum: ["celsius", "fahrenheit"] },
+            },
+            required: ["location"],
+          },
+        },
+      },
+    ],
+    tool_choice: "auto",
+  });
+  const res = await chat.invoke([
+    new HumanMessage("What is the weather in SF?"),
+    new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          id: "12345",
+          name: "get_current_weather",
+          args: {
+            location: "SF",
+          },
+        },
+      ],
+    }),
+    new ToolMessage({
+      tool_call_id: "12345",
+      content: "It is currently 24 degrees with hail in SF.",
+    }),
+    new AIMessage("It is currently 24 degrees in SF with hail in SF."),
+    new HumanMessage("What did you say the weather was?"),
+  ]);
+  console.log(res);
+  expect(res.content).toContain("24");
 });

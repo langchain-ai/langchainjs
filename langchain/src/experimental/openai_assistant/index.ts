@@ -291,7 +291,7 @@ export class OpenAIAssistantRunnable<
     const run = await this._waitForRun(runId, threadId);
     if (run.status === "completed") {
       const messages = await this.client.beta.threads.messages.list(threadId, {
-        order: "asc",
+        order: "desc",
       });
       const newMessages = messages.data.filter((msg) => msg.run_id === runId);
       if (!this.asAgent) {

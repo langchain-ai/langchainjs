@@ -61,8 +61,13 @@ export type RunnableLike<RunInput = any, RunOutput = any> =
   | RunnableFunc<RunInput, RunOutput>
   | RunnableMapLike<RunInput, RunOutput>;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type RunnableRetryFailedAttemptHandler = (error: any) => any;
+export type RunnableRetryFailedAttemptHandler = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  error: any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  input: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+) => any;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function _coerceToDict(value: any, defaultKey: string) {
@@ -1268,7 +1273,7 @@ export class RunnableRetry<
   protected maxAttemptNumber = 3;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onFailedAttempt?: RunnableRetryFailedAttemptHandler = () => {};
+  onFailedAttempt: RunnableRetryFailedAttemptHandler = () => {};
 
   constructor(
     fields: RunnableBindingArgs<RunInput, RunOutput, CallOptions> & {
@@ -1303,7 +1308,8 @@ export class RunnableRetry<
           this._patchConfigForRetry(attemptNumber, config, runManager)
         ),
       {
-        onFailedAttempt: this.onFailedAttempt,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        onFailedAttempt: (error: any) => this.onFailedAttempt(error, input),
         retries: Math.max(this.maxAttemptNumber - 1, 0),
         randomize: true,
       }
@@ -1362,6 +1368,8 @@ export class RunnableRetry<
             if (result instanceof Error) {
               if (firstException === undefined) {
                 firstException = result;
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (firstException as any).input = remainingInputs[i];
               }
             }
             resultsMap[resultMapIndex.toString()] = result;
@@ -1372,7 +1380,9 @@ export class RunnableRetry<
           return results;
         },
         {
-          onFailedAttempt: this.onFailedAttempt,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          onFailedAttempt: (error: any) =>
+            this.onFailedAttempt(error, error.input),
           retries: Math.max(this.maxAttemptNumber - 1, 0),
           randomize: true,
         }

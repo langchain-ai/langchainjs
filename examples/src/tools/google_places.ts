@@ -14,7 +14,7 @@ export async function run() {
     verbose: true,
   });
 
-  const res = await executor.call({
+  const res = await executor.invoke({
     input: "Where is the University of Toronto - Scarborough? ",
   });
 

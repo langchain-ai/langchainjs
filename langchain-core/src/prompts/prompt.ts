@@ -24,7 +24,8 @@ export interface PromptTemplateInput<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  PartialVariableName extends string = any
+  PartialVariableName extends string = any,
+  Format extends TemplateFormat = TemplateFormat
 > extends BasePromptTemplateInput<RunInput, PartialVariableName> {
   /**
    * The prompt template
@@ -32,11 +33,9 @@ export interface PromptTemplateInput<
   template: MessageContent;
 
   /**
-   * The format of the prompt template. Options are 'f-string'
-   *
-   * @defaultValue 'f-string'
+   * The format of the prompt template. Options are "f-string" and "mustache"
    */
-  templateFormat?: TemplateFormat;
+  templateFormat?: Format;
 
   /**
    * Whether or not to try validating the template on initialization
@@ -80,6 +79,13 @@ export type ParamsFromFString<T extends string> = {
     | (string & Record<never, never>)]: string;
 };
 
+export type ExtractedFStringParams<
+  T extends string,
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  RunInput extends InputValues = Symbol
+  // eslint-disable-next-line @typescript-eslint/ban-types
+> = RunInput extends Symbol ? ParamsFromFString<T> : RunInput;
+
 /**
  * Schema to represent a basic prompt for an LLM.
  * @augments BasePromptTemplate
@@ -116,9 +122,19 @@ export class PromptTemplate<
 
   constructor(input: PromptTemplateInput<RunInput, PartialVariableName>) {
     super(input);
+    // If input is mustache and validateTemplate is not defined, set it to false
+    if (
+      input.templateFormat === "mustache" &&
+      input.validateTemplate === undefined
+    ) {
+      this.validateTemplate = false;
+    }
     Object.assign(this, input);
 
     if (this.validateTemplate) {
+      if (this.templateFormat === "mustache") {
+        throw new Error("Mustache templates cannot be validated.");
+      }
       let totalInputVariables: string[] = this.inputVariables;
       if (this.partialVariables) {
         totalInputVariables = totalInputVariables.concat(
@@ -187,24 +203,55 @@ export class PromptTemplate<
     T extends string = string
   >(
     template: T,
-    {
-      templateFormat = "f-string",
-      ...rest
-    }: Omit<
+    options?: Omit<
+      PromptTemplateInput<RunInput, string, "f-string">,
+      "template" | "inputVariables"
+    >
+  ): PromptTemplate<ExtractedFStringParams<T, RunInput>>;
+
+  static fromTemplate<
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    RunInput extends InputValues = Symbol,
+    T extends string = string
+  >(
+    template: T,
+    options?: Omit<
       PromptTemplateInput<RunInput, string>,
       "template" | "inputVariables"
-    > = {}
-  ) {
+    >
+  ): PromptTemplate<ExtractedFStringParams<T, RunInput>>;
+
+  static fromTemplate<
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    RunInput extends InputValues = Symbol,
+    T extends string = string
+  >(
+    template: T,
+    options?: Omit<
+      PromptTemplateInput<RunInput, string, "mustache">,
+      "template" | "inputVariables"
+    >
+  ): PromptTemplate<InputValues>;
+
+  static fromTemplate<
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    RunInput extends InputValues = Symbol,
+    T extends string = string
+  >(
+    template: T,
+    options?: Omit<
+      PromptTemplateInput<RunInput, string, TemplateFormat>,
+      "template" | "inputVariables"
+    >
+  ): PromptTemplate<ExtractedFStringParams<T, RunInput> | InputValues> {
+    const { templateFormat = "f-string", ...rest } = options ?? {};
     const names = new Set<string>();
     parseTemplate(template, templateFormat).forEach((node) => {
       if (node.type === "variable") {
         names.add(node.name);
       }
     });
-    return new PromptTemplate<
-      // eslint-disable-next-line @typescript-eslint/ban-types
-      RunInput extends Symbol ? ParamsFromFString<T> : RunInput
-    >({
+    return new PromptTemplate({
       // Rely on extracted types
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       inputVariables: [...names] as any[],

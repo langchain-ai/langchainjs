@@ -36,13 +36,13 @@ Accessing the API requires an API key, which you can get by creating an account 
 export OPENAI_API_KEY="..."
 ```
 
-If you'd prefer not to set an environment variable you can pass the key in directly via the `openAIApiKey` named parameter when initiating the OpenAI Chat Model class:
+If you'd prefer not to set an environment variable you can pass the key in directly via the `apiKey` named parameter when initiating the OpenAI Chat Model class:
 
 ```typescript
 import { OpenAI } from "@langchain/openai";
 
 const llm = new OpenAI({
-  openAIApiKey: "YOUR_KEY_HERE",
+  apiKey: "YOUR_KEY_HERE",
 });
 ```
 
