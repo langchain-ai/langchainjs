@@ -72,7 +72,9 @@ function _getLanguageModel(llmLike: RunnableInterface): BaseLanguageModel {
 }
 
 /**
- * @deprecated Will be removed in 0.3.0. Use the LangChain Expression Language (LCEL) instead.
+ * @deprecated This class will be removed in 0.3.0. Use the LangChain Expression Language (LCEL) instead.
+ * See the example below for how to use LCEL with the LLMChain class:
+ * 
  * Chain to run queries against LLMs.
  *
  * @example

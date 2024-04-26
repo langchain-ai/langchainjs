@@ -23,7 +23,7 @@ export interface RetrievalQAChainInput extends Omit<ChainInputs, "memory"> {
 }
 
 /**
- * @deprecated This class is deprecated. See below for an example implementation using
+ * @deprecated This class will be removed in 0.3.0. See below for an example implementation using
  * `createRetrievalChain`:
  * Class representing a chain for performing question-answering tasks with
  * a retrieval component.
