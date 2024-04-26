@@ -159,18 +159,21 @@ export class AstraDBVectorStore extends VectorStore {
         throw error;
       }
     }
-    
+
     const insertedIds = insertResults.insertedIds as string[];
 
-    const missingDocs = docs.filter(doc => !insertedIds.includes(doc[this.idKey]));
+    if (insertedIds.length !== docs.length) {
+      const missingDocs = docs.filter(doc => !insertedIds.includes(doc[this.idKey]));
 
-    for (let i = 0; i < missingDocs.length; i += 1) {
-      await this.caller.call(async () => {
-        await this.collection?.replaceOne(
-          { [this.idKey]: missingDocs[i][this.idKey] },
-          missingDocs[i]
-        );
-      });
+      console.log(missingDocs)
+      for (let i = 0; i < missingDocs.length; i += 1) {
+        await this.caller.call(async () => {
+          await this.collection?.replaceOne(
+            { [this.idKey]: missingDocs[i][this.idKey] },
+            missingDocs[i]
+          );
+        });
+      }
     }
   }
 

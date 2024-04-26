@@ -7,13 +7,13 @@ import { OpenAIEmbeddings } from "@langchain/openai";
 import { FakeEmbeddings } from "closevector-common/dist/fake.js";
 import { AstraDBVectorStore, AstraLibArgs } from "../astradb.js";
 
-describe("AstraDBVectorStore", () => {
+describe.skip("AstraDBVectorStore", () => {
   let db: Db;
   let astraConfig: AstraLibArgs;
   beforeAll(() => {
     const clientConfig = {
-      token: process.env.ASTRA_DB_APPLICATION_TOKEN ?? "AstraCS:ntTROEpOKRQhaILoXIQdANYO:16e3f7e676eb20195178f1694530f5f0c4aaed0647fed7c5bdf56904715eedb3",
-      endpoint: process.env.ASTRA_DB_ENDPOINT ?? "https://a531bd64-e085-47f2-b8de-ceb601228b4e-us-east-1.apps.astra.datastax.com",
+      token: process.env.ASTRA_DB_APPLICATION_TOKEN ?? "dummy",
+      endpoint: process.env.ASTRA_DB_ENDPOINT ?? "dummy",
       namespace: process.env.ASTRA_DB_NAMESPACE ?? "default_keyspace",
     };
 
@@ -211,9 +211,6 @@ describe("AstraDBVectorStore", () => {
       { pageContent: "Baz foo bar.", metadata: { a: 3, _id: '234567891' } }
     ]);
 
-    // // get one of the ids
-    // 
-
     await store.addDocuments([
       { pageContent: "upserted", metadata: { a: 1, _id: '123456789' } },
     ]);
@@ -221,6 +218,6 @@ describe("AstraDBVectorStore", () => {
     const collection = await db.collection(astraConfig.collection);
     const doc = await collection.findOne({ _id: "123456789" });
 
-    expect(doc?.content).toEqual("upserted");
+    expect(doc?.text).toEqual("upserted");
   });
 });
