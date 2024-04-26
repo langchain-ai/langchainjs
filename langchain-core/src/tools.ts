@@ -43,7 +43,7 @@ export interface StructuredToolInterface<
   schema: T | z.ZodEffects<T>;
 
   /**
-   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
+   * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
    *
    * Calls the tool with the provided argument, configuration, and tags. It
    * parses the input according to the schema, handles any errors, and
@@ -107,7 +107,7 @@ export abstract class StructuredTool<
   }
 
   /**
-   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
+   * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
    *
    * Calls the tool with the provided argument, configuration, and tags. It
    * parses the input according to the schema, handles any errors, and
@@ -172,7 +172,7 @@ export abstract class StructuredTool<
 
 export interface ToolInterface extends StructuredToolInterface {
   /**
-   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
+   * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
    *
    * Calls the tool with the provided argument and callbacks. It handles
    * string inputs specifically.
@@ -199,7 +199,7 @@ export abstract class Tool extends StructuredTool {
   }
 
   /**
-   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
+   * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
    *
    * Calls the tool with the provided argument and callbacks. It handles
    * string inputs specifically.
@@ -273,7 +273,7 @@ export class DynamicTool extends Tool {
   }
 
   /**
-   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
+   * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
    */
   async call(
     arg: string | undefined | z.input<this["schema"]>,
@@ -328,7 +328,7 @@ export class DynamicStructuredTool<
   }
 
   /**
-   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
+   * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
    */
   async call(
     arg: z.output<T>,

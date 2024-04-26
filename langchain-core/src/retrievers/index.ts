@@ -77,7 +77,7 @@ export abstract class BaseRetriever<
   }
 
   /**
-   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
+   * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
    *
    * Main method used to retrieve relevant documents. It takes a query
    * string and an optional configuration object, and returns a promise that
