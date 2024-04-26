@@ -1,4 +1,7 @@
-import { DirectoryLoader, UnknownHandling } from "langchain/document_loaders/fs/directory";
+import {
+  DirectoryLoader,
+  UnknownHandling,
+} from "langchain/document_loaders/fs/directory";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 
 /**

@@ -1,10 +1,7 @@
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { z } from "zod";
 import type { BaseMessage } from "@langchain/core/messages";
-import {
-  type AgentFinish,
-  type AgentStep,
-} from "langchain/agents";
+import { type AgentFinish, type AgentStep } from "langchain/agents";
 import { ChatOpenAI } from "@langchain/openai";
 import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";
 import { AgentExecutor } from "langchain/agents";

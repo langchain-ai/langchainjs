@@ -33,7 +33,9 @@ import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation
  * ```
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export class ChromaTranslator<T extends VectorStore> extends BasicTranslator<T> {
+export class ChromaTranslator<
+  T extends VectorStore
+> extends BasicTranslator<T> {
   constructor() {
     super({
       allowedOperators: [Operators.and, Operators.or],

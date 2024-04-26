@@ -24,6 +24,7 @@ interface FirecrawlLoaderParameters {
   mode?: "crawl" | "scrape";
   params?: Record<string, unknown>;
 }
+
 interface FirecrawlDocument {
   markdown: string;
   metadata: Record<string, unknown>;

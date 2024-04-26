@@ -1,5 +1,4 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
-import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 import { PromptTemplate } from "@langchain/core/prompts";
 
 import {
@@ -16,6 +15,7 @@ import {
   ENTITY_SUMMARIZATION_PROMPT,
 } from "./prompt.js";
 import { BaseEntityStore } from "./stores/entity/base.js";
+import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 
 /**
  * Interface for the input parameters required by the EntityMemory class.

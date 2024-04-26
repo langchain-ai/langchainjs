@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Comparators,
   Comparison,
@@ -276,7 +277,8 @@ export function convertObjectFilterToStructuredQuery(
       Operators.and,
       Object.entries(objFilter).map(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ([column, value]) => new Comparison(Comparators.eq, column, value as any)
+        ([column, value]) =>
+          new Comparison(Comparators.eq, column, value as any)
       )
     )
   );

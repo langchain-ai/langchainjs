@@ -1,11 +1,5 @@
 import jsonpointer from "jsonpointer";
 import { TextLoader } from "./text.js";
-import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
-
-/* #__PURE__ */ logVersion020MigrationWarning({
-  oldEntrypointName: "document_loaders/fs/json",
-  newPackageName: "@langchain/community",
-});
 
 /**
  * Class that extends the `TextLoader` class. It represents a document

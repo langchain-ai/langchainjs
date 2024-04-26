@@ -1,8 +1,3 @@
-import type {
-  SupabaseFilterRPCCall,
-  SupabaseMetadata,
-  SupabaseVectorStore,
-} from "../../vectorstores/supabase.js";
 import {
   isFilterEmpty,
   isFloat,
@@ -18,6 +13,11 @@ import {
   Operators,
   StructuredQuery,
 } from "@langchain/core/structured_query";
+import type {
+  SupabaseFilterRPCCall,
+  SupabaseMetadata,
+  SupabaseVectorStore,
+} from "../../vectorstores/supabase.js";
 import {
   ProxyParamsDuplicator,
   convertObjectFilterToStructuredQuery,

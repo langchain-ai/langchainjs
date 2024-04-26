@@ -2,8 +2,8 @@ import type { BaseLanguageModelInterface } from "@langchain/core/language_models
 import { ChainValues } from "@langchain/core/utils/types";
 import { BasePromptTemplate } from "@langchain/core/prompts";
 import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
-import { Neo4jGraph } from "../../graphs/neo4j_graph.js";
 import { LLMChain, BaseChain, ChainInputs } from "langchain/chains";
+import { Neo4jGraph } from "../../graphs/neo4j_graph.js";
 import { CYPHER_GENERATION_PROMPT, CYPHER_QA_PROMPT } from "./prompts.js";
 
 export const INTERMEDIATE_STEPS_KEY = "intermediateSteps";
@@ -37,7 +37,7 @@ export interface FromLLMInput {
  *   llm: new ChatOpenAI({ temperature: 0 }),
  *   graph: new Neo4jGraph(),
  * });
- * const res = await chain.run("Who played in Pulp Fiction?");
+ * const res = await chain.invoke("Who played in Pulp Fiction?");
  * ```
  */
 export class GraphCypherQAChain extends BaseChain {

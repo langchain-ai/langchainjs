@@ -14,7 +14,7 @@ import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import type {
   CallbackManager,
   CallbackManagerForChainRun,
-} from "@langchain/core/callbacks/manager"
+} from "@langchain/core/callbacks/manager";
 import {
   Client,
   Example,
@@ -39,7 +39,7 @@ import {
   isCustomEvaluator,
 } from "./config.js";
 import { randomName } from "./name_generation.js";
-import { ProgressBar } from "./progress.js";;
+import { ProgressBar } from "./progress.js";
 
 export type ChainOrFactory =
   | Runnable

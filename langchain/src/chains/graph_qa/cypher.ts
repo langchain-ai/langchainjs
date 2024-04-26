@@ -27,6 +27,7 @@ export interface GraphCypherQAChainInput extends ChainInputs {
 }
 
 export interface FromLLMInput {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   graph: any;
   llm?: BaseLanguageModelInterface;
   cypherLLM?: BaseLanguageModelInterface;
@@ -44,7 +45,7 @@ export interface FromLLMInput {
  *   llm: new ChatOpenAI({ temperature: 0 }),
  *   graph: new Neo4jGraph(),
  * });
- * const res = await chain.run("Who played in Pulp Fiction?");
+ * const res = await chain.invoke("Who played in Pulp Fiction?");
  * ```
  */
 export class GraphCypherQAChain extends BaseChain {

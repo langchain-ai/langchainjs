@@ -1,9 +1,12 @@
 import { test } from "@jest/globals";
 import { Document } from "@langchain/core/documents";
-import { HNSWLib } from "../../../vectorstores/hnswlib.js";
 import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
 import { AttributeInfo } from "langchain/chains/query_constructor";
-import { FunctionalTranslator, SelfQueryRetriever } from "langchain/retrievers/self_query";
+import {
+  FunctionalTranslator,
+  SelfQueryRetriever,
+} from "langchain/retrievers/self_query";
+import { HNSWLib } from "../../../vectorstores/hnswlib.js";
 
 test("HNSWLib Store Self Query Retriever Test", async () => {
   const docs = [

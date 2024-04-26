@@ -14,10 +14,7 @@ import {
   StructuredQuery,
   Visitor,
 } from "@langchain/core/structured_query";
-import {
-  WeaviateFilter,
-  WeaviateStore,
-} from "./vectorstores.js";
+import { WeaviateFilter, WeaviateStore } from "./vectorstores.js";
 
 type AllowedOperator = Exclude<Operator, NOT>;
 
