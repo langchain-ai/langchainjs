@@ -9033,7 +9033,7 @@ __metadata:
     js-yaml: ^4.1.0
     jsdom: ^22.1.0
     jsonwebtoken: ^9.0.2
-    langchain: "workspace:*"
+    langchain: 0.2.0-rc.0
     langsmith: ~0.1.1
     llmonitor: ^0.5.9
     lodash: ^4.17.21
@@ -26726,7 +26726,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"langchain@workspace:*, langchain@workspace:^, langchain@workspace:langchain":
+"langchain@0.2.0-rc.0, langchain@workspace:*, langchain@workspace:^, langchain@workspace:langchain":
   version: 0.0.0-use.local
   resolution: "langchain@workspace:langchain"
   dependencies:
