@@ -33,4 +33,25 @@ export async function run() {
   });
 
   console.log(result);
+
+  /* {
+    input: 'How to go from the Eiffel Tower to the Louvre Museum by transit?',
+    output: 'To travel from the Eiffel Tower to the Louvre Museum by transit, here is the route information:\n' +
+      '\n' +
+      '- Departure: Eiffel Tower\n' +
+      '- Arrival: Louvre Museum\n' +
+      '- Distance: 4.1 km\n' +
+      '- Duration: 18 minutes\n' +
+      '- Transit Fare: €2.15\n' +
+      '\n' +
+      'Travel Instructions:\n' +
+      "1. Walk to Pont d'Iéna\n" +
+      '2. Take bus 72 towards Gare de Lyon - Maison de La RATP\n' +
+      '3. Walk to your destination\n' +
+      '\n' +
+      'Departure Time: 22:03\n' +
+      'Arrival Time: 22:15\n' +
+      '\n' +
+      'Please follow these instructions to reach the Louvre Museum from the Eiffel Tower.'
+  } */
 }
