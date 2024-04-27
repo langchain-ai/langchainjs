@@ -42,6 +42,9 @@ interface localizedValues {
   transitFare?: string;
 }
 
+/**
+ * Interface for the output of the tool for a transit route.
+ */
 interface FilteredTransitRoute {
   departure: Departure;
   arrival: Arrival;
@@ -50,6 +53,10 @@ interface FilteredTransitRoute {
   transitDetails: transitDetails;
 }
 
+/**
+ * Interface for the output of the tool for a non-transit route.
+ * This includes driving, walking, bicycling, and two-wheeler routes.
+ */
 interface FilteredRoute {
   description: string;
   distance: string;
@@ -68,7 +75,68 @@ interface Body {
 }
 
 /**
- * Tool that queries the Google Places API
+ * Helper functions to create the response objects for the Google Routes API.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function createDeparture(transitDetails: any): Departure {
+  const { stopDetails, localizedValues } = transitDetails;
+  return {
+    departureTime: stopDetails.departureTime,
+    localizedTime: localizedValues.departureTime.time.text,
+    localizedTimezone: localizedValues.departureTime.timeZone,
+    departureAddress: stopDetails.departureStop.name,
+  };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function createArrival(transitDetails: any): Arrival {
+  const { stopDetails, localizedValues } = transitDetails;
+  return {
+    arrivalTime: stopDetails.arrivalTime,
+    localizedTime: localizedValues.arrivalTime.time.text,
+    localizedTimezone: localizedValues.arrivalTime.timeZone,
+    arrivalAddress: stopDetails.arrivalStop.name,
+  };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function createTravelInstructions(stepsOverview: any): travelInstructions[] {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return stepsOverview.multiModalSegments.map((segment: any) => ({
+    ...(segment.navigationInstruction
+      ? {
+          navigationInstruction: segment.navigationInstruction.instructions,
+        }
+      : {}),
+    travelMode: segment.travelMode,
+  }));
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function createLocalizedValues(route: any): localizedValues {
+  const { distance, duration, transitFare } = route.localizedValues;
+  return {
+    distance: distance.text,
+    duration: duration.text,
+    ...(transitFare?.text ? { transitFare: transitFare.text } : {}),
+  };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function createTransitDetails(transitDetails: any): transitDetails {
+  const { name, nameShort, vehicle } = transitDetails.transitLine;
+  return {
+    transitName: name,
+    transitNameCode: nameShort,
+    transitVehicleType: vehicle.type,
+  };
+}
+
+/**
+ * Class for interacting with the Google Routes API
+ * It extends the base Tool class to perform retrieval.
+ * This tool is used to retrieve routing information between two destinations using the Google Routes API.
+ * The travel mode can be one of the following: "DRIVE", "WALK", "BICYCLE", "TRANSIT", or "TWO_WHEELER".
  */
 export class GoogleRoutesAPI extends Tool {
   static lc_name() {
@@ -173,7 +241,7 @@ export class GoogleRoutesAPI extends Tool {
     const json = await res.json();
 
     if (Object.keys(json).length === 0) {
-      return "Invalid route. No data returned from the API.";
+      return "Invalid route. The route may be too long or impossible to travel by the selected mode of transport.";
     }
 
     let routes: FilteredTransitRoute[] | FilteredRoute[];
@@ -185,64 +253,21 @@ export class GoogleRoutesAPI extends Tool {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (step: any) => step.transitDetails
         );
-        const departure: Departure = {
-          departureTime: transitStep.transitDetails.stopDetails.departureTime,
-          localizedTime:
-            transitStep.transitDetails.localizedValues.departureTime.time.text,
-          localizedTimezone:
-            transitStep.transitDetails.localizedValues.departureTime.timeZone,
-          departureAddress:
-            transitStep.transitDetails.stopDetails.departureStop.name,
-        };
-        const arrival: Arrival = {
-          arrivalTime: transitStep.transitDetails.stopDetails.arrivalTime,
-          localizedTime:
-            transitStep.transitDetails.localizedValues.arrivalTime.time.text,
-          localizedTimezone:
-            transitStep.transitDetails.localizedValues.arrivalTime.timeZone,
-          arrivalAddress:
-            transitStep.transitDetails.stopDetails.arrivalStop.name,
-        };
-        const travelInstructions: travelInstructions[] =
-          route.legs[0].stepsOverview.multiModalSegments.map(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (segment: any) => ({
-              ...(segment.navigationInstruction
-                ? {
-                    navigationInstruction:
-                      segment.navigationInstruction.instructions,
-                  }
-                : {}),
-              travelMode: segment.travelMode,
-            })
-          );
-        const localizedValues: localizedValues = {
-          distance: route.localizedValues.distance.text,
-          duration: route.localizedValues.duration.text,
-          ...(route.localizedValues.transitFare.text
-            ? { transitFare: route.localizedValues.transitFare.text }
-            : {}),
-        };
-        const transitDetails: transitDetails = {
-          transitName: transitStep.transitDetails.transitLine.name,
-          transitNameCode: transitStep.transitDetails.transitLine.nameShort,
-          transitVehicleType:
-            transitStep.transitDetails.transitLine.vehicle.type,
-        };
         return {
-          departure,
-          arrival,
-          travelInstructions,
-          localizedValues,
-          transitDetails,
+          departure: createDeparture(transitStep.transitDetails),
+          arrival: createArrival(transitStep.transitDetails),
+          travelInstructions: createTravelInstructions(
+            route.legs[0].stepsOverview
+          ),
+          localizedValues: createLocalizedValues(route),
+          transitDetails: createTransitDetails(transitStep.transitDetails),
         };
       });
     } else {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       routes = json.routes.map((route: any) => ({
         description: route.description,
-        distance: route.localizedValues.distance.text,
-        duration: route.localizedValues.duration.text,
+        ...createLocalizedValues(route),
       }));
     }
 
