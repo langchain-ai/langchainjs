@@ -1,4 +1,4 @@
-import { PromptTemplate } from "@langchain/core/prompts";
+import { PromptTemplate } from "../../prompts/index.js";
 
 export const SONG_DATA_SOURCE = `\
 \`\`\`json

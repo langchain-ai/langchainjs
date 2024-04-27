@@ -11,7 +11,7 @@ const docs = await textSplitter.createDocuments([text]);
 
 // This convenience function creates a document chain prompted to summarize a set of documents.
 const chain = loadSummarizationChain(model, { type: "map_reduce" });
-const res = await chain.call({
+const res = await chain.invoke({
   input_documents: docs,
 });
 console.log({ res });
