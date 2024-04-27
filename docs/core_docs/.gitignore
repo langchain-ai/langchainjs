@@ -109,12 +109,12 @@ docs/use_cases/extraction/how_to/examples.md
 docs/use_cases/extraction/how_to/examples.mdx
 docs/modules/model_io/output_parsers/custom.md
 docs/modules/model_io/output_parsers/custom.mdx
-docs/modules/memory/chat_messages/custom.md
-docs/modules/memory/chat_messages/custom.mdx
 docs/modules/model_io/chat/response_metadata.md
 docs/modules/model_io/chat/response_metadata.mdx
 docs/modules/model_io/chat/function_calling.md
 docs/modules/model_io/chat/function_calling.mdx
+docs/modules/memory/chat_messages/custom.md
+docs/modules/memory/chat_messages/custom.mdx
 docs/modules/data_connection/vectorstores/custom.md
 docs/modules/data_connection/vectorstores/custom.mdx
 docs/modules/agents/agent_types/tool_calling.md
