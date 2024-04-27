@@ -8,6 +8,9 @@ export interface GoogleRoutesAPIParams {
   apiKey?: string;
 }
 
+/**
+ * Interfaces for the response from the Google Routes API.
+ */
 interface Arrival {
   arrivalTime: string;
   localizedTime: string;
@@ -101,8 +104,6 @@ export class GoogleRoutesAPI extends Tool {
 
   Note:
   - The travel mode can be one of the following: "DRIVE", "WALK", "BICYCLE", "TRANSIT", or "TWO_WHEELER".
-  - Do not use any tool to convert or parse your output. The output should be based on the API response.
-  - The API will only return one route for the given input. You must only tell the user about that route.
   `;
 
   constructor(fields?: GoogleRoutesAPIParams) {
@@ -119,7 +120,6 @@ export class GoogleRoutesAPI extends Tool {
 
   async _call(input: string) {
     const parsedInput = input.split("|");
-    console.log("Tool input:", parsedInput);
     const [origin, destination, travel_mode] = parsedInput;
 
     const body: Body = {
@@ -245,8 +245,6 @@ export class GoogleRoutesAPI extends Tool {
         duration: route.localizedValues.duration.text,
       }));
     }
-
-    console.dir(routes, { depth: null });
 
     return JSON.stringify(routes);
   }
