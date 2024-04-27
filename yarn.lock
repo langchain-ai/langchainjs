@@ -13421,6 +13421,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@spider-cloud/spider-client@npm:^0.0.10":
+  version: 0.0.10
+  resolution: "@spider-cloud/spider-client@npm:0.0.10"
+  checksum: 7b1d9ebd6867342881aa2770a304e18334f04e5308a5c0fd9c0c2d860137d43dbde38e9e2b2c978f1aa08363c9a418bf580831cdd53864e293cd5241a000b0f0
+  languageName: node
+  linkType: hard
+
 "@sqltools/formatter@npm:^1.2.5":
   version: 1.2.5
   resolution: "@sqltools/formatter@npm:1.2.5"
@@ -26685,6 +26692,7 @@ __metadata:
     "@mendable/firecrawl-js": ^0.0.13
     "@notionhq/client": ^2.2.10
     "@pinecone-database/pinecone": ^1.1.0
+    "@spider-cloud/spider-client": ^0.0.10
     "@supabase/supabase-js": ^2.10.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -26782,6 +26790,7 @@ __metadata:
     "@mendable/firecrawl-js": ^0.0.13
     "@notionhq/client": ^2.2.10
     "@pinecone-database/pinecone": "*"
+    "@spider-cloud/spider-client": ^0.0.10
     "@supabase/supabase-js": ^2.10.0
     "@vercel/kv": ^0.2.3
     "@xata.io/client": ^0.28.0
@@ -26846,6 +26855,8 @@ __metadata:
     "@notionhq/client":
       optional: true
     "@pinecone-database/pinecone":
+      optional: true
+    "@spider-cloud/spider-client":
       optional: true
     "@supabase/supabase-js":
       optional: true

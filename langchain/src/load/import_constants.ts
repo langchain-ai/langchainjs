@@ -100,6 +100,7 @@ export const optionalImportEntrypoints: string[] = [
   "langchain/document_loaders/web/s3",
   "langchain/document_loaders/web/sitemap",
   "langchain/document_loaders/web/sonix_audio",
+  "langchain/document_loaders/web/spider",
   "langchain/document_loaders/web/confluence",
   "langchain/document_loaders/web/couchbase",
   "langchain/document_loaders/web/youtube",

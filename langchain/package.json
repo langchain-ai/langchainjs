@@ -614,6 +614,10 @@
     "document_loaders/web/sonix_audio.js",
     "document_loaders/web/sonix_audio.d.ts",
     "document_loaders/web/sonix_audio.d.cts",
+    "document_loaders/web/spider.cjs",
+    "document_loaders/web/spider.js",
+    "document_loaders/web/spider.d.ts",
+    "document_loaders/web/spider.d.cts",
     "document_loaders/web/confluence.cjs",
     "document_loaders/web/confluence.js",
     "document_loaders/web/confluence.d.ts",
@@ -1237,6 +1241,7 @@
     "@mendable/firecrawl-js": "^0.0.13",
     "@notionhq/client": "^2.2.10",
     "@pinecone-database/pinecone": "^1.1.0",
+    "@spider-cloud/spider-client": "^0.0.10",
     "@supabase/supabase-js": "^2.10.0",
     "@swc/core": "^1.3.90",
     "@swc/jest": "^0.2.29",
@@ -1322,6 +1327,7 @@
     "@mendable/firecrawl-js": "^0.0.13",
     "@notionhq/client": "^2.2.10",
     "@pinecone-database/pinecone": "*",
+    "@spider-cloud/spider-client": "^0.0.10",
     "@supabase/supabase-js": "^2.10.0",
     "@vercel/kv": "^0.2.3",
     "@xata.io/client": "^0.28.0",
@@ -1399,6 +1405,9 @@
       "optional": true
     },
     "@pinecone-database/pinecone": {
+      "optional": true
+    },
+    "@spider-cloud/spider-client": {
       "optional": true
     },
     "@supabase/supabase-js": {
@@ -2915,6 +2924,15 @@
       },
       "import": "./document_loaders/web/sonix_audio.js",
       "require": "./document_loaders/web/sonix_audio.cjs"
+    },
+    "./document_loaders/web/spider": {
+      "types": {
+        "import": "./document_loaders/web/spider.d.ts",
+        "require": "./document_loaders/web/spider.d.cts",
+        "default": "./document_loaders/web/spider.d.ts"
+      },
+      "import": "./document_loaders/web/spider.js",
+      "require": "./document_loaders/web/spider.cjs"
     },
     "./document_loaders/web/confluence": {
       "types": {
