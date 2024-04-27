@@ -1,4 +1,3 @@
-import * as querystring from "querystring";
 import { Tool } from "@langchain/core/tools";
 
 export interface StackExchangeAnswer {
@@ -155,21 +154,21 @@ export class StackExchangeAPI extends Tool {
       if (!endpoint) {
         throw new Error("No end point provided.");
       }
-      const queryParams: StackExchangeOptions = {
-        pagesize: this.pageSize,
-        page,
+      const queryParams = new URLSearchParams({
+        pagesize: this.pageSize.toString(),
+        page: page.toString(),
         filter,
         ...params,
-      };
+      });
 
       if (this.key) {
-        queryParams.key = this.key;
+        queryParams.append("key", this.key);
       }
       if (this.accessToken) {
-        queryParams.access_token = this.accessToken;
+        queryParams.append("access_token", this.accessToken);
       }
 
-      const queryParamsString = querystring.stringify(queryParams);
+      const queryParamsString = queryParams.toString();
 
       const endpointUrl = `${this.baseUrl}${endpoint}?${queryParamsString}`;
       return await this._makeRequest(endpointUrl);
