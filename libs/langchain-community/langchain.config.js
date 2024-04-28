@@ -166,6 +166,7 @@ export const config = {
     "chat_models/portkey": "chat_models/portkey",
     "chat_models/premai": "chat_models/premai",
     "chat_models/togetherai": "chat_models/togetherai",
+    "chat_models/webllm": "chat_models/webllm",
     "chat_models/yandex": "chat_models/yandex",
     "chat_models/zhipuai": "chat_models/zhipuai",
     // callbacks
