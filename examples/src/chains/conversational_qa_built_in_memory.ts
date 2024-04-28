@@ -137,7 +137,7 @@ const chain = RunnableSequence.from([
     },
     // Fetch relevant context based on the question
     context: async (input: { question: string }) =>
-      retriever.getRelevantDocuments(input.question),
+      retriever.invoke(input.question),
   },
   performQuestionAnswering,
 ]);

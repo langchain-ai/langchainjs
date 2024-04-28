@@ -602,6 +602,10 @@ retrievers/zep.cjs
 retrievers/zep.js
 retrievers/zep.d.ts
 retrievers/zep.d.cts
+retrievers/self_query/qdrant.cjs
+retrievers/self_query/qdrant.js
+retrievers/self_query/qdrant.d.ts
+retrievers/self_query/qdrant.d.cts
 caches/cloudflare_kv.cjs
 caches/cloudflare_kv.js
 caches/cloudflare_kv.d.ts

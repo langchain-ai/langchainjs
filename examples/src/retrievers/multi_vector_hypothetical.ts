@@ -118,7 +118,7 @@ console.log(vectorstoreResult[0].pageContent);
 */
 
 // Retriever returns larger result
-const retrieverResult = await retriever.getRelevantDocuments("justice breyer");
+const retrieverResult = await retriever.invoke("justice breyer");
 console.log(retrieverResult[0].pageContent.length);
 /*
   9770

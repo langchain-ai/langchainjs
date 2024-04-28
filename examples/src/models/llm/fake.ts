@@ -8,8 +8,8 @@ const llm = new FakeListLLM({
   responses: ["I'll callback later.", "You 'console' them!"],
 });
 
-const firstResponse = await llm.call("You want to hear a JavasSript joke?");
-const secondResponse = await llm.call(
+const firstResponse = await llm.invoke("You want to hear a JavasSript joke?");
+const secondResponse = await llm.invoke(
   "How do you cheer up a JavaScript developer?"
 );
 
@@ -37,7 +37,7 @@ const slowLLM = new FakeListLLM({
   sleep: 1000,
 });
 
-const slowResponse = await slowLLM.call(
+const slowResponse = await slowLLM.invoke(
   "Why do programmers always mix up Halloween and Christmas?"
 );
 console.log({ slowResponse });
