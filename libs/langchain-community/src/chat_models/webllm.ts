@@ -52,8 +52,32 @@ export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
 
   protected engine: webllm.EngineInterface;
 
+  /**
+   * Configures list of models available to engine via list of ModelRecords.
+   * @example
+   * const myAppConfig: AppConfig = {
+      model_list: [
+        {
+          "model_url": "https://huggingface.co/mlc-ai/Llama-2-7b-chat-hf-q4f32_1-MLC/resolve/main/",
+          "local_id": "Llama-2-7b-chat-hf-q4f32_1",
+          "model_lib_url": "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/Llama-2-7b-chat-hf/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm",
+        },
+        {
+          "model_url": "https://huggingface.co/mlc-ai/Mistral-7B-Instruct-v0.2-q4f16_1-MLC/resolve/main/",
+          "local_id": "Mistral-7B-Instruct-v0.2-q4f16_1",
+          "model_lib_url": "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/Mistral-7B-Instruct-v0.2/Mistral-7B-Instruct-v0.2-q4f16_1-sw4k_cs1k-webgpu.wasm",
+          "required_features": ["shader-f16"],
+        },
+        // Add your own models here...
+      ]
+    }
+   * 
+   */
   appConfig?: webllm.AppConfig;
 
+  /**
+   * Configures model options (temperature, etc.).
+   */
   chatOpts?: webllm.ChatOptions;
 
   modelRecord: webllm.ModelRecord;
@@ -118,15 +142,16 @@ export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
       },
     );
     
-    const stream = this.engine.chatCompletionAsyncChunkGenerator(
+    const stream = this.engine.chat.completions.create(
       {
         stream: true,
         messages: messagesInput,
         stop: options.stop,
-      },
-      {}
+        logprobs: true
+      }
     );
     for await (const chunk of stream) {
+      // Last chunk has undefined content
       const text = chunk.choices[0].delta.content ?? "";
       yield new ChatGenerationChunk({
         text,
