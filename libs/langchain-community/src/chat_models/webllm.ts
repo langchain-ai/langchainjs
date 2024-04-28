@@ -6,11 +6,7 @@ import type { BaseLanguageModelCallOptions } from "@langchain/core/language_mode
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { BaseMessage, AIMessageChunk } from "@langchain/core/messages";
 import { ChatGenerationChunk } from "@langchain/core/outputs";
-import {
-  ChatModule,
-  type ModelRecord,
-  InitProgressCallback,
-} from "@mlc-ai/web-llm";
+import * as webllm from '@mlc-ai/web-llm'
 import { ChatCompletionMessageParam } from '@mlc-ai/web-llm/lib/openai_api_protocols'
 
 // Code from jacoblee93 https://github.com/jacoblee93/fully-local-pdf-chatbot/blob/main/app/lib/chat_models/webllm.ts
@@ -20,7 +16,9 @@ import { ChatCompletionMessageParam } from '@mlc-ai/web-llm/lib/openai_api_proto
  * can set this in the environment variable `LLAMA_PATH`.
  */
 export interface WebLLMInputs extends BaseChatModelParams {
-  modelRecord: ModelRecord;
+  appConfig?: webllm.AppConfig;
+  chatOpts?: webllm.ChatOptions;
+  modelRecord: webllm.ModelRecord;
   temperature?: number;
 }
 
@@ -52,11 +50,13 @@ export interface WebLLMCallOptions extends BaseLanguageModelCallOptions {}
 export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
   static inputs: WebLLMInputs;
 
-  protected _chatModule: ChatModule;
+  protected engine: webllm.EngineInterface;
 
-  modelRecord: ModelRecord;
+  appConfig?: webllm.AppConfig;
 
-  temperature?: number;
+  chatOpts?: webllm.ChatOptions;
+
+  modelRecord: webllm.ModelRecord;
 
   static lc_name() {
     return "ChatWebLLM";
@@ -64,27 +64,24 @@ export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
 
   constructor(inputs: WebLLMInputs) {
     super(inputs);
-    this._chatModule = new ChatModule();
+    this.appConfig = inputs.appConfig;
+    this.chatOpts = inputs.chatOpts;
     this.modelRecord = inputs.modelRecord;
-    this.temperature = inputs.temperature;
   }
 
   _llmType() {
-    return "web-llm";
+    return "ChatWebLLM: " + this.modelRecord.model_id
   }
 
-  _modelType() {
-    return this.modelRecord.local_id
+  async initialize() {
+    this.engine = webllm.Engine().reload(this.modelRecord.model_id, this.appConfig, this.chatOpts)
+    this.engine.setInitProgressCallback(() => {})
   }
 
-  async initialize(progressCallback?: InitProgressCallback) {
-    if (progressCallback !== undefined) {
-      this._chatModule.setInitProgressCallback(progressCallback);
-    }
-    await this._chatModule.reload(this.modelRecord.local_id, undefined, {
-      model_list: [this.modelRecord],
-    });
-    this._chatModule.setInitProgressCallback(() => {});
+  async reload(newModelRecord: webllm.ModelRecord, newAppConfig?: webllm.AppConfig, newChatOpts?: webllm.ChatOptions) {
+    if (this.engine !== undefined) {
+      this.engine.reload(newModelRecord.model_id, newAppConfig, newChatOpts)
+    } else throw new Error("Initialize model before reloading.")
   }
 
   async *_streamResponseChunks(
@@ -120,14 +117,14 @@ export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
         };
       },
     );
-    const stream = this._chatModule.chatCompletionAsyncChunkGenerator(
+    
+    const stream = this.engine.chatCompletionAsyncChunkGenerator(
       {
         stream: true,
         messages: messagesInput,
         stop: options.stop,
-        temperature: this.temperature,
       },
-      {},
+      {}
     );
     for await (const chunk of stream) {
       const text = chunk.choices[0].delta.content ?? "";
@@ -137,6 +134,7 @@ export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
           content: text,
           additional_kwargs: {
             logprobs: chunk.choices[0].logprobs,
+            finish_reason: chunk.choices[0].finish_reason
           },
         }),
       });
