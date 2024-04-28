@@ -534,6 +534,10 @@ chat_models/togetherai.cjs
 chat_models/togetherai.js
 chat_models/togetherai.d.ts
 chat_models/togetherai.d.cts
+chat_models/webllm.cjs
+chat_models/webllm.js
+chat_models/webllm.d.ts
+chat_models/webllm.d.cts
 chat_models/yandex.cjs
 chat_models/yandex.js
 chat_models/yandex.d.ts
