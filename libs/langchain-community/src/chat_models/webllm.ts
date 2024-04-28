@@ -29,16 +29,19 @@ export interface WebLLMCallOptions extends BaseLanguageModelCallOptions {}
  *  This can be installed using `npm install -S @mlc-ai/web-llm`
  * @example
  * ```typescript
- * // Initialize the ChatWebLLM model with the model record.
+ * // Initialize the ChatWebLLM model with the model record and chat options.
+ * // Note that if the appConfig field is set, the list of model records 
+ * // must include the selected model record for the engine.
  * const model = new ChatWebLLM({
  *   modelRecord: {
- *     "model_url": "https://huggingface.co/mlc-ai/phi-2-q4f32_1-MLC/resolve/main/",
- *     "local_id": "Phi2-q4f32_1",
- *     "model_lib_url": "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/phi-2/phi-2-q4f32_1-ctx2k-webgpu.wasm",
- *     "vram_required_MB": 4032.48,
- *     "low_resource_required": false,
+ *     "model_url": "https://huggingface.co/mlc-ai/Llama-3-8B-Instruct-q4f32_1-MLC/resolve/main/",
+ *     "model_id": "Llama-3-8B-Instruct-q4f32_1",
+ *     "model_lib_url": webllm.modelLibURLPrefix + webllm.modelVersion + "/Llama-3-8B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm,
  *   },
- *   temperature: 0.5,
+ *   chatOpts: {
+ *     temperature: 0.5,
+ *     top-p: 2
+ *   }
  * });
  *
  * // Call the model with a message and await the response.
@@ -55,24 +58,16 @@ export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
   /**
    * Configures list of models available to engine via list of ModelRecords.
    * @example
-   * const myAppConfig: AppConfig = {
-      model_list: [
-        {
-          "model_url": "https://huggingface.co/mlc-ai/Llama-2-7b-chat-hf-q4f32_1-MLC/resolve/main/",
-          "local_id": "Llama-2-7b-chat-hf-q4f32_1",
-          "model_lib_url": "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/Llama-2-7b-chat-hf/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm",
-        },
-        {
-          "model_url": "https://huggingface.co/mlc-ai/Mistral-7B-Instruct-v0.2-q4f16_1-MLC/resolve/main/",
-          "local_id": "Mistral-7B-Instruct-v0.2-q4f16_1",
-          "model_lib_url": "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/Mistral-7B-Instruct-v0.2/Mistral-7B-Instruct-v0.2-q4f16_1-sw4k_cs1k-webgpu.wasm",
-          "required_features": ["shader-f16"],
-        },
-        // Add your own models here...
-      ]
-    }
-   * 
    */
+  // const appConfig: webllm.AppConfig = {
+  //   model_list: [
+  //     {
+  //       "model_url": "https://huggingface.co/mlc-ai/Llama-3-8B-Instruct-q4f32_1-MLC/resolve/main/",
+  //       "model_id": "Llama-3-8B-Instruct-q4f32_1",
+  //       "model_lib_url": webllm.modelLibURLPrefix + webllm.modelVersion + "/Llama-3-8B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm",
+  //     },
+  //   ]
+  // };
   appConfig?: webllm.AppConfig;
 
   /**
