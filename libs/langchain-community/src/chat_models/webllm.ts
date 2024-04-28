@@ -12,10 +12,6 @@ import { ChatCompletionMessageParam } from "@mlc-ai/web-llm/lib/openai_api_proto
 
 // Code from jacoblee93 https://github.com/jacoblee93/fully-local-pdf-chatbot/blob/main/app/lib/chat_models/webllm.ts
 
-/**
- * Note that the modelPath is the only required parameter. For testing you
- * can set this in the environment variable `LLAMA_PATH`.
- */
 export interface WebLLMInputs extends BaseChatModelParams {
   appConfig?: webllm.AppConfig;
   chatOpts?: webllm.ChatOptions;
