@@ -6,8 +6,9 @@ import type { BaseLanguageModelCallOptions } from "@langchain/core/language_mode
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { BaseMessage, AIMessageChunk } from "@langchain/core/messages";
 import { ChatGenerationChunk } from "@langchain/core/outputs";
-import * as webllm from '@mlc-ai/web-llm'
-import { ChatCompletionMessageParam } from '@mlc-ai/web-llm/lib/openai_api_protocols'
+
+import * as webllm from "@mlc-ai/web-llm";
+import { ChatCompletionMessageParam } from "@mlc-ai/web-llm/lib/openai_api_protocols";
 
 // Code from jacoblee93 https://github.com/jacoblee93/fully-local-pdf-chatbot/blob/main/app/lib/chat_models/webllm.ts
 
@@ -29,7 +30,7 @@ export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
   protected engine: webllm.EngineInterface;
 
   appConfig?: webllm.AppConfig;
-  
+
   chatOpts?: webllm.ChatOptions;
 
   modelRecord: webllm.ModelRecord;
@@ -46,24 +47,30 @@ export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
   }
 
   _llmType() {
-    return this.modelRecord.model_id
+    return this.modelRecord.model_id;
   }
 
   async initialize() {
-    this.engine = webllm.Engine().reload(this.modelRecord.model_id, this.appConfig, this.chatOpts)
-    this.engine.setInitProgressCallback(() => {})
+    this.engine = webllm
+      .Engine()
+      .reload(this.modelRecord.model_id, this.appConfig, this.chatOpts);
+    this.engine.setInitProgressCallback(() => {});
   }
 
-  async reload(newModelRecord: webllm.ModelRecord, newAppConfig?: webllm.AppConfig, newChatOpts?: webllm.ChatOptions) {
+  async reload(
+    newModelRecord: webllm.ModelRecord,
+    newAppConfig?: webllm.AppConfig,
+    newChatOpts?: webllm.ChatOptions
+  ) {
     if (this.engine !== undefined) {
-      this.engine.reload(newModelRecord.model_id, newAppConfig, newChatOpts)
-    } else throw new Error("Initialize model before reloading.")
+      this.engine.reload(newModelRecord.model_id, newAppConfig, newChatOpts);
+    } else throw new Error("Initialize model before reloading.");
   }
 
   async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun,
+    runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     await this.initialize();
 
@@ -71,7 +78,7 @@ export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
       (message) => {
         if (typeof message.content !== "string") {
           throw new Error(
-            "ChatWebLLM does not support non-string message content in sessions.",
+            "ChatWebLLM does not support non-string message content in sessions."
           );
         }
         const langChainType = message._getType();
@@ -84,24 +91,22 @@ export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
           role = "system" as const;
         } else {
           throw new Error(
-            "Function, tool, and generic messages are not supported.",
+            "Function, tool, and generic messages are not supported."
           );
         }
         return {
           role,
           content: message.content,
         };
-      },
-    );
-    
-    const stream = this.engine.chat.completions.create(
-      {
-        stream: true,
-        messages: messagesInput,
-        stop: options.stop,
-        logprobs: true
       }
     );
+
+    const stream = this.engine.chat.completions.create({
+      stream: true,
+      messages: messagesInput,
+      stop: options.stop,
+      logprobs: true,
+    });
     for await (const chunk of stream) {
       // Last chunk has undefined content
       const text = chunk.choices[0].delta.content ?? "";
@@ -111,7 +116,7 @@ export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
           content: text,
           additional_kwargs: {
             logprobs: chunk.choices[0].logprobs,
-            finish_reason: chunk.choices[0].finish_reason
+            finish_reason: chunk.choices[0].finish_reason,
           },
         }),
       });
@@ -122,13 +127,13 @@ export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
   async _call(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun,
+    runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
     const chunks = [];
     for await (const chunk of this._streamResponseChunks(
       messages,
       options,
-      runManager,
+      runManager
     )) {
       chunks.push(chunk.text);
     }
