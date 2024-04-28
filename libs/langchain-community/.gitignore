@@ -530,6 +530,10 @@ chat_models/minimax.cjs
 chat_models/minimax.js
 chat_models/minimax.d.ts
 chat_models/minimax.d.cts
+chat_models/moonshot.cjs
+chat_models/moonshot.js
+chat_models/moonshot.d.ts
+chat_models/moonshot.d.cts
 chat_models/ollama.cjs
 chat_models/ollama.js
 chat_models/ollama.d.ts

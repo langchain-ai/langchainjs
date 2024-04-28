@@ -38,6 +38,7 @@ export interface SecretMap {
   MILVUS_USERNAME?: string;
   MINIMAX_API_KEY?: string;
   MINIMAX_GROUP_ID?: string;
+  MOONSHOT_API_KEY?: string;
   PLANETSCALE_DATABASE_URL?: string;
   PLANETSCALE_HOST?: string;
   PLANETSCALE_PASSWORD?: string;
