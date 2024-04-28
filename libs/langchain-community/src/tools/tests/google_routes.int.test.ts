@@ -10,9 +10,12 @@ describe("GooglePlacesAPI", () => {
   test("GooglePlacesAPI returns expected result for valid query", async () => {
     const tool = new GoogleRoutesAPI();
 
-    const result = await tool.invoke(
-      "Big Ben, London, UK|Buckingham Palace, London, UK|WALK"
-    );
+    const result = await tool.invoke({
+      origin: "Big Ben, London, UK",
+      destination: "Buckingham Palace, London, UK",
+      travel_mode: "WALK",
+      computeAlternativeRoutes: false,
+    });
 
     expect(result).toContain("Birdcage Walk");
   });
@@ -20,7 +23,12 @@ describe("GooglePlacesAPI", () => {
   test("GoogleRoutesAPI returns 'Invalid route. The route may be too long or impossible to travel by the selected mode of transport.' for route on an non-existent place or one that is too far", async () => {
     const tool = new GoogleRoutesAPI();
 
-    const result = await tool.invoke("Sao Paulo, Brazil|New York, USA|DRIVE");
+    const result = await tool.invoke({
+      origin: "Sao Paulo, Brazil",
+      destination: "New York, USA",
+      travel_mode: "DRIVE",
+      computeAlternativeRoutes: false,
+    });
 
     expect(result).toContain(
       "Invalid route. The route may be too long or impossible to travel by the selected mode of transport."
