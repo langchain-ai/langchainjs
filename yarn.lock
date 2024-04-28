@@ -8953,6 +8953,7 @@ __metadata:
     "@langchain/core": ~0.1.60
     "@langchain/openai": ~0.0.28
     "@langchain/scripts": ~0.0
+    "@mlc-ai/web-llm": 0.2.28
     "@mozilla/readability": ^0.4.4
     "@neondatabase/serverless": ^0.9.1
     "@opensearch-project/opensearch": ^2.2.0
@@ -9087,6 +9088,7 @@ __metadata:
     "@google-ai/generativelanguage": ^0.2.1
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
+    "@mlc-ai/web-llm": 0.2.28
     "@mozilla/readability": "*"
     "@neondatabase/serverless": "*"
     "@opensearch-project/opensearch": "*"
@@ -9200,6 +9202,8 @@ __metadata:
     "@gradientai/nodejs-sdk":
       optional: true
     "@huggingface/inference":
+      optional: true
+    "@mlc-ai/web-llm":
       optional: true
     "@mozilla/readability":
       optional: true
@@ -10108,6 +10112,13 @@ __metadata:
   dependencies:
     node-fetch: ^2.6.7
   checksum: 3f8299811b06027dfbdae4fd86564ccda1a48ec4276940e1dcace4fa447cc4f7e61808a38d71ef73116fc6cf90b74257e6537e1c47c96d50ff52bfb8f62d2947
+  languageName: node
+  linkType: hard
+
+"@mlc-ai/web-llm@npm:0.2.28":
+  version: 0.2.28
+  resolution: "@mlc-ai/web-llm@npm:0.2.28"
+  checksum: 18188e18c5866e6cccbba587d04329c71215134fb184b6e9d285a76b6978218d8eed071511c11ae71153ba8bcda333bd4b10bbdce77f07a05e269e372d235f0e
   languageName: node
   linkType: hard
 
