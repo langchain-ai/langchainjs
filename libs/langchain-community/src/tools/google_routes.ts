@@ -1,12 +1,6 @@
+import { StructuredTool } from "@langchain/core/tools";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { Tool } from "@langchain/core/tools";
-
-/**
- * Interface for parameters required by GoogleRoutesAPI class.
- */
-export interface GoogleRoutesAPIParams {
-  apiKey?: string;
-}
+import { z } from "zod";
 
 /**
  * Interfaces for the response from the Google Routes API.
@@ -26,8 +20,8 @@ interface Departure {
 }
 
 interface transitDetails {
-  transitName: string;
-  transitNameCode: string;
+  transitName?: string;
+  transitNameCode?: string;
   transitVehicleType: string;
 }
 
@@ -51,6 +45,8 @@ interface FilteredTransitRoute {
   travelInstructions: travelInstructions[];
   localizedValues: localizedValues;
   transitDetails: transitDetails;
+  routeLabels: string[];
+  warnings?: string[];
 }
 
 /**
@@ -61,8 +57,13 @@ interface FilteredRoute {
   description: string;
   distance: string;
   duration: string;
+  routeLabels: string[];
+  warnings?: string[];
 }
 
+/**
+ * Interface for the body of the request to the Google Routes API.
+ */
 interface Body {
   origin: {
     address: string;
@@ -72,6 +73,7 @@ interface Body {
   };
   travel_mode: string;
   routing_preference?: string;
+  computeAlternativeRoutes: boolean;
 }
 
 /**
@@ -126,10 +128,58 @@ function createLocalizedValues(route: any): localizedValues {
 function createTransitDetails(transitDetails: any): transitDetails {
   const { name, nameShort, vehicle } = transitDetails.transitLine;
   return {
-    transitName: name,
-    transitNameCode: nameShort,
+    ...(name ? { transitName: name } : {}),
+    ...(nameShort ? { transitNameCode: nameShort } : {}),
     transitVehicleType: vehicle.type,
   };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function createRouteLabel(route: any): string[] {
+  return route.routeLabels;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function filterRoutes(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  route: any,
+  travel_mode: string
+): FilteredTransitRoute | FilteredRoute {
+  if (travel_mode === "TRANSIT") {
+    const transitStep = route.legs[0].steps.find(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (step: any) => step.transitDetails
+    );
+    const filteredRoute: FilteredTransitRoute = {
+      departure: createDeparture(transitStep.transitDetails),
+      arrival: createArrival(transitStep.transitDetails),
+      travelInstructions: createTravelInstructions(route.legs[0].stepsOverview),
+      localizedValues: createLocalizedValues(route),
+      transitDetails: createTransitDetails(transitStep.transitDetails),
+      routeLabels: createRouteLabel(route),
+    };
+    if (route.warnings && route.warnings.length > 0) {
+      filteredRoute.warnings = route.warnings;
+    }
+    return filteredRoute;
+  } else {
+    const filteredRoute: FilteredRoute = {
+      description: route.description,
+      routeLabels: createRouteLabel(route),
+      ...createLocalizedValues(route),
+    };
+    if (route.warnings && route.warnings.length > 0) {
+      filteredRoute.warnings = route.warnings;
+    }
+    return filteredRoute;
+  }
+}
+
+/**
+ * Interface for parameter s required by GoogleRoutesAPI class.
+ */
+export interface GoogleRoutesAPIParams {
+  apiKey?: string;
 }
 
 /**
@@ -138,7 +188,7 @@ function createTransitDetails(transitDetails: any): transitDetails {
  * This tool is used to retrieve routing information between two destinations using the Google Routes API.
  * The travel mode can be one of the following: "DRIVE", "WALK", "BICYCLE", "TRANSIT", or "TWO_WHEELER".
  */
-export class GoogleRoutesAPI extends Tool {
+export class GoogleRoutesAPI extends StructuredTool {
   static lc_name() {
     return "GoogleRoutesAPI";
   }
@@ -153,26 +203,22 @@ export class GoogleRoutesAPI extends Tool {
 
   protected apiKey: string;
 
-  description = `A tool for retrieving routing information between two destinations using Google Routes API.
+  schema = z.object({
+    origin: z.string(),
+    destination: z.string(),
+    travel_mode: z.enum(["DRIVE", "WALK", "BICYCLE", "TRANSIT", "TWO_WHEELER"]),
+    computeAlternativeRoutes: z.boolean(),
+  });
 
-  INPUT examples:
+  description = `A wrapper around Google Routes API. Useful for when you need to get route information between two destinations using the Google Routes API.
+The input should be an object in the following format: 
+{ "origin": "<origin>", "destination": "<destination>", "travel_mode": "<travel_mode>", "computeAlternativeRoutes": <boolean> }. 
+The "travel_mode" can be one of the following: "DRIVE", "WALK", "BICYCLE", "TRANSIT", or "TWO_WHEELER". 
+"computeAlternativeRoutes" should be set to true if the user wants a different route.
 
-  "action": "google_routes",
-  "action_input": "1600 Amphitheatre Parkway, Mountain View, CA|450 Serra Mall, Stanford, CA 94305, USA|DRIVE"
-
-  "action": "google_routes",
-  "action_input": "Big Ben|Buckingham Palace|WALK"
-
-  "action": "google_routes",
-  "action_input": "Westfield London, Ariel Way|Wembley Stadium|TRANSIT"
-
-  OUTPUT:
-  - For "DRIVE", "WALK", "BICYCLE", and "TWO_WHEELER" travel modes, your output is the information about the route, including the description, distance, and duration.
-  - For "TRANSIT" travel mode, your output is the information about the route, including the departure and arrival details, travel instructions, transit fare (if included in the API), and transit details.
-
-  Note:
-  - The travel mode can be one of the following: "DRIVE", "WALK", "BICYCLE", "TRANSIT", or "TWO_WHEELER".
-  `;
+The output for "TRANSIT" travel mode includes the departure and arrival details, travel instructions, transit fare (if included in the API), transit details, warnings if any, and alternative routes if requested.
+The output for other travel modes includes the information about the route, including the description, distance, duration, warnings if any, and alternative routes if requested.
+`;
 
   constructor(fields?: GoogleRoutesAPIParams) {
     super(...arguments);
@@ -186,9 +232,9 @@ export class GoogleRoutesAPI extends Tool {
     this.apiKey = apiKey;
   }
 
-  async _call(input: string) {
-    const parsedInput = input.split("|");
-    const [origin, destination, travel_mode] = parsedInput;
+  async _call(input: z.infer<typeof GoogleRoutesAPI.prototype.schema>) {
+    const { origin, destination, travel_mode, computeAlternativeRoutes } =
+      input;
 
     const body: Body = {
       origin: {
@@ -198,10 +244,11 @@ export class GoogleRoutesAPI extends Tool {
         address: destination,
       },
       travel_mode,
+      computeAlternativeRoutes,
     };
 
     let fieldMask =
-      "routes.description,routes.localizedValues,routes.travelAdvisory,routes.legs.steps.transitDetails";
+      "routes.description,routes.localizedValues,routes.travelAdvisory,routes.legs.steps.transitDetails,routes.routeLabels,routes.warnings";
 
     if (travel_mode === "TRANSIT") {
       fieldMask += ",routes.legs.stepsOverview";
@@ -244,32 +291,10 @@ export class GoogleRoutesAPI extends Tool {
       return "Invalid route. The route may be too long or impossible to travel by the selected mode of transport.";
     }
 
-    let routes: FilteredTransitRoute[] | FilteredRoute[];
-
-    if (travel_mode === "TRANSIT") {
+    const routes: FilteredTransitRoute[] | FilteredRoute[] = json.routes.map(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      routes = json.routes.map((route: any) => {
-        const transitStep = route.legs[0].steps.find(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (step: any) => step.transitDetails
-        );
-        return {
-          departure: createDeparture(transitStep.transitDetails),
-          arrival: createArrival(transitStep.transitDetails),
-          travelInstructions: createTravelInstructions(
-            route.legs[0].stepsOverview
-          ),
-          localizedValues: createLocalizedValues(route),
-          transitDetails: createTransitDetails(transitStep.transitDetails),
-        };
-      });
-    } else {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      routes = json.routes.map((route: any) => ({
-        description: route.description,
-        ...createLocalizedValues(route),
-      }));
-    }
+      (route: any) => filterRoutes(route, travel_mode)
+    );
 
     return JSON.stringify(routes);
   }
