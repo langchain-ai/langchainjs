@@ -78,7 +78,7 @@ Standalone question:`);
       outputParser: new StringOutputParser(),
     });
 
-    const { text } = await chain.call({
+    const { text } = await chain.invoke({
       ...input,
       chatHistory: serializeChatHistory(input.chatHistory ?? ""),
     });
@@ -116,7 +116,7 @@ Standalone question:`);
         chatHistory?: string | Array<string>;
       }) => {
         // Fetch relevant docs and serialize to a string.
-        const relevantDocs = await retriever.getRelevantDocuments(
+        const relevantDocs = await retriever.invoke(
           previousStepResult.question
         );
         const serialized = formatDocumentsAsString(relevantDocs);

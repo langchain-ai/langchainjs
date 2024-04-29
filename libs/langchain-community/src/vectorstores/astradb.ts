@@ -29,6 +29,7 @@ export interface AstraLibArgs extends AsyncCallerParams {
   namespace?: string;
   idKey?: string;
   contentKey?: string;
+  skipCollectionProvisioning?: boolean;
   collectionOptions?: CreateCollectionOptions<any>;
   batchSize?: number;
 }
@@ -56,6 +57,8 @@ export class AstraDBVectorStore extends VectorStore {
 
   caller: AsyncCaller;
 
+  private readonly skipCollectionProvisioning: boolean;
+
   _vectorstoreType(): string {
     return "astradb";
   }
@@ -72,16 +75,39 @@ export class AstraDBVectorStore extends VectorStore {
       idKey,
       contentKey,
       batchSize,
+      skipCollectionProvisioning,
       ...callerArgs
     } = args;
     const dataAPIClient = new DataAPIClient(token, { caller: ["langchainjs"] });
     this.astraDBClient = dataAPIClient.db(endpoint, { namespace });
+    this.skipCollectionProvisioning = skipCollectionProvisioning ?? false;
+    if (this.skipCollectionProvisioning && collectionOptions) {
+      throw new Error(
+        "If 'skipCollectionProvisioning' has been set to true, 'collectionOptions' must not be defined"
+      );
+    }
     this.collectionName = collection;
-    this.collectionOptions = collectionOptions;
+    this.collectionOptions =
+      AstraDBVectorStore.applyCollectionOptionsDefaults(collectionOptions);
     this.idKey = idKey ?? "_id";
     this.contentKey = contentKey ?? "text";
     this.batchSize = batchSize && batchSize <= 20 ? batchSize : 20;
     this.caller = new AsyncCaller(callerArgs);
+  }
+
+  private static applyCollectionOptionsDefaults(
+    fromUser?: CreateCollectionOptions<any>
+  ): CreateCollectionOptions<any> {
+    const copy: CreateCollectionOptions<any> = fromUser ? { ...fromUser } : {};
+    if (copy.checkExists === undefined) {
+      copy.checkExists = false;
+    }
+    if (copy.indexing === undefined) {
+      // same default as langchain python AstraDBVectorStore.
+      // this enables to create the collection in python/ts and use it in ts/python with default options.
+      copy.indexing = { allow: ["metadata"] };
+    }
+    return copy;
   }
 
   /**
@@ -91,10 +117,12 @@ export class AstraDBVectorStore extends VectorStore {
    * @returns Promise that resolves if connected to the collection.
    */
   async initialize(): Promise<void> {
-    await this.astraDBClient.createCollection(
-      this.collectionName,
-      this.collectionOptions
-    );
+    if (!this.skipCollectionProvisioning) {
+      await this.astraDBClient.createCollection(
+        this.collectionName,
+        this.collectionOptions
+      );
+    }
     this.collection = await this.astraDBClient.collection(this.collectionName);
     console.debug("Connected to Astra DB collection");
   }

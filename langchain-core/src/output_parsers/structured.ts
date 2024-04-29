@@ -104,7 +104,15 @@ ${JSON.stringify(zodToJsonSchema(this.schema))}
       const json = text.includes("```")
         ? text.trim().split(/```(?:json)?/)[1]
         : text.trim();
-      return await this.schema.parseAsync(JSON.parse(json));
+
+      const escapedJson = json
+        .replace(/"([^"\\]*(\\.[^"\\]*)*)"/g, (_match, capturedGroup) => {
+          const escapedInsideQuotes = capturedGroup.replace(/\n/g, "\\n");
+          return `"${escapedInsideQuotes}"`;
+        })
+        .replace(/\n/g, "");
+
+      return await this.schema.parseAsync(JSON.parse(escapedJson));
     } catch (e) {
       throw new OutputParserException(
         `Failed to parse. Text: "${text}". Error: ${e}`,

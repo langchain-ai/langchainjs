@@ -21,7 +21,7 @@ test("Test Bedrock LLM: AI21", async () => {
     },
   });
 
-  const res = await bedrock.call(prompt);
+  const res = await bedrock.invoke(prompt);
   expect(typeof res).toBe("string");
 
   console.log(res);
@@ -44,7 +44,7 @@ test.skip("Test Bedrock LLM: Meta Llama2", async () => {
     },
   });
 
-  const res = await bedrock.call(prompt);
+  const res = await bedrock.invoke(prompt);
   expect(typeof res).toBe("string");
 
   console.log(res);
@@ -93,7 +93,7 @@ test("Test Bedrock LLM: Claude-v2", async () => {
     },
   });
 
-  const res = await bedrock.call(prompt);
+  const res = await bedrock.invoke(prompt);
   expect(typeof res).toBe("string");
   console.log(res);
 });
@@ -150,7 +150,7 @@ test("Test Bedrock LLM handleLLMNewToken: Claude-v2", async () => {
     ],
   });
 
-  const stream = await bedrock.call(prompt);
+  const stream = await bedrock.invoke(prompt);
   expect(tokens.length).toBeGreaterThan(1);
   expect(stream).toEqual(tokens.join(""));
 });

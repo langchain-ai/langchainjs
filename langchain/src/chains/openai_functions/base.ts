@@ -157,6 +157,8 @@ export type CreateStructuredOutputRunnableConfig<
 };
 
 /**
+ * @deprecated Prefer the `.withStructuredOutput` method on chat model classes.
+ *
  * Create a runnable that uses an OpenAI function to get a structured output.
  * @param config Params required to create the runnable.
  * @returns A runnable sequence that will pass the given function to the model when run.

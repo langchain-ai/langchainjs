@@ -52,7 +52,7 @@ const chain = new RetrievalQAChain({
   inputKey: "question",
 });
 
-const response = await chain.call({
+const response = await chain.invoke({
   question: "What are the approaches to Task Decomposition?",
 });
 
