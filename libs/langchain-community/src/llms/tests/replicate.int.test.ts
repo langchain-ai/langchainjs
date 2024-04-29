@@ -15,7 +15,8 @@ test("Test Replicate", async () => {
   console.log({ res });
 
   expect(typeof res).toBe("string");
-});
+  expect(res).not.toBe("");
+}, 60000);
 
 test("Test Replicate Streaming", async () => {
   const model = new Replicate({
@@ -31,7 +32,8 @@ test("Test Replicate Streaming", async () => {
   console.log({ res });
 
   expect(typeof res).toBe("string");
-});
+  expect(res).not.toBe("");
+}, 60000);
 
 test.skip("Serialise Replicate", () => {
   const model = new Replicate({
