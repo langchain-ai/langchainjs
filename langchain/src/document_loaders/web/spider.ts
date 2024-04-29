@@ -24,7 +24,7 @@ interface SpiderLoaderParameters {
   mode?: "crawl" | "scrape";
   params?: Record<string, unknown>;
 }
-interface  SpiderDocument {
+interface SpiderDocument {
   markdown: string;
   metadata: Record<string, unknown>;
 }
