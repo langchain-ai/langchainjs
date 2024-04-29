@@ -79,12 +79,12 @@ export interface ChatGroqInput extends BaseChatModelParams {
   /**
    * The name of the model to use.
    * Alias for `model`
-   * @default "llama2-70b-4096"
+   * @default "llama3-8b-8192"
    */
   modelName?: string;
   /**
    * The name of the model to use.
-   * @default "llama2-70b-4096"
+   * @default "llama3-8b-8192"
    */
   model?: string;
   /**
@@ -257,9 +257,9 @@ export class ChatGroq extends BaseChatModel<
 > {
   client: Groq;
 
-  modelName = "llama2-70b-4096";
+  modelName = "llama3-8b-8192";
 
-  model = "llama2-70b-4096";
+  model = "llama3-8b-8192";
 
   temperature = 0.7;
 
