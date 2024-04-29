@@ -1,20 +1,20 @@
 import { describe, it, expect, jest } from '@jest/globals';
-import mlc_llm from 'mlc_llm';
+import { ChatWebLLM } from 'libs/langchain-community/src/chat_models/webllm.ts';
 
-jest.mock('mlc_llm', () => ({
+jest.mock('ChatWebLLM', () => ({
   initialize: jest.fn().mockResolvedValue(true),
   process: jest.fn().mockResolvedValue("Processed output")
 }));
 
 describe('MLC LLM Integration Tests', () => {
-  it('initializes mlc_llm successfully', async () => {
-    const result = await mlc_llm.initialize({ apiKey: "fake_api_key" });
+  it('initializes ChatWebLLM successfully', async () => {
+    const result = await ChatWebLLM.initialize({ apiKey: "fake_api_key" });
     expect(result).toBeTruthy();
   });
 
-  it('processes input correctly with mlc_llm', async () => {
+  it('processes input correctly with ChatWebLLM', async () => {
     const input = "Hello world";
-    const output = await mlc_llm.process(input);
+    const output = await ChatWebLLM.process(input);
     expect(output).toEqual("Processed output");
   });
 });
