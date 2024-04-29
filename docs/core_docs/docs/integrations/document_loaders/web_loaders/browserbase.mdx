@@ -1,0 +1,34 @@
+# Browserbase Loader
+
+## Description
+
+[Browserbase](https://browserbase.com) is a serverless platform for running headless browsers, it offers advanced debugging, session recordings, stealth mode, integrated proxies and captcha solving.
+
+## Installation
+
+- Get an API key from [browserbase.com](https://browserbase.com) and set it in environment variables (`BROWSERBASE_API_KEY`).
+- Install the [Browserbase SDK](http://github.com/browserbase/js-sdk):
+
+```
+npm i @browserbasehq/sdk
+```
+
+## Example
+
+Utilize the BrowserbaseLoader as follows to allow your agent to load websites:
+
+```js
+import { BrowserbaseLoader } from "langchain/document_loaders/web/browserbase.js";
+
+const loader = new BrowserbaseLoader(["https://example.com"], { textContent: true });
+const docs = await loader.load();
+```
+
+## Arguments
+
+- `urls`: Required. List of URLs to load.
+
+## Options
+
+- `api_key`: Optional. Specifies Browserbase API key. Defaults is the `BROWSERBASE_API_KEY` environment variable.
+- `text_content`: Optional. Load pages as readable text. Default is `False`.
