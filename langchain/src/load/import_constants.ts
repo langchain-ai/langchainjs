@@ -83,6 +83,7 @@ export const optionalImportEntrypoints: string[] = [
   "langchain/document_loaders/web/assemblyai",
   "langchain/document_loaders/web/azure_blob_storage_container",
   "langchain/document_loaders/web/azure_blob_storage_file",
+  "langchain/document_loaders/web/browserbase",
   "langchain/document_loaders/web/cheerio",
   "langchain/document_loaders/web/puppeteer",
   "langchain/document_loaders/web/playwright",

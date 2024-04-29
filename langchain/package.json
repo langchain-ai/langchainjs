@@ -2763,6 +2763,15 @@
       "import": "./document_loaders/web/azure_blob_storage_file.js",
       "require": "./document_loaders/web/azure_blob_storage_file.cjs"
     },
+    "./document_loaders/web/browserbase": {
+      "types": {
+        "import": "./document_loaders/web/browserbase.d.ts",
+        "require": "./document_loaders/web/browserbase.d.cts",
+        "default": "./document_loaders/web/browserbase.d.ts"
+      },
+      "import": "./document_loaders/web/browserbase.js",
+      "require": "./document_loaders/web/browserbase.cjs"
+    },
     "./document_loaders/web/cheerio": {
       "types": {
         "import": "./document_loaders/web/cheerio.d.ts",
