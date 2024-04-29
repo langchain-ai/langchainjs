@@ -184,7 +184,7 @@ export interface GoogleRoutesAPIParams {
 
 /**
  * Class for interacting with the Google Routes API
- * It extends the base Tool class to perform retrieval.
+ * It extends the StructuredTool class to perform retrieval.
  * This tool is used to retrieve routing information between two destinations using the Google Routes API.
  * The travel mode can be one of the following: "DRIVE", "WALK", "BICYCLE", "TRANSIT", or "TWO_WHEELER".
  */
@@ -199,26 +199,20 @@ export class GoogleRoutesAPI extends StructuredTool {
     };
   }
 
-  name = "google_routes";
+  name: string;
+
+  description: string;
 
   protected apiKey: string;
 
-  schema = z.object({
-    origin: z.string(),
-    destination: z.string(),
-    travel_mode: z.enum(["DRIVE", "WALK", "BICYCLE", "TRANSIT", "TWO_WHEELER"]),
-    computeAlternativeRoutes: z.boolean(),
-  });
-
-  description = `A wrapper around Google Routes API. Useful for when you need to get route information between two destinations using the Google Routes API.
-The input should be an object in the following format: 
-{ "origin": "<origin>", "destination": "<destination>", "travel_mode": "<travel_mode>", "computeAlternativeRoutes": <boolean> }. 
-The "travel_mode" can be one of the following: "DRIVE", "WALK", "BICYCLE", "TRANSIT", or "TWO_WHEELER". 
-"computeAlternativeRoutes" should be set to true if the user wants a different route.
-
-The output for "TRANSIT" travel mode includes the departure and arrival details, travel instructions, transit fare (if included in the API), transit details, warnings if any, and alternative routes if requested.
-The output for other travel modes includes the information about the route, including the description, distance, duration, warnings if any, and alternative routes if requested.
-`;
+  schema: z.ZodObject<{
+    origin: z.ZodString;
+    destination: z.ZodString;
+    travel_mode: z.ZodEnum<
+      ["DRIVE", "WALK", "BICYCLE", "TRANSIT", "TWO_WHEELER"]
+    >;
+    computeAlternativeRoutes: z.ZodBoolean;
+  }>;
 
   constructor(fields?: GoogleRoutesAPIParams) {
     super(...arguments);
@@ -230,6 +224,36 @@ The output for other travel modes includes the information about the route, incl
       );
     }
     this.apiKey = apiKey;
+    this.name = "google_routes";
+    this.description = `
+A tool for retrieving routing information between two destinations using the Google Routes API. 
+
+Supported travel modes: DRIVE, WALK, BICYCLE, TRANSIT, TWO_WHEELER. 
+
+Input format: 
+{ 
+  "origin": "<origin>",
+  "destination": "<destination>",
+  "travel_mode": "<travel_mode>", 
+  "computeAlternativeRoutes": <boolean>
+}
+
+Output:
+- For "TRANSIT" travel mode: Includes departure and arrival details, travel instructions, transit fare (if available), transit details, warnings (if any), and alternative routes (if requested).
+- For other travel modes: Includes route description, distance, duration, warnings (if any), and alternative routes (if requested).
+`;
+    this.schema = z.object({
+      origin: z.string(),
+      destination: z.string(),
+      travel_mode: z.enum([
+        "DRIVE",
+        "WALK",
+        "BICYCLE",
+        "TRANSIT",
+        "TWO_WHEELER",
+      ]),
+      computeAlternativeRoutes: z.boolean(),
+    });
   }
 
   async _call(input: z.infer<typeof GoogleRoutesAPI.prototype.schema>) {
@@ -277,8 +301,7 @@ The output for other travel modes includes the information about the route, incl
         const json = await res.json();
         message = json.error.message;
       } catch (e) {
-        message =
-          "Unable to parse error message: Google did not return a JSON response.";
+        message = `Unable to parse error message: Google did not return a JSON response. Error: ${e}`;
       }
       throw new Error(
         `Got ${res.status}: ${res.statusText} error from Google Routes API: ${message}`
