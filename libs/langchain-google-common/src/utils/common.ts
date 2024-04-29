@@ -21,8 +21,10 @@ export function copyAIModelParamsInto(
   target: GoogleAIModelParams
 ): GoogleAIModelRequestParams {
   const ret: GoogleAIModelRequestParams = target || {};
-
-  ret.modelName = options?.modelName ?? params?.modelName ?? target.modelName;
+  const model = options?.model ?? params?.model ?? target.model;
+  ret.modelName =
+    model ?? options?.modelName ?? params?.modelName ?? target.modelName;
+  ret.model = model;
   ret.temperature =
     options?.temperature ?? params?.temperature ?? target.temperature;
   ret.maxOutputTokens =
@@ -35,6 +37,10 @@ export function copyAIModelParamsInto(
     options?.stopSequences ?? params?.stopSequences ?? target.stopSequences;
   ret.safetySettings =
     options?.safetySettings ?? params?.safetySettings ?? target.safetySettings;
+  ret.convertSystemMessageToHumanContent =
+    options?.convertSystemMessageToHumanContent ??
+    params?.convertSystemMessageToHumanContent ??
+    target?.convertSystemMessageToHumanContent;
 
   ret.tools = options?.tools;
   // Ensure tools are formatted properly for Gemini
@@ -115,7 +121,8 @@ export function validateModelParams(
   params: GoogleAIModelParams | undefined
 ): void {
   const testParams: GoogleAIModelParams = params ?? {};
-  switch (modelToFamily(testParams.modelName)) {
+  const model = testParams.model ?? testParams.modelName;
+  switch (modelToFamily(model)) {
     case "gemini":
       return validateGeminiParams(testParams);
     default:

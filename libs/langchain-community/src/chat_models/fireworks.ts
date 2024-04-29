@@ -15,7 +15,7 @@ type FireworksUnsupportedArgs =
   | "logitBias"
   | "functions";
 
-type FireworksUnsupportedCallOptions = "functions" | "function_call" | "tools";
+type FireworksUnsupportedCallOptions = "functions" | "function_call";
 
 export type ChatFireworksCallOptions = Partial<
   Omit<ChatOpenAICallOptions, FireworksUnsupportedCallOptions>
@@ -33,7 +33,7 @@ export type ChatFireworksCallOptions = Partial<
  * ```typescript
  * const model = new ChatFireworks({
  *   temperature: 0.9,
- *   fireworksApiKey: "YOUR-API-KEY",
+ *   apiKey: "YOUR-API-KEY",
  * });
  *
  * const response = await model.invoke("Hello, how are you?");
@@ -52,6 +52,7 @@ export class ChatFireworks extends ChatOpenAI<ChatFireworksCallOptions> {
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       fireworksApiKey: "FIREWORKS_API_KEY",
+      apiKey: "FIREWORKS_API_KEY",
     };
   }
 
@@ -59,14 +60,27 @@ export class ChatFireworks extends ChatOpenAI<ChatFireworksCallOptions> {
 
   fireworksApiKey?: string;
 
+  apiKey?: string;
+
   constructor(
     fields?: Partial<
       Omit<OpenAIChatInput, "openAIApiKey" | FireworksUnsupportedArgs>
     > &
-      BaseChatModelParams & { fireworksApiKey?: string }
+      BaseChatModelParams & {
+        /**
+         * Prefer `apiKey`
+         */
+        fireworksApiKey?: string;
+        /**
+         * The Fireworks API key to use.
+         */
+        apiKey?: string;
+      }
   ) {
     const fireworksApiKey =
-      fields?.fireworksApiKey || getEnvironmentVariable("FIREWORKS_API_KEY");
+      fields?.apiKey ||
+      fields?.fireworksApiKey ||
+      getEnvironmentVariable("FIREWORKS_API_KEY");
 
     if (!fireworksApiKey) {
       throw new Error(
@@ -76,15 +90,15 @@ export class ChatFireworks extends ChatOpenAI<ChatFireworksCallOptions> {
 
     super({
       ...fields,
-      modelName:
-        fields?.modelName || "accounts/fireworks/models/llama-v2-13b-chat",
-      openAIApiKey: fireworksApiKey,
+      model: fields?.model || "accounts/fireworks/models/llama-v2-13b-chat",
+      apiKey: fireworksApiKey,
       configuration: {
         baseURL: "https://api.fireworks.ai/inference/v1",
       },
     });
 
     this.fireworksApiKey = fireworksApiKey;
+    this.apiKey = fireworksApiKey;
   }
 
   toJSON() {

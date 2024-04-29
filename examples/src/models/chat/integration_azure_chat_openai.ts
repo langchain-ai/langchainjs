@@ -1,7 +1,7 @@
 import { AzureChatOpenAI } from "@langchain/azure-openai";
 
 const model = new AzureChatOpenAI({
-  modelName: "gpt-4",
+  model: "gpt-4",
   prefixMessages: [
     {
       role: "system",

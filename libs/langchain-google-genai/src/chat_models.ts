@@ -36,9 +36,17 @@ export interface GoogleGenerativeAIChatInput extends BaseChatModelParams {
   /**
    * Model Name to use
    *
+   * Alias for `model`
+   *
    * Note: The format must follow the pattern - `{model}`
    */
   modelName?: string;
+  /**
+   * Model Name to use
+   *
+   * Note: The format must follow the pattern - `{model}`
+   */
+  model?: string;
 
   /**
    * Controls the randomness of the output.
@@ -157,6 +165,8 @@ export class ChatGoogleGenerativeAI
 
   modelName = "gemini-pro";
 
+  model = "gemini-pro";
+
   temperature?: number; // default value chosen based on model
 
   maxOutputTokens?: number;
@@ -176,14 +186,17 @@ export class ChatGoogleGenerativeAI
   private client: GenerativeModel;
 
   get _isMultimodalModel() {
-    return this.modelName.includes("vision");
+    return this.model.includes("vision") || this.model.startsWith("gemini-1.5");
   }
 
   constructor(fields?: GoogleGenerativeAIChatInput) {
     super(fields ?? {});
 
     this.modelName =
-      fields?.modelName?.replace(/^models\//, "") ?? this.modelName;
+      fields?.model?.replace(/^models\//, "") ??
+      fields?.modelName?.replace(/^models\//, "") ??
+      this.model;
+    this.model = this.modelName;
 
     this.maxOutputTokens = fields?.maxOutputTokens ?? this.maxOutputTokens;
 
@@ -237,7 +250,7 @@ export class ChatGoogleGenerativeAI
     this.streaming = fields?.streaming ?? this.streaming;
 
     this.client = new GenerativeAI(this.apiKey).getGenerativeModel({
-      model: this.modelName,
+      model: this.model,
       safetySettings: this.safetySettings as SafetySetting[],
       generationConfig: {
         candidateCount: 1,

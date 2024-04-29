@@ -1,14 +1,14 @@
 import { OpenAIEmbeddings } from "@langchain/openai";
 
 const embeddings = new OpenAIEmbeddings({
-  modelName: "text-embedding-3-large",
+  model: "text-embedding-3-large",
 });
 
 const vectors = await embeddings.embedDocuments(["some text"]);
 console.log(vectors[0].length);
 
 const embeddings1024 = new OpenAIEmbeddings({
-  modelName: "text-embedding-3-large",
+  model: "text-embedding-3-large",
   dimensions: 1024,
 });
 

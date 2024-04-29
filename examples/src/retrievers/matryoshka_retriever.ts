@@ -5,11 +5,11 @@ import { Document } from "@langchain/core/documents";
 import { faker } from "@faker-js/faker";
 
 const smallEmbeddings = new OpenAIEmbeddings({
-  modelName: "text-embedding-3-small",
+  model: "text-embedding-3-small",
   dimensions: 512, // Min num for small
 });
 const largeEmbeddings = new OpenAIEmbeddings({
-  modelName: "text-embedding-3-large",
+  model: "text-embedding-3-large",
   dimensions: 3072, // Max num for large
 });
 
@@ -56,7 +56,7 @@ const allDocs = [...irrelevantDocs, ...relevantDocs];
 await retriever.addDocuments(allDocs);
 
 const query = "What is LangChain?";
-const results = await retriever.getRelevantDocuments(query);
+const results = await retriever.invoke(query);
 console.log(results.map(({ pageContent }) => pageContent).join("\n"));
 /**
 I heart LangChain

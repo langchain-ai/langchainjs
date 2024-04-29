@@ -87,6 +87,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       openAIApiKey: "OPENAI_API_KEY",
+      apiKey: "OPENAI_API_KEY",
       azureOpenAIApiKey: "AZURE_OPENAI_API_KEY",
       organization: "OPENAI_ORGANIZATION",
     };
@@ -96,6 +97,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
     return {
       modelName: "model",
       openAIApiKey: "openai_api_key",
+      apiKey: "openai_api_key",
       azureOpenAIApiVersion: "azure_openai_api_version",
       azureOpenAIApiKey: "azure_openai_api_key",
       azureOpenAIApiInstanceName: "azure_openai_api_instance_name",
@@ -121,6 +123,8 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
 
   modelName = "gpt-3.5-turbo-instruct";
 
+  model = "gpt-3.5-turbo-instruct";
+
   modelKwargs?: OpenAIInput["modelKwargs"];
 
   batchSize = 20;
@@ -129,11 +133,15 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
 
   stop?: string[];
 
+  stopSequences?: string[];
+
   user?: string;
 
   streaming = false;
 
   openAIApiKey?: string;
+
+  apiKey?: string;
 
   azureOpenAIApiVersion?: string;
 
@@ -160,10 +168,10 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
     /** @deprecated */
     configuration?: ClientOptions & LegacyOpenAIInput
   ) {
+    let model = fields?.model ?? fields?.modelName;
     if (
-      (fields?.modelName?.startsWith("gpt-3.5-turbo") ||
-        fields?.modelName?.startsWith("gpt-4")) &&
-      !fields?.modelName?.includes("-instruct")
+      (model?.startsWith("gpt-3.5-turbo") || model?.startsWith("gpt-4")) &&
+      !model?.includes("-instruct")
     ) {
       // eslint-disable-next-line no-constructor-return
       return new OpenAIChat(
@@ -172,15 +180,19 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       ) as unknown as OpenAI<CallOptions>;
     }
     super(fields ?? {});
+    model = model ?? this.model;
 
     this.openAIApiKey =
-      fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
+      fields?.apiKey ??
+      fields?.openAIApiKey ??
+      getEnvironmentVariable("OPENAI_API_KEY");
+    this.apiKey = this.openAIApiKey;
 
     this.azureOpenAIApiKey =
       fields?.azureOpenAIApiKey ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY");
 
-    if (!this.azureOpenAIApiKey && !this.openAIApiKey) {
+    if (!this.azureOpenAIApiKey && !this.apiKey) {
       throw new Error("OpenAI or Azure OpenAI API key not found");
     }
 
@@ -206,7 +218,8 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       fields?.configuration?.organization ??
       getEnvironmentVariable("OPENAI_ORGANIZATION");
 
-    this.modelName = fields?.modelName ?? this.modelName;
+    this.modelName = model;
+    this.model = model;
     this.modelKwargs = fields?.modelKwargs ?? {};
     this.batchSize = fields?.batchSize ?? this.batchSize;
     this.timeout = fields?.timeout;
@@ -219,7 +232,8 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
     this.n = fields?.n ?? this.n;
     this.bestOf = fields?.bestOf ?? this.bestOf;
     this.logitBias = fields?.logitBias;
-    this.stop = fields?.stop;
+    this.stop = fields?.stopSequences ?? fields?.stop;
+    this.stopSequences = fields?.stopSequences;
     this.user = fields?.user;
 
     this.streaming = fields?.streaming ?? false;
@@ -238,11 +252,11 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       if (!this.azureOpenAIApiVersion) {
         throw new Error("Azure OpenAI API version not found");
       }
-      this.openAIApiKey = this.openAIApiKey ?? "";
+      this.apiKey = this.apiKey ?? "";
     }
 
     this.clientConfig = {
-      apiKey: this.openAIApiKey,
+      apiKey: this.apiKey,
       organization: this.organization,
       baseURL: configuration?.basePath ?? fields?.configuration?.basePath,
       dangerouslyAllowBrowser: true,
@@ -264,7 +278,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
     options?: this["ParsedCallOptions"]
   ): Omit<OpenAIClient.CompletionCreateParams, "prompt"> {
     return {
-      model: this.modelName,
+      model: this.model,
       temperature: this.temperature,
       max_tokens: this.maxTokens,
       top_p: this.topP,
@@ -273,7 +287,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       n: this.n,
       best_of: this.bestOf,
       logit_bias: this.logitBias,
-      stop: options?.stop ?? this.stop,
+      stop: options?.stop ?? this.stopSequences,
       user: this.user,
       stream: this.streaming,
       ...this.modelKwargs,
@@ -285,7 +299,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
     model_name: string;
   } & ClientOptions {
     return {
-      model_name: this.modelName,
+      model_name: this.model,
       ...this.invocationParams(),
       ...this.clientConfig,
     };
@@ -336,7 +350,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       params.max_tokens = await calculateMaxTokens({
         prompt: prompts[0],
         // Cast here to allow for other models that may not fit the union
-        modelName: this.modelName as TiktokenModel,
+        modelName: this.model as TiktokenModel,
       });
     }
 

@@ -43,6 +43,8 @@ export interface StructuredToolInterface<
   schema: T | z.ZodEffects<T>;
 
   /**
+   * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
+   *
    * Calls the tool with the provided argument, configuration, and tags. It
    * parses the input according to the schema, handles any errors, and
    * manages callbacks.
@@ -105,6 +107,8 @@ export abstract class StructuredTool<
   }
 
   /**
+   * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
+   *
    * Calls the tool with the provided argument, configuration, and tags. It
    * parses the input according to the schema, handles any errors, and
    * manages callbacks.
@@ -168,6 +172,8 @@ export abstract class StructuredTool<
 
 export interface ToolInterface extends StructuredToolInterface {
   /**
+   * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
+   *
    * Calls the tool with the provided argument and callbacks. It handles
    * string inputs specifically.
    * @param arg The input argument for the tool, which can be a string, undefined, or an input of the tool's schema.
@@ -193,6 +199,8 @@ export abstract class Tool extends StructuredTool {
   }
 
   /**
+   * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
+   *
    * Calls the tool with the provided argument and callbacks. It handles
    * string inputs specifically.
    * @param arg The input argument for the tool, which can be a string, undefined, or an input of the tool's schema.
@@ -264,6 +272,9 @@ export class DynamicTool extends Tool {
     this.returnDirect = fields.returnDirect ?? this.returnDirect;
   }
 
+  /**
+   * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
+   */
   async call(
     arg: string | undefined | z.input<this["schema"]>,
     configArg?: RunnableConfig | Callbacks
@@ -316,6 +327,9 @@ export class DynamicStructuredTool<
     this.schema = fields.schema;
   }
 
+  /**
+   * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
+   */
   async call(
     arg: z.output<T>,
     configArg?: RunnableConfig | Callbacks,
@@ -335,5 +349,18 @@ export class DynamicStructuredTool<
     config?: RunnableConfig
   ): Promise<string> {
     return this.func(arg, runManager, config);
+  }
+}
+
+/**
+ * Abstract base class for toolkits in LangChain. Toolkits are collections
+ * of tools that agents can use. Subclasses must implement the `tools`
+ * property to provide the specific tools for the toolkit.
+ */
+export abstract class BaseToolkit {
+  abstract tools: StructuredToolInterface[];
+
+  getTools(): StructuredToolInterface[] {
+    return this.tools;
   }
 }

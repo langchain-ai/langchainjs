@@ -37,9 +37,7 @@ const vectorstore = await MemoryVectorStore.fromDocuments(
 );
 const retriever = vectorstore.asRetriever();
 
-const retrieverResult = await retriever.getRelevantDocuments(
-  "how to upload a dataset"
-);
+const retrieverResult = await retriever.invoke("how to upload a dataset");
 console.log(retrieverResult[0]);
 
 /*
@@ -61,7 +59,7 @@ const retrieverTool = createRetrieverTool(retriever, {
 const tools = [searchTool, retrieverTool];
 
 const llm = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo-1106",
+  model: "gpt-3.5-turbo-1106",
   temperature: 0,
 });
 
