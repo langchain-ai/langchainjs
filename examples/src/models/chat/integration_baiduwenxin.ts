@@ -17,7 +17,7 @@ const ernie = new ChatBaiduWenxin({
 
 const messages = [new HumanMessage("Hello")];
 
-let res = await ernieTurbo.call(messages);
+let res = await ernieTurbo.invoke(messages);
 /*
 AIChatMessage {
   text: 'Hello! How may I assist you today?',
@@ -27,7 +27,7 @@ AIChatMessage {
 }
 */
 
-res = await ernie.call(messages);
+res = await ernie.invoke(messages);
 /*
 AIChatMessage {
   text: 'Hello! How may I assist you today?',

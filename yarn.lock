@@ -8960,7 +8960,7 @@ __metadata:
     "@pinecone-database/pinecone": ^1.1.0
     "@planetscale/database": ^1.8.0
     "@premai/prem-sdk": ^0.3.25
-    "@qdrant/js-client-rest": ^1.2.0
+    "@qdrant/js-client-rest": ^1.8.2
     "@raycast/api": ^1.55.2
     "@rockset/client": ^0.9.1
     "@smithy/eventstream-codec": ^2.0.5
@@ -9095,7 +9095,7 @@ __metadata:
     "@pinecone-database/pinecone": "*"
     "@planetscale/database": ^1.8.0
     "@premai/prem-sdk": ^0.3.25
-    "@qdrant/js-client-rest": ^1.2.0
+    "@qdrant/js-client-rest": ^1.8.2
     "@raycast/api": ^1.55.2
     "@rockset/client": ^0.9.1
     "@smithy/eventstream-codec": ^2.0.5
@@ -10986,22 +10986,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@qdrant/js-client-rest@npm:^1.2.0":
-  version: 1.2.0
-  resolution: "@qdrant/js-client-rest@npm:1.2.0"
+"@qdrant/js-client-rest@npm:^1.8.2":
+  version: 1.9.0
+  resolution: "@qdrant/js-client-rest@npm:1.9.0"
   dependencies:
-    "@qdrant/openapi-typescript-fetch": ^1.2.0
-    "@sevinf/maybe": ^0.5.0
+    "@qdrant/openapi-typescript-fetch": 1.2.6
+    "@sevinf/maybe": 0.5.0
+    undici: ~5.28.4
   peerDependencies:
-    typescript: ">=4.1"
-  checksum: 2cf7b33cbd3c912b5e063542e320b853486277afd847761abfe76c3917f02f1f80386e542e1b616ed04835af1cea7a0f5fbb4d0d56ab7213ad0e9ae44959cedf
+    typescript: ">=4.7"
+  checksum: 3ac6526a961f85e96eaa0cd17059cafcca208c7aaa6df96fa99caab75c53c79903eafa611be99b52732970f4bef65d93922537916194fe0b9edf0f256e42fa9a
   languageName: node
   linkType: hard
 
-"@qdrant/openapi-typescript-fetch@npm:^1.2.0":
-  version: 1.2.0
-  resolution: "@qdrant/openapi-typescript-fetch@npm:1.2.0"
-  checksum: dfddfe29bb843d957dc043b111618c7ae9ca7163fff9eca04c2d9ba2cd2fc00003548a2623e3ac0a1c79f2c9aae164eab0739ccb7d4d956d744d2263692a8d31
+"@qdrant/openapi-typescript-fetch@npm:1.2.6":
+  version: 1.2.6
+  resolution: "@qdrant/openapi-typescript-fetch@npm:1.2.6"
+  checksum: 038c26b64da656ec6c16a92c2d90ad13bb154312ea0442f49c476d31ba66e7ac43344dcc3e580980c0bfba9ad37266f4341c254fb648197f92872e694b9205d7
   languageName: node
   linkType: hard
 
@@ -11274,7 +11275,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sevinf/maybe@npm:^0.5.0":
+"@sevinf/maybe@npm:0.5.0":
   version: 0.5.0
   resolution: "@sevinf/maybe@npm:0.5.0"
   checksum: 406151dde7af0e05c51f2650eb0ccff429afe776f88e7c3cecb72197f28eb96f906eacace17d780052ce5aa6d2cd4b04a045a5ffabe3364ad6cdb9dfe42af3eb
@@ -21794,6 +21795,7 @@ __metadata:
     "@pinecone-database/pinecone": ^2.2.0
     "@planetscale/database": ^1.8.0
     "@prisma/client": ^4.11.0
+    "@qdrant/js-client-rest": ^1.8.2
     "@raycast/api": ^1.55.2
     "@rockset/client": ^0.9.1
     "@supabase/supabase-js": ^2.10.0
@@ -35467,6 +35469,15 @@ __metadata:
   dependencies:
     busboy: ^1.6.0
   checksum: 048a3365f622be44fb319316cedfaa241c59cf7f3368ae7667a12323447e1822e8cc3d00f6956c852d1478a6fde1cbbe753f49e05f2fdaed229693e716ebaf35
+  languageName: node
+  linkType: hard
+
+"undici@npm:~5.28.4":
+  version: 5.28.4
+  resolution: "undici@npm:5.28.4"
+  dependencies:
+    "@fastify/busboy": ^2.0.0
+  checksum: a8193132d84540e4dc1895ecc8dbaa176e8a49d26084d6fbe48a292e28397cd19ec5d13bc13e604484e76f94f6e334b2bdc740d5f06a6e50c44072818d0c19f9
   languageName: node
   linkType: hard
 

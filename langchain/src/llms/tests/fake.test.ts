@@ -4,7 +4,7 @@ import { FakeListLLM } from "../fake.js";
 describe("Test FakeListLLM", () => {
   test("Should exist", async () => {
     const llm = new FakeListLLM({ responses: ["test response"] });
-    const response = await llm.call("test prompt");
+    const response = await llm.invoke("test prompt");
 
     expect(typeof response).toBe("string");
   });
@@ -13,8 +13,8 @@ describe("Test FakeListLLM", () => {
     const llm = new FakeListLLM({
       responses: ["test response 1", "test response 2"],
     });
-    const response1 = await llm.call("test prompt");
-    const response2 = await llm.call("test prompt");
+    const response1 = await llm.invoke("test prompt");
+    const response2 = await llm.invoke("test prompt");
 
     expect(response1).toBe("test response 1");
     expect(response2).toBe("test response 2");
@@ -24,9 +24,9 @@ describe("Test FakeListLLM", () => {
     const llm = new FakeListLLM({
       responses: ["test response 1", "test response 2"],
     });
-    const response1 = await llm.call("test prompt");
-    const response2 = await llm.call("test prompt");
-    const response3 = await llm.call("test prompt");
+    const response1 = await llm.invoke("test prompt");
+    const response2 = await llm.invoke("test prompt");
+    const response3 = await llm.invoke("test prompt");
 
     expect(response1).toBe("test response 1");
     expect(response2).toBe("test response 2");
@@ -40,7 +40,7 @@ describe("Test FakeListLLM", () => {
     });
     const sleepSpy = jest.spyOn(llm, "_sleep");
 
-    await llm.call("test prompt");
+    await llm.invoke("test prompt");
 
     expect(sleepSpy).toHaveBeenCalledTimes(1);
   }, 3000);

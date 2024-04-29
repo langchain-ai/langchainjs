@@ -18,7 +18,7 @@ const chain = new RetrievalQAChain({
   combineDocumentsChain: loadQAMapReduceChain(model),
   retriever: vectorStore.asRetriever(),
 });
-const res = await chain.call({
+const res = await chain.invoke({
   query: "What did the president say about Justice Breyer?",
 });
 console.log({ res });
