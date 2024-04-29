@@ -12,6 +12,7 @@
  */
 
 import axios from "axios";
+import { fetch, Agent, setGlobalDispatcher } from "undici";
 import {
   EventStreamContentType,
   getLines,
@@ -211,8 +212,9 @@ function isStandardBrowserEnv() {
  * - Check if timeout
  */
 export default async function fetchAdapter(config) {
-  const request = createRequest(config);
-  const data = await getResponse(request, config);
+  // use url and options for undici fetch
+  const { url, options } = createRequest(config);
+  const data = await getResponse(url, options, config);
 
   return new Promise((resolve, reject) => {
     if (data instanceof Error) {
@@ -230,10 +232,10 @@ export default async function fetchAdapter(config) {
  * Fetch API stage two is to get response body. This funtion tries to retrieve
  * response body based on response's type
  */
-async function getResponse(request, config) {
+async function getResponse(url, options, config) {
   let stageOne;
   try {
-    stageOne = await fetch(request);
+    stageOne = await fetch(url, options);
   } catch (e) {
     if (e && e.name === "AbortError") {
       return createError("Request aborted", config, "ECONNABORTED", request);
@@ -355,6 +357,13 @@ function createRequest(config) {
   }
   if (config.timeout && config.timeout > 0) {
     options.signal = AbortSignal.timeout(config.timeout);
+    setGlobalDispatcher(
+      new Agent({
+        headersTimeout: config.timeout,
+        bodyTimeout: config.timeout,
+        connectTimeout: config.timeout,
+      })
+    );
   }
   if (config.signal) {
     // this overrides the timeout signal if both are set
@@ -374,7 +383,7 @@ function createRequest(config) {
   const url = buildURL(fullPath, config.params, config.paramsSerializer);
 
   // Expected browser to throw error if there is any wrong configuration value
-  return new Request(url, options);
+  return { url, options };
 }
 
 /**

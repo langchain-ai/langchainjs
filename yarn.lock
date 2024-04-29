@@ -26759,6 +26759,7 @@ __metadata:
     ts-jest: ^29.1.0
     typeorm: ^0.3.12
     typescript: ~5.1.6
+    undici: ^6.14.1
     uuid: ^9.0.0
     weaviate-ts-client: ^2.0.0
     web-auth-library: ^1.0.3
@@ -35458,6 +35459,13 @@ __metadata:
   dependencies:
     busboy: ^1.6.0
   checksum: 048a3365f622be44fb319316cedfaa241c59cf7f3368ae7667a12323447e1822e8cc3d00f6956c852d1478a6fde1cbbe753f49e05f2fdaed229693e716ebaf35
+  languageName: node
+  linkType: hard
+
+"undici@npm:^6.14.1":
+  version: 6.14.1
+  resolution: "undici@npm:6.14.1"
+  checksum: 46c49e9a274e6bf469d5185341bf658b5c5487344d71d952d2ec46656f4e721566fe48e22bc457cc9061229623aa7ee71820787c7d7ff4f7c9839aeda227fdc7
   languageName: node
   linkType: hard
 
