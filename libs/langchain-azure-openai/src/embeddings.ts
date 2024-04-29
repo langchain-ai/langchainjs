@@ -143,7 +143,7 @@ export class AzureOpenAIEmbeddings
       this.stripNewLines ? document.replace(/\n/g, " ") : document,
     ];
     const embeddings = await this.getEmbeddings(input);
-    return embeddings.flat()
+    return embeddings.flat();
   }
 
   private async getEmbeddings(input: string[]): Promise<number[][]> {
