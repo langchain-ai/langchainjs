@@ -37,7 +37,7 @@ describe('ChatWebLLM Integration Tests', () => {
   });
 
   test('ChatWebLLM initializes and processes messages correctly', async () => {
-    const messages = [{ content: 'Hello', _getType: () => 'human' }];
+    const messages = [{ content: 'Hello', role: () => 'human' }];
     const options = { stop: null }; // Adjust options as necessary
 
     const response = await chatWebLLM._call(messages, options);
