@@ -185,7 +185,7 @@ describe.skip("AzureCosmosDBVectorStore", () => {
     ]);
 
     // Delete document matching specified ids
-    await vectorStore.delete(ids.slice(0, 1));
+    await vectorStore.delete({ ids: ids.slice(0, 1) });
 
     const results = await vectorStore.similaritySearch("politics", 10);
 
@@ -214,7 +214,7 @@ describe.skip("AzureCosmosDBVectorStore", () => {
     ]);
 
     // Delete document matching the filter
-    await vectorStore.delete(undefined, { a: 1 });
+    await vectorStore.delete({ filter: { a: 1 } });
 
     const results = await vectorStore.similaritySearch("politics", 10);
 

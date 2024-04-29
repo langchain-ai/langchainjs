@@ -41,6 +41,14 @@ export type AzureCosmosDBIndexOptions = {
   readonly similarity?: AzureCosmosDBSimilarityType;
 };
 
+/** Azure Cosmos DB Delete Parameters. */
+export type AzureCosmosDBDeleteParams = {
+  /** List of IDs for the documents to be removed. */
+  readonly ids?: string | string[];
+  /** MongoDB filter object or list of IDs for the documents to be removed. */
+  readonly filter?: Filter<MongoDBDocument>;
+};
+
 /**
  * Configuration options for the `AzureCosmosDBVectorStore` constructor.
  */
@@ -234,16 +242,13 @@ export class AzureCosmosDBVectorStore extends VectorStore {
   /**
    * Removes specified documents from the AzureCosmosDBVectorStore.
    * If no IDs or filter are specified, all documents will be removed.
-   * @param ids A list of IDs for the documents to be removed.
-   * @param filter A MongoDB filter object or list of IDs for the documents to be removed.
+   * @param params Parameters for the delete operation.
    * @returns A promise that resolves when the documents have been removed.
    */
-  async delete(
-    ids?: string | string[],
-    filter?: Filter<MongoDBDocument>
-  ): Promise<void> {
+  async delete(params: AzureCosmosDBDeleteParams = {}): Promise<void> {
     await this.initPromise;
 
+    const { ids, filter } = params;
     const idsArray = Array.isArray(ids) ? ids : [ids];
     const deleteIds = ids && idsArray.length > 0 ? idsArray : undefined;
     let deleteFilter = filter ?? {};
