@@ -53,6 +53,9 @@ export class AstraDBVectorStore extends VectorStore {
 
   private readonly contentKey: string; // if undefined the entirety of the content aside from the id and embedding will be stored as content
 
+  /** @deprecated astra-db-ts > 1.0.0 handles this */
+  private readonly batchSize: number; 
+
   caller: AsyncCaller;
 
   private readonly skipCollectionProvisioning: boolean;
