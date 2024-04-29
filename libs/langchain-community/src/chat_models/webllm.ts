@@ -6,7 +6,6 @@ import type { BaseLanguageModelCallOptions } from "@langchain/core/language_mode
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { BaseMessage, AIMessageChunk } from "@langchain/core/messages";
 import { ChatGenerationChunk } from "@langchain/core/outputs";
-
 import * as webllm from "@mlc-ai/web-llm";
 import { ChatCompletionMessageParam } from "@mlc-ai/web-llm/lib/openai_api_protocols";
 
@@ -112,7 +111,7 @@ export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
           content: text,
           additional_kwargs: {
             logprobs: chunk.choices[0].logprobs,
-            finish_reason: chunk.choices[0].finish_reason,
+            finish_reason: chunk.choices[0].finish_reason
           },
         }),
       });
