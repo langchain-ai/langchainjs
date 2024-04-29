@@ -135,7 +135,7 @@ export class AzureOpenAIEmbeddings
 
     const batchRequests = batches.map((batch) => this.getEmbeddings(batch));
     const embeddings = await Promise.all(batchRequests);
-    return embeddings.flat(1);
+    return embeddings.flat();
   }
 
   async embedQuery(document: string): Promise<number[]> {
@@ -143,7 +143,7 @@ export class AzureOpenAIEmbeddings
       this.stripNewLines ? document.replace(/\n/g, " ") : document,
     ];
     const embeddings = await this.getEmbeddings(input);
-    return embeddings[0];
+    return embeddings.flat()
   }
 
   private async getEmbeddings(input: string[]): Promise<number[][]> {
