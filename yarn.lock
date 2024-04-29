@@ -13421,10 +13421,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@spider-cloud/spider-client@npm:^0.0.10":
-  version: 0.0.10
-  resolution: "@spider-cloud/spider-client@npm:0.0.10"
-  checksum: 7b1d9ebd6867342881aa2770a304e18334f04e5308a5c0fd9c0c2d860137d43dbde38e9e2b2c978f1aa08363c9a418bf580831cdd53864e293cd5241a000b0f0
+"@spider-cloud/spider-client@npm:^0.0.11":
+  version: 0.0.11
+  resolution: "@spider-cloud/spider-client@npm:0.0.11"
+  checksum: e66479bfe5180dc72622659255fb9bb2f4ee22fcebd825287b2123534b770da8ebf3281253a87431de957917b456edad9555dcfd2b2d955fcd38ec186c82ce14
   languageName: node
   linkType: hard
 
@@ -26692,7 +26692,7 @@ __metadata:
     "@mendable/firecrawl-js": ^0.0.13
     "@notionhq/client": ^2.2.10
     "@pinecone-database/pinecone": ^1.1.0
-    "@spider-cloud/spider-client": ^0.0.10
+    "@spider-cloud/spider-client": ^0.0.11
     "@supabase/supabase-js": ^2.10.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
