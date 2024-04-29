@@ -185,8 +185,6 @@ export interface GoogleRoutesAPIParams {
 /**
  * Class for interacting with the Google Routes API
  * It extends the StructuredTool class to perform retrieval.
- * This tool is used to retrieve routing information between two destinations using the Google Routes API.
- * The travel mode can be one of the following: "DRIVE", "WALK", "BICYCLE", "TRANSIT", or "TWO_WHEELER".
  */
 export class GoogleRoutesAPI extends StructuredTool {
   static lc_name() {
