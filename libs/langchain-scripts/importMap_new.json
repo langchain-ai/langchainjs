@@ -1380,6 +1380,11 @@
     "symbol": "JsonKeyOutputFunctionsParser"
   },
   {
+    "old": "langchain/output_parsers/*",
+    "new": "@langchain/core/output_parsers/openai_functions",
+    "symbol": null
+  },
+  {
     "old": "langchain/schema/*",
     "new": "@langchain/core/messages",
     "symbol": "ToolMessageFieldsWithToolCallId"
