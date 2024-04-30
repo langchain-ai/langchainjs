@@ -16,7 +16,7 @@ describe("ChatGoogleVertexAIWeb", () => {
   test("call", async () => {
     const chat = new ChatGoogleVertexAI();
     const message = new HumanMessage("Hello!");
-    const res = await chat.call([message]);
+    const res = await chat.invoke([message]);
     console.log({ res });
   });
 
@@ -25,7 +25,7 @@ describe("ChatGoogleVertexAIWeb", () => {
       model: "chat-bison-32k",
     });
     const message = new HumanMessage("Hello!");
-    const res = await chat.call([message]);
+    const res = await chat.invoke([message]);
     console.log({ res });
   });
 
@@ -38,7 +38,7 @@ describe("ChatGoogleVertexAIWeb", () => {
 
   test("custom messages", async () => {
     const chat = new ChatGoogleVertexAI();
-    const res = await chat.call([new ChatMessage("Hello!", "user")]);
+    const res = await chat.invoke([new ChatMessage("Hello!", "user")]);
     console.log(JSON.stringify(res, null, 2));
   });
 

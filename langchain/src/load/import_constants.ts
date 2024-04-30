@@ -92,6 +92,7 @@ export const optionalImportEntrypoints: string[] = [
   "langchain/document_loaders/web/hn",
   "langchain/document_loaders/web/imsdb",
   "langchain/document_loaders/web/figma",
+  "langchain/document_loaders/web/firecrawl",
   "langchain/document_loaders/web/github",
   "langchain/document_loaders/web/notiondb",
   "langchain/document_loaders/web/notionapi",

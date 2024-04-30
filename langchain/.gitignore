@@ -570,6 +570,10 @@ document_loaders/web/figma.cjs
 document_loaders/web/figma.js
 document_loaders/web/figma.d.ts
 document_loaders/web/figma.d.cts
+document_loaders/web/firecrawl.cjs
+document_loaders/web/firecrawl.js
+document_loaders/web/firecrawl.d.ts
+document_loaders/web/firecrawl.d.cts
 document_loaders/web/github.cjs
 document_loaders/web/github.js
 document_loaders/web/github.d.ts

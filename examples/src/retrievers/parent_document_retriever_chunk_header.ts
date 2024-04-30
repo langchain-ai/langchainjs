@@ -48,9 +48,7 @@ await retriever.addDocuments(pamDocs, {
 
 // This will search child documents in vector store with the help of chunk header,
 // returning the unmodified parent documents
-const retrievedDocs = await retriever.getRelevantDocuments(
-  "What is Pam's favorite color?"
-);
+const retrievedDocs = await retriever.invoke("What is Pam's favorite color?");
 
 // Pam's favorite color is returned first!
 console.log(JSON.stringify(retrievedDocs, null, 2));
