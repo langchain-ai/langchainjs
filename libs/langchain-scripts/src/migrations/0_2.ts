@@ -18,7 +18,7 @@ type MigrationUpdate = {
   updatedImport: string;
 };
 
-type DeprecatedEntrypoint = { old: string; new: string, symbol: string | null }
+type DeprecatedEntrypoint = { old: string; new: string; symbol: string | null };
 
 function matchOldEntrypoints(oldEntrypoint: string, newEntrypoint: string) {
   if (oldEntrypoint.endsWith("*")) {
@@ -67,13 +67,13 @@ export interface UpdateLangChainFields {
  * @param {boolean} [fields.shouldLog=false] - Whether or not to log a message when an import is updated.
  * @returns {Promise<Array<MigrationUpdate> | null>} - A promise that resolves to an array of migration updates if successful, or null if an error occurs.
  * @throws {Error} - If more than one of `projectPath`, `tsConfigPath`, or `files` is provided, or if none of them are provided.
- * 
+ *
  * @example
  * ```typescript
  * import { updateEntrypointsFrom0_x_xTo0_2_x } from "@langchain/scripts/migrations";
- * 
+ *
  * const pathToMyProject = "...";
- * 
+ *
  * updateEntrypointsFrom0_x_xTo0_2_x({
  *   projectPath: pathToMyProject,
  *   shouldLog: true,
@@ -139,8 +139,8 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(
           importPathText.length - 1
         );
 
-        const deprecatedEntrypoint = importMap.find(
-          (entrypoint) => matchOldEntrypoints(entrypoint.old, importPathTextWithoutQuotes)
+        const deprecatedEntrypoint = importMap.find((entrypoint) =>
+          matchOldEntrypoints(entrypoint.old, importPathTextWithoutQuotes)
         );
         if (!deprecatedEntrypoint) {
           // no-op
@@ -150,14 +150,12 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(
         // if deprecatedEntrypoint.symbol is NOT null then verify the named imports match
         if (deprecatedEntrypoint.symbol) {
           const namedImports = importDeclaration.getNamedImports();
-          const foundNamedImport = namedImports.find(
-            (namedImport) => {
-              if (deprecatedEntrypoint.symbol === null) {
-                return true;
-              }
-              return namedImport.getName() === deprecatedEntrypoint.symbol;
+          const foundNamedImport = namedImports.find((namedImport) => {
+            if (deprecatedEntrypoint.symbol === null) {
+              return true;
             }
-          );
+            return namedImport.getName() === deprecatedEntrypoint.symbol;
+          });
           if (!foundNamedImport) {
             // no-op
             return;
