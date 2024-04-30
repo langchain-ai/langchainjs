@@ -22,6 +22,9 @@ type DeprecatedEntrypoint = { old: string; new: string; symbol: string | null };
 
 function matchOldEntrypoints(oldEntrypoint: string, newEntrypoint: string) {
   if (oldEntrypoint.endsWith("*")) {
+    if (oldEntrypoint === "langchain/retrievers/self_query") {
+      console.log("oldEntrypoint", oldEntrypoint, "newEntrypoint", newEntrypoint)
+    }
     return newEntrypoint.startsWith(oldEntrypoint.replace("/*", ""));
   }
   return oldEntrypoint === newEntrypoint;
