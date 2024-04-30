@@ -159,9 +159,10 @@ export class S3Loader extends BaseDocumentLoader {
       const docs = await unstructuredLoader.load();
 
       return docs;
-    } catch {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
       throw new Error(
-        `Failed to load file ${filePath} using unstructured loader.`
+        `Failed to load file ${filePath} using unstructured loader : ${e.message}`
       );
     }
   }
