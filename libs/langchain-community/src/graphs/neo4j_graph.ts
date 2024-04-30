@@ -1,4 +1,4 @@
-import neo4j, { RoutingControl } from "neo4j-driver";
+import neo4j, { RoutingControl, type Record as Neo4jRecord, type Driver as Neo4jDriver, type Path as Neo4jPath } from "neo4j-driver";
 import { insecureHash } from "@langchain/core/utils/hash";
 import { GraphDocument } from "./graph_document.js";
 
@@ -63,7 +63,7 @@ const INCLUDE_DOCS_QUERY = `
  * @link See https://js.langchain.com/docs/security for more information.
  */
 export class Neo4jGraph {
-  private driver: neo4j.Driver;
+  private driver: Neo4jDriver;
 
   private database: string;
 
@@ -360,7 +360,7 @@ function getRelImportQuery({
 function toObjects<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RecordShape extends Record<string, any> = Record<string, any>
->(records: neo4j.Record<RecordShape>): RecordShape[] {
+>(records: Neo4jRecord<RecordShape>): RecordShape[] {
   return records.map((record) => {
     const rObj = record.toObject();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -414,7 +414,7 @@ function extractFromNeoObjects(obj: any) {
   return obj;
 }
 
-const extractPathForRows = (path: neo4j.Path) => {
+const extractPathForRows = (path: Neo4jPath) => {
   let { segments } = path;
   // Zero length path. No relationship, end === start
   if (!Array.isArray(path.segments) || path.segments.length < 1) {
