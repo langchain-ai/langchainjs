@@ -23,7 +23,12 @@ type DeprecatedEntrypoint = { old: string; new: string; symbol: string | null };
 function matchOldEntrypoints(oldEntrypoint: string, newEntrypoint: string) {
   if (oldEntrypoint.endsWith("*")) {
     if (oldEntrypoint === "langchain/retrievers/self_query") {
-      console.log("oldEntrypoint", oldEntrypoint, "newEntrypoint", newEntrypoint)
+      console.log(
+        "oldEntrypoint",
+        oldEntrypoint,
+        "newEntrypoint",
+        newEntrypoint
+      );
     }
     return newEntrypoint.startsWith(oldEntrypoint.replace("/*", ""));
   }
@@ -54,6 +59,12 @@ export interface UpdateLangChainFields {
    * @default false
    */
   shouldLog?: boolean;
+  /**
+   * Whether or not the invocation is a test run.
+   * If `testRun` is set to true, the script will NOT save changes.
+   * @default false
+   */
+  testRun?: boolean;
 }
 
 /**
@@ -193,7 +204,9 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(
 
   // save changes
   try {
-    await project.save();
+    if (!fields.testRun) {
+      await project.save();
+    }
     return updates;
   } catch (e) {
     console.error(
