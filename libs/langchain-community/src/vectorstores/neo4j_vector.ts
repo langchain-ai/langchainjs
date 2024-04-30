@@ -9,10 +9,7 @@ type Any = any;
 
 export type SearchType = "vector" | "hybrid";
 
-export enum IndexType {
-  NODE = "NODE",
-  RELATIONSHIP = "RELATIONSHIP",
-}
+export type IndexType = "NODE" | "RELATIONSHIP";
 
 export type DistanceStrategy = "euclidean" | "cosine";
 
@@ -37,7 +34,7 @@ interface Neo4jVectorStoreArgs {
 }
 
 const DEFAULT_SEARCH_TYPE = "vector";
-const DEFAULT_INDEX_TYPE = IndexType.NODE;
+const DEFAULT_INDEX_TYPE = "NODE";
 const DEFAULT_DISTANCE_STRATEGY = "cosine";
 
 /**
@@ -355,8 +352,8 @@ export class Neo4jVectorStore extends VectorStore {
         RETURN reduce(str='', k IN ${JSON.stringify(textNodeProperties)} |
         str + '\\n' + k + ': ' + coalesce(node[k], '')) AS text,
         node {.*, \`${embeddingNodeProperty}\`: Null, id: Null, ${textNodeProperties
-        .map((prop) => `\`${prop}\`: Null`)
-        .join(", ")} } AS metadata, score
+          .map((prop) => `\`${prop}\`: Null`)
+          .join(", ")} } AS metadata, score
       `;
     }
 
@@ -692,7 +689,7 @@ export class Neo4jVectorStore extends VectorStore {
 
     let defaultRetrieval: string;
 
-    if (this.indexType === IndexType.RELATIONSHIP) {
+    if (this.indexType === "RELATIONSHIP") {
       defaultRetrieval = `
         RETURN relationship.${this.textNodeProperty} AS text, score,
         relationship {.*, ${this.textNodeProperty}: Null,
@@ -811,7 +808,7 @@ function getSearchIndexQuery(
   searchType: SearchType,
   indexType: IndexType = DEFAULT_INDEX_TYPE
 ): string {
-  if (indexType === IndexType.NODE) {
+  if (indexType === "NODE") {
     const typeToQueryMap: { [key in SearchType]: string } = {
       vector:
         "CALL db.index.vector.queryNodes($index, $k, $embedding) YIELD node, score",
@@ -994,8 +991,8 @@ function handleFieldFilter(
       throw new Error(`Invalid filter condition. Expected a value which is a dictionary
         with a single key that corresponds to an operator but got a dictionary
         with ${keys.length} keys. The first few keys are: ${keys
-        .slice(0, 3)
-        .join(", ")}
+          .slice(0, 3)
+          .join(", ")}
       `);
     }
 
