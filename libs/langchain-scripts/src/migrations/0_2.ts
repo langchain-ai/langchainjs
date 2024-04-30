@@ -44,6 +44,8 @@ type MigrationUpdate = {
   updatedImport: string;
 };
 
+type DeprecatedEntrypoint = { old: string; new: string, symbol: string | null }
+
 function matchOldEntrypoints(oldEntrypoint: string, newEntrypoint: string) {
   if (oldEntrypoint.endsWith("*")) {
     return newEntrypoint.startsWith(oldEntrypoint.replace("/*", ""));
@@ -93,7 +95,7 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(
     );
   }
 
-  const importMap: Array<{ old: string; new: string, symbol: string | null }> = JSON.parse(
+  const importMap: Array<DeprecatedEntrypoint> = JSON.parse(
     fs.readFileSync("importMap_new.json", "utf-8")
   );
 
@@ -136,6 +138,23 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(
           // no-op
           return;
         }
+        // if deprecatedEntrypoint.symbol is NOT null then verify the named imports match
+        if (deprecatedEntrypoint.symbol) {
+          const namedImports = importDeclaration.getNamedImports();
+          const foundNamedImport = namedImports.find(
+            (namedImport) => {
+              if (deprecatedEntrypoint.symbol === null) {
+                return true;
+              }
+              return namedImport.getName() === deprecatedEntrypoint.symbol;
+            }
+          );
+          if (!foundNamedImport) {
+            // no-op
+            return;
+          }
+        }
+
         // Update import
         importDeclaration.setModuleSpecifier(deprecatedEntrypoint.new);
         // now get the full updated import
