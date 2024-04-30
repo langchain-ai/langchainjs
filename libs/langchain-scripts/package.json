@@ -18,8 +18,8 @@
   },
   "scripts": {
     "build": "yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
-    "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/",
-    "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rimraf dist-cjs",
+    "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 rm -f src/package.json && tsc --outDir dist/",
+    "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 echo '{}' > src/package.json && tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rimraf dist-cjs src/package.json",
     "build:watch": "yarn create-entrypoints && tsc --outDir dist/ --watch",
     "build:scripts": "yarn create-entrypoints && yarn check-tree-shaking",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
@@ -46,7 +46,7 @@
     "glob": "^10.3.10",
     "rollup": "^4.5.2",
     "ts-morph": "^21.0.1",
-    "typescript": "<5.2.0"
+    "typescript": "^5.4.5"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",

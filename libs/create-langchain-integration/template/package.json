@@ -62,7 +62,7 @@
     "prettier": "^2.8.3",
     "rollup": "^4.5.2",
     "ts-jest": "^29.1.0",
-    "typescript": "<5.2.0"
+    "typescript": "^5.4.5"
   },
   "publishConfig": {
     "access": "public"

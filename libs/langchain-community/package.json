@@ -174,7 +174,7 @@
     "rollup": "^3.19.1",
     "ts-jest": "^29.1.0",
     "typeorm": "^0.3.12",
-    "typescript": "~5.1.6",
+    "typescript": "^5.4.5",
     "typesense": "^1.5.3",
     "usearch": "^1.1.1",
     "vectordb": "^0.1.4",

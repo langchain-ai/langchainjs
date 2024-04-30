@@ -28,7 +28,7 @@
     "esbuild": "^0.17.18",
     "hnswlib-node": "^3.0.0",
     "langchain": "workspace:*",
-    "typescript": "^5.0.0"
+    "typescript": "^5.4.5"
   },
   "devDependencies": {
     "@types/node": "^18.15.11",
