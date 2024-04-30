@@ -1078,5 +1078,250 @@
     "old": "langchain/memory/*",
     "new": "@langchain/community/memory/chat_memory",
     "symbol": "BaseChatMemory"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/prompt_values",
+    "symbol": "BasePromptValue"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/outputs",
+    "symbol": "RUN_KEY"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/outputs",
+    "symbol": "Generation"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/outputs",
+    "symbol": "GenerationChunkFields"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/outputs",
+    "symbol": "GenerationChunk"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/outputs",
+    "symbol": "LLMResult"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/outputs",
+    "symbol": "ChatGeneration"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/outputs",
+    "symbol": "ChatGenerationChunk"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/outputs",
+    "symbol": "ChatResult"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/chat_history",
+    "symbol": "BaseChatMessageHistory"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/chat_history",
+    "symbol": "BaseListChatMessageHistory"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/caches",
+    "symbol": "BaseCache"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/agents",
+    "symbol": "AgentAction"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/agents",
+    "symbol": "AgentFinish"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/agents",
+    "symbol": "AgentStep"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/utils/types",
+    "symbol": "InputValues"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/utils/types",
+    "symbol": "PartialValues"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/utils/types",
+    "symbol": "ChainValues"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/prompts",
+    "symbol": "Example"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/messages",
+    "symbol": "ToolMessageFieldsWithToolCallId"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/messages",
+    "symbol": "ToolMessage"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/messages",
+    "symbol": "ToolMessageChunk"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/messages",
+    "symbol": "AIMessage"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/messages",
+    "symbol": "AIMessageChunk"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/messages",
+    "symbol": "isBaseMessage"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/messages",
+    "symbol": "isBaseMessageChunk"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/messages",
+    "symbol": "StoredMessageData"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/messages",
+    "symbol": "StoredMessage"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/messages",
+    "symbol": "StoredGeneration"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/messages",
+    "symbol": "MessageType"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/messages",
+    "symbol": "MessageContent"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/messages",
+    "symbol": "BaseMessageFields"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/messages",
+    "symbol": "BaseMessage"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/messages",
+    "symbol": "OpenAIToolCall"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/messages",
+    "symbol": "BaseMessageChunk"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/messages",
+    "symbol": "BaseMessageLike"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/messages",
+    "symbol": "ChatMessageFieldsWithRole"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/messages",
+    "symbol": "ChatMessage"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/messages",
+    "symbol": "ChatMessageChunk"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/messages",
+    "symbol": "FunctionMessageFieldsWithName"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/messages",
+    "symbol": "FunctionMessage"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/messages",
+    "symbol": "FunctionMessageChunk"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/messages",
+    "symbol": "HumanMessage"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/messages",
+    "symbol": "HumanMessageChunk"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/messages",
+    "symbol": "SystemMessage"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/messages",
+    "symbol": "SystemMessageChunk"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/messages",
+    "symbol": "coerceMessageLikeToMessage"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/core/messages",
+    "symbol": "mapStoredMessageToChatMessage"
+  },
+  {
+    "old": "langchain/schema/*",
+    "new": "@langchain/community/stores/doc/base",
+    "symbol": "Docstore"
   }
 ]

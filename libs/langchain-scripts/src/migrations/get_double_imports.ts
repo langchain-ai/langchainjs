@@ -81,7 +81,7 @@ function convertOldPathToNewImport(oldPath: string): string {
 function createImportMap(symbols: ExportedSymbol[]): Array<{ old: string, new: string, symbol: string }> {
   return symbols.map(symbol => {
     return {
-      old: "langchain/schema/*",
+      old: "langchain/agents/*",
       new: convertOldPathToNewImport(symbol.filePath),
       symbol: symbol.name
     }
@@ -89,7 +89,7 @@ function createImportMap(symbols: ExportedSymbol[]): Array<{ old: string, new: s
 }
 
 function main() {
-  const oldExportedSymbols = getExportedSymbolsAndFilePaths("../../langchain/src/schema/index.ts");
+  const oldExportedSymbols = getExportedSymbolsAndFilePaths("../../langchain/src/agents/index.ts");
   const directories = [
     "../../langchain-core/src",
     "../**/src",
@@ -103,12 +103,8 @@ function main() {
   const importMap = createImportMap(newlyExportedSymbols);
   console.log("importMap\n\n----------\n", importMap)
   const importMapJson: Array<{ old: string, new: string, symbol: string | null }> = JSON.parse(fs.readFileSync("importMap.json", "utf-8"));
-  // const newImportMap: Array<{ old: string, new: string, symbol: string | null }> = importMapJson.map((item) => ({
-  //   ...item,
-  //   symbol: null
-  // }))
   const combinedMap = importMapJson.concat(importMap);
-  // fs.writeFileSync("importMap.json", JSON.stringify(combinedMap, null, 2));
+  fs.writeFileSync("importMap.json", JSON.stringify(combinedMap, null, 2));
 }
 
 main()
