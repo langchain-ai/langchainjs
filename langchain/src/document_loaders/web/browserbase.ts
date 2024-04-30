@@ -1,17 +1,29 @@
-import { Document } from "@langchain/core/documents";
-import type { BrowserbaseLoadOptions } from "@browserbasehq/sdk";
+import { Document, DocumentInterface } from "@langchain/core/documents";
+import Browserbase, { BrowserbaseLoadOptions } from "@browserbasehq/sdk";
 import { BaseDocumentLoader } from "../base.js";
 import type { DocumentLoader } from "../base.js";
 
-type BrowserbaseLoaderOptions = BrowserbaseLoadOptions & {
+interface BrowserbaseLoaderOptions extends BrowserbaseLoadOptions {
   apiKey?: string;
-};
+}
 
 /**
  * Load pre-rendered web pages using a headless browser hosted on Browserbase.
  *
  * Depends on `@browserbasehq/sdk` package.
  * Get your API key from https://browserbase.com
+ *
+ * @example
+ * ```javascript
+ * import { BrowserbaseLoader } from "langchain/document_loaders/web/browserbase.js";
+ *
+ * const loader = new BrowserbaseLoader(["https://example.com"], {
+ *   apiKey: process.env.BROWSERBASE_API_KEY,
+ *   textContent: true,
+ * });
+ *
+ * const docs = await loader.load();
+ * ```
  *
  * @param {string[]} urls - The URLs of the web pages to load.
  * @param {BrowserbaseLoaderOptions} [options] - Browserbase client options.
@@ -25,19 +37,22 @@ export class BrowserbaseLoader
 
   options: BrowserbaseLoaderOptions;
 
+  browserbase: Browserbase;
+
   constructor(urls: string[], options: BrowserbaseLoaderOptions = {}) {
     super();
     this.urls = urls;
     this.options = options;
+    this.browserbase = new Browserbase(options.apiKey);
   }
 
   /**
    * Load pages from URLs.
    *
-   * @returns {Promise<Document[]>} - A generator that yields loaded documents.
+   * @returns {Promise<DocumentInterface[]>} - A promise which resolves to a list of documents.
    */
 
-  async load(): Promise<Document[]> {
+  async load(): Promise<DocumentInterface[]> {
     const documents: Document[] = [];
     for await (const doc of this.lazyLoad()) {
       documents.push(doc);
@@ -49,11 +64,10 @@ export class BrowserbaseLoader
   /**
    * Load pages from URLs.
    *
-   * @returns {Generator<Document>} - A generator that yields loaded documents.
+   * @returns {Generator<DocumentInterface>} - A generator that yields documents.
    */
   async *lazyLoad() {
-    const browserbase = await BrowserbaseLoader.imports(this.options.apiKey);
-    const pages = await browserbase.loadURLs(this.urls, this.options);
+    const pages = await this.browserbase.loadURLs(this.urls, this.options);
 
     let index = 0;
     for await (const page of pages) {
@@ -65,19 +79,6 @@ export class BrowserbaseLoader
       });
 
       index += index + 1;
-    }
-  }
-
-  static async imports(apiKey?: string) {
-    try {
-      const { default: Browserbase } = await import("@browserbasehq/sdk");
-      return new Browserbase(apiKey);
-    } catch (error) {
-      throw new Error(
-        "You must run " +
-          "`npm install --save @browserbasehq/sdk` " +
-          "to use the Browserbase loader."
-      );
     }
   }
 }
