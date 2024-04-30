@@ -1,61 +1,62 @@
-import { Project, SourceFile, Symbol, SymbolFlags } from 'ts-morph';
-import { glob } from "glob";
+import { Project, SyntaxKind, SourceFile, ExportDeclaration, StringLiteral } from "ts-morph";
 
-function logLangChainExports(sourceFiles: SourceFile[]) {
-  sourceFiles.forEach((sourceFile) => {
-    const exports = sourceFile.getExportSymbols();
-    exports.forEach((exportSymbol) => {
-      const rootExport = traverseToRootExport(exportSymbol);
-      if (rootExport) {
-        const exportPath = getExportPath(rootExport);
-        if (
-          exportPath.startsWith('@langchain/core') ||
-          exportPath.startsWith('@langchain/community')
-        ) {
-          console.log(exportPath);
+export function getExportsFromFiles(filePaths: string[]): Array<{ old: string, new: string, symbol: null }> {
+  const project = new Project();
+  const starExports: Array<{ old: string, new: string, symbol: null }> = [];
+
+  filePaths.forEach((filePath) => {
+    const sourceFile: SourceFile = project.addSourceFileAtPath(filePath);
+    const exportDeclarations: ExportDeclaration[] = sourceFile.getExportDeclarations();
+
+    exportDeclarations.forEach((exportDeclaration) => {
+      const moduleSpecifier = exportDeclaration.getModuleSpecifier();
+
+      if (moduleSpecifier && moduleSpecifier.getKind() === SyntaxKind.StringLiteral) {
+        const importPath = (moduleSpecifier as StringLiteral).getLiteralText();
+
+        if (importPath.startsWith("@langchain")) {
+          const namedExports = exportDeclaration.getNamedExports();
+
+          if (namedExports.length > 0) {
+            // no-op
+          } else {
+            console.log("\n-----\nExport all found\n-----\n");
+            const found = findExportAllDeclarations(filePath);
+            starExports.push(...found)
+          }
         }
       }
     });
   });
+
+  return starExports;
 }
 
-function traverseToRootExport(symbol: Symbol): Symbol | undefined {
-  if (symbol.getFlags() & SymbolFlags.Alias) {
-    const aliasedSymbol = symbol.getAliasedSymbol();
-    if (aliasedSymbol) {
-      return traverseToRootExport(aliasedSymbol);
+
+function findExportAllDeclarations(filePath: string): Array<{ old: string, new: string, symbol: null }> {
+  const project = new Project();
+  const sourceFile: SourceFile = project.addSourceFileAtPath(filePath);
+
+  const exportAllDeclarations: ExportDeclaration[] = sourceFile
+    .getDescendantsOfKind(SyntaxKind.ExportDeclaration);
+
+  const exportInfos: Array<{ old: string, new: string, symbol: null }> = [];
+
+  for (const exportDeclaration of exportAllDeclarations) {
+    const moduleSpecifier = exportDeclaration.getModuleSpecifier();
+    if (moduleSpecifier) {
+      const externalDep = moduleSpecifier.getLiteralText();
+      const namedExports = exportDeclaration.getNamedExports();
+      if (namedExports.length === 0) {
+        const symbolsTexts: string[] = [];
+        const exportType = exportDeclaration.getType();
+        exportType.getProperties().forEach((prop) => {
+          symbolsTexts.push(prop.getName());
+        })
+        exportInfos.push({ new: externalDep, symbol: null, old: filePath });
+      }
     }
   }
-  return symbol;
-}
 
-function getExportPath(symbol: Symbol): string {
-  const declarations = symbol.getDeclarations();
-  if (declarations.length > 0) {
-    // const declaration = declarations[0];
-    // console.log(declaration.getText())
-    // throw new Error("Stop here")
-    // const importDeclaration = declaration
-    // if (importDeclaration) {
-    //   const moduleSpecifier = importDeclaration.getModuleSpecifier();
-    //   if (moduleSpecifier) {
-    //     return moduleSpecifier.getLiteralText();
-    //   }
-    // }
-  } else {
-    console.log(symbol.getExports().map((symbol) => symbol.getName()));
-    const declaration = declarations[0];
-    console.log(declaration.getText())
-    throw new Error("Stop here")
-  }
-  return '';
+  return exportInfos;
 }
-
-function main() {
-  const project = new Project();
-  const allTsFiles = glob.globSync('../../langchain/src/**/*.ts');
-  const sourceFiles = project.addSourceFilesAtPaths(allTsFiles);
-  logLangChainExports(sourceFiles);
-}
-
-main()

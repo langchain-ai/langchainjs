@@ -44,6 +44,13 @@ type MigrationUpdate = {
   updatedImport: string;
 };
 
+function matchOldEntrypoints(oldEntrypoint: string, newEntrypoint: string) {
+  if (oldEntrypoint.endsWith("*")) {
+    return newEntrypoint.startsWith(oldEntrypoint.replace("/*", ""));
+  }
+  return oldEntrypoint === newEntrypoint;
+}
+
 /**
  * Edge cases to cover:
  * double exports
@@ -86,8 +93,8 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(
     );
   }
 
-  const importMap: Array<{ old: string; new: string }> = JSON.parse(
-    fs.readFileSync("importMap.json", "utf-8")
+  const importMap: Array<{ old: string; new: string, symbol: string | null }> = JSON.parse(
+    fs.readFileSync("importMap_new.json", "utf-8")
   );
 
   let projectFiles: string[] | null = null;
@@ -123,7 +130,7 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(
         );
 
         const deprecatedEntrypoint = importMap.find(
-          (entrypoint) => entrypoint.old === importPathTextWithoutQuotes
+          (entrypoint) => matchOldEntrypoints(entrypoint.old, importPathTextWithoutQuotes)
         );
         if (!deprecatedEntrypoint) {
           // no-op

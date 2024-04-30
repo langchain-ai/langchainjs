@@ -2,9 +2,10 @@ import { Project, Symbol } from "ts-morph";
 import { glob } from "glob";
 import path from "path";
 import fs from "fs";
+import { getExportsFromFiles } from "./get_all_re_exports.js";
 
 interface ExportedSymbol {
-  name: string;
+  name: string | null;
   filePath: string;
   originalPath: string;
 }
@@ -113,12 +114,12 @@ function convertOldPathToNewImport(oldPath: string): string {
 
 function convertOriginalPathToImport(originalPath: string) {
   if (originalPath.endsWith("index.ts")) {
-    const splitPath = originalPath.split("index.ts")[0].split("oh-two-migration-script/")[1].replace("src/", "")
+    const splitPath = originalPath.split("index.ts")[0].split("../../")[1].replace("src/", "")
     // splitPath should now be in the format of "langchain/src/stores/message/redis"
     return splitPath.endsWith("/") ? splitPath + "*" : splitPath + "/*";
   } else {
     // just remove .ts and src
-    return originalPath.replace("src/", "").replace(".ts", "");
+    return originalPath.split("../../")[1].replace("src/", "").replace(".ts", "");
   }
 }
 
@@ -132,27 +133,39 @@ function createImportMap(symbols: ExportedSymbol[]): Array<ImportMap> {
   });
 }
 
+function createImportMapStarImports(symbols: Array<{ old: string, new: string, symbol: string | null }>): Array<ImportMap> {
+  return symbols.map(symbol => {
+    return {
+      old: convertOriginalPathToImport(symbol.old),
+      new: symbol.new,
+      symbol: null
+    }
+  });
+}
+
 type ImportMap = { old: string, new: string, symbol: string | null }
 
 
 function main() {
   const allFiles = glob.globSync("../../langchain/src/**/*.ts");
-  const oldExportedSymbols = getExportedSymbolsFromPaths(allFiles);
-  const directories = [
-    "../../langchain-core/src",
-    "../**/src",
-  ];
-  console.log("oldExportedSymbols\n\n----------\n", oldExportedSymbols)
-  console.log("\n\n----------\n")
-  const newlyExportedSymbols = findNewlyExportedSymbols(directories, oldExportedSymbols);
+  // const oldExportedSymbols = getExportedSymbolsFromPaths(allFiles);
+  // const directories = [
+  //   "../../langchain-core/src",
+  //   "../**/src",
+  // ];
+  // console.log("oldExportedSymbols\n\n----------\n", oldExportedSymbols)
+  // console.log("\n\n----------\n")
+  // const newlyExportedSymbols = findNewlyExportedSymbols(directories, oldExportedSymbols);
 
-  console.log("newlyExportedSymbols\n\n----------\n", newlyExportedSymbols)
-  console.log("\n\n----------\n")
-  const importMap = createImportMap(newlyExportedSymbols);
-  console.log("importMap\n\n----------\n", importMap)
-  // const importMapJson: Array<ImportMap> = JSON.parse(fs.readFileSync("importMap.json", "utf-8"));
-  // const combinedMap = importMapJson.concat(importMap);
-  fs.writeFileSync("importMap_new.json", JSON.stringify(importMap, null, 2));
+  // console.log("newlyExportedSymbols\n\n----------\n", newlyExportedSymbols)
+  // console.log("\n\n----------\n")
+  const starExports = getExportsFromFiles(allFiles);
+  const importMapStarImports = createImportMapStarImports(starExports);
+  // const importMap = createImportMap(starExports);
+  // console.log("importMap\n\n----------\n", importMap)
+  const importMapJson: Array<ImportMap> = JSON.parse(fs.readFileSync("importMap_new.json", "utf-8"));
+  const combinedMap = importMapJson.concat(importMapStarImports);
+  fs.writeFileSync("importMap_new.json", JSON.stringify(combinedMap, null, 2));
 }
 
 main()
