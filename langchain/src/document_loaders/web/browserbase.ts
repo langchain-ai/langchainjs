@@ -1,4 +1,4 @@
-import { Document, DocumentInterface } from "@langchain/core/documents";
+import { Document, type DocumentInterface } from "@langchain/core/documents";
 import Browserbase, { BrowserbaseLoadOptions } from "@browserbasehq/sdk";
 import { BaseDocumentLoader } from "../base.js";
 import type { DocumentLoader } from "../base.js";
@@ -14,8 +14,8 @@ interface BrowserbaseLoaderOptions extends BrowserbaseLoadOptions {
  * Get your API key from https://browserbase.com
  *
  * @example
- * ```javascript
- * import { BrowserbaseLoader } from "langchain/document_loaders/web/browserbase.js";
+ * ```typescript
+ * import { BrowserbaseLoader } from "langchain/document_loaders/web/browserbase";
  *
  * const loader = new BrowserbaseLoader(["https://example.com"], {
  *   apiKey: process.env.BROWSERBASE_API_KEY,
@@ -28,7 +28,6 @@ interface BrowserbaseLoaderOptions extends BrowserbaseLoadOptions {
  * @param {string[]} urls - The URLs of the web pages to load.
  * @param {BrowserbaseLoaderOptions} [options] - Browserbase client options.
  */
-
 export class BrowserbaseLoader
   extends BaseDocumentLoader
   implements DocumentLoader
@@ -51,9 +50,8 @@ export class BrowserbaseLoader
    *
    * @returns {Promise<DocumentInterface[]>} - A promise which resolves to a list of documents.
    */
-
   async load(): Promise<DocumentInterface[]> {
-    const documents: Document[] = [];
+    const documents: DocumentInterface[] = [];
     for await (const doc of this.lazyLoad()) {
       documents.push(doc);
     }

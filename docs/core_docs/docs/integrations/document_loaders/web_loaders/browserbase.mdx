@@ -15,14 +15,12 @@ npm i @browserbasehq/sdk
 
 ## Example
 
-Utilize the BrowserbaseLoader as follows to allow your agent to load websites:
+Utilize the `BrowserbaseLoader` as follows to allow your agent to load websites:
 
-```js
-import { BrowserbaseLoader } from "langchain/document_loaders/web/browserbase.js";
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/document_loaders/browserbase.ts";
 
-const loader = new BrowserbaseLoader(["https://example.com"], { textContent: true });
-const docs = await loader.load();
-```
+<CodeBlock language="typescript">{Example}</CodeBlock>
 
 ## Arguments
 
