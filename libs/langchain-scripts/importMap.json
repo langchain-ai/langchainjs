@@ -1323,5 +1323,140 @@
     "old": "langchain/schema/*",
     "new": "@langchain/community/stores/doc/base",
     "symbol": "Docstore"
+  },
+  {
+    "old": "langchain/stores/*",
+    "new": "@langchain/core/messages",
+    "symbol": "mapStoredMessagesToChatMessages"
+  },
+  {
+    "old": "langchain/stores/*",
+    "new": "@langchain/core/messages",
+    "symbol": "mapChatMessagesToStoredMessages"
+  },
+  {
+    "old": "langchain/stores/*",
+    "new": "@langchain/redis",
+    "symbol": "RedisChatMessageHistoryInput"
+  },
+  {
+    "old": "langchain/stores/*",
+    "new": "@langchain/redis",
+    "symbol": "RedisChatMessageHistory"
+  },
+  {
+    "old": "langchain/stores/*",
+    "new": "@langchain/mongodb",
+    "symbol": "MongoDBChatMessageHistoryInput"
+  },
+  {
+    "old": "langchain/stores/*",
+    "new": "@langchain/mongodb",
+    "symbol": "MongoDBChatMessageHistory"
+  },
+  {
+    "old": "langchain/stores/*",
+    "new": "@langchain/community/stores/message/xata",
+    "symbol": "XataChatMessageHistoryInput"
+  },
+  {
+    "old": "langchain/stores/*",
+    "new": "@langchain/community/stores/message/xata",
+    "symbol": "XataChatMessageHistory"
+  },
+  {
+    "old": "langchain/stores/*",
+    "new": "@langchain/community/stores/message/upstash_redis",
+    "symbol": "UpstashRedisChatMessageHistoryInput"
+  },
+  {
+    "old": "langchain/stores/*",
+    "new": "@langchain/community/stores/message/upstash_redis",
+    "symbol": "UpstashRedisChatMessageHistory"
+  },
+  {
+    "old": "langchain/stores/*",
+    "new": "@langchain/community/stores/message/planetscale",
+    "symbol": "PlanetScaleChatMessageHistoryInput"
+  },
+  {
+    "old": "langchain/stores/*",
+    "new": "@langchain/community/stores/message/planetscale",
+    "symbol": "PlanetScaleChatMessageHistory"
+  },
+  {
+    "old": "langchain/stores/*",
+    "new": "@langchain/community/stores/message/momento",
+    "symbol": "MomentoChatMessageHistoryProps"
+  },
+  {
+    "old": "langchain/stores/*",
+    "new": "@langchain/community/stores/message/momento",
+    "symbol": "MomentoChatMessageHistory"
+  },
+  {
+    "old": "langchain/stores/*",
+    "new": "@langchain/community/stores/message/in_memory",
+    "symbol": "ChatMessageHistory"
+  },
+  {
+    "old": "langchain/stores/*",
+    "new": "@langchain/community/stores/message/firestore",
+    "symbol": "FirestoreDBChatMessageHistory"
+  },
+  {
+    "old": "langchain/stores/*",
+    "new": "@langchain/community/stores/message/firestore",
+    "symbol": "FirestoreChatMessageHistory"
+  },
+  {
+    "old": "langchain/stores/*",
+    "new": "@langchain/community/stores/message/dynamodb",
+    "symbol": "DynamoDBChatMessageHistoryFields"
+  },
+  {
+    "old": "langchain/stores/*",
+    "new": "@langchain/community/stores/message/dynamodb",
+    "symbol": "DynamoDBChatMessageHistory"
+  },
+  {
+    "old": "langchain/stores/*",
+    "new": "@langchain/community/stores/message/convex",
+    "symbol": "ConvexChatMessageHistoryInput"
+  },
+  {
+    "old": "langchain/stores/*",
+    "new": "@langchain/community/stores/message/convex",
+    "symbol": "ConvexChatMessageHistory"
+  },
+  {
+    "old": "langchain/stores/*",
+    "new": "@langchain/community/stores/message/cassandra",
+    "symbol": "CassandraChatMessageHistoryOptions"
+  },
+  {
+    "old": "langchain/stores/*",
+    "new": "@langchain/community/stores/message/cassandra",
+    "symbol": "CassandraChatMessageHistory"
+  },
+  {
+    "old": "langchain/stores/*",
+    "new": "@langchain/community/stores/doc/in_memory",
+    "symbol": "InMemoryDocstore"
+  },
+  {
+    "old": "langchain/stores/*",
+    "new": "@langchain/community/stores/doc/in_memory",
+    "symbol": "SynchronousInMemoryDocstore"
+  },
+  {
+    "old": "langchain/stores/*",
+    "new": "@langchain/cloudflare",
+    "symbol": "CloudflareD1MessageHistoryInput"
+  },
+  {
+    "old": "langchain/stores/*",
+    "new": "@langchain/cloudflare",
+    "symbol": "CloudflareD1MessageHistory"
   }
 ]

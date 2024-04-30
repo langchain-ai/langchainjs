@@ -1,4 +1,4 @@
-import { Project } from "ts-morph";
+import { Project, Symbol } from "ts-morph";
 import { glob } from "glob";
 import path from "path";
 import fs from "fs";
@@ -6,19 +6,37 @@ import fs from "fs";
 interface ExportedSymbol {
   name: string;
   filePath: string;
+  originalPath: string;
 }
 
-function getExportedSymbolsAndFilePaths(filePath: string): string[] {
+type SymbolPath = { symbol: string, path: string }
+
+function getExportedSymbolsFromPaths(filePaths: string[]): Array<SymbolPath> {
   const project = new Project();
-  const sourceFile = project.addSourceFileAtPath(filePath);
+  const sourceFiles = project.addSourceFilesAtPaths(filePaths);
+
+  const exports: Array<{ path: string, symbols: Symbol[]}> = [];
+  sourceFiles.forEach((file) => {
+    exports.push({
+      path: file.getFilePath(),
+      symbols: file.getExportSymbols(),
+    });
+  });
 
   // Get all exported symbols from the specified file
-  const exports = sourceFile.getExportSymbols();
-  const exportedSymbolNames = exports.map((symbol) => symbol.getName());
+  const exportedSymbolNames: Array<SymbolPath> = [];
+  exports.map((symbol) => {
+    const filePath = symbol.path;
+    const symbolNames = symbol.symbols.map((s) => s.getName());
+    symbolNames.forEach((name) => {
+      exportedSymbolNames.push({ symbol: name, path: filePath });
+    });
+  });
   return exportedSymbolNames;
 }
 
-function findNewlyExportedSymbols(directories: string[], symbols: string[]) {
+
+function findNewlyExportedSymbols(directories: string[], symbols: Array<SymbolPath>) {
   const allTsFilesInDirectories = directories.map((directory) => {
     return glob.sync(path.join(directory, '**', '*.ts'));
   }).flat();
@@ -33,12 +51,14 @@ function findNewlyExportedSymbols(directories: string[], symbols: string[]) {
     const fileExports = file.getExportSymbols();
     fileExports.forEach(symbol => {
       const symbolName = symbol.getName();
-      if (symbols.find((name) => name === symbolName)) {
+      const foundSymbol = symbols.find((s) => s.symbol === symbolName);
+      if (foundSymbol) {
         // If the symbol is already exported from an index.ts file, do not add it again
         if (!exportedSymbols.find((item) => item.name === symbolName && item.filePath.endsWith("index.ts"))) {
           exportedSymbols.push({
-            name: symbol.getName(),
-            filePath: file.getFilePath().split("brace/oh-two-migration-script/")[1]
+            name: symbolName,
+            filePath: file.getFilePath().split("brace/oh-two-migration-script/")[1],
+            originalPath: foundSymbol.path,
           });
 
           const storedSymbols = exportedSymbols.filter((item) => item.name === symbolName);
@@ -66,30 +86,58 @@ function convertOldPathToNewImport(oldPath: string): string {
     oldPath = oldPath.split("/index.ts")[0];
   }
   let ending = oldPath.split("src/")[1];
-  if (ending.endsWith(".ts")) {
+  if (ending?.endsWith(".ts")) {
     ending = ending.split(".ts")[0];
   }
+
+  if (oldPath.endsWith("/src")) {
+    ending = "";
+  }
+
+
   if (oldPath.includes("langchain-core")) {
     return `@langchain/core/${ending}`;
   } else if (oldPath.includes("langchain-community")) {
     return `@langchain/community/${ending}`;
   } else {
-    throw new Error(`Unknown path: ${oldPath}`)
+    // split the path at libs/, and /src and get what's in between
+    const splitPath = oldPath.split("libs/")[1].split("/src")[0];
+    const newPkg = `@${splitPath.split("-").join("/")}`;
+    if (ending === "") {
+      return newPkg;
+    }
+    return `${newPkg}/${ending}`;
+
   }
 }
 
-function createImportMap(symbols: ExportedSymbol[]): Array<{ old: string, new: string, symbol: string }> {
+function convertOriginalPathToImport(originalPath: string) {
+  if (originalPath.endsWith("index.ts")) {
+    const splitPath = originalPath.split("index.ts")[0].split("oh-two-migration-script/")[1].replace("src/", "")
+    // splitPath should now be in the format of "langchain/src/stores/message/redis"
+    return splitPath.endsWith("/") ? splitPath + "*" : splitPath + "/*";
+  } else {
+    // just remove .ts and src
+    return originalPath.replace("src/", "").replace(".ts", "");
+  }
+}
+
+function createImportMap(symbols: ExportedSymbol[]): Array<ImportMap> {
   return symbols.map(symbol => {
     return {
-      old: "langchain/agents/*",
+      old: convertOriginalPathToImport(symbol.originalPath),
       new: convertOldPathToNewImport(symbol.filePath),
       symbol: symbol.name
     }
   });
 }
 
+type ImportMap = { old: string, new: string, symbol: string | null }
+
+
 function main() {
-  const oldExportedSymbols = getExportedSymbolsAndFilePaths("../../langchain/src/agents/index.ts");
+  const allFiles = glob.globSync("../../langchain/src/**/*.ts");
+  const oldExportedSymbols = getExportedSymbolsFromPaths(allFiles);
   const directories = [
     "../../langchain-core/src",
     "../**/src",
@@ -102,9 +150,9 @@ function main() {
   console.log("\n\n----------\n")
   const importMap = createImportMap(newlyExportedSymbols);
   console.log("importMap\n\n----------\n", importMap)
-  const importMapJson: Array<{ old: string, new: string, symbol: string | null }> = JSON.parse(fs.readFileSync("importMap.json", "utf-8"));
-  const combinedMap = importMapJson.concat(importMap);
-  fs.writeFileSync("importMap.json", JSON.stringify(combinedMap, null, 2));
+  // const importMapJson: Array<ImportMap> = JSON.parse(fs.readFileSync("importMap.json", "utf-8"));
+  // const combinedMap = importMapJson.concat(importMap);
+  fs.writeFileSync("importMap_new.json", JSON.stringify(importMap, null, 2));
 }
 
 main()

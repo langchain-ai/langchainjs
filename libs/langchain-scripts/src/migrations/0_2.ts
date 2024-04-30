@@ -47,10 +47,10 @@ type MigrationUpdate = {
 /**
  * Edge cases to cover:
  * double exports
- * - tools
- * - memory
- * - schema
- * - agents (toolkits?)
+ * - tools - DONE
+ * - memory - DONE
+ * - schema - DONE
+ * - agents (toolkits?) - DONE
  * - stores
  * - llms/fake
  * - prompts/load
