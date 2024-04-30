@@ -1,4 +1,4 @@
-import neo4j from "neo4j-driver";
+import neo4j, { type Driver as Neo4jDriver, type Record as Neo4jRecord, type Path as Neo4jPath } from "neo4j-driver";
 import * as uuid from "uuid";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
@@ -43,7 +43,7 @@ const DEFAULT_DISTANCE_STRATEGY = "cosine";
  * @link See https://js.langchain.com/docs/security for more information.
  */
 export class Neo4jVectorStore extends VectorStore {
-  private driver: neo4j.Driver;
+  private driver: Neo4jDriver;
 
   private database: string;
 
@@ -641,7 +641,7 @@ export class Neo4jVectorStore extends VectorStore {
   }
 }
 
-function toObjects(records: neo4j.Record[]) {
+function toObjects(records: Neo4jRecord[]) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recordValues: Record<string, any>[] = records.map((record) => {
     const rObj = record.toObject();
@@ -697,7 +697,7 @@ function extractFromNeoObjects(obj: any) {
   return obj;
 }
 
-function extractPathForRows(path: neo4j.Path) {
+function extractPathForRows(path: Neo4jPath) {
   let { segments } = path;
   // Zero length path. No relationship, end === start
   if (!Array.isArray(path.segments) || path.segments.length < 1) {

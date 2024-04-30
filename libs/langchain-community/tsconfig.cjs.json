@@ -7,6 +7,20 @@
     "node_modules",
     "dist",
     "docs",
-    "**/tests"
+    "**/tests",
+    "src/callbacks/handlers/llmonitor.ts",
+    "src/callbacks/handlers/lunary.ts",
+    "src/chat_models/llama_cpp.ts",
+    "src/embeddings/hf_transformers.ts",
+    "src/embeddings/llama_cpp.ts",
+    "src/llms/llama_cpp.ts",
+    "src/retrievers/dria.ts",
+    "src/stores/message/ipfs_datastore.ts",
+    "src/stores/message/planetscale.ts",
+    "src/utils/llama_cpp.ts",
+    "src/vectorstores/voy.ts",
+    "src/utils/googlevertexai-webauth.ts",
+    "src/vectorstores/qdrant.ts",
+    "src/vectorstores/chroma.ts"
   ]
 }
