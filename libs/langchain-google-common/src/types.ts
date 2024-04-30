@@ -274,3 +274,13 @@ export interface GoogleAISafetyHandler {
 export interface GoogleAISafetyParams {
   safetyHandler?: GoogleAISafetyHandler;
 }
+
+export type GeminiJsonSchema = Record<string, unknown> & {
+  properties?: Record<string, GeminiJsonSchema>;
+  type: GeminiFunctionSchemaType;
+};
+
+export interface GeminiJsonSchemaDirty extends GeminiJsonSchema {
+  properties?: Record<string, GeminiJsonSchemaDirty>;
+  additionalProperties?: boolean;
+}
