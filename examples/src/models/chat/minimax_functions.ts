@@ -64,7 +64,7 @@ const minimax = new ChatMinimax({
   ],
 });
 
-const result2 = await minimax.call(
+const result2 = await minimax.invoke(
   [new HumanMessage("What is the weather like in NewYork tomorrow?")],
   {
     functions: [functionSchema],

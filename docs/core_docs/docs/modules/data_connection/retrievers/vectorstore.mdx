@@ -36,7 +36,7 @@ const docs = await textSplitter.createDocuments([text]);
 const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
 
 // Initialize a retriever wrapper around the vector store
-const vectorStoreRetriever = vectorStore.asRetriever();
+const retriever = vectorStore.asRetriever();
 
 const docs = await retriever.getRelevantDocuments(
   "what did he say about ketanji brown jackson"

@@ -10,5 +10,5 @@ test("TransformChain", async () => {
     outputVariables: ["c"],
   });
 
-  await expect(chain.call({ a: 1, b: 2 })).resolves.toEqual({ c: 3 });
+  await expect(chain.invoke({ a: 1, b: 2 })).resolves.toEqual({ c: 3 });
 });

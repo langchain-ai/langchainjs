@@ -10,13 +10,6 @@ const prompt = PromptTemplate.fromTemplate(
 const chainA = new LLMChain({ llm: model, prompt });
 
 // The result is an object with a `text` property.
-const resA = await chainA.call({ product: "colorful socks" });
+const resA = await chainA.invoke({ product: "colorful socks" });
 console.log({ resA });
 // { resA: { text: '\n\nSocktastic!' } }
-
-// Since this LLMChain is a single-input, single-output chain, we can also `run` it.
-// This convenience method takes in a string and returns the value
-// of the output key field in the chain response. For LLMChains, this defaults to "text".
-const resA2 = await chainA.run("colorful socks");
-console.log({ resA2 });
-// { resA2: '\n\nSocktastic!' }

@@ -54,7 +54,7 @@ const llm = new ChatOpenAI({
 const voeChain = ViolationOfExpectationsChain.fromLLM(llm, retriever);
 
 // Requires an input key of "chat_history" with an array of messages.
-const result = await voeChain.call({
+const result = await voeChain.invoke({
   chat_history: dummyMessages,
 });
 
