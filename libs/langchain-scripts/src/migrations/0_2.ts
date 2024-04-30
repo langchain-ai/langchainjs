@@ -44,6 +44,25 @@ type MigrationUpdate = {
   updatedImport: string;
 };
 
+/**
+ * Edge cases to cover:
+ * double exports
+ * - tools
+ * - memory
+ * - schema
+ * - agents (toolkits?)
+ * - stores
+ * - llms/fake
+ * - prompts/load
+ * - retrievers/remote
+ * Moving all the @langchain/community/retrievers/self_query/x to @langchain/community/structured_query/x
+ * 
+ * 
+ * 
+ * importMap now contains `symbol: string | null`
+ * if import map old path ends with `/*` then it can be any path after
+ */
+
 export async function updateEntrypointsFrom0_x_xTo0_2_x(
   fields: UpdateLangChainFields
 ): Promise<Array<MigrationUpdate> | null> {
