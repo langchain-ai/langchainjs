@@ -14,7 +14,8 @@ import {
   GoogleAIModelParams,
   GoogleAISafetySetting,
   GooglePlatformType,
-  GeminiContent, GoogleAIResponseMimeType,
+  GeminiContent,
+  GoogleAIResponseMimeType,
 } from "./types.js";
 import {
   copyAIModelParams,
