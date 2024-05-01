@@ -142,7 +142,6 @@ export class StackExchangeAPI extends Tool {
    * @param params Additional parameters passed to the endpoint
    * @param page Number of the page to retrieve
    * @param filter Filtering properties
-   * @returns
    */
   private async _fetch<T>(
     endpoint: string,
@@ -180,7 +179,6 @@ export class StackExchangeAPI extends Tool {
   /**
    * Fetch the result of a specific endpoint
    * @param endpointUrl Endpoint to call
-   * @returns
    */
   private async _makeRequest<T>(endpointUrl: string): Promise<T> {
     try {

@@ -9,10 +9,14 @@ console.log(result);
 const stackExchangeTitleTool = new StackExchangeAPI({
   queryType: "title",
 });
-const titleResult = await stackExchangeTitleTool.invoke("zsh: command not found: python");
+const titleResult = await stackExchangeTitleTool.invoke(
+  "zsh: command not found: python"
+);
 console.log(titleResult);
 
 // Get results from StackExchange API with bad query
 const stackExchangeBadTool = new StackExchangeAPI();
-const badResult = await stackExchangeBadTool.invoke("sjefbsmnazdkhbazkbdoaencopebfoubaef");
+const badResult = await stackExchangeBadTool.invoke(
+  "sjefbsmnazdkhbazkbdoaencopebfoubaef"
+);
 console.log(badResult);
