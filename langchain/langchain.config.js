@@ -182,6 +182,8 @@ export const config = {
       "document_loaders/web/azure_blob_storage_container",
     "document_loaders/web/azure_blob_storage_file":
       "document_loaders/web/azure_blob_storage_file",
+    "document_loaders/web/browserbase":
+      "document_loaders/web/browserbase",
     "document_loaders/web/cheerio": "document_loaders/web/cheerio",
     "document_loaders/web/puppeteer": "document_loaders/web/puppeteer",
     "document_loaders/web/playwright": "document_loaders/web/playwright",
@@ -630,6 +632,7 @@ export const config = {
     "document_loaders/web/assemblyai",
     "document_loaders/web/azure_blob_storage_container",
     "document_loaders/web/azure_blob_storage_file",
+    "document_loaders/web/browserbase",
     "document_loaders/web/cheerio",
     "document_loaders/web/puppeteer",
     "document_loaders/web/playwright",
