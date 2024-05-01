@@ -16,8 +16,8 @@
   "scripts": {
     "build": "yarn build:deps && yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
     "build:deps": "yarn run turbo:command build --filter=@langchain/core",
-    "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 rm -f src/package.json && tsc --outDir dist/ && rm -rf dist/tests dist/**/tests",
-    "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 echo '{}' > src/package.json && tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rimraf dist-cjs src/package.json",
+    "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rm -rf dist/tests dist/**/tests",
+    "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rimraf dist-cjs",
     "build:watch": "yarn create-entrypoints && tsc --outDir dist/ --watch",
     "build:scripts": "yarn create-entrypoints && yarn check-tree-shaking",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
@@ -40,7 +40,7 @@
   "license": "MIT",
   "dependencies": {
     "@langchain/core": "~0.1",
-    "@nomic-ai/atlas": "^0.8.0"
+    "@nomic-ai/atlas": "^0.9.5"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
@@ -64,9 +64,10 @@
     "jest-environment-node": "^29.6.4",
     "prettier": "^2.8.3",
     "release-it": "^15.10.1",
+    "rimraf": "^5.0.1",
     "rollup": "^4.5.2",
     "ts-jest": "^29.1.0",
-    "typescript": "^5.4.5"
+    "typescript": "<5.2.0"
   },
   "publishConfig": {
     "access": "public"

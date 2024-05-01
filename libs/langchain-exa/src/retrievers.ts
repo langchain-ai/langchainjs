@@ -1,9 +1,10 @@
-import Exa, {
+import {
   ContentsOptions,
   RegularSearchOptions,
   SearchResponse,
   SearchResult,
 } from "exa-js";
+import * as Exa from "exa-js";
 
 import { BaseRetriever, BaseRetrieverInput } from "@langchain/core/retrievers";
 import { Document } from "@langchain/core/documents";

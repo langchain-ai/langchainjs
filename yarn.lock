@@ -8893,6 +8893,7 @@ __metadata:
     jest-environment-node: ^29.6.4
     prettier: ^2.8.3
     release-it: ^15.10.1
+    rimraf: ^5.0.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: ^5.4.5
@@ -8925,6 +8926,7 @@ __metadata:
     jest-environment-node: ^29.6.4
     prettier: ^2.8.3
     release-it: ^15.10.1
+    rimraf: ^5.0.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: ^5.4.5
@@ -9062,6 +9064,7 @@ __metadata:
     redis: ^4.6.6
     release-it: ^15.10.1
     replicate: ^0.18.0
+    rimraf: ^5.0.1
     rollup: ^3.19.1
     ts-jest: ^29.1.0
     typeorm: ^0.3.12
@@ -9423,6 +9426,7 @@ __metadata:
     jest-environment-node: ^29.6.4
     prettier: ^2.8.3
     release-it: ^15.10.1
+    rimraf: ^5.0.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: ^5.4.5
@@ -9453,6 +9457,7 @@ __metadata:
     jest-environment-node: ^29.6.4
     prettier: ^2.8.3
     release-it: ^15.10.1
+    rimraf: ^5.0.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: ^5.4.5
@@ -9488,6 +9493,7 @@ __metadata:
     jest-environment-node: ^29.6.4
     prettier: ^2.8.3
     release-it: ^15.10.1
+    rimraf: ^5.0.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: ^5.4.5
@@ -9521,6 +9527,7 @@ __metadata:
     jest-environment-node: ^29.6.4
     prettier: ^2.8.3
     release-it: ^15.10.1
+    rimraf: ^5.0.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: ^5.4.5
@@ -9552,9 +9559,10 @@ __metadata:
     jest-environment-node: ^29.6.4
     prettier: ^2.8.3
     release-it: ^15.10.1
+    rimraf: ^5.0.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
-    typescript: ^5.4.5
+    typescript: <5.2.0
     zod: ^3.22.4
   languageName: unknown
   linkType: soft
@@ -9584,6 +9592,7 @@ __metadata:
     jest-environment-node: ^29.6.4
     prettier: ^2.8.3
     release-it: ^15.10.1
+    rimraf: ^5.0.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: ^5.4.5
@@ -9615,9 +9624,10 @@ __metadata:
     jest-environment-node: ^29.6.4
     prettier: ^2.8.3
     release-it: ^15.10.1
+    rimraf: ^5.0.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
-    typescript: ^5.4.5
+    typescript: <5.2.0
     web-auth-library: ^1.0.3
   languageName: unknown
   linkType: soft
@@ -9650,6 +9660,7 @@ __metadata:
     langchain: "workspace:^"
     prettier: ^2.8.3
     release-it: ^15.10.1
+    rimraf: ^5.0.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: ^5.4.5
@@ -9684,6 +9695,7 @@ __metadata:
     langchain: "workspace:^"
     prettier: ^2.8.3
     release-it: ^15.10.1
+    rimraf: ^5.0.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: ^5.4.5
@@ -9720,6 +9732,7 @@ __metadata:
     mongodb: ^6.3.0
     prettier: ^2.8.3
     release-it: ^15.10.1
+    rimraf: ^5.0.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: ^5.4.5
@@ -9735,7 +9748,7 @@ __metadata:
     "@langchain/core": ~0.1
     "@langchain/openai": "workspace:^"
     "@langchain/scripts": ~0.0
-    "@nomic-ai/atlas": ^0.8.0
+    "@nomic-ai/atlas": ^0.9.5
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9754,9 +9767,10 @@ __metadata:
     jest-environment-node: ^29.6.4
     prettier: ^2.8.3
     release-it: ^15.10.1
+    rimraf: ^5.0.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
-    typescript: ^5.4.5
+    typescript: <5.2.0
   languageName: unknown
   linkType: soft
 
@@ -9817,6 +9831,7 @@ __metadata:
     jest-environment-node: ^29.6.4
     prettier: ^2.8.3
     release-it: ^15.10.1
+    rimraf: ^5.0.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: ^5.4.5
@@ -9851,6 +9866,7 @@ __metadata:
     prettier: ^2.8.3
     redis: ^4.6.13
     release-it: ^15.10.1
+    rimraf: ^5.0.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: ^5.4.5
@@ -9918,9 +9934,10 @@ __metadata:
     js-tiktoken: ^1.0.11
     prettier: ^2.8.3
     release-it: ^15.10.1
+    rimraf: ^5.0.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
-    typescript: ^5.4.5
+    typescript: <5.2.0
   languageName: unknown
   linkType: soft
 
@@ -9950,6 +9967,7 @@ __metadata:
     jest-environment-node: ^29.6.4
     prettier: ^2.8.3
     release-it: ^15.10.1
+    rimraf: ^5.0.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: ^5.4.5
@@ -9981,6 +9999,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     prettier: ^2.8.3
+    rimraf: ^5.0.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: ^5.4.5
@@ -10300,15 +10319,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomic-ai/atlas@npm:^0.8.0":
-  version: 0.8.0
-  resolution: "@nomic-ai/atlas@npm:0.8.0"
+"@nomic-ai/atlas@npm:^0.9.5":
+  version: 0.9.5
+  resolution: "@nomic-ai/atlas@npm:0.9.5"
   dependencies:
     apache-arrow: ^12.0.1
     dotenv: ^16.0.3
     js-yaml: ^4.1.0
-    ts-md5: ^1.3.1
-  checksum: 19538f84a5dd9021870125879772e37925c730b75cb1716d619b8c014542503e93f843c04a32c1cab84dedd2ba797c108258453bb949b4bef0d7586290fb1337
+  checksum: cfcc83f926bca755a7c6e1c4bed465d2bfad14671a605ecb065005bb85643784fef268662011927b24b44fedec9cbac627ce1e36226820e76c36a7b7b99b50fe
   languageName: node
   linkType: hard
 
@@ -26960,7 +26978,6 @@ __metadata:
     dotenv: ^16.0.3
     lint-staged: ^13.1.1
     prettier: ^2.8.3
-    rimraf: ^5.0.1
     semver: ^7.5.4
     turbo: latest
     typescript: ^5.4.5
@@ -34782,13 +34799,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ts-md5@npm:^1.3.1":
-  version: 1.3.1
-  resolution: "ts-md5@npm:1.3.1"
-  checksum: 88fc4df837e17949fef92a8e71a0691b20e2f8b02a002876a162a102e7c9d364f1eb00cbd217f9578fec5fa07bb66ffa14ed054cdfe164486fab2173c8e9ea23
-  languageName: node
-  linkType: hard
-
 "ts-mixer@npm:^6.0.3":
   version: 6.0.3
   resolution: "ts-mixer@npm:6.0.3"
@@ -35274,6 +35284,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"typescript@npm:<5.2.0":
+  version: 5.1.6
+  resolution: "typescript@npm:5.1.6"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: b2f2c35096035fe1f5facd1e38922ccb8558996331405eb00a5111cc948b2e733163cc22fab5db46992aba7dd520fff637f2c1df4996ff0e134e77d3249a7350
+  languageName: node
+  linkType: hard
+
 "typescript@npm:^4.9.4":
   version: 4.9.5
   resolution: "typescript@npm:4.9.5"
@@ -35301,6 +35321,16 @@ __metadata:
     tsc: bin/tsc
     tsserver: bin/tsserver
   checksum: 53c879c6fa1e3bcb194b274d4501ba1985894b2c2692fa079db03c5a5a7140587a1e04e1ba03184605d35f439b40192d9e138eb3279ca8eee313c081c8bcd9b0
+  languageName: node
+  linkType: hard
+
+"typescript@patch:typescript@<5.2.0#~builtin<compat/typescript>":
+  version: 5.1.6
+  resolution: "typescript@patch:typescript@npm%3A5.1.6#~builtin<compat/typescript>::version=5.1.6&hash=1f5320"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 21e88b0a0c0226f9cb9fd25b9626fb05b4c0f3fddac521844a13e1f30beb8f14e90bd409a9ac43c812c5946d714d6e0dee12d5d02dfc1c562c5aacfa1f49b606
   languageName: node
   linkType: hard
 
