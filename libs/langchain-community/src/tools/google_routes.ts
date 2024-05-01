@@ -234,7 +234,7 @@ export class GoogleRoutesAPI extends StructuredTool {
     travel_mode: z.ZodEnum<
       ["DRIVE", "WALK", "BICYCLE", "TRANSIT", "TWO_WHEELER"]
     >;
-    computeAlternativeRoutes: z.ZodOptional<z.ZodBoolean>;
+    computeAlternativeRoutes: z.ZodBoolean;
     departureTime: z.ZodOptional<z.ZodString>;
     arrivalTime: z.ZodOptional<z.ZodString>;
     transitPreferences: z.ZodOptional<
@@ -257,50 +257,82 @@ export class GoogleRoutesAPI extends StructuredTool {
     this.apiKey = apiKey;
     this.name = "google_routes";
     this.description = `
-A tool for retrieving routing information between destinations using the Google Routes API. 
-Get directions for driving, walking, bicycling, transit, and two-wheeler routes. Obtain details such as departure and arrival times, travel instructions, transit fare, transit details, warnings, alternative routes, tolls price, and transit routing preferences such as less walking or fewer transfers.
+    This tool retrieves routing info using the Google Routes API for driving, walking, biking, transit, and two-wheeler routes. Get departure/arrival times, travel instructions, transit fare, warnings, alternative routes, tolls prices, and routing preferences like less walking or fewer transfers.
 
-Output:
-- For "TRANSIT" travel mode: Includes departure and arrival details, travel instructions including the name and code of the transit, transit fare (if available), transit details, warnings (if any), alternative routes (if requested), and the time the user will depart the origin and the time he will arrive at the destination.
-- For other travel modes: Includes route description, distance, duration, warnings (if any), alternative routes (if requested), tolls price (if requested), and the time the user will depart the origin and the time he will he will arrive at the destination.
+    Output:
+    - "TRANSIT" mode: Departure/arrival details, transit name/code, fare, details, warnings, alternative routes, and expected departure/arrival times.
+    - Other modes: Route description, distance, duration, warnings, alternative routes, tolls prices, and expected departure/arrival times.
+    
+    Current time in user's timezone: ${new Date().toLocaleString()}.
 `;
 
     this.schema = z.object({
-      origin: z.string().describe("Origin address"),
-      destination: z.string().describe("Destination address"),
+      origin: z
+        .string()
+        .describe(`Origin address, can be either a place or an address.`),
+      destination: z
+        .string()
+        .describe(`Destination address, can be either a place or an address.`),
       travel_mode: z
         .enum(["DRIVE", "WALK", "BICYCLE", "TRANSIT", "TWO_WHEELER"])
-        .describe("The mode of transport"),
+        .describe(`The mode of transport`),
       computeAlternativeRoutes: z
-        .optional(z.boolean())
-        .describe("Compute alternative routes if requested"),
+        .boolean()
+        .describe(
+          `Compute alternative routes, set to true if user wants multiple routes, false otherwise.`
+        ),
       departureTime: z
         .string()
         .optional()
         .describe(
-          `Expected departure time should be provided as a timestamp in RFC3339 format: YYYY-MM-DDThh:mm:ss+00:00. Here, the +00:00 represents the UTC offset. For instance, if the user is in New York, the offset would be -05:00 meaning YYYY-MM-DDThh:mm:ss-05:00. If the departure time is not specified it should not be included. The departure time must be in the future. For reference, here is the current time in UTC: ${new Date().toISOString()} and the user's timezone is ${getTimezoneOffsetInHours()}`
+          `Time that the user wants to depart.
+          There cannot be a departure time if an arrival time is specified.
+          Expected departure time should be provided as a timestamp in RFC3339 format: YYYY-MM-DDThh:mm:ss+00:00. The date should be in UTC time and the +00:00 represents the UTC offset. 
+          For instance, if the the user's timezone is -5, the offset would be -05:00 meaning YYYY-MM-DDThh:mm:ss-05:00 with YYYY-MM-DDThh:mm:ss being in UTC. 
+          For reference, here is the current time in UTC: ${new Date().toISOString()} and the user's timezone offset is ${getTimezoneOffsetInHours()}. 
+          Reminder that the departure time must be in the future. 
+          If the user asks for a departure time in the past, warn them that it is not possible. 
+          If the user asks for a departure time in a passed hour today, calculate it for the next day.
+          If the departure time is not specified it should not be included.          
+          `
         ),
       arrivalTime: z
         .string()
         .optional()
         .describe(
-          `Expected arrival time should be provided as a timestamp in RFC3339 format: YYYY-MM-DDThh:mm:ss+00:00. Here, the +00:00 represents the UTC offset. For instance, if the user is in New York, the offset would be -05:00 meaning YYYY-MM-DDThh:mm:ss-05:00. If the arrival time is not specified it should not be included. The arrival time must be in the future. For reference, here is the current time in UTC: ${new Date().toISOString()} and the user's timezone is ${getTimezoneOffsetInHours()}`
+          `Time that the user wants to arrive.
+          There cannot be an arrival time if a departure time is specified.
+          Expected arrival time should be provided as a timestamp in RFC3339 format: YYYY-MM-DDThh:mm:ss+00:00. The date should be in UTC time and the +00:00 represents the UTC offset. 
+          For instance, if the the user's timezone is -5, the offset would be -05:00 meaning YYYY-MM-DDThh:mm:ss-05:00 with YYYY-MM-DDThh:mm:ss being in UTC. 
+          For reference, here is the current time in UTC: ${new Date().toISOString()} and the user's timezone offset is ${getTimezoneOffsetInHours()}. 
+          Reminder that the arrival time must be in the future, if the user asks for a departure time in the past, warn them that it is not possible. 
+          If the user asks for a departure time in a passed hour today, calculate it for the next day.
+          Arrival time only works for transit mode. It should not be included if transit mode is not selected. 
+          If the user wants to calculate the arrival time for other modes you must warn them that it is not possible. 
+          If the arrival time is not specified it should not be included. `
         ),
       transitPreferences: z
         .object({
-          routingPreference: z
-            .enum(["LESS_WALKING", "FEWER_TRANSFERS"])
-            .describe("Transit routing preference"),
+          routingPreference: z.enum(["LESS_WALKING", "FEWER_TRANSFERS"])
+            .describe(`Transit routing preference.
+            Only works for transit mode.
+            It should not be included if transit mode is not selected.
+            By default, it should not be included.`),
         })
         .optional()
         .describe(
-          "Transit routing preference. Only works for transit mode. It should not be included if transit mode is not selected."
+          `Transit routing preference.
+           Only works for transit mode. 
+           It should not be included if transit mode is not selected. 
+           By default, it should not be included.`
         ),
       extraComputations: z
         .array(z.enum(["TOLLS"]))
         .optional()
         .describe(
-          "Calculate tolls for the route. Does not work for transit mode. It should not be included if transit mode is selected."
+          `Calculate tolls for the route. 
+          Does not work for transit mode. 
+          It should not be included if transit mode is selected, if the user wants to calculate tolls for transit mode you should warn them that it is not possible.`
         ),
     });
   }
@@ -381,7 +413,7 @@ Output:
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (route: any) => filterRoutes(route, travel_mode)
     );
-
+    console.log("output:", routes);
     return JSON.stringify(routes);
   }
 }
