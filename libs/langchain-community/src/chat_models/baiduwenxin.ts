@@ -117,6 +117,13 @@ declare interface BaiduWenxinChatInput {
 }
 
 /**
+ * Interface maps model names and their API endpoints.
+ */
+interface Models {
+  [key: string]: string;
+}
+
+/**
  * Function that extracts the custom role of a generic chat message.
  * @param message Chat message from which to extract the custom role.
  * @returns The custom role of the chat message.
@@ -264,21 +271,25 @@ export class ChatBaiduWenxin
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;
 
-    if (this.model === "ERNIE-Bot") {
-      this.apiUrl =
-        "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions";
-    } else if (this.model === "ERNIE-Bot-turbo") {
-      this.apiUrl =
-        "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/eb-instant";
-    } else if (this.model === "ERNIE-Bot-4") {
-      this.apiUrl =
-        "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions_pro";
-    } else if (this.model === "ERNIE-Speed-8K") {
-      this.apiUrl =
-        "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie_speed";
-    } else if (this.model === "ERNIE-Speed-128K") {
-      this.apiUrl =
-        "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie-speed-128k";
+    const models: Models = {
+      "ERNIE-Bot": "completions",
+      "ERNIE-Bot-turbo": "eb-instant",
+      "ERNIE-Bot-4": "completions_pro",
+      "ERNIE-Speed-8K": "ernie_speed",
+      "ERNIE-Speed-128K": "ernie-speed-128k",
+      "ERNIE-4.0-8K": "completions_pro",
+      "ERNIE-4.0-8K-Preview": "ernie-4.0-8k-preview",
+      "ERNIE-3.5-8K": "completions",
+      "ERNIE-3.5-8K-Preview": "ernie-3.5-8k-preview",
+      "ERNIE-Lite-8K": "eb-instant",
+      "ERNIE-Tiny-8K": "ernie-tiny-8k",
+      "ERNIE-Character-8K": "ernie-char-8",
+      "ERNIE Speed-AppBuilder": "ai_apaas",
+    };
+    if (this.model in models) {
+      this.apiUrl = `https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/${
+        models[this.model]
+      }`;
     } else {
       throw new Error(`Invalid model name: ${this.model}`);
     }
@@ -489,6 +500,22 @@ export class ChatBaiduWenxin
       this.accessToken = await this.getAccessToken();
     }
 
+    const findFirstNewlineIndex = (data: Uint8Array) => {
+      for (let i = 0; i < data.length; ) {
+        if (data[i] === 10) return i;
+        if ((data[i] & 0b11100000) === 0b11000000) {
+          i += 2;
+        } else if ((data[i] & 0b11110000) === 0b11100000) {
+          i += 3;
+        } else if ((data[i] & 0b11111000) === 0b11110000) {
+          i += 4;
+        } else {
+          i += 1;
+        }
+      }
+      return -1;
+    };
+
     const makeCompletionRequest = async () => {
       const url = `${this.apiUrl}?access_token=${this.accessToken}`;
       const response = await fetch(url, {
@@ -521,7 +548,7 @@ export class ChatBaiduWenxin
           const reader = response.body.getReader();
 
           const decoder = new TextDecoder("utf-8");
-          let data = "";
+          let dataArrayBuffer = new Uint8Array(0);
 
           let continueReading = true;
           while (continueReading) {
@@ -530,17 +557,30 @@ export class ChatBaiduWenxin
               continueReading = false;
               break;
             }
-            data += decoder.decode(value);
+            // merge the data first then decode in case of the Chinese characters are split between chunks
+            const mergedArray = new Uint8Array(
+              dataArrayBuffer.length + value.length
+            );
+            mergedArray.set(dataArrayBuffer);
+            mergedArray.set(value, dataArrayBuffer.length);
+            dataArrayBuffer = mergedArray;
 
             let continueProcessing = true;
             while (continueProcessing) {
-              const newlineIndex = data.indexOf("\n");
+              const newlineIndex = findFirstNewlineIndex(dataArrayBuffer);
               if (newlineIndex === -1) {
                 continueProcessing = false;
                 break;
               }
-              const line = data.slice(0, newlineIndex);
-              data = data.slice(newlineIndex + 1);
+
+              const lineArrayBuffer = dataArrayBuffer.slice(
+                0,
+                findFirstNewlineIndex(dataArrayBuffer)
+              );
+              const line = decoder.decode(lineArrayBuffer);
+              dataArrayBuffer = dataArrayBuffer.slice(
+                findFirstNewlineIndex(dataArrayBuffer) + 1
+              );
 
               if (line.startsWith("data:")) {
                 const event = new MessageEvent("message", {

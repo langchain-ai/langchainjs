@@ -135,18 +135,18 @@ export class AzureOpenAIEmbeddings
 
     const batchRequests = batches.map((batch) => this.getEmbeddings(batch));
     const embeddings = await Promise.all(batchRequests);
-
-    return embeddings;
+    return embeddings.flat();
   }
 
   async embedQuery(document: string): Promise<number[]> {
     const input = [
       this.stripNewLines ? document.replace(/\n/g, " ") : document,
     ];
-    return this.getEmbeddings(input);
+    const embeddings = await this.getEmbeddings(input);
+    return embeddings.flat();
   }
 
-  private async getEmbeddings(input: string[]) {
+  private async getEmbeddings(input: string[]): Promise<number[][]> {
     const deploymentName = this.azureOpenAIApiDeploymentName || this.model;
 
     const res = await this.caller.call(() =>
@@ -159,6 +159,6 @@ export class AzureOpenAIEmbeddings
       })
     );
 
-    return res.data[0].embedding;
+    return res.data.map((data) => data.embedding);
   }
 }

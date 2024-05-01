@@ -46,7 +46,7 @@ Human: {input}
 AI:`);
 const chain = new LLMChain({ llm: model, prompt, memory });
 
-const res1 = await chain.call({ input: "Hi, my name is Perry, what's up?" });
+const res1 = await chain.invoke({ input: "Hi, my name is Perry, what's up?" });
 console.log({ res1 });
 /*
 {
@@ -56,14 +56,68 @@ console.log({ res1 });
 }
 */
 
-const res2 = await chain.call({ input: "what's my favorite sport?" });
+const res2 = await chain.invoke({ input: "what's my favorite sport?" });
 console.log({ res2 });
 /*
 { res2: { text: ' You said your favorite sport is soccer.' } }
 */
 
-const res3 = await chain.call({ input: "what's my name?" });
+const res3 = await chain.invoke({ input: "what's my name?" });
 console.log({ res3 });
 /*
 { res3: { text: ' Your name is Perry.' } }
 */
+
+// Sometimes we might want to save metadata along with the conversation snippets
+const memoryWithMetadata = new VectorStoreRetrieverMemory({
+  vectorStoreRetriever: vectorStore.asRetriever(
+    1,
+    (doc) => doc.metadata?.userId === "1"
+  ),
+  memoryKey: "history",
+  metadata: { userId: "1", groupId: "42" },
+});
+
+await memoryWithMetadata.saveContext(
+  { input: "Community is my favorite TV Show" },
+  { output: "6 seasons and a movie!" }
+);
+
+console.log(
+  await memoryWithMetadata.loadMemoryVariables({
+    prompt: "what show should i watch? ",
+  })
+);
+/*
+{ history: 'input: Community is my favorite TV Show\noutput: 6 seasons and a movie!' }
+*/
+
+// If we have a retriever whose filter does not match our metadata, our previous messages won't appear
+const memoryWithoutMatchingMetadata = new VectorStoreRetrieverMemory({
+  vectorStoreRetriever: vectorStore.asRetriever(
+    1,
+    (doc) => doc.metadata?.userId === "2"
+  ),
+  memoryKey: "history",
+});
+
+// There are no messages saved for userId 2
+console.log(
+  await memoryWithoutMatchingMetadata.loadMemoryVariables({
+    prompt: "what show should i watch? ",
+  })
+);
+/*
+{ history: '' }
+*/
+
+// If we need the metadata to be dynamic, we can pass a function instead
+const memoryWithMetadataFunction = new VectorStoreRetrieverMemory({
+  vectorStoreRetriever: vectorStore.asRetriever(1),
+  memoryKey: "history",
+  metadata: (inputValues, _outputValues) => ({
+    firstWord: inputValues?.input.split(" ")[0], // First word of the input
+    createdAt: new Date().toLocaleDateString(), // Date when the message was saved
+    userId: "1", // Hardcoded userId
+  }),
+});

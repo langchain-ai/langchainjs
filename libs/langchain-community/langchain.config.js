@@ -125,6 +125,7 @@ export const config = {
     "vectorstores/mongodb_atlas": "vectorstores/mongodb_atlas",
     "vectorstores/myscale": "vectorstores/myscale",
     "vectorstores/neo4j_vector": "vectorstores/neo4j_vector",
+    "vectorstores/neon": "vectorstores/neon",
     "vectorstores/opensearch": "vectorstores/opensearch",
     "vectorstores/pgvector": "vectorstores/pgvector",
     "vectorstores/pinecone": "vectorstores/pinecone",
@@ -183,6 +184,7 @@ export const config = {
     "retrievers/vectara_summary": "retrievers/vectara_summary",
     "retrievers/vespa": "retrievers/vespa",
     "retrievers/zep": "retrievers/zep",
+    "retrievers/self_query/qdrant": "retrievers/self_query/qdrant",
     // cache
     "caches/cloudflare_kv": "caches/cloudflare_kv",
     "caches/ioredis": "caches/ioredis",
@@ -233,7 +235,8 @@ export const config = {
     "util/convex": "utils/convex",
     "utils/event_source_parse": "utils/event_source_parse",
     "utils/cassandra": "utils/cassandra",
-    "experimental/graph_transformers/llm": "experimental/graph_transformers/llm",
+    "experimental/graph_transformers/llm":
+      "experimental/graph_transformers/llm",
   },
   requiresOptionalDependency: [
     "tools/aws_sfn",
@@ -296,6 +299,7 @@ export const config = {
     "vectorstores/mongodb_atlas",
     "vectorstores/myscale",
     "vectorstores/neo4j_vector",
+    "vectorstores/neon",
     "vectorstores/opensearch",
     "vectorstores/pgvector",
     "vectorstores/pinecone",
@@ -332,6 +336,7 @@ export const config = {
     "retrievers/supabase",
     "retrievers/vectara_summary",
     "retrievers/zep",
+    "retrievers/self_query/qdrant",
     "cache/cloudflare_kv",
     "cache/momento",
     "cache/upstash_redis",
