@@ -95,11 +95,13 @@ export interface GoogleAIModelParams {
   convertSystemMessageToHumanContent?: boolean;
 
   /**
-   * Available for gemini-1.5-pro.
+   * Available for `gemini-1.5-pro`.
    * The output format of the generated candidate text.
    * Supported MIME types:
-   *     text/plain: (default) Text output.
-   *     application/json: JSON response in the candidates.
+   *  - `text/plain`: Text output.
+   *  - `application/json`: JSON response in the candidates.
+   * 
+   * @default "text/plain"
    */
   responseMimeType?: GoogleAIResponseMimeType;
 }
