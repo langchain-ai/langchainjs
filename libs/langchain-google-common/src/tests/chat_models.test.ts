@@ -80,8 +80,12 @@ describe("Mock ChatGoogle", () => {
     await model.invoke(messages);
 
     expect(record?.opts?.headers).toHaveProperty("User-Agent");
+    expect(record?.opts?.headers).toHaveProperty("Client-Info");
     expect(record.opts.headers["User-Agent"]).toMatch(
       /langchain-js\/[0-9.]+-ChatConnection/
+    );
+    expect(record.opts.headers["Client-Info"]).toMatch(
+      /\d+(\.\d+)?-ChatConnection/ // Since we are not getting libraryVersion from env right now, it will always be 0
     );
   });
 
