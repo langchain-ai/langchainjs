@@ -47,9 +47,7 @@ export interface GoogleAISafetySetting {
   threshold: string;
 }
 
-export type GoogleAIResponseMimeType =
-  "text/plain" |
-  "application/json";
+export type GoogleAIResponseMimeType = "text/plain" | "application/json";
 
 export interface GoogleAIModelParams {
   /** Model to use */
