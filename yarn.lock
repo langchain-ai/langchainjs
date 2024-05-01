@@ -26946,6 +26946,7 @@ __metadata:
     dotenv: ^16.0.3
     lint-staged: ^13.1.1
     prettier: ^2.8.3
+    rimraf: ^5.0.1
     semver: ^7.5.4
     turbo: latest
     typescript: ^5.4.5

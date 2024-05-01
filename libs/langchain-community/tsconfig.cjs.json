@@ -19,8 +19,11 @@
     "src/stores/message/planetscale.ts",
     "src/utils/llama_cpp.ts",
     "src/vectorstores/voy.ts",
+    "src/chat_models/googlevertexai/web.ts",
+    "src/llms/googlevertexai/web.ts",
     "src/utils/googlevertexai-webauth.ts",
     "src/vectorstores/qdrant.ts",
+    "src/retrievers/self_query/qdrant.ts",
     "src/vectorstores/chroma.ts"
   ]
 }
