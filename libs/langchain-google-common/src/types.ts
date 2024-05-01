@@ -100,7 +100,7 @@ export interface GoogleAIModelParams {
    * Supported MIME types:
    *  - `text/plain`: Text output.
    *  - `application/json`: JSON response in the candidates.
-   * 
+   *
    * @default "text/plain"
    */
   responseMimeType?: GoogleAIResponseMimeType;
