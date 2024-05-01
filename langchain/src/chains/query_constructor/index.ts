@@ -1,5 +1,5 @@
-import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { z } from "zod";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import {
   Example,
   interpolateFString,
@@ -21,7 +21,6 @@ import {
   DEFAULT_SUFFIX,
   EXAMPLE_PROMPT,
 } from "./prompt.js";
-import { LLMChain } from "../llm_chain.js";
 import { AsymmetricStructuredOutputParser } from "../../output_parsers/structured.js";
 import { AttributeInfo } from "../../schema/query_constructor.js";
 
@@ -168,7 +167,7 @@ function _getPrompt(
 /**
  * A type that represents options for the query constructor chain.
  */
-export type QueryConstructorChainOptions = {
+export type QueryConstructorRunnableOptions = {
   llm: BaseLanguageModelInterface;
   documentContents: string;
   attributeInfo: AttributeInfo[];
@@ -177,7 +176,12 @@ export type QueryConstructorChainOptions = {
   allowedOperators?: Operator[];
 };
 
-export function loadQueryConstructorChain(opts: QueryConstructorChainOptions) {
+/** @deprecated */
+export type QueryConstructorChainOptions = QueryConstructorRunnableOptions;
+
+export function loadQueryConstructorRunnable(
+  opts: QueryConstructorRunnableOptions
+) {
   const prompt = _getPrompt(
     opts.documentContents,
     opts.attributeInfo,
@@ -185,8 +189,9 @@ export function loadQueryConstructorChain(opts: QueryConstructorChainOptions) {
     opts.allowedOperators,
     opts.examples
   );
-  return new LLMChain({
-    llm: opts.llm,
-    prompt,
-  });
+  const outputParser = StructuredQueryOutputParser.fromComponents(
+    opts.allowedComparators,
+    opts.allowedOperators
+  );
+  return prompt.pipe(opts.llm).pipe(outputParser);
 }

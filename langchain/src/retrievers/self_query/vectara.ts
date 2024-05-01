@@ -3,6 +3,8 @@ import {
   VectaraStore,
 } from "@langchain/community/vectorstores/vectara";
 import {
+  BaseTranslator,
+  isFilterEmpty,
   Comparator,
   Comparators,
   Comparison,
@@ -12,9 +14,7 @@ import {
   Operators,
   StructuredQuery,
   Visitor,
-} from "../../chains/query_constructor/ir.js";
-import { BaseTranslator } from "./base.js";
-import { isFilterEmpty } from "./utils.js";
+} from "@langchain/core/structured_query";
 
 type AllowedOperator = Exclude<Operator, NOT>;
 

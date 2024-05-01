@@ -48,7 +48,7 @@ const chain = ConversationalRetrievalQAChain.fromLLM(
   }
 );
 
-const res = await chain.call({
+const res = await chain.invoke({
   question:
     "I have a friend called Bob. He's 28 years old. He'd like to know what the powerhouse of the cell is?",
 });
@@ -60,7 +60,7 @@ console.log(res);
   }
 */
 
-const res2 = await chain.call({
+const res2 = await chain.invoke({
   question: "How old is Bob?",
 });
 

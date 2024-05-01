@@ -21,9 +21,7 @@ await vectorStore.addDocuments(
   ].map((pageContent) => new Document({ pageContent }))
 );
 
-const results = await retriever.getRelevantDocuments(
-  "What is my favourite food?"
-);
+const results = await retriever.invoke("What is my favourite food?");
 
 console.log(results);
 /*

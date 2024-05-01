@@ -10,5 +10,5 @@ const retriever = new DriaRetriever({
   topK: 15, // optional: default value is 10
 });
 
-const docs = await retriever.getRelevantDocuments("What is a union type?");
+const docs = await retriever.invoke("What is a union type?");
 console.log(docs);

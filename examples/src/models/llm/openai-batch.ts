@@ -13,14 +13,14 @@ const prompts = [
   "Say hello to Mary.",
 ];
 
-const res = await model.generate(prompts);
+const res = await model.invoke(prompts);
 console.log({ res });
 
 const chat = new ChatOpenAI({
   model: "gpt-3.5-turbo",
 });
 
-const messages = prompts.map((prompt) => [new HumanMessage(prompt)]);
+const messages = prompts.map((prompt) => new HumanMessage(prompt));
 
-const res2 = await chat.generate(messages);
+const res2 = await chat.invoke(messages);
 console.log({ res2 });
