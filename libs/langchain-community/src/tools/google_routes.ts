@@ -36,6 +36,11 @@ interface localizedValues {
   transitFare?: string;
 }
 
+interface TollInfo {
+  currencyCode: string;
+  value: string;
+}
+
 /**
  * Interface for the output of the tool for a transit route.
  */
@@ -59,6 +64,7 @@ interface FilteredRoute {
   duration: string;
   routeLabels: string[];
   warnings?: string[];
+  tollInfo?: TollInfo;
 }
 
 /**
@@ -74,7 +80,19 @@ interface Body {
   travel_mode: string;
   routing_preference?: string;
   computeAlternativeRoutes: boolean;
+  departureTime?: string;
+  arrivalTime?: string;
+  transitPreferences?: {
+    routingPreference: string;
+  };
+  extraComputations?: string[];
 }
+
+const getTimezoneOffsetInHours = () => {
+  const offsetInMinutes = new Date().getTimezoneOffset();
+  const offsetInHours = -offsetInMinutes / 60;
+  return offsetInHours;
+};
 
 /**
  * Helper functions to create the response objects for the Google Routes API.
@@ -171,6 +189,13 @@ function filterRoutes(
     if (route.warnings && route.warnings.length > 0) {
       filteredRoute.warnings = route.warnings;
     }
+    if (route.travelAdvisory && route.travelAdvisory.tollInfo) {
+      filteredRoute.tollInfo = {
+        currencyCode:
+          route.travelAdvisory.tollInfo.estimatedPrice[0].currencyCode,
+        value: route.travelAdvisory.tollInfo.estimatedPrice[0].units,
+      };
+    }
     return filteredRoute;
   }
 }
@@ -209,7 +234,15 @@ export class GoogleRoutesAPI extends StructuredTool {
     travel_mode: z.ZodEnum<
       ["DRIVE", "WALK", "BICYCLE", "TRANSIT", "TWO_WHEELER"]
     >;
-    computeAlternativeRoutes: z.ZodBoolean;
+    computeAlternativeRoutes: z.ZodOptional<z.ZodBoolean>;
+    departureTime: z.ZodOptional<z.ZodString>;
+    arrivalTime: z.ZodOptional<z.ZodString>;
+    transitPreferences: z.ZodOptional<
+      z.ZodObject<{
+        routingPreference: z.ZodEnum<["LESS_WALKING", "FEWER_TRANSFERS"]>;
+      }>
+    >;
+    extraComputations: z.ZodOptional<z.ZodArray<z.ZodEnum<["TOLLS"]>>>;
   }>;
 
   constructor(fields?: GoogleRoutesAPIParams) {
@@ -224,39 +257,67 @@ export class GoogleRoutesAPI extends StructuredTool {
     this.apiKey = apiKey;
     this.name = "google_routes";
     this.description = `
-A tool for retrieving routing information between two destinations using the Google Routes API. 
-
-Supported travel modes: DRIVE, WALK, BICYCLE, TRANSIT, TWO_WHEELER. 
-
-Input format: 
-{ 
-  "origin": "<origin>",
-  "destination": "<destination>",
-  "travel_mode": "<travel_mode>", 
-  "computeAlternativeRoutes": <boolean>
-}
+A tool for retrieving routing information between destinations using the Google Routes API. 
+Get directions for driving, walking, bicycling, transit, and two-wheeler routes. Obtain details such as departure and arrival times, travel instructions, transit fare, transit details, warnings, alternative routes, tolls price, and transit routing preferences such as less walking or fewer transfers.
 
 Output:
-- For "TRANSIT" travel mode: Includes departure and arrival details, travel instructions, transit fare (if available), transit details, warnings (if any), and alternative routes (if requested).
-- For other travel modes: Includes route description, distance, duration, warnings (if any), and alternative routes (if requested).
+- For "TRANSIT" travel mode: Includes departure and arrival details, travel instructions including the name and code of the transit, transit fare (if available), transit details, warnings (if any), alternative routes (if requested), and the time the user will depart the origin and the time he will arrive at the destination.
+- For other travel modes: Includes route description, distance, duration, warnings (if any), alternative routes (if requested), tolls price (if requested), and the time the user will depart the origin and the time he will he will arrive at the destination.
 `;
+
     this.schema = z.object({
-      origin: z.string(),
-      destination: z.string(),
-      travel_mode: z.enum([
-        "DRIVE",
-        "WALK",
-        "BICYCLE",
-        "TRANSIT",
-        "TWO_WHEELER",
-      ]),
-      computeAlternativeRoutes: z.boolean(),
+      origin: z.string().describe("Origin address"),
+      destination: z.string().describe("Destination address"),
+      travel_mode: z
+        .enum(["DRIVE", "WALK", "BICYCLE", "TRANSIT", "TWO_WHEELER"])
+        .describe("The mode of transport"),
+      computeAlternativeRoutes: z
+        .optional(z.boolean())
+        .describe("Compute alternative routes if requested"),
+      departureTime: z
+        .string()
+        .optional()
+        .describe(
+          `Expected departure time should be provided as a timestamp in RFC3339 format: YYYY-MM-DDThh:mm:ss+00:00. Here, the +00:00 represents the UTC offset. For instance, if the user is in New York, the offset would be -05:00 meaning YYYY-MM-DDThh:mm:ss-05:00. If the departure time is not specified it should not be included. The departure time must be in the future. For reference, here is the current time in UTC: ${new Date().toISOString()} and the user's timezone is ${getTimezoneOffsetInHours()}`
+        ),
+      arrivalTime: z
+        .string()
+        .optional()
+        .describe(
+          `Expected arrival time should be provided as a timestamp in RFC3339 format: YYYY-MM-DDThh:mm:ss+00:00. Here, the +00:00 represents the UTC offset. For instance, if the user is in New York, the offset would be -05:00 meaning YYYY-MM-DDThh:mm:ss-05:00. If the arrival time is not specified it should not be included. The arrival time must be in the future. For reference, here is the current time in UTC: ${new Date().toISOString()} and the user's timezone is ${getTimezoneOffsetInHours()}`
+        ),
+      transitPreferences: z
+        .object({
+          routingPreference: z
+            .enum(["LESS_WALKING", "FEWER_TRANSFERS"])
+            .describe("Transit routing preference"),
+        })
+        .optional()
+        .describe(
+          "Transit routing preference. Only works for transit mode. It should not be included if transit mode is not selected."
+        ),
+      extraComputations: z
+        .array(z.enum(["TOLLS"]))
+        .optional()
+        .describe(
+          "Calculate tolls for the route. Does not work for transit mode. It should not be included if transit mode is selected."
+        ),
     });
   }
 
   async _call(input: z.infer<typeof GoogleRoutesAPI.prototype.schema>) {
-    const { origin, destination, travel_mode, computeAlternativeRoutes } =
-      input;
+    const {
+      origin,
+      destination,
+      travel_mode,
+      computeAlternativeRoutes,
+      departureTime,
+      arrivalTime,
+      transitPreferences,
+      extraComputations,
+    } = input;
+
+    console.log("input:", input);
 
     const body: Body = {
       origin: {
@@ -266,7 +327,11 @@ Output:
         address: destination,
       },
       travel_mode,
-      computeAlternativeRoutes,
+      computeAlternativeRoutes: computeAlternativeRoutes ?? false,
+      departureTime,
+      arrivalTime,
+      transitPreferences,
+      extraComputations: (extraComputations as string[]) ?? [],
     };
 
     let fieldMask =
