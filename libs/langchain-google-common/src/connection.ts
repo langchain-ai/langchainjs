@@ -282,6 +282,7 @@ export abstract class AbstractGoogleLLMConnection<
       topP: parameters.topP,
       maxOutputTokens: parameters.maxOutputTokens,
       stopSequences: parameters.stopSequences,
+      responseMimeType: parameters.responseMimeType,
     };
   }
 
