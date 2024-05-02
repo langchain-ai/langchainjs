@@ -1538,7 +1538,7 @@
     "js-tiktoken": "^1.0.7",
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
-    "langchainhub": "~0.0.8",
+    "langchainhub": "^0.0.10",
     "langsmith": "^0.1.22",
     "ml-distance": "^4.0.0",
     "openapi-types": "^12.1.3",
