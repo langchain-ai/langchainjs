@@ -9407,7 +9407,7 @@ __metadata:
     eslint-plugin-prettier: ^4.2.1
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
-    js-tiktoken: ^1.0.8
+    js-tiktoken: "file:/Users/bracesproul/code/lang-chain-ai/js-tiktoken/js"
     langsmith: latest
     ml-distance: ^4.0.0
     ml-matrix: ^6.10.4
@@ -26303,6 +26303,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"js-tiktoken@file:/Users/bracesproul/code/lang-chain-ai/js-tiktoken/js::locator=%40langchain%2Fcore%40workspace%3Alangchain-core":
+  version: 1.0.11
+  resolution: "js-tiktoken@file:/Users/bracesproul/code/lang-chain-ai/js-tiktoken/js#/Users/bracesproul/code/lang-chain-ai/js-tiktoken/js::hash=6d8468&locator=%40langchain%2Fcore%40workspace%3Alangchain-core"
+  dependencies:
+    base64-js: ^1.5.1
+  checksum: 7efffbaf902e449e5b1b400149c02c15e6efd72be635fd519675ea179a102a055756622351ad3a67d358e7cc5291f0f56e6e58e13e0925f9726b2e5507694766
+  languageName: node
+  linkType: hard
+
 "js-tiktoken@npm:^1.0.11":
   version: 1.0.11
   resolution: "js-tiktoken@npm:1.0.11"
@@ -26318,15 +26327,6 @@ __metadata:
   dependencies:
     base64-js: ^1.5.1
   checksum: 4856641fed816e618c8a693db0a5478995c598914dec2ba9ccd69719a88a14756d5aec2eed0fba7a4999e603b277ba9a58fd7b2af98e8b638b39b436bbfb7060
-  languageName: node
-  linkType: hard
-
-"js-tiktoken@npm:^1.0.8":
-  version: 1.0.8
-  resolution: "js-tiktoken@npm:1.0.8"
-  dependencies:
-    base64-js: ^1.5.1
-  checksum: ac6e666f14661b4e744bd60987e35275668863a686413bb35baca2d9a503bc95fcfa907f3c02b8e8abe4a4a70abe622c06cbb72ce3574b3b929d22f9146c3f85
   languageName: node
   linkType: hard
 

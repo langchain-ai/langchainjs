@@ -43,7 +43,7 @@
     "ansi-styles": "^5.0.0",
     "camelcase": "6",
     "decamelize": "1.2.0",
-    "js-tiktoken": "^1.0.8",
+    "js-tiktoken": "file:/Users/bracesproul/code/lang-chain-ai/js-tiktoken/js",
     "langsmith": "latest",
     "ml-distance": "^4.0.0",
     "mustache": "^4.2.0",
