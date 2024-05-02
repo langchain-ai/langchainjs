@@ -314,6 +314,7 @@ export class AzureAISearchVectorStore extends VectorStore {
       metadata: {
         source: doc.metadata?.source,
         attributes: doc.metadata?.attributes ?? [],
+        ...doc.metadata,
       },
     }));
 
