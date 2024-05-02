@@ -3,8 +3,8 @@ import { Document } from "@langchain/core/documents";
 import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
 import { AttributeInfo } from "langchain/chains/query_constructor";
 import { SelfQueryRetriever } from "langchain/retrievers/self_query";
-import { QdrantVectorStore } from "../../vectorstores/qdrant.js";
 import { QdrantClient } from "@qdrant/js-client-rest";
+import { QdrantVectorStore } from "../../vectorstores/qdrant.js";
 import { QdrantTranslator } from "../qdrant.js";
 
 test("Qdrant Vector Store Self Query Retriever Test", async () => {
