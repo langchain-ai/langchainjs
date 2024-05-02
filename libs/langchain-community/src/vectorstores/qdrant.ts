@@ -32,6 +32,10 @@ export type QdrantAddDocumentOptions = {
   customPayload: Record<string, any>[];
 };
 
+export type QdrantFilter = QdrantSchemas["Filter"];
+
+export type QdrantCondition = QdrantSchemas["FieldCondition"];
+
 /**
  * Type for the response returned by a search operation in the Qdrant
  * database. It includes the score and payload (metadata and content) for
@@ -51,6 +55,8 @@ type QdrantSearchResponse = QdrantSchemas["ScoredPoint"] & {
  * existence of a collection in the database.
  */
 export class QdrantVectorStore extends VectorStore {
+  declare FilterType: QdrantFilter;
+
   get lc_secrets(): { [key: string]: string } {
     return {
       apiKey: "QDRANT_API_KEY",
@@ -176,7 +182,7 @@ export class QdrantVectorStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k?: number,
-    filter?: QdrantSchemas["Filter"]
+    filter?: this["FilterType"]
   ): Promise<[Document, number][]> {
     if (!query) {
       return [];
