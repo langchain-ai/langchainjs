@@ -46,7 +46,7 @@
     "glob": "^10.3.10",
     "rollup": "^4.5.2",
     "ts-morph": "^21.0.1",
-    "typescript": "<5.2.0"
+    "typescript": "^5.4.5"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
@@ -68,8 +68,7 @@
     "prettier": "^2.8.3",
     "release-it": "^15.10.1",
     "rimraf": "^5.0.1",
-    "ts-jest": "^29.1.0",
-    "ts-node": "^10.9.2"
+    "ts-jest": "^29.1.0"
   },
   "publishConfig": {
     "access": "public"
