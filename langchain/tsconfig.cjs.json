@@ -7,6 +7,13 @@
     "node_modules",
     "dist",
     "docs",
-    "**/tests"
+    "**/tests",
+    "src/chains/sql_db/sql_db_chain.ts",
+    "src/document_loaders/fs/srt.ts",
+    "src/document_loaders/web/browserbase.ts",
+    "src/document_loaders/web/firecrawl.ts",
+    "",
+    "",
+    ""
   ]
 }

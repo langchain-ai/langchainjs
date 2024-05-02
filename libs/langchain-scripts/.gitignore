@@ -2,10 +2,6 @@ index.cjs
 index.js
 index.d.ts
 index.d.cts
-build.cjs
-build.js
-build.d.ts
-build.d.cts
 migrations.cjs
 migrations.js
 migrations.d.ts

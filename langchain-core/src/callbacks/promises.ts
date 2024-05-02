@@ -9,7 +9,7 @@ let queue: typeof import("p-queue")["default"]["prototype"];
  */
 function createQueue() {
   const PQueue = "default" in PQueueMod ? PQueueMod.default : PQueueMod;
-  return new PQueue({
+  return new (PQueue as typeof import("p-queue")["default"])({
     autoStart: true,
     concurrency: 1,
   });

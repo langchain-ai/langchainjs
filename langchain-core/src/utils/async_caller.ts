@@ -95,7 +95,7 @@ export class AsyncCaller {
       params.onFailedAttempt ?? defaultFailedAttemptHandler;
 
     const PQueue = "default" in PQueueMod ? PQueueMod.default : PQueueMod;
-    this.queue = new PQueue({ concurrency: this.maxConcurrency });
+    this.queue = new (PQueue as typeof import("p-queue")["default"])({ concurrency: this.maxConcurrency });
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
