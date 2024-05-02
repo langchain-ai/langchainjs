@@ -48,9 +48,7 @@ async function main() {
     config = lcConfig;
   } catch (e) {
     console.error(
-      `Failed to read config file at path: ${configFilePath}.\n\nError: ${JSON.stringify(
-        e
-      )}`
+      `Failed to read config file at path: ${configFilePath}.\n\n${e}`
     );
     process.exit(1);
   }
@@ -96,7 +94,6 @@ async function main() {
       packageSuffix: config.packageSuffix,
       shouldTestExports: config.shouldTestExports,
       extraImportMapEntries: config.extraImportMapEntries,
-      dynamicImportMapEntries: config.dynamicImportMapEntries,
       absTsConfigPath: config.tsConfigPath,
       isPre,
       shouldGenMaps,

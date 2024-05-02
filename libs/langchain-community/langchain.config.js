@@ -482,36 +482,4 @@ export const config = {
   cjsSource: "./dist-cjs",
   cjsDestination: "./dist",
   abs,
-  dynamicImportMapEntries: [
-    {
-      modules: ["ChatFireworks"],
-      alias: ["chat_models", "fireworks"],
-      path: "@langchain/community/chat_models/fireworks",
-    },
-    {
-      modules: ["Fireworks"],
-      alias: ["llms", "fireworks"],
-      path: "@langchain/community/llms/fireworks",
-    },
-    {
-      modules: ["BedrockChat"],
-      alias: ["chat_models", "bedrock"],
-      path: "@langchain/community/chat_models/bedrock"
-    },
-    {
-      modules: ["Bedrock"],
-      alias: ["llms", "bedrock"],
-      path: "@langchain/community/llms/bedrock"
-    },
-    {
-      modules: ["ChatAnthropic"],
-      alias: ["chat_models", "anthropic"],
-      path: "@langchain/anthropic"
-    },
-    {
-      modules: ["Replicate"],
-      alias: ["llms", "replicate"],
-      path: "@langchain/community/llms/replicate"
-    },
-  ]
 };
