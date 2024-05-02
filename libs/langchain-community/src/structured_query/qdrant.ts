@@ -18,7 +18,7 @@ import {
   QdrantVectorStore,
   QdrantFilter,
   QdrantCondition,
-} from "../../vectorstores/qdrant.js";
+} from "../vectorstores/qdrant.js";
 
 /**
  * A class that translates or converts `StructuredQuery` to equivalent Qdrant filters.

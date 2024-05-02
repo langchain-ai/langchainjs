@@ -2,7 +2,6 @@ import { load as coreLoad } from "@langchain/core/load";
 import { optionalImportEntrypoints } from "./import_constants.js";
 import * as importMap from "./import_map.js";
 import { OptionalImportMap } from "./import_type.js";
-import { getDynamicImportMap } from "./dynamic_import_map.js";
 
 /**
  * Load a LangChain module from a serialized text representation.
@@ -20,11 +19,10 @@ export async function load<T>(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   optionalImportsMap: OptionalImportMap & Record<string, any> = {}
 ): Promise<T> {
-  const dynamicImportMap = await getDynamicImportMap();
   return coreLoad(text, {
     secretsMap,
     optionalImportsMap,
     optionalImportEntrypoints,
-    importMap: { ...importMap, ...dynamicImportMap },
+    importMap: { ...importMap },
   });
 }

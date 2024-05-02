@@ -17,7 +17,7 @@ import type {
   SupabaseFilterRPCCall,
   SupabaseMetadata,
   SupabaseVectorStore,
-} from "../../vectorstores/supabase.js";
+} from "../vectorstores/supabase.js";
 import {
   ProxyParamsDuplicator,
   convertObjectFilterToStructuredQuery,
