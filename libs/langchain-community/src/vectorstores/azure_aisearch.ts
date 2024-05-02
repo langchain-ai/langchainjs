@@ -192,6 +192,9 @@ export class AzureAISearchVectorStore extends VectorStore {
         `Azure AI Search delete requires either "ids" or "filter" to be set in the params object`
       );
     }
+
+    await this.initPromise;
+
     if (params.ids) {
       await this.deleteById(params.ids);
     }
@@ -251,8 +254,6 @@ export class AzureAISearchVectorStore extends VectorStore {
    * @returns A promise that resolves when the documents have been removed.
    */
   private async deleteById(ids: string | string[]): Promise<IndexingResult[]> {
-    await this.initPromise;
-
     const docsIds = Array.isArray(ids) ? ids : [ids];
     const docs: { id: string }[] = docsIds.map((id) => ({ id }));
 
