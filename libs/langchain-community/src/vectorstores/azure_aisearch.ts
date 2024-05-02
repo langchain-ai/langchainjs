@@ -369,7 +369,8 @@ export class AzureAISearchVectorStore extends VectorStore {
     k = 4,
     filter: this["FilterType"] | undefined = undefined
   ): Promise<[Document, number][]> {
-    const searchType = this.options.type ?? AzureAISearchQueryType.SimilarityHybrid;
+    const searchType =
+      this.options.type ?? AzureAISearchQueryType.SimilarityHybrid;
 
     if (searchType === AzureAISearchQueryType.Similarity) {
       return this.similaritySearchVectorWithScore(
