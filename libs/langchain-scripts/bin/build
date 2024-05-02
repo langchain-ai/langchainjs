@@ -434,6 +434,8 @@ const updateConfig = ({
   requiresOptionalDependency,
   /** @type {boolean} */
   shouldTestExports,
+  /** @type {Array<string> | undefined} */
+  additionalGitignorePaths = [],
 }) => {
   const generatedFiles = generateFiles(entrypoints);
   const filenames = Object.keys(generatedFiles);
@@ -468,10 +470,12 @@ const updateConfig = ({
     fs.writeFileSync(filename, content);
   });
 
+  const gitignorePaths = [...filenames, ...DEFAULT_GITIGNORE_PATHS, ...(additionalGitignorePaths ? additionalGitignorePaths : [])];
+
   // Update .gitignore
   fs.writeFileSync(
     "./.gitignore",
-    `${filenames.join("\n")}\n${DEFAULT_GITIGNORE_PATHS.join("\n")}\n`
+    `${gitignorePaths.join("\n")}\n`
   );
 
   if (shouldTestExports) {
@@ -724,6 +728,11 @@ export function createEntrypoints({
    * @type {boolean}
    */
   shouldGenMaps,
+  /**
+   * Additional paths to add to the .gitignore file.
+   * @type {Array<string> | undefined}
+   */
+  additionalGitignorePaths,
 }) {
   if (isPre) {
     cleanGenerated({ entrypoints });
@@ -753,6 +762,7 @@ export function createEntrypoints({
       deprecatedNodeOnly,
       requiresOptionalDependency,
       shouldTestExports,
+      additionalGitignorePaths,
     });
   }
 }
@@ -850,6 +860,7 @@ async function main() {
       absTsConfigPath: config.tsConfigPath,
       isPre,
       shouldGenMaps,
+      additionalGitignorePaths: config.additionalGitignorePaths,
     });
   }
 

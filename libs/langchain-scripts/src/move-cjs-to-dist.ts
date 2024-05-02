@@ -11,7 +11,9 @@ export async function moveAndRename({
   abs: (p: string) => string;
 }) {
   try {
-    for (const file of await fs.promises.readdir(abs(source), { withFileTypes: true })) {
+    for (const file of await fs.promises.readdir(abs(source), {
+      withFileTypes: true,
+    })) {
       if (file.isDirectory()) {
         await moveAndRename({
           source: `${source}/${file.name}`,
@@ -27,7 +29,10 @@ export async function moveAndRename({
         }
 
         // Rewrite any require statements to use .cjs
-        const content = await fs.promises.readFile(abs(`${source}/${file.name}`), "utf8");
+        const content = await fs.promises.readFile(
+          abs(`${source}/${file.name}`),
+          "utf8"
+        );
         const rewritten = content.replace(
           /require\("(\..+?).js"\)/g,
           (_, p1) => `require("${p1}.cjs")`
@@ -36,7 +41,11 @@ export async function moveAndRename({
         // Rename the file to .cjs
         const renamed = path.format({ name: parsed.name, ext: ".cjs" });
 
-        await fs.promises.writeFile(abs(`${dest}/${renamed}`), rewritten, "utf8");
+        await fs.promises.writeFile(
+          abs(`${dest}/${renamed}`),
+          rewritten,
+          "utf8"
+        );
       }
     }
   } catch (err) {

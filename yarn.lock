@@ -9929,7 +9929,6 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     ts-morph: ^21.0.1
-    ts-node: ^10.9.2
     typescript: ^5.4.5
   bin:
     lc-build: bin/build
@@ -35457,7 +35456,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@<5.2.0#~builtin<compat/typescript>":
+"typescript@patch:typescript@<5.2.0#~builtin<compat/typescript>, typescript@patch:typescript@~5.1.6#~builtin<compat/typescript>":
   version: 5.1.6
   resolution: "typescript@patch:typescript@npm%3A5.1.6#~builtin<compat/typescript>::version=5.1.6&hash=1f5320"
   bin:
