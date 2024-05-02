@@ -457,7 +457,8 @@ export abstract class BaseLanguageModel<
    * @returns A unique cache key.
    */
   protected _getSerializedCacheKeyParametersForCall(
-    callOptions: CallOptions
+    // TODO: Fix when we remove the RunnableLambda backwards compatibility shim.
+    { config, ...callOptions }: CallOptions & { config?: RunnableConfig }
   ): string {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const params: Record<string, any> = {

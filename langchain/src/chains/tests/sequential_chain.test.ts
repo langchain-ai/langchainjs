@@ -109,7 +109,7 @@ test("Test SequentialChain", async () => {
     inputVariables: ["input1", "input2"],
     outputVariables: ["text"],
   });
-  const response = await combinedChain.call({
+  const response = await combinedChain.invoke({
     input1: "test1",
     input2: "test2",
   });
@@ -233,7 +233,7 @@ test("Test SequentialChain chains passes all outputs", async () => {
     outputVariables: ["text"],
   });
   expect(
-    await combinedChain.call({
+    await combinedChain.invoke({
       input1: "1",
     })
   ).toMatchInlineSnapshot(`
@@ -283,7 +283,7 @@ test("Test SequentialChain for memory on one of the sub-chains", async () => {
     outputVariables: ["text"],
   });
 
-  const result = await combinedChain.call({ input1: "test1" });
+  const result = await combinedChain.invoke({ input1: "test1" });
 
   expect(result).toMatchObject({
     text: "Final Answer: \nHuman: Hello\nAI: Hi\nThe answer is XXX.",

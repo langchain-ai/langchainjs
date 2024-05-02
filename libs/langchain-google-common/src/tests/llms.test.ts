@@ -185,7 +185,7 @@ describe("Mock Google LLM", () => {
     const model = new GoogleLLM({
       authOptions,
     });
-    const response = await model.call("Hello world");
+    const response = await model.invoke("Hello world");
 
     expect(response).toEqual(
       "1. Sock it to Me!\n2. Heel Yeah Socks\n3. Sole Mates\n4. Happy Soles\n5. Toe-tally Awesome Socks\n6. Sock Appeal\n7. Footsie Wootsies\n8. Thread Heads\n9. Sock Squad\n10. Sock-a-licious\n11. Darn Good Socks\n12. Sockcessories\n13. Sole Searching\n14. Sockstar\n15. Socktopia\n16. Sockology\n17. Elevated Toes\n18. The Urban Sole\n19. The Hippie Sole\n20. Sole Fuel"
@@ -236,7 +236,7 @@ describe("Mock Google LLM", () => {
     const model = new GoogleLLM({
       authOptions,
     });
-    const response = await model.call("Hello world");
+    const response = await model.invoke("Hello world");
     const expectedResponse = await mockFile("llm-2-mock.txt");
 
     expect(response).toEqual(expectedResponse);
@@ -312,7 +312,7 @@ describe("Mock Google LLM", () => {
       authOptions,
       safetyHandler,
     });
-    const reply = await model.call("Hello world");
+    const reply = await model.invoke("Hello world");
     expect(reply).toContain("I'm sorry Dave, but I can't do that.");
   });
 
@@ -519,6 +519,55 @@ describe("Mock Google LLM", () => {
     }
 
     expect(responseArray).toHaveLength(3);
+    console.log("record", JSON.stringify(record, null, 2));
+  });
+
+  test("8: streamGenerateContent - streaming - json responseMimeType", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "llm-8-mock.json",
+    };
+    const model = new GoogleLLM({
+      authOptions,
+      responseMimeType: "application/json",
+    });
+    const response = await model.stream("Give me a recipe for banana bread.");
+    const responseArray: string[] = [];
+    for await (const value of response) {
+      expect(typeof value).toEqual("string");
+      responseArray.push(value);
+    }
+
+    expect(responseArray).toHaveLength(10);
+    expect(typeof JSON.parse(responseArray.join(""))).toEqual("object");
+
+    console.log("record", JSON.stringify(record, null, 2));
+  });
+
+  test("9: streamGenerateContent - non-streaming - check json responseMimeType", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "llm-9-mock.json",
+    };
+    const model = new GoogleLLM({
+      authOptions,
+      responseMimeType: "application/json",
+    });
+    const response = await model.invoke("Give me a recipe for banana bread.");
+
+    expect(typeof JSON.parse(response)).toEqual("object");
+    expect(record.opts.data.generationConfig.responseMimeType).toEqual(
+      "application/json"
+    );
+
     console.log("record", JSON.stringify(record, null, 2));
   });
 });
