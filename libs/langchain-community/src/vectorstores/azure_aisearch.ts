@@ -358,7 +358,7 @@ export class AzureAISearchVectorStore extends VectorStore {
 
   /**
    * Performs a similarity search using query type specified in configuration.
-   * If the query type is not specified, it defaults to similarity search.
+   * If the query type is not specified, it defaults to similarity hybrid search.
    * @param query Query text for the similarity search.
    * @param k=4 Number of nearest neighbors to return.
    * @param filter Optional filter options for the documents.
@@ -369,7 +369,7 @@ export class AzureAISearchVectorStore extends VectorStore {
     k = 4,
     filter: this["FilterType"] | undefined = undefined
   ): Promise<[Document, number][]> {
-    const searchType = this.options.type ?? AzureAISearchQueryType.Similarity;
+    const searchType = this.options.type ?? AzureAISearchQueryType.SimilarityHybrid;
 
     if (searchType === AzureAISearchQueryType.Similarity) {
       return this.similaritySearchVectorWithScore(
