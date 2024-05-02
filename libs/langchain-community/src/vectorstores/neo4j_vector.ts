@@ -1,4 +1,8 @@
-import neo4j, { type Driver as Neo4jDriver, type Record as Neo4jRecord, type Path as Neo4jPath } from "neo4j-driver";
+import neo4j, {
+  type Driver as Neo4jDriver,
+  type Record as Neo4jRecord,
+  type Path as Neo4jPath,
+} from "neo4j-driver";
 import * as uuid from "uuid";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";

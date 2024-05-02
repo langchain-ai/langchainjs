@@ -1,4 +1,9 @@
-import neo4j, { RoutingControl, type Record as Neo4jRecord, type Driver as Neo4jDriver, type Path as Neo4jPath } from "neo4j-driver";
+import neo4j, {
+  RoutingControl,
+  type Record as Neo4jRecord,
+  type Driver as Neo4jDriver,
+  type Path as Neo4jPath,
+} from "neo4j-driver";
 import { insecureHash } from "@langchain/core/utils/hash";
 import { GraphDocument } from "./graph_document.js";
 

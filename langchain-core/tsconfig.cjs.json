@@ -7,8 +7,6 @@
     "node_modules",
     "dist",
     "docs",
-    "**/tests",
-    "src/language_models/base.ts",
-    "src/utils/tiktoken.ts"
+    "**/tests"
   ]
 }
