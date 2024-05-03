@@ -1,5 +1,5 @@
 import { glob } from "glob";
-import { Project } from "ts-morph";
+import { ImportDeclaration, ImportSpecifier, Project, SourceFile } from "ts-morph";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -20,7 +20,23 @@ const IMPORT_MAP_FALLBACKS = [
   },
 ];
 
-function handleImportMapFallbacks(importMap: Array<DeprecatedEntrypoint>) {
+function handleImportMapFallbacks(importPath: string, namedImports: ImportSpecifier[], tsMorph: {
+  importDeclaration: ImportDeclaration,
+  sourceFile: SourceFile,
+}) {
+  const fallback = IMPORT_MAP_FALLBACKS.find((fallback) => fallback.old === importPath);
+  const symbolsToKeep = namedImports.filter((namedImport) => !fallback?.symbolExceptions.find((exception) => exception === namedImport.getText()))
+  if (fallback && symbolsToKeep.length > 0) {
+    // Remove the symbols to keep from the existing import
+    symbolsToKeep.forEach((namedImport) => {
+      namedImport.remove();
+    });
+    // add a new import with the new path
+    tsMorph.sourceFile.addImportDeclaration({
+      moduleSpecifier: fallback.new,
+      namedImports: symbolsToKeep.map((namedImport) => namedImport.getText()),
+    });
+  }
   // if there was a no-op, after saving the project revisit all no-ops with the fallbacks.
 }
 
@@ -83,14 +99,77 @@ export interface UpdateLangChainFields {
   testRun?: boolean;
 }
 
+/**
+ * TODO: something around only updating for symbols which exist in list
+ */
 function findNewEntrypoint(
   importMap: Array<DeprecatedEntrypoint>,
-  entrypointToReplace: string
+  entrypointToReplace: string,
+  namedImports: ImportSpecifier[],
+) {
+  // First, see if we can find an exact match
+  const exactEntrypoints = importMap.filter((item) => {
+    if (item.old === entrypointToReplace) {
+      return true;
+    }
+    if (item.old.endsWith("/*")) {
+      const oldWithoutStar = item.old.replace("/*", "");
+      if (entrypointToReplace.startsWith(oldWithoutStar)) {
+        return true;
+      }
+    }
+    return false;
+  });
+
+  if (exactEntrypoints.length) {
+    const withSymbol = exactEntrypoints.find((item) => {
+      if (item.symbol === null) {
+        return true;
+      }
+      return namedImports.find((namedImport) => namedImport.getText() === item.symbol) !== undefined;
+    })
+    if (withSymbol) {
+      return {
+        newEntrypoint: withSymbol.new,
+        symbols: null,
+        isStarMatch: false,
+      };
+    }
+  }
+
+  // if we can not find an exact match, see if we can find a symbol match
+  const symbolMatch = importMap.filter((item) => {
+    if (item.symbol === null) {
+      return false;
+    }
+    return namedImports.find((namedImport) => namedImport.getText() === item.symbol) !== undefined;
+  });
+  if (symbolMatch.length) {
+    return {
+      newEntrypoint: symbolMatch[0].new,
+      symbols: symbolMatch.map((item) => item.symbol),
+      isStarMatch: false,
+    };
+  }
+
+  return null;
+}
+
+function findNewEntrypoint2(
+  importMap: Array<DeprecatedEntrypoint>,
+  entrypointToReplace: string,
+  namedImports: ImportSpecifier[],
 ): {
   newEntrypoint: string;
   symbols: Array<string> | null;
   isStarMatch: boolean;
 } | null {
+  const containsAIMessage = namedImports.find((namedImport) => namedImport.getText() === "AIMessage") !== undefined;
+
+
+
+
+
   const starMatches: Array<DeprecatedEntrypoint> = [];
   const exactEntrypoints: Array<DeprecatedEntrypoint> = [];
   importMap.map((item) => {
@@ -100,6 +179,9 @@ function findNewEntrypoint(
         entrypointToReplace.startsWith(oldWithoutStar);
       if (toReplaceBeginsWith) {
         if (oldWithoutStar === entrypointToReplace) {
+          if (containsAIMessage) {
+            console.log("1 is pushing")
+          }
           starMatches.push(item);
         } else {
           // If the entrypoint to replace does not match the import map entry exactly
@@ -110,7 +192,11 @@ function findNewEntrypoint(
             0,
             lastSlashIndex
           );
-          if (toReplaceWithoutLastPath === oldWithoutStar) {
+          // Length must be greater than two because we don't want to match the root
+          if (toReplaceWithoutLastPath === oldWithoutStar && toReplaceWithoutLastPath.split("/").length > 2) {
+            if (containsAIMessage) {
+              console.log("2 is pushing")
+            }
             starMatches.push(item);
           }
         }
@@ -118,10 +204,17 @@ function findNewEntrypoint(
       const doesMatchExactly =
         entrypointToReplace === item.old.replace("/*", "");
       if (doesMatchExactly) {
+        if (containsAIMessage) {
+          console.log("3 is pushing")
+        }
         starMatches.push(item);
       }
     } else if (item.old === entrypointToReplace) {
-      exactEntrypoints.push(item);
+      if (item.symbol === null) {
+        exactEntrypoints.push(item);
+      } else if (namedImports.find((namedImport) => namedImport.getText() === item.symbol) !== undefined) {
+        exactEntrypoints.push(item);
+      }
     }
   });
 
@@ -221,6 +314,8 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(
   project.getSourceFiles().forEach((sourceFile) => {
     try {
       const allImports = sourceFile.getImportDeclarations();
+      const filePath = sourceFile.getFilePath();
+
       allImports.forEach((importDeclaration) => {
         const namedImports = importDeclaration.getNamedImports();
         if (namedImports.length === 0) {
@@ -237,6 +332,7 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(
           return;
         }
 
+
         const importPath = importDeclaration.getModuleSpecifierValue();
         const importPathText = importDeclaration.getModuleSpecifier().getText();
         const importPathTextWithoutQuotes = importPathText.slice(
@@ -244,9 +340,16 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(
           importPathText.length - 1
         );
 
+        if (!importPathTextWithoutQuotes.startsWith("langchain/")) {
+          if (importPathTextWithoutQuotes !== "@langchain/community/retrievers/self_query/qdrant") {
+            return;
+          }
+        }
+
         const matchingEntrypoint = findNewEntrypoint(
           importMap,
-          importPathTextWithoutQuotes
+          importPathTextWithoutQuotes,
+          namedImports
         );
         if (matchingEntrypoint === null) {
           // no-op
@@ -260,21 +363,44 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(
           !matchingEntrypoint.symbols ||
           matchingEntrypoint.symbols.length === 0
         ) {
-          importDeclaration.setModuleSpecifier(
-            matchingEntrypoint.newEntrypoint
-          );
-        } else {
-          const namedImports = importDeclaration.getNamedImports();
-          if (namedImports.length === 0) {
-            return;
+          if (matchingEntrypoint.symbols?.length) {
+            const importsBefore = namedImports;
+            const importsRemoved: Array<string> = []
+            namedImports.forEach((namedImport) => {
+              const namedImportText = namedImport.getName();
+              if (matchingEntrypoint.symbols?.find((s) => s === namedImportText)) {
+                importsRemoved.push(namedImport.getName());
+                namedImport.remove();
+              }
+            });
+            if (importsBefore.length === importsRemoved.length) {
+              // all symbols were removed, delete the old import
+              importDeclaration.remove();
+            }
+            // Create a new import with the proper symbols
+            sourceFile.addImportDeclaration({
+              moduleSpecifier: matchingEntrypoint.newEntrypoint,
+              namedImports: importsRemoved,
+            });
+          } else {
+            importDeclaration.setModuleSpecifier(
+              matchingEntrypoint.newEntrypoint
+            );
           }
+        } else {
           const matchingNamedImports = namedImports.filter((namedImport) => {
             const namedImportText = namedImport.getText().trim();
             const matchingSymbol = matchingEntrypoint.symbols?.find(
               (s) => s === namedImportText
             );
             if (matchingSymbol) {
+              if (namedImportText === "AIMessage" && filePath === "/Users/bracesproul/code/lang-chain-ai/wt/jacob/0.2/examples/src/use_cases/sql/agents/index.ts") {
+                console.log("HOW THE FUCK??", matchingEntrypoint)
+              }
               return true;
+            }
+            if (namedImportText === "AIMessage" && filePath === "/Users/bracesproul/code/lang-chain-ai/wt/jacob/0.2/examples/src/use_cases/sql/agents/index.ts") {
+              console.log("better", matchingEntrypoint)
             }
             return false;
           });
@@ -293,11 +419,12 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(
               namedImport.getText()
             ),
           });
+          if (matchingEntrypoint.newEntrypoint === "@langchain/core/prompt_values" && matchingNamedImports.map((namedImport) => namedImport.getText()).includes("AIMessage")) {
+            console.log("What the fuck")
+          }
         }
 
         // Update import
-        // now get the full updated import
-        const filePath = sourceFile.getFilePath();
         if (fields.shouldLog) {
           console.log(
             `Updated import: ${importPath} to ${matchingEntrypoint.newEntrypoint} inside ${filePath}`

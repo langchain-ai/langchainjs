@@ -55,7 +55,7 @@
     "symbol": "StructuredTool"
   },
   {
-    "old": "langchain/tools/*",
+    "old": "langchain/tools",
     "new": "@langchain/core/tools",
     "symbol": "Tool"
   },
@@ -118,6 +118,11 @@
     "old": "langchain/prompts/chat",
     "new": "@langchain/core/prompt_values",
     "symbol": "ChatPromptValue"
+  },
+  {
+    "old": "langchain/schema",
+    "new": "@langchain/core/outputs",
+    "symbol": "LLMResult"
   },
   {
     "old": "langchain/schema/*",
@@ -687,7 +692,7 @@
   {
     "old": "langchain/retrievers/self_query/functional",
     "new": "@langchain/core/structured_query",
-    "symbol": "FunctionFilter"
+    "symbol": null
   },
   {
     "old": "langchain/retrievers/self_query/*",
@@ -2003,11 +2008,6 @@
     "old": "langchain/vectorstores/redis",
     "new": "@langchain/redis",
     "symbol": "RedisVectorStore"
-  },
-  {
-    "old": "langchain/cache/redis",
-    "new": "@langchain/redis",
-    "symbol": "RedisCache"
   },
   {
     "old": "langchain/vectorstores/pinecone",
@@ -3380,6 +3380,11 @@
     "symbol": "BaseChatMemoryInput"
   },
   {
+    "old": "langchain/memory",
+    "new": "langchain/memory/index",
+    "symbol": null
+  },
+  {
     "old": "langchain/memory/*",
     "new": "@langchain/community/memory/chat_memory",
     "symbol": "BaseChatMemory"
@@ -3973,6 +3978,16 @@
     "old": "langchain/agents/toolkits/aws_sfn",
     "new": "@langchain/community/agents/toolkits/aws_sfn",
     "symbol": "AWSSfnToolkit"
+  },
+  {
+    "old": "langchain/agents/toolkits/aws_sfn",
+    "new": "@langchain/community/agents/toolkits/aws_sfn",
+    "symbol": "createAWSSfnAgent"
+  },
+  {
+    "old": "langchain/stores/doc/gcs",
+    "new": "@langchain/community/stores/doc/gcs",
+    "symbol": null
   },
   {
     "old": "langchain/agents/toolkits/connery/*",

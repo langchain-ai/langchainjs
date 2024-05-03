@@ -8,5 +8,6 @@ test("updateEntrypointsFrom0_x_xTo0_2_x", async () => {
   await updateEntrypointsFrom0_x_xTo0_2_x({
     projectPath: pathToExamples,
     shouldLog: false,
+    // testRun: true,
   });
 });
