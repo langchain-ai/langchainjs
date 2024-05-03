@@ -1,4 +1,4 @@
-import Spider from "@spider-cloud/spider-client";
+import { Spider } from "@spider-cloud/spider-client";
 import { Document, type DocumentInterface } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { BaseDocumentLoader } from "../base.js";

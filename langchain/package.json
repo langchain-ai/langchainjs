@@ -618,10 +618,6 @@
     "document_loaders/web/sonix_audio.js",
     "document_loaders/web/sonix_audio.d.ts",
     "document_loaders/web/sonix_audio.d.cts",
-    "document_loaders/web/spider.cjs",
-    "document_loaders/web/spider.js",
-    "document_loaders/web/spider.d.ts",
-    "document_loaders/web/spider.d.cts",
     "document_loaders/web/confluence.cjs",
     "document_loaders/web/confluence.js",
     "document_loaders/web/confluence.d.ts",
@@ -642,6 +638,10 @@
     "document_loaders/web/sort_xyz_blockchain.js",
     "document_loaders/web/sort_xyz_blockchain.d.ts",
     "document_loaders/web/sort_xyz_blockchain.d.cts",
+    "document_loaders/web/spider.cjs",
+    "document_loaders/web/spider.js",
+    "document_loaders/web/spider.d.ts",
+    "document_loaders/web/spider.d.cts",
     "document_loaders/web/youtube.cjs",
     "document_loaders/web/youtube.js",
     "document_loaders/web/youtube.d.ts",
@@ -2943,15 +2943,6 @@
       "import": "./document_loaders/web/sonix_audio.js",
       "require": "./document_loaders/web/sonix_audio.cjs"
     },
-    "./document_loaders/web/spider": {
-      "types": {
-        "import": "./document_loaders/web/spider.d.ts",
-        "require": "./document_loaders/web/spider.d.cts",
-        "default": "./document_loaders/web/spider.d.ts"
-      },
-      "import": "./document_loaders/web/spider.js",
-      "require": "./document_loaders/web/spider.cjs"
-    },
     "./document_loaders/web/confluence": {
       "types": {
         "import": "./document_loaders/web/confluence.d.ts",
@@ -2996,6 +2987,15 @@
       },
       "import": "./document_loaders/web/sort_xyz_blockchain.js",
       "require": "./document_loaders/web/sort_xyz_blockchain.cjs"
+    },
+    "./document_loaders/web/spider": {
+      "types": {
+        "import": "./document_loaders/web/spider.d.ts",
+        "require": "./document_loaders/web/spider.d.cts",
+        "default": "./document_loaders/web/spider.d.ts"
+      },
+      "import": "./document_loaders/web/spider.js",
+      "require": "./document_loaders/web/spider.cjs"
     },
     "./document_loaders/web/youtube": {
       "types": {
