@@ -1,18 +1,16 @@
 async function test() {
   const { default: assert } = await import("assert");
-  const { OpenAI } = await import("langchain/llms/openai");
+  const { OpenAI } = await import("@langchain/openai");
   const { LLMChain } = await import("langchain/chains");
-  const { ChatPromptTemplate } = await import("langchain/prompts");
-  const { loadPrompt } = await import("langchain/prompts/load");
+  const { ChatPromptTemplate } = await import("@langchain/core/prompts");
   const { MemoryVectorStore } = await import("langchain/vectorstores/memory");
-  const { OpenAIEmbeddings } = await import("langchain/embeddings/openai");
-  const { Document } = await import("langchain/document");
+  const { OpenAIEmbeddings } = await import("@langchain/openai");
+  const { Document } = await import("@langchain/core/documents");
   const { CSVLoader } = await import("langchain/document_loaders/fs/csv");
 
   // Test exports
   assert(typeof OpenAI === "function");
   assert(typeof LLMChain === "function");
-  assert(typeof loadPrompt === "function");
   assert(typeof ChatPromptTemplate === "function");
   assert(typeof MemoryVectorStore === "function");
 
