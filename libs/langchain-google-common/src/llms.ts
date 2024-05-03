@@ -15,6 +15,7 @@ import {
   GoogleAISafetySetting,
   GooglePlatformType,
   GeminiContent,
+  GoogleAIResponseMimeType,
 } from "./types.js";
 import {
   copyAIModelParams,
@@ -102,6 +103,8 @@ export abstract class GoogleBaseLLM<AuthOptions>
   safetySettings: GoogleAISafetySetting[] = [];
 
   safetyHandler: GoogleAISafetyHandler;
+
+  responseMimeType: GoogleAIResponseMimeType = "text/plain";
 
   protected connection: GoogleLLMConnection<AuthOptions>;
 
