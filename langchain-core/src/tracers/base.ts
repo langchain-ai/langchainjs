@@ -47,10 +47,16 @@ function stripNonAlphanumeric(input: string) {
   return input.replace(/[-:.]/g, "");
 }
 
-function convertToDottedOrderFormat(epoch: number, runId: string) {
+function convertToDottedOrderFormat(
+  epoch: number,
+  runId: string,
+  executionOrder: number
+) {
+  const paddedOrder = executionOrder.toFixed(0).slice(0, 3).padStart(3, "0");
   return (
-    stripNonAlphanumeric(`${new Date(epoch).toISOString().slice(0, -1)}000Z`) +
-    runId
+    stripNonAlphanumeric(
+      `${new Date(epoch).toISOString().slice(0, -1)}${paddedOrder}Z`
+    ) + runId
   );
 }
 
@@ -87,7 +93,8 @@ export abstract class BaseTracer extends BaseCallbackHandler {
   protected async _startTrace(run: Run) {
     const currentDottedOrder = convertToDottedOrderFormat(
       run.start_time,
-      run.id
+      run.id,
+      run.execution_order
     );
     const storedRun = { ...run };
     if (storedRun.parent_run_id !== undefined) {
