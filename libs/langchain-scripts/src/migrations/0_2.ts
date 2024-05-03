@@ -27,7 +27,7 @@ type MigrationUpdate = {
 export type DeprecatedEntrypoint = {
   old: string;
   new: string;
-  symbol: string | null;
+  namedImport: string | null;
 };
 
 export interface UpdateLangChainFields {
@@ -63,13 +63,17 @@ export interface UpdateLangChainFields {
 }
 
 /**
- * TODO: something around only updating for symbols which exist in list
+ * Find the entrypoint in the import map that matches the
+ * old entrypoint and named imports.
  */
 function findNewEntrypoint(
   importMap: Array<DeprecatedEntrypoint>,
   entrypointToReplace: string,
   namedImports: ImportSpecifier[]
-) {
+): {
+  newEntrypoint: string;
+  namedImports: string[] | null;
+} | null {
   // First, see if we can find an exact match
   const exactEntrypoints = importMap.filter((item) => {
     if (item.old === entrypointToReplace) {
@@ -85,41 +89,41 @@ function findNewEntrypoint(
   });
 
   if (exactEntrypoints.length) {
-    const withSymbol = exactEntrypoints.find((item) => {
-      if (item.symbol === null) {
+    const withNamedImport = exactEntrypoints.find((item) => {
+      if (item.namedImport === null) {
         return true;
       }
       return (
         namedImports.find(
-          (namedImport) => namedImport.getText() === item.symbol
+          (namedImport) => namedImport.getName() === item.namedImport
         ) !== undefined
       );
     });
-    if (withSymbol) {
+    if (withNamedImport) {
       return {
-        newEntrypoint: withSymbol.new,
-        symbols: null,
-        isStarMatch: false,
+        newEntrypoint: withNamedImport.new,
+        namedImports: null,
       };
     }
   }
 
-  // if we can not find an exact match, see if we can find a symbol match
-  const symbolMatch = importMap.filter((item) => {
-    if (item.symbol === null) {
+  // if we can not find an exact match, see if we can find a named import match
+  const namedImportMatch = importMap.filter((item) => {
+    if (item.namedImport === null) {
       return false;
     }
     return (
       namedImports.find(
-        (namedImport) => namedImport.getText() === item.symbol
+        (namedImport) => namedImport.getName() === item.namedImport
       ) !== undefined
     );
   });
-  if (symbolMatch.length) {
+  if (namedImportMatch.length) {
     return {
-      newEntrypoint: symbolMatch[0].new,
-      symbols: symbolMatch.map((item) => item.symbol),
-      isStarMatch: false,
+      newEntrypoint: namedImportMatch[0].new,
+      namedImports: namedImportMatch
+        .map((item) => item.namedImport)
+        .filter((i): i is string => i !== null),
     };
   }
 
@@ -215,7 +219,7 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(
         if (
           namedImports.length === 1 &&
           DEPRECATED_AND_DELETED_IMPORTS.find(
-            (dep) => dep === namedImports[0].getText().trim()
+            (dep) => dep === namedImports[0].getName()
           ) !== undefined
         ) {
           // deprecated import, do not update
@@ -248,88 +252,33 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(
           return;
         }
 
-        // If it's not a star match, or a star match where there are no symbols
-        // just re-write the import with the new entrypoint
-        if (
-          !matchingEntrypoint.isStarMatch ||
-          !matchingEntrypoint.symbols ||
-          matchingEntrypoint.symbols.length === 0
-        ) {
-          if (matchingEntrypoint.symbols?.length) {
-            const importsBefore = namedImports;
-            const importsRemoved: Array<string> = [];
-            namedImports.forEach((namedImport) => {
-              const namedImportText = namedImport.getName();
-              if (
-                matchingEntrypoint.symbols?.find((s) => s === namedImportText)
-              ) {
-                importsRemoved.push(namedImport.getName());
-                namedImport.remove();
-              }
-            });
-            if (importsBefore.length === importsRemoved.length) {
-              // all symbols were removed, delete the old import
-              importDeclaration.remove();
-            }
-            // Create a new import with the proper symbols
-            sourceFile.addImportDeclaration({
-              moduleSpecifier: matchingEntrypoint.newEntrypoint,
-              namedImports: importsRemoved,
-            });
-          } else {
-            importDeclaration.setModuleSpecifier(
-              matchingEntrypoint.newEntrypoint
-            );
-          }
-        } else {
-          const matchingNamedImports = namedImports.filter((namedImport) => {
-            const namedImportText = namedImport.getText().trim();
-            const matchingSymbol = matchingEntrypoint.symbols?.find(
-              (s) => s === namedImportText
-            );
-            if (matchingSymbol) {
-              if (
-                namedImportText === "AIMessage" &&
-                filePath ===
-                  "/Users/bracesproul/code/lang-chain-ai/wt/jacob/0.2/examples/src/use_cases/sql/agents/index.ts"
-              ) {
-                console.log("HOW THE FUCK??", matchingEntrypoint);
-              }
-              return true;
-            }
+        if (matchingEntrypoint.namedImports?.length) {
+          const importsBefore = namedImports;
+          const importsRemoved: Array<string> = [];
+          namedImports.forEach((namedImport) => {
+            const namedImportText = namedImport.getName();
             if (
-              namedImportText === "AIMessage" &&
-              filePath ===
-                "/Users/bracesproul/code/lang-chain-ai/wt/jacob/0.2/examples/src/use_cases/sql/agents/index.ts"
+              matchingEntrypoint.namedImports?.find(
+                (s) => s === namedImportText
+              )
             ) {
-              console.log("better", matchingEntrypoint);
+              importsRemoved.push(namedImportText);
+              namedImport.remove();
             }
-            return false;
           });
-          if (!matchingNamedImports || matchingNamedImports.length === 0) {
-            // No symbols matched, no-op
-            return;
+          if (importsBefore.length === importsRemoved.length) {
+            // all named imports were removed, delete the old import
+            importDeclaration.remove();
           }
-          // remove matchingNamedImports from the existing import
-          matchingNamedImports.forEach((namedImport) => {
-            namedImport.remove();
-          });
-          // write a new import with the new entrypoint
+          // Create a new import with the proper named imports
           sourceFile.addImportDeclaration({
             moduleSpecifier: matchingEntrypoint.newEntrypoint,
-            namedImports: matchingNamedImports.map((namedImport) =>
-              namedImport.getText()
-            ),
+            namedImports: importsRemoved,
           });
-          if (
-            matchingEntrypoint.newEntrypoint ===
-              "@langchain/core/prompt_values" &&
-            matchingNamedImports
-              .map((namedImport) => namedImport.getText())
-              .includes("AIMessage")
-          ) {
-            console.log("What the fuck");
-          }
+        } else {
+          importDeclaration.setModuleSpecifier(
+            matchingEntrypoint.newEntrypoint
+          );
         }
 
         // Update import
