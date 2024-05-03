@@ -670,6 +670,10 @@ stores/doc/base.cjs
 stores/doc/base.js
 stores/doc/base.d.ts
 stores/doc/base.d.cts
+stores/doc/gcs.cjs
+stores/doc/gcs.js
+stores/doc/gcs.d.ts
+stores/doc/gcs.d.cts
 stores/doc/in_memory.cjs
 stores/doc/in_memory.js
 stores/doc/in_memory.d.ts

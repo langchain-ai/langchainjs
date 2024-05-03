@@ -212,6 +212,7 @@ export const config = {
     "storage/vercel_kv": "storage/vercel_kv",
     // stores
     "stores/doc/base": "stores/doc/base",
+    "stores/doc/gcs": "stores/doc/gcs",
     "stores/doc/in_memory": "stores/doc/in_memory",
     "stores/message/astradb": "stores/message/astradb",
     "stores/message/cassandra": "stores/message/cassandra",

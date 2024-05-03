@@ -2179,6 +2179,15 @@
       "import": "./stores/doc/base.js",
       "require": "./stores/doc/base.cjs"
     },
+    "./stores/doc/gcs": {
+      "types": {
+        "import": "./stores/doc/gcs.d.ts",
+        "require": "./stores/doc/gcs.d.cts",
+        "default": "./stores/doc/gcs.d.ts"
+      },
+      "import": "./stores/doc/gcs.js",
+      "require": "./stores/doc/gcs.cjs"
+    },
     "./stores/doc/in_memory": {
       "types": {
         "import": "./stores/doc/in_memory.d.ts",
@@ -3467,6 +3476,10 @@
     "stores/doc/base.js",
     "stores/doc/base.d.ts",
     "stores/doc/base.d.cts",
+    "stores/doc/gcs.cjs",
+    "stores/doc/gcs.js",
+    "stores/doc/gcs.d.ts",
+    "stores/doc/gcs.d.cts",
     "stores/doc/in_memory.cjs",
     "stores/doc/in_memory.js",
     "stores/doc/in_memory.d.ts",

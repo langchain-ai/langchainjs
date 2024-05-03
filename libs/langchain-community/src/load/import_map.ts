@@ -58,6 +58,7 @@ export * as caches__ioredis from "../caches/ioredis.js";
 export * as caches__momento from "../caches/momento.js";
 export * as caches__upstash_redis from "../caches/upstash_redis.js";
 export * as stores__doc__base from "../stores/doc/base.js";
+export * as stores__doc__gcs from "../stores/doc/gcs.js";
 export * as stores__doc__in_memory from "../stores/doc/in_memory.js";
 export * as stores__message__in_memory from "../stores/message/in_memory.js";
 export * as memory__chat_memory from "../memory/chat_memory.js";
