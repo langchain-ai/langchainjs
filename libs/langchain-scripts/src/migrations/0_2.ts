@@ -3,6 +3,30 @@ import { Project } from "ts-morph";
 import fs from "node:fs";
 import path from "node:path";
 
+/**
+ * TODO ADD THIS
+ */
+type ImportMapFallback = {
+  old: string;
+  new: string;
+  symbolExceptions: string[];
+}
+
+const IMPORT_MAP_FALLBACKS = [
+  {
+    old: "langchain/memory",
+    new: "langchain/memory/index",
+    symbolExceptions: ["MotorheadMemory", "MotorheadMemoryInput"]
+  }
+]
+
+function handleImportMapFallbacks(importMap: Array<DeprecatedEntrypoint>) {
+  // if there was a no-op, after saving the project revisit all no-ops with the fallbacks.
+}
+
+const DEPRECATED_AND_DELETED_IMPORTS = ["PromptLayerOpenAI", "loadPrompt", "ChatGPTPluginRetriever"]
+
+
 type MigrationUpdate = {
   /**
    * The path of the file which was updated.
@@ -18,22 +42,7 @@ type MigrationUpdate = {
   updatedImport: string;
 };
 
-type DeprecatedEntrypoint = { old: string; new: string; symbol: string | null };
-
-function matchOldEntrypoints(oldEntrypoint: string, newEntrypoint: string) {
-  if (oldEntrypoint.endsWith("*")) {
-    if (oldEntrypoint === "langchain/retrievers/self_query") {
-      console.log(
-        "oldEntrypoint",
-        oldEntrypoint,
-        "newEntrypoint",
-        newEntrypoint
-      );
-    }
-    return newEntrypoint.startsWith(oldEntrypoint.replace("/*", ""));
-  }
-  return oldEntrypoint === newEntrypoint;
-}
+export type DeprecatedEntrypoint = { old: string; new: string; symbol: string | null };
 
 export interface UpdateLangChainFields {
   /**
@@ -65,6 +74,56 @@ export interface UpdateLangChainFields {
    * @default false
    */
   testRun?: boolean;
+}
+
+function findNewEntrypoint(importMap: Array<DeprecatedEntrypoint>, entrypointToReplace: string): {
+  newEntrypoint: string;
+  symbols: Array<string> | null;
+  isStarMatch: boolean;
+} | null {
+  const starMatches: Array<DeprecatedEntrypoint> = [];
+  const exactEntrypoints: Array<DeprecatedEntrypoint> = [];
+  importMap.map((item) => {
+    if (item.old.endsWith("/*")) {
+      const oldWithoutStar = item.old.replace("/*", "");
+      const toReplaceBeginsWith = entrypointToReplace.startsWith(oldWithoutStar);
+      if (toReplaceBeginsWith) {
+        if (oldWithoutStar === entrypointToReplace) {
+          starMatches.push(item);
+        } else {
+          // If the entrypoint to replace does not match the import map entry exactly
+          // take off the last item in the path and check that. This is because we
+          // never nest entrypoints more than once.
+          const lastSlashIndex = entrypointToReplace.lastIndexOf("/");
+          const toReplaceWithoutLastPath = entrypointToReplace.slice(0, lastSlashIndex);
+          if (toReplaceWithoutLastPath === oldWithoutStar) {
+            starMatches.push(item);
+          }
+        }
+      }
+      const doesMatchExactly = entrypointToReplace === item.old.replace("/*", "");
+      if (doesMatchExactly) {
+        starMatches.push(item);
+      }
+    } else if (item.old === entrypointToReplace) {
+      exactEntrypoints.push(item)
+    }
+  });
+
+  if (exactEntrypoints.length) {
+    return {
+      newEntrypoint: exactEntrypoints[0].new,
+      symbols: null,
+      isStarMatch: false,
+    };
+  } else if (starMatches.length) {
+    return {
+      newEntrypoint: starMatches[0].new,
+      symbols: starMatches.map((item) => item.symbol).filter((s): s is string => s !== null),
+      isStarMatch: true,
+    };
+  }
+  return null;
 }
 
 /**
@@ -146,6 +205,16 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(
     try {
       const allImports = sourceFile.getImportDeclarations();
       allImports.forEach((importDeclaration) => {
+        const namedImports = importDeclaration.getNamedImports();
+        if (namedImports.length === 0) {
+          // no-op
+          return;
+        }
+        if (namedImports.length === 1 && DEPRECATED_AND_DELETED_IMPORTS.find((dep) => dep === namedImports[0].getText().trim()) !== undefined) {
+          // deprecated import, do not update
+          return;
+        }
+
         const importPath = importDeclaration.getModuleSpecifierValue();
         const importPathText = importDeclaration.getModuleSpecifier().getText();
         const importPathTextWithoutQuotes = importPathText.slice(
@@ -153,42 +222,56 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(
           importPathText.length - 1
         );
 
-        const deprecatedEntrypoint = importMap.find((entrypoint) =>
-          matchOldEntrypoints(entrypoint.old, importPathTextWithoutQuotes)
-        );
-        if (!deprecatedEntrypoint) {
+        const matchingEntrypoint = findNewEntrypoint(importMap, importPathTextWithoutQuotes);
+        if (matchingEntrypoint === null) {
           // no-op
           return;
         }
 
-        // if deprecatedEntrypoint.symbol is NOT null then verify the named imports match
-        if (deprecatedEntrypoint.symbol) {
+        // If it's not a star match, or a star match where there are no symbols
+        // just re-write the import with the new entrypoint
+        if (!matchingEntrypoint.isStarMatch || (!matchingEntrypoint.symbols || matchingEntrypoint.symbols.length === 0)) {
+          importDeclaration.setModuleSpecifier(matchingEntrypoint.newEntrypoint);
+        } else {
           const namedImports = importDeclaration.getNamedImports();
-          const foundNamedImport = namedImports.find((namedImport) => {
-            if (deprecatedEntrypoint.symbol === null) {
-              return true;
-            }
-            return namedImport.getName() === deprecatedEntrypoint.symbol;
-          });
-          if (!foundNamedImport) {
-            // no-op
+          if (namedImports.length === 0) {
             return;
           }
+          const matchingNamedImports = namedImports.filter((namedImport) => {
+            const namedImportText = namedImport.getText().trim();
+            const matchingSymbol = matchingEntrypoint.symbols?.find((s) => s === namedImportText);
+            if (matchingSymbol) {
+              return true;
+            }
+            return false;
+          });
+          if (!matchingNamedImports || matchingNamedImports.length === 0) {
+            // No symbols matched, no-op
+            return;
+          }
+          // remove matchingNamedImports from the existing import
+          matchingNamedImports.forEach((namedImport) => {
+            namedImport.remove();
+          });
+          // write a new import with the new entrypoint
+          sourceFile.addImportDeclaration({
+            moduleSpecifier: matchingEntrypoint.newEntrypoint,
+            namedImports: matchingNamedImports.map((namedImport) => namedImport.getText()),
+          })
         }
 
         // Update import
-        importDeclaration.setModuleSpecifier(deprecatedEntrypoint.new);
         // now get the full updated import
         const filePath = sourceFile.getFilePath();
         if (fields.shouldLog) {
           console.log(
-            `Updated import: ${importPath} to ${deprecatedEntrypoint.new} inside ${filePath}`
+            `Updated import: ${importPath} to ${matchingEntrypoint.newEntrypoint} inside ${filePath}`
           );
         }
         updates.push({
           path: filePath,
           oldImport: importPathTextWithoutQuotes,
-          updatedImport: deprecatedEntrypoint.new,
+          updatedImport: matchingEntrypoint.newEntrypoint,
         });
       });
     } catch (e) {

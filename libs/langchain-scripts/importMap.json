@@ -650,6 +650,31 @@
     "symbol": "TranslatorOpts"
   },
   {
+    "old": "@langchain/community/retrievers/self_query/qdrant",
+    "new": "@langchain/community/structured_query/qdrant",
+    "symbol": null
+  },
+  {
+    "old": "langchain/retrievers/self_query/chroma",
+    "new": "@langchain/community/structured_query/chroma",
+    "symbol": null
+  },
+  {
+    "old": "langchain/retrievers/self_query/pinecone",
+    "new": "@langchain/pinecone",
+    "symbol": null
+  },
+  {
+    "old": "langchain/retrievers/self_query/supabase",
+    "new": "@langchain/community/structured_query/supabase",
+    "symbol": null
+  },
+  {
+    "old": "langchain/retrievers/self_query/supabase_utils",
+    "new": "@langchain/community/structured_query/supabase_utils",
+    "symbol": null
+  },
+  {
     "old": "langchain/retrievers/self_query/*",
     "new": "@langchain/core/structured_query",
     "symbol": "BaseTranslator"
@@ -2475,24 +2500,9 @@
     "symbol": "MyScaleStore"
   },
   {
-    "old": "langchain/vectorstores/momento_vector_/*",
+    "old": "langchain/vectorstores/momento_vector_index",
     "new": "@langchain/community/vectorstores/momento_vector_index",
-    "symbol": "DocumentProps"
-  },
-  {
-    "old": "langchain/vectorstores/momento_vector_/*",
-    "new": "@langchain/community/vectorstores/momento_vector_index",
-    "symbol": "MomentoVectorIndexLibArgs"
-  },
-  {
-    "old": "langchain/vectorstores/momento_vector_/*",
-    "new": "@langchain/community/vectorstores/momento_vector_index",
-    "symbol": "DeleteProps"
-  },
-  {
-    "old": "langchain/vectorstores/momento_vector_/*",
-    "new": "@langchain/community/vectorstores/momento_vector_index",
-    "symbol": "MomentoVectorIndex"
+    "symbol": null
   },
   {
     "old": "langchain/vectorstores/milvus",
@@ -2702,12 +2712,7 @@
   {
     "old": "langchain/vectorstores/closevector/web",
     "new": "@langchain/community/vectorstores/closevector/web",
-    "symbol": "CloseVectorWebArgs"
-  },
-  {
-    "old": "langchain/vectorstores/closevector/web",
-    "new": "@langchain/community/vectorstores/closevector/web",
-    "symbol": "CloseVectorWeb"
+    "symbol": null
   },
   {
     "old": "langchain/vectorstores/closevector/node",
@@ -3641,18 +3646,13 @@
   },
   {
     "old": "langchain/llms/googlevertexai/web",
-    "new": "@langchain/community/llms/googlevertexai",
-    "symbol": "GoogleVertexAITextInput"
+    "new": "@langchain/community/llms/googlevertexai/web",
+    "symbol": null
   },
   {
-    "old": "langchain/llms/googlevertexai/web",
-    "new": "@langchain/community/llms/googlevertexai",
-    "symbol": "GoogleVertexAI"
-  },
-  {
-    "old": "langchain/llms/bedrock/web",
+    "old": "langchain/llms/bedrock",
     "new": "@langchain/community/llms/bedrock",
-    "symbol": "Bedrock"
+    "symbol": null
   },
   {
     "old": "langchain/graphs/neo4j_graph",
@@ -3901,68 +3901,18 @@
   },
   {
     "old": "langchain/chat_models/iflytek_xinghuo/web",
-    "new": "@langchain/community/chat_models/iflytek_xinghuo",
-    "symbol": "ChatIflytekXinghuo"
+    "new": "@langchain/community/chat_models/iflytek_xinghuo/web",
+    "symbol": null
   },
   {
     "old": "langchain/chat_models/googlevertexai/web",
-    "new": "@langchain/community/chat_models/googlevertexai",
-    "symbol": "ChatGoogleVertexAI"
-  },
-  {
-    "old": "langchain/chat_models/googlevertexai/web",
-    "new": "@langchain/community/chat_models/googlevertexai",
-    "symbol": "ChatExample"
-  },
-  {
-    "old": "langchain/chat_models/googlevertexai/web",
-    "new": "@langchain/community/chat_models/googlevertexai",
-    "symbol": "GoogleVertexAIChatAuthor"
-  },
-  {
-    "old": "langchain/chat_models/googlevertexai/web",
-    "new": "@langchain/community/chat_models/googlevertexai",
-    "symbol": "GoogleVertexAIChatInput"
-  },
-  {
-    "old": "langchain/chat_models/googlevertexai/web",
-    "new": "@langchain/community/chat_models/googlevertexai",
-    "symbol": "GoogleVertexAIChatInstance"
-  },
-  {
-    "old": "langchain/chat_models/googlevertexai/web",
-    "new": "@langchain/community/chat_models/googlevertexai",
-    "symbol": "GoogleVertexAIChatMessage"
-  },
-  {
-    "old": "langchain/chat_models/googlevertexai/web",
-    "new": "@langchain/community/chat_models/googlevertexai",
-    "symbol": "GoogleVertexAIChatMessageFields"
-  },
-  {
-    "old": "langchain/chat_models/googlevertexai/web",
-    "new": "@langchain/community/chat_models/googlevertexai",
-    "symbol": "GoogleVertexAIChatPrediction"
+    "new": "@langchain/community/chat_models/googlevertexai/web",
+    "symbol": null
   },
   {
     "old": "langchain/chat_models/bedrock/web",
-    "new": "@langchain/community/chat_models/bedrock",
-    "symbol": "BedrockChat"
-  },
-  {
-    "old": "langchain/chat_models/bedrock/web",
-    "new": "@langchain/community/chat_models/bedrock",
-    "symbol": "convertMessagesToPromptAnthropic"
-  },
-  {
-    "old": "langchain/chat_models/bedrock/web",
-    "new": "@langchain/community/chat_models/bedrock",
-    "symbol": "convertMessagesToPrompt"
-  },
-  {
-    "old": "langchain/chat_models/bedrock/web",
-    "new": "@langchain/community/chat_models/bedrock",
-    "symbol": "ChatBedrock"
+    "new": "@langchain/community/chat_models/bedrock/web",
+    "symbol": null
   },
   {
     "old": "langchain/callbacks/handlers/llmonitor",
@@ -4352,11 +4302,6 @@
   {
     "old": "langchain/vectorstores/analyticdb",
     "new": "@langchain/community/vectorstores/analyticdb",
-    "symbol": null
-  },
-  {
-    "old": "langchain/vectorstores/closevector/web",
-    "new": "@langchain/community/vectorstores/closevector/web",
     "symbol": null
   },
   {
@@ -4785,12 +4730,7 @@
     "symbol": null
   },
   {
-    "old": "langchain/llms/googlevertexai/web",
-    "new": "@langchain/community/llms/googlevertexai/web",
-    "symbol": null
-  },
-  {
-    "old": "langchain/llms/googlevertexai/*",
+    "old": "langchain/llms/googlevertexai",
     "new": "@langchain/community/llms/googlevertexai",
     "symbol": null
   },
@@ -4940,32 +4880,22 @@
     "symbol": null
   },
   {
-    "old": "langchain/chat_models/iflytek_xinghuo/web",
-    "new": "@langchain/community/chat_models/iflytek_xinghuo/web",
-    "symbol": null
-  },
-  {
-    "old": "langchain/chat_models/iflytek_xinghuo/*",
+    "old": "langchain/chat_models/iflytek_xinghuo",
     "new": "@langchain/community/chat_models/iflytek_xinghuo",
     "symbol": null
   },
   {
-    "old": "langchain/chat_models/googlevertexai/web",
-    "new": "@langchain/community/chat_models/googlevertexai/web",
-    "symbol": null
-  },
-  {
-    "old": "langchain/chat_models/googlevertexai/*",
+    "old": "langchain/chat_models/googlevertexai",
     "new": "@langchain/community/chat_models/googlevertexai",
     "symbol": null
   },
   {
-    "old": "langchain/chat_models/bedrock/web",
-    "new": "@langchain/community/chat_models/bedrock/web",
+    "old": "langchain/chat_models/googlevertexai",
+    "new": "@langchain/community/chat_models/googlevertexai",
     "symbol": null
   },
   {
-    "old": "langchain/chat_models/bedrock/*",
+    "old": "langchain/chat_models/bedrock",
     "new": "@langchain/community/chat_models/bedrock",
     "symbol": null
   },
@@ -5057,6 +4987,16 @@
   {
     "old": "langchain/agents/toolkits/connery/*",
     "new": "@langchain/community/agents/toolkits/connery",
+    "symbol": null
+  },
+  {
+    "old": "langchain/experimental/chat_models/ollama_functions",
+    "new": "@langchain/community/experimental/chat_models/ollama_functions",
+    "symbol": null
+  },
+  {
+    "old": "langchain/experimental/multimodal_embeddings/googlevertexai",
+    "new": "@langchain/community/experimental/multimodal_embeddings/googlevertexai",
     "symbol": null
   }
 ]
