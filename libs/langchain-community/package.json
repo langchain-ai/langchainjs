@@ -2791,6 +2791,15 @@
       "import": "./experimental/hubs/makersuite/googlemakersuitehub.js",
       "require": "./experimental/hubs/makersuite/googlemakersuitehub.cjs"
     },
+    "./experimental/chat_models/ollama_functions": {
+      "types": {
+        "import": "./experimental/chat_models/ollama_functions.d.ts",
+        "require": "./experimental/chat_models/ollama_functions.d.cts",
+        "default": "./experimental/chat_models/ollama_functions.d.ts"
+      },
+      "import": "./experimental/chat_models/ollama_functions.js",
+      "require": "./experimental/chat_models/ollama_functions.cjs"
+    },
     "./chains/graph_qa/cypher": {
       "types": {
         "import": "./chains/graph_qa/cypher.d.ts",
@@ -3748,6 +3757,10 @@
     "experimental/hubs/makersuite/googlemakersuitehub.js",
     "experimental/hubs/makersuite/googlemakersuitehub.d.ts",
     "experimental/hubs/makersuite/googlemakersuitehub.d.cts",
+    "experimental/chat_models/ollama_functions.cjs",
+    "experimental/chat_models/ollama_functions.js",
+    "experimental/chat_models/ollama_functions.d.ts",
+    "experimental/chat_models/ollama_functions.d.cts",
     "chains/graph_qa/cypher.cjs",
     "chains/graph_qa/cypher.js",
     "chains/graph_qa/cypher.d.ts",

@@ -293,6 +293,7 @@ export const config = {
       "experimental/multimodal_embeddings/googlevertexai",
     "experimental/hubs/makersuite/googlemakersuitehub":
       "experimental/hubs/makersuite/googlemakersuitehub",
+    "experimental/chat_models/ollama_functions": "experimental/chat_models/ollama_functions",
     // chains
     "chains/graph_qa/cypher": "chains/graph_qa/cypher"
   },
