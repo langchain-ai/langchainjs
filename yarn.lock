@@ -8883,7 +8883,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/cohere@workspace:*, @langchain/cohere@workspace:libs/langchain-cohere":
+"@langchain/cohere@^0.0.8, @langchain/cohere@workspace:*, @langchain/cohere@workspace:libs/langchain-cohere":
   version: 0.0.0-use.local
   resolution: "@langchain/cohere@workspace:libs/langchain-cohere"
   dependencies:
@@ -26915,7 +26915,7 @@ __metadata:
     "@gomomento/sdk-core": ^1.51.1
     "@google-ai/generativelanguage": ^0.2.1
     "@jest/globals": ^29.5.0
-    "@langchain/cohere": "workspace:*"
+    "@langchain/cohere": ^0.0.8
     "@langchain/core": ~0.1.60
     "@langchain/openai": ~0.0.28
     "@langchain/scripts": ~0.0

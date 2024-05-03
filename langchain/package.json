@@ -593,7 +593,7 @@
     "@gomomento/sdk-core": "^1.51.1",
     "@google-ai/generativelanguage": "^0.2.1",
     "@jest/globals": "^29.5.0",
-    "@langchain/cohere": "workspace:*",
+    "@langchain/cohere": "^0.0.8",
     "@langchain/scripts": "~0.0",
     "@mendable/firecrawl-js": "^0.0.13",
     "@notionhq/client": "^2.2.10",
