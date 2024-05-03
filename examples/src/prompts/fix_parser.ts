@@ -1,9 +1,9 @@
 import { z } from "zod";
 import { ChatOpenAI } from "@langchain/openai";
 import {
-  StructuredOutputParser,
   OutputFixingParser,
 } from "langchain/output_parsers";
+import { StructuredOutputParser } from "@langchain/core/output_parsers";
 
 export const run = async () => {
   const parser = StructuredOutputParser.fromZodSchema(

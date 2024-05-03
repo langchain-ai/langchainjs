@@ -38,12 +38,6 @@ const modelWithTools = model.bind({
     function: { name: "multiply" },
   },
 });
-
-import {
-  JsonOutputToolsParser,
-  JsonOutputKeyToolsParser,
-} from "langchain/output_parsers";
-
 const chain = modelWithTools.pipe(new JsonOutputToolsParser());
 
 console.log(await chain.invoke("What's 4 times 23?"));
@@ -55,6 +49,7 @@ const chain2 = modelWithTools.pipe(
 console.log(await chain2.invoke("What's 4 times 23?"));
 
 import { RunnableSequence } from "@langchain/core/runnables";
+import { JsonOutputToolsParser, JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 
 const chain3 = RunnableSequence.from([
   modelWithTools,

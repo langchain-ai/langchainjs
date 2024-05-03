@@ -1,8 +1,8 @@
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
-import { InMemoryStore } from "langchain/storage/in_memory";
+import { InMemoryStore } from "@langchain/core/stores";
 import { ParentDocumentRetriever } from "langchain/retrievers/parent_document";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { ScoreThresholdRetriever } from "langchain/retrievers/score_threshold";
 
