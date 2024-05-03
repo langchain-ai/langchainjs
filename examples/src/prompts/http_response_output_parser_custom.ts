@@ -1,7 +1,5 @@
 import { ChatOpenAI } from "@langchain/openai";
-import {
-  HttpResponseOutputParser
-} from "langchain/output_parsers";
+import { HttpResponseOutputParser } from "langchain/output_parsers";
 import { JsonOutputFunctionsParser } from "@langchain/core/output_parsers/openai_functions";
 
 const handler = async () => {
