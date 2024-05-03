@@ -23,7 +23,7 @@ node /updater_script/update_resolutions_lowest.js
 
 yarn
 
-yarn build --filter=langchain
+cd ../langchain-core && yarn build
 
 # Check the test command completes successfully
 NODE_OPTIONS=--experimental-vm-modules yarn run jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%
