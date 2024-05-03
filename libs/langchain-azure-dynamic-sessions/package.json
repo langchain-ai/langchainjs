@@ -1,5 +1,5 @@
 {
-  "name": "@langchain/azure-container-apps",
+  "name": "@langchain/azure-dynamic-sessions",
   "version": "0.0.0",
   "description": "Sample integration for LangChain.js",
   "type": "module",

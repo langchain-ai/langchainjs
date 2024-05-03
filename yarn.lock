@@ -9459,9 +9459,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/azure-container-apps@workspace:libs/langchain-azure-container-apps":
+"@langchain/azure-dynamic-sessions@workspace:libs/langchain-azure-dynamic-sessions":
   version: 0.0.0-use.local
-  resolution: "@langchain/azure-container-apps@workspace:libs/langchain-azure-container-apps"
+  resolution: "@langchain/azure-dynamic-sessions@workspace:libs/langchain-azure-dynamic-sessions"
   dependencies:
     "@azure/identity": ^4.1.0
     "@jest/globals": ^29.5.0
