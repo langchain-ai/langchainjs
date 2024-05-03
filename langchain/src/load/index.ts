@@ -23,6 +23,6 @@ export async function load<T>(
     secretsMap,
     optionalImportsMap,
     optionalImportEntrypoints,
-    importMap: { ...importMap },
+    importMap,
   });
 }
