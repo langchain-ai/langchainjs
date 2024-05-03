@@ -202,6 +202,7 @@ export const config = {
     // indexes
     indexes: "indexes/index",
     "schema/query_constructor": "schema/query_constructor",
+    "schema/prompt_template": "schema/prompt_template",
   },
   deprecatedOmitFromImportMap: [
     "document",

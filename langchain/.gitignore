@@ -538,6 +538,10 @@ schema/query_constructor.cjs
 schema/query_constructor.js
 schema/query_constructor.d.ts
 schema/query_constructor.d.cts
+schema/prompt_template.cjs
+schema/prompt_template.js
+schema/prompt_template.d.ts
+schema/prompt_template.d.cts
 node_modules
 dist
 .yarn
