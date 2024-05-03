@@ -26,6 +26,7 @@ export const config = {
     "mysql2/promise",
     "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js",
     "web-auth-library/google",
+    "notion-to-md/build/utils/notion.js",
   ],
   entrypoints: {
     load: "load/index",
