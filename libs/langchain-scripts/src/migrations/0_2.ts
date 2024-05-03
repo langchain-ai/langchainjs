@@ -1,44 +1,7 @@
 import { glob } from "glob";
-import { ImportDeclaration, ImportSpecifier, Project, SourceFile } from "ts-morph";
+import { ImportSpecifier, Project } from "ts-morph";
 import fs from "node:fs";
 import path from "node:path";
-
-/**
- * TODO ADD THIS
- */
-type ImportMapFallback = {
-  old: string;
-  new: string;
-  symbolExceptions: string[];
-};
-
-const IMPORT_MAP_FALLBACKS = [
-  {
-    old: "langchain/memory",
-    new: "langchain/memory/index",
-    symbolExceptions: ["MotorheadMemory", "MotorheadMemoryInput"],
-  },
-];
-
-function handleImportMapFallbacks(importPath: string, namedImports: ImportSpecifier[], tsMorph: {
-  importDeclaration: ImportDeclaration,
-  sourceFile: SourceFile,
-}) {
-  const fallback = IMPORT_MAP_FALLBACKS.find((fallback) => fallback.old === importPath);
-  const symbolsToKeep = namedImports.filter((namedImport) => !fallback?.symbolExceptions.find((exception) => exception === namedImport.getText()))
-  if (fallback && symbolsToKeep.length > 0) {
-    // Remove the symbols to keep from the existing import
-    symbolsToKeep.forEach((namedImport) => {
-      namedImport.remove();
-    });
-    // add a new import with the new path
-    tsMorph.sourceFile.addImportDeclaration({
-      moduleSpecifier: fallback.new,
-      namedImports: symbolsToKeep.map((namedImport) => namedImport.getText()),
-    });
-  }
-  // if there was a no-op, after saving the project revisit all no-ops with the fallbacks.
-}
 
 const DEPRECATED_AND_DELETED_IMPORTS = [
   "PromptLayerOpenAI",
@@ -105,7 +68,7 @@ export interface UpdateLangChainFields {
 function findNewEntrypoint(
   importMap: Array<DeprecatedEntrypoint>,
   entrypointToReplace: string,
-  namedImports: ImportSpecifier[],
+  namedImports: ImportSpecifier[]
 ) {
   // First, see if we can find an exact match
   const exactEntrypoints = importMap.filter((item) => {
@@ -126,8 +89,12 @@ function findNewEntrypoint(
       if (item.symbol === null) {
         return true;
       }
-      return namedImports.find((namedImport) => namedImport.getText() === item.symbol) !== undefined;
-    })
+      return (
+        namedImports.find(
+          (namedImport) => namedImport.getText() === item.symbol
+        ) !== undefined
+      );
+    });
     if (withSymbol) {
       return {
         newEntrypoint: withSymbol.new,
@@ -142,7 +109,11 @@ function findNewEntrypoint(
     if (item.symbol === null) {
       return false;
     }
-    return namedImports.find((namedImport) => namedImport.getText() === item.symbol) !== undefined;
+    return (
+      namedImports.find(
+        (namedImport) => namedImport.getText() === item.symbol
+      ) !== undefined
+    );
   });
   if (symbolMatch.length) {
     return {
@@ -152,87 +123,6 @@ function findNewEntrypoint(
     };
   }
 
-  return null;
-}
-
-function findNewEntrypoint2(
-  importMap: Array<DeprecatedEntrypoint>,
-  entrypointToReplace: string,
-  namedImports: ImportSpecifier[],
-): {
-  newEntrypoint: string;
-  symbols: Array<string> | null;
-  isStarMatch: boolean;
-} | null {
-  const containsAIMessage = namedImports.find((namedImport) => namedImport.getText() === "AIMessage") !== undefined;
-
-
-
-
-
-  const starMatches: Array<DeprecatedEntrypoint> = [];
-  const exactEntrypoints: Array<DeprecatedEntrypoint> = [];
-  importMap.map((item) => {
-    if (item.old.endsWith("/*")) {
-      const oldWithoutStar = item.old.replace("/*", "");
-      const toReplaceBeginsWith =
-        entrypointToReplace.startsWith(oldWithoutStar);
-      if (toReplaceBeginsWith) {
-        if (oldWithoutStar === entrypointToReplace) {
-          if (containsAIMessage) {
-            console.log("1 is pushing")
-          }
-          starMatches.push(item);
-        } else {
-          // If the entrypoint to replace does not match the import map entry exactly
-          // take off the last item in the path and check that. This is because we
-          // never nest entrypoints more than once.
-          const lastSlashIndex = entrypointToReplace.lastIndexOf("/");
-          const toReplaceWithoutLastPath = entrypointToReplace.slice(
-            0,
-            lastSlashIndex
-          );
-          // Length must be greater than two because we don't want to match the root
-          if (toReplaceWithoutLastPath === oldWithoutStar && toReplaceWithoutLastPath.split("/").length > 2) {
-            if (containsAIMessage) {
-              console.log("2 is pushing")
-            }
-            starMatches.push(item);
-          }
-        }
-      }
-      const doesMatchExactly =
-        entrypointToReplace === item.old.replace("/*", "");
-      if (doesMatchExactly) {
-        if (containsAIMessage) {
-          console.log("3 is pushing")
-        }
-        starMatches.push(item);
-      }
-    } else if (item.old === entrypointToReplace) {
-      if (item.symbol === null) {
-        exactEntrypoints.push(item);
-      } else if (namedImports.find((namedImport) => namedImport.getText() === item.symbol) !== undefined) {
-        exactEntrypoints.push(item);
-      }
-    }
-  });
-
-  if (exactEntrypoints.length) {
-    return {
-      newEntrypoint: exactEntrypoints[0].new,
-      symbols: null,
-      isStarMatch: false,
-    };
-  } else if (starMatches.length) {
-    return {
-      newEntrypoint: starMatches[0].new,
-      symbols: starMatches
-        .map((item) => item.symbol)
-        .filter((s): s is string => s !== null),
-      isStarMatch: true,
-    };
-  }
   return null;
 }
 
@@ -332,7 +222,6 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(
           return;
         }
 
-
         const importPath = importDeclaration.getModuleSpecifierValue();
         const importPathText = importDeclaration.getModuleSpecifier().getText();
         const importPathTextWithoutQuotes = importPathText.slice(
@@ -341,7 +230,10 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(
         );
 
         if (!importPathTextWithoutQuotes.startsWith("langchain/")) {
-          if (importPathTextWithoutQuotes !== "@langchain/community/retrievers/self_query/qdrant") {
+          if (
+            importPathTextWithoutQuotes !==
+            "@langchain/community/retrievers/self_query/qdrant"
+          ) {
             return;
           }
         }
@@ -365,10 +257,12 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(
         ) {
           if (matchingEntrypoint.symbols?.length) {
             const importsBefore = namedImports;
-            const importsRemoved: Array<string> = []
+            const importsRemoved: Array<string> = [];
             namedImports.forEach((namedImport) => {
               const namedImportText = namedImport.getName();
-              if (matchingEntrypoint.symbols?.find((s) => s === namedImportText)) {
+              if (
+                matchingEntrypoint.symbols?.find((s) => s === namedImportText)
+              ) {
                 importsRemoved.push(namedImport.getName());
                 namedImport.remove();
               }
@@ -394,13 +288,21 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(
               (s) => s === namedImportText
             );
             if (matchingSymbol) {
-              if (namedImportText === "AIMessage" && filePath === "/Users/bracesproul/code/lang-chain-ai/wt/jacob/0.2/examples/src/use_cases/sql/agents/index.ts") {
-                console.log("HOW THE FUCK??", matchingEntrypoint)
+              if (
+                namedImportText === "AIMessage" &&
+                filePath ===
+                  "/Users/bracesproul/code/lang-chain-ai/wt/jacob/0.2/examples/src/use_cases/sql/agents/index.ts"
+              ) {
+                console.log("HOW THE FUCK??", matchingEntrypoint);
               }
               return true;
             }
-            if (namedImportText === "AIMessage" && filePath === "/Users/bracesproul/code/lang-chain-ai/wt/jacob/0.2/examples/src/use_cases/sql/agents/index.ts") {
-              console.log("better", matchingEntrypoint)
+            if (
+              namedImportText === "AIMessage" &&
+              filePath ===
+                "/Users/bracesproul/code/lang-chain-ai/wt/jacob/0.2/examples/src/use_cases/sql/agents/index.ts"
+            ) {
+              console.log("better", matchingEntrypoint);
             }
             return false;
           });
@@ -419,8 +321,14 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(
               namedImport.getText()
             ),
           });
-          if (matchingEntrypoint.newEntrypoint === "@langchain/core/prompt_values" && matchingNamedImports.map((namedImport) => namedImport.getText()).includes("AIMessage")) {
-            console.log("What the fuck")
+          if (
+            matchingEntrypoint.newEntrypoint ===
+              "@langchain/core/prompt_values" &&
+            matchingNamedImports
+              .map((namedImport) => namedImport.getText())
+              .includes("AIMessage")
+          ) {
+            console.log("What the fuck");
           }
         }
 
