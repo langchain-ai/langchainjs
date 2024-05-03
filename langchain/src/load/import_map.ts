@@ -10,6 +10,7 @@ export * as agents__format_scratchpad__log_to_message from "../agents/format_scr
 export * as agents__react__output_parser from "../agents/react/output_parser.js";
 export * as agents__xml__output_parser from "../agents/xml/output_parser.js";
 export * as agents__openai__output_parser from "../agents/openai/output_parser.js";
+export * as tools from "../tools/index.js";
 export * as tools__chain from "../tools/chain.js";
 export * as tools__render from "../tools/render.js";
 export * as tools__retriever from "../tools/retriever.js";

@@ -48,6 +48,7 @@ export const config = {
     "agents/xml/output_parser": "agents/xml/output_parser",
     "agents/openai/output_parser": "agents/openai/output_parser",
     // tools
+    tools: "tools/index",
     "tools/chain": "tools/chain",
     "tools/render": "tools/render",
     "tools/retriever": "tools/retriever",

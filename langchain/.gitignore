@@ -54,6 +54,10 @@ agents/openai/output_parser.cjs
 agents/openai/output_parser.js
 agents/openai/output_parser.d.ts
 agents/openai/output_parser.d.cts
+tools.cjs
+tools.js
+tools.d.ts
+tools.d.cts
 tools/chain.cjs
 tools/chain.js
 tools/chain.d.ts

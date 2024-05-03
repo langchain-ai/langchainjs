@@ -66,6 +66,10 @@
     "agents/openai/output_parser.js",
     "agents/openai/output_parser.d.ts",
     "agents/openai/output_parser.d.cts",
+    "tools.cjs",
+    "tools.js",
+    "tools.d.ts",
+    "tools.d.cts",
     "tools/chain.cjs",
     "tools/chain.js",
     "tools/chain.d.ts",
@@ -1036,6 +1040,15 @@
       },
       "import": "./agents/openai/output_parser.js",
       "require": "./agents/openai/output_parser.cjs"
+    },
+    "./tools": {
+      "types": {
+        "import": "./tools.d.ts",
+        "require": "./tools.d.cts",
+        "default": "./tools.d.ts"
+      },
+      "import": "./tools.js",
+      "require": "./tools.cjs"
     },
     "./tools/chain": {
       "types": {
