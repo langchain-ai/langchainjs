@@ -10,22 +10,25 @@ type ImportMapFallback = {
   old: string;
   new: string;
   symbolExceptions: string[];
-}
+};
 
 const IMPORT_MAP_FALLBACKS = [
   {
     old: "langchain/memory",
     new: "langchain/memory/index",
-    symbolExceptions: ["MotorheadMemory", "MotorheadMemoryInput"]
-  }
-]
+    symbolExceptions: ["MotorheadMemory", "MotorheadMemoryInput"],
+  },
+];
 
 function handleImportMapFallbacks(importMap: Array<DeprecatedEntrypoint>) {
   // if there was a no-op, after saving the project revisit all no-ops with the fallbacks.
 }
 
-const DEPRECATED_AND_DELETED_IMPORTS = ["PromptLayerOpenAI", "loadPrompt", "ChatGPTPluginRetriever"]
-
+const DEPRECATED_AND_DELETED_IMPORTS = [
+  "PromptLayerOpenAI",
+  "loadPrompt",
+  "ChatGPTPluginRetriever",
+];
 
 type MigrationUpdate = {
   /**
@@ -42,7 +45,11 @@ type MigrationUpdate = {
   updatedImport: string;
 };
 
-export type DeprecatedEntrypoint = { old: string; new: string; symbol: string | null };
+export type DeprecatedEntrypoint = {
+  old: string;
+  new: string;
+  symbol: string | null;
+};
 
 export interface UpdateLangChainFields {
   /**
@@ -76,7 +83,10 @@ export interface UpdateLangChainFields {
   testRun?: boolean;
 }
 
-function findNewEntrypoint(importMap: Array<DeprecatedEntrypoint>, entrypointToReplace: string): {
+function findNewEntrypoint(
+  importMap: Array<DeprecatedEntrypoint>,
+  entrypointToReplace: string
+): {
   newEntrypoint: string;
   symbols: Array<string> | null;
   isStarMatch: boolean;
@@ -86,7 +96,8 @@ function findNewEntrypoint(importMap: Array<DeprecatedEntrypoint>, entrypointToR
   importMap.map((item) => {
     if (item.old.endsWith("/*")) {
       const oldWithoutStar = item.old.replace("/*", "");
-      const toReplaceBeginsWith = entrypointToReplace.startsWith(oldWithoutStar);
+      const toReplaceBeginsWith =
+        entrypointToReplace.startsWith(oldWithoutStar);
       if (toReplaceBeginsWith) {
         if (oldWithoutStar === entrypointToReplace) {
           starMatches.push(item);
@@ -95,18 +106,22 @@ function findNewEntrypoint(importMap: Array<DeprecatedEntrypoint>, entrypointToR
           // take off the last item in the path and check that. This is because we
           // never nest entrypoints more than once.
           const lastSlashIndex = entrypointToReplace.lastIndexOf("/");
-          const toReplaceWithoutLastPath = entrypointToReplace.slice(0, lastSlashIndex);
+          const toReplaceWithoutLastPath = entrypointToReplace.slice(
+            0,
+            lastSlashIndex
+          );
           if (toReplaceWithoutLastPath === oldWithoutStar) {
             starMatches.push(item);
           }
         }
       }
-      const doesMatchExactly = entrypointToReplace === item.old.replace("/*", "");
+      const doesMatchExactly =
+        entrypointToReplace === item.old.replace("/*", "");
       if (doesMatchExactly) {
         starMatches.push(item);
       }
     } else if (item.old === entrypointToReplace) {
-      exactEntrypoints.push(item)
+      exactEntrypoints.push(item);
     }
   });
 
@@ -119,7 +134,9 @@ function findNewEntrypoint(importMap: Array<DeprecatedEntrypoint>, entrypointToR
   } else if (starMatches.length) {
     return {
       newEntrypoint: starMatches[0].new,
-      symbols: starMatches.map((item) => item.symbol).filter((s): s is string => s !== null),
+      symbols: starMatches
+        .map((item) => item.symbol)
+        .filter((s): s is string => s !== null),
       isStarMatch: true,
     };
   }
@@ -210,7 +227,12 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(
           // no-op
           return;
         }
-        if (namedImports.length === 1 && DEPRECATED_AND_DELETED_IMPORTS.find((dep) => dep === namedImports[0].getText().trim()) !== undefined) {
+        if (
+          namedImports.length === 1 &&
+          DEPRECATED_AND_DELETED_IMPORTS.find(
+            (dep) => dep === namedImports[0].getText().trim()
+          ) !== undefined
+        ) {
           // deprecated import, do not update
           return;
         }
@@ -222,7 +244,10 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(
           importPathText.length - 1
         );
 
-        const matchingEntrypoint = findNewEntrypoint(importMap, importPathTextWithoutQuotes);
+        const matchingEntrypoint = findNewEntrypoint(
+          importMap,
+          importPathTextWithoutQuotes
+        );
         if (matchingEntrypoint === null) {
           // no-op
           return;
@@ -230,8 +255,14 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(
 
         // If it's not a star match, or a star match where there are no symbols
         // just re-write the import with the new entrypoint
-        if (!matchingEntrypoint.isStarMatch || (!matchingEntrypoint.symbols || matchingEntrypoint.symbols.length === 0)) {
-          importDeclaration.setModuleSpecifier(matchingEntrypoint.newEntrypoint);
+        if (
+          !matchingEntrypoint.isStarMatch ||
+          !matchingEntrypoint.symbols ||
+          matchingEntrypoint.symbols.length === 0
+        ) {
+          importDeclaration.setModuleSpecifier(
+            matchingEntrypoint.newEntrypoint
+          );
         } else {
           const namedImports = importDeclaration.getNamedImports();
           if (namedImports.length === 0) {
@@ -239,7 +270,9 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(
           }
           const matchingNamedImports = namedImports.filter((namedImport) => {
             const namedImportText = namedImport.getText().trim();
-            const matchingSymbol = matchingEntrypoint.symbols?.find((s) => s === namedImportText);
+            const matchingSymbol = matchingEntrypoint.symbols?.find(
+              (s) => s === namedImportText
+            );
             if (matchingSymbol) {
               return true;
             }
@@ -256,8 +289,10 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(
           // write a new import with the new entrypoint
           sourceFile.addImportDeclaration({
             moduleSpecifier: matchingEntrypoint.newEntrypoint,
-            namedImports: matchingNamedImports.map((namedImport) => namedImport.getText()),
-          })
+            namedImports: matchingNamedImports.map((namedImport) =>
+              namedImport.getText()
+            ),
+          });
         }
 
         // Update import
