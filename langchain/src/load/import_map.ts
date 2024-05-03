@@ -71,6 +71,7 @@ export * as evaluation from "../evaluation/index.js";
 export * as smith from "../smith/index.js";
 export * as runnables__remote from "../runnables/remote.js";
 export * as indexes from "../indexes/index.js";
+export * as schema__query_constructor from "../schema/query_constructor.js";
 import {
   ChatOpenAI,
   OpenAI,

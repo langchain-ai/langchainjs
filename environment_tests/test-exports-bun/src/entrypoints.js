@@ -72,3 +72,4 @@ export * from "langchain/evaluation";
 export * from "langchain/smith";
 export * from "langchain/runnables/remote";
 export * from "langchain/indexes";
+export * from "langchain/schema/query_constructor";

@@ -72,3 +72,4 @@ const evaluation = require("langchain/evaluation");
 const smith = require("langchain/smith");
 const runnables_remote = require("langchain/runnables/remote");
 const indexes = require("langchain/indexes");
+const schema_query_constructor = require("langchain/schema/query_constructor");

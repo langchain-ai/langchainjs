@@ -541,7 +541,11 @@
     "indexes.cjs",
     "indexes.js",
     "indexes.d.ts",
-    "indexes.d.cts"
+    "indexes.d.cts",
+    "schema/query_constructor.cjs",
+    "schema/query_constructor.js",
+    "schema/query_constructor.d.ts",
+    "schema/query_constructor.d.cts"
   ],
   "repository": {
     "type": "git",
@@ -2103,6 +2107,15 @@
       },
       "import": "./indexes.js",
       "require": "./indexes.cjs"
+    },
+    "./schema/query_constructor": {
+      "types": {
+        "import": "./schema/query_constructor.d.ts",
+        "require": "./schema/query_constructor.d.cts",
+        "default": "./schema/query_constructor.d.ts"
+      },
+      "import": "./schema/query_constructor.js",
+      "require": "./schema/query_constructor.cjs"
     },
     "./package.json": "./package.json"
   }

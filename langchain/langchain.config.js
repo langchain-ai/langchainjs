@@ -200,6 +200,7 @@ export const config = {
     "runnables/remote": "runnables/remote",
     // indexes
     indexes: "indexes/index",
+    "schema/query_constructor": "schema/query_constructor",
   },
   deprecatedOmitFromImportMap: [
     "document",

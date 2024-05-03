@@ -530,6 +530,10 @@ indexes.cjs
 indexes.js
 indexes.d.ts
 indexes.d.cts
+schema/query_constructor.cjs
+schema/query_constructor.js
+schema/query_constructor.d.ts
+schema/query_constructor.d.cts
 node_modules
 dist
 .yarn
