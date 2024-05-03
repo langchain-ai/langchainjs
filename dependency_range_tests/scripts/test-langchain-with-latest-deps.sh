@@ -10,6 +10,8 @@ shopt -s extglob
 # avoid copying build artifacts from the host
 cp -r ../langchain/!(node_modules|dist|dist-cjs|dist-esm|build|.next|.turbo) ./
 
+yarn build --filter=@langchain/cohere
+
 yarn
 
 # Check the test command completes successfully
