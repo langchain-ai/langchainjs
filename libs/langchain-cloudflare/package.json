@@ -38,12 +38,11 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@cloudflare/ai": "^1.0.47",
     "@langchain/core": "~0.1",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20231218.0",
+    "@cloudflare/workers-types": "^4.20240502.0",
     "@jest/globals": "^29.5.0",
     "@langchain/scripts": "~0.0",
     "@swc/core": "^1.3.90",
