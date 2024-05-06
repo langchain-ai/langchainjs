@@ -32,7 +32,10 @@ const SYMBOL_EDGE_CASE_MAP = {
     originalSymbolName: null,
   },
   ChatMessageHistory: {
-    sources: ["langchain/stores/message/in_memory", "@langchain/community/stores/message/in_memory"],
+    sources: [
+      "langchain/stores/message/in_memory",
+      "@langchain/community/stores/message/in_memory",
+    ],
     originalSource: "@langchain/core/chat_history",
     originalSymbolName: "InMemoryChatMessageHistory",
   },
@@ -41,23 +44,23 @@ const SYMBOL_EDGE_CASE_MAP = {
     originalSource: "@langchain/google-common/types",
     originalSymbolName: null,
   },
-  RecursiveCharacterTextSplitter: {}
-}
+  RecursiveCharacterTextSplitter: {},
+};
 
 /**
  * Symbols which will never exist in the API refs.
- * 
+ *
  * This can be caused by re-exports from non LangChain
  * packages.
  */
 const SYMBOLS_TO_SKIP_MAP = {
   LunaryHandler: {
-    source: "@langchain/community/callbacks/handlers/lunary"
+    source: "@langchain/community/callbacks/handlers/lunary",
   },
   updateEntrypointsFrom0_0_xTo0_1_x: {
-    source: "@langchain/scripts/migrations"
-  }
-}
+    source: "@langchain/scripts/migrations",
+  },
+};
 
 /**
  *
@@ -108,7 +111,12 @@ async function webpackLoader(content, map, meta) {
             const local = specifier.local.value;
             const imported = specifier.imported?.value ?? local;
             // Only push imports if the symbol & source is not in the skip map.
-            if (!(imported in SYMBOLS_TO_SKIP_MAP && SYMBOLS_TO_SKIP_MAP[imported].source === source)) {
+            if (
+              !(
+                imported in SYMBOLS_TO_SKIP_MAP &&
+                SYMBOLS_TO_SKIP_MAP[imported].source === source
+              )
+            ) {
               imports.push({ local, imported, source });
             }
           } else {
@@ -121,9 +129,9 @@ async function webpackLoader(content, map, meta) {
     /**
      * Create a full path to the API ref docs file, given a "componentPath".
      * A "componentPath" is a string in the format of "category/module/symbol.html".
-     * 
+     *
      * @param {string} componentPath The path to the component in the API docs.
-     * @returns {string} The path to the API docs file. 
+     * @returns {string} The path to the API docs file.
      */
     const getDocsPath = (componentPath) =>
       path.resolve("..", "api_refs", "public", componentPath);
@@ -131,25 +139,37 @@ async function webpackLoader(content, map, meta) {
     /**
      * Given an imported symbol and source, find the path to the API ref docs.
      * If no match is found, return null.
-     * 
+     *
      * @param {string} imported The name of the imported symbol. E.g. `ChatOpenAI`
      * @param {string} source The name of the package/module it was imported from. E.g. `@langchain/openai`
      * @returns {string | null} The path to the API docs file or null if not found.
      */
     const findApiRefPath = (imported, source) => {
       // Fix the source if it's an edge case.
-      if (imported in SYMBOL_EDGE_CASE_MAP && SYMBOL_EDGE_CASE_MAP[imported].sources.some((s) => s === source)) {
+      if (
+        imported in SYMBOL_EDGE_CASE_MAP &&
+        SYMBOL_EDGE_CASE_MAP[imported].sources.some((s) => s === source)
+      ) {
         source = SYMBOL_EDGE_CASE_MAP[imported].originalSource;
-        imported = SYMBOL_EDGE_CASE_MAP[imported].originalSymbolName ?? imported;
+        imported =
+          SYMBOL_EDGE_CASE_MAP[imported].originalSymbolName ?? imported;
       }
 
       let cleanedSource = "";
       if (source.startsWith("@langchain/")) {
-        cleanedSource = source.replace("@langchain/", "langchain_").replaceAll("/", "_").replaceAll("-", "_");
+        cleanedSource = source
+          .replace("@langchain/", "langchain_")
+          .replaceAll("/", "_")
+          .replaceAll("-", "_");
       } else if (source.startsWith("langchain")) {
-        cleanedSource = source.replace("langchain/", "langchain_").replaceAll("/", "_").replaceAll("-", "_");
+        cleanedSource = source
+          .replace("langchain/", "langchain_")
+          .replaceAll("/", "_")
+          .replaceAll("-", "_");
       } else {
-        throw new Error(`Invalid source: ${source}. Must be prefixed with one of "langchain/" or "@langchain/"`)
+        throw new Error(
+          `Invalid source: ${source}. Must be prefixed with one of "langchain/" or "@langchain/"`
+        );
       }
       const componentPath = `${cleanedSource}.${imported}.html`;
 
@@ -169,7 +189,7 @@ async function webpackLoader(content, map, meta) {
         }
       });
       return actualPath;
-    }
+    };
 
     imports.forEach((imp) => {
       const { imported, source } = imp;
@@ -180,7 +200,9 @@ async function webpackLoader(content, map, meta) {
       } else {
         // `this.resourcePath` is typically the absolute path. By splitting at "examples/"
         // we can get the relative path to the examples directory, making the error more readable.
-        const cleanedResourcePath = this.resourcePath.includes("examples/") ? this.resourcePath.split("examples/")[1] : this.resourcePath;
+        const cleanedResourcePath = this.resourcePath.includes("examples/")
+          ? this.resourcePath.split("examples/")[1]
+          : this.resourcePath;
         console.warn(
           {
             imported,
