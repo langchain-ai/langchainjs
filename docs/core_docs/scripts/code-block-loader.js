@@ -6,6 +6,60 @@ const path = require("path");
 const fs = require("fs");
 
 /**
+ * Edge cases where the import will not match the proper API ref path.
+ * This is typically caused by a re-export, or an aliased export so we
+ * must manually map the import to the correct path.
+ */
+const SYMBOL_EDGE_CASE_MAP = {
+  InMemoryStore: {
+    sources: ["langchain/storage/in_memory"],
+    originalSource: "@langchain/core/stores",
+    originalSymbolName: null,
+  },
+  ToolMessage: {
+    sources: ["@langchain/core/messages"],
+    originalSource: "@langchain/core/messages/tool",
+    originalSymbolName: null,
+  },
+  zodToGeminiParameters: {
+    sources: ["@langchain/google-vertexai/utils"],
+    originalSource: "@langchain/google-common",
+    originalSymbolName: null,
+  },
+  FunctionalTranslator: {
+    sources: ["langchain/retrievers/self_query/functional"],
+    originalSource: "@langchain/core/structured_query",
+    originalSymbolName: null,
+  },
+  ChatMessageHistory: {
+    sources: ["langchain/stores/message/in_memory", "@langchain/community/stores/message/in_memory"],
+    originalSource: "@langchain/core/chat_history",
+    originalSymbolName: "InMemoryChatMessageHistory",
+  },
+  GeminiTool: {
+    sources: ["@langchain/google-vertexai/types"],
+    originalSource: "@langchain/google-common/types",
+    originalSymbolName: null,
+  },
+  RecursiveCharacterTextSplitter: {}
+}
+
+/**
+ * Symbols which will never exist in the API refs.
+ * 
+ * This can be caused by re-exports from non LangChain
+ * packages.
+ */
+const SYMBOLS_TO_SKIP_MAP = {
+  LunaryHandler: {
+    source: "@langchain/community/callbacks/handlers/lunary"
+  },
+  updateEntrypointsFrom0_0_xTo0_1_x: {
+    source: "@langchain/scripts/migrations"
+  }
+}
+
+/**
  *
  * @param {string|Buffer} content Content of the resource file
  * @param {object} [map] SourceMap data consumable by https://github.com/mozilla/source-map
@@ -17,6 +71,7 @@ async function webpackLoader(content, map, meta) {
   // Directories generated inside the API docs (excluding "modules").
   const CATEGORIES = [
     "classes",
+    "enums",
     "functions",
     "interfaces",
     "types",
@@ -52,7 +107,10 @@ async function webpackLoader(content, map, meta) {
           if (specifier.type === "ImportSpecifier") {
             const local = specifier.local.value;
             const imported = specifier.imported?.value ?? local;
-            imports.push({ local, imported, source });
+            // Only push imports if the symbol & source is not in the skip map.
+            if (!(imported in SYMBOLS_TO_SKIP_MAP && SYMBOLS_TO_SKIP_MAP[imported].source === source)) {
+              imports.push({ local, imported, source });
+            }
           } else {
             throw new Error("Unsupported import type");
           }
@@ -60,91 +118,75 @@ async function webpackLoader(content, map, meta) {
       }
     });
 
+    /**
+     * Create a full path to the API ref docs file, given a "componentPath".
+     * A "componentPath" is a string in the format of "category/module/symbol.html".
+     * 
+     * @param {string} componentPath The path to the component in the API docs.
+     * @returns {string} The path to the API docs file. 
+     */
     const getDocsPath = (componentPath) =>
-      path.resolve(__dirname, "..", "api_refs", "public", componentPath);
-
-    const getPackageModuleName = (moduleName, imported, category) => {
-      const prefix = `${category}/langchain`;
-      const suffix = `.${imported}.html`;
-
-      if (suffix.includes("Runnable") && moduleName.startsWith("core")) {
-        return `${category}/langchain_schema_runnable${suffix}`;
-      }
-
-      // @TODO - Find a better way to deal with core
-      if (moduleName.startsWith("core")) {
-        return `${category}/langchain_schema${suffix}`;
-      }
-
-      return `${prefix}_${moduleName}_${suffix}`;
-    };
+      path.resolve("..", "api_refs", "public", componentPath);
 
     /**
-     * Somewhat of a hacky solution to finding the exact path of the docs file.
-     * Maps over all categories in the API docs and if the file exists, returns the path.
-     * @param {string} moduleName
-     * @param {string} imported
-     * @returns {string | undefined}
+     * Given an imported symbol and source, find the path to the API ref docs.
+     * If no match is found, return null.
+     * 
+     * @param {string} imported The name of the imported symbol. E.g. `ChatOpenAI`
+     * @param {string} source The name of the package/module it was imported from. E.g. `@langchain/openai`
+     * @returns {string | null} The path to the API docs file or null if not found.
      */
-    const findExactPath = (moduleName, imported) => {
-      let modulePath;
+    const findApiRefPath = (imported, source) => {
+      // Fix the source if it's an edge case.
+      if (imported in SYMBOL_EDGE_CASE_MAP && SYMBOL_EDGE_CASE_MAP[imported].sources.some((s) => s === source)) {
+        source = SYMBOL_EDGE_CASE_MAP[imported].originalSource;
+        imported = SYMBOL_EDGE_CASE_MAP[imported].originalSymbolName ?? imported;
+      }
+
+      let cleanedSource = "";
+      if (source.startsWith("@langchain/")) {
+        cleanedSource = source.replace("@langchain/", "langchain_").replaceAll("/", "_").replaceAll("-", "_");
+      } else if (source.startsWith("langchain")) {
+        cleanedSource = source.replace("langchain/", "langchain_").replaceAll("/", "_").replaceAll("-", "_");
+      } else {
+        throw new Error(`Invalid source: ${source}. Must be prefixed with one of "langchain/" or "@langchain/"`)
+      }
+      const componentPath = `${cleanedSource}.${imported}.html`;
+
+      /**
+       * Defaults to null, reassigned to string if a match is found.
+       * @type {null | string}
+       */
+      let actualPath = null;
       CATEGORIES.forEach((category) => {
-        // from langchain/src
-        const componentPathLangChain = `${category}/langchain_${moduleName}.${imported}.html`;
-        const docsPathLangChain = getDocsPath(componentPathLangChain);
-
-        const componentPathLangChainNoCore = `${category}/langchain_${
-          moduleName.startsWith("core_")
-            ? moduleName.replace("core_", "")
-            : moduleName
-        }.${imported}.html`;
-        const docsPathLangChainNoCore = getDocsPath(
-          componentPathLangChainNoCore
-        );
-
-        // from packages
-        const componentPathPackage = getPackageModuleName(
-          moduleName,
-          imported,
-          category
-        );
-        const docsPathPackage = componentPathPackage
-          ? getDocsPath(componentPathPackage)
-          : null;
-
-        // The modules from `langchain-core` are named differently in the API docs.
-        const componentPathWithSchema = `${category}/langchain_schema_${moduleName.slice(
-          0,
-          -1
-        )}.${imported}.html`;
-        const newDocsPath = getDocsPath(componentPathWithSchema);
-
-        // Check with the package name split off.
-        // This is because some modules are re-exported from langchain
-        // but the import might be from the package itself.
-        if (fs.existsSync(docsPathLangChain)) {
-          modulePath = componentPathLangChain;
-        } else if (fs.existsSync(newDocsPath)) {
-          modulePath = componentPathWithSchema;
-        } else if (docsPathPackage && fs.existsSync(docsPathPackage)) {
-          modulePath = componentPathPackage;
-        } else if (fs.existsSync(docsPathLangChainNoCore)) {
-          modulePath = componentPathLangChainNoCore;
+        if (actualPath !== null) {
+          return;
+        }
+        const fullPath = `${category}/${componentPath}`;
+        const pathExists = fs.existsSync(getDocsPath(fullPath));
+        if (pathExists) {
+          actualPath = fullPath;
         }
       });
-      return modulePath;
-    };
+      return actualPath;
+    }
 
     imports.forEach((imp) => {
       const { imported, source } = imp;
-      const moduleName = source.split("/").slice(1).join("_").replace("-", "_");
-      const exactPath = findExactPath(moduleName, imported);
-      if (exactPath) {
-        imp.docs = BASE_URL + "/" + exactPath;
+      const apiRefPath = findApiRefPath(imported, source);
+
+      if (apiRefPath) {
+        imp.docs = BASE_URL + "/" + apiRefPath;
       } else {
-        // eslint-disable-next-line no-console
+        // `this.resourcePath` is typically the absolute path. By splitting at "examples/"
+        // we can get the relative path to the examples directory, making the error more readable.
+        const cleanedResourcePath = this.resourcePath.includes("examples/") ? this.resourcePath.split("examples/")[1] : this.resourcePath;
         console.warn(
-          `${this.resourcePath}: Could not find docs for ${moduleName}.${imported} or schema_${moduleName}.${imported} in api_refs/public/`
+          {
+            imported,
+            source,
+          },
+          `examples/${cleanedResourcePath}: Could not find API refs link.`
         );
       }
     });
