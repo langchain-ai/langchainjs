@@ -32,10 +32,6 @@ cp ../root/yarn.lock ../root/.yarnrc.yml .
 yarn plugin import workspace-tools
 yarn workspaces focus --production
 
-pwd
-
-ls
-
 # Check the build command completes successfully
 yarn build
 
