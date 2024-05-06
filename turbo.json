@@ -78,6 +78,10 @@
       "outputs": [],
       "dependsOn": ["^build"]
     },
+    "build:scripts": {
+      "outputs": [],
+      "dependsOn": []
+    },
     "test:ci": {
       "outputs": [],
       "dependsOn": ["test"]

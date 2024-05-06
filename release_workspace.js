@@ -278,7 +278,7 @@ async function main() {
 
   // Run build, lint, tests
   console.log("Running build, lint, and tests.");
-  execSync(`yarn turbo:command run --filter ${options.workspace} build lint test --concurrency 1`);
+  execSync(`yarn turbo:command run --filter=${options.workspace} build lint test`);
   console.log("Successfully ran build, lint, and tests.");
 
   // Only run export tests for primary projects.
