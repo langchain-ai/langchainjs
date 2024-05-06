@@ -3,6 +3,11 @@
 
 import { z } from "zod";
 import { DynamicStructuredTool } from "@langchain/core/tools";
+import { RunnableSequence } from "@langchain/core/runnables";
+import {
+  JsonOutputToolsParser,
+  JsonOutputKeyToolsParser,
+} from "@langchain/core/output_parsers/openai_tools";
 
 const multiplyTool = new DynamicStructuredTool({
   name: "multiply",
@@ -47,12 +52,6 @@ const chain2 = modelWithTools.pipe(
 );
 
 console.log(await chain2.invoke("What's 4 times 23?"));
-
-import { RunnableSequence } from "@langchain/core/runnables";
-import {
-  JsonOutputToolsParser,
-  JsonOutputKeyToolsParser,
-} from "@langchain/core/output_parsers/openai_tools";
 
 const chain3 = RunnableSequence.from([
   modelWithTools,
