@@ -44,7 +44,6 @@ const SYMBOL_EDGE_CASE_MAP = {
     originalSource: "@langchain/google-common/types",
     originalSymbolName: null,
   },
-  RecursiveCharacterTextSplitter: {},
 };
 
 /**
