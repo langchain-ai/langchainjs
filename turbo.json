@@ -20,30 +20,27 @@
       ]
     },
     "@langchain/core#build": {
-      "dependsOn": ["@langchain/scripts#build"],
+      "dependsOn": [],
       "outputs": ["dist/**", "dist-cjs/**", "*.js", "*.cjs", "*.d.ts"],
       "inputs": ["src/**", "scripts/**", "package.json", "tsconfig.json"]
     },
     "@langchain/anthropic#build": {
-      "dependsOn": ["@langchain/core#build"],
+      "dependsOn": [],
       "outputs": ["dist/**", "dist-cjs/**", "*.js", "*.cjs", "*.d.ts"],
       "inputs": ["src/**", "scripts/**", "package.json", "tsconfig.json"]
     },
     "@langchain/openai#build": {
-      "dependsOn": ["@langchain/core#build"],
+      "dependsOn": [],
       "outputs": ["dist/**", "dist-cjs/**", "*.js", "*.cjs", "*.d.ts"],
       "inputs": ["src/**", "scripts/**", "package.json", "tsconfig.json"]
     },
     "@langchain/community#build": {
-      "dependsOn": ["@langchain/openai#build"],
+      "dependsOn": [],
       "outputs": ["dist/**", "dist-cjs/**", "*.js", "*.cjs", "*.d.ts"],
       "inputs": ["src/**", "scripts/**", "package.json", "tsconfig.json"]
     },
     "build": {
       "dependsOn": [
-        "@langchain/scripts#build",
-        "@langchain/core#build",
-        "@langchain/community#build",
         "^build"
       ],
       "outputs": ["dist/**", "dist-cjs/**", "*.js", "*.cjs", "*.d.ts"],
