@@ -41,6 +41,8 @@
     },
     "build": {
       "dependsOn": [
+        "@langchain/scripts#build",
+        "@langchain/core#build",
         "^build"
       ],
       "outputs": ["dist/**", "dist-cjs/**", "*.js", "*.cjs", "*.d.ts"],
