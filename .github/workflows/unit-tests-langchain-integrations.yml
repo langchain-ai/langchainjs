@@ -42,6 +42,9 @@ jobs:
     env:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+      TURBO_REMOTE_ONLY: true
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}

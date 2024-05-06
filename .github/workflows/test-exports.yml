@@ -18,6 +18,9 @@ env:
   PUPPETEER_SKIP_DOWNLOAD: "true"
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
   NODE_VERSION: "18.x"
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+  TURBO_REMOTE_ONLY: true
 
 # Run a separate job for each check in the docker-compose file,
 # so that they run in parallel instead of overwhelming the default 2 CPU runner.
@@ -34,7 +37,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build
-        run: yarn workspace langchain build
+        run: yarn build --filter=langchain
         shell: bash
         env:
           SKIP_API_DOCS: true
@@ -54,7 +57,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build
-        run: yarn workspace langchain build
+        run: yarn build --filter=langchain
         shell: bash
         env:
           SKIP_API_DOCS: true
@@ -74,7 +77,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build
-        run: yarn workspace langchain build
+        run: yarn build --filter=langchain
         shell: bash
         env:
           SKIP_API_DOCS: true
@@ -94,7 +97,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build
-        run: yarn workspace langchain build
+        run: yarn build --filter=langchain
         shell: bash
         env:
           SKIP_API_DOCS: true
@@ -114,7 +117,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build
-        run: yarn workspace langchain build
+        run: yarn build --filter=langchain
         shell: bash
         env:
           SKIP_API_DOCS: true
@@ -134,7 +137,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build
-        run: yarn workspace langchain build
+        run: yarn build --filter=langchain
         shell: bash
         env:
           SKIP_API_DOCS: true
@@ -154,7 +157,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build
-        run: yarn workspace langchain build
+        run: yarn build --filter=langchain
         shell: bash
         env:
           SKIP_API_DOCS: true
@@ -174,7 +177,7 @@ jobs:
   #     - name: Install dependencies
   #       run: yarn install --immutable
   #     - name: Build
-  #       run: yarn workspace langchain build
+  #       run: yarn build --filter=langchain
   #       shell: bash
   #       env:
   #         SKIP_API_DOCS: true
