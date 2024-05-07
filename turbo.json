@@ -1,7 +1,7 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "remoteCache": {
-    "enabled": true
+    "enabled": false
   },
   "globalDependencies": ["**/.env"],
   "pipeline": {
