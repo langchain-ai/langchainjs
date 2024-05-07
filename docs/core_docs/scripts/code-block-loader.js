@@ -53,6 +53,11 @@ const SYMBOL_EDGE_CASE_MAP = {
     sources: ["langchain/text_splitter"],
     originalSource: "@langchain/textsplitters",
     originalSymbolName: null,
+  },
+  TokenTextSplitter: {
+    sources: ["langchain/text_splitter"],
+    originalSource: "@langchain/textsplitters",
+    originalSymbolName: null,
   }
 };
 
