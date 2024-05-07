@@ -95,9 +95,11 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
   ): Promise<string> {
     try {
       const promptOptions = {
-        grammar: this?._jsonSchema === undefined && this?._gbnf !== undefined ? this?._gbnf 
-                : this?._jsonSchema !== undefined && this?._gbnf === undefined ? this?._jsonSchema 
-                : this?._jsonSchema,
+        grammar:this._jsonSchema !== undefined
+        ? this._jsonSchema
+        : this._gbnf !== undefined
+        ? this._gbnf
+        : undefined,
         onToken: options?.onToken,
         maxTokens: this?.maxTokens,
         temperature: this?.temperature,
