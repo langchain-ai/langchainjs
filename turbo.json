@@ -20,22 +20,22 @@
       ]
     },
     "@langchain/core#build": {
-      "dependsOn": [],
+      "dependsOn": ["@langchain/scripts#build"],
       "outputs": ["dist/**", "dist-cjs/**", "*.js", "*.cjs", "*.d.ts"],
       "inputs": ["src/**", "scripts/**", "package.json", "tsconfig.json"]
     },
     "@langchain/anthropic#build": {
-      "dependsOn": [],
+      "dependsOn": ["@langchain/core#build"],
       "outputs": ["dist/**", "dist-cjs/**", "*.js", "*.cjs", "*.d.ts"],
       "inputs": ["src/**", "scripts/**", "package.json", "tsconfig.json"]
     },
     "@langchain/openai#build": {
-      "dependsOn": [],
+      "dependsOn": ["@langchain/core#build"],
       "outputs": ["dist/**", "dist-cjs/**", "*.js", "*.cjs", "*.d.ts"],
       "inputs": ["src/**", "scripts/**", "package.json", "tsconfig.json"]
     },
     "@langchain/community#build": {
-      "dependsOn": [],
+      "dependsOn": ["@langchain/openai#build"],
       "outputs": ["dist/**", "dist-cjs/**", "*.js", "*.cjs", "*.d.ts"],
       "inputs": ["src/**", "scripts/**", "package.json", "tsconfig.json"]
     },
