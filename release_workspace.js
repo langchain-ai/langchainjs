@@ -96,7 +96,7 @@ async function runYarnRelease(packageDirectory, npm2FACode, tag) {
     const workingDirectory = path.join(process.cwd(), packageDirectory);
     const tagArg = tag ? `--npm.tag=${tag}` : "";
     const args = ["release-it", `--npm.otp=${npm2FACode}`, tagArg, "--config", ".release-it.json"];
-    
+
     console.log(`Running command: "yarn ${args.join(" ")}"`);
 
     const yarnReleaseProcess = spawn("yarn", args, { stdio: "inherit", cwd: workingDirectory });
@@ -161,10 +161,10 @@ function bumpDeps(workspaceName, workspaceDirectory, allWorkspaces, tag, preRele
   console.log(`Checking out new branch: ${newBranchName}`);
   execSync(`git checkout -b ${newBranchName}`);
 
-  const allWorkspacesWhichDependOn = allWorkspaces.filter(({ packageJSON }) => 
+  const allWorkspacesWhichDependOn = allWorkspaces.filter(({ packageJSON }) =>
     Object.keys(packageJSON.dependencies ?? {}).includes(workspaceName)
   );
-  const allWorkspacesWhichDevDependOn = allWorkspaces.filter(({ packageJSON }) => 
+  const allWorkspacesWhichDevDependOn = allWorkspaces.filter(({ packageJSON }) =>
     Object.keys(packageJSON.devDependencies ?? {}).includes(workspaceName)
   );
   const allWorkspacesWhichPeerDependOn = allWorkspaces.filter(({ packageJSON }) =>
@@ -268,7 +268,7 @@ async function main() {
   // Find the workspace package.json's.
   const allWorkspaces = getAllWorkspaces();
   const matchingWorkspace = allWorkspaces.find(({ packageJSON }) => packageJSON.name === options.workspace);
-  
+
   if (!matchingWorkspace) {
     throw new Error(`Could not find workspace ${options.workspace}`);
   }
@@ -278,7 +278,7 @@ async function main() {
 
   // Run build, lint, tests
   console.log("Running build, lint, and tests.");
-  execSync(`yarn turbo:command run --filter=${options.workspace} build lint test`);
+  execSync(`yarn turbo:command --concurrency=1 run --filter=${options.workspace} build lint test`);
   console.log("Successfully ran build, lint, and tests.");
 
   // Only run export tests for primary projects.
@@ -299,7 +299,7 @@ async function main() {
 
   // Run `release-it` on workspace
   await runYarnRelease(matchingWorkspace.dir, npm2FACode, options.tag);
-  
+
   // Log release branch URL
   console.log("🔗 Open %s and merge the release PR.", `\x1b[34mhttps://github.com/langchain-ai/langchainjs/compare/release?expand=1\x1b[0m`);
 

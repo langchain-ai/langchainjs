@@ -19,7 +19,7 @@
   "packageManager": "yarn@3.4.1",
   "scripts": {
     "build": "turbo run build --filter=\"!test-exports-*\" --concurrency=1",
-    "turbo:command": "turbo --concurrency=1",
+    "turbo:command": "turbo",
     "format": "turbo run format",
     "format:check": "turbo run format:check",
     "lint": "turbo run lint --concurrency=1",
