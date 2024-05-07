@@ -9824,7 +9824,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/qdrant@workspace:libs/langchain-qdrant":
+"@langchain/qdrant@workspace:*, @langchain/qdrant@workspace:libs/langchain-qdrant":
   version: 0.0.0-use.local
   resolution: "@langchain/qdrant@workspace:libs/langchain-qdrant"
   dependencies:
@@ -21820,6 +21820,7 @@ __metadata:
     "@langchain/nomic": "workspace:*"
     "@langchain/openai": "workspace:*"
     "@langchain/pinecone": "workspace:*"
+    "@langchain/qdrant": "workspace:*"
     "@langchain/redis": "workspace:*"
     "@langchain/scripts": "workspace:*"
     "@langchain/weaviate": "workspace:*"
