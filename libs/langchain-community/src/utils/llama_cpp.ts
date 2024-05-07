@@ -49,7 +49,7 @@ export interface LlamaBaseCppInputs {
   /** Only load the vocabulary, no weights. */
   vocabOnly?: boolean;
   /** JSON schema to be used to format output. Also known as `grammar`. */
-  jsonSchema?: GbnfJsonSchema;
+  jsonSchema?: object;
   /** GBNF string to be used to format output. Also known as `grammar`. */
   gbnf?: string;
 }
@@ -92,11 +92,14 @@ export function createLlamaSession(context: LlamaContext): LlamaChatSession {
 }
 
 export function createLlamaJsonSchemaGrammar(
-  schemaJSON: GbnfJsonSchema | undefined
+  schemaString: object | undefined
 ): LlamaJsonSchemaGrammar<GbnfJsonSchema> | undefined {
-  return schemaJSON === undefined
-    ? undefined
-    : new LlamaJsonSchemaGrammar(schemaJSON);
+  if (schemaString === undefined) {
+    return undefined;
+  }
+
+  const schemaJSON = schemaString as GbnfJsonSchema;
+  return new LlamaJsonSchemaGrammar(schemaJSON);
 }
 
 export function createCustomGrammar(

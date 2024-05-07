@@ -57,7 +57,7 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
 
   trimWhitespaceSuffix?: boolean;
 
-  jsonSchema?: GbnfJsonSchema;
+  jsonSchema?:  object;
 
   gbnf?: string;
 
@@ -82,13 +82,11 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
     this.topK = inputs?.topK;
     this.topP = inputs?.topP;
     this.trimWhitespaceSuffix = inputs?.trimWhitespaceSuffix;
-    this.jsonSchema = inputs?.jsonSchema;
-    this.gbnf = inputs?.gbnf;
     this._model = createLlamaModel(inputs);
     this._context = createLlamaContext(this._model, inputs);
     this._session = createLlamaSession(this._context);
-    this._jsonSchema = createLlamaJsonSchemaGrammar(this.jsonSchema);
-    this._gbnf = createCustomGrammar(this.gbnf);
+    this._jsonSchema = createLlamaJsonSchemaGrammar(inputs?.jsonSchema);
+    this._gbnf = createCustomGrammar(inputs?.gbnf);
   }
 
   _llmType() {
