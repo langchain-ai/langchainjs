@@ -1,4 +1,11 @@
-import { LlamaModel, LlamaContext, LlamaChatSession,LlamaJsonSchemaGrammar, LlamaGrammar, GbnfJsonSchema } from "node-llama-cpp";
+import {
+  LlamaModel,
+  LlamaContext,
+  LlamaChatSession,
+  LlamaJsonSchemaGrammar,
+  LlamaGrammar,
+  GbnfJsonSchema,
+} from "node-llama-cpp";
 
 /**
  * Note that the modelPath is the only required parameter. For testing you
@@ -42,9 +49,9 @@ export interface LlamaBaseCppInputs {
   /** Only load the vocabulary, no weights. */
   vocabOnly?: boolean;
   /** JSON schema to be used to format output. Also known as `grammar`. */
-  jsonSchema?:GbnfJsonSchema;
- /** GBNF string to be used to format output. Also known as `grammar`. */
-  gbnf?:string
+  jsonSchema?: GbnfJsonSchema;
+  /** GBNF string to be used to format output. Also known as `grammar`. */
+  gbnf?: string;
 }
 
 export function createLlamaModel(inputs: LlamaBaseCppInputs): LlamaModel {
@@ -55,7 +62,7 @@ export function createLlamaModel(inputs: LlamaBaseCppInputs): LlamaModel {
     useMmap: inputs?.useMmap,
     vocabOnly: inputs?.vocabOnly,
     jsonSchema: inputs?.jsonSchema,
-    gbnf:inputs?.gbnf,
+    gbnf: inputs?.gbnf,
   };
 
   return new LlamaModel(options);
@@ -84,10 +91,18 @@ export function createLlamaSession(context: LlamaContext): LlamaChatSession {
   return new LlamaChatSession({ context });
 }
 
-export function createLlamaJsonSchemaGrammar(schemaJSON: GbnfJsonSchema | undefined): LlamaJsonSchemaGrammar<GbnfJsonSchema> | undefined {
-  return schemaJSON === undefined ? undefined : new LlamaJsonSchemaGrammar(schemaJSON);
+export function createLlamaJsonSchemaGrammar(
+  schemaJSON: GbnfJsonSchema | undefined
+): LlamaJsonSchemaGrammar<GbnfJsonSchema> | undefined {
+  return schemaJSON === undefined
+    ? undefined
+    : new LlamaJsonSchemaGrammar(schemaJSON);
 }
 
-export function createCustomGrammar(filePath: string | undefined): LlamaGrammar | undefined {
-  return filePath === undefined ? undefined : new LlamaGrammar({ grammar: filePath });
+export function createCustomGrammar(
+  filePath: string | undefined
+): LlamaGrammar | undefined {
+  return filePath === undefined
+    ? undefined
+    : new LlamaGrammar({ grammar: filePath });
 }
