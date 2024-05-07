@@ -61,7 +61,7 @@ async function webpackLoader(content, map, meta) {
     });
 
     const getDocsPath = (componentPath) =>
-      path.resolve(__dirname, "..", "api_refs", "public", componentPath);
+      path.resolve("..", "api_refs", "public", componentPath);
 
     const getPackageModuleName = (moduleName, imported, category) => {
       const prefix = `${category}/langchain`;
@@ -93,11 +93,10 @@ async function webpackLoader(content, map, meta) {
         const componentPathLangChain = `${category}/langchain_${moduleName}.${imported}.html`;
         const docsPathLangChain = getDocsPath(componentPathLangChain);
 
-        const componentPathLangChainNoCore = `${category}/langchain_${
-          moduleName.startsWith("core_")
+        const componentPathLangChainNoCore = `${category}/langchain_${moduleName.startsWith("core_")
             ? moduleName.replace("core_", "")
             : moduleName
-        }.${imported}.html`;
+          }.${imported}.html`;
         const docsPathLangChainNoCore = getDocsPath(
           componentPathLangChainNoCore
         );
