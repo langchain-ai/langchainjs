@@ -177,7 +177,7 @@ export async function checkBrokenLinks(
     const batchResults = await Promise.all(batchLinksChecked);
     const batchLinksCount = batchResults.reduce<number>((acc, result) => {
       if (typeof result.linksChecked === "number") {
-        return acc + result.linksChecked;
+        acc = acc + result.linksChecked;
       }
       // Do not push the message if we are retrying failed links
       // because we will push the message again after retrying
