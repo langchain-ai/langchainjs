@@ -1,4 +1,5 @@
 import {
+    MaxMarginalRelevanceSearchOptions,
     VectorStore,
 } from '@langchain/core/vectorstores';
 import type { EmbeddingsInterface } from '@langchain/core/embeddings';
@@ -26,12 +27,15 @@ import {VectorQuerySnapshot} from '@google-cloud/firestore';
  * @param collection Firestore collection to store the vectors.
  * @param textKey Corresponds to the plaintext of 'pageContent'.
  * @param embeddingKey Key to store the embedding under.
+ * @param metadataKey Key to store the metadata under.
+ * @param vectorType Type of vector comparison
  */
 export interface FirestoreVectorSearchLibArgs extends AsyncCallerParams {
     readonly collection: CollectionReference;
     readonly textKey?: string;
     readonly embeddingKey?: string;
     readonly metadataKey?: string;
+    readonly vectorType?: SupportedVectorTypes;
 }
 
 /**
@@ -40,6 +44,8 @@ export interface FirestoreVectorSearchLibArgs extends AsyncCallerParams {
  * It applies a pre-filter query
  */
 type FirestoreFilter = Filter
+
+type SupportedVectorTypes = 'EUCLIDEAN' | 'COSINE' | 'DOT_PRODUCT'
 
 /**
  * Class that is a wrapper around Firestore.
@@ -55,7 +61,9 @@ export class FirestoreVectorSearch extends VectorStore {
 
     private readonly metadataKey: string;
 
-    // private caller: AsyncCaller;
+    private readonly vectorType: SupportedVectorTypes;
+
+    private caller: AsyncCaller;
 
     _vectorstoreType(): string {
         return 'firestore';
@@ -70,7 +78,8 @@ export class FirestoreVectorSearch extends VectorStore {
         this.textKey = args.textKey ?? 'text';
         this.embeddingKey = args.embeddingKey ?? 'embedding';
         this.metadataKey = args.metadataKey ?? 'metadata';
-        // this.caller = new AsyncCaller(args);
+        this.vectorType = args.vectorType ?? 'COSINE'
+        this.caller = new AsyncCaller(args);
     }
 
     /**
@@ -87,7 +96,7 @@ export class FirestoreVectorSearch extends VectorStore {
     ) {
         const docs = vectors.map((embedding, idx) => ({
             [this.textKey]: documents[idx].pageContent,
-            [this.embeddingKey]: embedding,
+            [this.embeddingKey]: FieldValue.vector(embedding),
             [this.metadataKey]: documents[idx].metadata,
         }));
         if (options?.ids === undefined) {
@@ -155,8 +164,9 @@ export class FirestoreVectorSearch extends VectorStore {
         // apply pre-filter query where available
         if (filter) qry = qry.where(filter)
         // apply vector query
+        const distanceMeasure = this.vectorType
         const vectorQuery = qry
-            .findNearest(this.embeddingKey, FieldValue.vector(query), {limit:k, distanceMeasure: 'EUCLIDEAN'})
+            .findNearest(this.embeddingKey, FieldValue.vector(query), {limit:k, distanceMeasure})
         // make the query
         const vectorQuerySnapshot:VectorQuerySnapshot = await vectorQuery.get();
         // convert the results
