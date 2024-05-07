@@ -59,6 +59,11 @@ const SYMBOL_EDGE_CASE_MAP = {
     originalSource: "@langchain/textsplitters",
     originalSymbolName: null,
   },
+  SupportedTextSplitterLanguages: {
+    sources: ["langchain/text_splitter"],
+    originalSource: "@langchain/textsplitters",
+    originalSymbolName: null,
+  },
 };
 
 /**
