@@ -2,29 +2,20 @@
 
 All functionality related to OpenAI
 
-> [OpenAI](https://en.wikipedia.org/wiki/OpenAI) is American artificial intelligence (AI) research laboratory
-> consisting of the non-profit `OpenAI Incorporated`
-> and its for-profit subsidiary corporation `OpenAI Limited Partnership`.
-> `OpenAI` conducts AI research with the declared intention of promoting and developing a friendly AI.
-> `OpenAI` systems run on an `Azure`-based supercomputing platform from `Microsoft`.
+> [OpenAI](https://en.wikipedia.org/wiki/OpenAI) is an American artificial intelligence (AI) research laboratory
+> consisting of the non-profit OpenAI Inc. and its for-profit subsidiary corporation OpenAI LP.
+> OpenAI conducts AI research with the declared intention of promoting and developing friendly AI.
+> OpenAI systems run on an Azure-based supercomputing platform from Microsoft.
 
 > The [OpenAI API](https://platform.openai.com/docs/models) is powered by a diverse set of models with different capabilities and price points.
 >
-> [ChatGPT](https://chat.openai.com) is the Artificial Intelligence (AI) chatbot developed by `OpenAI`.
+> [ChatGPT](https://chat.openai.com) is the Artificial Intelligence (AI) chatbot developed by OpenAI.
 
 ## Installation and Setup
 
-- Get an OpenAI api key and set it as an environment variable (`OPENAI_API_KEY`)
+- Get an OpenAI API key and set it as an environment variable (`OPENAI_API_KEY`).
 
-## LLM
-
-See a [usage example](/docs/integrations/llms/openai).
-
-import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
-
-<IntegrationInstallTooltip></IntegrationInstallTooltip>
-
-```bash npm2yarn
+```bash
 npm install @langchain/openai
 ```
 
@@ -32,7 +23,15 @@ npm install @langchain/openai
 import { OpenAI } from "@langchain/openai";
 ```
 
-## Chat model
+## LLM
+
+See a [usage example](/docs/integrations/llms/openai).
+
+```typescript
+import { OpenAILLM } from "@langchain/openai";
+```
+
+## Chat Model
 
 See a [usage example](/docs/integrations/chat/openai).
 
@@ -42,7 +41,7 @@ import { ChatOpenAI } from "@langchain/openai";
 
 ## Text Embedding Model
 
-See a [usage example](/docs/integrations/text_embedding/openai)
+See a [usage example](/docs/integrations/text_embedding/openai).
 
 ```typescript
 import { OpenAIEmbeddings } from "@langchain/openai";
@@ -53,11 +52,15 @@ import { OpenAIEmbeddings } from "@langchain/openai";
 See a [usage example](/docs/integrations/retrievers/chatgpt-retriever-plugin).
 
 ```typescript
-import { ChatGPTPluginRetriever } from "langchain/retrievers/remote";
+import { ChatGPTPluginRetriever } from "@langchain/retrievers/remote";
 ```
 
 ## Chain
 
 ```typescript
-import { OpenAIModerationChain } from "langchain/chains";
+import { OpenAIModerationChain } from "@langchain/chains";
 ```
+
+## API Reference
+
+For more detailed information on the OpenAI API and its capabilities, please refer to the [OpenAI API Documentation](https://platform.openai.com/docs/api).
