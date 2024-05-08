@@ -53,6 +53,7 @@ export const config = {
     "tools/searxng_search": "tools/searxng_search",
     "tools/serpapi": "tools/serpapi",
     "tools/serper": "tools/serper",
+    "tools/stackexchange": "tools/stackexchange",
     "tools/tavily_search": "tools/tavily_search",
     "tools/wikipedia_query_run": "tools/wikipedia_query_run",
     "tools/wolframalpha": "tools/wolframalpha",

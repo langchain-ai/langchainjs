@@ -90,6 +90,10 @@ tools/serper.cjs
 tools/serper.js
 tools/serper.d.ts
 tools/serper.d.cts
+tools/stackexchange.cjs
+tools/stackexchange.js
+tools/stackexchange.d.ts
+tools/stackexchange.d.cts
 tools/tavily_search.cjs
 tools/tavily_search.js
 tools/tavily_search.d.ts
