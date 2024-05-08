@@ -1,6 +1,5 @@
 {
-  "buildCommand": "yarn build",
-  "outputDirectory": "build",
+  "buildCommand": "yarn build:vercel",
   "trailingSlash": true,
   "rewrites": [
     {
