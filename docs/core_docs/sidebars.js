@@ -18,7 +18,7 @@
  Create as many sidebars as you want.
  */
 
- module.exports = {
+module.exports = {
   docs: [
     {
       type: "category",

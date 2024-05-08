@@ -1,7 +1,7 @@
 import React from "react";
 import { marked } from "marked";
 import DOMPurify from "isomorphic-dompurify";
-import Admonition from '@theme/Admonition';
+import Admonition from "@theme/Admonition";
 
 export default function PrerequisiteLinks({ content }) {
   return (
@@ -9,10 +9,11 @@ export default function PrerequisiteLinks({ content }) {
       <div style={{ marginTop: "8px" }}>
         This guide will assume familiarity with the following concepts:
       </div>
-      <div style={{ marginTop: "16px" }}
+      <div
+        style={{ marginTop: "16px" }}
         dangerouslySetInnerHTML={{
-          __html: DOMPurify.sanitize(marked.parse(content))
-        }} 
+          __html: DOMPurify.sanitize(marked.parse(content)),
+        }}
       />
     </Admonition>
   );

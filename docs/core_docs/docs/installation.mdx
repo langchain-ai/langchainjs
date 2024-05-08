@@ -8,8 +8,8 @@ sidebar_position: 2
 
 To install LangChain run:
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
 import CodeBlock from "@theme/CodeBlock";
 
 <Tabs>
@@ -17,7 +17,9 @@ import CodeBlock from "@theme/CodeBlock";
     <CodeBlock language="bash">pip install langchain</CodeBlock>
   </TabItem>
   <TabItem value="conda" label="Conda">
-    <CodeBlock language="bash">conda install langchain -c conda-forge</CodeBlock>
+    <CodeBlock language="bash">
+      conda install langchain -c conda-forge
+    </CodeBlock>
   </TabItem>
 </Tabs>
 
@@ -34,6 +36,7 @@ pip install -e .
 ```
 
 ## LangChain core
+
 The `langchain-core` package contains base abstractions that the rest of the LangChain ecosystem uses, along with the LangChain Expression Language. It is automatically installed by `langchain`, but can also be used separately. Install with:
 
 ```bash
@@ -41,6 +44,7 @@ pip install langchain-core
 ```
 
 ## LangChain community
+
 The `langchain-community` package contains third-party integrations. It is automatically installed by `langchain`, but can also be used separately. Install with:
 
 ```bash
@@ -48,6 +52,7 @@ pip install langchain-community
 ```
 
 ## LangChain experimental
+
 The `langchain-experimental` package holds experimental LangChain code, intended for research and experimental uses.
 Install with:
 
@@ -56,13 +61,16 @@ pip install langchain-experimental
 ```
 
 ## LangGraph
+
 `langgraph` is a library for building stateful, multi-actor applications with LLMs, built on top of (and intended to be used with) LangChain.
 Install with:
 
 ```bash
 pip install langgraph
 ```
+
 ## LangServe
+
 LangServe helps developers deploy LangChain runnables and chains as a REST API.
 LangServe is automatically installed by LangChain CLI.
 If not using LangChain CLI, install with:
@@ -70,9 +78,11 @@ If not using LangChain CLI, install with:
 ```bash
 pip install "langserve[all]"
 ```
+
 for both client and server dependencies. Or `pip install "langserve[client]"` for client code, and `pip install "langserve[server]"` for server code.
 
 ## LangChain CLI
+
 The LangChain CLI is useful for working with LangChain templates and other LangServe projects.
 Install with:
 
@@ -81,6 +91,7 @@ pip install langchain-cli
 ```
 
 ## LangSmith SDK
+
 The LangSmith SDK is automatically installed by LangChain.
 If not using LangChain, install with:
 

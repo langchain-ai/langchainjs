@@ -1,6 +1,6 @@
 # Conceptual guide
 
-import ThemedImage from '@theme/ThemedImage';
+import ThemedImage from "@theme/ThemedImage";
 
 This section contains introductions to key parts of LangChain.
 
@@ -11,13 +11,14 @@ LangChain as a framework consists of several pieces. The below diagram shows how
 <ThemedImage
   alt="Diagram outlining the hierarchical organization of the LangChain framework, displaying the interconnected parts across multiple layers."
   sources={{
-    light: '/svg/langchain_stack.svg',
-    dark: '/svg/langchain_stack_dark.svg',
+    light: "/svg/langchain_stack.svg",
+    dark: "/svg/langchain_stack_dark.svg",
   }}
   title="LangChain Framework Overview"
 />
 
 ### `langchain-core`
+
 This package contains base abstractions of different components and ways to compose them together.
 The interfaces for core components like LLMs, vectorstores, retrievers and more are defined here.
 No third party integrations are defined here.
@@ -126,17 +127,17 @@ These also have corresponding async methods that should be used with [asyncio](h
 
 The **input type** and **output type** varies by component:
 
-| Component | Input Type | Output Type |
-| --- | --- | --- |
-| Prompt | Dictionary | PromptValue |
-| ChatModel | Single string, list of chat messages or a PromptValue | ChatMessage |
-| LLM | Single string, list of chat messages or a PromptValue | String |
-| OutputParser | The output of an LLM or ChatModel | Depends on the parser |
-| Retriever | Single string | List of Documents |
-| Tool | Single string or dictionary, depending on the tool | Depends on the tool |
-
+| Component    | Input Type                                            | Output Type           |
+| ------------ | ----------------------------------------------------- | --------------------- |
+| Prompt       | Dictionary                                            | PromptValue           |
+| ChatModel    | Single string, list of chat messages or a PromptValue | ChatMessage           |
+| LLM          | Single string, list of chat messages or a PromptValue | String                |
+| OutputParser | The output of an LLM or ChatModel                     | Depends on the parser |
+| Retriever    | Single string                                         | List of Documents     |
+| Tool         | Single string or dictionary, depending on the tool    | Depends on the tool   |
 
 All runnables expose input and output **schemas** to inspect the inputs and outputs:
+
 - `input_schema`: an input Pydantic model auto-generated from the structure of the Runnable
 - `output_schema`: an output Pydantic model auto-generated from the structure of the Runnable
 
@@ -146,6 +147,7 @@ LangChain provides standard, extendable interfaces and external integrations for
 Some components LangChain implements, some components we rely on third-party integrations for, and others are a mix.
 
 ### LLMs
+
 Language models that takes a string as input and returns a string.
 These are traditionally older models (newer models generally are `ChatModels`, see below).
 
@@ -156,6 +158,7 @@ When messages are passed in as input, they will be formatted into a string under
 LangChain does not provide any LLMs, rather we rely on third party integrations.
 
 ### Chat models
+
 Language models that use a sequence of messages as inputs and return chat messages as outputs (as opposed to using plain text).
 These are traditionally newer models (older models are generally `LLMs`, see above).
 Chat models support the assignment of distinct roles to conversation messages, helping to distinguish messages from the AI, users, and instructions such as system messages.
@@ -167,6 +170,7 @@ When a string is passed in as input, it will be converted to a HumanMessage unde
 LangChain does not provide any ChatModels, rather we rely on third party integrations.
 
 We have some standardized parameters when constructing ChatModels:
+
 - `model`: the name of the model
 
 ChatModels also accept other parameters that are specific to that integration.
@@ -207,7 +211,6 @@ There are two main use cases for function/tool calling:
 
 - [How to return structured data from an LLM](/v0.2/docs/how_to/structured_output/)
 - [How to use a model to call tools](/v0.2/docs/how_to/tool_calling/)
-
 
 ### Message types
 
@@ -260,8 +263,8 @@ This represents the result of a function call. In addition to `role` and `conten
 
 This represents the result of a tool call. This is distinct from a FunctionMessage in order to match OpenAI's `function` and `tool` message types. In addition to `role` and `content`, this message has a `tool_call_id` parameter which conveys the id of the call to the tool that was called to produce this result.
 
-
 ### Prompt templates
+
 Prompt templates help to translate user input and parameters into instructions for a language model.
 This can be used to guide a model's response, helping it understand the context and generate relevant and coherent language-based output.
 
@@ -338,11 +341,11 @@ prompt_template = ChatPromptTemplate.from_messages([
 ```
 
 ### Example Selectors
+
 One common prompting technique for achieving better performance is to include examples as part of the prompt.
 This gives the language model concrete examples of how it should behave.
 Sometimes these examples are hardcoded into the prompt, but for more advanced situations it may be nice to dynamically select them.
 Example Selectors are classes responsible for selecting and then formatting examples into prompts.
-
 
 ### Output parsers
 
@@ -374,21 +377,22 @@ LangChain has lots of different types of output parsers. This is a list of outpu
 
 **Description**: Our commentary on this output parser and when to use it.
 
-| Name            | Supports Streaming | Has Format Instructions       | Calls LLM | Input Type                       | Output Type          | Description                                                                                                                                                                                                                                              |
-|-----------------|--------------------|-------------------------------|-----------|----------------------------------|----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [JSON](https://api.python.langchain.com/en/latest/output_parsers/langchain_core.output_parsers.json.JsonOutputParser.html#langchain_core.output_parsers.json.JsonOutputParser)            | ✅                  | ✅                             |           | `str` \| `Message`               | JSON object          | Returns a JSON object as specified. You can specify a Pydantic model and it will return JSON for that model. Probably the most reliable output parser for getting structured data that does NOT use function calling.                                    |
-| [XML](https://api.python.langchain.com/en/latest/output_parsers/langchain_core.output_parsers.xml.XMLOutputParser.html#langchain_core.output_parsers.xml.XMLOutputParser)            | ✅                  | ✅                             |           | `str` \| `Message`                 | `dict`               | Returns a dictionary of tags. Use when XML output is needed. Use with models that are good at writing XML (like Anthropic's).                                                                                                                            |
-| [CSV](https://api.python.langchain.com/en/latest/output_parsers/langchain_core.output_parsers.list.CommaSeparatedListOutputParser.html#langchain_core.output_parsers.list.CommaSeparatedListOutputParser)           | ✅                  | ✅                             |           | `str` \| `Message`                 | `List[str]`          | Returns a list of comma separated values.                                                                                                                                                                                                                |
-| [OutputFixing](https://api.python.langchain.com/en/latest/output_parsers/langchain.output_parsers.fix.OutputFixingParser.html#langchain.output_parsers.fix.OutputFixingParser)    |                    |                               | ✅         | `str` \| `Message`                 |                      | Wraps another output parser. If that output parser errors, then this will pass the error message and the bad output to an LLM and ask it to fix the output.                                                                                              |
-| [RetryWithError](https://api.python.langchain.com/en/latest/output_parsers/langchain.output_parsers.retry.RetryWithErrorOutputParser.html#langchain.output_parsers.retry.RetryWithErrorOutputParser)  |                    |                               | ✅         | `str` \| `Message`                 |                      | Wraps another output parser. If that output parser errors, then this will pass the original inputs, the bad output, and the error message to an LLM and ask it to fix it. Compared to OutputFixingParser, this one also sends the original instructions. |
-| [Pydantic](https://api.python.langchain.com/en/latest/output_parsers/langchain_core.output_parsers.pydantic.PydanticOutputParser.html#langchain_core.output_parsers.pydantic.PydanticOutputParser)        |                    | ✅                             |           | `str` \| `Message`                 | `pydantic.BaseModel` | Takes a user defined Pydantic model and returns data in that format.                                                                                                                                                                                     |
-| [YAML](https://api.python.langchain.com/en/latest/output_parsers/langchain.output_parsers.yaml.YamlOutputParser.html#langchain.output_parsers.yaml.YamlOutputParser)        |                    | ✅                             |           | `str` \| `Message`                 | `pydantic.BaseModel` | Takes a user defined Pydantic model and returns data in that format. Uses YAML to encode it.                                                                                                                                                                                    |
-| [PandasDataFrame](https://api.python.langchain.com/en/latest/output_parsers/langchain.output_parsers.pandas_dataframe.PandasDataFrameOutputParser.html#langchain.output_parsers.pandas_dataframe.PandasDataFrameOutputParser) |                    | ✅                             |           | `str` \| `Message`                 | `dict`               | Useful for doing operations with pandas DataFrames.                                                                                                                                                                                                      |
-| [Enum](https://api.python.langchain.com/en/latest/output_parsers/langchain.output_parsers.enum.EnumOutputParser.html#langchain.output_parsers.enum.EnumOutputParser)            |                    | ✅                             |           | `str` \| `Message`                 | `Enum`               | Parses response into one of the provided enum values.                                                                                                                                                                                                    |
-| [Datetime](https://api.python.langchain.com/en/latest/output_parsers/langchain.output_parsers.datetime.DatetimeOutputParser.html#langchain.output_parsers.datetime.DatetimeOutputParser)        |                    | ✅                             |           | `str` \| `Message`                 | `datetime.datetime`  | Parses response into a datetime string.                                                                                                                                                                                                                  |
-| [Structured](https://api.python.langchain.com/en/latest/output_parsers/langchain.output_parsers.structured.StructuredOutputParser.html#langchain.output_parsers.structured.StructuredOutputParser)      |                    | ✅                             |           | `str` \| `Message`                 | `Dict[str, str]`     | An output parser that returns structured information. It is less powerful than other output parsers since it only allows for fields to be strings. This can be useful when you are working with smaller LLMs.                                            |
+| Name                                                                                                                                                                                                                          | Supports Streaming | Has Format Instructions | Calls LLM | Input Type         | Output Type          | Description                                                                                                                                                                                                                                              |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ----------------------- | --------- | ------------------ | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [JSON](https://api.python.langchain.com/en/latest/output_parsers/langchain_core.output_parsers.json.JsonOutputParser.html#langchain_core.output_parsers.json.JsonOutputParser)                                                | ✅                 | ✅                      |           | `str` \| `Message` | JSON object          | Returns a JSON object as specified. You can specify a Pydantic model and it will return JSON for that model. Probably the most reliable output parser for getting structured data that does NOT use function calling.                                    |
+| [XML](https://api.python.langchain.com/en/latest/output_parsers/langchain_core.output_parsers.xml.XMLOutputParser.html#langchain_core.output_parsers.xml.XMLOutputParser)                                                     | ✅                 | ✅                      |           | `str` \| `Message` | `dict`               | Returns a dictionary of tags. Use when XML output is needed. Use with models that are good at writing XML (like Anthropic's).                                                                                                                            |
+| [CSV](https://api.python.langchain.com/en/latest/output_parsers/langchain_core.output_parsers.list.CommaSeparatedListOutputParser.html#langchain_core.output_parsers.list.CommaSeparatedListOutputParser)                     | ✅                 | ✅                      |           | `str` \| `Message` | `List[str]`          | Returns a list of comma separated values.                                                                                                                                                                                                                |
+| [OutputFixing](https://api.python.langchain.com/en/latest/output_parsers/langchain.output_parsers.fix.OutputFixingParser.html#langchain.output_parsers.fix.OutputFixingParser)                                                |                    |                         | ✅        | `str` \| `Message` |                      | Wraps another output parser. If that output parser errors, then this will pass the error message and the bad output to an LLM and ask it to fix the output.                                                                                              |
+| [RetryWithError](https://api.python.langchain.com/en/latest/output_parsers/langchain.output_parsers.retry.RetryWithErrorOutputParser.html#langchain.output_parsers.retry.RetryWithErrorOutputParser)                          |                    |                         | ✅        | `str` \| `Message` |                      | Wraps another output parser. If that output parser errors, then this will pass the original inputs, the bad output, and the error message to an LLM and ask it to fix it. Compared to OutputFixingParser, this one also sends the original instructions. |
+| [Pydantic](https://api.python.langchain.com/en/latest/output_parsers/langchain_core.output_parsers.pydantic.PydanticOutputParser.html#langchain_core.output_parsers.pydantic.PydanticOutputParser)                            |                    | ✅                      |           | `str` \| `Message` | `pydantic.BaseModel` | Takes a user defined Pydantic model and returns data in that format.                                                                                                                                                                                     |
+| [YAML](https://api.python.langchain.com/en/latest/output_parsers/langchain.output_parsers.yaml.YamlOutputParser.html#langchain.output_parsers.yaml.YamlOutputParser)                                                          |                    | ✅                      |           | `str` \| `Message` | `pydantic.BaseModel` | Takes a user defined Pydantic model and returns data in that format. Uses YAML to encode it.                                                                                                                                                             |
+| [PandasDataFrame](https://api.python.langchain.com/en/latest/output_parsers/langchain.output_parsers.pandas_dataframe.PandasDataFrameOutputParser.html#langchain.output_parsers.pandas_dataframe.PandasDataFrameOutputParser) |                    | ✅                      |           | `str` \| `Message` | `dict`               | Useful for doing operations with pandas DataFrames.                                                                                                                                                                                                      |
+| [Enum](https://api.python.langchain.com/en/latest/output_parsers/langchain.output_parsers.enum.EnumOutputParser.html#langchain.output_parsers.enum.EnumOutputParser)                                                          |                    | ✅                      |           | `str` \| `Message` | `Enum`               | Parses response into one of the provided enum values.                                                                                                                                                                                                    |
+| [Datetime](https://api.python.langchain.com/en/latest/output_parsers/langchain.output_parsers.datetime.DatetimeOutputParser.html#langchain.output_parsers.datetime.DatetimeOutputParser)                                      |                    | ✅                      |           | `str` \| `Message` | `datetime.datetime`  | Parses response into a datetime string.                                                                                                                                                                                                                  |
+| [Structured](https://api.python.langchain.com/en/latest/output_parsers/langchain.output_parsers.structured.StructuredOutputParser.html#langchain.output_parsers.structured.StructuredOutputParser)                            |                    | ✅                      |           | `str` \| `Message` | `Dict[str, str]`     | An output parser that returns structured information. It is less powerful than other output parsers since it only allows for fields to be strings. This can be useful when you are working with smaller LLMs.                                            |
 
 ### Chat History
+
 Most LLM applications have a conversational interface.
 An essential component of a conversation is being able to refer to information introduced earlier in the conversation.
 At bare minimum, a conversational system should be able to access some window of past messages directly.
@@ -438,6 +442,7 @@ That means there are two different axes along which you can customize your text 
 2. How the chunk size is measured
 
 ### Embedding models
+
 The Embeddings class is a class designed for interfacing with text embedding models. There are lots of embedding model providers (OpenAI, Cohere, Hugging Face, etc) - this class is designed to provide a standard interface for all of them.
 
 Embeddings create a vector representation of a piece of text. This is useful because it means we can think about text in the vector space, and do things like semantic search where we look for pieces of text that are most similar in the vector space.
@@ -445,6 +450,7 @@ Embeddings create a vector representation of a piece of text. This is useful bec
 The base Embeddings class in LangChain provides two methods: one for embedding documents and one for embedding a query. The former takes as input multiple texts, while the latter takes a single text. The reason for having these as two separate methods is that some embedding providers have different embedding methods for documents (to be searched over) vs queries (the search query itself).
 
 ### Vectorstores
+
 One of the most common ways to store and search over unstructured data is to embed it and store the resulting embedding vectors,
 and then at query time to embed the unstructured query and retrieve the embedding vectors that are 'most similar' to the embedded query.
 A vector store takes care of storing embedded data and performing vector search for you.
@@ -457,6 +463,7 @@ retriever = vectorstore.as_retriever()
 ```
 
 ### Retrievers
+
 A retriever is an interface that returns documents given an unstructured query.
 It is more general than a vector store.
 A retriever does not need to be able to store documents, only to return (or retrieve) them.
@@ -478,18 +485,19 @@ LangChain provides several advanced retrieval types. A full list is below, along
 
 **Description**: Description of what this retrieval algorithm is doing.
 
-| Name                      | Index Type                   | Uses an LLM               | When to Use                                                                                                                                   | Description                                                                                                                                                                                                                                                                                      |
-|---------------------------|------------------------------|---------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [Vectorstore](https://api.python.langchain.com/en/latest/vectorstores/langchain_core.vectorstores.VectorStoreRetriever.html#langchain_core.vectorstores.VectorStoreRetriever)               | Vectorstore                  | No                        | If you are just getting started and looking for something quick and easy.                                                                     | This is the simplest method and the one that is easiest to get started with. It involves creating embeddings for each piece of text.                                                                                                                                                             |
-| [ParentDocument](https://api.python.langchain.com/en/latest/retrievers/langchain.retrievers.parent_document_retriever.ParentDocumentRetriever.html#langchain.retrievers.parent_document_retriever.ParentDocumentRetriever)            | Vectorstore + Document Store | No                        | If your pages have lots of smaller pieces of distinct information that are best indexed by themselves, but best retrieved all together.       | This involves indexing multiple chunks for each document. Then you find the chunks that are most similar in embedding space, but you retrieve the whole parent document and return that (rather than individual chunks).                                                                         |
-| [Multi Vector](https://api.python.langchain.com/en/latest/retrievers/langchain.retrievers.multi_vector.MultiVectorRetriever.html#langchain.retrievers.multi_vector.MultiVectorRetriever)              | Vectorstore + Document Store | Sometimes during indexing | If you are able to extract information from documents that you think is more relevant to index than the text itself.                          | This involves creating multiple vectors for each document. Each vector could be created in a myriad of ways - examples include summaries of the text and hypothetical questions.                                                                                                                 |
-| [Self Query](https://api.python.langchain.com/en/latest/retrievers/langchain.retrievers.self_query.base.SelfQueryRetriever.html#langchain.retrievers.self_query.base.SelfQueryRetriever)               | Vectorstore                  | Yes                       | If users are asking questions that are better answered by fetching documents based on metadata rather than similarity with the text.          | This uses an LLM to transform user input into two things: (1) a string to look up semantically, (2) a metadata filer to go along with it. This is useful because oftentimes questions are about the METADATA of documents (not the content itself).                                              |
-| [Contextual Compression](https://api.python.langchain.com/en/latest/retrievers/langchain.retrievers.contextual_compression.ContextualCompressionRetriever.html#langchain.retrievers.contextual_compression.ContextualCompressionRetriever)    | Any                          | Sometimes                 | If you are finding that your retrieved documents contain too much irrelevant information and are distracting the LLM.                         | This puts a post-processing step on top of another retriever and extracts only the most relevant information from retrieved documents. This can be done with embeddings or an LLM.                                                                                                               |
-| [Time-Weighted Vectorstore](https://api.python.langchain.com/en/latest/retrievers/langchain.retrievers.time_weighted_retriever.TimeWeightedVectorStoreRetriever.html#langchain.retrievers.time_weighted_retriever.TimeWeightedVectorStoreRetriever) | Vectorstore                  | No                        | If you have timestamps associated with your documents, and you want to retrieve the most recent ones                                          | This fetches documents based on a combination of semantic similarity (as in normal vector retrieval) and recency (looking at timestamps of indexed documents)                                                                                                                                    |
-| [Multi-Query Retriever](https://api.python.langchain.com/en/latest/retrievers/langchain.retrievers.multi_query.MultiQueryRetriever.html#langchain.retrievers.multi_query.MultiQueryRetriever)     | Any                          | Yes                       | If users are asking questions that are complex and require multiple pieces of distinct information to respond                                 | This uses an LLM to generate multiple queries from the original one. This is useful when the original query needs pieces of information about multiple topics to be properly answered. By generating multiple queries, we can then fetch documents for each of them.                             |
-| [Ensemble](https://api.python.langchain.com/en/latest/retrievers/langchain.retrievers.ensemble.EnsembleRetriever.html#langchain.retrievers.ensemble.EnsembleRetriever)                  | Any                          | No                        | If you have multiple retrieval methods and want to try combining them.                                                                        | This fetches documents from multiple retrievers and then combines them.                                                                                                                                                                                                                          |
+| Name                                                                                                                                                                                                                                                | Index Type                   | Uses an LLM               | When to Use                                                                                                                             | Description                                                                                                                                                                                                                                                          |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Vectorstore](https://api.python.langchain.com/en/latest/vectorstores/langchain_core.vectorstores.VectorStoreRetriever.html#langchain_core.vectorstores.VectorStoreRetriever)                                                                       | Vectorstore                  | No                        | If you are just getting started and looking for something quick and easy.                                                               | This is the simplest method and the one that is easiest to get started with. It involves creating embeddings for each piece of text.                                                                                                                                 |
+| [ParentDocument](https://api.python.langchain.com/en/latest/retrievers/langchain.retrievers.parent_document_retriever.ParentDocumentRetriever.html#langchain.retrievers.parent_document_retriever.ParentDocumentRetriever)                          | Vectorstore + Document Store | No                        | If your pages have lots of smaller pieces of distinct information that are best indexed by themselves, but best retrieved all together. | This involves indexing multiple chunks for each document. Then you find the chunks that are most similar in embedding space, but you retrieve the whole parent document and return that (rather than individual chunks).                                             |
+| [Multi Vector](https://api.python.langchain.com/en/latest/retrievers/langchain.retrievers.multi_vector.MultiVectorRetriever.html#langchain.retrievers.multi_vector.MultiVectorRetriever)                                                            | Vectorstore + Document Store | Sometimes during indexing | If you are able to extract information from documents that you think is more relevant to index than the text itself.                    | This involves creating multiple vectors for each document. Each vector could be created in a myriad of ways - examples include summaries of the text and hypothetical questions.                                                                                     |
+| [Self Query](https://api.python.langchain.com/en/latest/retrievers/langchain.retrievers.self_query.base.SelfQueryRetriever.html#langchain.retrievers.self_query.base.SelfQueryRetriever)                                                            | Vectorstore                  | Yes                       | If users are asking questions that are better answered by fetching documents based on metadata rather than similarity with the text.    | This uses an LLM to transform user input into two things: (1) a string to look up semantically, (2) a metadata filer to go along with it. This is useful because oftentimes questions are about the METADATA of documents (not the content itself).                  |
+| [Contextual Compression](https://api.python.langchain.com/en/latest/retrievers/langchain.retrievers.contextual_compression.ContextualCompressionRetriever.html#langchain.retrievers.contextual_compression.ContextualCompressionRetriever)          | Any                          | Sometimes                 | If you are finding that your retrieved documents contain too much irrelevant information and are distracting the LLM.                   | This puts a post-processing step on top of another retriever and extracts only the most relevant information from retrieved documents. This can be done with embeddings or an LLM.                                                                                   |
+| [Time-Weighted Vectorstore](https://api.python.langchain.com/en/latest/retrievers/langchain.retrievers.time_weighted_retriever.TimeWeightedVectorStoreRetriever.html#langchain.retrievers.time_weighted_retriever.TimeWeightedVectorStoreRetriever) | Vectorstore                  | No                        | If you have timestamps associated with your documents, and you want to retrieve the most recent ones                                    | This fetches documents based on a combination of semantic similarity (as in normal vector retrieval) and recency (looking at timestamps of indexed documents)                                                                                                        |
+| [Multi-Query Retriever](https://api.python.langchain.com/en/latest/retrievers/langchain.retrievers.multi_query.MultiQueryRetriever.html#langchain.retrievers.multi_query.MultiQueryRetriever)                                                       | Any                          | Yes                       | If users are asking questions that are complex and require multiple pieces of distinct information to respond                           | This uses an LLM to generate multiple queries from the original one. This is useful when the original query needs pieces of information about multiple topics to be properly answered. By generating multiple queries, we can then fetch documents for each of them. |
+| [Ensemble](https://api.python.langchain.com/en/latest/retrievers/langchain.retrievers.ensemble.EnsembleRetriever.html#langchain.retrievers.ensemble.EnsembleRetriever)                                                                              | Any                          | No                        | If you have multiple retrieval methods and want to try combining them.                                                                  | This fetches documents from multiple retrievers and then combines them.                                                                                                                                                                                              |
 
 ### Tools
+
 Tools are interfaces that an agent, chain, or LLM can use to interact with the world.
 They combine a few things:
 
@@ -505,7 +513,6 @@ The simpler the input to a tool is, the easier it is for an LLM to be able to us
 Many agents will only work with tools that have a single string input.
 
 Importantly, the name, description, and JSON schema (if used) are all used in the prompt. Therefore, it is really important that they are clear and describe exactly how the tool should be used. You may need to change the default name, description, or JSON schema if the LLM is not understanding how to use the tool.
-
 
 ### Toolkits
 

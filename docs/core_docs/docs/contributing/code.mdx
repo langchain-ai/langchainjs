@@ -1,6 +1,7 @@
 ---
 sidebar_position: 1
 ---
+
 # Contribute Code
 
 To contribute to this project, please follow the ["fork and pull request"](https://docs.github.com/en/get-started/quickstart/contributing-to-projects) workflow.
@@ -13,6 +14,7 @@ Pull requests cannot land without passing the formatting, linting, and testing c
 [Formatting and Linting](#formatting-and-linting) for how to run these checks locally.
 
 It's essential that we maintain great documentation and testing. If you:
+
 - Fix a bug
   - Add a relevant unit or integration test when possible. These live in `**/tests/*.test.ts` and `**/tests/*.int.test.ts/`.
 - Make an improvement
@@ -49,9 +51,9 @@ You can invoke the script by calling `yarn release`. If new dependencies have be
 
 There are three parameters which can be passed to this script, one required and two optional.
 
-- __Required__: `<workspace name>`. eg: `@langchain/core` The name of the package to release. Can be found in the `name` value of the package's `package.json`
-- __Optional__: `--bump-deps` eg `--bump-deps` Will find all packages in the repo which depend on this workspace and checkout a new branch, update the dep version, run yarn install, commit & push to new branch. Generally, this is not necessary.
-- __Optional__: `--tag <tag>` eg `--tag beta` Add a tag to the NPM release. Useful if you want to push a release candidate.
+- **Required**: `<workspace name>`. eg: `@langchain/core` The name of the package to release. Can be found in the `name` value of the package's `package.json`
+- **Optional**: `--bump-deps` eg `--bump-deps` Will find all packages in the repo which depend on this workspace and checkout a new branch, update the dep version, run yarn install, commit & push to new branch. Generally, this is not necessary.
+- **Optional**: `--tag <tag>` eg `--tag beta` Add a tag to the NPM release. Useful if you want to push a release candidate.
 
 This script automatically bumps the package version, creates a new release branch with the changes, pushes the branch to GitHub, uses `release-it` to automatically release to NPM, and more depending on the flags passed.
 
@@ -102,6 +104,7 @@ cd libs/langchain-community
 ```
 
 ### Setup
+
 **Prerequisite**: Node version 18+ is required. Please check node version `node -v` and update it if required.
 
 To get started, you will need to install the dependencies for the project. To do so, run:
