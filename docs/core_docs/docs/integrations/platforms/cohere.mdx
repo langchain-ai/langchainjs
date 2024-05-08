@@ -1,0 +1,121 @@
+---
+title: Cohere
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Cohere
+
+:::info
+This is the documentation for the Cohere provider in the LangChain JS documentation.
+:::
+
+## Introduction
+
+Cohere is a company that provides natural language processing (NLP) tools and services, including language models that can be used for a variety of applications such as text generation, classification, and sentiment analysis.
+
+## Installation and Setup
+
+To use Cohere with LangChain JS, you need to install the SDK and set up your API keys.
+
+```bash
+npm install langchain-cohere
+```
+
+Obtain an API key from Cohere and set it as an environment variable:
+
+```bash
+export COHERE_API_KEY='your-api-key'
+```
+
+## Cohere LangChain Integrations
+
+<Tabs
+  defaultValue="text-generation"
+  values={[
+    { label: 'Text Generation', value: 'text-generation', },
+    { label: 'Classification', value: 'classification', },
+    { label: 'Sentiment Analysis', value: 'sentiment-analysis', },
+  ]}>
+  <TabItem value="text-generation">
+
+### Text Generation
+
+Cohere's text generation model allows for the creation of coherent and contextually relevant text based on a given prompt.
+
+```javascript
+import { TextGeneration } from 'langchain-cohere';
+
+const textGen = new TextGeneration();
+// Use the text generation model
+```
+
+  </TabItem>
+  <TabItem value="classification">
+
+### Classification
+
+Cohere's classification model can categorize text into predefined classes.
+
+```javascript
+import { Classification } from 'langchain-cohere';
+
+const classifier = new Classification();
+// Use the classification model
+```
+
+  </TabItem>
+  <TabItem value="sentiment-analysis">
+
+### Sentiment Analysis
+
+Cohere's sentiment analysis model can determine the sentiment expressed in a piece of text.
+
+```javascript
+import { SentimentAnalysis } from 'langchain-cohere';
+
+const sentiment = new SentimentAnalysis();
+// Use the sentiment analysis model
+```
+
+  </TabItem>
+</Tabs>
+
+## Quick Copy Examples
+
+Here are some quick examples to get you started with Cohere integrations.
+
+### Text Generation
+
+```javascript
+import { TextGeneration } from 'langchain-cohere';
+
+const textGen = new TextGeneration();
+const generatedText = textGen.generateText('Once upon a time');
+console.log(generatedText);
+```
+
+### Classification
+
+```javascript
+import { Classification } from 'langchain-cohere';
+
+const classifier = new Classification();
+const categories = classifier.classifyText('This is a test sentence.');
+console.log(categories);
+```
+
+### Sentiment Analysis
+
+```javascript
+import { SentimentAnalysis } from 'langchain-cohere';
+
+const sentiment = new SentimentAnalysis();
+const sentimentResult = sentiment.analyzeSentiment('I love this product!');
+console.log(sentimentResult);
+```
+
+## API Reference
+
+Refer to the [Cohere API Documentation](https://docs.cohere.ai/) for detailed information on all the features and capabilities provided.
