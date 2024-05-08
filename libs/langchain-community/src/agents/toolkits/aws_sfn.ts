@@ -1,5 +1,5 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
-import { Tool } from "@langchain/core/tools";
+import { ToolInterface } from "@langchain/core/tools";
 import { renderTemplate } from "@langchain/core/prompts";
 import { LLMChain } from "langchain/chains";
 import {
@@ -53,7 +53,7 @@ export interface AWSSfnToolkitArgs {
  * ```
  */
 export class AWSSfnToolkit extends Toolkit {
-  tools: Tool[];
+  tools: ToolInterface[];
 
   stateMachineArn: string;
 
