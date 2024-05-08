@@ -9427,7 +9427,27 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1, @langchain/core@~0.1.5, @langchain/core@~0.1.56, @langchain/core@~0.1.58, @langchain/core@~0.1.60, @langchain/core@~0.1.9":
+"@langchain/core@npm:~0.1, @langchain/core@npm:~0.1.5, @langchain/core@npm:~0.1.56, @langchain/core@npm:~0.1.58, @langchain/core@npm:~0.1.60, @langchain/core@npm:~0.1.9":
+  version: 0.1.62
+  resolution: "@langchain/core@npm:0.1.62"
+  dependencies:
+    ansi-styles: ^5.0.0
+    camelcase: 6
+    decamelize: 1.2.0
+    js-tiktoken: ^1.0.8
+    langsmith: ~0.1.7
+    ml-distance: ^4.0.0
+    mustache: ^4.2.0
+    p-queue: ^6.6.2
+    p-retry: 4
+    uuid: ^9.0.0
+    zod: ^3.22.4
+    zod-to-json-schema: ^3.22.3
+  checksum: 6456b5c286e6df2124431f6e73bfcf490d3b71fcf4755ff5947647e80f6c5af071e43ec9792d121c906760b0b65e7fb74154c213d2ec4c227067d81d033ddc99
+  languageName: node
+  linkType: hard
+
+"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.2.0-rc.0":
   version: 0.0.0-use.local
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
@@ -26916,7 +26936,7 @@ __metadata:
     "@google-ai/generativelanguage": ^0.2.1
     "@jest/globals": ^29.5.0
     "@langchain/cohere": ^0.0.8
-    "@langchain/core": ~0.1.60
+    "@langchain/core": ~0.2.0-rc.0
     "@langchain/openai": ~0.0.28
     "@langchain/scripts": ~0.0
     "@langchain/textsplitters": ~0.0.0
