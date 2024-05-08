@@ -22,7 +22,7 @@ const config = {
   url: "https://js.langchain.com",
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: "/",
+  baseUrl: "/v0.2/",
 
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "throw",
@@ -130,6 +130,10 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+      announcementBar: {
+        content: 'You are viewing the <strong>preview</strong> LangChain v0.2 docs. View the <a href="/v0.1/docs/get_started/introduction/">stable 0.1 docs here</a>.',
+        isCloseable: true,
+      },
       prism: {
         theme: {
           ...baseLightCodeBlockTheme,
