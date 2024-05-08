@@ -1,0 +1,39 @@
+---
+sidebar_class_name: node-only
+---
+
+# Gradient AI
+
+The `GradientEmbeddings` class uses the Gradient AI API to generate embeddings for a given text.
+
+## Setup
+
+You'll need to install the official Gradient Node SDK as a peer dependency:
+
+```bash npm2yarn
+npm i @gradientai/nodejs-sdk
+```
+
+You will need to set the following environment variables for using the Gradient AI API.
+
+```
+export GRADIENT_ACCESS_TOKEN=<YOUR_ACCESS_TOKEN>
+export GRADIENT_WORKSPACE_ID=<YOUR_WORKSPACE_ID>
+```
+
+Alternatively, these can be set during the GradientAI Class instantiation as `gradientAccessKey` and `workspaceId` respectively.
+For example:
+
+```typescript
+const model = new GradientEmbeddings({
+  gradientAccessKey: "My secret Access Token"
+  workspaceId: "My secret workspace id"
+});
+```
+
+## Usage
+
+import CodeBlock from "@theme/CodeBlock";
+import GradientEmbeddingsExample from "@examples/embeddings/gradient_ai.ts";
+
+<CodeBlock language="typescript">{GradientEmbeddingsExample}</CodeBlock>

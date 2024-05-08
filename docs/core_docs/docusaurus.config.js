@@ -158,17 +158,6 @@ const config = {
         },
         items: [
           {
-            to: "/docs/get_started/introduction",
-            label: "Docs",
-            position: "left",
-          },
-          {
-            type: "docSidebar",
-            position: "left",
-            sidebarId: "use_cases",
-            label: "Use cases",
-          },
-          {
             type: "docSidebar",
             position: "left",
             sidebarId: "integrations",

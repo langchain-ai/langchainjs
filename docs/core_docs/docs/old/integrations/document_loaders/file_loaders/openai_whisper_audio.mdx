@@ -1,0 +1,24 @@
+---
+hide_table_of_contents: true
+---
+
+# Open AI Whisper Audio
+
+:::tip Compatibility
+Only available on Node.js.
+:::
+
+This covers how to load document objects from an audio file using the [Open AI Whisper](https://platform.openai.com/docs/guides/speech-to-text) API.
+
+## Setup
+
+To run this loader you will need to create an account on the Open AI and obtain an auth key from the https://platform.openai.com/account page.
+
+## Usage
+
+Once auth key is configured, you can use the loader to create transcriptions and then convert them into a Document.
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/document_loaders/openai_whisper_audio.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
