@@ -566,12 +566,14 @@ export class ChatAlibabaTongyi
         error = new Error(
           `Tongyi call failed with status code ${response.status}: ${json.error}`
         );
-      } catch (e) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (e: any) {
         error = new Error(
           `Tongyi call failed with status code ${response.status}: ${responseText}`
         );
       }
-      error.response = response;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (error as any).response = response;
       throw error;
     }
     if (!response.body) {
