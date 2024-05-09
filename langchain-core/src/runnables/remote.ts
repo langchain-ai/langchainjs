@@ -533,11 +533,29 @@ export class RemoteRunnable<
     await runManager?.handleChainEnd(runLog?.state.final_output);
   }
 
-  async *streamEvents(
+  streamEvents(
     input: RunInput,
     options: Partial<CallOptions> & { version: "v1" },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
-  ): AsyncGenerator<StreamEvent> {
+  ): AsyncGenerator<StreamEvent>;
+
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version: "v1";
+      encoding: "text/event-stream";
+    },
+    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
+  ): AsyncGenerator<Uint8Array>;
+
+  async *streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version: "v1";
+      encoding?: "text/event-stream" | undefined;
+    },
+    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
+  ): AsyncGenerator<StreamEvent | Uint8Array> {
     if (options?.version !== "v1") {
       throw new Error(
         `Only version "v1" of the events schema is currently supported.`

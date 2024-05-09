@@ -14,7 +14,7 @@ test.skip("Test ChatGooglePalm", async () => {
     maxRetries: 1,
   });
   const message = new HumanMessage("Hello!");
-  const res = await chat.call([message]);
+  const res = await chat.invoke([message]);
   console.log({ res });
 });
 

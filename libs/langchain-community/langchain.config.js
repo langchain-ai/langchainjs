@@ -50,6 +50,7 @@ export const config = {
     "tools/searxng_search": "tools/searxng_search",
     "tools/serpapi": "tools/serpapi",
     "tools/serper": "tools/serper",
+    "tools/stackexchange": "tools/stackexchange",
     "tools/tavily_search": "tools/tavily_search",
     "tools/wikipedia_query_run": "tools/wikipedia_query_run",
     "tools/wolframalpha": "tools/wolframalpha",
@@ -184,6 +185,7 @@ export const config = {
     "retrievers/vectara_summary": "retrievers/vectara_summary",
     "retrievers/vespa": "retrievers/vespa",
     "retrievers/zep": "retrievers/zep",
+    "retrievers/self_query/qdrant": "retrievers/self_query/qdrant",
     // cache
     "caches/cloudflare_kv": "caches/cloudflare_kv",
     "caches/ioredis": "caches/ioredis",
@@ -335,6 +337,7 @@ export const config = {
     "retrievers/supabase",
     "retrievers/vectara_summary",
     "retrievers/zep",
+    "retrievers/self_query/qdrant",
     "cache/cloudflare_kv",
     "cache/momento",
     "cache/upstash_redis",

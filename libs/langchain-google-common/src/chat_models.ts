@@ -186,6 +186,12 @@ export abstract class ChatGoogleBase<AuthOptions>
     return "ChatGoogle";
   }
 
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      authOptions: "GOOGLE_AUTH_OPTIONS",
+    };
+  }
+
   lc_serializable = true;
 
   // Set based on modelName
