@@ -73,6 +73,7 @@ export class AzureChatOpenAI extends ChatOpenAI {
       this.client = new AzureOpenAIClient({
         apiVersion: this.azureOpenAIApiVersion,
         azureADTokenProvider: this.azureADTokenProvider,
+        deployment: this.azureOpenAIApiDeploymentName,
         ...params,
       });
     }

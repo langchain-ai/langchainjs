@@ -72,6 +72,7 @@ export class AzureOpenAIEmbeddings extends OpenAIEmbeddings {
       this.client = new AzureOpenAIClient({
         apiVersion: this.azureOpenAIApiVersion,
         azureADTokenProvider: this.azureADTokenProvider,
+        deployment: this.azureOpenAIApiDeploymentName,
         ...params,
       });
     }
