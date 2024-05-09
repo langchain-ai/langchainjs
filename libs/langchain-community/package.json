@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.0.54",
+  "version": "0.0.55",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -764,6 +764,15 @@
       },
       "import": "./tools/serper.js",
       "require": "./tools/serper.cjs"
+    },
+    "./tools/stackexchange": {
+      "types": {
+        "import": "./tools/stackexchange.d.ts",
+        "require": "./tools/stackexchange.d.cts",
+        "default": "./tools/stackexchange.d.ts"
+      },
+      "import": "./tools/stackexchange.js",
+      "require": "./tools/stackexchange.cjs"
     },
     "./tools/tavily_search": {
       "types": {
@@ -2391,6 +2400,10 @@
     "tools/serper.js",
     "tools/serper.d.ts",
     "tools/serper.d.cts",
+    "tools/stackexchange.cjs",
+    "tools/stackexchange.js",
+    "tools/stackexchange.d.ts",
+    "tools/stackexchange.d.cts",
     "tools/tavily_search.cjs",
     "tools/tavily_search.js",
     "tools/tavily_search.d.ts",

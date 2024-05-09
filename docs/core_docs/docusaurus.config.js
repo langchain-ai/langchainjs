@@ -51,7 +51,7 @@ const config = {
           rules: [
             {
               test: examplesPath,
-              use: ["json-loader", "./code-block-loader.js"],
+              use: ["json-loader", "./scripts/code-block-loader.js"],
             },
             {
               test: /\.ya?ml$/,
