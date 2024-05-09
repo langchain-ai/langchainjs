@@ -1,5 +1,6 @@
 // Swizzled class to show custom text for canary version.
-// Should be removed in favor of the stock implementation.
+// Should be removed in favor of the stock implementation.\
+/* eslint-disable react/jsx-props-no-spreading */
 
 import React from "react";
 import clsx from "clsx";
@@ -32,6 +33,7 @@ function UnreleasedVersionLabel({ siteTitle, versionMetadata }) {
     </Translate>
   );
 }
+
 function UnmaintainedVersionLabel({ siteTitle, versionMetadata }) {
   return (
     <Translate
@@ -48,15 +50,22 @@ function UnmaintainedVersionLabel({ siteTitle, versionMetadata }) {
     </Translate>
   );
 }
+
 const BannerLabelComponents = {
   unreleased: UnreleasedVersionLabel,
   unmaintained: UnmaintainedVersionLabel,
 };
-function BannerLabel(props) {
-  const BannerLabelComponent =
-    BannerLabelComponents[props.versionMetadata.banner];
-  return <BannerLabelComponent {...props} />;
+
+function BannerLabel({ siteTitle, versionMetadata }) {
+  const BannerLabelComponent = BannerLabelComponents[versionMetadata.banner];
+  return (
+    <BannerLabelComponent
+      siteTitle={siteTitle}
+      versionMetadata={versionMetadata}
+    />
+  );
 }
+
 function LatestVersionSuggestionLabel({ versionLabel, to, onClick }) {
   return (
     <Translate
@@ -84,6 +93,7 @@ function LatestVersionSuggestionLabel({ versionLabel, to, onClick }) {
     </Translate>
   );
 }
+
 function DocVersionBannerEnabled({ className, versionMetadata }) {
   const {
     siteConfig: { title: siteTitle },
@@ -121,77 +131,77 @@ function DocVersionBannerEnabled({ className, versionMetadata }) {
   );
 }
 
-function LatestDocVersionBanner({ className, versionMetadata }) {
-  const {
-    siteConfig: { title: siteTitle },
-  } = useDocusaurusContext();
-  const { pluginId } = useActivePlugin({ failfast: true });
-  const getVersionMainDoc = (version) =>
-    version.docs.find((doc) => doc.id === version.mainDocId);
-  const { savePreferredVersionName } = useDocsPreferredVersion(pluginId);
-  const { latestDocSuggestion, latestVersionSuggestion } =
-    useDocVersionSuggestions(pluginId);
-  // Try to link to same doc in latest version (not always possible), falling
-  // back to main doc of latest version
-  const latestVersionSuggestedDoc =
-    latestDocSuggestion ?? getVersionMainDoc(latestVersionSuggestion);
-  const canaryPath = `/docs/0.2.x/${latestVersionSuggestedDoc.path.slice(
-    "/docs/".length
-  )}`;
-  return (
-    <div
-      className={clsx(
-        className,
-        ThemeClassNames.docs.docVersionBanner,
-        "alert alert--info margin-bottom--md"
-      )}
-      role="alert"
-    >
-      <div>
-        <Translate
-          id="theme.docs.versions.unmaintainedVersionLabel"
-          description="The label used to encourage the user to view the experimental 0.2.x version"
-          values={{
-            siteTitle,
-            versionLabel: <b>{versionMetadata.label}</b>,
-          }}
-        >
-          {
-            "This is a stable version of documentation for {siteTitle}'s version {versionLabel}."
-          }
-        </Translate>
-      </div>
-      <div className="margin-top--md">
-        <Translate
-          id="theme.docs.versions.latestVersionSuggestionLabel"
-          description="The label used to tell the user to check the experimental version"
-          values={{
-            versionLabel: <b>{versionMetadata.label}</b>,
-            latestVersionLink: (
-              <b>
-                <Link
-                  to={canaryPath}
-                  onClick={() => savePreferredVersionName("0.2.x")}
-                >
-                  <Translate
-                    id="theme.docs.versions.latestVersionLinkLabel"
-                    description="The label used for the latest version suggestion link label"
-                  >
-                    this experimental version
-                  </Translate>
-                </Link>
-              </b>
-            ),
-          }}
-        >
-          {
-            "You can also check out {latestVersionLink} for an updated experience."
-          }
-        </Translate>
-      </div>
-    </div>
-  );
-}
+// function LatestDocVersionBanner({ className, versionMetadata }) {
+//   const {
+//     siteConfig: { title: siteTitle },
+//   } = useDocusaurusContext();
+//   const { pluginId } = useActivePlugin({ failfast: true });
+//   const getVersionMainDoc = (version) =>
+//     version.docs.find((doc) => doc.id === version.mainDocId);
+//   const { savePreferredVersionName } = useDocsPreferredVersion(pluginId);
+//   const { latestDocSuggestion, latestVersionSuggestion } =
+//     useDocVersionSuggestions(pluginId);
+//   // Try to link to same doc in latest version (not always possible), falling
+//   // back to main doc of latest version
+//   const latestVersionSuggestedDoc =
+//     latestDocSuggestion ?? getVersionMainDoc(latestVersionSuggestion);
+//   const canaryPath = `/docs/0.2.x/${latestVersionSuggestedDoc.path.slice(
+//     "/docs/".length
+//   )}`;
+//   return (
+//     <div
+//       className={clsx(
+//         className,
+//         ThemeClassNames.docs.docVersionBanner,
+//         "alert alert--info margin-bottom--md"
+//       )}
+//       role="alert"
+//     >
+//       <div>
+//         <Translate
+//           id="theme.docs.versions.unmaintainedVersionLabel"
+//           description="The label used to encourage the user to view the experimental 0.2.x version"
+//           values={{
+//             siteTitle,
+//             versionLabel: <b>{versionMetadata.label}</b>,
+//           }}
+//         >
+//           {
+//             "This is a stable version of documentation for {siteTitle}'s version {versionLabel}."
+//           }
+//         </Translate>
+//       </div>
+//       <div className="margin-top--md">
+//         <Translate
+//           id="theme.docs.versions.latestVersionSuggestionLabel"
+//           description="The label used to tell the user to check the experimental version"
+//           values={{
+//             versionLabel: <b>{versionMetadata.label}</b>,
+//             latestVersionLink: (
+//               <b>
+//                 <Link
+//                   to={canaryPath}
+//                   onClick={() => savePreferredVersionName("0.2.x")}
+//                 >
+//                   <Translate
+//                     id="theme.docs.versions.latestVersionLinkLabel"
+//                     description="The label used for the latest version suggestion link label"
+//                   >
+//                     this experimental version
+//                   </Translate>
+//                 </Link>
+//               </b>
+//             ),
+//           }}
+//         >
+//           {
+//             "You can also check out {latestVersionLink} for an updated experience."
+//           }
+//         </Translate>
+//       </div>
+//     </div>
+//   );
+// }
 
 export default function DocVersionBanner({ className }) {
   const versionMetadata = useDocsVersion();
@@ -202,7 +212,8 @@ export default function DocVersionBanner({ className }) {
         versionMetadata={versionMetadata}
       />
     );
-  } if (versionMetadata.isLast) {
+  }
+  if (versionMetadata.isLast) {
     // Uncomment when we are ready to direct people to new build
     // return (
     //   <LatestDocVersionBanner
