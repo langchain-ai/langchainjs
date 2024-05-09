@@ -13,9 +13,9 @@ By this point, the LangChain ecosystem had become large both in the breadth of w
 **Split of packages**
 
 LangChain was split up into several packages to increase modularity and decrease bloat.
-First, `langchain-core` is created as a lightweight core library containing the base abstractions,
+First, `@langchain/core` is created as a lightweight core library containing the base abstractions,
 some core implementations of those abstractions, and the generic runtime for creating chains.
-Next, all third party integrations are split into `langchain-community` or their own individual partner packages.
+Next, all third party integrations are split into `@langchain/community` or their own individual partner packages.
 Higher level chains and agents remain in `langchain`.
 
 **`Runnables`**
@@ -31,7 +31,6 @@ There are several key characteristics of LangChain pre-0.1.
 **Singular Package**
 
 LangChain was largely a singular package.
-The only exception was was `langchain-experimental`, which largely held more experimental code.
 This meant that ALL integrations lived inside `langchain`.
 
 **Chains as classes**
