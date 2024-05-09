@@ -4,8 +4,8 @@
 
 ## Overview
 
-LangGraph is a library for building stateful, multi-actor applications with LLMs, built on top of (and intended to be used with) [LangChain.js](https://github.com/langchain-ai/langchainjs). 
-It extends the [LangChain Expression Language](https://js.langchain.com/docs/expression_language/) with the ability to coordinate multiple chains (or actors) across multiple steps of computation in a cyclic manner. 
+LangGraph is a library for building stateful, multi-actor applications with LLMs, built on top of (and intended to be used with) [LangChain.js](https://github.com/langchain-ai/langchainjs).
+It extends the [LangChain Expression Language](https://js.langchain.com/docs/expression_language/) with the ability to coordinate multiple chains (or actors) across multiple steps of computation in a cyclic manner.
 It is inspired by [Pregel](https://research.google/pubs/pub37252/) and [Apache Beam](https://beam.apache.org/).
 The current interface exposed is one inspired by [NetworkX](https://networkx.org/documentation/latest/).
 
@@ -45,7 +45,7 @@ And now we're ready! The graph below contains a single node called `"oracle"` th
 
 ```ts
 import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, BaseMessage, } from "@langchain/core/messages";
+import { HumanMessage, BaseMessage } from "@langchain/core/messages";
 import { END, MessageGraph } from "@langchain/langgraph";
 
 const model = new ChatOpenAI({ temperature: 0 });
@@ -67,9 +67,7 @@ Let's run it!
 
 ```ts
 // For Message graph, input should always be a message or list of messages.
-const res = await runnable.invoke(
-  new HumanMessage("What is 1 + 1?")
-);
+const res = await runnable.invoke(new HumanMessage("What is 1 + 1?"));
 ```
 
 ```ts
@@ -116,11 +114,14 @@ Just make sure you are mindful of the fact that the input to the runnable is the
 
 ```ts
 // This will NOT work with MessageGraph!
-import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
 
 const prompt = ChatPromptTemplate.fromMessages([
-    ["system", "You are a helpful assistant who always speaks in pirate dialect"],
-    MessagesPlaceholder("messages"),
+  ["system", "You are a helpful assistant who always speaks in pirate dialect"],
+  MessagesPlaceholder("messages"),
 ]);
 
 const chain = prompt.pipe(model);
@@ -145,9 +146,7 @@ We'll recreate our graph with an additional `"calculator"` that will take the re
 We'll also bind the calculator to the OpenAI model as a tool to allow the model to optionally use the tool if it deems necessary:
 
 ```ts
-import {
-  ToolMessage,
-} from "@langchain/core/messages";
+import { ToolMessage } from "@langchain/core/messages";
 import { Calculator } from "langchain/tools/calculator";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 
@@ -166,8 +165,7 @@ graph.addNode("oracle", async (state: BaseMessage[]) => {
 
 graph.addNode("calculator", async (state: BaseMessage[]) => {
   const tool = new Calculator();
-  const toolCalls =
-    state[state.length - 1].additional_kwargs.tool_calls ?? [];
+  const toolCalls = state[state.length - 1].additional_kwargs.tool_calls ?? [];
   const calculatorCall = toolCalls.find(
     (toolCall) => toolCall.function.name === "calculator"
   );
@@ -199,8 +197,7 @@ Here's what that looks like:
 
 ```ts
 const router = (state: BaseMessage[]) => {
-  const toolCalls =
-    state[state.length - 1].additional_kwargs.tool_calls ?? [];
+  const toolCalls = state[state.length - 1].additional_kwargs.tool_calls ?? [];
   if (toolCalls.length) {
     return "calculator";
   } else {
@@ -245,7 +242,9 @@ const mathResponse = await runnable.invoke(new HumanMessage("What is 1 + 1?"));
 While conversational responses are outputted directly:
 
 ```ts
-const otherResponse = await runnable.invoke(new HumanMessage("What is your name?"));
+const otherResponse = await runnable.invoke(
+  new HumanMessage("What is your name?")
+);
 ```
 
 ```ts
@@ -304,7 +303,6 @@ We can now wrap these tools in a ToolExecutor, which simply takes in a ToolInvoc
 
 A ToolInvocation is any type with `tool` and `toolInput` attribute.
 
-
 ```typescript
 import { ToolExecutor } from "@langchain/langgraph/prebuilt";
 
@@ -323,7 +321,7 @@ import { ChatOpenAI } from "@langchain/openai";
 // See the streaming section for more information on this.
 const model = new ChatOpenAI({
   temperature: 0,
-  streaming: true
+  streaming: true,
 });
 ```
 
@@ -362,7 +360,7 @@ const agentState = {
   messages: {
     value: (x: BaseMessage[], y: BaseMessage[]) => x.concat(y),
     default: () => [],
-  }
+  },
 };
 ```
 
@@ -396,7 +394,7 @@ import { FunctionMessage } from "@langchain/core/messages";
 import { AgentAction } from "@langchain/core/agents";
 import {
   ChatPromptTemplate,
-  MessagesPlaceholder
+  MessagesPlaceholder,
 } from "@langchain/core/prompts";
 
 // Define the function that determines whether to continue or not
@@ -437,9 +435,7 @@ const _getAction = (state: { messages: Array<BaseMessage> }): AgentAction => {
 };
 
 // Define the function that calls the model
-const callModel = async (
-  state: { messages: Array<BaseMessage> }
-) => {
+const callModel = async (state: { messages: Array<BaseMessage> }) => {
   const { messages } = state;
   // You can use a prompt here to tweak model behavior.
   // You can also just pass messages to the model directly.
@@ -447,18 +443,14 @@ const callModel = async (
     ["system", "You are a helpful assistant."],
     new MessagesPlaceholder("messages"),
   ]);
-  const response = await prompt
-    .pipe(newModel)
-    .invoke({ messages });
+  const response = await prompt.pipe(newModel).invoke({ messages });
   // We return a list, because this will get added to the existing list
   return {
     messages: [response],
   };
 };
 
-const callTool = async (
-  state: { messages: Array<BaseMessage> }
-) => {
+const callTool = async (state: { messages: Array<BaseMessage> }) => {
   const action = _getAction(state);
   // We call the tool_executor and get back a response
   const response = await toolExecutor.invoke(action);
@@ -510,7 +502,7 @@ workflow.addConditionalEdges(
     // If `tools`, then we call the tool node.
     continue: "action",
     // Otherwise we finish.
-    end: END
+    end: END,
   }
 );
 
@@ -534,8 +526,8 @@ This runnable accepts a list of messages.
 import { HumanMessage } from "@langchain/core/messages";
 
 const inputs = {
-  messages: [new HumanMessage("what is the weather in sf")]
-}
+  messages: [new HumanMessage("what is the weather in sf")],
+};
 const result = await app.invoke(inputs);
 ```
 
@@ -554,7 +546,7 @@ One of the benefits of using LangGraph is that it is easy to stream output as it
 
 ```typescript
 const inputs = {
-  messages: [new HumanMessage("what is the weather in sf")]
+  messages: [new HumanMessage("what is the weather in sf")],
 };
 for await (const output of await app.stream(inputs)) {
   console.log("output", output);
@@ -583,7 +575,7 @@ Langchain Expression Language allows you to easily define chains (DAGs) but does
 
 ### ChatAgentExecutor: with function calling
 
-This agent executor takes a list of messages as input and outputs a list of messages. 
+This agent executor takes a list of messages as input and outputs a list of messages.
 All agent state is represented as a list of messages.
 This specifically uses OpenAI function calling.
 This is recommended agent executor for newer chat based models that support function calling.
@@ -618,7 +610,6 @@ This class is responsible for constructing the graph.
 It exposes an interface inspired by [NetworkX](https://networkx.org/documentation/latest/).
 This graph is parameterized by a state object that it passes around to each node.
 
-
 #### `constructor`
 
 ```typescript
@@ -640,7 +631,6 @@ When constructing the graph, you need to pass in a schema for a state.
 Each node then returns operations to update that state.
 These operations can either SET specific attributes on the state (e.g. overwrite the existing values) or ADD to the existing attribute.
 Whether to set or add is denoted by annotating the state object you construct the graph with.
-
 
 Let's take a look at an example:
 
@@ -807,7 +797,7 @@ const firstAgent = (inputs: AgentData) => {
     tool: "tavily_search_results_json",
     // We just pass in the `input` key to this tool
     toolInput: newInputs.input,
-    log: ""
+    log: "",
   };
   newInputs.agentOutcome = action;
   return newInputs;
@@ -832,7 +822,7 @@ workflow.setEntryPoint("firstAgent");
 // We define the same edges as before
 workflow.addConditionalEdges("agent", shouldContinue, {
   continue: "tools",
-  exit: END
+  exit: END,
 });
 workflow.addEdge("tools", "agent");
 
@@ -852,7 +842,7 @@ Depending on whether or not the first tool call is actually useful, this may sav
 ```typescript
 const result = await chain.invoke({
   input: "what is the weather in sf",
-  steps: []
+  steps: [],
 });
 ```
 

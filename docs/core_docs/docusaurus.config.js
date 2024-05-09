@@ -24,8 +24,8 @@ const config = {
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: "/v0.2/",
 
-  onBrokenLinks: "throw",
-  onBrokenMarkdownLinks: "throw",
+  onBrokenLinks: "warn", // TODO(brace) change back to "throw" once all todos ported
+  onBrokenMarkdownLinks: "warn", // TODO(brace) change back to "throw" once all todos ported
 
   plugins: [
     () => ({
@@ -168,6 +168,13 @@ const config = {
             href: "https://api.js.langchain.com",
             label: "API Reference",
             position: "left",
+          },
+          // TODO(brace) Drop once all todo's have been ported
+          {
+            type: "docSidebar",
+            position: "left",
+            sidebarId: "old",
+            label: "old",
           },
           {
             type: "dropdown",
