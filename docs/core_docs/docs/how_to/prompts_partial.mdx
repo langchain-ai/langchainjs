@@ -1,17 +1,28 @@
-# Partial prompt templates
+# How to partially format prompt templates
 
-Like other methods, it can make sense to "partial" a prompt template - eg pass in a subset of the required values, as to create a new prompt template which expects only the remaining subset of values.
+Like partially binding arguments to a function, it can make sense to "partial" a prompt template - e.g. pass in
+a subset of the required values, as to create a new prompt template which expects only the remaining subset of values.
 
 LangChain supports this in two ways:
 
 1. Partial formatting with string values.
 2. Partial formatting with functions that return string values.
 
-These two different ways support different use cases. In the examples below, we go over the motivations for both use cases as well as how to do it in LangChain.
+In the examples below, we go over the motivations for both use cases as well as how to do it in LangChain.
 
-## Partial With Strings
+import PrerequisiteLinks from "@theme/PrerequisiteLinks";
 
-One common use case for wanting to partial a prompt template is if you get some of the variables before others. For example, suppose you have a prompt template that requires two variables, `foo` and `baz`. If you get the `foo` value early on in the chain, but the `baz` value later, it can be annoying to wait until you have both variables in the same place to pass them to the prompt template. Instead, you can partial the prompt template with the `foo` value, and then pass the partialed prompt template along and just use that. Below is an example of doing this:
+<PrerequisiteLinks content={`
+- [Prompt templates](/docs/concepts/#prompt-templates)
+`}/>
+
+## Partial with strings
+
+One common use case for wanting to partial a prompt template is if you get access to some of the variables in a
+prompt before others. For example, suppose you have a prompt template that requires two variables, `foo` and `baz`.
+If you get the `foo` value early on in your chain, but the `baz` value later, it can be inconvenient to pass both variables all the way through the chain.
+Instead, you can partial the prompt template with the `foo` value, and then pass the partialed prompt template along and just use that.
+Below is an example of doing this:
 
 ```typescript
 import { PromptTemplate } from "langchain/prompts";
