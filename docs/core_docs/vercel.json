@@ -9,7 +9,7 @@
   ],
   "redirects": [
     {
-      "source": "/",
+      "source": "/|(/v0.2/?)",
       "destination": "/v0.2/docs/introduction/"
     },
     {
