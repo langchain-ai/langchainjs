@@ -197,4 +197,6 @@ export declare interface AzureOpenAIInput {
    * will be result in the endpoint URL: https://westeurope.api.cognitive.microsoft.com/openai/deployments/{DeploymentName}/
    */
   azureOpenAIBasePath?: string;
+
+  azureADTokenProvider?: () => Promise<string>;
 }

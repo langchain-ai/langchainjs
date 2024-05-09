@@ -1,37 +1,34 @@
-import { type ClientOptions, AzureOpenAI as AzureOpenAIClient } from "openai";
-import { type BaseChatModelParams } from "@langchain/core/language_models/chat_models";
-import { ChatOpenAI } from "../chat_models.js";
-import { OpenAIEndpointConfig, getEndpoint } from "../utils/azure.js";
+import {
+  type ClientOptions,
+  AzureOpenAI as AzureOpenAIClient,
+  OpenAI as OpenAIClient,
+} from "openai";
+import { OpenAIEmbeddings, OpenAIEmbeddingsParams } from "../embeddings.js";
 import {
   AzureOpenAIInput,
-  LegacyOpenAIInput,
-  OpenAIChatInput,
   OpenAICoreRequestOptions,
+  LegacyOpenAIInput,
 } from "../types.js";
+import { getEndpoint, OpenAIEndpointConfig } from "../utils/azure.js";
+import { wrapOpenAIClientError } from "../utils/openai.js";
 
-export class AzureChatOpenAI extends ChatOpenAI {
-  _llmType(): string {
-    return "azure_openai";
-  }
-
-  get lc_aliases(): Record<string, string> {
-    return {
-      openAIApiKey: "openai_api_key",
-      openAIApiVersion: "openai_api_version",
-      openAIBasePath: "openai_api_base",
-    };
-  }
-
+export class AzureOpenAIEmbeddings extends OpenAIEmbeddings {
   constructor(
-    fields?: Partial<OpenAIChatInput> &
+    fields?: Partial<OpenAIEmbeddingsParams> &
       Partial<AzureOpenAIInput> & {
+        verbose?: boolean;
+        /**
+         * The OpenAI API key to use.
+         * Alias for `apiKey`.
+         */
         openAIApiKey?: string;
-        openAIApiVersion?: string;
-        openAIBasePath?: string;
+        /** The OpenAI API key to use. */
+        apiKey?: string;
+        configuration?: ClientOptions;
         deploymentName?: string;
-      } & BaseChatModelParams & {
-        configuration?: ClientOptions & LegacyOpenAIInput;
-      }
+        openAIApiVersion?: string;
+      },
+    configuration?: ClientOptions & LegacyOpenAIInput
   ) {
     const newFields = fields ? { ...fields } : fields;
     if (newFields) {
@@ -40,10 +37,12 @@ export class AzureChatOpenAI extends ChatOpenAI {
       newFields.azureOpenAIApiVersion = newFields.openAIApiVersion;
     }
 
-    super(newFields);
+    super(newFields, configuration);
   }
 
-  protected _getClientOptions(options: OpenAICoreRequestOptions | undefined) {
+  protected async embeddingWithRetry(
+    request: OpenAIClient.EmbeddingCreateParams
+  ) {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
         azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,
@@ -76,10 +75,7 @@ export class AzureChatOpenAI extends ChatOpenAI {
         ...params,
       });
     }
-    const requestOptions = {
-      ...this.clientConfig,
-      ...options,
-    } as OpenAICoreRequestOptions;
+    const requestOptions: OpenAICoreRequestOptions = {};
     if (this.azureOpenAIApiKey) {
       requestOptions.headers = {
         "api-key": this.azureOpenAIApiKey,
@@ -90,25 +86,17 @@ export class AzureChatOpenAI extends ChatOpenAI {
         ...requestOptions.query,
       };
     }
-    return requestOptions;
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  toJSON(): any {
-    const json = super.toJSON() as unknown;
-
-    function isRecord(obj: unknown): obj is Record<string, unknown> {
-      return typeof obj === "object" && obj != null;
-    }
-
-    if (isRecord(json) && isRecord(json.kwargs)) {
-      delete json.kwargs.azure_openai_base_path;
-      delete json.kwargs.azure_openai_api_deployment_name;
-      delete json.kwargs.azure_openai_api_key;
-      delete json.kwargs.azure_openai_api_version;
-      delete json.kwargs.azure_open_ai_base_path;
-    }
-
-    return json;
+    return this.caller.call(async () => {
+      try {
+        const res = await this.client.embeddings.create(
+          request,
+          requestOptions
+        );
+        return res;
+      } catch (e) {
+        const error = wrapOpenAIClientError(e);
+        throw error;
+      }
+    });
   }
 }
