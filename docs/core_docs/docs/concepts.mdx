@@ -42,14 +42,14 @@ The main `langchain` package contains chains, agents, and retrieval strategies t
 These are NOT third party integrations.
 All chains, agents, and retrieval strategies here are NOT specific to any one integration, but rather generic across all integrations.
 
-### [LangGraph](/v0.2/docs/langgraph)
+### [LangGraph](/docs/langgraph)
 
 Not currently in this repo, `langgraph` is an extension of `langchain` aimed at
 building robust and stateful multi-actor applications with LLMs by modeling steps as edges and nodes in a graph.
 
 LangGraph exposes high level interfaces for creating common types of agents, as well as a low-level API for constructing more contr
 
-### [LangSmith](/v0.2/docs/langsmith)
+### [LangSmith](/docs/langsmith)
 
 A developer platform that lets you debug, test, evaluate, and monitor LLM applications.
 
@@ -62,7 +62,7 @@ npm i langchain
 ```
 
 If you want to work with specific integrations, you will need to install them separately.
-See [here](/v0.2/docs/integrations/platforms/) for a list of integrations and how to install them.
+See [here](/docs/integrations/platforms/) for a list of integrations and how to install them.
 
 For working with LangSmith, you will need to set up a LangSmith developer account [here](https://smith.langchain.com) and get an API key.
 After that, you can enable it by setting environment variables:
@@ -91,18 +91,18 @@ support for retries/fallbacks, so you can get the added reliability without any 
 
 **Access intermediate results**
 For more complex chains it’s often very useful to access the results of intermediate steps even before the final output is produced. This can be used to let end-users know
-something is happening, or even just to debug your chain. You can stream intermediate results, and it’s available on every [LangServe](/v0.2/docs/langserve) server.
+something is happening, or even just to debug your chain. You can stream intermediate results, and it’s available on every [LangServe](/docs/langserve) server.
 
 **Input and output schemas**
 Input and output schemas give every LCEL chain schemas inferred from the structure of your chain. This can be used for validation of inputs and outputs,
 and is an integral part of LangServe.
 
-[**Seamless LangSmith tracing**](/v0.2/docs/langsmith)
+[**Seamless LangSmith tracing**](/docs/langsmith)
 As your chains get more and more complex, it becomes increasingly important to understand what exactly is happening at every step.
-With LCEL, **all** steps are automatically logged to [LangSmith](/v0.2/docs/langsmith/) for maximum observability and debuggability.
+With LCEL, **all** steps are automatically logged to [LangSmith](/docs/langsmith/) for maximum observability and debuggability.
 
-[**Seamless LangServe deployment**](/v0.2/docs/langserve)
-Any chain created with LCEL can be easily deployed using [LangServe](/v0.2/docs/langserve).
+[**Seamless LangServe deployment**](/docs/langserve)
+Any chain created with LCEL can be easily deployed using [LangServe](/docs/langserve).
 
 ### Interface
 
@@ -174,7 +174,7 @@ Tool calling allows a model to respond to a given prompt by generating output th
 matches a user-defined schema. While the name implies that the model is performing
 some action, this is actually not the case! The model is coming up with the
 arguments to a tool, and actually running the tool (or not) is up to the user -
-for example, if you want to [extract output matching some schema](/v0.2/docs/tutorial/extraction/)
+for example, if you want to [extract output matching some schema](/docs/tutorial/extraction/)
 from unstructured text, you could give the model an "extraction" tool that takes
 parameters matching the desired schema, then treat the generated output as your final
 result.
@@ -190,13 +190,13 @@ to the LLM to include available tools and their schemas, and for responses to in
 calls to these tools. For instance, given a search engine tool, an LLM might handle a
 query by first issuing a call to the search engine. The system calling the LLM can
 receive the tool call, execute it, and return the output to the LLM to inform its
-response. LangChain includes a suite of [built-in tools](/v0.2/docs/integrations/tools/)
-and supports several methods for defining your own [custom tools](/v0.2/docs/how_to/custom_tools).
+response. LangChain includes a suite of [built-in tools](/docs/integrations/tools/)
+and supports several methods for defining your own [custom tools](/docs/how_to/custom_tools).
 
 There are two main use cases for function/tool calling:
 
-- [How to return structured data from an LLM](/v0.2/docs/how_to/structured_output/)
-- [How to use a model to call tools](/v0.2/docs/how_to/tool_calling/)
+- [How to return structured data from an LLM](/docs/how_to/structured_output/)
+- [How to use a model to call tools](/docs/how_to/tool_calling/)
 
 ### Message types
 
@@ -345,7 +345,7 @@ Example Selectors are classes responsible for selecting and then formatting exam
 The information here refers to parsers that take a text output from a model try to parse it into a more structured representation.
 More and more models are supporting function (or tool) calling, which handles this automatically.
 It is recommended to use function/tool calling rather than output parsing.
-See documentation for that [here](/v0.2/docs/concepts/#function-tool-calling).
+See documentation for that [here](/docs/concepts/#function-tool-calling).
 
 :::
 
@@ -451,7 +451,7 @@ const retriever = vectorstore.asRetriever();
 A retriever is an interface that returns documents given an unstructured query.
 It is more general than a vector store.
 A retriever does not need to be able to store documents, only to return (or retrieve) them.
-Retrievers can be created from vectorstores, but are also broad enough to include [Wikipedia search](/v0.2/docs/integrations/retrievers/wikipedia/) and [Amazon Kendra](/v0.2/docs/integrations/retrievers/amazon_kendra_retriever/).
+Retrievers can be created from vectorstores, but are also broad enough to include [Wikipedia search](/docs/integrations/retrievers/wikipedia/) and [Amazon Kendra](/docs/integrations/retrievers/amazon_kendra_retriever/).
 
 Retrievers accept a string query as input and return an array of Document's as output.
 
@@ -527,6 +527,6 @@ AgentExecutor was essentially a runtime for agents.
 It was a great place to get started, however, it was not flexible enough as you started to have more customized agents.
 In order to solve that we built LangGraph to be this flexible, highly-controllable runtime.
 
-If you are still using AgentExecutor, do not fear: we still have a guide on [how to use AgentExecutor](/v0.2/docs/how_to/agent_executor).
+If you are still using AgentExecutor, do not fear: we still have a guide on [how to use AgentExecutor](/docs/how_to/agent_executor).
 It is recommended, however, that you start to transition to LangGraph.
-In order to assist in this we have put together a [transition guide on how to do so](/v0.2/docs/how_to/migrate_agent)
+In order to assist in this we have put together a [transition guide on how to do so](/docs/how_to/migrate_agent)

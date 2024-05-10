@@ -75,6 +75,7 @@ const config = {
       /** @type {import('@docusaurus/preset-classic').Options} */
       ({
         docs: {
+          exclude: ['docs/old'],
           sidebarPath: require.resolve("./sidebars.js"),
           remarkPlugins: [
             [require("@docusaurus/remark-plugin-npm2yarn"), { sync: true }],
@@ -168,13 +169,6 @@ const config = {
             href: "https://api.js.langchain.com",
             label: "API Reference",
             position: "left",
-          },
-          // TODO(brace) Drop once all todo's have been ported
-          {
-            type: "docSidebar",
-            position: "left",
-            sidebarId: "old",
-            label: "old",
           },
           {
             type: "dropdown",
