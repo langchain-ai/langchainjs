@@ -1,0 +1,133 @@
+---
+title: Human-in-the-loop
+---
+
+# Human-in-the-loop
+
+There are certain tools that we don’t trust a model to execute on its
+own. One thing we can do in such situations is require human approval
+before the tool is invoked.
+
+## Setup
+
+We’ll need to install the following packages:
+
+```bash
+npm install langchain @langchain/core @langchain/openai readline zod
+```
+
+We’ll use `readline` to handle accepting input from the user.
+
+### LangSmith
+
+Many of the applications you build with LangChain will contain multiple
+steps with multiple invocations of LLM calls. As these applications get
+more and more complex, it becomes crucial to be able to inspect what
+exactly is going on inside your chain or agent. The best way to do this
+is with [LangSmith](https://smith.langchain.com/).
+
+Note that LangSmith is not needed, but it is helpful. If you do want to
+use LangSmith, after you sign up at the link above, make sure to set
+your environment variables to start logging traces:
+
+```bash
+export LANGCHAIN_TRACING_V2=true
+export LANGCHAIN_API_KEY=YOUR_KEY
+```
+
+## Chain
+
+Suppose we have the following (dummy) tools and tool-calling chain:
+
+```typescript
+import { ChatOpenAI } from "@langchain/openai";
+import {
+  Runnable,
+  RunnableLambda,
+  RunnablePassthrough,
+} from "@langchain/core/runnables";
+import { StructuredTool } from "@langchain/core/tools";
+import { JsonOutputToolsParser } from "langchain/output_parsers";
+import { z } from "zod";
+
+class CountEmails extends StructuredTool {
+  schema = z.object({
+    lastNDays: z.number(),
+  });
+
+  name = "count_emails";
+
+  description = "Count the number of emails sent in the last N days.";
+
+  async _call(input: z.infer<typeof this.schema>): Promise<string> {
+    return (input.lastNDays * 2).toString();
+  }
+}
+
+class SendEmail extends StructuredTool {
+  schema = z.object({
+    message: z.string(),
+    recipient: z.string(),
+  });
+
+  name = "send_email";
+
+  description = "Send an email.";
+
+  async _call(input: z.infer<typeof this.schema>): Promise<string> {
+    return `Successfully sent email to ${input.recipient}`;
+  }
+}
+
+const tools = [new CountEmails(), new SendEmail()];
+```
+
+```typescript
+const model = new ChatOpenAI({
+  model: "gpt-3.5-turbo",
+  temperature: 0,
+}).bind({
+  tools,
+});
+
+/**
+ * Function for dynamically constructing the end of the chain based on the model-selected tool.
+ */
+const callTool = (toolInvocation: Record<string, any>): Runnable => {
+  const toolMap: Record<string, StructuredTool> = tools.reduce((acc, tool) => {
+    acc[tool.name] = tool;
+    return acc;
+  }, {});
+  const tool = toolMap[toolInvocation.type];
+  return RunnablePassthrough.assign({
+    output: (input, config) => tool.invoke(input.args, config),
+  });
+};
+```
+
+```typescript
+// .map() allows us to apply a function to a list of inputs.
+const callToolList = new RunnableLambda({ func: callTool }).map();
+const chain = model.pipe(new JsonOutputToolsParser()).pipe(callToolList);
+```
+
+```typescript
+await chain.invoke("How many emails did I get in the last 5 days?");
+```
+
+```text
+[ { type: "count_emails", args: { lastNDays: 5 }, output: "10" } ]
+```
+
+## Adding human approval
+
+We can add a simple human approval step to our `toolChain` function:
+
+```mdx-code-block
+import CodeBlock from "@theme/CodeBlock";
+import HumanFeedback from "@examples/use_cases/human_in_the_loop/accept-feedback.ts";
+
+<CodeBlock language="typescript">{HumanFeedback}</CodeBlock>
+```
+
+> #### Examine the LangSmith traces from the code above [here](https://smith.langchain.com/public/aac711ff-b1a1-4fd7-a298-0f20909259b6/r) and [here](https://smith.langchain.com/public/7b35ee77-b369-4b95-af4f-b83510f9a93b/r). {#examine-the-langsmith-traces-from-the-code-above-here-and-here.}

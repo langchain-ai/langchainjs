@@ -1,0 +1,336 @@
+---
+sidebar_position: 1
+title: Decomposition
+---
+
+# Decomposition
+
+When a user asks a question there is no guarantee that the relevant
+results can be returned with a single query. Sometimes to answer a
+question we need to split it into distinct sub-questions, retrieve
+results for each sub-question, and then answer using the cumulative
+context.
+
+For example if a user asks: “How is Web Voyager different from
+reflection agents”, and we have one document that explains Web Voyager
+and one that explains reflection agents but no document that compares
+the two, then we’d likely get better results by retrieving for both
+“What is Web Voyager” and “What are reflection agents” and combining the
+retrieved documents than by retrieving based on the user question
+directly.
+
+This process of splitting an input into multiple distinct sub-queries is
+what we refer to as **query decomposition**. It is also sometimes
+referred to as sub-query generation. In this guide we’ll walk through an
+example of how to do decomposition, using our example of a Q&A bot over
+the LangChain YouTube videos from the
+[Quickstart](../../../../../docs/use_cases/query_analysis/quickstart).
+
+## Setup
+
+#### Install dependencies
+
+```mdx-code-block
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+import Npm2Yarn from "@theme/Npm2Yarn";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+<Npm2Yarn>
+  @langchain/core zod uuid
+</Npm2Yarn>
+```
+
+#### Set environment variables
+
+```text
+# Optional, use LangSmith for best-in-class observability
+LANGSMITH_API_KEY=your-api-key
+LANGCHAIN_TRACING_V2=true
+```
+
+## Query generation
+
+To convert user questions to a list of sub questions we’ll use a LLM
+function-calling API, which can return multiple functions each turn:
+
+```mdx-code-block
+import ChatModelTabs from "@theme/ChatModelTabs";
+
+<ChatModelTabs customVarName="llm" />
+```
+
+```typescript
+import { z } from "zod";
+
+const subQuerySchema = z
+  .object({
+    subQuery: z.array(
+      z.string().describe("A very specific query against the database")
+    ),
+  })
+  .describe(
+    "Search over a database of tutorial videos about a software library"
+  );
+```
+
+```typescript
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
+
+const system = `You are an expert at converting user questions into database queries.
+You have access to a database of tutorial videos about a software library for building LLM-powered applications.
+
+Perform query decomposition. Given a user question, break it down into distinct sub questions that
+you need to answer in order to answer the original question.
+
+If there are acronyms or words you are not familiar with, do not try to rephrase them.
+If the query is already well formed, do not try to decompose it further.`;
+const prompt = ChatPromptTemplate.fromMessages([
+  ["system", system],
+  new MessagesPlaceholder({
+    variableName: "examples",
+    optional: true,
+  }),
+  ["human", "{question}"],
+]);
+const llmWithTools = llm.withStructuredOutput(subQuerySchema, {
+  name: "SubQuery",
+});
+const queryAnalyzer = prompt.pipe(llmWithTools);
+```
+
+Let’s try it out with a simple question:
+
+```typescript
+await queryAnalyzer.invoke({ question: "how to do rag" });
+```
+
+```text
+{ subQuery: [ "How to do rag" ] }
+```
+
+Now with two slightly more involved questions:
+
+```typescript
+await queryAnalyzer.invoke({
+  question:
+    "how to use multi-modal models in a chain and turn chain into a rest api",
+});
+```
+
+```text
+{
+  subQuery: [
+    "How to use multi-modal models in a chain",
+    "How to turn a chain into a REST API"
+  ]
+}
+```
+
+```typescript
+await queryAnalyzer.invoke({
+  question:
+    "what's the difference between web voyager and reflection agents? do they use langgraph?",
+});
+```
+
+```text
+{
+  subQuery: [
+    "Difference between Web Voyager and Reflection Agents",
+    "Do Web Voyager and Reflection Agents use LangGraph?"
+  ]
+}
+```
+
+## Adding examples and tuning the prompt
+
+This works pretty well, but we probably want it to decompose the last
+question even further to separate the queries about Web Voyager and
+Reflection Agents. If we aren’t sure up front what types of queries will
+do best with our index, we can also intentionally include some
+redundancy in our queries, so that we return both sub queries and higher
+level queries.
+
+To tune our query generation results, we can add some examples of inputs
+questions and gold standard output queries to our prompt. We can also
+try to improve our system message.
+
+```typescript
+const examples: Array<Record<string, any>> = [];
+```
+
+```typescript
+const question = "What's chat langchain, is it a langchain template?";
+const query = {
+  query: "What's chat langchain, is it a langchain template?",
+  subQueries: [
+    "What is chat langchain",
+    "Is chat langchain a langchain template",
+  ],
+};
+examples.push({ input: question, toolCalls: [query] });
+```
+
+```text
+1
+```
+
+```typescript
+const question = "How would I use LangGraph to build an automaton";
+const query = {
+  query: "How would I use LangGraph to build an automaton",
+  subQueries: ["How to build automaton with LangGraph"],
+};
+examples.push({ input: question, toolCalls: [query] });
+```
+
+```text
+2
+```
+
+```typescript
+const question =
+  "How to build multi-agent system and stream intermediate steps from it";
+const query = {
+  query:
+    "How to build multi-agent system and stream intermediate steps from it",
+  subQueries: [
+    "How to build multi-agent system",
+    "How to stream intermediate steps",
+    "How to stream intermediate steps from multi-agent system",
+  ],
+};
+examples.push({ input: question, toolCalls: [query] });
+```
+
+```text
+3
+```
+
+```typescript
+const question =
+  "What's the difference between LangChain agents and LangGraph?";
+const query = {
+  query: "What's the difference between LangChain agents and LangGraph?",
+  subQueries: [
+    "What's the difference between LangChain agents and LangGraph?",
+    "What are LangChain agents",
+    "What is LangGraph",
+  ],
+};
+examples.push({ input: question, toolCalls: [query] });
+```
+
+```text
+4
+```
+
+Now we need to update our prompt template and chain so that the examples
+are included in each prompt. Since we’re working with LLM model
+function-calling, we’ll need to do a bit of extra structuring to send
+example inputs and outputs to the model. We’ll create a
+`toolExampleToMessages` helper function to handle this for us:
+
+```typescript
+import { v4 as uuidV4 } from "uuid";
+import {
+  AIMessage,
+  BaseMessage,
+  HumanMessage,
+  SystemMessage,
+  ToolMessage,
+} from "@langchain/core/messages";
+
+const toolExampleToMessages = (
+  example: Record<string, any>
+): Array<BaseMessage> => {
+  const messages: Array<BaseMessage> = [
+    new HumanMessage({ content: example.input }),
+  ];
+  const openaiToolCalls = example.toolCalls.map((toolCall) => {
+    return {
+      id: uuidV4(),
+      type: "function" as const,
+      function: {
+        name: "SubQuery",
+        arguments: JSON.stringify(toolCall),
+      },
+    };
+  });
+
+  messages.push(
+    new AIMessage({
+      content: "",
+      additional_kwargs: { tool_calls: openaiToolCalls },
+    })
+  );
+
+  const toolOutputs =
+    "toolOutputs" in example
+      ? example.toolOutputs
+      : Array(openaiToolCalls.length).fill(
+          "This is an example of a correct usage of this tool. Make sure to continue using the tool this way."
+        );
+  toolOutputs.forEach((output, index) => {
+    messages.push(
+      new ToolMessage({
+        content: output,
+        tool_call_id: openaiToolCalls[index].id,
+      })
+    );
+  });
+
+  return messages;
+};
+
+const exampleMessages = examples.map((ex) => toolExampleToMessages(ex)).flat();
+```
+
+```typescript
+import { MessagesPlaceholder } from "@langchain/core/prompts";
+import {
+  RunnablePassthrough,
+  RunnableSequence,
+} from "@langchain/core/runnables";
+
+const system = `You are an expert at converting user questions into database queries.
+You have access to a database of tutorial videos about a software library for building LLM-powered applications.
+
+Perform query decomposition. Given a user question, break it down into the most specific sub questions you can
+which will help you answer the original question. Each sub question should be about a single concept/fact/idea.
+
+If there are acronyms or words you are not familiar with, do not try to rephrase them.`;
+const prompt = ChatPromptTemplate.fromMessages([
+  ["system", system],
+  new MessagesPlaceholder({ variableName: "examples", optional: true }),
+  ["human", "{question}"],
+]);
+const queryAnalyzerWithExamples = RunnableSequence.from([
+  {
+    question: new RunnablePassthrough(),
+    examples: () => exampleMessages,
+  },
+  prompt,
+  llmWithTools,
+]);
+```
+
+```typescript
+await queryAnalyzerWithExamples.invoke(
+  "what's the difference between web voyager and reflection agents? do they use langgraph?"
+);
+```
+
+```text
+{
+  query: "what's the difference between web voyager and reflection agents? do they use langgraph?",
+  subQueries: [
+    "What's the difference between web voyager and reflection agents",
+    "Do web voyager and reflection agents use LangGraph"
+  ]
+}
+```
