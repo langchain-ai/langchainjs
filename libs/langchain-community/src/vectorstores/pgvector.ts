@@ -599,7 +599,9 @@ export class PGVectorStore extends VectorStore {
     } catch (e) {
       if (!(e as Error).message.includes("already exists")) {
         console.error(e);
-        throw new Error(`Error adding column or creating index: ${(e as Error).message}`);
+        throw new Error(
+          `Error adding column or creating index: ${(e as Error).message}`
+        );
       }
     }
   }

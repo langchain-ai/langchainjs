@@ -304,9 +304,11 @@ describe("PGVectorStore with collection", () => {
     );
     const expectedIndexName = `idx_${pgvectorVectorStore.computedCollectionTableName}_name`; // Adjust the variable name as necessary
 
-    const index = result.rows.find((row) => row.indexname === expectedIndexName);
+    const index = result.rows.find(
+      (row) => row.indexname === expectedIndexName
+    );
     expect(index).toBeDefined();
-  })
+  });
 
   test("Test embeddings creation", async () => {
     const documents = [
