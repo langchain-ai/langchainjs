@@ -57,10 +57,6 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
 
   trimWhitespaceSuffix?: boolean;
 
-  jsonSchema?:  object;
-
-  gbnf?: string;
-
   _model: LlamaModel;
 
   _context: LlamaContext;
