@@ -206,13 +206,13 @@ describe.skip("AstraDBVectorStore", () => {
     await store.initialize();
 
     await store.addDocuments([
-      { pageContent: "Foo bar baz.", metadata: { a: 1, _id: '123456789' } },
-      { pageContent: "Bar baz foo.", metadata: { a: 2, _id: '987654321' } },
-      { pageContent: "Baz foo bar.", metadata: { a: 3, _id: '234567891' } }
+      { pageContent: "Foo bar baz.", metadata: { a: 1, _id: "123456789" } },
+      { pageContent: "Bar baz foo.", metadata: { a: 2, _id: "987654321" } },
+      { pageContent: "Baz foo bar.", metadata: { a: 3, _id: "234567891" } },
     ]);
 
     await store.addDocuments([
-      { pageContent: "upserted", metadata: { a: 1, _id: '123456789' } },
+      { pageContent: "upserted", metadata: { a: 1, _id: "123456789" } },
     ]);
 
     const collection = await db.collection(astraConfig.collection);

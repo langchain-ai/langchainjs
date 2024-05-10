@@ -5,7 +5,7 @@ import {
   DataAPIClient,
   CreateCollectionOptions,
   Db,
-  InsertManyError
+  InsertManyError,
 } from "@datastax/astra-db-ts";
 
 import {
@@ -53,9 +53,6 @@ export class AstraDBVectorStore extends VectorStore {
 
   private readonly contentKey: string; // if undefined the entirety of the content aside from the id and embedding will be stored as content
 
-  /** @deprecated astra-db-ts > 1.0.0 handles this */
-  private readonly batchSize: number; 
-
   caller: AsyncCaller;
 
   private readonly skipCollectionProvisioning: boolean;
@@ -92,6 +89,12 @@ export class AstraDBVectorStore extends VectorStore {
     this.idKey = idKey ?? "_id";
     this.contentKey = contentKey ?? "text";
     this.caller = new AsyncCaller(callerArgs);
+
+    if (args.batchSize) {
+      console.warn(
+        "[WARNING]: `batchSize` is deprecated, and no longer has any effect.\n`astra-db-ts` > 1.0.0 handles this internally."
+      );
+    }
   }
 
   private static applyCollectionOptionsDefaults(
@@ -151,10 +154,13 @@ export class AstraDBVectorStore extends VectorStore {
 
     let insertResults;
 
-    const isInsertManyError = (error: any): error is InsertManyError => error.name === 'InsertManyError';
+    const isInsertManyError = (error: any): error is InsertManyError =>
+      error.name === "InsertManyError";
 
     try {
-      insertResults = await this.collection.insertMany(docs, { ordered: false });
+      insertResults = await this.collection.insertMany(docs, {
+        ordered: false,
+      });
     } catch (error) {
       if (isInsertManyError(error)) {
         insertResults = error.partialResult;
@@ -166,7 +172,9 @@ export class AstraDBVectorStore extends VectorStore {
     const insertedIds = insertResults.insertedIds as string[];
 
     if (insertedIds.length !== docs.length) {
-      const missingDocs = docs.filter(doc => !insertedIds.includes(doc[this.idKey]));
+      const missingDocs = docs.filter(
+        (doc) => !insertedIds.includes(doc[this.idKey])
+      );
 
       for (let i = 0; i < missingDocs.length; i += 1) {
         await this.caller.call(async () => {
