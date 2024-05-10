@@ -13,6 +13,8 @@ const mdxComponentsPath = path.resolve(__dirname, "docs", "mdx_components");
 const baseLightCodeBlockTheme = require("prism-react-renderer/themes/vsLight");
 const baseDarkCodeBlockTheme = require("prism-react-renderer/themes/vsDark");
 
+const baseUrl = "/v0.2/";
+
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: "🦜️🔗 Langchain",
@@ -22,7 +24,7 @@ const config = {
   url: "https://js.langchain.com",
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: "/v0.2/",
+  baseUrl,
 
   onBrokenLinks: "warn", // TODO(brace) change back to "throw" once all todos ported
   onBrokenMarkdownLinks: "warn", // TODO(brace) change back to "throw" once all todos ported
@@ -293,7 +295,7 @@ const config = {
     }),
 
   scripts: [
-    "/js/google_analytics.js",
+    baseUrl + "js/google_analytics.js",
     {
       src: "https://www.googletagmanager.com/gtag/js?id=G-TVSL7JBE9Y",
       async: true,
