@@ -302,7 +302,7 @@ describe("PGVectorStore with collection", () => {
     const result = await pgvectorVectorStore.pool.query(
       `SELECT * FROM pg_indexes WHERE tablename = '${pgvectorVectorStore.computedCollectionTableName}'`
     );
-    const expectedIndexName = `idx_${pgvectorVectorStore.computedCollectionTableName}_name`; // Adjust the variable name as necessary
+    const expectedIndexName = `idx_${pgvectorVectorStore.computedCollectionTableName}_name`;
 
     const index = result.rows.find(
       (row) => row.indexname === expectedIndexName
