@@ -125,8 +125,8 @@ function createTravelInstructions(stepsOverview: any): travelInstructions[] {
   return stepsOverview.multiModalSegments.map((segment: any) => ({
     ...(segment.navigationInstruction
       ? {
-          navigationInstruction: segment.navigationInstruction.instructions,
-        }
+        navigationInstruction: segment.navigationInstruction.instructions,
+      }
       : {}),
     travelMode: segment.travelMode,
   }));
@@ -290,9 +290,6 @@ export class GoogleRoutesAPI extends StructuredTool {
           Expected departure time should be provided as a timestamp in RFC3339 format: YYYY-MM-DDThh:mm:ss+00:00. The date should be in UTC time and the +00:00 represents the UTC offset. 
           For instance, if the the user's timezone is -5, the offset would be -05:00 meaning YYYY-MM-DDThh:mm:ss-05:00 with YYYY-MM-DDThh:mm:ss being in UTC. 
           For reference, here is the current time in UTC: ${new Date().toISOString()} and the user's timezone offset is ${getTimezoneOffsetInHours()}. 
-          Reminder that the departure time must be in the future. 
-          If the user asks for a departure time in the past, warn them that it is not possible. 
-          If the user asks for a departure time in a passed hour today, calculate it for the next day.
           If the departure time is not specified it should not be included.          
           `
         ),
@@ -305,34 +302,26 @@ export class GoogleRoutesAPI extends StructuredTool {
           Expected arrival time should be provided as a timestamp in RFC3339 format: YYYY-MM-DDThh:mm:ss+00:00. The date should be in UTC time and the +00:00 represents the UTC offset. 
           For instance, if the the user's timezone is -5, the offset would be -05:00 meaning YYYY-MM-DDThh:mm:ss-05:00 with YYYY-MM-DDThh:mm:ss being in UTC. 
           For reference, here is the current time in UTC: ${new Date().toISOString()} and the user's timezone offset is ${getTimezoneOffsetInHours()}. 
-          Reminder that the arrival time must be in the future, if the user asks for a departure time in the past, warn them that it is not possible. 
-          If the user asks for a departure time in a passed hour today, calculate it for the next day.
-          Arrival time only works for transit mode. It should not be included if transit mode is not selected. 
-          If the user wants to calculate the arrival time for other modes you must warn them that it is not possible. 
+          Reminder that the arrival time must be in the future, if the user asks for a arrival time in the past instead of processing the request, warn them that it is not possible to calculate a route for a past time.
+          If the user asks for a arrival time in a passed hour today, calculate it for the next day.
           If the arrival time is not specified it should not be included. `
         ),
       transitPreferences: z
         .object({
           routingPreference: z.enum(["LESS_WALKING", "FEWER_TRANSFERS"])
             .describe(`Transit routing preference.
-            Only works for transit mode.
-            It should not be included if transit mode is not selected.
             By default, it should not be included.`),
         })
         .optional()
         .describe(
           `Transit routing preference.
-           Only works for transit mode. 
-           It should not be included if transit mode is not selected. 
            By default, it should not be included.`
         ),
       extraComputations: z
         .array(z.enum(["TOLLS"]))
         .optional()
         .describe(
-          `Calculate tolls for the route. 
-          Does not work for transit mode. 
-          It should not be included if transit mode is selected, if the user wants to calculate tolls for transit mode you should warn them that it is not possible.`
+          `Calculate tolls for the route.`
         ),
     });
   }
@@ -349,7 +338,23 @@ export class GoogleRoutesAPI extends StructuredTool {
       extraComputations,
     } = input;
 
-    console.log("input:", input);
+    const now = new Date();
+
+    if (departureTime && new Date(departureTime) < now) {
+      return "It is not possible to calculate a route with a past departure time. Warn the user that it is not possible to calculate a route with a past departure time.";
+    }
+
+    if (arrivalTime && new Date(arrivalTime) < now) {
+      return "It is not possible to calculate a route with a past arrival time. Warn the user that it is not possible to calculate a route with a past arrival time.";
+    }
+
+    if (travel_mode !== "TRANSIT" && arrivalTime) {
+      return "It is not possible to calculate an arrival time for modes other than transit. Warn the user that it is not possible to calculate an arrival time for the selected mode of transport.";
+    }
+
+    if (travel_mode === "TRANSIT" && extraComputations) {
+      return "It is not possible to calculate tolls for transit mode. Warn the user that it is not possible to calculate tolls for transit mode.";
+    }
 
     const body: Body = {
       origin: {
@@ -413,7 +418,7 @@ export class GoogleRoutesAPI extends StructuredTool {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (route: any) => filterRoutes(route, travel_mode)
     );
-    console.log("output:", routes);
+
     return JSON.stringify(routes);
   }
 }
