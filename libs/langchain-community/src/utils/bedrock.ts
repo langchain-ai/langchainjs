@@ -88,13 +88,6 @@ function formatMessagesForAnthropic(messages: BaseMessage[]): {
   };
 }
 
-/**
- * https://us-west-2.console.aws.amazon.com/bedrock/home?region=us-west-2#/providers?model=cohere.command-light-text-v14
- * https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-cohere-command-r-plus.html
- * https://qiita.com/moritalous/items/7ce39c46fcddb9870476
- * @param messages
- * @returns
- */
 function formatMEssagesForCohere(messages: BaseMessage[]): {
   system?: string;
   message: string;
@@ -152,12 +145,6 @@ function formatMEssagesForCohere(messages: BaseMessage[]): {
         message: message.content,
       };
     });
-
-  console.log("--------------------------------", {
-    chatHistory: formattedChatHistories,
-    message: formattedMessage,
-    system: system,
-  });
 
   return {
     chatHistory: formattedChatHistories,
@@ -409,6 +396,7 @@ export class BedrockLLMInputOutputAdapter {
         return parseMessage(responseBody);
       } else if (
         responseBody.event_type === "stream-end" &&
+        responseBody["response"] !== undefined &&
         responseBody["amazon-bedrock-invocationMetrics"] !== undefined
       ) {
         return new ChatGenerationChunk({
