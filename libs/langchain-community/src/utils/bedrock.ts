@@ -314,7 +314,7 @@ export class BedrockLLMInputOutputAdapter {
         chatHistory: formattedChatHistories,
       } = formatMessagesForCohere(messages);
 
-      if (system !== undefined) {
+      if (system !== undefined && system.length > 0) {
         inputBody.preamble = system;
       }
       inputBody.message = formattedMessage;
