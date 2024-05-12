@@ -88,7 +88,7 @@ function formatMessagesForAnthropic(messages: BaseMessage[]): {
   };
 }
 
-function formatMEssagesForCohere(messages: BaseMessage[]): {
+function formatMessagesForCohere(messages: BaseMessage[]): {
   system?: string;
   message: string;
   chatHistory: Record<string, unknown>[];
@@ -291,7 +291,7 @@ export class BedrockLLMInputOutputAdapter {
         system,
         message: formattedMessage,
         chatHistory: formattedChatHistories,
-      } = formatMEssagesForCohere(messages);
+      } = formatMessagesForCohere(messages);
 
       if (system !== undefined) {
         inputBody.preamble = system;
