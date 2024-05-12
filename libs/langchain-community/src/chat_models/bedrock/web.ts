@@ -508,10 +508,10 @@ function canUsesMessagesApi(model: string): boolean {
   }
 
   if (modelProviderName === "cohere") {
-    if (model.includes("command-r-v1:0")) {
+    if (model.includes("command-r-v1")) {
       return true;
     }
-    if (model.includes("command-r-plus-v1:0")) {
+    if (model.includes("command-r-plus-v1")) {
       return true;
     }
   }
