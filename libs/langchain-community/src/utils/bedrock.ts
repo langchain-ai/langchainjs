@@ -88,6 +88,27 @@ function formatMessagesForAnthropic(messages: BaseMessage[]): {
   };
 }
 
+/**
+ * format messages for Cohere Command-R and CommandR+ via AWS Bedrock.
+ *
+ * @param messages messages The base messages to format as a prompt.
+ *
+ * @returns The formatted prompt for Cohere.
+ *
+ * `system`: user system prompts. Overrides the default preamble for search query generation. Has no effect on tool use generations.\
+ * `message`: (Required) Text input for the model to respond to.\
+ * `chatHistory`: A list of previous messages between the user and the model, meant to give the model conversational context for responding to the user's message.\
+ * The following are required fields.
+ * - `role` - The role for the message. Valid values are USER or CHATBOT.\
+ * - `message` – Text contents of the message.\
+ *
+ * The following is example JSON for the chat_history field.\
+ * "chat_history": [
+ * {"role": "USER", "message": "Who discovered gravity?"},
+ * {"role": "CHATBOT", "message": "The man who is widely credited with discovering gravity is Sir Isaac Newton"}]\
+ *
+ * docs: https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-cohere-command-r-plus.html
+ */
 function formatMessagesForCohere(messages: BaseMessage[]): {
   system?: string;
   message: string;
