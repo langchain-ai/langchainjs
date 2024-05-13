@@ -1,6 +1,6 @@
 // Swizzled class to show custom text for canary version.
 // Should be removed in favor of the stock implementation.\
-/* eslint-disable react/jsx-props-no-spreading */
+/* eslint-disable react/jsx-props-no-spreading, import/no-extraneous-dependencies */
 
 import React from "react";
 import clsx from "clsx";
