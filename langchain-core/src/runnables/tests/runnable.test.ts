@@ -214,6 +214,50 @@ test("RunnableLambda that returns an async iterator should consume it", async ()
   expect(chunks).toEqual(["test", "ing"]);
 });
 
+test("RunnableLambda that returns an async iterable should consume it", async () => {
+  const runnable = new RunnableLambda({
+    func() {
+      return new ReadableStream({
+        async start(controller) {
+          controller.enqueue("test");
+          controller.enqueue("ing");
+          controller.close();
+        },
+      });
+    },
+  });
+  const result = await runnable.invoke({});
+  expect(result).toEqual("testing");
+  const chunks = [];
+  const stream = await runnable.stream({});
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+  expect(chunks).toEqual(["test", "ing"]);
+});
+
+test("RunnableLambda that returns a promise for async iterable should consume it", async () => {
+  const runnable = new RunnableLambda({
+    async func() {
+      return new ReadableStream({
+        async start(controller) {
+          controller.enqueue("test");
+          controller.enqueue("ing");
+          controller.close();
+        },
+      });
+    },
+  });
+  const result = await runnable.invoke({});
+  expect(result).toEqual("testing");
+  const chunks = [];
+  const stream = await runnable.stream({});
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+  expect(chunks).toEqual(["test", "ing"]);
+});
+
 test("RunnableLambda that returns an iterator should consume it", async () => {
   const runnable = new RunnableLambda({
     *func() {
