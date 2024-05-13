@@ -21,8 +21,9 @@ export interface WebLLMCallOptions extends BaseLanguageModelCallOptions {}
 /**
  * To use this model you need to have the `@mlc-ai/web-llm` module installed.
  * This can be installed using `npm install -S @mlc-ai/web-llm`.
- * You can see a list of available model records from here:
- * https://github.com/mlc-ai/web-llm/blob/eaaff6a7730b6403810bb4fd2bbc4af113c36050/examples/simple-chat/src/gh-config.js
+ *
+ * You can see a list of available model records here:
+ * https://github.com/mlc-ai/web-llm/blob/main/src/config.ts
  * @example
  * ```typescript
  * // Initialize the ChatWebLLM model with the model record.
