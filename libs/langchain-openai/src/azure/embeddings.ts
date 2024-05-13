@@ -17,11 +17,6 @@ export class AzureOpenAIEmbeddings extends OpenAIEmbeddings {
     fields?: Partial<OpenAIEmbeddingsParams> &
       Partial<AzureOpenAIInput> & {
         verbose?: boolean;
-        /**
-         * The OpenAI API key to use.
-         * Alias for `apiKey`.
-         */
-        openAIApiKey?: string;
         /** The OpenAI API key to use. */
         apiKey?: string;
         configuration?: ClientOptions;
