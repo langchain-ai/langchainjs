@@ -198,5 +198,9 @@ export declare interface AzureOpenAIInput {
    */
   azureOpenAIBasePath?: string;
 
+  /**
+   * A function that returns an access token for Microsoft Entra (formerly known as Azure Active Directory),
+   * which will be invoked on every request.
+   */
   azureADTokenProvider?: () => Promise<string>;
 }

@@ -28,7 +28,7 @@ export class AzureOpenAIEmbeddings extends OpenAIEmbeddings {
     const newFields = { ...fields };
     if (Object.entries(newFields).length) {
       newFields.azureOpenAIApiDeploymentName = newFields.deploymentName;
-      newFields.azureOpenAIApiKey = newFields.openAIApiKey;
+      newFields.azureOpenAIApiKey = newFields.apiKey;
       newFields.azureOpenAIApiVersion = newFields.openAIApiVersion;
     }
 
