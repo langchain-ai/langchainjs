@@ -145,7 +145,6 @@ const cleanGenerated = ({
 
 // Tuple describing the auto-generated import map (used by langchain/load)
 // [package name, import statement, import map path]
-// This will not include entrypoints deprecated or requiring optional deps.
 const importMap = (
   packageSuffix: string | null
 ): [string, (k: string, p: string) => string, string] => [

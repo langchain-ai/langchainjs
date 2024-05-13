@@ -14,12 +14,14 @@ mkdir -p ./libs/langchain-core/
 mkdir -p ./libs/langchain-openai/
 mkdir -p ./libs/langchain-anthropic/
 mkdir -p ./libs/langchain-community/
+mkdir -p ./libs/langchain-cohere/
 mkdir -p ./libs/langchain/
 
 cp -r ../langchain-core ./libs/
 cp -r ../langchain-openai ./libs/
 cp -r ../langchain-anthropic ./libs/
 cp -r ../langchain-community ./libs/
+cp -r ../langchain-cohere ./libs/
 cp -r ../langchain ./libs/
 
 # copy cache

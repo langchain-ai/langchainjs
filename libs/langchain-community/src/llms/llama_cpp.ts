@@ -1,4 +1,11 @@
-import { LlamaModel, LlamaContext, LlamaChatSession } from "node-llama-cpp";
+import {
+  LlamaModel,
+  LlamaContext,
+  LlamaChatSession,
+  LlamaJsonSchemaGrammar,
+  LlamaGrammar,
+  GbnfJsonSchema,
+} from "node-llama-cpp";
 import {
   LLM,
   type BaseLLMCallOptions,
@@ -12,6 +19,8 @@ import {
   createLlamaModel,
   createLlamaContext,
   createLlamaSession,
+  createLlamaJsonSchemaGrammar,
+  createCustomGrammar,
 } from "../utils/llama_cpp.js";
 
 /**
@@ -54,6 +63,10 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
 
   _session: LlamaChatSession;
 
+  _jsonSchema: LlamaJsonSchemaGrammar<GbnfJsonSchema> | undefined;
+
+  _gbnf: LlamaGrammar | undefined;
+
   static lc_name() {
     return "LlamaCpp";
   }
@@ -68,6 +81,8 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
     this._model = createLlamaModel(inputs);
     this._context = createLlamaContext(this._model, inputs);
     this._session = createLlamaSession(this._context);
+    this._jsonSchema = createLlamaJsonSchemaGrammar(inputs?.jsonSchema);
+    this._gbnf = createCustomGrammar(inputs?.gbnf);
   }
 
   _llmType() {
@@ -80,7 +95,17 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
     options?: this["ParsedCallOptions"]
   ): Promise<string> {
     try {
+      let promptGrammer;
+
+      if (this._jsonSchema !== undefined) {
+        promptGrammer = this._jsonSchema;
+      } else if (this._gbnf !== undefined) {
+        promptGrammer = this._gbnf;
+      } else {
+        promptGrammer = undefined;
+      }
       const promptOptions = {
+        grammar: promptGrammer,
         onToken: options?.onToken,
         maxTokens: this?.maxTokens,
         temperature: this?.temperature,
@@ -88,6 +113,7 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
         topP: this?.topP,
         trimWhitespaceSuffix: this?.trimWhitespaceSuffix,
       };
+
       const completion = await this._session.prompt(prompt, promptOptions);
       return completion;
     } catch (e) {

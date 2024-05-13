@@ -12,6 +12,12 @@ import { Document } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { BaseDocumentLoader } from "../base.js";
 import { AssemblyAIOptions } from "../../types/assemblyai-types.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/web/assemblyai",
+  newPackageName: "@langchain/community",
+});
 
 export type * from "../../types/assemblyai-types.js";
 
