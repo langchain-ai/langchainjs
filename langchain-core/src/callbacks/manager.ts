@@ -119,7 +119,8 @@ class BaseRunManager {
     protected readonly inheritableTags: string[],
     protected readonly metadata: Record<string, unknown>,
     protected readonly inheritableMetadata: Record<string, unknown>,
-    protected readonly _parentRunId?: string
+    protected readonly _parentRunId?: string,
+    protected readonly raiseError?: boolean
   ) {}
 
   async handleText(text: string): Promise<void> {
@@ -137,6 +138,9 @@ class BaseRunManager {
             console.error(
               `Error in handler ${handler.constructor.name}, handleText: ${err}`
             );
+            if (this.raiseError) {
+              throw err;
+            }
           }
         }, handler.awaitHandlers)
       )
@@ -179,6 +183,9 @@ export class CallbackManagerForRetrieverRun
               console.error(
                 `Error in handler ${handler.constructor.name}, handleRetriever`
               );
+              if (this.raiseError) {
+                throw err;
+              }
             }
           }
         }, handler.awaitHandlers)
@@ -202,6 +209,9 @@ export class CallbackManagerForRetrieverRun
               console.error(
                 `Error in handler ${handler.constructor.name}, handleRetrieverError: ${error}`
               );
+              if (this.raiseError) {
+                throw err;
+              }
             }
           }
         }, handler.awaitHandlers)
@@ -239,6 +249,9 @@ export class CallbackManagerForLLMRun
               console.error(
                 `Error in handler ${handler.constructor.name}, handleLLMNewToken: ${err}`
               );
+              if (this.raiseError) {
+                throw err;
+              }
             }
           }
         }, handler.awaitHandlers)
@@ -262,6 +275,9 @@ export class CallbackManagerForLLMRun
               console.error(
                 `Error in handler ${handler.constructor.name}, handleLLMError: ${err}`
               );
+              if (this.raiseError) {
+                throw err;
+              }
             }
           }
         }, handler.awaitHandlers)
@@ -285,6 +301,9 @@ export class CallbackManagerForLLMRun
               console.error(
                 `Error in handler ${handler.constructor.name}, handleLLMEnd: ${err}`
               );
+              if (this.raiseError) {
+                throw err;
+              }
             }
           }
         }, handler.awaitHandlers)
@@ -332,6 +351,9 @@ export class CallbackManagerForChainRun
               console.error(
                 `Error in handler ${handler.constructor.name}, handleChainError: ${err}`
               );
+              if (this.raiseError) {
+                throw err;
+              }
             }
           }
         }, handler.awaitHandlers)
@@ -362,6 +384,9 @@ export class CallbackManagerForChainRun
               console.error(
                 `Error in handler ${handler.constructor.name}, handleChainEnd: ${err}`
               );
+              if (this.raiseError) {
+                throw err;
+              }
             }
           }
         }, handler.awaitHandlers)
@@ -385,6 +410,9 @@ export class CallbackManagerForChainRun
               console.error(
                 `Error in handler ${handler.constructor.name}, handleAgentAction: ${err}`
               );
+              if (this.raiseError) {
+                throw err;
+              }
             }
           }
         }, handler.awaitHandlers)
@@ -408,6 +436,9 @@ export class CallbackManagerForChainRun
               console.error(
                 `Error in handler ${handler.constructor.name}, handleAgentEnd: ${err}`
               );
+              if (this.raiseError) {
+                throw err;
+              }
             }
           }
         }, handler.awaitHandlers)
@@ -448,6 +479,9 @@ export class CallbackManagerForToolRun
               console.error(
                 `Error in handler ${handler.constructor.name}, handleToolError: ${err}`
               );
+              if (this.raiseError) {
+                throw err;
+              }
             }
           }
         }, handler.awaitHandlers)
@@ -471,6 +505,9 @@ export class CallbackManagerForToolRun
               console.error(
                 `Error in handler ${handler.constructor.name}, handleToolEnd: ${err}`
               );
+              if (this.raiseError) {
+                throw err;
+              }
             }
           }
         }, handler.awaitHandlers)
@@ -516,6 +553,7 @@ export class CallbackManager
   name = "callback_manager";
 
   public readonly _parentRunId?: string;
+  raiseError: any;
 
   constructor(
     parentRunId?: string,
@@ -526,6 +564,7 @@ export class CallbackManager
       inheritableTags?: string[];
       metadata?: Record<string, unknown>;
       inheritableMetadata?: Record<string, unknown>;
+      raiseError?: boolean;
     }
   ) {
     super();
@@ -538,6 +577,7 @@ export class CallbackManager
     this.inheritableMetadata =
       options?.inheritableMetadata ?? this.inheritableMetadata;
     this._parentRunId = parentRunId;
+    this.raiseError = options?.raiseError ?? this.raiseError;
   }
 
   /**
@@ -583,6 +623,9 @@ export class CallbackManager
                   console.error(
                     `Error in handler ${handler.constructor.name}, handleLLMStart: ${err}`
                   );
+                  if (this.raiseError) {
+                    throw err;
+                  }
                 }
               }
             }, handler.awaitHandlers)
@@ -597,7 +640,8 @@ export class CallbackManager
           this.inheritableTags,
           this.metadata,
           this.inheritableMetadata,
-          this._parentRunId
+          this._parentRunId,
+          this.raiseError
         );
       })
     );
@@ -651,6 +695,9 @@ export class CallbackManager
                   console.error(
                     `Error in handler ${handler.constructor.name}, handleLLMStart: ${err}`
                   );
+                  if (this.raiseError) {
+                    throw err;
+                  }
                 }
               }
             }, handler.awaitHandlers)
@@ -665,7 +712,8 @@ export class CallbackManager
           this.inheritableTags,
           this.metadata,
           this.inheritableMetadata,
-          this._parentRunId
+          this._parentRunId,
+          this.raiseError
         );
       })
     );
@@ -699,6 +747,9 @@ export class CallbackManager
               console.error(
                 `Error in handler ${handler.constructor.name}, handleChainStart: ${err}`
               );
+              if (this.raiseError) {
+                throw err;
+              }
             }
           }
         }, handler.awaitHandlers)
@@ -712,7 +763,8 @@ export class CallbackManager
       this.inheritableTags,
       this.metadata,
       this.inheritableMetadata,
-      this._parentRunId
+      this._parentRunId,
+      this.raiseError
     );
   }
 
@@ -743,6 +795,9 @@ export class CallbackManager
               console.error(
                 `Error in handler ${handler.constructor.name}, handleToolStart: ${err}`
               );
+              if (this.raiseError) {
+                throw err;
+              }
             }
           }
         }, handler.awaitHandlers)
@@ -756,7 +811,8 @@ export class CallbackManager
       this.inheritableTags,
       this.metadata,
       this.inheritableMetadata,
-      this._parentRunId
+      this._parentRunId,
+      this.raiseError
     );
   }
 
@@ -787,6 +843,9 @@ export class CallbackManager
               console.error(
                 `Error in handler ${handler.constructor.name}, handleRetrieverStart: ${err}`
               );
+              if (this.raiseError) {
+                throw err
+              }
             }
           }
         }, handler.awaitHandlers)
@@ -800,7 +859,8 @@ export class CallbackManager
       this.inheritableTags,
       this.metadata,
       this.inheritableMetadata,
-      this._parentRunId
+      this._parentRunId,
+      this.raiseError
     );
   }
 
