@@ -1,7 +1,7 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { SyntheticEmbeddings } from "@langchain/core/utils/testing";
-import { GoogleCloudStorageDocstore } from "langchain/stores/doc/gcs";
+import { GoogleCloudStorageDocstore } from "@langchain/community/stores/doc/gcs";
 import {
   MatchingEngineArgs,
   MatchingEngine,

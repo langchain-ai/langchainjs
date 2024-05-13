@@ -18,9 +18,10 @@ export interface SecretMap {
   CLOUDFLARE_API_TOKEN?: string;
   COHERE_API_KEY?: string;
   DATABERRY_API_KEY?: string;
+  DRIA_API_KEY?: string;
   FIREWORKS_API_KEY?: string;
-  FRIENDLI_TOKEN?: string;
   FRIENDLI_TEAM?: string;
+  FRIENDLI_TOKEN?: string;
   GOOGLE_API_KEY?: string;
   GOOGLE_PALM_API_KEY?: string;
   GOOGLE_PLACES_API_KEY?: string;
@@ -40,6 +41,7 @@ export interface SecretMap {
   PLANETSCALE_HOST?: string;
   PLANETSCALE_PASSWORD?: string;
   PLANETSCALE_USERNAME?: string;
+  PREM_API_KEY?: string;
   QDRANT_API_KEY?: string;
   QDRANT_URL?: string;
   REDIS_PASSWORD?: string;
@@ -62,4 +64,5 @@ export interface SecretMap {
   YC_IAM_TOKEN?: string;
   ZEP_API_KEY?: string;
   ZEP_API_URL?: string;
+  ZHIPUAI_API_KEY?: string;
 }

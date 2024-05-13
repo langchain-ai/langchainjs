@@ -33,7 +33,13 @@ jobs:
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable
-      - name: Build
+
+      - name: Build "@langchain/community"
+        run: yarn workspace @langchain/community build
+        shell: bash
+        env:
+          SKIP_API_DOCS: true
+      - name: Build LangChain
         run: yarn workspace langchain build
         shell: bash
         env:
@@ -53,7 +59,13 @@ jobs:
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable
-      - name: Build
+
+      - name: Build "@langchain/community"
+        run: yarn workspace @langchain/community build
+        shell: bash
+        env:
+          SKIP_API_DOCS: true
+      - name: Build LangChain
         run: yarn workspace langchain build
         shell: bash
         env:
@@ -73,7 +85,13 @@ jobs:
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable
-      - name: Build
+
+      - name: Build "@langchain/community"
+        run: yarn workspace @langchain/community build
+        shell: bash
+        env:
+          SKIP_API_DOCS: true
+      - name: Build LangChain
         run: yarn workspace langchain build
         shell: bash
         env:

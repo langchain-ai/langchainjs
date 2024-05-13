@@ -114,7 +114,7 @@ const selfQueryRetriever = SelfQueryRetriever.fromLLM({
    * abstract class. Note that the vector store needs to support filtering on the metadata
    * attributes you want to query on.
    */
-  structuredQueryTranslator: new VectaraTranslator(),
+  structuredQueryTranslator: new VectaraTranslator<VectaraStore>(),
 });
 
 /**

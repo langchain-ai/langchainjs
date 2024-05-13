@@ -5,6 +5,7 @@ services:
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
+      COHERE_API_KEY: ${COHERE_API_KEY}
     working_dir: /app
     volumes:
       - ../langchain:/langchain
@@ -15,6 +16,7 @@ services:
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
+      COHERE_API_KEY: ${COHERE_API_KEY}
     working_dir: /app
     volumes:
       - ../langchain:/langchain

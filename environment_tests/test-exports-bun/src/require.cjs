@@ -1,18 +1,16 @@
 const assert = require("assert");
-const { OpenAI } = require("langchain/llms/openai");
+const { OpenAI } = require("@langchain/openai");
 const { LLMChain } = require("langchain/chains");
-const { ChatPromptTemplate } = require("langchain/prompts");
-const { loadPrompt } = require("langchain/prompts/load");
+const { ChatPromptTemplate } = require("@langchain/core/prompts");
 const { MemoryVectorStore } = require("langchain/vectorstores/memory");
-const { OpenAIEmbeddings } = require("langchain/embeddings/openai");
-const { Document } = require("langchain/document");
+const { OpenAIEmbeddings } = require("@langchain/openai");
+const { Document } = require("@langchain/core/documents");
 const { CSVLoader } = require("langchain/document_loaders/fs/csv");
 
 async function test() {
   // Test exports
   assert(typeof OpenAI === "function");
   assert(typeof LLMChain === "function");
-  assert(typeof loadPrompt === "function");
   assert(typeof ChatPromptTemplate === "function");
   assert(typeof MemoryVectorStore === "function");
 

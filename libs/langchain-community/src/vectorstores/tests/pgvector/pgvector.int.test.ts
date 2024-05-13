@@ -12,7 +12,7 @@ describe("PGVectorStore", () => {
       postgresConnectionOptions: {
         type: "postgres",
         host: "127.0.0.1",
-        port: 5433,
+        port: 5432,
         user: "myuser",
         password: "ChangeMe",
         database: "api",
@@ -252,7 +252,7 @@ describe("PGVectorStore", () => {
   });
 });
 
-describe.skip("PGVectorStore with collection", () => {
+describe("PGVectorStore with collection", () => {
   let pgvectorVectorStore: PGVectorStore;
   const tableName = "testlangchain_collection";
   const collectionTableName = "langchain_pg_collection";
@@ -262,7 +262,7 @@ describe.skip("PGVectorStore with collection", () => {
       postgresConnectionOptions: {
         type: "postgres",
         host: "127.0.0.1",
-        port: 5433,
+        port: 5432,
         user: "myuser",
         password: "ChangeMe",
         database: "api",
@@ -296,6 +296,18 @@ describe.skip("PGVectorStore with collection", () => {
 
   afterAll(async () => {
     await pgvectorVectorStore.end();
+  });
+
+  test("'name' column is indexed", async () => {
+    const result = await pgvectorVectorStore.pool.query(
+      `SELECT * FROM pg_indexes WHERE tablename = '${pgvectorVectorStore.computedCollectionTableName}'`
+    );
+    const expectedIndexName = `idx_${pgvectorVectorStore.computedCollectionTableName}_name`;
+
+    const index = result.rows.find(
+      (row) => row.indexname === expectedIndexName
+    );
+    expect(index).toBeDefined();
   });
 
   test("Test embeddings creation", async () => {
@@ -475,7 +487,7 @@ describe.skip("PGVectorStore with collection", () => {
   });
 });
 
-describe.skip("PGVectorStore with schema", () => {
+describe("PGVectorStore with schema", () => {
   let pgvectorVectorStore: PGVectorStore;
   const tableName = "testlangchain_schema";
   const schema = "test_schema";
@@ -487,7 +499,7 @@ describe.skip("PGVectorStore with schema", () => {
   beforeAll(async () => {
     pool = new pg.Pool({
       host: "127.0.0.1",
-      port: 5433,
+      port: 5432,
       user: "myuser",
       password: "ChangeMe",
       database: "api",
