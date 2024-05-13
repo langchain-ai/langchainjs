@@ -18,6 +18,10 @@
       "destination": "/v0.2/docs/introduction/"
     },
     {
+      "source": "/v0.2/docs(/?)",
+      "destination": "/v0.2/docs/introduction/"
+    },
+    {
       "source": "/docs/:path(.*/?)*",
       "destination": "/v0.1/docs/:path*"
     }
