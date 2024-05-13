@@ -47,6 +47,7 @@
     "@langchain/nomic": "workspace:*",
     "@langchain/openai": "workspace:*",
     "@langchain/pinecone": "workspace:*",
+    "@langchain/qdrant": "workspace:*",
     "@langchain/redis": "workspace:*",
     "@langchain/scripts": "workspace:*",
     "@langchain/weaviate": "workspace:*",
