@@ -38,6 +38,12 @@ import { _RootEventFilter, isRunnableInterface } from "./utils.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 import { Graph } from "./graph.js";
 import { convertToHttpEventStream } from "./wrappers.js";
+import {
+  consumeAsyncIterableInContext,
+  consumeIteratorInContext,
+  isAsyncIterable,
+  isIterator,
+} from "./iter.js";
 
 export { type RunnableInterface, RunnableBatchOptions };
 
@@ -1999,6 +2005,44 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
                 recursionLimit:
                   (childConfig.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
               });
+            } else if (isAsyncIterable(output)) {
+              let finalOutput: RunOutput | undefined;
+              for await (const chunk of consumeAsyncIterableInContext(
+                childConfig,
+                output
+              )) {
+                if (finalOutput === undefined) {
+                  finalOutput = chunk as RunOutput;
+                } else {
+                  // Make a best effort to gather, for any type that supports concat.
+                  try {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    finalOutput = concat(finalOutput, chunk as any);
+                  } catch (e) {
+                    finalOutput = chunk as RunOutput;
+                  }
+                }
+              }
+              output = finalOutput as typeof output;
+            } else if (isIterator(output)) {
+              let finalOutput: RunOutput | undefined;
+              for (const chunk of consumeIteratorInContext(
+                childConfig,
+                output
+              )) {
+                if (finalOutput === undefined) {
+                  finalOutput = chunk as RunOutput;
+                } else {
+                  // Make a best effort to gather, for any type that supports concat.
+                  try {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    finalOutput = concat(finalOutput, chunk as any);
+                  } catch (e) {
+                    finalOutput = chunk as RunOutput;
+                  }
+                }
+              }
+              output = finalOutput as typeof output;
             }
             resolve(output);
           } catch (e) {
@@ -2067,6 +2111,14 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
       );
       for await (const chunk of stream) {
         yield chunk;
+      }
+    } else if (isAsyncIterable(output)) {
+      for await (const chunk of consumeAsyncIterableInContext(config, output)) {
+        yield chunk as RunOutput;
+      }
+    } else if (isIterator(output)) {
+      for (const chunk of consumeIteratorInContext(config, output)) {
+        yield chunk as RunOutput;
       }
     } else {
       yield output;

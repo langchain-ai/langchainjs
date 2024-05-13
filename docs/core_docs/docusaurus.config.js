@@ -13,8 +13,6 @@ const mdxComponentsPath = path.resolve(__dirname, "docs", "mdx_components");
 const baseLightCodeBlockTheme = require("prism-react-renderer/themes/vsLight");
 const baseDarkCodeBlockTheme = require("prism-react-renderer/themes/vsDark");
 
-const baseUrl = "/v0.1/";
-
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: "🦜️🔗 Langchain",
@@ -24,8 +22,7 @@ const config = {
   url: "https://js.langchain.com",
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: baseUrl,
-  trailingSlash: true,
+  baseUrl: "/",
 
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "throw",
@@ -133,12 +130,6 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      // TODO(brace) -- Uncomment once 0.2 is merged to main & site is live!
-      // announcementBar: {
-      //   content:
-      //     'LangChain v0.2 is coming soon! Preview the new docs <a href="/v0.2/docs/introduction/">here</a>.',
-      //   isCloseable: true,
-      // },
       prism: {
         theme: {
           ...baseLightCodeBlockTheme,
@@ -308,7 +299,7 @@ const config = {
     }),
 
   scripts: [
-    baseUrl + "js/google_analytics.js",
+    "/js/google_analytics.js",
     {
       src: "https://www.googletagmanager.com/gtag/js?id=G-TVSL7JBE9Y",
       async: true,
