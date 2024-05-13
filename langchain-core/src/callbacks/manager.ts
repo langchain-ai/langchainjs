@@ -551,7 +551,7 @@ export class CallbackManager
 
   name = "callback_manager";
 
-  public readonly _parentRunId?: string;
+  public _parentRunId?: string;
 
   constructor(
     parentRunId?: string,
@@ -1010,7 +1010,13 @@ export class CallbackManager
         )
       ) {
         if (tracingV2Enabled) {
-          callbackManager.addHandler(await getTracingV2CallbackHandler(), true);
+          const tracerV2 = await getTracingV2CallbackHandler();
+          callbackManager.addHandler(tracerV2, true);
+
+          // handoff between langchain and langsmith/traceable
+          // override the parent run ID
+          callbackManager._parentRunId =
+            tracerV2.getTraceableRunTree()?.id ?? callbackManager._parentRunId;
         }
       }
     }

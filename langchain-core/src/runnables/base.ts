@@ -2,6 +2,10 @@ import { z } from "zod";
 import pRetry from "p-retry";
 import { v4 as uuidv4 } from "uuid";
 
+import {
+  type TraceableFunction,
+  isTraceableFunction,
+} from "langsmith/traceable";
 import type { RunnableInterface, RunnableBatchOptions } from "./types.js";
 import {
   CallbackManager,
@@ -50,6 +54,7 @@ import {
   isAsyncIterable,
   isIterator,
 } from "./iter.js";
+import { RunnableTraceable } from "../tracers/tracer_langchain.js";
 
 export { type RunnableInterface, RunnableBatchOptions };
 
@@ -2081,18 +2086,40 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
   >;
 
   constructor(fields: {
-    func: RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>;
+    func:
+      | RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
+      | TraceableFunction<
+          RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
+        >;
   }) {
+    if (isTraceableFunction(fields.func)) {
+      // eslint-disable-next-line no-constructor-return
+      return new RunnableTraceable({
+        func: fields.func,
+      }) as unknown as RunnableLambda<RunInput, RunOutput>;
+    }
+
     super(fields);
-    this.func = fields.func;
   }
 
   static from<RunInput, RunOutput>(
     func: RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
+  ): RunnableLambda<RunInput, RunOutput>;
+
+  static from<RunInput, RunOutput>(
+    func: TraceableFunction<
+      RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
+    >
+  ): RunnableLambda<RunInput, RunOutput>;
+
+  static from<RunInput, RunOutput>(
+    func:
+      | RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
+      | TraceableFunction<
+          RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
+        >
   ): RunnableLambda<RunInput, RunOutput> {
-    return new RunnableLambda({
-      func,
-    });
+    return new RunnableLambda({ func });
   }
 
   async _invoke(
