@@ -1,3 +1,5 @@
+import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import { describe, test } from "@jest/globals";
 import { ChatMessage, HumanMessage } from "@langchain/core/messages";
 import {
@@ -13,7 +15,7 @@ describe.skip("ChatFireworks", () => {
   test("call", async () => {
     const chat = new ChatFireworks();
     const message = new HumanMessage("Hello!");
-    const res = await chat.call([message]);
+    const res = await chat.invoke([message]);
     console.log({ res });
   });
 
@@ -26,7 +28,7 @@ describe.skip("ChatFireworks", () => {
 
   test("custom messages", async () => {
     const chat = new ChatFireworks();
-    const res = await chat.call([new ChatMessage("Hello!", "user")]);
+    const res = await chat.invoke([new ChatMessage("Hello!", "user")]);
     console.log(JSON.stringify(res, null, 2));
   });
 
@@ -69,5 +71,34 @@ describe.skip("ChatFireworks", () => {
     ]);
 
     console.log(responseA.generations);
+  });
+
+  test("Tool calling", async () => {
+    const zodSchema = z
+      .object({
+        location: z
+          .string()
+          .describe("The name of city to get the weather for."),
+      })
+      .describe(
+        "Get the weather of a specific location and return the temperature in Celsius."
+      );
+    const chat = new ChatFireworks({
+      modelName: "accounts/fireworks/models/firefunction-v1",
+      temperature: 0,
+    }).bind({
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "get_current_weather",
+            description: "Get the current weather in a given location",
+            parameters: zodToJsonSchema(zodSchema),
+          },
+        },
+      ],
+    });
+    const result = await chat.invoke("What is the current weather in SF?");
+    console.log(result);
   });
 });

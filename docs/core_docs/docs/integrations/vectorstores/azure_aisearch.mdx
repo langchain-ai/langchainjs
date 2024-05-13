@@ -27,6 +27,17 @@ import EnvVars from "@examples/indexes/vector_stores/azure_aisearch/.env.example
 
 <CodeBlock language="text">{EnvVars}</CodeBlock>
 
+## About hybrid search
+
+Hybrid search is a feature that combines the strengths of full text search and vector search to provide the best ranking performance. It's enabled by default in Azure AI Search vector stores, but you can select a different search query type by setting the `search.type` property when creating the vector store.
+
+You can read more about hybrid search and how it may improve your search results in the [official documentation](https://learn.microsoft.com/azure/search/hybrid-search-overview).
+
+In some scenarios like retrieval-augmented generation (RAG), you may want to enable **semantic ranking** in addition to hybrid search to improve the relevance of the search results. You can enable semantic ranking by setting the `search.type` property to `AzureAISearchQueryType.SemanticHybrid` when creating the vector store.
+Note that semantic ranking capabilities are only available in the Basic and higher pricing tiers, and subject to [regional availability](https://azure.microsoft.com/en-us/explore/global-infrastructure/products-by-region/?products=search).
+
+You can read more about the performance of using semantic ranking with hybrid search in [this blog post](https://techcommunity.microsoft.com/t5/ai-azure-ai-services-blog/azure-cognitive-search-outperforming-vector-search-with-hybrid/ba-p/3929167).
+
 ## Example: index docs, vector search and LLM integration
 
 Below is an example that indexes documents from a file in Azure AI Search, runs a hybrid search query, and finally uses a chain to answer a question in natural language based on the retrieved documents.

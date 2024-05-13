@@ -827,3 +827,57 @@ test("Runnable streamEvents method with a retriever", async () => {
     },
   ]);
 });
+
+test("Runnable streamEvents method with text/event-stream encoding", async () => {
+  const chain = RunnableLambda.from(reverse).withConfig({
+    runName: "reverse",
+  });
+
+  const events = [];
+  for await (const event of chain.streamEvents("hello", {
+    version: "v1",
+    encoding: "text/event-stream",
+    runId: "1234",
+  })) {
+    events.push(event);
+  }
+  const decoder = new TextDecoder();
+  expect(events.length).toEqual(4);
+  const dataEvents = events
+    .slice(0, 3)
+    .map((event) => decoder.decode(event).split("event: data\ndata: ")[1]);
+  const expectedPayloads = [
+    {
+      data: { input: "hello" },
+      event: "on_chain_start",
+      metadata: {},
+      name: "reverse",
+      run_id: "1234",
+      tags: [],
+    },
+    {
+      data: { chunk: "olleh" },
+      event: "on_chain_stream",
+      metadata: {},
+      name: "reverse",
+      run_id: "1234",
+      tags: [],
+    },
+    {
+      data: { output: "olleh" },
+      event: "on_chain_end",
+      metadata: {},
+      name: "reverse",
+      run_id: "1234",
+      tags: [],
+    },
+  ];
+  for (let i = 0; i < dataEvents.length; i += 1) {
+    expect(dataEvents[i].endsWith("\n\n")).toBe(true);
+    expect(JSON.parse(dataEvents[i].replace("\n\n", ""))).toEqual(
+      expectedPayloads[i]
+    );
+  }
+
+  expect(decoder.decode(events[3])).toEqual("event: end\n\n");
+});

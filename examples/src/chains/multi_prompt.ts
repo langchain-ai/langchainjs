@@ -31,15 +31,15 @@ const multiPromptChain = MultiPromptChain.fromLLMAndPrompts(llm, {
   promptTemplates,
 });
 
-const testPromise1 = multiPromptChain.call({
+const testPromise1 = multiPromptChain.invoke({
   input: "What is the speed of light?",
 });
 
-const testPromise2 = multiPromptChain.call({
+const testPromise2 = multiPromptChain.invoke({
   input: "What is the derivative of x^2?",
 });
 
-const testPromise3 = multiPromptChain.call({
+const testPromise3 = multiPromptChain.invoke({
   input: "Who was the first president of the United States?",
 });
 

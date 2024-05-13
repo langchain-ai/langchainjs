@@ -67,10 +67,14 @@ interface ResponseChoice {
   message: ChoiceMessage;
 }
 
+interface ZhipuAIError {
+  error: BaseResponse;
+}
+
 /**
  * Interface representing a response from a chat completion.
  */
-interface ChatCompletionResponse extends BaseResponse {
+interface ChatCompletionResponse extends ZhipuAIError {
   choices: ResponseChoice[];
   created: number;
   id: string;
@@ -93,8 +97,13 @@ interface ChatCompletionResponse extends BaseResponse {
 export interface ChatZhipuAIParams {
   /**
    * @default "glm-3-turbo"
+   * Alias for `model`
    */
   modelName: ModelName;
+  /**
+   * @default "glm-3-turbo"
+   */
+  model: ModelName;
 
   /** Whether to stream the results or not. Defaults to false. */
   streaming?: boolean;
@@ -105,8 +114,15 @@ export interface ChatZhipuAIParams {
   /**
    * API key to use when making requests. Defaults to the value of
    * `ZHIPUAI_API_KEY` environment variable.
+   * Alias for `apiKey`
    */
   zhipuAIApiKey?: string;
+
+  /**
+   * API key to use when making requests. Defaults to the value of
+   * `ZHIPUAI_API_KEY` environment variable.
+   */
+  apiKey?: string;
 
   /** Amount of randomness injected into the response. Ranges
    * from 0 to 1 (0 is not included). Use temp closer to 0 for analytical /
@@ -176,6 +192,7 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
   get lc_secrets() {
     return {
       zhipuAIApiKey: "ZHIPUAI_API_KEY",
+      apiKey: "ZHIPUAI_API_KEY",
     };
   }
 
@@ -184,6 +201,8 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
   }
 
   zhipuAIApiKey?: string;
+
+  apiKey?: string;
 
   streaming: boolean;
 
@@ -194,6 +213,8 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
   requestId?: string;
 
   modelName: ChatCompletionRequest["model"];
+
+  model: ChatCompletionRequest["model"];
 
   apiUrl: string;
 
@@ -208,9 +229,10 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
   constructor(fields: Partial<ChatZhipuAIParams> & BaseChatModelParams = {}) {
     super(fields);
 
-    this.zhipuAIApiKey = encodeApiKey(
-      fields?.zhipuAIApiKey ?? getEnvironmentVariable("ZHIPUAI_API_KEY")
-    );
+    this.zhipuAIApiKey =
+      fields?.apiKey ??
+      fields?.zhipuAIApiKey ??
+      getEnvironmentVariable("ZHIPUAI_API_KEY");
     if (!this.zhipuAIApiKey) {
       throw new Error("ZhipuAI API key not found");
     }
@@ -222,7 +244,8 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
     this.topP = fields.topP ?? 0.7;
     this.stop = fields.stop;
     this.maxTokens = fields.maxTokens;
-    this.modelName = fields.modelName ?? "glm-3-turbo";
+    this.modelName = fields?.model ?? fields.modelName ?? "glm-3-turbo";
+    this.model = this.modelName;
     this.doSample = fields.doSample;
   }
 
@@ -231,7 +254,7 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
    */
   invocationParams(): Omit<ChatCompletionRequest, "messages"> {
     return {
-      model: this.modelName,
+      model: this.model,
       request_id: this.requestId,
       do_sample: this.doSample,
       stream: this.streaming,
@@ -276,12 +299,12 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
             options?.signal,
             (event) => {
               const data: ChatCompletionResponse = JSON.parse(event.data);
-              if (data?.code) {
+              if (data?.error?.code) {
                 if (rejected) {
                   return;
                 }
                 rejected = true;
-                reject(new Error(data?.message));
+                reject(new Error(data?.error?.message));
                 return;
               }
 
@@ -321,8 +344,8 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
           false,
           options?.signal
         ).then<ChatCompletionResponse>((data) => {
-          if (data?.code) {
-            throw new Error(data?.message);
+          if (data?.error?.code) {
+            throw new Error(data?.error?.message);
           }
           const { finish_reason, message } = data.choices[0];
           const text = message.content;
@@ -369,7 +392,7 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
         method: "POST",
         headers: {
           ...(stream ? { Accept: "text/event-stream" } : {}),
-          Authorization: `Bearer ${this.zhipuAIApiKey}`,
+          Authorization: `Bearer ${encodeApiKey(this.zhipuAIApiKey)}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(request),

@@ -7,7 +7,7 @@ const model = new ChatOpenAI({
   // topLogprobs: 5,
 });
 
-const generations = await model.generate([[new HumanMessage("Hi there!")]]);
+const generations = await model.invoke([new HumanMessage("Hi there!")]);
 
 console.log(JSON.stringify(generations, null, 2));
 

@@ -315,7 +315,8 @@ export class RunnableMultiActionAgent extends BaseMultiActionAgent {
     super(fields);
     this.runnable = fields.runnable;
     this.stop = fields.stop;
-    this.defaultRunName = fields.defaultRunName ?? this.defaultRunName;
+    this.defaultRunName =
+      fields.defaultRunName ?? this.runnable.name ?? this.defaultRunName;
     this.streamRunnable = fields.streamRunnable ?? this.streamRunnable;
   }
 

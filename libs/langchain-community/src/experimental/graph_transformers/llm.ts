@@ -47,6 +47,13 @@ interface OptionalEnumFieldProps {
   fieldKwargs?: object;
 }
 
+function toTitleCase(str: string): string {
+  return str
+    .split(" ")
+    .map((w) => w[0].toUpperCase() + w.substring(1).toLowerCase())
+    .join("");
+}
+
 function createOptionalEnumType({
   enumValues = undefined,
   description = "",
@@ -122,7 +129,7 @@ function createSchema(allowedNodes: string[], allowedRelationships: string[]) {
 function mapToBaseNode(node: any): Node {
   return new Node({
     id: node.id,
-    type: node.type.replace(" ", "_").toUpperCase(),
+    type: node.type ? toTitleCase(node.type) : "",
   });
 }
 
@@ -131,11 +138,15 @@ function mapToBaseRelationship(relationship: any): Relationship {
   return new Relationship({
     source: new Node({
       id: relationship.sourceNodeId,
-      type: relationship.sourceNodeType.replace(" ", "_").toUpperCase(),
+      type: relationship.sourceNodeType
+        ? toTitleCase(relationship.sourceNodeType)
+        : "",
     }),
     target: new Node({
       id: relationship.targetNodeId,
-      type: relationship.targetNodeType.replace(" ", "_").toUpperCase(),
+      type: relationship.targetNodeType
+        ? toTitleCase(relationship.targetNodeType)
+        : "",
     }),
     type: relationship.relationshipType.replace(" ", "_").toUpperCase(),
   });
@@ -194,12 +205,12 @@ export class LLMGraphTransformer {
     const rawSchema = await this.chain.invoke({ input: text });
 
     let nodes: Node[] = [];
-    if (rawSchema.nodes) {
+    if (rawSchema?.nodes) {
       nodes = rawSchema.nodes.map(mapToBaseNode);
     }
 
     let relationships: Relationship[] = [];
-    if (rawSchema.relationships) {
+    if (rawSchema?.relationships) {
       relationships = rawSchema.relationships.map(mapToBaseRelationship);
     }
 
@@ -208,16 +219,29 @@ export class LLMGraphTransformer {
       (this.allowedNodes.length > 0 || this.allowedRelationships.length > 0)
     ) {
       if (this.allowedNodes.length > 0) {
-        nodes = nodes.filter((node) => this.allowedNodes.includes(node.type));
+        const allowedNodesLowerCase = this.allowedNodes.map((node) =>
+          node.toLowerCase()
+        );
+
+        // For nodes, compare lowercased types
+        nodes = nodes.filter((node) =>
+          allowedNodesLowerCase.includes(node.type.toLowerCase())
+        );
+
+        // For relationships, compare lowercased types for both source and target nodes
         relationships = relationships.filter(
           (rel) =>
-            this.allowedNodes.includes(rel.source.type) &&
-            this.allowedNodes.includes(rel.target.type)
+            allowedNodesLowerCase.includes(rel.source.type.toLowerCase()) &&
+            allowedNodesLowerCase.includes(rel.target.type.toLowerCase())
         );
       }
+
       if (this.allowedRelationships.length > 0) {
+        // For relationships, compare lowercased types
         relationships = relationships.filter((rel) =>
-          this.allowedRelationships.includes(rel.type)
+          this.allowedRelationships
+            .map((rel) => rel.toLowerCase())
+            .includes(rel.type.toLowerCase())
         );
       }
     }

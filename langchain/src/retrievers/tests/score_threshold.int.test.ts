@@ -39,7 +39,7 @@ test("ConversationalRetrievalQAChain.fromLLM should use its vector store recursi
       }),
     }
   );
-  const res = await chain.call({
+  const res = await chain.invoke({
     question: "Buildings are made out of what?",
   });
 

@@ -1,6 +1,6 @@
 {
   "name": "@langchain/scripts",
-  "version": "0.0.10",
+  "version": "0.0.13",
   "description": "Shared scripts for LangChain.js",
   "type": "module",
   "engines": {
@@ -14,19 +14,19 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-scripts/",
   "bin": {
-    "lc-build": "./build.js"
+    "lc-build": "bin/build"
   },
   "scripts": {
     "build": "yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
-    "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/",
-    "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rimraf dist-cjs",
+    "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 rm -f src/package.json && tsc --outDir dist/",
+    "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 echo '{}' > src/package.json && tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rimraf dist-cjs src/package.json",
     "build:watch": "yarn create-entrypoints && tsc --outDir dist/ --watch",
     "build:scripts": "yarn create-entrypoints && yarn check-tree-shaking",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
     "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "yarn lint:eslint && yarn lint:dpdm",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
-    "clean": "rimraf .turbo/ dist/ && NODE_OPTIONS=--max-old-space-size=4096 npx tsx ./src/build.ts --config ./langchain.config.js --create-entrypoints --pre",
+    "clean": "rimraf .turbo/ dist/ && NODE_OPTIONS=--max-old-space-size=4096 node ./bin/build --config ./langchain.config.js --create-entrypoints --pre",
     "prepack": "yarn build",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
@@ -34,9 +34,9 @@
     "test:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
     "format": "prettier --write \"src\"",
     "format:check": "prettier --check \"src\"",
-    "move-cjs-to-dist": "npx tsx ./src/build.ts --config ./langchain.config.js --move-cjs-dist",
-    "create-entrypoints": "npx tsx ./src/build.ts --config ./langchain.config.js --create-entrypoints",
-    "check-tree-shaking": "npx tsx ./src/build.ts --config ./langchain.config.js --tree-shaking"
+    "move-cjs-to-dist": "node ./bin/build --config ./langchain.config.js --move-cjs-dist",
+    "create-entrypoints": "node ./bin/build --config ./langchain.config.js --create-entrypoints",
+    "check-tree-shaking": "node ./bin/build --config ./langchain.config.js --tree-shaking"
   },
   "author": "LangChain",
   "license": "MIT",
@@ -46,7 +46,7 @@
     "glob": "^10.3.10",
     "rollup": "^4.5.2",
     "ts-morph": "^21.0.1",
-    "typescript": "<5.2.0"
+    "typescript": "^5.4.5"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",

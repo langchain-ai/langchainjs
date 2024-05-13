@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
 import { describe, expect, test } from "@jest/globals";
-import { AstraDB } from "@datastax/astra-db-ts";
+import { DataAPIClient, Db } from "@datastax/astra-db-ts";
 import { faker } from "@faker-js/faker";
 import { Document } from "@langchain/core/documents";
 import { OpenAIEmbeddings } from "@langchain/openai";
@@ -8,7 +8,7 @@ import { FakeEmbeddings } from "closevector-common/dist/fake.js";
 import { AstraDBVectorStore, AstraLibArgs } from "../astradb.js";
 
 describe.skip("AstraDBVectorStore", () => {
-  let client: AstraDB;
+  let db: Db;
   let astraConfig: AstraLibArgs;
   beforeAll(() => {
     const clientConfig = {
@@ -17,7 +17,8 @@ describe.skip("AstraDBVectorStore", () => {
       namespace: process.env.ASTRA_DB_NAMESPACE ?? "default_keyspace",
     };
 
-    client = new AstraDB(clientConfig.token, clientConfig.endpoint);
+    const dataAPIClient = new DataAPIClient(clientConfig.token);
+    db = dataAPIClient.db(clientConfig.endpoint);
 
     astraConfig = {
       ...clientConfig,
@@ -33,7 +34,7 @@ describe.skip("AstraDBVectorStore", () => {
 
   beforeEach(async () => {
     try {
-      await client.dropCollection(astraConfig.collection);
+      await db.dropCollection(astraConfig.collection);
     } catch (e) {
       console.debug("Collection doesn't exist yet, skipping drop");
     }
@@ -157,7 +158,66 @@ describe.skip("AstraDBVectorStore", () => {
       fail("Should have thrown error");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
-      expect(e.message).toContain("already exists with different 'vector'");
+      expect(e.message).toContain(
+        "already exists with different collection options"
+      );
     }
   }, 60000);
+
+  test("skipCollectionProvisioning", async () => {
+    let store = new AstraDBVectorStore(new FakeEmbeddings(), {
+      ...astraConfig,
+      skipCollectionProvisioning: true,
+      collectionOptions: undefined,
+    });
+    await store.initialize();
+    try {
+      await store.similaritySearch("test");
+      fail("Should have thrown error");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      expect(e.message).toContain("langchain_test");
+    }
+    store = new AstraDBVectorStore(new FakeEmbeddings(), {
+      ...astraConfig,
+      skipCollectionProvisioning: false,
+      collectionOptions: {
+        checkExists: false,
+        vector: {
+          dimension: 4,
+          metric: "cosine",
+        },
+      },
+    });
+    await store.initialize();
+    await store.similaritySearch("test");
+  });
+
+  test("upsert", async () => {
+    const store = new AstraDBVectorStore(new FakeEmbeddings(), {
+      ...astraConfig,
+      collectionOptions: {
+        vector: {
+          dimension: 4,
+          metric: "cosine",
+        },
+      },
+    });
+    await store.initialize();
+
+    await store.addDocuments([
+      { pageContent: "Foo bar baz.", metadata: { a: 1, _id: "123456789" } },
+      { pageContent: "Bar baz foo.", metadata: { a: 2, _id: "987654321" } },
+      { pageContent: "Baz foo bar.", metadata: { a: 3, _id: "234567891" } },
+    ]);
+
+    await store.addDocuments([
+      { pageContent: "upserted", metadata: { a: 1, _id: "123456789" } },
+    ]);
+
+    const collection = await db.collection(astraConfig.collection);
+    const doc = await collection.findOne({ _id: "123456789" });
+
+    expect(doc?.text).toEqual("upserted");
+  });
 });

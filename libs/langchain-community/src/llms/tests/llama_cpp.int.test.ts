@@ -45,3 +45,38 @@ test.skip("Test Llama_CPP", async () => {
 
   expect(chunks.length).toBeGreaterThan(1);
 });
+
+// gbnf grammer test
+const gbnfListGrammer =
+  'root ::= item+ # Excludes various line break characters item ::= "- " [^\r\n\x0b\x0c\x85\u2028\u2029]+ "\n"';
+
+test.skip("Test Llama_CPP", async () => {
+  const model = new LlamaCpp({ modelPath: llamaPath, gbnf: gbnfListGrammer });
+  const res = await model.invoke(
+    "Can you give me a list of 3 cute llama names?"
+  );
+  console.log(res);
+}, 100000);
+
+// JSON schema test
+
+const schemaJSON = {
+  type: "object",
+  properties: {
+    responseMessage: {
+      type: "string",
+    },
+    responseMetaData: {
+      type: "string",
+    },
+    requestPositivityScoreFromOneToTen: {
+      type: "number",
+    },
+  },
+};
+
+test.skip("Test Llama_CPP", async () => {
+  const model = new LlamaCpp({ modelPath: llamaPath, jsonSchema: schemaJSON });
+  const res = await model.invoke("Where do llamas live?");
+  console.log(res);
+}, 100000);

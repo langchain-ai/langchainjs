@@ -47,14 +47,14 @@ const retriever = vectorStore.asRetriever();
 
 // Instantiate the LLM,
 const llm = new ChatOpenAI({
-  modelName: "gpt-4",
+  model: "gpt-4",
 });
 
 // And the chain.
 const voeChain = ViolationOfExpectationsChain.fromLLM(llm, retriever);
 
 // Requires an input key of "chat_history" with an array of messages.
-const result = await voeChain.call({
+const result = await voeChain.invoke({
   chat_history: dummyMessages,
 });
 

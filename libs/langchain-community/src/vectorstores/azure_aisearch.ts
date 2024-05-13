@@ -8,6 +8,7 @@ import {
   SearchIndexingBufferedSender,
   VectorFilterMode,
 } from "@azure/search-documents";
+import type { KeyCredential, TokenCredential } from "@azure/core-auth";
 import {
   MaxMarginalRelevanceSearchOptions,
   VectorStore,
@@ -39,7 +40,7 @@ export type AzureAISearchQueryType =
  * Azure AI Search settings.
  */
 export interface AzureAISearchQueryOptions {
-  readonly type: AzureAISearchQueryType;
+  readonly type?: AzureAISearchQueryType;
   readonly semanticConfigurationName?: string;
 }
 
@@ -51,7 +52,8 @@ export interface AzureAISearchConfig {
   readonly indexName?: string;
   readonly endpoint?: string;
   readonly key?: string;
-  readonly search: AzureAISearchQueryOptions;
+  readonly credentials?: KeyCredential | TokenCredential;
+  readonly search?: AzureAISearchQueryOptions;
 }
 
 /**
@@ -139,10 +141,11 @@ export class AzureAISearchVectorStore extends VectorStore {
     const endpoint =
       config.endpoint ?? getEnvironmentVariable("AZURE_AISEARCH_ENDPOINT");
     const key = config.key ?? getEnvironmentVariable("AZURE_AISEARCH_KEY");
+    let { credentials } = config;
 
-    if (!config.client && (!endpoint || !key)) {
+    if (!config.client && (!endpoint || (!key && !credentials))) {
       throw new Error(
-        "Azure AI Search client or endpoint and key must be set."
+        "Azure AI Search client or endpoint and key/credentials must be set."
       );
     }
 
@@ -150,13 +153,13 @@ export class AzureAISearchVectorStore extends VectorStore {
 
     if (!config.client) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const credential = new AzureKeyCredential(key!);
+      credentials ??= new AzureKeyCredential(key!);
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this.client = new SearchClient(endpoint!, this.indexName, credential, {
+      this.client = new SearchClient(endpoint!, this.indexName, credentials, {
         userAgentOptions: { userAgentPrefix: USER_AGENT_PREFIX },
       });
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const indexClient = new SearchIndexClient(endpoint!, credential, {
+      const indexClient = new SearchIndexClient(endpoint!, credentials, {
         userAgentOptions: { userAgentPrefix: USER_AGENT_PREFIX },
       });
 
@@ -171,7 +174,7 @@ export class AzureAISearchVectorStore extends VectorStore {
       this.client = config.client;
     }
 
-    this.options = config.search;
+    this.options = config.search ?? {};
     this.embeddings = embeddings;
   }
 
@@ -189,6 +192,9 @@ export class AzureAISearchVectorStore extends VectorStore {
         `Azure AI Search delete requires either "ids" or "filter" to be set in the params object`
       );
     }
+
+    await this.initPromise;
+
     if (params.ids) {
       await this.deleteById(params.ids);
     }
@@ -248,8 +254,6 @@ export class AzureAISearchVectorStore extends VectorStore {
    * @returns A promise that resolves when the documents have been removed.
    */
   private async deleteById(ids: string | string[]): Promise<IndexingResult[]> {
-    await this.initPromise;
-
     const docsIds = Array.isArray(ids) ? ids : [ids];
     const docs: { id: string }[] = docsIds.map((id) => ({ id }));
 
@@ -336,6 +340,7 @@ export class AzureAISearchVectorStore extends VectorStore {
 
   /**
    * Performs a similarity search using query type specified in configuration.
+   * If the query type is not specified, it defaults to similarity search.
    * @param query Query text for the similarity search.
    * @param k=4 Number of nearest neighbors to return.
    * @param filter Optional filter options for the documents.
@@ -353,6 +358,7 @@ export class AzureAISearchVectorStore extends VectorStore {
 
   /**
    * Performs a similarity search using query type specified in configuration.
+   * If the query type is not specified, it defaults to similarity hybrid search.
    * @param query Query text for the similarity search.
    * @param k=4 Number of nearest neighbors to return.
    * @param filter Optional filter options for the documents.
@@ -363,7 +369,8 @@ export class AzureAISearchVectorStore extends VectorStore {
     k = 4,
     filter: this["FilterType"] | undefined = undefined
   ): Promise<[Document, number][]> {
-    const searchType = this.options.type;
+    const searchType =
+      this.options.type ?? AzureAISearchQueryType.SimilarityHybrid;
 
     if (searchType === AzureAISearchQueryType.Similarity) {
       return this.similaritySearchVectorWithScore(

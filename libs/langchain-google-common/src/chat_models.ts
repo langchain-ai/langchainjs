@@ -15,11 +15,15 @@ import {
 import type { z } from "zod";
 import {
   Runnable,
+  RunnableInterface,
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
 import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
+import { isStructuredTool } from "@langchain/core/utils/function_calling";
+import { AsyncCaller } from "@langchain/core/utils/async_caller";
+import { StructuredToolInterface } from "@langchain/core/tools";
 import {
   GoogleAIBaseLLMInput,
   GoogleAIModelParams,
@@ -57,13 +61,85 @@ class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   BaseMessage[],
   AuthOptions
 > {
+  convertSystemMessageToHumanContent: boolean | undefined;
+
+  constructor(
+    fields: GoogleAIBaseLLMInput<AuthOptions> | undefined,
+    caller: AsyncCaller,
+    client: GoogleAbstractedClient,
+    streaming: boolean
+  ) {
+    super(fields, caller, client, streaming);
+    this.convertSystemMessageToHumanContent =
+      fields?.convertSystemMessageToHumanContent;
+  }
+
+  get useSystemInstruction(): boolean {
+    return typeof this.convertSystemMessageToHumanContent === "boolean"
+      ? !this.convertSystemMessageToHumanContent
+      : this.computeUseSystemInstruction;
+  }
+
+  get computeUseSystemInstruction(): boolean {
+    // This works on models from April 2024 and later
+    //   Vertex AI: gemini-1.5-pro and gemini-1.0-002 and later
+    //   AI Studio: gemini-1.5-pro-latest
+    if (this.modelFamily === "palm") {
+      return false;
+    } else if (this.modelName === "gemini-1.0-pro-001") {
+      return false;
+    } else if (this.modelName.startsWith("gemini-pro-vision")) {
+      return false;
+    } else if (this.modelName.startsWith("gemini-1.0-pro-vision")) {
+      return false;
+    } else if (this.modelName === "gemini-pro" && this.platform === "gai") {
+      // on AI Studio gemini-pro is still pointing at gemini-1.0-pro-001
+      return false;
+    }
+    return true;
+  }
+
   formatContents(
     input: BaseMessage[],
     _parameters: GoogleAIModelParams
   ): GeminiContent[] {
     return input
-      .map((msg) => baseMessageToContent(msg))
-      .reduce((acc, cur) => [...acc, ...cur]);
+      .map((msg, i) =>
+        baseMessageToContent(msg, input[i - 1], this.useSystemInstruction)
+      )
+      .reduce((acc, cur) => {
+        // Filter out the system content, since those don't belong
+        // in the actual content.
+        const hasNoSystem = cur.every((content) => content.role !== "system");
+        return hasNoSystem ? [...acc, ...cur] : acc;
+      }, []);
+  }
+
+  formatSystemInstruction(
+    input: BaseMessage[],
+    _parameters: GoogleAIModelParams
+  ): GeminiContent {
+    if (!this.useSystemInstruction) {
+      return {} as GeminiContent;
+    }
+
+    let ret = {} as GeminiContent;
+    input.forEach((message, index) => {
+      if (message._getType() === "system") {
+        // For system types, we only want it if it is the first message,
+        // if it appears anywhere else, it should be an error.
+        if (index === 0) {
+          // eslint-disable-next-line prefer-destructuring
+          ret = baseMessageToContent(message, undefined, true)[0];
+        } else {
+          throw new Error(
+            "System messages are only permitted as the first passed message."
+          );
+        }
+      }
+    });
+
+    return ret;
   }
 }
 
@@ -76,11 +152,33 @@ export interface ChatGoogleBaseInput<AuthOptions>
     GoogleAIModelParams,
     GoogleAISafetyParams {}
 
+function convertToGeminiTools(
+  structuredTools: (StructuredToolInterface | Record<string, unknown>)[]
+): GeminiTool[] {
+  return [
+    {
+      functionDeclarations: structuredTools.map(
+        (structuredTool): GeminiFunctionDeclaration => {
+          if (isStructuredTool(structuredTool)) {
+            const jsonSchema = zodToGeminiParameters(structuredTool.schema);
+            return {
+              name: structuredTool.name,
+              description: structuredTool.description,
+              parameters: jsonSchema as GeminiFunctionSchema,
+            };
+          }
+          return structuredTool as unknown as GeminiFunctionDeclaration;
+        }
+      ),
+    },
+  ];
+}
+
 /**
  * Integration with a chat model.
  */
 export abstract class ChatGoogleBase<AuthOptions>
-  extends BaseChatModel<GoogleAIBaseLanguageModelCallOptions>
+  extends BaseChatModel<GoogleAIBaseLanguageModelCallOptions, AIMessageChunk>
   implements ChatGoogleBaseInput<AuthOptions>
 {
   // Used for tracing, replace with the same name as your class
@@ -88,10 +186,16 @@ export abstract class ChatGoogleBase<AuthOptions>
     return "ChatGoogle";
   }
 
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      authOptions: "GOOGLE_AUTH_OPTIONS",
+    };
+  }
+
   lc_serializable = true;
 
-  /** @deprecated Prefer `modelName` */
-  model = "gemini-pro";
+  // Set based on modelName
+  model: string;
 
   modelName = "gemini-pro";
 
@@ -106,6 +210,9 @@ export abstract class ChatGoogleBase<AuthOptions>
   stopSequences: string[] = [];
 
   safetySettings: GoogleAISafetySetting[] = [];
+
+  // May intentionally be undefined, meaning to compute this.
+  convertSystemMessageToHumanContent: boolean | undefined;
 
   safetyHandler: GoogleAISafetyHandler;
 
@@ -170,9 +277,27 @@ export abstract class ChatGoogleBase<AuthOptions>
     return this.connection.platform;
   }
 
+  override bindTools(
+    tools: (StructuredToolInterface | Record<string, unknown>)[],
+    kwargs?: Partial<GoogleAIBaseLanguageModelCallOptions>
+  ): RunnableInterface<
+    BaseLanguageModelInput,
+    AIMessageChunk,
+    GoogleAIBaseLanguageModelCallOptions
+  > {
+    return this.bind({ tools: convertToGeminiTools(tools), ...kwargs });
+  }
+
   // Replace
   _llmType() {
     return "chat_integration";
+  }
+
+  /**
+   * Get the parameters used to invoke the model
+   */
+  override invocationParams(options?: this["ParsedCallOptions"]) {
+    return copyAIModelParams(this, options);
   }
 
   async _generate(
@@ -180,7 +305,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     options: this["ParsedCallOptions"],
     _runManager: CallbackManagerForLLMRun | undefined
   ): Promise<ChatResult> {
-    const parameters = copyAIModelParams(this, options);
+    const parameters = this.invocationParams(options);
     const response = await this.connection.request(
       messages,
       parameters,
@@ -196,7 +321,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     _runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     // Make the call as a streaming request
-    const parameters = copyAIModelParams(this, options);
+    const parameters = this.invocationParams(options);
     const response = await this.streamedConnection.request(
       _messages,
       parameters,

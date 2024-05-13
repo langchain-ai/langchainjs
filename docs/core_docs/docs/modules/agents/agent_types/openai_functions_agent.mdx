@@ -1,6 +1,6 @@
 ---
 hide_table_of_contents: true
-sidebar_position: 0
+sidebar_position: 1.5
 ---
 
 # OpenAI functions
@@ -52,7 +52,7 @@ const prompt = await pull<ChatPromptTemplate>(
 );
 
 const llm = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo-1106",
+  model: "gpt-3.5-turbo-1106",
   temperature: 0,
 });
 

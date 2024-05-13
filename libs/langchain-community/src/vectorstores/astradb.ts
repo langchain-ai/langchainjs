@@ -1,8 +1,12 @@
 import * as uuid from "uuid";
 
-import { AstraDB } from "@datastax/astra-db-ts";
-import { Collection } from "@datastax/astra-db-ts/dist/collections";
-import { CreateCollectionOptions } from "@datastax/astra-db-ts/dist/collections/options.js";
+import {
+  Collection,
+  DataAPIClient,
+  CreateCollectionOptions,
+  Db,
+  InsertManyError,
+} from "@datastax/astra-db-ts";
 
 import {
   AsyncCaller,
@@ -10,7 +14,6 @@ import {
 } from "@langchain/core/utils/async_caller";
 import { Document } from "@langchain/core/documents";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
-import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 import {
   MaxMarginalRelevanceSearchOptions,
@@ -26,7 +29,8 @@ export interface AstraLibArgs extends AsyncCallerParams {
   namespace?: string;
   idKey?: string;
   contentKey?: string;
-  collectionOptions?: CreateCollectionOptions;
+  skipCollectionProvisioning?: boolean;
+  collectionOptions?: CreateCollectionOptions<any>;
   batchSize?: number;
 }
 
@@ -37,21 +41,21 @@ export type AstraDeleteParams = {
 export class AstraDBVectorStore extends VectorStore {
   declare FilterType: CollectionFilter;
 
-  private astraDBClient: AstraDB;
+  private astraDBClient: Db;
 
   private collectionName: string;
 
   private collection: Collection | undefined;
 
-  private collectionOptions: CreateCollectionOptions | undefined;
+  private collectionOptions: CreateCollectionOptions<any> | undefined;
 
   private readonly idKey: string;
 
   private readonly contentKey: string; // if undefined the entirety of the content aside from the id and embedding will be stored as content
 
-  private readonly batchSize: number; // insertMany has a limit of 20 documents
-
   caller: AsyncCaller;
+
+  private readonly skipCollectionProvisioning: boolean;
 
   _vectorstoreType(): string {
     return "astradb";
@@ -68,17 +72,44 @@ export class AstraDBVectorStore extends VectorStore {
       namespace,
       idKey,
       contentKey,
-      batchSize,
+      skipCollectionProvisioning,
       ...callerArgs
     } = args;
-
-    this.astraDBClient = new AstraDB(token, endpoint, namespace);
+    const dataAPIClient = new DataAPIClient(token, { caller: ["langchainjs"] });
+    this.astraDBClient = dataAPIClient.db(endpoint, { namespace });
+    this.skipCollectionProvisioning = skipCollectionProvisioning ?? false;
+    if (this.skipCollectionProvisioning && collectionOptions) {
+      throw new Error(
+        "If 'skipCollectionProvisioning' has been set to true, 'collectionOptions' must not be defined"
+      );
+    }
     this.collectionName = collection;
-    this.collectionOptions = collectionOptions;
+    this.collectionOptions =
+      AstraDBVectorStore.applyCollectionOptionsDefaults(collectionOptions);
     this.idKey = idKey ?? "_id";
     this.contentKey = contentKey ?? "text";
-    this.batchSize = batchSize && batchSize <= 20 ? batchSize : 20;
     this.caller = new AsyncCaller(callerArgs);
+
+    if (args.batchSize) {
+      console.warn(
+        "[WARNING]: `batchSize` is deprecated, and no longer has any effect.\n`astra-db-ts` > 1.0.0 handles this internally."
+      );
+    }
+  }
+
+  private static applyCollectionOptionsDefaults(
+    fromUser?: CreateCollectionOptions<any>
+  ): CreateCollectionOptions<any> {
+    const copy: CreateCollectionOptions<any> = fromUser ? { ...fromUser } : {};
+    if (copy.checkExists === undefined) {
+      copy.checkExists = false;
+    }
+    if (copy.indexing === undefined) {
+      // same default as langchain python AstraDBVectorStore.
+      // this enables to create the collection in python/ts and use it in ts/python with default options.
+      copy.indexing = { allow: ["metadata"] };
+    }
+    return copy;
   }
 
   /**
@@ -88,10 +119,12 @@ export class AstraDBVectorStore extends VectorStore {
    * @returns Promise that resolves if connected to the collection.
    */
   async initialize(): Promise<void> {
-    await this.astraDBClient.createCollection(
-      this.collectionName,
-      this.collectionOptions
-    );
+    if (!this.skipCollectionProvisioning) {
+      await this.astraDBClient.createCollection(
+        this.collectionName,
+        this.collectionOptions
+      );
+    }
     this.collection = await this.astraDBClient.collection(this.collectionName);
     console.debug("Connected to Astra DB collection");
   }
@@ -119,12 +152,39 @@ export class AstraDBVectorStore extends VectorStore {
       ...documents[idx].metadata,
     }));
 
-    const chunkedDocs = chunkArray(docs, this.batchSize);
-    const batchCalls = chunkedDocs.map((chunk) =>
-      this.caller.call(async () => this.collection?.insertMany(chunk))
-    );
+    let insertResults;
 
-    await Promise.all(batchCalls);
+    const isInsertManyError = (error: any): error is InsertManyError =>
+      error.name === "InsertManyError";
+
+    try {
+      insertResults = await this.collection.insertMany(docs, {
+        ordered: false,
+      });
+    } catch (error) {
+      if (isInsertManyError(error)) {
+        insertResults = error.partialResult;
+      } else {
+        throw error;
+      }
+    }
+
+    const insertedIds = insertResults.insertedIds as string[];
+
+    if (insertedIds.length !== docs.length) {
+      const missingDocs = docs.filter(
+        (doc) => !insertedIds.includes(doc[this.idKey])
+      );
+
+      for (let i = 0; i < missingDocs.length; i += 1) {
+        await this.caller.call(async () => {
+          await this.collection?.replaceOne(
+            { [this.idKey]: missingDocs[i][this.idKey] },
+            missingDocs[i]
+          );
+        });
+      }
+    }
   }
 
   /**
@@ -157,12 +217,8 @@ export class AstraDBVectorStore extends VectorStore {
       throw new Error("Must connect to a collection before deleting");
     }
 
-    for (const id of params.ids) {
-      console.debug(`Deleting document with id ${id}`);
-      await this.collection.deleteOne({
-        [this.idKey]: id,
-      });
-    }
+    await this.collection.deleteMany({ [this.idKey]: { $in: params.ids } });
+    console.log(`Deleted ${params.ids.length} documents`);
   }
 
   /**
@@ -189,8 +245,7 @@ export class AstraDBVectorStore extends VectorStore {
     });
 
     const results: [Document, number][] = [];
-
-    await cursor.forEach(async (row: Record<string, unknown>) => {
+    for await (const row of cursor) {
       const {
         $similarity: similarity,
         [this.contentKey]: content,
@@ -203,8 +258,7 @@ export class AstraDBVectorStore extends VectorStore {
       });
 
       results.push([doc, similarity as number]);
-    });
-
+    }
     return results;
   }
 

@@ -3,7 +3,7 @@ import { HumanMessage } from "@langchain/core/messages";
 
 const chat = new NIBittensorChatModel();
 const message = new HumanMessage("What is bittensor?");
-const res = await chat.call([message]);
+const res = await chat.invoke([message]);
 console.log({ res });
 /*
   {

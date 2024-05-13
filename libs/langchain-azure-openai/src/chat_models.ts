@@ -226,9 +226,13 @@ export class AzureChatOpenAI
 
   stop?: string[] | undefined;
 
+  stopSequences?: string[] | undefined;
+
   streaming: boolean;
 
   modelName: string;
+
+  model: string;
 
   modelKwargs?: OpenAIChatInput["modelKwargs"];
 
@@ -237,6 +241,8 @@ export class AzureChatOpenAI
   azureOpenAIEndpoint?: string;
 
   azureOpenAIApiKey?: string;
+
+  apiKey?: string;
 
   azureOpenAIApiDeploymentName?: string;
 
@@ -264,20 +270,22 @@ export class AzureChatOpenAI
       fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
 
     this.azureOpenAIApiKey =
+      fields?.apiKey ??
       fields?.azureOpenAIApiKey ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY") ??
       openAiApiKey;
+    this.apiKey = this.azureOpenAIApiKey;
 
     const azureCredential =
       fields?.credentials ??
-      (this.azureOpenAIApiKey === openAiApiKey
-        ? new OpenAIKeyCredential(this.azureOpenAIApiKey ?? "")
-        : new AzureKeyCredential(this.azureOpenAIApiKey ?? ""));
+      (this.apiKey === openAiApiKey
+        ? new OpenAIKeyCredential(this.apiKey ?? "")
+        : new AzureKeyCredential(this.apiKey ?? ""));
 
     // eslint-disable-next-line no-instanceof/no-instanceof
     const isOpenAIApiKey = azureCredential instanceof OpenAIKeyCredential;
 
-    if (!this.azureOpenAIApiKey && !fields?.credentials) {
+    if (!this.apiKey && !fields?.credentials) {
       throw new Error("Azure OpenAI API key not found");
     }
 
@@ -289,7 +297,8 @@ export class AzureChatOpenAI
       throw new Error("Azure OpenAI Deployment name not found");
     }
 
-    this.modelName = fields?.modelName ?? this.modelName;
+    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
+    this.model = this.modelName;
     this.modelKwargs = fields?.modelKwargs ?? {};
     this.timeout = fields?.timeout;
     this.temperature = fields?.temperature ?? this.temperature;
@@ -299,7 +308,8 @@ export class AzureChatOpenAI
     this.maxTokens = fields?.maxTokens;
     this.n = fields?.n ?? this.n;
     this.logitBias = fields?.logitBias;
-    this.stop = fields?.stop;
+    this.stop = fields?.stopSequences ?? fields?.stop;
+    this.stopSequences = this.stop;
     this.user = fields?.user;
     this.azureExtensionOptions = fields?.azureExtensionOptions;
 
@@ -347,8 +357,7 @@ export class AzureChatOpenAI
     options: this["ParsedCallOptions"]
   ): Promise<EventStream<ChatCompletions>> {
     return this.caller.call(async () => {
-      const deploymentName =
-        this.azureOpenAIApiDeploymentName || this.modelName;
+      const deploymentName = this.azureOpenAIApiDeploymentName || this.model;
 
       const res = await this.client.streamChatCompletions(
         deploymentName,
@@ -362,7 +371,7 @@ export class AzureChatOpenAI
           logitBias: this.logitBias,
           user: this.user,
           n: this.n,
-          stop: this.stop,
+          stop: this.stopSequences,
           presencePenalty: this.presencePenalty,
           frequencyPenalty: this.frequencyPenalty,
           azureExtensionOptions: this.azureExtensionOptions,
@@ -442,7 +451,7 @@ export class AzureChatOpenAI
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
-    const deploymentName = this.azureOpenAIApiDeploymentName || this.modelName;
+    const deploymentName = this.azureOpenAIApiDeploymentName || this.model;
     const tokenUsage: TokenUsage = {};
     const azureOpenAIMessages: ChatRequestMessage[] =
       this.formatMessages(messages);
@@ -458,7 +467,7 @@ export class AzureChatOpenAI
           logitBias: this.logitBias,
           user: this.user,
           n: this.n,
-          stop: this.stop,
+          stop: this.stopSequences,
           presencePenalty: this.presencePenalty,
           frequencyPenalty: this.frequencyPenalty,
           azureExtensionOptions: this.azureExtensionOptions,
@@ -615,7 +624,7 @@ export class AzureChatOpenAI
     let tokensPerName = 0;
 
     // From: https://github.com/openai/openai-cookbook/blob/main/examples/How_to_format_inputs_to_ChatGPT_models.ipynb
-    if (this.modelName === "gpt-3.5-turbo-0301") {
+    if (this.model === "gpt-3.5-turbo-0301") {
       tokensPerMessage = 4;
       tokensPerName = -1;
     } else {

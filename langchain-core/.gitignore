@@ -62,6 +62,10 @@ messages.cjs
 messages.js
 messages.d.ts
 messages.d.cts
+messages/tool.cjs
+messages/tool.js
+messages/tool.d.ts
+messages/tool.d.cts
 output_parsers.cjs
 output_parsers.js
 output_parsers.d.ts
@@ -110,6 +114,10 @@ stores.cjs
 stores.js
 stores.d.ts
 stores.d.cts
+structured_query.cjs
+structured_query.js
+structured_query.d.ts
+structured_query.d.cts
 tools.cjs
 tools.js
 tools.d.ts

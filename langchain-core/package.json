@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "0.1.54",
+  "version": "0.1.62",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -46,6 +46,7 @@
     "js-tiktoken": "^1.0.8",
     "langsmith": "~0.1.7",
     "ml-distance": "^4.0.0",
+    "mustache": "^4.2.0",
     "p-queue": "^6.6.2",
     "p-retry": "4",
     "uuid": "^9.0.0",
@@ -57,6 +58,7 @@
     "@langchain/scripts": "~0.0",
     "@swc/core": "^1.3.90",
     "@swc/jest": "^0.2.29",
+    "@types/mustache": "^4",
     "dpdm": "^3.12.0",
     "eslint": "^8.33.0",
     "eslint-config-airbnb-base": "^15.0.0",
@@ -237,6 +239,15 @@
       "import": "./messages.js",
       "require": "./messages.cjs"
     },
+    "./messages/tool": {
+      "types": {
+        "import": "./messages/tool.d.ts",
+        "require": "./messages/tool.d.cts",
+        "default": "./messages/tool.d.ts"
+      },
+      "import": "./messages/tool.js",
+      "require": "./messages/tool.cjs"
+    },
     "./output_parsers": {
       "types": {
         "import": "./output_parsers.d.ts",
@@ -344,6 +355,15 @@
       },
       "import": "./stores.js",
       "require": "./stores.cjs"
+    },
+    "./structured_query": {
+      "types": {
+        "import": "./structured_query.d.ts",
+        "require": "./structured_query.d.cts",
+        "default": "./structured_query.d.ts"
+      },
+      "import": "./structured_query.js",
+      "require": "./structured_query.cjs"
     },
     "./tools": {
       "types": {
@@ -620,6 +640,10 @@
     "messages.js",
     "messages.d.ts",
     "messages.d.cts",
+    "messages/tool.cjs",
+    "messages/tool.js",
+    "messages/tool.d.ts",
+    "messages/tool.d.cts",
     "output_parsers.cjs",
     "output_parsers.js",
     "output_parsers.d.ts",
@@ -668,6 +692,10 @@
     "stores.js",
     "stores.d.ts",
     "stores.d.cts",
+    "structured_query.cjs",
+    "structured_query.js",
+    "structured_query.d.ts",
+    "structured_query.d.cts",
     "tools.cjs",
     "tools.js",
     "tools.d.ts",

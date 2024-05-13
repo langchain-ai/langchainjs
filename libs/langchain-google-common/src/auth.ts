@@ -53,8 +53,9 @@ export abstract class GoogleAbstractedFetchClient
     const res = await fetch(url, fetchOptions);
 
     if (!res.ok) {
+      const resText = await res.text();
       const error = new Error(
-        `Could not get access token for Google with status code: ${res.status}`
+        `Google request failed with status code ${res.status}: ${resText}`
       );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (error as any).response = res;

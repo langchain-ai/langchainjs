@@ -534,6 +534,10 @@ document_loaders/web/azure_blob_storage_file.cjs
 document_loaders/web/azure_blob_storage_file.js
 document_loaders/web/azure_blob_storage_file.d.ts
 document_loaders/web/azure_blob_storage_file.d.cts
+document_loaders/web/browserbase.cjs
+document_loaders/web/browserbase.js
+document_loaders/web/browserbase.d.ts
+document_loaders/web/browserbase.d.cts
 document_loaders/web/cheerio.cjs
 document_loaders/web/cheerio.js
 document_loaders/web/cheerio.d.ts
@@ -566,6 +570,10 @@ document_loaders/web/figma.cjs
 document_loaders/web/figma.js
 document_loaders/web/figma.d.ts
 document_loaders/web/figma.d.cts
+document_loaders/web/firecrawl.cjs
+document_loaders/web/firecrawl.js
+document_loaders/web/firecrawl.d.ts
+document_loaders/web/firecrawl.d.cts
 document_loaders/web/github.cjs
 document_loaders/web/github.js
 document_loaders/web/github.d.ts

@@ -7,7 +7,7 @@ import { ContextualCompressionRetriever } from "langchain/retrievers/contextual_
 import { LLMChainExtractor } from "langchain/retrievers/document_compressors/chain_extract";
 
 const model = new OpenAI({
-  modelName: "gpt-3.5-turbo-instruct",
+  model: "gpt-3.5-turbo-instruct",
 });
 const baseCompressor = LLMChainExtractor.fromLLM(model);
 
@@ -24,7 +24,7 @@ const retriever = new ContextualCompressionRetriever({
   baseRetriever: vectorStore.asRetriever(),
 });
 
-const retrievedDocs = await retriever.getRelevantDocuments(
+const retrievedDocs = await retriever.invoke(
   "What did the speaker say about Justice Breyer?"
 );
 

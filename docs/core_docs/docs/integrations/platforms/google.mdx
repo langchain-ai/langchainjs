@@ -35,7 +35,7 @@ export GOOGLE_API_KEY=your-api-key
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 
 const model = new ChatGoogleGenerativeAI({
-  modelName: "gemini-pro",
+  model: "gemini-pro",
   maxOutputTokens: 2048,
 });
 
@@ -52,7 +52,7 @@ Gemini vision models support image inputs when providing a single human message.
 
 ```typescript
 const visionModel = new ChatGoogleGenerativeAI({
-  modelName: "gemini-pro-vision",
+  model: "gemini-pro-vision",
   maxOutputTokens: 2048,
 });
 const image = fs.readFileSync("./hotdog.jpg").toString("base64");
@@ -105,7 +105,7 @@ import { ChatVertexAI } from "@langchain/google-vertexai";
 // import { ChatVertexAI } from "@langchain/google-vertexai-web";
 
 const model = new ChatVertexAI({
-  modelName: "gemini-1.0-pro",
+  model: "gemini-1.0-pro",
   maxOutputTokens: 2048,
 });
 
@@ -122,7 +122,7 @@ Gemini vision models support image inputs when providing a single human message.
 
 ```typescript
 const visionModel = new ChatVertexAI({
-  modelName: "gemini-pro-vision",
+  model: "gemini-pro-vision",
   maxOutputTokens: 2048,
 });
 const image = fs.readFileSync("./hotdog.png").toString("base64");

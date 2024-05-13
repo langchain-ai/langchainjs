@@ -182,6 +182,8 @@ export const config = {
       "document_loaders/web/azure_blob_storage_container",
     "document_loaders/web/azure_blob_storage_file":
       "document_loaders/web/azure_blob_storage_file",
+    "document_loaders/web/browserbase":
+      "document_loaders/web/browserbase",
     "document_loaders/web/cheerio": "document_loaders/web/cheerio",
     "document_loaders/web/puppeteer": "document_loaders/web/puppeteer",
     "document_loaders/web/playwright": "document_loaders/web/playwright",
@@ -191,6 +193,7 @@ export const config = {
     "document_loaders/web/hn": "document_loaders/web/hn",
     "document_loaders/web/imsdb": "document_loaders/web/imsdb",
     "document_loaders/web/figma": "document_loaders/web/figma",
+    "document_loaders/web/firecrawl": "document_loaders/web/firecrawl",
     "document_loaders/web/github": "document_loaders/web/github",
     "document_loaders/web/notiondb": "document_loaders/web/notiondb",
     "document_loaders/web/notionapi": "document_loaders/web/notionapi",
@@ -630,6 +633,7 @@ export const config = {
     "document_loaders/web/assemblyai",
     "document_loaders/web/azure_blob_storage_container",
     "document_loaders/web/azure_blob_storage_file",
+    "document_loaders/web/browserbase",
     "document_loaders/web/cheerio",
     "document_loaders/web/puppeteer",
     "document_loaders/web/playwright",
@@ -638,6 +642,7 @@ export const config = {
     "document_loaders/web/hn",
     "document_loaders/web/imsdb",
     "document_loaders/web/figma",
+    "document_loaders/web/firecrawl",
     "document_loaders/web/github",
     "document_loaders/web/pdf",
     "document_loaders/web/notiondb",

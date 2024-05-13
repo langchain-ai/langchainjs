@@ -58,10 +58,16 @@ interface ChatCompletionResponse {
  * Interface defining the input to the ChatBaiduWenxin class.
  */
 declare interface BaiduWenxinChatInput {
-  /** Model name to use. Available options are: ERNIE-Bot, ERNIE-Bot-turbo, ERNIE-Bot-4
+  /**
+   * Model name to use. Available options are: ERNIE-Bot, ERNIE-Bot-turbo, ERNIE-Bot-4
+   * Alias for `model`
    * @default "ERNIE-Bot-turbo"
    */
   modelName: string;
+  /** Model name to use. Available options are: ERNIE-Bot, ERNIE-Bot-turbo, ERNIE-Bot-4
+   * @default "ERNIE-Bot-turbo"
+   */
+  model: string;
 
   /** Whether to stream the results or not. Defaults to false. */
   streaming?: boolean;
@@ -77,8 +83,14 @@ declare interface BaiduWenxinChatInput {
   /**
    * API key to use when making requests. Defaults to the value of
    * `BAIDU_API_KEY` environment variable.
+   * Alias for `apiKey`
    */
   baiduApiKey?: string;
+  /**
+   * API key to use when making requests. Defaults to the value of
+   * `BAIDU_API_KEY` environment variable.
+   */
+  apiKey?: string;
 
   /**
    * Secret key to use when making requests. Defaults to the value of
@@ -102,6 +114,13 @@ declare interface BaiduWenxinChatInput {
    * from 1.0 to 2.0. Defaults to 1.0.
    */
   penaltyScore?: number;
+}
+
+/**
+ * Interface maps model names and their API endpoints.
+ */
+interface Models {
+  [key: string]: string;
 }
 
 /**
@@ -154,14 +173,14 @@ function messageToWenxinRole(message: BaseMessage): WenxinMessageRole {
  * @example
  * ```typescript
  * const ernieTurbo = new ChatBaiduWenxin({
- *   baiduApiKey: "YOUR-API-KEY",
+ *   apiKey: "YOUR-API-KEY",
  *   baiduSecretKey: "YOUR-SECRET-KEY",
  * });
  *
  * const ernie = new ChatBaiduWenxin({
- *   modelName: "ERNIE-Bot",
+ *   model: "ERNIE-Bot",
  *   temperature: 1,
- *   baiduApiKey: "YOUR-API-KEY",
+ *   apiKey: "YOUR-API-KEY",
  *   baiduSecretKey: "YOUR-SECRET-KEY",
  * });
  *
@@ -187,6 +206,7 @@ export class ChatBaiduWenxin
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       baiduApiKey: "BAIDU_API_KEY",
+      apiKey: "BAIDU_API_KEY",
       baiduSecretKey: "BAIDU_SECRET_KEY",
     };
   }
@@ -198,6 +218,8 @@ export class ChatBaiduWenxin
   lc_serializable = true;
 
   baiduApiKey?: string;
+
+  apiKey?: string;
 
   baiduSecretKey?: string;
 
@@ -211,6 +233,8 @@ export class ChatBaiduWenxin
 
   modelName = "ERNIE-Bot-turbo";
 
+  model = "ERNIE-Bot-turbo";
+
   apiUrl: string;
 
   temperature?: number | undefined;
@@ -223,10 +247,13 @@ export class ChatBaiduWenxin
     super(fields ?? {});
 
     this.baiduApiKey =
-      fields?.baiduApiKey ?? getEnvironmentVariable("BAIDU_API_KEY");
+      fields?.apiKey ??
+      fields?.baiduApiKey ??
+      getEnvironmentVariable("BAIDU_API_KEY");
     if (!this.baiduApiKey) {
       throw new Error("Baidu API key not found");
     }
+    this.apiKey = this.baiduApiKey;
 
     this.baiduSecretKey =
       fields?.baiduSecretKey ?? getEnvironmentVariable("BAIDU_SECRET_KEY");
@@ -241,25 +268,30 @@ export class ChatBaiduWenxin
     this.topP = fields?.topP ?? this.topP;
     this.penaltyScore = fields?.penaltyScore ?? this.penaltyScore;
 
-    this.modelName = fields?.modelName ?? this.modelName;
+    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
+    this.model = this.modelName;
 
-    if (this.modelName === "ERNIE-Bot") {
-      this.apiUrl =
-        "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions";
-    } else if (this.modelName === "ERNIE-Bot-turbo") {
-      this.apiUrl =
-        "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/eb-instant";
-    } else if (this.modelName === "ERNIE-Bot-4") {
-      this.apiUrl =
-        "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions_pro";
-    } else if (this.modelName === "ERNIE-Speed-8K") {
-      this.apiUrl =
-        "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie_speed";
-    } else if (this.modelName === "ERNIE-Speed-128K") {
-      this.apiUrl =
-        "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie-speed-128k";
+    const models: Models = {
+      "ERNIE-Bot": "completions",
+      "ERNIE-Bot-turbo": "eb-instant",
+      "ERNIE-Bot-4": "completions_pro",
+      "ERNIE-Speed-8K": "ernie_speed",
+      "ERNIE-Speed-128K": "ernie-speed-128k",
+      "ERNIE-4.0-8K": "completions_pro",
+      "ERNIE-4.0-8K-Preview": "ernie-4.0-8k-preview",
+      "ERNIE-3.5-8K": "completions",
+      "ERNIE-3.5-8K-Preview": "ernie-3.5-8k-preview",
+      "ERNIE-Lite-8K": "eb-instant",
+      "ERNIE-Tiny-8K": "ernie-tiny-8k",
+      "ERNIE-Character-8K": "ernie-char-8k",
+      "ERNIE Speed-AppBuilder": "ai_apaas",
+    };
+    if (this.model in models) {
+      this.apiUrl = `https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/${
+        models[this.model]
+      }`;
     } else {
-      throw new Error(`Invalid model name: ${this.modelName}`);
+      throw new Error(`Invalid model name: ${this.model}`);
     }
   }
 
@@ -270,7 +302,7 @@ export class ChatBaiduWenxin
    * @returns The access token for making requests to the Baidu API.
    */
   async getAccessToken(options?: this["ParsedCallOptions"]) {
-    const url = `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${this.baiduApiKey}&client_secret=${this.baiduSecretKey}`;
+    const url = `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${this.apiKey}&client_secret=${this.baiduSecretKey}`;
     const response = await fetch(url, {
       method: "POST",
       headers: {
@@ -310,7 +342,7 @@ export class ChatBaiduWenxin
    */
   identifyingParams() {
     return {
-      model_name: this.modelName,
+      model_name: this.model,
       ...this.invocationParams(),
     };
   }
@@ -468,6 +500,22 @@ export class ChatBaiduWenxin
       this.accessToken = await this.getAccessToken();
     }
 
+    const findFirstNewlineIndex = (data: Uint8Array) => {
+      for (let i = 0; i < data.length; ) {
+        if (data[i] === 10) return i;
+        if ((data[i] & 0b11100000) === 0b11000000) {
+          i += 2;
+        } else if ((data[i] & 0b11110000) === 0b11100000) {
+          i += 3;
+        } else if ((data[i] & 0b11111000) === 0b11110000) {
+          i += 4;
+        } else {
+          i += 1;
+        }
+      }
+      return -1;
+    };
+
     const makeCompletionRequest = async () => {
       const url = `${this.apiUrl}?access_token=${this.accessToken}`;
       const response = await fetch(url, {
@@ -500,7 +548,7 @@ export class ChatBaiduWenxin
           const reader = response.body.getReader();
 
           const decoder = new TextDecoder("utf-8");
-          let data = "";
+          let dataArrayBuffer = new Uint8Array(0);
 
           let continueReading = true;
           while (continueReading) {
@@ -509,17 +557,30 @@ export class ChatBaiduWenxin
               continueReading = false;
               break;
             }
-            data += decoder.decode(value);
+            // merge the data first then decode in case of the Chinese characters are split between chunks
+            const mergedArray = new Uint8Array(
+              dataArrayBuffer.length + value.length
+            );
+            mergedArray.set(dataArrayBuffer);
+            mergedArray.set(value, dataArrayBuffer.length);
+            dataArrayBuffer = mergedArray;
 
             let continueProcessing = true;
             while (continueProcessing) {
-              const newlineIndex = data.indexOf("\n");
+              const newlineIndex = findFirstNewlineIndex(dataArrayBuffer);
               if (newlineIndex === -1) {
                 continueProcessing = false;
                 break;
               }
-              const line = data.slice(0, newlineIndex);
-              data = data.slice(newlineIndex + 1);
+
+              const lineArrayBuffer = dataArrayBuffer.slice(
+                0,
+                findFirstNewlineIndex(dataArrayBuffer)
+              );
+              const line = decoder.decode(lineArrayBuffer);
+              dataArrayBuffer = dataArrayBuffer.slice(
+                findFirstNewlineIndex(dataArrayBuffer) + 1
+              );
 
               if (line.startsWith("data:")) {
                 const event = new MessageEvent("message", {

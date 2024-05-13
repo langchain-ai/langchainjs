@@ -126,7 +126,7 @@ describe("Pinecone self query", () => {
     const vectorStore = await PineconeStore.fromDocuments(docs, embeddings, {
       pineconeIndex: index,
     });
-    const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+    const selfQueryRetriever = SelfQueryRetriever.fromLLM({
       llm,
       vectorStore,
       documentContents,
@@ -276,7 +276,7 @@ describe("Pinecone self query", () => {
     const vectorStore = await PineconeStore.fromDocuments(docs, embeddings, {
       pineconeIndex: index,
     });
-    const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+    const selfQueryRetriever = SelfQueryRetriever.fromLLM({
       llm,
       vectorStore,
       documentContents,
@@ -432,7 +432,7 @@ describe("Pinecone self query", () => {
     const vectorStore = await PineconeStore.fromDocuments(docs, embeddings, {
       pineconeIndex: index,
     });
-    const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+    const selfQueryRetriever = SelfQueryRetriever.fromLLM({
       llm,
       vectorStore,
       documentContents,
@@ -588,7 +588,7 @@ describe("Pinecone self query", () => {
     const vectorStore = await PineconeStore.fromDocuments(docs, embeddings, {
       pineconeIndex: index,
     });
-    const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+    const selfQueryRetriever = SelfQueryRetriever.fromLLM({
       llm,
       vectorStore,
       documentContents,

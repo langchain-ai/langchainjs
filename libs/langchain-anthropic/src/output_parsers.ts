@@ -1,10 +1,15 @@
-import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
+import { z } from "zod";
+import {
+  BaseLLMOutputParser,
+  OutputParserException,
+} from "@langchain/core/output_parsers";
 import { JsonOutputKeyToolsParserParams } from "@langchain/core/output_parsers/openai_tools";
 import { ChatGeneration } from "@langchain/core/outputs";
-import { AnthropicToolResponse } from "./types.js";
+import { ToolCall } from "@langchain/core/messages/tool";
 
-interface AnthropicToolsOutputParserParams
-  extends JsonOutputKeyToolsParserParams {}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+interface AnthropicToolsOutputParserParams<T extends Record<string, any>>
+  extends JsonOutputKeyToolsParserParams<T> {}
 
 export class AnthropicToolsOutputParser<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -24,31 +29,61 @@ export class AnthropicToolsOutputParser<
   /** Whether to return only the first tool call. */
   returnSingle = false;
 
-  constructor(params: AnthropicToolsOutputParserParams) {
+  zodSchema?: z.ZodType<T>;
+
+  constructor(params: AnthropicToolsOutputParserParams<T>) {
     super(params);
     this.keyName = params.keyName;
     this.returnSingle = params.returnSingle ?? this.returnSingle;
+    this.zodSchema = params.zodSchema;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  protected async _validateResult(result: unknown): Promise<T> {
+    if (this.zodSchema === undefined) {
+      return result as T;
+    }
+    const zodParsedResult = await this.zodSchema.safeParseAsync(result);
+    if (zodParsedResult.success) {
+      return zodParsedResult.data;
+    } else {
+      throw new OutputParserException(
+        `Failed to parse. Text: "${JSON.stringify(
+          result,
+          null,
+          2
+        )}". Error: ${JSON.stringify(zodParsedResult.error.errors)}`,
+        JSON.stringify(result, null, 2)
+      );
+    }
+  }
+
   async parseResult(generations: ChatGeneration[]): Promise<T> {
     const tools = generations.flatMap((generation) => {
       const { message } = generation;
-      if (typeof message === "string") {
-        return [];
-      }
       if (!Array.isArray(message.content)) {
         return [];
       }
-      const tool = message.content.find((item) => item.type === "tool_use") as
-        | AnthropicToolResponse
-        | undefined;
+      const tool = extractToolCalls(message.content)[0];
       return tool;
     });
-    if (tools.length === 0 || !tools[0]) {
-      throw new Error("No tools provided to AnthropicToolsOutputParser.");
+    if (tools[0] === undefined) {
+      throw new Error(
+        "No parseable tool calls provided to AnthropicToolsOutputParser."
+      );
     }
     const [tool] = tools;
-    return tool.input as T;
+    const validatedResult = await this._validateResult(tool.args);
+    return validatedResult;
   }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function extractToolCalls(content: Record<string, any>[]) {
+  const toolCalls: ToolCall[] = [];
+  for (const block of content) {
+    if (block.type === "tool_use") {
+      toolCalls.push({ name: block.name, args: block.input, id: block.id });
+    }
+  }
+  return toolCalls;
 }

@@ -37,6 +37,7 @@ import { BaseCallbackHandler } from "../callbacks/base.js";
 import { _RootEventFilter, isRunnableInterface } from "./utils.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 import { Graph } from "./graph.js";
+import { convertToHttpEventStream } from "./wrappers.js";
 
 export { type RunnableInterface, RunnableBatchOptions };
 
@@ -61,8 +62,13 @@ export type RunnableLike<RunInput = any, RunOutput = any> =
   | RunnableFunc<RunInput, RunOutput>
   | RunnableMapLike<RunInput, RunOutput>;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type RunnableRetryFailedAttemptHandler = (error: any) => any;
+export type RunnableRetryFailedAttemptHandler = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  error: any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  input: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+) => any;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function _coerceToDict(value: any, defaultKey: string) {
@@ -724,7 +730,38 @@ export abstract class Runnable<
    * | on_prompt_start      | [template_name]  |                                    | {"question": "hello"}                         |                                                 |
    * | on_prompt_end        | [template_name]  |                                    | {"question": "hello"}                         | ChatPromptValue(messages: [SystemMessage, ...]) |
    */
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & { version: "v1" },
+    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
+  ): AsyncGenerator<StreamEvent>;
+
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version: "v1";
+      encoding: "text/event-stream";
+    },
+    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
+  ): AsyncGenerator<Uint8Array>;
+
   async *streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version: "v1";
+      encoding?: "text/event-stream" | undefined;
+    },
+    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
+  ): AsyncGenerator<StreamEvent | Uint8Array> {
+    if (options.encoding === "text/event-stream") {
+      const stream = await this._streamEvents(input, options, streamOptions);
+      yield* convertToHttpEventStream(stream);
+    } else {
+      yield* this._streamEvents(input, options, streamOptions);
+    }
+  }
+
+  async *_streamEvents(
     input: RunInput,
     options: Partial<CallOptions> & { version: "v1" },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
@@ -1091,11 +1128,29 @@ export class RunnableBinding<
     );
   }
 
-  async *streamEvents(
+  streamEvents(
     input: RunInput,
     options: Partial<CallOptions> & { version: "v1" },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
-  ): AsyncGenerator<StreamEvent> {
+  ): AsyncGenerator<StreamEvent>;
+
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version: "v1";
+      encoding: "text/event-stream";
+    },
+    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
+  ): AsyncGenerator<Uint8Array>;
+
+  async *streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version: "v1";
+      encoding?: "text/event-stream" | undefined;
+    },
+    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
+  ): AsyncGenerator<StreamEvent | Uint8Array> {
     yield* this.bound.streamEvents(
       input,
       {
@@ -1268,7 +1323,7 @@ export class RunnableRetry<
   protected maxAttemptNumber = 3;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onFailedAttempt?: RunnableRetryFailedAttemptHandler = () => {};
+  onFailedAttempt: RunnableRetryFailedAttemptHandler = () => {};
 
   constructor(
     fields: RunnableBindingArgs<RunInput, RunOutput, CallOptions> & {
@@ -1303,7 +1358,8 @@ export class RunnableRetry<
           this._patchConfigForRetry(attemptNumber, config, runManager)
         ),
       {
-        onFailedAttempt: this.onFailedAttempt,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        onFailedAttempt: (error: any) => this.onFailedAttempt(error, input),
         retries: Math.max(this.maxAttemptNumber - 1, 0),
         randomize: true,
       }
@@ -1362,6 +1418,8 @@ export class RunnableRetry<
             if (result instanceof Error) {
               if (firstException === undefined) {
                 firstException = result;
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (firstException as any).input = remainingInputs[i];
               }
             }
             resultsMap[resultMapIndex.toString()] = result;
@@ -1372,7 +1430,9 @@ export class RunnableRetry<
           return results;
         },
         {
-          onFailedAttempt: this.onFailedAttempt,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          onFailedAttempt: (error: any) =>
+            this.onFailedAttempt(error, error.input),
           retries: Math.max(this.maxAttemptNumber - 1, 0),
           randomize: true,
         }
@@ -1587,14 +1647,15 @@ export class RunnableSequence<
     options?: RunnableConfig
   ): AsyncGenerator<RunOutput> {
     const callbackManager_ = await getCallbackManagerForConfig(options);
+    const { runId, ...otherOptions } = options ?? {};
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
+      runId,
       undefined,
       undefined,
       undefined,
-      undefined,
-      options?.runName
+      otherOptions?.runName
     );
     const steps = [this.first, ...this.middle, this.last];
     let concatSupported = true;
@@ -1605,7 +1666,7 @@ export class RunnableSequence<
     try {
       let finalGenerator = steps[0].transform(
         inputGenerator(),
-        patchConfig(options, {
+        patchConfig(otherOptions, {
           callbacks: runManager?.getChild(`seq:step:1`),
         })
       );
@@ -1613,7 +1674,7 @@ export class RunnableSequence<
         const step = steps[i];
         finalGenerator = await step.transform(
           finalGenerator,
-          patchConfig(options, {
+          patchConfig(otherOptions, {
             callbacks: runManager?.getChild(`seq:step:${i + 1}`),
           })
         );
@@ -2086,23 +2147,22 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
       undefined,
       options?.metadata
     );
+    const { runId, ...otherOptions } = options ?? {};
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
-      options?.runId,
+      runId,
       undefined,
       undefined,
       undefined,
-      options?.runName
+      otherOptions?.runName
     );
-    // eslint-disable-next-line no-param-reassign
-    delete options?.runId;
     let firstError;
     for (const runnable of this.runnables()) {
       try {
         const output = await runnable.invoke(
           input,
-          patchConfig(options, { callbacks: runManager?.getChild() })
+          patchConfig(otherOptions, { callbacks: runManager?.getChild() })
         );
         await runManager?.handleChainEnd(_coerceToDict(output, "output"));
         return output;
