@@ -9,16 +9,38 @@ import { ChatGenerationChunk } from "@langchain/core/outputs";
 import * as webllm from "@mlc-ai/web-llm";
 import { ChatCompletionMessageParam } from "@mlc-ai/web-llm/lib/openai_api_protocols";
 
-// Code from jacoblee93 https://github.com/jacoblee93/fully-local-pdf-chatbot/blob/main/app/lib/chat_models/webllm.ts
-
 export interface WebLLMInputs extends BaseChatModelParams {
   appConfig?: webllm.AppConfig;
   chatOpts?: webllm.ChatOptions;
+  temperature?: number;
   modelRecord: webllm.ModelRecord;
 }
 
 export interface WebLLMCallOptions extends BaseLanguageModelCallOptions {}
 
+/**
+ *  To use this model you need to have the `@mlc-ai/web-llm` module installed.
+ *  This can be installed using `npm install -S @mlc-ai/web-llm`
+ * @example
+ * ```typescript
+ * // Initialize the ChatWebLLM model with the model record.
+ * const model = new ChatWebLLM({
+ *   modelRecord: {
+ *     "model_url": "https://huggingface.co/mlc-ai/phi-2-q4f32_1-MLC/resolve/main/",
+ *     "local_id": "Phi2-q4f32_1",
+ *     "model_lib_url": "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/phi-2/phi-2-q4f32_1-ctx2k-webgpu.wasm",
+ *     "vram_required_MB": 4032.48,
+ *     "low_resource_required": false,
+ *   },
+ *   temperature: 0.5,
+ * });
+ *
+ * // Call the model with a message and await the response.
+ * const response = await model.invoke([
+ *   new HumanMessage({ content: "My name is John." }),
+ * ]);
+ * ```
+ */
 export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
   static inputs: WebLLMInputs;
 
@@ -27,6 +49,8 @@ export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
   appConfig?: webllm.AppConfig;
 
   chatOpts?: webllm.ChatOptions;
+
+  temperature?: number;
 
   modelRecord: webllm.ModelRecord;
 
@@ -39,27 +63,32 @@ export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
     this.appConfig = inputs.appConfig;
     this.chatOpts = inputs.chatOpts;
     this.modelRecord = inputs.modelRecord;
+    this.temperature = inputs.temperature;
   }
 
   _llmType() {
-    return this.modelRecord.model_id;
+    return "web-llm";
   }
 
-  async initialize() {
-    this.engine = webllm
-      .Engine()
-      .reload(this.modelRecord.model_id, this.appConfig, this.chatOpts);
+  async initialize(progressCallback?: webllm.InitProgressCallback) {
+    this.engine = new webllm.Engine();
+    if (progressCallback !== undefined) {
+      this.engine.setInitProgressCallback(progressCallback);
+    }
+    await this.reload(this.modelRecord.local_id, this.appConfig, this.chatOpts);
     this.engine.setInitProgressCallback(() => {});
   }
 
   async reload(
-    newModelRecord: webllm.ModelRecord,
+    modelId: string,
     newAppConfig?: webllm.AppConfig,
     newChatOpts?: webllm.ChatOptions
   ) {
     if (this.engine !== undefined) {
-      this.engine.reload(newModelRecord.model_id, newAppConfig, newChatOpts);
-    } else throw new Error("Initialize model before reloading.");
+      await this.engine.reload(modelId, newAppConfig, newChatOpts);
+    } else {
+      throw new Error("Initialize model before reloading.");
+    }
   }
 
   async *_streamResponseChunks(
@@ -96,12 +125,16 @@ export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
       }
     );
 
-    const stream = this.engine.chat.completions.create({
-      stream: true,
-      messages: messagesInput,
-      stop: options.stop,
-      logprobs: true,
-    });
+    const stream = this.engine.chatCompletionAsyncChunkGenerator(
+      {
+        stream: true,
+        messages: messagesInput,
+        stop: options.stop,
+        temperature: this.temperature,
+        logprobs: true,
+      },
+      {}
+    );
     for await (const chunk of stream) {
       // Last chunk has undefined content
       const text = chunk.choices[0].delta.content ?? "";

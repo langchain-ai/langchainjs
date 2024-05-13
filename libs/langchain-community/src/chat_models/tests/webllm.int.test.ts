@@ -56,9 +56,7 @@ describe("ChatWebLLM Integration Tests", () => {
 
   test("ChatWebLLM initializes and processes messages correctly", async () => {
     // const options = {}; // Adjust options as necessary
-
     // const response = await chatWebLLM.invoke("Hello", options);
-
     // expect(response).toBe("Hello");
     // expect(webllm.Engine).toHaveBeenCalled();
     // expect(webllm.Engine().chat.completions.create).toHaveBeenCalledWith({
