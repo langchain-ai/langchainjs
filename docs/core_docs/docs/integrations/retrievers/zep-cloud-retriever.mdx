@@ -2,19 +2,21 @@
 hide_table_of_contents: true
 ---
 
-# Zep Open Source Retriever
+# Zep Cloud Retriever
 
 > [Zep](https://www.getzep.com) is a long-term memory service for AI Assistant apps.
 > With Zep, you can provide AI assistants with the ability to recall past conversations, no matter how distant,
 > while also reducing hallucinations, latency, and cost.
 
-> Interested in Zep Cloud? See [Zep Cloud Installation Guide](https://help.getzep.com/sdks)
-
 This example shows how to use the Zep Retriever in a retrieval chain to retrieve documents from Zep Open Source memory store.
 
 ## Installation
 
-Follow the [Zep Open Source Quickstart Guide](https://docs.getzep.com/deployment/quickstart/) to install and get started with Zep.
+Sign up for [Zep Cloud](https://app.getzep.com/) and create a project.
+
+Follow the [Zep Cloud Typescript SDK Installation Guide](https://help.getzep.com/sdks) to install and get started with Zep.
+
+You'll need your Zep Cloud Project API Key to use the ZepCloudRetriever. See the [Zep Cloud docs](https://help.getzep.com/projects) for more information.
 
 ## Setup
 
@@ -23,12 +25,12 @@ import IntegrationInstallTooltip from "@mdx_components/integration_install_toolt
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm i @getzep/zep-js @langchain/community
+npm i @getzep/zep-cloud @langchain/community
 ```
 
 ## Usage
 
 import CodeBlock from "@theme/CodeBlock";
-import Example from "@examples/retrievers/zep.ts";
+import Example from "@examples/retrievers/zep_cloud.ts";
 
 <CodeBlock language="typescript">{Example}</CodeBlock>

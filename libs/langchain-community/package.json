@@ -67,6 +67,7 @@
     "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
+    "@getzep/zep-cloud": "~1.0.0",
     "@getzep/zep-js": "^0.9.0",
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
@@ -198,6 +199,7 @@
     "@datastax/astra-db-ts": "^1.0.0",
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
+    "@getzep/zep-cloud": "~1.0.0",
     "@getzep/zep-js": "^0.9.0",
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
@@ -320,6 +322,9 @@
       "optional": true
     },
     "@getmetal/metal-sdk": {
+      "optional": true
+    },
+    "@getzep/zep-cloud": {
       "optional": true
     },
     "@getzep/zep-js": {
@@ -1611,6 +1616,15 @@
       "import": "./vectorstores/zep.js",
       "require": "./vectorstores/zep.cjs"
     },
+    "./vectorstores/zep_cloud": {
+      "types": {
+        "import": "./vectorstores/zep_cloud.d.ts",
+        "require": "./vectorstores/zep_cloud.d.cts",
+        "default": "./vectorstores/zep_cloud.d.ts"
+      },
+      "import": "./vectorstores/zep_cloud.js",
+      "require": "./vectorstores/zep_cloud.cjs"
+    },
     "./chat_models/alibaba_tongyi": {
       "types": {
         "import": "./chat_models/alibaba_tongyi.d.ts",
@@ -1917,6 +1931,15 @@
       "import": "./retrievers/zep.js",
       "require": "./retrievers/zep.cjs"
     },
+    "./retrievers/zep_cloud": {
+      "types": {
+        "import": "./retrievers/zep_cloud.d.ts",
+        "require": "./retrievers/zep_cloud.d.cts",
+        "default": "./retrievers/zep_cloud.d.ts"
+      },
+      "import": "./retrievers/zep_cloud.js",
+      "require": "./retrievers/zep_cloud.cjs"
+    },
     "./retrievers/self_query/qdrant": {
       "types": {
         "import": "./retrievers/self_query/qdrant.d.ts",
@@ -2205,6 +2228,15 @@
       "import": "./stores/message/xata.js",
       "require": "./stores/message/xata.cjs"
     },
+    "./stores/message/zep_cloud": {
+      "types": {
+        "import": "./stores/message/zep_cloud.d.ts",
+        "require": "./stores/message/zep_cloud.d.cts",
+        "default": "./stores/message/zep_cloud.d.ts"
+      },
+      "import": "./stores/message/zep_cloud.js",
+      "require": "./stores/message/zep_cloud.cjs"
+    },
     "./memory/chat_memory": {
       "types": {
         "import": "./memory/chat_memory.d.ts",
@@ -2231,6 +2263,15 @@
       },
       "import": "./memory/zep.js",
       "require": "./memory/zep.cjs"
+    },
+    "./memory/zep_cloud": {
+      "types": {
+        "import": "./memory/zep_cloud.d.ts",
+        "require": "./memory/zep_cloud.d.cts",
+        "default": "./memory/zep_cloud.d.ts"
+      },
+      "import": "./memory/zep_cloud.js",
+      "require": "./memory/zep_cloud.cjs"
     },
     "./indexes/base": {
       "types": {
@@ -2776,6 +2817,10 @@
     "vectorstores/zep.js",
     "vectorstores/zep.d.ts",
     "vectorstores/zep.d.cts",
+    "vectorstores/zep_cloud.cjs",
+    "vectorstores/zep_cloud.js",
+    "vectorstores/zep_cloud.d.ts",
+    "vectorstores/zep_cloud.d.cts",
     "chat_models/alibaba_tongyi.cjs",
     "chat_models/alibaba_tongyi.js",
     "chat_models/alibaba_tongyi.d.ts",
@@ -2912,6 +2957,10 @@
     "retrievers/zep.js",
     "retrievers/zep.d.ts",
     "retrievers/zep.d.cts",
+    "retrievers/zep_cloud.cjs",
+    "retrievers/zep_cloud.js",
+    "retrievers/zep_cloud.d.ts",
+    "retrievers/zep_cloud.d.cts",
     "retrievers/self_query/qdrant.cjs",
     "retrievers/self_query/qdrant.js",
     "retrievers/self_query/qdrant.d.ts",
@@ -3040,6 +3089,10 @@
     "stores/message/xata.js",
     "stores/message/xata.d.ts",
     "stores/message/xata.d.cts",
+    "stores/message/zep_cloud.cjs",
+    "stores/message/zep_cloud.js",
+    "stores/message/zep_cloud.d.ts",
+    "stores/message/zep_cloud.d.cts",
     "memory/chat_memory.cjs",
     "memory/chat_memory.js",
     "memory/chat_memory.d.ts",
@@ -3052,6 +3105,10 @@
     "memory/zep.js",
     "memory/zep.d.ts",
     "memory/zep.d.cts",
+    "memory/zep_cloud.cjs",
+    "memory/zep_cloud.js",
+    "memory/zep_cloud.d.ts",
+    "memory/zep_cloud.d.cts",
     "indexes/base.cjs",
     "indexes/base.js",
     "indexes/base.d.ts",

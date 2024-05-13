@@ -8017,6 +8017,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@getzep/zep-cloud@npm:~1.0.0":
+  version: 1.0.0
+  resolution: "@getzep/zep-cloud@npm:1.0.0"
+  dependencies:
+    form-data: 4.0.0
+    node-fetch: 2.7.0
+    qs: 6.11.2
+    url-join: 4.0.1
+  peerDependencies:
+    "@langchain/core": ~0.1.29
+    langchain: ~0.1.19
+  peerDependenciesMeta:
+    "@langchain/core":
+      optional: true
+    langchain:
+      optional: true
+  checksum: e94ad5a30470a6e1b0f40378edec88d437715551363623bbc55f7675d2c72059de91918b3919510ef1d815557d42e76808cd201411a96fb7c00b742b8ee5b6ac
+  languageName: node
+  linkType: hard
+
 "@getzep/zep-js@npm:^0.9.0":
   version: 0.9.0
   resolution: "@getzep/zep-js@npm:0.9.0"
@@ -8953,6 +8973,7 @@ __metadata:
     "@elastic/elasticsearch": ^8.4.0
     "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": ^4.0.0
+    "@getzep/zep-cloud": ~1.0.0
     "@getzep/zep-js": ^0.9.0
     "@gomomento/sdk": ^1.51.1
     "@gomomento/sdk-core": ^1.51.1
@@ -9091,6 +9112,7 @@ __metadata:
     "@datastax/astra-db-ts": ^1.0.0
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": "*"
+    "@getzep/zep-cloud": ~1.0.0
     "@getzep/zep-js": ^0.9.0
     "@gomomento/sdk": ^1.51.1
     "@gomomento/sdk-core": ^1.51.1
@@ -9198,6 +9220,8 @@ __metadata:
     "@elastic/elasticsearch":
       optional: true
     "@getmetal/metal-sdk":
+      optional: true
+    "@getzep/zep-cloud":
       optional: true
     "@getzep/zep-js":
       optional: true
@@ -21800,6 +21824,7 @@ __metadata:
     "@elastic/elasticsearch": ^8.4.0
     "@faker-js/faker": ^8.4.1
     "@getmetal/metal-sdk": ^4.0.0
+    "@getzep/zep-cloud": ~1.0.0
     "@getzep/zep-js": ^0.9.0
     "@gomomento/sdk": ^1.51.1
     "@google/generative-ai": ^0.7.0

@@ -148,6 +148,7 @@ export const config = {
     "vectorstores/weaviate": "vectorstores/weaviate",
     "vectorstores/xata": "vectorstores/xata",
     "vectorstores/zep": "vectorstores/zep",
+    "vectorstores/zep_cloud": "vectorstores/zep_cloud",
     // chat_models
     "chat_models/alibaba_tongyi": "chat_models/alibaba_tongyi",
     "chat_models/baiduwenxin": "chat_models/baiduwenxin",
@@ -185,6 +186,7 @@ export const config = {
     "retrievers/vectara_summary": "retrievers/vectara_summary",
     "retrievers/vespa": "retrievers/vespa",
     "retrievers/zep": "retrievers/zep",
+    "retrievers/zep_cloud": "retrievers/zep_cloud",
     "retrievers/self_query/qdrant": "retrievers/self_query/qdrant",
     // cache
     "caches/cloudflare_kv": "caches/cloudflare_kv",
@@ -223,10 +225,12 @@ export const config = {
     "stores/message/redis": "stores/message/redis",
     "stores/message/upstash_redis": "stores/message/upstash_redis",
     "stores/message/xata": "stores/message/xata",
+    "stores/message/zep_cloud": "stores/message/zep_cloud",
     // memory
     "memory/chat_memory": "memory/chat_memory",
     "memory/motorhead_memory": "memory/motorhead_memory",
     "memory/zep": "memory/zep",
+    "memory/zep_cloud": "memory/zep_cloud",
     // indexes
     "indexes/base": "indexes/base",
     "indexes/postgres": "indexes/postgres",
@@ -319,6 +323,7 @@ export const config = {
     "vectorstores/weaviate",
     "vectorstores/xata",
     "vectorstores/zep",
+    "vectorstores/zep_cloud",
     "chat_models/bedrock",
     "chat_models/bedrock/web",
     "chat_models/googlevertexai",
@@ -337,6 +342,7 @@ export const config = {
     "retrievers/supabase",
     "retrievers/vectara_summary",
     "retrievers/zep",
+    "retrievers/zep_cloud",
     "retrievers/self_query/qdrant",
     "cache/cloudflare_kv",
     "cache/momento",
@@ -368,9 +374,11 @@ export const config = {
     "stores/message/redis",
     "stores/message/upstash_redis",
     "stores/message/xata",
+    "stores/message/zep_cloud",
     // memory
     "memory/motorhead_memory",
     "memory/zep",
+    "memory/zep_cloud",
     // utils
     "util/convex",
     "utils/cassandra",
