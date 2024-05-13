@@ -1,3 +1,4 @@
+import * as ReplicateModel from "replicate";
 import { LLM, type BaseLLMParams } from "@langchain/core/language_models/llms";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
@@ -8,7 +9,7 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
  */
 export interface ReplicateInput {
   // owner/model_name:version
-  model: `${string}/${string}:${string}`;
+  model: `${string}/${string}` | `${string}/${string}:${string}`;
 
   input?: {
     // different models accept different inputs
@@ -19,6 +20,12 @@ export interface ReplicateInput {
 
   /** The key used to pass prompts to the model. */
   promptKey?: string;
+
+  /**
+   * Whether or not to stream tokens as they are generated.
+   * @default {false}
+   */
+  streaming?: boolean;
 }
 
 /**
@@ -59,6 +66,8 @@ export class Replicate extends LLM implements ReplicateInput {
 
   promptKey?: string;
 
+  streaming: boolean;
+
   constructor(fields: ReplicateInput & BaseLLMParams) {
     super(fields);
 
@@ -77,6 +86,7 @@ export class Replicate extends LLM implements ReplicateInput {
     this.model = fields.model;
     this.input = fields.input ?? {};
     this.promptKey = fields.promptKey;
+    this.streaming = fields.streaming ?? this.streaming;
   }
 
   _llmType() {
@@ -88,24 +98,26 @@ export class Replicate extends LLM implements ReplicateInput {
     prompt: string,
     options: this["ParsedCallOptions"]
   ): Promise<string> {
-    const imports = await Replicate.imports();
-
-    const replicate = new imports.Replicate({
+    const replicate = new ReplicateModel.default({
       userAgent: "langchain",
       auth: this.apiKey,
     });
 
     if (this.promptKey === undefined) {
       const [modelString, versionString] = this.model.split(":");
-      const version = await replicate.models.versions.get(
-        modelString.split("/")[0],
-        modelString.split("/")[1],
-        versionString
-      );
-      const openapiSchema = version.openapi_schema;
-      const inputProperties: { "x-order": number | undefined }[] =
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (openapiSchema as any)?.components?.schemas?.Input?.properties;
+
+      let inputProperties: { "x-order": number | undefined }[] | undefined;
+      if (versionString !== undefined) {
+        const version = await replicate.models.versions.get(
+          modelString.split("/")[0],
+          modelString.split("/")[1],
+          versionString
+        );
+        const openapiSchema = version.openapi_schema;
+        inputProperties = (openapiSchema as any)?.components?.schemas?.Input
+          ?.properties;
+      }
+
       if (inputProperties === undefined) {
         this.promptKey = "prompt";
       } else {
@@ -119,40 +131,31 @@ export class Replicate extends LLM implements ReplicateInput {
         this.promptKey = sortedInputProperties[0][0] ?? "prompt";
       }
     }
-    const output = await this.caller.callWithOptions(
-      { signal: options.signal },
-      () =>
-        replicate.run(this.model, {
+    let output = "";
+    await this.caller.callWithOptions({ signal: options.signal }, async () => {
+      // Ensuring the function is explicitly marked as async
+      try {
+        for await (const event of replicate.stream(this.model, {
           input: {
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             [this.promptKey!]: prompt,
             ...this.input,
           },
-        })
-    );
+        })) {
+          output += event.toString();
+        }
+      } catch (error) {
+        console.error("Error occurred while processing stream:", error);
+        // Handle or rethrow error as necessary
+      }
+    });
 
     if (typeof output === "string") {
       return output;
-    } else if (Array.isArray(output)) {
-      return output.join("");
     } else {
       // Note this is a little odd, but the output format is not consistent
       // across models, so it makes some amount of sense.
       return String(output);
-    }
-  }
-
-  /** @ignore */
-  static async imports(): Promise<{
-    Replicate: typeof import("replicate").default;
-  }> {
-    try {
-      const { default: Replicate } = await import("replicate");
-      return { Replicate };
-    } catch (e) {
-      throw new Error(
-        "Please install replicate as a dependency with, e.g. `yarn add replicate`"
-      );
     }
   }
 }

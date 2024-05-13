@@ -2,10 +2,9 @@ import { test, expect } from "@jest/globals";
 import { Replicate } from "../replicate.js";
 
 // Test skipped because Replicate appears to be timing out often when called
-test.skip("Test Replicate", async () => {
+test("Test Replicate", async () => {
   const model = new Replicate({
-    model:
-      "a16z-infra/llama13b-v2-chat:df7690f1994d94e96ad9d568eac121aecf50684a0b0963b25a41cc40061269e5",
+    model: "lucataco/phi-3-mini-4k-instruct:c4576a0e0c076f0feeced00df4ed332c60ffd8de781afef68ff0611645548162",
     input: {
       max_length: 10,
     },
@@ -16,12 +15,30 @@ test.skip("Test Replicate", async () => {
   console.log({ res });
 
   expect(typeof res).toBe("string");
-});
+  expect(res).not.toBe("");
+}, 60000);
+
+test("Test Replicate Streaming", async () => {
+  const model = new Replicate({
+    model: "lucataco/phi-3-mini-4k-instruct:c4576a0e0c076f0feeced00df4ed332c60ffd8de781afef68ff0611645548162",
+    input: {
+      max_length: 10,
+    },
+    streaming: true,
+  });
+
+  const res = await model.invoke("Hello, my name is ");
+
+  console.log({ res });
+
+  expect(typeof res).toBe("string");
+  expect(res).not.toBe("");
+}, 60000);
 
 test.skip("Serialise Replicate", () => {
   const model = new Replicate({
     model:
-      "a16z-infra/llama13b-v2-chat:df7690f1994d94e96ad9d568eac121aecf50684a0b0963b25a41cc40061269e5",
+      "lucataco/phi-3-mini-4k-instruct:c4576a0e0c076f0feeced00df4ed332c60ffd8de781afef68ff0611645548162",
     input: {
       max_length: 10,
     },
@@ -48,7 +65,7 @@ test.skip("Serialise Replicate", () => {
         "input": {
           "max_length": 10,
         },
-        "model": "a16z-infra/llama13b-v2-chat:df7690f1994d94e96ad9d568eac121aecf50684a0b0963b25a41cc40061269e5",
+        "model": "lucataco/phi-3-mini-4k-instruct:c4576a0e0c076f0feeced00df4ed332c60ffd8de781afef68ff0611645548162",
       },
       "lc": 1,
       "type": "constructor",
