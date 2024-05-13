@@ -40,7 +40,7 @@
   "license": "MIT",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.20.1",
-    "@langchain/core": "<0.3.0",
+    "@langchain/core": "~0.2.0-rc.0",
     "fast-xml-parser": "^4.3.5",
     "zod": "^3.22.4",
     "zod-to-json-schema": "^3.22.4"
