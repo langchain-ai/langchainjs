@@ -1,6 +1,12 @@
 import type { EPub } from "epub2";
 import { Document } from "@langchain/core/documents";
 import { BaseDocumentLoader } from "../base.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/fs/epub",
+  newPackageName: "@langchain/community",
+});
 
 /**
  * A class that extends the `BaseDocumentLoader` class. It represents a

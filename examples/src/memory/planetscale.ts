@@ -1,4 +1,4 @@
-import { BufferMemory } from "langchain/memory";
+import { BufferMemory } from "langchain/memory/index";
 import { PlanetScaleChatMessageHistory } from "@langchain/community/stores/message/planetscale";
 import { ChatOpenAI } from "@langchain/openai";
 import { ConversationChain } from "langchain/chains";

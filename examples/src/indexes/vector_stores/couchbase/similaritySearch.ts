@@ -5,7 +5,7 @@ import {
 } from "@langchain/community/vectorstores/couchbase";
 import { Cluster } from "couchbase";
 import { TextLoader } from "langchain/document_loaders/fs/text";
-import { CharacterTextSplitter } from "langchain/text_splitter";
+import { CharacterTextSplitter } from "@langchain/textsplitters";
 
 const connectionString =
   process.env.COUCHBASE_DB_CONN_STR ?? "couchbase://localhost";

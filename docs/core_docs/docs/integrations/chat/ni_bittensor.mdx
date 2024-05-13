@@ -1,14 +1,29 @@
 ---
 sidebar_label: NIBittensorChatModel
+sidebar_class_name: hidden
 ---
 
 # NIBittensorChatModel
+
+:::warning
+This module has been deprecated and is no longer supported. The documentation below will not work in versions 0.2.0 or later.
+:::
 
 LangChain.js offers experimental support for Neural Internet's Bittensor chat models.
 
 Here's an example:
 
-import CodeBlock from "@theme/CodeBlock";
-import NIBittensorChatModelExample from "@examples/models/chat/integration_bittensor.ts";
+```typescript
+import { NIBittensorChatModel } from "langchain/experimental/chat_models/bittensor";
+import { HumanMessage } from "@langchain/core/messages";
 
-<CodeBlock language="typescript">{NIBittensorChatModelExample}</CodeBlock>
+const chat = new NIBittensorChatModel();
+const message = new HumanMessage("What is bittensor?");
+const res = await chat.invoke([message]);
+console.log({ res });
+/*
+  {
+    res: "\nBittensor is opensource protocol..."
+  }
+ */
+```

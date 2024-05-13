@@ -1,6 +1,12 @@
 import { Document } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { BaseDocumentLoader } from "../base.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/web/figma",
+  newPackageName: "@langchain/community",
+});
 
 /**
  * Interface representing a Figma file. It includes properties for the

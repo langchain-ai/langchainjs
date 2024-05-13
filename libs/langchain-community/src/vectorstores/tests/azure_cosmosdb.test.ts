@@ -18,7 +18,9 @@ const createMockClient = () => ({
       }),
       dropIndex: jest.fn(),
       deleteMany: jest.fn(),
-      insertMany: jest.fn(),
+      insertMany: jest.fn().mockImplementation((docs: any) => ({
+        insertedIds: docs.map((_: any, i: any) => `id${i}`),
+      })),
       aggregate: jest.fn().mockReturnValue({
         map: jest.fn().mockReturnValue({
           toArray: jest
@@ -75,7 +77,6 @@ test("AzureCosmosDBVectorStore manages its index", async () => {
     client: client as any,
   });
 
-  await store.createIndex();
   const indexExists = await store.checkIndexExists();
 
   const mockDb = client.db();
@@ -103,10 +104,15 @@ test("AzureCosmosDBVectorStore deletes documents", async () => {
   expect(mockCollection.deleteMany).toHaveBeenCalledTimes(1);
   expect(mockCollection.deleteMany).toHaveBeenCalledWith({});
 
-  await store.delete(["id1234567890", "id2345678901"]);
+  await store.delete({ ids: ["id1234567890", "id2345678901"] });
 
   expect(mockCollection.deleteMany).toHaveBeenCalledTimes(2);
   expect(mockCollection.deleteMany.mock.calls[1][0]).toMatchObject({ _id: {} });
+
+  await store.delete({ filter: { a: 1 } });
+
+  expect(mockCollection.deleteMany).toHaveBeenCalledTimes(3);
+  expect(mockCollection.deleteMany.mock.calls[2][0]).toMatchObject({ a: 1 });
 });
 
 test("AzureCosmosDBVectorStore adds vectors", async () => {

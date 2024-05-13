@@ -1,6 +1,12 @@
 import type { CheerioAPI } from "cheerio";
 import { Document } from "@langchain/core/documents";
 import { CheerioWebBaseLoader } from "./cheerio.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/web/gitbook",
+  newPackageName: "@langchain/community",
+});
 
 /**
  * Interface representing the parameters for configuring the

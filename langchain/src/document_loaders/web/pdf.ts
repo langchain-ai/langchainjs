@@ -1,6 +1,12 @@
 import { Document } from "@langchain/core/documents";
 import { BaseDocumentLoader } from "../base.js";
 import { formatDocumentsAsString } from "../../util/document.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/web/pdf",
+  newPackageName: "@langchain/community",
+});
 
 /**
  * A document loader for loading data from PDFs.
