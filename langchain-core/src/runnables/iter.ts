@@ -1,28 +1,31 @@
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 import { RunnableConfig } from "./config.js";
 
-export function isIterator(thing: unknown): thing is Generator {
+export function isIterator(thing: unknown): thing is IterableIterator<unknown> {
   return (
     typeof thing === "object" &&
     thing !== null &&
     typeof (thing as Generator)[Symbol.iterator] === "function" &&
+    // avoid detecting array/set as iterator
     typeof (thing as Generator).next === "function"
   );
 }
 
-export function isAsyncIterator(thing: unknown): thing is AsyncGenerator {
+export function isAsyncIterable(
+  thing: unknown
+): thing is AsyncIterable<unknown> {
   return (
     typeof thing === "object" &&
     thing !== null &&
-    typeof (thing as AsyncGenerator)[Symbol.asyncIterator] === "function" &&
-    typeof (thing as AsyncGenerator).next === "function"
+    typeof (thing as AsyncIterable<unknown>)[Symbol.asyncIterator] ===
+      "function"
   );
 }
 
 export function* consumeIteratorInContext<T>(
   context: Partial<RunnableConfig> | undefined,
-  iter: Generator<T>
-): Generator<T> {
+  iter: IterableIterator<T>
+): IterableIterator<T> {
   const storage = AsyncLocalStorageProviderSingleton.getInstance();
   while (true) {
     const { value, done } = storage.run(context, iter.next.bind(iter));
@@ -34,13 +37,17 @@ export function* consumeIteratorInContext<T>(
   }
 }
 
-export async function* consumeAsyncIteratorInContext<T>(
+export async function* consumeAsyncIterableInContext<T>(
   context: Partial<RunnableConfig> | undefined,
-  iter: AsyncGenerator<T>
-): AsyncGenerator<T> {
+  iter: AsyncIterable<T>
+): AsyncIterableIterator<T> {
   const storage = AsyncLocalStorageProviderSingleton.getInstance();
+  const iterator = iter[Symbol.asyncIterator]();
   while (true) {
-    const { value, done } = await storage.run(context, iter.next.bind(iter));
+    const { value, done } = await storage.run(
+      context,
+      iterator.next.bind(iter)
+    );
     if (done) {
       break;
     } else {

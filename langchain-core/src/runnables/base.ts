@@ -39,9 +39,9 @@ import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 import { Graph } from "./graph.js";
 import { convertToHttpEventStream } from "./wrappers.js";
 import {
-  consumeAsyncIteratorInContext,
+  consumeAsyncIterableInContext,
   consumeIteratorInContext,
-  isAsyncIterator,
+  isAsyncIterable,
   isIterator,
 } from "./iter.js";
 
@@ -2005,9 +2005,9 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
                 recursionLimit:
                   (childConfig.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
               });
-            } else if (isAsyncIterator(output)) {
+            } else if (isAsyncIterable(output)) {
               let finalOutput: RunOutput | undefined;
-              for await (const chunk of consumeAsyncIteratorInContext(
+              for await (const chunk of consumeAsyncIterableInContext(
                 childConfig,
                 output
               )) {
@@ -2112,8 +2112,8 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
       for await (const chunk of stream) {
         yield chunk;
       }
-    } else if (isAsyncIterator(output)) {
-      for await (const chunk of consumeAsyncIteratorInContext(config, output)) {
+    } else if (isAsyncIterable(output)) {
+      for await (const chunk of consumeAsyncIterableInContext(config, output)) {
         yield chunk as RunOutput;
       }
     } else if (isIterator(output)) {
