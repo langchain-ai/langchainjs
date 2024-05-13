@@ -38,6 +38,12 @@ import { _RootEventFilter, isRunnableInterface } from "./utils.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 import { Graph } from "./graph.js";
 import { convertToHttpEventStream } from "./wrappers.js";
+import {
+  consumeAsyncIteratorInContext,
+  consumeIteratorInContext,
+  isAsyncIterator,
+  isIterator,
+} from "./iter.js";
 
 export { type RunnableInterface, RunnableBatchOptions };
 
@@ -2001,7 +2007,10 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
               });
             } else if (isAsyncIterator(output)) {
               let finalOutput: RunOutput | undefined;
-              for await (const chunk of output) {
+              for await (const chunk of consumeAsyncIteratorInContext(
+                childConfig,
+                output
+              )) {
                 if (finalOutput === undefined) {
                   finalOutput = chunk as RunOutput;
                 } else {
@@ -2017,7 +2026,10 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
               output = finalOutput as typeof output;
             } else if (isIterator(output)) {
               let finalOutput: RunOutput | undefined;
-              for (const chunk of output) {
+              for (const chunk of consumeIteratorInContext(
+                childConfig,
+                output
+              )) {
                 if (finalOutput === undefined) {
                   finalOutput = chunk as RunOutput;
                 } else {
@@ -2101,11 +2113,11 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
         yield chunk;
       }
     } else if (isAsyncIterator(output)) {
-      for await (const chunk of output) {
+      for await (const chunk of consumeAsyncIteratorInContext(config, output)) {
         yield chunk as RunOutput;
       }
     } else if (isIterator(output)) {
-      for (const chunk of output) {
+      for (const chunk of consumeIteratorInContext(config, output)) {
         yield chunk as RunOutput;
       }
     } else {
@@ -2137,24 +2149,6 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     await wrappedGenerator.setup;
     return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
   }
-}
-
-function isIterator(thing: unknown): thing is Generator {
-  return (
-    typeof thing === "object" &&
-    thing !== null &&
-    typeof (thing as Generator)[Symbol.iterator] === "function" &&
-    typeof (thing as Generator).next === "function"
-  );
-}
-
-function isAsyncIterator(thing: unknown): thing is AsyncGenerator {
-  return (
-    typeof thing === "object" &&
-    thing !== null &&
-    typeof (thing as AsyncGenerator)[Symbol.asyncIterator] === "function" &&
-    typeof (thing as AsyncGenerator).next === "function"
-  );
 }
 
 export class RunnableParallel<RunInput> extends RunnableMap<RunInput> {}
