@@ -1999,6 +1999,38 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
                 recursionLimit:
                   (childConfig.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
               });
+            } else if (isAsyncIterator(output)) {
+              let finalOutput: RunOutput | undefined;
+              for await (const chunk of output) {
+                if (finalOutput === undefined) {
+                  finalOutput = chunk as RunOutput;
+                } else {
+                  // Make a best effort to gather, for any type that supports concat.
+                  try {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    finalOutput = concat(finalOutput, chunk as any);
+                  } catch (e) {
+                    finalOutput = chunk as RunOutput;
+                  }
+                }
+              }
+              output = finalOutput as typeof output;
+            } else if (isIterator(output)) {
+              let finalOutput: RunOutput | undefined;
+              for (const chunk of output) {
+                if (finalOutput === undefined) {
+                  finalOutput = chunk as RunOutput;
+                } else {
+                  // Make a best effort to gather, for any type that supports concat.
+                  try {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    finalOutput = concat(finalOutput, chunk as any);
+                  } catch (e) {
+                    finalOutput = chunk as RunOutput;
+                  }
+                }
+              }
+              output = finalOutput as typeof output;
             }
             resolve(output);
           } catch (e) {
