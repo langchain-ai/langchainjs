@@ -289,11 +289,6 @@ id:
   - Cohere
 kwargs:
   temperature: 0.5
-  cohere_api_key:
-    lc: 1
-    type: secret
-    id:
-      - COHERE_API_KEY
 "
 `;
 

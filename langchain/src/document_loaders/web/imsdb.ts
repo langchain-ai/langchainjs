@@ -1,5 +1,11 @@
 import { Document } from "@langchain/core/documents";
 import { CheerioWebBaseLoader } from "./cheerio.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/web/imsdb",
+  newPackageName: "@langchain/community",
+});
 
 /**
  * A class that extends the CheerioWebBaseLoader class. It represents a

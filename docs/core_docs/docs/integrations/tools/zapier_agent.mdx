@@ -1,6 +1,12 @@
-import CodeBlock from "@theme/CodeBlock";
+---
+sidebar_class_name: hidden
+---
 
 # Agent with Zapier NLA Integration
+
+:::warning
+This module has been deprecated and is no longer supported. The documentation below will not work in versions 0.2.0 or later.
+:::
 
 Full docs here: https://nla.zapier.com/start/
 
@@ -22,8 +28,6 @@ Review [auth docs](https://nla.zapier.com/docs/authentication/) for more details
 
 The example below demonstrates how to use the Zapier integration as an Agent:
 
-import Example from "@examples/agents/zapier_mrkl.ts";
-
 import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
 
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
@@ -32,4 +36,33 @@ import IntegrationInstallTooltip from "@mdx_components/integration_install_toolt
 npm install @langchain/openai
 ```
 
-<CodeBlock language="typescript">{Example}</CodeBlock>
+```typescript
+import { OpenAI } from "@langchain/openai";
+import { ZapierNLAWrapper } from "langchain/tools";
+import {
+  initializeAgentExecutorWithOptions,
+  ZapierToolKit,
+} from "langchain/agents";
+
+const model = new OpenAI({ temperature: 0 });
+const zapier = new ZapierNLAWrapper();
+const toolkit = await ZapierToolKit.fromZapierNLAWrapper(zapier);
+
+const executor = await initializeAgentExecutorWithOptions(
+  toolkit.tools,
+  model,
+  {
+    agentType: "zero-shot-react-description",
+    verbose: true,
+  }
+);
+console.log("Loaded agent.");
+
+const input = `Summarize the last email I received regarding Silicon Valley Bank. Send the summary to the #test-zapier Slack channel.`;
+
+console.log(`Executing with input "${input}"...`);
+
+const result = await executor.invoke({ input });
+
+console.log(`Got output ${result.output}`);
+```

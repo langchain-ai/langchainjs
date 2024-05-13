@@ -1,4 +1,4 @@
-import { TokenTextSplitter } from "langchain/text_splitter";
+import { TokenTextSplitter } from "@langchain/textsplitters";
 import fs from "fs";
 import path from "path";
 import { Document } from "@langchain/core/documents";

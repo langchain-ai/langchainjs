@@ -1,8 +1,8 @@
 import { expect, test } from "@jest/globals";
 import process from "process";
 import { OpenAI } from "@langchain/openai";
-import { SerpAPI } from "@langchain/community/tools/serpapi";
-import { Calculator } from "../../../tools/calculator.js";
+import { SerpAPI } from "../../../util/testing/tools/serpapi.js";
+import { Calculator } from "../../../util/testing/tools/calculator.js";
 import { initializeAgentExecutorWithOptions } from "../../../agents/index.js";
 import { loadEvaluator } from "../../loader.js";
 

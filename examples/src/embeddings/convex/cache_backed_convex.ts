@@ -4,7 +4,7 @@ import { TextLoader } from "langchain/document_loaders/fs/text";
 import { CacheBackedEmbeddings } from "langchain/embeddings/cache_backed";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { ConvexKVStore } from "@langchain/community/storage/convex";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { ConvexVectorStore } from "@langchain/community/vectorstores/convex";
 import { action } from "./_generated/server.js";
 

@@ -1,0 +1,246 @@
+{
+  "object": "database",
+  "id": "c393f19c-3903-440d-a0d3-4bf9c6c12ff2",
+  "cover": null,
+  "icon": null,
+  "created_time": "2023-06-14T10:29:00.000Z",
+  "created_by": {
+    "object": "user",
+    "id": "c9b34ba3-5b62-4aa9-aae2-ed6024ffb0fd"
+  },
+  "last_edited_by": {
+    "object": "user",
+    "id": "c9b34ba3-5b62-4aa9-aae2-ed6024ffb0fd"
+  },
+  "last_edited_time": "2023-09-27T09:07:00.000Z",
+  "title": [
+    {
+      "type": "text",
+      "text": { "content": "Example ", "link": null },
+      "annotations": {
+        "bold": false,
+        "italic": false,
+        "strikethrough": false,
+        "underline": false,
+        "code": false,
+        "color": "default"
+      },
+      "plain_text": "Example ",
+      "href": null
+    },
+    {
+      "type": "text",
+      "text": { "content": "Database", "link": null },
+      "annotations": {
+        "bold": true,
+        "italic": true,
+        "strikethrough": true,
+        "underline": false,
+        "code": false,
+        "color": "default"
+      },
+      "plain_text": "Database",
+      "href": null
+    }
+  ],
+  "description": [],
+  "is_inline": true,
+  "properties": {
+    "File": { "id": "%3DAK%3F", "name": "File", "type": "files", "files": {} },
+    "Number": {
+      "id": "%3FD%7CI",
+      "name": "Number",
+      "type": "number",
+      "number": { "format": "number" }
+    },
+    "Rollup": {
+      "id": "%3FROk",
+      "name": "Rollup",
+      "type": "rollup",
+      "rollup": {
+        "rollup_property_name": "Name",
+        "relation_property_name": "Related Example Database",
+        "rollup_property_id": "title",
+        "relation_property_id": "\\tQ[",
+        "function": "show_original"
+      }
+    },
+    "Status": {
+      "id": "%40mqJ",
+      "name": "Status",
+      "type": "status",
+      "status": {
+        "options": [
+          {
+            "id": "9f08647c-ad39-463d-ada7-18b0851806e1",
+            "name": "Not started",
+            "color": "default"
+          },
+          {
+            "id": "6d4f47e4-d554-485b-a3b5-38f41218502d",
+            "name": "In progress",
+            "color": "blue"
+          },
+          {
+            "id": "e07004b9-d05a-4ead-a752-fd46444d5b20",
+            "name": "Done",
+            "color": "green"
+          }
+        ],
+        "groups": [
+          {
+            "id": "6a9b9293-ead5-4ec4-a46f-a86fc5ec8579",
+            "name": "To-do",
+            "color": "gray",
+            "option_ids": ["9f08647c-ad39-463d-ada7-18b0851806e1"]
+          },
+          {
+            "id": "183249c1-103e-4ddf-8c7d-76feda6073fe",
+            "name": "In progress",
+            "color": "blue",
+            "option_ids": ["6d4f47e4-d554-485b-a3b5-38f41218502d"]
+          },
+          {
+            "id": "71ab78cb-5c7c-4af2-8e28-64c82e9ab4be",
+            "name": "Complete",
+            "color": "green",
+            "option_ids": ["e07004b9-d05a-4ead-a752-fd46444d5b20"]
+          }
+        ]
+      }
+    },
+    "Multi-select": {
+      "id": "GpEZ",
+      "name": "Multi-select",
+      "type": "multi_select",
+      "multi_select": {
+        "options": [
+          {
+            "id": "02733568-8d80-4b3e-8d7d-a2fcd547fc3f",
+            "name": "Red",
+            "color": "red"
+          },
+          {
+            "id": "426a6876-f5db-498b-a528-5d32ac11a57d",
+            "name": "Green",
+            "color": "green"
+          },
+          {
+            "id": "e4063033-ca88-4541-ac81-348f9f409443",
+            "name": "Blue",
+            "color": "blue"
+          }
+        ]
+      }
+    },
+    "Select": {
+      "id": "OMmU",
+      "name": "Select",
+      "type": "select",
+      "select": {
+        "options": [
+          {
+            "id": "123c9765-bef8-4c91-93e3-73205973ce29",
+            "name": "Yellow",
+            "color": "yellow"
+          },
+          {
+            "id": "40278f77-e412-417a-a1d9-dad665e57242",
+            "name": "Magenta",
+            "color": "pink"
+          }
+        ]
+      }
+    },
+    "Last edited time": {
+      "id": "Okfy",
+      "name": "Last edited time",
+      "type": "last_edited_time",
+      "last_edited_time": {}
+    },
+    "Text": {
+      "id": "VWez",
+      "name": "Text",
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "title": {
+      "id": "VdnU",
+      "name": "title",
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Last edited by": {
+      "id": "Yfu%7B",
+      "name": "Last edited by",
+      "type": "last_edited_by",
+      "last_edited_by": {}
+    },
+    "Related Example Database": {
+      "id": "%5CtQ%5B",
+      "name": "Related Example Database",
+      "type": "relation",
+      "relation": {
+        "database_id": "c393f19c-3903-440d-a0d3-4bf9c6c12ff2",
+        "synced_property_id": "\\tQ[",
+        "synced_property_name": "Related Example Database"
+      }
+    },
+    "Created by": {
+      "id": "_qQv",
+      "name": "Created by",
+      "type": "created_by",
+      "created_by": {}
+    },
+    "Checkbox": {
+      "id": "aSh%3F",
+      "name": "Checkbox",
+      "type": "checkbox",
+      "checkbox": {}
+    },
+    "Formula": {
+      "id": "cnSn",
+      "name": "Formula",
+      "type": "formula",
+      "formula": {
+        "expression": "{{notion:block_property:lsSy:928ad4d3-c992-4931-b295-2c5bc13595dd:7f86f3d2-0f6c-4541-a93b-9593d6dc3f0a}}.split('-').last().toNumber() == \"1\""
+      }
+    },
+    "Phone": {
+      "id": "faWC",
+      "name": "Phone",
+      "type": "phone_number",
+      "phone_number": {}
+    },
+    "Email": { "id": "hMx%3C", "name": "Email", "type": "email", "email": {} },
+    "URL": { "id": "k~K%3C", "name": "URL", "type": "url", "url": {} },
+    "Created time": {
+      "id": "lYCY",
+      "name": "Created time",
+      "type": "created_time",
+      "created_time": {}
+    },
+    "ID": {
+      "id": "lsSy",
+      "name": "ID",
+      "type": "unique_id",
+      "unique_id": { "prefix": null }
+    },
+    "Date": { "id": "pbgc", "name": "Date", "type": "date", "date": {} },
+    "Person": {
+      "id": "~GU~",
+      "name": "Person",
+      "type": "people",
+      "people": {}
+    },
+    "Name": { "id": "title", "name": "Name", "type": "title", "title": {} }
+  },
+  "parent": {
+    "type": "page_id",
+    "page_id": "b34ca03f-219c-4420-a604-6fc4bdfdf7b4"
+  },
+  "url": "https://www.notion.so/c393f19c3903440da0d34bf9c6c12ff2",
+  "public_url": "https://skarard.notion.site/c393f19c3903440da0d34bf9c6c12ff2",
+  "archived": false,
+  "developer_survey": "https://notionup.typeform.com/to/bllBsoI4?utm_source=postman"
+}
