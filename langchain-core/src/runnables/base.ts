@@ -2068,6 +2068,10 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
       for await (const chunk of stream) {
         yield chunk;
       }
+    } else if (isAsyncIterator(output)) {
+      for await (const chunk of output) {
+        yield chunk as RunOutput;
+      }
     } else {
       yield output;
     }
@@ -2097,6 +2101,14 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     await wrappedGenerator.setup;
     return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
   }
+}
+
+function isAsyncIterator(thing: unknown): thing is AsyncGenerator {
+  return (
+    typeof thing === "object" &&
+    thing !== null &&
+    typeof (thing as AsyncGenerator)[Symbol.asyncIterator] === "function"
+  );
 }
 
 export class RunnableParallel<RunInput> extends RunnableMap<RunInput> {}
