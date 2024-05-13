@@ -11,7 +11,7 @@ import {
   MaxMarginalRelevanceSearchOptions,
   VectorStore,
 } from "@langchain/core/vectorstores";
-import { Document } from "@langchain/core/documents";
+import { Document, DocumentInterface } from "@langchain/core/documents";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
@@ -245,10 +245,19 @@ export class AzureCosmosDBVectorStore extends VectorStore {
    * @param params Parameters for the delete operation.
    * @returns A promise that resolves when the documents have been removed.
    */
-  async delete(params: AzureCosmosDBDeleteParams = {}): Promise<void> {
+  async delete(
+    params: AzureCosmosDBDeleteParams | string[] = {}
+  ): Promise<void> {
     await this.initPromise;
 
-    const { ids, filter } = params;
+    let ids: string | string[] | undefined;
+    let filter: AzureCosmosDBDeleteParams["filter"];
+    if (Array.isArray(params)) {
+      ids = params;
+    } else {
+      ids = params.ids;
+      filter = params.filter;
+    }
     const idsArray = Array.isArray(ids) ? ids : [ids];
     const deleteIds = ids && idsArray.length > 0 ? idsArray : undefined;
     let deleteFilter = filter ?? {};
@@ -281,7 +290,7 @@ export class AzureCosmosDBVectorStore extends VectorStore {
    */
   async addVectors(
     vectors: number[][],
-    documents: Document[]
+    documents: DocumentInterface[]
   ): Promise<string[]> {
     const docs = vectors.map((embedding, idx) => ({
       [this.textKey]: documents[idx].pageContent,
@@ -299,7 +308,7 @@ export class AzureCosmosDBVectorStore extends VectorStore {
    * @param documents The documents to add.
    * @returns A promise that resolves to the added documents IDs.
    */
-  async addDocuments(documents: Document[]): Promise<string[]> {
+  async addDocuments(documents: DocumentInterface[]): Promise<string[]> {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
