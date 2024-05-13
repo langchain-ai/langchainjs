@@ -178,7 +178,7 @@ export class AgentExecutorIterator
         undefined,
         this.tags ?? this.config?.tags,
         this.metadata ?? this.config?.metadata,
-        this.runName ?? this.config?.runName,
+        this.runName ?? this.config?.runName
       );
     }
   }
