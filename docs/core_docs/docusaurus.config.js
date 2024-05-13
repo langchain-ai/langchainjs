@@ -134,7 +134,8 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       announcementBar: {
-        content: 'LangChain v0.2 is coming soon! Preview the new docs <a href="/v0.2/docs/introduction/">here</a>.',
+        content:
+          'LangChain v0.2 is coming soon! Preview the new docs <a href="/v0.2/docs/introduction/">here</a>.',
         isCloseable: true,
       },
       prism: {
