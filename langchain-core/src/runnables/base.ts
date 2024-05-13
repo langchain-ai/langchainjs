@@ -2111,7 +2111,8 @@ function isIterator(thing: unknown): thing is Generator {
   return (
     typeof thing === "object" &&
     thing !== null &&
-    typeof (thing as Generator)[Symbol.iterator] === "function"
+    typeof (thing as Generator)[Symbol.iterator] === "function" &&
+    typeof (thing as Generator).next === "function"
   );
 }
 
@@ -2119,7 +2120,8 @@ function isAsyncIterator(thing: unknown): thing is AsyncGenerator {
   return (
     typeof thing === "object" &&
     thing !== null &&
-    typeof (thing as AsyncGenerator)[Symbol.asyncIterator] === "function"
+    typeof (thing as AsyncGenerator)[Symbol.asyncIterator] === "function" &&
+    typeof (thing as AsyncGenerator).next === "function"
   );
 }
 
