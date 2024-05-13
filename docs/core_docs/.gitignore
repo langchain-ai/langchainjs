@@ -37,6 +37,10 @@ docs/expression_language/streaming.md
 docs/expression_language/streaming.mdx
 docs/use_cases/tool_use/human_in_the_loop.md
 docs/use_cases/tool_use/human_in_the_loop.mdx
+docs/use_cases/query_analysis/quickstart.md
+docs/use_cases/query_analysis/quickstart.mdx
+docs/use_cases/query_analysis/index.md
+docs/use_cases/query_analysis/index.mdx
 docs/use_cases/question_answering/streaming.md
 docs/use_cases/question_answering/streaming.mdx
 docs/use_cases/question_answering/sources.md
@@ -53,10 +57,6 @@ docs/use_cases/question_answering/citations.md
 docs/use_cases/question_answering/citations.mdx
 docs/use_cases/question_answering/chat_history.md
 docs/use_cases/question_answering/chat_history.mdx
-docs/use_cases/query_analysis/quickstart.md
-docs/use_cases/query_analysis/quickstart.mdx
-docs/use_cases/query_analysis/index.md
-docs/use_cases/query_analysis/index.mdx
 docs/use_cases/graph/semantic.md
 docs/use_cases/graph/semantic.mdx
 docs/use_cases/graph/quickstart.md
@@ -109,12 +109,12 @@ docs/use_cases/extraction/how_to/examples.md
 docs/use_cases/extraction/how_to/examples.mdx
 docs/modules/model_io/output_parsers/custom.md
 docs/modules/model_io/output_parsers/custom.mdx
-docs/modules/memory/chat_messages/custom.md
-docs/modules/memory/chat_messages/custom.mdx
 docs/modules/model_io/chat/response_metadata.md
 docs/modules/model_io/chat/response_metadata.mdx
 docs/modules/model_io/chat/function_calling.md
 docs/modules/model_io/chat/function_calling.mdx
+docs/modules/memory/chat_messages/custom.md
+docs/modules/memory/chat_messages/custom.mdx
 docs/modules/data_connection/vectorstores/custom.md
 docs/modules/data_connection/vectorstores/custom.mdx
 docs/modules/agents/agent_types/tool_calling.md

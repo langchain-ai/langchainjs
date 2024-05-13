@@ -2,7 +2,7 @@ import { test, expect } from "@jest/globals";
 import { stringify } from "yaml";
 import { z } from "zod";
 import { RunnableSequence } from "@langchain/core/runnables";
-import { Cohere } from "@langchain/community/llms/cohere";
+import { Cohere } from "@langchain/cohere";
 import { OpenAI, ChatOpenAI } from "@langchain/openai";
 
 import {
@@ -18,7 +18,7 @@ import { ConsoleCallbackHandler } from "@langchain/core/tracers/console";
 import { CommaSeparatedListOutputParser } from "@langchain/core/output_parsers";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { initializeAgentExecutorWithOptions } from "../../agents/initialize.js";
-import { Calculator } from "../../tools/calculator.js";
+import { Calculator } from "../../util/testing/tools/calculator.js";
 import { RequestsGetTool } from "../../tools/requests.js";
 import { JsonListKeysTool, JsonSpec } from "../../tools/json.js";
 import { AgentExecutor } from "../../agents/executor.js";
@@ -175,7 +175,7 @@ test("serialize + deserialize llm with optional deps", async () => {
   const llm3 = await load<Cohere>(
     str,
     { COHERE_API_KEY: "cohere-key" },
-    { "langchain/llms/cohere": import("../../llms/cohere.js") }
+    { "langchain/llms/cohere": import("@langchain/cohere") }
   );
   expect(llm3).toBeInstanceOf(Cohere);
   expect(JSON.stringify(llm3, null, 2)).toBe(str);

@@ -1,17 +1,15 @@
 import assert from "assert";
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import { LLMChain } from "langchain/chains";
-import { ChatPromptTemplate } from "langchain/prompts";
-import { loadPrompt } from "langchain/prompts/load";
-import { HNSWLib } from "langchain/vectorstores/hnswlib";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { Document } from "langchain/document";
+import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { Document } from "@langchain/core/documents";
 import { CSVLoader } from "langchain/document_loaders/fs/csv";
 
 // Test exports
 assert(typeof OpenAI === "function");
 assert(typeof LLMChain === "function");
-assert(typeof loadPrompt === "function");
 assert(typeof ChatPromptTemplate === "function");
 assert(typeof HNSWLib === "function");
 

@@ -1,8 +1,8 @@
 /* eslint-disable no-process-env */
 import { ChatOpenAI } from "@langchain/openai";
-import { SerpAPI } from "@langchain/community/tools/serpapi";
+import { SerpAPI } from "../../../util/testing/tools/serpapi.js";
+import { Calculator } from "../../../util/testing/tools/calculator.js";
 import { PlanAndExecuteAgentExecutor } from "../agent_executor.js";
-import { Calculator } from "../../../tools/calculator.js";
 
 test.skip("Run agent on a simple input", async () => {
   const tools = [new Calculator(), new SerpAPI()];

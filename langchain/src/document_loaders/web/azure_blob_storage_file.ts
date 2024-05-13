@@ -7,6 +7,12 @@ import {
   UnstructuredLoader,
   UnstructuredLoaderOptions,
 } from "../fs/unstructured.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/web/azure_blog_storage_file",
+  newPackageName: "@langchain/community",
+});
 
 /**
  * Interface representing the configuration for accessing a specific file

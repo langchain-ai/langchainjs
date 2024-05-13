@@ -1,6 +1,12 @@
 import { Document } from "@langchain/core/documents";
 import { BufferLoader } from "./buffer.js";
 import { formatDocumentsAsString } from "../../util/document.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/fs/pdf",
+  newPackageName: "@langchain/community",
+});
 
 /**
  * A class that extends the `BufferLoader` class. It represents a document

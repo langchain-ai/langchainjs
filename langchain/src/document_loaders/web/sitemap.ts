@@ -1,6 +1,12 @@
 import { Document, DocumentInterface } from "@langchain/core/documents";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { CheerioWebBaseLoader, WebBaseLoaderParams } from "./cheerio.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/web/sitemap",
+  newPackageName: "@langchain/community",
+});
 
 /**
  * Interface representing the parameters for initializing a SitemapLoader.

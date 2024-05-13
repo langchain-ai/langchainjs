@@ -3,7 +3,7 @@ import {
   Configurations,
   CredentialProvider,
 } from "@gomomento/sdk"; // `from "gomomento/sdk-web";` for browser/edge
-import { BufferMemory } from "langchain/memory";
+import { BufferMemory } from "langchain/memory/index";
 import { ChatOpenAI } from "@langchain/openai";
 import { ConversationChain } from "langchain/chains";
 import { MomentoChatMessageHistory } from "@langchain/community/stores/message/momento";

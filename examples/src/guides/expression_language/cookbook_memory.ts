@@ -1,4 +1,4 @@
-import { BufferMemory } from "langchain/memory";
+import { BufferMemory } from "langchain/memory/index";
 import {
   ChatPromptTemplate,
   MessagesPlaceholder,

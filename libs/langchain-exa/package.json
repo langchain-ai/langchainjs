@@ -39,7 +39,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1",
+    "@langchain/core": "~0.2.0-rc.0",
     "exa-js": "^1.0.12"
   },
   "devDependencies": {

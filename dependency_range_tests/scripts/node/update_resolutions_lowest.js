@@ -3,7 +3,7 @@ const semver = require("semver");
 
 const currentPackageJson = JSON.parse(fs.readFileSync("./package.json"));
 
-if (currentPackageJson.dependencies["@langchain/core"]) {
+if (currentPackageJson.dependencies["@langchain/core"] && !currentPackageJson.dependencies["@langchain/core"].includes("rc")) {
   const minVersion = semver.minVersion(
     currentPackageJson.dependencies["@langchain/core"]
   ).version;
@@ -17,7 +17,7 @@ if (currentPackageJson.dependencies["@langchain/core"]) {
   };
 }
 
-if (currentPackageJson.dependencies["@langchain/community"]) {
+if (currentPackageJson.dependencies["@langchain/community"] && !currentPackageJson.dependencies["@langchain/community"].includes("rc")) {
   const minVersion = semver.minVersion(
     currentPackageJson.dependencies["@langchain/community"]
   ).version;

@@ -11,6 +11,12 @@ import {
 } from "@langchain/core/utils/async_caller";
 import { BaseDocumentLoader } from "../base.js";
 import type { DocumentLoader } from "../base.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/web/cheerio",
+  newPackageName: "@langchain/community",
+});
 
 /**
  * Represents the parameters for configuring the CheerioWebBaseLoader. It

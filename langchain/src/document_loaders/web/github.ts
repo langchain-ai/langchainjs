@@ -10,6 +10,12 @@ import {
 import { BaseDocumentLoader } from "../base.js";
 import { UnknownHandling } from "../fs/directory.js";
 import { extname } from "../../util/extname.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/web/github",
+  newPackageName: "@langchain/community",
+});
 
 const extensions = /* #__PURE__ */ new Set(binaryExtensions);
 
