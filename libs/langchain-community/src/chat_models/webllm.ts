@@ -11,28 +11,26 @@ import { ChatCompletionMessageParam } from "@mlc-ai/web-llm/lib/openai_api_proto
 
 export interface WebLLMInputs extends BaseChatModelParams {
   appConfig?: webllm.AppConfig;
-  chatOpts?: webllm.ChatOptions;
+  chatOptions?: webllm.ChatOptions;
   temperature?: number;
-  modelRecord: webllm.ModelRecord;
+  model: string;
 }
 
 export interface WebLLMCallOptions extends BaseLanguageModelCallOptions {}
 
 /**
- *  To use this model you need to have the `@mlc-ai/web-llm` module installed.
- *  This can be installed using `npm install -S @mlc-ai/web-llm`
+ * To use this model you need to have the `@mlc-ai/web-llm` module installed.
+ * This can be installed using `npm install -S @mlc-ai/web-llm`.
+ * You can see a list of available model records from here:
+ * https://github.com/mlc-ai/web-llm/blob/eaaff6a7730b6403810bb4fd2bbc4af113c36050/examples/simple-chat/src/gh-config.js
  * @example
  * ```typescript
  * // Initialize the ChatWebLLM model with the model record.
  * const model = new ChatWebLLM({
- *   modelRecord: {
- *     "model_url": "https://huggingface.co/mlc-ai/phi-2-q4f32_1-MLC/resolve/main/",
- *     "local_id": "Phi2-q4f32_1",
- *     "model_lib_url": "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/phi-2/phi-2-q4f32_1-ctx2k-webgpu.wasm",
- *     "vram_required_MB": 4032.48,
- *     "low_resource_required": false,
+ *   model: "Phi2-q4f32_1",
+ *   chatOptions: {
+ *     temperature: 0.5,
  *   },
- *   temperature: 0.5,
  * });
  *
  * // Call the model with a message and await the response.
@@ -48,11 +46,11 @@ export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
 
   appConfig?: webllm.AppConfig;
 
-  chatOpts?: webllm.ChatOptions;
+  chatOptions?: webllm.ChatOptions;
 
   temperature?: number;
 
-  modelRecord: webllm.ModelRecord;
+  model: string;
 
   static lc_name() {
     return "ChatWebLLM";
@@ -61,8 +59,8 @@ export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
   constructor(inputs: WebLLMInputs) {
     super(inputs);
     this.appConfig = inputs.appConfig;
-    this.chatOpts = inputs.chatOpts;
-    this.modelRecord = inputs.modelRecord;
+    this.chatOptions = inputs.chatOptions;
+    this.model = inputs.model;
     this.temperature = inputs.temperature;
   }
 
@@ -75,7 +73,7 @@ export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
     if (progressCallback !== undefined) {
       this.engine.setInitProgressCallback(progressCallback);
     }
-    await this.reload(this.modelRecord.local_id, this.appConfig, this.chatOpts);
+    await this.reload(this.model, this.chatOptions, this.appConfig);
     this.engine.setInitProgressCallback(() => {});
   }
 
@@ -130,7 +128,6 @@ export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
         stream: true,
         messages: messagesInput,
         stop: options.stop,
-        temperature: this.temperature,
         logprobs: true,
       },
       {}
