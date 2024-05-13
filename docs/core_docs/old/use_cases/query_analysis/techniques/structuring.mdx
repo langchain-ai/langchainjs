@@ -1,0 +1,492 @@
+---
+sidebar_position: 3
+title: Structuring
+---
+
+# Structuring
+
+One of the most important steps in retrieval is turning a text input
+into the right search and filter parameters. This process of extracting
+structured parameters from an unstructured input is what we refer to as
+**query structuring**.
+
+To illustrate, let’s return to our example of a Q&A bot over the
+LangChain YouTube videos from the
+[Quickstart](../../../../../docs/use_cases/query_analysis/quickstart)
+and see what more complex structured queries might look like in this
+case.
+
+## Setup
+
+#### Install dependencies
+
+```mdx-code-block
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+import Npm2Yarn from "@theme/Npm2Yarn";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+<Npm2Yarn>
+  @langchain/core zod
+</Npm2Yarn>
+```
+
+#### Set environment variables
+
+```text
+# Optional, use LangSmith for best-in-class observability
+LANGSMITH_API_KEY=your-api-key
+LANGCHAIN_TRACING_V2=true
+```
+
+### Load example document
+
+Let’s say we loaded a document with the following metadata:
+
+```json
+{
+  "source": "pbAd8O1Lvm4",
+  "title": "Self-reflective RAG with LangGraph: Self-RAG and CRAG",
+  "description": "Unknown",
+  "view_count": 9006,
+  "thumbnail_url": "https://i.ytimg.com/vi/pbAd8O1Lvm4/hq720.jpg",
+  "publish_date": "2024-02-07 00:00:00",
+  "length": 1058,
+  "author": "LangChain"
+}
+```
+
+## Query schema
+
+In order to generate structured queries we first need to define our
+query schema. We can see that each document has a title, view count,
+publication date, and length in seconds. Let’s assume we’ve built an
+index that allows us to perform unstructured search over the contents
+and title of each document, and to use range filtering on view count,
+publication date, and length.
+
+To start we’ll create a schema with explicit min and max attributes for
+view count, publication date, and video length so that those can be
+filtered on. And we’ll add separate attributes for searches against the
+transcript contents versus the video title.
+
+We could alternatively create a more generic schema where instead of
+having one or more filter attributes for each filterable field, we have
+a single `filters` attribute that takes a list of (attribute, condition,
+value) tuples. We’ll demonstrate how to do this as well. Which approach
+works best depends on the complexity of your index. If you have many
+filterable fields then it may be better to have a single `filters` query
+attribute. If you have only a few filterable fields and/or there are
+fields that can only be filtered in very specific ways, it can be
+helpful to have separate query attributes for them, each with their own
+description.
+
+```typescript
+import { RunnableLambda } from "@langchain/core/runnables";
+import { z } from "zod";
+
+const tutorialSearch = z.object({
+  content_search: z
+    .string()
+    .describe("Similarity search query applied to video transcripts."),
+  title_search: z
+    .string()
+    .describe(
+      "Alternate version of the content search query to apply to video titles. Should be succinct and only include key words that could be in a video title."
+    ),
+  min_view_count: z
+    .number()
+    .optional()
+    .describe(
+      "Minimum view count filter, inclusive. Only use if explicitly specified."
+    ),
+  max_view_count: z
+    .number()
+    .optional()
+    .describe(
+      "Maximum view count filter, exclusive. Only use if explicitly specified."
+    ),
+  earliest_publish_date: z
+    .date()
+    .optional()
+    .describe(
+      "Earliest publish date filter, inclusive. Only use if explicitly specified."
+    ),
+  latest_publish_date: z
+    .date()
+    .optional()
+    .describe(
+      "Latest publish date filter, exclusive. Only use if explicitly specified."
+    ),
+  min_length_sec: z
+    .number()
+    .optional()
+    .describe(
+      "Minimum video length in seconds, inclusive. Only use if explicitly specified."
+    ),
+  max_length_sec: z
+    .number()
+    .optional()
+    .describe(
+      "Maximum video length in seconds, exclusive. Only use if explicitly specified."
+    ),
+});
+
+const prettyPrint = (obj: z.infer<typeof tutorialSearch>) => {
+  for (const field in obj) {
+    if (obj[field] !== undefined) {
+      console.log(`${field}: ${JSON.stringify(obj[field], null, 2)}`);
+    }
+  }
+};
+
+const prettyPrintRunnable = new RunnableLambda({
+  func: prettyPrint,
+}).withConfig({ runName: "prettyPrint" });
+```
+
+## Query generation
+
+To convert user questions to structured queries we’ll make use of a
+function-calling model. LangChain has some nice constructors that make
+it easy to specify a desired function call schema via a Zod schema:
+
+```mdx-code-block
+import ChatModelTabs from "@theme/ChatModelTabs";
+
+<ChatModelTabs customVarName="llm" />
+```
+
+```typescript
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+
+const system = `You are an expert at converting user questions into database queries.
+You have access to a database of tutorial videos about a software library for building LLM-powered applications.
+Given a question, return a database query optimized to retrieve the most relevant results.
+
+If there are acronyms or words you are not familiar with, do not try to rephrase them.`;
+
+const prompt = ChatPromptTemplate.fromMessages([
+  ["system", system],
+  ["human", "{question}"],
+]);
+const llmWithTools = llm.withStructuredOutput(tutorialSearch, {
+  name: "TutorialSearch",
+});
+const queryAnalyzer = prompt.pipe(llmWithTools);
+```
+
+Let’s try it out:
+
+```typescript
+await queryAnalyzer
+  .pipe(prettyPrintRunnable)
+  .invoke({ question: "rag from scratch" });
+```
+
+```text
+content_search: "rag from scratch"
+title_search: "rag from scratch"
+```
+
+```typescript
+await queryAnalyzer
+  .pipe(prettyPrintRunnable)
+  .invoke({ question: "videos on chat langchain published in 2023" });
+```
+
+```text
+content_search: "chat langchain"
+title_search: "2023"
+earliest_publish_date: "2023-01-01T00:00:00Z"
+latest_publish_date: "2024-01-01T00:00:00Z"
+```
+
+```typescript
+await queryAnalyzer.pipe(prettyPrintRunnable).invoke({
+  question:
+    "how to use multi-modal models in an agent, only videos under 5 minutes",
+});
+```
+
+```text
+content_search: "multi-modal models agent"
+title_search: "multi-modal models agent"
+max_length_sec: 300
+```
+
+## Alternative: Succinct schema
+
+If we have many filterable fields then having a verbose schema could
+harm performance, or may not even be possible given limitations on the
+size of function schemas. In these cases we can try more succinct query
+schemas that trade off some explicitness of direction for concision:
+
+```typescript
+import { z } from "zod";
+
+const Filter = z.object({
+  field: z.union([
+    z.literal("view_count"),
+    z.literal("publish_date"),
+    z.literal("length_sec"),
+  ]),
+  comparison: z.union([
+    z.literal("eq"),
+    z.literal("lt"),
+    z.literal("lte"),
+    z.literal("gt"),
+    z.literal("gte"),
+  ]),
+  value: z
+    .union([
+      z.number(),
+      z.string().refine((data) => !isNaN(Date.parse(data)), {
+        message:
+          "If field is publish_date then value must be a ISO-8601 format date",
+      }),
+    ])
+    .describe(
+      "If field is publish_date then value must be a ISO-8601 format date"
+    ),
+});
+
+const tutorialSearch = z.object({
+  content_search: z
+    .string()
+    .describe("Similarity search query applied to video transcripts."),
+  title_search: z
+    .string()
+    .describe(
+      "Alternate version of the content search query to apply to video titles. " +
+        "Should be succinct and only include key words that could be in a video title."
+    ),
+  filters: z
+    .array(Filter)
+    .default([])
+    .describe(
+      "Filters over specific fields. Final condition is a logical conjunction of all filters."
+    ),
+});
+```
+
+```typescript
+const llmWithTools = llm.withStructuredOutput(tutorialSearch, {
+  name: "TutorialSearch",
+});
+const queryAnalyzer = prompt.pipe(llmWithTools);
+```
+
+Let’s try it out:
+
+```typescript
+await queryAnalyzer
+  .pipe(prettyPrintRunnable)
+  .invoke({ question: "rag from scratch" });
+```
+
+```text
+content_search: "rag from scratch"
+title_search: "rag"
+filters: []
+```
+
+```typescript
+await queryAnalyzer
+  .pipe(prettyPrintRunnable)
+  .invoke({ question: "videos on chat langchain published in 2023" });
+```
+
+```text
+content_search: "chat langchain"
+title_search: "chat langchain"
+filters: [
+  {
+    "field": "publish_date",
+    "comparison": "gte",
+    "value": "2023-01-01"
+  }
+]
+```
+
+```typescript
+await queryAnalyzer.pipe(prettyPrintRunnable).invoke({
+  question:
+    "how to use multi-modal models in an agent, only videos under 5 minutes and with over 276 views",
+});
+```
+
+```text
+content_search: "multi-modal models in an agent"
+title_search: "multi-modal models"
+filters: [
+  {
+    "field": "length_sec",
+    "comparison": "lt",
+    "value": 300
+  },
+  {
+    "field": "view_count",
+    "comparison": "gte",
+    "value": 276
+  }
+]
+```
+
+We can see that the analyzer handles integers well but struggles with
+date ranges. We can try adjusting our schema description and/or our
+prompt to correct this:
+
+```typescript
+import { z } from "zod";
+
+const tutorialSearch = z.object({
+  content_search: z
+    .string()
+    .describe("Similarity search query applied to video transcripts."),
+  title_search: z
+    .string()
+    .describe(
+      "Alternate version of the content search query to apply to video titles. " +
+        "Should be succinct and only include key words that could be in a video title."
+    ),
+  filters: z
+    .array(Filter)
+    .default([])
+    .describe(
+      "Filters over specific fields. Final condition is a logical conjunction of all filters. " +
+        "If a time period longer than one day is specified then it must result in filters that define a date range. " +
+        `Keep in mind the current date is ${
+          new Date().toISOString().split("T")[0]
+        }.`
+    ),
+});
+```
+
+```typescript
+const llmWithTools = llm.withStructuredOutput(tutorialSearch, {
+  name: "TutorialSearch",
+});
+const queryAnalyzer = prompt.pipe(llmWithTools);
+```
+
+```typescript
+await queryAnalyzer
+  .pipe(prettyPrintRunnable)
+  .invoke({ question: "videos on chat langchain published in 2023" });
+```
+
+```text
+content_search: "chat langchain"
+title_search: "chat langchain"
+filters: [
+  {
+    "field": "publish_date",
+    "comparison": "eq",
+    "value": "2023"
+  }
+]
+```
+
+This seems to work!
+
+## Sorting: Going beyond search
+
+With certain indexes searching by field isn’t the only way to retrieve
+results — we can also sort documents by a field and retrieve the top
+sorted results. With structured querying this is easy to accomodate by
+adding separate query fields that specify how to sort results.
+
+```typescript
+const tutorialSearch = z.object({
+  content_search: z
+    .string()
+    .default("")
+    .describe("Similarity search query applied to video transcripts."),
+  title_search: z
+    .string()
+    .default("")
+    .describe(
+      "Alternate version of the content search query to apply to video titles. " +
+        "Should be succinct and only include key words that could be in a video title."
+    ),
+  min_view_count: z
+    .number()
+    .optional()
+    .describe("Minimum view count filter, inclusive."),
+  max_view_count: z
+    .number()
+    .optional()
+    .describe("Maximum view count filter, exclusive."),
+  earliest_publish_date: z
+    .date()
+    .optional()
+    .describe("Earliest publish date filter, inclusive."),
+  latest_publish_date: z
+    .date()
+    .optional()
+    .describe("Latest publish date filter, exclusive."),
+  min_length_sec: z
+    .number()
+    .optional()
+    .describe("Minimum video length in seconds, inclusive."),
+  max_length_sec: z
+    .number()
+    .optional()
+    .describe("Maximum video length in seconds, exclusive."),
+  sort_by: z
+    .enum(["relevance", "view_count", "publish_date", "length"])
+    .default("relevance")
+    .describe("Attribute to sort by."),
+  sort_order: z
+    .enum(["ascending", "descending"])
+    .default("descending")
+    .describe("Whether to sort in ascending or descending order."),
+});
+```
+
+```typescript
+const llmWithTools = llm.withStructuredOutput(tutorialSearch, {
+  name: "TutorialSearch",
+});
+const queryAnalyzer = prompt.pipe(llmWithTools);
+```
+
+```typescript
+await queryAnalyzer
+  .pipe(prettyPrintRunnable)
+  .invoke({ question: "What has LangChain released lately?" });
+```
+
+```text
+title_search: "LangChain"
+sort_by: "publish_date"
+sort_order: "descending"
+```
+
+```typescript
+await queryAnalyzer
+  .pipe(prettyPrintRunnable)
+  .invoke({ question: "What are the longest videos?" });
+```
+
+```text
+sort_by: "length"
+sort_order: "descending"
+```
+
+We can even support searching and sorting together. This might look like
+first retrieving all results above a relevancy threshold and then
+sorting them according to the specified attribute:
+
+```typescript
+await queryAnalyzer
+  .pipe(prettyPrintRunnable)
+  .invoke({ question: "What are the shortest videos about agents?" });
+```
+
+```text
+content_search: "agents"
+sort_by: "length"
+sort_order: "ascending"
+```

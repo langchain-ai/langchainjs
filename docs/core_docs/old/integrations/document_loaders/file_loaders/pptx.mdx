@@ -1,0 +1,19 @@
+# PPTX files
+
+This example goes over how to load data from PPTX files. By default, one document will be created for all pages in the PPTX file.
+
+## Setup
+
+```bash npm2yarn
+npm install officeparser
+```
+
+## Usage, one document per page
+
+```typescript
+import { PPTXLoader } from "langchain/document_loaders/fs/pptx";
+
+const loader = new PPTXLoader("src/document_loaders/example_data/example.pptx");
+
+const docs = await loader.load();
+```

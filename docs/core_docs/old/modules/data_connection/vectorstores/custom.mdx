@@ -1,0 +1,224 @@
+---
+hide_table_of_contents: true
+title: Custom vectorstores
+---
+
+# Custom vectorstores
+
+If you want to interact with a vectorstore that is not already present
+as an [integration](../../../../../docs/integrations/vectorstores), you
+can extend the [`VectorStore`
+class](https://api.js.langchain.com/classes/langchain_core_vectorstores.VectorStore.html).
+
+This involves overriding a few methods:
+
+- `FilterType`, if your vectorstore supports filtering by metadata,
+  you should declare the type of the filter required.
+- `addDocuments`, which embeds and adds LangChain documents to
+  storage. This is a convenience method that should generally use the
+  `embeddings` passed into the constructor to embed the document
+  content, then call `addVectors`.
+- `addVectors`, which is responsible for saving embedded vectors,
+  document content, and metadata to the backing store.
+- `similaritySearchVectorWithScore`, which searches for vectors within
+  the store by similarity to an input vector, and returns a tuple of
+  the most relevant documents and a score.
+- `_vectorstoreType`, which returns an identifying string for the
+  class. Used for tracing and type-checking.
+- `fromTexts` and `fromDocuments`, which are convenience static
+  methods for initializing a vectorstore from data.
+
+There are a few optional methods too:
+
+- `delete`, which deletes vectors and their associated metadata from
+  the backing store based on arbitrary parameters.
+- `maxMarginalRelevanceSearch`, an alternative search mode that
+  increases the number of retrieved vectors, reranks them to optimize
+  for diversity, then returns top results. This can help reduce the
+  amount of redundancy in returned results.
+
+A few notes:
+
+- Different databases provide varying levels of support for storing
+  raw content/extra metadata fields. Some higher level retrieval
+  abstractions like [multi-vector
+  retrieval](../../../../../docs/modules/data_connection/retrievers/multi-vector-retriever)
+  in LangChain rely on the ability to set arbitrary metadata on stored
+  vectors.
+- Generally, search type arguments that are not used directly to
+  filter returned vectors by associated metadata should be passed into
+  the constructor.
+
+Here is an example of an in-memory vectorstore with no persistence that
+uses cosine distance:
+
+```typescript
+import { VectorStore } from "@langchain/core/vectorstores";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
+import { Document } from "@langchain/core/documents";
+
+import { similarity as ml_distance_similarity } from "ml-distance";
+
+interface InMemoryVector {
+  content: string;
+  embedding: number[];
+  metadata: Record<string, any>;
+}
+
+export interface CustomVectorStoreArgs {}
+
+export class CustomVectorStore extends VectorStore {
+  declare FilterType: (doc: Document) => boolean;
+
+  memoryVectors: InMemoryVector[] = [];
+
+  _vectorstoreType(): string {
+    return "custom";
+  }
+
+  constructor(
+    embeddings: EmbeddingsInterface,
+    fields: CustomVectorStoreArgs = {}
+  ) {
+    super(embeddings, fields);
+  }
+
+  async addDocuments(documents: Document[]): Promise<void> {
+    const texts = documents.map(({ pageContent }) => pageContent);
+    return this.addVectors(
+      await this.embeddings.embedDocuments(texts),
+      documents
+    );
+  }
+
+  async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
+    const memoryVectors = vectors.map((embedding, idx) => ({
+      content: documents[idx].pageContent,
+      embedding,
+      metadata: documents[idx].metadata,
+    }));
+
+    this.memoryVectors = this.memoryVectors.concat(memoryVectors);
+  }
+
+  async similaritySearchVectorWithScore(
+    query: number[],
+    k: number,
+    filter?: this["FilterType"]
+  ): Promise<[Document, number][]> {
+    const filterFunction = (memoryVector: InMemoryVector) => {
+      if (!filter) {
+        return true;
+      }
+
+      const doc = new Document({
+        metadata: memoryVector.metadata,
+        pageContent: memoryVector.content,
+      });
+      return filter(doc);
+    };
+    const filteredMemoryVectors = this.memoryVectors.filter(filterFunction);
+    const searches = filteredMemoryVectors
+      .map((vector, index) => ({
+        similarity: ml_distance_similarity.cosine(query, vector.embedding),
+        index,
+      }))
+      .sort((a, b) => (a.similarity > b.similarity ? -1 : 0))
+      .slice(0, k);
+
+    const result: [Document, number][] = searches.map((search) => [
+      new Document({
+        metadata: filteredMemoryVectors[search.index].metadata,
+        pageContent: filteredMemoryVectors[search.index].content,
+      }),
+      search.similarity,
+    ]);
+
+    return result;
+  }
+
+  static async fromTexts(
+    texts: string[],
+    metadatas: object[] | object,
+    embeddings: EmbeddingsInterface,
+    dbConfig?: CustomVectorStoreArgs
+  ): Promise<CustomVectorStore> {
+    const docs: Document[] = [];
+    for (let i = 0; i < texts.length; i += 1) {
+      const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
+      const newDoc = new Document({
+        pageContent: texts[i],
+        metadata,
+      });
+      docs.push(newDoc);
+    }
+    return this.fromDocuments(docs, embeddings, dbConfig);
+  }
+
+  static async fromDocuments(
+    docs: Document[],
+    embeddings: EmbeddingsInterface,
+    dbConfig?: CustomVectorStoreArgs
+  ): Promise<CustomVectorStore> {
+    const instance = new this(embeddings, dbConfig);
+    await instance.addDocuments(docs);
+    return instance;
+  }
+}
+```
+
+Then, we can call this vectorstore directly:
+
+```typescript
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { Document } from "@langchain/core/documents";
+
+const vectorstore = new CustomVectorStore(new OpenAIEmbeddings());
+
+await vectorstore.addDocuments([
+  new Document({
+    pageContent: "Mitochondria is the powerhouse of the cell",
+    metadata: { id: 1 },
+  }),
+  new Document({
+    pageContent: "Buildings are made of brick",
+    metadata: { id: 2 },
+  }),
+]);
+
+await vectorstore.similaritySearch("What is the powerhouse of the cell?");
+```
+
+```text
+[
+  Document {
+    pageContent: "Mitochondria is the powerhouse of the cell",
+    metadata: { id: 1 }
+  },
+  Document {
+    pageContent: "Buildings are made of brick",
+    metadata: { id: 2 }
+  }
+]
+```
+
+Or, we can interact with the vectorstore as a retriever:
+
+```typescript
+const retriever = vectorstore.asRetriever();
+
+await retriever.invoke("What is the powerhouse of the cell?");
+```
+
+```text
+[
+  Document {
+    pageContent: "Mitochondria is the powerhouse of the cell",
+    metadata: { id: 1 }
+  },
+  Document {
+    pageContent: "Buildings are made of brick",
+    metadata: { id: 2 }
+  }
+]
+```

@@ -1,0 +1,132 @@
+---
+title: Response metadata
+---
+
+# Response metadata
+
+Many model providers include some metadata in their chat generation
+responses. This metadata can be accessed via the
+`AIMessage.response_metadata` attribute. Depending on the model provider
+and model configuration, this can contain information like [token
+counts](../../../../../docs/modules/model_io/chat/token_usage_tracking/)
+and more.
+
+Here’s what the response metadata looks like for a few different
+providers:
+
+## OpenAI
+
+```typescript
+import { ChatOpenAI } from "@langchain/openai";
+
+const chatModel = new ChatOpenAI({ model: "gpt-4-turbo" });
+const message = await chatModel.invoke([
+  ["human", "What's the oldest known example of cuneiform"],
+]);
+
+console.log(message.response_metadata);
+```
+
+```text
+{
+  tokenUsage: { completionTokens: 164, promptTokens: 17, totalTokens: 181 },
+  finish_reason: "stop"
+}
+```
+
+## Anthropic
+
+```typescript
+import { ChatAnthropic } from "@langchain/anthropic";
+
+const chatModel = new ChatAnthropic({ model: "claude-3-sonnet-20240229" });
+const message = await chatModel.invoke([
+  ["human", "What's the oldest known example of cuneiform"],
+]);
+
+console.log(message.response_metadata);
+```
+
+```text
+{
+  id: "msg_01K8kC9wskG6qsSGRmY7b3kj",
+  model: "claude-3-sonnet-20240229",
+  stop_sequence: null,
+  usage: { input_tokens: 17, output_tokens: 355 },
+  stop_reason: "end_turn"
+}
+```
+
+## Google VertexAI
+
+```typescript
+import { ChatVertexAI } from "@langchain/google-vertexai-web";
+
+const chatModel = new ChatVertexAI({ model: "gemini-pro" });
+const message = await chatModel.invoke([
+  ["human", "What's the oldest known example of cuneiform"],
+]);
+
+console.log(message.response_metadata);
+```
+
+```text
+{
+  usage_metadata: {
+    prompt_token_count: undefined,
+    candidates_token_count: undefined,
+    total_token_count: undefined
+  },
+  safety_ratings: [
+    {
+      category: "HARM_CATEGORY_HATE_SPEECH",
+      probability: "NEGLIGIBLE",
+      probability_score: 0.027480692,
+      severity: "HARM_SEVERITY_NEGLIGIBLE",
+      severity_score: 0.073430054
+    },
+    {
+      category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+      probability: "NEGLIGIBLE",
+      probability_score: 0.055412795,
+      severity: "HARM_SEVERITY_NEGLIGIBLE",
+      severity_score: 0.112405084
+    },
+    {
+      category: "HARM_CATEGORY_HARASSMENT",
+      probability: "NEGLIGIBLE",
+      probability_score: 0.055720285,
+      severity: "HARM_SEVERITY_NEGLIGIBLE",
+      severity_score: 0.020844316
+    },
+    {
+      category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+      probability: "NEGLIGIBLE",
+      probability_score: 0.05223086,
+      severity: "HARM_SEVERITY_NEGLIGIBLE",
+      severity_score: 0.14891148
+    }
+  ],
+  finish_reason: undefined
+}
+```
+
+## MistralAI
+
+```typescript
+import { ChatMistralAI } from "@langchain/mistralai";
+
+const chatModel = new ChatMistralAI({ model: "mistral-tiny" });
+const message = await chatModel.invoke([
+  ["human", "What's the oldest known example of cuneiform"],
+]);
+
+console.log(message.response_metadata);
+```
+
+```text
+{
+  tokenUsage: { completionTokens: 166, promptTokens: 19, totalTokens: 185 },
+  finish_reason: "stop"
+}
+```
