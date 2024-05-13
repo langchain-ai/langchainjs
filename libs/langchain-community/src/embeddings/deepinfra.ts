@@ -1,4 +1,4 @@
-import axios, {AxiosInstance} from "axios";
+import axios, {AxiosInstance, AxiosResponse} from "axios";
 
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
@@ -54,6 +54,25 @@ export interface DeepInfraEmbeddingsParams extends EmbeddingsParams {
 }
 
 /**
+ * Response from the DeepInfra embeddings API.
+ */
+export interface DeepInfraEmbeddingsResponse {
+  /**
+   * The embeddings generated for the input texts.
+   */
+  embeddings: number[][];
+  /**
+   * The number of tokens in the input texts.
+   */
+  input_tokens: number;
+  /**
+   * The status of the inference.
+   */
+  request_id?: string;
+}
+
+
+/**
  * A class for generating embeddings using the Cohere API.
  * @example
  * ```typescript
@@ -72,11 +91,11 @@ export class DeepInfraEmbeddings
 
   private client: AxiosInstance;
 
-  private readonly apiToken: string;
+  apiToken: string;
 
-  private readonly batchSize: number;
+  batchSize: number;
 
-  private readonly modelName: string;
+  modelName: string;
 
 
   /**
@@ -126,17 +145,17 @@ export class DeepInfraEmbeddings
 
     const batchResponses = await Promise.all(batchRequests);
 
-    const embeddings: number[][] = [];
+    const out: number[][] = [];
 
     for (let i = 0; i < batchResponses.length; i += 1) {
       const batch = batches[i];
-      const { body: batchResponse } = batchResponses[i];
+      const { embeddings } = batchResponses[i];
       for (let j = 0; j < batch.length; j += 1) {
-        embeddings.push(batchResponse.embeddings[j]);
+        out.push(embeddings[j]);
       }
     }
 
-    return embeddings;
+    return out;
   }
 
   /**
@@ -147,10 +166,10 @@ export class DeepInfraEmbeddings
   async embedQuery(text: string): Promise<number[]> {
     await this.maybeInitClient();
 
-    const { body } = await this.embeddingWithRetry({
+    const {embeddings} = await this.embeddingWithRetry({
       inputs: [text],
     });
-    return body.embeddings[0];
+    return embeddings[0];
   }
 
   /**
@@ -160,9 +179,10 @@ export class DeepInfraEmbeddings
    */
   private async embeddingWithRetry(
     request: DeepInfraEmbeddingsRequest
-  ) {
+  ): Promise<DeepInfraEmbeddingsResponse> {
     this.maybeInitClient();
-    return this.caller.call(this.client.post.bind(this.client,""), request);
+    const response = await this.caller.call(this.client.post.bind(this.client,""), request);
+    return (response as AxiosResponse<DeepInfraEmbeddingsResponse>).data;
   }
 
   /**
@@ -171,7 +191,7 @@ export class DeepInfraEmbeddings
   private maybeInitClient() {
     if (!this.client) {
 
-      this.client = axios.create({
+      this.client = axios.default.create({
         baseURL: `https://api.deepinfra.com/v1/inference/${this.modelName}`,
         headers: {
           Authorization: `Bearer ${this.apiToken}`,
@@ -182,8 +202,7 @@ export class DeepInfraEmbeddings
   }
 
   /** @ignore */
-  static async imports(): Promise<{
-  }> {
+  static async imports(): Promise<{}> {
     // Axios has already been defined as dependency in the package.json
     // so we can use it here without importing it.
     return {};
