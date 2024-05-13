@@ -46,3 +46,9 @@ docs/api_refs/typedoc.json
 
 .tool-versions
 credentials.json
+
+# Auto-generated during cjs build
+# Should always be removed, adding this as a fallback.
+**/**/src/package.json
+langchain/src/package.json
+langchain-core/src/package.json

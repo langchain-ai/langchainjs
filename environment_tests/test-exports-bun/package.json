@@ -28,6 +28,6 @@
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",
     "@types/node": "^18.15.11",
-    "typescript": "^5.0.0"
+    "typescript": "^5.4.5"
   }
 }

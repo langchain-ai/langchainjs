@@ -1,7 +1,7 @@
 import { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
 import { Tool, type ToolParams } from "@langchain/core/tools";
-import Exa, { ContentsOptions, RegularSearchOptions } from "exa-js";
-
+import { ContentsOptions, RegularSearchOptions } from "exa-js";
+import * as Exa from "exa-js";
 /**
  * Options for the ExaSearchResults tool.
  */

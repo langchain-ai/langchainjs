@@ -68,7 +68,8 @@
     "prettier": "^2.8.3",
     "release-it": "^15.10.1",
     "rimraf": "^5.0.1",
-    "ts-jest": "^29.1.0"
+    "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.2"
   },
   "publishConfig": {
     "access": "public"
@@ -82,15 +83,6 @@
       },
       "import": "./index.js",
       "require": "./index.cjs"
-    },
-    "./build": {
-      "types": {
-        "import": "./build.d.ts",
-        "require": "./build.d.cts",
-        "default": "./build.d.ts"
-      },
-      "import": "./build.js",
-      "require": "./build.cjs"
     },
     "./migrations": {
       "types": {
@@ -118,10 +110,6 @@
     "index.js",
     "index.d.ts",
     "index.d.cts",
-    "build.cjs",
-    "build.js",
-    "build.d.ts",
-    "build.d.cts",
     "migrations.cjs",
     "migrations.js",
     "migrations.d.ts",

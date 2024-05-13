@@ -165,7 +165,7 @@ class CallbackManagerRunTree extends RunTree {
     this.callbackManager = callbackManager;
   }
 
-  async createChild(config: RunTreeConfig): Promise<CallbackManagerRunTree> {
+  createChild(config: RunTreeConfig): CallbackManagerRunTree {
     const child = new CallbackManagerRunTree(
       {
         ...config,

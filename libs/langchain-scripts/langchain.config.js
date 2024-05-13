@@ -13,7 +13,6 @@ export const config = {
   internals: [/node\:/],
   entrypoints: {
     index: "index",
-    build: "build",
     migrations: "migrations/index",
     check_broken_links: "check_broken_links",
   },
