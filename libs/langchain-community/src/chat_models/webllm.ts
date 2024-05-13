@@ -111,7 +111,7 @@ export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
           content: text,
           additional_kwargs: {
             logprobs: chunk.choices[0].logprobs,
-            finish_reason: chunk.choices[0].finish_reason
+            finish_reason: chunk.choices[0].finish_reason,
           },
         }),
       });

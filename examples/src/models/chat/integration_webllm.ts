@@ -39,3 +39,5 @@ const model = new ChatWebLLM({
 const response = await model.invoke([
   new HumanMessage({ content: "My name is John" }),
 ]);
+
+console.log(response);

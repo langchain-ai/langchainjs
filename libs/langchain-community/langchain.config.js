@@ -329,6 +329,7 @@ export const config = {
     "chat_models/premai",
     "chat_models/iflytek_xinghuo",
     "chat_models/iflytek_xinghuo/web",
+    "chat_models/webllm",
     "chat_models/zhipuai",
     "retrievers/amazon_kendra",
     "retrievers/amazon_knowledge_base",
