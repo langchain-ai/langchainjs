@@ -1,0 +1,42 @@
+---
+sidebar_class_name: web-only
+---
+
+# WebLLM
+
+:::tip Compatibility
+Only available in web environments.
+:::
+
+You can run LLMs directly in your web browser using LangChain's [WebLLM](https://webllm.mlc.ai) integration.
+
+## Setup
+
+You'll need to install the [WebLLM SDK](https://www.npmjs.com/package/@mlc-ai/web-llm) module to communicate with your local model.
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install -S @mlc-ai/web-llm @langchain/community
+```
+
+## Usage
+
+Note that the first time a model is called, WebLLM will download the full weights for that model. This can be multiple gigabytes, and may not be possible for all end-users of your application depending on their internet connection and computer specs.
+While the browser will cache future invocations of that model, we recommend using the smallest possible model you can.
+
+We also recommend using a [separate web worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) when invoking and loading your models to
+not block execution.
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/models/chat/integration_webllm.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
+Streaming is also supported.
+
+## Example
+
+For a full end-to-end example, check out [this project](https://github.com/jacoblee93/fully-local-pdf-chatbot).

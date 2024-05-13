@@ -82,6 +82,7 @@
     "@jest/globals": "^29.5.0",
     "@langchain/scripts": "~0.0",
     "@mendable/firecrawl-js": "^0.0.13",
+    "@mlc-ai/web-llm": "^0.2.35",
     "@mozilla/readability": "^0.4.4",
     "@neondatabase/serverless": "^0.9.1",
     "@notionhq/client": "^2.2.10",
@@ -233,6 +234,7 @@
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
     "@mendable/firecrawl-js": "^0.0.13",
+    "@mlc-ai/web-llm": "^0.2.35",
     "@mozilla/readability": "*",
     "@neondatabase/serverless": "*",
     "@notionhq/client": "^2.2.10",
@@ -396,6 +398,9 @@
       "optional": true
     },
     "@mendable/firecrawl-js": {
+      "optional": true
+    },
+    "@mlc-ai/web-llm": {
       "optional": true
     },
     "@mozilla/readability": {
@@ -1882,6 +1887,15 @@
       "import": "./chat_models/togetherai.js",
       "require": "./chat_models/togetherai.cjs"
     },
+    "./chat_models/webllm": {
+      "types": {
+        "import": "./chat_models/webllm.d.ts",
+        "require": "./chat_models/webllm.d.cts",
+        "default": "./chat_models/webllm.d.ts"
+      },
+      "import": "./chat_models/webllm.js",
+      "require": "./chat_models/webllm.cjs"
+    },
     "./chat_models/yandex": {
       "types": {
         "import": "./chat_models/yandex.d.ts",
@@ -3362,6 +3376,10 @@
     "chat_models/togetherai.js",
     "chat_models/togetherai.d.ts",
     "chat_models/togetherai.d.cts",
+    "chat_models/webllm.cjs",
+    "chat_models/webllm.js",
+    "chat_models/webllm.d.ts",
+    "chat_models/webllm.d.cts",
     "chat_models/yandex.cjs",
     "chat_models/yandex.js",
     "chat_models/yandex.d.ts",
