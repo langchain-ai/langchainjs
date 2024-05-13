@@ -33,3 +33,7 @@ services:
       - POSTGRES_PASSWORD=ChangeMe
       - POSTGRES_USER=myuser
       - POSTGRES_DB=api
+  qdrant:
+    image: qdrant/qdrant:v1.9.1
+    ports:
+      - 6333:6333

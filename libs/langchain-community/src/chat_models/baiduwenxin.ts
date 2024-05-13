@@ -283,7 +283,7 @@ export class ChatBaiduWenxin
       "ERNIE-3.5-8K-Preview": "ernie-3.5-8k-preview",
       "ERNIE-Lite-8K": "eb-instant",
       "ERNIE-Tiny-8K": "ernie-tiny-8k",
-      "ERNIE-Character-8K": "ernie-char-8",
+      "ERNIE-Character-8K": "ernie-char-8k",
       "ERNIE Speed-AppBuilder": "ai_apaas",
     };
     if (this.model in models) {

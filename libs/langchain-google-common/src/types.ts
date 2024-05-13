@@ -47,6 +47,8 @@ export interface GoogleAISafetySetting {
   threshold: string;
 }
 
+export type GoogleAIResponseMimeType = "text/plain" | "application/json";
+
 export interface GoogleAIModelParams {
   /** Model to use */
   model?: string;
@@ -91,6 +93,17 @@ export interface GoogleAIModelParams {
   safetySettings?: GoogleAISafetySetting[];
 
   convertSystemMessageToHumanContent?: boolean;
+
+  /**
+   * Available for `gemini-1.5-pro`.
+   * The output format of the generated candidate text.
+   * Supported MIME types:
+   *  - `text/plain`: Text output.
+   *  - `application/json`: JSON response in the candidates.
+   *
+   * @default "text/plain"
+   */
+  responseMimeType?: GoogleAIResponseMimeType;
 }
 
 /**
@@ -218,6 +231,7 @@ export interface GeminiGenerationConfig {
   temperature?: number;
   topP?: number;
   topK?: number;
+  responseMimeType?: GoogleAIResponseMimeType;
 }
 
 export interface GeminiRequest {
@@ -273,4 +287,14 @@ export interface GoogleAISafetyHandler {
 
 export interface GoogleAISafetyParams {
   safetyHandler?: GoogleAISafetyHandler;
+}
+
+export type GeminiJsonSchema = Record<string, unknown> & {
+  properties?: Record<string, GeminiJsonSchema>;
+  type: GeminiFunctionSchemaType;
+};
+
+export interface GeminiJsonSchemaDirty extends GeminiJsonSchema {
+  properties?: Record<string, GeminiJsonSchemaDirty>;
+  additionalProperties?: boolean;
 }

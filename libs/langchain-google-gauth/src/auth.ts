@@ -8,12 +8,19 @@ import {
 } from "@langchain/google-common";
 import { GoogleAuth, GoogleAuthOptions } from "google-auth-library";
 
-class NodeJsonStream extends JsonStream {
+export class NodeJsonStream extends JsonStream {
   constructor(data: Readable) {
     super();
-
-    data.on("data", (data) => this.appendBuffer(data.toString()));
-    data.on("end", () => this.closeBuffer());
+    const decoder = new TextDecoder("utf-8");
+    data.on("data", (data) => {
+      const text = decoder.decode(data, { stream: true });
+      this.appendBuffer(text);
+    });
+    data.on("end", () => {
+      const rest = decoder.decode();
+      this.appendBuffer(rest);
+      this.closeBuffer();
+    });
   }
 }
 
