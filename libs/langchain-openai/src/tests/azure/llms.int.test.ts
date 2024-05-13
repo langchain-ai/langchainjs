@@ -10,7 +10,7 @@ import {
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { AzureOpenAI } from "../../azure/llms.js";
 
-test("Test OpenAI", async () => {
+test("Test Azure OpenAI invoke", async () => {
   const model = new AzureOpenAI({
     maxTokens: 5,
     modelName: "gpt-3.5-turbo-instruct",
@@ -19,7 +19,7 @@ test("Test OpenAI", async () => {
   console.log({ res });
 });
 
-test("Test OpenAI with stop", async () => {
+test("Test Azure OpenAI call", async () => {
   const model = new AzureOpenAI({
     maxTokens: 5,
     modelName: "gpt-3.5-turbo-instruct",
@@ -28,7 +28,7 @@ test("Test OpenAI with stop", async () => {
   console.log({ res });
 });
 
-test("Test OpenAI with stop in object", async () => {
+test("Test Azure OpenAI with stop in object", async () => {
   const model = new AzureOpenAI({
     maxTokens: 5,
     modelName: "gpt-3.5-turbo-instruct",
@@ -37,7 +37,7 @@ test("Test OpenAI with stop in object", async () => {
   console.log({ res });
 });
 
-test("Test OpenAI with timeout in call options", async () => {
+test("Test Azure OpenAI with timeout in call options", async () => {
   const model = new AzureOpenAI({
     maxTokens: 5,
     modelName: "gpt-3.5-turbo-instruct",
@@ -49,7 +49,7 @@ test("Test OpenAI with timeout in call options", async () => {
   ).rejects.toThrow();
 }, 5000);
 
-test("Test OpenAI with timeout in call options and node adapter", async () => {
+test("Test Azure OpenAI with timeout in call options and node adapter", async () => {
   const model = new AzureOpenAI({
     maxTokens: 5,
     modelName: "gpt-3.5-turbo-instruct",
@@ -61,7 +61,7 @@ test("Test OpenAI with timeout in call options and node adapter", async () => {
   ).rejects.toThrow();
 }, 5000);
 
-test("Test OpenAI with signal in call options", async () => {
+test("Test Azure OpenAI with signal in call options", async () => {
   const model = new AzureOpenAI({
     maxTokens: 5,
     modelName: "gpt-3.5-turbo-instruct",
@@ -78,7 +78,7 @@ test("Test OpenAI with signal in call options", async () => {
   }).rejects.toThrow();
 }, 5000);
 
-test("Test OpenAI with signal in call options and node adapter", async () => {
+test("Test Azure OpenAI with signal in call options and node adapter", async () => {
   const model = new AzureOpenAI({
     maxTokens: 5,
     modelName: "gpt-3.5-turbo-instruct",
@@ -95,7 +95,7 @@ test("Test OpenAI with signal in call options and node adapter", async () => {
   }).rejects.toThrow();
 }, 5000);
 
-test("Test OpenAI with concurrency == 1", async () => {
+test("Test Azure OpenAI with concurrency == 1", async () => {
   const model = new AzureOpenAI({
     maxTokens: 5,
     modelName: "gpt-3.5-turbo-instruct",
@@ -108,7 +108,7 @@ test("Test OpenAI with concurrency == 1", async () => {
   console.log({ res });
 });
 
-test("Test OpenAI with maxTokens -1", async () => {
+test("Test Azure OpenAI with maxTokens -1", async () => {
   const model = new AzureOpenAI({
     maxTokens: -1,
     modelName: "gpt-3.5-turbo-instruct",
@@ -117,7 +117,7 @@ test("Test OpenAI with maxTokens -1", async () => {
   console.log({ res });
 });
 
-test("Test OpenAI with instruct model returns OpenAI", async () => {
+test("Test Azure OpenAI with model name", async () => {
   const model = new AzureOpenAI({ modelName: "gpt-3.5-turbo-instruct" });
   expect(model).toBeInstanceOf(AzureOpenAI);
   const res = await model.invoke("Print hello world");
@@ -125,7 +125,7 @@ test("Test OpenAI with instruct model returns OpenAI", async () => {
   expect(typeof res).toBe("string");
 });
 
-test("Test OpenAI with versioned instruct model returns OpenAI", async () => {
+test("Test Azure OpenAI with versioned instruct model returns Azure OpenAI", async () => {
   const model = new AzureOpenAI({
     modelName: "gpt-3.5-turbo-instruct-0914",
   });
@@ -135,7 +135,7 @@ test("Test OpenAI with versioned instruct model returns OpenAI", async () => {
   expect(typeof res).toBe("string");
 });
 
-test("Test ChatOpenAI tokenUsage", async () => {
+test("Test Azure OpenAI tokenUsage", async () => {
   let tokenUsage = {
     completionTokens: 0,
     promptTokens: 0,
@@ -157,7 +157,7 @@ test("Test ChatOpenAI tokenUsage", async () => {
   expect(tokenUsage.promptTokens).toBe(1);
 });
 
-test("Test OpenAI in streaming mode", async () => {
+test("Test Azure OpenAI in streaming mode", async () => {
   let nrNewTokens = 0;
   let streamedCompletion = "";
 
@@ -179,7 +179,7 @@ test("Test OpenAI in streaming mode", async () => {
   expect(res).toBe(streamedCompletion);
 });
 
-test("Test OpenAI in streaming mode with multiple prompts", async () => {
+test("Test Azure OpenAI in streaming mode with multiple prompts", async () => {
   let nrNewTokens = 0;
   const completions = [
     ["", ""],
@@ -211,7 +211,7 @@ test("Test OpenAI in streaming mode with multiple prompts", async () => {
   );
 });
 
-test("Test OpenAIChat in streaming mode with multiple prompts", async () => {
+test("Test Azure OpenAI in streaming mode with multiple prompts", async () => {
   let nrNewTokens = 0;
   const completions = [[""], [""]];
 
@@ -240,7 +240,7 @@ test("Test OpenAIChat in streaming mode with multiple prompts", async () => {
   );
 });
 
-test("Test OpenAI prompt value", async () => {
+test("Test Azure OpenAI prompt value", async () => {
   const model = new AzureOpenAI({
     maxTokens: 5,
     modelName: "gpt-3.5-turbo-instruct",
@@ -258,7 +258,7 @@ test("Test OpenAI prompt value", async () => {
   console.log({ res });
 });
 
-test("Test OpenAI stream method", async () => {
+test("Test Azure OpenAI stream method", async () => {
   const model = new AzureOpenAI({
     maxTokens: 50,
     modelName: "gpt-3.5-turbo-instruct",
@@ -271,7 +271,7 @@ test("Test OpenAI stream method", async () => {
   expect(chunks.length).toBeGreaterThan(1);
 });
 
-test("Test OpenAI stream method with abort", async () => {
+test("Test Azure OpenAI stream method with abort", async () => {
   await expect(async () => {
     const model = new AzureOpenAI({
       maxTokens: 250,
@@ -289,7 +289,7 @@ test("Test OpenAI stream method with abort", async () => {
   }).rejects.toThrow();
 });
 
-test("Test OpenAI stream method with early break", async () => {
+test("Test Azure OpenAI stream method with early break", async () => {
   const model = new AzureOpenAI({
     maxTokens: 50,
     modelName: "gpt-3.5-turbo-instruct",
@@ -307,7 +307,7 @@ test("Test OpenAI stream method with early break", async () => {
   }
 });
 
-test("Test OpenAI with OpenAI API key credentials ", async () => {
+test("Test Azure OpenAI with bearer token credentials", async () => {
   const tenantId: string = getEnvironmentVariable("AZURE_TENANT_ID") ?? "";
   const clientId: string = getEnvironmentVariable("AZURE_CLIENT_ID") ?? "";
   const clientSecret: string =

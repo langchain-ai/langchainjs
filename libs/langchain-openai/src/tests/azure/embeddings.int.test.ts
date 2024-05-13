@@ -1,13 +1,13 @@
 import { test, expect } from "@jest/globals";
 import { AzureOpenAIEmbeddings as OpenAIEmbeddings } from "../../azure/embeddings.js";
 
-test("Test OpenAIEmbeddings.embedQuery", async () => {
+test("Test AzureOpenAIEmbeddings.embedQuery", async () => {
   const embeddings = new OpenAIEmbeddings();
   const res = await embeddings.embedQuery("Hello world");
   expect(typeof res[0]).toBe("number");
 });
 
-test("Test OpenAIEmbeddings.embedDocuments", async () => {
+test("Test AzureOpenAIEmbeddings.embedDocuments", async () => {
   const embeddings = new OpenAIEmbeddings();
   const res = await embeddings.embedDocuments(["Hello world", "Bye bye"]);
   expect(res).toHaveLength(2);
@@ -15,7 +15,7 @@ test("Test OpenAIEmbeddings.embedDocuments", async () => {
   expect(typeof res[1][0]).toBe("number");
 });
 
-test("Test OpenAIEmbeddings concurrency", async () => {
+test("Test AzureOpenAIEmbeddings concurrency", async () => {
   const embeddings = new OpenAIEmbeddings({
     batchSize: 1,
     maxConcurrency: 2,
@@ -51,7 +51,7 @@ test("Test timeout error thrown from SDK", async () => {
   }).rejects.toThrow();
 });
 
-test("Test OpenAIEmbeddings.embedQuery with v3 and dimensions", async () => {
+test("Test AzureOpenAIEmbeddings.embedQuery with v3 and dimensions", async () => {
   const embeddings = new OpenAIEmbeddings({
     modelName: "text-embedding-3-small",
     dimensions: 127,
@@ -61,7 +61,7 @@ test("Test OpenAIEmbeddings.embedQuery with v3 and dimensions", async () => {
   expect(res.length).toBe(127);
 });
 
-test("Test OpenAIEmbeddings.embedDocuments with v3 and dimensions", async () => {
+test("Test AzureOpenAIEmbeddings.embedDocuments with v3 and dimensions", async () => {
   const embeddings = new OpenAIEmbeddings({
     modelName: "text-embedding-3-small",
     dimensions: 127,
