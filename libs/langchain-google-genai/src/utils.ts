@@ -48,6 +48,22 @@ export function convertAuthorToRole(author: string) {
   }
 }
 
+function messageContentMedia(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  content: Record<string, any>
+): Part {
+  if ("mimeType" in content && "data" in content) {
+    return {
+      inlineData: {
+        mimeType: content.mimeType,
+        data: content.data,
+      },
+    };
+  }
+
+  throw new Error("Invalid media content");
+}
+
 export function convertMessageContentToParts(
   content: MessageContent,
   isMultimodalModel: boolean
@@ -91,6 +107,8 @@ export function convertMessageContentToParts(
           mimeType,
         },
       };
+    } else if (c.type === "media") {
+      return messageContentMedia(c);
     }
     throw new Error(`Unknown content type ${(c as { type: string }).type}`);
   });
