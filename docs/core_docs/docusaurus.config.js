@@ -290,7 +290,7 @@ const config = {
 
         indexName: "js-langchain-0.2",
 
-        contextualSearch: true,
+        contextualSearch: false,
       },
     }),
 
