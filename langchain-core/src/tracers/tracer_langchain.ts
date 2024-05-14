@@ -1,11 +1,10 @@
 import { Client } from "langsmith";
 import { RunTree } from "langsmith/run_trees";
-// TODO: importing this could result in breaking change
 import {
-  TraceableFunction,
-  getCurrentRunTree,
+  type TraceableFunction,
   isTraceableFunction,
-} from "langsmith/traceable";
+  getCurrentRunTree,
+} from "langsmith/singletons/traceable";
 
 import {
   BaseRun,
@@ -150,8 +149,6 @@ export class LangChainTracer
 
   getTraceableRunTree(): RunTree | undefined {
     try {
-      // TODO: this might be an unsafe/breaking operation
-      // as now we have a hard dependency on node:async_hooks
       return getCurrentRunTree();
     } catch {
       return undefined;
