@@ -38,7 +38,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1.58",
+    "@langchain/core": "~0.2.0-rc.0",
     "cohere-ai": "^7.9.3"
   },
   "devDependencies": {

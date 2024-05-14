@@ -16,6 +16,7 @@ export const config = {
     index: "index",
     experimental: "experimental/index",
   },
+  packageSuffix: "anthropic",
   tsConfigPath: resolve("./tsconfig.json"),
   cjsSource: "./dist-cjs",
   cjsDestination: "./dist",

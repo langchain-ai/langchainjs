@@ -10,6 +10,7 @@ test("zodToGeminiParameters can convert zod schema to gemini schema", () => {
         .describe("The type of operation to execute"),
       number1: z.number().describe("The first number to operate on."),
       number2: z.number().describe("The second number to operate on."),
+      childObject: z.object({}),
     })
     .describe("A simple calculator tool");
 
@@ -17,6 +18,7 @@ test("zodToGeminiParameters can convert zod schema to gemini schema", () => {
 
   expect(convertedSchema.type).toBe("object");
   expect(convertedSchema.description).toBe("A simple calculator tool");
+  expect(convertedSchema).not.toContain("additionalProperties");
   expect(convertedSchema.properties).toEqual({
     operation: {
       type: "string",
@@ -31,6 +33,15 @@ test("zodToGeminiParameters can convert zod schema to gemini schema", () => {
       type: "number",
       description: "The second number to operate on.",
     },
+    childObject: {
+      type: "object",
+      properties: {},
+    },
   });
-  expect(convertedSchema.required).toEqual(["operation", "number1", "number2"]);
+  expect(convertedSchema.required).toEqual([
+    "operation",
+    "number1",
+    "number2",
+    "childObject",
+  ]);
 });

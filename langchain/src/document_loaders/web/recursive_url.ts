@@ -2,6 +2,12 @@ import { JSDOM } from "jsdom";
 import { Document } from "@langchain/core/documents";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { BaseDocumentLoader, DocumentLoader } from "../base.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/web/recursive_url",
+  newPackageName: "@langchain/community",
+});
 
 export interface RecursiveUrlLoaderOptions {
   excludeDirs?: string[];

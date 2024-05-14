@@ -1,0 +1,387 @@
+---
+sidebar_position: 7
+title: Deal with High Cardinality Categoricals
+---
+
+# Deal with High Cardinality Categoricals
+
+You may want to do query analysis to create a filter on a categorical
+column. One of the difficulties here is that you usually need to specify
+the EXACT categorical value. The issue is you need to make sure the LLM
+generates that categorical value exactly. This can be done relatively
+easy with prompting when there are only a few values that are valid.
+When there are a high number of valid values then it becomes more
+difficult, as those values may not fit in the LLM context, or (if they
+do) there may be too many for the LLM to properly attend to.
+
+In this notebook we take a look at how to approach this.
+
+## Setup
+
+#### Install dependencies
+
+```mdx-code-block
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+import Npm2Yarn from "@theme/Npm2Yarn";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+<Npm2Yarn>
+  @langchain/core @langchain/community zod chromadb @faker-js/faker
+</Npm2Yarn>
+```
+
+#### Set environment variables
+
+```text
+# Optional, use LangSmith for best-in-class observability
+LANGSMITH_API_KEY=your-api-key
+LANGCHAIN_TRACING_V2=true
+```
+
+#### Set up data
+
+We will generate a bunch of fake names
+
+```typescript
+import { faker } from "@faker-js/faker";
+
+const names = Array.from({ length: 10000 }, () => faker.person.fullName());
+```
+
+Let’s look at some of the names
+
+```typescript
+names[0];
+```
+
+```text
+"Dale Kessler"
+```
+
+```typescript
+names[567];
+```
+
+```text
+"Mrs. Chelsea Bayer MD"
+```
+
+## Query Analysis
+
+We can now set up a baseline query analysis
+
+```typescript
+import { z } from "zod";
+
+const searchSchema = z.object({
+  query: z.string(),
+  author: z.string(),
+});
+```
+
+```mdx-code-block
+import ChatModelTabs from "@theme/ChatModelTabs";
+
+<ChatModelTabs customVarName="llm" />
+```
+
+```typescript
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import {
+  RunnablePassthrough,
+  RunnableSequence,
+} from "@langchain/core/runnables";
+
+const system = `Generate a relevant search query for a library system`;
+const prompt = ChatPromptTemplate.fromMessages([
+  ["system", system],
+  ["human", "{question}"],
+]);
+const llmWithTools = llm.withStructuredOutput(searchSchema, {
+  name: "Search",
+});
+const queryAnalyzer = RunnableSequence.from([
+  {
+    question: new RunnablePassthrough(),
+  },
+  prompt,
+  llmWithTools,
+]);
+```
+
+We can see that if we spell the name exactly correctly, it knows how to
+handle it
+
+```typescript
+await queryAnalyzer.invoke("what are books about aliens by Jesse Knight");
+```
+
+```text
+{ query: "books about aliens", author: "Jesse Knight" }
+```
+
+The issue is that the values you want to filter on may NOT be spelled
+exactly correctly
+
+```typescript
+await queryAnalyzer.invoke("what are books about aliens by jess knight");
+```
+
+```text
+{ query: "books about aliens", author: "Jess Knight" }
+```
+
+### Add in all values
+
+One way around this is to add ALL possible values to the prompt. That
+will generally guide the query in the right direction
+
+```typescript
+const system = `Generate a relevant search query for a library system using the 'search' tool.
+
+The 'author' you return to the user MUST be one of the following authors:
+
+{authors}
+
+Do NOT hallucinate author name!`;
+const basePrompt = ChatPromptTemplate.fromMessages([
+  ["system", system],
+  ["human", "{question}"],
+]);
+const prompt = await basePrompt.partial({ authors: names.join(", ") });
+```
+
+```typescript
+const queryAnalyzerAll = RunnableSequence.from([
+  {
+    question: new RunnablePassthrough(),
+  },
+  prompt,
+  llmWithTools,
+]);
+```
+
+However… if the list of categoricals is long enough, it may error!
+
+```typescript
+try {
+  const res = await queryAnalyzerAll.invoke(
+    "what are books about aliens by jess knight"
+  );
+} catch (e) {
+  console.error(e);
+}
+```
+
+```text
+Error: 400 This model's maximum context length is 16385 tokens. However, your messages resulted in 49822 tokens (49792 in the messages, 30 in the functions). Please reduce the length of the messages or functions.
+    at Function.generate (file:///Users/bracesproul/Library/Caches/deno/npm/registry.npmjs.org/openai/4.28.4/error.mjs:40:20)
+    at OpenAI.makeStatusError (file:///Users/bracesproul/Library/Caches/deno/npm/registry.npmjs.org/openai/4.28.4/core.mjs:256:25)
+    at OpenAI.makeRequest (file:///Users/bracesproul/Library/Caches/deno/npm/registry.npmjs.org/openai/4.28.4/core.mjs:299:30)
+    at eventLoopTick (ext:core/01_core.js:63:7)
+    at async file:///Users/bracesproul/Library/Caches/deno/npm/registry.npmjs.org/@langchain/openai/0.0.15/dist/chat_models.js:650:29
+    at async RetryOperation._fn (file:///Users/bracesproul/Library/Caches/deno/npm/registry.npmjs.org/p-retry/4.6.2/index.js:50:12) {
+  status: 400,
+  headers: {
+    "access-control-allow-origin": "*",
+    "alt-svc": 'h3=":443"; ma=86400',
+    "cf-cache-status": "DYNAMIC",
+    "cf-ray": "85f6e713581815d0-SJC",
+    "content-length": "341",
+    "content-type": "application/json",
+    date: "Tue, 05 Mar 2024 03:08:39 GMT",
+    "openai-organization": "langchain",
+    "openai-processing-ms": "349",
+    "openai-version": "2020-10-01",
+    server: "cloudflare",
+    "set-cookie": "_cfuvid=NXe7nstRj6UNdFs5F8k49JZF6Tz7EE8dfKwYRpV3AWI-1709608119946-0.0.1.1-604800000; path=/; domain="... 48 more characters,
+    "strict-transport-security": "max-age=15724800; includeSubDomains",
+    "x-ratelimit-limit-requests": "10000",
+    "x-ratelimit-limit-tokens": "2000000",
+    "x-ratelimit-remaining-requests": "9999",
+    "x-ratelimit-remaining-tokens": "1958537",
+    "x-ratelimit-reset-requests": "6ms",
+    "x-ratelimit-reset-tokens": "1.243s",
+    "x-request-id": "req_99890749d442033c6145f9a8f1324aea"
+  },
+  error: {
+    message: "This model's maximum context length is 16385 tokens. However, your messages resulted in 49822 tokens"... 101 more characters,
+    type: "invalid_request_error",
+    param: "messages",
+    code: "context_length_exceeded"
+  },
+  code: "context_length_exceeded",
+  param: "messages",
+  type: "invalid_request_error",
+  attemptNumber: 1,
+  retriesLeft: 6
+}
+```
+
+We can try to use a longer context window… but with so much information
+in there, it is not garunteed to pick it up reliably
+
+```mdx-code-block
+<ChatModelTabs customVarName="llmLong" openaiParams={`{ model: "gpt-4-turbo-preview" }`} />
+```
+
+```typescript
+const structuredLlmLong = llmLong.withStructuredOutput(searchSchema, {
+  name: "Search",
+});
+const queryAnalyzerAll = RunnableSequence.from([
+  {
+    question: new RunnablePassthrough(),
+  },
+  prompt,
+  structuredLlmLong,
+]);
+```
+
+```typescript
+await queryAnalyzerAll.invoke("what are books about aliens by jess knight");
+```
+
+```text
+{ query: "aliens", author: "Jess Knight" }
+```
+
+### Find and all relevant values
+
+Instead, what we can do is create an index over the relevant values and
+then query that for the N most relevant values,
+
+```typescript
+import { Chroma } from "@langchain/community/vectorstores/chroma";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import "chromadb";
+
+const embeddings = new OpenAIEmbeddings({
+  model: "text-embedding-3-small",
+});
+const vectorstore = await Chroma.fromTexts(names, {}, embeddings, {
+  collectionName: "author_names",
+});
+```
+
+```text
+[Module: null prototype] {
+  AdminClient: [class AdminClient],
+  ChromaClient: [class ChromaClient],
+  CloudClient: [class CloudClient extends ChromaClient],
+  CohereEmbeddingFunction: [class CohereEmbeddingFunction],
+  Collection: [class Collection],
+  DefaultEmbeddingFunction: [class _DefaultEmbeddingFunction],
+  GoogleGenerativeAiEmbeddingFunction: [class _GoogleGenerativeAiEmbeddingFunction],
+  HuggingFaceEmbeddingServerFunction: [class HuggingFaceEmbeddingServerFunction],
+  IncludeEnum: {
+    Documents: "documents",
+    Embeddings: "embeddings",
+    Metadatas: "metadatas",
+    Distances: "distances"
+  },
+  JinaEmbeddingFunction: [class JinaEmbeddingFunction],
+  OpenAIEmbeddingFunction: [class _OpenAIEmbeddingFunction],
+  TransformersEmbeddingFunction: [class _TransformersEmbeddingFunction]
+}
+```
+
+```typescript
+const selectNames = async (question: string) => {
+  const _docs = await vectorstore.similaritySearch(question, 10);
+  const _names = _docs.map((d) => d.pageContent);
+  return _names.join(", ");
+};
+```
+
+```typescript
+const createPrompt = RunnableSequence.from([
+  {
+    question: new RunnablePassthrough(),
+    authors: selectNames,
+  },
+  basePrompt,
+]);
+```
+
+```typescript
+const queryAnalyzerSelect = createPrompt.pipe(llmWithTools);
+```
+
+```typescript
+await createPrompt.invoke("what are books by jess knight");
+```
+
+```text
+ChatPromptValue {
+  lc_serializable: true,
+  lc_kwargs: {
+    messages: [
+      SystemMessage {
+        lc_serializable: true,
+        lc_kwargs: {
+          content: "Generate a relevant search query for a library system using the 'search' tool.\n" +
+            "\n" +
+            "The 'author' you ret"... 259 more characters,
+          additional_kwargs: {}
+        },
+        lc_namespace: [ "langchain_core", "messages" ],
+        content: "Generate a relevant search query for a library system using the 'search' tool.\n" +
+          "\n" +
+          "The 'author' you ret"... 259 more characters,
+        name: undefined,
+        additional_kwargs: {}
+      },
+      HumanMessage {
+        lc_serializable: true,
+        lc_kwargs: {
+          content: "what are books by jess knight",
+          additional_kwargs: {}
+        },
+        lc_namespace: [ "langchain_core", "messages" ],
+        content: "what are books by jess knight",
+        name: undefined,
+        additional_kwargs: {}
+      }
+    ]
+  },
+  lc_namespace: [ "langchain_core", "prompt_values" ],
+  messages: [
+    SystemMessage {
+      lc_serializable: true,
+      lc_kwargs: {
+        content: "Generate a relevant search query for a library system using the 'search' tool.\n" +
+          "\n" +
+          "The 'author' you ret"... 259 more characters,
+        additional_kwargs: {}
+      },
+      lc_namespace: [ "langchain_core", "messages" ],
+      content: "Generate a relevant search query for a library system using the 'search' tool.\n" +
+        "\n" +
+        "The 'author' you ret"... 259 more characters,
+      name: undefined,
+      additional_kwargs: {}
+    },
+    HumanMessage {
+      lc_serializable: true,
+      lc_kwargs: {
+        content: "what are books by jess knight",
+        additional_kwargs: {}
+      },
+      lc_namespace: [ "langchain_core", "messages" ],
+      content: "what are books by jess knight",
+      name: undefined,
+      additional_kwargs: {}
+    }
+  ]
+}
+```
+
+```typescript
+await queryAnalyzerSelect.invoke("what are books about aliens by jess knight");
+```
+
+```text
+{ query: "books about aliens", author: "Jessica Kerluke" }
+```

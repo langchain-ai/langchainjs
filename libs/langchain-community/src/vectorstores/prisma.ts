@@ -61,6 +61,7 @@ export type PrismaSqlFilter<TModel extends Record<string, unknown>> = {
   [K in keyof TModel]?: {
     equals?: TModel[K];
     in?: TModel[K][];
+    notIn?: TModel[K][];
     isNull?: TModel[K];
     isNotNull?: TModel[K];
     like?: TModel[K];
@@ -75,6 +76,7 @@ export type PrismaSqlFilter<TModel extends Record<string, unknown>> = {
 const OpMap = {
   equals: "=",
   in: "IN",
+  notIn: "NOT IN",
   isNull: "IS NULL",
   isNotNull: "IS NOT NULL",
   like: "LIKE",
@@ -423,6 +425,7 @@ export class PrismaVectorStore<
           const opRaw = this.Prisma.raw(OpMap[opNameKey]);
 
           switch (OpMap[opNameKey]) {
+            case OpMap.notIn:
             case OpMap.in: {
               if (
                 !Array.isArray(value) ||

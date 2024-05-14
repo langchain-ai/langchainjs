@@ -2,6 +2,12 @@ import { TranscriptResponse, YoutubeTranscript } from "youtube-transcript";
 import { Innertube } from "youtubei.js";
 import { Document } from "@langchain/core/documents";
 import { BaseDocumentLoader } from "../base.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/web/youtube",
+  newPackageName: "@langchain/community",
+});
 
 /**
  * Configuration options for the YoutubeLoader class. Includes properties

@@ -1,5 +1,11 @@
 import { DirectoryLoader, UnknownHandling } from "./directory.js";
 import { TextLoader } from "./text.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/fs/notion",
+  newPackageName: "@langchain/community",
+});
 
 /**
  * A class that extends the DirectoryLoader class. It represents a

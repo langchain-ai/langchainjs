@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { StructuredTool } from "@langchain/core/tools";
 import { getPrompt } from "../prompt_generator.js";
-import { Calculator } from "../../../tools/calculator.js";
+import { Calculator } from "../../../util/testing/tools/calculator.js";
 import { ReadFileTool, WriteFileTool } from "../../../tools/fs.js";
 import { InMemoryFileStore } from "../../../stores/file/in_memory.js";
 

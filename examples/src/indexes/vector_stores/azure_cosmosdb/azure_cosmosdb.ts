@@ -7,7 +7,7 @@ import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
 import { createRetrievalChain } from "langchain/chains/retrieval";
 import { TextLoader } from "langchain/document_loaders/fs/text";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
 // Load documents from file
 const loader = new TextLoader("./state_of_the_union.txt");
@@ -25,14 +25,13 @@ const store = await AzureCosmosDBVectorStore.fromDocuments(
   {
     databaseName: "langchain",
     collectionName: "documents",
+    indexOptions: {
+      numLists: 100,
+      dimensions: 1536,
+      similarity: AzureCosmosDBSimilarityType.COS,
+    },
   }
 );
-
-// Create the index
-const numLists = 100;
-const dimensions = 1536;
-const similarity = AzureCosmosDBSimilarityType.COS;
-await store.createIndex(numLists, dimensions, similarity);
 
 // Performs a similarity search
 const resultDocuments = await store.similaritySearch(

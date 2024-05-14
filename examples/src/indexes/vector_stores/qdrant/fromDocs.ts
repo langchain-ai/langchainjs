@@ -1,4 +1,4 @@
-import { QdrantVectorStore } from "@langchain/community/vectorstores/qdrant";
+import { QdrantVectorStore } from "@langchain/qdrant";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 

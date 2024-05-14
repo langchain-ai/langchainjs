@@ -1,4 +1,5 @@
 import { NotionAPILoader } from "langchain/document_loaders/web/notionapi";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
 // Loading a page (including child pages all as separate documents)
 const pageLoader = new NotionAPILoader({
@@ -9,8 +10,10 @@ const pageLoader = new NotionAPILoader({
   type: "page",
 });
 
+const splitter = new RecursiveCharacterTextSplitter();
+
 // A page contents is likely to be more than 1000 characters so it's split into multiple documents (important for vectorization)
-const pageDocs = await pageLoader.loadAndSplit();
+const pageDocs = await pageLoader.loadAndSplit(splitter);
 
 console.log({ pageDocs });
 

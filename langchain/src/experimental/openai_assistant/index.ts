@@ -83,7 +83,8 @@ export class OpenAIAssistantRunnable<
       tools: formattedTools,
       model,
       file_ids: fileIds,
-    });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
     return new this({
       client: oaiClient,
@@ -130,7 +131,8 @@ export class OpenAIAssistantRunnable<
         role: "user",
         file_ids: input.file_ids,
         metadata: input.messagesMetadata,
-      });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any);
       run = await this._createRun(input);
     } else {
       // Submitting tool outputs to an existing run, outside the AgentExecutor
@@ -189,7 +191,8 @@ export class OpenAIAssistantRunnable<
       instructions,
       model,
       file_ids: fileIds,
-    });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
   }
 
   private async _parseStepsInput(input: RunInput): Promise<RunInput> {
