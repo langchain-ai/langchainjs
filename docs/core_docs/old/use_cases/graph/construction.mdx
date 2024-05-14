@@ -1,0 +1,174 @@
+---
+sidebar_position: 1
+title: Constructing knowledge graphs
+---
+
+# Constructing knowledge graphs
+
+In this guide we’ll go over the basic ways of constructing a knowledge
+graph based on unstructured text. The constructured graph can then be
+used as knowledge base in a RAG application. At a high-level, the steps
+of constructing a knowledge are from text are:
+
+1.  Extracting structured information from text: Model is used to
+    extract structured graph information from text.
+2.  Storing into graph database: Storing the extracted structured graph
+    information into a graph database enables downstream RAG
+    applications
+
+## Setup
+
+#### Install dependencies
+
+```mdx-code-block
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+import Npm2Yarn from "@theme/Npm2Yarn";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+<Npm2Yarn>
+  langchain @langchain/community @langchain/openai neo4j-driver zod
+</Npm2Yarn>
+```
+
+#### Set environment variables
+
+We’ll use OpenAI in this example:
+
+```env
+OPENAI_API_KEY=your-api-key
+
+# Optional, use LangSmith for best-in-class observability
+LANGSMITH_API_KEY=your-api-key
+LANGCHAIN_TRACING_V2=true
+```
+
+Next, we need to define Neo4j credentials. Follow [these installation
+steps](https://neo4j.com/docs/operations-manual/current/installation/)
+to set up a Neo4j database.
+
+```env
+NEO4J_URI="bolt://localhost:7687"
+NEO4J_USERNAME="neo4j"
+NEO4J_PASSWORD="password"
+```
+
+The below example will create a connection with a Neo4j database.
+
+```typescript
+import "neo4j-driver";
+import { Neo4jGraph } from "@langchain/community/graphs/neo4j_graph";
+
+const url = Deno.env.get("NEO4J_URI");
+const username = Deno.env.get("NEO4J_USER");
+const password = Deno.env.get("NEO4J_PASSWORD");
+const graph = await Neo4jGraph.initialize({ url, username, password });
+```
+
+## LLM Graph Transformer
+
+Extracting graph data from text enables the transformation of
+unstructured information into structured formats, facilitating deeper
+insights and more efficient navigation through complex relationships and
+patterns. The LLMGraphTransformer converts text documents into
+structured graph documents by leveraging a LLM to parse and categorize
+entities and their relationships. The selection of the LLM model
+significantly influences the output by determining the accuracy and
+nuance of the extracted graph data.
+
+```typescript
+import { ChatOpenAI } from "@langchain/openai";
+import { LLMGraphTransformer } from "@langchain/community/experimental/graph_transformers/llm";
+
+const model = new ChatOpenAI({
+  temperature: 0,
+  model: "gpt-4-turbo-preview",
+});
+
+const llmGraphTransformer = new LLMGraphTransformer({
+  llm: model,
+});
+```
+
+Now we can pass in example text and examine the results.
+
+```typescript
+import { Document } from "@langchain/core/documents";
+
+let text = `
+Marie Curie, was a Polish and naturalised-French physicist and chemist who conducted pioneering research on radioactivity.
+She was the first woman to win a Nobel Prize, the first person to win a Nobel Prize twice, and the only person to win a Nobel Prize in two scientific fields.
+Her husband, Pierre Curie, was a co-winner of her first Nobel Prize, making them the first-ever married couple to win the Nobel Prize and launching the Curie family legacy of five Nobel Prizes.
+She was, in 1906, the first woman to become a professor at the University of Paris.
+`;
+
+const result = await llmGraphTransformer.convertToGraphDocuments([
+  new Document({ pageContent: text }),
+]);
+
+console.log(`Nodes: ${result[0].nodes.length}`);
+console.log(`Relationships:${result[0].relationships.length}`);
+```
+
+```text
+Nodes: 8
+Relationships:7
+```
+
+Note that the graph construction process is non-deterministic since we
+are using LLM. Therefore, you might get slightly different results on
+each execution. Examine the following image to better grasp the
+structure of the generated knowledge graph.
+
+<figure>
+  <img
+    src="../../../../static/img/graph_construction1.png"
+    alt="graph_construction1.png"
+  />
+  <figcaption aria-hidden="true">graph_construction1.png</figcaption>
+</figure>
+
+Additionally, you have the flexibility to define specific types of nodes
+and relationships for extraction according to your requirements.
+
+```typescript
+const llmGraphTransformerFiltered = new LLMGraphTransformer({
+  llm: model,
+  allowedNodes: ["PERSON", "COUNTRY", "ORGANIZATION"],
+  allowedRelationships: ["NATIONALITY", "LOCATED_IN", "WORKED_AT", "SPOUSE"],
+  strictMode: false,
+});
+
+const result_filtered =
+  await llmGraphTransformerFiltered.convertToGraphDocuments([
+    new Document({ pageContent: text }),
+  ]);
+
+console.log(`Nodes: ${result_filtered[0].nodes.length}`);
+console.log(`Relationships:${result_filtered[0].relationships.length}`);
+```
+
+```text
+Nodes: 6
+Relationships:4
+```
+
+For a better understanding of the generated graph, we can again
+visualize it.
+
+<figure>
+  <img
+    src="../../../../static/img/graph_construction2.png"
+    alt="graph_construction1.png"
+  />
+  <figcaption aria-hidden="true">graph_construction1.png</figcaption>
+</figure>
+
+## Storing to graph database
+
+The generated graph documents can be stored to a graph database using
+the `addGraphDocuments` method.
+
+```typescript
+await graph.addGraphDocuments(result_filtered);
+```

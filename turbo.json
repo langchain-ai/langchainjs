@@ -32,7 +32,7 @@
       "inputs": ["src/**", "scripts/**", "package.json", "tsconfig.json"]
     },
     "@langchain/community#build": {
-      "dependsOn": ["@langchain/openai#build"],
+      "dependsOn": ["@langchain/openai#build", "langchain#build", "@langchain/anthropic#build"],
       "outputs": ["dist/**", "dist-cjs/**", "*.js", "*.cjs", "*.d.ts"],
       "inputs": ["src/**", "scripts/**", "package.json", "tsconfig.json"]
     },
@@ -40,7 +40,6 @@
       "dependsOn": [
         "@langchain/scripts#build",
         "@langchain/core#build",
-        "@langchain/community#build",
         "^build"
       ],
       "outputs": ["dist/**", "dist-cjs/**", "*.js", "*.cjs", "*.d.ts"],

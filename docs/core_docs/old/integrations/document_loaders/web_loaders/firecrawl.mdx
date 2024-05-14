@@ -1,0 +1,38 @@
+---
+hide_table_of_contents: true
+---
+
+# Firecrawl
+
+This guide shows how to use [Firecrawl](https://firecrawl.dev) with LangChain to load web data into an LLM-ready format using Firecrawl.
+
+## Overview
+
+[FireCrawl](https://firecrawl.dev) crawls and convert any website into LLM-ready data. It crawls all accessible subpages and give you clean markdown and metadata for each. No sitemap required.
+
+FireCrawl handles complex tasks such as reverse proxies, caching, rate limits, and content blocked by JavaScript. Built by the [mendable.ai](https://mendable.ai) team.
+
+This guide shows how to scrap and crawl entire websites and load them using the `FireCrawlLoader` in LangChain.
+
+## Setup
+
+Sign up and get your free [FireCrawl API key](https://firecrawl.dev) to start. FireCrawl offers 300 free credits to get you started, and it's [open-source](https://github.com/mendableai/firecrawl) in case you want to self-host.
+
+## Usage
+
+Here's an example of how to use the `FireCrawlLoader` to load web search results:
+
+Firecrawl offers 2 modes: `scrape` and `crawl`. In `scrape` mode, Firecrawl will only scrape the page you provide. In `crawl` mode, Firecrawl will crawl the entire website.
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/document_loaders/firecrawl.ts";
+
+```bash npm2yarn
+npm install @mendable/firecrawl-js
+```
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
+### Additional Parameters
+
+For `params` you can pass any of the params according to the [Firecrawl documentation](https://docs.firecrawl.dev).

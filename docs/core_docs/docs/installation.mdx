@@ -1,0 +1,59 @@
+---
+sidebar_position: 2
+---
+
+# Installation
+
+## Official release
+
+To install LangChain run:
+
+```bash npm2yarn
+npm install langchain
+```
+
+This will install the bare minimum requirements of LangChain.
+A lot of the value of LangChain comes when integrating it with various model providers, datastores, etc.
+By default, the dependencies needed to do that are NOT installed. You will need to install the dependencies for specific integrations separately.
+
+## LangChain core
+
+The `@langchain/core` package contains base abstractions that the rest of the LangChain ecosystem uses, along with the LangChain Expression Language.
+It is automatically installed by `langchain`, but can also be used separately. Install with:
+
+```bash npm2yarn
+npm install @langchain/core
+```
+
+## LangChain community
+
+The `@langchain/community` package contains third-party integrations.
+It is automatically installed by `langchain`, but can also be used separately. Install with:
+
+```bash npm2yarn
+npm install @langchain/community
+```
+
+:::note
+
+`@langchain/community` will be removed as a dependency of `langchain` in version `0.2.0`.
+
+:::
+
+## LangGraph
+
+`langgraph` is a library for building stateful, multi-actor applications with LLMs, built on top of (and intended to be used with) LangChain.
+Install with:
+
+```bash npm2yarn
+npm install @langchain/langgraph
+```
+
+## LangSmith SDK
+
+The LangSmith SDK is automatically installed by LangChain.
+If not using LangChain, install with:
+
+```bash npm2yarn
+npm install langsmith
+```

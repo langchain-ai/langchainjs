@@ -1,5 +1,11 @@
 import { Document } from "@langchain/core/documents";
 import { BaseDocumentLoader } from "../base.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/web/sortxyz_blockchain",
+  newPackageName: "@langchain/community",
+});
 
 /**
  * See https://docs.sort.xyz/docs/api-keys to get your free Sort API key.

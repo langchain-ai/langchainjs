@@ -1,0 +1,158 @@
+---
+sidebar_position: 2
+title: Routing
+---
+
+# Routing
+
+Sometimes we have multiple indexes for different domains, and for
+different questions we want to query different subsets of these indexes.
+For example, suppose we had one vector store index for all of the
+LangChain python documentation and one for all of the LangChain js
+documentation. Given a question about LangChain usage, we’d want to
+infer which language the the question was referring to and query the
+appropriate docs. **Query routing** is the process of classifying which
+index or subset of indexes a query should be performed on.
+
+## Setup
+
+#### Install dependencies
+
+```mdx-code-block
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+import Npm2Yarn from "@theme/Npm2Yarn";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+<Npm2Yarn>
+  @langchain/core zod
+</Npm2Yarn>
+```
+
+#### Set environment variables
+
+```text
+# Optional, use LangSmith for best-in-class observability
+LANGSMITH_API_KEY=your-api-key
+LANGCHAIN_TRACING_V2=true
+```
+
+## Routing with function calling models
+
+With function-calling models it’s simple to use models for
+classification, which is what routing comes down to:
+
+```mdx-code-block
+import ChatModelTabs from "@theme/ChatModelTabs";
+
+<ChatModelTabs customVarName="llm" />
+```
+
+```typescript
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { z } from "zod";
+
+const routeQuerySchema = z.object({
+  datasource: z
+    .union([
+      z.literal("python_docs"),
+      z.literal("js_docs"),
+      z.literal("golang_docs"),
+    ])
+    .describe(
+      "Given a user question choose which datasource would be most relevant for answering their question"
+    ),
+});
+
+const system = `You are an expert at routing a user question to the appropriate data source.
+
+Based on the programming language the question is referring to, route it to the relevant data source.`;
+
+const prompt = ChatPromptTemplate.fromMessages([
+  ["system", system],
+  ["human", "{question}"],
+]);
+const llmWithTools = llm.withStructuredOutput(routeQuerySchema, {
+  name: "RouteQuery",
+});
+
+const router = prompt.pipe(llmWithTools);
+```
+
+```typescript
+const question = `Why doesn't the following code work:
+
+from langchain_core.prompts import ChatPromptTemplate
+
+prompt = ChatPromptTemplate.from_messages(["human", "speak in {language}"])
+prompt.invoke("french")`;
+await router.invoke({ question: question });
+```
+
+```text
+{ datasource: "python_docs" }
+```
+
+```typescript
+const question = `Why doesn't the following code work:
+
+
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+
+
+const chatPrompt = ChatPromptTemplate.fromMessages([
+  ["human", "speak in {language}"],
+]);
+
+const formattedChatPrompt = await chatPrompt.invoke({
+  input_language: "french"
+});`;
+
+await router.invoke({ question: question });
+```
+
+```text
+{ datasource: "js_docs" }
+```
+
+## Routing to multiple indexes
+
+If we may want to query multiple indexes we can do that, too, by
+updating our schema to accept a List of data sources:
+
+```mdx-code-block
+<ChatModelTabs customVarName="llm" />
+```
+
+```typescript
+import { z } from "zod";
+
+const routeQuerySchema = z
+  .object({
+    datasources: z
+      .array(
+        z.union([
+          z.literal("python_docs"),
+          z.literal("js_docs"),
+          z.literal("golang_docs"),
+        ])
+      )
+      .describe(
+        "Given a user question choose which datasources would be most relevant for answering their question"
+      ),
+  })
+  .describe("Route a user query to the most relevant datasource.");
+
+const llmWithTools = llm.withStructuredOutput(routeQuerySchema, {
+  name: "RouteQuery",
+});
+const router = prompt.pipe(llmWithTools);
+await router.invoke({
+  question:
+    "is there feature parity between the Python and JS implementations of OpenAI chat models",
+});
+```
+
+```text
+{ datasources: [ "python_docs", "js_docs" ] }
+```

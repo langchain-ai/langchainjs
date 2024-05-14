@@ -1,0 +1,233 @@
+---
+sidebar_position: 4
+title: Per-User Retrieval
+---
+
+# Per-User Retrieval
+
+When building a retrieval app, you often have to build it with multiple
+users in mind. This means that you may be storing data not just for one
+user, but for many different users, and they should not be able to see
+eachother’s data. This means that you need to be able to configure your
+retrieval chain to only retrieve certain information. This generally
+involves two steps.
+
+**Step 1: Make sure the retriever you are using supports multiple
+users**
+
+At the moment, there is no unified flag or filter for this in LangChain.
+Rather, each vectorstore and retriever may have their own, and may be
+called different things (namespaces, multi-tenancy, etc). For
+vectorstores, this is generally exposed as a keyword argument that is
+passed in during `similaritySearch`. By reading the documentation or
+source code, figure out whether the retriever you are using supports
+multiple users, and, if so, how to use it.
+
+Note: adding documentation and/or support for multiple users for
+retrievers that do not support it (or document it) is a GREAT way to
+contribute to LangChain
+
+**Step 2: Add that parameter as a configurable field for the chain**
+
+The LangChain `config` object is passed through to every Runnable. Here
+you can add any fields you’d like to the `configurable` object. Later,
+inside the chain we can extract these fields.
+
+**Step 3: Call the chain with that configurable field**
+
+Now, at runtime you can call this chain with configurable field.
+
+## Code Example
+
+Let’s see a concrete example of what this looks like in code. We will
+use Pinecone for this example.
+
+## Setup
+
+### Install dependencies
+
+```mdx-code-block
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+import Npm2Yarn from "@theme/Npm2Yarn";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+<Npm2Yarn>
+  @langchain/pinecone @langchain/openai @pinecone-database/pinecone @langchain/core
+</Npm2Yarn>
+```
+
+### Set environment variables
+
+We’ll use OpenAI and Pinecone in this example:
+
+```env
+OPENAI_API_KEY=your-api-key
+
+PINECONE_API_KEY=your-api-key
+PINECONE_INDEX=your-index-name
+
+# Optional, use LangSmith for best-in-class observability
+LANGSMITH_API_KEY=your-api-key
+LANGCHAIN_TRACING_V2=true
+```
+
+```typescript
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { PineconeStore } from "@langchain/pinecone";
+import { Pinecone } from "@pinecone-database/pinecone";
+import { Document } from "@langchain/core/documents";
+```
+
+```typescript
+const embeddings = new OpenAIEmbeddings();
+
+const pinecone = new Pinecone();
+
+const pineconeIndex = pinecone.Index(Deno.env.get("PINECONE_INDEX"));
+
+const vectorStore = await PineconeStore.fromExistingIndex(
+  new OpenAIEmbeddings(),
+  { pineconeIndex }
+);
+```
+
+```typescript
+await vectorStore.addDocuments(
+  [new Document({ pageContent: "i worked at kensho" })],
+  { namespace: "harrison" }
+);
+```
+
+```text
+[ "39d90a6d-7e97-45cc-a9dc-ebefa47220fc" ]
+```
+
+```typescript
+await vectorStore.addDocuments(
+  [new Document({ pageContent: "i worked at facebook" })],
+  { namespace: "ankush" }
+);
+```
+
+```text
+[ "75f94962-9135-4385-b71c-36d8345e02aa" ]
+```
+
+The pinecone kwarg for `namespace` can be used to separate documents
+
+```typescript
+// This will only get documents for Ankush
+await vectorStore
+  .asRetriever({
+    filter: {
+      namespace: "ankush",
+    },
+  })
+  .getRelevantDocuments("where did i work?");
+```
+
+```text
+[ Document { pageContent: "i worked at facebook", metadata: {} } ]
+```
+
+```typescript
+// This will only get documents for Harrison
+await vectorStore
+  .asRetriever({
+    filter: {
+      namespace: "harrison",
+    },
+  })
+  .getRelevantDocuments("where did i work?");
+```
+
+```text
+[ Document { pageContent: "i worked at kensho", metadata: {} } ]
+```
+
+We can now create the chain that we will use to do question-answering
+over
+
+```typescript
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import {
+  RunnableBinding,
+  RunnableLambda,
+  RunnablePassthrough,
+} from "@langchain/core/runnables";
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
+```
+
+This is basic question-answering chain set up.
+
+```typescript
+const template = `Answer the question based only on the following context:
+{context}
+Question: {question}`;
+
+const prompt = ChatPromptTemplate.fromTemplate(template);
+
+const model = new ChatOpenAI({
+  model: "gpt-3.5-turbo-0125",
+  temperature: 0,
+});
+
+const retriever = vectorStore.asRetriever();
+```
+
+We can now create the chain using our configurable retriever. It is
+configurable because we can define any object which will be passed to
+the chain. From there, we extract the configurable object and pass it to
+the vectorstore.
+
+```typescript
+import { RunnableSequence } from "@langchain/core/runnables";
+
+const chain = RunnableSequence.from([
+  {
+    context: async (input, config) => {
+      if (!config || !("configurable" in config)) {
+        throw new Error("No config");
+      }
+      const { configurable } = config;
+      return JSON.stringify(
+        await vectorStore.asRetriever(configurable).getRelevantDocuments(input)
+      );
+    },
+    question: new RunnablePassthrough(),
+  },
+  prompt,
+  model,
+  new StringOutputParser(),
+]);
+```
+
+We can now invoke the chain with configurable options. `search_kwargs`
+is the id of the configurable field. The value is the search kwargs to
+use for Pinecone
+
+```typescript
+await chain.invoke("where did the user work?", {
+  configurable: { filter: { namespace: "harrison" } },
+});
+```
+
+```text
+"The user worked at Kensho."
+```
+
+```typescript
+await chain.invoke("where did the user work?", {
+  configurable: { filter: { namespace: "ankush" } },
+});
+```
+
+```text
+"The user worked at Facebook."
+```
+
+For more vectorstore implementations for multi-user, please refer to
+specific pages, such as
+[Milvus](../../../../docs/integrations/vectorstores/milvus).

@@ -1,7 +1,7 @@
 import { test, expect } from "@jest/globals";
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
+import { TavilySearchResults } from "../../util/testing/tools/tavily_search.js";
 import { AgentExecutor, createToolCallingAgent } from "../index.js";
 
 const tools = [new TavilySearchResults({ maxResults: 1 })];

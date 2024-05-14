@@ -21,10 +21,6 @@ export {
 export { BaseChatMemory, type BaseChatMemoryInput } from "./chat_memory.js";
 export { ChatMessageHistory } from "../stores/message/in_memory.js";
 export {
-  MotorheadMemory,
-  type MotorheadMemoryInput,
-} from "./motorhead_memory.js";
-export {
   VectorStoreRetrieverMemory,
   type VectorStoreRetrieverMemoryParams,
 } from "./vector_store.js";

@@ -1,0 +1,28 @@
+---
+sidebar_label: Prem AI
+---
+
+# Prem AI
+
+The `PremEmbeddings` class uses the Prem AI API to generate embeddings for a given text.
+
+## Setup
+
+In order to use the Prem API you'll need an API key. You can sign up for a Prem account and create an API key [here](https://app.premai.io/accounts/signup/).
+
+You'll first need to install the [`@langchain/community`](https://www.npmjs.com/package/@langchain/community) package:
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/community
+```
+
+## Usage
+
+import CodeBlock from "@theme/CodeBlock";
+import PremExample from "@examples/embeddings/premai.ts";
+
+<CodeBlock language="typescript">{PremExample}</CodeBlock>

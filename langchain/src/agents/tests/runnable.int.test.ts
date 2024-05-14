@@ -10,12 +10,12 @@ import {
   BaseMessage,
   FunctionMessage,
 } from "@langchain/core/messages";
-import { SerpAPI } from "@langchain/community/tools/serpapi";
 import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";
 import { AgentStep } from "@langchain/core/agents";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { AgentExecutor } from "../executor.js";
-import { Calculator } from "../../tools/calculator.js";
+import { SerpAPI } from "../../util/testing/tools/serpapi.js";
+import { Calculator } from "../../util/testing/tools/calculator.js";
 import { OpenAIFunctionsAgentOutputParser } from "../openai/output_parser.js";
 
 test("Runnable variant", async () => {

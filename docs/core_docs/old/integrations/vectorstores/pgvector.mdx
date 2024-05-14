@@ -1,0 +1,76 @@
+# PGVector
+
+To enable vector search in a generic PostgreSQL database, LangChain.js supports using the [`pgvector`](https://github.com/pgvector/pgvector) Postgres extension.
+
+## Setup
+
+To work with PGVector, you need to install the `pg` package:
+
+```bash npm2yarn
+npm install pg
+```
+
+### Setup a `pgvector` self hosted instance with `docker-compose`
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai @langchain/community
+```
+
+`pgvector` provides a prebuilt Docker image that can be used to quickly setup a self-hosted Postgres instance.
+Create a file below named `docker-compose.yml`:
+
+import CodeBlock from "@theme/CodeBlock";
+import DockerExample from "@examples/indexes/vector_stores/pgvector_vectorstore/docker-compose.example.yml";
+
+```yml
+# Run this command to start the database:
+# docker-compose up --build
+version: "3"
+services:
+  db:
+    hostname: 127.0.0.1
+    image: ankane/pgvector
+    ports:
+      - 5432:5432
+    restart: always
+    environment:
+      - POSTGRES_DB=api
+      - POSTGRES_USER=myuser
+      - POSTGRES_PASSWORD=ChangeMe
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+```
+
+And then in the same directory, run `docker compose up` to start the container.
+
+You can find more information on how to setup `pgvector` in the [official repository](https://github.com/pgvector/pgvector).
+
+## Usage
+
+::::danger Security
+User-generated data such as usernames should not be used as input for table and column names.  
+**This may lead to SQL Injection!**
+::::
+
+import Example from "@examples/indexes/vector_stores/pgvector_vectorstore/pgvector.ts";
+
+One complete example of using `PGVectorStore` is the following:
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
+You can also specify a `collectionTableName` and a `collectionName` to partition vectors between multiple users or namespaces.
+
+### Advanced: reusing connections
+
+You can reuse connections by creating a pool, then creating new `PGVectorStore` instances directly via the constructor.
+
+Note that you should call `.initialize()` to set up your database at least once to set up your tables properly
+before using the constructor.
+
+import ConnectionReuseExample from "@examples/indexes/vector_stores/pgvector_vectorstore/pgvector_pool.ts";
+
+<CodeBlock language="typescript">{ConnectionReuseExample}</CodeBlock>

@@ -112,7 +112,7 @@ const selfQueryRetriever = SelfQueryRetriever.fromLLM({
    * We need to use a translator that translates the queries into a
    * filter format that the vector store can understand. LangChain provides one here.
    */
-  structuredQueryTranslator: new WeaviateTranslator(),
+  structuredQueryTranslator: new WeaviateTranslator<WeaviateStore>(),
 });
 
 /**
