@@ -4674,6 +4674,28 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@azure/identity@npm:^4.2.0":
+  version: 4.2.0
+  resolution: "@azure/identity@npm:4.2.0"
+  dependencies:
+    "@azure/abort-controller": ^1.0.0
+    "@azure/core-auth": ^1.5.0
+    "@azure/core-client": ^1.4.0
+    "@azure/core-rest-pipeline": ^1.1.0
+    "@azure/core-tracing": ^1.0.0
+    "@azure/core-util": ^1.3.0
+    "@azure/logger": ^1.0.0
+    "@azure/msal-browser": ^3.11.1
+    "@azure/msal-node": ^2.6.6
+    events: ^3.0.0
+    jws: ^4.0.0
+    open: ^8.0.0
+    stoppable: ^1.1.0
+    tslib: ^2.2.0
+  checksum: b1b336113c944abf89376f366bf8e82958617465c91e561e922c165a10aaa1789e83a78b7baa070671247d0f97c63b4cc89cf6cabc72258f3d9cbe12fe799e2a
+  languageName: node
+  linkType: hard
+
 "@azure/logger@npm:^1.0.0, @azure/logger@npm:^1.0.3":
   version: 1.0.4
   resolution: "@azure/logger@npm:1.0.4"
@@ -4683,12 +4705,28 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@azure/msal-browser@npm:^3.11.1":
+  version: 3.14.0
+  resolution: "@azure/msal-browser@npm:3.14.0"
+  dependencies:
+    "@azure/msal-common": 14.10.0
+  checksum: 747cd3df32f082e515c5e268d64f0d16afa0ce21ab5154e235ee0eb0fd0e2902504d12bac1f94839afaf9cc94c823d961775c3f57c3f20f12864d13a5ed0fa44
+  languageName: node
+  linkType: hard
+
 "@azure/msal-browser@npm:^3.5.0":
   version: 3.7.1
   resolution: "@azure/msal-browser@npm:3.7.1"
   dependencies:
     "@azure/msal-common": 14.6.1
   checksum: 756cc9aef745739408be6dace5fb8aee0e63c98d6998a38c70e5eea18257ce4a79ec100e88d370402c28e1688bf13280e5166633a560e8bcfbad0525d3bb46ac
+  languageName: node
+  linkType: hard
+
+"@azure/msal-common@npm:14.10.0":
+  version: 14.10.0
+  resolution: "@azure/msal-common@npm:14.10.0"
+  checksum: 50994f54cdce7425bef42d44b3b15e756ede11efa5d2f84440da41ea13f0b0c00e8c262925e42b2f6d5f6f850233dccf99d810ced7b2cf372b9a645ed53489f8
   languageName: node
   linkType: hard
 
@@ -4707,6 +4745,17 @@ __metadata:
     jsonwebtoken: ^9.0.0
     uuid: ^8.3.0
   checksum: 7d842c1269bd0892d6545c64cc49a5c8a739ded35103b7faa389dde0b0318c9c057df06626baa40d40dfa164db65be8544c7c32796aa3454716ec817c1749380
+  languageName: node
+  linkType: hard
+
+"@azure/msal-node@npm:^2.6.6":
+  version: 2.8.0
+  resolution: "@azure/msal-node@npm:2.8.0"
+  dependencies:
+    "@azure/msal-common": 14.10.0
+    jsonwebtoken: ^9.0.0
+    uuid: ^8.3.0
+  checksum: 778b7f8a9088ec264b7b59c1dd06ca9f4d9acfe7dd9e9fa92fb1fbcb8da3f9917ebf641715d4fe2338da17eae00a571cb8f1b6431c419609c8eff372654ce378
   languageName: node
   linkType: hard
 
@@ -9865,6 +9914,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/openai@workspace:libs/langchain-openai"
   dependencies:
+    "@azure/identity": ^4.2.0
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.2.0-rc.0
     "@langchain/scripts": ~0.0
@@ -9881,7 +9931,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     js-tiktoken: ^1.0.7
-    openai: ^4.32.1
+    openai: ^4.41.1
     prettier: ^2.8.3
     release-it: ^15.10.1
     rimraf: ^5.0.1
@@ -27386,7 +27436,7 @@ __metadata:
     node-llama-cpp: 2.7.3
     notion-to-md: ^3.1.0
     officeparser: ^4.0.4
-    openai: ^4.32.1
+    openai: ^4.41.1
     openapi-types: ^12.1.3
     p-retry: 4
     pdf-parse: 1.1.1
@@ -30165,9 +30215,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openai@npm:^4.32.1":
-  version: 4.32.1
-  resolution: "openai@npm:4.32.1"
+"openai@npm:^4.41.1":
+  version: 4.42.0
+  resolution: "openai@npm:4.42.0"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
@@ -30179,7 +30229,7 @@ __metadata:
     web-streams-polyfill: ^3.2.1
   bin:
     openai: bin/cli
-  checksum: da60909a86196ff88b5983c302c3da1dcbe0660ec87652dda62866e38cf6005c4974eaeb731446de9a9f7f13146ef3018aca51b8bfe1486374226bb102494dcb
+  checksum: 28eae59cb4b51b3d7224647e3be369453522b5be3f1530a51bf8ffe2aefa165cf4156a7621803782014c022943b16ff27690159ef3720214fdbb137a21e47bf2
   languageName: node
   linkType: hard
 

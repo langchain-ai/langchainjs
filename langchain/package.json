@@ -654,7 +654,7 @@
     "node-llama-cpp": "2.7.3",
     "notion-to-md": "^3.1.0",
     "officeparser": "^4.0.4",
-    "openai": "^4.32.1",
+    "openai": "^4.41.1",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
     "playwright": "^1.32.1",
