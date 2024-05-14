@@ -31,14 +31,12 @@ The migration script has the following limitations:
 
 Here is an example of the import changes that the migration script can help apply automatically:
 
-
-| From Package        | To Package                    | Deprecated Import                                                          | New Import                                                                          |
-|------------------------|----------------------------|----------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
-| `langchain`            | `@langchain/community`     | `import { UpstashVectorStore } from "langchain/vectorstores/upstash"`      | `import { UpstashVectorStore } from "@langchain/community/vectorstores/upstash"`    |
-| `@langchain/community` | `@langchain/openai`        | `import { ChatOpenAI } from "@langchain/community/chat_models/openai"`     | `import { ChatOpenAI } from "@langchain/openai"`                                    |
-| `langchain`            | `@langchain/core`          | `import { Document } from "langchain/schema/document"`                     | `import { Document } from "@langchain/core/documents"`                              |
-| `langchain`            | `@langchain/textsplitters` | `import { RecursiveCharacterTextSplitter } from "langchain/text_splitter"` | `import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters"`         |
-
+| From Package           | To Package                 | Deprecated Import                                                          | New Import                                                                       |
+| ---------------------- | -------------------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `langchain`            | `@langchain/community`     | `import { UpstashVectorStore } from "langchain/vectorstores/upstash"`      | `import { UpstashVectorStore } from "@langchain/community/vectorstores/upstash"` |
+| `@langchain/community` | `@langchain/openai`        | `import { ChatOpenAI } from "@langchain/community/chat_models/openai"`     | `import { ChatOpenAI } from "@langchain/openai"`                                 |
+| `langchain`            | `@langchain/core`          | `import { Document } from "langchain/schema/document"`                     | `import { Document } from "@langchain/core/documents"`                           |
+| `langchain`            | `@langchain/textsplitters` | `import { RecursiveCharacterTextSplitter } from "langchain/text_splitter"` | `import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters"`      |
 
 #### Deprecation timeline
 
@@ -88,6 +86,6 @@ updateEntrypointsFrom0_x_xTo0_2_x({
   projectPath: pathToMyProject,
   tsConfigPath: "tsconfig.json", // Path to the tsConfig file. This will be used to load all the project files into the script.
   testRun: true, // If true, the script will not save any changes, but will log the changes that would be made.
-  files: ["..."] // A list of .ts file paths to check. If this is provided, the script will only check these files.
+  files: ["..."], // A list of .ts file paths to check. If this is provided, the script will only check these files.
 });
 ```
