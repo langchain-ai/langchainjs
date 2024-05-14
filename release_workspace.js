@@ -216,7 +216,7 @@ Workspaces:
  */
 function checkoutReleaseBranch() {
   const currentBranch = execSync("git branch --show-current").toString().trim();
-  if (currentBranch === MAIN_BRANCH) {
+  if (currentBranch === MAIN_BRANCH || currentBranch === "v0.1") {
     console.log(`Checking out '${RELEASE_BRANCH}' branch.`);
     execSync(`git checkout -B ${RELEASE_BRANCH}`);
     execSync(`git push -u origin ${RELEASE_BRANCH}`);
