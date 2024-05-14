@@ -3,11 +3,11 @@ import * as fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import * as path from "node:path";
 import { HumanMessage } from "@langchain/core/messages";
-import { ChatGoogleGenerativeAI } from "../chat_models.js";
 import {
   ChatPromptTemplate,
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
+import { ChatGoogleGenerativeAI } from "../chat_models.js";
 
 test("Test Google AI", async () => {
   const model = new ChatGoogleGenerativeAI({});

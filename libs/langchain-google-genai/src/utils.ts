@@ -9,6 +9,7 @@ import {
   BaseMessage,
   ChatMessage,
   MessageContent,
+  MessageContentComplex,
   isBaseMessage,
 } from "@langchain/core/messages";
 import {
@@ -48,10 +49,7 @@ export function convertAuthorToRole(author: string) {
   }
 }
 
-function messageContentMedia(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  content: Record<string, any>
-): Part {
+function messageContentMedia(content: MessageContentComplex): Part {
   if ("mimeType" in content && "data" in content) {
     return {
       inlineData: {
