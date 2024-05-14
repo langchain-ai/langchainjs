@@ -1,0 +1,24 @@
+---
+hide_table_of_contents: true
+---
+
+# Knowledge Bases for Amazon Bedrock
+
+Knowledge Bases for Amazon Bedrock is a fully managed support for end-to-end RAG workflow provided by Amazon Web Services (AWS). It provides an entire ingestion workflow of converting your documents into embeddings (vector) and storing the embeddings in a specialized vector database. Knowledge Bases for Amazon Bedrock supports popular databases for vector storage, including vector engine for Amazon OpenSearch Serverless, Pinecone, Redis Enterprise Cloud, Amazon Aurora (coming soon), and MongoDB (coming soon).
+
+## Setup
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm i @aws-sdk/client-bedrock-agent-runtime @langchain/community
+```
+
+## Usage
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/retrievers/amazon_knowledge_bases.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>

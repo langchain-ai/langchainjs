@@ -13,6 +13,8 @@ const mdxComponentsPath = path.resolve(__dirname, "docs", "mdx_components");
 const baseLightCodeBlockTheme = require("prism-react-renderer/themes/vsLight");
 const baseDarkCodeBlockTheme = require("prism-react-renderer/themes/vsDark");
 
+const baseUrl = "/v0.2/";
+
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: "🦜️🔗 Langchain",
@@ -22,10 +24,10 @@ const config = {
   url: "https://js.langchain.com",
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: "/",
+  baseUrl,
 
-  onBrokenLinks: "throw",
-  onBrokenMarkdownLinks: "throw",
+  onBrokenLinks: "warn", // TODO(brace) change back to "throw" once all todos ported
+  onBrokenMarkdownLinks: "warn", // TODO(brace) change back to "throw" once all todos ported
 
   plugins: [
     () => ({
@@ -51,7 +53,7 @@ const config = {
           rules: [
             {
               test: examplesPath,
-              use: ["json-loader", "./code-block-loader.js"],
+              use: ["json-loader", "./scripts/code-block-loader.js"],
             },
             {
               test: /\.ya?ml$/,
@@ -130,6 +132,11 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+      announcementBar: {
+        content:
+          'You are viewing the <strong>preview</strong> LangChain v0.2 docs. View the <a href="/v0.1/docs/get_started/introduction/">stable 0.1 docs here</a>.',
+        isCloseable: true,
+      },
       prism: {
         theme: {
           ...baseLightCodeBlockTheme,
@@ -153,17 +160,6 @@ const config = {
           srcDark: "img/brand/wordmark-dark.png",
         },
         items: [
-          {
-            to: "/docs/get_started/introduction",
-            label: "Docs",
-            position: "left",
-          },
-          {
-            type: "docSidebar",
-            position: "left",
-            sidebarId: "use_cases",
-            label: "Use cases",
-          },
           {
             type: "docSidebar",
             position: "left",
@@ -299,7 +295,7 @@ const config = {
     }),
 
   scripts: [
-    "/js/google_analytics.js",
+    baseUrl + "js/google_analytics.js",
     {
       src: "https://www.googletagmanager.com/gtag/js?id=G-TVSL7JBE9Y",
       async: true,

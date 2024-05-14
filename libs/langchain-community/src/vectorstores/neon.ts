@@ -94,6 +94,7 @@ export class NeonPostgres extends VectorStore {
    * @returns The complete SQL INSERT INTO query string.
    */
   protected async runInsertQuery(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     rows: (string | Record<string, any>)[][],
     useIdColumn: boolean
   ) {

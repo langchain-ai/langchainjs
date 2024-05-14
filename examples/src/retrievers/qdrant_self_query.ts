@@ -2,7 +2,7 @@ import { AttributeInfo } from "langchain/schema/query_constructor";
 import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
 import { SelfQueryRetriever } from "langchain/retrievers/self_query";
 import { QdrantVectorStore } from "@langchain/community/vectorstores/qdrant";
-import { QdrantTranslator } from "@langchain/community/retrievers/self_query/qdrant";
+import { QdrantTranslator } from "@langchain/community/structured_query/qdrant";
 import { Document } from "@langchain/core/documents";
 
 import { QdrantClient } from "@qdrant/js-client-rest";

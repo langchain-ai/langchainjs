@@ -1,7 +1,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { Calculator } from "@langchain/community/tools/calculator";
-import { BufferMemory } from "langchain/memory";
+import { BufferMemory } from "langchain/memory/index";
 import { MessagesPlaceholder } from "@langchain/core/prompts";
 
 export const run = async () => {

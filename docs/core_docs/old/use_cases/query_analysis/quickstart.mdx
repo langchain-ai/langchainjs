@@ -1,0 +1,333 @@
+---
+sidebar_position: 0
+title: Build a Query Analysis System
+---
+
+```mdx-code-block
+import CodeBlock from "@theme/CodeBlock";
+```
+
+# Build a Query Analysis System
+
+This page will show how to use query analysis in a basic end-to-end
+example. This will cover creating a simple search engine, showing a
+failure mode that occurs when passing a raw user question to that
+search, and then an example of how query analysis can help address that
+issue. There are MANY different query analysis techniques and this
+end-to-end example will not show all of them.
+
+For the purpose of this example, we will do retrieval over the LangChain
+YouTube videos.
+
+## Setup
+
+#### Install dependencies
+
+```mdx-code-block
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+import Npm2Yarn from "@theme/Npm2Yarn";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+<Npm2Yarn>
+  langchain @langchain/community @langchain/openai youtubei.js chromadb youtube-transcript
+</Npm2Yarn>
+```
+
+#### Set environment variables
+
+We’ll use OpenAI in this example:
+
+```env
+OPENAI_API_KEY=your-api-key
+
+# Optional, use LangSmith for best-in-class observability
+LANGSMITH_API_KEY=your-api-key
+LANGCHAIN_TRACING_V2=true
+```
+
+### Load documents
+
+We can use the `YouTubeLoader` to load transcripts of a few LangChain
+videos:
+
+```mdx-code-block
+import LoadYtVideos from "@examples/use_cases/query_analysis/quickstart/load_yt_videos.ts";
+
+<CodeBlock language="typescript">{LoadYtVideos}</CodeBlock>
+```
+
+Here’s the metadata associated with each video.
+
+We can see that each document also has a title, view count, publication
+date, and length:
+
+```mdx-code-block
+import VideoMetadata from "@examples/use_cases/query_analysis/quickstart/metadata.ts";
+
+<CodeBlock language="typescript">{VideoMetadata}</CodeBlock>
+```
+
+### Indexing documents
+
+Whenever we perform retrieval we need to create an index of documents
+that we can query. We’ll use a vector store to index our documents, and
+we’ll chunk them first to make our retrievals more concise and precise:
+
+```mdx-code-block
+import IndexDocs from "@examples/use_cases/query_analysis/quickstart/index_docs.ts";
+
+<CodeBlock language="typescript">{IndexDocs}</CodeBlock>
+```
+
+Then later, you can retrieve the index without having to re-query and
+embed:
+
+```typescript
+import "chromadb";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { Chroma } from "@langchain/community/vectorstores/chroma";
+
+const embeddings = new OpenAIEmbeddings({
+  model: "text-embedding-3-small",
+});
+const vectorStore = await Chroma.fromExistingCollection(embeddings, {
+  collectionName: "yt-videos",
+});
+```
+
+```text
+[Module: null prototype] {
+  AdminClient: [class AdminClient],
+  ChromaClient: [class ChromaClient],
+  CloudClient: [class CloudClient extends ChromaClient],
+  CohereEmbeddingFunction: [class CohereEmbeddingFunction],
+  Collection: [class Collection],
+  DefaultEmbeddingFunction: [class _DefaultEmbeddingFunction],
+  GoogleGenerativeAiEmbeddingFunction: [class _GoogleGenerativeAiEmbeddingFunction],
+  HuggingFaceEmbeddingServerFunction: [class HuggingFaceEmbeddingServerFunction],
+  IncludeEnum: {
+    Documents: "documents",
+    Embeddings: "embeddings",
+    Metadatas: "metadatas",
+    Distances: "distances"
+  },
+  JinaEmbeddingFunction: [class JinaEmbeddingFunction],
+  OpenAIEmbeddingFunction: [class _OpenAIEmbeddingFunction],
+  TransformersEmbeddingFunction: [class _TransformersEmbeddingFunction]
+}
+```
+
+## Retrieval without query analysis
+
+We can perform similarity search on a user question directly to find
+chunks relevant to the question:
+
+```typescript
+const searchResults = await vectorStore.similaritySearch(
+  "how do I build a RAG agent"
+);
+console.log(searchResults[0].metadata.title);
+console.log(searchResults[0].pageContent.slice(0, 500));
+```
+
+```text
+OpenGPTs
+hardcoded that it will always do a retrieval step here the assistant decides whether to do a retrieval step or not sometimes this is good sometimes this is bad sometimes it you don't need to do a retrieval step when I said hi it didn't need to call it tool um but other times you know the the llm might mess up and not realize that it needs to do a retrieval step and so the rag bot will always do a retrieval step so it's more focused there because this is also a simpler architecture so it's always
+```
+
+This works pretty okay! Our first result is somewhat relevant to the
+question.
+
+What if we wanted to search for results from a specific time period?
+
+```typescript
+const searchResults = await vectorStore.similaritySearch(
+  "videos on RAG published in 2023"
+);
+console.log(searchResults[0].metadata.title);
+console.log(searchResults[0].metadata.publish_year);
+console.log(searchResults[0].pageContent.slice(0, 500));
+```
+
+```text
+OpenGPTs
+2024
+hardcoded that it will always do a retrieval step here the assistant decides whether to do a retrieval step or not sometimes this is good sometimes this is bad sometimes it you don't need to do a retrieval step when I said hi it didn't need to call it tool um but other times you know the the llm might mess up and not realize that it needs to do a retrieval step and so the rag bot will always do a retrieval step so it's more focused there because this is also a simpler architecture so it's always
+```
+
+Our first result is from 2024, and not very relevant to the input. Since
+we’re just searching against document contents, there’s no way for the
+results to be filtered on any document attributes.
+
+This is just one failure mode that can arise. Let’s now take a look at
+how a basic form of query analysis can fix it!
+
+## Query analysis
+
+To handle these failure modes we’ll do some query structuring. This will
+involve defining a **query schema** that contains some date filters and
+use a function-calling model to convert a user question into a
+structured queries.
+
+### Query schema
+
+In this case we’ll have explicit min and max attributes for publication
+date so that it can be filtered on.
+
+```typescript
+import { z } from "zod";
+
+const searchSchema = z
+  .object({
+    query: z
+      .string()
+      .describe("Similarity search query applied to video transcripts."),
+    publish_year: z.number().optional().describe("Year of video publication."),
+  })
+  .describe(
+    "Search over a database of tutorial videos about a software library."
+  );
+```
+
+### Query generation
+
+To convert user questions to structured queries we’ll make use of
+OpenAI’s function-calling API. Specifically we’ll use the new
+[ChatModel.withStructuredOutput()](https://api.js.langchain.com/classes/langchain_core_language_models_base.BaseLanguageModel.html#withStructuredOutput)
+constructor to handle passing the schema to the model and parsing the
+output.
+
+```typescript
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { ChatOpenAI } from "@langchain/openai";
+import {
+  RunnablePassthrough,
+  RunnableSequence,
+} from "@langchain/core/runnables";
+
+const system = `You are an expert at converting user questions into database queries.
+You have access to a database of tutorial videos about a software library for building LLM-powered applications.
+Given a question, return a list of database queries optimized to retrieve the most relevant results.
+
+If there are acronyms or words you are not familiar with, do not try to rephrase them.`;
+const prompt = ChatPromptTemplate.fromMessages([
+  ["system", system],
+  ["human", "{question}"],
+]);
+const llm = new ChatOpenAI({
+  model: "gpt-3.5-turbo-0125",
+  temperature: 0,
+});
+const structuredLLM = llm.withStructuredOutput(searchSchema, {
+  name: "search",
+});
+
+const queryAnalyzer = RunnableSequence.from([
+  {
+    question: new RunnablePassthrough(),
+  },
+  prompt,
+  structuredLLM,
+]);
+```
+
+Let’s see what queries our analyzer generates for the questions we
+searched earlier:
+
+```typescript
+console.log(await queryAnalyzer.invoke("How do I build a rag agent"));
+```
+
+```text
+{ query: "build a rag agent" }
+```
+
+```typescript
+console.log(await queryAnalyzer.invoke("videos on RAG published in 2023"));
+```
+
+```text
+{ query: "RAG", publish_year: 2023 }
+```
+
+## Retrieval with query analysis
+
+Our query analysis looks pretty good; now let’s try using our generated
+queries to actually perform retrieval.
+
+**Note:** in our example, we specified `tool_choice: "Search"`. This
+will force the LLM to call one - and only one - function, meaning that
+we will always have one optimized query to look up. Note that this is
+not always the case - see other guides for how to deal with situations
+when no - or multiple - optimized queries are returned.
+
+```typescript
+import { DocumentInterface } from "@langchain/core/documents";
+
+const retrieval = async (input: {
+  query: string;
+  publish_year?: number;
+}): Promise<DocumentInterface[]> => {
+  let _filter: Record<string, any> = {};
+  if (input.publish_year) {
+    // This syntax is specific to Chroma
+    // the vector database we are using.
+    _filter = {
+      publish_year: {
+        $eq: input.publish_year,
+      },
+    };
+  }
+
+  return vectorStore.similaritySearch(input.query, undefined, _filter);
+};
+```
+
+```typescript
+import { RunnableLambda } from "@langchain/core/runnables";
+
+const retrievalChain = queryAnalyzer.pipe(
+  new RunnableLambda({
+    func: async (input) =>
+      retrieval(input as unknown as { query: string; publish_year?: number }),
+  })
+);
+```
+
+We can now run this chain on the problematic input from before, and see
+that it yields only results from that year!
+
+```typescript
+const results = await retrievalChain.invoke("RAG tutorial published in 2023");
+```
+
+```typescript
+console.log(
+  results.map((doc) => ({
+    title: doc.metadata.title,
+    year: doc.metadata.publish_date,
+  }))
+);
+```
+
+```text
+[
+  {
+    title: "Getting Started with Multi-Modal LLMs",
+    year: "2023-12-20T08:00:00.000Z"
+  },
+  {
+    title: "LangServe and LangChain Templates Webinar",
+    year: "2023-11-02T07:00:00.000Z"
+  },
+  {
+    title: "Getting Started with Multi-Modal LLMs",
+    year: "2023-12-20T08:00:00.000Z"
+  },
+  {
+    title: "Building a Research Assistant from Scratch",
+    year: "2023-11-16T08:00:00.000Z"
+  }
+]
+```

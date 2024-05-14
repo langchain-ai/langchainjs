@@ -2,6 +2,12 @@ import { type ClientOptions, OpenAIClient, toFile } from "@langchain/openai";
 
 import { Document } from "@langchain/core/documents";
 import { BufferLoader } from "./buffer.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/fs/openai_whisper_audio",
+  newPackageName: "@langchain/community",
+});
 
 const MODEL_NAME = "whisper-1";
 

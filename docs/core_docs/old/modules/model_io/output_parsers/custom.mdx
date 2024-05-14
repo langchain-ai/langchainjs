@@ -1,0 +1,379 @@
+---
+title: Custom output parsers
+---
+
+# Custom output parsers
+
+If there is a custom format you want to transform a model’s output into,
+you can subclass and create your own output parser.
+
+The simplest kind of output parser extends the [`BaseOutputParser<T>`
+class](https://api.js.langchain.com/classes/langchain_core_output_parsers.BaseOutputParser.html)
+and must implement the following methods:
+
+- `parse`, which takes extracted string output from the model and
+  returns an instance of `T`.
+- `getFormatInstructions`, which returns formatting instructions to
+  pass to the model’s prompt to encourage output in the correct
+  format.
+
+The `parse` method should also throw a special type of error called an
+[`OutputParserException`](https://api.js.langchain.com/classes/langchain_core_output_parsers.OutputParserException.html)
+if the LLM output is badly formatted, which will trigger special retry
+behavior in other modules.
+
+Here is a simplified example that expects the LLM to output a JSON
+object with specific named properties:
+
+```typescript
+import {
+  BaseOutputParser,
+  OutputParserException,
+} from "@langchain/core/output_parsers";
+
+export interface CustomOutputParserFields {}
+
+// This can be more generic, like Record<string, string>
+export type ExpectedOutput = {
+  greeting: string;
+};
+
+export class CustomOutputParser extends BaseOutputParser<ExpectedOutput> {
+  lc_namespace = ["langchain", "output_parsers"];
+
+  constructor(fields?: CustomOutputParserFields) {
+    super(fields);
+  }
+
+  async parse(llmOutput: string): Promise<ExpectedOutput> {
+    let parsedText;
+    try {
+      parsedText = JSON.parse(llmOutput);
+    } catch (e) {
+      throw new OutputParserException(
+        `Failed to parse. Text: "${llmOutput}". Error: ${e.message}`
+      );
+    }
+    if (parsedText.greeting === undefined) {
+      throw new OutputParserException(
+        `Failed to parse. Text: "${llmOutput}". Error: Missing "greeting" key.`
+      );
+    }
+    if (Object.keys(parsedText).length !== 1) {
+      throw new OutputParserException(
+        `Failed to parse. Text: "${llmOutput}". Error: Expected one and only one key named "greeting".`
+      );
+    }
+    return parsedText;
+  }
+
+  getFormatInstructions(): string {
+    return `Your response must be a JSON object with a single key called "greeting" with a single string value. Do not return anything else.`;
+  }
+}
+```
+
+Then, we can use it with an LLM like this:
+
+```typescript
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { ChatOpenAI } from "@langchain/openai";
+
+const template = `Answer the following user question to the best of your ability:
+{format_instructions}
+
+{question}`;
+
+const prompt = ChatPromptTemplate.fromTemplate(template);
+
+const model = new ChatOpenAI({});
+
+const outputParser = new CustomOutputParser();
+
+const chain = prompt.pipe(model).pipe(outputParser);
+
+const result = await chain.invoke({
+  question: "how are you?",
+  format_instructions: outputParser.getFormatInstructions(),
+});
+
+console.log(typeof result);
+console.log(result);
+```
+
+```text
+object
+{
+  greeting: "I am an AI assistant programmed to provide information and assist with tasks. How can I help you tod"... 3 more characters
+}
+```
+
+## Parsing raw model outputs
+
+Sometimes there is additional metadata on the model output that is
+important besides the raw text. One example of this is function calling,
+where arguments intended to be passed to called functions are returned
+in a separate property. If you need this finer-grained control, you can
+instead subclass the [`BaseLLMOutputParser<T>`
+class](https://api.js.langchain.com/classes/langchain_core_output_parsers.BaseLLMOutputParser.html).
+This class requires a single method:
+
+- `parseResult`, which takes a
+  [`Generation[]`](https://api.js.langchain.com/interfaces/langchain_core_outputs.Generation.html)
+  or a
+  [`ChatGeneration[]`](https://api.js.langchain.com/interfaces/langchain_core_outputs.ChatGeneration.html)
+  as a parameter. This is because output parsers generally work with
+  both chat models and LLMs, and therefore must be able to handle both
+  types of outputs.
+
+The `getFormatInstructions` method is not required for this class.
+Here’s an example of the above output parser rewritten in this style:
+
+```typescript
+import {
+  BaseLLMOutputParser,
+  OutputParserException,
+} from "@langchain/core/output_parsers";
+import { ChatGeneration, Generation } from "@langchain/core/outputs";
+
+export interface CustomOutputParserFields {}
+
+// This can be more generic, like Record<string, string>
+export type ExpectedOutput = {
+  greeting: string;
+};
+
+function isChatGeneration(
+  llmOutput: ChatGeneration | Generation
+): llmOutput is ChatGeneration {
+  return "message" in llmOutput;
+}
+
+export class CustomLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
+  lc_namespace = ["langchain", "output_parsers"];
+
+  constructor(fields?: CustomOutputParserFields) {
+    super(fields);
+  }
+
+  async parseResult(
+    llmOutputs: ChatGeneration[] | Generation[]
+  ): Promise<ExpectedOutput> {
+    if (!llmOutputs.length) {
+      throw new OutputParserException(
+        "Output parser did not receive any generations."
+      );
+    }
+    let parsedOutput;
+    // There is a standard `text` property as well on both types of Generation
+    if (isChatGeneration(llmOutputs[0])) {
+      parsedOutput = llmOutputs[0].message.content;
+    } else {
+      parsedOutput = llmOutputs[0].text;
+    }
+    let parsedText;
+    try {
+      parsedText = JSON.parse(parsedOutput);
+    } catch (e) {
+      throw new OutputParserException(
+        `Failed to parse. Text: "${parsedOutput}". Error: ${e.message}`
+      );
+    }
+    if (parsedText.greeting === undefined) {
+      throw new OutputParserException(
+        `Failed to parse. Text: "${parsedOutput}". Error: Missing "greeting" key.`
+      );
+    }
+    if (Object.keys(parsedText).length !== 1) {
+      throw new OutputParserException(
+        `Failed to parse. Text: "${parsedOutput}". Error: Expected one and only one key named "greeting".`
+      );
+    }
+    return parsedText;
+  }
+}
+```
+
+```typescript
+const template = `Answer the following user question to the best of your ability:
+Your response must be a JSON object with a single key called "greeting" with a single string value. Do not return anything else.
+
+{question}`;
+
+const prompt = ChatPromptTemplate.fromTemplate(template);
+
+const model = new ChatOpenAI({});
+
+const outputParser = new CustomLLMOutputParser();
+
+const chain = prompt.pipe(model).pipe(outputParser);
+
+const result = await chain.invoke({
+  question: "how are you?",
+});
+
+console.log(typeof result);
+console.log(result);
+```
+
+```text
+object
+{
+  greeting: "I'm an AI assistant, I don't have feelings but thank you for asking!"
+}
+```
+
+## Streaming
+
+The above parser will work well for parsing fully aggregated model
+outputs, but will cause `.stream()` to return a single chunk rather than
+emitting them as the model generates them:
+
+```typescript
+const stream = await chain.stream({
+  question: "how are you?",
+});
+for await (const chunk of stream) {
+  console.log(chunk);
+}
+```
+
+```text
+{
+  greeting: "I'm an AI assistant, so I don't feel emotions but I'm here to help you."
+}
+```
+
+This makes sense in some scenarios where we need to wait for the LLM to
+finish generating before parsing the output, but supporting preemptive
+parsing when possible creates nicer downstream user experiences. A
+simple example is automatically transforming streamed output into bytes
+as it is generated for use in HTTP responses.
+
+The base class in this case is
+[`BaseTransformOutputParser`](https://api.js.langchain.com/classes/langchain_core_output_parsers.BaseTransformOutputParser.html),
+which itself extends `BaseOutputParser`. As before, you’ll need to
+implement the `parse` method, but this time it’s a bit trickier since
+each `parse` invocation needs to potentially handle a chunk of output
+rather than the whole thing. Here’s a simple example:
+
+```typescript
+import { BaseTransformOutputParser } from "@langchain/core/output_parsers";
+
+export class CustomTransformOutputParser extends BaseTransformOutputParser<Uint8Array> {
+  lc_namespace = ["langchain", "output_parsers"];
+
+  protected textEncoder = new TextEncoder();
+
+  async parse(text: string): Promise<Uint8Array> {
+    return this.textEncoder.encode(text);
+  }
+
+  getFormatInstructions(): string {
+    return "";
+  }
+}
+```
+
+```typescript
+const template = `Answer the following user question to the best of your ability:
+
+{question}`;
+
+const prompt = ChatPromptTemplate.fromTemplate(template);
+
+const model = new ChatOpenAI({});
+
+const outputParser = new CustomTransformOutputParser();
+
+const chain = prompt.pipe(model).pipe(outputParser);
+
+const stream = await chain.stream({
+  question: "how are you?",
+});
+
+for await (const chunk of stream) {
+  console.log(chunk);
+}
+```
+
+```text
+Uint8Array(0) []
+Uint8Array(2) [ 65, 115 ]
+Uint8Array(3) [ 32, 97, 110 ]
+Uint8Array(3) [ 32, 65, 73 ]
+Uint8Array(1) [ 44 ]
+Uint8Array(2) [ 32, 73 ]
+Uint8Array(4) [ 32, 100, 111, 110 ]
+Uint8Array(2) [ 39, 116 ]
+Uint8Array(5) [ 32, 104, 97, 118, 101 ]
+Uint8Array(9) [
+   32, 102, 101, 101,
+  108, 105, 110, 103,
+  115
+]
+Uint8Array(3) [ 32, 111, 114 ]
+Uint8Array(9) [
+   32, 101, 109, 111,
+  116, 105, 111, 110,
+  115
+]
+Uint8Array(1) [ 44 ]
+Uint8Array(3) [ 32, 115, 111 ]
+Uint8Array(2) [ 32, 73 ]
+Uint8Array(4) [ 32, 100, 111, 110 ]
+Uint8Array(2) [ 39, 116 ]
+Uint8Array(11) [
+   32, 101, 120, 112,
+  101, 114, 105, 101,
+  110,  99, 101
+]
+Uint8Array(4) [ 32, 116, 104, 101 ]
+Uint8Array(5) [ 32, 115, 97, 109, 101 ]
+Uint8Array(4) [ 32, 119, 97, 121 ]
+Uint8Array(7) [
+   32, 104, 117,
+  109,  97, 110,
+  115
+]
+Uint8Array(3) [ 32, 100, 111 ]
+Uint8Array(1) [ 46 ]
+Uint8Array(8) [
+   32,  72, 111, 119,
+  101, 118, 101, 114
+]
+Uint8Array(1) [ 44 ]
+Uint8Array(2) [ 32, 73 ]
+Uint8Array(2) [ 39, 109 ]
+Uint8Array(5) [ 32, 104, 101, 114, 101 ]
+Uint8Array(3) [ 32, 116, 111 ]
+Uint8Array(5) [ 32, 104, 101, 108, 112 ]
+Uint8Array(4) [ 32, 121, 111, 117 ]
+Uint8Array(5) [ 32, 119, 105, 116, 104 ]
+Uint8Array(4) [ 32, 97, 110, 121 ]
+Uint8Array(10) [
+   32, 113, 117, 101,
+  115, 116, 105, 111,
+  110, 115
+]
+Uint8Array(3) [ 32, 111, 114 ]
+Uint8Array(6) [ 32, 116, 97, 115, 107, 115 ]
+Uint8Array(4) [ 32, 121, 111, 117 ]
+Uint8Array(5) [ 32, 104, 97, 118, 101 ]
+Uint8Array(1) [ 33 ]
+Uint8Array(4) [ 32, 72, 111, 119 ]
+Uint8Array(4) [ 32, 99, 97, 110 ]
+Uint8Array(2) [ 32, 73 ]
+Uint8Array(7) [
+   32,  97, 115,
+  115, 105, 115,
+  116
+]
+Uint8Array(4) [ 32, 121, 111, 117 ]
+Uint8Array(6) [ 32, 116, 111, 100, 97, 121 ]
+Uint8Array(1) [ 63 ]
+Uint8Array(0) []
+```
+
+For more examples, see some of the implementations [in
+(**langchain/core?**)](https://github.com/langchain-ai/langchainjs/tree/main/langchain-core/src/output_parsers).
