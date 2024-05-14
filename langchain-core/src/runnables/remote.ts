@@ -26,7 +26,7 @@ import {
 } from "../messages/index.js";
 import { GenerationChunk, ChatGenerationChunk, RUN_KEY } from "../outputs.js";
 import { convertEventStreamToIterableReadableDataStream } from "../utils/event_source_parse.js";
-import { concat } from "../utils/stream.js";
+import { IterableReadableStream, concat } from "../utils/stream.js";
 
 type RemoteRunnableOptions = {
   timeout?: number;
@@ -533,34 +533,11 @@ export class RemoteRunnable<
     await runManager?.handleChainEnd(runLog?.state.final_output);
   }
 
-  streamEvents(
+  async *_streamEvents(
     input: RunInput,
     options: Partial<CallOptions> & { version: "v1" },
-    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
-  ): AsyncGenerator<StreamEvent>;
-
-  streamEvents(
-    input: RunInput,
-    options: Partial<CallOptions> & {
-      version: "v1";
-      encoding: "text/event-stream";
-    },
-    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
-  ): AsyncGenerator<Uint8Array>;
-
-  async *streamEvents(
-    input: RunInput,
-    options: Partial<CallOptions> & {
-      version: "v1";
-      encoding?: "text/event-stream" | undefined;
-    },
-    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
-  ): AsyncGenerator<StreamEvent | Uint8Array> {
-    if (options?.version !== "v1") {
-      throw new Error(
-        `Only version "v1" of the events schema is currently supported.`
-      );
-    }
+    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose"> | undefined
+  ): AsyncGenerator<StreamEvent, any, unknown> {
     const [config, kwargs] =
       this._separateRunnableConfigFromCallOptions(options);
     const callbackManager_ = await getCallbackManagerForConfig(options);
@@ -625,5 +602,40 @@ export class RemoteRunnable<
       throw err;
     }
     await runManager?.handleChainEnd(events);
+  }
+
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & { version: "v1" },
+    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
+  ): Promise<IterableReadableStream<StreamEvent>>;
+
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version: "v1";
+      encoding: "text/event-stream";
+    },
+    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
+  ): Promise<IterableReadableStream<Uint8Array>>;
+
+  async streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version: "v1";
+      encoding?: "text/event-stream" | undefined;
+    },
+    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
+  ): Promise<IterableReadableStream<StreamEvent | Uint8Array>> {
+    if (options?.version !== "v1") {
+      throw new Error(
+        `Only version "v1" of the events schema is currently supported.`
+      );
+    }
+    if (options.encoding !== undefined) {
+      throw new Error("Special encodings are not supported for this runnable.");
+    }
+    const eventStream = await this._streamEvents(input, options, streamOptions);
+    return IterableReadableStream.fromAsyncGenerator(eventStream);
   }
 }
