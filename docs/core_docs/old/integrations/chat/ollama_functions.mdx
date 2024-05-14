@@ -1,0 +1,55 @@
+---
+sidebar_label: Ollama Functions
+---
+
+# Ollama Functions
+
+LangChain offers an experimental wrapper around open source models run locally via [Ollama](https://github.com/jmorganca/ollama)
+that gives it the same API as OpenAI Functions.
+
+Note that more powerful and capable models will perform better with complex schema and/or multiple functions. The examples below
+use [Mistral](https://ollama.ai/library/mistral).
+
+## Setup
+
+Follow [these instructions](https://github.com/jmorganca/ollama) to set up and run a local Ollama instance.
+
+## Initialize model
+
+You can initialize this wrapper the same way you'd initialize a standard `ChatOllama` instance:
+
+```typescript
+import { OllamaFunctions } from "langchain/experimental/chat_models/ollama_functions";
+
+const model = new OllamaFunctions({
+  temperature: 0.1,
+  model: "mistral",
+});
+```
+
+## Passing in functions
+
+You can now pass in functions the same way as OpenAI:
+
+import CodeBlock from "@theme/CodeBlock";
+import OllamaFunctionsCalling from "@examples/models/chat/ollama_functions/function_calling.ts";
+
+<CodeBlock language="typescript">{OllamaFunctionsCalling}</CodeBlock>
+
+## Using for extraction
+
+import OllamaFunctionsExtraction from "@examples/models/chat/ollama_functions/extraction.ts";
+
+<CodeBlock language="typescript">{OllamaFunctionsExtraction}</CodeBlock>
+
+You can see a LangSmith trace of what this looks like here: https://smith.langchain.com/public/31457ea4-71ca-4e29-a1e0-aa80e6828883/r
+
+## Customization
+
+Behind the scenes, this uses Ollama's JSON mode to constrain output to JSON, then passes tools schemas as JSON schema into the prompt.
+
+Because different models have different strengths, it may be helpful to pass in your own system prompt. Here's an example:
+
+import OllamaFunctionsCustomPrompt from "@examples/models/chat/ollama_functions/custom_prompt.ts";
+
+<CodeBlock language="typescript">{OllamaFunctionsCustomPrompt}</CodeBlock>

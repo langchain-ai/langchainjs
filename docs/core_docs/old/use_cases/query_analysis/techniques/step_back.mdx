@@ -1,0 +1,143 @@
+---
+sidebar_position: 2
+title: Step Back Prompting
+---
+
+# Step Back Prompting
+
+Sometimes search quality and model generations can be tripped up by the
+specifics of a question. One way to handle this is to first generate a
+more abstract, “step back” question and to query based on both the
+original and step back question.
+
+For example, if we ask a question of the form “Why does my LangGraph
+agent streamEvents return {LONG_TRACE} instead of {DESIRED_OUTPUT}” we
+will likely retrieve more relevant documents if we search with the more
+generic question “How does streamEvents work with a LangGraph agent”
+than if we search with the specific user question.
+
+Let’s take a look at how we might use step back prompting in the context
+of our Q&A bot over the LangChain YouTube videos.
+
+## Setup
+
+#### Install dependencies
+
+```mdx-code-block
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+import Npm2Yarn from "@theme/Npm2Yarn";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+<Npm2Yarn>
+  @langchain/core zod
+</Npm2Yarn>
+```
+
+#### Set environment variables
+
+```text
+# Optional, use LangSmith for best-in-class observability
+LANGSMITH_API_KEY=your-api-key
+LANGCHAIN_TRACING_V2=true
+```
+
+## Step back question generation
+
+Generating good step back questions comes down to writing a good prompt:
+
+```mdx-code-block
+import ChatModelTabs from "@theme/ChatModelTabs";
+
+<ChatModelTabs customVarName="llm" />
+```
+
+```typescript
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+
+const system = `You are an expert at taking a specific question and extracting a more generic question that gets at \
+the underlying principles needed to answer the specific question.
+
+You will be asked about a set of software for building LLM-powered applications called LangChain, LangGraph, LangServe, and LangSmith.
+
+LangChain is a Python framework that provides a large set of integrations that can easily be composed to build LLM applications.
+LangGraph is a Python package built on top of LangChain that makes it easy to build stateful, multi-actor LLM applications.
+LangServe is a Python package built on top of LangChain that makes it easy to deploy a LangChain application as a REST API.
+LangSmith is a platform that makes it easy to trace and test LLM applications.
+
+Given a specific user question about one or more of these products, write a more generic question that needs to be answered in order to answer the specific question. \
+
+If you don't recognize a word or acronym to not try to rewrite it.
+
+Write concise questions.`;
+const prompt = ChatPromptTemplate.fromMessages([
+  ["system", system],
+  ["human", "{question}"],
+]);
+const stepBack = prompt.pipe(llm).pipe(new StringOutputParser());
+```
+
+```typescript
+const question = `I built a LangGraph agent using Gemini Pro and tools like vectorstores and duckduckgo search.
+How do I get just the LLM calls from the event stream`;
+const result = await stepBack.invoke({ question: question });
+console.log(result);
+```
+
+```text
+What are the specific methods or functions within LangGraph that allow for filtering or extracting LLM calls from an event stream?
+```
+
+## Returning the stepback question and the original question
+
+To increase our recall we’ll likely want to retrieve documents based on
+both the step back question and the original question. We can easily
+return both like so:
+
+```typescript
+import { RunnablePassthrough } from "@langchain/core/runnables";
+
+const stepBackAndOriginal = RunnablePassthrough.assign({ stepBack });
+
+await stepBackAndOriginal.invoke({ question: question });
+```
+
+```text
+{
+  question: "I built a LangGraph agent using Gemini Pro and tools like vectorstores and duckduckgo search.\n" +
+    "How do"... 47 more characters,
+  stepBack: "What is the process for extracting specific types of calls, such as LLM calls, from an event stream "... 37 more characters
+}
+```
+
+## Using function-calling to get structured output
+
+If we were composing this technique with other query analysis
+techniques, we’d likely be using function calling to get out structured
+query objects. We can use function-calling for step back prompting like
+so:
+
+```typescript
+import { z } from "zod";
+
+const stepBackQuerySchema = z.object({
+  stepBackQuestion: z
+    .string()
+    .describe(
+      "Given a specific user question about one or more of these products, write a more generic question that needs to be answered in order to answer the specific question."
+    ),
+});
+
+const llmWithTools = llm.withStructuredOutput(stepBackQuerySchema, {
+  name: "StepBackQuery",
+});
+const hydeChain = prompt.pipe(llmWithTools);
+await hydeChain.invoke({ question: question });
+```
+
+```text
+{
+  stepBackQuestion: "What are the steps involved in extracting specific types of calls from an event stream in a software"... 13 more characters
+}
+```

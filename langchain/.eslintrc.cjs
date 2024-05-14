@@ -25,6 +25,7 @@ module.exports = {
     "*.cjs",
     "*.d.ts",
     "import_map.ts",
+    "dynamic_import_map.ts",
   ],
   rules: {
     "no-process-env": 2,

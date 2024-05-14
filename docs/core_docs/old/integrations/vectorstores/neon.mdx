@@ -1,0 +1,55 @@
+# Neon Postgres
+
+Neon is a fully managed serverless PostgreSQL database. It separates storage and compute to offer
+features such as instant branching and automatic scaling.
+
+With the `pgvector` extension, Neon provides a vector store that can be used with LangChain.js to store and query embeddings.
+
+## Setup
+
+### Select a Neon project
+
+If you do not have a Neon account, sign up for one at [Neon](https://neon.tech). After logging into the Neon Console, proceed
+to the [Projects](https://console.neon.tech/app/projects) section and select an existing project or create a new one.
+
+Your Neon project comes with a ready-to-use Postgres database named `neondb` that you can use to store embeddings. Navigate to
+the Connection Details section to find your database connection string. It should look similar to this:
+
+```text
+postgres://alex:AbC123dEf@ep-cool-darkness-123456.us-east-2.aws.neon.tech/dbname?sslmode=require
+```
+
+Keep your connection string handy for later use.
+
+### Application code
+
+To work with Neon Postgres, you need to install the `@neondatabase/serverless` package which provides a JavaScript/TypeScript
+driver to connect to the database.
+
+```bash npm2yarn
+npm install @neondatabase/serverless
+```
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/community
+```
+
+To initialize a `NeonPostgres` vectorstore, you need to provide your Neon database connection string. You can use the connection string
+we fetched above directly, or store it as an environment variable and use it in your code.
+
+```typescript
+const vectorStore = await NeonPostgres.initialize(embeddings, {
+  connectionString: NEON_POSTGRES_CONNECTION_STRING,
+});
+```
+
+## Usage
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/indexes/vector_stores/neon/example.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>

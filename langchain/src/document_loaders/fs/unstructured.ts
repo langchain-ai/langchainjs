@@ -9,6 +9,12 @@ import {
   LoadersMapping,
 } from "./directory.js";
 import { BaseDocumentLoader } from "../base.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/fs/unstructured",
+  newPackageName: "@langchain/community",
+});
 
 const UNSTRUCTURED_API_FILETYPES = [
   ".txt",
@@ -291,7 +297,7 @@ export class UnstructuredLoader extends BaseDocumentLoader {
     const documents: Document[] = [];
     for (const element of elements) {
       const { metadata, text } = element;
-      if (typeof text === "string") {
+      if (typeof text === "string" && text !== "") {
         documents.push(
           new Document({
             pageContent: text,

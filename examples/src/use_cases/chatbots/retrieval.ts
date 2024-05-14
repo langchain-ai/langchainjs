@@ -17,7 +17,7 @@ const loader = new CheerioWebBaseLoader(
 
 const rawDocs = await loader.load();
 
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
 const textSplitter = new RecursiveCharacterTextSplitter({
   chunkSize: 500,
