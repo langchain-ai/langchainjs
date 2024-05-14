@@ -740,7 +740,7 @@ export abstract class Runnable<
     input: RunInput,
     options: Partial<CallOptions> & { version: "v1" },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
-  ): Promise<IterableReadableStream<StreamEvent>>;
+  ): IterableReadableStream<StreamEvent>;
 
   streamEvents(
     input: RunInput,
@@ -749,17 +749,17 @@ export abstract class Runnable<
       encoding: "text/event-stream";
     },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
-  ): Promise<IterableReadableStream<Uint8Array>>;
+  ): IterableReadableStream<Uint8Array>;
 
-  async streamEvents(
+  streamEvents(
     input: RunInput,
     options: Partial<CallOptions> & {
       version: "v1";
       encoding?: "text/event-stream" | undefined;
     },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
-  ): Promise<IterableReadableStream<StreamEvent | Uint8Array>> {
-    const stream = await this._streamEvents(input, options, streamOptions);
+  ): IterableReadableStream<StreamEvent | Uint8Array> {
+    const stream = this._streamEvents(input, options, streamOptions);
     if (options.encoding === "text/event-stream") {
       return convertToHttpEventStream(stream);
     } else {
@@ -1138,7 +1138,7 @@ export class RunnableBinding<
     input: RunInput,
     options: Partial<CallOptions> & { version: "v1" },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
-  ): Promise<IterableReadableStream<StreamEvent>>;
+  ): IterableReadableStream<StreamEvent>;
 
   streamEvents(
     input: RunInput,
@@ -1147,24 +1147,32 @@ export class RunnableBinding<
       encoding: "text/event-stream";
     },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
-  ): Promise<IterableReadableStream<Uint8Array>>;
+  ): IterableReadableStream<Uint8Array>;
 
-  async streamEvents(
+  streamEvents(
     input: RunInput,
     options: Partial<CallOptions> & {
       version: "v1";
       encoding?: "text/event-stream" | undefined;
     },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
-  ): Promise<IterableReadableStream<StreamEvent | Uint8Array>> {
-    return this.bound.streamEvents(
-      input,
-      {
-        ...(await this._mergeConfig(ensureConfig(options), this.kwargs)),
-        version: options.version,
-      },
-      streamOptions
-    );
+  ): IterableReadableStream<StreamEvent | Uint8Array> {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const outerThis = this;
+    const generator = async function* () {
+      yield* outerThis.bound.streamEvents(
+        input,
+        {
+          ...(await outerThis._mergeConfig(
+            ensureConfig(options),
+            outerThis.kwargs
+          )),
+          version: options.version,
+        },
+        streamOptions
+      );
+    };
+    return IterableReadableStream.fromAsyncGenerator(generator());
   }
 
   static isRunnableBinding(
