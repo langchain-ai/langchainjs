@@ -249,7 +249,7 @@ export default function Feedback() {
       <br />
       <h4>
         You can leave detailed feedback{" "}
-        <a target="_blank" href={newGithubIssueURL}>
+        <a target="_blank" href={newGithubIssueURL} rel="noreferrer">
           on GitHub
         </a>
         .
