@@ -1,5 +1,11 @@
 import srtParser2 from "srt-parser-2";
 import { TextLoader } from "./text.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/fs/srt",
+  newPackageName: "@langchain/community",
+});
 
 /**
  * A class that extends the `TextLoader` class. It represents a document

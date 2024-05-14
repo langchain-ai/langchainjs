@@ -1,0 +1,25 @@
+# HuggingFace Inference
+
+This Embeddings integration uses the HuggingFace Inference API to generate embeddings for a given text using by default the `sentence-transformers/distilbert-base-nli-mean-tokens` model. You can pass a different model name to the constructor to use a different model.
+
+## Setup
+
+You'll first need to install the [`@langchain/community`](https://www.npmjs.com/package/@langchain/community) package and the required peer dep:
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/community @huggingface/inference@2
+```
+
+## Usage
+
+```typescript
+import { HuggingFaceInferenceEmbeddings } from "@langchain/community/embeddings/hf";
+
+const embeddings = new HuggingFaceInferenceEmbeddings({
+  apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.HUGGINGFACEHUB_API_KEY
+});
+```

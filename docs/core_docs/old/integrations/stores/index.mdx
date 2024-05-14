@@ -1,0 +1,184 @@
+---
+sidebar_class_name: hidden
+---
+
+# Stores
+
+Storing data in key value format is quick and efficient, and can be a powerful tool for LLM applications. The `BaseStore` class provides a simple interface for getting, setting, deleting and iterating over lists of key value pairs.
+
+The public API of `BaseStore` in LangChain JS offers four main methods:
+
+```typescript
+abstract mget(keys: K[]): Promise<(V | undefined)[]>;
+
+abstract mset(keyValuePairs: [K, V][]): Promise<void>;
+
+abstract mdelete(keys: K[]): Promise<void>;
+
+abstract yieldKeys(prefix?: string): AsyncGenerator<K | string>;
+```
+
+The `m` prefix stands for multiple, and indicates that these methods can be used to get, set and delete multiple key value pairs at once.
+The `yieldKeys` method is a generator function that can be used to iterate over all keys in the store, or all keys with a given prefix.
+
+It's that simple!
+
+So far LangChain.js has two base integrations for `BaseStore`:
+
+- [`InMemoryStore`](/docs/integrations/stores/in_memory)
+- [`LocalFileStore`](/docs/integrations/stores/file_system) (Node.js only)
+
+## Use Cases
+
+### Chat history
+
+If you're building web apps with chat, the `BaseStore` family of integrations can come in very handy for storing and retrieving chat history.
+
+### Caching
+
+The `BaseStore` family can be a useful alternative to our other caching integrations.
+For example the [`LocalFileStore`](/docs/integrations/stores/file_system) allows for persisting data through the file system. It also is incredibly fast, so your users will be able to access cached data in a snap.
+
+See the individual sections for deeper dives on specific storage providers.
+
+## Reading Data
+
+### In Memory
+
+Reading data is simple with KV stores. Below is an example using the [`InMemoryStore`](/docs/integrations/stores/in_memory) and the `.mget()` method.
+We'll also set our generic value type to `string` so we can have type safety setting our strings.
+
+Import the [`InMemoryStore`](/docs/integrations/stores/in_memory) class.
+
+```typescript
+import { InMemoryStore } from "langchain/storage/in_memory";
+```
+
+Instantiate a new instance and pass `string` as our generic for the value type.
+
+```typescript
+const store = new InMemoryStore<string>();
+```
+
+Next we can call `.mset()` to write multiple values at once.
+
+```typescript
+const data: [string, string][] = [
+  ["key1", "value1"],
+  ["key2", "value2"],
+];
+
+await store.mset(data);
+```
+
+Finally, call the `.mget()` method to retrieve the values from our store.
+
+```typescript
+const data = await store.mget(["key1", "key2"]);
+
+console.log(data);
+/**
+ * ["value1", "value2"]
+ */
+```
+
+### File System
+
+When using the file system integration we need to instantiate via the `fromPath` method. This is required because it needs to preform checks to ensure the directory exists and is readable/writable.
+You also must use a directory when using [`LocalFileStore`](/docs/integrations/stores/file_system) because each entry is stored as a unique file in the directory.
+
+```typescript
+import { LocalFileStore } from "langchain/storage/file_system";
+```
+
+```typescript
+const pathToStore = "./my-store-directory";
+const store = await LocalFileStore.fromPath(pathToStore);
+```
+
+To do this we can define an encoder for initially setting our data, and a decoder for when we retrieve data.
+
+```typescript
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
+```
+
+```typescript
+const data: [string, Uint8Array][] = [
+  ["key1", encoder.encode(new Date().toDateString())],
+  ["key2", encoder.encode(new Date().toDateString())],
+];
+
+await store.mset(data);
+```
+
+```typescript
+const data = await store.mget(["key1", "key2"]);
+
+console.log(data.map((v) => decoder.decode(v)));
+/**
+ * [ 'Wed Jan 03 2024', 'Wed Jan 03 2024' ]
+ */
+```
+
+## Writing Data
+
+### In Memory
+
+Writing data is simple with KV stores. Below is an example using the [`InMemoryStore`](/docs/integrations/stores/in_memory) and the `.mset()` method.
+We'll also set our generic value type to `Date` so we can have type safety setting our dates.
+
+Import the [`InMemoryStore`](/docs/integrations/stores/in_memory) class.
+
+```typescript
+import { InMemoryStore } from "langchain/storage/in_memory";
+```
+
+Instantiate a new instance and pass `Date` as our generic for the value type.
+
+```typescript
+const store = new InMemoryStore<Date>();
+```
+
+Finally we can call `.mset()` to write multiple values at once.
+
+```typescript
+const data: [string, Date][] = [
+  ["date1", new Date()],
+  ["date2", new Date()],
+];
+
+await store.mset(data);
+```
+
+### File System
+
+When using the file system integration we need to instantiate via the `fromPath` method. This is required because it needs to preform checks to ensure the directory exists and is readable/writable.
+You also must use a directory when using [`LocalFileStore`](/docs/integrations/stores/file_system) because each entry is stored as a unique file in the directory.
+
+```typescript
+import { LocalFileStore } from "langchain/storage/file_system";
+```
+
+```typescript
+const pathToStore = "./my-store-directory";
+const store = await LocalFileStore.fromPath(pathToStore);
+```
+
+When defining our data we must convert the values to `Uint8Array` because the file system integration only supports binary data.
+
+To do this we can define an encoder for initially setting our data, and a decoder for when we retrieve data.
+
+```typescript
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
+```
+
+```typescript
+const data: [string, Uint8Array][] = [
+  ["key1", encoder.encode(new Date().toDateString())],
+  ["key2", encoder.encode(new Date().toDateString())],
+];
+
+await store.mset(data);
+```

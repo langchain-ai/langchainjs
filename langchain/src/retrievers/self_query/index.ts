@@ -11,7 +11,7 @@ import {
   FunctionalTranslator,
   StructuredQuery,
 } from "@langchain/core/structured_query";
-import { CallbackManagerForRetrieverRun } from "../../callbacks/manager.js";
+import { CallbackManagerForRetrieverRun } from "@langchain/core/callbacks/manager";
 import {
   loadQueryConstructorRunnable,
   QueryConstructorRunnableOptions,

@@ -1,0 +1,94 @@
+---
+sidebar_position: 6
+title: Construct Filters
+---
+
+# Construct Filters
+
+We may want to do query analysis to extract filters to pass into
+retrievers. One way we ask the LLM to represent these filters is as a
+Zod schema. There is then the issue of converting that Zod schema into a
+filter that can be passed into a retriever.
+
+This can be done manually, but LangChain also provides some
+“Translators” that are able to translate from a common syntax into
+filters specific to each retriever. Here, we will cover how to use those
+translators.
+
+## Setup
+
+#### Install dependencies
+
+```mdx-code-block
+import Npm2Yarn from "@theme/Npm2Yarn";
+
+<Npm2Yarn>
+  langchain zod
+</Npm2Yarn>
+```
+
+In this example, `year` and `author` are both attributes to filter on.
+
+```typescript
+import { z } from "zod";
+
+const searchSchema = z.object({
+  query: z.string(),
+  startYear: z.number().optional(),
+  author: z.string().optional(),
+});
+```
+
+```typescript
+const searchQuery: z.infer<typeof searchSchema> = {
+  query: "RAG",
+  startYear: 2022,
+  author: "LangChain",
+};
+```
+
+```typescript
+import { Comparison, Comparator } from "langchain/chains/query_constructor/ir";
+
+function constructComparisons(
+  query: z.infer<typeof searchSchema>
+): Comparison[] {
+  const comparisons: Comparison[] = [];
+  if (query.startYear !== undefined) {
+    comparisons.push(
+      new Comparison("gt" as Comparator, "start_year", query.startYear)
+    );
+  }
+  if (query.author !== undefined) {
+    comparisons.push(
+      new Comparison("eq" as Comparator, "author", query.author)
+    );
+  }
+  return comparisons;
+}
+```
+
+```typescript
+const comparisons = constructComparisons(searchQuery);
+```
+
+```typescript
+import { Operation, Operator } from "langchain/chains/query_constructor/ir";
+
+const _filter = new Operation("and" as Operator, comparisons);
+```
+
+```typescript
+import { ChromaTranslator } from "langchain/retrievers/self_query/chroma";
+
+new ChromaTranslator().visitOperation(_filter);
+```
+
+```text
+{
+  "$and": [
+    { start_year: { "$gt": 2022 } },
+    { author: { "$eq": "LangChain" } }
+  ]
+}
+```

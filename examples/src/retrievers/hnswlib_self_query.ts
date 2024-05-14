@@ -2,7 +2,7 @@ import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { AttributeInfo } from "langchain/schema/query_constructor";
 import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
 import { SelfQueryRetriever } from "langchain/retrievers/self_query";
-import { FunctionalTranslator } from "langchain/retrievers/self_query/functional";
+import { FunctionalTranslator } from "@langchain/core/structured_query";
 import { Document } from "@langchain/core/documents";
 
 /**
