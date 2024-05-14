@@ -1,7 +1,10 @@
 import { glob } from "glob";
 import { ImportSpecifier, Project } from "ts-morph";
-import fs from "node:fs";
 import path from "node:path";
+import {
+  type DeprecatedEntrypoint,
+  importMap as importMapArr,
+} from "../_data/importMap.js";
 
 const DEPRECATED_AND_DELETED_IMPORTS = [
   "PromptLayerOpenAI",
@@ -22,12 +25,6 @@ type MigrationUpdate = {
    * The updated import statement.
    */
   updatedImport: string;
-};
-
-export type DeprecatedEntrypoint = {
-  old: string;
-  new: string;
-  namedImport: string | null;
 };
 
 export interface UpdateLangChainFields {
@@ -180,10 +177,6 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(
     );
   }
 
-  const importMap: Array<DeprecatedEntrypoint> = JSON.parse(
-    fs.readFileSync("importMap.json", "utf-8")
-  );
-
   let projectFiles: string[] | null = null;
   if (fields.projectPath) {
     projectFiles = glob.sync(
@@ -243,7 +236,7 @@ export async function updateEntrypointsFrom0_x_xTo0_2_x(
         }
 
         const matchingEntrypoint = findNewEntrypoint(
-          importMap,
+          importMapArr,
           importPathTextWithoutQuotes,
           namedImports
         );
