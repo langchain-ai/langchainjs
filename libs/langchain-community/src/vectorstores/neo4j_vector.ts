@@ -622,8 +622,7 @@ export class Neo4jVectorStore extends VectorStore {
   async similaritySearch(
     query: string,
     k = 4,
-    params: Record<string, Any> = {},
-    filter: Record<string, Any> | undefined = undefined
+    params: Record<string, Any> = {}
   ): Promise<Document[]> {
     const embedding = await this.embeddings.embedQuery(query);
 
@@ -631,8 +630,7 @@ export class Neo4jVectorStore extends VectorStore {
       embedding,
       k,
       query,
-      params,
-      filter
+      params
     );
 
     return results.map((result) => result[0]);
@@ -643,10 +641,11 @@ export class Neo4jVectorStore extends VectorStore {
     k: number,
     query: string,
     params: Record<string, Any> = {},
-    filter: Record<string, Any> | undefined = undefined
   ): Promise<[Document, number][]> {
     let indexQuery: string;
     let filterParams: Record<string, Any>;
+
+    const { filter } = params;
 
     if (filter) {
       if (!this.supportMetadataFilter) {

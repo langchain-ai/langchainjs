@@ -693,7 +693,7 @@ describe("Neo4j Vector", () => {
 
     for (const example of examples) {
       const { filter, expected } = example;
-      const output = await docsearch.similaritySearch("Foo", 4, {}, filter);
+      const output = await docsearch.similaritySearch("Foo", 4, { filter });
       const adjustedIndices = expected.map((index) => index - 1);
       const expectedOutput = adjustedIndices.map((index) => DOCUMENTS[index]);
 
