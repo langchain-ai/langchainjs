@@ -475,6 +475,8 @@ test("CallbackManager.copy()", () => {
 });
 
 class FakeCallbackHandlerWithErrors extends FakeCallbackHandler {
+  raiseError = true;
+
   async handleChainStart(_chain: Serialized, _inputs: ChainValues): Promise<void> {
     throw Error("error!")
   }
@@ -488,7 +490,7 @@ test.only("error handling in chain start", async () => {
   const handler = new FakeCallbackHandlerWithErrors({
     ignoreLLM: true
   });
-  const manager = new CallbackManager(undefined, { raiseError: true });
+  const manager = new CallbackManager(undefined);
   manager.addHandler(handler);
 
   expect(async () => {
@@ -497,11 +499,11 @@ test.only("error handling in chain start", async () => {
   await manager.handleLLMStart(serialized, ["test"]);
 })
 
-test.only("error handling in chain start", async () => {
+test.only("error handling in llm start", async () => {
   const handler = new FakeCallbackHandlerWithErrors({
     ignoreChain: true,
   });
-  const manager = new CallbackManager(undefined, { raiseError: true });
+  const manager = new CallbackManager(undefined);
   manager.addHandler(handler);
 
   await manager.handleChainStart(serialized, ["test"]);

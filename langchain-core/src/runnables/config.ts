@@ -102,7 +102,6 @@ export function mergeConfigs<CallOptions extends RunnableConfig>(
                   ...baseCallbacks.metadata,
                   ...providedCallbacks.metadata,
                 },
-                raiseError: baseCallbacks.raiseError || providedCallbacks.raiseError,
               }
             );
           }
