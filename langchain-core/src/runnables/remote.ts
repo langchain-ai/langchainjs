@@ -537,7 +537,7 @@ export class RemoteRunnable<
     input: RunInput,
     options: Partial<CallOptions> & { version: "v1" },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose"> | undefined
-  ): AsyncGenerator<StreamEvent, any, unknown> {
+  ): AsyncGenerator<StreamEvent> {
     const [config, kwargs] =
       this._separateRunnableConfigFromCallOptions(options);
     const callbackManager_ = await getCallbackManagerForConfig(options);
