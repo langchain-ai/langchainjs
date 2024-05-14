@@ -489,7 +489,7 @@ class FakeCallbackHandlerWithErrors extends FakeCallbackHandler {
   }
 }
 
-test.only("error handling in chain start", async () => {
+test("error handling in chain start", async () => {
   const handler = new FakeCallbackHandlerWithErrors({
     ignoreLLM: true,
   });
@@ -502,7 +502,7 @@ test.only("error handling in chain start", async () => {
   await manager.handleLLMStart(serialized, ["test"]);
 });
 
-test.only("error handling in llm start", async () => {
+test("error handling in llm start", async () => {
   const handler = new FakeCallbackHandlerWithErrors({
     ignoreChain: true,
   });
