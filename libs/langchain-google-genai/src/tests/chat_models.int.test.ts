@@ -4,7 +4,10 @@ import { fileURLToPath } from "node:url";
 import * as path from "node:path";
 import { HumanMessage } from "@langchain/core/messages";
 import { ChatGoogleGenerativeAI } from "../chat_models.js";
-import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
 
 test("Test Google AI", async () => {
   const model = new ChatGoogleGenerativeAI({});
@@ -142,7 +145,8 @@ async function fileToBase64(filePath: string): Promise<string> {
 
 test.skip("Gemini can understand audio", async () => {
   // Update this with the correct path to an audio file on your machine.
-  const audioPath = "/Users/bracesproul/code/lang-chain-ai/langchainjs/libs/langchain-google-gauth/src/tests/data/audio.mp3";
+  const audioPath =
+    "/Users/bracesproul/code/lang-chain-ai/langchainjs/libs/langchain-google-gauth/src/tests/data/audio.mp3";
   const audioMimeType = "audio/mp3";
 
   const model = new ChatGoogleGenerativeAI({
@@ -173,7 +177,7 @@ test.skip("Gemini can understand audio", async () => {
     }),
   });
 
-  console.log(response.content)
+  console.log(response.content);
   expect(typeof response.content).toBe("string");
   expect((response.content as string).length).toBeGreaterThan(15);
 });
