@@ -10,6 +10,10 @@
   ],
   "redirects": [
     {
+      "source": "/docs(/?)",
+      "destination": "/v0.1/docs/get_started/introduction/"
+    },
+    {
       "source": "/docs/:path*(/?)",
       "destination": "/v0.1/docs/:path*/"
     },
