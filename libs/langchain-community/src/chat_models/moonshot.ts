@@ -102,14 +102,14 @@ export interface ChatMoonshotParams {
 
   /**
    * API key to use when making requests. Defaults to the value of
-   * `Moonshot_API_KEY` environment variable.
+   * `MOONSHOT_API_KEY` environment variable.
    * Alias for `apiKey`
    */
   moonshotApiKey?: string;
 
-  /**
+    /**
    * API key to use when making requests. Defaults to the value of
-   * `Moonshot_API_KEY` environment variable.
+   * `MOONSHOT_API_KEY` environment variable.
    */
   apiKey?: string;
 
@@ -193,8 +193,8 @@ export class ChatMoonshot extends BaseChatModel implements ChatMoonshotParams {
 
   get lc_secrets() {
     return {
-      moonshotApiKey: "Moonshot_API_KEY",
-      apiKey: "Moonshot_API_KEY",
+      moonshotApiKey: "MOONSHOT_API_KEY",
+      apiKey: "MOONSHOT_API_KEY",
     };
   }
 
@@ -236,7 +236,7 @@ export class ChatMoonshot extends BaseChatModel implements ChatMoonshotParams {
     this.moonshotApiKey =
       fields?.apiKey ??
       fields?.moonshotApiKey ??
-      getEnvironmentVariable("Moonshot_API_KEY");
+      getEnvironmentVariable("MOONSHOT_API_KEY");
     if (!this.moonshotApiKey) {
       throw new Error("Moonshot API key not found");
     }
