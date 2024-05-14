@@ -24,8 +24,8 @@ we hope that it will help you migrate your code more quickly.
 
 The migration script has the following limitations:
 
-1. It’s limited to helping users move from old imports to new imports. It doesn’t help address other deprecations.
-2. It can’t handle imports that involve `as` .
+1. It's limited to helping users move from old imports to new imports. It doesn't help address other deprecations.
+2. It can't handle imports that involve `as` .
 3. New imports are always placed in global scope, even if the old import that was replaced was located inside some local scope (e..g, function body).
 4. It will likely miss some deprecated imports.
 
@@ -46,129 +46,44 @@ We have two main types of deprecations:
 
 1. Code that was moved from `langchain` into another package (e.g, `@langchain/community`)
 
-If you try to import it from `langchain`, the import will keep on working, but will raise a deprecation warning. The warning will provide a replacement import statement.
+If you try to import it from `langchain`, it will fail since the entrypoint has been removed.
 
- ```python
- python -c "from langchain.document_loaders.markdown import UnstructuredMarkdownLoader"
-
-    ```
-
- ```python
- LangChainDeprecationWarning: Importing UnstructuredMarkdownLoader from langchain.document_loaders is deprecated. Please replace deprecated imports:
-
- >> from langchain.document_loaders import UnstructuredMarkdownLoader
-
- with new imports of:
-
- >> from langchain_community.document_loaders import UnstructuredMarkdownLoader
-    ```
-
-We will continue supporting the imports in `langchain` until release 0.4 as long as the relevant package where the code lives is installed. (e.g., as long as `langchain_community` is installed.)
-
-However, we advise for users to not rely on these imports and instead migrate to the new imports. To help with this process, we’re releasing a migration script via the LangChain CLI. See further instructions in migration guide.
-
-2. Code that has better alternatives available and will eventually be removed, so there’s only a single way to do things. (e.g., `predict_messages` method in ChatModels has been deprecated in favor of `invoke`).
+2. Code that has better alternatives available and will eventually be removed, so there's only a single way to do things. (e.g., `predictMessages` method in ChatModels has been deprecated in favor of `invoke`).
 
 Many of these were marked for removal in 0.2. We have bumped the removal to 0.3.
 
-
 #### Installation
 
-```bash
-pip install langchain-cli
-langchain-cli --version # <-- Make sure the version is at least 0.0.22
+```bash npm2yarn
+npm i @langchain/scripts
 ```
 
 #### Usage
 
 Given that the migration script is not perfect, you should make sure you have a backup of your code first (e.g., using version control like `git`).
 
-You will need to run the migration script **twice** as it only applies one import replacement per run.
+For example, say your code still uses `import ChatOpenAI from "@langchain/community/chat_models/openai";`:
 
-For example, say your code still uses `from langchain.chat_models import ChatOpenAI`:
+Invoking the migration script will replace this import with `import ChatOpenAI from "@langchain/openai";`.
 
-After the first run, you’ll get: `from langchain_community.chat_models import ChatOpenAI`
-After the second run, you’ll get: `from @langchain/openai import ChatOpenAI`
+```typescript
+import { updateEntrypointsFrom0_x_xTo0_2_x } from "@langchain/scripts/migrations";
 
-```bash
-# Run a first time
-# Will replace from langchain.chat_models import ChatOpenAI
-langchain-cli migrate [path to code] --diff # Preview
-langchain-cli migrate [path to code] # Apply
+const pathToMyProject = "..."; // This path is used in the following glob pattern: `${projectPath}/**/*.{ts,tsx,js,jsx}`.
 
-# Run a second time to apply more import replacements
-langchain-cli migrate [path to code] --diff # Preview
-langchain-cli migrate [path to code] # Apply
+updateEntrypointsFrom0_x_xTo0_2_x({
+  projectPath: pathToMyProject,
+  shouldLog: true,
+});
 ```
 
 #### Other options
 
-```bash
-# See help menu
-langchain-cli migrate --help
-# Preview Changes without applying
-langchain-cli migrate --diff [path to code]
-# Run on code including ipython notebooks
-# Apply all import updates except for updates from langchain to @langchain/core
-langchain-cli migrate --disable langchain_to_core --include-ipynb [path to code]
+```typescript
+updateEntrypointsFrom0_x_xTo0_2_x({
+  projectPath: pathToMyProject,
+  tsConfigPath: "tsconfig.json", // Path to the tsConfig file. This will be used to load all the project files into the script.
+  testRun: true, // If true, the script will not save any changes, but will log the changes that would be made.
+  files: ["..."] // A list of .ts file paths to check. If this is provided, the script will only check these files.
+});
 ```
-
-## Deprecations and breaking changes
-
-This code contains a list of deprecations and removals in the `langchain` and `@langchain/core` packages.
-
-### Breaking changes in 0.2.0
-
-As of release 0.2.0, `langchain` is required to be integration-agnostic. This means that code in `langchain`  should not by default instantiate any specific chat models, llms, embedding models, vectorstores etc; instead, the user will be required to specify those explicitly.
-
-The following functions and classes require an explicit LLM to be passed as an argument:
-
-- `langchain.agents.agent_toolkits.vectorstore.toolkit.VectorStoreToolkit`
-- `langchain.agents.agent_toolkits.vectorstore.toolkit.VectorStoreRouterToolkit`
-- `langchain.chains.openai_functions.get_openapi_chain`
-- `langchain.chains.router.MultiRetrievalQAChain.from_retrievers`
-- `langchain.indexes.VectorStoreIndexWrapper.query`
-- `langchain.indexes.VectorStoreIndexWrapper.query_with_sources`
-- `langchain.indexes.VectorStoreIndexWrapper.aquery_with_sources`
-- `langchain.chains.flare.FlareChain`
-
-
-
-The following classes now require passing an explicit Embedding model as an argument:
-
-- `langchain.indexes.VectostoreIndexCreator`
-
-The following code has been removed:
-
-- `langchain.natbot.NatBotChain.from_default` removed in favor of the `from_llm` class method.
-
-
-### Deprecations
-
-We have two main types of deprecations:
-
-1. Code that was moved from `langchain` into another package (e.g, `@langchain/community`)
-
-    If you try to import it from `langchain`, the import will keep on working, but will raise a deprecation warning. The warning will provide a replacement import statement.
-
-    ```python
-    python -c "from langchain.document_loaders.markdown import UnstructuredMarkdownLoader"
-    ```
-
-    ```python
-    LangChainDeprecationWarning: Importing UnstructuredMarkdownLoader from langchain.document_loaders is deprecated. Please replace deprecated imports:
-
-    >> from langchain.document_loaders import UnstructuredMarkdownLoader
-
-    with new imports of:
-
-    >> from langchain_community.document_loaders import UnstructuredMarkdownLoader
-    ```
-
-    We will continue supporting the imports in `langchain` until release 0.4 as long as the relevant package where the code lives is installed. (e.g., as long as `langchain_community` is installed.)
-
-    However, we advise for users to not rely on these imports and instead migrate to the new imports. To help with this process, we’re releasing a migration script via the LangChain CLI. See further instructions in migration guide.
-
-2. Code that has better alternatives available and will eventually be removed, so there’s only a single way to do things. (e.g., `predict_messages` method in ChatModels has been deprecated in favor of `invoke`).
-
-    Many of these were marked for removal in 0.2. We have bumped the removal to 0.3.
