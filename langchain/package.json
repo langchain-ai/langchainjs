@@ -1535,7 +1535,7 @@
     "@langchain/openai": "~0.0.28",
     "@langchain/textsplitters": "~0.0.0",
     "binary-extensions": "^2.2.0",
-    "js-tiktoken": "^1.0.7",
+    "js-tiktoken": "^1.0.12",
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
     "langchainhub": "~0.0.8",

@@ -39,6 +39,10 @@ export const getModelNameForTiktoken = (modelName: string): TiktokenModel => {
     return "gpt-4";
   }
 
+  if (modelName.startsWith("gpt-4o")) {
+    return "gpt-4o";
+  }
+
   return modelName as TiktokenModel;
 };
 
