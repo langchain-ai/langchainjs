@@ -25,7 +25,7 @@ import {
 } from "langsmith";
 import { EvaluationResult, RunEvaluator } from "langsmith/evaluation";
 import { DataType } from "langsmith/schemas";
-import type { TraceableFunction } from "langsmith/traceable";
+import type { TraceableFunction } from "langsmith/singletons/traceable";
 import { LLMStringEvaluator } from "../evaluation/base.js";
 import { loadEvaluator } from "../evaluation/loader.js";
 import { EvaluatorType } from "../evaluation/types.js";

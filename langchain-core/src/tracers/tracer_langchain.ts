@@ -149,6 +149,8 @@ export class LangChainTracer
 
   getTraceableRunTree(): RunTree | undefined {
     try {
+      // TODO: this might be an unsafe/breaking operation
+      // as now we have a hard dependency on node:async_hooks
       return getCurrentRunTree();
     } catch {
       return undefined;
