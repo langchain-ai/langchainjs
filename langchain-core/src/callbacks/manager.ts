@@ -119,7 +119,7 @@ class BaseRunManager {
     protected readonly inheritableTags: string[],
     protected readonly metadata: Record<string, unknown>,
     protected readonly inheritableMetadata: Record<string, unknown>,
-    protected readonly _parentRunId?: string,
+    protected readonly _parentRunId?: string
   ) {}
 
   async handleText(text: string): Promise<void> {
@@ -836,7 +836,7 @@ export class CallbackManager
                 `Error in handler ${handler.constructor.name}, handleRetrieverStart: ${err}`
               );
               if (handler.raiseError) {
-                throw err
+                throw err;
               }
             }
           }

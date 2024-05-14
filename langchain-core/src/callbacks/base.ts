@@ -283,7 +283,6 @@ export abstract class BaseCallbackHandler
   implements BaseCallbackHandlerInput, Serializable
 {
   lc_serializable = false;
-  raiseError = false;
 
   get lc_namespace(): ["langchain_core", "callbacks", string] {
     return ["langchain_core", "callbacks", this.name];
@@ -333,6 +332,8 @@ export abstract class BaseCallbackHandler
 
   ignoreRetriever = false;
 
+  raiseError = false;
+
   awaitHandlers =
     getEnvironmentVariable("LANGCHAIN_CALLBACKS_BACKGROUND") !== "true";
 
@@ -344,8 +345,9 @@ export abstract class BaseCallbackHandler
       this.ignoreChain = input.ignoreChain ?? this.ignoreChain;
       this.ignoreAgent = input.ignoreAgent ?? this.ignoreAgent;
       this.ignoreRetriever = input.ignoreRetriever ?? this.ignoreRetriever;
-      this.awaitHandlers = input._awaitHandler ?? this.awaitHandlers;
       this.raiseError = input.raiseError ?? this.raiseError;
+      this.awaitHandlers =
+        this.raiseError || (input._awaitHandler ?? this.awaitHandlers);
     }
   }
 
