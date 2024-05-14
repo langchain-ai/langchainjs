@@ -13,14 +13,18 @@ function fileToBase64(filePath: string): string {
   return base64String;
 }
 
-test.skip("Gemini can understand audio", async () => {
+const audioPath = "/Users/bracesproul/code/lang-chain-ai/langchainjs/libs/langchain-google-gauth/src/tests/data/audio.mp3";
+const audioMimeType = "audio/mp3";
+
+const videoPath = "/Users/bracesproul/code/lang-chain-ai/langchainjs/libs/langchain-google-gauth/src/tests/data/video.mp4";
+const videoMimeType = "video/mp4";
+
+test.only("Gemini can understand audio", async () => {
   const model = new ChatGoogle({
-    model: "gemini-1.5-pro-preview-0409",
+    model: "gemini-1.5-pro-latest",
     temperature: 0,
   });
 
-  const audioPath = "../../examples/Mozart_Requiem_D_minor.mp3";
-  const audioMimeType = "audio/mp3";
   const audioBase64 = fileToBase64(audioPath);
 
   const prompt = ChatPromptTemplate.fromMessages([
@@ -31,11 +35,11 @@ test.skip("Gemini can understand audio", async () => {
   const response = await chain.invoke({
     audio: new HumanMessage({
       content: [
-        {
-          type: "media",
-          mimeType: audioMimeType,
-          data: audioBase64,
-        },
+        // {
+        //   type: "media",
+        //   mimeType: audioMimeType,
+        //   data: audioBase64,
+        // },
         {
           type: "text",
           text: "Do you know this song? If so, who is the composer and can you give me a brief overview of the tone/tempo?",
@@ -44,6 +48,7 @@ test.skip("Gemini can understand audio", async () => {
     }),
   });
 
+  console.log(response.content)
   expect(typeof response.content).toBe("string");
   expect((response.content as string).length).toBeGreaterThan(15);
 });
@@ -54,8 +59,6 @@ test.skip("Gemini can understand video", async () => {
     temperature: 0,
   });
 
-  const videoPath = "../../examples/lance_ls_eval_video.mp4";
-  const videoMimeType = "video/mp4";
   const videoBase64 = fileToBase64(videoPath);
 
   const prompt = ChatPromptTemplate.fromMessages([
@@ -84,8 +87,6 @@ test.skip("Gemini can understand video", async () => {
 });
 
 test.skip("Gemini can use tools with audio", async () => {
-  const audioPath = "../../examples/Mozart_Requiem_D_minor.mp3";
-  const audioMimeType = "audio/mp3";
   const audioBase64 = fileToBase64(audioPath);
 
   const tool = z.object({
@@ -131,8 +132,6 @@ test.skip("Gemini can use tools with audio", async () => {
 });
 
 test.skip("Gemini can use tools with video", async () => {
-  const videoPath = "../../examples/lance_ls_eval_video.mp4";
-  const videoMimeType = "video/mp4";
   const videoBase64 = fileToBase64(videoPath);
 
   const tool = z.object({
