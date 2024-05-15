@@ -201,7 +201,6 @@ export class RunnableWithMessageHistory<
       return history.getMessages();
     }
 
-
     let inputValue: string | BaseMessage | BaseMessage[];
     if (this.inputMessagesKey && input[this.inputMessagesKey]) {
       inputValue = input[this.inputMessagesKey];
