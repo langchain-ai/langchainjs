@@ -137,6 +137,9 @@ class BaseRunManager {
             console.error(
               `Error in handler ${handler.constructor.name}, handleText: ${err}`
             );
+            if (handler.raiseError) {
+              throw err;
+            }
           }
         }, handler.awaitHandlers)
       )
@@ -179,6 +182,9 @@ export class CallbackManagerForRetrieverRun
               console.error(
                 `Error in handler ${handler.constructor.name}, handleRetriever`
               );
+              if (handler.raiseError) {
+                throw err;
+              }
             }
           }
         }, handler.awaitHandlers)
@@ -202,6 +208,9 @@ export class CallbackManagerForRetrieverRun
               console.error(
                 `Error in handler ${handler.constructor.name}, handleRetrieverError: ${error}`
               );
+              if (handler.raiseError) {
+                throw err;
+              }
             }
           }
         }, handler.awaitHandlers)
@@ -239,6 +248,9 @@ export class CallbackManagerForLLMRun
               console.error(
                 `Error in handler ${handler.constructor.name}, handleLLMNewToken: ${err}`
               );
+              if (handler.raiseError) {
+                throw err;
+              }
             }
           }
         }, handler.awaitHandlers)
@@ -262,6 +274,9 @@ export class CallbackManagerForLLMRun
               console.error(
                 `Error in handler ${handler.constructor.name}, handleLLMError: ${err}`
               );
+              if (handler.raiseError) {
+                throw err;
+              }
             }
           }
         }, handler.awaitHandlers)
@@ -285,6 +300,9 @@ export class CallbackManagerForLLMRun
               console.error(
                 `Error in handler ${handler.constructor.name}, handleLLMEnd: ${err}`
               );
+              if (handler.raiseError) {
+                throw err;
+              }
             }
           }
         }, handler.awaitHandlers)
@@ -332,6 +350,9 @@ export class CallbackManagerForChainRun
               console.error(
                 `Error in handler ${handler.constructor.name}, handleChainError: ${err}`
               );
+              if (handler.raiseError) {
+                throw err;
+              }
             }
           }
         }, handler.awaitHandlers)
@@ -362,6 +383,9 @@ export class CallbackManagerForChainRun
               console.error(
                 `Error in handler ${handler.constructor.name}, handleChainEnd: ${err}`
               );
+              if (handler.raiseError) {
+                throw err;
+              }
             }
           }
         }, handler.awaitHandlers)
@@ -385,6 +409,9 @@ export class CallbackManagerForChainRun
               console.error(
                 `Error in handler ${handler.constructor.name}, handleAgentAction: ${err}`
               );
+              if (handler.raiseError) {
+                throw err;
+              }
             }
           }
         }, handler.awaitHandlers)
@@ -408,6 +435,9 @@ export class CallbackManagerForChainRun
               console.error(
                 `Error in handler ${handler.constructor.name}, handleAgentEnd: ${err}`
               );
+              if (handler.raiseError) {
+                throw err;
+              }
             }
           }
         }, handler.awaitHandlers)
@@ -448,6 +478,9 @@ export class CallbackManagerForToolRun
               console.error(
                 `Error in handler ${handler.constructor.name}, handleToolError: ${err}`
               );
+              if (handler.raiseError) {
+                throw err;
+              }
             }
           }
         }, handler.awaitHandlers)
@@ -471,6 +504,9 @@ export class CallbackManagerForToolRun
               console.error(
                 `Error in handler ${handler.constructor.name}, handleToolEnd: ${err}`
               );
+              if (handler.raiseError) {
+                throw err;
+              }
             }
           }
         }, handler.awaitHandlers)
@@ -583,6 +619,9 @@ export class CallbackManager
                   console.error(
                     `Error in handler ${handler.constructor.name}, handleLLMStart: ${err}`
                   );
+                  if (handler.raiseError) {
+                    throw err;
+                  }
                 }
               }
             }, handler.awaitHandlers)
@@ -651,6 +690,9 @@ export class CallbackManager
                   console.error(
                     `Error in handler ${handler.constructor.name}, handleLLMStart: ${err}`
                   );
+                  if (handler.raiseError) {
+                    throw err;
+                  }
                 }
               }
             }, handler.awaitHandlers)
@@ -699,6 +741,9 @@ export class CallbackManager
               console.error(
                 `Error in handler ${handler.constructor.name}, handleChainStart: ${err}`
               );
+              if (handler.raiseError) {
+                throw err;
+              }
             }
           }
         }, handler.awaitHandlers)
@@ -743,6 +788,9 @@ export class CallbackManager
               console.error(
                 `Error in handler ${handler.constructor.name}, handleToolStart: ${err}`
               );
+              if (handler.raiseError) {
+                throw err;
+              }
             }
           }
         }, handler.awaitHandlers)
@@ -787,6 +835,9 @@ export class CallbackManager
               console.error(
                 `Error in handler ${handler.constructor.name}, handleRetrieverStart: ${err}`
               );
+              if (handler.raiseError) {
+                throw err;
+              }
             }
           }
         }, handler.awaitHandlers)
