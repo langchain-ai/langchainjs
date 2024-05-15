@@ -138,6 +138,10 @@ embeddings/cohere.cjs
 embeddings/cohere.js
 embeddings/cohere.d.ts
 embeddings/cohere.d.cts
+embeddings/deepinfra.cjs
+embeddings/deepinfra.js
+embeddings/deepinfra.d.ts
+embeddings/deepinfra.d.cts
 embeddings/fireworks.cjs
 embeddings/fireworks.js
 embeddings/fireworks.d.ts
