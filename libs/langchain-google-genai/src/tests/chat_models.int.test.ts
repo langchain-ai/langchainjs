@@ -3,6 +3,10 @@ import * as fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import * as path from "node:path";
 import { HumanMessage } from "@langchain/core/messages";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
 import { ChatGoogleGenerativeAI } from "../chat_models.js";
 
 test("Test Google AI", async () => {
@@ -131,4 +135,49 @@ test("Test Google AI in streaming mode", async () => {
   console.log({ tokens, nrNewTokens });
   expect(nrNewTokens > 1).toBe(true);
   expect(res.content).toBe(tokens);
+});
+
+async function fileToBase64(filePath: string): Promise<string> {
+  const fileData = await fs.readFile(filePath);
+  const base64String = Buffer.from(fileData).toString("base64");
+  return base64String;
+}
+
+test.skip("Gemini can understand audio", async () => {
+  // Update this with the correct path to an audio file on your machine.
+  const audioPath =
+    "/Users/bracesproul/code/lang-chain-ai/langchainjs/libs/langchain-google-gauth/src/tests/data/audio.mp3";
+  const audioMimeType = "audio/mp3";
+
+  const model = new ChatGoogleGenerativeAI({
+    model: "gemini-1.5-pro-latest",
+    temperature: 0,
+  });
+
+  const audioBase64 = await fileToBase64(audioPath);
+
+  const prompt = ChatPromptTemplate.fromMessages([
+    new MessagesPlaceholder("audio"),
+  ]);
+
+  const chain = prompt.pipe(model);
+  const response = await chain.invoke({
+    audio: new HumanMessage({
+      content: [
+        {
+          type: "media",
+          mimeType: audioMimeType,
+          data: audioBase64,
+        },
+        {
+          type: "text",
+          text: "Summarize the content in this audio. ALso, what is the speaker's tone?",
+        },
+      ],
+    }),
+  });
+
+  console.log(response.content);
+  expect(typeof response.content).toBe("string");
+  expect((response.content as string).length).toBeGreaterThan(15);
 });
