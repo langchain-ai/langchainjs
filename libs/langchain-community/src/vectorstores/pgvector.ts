@@ -501,6 +501,15 @@ export class PGVectorStore extends VectorStore {
           parameters.push(..._value.in);
           paramCount += _value.in.length;
         }
+        if (_value.arrayContains) {
+          whereClauses.push(
+            `${
+              this.metadataColumnName
+            }->'${key}' ?| array[${_value.arrayContains
+              .map((v: string) => `'${v}'`)
+              .join(", ")}]`
+          );
+        }
       } else {
         paramCount += 1;
         whereClauses.push(
