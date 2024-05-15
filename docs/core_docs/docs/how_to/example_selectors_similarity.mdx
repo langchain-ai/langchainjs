@@ -1,5 +1,17 @@
 # How to select examples by similarity
 
+```{=mdx}
+import PrerequisiteLinks from "@theme/PrerequisiteLinks";
+
+<PrerequisiteLinks
+  content={`
+- [Prompt templates](/docs/concepts/#prompt-templates)
+- [Example selectors](/docs/how_to/example_selectors)
+- [Vector stores](/docs/concepts#vectorstores)
+`}
+/>
+```
+
 This object selects examples based on similarity to the inputs.
 It does this by finding the examples with the embeddings that have the greatest cosine similarity with the inputs.
 
@@ -54,3 +66,9 @@ besides similarity search such as maximal marginal relevance:
 import ExampleSimilarityCustomRetriever from "@examples/prompts/semantic_similarity_example_selector_custom_retriever.ts";
 
 <CodeBlock language="typescript">{ExampleSimilarityCustomRetriever}</CodeBlock>
+
+## Next steps
+
+You've now learned a bit about using similarity in an example selector.
+
+Next, check out this guide on how to use a [length-based example selector](/docs/how_to/example_selectors_length_based).
