@@ -4,11 +4,19 @@ sidebar_position: 5
 
 # How to track token usage
 
+:::info Prerequisites
+
+This guide assumes familiarity with the following concepts:
+
+- [Chat models](/docs/concepts/#chat-models)
+
+:::
+
 This notebook goes over how to track your token usage for specific calls.
 
-## Using AIMessage.response_metadata
+## Using `AIMessage.response_metadata`
 
-A number of model providers return token usage information as part of the chat generation response. When available, this is included in the [AIMessage.response_metadata](/docs/modules/model_io/chat/response_metadata/) field.
+A number of model providers return token usage information as part of the chat generation response. When available, this is included in the [`AIMessage.response_metadata`](/docs/modules/model_io/chat/response_metadata/) field.
 Here's an example with OpenAI:
 
 import CodeBlock from "@theme/CodeBlock";
@@ -42,3 +50,9 @@ Here's an example of how you could do that:
 import CallbackExample from "@examples/models/chat/token_usage_tracking_callback.ts";
 
 <CodeBlock language="typescript">{CallbackExample}</CodeBlock>
+
+## Next steps
+
+You've now seen a few examples of how to track chat model token usage for supported providers.
+
+Next, check out the other how-to guides on chat models in this section, like [how to get a model to return structured output](/docs/how_to/structured_output) or [how to add caching to your chat models](/docs/how_to/chat_model_caching).
