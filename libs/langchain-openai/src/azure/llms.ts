@@ -66,16 +66,13 @@ export class AzureOpenAI extends OpenAI {
         delete params.baseURL;
       }
 
-      if (!params.defaultHeaders) {
-        params.defaultHeaders = {
-          'User-Agent': 'langchain/openai'
-        };
-      } else {
-        params.defaultHeaders = {
-          ...params.defaultHeaders,
-          'User-Agent': 'langchain/openai'
-        }
-      }
+      params.defaultHeaders = {
+        ...params.defaultHeaders,
+        "User-Agent":
+          params.defaultHeaders && params.defaultHeaders["User-Agent"]
+            ? `${params.defaultHeaders["User-Agent"]}: langchain/openai`
+            : `langchain/openai`,
+      };
 
       this.client = new AzureOpenAIClient({
         apiVersion: this.azureOpenAIApiVersion,
