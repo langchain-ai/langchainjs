@@ -22,10 +22,10 @@ test("Test DeepInfraEmbeddings concurrency", async () => {
   const res = await embeddings.embedDocuments([
     "Hello world",
     "Bye bye",
-    "Hello world",
-    "Bye bye",
-    "Hello world",
-    "Bye bye",
+    "we need",
+    "at least",
+    "six documents",
+    "to test concurrency"
   ]);
   expect(res).toHaveLength(6);
   expect(res.find((embedding) => typeof embedding[0] !== "number")).toBe(
