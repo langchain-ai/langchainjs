@@ -46,6 +46,7 @@ export class AzureOpenAI extends OpenAI {
         azureOpenAIApiInstanceName: this.azureOpenAIApiInstanceName,
         azureOpenAIApiKey: this.azureOpenAIApiKey,
         azureOpenAIBasePath: this.azureOpenAIBasePath,
+        azureADTokenProvider: this.azureADTokenProvider,
         baseURL: this.clientConfig.baseURL,
       };
 
