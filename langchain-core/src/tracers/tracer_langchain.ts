@@ -1,10 +1,6 @@
 import { Client } from "langsmith";
 import { RunTree } from "langsmith/run_trees";
-import {
-  type TraceableFunction,
-  isTraceableFunction,
-  getCurrentRunTree,
-} from "langsmith/singletons/traceable";
+import { getCurrentRunTree } from "langsmith/singletons/traceable";
 
 import {
   BaseRun,
@@ -15,11 +11,6 @@ import {
 import { getEnvironmentVariable, getRuntimeEnvironment } from "../utils/env.js";
 import { BaseTracer } from "./base.js";
 import { BaseCallbackHandlerInput } from "../callbacks/base.js";
-import { Runnable } from "../runnables/base.js";
-import {
-  RunnableConfig,
-  getCallbackManagerForConfig,
-} from "../runnables/config.js";
 
 export interface Run extends BaseRun {
   id: string;
@@ -155,42 +146,5 @@ export class LangChainTracer
     } catch {
       return undefined;
     }
-  }
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyTraceableFunction = TraceableFunction<(...any: any[]) => any>;
-
-/**
- * A runnabble that runs a traced function from LangSmith
- */
-export class RunnableTraceable<RunInput, RunOutput> extends Runnable<
-  RunInput,
-  RunOutput
-> {
-  lc_serializable = false;
-
-  lc_namespace = ["langchain_core", "runnables"];
-
-  protected func: AnyTraceableFunction;
-
-  constructor(fields: { func: AnyTraceableFunction }) {
-    super(fields);
-
-    if (!isTraceableFunction(fields.func)) {
-      throw new Error(
-        "RunnableTraceable requires a function that is wrapped in traceable higher-order function"
-      );
-    }
-
-    this.func = fields.func;
-  }
-
-  async invoke(input: RunInput, options?: Partial<RunnableConfig>) {
-    const [config] = this._getOptionsList(options ?? {}, 1);
-    return (await this.func(
-      { ...config, callbacks: await getCallbackManagerForConfig(config) },
-      input
-    )) as RunOutput;
   }
 }

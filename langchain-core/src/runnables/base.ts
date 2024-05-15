@@ -54,7 +54,6 @@ import {
   isAsyncIterable,
   isIterator,
 } from "./iter.js";
-import { RunnableTraceable } from "../tracers/tracer_langchain.js";
 
 export { type RunnableInterface, RunnableBatchOptions };
 
@@ -2064,6 +2063,43 @@ export class RunnableMap<
     });
     await wrappedGenerator.setup;
     return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyTraceableFunction = TraceableFunction<(...any: any[]) => any>;
+
+/**
+ * A runnabble that runs a traced function from LangSmith
+ */
+export class RunnableTraceable<RunInput, RunOutput> extends Runnable<
+  RunInput,
+  RunOutput
+> {
+  lc_serializable = false;
+
+  lc_namespace = ["langchain_core", "runnables"];
+
+  protected func: AnyTraceableFunction;
+
+  constructor(fields: { func: AnyTraceableFunction }) {
+    super(fields);
+
+    if (!isTraceableFunction(fields.func)) {
+      throw new Error(
+        "RunnableTraceable requires a function that is wrapped in traceable higher-order function"
+      );
+    }
+
+    this.func = fields.func;
+  }
+
+  async invoke(input: RunInput, options?: Partial<RunnableConfig>) {
+    const [config] = this._getOptionsList(options ?? {}, 1);
+    return (await this.func(
+      { ...config, callbacks: await getCallbackManagerForConfig(config) },
+      input
+    )) as RunOutput;
   }
 }
 
