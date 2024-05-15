@@ -229,7 +229,7 @@ const config = {
                 label: "LangServe",
               },
               {
-                href: "https://python.langchain.com/en/latest/",
+                href: "https://python.langchain.com/",
                 label: "Python Docs",
               },
             ],
