@@ -1,10 +1,22 @@
 # How to add message history
 
+:::info Prerequisites
+
+This guide assumes familiarity with the following concepts:
+
+- [LangChain Expression Language (LCEL)](/docs/concepts/#langchain-expression-language)
+- [Chaining runnables](/docs/how_to/sequence/)
+- [Configuring chain parameters at runtime](/docs/how_to/configure)
+- [Prompt templates](/docs/concepts/#prompt-templates)
+- [Chat Messages](/docs/concepts/#message-types)
+
+:::
+
 The `RunnableWithMessageHistory` let's us add message history to certain types of chains.
 
 Specifically, it can be used for any Runnable that takes as input one of
 
-- a sequence of `BaseMessage`
+- a sequence of [`BaseMessages`](/docs/concepts/#message-types)
 - a dict with a key that takes a sequence of `BaseMessage`
 - a dict with a key that takes the latest message(s) as a string or sequence of `BaseMessage`, and a separate key that takes historical messages
 
@@ -38,9 +50,7 @@ export LANGCHAIN_TRACING_V2="true"
 export LANGCHAIN_API_KEY="<your-api-key>"
 ```
 
-## Example: Dict input, message output
-
-Let's create a simple chain that takes a dict as input and returns a BaseMessage.
+Let's create a simple runnable that takes a dict as input and returns a `BaseMessage`.
 
 In this case the `"question"` key in the input represents our input message, and the `"history"` key is where our historical messages will be injected.
 
@@ -69,9 +79,9 @@ const chain = prompt.pipe(
 
 To add message history to our original chain we wrap it in the `RunnableWithMessageHistory` class.
 
-Crucially, we also need to define a method that takes a `sessionId` string and based on it returns a `BaseChatMessageHistory`. Given the same input, this method should return an equivalent output.
+Crucially, we also need to define a `getMessageHistory()` method that takes a `sessionId` string and based on it returns a `BaseChatMessageHistory`. Given the same input, this method should return an equivalent output.
 
-In this case we'll also want to specify `inputMessagesKey` (the key to be treated as the latest input message) and `historyMessagesKey` (the key to add historical messages to).
+In this case, we'll also want to specify `inputMessagesKey` (the key to be treated as the latest input message) and `historyMessagesKey` (the key to add historical messages to).
 
 ```typescript
 import { RunnableWithMessageHistory } from "@langchain/core/runnables";
