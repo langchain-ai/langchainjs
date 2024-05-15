@@ -180,6 +180,7 @@ export class RunnableWithMessageHistory<
     } else if (isBaseMessage(newOutputValue)) {
       return [newOutputValue];
     }
+
     throw new Error(
       `Expected a string, BaseMessage, or array of BaseMessages. Received: ${JSON.stringify(
         newOutputValue,
@@ -200,13 +201,20 @@ export class RunnableWithMessageHistory<
       return history.getMessages();
     }
 
-    const inputVal =
-      input ||
-      (this.inputMessagesKey ? input[this.inputMessagesKey] : undefined);
+
+    let inputValue: string | BaseMessage | BaseMessage[];
+    if (this.inputMessagesKey && input[this.inputMessagesKey]) {
+      inputValue = input[this.inputMessagesKey];
+    } else {
+      inputValue = input;
+    }
+    // const inputVal =
+    //   input ||
+    //   (this.inputMessagesKey ? input[this.inputMessagesKey] : undefined);
     const historyMessages = history ? await history.getMessages() : [];
     const returnType = [
       ...historyMessages,
-      ...this._getInputMessages(inputVal),
+      ...this._getInputMessages(inputValue),
     ];
     return returnType;
   }
@@ -216,10 +224,18 @@ export class RunnableWithMessageHistory<
 
     // Get input messages
     const { inputs } = run;
-    const inputValue = inputs[this.inputMessagesKey ?? "input"];
+    let inputValue: string | BaseMessage | BaseMessage[];
+    if (this.inputMessagesKey ?? "input" in inputs) {
+      inputValue = inputs[this.inputMessagesKey ?? "input"];
+    } else if ("messages" in inputs) {
+      inputValue = inputs.messages.flat();
+    } else {
+      throw new Error("Input messages not found in inputs");
+    }
+
     const inputMessages = this._getInputMessages(inputValue);
     // Get output messages
-    const outputValue = run.outputs;
+    let outputValue = run.outputs;
     if (!outputValue) {
       throw new Error(
         `Output values from 'Run' undefined. Run: ${JSON.stringify(
@@ -228,6 +244,17 @@ export class RunnableWithMessageHistory<
           2
         )}`
       );
+    } else if (
+      typeof outputValue === "object" &&
+      "generations" in outputValue &&
+      Array.isArray(outputValue.generations) &&
+      outputValue.generations[0].every((gen: Record<string, unknown>) =>
+        isBaseMessage(gen.message)
+      )
+    ) {
+      outputValue = outputValue.generations[0].map(
+        (gen: Record<string, BaseMessage>) => gen.message
+      ) as BaseMessage[];
     }
     const outputMessages = this._getOutputMessages(outputValue);
 

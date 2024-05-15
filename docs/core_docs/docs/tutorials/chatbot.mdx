@@ -1,0 +1,294 @@
+## Overview
+
+We'll go over an example of how to design and implement an LLM-powered chatbot. 
+This chatbot will be able to have a conversation and remember previous interactions.
+
+
+Note that this chatbot that we build will only use the language model to have a conversation.
+There are several other related concepts that you may be looking for:
+
+- [Conversational RAG](/docs/tutorials/qa_chat_history): Enable a chatbot experience over an external source of data
+- [Agents](/docs/tutorials/agents): Build a chatbot that can take actions
+
+This tutorial will cover the basics which will be helpful for those two more advanced topics, but feel free to skip directly to there should you choose.
+
+
+## Concepts
+
+Here are a few of the high-level components we'll be working with:
+
+- [`Chat Models`](/docs/concepts/#chat-models). The chatbot interface is based around messages rather than raw text, and therefore is best suited to Chat Models rather than text LLMs.
+- [`Prompt Templates`](/docs/concepts/#prompt-templates), which simplify the process of assembling prompts that combine default messages, user input, chat history, and (optionally) additional retrieved context.
+- [`Chat History`](/docs/concepts/#chat-history), which allows a chatbot to "remember" past interactions and take them into account when responding to followup questions. 
+- Debugging and tracing your application using [LangSmith](/docs/concepts/#langsmith)
+
+We'll cover how to fit the above components together to create a powerful conversational chatbot.
+
+## Setup
+
+### Installation
+
+To install LangChain run:
+
+import Npm2Yarn from '@theme/Npm2Yarn';
+
+<Npm2Yarn>
+  langchain @langchain/core
+</Npm2Yarn>
+
+For more details, see our [Installation guide](/docs/installation).
+
+### LangSmith
+
+Many of the applications you build with LangChain will contain multiple steps with multiple invocations of LLM calls.
+As these applications get more and more complex, it becomes crucial to be able to inspect what exactly is going on inside your chain or agent.
+The best way to do this is with [LangSmith](https://smith.langchain.com).
+
+After you sign up at the link above, make sure to set your environment variables to start logging traces:
+
+```shell
+export LANGCHAIN_TRACING_V2="true"
+export LANGCHAIN_API_KEY="..."
+```
+
+## Quickstart
+
+First up, let's learn how to use a language model by itself. LangChain supports many different language models that you can use interchangeably - select the one you want to use below!
+
+import ChatModelTabs from "@theme/ChatModelTabs";
+
+<ChatModelTabs />
+
+```typescript
+
+```
+
+Let's first use the model directly. `ChatModel`s are instances of LangChain "Runnables", which means they expose a standard interface for interacting with them.
+To just simply call the model, we can pass in a list of messages to the `.invoke` method.
+
+```typescript
+import { HumanMessage } from "@langchain/core/messages";
+
+await model.invoke([new HumanMessage("Hi! I'm Bob")])
+```
+
+```
+AIMessage {
+  content: "Hello Bob! How can I assist you today?",
+  additional_kwargs: { function_call: undefined, tool_calls: undefined },
+  response_metadata: {
+    tokenUsage: { completionTokens: 10, promptTokens: 12, totalTokens: 22 },
+    finish_reason: "stop"
+  },
+}
+```
+
+The model on its own does not have any concept of state. For example, if you ask a followup question:
+
+```typescript
+await model.invoke([new HumanMessage("What's my name?")])
+```
+
+```
+AIMessage {
+  content: "I'm sorry, I do not have access to personal information such as your name. How can I assist you today?",
+  additional_kwargs: { function_call: undefined, tool_calls: undefined },
+  response_metadata: {
+    tokenUsage: { completionTokens: 24, promptTokens: 12, totalTokens: 36 },
+    finish_reason: "stop"
+  },
+}
+```
+
+Let's take a look at the example [LangSmith trace](https://smith.langchain.com/public/5befba9f-5782-466c-864c-64cc307440cd/r)
+
+We can see that it doesn't take the previous conversation turn into context, and cannot answer the question.
+This makes for a terrible chatbot experience!
+
+To get around this, we need to pass the entire conversation history into the model. Let's see what happens when we do that:
+
+```typescript
+import { AIMessage } from "@langchain/core/messages";
+
+await model.invoke(
+    [
+        new HumanMessage("Hi! I'm Bob"),
+        new AIMessage("Hello Bob! How can I assist you today?"),
+        new HumanMessage("What's my name?"),
+    ]
+)
+```
+
+```
+AIMessage {
+  content: "Your name is Bob.",
+  additional_kwargs: { function_call: undefined, tool_calls: undefined },
+  response_metadata: {
+    tokenUsage: { completionTokens: 5, promptTokens: 35, totalTokens: 40 },
+    finish_reason: "stop"
+  },
+}
+```
+
+And now we can see that we get a good response!
+
+This is the basic idea underpinning a chatbot's ability to interact conversationally.
+So how do we best implement this?
+
+## Message History
+
+We can use a Message History class to wrap our model and make it stateful.
+This will keep track of inputs and outputs of the model, and store them in some datastore.
+Future interactions will then load those messages and pass them into the chain as part of the input.
+Let's see how to use this!
+
+First, let's make sure to install `@langchain/community`, as we will be using an integration in there to store message history.
+
+<Npm2Yarn>
+  @langchain/community
+</Npm2Yarn>
+
+After that, we can import the relevant classes and set up our chain which wraps the model and adds in this message history. A key part here is the function we pass into as the `getSessionHistory`. This function is expected to take in a `sessionId` and return a Message History object. This `sessionId` is used to distinguish between separate conversations, and should be passed in as part of the config when calling the new chain (we'll show how to do that).
+
+We also define a prompt which has two crucial fields:
+
+1. `new MessagesPlaceholder("chat_history")` - This is a placeholder that will be replaced with the chat history when the model is called.
+2. `["human", "{input}"]` - This is a standard varibale placeholder which will be replaced with any user input.
+
+We then specify the `inputMessagesKey` and `historyMessagesKey` in the `RunnableWithMessageHistory` constructor. This tells the class where to insert the message history, and current input.
+
+```typescript
+import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
+import { BaseChatMessageHistory } from "@langchain/core/chat_history";
+import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts";
+import { RunnableWithMessageHistory } from "@langchain/core/runnables";
+
+const store: Record<string, BaseChatMessageHistory> = {};
+
+function getMessageHistory(sessionId: string): BaseChatMessageHistory {
+    if (!(sessionId in store)) {
+        store[sessionId] = new ChatMessageHistory();
+    }
+    return store[sessionId];
+}
+
+const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "You are a helpful assistant."],
+    new MessagesPlaceholder("chat_history"),
+    ["human", "{input}"]
+])
+
+const runnable = prompt.pipe(model);
+
+const withMessageHistory = new RunnableWithMessageHistory({
+    runnable,
+    getMessageHistory,
+    inputMessagesKey: "input",
+    historyMessagesKey: "chat_history",
+})
+```
+
+We now need to create a `config` that we pass into the runnable every time.
+This config contains information that is not part of the input directly, but is still useful.
+In this case, we want to include a `sessionId`. This should look like:
+
+```typescript
+const config = { configurable: { sessionId: "abc123" }}
+
+const response = await withMessageHistory.invoke(
+    {
+        input: "Hi! I'm Bob",
+    },
+    config,
+)
+
+console.log(response.content)
+```
+
+```
+"I'm sorry, but I don't have access to your personal information, including your name. How can I assi"... 13 more characters
+```
+
+However, we can always go back to the original conversation (since we are persisting it in a database)
+
+```typescript
+const config = { configurable: { sessionId: "abc123" }}
+
+const response = await withMessageHistory.invoke(
+    {
+        input: "What's my name?"
+    },
+    config,
+)
+
+console.log(response.content)
+```
+
+```
+"Your name is Bob."
+```
+
+This is how we can support a chatbot having conversations with many users!
+
+Right now, all we've done is add a simple persistence layer around the model. Let's now make our prompt a little bit more complicated. Let's assume that the prompt template now looks something like this:
+
+```typescript
+const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "You are a helpful assistant. Answer all questions to the best of your ability in {language}."],
+    new MessagesPlaceholder("messages"),
+])
+
+const chain = prompt.pipe(model)
+```
+
+Note that we have added a new `language` input to the prompt. We can now invoke the chain and pass in a language of our choice.
+
+```typescript
+const response = await chain.invoke(
+    { messages: [new HumanMessage("hi! I'm bob")], language: "Spanish" }
+)
+
+console.log(response.content)
+```
+
+```
+"¡Hola, Bob! ¿En qué puedo ayudarte hoy?"
+```
+
+Let's now wrap this more complicated chain in a Message History class. This time, because there are multiple keys in the input, we need to specify the correct key to use to save the chat history.
+
+```typescript
+const withMessageHistory = new RunnableWithMessageHistory({
+    runnable: chain,
+    getMessageHistory,
+    inputMessagesKey: "messages",
+})
+
+const config = { configurable: { sessionId: "abc11" } }
+
+const response = await withMessageHistory.invoke(
+    { messages: [new HumanMessage("hi! I'm todd")], language: "Spanish" },
+    config,
+)
+
+console.log(response.content)
+```
+
+```
+¡Hola Todd! ¿En qué puedo ayudarte hoy?
+```
+
+```typescript
+const response = await withMessageHistory.invoke(
+  { messages: [new HumanMessage("Whats my name?")], language: "Spanish" },
+  config,
+)
+
+console.log(response.content)
+```
+
+```
+Tu nombre es Todd.
+```
+
+To help understand what's happening internally, checkout this LangSmith trace
