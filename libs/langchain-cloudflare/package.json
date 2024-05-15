@@ -39,7 +39,7 @@
   "license": "MIT",
   "dependencies": {
     "@cloudflare/ai": "^1.0.47",
-    "@langchain/core": "~0.2.0-rc.0",
+    "@langchain/core": "<0.3.0 || >0.1.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
