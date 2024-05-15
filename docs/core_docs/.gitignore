@@ -45,8 +45,14 @@ docs/tutorials/llm_chain.md
 docs/tutorials/llm_chain.mdx
 docs/tutorials/graph.md
 docs/tutorials/graph.mdx
+docs/tutorials/extraction.md
+docs/tutorials/extraction.mdx
+docs/tutorials/classification.md
+docs/tutorials/classification.mdx
 docs/how_to/tools_as_openai_functions.md
 docs/how_to/tools_as_openai_functions.mdx
+docs/how_to/tools.md
+docs/how_to/tools.mdx
 docs/how_to/tool_calling.md
 docs/how_to/tool_calling.mdx
 docs/how_to/structured_output.md
@@ -109,6 +115,8 @@ docs/how_to/extraction_examples.md
 docs/how_to/extraction_examples.mdx
 docs/how_to/example_selectors.md
 docs/how_to/example_selectors.mdx
+docs/how_to/custom_tools.md
+docs/how_to/custom_tools.mdx
 docs/how_to/code_splitter.md
 docs/how_to/code_splitter.mdx
 docs/how_to/chatbots_tools.md
