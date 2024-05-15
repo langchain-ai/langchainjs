@@ -129,7 +129,6 @@ export default function ChatModelTabs(props) {
     },
   };
 
-  // const displayedTabs = providers.map((provider) => tabs[provider]);
   const displayedTabs = (props.onlyWsa ? MODELS_WSA : providers).map(
     (provider) => tabs[provider]
   );
