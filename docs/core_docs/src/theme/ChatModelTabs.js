@@ -43,14 +43,14 @@ const MODELS_WSA = ["openai", "anthropic", "mistral", "groq", "vertex"];
  * @property {string} [mistralParams] - Parameters for Mistral chat model. Defaults to `"{\n  model: "mistral-large-latest",\n  temperature: 0\n}"`
  * @property {string} [groqParams] - Parameters for Groq chat model. Defaults to `"{\n  model: "mixtral-8x7b-32768",\n  temperature: 0\n}"`
  * @property {string} [vertexParams] - Parameters for Google VertexAI chat model. Defaults to `"{\n  model: "gemini-1.5-pro",\n  temperature: 0\n}"`
- * 
+ *
  * @property {boolean} [hideOpenai] - Whether or not to hide OpenAI chat model.
  * @property {boolean} [hideAnthropic] - Whether or not to hide Anthropic chat model.
  * @property {boolean} [hideFireworks] - Whether or not to hide Fireworks chat model.
  * @property {boolean} [hideMistral] - Whether or not to hide Mistral chat model.
  * @property {boolean} [hideGroq] - Whether or not to hide Mistral chat model.
  * @property {boolean} [hideVertex] - Whether or not to hide Mistral chat model.
- * 
+ *
  * @property {string} [customVarName] - Custom variable name for the model. Defaults to `"model"`.
  * @property {boolean} [onlyWsa] - Only display models which have `withStructuredOutput` implemented.
  */
@@ -130,7 +130,9 @@ export default function ChatModelTabs(props) {
   };
 
   // const displayedTabs = providers.map((provider) => tabs[provider]);
-  const displayedTabs = (props.onlyWsa ? MODELS_WSA : providers).map((provider) => tabs[provider]);
+  const displayedTabs = (props.onlyWsa ? MODELS_WSA : providers).map(
+    (provider) => tabs[provider]
+  );
 
   return (
     <div>
