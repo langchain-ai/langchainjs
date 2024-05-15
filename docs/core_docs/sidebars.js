@@ -20,13 +20,7 @@
 
 module.exports = {
   docs: [
-    {
-      type: "category",
-      label: "Introduction",
-      collapsed: false,
-      collapsible: false,
-      link: { type: "doc", id: "introduction" },
-    },
+    "introduction",
     {
       type: "doc",
       id: "tutorials/index",
