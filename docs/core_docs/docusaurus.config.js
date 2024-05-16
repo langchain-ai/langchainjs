@@ -208,7 +208,7 @@ const config = {
               },
               {
                 label: "v0.1",
-                href: "/../v0.1/docs/get_started/introduction",
+                href: "https://js.langchain.com/v0.1/docs/get_started/introduction",
               },
             ],
           },
