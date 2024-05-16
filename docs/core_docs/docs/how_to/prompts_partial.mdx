@@ -1,5 +1,13 @@
 # How to partially format prompt templates
 
+import PrerequisiteLinks from "@theme/PrerequisiteLinks";
+
+<PrerequisiteLinks
+  content={`
+- [Prompt templates](/docs/concepts/#prompt-templates)
+`}
+/>
+
 Like partially binding arguments to a function, it can make sense to "partial" a prompt template - e.g. pass in
 a subset of the required values, as to create a new prompt template which expects only the remaining subset of values.
 
@@ -9,14 +17,6 @@ LangChain supports this in two ways:
 2. Partial formatting with functions that return string values.
 
 In the examples below, we go over the motivations for both use cases as well as how to do it in LangChain.
-
-import PrerequisiteLinks from "@theme/PrerequisiteLinks";
-
-<PrerequisiteLinks
-  content={`
-- [Prompt templates](/docs/concepts/#prompt-templates)
-`}
-/>
 
 ## Partial with strings
 
@@ -113,3 +113,9 @@ console.log(formattedPrompt);
 
 // Tell me a funny joke about the day 2023-07-13T00:54:59.287Z
 ```
+
+## Next steps
+
+You've now learned how to partially apply variables to your prompt templates.
+
+Next, check out the other how-to guides on prompt templates in this section, like [adding few-shot examples to your prompt templates](/docs/how_to/few_shot_examples_chat).

@@ -8958,7 +8958,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/cohere@^0.0.8, @langchain/cohere@workspace:*, @langchain/cohere@workspace:libs/langchain-cohere":
+"@langchain/cohere@npm:^0.0.8":
+  version: 0.0.8
+  resolution: "@langchain/cohere@npm:0.0.8"
+  dependencies:
+    "@langchain/core": ~0.1.58
+    cohere-ai: ^7.9.3
+  checksum: f7ba95cb4f715eb0e77c7d6f842d61663baefb4a5f164bb872945b011d3e12f5fa320e976d605d943f70cc67801fd7618e2beac99cd74666f20f2000ac26a961
+  languageName: node
+  linkType: hard
+
+"@langchain/cohere@workspace:*, @langchain/cohere@workspace:libs/langchain-cohere":
   version: 0.0.0-use.local
   resolution: "@langchain/cohere@workspace:libs/langchain-cohere"
   dependencies:
@@ -9579,7 +9589,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-common@workspace:*, @langchain/google-common@workspace:libs/langchain-google-common, @langchain/google-common@~0.0.13":
+"@langchain/google-common@workspace:*, @langchain/google-common@workspace:libs/langchain-google-common, @langchain/google-common@~0.0.14":
   version: 0.0.0-use.local
   resolution: "@langchain/google-common@workspace:libs/langchain-google-common"
   dependencies:
@@ -9612,13 +9622,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-gauth@workspace:libs/langchain-google-gauth, @langchain/google-gauth@~0.0.14":
+"@langchain/google-gauth@workspace:libs/langchain-google-gauth, @langchain/google-gauth@~0.0.15":
   version: 0.0.0-use.local
   resolution: "@langchain/google-gauth@workspace:libs/langchain-google-gauth"
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": <0.3.0 || >0.1.0
-    "@langchain/google-common": ~0.0.13
+    "@langchain/google-common": ~0.0.14
     "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9683,7 +9693,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": <0.3.0 || >0.1.0
-    "@langchain/google-webauth": ~0.0.13
+    "@langchain/google-webauth": ~0.0.14
     "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9715,7 +9725,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": <0.3.0 || >0.1.0
-    "@langchain/google-gauth": ~0.0.14
+    "@langchain/google-gauth": ~0.0.15
     "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9740,13 +9750,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-webauth@workspace:libs/langchain-google-webauth, @langchain/google-webauth@~0.0.13":
+"@langchain/google-webauth@workspace:libs/langchain-google-webauth, @langchain/google-webauth@~0.0.14":
   version: 0.0.0-use.local
   resolution: "@langchain/google-webauth@workspace:libs/langchain-google-webauth"
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": <0.3.0 || >0.1.0
-    "@langchain/google-common": ~0.0.13
+    "@langchain/google-common": ~0.0.14
     "@langchain/scripts": ~0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
