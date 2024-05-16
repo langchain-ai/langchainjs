@@ -11,6 +11,7 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   type BaseChatModelParams,
   BaseChatModel,
+  LangSmithParams,
 } from "@langchain/core/language_models/chat_models";
 import {
   ChatGeneration,
@@ -143,6 +144,15 @@ export class ChatCohere<
     this.model = fields?.model ?? this.model;
     this.temperature = fields?.temperature ?? this.temperature;
     this.streaming = fields?.streaming ?? this.streaming;
+  }
+
+  protected _getLsParams(_: this["ParsedCallOptions"]): LangSmithParams {
+    return {
+      ls_provider: "cohere",
+      ls_model_name: this.model,
+      ls_model_type: "chat",
+      ls_temperature: this.temperature ?? undefined,
+    };
   }
 
   _llmType() {
