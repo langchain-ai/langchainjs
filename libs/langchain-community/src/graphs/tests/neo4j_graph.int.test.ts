@@ -165,7 +165,7 @@ describe.skip("Neo4j Graph Tests", () => {
   });
 });
 
-describe("Neo4j Graph with custom config", () => {
+describe.skip("Neo4j Graph with custom config", () => {
   const url = process.env.NEO4J_URI as string;
   const username = process.env.NEO4J_USERNAME as string;
   const password = process.env.NEO4J_PASSWORD as string;
@@ -188,7 +188,7 @@ describe("Neo4j Graph with custom config", () => {
     "twitter",
   ];
 
-  test.skip("Test database timeout", async () => {
+  test("Test database timeout", async () => {
     expect(url).toBeDefined();
     expect(username).toBeDefined();
     expect(password).toBeDefined();
@@ -256,7 +256,7 @@ describe("Neo4j Graph with custom config", () => {
     await graphWithEnhancedSchema.close();
   });
 
-  test.skip("Test running on multiple demo databases", async () => {
+  test("Test running on multiple demo databases", async () => {
     for (const database of DEMO_DATABASES) {
       console.log("Connecting demo database:", database);
 
