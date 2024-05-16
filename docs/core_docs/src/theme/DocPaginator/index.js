@@ -13,5 +13,10 @@ export default function DocPaginatorWrapper(props) {
       setShouldHide(true);
     }
   }, []);
-  return <>{shouldHide ? null : <DocPaginator {...props} />}</>;
+
+  if (!shouldHide) {
+    // eslint-disable-next-line react/jsx-props-no-spreading
+    return <DocPaginator {...props} />;
+  }
+  return null;
 }
