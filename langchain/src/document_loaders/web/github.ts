@@ -31,7 +31,7 @@ function isBinaryPath(name: string) {
 
 /**
  * @deprecated - Import from "@langchain/community/document_loaders/web/github" instead. This entrypoint will be removed in 0.3.0.
- * 
+ *
  * An interface that represents a file in a GitHub repository. It has
  * properties for the file name, path, SHA, size, URLs, type, and links.
  */
@@ -73,7 +73,7 @@ interface SubmoduleInfo {
 
 /**
  * @deprecated - Import from "@langchain/community/document_loaders/web/github" instead. This entrypoint will be removed in 0.3.0.
- * 
+ *
  * An interface that represents the parameters for the GithubRepoLoader
  * class. It extends the AsyncCallerParams interface and adds additional
  * properties specific to the GitHub repository loader.
@@ -113,7 +113,7 @@ export interface GithubRepoLoaderParams extends AsyncCallerParams {
 
 /**
  * @deprecated - Import from "@langchain/community/document_loaders/web/github" instead. This entrypoint will be removed in 0.3.0.
- * 
+ *
  * A class that extends the BaseDocumentLoader and implements the
  * GithubRepoLoaderParams interface. It represents a document loader for
  * loading files from a GitHub repository.

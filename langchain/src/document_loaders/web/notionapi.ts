@@ -76,7 +76,7 @@ export type OnDocumentLoadedCallback = (
   rootTitle?: string
 ) => void;
 
-/** 
+/**
  * @deprecated - Import from "@langchain/community/document_loaders/web/notionapi" instead. This entrypoint will be removed in 0.3.0.
  */
 export type NotionAPILoaderOptions = {
@@ -90,7 +90,7 @@ export type NotionAPILoaderOptions = {
 
 /**
  * @deprecated - Import from "@langchain/community/document_loaders/web/notionapi" instead. This entrypoint will be removed in 0.3.0.
- * 
+ *
  * A class that extends the BaseDocumentLoader class. It represents a
  * document loader for loading documents from Notion using the Notion API.
  * @example

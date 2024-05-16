@@ -10,7 +10,7 @@ import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation
 
 /**
  * @deprecated - Import from "@langchain/community/document_loaders/web/sitemap" instead. This entrypoint will be removed in 0.3.0.
- * 
+ *
  * Interface representing the parameters for initializing a SitemapLoader.
  * @interface SitemapLoaderParams
  * @extends WebBaseLoaderParams

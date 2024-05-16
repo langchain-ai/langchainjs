@@ -10,7 +10,7 @@ import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation
 
 /**
  * @deprecated - Import from "@langchain/community/document_loaders/web/confluence" instead. This entrypoint will be removed in 0.3.0.
- * 
+ *
  * Interface representing the parameters for configuring the
  * ConfluencePagesLoader.
  */
@@ -26,7 +26,7 @@ export interface ConfluencePagesLoaderParams {
 
 /**
  * @deprecated - Import from "@langchain/community/document_loaders/web/confluence" instead. This entrypoint will be removed in 0.3.0.
- * 
+ *
  * Interface representing a Confluence page.
  */
 export interface ConfluencePage {
@@ -50,7 +50,7 @@ export interface ConfluencePage {
 
 /**
  * @deprecated - Import from "@langchain/community/document_loaders/web/confluence" instead. This entrypoint will be removed in 0.3.0.
- * 
+ *
  * Interface representing the response from the Confluence API.
  */
 export interface ConfluenceAPIResponse {
@@ -60,7 +60,7 @@ export interface ConfluenceAPIResponse {
 
 /**
  * @deprecated - Import from "@langchain/community/document_loaders/web/confluence" instead. This entrypoint will be removed in 0.3.0.
- * 
+ *
  * Class representing a document loader for loading pages from Confluence.
  * @example
  * ```typescript

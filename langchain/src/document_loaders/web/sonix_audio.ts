@@ -11,7 +11,7 @@ import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation
 
 /**
  * @deprecated - Import from "@langchain/community/document_loaders/web/sonix_audio" instead. This entrypoint will be removed in 0.3.0.
- * 
+ *
  * A class that represents a document loader for transcribing audio files
  * using the Sonix Speech Recognition service.
  * @example

@@ -41,7 +41,7 @@ export type PuppeteerWebBaseLoaderOptions = {
 
 /**
  * @deprecated - Import from "@langchain/community/document_loaders/web/puppeteer" instead. This entrypoint will be removed in 0.3.0.
- * 
+ *
  * Class that extends the BaseDocumentLoader class and implements the
  * DocumentLoader interface. It represents a document loader for scraping
  * web pages using Puppeteer.

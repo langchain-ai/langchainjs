@@ -13,7 +13,7 @@ const MODEL_NAME = "whisper-1";
 
 /**
  * @deprecated - Import from "@langchain/community/document_loaders/fs/openai_whisper_audio" instead. This entrypoint will be removed in 0.3.0.
- * 
+ *
  * @example
  * ```typescript
  * const loader = new OpenAIWhisperAudio(

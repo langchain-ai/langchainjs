@@ -20,7 +20,7 @@ export type PlaywrightGotoOptions = {
 
 /**
  * @deprecated - Import from "@langchain/community/document_loaders/web/playwright" instead. This entrypoint will be removed in 0.3.0.
- * 
+ *
  * Type representing a function for evaluating JavaScript code on a web
  * page using Playwright. Takes a Page, Browser, and Response object as
  * parameters and returns a Promise that resolves to a string.
@@ -39,7 +39,7 @@ export type PlaywrightWebBaseLoaderOptions = {
 
 /**
  * @deprecated - Import from "@langchain/community/document_loaders/web/pplaywrightdf" instead. This entrypoint will be removed in 0.3.0.
- * 
+ *
  * Class representing a document loader for scraping web pages using
  * Playwright. Extends the BaseDocumentLoader class and implements the
  * DocumentLoader interface.
