@@ -80,6 +80,15 @@ export function createChatMessageChunkEncoderStream() {
   });
 }
 
+type LangSmithParams = {
+  ls_provider: string;
+  ls_model_name: string
+  ls_model_type: "chat";
+  ls_temperature?: number;
+  ls_max_tokens?: number;
+  ls_stop?: Array<string>;
+}
+
 interface ChatModelGenerateCachedParameters<
   T extends BaseChatModel<CallOptions>,
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions
