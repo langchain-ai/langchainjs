@@ -16,15 +16,19 @@ const weatherSchema = z.object({
   state: z.string().optional().describe("The state to get the weather from"),
 });
 
-const tools = [{
-  name: "calculator",
-  description: "A simple calculator tool",
-  input_schema: zodToJsonSchema(calculatorSchema),
-}, {
-  name: "get_weather",
-  description: "Get the weather of a specific location and return the temperature in Celsius.",
-  input_schema: zodToJsonSchema(weatherSchema),
-}];
+const tools = [
+  {
+    name: "calculator",
+    description: "A simple calculator tool",
+    input_schema: zodToJsonSchema(calculatorSchema),
+  },
+  {
+    name: "get_weather",
+    description:
+      "Get the weather of a specific location and return the temperature in Celsius.",
+    input_schema: zodToJsonSchema(weatherSchema),
+  },
+];
 
 const model = new ChatAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -32,9 +36,9 @@ const model = new ChatAnthropic({
 }).bind({
   tools,
   tool_choice: {
-    type:"tool",
-    name: "get_weather"
-  }
+    type: "tool",
+    name: "get_weather",
+  },
 });
 
 const prompt = ChatPromptTemplate.fromMessages([

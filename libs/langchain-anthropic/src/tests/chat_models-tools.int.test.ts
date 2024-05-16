@@ -290,8 +290,7 @@ test("Can pass tool_choice", async () => {
   };
   const tool2 = {
     name: "calculator",
-    description:
-      "Calculate any math expression and return the result.",
+    description: "Calculate any math expression and return the result.",
     input_schema: {
       type: "object",
       properties: {
@@ -309,7 +308,7 @@ test("Can pass tool_choice", async () => {
     tool_choice: {
       type: "tool",
       name: "get_weather",
-    }
+    },
   });
 
   const result = await modelWithTools.invoke(

@@ -60,17 +60,20 @@ type AnthropicStreamingMessageCreateParams =
   Anthropic.MessageCreateParamsStreaming;
 type AnthropicMessageStreamEvent = Anthropic.MessageStreamEvent;
 type AnthropicRequestOptions = Anthropic.RequestOptions;
-type AnthropicToolChoice = | {
-  type: "tool",
-  name: string;
-} | "any" | "auto"
+type AnthropicToolChoice =
+  | {
+      type: "tool";
+      name: string;
+    }
+  | "any"
+  | "auto";
 interface ChatAnthropicCallOptions extends BaseLanguageModelCallOptions {
   tools?: (StructuredToolInterface | AnthropicTool)[];
   /**
    * Whether or not to specify what tool the model should use
    * @default "auto"
    */
-  tool_choice?: AnthropicToolChoice
+  tool_choice?: AnthropicToolChoice;
 }
 
 type AnthropicMessageResponse = Anthropic.ContentBlock | AnthropicToolResponse;
@@ -554,24 +557,26 @@ export class ChatAnthropicMessages<
     "messages"
   > &
     Kwargs {
-    let tool_choice: {
-      type: string;
-      name?: string;
-    } | undefined = undefined;
+    let tool_choice:
+      | {
+          type: string;
+          name?: string;
+        }
+      | undefined;
     if (options?.tool_choice) {
       if (options?.tool_choice === "any") {
         tool_choice = {
-          type: "any"
-        }
+          type: "any",
+        };
       } else if (options?.tool_choice === "auto") {
         tool_choice = {
-          type: "auto"
-        }
+          type: "auto",
+        };
       } else {
-        tool_choice = options?.tool_choice
+        tool_choice = options?.tool_choice;
       }
     }
-    
+
     return {
       model: this.model,
       temperature: this.temperature,
@@ -937,7 +942,7 @@ export class ChatAnthropicMessages<
     }
     const llm = this.bind({
       tools,
-      tool_choice: "any"
+      tool_choice: "any",
     } as Partial<CallOptions>);
 
     if (!includeRaw) {
