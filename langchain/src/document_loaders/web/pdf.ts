@@ -9,6 +9,8 @@ import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation
 });
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/pdf" instead. This entrypoint will be removed in 0.3.0.
+ * 
  * A document loader for loading data from PDFs.
  * @example
  * ```typescript

@@ -9,6 +9,8 @@ import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation
 });
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/fs/pptx" instead. This entrypoint will be removed in 0.3.0.
+ * 
  * A class that extends the `BufferLoader` class. It represents a document
  * loader that loads documents from PDF files.
  */

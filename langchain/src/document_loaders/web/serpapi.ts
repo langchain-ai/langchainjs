@@ -21,6 +21,8 @@ interface SerpAPIParameters {
 }
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/serpapi" instead. This entrypoint will be removed in 0.3.0.
+ * 
  * Class representing a document loader for loading search results from
  * the SerpAPI. It extends the BaseDocumentLoader class.
  * @example

@@ -8,6 +8,8 @@ import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation
 });
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/college_confidential" instead. This entrypoint will be removed in 0.3.0.
+ * 
  * A document loader specifically designed for loading documents from the
  * College Confidential website. It extends the CheerioWebBaseLoader.
  * @example

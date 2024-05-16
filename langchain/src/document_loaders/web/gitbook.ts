@@ -18,6 +18,8 @@ interface GitbookLoaderParams {
 }
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/gitbook" instead. This entrypoint will be removed in 0.3.0.
+ * 
  * Class representing a document loader specifically designed for loading
  * documents from Gitbook. It extends the CheerioWebBaseLoader.
  */

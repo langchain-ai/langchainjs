@@ -44,6 +44,8 @@ export interface SortXYZBlockchainAPIResponse {
 }
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/sortxyz_blockchain" instead. This entrypoint will be removed in 0.3.0.
+ * 
  * Class representing a document loader for loading data from the SortXYZ
  * blockchain using the SortXYZ API.
  * @example
