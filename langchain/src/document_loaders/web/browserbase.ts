@@ -1,11 +1,9 @@
 import { Document, type DocumentInterface } from "@langchain/core/documents";
-import Browserbase, { BrowserbaseLoadOptions } from "@browserbasehq/sdk";
+import Browserbase, { LoadOptions, ClientOptions } from "@browserbasehq/sdk";
 import { BaseDocumentLoader } from "../base.js";
 import type { DocumentLoader } from "../base.js";
 
-interface BrowserbaseLoaderOptions extends BrowserbaseLoadOptions {
-  apiKey?: string;
-}
+type BrowserbaseLoaderOptions = ClientOptions & LoadOptions
 
 /**
  * Load pre-rendered web pages using a headless browser hosted on Browserbase.
@@ -42,7 +40,7 @@ export class BrowserbaseLoader
     super();
     this.urls = urls;
     this.options = options;
-    this.browserbase = new Browserbase(options.apiKey);
+    this.browserbase = new Browserbase(options);
   }
 
   /**

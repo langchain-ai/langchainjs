@@ -6623,13 +6623,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@browserbasehq/sdk@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "@browserbasehq/sdk@npm:1.0.0"
+"@browserbasehq/sdk@npm:^1.1.5":
+  version: 1.1.5
+  resolution: "@browserbasehq/sdk@npm:1.1.5"
   dependencies:
     playwright: ^1.43.1
     zod: ^3.22.5
-  checksum: 1aa7d6fd9e7550bdb7fff43a3c858227bcb9fcb26e9c4ee0ae245e36a1fa90d9a378f6937c620ef0bbe8e400710005778d945d180033639afa50a564c975a3ae
+  checksum: 9b62d6471c4f706af881b58b8fcc0c06ea48bc4b3b2d97c71265a8294cf38afefc61609b21c7d6564a312a91359f645e90462875582c73004420ed2a2bf4e1bc
   languageName: node
   linkType: hard
 
@@ -27374,7 +27374,7 @@ __metadata:
     "@aws-sdk/credential-provider-node": ^3.388.0
     "@aws-sdk/types": ^3.357.0
     "@azure/storage-blob": ^12.15.0
-    "@browserbasehq/sdk": ^1.0.0
+    "@browserbasehq/sdk": ^1.1.5
     "@cloudflare/workers-types": ^4.20230922.0
     "@faker-js/faker": ^7.6.0
     "@gomomento/sdk": ^1.51.1
