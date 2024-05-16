@@ -418,7 +418,7 @@ export class ChatMistralAI<
     this.model = this.modelName;
   }
 
-  protected _getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+  protected getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     const params = this.invocationParams(options);
     return {
       ls_provider: "mistral",

@@ -504,7 +504,7 @@ export class ChatAnthropicMessages<
     this.clientOptions = fields?.clientOptions ?? {};
   }
 
-  protected _getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+  protected getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     const params = this.invocationParams(options);
     return {
       ls_provider: "openai",

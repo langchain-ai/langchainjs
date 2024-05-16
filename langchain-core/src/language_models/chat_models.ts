@@ -196,7 +196,7 @@ export abstract class BaseChatModel<
         this._separateRunnableConfigFromCallOptions(options);
       const inheritableMetadata = {
         ...this.metadata,
-        ...this._getLsParams(callOptions),
+        ...this.getLsParams(callOptions),
       };
       const callbackManager_ = await CallbackManager.configure(
         runnableConfig.callbacks,
@@ -259,7 +259,7 @@ export abstract class BaseChatModel<
     }
   }
 
-  protected _getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+  protected getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     return {
       ls_model_type: "chat",
       ls_stop: options.stop,
@@ -278,7 +278,7 @@ export abstract class BaseChatModel<
 
     const inheritableMetadata = {
       ...this.metadata,
-      ...this._getLsParams(parsedOptions),
+      ...this.getLsParams(parsedOptions),
     };
 
     // create callback manager and start run
@@ -378,7 +378,7 @@ export abstract class BaseChatModel<
     );
     const inheritableMetadata = {
       ...this.metadata,
-      ...this._getLsParams(parsedOptions),
+      ...this.getLsParams(parsedOptions),
     };
 
     // create callback manager and start run

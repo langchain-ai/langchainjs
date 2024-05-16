@@ -146,7 +146,7 @@ export class ChatCohere<
     this.streaming = fields?.streaming ?? this.streaming;
   }
 
-  protected _getLsParams(_: this["ParsedCallOptions"]): LangSmithParams {
+  protected getLsParams(_: this["ParsedCallOptions"]): LangSmithParams {
     return {
       ls_provider: "cohere",
       ls_model_name: this.model,

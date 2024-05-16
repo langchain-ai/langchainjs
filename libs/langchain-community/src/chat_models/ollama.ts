@@ -177,7 +177,7 @@ export class ChatOllama
     this.format = fields.format;
   }
 
-  protected _getLsParams(_: this["ParsedCallOptions"]): LangSmithParams {
+  protected getLsParams(_: this["ParsedCallOptions"]): LangSmithParams {
     return {
       ls_provider: "ollama",
       ls_model_name: this.model,
