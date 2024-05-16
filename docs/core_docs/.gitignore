@@ -59,6 +59,8 @@ docs/how_to/structured_output.md
 docs/how_to/structured_output.mdx
 docs/how_to/streaming.md
 docs/how_to/streaming.mdx
+docs/how_to/split_by_token.md
+docs/how_to/split_by_token.mdx
 docs/how_to/sequence.md
 docs/how_to/sequence.mdx
 docs/how_to/recursive_text_splitter.md
