@@ -271,6 +271,7 @@ export const config = {
     "document_loaders/web/serpapi": "document_loaders/web/serpapi",
     "document_loaders/web/sort_xyz_blockchain":
       "document_loaders/web/sort_xyz_blockchain",
+    "document_loaders/web/spider": "document_loaders/web/spider",
     "document_loaders/web/youtube": "document_loaders/web/youtube",
     "document_loaders/fs/chatgpt": "document_loaders/fs/chatgpt",
     "document_loaders/fs/srt": "document_loaders/fs/srt",
@@ -463,6 +464,7 @@ export const config = {
     "document_loaders/web/s3",
     "document_loaders/web/sitemap",
     "document_loaders/web/sonix_audio",
+    "document_loaders/web/spider",
     "document_loaders/web/confluence",
     "document_loaders/web/couchbase",
     "document_loaders/web/youtube",

@@ -278,10 +278,6 @@
     "document_loaders/web/sort_xyz_blockchain.js",
     "document_loaders/web/sort_xyz_blockchain.d.ts",
     "document_loaders/web/sort_xyz_blockchain.d.cts",
-    "document_loaders/web/spider.cjs",
-    "document_loaders/web/spider.js",
-    "document_loaders/web/spider.d.ts",
-    "document_loaders/web/spider.d.cts",
     "document_loaders/web/youtube.cjs",
     "document_loaders/web/youtube.js",
     "document_loaders/web/youtube.d.ts",
@@ -610,7 +606,6 @@
     "@mendable/firecrawl-js": "^0.0.13",
     "@notionhq/client": "^2.2.10",
     "@pinecone-database/pinecone": "^1.1.0",
-    "@spider-cloud/spider-client": "^0.0.21",
     "@supabase/supabase-js": "^2.10.0",
     "@swc/core": "^1.3.90",
     "@swc/jest": "^0.2.29",
@@ -695,7 +690,6 @@
     "@mendable/firecrawl-js": "^0.0.13",
     "@notionhq/client": "^2.2.10",
     "@pinecone-database/pinecone": "*",
-    "@spider-cloud/spider-client": "^0.0.21",
     "@supabase/supabase-js": "^2.10.0",
     "@vercel/kv": "^0.2.3",
     "@xata.io/client": "^0.28.0",
@@ -772,9 +766,6 @@
       "optional": true
     },
     "@pinecone-database/pinecone": {
-      "optional": true
-    },
-    "@spider-cloud/spider-client": {
       "optional": true
     },
     "@supabase/supabase-js": {
@@ -1530,15 +1521,6 @@
       },
       "import": "./document_loaders/web/sort_xyz_blockchain.js",
       "require": "./document_loaders/web/sort_xyz_blockchain.cjs"
-    },
-    "./document_loaders/web/spider": {
-      "types": {
-        "import": "./document_loaders/web/spider.d.ts",
-        "require": "./document_loaders/web/spider.d.cts",
-        "default": "./document_loaders/web/spider.d.ts"
-      },
-      "import": "./document_loaders/web/spider.js",
-      "require": "./document_loaders/web/spider.cjs"
     },
     "./document_loaders/web/youtube": {
       "types": {
