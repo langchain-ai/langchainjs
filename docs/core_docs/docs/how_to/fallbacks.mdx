@@ -2,6 +2,15 @@ import CodeBlock from "@theme/CodeBlock";
 
 # Fallbacks
 
+:::info Prerequisites
+
+This guide assumes familiarity with the following concepts:
+
+- [LangChain Expression Language (LCEL)](/docs/concepts/#langchain-expression-language)
+- [Chaining runnables](/docs/how_to/sequence/)
+
+:::
+
 When working with language models, you may encounter issues from the underlying APIs, e.g. rate limits or downtime.
 As you move your LLM applications into production it becomes more and more important to have contingencies for errors.
 That's why we've introduced the concept of fallbacks.
