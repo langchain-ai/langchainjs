@@ -34,7 +34,6 @@ export const optionalImportEntrypoints: string[] = [
   "langchain/document_loaders/web/sonix_audio",
   "langchain/document_loaders/web/confluence",
   "langchain/document_loaders/web/couchbase",
-  "langchain/document_loaders/web/spider",
   "langchain/document_loaders/web/youtube",
   "langchain/document_loaders/fs/directory",
   "langchain/document_loaders/fs/buffer",

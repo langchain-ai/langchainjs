@@ -47,6 +47,7 @@ export const optionalImportEntrypoints: string[] = [
   "langchain_community/vectorstores/cloudflare_vectorize",
   "langchain_community/vectorstores/convex",
   "langchain_community/vectorstores/couchbase",
+  "langchain/document_loaders/web/spider",
   "langchain_community/vectorstores/elasticsearch",
   "langchain_community/vectorstores/faiss",
   "langchain_community/vectorstores/googlevertexai",
