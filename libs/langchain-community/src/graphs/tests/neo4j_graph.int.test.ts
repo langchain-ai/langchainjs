@@ -47,7 +47,7 @@ describe.skip("Neo4j Graph Tests", () => {
 
     await graph.query(
       "CREATE (a:Actor {name:'Bruce Willis'})" +
-      "-[:ACTED_IN {roles: ['Butch Coolidge']}]->(:Movie {title: 'Pulp Fiction'})"
+        "-[:ACTED_IN {roles: ['Butch Coolidge']}]->(:Movie {title: 'Pulp Fiction'})"
     );
 
     await graph.refreshSchema();
@@ -163,16 +163,13 @@ describe.skip("Neo4j Graph Tests", () => {
     ]);
     expect(graph.getStructuredSchema().metadata?.constraint).not.toEqual([]);
   });
-
-
 });
-
 
 describe.skip("Neo4j Graph with custom config", () => {
   const url = process.env.NEO4J_URI as string;
   const username = process.env.NEO4J_USERNAME as string;
   const password = process.env.NEO4J_PASSWORD as string;
-  const DEMO_URL = "neo4j+s://demo.neo4jlabs.com"
+  const DEMO_URL = "neo4j+s://demo.neo4jlabs.com";
   const DEMO_DATABASES = [
     "recommendations",
     "buzzoverflow",
@@ -210,7 +207,6 @@ describe.skip("Neo4j Graph with custom config", () => {
     await graphWithTimeout.close();
   });
 
-
   test("Test enhancedSchema option", async () => {
     expect(url).toBeDefined();
     expect(username).toBeDefined();
@@ -220,7 +216,7 @@ describe.skip("Neo4j Graph with custom config", () => {
       url,
       username,
       password,
-      enhancedSchema: true
+      enhancedSchema: true,
     });
     await graphWithEnhancedSchema.addGraphDocuments(TEST_DATA, {
       baseEntityLabel: true,
@@ -230,7 +226,7 @@ describe.skip("Neo4j Graph with custom config", () => {
     // call refresh again
     await graphWithEnhancedSchema.refreshSchema();
 
-    await graphWithEnhancedSchema.close()
+    await graphWithEnhancedSchema.close();
   });
 
   test("Test running on multiple demo databases", async () => {
@@ -244,9 +240,9 @@ describe.skip("Neo4j Graph with custom config", () => {
         password: database,
         enhancedSchema: true,
       });
-      await graphDemo.close()
+      await graphDemo.close();
     }
 
     console.log("All database tests completed.");
-  }, 10000000)
-})
+  }, 10000000);
+});

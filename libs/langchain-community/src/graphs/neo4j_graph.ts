@@ -45,7 +45,7 @@ export const BASE_ENTITY_LABEL = "__Entity__";
 
 const DISTINCT_VALUE_LIMIT = 10;
 const LIST_LIMIT = 128;
-const EXHAUSTIVE_SEARCH_LIMIT = 10000
+const EXHAUSTIVE_SEARCH_LIMIT = 10000;
 const EXCLUDED_LABELS = ["Bloom_Perspective", "Bloom_Scene"];
 const EXCLUDED_RELS = ["Bloom_HAS_SCENE"];
 
@@ -84,22 +84,28 @@ WITH * WHERE NOT label IN $EXCLUDED_LABELS
 RETURN {start: label, type: property, end: toString(other_node)} AS output
 `;
 
-function isDistinctMoreThanLimit(distinct_count = 11, limit = DISTINCT_VALUE_LIMIT): boolean {
+function isDistinctMoreThanLimit(
+  distinct_count = 11,
+  limit = DISTINCT_VALUE_LIMIT
+): boolean {
   return distinct_count !== undefined && distinct_count > limit;
 }
 
 function cleanStringValues(text: string) {
-  return text.replace("\n", " ").replace("\r", " ")
+  return text.replace("\n", " ").replace("\r", " ");
 }
 
-function formatSchema(schema: Record<string, Any>, isEnhanced: boolean): string {
+function formatSchema(
+  schema: Record<string, Any>,
+  isEnhanced: boolean
+): string {
   let formattedNodeProps: string[] = [];
   let formattedRelProps: string[] = [];
 
   if (isEnhanced) {
     // Enhanced formatting for nodes
     for (const [nodeType, properties] of Object.entries(schema.nodeProps)) {
-      formattedNodeProps.push(`- **${nodeType}**`)
+      formattedNodeProps.push(`- **${nodeType}**`);
 
       for (const prop of properties as Array<Record<string, Any>>) {
         let example = "";
@@ -109,16 +115,16 @@ function formatSchema(schema: Record<string, Any>, isEnhanced: boolean): string 
             if (isDistinctMoreThanLimit(prop.distinct_count)) {
               example = `Example: ${cleanStringValues(prop.values[0])}`;
             } else {
-              example = `Available options: ${prop.values.map(cleanStringValues).join(", ")}`;
+              example = `Available options: ${prop.values
+                .map(cleanStringValues)
+                .join(", ")}`;
             }
           }
-        } else if ([
-          "INTEGER",
-          "FLOAT",
-          "DATE",
-          "DATE_TIME",
-          "LOCAL_DATE_TIME",
-        ].includes(prop.type)) {
+        } else if (
+          ["INTEGER", "FLOAT", "DATE", "DATE_TIME", "LOCAL_DATE_TIME"].includes(
+            prop.type
+          )
+        ) {
           if (prop.min !== undefined) {
             example = `Min: ${prop.min}, Max: ${prop.max}`;
           } else {
@@ -128,12 +134,14 @@ function formatSchema(schema: Record<string, Any>, isEnhanced: boolean): string 
           }
         } else if (prop.type === "LIST") {
           if (!prop.min_size || prop.min_size > LIST_LIMIT) {
-            continue
+            continue;
           }
           example = `Min Size: ${prop.min_size}, Max Size: ${prop.max_size}`;
         }
 
-        formattedNodeProps.push(`  - \`${prop.property}\`: ${prop.type} ${example}`);
+        formattedNodeProps.push(
+          `  - \`${prop.property}\`: ${prop.type} ${example}`
+        );
       }
     }
 
@@ -149,16 +157,16 @@ function formatSchema(schema: Record<string, Any>, isEnhanced: boolean): string 
             if (isDistinctMoreThanLimit(prop.distinct_count)) {
               example = `Example: ${cleanStringValues(prop.values[0])}`;
             } else {
-              example = `Available options: ${prop.values.map(cleanStringValues).join(", ")}`;
+              example = `Available options: ${prop.values
+                .map(cleanStringValues)
+                .join(", ")}`;
             }
           }
-        } else if ([
-          "INTEGER",
-          "FLOAT",
-          "DATE",
-          "DATE_TIME",
-          "LOCAL_DATE_TIME",
-        ].includes(prop.type)) {
+        } else if (
+          ["INTEGER", "FLOAT", "DATE", "DATE_TIME", "LOCAL_DATE_TIME"].includes(
+            prop.type
+          )
+        ) {
           if (prop.min) {
             example = `Min: ${prop.min}, Max: ${prop.max}`;
           } else {
@@ -168,12 +176,14 @@ function formatSchema(schema: Record<string, Any>, isEnhanced: boolean): string 
           }
         } else if (prop.type === "LIST") {
           if (prop.min_size > LIST_LIMIT) {
-            continue
+            continue;
           }
           example = `Min Size: ${prop.min_size}, Max Size: ${prop.max_size}`;
         }
 
-        formattedRelProps.push(`  - \`${prop.property}\`: ${prop.type} ${example}`);
+        formattedRelProps.push(
+          `  - \`${prop.property}\`: ${prop.type} ${example}`
+        );
       }
     }
   } else {
@@ -192,12 +202,12 @@ function formatSchema(schema: Record<string, Any>, isEnhanced: boolean): string 
         .join(", ");
       return `${el.type} {${propsStr} } `;
     });
-
   }
 
   // Format relationships
   const formattedRels = schema.relationships.map(
-    (el: Record<string, string>) => `(: ${el.start}) - [: ${el.type}] -> (:${el.end})`
+    (el: Record<string, string>) =>
+      `(: ${el.start}) - [: ${el.type}] -> (:${el.end})`
   );
 
   return [
@@ -251,7 +261,7 @@ export class Neo4jGraph {
     password,
     database = "neo4j",
     timeoutMs,
-    enhancedSchema = false
+    enhancedSchema = false,
   }: Neo4jGraphConfig) {
     try {
       this.driver = neo4j.driver(url, neo4j.auth.basic(username, password));
@@ -274,7 +284,9 @@ export class Neo4jGraph {
       await graph.refreshSchema();
     } catch (error: Any) {
       if (error.code === "Neo.ClientError.Procedure.ProcedureNotFound") {
-        throw new Error("Could not use APOC procedures. Please ensure the APOC plugin is installed in Neo4j and that 'apoc.meta.data()' is allowed in Neo4j configuration.")
+        throw new Error(
+          "Could not use APOC procedures. Please ensure the APOC plugin is installed in Neo4j and that 'apoc.meta.data()' is allowed in Neo4j configuration."
+        );
       }
 
       throw error;
@@ -311,18 +323,23 @@ export class Neo4jGraph {
   }
 
   async refreshSchema() {
-
     // Assuming query method is defined and returns a Promise
     const nodeProperties = (
-      await this.query<{ output: NodeType }>(NODE_PROPERTIES_QUERY, { "EXCLUDED_LABELS": EXCLUDED_LABELS.concat([BASE_ENTITY_LABEL]) })
+      await this.query<{ output: NodeType }>(NODE_PROPERTIES_QUERY, {
+        EXCLUDED_LABELS: EXCLUDED_LABELS.concat([BASE_ENTITY_LABEL]),
+      })
     )?.map((el) => el.output);
 
     const relationshipsProperties = (
-      await this.query<{ output: RelType }>(REL_PROPERTIES_QUERY, { "EXCLUDED_LABELS": EXCLUDED_RELS })
+      await this.query<{ output: RelType }>(REL_PROPERTIES_QUERY, {
+        EXCLUDED_LABELS: EXCLUDED_RELS,
+      })
     )?.map((el) => el.output);
 
     const relationships: PathType[] = (
-      await this.query<{ output: PathType }>(REL_QUERY, { "EXCLUDED_LABELS": EXCLUDED_LABELS.concat([BASE_ENTITY_LABEL]) })
+      await this.query<{ output: PathType }>(REL_QUERY, {
+        EXCLUDED_LABELS: EXCLUDED_LABELS.concat([BASE_ENTITY_LABEL]),
+      })
     )?.map((el) => el.output);
 
     const constraint = await this.query("SHOW CONSTRAINTS");
@@ -347,7 +364,7 @@ export class Neo4jGraph {
     if (this.enhancedSchema) {
       const schemaCounts = await this.query(
         `CALL apoc.meta.graphSample() YIELD nodes, relationships ` +
-        `RETURN nodes, [rel in relationships | {name: apoc.any.property(rel, 'type'), count: apoc.any.property(rel, 'count')}] AS relationships`
+          `RETURN nodes, [rel in relationships | {name: apoc.any.property(rel, 'type'), count: apoc.any.property(rel, 'count')}] AS relationships`
       );
       // Update node info
       for (const node of schemaCounts[0].nodes) {
@@ -414,11 +431,13 @@ export class Neo4jGraph {
 
   async enhancedSchemaCypher(
     labelOrType: string,
-    properties: { property: string, type: string }[],
+    properties: { property: string; type: string }[],
     exhaustive: boolean,
     isRelationship = false
   ) {
-    let matchClause = isRelationship ? `MATCH ()-[n:\`${labelOrType}\`]->()` : `MATCH (n:\`${labelOrType}\`)`;
+    let matchClause = isRelationship
+      ? `MATCH ()-[n:\`${labelOrType}\`]->()`
+      : `MATCH (n:\`${labelOrType}\`)`;
 
     const withClauses: string[] = [];
     const returnClauses: string[] = [];
@@ -430,16 +449,32 @@ export class Neo4jGraph {
         const propType = prop.type;
 
         if (propType === "STRING") {
-          withClauses.push(`collect(distinct substring(n.\`${propName}\`, 0, 50)) AS \`${propName}_values\``);
-          returnClauses.push(`values: \`${propName}_values\`[..${DISTINCT_VALUE_LIMIT}], distinct_count: size(\`${propName}_values\`)`);
-        } else if (["INTEGER", "FLOAT", "DATE", "DATE_TIME", "LOCAL_DATE_TIME"].includes(propType)) {
+          withClauses.push(
+            `collect(distinct substring(n.\`${propName}\`, 0, 50)) AS \`${propName}_values\``
+          );
+          returnClauses.push(
+            `values: \`${propName}_values\`[..${DISTINCT_VALUE_LIMIT}], distinct_count: size(\`${propName}_values\`)`
+          );
+        } else if (
+          ["INTEGER", "FLOAT", "DATE", "DATE_TIME", "LOCAL_DATE_TIME"].includes(
+            propType
+          )
+        ) {
           withClauses.push(`min(n.\`${propName}\`) AS \`${propName}_min\``);
           withClauses.push(`max(n.\`${propName}\`) AS \`${propName}_max\``);
-          withClauses.push(`count(distinct n.\`${propName}\`) AS \`${propName}_distinct\``);
-          returnClauses.push(`min: toString(\`${propName}_min\`), max: toString(\`${propName}_max\`), distinct_count: \`${propName}_distinct\``);
+          withClauses.push(
+            `count(distinct n.\`${propName}\`) AS \`${propName}_distinct\``
+          );
+          returnClauses.push(
+            `min: toString(\`${propName}_min\`), max: toString(\`${propName}_max\`), distinct_count: \`${propName}_distinct\``
+          );
         } else if (propType === "LIST") {
-          withClauses.push(`min(size(n.\`${propName}\`)) AS \`${propName}_size_min\`, max(size(n.\`${propName}\`)) AS \`${propName}_size_max\``);
-          returnClauses.push(`min_size: \`${propName}_size_min\`, max_size: \`${propName}_size_max\``);
+          withClauses.push(
+            `min(size(n.\`${propName}\`)) AS \`${propName}_size_min\`, max(size(n.\`${propName}\`)) AS \`${propName}_size_max\``
+          );
+          returnClauses.push(
+            `min_size: \`${propName}_size_min\`, max_size: \`${propName}_size_max\``
+          );
         } else if (["BOOLEAN", "POINT", "DURATION"].includes(propType)) {
           continue;
         }
@@ -452,38 +487,59 @@ export class Neo4jGraph {
         const propName = prop.property;
         const propType = prop.type;
 
-        const propIndex = this.structuredSchema?.metadata?.index.filter((el: Any) =>
-          el.label === labelOrType &&
-          el.properties[0] === propName &&
-          el.type === "RANGE"
+        const propIndex = this.structuredSchema?.metadata?.index.filter(
+          (el: Any) =>
+            el.label === labelOrType &&
+            el.properties[0] === propName &&
+            el.type === "RANGE"
         );
 
         if (propType === "STRING") {
           if (
-            propIndex.length > 0
-            && propIndex[0].size > 0
-            && propIndex[0].distinctValues <= DISTINCT_VALUE_LIMIT
+            propIndex.length > 0 &&
+            propIndex[0].size > 0 &&
+            propIndex[0].distinctValues <= DISTINCT_VALUE_LIMIT
           ) {
-            const distinctValuesPromise = await this.query(`CALL apoc.schema.properties.distinct('${labelOrType}', '${propName}') YIELD value`);
+            const distinctValuesPromise = await this.query(
+              `CALL apoc.schema.properties.distinct('${labelOrType}', '${propName}') YIELD value`
+            );
             const distinctValues = distinctValuesPromise[0].value;
-            returnClauses.push(`values: ${distinctValues}, distinct_count: ${distinctValues.length}`);
+            returnClauses.push(
+              `values: ${distinctValues}, distinct_count: ${distinctValues.length}`
+            );
           } else {
-            withClauses.push(`collect(distinct substring(n.\`${propName}\`, 0, 50)) AS \`${propName}_values\``);
+            withClauses.push(
+              `collect(distinct substring(n.\`${propName}\`, 0, 50)) AS \`${propName}_values\``
+            );
             returnClauses.push(`values: ${propName}_values`);
           }
-        } else if (["INTEGER", "FLOAT", "DATE", "DATE_TIME", "LOCAL_DATE_TIME"].includes(propType)) {
+        } else if (
+          ["INTEGER", "FLOAT", "DATE", "DATE_TIME", "LOCAL_DATE_TIME"].includes(
+            propType
+          )
+        ) {
           if (!propIndex) {
-            withClauses.push(`collect(distinct toString(n.\`${propName}\`)) AS \`${propName}_values\``);
+            withClauses.push(
+              `collect(distinct toString(n.\`${propName}\`)) AS \`${propName}_values\``
+            );
             returnClauses.push(`values: ${propName}_values`);
           } else {
             withClauses.push(`min(n.\`${propName}\`) AS \`${propName}_min\``);
             withClauses.push(`max(n.\`${propName}\`) AS \`${propName}_max\``);
-            withClauses.push(`count(distinct n.\`${propName}\`) AS \`${propName}_distinct\``);
-            returnClauses.push(`min: toString(\`${propName}_min\`), max: toString(\`${propName}_max\`), distinct_count: \`${propName}_distinct\``);
+            withClauses.push(
+              `count(distinct n.\`${propName}\`) AS \`${propName}_distinct\``
+            );
+            returnClauses.push(
+              `min: toString(\`${propName}_min\`), max: toString(\`${propName}_max\`), distinct_count: \`${propName}_distinct\``
+            );
           }
         } else if (propType === "LIST") {
-          withClauses.push(`min(size(n.\`${propName}\`)) AS \`${propName}_size_min\`, max(size(n.\`${propName}\`)) AS \`${propName}_size_max\``);
-          returnClauses.push(`min_size: \`${propName}_size_min\`, max_size: \`${propName}_size_max\``);
+          withClauses.push(
+            `min(size(n.\`${propName}\`)) AS \`${propName}_size_min\`, max(size(n.\`${propName}\`)) AS \`${propName}_size_max\``
+          );
+          returnClauses.push(
+            `min_size: \`${propName}_size_min\`, max_size: \`${propName}_size_max\``
+          );
         } else if (["BOOLEAN", "POINT", "DURATION"].includes(propType)) {
           continue;
         }
@@ -493,13 +549,14 @@ export class Neo4jGraph {
     }
 
     const withClause = `WITH ${withClauses.join(", ")}`;
-    const returnClause = `RETURN {${Object.entries(outputDict).map(([k, v]) => `\`${k}\`: ${v}`).join(", ")}} AS output`;
+    const returnClause = `RETURN {${Object.entries(outputDict)
+      .map(([k, v]) => `\`${k}\`: ${v}`)
+      .join(", ")}} AS output`;
 
     const cypherQuery = [matchClause, withClause, returnClause].join("\n");
 
     return cypherQuery;
   }
-
 
   async addGraphDocuments(
     graphDocuments: GraphDocument[],
@@ -512,7 +569,7 @@ export class Neo4jGraph {
         this.structuredSchema?.metadata?.constraint?.some(
           (el: Any) =>
             JSON.stringify(el.labelsOrTypes) ===
-            JSON.stringify([BASE_ENTITY_LABEL]) &&
+              JSON.stringify([BASE_ENTITY_LABEL]) &&
             JSON.stringify(el.properties) === JSON.stringify(["id"])
         ) ?? false;
 
