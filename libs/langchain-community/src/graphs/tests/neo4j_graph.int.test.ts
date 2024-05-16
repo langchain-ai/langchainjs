@@ -47,7 +47,7 @@ describe.skip("Neo4j Graph Tests", () => {
 
     await graph.query(
       "CREATE (a:Actor {name:'Bruce Willis'})" +
-        "-[:ACTED_IN {roles: ['Butch Coolidge']}]->(:Movie {title: 'Pulp Fiction'})"
+      "-[:ACTED_IN {roles: ['Butch Coolidge']}]->(:Movie {title: 'Pulp Fiction'})"
     );
 
     await graph.refreshSchema();
@@ -165,7 +165,7 @@ describe.skip("Neo4j Graph Tests", () => {
   });
 });
 
-describe.skip("Neo4j Graph with custom config", () => {
+describe("Neo4j Graph with custom config", () => {
   const url = process.env.NEO4J_URI as string;
   const username = process.env.NEO4J_USERNAME as string;
   const password = process.env.NEO4J_PASSWORD as string;
@@ -218,18 +218,45 @@ describe.skip("Neo4j Graph with custom config", () => {
       password,
       enhancedSchema: true,
     });
-    await graphWithEnhancedSchema.addGraphDocuments(TEST_DATA, {
-      baseEntityLabel: true,
-      includeSource: true,
-    });
+
+    await graphWithEnhancedSchema.query("MATCH (n) DETACH DELETE n");
+
+    await graphWithEnhancedSchema.addGraphDocuments(TEST_DATA);
 
     // call refresh again
     await graphWithEnhancedSchema.refreshSchema();
 
+    const output = graphWithEnhancedSchema.getStructuredSchema();
+
+    delete output.metadata
+    console.log(output);
+    expect(output).toEqual({
+      "nodeProps": {
+        "foo": [
+          {
+            "property": "id",
+            "type": "STRING",
+            "values": ["foo"],
+            "distinct_count": "1",
+          }
+        ],
+        "bar": [
+          {
+            "property": "id",
+            "type": "STRING",
+            "values": ["bar"],
+            "distinct_count": "1",
+          }
+        ],
+      },
+      "relProps": {},
+      "relationships": [{ "start": "foo", "type": "REL", "end": "bar" }],
+    });
+
     await graphWithEnhancedSchema.close();
   });
 
-  test("Test running on multiple demo databases", async () => {
+  test.skip("Test running on multiple demo databases", async () => {
     for (const database of DEMO_DATABASES) {
       console.log("Connecting demo database:", database);
 
