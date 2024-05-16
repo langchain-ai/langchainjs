@@ -194,8 +194,9 @@ export abstract class BaseChatModel<
       const messages = prompt.toChatMessages();
       const [runnableConfig, callOptions] =
         this._separateRunnableConfigFromCallOptions(options);
+  
       const inheritableMetadata = {
-        ...this.metadata,
+        ...runnableConfig.metadata,
         ...this.getLsParams(callOptions),
       };
       const callbackManager_ = await CallbackManager.configure(
@@ -203,8 +204,8 @@ export abstract class BaseChatModel<
         this.callbacks,
         runnableConfig.tags,
         this.tags,
-        runnableConfig.metadata,
         inheritableMetadata,
+        this.metadata,
         { verbose: this.verbose }
       );
       const extra = {
@@ -277,18 +278,17 @@ export abstract class BaseChatModel<
     );
 
     const inheritableMetadata = {
-      ...this.metadata,
+      ...handledOptions.metadata,
       ...this.getLsParams(parsedOptions),
     };
-
     // create callback manager and start run
     const callbackManager_ = await CallbackManager.configure(
       handledOptions.callbacks,
       this.callbacks,
       handledOptions.tags,
       this.tags,
-      handledOptions.metadata,
       inheritableMetadata,
+      this.metadata,
       { verbose: this.verbose }
     );
     const extra = {
@@ -376,19 +376,19 @@ export abstract class BaseChatModel<
     const baseMessages = messages.map((messageList) =>
       messageList.map(coerceMessageLikeToMessage)
     );
+
     const inheritableMetadata = {
-      ...this.metadata,
+      ...handledOptions.metadata,
       ...this.getLsParams(parsedOptions),
     };
-
     // create callback manager and start run
     const callbackManager_ = await CallbackManager.configure(
       handledOptions.callbacks,
       this.callbacks,
       handledOptions.tags,
       this.tags,
-      handledOptions.metadata,
       inheritableMetadata,
+      this.metadata,
       { verbose: this.verbose }
     );
     const extra = {
