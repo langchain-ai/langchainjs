@@ -194,7 +194,7 @@ export abstract class BaseChatModel<
       const messages = prompt.toChatMessages();
       const [runnableConfig, callOptions] =
         this._separateRunnableConfigFromCallOptions(options);
-  
+
       const inheritableMetadata = {
         ...runnableConfig.metadata,
         ...this.getLsParams(callOptions),
