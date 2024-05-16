@@ -13642,10 +13642,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@spider-cloud/spider-client@npm:^0.0.19":
-  version: 0.0.19
-  resolution: "@spider-cloud/spider-client@npm:0.0.19"
-  checksum: a70e4fc239245cc48827889506f729b8a824b671341444fabef6af82e60903f7d3e40730a85c714a30a8e4cf6550fc549cc49da445ffa8b778ce4f9f89877a9a
+"@spider-cloud/spider-client@npm:^0.0.21":
+  version: 0.0.21
+  resolution: "@spider-cloud/spider-client@npm:0.0.21"
+  checksum: 8ed81910f3712b09419e32a0e99cc108f83ea8dd2f58669d9fd2094664b6ef292f44f3424da4d6c043e74255a072f7c32493e179da109f3ba05629d79e5db779
   languageName: node
   linkType: hard
 
@@ -27386,7 +27386,7 @@ __metadata:
     "@mendable/firecrawl-js": ^0.0.13
     "@notionhq/client": ^2.2.10
     "@pinecone-database/pinecone": ^1.1.0
-    "@spider-cloud/spider-client": ^0.0.19
+    "@spider-cloud/spider-client": ^0.0.21
     "@supabase/supabase-js": ^2.10.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -27483,7 +27483,7 @@ __metadata:
     "@mendable/firecrawl-js": ^0.0.13
     "@notionhq/client": ^2.2.10
     "@pinecone-database/pinecone": "*"
-    "@spider-cloud/spider-client": ^0.0.19
+    "@spider-cloud/spider-client": ^0.0.21
     "@supabase/supabase-js": ^2.10.0
     "@vercel/kv": ^0.2.3
     "@xata.io/client": ^0.28.0
