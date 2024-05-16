@@ -1,21 +1,17 @@
-import React from 'react';
-import DocPaginator from '@theme-original/DocPaginator';
+import React from "react";
+import DocPaginator from "@theme-original/DocPaginator";
 
-const BLACKLISTED_PATHS = ["/docs/how_to/", "/docs/tutorials/"]
+const BLACKLISTED_PATHS = ["/docs/how_to/", "/docs/tutorials/"];
 
 export default function DocPaginatorWrapper(props) {
   const [shouldHide, setShouldHide] = React.useState(false);
 
   React.useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     const currentPath = window.location.pathname;
-    if (BLACKLISTED_PATHS.some(path => currentPath.includes(path))) {
+    if (BLACKLISTED_PATHS.some((path) => currentPath.includes(path))) {
       setShouldHide(true);
     }
-  }, [])
-  return (
-    <>
-      {shouldHide ? null : <DocPaginator {...props} />}
-    </>
-  );
+  }, []);
+  return <>{shouldHide ? null : <DocPaginator {...props} />}</>;
 }
