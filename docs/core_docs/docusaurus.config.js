@@ -133,12 +133,11 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      // TODO(brace) -- Uncomment once 0.2 is merged to main & site is live!
-      // announcementBar: {
-      //   content:
-      //     'LangChain v0.2 is coming soon! Preview the new docs <a href="/v0.2/docs/introduction/">here</a>.',
-      //   isCloseable: true,
-      // },
+      announcementBar: {
+        content:
+          'LangChain v0.2 is coming soon! Preview the new docs <a href="/v0.2/docs/introduction/">here</a>.',
+        isCloseable: true,
+      },
       prism: {
         theme: {
           ...baseLightCodeBlockTheme,
