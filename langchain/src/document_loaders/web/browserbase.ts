@@ -3,7 +3,7 @@ import Browserbase, { LoadOptions, ClientOptions } from "@browserbasehq/sdk";
 import { BaseDocumentLoader } from "../base.js";
 import type { DocumentLoader } from "../base.js";
 
-type BrowserbaseLoaderOptions = ClientOptions & LoadOptions
+type BrowserbaseLoaderOptions = ClientOptions & LoadOptions;
 
 /**
  * Load pre-rendered web pages using a headless browser hosted on Browserbase.
