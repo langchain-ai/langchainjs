@@ -25,7 +25,7 @@ interface SpiderLoaderParameters {
   params?: Record<string, unknown>;
 }
 interface SpiderDocument {
-  markdown: string;
+  content: string;
   metadata: Record<string, unknown>;
 }
 
@@ -56,7 +56,7 @@ export class SpiderLoader extends BaseDocumentLoader {
     const {
       apiKey = getEnvironmentVariable("SPIDER_API_KEY"),
       url,
-      mode = "crawl",
+      mode = "scrape",
       params,
     } = loaderParams;
     if (!apiKey) {
@@ -68,7 +68,7 @@ export class SpiderLoader extends BaseDocumentLoader {
     this.apiKey = apiKey;
     this.url = url;
     this.mode = mode;
-    this.params = params;
+    this.params = params || { metadata: true, return_format: "markdown" };
   }
 
   /**
@@ -82,14 +82,19 @@ export class SpiderLoader extends BaseDocumentLoader {
 
     if (this.mode === "scrape") {
       const response = await app.scrapeUrl(this.url, this.params);
-      if (!response.success) {
+      if (response.error) {
         throw new Error(
           `Spider: Failed to scrape URL. Error: ${response.error}`
         );
       }
-      spiderDocs = [response.data as SpiderDocument];
+      spiderDocs = response as SpiderDocument[];
     } else if (this.mode === "crawl") {
-      const response = await app.crawlUrl(this.url, this.params, true);
+      const response = await app.crawlUrl(this.url, this.params);
+      if (response.error) {
+        throw new Error(
+          `Spider: Failed to crawl URL. Error: ${response.error}`
+        );
+      }
       spiderDocs = response as SpiderDocument[];
     } else {
       throw new Error(
@@ -100,7 +105,7 @@ export class SpiderLoader extends BaseDocumentLoader {
     return spiderDocs.map(
       (doc) =>
         new Document({
-          pageContent: doc.markdown || "",
+          pageContent: doc.content || "",
           metadata: doc.metadata || {},
         })
     );
