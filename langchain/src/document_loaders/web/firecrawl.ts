@@ -17,7 +17,7 @@ interface FirecrawlLoaderParameters {
   /**
    * URL to scrape or crawl
    */
-  url: string;
+  url?: string;
 
   /**
    * API key for Firecrawl. If not provided, the default value is the value of the FIRECRAWL_API_KEY environment variable.
@@ -25,13 +25,29 @@ interface FirecrawlLoaderParameters {
   apiKey?: string;
 
   /**
-   * Mode of operation. Can be either "crawl" or "scrape". If not provided, the default value is "crawl".
+   * Mode of operation. Can be either "crawl", "scrape", or "search". If not provided, the default value is "crawl".
    */
-  mode?: "crawl" | "scrape";
+  mode?: "crawl" | "scrape" | "search";
+
+  /**
+   * Query to search for.
+   */
+  query?: string;
+
+  /**
+   * Additional parameters for the Firecrawl request.
+   */
   params?: Record<string, unknown>;
 }
 interface FirecrawlDocument {
   markdown: string;
+  metadata: Record<string, unknown>;
+}
+
+interface FirecrawlSearchDocument {
+  url: string;
+  markdown: string;
+  content: string,
   metadata: Record<string, unknown>;
 }
 
@@ -51,9 +67,11 @@ interface FirecrawlDocument {
 export class FireCrawlLoader extends BaseDocumentLoader {
   private apiKey: string;
 
-  private url: string;
+  private url?: string;
 
-  private mode: "crawl" | "scrape";
+  private query?: string;
+
+  private mode: "crawl" | "scrape" | "search";
 
   private params?: Record<string, unknown>;
 
@@ -62,6 +80,7 @@ export class FireCrawlLoader extends BaseDocumentLoader {
     const {
       apiKey = getEnvironmentVariable("FIRECRAWL_API_KEY"),
       url,
+      query,
       mode = "crawl",
       params,
     } = loaderParams;
@@ -71,8 +90,15 @@ export class FireCrawlLoader extends BaseDocumentLoader {
       );
     }
 
+    if (!url && !query) {
+      throw new Error("Firecrawl URL or query not provided.");
+    } else if (url && query) {
+      throw new Error("Firecrawl URL and query cannot be provided together.");
+    }
+
     this.apiKey = apiKey;
     this.url = url;
+    this.query = query;
     this.mode = mode;
     this.params = params;
   }
@@ -87,6 +113,10 @@ export class FireCrawlLoader extends BaseDocumentLoader {
     let firecrawlDocs: FirecrawlDocument[];
 
     if (this.mode === "scrape") {
+      if (!this.url) {
+        throw new Error("Firecrawl URL not provided.");
+      }
+
       const response = await app.scrapeUrl(this.url, this.params);
       if (!response.success) {
         throw new Error(
@@ -95,8 +125,18 @@ export class FireCrawlLoader extends BaseDocumentLoader {
       }
       firecrawlDocs = [response.data as FirecrawlDocument];
     } else if (this.mode === "crawl") {
+      if (!this.url) {
+        throw new Error("Firecrawl URL not provided.");
+      }
+
       const response = await app.crawlUrl(this.url, this.params, true);
       firecrawlDocs = response as FirecrawlDocument[];
+    } else if (this.mode === "search") {
+      if (!this.query) {
+        throw new Error("Firecrawl query not provided.");
+      }
+      const response = await app.search(this.query, this.params);
+      firecrawlDocs = [response.data as FirecrawlSearchDocument];
     } else {
       throw new Error(
         `Unrecognized mode '${this.mode}'. Expected one of 'crawl', 'scrape'.`
