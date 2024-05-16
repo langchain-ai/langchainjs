@@ -33,7 +33,7 @@ const DEFAULTS = {
   vertexParams: `{\n  model: "gemini-1.5-pro",\n  temperature: 0\n}`,
 };
 
-const MODELS_WSA = ["openai", "anthropic", "mistral", "groq", "vertex"];
+const MODELS_WSO = ["openai", "anthropic", "mistral", "groq", "vertex"];
 
 /**
  * @typedef {Object} ChatModelTabsProps - Component props.
@@ -52,7 +52,7 @@ const MODELS_WSA = ["openai", "anthropic", "mistral", "groq", "vertex"];
  * @property {boolean} [hideVertex] - Whether or not to hide Mistral chat model.
  *
  * @property {string} [customVarName] - Custom variable name for the model. Defaults to `"model"`.
- * @property {boolean} [onlyWsa] - Only display models which have `withStructuredOutput` implemented.
+ * @property {boolean} [onlyWso] - Only display models which have `withStructuredOutput` implemented.
  */
 
 /**
@@ -129,7 +129,7 @@ export default function ChatModelTabs(props) {
     },
   };
 
-  const displayedTabs = (props.onlyWsa ? MODELS_WSA : providers).map(
+  const displayedTabs = (props.onlyWso ? MODELS_WSO : providers).map(
     (provider) => tabs[provider]
   );
 
