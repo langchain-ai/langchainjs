@@ -80,14 +80,14 @@ export function createChatMessageChunkEncoderStream() {
   });
 }
 
-type LangSmithParams = {
-  ls_provider: string;
-  ls_model_name: string
+export type LangSmithParams = {
+  ls_provider?: string;
+  ls_model_name?: string;
   ls_model_type: "chat";
   ls_temperature?: number;
   ls_max_tokens?: number;
   ls_stop?: Array<string>;
-}
+};
 
 interface ChatModelGenerateCachedParameters<
   T extends BaseChatModel<CallOptions>,
@@ -194,13 +194,17 @@ export abstract class BaseChatModel<
       const messages = prompt.toChatMessages();
       const [runnableConfig, callOptions] =
         this._separateRunnableConfigFromCallOptions(options);
+      const inheritableMetadata = {
+        ...this.metadata,
+        ...this._getLsParams(callOptions),
+      };
       const callbackManager_ = await CallbackManager.configure(
         runnableConfig.callbacks,
         this.callbacks,
         runnableConfig.tags,
         this.tags,
         runnableConfig.metadata,
-        this.metadata,
+        inheritableMetadata,
         { verbose: this.verbose }
       );
       const extra = {
@@ -255,6 +259,13 @@ export abstract class BaseChatModel<
     }
   }
 
+  protected _getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+    return {
+      ls_model_type: "chat",
+      ls_stop: options.stop,
+    };
+  }
+
   /** @ignore */
   async _generateUncached(
     messages: BaseMessageLike[][],
@@ -265,6 +276,11 @@ export abstract class BaseChatModel<
       messageList.map(coerceMessageLikeToMessage)
     );
 
+    const inheritableMetadata = {
+      ...this.metadata,
+      ...this._getLsParams(parsedOptions),
+    };
+
     // create callback manager and start run
     const callbackManager_ = await CallbackManager.configure(
       handledOptions.callbacks,
@@ -272,7 +288,7 @@ export abstract class BaseChatModel<
       handledOptions.tags,
       this.tags,
       handledOptions.metadata,
-      this.metadata,
+      inheritableMetadata,
       { verbose: this.verbose }
     );
     const extra = {
@@ -360,6 +376,10 @@ export abstract class BaseChatModel<
     const baseMessages = messages.map((messageList) =>
       messageList.map(coerceMessageLikeToMessage)
     );
+    const inheritableMetadata = {
+      ...this.metadata,
+      ...this._getLsParams(parsedOptions),
+    };
 
     // create callback manager and start run
     const callbackManager_ = await CallbackManager.configure(
@@ -368,7 +388,7 @@ export abstract class BaseChatModel<
       handledOptions.tags,
       this.tags,
       handledOptions.metadata,
-      this.metadata,
+      inheritableMetadata,
       { verbose: this.verbose }
     );
     const extra = {

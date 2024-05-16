@@ -1,5 +1,8 @@
 import { type ClientOptions, AzureOpenAI as AzureOpenAIClient } from "openai";
-import { type BaseChatModelParams } from "@langchain/core/language_models/chat_models";
+import {
+  LangSmithParams,
+  type BaseChatModelParams,
+} from "@langchain/core/language_models/chat_models";
 import { ChatOpenAI } from "../chat_models.js";
 import { OpenAIEndpointConfig, getEndpoint } from "../utils/azure.js";
 import {
@@ -41,6 +44,12 @@ export class AzureChatOpenAI extends ChatOpenAI {
     }
 
     super(newFields);
+  }
+
+  protected _getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+    const params = super._getLsParams(options);
+    params.ls_provider = "azure";
+    return params;
   }
 
   protected _getClientOptions(options: OpenAICoreRequestOptions | undefined) {
