@@ -1,0 +1,66 @@
+[
+  {
+    "candidates": [
+      {
+        "content": {
+          "role": "model",
+          "parts": [
+            {
+              "text": "\n[\n  {\n    \"name\": \"Banana Bread\",\n    \"ingredients\": [\n      {\n        \"name\": \"Flour\",\n        \"amount\": \"1 1/2 cups\",\n        \"type\": \"all-purpose\"\n      },\n      {\n        \"name\": \"Baking soda\",\n        \"amount\": \"1 teaspoon\"\n      },\n      {\n        \"name\": \"Salt\",\n        \"amount\": \"1/2 teaspoon\"\n      },\n      {\n        \"name\": \"Cinnamon\",\n        \"amount\": \"1 teaspoon\"\n      },\n      {\n        \"name\": \"Nutmeg\",\n        \"amount\": \"1/4 teaspoon\"\n      },\n      {\n        \"name\": \"Bananas\",\n        \"amount\": \"3 ripe\",\n        \"type\": \"mashed\"\n      },\n      {\n        \"name\": \"Sugar\",\n        \"amount\": \"3/4 cup\"\n      },\n      {\n        \"name\": \"Eggs\",\n        \"amount\": \"2 large\"\n      },\n      {\n        \"name\": \"Vanilla extract\",\n        \"amount\": \"1 teaspoon\"\n      },\n      {\n        \"name\": \"Melted butter\",\n        \"amount\": \"1/2 cup\"\n      }\n    ],\n    \"instructions\": [\n      \"Preheat oven to 350 degrees F (175 degrees C). Grease and flour a 9x5 inch loaf pan.\",\n      \"In a large bowl, whisk together the flour, baking soda, salt, cinnamon, and nutmeg.\",\n      \"In a separate bowl, cream together the mashed bananas, sugar, eggs, and vanilla extract.\",\n      \"Gradually add the wet ingredients to the dry ingredients, mixing until just combined.\",\n      \"Stir in the melted butter.\",\n      \"Pour batter into the prepared loaf pan and bake for 50-60 minutes, or until a toothpick inserted into the center comes out clean.\",\n      \"Let cool in the pan for 10 minutes before inverting onto a wire rack to cool completely.\"\n    ]\n  }\n]\n"
+            }
+          ]
+        },
+        "finishReason": "STOP",
+        "safetyRatings": [
+          {
+            "category": "HARM_CATEGORY_HATE_SPEECH",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.15869519,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.13161905
+          },
+          {
+            "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.19012183,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.17314835
+          },
+          {
+            "category": "HARM_CATEGORY_HARASSMENT",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.18025091,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.09704755
+          },
+          {
+            "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+            "probability": "NEGLIGIBLE",
+            "probabilityScore": 0.17370832,
+            "severity": "HARM_SEVERITY_NEGLIGIBLE",
+            "severityScore": 0.17078441
+          }
+        ],
+        "citationMetadata": {
+          "citations": [
+            {
+              "startIndex": 1325,
+              "endIndex": 1456,
+              "uri": "https://sammistreats.com/how-to-make-banana-bread/"
+            },
+            {
+              "startIndex": 1383,
+              "endIndex": 1531,
+              "uri": "https://www.biggerbolderbaking.com/pumpkin-banana-bread/"
+            }
+          ]
+        }
+      }
+    ],
+    "usageMetadata": {
+      "promptTokenCount": 8,
+      "candidatesTokenCount": 464,
+      "totalTokenCount": 472
+    }
+  }
+]

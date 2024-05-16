@@ -1,6 +1,12 @@
 import { htmlToText } from "html-to-text";
 import { Document } from "@langchain/core/documents";
 import { BaseDocumentLoader } from "../base.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/web/confluence",
+  newPackageName: "@langchain/community",
+});
 
 /**
  * Interface representing the parameters for configuring the

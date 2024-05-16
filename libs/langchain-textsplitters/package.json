@@ -1,6 +1,6 @@
 {
   "name": "@langchain/textsplitters",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Various implementations of LangChain.js text splitters",
   "type": "module",
   "engines": {
@@ -38,8 +38,8 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1",
-    "js-tiktoken": "^1.0.11"
+    "@langchain/core": "<0.3.0 || >0.1.0",
+    "js-tiktoken": "^1.0.12"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",

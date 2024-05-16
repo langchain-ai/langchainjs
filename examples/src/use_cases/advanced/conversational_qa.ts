@@ -1,7 +1,7 @@
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { BufferMemory } from "langchain/memory";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+import { BufferMemory } from "langchain/memory/index";
 import * as fs from "fs";
 import { LLMChain } from "langchain/chains";
 import { formatDocumentsAsString } from "langchain/util/document";
@@ -78,7 +78,7 @@ Standalone question:`);
       outputParser: new StringOutputParser(),
     });
 
-    const { text } = await chain.call({
+    const { text } = await chain.invoke({
       ...input,
       chatHistory: serializeChatHistory(input.chatHistory ?? ""),
     });
@@ -116,7 +116,7 @@ Standalone question:`);
         chatHistory?: string | Array<string>;
       }) => {
         // Fetch relevant docs and serialize to a string.
-        const relevantDocs = await retriever.getRelevantDocuments(
+        const relevantDocs = await retriever.invoke(
           previousStepResult.question
         );
         const serialized = formatDocumentsAsString(relevantDocs);

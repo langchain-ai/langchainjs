@@ -1,7 +1,7 @@
 import { test, expect } from "@jest/globals";
 import { ChatOpenAI } from "@langchain/openai";
 import type { ChatPromptTemplate } from "@langchain/core/prompts";
-import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
+import { TavilySearchResults } from "../../util/testing/tools/tavily_search.js";
 import { pull } from "../../hub.js";
 import { AgentExecutor, createStructuredChatAgent } from "../index.js";
 

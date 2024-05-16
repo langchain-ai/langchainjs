@@ -48,13 +48,18 @@ describe.skip("AzureCosmosDBVectorStore", () => {
       process.env.AZURE_COSMOSDB_CONNECTION_STRING!
     );
     await client.connect();
-    const collection = client.db(DATABASE_NAME).collection(COLLECTION_NAME);
+    const db = client.db(DATABASE_NAME);
+    const collection = await db.createCollection(COLLECTION_NAME);
 
     // Make sure the database is empty
     await collection.deleteMany({});
 
     // Delete any existing index
-    await collection.dropIndex(INDEX_NAME);
+    try {
+      await collection.dropIndex(INDEX_NAME);
+    } catch {
+      // Ignore error if the index does not exist
+    }
 
     await client.close();
   });
@@ -64,6 +69,9 @@ describe.skip("AzureCosmosDBVectorStore", () => {
       databaseName: DATABASE_NAME,
       collectionName: COLLECTION_NAME,
       indexName: INDEX_NAME,
+      indexOptions: {
+        numLists: 1,
+      },
     });
 
     expect(vectorStore).toBeDefined();
@@ -74,9 +82,6 @@ describe.skip("AzureCosmosDBVectorStore", () => {
       { pageContent: "Sandwiches taste good.", metadata: { c: 1 } },
       { pageContent: "The house is open", metadata: { d: 1, e: 2 } },
     ]);
-
-    // Make sure the index is created
-    await vectorStore.createIndex(1);
 
     const results: Document[] = await vectorStore.similaritySearch(
       "sandwich",
@@ -110,11 +115,11 @@ describe.skip("AzureCosmosDBVectorStore", () => {
         databaseName: DATABASE_NAME,
         collectionName: COLLECTION_NAME,
         indexName: INDEX_NAME,
+        indexOptions: {
+          numLists: 1,
+        },
       }
     );
-
-    // Make sure the index is created
-    await vectorStore.createIndex(1);
 
     const output = await vectorStore.maxMarginalRelevanceSearch("foo", {
       k: 10,
@@ -157,6 +162,92 @@ describe.skip("AzureCosmosDBVectorStore", () => {
 
     const similarity = await vectorStore.similaritySearchWithScore("foo", 1);
     expect(similarity.length).toBe(1);
+
+    await vectorStore.close();
+  });
+
+  test("deletes documents by id", async () => {
+    const vectorStore = new AzureCosmosDBVectorStore(new OpenAIEmbeddings(), {
+      databaseName: DATABASE_NAME,
+      collectionName: COLLECTION_NAME,
+      indexName: INDEX_NAME,
+      indexOptions: {
+        numLists: 1,
+      },
+    });
+
+    const ids = await vectorStore.addDocuments([
+      { pageContent: "This book is about politics", metadata: { a: 1 } },
+      {
+        pageContent: "The is the house of parliament",
+        metadata: { d: 1, e: 2 },
+      },
+    ]);
+
+    // Delete document matching specified ids
+    await vectorStore.delete({ ids: ids.slice(0, 1) });
+
+    const results = await vectorStore.similaritySearch("politics", 10);
+
+    expect(results.length).toEqual(1);
+    expect(results[0].pageContent).toEqual("The is the house of parliament");
+
+    await vectorStore.close();
+  });
+
+  test("deletes documents by filter", async () => {
+    const vectorStore = new AzureCosmosDBVectorStore(new OpenAIEmbeddings(), {
+      databaseName: DATABASE_NAME,
+      collectionName: COLLECTION_NAME,
+      indexName: INDEX_NAME,
+      indexOptions: {
+        numLists: 1,
+      },
+    });
+
+    await vectorStore.addDocuments([
+      { pageContent: "This book is about politics", metadata: { a: 1 } },
+      {
+        pageContent: "The is the house of parliament",
+        metadata: { d: 1, e: 2 },
+      },
+    ]);
+
+    // Delete document matching the filter
+    await vectorStore.delete({ filter: { a: 1 } });
+
+    const results = await vectorStore.similaritySearch("politics", 10);
+
+    expect(results.length).toEqual(1);
+    expect(results[0].pageContent).toEqual("The is the house of parliament");
+
+    await vectorStore.close();
+  });
+
+  test("deletes all documents", async () => {
+    const vectorStore = new AzureCosmosDBVectorStore(new OpenAIEmbeddings(), {
+      databaseName: DATABASE_NAME,
+      collectionName: COLLECTION_NAME,
+      indexName: INDEX_NAME,
+      indexOptions: {
+        numLists: 1,
+      },
+    });
+
+    await vectorStore.addDocuments([
+      { pageContent: "This book is about politics", metadata: { a: 1 } },
+      {
+        pageContent: "The is the house of parliament",
+        metadata: { d: 1, e: 2 },
+      },
+    ]);
+
+    // Delete all documents
+    await vectorStore.delete();
+
+    const results = await vectorStore.similaritySearch("politics", 10);
+
+    expect(results.length).toEqual(0);
 
     await vectorStore.close();
   });

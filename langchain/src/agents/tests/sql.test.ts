@@ -61,7 +61,7 @@ afterEach(async () => {
 
 test.skip("QuerySqlTool", async () => {
   const querySqlTool = new QuerySqlTool(db);
-  const result = await querySqlTool.call("SELECT * FROM users");
+  const result = await querySqlTool.invoke("SELECT * FROM users");
   expect(result).toBe(
     `[{"id":1,"name":"Alice","age":20},{"id":2,"name":"Bob","age":21},{"id":3,"name":"Charlie","age":22}]`
   );
@@ -69,13 +69,13 @@ test.skip("QuerySqlTool", async () => {
 
 test.skip("QuerySqlTool with error", async () => {
   const querySqlTool = new QuerySqlTool(db);
-  const result = await querySqlTool.call("SELECT * FROM userss");
+  const result = await querySqlTool.invoke("SELECT * FROM userss");
   expect(result).toBe(`QueryFailedError: SQLITE_ERROR: no such table: userss`);
 });
 
 test.skip("InfoSqlTool", async () => {
   const infoSqlTool = new InfoSqlTool(db);
-  const result = await infoSqlTool.call("users, products");
+  const result = await infoSqlTool.invoke("users, products");
   const expectStr = `
 CREATE TABLE products (
 id INTEGER , name TEXT , price INTEGER ) 
@@ -101,7 +101,7 @@ test.skip("InfoSqlTool with customDescription", async () => {
     userss: "Should not appear",
   };
   const infoSqlTool = new InfoSqlTool(db);
-  const result = await infoSqlTool.call("users, products");
+  const result = await infoSqlTool.invoke("users, products");
   const expectStr = `
 Custom Description for Products Table
 CREATE TABLE products (
@@ -124,7 +124,7 @@ SELECT * FROM "users" LIMIT 3;
 
 test.skip("InfoSqlTool with error", async () => {
   const infoSqlTool = new InfoSqlTool(db);
-  const result = await infoSqlTool.call("userss, products");
+  const result = await infoSqlTool.invoke("userss, products");
   expect(result).toBe(
     `Error: Wrong target table name: the table userss was not found in the database`
   );
@@ -132,7 +132,7 @@ test.skip("InfoSqlTool with error", async () => {
 
 test.skip("ListTablesSqlTool", async () => {
   const listSqlTool = new ListTablesSqlTool(db);
-  const result = await listSqlTool.call("");
+  const result = await listSqlTool.invoke("");
   expect(result).toBe(`products, users`);
 });
 
@@ -146,7 +146,7 @@ test.skip("ListTablesSqlTool with include tables", async () => {
   const includesTables = ["users"];
   db.includesTables = includesTables;
   const listSqlTool = new ListTablesSqlTool(db);
-  const result = await listSqlTool.call("");
+  const result = await listSqlTool.invoke("");
   expect(result).toBe("users");
 });
 
@@ -154,6 +154,6 @@ test.skip("ListTablesSqlTool with ignore tables", async () => {
   const ignoreTables = ["products"];
   db.ignoreTables = ignoreTables;
   const listSqlTool = new ListTablesSqlTool(db);
-  const result = await listSqlTool.call("");
+  const result = await listSqlTool.invoke("");
   expect(result).toBe("users");
 });

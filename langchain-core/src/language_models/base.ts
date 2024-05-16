@@ -39,6 +39,10 @@ export const getModelNameForTiktoken = (modelName: string): TiktokenModel => {
     return "gpt-4";
   }
 
+  if (modelName.startsWith("gpt-4o")) {
+    return "gpt-4o";
+  }
+
   return modelName as TiktokenModel;
 };
 
@@ -457,7 +461,8 @@ export abstract class BaseLanguageModel<
    * @returns A unique cache key.
    */
   protected _getSerializedCacheKeyParametersForCall(
-    callOptions: CallOptions
+    // TODO: Fix when we remove the RunnableLambda backwards compatibility shim.
+    { config, ...callOptions }: CallOptions & { config?: RunnableConfig }
   ): string {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const params: Record<string, any> = {

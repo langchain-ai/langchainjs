@@ -68,17 +68,17 @@ const multiRetrievalQAChain = MultiRetrievalQAChain.fromLLMAndRetrievers(llm, {
     returnSourceDocuments: true,
   },
 });
-const testPromise1 = multiRetrievalQAChain.call({
+const testPromise1 = multiRetrievalQAChain.invoke({
   input:
     "In the Aqua Teen Hunger Force theme song, who calls himself the mike rula?",
 });
 
-const testPromise2 = multiRetrievalQAChain.call({
+const testPromise2 = multiRetrievalQAChain.invoke({
   input:
     "In the Mystery Science Theater 3000 theme song, who worked at Gizmonic Institute?",
 });
 
-const testPromise3 = multiRetrievalQAChain.call({
+const testPromise3 = multiRetrievalQAChain.invoke({
   input:
     "In the Animaniacs theme song, who plays the sax while Wakko packs away the snacks?",
 });

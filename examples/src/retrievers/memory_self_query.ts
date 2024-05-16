@@ -2,7 +2,7 @@ import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { AttributeInfo } from "langchain/schema/query_constructor";
 import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
 import { SelfQueryRetriever } from "langchain/retrievers/self_query";
-import { FunctionalTranslator } from "langchain/retrievers/self_query/functional";
+import { FunctionalTranslator } from "@langchain/core/structured_query";
 import { Document } from "@langchain/core/documents";
 
 /**
@@ -108,16 +108,16 @@ const selfQueryRetriever = SelfQueryRetriever.fromLLM({
  * We can also ask questions like "Which movies are either comedy or drama and are less than 90 minutes?".
  * The retriever will automatically convert these questions into queries that can be used to retrieve documents.
  */
-const query1 = await selfQueryRetriever.getRelevantDocuments(
+const query1 = await selfQueryRetriever.invoke(
   "Which movies are less than 90 minutes?"
 );
-const query2 = await selfQueryRetriever.getRelevantDocuments(
+const query2 = await selfQueryRetriever.invoke(
   "Which movies are rated higher than 8.5?"
 );
-const query3 = await selfQueryRetriever.getRelevantDocuments(
+const query3 = await selfQueryRetriever.invoke(
   "Which movies are directed by Greta Gerwig?"
 );
-const query4 = await selfQueryRetriever.getRelevantDocuments(
+const query4 = await selfQueryRetriever.invoke(
   "Which movies are either comedy or drama and are less than 90 minutes?"
 );
 console.log(query1, query2, query3, query4);

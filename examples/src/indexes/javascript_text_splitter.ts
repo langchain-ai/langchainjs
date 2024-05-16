@@ -1,7 +1,7 @@
 import {
   SupportedTextSplitterLanguages,
   RecursiveCharacterTextSplitter,
-} from "langchain/text_splitter";
+} from "@langchain/textsplitters";
 
 console.log(SupportedTextSplitterLanguages); // Array of supported languages
 

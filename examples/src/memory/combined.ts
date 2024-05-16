@@ -3,7 +3,7 @@ import {
   BufferMemory,
   CombinedMemory,
   ConversationSummaryMemory,
-} from "langchain/memory";
+} from "langchain/memory/index";
 import { ConversationChain } from "langchain/chains";
 import { PromptTemplate } from "@langchain/core/prompts";
 
@@ -41,7 +41,7 @@ const PROMPT = new PromptTemplate({
 const model = new ChatOpenAI({ temperature: 0.9, verbose: true });
 const chain = new ConversationChain({ llm: model, memory, prompt: PROMPT });
 
-const res1 = await chain.call({ input: "Hi! I'm Jim." });
+const res1 = await chain.invoke({ input: "Hi! I'm Jim." });
 console.log({ res1 });
 
 /*
@@ -52,7 +52,7 @@ console.log({ res1 });
   }
 */
 
-const res2 = await chain.call({ input: "Can you tell me a joke?" });
+const res2 = await chain.invoke({ input: "Can you tell me a joke?" });
 console.log({ res2 });
 
 /*
@@ -63,7 +63,7 @@ console.log({ res2 });
   }
 */
 
-const res3 = await chain.call({
+const res3 = await chain.invoke({
   input: "What's my name and what joke did you just tell?",
 });
 console.log({ res3 });

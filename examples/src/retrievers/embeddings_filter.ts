@@ -1,6 +1,6 @@
 import * as fs from "fs";
 
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { ContextualCompressionRetriever } from "langchain/retrievers/contextual_compression";
@@ -24,7 +24,7 @@ const retriever = new ContextualCompressionRetriever({
   baseRetriever: vectorStore.asRetriever(),
 });
 
-const retrievedDocs = await retriever.getRelevantDocuments(
+const retrievedDocs = await retriever.invoke(
   "What did the speaker say about Justice Breyer?"
 );
 console.log({ retrievedDocs });

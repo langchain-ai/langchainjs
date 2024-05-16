@@ -4,7 +4,7 @@ import {
   ChatPromptTemplate,
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
-import { BufferMemory } from "langchain/memory";
+import { BufferMemory } from "langchain/memory/index";
 
 const chat = new ChatOpenAI({ temperature: 0 });
 
@@ -23,7 +23,7 @@ const chain = new ConversationChain({
   llm: chat,
 });
 
-const response = await chain.call({
+const response = await chain.invoke({
   input: "hi! whats up?",
 });
 
