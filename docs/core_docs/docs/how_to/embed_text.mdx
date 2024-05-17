@@ -8,15 +8,19 @@ sidebar_position: 2
 Head to [Integrations](/docs/integrations/text_embedding) for documentation on built-in integrations with text embedding providers.
 :::
 
-The Embeddings class is a class designed for interfacing with text embedding models. There are lots of embedding model providers (OpenAI, Cohere, Hugging Face, etc) - this class is designed to provide a standard interface for all of them.
+:::info Prerequisites
+
+This guide assumes familiarity with the following concepts:
+
+- [Embeddings](/docs/concepts/#embedding-models)
+
+:::
 
 Embeddings create a vector representation of a piece of text. This is useful because it means we can think about text in the vector space, and do things like semantic search where we look for pieces of text that are most similar in the vector space.
 
 The base Embeddings class in LangChain exposes two methods: one for embedding documents and one for embedding a query. The former takes as input multiple texts, while the latter takes a single text. The reason for having these as two separate methods is that some embedding providers have different embedding methods for documents (to be searched over) vs queries (the search query itself).
 
 ## Get started
-
-Embeddings can be used to create a numerical representation of textual data. This numerical representation is useful because it can be used to find similar documents.
 
 Below is an example of how to use the OpenAI embeddings. Embeddings occasionally have different embedding methods for queries versus documents, so the embedding class exposes a `embedQuery` and `embedDocuments` method.
 
@@ -77,3 +81,9 @@ const documentRes = await embeddings.embedDocuments(["Hello world", "Bye bye"]);
 ]
 */
 ```
+
+## Next steps
+
+You've now learned how to use embeddings models with queries and text.
+
+Next, check out how to [avoid excessively recomputing embeddings with caching](/docs/how_to/caching_embeddings), or the [full tutorial on retrieval-augmented generation](/docs/tutorials/rag).

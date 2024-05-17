@@ -19,6 +19,8 @@ import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation
 });
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/cheerio" instead. This entrypoint will be removed in 0.3.0.
+ *
  * Represents the parameters for configuring the CheerioWebBaseLoader. It
  * extends the AsyncCallerParams interface and adds additional parameters
  * specific to web-based loaders.
@@ -42,6 +44,8 @@ export interface WebBaseLoaderParams extends AsyncCallerParams {
 }
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/cheerio" instead. This entrypoint will be removed in 0.3.0.
+ *
  * A class that extends the BaseDocumentLoader and implements the
  * DocumentLoader interface. It represents a document loader for loading
  * web-based documents using Cheerio.
