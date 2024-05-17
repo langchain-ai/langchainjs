@@ -546,6 +546,8 @@ test("Runnable streamEvents method with chat model chain", async () => {
       metadata: {
         foo: "bar",
         a: "b",
+        ls_model_type: "chat",
+        ls_stop: undefined,
       },
       data: {
         input: {
@@ -562,6 +564,8 @@ test("Runnable streamEvents method with chat model chain", async () => {
       metadata: {
         a: "b",
         foo: "bar",
+        ls_model_type: "chat",
+        ls_stop: undefined,
       },
       name: "my_model",
       data: { chunk: new AIMessageChunk("R") },
@@ -583,6 +587,8 @@ test("Runnable streamEvents method with chat model chain", async () => {
       metadata: {
         a: "b",
         foo: "bar",
+        ls_model_type: "chat",
+        ls_stop: undefined,
       },
       name: "my_model",
       data: { chunk: new AIMessageChunk("O") },
@@ -604,6 +610,8 @@ test("Runnable streamEvents method with chat model chain", async () => {
       metadata: {
         a: "b",
         foo: "bar",
+        ls_model_type: "chat",
+        ls_stop: undefined,
       },
       name: "my_model",
       data: { chunk: new AIMessageChunk("A") },
@@ -625,6 +633,8 @@ test("Runnable streamEvents method with chat model chain", async () => {
       metadata: {
         a: "b",
         foo: "bar",
+        ls_model_type: "chat",
+        ls_stop: undefined,
       },
       name: "my_model",
       data: { chunk: new AIMessageChunk("R") },
@@ -647,6 +657,8 @@ test("Runnable streamEvents method with chat model chain", async () => {
       metadata: {
         foo: "bar",
         a: "b",
+        ls_model_type: "chat",
+        ls_stop: undefined,
       },
       data: {
         input: {
