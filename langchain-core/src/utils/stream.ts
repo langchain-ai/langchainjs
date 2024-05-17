@@ -203,7 +203,7 @@ export class AsyncGeneratorWithSetup<
     // to each generator is available.
     this.setup = new Promise((resolve, reject) => {
       const storage = AsyncLocalStorageProviderSingleton.getInstance();
-      storage.run(params.config, async () => {
+      void storage.run(params.config, async () => {
         this.firstResult = params.generator.next();
         if (params.startSetup) {
           this.firstResult.then(params.startSetup).then(resolve, reject);

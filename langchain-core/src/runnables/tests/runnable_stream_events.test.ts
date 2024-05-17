@@ -386,7 +386,7 @@ test("Runnable streamEvents method with three runnables with filtering", async (
   ]);
 });
 
-test.only("Runnable streamEvents method with a runnable map", async () => {
+test("Runnable streamEvents method with a runnable map", async () => {
   const r = RunnableLambda.from(reverse);
 
   const chain = RunnableMap.from({

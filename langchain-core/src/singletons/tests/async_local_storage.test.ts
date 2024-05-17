@@ -141,6 +141,7 @@ test("Runnable streamEvents method with streaming nested in a RunnableLambda", a
   });
   const myFunc = async (input: string) => {
     for await (const _ of await chat.stream(input)) {
+      // no-op
     }
   };
 
