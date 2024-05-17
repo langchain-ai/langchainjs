@@ -9031,7 +9031,7 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.2.0-rc.0
+    "@langchain/core": ~0.2.0
     "@langchain/openai": ~0.0.28
     "@langchain/scripts": ~0.0
     "@mendable/firecrawl-js": ^0.0.13
@@ -9129,7 +9129,7 @@ __metadata:
     js-yaml: ^4.1.0
     jsdom: ^22.1.0
     jsonwebtoken: ^9.0.2
-    langchain: 0.2.0-rc.1
+    langchain: ~0.2.0
     langsmith: ~0.1.1
     llmonitor: ^0.5.9
     lodash: ^4.17.21
@@ -27364,7 +27364,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"langchain@0.2.0-rc.1, langchain@workspace:*, langchain@workspace:langchain":
+"langchain@workspace:*, langchain@workspace:langchain, langchain@~0.2.0":
   version: 0.0.0-use.local
   resolution: "langchain@workspace:langchain"
   dependencies:
