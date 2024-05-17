@@ -1,14 +1,17 @@
----
-hide_table_of_contents: true
-sidebar_position: 0
----
-
 # How to write a custom retriever class
 
-To create your own retriever, you need to extend the [`BaseRetriever` class](https://api.js.langchain.com/classes/langchain_core_retrievers.BaseRetriever.html)
-and implement a `_getRelevantDocuments` method that takes a `string` as its first parameter and an optional `runManager` for tracing.
-This method should return an array of `Document`s fetched from some source. This process can involve calls to a database or to the web using `fetch`.
-Note the underscore before `_getRelevantDocuments()` - the base class wraps the non-prefixed version in order to automatically handle tracing of the original call.
+:::info Prerequisites
+
+This guide assumes familiarity with the following concepts:
+
+- [Retrievers](/docs/concepts/#retrievers)
+
+:::
+
+To create your own retriever, you need to extend the [`BaseRetriever`](https://api.js.langchain.com/classes/langchain_core_retrievers.BaseRetriever.html) class
+and implement a `_getRelevantDocuments` method that takes a `string` as its first parameter (and an optional `runManager` for tracing).
+This method should return an array of `Document`s fetched from some source. This process can involve calls to a database, to the web using `fetch`, or any other source.
+Note the underscore before `_getRelevantDocuments()`. The base class wraps the non-prefixed version in order to automatically handle tracing of the original call.
 
 Here's an example of a custom retriever that returns static documents:
 
@@ -70,3 +73,9 @@ await retriever.invoke("LangChain docs");
   }
 ]
 ```
+
+## Next steps
+
+You've now seen an example of implementing your own custom retriever.
+
+Next, check out the individual sections for deeper dives on specific retrievers, or the [broader tutorial on RAG](/docs/tutorials/rag).

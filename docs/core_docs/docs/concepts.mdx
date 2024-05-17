@@ -449,10 +449,10 @@ const retriever = vectorstore.asRetriever();
 
 ### Retrievers
 
-A retriever is an interface that returns documents given an unstructured query.
-It is more general than a vector store.
+A retriever is an interface that returns relevant documents given an unstructured query.
+They are more general than a vector store.
 A retriever does not need to be able to store documents, only to return (or retrieve) them.
-Retrievers can be created from vectorstores, but are also broad enough to include [Exa search](/docs/integrations/retrievers/exa/)(web search) and [Amazon Kendra](/docs/integrations/retrievers/kendra-retriever/).
+Retrievers can be created from vector stores, but are also broad enough to include [Exa search](/docs/integrations/retrievers/exa/)(web search) and [Amazon Kendra](/docs/integrations/retrievers/kendra-retriever/).
 
 Retrievers accept a string query as input and return an array of Document's as output.
 
