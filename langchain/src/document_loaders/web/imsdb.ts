@@ -8,6 +8,8 @@ import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation
 });
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/imsdb" instead. This entrypoint will be removed in 0.3.0.
+ *
  * A class that extends the CheerioWebBaseLoader class. It represents a
  * loader for loading web pages from the IMSDB (Internet Movie Script
  * Database) website.

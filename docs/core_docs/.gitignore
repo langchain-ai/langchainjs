@@ -59,6 +59,8 @@ docs/how_to/structured_output.md
 docs/how_to/structured_output.mdx
 docs/how_to/streaming.md
 docs/how_to/streaming.mdx
+docs/how_to/split_by_token.md
+docs/how_to/split_by_token.mdx
 docs/how_to/sequence.md
 docs/how_to/sequence.mdx
 docs/how_to/recursive_text_splitter.md
@@ -93,6 +95,8 @@ docs/how_to/output_parser_structured.md
 docs/how_to/output_parser_structured.mdx
 docs/how_to/output_parser_json.md
 docs/how_to/output_parser_json.mdx
+docs/how_to/logprobs.md
+docs/how_to/logprobs.mdx
 docs/how_to/graph_semantic.md
 docs/how_to/graph_semantic.mdx
 docs/how_to/graph_prompting.md
