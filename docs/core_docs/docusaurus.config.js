@@ -208,6 +208,21 @@ const config = {
           },
           {
             type: "dropdown",
+            label: "v0.1",
+            position: "right",
+            items: [
+              {
+                label: "v0.2",
+                href: "https://js.langchain.com/v0.2/docs/introduction",
+              },
+              {
+                label: "v0.1",
+                href: "/docs/get_started/introduction",
+              },
+            ],
+          },
+          {
+            type: "dropdown",
             label: "🦜🔗",
             position: "right",
             items: [
