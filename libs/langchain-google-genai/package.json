@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-genai",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "Sample integration for LangChain.js",
   "type": "module",
   "engines": {
@@ -40,7 +40,7 @@
   "license": "MIT",
   "dependencies": {
     "@google/generative-ai": "^0.7.0",
-    "@langchain/core": "~0.1.5"
+    "@langchain/core": ">0.1.5  <0.3.0"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
