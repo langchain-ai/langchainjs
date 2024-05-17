@@ -1,6 +1,6 @@
 {
   "name": "@langchain/weaviate",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Weaviate integration for LangChain.js",
   "type": "module",
   "engines": {
@@ -39,7 +39,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": ">0.1.0  <0.3.0",
+    "@langchain/core": ">0.1.0 <0.3.0",
     "uuid": "^9.0.1",
     "weaviate-ts-client": "^2.0.0"
   },

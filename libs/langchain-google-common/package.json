@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-common",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "description": "Core types and classes for Google services.",
   "type": "module",
   "engines": {
@@ -39,7 +39,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": ">0.1.56  <0.3.0",
+    "@langchain/core": ">0.1.56 <0.3.0",
     "uuid": "^9.0.0",
     "zod-to-json-schema": "^3.22.4"
   },
