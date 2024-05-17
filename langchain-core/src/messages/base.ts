@@ -208,6 +208,10 @@ export abstract class BaseMessage
       // eslint-disable-next-line no-param-reassign
       fields.response_metadata = {};
     }
+    if (!fields.id) {
+      // eslint-disable-next-line no-param-reassign
+      fields.id = undefined;
+    }
     super(fields);
     this.id = fields.id;
     this.name = fields.name;

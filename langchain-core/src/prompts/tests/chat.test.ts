@@ -33,15 +33,6 @@ function createChatPromptTemplate() {
     template: "I'm a generic message. I'm {foo}. I'm {bar}.",
     inputVariables: ["foo", "bar"],
   });
-  // return new ChatPromptTemplate({
-  //   promptMessages: [
-  //     new SystemMessagePromptTemplate(systemPrompt),
-  //     new HumanMessagePromptTemplate(userPrompt),
-  //     new AIMessagePromptTemplate({ prompt: aiPrompt }),
-  //     new ChatMessagePromptTemplate(genericPrompt, "test"),
-  //   ],
-  //   inputVariables: ["context", "foo", "bar"],
-  // });
   return ChatPromptTemplate.fromMessages<{
     foo: string;
     bar: string;

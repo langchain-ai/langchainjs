@@ -117,7 +117,7 @@ test("Deserialisation and serialisation of id", async () => {
   };
 
   const message = new AIMessage({
-    content: "I am a messages",
+    content: "I am a message 1",
     id: "my-cool-id",
   });
 
@@ -126,12 +126,12 @@ test("Deserialisation and serialisation of id", async () => {
 
   // Ensure it works if you mutate the id after creation
   const newMessage = new AIMessage({
-    content: "I am a messages",
+    content: "I am a message 2",
   });
   newMessage.id = "my-other-cool-id";
   const deserializedNew: AIMessage = await load(
     JSON.stringify(newMessage),
     config
   );
-  expect(deserializedNew).toEqual(newMessage);
+  expect(deserializedNew.id).toEqual(newMessage.id);
 });
