@@ -107,3 +107,31 @@ test("Deserialisation and serialisation of tool_call_id", async () => {
   const deserialized: ToolMessage = await load(JSON.stringify(message), config);
   expect(deserialized).toEqual(message);
 });
+
+test("Deserialisation and serialisation of id", async () => {
+  const config = {
+    importMap: { messages: { AIMessage } },
+    optionalImportEntrypoints: [],
+    optionalImportsMap: {},
+    secretsMap: {},
+  };
+
+  const message = new AIMessage({
+    content: "I am a messages",
+    id: "my-cool-id",
+  });
+
+  const deserialized: AIMessage = await load(JSON.stringify(message), config);
+  expect(deserialized).toEqual(message);
+
+  // Ensure it works if you mutate the id after creation
+  const newMessage = new AIMessage({
+    content: "I am a messages",
+  });
+  newMessage.id = "my-other-cool-id";
+  const deserializedNew: AIMessage = await load(
+    JSON.stringify(newMessage),
+    config
+  );
+  expect(deserializedNew).toEqual(newMessage);
+});
