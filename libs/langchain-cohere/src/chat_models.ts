@@ -153,8 +153,11 @@ export class ChatCohere<
       ls_model_name: this.model,
       ls_model_type: "chat",
       ls_temperature: this.temperature ?? undefined,
-      ls_max_tokens: typeof params.maxTokens === "number" ? params.maxTokens : undefined,
-      ls_stop: Array.isArray(params.stopSequences) ? params.stopSequences as unknown as string[] : undefined,
+      ls_max_tokens:
+        typeof params.maxTokens === "number" ? params.maxTokens : undefined,
+      ls_stop: Array.isArray(params.stopSequences)
+        ? (params.stopSequences as unknown as string[])
+        : undefined,
     };
   }
 
