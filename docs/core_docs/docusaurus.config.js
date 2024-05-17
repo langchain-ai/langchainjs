@@ -170,7 +170,7 @@ const config = {
             label: "Integrations",
           },
           {
-            href: "https://api.js.langchain.com",
+            href: "https://v02.api.js.langchain.com",
             label: "API Reference",
             position: "left",
           },
