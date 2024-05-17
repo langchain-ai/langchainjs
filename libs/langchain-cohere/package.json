@@ -1,6 +1,6 @@
 {
   "name": "@langchain/cohere",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "Cohere integration for LangChain.js",
   "type": "module",
   "engines": {
@@ -38,7 +38,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1.58",
+    "@langchain/core": ">0.1.58 <0.3.0",
     "cohere-ai": "^7.9.3"
   },
   "devDependencies": {
