@@ -263,21 +263,24 @@ export class ChatGoogleGenerativeAI
 
     this.streaming = fields?.streaming ?? this.streaming;
 
-    this.client = new GenerativeAI(this.apiKey).getGenerativeModel({
-      model: this.model,
-      safetySettings: this.safetySettings as SafetySetting[],
-      generationConfig: {
-        candidateCount: 1,
-        stopSequences: this.stopSequences,
-        maxOutputTokens: this.maxOutputTokens,
-        temperature: this.temperature,
-        topP: this.topP,
-        topK: this.topK,
+    this.client = new GenerativeAI(this.apiKey).getGenerativeModel(
+      {
+        model: this.model,
+        safetySettings: this.safetySettings as SafetySetting[],
+        generationConfig: {
+          candidateCount: 1,
+          stopSequences: this.stopSequences,
+          maxOutputTokens: this.maxOutputTokens,
+          temperature: this.temperature,
+          topP: this.topP,
+          topK: this.topK,
+        },
       },
-    }, {
-      apiVersion: this.apiVersion,
-      baseUrl: this.baseUrl,
-    });
+      {
+        apiVersion: this.apiVersion,
+        baseUrl: this.baseUrl,
+      }
+    );
   }
 
   _combineLLMOutput() {
