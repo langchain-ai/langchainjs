@@ -27382,7 +27382,7 @@ __metadata:
     "@google-ai/generativelanguage": ^0.2.1
     "@jest/globals": ^29.5.0
     "@langchain/cohere": ^0.0.8
-    "@langchain/core": ~0.2.0-rc.0
+    "@langchain/core": ~0.2.0
     "@langchain/openai": ~0.0.28
     "@langchain/scripts": ~0.0
     "@langchain/textsplitters": ~0.0.0
