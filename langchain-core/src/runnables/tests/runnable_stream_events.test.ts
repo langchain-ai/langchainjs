@@ -4,7 +4,12 @@
 
 import { test } from "@jest/globals";
 import { z } from "zod";
-import { RunnableLambda } from "../index.js";
+import {
+  RunnableLambda,
+  RunnableMap,
+  RunnablePassthrough,
+  RunnablePick,
+} from "../index.js";
 import { ChatPromptTemplate } from "../../prompts/chat.js";
 import {
   FakeListChatModel,
@@ -377,6 +382,166 @@ test("Runnable streamEvents method with three runnables with filtering", async (
       name: "3",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["seq:step:3", "my_tag"]),
+    },
+  ]);
+});
+
+test("Runnable streamEvents method with a runnable map", async () => {
+  const r = RunnableLambda.from(reverse);
+
+  const chain = RunnableMap.from({
+    reversed: r,
+    original: new RunnablePassthrough(),
+  }).pipe(new RunnablePick("reversed"));
+
+  const events = [];
+  const eventStream = await chain.streamEvents("hello", { version: "v1" });
+  for await (const event of eventStream) {
+    events.push(event);
+  }
+  console.log(events);
+  expect(events).toEqual([
+    {
+      run_id: expect.any(String),
+      event: "on_chain_start",
+      name: "RunnableSequence",
+      tags: [],
+      metadata: {},
+      data: { input: "hello" },
+    },
+    {
+      event: "on_chain_start",
+      name: "RunnableMap",
+      run_id: expect.any(String),
+      tags: ["seq:step:1"],
+      metadata: {},
+      data: {},
+    },
+    {
+      event: "on_chain_start",
+      name: "RunnableLambda",
+      run_id: expect.any(String),
+      tags: ["map:key:reversed"],
+      metadata: {},
+      data: {},
+    },
+    {
+      event: "on_chain_start",
+      name: "RunnablePassthrough",
+      run_id: expect.any(String),
+      tags: ["map:key:original"],
+      metadata: {},
+      data: {},
+    },
+    {
+      event: "on_chain_stream",
+      name: "RunnablePassthrough",
+      run_id: expect.any(String),
+      tags: ["map:key:original"],
+      metadata: {},
+      data: { chunk: "hello" },
+    },
+    {
+      event: "on_chain_stream",
+      name: "RunnableLambda",
+      run_id: expect.any(String),
+      tags: ["map:key:reversed"],
+      metadata: {},
+      data: { chunk: "olleh" },
+    },
+    {
+      event: "on_chain_stream",
+      name: "RunnableMap",
+      run_id: expect.any(String),
+      tags: ["seq:step:1"],
+      metadata: {},
+      data: {
+        chunk: {
+          original: "hello",
+        },
+      },
+    },
+    {
+      event: "on_chain_start",
+      name: "RunnablePick",
+      run_id: expect.any(String),
+      tags: ["seq:step:2"],
+      metadata: {},
+      data: {},
+    },
+    {
+      event: "on_chain_stream",
+      name: "RunnableMap",
+      run_id: expect.any(String),
+      tags: ["seq:step:1"],
+      metadata: {},
+      data: {
+        chunk: {
+          reversed: "olleh",
+        },
+      },
+    },
+    {
+      event: "on_chain_end",
+      name: "RunnablePassthrough",
+      run_id: expect.any(String),
+      tags: ["map:key:original"],
+      metadata: {},
+      data: { input: "hello", output: "hello" },
+    },
+    {
+      event: "on_chain_stream",
+      name: "RunnablePick",
+      run_id: expect.any(String),
+      tags: ["seq:step:2"],
+      metadata: {},
+      data: { chunk: "olleh" },
+    },
+    {
+      event: "on_chain_stream",
+      run_id: expect.any(String),
+      tags: [],
+      metadata: {},
+      name: "RunnableSequence",
+      data: { chunk: "olleh" },
+    },
+    {
+      event: "on_chain_end",
+      name: "RunnableLambda",
+      run_id: expect.any(String),
+      tags: ["map:key:reversed"],
+      metadata: {},
+      data: { input: "hello", output: "olleh" },
+    },
+    {
+      event: "on_chain_end",
+      name: "RunnableMap",
+      run_id: expect.any(String),
+      tags: ["seq:step:1"],
+      metadata: {},
+      data: {
+        input: "hello",
+        output: {
+          original: "hello",
+          reversed: "olleh",
+        },
+      },
+    },
+    {
+      event: "on_chain_end",
+      name: "RunnablePick",
+      run_id: expect.any(String),
+      tags: ["seq:step:2"],
+      metadata: {},
+      data: { output: "olleh" },
+    },
+    {
+      event: "on_chain_end",
+      name: "RunnableSequence",
+      run_id: expect.any(String),
+      tags: [],
+      metadata: {},
+      data: { output: "olleh" },
     },
   ]);
 });
