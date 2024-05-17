@@ -98,6 +98,11 @@ export interface ToolCall {
 export type BaseMessageFields = {
   content: MessageContent;
   name?: string;
+  /**
+   * An optional unique identifier for the message. This should ideally be
+   * provided by the provider/model which created the message.
+   */
+  id?: string;
   additional_kwargs?: {
     function_call?: FunctionCall;
     tool_calls?: ToolCall[];
