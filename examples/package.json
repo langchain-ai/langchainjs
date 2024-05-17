@@ -23,6 +23,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
+    "@azure/identity": "^4.2.0",
     "@clickhouse/client": "^0.2.5",
     "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^8.4.1",
