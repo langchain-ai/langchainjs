@@ -157,7 +157,7 @@ async function testChatModel(
         accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
         sessionToken: process.env.BEDROCK_AWS_SESSION_TOKEN,
       },
-      modelKwargs: modelKwargs,
+      modelKwargs,
     });
 
     const res = await bedrock.invoke([new HumanMessage(message)]);
@@ -191,7 +191,7 @@ async function testChatStreamingModel(
         accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
         sessionToken: process.env.BEDROCK_AWS_SESSION_TOKEN,
       },
-      modelKwargs: modelKwargs,
+      modelKwargs,
     });
 
     const stream = await bedrock.stream([

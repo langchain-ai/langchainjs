@@ -170,7 +170,7 @@ function formatMessagesForCohere(messages: BaseMessage[]): {
   return {
     chatHistory: formattedChatHistories,
     message: formattedMessage,
-    system: system,
+    system,
   };
 }
 
@@ -417,14 +417,14 @@ export class BedrockLLMInputOutputAdapter {
         return parseMessage(responseBody);
       } else if (
         responseBody.event_type === "stream-end" &&
-        responseBody["response"] !== undefined &&
+        responseBody.response !== undefined &&
         responseBody["amazon-bedrock-invocationMetrics"] !== undefined
       ) {
         return new ChatGenerationChunk({
           message: new AIMessageChunk({ content: "" }),
           text: "",
           generationInfo: {
-            response: responseBody["response"],
+            response: responseBody.response,
             "amazon-bedrock-invocationMetrics":
               responseBody["amazon-bedrock-invocationMetrics"],
           },
