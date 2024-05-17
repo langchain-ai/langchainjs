@@ -38,7 +38,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "<0.3.0 || >0.1.0",
+    "@langchain/core": ">0.1.0  <0.3.0",
     "redis": "^4.6.13"
   },
   "devDependencies": {
