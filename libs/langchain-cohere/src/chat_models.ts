@@ -146,12 +146,15 @@ export class ChatCohere<
     this.streaming = fields?.streaming ?? this.streaming;
   }
 
-  protected getLsParams(_: this["ParsedCallOptions"]): LangSmithParams {
+  protected getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+    const params = this.invocationParams(options);
     return {
       ls_provider: "cohere",
       ls_model_name: this.model,
       ls_model_type: "chat",
       ls_temperature: this.temperature ?? undefined,
+      ls_max_tokens: typeof params.maxTokens === "number" ? params.maxTokens : undefined,
+      ls_stop: Array.isArray(params.stopSequences) ? params.stopSequences as unknown as string[] : undefined,
     };
   }
 

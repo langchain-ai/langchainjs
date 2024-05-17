@@ -177,13 +177,15 @@ export class ChatOllama
     this.format = fields.format;
   }
 
-  protected getLsParams(_: this["ParsedCallOptions"]): LangSmithParams {
+  protected getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+    const params = this.invocationParams(options);
     return {
       ls_provider: "ollama",
       ls_model_name: this.model,
       ls_model_type: "chat",
       ls_temperature: this.temperature ?? undefined,
       ls_stop: this.stop,
+      ls_max_tokens: params.options.num_predict,
     };
   }
 
