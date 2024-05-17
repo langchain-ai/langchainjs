@@ -1,18 +1,24 @@
----
-hide_table_of_contents: true
----
-
 # How to generate multiple embeddings per document
 
-It can often be beneficial to store multiple vectors per document.
-LangChain has a base MultiVectorRetriever which makes querying this type of setup easier!
+:::info Prerequisites
+
+This guide assumes familiarity with the following concepts:
+
+- [Retrievers](/docs/concepts/#retrievers)
+- [Text splitters](/docs/concepts/#text-splitters)
+- [Retrieval-augmented generation (RAG)](/docs/tutorials/rag)
+
+:::
+
+Embedding different representations of an original document, then returning the original document when any of the representations result in a search hit, can allow you to
+tune and improve your retrieval performance. LangChain has a base [`MultiVectorRetriever`](https://api.js.langchain.com/classes/langchain_retrievers_multi_vector.MultiVectorRetriever.html) designed to do just this!
 
 A lot of the complexity lies in how to create the multiple vectors per document.
-This notebook covers some of the common ways to create those vectors and use the MultiVectorRetriever.
+This guide covers some of the common ways to create those vectors and use the `MultiVectorRetriever`.
 
 Some methods to create multiple vectors per document include:
 
-- smaller chunks: split a document into smaller chunks, and embed those (e.g. the [ParentDocumentRetriever](/docs/modules/data_connection/retrievers/parent-document-retriever))
+- smaller chunks: split a document into smaller chunks, and embed those (e.g. the [`ParentDocumentRetriever`](/docs/modules/data_connection/retrievers/parent-document-retriever))
 - summary: create a summary for each document, embed that along with (or instead of) the document
 - hypothetical questions: create hypothetical questions that each document would be appropriate to answer, embed those along with (or instead of) the document
 
@@ -54,3 +60,10 @@ These questions can then be embedded and used to retrieve the original document:
 import HypotheticalExample from "@examples/retrievers/multi_vector_hypothetical.ts";
 
 <CodeBlock language="typescript">{HypotheticalExample}</CodeBlock>
+
+## Next steps
+
+You've now learned a few ways to generate multiple embeddings per document.
+
+Next, check out the individual sections for deeper dives on specific retrievers, the [broader tutorial on RAG](/docs/tutorials/rag), or this section to learn how to
+[create your own custom retriever over any data source](/docs/modules/data_connection/retrievers/custom).

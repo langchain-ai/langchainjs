@@ -1,5 +1,4 @@
 ---
-sidebar_position: 3
 keywords: [similaritySearchWithScore]
 ---
 
@@ -9,20 +8,37 @@ keywords: [similaritySearchWithScore]
 Head to [Integrations](/docs/integrations/vectorstores) for documentation on built-in integrations with vectorstore providers.
 :::
 
+:::info Prerequisites
+
+This guide assumes familiarity with the following concepts:
+
+- [Vector stores](/docs/concepts/#vectorstores)
+- [Embeddings](/docs/concepts/#embedding-models)
+- [Document loaders](/docs/concepts#document-loaders)
+
+:::
+
 One of the most common ways to store and search over unstructured data is to embed it and store the resulting embedding
 vectors, and then at query time to embed the unstructured query and retrieve the embedding vectors that are
 'most similar' to the embedded query. A vector store takes care of storing embedded data and performing vector search
 for you.
 
-## Get started
+This walkthrough uses a basic, unoptimized implementation called [`MemoryVectorStore`](https://api.js.langchain.com/classes/langchain_vectorstores_memory.MemoryVectorStore.html) that stores embeddings in-memory and does an exact, linear search for the most similar embeddings.
+LangChain contains many built-in integrations - see [this section](/docs/how_to/vectorstores/#which-one-to-pick) for more, or the [full list of integrations](/docs/integrations/vectorstores/).
 
-This walkthrough showcases basic functionality related to VectorStores. A key part of working with vector stores is creating the vector to put in them, which is usually created via embeddings. Therefore, it is recommended that you familiarize yourself with the [text embedding model](/docs/concepts#embedding-models) interfaces before diving into this.
+## Creating a new index
 
-This walkthrough uses a basic, unoptimized implementation called MemoryVectorStore that stores embeddings in-memory and does an exact, linear search for the most similar embeddings.
+Most of the time, you'll need to load and prepare the data you want to search over. Here's an example that loads a recent speech from a file:
 
-## Usage
+import ExampleLoader from "@examples/indexes/vector_stores/memory_fromdocs.ts";
 
-### Create a new index from texts
+<CodeBlock language="typescript">{ExampleLoader}</CodeBlock>
+
+Most of the time, you'll need to split the loaded text as a preparation step. See [this section](/docs/concepts/#text-splitters) to learn more about text splitters.
+
+## Creating a new index from texts
+
+If you have already prepared the data you want to search over, you can initialize a vector store directly from text chunks:
 
 import CodeBlock from "@theme/CodeBlock";
 import ExampleTexts from "@examples/indexes/vector_stores/memory.ts";
@@ -36,98 +52,6 @@ npm install @langchain/openai
 ```
 
 <CodeBlock language="typescript">{ExampleTexts}</CodeBlock>
-
-### Create a new index from a loader
-
-import ExampleLoader from "@examples/indexes/vector_stores/memory_fromdocs.ts";
-
-<CodeBlock language="typescript">{ExampleLoader}</CodeBlock>
-
-Here is the current base interface all vector stores share:
-
-```typescript
-interface VectorStore {
-  /**
-   * Add more documents to an existing VectorStore.
-   * Some providers support additional parameters, e.g. to associate custom ids
-   * with added documents or to change the batch size of bulk inserts.
-   * Returns an array of ids for the documents or nothing.
-   */
-  addDocuments(
-    documents: Document[],
-    options?: Record<string, any>
-  ): Promise<string[] | void>;
-
-  /**
-   * Search for the most similar documents to a query
-   */
-  similaritySearch(
-    query: string,
-    k?: number,
-    filter?: object | undefined
-  ): Promise<Document[]>;
-
-  /**
-   * Search for the most similar documents to a query,
-   * and return their similarity score
-   */
-  similaritySearchWithScore(
-    query: string,
-    k = 4,
-    filter: object | undefined = undefined
-  ): Promise<[object, number][]>;
-
-  /**
-   * Turn a VectorStore into a Retriever
-   */
-  asRetriever(k?: number): BaseRetriever;
-
-  /**
-   * Delete embedded documents from the vector store matching the passed in parameter.
-   * Not supported by every provider.
-   */
-  delete(params?: Record<string, any>): Promise<void>;
-
-  /**
-   * Advanced: Add more documents to an existing VectorStore,
-   * when you already have their embeddings
-   */
-  addVectors(
-    vectors: number[][],
-    documents: Document[],
-    options?: Record<string, any>
-  ): Promise<string[] | void>;
-
-  /**
-   * Advanced: Search for the most similar documents to a query,
-   * when you already have the embedding of the query
-   */
-  similaritySearchVectorWithScore(
-    query: number[],
-    k: number,
-    filter?: object
-  ): Promise<[Document, number][]>;
-}
-```
-
-You can create a vector store from a list of [Documents](https://api.js.langchain.com/classes/langchain_core_documents.Document.html), or from a list of texts and their corresponding metadata. You can also create a vector store from an existing index, the signature of this method depends on the vector store you're using, check the documentation of the vector store you're interested in.
-
-```typescript
-abstract class BaseVectorStore implements VectorStore {
-  static fromTexts(
-    texts: string[],
-    metadatas: object[] | object,
-    embeddings: EmbeddingsInterface,
-    dbConfig: Record<string, any>
-  ): Promise<VectorStore>;
-
-  static fromDocuments(
-    docs: Document[],
-    embeddings: EmbeddingsInterface,
-    dbConfig: Record<string, any>
-  ): Promise<VectorStore>;
-}
-```
 
 ## Which one to pick?
 
@@ -146,3 +70,9 @@ Here's a quick guide to help you pick the right vector store for your use case:
 - If you're in search of a cost-effective vector database that allows run vector search with SQL, look no further than [MyScale](/docs/integrations/vectorstores/myscale).
 - If you're in search of a vector database that you can load from both the browser and server side, check out [CloseVector](/docs/integrations/vectorstores/closevector). It's a vector database that aims to be cross-platform.
 - If you're looking for a scalable, open-source columnar database with excellent performance for analytical queries, then consider [ClickHouse](/docs/integrations/vectorstores/clickhouse).
+
+## Next steps
+
+You've now learned how to load data into a vectorstore.
+
+Next, check out the [full tutorial on retrieval-augmented generation](/docs/tutorials/rag).
