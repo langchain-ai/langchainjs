@@ -6,11 +6,12 @@ import { faker } from "@faker-js/faker";
 
 const smallEmbeddings = new OpenAIEmbeddings({
   model: "text-embedding-3-small",
-  dimensions: 512, // Min num for small
+  dimensions: 512, // Min number for small
 });
+
 const largeEmbeddings = new OpenAIEmbeddings({
   model: "text-embedding-3-large",
-  dimensions: 3072, // Max num for large
+  dimensions: 3072, // Max number for large
 });
 
 const vectorStore = new Chroma(smallEmbeddings, {
@@ -58,10 +59,11 @@ await retriever.addDocuments(allDocs);
 const query = "What is LangChain?";
 const results = await retriever.invoke(query);
 console.log(results.map(({ pageContent }) => pageContent).join("\n"));
+
 /**
-I heart LangChain
-LangGraph is a new open source library by the LangChain team
-LangChain is an open source github repo
-LangChain announced GA of LangSmith last week!
-There are JS and PY versions of the LangChain github repos
- */
+  I heart LangChain
+  LangGraph is a new open source library by the LangChain team
+  LangChain is an open source github repo
+  LangChain announced GA of LangSmith last week!
+  There are JS and PY versions of the LangChain github repos
+*/

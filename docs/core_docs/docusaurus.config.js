@@ -170,7 +170,7 @@ const config = {
             label: "Integrations",
           },
           {
-            href: "https://api.js.langchain.com",
+            href: "https://v02.api.js.langchain.com",
             label: "API Reference",
             position: "left",
           },
@@ -194,6 +194,21 @@ const config = {
               {
                 to: "/docs/contributing",
                 label: "Contributing",
+              },
+            ],
+          },
+          {
+            type: "dropdown",
+            label: "v0.2",
+            position: "right",
+            items: [
+              {
+                label: "v0.2",
+                href: "/docs/introduction",
+              },
+              {
+                label: "v0.1",
+                href: "https://js.langchain.com/v0.1/docs/get_started/introduction",
               },
             ],
           },

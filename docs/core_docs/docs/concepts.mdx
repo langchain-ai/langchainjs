@@ -92,7 +92,7 @@ support for retries/fallbacks, so you can get the added reliability without any 
 
 **Access intermediate results**
 For more complex chains it’s often very useful to access the results of intermediate steps even before the final output is produced. This can be used to let end-users know
-something is happening, or even just to debug your chain. You can stream intermediate results, and it’s available on every [LangServe](/docs/langserve) server.
+something is happening, or even just to debug your chain. You can stream intermediate results, and it’s available on every [LangServe](https://www.langchain.com/langserve/) server.
 
 **Input and output schemas**
 Input and output schemas give every LCEL chain schemas inferred from the structure of your chain. This can be used for validation of inputs and outputs,
@@ -102,8 +102,8 @@ and is an integral part of LangServe.
 As your chains get more and more complex, it becomes increasingly important to understand what exactly is happening at every step.
 With LCEL, **all** steps are automatically logged to [LangSmith](/docs/langsmith/) for maximum observability and debuggability.
 
-[**Seamless LangServe deployment**](/docs/langserve)
-Any chain created with LCEL can be easily deployed using [LangServe](/docs/langserve).
+[**Seamless LangServe deployment**](https://www.langchain.com/langserve/)
+Any chain created with LCEL can be easily deployed using [LangServe](https://www.langchain.com/langserve/).
 
 ### Interface
 
@@ -175,7 +175,7 @@ Tool calling allows a model to respond to a given prompt by generating output th
 matches a user-defined schema. While the name implies that the model is performing
 some action, this is actually not the case! The model is coming up with the
 arguments to a tool, and actually running the tool (or not) is up to the user -
-for example, if you want to [extract output matching some schema](/docs/tutorial/extraction/)
+for example, if you want to [extract output matching some schema](/docs/tutorials/extraction/)
 from unstructured text, you could give the model an "extraction" tool that takes
 parameters matching the desired schema, then treat the generated output as your final
 result.
@@ -449,10 +449,10 @@ const retriever = vectorstore.asRetriever();
 
 ### Retrievers
 
-A retriever is an interface that returns documents given an unstructured query.
-It is more general than a vector store.
+A retriever is an interface that returns relevant documents given an unstructured query.
+They are more general than a vector store.
 A retriever does not need to be able to store documents, only to return (or retrieve) them.
-Retrievers can be created from vectorstores, but are also broad enough to include [Wikipedia search](/docs/integrations/retrievers/wikipedia/) and [Amazon Kendra](/docs/integrations/retrievers/amazon_kendra_retriever/).
+Retrievers can be created from vector stores, but are also broad enough to include [Exa search](/docs/integrations/retrievers/exa/)(web search) and [Amazon Kendra](/docs/integrations/retrievers/kendra-retriever/).
 
 Retrievers accept a string query as input and return an array of Document's as output.
 
