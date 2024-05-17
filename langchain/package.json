@@ -884,7 +884,7 @@
     }
   },
   "dependencies": {
-    "@langchain/core": "~0.2.0-rc.0",
+    "@langchain/core": "~0.2.0",
     "@langchain/openai": "~0.0.28",
     "@langchain/textsplitters": "~0.0.0",
     "binary-extensions": "^2.2.0",
