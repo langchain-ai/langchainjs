@@ -225,7 +225,7 @@ function convertMessagesToMistralMessages(
         id: "null",
         type: "function" as ToolType.function,
         function: toolCall.function,
-      })) || []
+      }))
     );
   };
 
