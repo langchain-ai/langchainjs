@@ -1,0 +1,25 @@
+---
+sidebar_label: TencentHunyuan
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# ChatTencentHunyuan
+
+LangChain.js supports the Tencent Hunyuan family of models.
+
+https://cloud.tencent.com/document/product/1729/104753
+
+## Setup
+
+1. Sign up for a Tencent Cloud account [here](https://cloud.tencent.com/register).
+2. Create SecretID & SecretKey [here](https://console.cloud.tencent.com/cam/capi).
+3. Set SecretID and SecretKey as environment variables named `TENCENT_SECRET_ID` and `TENCENT_SECRET_KEY`, respectively.
+
+## Usage
+
+Here's an example:
+
+import TencentHunyuan from "@examples/models/chat/integration_tencent_hunyuan.ts";
+
+<CodeBlock language="typescript">{TencentHunyuan}</CodeBlock>

@@ -1,0 +1,22 @@
+---
+sidebar_class_name: node-only
+---
+
+# TencentHunyuan
+
+The `TencentHunyuanEmbeddings` class uses the Tencent Hunyuan API to generate embeddings for a given text.
+
+## Setup
+
+1. Sign up for a Tencent Cloud account [here](https://cloud.tencent.com/register).
+2. Create SecretID & SecretKey [here](https://console.cloud.tencent.com/cam/capi).
+3. Set SecretID and SecretKey as environment variables named `TENCENT_SECRET_ID` and `TENCENT_SECRET_KEY`, respectively.
+
+## Usage
+
+Here's an example:
+
+import CodeBlock from "@theme/CodeBlock";
+import TencentHunyuan from "@examples/models/embeddings/tencent_hunyuan.ts";
+
+<CodeBlock language="typescript">{TencentHunyuan}</CodeBlock>

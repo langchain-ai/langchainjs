@@ -182,6 +182,10 @@ embeddings/tensorflow.cjs
 embeddings/tensorflow.js
 embeddings/tensorflow.d.ts
 embeddings/tensorflow.d.cts
+embeddings/tencent_hunyuan.cjs
+embeddings/tencent_hunyuan.js
+embeddings/tencent_hunyuan.d.ts
+embeddings/tencent_hunyuan.d.cts
 embeddings/togetherai.cjs
 embeddings/togetherai.js
 embeddings/togetherai.d.ts
@@ -534,6 +538,10 @@ chat_models/premai.cjs
 chat_models/premai.js
 chat_models/premai.d.ts
 chat_models/premai.d.cts
+chat_models/tencent_hunyuan.cjs
+chat_models/tencent_hunyuan.js
+chat_models/tencent_hunyuan.d.ts
+chat_models/tencent_hunyuan.d.cts
 chat_models/togetherai.cjs
 chat_models/togetherai.js
 chat_models/togetherai.d.ts
