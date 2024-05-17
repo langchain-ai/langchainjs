@@ -221,10 +221,8 @@ export class AsyncGeneratorWithSetup<
     }
 
     const storage = AsyncLocalStorageProviderSingleton.getInstance();
-    return new Promise((resolve) => {
-      storage.run(this.config, async () => {
-        resolve(this.generator.next(...args));
-      });
+    return storage.run(this.config, async () => {
+      return this.generator.next(...args);
     });
   }
 
