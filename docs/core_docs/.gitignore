@@ -95,6 +95,8 @@ docs/how_to/output_parser_structured.md
 docs/how_to/output_parser_structured.mdx
 docs/how_to/output_parser_json.md
 docs/how_to/output_parser_json.mdx
+docs/how_to/multiple_queries.md
+docs/how_to/multiple_queries.mdx
 docs/how_to/logprobs.md
 docs/how_to/logprobs.mdx
 docs/how_to/graph_semantic.md
@@ -139,5 +141,3 @@ docs/how_to/assign.md
 docs/how_to/assign.mdx
 docs/how_to/agent_executor.md
 docs/how_to/agent_executor.mdx
-docs/how_to/MultiQueryRetriever.md
-docs/how_to/MultiQueryRetriever.mdx
