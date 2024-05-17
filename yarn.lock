@@ -9050,6 +9050,7 @@ __metadata:
     "@smithy/protocol-http": ^3.0.6
     "@smithy/signature-v4": ^2.0.10
     "@smithy/util-utf8": ^2.0.0
+    "@spider-cloud/spider-client": ^0.0.21
     "@supabase/postgrest-js": ^1.1.1
     "@supabase/supabase-js": ^2.10.0
     "@swc/core": ^1.3.90
@@ -9210,6 +9211,7 @@ __metadata:
     "@smithy/protocol-http": ^3.0.6
     "@smithy/signature-v4": ^2.0.10
     "@smithy/util-utf8": ^2.0.0
+    "@spider-cloud/spider-client": ^0.0.21
     "@supabase/postgrest-js": ^1.1.1
     "@supabase/supabase-js": ^2.10.0
     "@tensorflow-models/universal-sentence-encoder": "*"
@@ -9364,6 +9366,8 @@ __metadata:
     "@smithy/signature-v4":
       optional: true
     "@smithy/util-utf8":
+      optional: true
+    "@spider-cloud/spider-client":
       optional: true
     "@supabase/postgrest-js":
       optional: true
@@ -27396,7 +27400,6 @@ __metadata:
     "@mendable/firecrawl-js": ^0.0.13
     "@notionhq/client": ^2.2.10
     "@pinecone-database/pinecone": ^1.1.0
-    "@spider-cloud/spider-client": ^0.0.21
     "@supabase/supabase-js": ^2.10.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -27493,7 +27496,6 @@ __metadata:
     "@mendable/firecrawl-js": ^0.0.13
     "@notionhq/client": ^2.2.10
     "@pinecone-database/pinecone": "*"
-    "@spider-cloud/spider-client": ^0.0.21
     "@supabase/supabase-js": ^2.10.0
     "@vercel/kv": ^0.2.3
     "@xata.io/client": ^0.28.0
@@ -27557,8 +27559,6 @@ __metadata:
     "@notionhq/client":
       optional: true
     "@pinecone-database/pinecone":
-      optional: true
-    "@spider-cloud/spider-client":
       optional: true
     "@supabase/supabase-js":
       optional: true

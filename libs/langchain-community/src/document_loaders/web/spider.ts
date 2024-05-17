@@ -1,7 +1,7 @@
 import { Spider } from "@spider-cloud/spider-client";
 import { Document, type DocumentInterface } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { BaseDocumentLoader } from "../base.js";
+import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
 
 /**
  * Interface representing the parameters for the Spider loader. It
