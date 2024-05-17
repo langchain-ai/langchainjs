@@ -39,7 +39,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": ">0.1.56  <0.3.0",
+    "@langchain/core": ">0.1.56 <0.3.0",
     "@langchain/google-common": "~0.0.15",
     "google-auth-library": "^8.9.0"
   },
