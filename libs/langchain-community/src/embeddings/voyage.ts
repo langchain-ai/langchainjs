@@ -14,6 +14,11 @@ export interface VoyageEmbeddingsParams extends EmbeddingsParams {
    * limited by the Voyage AI API to a maximum of 8.
    */
   batchSize?: number;
+
+  /**
+   * Input type for the embeddings request.
+   */
+  inputType?: string;
 }
 
 /**
@@ -53,6 +58,7 @@ export class VoyageEmbeddings
 
   headers?: Record<string, string>;
 
+  inputType: string;
   /**
    * Constructor for the VoyageEmbeddings class.
    * @param fields - An optional object with properties to configure the instance.
@@ -61,6 +67,7 @@ export class VoyageEmbeddings
     fields?: Partial<VoyageEmbeddingsParams> & {
       verbose?: boolean;
       apiKey?: string;
+      inputType?: string;
     }
   ) {
     const fieldsWithDefaults = { ...fields };
@@ -78,6 +85,7 @@ export class VoyageEmbeddings
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
     this.apiKey = apiKey;
     this.apiUrl = `${this.basePath}/embeddings`;
+    this.inputType = fieldsWithDefaults?.inputType; // No default input type
   }
 
   /**
@@ -92,6 +100,7 @@ export class VoyageEmbeddings
       this.embeddingWithRetry({
         model: this.modelName,
         input: batch,
+        input_type: this.inputType, // Add input_type to the request
       })
     );
 
@@ -118,7 +127,7 @@ export class VoyageEmbeddings
   async embedQuery(text: string): Promise<number[]> {
     const { data } = await this.embeddingWithRetry({
       model: this.modelName,
-      input: text,
+      input_type: this.inputType, // Add input_type to the request
     });
 
     return data[0].embedding;
