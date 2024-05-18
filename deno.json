@@ -12,6 +12,8 @@
     "@langchain/core/": "npm:/@langchain/core/",
     "@langchain/pinecone": "npm:@langchain/pinecone",
     "@langchain/google-common": "npm:@langchain/google-common",
+    "@langchain/langgraph": "npm:/@langchain/langgraph@0.0.17",
+    "@langchain/langgraph/": "npm:/@langchain/langgraph@0.0.17/",
     "@microsoft/fetch-event-source": "npm:@microsoft/fetch-event-source",
     "@pinecone-database/pinecone": "npm:@pinecone-database/pinecone",
     "cheerio": "npm:/cheerio",
