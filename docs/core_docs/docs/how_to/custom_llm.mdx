@@ -14,14 +14,14 @@ This guide assumes familiarity with the following concepts:
 
 This notebook goes over how to create a custom LLM wrapper, in case you want to use your own LLM or a different wrapper than one that is directly supported in LangChain.
 
-There are a few required things that a custom LLM needs to implement after extending the [`LLM` class](https://api.js.langchain.com/classes/langchain_core_language_models_llms.LLM.html):
+There are a few required things that a custom LLM needs to implement after extending the [`LLM` class](https://v02.api.js.langchain.com/classes/langchain_core_language_models_llms.LLM.html):
 
 - A `_call` method that takes in a string and call options (which includes things like `stop` sequences), and returns a string.
 - A `_llmType` method that returns a string. Used for logging purposes only.
 
 You can also implement the following optional method:
 
-- A `_streamResponseChunks` method that returns an `AsyncIterator` and yields [`GenerationChunks`](https://api.js.langchain.com/classes/langchain_core_outputs.GenerationChunk.html). This allows the LLM to support streaming outputs.
+- A `_streamResponseChunks` method that returns an `AsyncIterator` and yields [`GenerationChunks`](https://v02.api.js.langchain.com/classes/langchain_core_outputs.GenerationChunk.html). This allows the LLM to support streaming outputs.
 
 Let’s implement a very simple custom LLM that just echoes back the first `n` characters of the input.
 
@@ -105,7 +105,7 @@ m
 
 ## Richer outputs
 
-If you want to take advantage of LangChain's callback system for functionality like token tracking, you can extend the [`BaseLLM`](https://api.js.langchain.com/classes/langchain_core_language_models_llms.BaseLLM.html) class and implement the lower level
+If you want to take advantage of LangChain's callback system for functionality like token tracking, you can extend the [`BaseLLM`](https://v02.api.js.langchain.com/classes/langchain_core_language_models_llms.BaseLLM.html) class and implement the lower level
 `_generate` method. Rather than taking a single string as input and a single string output, it can take multiple input strings and map each to multiple string outputs.
 Additionally, it returns a `Generation` output with fields for additional metadata rather than just a string.
 

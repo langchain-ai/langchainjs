@@ -6,7 +6,7 @@ import { RecursiveUrlLoader } from "../web/recursive_url.js";
 
 describe("RecursiveUrlLoader", () => {
   test("loading valid url", async () => {
-    const url = "https://js.langchain.com/docs/get_started/introduction";
+    const url = "https://js.langchain.com/v0.2/docs/introduction";
 
     const compiledConvert = compile({ wordwrap: 130 }); // returns (input: string) => string;
 
@@ -22,7 +22,7 @@ describe("RecursiveUrlLoader", () => {
   });
 
   test("loading single page", async () => {
-    const url = "https://js.langchain.com/docs/get_started/introduction";
+    const url = "https://js.langchain.com/v0.2/docs/introduction";
 
     const compiledConvert = compile({ wordwrap: 130 }); // returns (input: string) => string;
 

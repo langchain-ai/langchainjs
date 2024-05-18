@@ -12,7 +12,7 @@ This guide assumes familiarity with the following concepts:
 :::
 
 One way to reduce retrieval latency is through a technique called "Adaptive Retrieval".
-The [`MatryoshkaRetriever`](https://api.js.langchain.com/classes/langchain_retrievers_matryoshka_retriever.MatryoshkaRetriever.html) uses the
+The [`MatryoshkaRetriever`](https://v02.api.js.langchain.com/classes/langchain_retrievers_matryoshka_retriever.MatryoshkaRetriever.html) uses the
 Matryoshka Representation Learning (MRL) technique to retrieve documents for a given query in two steps:
 
 - **First-pass**: Uses a lower dimensional sub-vector from the MRL embedding for an initial, fast,
@@ -58,4 +58,4 @@ Due to the constraints of some vector stores, the large embedding metadata field
 You've now learned a technique that can help speed up your retrieval queries.
 
 Next, check out the [broader tutorial on RAG](/docs/tutorials/rag), or this section to learn how to
-[create your own custom retriever over any data source](/docs/modules/data_connection/retrievers/custom).
+[create your own custom retriever over any data source](/docs/how_to/custom_retriever/).
