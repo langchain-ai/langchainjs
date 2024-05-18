@@ -14,14 +14,14 @@ This guide assumes familiarity with the following concepts:
 
 This notebook goes over how to create a custom chat model wrapper, in case you want to use your own chat model or a different wrapper than one that is directly supported in LangChain.
 
-There are a few required things that a chat model needs to implement after extending the [`SimpleChatModel` class](https://api.js.langchain.com/classes/langchain_core_language_models_chat_models.SimpleChatModel.html):
+There are a few required things that a chat model needs to implement after extending the [`SimpleChatModel` class](https://v02.api.js.langchain.com/classes/langchain_core_language_models_chat_models.SimpleChatModel.html):
 
 - A `_call` method that takes in a list of messages and call options (which includes things like `stop` sequences), and returns a string.
 - A `_llmType` method that returns a string. Used for logging purposes only.
 
 You can also implement the following optional method:
 
-- A `_streamResponseChunks` method that returns an `AsyncGenerator` and yields [`ChatGenerationChunks`](https://api.js.langchain.com/classes/langchain_core_outputs.ChatGenerationChunk.html). This allows the LLM to support streaming outputs.
+- A `_streamResponseChunks` method that returns an `AsyncGenerator` and yields [`ChatGenerationChunks`](https://v02.api.js.langchain.com/classes/langchain_core_outputs.ChatGenerationChunk.html). This allows the LLM to support streaming outputs.
 
 Let's implement a very simple custom chat model that just echoes back the first `n` characters of the input.
 
@@ -139,7 +139,7 @@ AIMessageChunk {
 
 ## Richer outputs
 
-If you want to take advantage of LangChain's callback system for functionality like token tracking, you can extend the [`BaseChatModel`](https://api.js.langchain.com/classes/langchain_core_language_models_chat_models.BaseChatModel.html) class and implement the lower level
+If you want to take advantage of LangChain's callback system for functionality like token tracking, you can extend the [`BaseChatModel`](https://v02.api.js.langchain.com/classes/langchain_core_language_models_chat_models.BaseChatModel.html) class and implement the lower level
 `_generate` method. It also takes a list of `BaseMessage`s as input, but requires you to construct and return a `ChatGeneration` object that permits additional metadata.
 Here's an example:
 
