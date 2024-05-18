@@ -1,5 +1,13 @@
 # How to deal with large databases
 
+:::info Prerequisites
+
+This guide assumes familiarity with the following:
+
+- [Question answering over SQL data](/docs/tutorials/sql_qa)
+
+:::
+
 In order to write valid queries against a database, we need to feed the model the table names, table schemas, and feature values for it to query over.
 When there are many tables, columns, and/or high-cardinality columns, it becomes impossible for us to dump the full information about our database in every prompt.
 Instead, we must find ways to dynamically insert into the prompt only the most relevant information. Let's take a look at some techniques for doing this.
@@ -68,3 +76,10 @@ import HighCardinalityExample from "@examples/use_cases/sql/large_db_high_cardin
 We can see that with retrieval we're able to correct the spelling and get back a valid result.
 
 Another possible approach to this problem is to let an Agent decide for itself when to look up proper nouns.
+
+## Next steps
+
+You've now learned about some prompting strategies to improve SQL generation.
+
+Next, check out some of the other guides in this section, like [how to validate queries](/docs/how_to/sql_query_checking).
+You might also be interested in the query analysis guide [on handling high cardinality](/docs/how_to/query_high_cardinality).
