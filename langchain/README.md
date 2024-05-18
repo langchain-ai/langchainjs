@@ -63,8 +63,8 @@ This library aims to assist in the development of those types of applications. C
 
 **💬 Chatbots**
 
-- [Documentation](https://js.langchain.com/docs/modules/models/chat/)
-- End-to-end Example: [Chat-LangChain](https://github.com/langchain-ai/chat-langchain)
+- [Documentation](https://js.langchain.com/v0.2/docs/how_to/#chatbots)
+- End-to-end Example: [Chat-LangChain](https://github.com/langchain-ai/chat-langchainjs)
 
 ## 🚀 How does LangChain help?
 
@@ -90,12 +90,12 @@ Agents involve an LLM making decisions about which Actions to take, taking that 
 
 ## 📖 Documentation
 
-Please see [here](https://js.langchain.com) for full documentation, which includes:
+Please see [here](https://js.langchain.com/v0.2/) for full documentation, which includes:
 
-- [Getting started](https://js.langchain.com/docs/get_started/introduction): installation, setting up the environment, simple examples
-- Overview of the [interfaces](https://js.langchain.com/docs/expression_language/), [modules](https://js.langchain.com/docs/modules/) and [integrations](https://js.langchain.com/docs/integrations/platforms)
-- [Use case](https://js.langchain.com/docs/use_cases/) walkthroughs and best practice [guides](https://js.langchain.com/docs/guides/)
-- [Reference](https://api.js.langchain.com): full API docs
+- [Getting started](https://js.langchain.com/v0.2/docs/introduction): installation, setting up the environment, simple examples
+- [Tutorials](https://js.langchain.com/v0.2/docs/tutorials/): interactive guides and walkthroughs of common use cases/tasks.
+- [Use case](https://js.langchain.com/v0.2/docs/how_to/) walkthroughs and best practices for every component of the LangChain library.
+- [Reference](https://v02.api.js.langchain.com): full API docs
 
 ## 💁 Contributing
 
