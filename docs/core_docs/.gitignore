@@ -51,10 +51,10 @@ docs/tutorials/classification.md
 docs/tutorials/classification.mdx
 docs/how_to/tools_prompting.md
 docs/how_to/tools_prompting.mdx
-docs/how_to/tools_as_openai_functions.md
-docs/how_to/tools_as_openai_functions.mdx
-docs/how_to/tools.md
-docs/how_to/tools.mdx
+docs/how_to/tools_builtin.md
+docs/how_to/tools_builtin.mdx
+docs/how_to/tool_calls_multi_modal.md
+docs/how_to/tool_calls_multi_modal.mdx
 docs/how_to/tool_calling.md
 docs/how_to/tool_calling.mdx
 docs/how_to/structured_output.md
@@ -65,6 +65,8 @@ docs/how_to/split_by_token.md
 docs/how_to/split_by_token.mdx
 docs/how_to/sequence.md
 docs/how_to/sequence.mdx
+docs/how_to/self_query.md
+docs/how_to/self_query.mdx
 docs/how_to/recursive_text_splitter.md
 docs/how_to/recursive_text_splitter.mdx
 docs/how_to/query_no_queries.md
@@ -101,6 +103,8 @@ docs/how_to/multiple_queries.md
 docs/how_to/multiple_queries.mdx
 docs/how_to/logprobs.md
 docs/how_to/logprobs.mdx
+docs/how_to/lcel_cheatsheet.md
+docs/how_to/lcel_cheatsheet.mdx
 docs/how_to/graph_semantic.md
 docs/how_to/graph_semantic.mdx
 docs/how_to/graph_prompting.md
