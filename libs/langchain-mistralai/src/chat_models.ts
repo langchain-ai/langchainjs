@@ -507,15 +507,23 @@ export class ChatMistralAI<
     const client = new MistralClient(this.apiKey, this.endpoint);
 
     return this.caller.call(async () => {
-      let res:
-        | ChatCompletionResponse
-        | AsyncGenerator<ChatCompletionResponseChunk>;
-      if (streaming) {
-        res = client.chatStream(input);
-      } else {
-        res = await client.chat(input);
+      try {
+        let res:
+          | ChatCompletionResponse
+          | AsyncGenerator<ChatCompletionResponseChunk>;
+        if (streaming) {
+          res = client.chatStream(input);
+        } else {
+          res = await client.chat(input);
+        }
+        return res;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (e: any) {
+        if (e.message?.includes("status: 400")) {
+          e.status = 400;
+        }
+        throw e;
       }
-      return res;
     });
   }
 
