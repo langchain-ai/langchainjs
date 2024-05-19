@@ -40,7 +40,6 @@ import {
 } from "groq-sdk/resources/chat/completions";
 import {
   Runnable,
-  RunnableInterface,
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
@@ -357,7 +356,7 @@ export class ChatGroq extends BaseChatModel<
   override bindTools(
     tools: (Record<string, unknown> | StructuredToolInterface)[],
     kwargs?: Partial<ChatGroqCallOptions>
-  ): RunnableInterface<
+  ): Runnable<
     BaseLanguageModelInput,
     AIMessageChunk,
     ChatGroqCallOptions
