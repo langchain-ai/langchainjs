@@ -215,18 +215,16 @@ function convertMessagesToMistralMessages(
         .map((toolCall) => ({ ...toolCall, id: "null" }))
         .map(convertLangChainToolCallToOpenAI) as MistralAIToolCalls[];
     }
-    if (message.additional_kwargs.tool_calls === undefined) {
+    if (!message.additional_kwargs.tool_calls?.length) {
       return undefined;
     }
     const toolCalls: Omit<OpenAIToolCall, "index">[] =
       message.additional_kwargs.tool_calls;
-    return (
-      toolCalls?.map((toolCall) => ({
-        id: "null",
-        type: "function" as ToolType.function,
-        function: toolCall.function,
-      }))
-    );
+    return toolCalls?.map((toolCall) => ({
+      id: "null",
+      type: "function" as ToolType.function,
+      function: toolCall.function,
+    }));
   };
 
   return messages.map((message) => ({
