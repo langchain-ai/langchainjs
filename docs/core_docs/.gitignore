@@ -129,6 +129,8 @@ docs/how_to/example_selectors.md
 docs/how_to/example_selectors.mdx
 docs/how_to/custom_tools.md
 docs/how_to/custom_tools.mdx
+docs/how_to/custom_callbacks.md
+docs/how_to/custom_callbacks.mdx
 docs/how_to/code_splitter.md
 docs/how_to/code_splitter.mdx
 docs/how_to/chatbots_tools.md
@@ -141,6 +143,14 @@ docs/how_to/chat_streaming.md
 docs/how_to/chat_streaming.mdx
 docs/how_to/character_text_splitter.md
 docs/how_to/character_text_splitter.mdx
+docs/how_to/callbacks_runtime.md
+docs/how_to/callbacks_runtime.mdx
+docs/how_to/callbacks_constructor.md
+docs/how_to/callbacks_constructor.mdx
+docs/how_to/callbacks_binding.md
+docs/how_to/callbacks_binding.mdx
+docs/how_to/callbacks_backgrounding.md
+docs/how_to/callbacks_backgrounding.mdx
 docs/how_to/binding.md
 docs/how_to/binding.mdx
 docs/how_to/assign.md
