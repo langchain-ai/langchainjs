@@ -4,8 +4,6 @@ sidebar_position: 5
 
 # Contribute Integrations
 
-## TODO rewrite for JS
-
 To begin, make sure you have all the dependencies outlined in guide on [Contributing Code](/docs/contributing/code/).
 
 There are a few different places you can contribute integrations for LangChain:
@@ -19,129 +17,87 @@ In the following sections, we'll walk through how to contribute to each of these
 
 ## Community package
 
-The `@langchain/community` package is in `libs/community` and contains most integrations.
+The `@langchain/community` package is in `libs/langchain-community` and contains most integrations.
 
-It can be installed with `pip install langchain-community`, and exported members can be imported with code like
+It can be installed with e.g. `npm install @langchain/community`, and exported members can be imported with code like
 
-```python
-from langchain_community.chat_models import ChatParrotLink
-from langchain_community.llms import ParrotLinkLLM
-from langchain_community.vectorstores import ParrotLinkVectorStore
+```ts
+import { ChatParrotLink } from "@langchain/community/chat_models/parrot_link";
+import { ParrotLinkLLM } from "@langchain/community/llms/parrot_link";
+import { ParrotLinkVectorStore } from "@langchain/community/vectorstores/parrot_link";
 ```
 
-The `community` package relies on manually-installed dependent packages, so you will see errors
-if you try to import a package that is not installed. In our fake example, if you tried to import `ParrotLinkLLM` without installing `parrot-link-sdk`, you will see an `ImportError` telling you to install it when trying to use it.
+The `@langchain/community` package relies on manually-installed dependent packages, so you will see errors
+if you try to import a package that is not installed. In our fake example, if you tried to import `ParrotLinkLLM` without installing `parrot-link-sdk`, you would see an error telling you that the package failed to import.
 
-Let's say we wanted to implement a chat model for Parrot Link AI. We would create a new file in `libs/community/langchain_community/chat_models/parrot_link.py` with the following code:
+Let's say we wanted to implement a chat model for Parrot Link AI. We would create a new file in `libs/langchain-community/src/chat_models/parrot_link.ts` with something like the following code:
 
-```python
-from langchain_core.language_models.chat_models import BaseChatModel
+```ts
+import {
+  SimpleChatModel,
+} from "@langchain/core/language_models/chat_models";
 
-class ChatParrotLink(BaseChatModel):
-    """ChatParrotLink chat model.
+export class ChatParrotLink extends SimpleChatModel {
 
-    Example:
-        .. code-block:: python
-
-            from langchain_community.chat_models import ChatParrotLink
-
-            model = ChatParrotLink()
-    """
-
-    ...
+  ...
 ```
 
-And we would write tests in:
+Tests are colocated in the `src/` directory, so you could write them in files like the below:
 
-- Unit tests: `libs/community/tests/unit_tests/chat_models/test_parrot_link.py`
-- Integration tests: `libs/community/tests/integration_tests/chat_models/test_parrot_link.py`
+- Unit tests: `libs/langchain-community/src/chat_models/tests/parrot_link.test.ts`
+- Integration tests: `libs/langchain-community/src/chat_models/tests/parrot_link.int.test.ts`
 
-And add documentation to:
+Unit tests should not have any external API calls or require any environment variables.
 
-- `docs/docs/integrations/chat/parrot_link.ipynb`
+You should add documentation to:
+
+- `docs/core_docs/docs/integrations/chat/parrot_link.mdx`
 
 ## Partner package in LangChain repo
 
-Partner packages can be hosted in the `LangChain` monorepo or in an external repo.
+Partner packages can be hosted in the `LangChain` monorepo.
 
-Partner package in the `LangChain` repo is placed in `libs/partners/{partner}`
-and the package source code is in `libs/partners/{partner}/langchain_{partner}`.
+Partner packages in the `LangChain` repo should be placed under `libs/langchain-{partner}`
 
 A package is
-installed by users with `pip install langchain-{partner}`, and the package members
+installed by users with `npm install @langchain/{partner}`, and the package members
 can be imported with code like:
 
-```python
-from langchain_{partner} import X
+```ts
+import { X } from "@langchain/{partner}";
 ```
 
 ### Set up a new package
 
-To set up a new partner package, use the latest version of the LangChain CLI. You can install or update it with:
+To set up a new partner package, you can use [`create-langchain-integration`](https://github.com/langchain-ai/langchainjs/blob/main/libs/create-langchain-integration/),
+a utility that will automatically scaffold a repo with support for both ESM + CJS entrypoints. You can run it like this within the `libs/` folder:
 
 ```bash
-pip install -U langchain-cli
+cd libs/
+npx create-langchain-integration
 ```
 
-Let's say you want to create a new partner package working for a company called Parrot Link AI.
+Then, follow the prompts to name your package.
+The default package will include stubs for a Chat Model, an LLM, and/or a Vector Store. You should delete any of the files you won't use and remove them from `index.ts`.
 
-Then, run the following command to create a new partner package:
+### Dependencies
+
+If your package needs dependencies, such as your company's SDK, you can add them to your package's `package.json` file as normal:
 
 ```bash
-cd libs/partners
-langchain-cli integration new
-> Name: parrot-link
-> Name of integration in PascalCase [ParrotLink]: ParrotLink
+npm install parrot-link-sdk
 ```
-
-This will create a new package in `libs/partners/parrot-link` with the following structure:
-
-```
-libs/partners/parrot-link/
-  langchain_parrot_link/ # folder containing your package
-    ...
-  tests/
-    ...
-  docs/ # bootstrapped docs notebooks, must be moved to /docs in monorepo root
-    ...
-  scripts/ # scripts for CI
-    ...
-  LICENSE
-  README.md # fill out with information about your package
-  Makefile # default commands for CI
-  pyproject.toml # package metadata, mostly managed by Poetry
-  poetry.lock # package lockfile, managed by Poetry
-  .gitignore
-```
-
-### Implement your package
-
-First, add any dependencies your package needs, such as your company's SDK:
-
-```bash
-poetry add parrot-link-sdk
-```
-
-If you need separate dependencies for type checking, you can add them to the `typing` group with:
-
-```bash
-poetry add --group typing types-parrot-link-sdk
-```
-
-Then, implement your package in `libs/partners/parrot-link/langchain_parrot_link`.
-
-By default, this will include stubs for a Chat Model, an LLM, and/or a Vector Store. You should delete any of the files you won't use and remove them from `__init__.py`.
 
 ### Write Unit and Integration Tests
 
-Some basic tests are presented in the `tests/` directory. You should add more tests to cover your package's functionality.
+Some basic tests are presented in the `src/tests/` directory. You should add more tests to cover your package's functionality.
 
 For information on running and implementing tests, see the [Testing guide](/docs/contributing/testing/).
 
 ### Write documentation
 
-Documentation is generated from Jupyter notebooks in the `docs/` directory. You should place the notebooks with examples
-to the relevant `docs/docs/integrations` directory in the monorepo root.
+Documentation is generated from Jupyter notebooks or `.mdx` files in the `docs/` directory. You should place the notebooks with examples
+to the relevant `docs/core_docs/docs/integrations` directory in the monorepo root.
 
 ### (If Necessary) Deprecate community integration
 
@@ -151,51 +107,21 @@ not already in the `community` package), you can skip this step.
 
 Let's pretend we migrated our `ChatParrotLink` chat model from the community package to
 the partner package. We would need to deprecate the old model in the community package.
-
-We would do that by adding a `@deprecated` decorator to the old model as follows, in
-`libs/community/langchain_community/chat_models/parrot_link.py`.
+We can do this using a `@deprecated` TSDoc comment.
 
 Before our change, our chat model might look like this:
 
-```python
-class ChatParrotLink(BaseChatModel):
+```ts
+class ChatParrotLink extends SimpleChatModel {
   ...
 ```
 
 After our change, it would look like this:
 
-```python
-from langchain_core._api.deprecation import deprecated
-
-@deprecated(
-    since="0.0.<next community version>",
-    removal="0.2.0",
-    alternative_import="langchain_parrot_link.ChatParrotLink"
-)
-class ChatParrotLink(BaseChatModel):
+```ts
+/** @deprecated Install and import from `@langchain/parrot-link` instead.
+class ChatParrotLink extends SimpleChatModel {
   ...
 ```
 
 You should do this for _each_ component that you're migrating to the partner package.
-
-### Additional steps
-
-Contributor steps:
-
-- [ ] Add secret names to manual integrations workflow in `.github/workflows/_integration_test.yml`
-- [ ] Add secrets to release workflow (for pre-release testing) in `.github/workflows/_release.yml`
-
-Maintainer steps (Contributors should **not** do these):
-
-- [ ] set up pypi and test pypi projects
-- [ ] add credential secrets to Github Actions
-- [ ] add package to conda-forge
-
-## Partner package in external repo
-
-Partner packages in external repos must be coordinated between the LangChain team and
-the partner organization to ensure that they are maintained and updated.
-
-If you're interested in creating a partner package in an external repo, please start
-with one in the LangChain repo, and then reach out to the LangChain team to discuss
-how to move it to an external repo.

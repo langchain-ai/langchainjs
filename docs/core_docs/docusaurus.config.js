@@ -26,8 +26,8 @@ const config = {
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl,
 
-  onBrokenLinks: "throw", // TODO(brace) change back to "throw" once all todos ported
-  onBrokenMarkdownLinks: "throw", // TODO(brace) change back to "throw" once all todos ported
+  onBrokenLinks: "throw",
+  onBrokenMarkdownLinks: "throw",
 
   plugins: [
     () => ({
