@@ -25,6 +25,17 @@ describe("QdrantVectorStore testcase", () => {
     const results = await qdrantVectorStore.similaritySearch(pageContent, 1);
 
     expect(results[0]).toEqual(new Document({ metadata: {}, pageContent }));
+
+    expect(qdrantVectorStore.maxMarginalRelevanceSearch).toBeDefined();
+
+    const mmrResults = await qdrantVectorStore.maxMarginalRelevanceSearch(
+      pageContent,
+      {
+        k: 1,
+      }
+    );
+    expect(mmrResults.length).toBe(1);
+    expect(mmrResults[0]).toEqual(new Document({ metadata: {}, pageContent }));
   });
 
   test("passing client directly with a model that creates embeddings with a different number of dimensions", async () => {
