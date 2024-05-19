@@ -51,10 +51,10 @@ docs/tutorials/classification.md
 docs/tutorials/classification.mdx
 docs/how_to/tools_prompting.md
 docs/how_to/tools_prompting.mdx
-docs/how_to/tools_as_openai_functions.md
-docs/how_to/tools_as_openai_functions.mdx
-docs/how_to/tools.md
-docs/how_to/tools.mdx
+docs/how_to/tools_builtin.md
+docs/how_to/tools_builtin.mdx
+docs/how_to/tool_calls_multi_modal.md
+docs/how_to/tool_calls_multi_modal.mdx
 docs/how_to/tool_calling.md
 docs/how_to/tool_calling.mdx
 docs/how_to/structured_output.md
