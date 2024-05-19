@@ -127,6 +127,7 @@ export class VoyageEmbeddings
   async embedQuery(text: string): Promise<number[]> {
     const { data } = await this.embeddingWithRetry({
       model: this.modelName,
+      input: text,
       input_type: this.inputType, // Add input_type to the request
     });
 
