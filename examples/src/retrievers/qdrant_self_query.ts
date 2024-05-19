@@ -4,6 +4,7 @@ import { QdrantVectorStore } from "@langchain/qdrant";
 import { QdrantTranslator } from "@langchain/community/structured_query/qdrant";
 import { Document } from "@langchain/core/documents";
 import type { AttributeInfo } from "langchain/chains/query_constructor";
+import { QdrantClient } from "@qdrant/js-client-rest";
 
 /**
  * First, we create a bunch of documents. You can load your own documents here instead.
