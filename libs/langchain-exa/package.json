@@ -1,6 +1,6 @@
 {
   "name": "@langchain/exa",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Exa integration for LangChain.js",
   "type": "module",
   "engines": {
@@ -39,7 +39,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "<0.3.0 || >0.1.0",
+    "@langchain/core": ">0.1.0 <0.3.0",
     "exa-js": "^1.0.12"
   },
   "devDependencies": {

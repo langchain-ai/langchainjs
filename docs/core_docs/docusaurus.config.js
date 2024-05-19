@@ -26,8 +26,8 @@ const config = {
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl,
 
-  onBrokenLinks: "warn", // TODO(brace) change back to "throw" once all todos ported
-  onBrokenMarkdownLinks: "warn", // TODO(brace) change back to "throw" once all todos ported
+  onBrokenLinks: "throw", // TODO(brace) change back to "throw" once all todos ported
+  onBrokenMarkdownLinks: "throw", // TODO(brace) change back to "throw" once all todos ported
 
   plugins: [
     () => ({
@@ -170,7 +170,7 @@ const config = {
             label: "Integrations",
           },
           {
-            href: "https://api.js.langchain.com",
+            href: "https://v02.api.js.langchain.com",
             label: "API Reference",
             position: "left",
           },

@@ -1,5 +1,14 @@
 # How to reindex data to keep your vectorstore in-sync with the underlying data source
 
+:::info Prerequisites
+
+This guide assumes familiarity with the following concepts:
+
+- [Retrieval-augmented generation (RAG)](/docs/tutorials/rag/)
+- [Vector stores](/docs/concepts/#vectorstores)
+
+:::
+
 Here, we will look at a basic indexing workflow using the LangChain indexing API.
 
 The indexing API lets you load and keep in sync documents from any source into a vector store. Specifically, it helps:
@@ -76,3 +85,9 @@ import CodeBlock from "@theme/CodeBlock";
 import QuickStartExample from "@examples/indexes/indexing_api/indexing.ts";
 
 <CodeBlock language="typescript">{QuickStartExample}</CodeBlock>
+
+## Next steps
+
+You've now learned how to use indexing in your RAG pipelines.
+
+Next, check out some of the other sections on retrieval.
