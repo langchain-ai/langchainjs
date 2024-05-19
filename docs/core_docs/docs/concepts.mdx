@@ -507,6 +507,91 @@ In order to solve that we built LangGraph to be this flexible, highly-controllab
 If you are still using AgentExecutor, do not fear: we still have a guide on [how to use AgentExecutor](/docs/how_to/agent_executor).
 It is recommended, however, that you start to transition to [LangGraph](https://github.com/langchain-ai/langgraphjs).
 
+### Callbacks
+
+LangChain provides a callbacks system that allows you to hook into the various stages of your LLM application. This is useful for logging, monitoring, streaming, and other tasks.
+
+You can subscribe to these events by using the `callbacks` argument available throughout the API. This argument is list of handler objects, which are expected to implement one or more of the methods described below in more detail.
+
+#### Callback handlers
+
+`CallbackHandlers` are objects that implement the [`CallbackHandler`](https://api.js.langchain.com/interfaces/langchain_core_callbacks_base.CallbackHandlerMethods.html) interface, which has a method for each event that can be subscribed to.
+The `CallbackManager` will call the appropriate method on each handler when the event is triggered.
+
+```ts
+interface CallbackHandlerMethods {
+  handleAgentAction?(action, runId, parentRunId?, tags?): void | Promise<void>;
+  handleAgentEnd?(action, runId, parentRunId?, tags?): void | Promise<void>;
+  handleChainEnd?(outputs, runId, parentRunId?, tags?, kwargs?): any;
+  handleChainError?(err, runId, parentRunId?, tags?, kwargs?): any;
+  handleChainStart?(
+    chain,
+    inputs,
+    runId,
+    parentRunId?,
+    tags?,
+    metadata?,
+    runType?,
+    name?
+  ): any;
+  handleChatModelStart?(
+    llm,
+    messages,
+    runId,
+    parentRunId?,
+    extraParams?,
+    tags?,
+    metadata?,
+    name?
+  ): any;
+  handleLLMEnd?(output, runId, parentRunId?, tags?): any;
+  handleLLMError?(err, runId, parentRunId?, tags?): any;
+  handleLLMNewToken?(token, idx, runId, parentRunId?, tags?, fields?): any;
+  handleLLMStart?(
+    llm,
+    prompts,
+    runId,
+    parentRunId?,
+    extraParams?,
+    tags?,
+    metadata?,
+    name?
+  ): any;
+  handleRetrieverEnd?(documents, runId, parentRunId?, tags?): any;
+  handleRetrieverError?(err, runId, parentRunId?, tags?): any;
+  handleRetrieverStart?(
+    retriever,
+    query,
+    runId,
+    parentRunId?,
+    tags?,
+    metadata?,
+    name?
+  ): any;
+  handleText?(text, runId, parentRunId?, tags?): void | Promise<void>;
+  handleToolEnd?(output, runId, parentRunId?, tags?): any;
+  handleToolError?(err, runId, parentRunId?, tags?): any;
+  handleToolStart?(
+    tool,
+    input,
+    runId,
+    parentRunId?,
+    tags?,
+    metadata?,
+    name?
+  ): any;
+}
+```
+
+#### Passing callbacks
+
+The `callbacks` property is available on most objects throughout the API (Models, Tools, Agents, etc.) in two different places:
+
+- **Constructor callbacks**: defined in the constructor, e.g. `new ChatAnthropic({ callbacks: [handler], tags: ["a-tag"] })`. In this case, the callbacks will be used for all calls made on that object, and will be scoped to that object only.
+  For example, if you initialize a chat model with constructor callbacks, then use it within a chain, the callbacks will only be invoked for calls to that model.
+- **Request callbacks**: passed into the `invoke` method used for issuing a request. In this case, the callbacks will be used for that specific request only, and all sub-requests that it contains (e.g. a call to a sequence that triggers a call to a model, which uses the same handler passed in the `invoke()` method).
+  In the `invoke()` method, callbacks are passed through the config parameter.
+
 ## Techniques
 
 ### Function/tool calling
