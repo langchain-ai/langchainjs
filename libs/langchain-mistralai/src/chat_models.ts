@@ -59,7 +59,6 @@ import {
 } from "@langchain/core/output_parsers/openai_tools";
 import {
   Runnable,
-  RunnableInterface,
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
@@ -466,7 +465,7 @@ export class ChatMistralAI<
   override bindTools(
     tools: (Record<string, unknown> | StructuredToolInterface)[],
     kwargs?: Partial<CallOptions>
-  ): RunnableInterface<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
+  ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
     const mistralAITools = tools
       ?.map((tool) => {
         if ("lc_namespace" in tool) {

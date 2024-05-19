@@ -29,7 +29,7 @@ import {
 import type { RunnableConfig } from "../runnables/config.js";
 import type { BaseCache } from "../caches.js";
 import { StructuredToolInterface } from "../tools.js";
-import { RunnableInterface } from "../runnables/types.js";
+import { Runnable } from "../runnables/base.js";
 
 /**
  * Represents a serialized chat model.
@@ -147,7 +147,7 @@ export abstract class BaseChatModel<
   bindTools?(
     tools: (StructuredToolInterface | Record<string, unknown>)[],
     kwargs?: Partial<CallOptions>
-  ): RunnableInterface<BaseLanguageModelInput, OutputMessageType, CallOptions>;
+  ): Runnable<BaseLanguageModelInput, OutputMessageType, CallOptions>;
 
   /**
    * Invokes the chat model with a single input.
