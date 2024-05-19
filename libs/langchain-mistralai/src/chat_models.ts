@@ -227,11 +227,15 @@ function convertMessagesToMistralMessages(
     }));
   };
 
-  return messages.map((message) => ({
-    role: getRole(message._getType()),
-    content: getContent(message.content),
-    tool_calls: getTools(message),
-  }));
+  return messages.map((message) => {
+    const toolCalls = getTools(message);
+    const content = toolCalls === undefined ? getContent(message.content) : "";
+    return {
+      role: getRole(message._getType()),
+      content,
+      tool_calls: toolCalls,
+    };
+  });
 }
 
 function mistralAIResponseToChatMessage(
