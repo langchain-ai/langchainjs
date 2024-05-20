@@ -9,6 +9,7 @@ import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   BaseChatModel,
+  LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
@@ -281,6 +282,18 @@ export class ChatGoogleGenerativeAI
         baseUrl: this.baseUrl,
       }
     );
+  }
+
+  protected getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+    const params = this.invocationParams(options);
+    return {
+      ls_provider: "google_genai",
+      ls_model_name: this.model,
+      ls_model_type: "chat",
+      ls_temperature: params.temperature ?? undefined,
+      ls_max_tokens: params.maxOutputTokens ?? undefined,
+      ls_stop: options.stop,
+    };
   }
 
   _combineLLMOutput() {
