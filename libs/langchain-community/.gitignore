@@ -886,6 +886,10 @@ document_loaders/web/sort_xyz_blockchain.cjs
 document_loaders/web/sort_xyz_blockchain.js
 document_loaders/web/sort_xyz_blockchain.d.ts
 document_loaders/web/sort_xyz_blockchain.d.cts
+document_loaders/web/spider.cjs
+document_loaders/web/spider.js
+document_loaders/web/spider.d.ts
+document_loaders/web/spider.d.cts
 document_loaders/web/youtube.cjs
 document_loaders/web/youtube.js
 document_loaders/web/youtube.d.ts

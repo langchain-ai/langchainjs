@@ -98,6 +98,7 @@
     "@smithy/protocol-http": "^3.0.6",
     "@smithy/signature-v4": "^2.0.10",
     "@smithy/util-utf8": "^2.0.0",
+    "@spider-cloud/spider-client": "^0.0.21",
     "@supabase/postgrest-js": "^1.1.1",
     "@supabase/supabase-js": "^2.10.0",
     "@swc/core": "^1.3.90",
@@ -251,6 +252,7 @@
     "@smithy/protocol-http": "^3.0.6",
     "@smithy/signature-v4": "^2.0.10",
     "@smithy/util-utf8": "^2.0.0",
+    "@spider-cloud/spider-client": "^0.0.21",
     "@supabase/postgrest-js": "^1.1.1",
     "@supabase/supabase-js": "^2.10.0",
     "@tensorflow-models/universal-sentence-encoder": "*",
@@ -448,6 +450,9 @@
       "optional": true
     },
     "@smithy/util-utf8": {
+      "optional": true
+    },
+    "@spider-cloud/spider-client": {
       "optional": true
     },
     "@supabase/postgrest-js": {
@@ -2675,6 +2680,15 @@
       "import": "./document_loaders/web/sort_xyz_blockchain.js",
       "require": "./document_loaders/web/sort_xyz_blockchain.cjs"
     },
+    "./document_loaders/web/spider": {
+      "types": {
+        "import": "./document_loaders/web/spider.d.ts",
+        "require": "./document_loaders/web/spider.d.cts",
+        "default": "./document_loaders/web/spider.d.ts"
+      },
+      "import": "./document_loaders/web/spider.js",
+      "require": "./document_loaders/web/spider.cjs"
+    },
     "./document_loaders/web/youtube": {
       "types": {
         "import": "./document_loaders/web/youtube.d.ts",
@@ -3747,6 +3761,10 @@
     "document_loaders/web/sort_xyz_blockchain.js",
     "document_loaders/web/sort_xyz_blockchain.d.ts",
     "document_loaders/web/sort_xyz_blockchain.d.cts",
+    "document_loaders/web/spider.cjs",
+    "document_loaders/web/spider.js",
+    "document_loaders/web/spider.d.ts",
+    "document_loaders/web/spider.d.cts",
     "document_loaders/web/youtube.cjs",
     "document_loaders/web/youtube.js",
     "document_loaders/web/youtube.d.ts",

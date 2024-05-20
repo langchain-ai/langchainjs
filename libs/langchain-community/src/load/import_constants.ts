@@ -153,6 +153,7 @@ export const optionalImportEntrypoints: string[] = [
   "langchain_community/document_loaders/web/sonix_audio",
   "langchain_community/document_loaders/web/confluence",
   "langchain_community/document_loaders/web/couchbase",
+  "langchain_community/document_loaders/web/spider",
   "langchain_community/document_loaders/web/youtube",
   "langchain_community/document_loaders/fs/chatgpt",
   "langchain_community/document_loaders/fs/srt",
