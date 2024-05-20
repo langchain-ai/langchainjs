@@ -1,8 +1,13 @@
----
-hide_table_of_contents: true
----
-
 # How to do retrieval with contextual compression
+
+:::info Prerequisites
+
+This guide assumes familiarity with the following concepts:
+
+- [Retrievers](/docs/concepts/#retrievers)
+- [Retrieval-augmented generation (RAG)](/docs/tutorials/rag)
+
+:::
 
 One challenge with retrieval is that usually you don't know the specific queries your document storage system will face when you ingest data into the system. This means that the information most relevant to a query may be buried in a document with a lot of irrelevant text. Passing that full document through your application can lead to more expensive LLM calls and poorer responses.
 
@@ -58,3 +63,10 @@ This skips the need to add documents to a vector store to perform similarity sea
 import DocumentCompressorPipelineExample from "@examples/retrievers/document_compressor_pipeline.ts";
 
 <CodeBlock language="typescript">{DocumentCompressorPipelineExample}</CodeBlock>
+
+## Next steps
+
+You've now learned a few ways to use contextual compression to remove bad data from your results.
+
+See the individual sections for deeper dives on specific retrievers, the [broader tutorial on RAG](/docs/tutorials/rag), or this section to learn how to
+[create your own custom retriever over any data source](/docs/how_to/custom_retriever/).

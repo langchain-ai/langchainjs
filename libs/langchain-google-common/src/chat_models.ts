@@ -4,6 +4,7 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 
 import {
   BaseChatModel,
+  LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
@@ -15,7 +16,6 @@ import {
 import type { z } from "zod";
 import {
   Runnable,
-  RunnableInterface,
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
@@ -231,6 +231,18 @@ export abstract class ChatGoogleBase<AuthOptions>
     this.buildConnection(fields ?? {}, client);
   }
 
+  protected getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+    const params = this.invocationParams(options);
+    return {
+      ls_provider: "google_vertexai",
+      ls_model_name: this.model,
+      ls_model_type: "chat",
+      ls_temperature: params.temperature ?? undefined,
+      ls_max_tokens: params.maxOutputTokens ?? undefined,
+      ls_stop: options.stop,
+    };
+  }
+
   abstract buildAbstractedClient(
     fields?: GoogleAIBaseLLMInput<AuthOptions>
   ): GoogleAbstractedClient;
@@ -280,7 +292,7 @@ export abstract class ChatGoogleBase<AuthOptions>
   override bindTools(
     tools: (StructuredToolInterface | Record<string, unknown>)[],
     kwargs?: Partial<GoogleAIBaseLanguageModelCallOptions>
-  ): RunnableInterface<
+  ): Runnable<
     BaseLanguageModelInput,
     AIMessageChunk,
     GoogleAIBaseLanguageModelCallOptions

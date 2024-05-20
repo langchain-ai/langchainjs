@@ -22,6 +22,7 @@
     "node-llama-cpp": "npm:/node-llama-cpp",
     "ml-distance": "npm:/ml-distance",
     "pdf-parse": "npm:/pdf-parse",
+    "peggy": "npm:/peggy",
     "readline": "https://deno.land/x/readline@v1.1.0/mod.ts",
     "uuid": "npm:/uuid",
     "youtubei.js": "npm:/youtubei.js",
