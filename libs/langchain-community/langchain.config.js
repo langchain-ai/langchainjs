@@ -48,6 +48,7 @@ export const config = {
     "tools/google_calendar": "tools/google_calendar/index",
     "tools/google_custom_search": "tools/google_custom_search",
     "tools/google_places": "tools/google_places",
+    "tools/google_routes": "tools/google_routes",
     "tools/ifttt": "tools/ifttt",
     "tools/searchapi": "tools/searchapi",
     "tools/searxng_search": "tools/searxng_search",
