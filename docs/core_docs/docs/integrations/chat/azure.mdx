@@ -107,7 +107,7 @@ If you are using the deprecated Azure OpenAI SDK with the `@langchain/azure-open
       azureOpenAIApiVersion: "<api_version>",
     });
    ```
-   Notice that the `AzureChatOpenAI` class now requires the `azureOpenAIApiInstanceName` parameter instead of the `azureOpenAIEndpoint` parameter, and adds the `azureOpenAIApiVersion` parameter to specify the API version.
+   Notice that the constructor now requires the `azureOpenAIApiInstanceName` parameter instead of the `azureOpenAIEndpoint` parameter, and adds the `azureOpenAIApiVersion` parameter to specify the API version.
 
    - If you were using Azure Managed Identity, you now need to use the `azureADTokenProvider` parameter to the constructor instead of `credentials`, see the [Azure Managed Identity](#using-azure-managed-identity) section for more details.
 
