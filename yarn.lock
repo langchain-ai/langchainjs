@@ -8861,6 +8861,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@langchain/anthropic@npm:latest":
+  version: 0.1.21
+  resolution: "@langchain/anthropic@npm:0.1.21"
+  dependencies:
+    "@anthropic-ai/sdk": ^0.21.0
+    "@langchain/core": ">0.1.56 <0.3.0"
+    fast-xml-parser: ^4.3.5
+    zod: ^3.22.4
+    zod-to-json-schema: ^3.22.4
+  checksum: 986b6c771d853653b9c538a995b4bd6c0090ce850d3958a177739ee5d9bb04a2d4cd20c4be5e77b8182943614824aebc66677b9fec4f638174557c03ac37eab2
+  languageName: node
+  linkType: hard
+
 "@langchain/anthropic@workspace:*, @langchain/anthropic@workspace:libs/langchain-anthropic":
   version: 0.0.0-use.local
   resolution: "@langchain/anthropic@workspace:libs/langchain-anthropic"
@@ -9817,6 +9830,21 @@ __metadata:
     zod-to-json-schema: ^3.22.5
   languageName: unknown
   linkType: soft
+
+"@langchain/langgraph@npm:latest":
+  version: 0.0.18
+  resolution: "@langchain/langgraph@npm:0.0.18"
+  dependencies:
+    "@langchain/core": ^0.1.61
+    uuid: ^9.0.1
+  peerDependencies:
+    better-sqlite3: ^9.5.0
+  peerDependenciesMeta:
+    better-sqlite3:
+      optional: true
+  checksum: dc35aaafc3489d8b30863e31c6564fc10be0bc1cd216d5877cc248a46e3ad508f7faf120e7ead675e0ac7f0ea1deae23bbd239ac0020e6a0c46a129a691c62b5
+  languageName: node
+  linkType: hard
 
 "@langchain/mistralai@workspace:*, @langchain/mistralai@workspace:libs/langchain-mistralai":
   version: 0.0.0-use.local
@@ -19225,6 +19253,8 @@ __metadata:
     "@docusaurus/preset-classic": 2.4.3
     "@docusaurus/remark-plugin-npm2yarn": 2.4.3
     "@docusaurus/theme-mermaid": 2.4.3
+    "@langchain/anthropic": latest
+    "@langchain/langgraph": latest
     "@langchain/scripts": "workspace:*"
     "@mdx-js/react": ^1.6.22
     "@supabase/supabase-js": ^2.39.7
@@ -19245,6 +19275,7 @@ __metadata:
     glob: ^10.3.10
     isomorphic-dompurify: ^2.9.0
     json-loader: ^0.5.7
+    langchain: "workspace:*"
     marked: ^12.0.2
     prettier: ^2.7.1
     process: ^0.11.10
