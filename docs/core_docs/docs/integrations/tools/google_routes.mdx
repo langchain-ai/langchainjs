@@ -1,0 +1,30 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# Google Routes Tool
+
+The Google Routes Tool allows your agent to utilize the Google Routes API in order to find a route between
+two or more destinations. You can get a route by walk, transit, car, motorcycle and bicycle.
+
+## Setup
+
+You will need to get an API key from [Google here](https://developers.google.com/maps/documentation/places/web-service/overview)
+and [enable the Routes API](https://console.cloud.google.com/apis/library/routes.googleapis.com). Then, set your API key
+as `process.env.GOOGLE_ROUTES_API_KEY` or pass it in as an `apiKey` constructor argument.
+
+## Usage
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai @langchain/community
+```
+
+import ToolExample from "@examples/tools/google_routes.ts";
+
+<CodeBlock language="typescript">{ToolExample}</CodeBlock>
