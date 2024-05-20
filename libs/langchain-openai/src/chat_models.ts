@@ -583,11 +583,19 @@ export class ChatOpenAI<
       ...this.invocationParams(options),
       messages: messagesMapped,
       stream: true as const,
+      stream_options: {
+        ...this.invocationParams(options).stream_options,
+        include_usage: true,
+      }
     };
     let defaultRole: OpenAIRoleEnum | undefined;
     const streamIterable = await this.completionWithRetry(params, options);
+    let usage: OpenAIClient.Completions.CompletionUsage | undefined = undefined;
     for await (const data of streamIterable) {
       const choice = data?.choices[0];
+      if (data.usage) {
+        usage = data.usage;
+      }
       if (!choice) {
         continue;
       }
@@ -631,6 +639,15 @@ export class ChatOpenAI<
         undefined,
         { chunk: generationChunk }
       );
+    }
+    if (usage) {
+      const generationChunk = new ChatGenerationChunk({
+        message: new AIMessageChunk({ content: "", response_metadata: {
+          usage,
+        } }),
+        text: "",
+      });
+      yield generationChunk;
     }
     if (options.signal?.aborted) {
       throw new Error("AbortError");
