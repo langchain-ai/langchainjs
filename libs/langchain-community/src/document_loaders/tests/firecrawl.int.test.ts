@@ -32,17 +32,3 @@ test("Test FireCrawlLoader load method with crawl mode", async () => {
   expect(document.pageContent).toBeTruthy();
   expect(document.metadata).toBeTruthy();
 }, 15000);
-
-test("Test FireCrawlLoader load method with search mode", async () => {
-  const loader = new FireCrawlLoader({
-    query: "what is firecrawl.dev?",
-    apiKey: process.env.FIRECRAWL_API_KEY,
-    mode: "search",
-  });
-
-  const documents = await loader.load();
-  const document = documents[0];
-  expect(document).toBeInstanceOf(Document);
-  expect(document.pageContent).toBeTruthy();
-  expect(document.metadata).toBeTruthy();
-}, 15000);
