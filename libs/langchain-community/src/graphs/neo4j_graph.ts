@@ -42,10 +42,10 @@ export type PathType = { start: string; type: string; end: string };
 export const BASE_ENTITY_LABEL = "__Entity__";
 
 const INCLUDE_DOCS_QUERY = `
-  MERGE (d:Document {id:$document.metadata.id}) 
-  SET d.text = $document.pageContent 
-  SET d += $document.metadata 
-  WITH d 
+  MERGE (d:Document {id:$document.metadata.id})
+  SET d.text = $document.pageContent
+  SET d += $document.metadata
+  WITH d
 `;
 
 /**
@@ -262,7 +262,7 @@ export class Neo4jGraph {
       if (!constraintExists) {
         await this.query(`
           CREATE CONSTRAINT IF NOT EXISTS FOR (b:${BASE_ENTITY_LABEL})
-          REQUIRE b.id IS UNIQUE;          
+          REQUIRE b.id IS UNIQUE;
         `);
         await this.refreshSchema();
       }
