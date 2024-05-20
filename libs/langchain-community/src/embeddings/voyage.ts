@@ -54,7 +54,7 @@ export class VoyageEmbeddings
   extends Embeddings
   implements VoyageEmbeddingsParams
 {
-  modelName = "voyage-2";
+  modelName = "voyage-01";
 
   batchSize = 8;
 
