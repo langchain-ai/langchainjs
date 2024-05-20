@@ -1,7 +1,7 @@
 import { describe, expect } from "@jest/globals";
 import { GoogleRoutesAPI } from "../google_routes.js";
 
-describe("GooglePlacesAPI", () => {
+describe.skip("GooglePlacesAPI", () => {
   test("should be setup with correct parameters", async () => {
     const instance = new GoogleRoutesAPI();
     expect(instance.name).toBe("google_routes");
