@@ -1,9 +1,9 @@
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
-import { AttributeInfo } from "langchain/schema/query_constructor";
 import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
 import { SelfQueryRetriever } from "langchain/retrievers/self_query";
 import { FunctionalTranslator } from "@langchain/core/structured_query";
 import { Document } from "@langchain/core/documents";
+import type { AttributeInfo } from "langchain/chains/query_constructor";
 
 /**
  * First, we create a bunch of documents. You can load your own documents here instead.

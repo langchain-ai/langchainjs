@@ -1,5 +1,13 @@
 # How to do query validation
 
+:::info Prerequisites
+
+This guide assumes familiarity with the following:
+
+- [Question answering over SQL data](/docs/tutorials/sql_qa)
+
+:::
+
 Perhaps the most error-prone part of any SQL chain or agent is writing valid and safe SQL queries.
 In this guide we'll go over some strategies for validating our queries and handling invalid queries.
 
@@ -12,7 +20,7 @@ import IntegrationInstallTooltip from "@mdx_components/integration_install_toolt
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash
-npm install langchain @langchain/community @langchain/openai typeorm sqlite3
+npm install @langchain/community @langchain/openai typeorm sqlite3
 ```
 
 ```bash
@@ -44,3 +52,9 @@ Suppose we have the following SQL query chain:
 import FullExample from "@examples/use_cases/sql/query_checking.ts";
 
 <CodeBlock language="typescript">{FullExample}</CodeBlock>
+
+## Next steps
+
+You've now learned about some strategies to validate generated SQL queries.
+
+Next, check out some of the other guides in this section, like [how to query over large databases](/docs/how_to/sql_large_db).

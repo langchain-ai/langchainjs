@@ -15,7 +15,6 @@ import {
 import type { z } from "zod";
 import {
   Runnable,
-  RunnableInterface,
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
@@ -280,7 +279,7 @@ export abstract class ChatGoogleBase<AuthOptions>
   override bindTools(
     tools: (StructuredToolInterface | Record<string, unknown>)[],
     kwargs?: Partial<GoogleAIBaseLanguageModelCallOptions>
-  ): RunnableInterface<
+  ): Runnable<
     BaseLanguageModelInput,
     AIMessageChunk,
     GoogleAIBaseLanguageModelCallOptions
