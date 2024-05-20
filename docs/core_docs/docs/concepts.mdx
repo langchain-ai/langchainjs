@@ -43,14 +43,14 @@ The main `langchain` package contains chains, agents, and retrieval strategies t
 These are NOT third party integrations.
 All chains, agents, and retrieval strategies here are NOT specific to any one integration, but rather generic across all integrations.
 
-### [LangGraph](/docs/langgraph)
+### [LangGraph.js](https://langchain-ai.github.io/langgraphjs/)
 
-Not currently in this repo, `langgraph` is an extension of `langchain` aimed at
+LangGraph.js is an extension of `langchain` aimed at
 building robust and stateful multi-actor applications with LLMs by modeling steps as edges and nodes in a graph.
 
 LangGraph exposes high level interfaces for creating common types of agents, as well as a low-level API for constructing more contr
 
-### [LangSmith](/docs/langsmith)
+### [LangSmith](https://docs.smith.langchain.com)
 
 A developer platform that lets you debug, test, evaluate, and monitor LLM applications.
 
@@ -98,12 +98,9 @@ something is happening, or even just to debug your chain. You can stream interme
 Input and output schemas give every LCEL chain schemas inferred from the structure of your chain. This can be used for validation of inputs and outputs,
 and is an integral part of LangServe.
 
-[**Seamless LangSmith tracing**](/docs/langsmith)
+[**Seamless LangSmith tracing**](https://docs.smith.langchain.com)
 As your chains get more and more complex, it becomes increasingly important to understand what exactly is happening at every step.
-With LCEL, **all** steps are automatically logged to [LangSmith](/docs/langsmith/) for maximum observability and debuggability.
-
-[**Seamless LangServe deployment**](https://www.langchain.com/langserve/)
-Any chain created with LCEL can be easily deployed using [LangServe](https://www.langchain.com/langserve/).
+With LCEL, **all** steps are automatically logged to [LangSmith](https://docs.smith.langchain.com) for maximum observability and debuggability.
 
 ### Interface
 
