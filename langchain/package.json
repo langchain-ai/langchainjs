@@ -1533,7 +1533,7 @@
     "@langchain/community": "~0.0.47",
     "@langchain/core": "~0.1.60",
     "@langchain/openai": "~0.0.28",
-    "@langchain/textsplitters": "~0.0.0",
+    "@langchain/textsplitters": "0.0.0",
     "binary-extensions": "^2.2.0",
     "js-tiktoken": "^1.0.12",
     "js-yaml": "^4.1.0",

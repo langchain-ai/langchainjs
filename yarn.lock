@@ -9981,7 +9981,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/textsplitters@workspace:libs/langchain-textsplitters, @langchain/textsplitters@~0.0.0":
+"@langchain/textsplitters@npm:0.0.0":
+  version: 0.0.0
+  resolution: "@langchain/textsplitters@npm:0.0.0"
+  dependencies:
+    "@langchain/core": ~0.1
+    js-tiktoken: ^1.0.11
+  checksum: 13034a309943adb484bea46015b51744a424f7645fe00401899eb0536c1a94ecd15dd0f144a279131fae7c054f1b4eb3a35c3a9dac05ef641263c1f6f27d4538
+  languageName: node
+  linkType: hard
+
+"@langchain/textsplitters@workspace:libs/langchain-textsplitters":
   version: 0.0.0-use.local
   resolution: "@langchain/textsplitters@workspace:libs/langchain-textsplitters"
   dependencies:
@@ -26289,7 +26299,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"js-tiktoken@npm:^1.0.12":
+"js-tiktoken@npm:^1.0.11, js-tiktoken@npm:^1.0.12":
   version: 1.0.12
   resolution: "js-tiktoken@npm:1.0.12"
   dependencies:
@@ -26770,7 +26780,7 @@ __metadata:
     "@langchain/core": ~0.1.60
     "@langchain/openai": ~0.0.28
     "@langchain/scripts": ~0.0
-    "@langchain/textsplitters": ~0.0.0
+    "@langchain/textsplitters": 0.0.0
     "@mendable/firecrawl-js": ^0.0.13
     "@notionhq/client": ^2.2.10
     "@pinecone-database/pinecone": ^1.1.0
