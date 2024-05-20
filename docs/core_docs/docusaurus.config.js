@@ -13,6 +13,8 @@ const mdxComponentsPath = path.resolve(__dirname, "docs", "mdx_components");
 const baseLightCodeBlockTheme = require("prism-react-renderer/themes/vsLight");
 const baseDarkCodeBlockTheme = require("prism-react-renderer/themes/vsDark");
 
+const baseUrl = "/v0.2/";
+
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: "🦜️🔗 Langchain",
@@ -22,7 +24,7 @@ const config = {
   url: "https://js.langchain.com",
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: "/",
+  baseUrl,
 
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "throw",
@@ -51,7 +53,7 @@ const config = {
           rules: [
             {
               test: examplesPath,
-              use: ["json-loader", "./code-block-loader.js"],
+              use: ["json-loader", "./scripts/code-block-loader.js"],
             },
             {
               test: /\.ya?ml$/,
@@ -95,6 +97,9 @@ const config = {
                 // eslint-disable-next-line no-param-reassign
                 subItem.label = subItem.label.replace(/\//g, "/\u200B");
               }
+              if (args.item.className) {
+                subItem.className = args.item.className;
+              }
             });
             return sidebarItems;
           },
@@ -130,6 +135,11 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+      announcementBar: {
+        content:
+          'LangChain 0.2 is out! Leave feedback on the v0.2 docs <a href="https://github.com/langchain-ai/langchainjs/discussions/5386">here</a>. You can view the v0.1 docs <a href="/v0.1/docs/get_started/introduction/">here</a>.',
+        isCloseable: true,
+      },
       prism: {
         theme: {
           ...baseLightCodeBlockTheme,
@@ -154,24 +164,13 @@ const config = {
         },
         items: [
           {
-            to: "/docs/get_started/introduction",
-            label: "Docs",
-            position: "left",
-          },
-          {
-            type: "docSidebar",
-            position: "left",
-            sidebarId: "use_cases",
-            label: "Use cases",
-          },
-          {
             type: "docSidebar",
             position: "left",
             sidebarId: "integrations",
             label: "Integrations",
           },
           {
-            href: "https://api.js.langchain.com",
+            href: "https://v02.api.js.langchain.com",
             label: "API Reference",
             position: "left",
           },
@@ -200,6 +199,21 @@ const config = {
           },
           {
             type: "dropdown",
+            label: "v0.2",
+            position: "right",
+            items: [
+              {
+                label: "v0.2",
+                href: "/docs/introduction",
+              },
+              {
+                label: "v0.1",
+                href: "https://js.langchain.com/v0.1/docs/get_started/introduction",
+              },
+            ],
+          },
+          {
+            type: "dropdown",
             label: "🦜🔗",
             position: "right",
             items: [
@@ -220,7 +234,7 @@ const config = {
                 label: "LangServe",
               },
               {
-                href: "https://python.langchain.com/en/latest/",
+                href: "https://python.langchain.com/",
                 label: "Python Docs",
               },
             ],
@@ -292,14 +306,14 @@ const config = {
         // this is linked to erick@langchain.dev currently
         apiKey: "180851bbb9ba0ef6be9214849d6efeaf",
 
-        indexName: "js-langchain",
+        indexName: "js-langchain-0.2",
 
-        contextualSearch: true,
+        contextualSearch: false,
       },
     }),
 
   scripts: [
-    "/js/google_analytics.js",
+    baseUrl + "js/google_analytics.js",
     {
       src: "https://www.googletagmanager.com/gtag/js?id=G-TVSL7JBE9Y",
       async: true,

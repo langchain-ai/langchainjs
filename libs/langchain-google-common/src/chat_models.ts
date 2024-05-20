@@ -15,7 +15,6 @@ import {
 import type { z } from "zod";
 import {
   Runnable,
-  RunnableInterface,
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
@@ -186,6 +185,12 @@ export abstract class ChatGoogleBase<AuthOptions>
     return "ChatGoogle";
   }
 
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      authOptions: "GOOGLE_AUTH_OPTIONS",
+    };
+  }
+
   lc_serializable = true;
 
   // Set based on modelName
@@ -274,7 +279,7 @@ export abstract class ChatGoogleBase<AuthOptions>
   override bindTools(
     tools: (StructuredToolInterface | Record<string, unknown>)[],
     kwargs?: Partial<GoogleAIBaseLanguageModelCallOptions>
-  ): RunnableInterface<
+  ): Runnable<
     BaseLanguageModelInput,
     AIMessageChunk,
     GoogleAIBaseLanguageModelCallOptions

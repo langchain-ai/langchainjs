@@ -147,4 +147,10 @@ export interface LangChainConfig {
    * @returns {string}
    */
   abs: (relativePath: string) => string;
+  /**
+   * Additional paths to add to the gitignore file.
+   * @default undefined
+   * @type {string[]}
+   */
+  additionalGitignorePaths?: string[];
 }

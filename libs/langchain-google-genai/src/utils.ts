@@ -9,6 +9,7 @@ import {
   BaseMessage,
   ChatMessage,
   MessageContent,
+  MessageContentComplex,
   isBaseMessage,
 } from "@langchain/core/messages";
 import {
@@ -46,6 +47,19 @@ export function convertAuthorToRole(author: string) {
     default:
       throw new Error(`Unknown / unsupported author: ${author}`);
   }
+}
+
+function messageContentMedia(content: MessageContentComplex): Part {
+  if ("mimeType" in content && "data" in content) {
+    return {
+      inlineData: {
+        mimeType: content.mimeType,
+        data: content.data,
+      },
+    };
+  }
+
+  throw new Error("Invalid media content");
 }
 
 export function convertMessageContentToParts(
@@ -91,6 +105,8 @@ export function convertMessageContentToParts(
           mimeType,
         },
       };
+    } else if (c.type === "media") {
+      return messageContentMedia(c);
     }
     throw new Error(`Unknown content type ${(c as { type: string }).type}`);
   });

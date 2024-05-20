@@ -7,7 +7,7 @@ hide_table_of_contents: true
 
 When loading content from a website, we may want to process load all URLs on a page.
 
-For example, let's look at the [LangChain.js introduction](https://js.langchain.com/docs/get_started/introduction) docs.
+For example, let's look at the [LangChain.js introduction](/docs/introduction) docs.
 
 This has many interesting child pages that we may want to load, split, and later retrieve in bulk.
 
@@ -38,14 +38,14 @@ npm i html-to-text
 import { compile } from "html-to-text";
 import { RecursiveUrlLoader } from "langchain/document_loaders/web/recursive_url";
 
-const url = "https://js.langchain.com/docs/get_started/introduction";
+const url = "/docs/introduction";
 
 const compiledConvert = compile({ wordwrap: 130 }); // returns (text: string) => string;
 
 const loader = new RecursiveUrlLoader(url, {
   extractor: compiledConvert,
   maxDepth: 1,
-  excludeDirs: ["https://js.langchain.com/docs/api/"],
+  excludeDirs: ["/docs/api/"],
 });
 
 const docs = await loader.load();

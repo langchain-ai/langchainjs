@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "0.1.61",
+  "version": "0.2.0",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -43,7 +43,7 @@
     "ansi-styles": "^5.0.0",
     "camelcase": "6",
     "decamelize": "1.2.0",
-    "js-tiktoken": "^1.0.8",
+    "js-tiktoken": "^1.0.12",
     "langsmith": "~0.1.7",
     "ml-distance": "^4.0.0",
     "mustache": "^4.2.0",
@@ -158,6 +158,15 @@
       "import": "./documents.js",
       "require": "./documents.cjs"
     },
+    "./document_loaders/base": {
+      "types": {
+        "import": "./document_loaders/base.d.ts",
+        "require": "./document_loaders/base.d.cts",
+        "default": "./document_loaders/base.d.ts"
+      },
+      "import": "./document_loaders/base.js",
+      "require": "./document_loaders/base.cjs"
+    },
     "./embeddings": {
       "types": {
         "import": "./embeddings.d.ts",
@@ -175,6 +184,15 @@
       },
       "import": "./example_selectors.js",
       "require": "./example_selectors.cjs"
+    },
+    "./indexing": {
+      "types": {
+        "import": "./indexing.d.ts",
+        "require": "./indexing.d.cts",
+        "default": "./indexing.d.ts"
+      },
+      "import": "./indexing.js",
+      "require": "./indexing.cjs"
     },
     "./language_models/base": {
       "types": {
@@ -604,6 +622,10 @@
     "documents.js",
     "documents.d.ts",
     "documents.d.cts",
+    "document_loaders/base.cjs",
+    "document_loaders/base.js",
+    "document_loaders/base.d.ts",
+    "document_loaders/base.d.cts",
     "embeddings.cjs",
     "embeddings.js",
     "embeddings.d.ts",
@@ -612,6 +634,10 @@
     "example_selectors.js",
     "example_selectors.d.ts",
     "example_selectors.d.cts",
+    "indexing.cjs",
+    "indexing.js",
+    "indexing.d.ts",
+    "indexing.d.cts",
     "language_models/base.cjs",
     "language_models/base.js",
     "language_models/base.d.ts",

@@ -40,7 +40,8 @@ type RunnablePassthroughFunc<RunInput = any> =
  * );
  * ```
  */
-export class RunnablePassthrough<RunInput> extends Runnable<
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export class RunnablePassthrough<RunInput = any> extends Runnable<
   RunInput,
   RunInput
 > {

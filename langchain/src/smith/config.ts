@@ -30,10 +30,14 @@ export type EvaluatorInputFormatter = ({
   run: Run;
 }) => EvaluatorInputs;
 
-export type DynamicRunEvaluatorParams = {
-  input: Record<string, unknown>;
-  prediction?: Record<string, unknown>;
-  reference?: Record<string, unknown>;
+export type DynamicRunEvaluatorParams<
+  Input extends Record<string, any> = Record<string, unknown>,
+  Prediction extends Record<string, any> = Record<string, unknown>,
+  Reference extends Record<string, any> = Record<string, unknown>
+> = {
+  input: Input;
+  prediction?: Prediction;
+  reference?: Reference;
   run: Run;
   example?: Example;
 };

@@ -197,4 +197,10 @@ export declare interface AzureOpenAIInput {
    * will be result in the endpoint URL: https://westeurope.api.cognitive.microsoft.com/openai/deployments/{DeploymentName}/
    */
   azureOpenAIBasePath?: string;
+
+  /**
+   * A function that returns an access token for Microsoft Entra (formerly known as Azure Active Directory),
+   * which will be invoked on every request.
+   */
+  azureADTokenProvider?: () => Promise<string>;
 }

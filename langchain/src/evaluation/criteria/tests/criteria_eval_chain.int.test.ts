@@ -1,7 +1,7 @@
 import { expect, test } from "@jest/globals";
 import { PromptTemplate } from "@langchain/core/prompts";
+import { ChatOpenAI } from "@langchain/openai";
 import { PRINCIPLES } from "../../../chains/index.js";
-import { ChatAnthropic } from "../../../chat_models/anthropic.js";
 import { loadEvaluator } from "../../loader.js";
 
 test("Test CriteriaEvalChain", async () => {
@@ -88,7 +88,7 @@ test("Test Using Constitutional Principles ", async () => {
 });
 
 test("Test Configuring the LLM", async () => {
-  const model = new ChatAnthropic();
+  const model = new ChatOpenAI();
 
   const chain = await loadEvaluator("criteria", {
     criteria: PRINCIPLES.harmful1,
