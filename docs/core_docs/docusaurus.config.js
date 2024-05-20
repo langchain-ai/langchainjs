@@ -26,8 +26,8 @@ const config = {
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl,
 
-  onBrokenLinks: "warn", // TODO(brace) change back to "throw" once all todos ported
-  onBrokenMarkdownLinks: "warn", // TODO(brace) change back to "throw" once all todos ported
+  onBrokenLinks: "throw",
+  onBrokenMarkdownLinks: "throw",
 
   plugins: [
     () => ({
@@ -137,7 +137,7 @@ const config = {
     ({
       announcementBar: {
         content:
-          'You are viewing the <strong>preview</strong> v0.2 docs. View the <strong>stable</strong> v0.1 docs <a href="/v0.1/docs/get_started/introduction/">here</a>. Leave feedback on the v0.2 docs <a href="https://github.com/langchain-ai/langchainjs/discussions/5386">here</a>.',
+          'LangChain 0.2 is out! Leave feedback on the v0.2 docs <a href="https://github.com/langchain-ai/langchainjs/discussions/5386">here</a>. You can view the v0.1 docs <a href="/v0.1/docs/get_started/introduction/">here</a>.',
         isCloseable: true,
       },
       prism: {
@@ -170,7 +170,7 @@ const config = {
             label: "Integrations",
           },
           {
-            href: "https://api.js.langchain.com",
+            href: "https://v02.api.js.langchain.com",
             label: "API Reference",
             position: "left",
           },

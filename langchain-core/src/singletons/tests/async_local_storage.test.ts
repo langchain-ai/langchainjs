@@ -131,3 +131,31 @@ test("Config should be automatically populated after setting global async local 
     events.filter((event) => event.event === "on_llm_start").length
   ).toEqual(1);
 });
+
+test("Runnable streamEvents method with streaming nested in a RunnableLambda", async () => {
+  AsyncLocalStorageProviderSingleton.initializeGlobalInstance(
+    new AsyncLocalStorage()
+  );
+  const chat = new FakeListChatModel({
+    responses: ["Hello"],
+  });
+  const myFunc = async (input: string) => {
+    for await (const _ of await chat.stream(input)) {
+      // no-op
+    }
+  };
+
+  const myNestedLambda = RunnableLambda.from(myFunc);
+
+  const events = [];
+  for await (const event of myNestedLambda.streamEvents("hello", {
+    version: "v1",
+  })) {
+    console.log(event);
+    events.push(event);
+  }
+  const chatModelStreamEvent = events.find((event) => {
+    return event.event === "on_llm_stream";
+  });
+  expect(chatModelStreamEvent).toBeDefined();
+});

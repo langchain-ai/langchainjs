@@ -28,6 +28,6 @@
     "typescript": "^5.0.0"
   },
   "resolutions": {
-    "@langchain/core": "0.2.0-rc.0"
+    "@langchain/core": "~0.2.0"
   }
 }
