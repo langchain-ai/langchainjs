@@ -1,4 +1,4 @@
-import { SpiderLoader } from "langchain/document_loaders/web/spider";
+import { SpiderLoader } from "@langchain/community/document_loaders/web/spider";
 
 const loader = new SpiderLoader({
   url: "https://spider.cloud", // The URL to scrape
