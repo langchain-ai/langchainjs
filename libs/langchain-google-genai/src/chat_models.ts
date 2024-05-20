@@ -192,10 +192,6 @@ export class ChatGoogleGenerativeAI
 
   apiKey?: string;
 
-  apiVersion?: string = "v1";
-
-  baseUrl?: string = "https://generativeai.googleapis.com";
-
   streaming = false;
 
   private client: GenerativeModel;
@@ -278,8 +274,8 @@ export class ChatGoogleGenerativeAI
         },
       },
       {
-        apiVersion: this.apiVersion,
-        baseUrl: this.baseUrl,
+        apiVersion: fields?.apiVersion,
+        baseUrl: fields?.baseUrl,
       }
     );
   }
