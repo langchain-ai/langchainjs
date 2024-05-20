@@ -402,7 +402,7 @@ export class BedrockLLMInputOutputAdapter {
       }
     } else if (provider === "cohere") {
       if (responseBody.event_type === "stream-start") {
-        return parseMessage(responseBody.message, true);
+        return parseMessageCohere(responseBody.message, true);
       } else if (
         responseBody.event_type === "text-generation" &&
         typeof responseBody?.text === "string"
@@ -414,7 +414,7 @@ export class BedrockLLMInputOutputAdapter {
           text: responseBody.text,
         });
       } else if (responseBody.event_type === "search-queries-generation") {
-        return parseMessage(responseBody);
+        return parseMessageCohere(responseBody);
       } else if (
         responseBody.event_type === "stream-end" &&
         responseBody.response !== undefined &&
@@ -434,7 +434,7 @@ export class BedrockLLMInputOutputAdapter {
           responseBody.finish_reason === "COMPLETE" ||
           responseBody.finish_reason === "MAX_TOKENS"
         ) {
-          return parseMessage(responseBody);
+          return parseMessageCohere(responseBody);
         } else {
           return undefined;
         }
@@ -478,6 +478,34 @@ function parseMessage(responseBody: any, asChunk?: boolean): ChatGeneration {
         additional_kwargs: { id },
       }),
       text: typeof parsedContent === "string" ? parsedContent : "",
+      generationInfo,
+    };
+  }
+}
+
+function parseMessageCohere(
+  responseBody: any,
+  asChunk?: boolean
+): ChatGeneration {
+  const { text, ...generationInfo } = responseBody;
+  let parsedContent = text;
+  if (typeof text !== "string") {
+    parsedContent = "";
+  }
+  if (asChunk) {
+    return new ChatGenerationChunk({
+      message: new AIMessageChunk({
+        content: parsedContent,
+      }),
+      text: parsedContent,
+      generationInfo,
+    });
+  } else {
+    return {
+      message: new AIMessage({
+        content: parsedContent,
+      }),
+      text: parsedContent,
       generationInfo,
     };
   }
