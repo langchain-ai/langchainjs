@@ -125,8 +125,8 @@ function createTravelInstructions(stepsOverview: any): travelInstructions[] {
   return stepsOverview.multiModalSegments.map((segment: any) => ({
     ...(segment.navigationInstruction
       ? {
-        navigationInstruction: segment.navigationInstruction.instructions,
-      }
+          navigationInstruction: segment.navigationInstruction.instructions,
+        }
       : {}),
     travelMode: segment.travelMode,
   }));
@@ -320,9 +320,7 @@ export class GoogleRoutesAPI extends StructuredTool {
       extraComputations: z
         .array(z.enum(["TOLLS"]))
         .optional()
-        .describe(
-          `Calculate tolls for the route.`
-        ),
+        .describe(`Calculate tolls for the route.`),
     });
   }
 
