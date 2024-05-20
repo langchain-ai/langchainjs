@@ -104,14 +104,17 @@ If you are using the deprecated Azure OpenAI SDK with the `@langchain/azure-open
    import { AzureOpenAIEmbeddings } from "@langchain/openai";
    ```
 3. Update your code to use the new `AzureOpenAIEmbeddings` class and pass the required parameters:
+
    ```typescript
-    const model = new AzureOpenAIEmbeddings({
-      azureOpenAIApiKey: "<your_key>",
-      azureOpenAIApiInstanceName: "<your_instance_name>",
-      azureOpenAIApiEmbeddingsDeploymentName: "<your_embeddings_deployment_name>",
-      azureOpenAIApiVersion: "<api_version>",
-    });
+   const model = new AzureOpenAIEmbeddings({
+     azureOpenAIApiKey: "<your_key>",
+     azureOpenAIApiInstanceName: "<your_instance_name>",
+     azureOpenAIApiEmbeddingsDeploymentName:
+       "<your_embeddings_deployment_name>",
+     azureOpenAIApiVersion: "<api_version>",
+   });
    ```
+
    Notice that the constructor now requires the `azureOpenAIApiInstanceName` parameter instead of the `azureOpenAIEndpoint` parameter, and adds the `azureOpenAIApiVersion` parameter to specify the API version.
 
    - If you were using Azure Managed Identity, you now need to use the `azureADTokenProvider` parameter to the constructor instead of `credentials`, see the [Azure Managed Identity](#using-azure-managed-identity) section for more details.

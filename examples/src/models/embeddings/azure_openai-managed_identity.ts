@@ -1,8 +1,14 @@
-import { DefaultAzureCredential, getBearerTokenProvider } from "@azure/identity";
+import {
+  DefaultAzureCredential,
+  getBearerTokenProvider,
+} from "@azure/identity";
 import { AzureOpenAIEmbeddings } from "@langchain/openai";
 
 const credentials = new DefaultAzureCredential();
-const azureADTokenProvider = getBearerTokenProvider(credentials, 'https://cognitiveservices.azure.com/.default');
+const azureADTokenProvider = getBearerTokenProvider(
+  credentials,
+  "https://cognitiveservices.azure.com/.default"
+);
 
 const model = new AzureOpenAIEmbeddings({
   azureADTokenProvider,
