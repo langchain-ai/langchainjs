@@ -83,7 +83,7 @@ export class LangChainTracer
         if (!current || visited.has(current.id)) continue;
         visited.add(current.id);
 
-        // @ts-expect-error KVMap is not assignable to Run["events"]
+        // @ts-expect-error Types of property 'events' are incompatible.
         this.runMap.set(current.id, current);
         if (current.child_runs) {
           queue.push(...current.child_runs);
@@ -91,6 +91,8 @@ export class LangChainTracer
       }
 
       this.client = traceableTree.client ?? this.client;
+      this.projectName = traceableTree.project_name ?? this.projectName;
+      this.exampleId = traceableTree.reference_example_id ?? this.exampleId;
     }
   }
 
