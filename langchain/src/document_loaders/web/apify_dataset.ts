@@ -14,8 +14,15 @@ import {
 } from "@langchain/core/utils/async_caller";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { BaseDocumentLoader, DocumentLoader } from "../base.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/web/apify_dataset",
+  newPackageName: "@langchain/community",
+});
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/apify_dataset" instead. This entrypoint will be removed in 0.3.0.
  * A type that represents a function that takes a single object (an Apify
  * dataset item) and converts it to an instance of the Document class.
  *
@@ -37,6 +44,7 @@ export interface ApifyDatasetLoaderConfig<Metadata extends Record<string, any>>
 }
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/apify_dataset" instead. This entrypoint will be removed in 0.3.0.
  * A class that extends the BaseDocumentLoader and implements the
  * DocumentLoader interface. It represents a document loader that loads
  * documents from an Apify dataset.

@@ -279,24 +279,6 @@ kwargs:
 "
 `;
 
-exports[`serialize + deserialize llm with optional deps 1`] = `
-"lc: 1
-type: constructor
-id:
-  - langchain
-  - llms
-  - cohere
-  - Cohere
-kwargs:
-  temperature: 0.5
-  cohere_api_key:
-    lc: 1
-    type: secret
-    id:
-      - COHERE_API_KEY
-"
-`;
-
 exports[`serialize + deserialize llmchain with list output parser 1`] = `
 "lc: 1
 type: constructor

@@ -9,7 +9,7 @@ const ernieTurbo = new ChatBaiduWenxin({
 
 // Use ERNIE-Bot
 const ernie = new ChatBaiduWenxin({
-  model: "ERNIE-Bot", // Available models: ERNIE-Bot, ERNIE-Bot-turbo, ERNIE-Bot-4, ERNIE-Speed-8K, ERNIE-Speed-128K
+  model: "ERNIE-Bot", // Available models are shown above
   temperature: 1,
   baiduApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.BAIDU_API_KEY
   baiduSecretKey: "YOUR-SECRET-KEY", // In Node.js defaults to process.env.BAIDU_SECRET_KEY
@@ -17,7 +17,7 @@ const ernie = new ChatBaiduWenxin({
 
 const messages = [new HumanMessage("Hello")];
 
-let res = await ernieTurbo.call(messages);
+let res = await ernieTurbo.invoke(messages);
 /*
 AIChatMessage {
   text: 'Hello! How may I assist you today?',
@@ -27,7 +27,7 @@ AIChatMessage {
 }
 */
 
-res = await ernie.call(messages);
+res = await ernie.invoke(messages);
 /*
 AIChatMessage {
   text: 'Hello! How may I assist you today?',

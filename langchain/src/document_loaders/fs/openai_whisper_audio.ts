@@ -2,10 +2,18 @@ import { type ClientOptions, OpenAIClient, toFile } from "@langchain/openai";
 
 import { Document } from "@langchain/core/documents";
 import { BufferLoader } from "./buffer.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/fs/openai_whisper_audio",
+  newPackageName: "@langchain/community",
+});
 
 const MODEL_NAME = "whisper-1";
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/fs/openai_whisper_audio" instead. This entrypoint will be removed in 0.3.0.
+ *
  * @example
  * ```typescript
  * const loader = new OpenAIWhisperAudio(

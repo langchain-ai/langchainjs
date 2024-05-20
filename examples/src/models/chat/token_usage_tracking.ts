@@ -1,49 +1,16 @@
 import { ChatOpenAI } from "@langchain/openai";
 
 const chatModel = new ChatOpenAI({
-  model: "gpt-4",
-  callbacks: [
-    {
-      handleLLMEnd(output) {
-        console.log(JSON.stringify(output, null, 2));
-      },
-    },
-  ],
+  model: "gpt-4-turbo",
 });
 
-await chatModel.invoke("Tell me a joke.");
+const res = await chatModel.invoke("Tell me a joke.");
+
+console.log(res.response_metadata);
 
 /*
   {
-    "generations": [
-      [
-        {
-          "text": "Why don't scientists trust atoms?\n\nBecause they make up everything!",
-          "message": {
-            "lc": 1,
-            "type": "constructor",
-            "id": [
-              "langchain_core",
-              "messages",
-              "AIMessage"
-            ],
-            "kwargs": {
-              "content": "Why don't scientists trust atoms?\n\nBecause they make up everything!",
-              "additional_kwargs": {}
-            }
-          },
-          "generationInfo": {
-            "finish_reason": "stop"
-          }
-        }
-      ]
-    ],
-    "llmOutput": {
-      "tokenUsage": {
-        "completionTokens": 13,
-        "promptTokens": 12,
-        "totalTokens": 25
-      }
-    }
+    tokenUsage: { completionTokens: 15, promptTokens: 12, totalTokens: 27 },
+    finish_reason: 'stop'
   }
 */

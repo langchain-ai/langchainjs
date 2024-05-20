@@ -20,6 +20,7 @@ import {
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   BaseChatModel,
+  LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
 import {
@@ -32,7 +33,6 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
 import {
   Runnable,
-  RunnableInterface,
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
@@ -60,9 +60,20 @@ type AnthropicStreamingMessageCreateParams =
   Anthropic.MessageCreateParamsStreaming;
 type AnthropicMessageStreamEvent = Anthropic.MessageStreamEvent;
 type AnthropicRequestOptions = Anthropic.RequestOptions;
-
+type AnthropicToolChoice =
+  | {
+      type: "tool";
+      name: string;
+    }
+  | "any"
+  | "auto";
 interface ChatAnthropicCallOptions extends BaseLanguageModelCallOptions {
   tools?: (StructuredToolInterface | AnthropicTool)[];
+  /**
+   * Whether or not to specify what tool the model should use
+   * @default "auto"
+   */
+  tool_choice?: AnthropicToolChoice;
 }
 
 type AnthropicMessageResponse = Anthropic.ContentBlock | AnthropicToolResponse;
@@ -331,19 +342,23 @@ function _formatMessagesForAnthropic(messages: BaseMessage[]): {
       throw new Error(`Message type "${message._getType()}" is not supported.`);
     }
     if (isAIMessage(message) && !!message.tool_calls?.length) {
-      if (message.content === "") {
-        return {
-          role,
-          content: message.tool_calls.map(_convertLangChainToolCallToAnthropic),
-        };
-      } else if (typeof message.content === "string") {
-        console.warn(
-          `The "tool_calls" field on a message is only respected if content is an empty string.`
-        );
-        return {
-          role,
-          content: _formatContent(message.content),
-        };
+      if (typeof message.content === "string") {
+        if (message.content === "") {
+          return {
+            role,
+            content: message.tool_calls.map(
+              _convertLangChainToolCallToAnthropic
+            ),
+          };
+        } else {
+          return {
+            role,
+            content: [
+              { type: "text", text: message.content },
+              ...message.tool_calls.map(_convertLangChainToolCallToAnthropic),
+            ],
+          };
+        }
       } else {
         const { content } = message;
         const hasMismatchedToolCalls = !message.tool_calls.every((toolCall) =>
@@ -354,7 +369,7 @@ function _formatMessagesForAnthropic(messages: BaseMessage[]): {
         );
         if (hasMismatchedToolCalls) {
           console.warn(
-            `The "tool_calls" field on a message is only respected if content is an empty string.`
+            `The "tool_calls" field on a message is only respected if content is a string.`
           );
         }
         return {
@@ -488,6 +503,18 @@ export class ChatAnthropicMessages<
     this.clientOptions = fields?.clientOptions ?? {};
   }
 
+  protected getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+    const params = this.invocationParams(options);
+    return {
+      ls_provider: "openai",
+      ls_model_name: this.model,
+      ls_model_type: "chat",
+      ls_temperature: params.temperature ?? undefined,
+      ls_max_tokens: params.max_tokens ?? undefined,
+      ls_stop: options.stop,
+    };
+  }
+
   /**
    * Formats LangChain StructuredTools to AnthropicTools.
    *
@@ -525,7 +552,7 @@ export class ChatAnthropicMessages<
   override bindTools(
     tools: (AnthropicTool | StructuredToolInterface)[],
     kwargs?: Partial<CallOptions>
-  ): RunnableInterface<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
+  ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
     return this.bind({
       tools: this.formatStructuredToolToAnthropic(tools),
       ...kwargs,
@@ -542,6 +569,26 @@ export class ChatAnthropicMessages<
     "messages"
   > &
     Kwargs {
+    let tool_choice:
+      | {
+          type: string;
+          name?: string;
+        }
+      | undefined;
+    if (options?.tool_choice) {
+      if (options?.tool_choice === "any") {
+        tool_choice = {
+          type: "any",
+        };
+      } else if (options?.tool_choice === "auto") {
+        tool_choice = {
+          type: "auto",
+        };
+      } else {
+        tool_choice = options?.tool_choice;
+      }
+    }
+
     return {
       model: this.model,
       temperature: this.temperature,
@@ -551,6 +598,7 @@ export class ChatAnthropicMessages<
       stream: this.streaming,
       max_tokens: this.maxTokens,
       tools: this.formatStructuredToolToAnthropic(options?.tools),
+      tool_choice,
       ...this.invocationKwargs,
     };
   }
@@ -581,9 +629,13 @@ export class ChatAnthropicMessages<
     const params = this.invocationParams(options);
     const formattedMessages = _formatMessagesForAnthropic(messages);
     if (options.tools !== undefined && options.tools.length > 0) {
-      const generations = await this._generateNonStreaming(messages, params, {
-        signal: options.signal,
-      });
+      const { generations } = await this._generateNonStreaming(
+        messages,
+        params,
+        {
+          signal: options.signal,
+        }
+      );
       const result = generations[0].message as AIMessage;
       const toolCallChunks = result.tool_calls?.map(
         (toolCall: ToolCall, index: number) => ({
@@ -702,7 +754,8 @@ export class ChatAnthropicMessages<
       content,
       additionalKwargs
     );
-    return generations;
+    const { role: _role, type: _type, ...rest } = additionalKwargs;
+    return { generations, llmOutput: rest };
   }
 
   /** @ignore */
@@ -740,12 +793,9 @@ export class ChatAnthropicMessages<
         ],
       };
     } else {
-      const generations = await this._generateNonStreaming(messages, params, {
+      return this._generateNonStreaming(messages, params, {
         signal: options.signal,
       });
-      return {
-        generations,
-      };
     }
   }
 
@@ -904,6 +954,7 @@ export class ChatAnthropicMessages<
     }
     const llm = this.bind({
       tools,
+      tool_choice: "any",
     } as Partial<CallOptions>);
 
     if (!includeRaw) {

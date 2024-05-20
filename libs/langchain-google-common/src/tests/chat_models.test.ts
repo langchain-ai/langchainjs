@@ -80,8 +80,12 @@ describe("Mock ChatGoogle", () => {
     await model.invoke(messages);
 
     expect(record?.opts?.headers).toHaveProperty("User-Agent");
+    expect(record?.opts?.headers).toHaveProperty("Client-Info");
     expect(record.opts.headers["User-Agent"]).toMatch(
       /langchain-js\/[0-9.]+-ChatConnection/
+    );
+    expect(record.opts.headers["Client-Info"]).toMatch(
+      /\d+(\.\d+)?-ChatConnection/ // Since we are not getting libraryVersion from env right now, it will always be 0
     );
   });
 
@@ -149,6 +153,7 @@ describe("Mock ChatGoogle", () => {
     expect(data.contents[1].role).toEqual("model");
     expect(data.contents[1].parts).toBeDefined();
     expect(data.contents[1].parts.length).toBeGreaterThanOrEqual(1);
+    expect(data.systemInstruction).not.toBeDefined();
   });
 
   test("1. Invoke request format", async () => {
@@ -184,6 +189,7 @@ describe("Mock ChatGoogle", () => {
     expect(data.contents[1].role).toEqual("model");
     expect(data.contents[1].parts).toBeDefined();
     expect(data.contents[1].parts.length).toBeGreaterThanOrEqual(1);
+    expect(data.systemInstruction).not.toBeDefined();
   });
 
   test("1. Response format", async () => {
@@ -236,9 +242,10 @@ describe("Mock ChatGoogle", () => {
     expect(aiMessage.content).toBe("T");
   });
 
+  // The older models don't support systemInstruction, so
   // SystemMessages will be turned into the human request with the prompt
   // from the system message and a faked ai response saying "Ok".
-  test("1. System request format", async () => {
+  test("1. System request format old model", async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
@@ -249,6 +256,7 @@ describe("Mock ChatGoogle", () => {
     };
     const model = new ChatGoogle({
       authOptions,
+      modelName: "gemini-1.0-pro-001",
     });
     const messages: BaseMessageLike[] = [
       new SystemMessage(
@@ -277,6 +285,195 @@ describe("Mock ChatGoogle", () => {
     expect(data.contents[1].parts).toBeDefined();
     expect(data.contents[1].parts.length).toBeGreaterThanOrEqual(1);
     expect(data.contents[1].parts[0].text).toEqual("Ok");
+    expect(data.systemInstruction).not.toBeDefined();
+  });
+
+  test("1. System request format convert true", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      convertSystemMessageToHumanContent: true,
+    });
+    const messages: BaseMessageLike[] = [
+      new SystemMessage(
+        "I will ask you to flip a coin and tell me H for heads and T for tails"
+      ),
+      new HumanMessage("Flip it"),
+      new AIMessage("H"),
+      new HumanMessage("Flip it again"),
+    ];
+    const result = await model.invoke(messages);
+    console.log("record", JSON.stringify(record, null, 1));
+    console.log("result", JSON.stringify(result, null, 1));
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+    expect(data.contents).toBeDefined();
+    expect(data.contents.length).toEqual(5);
+    expect(data.contents[0].role).toEqual("user");
+    expect(data.contents[0].parts).toBeDefined();
+    expect(data.contents[0].parts.length).toBeGreaterThanOrEqual(1);
+    expect(data.contents[0].parts[0].text).toEqual(
+      "I will ask you to flip a coin and tell me H for heads and T for tails"
+    );
+    expect(data.contents[1].role).toEqual("model");
+    expect(data.contents[1].parts).toBeDefined();
+    expect(data.contents[1].parts.length).toBeGreaterThanOrEqual(1);
+    expect(data.contents[1].parts[0].text).toEqual("Ok");
+    expect(data.systemInstruction).not.toBeDefined();
+  });
+
+  test("1. System request format convert false", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      convertSystemMessageToHumanContent: false,
+    });
+    const messages: BaseMessageLike[] = [
+      new SystemMessage(
+        "I will ask you to flip a coin and tell me H for heads and T for tails"
+      ),
+      new HumanMessage("Flip it"),
+      new AIMessage("H"),
+      new HumanMessage("Flip it again"),
+    ];
+    const result = await model.invoke(messages);
+    console.log("record", JSON.stringify(record, null, 1));
+    console.log("result", JSON.stringify(result, null, 1));
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+    expect(data.contents).toBeDefined();
+    expect(data.contents.length).toEqual(3);
+    expect(data.contents[0].role).toEqual("user");
+    expect(data.contents[0].parts).toBeDefined();
+    expect(data.contents[0].parts.length).toBeGreaterThanOrEqual(1);
+    expect(data.contents[0].parts[0].text).toEqual("Flip it");
+    expect(data.contents[1].role).toEqual("model");
+    expect(data.contents[1].parts).toBeDefined();
+    expect(data.contents[1].parts.length).toBeGreaterThanOrEqual(1);
+    expect(data.contents[1].parts[0].text).toEqual("H");
+    expect(data.systemInstruction).toBeDefined();
+  });
+
+  test("1. System request format new model", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      modelName: "gemini-1.5-pro",
+    });
+    const messages: BaseMessageLike[] = [
+      new SystemMessage(
+        "I will ask you to flip a coin and tell me H for heads and T for tails"
+      ),
+      new HumanMessage("Flip it"),
+      new AIMessage("H"),
+      new HumanMessage("Flip it again"),
+    ];
+    const result = await model.invoke(messages);
+    console.log("record", JSON.stringify(record, null, 1));
+    console.log("result", JSON.stringify(result, null, 1));
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+    expect(data.contents).toBeDefined();
+    expect(data.contents.length).toEqual(3);
+    expect(data.contents[0].role).toEqual("user");
+    expect(data.contents[0].parts).toBeDefined();
+    expect(data.contents[0].parts.length).toBeGreaterThanOrEqual(1);
+    expect(data.contents[0].parts[0].text).toEqual("Flip it");
+    expect(data.contents[1].role).toEqual("model");
+    expect(data.contents[1].parts).toBeDefined();
+    expect(data.contents[1].parts.length).toBeGreaterThanOrEqual(1);
+    expect(data.contents[1].parts[0].text).toEqual("H");
+    expect(data.systemInstruction).toBeDefined();
+  });
+
+  test("1. System request - multiple", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      convertSystemMessageToHumanContent: false,
+    });
+    const messages: BaseMessageLike[] = [
+      new SystemMessage(
+        "I will ask you to flip a coin and tell me H for heads and T for tails"
+      ),
+      new HumanMessage("Flip it"),
+      new AIMessage("H"),
+      new SystemMessage("Now tell me Z for heads and Q for tails"),
+      new HumanMessage("Flip it again"),
+    ];
+
+    let caught = false;
+    try {
+      const result = await model.invoke(messages);
+      console.log(result);
+    } catch (xx) {
+      caught = true;
+    }
+    expect(caught).toBeTruthy();
+  });
+
+  test("1. System request - not first", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      convertSystemMessageToHumanContent: false,
+    });
+    const messages: BaseMessageLike[] = [
+      new HumanMessage("Flip it"),
+      new AIMessage("H"),
+      new SystemMessage("Now tell me Z for heads and Q for tails"),
+      new HumanMessage("Flip it again"),
+    ];
+
+    let caught = false;
+    try {
+      const result = await model.invoke(messages);
+      console.log(result);
+    } catch (xx) {
+      caught = true;
+    }
+    expect(caught).toBeTruthy();
   });
 
   test("2. Response format - safety", async () => {

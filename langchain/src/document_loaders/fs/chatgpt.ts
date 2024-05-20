@@ -1,5 +1,11 @@
 import { Document } from "@langchain/core/documents";
 import { TextLoader } from "./text.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/fs/chatgpt",
+  newPackageName: "@langchain/community",
+});
 
 interface ChatGPTMessage {
   author: {

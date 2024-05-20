@@ -1,6 +1,12 @@
 import { Document } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { BaseDocumentLoader } from "../base.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/web/searchapi",
+  newPackageName: "@langchain/community",
+});
 
 type JSONPrimitive = string | number | boolean | null;
 type JSONValue = JSONPrimitive | JSONObject | JSONArray;
@@ -25,6 +31,8 @@ type SearchApiParameters = {
 };
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/searchapi" instead. This entrypoint will be removed in 0.3.0.
+ *
  * Class representing a document loader for loading search results from
  * the SearchApi. It extends the BaseDocumentLoader class.
  * @example

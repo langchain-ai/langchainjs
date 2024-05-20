@@ -1,6 +1,6 @@
 import { test } from "@jest/globals";
 import { OpenAI } from "@langchain/openai";
-import { loadQueryConstructorChain } from "../index.js";
+import { loadQueryConstructorRunnable, AttributeInfo } from "../index.js";
 import {
   Comparators,
   Comparison,
@@ -8,7 +8,6 @@ import {
   Operators,
   StructuredQuery,
 } from "../ir.js";
-import { AttributeInfo } from "../../../schema/query_constructor.js";
 import { BasicTranslator } from "../../../retrievers/self_query/base.js";
 
 test("Query Chain Test", async () => {
@@ -76,8 +75,11 @@ test("Query Chain Test", async () => {
 
   const allowedComparators = Object.values(Comparators);
   const allowedOperators = Object.values(Operators);
-  const llm = new OpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 });
-  const queryChain = loadQueryConstructorChain({
+  const llm = new OpenAI({
+    modelName: "gpt-3.5-turbo-instruct",
+    temperature: 0,
+  });
+  const queryChain = loadQueryConstructorRunnable({
     llm,
     documentContents,
     attributeInfo,
@@ -85,26 +87,21 @@ test("Query Chain Test", async () => {
     allowedOperators,
   });
 
-  const c1 = queryChain.call({
+  const c1 = queryChain.invoke({
     query: "Which movies are less than 90 minutes?",
   });
-  const c3 = queryChain.call({
+  const c3 = queryChain.invoke({
     query: "Which movies are rated higher than 8.5?",
   });
-  const c4 = queryChain.call({
+  const c4 = queryChain.invoke({
     query: "Which movies are directed by Greta Gerwig?",
   });
-  const c5 = queryChain.call({
+  const c5 = queryChain.invoke({
     query:
       "Which movies are either comedy or drama and are less than 90 minutes?",
   });
 
-  const [
-    { [queryChain.outputKey]: r1 },
-    { [queryChain.outputKey]: r3 },
-    { [queryChain.outputKey]: r4 },
-    { [queryChain.outputKey]: r5 },
-  ] = await Promise.all([c1, c3, c4, c5]);
+  const [r1, r3, r4, r5] = await Promise.all([c1, c3, c4, c5]);
 
   expect(r1).toMatchObject(sq1);
   expect(r3).toMatchObject(sq3);
@@ -112,18 +109,10 @@ test("Query Chain Test", async () => {
   expect(r5).toMatchObject(sq5);
   const testTranslator = new BasicTranslator();
 
-  const { filter: parsedFilter1 } = testTranslator.visitStructuredQuery(
-    r1 as StructuredQuery
-  );
-  const { filter: parsedFilter3 } = testTranslator.visitStructuredQuery(
-    r3 as StructuredQuery
-  );
-  const { filter: parsedFilter4 } = testTranslator.visitStructuredQuery(
-    r4 as StructuredQuery
-  );
-  const { filter: parsedFilter5 } = testTranslator.visitStructuredQuery(
-    r5 as StructuredQuery
-  );
+  const { filter: parsedFilter1 } = testTranslator.visitStructuredQuery(r1);
+  const { filter: parsedFilter3 } = testTranslator.visitStructuredQuery(r3);
+  const { filter: parsedFilter4 } = testTranslator.visitStructuredQuery(r4);
+  const { filter: parsedFilter5 } = testTranslator.visitStructuredQuery(r5);
 
   expect(parsedFilter1).toMatchObject(filter1);
   expect(parsedFilter3).toMatchObject(filter3);

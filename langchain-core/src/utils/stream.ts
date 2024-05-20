@@ -1,5 +1,7 @@
 // Make this a type to override ReadableStream's async iterator type in case
 // the popular web-streams-polyfill is imported - the supplied types
+import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
+
 // in this case don't quite match.
 export type IterableReadableStreamInterface<T> = ReadableStream<T> &
   AsyncIterable<T>;
@@ -182,23 +184,33 @@ export class AsyncGeneratorWithSetup<
 
   public setup: Promise<S>;
 
+  public config?: unknown;
+
   private firstResult: Promise<IteratorResult<T>>;
 
   private firstResultUsed = false;
 
-  constructor(generator: AsyncGenerator<T>, startSetup?: () => Promise<S>) {
-    this.generator = generator;
+  constructor(params: {
+    generator: AsyncGenerator<T>;
+    startSetup?: () => Promise<S>;
+    config?: unknown;
+  }) {
+    this.generator = params.generator;
+    this.config = params.config;
     // setup is a promise that resolves only after the first iterator value
     // is available. this is useful when setup of several piped generators
     // needs to happen in logical order, ie. in the order in which input to
     // to each generator is available.
     this.setup = new Promise((resolve, reject) => {
-      this.firstResult = generator.next();
-      if (startSetup) {
-        this.firstResult.then(startSetup).then(resolve, reject);
-      } else {
-        this.firstResult.then((_result) => resolve(undefined as S), reject);
-      }
+      const storage = AsyncLocalStorageProviderSingleton.getInstance();
+      void storage.run(params.config, async () => {
+        this.firstResult = params.generator.next();
+        if (params.startSetup) {
+          this.firstResult.then(params.startSetup).then(resolve, reject);
+        } else {
+          this.firstResult.then((_result) => resolve(undefined as S), reject);
+        }
+      });
     });
   }
 
@@ -208,7 +220,10 @@ export class AsyncGeneratorWithSetup<
       return this.firstResult;
     }
 
-    return this.generator.next(...args);
+    const storage = AsyncLocalStorageProviderSingleton.getInstance();
+    return storage.run(this.config, async () => {
+      return this.generator.next(...args);
+    });
   }
 
   async return(
@@ -245,7 +260,7 @@ export async function pipeGeneratorWithSetup<
   startSetup: () => Promise<S>,
   ...args: A
 ) {
-  const gen = new AsyncGeneratorWithSetup(generator, startSetup);
+  const gen = new AsyncGeneratorWithSetup({ generator, startSetup });
   const setup = await gen.setup;
   return { output: to(gen, setup, ...args), setup };
 }

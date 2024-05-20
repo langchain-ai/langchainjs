@@ -3,8 +3,8 @@ import * as uuid from "uuid";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { MultiVectorRetriever } from "langchain/retrievers/multi_vector";
 import { FaissStore } from "@langchain/community/vectorstores/faiss";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { InMemoryStore } from "langchain/storage/in_memory";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+import { InMemoryStore } from "@langchain/core/stores";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
@@ -86,7 +86,7 @@ console.log(vectorstoreResult[0].pageContent.length);
 */
 
 // Retriever returns larger result
-const retrieverResult = await retriever.getRelevantDocuments("justice breyer");
+const retrieverResult = await retriever.invoke("justice breyer");
 console.log(retrieverResult[0].pageContent.length);
 /*
   9770

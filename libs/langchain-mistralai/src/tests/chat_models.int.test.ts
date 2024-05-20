@@ -6,7 +6,7 @@ import {
   SystemMessagePromptTemplate,
 } from "@langchain/core/prompts";
 import { AgentExecutor, createOpenAIToolsAgent } from "langchain/agents";
-import { BaseChatModel } from "langchain/chat_models/base";
+import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { DynamicStructuredTool, StructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
 import {
@@ -98,7 +98,7 @@ test("Can call tools using structured tools", async () => {
   ).toBeDefined();
 });
 
-test.only("Can call tools", async () => {
+test("Can call tools", async () => {
   const tools = [
     {
       type: "function",

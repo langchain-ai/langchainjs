@@ -52,22 +52,30 @@ export abstract class GoogleConnection<
   abstract buildMethod(): GoogleAbstractedClientOpsMethod;
 
   async _clientInfoHeaders(): Promise<Record<string, string>> {
-    const clientLibraryVersion = await this._clientLibraryVersion();
+    const { userAgent, clientLibraryVersion } = await this._getClientInfo();
     return {
-      "User-Agent": clientLibraryVersion,
+      "User-Agent": userAgent,
+      "Client-Info": clientLibraryVersion,
     };
   }
 
-  async _clientLibraryVersion(): Promise<string> {
+  async _getClientInfo(): Promise<{
+    userAgent: string;
+    clientLibraryVersion: string;
+  }> {
     const env = await getRuntimeEnvironment();
     const langchain = env?.library ?? "langchain-js";
-    const langchainVersion = env?.libraryVersion ?? "0";
+    // TODO: Add an API for getting the current LangChain version
+    const langchainVersion = "0";
     const moduleName = await this._moduleName();
-    let ret = `${langchain}/${langchainVersion}`;
+    let clientLibraryVersion = `${langchain}/${langchainVersion}`;
     if (moduleName && moduleName.length) {
-      ret = `${ret}-${moduleName}`;
+      clientLibraryVersion = `${clientLibraryVersion}-${moduleName}`;
     }
-    return ret;
+    return {
+      userAgent: clientLibraryVersion,
+      clientLibraryVersion: `${langchainVersion}-${moduleName}`,
+    };
   }
 
   async _moduleName(): Promise<string> {
@@ -274,6 +282,7 @@ export abstract class AbstractGoogleLLMConnection<
       topP: parameters.topP,
       maxOutputTokens: parameters.maxOutputTokens,
       stopSequences: parameters.stopSequences,
+      responseMimeType: parameters.responseMimeType,
     };
   }
 
@@ -282,6 +291,13 @@ export abstract class AbstractGoogleLLMConnection<
     parameters: GoogleAIModelRequestParams
   ): GeminiSafetySetting[] {
     return parameters.safetySettings ?? [];
+  }
+
+  formatSystemInstruction(
+    _input: MessageType,
+    _parameters: GoogleAIModelRequestParams
+  ): GeminiContent {
+    return {} as GeminiContent;
   }
 
   // Borrowed from the OpenAI invocation params test
@@ -343,6 +359,7 @@ export abstract class AbstractGoogleLLMConnection<
     const generationConfig = this.formatGenerationConfig(input, parameters);
     const tools = this.formatTools(input, parameters);
     const safetySettings = this.formatSafetySettings(input, parameters);
+    const systemInstruction = this.formatSystemInstruction(input, parameters);
 
     const ret: GeminiRequest = {
       contents,
@@ -353,6 +370,13 @@ export abstract class AbstractGoogleLLMConnection<
     }
     if (safetySettings && safetySettings.length) {
       ret.safetySettings = safetySettings;
+    }
+    if (
+      systemInstruction?.role &&
+      systemInstruction?.parts &&
+      systemInstruction?.parts?.length
+    ) {
+      ret.systemInstruction = systemInstruction;
     }
     return ret;
   }

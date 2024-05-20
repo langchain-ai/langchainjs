@@ -33,6 +33,7 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   type BaseChatModelParams,
   BaseChatModel,
+  LangSmithParams,
 } from "@langchain/core/language_models/chat_models";
 
 import {
@@ -58,7 +59,6 @@ import {
 } from "@langchain/core/output_parsers/openai_tools";
 import {
   Runnable,
-  RunnableInterface,
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
@@ -209,28 +209,33 @@ function convertMessagesToMistralMessages(
     );
   };
 
-  const getTools = (message: BaseMessage): MistralAIToolCalls[] => {
+  const getTools = (message: BaseMessage): MistralAIToolCalls[] | undefined => {
     if (isAIMessage(message) && !!message.tool_calls?.length) {
       return message.tool_calls
         .map((toolCall) => ({ ...toolCall, id: "null" }))
         .map(convertLangChainToolCallToOpenAI) as MistralAIToolCalls[];
     }
+    if (!message.additional_kwargs.tool_calls?.length) {
+      return undefined;
+    }
     const toolCalls: Omit<OpenAIToolCall, "index">[] =
-      message.additional_kwargs.tool_calls ?? [];
-    return (
-      toolCalls?.map((toolCall) => ({
-        id: "null",
-        type: "function" as ToolType.function,
-        function: toolCall.function,
-      })) || []
-    );
+      message.additional_kwargs.tool_calls;
+    return toolCalls?.map((toolCall) => ({
+      id: "null",
+      type: "function" as ToolType.function,
+      function: toolCall.function,
+    }));
   };
 
-  return messages.map((message) => ({
-    role: getRole(message._getType()),
-    content: getContent(message.content),
-    tool_calls: getTools(message),
-  }));
+  return messages.map((message) => {
+    const toolCalls = getTools(message);
+    const content = toolCalls === undefined ? getContent(message.content) : "";
+    return {
+      role: getRole(message._getType()),
+      content,
+      tool_calls: toolCalls,
+    };
+  });
 }
 
 function mistralAIResponseToChatMessage(
@@ -414,6 +419,17 @@ export class ChatMistralAI<
     this.model = this.modelName;
   }
 
+  protected getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+    const params = this.invocationParams(options);
+    return {
+      ls_provider: "mistral",
+      ls_model_name: this.model,
+      ls_model_type: "chat",
+      ls_temperature: params.temperature ?? undefined,
+      ls_max_tokens: params.maxTokens ?? undefined,
+    };
+  }
+
   _llmType() {
     return "mistral_ai";
   }
@@ -451,7 +467,7 @@ export class ChatMistralAI<
   override bindTools(
     tools: (Record<string, unknown> | StructuredToolInterface)[],
     kwargs?: Partial<CallOptions>
-  ): RunnableInterface<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
+  ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
     const mistralAITools = tools
       ?.map((tool) => {
         if ("lc_namespace" in tool) {
@@ -491,15 +507,23 @@ export class ChatMistralAI<
     const client = new MistralClient(this.apiKey, this.endpoint);
 
     return this.caller.call(async () => {
-      let res:
-        | ChatCompletionResponse
-        | AsyncGenerator<ChatCompletionResponseChunk>;
-      if (streaming) {
-        res = client.chatStream(input);
-      } else {
-        res = await client.chat(input);
+      try {
+        let res:
+          | ChatCompletionResponse
+          | AsyncGenerator<ChatCompletionResponseChunk>;
+        if (streaming) {
+          res = client.chatStream(input);
+        } else {
+          res = await client.chat(input);
+        }
+        return res;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (e: any) {
+        if (e.message?.includes("status: 400")) {
+          e.status = 400;
+        }
+        throw e;
       }
-      return res;
     });
   }
 

@@ -58,7 +58,7 @@ test("Few shotting with tool calls", async () => {
   const res = await chat.invoke([
     new HumanMessage("What is the weather in SF?"),
     new AIMessage({
-      content: "",
+      content: "Let me look up the current weather.",
       tool_calls: [
         {
           id: "toolu_feiwjf9u98r389u498",
@@ -270,4 +270,73 @@ test("withStructuredOutput JSON Schema only", async () => {
     "withStructuredOutput JSON Schema only"
   );
   expect(typeof result.location).toBe("string");
+});
+
+test("Can pass tool_choice", async () => {
+  const tool1 = {
+    name: "get_weather",
+    description:
+      "Get the weather of a specific location and return the temperature in Celsius.",
+    input_schema: {
+      type: "object",
+      properties: {
+        location: {
+          type: "string",
+          description: "The name of city to get the weather for.",
+        },
+      },
+      required: ["location"],
+    },
+  };
+  const tool2 = {
+    name: "calculator",
+    description: "Calculate any math expression and return the result.",
+    input_schema: {
+      type: "object",
+      properties: {
+        expression: {
+          type: "string",
+          description: "The math expression to calculate.",
+        },
+      },
+      required: ["expression"],
+    },
+  };
+  const tools = [tool1, tool2];
+
+  const modelWithTools = model.bindTools(tools, {
+    tool_choice: {
+      type: "tool",
+      name: "get_weather",
+    },
+  });
+
+  const result = await modelWithTools.invoke(
+    "What is the sum of 272818 and 281818?"
+  );
+  console.log(
+    {
+      tool_calls: JSON.stringify(result.content, null, 2),
+    },
+    "Can bind & invoke StructuredTools"
+  );
+  expect(Array.isArray(result.content)).toBeTruthy();
+  if (!Array.isArray(result.content)) {
+    throw new Error("Content is not an array");
+  }
+  let toolCall: AnthropicToolResponse | undefined;
+  result.content.forEach((item) => {
+    if (item.type === "tool_use") {
+      toolCall = item as AnthropicToolResponse;
+    }
+  });
+  if (!toolCall) {
+    throw new Error("No tool call found");
+  }
+  expect(toolCall).toBeTruthy();
+  const { name, input } = toolCall;
+  expect(toolCall.input).toEqual(result.tool_calls?.[0].args);
+  expect(name).toBe("get_weather");
+  expect(input).toBeTruthy();
+  expect(input.location).toBeTruthy();
 });

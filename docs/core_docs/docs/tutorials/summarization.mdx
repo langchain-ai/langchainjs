@@ -1,0 +1,32 @@
+---
+hide_table_of_contents: true
+sidebar_position: 6
+---
+
+# Summarize Text
+
+A common use case is wanting to summarize long documents.
+This naturally runs into the context window limitations.
+Unlike in question-answering, you can't just do some semantic search hacks to only select the chunks of text most relevant to the question (because, in this case, there is no particular question - you want to summarize everything).
+So what do you do then?
+
+To get started, we would recommend checking out the summarization chain, which attacks this problem in a recursive manner.
+
+- [Summarization Chain](https://js.langchain.com/v0.1/docs/modules/chains/popular/summarize)
+
+## Example
+
+Here's an example of how you can use the [RefineDocumentsChain](https://js.langchain.com/v0.1/docs/modules/chains/document/refine) to summarize documents loaded from a YouTube video:
+
+import CodeBlock from "@theme/CodeBlock";
+import LoadDocuments from "@examples/use_cases/youtube/podcast_summary.ts";
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/anthropic
+```
+
+<CodeBlock language="typescript">{LoadDocuments}</CodeBlock>

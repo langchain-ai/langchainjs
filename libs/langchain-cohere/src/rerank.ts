@@ -1,4 +1,5 @@
 import { DocumentInterface } from "@langchain/core/documents";
+import { BaseDocumentCompressor } from "@langchain/core/retrievers/document_compressors";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { CohereClient } from "cohere-ai";
 
@@ -27,7 +28,7 @@ export interface CohereRerankArgs {
 /**
  * Document compressor that uses `Cohere Rerank API`.
  */
-export class CohereRerank {
+export class CohereRerank extends BaseDocumentCompressor {
   model = "rerank-english-v2.0";
 
   topN = 3;
@@ -37,6 +38,7 @@ export class CohereRerank {
   maxChunksPerDoc: number | undefined;
 
   constructor(fields?: CohereRerankArgs) {
+    super();
     const token = fields?.apiKey ?? getEnvironmentVariable("COHERE_API_KEY");
     if (!token) {
       throw new Error("No API key provided for CohereRerank.");

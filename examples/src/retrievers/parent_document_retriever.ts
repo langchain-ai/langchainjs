@@ -1,8 +1,8 @@
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
-import { InMemoryStore } from "langchain/storage/in_memory";
+import { InMemoryStore } from "@langchain/core/stores";
 import { ParentDocumentRetriever } from "langchain/retrievers/parent_document";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 
 const vectorstore = new MemoryVectorStore(new OpenAIEmbeddings());
@@ -33,7 +33,7 @@ const parentDocuments = await textLoader.load();
 // We must add the parent documents via the retriever's addDocuments method
 await retriever.addDocuments(parentDocuments);
 
-const retrievedDocs = await retriever.getRelevantDocuments("justice breyer");
+const retrievedDocs = await retriever.invoke("justice breyer");
 
 // Retrieved chunks are the larger parent chunks
 console.log(retrievedDocs);

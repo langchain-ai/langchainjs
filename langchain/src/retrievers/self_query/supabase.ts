@@ -1,9 +1,12 @@
-import type {
-  SupabaseFilterRPCCall,
-  SupabaseMetadata,
-  SupabaseVectorStore,
-} from "@langchain/community/vectorstores/supabase";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import {
+  isFilterEmpty,
+  isFloat,
+  isInt,
+  isObject,
+  isString,
+  BaseTranslator,
   Comparator,
   Comparators,
   Comparison,
@@ -11,13 +14,19 @@ import {
   Operator,
   Operators,
   StructuredQuery,
-} from "../../chains/query_constructor/ir.js";
-import { BaseTranslator } from "./base.js";
-import { isFilterEmpty, isFloat, isInt, isObject, isString } from "./utils.js";
+} from "@langchain/core/structured_query";
+import { VectorStore } from "@langchain/core/vectorstores";
 import {
   ProxyParamsDuplicator,
   convertObjectFilterToStructuredQuery,
 } from "./supabase_utils.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "retrievers/self_query/supabase",
+  newEntrypointName: "structured_query/supabase",
+  newPackageName: "@langchain/community",
+});
 
 /**
  * Represents the possible values that can be used in a comparison in a
@@ -31,6 +40,10 @@ type ValueType = {
   gt: string | number;
   gte: string | number;
 };
+
+type SupabaseFilterRPCCall = any;
+
+type SupabaseMetadata = any;
 
 /**
  * A specialized translator designed to work with Supabase, extending the
@@ -52,7 +65,7 @@ type ValueType = {
  * ```
  */
 export class SupabaseTranslator<
-  T extends SupabaseVectorStore
+  T extends VectorStore
 > extends BaseTranslator<T> {
   declare VisitOperationOutput: SupabaseFilterRPCCall;
 
@@ -85,27 +98,27 @@ export class SupabaseTranslator<
   ): (attr: string, value: ValueType[C]) => SupabaseFilterRPCCall {
     switch (comparator) {
       case Comparators.eq: {
-        return (attr: string, value: ValueType[C]) => (rpc) =>
+        return (attr: string, value: ValueType[C]) => (rpc: any) =>
           rpc.eq(this.buildColumnName(attr, value), value);
       }
       case Comparators.ne: {
-        return (attr: string, value: ValueType[C]) => (rpc) =>
+        return (attr: string, value: ValueType[C]) => (rpc: any) =>
           rpc.neq(this.buildColumnName(attr, value), value);
       }
       case Comparators.gt: {
-        return (attr: string, value: ValueType[C]) => (rpc) =>
+        return (attr: string, value: ValueType[C]) => (rpc: any) =>
           rpc.gt(this.buildColumnName(attr, value), value);
       }
       case Comparators.gte: {
-        return (attr: string, value: ValueType[C]) => (rpc) =>
+        return (attr: string, value: ValueType[C]) => (rpc: any) =>
           rpc.gte(this.buildColumnName(attr, value), value);
       }
       case Comparators.lt: {
-        return (attr: string, value: ValueType[C]) => (rpc) =>
+        return (attr: string, value: ValueType[C]) => (rpc: any) =>
           rpc.lt(this.buildColumnName(attr, value), value);
       }
       case Comparators.lte: {
-        return (attr: string, value: ValueType[C]) => (rpc) =>
+        return (attr: string, value: ValueType[C]) => (rpc: any) =>
           rpc.lte(this.buildColumnName(attr, value), value);
       }
       default: {
@@ -176,16 +189,16 @@ export class SupabaseTranslator<
     if (this.allowedOperators.includes(operator)) {
       if (operator === Operators.and) {
         if (!args) {
-          return (rpc) => rpc;
+          return (rpc: any) => rpc;
         }
-        const filter: SupabaseFilterRPCCall = (rpc) =>
+        const filter: SupabaseFilterRPCCall = (rpc: any) =>
           args.reduce((acc, arg) => {
             const filter = arg.accept(this) as SupabaseFilterRPCCall;
             return filter(acc);
           }, rpc);
         return filter;
       } else if (operator === Operators.or) {
-        return (rpc) => rpc.or(this.visitOperationAsString(operation));
+        return (rpc: any) => rpc.or(this.visitOperationAsString(operation));
       } else {
         throw new Error("Unknown operator");
       }
@@ -305,7 +318,7 @@ export class SupabaseTranslator<
     }
     // After this point, myDefaultFilter will always be SupabaseFilterRPCCall
     if (mergeType === "or") {
-      return (rpc) => {
+      return (rpc: any) => {
         const defaultFlattenedParams = ProxyParamsDuplicator.getFlattenedParams(
           rpc,
           myDefaultFilter as SupabaseFilterRPCCall
@@ -315,7 +328,7 @@ export class SupabaseTranslator<
         return rpc.or(`${defaultFlattenedParams},${generatedFlattenedParams}`);
       };
     } else if (mergeType === "and") {
-      return (rpc) =>
+      return (rpc: any) =>
         generatedFilter((myDefaultFilter as SupabaseFilterRPCCall)(rpc));
     } else {
       throw new Error("Unknown merge type");

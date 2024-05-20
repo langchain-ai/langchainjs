@@ -12,10 +12,17 @@ import { Document } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { BaseDocumentLoader } from "../base.js";
 import { AssemblyAIOptions } from "../../types/assemblyai-types.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/web/assemblyai",
+  newPackageName: "@langchain/community",
+});
 
 export type * from "../../types/assemblyai-types.js";
 
 /**
+ * @deprecated
  * Base class for AssemblyAI loaders.
  */
 abstract class AssemblyAILoader extends BaseDocumentLoader {
@@ -43,6 +50,9 @@ abstract class AssemblyAILoader extends BaseDocumentLoader {
   }
 }
 
+/**
+ * @deprecated
+ */
 abstract class CreateTranscriptLoader extends AssemblyAILoader {
   protected transcribeParams?: TranscribeParams | CreateTranscriptParameters;
 
@@ -89,6 +99,7 @@ abstract class CreateTranscriptLoader extends AssemblyAILoader {
 }
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/assemblyai" instead. This entrypoint will be removed in 0.3.0.
  * Transcribe audio and load the transcript as a document using AssemblyAI.
  */
 export class AudioTranscriptLoader extends CreateTranscriptLoader {
@@ -110,6 +121,7 @@ export class AudioTranscriptLoader extends CreateTranscriptLoader {
 }
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/assemblyai" instead. This entrypoint will be removed in 0.3.0.
  * Transcribe audio and load the paragraphs of the transcript, creating a document for each paragraph.
  */
 export class AudioTranscriptParagraphsLoader extends CreateTranscriptLoader {
@@ -133,6 +145,7 @@ export class AudioTranscriptParagraphsLoader extends CreateTranscriptLoader {
 }
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/assemblyai" instead. This entrypoint will be removed in 0.3.0.
  * Transcribe audio and load the sentences of the transcript, creating a document for each sentence.
  */
 export class AudioTranscriptSentencesLoader extends CreateTranscriptLoader {
@@ -156,6 +169,7 @@ export class AudioTranscriptSentencesLoader extends CreateTranscriptLoader {
 }
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/assemblyai" instead. This entrypoint will be removed in 0.3.0.
  * Transcribe audio and load subtitles for the transcript as `srt` or `vtt` format.
  */
 export class AudioSubtitleLoader extends CreateTranscriptLoader {

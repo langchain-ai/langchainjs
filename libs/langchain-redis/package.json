@@ -1,6 +1,6 @@
 {
   "name": "@langchain/redis",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "description": "Sample integration for LangChain.js",
   "type": "module",
   "engines": {
@@ -38,7 +38,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1",
+    "@langchain/core": ">0.1.0 <0.3.0",
     "redis": "^4.6.13"
   },
   "devDependencies": {

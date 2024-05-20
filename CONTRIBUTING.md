@@ -88,19 +88,25 @@ If you have a Twitter account you would like us to mention, please let us know i
 
 #### Integration releases
 
-You can invoke the release flow by calling `yarn release` from the package root.
+The release script can be executed only while on a fresh `main` branch, with no un-committed changes, from the package root. If working from a fork of the repository, make sure to sync the forked `main` branch with the upstream `main` branch first.
+
+You can invoke the script by calling `yarn release`. If new dependencies have been added to the integration package, install them first (i.e. run `yarn`, then `yarn release`).
 
 There are three parameters which can be passed to this script, one required and two optional.
 
-- __Required__: `--workspace <workspace name>`. eg: `--workspace @langchain/core` (always appended as the first flag when running `yarn release`)
-- __Optional__: `--bump-deps` eg `--bump-deps` Will find all packages in the repo which depend on this workspace and checkout a new branch, update the dep version, run yarn install, commit & push to new branch.
-- __Optional__: `--tag <tag>` eg `--tag beta` Add a tag to the NPM release.
+- __Required__: `<workspace name>`. eg: `@langchain/core` The name of the package to release. Can be found in the `name` value of the package's `package.json`
+- __Optional__: `--bump-deps` eg `--bump-deps` Will find all packages in the repo which depend on this workspace and checkout a new branch, update the dep version, run yarn install, commit & push to new branch. Generally, this is not necessary.
+- __Optional__: `--tag <tag>` eg `--tag beta` Add a tag to the NPM release. Useful if you want to push a release candidate.
 
 This script automatically bumps the package version, creates a new release branch with the changes, pushes the branch to GitHub, uses `release-it` to automatically release to NPM, and more depending on the flags passed.
 
 Halfway through this script, you'll be prompted to enter an NPM OTP (typically from an authenticator app). This value is not stored anywhere and is only used to authenticate the NPM release.
 
-Full example: `yarn release @langchain/core --bump-deps --tag beta`. 
+> **Note** Unless releasing `langchain`, `no` should be answered to all prompts following `Publish @langchain/<package> to npm?`. Then, the change should be manually committed with the following commit message: `<package>[patch]: Release <new version>`. E.g.: `groq[patch]: Release 0.0.1`.
+
+Docker must be running if releasing one of `langchain`, `@langchain/core` or `@langchain/community`. These packages run LangChain's export tests, which run inside docker containers.
+
+Full example: `yarn release @langchain/core`.
 
 ### 🛠️ Tooling
 

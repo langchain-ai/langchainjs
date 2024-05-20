@@ -3,6 +3,12 @@ import { Document } from "@langchain/core/documents";
 import { AzureBlobStorageFileLoader } from "./azure_blob_storage_file.js";
 import { BaseDocumentLoader } from "../base.js";
 import { UnstructuredLoaderOptions } from "../fs/unstructured.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/web/azure_blog_storage_container",
+  newPackageName: "@langchain/community",
+});
 
 /**
  * Interface representing the configuration for accessing an Azure Blob
@@ -28,6 +34,7 @@ interface AzureBlobStorageContainerLoaderConfig {
 }
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/azure_blog_storage_container" instead. This entrypoint will be removed in 0.3.0.
  * Class representing a document loader that loads documents from an Azure
  * Blob Storage container. It extends the BaseDocumentLoader class.
  */

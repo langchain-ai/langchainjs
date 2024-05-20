@@ -2,7 +2,7 @@ import { OpenAI } from "@langchain/openai";
 import {
   EntityMemory,
   ENTITY_MEMORY_CONVERSATION_TEMPLATE,
-} from "langchain/memory";
+} from "langchain/memory/index";
 import { LLMChain } from "langchain/chains";
 
 const memory = new EntityMemory({
@@ -15,13 +15,13 @@ const chain = new LLMChain({
   memory,
 });
 
-await chain.call({ input: "Hi! I'm Jim." });
+await chain.invoke({ input: "Hi! I'm Jim." });
 
-await chain.call({
+await chain.invoke({
   input: "I work in sales. What about you?",
 });
 
-const res = await chain.call({
+const res = await chain.invoke({
   input: "My office is the Utica branch of Dunder Mifflin. What about you?",
 });
 console.log({

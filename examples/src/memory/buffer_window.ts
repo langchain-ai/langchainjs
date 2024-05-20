@@ -1,5 +1,5 @@
 import { OpenAI } from "@langchain/openai";
-import { BufferWindowMemory } from "langchain/memory";
+import { BufferWindowMemory } from "langchain/memory/index";
 import { LLMChain } from "langchain/chains";
 import { PromptTemplate } from "@langchain/core/prompts";
 
@@ -15,8 +15,8 @@ export const run = async () => {
 
   const prompt = PromptTemplate.fromTemplate(template);
   const chain = new LLMChain({ llm: model, prompt, memory });
-  const res1 = await chain.call({ input: "Hi! I'm Jim." });
+  const res1 = await chain.invoke({ input: "Hi! I'm Jim." });
   console.log({ res1 });
-  const res2 = await chain.call({ input: "What's my name?" });
+  const res2 = await chain.invoke({ input: "What's my name?" });
   console.log({ res2 });
 };

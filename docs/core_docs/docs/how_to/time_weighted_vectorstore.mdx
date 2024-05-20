@@ -1,0 +1,52 @@
+# How to create a time-weighted retriever
+
+:::info Prerequisites
+
+This guide assumes familiarity with the following concepts:
+
+- [Retrievers](/docs/concepts/#retrievers)
+- [Vector stores](/docs/concepts/#vectorstores)
+- [Retrieval-augmented generation (RAG)](/docs/tutorials/rag)
+
+:::
+
+This guide covers the [`TimeWeightedVectorStoreRetriever`](https://v02.api.js.langchain.com/classes/langchain_retrievers_time_weighted.TimeWeightedVectorStoreRetriever.html),
+which uses a combination of semantic similarity and a time decay.
+
+The algorithm for scoring them is:
+
+```
+semantic_similarity + (1.0 - decay_rate) ^ hours_passed
+```
+
+Notably, `hours_passed` refers to the hours passed since the object in the retriever **was last accessed**, not since it was created. This means that frequently accessed objects remain "fresh."
+
+```typescript
+let score = (1.0 - this.decayRate) ** hoursPassed + vectorRelevance;
+```
+
+`this.decayRate` is a configurable decimal number between 0 and 1. A lower number means that documents will be "remembered" for longer, while a higher number strongly weights more recently accessed documents.
+
+Note that setting a decay rate of exactly 0 or 1 makes `hoursPassed` irrelevant and makes this retriever equivalent to a standard vector lookup.
+
+It is important to note that due to required metadata, all documents must be added to the backing vector store using the `addDocuments` method on the **retriever**, not the vector store itself.
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/retrievers/time-weighted-retriever.ts";
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
+## Next steps
+
+You've now learned how to use time as a factor when performing retrieval.
+
+Next, check out the [broader tutorial on RAG](/docs/tutorials/rag), or this section to learn how to
+[create your own custom retriever over any data source](/docs/how_to/custom_retriever/).

@@ -3,7 +3,7 @@ import {
   Configurations,
   CredentialProvider,
 } from "@gomomento/sdk"; // `from "gomomento/sdk-web";` for browser/edge
-import { BufferMemory } from "langchain/memory";
+import { BufferMemory } from "langchain/memory/index";
 import { ChatOpenAI } from "@langchain/openai";
 import { ConversationChain } from "langchain/chains";
 import { MomentoChatMessageHistory } from "@langchain/community/stores/message/momento";
@@ -40,7 +40,7 @@ const model = new ChatOpenAI({
 
 const chain = new ConversationChain({ llm: model, memory });
 
-const res1 = await chain.call({ input: "Hi! I'm Jim." });
+const res1 = await chain.invoke({ input: "Hi! I'm Jim." });
 console.log({ res1 });
 /*
 {
@@ -50,7 +50,7 @@ console.log({ res1 });
 }
 */
 
-const res2 = await chain.call({ input: "What did I just say my name was?" });
+const res2 = await chain.invoke({ input: "What did I just say my name was?" });
 console.log({ res2 });
 
 /*

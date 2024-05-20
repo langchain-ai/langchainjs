@@ -24,7 +24,6 @@ describe.skip("AstraDBVectorStore", () => {
       ...clientConfig,
       collection: process.env.ASTRA_DB_COLLECTION ?? "langchain_test",
       collectionOptions: {
-        checkExists: false,
         vector: {
           dimension: 1536,
           metric: "cosine",
@@ -149,7 +148,6 @@ describe.skip("AstraDBVectorStore", () => {
       store = new AstraDBVectorStore(new FakeEmbeddings(), {
         ...astraConfig,
         collectionOptions: {
-          checkExists: false,
           vector: {
             dimension: 8,
             metric: "cosine",
@@ -165,4 +163,61 @@ describe.skip("AstraDBVectorStore", () => {
       );
     }
   }, 60000);
+
+  test("skipCollectionProvisioning", async () => {
+    let store = new AstraDBVectorStore(new FakeEmbeddings(), {
+      ...astraConfig,
+      skipCollectionProvisioning: true,
+      collectionOptions: undefined,
+    });
+    await store.initialize();
+    try {
+      await store.similaritySearch("test");
+      fail("Should have thrown error");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      expect(e.message).toContain("langchain_test");
+    }
+    store = new AstraDBVectorStore(new FakeEmbeddings(), {
+      ...astraConfig,
+      skipCollectionProvisioning: false,
+      collectionOptions: {
+        checkExists: false,
+        vector: {
+          dimension: 4,
+          metric: "cosine",
+        },
+      },
+    });
+    await store.initialize();
+    await store.similaritySearch("test");
+  });
+
+  test("upsert", async () => {
+    const store = new AstraDBVectorStore(new FakeEmbeddings(), {
+      ...astraConfig,
+      collectionOptions: {
+        vector: {
+          dimension: 4,
+          metric: "cosine",
+        },
+      },
+    });
+    await store.initialize();
+
+    await store.addDocuments([
+      { pageContent: "Foo bar baz.", metadata: { a: 1, _id: "123456789" } },
+      { pageContent: "Bar baz foo.", metadata: { a: 2, _id: "987654321" } },
+      { pageContent: "Baz foo bar.", metadata: { a: 3, _id: "234567891" } },
+    ]);
+
+    await store.addDocuments([
+      { pageContent: "upserted", metadata: { a: 1, _id: "123456789" } },
+    ]);
+
+    const collection = await db.collection(astraConfig.collection);
+    const doc = await collection.findOne({ _id: "123456789" });
+
+    expect(doc?.text).toEqual("upserted");
+  });
 });

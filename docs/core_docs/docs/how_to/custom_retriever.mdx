@@ -1,0 +1,81 @@
+# How to write a custom retriever class
+
+:::info Prerequisites
+
+This guide assumes familiarity with the following concepts:
+
+- [Retrievers](/docs/concepts/#retrievers)
+
+:::
+
+To create your own retriever, you need to extend the [`BaseRetriever`](https://v02.api.js.langchain.com/classes/langchain_core_retrievers.BaseRetriever.html) class
+and implement a `_getRelevantDocuments` method that takes a `string` as its first parameter (and an optional `runManager` for tracing).
+This method should return an array of `Document`s fetched from some source. This process can involve calls to a database, to the web using `fetch`, or any other source.
+Note the underscore before `_getRelevantDocuments()`. The base class wraps the non-prefixed version in order to automatically handle tracing of the original call.
+
+Here's an example of a custom retriever that returns static documents:
+
+```ts
+import {
+  BaseRetriever,
+  type BaseRetrieverInput,
+} from "@langchain/core/retrievers";
+import type { CallbackManagerForRetrieverRun } from "@langchain/core/callbacks/manager";
+import { Document } from "@langchain/core/documents";
+
+export interface CustomRetrieverInput extends BaseRetrieverInput {}
+
+export class CustomRetriever extends BaseRetriever {
+  lc_namespace = ["langchain", "retrievers"];
+
+  constructor(fields?: CustomRetrieverInput) {
+    super(fields);
+  }
+
+  async _getRelevantDocuments(
+    query: string,
+    runManager?: CallbackManagerForRetrieverRun
+  ): Promise<Document[]> {
+    // Pass `runManager?.getChild()` when invoking internal runnables to enable tracing
+    // const additionalDocs = await someOtherRunnable.invoke(params, runManager?.getChild());
+    return [
+      // ...additionalDocs,
+      new Document({
+        pageContent: `Some document pertaining to ${query}`,
+        metadata: {},
+      }),
+      new Document({
+        pageContent: `Some other document pertaining to ${query}`,
+        metadata: {},
+      }),
+    ];
+  }
+}
+```
+
+Then, you can call `.invoke()` as follows:
+
+```ts
+const retriever = new CustomRetriever({});
+
+await retriever.invoke("LangChain docs");
+```
+
+```
+[
+  Document {
+    pageContent: 'Some document pertaining to LangChain docs',
+    metadata: {}
+  },
+  Document {
+    pageContent: 'Some other document pertaining to LangChain docs',
+    metadata: {}
+  }
+]
+```
+
+## Next steps
+
+You've now seen an example of implementing your own custom retriever.
+
+Next, check out the individual sections for deeper dives on specific retrievers, or the [broader tutorial on RAG](/docs/tutorials/rag).

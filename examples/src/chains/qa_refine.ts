@@ -1,5 +1,6 @@
 import { loadQARefineChain } from "langchain/chains";
 import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 
@@ -10,7 +11,8 @@ const chain = loadQARefineChain(model);
 
 // Load the documents and create the vector store
 const loader = new TextLoader("./state_of_the_union.txt");
-const docs = await loader.loadAndSplit();
+const splitter = new RecursiveCharacterTextSplitter();
+const docs = await loader.loadAndSplit(splitter);
 const store = await MemoryVectorStore.fromDocuments(docs, embeddings);
 
 // Select the relevant documents
@@ -18,7 +20,7 @@ const question = "What did the president say about Justice Breyer";
 const relevantDocs = await store.similaritySearch(question);
 
 // Call the chain
-const res = await chain.call({
+const res = await chain.invoke({
   input_documents: relevantDocs,
   question,
 });

@@ -2,15 +2,21 @@ import type { BaseLanguageModelInterface } from "@langchain/core/language_models
 import { ChainValues } from "@langchain/core/utils/types";
 import { BasePromptTemplate } from "@langchain/core/prompts";
 import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
-import { Neo4jGraph } from "@langchain/community/graphs/neo4j_graph";
-import { LLMChain } from "../../chains/llm_chain.js";
+import { LLMChain } from "../llm_chain.js";
 import { BaseChain, ChainInputs } from "../base.js";
 import { CYPHER_GENERATION_PROMPT, CYPHER_QA_PROMPT } from "./prompts.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "chains/graph_qa/cypher",
+  newPackageName: "@langchain/community",
+});
 
 export const INTERMEDIATE_STEPS_KEY = "intermediateSteps";
 
 export interface GraphCypherQAChainInput extends ChainInputs {
-  graph: Neo4jGraph;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  graph: any;
   cypherGenerationChain: LLMChain;
   qaChain: LLMChain;
   inputKey?: string;
@@ -21,7 +27,8 @@ export interface GraphCypherQAChainInput extends ChainInputs {
 }
 
 export interface FromLLMInput {
-  graph: Neo4jGraph;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  graph: any;
   llm?: BaseLanguageModelInterface;
   cypherLLM?: BaseLanguageModelInterface;
   qaLLM?: BaseLanguageModelInterface;
@@ -38,11 +45,12 @@ export interface FromLLMInput {
  *   llm: new ChatOpenAI({ temperature: 0 }),
  *   graph: new Neo4jGraph(),
  * });
- * const res = await chain.run("Who played in Pulp Fiction?");
+ * const res = await chain.invoke("Who played in Pulp Fiction?");
  * ```
  */
 export class GraphCypherQAChain extends BaseChain {
-  private graph: Neo4jGraph;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private graph: any;
 
   private cypherGenerationChain: LLMChain;
 

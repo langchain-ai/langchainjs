@@ -6,38 +6,19 @@ sidebar_class_name: node-only
 
 [Qdrant](https://qdrant.tech/) is a vector similarity search engine. It provides a production-ready service with a convenient API to store, search, and manage points - vectors with an additional payload.
 
-:::tip Compatibility
-Only available on Node.js.
-:::
-
 ## Setup
 
-1. Run a Qdrant instance with Docker on your computer by following the [Qdrant setup instructions](https://qdrant.tech/documentation/install/).
+1. Run a Qdrant instance with Docker on your computer by following the [Qdrant setup instructions](https://qdrant.tech/documentation/quick-start/).
 2. Install the Qdrant Node.js SDK.
 
    ```bash npm2yarn
-   npm install -S @qdrant/js-client-rest
+   npm install -S @langchain/qdrant
    ```
 
 3. Setup Env variables for Qdrant before running the code
 
-   3.1 OpenAI
-
    ```bash
    export OPENAI_API_KEY=YOUR_OPENAI_API_KEY_HERE
-   export QDRANT_URL=YOUR_QDRANT_URL_HERE # for example http://localhost:6333
-   ```
-
-   3.2 Azure OpenAI
-
-   ```bash
-   export AZURE_OPENAI_API_KEY=YOUR_AZURE_OPENAI_API_KEY_HERE
-   export AZURE_OPENAI_API_INSTANCE_NAME=YOUR_AZURE_OPENAI_INSTANCE_NAME_HERE
-   export AZURE_OPENAI_API_DEPLOYMENT_NAME=YOUR_AZURE_OPENAI_DEPLOYMENT_NAME_HERE
-   export AZURE_OPENAI_API_COMPLETIONS_DEPLOYMENT_NAME=YOUR_AZURE_OPENAI_COMPLETIONS_DEPLOYMENT_NAME_HERE
-   export AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME=YOUR_AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT_NAME_HERE
-   export AZURE_OPENAI_API_VERSION=YOUR_AZURE_OPENAI_API_VERSION_HERE
-   export AZURE_OPENAI_BASE_PATH=YOUR_AZURE_OPENAI_BASE_PATH_HERE
    export QDRANT_URL=YOUR_QDRANT_URL_HERE # for example http://localhost:6333
    ```
 

@@ -25,6 +25,7 @@ module.exports = {
     "*.cjs",
     "*.d.ts",
     "import_map.ts",
+    "dynamic_import_map.ts",
   ],
   rules: {
     "no-process-env": 2,
@@ -67,5 +68,14 @@ module.exports = {
     "prefer-rest-params": 0,
     "new-cap": ["error", { properties: false, capIsNew: false }],
     'jest/no-focused-tests': 'error',
+    "arrow-body-style": 0,
   },
+  overrides: [
+    {
+      files: ['**/*.test.ts'],
+      rules: {
+        '@typescript-eslint/no-unused-vars': 'off'
+      }
+    }
+  ]
 };

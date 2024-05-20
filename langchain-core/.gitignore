@@ -26,6 +26,10 @@ documents.cjs
 documents.js
 documents.d.ts
 documents.d.cts
+document_loaders/base.cjs
+document_loaders/base.js
+document_loaders/base.d.ts
+document_loaders/base.d.cts
 embeddings.cjs
 embeddings.js
 embeddings.d.ts
@@ -34,6 +38,10 @@ example_selectors.cjs
 example_selectors.js
 example_selectors.d.ts
 example_selectors.d.cts
+indexing.cjs
+indexing.js
+indexing.d.ts
+indexing.d.cts
 language_models/base.cjs
 language_models/base.js
 language_models/base.d.ts
@@ -114,6 +122,10 @@ stores.cjs
 stores.js
 stores.d.ts
 stores.d.cts
+structured_query.cjs
+structured_query.js
+structured_query.d.ts
+structured_query.d.cts
 tools.cjs
 tools.js
 tools.d.ts

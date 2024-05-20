@@ -9,6 +9,7 @@ import {
   BaseMessage,
   ChatMessage,
   MessageContent,
+  MessageContentComplex,
   isBaseMessage,
 } from "@langchain/core/messages";
 import {
@@ -48,6 +49,19 @@ export function convertAuthorToRole(author: string) {
   }
 }
 
+function messageContentMedia(content: MessageContentComplex): Part {
+  if ("mimeType" in content && "data" in content) {
+    return {
+      inlineData: {
+        mimeType: content.mimeType,
+        data: content.data,
+      },
+    };
+  }
+
+  throw new Error("Invalid media content");
+}
+
 export function convertMessageContentToParts(
   content: MessageContent,
   isMultimodalModel: boolean
@@ -67,10 +81,15 @@ export function convertMessageContentToParts(
       if (!isMultimodalModel) {
         throw new Error(`This model does not support images`);
       }
-      if (typeof c.image_url !== "string") {
+      let source;
+      if (typeof c.image_url === "string") {
+        source = c.image_url;
+      } else if (typeof c.image_url === "object" && "url" in c.image_url) {
+        source = c.image_url.url;
+      } else {
         throw new Error("Please provide image as base64 encoded data URL");
       }
-      const [dm, data] = c.image_url.split(",");
+      const [dm, data] = source.split(",");
       if (!dm.startsWith("data:")) {
         throw new Error("Please provide image as base64 encoded data URL");
       }
@@ -86,6 +105,8 @@ export function convertMessageContentToParts(
           mimeType,
         },
       };
+    } else if (c.type === "media") {
+      return messageContentMedia(c);
     }
     throw new Error(`Unknown content type ${(c as { type: string }).type}`);
   });

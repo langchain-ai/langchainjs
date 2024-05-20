@@ -1,17 +1,14 @@
-import type {
-  SupabaseFilter,
-  SupabaseFilterRPCCall,
-  SupabaseMetadata,
-} from "@langchain/community/vectorstores/supabase";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Comparators,
   Comparison,
   Operation,
   Operators,
   StructuredQuery,
-} from "../../chains/query_constructor/ir.js";
+} from "@langchain/core/structured_query";
 
-type SupabaseFilterProps = keyof SupabaseFilter;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SupabaseFilterProps = any;
 
 /**
  * Utility class used to duplicate parameters for a proxy object,
@@ -48,7 +45,7 @@ export class ProxyParamsDuplicator {
    * @returns A proxy handler for a `SupabaseFilter` object.
    */
   buildProxyHandler() {
-    const proxyHandler: ProxyHandler<SupabaseFilter> = {
+    const proxyHandler: ProxyHandler<any> = {
       get: (target, prop, receiver) => {
         if (typeof target[prop as SupabaseFilterProps] === "function") {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -253,8 +250,10 @@ export class ProxyParamsDuplicator {
    * @returns The flattened parameters as a string.
    */
   static getFlattenedParams(
-    rpc: SupabaseFilter,
-    filter: SupabaseFilterRPCCall
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    rpc: any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    filter: any
   ) {
     const proxiedDuplicator = new ProxyParamsDuplicator();
     const proxiedRpc = new Proxy(rpc, proxiedDuplicator.buildProxyHandler());
@@ -269,14 +268,17 @@ export class ProxyParamsDuplicator {
  * `Operation` and `Comparison` classes to build the query.
  */
 export function convertObjectFilterToStructuredQuery(
-  objFilter: SupabaseMetadata
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  objFilter: any
 ): StructuredQuery {
   return new StructuredQuery(
     "",
     new Operation(
       Operators.and,
       Object.entries(objFilter).map(
-        ([column, value]) => new Comparison(Comparators.eq, column, value)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ([column, value]) =>
+          new Comparison(Comparators.eq, column, value as any)
       )
     )
   );
