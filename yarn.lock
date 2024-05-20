@@ -9016,6 +9016,7 @@ __metadata:
     "@aws-sdk/types": ^3.357.0
     "@azure/search-documents": ^12.0.0
     "@azure/storage-blob": ^12.15.0
+    "@browserbasehq/sdk": ^1.1.5
     "@clickhouse/client": ^0.2.5
     "@cloudflare/ai": ^1.0.12
     "@cloudflare/workers-types": ^4.20230922.0
@@ -9182,6 +9183,7 @@ __metadata:
     "@aws-sdk/credential-provider-node": ^3.388.0
     "@azure/search-documents": ^12.0.0
     "@azure/storage-blob": ^12.15.0
+    "@browserbasehq/sdk": ^1.1.5
     "@clickhouse/client": ^0.2.5
     "@cloudflare/ai": "*"
     "@datastax/astra-db-ts": ^1.0.0
@@ -9308,6 +9310,8 @@ __metadata:
     "@azure/search-documents":
       optional: true
     "@azure/storage-blob":
+      optional: true
+    "@browserbasehq/sdk":
       optional: true
     "@clickhouse/client":
       optional: true

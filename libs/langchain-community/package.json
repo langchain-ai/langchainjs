@@ -65,6 +65,7 @@
     "@aws-sdk/types": "^3.357.0",
     "@azure/search-documents": "^12.0.0",
     "@azure/storage-blob": "^12.15.0",
+    "@browserbasehq/sdk": "^1.1.5",
     "@clickhouse/client": "^0.2.5",
     "@cloudflare/ai": "^1.0.12",
     "@cloudflare/workers-types": "^4.20230922.0",
@@ -221,6 +222,7 @@
     "@aws-sdk/credential-provider-node": "^3.388.0",
     "@azure/search-documents": "^12.0.0",
     "@azure/storage-blob": "^12.15.0",
+    "@browserbasehq/sdk": "^1.1.5",
     "@clickhouse/client": "^0.2.5",
     "@cloudflare/ai": "*",
     "@datastax/astra-db-ts": "^1.0.0",
@@ -359,6 +361,9 @@
       "optional": true
     },
     "@azure/storage-blob": {
+      "optional": true
+    },
+    "@browserbasehq/sdk": {
       "optional": true
     },
     "@clickhouse/client": {
@@ -2463,6 +2468,15 @@
       "import": "./document_loaders/web/azure_blob_storage_file.js",
       "require": "./document_loaders/web/azure_blob_storage_file.cjs"
     },
+    "./document_loaders/web/browserbase": {
+      "types": {
+        "import": "./document_loaders/web/browserbase.d.ts",
+        "require": "./document_loaders/web/browserbase.d.cts",
+        "default": "./document_loaders/web/browserbase.d.ts"
+      },
+      "import": "./document_loaders/web/browserbase.js",
+      "require": "./document_loaders/web/browserbase.cjs"
+    },
     "./document_loaders/web/cheerio": {
       "types": {
         "import": "./document_loaders/web/cheerio.d.ts",
@@ -3632,6 +3646,10 @@
     "document_loaders/web/azure_blob_storage_file.js",
     "document_loaders/web/azure_blob_storage_file.d.ts",
     "document_loaders/web/azure_blob_storage_file.d.cts",
+    "document_loaders/web/browserbase.cjs",
+    "document_loaders/web/browserbase.js",
+    "document_loaders/web/browserbase.d.ts",
+    "document_loaders/web/browserbase.d.cts",
     "document_loaders/web/cheerio.cjs",
     "document_loaders/web/cheerio.js",
     "document_loaders/web/cheerio.d.ts",
