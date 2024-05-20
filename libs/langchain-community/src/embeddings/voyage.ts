@@ -58,7 +58,7 @@ export class VoyageEmbeddings
 
   headers?: Record<string, string>;
 
-  inputType: string;
+  inputType?: string;
   /**
    * Constructor for the VoyageEmbeddings class.
    * @param fields - An optional object with properties to configure the instance.
