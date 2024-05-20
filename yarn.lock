@@ -10215,6 +10215,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@layerup/layerup-security@npm:^1.5.12":
+  version: 1.5.12
+  resolution: "@layerup/layerup-security@npm:1.5.12"
+  dependencies:
+    axios: ^1.6.8
+    openai: ^4.32.1
+  checksum: f506b7aa266dcf7e062e3eebdba99468363f45f4d87419f108538f13d5cae70b6ac96f1c263d614de4ff7d742cf0ee3bd67b44124de717680bf02c69a458b5e2
+  languageName: node
+  linkType: hard
+
 "@leichtgewicht/ip-codec@npm:^2.0.1":
   version: 2.0.4
   resolution: "@leichtgewicht/ip-codec@npm:2.0.4"
@@ -22450,7 +22460,7 @@ __metadata:
     "@langchain/textsplitters": "workspace:*"
     "@langchain/weaviate": "workspace:*"
     "@langchain/yandex": "workspace:*"
-    "@layerup/layerup-security": ^1.5.10
+    "@layerup/layerup-security": ^1.5.12
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^2.2.0
     "@planetscale/database": ^1.8.0
