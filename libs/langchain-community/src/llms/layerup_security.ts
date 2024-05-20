@@ -129,14 +129,14 @@ export class LayerupSecurity extends LLM {
 
       // If there is a guardrail violation, extract the canned response and reply with that instead
       if (!securityResponse.all_safe) {
-        const replacedResponse =
+        const replacedResponse: LLMMessage =
           this.handlePromptGuardrailViolation(securityResponse);
-        return replacedResponse.content;
+        return replacedResponse.content as string;
       }
     }
 
     // Invoke the underlying LLM with the prompt and options
-    let result = await this.llm.invoke(messages[0].content, options);
+    let result = await this.llm.invoke(messages[0].content as string, options);
 
     if (this.mask && unmaskResponse) {
       result = unmaskResponse(result);
@@ -158,9 +158,9 @@ export class LayerupSecurity extends LLM {
 
       // If there is a guardrail violation, extract the canned response and reply with that instead
       if (!securityResponse.all_safe) {
-        const replacedResponse =
+        const replacedResponse: LLMMessage =
           this.handleResponseGuardrailViolation(securityResponse);
-        return replacedResponse.content;
+        return replacedResponse.content as string;
       }
     }
 
