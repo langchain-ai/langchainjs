@@ -208,7 +208,7 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
     this.stopSequences = fields?.stopSequences;
     this.modelKwargs = fields?.modelKwargs;
     this.streaming = fields?.streaming ?? this.streaming;
-    this.usesMessagesApi = canUsesMessagesApi(this.model);
+    this.usesMessagesApi = canUseMessagesApi(this.model);
   }
 
   async _generate(
@@ -496,7 +496,7 @@ function isChatGenerationChunk(
   );
 }
 
-function canUsesMessagesApi(model: string): boolean {
+function canUseMessagesApi(model: string): boolean {
   const modelProviderName = model.split(".")[0];
 
   if (
