@@ -159,14 +159,14 @@ class UpstashRatelimitHandler extends BaseCallbackHandler {
           await this.tokenRatelimit.limit(this.identifier, {rate: tokenCount});
         } else {
           throw new Error(
-            `LLM response doesn't include "${this.llmOutputTokenUsageField}: {total_tokens: int, prompt_tokens: int}" field.`
+            "tokenCount not found in llm output"
           );
         }
       } catch (error) {
         if (error instanceof UpstashRatelimitError) {
           throw error;
         }
-        console.error(error);
+        console.error(`Failed to log token usage for Upstash rate limit. It could be because the LLM returns the token usage in a different format than expected. See UpstashRatelimitHandler parameters. Got error: ${error}`);
       }
     }
   }
