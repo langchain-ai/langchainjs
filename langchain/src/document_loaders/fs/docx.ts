@@ -8,6 +8,8 @@ import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation
 });
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/fs/docx" instead. This entrypoint will be removed in 0.3.0.
+ *
  * A class that extends the `BufferLoader` class. It represents a document
  * loader that loads documents from DOCX files.
  */

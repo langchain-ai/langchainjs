@@ -33,6 +33,8 @@ interface VideoMetadata {
 }
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/youtube" instead. This entrypoint will be removed in 0.3.0.
+ *
  * A document loader for loading data from YouTube videos. It uses the
  * youtube-transcript and youtubei.js libraries to fetch the transcript
  * and video metadata.
