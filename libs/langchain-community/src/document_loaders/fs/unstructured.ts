@@ -181,8 +181,12 @@ export class UnstructuredLoader extends BaseDocumentLoader {
     } else {
       this.filePath = filePathOrLegacyApiUrl;
       const options = optionsOrLegacyFilePath;
-      this.apiKey = options.apiKey ?? getEnvironmentVariable("UNSTRUCTURED_API_KEY");
-      this.apiUrl = options.apiUrl ?? getEnvironmentVariable("UNSTRUCTURED_API_URL") ?? this.apiUrl;
+      this.apiKey =
+        options.apiKey ?? getEnvironmentVariable("UNSTRUCTURED_API_KEY");
+      this.apiUrl =
+        options.apiUrl ??
+        getEnvironmentVariable("UNSTRUCTURED_API_URL") ??
+        this.apiUrl;
       this.strategy = options.strategy ?? this.strategy;
       this.encoding = options.encoding;
       this.ocrLanguages = options.ocrLanguages ?? this.ocrLanguages;
