@@ -1,6 +1,6 @@
 import { loadSummarizationChain } from "langchain/chains";
 import { SearchApiLoader } from "langchain/document_loaders/web/searchapi";
-import { TokenTextSplitter } from "langchain/text_splitter";
+import { TokenTextSplitter } from "@langchain/textsplitters";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { ChatAnthropic } from "@langchain/anthropic";
 

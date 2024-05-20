@@ -11,6 +11,10 @@ import { LangChainTracer } from "@langchain/core/tracers/tracer_langchain";
 import { BaseTracer } from "@langchain/core/tracers/base";
 import { ChainValues } from "@langchain/core/utils/types";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
+import type {
+  CallbackManager,
+  CallbackManagerForChainRun,
+} from "@langchain/core/callbacks/manager";
 import {
   Client,
   Example,
@@ -36,10 +40,6 @@ import {
 } from "./config.js";
 import { randomName } from "./name_generation.js";
 import { ProgressBar } from "./progress.js";
-import type {
-  CallbackManager,
-  CallbackManagerForChainRun,
-} from "../callbacks/manager.js";
 
 export type ChainOrFactory =
   | Runnable

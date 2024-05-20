@@ -88,6 +88,8 @@ export class OpenAIEmbeddings
 
   azureOpenAIApiKey?: string;
 
+  azureADTokenProvider?: () => Promise<string>;
+
   azureOpenAIApiInstanceName?: string;
 
   azureOpenAIApiDeploymentName?: string;
@@ -96,9 +98,9 @@ export class OpenAIEmbeddings
 
   organization?: string;
 
-  private client: OpenAIClient;
+  protected client: OpenAIClient;
 
-  private clientConfig: ClientOptions;
+  protected clientConfig: ClientOptions;
 
   constructor(
     fields?: Partial<OpenAIEmbeddingsParams> &
@@ -127,8 +129,13 @@ export class OpenAIEmbeddings
     const azureApiKey =
       fieldsWithDefaults?.azureOpenAIApiKey ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY");
-    if (!azureApiKey && !apiKey) {
-      throw new Error("OpenAI or Azure OpenAI API key not found");
+
+    this.azureADTokenProvider = fields?.azureADTokenProvider ?? undefined;
+
+    if (!azureApiKey && !apiKey && !this.azureADTokenProvider) {
+      throw new Error(
+        "OpenAI or Azure OpenAI API key or Token Provider not found"
+      );
     }
 
     const azureApiInstanceName =
@@ -168,7 +175,7 @@ export class OpenAIEmbeddings
     this.azureOpenAIApiInstanceName = azureApiInstanceName;
     this.azureOpenAIApiDeploymentName = azureApiDeploymentName;
 
-    if (this.azureOpenAIApiKey) {
+    if (this.azureOpenAIApiKey || this.azureADTokenProvider) {
       if (!this.azureOpenAIApiInstanceName && !this.azureOpenAIBasePath) {
         throw new Error("Azure OpenAI API instance name not found");
       }
@@ -254,7 +261,7 @@ export class OpenAIEmbeddings
    * @param request Request to send to the OpenAI API.
    * @returns Promise that resolves to the response from the API.
    */
-  private async embeddingWithRetry(
+  protected async embeddingWithRetry(
     request: OpenAIClient.EmbeddingCreateParams
   ) {
     if (!this.client) {

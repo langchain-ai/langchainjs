@@ -1,0 +1,118 @@
+---
+sidebar_position: 3
+---
+
+# How to cache chat model responses
+
+:::info Prerequisites
+
+This guide assumes familiarity with the following concepts:
+
+- [Chat models](/docs/concepts/#chat-models)
+- [LLMs](/docs/concepts/#llms)
+
+:::
+
+LangChain provides an optional caching layer for chat models. This is useful for two reasons:
+
+It can save you money by reducing the number of API calls you make to the LLM provider, if you're often requesting the same completion multiple times.
+It can speed up your application by reducing the number of API calls you make to the LLM provider.
+
+import CodeBlock from "@theme/CodeBlock";
+
+```typescript
+import { ChatOpenAI } from "@langchain/openai";
+
+// To make the caching really obvious, lets use a slower model.
+const model = new ChatOpenAI({
+  model: "gpt-4",
+  cache: true,
+});
+```
+
+## In Memory Cache
+
+The default cache is stored in-memory. This means that if you restart your application, the cache will be cleared.
+
+```typescript
+console.time();
+
+// The first time, it is not yet in cache, so it should take longer
+const res = await model.invoke("Tell me a joke!");
+console.log(res);
+
+console.timeEnd();
+
+/*
+  AIMessage {
+    lc_serializable: true,
+    lc_kwargs: {
+      content: "Why don't scientists trust atoms?\n\nBecause they make up everything!",
+      additional_kwargs: { function_call: undefined, tool_calls: undefined }
+    },
+    lc_namespace: [ 'langchain_core', 'messages' ],
+    content: "Why don't scientists trust atoms?\n\nBecause they make up everything!",
+    name: undefined,
+    additional_kwargs: { function_call: undefined, tool_calls: undefined }
+  }
+  default: 2.224s
+*/
+```
+
+```typescript
+console.time();
+
+// The second time it is, so it goes faster
+const res2 = await model.invoke("Tell me a joke!");
+console.log(res2);
+
+console.timeEnd();
+/*
+  AIMessage {
+    lc_serializable: true,
+    lc_kwargs: {
+      content: "Why don't scientists trust atoms?\n\nBecause they make up everything!",
+      additional_kwargs: { function_call: undefined, tool_calls: undefined }
+    },
+    lc_namespace: [ 'langchain_core', 'messages' ],
+    content: "Why don't scientists trust atoms?\n\nBecause they make up everything!",
+    name: undefined,
+    additional_kwargs: { function_call: undefined, tool_calls: undefined }
+  }
+  default: 181.98ms
+*/
+```
+
+## Caching with Redis
+
+LangChain also provides a Redis-based cache. This is useful if you want to share the cache across multiple processes or servers.
+To use it, you'll need to install the `redis` package:
+
+```bash npm2yarn
+npm install ioredis @langchain/community
+```
+
+Then, you can pass a `cache` option when you instantiate the LLM. For example:
+
+import RedisCacheExample from "@examples/cache/chat_models/redis.ts";
+
+<CodeBlock language="typescript">{RedisCacheExample}</CodeBlock>
+
+## Caching on the File System
+
+:::warning
+This cache is not recommended for production use. It is only intended for local development.
+:::
+
+LangChain provides a simple file system cache.
+By default the cache is stored a temporary directory, but you can specify a custom directory if you want.
+
+```typescript
+const cache = await LocalFileCache.create();
+```
+
+## Next steps
+
+You've now learned how to cache model responses to save time and money.
+
+Next, check out the other how-to guides on chat models, like [how to get a model to return structured output](/docs/how_to/structured_output) or [how to create your own custom chat model](/docs/how_to/custom_chat).

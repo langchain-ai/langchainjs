@@ -5,7 +5,7 @@ import {
 } from "@langchain/community/vectorstores/hanavector";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { TextLoader } from "langchain/document_loaders/fs/text";
-import { CharacterTextSplitter } from "langchain/text_splitter";
+import { CharacterTextSplitter } from "@langchain/textsplitters";
 
 const connectionParams = {
   host: process.env.HANA_HOST,

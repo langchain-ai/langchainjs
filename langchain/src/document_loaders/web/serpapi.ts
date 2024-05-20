@@ -1,6 +1,12 @@
 import { Document } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { BaseDocumentLoader } from "../base.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/web/serpapi",
+  newPackageName: "@langchain/community",
+});
 
 /**
  * Interface representing the parameters for the SerpAPI loader. It
@@ -15,6 +21,8 @@ interface SerpAPIParameters {
 }
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/serpapi" instead. This entrypoint will be removed in 0.3.0.
+ *
  * Class representing a document loader for loading search results from
  * the SerpAPI. It extends the BaseDocumentLoader class.
  * @example

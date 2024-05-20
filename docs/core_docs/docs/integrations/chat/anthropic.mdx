@@ -47,7 +47,7 @@ for a complete list of supported file types.
 
 ## Agents
 
-Anthropic models that support tool calling can be used in the [Tool Calling agent](/docs/modules/agents/agent_types/tool_calling/). Here's an example:
+Anthropic models that support tool calling can be used in the Tool Calling agent. Here's an example:
 
 import AnthropicToolCallingAgent from "@examples/models/chat/integration_anthropic_tool_calling_agent.ts";
 
@@ -77,6 +77,42 @@ import AnthropicSingleTool from "@examples/models/chat/integration_anthropic_sin
 
 :::tip
 See the LangSmith trace [here](https://smith.langchain.com/public/90c03ed0-154b-4a50-afbf-83dcbf302647/r)
+:::
+
+### Forced tool calling
+
+import AnthropicForcedTool from "@examples/models/chat/integration_anthropic_forced_tool.ts";
+
+In this example we'll provide the model with two tools:
+
+- `calculator`
+- `get_weather`
+
+Then, when we call `bindTools`, we'll force the model to use the `get_weather` tool by passing the `tool_choice` arg like this:
+
+```typescript
+.bindTools({
+  tools,
+  tool_choice: {
+    type: "tool",
+    name: "get_weather",
+  }
+});
+```
+
+Finally, we'll invoke the model, but instead of asking about the weather, we'll ask it to do some math.
+Since we explicitly forced the model to use the `get_weather` tool, it will ignore the input and return the weather information (in this case it returned `<UNKNOWN>`, which is expected.)
+
+<CodeBlock language="typescript">{AnthropicForcedTool}</CodeBlock>
+
+The `bind_tools` argument has three possible values:
+
+- `{ type: "tool", name: "tool_name" }` - Forces the model to use the specified tool.
+- `"any"` - Allows the model to choose the tool, but still forcing it to choose at least one.
+- `"auto"` - The default value. Allows the model to select any tool, or none.
+
+:::tip
+See the LangSmith trace [here](https://smith.langchain.com/public/c5cc8fe7-5e76-4607-8c43-1e0b30e4f5ca/r)
 :::
 
 ### `withStructuredOutput`

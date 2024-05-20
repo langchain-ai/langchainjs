@@ -88,7 +88,7 @@ const agent2 = await createOpenAIToolsAgent({
 
 const agentExecutor2 = new AgentExecutor({ agent: agent2, tools });
 
-import { ChatMessageHistory } from "langchain/stores/message/in_memory";
+import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
 import { RunnableWithMessageHistory } from "@langchain/core/runnables";
 
 const demoEphemeralChatMessageHistory = new ChatMessageHistory();

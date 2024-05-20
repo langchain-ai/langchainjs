@@ -2,6 +2,12 @@ import FirecrawlApp from "@mendable/firecrawl-js";
 import { Document, type DocumentInterface } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { BaseDocumentLoader } from "../base.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/web/firecrawl",
+  newPackageName: "@langchain/community",
+});
 
 /**
  * Interface representing the parameters for the Firecrawl loader. It
@@ -30,6 +36,8 @@ interface FirecrawlDocument {
 }
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/firecrawl" instead. This entrypoint will be removed in 0.3.0.
+ *
  * Class representing a document loader for loading data from
  * Firecrawl (firecrawl.dev). It extends the BaseDocumentLoader class.
  * @example

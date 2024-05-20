@@ -1,0 +1,58 @@
+# How use a vector store to retrieve data
+
+:::info Prerequisites
+
+This guide assumes familiarity with the following concepts:
+
+- [Vector stores](/docs/concepts/#vectorstores)
+- [Retrievers](/docs/concepts/#retrievers)
+- [Text splitters](/docs/concepts#text-splitters)
+- [Chaining runnables](/docs/how_to/sequence/)
+
+:::
+
+Vector stores can be converted into retrievers using the [`.asRetriever()`](https://v02.api.js.langchain.com/classes/langchain_core_vectorstores.VectorStore.html#asRetriever) method, which allows you to more easily compose them in chains.
+
+Below, we show a retrieval-augmented generation (RAG) chain that performs question answering over documents using the following steps:
+
+1. Initialize an vector store
+2. Create a retriever from that vector store
+3. Compose a question answering chain
+4. Ask questions!
+
+Each of the steps has multiple sub steps and potential configurations, but we'll go through one common flow.
+First, install the required dependency:
+
+import CodeBlock from "@theme/CodeBlock";
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
+You can download the `state_of_the_union.txt` file [here](https://github.com/langchain-ai/langchain/blob/master/docs/docs/modules/state_of_the_union.txt).
+
+import RetrievalQAExample from "@examples/chains/retrieval_qa.ts";
+
+<CodeBlock language="typescript">{RetrievalQAExample}</CodeBlock>
+
+Let's walk through what's happening here.
+
+1. We first load a long text and split it into smaller documents using a text splitter.
+   We then load those documents (which also embeds the documents using the passed `OpenAIEmbeddings` instance) into HNSWLib, our vector store, creating our index.
+
+2. Though we can query the vector store directly, we convert the vector store into a retriever to return retrieved documents in the right format for the question answering chain.
+
+3. We initialize a retrieval chain, which we'll call later in step 4.
+
+4. We ask questions!
+
+## Next steps
+
+You've now learned how to convert a vector store as a retriever.
+
+See the individual sections for deeper dives on specific retrievers, the [broader tutorial on RAG](/docs/tutorials/rag), or this section to learn how to
+[create your own custom retriever over any data source](/docs/how_to/custom_retriever/).
