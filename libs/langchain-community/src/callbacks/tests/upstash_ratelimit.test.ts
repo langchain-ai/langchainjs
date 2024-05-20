@@ -1,16 +1,38 @@
 import { LLMResult } from "@langchain/core/outputs";
-import { Ratelimit, Response } from '@upstash/ratelimit';
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
 import { Serialized } from "./langchain-core/src/load/serializable";
 import { UpstashRatelimitHandler, UpstashRatelimitError } from '../handlers/upstash_ratelimit.js';
-
+import {jest} from '@jest/globals'
 
 // Mocked Ratelimit class
 jest.mock('@upstash/ratelimit');
 
+const createResponse = (
+  sucess: boolean,
+  limit: number,
+  remaining: number,
+  reset: number,
+  // pending: Promise<unknown>
+) => ({
+  success: sucess,
+  limit: limit,
+  remaining: remaining,
+  reset: reset,
+  // pending: pending
+})
+
 const createRatelimitMock = () => {
-  const ratelimit = new Ratelimit();
-  (ratelimit.limit as jest.Mock).mockReturnValue(Promise.resolve(new Response(true, 10, 10, 10000)));
-  (ratelimit.getRemaining as jest.Mock).mockReturnValue(Promise.resolve(1000));
+  const ratelimit = new Ratelimit({
+    redis: new Redis({url: "mock", token: "mock"}),
+    limiter: Ratelimit.fixedWindow(10, "10 s")
+  });
+  // (ratelimit.limit as jest.Mock).mockReturnValue(Promise.resolve(createResponse(true, 10, 10, 10000)));
+  // (ratelimit.getRemaining as jest.Mock).mockReturnValue(Promise.resolve(1000));
+
+  ratelimit.limit = jest.fn().mockReturnValue(Promise.resolve(createResponse(true, 10, 10, 10000)));
+  ratelimit.getRemaining = jest.fn().mockReturnValue(Promise.resolve(1000));
+
   return ratelimit;
 };
 
@@ -60,7 +82,7 @@ describe('UpstashRatelimitHandler', () => {
   });
 
   test('should throw error when request limit is reached', async () => {
-    (requestRatelimit.limit as jest.Mock).mockReturnValue(Promise.resolve(new Response(false, 10, 0, 10000)));
+    (requestRatelimit.limit as jest.Mock).mockReturnValue(Promise.resolve(createResponse(false, 10, 0, 10000)));
     const handler = new UpstashRatelimitHandler('user123', { requestRatelimit });
     await expect(handler.handleChainStart(serialized, {})).rejects.toThrowError(UpstashRatelimitError);
   });
@@ -75,15 +97,15 @@ describe('UpstashRatelimitHandler', () => {
     const response: LLMResult = {
       generations: [],
       llmOutput: {
-        token_usage: {
-          prompt_tokens: 2,
-          completion_tokens: 3,
-          total_tokens: 5,
+        tokenUsage: {
+          promptTokens: 2,
+          completionTokens: 3,
+          totalTokens: 5,
         },
       },
     };
     await handlerWithBothLimits.handleLLMEnd(response, 'runId');
-    expect(tokenRatelimit.limit).toHaveBeenCalledWith('user123', 2);
+    expect(tokenRatelimit.limit).toHaveBeenCalledWith('user123', {rate: 2});
   });
 
   test('should handle LLM end with token limit including output tokens', async () => {
@@ -94,15 +116,15 @@ describe('UpstashRatelimitHandler', () => {
     const response: LLMResult = {
       generations: [],
       llmOutput: {
-        token_usage: {
-          prompt_tokens: 2,
-          completion_tokens: 3,
-          total_tokens: 5,
+        tokenUsage: {
+          promptTokens: 2,
+          completionTokens: 3,
+          totalTokens: 5,
         },
       },
     };
     await handler.handleLLMEnd(response, 'runId');
-    expect(tokenRatelimit.limit).toHaveBeenCalledWith('user123', 5);
+    expect(tokenRatelimit.limit).toHaveBeenCalledWith('user123', { rate: 5 });
   });
 
   test('should throw error when LLM response does not include token usage', async () => {
@@ -110,7 +132,14 @@ describe('UpstashRatelimitHandler', () => {
       generations: [],
       llmOutput: {},
     };
-    await expect(handlerWithBothLimits.handleLLMEnd(response, 'runId')).rejects.toThrowError('LLM response doesn\'t include `token_usage: {total_tokens: int, prompt_tokens: int}` field.');
+
+    // Spy on console.error
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    await handlerWithBothLimits.handleLLMEnd(response, 'runId');
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith("Failed to log token usage for Upstash rate limit. It could be because the LLM returns the token usage in a different format than expected. See UpstashRatelimitHandler parameters. Got error: TypeError: Cannot read properties of undefined (reading 'promptTokens')");
+
   });
 
   test('should reset handler with new identifier', () => {
@@ -168,10 +197,10 @@ describe('UpstashRatelimitHandler', () => {
     const response: LLMResult = {
       generations: [],
       llmOutput: {
-        token_usage: {
-          prompt_tokens: 2,
-          completion_tokens: 3,
-          total_tokens: 5,
+        tokenUsage: {
+          promptTokens: 2,
+          completionTokens: 3,
+          totalTokens: 5,
         },
       },
     };
