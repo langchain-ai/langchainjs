@@ -191,7 +191,7 @@ export class ChatGoogleGenerativeAI
 
   apiKey?: string;
 
-  apiVersion?: string = "v1";
+  apiVersion?: string = "v1"; // v1 or v1beta (has more more models)
 
   baseUrl?: string = "https://generativeai.googleapis.com";
 
@@ -277,7 +277,7 @@ export class ChatGoogleGenerativeAI
         },
       },
       {
-        apiVersion: this.apiVersion,
+        apiVersion: fields?.apiVersion ?? this.apiVersion,
         baseUrl: this.baseUrl,
       }
     );
