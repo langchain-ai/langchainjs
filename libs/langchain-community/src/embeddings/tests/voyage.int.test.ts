@@ -2,14 +2,14 @@ import { test, expect } from "@jest/globals";
 import { VoyageEmbeddings } from "../voyage.js";
 
 test.skip("Test VoyageEmbeddings.embedQuery with input_type", async () => {
-  const embeddings = new VoyageEmbeddings({ inputType: "document" });
+  const embeddings = new VoyageEmbeddings({ inputType: "none" });
   const res = await embeddings.embedQuery("Hello world");
 
   expect(typeof res[0]).toBe("number");
 });
 
 test.skip("Test VoyageEmbeddings.embedDocuments with input_type", async () => {
-  const embeddings = new VoyageEmbeddings({ inputType: "document" });
+  const embeddings = new VoyageEmbeddings({ inputType: "none" });
   const res = await embeddings.embedDocuments(["Hello world", "Bye bye"]);
   expect(res).toHaveLength(2);
   expect(typeof res[0][0]).toBe("number");
@@ -20,7 +20,7 @@ test.skip("Test VoyageEmbeddings concurrency with input_type", async () => {
   const embeddings = new VoyageEmbeddings({
     batchSize: 1,
     maxConcurrency: 2,
-    inputType: "document",
+    inputType: "none",
   });
   const res = await embeddings.embedDocuments([
     "Hello world",
