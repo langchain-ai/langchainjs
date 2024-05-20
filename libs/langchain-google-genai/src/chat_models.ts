@@ -114,6 +114,16 @@ export interface GoogleGenerativeAIChatInput extends BaseChatModelParams {
    */
   apiKey?: string;
 
+  /**
+   * Google API version to use
+   */
+  apiVersion?: string;
+
+  /**
+   * Google API base URL to use
+   */
+  baseUrl?: string;
+
   /** Whether to stream the results or not */
   streaming?: boolean;
 }
@@ -180,6 +190,10 @@ export class ChatGoogleGenerativeAI
   safetySettings?: SafetySetting[];
 
   apiKey?: string;
+
+  apiVersion?: string = "v1";
+
+  baseUrl?: string = "https://generativeai.googleapis.com";
 
   streaming = false;
 
@@ -249,18 +263,24 @@ export class ChatGoogleGenerativeAI
 
     this.streaming = fields?.streaming ?? this.streaming;
 
-    this.client = new GenerativeAI(this.apiKey).getGenerativeModel({
-      model: this.model,
-      safetySettings: this.safetySettings as SafetySetting[],
-      generationConfig: {
-        candidateCount: 1,
-        stopSequences: this.stopSequences,
-        maxOutputTokens: this.maxOutputTokens,
-        temperature: this.temperature,
-        topP: this.topP,
-        topK: this.topK,
+    this.client = new GenerativeAI(this.apiKey).getGenerativeModel(
+      {
+        model: this.model,
+        safetySettings: this.safetySettings as SafetySetting[],
+        generationConfig: {
+          candidateCount: 1,
+          stopSequences: this.stopSequences,
+          maxOutputTokens: this.maxOutputTokens,
+          temperature: this.temperature,
+          topP: this.topP,
+          topK: this.topK,
+        },
       },
-    });
+      {
+        apiVersion: this.apiVersion,
+        baseUrl: this.baseUrl,
+      }
+    );
   }
 
   _combineLLMOutput() {

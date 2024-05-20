@@ -1,5 +1,8 @@
 import { type ClientOptions, AzureOpenAI as AzureOpenAIClient } from "openai";
-import { type BaseChatModelParams } from "@langchain/core/language_models/chat_models";
+import {
+  LangSmithParams,
+  type BaseChatModelParams,
+} from "@langchain/core/language_models/chat_models";
 import { ChatOpenAI } from "../chat_models.js";
 import { OpenAIEndpointConfig, getEndpoint } from "../utils/azure.js";
 import {
@@ -43,6 +46,12 @@ export class AzureChatOpenAI extends ChatOpenAI {
     super(newFields);
   }
 
+  protected getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+    const params = super.getLsParams(options);
+    params.ls_provider = "azure";
+    return params;
+  }
+
   protected _getClientOptions(options: OpenAICoreRequestOptions | undefined) {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
@@ -50,6 +59,7 @@ export class AzureChatOpenAI extends ChatOpenAI {
         azureOpenAIApiInstanceName: this.azureOpenAIApiInstanceName,
         azureOpenAIApiKey: this.azureOpenAIApiKey,
         azureOpenAIBasePath: this.azureOpenAIBasePath,
+        azureADTokenProvider: this.azureADTokenProvider,
         baseURL: this.clientConfig.baseURL,
       };
 
@@ -69,6 +79,13 @@ export class AzureChatOpenAI extends ChatOpenAI {
       if (!params.baseURL) {
         delete params.baseURL;
       }
+
+      params.defaultHeaders = {
+        ...params.defaultHeaders,
+        "User-Agent": params.defaultHeaders?.["User-Agent"]
+          ? `${params.defaultHeaders["User-Agent"]}: langchainjs-azure-openai-v2`
+          : `langchainjs-azure-openai-v2`,
+      };
 
       this.client = new AzureOpenAIClient({
         apiVersion: this.azureOpenAIApiVersion,

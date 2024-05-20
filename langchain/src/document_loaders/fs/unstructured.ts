@@ -127,6 +127,8 @@ type UnstructuredDirectoryLoaderOptions = UnstructuredLoaderOptions & {
 };
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/fs/unstructured" instead. This entrypoint will be removed in 0.3.0.
+ *
  * A document loader that uses the Unstructured API to load unstructured
  * documents. It supports both the new syntax with options object and the
  * legacy syntax for backward compatibility. The load() method sends a

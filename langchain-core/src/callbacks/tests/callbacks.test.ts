@@ -12,8 +12,6 @@ import type { LLMResult } from "../../outputs.js";
 class FakeCallbackHandler extends BaseCallbackHandler {
   name = `fake-${uuid.v4()}`;
 
-  awaitHandlers = true;
-
   starts = 0;
 
   ends = 0;
@@ -472,4 +470,47 @@ test("CallbackManager.copy()", () => {
     handler1.name,
     handler3.name,
   ]);
+});
+
+class FakeCallbackHandlerWithErrors extends FakeCallbackHandler {
+  constructor(input: BaseCallbackHandlerInput) {
+    super({ ...input, raiseError: true });
+  }
+
+  async handleChainStart(
+    _chain: Serialized,
+    _inputs: ChainValues
+  ): Promise<void> {
+    throw Error("error!");
+  }
+
+  async handleLLMStart(_llm: Serialized, _prompts: string[]): Promise<void> {
+    throw Error("llm start error!");
+  }
+}
+
+test("error handling in chain start", async () => {
+  const handler = new FakeCallbackHandlerWithErrors({
+    ignoreLLM: true,
+  });
+  const manager = new CallbackManager(undefined);
+  manager.addHandler(handler);
+
+  await expect(async () => {
+    await manager.handleChainStart(serialized, ["test"]);
+  }).rejects.toThrowError();
+  await manager.handleLLMStart(serialized, ["test"]);
+});
+
+test("error handling in llm start", async () => {
+  const handler = new FakeCallbackHandlerWithErrors({
+    ignoreChain: true,
+  });
+  const manager = new CallbackManager(undefined);
+  manager.addHandler(handler);
+
+  await manager.handleChainStart(serialized, ["test"]);
+  await expect(async () => {
+    await manager.handleLLMStart(serialized, ["test"]);
+  }).rejects.toThrowError();
 });

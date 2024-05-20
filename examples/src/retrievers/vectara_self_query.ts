@@ -1,11 +1,10 @@
-import { AttributeInfo } from "langchain/schema/query_constructor";
 import { SelfQueryRetriever } from "langchain/retrievers/self_query";
-
 import { OpenAI } from "@langchain/openai";
 import { VectaraStore } from "@langchain/community/vectorstores/vectara";
-import { VectaraTranslator } from "langchain/retrievers/self_query/vectara";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { Document } from "@langchain/core/documents";
+import { VectaraTranslator } from "@langchain/community/structured_query/vectara";
+import type { AttributeInfo } from "langchain/chains/query_constructor";
 
 /**
  * First, we create a bunch of documents. You can load your own documents here instead.

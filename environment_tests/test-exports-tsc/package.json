@@ -25,5 +25,8 @@
   "devDependencies": {
     "@types/node": "^18.15.11",
     "prettier": "^2.8.3"
+  },
+  "resolutions": {
+    "@langchain/core": "~0.2.0"
   }
 }
