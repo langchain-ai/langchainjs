@@ -586,11 +586,11 @@ export class ChatOpenAI<
       stream_options: {
         ...this.invocationParams(options).stream_options,
         include_usage: true,
-      }
+      },
     };
     let defaultRole: OpenAIRoleEnum | undefined;
     const streamIterable = await this.completionWithRetry(params, options);
-    let usage: OpenAIClient.Completions.CompletionUsage | undefined = undefined;
+    let usage: OpenAIClient.Completions.CompletionUsage | undefined;
     for await (const data of streamIterable) {
       const choice = data?.choices[0];
       if (data.usage) {
@@ -642,9 +642,12 @@ export class ChatOpenAI<
     }
     if (usage) {
       const generationChunk = new ChatGenerationChunk({
-        message: new AIMessageChunk({ content: "", response_metadata: {
-          usage,
-        } }),
+        message: new AIMessageChunk({
+          content: "",
+          response_metadata: {
+            usage,
+          },
+        }),
         text: "",
       });
       yield generationChunk;
