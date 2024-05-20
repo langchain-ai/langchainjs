@@ -193,7 +193,7 @@ export class ChatGoogleGenerativeAI
 
   apiVersion?: string = "v1";
 
-  baseUrl?: string = "https://generativeai.googleapis.com";
+  baseUrl?: string = "https://generativelanguage.googleapis.com";
 
   streaming = false;
 
@@ -213,6 +213,11 @@ export class ChatGoogleGenerativeAI
     this.model = this.modelName;
 
     this.maxOutputTokens = fields?.maxOutputTokens ?? this.maxOutputTokens;
+
+    this.baseUrl = fields?.baseUrl ?? this.baseUrl;
+    if (!this.baseUrl) {
+      throw new Error("`baseUrl` must be a valid URL");
+    }
 
     if (this.maxOutputTokens && this.maxOutputTokens < 0) {
       throw new Error("`maxOutputTokens` must be a positive integer");
@@ -238,6 +243,11 @@ export class ChatGoogleGenerativeAI
     }
 
     this.stopSequences = fields?.stopSequences ?? this.stopSequences;
+
+    this.apiVersion = fields?.apiKey ?? this.apiVersion;
+    if (!this.apiVersion) {
+      throw new Error("Please set a valid version for `apiKey`");
+    }
 
     this.apiKey = fields?.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
     if (!this.apiKey) {
