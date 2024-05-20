@@ -64,4 +64,12 @@ module.exports = {
     "new-cap": ["error", { properties: false, capIsNew: false }],
     "arrow-body-style": 0,
   },
+  overrides: [
+    {
+      files: ['**/*.test.ts'],
+      rules: {
+        '@typescript-eslint/no-unused-vars': 'off'
+      }
+    }
+  ]
 };

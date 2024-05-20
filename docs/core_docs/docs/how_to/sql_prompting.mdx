@@ -1,5 +1,13 @@
 # How to use prompting to improve results
 
+:::info Prerequisites
+
+This guide assumes familiarity with the following:
+
+- [Question answering over SQL data](/docs/tutorials/sql_qa)
+
+:::
+
 In this guide we'll go over prompting strategies to improve SQL query generation.
 We'll largely focus on methods for getting relevant database-specific information in your prompt.
 
@@ -8,7 +16,7 @@ We'll largely focus on methods for getting relevant database-specific informatio
 First, install the required packages and set your environment variables. This example will use OpenAI as the LLM.
 
 ```bash
-npm install langchain @langchain/community @langchain/openai typeorm sqlite3
+npm install @langchain/community @langchain/openai typeorm sqlite3
 ```
 
 ```bash
@@ -79,3 +87,9 @@ At runtime it will perform a similarity search between the input and our example
 import DynamicFewShotExample from "@examples/use_cases/sql/prompting/dynamic_few_shot.ts";
 
 <CodeBlock language="typescript">{DynamicFewShotExample}</CodeBlock>
+
+## Next steps
+
+You've now learned about some prompting strategies to improve SQL generation.
+
+Next, check out some of the other guides in this section, like [how to query over large databases](/docs/how_to/sql_large_db).
