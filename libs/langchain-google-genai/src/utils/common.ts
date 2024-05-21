@@ -190,6 +190,7 @@ export function mapGenerateContentResultToChatResult(
     };
   }
 
+  const functionCalls = response.functionCalls();
   const [candidate] = response.candidates;
   const { content, ...generationInfo } = candidate;
   const text = content?.parts[0]?.text ?? "";
@@ -199,7 +200,10 @@ export function mapGenerateContentResultToChatResult(
     message: new AIMessage({
       content: text,
       name: !content ? undefined : content.role,
-      additional_kwargs: generationInfo,
+      tool_calls: functionCalls,
+      additional_kwargs: {
+        ...generationInfo,
+      },
     }),
     generationInfo,
   };

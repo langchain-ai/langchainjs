@@ -8,6 +8,9 @@ import {
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
 import { ChatGoogleGenerativeAI } from "../chat_models.js";
+import { StructuredTool } from "@langchain/core/tools";
+import { z } from "zod";
+import { FunctionDeclarationSchemaType } from "@google/generative-ai";
 
 test("Test Google AI", async () => {
   const model = new ChatGoogleGenerativeAI({});
@@ -181,3 +184,131 @@ test.skip("Gemini can understand audio", async () => {
   expect(typeof response.content).toBe("string");
   expect((response.content as string).length).toBeGreaterThan(15);
 });
+
+class FakeBrowserTool extends StructuredTool {
+  schema = z.object({
+    url: z.string(),
+    query: z.string().optional(),
+  });
+
+  name = "fake_browser_tool";
+
+  description =
+    "useful for when you need to find something on the web or summarize a webpage.";
+
+  async _call(_: z.infer<this["schema"]>): Promise<string> {
+    return "fake_browser_tool";
+  }
+}
+const googleGenAITool = {
+  functionDeclarations: [{
+    name: "fake_browser_tool",
+    description: "useful for when you need to find something on the web or summarize a webpage.",
+    parameters: {
+      type: FunctionDeclarationSchemaType.OBJECT,
+      required: ["url"],
+      properties: {
+        url: {
+          type: FunctionDeclarationSchemaType.STRING,
+        },
+        query: {
+          type: FunctionDeclarationSchemaType.STRING,
+        }
+      }
+    }
+  }]
+}
+const prompt = new HumanMessage("Search the web and tell me what the weather will be like tonight in new york. use weather.com");
+
+test("ChatGoogleGenerativeAI can bind and invoke langchain tools", async () => {
+  const model = new ChatGoogleGenerativeAI({});
+
+  const modelWithTools = model.bind({
+    tools: [new FakeBrowserTool()]
+  });
+  const res = await modelWithTools.invoke([prompt])
+  const toolCalls = res.tool_calls;
+  console.log(toolCalls)
+  expect(toolCalls).toBeDefined();
+  if (!toolCalls) {
+    throw new Error("tool_calls not in response")
+  }
+  expect(toolCalls.length).toBe(1);
+  expect(toolCalls[0].name).toBe("fake_browser_tool");
+  expect("url" in toolCalls[0].args).toBe(true);
+})
+
+test("ChatGoogleGenerativeAI can bind and invoke genai tools", async () => {
+  const model = new ChatGoogleGenerativeAI({});
+
+  const modelWithTools = model.bind({
+    tools: [googleGenAITool],
+  });
+  const res = await modelWithTools.invoke([prompt])
+  const toolCalls = res.tool_calls;
+  console.log(toolCalls)
+  expect(toolCalls).toBeDefined();
+  if (!toolCalls) {
+    throw new Error("tool_calls not in response")
+  }
+  expect(toolCalls.length).toBe(1);
+  expect(toolCalls[0].name).toBe("fake_browser_tool");
+  expect("url" in toolCalls[0].args).toBe(true);
+})
+
+
+test("ChatGoogleGenerativeAI can bindTools with langchain tools and invoke", async () => {
+  const model = new ChatGoogleGenerativeAI({});
+
+  const modelWithTools = model.bindTools([new FakeBrowserTool()]);
+  const res = await modelWithTools.invoke([prompt])
+  const toolCalls = res.tool_calls;
+  console.log(toolCalls)
+  expect(toolCalls).toBeDefined();
+  if (!toolCalls) {
+    throw new Error("tool_calls not in response")
+  }
+  expect(toolCalls.length).toBe(1);
+  expect(toolCalls[0].name).toBe("fake_browser_tool");
+  expect("url" in toolCalls[0].args).toBe(true);
+})
+
+test("ChatGoogleGenerativeAI can bindTools with genai tools and invoke", async () => {
+  const model = new ChatGoogleGenerativeAI({});
+
+  const modelWithTools = model.bindTools([googleGenAITool]);
+  const res = await modelWithTools.invoke([prompt])
+  const toolCalls = res.tool_calls;
+  console.log(toolCalls)
+  expect(toolCalls).toBeDefined();
+  if (!toolCalls) {
+    throw new Error("tool_calls not in response")
+  }
+  expect(toolCalls.length).toBe(1);
+  expect(toolCalls[0].name).toBe("fake_browser_tool");
+  expect("url" in toolCalls[0].args).toBe(true);
+})
+
+test("ChatGoogleGenerativeAI can call withStructuredOutput langchain tools and invoke", async () => {
+  const model = new ChatGoogleGenerativeAI({});
+  const tool = new FakeBrowserTool();
+
+  const modelWithTools = model.withStructuredOutput<z.infer<typeof tool.schema>>(tool.schema);
+  const res = await modelWithTools.invoke([prompt])
+  console.log(res)
+  expect(typeof res.url === "string").toBe(true);
+})
+
+test("ChatGoogleGenerativeAI can call withStructuredOutput genai tools and invoke", async () => {
+  const model = new ChatGoogleGenerativeAI({});
+
+  type GeminiTool = {
+    url: string;
+    query?: string;
+  }
+
+  const modelWithTools = model.withStructuredOutput<GeminiTool>(googleGenAITool.functionDeclarations[0].parameters);
+  const res = await modelWithTools.invoke([prompt])
+  console.log(res)
+  expect(typeof res.url === "string").toBe(true);
+})
