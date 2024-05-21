@@ -14,7 +14,7 @@ export interface VoyageEmbeddingsParams extends EmbeddingsParams {
    * limited by the Voyage AI API to a maximum of 8.
    */
   batchSize?: number;
-  
+
   /**
    * Input type for the embeddings request.
    */
@@ -37,7 +37,7 @@ export interface CreateVoyageEmbeddingRequest {
    * @memberof CreateVoyageEmbeddingRequest
    */
   input: string | string[];
-  
+
   /**
    * Input type for the embeddings request.
    */
