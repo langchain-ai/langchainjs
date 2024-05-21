@@ -11,8 +11,6 @@ import { type ChatResult } from "@langchain/core/outputs";
 import { type CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
-import { encodeApiKey } from "../utils/Moonshot.js";
-
 export type MoonshotMessageRole = "system" | "assistant" | "user";
 
 interface MoonshotMessage {
@@ -387,7 +385,7 @@ export class ChatMoonshot extends BaseChatModel implements ChatMoonshotParams {
         method: "POST",
         headers: {
           ...(stream ? { Accept: "text/event-stream" } : {}),
-          Authorization: `Bearer ${encodeApiKey(this.apiKey)}`,
+          Authorization: `Bearer ${this.apiKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(request),
