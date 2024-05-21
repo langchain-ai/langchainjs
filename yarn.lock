@@ -9034,7 +9034,7 @@ __metadata:
     "@langchain/core": ~0.2.0
     "@langchain/openai": ~0.0.28
     "@langchain/scripts": ~0.0
-    "@layerup/layerup-security": ^1.5.10
+    "@layerup/layerup-security": ^1.5.12
     "@mendable/firecrawl-js": ^0.0.13
     "@mlc-ai/web-llm": ^0.2.35
     "@mozilla/readability": ^0.4.4
@@ -9195,7 +9195,7 @@ __metadata:
     "@google-cloud/storage": ^6.10.1 || ^7.7.0
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
-    "@layerup/layerup-security": ^1.5.10
+    "@layerup/layerup-security": ^1.5.12
     "@mendable/firecrawl-js": ^0.0.13
     "@mlc-ai/web-llm": ^0.2.35
     "@mozilla/readability": "*"
@@ -10204,16 +10204,6 @@ __metadata:
     typescript: <5.2.0
   languageName: unknown
   linkType: soft
-
-"@layerup/layerup-security@npm:^1.5.10":
-  version: 1.5.10
-  resolution: "@layerup/layerup-security@npm:1.5.10"
-  dependencies:
-    axios: ^1.6.8
-    openai: ^4.32.1
-  checksum: 5fa2e500b481e802d3063020a96868d07bb7d3c22e5557c9d0f02e424f38b7366011aaa892b1d593a433f877df90fe25fee1858230d513bbca61c214fa731487
-  languageName: node
-  linkType: hard
 
 "@layerup/layerup-security@npm:^1.5.12":
   version: 1.5.12
