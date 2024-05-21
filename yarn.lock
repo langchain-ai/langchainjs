@@ -6623,13 +6623,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@browserbasehq/sdk@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "@browserbasehq/sdk@npm:1.0.0"
+"@browserbasehq/sdk@npm:^1.1.5":
+  version: 1.1.5
+  resolution: "@browserbasehq/sdk@npm:1.1.5"
   dependencies:
     playwright: ^1.43.1
     zod: ^3.22.5
-  checksum: 1aa7d6fd9e7550bdb7fff43a3c858227bcb9fcb26e9c4ee0ae245e36a1fa90d9a378f6937c620ef0bbe8e400710005778d945d180033639afa50a564c975a3ae
+  checksum: 9b62d6471c4f706af881b58b8fcc0c06ea48bc4b3b2d97c71265a8294cf38afefc61609b21c7d6564a312a91359f645e90462875582c73004420ed2a2bf4e1bc
   languageName: node
   linkType: hard
 
@@ -8889,7 +8889,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/community": "workspace:*"
     "@langchain/core": ">0.1.56 <0.3.0"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     dpdm: ^3.12.0
@@ -8921,7 +8921,7 @@ __metadata:
     "@azure/openai": 1.0.0-beta.11
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     dpdm: ^3.12.0
@@ -8952,7 +8952,7 @@ __metadata:
     "@cloudflare/workers-types": ^4.20231218.0
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -8994,7 +8994,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.58 <0.3.0"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9036,6 +9036,7 @@ __metadata:
     "@aws-sdk/types": ^3.357.0
     "@azure/search-documents": ^12.0.0
     "@azure/storage-blob": ^12.15.0
+    "@browserbasehq/sdk": ^1.1.5
     "@clickhouse/client": ^0.2.5
     "@cloudflare/ai": ^1.0.12
     "@cloudflare/workers-types": ^4.20230922.0
@@ -9054,7 +9055,8 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.2.0
     "@langchain/openai": ~0.0.28
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
+    "@layerup/layerup-security": ^1.5.12
     "@mendable/firecrawl-js": ^0.0.13
     "@mlc-ai/web-llm": ^0.2.35
     "@mozilla/readability": ^0.4.4
@@ -9071,6 +9073,7 @@ __metadata:
     "@smithy/protocol-http": ^3.0.6
     "@smithy/signature-v4": ^2.0.10
     "@smithy/util-utf8": ^2.0.0
+    "@spider-cloud/spider-client": ^0.0.21
     "@supabase/postgrest-js": ^1.1.1
     "@supabase/supabase-js": ^2.10.0
     "@swc/core": ^1.3.90
@@ -9203,6 +9206,7 @@ __metadata:
     "@aws-sdk/credential-provider-node": ^3.388.0
     "@azure/search-documents": ^12.0.0
     "@azure/storage-blob": ^12.15.0
+    "@browserbasehq/sdk": "*"
     "@clickhouse/client": ^0.2.5
     "@cloudflare/ai": "*"
     "@datastax/astra-db-ts": ^1.0.0
@@ -9216,6 +9220,7 @@ __metadata:
     "@google-cloud/storage": ^6.10.1 || ^7.7.0
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
+    "@layerup/layerup-security": ^1.5.12
     "@mendable/firecrawl-js": ^0.0.13
     "@mlc-ai/web-llm": ^0.2.35
     "@mozilla/readability": "*"
@@ -9232,6 +9237,7 @@ __metadata:
     "@smithy/protocol-http": ^3.0.6
     "@smithy/signature-v4": ^2.0.10
     "@smithy/util-utf8": ^2.0.0
+    "@spider-cloud/spider-client": ^0.0.21
     "@supabase/postgrest-js": ^1.1.1
     "@supabase/supabase-js": ^2.10.0
     "@tensorflow-models/universal-sentence-encoder": "*"
@@ -9331,6 +9337,8 @@ __metadata:
       optional: true
     "@azure/storage-blob":
       optional: true
+    "@browserbasehq/sdk":
+      optional: true
     "@clickhouse/client":
       optional: true
     "@cloudflare/ai":
@@ -9356,6 +9364,8 @@ __metadata:
     "@gradientai/nodejs-sdk":
       optional: true
     "@huggingface/inference":
+      optional: true
+    "@layerup/layerup-security":
       optional: true
     "@mendable/firecrawl-js":
       optional: true
@@ -9388,6 +9398,8 @@ __metadata:
     "@smithy/signature-v4":
       optional: true
     "@smithy/util-utf8":
+      optional: true
+    "@spider-cloud/spider-client":
       optional: true
     "@supabase/postgrest-js":
       optional: true
@@ -9545,7 +9557,7 @@ __metadata:
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@types/mustache": ^4
@@ -9587,7 +9599,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9619,7 +9631,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.56 <0.3.0"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9653,7 +9665,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.56 <0.3.0"
     "@langchain/google-common": ~0.0.15
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9686,7 +9698,7 @@ __metadata:
     "@google/generative-ai": ^0.7.0
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.5  <0.3.0"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9718,7 +9730,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.56 <0.3.0"
     "@langchain/google-webauth": ~0.0.15
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9750,7 +9762,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.56 <0.3.0"
     "@langchain/google-gauth": ~0.0.16
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9781,7 +9793,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.56 <0.3.0"
     "@langchain/google-common": ~0.0.15
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9813,7 +9825,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.56 <0.3.0"
     "@langchain/openai": "workspace:^"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9848,7 +9860,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.56 <0.3.0"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@mistralai/mistralai": ^0.1.3
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9884,7 +9896,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
     "@langchain/openai": "workspace:*"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9918,7 +9930,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
     "@langchain/openai": "workspace:^"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@nomic-ai/atlas": ^0.8.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9951,7 +9963,7 @@ __metadata:
     "@azure/identity": ^4.2.0
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.56 <0.3.0"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     dpdm: ^3.12.0
@@ -9983,7 +9995,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
     "@langchain/openai": "workspace:*"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@pinecone-database/pinecone": ^2.2.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -10018,7 +10030,7 @@ __metadata:
     "@faker-js/faker": ^8.4.1
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@qdrant/js-client-rest": ^1.9.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -10052,7 +10064,7 @@ __metadata:
     "@faker-js/faker": ^8.4.0
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -10079,23 +10091,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/scripts@npm:~0.0":
-  version: 0.0.13
-  resolution: "@langchain/scripts@npm:0.0.13"
-  dependencies:
-    axios: ^1.6.7
-    commander: ^11.1.0
-    glob: ^10.3.10
-    rollup: ^4.5.2
-    ts-morph: ^21.0.1
-    typescript: ^5.4.5
-  bin:
-    lc-build: bin/build
-  checksum: 7ebfbccc40df4d3fc503463dd6c4e6532ecf883bab4a0f8d5e4d50b5f779764d038ee0ec9c40916b4673048827f9d96cb85cd791bb879d42defe98ba1c2536d1
-  languageName: node
-  linkType: hard
-
-"@langchain/scripts@workspace:*, @langchain/scripts@workspace:libs/langchain-scripts":
+"@langchain/scripts@workspace:libs/langchain-scripts, @langchain/scripts@~0.0.14":
   version: 0.0.0-use.local
   resolution: "@langchain/scripts@workspace:libs/langchain-scripts"
   dependencies:
@@ -10136,7 +10132,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -10168,7 +10164,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
     "@langchain/openai": "workspace:^"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -10202,7 +10198,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0  <0.3.0"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -10224,6 +10220,16 @@ __metadata:
     typescript: <5.2.0
   languageName: unknown
   linkType: soft
+
+"@layerup/layerup-security@npm:^1.5.12":
+  version: 1.5.12
+  resolution: "@layerup/layerup-security@npm:1.5.12"
+  dependencies:
+    axios: ^1.6.8
+    openai: ^4.32.1
+  checksum: f506b7aa266dcf7e062e3eebdba99468363f45f4d87419f108538f13d5cae70b6ac96f1c263d614de4ff7d742cf0ee3bd67b44124de717680bf02c69a458b5e2
+  languageName: node
+  linkType: hard
 
 "@leichtgewicht/ip-codec@npm:^2.0.1":
   version: 2.0.4
@@ -13673,6 +13679,13 @@ __metadata:
     "@smithy/util-buffer-from": ^2.1.1
     tslib: ^2.5.0
   checksum: 286ce5cba3f45a8abd3d6c28e40b3204dd64300340818d77e42c1cbb0c2f6ad0c42f0e47ffaf38d74d0895b0dfd1750c5b55222ab4d205a3b39da4325971d303
+  languageName: node
+  linkType: hard
+
+"@spider-cloud/spider-client@npm:^0.0.21":
+  version: 0.0.21
+  resolution: "@spider-cloud/spider-client@npm:0.0.21"
+  checksum: 8ed81910f3712b09419e32a0e99cc108f83ea8dd2f58669d9fd2094664b6ef292f44f3424da4d6c043e74255a072f7c32493e179da109f3ba05629d79e5db779
   languageName: node
   linkType: hard
 
@@ -19249,7 +19262,7 @@ __metadata:
     "@docusaurus/preset-classic": 2.4.3
     "@docusaurus/remark-plugin-npm2yarn": 2.4.3
     "@docusaurus/theme-mermaid": 2.4.3
-    "@langchain/scripts": "workspace:*"
+    "@langchain/scripts": ~0.0.14
     "@mdx-js/react": ^1.6.22
     "@supabase/supabase-js": ^2.39.7
     "@swc/core": ^1.3.62
@@ -22429,6 +22442,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "examples@workspace:examples"
   dependencies:
+    "@azure/identity": ^4.2.0
     "@clickhouse/client": ^0.2.5
     "@elastic/elasticsearch": ^8.4.0
     "@faker-js/faker": ^8.4.1
@@ -22456,10 +22470,11 @@ __metadata:
     "@langchain/pinecone": "workspace:*"
     "@langchain/qdrant": "workspace:*"
     "@langchain/redis": "workspace:*"
-    "@langchain/scripts": "workspace:*"
+    "@langchain/scripts": ~0.0.14
     "@langchain/textsplitters": "workspace:*"
     "@langchain/weaviate": "workspace:*"
     "@langchain/yandex": "workspace:*"
+    "@layerup/layerup-security": ^1.5.12
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^2.2.0
     "@planetscale/database": ^1.8.0
@@ -27399,7 +27414,7 @@ __metadata:
     "@aws-sdk/credential-provider-node": ^3.388.0
     "@aws-sdk/types": ^3.357.0
     "@azure/storage-blob": ^12.15.0
-    "@browserbasehq/sdk": ^1.0.0
+    "@browserbasehq/sdk": ^1.1.5
     "@cloudflare/workers-types": ^4.20230922.0
     "@faker-js/faker": ^7.6.0
     "@gomomento/sdk": ^1.51.1
@@ -27409,7 +27424,7 @@ __metadata:
     "@langchain/cohere": ^0.0.8
     "@langchain/core": ~0.2.0
     "@langchain/openai": ~0.0.28
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@langchain/textsplitters": ~0.0.0
     "@mendable/firecrawl-js": ^0.0.13
     "@notionhq/client": ^2.2.10
@@ -30245,6 +30260,24 @@ __metadata:
     is-docker: ^2.1.1
     is-wsl: ^2.2.0
   checksum: 6388bfff21b40cb9bd8f913f9130d107f2ed4724ea81a8fd29798ee322b361ca31fa2cdfb491a5c31e43a3996cfe9566741238c7a741ada8d7af1cb78d85cf26
+  languageName: node
+  linkType: hard
+
+"openai@npm:^4.32.1":
+  version: 4.47.1
+  resolution: "openai@npm:4.47.1"
+  dependencies:
+    "@types/node": ^18.11.18
+    "@types/node-fetch": ^2.6.4
+    abort-controller: ^3.0.0
+    agentkeepalive: ^4.2.1
+    form-data-encoder: 1.7.2
+    formdata-node: ^4.3.2
+    node-fetch: ^2.6.7
+    web-streams-polyfill: ^3.2.1
+  bin:
+    openai: bin/cli
+  checksum: 746aa39479f7bc62b1536582bd2f068870715a3a1ae372a187ec5fd1a6cf70c6e49b94a5a8b408186ec52aca886ed47b52fccf6010993fcf16915ab11f96b3b9
   languageName: node
   linkType: hard
 
