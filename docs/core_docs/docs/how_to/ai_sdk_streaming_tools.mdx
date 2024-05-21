@@ -21,9 +21,7 @@ First, install the necessary LangChain & AI SDK packages:
 
 import Npm2Yarn from "@theme/Npm2Yarn";
 
-<Npm2Yarn>
-  @langchain/openai @langchain/core ai zod zod-to-json-schema
-</Npm2Yarn>
+<Npm2Yarn>@langchain/openai @langchain/core ai zod zod-to-json-schema</Npm2Yarn>
 
 Next, we'll create our server file.
 This will contain all the logic for making tool calls and sending the data back to the client.
@@ -39,7 +37,6 @@ import { createStreamableValue } from "ai/rsc";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
-
 ```
 
 After that, we'll define our tool schema. For this example we'll use a simple demo weather schema:
@@ -91,30 +88,29 @@ After defining our chat model, we'll define our runnable chain using LCEL.
 We start binding our `weather` tool we defined earlier to the model:
 
 ```typescript
-    const modelWithTools = llm.bind({
-      tools: [
-        {
-          type: "function" as const,
-          function: {
-            name: "get_weather",
-            description: Weather.description,
-            parameters: zodToJsonSchema(Weather),
-          },
-        },
-      ],
-    })
+const modelWithTools = llm.bind({
+  tools: [
+    {
+      type: "function" as const,
+      function: {
+        name: "get_weather",
+        description: Weather.description,
+        parameters: zodToJsonSchema(Weather),
+      },
+    },
+  ],
+});
 ```
 
 Next, we'll use LCEL to pipe each component together, starting with the prompt, then the model with tools, and finally the output parser:
+
 ```typescript
-    const chain = prompt
-      .pipe(modelWithTools)
-      .pipe(
-        new JsonOutputKeyToolsParser<z.infer<typeof Weather>>({
-          keyName: "get_weather",
-          zodSchema: Weather,
-        }),
-      );
+const chain = prompt.pipe(modelWithTools).pipe(
+  new JsonOutputKeyToolsParser<z.infer<typeof Weather>>({
+    keyName: "get_weather",
+    zodSchema: Weather,
+  })
+);
 ```
 
 Finally, we'll call `.stream` on our chain, and similarly to the [streaming agent](/docs/how_to/ai_sdk_streaming_agent)
