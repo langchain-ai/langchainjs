@@ -16,16 +16,13 @@ This guide assumes familiarity with the following concepts:
 This doc will break down each component into separate sections. Click [here for the server file](https://github.com/langchain-ai/langchain-nextjs-template/tree/main/app/ai_sdk/agent/action.ts)
 and [here for the client file](https://github.com/langchain-ai/langchain-nextjs-template/tree/main/app/ai_sdk/agent/page.tsx) to view the complete code inside a demo application.
 
-
 ## Setup
 
 First, install the necessary LangChain & AI SDK packages:
 
 import Npm2Yarn from "@theme/Npm2Yarn";
 
-<Npm2Yarn>
-  langchain @langchain/core @langchain/community ai
-</Npm2Yarn>
+<Npm2Yarn>langchain @langchain/core @langchain/community ai</Npm2Yarn>
 
 In this demo we'll be using the `TavilySearchResults` tool, which requires an API key. You can get one [here](https://app.tavily.com/), or you can swap it out for another tool of your choice, like
 [`WikipediaQueryRun`](/docs/integrations/tools/wikipedia) which doesn't require an API key.
@@ -56,22 +53,22 @@ Next, we'll define a `runAgent` function. This function takes in a single input 
 ```typescript action.ts
 export async function runAgent(input: string) {
   "use server";
-};
+}
 ```
 
 Next, inside our function we'll define our chat model of choice:
 
 ```typescript action.ts
-  const llm = new ChatOpenAI({
-    model: "gpt-4o-2024-05-13",
-    temperature: 0,
-  });
+const llm = new ChatOpenAI({
+  model: "gpt-4o-2024-05-13",
+  temperature: 0,
+});
 ```
 
 Next, we'll use the `createStreamableValue` helper function provided by the `ai` package to create a streamable value:
 
 ```typescript action.ts
-  const stream = createStreamableValue();
+const stream = createStreamableValue();
 ```
 
 This will be very important later on when we start streaming data back to the client.
@@ -131,11 +128,10 @@ however if you stringify and parse like we are above, you shouldn't experience t
 Finally, at the bottom of the function return the stream value:
 
 ```typescript action.ts
-    return { streamData: stream.value };
+return { streamData: stream.value };
 ```
 
 Once we've implemented our server action, we can add a couple lines of code in our client function to request and stream this data:
-
 
 First, add the necessary imports:
 
