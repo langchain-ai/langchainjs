@@ -101,11 +101,17 @@ export class ZepCloudChatMessageHistory
     return [condenseZepMemoryIntoHumanMessage(memory)];
   }
 
-  async addAIChatMessage(message: string, metadata?: Record<string, unknown>): Promise<void> {
+  async addAIChatMessage(
+    message: string,
+    metadata?: Record<string, unknown>
+  ): Promise<void> {
     await this.addMessage(new AIMessage({ content: message }), metadata);
   }
 
-  async addMessage(message: BaseMessage, metadata?: Record<string, unknown>): Promise<void> {
+  async addMessage(
+    message: BaseMessage,
+    metadata?: Record<string, unknown>
+  ): Promise<void> {
     const messageToSave = message;
     if (message._getType() === "ai") {
       messageToSave.name = this.aiPrefix;
@@ -132,7 +138,10 @@ export class ZepCloudChatMessageHistory
     });
   }
 
-  async addUserMessage(message: string, metadata?: Record<string, unknown>): Promise<void> {
+  async addUserMessage(
+    message: string,
+    metadata?: Record<string, unknown>
+  ): Promise<void> {
     await this.addMessage(new HumanMessage({ content: message }, metadata));
   }
 
