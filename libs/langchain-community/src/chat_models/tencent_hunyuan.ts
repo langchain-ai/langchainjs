@@ -18,8 +18,6 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { IterableReadableStream } from "@langchain/core/utils/stream";
 import { sign } from "../utils/tencent_hunyuan.js";
 
-const host = "hunyuan.tencentcloudapi.com";
-
 /**
  * Type representing the role of a message in the Hunyuan chat model.
  */
@@ -117,6 +115,12 @@ interface ChatCompletionResponse {
  * Interface defining the input to the ChatTencentHunyuan class.
  */
 declare interface TencentHunyuanChatInput {
+  /**
+   * Tencent Cloud API Host.
+   * @default "hunyuan.tencentcloudapi.com"
+   */
+  host?: string;
+
   /**
    * Model name to use.
    * @default "hunyuan-pro"
@@ -247,6 +251,8 @@ export class ChatTencentHunyuan
 
   streaming = false;
 
+  host = "hunyuan.tencentcloudapi.com";
+
   model = "hunyuan-pro";
 
   temperature?: number | undefined;
@@ -268,6 +274,7 @@ export class ChatTencentHunyuan
       throw new Error("Tencent SecretKey not found");
     }
 
+    this.host = fields?.host ?? this.host;
     this.topP = fields?.topP ?? this.topP;
     this.model = fields?.model ?? this.model;
     this.streaming = fields?.streaming ?? this.streaming;
@@ -299,6 +306,7 @@ export class ChatTencentHunyuan
     };
 
     headers.Authorization = sign(
+      this.host,
       request,
       timestamp,
       this.tencentSecretId ?? "",
@@ -332,7 +340,14 @@ export class ChatTencentHunyuan
         throw new Error(`[${chunk.Id}] ${chunk.ErrorMsg?.Message}`);
       }
 
-      const { Choices: [{ Delta: { Content }, FinishReason }] } = chunk;
+      const {
+        Choices: [
+          {
+            Delta: { Content },
+            FinishReason,
+          },
+        ],
+      } = chunk;
       yield new ChatGenerationChunk({
         text: Content,
         message: new AIMessageChunk({ content: Content }),
@@ -354,7 +369,7 @@ export class ChatTencentHunyuan
   ): AsyncGenerator<ChatCompletionResponse> {
     const timestamp = Math.trunc(Date.now() / 1000);
     const headers = this.invocationHeaders(request, timestamp);
-    const response = await fetch(`https://${host}`, {
+    const response = await fetch(`https://${this.host}`, {
       headers,
       method: "POST",
       body: JSON.stringify(request),
@@ -465,21 +480,20 @@ export class ChatTencentHunyuan
       return response;
     });
 
+    const text = data.Choices[0]?.Message?.Content ?? "";
     const {
       TotalTokens = 0,
       PromptTokens = 0,
       CompletionTokens = 0,
     } = data.Usage;
 
-    const text = data.Choices[0]?.Message?.Content ?? "";
-    const generations: ChatGeneration[] = [];
-    generations.push({
-      text,
-      message: new AIMessage(text),
-    });
-
     return {
-      generations,
+      generations: [
+        {
+          text,
+          message: new AIMessage(text),
+        },
+      ],
       llmOutput: {
         tokenUsage: {
           totalTokens: TotalTokens,
@@ -498,7 +512,7 @@ export class ChatTencentHunyuan
     return this.caller.call(async () => {
       const timestamp = Math.trunc(Date.now() / 1000);
       const headers = this.invocationHeaders(request, timestamp);
-      const response = await fetch(`https://${host}`, {
+      const response = await fetch(`https://${this.host}`, {
         headers,
         method: "POST",
         body: JSON.stringify(request),

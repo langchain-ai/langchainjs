@@ -2,13 +2,17 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { sign } from "../utils/tencent_hunyuan.js";
 
-const host = "hunyuan.tencentcloudapi.com";
-
 /**
  * Interface that extends EmbeddingsParams and defines additional
  * parameters specific to the TencentHunyuanEmbeddingsParams class.
  */
 export interface TencentHunyuanEmbeddingsParams extends EmbeddingsParams {
+  /**
+   * Tencent Cloud API Host.
+   * @default "hunyuan.tencentcloudapi.com"
+   */
+  host?: string;
+
   /**
    * SecretID to use when making requests, can be obtained from https://console.cloud.tencent.com/cam/capi.
    * Defaults to the value of `TENCENT_SECRET_ID` environment variable.
@@ -75,6 +79,8 @@ export class TencentHunyuanEmbeddings
 
   tencentSecretKey?: string;
 
+  host = "hunyuan.tencentcloudapi.com";
+
   constructor(fields?: TencentHunyuanEmbeddingsParams) {
     super(fields ?? {});
 
@@ -89,6 +95,8 @@ export class TencentHunyuanEmbeddings
     if (!this.tencentSecretKey) {
       throw new Error("Tencent SecretKey not found");
     }
+
+    this.host = fields?.host ?? this.host;
   }
 
   /**
@@ -112,6 +120,7 @@ export class TencentHunyuanEmbeddings
     };
 
     headers.Authorization = sign(
+      this.host,
       request,
       timestamp,
       this.tencentSecretId ?? "",
@@ -120,7 +129,7 @@ export class TencentHunyuanEmbeddings
     );
 
     return this.caller.call(async () => {
-      const response = await fetch(`https://${host}`, {
+      const response = await fetch(`https://${this.host}`, {
         headers,
         method: "POST",
         body: JSON.stringify(request),
