@@ -1344,6 +1344,15 @@
       "import": "./llms/yandex.js",
       "require": "./llms/yandex.cjs"
     },
+    "./llms/layerup_security": {
+      "types": {
+        "import": "./llms/layerup_security.d.ts",
+        "require": "./llms/layerup_security.d.cts",
+        "default": "./llms/layerup_security.d.ts"
+      },
+      "import": "./llms/layerup_security.js",
+      "require": "./llms/layerup_security.cjs"
+    },
     "./vectorstores/analyticdb": {
       "types": {
         "import": "./vectorstores/analyticdb.d.ts",
@@ -3170,6 +3179,10 @@
     "llms/yandex.js",
     "llms/yandex.d.ts",
     "llms/yandex.d.cts",
+    "llms/layerup_security.cjs",
+    "llms/layerup_security.js",
+    "llms/layerup_security.d.ts",
+    "llms/layerup_security.d.cts",
     "vectorstores/analyticdb.cjs",
     "vectorstores/analyticdb.js",
     "vectorstores/analyticdb.d.ts",
