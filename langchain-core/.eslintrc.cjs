@@ -70,4 +70,12 @@ module.exports = {
     'jest/no-focused-tests': 'error',
     "arrow-body-style": 0,
   },
+  overrides: [
+    {
+      files: ['**/*.test.ts'],
+      rules: {
+        '@typescript-eslint/no-unused-vars': 'off'
+      }
+    }
+  ]
 };

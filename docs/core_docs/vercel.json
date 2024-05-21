@@ -14,11 +14,19 @@
       "destination": "/v0.2/docs/introduction/"
     },
     {
+      "source": "/v0.1",
+      "destination": "/"
+    },
+    {
       "source": "/v0.2/docs/get_started/introduction(/?)",
       "destination": "/v0.2/docs/introduction/"
     },
     {
       "source": "/docs(/?)",
+      "destination": "/v0.2/docs/introduction/"
+    },
+    {
+      "source": "/docs/get_started/introduction(/?)",
       "destination": "/v0.2/docs/introduction/"
     },
     {
