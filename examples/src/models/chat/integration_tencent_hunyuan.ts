@@ -1,5 +1,6 @@
 import { ChatTencentHunyuan } from "@langchain/community/chat_models/tencent_hunyuan";
 import { HumanMessage } from "@langchain/core/messages";
+import type { LLMResult } from "@langchain/core/outputs";
 
 const messages = [new HumanMessage("Hello")];
 
@@ -46,23 +47,60 @@ AIMessage {
 */
 
 // Use hunyuan-lite with streaming
-const hunyuanLL = new ChatTencentHunyuan({
+const hunyuanLiteStream = new ChatTencentHunyuan({
   model: "hunyuan-lite",
   streaming: true,
   temperature: 1,
 });
 
-res = await hunyuanLL.invoke(messages);
-console.log(res);
-/*
-AIMessage {
-  content: '您好！我是一个AI语言模型HunYuan,由腾讯开发和提供支持.您可以通过输入您的问题或请求来获取帮助和建议.',
-  name: undefined,
-  additional_kwargs: {},
-  response_metadata: {
-    tokenUsage: { totalTokens: 29, promptTokens: 1, completionTokens: 28 }
-  },
-  tool_calls: [],
-  invalid_tool_calls: []
-}
-*/
+hunyuanLiteStream.invoke(messages, {
+  callbacks: [
+    {
+      handleLLMEnd(output: LLMResult) {
+        console.log(output);
+        /*
+        {
+          generations: [
+            [
+              [Object], [Object],
+              [Object], [Object],
+              [Object], [Object],
+              [Object], [Object],
+              [Object]
+            ]
+          ],
+          llmOutput: {
+            tokenUsage: { totalTokens: 9, promptTokens: 1, completionTokens: 8 }
+          }
+        }
+      */
+      },
+      handleLLMNewToken(token: string) {
+        console.log(`token: ${token}`);
+        /*
+        token: 你好
+        token: ！
+        token: 很高兴
+        token: 能
+        token: 为您
+        token: 解答
+        token: 问题
+        token: 和建议
+        token: 方案
+        token: .
+        token:  如果您
+        token: 有其他
+        token: 需要帮助
+        token: 的地方
+        token: ,
+        token:
+        token: 随时
+        token: 告诉我
+        token: 哦
+        token: ~
+        token:
+        */
+      },
+    },
+  ],
+});
