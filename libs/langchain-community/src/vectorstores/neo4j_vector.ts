@@ -720,6 +720,22 @@ export class Neo4jVectorStore extends VectorStore {
     const results = await this.query(readQuery, parameters);
 
     if (results) {
+      if (results.some((result) => result.text == null)) {
+        if (!this.retrievalQuery) {
+          throw new Error(
+            "Make sure that none of the '" +
+              this.textNodeProperty +
+              "' properties on nodes with label '" +
+              this.nodeLabel +
+              "' are missing or empty"
+          );
+        } else {
+          throw new Error(
+            "Inspect the 'retrievalQuery' and ensure it doesn't return null for the 'text' column"
+          );
+        }
+      }
+
       const docs: [Document, number][] = results.map((result: Any) => [
         new Document({
           pageContent: result.text,
