@@ -7,8 +7,9 @@ The `inputType` parameter allows you to specify the type of input text for bette
 - `query`: Use this for search or retrieval queries. Voyage AI will prepend a prompt to optimize the embeddings for query use cases.
 - `document`: Use this for documents or content that you want to be retrievable. Voyage AI will prepend a prompt to optimize the embeddings for document use cases.
 - `None` (default): The input text will be directly encoded without any additional prompt.
+
 ```typescript
-import { VoyageEmbeddings } from "langchain/embeddings/voyage";
+import { VoyageEmbeddings } from "@langchain/community/embeddings/voyage";
 
 const embeddings = new VoyageEmbeddings({
   apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.VOYAGEAI_API_KEY
