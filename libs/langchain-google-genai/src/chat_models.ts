@@ -306,8 +306,6 @@ export class ChatGoogleGenerativeAI
         baseUrl: fields?.baseUrl,
       }
     );
-
-    console.log(this.client.generationConfig.temperature);
   }
 
   protected getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -343,15 +341,22 @@ export class ChatGoogleGenerativeAI
   invocationParams(
     options?: this["ParsedCallOptions"]
   ): Omit<GenerateContentRequest, "contents"> {
+    const tools = options?.tools as
+      | GoogleGenerativeAIFunctionDeclarationsTool[]
+      | StructuredToolInterface[]
+      | undefined;
     if (
-      options?.tools &&
-      options?.tools?.every(
-        (t): t is StructuredToolInterface => "lc_namespace" in t
+      Array.isArray(tools) &&
+      !tools.some(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (t: any) => !("lc_namespace" in t)
       )
     ) {
       // Tools are in StructuredToolInterface format. Convert to GenAI format
       return {
-        tools: convertToGenerativeAITools(options?.tools),
+        tools: convertToGenerativeAITools(
+          options?.tools as StructuredToolInterface[]
+        ),
       };
     }
     return {
@@ -531,7 +536,6 @@ export class ChatGoogleGenerativeAI
         typeof schema.parameters === "object" &&
         schema.parameters != null
       ) {
-        console.log("FIRST OPTION");
         geminiFunctionDefinition = schema as GenerativeAIFunctionDeclaration;
         functionName = schema.name;
       } else {
