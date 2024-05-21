@@ -9035,6 +9035,7 @@ __metadata:
     "@langchain/core": ~0.2.0
     "@langchain/openai": ~0.0.28
     "@langchain/scripts": ~0.0
+    "@layerup/layerup-security": ^1.5.12
     "@mendable/firecrawl-js": ^0.0.13
     "@mlc-ai/web-llm": ^0.2.35
     "@mozilla/readability": ^0.4.4
@@ -9197,6 +9198,7 @@ __metadata:
     "@google-cloud/storage": ^6.10.1 || ^7.7.0
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
+    "@layerup/layerup-security": ^1.5.12
     "@mendable/firecrawl-js": ^0.0.13
     "@mlc-ai/web-llm": ^0.2.35
     "@mozilla/readability": "*"
@@ -9338,6 +9340,8 @@ __metadata:
     "@gradientai/nodejs-sdk":
       optional: true
     "@huggingface/inference":
+      optional: true
+    "@layerup/layerup-security":
       optional: true
     "@mendable/firecrawl-js":
       optional: true
@@ -10208,6 +10212,16 @@ __metadata:
     typescript: <5.2.0
   languageName: unknown
   linkType: soft
+
+"@layerup/layerup-security@npm:^1.5.12":
+  version: 1.5.12
+  resolution: "@layerup/layerup-security@npm:1.5.12"
+  dependencies:
+    axios: ^1.6.8
+    openai: ^4.32.1
+  checksum: f506b7aa266dcf7e062e3eebdba99468363f45f4d87419f108538f13d5cae70b6ac96f1c263d614de4ff7d742cf0ee3bd67b44124de717680bf02c69a458b5e2
+  languageName: node
+  linkType: hard
 
 "@leichtgewicht/ip-codec@npm:^2.0.1":
   version: 2.0.4
@@ -22451,6 +22465,7 @@ __metadata:
     "@langchain/textsplitters": "workspace:*"
     "@langchain/weaviate": "workspace:*"
     "@langchain/yandex": "workspace:*"
+    "@layerup/layerup-security": ^1.5.12
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^2.2.0
     "@planetscale/database": ^1.8.0
@@ -30236,6 +30251,24 @@ __metadata:
     is-docker: ^2.1.1
     is-wsl: ^2.2.0
   checksum: 6388bfff21b40cb9bd8f913f9130d107f2ed4724ea81a8fd29798ee322b361ca31fa2cdfb491a5c31e43a3996cfe9566741238c7a741ada8d7af1cb78d85cf26
+  languageName: node
+  linkType: hard
+
+"openai@npm:^4.32.1":
+  version: 4.47.1
+  resolution: "openai@npm:4.47.1"
+  dependencies:
+    "@types/node": ^18.11.18
+    "@types/node-fetch": ^2.6.4
+    abort-controller: ^3.0.0
+    agentkeepalive: ^4.2.1
+    form-data-encoder: 1.7.2
+    formdata-node: ^4.3.2
+    node-fetch: ^2.6.7
+    web-streams-polyfill: ^3.2.1
+  bin:
+    openai: bin/cli
+  checksum: 746aa39479f7bc62b1536582bd2f068870715a3a1ae372a187ec5fd1a6cf70c6e49b94a5a8b408186ec52aca886ed47b52fccf6010993fcf16915ab11f96b3b9
   languageName: node
   linkType: hard
 
