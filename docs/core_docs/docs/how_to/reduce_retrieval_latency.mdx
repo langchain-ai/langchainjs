@@ -1,0 +1,61 @@
+# How to reduce retrieval latency
+
+:::info Prerequisites
+
+This guide assumes familiarity with the following concepts:
+
+- [Retrievers](/docs/concepts/#retrievers)
+- [Embeddings](/docs/concepts/#embedding-models)
+- [Vector stores](/docs/concepts/#vectorstores)
+- [Retrieval-augmented generation (RAG)](/docs/tutorials/rag)
+
+:::
+
+One way to reduce retrieval latency is through a technique called "Adaptive Retrieval".
+The [`MatryoshkaRetriever`](https://v02.api.js.langchain.com/classes/langchain_retrievers_matryoshka_retriever.MatryoshkaRetriever.html) uses the
+Matryoshka Representation Learning (MRL) technique to retrieve documents for a given query in two steps:
+
+- **First-pass**: Uses a lower dimensional sub-vector from the MRL embedding for an initial, fast,
+  but less accurate search.
+
+- **Second-pass**: Re-ranks the top results from the first pass using the full, high-dimensional
+  embedding for higher accuracy.
+
+![Matryoshka Retriever](/img/adaptive_retrieval.png)
+
+It is based on this [Supabase](https://supabase.com/) blog post
+["Matryoshka embeddings: faster OpenAI vector search using Adaptive Retrieval"](https://supabase.com/blog/matryoshka-embeddings).
+
+### Setup
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai @langchain/community
+```
+
+To follow the example below, you need an OpenAI API key:
+
+```bash
+export OPENAI_API_KEY=your-api-key
+```
+
+We'll also be using `chroma` for our vector store. Follow the instructions [here](/docs/integrations/vectorstores/chroma) to setup.
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/retrievers/matryoshka_retriever.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
+:::note
+Due to the constraints of some vector stores, the large embedding metadata field is stringified (`JSON.stringify`) before being stored. This means that the metadata field will need to be parsed (`JSON.parse`) when retrieved from the vector store.
+:::
+
+## Next steps
+
+You've now learned a technique that can help speed up your retrieval queries.
+
+Next, check out the [broader tutorial on RAG](/docs/tutorials/rag), or this section to learn how to
+[create your own custom retriever over any data source](/docs/how_to/custom_retriever/).

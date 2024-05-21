@@ -88,6 +88,92 @@ function formatMessagesForAnthropic(messages: BaseMessage[]): {
   };
 }
 
+/**
+ * format messages for Cohere Command-R and CommandR+ via AWS Bedrock.
+ *
+ * @param messages messages The base messages to format as a prompt.
+ *
+ * @returns The formatted prompt for Cohere.
+ *
+ * `system`: user system prompts. Overrides the default preamble for search query generation. Has no effect on tool use generations.\
+ * `message`: (Required) Text input for the model to respond to.\
+ * `chatHistory`: A list of previous messages between the user and the model, meant to give the model conversational context for responding to the user's message.\
+ * The following are required fields.
+ * - `role` - The role for the message. Valid values are USER or CHATBOT.\
+ * - `message` – Text contents of the message.\
+ *
+ * The following is example JSON for the chat_history field.\
+ * "chat_history": [
+ * {"role": "USER", "message": "Who discovered gravity?"},
+ * {"role": "CHATBOT", "message": "The man who is widely credited with discovering gravity is Sir Isaac Newton"}]\
+ *
+ * docs: https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-cohere-command-r-plus.html
+ */
+function formatMessagesForCohere(messages: BaseMessage[]): {
+  system?: string;
+  message: string;
+  chatHistory: Record<string, unknown>[];
+} {
+  const systemMessages = messages.filter(
+    (system) => system._getType() === "system"
+  );
+
+  const system = systemMessages
+    .filter((m) => typeof m.content === "string")
+    .map((m) => m.content)
+    .join("\n\n");
+
+  const conversationMessages = messages.filter(
+    (message) => message._getType() !== "system"
+  );
+
+  const questionContent = conversationMessages.slice(-1);
+
+  if (!questionContent.length || questionContent[0]._getType() !== "human") {
+    throw new Error("question message content must be a human message.");
+  }
+
+  if (typeof questionContent[0].content !== "string") {
+    throw new Error("question message content must be a string.");
+  }
+
+  const formattedMessage = questionContent[0].content;
+
+  const formattedChatHistories = conversationMessages
+    .slice(0, -1)
+    .map((message) => {
+      let role;
+      switch (message._getType()) {
+        case "human":
+          role = "USER" as const;
+          break;
+        case "ai":
+          role = "CHATBOT" as const;
+          break;
+        case "system":
+          throw new Error("chat_history can not include system prompts.");
+        default:
+          throw new Error(
+            `Message type "${message._getType()}" is not supported.`
+          );
+      }
+
+      if (typeof message.content !== "string") {
+        throw new Error("message content must be a string.");
+      }
+      return {
+        role,
+        message: message.content,
+      };
+    });
+
+  return {
+    chatHistory: formattedChatHistories,
+    message: formattedMessage,
+    system,
+  };
+}
+
 /** Bedrock models.
     To authenticate, the AWS client uses the following methods to automatically load credentials:
     https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html
@@ -221,9 +307,25 @@ export class BedrockLLMInputOutputAdapter {
       inputBody.temperature = temperature;
       inputBody.stop_sequences = stopSequences;
       return { ...inputBody, ...modelKwargs };
+    } else if (provider === "cohere") {
+      const {
+        system,
+        message: formattedMessage,
+        chatHistory: formattedChatHistories,
+      } = formatMessagesForCohere(messages);
+
+      if (system !== undefined && system.length > 0) {
+        inputBody.preamble = system;
+      }
+      inputBody.message = formattedMessage;
+      inputBody.chat_history = formattedChatHistories;
+      inputBody.max_tokens = maxTokens;
+      inputBody.temperature = temperature;
+      inputBody.stop_sequences = stopSequences;
+      return { ...inputBody, ...modelKwargs };
     } else {
       throw new Error(
-        "The messages API is currently only supported by Anthropic"
+        "The messages API is currently only supported by Anthropic or Cohere"
       );
     }
   }
@@ -298,9 +400,48 @@ export class BedrockLLMInputOutputAdapter {
       } else {
         return undefined;
       }
+    } else if (provider === "cohere") {
+      if (responseBody.event_type === "stream-start") {
+        return parseMessageCohere(responseBody.message, true);
+      } else if (
+        responseBody.event_type === "text-generation" &&
+        typeof responseBody?.text === "string"
+      ) {
+        return new ChatGenerationChunk({
+          message: new AIMessageChunk({
+            content: responseBody.text,
+          }),
+          text: responseBody.text,
+        });
+      } else if (responseBody.event_type === "search-queries-generation") {
+        return parseMessageCohere(responseBody);
+      } else if (
+        responseBody.event_type === "stream-end" &&
+        responseBody.response !== undefined &&
+        responseBody["amazon-bedrock-invocationMetrics"] !== undefined
+      ) {
+        return new ChatGenerationChunk({
+          message: new AIMessageChunk({ content: "" }),
+          text: "",
+          generationInfo: {
+            response: responseBody.response,
+            "amazon-bedrock-invocationMetrics":
+              responseBody["amazon-bedrock-invocationMetrics"],
+          },
+        });
+      } else {
+        if (
+          responseBody.finish_reason === "COMPLETE" ||
+          responseBody.finish_reason === "MAX_TOKENS"
+        ) {
+          return parseMessageCohere(responseBody);
+        } else {
+          return undefined;
+        }
+      }
     } else {
       throw new Error(
-        "The messages API is currently only supported by Anthropic."
+        "The messages API is currently only supported by Anthropic or Cohere."
       );
     }
   }
@@ -337,6 +478,34 @@ function parseMessage(responseBody: any, asChunk?: boolean): ChatGeneration {
         additional_kwargs: { id },
       }),
       text: typeof parsedContent === "string" ? parsedContent : "",
+      generationInfo,
+    };
+  }
+}
+
+function parseMessageCohere(
+  responseBody: any,
+  asChunk?: boolean
+): ChatGeneration {
+  const { text, ...generationInfo } = responseBody;
+  let parsedContent = text;
+  if (typeof text !== "string") {
+    parsedContent = "";
+  }
+  if (asChunk) {
+    return new ChatGenerationChunk({
+      message: new AIMessageChunk({
+        content: parsedContent,
+      }),
+      text: parsedContent,
+      generationInfo,
+    });
+  } else {
+    return {
+      message: new AIMessage({
+        content: parsedContent,
+      }),
+      text: parsedContent,
       generationInfo,
     };
   }

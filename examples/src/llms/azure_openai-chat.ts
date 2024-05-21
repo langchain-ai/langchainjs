@@ -1,8 +1,7 @@
-import { AzureChatOpenAI } from "@langchain/azure-openai";
+import { AzureChatOpenAI } from "@langchain/openai";
 
 export const run = async () => {
   const model = new AzureChatOpenAI({
-    model: "gpt-4",
     prefixMessages: [
       {
         role: "system",

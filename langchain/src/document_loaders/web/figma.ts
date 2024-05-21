@@ -9,6 +9,8 @@ import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation
 });
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/figma" instead. This entrypoint will be removed in 0.3.0.
+ *
  * Interface representing a Figma file. It includes properties for the
  * file name, role, last modified date, editor type, thumbnail URL,
  * version, document node, schema version, main file key, and an array of
@@ -34,6 +36,8 @@ export interface FigmaFile {
 }
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/figma" instead. This entrypoint will be removed in 0.3.0.
+ *
  * Interface representing the parameters for configuring the FigmaLoader.
  * It includes optional properties for the access token, an array of node
  * IDs, and the file key.
@@ -45,6 +49,8 @@ export interface FigmaLoaderParams {
 }
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/figma" instead. This entrypoint will be removed in 0.3.0.
+ *
  * Class representing a document loader for loading Figma files. It
  * extends the BaseDocumentLoader and implements the FigmaLoaderParams
  * interface. The constructor takes a config object as a parameter, which

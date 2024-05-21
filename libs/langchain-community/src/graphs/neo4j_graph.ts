@@ -50,10 +50,10 @@ const EXCLUDED_LABELS = ["Bloom_Perspective", "Bloom_Scene"];
 const EXCLUDED_RELS = ["Bloom_HAS_SCENE"];
 
 const INCLUDE_DOCS_QUERY = `
-  MERGE (d:Document {id:$document.metadata.id})
-  SET d.text = $document.pageContent
-  SET d += $document.metadata
-  WITH d
+MERGE (d:Document {id:$document.metadata.id})
+SET d.text = $document.pageContent
+SET d += $document.metadata
+WITH d
 `;
 
 const NODE_PROPERTIES_QUERY = `
@@ -575,9 +575,9 @@ export class Neo4jGraph {
 
       if (!constraintExists) {
         await this.query(`
-          CREATE CONSTRAINT IF NOT EXISTS FOR(b: ${BASE_ENTITY_LABEL})
+          CREATE CONSTRAINT IF NOT EXISTS FOR (b:${BASE_ENTITY_LABEL})
           REQUIRE b.id IS UNIQUE;
-              `);
+        `);
         await this.refreshSchema();
       }
     }

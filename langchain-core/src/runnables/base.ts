@@ -298,9 +298,11 @@ export abstract class Runnable<
   ): Promise<IterableReadableStream<RunOutput>> {
     // Buffer the first streamed chunk to allow for initial errors
     // to surface immediately.
-    const wrappedGenerator = new AsyncGeneratorWithSetup(
-      this._streamIterator(input, ensureConfig(options))
-    );
+    const config = ensureConfig(options);
+    const wrappedGenerator = new AsyncGeneratorWithSetup({
+      generator: this._streamIterator(input, config),
+      config,
+    });
     await wrappedGenerator.setup;
     return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
   }
@@ -1945,9 +1947,11 @@ export class RunnableMap<
     async function* generator() {
       yield input;
     }
-    const wrappedGenerator = new AsyncGeneratorWithSetup(
-      this.transform(generator(), options)
-    );
+    const config = ensureConfig(options);
+    const wrappedGenerator = new AsyncGeneratorWithSetup({
+      generator: this.transform(generator(), config),
+      config,
+    });
     await wrappedGenerator.setup;
     return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
   }
@@ -2151,9 +2155,11 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     async function* generator() {
       yield input;
     }
-    const wrappedGenerator = new AsyncGeneratorWithSetup(
-      this.transform(generator(), options)
-    );
+    const config = ensureConfig(options);
+    const wrappedGenerator = new AsyncGeneratorWithSetup({
+      generator: this.transform(generator(), config),
+      config,
+    });
     await wrappedGenerator.setup;
     return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
   }
@@ -2458,9 +2464,11 @@ export class RunnableAssign<
     async function* generator() {
       yield input;
     }
-    const wrappedGenerator = new AsyncGeneratorWithSetup(
-      this.transform(generator(), options)
-    );
+    const config = ensureConfig(options);
+    const wrappedGenerator = new AsyncGeneratorWithSetup({
+      generator: this.transform(generator(), config),
+      config,
+    });
     await wrappedGenerator.setup;
     return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
   }
@@ -2549,9 +2557,11 @@ export class RunnablePick<
     async function* generator() {
       yield input;
     }
-    const wrappedGenerator = new AsyncGeneratorWithSetup(
-      this.transform(generator(), options)
-    );
+    const config = ensureConfig(options);
+    const wrappedGenerator = new AsyncGeneratorWithSetup({
+      generator: this.transform(generator(), config),
+      config,
+    });
     await wrappedGenerator.setup;
     return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
   }

@@ -1,3 +1,5 @@
+import CodeBlock from "@theme/CodeBlock";
+
 # Microsoft
 
 All functionality related to `Microsoft Azure` and other `Microsoft` products.
@@ -8,21 +10,31 @@ All functionality related to `Microsoft Azure` and other `Microsoft` products.
 
 > [Microsoft Azure](https://en.wikipedia.org/wiki/Microsoft_Azure), often referred to as `Azure` is a cloud computing platform run by `Microsoft`, which offers access, management, and development of applications and services through global data centers. It provides a range of capabilities, including software as a service (SaaS), platform as a service (PaaS), and infrastructure as a service (IaaS). `Microsoft Azure` supports many programming languages, tools, and frameworks, including Microsoft-specific and third-party software and systems.
 
-> [Azure OpenAI](https://learn.microsoft.com/en-us/azure/cognitive-services/openai/) is an `Azure` service with powerful language models from `OpenAI` including the `GPT-3`, `Codex` and `Embeddings model` series for content generation, summarization, semantic search, and natural language to code translation.
+> [Azure OpenAI](https://azure.microsoft.com/products/ai-services/openai-service/) is a cloud service to help you quickly develop generative AI experiences with a diverse set of prebuilt and curated models from OpenAI, Meta and beyond.
 
-Set the environment variables to get access to the `Azure OpenAI` service.
+LangChain.js supports integration with [Azure OpenAI](https://azure.microsoft.com/products/ai-services/openai-service/) using the new Azure integration in the [OpenAI SDK](https://github.com/openai/openai-node).
 
-Inside an environment variables file (`.env`).
+You can learn more about Azure OpenAI and its difference with the OpenAI API on [this page](https://learn.microsoft.com/azure/ai-services/openai/overview). If you don't have an Azure account, you can [create a free account](https://azure.microsoft.com/free/) to get started.
 
-```shell
-AZURE_OPENAI_API_KEY="YOUR-API-KEY"
-AZURE_OPENAI_API_VERSION="YOUR-BASE-URL"
-AZURE_OPENAI_API_INSTANCE_NAME="YOUR-INSTANCE-NAME"
-AZURE_OPENAI_API_DEPLOYMENT_NAME="YOUR-DEPLOYMENT-NAME"
-AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME="YOUR-EMBEDDINGS-NAME"
+You'll need to have an Azure OpenAI instance deployed. You can deploy a version on Azure Portal following [this guide](https://learn.microsoft.com/azure/ai-services/openai/how-to/create-resource?pivots=web-portal).
+
+Once you have your instance running, make sure you have the name of your instance and key. You can find the key in the Azure Portal, under the "Keys and Endpoint" section of your instance.
+
+If you're using Node.js, you can define the following environment variables to use the service:
+
+```bash
+AZURE_OPENAI_API_INSTANCE_NAME=<YOUR_INSTANCE_NAME>
+AZURE_OPENAI_API_DEPLOYMENT_NAME=<YOUR_DEPLOYMENT_NAME>
+AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME=<YOUR_EMBEDDINGS_DEPLOYMENT_NAME>
+AZURE_OPENAI_API_KEY=<YOUR_KEY>
+AZURE_OPENAI_API_VERSION="2024-02-01"
 ```
 
-See a [usage example](/docs/integrations/llms/azure).
+:::info
+
+You can find the list of supported API versions in the [Azure OpenAI documentation](https://learn.microsoft.com/azure/ai-services/openai/reference).
+
+:::
 
 import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
 
@@ -32,9 +44,15 @@ import IntegrationInstallTooltip from "@mdx_components/integration_install_toolt
 npm install @langchain/openai
 ```
 
-```typescript
-import { OpenAI } from "@langchain/openai";
-```
+See a [usage example](/docs/integrations/llms/azure).
+
+import AzureOpenAI from "@examples/models/llm/azure_openai.ts";
+
+import UnifiedModelParamsTooltip from "@mdx_components/unified_model_params_tooltip.mdx";
+
+<UnifiedModelParamsTooltip></UnifiedModelParamsTooltip>
+
+<CodeBlock language="typescript">{AzureOpenAI}</CodeBlock>
 
 ## Text Embedding Models
 
@@ -42,18 +60,11 @@ import { OpenAI } from "@langchain/openai";
 
 See a [usage example](/docs/integrations/text_embedding/azure_openai)
 
-```typescript
-import { OpenAIEmbeddings } from "@langchain/openai";
-```
+import AzureOpenAIEmbeddings from "@examples/models/embeddings/azure_openai.ts";
 
-```typescript
-const embeddings = new OpenAIEmbeddings({
-  azureOpenAIApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.AZURE_OPENAI_API_KEY
-  azureOpenAIApiVersion: "YOUR-API-VERSION", // In Node.js defaults to process.env.AZURE_OPENAI_API_VERSION
-  azureOpenAIApiInstanceName: "{MY_INSTANCE_NAME}", // In Node.js defaults to process.env.AZURE_OPENAI_API_INSTANCE_NAME
-  azureOpenAIApiDeploymentName: "{DEPLOYMENT_NAME}", // In Node.js defaults to process.env.AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME
-});
-```
+<UnifiedModelParamsTooltip></UnifiedModelParamsTooltip>
+
+<CodeBlock language="typescript">{AzureOpenAIEmbeddings}</CodeBlock>
 
 ## Chat Models
 
@@ -61,27 +72,53 @@ const embeddings = new OpenAIEmbeddings({
 
 See a [usage example](/docs/integrations/chat/azure)
 
-```typescript
-import { ChatOpenAI } from "@langchain/openai";
+import AzureChatOpenAI from "@examples/models/chat/integration_azure_openai.ts";
+
+<UnifiedModelParamsTooltip></UnifiedModelParamsTooltip>
+
+<CodeBlock language="typescript">{AzureChatOpenAI}</CodeBlock>
+
+## Vector stores
+
+### Azure AI Search
+
+> [Azure AI Search](https://azure.microsoft.com/products/ai-services/ai-search) (formerly known as Azure Search and Azure Cognitive Search) is a distributed, RESTful search engine optimized for speed and relevance on production-scale workloads on Azure. It supports also vector search using the [k-nearest neighbor](https://en.wikipedia.org/wiki/Nearest_neighbor_search) (kNN) algorithm and also [semantic search](https://learn.microsoft.com/azure/search/semantic-search-overview).
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install -S @langchain/community @azure/search-documents
 ```
 
+See a [usage example](/docs/integrations/vectorstores/azure_aisearch).
+
 ```typescript
-const model = new ChatOpenAI({
-  temperature: 0.9,
-  azureOpenAIApiKey: "SOME_SECRET_VALUE", // In Node.js defaults to process.env.AZURE_OPENAI_API_KEY
-  azureOpenAIApiVersion: "YOUR-API-VERSION", // In Node.js defaults to process.env.AZURE_OPENAI_API_VERSION
-  azureOpenAIApiInstanceName: "{MY_INSTANCE_NAME}", // In Node.js defaults to process.env.AZURE_OPENAI_API_INSTANCE_NAME
-  azureOpenAIApiDeploymentName: "{DEPLOYMENT_NAME}", // In Node.js defaults to process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME
-});
+import { AzureAISearchVectorStore } from "@langchain/community/vectorstores/azure_aisearch";
+```
+
+### Azure Cosmos DB for MongoDB vCore
+
+> [Azure Cosmos DB for MongoDB vCore](https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/vcore/) makes it easy to create a database with full native MongoDB support. You can apply your MongoDB experience and continue to use your favorite MongoDB drivers, SDKs, and tools by pointing your application to the API for MongoDB vCore account’s connection string. Use vector search in Azure Cosmos DB for MongoDB vCore to seamlessly integrate your AI-based applications with your data that’s stored in Azure Cosmos DB.
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/community mongodb
+```
+
+See a [usage example](/docs/integrations/vectorstores/azure_cosmosdb).
+
+```typescript
+import { AzureCosmosDBVectorStore } from "@langchain/community/vectorstores/azure_cosmosdb";
 ```
 
 ## Document loaders
 
 ### Azure Blob Storage
 
-> [Azure Blob Storage](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blobs-introduction) is Microsoft's object storage solution for the cloud. Blob Storage is optimized for storing massive amounts of unstructured data. Unstructured data is data that doesn't adhere to a particular data model or definition, such as text or binary data.
+> [Azure Blob Storage](https://learn.microsoft.com/azure/storage/blobs/storage-blobs-introduction) is Microsoft's object storage solution for the cloud. Blob Storage is optimized for storing massive amounts of unstructured data. Unstructured data is data that doesn't adhere to a particular data model or definition, such as text or binary data.
 
-> [Azure Files](https://learn.microsoft.com/en-us/azure/storage/files/storage-files-introduction) offers fully managed
+> [Azure Files](https://learn.microsoft.com/azure/storage/files/storage-files-introduction) offers fully managed
 > file shares in the cloud that are accessible via the industry standard Server Message Block (`SMB`) protocol,
 > Network File System (`NFS`) protocol, and `Azure Files REST API`. `Azure Files` are based on the `Azure Blob Storage`.
 
@@ -94,18 +131,20 @@ const model = new ChatOpenAI({
 - Storing data for backup and restore, disaster recovery, and archiving.
 - Storing data for analysis by an on-premises or Azure-hosted service.
 
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
 ```bash npm2yarn
-npm install @azure/storage-blob
+npm install @langchain/community @azure/storage-blob
 ```
 
 See a [usage example for the Azure Blob Storage](/docs/integrations/document_loaders/web_loaders/azure_blob_storage_container).
 
 ```typescript
-import { AzureBlobStorageContainerLoader } from "langchain/document_loaders/web/azure_blob_storage_container";
+import { AzureBlobStorageContainerLoader } from "@langchain/community/document_loaders/web/azure_blob_storage_container";
 ```
 
 See a [usage example for the Azure Files](/docs/integrations/document_loaders/web_loaders/azure_blob_storage_file).
 
 ```typescript
-import { AzureBlobStorageFileLoader } from "langchain/document_loaders/web/azure_blob_storage_file";
+import { AzureBlobStorageFileLoader } from "@langchain/community/document_loaders/web/azure_blob_storage_file";
 ```

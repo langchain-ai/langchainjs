@@ -1,16 +1,14 @@
 # How to select examples by similarity
 
-```{=mdx}
-import PrerequisiteLinks from "@theme/PrerequisiteLinks";
+:::info Prerequisites
 
-<PrerequisiteLinks
-  content={`
+This guide assumes familiarity with the following concepts:
+
 - [Prompt templates](/docs/concepts/#prompt-templates)
 - [Example selectors](/docs/how_to/example_selectors)
 - [Vector stores](/docs/concepts#vectorstores)
-`}
-/>
-```
+
+:::
 
 This object selects examples based on similarity to the inputs.
 It does this by finding the examples with the embeddings that have the greatest cosine similarity with the inputs.
