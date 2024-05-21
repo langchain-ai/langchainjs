@@ -40,10 +40,7 @@ export interface CreateVoyageEmbeddingRequest {
   
   /**
    * Input type for the embeddings request.
-   * @type {string}
-   * @memberof CreateVoyageEmbeddingRequest
    */
-
   input_type?: string;
 }
 
