@@ -2,6 +2,8 @@ import {
   EnhancedGenerateContentResponse,
   Content,
   Part,
+  type FunctionDeclarationsTool as GoogleGenerativeAIFunctionDeclarationsTool,
+  type FunctionDeclaration as GenerativeAIFunctionDeclaration,
 } from "@google/generative-ai";
 import {
   AIMessage,
@@ -17,6 +19,9 @@ import {
   ChatGenerationChunk,
   ChatResult,
 } from "@langchain/core/outputs";
+import { StructuredToolInterface } from "@langchain/core/tools";
+import { isStructuredTool } from "@langchain/core/utils/function_calling";
+import { zodToGenerativeAIParameters } from "./zod_to_genai_parameters.js";
 
 export function getMessageAuthor(message: BaseMessage) {
   const type = message._getType();
@@ -234,4 +239,29 @@ export function convertResponseContentToChatGenerationChunk(
     }),
     generationInfo,
   });
+}
+
+export function convertToGenerativeAITools(
+  structuredTools: (StructuredToolInterface | Record<string, unknown>)[]
+): GoogleGenerativeAIFunctionDeclarationsTool[] {
+  if (structuredTools.every((tool) => "functionDeclarations" in tool && Array.isArray(tool.functionDeclarations))) {
+    return structuredTools as GoogleGenerativeAIFunctionDeclarationsTool[];
+  }
+  return [
+    {
+      functionDeclarations: structuredTools.map(
+        (structuredTool): GenerativeAIFunctionDeclaration => {
+          if (isStructuredTool(structuredTool)) {
+            const jsonSchema = zodToGenerativeAIParameters(structuredTool.schema);
+            return {
+              name: structuredTool.name,
+              description: structuredTool.description,
+              parameters: jsonSchema,
+            };
+          }
+          return structuredTool as unknown as GenerativeAIFunctionDeclaration;
+        }
+      ),
+    },
+  ];
 }
