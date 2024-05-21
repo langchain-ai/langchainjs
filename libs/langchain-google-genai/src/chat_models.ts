@@ -4,7 +4,6 @@ import {
   FunctionDeclarationsTool as GoogleGenerativeAIFunctionDeclarationsTool,
   FunctionDeclaration as GenerativeAIFunctionDeclaration,
   type FunctionDeclarationSchema as GenerativeAIFunctionDeclarationSchema,
-
   GenerateContentRequest,
   SafetySetting,
 } from "@google/generative-ai";
@@ -307,6 +306,8 @@ export class ChatGoogleGenerativeAI
         baseUrl: fields?.baseUrl,
       }
     );
+
+    console.log(this.client.generationConfig.temperature);
   }
 
   protected getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -314,8 +315,8 @@ export class ChatGoogleGenerativeAI
       ls_provider: "google_genai",
       ls_model_name: this.model,
       ls_model_type: "chat",
-      ls_temperature: this.temperature ?? undefined,
-      ls_max_tokens: this.maxOutputTokens ?? undefined,
+      ls_temperature: this.client.generationConfig.temperature ?? undefined,
+      ls_max_tokens: this.client.generationConfig.maxOutputTokens ?? undefined,
       ls_stop: options.stop,
     };
   }

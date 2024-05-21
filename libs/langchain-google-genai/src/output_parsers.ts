@@ -1,4 +1,4 @@
-import { z } from "zod";
+import type { z } from "zod";
 import {
   BaseLLMOutputParser,
   OutputParserException,
@@ -7,8 +7,8 @@ import { JsonOutputKeyToolsParserParams } from "@langchain/core/output_parsers/o
 import { ChatGeneration } from "@langchain/core/outputs";
 import { ToolCall } from "@langchain/core/messages/tool";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface GoogleGenerativeAIToolsOutputParserParams<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends Record<string, any>
 > extends JsonOutputKeyToolsParserParams<T> {}
 
