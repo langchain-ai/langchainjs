@@ -9196,7 +9196,7 @@ __metadata:
     jsdom: ^22.1.0
     jsonwebtoken: ^9.0.2
     langchain: 0.2.3
-    langsmith: ~0.1.1
+    langsmith: ~0.1.28
     llmonitor: ^0.5.9
     lodash: ^4.17.21
     lunary: ^0.6.11
@@ -9620,7 +9620,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     js-tiktoken: ^1.0.12
-    langsmith: ~0.1.7
+    langsmith: ~0.1.28
     ml-distance: ^4.0.0
     ml-matrix: ^6.10.4
     mustache: ^4.2.0
@@ -27500,7 +27500,7 @@ __metadata:
     jsdom: ^22.1.0
     jsonpointer: ^5.0.1
     langchainhub: ~0.0.8
-    langsmith: ~0.1.7
+    langsmith: ~0.1.28
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
@@ -27712,7 +27712,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langsmith@npm:^0.1.1, langsmith@npm:~0.1.1":
+"langsmith@npm:^0.1.1":
   version: 0.1.1
   resolution: "langsmith@npm:0.1.1"
   dependencies:
@@ -27727,18 +27727,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"langsmith@npm:~0.1.7":
-  version: 0.1.7
-  resolution: "langsmith@npm:0.1.7"
+"langsmith@npm:~0.1.28":
+  version: 0.1.28
+  resolution: "langsmith@npm:0.1.28"
   dependencies:
     "@types/uuid": ^9.0.1
     commander: ^10.0.1
     p-queue: ^6.6.2
     p-retry: 4
     uuid: ^9.0.0
-  bin:
-    langsmith: dist/cli/main.cjs
-  checksum: e8787b21c1ab80c1542b0cca9be99d300124b4e5d665e05f0caf3bc3616392a6fd46ca62466e6ede54062d9273123d0f5f4c40296c11b869a399dca592647b5e
+  peerDependencies:
+    "@langchain/core": "*"
+    langchain: "*"
+    openai: "*"
+  peerDependenciesMeta:
+    "@langchain/core":
+      optional: true
+    langchain:
+      optional: true
+    openai:
+      optional: true
+  checksum: 28718ac6198547ea03cf55c685d71b9e8ed658fc3e3ce2f0adc581def497adb0211044c3813a01769d69fcf936124d5fd3e54a1283273585d3df52eb006b2a61
   languageName: node
   linkType: hard
 
