@@ -8869,7 +8869,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/community": "workspace:*"
     "@langchain/core": ">0.1.56 <0.3.0"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     dpdm: ^3.12.0
@@ -8901,7 +8901,7 @@ __metadata:
     "@azure/openai": 1.0.0-beta.11
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     dpdm: ^3.12.0
@@ -8932,7 +8932,7 @@ __metadata:
     "@cloudflare/workers-types": ^4.20231218.0
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -8974,7 +8974,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.58 <0.3.0"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9034,7 +9034,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.2.0
     "@langchain/openai": ~0.0.28
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@layerup/layerup-security": ^1.5.12
     "@mendable/firecrawl-js": ^0.0.13
     "@mlc-ai/web-llm": ^0.2.35
@@ -9533,7 +9533,7 @@ __metadata:
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@types/mustache": ^4
@@ -9575,7 +9575,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9607,7 +9607,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.56 <0.3.0"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9641,7 +9641,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.56 <0.3.0"
     "@langchain/google-common": ~0.0.15
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9674,7 +9674,7 @@ __metadata:
     "@google/generative-ai": ^0.7.0
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.5  <0.3.0"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9706,7 +9706,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.56 <0.3.0"
     "@langchain/google-webauth": ~0.0.15
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9738,7 +9738,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.56 <0.3.0"
     "@langchain/google-gauth": ~0.0.16
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9769,7 +9769,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.56 <0.3.0"
     "@langchain/google-common": ~0.0.15
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9801,7 +9801,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.56 <0.3.0"
     "@langchain/openai": "workspace:^"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9836,7 +9836,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.56 <0.3.0"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@mistralai/mistralai": ^0.1.3
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9872,7 +9872,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
     "@langchain/openai": "workspace:*"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9906,7 +9906,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
     "@langchain/openai": "workspace:^"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@nomic-ai/atlas": ^0.8.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9939,7 +9939,7 @@ __metadata:
     "@azure/identity": ^4.2.0
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.56 <0.3.0"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     dpdm: ^3.12.0
@@ -9971,7 +9971,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
     "@langchain/openai": "workspace:*"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@pinecone-database/pinecone": ^2.2.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -10006,7 +10006,7 @@ __metadata:
     "@faker-js/faker": ^8.4.1
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@qdrant/js-client-rest": ^1.9.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -10040,7 +10040,7 @@ __metadata:
     "@faker-js/faker": ^8.4.0
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -10067,23 +10067,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/scripts@npm:~0.0":
-  version: 0.0.13
-  resolution: "@langchain/scripts@npm:0.0.13"
-  dependencies:
-    axios: ^1.6.7
-    commander: ^11.1.0
-    glob: ^10.3.10
-    rollup: ^4.5.2
-    ts-morph: ^21.0.1
-    typescript: ^5.4.5
-  bin:
-    lc-build: bin/build
-  checksum: 7ebfbccc40df4d3fc503463dd6c4e6532ecf883bab4a0f8d5e4d50b5f779764d038ee0ec9c40916b4673048827f9d96cb85cd791bb879d42defe98ba1c2536d1
-  languageName: node
-  linkType: hard
-
-"@langchain/scripts@workspace:*, @langchain/scripts@workspace:libs/langchain-scripts":
+"@langchain/scripts@workspace:libs/langchain-scripts, @langchain/scripts@~0.0.14":
   version: 0.0.0-use.local
   resolution: "@langchain/scripts@workspace:libs/langchain-scripts"
   dependencies:
@@ -10124,7 +10108,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -10156,7 +10140,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
     "@langchain/openai": "workspace:^"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -10190,7 +10174,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0  <0.3.0"
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -19254,7 +19238,7 @@ __metadata:
     "@docusaurus/preset-classic": 2.4.3
     "@docusaurus/remark-plugin-npm2yarn": 2.4.3
     "@docusaurus/theme-mermaid": 2.4.3
-    "@langchain/scripts": "workspace:*"
+    "@langchain/scripts": ~0.0.14
     "@mdx-js/react": ^1.6.22
     "@supabase/supabase-js": ^2.39.7
     "@swc/core": ^1.3.62
@@ -22461,7 +22445,7 @@ __metadata:
     "@langchain/pinecone": "workspace:*"
     "@langchain/qdrant": "workspace:*"
     "@langchain/redis": "workspace:*"
-    "@langchain/scripts": "workspace:*"
+    "@langchain/scripts": ~0.0.14
     "@langchain/textsplitters": "workspace:*"
     "@langchain/weaviate": "workspace:*"
     "@langchain/yandex": "workspace:*"
@@ -27415,7 +27399,7 @@ __metadata:
     "@langchain/cohere": ^0.0.8
     "@langchain/core": ~0.2.0
     "@langchain/openai": ~0.0.28
-    "@langchain/scripts": ~0.0
+    "@langchain/scripts": ~0.0.14
     "@langchain/textsplitters": ~0.0.0
     "@mendable/firecrawl-js": ^0.0.13
     "@notionhq/client": ^2.2.10
