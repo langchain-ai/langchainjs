@@ -290,6 +290,10 @@ llms/yandex.cjs
 llms/yandex.js
 llms/yandex.d.ts
 llms/yandex.d.cts
+llms/layerup_security.cjs
+llms/layerup_security.js
+llms/layerup_security.d.ts
+llms/layerup_security.d.cts
 vectorstores/analyticdb.cjs
 vectorstores/analyticdb.js
 vectorstores/analyticdb.d.ts
