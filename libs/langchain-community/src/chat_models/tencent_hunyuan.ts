@@ -16,7 +16,7 @@ import {
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { IterableReadableStream } from "@langchain/core/utils/stream";
-import { sign } from "../utils/tencent_hunyuan.js";
+import { sign } from "../utils/tencent_hunyuan/common.js";
 
 /**
  * Type representing the role of a message in the Hunyuan chat model.
@@ -120,6 +120,11 @@ declare interface TencentHunyuanChatInput {
    * @default "hunyuan.tencentcloudapi.com"
    */
   host?: string;
+
+  /**
+   * Tencent Cloud API v3 sign method.
+   */
+  sign: sign;
 
   /**
    * Model name to use.
@@ -259,6 +264,8 @@ export class ChatTencentHunyuan
 
   topP?: number | undefined;
 
+  sign: sign;
+
   constructor(fields?: Partial<TencentHunyuanChatInput> & BaseChatModelParams) {
     super(fields ?? {});
 
@@ -279,6 +286,10 @@ export class ChatTencentHunyuan
     this.model = fields?.model ?? this.model;
     this.streaming = fields?.streaming ?? this.streaming;
     this.temperature = fields?.temperature ?? this.temperature;
+    if (!fields?.sign) {
+      throw new Error("Sign method undefined");
+    }
+    this.sign = fields?.sign;
   }
 
   /**
@@ -305,7 +316,7 @@ export class ChatTencentHunyuan
       Authorization: "",
     };
 
-    headers.Authorization = sign(
+    headers.Authorization = this.sign(
       this.host,
       request,
       timestamp,

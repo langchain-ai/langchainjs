@@ -2,12 +2,19 @@ import { ChatTencentHunyuan } from "@langchain/community/chat_models/tencent_hun
 import { HumanMessage } from "@langchain/core/messages";
 import type { LLMResult } from "@langchain/core/outputs";
 
+// in nodejs environment
+import { sign } from "@langchain/community/utils/tencent_hunyuan/index";
+
+// in browser environment
+// import { sign } from "@langchain/community/utils/tencent_hunyuan/web";
+
 const messages = [new HumanMessage("Hello")];
 
 // Default model is hunyuan-pro
 const hunyuanPro = new ChatTencentHunyuan({
   streaming: false,
   temperature: 1,
+  sign,
 });
 
 let res = await hunyuanPro.invoke(messages);
@@ -29,6 +36,7 @@ AIMessage {
 const hunyuanLite = new ChatTencentHunyuan({
   model: "hunyuan-lite",
   streaming: false,
+  sign,
 });
 
 res = await hunyuanLite.invoke(messages);
@@ -51,6 +59,7 @@ const hunyuanLiteStream = new ChatTencentHunyuan({
   model: "hunyuan-lite",
   streaming: true,
   temperature: 1,
+  sign,
 });
 
 hunyuanLiteStream.invoke(messages, {

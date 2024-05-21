@@ -27,7 +27,6 @@ export * as embeddings__baidu_qianfan from "../embeddings/baidu_qianfan.js";
 export * as embeddings__fireworks from "../embeddings/fireworks.js";
 export * as embeddings__minimax from "../embeddings/minimax.js";
 export * as embeddings__ollama from "../embeddings/ollama.js";
-export * as embeddings__tencent_hunyuan from "../embeddings/tencent_hunyuan.js";
 export * as embeddings__togetherai from "../embeddings/togetherai.js";
 export * as embeddings__voyage from "../embeddings/voyage.js";
 export * as llms__ai21 from "../llms/ai21.js";
@@ -48,7 +47,6 @@ export * as chat_models__fireworks from "../chat_models/fireworks.js";
 export * as chat_models__friendli from "../chat_models/friendli.js";
 export * as chat_models__minimax from "../chat_models/minimax.js";
 export * as chat_models__ollama from "../chat_models/ollama.js";
-export * as chat_models__tencent_hunyuan from "../chat_models/tencent_hunyuan.js";
 export * as chat_models__togetherai from "../chat_models/togetherai.js";
 export * as chat_models__yandex from "../chat_models/yandex.js";
 export * as retrievers__chaindesk from "../retrievers/chaindesk.js";
@@ -71,6 +69,8 @@ export * as document_loaders__web__searchapi from "../document_loaders/web/searc
 export * as document_loaders__web__serpapi from "../document_loaders/web/serpapi.js";
 export * as document_loaders__web__sort_xyz_blockchain from "../document_loaders/web/sort_xyz_blockchain.js";
 export * as utils__event_source_parse from "../utils/event_source_parse.js";
+export * as utils__tencent_hunyuan__web from "../utils/tencent_hunyuan/web.js";
+export * as utils__tencent_hunyuan__index from "../utils/tencent_hunyuan/index.js";
 export * as experimental__graph_transformers__llm from "../experimental/graph_transformers/llm.js";
 export * as experimental__chat_models__ollama_functions from "../experimental/chat_models/ollama_functions.js";
 

@@ -290,6 +290,8 @@ export const config = {
     "utils/convex": "utils/convex",
     "utils/event_source_parse": "utils/event_source_parse",
     "utils/cassandra": "utils/cassandra",
+    "utils/tencent_hunyuan/web": "utils/tencent_hunyuan/web",
+    "utils/tencent_hunyuan/index": "utils/tencent_hunyuan/index",
     // experimental
     "experimental/graph_transformers/llm":
       "experimental/graph_transformers/llm",
@@ -322,6 +324,7 @@ export const config = {
     "embeddings/llama_cpp",
     "embeddings/gradient_ai",
     "embeddings/premai",
+    "embeddings/tencent_hunyuan",
     "embeddings/zhipuai",
     "llms/load",
     "llms/cohere",
@@ -389,6 +392,7 @@ export const config = {
     "chat_models/llama_cpp",
     "chat_models/portkey",
     "chat_models/premai",
+    "chat_models/tencent_hunyuan",
     "chat_models/iflytek_xinghuo",
     "chat_models/iflytek_xinghuo/web",
     "chat_models/webllm",

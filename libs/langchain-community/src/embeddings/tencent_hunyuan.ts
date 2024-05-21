@@ -1,6 +1,6 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
-import { sign } from "../utils/tencent_hunyuan.js";
+import { sign } from "../utils/tencent_hunyuan/common.js";
 
 /**
  * Interface that extends EmbeddingsParams and defines additional
@@ -12,6 +12,11 @@ export interface TencentHunyuanEmbeddingsParams extends EmbeddingsParams {
    * @default "hunyuan.tencentcloudapi.com"
    */
   host?: string;
+
+  /**
+   * Tencent Cloud API v3 sign method.
+   */
+  sign: sign;
 
   /**
    * SecretID to use when making requests, can be obtained from https://console.cloud.tencent.com/cam/capi.
@@ -81,6 +86,8 @@ export class TencentHunyuanEmbeddings
 
   host = "hunyuan.tencentcloudapi.com";
 
+  sign: sign;
+
   constructor(fields?: TencentHunyuanEmbeddingsParams) {
     super(fields ?? {});
 
@@ -97,6 +104,10 @@ export class TencentHunyuanEmbeddings
     }
 
     this.host = fields?.host ?? this.host;
+    if (!fields?.sign) {
+      throw new Error("Sign method undefined");
+    }
+    this.sign = fields?.sign;
   }
 
   /**
@@ -119,7 +130,7 @@ export class TencentHunyuanEmbeddings
       Authorization: "",
     };
 
-    headers.Authorization = sign(
+    headers.Authorization = this.sign(
       this.host,
       request,
       timestamp,
@@ -135,7 +146,7 @@ export class TencentHunyuanEmbeddings
         body: JSON.stringify(request),
       });
 
-      if (response.status === 200) {
+      if (response.ok) {
         return response.json();
       }
 

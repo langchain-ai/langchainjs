@@ -1,5 +1,6 @@
 import { test, expect } from "@jest/globals";
 import { TencentHunyuanEmbeddings } from "../tencent_hunyuan.js";
+import { sign } from "../../utils/tencent_hunyuan/index.js";
 
 test.skip("Test TencentHunyuanEmbeddings.embedQuery", async () => {
   const embeddings = new TencentHunyuanEmbeddings();
@@ -16,7 +17,7 @@ test.skip("Test TencentHunyuanEmbeddings.embedDocuments", async () => {
 });
 
 test.skip("Test TencentHunyuanEmbeddings concurrency", async () => {
-  const embeddings = new TencentHunyuanEmbeddings({});
+  const embeddings = new TencentHunyuanEmbeddings({ sign });
   const res = await embeddings.embedDocuments([
     "Hello world",
     "Bye bye",

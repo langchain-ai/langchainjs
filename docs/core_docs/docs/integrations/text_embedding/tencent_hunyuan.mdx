@@ -1,5 +1,5 @@
 ---
-sidebar_class_name: node-only
+sidebar_label: TencentHunyuan
 ---
 
 # TencentHunyuan
@@ -11,6 +11,16 @@ The `TencentHunyuanEmbeddings` class uses the Tencent Hunyuan API to generate em
 1. Sign up for a Tencent Cloud account [here](https://cloud.tencent.com/register).
 2. Create SecretID & SecretKey [here](https://console.cloud.tencent.com/cam/capi).
 3. Set SecretID and SecretKey as environment variables named `TENCENT_SECRET_ID` and `TENCENT_SECRET_KEY`, respectively.
+
+If you are using langchain-js in browser environment, you'll also need to install the following dependencies:
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/community crypto-js
+```
 
 ## Usage
 

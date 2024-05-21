@@ -946,6 +946,14 @@ utils/cassandra.cjs
 utils/cassandra.js
 utils/cassandra.d.ts
 utils/cassandra.d.cts
+utils/tencent_hunyuan/web.cjs
+utils/tencent_hunyuan/web.js
+utils/tencent_hunyuan/web.d.ts
+utils/tencent_hunyuan/web.d.cts
+utils/tencent_hunyuan/index.cjs
+utils/tencent_hunyuan/index.js
+utils/tencent_hunyuan/index.d.ts
+utils/tencent_hunyuan/index.d.cts
 experimental/graph_transformers/llm.cjs
 experimental/graph_transformers/llm.js
 experimental/graph_transformers/llm.d.ts
