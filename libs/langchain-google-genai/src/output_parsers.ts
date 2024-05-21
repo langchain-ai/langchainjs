@@ -8,8 +8,9 @@ import { ChatGeneration } from "@langchain/core/outputs";
 import { ToolCall } from "@langchain/core/messages/tool";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-interface GoogleGenerativeAIToolsOutputParserParams<T extends Record<string, any>>
-  extends JsonOutputKeyToolsParserParams<T> {}
+interface GoogleGenerativeAIToolsOutputParserParams<
+  T extends Record<string, any>
+> extends JsonOutputKeyToolsParserParams<T> {}
 
 export class GoogleGenerativeAIToolsOutputParser<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

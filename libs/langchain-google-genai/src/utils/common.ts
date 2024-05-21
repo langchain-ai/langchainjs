@@ -244,7 +244,13 @@ export function convertResponseContentToChatGenerationChunk(
 export function convertToGenerativeAITools(
   structuredTools: (StructuredToolInterface | Record<string, unknown>)[]
 ): GoogleGenerativeAIFunctionDeclarationsTool[] {
-  if (structuredTools.every((tool) => "functionDeclarations" in tool && Array.isArray(tool.functionDeclarations))) {
+  if (
+    structuredTools.every(
+      (tool) =>
+        "functionDeclarations" in tool &&
+        Array.isArray(tool.functionDeclarations)
+    )
+  ) {
     return structuredTools as GoogleGenerativeAIFunctionDeclarationsTool[];
   }
   return [
@@ -252,7 +258,9 @@ export function convertToGenerativeAITools(
       functionDeclarations: structuredTools.map(
         (structuredTool): GenerativeAIFunctionDeclaration => {
           if (isStructuredTool(structuredTool)) {
-            const jsonSchema = zodToGenerativeAIParameters(structuredTool.schema);
+            const jsonSchema = zodToGenerativeAIParameters(
+              structuredTool.schema
+            );
             return {
               name: structuredTool.name,
               description: structuredTool.description,
