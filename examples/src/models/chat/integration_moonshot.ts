@@ -3,14 +3,14 @@ import { HumanMessage } from "@langchain/core/messages";
 
 // Default model is moonshot-v1-8k
 const moonshotV18K = new ChatMoonshot({
-  moonshotApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.MOONSHOT_API_KEY
+  apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.MOONSHOT_API_KEY
 });
 
 // Use moonshot-v1-128k
 const moonshotV1128k = new ChatMoonshot({
+  apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.MOONSHOT_API_KEY
   model: "moonshot-v1-128k", // Available models: moonshot-v1-8k, moonshot-v1-32k, moonshot-v1-128k
-  temperature: 1,
-  moonshotApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.MOONSHOT_API_KEY
+  temperature: 0.3,
 });
 
 const messages = [new HumanMessage("Hello")];

@@ -103,13 +103,6 @@ export interface ChatMoonshotParams {
   /**
    * API key to use when making requests. Defaults to the value of
    * `MOONSHOT_API_KEY` environment variable.
-   * Alias for `apiKey`
-   */
-  moonshotApiKey?: string;
-
-    /**
-   * API key to use when making requests. Defaults to the value of
-   * `MOONSHOT_API_KEY` environment variable.
    */
   apiKey?: string;
 
@@ -193,7 +186,6 @@ export class ChatMoonshot extends BaseChatModel implements ChatMoonshotParams {
 
   get lc_secrets() {
     return {
-      moonshotApiKey: "MOONSHOT_API_KEY",
       apiKey: "MOONSHOT_API_KEY",
     };
   }
@@ -201,8 +193,6 @@ export class ChatMoonshot extends BaseChatModel implements ChatMoonshotParams {
   get lc_aliases() {
     return undefined;
   }
-
-  moonshotApiKey?: string;
 
   apiKey?: string;
 
@@ -233,11 +223,9 @@ export class ChatMoonshot extends BaseChatModel implements ChatMoonshotParams {
   constructor(fields: Partial<ChatMoonshotParams> & BaseChatModelParams = {}) {
     super(fields);
 
-    this.moonshotApiKey =
-      fields?.apiKey ??
-      fields?.moonshotApiKey ??
-      getEnvironmentVariable("MOONSHOT_API_KEY");
-    if (!this.moonshotApiKey) {
+    this.apiKey = fields?.apiKey ?? getEnvironmentVariable("MOONSHOT_API_KEY");
+
+    if (!this.apiKey) {
       throw new Error("Moonshot API key not found");
     }
 
@@ -399,7 +387,7 @@ export class ChatMoonshot extends BaseChatModel implements ChatMoonshotParams {
         method: "POST",
         headers: {
           ...(stream ? { Accept: "text/event-stream" } : {}),
-          Authorization: `Bearer ${encodeApiKey(this.moonshotApiKey)}`,
+          Authorization: `Bearer ${encodeApiKey(this.apiKey)}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(request),
@@ -460,7 +448,7 @@ export class ChatMoonshot extends BaseChatModel implements ChatMoonshotParams {
   }
 
   _llmType(): string {
-    return "Moonshot";
+    return "moonshot";
   }
 
   /** @ignore */
