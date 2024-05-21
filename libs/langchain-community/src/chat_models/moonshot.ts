@@ -104,20 +104,23 @@ export interface ChatMoonshotParams {
    */
   apiKey?: string;
 
-  /** Amount of randomness injected into the response. Ranges
+  /**
+   * Amount of randomness injected into the response. Ranges
    * from 0 to 1 (0 is not included). Use temp closer to 0 for analytical /
-   * multiple choice, and temp closer to 1 for creative
-   * and generative tasks. Defaults to 0.95
+   * multiple choice, and temp closer to 1 for creative and generative tasks.
+   * Defaults to 0, recommended 0.3
    */
   temperature?: number;
 
-  /** Total probability mass of tokens to consider at each step. Range
-   * from 0 to 1 Defaults to 0.7
+  /**
+   * Total probability mass of tokens to consider at each step. Range
+   * from 0 to 1. Defaults to 1
    */
   topP?: number;
 
   /**
-   * max value is 8192，defaults to 1024
+   * Different models have different maximum values. For example, the maximum
+   * value of moonshot-v1-8k is 8192. Defaults to 1024
    */
   maxTokens?: number;
 
@@ -230,8 +233,8 @@ export class ChatMoonshot extends BaseChatModel implements ChatMoonshotParams {
     this.apiUrl = "https://api.moonshot.cn/v1/chat/completions";
     this.streaming = fields.streaming ?? false;
     this.messages = fields.messages ?? [];
-    this.temperature = fields.temperature ?? 0.3;
-    this.topP = fields.topP ?? 1.0;
+    this.temperature = fields.temperature ?? 0;
+    this.topP = fields.topP ?? 1;
     this.stop = fields.stop;
     this.maxTokens = fields.maxTokens;
     this.modelName = fields?.model ?? fields.modelName ?? "moonshot-v1-8k";
