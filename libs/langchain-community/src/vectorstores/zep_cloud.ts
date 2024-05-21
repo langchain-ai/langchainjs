@@ -127,11 +127,8 @@ export class ZepCloudVectorStore extends VectorStore {
     });
   }
 
-  /**
-   * @deprecated Adding vectors in unsupported in Zep Cloud
-   */
   async addVectors(): Promise<string[]> {
-    return [];
+    throw new Error("Adding vectors is not supported in Zep Cloud.");
   }
 
   /**
@@ -175,15 +172,8 @@ export class ZepCloudVectorStore extends VectorStore {
     }
   }
 
-  /**
-   * @deprecated Unsupported in cloud.
-   */
   async similaritySearchVectorWithScore(): Promise<[Document, number][]> {
-    // Deprecated
-    console.warn(
-      "Zep does not support vector search. Using text search instead."
-    );
-    return [];
+    throw new Error("Unsupported in Zep Cloud.");
   }
 
   // eslint-disable-next-line no-underscore-dangle
