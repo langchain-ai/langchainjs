@@ -112,6 +112,46 @@ test("Runnable with message history with a chat model", async () => {
   ]);
 });
 
+test("Runnable with message history with a messages in, messages out chain", async () => {
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "you are a robot"],
+    ["placeholder", "{messages}"],
+  ]);
+  const model = new FakeListChatModel({
+    responses: ["So long and thanks for the fish!!"],
+  });
+  const runnable = prompt.pipe(model);
+
+  const getMessageHistory = await getGetSessionHistory();
+  const withHistory = new RunnableWithMessageHistory({
+    runnable,
+    config: {},
+    getMessageHistory,
+  });
+  const config: RunnableConfig = { configurable: { sessionId: "2" } };
+  const output = await withHistory.invoke([new HumanMessage("hello")], config);
+  expect(output.content).toBe("So long and thanks for the fish!!");
+  const stream = await withHistory.stream(
+    [new HumanMessage("good bye")],
+    config
+  );
+  const chunks = [];
+  for await (const chunk of stream) {
+    console.log(chunk);
+    chunks.push(chunk);
+  }
+  expect(chunks.map((chunk) => chunk.content).join("")).toEqual(
+    "So long and thanks for the fish!!"
+  );
+  const sessionHistory = await getMessageHistory("2");
+  expect(await sessionHistory.getMessages()).toEqual([
+    new HumanMessage("hello"),
+    new AIMessage("So long and thanks for the fish!!"),
+    new HumanMessage("good bye"),
+    new AIMessageChunk("So long and thanks for the fish!!"),
+  ]);
+});
+
 test("Runnable with message history work with chat list memory", async () => {
   const runnable = new RunnableLambda({
     func: (messages: BaseMessage[]) =>
