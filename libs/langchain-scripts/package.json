@@ -46,8 +46,10 @@
     "axios": "^1.6.7",
     "commander": "^11.1.0",
     "glob": "^10.3.10",
+    "rimraf": "^5.0.1",
     "rollup": "^4.5.2",
     "ts-morph": "^21.0.1",
+    "tsup": "6.5.0",
     "typescript": "^5.4.5"
   },
   "devDependencies": {
@@ -69,9 +71,7 @@
     "jest-environment-node": "^29.6.4",
     "prettier": "^2.8.3",
     "release-it": "^15.10.1",
-    "rimraf": "^5.0.1",
-    "ts-jest": "^29.1.0",
-    "tsup": "6.5.0"
+    "ts-jest": "^29.1.0"
   },
   "publishConfig": {
     "access": "public"

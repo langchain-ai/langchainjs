@@ -241,6 +241,7 @@ ${[...identifySecrets(config.tsConfigPath)]
 }
 
 function listExternals(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   packageJson: Record<string, any>,
   extraInternals?: Array<string | RegExp>
 ) {
@@ -251,6 +252,7 @@ function listExternals(
   ];
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function listEntrypoints(packageJson: Record<string, any>) {
   const { exports } = packageJson;
   /** @type {Record<string, ExportsMapValue | string> | null} */
