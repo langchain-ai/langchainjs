@@ -204,7 +204,6 @@ export function mapGenerateContentResultToChatResult(
     text,
     message: new AIMessage({
       content: text,
-      name: !content ? undefined : content.role,
       tool_calls: functionCalls,
       additional_kwargs: {
         ...generationInfo,
