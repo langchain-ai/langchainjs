@@ -12,13 +12,24 @@ function abs(relativePath) {
 export const config = {
   internals: [/node\:/],
   entrypoints: {
-    index: "index",
-    build: "build",
-    migrations: "migrations/index",
-    check_broken_links: "check_broken_links",
+    index: "src/index.ts",
+    build: "src/build.ts",
+    migrations: "src/migrations/index.ts",
+    check_broken_links: "src/check_broken_links.ts",
   },
   tsConfigPath: resolve("./tsconfig.json"),
   cjsSource: "./dist-cjs",
   cjsDestination: "./dist",
   abs,
+  tSupConfig: {
+    name: "@langchain/scripts",
+    dts: true,
+    format: ["cjs", "esm"],
+    splitting: false,
+    sourcemap: true,
+    clean: true,
+    platform: "node",
+    outDir: `dist`,
+    tsconfig: `tsconfig.json`,
+  }
 }

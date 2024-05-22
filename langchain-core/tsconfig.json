@@ -1,5 +1,5 @@
 {
-  "extends": "@tsconfig/recommended",
+  // "extends": "@tsconfig/recommended",
   "compilerOptions": {
     "outDir": "../dist",
     "rootDir": "./src",
@@ -9,7 +9,7 @@
       "ES2022.Object",
       "DOM"
     ],
-    "module": "ES2020",
+    "module": "NodeNext",
     "moduleResolution": "nodenext",
     "esModuleInterop": true,
     "declaration": true,

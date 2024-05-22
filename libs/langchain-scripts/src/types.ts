@@ -1,3 +1,5 @@
+import type { Options } from "tsup";
+
 /** @ignore We don't need API refs for these */
 export declare type PackageJSONDependencyTypes =
   | "dependencies"
@@ -17,7 +19,11 @@ export interface PackageJSONPerson extends PackageJSONAddress {
 }
 
 export interface ExportsMapValue {
-  types: string;
+  types: {
+    import: string;
+    require: string;
+    default: string;
+  };
   import: string;
   require: string;
 }
@@ -153,4 +159,8 @@ export interface LangChainConfig {
    * @type {string[]}
    */
   additionalGitignorePaths?: string[];
+  /**
+   * Config for TSup build process
+   */
+  tSupConfig?: Options;
 }

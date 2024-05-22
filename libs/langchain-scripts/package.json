@@ -14,10 +14,12 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-scripts/",
   "bin": {
-    "lc-build": "bin/build"
+    "lc-build": "bin/build",
+    "tsup-build": "bin/tsup_build"
   },
   "scripts": {
-    "build": "yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
+    "build": "NODE_OPTIONS=--max-old-space-size=4096 node ./bin/tsup_build --create-entrypoints --tree-shaking",
+    "build:old": "yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 rm -f src/package.json && tsc --outDir dist/",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 echo '{}' > src/package.json && tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rimraf dist-cjs src/package.json",
     "build:watch": "yarn create-entrypoints && tsc --outDir dist/ --watch",
@@ -68,67 +70,51 @@
     "prettier": "^2.8.3",
     "release-it": "^15.10.1",
     "rimraf": "^5.0.1",
-    "ts-jest": "^29.1.0"
+    "ts-jest": "^29.1.0",
+    "tsup": "6.5.0"
   },
   "publishConfig": {
     "access": "public"
   },
   "exports": {
-    ".": {
+    "./index": {
       "types": {
-        "import": "./index.d.ts",
-        "require": "./index.d.cts",
-        "default": "./index.d.ts"
+        "import": "./dist/index.d.ts",
+        "require": "./dist/index.d.cts",
+        "default": "./dist/index.d.ts"
       },
-      "import": "./index.js",
-      "require": "./index.cjs"
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     },
     "./build": {
       "types": {
-        "import": "./build.d.ts",
-        "require": "./build.d.cts",
-        "default": "./build.d.ts"
+        "import": "./dist/build.d.ts",
+        "require": "./dist/build.d.cts",
+        "default": "./dist/build.d.ts"
       },
-      "import": "./build.js",
-      "require": "./build.cjs"
+      "import": "./dist/build.js",
+      "require": "./dist/build.cjs"
     },
     "./migrations": {
       "types": {
-        "import": "./migrations.d.ts",
-        "require": "./migrations.d.cts",
-        "default": "./migrations.d.ts"
+        "import": "./dist/migrations.d.ts",
+        "require": "./dist/migrations.d.cts",
+        "default": "./dist/migrations.d.ts"
       },
-      "import": "./migrations.js",
-      "require": "./migrations.cjs"
+      "import": "./dist/migrations.js",
+      "require": "./dist/migrations.cjs"
     },
     "./check_broken_links": {
       "types": {
-        "import": "./check_broken_links.d.ts",
-        "require": "./check_broken_links.d.cts",
-        "default": "./check_broken_links.d.ts"
+        "import": "./dist/check_broken_links.d.ts",
+        "require": "./dist/check_broken_links.d.cts",
+        "default": "./dist/check_broken_links.d.ts"
       },
-      "import": "./check_broken_links.js",
-      "require": "./check_broken_links.cjs"
-    },
-    "./package.json": "./package.json"
+      "import": "./dist/check_broken_links.js",
+      "require": "./dist/check_broken_links.cjs"
+    }
   },
   "files": [
-    "dist/",
-    "index.cjs",
-    "index.js",
-    "index.d.ts",
-    "index.d.cts",
-    "build.cjs",
-    "build.js",
-    "build.d.ts",
-    "build.d.cts",
-    "migrations.cjs",
-    "migrations.js",
-    "migrations.d.ts",
-    "migrations.d.cts",
-    "check_broken_links.cjs",
-    "check_broken_links.js",
-    "check_broken_links.d.ts",
-    "check_broken_links.d.cts"
+    "dist/**/*"
   ]
 }
