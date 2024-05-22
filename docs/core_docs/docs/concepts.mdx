@@ -553,19 +553,9 @@ The `CallbackManager` will call the appropriate method on each handler when the 
 
 The `callbacks` property is available on most objects throughout the API (Models, Tools, Agents, etc.) in two different places:
 
-- **Request time callbacks**: Passed at the time of the request in addition to the input data.
-    Available on all standard `Runnable` objects. These callbacks are INHERITED by all children
-    of the object they are defined on. For example, `chain.invoke({"number": 25}, {"callbacks": [handler]})`.
-- **Constructor callbacks**: `chain = TheNameOfSomeChain(callbacks=[handler])`. These callbacks
-    are passed as arguments to the constructor of the object. The callbacks are scoped
-    only to the object they are defined on, and are **not** inherited by any children of the object.
-
-
-The `callbacks` property is available on most objects throughout the API (Models, Tools, Agents, etc.) in two different places:
-
 - **Request callbacks**: Passed at the time of the request in addition to the input data.
     Available on all standard `Runnable` objects. These callbacks are INHERITED by all children
-    of the object they are defined on. For example, `chain.invoke({"number": 25}, {"callbacks": [handler]})
+    of the object they are defined on. For example, `chain.invoke({foo: "bar"}, {callbacks: [handler]})`.
 - **Constructor callbacks**: defined in the constructor, e.g. `new ChatAnthropic({ callbacks: [handler], tags: ["a-tag"] })`. In this case, the callbacks will be used for all calls made on that object, and will be scoped to that object only.
     For example, if you initialize a chat model with constructor callbacks, then use it within a chain, the callbacks will only be invoked for calls to that model.
 
