@@ -5,13 +5,13 @@ import "../../entrypoints.js";
 
 // Import a few things we'll use to test the exports
 import { LLMChain } from "langchain/chains";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
-} from "langchain/prompts";
-import { OpenAI } from "langchain/llms/openai";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+} from "@langchain/core/prompts";
+import { OpenAI } from "@langchain/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 
 import { NextApiRequest, NextApiResponse } from "next";

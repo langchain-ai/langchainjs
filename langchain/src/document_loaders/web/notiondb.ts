@@ -39,7 +39,8 @@ interface NotionPage {
   };
 }
 
-/** @deprecated use the `NotionAPILoader` class instead.
+/**
+ * @deprecated use the `NotionAPILoader` class instead.
  * @example
  * ```typescript
  * const loader = new NotionDBLoader({

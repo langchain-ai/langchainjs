@@ -2,8 +2,16 @@ import { SonixSpeechRecognitionService } from "sonix-speech-recognition";
 import { SpeechToTextRequest } from "sonix-speech-recognition/lib/types.js";
 import { Document } from "@langchain/core/documents";
 import { BaseDocumentLoader } from "../base.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/web/sonix_audio",
+  newPackageName: "@langchain/community",
+});
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/sonix_audio" instead. This entrypoint will be removed in 0.3.0.
+ *
  * A class that represents a document loader for transcribing audio files
  * using the Sonix Speech Recognition service.
  * @example

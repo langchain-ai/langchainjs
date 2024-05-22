@@ -9,6 +9,7 @@ import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   BaseChatModel,
+  LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
@@ -113,6 +114,16 @@ export interface GoogleGenerativeAIChatInput extends BaseChatModelParams {
    * Google API key to use
    */
   apiKey?: string;
+
+  /**
+   * Google API version to use
+   */
+  apiVersion?: string;
+
+  /**
+   * Google API base URL to use
+   */
+  baseUrl?: string;
 
   /** Whether to stream the results or not */
   streaming?: boolean;
@@ -249,18 +260,36 @@ export class ChatGoogleGenerativeAI
 
     this.streaming = fields?.streaming ?? this.streaming;
 
-    this.client = new GenerativeAI(this.apiKey).getGenerativeModel({
-      model: this.model,
-      safetySettings: this.safetySettings as SafetySetting[],
-      generationConfig: {
-        candidateCount: 1,
-        stopSequences: this.stopSequences,
-        maxOutputTokens: this.maxOutputTokens,
-        temperature: this.temperature,
-        topP: this.topP,
-        topK: this.topK,
+    this.client = new GenerativeAI(this.apiKey).getGenerativeModel(
+      {
+        model: this.model,
+        safetySettings: this.safetySettings as SafetySetting[],
+        generationConfig: {
+          candidateCount: 1,
+          stopSequences: this.stopSequences,
+          maxOutputTokens: this.maxOutputTokens,
+          temperature: this.temperature,
+          topP: this.topP,
+          topK: this.topK,
+        },
       },
-    });
+      {
+        apiVersion: fields?.apiVersion,
+        baseUrl: fields?.baseUrl,
+      }
+    );
+  }
+
+  protected getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+    const params = this.invocationParams(options);
+    return {
+      ls_provider: "google_genai",
+      ls_model_name: this.model,
+      ls_model_type: "chat",
+      ls_temperature: params.temperature ?? undefined,
+      ls_max_tokens: params.maxOutputTokens ?? undefined,
+      ls_stop: options.stop,
+    };
   }
 
   _combineLLMOutput() {

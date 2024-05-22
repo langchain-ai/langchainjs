@@ -10,6 +10,8 @@ const CONTENT_KEY = "content";
 const METADATA_KEY = "metadata";
 
 /**
+ * @deprecated Install and import from @langchain/qdrant instead.
+ *
  * Interface for the arguments that can be passed to the
  * `QdrantVectorStore` constructor. It includes options for specifying a
  * `QdrantClient` instance, the URL and API key for a Qdrant database, and
@@ -27,16 +29,21 @@ export interface QdrantLibArgs {
   metadataPayloadKey?: string;
 }
 
+/** @deprecated Install and import from @langchain/qdrant instead. */
 export type QdrantAddDocumentOptions = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   customPayload: Record<string, any>[];
 };
 
+/** @deprecated Install and import from @langchain/qdrant instead. */
 export type QdrantFilter = QdrantSchemas["Filter"];
 
+/** @deprecated Install and import from @langchain/qdrant instead. */
 export type QdrantCondition = QdrantSchemas["FieldCondition"];
 
 /**
+ * @deprecated Install and import from @langchain/qdrant instead.
+ *
  * Type for the response returned by a search operation in the Qdrant
  * database. It includes the score and payload (metadata and content) for
  * each point (document) in the search results.
@@ -49,6 +56,8 @@ type QdrantSearchResponse = QdrantSchemas["ScoredPoint"] & {
 };
 
 /**
+ * @deprecated Install and import from @langchain/qdrant instead.
+ *
  * Class that extends the `VectorStore` base class to interact with a
  * Qdrant database. It includes methods for adding documents and vectors
  * to the Qdrant database, searching for similar vectors, and ensuring the

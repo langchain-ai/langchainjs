@@ -1,139 +1,117 @@
+import CodeBlock from "@theme/CodeBlock";
+
 # Azure OpenAI
 
 [Azure OpenAI](https://azure.microsoft.com/products/ai-services/openai-service/) is a cloud service to help you quickly develop generative AI experiences with a diverse set of prebuilt and curated models from OpenAI, Meta and beyond.
 
-LangChain.js supports integration with [Azure OpenAI](https://azure.microsoft.com/products/ai-services/openai-service/) using either the dedicated [Azure OpenAI SDK](https://github.com/Azure/azure-sdk-for-js/tree/main/sdk/openai/openai) or the [OpenAI SDK](https://github.com/openai/openai-node).
+LangChain.js supports integration with [Azure OpenAI](https://azure.microsoft.com/products/ai-services/openai-service/) using the new Azure integration in the [OpenAI SDK](https://github.com/openai/openai-node).
 
 You can learn more about Azure OpenAI and its difference with the OpenAI API on [this page](https://learn.microsoft.com/azure/ai-services/openai/overview). If you don't have an Azure account, you can [create a free account](https://azure.microsoft.com/free/) to get started.
 
-## Using the Azure OpenAI SDK
+:::info
 
-You'll first need to install the [`@langchain/azure-openai`](https://www.npmjs.com/package/@langchain/azure-openai) package:
+Previously, LangChain.js supported integration with Azure OpenAI using the dedicated [Azure OpenAI SDK](https://github.com/Azure/azure-sdk-for-js/tree/main/sdk/openai/openai). This SDK is now deprecated in favor of the new Azure integration in the OpenAI SDK, which allows to access the latest OpenAI models and features the same day they are released, and allows seemless transition between the OpenAI API and Azure OpenAI.
 
-<IntegrationInstallTooltip></IntegrationInstallTooltip>
+If you are using Azure OpenAI with the deprecated SDK, see the [migration guide](#migration-from-azure-openai-sdk) to update to the new API.
 
-```bash npm2yarn
-npm install -S @langchain/azure-openai
-```
+:::
 
-import UnifiedModelParamsTooltip from "@mdx_components/unified_model_params_tooltip.mdx";
+## Setup
 
-<UnifiedModelParamsTooltip></UnifiedModelParamsTooltip>
-
-You'll also need to have an Azure OpenAI instance deployed. You can deploy a version on Azure Portal following [this guide](https://learn.microsoft.com/azure/ai-services/openai/how-to/create-resource?pivots=web-portal).
-
-Once you have your instance running, make sure you have the endpoint and key. You can find them in the Azure Portal, under the "Keys and Endpoint" section of your instance.
-
-You can then define the following environment variables to use the service:
-
-```bash
-AZURE_OPENAI_API_ENDPOINT=<YOUR_ENDPOINT>
-AZURE_OPENAI_API_KEY=<YOUR_KEY>
-AZURE_OPENAI_API_DEPLOYMENT_NAME=<YOUR_DEPLOYMENT_NAME>
-```
-
-Alternatively, you can pass the values directly to the `AzureOpenAI` constructor:
-
-```typescript
-import { AzureOpenAI } from "@langchain/azure-openai";
-
-const model = new AzureOpenAI({
-  azureOpenAIEndpoint: "<your_endpoint>",
-  apiKey: "<your_key>",
-  azureOpenAIApiDeploymentName: "<your_deployment_name",
-});
-```
-
-If you're using Azure Managed Identity, you can also pass the credentials directly to the constructor:
-
-```typescript
-import { DefaultAzureCredential } from "@azure/identity";
-import { AzureOpenAI } from "@langchain/azure-openai";
-
-const credentials = new DefaultAzureCredential();
-
-const model = new AzureOpenAI({
-  credentials,
-  azureOpenAIEndpoint: "<your_endpoint>",
-  azureOpenAIApiDeploymentName: "<your_deployment_name",
-});
-```
-
-If you're using Azure Managed Identity, you can also pass the credentials directly to the constructor:
-
-```typescript
-import { DefaultAzureCredential } from "@azure/identity";
-import { AzureOpenAI } from "@langchain/azure-openai";
-
-const credentials = new DefaultAzureCredential();
-
-const model = new AzureOpenAI({
-  credentials,
-  azureOpenAIEndpoint: "<your_endpoint>",
-  azureOpenAIApiDeploymentName: "<your_deployment_name",
-  model: "<your_model>",
-});
-```
-
-### LLM usage example
-
-import CodeBlock from "@theme/CodeBlock";
-import LLMExample from "@examples/llms/azure_openai.ts";
-
-<CodeBlock language="text">{LLMExample}</CodeBlock>
-
-### Chat usage example
-
-import ChatExample from "@examples/llms/azure_openai-chat.ts";
-
-<CodeBlock language="text">{ChatExample}</CodeBlock>
-
-## Using OpenAI SDK
-
-You can also use the `OpenAI` class to call OpenAI models hosted on Azure.
-
-For example, if your Azure instance is hosted under `https://{MY_INSTANCE_NAME}.openai.azure.com/openai/deployments/{DEPLOYMENT_NAME}`, you could initialize your instance like this:
+You'll first need to install the [`@langchain/openai`](https://www.npmjs.com/package/@langchain/openai) package:
 
 import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
 
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm install @langchain/openai
+npm install -S @langchain/openai
 ```
 
-```typescript
-import { OpenAI } from "@langchain/openai";
+You'll also need to have an Azure OpenAI instance deployed. You can deploy a version on Azure Portal following [this guide](https://learn.microsoft.com/azure/ai-services/openai/how-to/create-resource?pivots=web-portal).
 
-const model = new OpenAI({
-  temperature: 0.9,
-  apiKey: "YOUR-API-KEY",
-  azureOpenAIApiVersion: "YOUR-API-VERSION",
-  azureOpenAIApiInstanceName: "{MY_INSTANCE_NAME}",
-  azureOpenAIApiDeploymentName: "{DEPLOYMENT_NAME}",
-});
-const res = await model.invoke(
-  "What would be a good company name for a company that makes colorful socks?"
-);
-console.log({ res });
+Once you have your instance running, make sure you have the name of your instance and key. You can find the key in the Azure Portal, under the "Keys and Endpoint" section of your instance.
+
+If you're using Node.js, you can define the following environment variables to use the service:
+
+```bash
+AZURE_OPENAI_API_INSTANCE_NAME=<YOUR_INSTANCE_NAME>
+AZURE_OPENAI_API_DEPLOYMENT_NAME=<YOUR_DEPLOYMENT_NAME>
+AZURE_OPENAI_API_KEY=<YOUR_KEY>
+AZURE_OPENAI_API_VERSION="2024-02-01"
 ```
+
+Alternatively, you can pass the values directly to the `AzureOpenAI` constructor:
+
+import AzureOpenAI from "@examples/models/llm/azure_openai.ts";
+
+import UnifiedModelParamsTooltip from "@mdx_components/unified_model_params_tooltip.mdx";
+
+<UnifiedModelParamsTooltip></UnifiedModelParamsTooltip>
+
+<CodeBlock language="typescript">{AzureOpenAI}</CodeBlock>
+
+:::info
+
+You can find the list of supported API versions in the [Azure OpenAI documentation](https://learn.microsoft.com/azure/ai-services/openai/reference).
+
+:::
+
+### Using Azure Managed Identity
+
+If you're using Azure Managed Identity, you can configure the credentials like this:
+
+import AzureOpenAIManagedIdentity from "@examples/models/llm/azure_openai-managed_identity.ts";
+
+<CodeBlock language="typescript">{AzureOpenAIManagedIdentity}</CodeBlock>
+
+### Using a different domain
 
 If your instance is hosted under a domain other than the default `openai.azure.com`, you'll need to use the alternate `AZURE_OPENAI_BASE_PATH` environment variable.
 For example, here's how you would connect to the domain `https://westeurope.api.microsoft.com/openai/deployments/{DEPLOYMENT_NAME}`:
 
-```typescript
-import { OpenAI } from "@langchain/openai";
+import AzureOpenAIBasePath from "@examples/models/llm/azure_openai-base_path.ts";
 
-const model = new OpenAI({
-  temperature: 0.9,
-  apiKey: "YOUR-API-KEY",
-  azureOpenAIApiVersion: "YOUR-API-VERSION",
-  azureOpenAIApiDeploymentName: "{DEPLOYMENT_NAME}",
-  azureOpenAIBasePath:
-    "https://westeurope.api.microsoft.com/openai/deployments", // In Node.js defaults to process.env.AZURE_OPENAI_BASE_PATH
-});
-const res = await model.invoke(
-  "What would be a good company name for a company that makes colorful socks?"
-);
-console.log({ res });
-```
+<CodeBlock language="typescript">{AzureOpenAIBasePath}</CodeBlock>
+
+### LLM usage example
+
+import LLMExample from "@examples/llms/azure_openai.ts";
+
+<CodeBlock language="typescript">{LLMExample}</CodeBlock>
+
+### Chat usage example
+
+import ChatExample from "@examples/llms/azure_openai-chat.ts";
+
+<CodeBlock language="typescript">{ChatExample}</CodeBlock>
+
+## Migration from Azure OpenAI SDK
+
+If you are using the deprecated Azure OpenAI SDK with the `@langchain/azure-openai` package, you can update your code to use the new Azure integration following these steps:
+
+1. Install the new `@langchain/openai` package and remove the previous `@langchain/azure-openai` package:
+   ```bash npm2yarn
+   npm install @langchain/openai
+   npm uninstall @langchain/azure-openai
+   ```
+2. Update your imports to use the new `AzureOpenAI` and `AzureChatOpenAI` classes from the `@langchain/openai` package:
+   ```typescript
+   import { AzureOpenAI } from "@langchain/openai";
+   ```
+3. Update your code to use the new `AzureOpenAI` and `AzureChatOpenAI` classes and pass the required parameters:
+
+   ```typescript
+   const model = new AzureOpenAI({
+     azureOpenAIApiKey: "<your_key>",
+     azureOpenAIApiInstanceName: "<your_instance_name>",
+     azureOpenAIApiDeploymentName: "<your_deployment_name>",
+     azureOpenAIApiVersion: "<api_version>",
+   });
+   ```
+
+   Notice that the constructor now requires the `azureOpenAIApiInstanceName` parameter instead of the `azureOpenAIEndpoint` parameter, and adds the `azureOpenAIApiVersion` parameter to specify the API version.
+
+   - If you were using Azure Managed Identity, you now need to use the `azureADTokenProvider` parameter to the constructor instead of `credentials`, see the [Azure Managed Identity](#using-azure-managed-identity) section for more details.
+
+   - If you were using environment variables, you now have to set the `AZURE_OPENAI_API_INSTANCE_NAME` environment variable instead of `AZURE_OPENAI_API_ENDPOINT`, and add the `AZURE_OPENAI_API_VERSION` environment variable to specify the API version.

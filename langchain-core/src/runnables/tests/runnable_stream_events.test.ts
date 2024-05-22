@@ -4,7 +4,12 @@
 
 import { test } from "@jest/globals";
 import { z } from "zod";
-import { RunnableLambda } from "../index.js";
+import {
+  RunnableLambda,
+  RunnableMap,
+  RunnablePassthrough,
+  RunnablePick,
+} from "../index.js";
 import { ChatPromptTemplate } from "../../prompts/chat.js";
 import {
   FakeListChatModel,
@@ -37,7 +42,8 @@ test("Runnable streamEvents method", async () => {
   });
 
   const events = [];
-  for await (const event of chain.streamEvents("hello", { version: "v1" })) {
+  const eventStream = await chain.streamEvents("hello", { version: "v1" });
+  for await (const event of eventStream) {
     events.push(event);
   }
   expect(events).toEqual([
@@ -77,7 +83,8 @@ test("Runnable streamEvents method with three runnables", async () => {
     .pipe(r.withConfig({ runName: "3" }));
 
   const events = [];
-  for await (const event of chain.streamEvents("hello", { version: "v1" })) {
+  const eventStream = await chain.streamEvents("hello", { version: "v1" });
+  for await (const event of eventStream) {
     events.push(event);
   }
   expect(events).toEqual([
@@ -190,7 +197,8 @@ test("Runnable streamEvents method with three runnables with backgrounded callba
     .pipe(r.withConfig({ runName: "3" }));
 
   const events = [];
-  for await (const event of chain.streamEvents("hello", { version: "v1" })) {
+  const eventStream = await chain.streamEvents("hello", { version: "v1" });
+  for await (const event of eventStream) {
     events.push(event);
   }
   expect(events).toEqual([
@@ -302,13 +310,14 @@ test("Runnable streamEvents method with three runnables with filtering", async (
     .pipe(r.withConfig({ runName: "3", tags: ["my_tag"] }));
 
   const events = [];
-  for await (const event of chain.streamEvents(
+  const eventStream = await chain.streamEvents(
     "hello",
     { version: "v1" },
     {
       includeNames: ["1"],
     }
-  )) {
+  );
+  for await (const event of eventStream) {
     events.push(event);
   }
   expect(events).toEqual([
@@ -338,14 +347,15 @@ test("Runnable streamEvents method with three runnables with filtering", async (
     },
   ]);
   const events2 = [];
-  for await (const event of chain.streamEvents(
+  const eventStream2 = await chain.streamEvents(
     "hello",
     { version: "v1" },
     {
       excludeNames: ["2"],
       includeTags: ["my_tag"],
     }
-  )) {
+  );
+  for await (const event of eventStream2) {
     events2.push(event);
   }
   expect(events2).toEqual([
@@ -376,6 +386,166 @@ test("Runnable streamEvents method with three runnables with filtering", async (
   ]);
 });
 
+test("Runnable streamEvents method with a runnable map", async () => {
+  const r = RunnableLambda.from(reverse);
+
+  const chain = RunnableMap.from({
+    reversed: r,
+    original: new RunnablePassthrough(),
+  }).pipe(new RunnablePick("reversed"));
+
+  const events = [];
+  const eventStream = await chain.streamEvents("hello", { version: "v1" });
+  for await (const event of eventStream) {
+    events.push(event);
+  }
+  console.log(events);
+  expect(events).toEqual([
+    {
+      run_id: expect.any(String),
+      event: "on_chain_start",
+      name: "RunnableSequence",
+      tags: [],
+      metadata: {},
+      data: { input: "hello" },
+    },
+    {
+      event: "on_chain_start",
+      name: "RunnableMap",
+      run_id: expect.any(String),
+      tags: ["seq:step:1"],
+      metadata: {},
+      data: {},
+    },
+    {
+      event: "on_chain_start",
+      name: "RunnableLambda",
+      run_id: expect.any(String),
+      tags: ["map:key:reversed"],
+      metadata: {},
+      data: {},
+    },
+    {
+      event: "on_chain_start",
+      name: "RunnablePassthrough",
+      run_id: expect.any(String),
+      tags: ["map:key:original"],
+      metadata: {},
+      data: {},
+    },
+    {
+      event: "on_chain_stream",
+      name: "RunnablePassthrough",
+      run_id: expect.any(String),
+      tags: ["map:key:original"],
+      metadata: {},
+      data: { chunk: "hello" },
+    },
+    {
+      event: "on_chain_stream",
+      name: "RunnableLambda",
+      run_id: expect.any(String),
+      tags: ["map:key:reversed"],
+      metadata: {},
+      data: { chunk: "olleh" },
+    },
+    {
+      event: "on_chain_stream",
+      name: "RunnableMap",
+      run_id: expect.any(String),
+      tags: ["seq:step:1"],
+      metadata: {},
+      data: {
+        chunk: {
+          original: "hello",
+        },
+      },
+    },
+    {
+      event: "on_chain_start",
+      name: "RunnablePick",
+      run_id: expect.any(String),
+      tags: ["seq:step:2"],
+      metadata: {},
+      data: {},
+    },
+    {
+      event: "on_chain_stream",
+      name: "RunnableMap",
+      run_id: expect.any(String),
+      tags: ["seq:step:1"],
+      metadata: {},
+      data: {
+        chunk: {
+          reversed: "olleh",
+        },
+      },
+    },
+    {
+      event: "on_chain_end",
+      name: "RunnablePassthrough",
+      run_id: expect.any(String),
+      tags: ["map:key:original"],
+      metadata: {},
+      data: { input: "hello", output: "hello" },
+    },
+    {
+      event: "on_chain_stream",
+      name: "RunnablePick",
+      run_id: expect.any(String),
+      tags: ["seq:step:2"],
+      metadata: {},
+      data: { chunk: "olleh" },
+    },
+    {
+      event: "on_chain_stream",
+      run_id: expect.any(String),
+      tags: [],
+      metadata: {},
+      name: "RunnableSequence",
+      data: { chunk: "olleh" },
+    },
+    {
+      event: "on_chain_end",
+      name: "RunnableLambda",
+      run_id: expect.any(String),
+      tags: ["map:key:reversed"],
+      metadata: {},
+      data: { input: "hello", output: "olleh" },
+    },
+    {
+      event: "on_chain_end",
+      name: "RunnableMap",
+      run_id: expect.any(String),
+      tags: ["seq:step:1"],
+      metadata: {},
+      data: {
+        input: "hello",
+        output: {
+          original: "hello",
+          reversed: "olleh",
+        },
+      },
+    },
+    {
+      event: "on_chain_end",
+      name: "RunnablePick",
+      run_id: expect.any(String),
+      tags: ["seq:step:2"],
+      metadata: {},
+      data: { output: "olleh" },
+    },
+    {
+      event: "on_chain_end",
+      name: "RunnableSequence",
+      run_id: expect.any(String),
+      tags: [],
+      metadata: {},
+      data: { output: "olleh" },
+    },
+  ]);
+});
+
 test("Runnable streamEvents method with llm", async () => {
   const model = new FakeStreamingLLM({
     responses: ["hey!"],
@@ -385,7 +555,8 @@ test("Runnable streamEvents method with llm", async () => {
     runName: "my_model",
   });
   const events = [];
-  for await (const event of model.streamEvents("hello", { version: "v1" })) {
+  const eventStream = await model.streamEvents("hello", { version: "v1" });
+  for await (const event of eventStream) {
     events.push(event);
   }
   expect(events).toEqual([
@@ -487,10 +658,11 @@ test("Runnable streamEvents method with chat model chain", async () => {
     runName: "my_chain",
   });
   const events = [];
-  for await (const event of chain.streamEvents(
+  const eventStream = await chain.streamEvents(
     { question: "hello" },
     { version: "v1" }
-  )) {
+  );
+  for await (const event of eventStream) {
     events.push(event);
   }
   expect(events).toEqual([
@@ -539,6 +711,8 @@ test("Runnable streamEvents method with chat model chain", async () => {
       metadata: {
         foo: "bar",
         a: "b",
+        ls_model_type: "chat",
+        ls_stop: undefined,
       },
       data: {
         input: {
@@ -555,6 +729,8 @@ test("Runnable streamEvents method with chat model chain", async () => {
       metadata: {
         a: "b",
         foo: "bar",
+        ls_model_type: "chat",
+        ls_stop: undefined,
       },
       name: "my_model",
       data: { chunk: new AIMessageChunk("R") },
@@ -576,6 +752,8 @@ test("Runnable streamEvents method with chat model chain", async () => {
       metadata: {
         a: "b",
         foo: "bar",
+        ls_model_type: "chat",
+        ls_stop: undefined,
       },
       name: "my_model",
       data: { chunk: new AIMessageChunk("O") },
@@ -597,6 +775,8 @@ test("Runnable streamEvents method with chat model chain", async () => {
       metadata: {
         a: "b",
         foo: "bar",
+        ls_model_type: "chat",
+        ls_stop: undefined,
       },
       name: "my_model",
       data: { chunk: new AIMessageChunk("A") },
@@ -618,6 +798,8 @@ test("Runnable streamEvents method with chat model chain", async () => {
       metadata: {
         a: "b",
         foo: "bar",
+        ls_model_type: "chat",
+        ls_stop: undefined,
       },
       name: "my_model",
       data: { chunk: new AIMessageChunk("R") },
@@ -640,6 +822,8 @@ test("Runnable streamEvents method with chat model chain", async () => {
       metadata: {
         foo: "bar",
         a: "b",
+        ls_model_type: "chat",
+        ls_stop: undefined,
       },
       data: {
         input: {
@@ -682,7 +866,8 @@ test("Runnable streamEvents method with simple tools", async () => {
     description: "A tool that does nothing",
   });
   const events = [];
-  for await (const event of tool.streamEvents({}, { version: "v1" })) {
+  const eventStream = await tool.streamEvents({}, { version: "v1" });
+  for await (const event of eventStream) {
     events.push(event);
   }
 
@@ -724,10 +909,11 @@ test("Runnable streamEvents method with simple tools", async () => {
     description: "A tool that does nothing",
   });
   const events2 = [];
-  for await (const event of toolWithParams.streamEvents(
+  const eventStream2 = await toolWithParams.streamEvents(
     { x: 1, y: "2" },
     { version: "v1" }
-  )) {
+  );
+  for await (const event of eventStream2) {
     events2.push(event);
   }
   expect(events2).toEqual([
@@ -769,9 +955,10 @@ test("Runnable streamEvents method with a retriever", async () => {
     ],
   });
   const events = [];
-  for await (const event of retriever.streamEvents("hello", {
+  const eventStream = await retriever.streamEvents("hello", {
     version: "v1",
-  })) {
+  });
+  for await (const event of eventStream) {
     events.push(event);
   }
   expect(events).toEqual([
@@ -826,4 +1013,59 @@ test("Runnable streamEvents method with a retriever", async () => {
       tags: [],
     },
   ]);
+});
+
+test("Runnable streamEvents method with text/event-stream encoding", async () => {
+  const chain = RunnableLambda.from(reverse).withConfig({
+    runName: "reverse",
+  });
+
+  const events = [];
+  const eventStream = await chain.streamEvents("hello", {
+    version: "v1",
+    encoding: "text/event-stream",
+    runId: "1234",
+  });
+  for await (const event of eventStream) {
+    events.push(event);
+  }
+  const decoder = new TextDecoder();
+  expect(events.length).toEqual(4);
+  const dataEvents = events
+    .slice(0, 3)
+    .map((event) => decoder.decode(event).split("event: data\ndata: ")[1]);
+  const expectedPayloads = [
+    {
+      data: { input: "hello" },
+      event: "on_chain_start",
+      metadata: {},
+      name: "reverse",
+      run_id: "1234",
+      tags: [],
+    },
+    {
+      data: { chunk: "olleh" },
+      event: "on_chain_stream",
+      metadata: {},
+      name: "reverse",
+      run_id: "1234",
+      tags: [],
+    },
+    {
+      data: { output: "olleh" },
+      event: "on_chain_end",
+      metadata: {},
+      name: "reverse",
+      run_id: "1234",
+      tags: [],
+    },
+  ];
+  for (let i = 0; i < dataEvents.length; i += 1) {
+    expect(dataEvents[i].endsWith("\n\n")).toBe(true);
+    expect(JSON.parse(dataEvents[i].replace("\n\n", ""))).toEqual(
+      expectedPayloads[i]
+    );
+  }
+
+  expect(decoder.decode(events[3])).toEqual("event: end\n\n");
 });

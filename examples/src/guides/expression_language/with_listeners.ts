@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { Run } from "@langchain/core/tracers/base";
+import { Run } from "@langchain/core/tracers/tracer_langchain";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 
 const prompt = ChatPromptTemplate.fromMessages([
@@ -14,10 +14,12 @@ const trackTime = () => {
   let end: { endTime: number; answer: string };
 
   const handleStart = (run: Run) => {
-    start = {
-      startTime: run.start_time,
-      question: run.inputs.question,
-    };
+    if (run.start_time) {
+      start = {
+        startTime: run.start_time,
+        question: run.inputs.question,
+      };
+    }
   };
 
   const handleEnd = (run: Run) => {

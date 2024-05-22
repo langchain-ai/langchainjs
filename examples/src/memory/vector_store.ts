@@ -1,5 +1,5 @@
 import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
-import { VectorStoreRetrieverMemory } from "langchain/memory";
+import { VectorStoreRetrieverMemory } from "langchain/memory/index";
 import { LLMChain } from "langchain/chains";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { PromptTemplate } from "@langchain/core/prompts";

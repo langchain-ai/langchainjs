@@ -9,6 +9,12 @@ import {
   LoadersMapping,
 } from "./directory.js";
 import { BaseDocumentLoader } from "../base.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/fs/unstructured",
+  newPackageName: "@langchain/community",
+});
 
 const UNSTRUCTURED_API_FILETYPES = [
   ".txt",
@@ -121,6 +127,8 @@ type UnstructuredDirectoryLoaderOptions = UnstructuredLoaderOptions & {
 };
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/fs/unstructured" instead. This entrypoint will be removed in 0.3.0.
+ *
  * A document loader that uses the Unstructured API to load unstructured
  * documents. It supports both the new syntax with options object and the
  * legacy syntax for backward compatibility. The load() method sends a
@@ -291,7 +299,7 @@ export class UnstructuredLoader extends BaseDocumentLoader {
     const documents: Document[] = [];
     for (const element of elements) {
       const { metadata, text } = element;
-      if (typeof text === "string") {
+      if (typeof text === "string" && text !== "") {
         documents.push(
           new Document({
             pageContent: text,

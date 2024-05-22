@@ -37,6 +37,13 @@ import { BaseCallbackHandler } from "../callbacks/base.js";
 import { _RootEventFilter, isRunnableInterface } from "./utils.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 import { Graph } from "./graph.js";
+import { convertToHttpEventStream } from "./wrappers.js";
+import {
+  consumeAsyncIterableInContext,
+  consumeIteratorInContext,
+  isAsyncIterable,
+  isIterator,
+} from "./iter.js";
 
 export { type RunnableInterface, RunnableBatchOptions };
 
@@ -291,9 +298,11 @@ export abstract class Runnable<
   ): Promise<IterableReadableStream<RunOutput>> {
     // Buffer the first streamed chunk to allow for initial errors
     // to surface immediately.
-    const wrappedGenerator = new AsyncGeneratorWithSetup(
-      this._streamIterator(input, ensureConfig(options))
-    );
+    const config = ensureConfig(options);
+    const wrappedGenerator = new AsyncGeneratorWithSetup({
+      generator: this._streamIterator(input, config),
+      config,
+    });
     await wrappedGenerator.setup;
     return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
   }
@@ -729,7 +738,38 @@ export abstract class Runnable<
    * | on_prompt_start      | [template_name]  |                                    | {"question": "hello"}                         |                                                 |
    * | on_prompt_end        | [template_name]  |                                    | {"question": "hello"}                         | ChatPromptValue(messages: [SystemMessage, ...]) |
    */
-  async *streamEvents(
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & { version: "v1" },
+    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEvent>;
+
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version: "v1";
+      encoding: "text/event-stream";
+    },
+    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<Uint8Array>;
+
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version: "v1";
+      encoding?: "text/event-stream" | undefined;
+    },
+    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEvent | Uint8Array> {
+    const stream = this._streamEvents(input, options, streamOptions);
+    if (options.encoding === "text/event-stream") {
+      return convertToHttpEventStream(stream);
+    } else {
+      return IterableReadableStream.fromAsyncGenerator(stream);
+    }
+  }
+
+  async *_streamEvents(
     input: RunInput,
     options: Partial<CallOptions> & { version: "v1" },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
@@ -1096,19 +1136,45 @@ export class RunnableBinding<
     );
   }
 
-  async *streamEvents(
+  streamEvents(
     input: RunInput,
     options: Partial<CallOptions> & { version: "v1" },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
-  ): AsyncGenerator<StreamEvent> {
-    yield* this.bound.streamEvents(
-      input,
-      {
-        ...(await this._mergeConfig(ensureConfig(options), this.kwargs)),
-        version: options.version,
-      },
-      streamOptions
-    );
+  ): IterableReadableStream<StreamEvent>;
+
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version: "v1";
+      encoding: "text/event-stream";
+    },
+    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<Uint8Array>;
+
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version: "v1";
+      encoding?: "text/event-stream" | undefined;
+    },
+    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEvent | Uint8Array> {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const outerThis = this;
+    const generator = async function* () {
+      yield* outerThis.bound.streamEvents(
+        input,
+        {
+          ...(await outerThis._mergeConfig(
+            ensureConfig(options),
+            outerThis.kwargs
+          )),
+          version: options.version,
+        },
+        streamOptions
+      );
+    };
+    return IterableReadableStream.fromAsyncGenerator(generator());
   }
 
   static isRunnableBinding(
@@ -1881,9 +1947,11 @@ export class RunnableMap<
     async function* generator() {
       yield input;
     }
-    const wrappedGenerator = new AsyncGeneratorWithSetup(
-      this.transform(generator(), options)
-    );
+    const config = ensureConfig(options);
+    const wrappedGenerator = new AsyncGeneratorWithSetup({
+      generator: this.transform(generator(), config),
+      config,
+    });
     await wrappedGenerator.setup;
     return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
   }
@@ -1949,6 +2017,44 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
                 recursionLimit:
                   (childConfig.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
               });
+            } else if (isAsyncIterable(output)) {
+              let finalOutput: RunOutput | undefined;
+              for await (const chunk of consumeAsyncIterableInContext(
+                childConfig,
+                output
+              )) {
+                if (finalOutput === undefined) {
+                  finalOutput = chunk as RunOutput;
+                } else {
+                  // Make a best effort to gather, for any type that supports concat.
+                  try {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    finalOutput = concat(finalOutput, chunk as any);
+                  } catch (e) {
+                    finalOutput = chunk as RunOutput;
+                  }
+                }
+              }
+              output = finalOutput as typeof output;
+            } else if (isIterator(output)) {
+              let finalOutput: RunOutput | undefined;
+              for (const chunk of consumeIteratorInContext(
+                childConfig,
+                output
+              )) {
+                if (finalOutput === undefined) {
+                  finalOutput = chunk as RunOutput;
+                } else {
+                  // Make a best effort to gather, for any type that supports concat.
+                  try {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    finalOutput = concat(finalOutput, chunk as any);
+                  } catch (e) {
+                    finalOutput = chunk as RunOutput;
+                  }
+                }
+              }
+              output = finalOutput as typeof output;
             }
             resolve(output);
           } catch (e) {
@@ -2018,6 +2124,14 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
       for await (const chunk of stream) {
         yield chunk;
       }
+    } else if (isAsyncIterable(output)) {
+      for await (const chunk of consumeAsyncIterableInContext(config, output)) {
+        yield chunk as RunOutput;
+      }
+    } else if (isIterator(output)) {
+      for (const chunk of consumeIteratorInContext(config, output)) {
+        yield chunk as RunOutput;
+      }
     } else {
       yield output;
     }
@@ -2041,9 +2155,11 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     async function* generator() {
       yield input;
     }
-    const wrappedGenerator = new AsyncGeneratorWithSetup(
-      this.transform(generator(), options)
-    );
+    const config = ensureConfig(options);
+    const wrappedGenerator = new AsyncGeneratorWithSetup({
+      generator: this.transform(generator(), config),
+      config,
+    });
     await wrappedGenerator.setup;
     return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
   }
@@ -2348,9 +2464,11 @@ export class RunnableAssign<
     async function* generator() {
       yield input;
     }
-    const wrappedGenerator = new AsyncGeneratorWithSetup(
-      this.transform(generator(), options)
-    );
+    const config = ensureConfig(options);
+    const wrappedGenerator = new AsyncGeneratorWithSetup({
+      generator: this.transform(generator(), config),
+      config,
+    });
     await wrappedGenerator.setup;
     return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
   }
@@ -2439,9 +2557,11 @@ export class RunnablePick<
     async function* generator() {
       yield input;
     }
-    const wrappedGenerator = new AsyncGeneratorWithSetup(
-      this.transform(generator(), options)
-    );
+    const config = ensureConfig(options);
+    const wrappedGenerator = new AsyncGeneratorWithSetup({
+      generator: this.transform(generator(), config),
+      config,
+    });
     await wrappedGenerator.setup;
     return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
   }
