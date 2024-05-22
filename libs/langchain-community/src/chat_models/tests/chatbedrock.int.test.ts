@@ -281,10 +281,11 @@ test.skip.each([
 
 test.skip("new credential fields", async () => {
   const model = new BedrockChat({
-    filepath: "/Users/bracesproul/code/lang-chain-ai/langchainjs/libs/langchain-community/src/chat_models/tests/aws_credentials",
+    filepath:
+      "/Users/bracesproul/code/lang-chain-ai/langchainjs/libs/langchain-community/src/chat_models/tests/aws_credentials",
     model: "anthropic.claude-3-sonnet-20240229-v1:0",
-    region: process.env.BEDROCK_AWS_REGION
-  })
+    region: process.env.BEDROCK_AWS_REGION,
+  });
   const res = await model.invoke(["Why is the sky blue? Be VERY concise!"]);
-  console.log("res", res)
-})
+  console.log("res", res);
+});
