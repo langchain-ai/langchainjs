@@ -4,21 +4,18 @@
   "pipeline": {
     "@langchain/scripts#build": {
       "outputs": [
-        "./libs/langchain-scripts/dist/**",
-        "*.js",
-        "*.cjs",
-        "*.d.ts"
+        "dist/**"
       ],
       "inputs": [
-        "./libs/langchain-scripts/src/",
-        "./libs/langchain-scripts/scripts/**",
-        "./libs/langchain-scripts/package.json",
-        "./libs/langchain-scripts/tsconfig.json"
+        "src/**",
+        "bin/*",
+        "package.json",
+        "tsconfig.json"
       ]
     },
     "@langchain/core#build": {
       "dependsOn": ["@langchain/scripts#build"],
-      "outputs": ["dist/**", "dist-cjs/**", "*.js", "*.cjs", "*.d.ts"],
+      "outputs": ["dist/**"],
       "inputs": ["src/**", "scripts/**", "package.json", "tsconfig.json"]
     },
     "@langchain/anthropic#build": {
