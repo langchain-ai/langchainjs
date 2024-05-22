@@ -44,8 +44,8 @@ console.log(res.tool_calls);
   {
     name: 'fake_browser_tool',
     args: {
-      query: 'weather tonight in new york',
-      url: 'https://www.weather.com/'
+      query: 'weather in new york',
+      url: 'https://www.google.com/search?q=weather+in+new+york'
     }
   }
 ]

@@ -42,5 +42,8 @@ const res = await modelWithTools.invoke([
 
 console.log(res);
 /*
-{ url: 'https://weather.com/', query: 'new york weather tonight' }
+{
+  url: 'https://www.accuweather.com/en/us/new-york-ny/10007/night-weather-forecast/349014',
+  query: 'weather tonight'
+}
 */
