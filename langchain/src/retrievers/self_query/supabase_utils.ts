@@ -9,7 +9,7 @@ import {
   Operation,
   Operators,
   StructuredQuery,
-} from "../../chains/query_constructor/ir.js";
+} from "@langchain/core/structured_query";
 
 type SupabaseFilterProps = keyof SupabaseFilter;
 

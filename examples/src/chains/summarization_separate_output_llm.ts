@@ -35,7 +35,7 @@ const chain = loadSummarizationChain(model, {
   type: "map_reduce",
   combineLLM: combineModel,
 });
-const res = await chain.call({
+const res = await chain.invoke({
   input_documents: docs,
 });
 console.log({ res });

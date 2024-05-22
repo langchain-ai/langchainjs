@@ -25,7 +25,7 @@ test.skip("Test ChatMinimax", async () => {
     ],
   });
   const message = new HumanMessage("Hello!");
-  const res = await chat.call([message]);
+  const res = await chat.invoke([message]);
   console.log({ res });
 });
 
@@ -33,7 +33,7 @@ test.skip("Test ChatMinimax with SystemChatMessage", async () => {
   const chat = new ChatMinimax();
   const system_message = new SystemMessage("You are to chat with a user.");
   const message = new HumanMessage("Hello!");
-  const res = await chat.call([system_message, message]);
+  const res = await chat.invoke([system_message, message]);
   console.log({ res });
 });
 
@@ -207,7 +207,7 @@ test.skip("Test OpenAI with specific roles in ChatMessage", async () => {
     "system"
   );
   const user_message = new ChatMessage("Hello!", "user");
-  const res = await chat.call([system_message, user_message]);
+  const res = await chat.invoke([system_message, user_message]);
   console.log({ res });
 });
 
