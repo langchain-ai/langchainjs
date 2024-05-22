@@ -1,7 +1,7 @@
 import { Index } from "@upstash/vector";
-import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
 import { UpstashVectorStore } from "@langchain/community/vectorstores/upstash";
+import { FakeEmbeddings } from "@langchain/core/utils/testing";
 
 const index = new Index({
   url: process.env.UPSTASH_VECTOR_REST_URL as string,
@@ -9,7 +9,8 @@ const index = new Index({
 });
 
 // Initializing the UpstashVectorStore with the Upstash Embeddings configuration.
-const UpstashVector = new UpstashVectorStore("UpstashEmbeddings", { index });
+// Passing FakeEmbeddings here will enable the store to generate embeddings using Upstash Embeddings.
+const UpstashVector = new UpstashVectorStore(new FakeEmbeddings(), { index });
 
 // Creating the docs to be indexed.
 const id = new Date().getTime();
@@ -48,18 +49,18 @@ console.log(queryResult);
 /**
 [
   [
-	Document {
-	  pageContent: 'Upstash Vector is great for building AI applications.',
-	  metadata: [Object]
-	},
-	0.9016147
+  Document {
+    pageContent: 'Upstash Vector is great for building AI applications.',
+    metadata: [Object]
+  },
+  0.9016147
   ],
   [
-	Document {
-	  pageContent: 'What are you building?',
-	  metadata: [Object]
-	},
-	0.8613077
+  Document {
+    pageContent: 'What are you building?',
+    metadata: [Object]
+  },
+  0.8613077
   ]
 ]
  */

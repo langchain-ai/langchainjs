@@ -5,6 +5,7 @@ import { Index as UpstashIndex, type QueryResult } from "@upstash/vector";
 import { Document, DocumentInterface } from "@langchain/core/documents";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
+
 import {
   AsyncCaller,
   AsyncCallerParams,
@@ -64,16 +65,20 @@ export class UpstashVectorStore extends VectorStore {
   }
 
   constructor(
-    embeddings: EmbeddingsInterface | "UpstashEmbeddings",
+    embeddings: EmbeddingsInterface,
     args: UpstashVectorLibArgs
   ) {
-    if (embeddings === "UpstashEmbeddings") {
+
+    // There is a special case where the embeddings instance is a FakeEmbeddings instance. In this case, we need to disable "instanceof" rule.
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    if (embeddings instanceof FakeEmbeddings) {
       super(new FakeEmbeddings(), args);
       this.upstashEmbeddingsConfig = true;
     } else {
       super(embeddings, args);
       this.embeddings = embeddings;
     }
+
 
     const { index, ...asyncCallerArgs } = args;
 
@@ -271,7 +276,7 @@ export class UpstashVectorStore extends VectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: UpstashMetadata | UpstashMetadata[],
-    embeddings: EmbeddingsInterface | "UpstashEmbeddings",
+    embeddings: EmbeddingsInterface,
     dbConfig: UpstashVectorLibArgs
   ): Promise<UpstashVectorStore> {
     const docs: DocumentInterface[] = [];
@@ -297,7 +302,7 @@ export class UpstashVectorStore extends VectorStore {
    */
   static async fromDocuments(
     docs: DocumentInterface[],
-    embeddings: EmbeddingsInterface | "UpstashEmbeddings",
+    embeddings: EmbeddingsInterface,
     dbConfig: UpstashVectorLibArgs
   ): Promise<UpstashVectorStore> {
     const instance = new this(embeddings, dbConfig);
@@ -312,7 +317,7 @@ export class UpstashVectorStore extends VectorStore {
    * @returns
    */
   static async fromExistingIndex(
-    embeddings: EmbeddingsInterface | "UpstashEmbeddings",
+    embeddings: EmbeddingsInterface,
     dbConfig: UpstashVectorLibArgs
   ): Promise<UpstashVectorStore> {
     const instance = new this(embeddings, dbConfig);
