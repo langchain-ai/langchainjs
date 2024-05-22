@@ -142,10 +142,6 @@
     "embeddings/fake.js",
     "embeddings/fake.d.ts",
     "embeddings/fake.d.cts",
-    "prompts/index.cjs",
-    "prompts/index.js",
-    "prompts/index.d.ts",
-    "prompts/index.d.cts",
     "vectorstores/memory.cjs",
     "vectorstores/memory.js",
     "vectorstores/memory.d.ts",
@@ -1215,15 +1211,6 @@
       },
       "import": "./embeddings/fake.js",
       "require": "./embeddings/fake.cjs"
-    },
-    "./prompts/index": {
-      "types": {
-        "import": "./prompts/index.d.ts",
-        "require": "./prompts/index.d.cts",
-        "default": "./prompts/index.d.ts"
-      },
-      "import": "./prompts/index.js",
-      "require": "./prompts/index.cjs"
     },
     "./vectorstores/memory": {
       "types": {

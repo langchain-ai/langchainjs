@@ -22,7 +22,6 @@ export * from "langchain/chains/openai_functions";
 export * from "langchain/chains/retrieval";
 export * from "langchain/embeddings/cache_backed";
 export * from "langchain/embeddings/fake";
-export * from "langchain/prompts/index";
 export * from "langchain/vectorstores/memory";
 export * from "langchain/text_splitter";
 export * from "langchain/memory/index";
