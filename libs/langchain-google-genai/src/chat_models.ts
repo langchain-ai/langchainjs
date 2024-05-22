@@ -313,8 +313,8 @@ export class ChatGoogleGenerativeAI
       ls_provider: "google_genai",
       ls_model_name: this.model,
       ls_model_type: "chat",
-      ls_temperature: this.client.generationConfig.temperature ?? undefined,
-      ls_max_tokens: this.client.generationConfig.maxOutputTokens ?? undefined,
+      ls_temperature: this.client.generationConfig.temperature,
+      ls_max_tokens: this.client.generationConfig.maxOutputTokens,
       ls_stop: options.stop,
     };
   }
