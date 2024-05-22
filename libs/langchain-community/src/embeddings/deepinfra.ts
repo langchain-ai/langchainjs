@@ -123,7 +123,7 @@ export class DeepInfraEmbeddings
    * @returns A Promise that resolves to an array of embeddings.
    */
   async embedDocuments(inputs: string[]): Promise<number[][]> {
-    const batches = chunkArray(inputs, this.batchSize) as string[][];
+    const batches = chunkArray(inputs, this.batchSize);
 
     const batchRequests = batches.map((batch: string[]) =>
       this.embeddingWithRetry({
