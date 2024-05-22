@@ -22,7 +22,6 @@ import * as chains_openai_functions from "langchain/chains/openai_functions";
 import * as chains_retrieval from "langchain/chains/retrieval";
 import * as embeddings_cache_backed from "langchain/embeddings/cache_backed";
 import * as embeddings_fake from "langchain/embeddings/fake";
-import * as prompts_index from "langchain/prompts/index";
 import * as vectorstores_memory from "langchain/vectorstores/memory";
 import * as text_splitter from "langchain/text_splitter";
 import * as memory_index from "langchain/memory/index";

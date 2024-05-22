@@ -69,8 +69,6 @@ export const config = {
     // embeddings
     "embeddings/cache_backed": "embeddings/cache_backed",
     "embeddings/fake": "embeddings/fake",
-    // prompts
-    "prompts/index": "prompts/index",
     // vectorstores
     "vectorstores/memory": "vectorstores/memory",
     // text_splitter
@@ -208,6 +206,14 @@ export const config = {
     "document",
     "load/serializable",
     "runnables",
+    "document_loaders/web/searchapi",
+    "retrievers/self_query/chroma",
+    "retrievers/self_query/pinecone",
+    "retrievers/self_query/supabase",
+    "retrievers/self_query/weaviate",
+    "retrievers/self_query/vectara",
+    "document_loaders/web/serpapi",
+    "document_loaders/web/sort_xyz_blockchain"
   ],
   requiresOptionalDependency: [
     "agents/load",

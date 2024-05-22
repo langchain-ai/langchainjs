@@ -130,10 +130,6 @@ embeddings/fake.cjs
 embeddings/fake.js
 embeddings/fake.d.ts
 embeddings/fake.d.cts
-prompts/index.cjs
-prompts/index.js
-prompts/index.d.ts
-prompts/index.d.cts
 vectorstores/memory.cjs
 vectorstores/memory.js
 vectorstores/memory.d.ts

@@ -22,7 +22,6 @@ const chains_openai_functions = require("langchain/chains/openai_functions");
 const chains_retrieval = require("langchain/chains/retrieval");
 const embeddings_cache_backed = require("langchain/embeddings/cache_backed");
 const embeddings_fake = require("langchain/embeddings/fake");
-const prompts_index = require("langchain/prompts/index");
 const vectorstores_memory = require("langchain/vectorstores/memory");
 const text_splitter = require("langchain/text_splitter");
 const memory_index = require("langchain/memory/index");
