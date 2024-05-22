@@ -3,7 +3,7 @@ import { JsonSchema7ObjectType } from "zod-to-json-schema";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { ToolDefinition } from "@langchain/core/language_models/base";
 
-export const DEFAULT_TOOL_SYSTEM_PROMPT: PromptTemplate =
+export const DEFAULT_TOOL_SYSTEM_PROMPT =
   /* #__PURE__ */ PromptTemplate.fromTemplate(`In this environment you have access to a set of tools you can use to answer the user's question.
 
 You may call them like this:
