@@ -76,14 +76,3 @@ export class GoogleGenerativeAIToolsOutputParser<
     return validatedResult;
   }
 }
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function extractToolCalls(content: Record<string, any>[]) {
-  const toolCalls: ToolCall[] = [];
-  for (const block of content) {
-    if (block.type === "tool_use") {
-      toolCalls.push({ name: block.name, args: block.input, id: block.id });
-    }
-  }
-  return toolCalls;
-}
