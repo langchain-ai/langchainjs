@@ -36,6 +36,7 @@ interface Neo4jVectorStoreArgs {
 const DEFAULT_SEARCH_TYPE = "vector";
 const DEFAULT_INDEX_TYPE = "NODE";
 const DEFAULT_DISTANCE_STRATEGY = "cosine";
+const DEFAULT_NODE_EMBEDDING_PROPERTY = "embedding";
 
 /**
  * @security *Security note*: Make sure that the database connection uses credentials
@@ -102,7 +103,7 @@ export class Neo4jVectorStore extends VectorStore {
       preDeleteCollection = false,
       nodeLabel = "Chunk",
       textNodeProperty = "text",
-      embeddingNodeProperty = "embedding",
+      embeddingNodeProperty = DEFAULT_NODE_EMBEDDING_PROPERTY,
       keywordIndexName = "keyword",
       indexName = "vector",
       retrievalQuery = "",
@@ -333,7 +334,7 @@ export class Neo4jVectorStore extends VectorStore {
   ) {
     const {
       textNodeProperties = [],
-      embeddingNodeProperty,
+      embeddingNodeProperty = DEFAULT_NODE_EMBEDDING_PROPERTY,
       searchType = DEFAULT_SEARCH_TYPE,
       retrievalQuery = "",
       nodeLabel,
@@ -346,6 +347,7 @@ export class Neo4jVectorStore extends VectorStore {
         "Parameter `text_node_properties` must not be an empty array"
       );
     }
+
 
     if (!retrievalQuery) {
       _retrievalQuery = `
