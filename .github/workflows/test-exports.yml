@@ -35,12 +35,12 @@ jobs:
         run: yarn install --immutable
 
       - name: Build "@langchain/community"
-        run: yarn workspace @langchain/community build
+        run: yarn turbo:command build --filter=@langchain/community
         shell: bash
         env:
           SKIP_API_DOCS: true
       - name: Build LangChain
-        run: yarn workspace langchain build
+        run: yarn turbo:command build --filter=langchain
         shell: bash
         env:
           SKIP_API_DOCS: true
@@ -61,12 +61,12 @@ jobs:
         run: yarn install --immutable
 
       - name: Build "@langchain/community"
-        run: yarn workspace @langchain/community build
+        run: yarn turbo:command build --filter=@langchain/community
         shell: bash
         env:
           SKIP_API_DOCS: true
       - name: Build LangChain
-        run: yarn workspace langchain build
+        run: yarn turbo:command build --filter=langchain
         shell: bash
         env:
           SKIP_API_DOCS: true
@@ -87,12 +87,12 @@ jobs:
         run: yarn install --immutable
 
       - name: Build "@langchain/community"
-        run: yarn workspace @langchain/community build
+        run: yarn turbo:command build --filter=@langchain/community
         shell: bash
         env:
           SKIP_API_DOCS: true
       - name: Build LangChain
-        run: yarn workspace langchain build
+        run: yarn turbo:command build --filter=langchain
         shell: bash
         env:
           SKIP_API_DOCS: true
@@ -112,7 +112,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build
-        run: yarn workspace langchain build
+        run: yarn turbo:command build --filter=langchain
         shell: bash
         env:
           SKIP_API_DOCS: true
@@ -132,7 +132,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build
-        run: yarn workspace langchain build
+        run: yarn turbo:command build --filter=langchain
         shell: bash
         env:
           SKIP_API_DOCS: true
@@ -152,7 +152,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build
-        run: yarn workspace langchain build
+        run: yarn turbo:command build --filter=langchain
         shell: bash
         env:
           SKIP_API_DOCS: true
@@ -172,7 +172,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build
-        run: yarn workspace langchain build
+        run: yarn turbo:command build --filter=langchain
         shell: bash
         env:
           SKIP_API_DOCS: true
@@ -192,7 +192,7 @@ jobs:
   #     - name: Install dependencies
   #       run: yarn install --immutable
   #     - name: Build
-  #       run: yarn workspace langchain build
+  #       run: yarn turbo:command build --filter=langchain
   #       shell: bash
   #       env:
   #         SKIP_API_DOCS: true
