@@ -41,6 +41,7 @@ module.exports = {
     "import/extensions": OFF,
     "react/jsx-filename-extension": OFF,
     "react-hooks/rules-of-hooks": ERROR,
+    "react/jsx-props-no-spreading": OFF,
     "react/prop-types": OFF, // PropTypes aren't used much these days.
     "react/function-component-definition": [
       WARNING,
