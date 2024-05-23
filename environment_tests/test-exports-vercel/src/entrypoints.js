@@ -24,6 +24,7 @@ export * from "langchain/embeddings/cache_backed";
 export * from "langchain/embeddings/fake";
 export * from "langchain/vectorstores/memory";
 export * from "langchain/text_splitter";
+export * from "langchain/memory";
 export * from "langchain/memory/index";
 export * from "langchain/memory/chat_memory";
 export * from "langchain/document";

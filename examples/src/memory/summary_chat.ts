@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { ConversationSummaryMemory } from "langchain/memory/index";
+import { ConversationSummaryMemory } from "langchain/memory";
 import { LLMChain } from "langchain/chains";
 import { PromptTemplate } from "@langchain/core/prompts";
 
