@@ -7,6 +7,9 @@ import { rollup } from "rollup";
 import { ExportsMapValue, ImportData, LangChainConfig } from "../types.js";
 import path from "node:path";
 
+const NEWLINE = `
+`;
+
 // List of test-exports-* packages which we use to test that the exports field
 // works correctly across different JS environments.
 // Each entry is a tuple of [package name, import statement].
@@ -174,10 +177,15 @@ async function updatePackageJson(config: LangChainConfig): Promise<void> {
     {}
   );
 
+  let packageJsonString = JSON.stringify(packageJson, null, 2);
+  if (!packageJsonString.endsWith("\n") && !packageJsonString.endsWith(NEWLINE)) {
+    packageJsonString += NEWLINE;
+  }
+
   // Write package.json and generate d.cts files
   // Optionally, update test exports files
   await Promise.all([
-    fs.promises.writeFile(`package.json`, JSON.stringify(packageJson, null, 2)),
+    fs.promises.writeFile(`package.json`, packageJsonString),
     generateDCTSFiles(config),
     config.shouldTestExports
       ? updateExportTestFiles(config)
