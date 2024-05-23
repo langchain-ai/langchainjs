@@ -412,7 +412,7 @@ export const config = {
     dts: true,
     format: ["cjs", "esm"],
     splitting: false,
-    sourcemap: true,
+    sourcemap: false,
     clean: true,
     platform: "node",
     outDir: `dist`,

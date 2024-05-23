@@ -5,6 +5,32 @@ import { rimraf } from "rimraf";
 import { Command } from "commander";
 import { rollup } from "rollup";
 import { ExportsMapValue, ImportData, LangChainConfig } from "../types.js";
+import path from "node:path";
+
+// List of test-exports-* packages which we use to test that the exports field
+// works correctly across different JS environments.
+// Each entry is a tuple of [package name, import statement].
+const testExports: Array<[string, (p: string) => string]> = [
+  [
+    "test-exports-esm",
+    (p: string) =>
+      `import * as ${p.replace(/\//g, "_")} from "langchain/${p}";`,
+  ],
+  [
+    "test-exports-esbuild",
+    (p: string) =>
+      `import * as ${p.replace(/\//g, "_")} from "langchain/${p}";`,
+  ],
+  [
+    "test-exports-cjs",
+    (p: string) =>
+      `const ${p.replace(/\//g, "_")} = require("langchain/${p}");`,
+  ],
+  ["test-exports-cf", (p: string) => `export * from "langchain/${p}";`],
+  ["test-exports-vercel", (p: string) => `export * from "langchain/${p}";`],
+  ["test-exports-vite", (p: string) => `export * from "langchain/${p}";`],
+  ["test-exports-bun", (p: string) => `export * from "langchain/${p}";`],
+];
 
 async function createImportMapFile(config: LangChainConfig): Promise<void> {
   const createImportStatement = (k: string, p: string) =>
@@ -93,6 +119,36 @@ async function generateImportConstants(config: LangChainConfig): Promise<void> {
   );
 }
 
+async function generateDCTSFiles(config: LangChainConfig): Promise<void[]> {
+  return Promise.all(
+    Object.keys(config.entrypoints).map(async (key) => {
+      const filePath = `./dist/${key}.d.cts`;
+      const content = `export * from './${key}.js'`;
+      await fs.promises.mkdir(path.dirname(filePath), { recursive: true });
+      await fs.promises.writeFile(filePath, content);
+    })
+  );
+}
+
+async function updateExportTestFiles(config: LangChainConfig): Promise<void[]> {
+  // Update test-exports-*/entrypoints.js
+  const entrypointsToTest = Object.keys(config.entrypoints)
+    .filter((key) => !config.deprecatedNodeOnly?.includes(key))
+    .filter((key) => !config.requiresOptionalDependency?.includes(key));
+
+  return Promise.all(
+    testExports.map(async ([pkg, importStatement]) => {
+      const contents = `${entrypointsToTest
+        .map((key) => importStatement(key))
+        .join("\n")}\n`;
+      fs.promises.writeFile(
+        `../environment_tests/${pkg}/src/entrypoints.js`,
+        contents
+      );
+    })
+  );
+}
+
 async function updatePackageJson(config: LangChainConfig): Promise<void> {
   const packageJson = JSON.parse(
     await fs.promises.readFile(`package.json`, "utf8")
@@ -117,10 +173,16 @@ async function updatePackageJson(config: LangChainConfig): Promise<void> {
     },
     {}
   );
-  await fs.promises.writeFile(
-    `package.json`,
-    JSON.stringify(packageJson, null, 2)
-  );
+
+  // Write package.json and generate d.cts files
+  // Optionally, update test exports files
+  await Promise.all([
+    fs.promises.writeFile(`package.json`, JSON.stringify(packageJson, null, 2)),
+    generateDCTSFiles(config),
+    config.shouldTestExports
+      ? updateExportTestFiles(config)
+      : Promise.resolve(),
+  ]);
 }
 
 export function identifySecrets(absTsConfigPath: string) {

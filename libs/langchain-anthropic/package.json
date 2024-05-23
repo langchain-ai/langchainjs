@@ -14,7 +14,8 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-anthropic/",
   "scripts": {
-    "build": "yarn build:deps && NODE_OPTIONS=--max-old-space-size=4096 yarn tsup-build --tree-shaking --create-entrypoints --gen-maps",
+    "build": "NODE_OPTIONS=--max-old-space-size=4096 yarn tsup-build --tree-shaking --create-entrypoints --gen-maps",
+    "build:deps": "yarn turbo:command build --filter=@langchain/core --filter=@langchain/community",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
     "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "yarn lint:eslint && yarn lint:dpdm",
