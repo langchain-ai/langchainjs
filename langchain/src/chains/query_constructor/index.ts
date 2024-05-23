@@ -6,6 +6,7 @@ import {
   FewShotPromptTemplate,
 } from "@langchain/core/prompts";
 import { InputValues } from "@langchain/core/utils/types";
+import { Runnable, RunnableConfig } from "@langchain/core/runnables";
 import { QueryTransformer, TraverseType } from "./parser.js";
 import {
   Comparator,
@@ -22,7 +23,6 @@ import {
   EXAMPLE_PROMPT,
 } from "./prompt.js";
 import { AsymmetricStructuredOutputParser } from "../../output_parsers/structured.js";
-import { Runnable, RunnableConfig } from "@langchain/core/runnables";
 
 /**
  * A simple data structure that holds information about an attribute. It

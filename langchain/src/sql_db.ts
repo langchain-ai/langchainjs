@@ -1,5 +1,8 @@
 import type { DataSource as DataSourceT, DataSourceOptions } from "typeorm";
-import { Serializable, SerializedNotImplemented } from "@langchain/core/load/serializable";
+import {
+  Serializable,
+  SerializedNotImplemented,
+} from "@langchain/core/load/serializable";
 import {
   generateTableInfoFromTables,
   getTableAndColumnsName,

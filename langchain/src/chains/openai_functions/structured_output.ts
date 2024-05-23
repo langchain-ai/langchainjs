@@ -11,9 +11,9 @@ import {
 import { ChatGeneration } from "@langchain/core/outputs";
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import type { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
+import { BaseMessageChunk } from "@langchain/core/messages";
 import { LLMChain, type LLMChainInput } from "../llm_chain.js";
 import { OutputFunctionsParser } from "../../output_parsers/openai_functions.js";
-import { BaseMessageChunk } from "@langchain/core/messages";
 
 /**
  * Type representing the input for creating a structured output chain. It

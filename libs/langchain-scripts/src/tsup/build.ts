@@ -102,7 +102,7 @@ async function updatePackageJson(config: LangChainConfig): Promise<void> {
     (acc: Record<string, ExportsMapValue>, key) => {
       let entrypoint = `./${key}`;
       if (key === "index") {
-        entrypoint = "."
+        entrypoint = ".";
       }
       acc[entrypoint] = {
         types: {

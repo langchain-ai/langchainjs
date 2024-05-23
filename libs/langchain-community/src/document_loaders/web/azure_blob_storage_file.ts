@@ -3,11 +3,11 @@ import * as path from "node:path";
 import * as os from "node:os";
 import { BlobServiceClient } from "@azure/storage-blob";
 import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
+import { DocumentInterface } from "@langchain/core/documents";
 import {
   UnstructuredLoader,
   UnstructuredLoaderOptions,
 } from "../fs/unstructured.js";
-import { DocumentInterface } from "@langchain/core/documents";
 
 /**
  * Interface representing the configuration for accessing a specific file

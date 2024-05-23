@@ -2,13 +2,13 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
 import { BlobServiceClient } from "@azure/storage-blob";
+import { DocumentInterface } from "@langchain/core/documents";
 import { BaseDocumentLoader } from "../base.js";
 import {
   UnstructuredLoader,
   UnstructuredLoaderOptions,
 } from "../fs/unstructured.js";
 import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
-import { DocumentInterface } from "@langchain/core/documents";
 
 /* #__PURE__ */ logVersion020MigrationWarning({
   oldEntrypointName: "document_loaders/web/azure_blog_storage_file",

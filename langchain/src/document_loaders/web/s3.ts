@@ -3,10 +3,10 @@ import * as path from "node:path";
 import * as os from "node:os";
 import { Readable } from "node:stream";
 import { S3Client, GetObjectCommand, S3ClientConfig } from "@aws-sdk/client-s3";
+import { DocumentInterface } from "@langchain/core/documents";
 import { BaseDocumentLoader } from "../base.js";
 import { UnstructuredLoader as UnstructuredLoaderDefault } from "../fs/unstructured.js";
 import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
-import { DocumentInterface } from "@langchain/core/documents";
 
 /* #__PURE__ */ logVersion020MigrationWarning({
   oldEntrypointName: "document_loaders/web/s3",

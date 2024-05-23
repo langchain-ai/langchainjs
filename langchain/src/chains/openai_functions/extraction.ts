@@ -3,12 +3,12 @@ import { zodToJsonSchema, JsonSchema7ObjectType } from "zod-to-json-schema";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
 import { PromptTemplate } from "@langchain/core/prompts";
+import { BaseMessageChunk } from "@langchain/core/messages";
 import {
   FunctionParameters,
   JsonKeyOutputFunctionsParser,
 } from "../../output_parsers/openai_functions.js";
 import { LLMChain } from "../llm_chain.js";
-import { BaseMessageChunk } from "@langchain/core/messages";
 
 /**
  * Function that returns an array of extraction functions. These functions
