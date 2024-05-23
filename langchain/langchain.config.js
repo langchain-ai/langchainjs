@@ -74,7 +74,7 @@ export const config = {
     // text_splitter
     text_splitter: "text_splitter",
     // memory
-    "memory/index": "memory/index",
+    "memory": "memory/index",
     "memory/chat_memory": "memory/chat_memory",
     // document
     document: "document",

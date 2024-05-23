@@ -150,10 +150,10 @@
     "text_splitter.js",
     "text_splitter.d.ts",
     "text_splitter.d.cts",
-    "memory/index.cjs",
-    "memory/index.js",
-    "memory/index.d.ts",
-    "memory/index.d.cts",
+    "memory.cjs",
+    "memory.js",
+    "memory.d.ts",
+    "memory.d.cts",
     "memory/chat_memory.cjs",
     "memory/chat_memory.js",
     "memory/chat_memory.d.ts",
@@ -1230,14 +1230,14 @@
       "import": "./text_splitter.js",
       "require": "./text_splitter.cjs"
     },
-    "./memory/index": {
+    "./memory": {
       "types": {
-        "import": "./memory/index.d.ts",
-        "require": "./memory/index.d.cts",
-        "default": "./memory/index.d.ts"
+        "import": "./memory.d.ts",
+        "require": "./memory.d.cts",
+        "default": "./memory.d.ts"
       },
-      "import": "./memory/index.js",
-      "require": "./memory/index.cjs"
+      "import": "./memory.js",
+      "require": "./memory.cjs"
     },
     "./memory/chat_memory": {
       "types": {

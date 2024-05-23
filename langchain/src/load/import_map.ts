@@ -24,7 +24,7 @@ export * as embeddings__cache_backed from "../embeddings/cache_backed.js";
 export * as embeddings__fake from "../embeddings/fake.js";
 export * as vectorstores__memory from "../vectorstores/memory.js";
 export * as text_splitter from "../text_splitter.js";
-export * as memory__index from "../memory/index.js";
+export * as memory from "../memory/index.js";
 export * as memory__chat_memory from "../memory/chat_memory.js";
 export * as document_loaders__base from "../document_loaders/base.js";
 export * as document_transformers__openai_functions from "../document_transformers/openai_functions.js";
