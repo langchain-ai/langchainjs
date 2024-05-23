@@ -9009,7 +9009,7 @@ __metadata:
     release-it: ^15.10.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
-    typescript: <5.2.0
+    typescript: ^5.4.5
   languageName: unknown
   linkType: soft
 
@@ -9174,7 +9174,7 @@ __metadata:
     srt-parser-2: ^1.2.3
     ts-jest: ^29.1.0
     typeorm: ^0.3.12
-    typescript: ~5.1.6
+    typescript: ^5.4.5
     typesense: ^1.5.3
     usearch: ^1.1.1
     uuid: ^9.0.0
@@ -9949,7 +9949,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai, @langchain/openai@~0.0.28":
+"@langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai, @langchain/openai@~0.0.28, @langchain/openai@~0.0.33":
   version: 0.0.0-use.local
   resolution: "@langchain/openai@workspace:libs/langchain-openai"
   dependencies:
@@ -9974,7 +9974,7 @@ __metadata:
     prettier: ^2.8.3
     release-it: ^15.10.1
     rimraf: ^5.0.1
-    typescript: ~5.1.6
+    typescript: ^5.4.5
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.3
   languageName: unknown
@@ -10148,7 +10148,7 @@ __metadata:
     release-it: ^15.10.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
-    typescript: <5.2.0
+    typescript: ^5.4.5
   languageName: unknown
   linkType: soft
 
@@ -27671,7 +27671,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/cohere": ^0.0.8
     "@langchain/core": ~0.2.0
-    "@langchain/openai": ~0.0.28
+    "@langchain/openai": ~0.0.33
     "@langchain/scripts": ~0.0.14
     "@langchain/textsplitters": ~0.0.0
     "@mendable/firecrawl-js": ^0.0.13
@@ -27749,7 +27749,7 @@ __metadata:
     srt-parser-2: ^1.2.3
     ts-jest: ^29.1.0
     typeorm: ^0.3.12
-    typescript: ~5.1.6
+    typescript: ^5.4.5
     uuid: ^9.0.0
     weaviate-ts-client: ^2.0.0
     web-auth-library: ^1.0.3

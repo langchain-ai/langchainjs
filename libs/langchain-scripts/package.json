@@ -77,7 +77,7 @@
     "access": "public"
   },
   "exports": {
-    "./index": {
+    ".": {
       "types": {
         "import": "./dist/index.d.ts",
         "require": "./dist/index.d.cts",

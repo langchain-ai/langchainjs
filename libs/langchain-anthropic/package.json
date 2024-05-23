@@ -14,7 +14,8 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-anthropic/",
   "scripts": {
-    "build": "yarn run build:deps && yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
+    "build": "yarn build:deps && NODE_OPTIONS=--max-old-space-size=4096 yarn tsup-build --tree-shaking --create-entrypoints --gen-maps",
+    "build:old": "yarn run build:deps && yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
     "build:deps": "yarn run turbo:command build --filter=@langchain/core",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rimraf dist-cjs",
@@ -86,33 +87,24 @@
   "exports": {
     ".": {
       "types": {
-        "import": "./index.d.ts",
-        "require": "./index.d.cts",
-        "default": "./index.d.ts"
+        "import": "./dist/index.d.ts",
+        "require": "./dist/index.d.cts",
+        "default": "./dist/index.d.ts"
       },
-      "import": "./index.js",
-      "require": "./index.cjs"
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     },
     "./experimental": {
       "types": {
-        "import": "./experimental.d.ts",
-        "require": "./experimental.d.cts",
-        "default": "./experimental.d.ts"
+        "import": "./dist/experimental.d.ts",
+        "require": "./dist/experimental.d.cts",
+        "default": "./dist/experimental.d.ts"
       },
-      "import": "./experimental.js",
-      "require": "./experimental.cjs"
-    },
-    "./package.json": "./package.json"
+      "import": "./dist/experimental.js",
+      "require": "./dist/experimental.cjs"
+    }
   },
   "files": [
-    "dist/",
-    "index.cjs",
-    "index.js",
-    "index.d.ts",
-    "index.d.cts",
-    "experimental.cjs",
-    "experimental.js",
-    "experimental.d.ts",
-    "experimental.d.cts"
+    "dist/**/*"
   ]
 }

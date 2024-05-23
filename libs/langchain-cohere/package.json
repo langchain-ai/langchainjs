@@ -14,7 +14,9 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-cohere/",
   "scripts": {
-    "build": "yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
+    "build": "NODE_OPTIONS=--max-old-space-size=4096 yarn tsup-build --tree-shaking --create-entrypoints",
+    "build:deps": "yarn turbo:command build --filter=@langchain/core",
+    "build:old": "yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rm -rf dist/tests dist/**/tests",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rm -rf dist-cjs",
     "build:watch": "yarn create-entrypoints && tsc --outDir dist/ --watch",
@@ -63,7 +65,7 @@
     "release-it": "^15.10.1",
     "rollup": "^4.5.2",
     "ts-jest": "^29.1.0",
-    "typescript": "<5.2.0"
+    "typescript": "^5.4.5"
   },
   "publishConfig": {
     "access": "public"
@@ -71,20 +73,15 @@
   "exports": {
     ".": {
       "types": {
-        "import": "./index.d.ts",
-        "require": "./index.d.cts",
-        "default": "./index.d.ts"
+        "import": "./dist/index.d.ts",
+        "require": "./dist/index.d.cts",
+        "default": "./dist/index.d.ts"
       },
-      "import": "./index.js",
-      "require": "./index.cjs"
-    },
-    "./package.json": "./package.json"
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
   },
   "files": [
-    "dist/",
-    "index.cjs",
-    "index.js",
-    "index.d.ts",
-    "index.d.cts"
+    "dist/**/*"
   ]
 }

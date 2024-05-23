@@ -13,12 +13,23 @@ function abs(relativePath) {
 export const config = {
   internals: [/node\:/, /@langchain\/core\//],
   entrypoints: {
-    index: "index",
-    experimental: "experimental/index",
+    index: "src/index.ts",
+    experimental: "src/experimental/index.ts",
   },
   packageSuffix: "anthropic",
   tsConfigPath: resolve("./tsconfig.json"),
   cjsSource: "./dist-cjs",
   cjsDestination: "./dist",
   abs,
+  tSupConfig: {
+    name: "@langchain/anthropic",
+    dts: true,
+    format: ["cjs", "esm"],
+    splitting: false,
+    sourcemap: true,
+    clean: true,
+    platform: "neutral",
+    outDir: `dist`,
+    tsconfig: `tsconfig.json`,
+  }
 }
