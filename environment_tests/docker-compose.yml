@@ -7,7 +7,7 @@ services:
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
     working_dir: /app
     volumes:
-      - ../package.json:/package.json
+      - ../turbo.json:/turbo.json
       - ../yarn.lock:/root/yarn.lock
       - ../.yarnrc.yml:/root/.yarnrc.yml
       - ../.yarn:/root/.yarn
@@ -19,6 +19,7 @@ services:
       - ../libs/langchain-anthropic:/langchain-anthropic
       - ../libs/langchain-openai:/langchain-openai
       - ../libs/langchain-cohere:/langchain-cohere
+      - ../libs/langchain-scripts:/langchain-scripts
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-esm:
     image: node:18
@@ -27,7 +28,7 @@ services:
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
     working_dir: /app
     volumes:
-      - ../package.json:/package.json
+      - ../turbo.json:/turbo.json
       - ../yarn.lock:/root/yarn.lock
       - ../.yarnrc.yml:/root/.yarnrc.yml
       - ../.yarn:/root/.yarn
@@ -39,6 +40,7 @@ services:
       - ../libs/langchain-anthropic:/langchain-anthropic
       - ../libs/langchain-openai:/langchain-openai
       - ../libs/langchain-cohere:/langchain-cohere
+      - ../libs/langchain-scripts:/langchain-scripts
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-tsc:
     image: node:18
@@ -47,7 +49,7 @@ services:
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
     working_dir: /app
     volumes:
-      - ../package.json:/package.json
+      - ../turbo.json:/turbo.json
       - ../yarn.lock:/root/yarn.lock
       - ../.yarnrc.yml:/root/.yarnrc.yml
       - ../.yarn:/root/.yarn
@@ -59,6 +61,7 @@ services:
       - ../libs/langchain-anthropic:/langchain-anthropic
       - ../libs/langchain-openai:/langchain-openai
       - ../libs/langchain-cohere:/langchain-cohere
+      - ../libs/langchain-scripts:/langchain-scripts
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-cjs:
     image: node:18
@@ -67,7 +70,7 @@ services:
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
     working_dir: /app
     volumes:
-      - ../package.json:/package.json
+      - ../turbo.json:/turbo.json
       - ../yarn.lock:/root/yarn.lock
       - ../.yarnrc.yml:/root/.yarnrc.yml
       - ../.yarn:/root/.yarn
@@ -79,6 +82,7 @@ services:
       - ../libs/langchain-anthropic:/langchain-anthropic
       - ../libs/langchain-openai:/langchain-openai
       - ../libs/langchain-cohere:/langchain-cohere
+      - ../libs/langchain-scripts:/langchain-scripts
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-cf:
     image: node:18
@@ -87,7 +91,7 @@ services:
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
     working_dir: /app
     volumes:
-      - ../package.json:/package.json
+      - ../turbo.json:/turbo.json
       - ../yarn.lock:/root/yarn.lock
       - ../.yarnrc.yml:/root/.yarnrc.yml
       - ../.yarn:/root/.yarn
@@ -99,6 +103,7 @@ services:
       - ../libs/langchain-anthropic:/langchain-anthropic
       - ../libs/langchain-openai:/langchain-openai
       - ../libs/langchain-cohere:/langchain-cohere
+      - ../libs/langchain-scripts:/langchain-scripts
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-vercel:
     image: node:18
@@ -107,7 +112,7 @@ services:
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
     working_dir: /app
     volumes:
-      - ../package.json:/package.json
+      - ../turbo.json:/turbo.json
       - ../yarn.lock:/root/yarn.lock
       - ../.yarnrc.yml:/root/.yarnrc.yml
       - ../.yarn:/root/.yarn
@@ -119,6 +124,7 @@ services:
       - ../libs/langchain-anthropic:/langchain-anthropic
       - ../libs/langchain-openai:/langchain-openai
       - ../libs/langchain-cohere:/langchain-cohere
+      - ../libs/langchain-scripts:/langchain-scripts
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-vite:
     image: node:18
@@ -127,7 +133,7 @@ services:
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
     working_dir: /app
     volumes:
-      - ../package.json:/package.json
+      - ../turbo.json:/turbo.json
       - ../yarn.lock:/root/yarn.lock
       - ../.yarnrc.yml:/root/.yarnrc.yml
       - ../.yarn:/root/.yarn
@@ -139,6 +145,7 @@ services:
       - ../libs/langchain-anthropic:/langchain-anthropic
       - ../libs/langchain-openai:/langchain-openai
       - ../libs/langchain-cohere:/langchain-cohere
+      - ../libs/langchain-scripts:/langchain-scripts
     command: bash /scripts/docker-ci-entrypoint.sh
   # test-exports-bun:
   #   image: oven/bun

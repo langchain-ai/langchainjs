@@ -16,6 +16,7 @@ mkdir -p ./libs/langchain-anthropic/
 mkdir -p ./libs/langchain-community/
 mkdir -p ./libs/langchain-cohere/
 mkdir -p ./libs/langchain/
+mkdir -p ./libs/langchain-scripts/
 
 cp -r ../langchain-core ./libs/
 cp -r ../langchain-openai ./libs/
@@ -23,13 +24,14 @@ cp -r ../langchain-anthropic ./libs/
 cp -r ../langchain-community ./libs/
 cp -r ../langchain-cohere ./libs/
 cp -r ../langchain ./libs/
+cp -r ../langchain-scripts ./libs/
 
 # copy cache
 mkdir -p ./.yarn
 cp -r ../root/.yarn/!(berry|cache) ./.yarn
 cp ../root/yarn.lock ../root/.yarnrc.yml .
 
-cp ../package.json .
+cp ../turbo.json .
 
 yarn plugin import workspace-tools
 yarn workspaces focus --production
