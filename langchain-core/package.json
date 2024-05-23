@@ -15,12 +15,12 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/langchain-core/",
   "scripts": {
     "build": "NODE_OPTIONS=--max-old-space-size=4096 yarn tsup-build --tree-shaking --create-entrypoints",
-    "build:deps": "yarn turbo:command build --filter=@langchain/core",
+    "build:deps": "yarn turbo:command build --filter=@langchain/scripts",
+    "clean": "rm -rf ./dist ./.turbo",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
     "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "yarn lint:eslint && yarn lint:dpdm",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
-    "clean": "rimraf .turbo/ dist/",
     "prepack": "yarn build",
     "release": "release-it --only-version --config .release-it.json",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
@@ -67,6 +67,7 @@
     "prettier": "^2.8.3",
     "release-it": "^15.10.1",
     "rimraf": "^5.0.1",
+    "ts-jest": "^29.1.0",
     "turbo": "latest",
     "typescript": "^5.4.5",
     "web-streams-polyfill": "^3.3.3"
