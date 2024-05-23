@@ -1,5 +1,5 @@
 export {
   deepCompareStrict,
   Validator,
-  Schema,
+  type Schema,
 } from "./@cfworker/json-schema/index.js";
