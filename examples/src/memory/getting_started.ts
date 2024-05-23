@@ -1,6 +1,6 @@
 /* eslint-disable import/first */
 /* eslint-disable import/no-duplicates */
-import { BufferMemory } from "langchain/memory/index";
+import { BufferMemory } from "langchain/memory";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
 const memory = new BufferMemory();
