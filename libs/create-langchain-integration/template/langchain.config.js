@@ -12,7 +12,7 @@ function abs(relativePath) {
 export const config = {
   internals: [/node\:/, /@langchain\/core\//],
   entrypoints: {
-    index: "index",
+    index: "src/index.ts",
   },
   requiresOptionalDependency: [],
   tsConfigPath: resolve("./tsconfig.json"),

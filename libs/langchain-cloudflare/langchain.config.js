@@ -13,10 +13,21 @@ function abs(relativePath) {
 export const config = {
   internals: [/node\:/, /@langchain\/core\//],
   entrypoints: {
-    index: "index",
+    index: "src/index.ts",
   },
   tsConfigPath: resolve("./tsconfig.json"),
   cjsSource: "./dist-cjs",
   cjsDestination: "./dist",
   abs,
+  tSupConfig: {
+    name: "@langchain/cloudflare",
+    dts: true,
+    format: ["cjs", "esm"],
+    splitting: false,
+    sourcemap: true,
+    clean: true,
+    platform: "neutral",
+    outDir: `dist`,
+    tsconfig: `tsconfig.json`,
+  }
 }

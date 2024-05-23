@@ -9,14 +9,25 @@ function abs(relativePath) {
   return resolve(dirname(fileURLToPath(import.meta.url)), relativePath);
 }
 
+
 export const config = {
   internals: [/node\:/, /@langchain\/core\//],
   entrypoints: {
-    index: "index",
+    index: "src/index.ts",
   },
-  requiresOptionalDependency: [],
   tsConfigPath: resolve("./tsconfig.json"),
   cjsSource: "./dist-cjs",
   cjsDestination: "./dist",
   abs,
-};
+  tSupConfig: {
+    name: "@langchain/mongodb",
+    dts: true,
+    format: ["cjs", "esm"],
+    splitting: false,
+    sourcemap: true,
+    clean: true,
+    platform: "neutral",
+    outDir: `dist`,
+    tsconfig: `tsconfig.json`,
+  }
+}

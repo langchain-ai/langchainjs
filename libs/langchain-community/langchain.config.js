@@ -495,4 +495,15 @@ export const config = {
   cjsSource: "./dist-cjs",
   cjsDestination: "./dist",
   abs,
+  tSupConfig: {
+    name: "@langchain/community",
+    dts: true,
+    format: ["cjs", "esm"],
+    splitting: false,
+    sourcemap: true,
+    clean: true,
+    platform: "node",
+    outDir: `dist`,
+    tsconfig: `tsconfig.json`,
+  }
 };

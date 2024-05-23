@@ -14,12 +14,8 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-google-gauth/",
   "scripts": {
-    "build": "yarn run build:deps && yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
+    "build": "NODE_OPTIONS=--max-old-space-size=4096 yarn tsup-build --tree-shaking --create-entrypoints",
     "build:deps": "yarn run turbo:command build --filter=@langchain/google-common",
-    "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rm -rf dist/tests dist/**/tests",
-    "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rm -rf dist-cjs",
-    "build:watch": "yarn create-entrypoints && tsc --outDir dist/ --watch",
-    "build:scripts": "yarn create-entrypoints && yarn check-tree-shaking",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
     "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "yarn lint:eslint && yarn lint:dpdm",
@@ -31,10 +27,7 @@
     "test:single": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 100000",
     "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
     "format": "prettier --config .prettierrc --write \"src\"",
-    "format:check": "prettier --config .prettierrc --check \"src\"",
-    "move-cjs-to-dist": "yarn lc-build --config ./langchain.config.js --move-cjs-dist",
-    "create-entrypoints": "yarn lc-build --config ./langchain.config.js --create-entrypoints",
-    "check-tree-shaking": "yarn lc-build --config ./langchain.config.js --tree-shaking"
+    "format:check": "prettier --config .prettierrc --check \"src\""
   },
   "author": "LangChain",
   "license": "MIT",
@@ -65,7 +58,7 @@
     "release-it": "^15.10.1",
     "rollup": "^4.5.2",
     "ts-jest": "^29.1.0",
-    "typescript": "<5.2.0",
+    "typescript": "^5.4.5",
     "zod": "^3.22.4"
   },
   "publishConfig": {
@@ -74,46 +67,33 @@
   "exports": {
     ".": {
       "types": {
-        "import": "./index.d.ts",
-        "require": "./index.d.cts",
-        "default": "./index.d.ts"
+        "import": "./dist/index.d.ts",
+        "require": "./dist/index.d.cts",
+        "default": "./dist/index.d.ts"
       },
-      "import": "./index.js",
-      "require": "./index.cjs"
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     },
     "./utils": {
       "types": {
-        "import": "./utils.d.ts",
-        "require": "./utils.d.cts",
-        "default": "./utils.d.ts"
+        "import": "./dist/utils.d.ts",
+        "require": "./dist/utils.d.cts",
+        "default": "./dist/utils.d.ts"
       },
-      "import": "./utils.js",
-      "require": "./utils.cjs"
+      "import": "./dist/utils.js",
+      "require": "./dist/utils.cjs"
     },
     "./types": {
       "types": {
-        "import": "./types.d.ts",
-        "require": "./types.d.cts",
-        "default": "./types.d.ts"
+        "import": "./dist/types.d.ts",
+        "require": "./dist/types.d.cts",
+        "default": "./dist/types.d.ts"
       },
-      "import": "./types.js",
-      "require": "./types.cjs"
-    },
-    "./package.json": "./package.json"
+      "import": "./dist/types.js",
+      "require": "./dist/types.cjs"
+    }
   },
   "files": [
-    "dist/",
-    "index.cjs",
-    "index.js",
-    "index.d.ts",
-    "index.d.cts",
-    "utils.cjs",
-    "utils.js",
-    "utils.d.ts",
-    "utils.d.cts",
-    "types.cjs",
-    "types.js",
-    "types.d.ts",
-    "types.d.cts"
+    "dist/**/*"
   ]
 }

@@ -13,12 +13,23 @@ function abs(relativePath) {
 export const config = {
   internals: [/node\:/, /@langchain\/core\//, /@langchain\/google-common/],
   entrypoints: {
-    index: "index",
-    utils: "utils",
-    types: "types",
+    index: "src/index.ts",
+    utils: "src/utils.ts",
+    types: "src/types.ts",
   },
   tsConfigPath: resolve("./tsconfig.json"),
   cjsSource: "./dist-cjs",
   cjsDestination: "./dist",
   abs,
+  tSupConfig: {
+    name: "@langchain/google-gauth",
+    dts: true,
+    format: ["cjs", "esm"],
+    splitting: false,
+    sourcemap: true,
+    clean: true,
+    platform: "neutral",
+    outDir: `dist`,
+    tsconfig: `tsconfig.json`,
+  }
 }

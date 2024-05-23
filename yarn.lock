@@ -8932,7 +8932,7 @@ __metadata:
     prettier: ^2.8.3
     release-it: ^15.10.1
     rimraf: ^5.0.1
-    typescript: ~5.1.6
+    typescript: ^5.4.5
     zod: ^3.22.3
     zod-to-json-schema: 3.20.3
   languageName: unknown
@@ -8967,7 +8967,7 @@ __metadata:
     release-it: ^15.10.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
-    typescript: <5.2.0
+    typescript: ^5.4.5
     uuid: ^9.0.1
   languageName: unknown
   linkType: soft
@@ -9612,7 +9612,7 @@ __metadata:
     release-it: ^15.10.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
-    typescript: <5.2.0
+    typescript: ^5.4.5
   languageName: unknown
   linkType: soft
 
@@ -9642,7 +9642,7 @@ __metadata:
     release-it: ^15.10.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
-    typescript: <5.2.0
+    typescript: ^5.4.5
     uuid: ^9.0.0
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.4
@@ -9677,7 +9677,7 @@ __metadata:
     release-it: ^15.10.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
-    typescript: <5.2.0
+    typescript: ^5.4.5
     zod: ^3.22.4
   languageName: unknown
   linkType: soft
@@ -9710,7 +9710,7 @@ __metadata:
     release-it: ^15.10.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
-    typescript: <5.2.0
+    typescript: ^5.4.5
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.4
   languageName: unknown
@@ -9743,7 +9743,7 @@ __metadata:
     release-it: ^15.10.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
-    typescript: <5.2.0
+    typescript: ^5.4.5
     zod: ^3.22.4
   languageName: unknown
   linkType: soft
@@ -9775,7 +9775,7 @@ __metadata:
     release-it: ^15.10.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
-    typescript: <5.2.0
+    typescript: ^5.4.5
   languageName: unknown
   linkType: soft
 
@@ -9806,7 +9806,7 @@ __metadata:
     release-it: ^15.10.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
-    typescript: <5.2.0
+    typescript: ^5.4.5
     web-auth-library: ^1.0.3
   languageName: unknown
   linkType: soft
@@ -9841,7 +9841,7 @@ __metadata:
     release-it: ^15.10.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
-    typescript: <5.2.0
+    typescript: ^5.4.5
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.5
   languageName: unknown
@@ -9875,7 +9875,7 @@ __metadata:
     release-it: ^15.10.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
-    typescript: <5.2.0
+    typescript: ^5.4.5
     uuid: ^9.0.0
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.4
@@ -9911,7 +9911,7 @@ __metadata:
     release-it: ^15.10.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
-    typescript: <5.2.0
+    typescript: ^5.4.5
     uuid: ^9.0.1
   languageName: unknown
   linkType: soft
@@ -9945,7 +9945,7 @@ __metadata:
     release-it: ^15.10.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
-    typescript: <5.2.0
+    typescript: ^5.4.5
   languageName: unknown
   linkType: soft
 
@@ -10011,7 +10011,7 @@ __metadata:
     release-it: ^15.10.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
-    typescript: <5.2.0
+    typescript: ^5.4.5
     uuid: ^9.0.0
   languageName: unknown
   linkType: soft
@@ -10045,7 +10045,7 @@ __metadata:
     release-it: ^15.10.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
-    typescript: <5.2.0
+    typescript: ^5.4.5
     uuid: ^9.0.1
   languageName: unknown
   linkType: soft
@@ -10079,7 +10079,7 @@ __metadata:
     release-it: ^15.10.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
-    typescript: <5.2.0
+    typescript: ^5.4.5
     uuid: ^9.0.1
   languageName: unknown
   linkType: soft
@@ -10181,7 +10181,7 @@ __metadata:
     release-it: ^15.10.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
-    typescript: <5.2.0
+    typescript: ^5.4.5
     uuid: ^9.0.1
     weaviate-ts-client: ^2.0.0
   languageName: unknown
@@ -10212,7 +10212,7 @@ __metadata:
     prettier: ^2.8.3
     rollup: ^4.5.2
     ts-jest: ^29.1.0
-    typescript: <5.2.0
+    typescript: ^5.4.5
   languageName: unknown
   linkType: soft
 
@@ -36529,16 +36529,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:<5.2.0, typescript@npm:~5.1.6":
-  version: 5.1.6
-  resolution: "typescript@npm:5.1.6"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: b2f2c35096035fe1f5facd1e38922ccb8558996331405eb00a5111cc948b2e733163cc22fab5db46992aba7dd520fff637f2c1df4996ff0e134e77d3249a7350
-  languageName: node
-  linkType: hard
-
 "typescript@npm:^4.9.4":
   version: 4.9.5
   resolution: "typescript@npm:4.9.5"
@@ -36569,13 +36559,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@<5.2.0#~builtin<compat/typescript>, typescript@patch:typescript@~5.1.6#~builtin<compat/typescript>":
+"typescript@npm:~5.1.6":
   version: 5.1.6
-  resolution: "typescript@patch:typescript@npm%3A5.1.6#~builtin<compat/typescript>::version=5.1.6&hash=1f5320"
+  resolution: "typescript@npm:5.1.6"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 21e88b0a0c0226f9cb9fd25b9626fb05b4c0f3fddac521844a13e1f30beb8f14e90bd409a9ac43c812c5946d714d6e0dee12d5d02dfc1c562c5aacfa1f49b606
+  checksum: b2f2c35096035fe1f5facd1e38922ccb8558996331405eb00a5111cc948b2e733163cc22fab5db46992aba7dd520fff637f2c1df4996ff0e134e77d3249a7350
   languageName: node
   linkType: hard
 
@@ -36606,6 +36596,16 @@ __metadata:
     tsc: bin/tsc
     tsserver: bin/tsserver
   checksum: 2373c693f3b328f3b2387c3efafe6d257b057a142f9a79291854b14ff4d5367d3d730810aee981726b677ae0fd8329b23309da3b6aaab8263dbdccf1da07a3ba
+  languageName: node
+  linkType: hard
+
+"typescript@patch:typescript@~5.1.6#~builtin<compat/typescript>":
+  version: 5.1.6
+  resolution: "typescript@patch:typescript@npm%3A5.1.6#~builtin<compat/typescript>::version=5.1.6&hash=1f5320"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 21e88b0a0c0226f9cb9fd25b9626fb05b4c0f3fddac521844a13e1f30beb8f14e90bd409a9ac43c812c5946d714d6e0dee12d5d02dfc1c562c5aacfa1f49b606
   languageName: node
   linkType: hard
 
