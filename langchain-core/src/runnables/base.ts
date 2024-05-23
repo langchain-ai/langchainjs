@@ -800,7 +800,7 @@ export abstract class Runnable<
     }
   }
   
-  async *_streamEventsV2(
+  private async *_streamEventsV2(
     input: RunInput,
     options: Partial<CallOptions> & { version: "v1" | "v2" },
     streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
@@ -824,7 +824,10 @@ export abstract class Runnable<
     }
     // Call the runnable in streaming mode,
     // add each chunk to the output stream
-    const runnableStreamPromise = this.stream(input, config);
+    const runnableStreamPromise = eventStreamer.tapOutputIterable(
+      config.runId,
+      await this.stream(input, config)
+    );
     async function consumeRunnableStream() {
       try {
         const runnableStream = await runnableStreamPromise;
@@ -846,11 +849,12 @@ export abstract class Runnable<
         // that was passed into the chain.
         if (!firstEventSent) {
           event.data.input = input;
-          firstEventRunId = event.runId;
+          firstEventSent = true;
+          firstEventRunId = event.run_id;
           yield event;
           continue;
         }
-        if (event.runId === firstEventRunId && event.event.endsWith("_end")) {
+        if (event.run_id === firstEventRunId && event.event.endsWith("_end")) {
           // If it's the end event corresponding to the root runnable
           // we dont include the input in the event since it's guaranteed
           // to be included in the first event.
@@ -865,7 +869,7 @@ export abstract class Runnable<
     }
   }
 
-  async *_streamEventsV1(
+  private async *_streamEventsV1(
     input: RunInput,
     options: Partial<CallOptions> & { version: "v1" | "v2" },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">

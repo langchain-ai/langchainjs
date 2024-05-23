@@ -1,66 +1,11 @@
 import { BaseTracer, type Run } from "./base.js";
 import {
   BaseCallbackHandlerInput,
-  HandleLLMNewTokenCallbackFields,
 } from "../callbacks/base.js";
 import { IterableReadableStream } from "../utils/stream.js";
-import { ChatGenerationChunk, GenerationChunk } from "../outputs.js";
-import { AIMessageChunk, BaseMessage } from "../messages/index.js";
-import { KVMap } from "langsmith/schemas";
-import { Serialized } from "../load/serializable.js";
-
-/**
- * Interface that represents the structure of a log entry in the
- * `EventStreamCallbackHandler`.
- */
-type LogEntry = {
-  /** ID of the sub-run. */
-  id: string;
-  /** Name of the object being run. */
-  name: string;
-  /** Type of the object being run, eg. prompt, chain, llm, etc. */
-  type: string;
-  /** List of tags for the run. */
-  tags: string[];
-  /** Key-value pairs of metadata for the run. */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  metadata: Record<string, any>;
-  /** ISO-8601 timestamp of when the run started. */
-  start_time: string;
-  /** List of general output chunks streamed by this run. */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  streamed_output: any[];
-  /** List of LLM tokens streamed by this run, if applicable. */
-  streamed_output_str: string[];
-  /** Inputs to this run. Not available currently via streamLog. */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  inputs?: any;
-  /** Final output of this run. Only available after the run has finished successfully. */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  final_output?: any;
-  /** ISO-8601 timestamp of when the run ended. Only available after the run has finished. */
-  end_time?: string;
-};
-
-type RunState = {
-  /** ID of the sub-run. */
-  id: string;
-  /** List of output chunks streamed by Runnable.stream() */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  streamed_output: any[];
-  /** Final output of the run, usually the result of aggregating streamed_output. Only available after the run has finished successfully. */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  final_output?: any;
-  /**
-   * List of sub-runs contained in this run, if any, in the order they were started.
-   * If filters were supplied, this list will contain only the runs that matched the filters.
-   */
-  logs: Record<string, LogEntry>;
-  /** Name of the object being run. */
-  name: string;
-  /** Type of the object being run, eg. prompt, chain, llm, etc. */
-  type: string;
-};
+import { AIMessageChunk } from "../messages/ai.js";
+import { ChatGeneration, Generation, GenerationChunk } from "../outputs.js";
+import { BaseMessage } from "../messages/base.js";
 
 /**
  * Data associated with a StreamEvent.
@@ -109,7 +54,7 @@ export type StreamEvent = {
    * - llm - used by non chat models
    * - chat_model - used by chat models
    * - prompt --  e.g., ChatPromptTemplate
-   * - tool -- from tools defined via @tool decorator or inheriting from Tool/BaseTool
+   * - tool -- LangChain tools
    * - chain - most Runnables are of this type
    *
    * Further, the events are categorized as one of:
@@ -168,13 +113,6 @@ export interface EventStreamCallbackHandlerInput
   excludeTags?: string[];
 }
 
-function isChatGenerationChunk(
-  x?: ChatGenerationChunk | GenerationChunk
-): x is ChatGenerationChunk {
-  return x !== undefined && (x as ChatGenerationChunk).message !== undefined;
-}
-
-
 function assignName({ name, serialized }: { name?: string, serialized?: Record<string, any> }): string {
   if (name !== undefined) {
     return name;
@@ -208,10 +146,6 @@ export class EventStreamCallbackHandler extends BaseTracer {
   protected excludeTags?: string[];
 
   protected rootId?: string;
-
-  private keyMapByRunId: Record<string, string> = {};
-
-  private counterMapByRunName: Record<string, number> = {};
   
   private runInfoMap: Map<string, RunInfo> = new Map();
 
@@ -248,10 +182,11 @@ export class EventStreamCallbackHandler extends BaseTracer {
     // and is therefore not useful here
   }
 
-  _includeRun(run: Run): boolean {
-    if (run.id === this.rootId) {
-      return false;
-    }
+  _includeRun(run: RunInfo): boolean {
+    // TODO: Remove?
+    // if (run.id === this.rootId) {
+    //   return false;
+    // }
     const runTags = run.tags ?? [];
     let include =
       this.includeNames === undefined &&
@@ -261,7 +196,7 @@ export class EventStreamCallbackHandler extends BaseTracer {
       include = include || this.includeNames.includes(run.name);
     }
     if (this.includeTypes !== undefined) {
-      include = include || this.includeTypes.includes(run.run_type);
+      include = include || this.includeTypes.includes(run.runType);
     }
     if (this.includeTags !== undefined) {
       include =
@@ -272,7 +207,7 @@ export class EventStreamCallbackHandler extends BaseTracer {
       include = include && !this.excludeNames.includes(run.name);
     }
     if (this.excludeTypes !== undefined) {
-      include = include && !this.excludeTypes.includes(run.run_type);
+      include = include && !this.excludeTypes.includes(run.runType);
     }
     if (this.excludeTags !== undefined) {
       include =
@@ -285,7 +220,7 @@ export class EventStreamCallbackHandler extends BaseTracer {
     runId: string,
     output: AsyncGenerator<T>
   ): AsyncGenerator<T> {
-    const runInfo = this.runMap.get(runId);
+    const runInfo = this.runInfoMap.get(runId);
     if (runInfo === undefined) {
       return;
     }
@@ -310,416 +245,275 @@ export class EventStreamCallbackHandler extends BaseTracer {
       //     "data": {},
       // }
       // self._send({**event, "data": {"chunk": first}}, run_info["run_type"])
-      if (this._includeRun(runInfo)) {
-        await this.writer.write({
-          
-        })
+      const event: StreamEvent = {
+        event: `on_${runInfo.runType}_stream`,
+        run_id: runId,
+        name: runInfo.name,
+        tags: runInfo.tags,
+        metadata: runInfo.metadata,
+        data: {},
       }
+      console.log("SENDING STREAM EVENT");
+      await this.send({
+        ...event,
+        data: {
+          chunk
+        }
+      }, runInfo);
       yield chunk;
     }
   }
   
-  async send(payload: StreamEvent, run: Run) {
+  async send(payload: StreamEvent, run: RunInfo) {
     if (this._includeRun(run)) {
       await this.writer.write(payload);
     }
   }
 
   async onLLMStart(run: Run): Promise<void> {
-    const runName = assignName({ name: run.name, serialized: run.serialized });
+    const runName = assignName(run);
     const runType = run.inputs.messages !== undefined ? "chat_model" : "llm"
-    this.runInfoMap.set(run.id, {
+    const runInfo = {
       tags: run.tags ?? [],
-      metadata: run.extra ?? {},
+      metadata: run.extra?.metadata ?? {},
       name: runName,
       runType,
       inputs: run.inputs,
-    });
+    };
+    this.runInfoMap.set(run.id, runInfo);
+    const eventName = `on_${runType}_start`;
     await this.send({
-      event: "on_chat_model_start",
+      event: eventName,
       data: {
         input: run.inputs,
       },
       name: runName,
       tags: run.tags ?? [],
       run_id: run.id,
-      metadata: run.extra ?? {}
-    }, run);
+      metadata: run.extra?.metadata ?? {}
+    }, runInfo);
   }
-//   async def on_chat_model_start(
-//     self,
-//     serialized: Dict[str, Any],
-//     messages: List[List[BaseMessage]],
-//     *,
-//     run_id: UUID,
-//     tags: Optional[List[str]] = None,
-//     parent_run_id: Optional[UUID] = None,
-//     metadata: Optional[Dict[str, Any]] = None,
-//     name: Optional[str] = None,
-//     **kwargs: Any,
-// ) -> None:
-//     """Start a trace for an LLM run."""
-//     name_ = _assign_name(name, serialized)
-//     run_type = "chat_model"
-//     self.run_map[run_id] = {
-//         "tags": tags or [],
-//         "metadata": metadata or {},
-//         "name": name_,
-//         "run_type": run_type,
-//         "inputs": {"messages": messages},
-//     }
-
-//     self._send(
-//         {
-//             "event": "on_chat_model_start",
-//             "data": {
-//                 "input": {"messages": messages},
-//             },
-//             "name": name_,
-//             "tags": tags or [],
-//             "run_id": str(run_id),
-//             "metadata": metadata or {},
-//         },
-//         run_type,
-//     )
-
-// async def on_llm_start(
-//     self,
-//     serialized: Dict[str, Any],
-//     prompts: List[str],
-//     *,
-//     run_id: UUID,
-//     tags: Optional[List[str]] = None,
-//     parent_run_id: Optional[UUID] = None,
-//     metadata: Optional[Dict[str, Any]] = None,
-//     name: Optional[str] = None,
-//     **kwargs: Any,
-// ) -> None:
-//     """Start a trace for an LLM run."""
-//     name_ = _assign_name(name, serialized)
-//     run_type = "llm"
-//     self.run_map[run_id] = {
-//         "tags": tags or [],
-//         "metadata": metadata or {},
-//         "name": name_,
-//         "run_type": run_type,
-//         "inputs": {"prompts": prompts},
-//     }
-
-//     self._send(
-//         {
-//             "event": "on_llm_start",
-//             "data": {
-//                 "input": {
-//                     "prompts": prompts,
-//                 }
-//             },
-//             "name": name_,
-//             "tags": tags or [],
-//             "run_id": str(run_id),
-//             "metadata": metadata or {},
-//         },
-//         run_type,
-//     )
-
-// async def on_llm_new_token(
-//     self,
-//     token: str,
-//     *,
-//     chunk: Optional[Union[GenerationChunk, ChatGenerationChunk]] = None,
-//     run_id: UUID,
-//     parent_run_id: Optional[UUID] = None,
-//     **kwargs: Any,
-// ) -> None:
-//     """Run on new LLM token. Only available when streaming is enabled."""
-//     run_info = self.run_map.get(run_id)
-
-//     chunk_: Union[GenerationChunk, BaseMessageChunk]
-
-//     if run_info is None:
-//         raise AssertionError(f"Run ID {run_id} not found in run map.")
-//     if self.is_tapped.get(run_id):
-//         return
-//     if run_info["run_type"] == "chat_model":
-//         event = "on_chat_model_stream"
-
-//         if chunk is None:
-//             chunk_ = AIMessageChunk(content=token)
-//         else:
-//             chunk_ = cast(ChatGenerationChunk, chunk).message
-
-//     elif run_info["run_type"] == "llm":
-//         event = "on_llm_stream"
-//         if chunk is None:
-//             chunk_ = GenerationChunk(text=token)
-//         else:
-//             chunk_ = cast(GenerationChunk, chunk)
-//     else:
-//         raise ValueError(f"Unexpected run type: {run_info['run_type']}")
-
-//     self._send(
-//         {
-//             "event": event,
-//             "data": {
-//                 "chunk": chunk_,
-//             },
-//             "run_id": str(run_id),
-//             "name": run_info["name"],
-//             "tags": run_info["tags"],
-//             "metadata": run_info["metadata"],
-//         },
-//         run_info["run_type"],
-//     )
-
-// async def on_llm_end(
-//     self, response: LLMResult, *, run_id: UUID, **kwargs: Any
-// ) -> None:
-//     """End a trace for an LLM run."""
-//     run_info = self.run_map.pop(run_id)
-//     inputs_ = run_info["inputs"]
-
-//     generations: Union[List[List[GenerationChunk]], List[List[ChatGenerationChunk]]]
-//     output: Union[dict, BaseMessage] = {}
-
-//     if run_info["run_type"] == "chat_model":
-//         generations = cast(List[List[ChatGenerationChunk]], response.generations)
-//         for gen in generations:
-//             if output != {}:
-//                 break
-//             for chunk in gen:
-//                 output = chunk.message
-//                 break
-
-//         event = "on_chat_model_end"
-//     elif run_info["run_type"] == "llm":
-//         generations = cast(List[List[GenerationChunk]], response.generations)
-//         output = {
-//             "generations": [
-//                 [
-//                     {
-//                         "text": chunk.text,
-//                         "generation_info": chunk.generation_info,
-//                         "type": chunk.type,
-//                     }
-//                     for chunk in gen
-//                 ]
-//                 for gen in generations
-//             ],
-//             "llm_output": response.llm_output,
-//         }
-//         event = "on_llm_end"
-//     else:
-//         raise ValueError(f"Unexpected run type: {run_info['run_type']}")
-
-//     self._send(
-//         {
-//             "event": event,
-//             "data": {"output": output, "input": inputs_},
-//             "run_id": str(run_id),
-//             "name": run_info["name"],
-//             "tags": run_info["tags"],
-//             "metadata": run_info["metadata"],
-//         },
-//         run_info["run_type"],
-//     )
-
-// async def on_chain_start(
-//     self,
-//     serialized: Dict[str, Any],
-//     inputs: Dict[str, Any],
-//     *,
-//     run_id: UUID,
-//     tags: Optional[List[str]] = None,
-//     parent_run_id: Optional[UUID] = None,
-//     metadata: Optional[Dict[str, Any]] = None,
-//     run_type: Optional[str] = None,
-//     name: Optional[str] = None,
-//     **kwargs: Any,
-// ) -> None:
-//     """Start a trace for a chain run."""
-//     name_ = _assign_name(name, serialized)
-//     run_type_ = run_type or "chain"
-//     run_info: RunInfo = {
-//         "tags": tags or [],
-//         "metadata": metadata or {},
-//         "name": name_,
-//         "run_type": run_type_,
-//     }
-
-//     data: EventData = {}
-
-//     # Work-around Runnable core code not sending input in some
-//     # cases.
-//     if inputs != {"input": ""}:
-//         data["input"] = inputs
-//         run_info["inputs"] = inputs
-
-//     self.run_map[run_id] = run_info
-
-//     self._send(
-//         {
-//             "event": f"on_{run_type_}_start",
-//             "data": data,
-//             "name": name_,
-//             "tags": tags or [],
-//             "run_id": str(run_id),
-//             "metadata": metadata or {},
-//         },
-//         run_type_,
-//     )
-
-// async def on_chain_end(
-//     self,
-//     outputs: Dict[str, Any],
-//     *,
-//     run_id: UUID,
-//     inputs: Optional[Dict[str, Any]] = None,
-//     **kwargs: Any,
-// ) -> None:
-//     """End a trace for a chain run."""
-//     run_info = self.run_map.pop(run_id)
-//     run_type = run_info["run_type"]
-
-//     event = f"on_{run_type}_end"
-
-//     inputs = inputs or run_info.get("inputs") or {}
-
-//     data: EventData = {
-//         "output": outputs,
-//         "input": inputs,
-//     }
-
-//     self._send(
-//         {
-//             "event": event,
-//             "data": data,
-//             "run_id": str(run_id),
-//             "name": run_info["name"],
-//             "tags": run_info["tags"],
-//             "metadata": run_info["metadata"],
-//         },
-//         run_type,
-//     )
-
-// async def on_tool_start(
-//     self,
-//     serialized: Dict[str, Any],
-//     input_str: str,
-//     *,
-//     run_id: UUID,
-//     tags: Optional[List[str]] = None,
-//     parent_run_id: Optional[UUID] = None,
-//     metadata: Optional[Dict[str, Any]] = None,
-//     name: Optional[str] = None,
-//     inputs: Optional[Dict[str, Any]] = None,
-//     **kwargs: Any,
-// ) -> None:
-//     """Start a trace for a tool run."""
-//     name_ = _assign_name(name, serialized)
-//     self.run_map[run_id] = {
-//         "tags": tags or [],
-//         "metadata": metadata or {},
-//         "name": name_,
-//         "run_type": "tool",
-//         "inputs": inputs,
-//     }
-
-//     self._send(
-//         {
-//             "event": "on_tool_start",
-//             "data": {
-//                 "input": inputs or {},
-//             },
-//             "name": name_,
-//             "tags": tags or [],
-//             "run_id": str(run_id),
-//             "metadata": metadata or {},
-//         },
-//         "tool",
-//     )
-
-// async def on_tool_end(self, output: Any, *, run_id: UUID, **kwargs: Any) -> None:
-//     """End a trace for a tool run."""
-//     run_info = self.run_map.pop(run_id)
-//     if "inputs" not in run_info:
-//         raise AssertionError(
-//             f"Run ID {run_id} is a tool call and is expected to have "
-//             f"inputs associated with it."
-//         )
-//     inputs = run_info["inputs"]
-
-//     self._send(
-//         {
-//             "event": "on_tool_end",
-//             "data": {
-//                 "output": output,
-//                 "input": inputs,
-//             },
-//             "run_id": str(run_id),
-//             "name": run_info["name"],
-//             "tags": run_info["tags"],
-//             "metadata": run_info["metadata"],
-//         },
-//         "tool",
-//     )
-
-// async def on_retriever_start(
-//     self,
-//     serialized: Dict[str, Any],
-//     query: str,
-//     *,
-//     run_id: UUID,
-//     parent_run_id: Optional[UUID] = None,
-//     tags: Optional[List[str]] = None,
-//     metadata: Optional[Dict[str, Any]] = None,
-//     name: Optional[str] = None,
-//     **kwargs: Any,
-// ) -> None:
-//     """Run when Retriever starts running."""
-//     name_ = _assign_name(name, serialized)
-//     run_type = "retriever"
-//     self.run_map[run_id] = {
-//         "tags": tags or [],
-//         "metadata": metadata or {},
-//         "name": name_,
-//         "run_type": run_type,
-//         "inputs": {"query": query},
-//     }
-
-//     self._send(
-//         {
-//             "event": "on_retriever_start",
-//             "data": {
-//                 "input": {
-//                     "query": query,
-//                 }
-//             },
-//             "name": name_,
-//             "tags": tags or [],
-//             "run_id": str(run_id),
-//             "metadata": metadata or {},
-//         },
-//         run_type,
-//     )
-
-// async def on_retriever_end(
-//     self, documents: Sequence[Document], *, run_id: UUID, **kwargs: Any
-// ) -> None:
-//     """Run when Retriever ends running."""
-//     run_info = self.run_map.pop(run_id)
-
-//     self._send(
-//         {
-//             "event": "on_retriever_end",
-//             "data": {
-//                 "output": documents,
-//                 "input": run_info["inputs"],
-//             },
-//             "run_id": str(run_id),
-//             "name": run_info["name"],
-//             "tags": run_info["tags"],
-//             "metadata": run_info["metadata"],
-//         },
-//         run_info["run_type"],
-//     )
+  
+  async onLLMNewToken(
+    run: Run,
+    token: string,
+    kwargs?: { chunk: any; }
+  ): Promise<void> {
+    const runInfo = this.runInfoMap.get(run.id);
+    let chunk;
+    let eventName;
+    if (runInfo === undefined) {
+      throw new Error(`onLLMNewToken: Run ID ${run.id} not found in run map.`);
+    }
+    if (runInfo.runType === "chat_model") {
+      eventName = "on_chat_model_stream";
+      if (kwargs?.chunk === undefined) {
+        chunk = new AIMessageChunk({ content: token });
+      } else {
+        chunk = kwargs.chunk.message;
+      }
+    } else if (runInfo.runType === "llm") {
+      eventName = "on_llm_stream";
+      if (kwargs?.chunk === undefined) {
+        chunk = new GenerationChunk({ text: token });
+      } else {
+        chunk = kwargs.chunk;
+      }
+    } else {
+      throw new Error(`Unexpected run type ${runInfo.runType}`);
+    }
+    await this.send({
+      event: eventName,
+      data: {
+        chunk
+      },
+      run_id: run.id,
+      name: runInfo.name,
+      tags: runInfo.tags,
+      metadata: runInfo.metadata
+    }, runInfo);
+  }
+  
+  async onLLMEnd(run: Run): Promise<void> {
+    const runInfo = this.runInfoMap.get(run.id);
+    this.runInfoMap.delete(run.id);
+    let eventName;
+    if (runInfo === undefined) {
+      throw new Error(`onLLMEnd: Run ID ${run.id} not found in run map.`);
+    }
+    const generations: ChatGeneration[][] | Generation[][] | undefined = run.outputs?.generations;
+    let output: BaseMessage | Record<string, any> | undefined;
+    if (runInfo.runType === "chat_model") {
+      for (const generation of (generations ?? [])) {
+        if (output !== undefined) {
+          break;
+        }
+        output = (generation[0] as ChatGeneration | undefined)?.message;
+      }
+      eventName = "on_chat_model_end";
+    } else if (runInfo.runType === "llm") {
+      output = {
+        generations: generations?.map((generation) => {
+          return generation.map((chunk) => {
+            return {
+              text: chunk.text,
+              generationInfo: chunk.generationInfo,
+            }
+          })
+        }),
+        llmOutput: run.outputs?.llmOutput ?? {}
+      };
+      eventName = "on_llm_end"
+    } else {
+      throw new Error(`onLLMEnd: Unexpected run type: ${runInfo.runType}`);
+    }
+    console.log("SENDING END EVENT");
+    await this.send({
+      event: eventName,
+      data: {
+        output,
+        input: runInfo.inputs
+      },
+      run_id: run.id,
+      name: runInfo.name,
+      tags: runInfo.tags,
+      metadata: runInfo.metadata,
+    }, runInfo);
+  }
+  
+  async onChainStart(run: Run): Promise<void> {
+    const runName = assignName(run);
+    const runType = run.run_type ?? "chain";
+    const runInfo: RunInfo = {
+      tags: run.tags ?? [],
+      metadata: run.extra?.metadata ?? {},
+      name: runName,
+      runType: run.run_type,
+    };
+    const eventData: StreamEventData = {};
+    // Work-around Runnable core code not sending input in some cases.
+    if (typeof run.inputs !== "object" || run.inputs.inputs === undefined) {
+      eventData.input = run.inputs;
+      runInfo.inputs = run.inputs;
+    }
+    this.runInfoMap.set(run.id, runInfo);
+    await this.send({
+      event: `on_${runType}_start`,
+      data: eventData,
+      name: runName,
+      tags: run.tags ?? [],
+      run_id: run.id,
+      metadata: run.extra?.metadata ?? {},
+    }, runInfo);
+  }
+  
+  async onChainEnd(run: Run): Promise<void> {
+    const runInfo = this.runInfoMap.get(run.id);
+    if (runInfo === undefined) {
+      throw new Error(`onChainEnd: Run ID ${run.id} not found in run map.`);
+    }
+    const eventName = `on_${run.run_type}_end`;
+    const inputs = run.inputs ?? runInfo.inputs ?? {};
+    const data: StreamEventData = {
+      output: run.outputs,
+      input: inputs,
+    };
+    await this.send({
+      event: eventName,
+      data,
+      run_id: run.id,
+      name: runInfo.name,
+      tags: runInfo.tags,
+      metadata: runInfo.metadata ?? {},
+    }, runInfo);
+  }
+  
+  async onToolStart(run: Run): Promise<void> {
+    const runName = assignName(run);
+    const runInfo = {
+      tags: run.tags ?? [],
+      metadata: run.extra?.metadata ?? {},
+      name: runName,
+      runType: "tool",
+      inputs: run.inputs ?? {},
+    };
+    this.runInfoMap.set(run.id, runInfo);
+    await this.send({
+      event: "on_tool_start",
+      data: {
+        input: run.inputs ?? {}
+      },
+      name: runName,
+      run_id: run.id,
+      metadata: run.extra?.metadata ?? {},
+    }, runInfo);
+  }
+  
+  async onToolEnd(run: Run): Promise<void> {
+    const runInfo = this.runInfoMap.get(run.id);
+    if (runInfo === undefined) {
+      throw new Error(`onToolEnd: Run ID ${run.id} not found in run map.`);
+    }
+    if (runInfo.inputs === undefined) {
+      throw new Error(
+        `onToolEnd: Run ID ${run.id} is a tool call, and is expected to have traced inputs.`
+      );
+    }
+    await this.send({
+      event: "on_tool_end",
+      data: {
+        output: run.outputs,
+        input: runInfo.inputs,
+      },
+      run_id: run.id,
+      name: runInfo.name,
+      tags: runInfo.tags,
+      metadata: runInfo.metadata,
+    }, runInfo);
+  }
+  
+  async onRetrieverStart(run: Run): Promise<void> {
+    const runName = assignName(run);
+    const runType = "retriever";
+    const runInfo = {
+      tags: run.tags ?? [],
+      metadata: run.extra?.metadata ?? {},
+      name: runName,
+      runType,
+      inputs: {
+        query: run.inputs.query,
+      }
+    };
+    this.runInfoMap.set(run.id, runInfo);
+    await this.send({
+      event: "on_retriever_start",
+      data: {
+        input: {
+          query: run.inputs.query,
+        }
+      },
+      name: runName,
+      tags: run.tags ?? [],
+      run_id: run.id,
+      metadata: run.extra?.metadata ?? {}
+    }, runInfo);
+  }
+  
+  async onRetrieverEnd(run: Run): Promise<void> {
+    const runInfo = this.runInfoMap.get(run.id);
+    if (runInfo === undefined) {
+      throw new Error(`onRetrieverEnd: Run ID ${run.id} not found in run map.`);
+    }
+    await this.send({
+      event: "on_retriever_end",
+      data: {
+        output: run.outputs,
+        input: runInfo.inputs,
+      },
+      run_id: run.id,
+      name: runInfo.name,
+      tags: runInfo.tags,
+      metadata: runInfo.metadata
+    }, runInfo);
+  }
 }
