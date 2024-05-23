@@ -8,6 +8,7 @@ import {
   UnstructuredLoaderOptions,
 } from "../fs/unstructured.js";
 import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+import { DocumentInterface } from "@langchain/core/documents";
 
 /* #__PURE__ */ logVersion020MigrationWarning({
   oldEntrypointName: "document_loaders/web/azure_blog_storage_file",
@@ -78,7 +79,8 @@ export class AzureBlobStorageFileLoader extends BaseDocumentLoader {
    * are returned, and the temporary directory is deleted.
    * @returns An array of documents loaded from the file in Azure Blob Storage.
    */
-  public async load() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public async load(): Promise<DocumentInterface<Record<string, any>>[]> {
     const tempDir = fs.mkdtempSync(
       path.join(os.tmpdir(), "azureblobfileloader-")
     );

@@ -23,7 +23,7 @@
     "@langchain/community": "workspace:*",
     "@langchain/core": "workspace:*",
     "@langchain/openai": "workspace:*",
-    "@tsconfig/recommended": "^1.0.2",
+    "@tsconfig/recommended": "^1.0.3",
     "d3-dsv": "2",
     "esbuild": "^0.17.18",
     "hnswlib-node": "^3.0.0",

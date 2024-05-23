@@ -8,6 +8,7 @@ import {
   JsonOutputFunctionsParser,
 } from "../../output_parsers/openai_functions.js";
 import { LLMChain, LLMChainInput } from "../llm_chain.js";
+import { BaseMessageChunk } from "@langchain/core/messages";
 
 /**
  * Type representing the options for creating a tagging chain.
@@ -55,7 +56,7 @@ export function createTaggingChain(
   schema: FunctionParameters,
   llm: BaseChatModel<BaseFunctionCallOptions>,
   options: TaggingChainOptions = {}
-) {
+): LLMChain<object, BaseChatModel<BaseFunctionCallOptions, BaseMessageChunk>> {
   const { prompt = PromptTemplate.fromTemplate(TAGGING_TEMPLATE), ...rest } =
     options;
   const functions = getTaggingFunctions(schema);

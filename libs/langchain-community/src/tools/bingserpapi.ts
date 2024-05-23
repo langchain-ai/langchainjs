@@ -1,5 +1,6 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Tool } from "@langchain/core/tools";
+import { SerializedNotImplemented } from "@langchain/core/load/serializable";
 
 /**
  * A tool for web search functionality using Bing's search engine. It
@@ -16,7 +17,7 @@ class BingSerpAPI extends Tool {
   /**
    * Not implemented. Will throw an error if called.
    */
-  toJSON() {
+  toJSON(): SerializedNotImplemented {
     return this.toJSONNotImplemented();
   }
 

@@ -22,6 +22,7 @@ import {
   EXAMPLE_PROMPT,
 } from "./prompt.js";
 import { AsymmetricStructuredOutputParser } from "../../output_parsers/structured.js";
+import { Runnable, RunnableConfig } from "@langchain/core/runnables";
 
 /**
  * A simple data structure that holds information about an attribute. It
@@ -193,7 +194,7 @@ export type QueryConstructorChainOptions = QueryConstructorRunnableOptions;
 
 export function loadQueryConstructorRunnable(
   opts: QueryConstructorRunnableOptions
-) {
+): Runnable<any, StructuredQuery, RunnableConfig> {
   const prompt = _getPrompt(
     opts.documentContents,
     opts.attributeInfo,

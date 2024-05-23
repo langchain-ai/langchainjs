@@ -14,7 +14,7 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/langchain-core/",
   "scripts": {
-    "build": "yarn build:deps && NODE_OPTIONS=--max-old-space-size=4096 yarn tsup-build --create-entrypoints --tree-shaking",
+    "build": "yarn build:deps && NODE_OPTIONS=--max-old-space-size=4096 yarn tsup-build --create-entrypoints",
     "build:old": "yarn build:deps && yarn clean && yarn build:esm && yarn build:cjs && yarn run build:scripts",
     "build:deps": "yarn turbo:command build --filter=@langchain/scripts",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rimraf dist/tests dist/**/tests",
@@ -59,7 +59,7 @@
     "@langchain/scripts": "~0.0.14",
     "@swc/core": "^1.3.90",
     "@swc/jest": "^0.2.29",
-    "@tsconfig/recommended": "^1.0.2",
+    "@tsconfig/recommended": "^1.0.3",
     "@types/mustache": "^4",
     "dpdm": "^3.12.0",
     "eslint": "^8.33.0",
@@ -76,7 +76,7 @@
     "release-it": "^15.10.1",
     "rimraf": "^5.0.1",
     "turbo": "latest",
-    "typescript": "~5.1.6",
+    "typescript": "^5.4.5",
     "web-streams-polyfill": "^3.3.3"
   },
   "publishConfig": {

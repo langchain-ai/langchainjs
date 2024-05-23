@@ -11,6 +11,7 @@ import {
 } from "@langchain/openai";
 
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { Serialized } from "@langchain/core/load/serializable";
 
 type FireworksUnsupportedArgs =
   | "frequencyPenalty"
@@ -110,7 +111,7 @@ export class ChatFireworks extends ChatOpenAI<ChatFireworksCallOptions> {
     return params;
   }
 
-  toJSON() {
+  toJSON(): Serialized {
     const result = super.toJSON();
 
     if (

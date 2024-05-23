@@ -1,5 +1,6 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Tool } from "@langchain/core/tools";
+import { SerializedNotImplemented } from "@langchain/core/load/serializable";
 
 type JSONPrimitive = string | number | boolean | null;
 type JSONValue = JSONPrimitive | JSONObject | JSONArray;
@@ -72,7 +73,7 @@ export class SearchApi extends Tool {
    * and will throw an error if called.
    * @returns Throws an error.
    */
-  toJSON() {
+  toJSON(): SerializedNotImplemented {
     return this.toJSONNotImplemented();
   }
 

@@ -351,7 +351,7 @@ export class PrismaVectorStore<
     query: string,
     k?: number,
     filter?: this["FilterType"]
-  ) {
+  ): Promise<[Document, number][]> {
     return super.similaritySearchWithScore(query, k, filter);
   }
 

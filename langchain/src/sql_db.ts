@@ -1,5 +1,5 @@
 import type { DataSource as DataSourceT, DataSourceOptions } from "typeorm";
-import { Serializable } from "@langchain/core/load/serializable";
+import { Serializable, SerializedNotImplemented } from "@langchain/core/load/serializable";
 import {
   generateTableInfoFromTables,
   getTableAndColumnsName,
@@ -34,7 +34,7 @@ export class SqlDatabase
 {
   lc_namespace = ["langchain", "sql_db"];
 
-  toJSON() {
+  toJSON(): SerializedNotImplemented {
     return this.toJSONNotImplemented();
   }
 

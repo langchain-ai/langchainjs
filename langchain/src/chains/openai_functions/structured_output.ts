@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { zodToJsonSchema, JsonSchema7Type } from "zod-to-json-schema";
 
-import { Validator } from "@langchain/core/utils/json_schema";
+import { Validator, type Schema } from "@langchain/core/utils/json_schema";
 import { ChatOpenAI } from "@langchain/openai";
 import { BasePromptTemplate } from "@langchain/core/prompts";
 import {
@@ -13,6 +13,7 @@ import type { BaseChatModel } from "@langchain/core/language_models/chat_models"
 import type { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
 import { LLMChain, type LLMChainInput } from "../llm_chain.js";
 import { OutputFunctionsParser } from "../../output_parsers/openai_functions.js";
+import { BaseMessageChunk } from "@langchain/core/messages";
 
 /**
  * Type representing the input for creating a structured output chain. It
@@ -82,7 +83,10 @@ export class FunctionCallStructuredOutputParser<
     }
     super(fields);
     if (fields.jsonSchema !== undefined) {
-      this.jsonSchemaValidator = new Validator(fields.jsonSchema, "7");
+      this.jsonSchemaValidator = new Validator(
+        fields.jsonSchema as Schema,
+        "7"
+      );
     }
     if (fields.zodSchema !== undefined) {
       this.zodSchema = fields.zodSchema;
@@ -150,7 +154,13 @@ export class FunctionCallStructuredOutputParser<
  */
 export function createStructuredOutputChain<
   T extends z.AnyZodObject = z.AnyZodObject
->(input: StructuredOutputChainInput<T>) {
+>(
+  input: StructuredOutputChainInput<T>
+): LLMChain<
+  any,
+  | BaseChatModel<BaseFunctionCallOptions, BaseMessageChunk>
+  | ChatOpenAI<BaseFunctionCallOptions>
+> {
   const {
     outputSchema,
     llm = new ChatOpenAI({ modelName: "gpt-3.5-turbo-0613", temperature: 0 }),

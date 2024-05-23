@@ -2,7 +2,7 @@ import type { protos } from "@google-ai/generativelanguage";
 import type { google } from "@google-ai/generativelanguage/build/protos/protos.js";
 import { GoogleAuth, GoogleAuthOptions } from "google-auth-library";
 import type { BaseLanguageModel } from "@langchain/core/language_models/base";
-import { Runnable } from "@langchain/core/runnables";
+import { Runnable, RunnableConfig } from "@langchain/core/runnables";
 import { PromptTemplate } from "@langchain/core/prompts";
 import {
   AsyncCaller,
@@ -286,7 +286,7 @@ export class MakerSuitePrompt {
    * will have the parameters (model name, temperature, etc) from those in
    * MakerSuite.
    */
-  toChain() {
+  toChain(): Runnable<any, any, RunnableConfig> {
     return this.toTemplate().pipe(this.toModel() as Runnable);
   }
 }

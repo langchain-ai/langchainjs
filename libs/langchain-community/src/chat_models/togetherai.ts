@@ -10,6 +10,7 @@ import {
   ChatOpenAI,
 } from "@langchain/openai";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { Serialized } from "@langchain/core/load/serializable";
 
 type TogetherAIUnsupportedArgs =
   | "frequencyPenalty"
@@ -122,7 +123,7 @@ export class ChatTogetherAI extends ChatOpenAI<ChatTogetherAICallOptions> {
     return params;
   }
 
-  toJSON() {
+  toJSON(): Serialized {
     const result = super.toJSON();
 
     if (

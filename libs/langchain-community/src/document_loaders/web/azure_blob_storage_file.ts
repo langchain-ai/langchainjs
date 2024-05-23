@@ -7,6 +7,7 @@ import {
   UnstructuredLoader,
   UnstructuredLoaderOptions,
 } from "../fs/unstructured.js";
+import { DocumentInterface } from "@langchain/core/documents";
 
 /**
  * Interface representing the configuration for accessing a specific file
@@ -71,7 +72,8 @@ export class AzureBlobStorageFileLoader extends BaseDocumentLoader {
    * are returned, and the temporary directory is deleted.
    * @returns An array of documents loaded from the file in Azure Blob Storage.
    */
-  public async load() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public async load(): Promise<DocumentInterface<Record<string, any>>[]> {
     const tempDir = fs.mkdtempSync(
       path.join(os.tmpdir(), "azureblobfileloader-")
     );

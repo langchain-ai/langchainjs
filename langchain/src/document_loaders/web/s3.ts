@@ -6,6 +6,7 @@ import { S3Client, GetObjectCommand, S3ClientConfig } from "@aws-sdk/client-s3";
 import { BaseDocumentLoader } from "../base.js";
 import { UnstructuredLoader as UnstructuredLoaderDefault } from "../fs/unstructured.js";
 import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+import { DocumentInterface } from "@langchain/core/documents";
 
 /* #__PURE__ */ logVersion020MigrationWarning({
   oldEntrypointName: "document_loaders/web/s3",
@@ -115,7 +116,8 @@ export class S3Loader extends BaseDocumentLoader {
    * and then uses the UnstructuredLoader to load the file as a document.
    * @returns An array of Document objects representing the loaded documents.
    */
-  public async load() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public async load(): Promise<DocumentInterface<Record<string, any>>[]> {
     const tempDir = this._fs.mkdtempSync(
       path.join(os.tmpdir(), "s3fileloader-")
     );

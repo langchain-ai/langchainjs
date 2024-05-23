@@ -5,6 +5,7 @@ import { Readable } from "node:stream";
 import { S3Client, GetObjectCommand, S3ClientConfig } from "@aws-sdk/client-s3";
 import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
 import { UnstructuredLoader as UnstructuredLoaderDefault } from "../fs/unstructured.js";
+import { DocumentInterface } from "@langchain/core/documents";
 
 /**
  * Represents the configuration options for the S3 client. It extends the
@@ -105,7 +106,8 @@ export class S3Loader extends BaseDocumentLoader {
    * and then uses the UnstructuredLoader to load the file as a document.
    * @returns An array of Document objects representing the loaded documents.
    */
-  public async load() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public async load(): Promise<DocumentInterface<Record<string, any>>[]> {
     const tempDir = this._fs.mkdtempSync(
       path.join(os.tmpdir(), "s3fileloader-")
     );

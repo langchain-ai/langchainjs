@@ -7,6 +7,7 @@ import {
 } from "@langchain/openai";
 import type { BaseLLMParams } from "@langchain/core/language_models/llms";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { Serialized } from "@langchain/core/load/serializable";
 
 type FireworksUnsupportedArgs =
   | "frequencyPenalty"
@@ -75,7 +76,7 @@ export class Fireworks extends OpenAI<FireworksCallOptions> {
     this.fireworksApiKey = fireworksApiKey;
   }
 
-  toJSON() {
+  toJSON(): Serialized {
     const result = super.toJSON();
 
     if (

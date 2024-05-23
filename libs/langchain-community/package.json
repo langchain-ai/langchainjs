@@ -108,7 +108,7 @@
     "@tensorflow/tfjs-backend-cpu": "^3",
     "@tensorflow/tfjs-converter": "^3.6.0",
     "@tensorflow/tfjs-core": "^3.6.0",
-    "@tsconfig/recommended": "^1.0.2",
+    "@tsconfig/recommended": "^1.0.3",
     "@types/better-sqlite3": "^7.6.9",
     "@types/flat": "^5.0.2",
     "@types/html-to-text": "^9",

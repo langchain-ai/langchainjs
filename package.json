@@ -41,7 +41,7 @@
   "author": "LangChain",
   "license": "MIT",
   "devDependencies": {
-    "@tsconfig/recommended": "^1.0.2",
+    "@tsconfig/recommended": "^1.0.3",
     "@types/jest": "^29.5.3",
     "@types/semver": "^7",
     "commander": "^11.1.0",

@@ -8,6 +8,7 @@ import {
   JsonKeyOutputFunctionsParser,
 } from "../../output_parsers/openai_functions.js";
 import { LLMChain } from "../llm_chain.js";
+import { BaseMessageChunk } from "@langchain/core/messages";
 
 /**
  * Function that returns an array of extraction functions. These functions
@@ -79,7 +80,7 @@ export function createExtractionChainFromZod(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   schema: z.ZodObject<any, any, any, any>,
   llm: BaseChatModel<BaseFunctionCallOptions>
-) {
+): LLMChain<object, BaseChatModel<BaseFunctionCallOptions, BaseMessageChunk>> {
   return createExtractionChain(
     zodToJsonSchema(schema) as JsonSchema7ObjectType,
     llm

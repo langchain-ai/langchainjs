@@ -17,5 +17,5 @@ Error:
 
 Please try again. Please only respond with an answer that satisfies the constraints laid out in the Instructions:`;
 
-export const NAIVE_FIX_PROMPT =
+export const NAIVE_FIX_PROMPT: PromptTemplate  =
   /* #__PURE__ */ PromptTemplate.fromTemplate(NAIVE_FIX_TEMPLATE);

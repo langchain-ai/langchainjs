@@ -15,7 +15,7 @@ Return any relevant text verbatim.
 {context}
 Question: {question}
 Relevant text, if any:`;
-export const DEFAULT_COMBINE_QA_PROMPT =
+export const DEFAULT_COMBINE_QA_PROMPT: PromptTemplate =
   /*#__PURE__*/
   PromptTemplate.fromTemplate(qa_template);
 
@@ -64,7 +64,7 @@ QUESTION: {question}
 {summaries}
 =========
 FINAL ANSWER:`;
-export const COMBINE_PROMPT =
+export const COMBINE_PROMPT: PromptTemplate =
   /*#__PURE__*/ PromptTemplate.fromTemplate(combine_prompt);
 
 const system_combine_template = `Given the following extracted parts of a long document and a question, create a final answer. 

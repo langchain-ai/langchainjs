@@ -13,6 +13,7 @@ import {
   FormatInstructionsOptions,
   OutputParserException,
 } from "@langchain/core/output_parsers";
+import { SerializedNotImplemented } from "@langchain/core/load/serializable";
 
 export type JsonMarkdownStructuredOutputParserInput = {
   interpolationDepth?: number;
@@ -32,7 +33,7 @@ export class StructuredOutputParser<
 
   lc_namespace = ["langchain", "output_parsers", "structured"];
 
-  toJSON() {
+  toJSON(): SerializedNotImplemented {
     return this.toJSONNotImplemented();
   }
 

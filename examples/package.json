@@ -102,7 +102,7 @@
     "zod-to-json-schema": "^3.22.3"
   },
   "devDependencies": {
-    "@tsconfig/recommended": "^1.0.2",
+    "@tsconfig/recommended": "^1.0.3",
     "@types/js-yaml": "^4",
     "@types/uuid": "^9",
     "@typescript-eslint/eslint-plugin": "^5.51.0",
