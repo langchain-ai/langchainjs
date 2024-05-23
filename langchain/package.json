@@ -67,7 +67,7 @@
     "@types/uuid": "^9",
     "@types/ws": "^8",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
-    "@typescript-eslint/parser": "^5.58.0",
+    "@typescript-eslint/parser": "^6.6.0",
     "@vercel/kv": "^0.2.3",
     "@xata.io/client": "^0.28.0",
     "apify-client": "^2.7.1",

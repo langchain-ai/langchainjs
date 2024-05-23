@@ -114,7 +114,7 @@
     "@types/uuid": "^9",
     "@types/ws": "^8",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
-    "@typescript-eslint/parser": "^5.58.0",
+    "@typescript-eslint/parser": "^6.6.0",
     "@upstash/redis": "^1.20.6",
     "@upstash/vector": "^1.0.7",
     "@vercel/kv": "^0.2.3",
