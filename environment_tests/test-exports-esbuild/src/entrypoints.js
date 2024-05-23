@@ -25,6 +25,7 @@ import * as embeddings_fake from "langchain/embeddings/fake";
 import * as vectorstores_memory from "langchain/vectorstores/memory";
 import * as text_splitter from "langchain/text_splitter";
 import * as memory from "langchain/memory";
+import * as memory_index from "langchain/memory/index";
 import * as memory_chat_memory from "langchain/memory/chat_memory";
 import * as document from "langchain/document";
 import * as document_loaders_base from "langchain/document_loaders/base";

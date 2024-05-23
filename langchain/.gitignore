@@ -142,6 +142,10 @@ memory.cjs
 memory.js
 memory.d.ts
 memory.d.cts
+memory/index.cjs
+memory/index.js
+memory/index.d.ts
+memory/index.d.cts
 memory/chat_memory.cjs
 memory/chat_memory.js
 memory/chat_memory.d.ts

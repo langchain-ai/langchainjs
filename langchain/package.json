@@ -154,6 +154,10 @@
     "memory.js",
     "memory.d.ts",
     "memory.d.cts",
+    "memory/index.cjs",
+    "memory/index.js",
+    "memory/index.d.ts",
+    "memory/index.d.cts",
     "memory/chat_memory.cjs",
     "memory/chat_memory.js",
     "memory/chat_memory.d.ts",
@@ -1238,6 +1242,15 @@
       },
       "import": "./memory.js",
       "require": "./memory.cjs"
+    },
+    "./memory/index": {
+      "types": {
+        "import": "./memory/index.d.ts",
+        "require": "./memory/index.d.cts",
+        "default": "./memory/index.d.ts"
+      },
+      "import": "./memory/index.js",
+      "require": "./memory/index.cjs"
     },
     "./memory/chat_memory": {
       "types": {
