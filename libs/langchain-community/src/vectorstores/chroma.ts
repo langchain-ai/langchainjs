@@ -1,5 +1,9 @@
 import * as uuid from "uuid";
-import type { ChromaClient as ChromaClientT, Collection } from "chromadb";
+import type {
+  ChromaClient as ChromaClientT,
+  Collection,
+  IEmbeddingFunction,
+} from "chromadb";
 import type { CollectionMetadata, Where } from "chromadb/dist/main/types.js";
 
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
@@ -22,6 +26,7 @@ export type ChromaLibArgs =
       collectionName?: string;
       filter?: object;
       collectionMetadata?: CollectionMetadata;
+      embeddingFunction?: IEmbeddingFunction;
     }
   | {
       index?: ChromaClientT;
@@ -29,6 +34,7 @@ export type ChromaLibArgs =
       collectionName?: string;
       filter?: object;
       collectionMetadata?: CollectionMetadata;
+      embeddingFunction?: IEmbeddingFunction;
     };
 
 /**
@@ -56,6 +62,8 @@ export class Chroma extends VectorStore {
   collectionName: string;
 
   collectionMetadata?: CollectionMetadata;
+
+  embeddingFunction?: IEmbeddingFunction;
 
   numDimensions?: number;
 
@@ -115,6 +123,9 @@ export class Chroma extends VectorStore {
       try {
         this.collection = await this.index.getOrCreateCollection({
           name: this.collectionName,
+          ...(this.embeddingFunction && {
+            embeddingFunction: this.embeddingFunction,
+          }),
           ...(this.collectionMetadata && { metadata: this.collectionMetadata }),
         });
       } catch (err) {
