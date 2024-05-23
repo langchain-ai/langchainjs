@@ -30,7 +30,7 @@ const tool = new DynamicStructuredTool({
         images={result.images_results
           .map((image) => image.thumbnail)
           .slice(0, input.limit)}
-      />,
+      />
     );
 
     return `[Returned ${result.images_results.length} images]`;

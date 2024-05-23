@@ -108,7 +108,7 @@ const chain = prompt.pipe(modelWithTools).pipe(
   new JsonOutputKeyToolsParser<z.infer<typeof Weather>>({
     keyName: "get_weather",
     zodSchema: Weather,
-  }),
+  })
 );
 ```
 
