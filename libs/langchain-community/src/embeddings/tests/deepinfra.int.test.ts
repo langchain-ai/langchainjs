@@ -25,7 +25,7 @@ test("Test DeepInfraEmbeddings concurrency", async () => {
     "we need",
     "at least",
     "six documents",
-    "to test concurrency"
+    "to test concurrency",
   ]);
   expect(res).toHaveLength(6);
   expect(res.find((embedding) => typeof embedding[0] !== "number")).toBe(
