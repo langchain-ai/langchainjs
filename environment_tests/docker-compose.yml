@@ -7,6 +7,7 @@ services:
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
     working_dir: /app
     volumes:
+      - ../package.json:/package.json
       - ../yarn.lock:/root/yarn.lock
       - ../.yarnrc.yml:/root/.yarnrc.yml
       - ../.yarn:/root/.yarn
@@ -26,6 +27,7 @@ services:
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
     working_dir: /app
     volumes:
+      - ../package.json:/package.json
       - ../yarn.lock:/root/yarn.lock
       - ../.yarnrc.yml:/root/.yarnrc.yml
       - ../.yarn:/root/.yarn
@@ -45,6 +47,7 @@ services:
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
     working_dir: /app
     volumes:
+      - ../package.json:/package.json
       - ../yarn.lock:/root/yarn.lock
       - ../.yarnrc.yml:/root/.yarnrc.yml
       - ../.yarn:/root/.yarn
@@ -64,6 +67,7 @@ services:
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
     working_dir: /app
     volumes:
+      - ../package.json:/package.json
       - ../yarn.lock:/root/yarn.lock
       - ../.yarnrc.yml:/root/.yarnrc.yml
       - ../.yarn:/root/.yarn
@@ -83,6 +87,7 @@ services:
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
     working_dir: /app
     volumes:
+      - ../package.json:/package.json
       - ../yarn.lock:/root/yarn.lock
       - ../.yarnrc.yml:/root/.yarnrc.yml
       - ../.yarn:/root/.yarn
@@ -102,6 +107,7 @@ services:
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
     working_dir: /app
     volumes:
+      - ../package.json:/package.json
       - ../yarn.lock:/root/yarn.lock
       - ../.yarnrc.yml:/root/.yarnrc.yml
       - ../.yarn:/root/.yarn
@@ -121,6 +127,7 @@ services:
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
     working_dir: /app
     volumes:
+      - ../package.json:/package.json
       - ../yarn.lock:/root/yarn.lock
       - ../.yarnrc.yml:/root/.yarnrc.yml
       - ../.yarn:/root/.yarn

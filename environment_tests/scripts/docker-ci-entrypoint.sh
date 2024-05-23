@@ -29,6 +29,8 @@ mkdir -p ./.yarn
 cp -r ../root/.yarn/!(berry|cache) ./.yarn
 cp ../root/yarn.lock ../root/.yarnrc.yml .
 
+cp ../package.json .
+
 yarn plugin import workspace-tools
 yarn workspaces focus --production
 

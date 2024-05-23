@@ -27,6 +27,6 @@
     "prettier": "^2.8.3"
   },
   "resolutions": {
-    "@langchain/core": "~0.2.0"
+    "@langchain/core": "workspace:*"
   }
 }

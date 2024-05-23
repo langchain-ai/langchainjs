@@ -18,10 +18,10 @@
     "@langchain/core": "workspace:*",
     "@langchain/openai": "workspace:*",
     "langchain": "workspace:*",
-    "typescript": "^5.0.0",
+    "typescript": "^5.4.5",
     "vite": "^4.2.0"
   },
   "resolutions": {
-    "@langchain/core": "~0.2.0"
+    "@langchain/core": "workspace:*"
   }
 }
