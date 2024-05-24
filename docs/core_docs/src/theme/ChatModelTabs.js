@@ -25,23 +25,34 @@ function InstallationInfo({ children }) {
 }
 
 const DEFAULTS = {
-  openaiParams: `{\n  model: "gpt-3.5-turbo-0125",\n  temperature: 0\n}`,
+  openaiParams: `{\n  model: "gpt-3.5-turbo",\n  temperature: 0\n}`,
   anthropicParams: `{\n  model: "claude-3-sonnet-20240229",\n  temperature: 0\n}`,
   fireworksParams: `{\n  model: "accounts/fireworks/models/firefunction-v1",\n  temperature: 0\n}`,
   mistralParams: `{\n  model: "mistral-large-latest",\n  temperature: 0\n}`,
+  groqParams: `{\n  model: "mixtral-8x7b-32768",\n  temperature: 0\n}`,
+  vertexParams: `{\n  model: "gemini-1.5-pro",\n  temperature: 0\n}`,
 };
+
+const MODELS_WSO = ["openai", "anthropic", "mistral", "groq", "vertex"];
 
 /**
  * @typedef {Object} ChatModelTabsProps - Component props.
- * @property {string} [openaiParams] - Parameters for OpenAI chat model. Defaults to `"{\n  model: "gpt-3.5-turbo-0125",\n  temperature: 0\n}"`
+ * @property {string} [openaiParams] - Parameters for OpenAI chat model. Defaults to `"{\n  model: "gpt-3.5-turbo",\n  temperature: 0\n}"`
  * @property {string} [anthropicParams] - Parameters for Anthropic chat model. Defaults to `"{\n  model: "claude-3-sonnet-20240229",\n  temperature: 0\n}"`
  * @property {string} [fireworksParams] - Parameters for Fireworks chat model. Defaults to `"{\n  model: "accounts/fireworks/models/firefunction-v1",\n  temperature: 0\n}"`
  * @property {string} [mistralParams] - Parameters for Mistral chat model. Defaults to `"{\n  model: "mistral-large-latest",\n  temperature: 0\n}"`
+ * @property {string} [groqParams] - Parameters for Groq chat model. Defaults to `"{\n  model: "mixtral-8x7b-32768",\n  temperature: 0\n}"`
+ * @property {string} [vertexParams] - Parameters for Google VertexAI chat model. Defaults to `"{\n  model: "gemini-1.5-pro",\n  temperature: 0\n}"`
+ *
  * @property {boolean} [hideOpenai] - Whether or not to hide OpenAI chat model.
  * @property {boolean} [hideAnthropic] - Whether or not to hide Anthropic chat model.
  * @property {boolean} [hideFireworks] - Whether or not to hide Fireworks chat model.
  * @property {boolean} [hideMistral] - Whether or not to hide Mistral chat model.
+ * @property {boolean} [hideGroq] - Whether or not to hide Mistral chat model.
+ * @property {boolean} [hideVertex] - Whether or not to hide Mistral chat model.
+ *
  * @property {string} [customVarName] - Custom variable name for the model. Defaults to `"model"`.
+ * @property {boolean} [onlyWso] - Only display models which have `withStructuredOutput` implemented.
  */
 
 /**
@@ -56,16 +67,20 @@ export default function ChatModelTabs(props) {
   const anthropicParams = props.anthropicParams ?? DEFAULTS.anthropicParams;
   const fireworksParams = props.fireworksParams ?? DEFAULTS.fireworksParams;
   const mistralParams = props.mistralParams ?? DEFAULTS.mistralParams;
+  const groqParams = props.groqParams ?? DEFAULTS.groqParams;
+  const vertexParams = props.vertexParams ?? DEFAULTS.vertexParams;
   const providers = props.providers ?? [
     "openai",
     "anthropic",
     "fireworks",
     "mistral",
+    "groq",
+    "vertex",
   ];
 
   const tabs = {
     openai: {
-      value: "OpenAI",
+      value: "openai",
       label: "OpenAI",
       default: true,
       text: `import { ChatOpenAI } from "@langchain/openai";\n\nconst ${llmVarName} = new ChatOpenAI(${openaiParams});`,
@@ -73,7 +88,7 @@ export default function ChatModelTabs(props) {
       dependencies: "@langchain/openai",
     },
     anthropic: {
-      value: "Anthropic",
+      value: "anthropic",
       label: "Anthropic",
       default: false,
       text: `import { ChatAnthropic } from "@langchain/anthropic";\n\nconst ${llmVarName} = new ChatAnthropic(${anthropicParams});`,
@@ -81,7 +96,7 @@ export default function ChatModelTabs(props) {
       dependencies: "@langchain/anthropic",
     },
     fireworks: {
-      value: "FireworksAI",
+      value: "fireworks",
       label: "FireworksAI",
       default: false,
       text: `import { ChatFireworks } from "@langchain/community/chat_models/fireworks";\n\nconst ${llmVarName} = new ChatFireworks(${fireworksParams});`,
@@ -89,16 +104,34 @@ export default function ChatModelTabs(props) {
       dependencies: "@langchain/community",
     },
     mistral: {
-      value: "MistralAI",
+      value: "mistral",
       label: "MistralAI",
       default: false,
       text: `import { ChatMistralAI } from "@langchain/mistralai";\n\nconst ${llmVarName} = new ChatMistralAI(${mistralParams});`,
       envs: `MISTRAL_API_KEY=your-api-key`,
       dependencies: "@langchain/mistralai",
     },
+    groq: {
+      value: "groq",
+      label: "Groq",
+      default: false,
+      text: `import { ChatGroq } from "@langchain/groq";\n\nconst ${llmVarName} = new ChatGroq(${groqParams});`,
+      envs: `GROQ_API_KEY=your-api-key`,
+      dependencies: "@langchain/groq",
+    },
+    vertex: {
+      value: "vertex",
+      label: "VertexAI",
+      default: false,
+      text: `import { ChatVertexAI } from "@langchain/google-vertexai";\n\nconst ${llmVarName} = new ChatVertexAI(${vertexParams});`,
+      envs: `GOOGLE_APPLICATION_CREDENTIALS=credentials.json`,
+      dependencies: "@langchain/google-vertexai",
+    },
   };
 
-  const displayedTabs = providers.map((provider) => tabs[provider]);
+  const displayedTabs = (props.onlyWso ? MODELS_WSO : providers).map(
+    (provider) => tabs[provider]
+  );
 
   return (
     <div>

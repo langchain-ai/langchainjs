@@ -35,6 +35,7 @@ interface AzureBlobStorageFileLoaderConfig {
 }
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/azure_blog_storage_file" instead. This entrypoint will be removed in 0.3.0.
  * Class representing a document loader that loads a specific file from
  * Azure Blob Storage. It extends the BaseDocumentLoader class and
  * implements the DocumentLoader interface.

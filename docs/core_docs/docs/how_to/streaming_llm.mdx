@@ -1,0 +1,49 @@
+---
+sidebar_position: 1
+---
+
+# How to stream responses from an LLM
+
+All [`LLM`s](https://v02.api.js.langchain.com/classes/langchain_core_language_models_llms.BaseLLM.html) implement the [Runnable interface](https://v02.api.js.langchain.com/classes/langchain_core_runnables.Runnable.html), which comes with **default** implementations of standard runnable methods (i.e. `ainvoke`, `batch`, `abatch`, `stream`, `astream`, `astream_events`).
+
+The **default** streaming implementations provide an `AsyncGenerator` that yields a single value: the final output from the underlying chat model provider.
+
+The ability to stream the output token-by-token depends on whether the provider has implemented proper streaming support.
+
+See which [integrations support token-by-token streaming here](/docs/integrations/llms/).
+
+:::{.callout-note}
+
+The **default** implementation does **not** provide support for token-by-token streaming, but it ensures that the model can be swapped in for any other model as it supports the same standard interface.
+
+:::
+
+## Using `.stream()`
+
+import CodeBlock from "@theme/CodeBlock";
+
+The easiest way to stream is to use the `.stream()` method. This returns an readable stream that you can also iterate over:
+
+import StreamMethodExample from "@examples/models/llm/llm_streaming_stream_method.ts";
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
+<CodeBlock language="typescript">{StreamMethodExample}</CodeBlock>
+
+For models that do not support streaming, the entire response will be returned as a single chunk.
+
+## Using a callback handler
+
+You can also use a [`CallbackHandler`](https://v02.api.js.langchain.com/classes/langchain_core_callbacks_base.BaseCallbackHandler.html) like so:
+
+import StreamingExample from "@examples/models/llm/llm_streaming.ts";
+
+<CodeBlock language="typescript">{StreamingExample}</CodeBlock>
+
+We still have access to the end `LLMResult` if using `generate`. However, `tokenUsage` may not be currently supported for all model providers when streaming.

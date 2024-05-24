@@ -1,5 +1,5 @@
 import { Redis } from "@upstash/redis";
-import { BufferMemory } from "langchain/memory/index";
+import { BufferMemory } from "langchain/memory";
 import { UpstashRedisChatMessageHistory } from "@langchain/community/stores/message/upstash_redis";
 import { ChatOpenAI } from "@langchain/openai";
 import { ConversationChain } from "langchain/chains";

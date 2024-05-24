@@ -11,6 +11,7 @@ export * as tools__dynamic from "../tools/dynamic.js";
 export * as tools__dataforseo_api_search from "../tools/dataforseo_api_search.js";
 export * as tools__google_custom_search from "../tools/google_custom_search.js";
 export * as tools__google_places from "../tools/google_places.js";
+export * as tools__google_routes from "../tools/google_routes.js";
 export * as tools__ifttt from "../tools/ifttt.js";
 export * as tools__searchapi from "../tools/searchapi.js";
 export * as tools__searxng_search from "../tools/searxng_search.js";

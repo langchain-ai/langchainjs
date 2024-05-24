@@ -70,6 +70,10 @@ tools/google_places.cjs
 tools/google_places.js
 tools/google_places.d.ts
 tools/google_places.d.cts
+tools/google_routes.cjs
+tools/google_routes.js
+tools/google_routes.d.ts
+tools/google_routes.d.cts
 tools/ifttt.cjs
 tools/ifttt.js
 tools/ifttt.d.ts
@@ -286,6 +290,10 @@ llms/yandex.cjs
 llms/yandex.js
 llms/yandex.d.ts
 llms/yandex.d.cts
+llms/layerup_security.cjs
+llms/layerup_security.js
+llms/layerup_security.d.ts
+llms/layerup_security.d.cts
 vectorstores/analyticdb.cjs
 vectorstores/analyticdb.js
 vectorstores/analyticdb.d.ts
@@ -538,6 +546,10 @@ chat_models/togetherai.cjs
 chat_models/togetherai.js
 chat_models/togetherai.d.ts
 chat_models/togetherai.d.cts
+chat_models/webllm.cjs
+chat_models/webllm.js
+chat_models/webllm.d.ts
+chat_models/webllm.d.cts
 chat_models/yandex.cjs
 chat_models/yandex.js
 chat_models/yandex.d.ts
@@ -790,6 +802,10 @@ document_loaders/web/azure_blob_storage_file.cjs
 document_loaders/web/azure_blob_storage_file.js
 document_loaders/web/azure_blob_storage_file.d.ts
 document_loaders/web/azure_blob_storage_file.d.cts
+document_loaders/web/browserbase.cjs
+document_loaders/web/browserbase.js
+document_loaders/web/browserbase.d.ts
+document_loaders/web/browserbase.d.cts
 document_loaders/web/cheerio.cjs
 document_loaders/web/cheerio.js
 document_loaders/web/cheerio.d.ts
@@ -874,6 +890,10 @@ document_loaders/web/sort_xyz_blockchain.cjs
 document_loaders/web/sort_xyz_blockchain.js
 document_loaders/web/sort_xyz_blockchain.d.ts
 document_loaders/web/sort_xyz_blockchain.d.cts
+document_loaders/web/spider.cjs
+document_loaders/web/spider.js
+document_loaders/web/spider.d.ts
+document_loaders/web/spider.d.cts
 document_loaders/web/youtube.cjs
 document_loaders/web/youtube.js
 document_loaders/web/youtube.d.ts

@@ -68,5 +68,15 @@ module.exports = {
     "prefer-rest-params": 0,
     "new-cap": ["error", { properties: false, capIsNew: false }],
     'jest/no-focused-tests': 'error',
+    "arrow-body-style": 0,
+    "prefer-destructuring": 0,
   },
+  overrides: [
+    {
+      files: ['**/*.test.ts'],
+      rules: {
+        '@typescript-eslint/no-unused-vars': 'off'
+      }
+    }
+  ]
 };

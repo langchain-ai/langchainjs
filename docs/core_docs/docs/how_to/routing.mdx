@@ -1,0 +1,59 @@
+# How to route execution within a chain
+
+:::info Prerequisites
+
+This guide assumes familiarity with the following concepts:
+
+- [LangChain Expression Language (LCEL)](/docs/concepts/#langchain-expression-language)
+- [Chaining runnables](/docs/how_to/sequence/)
+- [Configuring chain parameters at runtime](/docs/how_to/binding)
+- [Prompt templates](/docs/concepts/#prompt-templates)
+- [Chat Messages](/docs/concepts/#message-types)
+
+:::
+
+This guide covers how to do routing in the LangChain Expression Language.
+
+Routing allows you to create non-deterministic chains where the output of a previous step defines the next step. Routing helps provide structure and consistency around interactions with LLMs.
+
+There are two ways to perform routing:
+
+1. Conditionally return runnables from a [`RunnableLambda`](/docs/how_to/functions) (recommended)
+2. Using a `RunnableBranch` (legacy)
+
+We'll illustrate both methods using a two step sequence where the first step classifies an input question as being about LangChain, Anthropic, or Other, then routes to a corresponding prompt chain.
+
+## Using a custom function
+
+You can use a custom function to route between different outputs. Here's an example:
+
+import CodeBlock from "@theme/CodeBlock";
+import BranchExample from "@examples/guides/expression_language/how_to_routing_runnable_branch.ts";
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/anthropic
+```
+
+import FactoryFunctionExample from "@examples/guides/expression_language/how_to_routing_custom_function.ts";
+
+<CodeBlock language="typescript">{FactoryFunctionExample}</CodeBlock>
+
+## Using a RunnableBranch
+
+A `RunnableBranch` is initialized with a list of (condition, runnable) pairs and a default runnable. It selects which branch by passing each condition the input it's invoked with. It selects the first condition to evaluate to True, and runs the corresponding runnable to that condition with the input.
+
+If no provided conditions match, it runs the default runnable.
+
+Here's an example of what it looks like in action:
+
+<CodeBlock language="typescript">{BranchExample}</CodeBlock>
+
+## Next steps
+
+You've now learned how to add routing to your composed LCEL chains.
+
+Next, check out the other [how-to guides on runnables](/docs/how_to/#langchain-expression-language-lcel) in this section.
