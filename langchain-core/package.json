@@ -14,7 +14,8 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/langchain-core/",
   "scripts": {
-    "build": "yarn build:deps && yarn clean && yarn build:esm && yarn build:cjs && yarn run build:scripts",
+    "build": "yarn build:esm && yarn build:cjs",
+    "build:old": "yarn build:deps && yarn clean && yarn build:esm && yarn build:cjs && yarn run build:scripts",
     "build:deps": "yarn turbo:command build --filter=@langchain/scripts",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rimraf dist/tests dist/**/tests",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rimraf dist-cjs",
