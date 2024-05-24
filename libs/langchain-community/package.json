@@ -14,7 +14,7 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-community/",
   "scripts": {
-    "build": "NODE_OPTIONS=--max-old-space-size=4096 yarn tsup-build --create-entrypoints --tree-shaking --gen-maps",
+    "build": "NODE_OPTIONS=--max-old-space-size=24576 yarn tsup-build --create-entrypoints --tree-shaking --gen-maps && NODE_OPTIONS=--max-old-space-size=4096 tsc --skipLibCheck --declaration --emitDeclarationOnly --outDir dist/ && rm -rf dist/tests dist/**/tests",
     "build:deps": "yarn turbo:command build --filter=@langchain/core --filter=langchain --filter=@langchain/openai",
     "clean": "rm -rf ./dist ./.turbo",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
@@ -682,9 +682,9 @@
   "exports": {
     "./load": {
       "types": {
-        "import": "./dist/load.d.ts",
+        "import": "./dist/load/index.d.ts",
         "require": "./dist/load.d.cts",
-        "default": "./dist/load.d.ts"
+        "default": "./dist/load/index.d.ts"
       },
       "import": "./dist/load.js",
       "require": "./dist/load.cjs"
@@ -808,18 +808,18 @@
     },
     "./tools/gmail": {
       "types": {
-        "import": "./dist/tools/gmail.d.ts",
+        "import": "./dist/tools/gmail/index.d.ts",
         "require": "./dist/tools/gmail.d.cts",
-        "default": "./dist/tools/gmail.d.ts"
+        "default": "./dist/tools/gmail/index.d.ts"
       },
       "import": "./dist/tools/gmail.js",
       "require": "./dist/tools/gmail.cjs"
     },
     "./tools/google_calendar": {
       "types": {
-        "import": "./dist/tools/google_calendar.d.ts",
+        "import": "./dist/tools/google_calendar/index.d.ts",
         "require": "./dist/tools/google_calendar.d.cts",
-        "default": "./dist/tools/google_calendar.d.ts"
+        "default": "./dist/tools/google_calendar/index.d.ts"
       },
       "import": "./dist/tools/google_calendar.js",
       "require": "./dist/tools/google_calendar.cjs"
@@ -952,9 +952,9 @@
     },
     "./agents/toolkits/connery": {
       "types": {
-        "import": "./dist/agents/toolkits/connery.d.ts",
+        "import": "./dist/agents/toolkits/connery/index.d.ts",
         "require": "./dist/agents/toolkits/connery.d.cts",
-        "default": "./dist/agents/toolkits/connery.d.ts"
+        "default": "./dist/agents/toolkits/connery/index.d.ts"
       },
       "import": "./dist/agents/toolkits/connery.js",
       "require": "./dist/agents/toolkits/connery.cjs"
@@ -1150,9 +1150,9 @@
     },
     "./llms/bedrock": {
       "types": {
-        "import": "./dist/llms/bedrock.d.ts",
+        "import": "./dist/llms/bedrock/index.d.ts",
         "require": "./dist/llms/bedrock.d.cts",
-        "default": "./dist/llms/bedrock.d.ts"
+        "default": "./dist/llms/bedrock/index.d.ts"
       },
       "import": "./dist/llms/bedrock.js",
       "require": "./dist/llms/bedrock.cjs"
@@ -1213,9 +1213,9 @@
     },
     "./llms/googlevertexai": {
       "types": {
-        "import": "./dist/llms/googlevertexai.d.ts",
+        "import": "./dist/llms/googlevertexai/index.d.ts",
         "require": "./dist/llms/googlevertexai.d.cts",
-        "default": "./dist/llms/googlevertexai.d.ts"
+        "default": "./dist/llms/googlevertexai/index.d.ts"
       },
       "import": "./dist/llms/googlevertexai.js",
       "require": "./dist/llms/googlevertexai.cjs"
@@ -1771,9 +1771,9 @@
     },
     "./chat_models/bedrock": {
       "types": {
-        "import": "./dist/chat_models/bedrock.d.ts",
+        "import": "./dist/chat_models/bedrock/index.d.ts",
         "require": "./dist/chat_models/bedrock.d.cts",
-        "default": "./dist/chat_models/bedrock.d.ts"
+        "default": "./dist/chat_models/bedrock/index.d.ts"
       },
       "import": "./dist/chat_models/bedrock.js",
       "require": "./dist/chat_models/bedrock.cjs"
@@ -1816,9 +1816,9 @@
     },
     "./chat_models/googlevertexai": {
       "types": {
-        "import": "./dist/chat_models/googlevertexai.d.ts",
+        "import": "./dist/chat_models/googlevertexai/index.d.ts",
         "require": "./dist/chat_models/googlevertexai.d.cts",
-        "default": "./dist/chat_models/googlevertexai.d.ts"
+        "default": "./dist/chat_models/googlevertexai/index.d.ts"
       },
       "import": "./dist/chat_models/googlevertexai.js",
       "require": "./dist/chat_models/googlevertexai.cjs"
@@ -1843,9 +1843,9 @@
     },
     "./chat_models/iflytek_xinghuo": {
       "types": {
-        "import": "./dist/chat_models/iflytek_xinghuo.d.ts",
+        "import": "./dist/chat_models/iflytek_xinghuo/index.d.ts",
         "require": "./dist/chat_models/iflytek_xinghuo.d.cts",
-        "default": "./dist/chat_models/iflytek_xinghuo.d.ts"
+        "default": "./dist/chat_models/iflytek_xinghuo/index.d.ts"
       },
       "import": "./dist/chat_models/iflytek_xinghuo.js",
       "require": "./dist/chat_models/iflytek_xinghuo.cjs"
@@ -2014,9 +2014,9 @@
     },
     "./retrievers/remote": {
       "types": {
-        "import": "./dist/retrievers/remote.d.ts",
+        "import": "./dist/retrievers/remote/index.d.ts",
         "require": "./dist/retrievers/remote.d.cts",
-        "default": "./dist/retrievers/remote.d.ts"
+        "default": "./dist/retrievers/remote/index.d.ts"
       },
       "import": "./dist/retrievers/remote.js",
       "require": "./dist/retrievers/remote.cjs"

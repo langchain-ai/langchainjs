@@ -205,7 +205,7 @@ export class CassandraClientFactory {
     // Ensure secure connect bundle exists
     await CassandraClientFactory.setAstraBundle(
       astraArgs,
-      modifiedArgs.cloud.secureConnectBundle
+      modifiedArgs.cloud.secureConnectBundle as string | URL
     );
 
     // Ensure credentials are set

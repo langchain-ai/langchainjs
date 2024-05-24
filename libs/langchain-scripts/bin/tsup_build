@@ -448,13 +448,14 @@ export async function buildWithTSup() {
   const { config } = await import(importPath);
 
   if (shouldCreateEntrypoints) {
+    await rimraf("dist");
     const tsupOptions = defineConfig({
       ...config.tSupConfig,
       entry: config.entrypoints,
+      clean: false,
       dts: false,
     });
 
-    await rimraf("dist");
     await build(tsupOptions);
 
     if (shouldGenMaps) {

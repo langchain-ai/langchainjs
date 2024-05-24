@@ -18,7 +18,7 @@
     "tsup-build": "bin/tsup_build"
   },
   "scripts": {
-    "build": "NODE_OPTIONS=--max-old-space-size=4096 node ./bin/tsup_build --create-entrypoints --tree-shaking",
+    "build": "NODE_OPTIONS=--max-old-space-size=4096 node ./bin/tsup_build --create-entrypoints --tree-shaking && NODE_OPTIONS=--max-old-space-size=4096 tsc --skipLibCheck --declaration --emitDeclarationOnly --outDir dist/ && rm -rf dist/tests dist/**/tests",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
     "clean": "rm -rf ./dist ./.turbo",
     "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",

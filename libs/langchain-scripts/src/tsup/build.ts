@@ -157,20 +157,17 @@ async function updatePackageJson(config: LangChainConfig): Promise<void> {
     await fs.promises.readFile(`package.json`, "utf8")
   );
   packageJson.files = ["dist/**/*"];
-  packageJson.exports = Object.entries(config.entrypoints).reduce(
-    (acc: Record<string, ExportsMapValue>, [key, value]) => {
+  packageJson.exports = Object.keys(config.entrypoints).reduce(
+    (acc: Record<string, ExportsMapValue>, key) => {
       let entrypoint = `./${key}`;
       if (key === "index") {
         entrypoint = ".";
       }
-      const dTsPath = value.replace("src/", "./dist/").replace(".ts", ".d.ts");
       acc[entrypoint] = {
         types: {
-          // import: `./dist/${key}.d.ts`,
-          import: dTsPath,
+          import: `./dist/${key}.d.ts`,
           require: `./dist/${key}.d.cts`,
-          default: dTsPath,
-          // default: `./dist/${key}.d.ts`,
+          default: `./dist/${key}.d.ts`,
         },
         import: `./dist/${key}.js`,
         require: `./dist/${key}.cjs`,
@@ -462,13 +459,15 @@ export async function buildWithTSup() {
   const { config }: { config: LangChainConfig } = await import(importPath);
 
   if (shouldCreateEntrypoints) {
+    await rimraf("dist");
+
     const tsupOptions = defineConfig({
       ...config.tSupConfig,
       entry: config.entrypoints,
+      clean: false,
       dts: false,
     }) as Options;
 
-    await rimraf("dist");
     await build(tsupOptions);
 
     if (shouldGenMaps) {

@@ -14,7 +14,7 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/langchain-core/",
   "scripts": {
-    "build": "NODE_OPTIONS=--max-old-space-size=4096 yarn tsup-build --tree-shaking --create-entrypoints",
+    "build": "NODE_OPTIONS=--max-old-space-size=4096 yarn tsup-build --tree-shaking --create-entrypoints && NODE_OPTIONS=--max-old-space-size=4096 tsc --declaration --emitDeclarationOnly --outDir dist/ && rm -rf dist/tests dist/**/tests",
     "build:deps": "yarn turbo:command build --filter=@langchain/scripts",
     "clean": "rm -rf ./dist ./.turbo",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
@@ -146,9 +146,9 @@
     },
     "./documents": {
       "types": {
-        "import": "./dist/documents.d.ts",
+        "import": "./dist/documents/index.d.ts",
         "require": "./dist/documents.d.cts",
-        "default": "./dist/documents.d.ts"
+        "default": "./dist/documents/index.d.ts"
       },
       "import": "./dist/documents.js",
       "require": "./dist/documents.cjs"
@@ -173,18 +173,18 @@
     },
     "./example_selectors": {
       "types": {
-        "import": "./dist/example_selectors.d.ts",
+        "import": "./dist/example_selectors/index.d.ts",
         "require": "./dist/example_selectors.d.cts",
-        "default": "./dist/example_selectors.d.ts"
+        "default": "./dist/example_selectors/index.d.ts"
       },
       "import": "./dist/example_selectors.js",
       "require": "./dist/example_selectors.cjs"
     },
     "./indexing": {
       "types": {
-        "import": "./dist/indexing.d.ts",
+        "import": "./dist/indexing/index.d.ts",
         "require": "./dist/indexing.d.cts",
-        "default": "./dist/indexing.d.ts"
+        "default": "./dist/indexing/index.d.ts"
       },
       "import": "./dist/indexing.js",
       "require": "./dist/indexing.cjs"
@@ -218,9 +218,9 @@
     },
     "./load": {
       "types": {
-        "import": "./dist/load.d.ts",
+        "import": "./dist/load/index.d.ts",
         "require": "./dist/load.d.cts",
-        "default": "./dist/load.d.ts"
+        "default": "./dist/load/index.d.ts"
       },
       "import": "./dist/load.js",
       "require": "./dist/load.cjs"
@@ -245,9 +245,9 @@
     },
     "./messages": {
       "types": {
-        "import": "./dist/messages.d.ts",
+        "import": "./dist/messages/index.d.ts",
         "require": "./dist/messages.d.cts",
-        "default": "./dist/messages.d.ts"
+        "default": "./dist/messages/index.d.ts"
       },
       "import": "./dist/messages.js",
       "require": "./dist/messages.cjs"
@@ -263,27 +263,27 @@
     },
     "./output_parsers": {
       "types": {
-        "import": "./dist/output_parsers.d.ts",
+        "import": "./dist/output_parsers/index.d.ts",
         "require": "./dist/output_parsers.d.cts",
-        "default": "./dist/output_parsers.d.ts"
+        "default": "./dist/output_parsers/index.d.ts"
       },
       "import": "./dist/output_parsers.js",
       "require": "./dist/output_parsers.cjs"
     },
     "./output_parsers/openai_tools": {
       "types": {
-        "import": "./dist/output_parsers/openai_tools.d.ts",
+        "import": "./dist/output_parsers/openai_tools/index.d.ts",
         "require": "./dist/output_parsers/openai_tools.d.cts",
-        "default": "./dist/output_parsers/openai_tools.d.ts"
+        "default": "./dist/output_parsers/openai_tools/index.d.ts"
       },
       "import": "./dist/output_parsers/openai_tools.js",
       "require": "./dist/output_parsers/openai_tools.cjs"
     },
     "./output_parsers/openai_functions": {
       "types": {
-        "import": "./dist/output_parsers/openai_functions.d.ts",
+        "import": "./dist/output_parsers/openai_functions/index.d.ts",
         "require": "./dist/output_parsers/openai_functions.d.cts",
-        "default": "./dist/output_parsers/openai_functions.d.ts"
+        "default": "./dist/output_parsers/openai_functions/index.d.ts"
       },
       "import": "./dist/output_parsers/openai_functions.js",
       "require": "./dist/output_parsers/openai_functions.cjs"
@@ -299,9 +299,9 @@
     },
     "./prompts": {
       "types": {
-        "import": "./dist/prompts.d.ts",
+        "import": "./dist/prompts/index.d.ts",
         "require": "./dist/prompts.d.cts",
-        "default": "./dist/prompts.d.ts"
+        "default": "./dist/prompts/index.d.ts"
       },
       "import": "./dist/prompts.js",
       "require": "./dist/prompts.cjs"
@@ -317,9 +317,9 @@
     },
     "./runnables": {
       "types": {
-        "import": "./dist/runnables.d.ts",
+        "import": "./dist/runnables/index.d.ts",
         "require": "./dist/runnables.d.cts",
-        "default": "./dist/runnables.d.ts"
+        "default": "./dist/runnables/index.d.ts"
       },
       "import": "./dist/runnables.js",
       "require": "./dist/runnables.cjs"
@@ -335,27 +335,27 @@
     },
     "./retrievers": {
       "types": {
-        "import": "./dist/retrievers.d.ts",
+        "import": "./dist/retrievers/index.d.ts",
         "require": "./dist/retrievers.d.cts",
-        "default": "./dist/retrievers.d.ts"
+        "default": "./dist/retrievers/index.d.ts"
       },
       "import": "./dist/retrievers.js",
       "require": "./dist/retrievers.cjs"
     },
     "./retrievers/document_compressors": {
       "types": {
-        "import": "./dist/retrievers/document_compressors.d.ts",
+        "import": "./dist/retrievers/document_compressors/base.d.ts",
         "require": "./dist/retrievers/document_compressors.d.cts",
-        "default": "./dist/retrievers/document_compressors.d.ts"
+        "default": "./dist/retrievers/document_compressors/base.d.ts"
       },
       "import": "./dist/retrievers/document_compressors.js",
       "require": "./dist/retrievers/document_compressors.cjs"
     },
     "./singletons": {
       "types": {
-        "import": "./dist/singletons.d.ts",
+        "import": "./dist/singletons/index.d.ts",
         "require": "./dist/singletons.d.cts",
-        "default": "./dist/singletons.d.ts"
+        "default": "./dist/singletons/index.d.ts"
       },
       "import": "./dist/singletons.js",
       "require": "./dist/singletons.cjs"
@@ -371,9 +371,9 @@
     },
     "./structured_query": {
       "types": {
-        "import": "./dist/structured_query.d.ts",
+        "import": "./dist/structured_query/index.d.ts",
         "require": "./dist/structured_query.d.cts",
-        "default": "./dist/structured_query.d.ts"
+        "default": "./dist/structured_query/index.d.ts"
       },
       "import": "./dist/structured_query.js",
       "require": "./dist/structured_query.cjs"
@@ -551,9 +551,9 @@
     },
     "./utils/testing": {
       "types": {
-        "import": "./dist/utils/testing.d.ts",
+        "import": "./dist/utils/testing/index.d.ts",
         "require": "./dist/utils/testing.d.cts",
-        "default": "./dist/utils/testing.d.ts"
+        "default": "./dist/utils/testing/index.d.ts"
       },
       "import": "./dist/utils/testing.js",
       "require": "./dist/utils/testing.cjs"
@@ -569,9 +569,9 @@
     },
     "./utils/types": {
       "types": {
-        "import": "./dist/utils/types.d.ts",
+        "import": "./dist/utils/types/index.d.ts",
         "require": "./dist/utils/types.d.cts",
-        "default": "./dist/utils/types.d.ts"
+        "default": "./dist/utils/types/index.d.ts"
       },
       "import": "./dist/utils/types.js",
       "require": "./dist/utils/types.cjs"

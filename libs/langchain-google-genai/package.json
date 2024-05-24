@@ -14,7 +14,7 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-google-genai/",
   "scripts": {
-    "build": "NODE_OPTIONS=--max-old-space-size=4096 yarn tsup-build --tree-shaking --create-entrypoints",
+    "build": "NODE_OPTIONS=--max-old-space-size=4096 yarn tsup-build --tree-shaking --create-entrypoints && NODE_OPTIONS=--max-old-space-size=4096 tsc --declaration --emitDeclarationOnly --outDir dist/ && rm -rf dist/tests dist/**/tests",
     "build:deps": "yarn turbo:command build --filter=@langchain/scripts",
     "clean": "rm -rf ./dist ./.turbo",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",

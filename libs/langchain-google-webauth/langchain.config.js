@@ -28,7 +28,7 @@ export const config = {
     splitting: false,
     sourcemap: false,
     clean: true,
-    platform: "neutral",
+    platform: "node",
     outDir: `dist`,
     tsconfig: `tsconfig.json`,
   }
