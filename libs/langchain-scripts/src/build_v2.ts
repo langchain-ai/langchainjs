@@ -12,6 +12,7 @@ async function asyncSpawn(command: string, args: string[]) {
     const child = spawn(command, args, {
       stdio: "inherit",
       env: {
+        // eslint-disable-next-line no-process-env
         ...process.env,
         NODE_OPTIONS: "--max-old-space-size=4096",
       },
@@ -175,7 +176,7 @@ async function updateExportTestFiles(config: LangChainConfig): Promise<void[]> {
       const contents = `${entrypointsToTest
         .map((key) => importStatement(key))
         .join("\n")}\n`;
-      fs.promises.writeFile(
+      return fs.promises.writeFile(
         `../environment_tests/${pkg}/src/entrypoints.js`,
         contents
       );
@@ -511,7 +512,7 @@ function processOptions(): {
   const shouldCreateEntrypoints = options.createEntrypoints;
   const shouldCheckTreeShaking = options.treeShaking;
   const shouldGenMaps = options.genMaps;
-  const {pre} = options;
+  const { pre } = options;
 
   return {
     shouldCreateEntrypoints,
