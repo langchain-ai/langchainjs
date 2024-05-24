@@ -4,16 +4,18 @@
   "pipeline": {
     "@langchain/scripts#build": {
       "outputs": [
-        "./libs/langchain-scripts/dist/**",
+        "dist/**",
         "*.js",
         "*.cjs",
         "*.d.ts"
       ],
       "inputs": [
-        "./libs/langchain-scripts/src/",
-        "./libs/langchain-scripts/scripts/**",
-        "./libs/langchain-scripts/package.json",
-        "./libs/langchain-scripts/tsconfig.json"
+        "src/*",
+        "src/**/*",
+        "scripts/*",
+        "package.json",
+        "tsconfig.json",
+        "bin/*"
       ]
     },
     "@langchain/core#build": {
