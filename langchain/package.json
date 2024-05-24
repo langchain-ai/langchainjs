@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -48,7 +48,7 @@
     "@faker-js/faker": "^7.6.0",
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
-    "@google-ai/generativelanguage": "^0.2.1",
+    "@google-ai/generativelanguage": "^2.5.0",
     "@jest/globals": "^29.5.0",
     "@langchain/cohere": "^0.0.8",
     "@langchain/scripts": "~0.0.14",
@@ -135,7 +135,7 @@
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
     "@gomomento/sdk-web": "^1.51.1",
-    "@google-ai/generativelanguage": "^0.2.1",
+    "@google-ai/generativelanguage": "^2.5.0",
     "@mendable/firecrawl-js": "^0.0.13",
     "@notionhq/client": "^2.2.10",
     "@pinecone-database/pinecone": "*",
@@ -682,6 +682,15 @@
       },
       "import": "./dist/text_splitter.js",
       "require": "./dist/text_splitter.cjs"
+    },
+    "./memory": {
+      "types": {
+        "import": "./memory.d.ts",
+        "require": "./memory.d.cts",
+        "default": "./memory.d.ts"
+      },
+      "import": "./memory.js",
+      "require": "./memory.cjs"
     },
     "./memory/index": {
       "types": {

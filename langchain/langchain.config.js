@@ -74,6 +74,8 @@ export const config = {
     // text_splitter
     text_splitter: "src/text_splitter.ts",
     // memory
+    "memory": "src/memory/index.ts",
+    // TODO: Remove on breaking change
     "memory/index": "src/memory/index.ts",
     "memory/chat_memory": "src/memory/chat_memory.ts",
     // document

@@ -2,7 +2,7 @@ import { OpenAI } from "@langchain/openai";
 import {
   EntityMemory,
   ENTITY_MEMORY_CONVERSATION_TEMPLATE,
-} from "langchain/memory/index";
+} from "langchain/memory";
 import { LLMChain } from "langchain/chains";
 
 export const run = async () => {
