@@ -108,14 +108,13 @@ async function generateImportConstants(config) {
     .filter((key) => config.requiresOptionalDependency?.includes(key));
   const importConstantsPath = "src/load/import_constants.ts";
   const createImportStatement = (k) =>
-    `  "langchain${
-      config.packageSuffix ? `_${config.packageSuffix}` : ""
+    `  "langchain${config.packageSuffix ? `_${config.packageSuffix}` : ""
     }/${k}"`;
   const contents =
     entrypointsToInclude.length > 0
       ? `\n${entrypointsToInclude
-          .map((key) => createImportStatement(key))
-          .join(",\n")},\n];\n`
+        .map((key) => createImportStatement(key))
+        .join(",\n")},\n];\n`
       : "];\n";
   await fs.promises.writeFile(
     `${importConstantsPath}`,
@@ -158,17 +157,20 @@ async function updatePackageJson(config) {
     await fs.promises.readFile(`package.json`, "utf8")
   );
   packageJson.files = ["dist/**/*"];
-  packageJson.exports = Object.keys(config.entrypoints).reduce(
-    (acc, key) => {
+  packageJson.exports = Object.entries(config.entrypoints).reduce(
+    (acc, [key, value]) => {
       let entrypoint = `./${key}`;
       if (key === "index") {
         entrypoint = ".";
       }
+      const dTsPath = value.replace("src/", "./dist/").replace(".ts", ".d.ts");
       acc[entrypoint] = {
         types: {
-          import: `./dist/${key}.d.ts`,
+          // import: `./dist/${key}.d.ts`,
+          import: dTsPath,
           require: `./dist/${key}.d.cts`,
-          default: `./dist/${key}.d.ts`,
+          default: dTsPath,
+          // default: `./dist/${key}.d.ts`,
         },
         import: `./dist/${key}.js`,
         require: `./dist/${key}.cjs`,
@@ -294,9 +296,8 @@ export function identifySecrets(absTsConfigPath) {
 
 async function generateImportTypes(config) {
   // Generate import types
-  const pkg = `langchain${
-    config.packageSuffix ? `-${config.packageSuffix}` : ""
-  }`;
+  const pkg = `langchain${config.packageSuffix ? `-${config.packageSuffix}` : ""
+    }`;
   const importTypesPath = "src/load/import_type.ts";
 
   await fs.promises.writeFile(
@@ -307,9 +308,9 @@ export interface OptionalImportMap {}
 
 export interface SecretMap {
 ${[...identifySecrets(config.tsConfigPath)]
-  .sort()
-  .map((secret) => `  ${secret}?: string;`)
-  .join("\n")}
+      .sort()
+      .map((secret) => `  ${secret}?: string;`)
+      .join("\n")}
 }
 `
   );
@@ -330,8 +331,8 @@ function listEntrypoints(packageJson) {
   const { exports } = packageJson;
   const exportsWithoutPackageJSON = exports
     ? Object.entries(exports)
-        .filter(([k]) => k !== "./package.json")
-        .reduce((acc, [k, v]) => ({ ...acc, [k]: v }), {})
+      .filter(([k]) => k !== "./package.json")
+      .reduce((acc, [k, v]) => ({ ...acc, [k]: v }), {})
     : null;
 
   if (!exportsWithoutPackageJSON) {
@@ -449,15 +450,11 @@ export async function buildWithTSup() {
   if (shouldCreateEntrypoints) {
     const tsupOptions = defineConfig({
       ...config.tSupConfig,
-      entry: {
-        ...config.entrypoints,
-      },
+      entry: config.entrypoints,
+      dts: false,
     });
 
-    // Clean dist folder
     await rimraf("dist");
-
-    // Generate build artifacts
     await build(tsupOptions);
 
     if (shouldGenMaps) {
@@ -477,6 +474,7 @@ export async function buildWithTSup() {
     await checkTreeShaking(config);
   }
 }
+
 
 /* #__PURE__ */ buildWithTSup().catch((e) => {
   console.error(e);

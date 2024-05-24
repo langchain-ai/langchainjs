@@ -164,5 +164,5 @@ export interface LangChainConfig {
   /**
    * Config for TSup build process
    */
-  tSupConfig?: Options;
+  tSupConfig: Options;
 }

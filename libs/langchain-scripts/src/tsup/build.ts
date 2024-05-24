@@ -157,17 +157,20 @@ async function updatePackageJson(config: LangChainConfig): Promise<void> {
     await fs.promises.readFile(`package.json`, "utf8")
   );
   packageJson.files = ["dist/**/*"];
-  packageJson.exports = Object.keys(config.entrypoints).reduce(
-    (acc: Record<string, ExportsMapValue>, key) => {
+  packageJson.exports = Object.entries(config.entrypoints).reduce(
+    (acc: Record<string, ExportsMapValue>, [key, value]) => {
       let entrypoint = `./${key}`;
       if (key === "index") {
         entrypoint = ".";
       }
+      const dTsPath = value.replace("src/", "./dist/").replace(".ts", ".d.ts");
       acc[entrypoint] = {
         types: {
-          import: `./dist/${key}.d.ts`,
+          // import: `./dist/${key}.d.ts`,
+          import: dTsPath,
           require: `./dist/${key}.d.cts`,
-          default: `./dist/${key}.d.ts`,
+          default: dTsPath,
+          // default: `./dist/${key}.d.ts`,
         },
         import: `./dist/${key}.js`,
         require: `./dist/${key}.cjs`,
@@ -178,7 +181,10 @@ async function updatePackageJson(config: LangChainConfig): Promise<void> {
   );
 
   let packageJsonString = JSON.stringify(packageJson, null, 2);
-  if (!packageJsonString.endsWith("\n") && !packageJsonString.endsWith(NEWLINE)) {
+  if (
+    !packageJsonString.endsWith("\n") &&
+    !packageJsonString.endsWith(NEWLINE)
+  ) {
     packageJsonString += NEWLINE;
   }
 
@@ -458,15 +464,11 @@ export async function buildWithTSup() {
   if (shouldCreateEntrypoints) {
     const tsupOptions = defineConfig({
       ...config.tSupConfig,
-      entry: {
-        ...config.entrypoints,
-      },
+      entry: config.entrypoints,
+      dts: false,
     }) as Options;
 
-    // Clean dist folder
     await rimraf("dist");
-
-    // Generate build artifacts
     await build(tsupOptions);
 
     if (shouldGenMaps) {

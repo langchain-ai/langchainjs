@@ -41,7 +41,7 @@
     "rimraf": "^5.0.1",
     "rollup": "^4.5.2",
     "ts-morph": "^21.0.1",
-    "tsup": "6.5.0",
+    "tsup": "latest",
     "typescript": "^5.4.5"
   },
   "devDependencies": {
@@ -89,9 +89,9 @@
     },
     "./migrations": {
       "types": {
-        "import": "./dist/migrations.d.ts",
+        "import": "./dist/migrations/index.d.ts",
         "require": "./dist/migrations.d.cts",
-        "default": "./dist/migrations.d.ts"
+        "default": "./dist/migrations/index.d.ts"
       },
       "import": "./dist/migrations.js",
       "require": "./dist/migrations.cjs"
