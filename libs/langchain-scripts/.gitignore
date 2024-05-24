@@ -18,3 +18,4 @@ node_modules
 dist
 .yarn
 !bin/build.js
+dist_build

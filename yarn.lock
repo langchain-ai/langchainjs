@@ -10114,7 +10114,7 @@ __metadata:
     typescript: ^5.4.5
   bin:
     lc-build: bin/build.js
-    "lc-build:new": bin/build_new.js
+    "lc-build:v2": bin/build_v2.js
   languageName: unknown
   linkType: soft
 

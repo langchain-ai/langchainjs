@@ -1,7 +1,7 @@
 {
   "extends": "@tsconfig/recommended",
   "compilerOptions": {
-    "outDir": "../dist",
+    "outDir": "./dist_build",
     "rootDir": "./src",
     "target": "ES2021",
     "lib": [
@@ -23,13 +23,14 @@
     "strict": true
   },
   "include": [
-    "src/**/*",
-    "src/*"
+    "src/build_v2.ts",
+    "src/types.ts"
   ],
   "exclude": [
     "node_modules/",
     "dist",
     "docs",
-    "bin/"
+    "bin/",
+    "../../node_modules/"
   ]
 }

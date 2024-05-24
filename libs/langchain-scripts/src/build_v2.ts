@@ -1,13 +1,14 @@
-import { spawn } from "child_process";
+import { spawn } from "node:child_process";
 import ts from "typescript";
 import fs from "node:fs";
 import { rimraf } from "rimraf";
 import { Command } from "commander";
 import { rollup } from "rollup";
 import path from "node:path";
+import { ExportsMapValue, ImportData, LangChainConfig } from "./types.js";
 
-async function asyncSpawn(command, args) {
-  return new Promise((resolve, reject) => {
+async function asyncSpawn(command: string, args: string[]) {
+  return new Promise<void>((resolve, reject) => {
     const child = spawn(command, args, {
       stdio: "inherit",
       env: {
@@ -31,32 +32,32 @@ const NEWLINE = `
 // List of test-exports-* packages which we use to test that the exports field
 // works correctly across different JS environments.
 // Each entry is a tuple of [package name, import statement].
-const testExports = [
+const testExports: Array<[string, (p: string) => string]> = [
   [
     "test-exports-esm",
-    (p) =>
+    (p: string) =>
       `import * as ${p.replace(/\//g, "_")} from "langchain/${p}";`,
   ],
   [
     "test-exports-esbuild",
-    (p) =>
+    (p: string) =>
       `import * as ${p.replace(/\//g, "_")} from "langchain/${p}";`,
   ],
   [
     "test-exports-cjs",
-    (p) =>
+    (p: string) =>
       `const ${p.replace(/\//g, "_")} = require("langchain/${p}");`,
   ],
-  ["test-exports-cf", (p) => `export * from "langchain/${p}";`],
-  ["test-exports-vercel", (p) => `export * from "langchain/${p}";`],
-  ["test-exports-vite", (p) => `export * from "langchain/${p}";`],
-  ["test-exports-bun", (p) => `export * from "langchain/${p}";`],
+  ["test-exports-cf", (p: string) => `export * from "langchain/${p}";`],
+  ["test-exports-vercel", (p: string) => `export * from "langchain/${p}";`],
+  ["test-exports-vite", (p: string) => `export * from "langchain/${p}";`],
+  ["test-exports-bun", (p: string) => `export * from "langchain/${p}";`],
 ];
 
 const DEFAULT_GITIGNORE_PATHS = ["node_modules", "dist", ".yarn"];
 
-async function createImportMapFile(config) {
-  const createImportStatement = (k, p) =>
+async function createImportMapFile(config: LangChainConfig): Promise<void> {
+  const createImportStatement = (k: string, p: string) =>
     `export * as ${k.replace(/\//g, "__")} from "../${p
       .replace("src/", "")
       .replace(".ts", ".js")}";`;
@@ -72,7 +73,7 @@ async function createImportMapFile(config) {
 
   let extraContent = "";
   if (config.extraImportMapEntries) {
-    const extraImportData = config.extraImportMapEntries?.reduce(
+    const extraImportData = config.extraImportMapEntries?.reduce<ImportData>(
       (data, { modules, alias, path }) => {
         const newData = { ...data };
         if (!newData.imports[path]) {
@@ -120,20 +121,21 @@ async function createImportMapFile(config) {
   await fs.promises.writeFile("src/load/import_map.ts", importMapContents);
 }
 
-async function generateImportConstants(config) {
+async function generateImportConstants(config: LangChainConfig): Promise<void> {
   // Generate import constants
   const entrypointsToInclude = Object.keys(config.entrypoints)
     .filter((key) => !config.deprecatedNodeOnly?.includes(key))
     .filter((key) => config.requiresOptionalDependency?.includes(key));
   const importConstantsPath = "src/load/import_constants.ts";
-  const createImportStatement = (k) =>
-    `  "langchain${config.packageSuffix ? `_${config.packageSuffix}` : ""
+  const createImportStatement = (k: string) =>
+    `  "langchain${
+      config.packageSuffix ? `_${config.packageSuffix}` : ""
     }/${k}"`;
   const contents =
     entrypointsToInclude.length > 0
       ? `\n${entrypointsToInclude
-        .map((key) => createImportStatement(key))
-        .join(",\n")},\n];\n`
+          .map((key) => createImportStatement(key))
+          .join(",\n")},\n];\n`
       : "];\n";
   await fs.promises.writeFile(
     `${importConstantsPath}`,
@@ -141,7 +143,7 @@ async function generateImportConstants(config) {
   );
 }
 
-const generateFiles = (config) => {
+const generateFiles = (config: LangChainConfig): Record<string, string> => {
   const files = [...Object.entries(config.entrypoints)].flatMap(
     ([key, value]) => {
       const nrOfDots = key.split("/").length - 1;
@@ -162,7 +164,7 @@ const generateFiles = (config) => {
   return Object.fromEntries(files);
 };
 
-async function updateExportTestFiles(config) {
+async function updateExportTestFiles(config: LangChainConfig): Promise<void[]> {
   // Update test-exports-*/entrypoints.js
   const entrypointsToTest = Object.keys(config.entrypoints)
     .filter((key) => !config.deprecatedNodeOnly?.includes(key))
@@ -182,8 +184,8 @@ async function updateExportTestFiles(config) {
 }
 
 async function writeTopLevelGeneratedFiles(
-  generatedFiles
-) {
+  generatedFiles: Record<string, string>
+): Promise<void[]> {
   return Promise.all(
     Object.entries(generatedFiles).map(async ([filename, content]) => {
       await fs.promises.mkdir(path.dirname(filename), { recursive: true });
@@ -193,9 +195,9 @@ async function writeTopLevelGeneratedFiles(
 }
 
 async function updateGitIgnore(
-  config,
-  filenames
-) {
+  config: LangChainConfig,
+  filenames: string[]
+): Promise<void> {
   const gitignorePaths = [
     ...filenames,
     ...DEFAULT_GITIGNORE_PATHS,
@@ -209,7 +211,7 @@ async function updateGitIgnore(
   );
 }
 
-async function updatePackageJson(config) {
+async function updatePackageJson(config: LangChainConfig): Promise<void> {
   const packageJson = JSON.parse(
     await fs.promises.readFile(`package.json`, "utf8")
   );
@@ -217,7 +219,7 @@ async function updatePackageJson(config) {
   const filenames = Object.keys(generatedFiles);
   packageJson.files = ["dist/", ...filenames];
   packageJson.exports = Object.keys(config.entrypoints).reduce(
-    (acc, key) => {
+    (acc: Record<string, ExportsMapValue>, key) => {
       let entrypoint = `./${key}`;
       if (key === "index") {
         entrypoint = ".";
@@ -260,7 +262,7 @@ async function updatePackageJson(config) {
   ]);
 }
 
-export function identifySecrets(absTsConfigPath) {
+export function identifySecrets(absTsConfigPath: string) {
   const secrets = new Set();
 
   const tsConfig = ts.parseJsonConfigFileContent(
@@ -274,7 +276,7 @@ export function identifySecrets(absTsConfigPath) {
   // tsConfig.json file contents.
   const tsConfigFileContentsText =
     "text" in tsConfig.raw
-      ? JSON.parse(tsConfig.raw.text)
+      ? JSON.parse(tsConfig.raw.text as string)
       : { compilerOptions: {} };
 
   const tsConfigTarget =
@@ -358,10 +360,11 @@ export function identifySecrets(absTsConfigPath) {
   return secrets;
 }
 
-async function generateImportTypes(config) {
+async function generateImportTypes(config: LangChainConfig): Promise<void> {
   // Generate import types
-  const pkg = `langchain${config.packageSuffix ? `-${config.packageSuffix}` : ""
-    }`;
+  const pkg = `langchain${
+    config.packageSuffix ? `-${config.packageSuffix}` : ""
+  }`;
   const importTypesPath = "src/load/import_type.ts";
 
   await fs.promises.writeFile(
@@ -372,17 +375,18 @@ export interface OptionalImportMap {}
 
 export interface SecretMap {
 ${[...identifySecrets(config.tsConfigPath)]
-      .sort()
-      .map((secret) => `  ${secret}?: string;`)
-      .join("\n")}
+  .sort()
+  .map((secret) => `  ${secret}?: string;`)
+  .join("\n")}
 }
 `
   );
 }
 
 function listExternals(
-  packageJson,
-  extraInternals
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  packageJson: Record<string, any>,
+  extraInternals?: Array<string | RegExp>
 ) {
   return [
     ...Object.keys(packageJson.dependencies ?? {}),
@@ -391,13 +395,17 @@ function listExternals(
   ];
 }
 
-function listEntrypoints(packageJson) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function listEntrypoints(packageJson: Record<string, any>) {
   const { exports } = packageJson;
   /** @type {Record<string, ExportsMapValue | string> | null} */
-  const exportsWithoutPackageJSON = exports
+  const exportsWithoutPackageJSON: Record<
+    string,
+    ExportsMapValue | string
+  > | null = exports
     ? Object.entries(exports)
-      .filter(([k]) => k !== "./package.json")
-      .reduce((acc, [k, v]) => ({ ...acc, [k]: v }), {})
+        .filter(([k]) => k !== "./package.json")
+        .reduce((acc, [k, v]) => ({ ...acc, [k]: v }), {})
     : null;
 
   if (!exportsWithoutPackageJSON) {
@@ -424,7 +432,7 @@ function listEntrypoints(packageJson) {
   return entrypoints;
 }
 
-async function checkTreeShaking(config) {
+async function checkTreeShaking(config: LangChainConfig) {
   const packageJson = JSON.parse(
     await fs.promises.readFile("package.json", "utf8")
   );
@@ -475,16 +483,12 @@ async function checkTreeShaking(config) {
   }
 }
 
-/**
- * Processes the command line options and returns an object with the parsed options.
- *
- * @returns {Object} An object containing the parsed options:
- *   - shouldCreateEntrypoints: boolean indicating if entrypoints should be created
- *   - shouldCheckTreeShaking: boolean indicating if tree shaking should be checked
- *   - shouldGenMaps: boolean indicating if maps should be generated
- *   - pre: boolean value of the --pre flag
- */
-function processOptions() {
+function processOptions(): {
+  shouldCreateEntrypoints: boolean;
+  shouldCheckTreeShaking: boolean;
+  shouldGenMaps: boolean;
+  pre: boolean;
+} {
   const program = new Command();
   program
     .description("Run a build script for a LangChain package.")
@@ -507,7 +511,7 @@ function processOptions() {
   const shouldCreateEntrypoints = options.createEntrypoints;
   const shouldCheckTreeShaking = options.treeShaking;
   const shouldGenMaps = options.genMaps;
-  const pre = options.pre;
+  const {pre} = options;
 
   return {
     shouldCreateEntrypoints,
@@ -517,9 +521,9 @@ function processOptions() {
   };
 }
 
-async function cleanGeneratedFiles(config) {
+async function cleanGeneratedFiles(config: LangChainConfig) {
   const allFileNames = Object.keys(config.entrypoints)
-    .map((key) => [`${key}.cjs`, `${key}.js`, `${key}.d.ts`, `${key}.d.cts`])
+    .map((key) => [`${key}.cjs`, `${key}.js`, `${key}.d.ts`, `${key}.d.dts`])
     .flat();
   return Promise.all(
     allFileNames.map(async (fileName) => {
@@ -536,6 +540,10 @@ export async function moveAndRename({
   source,
   dest,
   abs,
+}: {
+  source: string;
+  dest: string;
+  abs: (p: string) => string;
 }) {
   try {
     for (const file of await fs.promises.readdir(abs(source), {
@@ -590,7 +598,7 @@ export async function buildWithTSup() {
   } = processOptions();
 
   const importPath = `${process.cwd()}/langchain.config.js`;
-  const { config } = await import(importPath);
+  const { config }: { config: LangChainConfig } = await import(importPath);
 
   // Clean & generate build files
   if (pre && shouldGenMaps) {
@@ -634,7 +642,6 @@ export async function buildWithTSup() {
     await checkTreeShaking(config);
   }
 }
-
 
 /* #__PURE__ */ buildWithTSup().catch((e) => {
   console.error(e);
