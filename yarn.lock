@@ -9573,7 +9573,6 @@ __metadata:
     prettier: ^2.8.3
     release-it: ^15.10.1
     rimraf: ^5.0.1
-    turbo: latest
     typescript: ~5.1.6
     uuid: ^9.0.0
     web-streams-polyfill: ^3.3.3
@@ -10113,7 +10112,8 @@ __metadata:
     ts-morph: ^21.0.1
     typescript: ^5.4.5
   bin:
-    lc-build: bin/build
+    lc-build: bin/build.js
+    "lc-build:v2": bin/build_v2.js
   languageName: unknown
   linkType: soft
 
@@ -27597,7 +27597,7 @@ __metadata:
     lint-staged: ^13.1.1
     prettier: ^2.8.3
     semver: ^7.5.4
-    turbo: latest
+    turbo: ^1.13.3
     typescript: ~5.1.6
   languageName: unknown
   linkType: soft
@@ -35588,58 +35588,58 @@ __metadata:
   languageName: node
   linkType: hard
 
-"turbo-darwin-64@npm:1.9.2":
-  version: 1.9.2
-  resolution: "turbo-darwin-64@npm:1.9.2"
+"turbo-darwin-64@npm:1.13.3":
+  version: 1.13.3
+  resolution: "turbo-darwin-64@npm:1.13.3"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"turbo-darwin-arm64@npm:1.9.2":
-  version: 1.9.2
-  resolution: "turbo-darwin-arm64@npm:1.9.2"
+"turbo-darwin-arm64@npm:1.13.3":
+  version: 1.13.3
+  resolution: "turbo-darwin-arm64@npm:1.13.3"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"turbo-linux-64@npm:1.9.2":
-  version: 1.9.2
-  resolution: "turbo-linux-64@npm:1.9.2"
+"turbo-linux-64@npm:1.13.3":
+  version: 1.13.3
+  resolution: "turbo-linux-64@npm:1.13.3"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"turbo-linux-arm64@npm:1.9.2":
-  version: 1.9.2
-  resolution: "turbo-linux-arm64@npm:1.9.2"
+"turbo-linux-arm64@npm:1.13.3":
+  version: 1.13.3
+  resolution: "turbo-linux-arm64@npm:1.13.3"
   conditions: os=linux & cpu=arm64
   languageName: node
   linkType: hard
 
-"turbo-windows-64@npm:1.9.2":
-  version: 1.9.2
-  resolution: "turbo-windows-64@npm:1.9.2"
+"turbo-windows-64@npm:1.13.3":
+  version: 1.13.3
+  resolution: "turbo-windows-64@npm:1.13.3"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
-"turbo-windows-arm64@npm:1.9.2":
-  version: 1.9.2
-  resolution: "turbo-windows-arm64@npm:1.9.2"
+"turbo-windows-arm64@npm:1.13.3":
+  version: 1.13.3
+  resolution: "turbo-windows-arm64@npm:1.13.3"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"turbo@npm:latest":
-  version: 1.9.2
-  resolution: "turbo@npm:1.9.2"
+"turbo@npm:^1.13.3":
+  version: 1.13.3
+  resolution: "turbo@npm:1.13.3"
   dependencies:
-    turbo-darwin-64: 1.9.2
-    turbo-darwin-arm64: 1.9.2
-    turbo-linux-64: 1.9.2
-    turbo-linux-arm64: 1.9.2
-    turbo-windows-64: 1.9.2
-    turbo-windows-arm64: 1.9.2
+    turbo-darwin-64: 1.13.3
+    turbo-darwin-arm64: 1.13.3
+    turbo-linux-64: 1.13.3
+    turbo-linux-arm64: 1.13.3
+    turbo-windows-64: 1.13.3
+    turbo-windows-arm64: 1.13.3
   dependenciesMeta:
     turbo-darwin-64:
       optional: true
@@ -35655,7 +35655,7 @@ __metadata:
       optional: true
   bin:
     turbo: bin/turbo
-  checksum: ac74531c9a249bc9e06cae42d76fabed7d2bbd168b9c7a65f657f0f902ef83d0fe93977a1b42973714f05a019ad496a6e1c41237c2c2ff57c8257b6d6ab8dd13
+  checksum: d00655987e5d2e714d5e5a8d5950624508fb69e8671ca17e8ac7b9316ce01e518308ec4eaa472306950782704caa2eaa3c4fb328192818fcd9fcc05423bc29e7
   languageName: node
   linkType: hard
 
