@@ -14,10 +14,11 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-scripts/",
   "bin": {
-    "lc-build": "bin/build.js"
+    "lc-build": "bin/build.js",
+    "lc-build:new": "bin/build_new.js"
   },
   "scripts": {
-    "build": "yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
+    "build": "node bin/build_new.js --create-entrypoints --pre --tree-shaking",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 rm -f src/package.json && tsc --outDir dist/",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 echo '{}' > src/package.json && tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rimraf dist-cjs src/package.json",
     "build:watch": "yarn create-entrypoints && tsc --outDir dist/ --watch",
