@@ -10,6 +10,9 @@ import {
 import { IterableReadableStream } from "../utils/stream.js";
 import { ChatGenerationChunk, GenerationChunk } from "../outputs.js";
 import { AIMessageChunk } from "../messages/index.js";
+import type { StreamEvent, StreamEventData } from "./event_stream.js";
+
+export type { StreamEvent, StreamEventData };
 
 /**
  * Interface that represents the structure of a log entry in the

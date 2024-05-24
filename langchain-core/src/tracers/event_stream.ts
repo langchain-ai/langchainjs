@@ -94,8 +94,10 @@ export type StreamEvent = {
 type RunInfo = {
   name: string;
   tags: string[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata: Record<string, any>;
   runType: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   inputs?: Record<string, any>;
 };
 
@@ -115,6 +117,7 @@ function assignName({
   serialized,
 }: {
   name?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   serialized?: Record<string, any>;
 }): string {
   if (name !== undefined) {
@@ -122,7 +125,7 @@ function assignName({
   }
   if (serialized?.name !== undefined) {
     return serialized.name;
-  } else if (Array.isArray(serialized?.id)) {
+  } else if (serialized?.id !== undefined && Array.isArray(serialized?.id)) {
     return serialized.id[serialized.id.length - 1];
   }
   return "Unnamed";
@@ -293,8 +296,8 @@ export class EventStreamCallbackHandler extends BaseTracer {
   async sendEndEvent(payload: StreamEvent, run: RunInfo) {
     const tappedPromise = this.tappedPromises.get(payload.run_id);
     if (tappedPromise !== undefined) {
-      tappedPromise.then(() => {
-        this.send(payload, run);
+      void tappedPromise.then(() => {
+        void this.send(payload, run);
       });
     } else {
       await this.send(payload, run);
@@ -331,6 +334,7 @@ export class EventStreamCallbackHandler extends BaseTracer {
   async onLLMNewToken(
     run: Run,
     token: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     kwargs?: { chunk: any }
   ): Promise<void> {
     const runInfo = this.runInfoMap.get(run.id);
@@ -380,6 +384,7 @@ export class EventStreamCallbackHandler extends BaseTracer {
     }
     const generations: ChatGeneration[][] | Generation[][] | undefined =
       run.outputs?.generations;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let output: BaseMessage | Record<string, any> | undefined;
     if (runInfo.runType === "chat_model") {
       for (const generation of generations ?? []) {
