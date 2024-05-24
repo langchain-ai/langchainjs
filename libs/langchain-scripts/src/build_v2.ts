@@ -61,7 +61,7 @@ async function createImportMapFile(config: LangChainConfig): Promise<void> {
   const createImportStatement = (k: string, p: string) =>
     `export * as ${k.replace(/\//g, "__")} from "../${p
       .replace("src/", "")
-      .replace(".ts", ".js")}";`;
+      .endsWith(".ts") ? p.replace(".ts", ".js") : `${p}.js`}";`;
 
   const entrypointsToInclude = Object.keys(config.entrypoints)
     .filter((key) => key !== "load")

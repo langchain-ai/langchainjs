@@ -14,7 +14,7 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-groq/",
   "scripts": {
-    "build": "yarn build:deps && yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
+    "build": "yarn lc-build:v2 --create-entrypoints --pre --tree-shaking",
     "build:deps": "yarn run turbo:command build --filter=@langchain/core",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rm -rf dist/tests dist/**/tests",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rm -rf dist-cjs",
