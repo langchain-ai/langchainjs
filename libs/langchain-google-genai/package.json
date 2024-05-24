@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-genai",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "description": "Sample integration for LangChain.js",
   "type": "module",
   "engines": {
@@ -40,7 +40,8 @@
   "license": "MIT",
   "dependencies": {
     "@google/generative-ai": "^0.7.0",
-    "@langchain/core": ">0.1.5  <0.3.0"
+    "@langchain/core": ">0.1.5  <0.3.0",
+    "zod-to-json-schema": "^3.22.4"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
@@ -65,7 +66,8 @@
     "release-it": "^15.10.1",
     "rollup": "^4.5.2",
     "ts-jest": "^29.1.0",
-    "typescript": "<5.2.0"
+    "typescript": "<5.2.0",
+    "zod": "^3.22.4"
   },
   "publishConfig": {
     "access": "public"

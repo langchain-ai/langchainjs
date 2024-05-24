@@ -69,6 +69,7 @@ module.exports = {
     "new-cap": ["error", { properties: false, capIsNew: false }],
     'jest/no-focused-tests': 'error',
     "arrow-body-style": 0,
+    "prefer-destructuring": 0,
   },
   overrides: [
     {
