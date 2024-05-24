@@ -21,7 +21,6 @@ import {
   HumanMessage,
   SystemMessage,
 } from "../../messages/index.js";
-import { ChatGenerationChunk, GenerationChunk } from "../../outputs.js";
 import { DynamicStructuredTool, DynamicTool } from "../../tools.js";
 import { Document } from "../../documents/document.js";
 
@@ -42,7 +41,7 @@ test("Runnable streamEvents method", async () => {
   });
 
   const events = [];
-  const eventStream = await chain.streamEvents("hello", { version: "v1" });
+  const eventStream = await chain.streamEvents("hello", { version: "v2" });
   for await (const event of eventStream) {
     events.push(event);
   }
@@ -83,7 +82,7 @@ test("Runnable streamEvents method with three runnables", async () => {
     .pipe(r.withConfig({ runName: "3" }));
 
   const events = [];
-  const eventStream = await chain.streamEvents("hello", { version: "v1" });
+  const eventStream = await chain.streamEvents("hello", { version: "v2" });
   for await (const event of eventStream) {
     events.push(event);
   }
@@ -197,7 +196,7 @@ test("Runnable streamEvents method with three runnables with backgrounded callba
     .pipe(r.withConfig({ runName: "3" }));
 
   const events = [];
-  const eventStream = await chain.streamEvents("hello", { version: "v1" });
+  const eventStream = await chain.streamEvents("hello", { version: "v2" });
   for await (const event of eventStream) {
     events.push(event);
   }
@@ -312,7 +311,7 @@ test("Runnable streamEvents method with three runnables with filtering", async (
   const events = [];
   const eventStream = await chain.streamEvents(
     "hello",
-    { version: "v1" },
+    { version: "v2" },
     {
       includeNames: ["1"],
     }
@@ -322,7 +321,7 @@ test("Runnable streamEvents method with three runnables with filtering", async (
   }
   expect(events).toEqual([
     {
-      data: {},
+      data: { input: "hello" },
       event: "on_chain_start",
       metadata: {},
       name: "1",
@@ -338,7 +337,7 @@ test("Runnable streamEvents method with three runnables with filtering", async (
       tags: ["seq:step:1"],
     },
     {
-      data: { input: "hello", output: "olleh" },
+      data: { output: "olleh" },
       event: "on_chain_end",
       metadata: {},
       name: "1",
@@ -349,7 +348,7 @@ test("Runnable streamEvents method with three runnables with filtering", async (
   const events2 = [];
   const eventStream2 = await chain.streamEvents(
     "hello",
-    { version: "v1" },
+    { version: "v2" },
     {
       excludeNames: ["2"],
       includeTags: ["my_tag"],
@@ -360,7 +359,9 @@ test("Runnable streamEvents method with three runnables with filtering", async (
   }
   expect(events2).toEqual([
     {
-      data: {},
+      data: {
+        input: "hello",
+      },
       event: "on_chain_start",
       metadata: {},
       name: "3",
@@ -376,7 +377,7 @@ test("Runnable streamEvents method with three runnables with filtering", async (
       tags: expect.arrayContaining(["seq:step:3", "my_tag"]),
     },
     {
-      data: { input: "hello", output: "olleh" },
+      data: { output: "olleh" },
       event: "on_chain_end",
       metadata: {},
       name: "3",
@@ -395,11 +396,10 @@ test("Runnable streamEvents method with a runnable map", async () => {
   }).pipe(new RunnablePick("reversed"));
 
   const events = [];
-  const eventStream = await chain.streamEvents("hello", { version: "v1" });
+  const eventStream = await chain.streamEvents("hello", { version: "v2" });
   for await (const event of eventStream) {
     events.push(event);
   }
-  console.log(events);
   expect(events).toEqual([
     {
       run_id: expect.any(String),
@@ -533,7 +533,13 @@ test("Runnable streamEvents method with a runnable map", async () => {
       run_id: expect.any(String),
       tags: ["seq:step:2"],
       metadata: {},
-      data: { output: "olleh" },
+      data: {
+        input: {
+          original: "hello",
+          reversed: "olleh",
+        },
+        output: "olleh",
+      },
     },
     {
       event: "on_chain_end",
@@ -546,7 +552,7 @@ test("Runnable streamEvents method with a runnable map", async () => {
   ]);
 });
 
-test.only("Runnable streamEvents method with llm", async () => {
+test("Runnable streamEvents method with llm", async () => {
   const model = new FakeStreamingLLM({
     responses: ["hey!"],
   }).withConfig({
@@ -559,7 +565,6 @@ test.only("Runnable streamEvents method with llm", async () => {
   for await (const event of eventStream) {
     events.push(event);
   }
-  console.log(events);
   expect(events).toEqual([
     {
       event: "on_llm_start",
@@ -626,12 +631,13 @@ test.only("Runnable streamEvents method with llm", async () => {
         output: {
           generations: [
             [
-              new GenerationChunk({
+              {
                 generationInfo: {},
                 text: "hey!",
-              }),
+              },
             ],
           ],
+          llmOutput: {},
         },
       },
     },
@@ -661,7 +667,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
   const events = [];
   const eventStream = await chain.streamEvents(
     { question: "hello" },
-    { version: "v1" }
+    { version: "v2" }
   );
   for await (const event of eventStream) {
     events.push(event);
@@ -705,7 +711,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
       },
     },
     {
-      event: "on_llm_start",
+      event: "on_chat_model_start",
       name: "my_model",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["seq:step:2", "my_model", "my_chain"]),
@@ -724,7 +730,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
       },
     },
     {
-      event: "on_llm_stream",
+      event: "on_chat_model_stream",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["my_chain", "my_model", "seq:step:2"]),
       metadata: {
@@ -747,7 +753,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
       data: { chunk: new AIMessageChunk("R") },
     },
     {
-      event: "on_llm_stream",
+      event: "on_chat_model_stream",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["my_chain", "my_model", "seq:step:2"]),
       metadata: {
@@ -770,7 +776,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
       data: { chunk: new AIMessageChunk("O") },
     },
     {
-      event: "on_llm_stream",
+      event: "on_chat_model_stream",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["my_chain", "my_model", "seq:step:2"]),
       metadata: {
@@ -793,7 +799,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
       data: { chunk: new AIMessageChunk("A") },
     },
     {
-      event: "on_llm_stream",
+      event: "on_chat_model_stream",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["my_chain", "my_model", "seq:step:2"]),
       metadata: {
@@ -816,7 +822,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
       data: { chunk: new AIMessageChunk("R") },
     },
     {
-      event: "on_llm_end",
+      event: "on_chat_model_end",
       name: "my_model",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["seq:step:2", "my_model", "my_chain"]),
@@ -832,17 +838,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
             [new SystemMessage("You are Godzilla"), new HumanMessage("hello")],
           ],
         },
-        output: {
-          generations: [
-            [
-              new ChatGenerationChunk({
-                generationInfo: {},
-                message: new AIMessageChunk("ROAR"),
-                text: "ROAR",
-              }),
-            ],
-          ],
-        },
+        output: new AIMessageChunk("ROAR"),
       },
     },
     {
@@ -867,7 +863,7 @@ test("Runnable streamEvents method with simple tools", async () => {
     description: "A tool that does nothing",
   });
   const events = [];
-  const eventStream = await tool.streamEvents({}, { version: "v1" });
+  const eventStream = await tool.streamEvents({}, { version: "v2" });
   for await (const event of eventStream) {
     events.push(event);
   }
@@ -876,14 +872,6 @@ test("Runnable streamEvents method with simple tools", async () => {
     {
       data: { input: {} },
       event: "on_tool_start",
-      metadata: {},
-      name: "parameterless",
-      run_id: expect.any(String),
-      tags: [],
-    },
-    {
-      data: { chunk: "hello" },
-      event: "on_tool_stream",
       metadata: {},
       name: "parameterless",
       run_id: expect.any(String),
@@ -912,7 +900,7 @@ test("Runnable streamEvents method with simple tools", async () => {
   const events2 = [];
   const eventStream2 = await toolWithParams.streamEvents(
     { x: 1, y: "2" },
-    { version: "v1" }
+    { version: "v2" }
   );
   for await (const event of eventStream2) {
     events2.push(event);
@@ -921,14 +909,6 @@ test("Runnable streamEvents method with simple tools", async () => {
     {
       data: { input: { x: 1, y: "2" } },
       event: "on_tool_start",
-      metadata: {},
-      name: "with_parameters",
-      run_id: expect.any(String),
-      tags: [],
-    },
-    {
-      data: { chunk: JSON.stringify({ x: 1, y: "2" }) },
-      event: "on_tool_stream",
       metadata: {},
       name: "with_parameters",
       run_id: expect.any(String),
@@ -957,7 +937,7 @@ test("Runnable streamEvents method with a retriever", async () => {
   });
   const events = [];
   const eventStream = await retriever.streamEvents("hello", {
-    version: "v1",
+    version: "v2",
   });
   for await (const event of eventStream) {
     events.push(event);
@@ -975,7 +955,7 @@ test("Runnable streamEvents method with a retriever", async () => {
     },
     {
       data: {
-        chunk: [
+        output: [
           new Document({
             pageContent: "hello world!",
             metadata: { foo: "bar" },
@@ -985,27 +965,6 @@ test("Runnable streamEvents method with a retriever", async () => {
             metadata: { food: "spare" },
           }),
         ],
-      },
-      event: "on_retriever_stream",
-      metadata: {},
-      name: "FakeRetriever",
-      run_id: expect.any(String),
-      tags: [],
-    },
-    {
-      data: {
-        output: {
-          documents: [
-            new Document({
-              pageContent: "hello world!",
-              metadata: { foo: "bar" },
-            }),
-            new Document({
-              pageContent: "goodbye world!",
-              metadata: { food: "spare" },
-            }),
-          ],
-        },
       },
       event: "on_retriever_end",
       metadata: {},
@@ -1020,10 +979,9 @@ test("Runnable streamEvents method with text/event-stream encoding", async () =>
   const chain = RunnableLambda.from(reverse).withConfig({
     runName: "reverse",
   });
-
   const events = [];
   const eventStream = await chain.streamEvents("hello", {
-    version: "v1",
+    version: "v2",
     encoding: "text/event-stream",
     runId: "1234",
   });

@@ -502,18 +502,34 @@ export abstract class Runnable<
       );
       delete config.runId;
       runManager = pipe.setup;
+
+      const isStreamEventsHandler = (
+        handler: BaseCallbackHandler
+      ): handler is EventStreamCallbackHandler =>
+        handler.name === "event_stream_tracer";
+      const streamEventsHandler = runManager?.handlers.find(
+        isStreamEventsHandler
+      );
+      let iterator = pipe.output;
+      if (streamEventsHandler !== undefined && runManager !== undefined) {
+        iterator = streamEventsHandler.tapOutputIterable(
+          runManager.runId,
+          iterator
+        );
+      }
+
       const isLogStreamHandler = (
         handler: BaseCallbackHandler
       ): handler is LogStreamCallbackHandler =>
         handler.name === "log_stream_tracer";
       const streamLogHandler = runManager?.handlers.find(isLogStreamHandler);
-      let iterator = pipe.output;
       if (streamLogHandler !== undefined && runManager !== undefined) {
-        iterator = await streamLogHandler.tapOutputIterable(
+        iterator = streamLogHandler.tapOutputIterable(
           runManager.runId,
-          pipe.output
+          iterator
         );
       }
+
       for await (const chunk of iterator) {
         yield chunk;
         if (finalOutputSupported) {
@@ -760,7 +776,7 @@ export abstract class Runnable<
    * | on_prompt_start      | [template_name]  |                                 | {"question": "hello"}                         |                                                 |
    * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
    * | on_prompt_end        | [template_name]  |                                 | {"question": "hello"}                         | ChatPromptValue(messages: [SystemMessage, ...]) |
-   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+   
+   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
    */
   streamEvents(
     input: RunInput,
@@ -791,7 +807,9 @@ export abstract class Runnable<
     } else if (options.version === "v2") {
       stream = this._streamEventsV2(input, options, streamOptions);
     } else {
-      throw new Error(`Only versions "v1" and "v2" of the schema are currently supported.`);
+      throw new Error(
+        `Only versions "v1" and "v2" of the schema are currently supported.`
+      );
     }
     if (options.encoding === "text/event-stream") {
       return convertToHttpEventStream(stream);
@@ -799,7 +817,7 @@ export abstract class Runnable<
       return IterableReadableStream.fromAsyncGenerator(stream);
     }
   }
-  
+
   private async *_streamEventsV2(
     input: RunInput,
     options: Partial<CallOptions> & { version: "v1" | "v2" },
@@ -807,10 +825,11 @@ export abstract class Runnable<
   ): AsyncGenerator<StreamEvent> {
     const eventStreamer = new EventStreamCallbackHandler({
       ...streamOptions,
-      autoClose: false, 
+      autoClose: false,
     });
     const config = ensureConfig(options);
-    config.runId = config.runId ?? uuidv4();
+    const runId = config.runId ?? uuidv4();
+    config.runId = runId;
     const callbacks = config.callbacks;
     if (callbacks === undefined) {
       config.callbacks = [eventStreamer];
@@ -824,14 +843,15 @@ export abstract class Runnable<
     }
     // Call the runnable in streaming mode,
     // add each chunk to the output stream
-    const runnableStreamPromise = eventStreamer.tapOutputIterable(
-      config.runId,
-      await this.stream(input, config)
-    );
+    const outerThis = this;
     async function consumeRunnableStream() {
       try {
-        const runnableStream = await runnableStreamPromise;
-        for await (const _ of runnableStream) {
+        const runnableStream = await outerThis.stream(input, config);
+        const tappedStream = eventStreamer.tapOutputIterable(
+          runId,
+          runnableStream
+        );
+        for await (const _ of tappedStream) {
           // Just iterate so that the callback handler picks up events
         }
       } finally {

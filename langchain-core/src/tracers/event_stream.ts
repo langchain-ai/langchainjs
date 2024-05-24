@@ -1,7 +1,5 @@
 import { BaseTracer, type Run } from "./base.js";
-import {
-  BaseCallbackHandlerInput,
-} from "../callbacks/base.js";
+import { BaseCallbackHandlerInput } from "../callbacks/base.js";
 import { IterableReadableStream } from "../utils/stream.js";
 import { AIMessageChunk } from "../messages/ai.js";
 import { ChatGeneration, Generation, GenerationChunk } from "../outputs.js";
@@ -101,7 +99,6 @@ type RunInfo = {
   inputs?: Record<string, any>;
 };
 
-
 export interface EventStreamCallbackHandlerInput
   extends BaseCallbackHandlerInput {
   autoClose?: boolean;
@@ -113,7 +110,13 @@ export interface EventStreamCallbackHandlerInput
   excludeTags?: string[];
 }
 
-function assignName({ name, serialized }: { name?: string, serialized?: Record<string, any> }): string {
+function assignName({
+  name,
+  serialized,
+}: {
+  name?: string;
+  serialized?: Record<string, any>;
+}): string {
   if (name !== undefined) {
     return name;
   }
@@ -146,8 +149,10 @@ export class EventStreamCallbackHandler extends BaseTracer {
   protected excludeTags?: string[];
 
   protected rootId?: string;
-  
+
   private runInfoMap: Map<string, RunInfo> = new Map();
+
+  private tappedPromises: Map<string, Promise<void>> = new Map();
 
   protected transformStream: TransformStream;
 
@@ -155,7 +160,7 @@ export class EventStreamCallbackHandler extends BaseTracer {
 
   public receiveStream: IterableReadableStream<StreamEvent>;
 
-  name = "log_stream_tracer";
+  name = "event_stream_tracer";
 
   constructor(fields?: EventStreamCallbackHandlerInput) {
     super({ _awaitHandler: true, ...fields });
@@ -183,10 +188,6 @@ export class EventStreamCallbackHandler extends BaseTracer {
   }
 
   _includeRun(run: RunInfo): boolean {
-    // TODO: Remove?
-    // if (run.id === this.rootId) {
-    //   return false;
-    // }
     const runTags = run.tags ?? [];
     let include =
       this.includeNames === undefined &&
@@ -218,61 +219,91 @@ export class EventStreamCallbackHandler extends BaseTracer {
 
   async *tapOutputIterable<T>(
     runId: string,
-    output: AsyncGenerator<T>
+    outputStream: AsyncGenerator<T>
   ): AsyncGenerator<T> {
-    const runInfo = this.runInfoMap.get(runId);
-    if (runInfo === undefined) {
+    const firstChunk = await outputStream.next();
+    if (firstChunk.done) {
       return;
     }
-    // Tap an output async iterator to stream its values to the log.
-    for await (const chunk of output) {
-      // await this.writer.write({
-      //   event: StreamEvent = {
-      //     "event": f"on_{run_info['run_type']}_stream",
-      //     "run_id": str(run_id),
-      //     "name": run_info["name"],
-      //     "tags": run_info["tags"],
-      //     "metadata": run_info["metadata"],
-      //     "data": {},
-      // }
-      // // });
-      // event: StreamEvent = {
-      //     "event": f"on_{run_info['run_type']}_stream",
-      //     "run_id": str(run_id),
-      //     "name": run_info["name"],
-      //     "tags": run_info["tags"],
-      //     "metadata": run_info["metadata"],
-      //     "data": {},
-      // }
-      // self._send({**event, "data": {"chunk": first}}, run_info["run_type"])
-      const event: StreamEvent = {
-        event: `on_${runInfo.runType}_stream`,
-        run_id: runId,
-        name: runInfo.name,
-        tags: runInfo.tags,
-        metadata: runInfo.metadata,
-        data: {},
-      }
-      console.log("SENDING STREAM EVENT");
-      await this.send({
-        ...event,
-        data: {
-          chunk
+    const runInfo = this.runInfoMap.get(runId);
+    // run has finished, don't issue any stream events
+    if (runInfo === undefined) {
+      yield firstChunk.value;
+      return;
+    }
+    let tappedPromise = this.tappedPromises.get(runId);
+    // if we are the first to tap, issue stream events
+    if (tappedPromise === undefined) {
+      let tappedPromiseResolver;
+      tappedPromise = new Promise((resolve) => {
+        tappedPromiseResolver = resolve;
+      });
+      this.tappedPromises.set(runId, tappedPromise);
+      try {
+        const event: StreamEvent = {
+          event: `on_${runInfo.runType}_stream`,
+          run_id: runId,
+          name: runInfo.name,
+          tags: runInfo.tags,
+          metadata: runInfo.metadata,
+          data: {},
+        };
+        await this.send(
+          {
+            ...event,
+            data: { chunk: firstChunk.value },
+          },
+          runInfo
+        );
+        yield firstChunk.value;
+        for await (const chunk of outputStream) {
+          // Don't yield tool and retriever stream events
+          if (runInfo.runType !== "tool" && runInfo.runType !== "retriever") {
+            await this.send(
+              {
+                ...event,
+                data: {
+                  chunk,
+                },
+              },
+              runInfo
+            );
+          }
+          yield chunk;
         }
-      }, runInfo);
-      yield chunk;
+      } finally {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        tappedPromiseResolver!();
+      }
+    } else {
+      // otherwise just pass through
+      yield firstChunk.value;
+      for await (const chunk of outputStream) {
+        yield chunk;
+      }
     }
   }
-  
+
   async send(payload: StreamEvent, run: RunInfo) {
     if (this._includeRun(run)) {
       await this.writer.write(payload);
     }
   }
 
+  async sendEndEvent(payload: StreamEvent, run: RunInfo) {
+    const tappedPromise = this.tappedPromises.get(payload.run_id);
+    if (tappedPromise !== undefined) {
+      tappedPromise.then(() => {
+        this.send(payload, run);
+      });
+    } else {
+      await this.send(payload, run);
+    }
+  }
+
   async onLLMStart(run: Run): Promise<void> {
     const runName = assignName(run);
-    const runType = run.inputs.messages !== undefined ? "chat_model" : "llm"
+    const runType = run.inputs.messages !== undefined ? "chat_model" : "llm";
     const runInfo = {
       tags: run.tags ?? [],
       metadata: run.extra?.metadata ?? {},
@@ -282,22 +313,25 @@ export class EventStreamCallbackHandler extends BaseTracer {
     };
     this.runInfoMap.set(run.id, runInfo);
     const eventName = `on_${runType}_start`;
-    await this.send({
-      event: eventName,
-      data: {
-        input: run.inputs,
+    await this.send(
+      {
+        event: eventName,
+        data: {
+          input: run.inputs,
+        },
+        name: runName,
+        tags: run.tags ?? [],
+        run_id: run.id,
+        metadata: run.extra?.metadata ?? {},
       },
-      name: runName,
-      tags: run.tags ?? [],
-      run_id: run.id,
-      metadata: run.extra?.metadata ?? {}
-    }, runInfo);
+      runInfo
+    );
   }
-  
+
   async onLLMNewToken(
     run: Run,
     token: string,
-    kwargs?: { chunk: any; }
+    kwargs?: { chunk: any }
   ): Promise<void> {
     const runInfo = this.runInfoMap.get(run.id);
     let chunk;
@@ -322,29 +356,33 @@ export class EventStreamCallbackHandler extends BaseTracer {
     } else {
       throw new Error(`Unexpected run type ${runInfo.runType}`);
     }
-    await this.send({
-      event: eventName,
-      data: {
-        chunk
+    await this.send(
+      {
+        event: eventName,
+        data: {
+          chunk,
+        },
+        run_id: run.id,
+        name: runInfo.name,
+        tags: runInfo.tags,
+        metadata: runInfo.metadata,
       },
-      run_id: run.id,
-      name: runInfo.name,
-      tags: runInfo.tags,
-      metadata: runInfo.metadata
-    }, runInfo);
+      runInfo
+    );
   }
-  
+
   async onLLMEnd(run: Run): Promise<void> {
     const runInfo = this.runInfoMap.get(run.id);
     this.runInfoMap.delete(run.id);
-    let eventName;
+    let eventName: string;
     if (runInfo === undefined) {
       throw new Error(`onLLMEnd: Run ID ${run.id} not found in run map.`);
     }
-    const generations: ChatGeneration[][] | Generation[][] | undefined = run.outputs?.generations;
+    const generations: ChatGeneration[][] | Generation[][] | undefined =
+      run.outputs?.generations;
     let output: BaseMessage | Record<string, any> | undefined;
     if (runInfo.runType === "chat_model") {
-      for (const generation of (generations ?? [])) {
+      for (const generation of generations ?? []) {
         if (output !== undefined) {
           break;
         }
@@ -358,29 +396,31 @@ export class EventStreamCallbackHandler extends BaseTracer {
             return {
               text: chunk.text,
               generationInfo: chunk.generationInfo,
-            }
-          })
+            };
+          });
         }),
-        llmOutput: run.outputs?.llmOutput ?? {}
+        llmOutput: run.outputs?.llmOutput ?? {},
       };
-      eventName = "on_llm_end"
+      eventName = "on_llm_end";
     } else {
       throw new Error(`onLLMEnd: Unexpected run type: ${runInfo.runType}`);
     }
-    console.log("SENDING END EVENT");
-    await this.send({
-      event: eventName,
-      data: {
-        output,
-        input: runInfo.inputs
+    await this.sendEndEvent(
+      {
+        event: eventName,
+        data: {
+          output,
+          input: runInfo.inputs,
+        },
+        run_id: run.id,
+        name: runInfo.name,
+        tags: runInfo.tags,
+        metadata: runInfo.metadata,
       },
-      run_id: run.id,
-      name: runInfo.name,
-      tags: runInfo.tags,
-      metadata: runInfo.metadata,
-    }, runInfo);
+      runInfo
+    );
   }
-  
+
   async onChainStart(run: Run): Promise<void> {
     const runName = assignName(run);
     const runType = run.run_type ?? "chain";
@@ -390,44 +430,62 @@ export class EventStreamCallbackHandler extends BaseTracer {
       name: runName,
       runType: run.run_type,
     };
-    const eventData: StreamEventData = {};
-    // Work-around Runnable core code not sending input in some cases.
-    if (typeof run.inputs !== "object" || run.inputs.inputs === undefined) {
+    let eventData: StreamEventData = {};
+    // Workaround Runnable core code not sending input when transform streaming.
+    if (run.inputs.input === "" && Object.keys(run.inputs).length === 1) {
+      eventData = {};
+      runInfo.inputs = {};
+    } else if (run.inputs.input !== undefined) {
+      eventData.input = run.inputs.input;
+      runInfo.inputs = run.inputs.input;
+    } else {
       eventData.input = run.inputs;
       runInfo.inputs = run.inputs;
     }
     this.runInfoMap.set(run.id, runInfo);
-    await this.send({
-      event: `on_${runType}_start`,
-      data: eventData,
-      name: runName,
-      tags: run.tags ?? [],
-      run_id: run.id,
-      metadata: run.extra?.metadata ?? {},
-    }, runInfo);
+    await this.send(
+      {
+        event: `on_${runType}_start`,
+        data: eventData,
+        name: runName,
+        tags: run.tags ?? [],
+        run_id: run.id,
+        metadata: run.extra?.metadata ?? {},
+      },
+      runInfo
+    );
   }
-  
+
   async onChainEnd(run: Run): Promise<void> {
     const runInfo = this.runInfoMap.get(run.id);
+    this.runInfoMap.delete(run.id);
     if (runInfo === undefined) {
       throw new Error(`onChainEnd: Run ID ${run.id} not found in run map.`);
     }
     const eventName = `on_${run.run_type}_end`;
     const inputs = run.inputs ?? runInfo.inputs ?? {};
+    const outputs = run.outputs?.output ?? run.outputs;
     const data: StreamEventData = {
-      output: run.outputs,
+      output: outputs,
       input: inputs,
     };
-    await this.send({
-      event: eventName,
-      data,
-      run_id: run.id,
-      name: runInfo.name,
-      tags: runInfo.tags,
-      metadata: runInfo.metadata ?? {},
-    }, runInfo);
+    if (inputs.input && Object.keys(inputs).length === 1) {
+      data.input = inputs.input;
+      runInfo.inputs = inputs.input;
+    }
+    await this.sendEndEvent(
+      {
+        event: eventName,
+        data,
+        run_id: run.id,
+        name: runInfo.name,
+        tags: runInfo.tags,
+        metadata: runInfo.metadata ?? {},
+      },
+      runInfo
+    );
   }
-  
+
   async onToolStart(run: Run): Promise<void> {
     const runName = assignName(run);
     const runInfo = {
@@ -438,19 +496,24 @@ export class EventStreamCallbackHandler extends BaseTracer {
       inputs: run.inputs ?? {},
     };
     this.runInfoMap.set(run.id, runInfo);
-    await this.send({
-      event: "on_tool_start",
-      data: {
-        input: run.inputs ?? {}
+    await this.send(
+      {
+        event: "on_tool_start",
+        data: {
+          input: run.inputs ?? {},
+        },
+        name: runName,
+        run_id: run.id,
+        tags: run.tags ?? [],
+        metadata: run.extra?.metadata ?? {},
       },
-      name: runName,
-      run_id: run.id,
-      metadata: run.extra?.metadata ?? {},
-    }, runInfo);
+      runInfo
+    );
   }
-  
+
   async onToolEnd(run: Run): Promise<void> {
     const runInfo = this.runInfoMap.get(run.id);
+    this.runInfoMap.delete(run.id);
     if (runInfo === undefined) {
       throw new Error(`onToolEnd: Run ID ${run.id} not found in run map.`);
     }
@@ -459,19 +522,24 @@ export class EventStreamCallbackHandler extends BaseTracer {
         `onToolEnd: Run ID ${run.id} is a tool call, and is expected to have traced inputs.`
       );
     }
-    await this.send({
-      event: "on_tool_end",
-      data: {
-        output: run.outputs,
-        input: runInfo.inputs,
+    const output =
+      run.outputs?.output === undefined ? run.outputs : run.outputs.output;
+    await this.sendEndEvent(
+      {
+        event: "on_tool_end",
+        data: {
+          output,
+          input: runInfo.inputs,
+        },
+        run_id: run.id,
+        name: runInfo.name,
+        tags: runInfo.tags,
+        metadata: runInfo.metadata,
       },
-      run_id: run.id,
-      name: runInfo.name,
-      tags: runInfo.tags,
-      metadata: runInfo.metadata,
-    }, runInfo);
+      runInfo
+    );
   }
-  
+
   async onRetrieverStart(run: Run): Promise<void> {
     const runName = assignName(run);
     const runType = "retriever";
@@ -482,38 +550,45 @@ export class EventStreamCallbackHandler extends BaseTracer {
       runType,
       inputs: {
         query: run.inputs.query,
-      }
+      },
     };
     this.runInfoMap.set(run.id, runInfo);
-    await this.send({
-      event: "on_retriever_start",
-      data: {
-        input: {
-          query: run.inputs.query,
-        }
+    await this.send(
+      {
+        event: "on_retriever_start",
+        data: {
+          input: {
+            query: run.inputs.query,
+          },
+        },
+        name: runName,
+        tags: run.tags ?? [],
+        run_id: run.id,
+        metadata: run.extra?.metadata ?? {},
       },
-      name: runName,
-      tags: run.tags ?? [],
-      run_id: run.id,
-      metadata: run.extra?.metadata ?? {}
-    }, runInfo);
+      runInfo
+    );
   }
-  
+
   async onRetrieverEnd(run: Run): Promise<void> {
     const runInfo = this.runInfoMap.get(run.id);
+    this.runInfoMap.delete(run.id);
     if (runInfo === undefined) {
       throw new Error(`onRetrieverEnd: Run ID ${run.id} not found in run map.`);
     }
-    await this.send({
-      event: "on_retriever_end",
-      data: {
-        output: run.outputs,
-        input: runInfo.inputs,
+    await this.sendEndEvent(
+      {
+        event: "on_retriever_end",
+        data: {
+          output: run.outputs?.documents ?? run.outputs,
+          input: runInfo.inputs,
+        },
+        run_id: run.id,
+        name: runInfo.name,
+        tags: runInfo.tags,
+        metadata: runInfo.metadata,
       },
-      run_id: run.id,
-      name: runInfo.name,
-      tags: runInfo.tags,
-      metadata: runInfo.metadata
-    }, runInfo);
+      runInfo
+    );
   }
 }
