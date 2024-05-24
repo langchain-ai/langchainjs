@@ -24,10 +24,10 @@
   },
   "include": [
     "src/**/*",
-    "bin"
+    "src/*"
   ],
   "exclude": [
-    "node_modules",
+    "node_modules/",
     "dist",
     "docs",
     "bin/"
