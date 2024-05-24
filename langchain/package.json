@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -142,10 +142,6 @@
     "embeddings/fake.js",
     "embeddings/fake.d.ts",
     "embeddings/fake.d.cts",
-    "prompts/index.cjs",
-    "prompts/index.js",
-    "prompts/index.d.ts",
-    "prompts/index.d.cts",
     "vectorstores/memory.cjs",
     "vectorstores/memory.js",
     "vectorstores/memory.d.ts",
@@ -154,6 +150,10 @@
     "text_splitter.js",
     "text_splitter.d.ts",
     "text_splitter.d.cts",
+    "memory.cjs",
+    "memory.js",
+    "memory.d.ts",
+    "memory.d.cts",
     "memory/index.cjs",
     "memory/index.js",
     "memory/index.d.ts",
@@ -599,7 +599,7 @@
     "@faker-js/faker": "^7.6.0",
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
-    "@google-ai/generativelanguage": "^0.2.1",
+    "@google-ai/generativelanguage": "^2.5.0",
     "@jest/globals": "^29.5.0",
     "@langchain/cohere": "^0.0.8",
     "@langchain/scripts": "~0.0.14",
@@ -686,7 +686,7 @@
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
     "@gomomento/sdk-web": "^1.51.1",
-    "@google-ai/generativelanguage": "^0.2.1",
+    "@google-ai/generativelanguage": "^2.5.0",
     "@mendable/firecrawl-js": "^0.0.13",
     "@notionhq/client": "^2.2.10",
     "@pinecone-database/pinecone": "*",
@@ -1216,15 +1216,6 @@
       "import": "./embeddings/fake.js",
       "require": "./embeddings/fake.cjs"
     },
-    "./prompts/index": {
-      "types": {
-        "import": "./prompts/index.d.ts",
-        "require": "./prompts/index.d.cts",
-        "default": "./prompts/index.d.ts"
-      },
-      "import": "./prompts/index.js",
-      "require": "./prompts/index.cjs"
-    },
     "./vectorstores/memory": {
       "types": {
         "import": "./vectorstores/memory.d.ts",
@@ -1242,6 +1233,15 @@
       },
       "import": "./text_splitter.js",
       "require": "./text_splitter.cjs"
+    },
+    "./memory": {
+      "types": {
+        "import": "./memory.d.ts",
+        "require": "./memory.d.cts",
+        "default": "./memory.d.ts"
+      },
+      "import": "./memory.js",
+      "require": "./memory.cjs"
     },
     "./memory/index": {
       "types": {

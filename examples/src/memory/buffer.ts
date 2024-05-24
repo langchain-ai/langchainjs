@@ -1,5 +1,5 @@
 import { OpenAI } from "@langchain/openai";
-import { BufferMemory } from "langchain/memory/index";
+import { BufferMemory } from "langchain/memory";
 import { LLMChain } from "langchain/chains";
 import { PromptTemplate } from "@langchain/core/prompts";
 

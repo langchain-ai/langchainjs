@@ -1,4 +1,4 @@
-import { BufferMemory } from "langchain/memory/index";
+import { BufferMemory } from "langchain/memory";
 import { DynamoDBChatMessageHistory } from "@langchain/community/stores/message/dynamodb";
 import { ChatOpenAI } from "@langchain/openai";
 import { ConversationChain } from "langchain/chains";
