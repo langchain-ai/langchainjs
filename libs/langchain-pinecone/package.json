@@ -14,7 +14,8 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-pinecone/",
   "scripts": {
-    "build": "yarn lc-build:v2 --create-entrypoints --pre --tree-shaking",
+    "build": "yarn turbo:command build:internal --filter=@langchain/pinecone",
+    "build:internal": "yarn lc-build:v2 --create-entrypoints --pre --tree-shaking",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rm -rf dist/tests dist/**/tests",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rm -rf dist-cjs",
     "build:watch": "yarn create-entrypoints && tsc --outDir dist/ --watch",

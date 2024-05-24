@@ -18,8 +18,10 @@
     "lc-build:v2": "bin/build_v2.js"
   },
   "scripts": {
-    "build": "rm -rf ./build_new && tsc --project ./tsconfig.build.json && yarn build:generated",
+    "build": "yarn turbo:command build:internal --filter=@langchain/scripts",
+    "build:internal": "rm -rf ./build_new && tsc --project ./tsconfig.build.json && yarn build:generated",
     "build:generated": "node bin/build_v2.js --create-entrypoints --pre --tree-shaking",
+    "build:turbo": "yarn turbo:command build --filter=@langchain/scripts",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
     "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "yarn lint:eslint && yarn lint:dpdm",
