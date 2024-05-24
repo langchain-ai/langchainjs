@@ -19,7 +19,12 @@
       "dependsOn": ["^format:check"]
     },
     "test": {
+      "cache": false,
       "dependsOn": ["^build", "build"]
+    },
+    "test:ci": {
+      "outputs": [],
+      "dependsOn": ["test"]
     },
     "test:single": {
       "dependsOn": ["^build", "build"]
