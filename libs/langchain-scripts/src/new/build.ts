@@ -4,8 +4,8 @@ import fs from "node:fs";
 import { rimraf } from "rimraf";
 import { Command } from "commander";
 import { rollup } from "rollup";
-import { ExportsMapValue, ImportData, LangChainConfig } from "../types.js";
 import path from "node:path";
+import { ExportsMapValue, ImportData, LangChainConfig } from "../types.js";
 
 async function asyncSpawn(command: string, args: string[]) {
   return new Promise<void>((resolve, reject) => {
@@ -483,7 +483,6 @@ async function checkTreeShaking(config: LangChainConfig) {
   }
 }
 
-
 function processOptions(): {
   shouldCreateEntrypoints: boolean;
   shouldCheckTreeShaking: boolean;
@@ -512,7 +511,7 @@ function processOptions(): {
   const shouldCreateEntrypoints = options.createEntrypoints;
   const shouldCheckTreeShaking = options.treeShaking;
   const shouldGenMaps = options.genMaps;
-  const pre = options.pre;
+  const {pre} = options;
 
   return {
     shouldCreateEntrypoints,
