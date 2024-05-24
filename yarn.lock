@@ -10113,7 +10113,7 @@ __metadata:
     ts-morph: ^21.0.1
     typescript: ^5.4.5
   bin:
-    lc-build: bin/build
+    lc-build: bin/build.js
   languageName: unknown
   linkType: soft
 
