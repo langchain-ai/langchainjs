@@ -16,6 +16,20 @@ export abstract class BaseChatMessageHistory extends Serializable {
 
   public abstract addAIChatMessage(message: string): Promise<void>;
 
+  /**
+   * Add a list of messages.
+   *
+   * Implementations should override this method to handle bulk addition of messages
+   * in an efficient manner to avoid unnecessary round-trips to the underlying store.
+   *
+   * @param messages - A list of BaseMessage objects to store.
+   */
+  public async addMessages(messages: BaseMessage[]): Promise<void> {
+    for (const message of messages) {
+      await this.addMessage(message);
+    }
+  }
+
   public abstract clear(): Promise<void>;
 }
 
