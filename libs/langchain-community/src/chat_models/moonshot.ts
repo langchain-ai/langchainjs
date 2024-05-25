@@ -128,7 +128,7 @@ export interface ChatMoonshotParams {
 
   /**
    * There is a penalty, a number between -2.0 and 2.0. Positive values
-   * ​​penalize the newly generated words based on whether they appear in the
+   * penalize the newly generated words based on whether they appear in the
    * text, increasing the likelihood that the model will discuss new topics.
    * The default value is 0
    */
@@ -136,7 +136,7 @@ export interface ChatMoonshotParams {
 
   /**
    * Frequency penalty, a number between -2.0 and 2.0. Positive values
-   * ​penalize the newly generated words based on their existing frequency in the
+   * penalize the newly generated words based on their existing frequency in the
    * text, making the model less likely to repeat the same words verbatim.
    * The default value is 0
    */
