@@ -1,9 +1,5 @@
 import { ZepClient } from "@getzep/zep-cloud";
-import {
-  BasePromptTemplate,
-  ChatPromptTemplate,
-  PromptTemplate,
-} from "@langchain/core/prompts";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ConsoleCallbackHandler } from "@langchain/core/tracers/console";
 import { ChatOpenAI } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
@@ -13,18 +9,11 @@ import {
   RunnablePassthrough,
 } from "@langchain/core/runnables";
 import { ZepCloudVectorStore } from "@langchain/community/vectorstores/zep_cloud";
-import { formatDocument } from "langchain/schema/prompt_template";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 
-const DEFAULT_DOCUMENT_PROMPT = PromptTemplate.fromTemplate("{pageContent}");
-
-async function combineDocuments(
-  docs: Document[],
-  documentPrompt: BasePromptTemplate = DEFAULT_DOCUMENT_PROMPT,
-  documentSeparator = "\n\n"
-) {
+async function combineDocuments(docs: Document[], documentSeparator = "\n\n") {
   const docStrings: string[] = await Promise.all(
-    docs.map((doc) => formatDocument(doc, documentPrompt))
+    docs.map((doc) => doc.pageContent)
   );
   return docStrings.join(documentSeparator);
 }

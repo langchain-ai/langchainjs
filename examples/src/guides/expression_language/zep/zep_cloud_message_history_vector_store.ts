@@ -1,9 +1,7 @@
 import { ZepClient } from "@getzep/zep-cloud";
 import {
-  BasePromptTemplate,
   ChatPromptTemplate,
   MessagesPlaceholder,
-  PromptTemplate,
 } from "@langchain/core/prompts";
 import { ConsoleCallbackHandler } from "@langchain/core/tracers/console";
 import { ChatOpenAI } from "@langchain/openai";
@@ -15,24 +13,17 @@ import {
   RunnableWithMessageHistory,
 } from "@langchain/core/runnables";
 import { ZepCloudVectorStore } from "@langchain/community/vectorstores/zep_cloud";
-import { formatDocument } from "langchain/schema/prompt_template";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { ZepCloudChatMessageHistory } from "@langchain/community/stores/message/zep_cloud";
-
-const DEFAULT_DOCUMENT_PROMPT = PromptTemplate.fromTemplate("{pageContent}");
 
 interface ChainInput {
   question: string;
   sessionId: string;
 }
 
-async function combineDocuments(
-  docs: Document[],
-  documentPrompt: BasePromptTemplate = DEFAULT_DOCUMENT_PROMPT,
-  documentSeparator = "\n\n"
-) {
+async function combineDocuments(docs: Document[], documentSeparator = "\n\n") {
   const docStrings: string[] = await Promise.all(
-    docs.map((doc) => formatDocument(doc, documentPrompt))
+    docs.map((doc) => doc.pageContent)
   );
   return docStrings.join(documentSeparator);
 }
