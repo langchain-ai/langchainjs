@@ -77,7 +77,10 @@ const testConfigs: TestConfig[] = [
     modelName: "moonshot-v1-8k",
     config: { description: "with temperature", temperature: 1 },
   },
-  { modelName: "moonshot-v1-8k", config: { description: "with topP", topP: 1 } },
+  {
+    modelName: "moonshot-v1-8k",
+    config: { description: "with topP", topP: 1 },
+  },
   {
     modelName: "moonshot-v1-8k",
     config: { description: "with repetitionPenalty" },
