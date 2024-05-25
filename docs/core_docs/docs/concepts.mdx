@@ -43,14 +43,14 @@ The main `langchain` package contains chains, agents, and retrieval strategies t
 These are NOT third party integrations.
 All chains, agents, and retrieval strategies here are NOT specific to any one integration, but rather generic across all integrations.
 
-### [LangGraph](/docs/langgraph)
+### [LangGraph.js](https://langchain-ai.github.io/langgraphjs/)
 
-Not currently in this repo, `langgraph` is an extension of `langchain` aimed at
+LangGraph.js is an extension of `langchain` aimed at
 building robust and stateful multi-actor applications with LLMs by modeling steps as edges and nodes in a graph.
 
 LangGraph exposes high level interfaces for creating common types of agents, as well as a low-level API for constructing more contr
 
-### [LangSmith](/docs/langsmith)
+### [LangSmith](https://docs.smith.langchain.com)
 
 A developer platform that lets you debug, test, evaluate, and monitor LLM applications.
 
@@ -98,12 +98,9 @@ something is happening, or even just to debug your chain. You can stream interme
 Input and output schemas give every LCEL chain schemas inferred from the structure of your chain. This can be used for validation of inputs and outputs,
 and is an integral part of LangServe.
 
-[**Seamless LangSmith tracing**](/docs/langsmith)
+[**Seamless LangSmith tracing**](https://docs.smith.langchain.com)
 As your chains get more and more complex, it becomes increasingly important to understand what exactly is happening at every step.
-With LCEL, **all** steps are automatically logged to [LangSmith](/docs/langsmith/) for maximum observability and debuggability.
-
-[**Seamless LangServe deployment**](https://www.langchain.com/langserve/)
-Any chain created with LCEL can be easily deployed using [LangServe](https://www.langchain.com/langserve/).
+With LCEL, **all** steps are automatically logged to [LangSmith](https://docs.smith.langchain.com) for maximum observability and debuggability.
 
 ### Interface
 
@@ -353,7 +350,18 @@ See documentation for that [here](/docs/concepts/#function-tool-calling).
 Responsible for taking the output of a model and transforming it to a more suitable format for downstream tasks.
 Useful when you are using LLMs to generate structured data, or to normalize output from chat models and LLMs.
 
-LangChain has lots of different types of output parsers. This is a list of output parsers LangChain supports. The table below has various pieces of information:
+There are two main methods an output parser must implement:
+
+- "Get format instructions": A method which returns a string containing instructions for how the output of a language model should be formatted.
+- "Parse": A method which takes in a string (assumed to be the response from a language model) and parses it into some structure.
+
+And then one optional one:
+
+- "Parse with prompt": A method which takes in a string (assumed to be the response from a language model) and a prompt (assumed to be the prompt that generated such a response) and parses it into some structure. The prompt is largely provided in the event the OutputParser wants to retry or fix the output in some way, and needs information from the prompt to do so.
+
+Output parsers accept a string or `BaseMessage` as input and can return an arbitrary type.
+
+LangChain has many different types of output parsers. This is a list of output parsers LangChain supports. The table below has various pieces of information:
 
 **Name**: The name of the output parser
 
@@ -506,6 +514,14 @@ In order to solve that we built LangGraph to be this flexible, highly-controllab
 
 If you are still using AgentExecutor, do not fear: we still have a guide on [how to use AgentExecutor](/docs/how_to/agent_executor).
 It is recommended, however, that you start to transition to [LangGraph](https://github.com/langchain-ai/langgraphjs).
+
+### Multimodal
+
+Some models are multimodal, accepting images, audio and even video as inputs. These are still less common, meaning model providers haven't standardized on the "best" way to define the API.
+Multimodal **outputs** are even less common. As such, we've kept our multimodal abstractions fairly light weight and plan to further solidify the multimodal APIs and interaction patterns as the field matures.
+
+In LangChain, most chat models that support multimodal inputs also accept those values in OpenAI's content blocks format.
+So far this is restricted to image inputs. For models like Gemini which support video and other bytes input, the APIs also support the native, model-specific representations.
 
 ### Callbacks
 
@@ -681,3 +697,14 @@ Table columns:
 | Code      | [many languages](/docs/how_to/code_splitter/)                           | Code (Python, JS) specific characters |               | Splits text based on characters specific to coding languages. 15 different languages are available to choose from.                                          |
 | Token     | [many classes](/docs/how_to/split_by_token/)                            | Tokens                                |               | Splits text on tokens. There exist a few different ways to measure tokens.                                                                                  |
 | Character | [CharacterTextSplitter](/docs/how_to/character_text_splitter/)          | A user defined character              |               | Splits text based on a user defined character. One of the simpler methods.                                                                                  |
+
+### Generative UI
+
+LangChain.js provides a few templates and examples showing off generative UI,
+and other ways of streaming data from the server to the client, specifically in React/Next.js.
+
+You can find the template for generative UI in the official [LangChain.js Next.js template](https://github.com/langchain-ai/langchain-nextjs-template/blob/main/app/generative_ui/README.md).
+
+For streaming agentic responses and intermediate steps, you can find the [template and documentation here](https://github.com/langchain-ai/langchain-nextjs-template/blob/main/app/ai_sdk/agent/README.md).
+
+And finally, streaming tool calls and structured output can be found [here](https://github.com/langchain-ai/langchain-nextjs-template/blob/main/app/ai_sdk/tools/README.md).

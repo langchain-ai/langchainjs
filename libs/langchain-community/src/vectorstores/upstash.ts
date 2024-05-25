@@ -1,9 +1,11 @@
 import * as uuid from "uuid";
 import { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
-import { Index as UpstashIndex } from "@upstash/vector";
+import { Index as UpstashIndex, type QueryResult } from "@upstash/vector";
 import { Document, DocumentInterface } from "@langchain/core/documents";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
+import { FakeEmbeddings } from "@langchain/core/utils/testing";
+
 import {
   AsyncCaller,
   AsyncCallerParams,
@@ -37,6 +39,7 @@ export type UpstashDeleteParams =
   | { deleteAll: boolean; ids?: never };
 
 const CONCURRENT_UPSERT_LIMIT = 1000;
+
 /**
  * The main class that extends the 'VectorStore' class. It provides
  * methods for interacting with Upstash index, such as adding documents,
@@ -49,7 +52,7 @@ export class UpstashVectorStore extends VectorStore {
 
   caller: AsyncCaller;
 
-  embeddings: EmbeddingsInterface;
+  useUpstashEmbeddings?: boolean;
 
   filter?: this["FilterType"];
 
@@ -59,8 +62,11 @@ export class UpstashVectorStore extends VectorStore {
 
   constructor(embeddings: EmbeddingsInterface, args: UpstashVectorLibArgs) {
     super(embeddings, args);
-
-    this.embeddings = embeddings;
+    // Special case where the embeddings instance is a FakeEmbeddings instance. In this case, we need to disable "instanceof" rule.
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    if (embeddings instanceof FakeEmbeddings) {
+      this.useUpstashEmbeddings = true;
+    }
 
     const { index, ...asyncCallerArgs } = args;
 
@@ -78,9 +84,13 @@ export class UpstashVectorStore extends VectorStore {
    */
   async addDocuments(
     documents: DocumentInterface[],
-    options?: { ids?: string[] }
+    options?: { ids?: string[]; useUpstashEmbeddings?: boolean }
   ) {
     const texts = documents.map(({ pageContent }) => pageContent);
+
+    if (this.useUpstashEmbeddings || options?.useUpstashEmbeddings) {
+      return this._addData(documents, options);
+    }
 
     const embeddings = await this.embeddings.embedDocuments(texts);
 
@@ -129,6 +139,48 @@ export class UpstashVectorStore extends VectorStore {
   }
 
   /**
+   * This method adds the provided documents to Upstash database. The pageContent of the documents will be embedded by Upstash Embeddings.
+   * @param documents Array of Document objects to be added to the Upstash database.
+   * @param options Optional object containing the array of ids for the documents.
+   * @returns Promise that resolves with the ids of the provided documents when the upsert operation is done.
+   */
+  protected async _addData(
+    documents: DocumentInterface[],
+    options?: { ids?: string[] }
+  ) {
+    const documentIds =
+      options?.ids ?? Array.from({ length: documents.length }, () => uuid.v4());
+
+    const upstashVectorsWithData = documents.map((document, index) => {
+      const metadata = {
+        _pageContentLC: documents[index].pageContent,
+        ...documents[index].metadata,
+      };
+
+      const id = documentIds[index];
+
+      return {
+        id,
+        data: document.pageContent,
+        metadata,
+      };
+    });
+
+    const vectorChunks = chunkArray(
+      upstashVectorsWithData,
+      CONCURRENT_UPSERT_LIMIT
+    );
+
+    const batchRequests = vectorChunks.map((chunk) =>
+      this.caller.call(async () => this.index.upsert(chunk))
+    );
+
+    await Promise.all(batchRequests);
+
+    return documentIds;
+  }
+
+  /**
    * This method deletes documents from the Upstash database. You can either
    * provide the target ids, or delete all vectors in the database.
    * @param params Object containing either array of ids of the documents or boolean deleteAll.
@@ -143,18 +195,30 @@ export class UpstashVectorStore extends VectorStore {
   }
 
   protected async _runUpstashQuery(
-    query: number[],
+    query: number[] | string,
     k: number,
     filter?: this["FilterType"],
     options?: { includeVectors: boolean }
   ) {
-    const queryResult = await this.index.query<UpstashQueryMetadata>({
-      vector: query,
-      topK: k,
-      includeMetadata: true,
-      filter,
-      ...options,
-    });
+    let queryResult: QueryResult<UpstashQueryMetadata>[] = [];
+
+    if (typeof query === "string") {
+      queryResult = await this.index.query<UpstashQueryMetadata>({
+        data: query,
+        topK: k,
+        includeMetadata: true,
+        filter,
+        ...options,
+      });
+    } else {
+      queryResult = await this.index.query<UpstashQueryMetadata>({
+        vector: query,
+        topK: k,
+        includeMetadata: true,
+        filter,
+        ...options,
+      });
+    }
 
     return queryResult;
   }
@@ -169,7 +233,7 @@ export class UpstashVectorStore extends VectorStore {
    *  maximum of 'k' and vectors in the index.
    */
   async similaritySearchVectorWithScore(
-    query: number[],
+    query: number[] | string,
     k: number,
     filter?: this["FilterType"]
   ): Promise<[DocumentInterface, number][]> {
