@@ -33,14 +33,12 @@ export type UpstashQueryMetadata = UpstashMetadata & {
  */
 export type UpstashDeleteParams =
   | {
-    ids: string | string[];
-    deleteAll?: never;
-  }
+      ids: string | string[];
+      deleteAll?: never;
+    }
   | { deleteAll: boolean; ids?: never };
 
 const CONCURRENT_UPSERT_LIMIT = 1000;
-
-
 
 /**
  * The main class that extends the 'VectorStore' class. It provides
@@ -50,13 +48,11 @@ const CONCURRENT_UPSERT_LIMIT = 1000;
 export class UpstashVectorStore extends VectorStore {
   declare FilterType: string;
 
-  declare embeddings: EmbeddingsInterface;
-
   index: UpstashIndex;
 
   caller: AsyncCaller;
 
-  upstashEmbeddingsConfig?: boolean;
+  useUpstashEmbeddings?: boolean;
 
   filter?: this["FilterType"];
 
@@ -64,21 +60,13 @@ export class UpstashVectorStore extends VectorStore {
     return "upstash";
   }
 
-  constructor(
-    embeddings: EmbeddingsInterface,
-    args: UpstashVectorLibArgs
-  ) {
-
-    // There is a special case where the embeddings instance is a FakeEmbeddings instance. In this case, we need to disable "instanceof" rule.
+  constructor(embeddings: EmbeddingsInterface, args: UpstashVectorLibArgs) {
+    super(embeddings, args);
+    // Special case where the embeddings instance is a FakeEmbeddings instance. In this case, we need to disable "instanceof" rule.
     // eslint-disable-next-line no-instanceof/no-instanceof
     if (embeddings instanceof FakeEmbeddings) {
-      super(new FakeEmbeddings(), args);
-      this.upstashEmbeddingsConfig = true;
-    } else {
-      super(embeddings, args);
-      this.embeddings = embeddings;
+      this.useUpstashEmbeddings = true;
     }
-
 
     const { index, ...asyncCallerArgs } = args;
 
@@ -96,12 +84,12 @@ export class UpstashVectorStore extends VectorStore {
    */
   async addDocuments(
     documents: DocumentInterface[],
-    options?: { ids?: string[]; UpstashEmbeddings?: boolean }
+    options?: { ids?: string[]; useUpstashEmbeddings?: boolean }
   ) {
     const texts = documents.map(({ pageContent }) => pageContent);
 
-    if (this.upstashEmbeddingsConfig || options?.UpstashEmbeddings) {
-      return this.addData(documents, options);
+    if (this.useUpstashEmbeddings || options?.useUpstashEmbeddings) {
+      return this._addData(documents, options);
     }
 
     const embeddings = await this.embeddings.embedDocuments(texts);
@@ -156,7 +144,10 @@ export class UpstashVectorStore extends VectorStore {
    * @param options Optional object containing the array of ids for the documents.
    * @returns Promise that resolves with the ids of the provided documents when the upsert operation is done.
    */
-  async addData(documents: DocumentInterface[], options?: { ids?: string[] }) {
+  protected async _addData(
+    documents: DocumentInterface[],
+    options?: { ids?: string[] }
+  ) {
     const documentIds =
       options?.ids ?? Array.from({ length: documents.length }, () => uuid.v4());
 
