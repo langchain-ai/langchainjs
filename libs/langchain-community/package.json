@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -14,7 +14,8 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-community/",
   "scripts": {
-    "build": "yarn run build:deps && yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
+    "build": "yarn turbo:command build:internal --filter=@langchain/community",
+    "build:internal": "yarn lc-build:v2 --create-entrypoints --pre --tree-shaking --gen-maps",
     "build:deps": "yarn run turbo:command build --filter=@langchain/core --filter=@langchain/openai --filter=langchain --filter=@langchain/anthropic --concurrency=1",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rm -rf dist/tests dist/**/tests",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rm -rf dist-cjs",
@@ -24,7 +25,7 @@
     "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "yarn lint:eslint && yarn lint:dpdm",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
-    "clean": "rm -rf dist/ && NODE_OPTIONS=--max-old-space-size=4096 yarn lc-build --config ./langchain.config.js --create-entrypoints --pre --gen-maps",
+    "clean": "rm -rf .turbo dist/",
     "prepack": "yarn build",
     "test": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
     "test:watch": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
@@ -53,7 +54,7 @@
   },
   "devDependencies": {
     "@aws-crypto/sha256-js": "^5.0.0",
-    "@aws-sdk/client-bedrock-agent-runtime": "^3.496.0",
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.583.0",
     "@aws-sdk/client-bedrock-runtime": "^3.422.0",
     "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-kendra": "^3.352.0",
@@ -73,10 +74,11 @@
     "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
+    "@getzep/zep-cloud": "~1.0.0",
     "@getzep/zep-js": "^0.9.0",
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
-    "@google-ai/generativelanguage": "^0.2.1",
+    "@google-ai/generativelanguage": "^2.5.0",
     "@google-cloud/storage": "^7.7.0",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
@@ -123,6 +125,7 @@
     "@types/ws": "^8",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
+    "@upstash/ratelimit": "^1.1.3",
     "@upstash/redis": "^1.20.6",
     "@upstash/vector": "^1.0.7",
     "@vercel/kv": "^0.2.3",
@@ -161,7 +164,7 @@
     "eslint-plugin-prettier": "^4.2.1",
     "faiss-node": "^0.5.1",
     "firebase-admin": "^11.9.0 || ^12.0.0",
-    "google-auth-library": "^8.9.0",
+    "google-auth-library": "^9.10.0",
     "googleapis": "^126.0.1",
     "graphql": "^16.6.0",
     "hdb": "0.19.8",
@@ -195,7 +198,7 @@
     "puppeteer": "^19.7.2",
     "redis": "^4.6.6",
     "release-it": "^15.10.1",
-    "replicate": "^0.18.0",
+    "replicate": "^0.29.4",
     "rollup": "^3.19.1",
     "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.3",
@@ -213,7 +216,7 @@
   },
   "peerDependencies": {
     "@aws-crypto/sha256-js": "^5.0.0",
-    "@aws-sdk/client-bedrock-agent-runtime": "^3.485.0",
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.583.0",
     "@aws-sdk/client-bedrock-runtime": "^3.422.0",
     "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-kendra": "^3.352.0",
@@ -230,10 +233,11 @@
     "@datastax/astra-db-ts": "^1.0.0",
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
+    "@getzep/zep-cloud": "~1.0.0",
     "@getzep/zep-js": "^0.9.0",
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
-    "@google-ai/generativelanguage": "^0.2.1",
+    "@google-ai/generativelanguage": "^2.5.0",
     "@google-cloud/storage": "^6.10.1 || ^7.7.0",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
@@ -260,6 +264,7 @@
     "@tensorflow-models/universal-sentence-encoder": "*",
     "@tensorflow/tfjs-converter": "*",
     "@tensorflow/tfjs-core": "*",
+    "@upstash/ratelimit": "^1.1.3",
     "@upstash/redis": "^1.20.6",
     "@upstash/vector": "^1.0.7",
     "@vercel/kv": "^0.2.3",
@@ -288,7 +293,7 @@
     "epub2": "^3.0.1",
     "faiss-node": "^0.5.1",
     "firebase-admin": "^11.9.0 || ^12.0.0",
-    "google-auth-library": "^8.9.0",
+    "google-auth-library": "^9.10.0",
     "googleapis": "^126.0.1",
     "hnswlib-node": "^3.0.0",
     "html-to-text": "^9.0.5",
@@ -316,7 +321,7 @@
     "portkey-ai": "^0.1.11",
     "puppeteer": "^19.7.2",
     "redis": "*",
-    "replicate": "^0.18.0",
+    "replicate": "^0.29.4",
     "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.3",
     "typeorm": "^0.3.12",
@@ -383,6 +388,9 @@
       "optional": true
     },
     "@getmetal/metal-sdk": {
+      "optional": true
+    },
+    "@getzep/zep-cloud": {
       "optional": true
     },
     "@getzep/zep-js": {
@@ -473,6 +481,9 @@
       "optional": true
     },
     "@tensorflow/tfjs-core": {
+      "optional": true
+    },
+    "@upstash/ratelimit": {
       "optional": true
     },
     "@upstash/redis": {
@@ -1758,6 +1769,15 @@
       "import": "./vectorstores/zep.js",
       "require": "./vectorstores/zep.cjs"
     },
+    "./vectorstores/zep_cloud": {
+      "types": {
+        "import": "./vectorstores/zep_cloud.d.ts",
+        "require": "./vectorstores/zep_cloud.d.cts",
+        "default": "./vectorstores/zep_cloud.d.ts"
+      },
+      "import": "./vectorstores/zep_cloud.js",
+      "require": "./vectorstores/zep_cloud.cjs"
+    },
     "./chat_models/alibaba_tongyi": {
       "types": {
         "import": "./chat_models/alibaba_tongyi.d.ts",
@@ -1884,6 +1904,15 @@
       "import": "./chat_models/minimax.js",
       "require": "./chat_models/minimax.cjs"
     },
+    "./chat_models/moonshot": {
+      "types": {
+        "import": "./chat_models/moonshot.d.ts",
+        "require": "./chat_models/moonshot.d.cts",
+        "default": "./chat_models/moonshot.d.ts"
+      },
+      "import": "./chat_models/moonshot.js",
+      "require": "./chat_models/moonshot.cjs"
+    },
     "./chat_models/ollama": {
       "types": {
         "import": "./chat_models/ollama.d.ts",
@@ -1964,6 +1993,15 @@
       },
       "import": "./callbacks/handlers/lunary.js",
       "require": "./callbacks/handlers/lunary.cjs"
+    },
+    "./callbacks/handlers/upstash_ratelimit": {
+      "types": {
+        "import": "./callbacks/handlers/upstash_ratelimit.d.ts",
+        "require": "./callbacks/handlers/upstash_ratelimit.d.cts",
+        "default": "./callbacks/handlers/upstash_ratelimit.d.ts"
+      },
+      "import": "./callbacks/handlers/upstash_ratelimit.js",
+      "require": "./callbacks/handlers/upstash_ratelimit.cjs"
     },
     "./retrievers/amazon_kendra": {
       "types": {
@@ -2108,6 +2146,15 @@
       },
       "import": "./structured_query/vectara.js",
       "require": "./structured_query/vectara.cjs"
+    },
+    "./retrievers/zep_cloud": {
+      "types": {
+        "import": "./retrievers/zep_cloud.d.ts",
+        "require": "./retrievers/zep_cloud.d.cts",
+        "default": "./retrievers/zep_cloud.d.ts"
+      },
+      "import": "./retrievers/zep_cloud.js",
+      "require": "./retrievers/zep_cloud.cjs"
     },
     "./caches/cloudflare_kv": {
       "types": {
@@ -2397,6 +2444,15 @@
       "import": "./stores/message/xata.js",
       "require": "./stores/message/xata.cjs"
     },
+    "./stores/message/zep_cloud": {
+      "types": {
+        "import": "./stores/message/zep_cloud.d.ts",
+        "require": "./stores/message/zep_cloud.d.cts",
+        "default": "./stores/message/zep_cloud.d.ts"
+      },
+      "import": "./stores/message/zep_cloud.js",
+      "require": "./stores/message/zep_cloud.cjs"
+    },
     "./memory/chat_memory": {
       "types": {
         "import": "./memory/chat_memory.d.ts",
@@ -2423,6 +2479,15 @@
       },
       "import": "./memory/zep.js",
       "require": "./memory/zep.cjs"
+    },
+    "./memory/zep_cloud": {
+      "types": {
+        "import": "./memory/zep_cloud.d.ts",
+        "require": "./memory/zep_cloud.d.cts",
+        "default": "./memory/zep_cloud.d.ts"
+      },
+      "import": "./memory/zep_cloud.js",
+      "require": "./memory/zep_cloud.cjs"
     },
     "./indexes/base": {
       "types": {
@@ -3363,6 +3428,10 @@
     "vectorstores/zep.js",
     "vectorstores/zep.d.ts",
     "vectorstores/zep.d.cts",
+    "vectorstores/zep_cloud.cjs",
+    "vectorstores/zep_cloud.js",
+    "vectorstores/zep_cloud.d.ts",
+    "vectorstores/zep_cloud.d.cts",
     "chat_models/alibaba_tongyi.cjs",
     "chat_models/alibaba_tongyi.js",
     "chat_models/alibaba_tongyi.d.ts",
@@ -3419,6 +3488,10 @@
     "chat_models/minimax.js",
     "chat_models/minimax.d.ts",
     "chat_models/minimax.d.cts",
+    "chat_models/moonshot.cjs",
+    "chat_models/moonshot.js",
+    "chat_models/moonshot.d.ts",
+    "chat_models/moonshot.d.cts",
     "chat_models/ollama.cjs",
     "chat_models/ollama.js",
     "chat_models/ollama.d.ts",
@@ -3455,6 +3528,10 @@
     "callbacks/handlers/lunary.js",
     "callbacks/handlers/lunary.d.ts",
     "callbacks/handlers/lunary.d.cts",
+    "callbacks/handlers/upstash_ratelimit.cjs",
+    "callbacks/handlers/upstash_ratelimit.js",
+    "callbacks/handlers/upstash_ratelimit.d.ts",
+    "callbacks/handlers/upstash_ratelimit.d.cts",
     "retrievers/amazon_kendra.cjs",
     "retrievers/amazon_kendra.js",
     "retrievers/amazon_kendra.d.ts",
@@ -3519,6 +3596,10 @@
     "structured_query/vectara.js",
     "structured_query/vectara.d.ts",
     "structured_query/vectara.d.cts",
+    "retrievers/zep_cloud.cjs",
+    "retrievers/zep_cloud.js",
+    "retrievers/zep_cloud.d.ts",
+    "retrievers/zep_cloud.d.cts",
     "caches/cloudflare_kv.cjs",
     "caches/cloudflare_kv.js",
     "caches/cloudflare_kv.d.ts",
@@ -3647,6 +3728,10 @@
     "stores/message/xata.js",
     "stores/message/xata.d.ts",
     "stores/message/xata.d.cts",
+    "stores/message/zep_cloud.cjs",
+    "stores/message/zep_cloud.js",
+    "stores/message/zep_cloud.d.ts",
+    "stores/message/zep_cloud.d.cts",
     "memory/chat_memory.cjs",
     "memory/chat_memory.js",
     "memory/chat_memory.d.ts",
@@ -3659,6 +3744,10 @@
     "memory/zep.js",
     "memory/zep.d.ts",
     "memory/zep.d.cts",
+    "memory/zep_cloud.cjs",
+    "memory/zep_cloud.js",
+    "memory/zep_cloud.d.ts",
+    "memory/zep_cloud.d.cts",
     "indexes/base.cjs",
     "indexes/base.js",
     "indexes/base.d.ts",
