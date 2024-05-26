@@ -348,7 +348,6 @@ export class Neo4jVectorStore extends VectorStore {
       );
     }
 
-
     if (!retrievalQuery) {
       _retrievalQuery = `
         RETURN reduce(str='', k IN ${JSON.stringify(textNodeProperties)} |
