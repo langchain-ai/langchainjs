@@ -180,6 +180,7 @@ export const config = {
     // callbacks
     "callbacks/handlers/llmonitor": "callbacks/handlers/llmonitor",
     "callbacks/handlers/lunary": "callbacks/handlers/lunary",
+    "callbacks/handlers/upstash_ratelimit": "callbacks/handlers/upstash_ratelimit",
     // retrievers
     "retrievers/amazon_kendra": "retrievers/amazon_kendra",
     "retrievers/amazon_knowledge_base": "retrievers/amazon_knowledge_base",
@@ -318,6 +319,7 @@ export const config = {
     "agents/toolkits/aws_sfn",
     "callbacks/handlers/llmonitor",
     "callbacks/handlers/lunary",
+    "callbacks/handlers/upstash_ratelimit",
     "embeddings/bedrock",
     "embeddings/cloudflare_workersai",
     "embeddings/cohere",
