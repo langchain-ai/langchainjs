@@ -2,6 +2,7 @@ import { Document } from "@langchain/core/documents";
 import { BasePromptTemplate } from "@langchain/core/prompts";
 
 /**
+ * @deprecated
  * Formats a document using a given prompt template.
  *
  * @async

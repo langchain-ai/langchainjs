@@ -1,0 +1,38 @@
+---
+sidebar_position: 5
+---
+
+# How to track token usage
+
+:::info Prerequisites
+
+This guide assumes familiarity with the following concepts:
+
+- [LLMs](/docs/concepts/#llms)
+
+:::
+
+This notebook goes over how to track your token usage for specific LLM calls. This is only implemented by some providers, including OpenAI.
+
+Here's an example of tracking token usage for a single LLM call via a callback:
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/models/llm/token_usage_tracking.ts";
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
+If this model is passed to a chain or agent that calls it multiple times, it will log an output each time.
+
+## Next steps
+
+You've now seen how to get token usage for supported LLM providers.
+
+Next, check out the other how-to guides in this section, like [how to implement your own custom LLM](/docs/how_to/custom_llm).

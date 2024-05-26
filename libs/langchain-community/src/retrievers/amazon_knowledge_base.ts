@@ -101,6 +101,7 @@ export class AmazonKnowledgeBaseRetriever extends BaseRetriever {
         metadata: {
           source: result.location?.s3Location?.uri,
           score: result.score,
+          ...result.metadata,
         },
       })) ?? ([] as Array<Document>)
     );

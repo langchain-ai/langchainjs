@@ -1,8 +1,8 @@
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
-import { InMemoryStore } from "langchain/storage/in_memory";
+import { InMemoryStore } from "@langchain/core/stores";
 import { ParentDocumentRetriever } from "langchain/retrievers/parent_document";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
 const splitter = new RecursiveCharacterTextSplitter({
   chunkSize: 1500,

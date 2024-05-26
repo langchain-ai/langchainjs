@@ -501,6 +501,18 @@ export class PGVectorStore extends VectorStore {
           parameters.push(..._value.in);
           paramCount += _value.in.length;
         }
+        if (Array.isArray(_value.arrayContains)) {
+          const placeholders = _value.arrayContains
+            .map(
+              (_: unknown, index: number) => `$${currentParamCount + index + 1}`
+            )
+            .join(",");
+          whereClauses.push(
+            `${this.metadataColumnName}->'${key}' ?| array[${placeholders}]`
+          );
+          parameters.push(..._value.arrayContains);
+          paramCount += _value.arrayContains.length;
+        }
       } else {
         paramCount += 1;
         whereClauses.push(
@@ -584,6 +596,8 @@ export class PGVectorStore extends VectorStore {
           cmetadata jsonb
         );
 
+        CREATE INDEX IF NOT EXISTS idx_${this.collectionTableName}_name ON ${this.computedCollectionTableName}(name);
+
         ALTER TABLE ${this.computedTableName}
           ADD COLUMN collection_id uuid;
 
@@ -597,7 +611,9 @@ export class PGVectorStore extends VectorStore {
     } catch (e) {
       if (!(e as Error).message.includes("already exists")) {
         console.error(e);
-        throw new Error(`Error adding column: ${(e as Error).message}`);
+        throw new Error(
+          `Error adding column or creating index: ${(e as Error).message}`
+        );
       }
     }
   }

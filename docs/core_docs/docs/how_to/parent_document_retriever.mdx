@@ -1,0 +1,77 @@
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/retrievers/parent_document_retriever.ts";
+import ExampleWithScoreThreshold from "@examples/retrievers/parent_document_retriever_score_threshold.ts";
+import ExampleWithChunkHeader from "@examples/retrievers/parent_document_retriever_chunk_header.ts";
+import ExampleWithRerank from "@examples/retrievers/parent_document_retriever_rerank.ts";
+
+# How to retrieve the whole document for a chunk
+
+:::info Prerequisites
+
+This guide assumes familiarity with the following concepts:
+
+- [Retrievers](/docs/concepts/#retrievers)
+- [Text splitters](/docs/concepts/#text-splitters)
+- [Retrieval-augmented generation (RAG)](/docs/tutorials/rag)
+
+:::
+
+When splitting documents for retrieval, there are often conflicting desires:
+
+1. You may want to have small documents, so that their embeddings can most accurately reflect their meaning. If documents are too long, then the embeddings can lose meaning.
+2. You want to have long enough documents that the context of each chunk is retained.
+
+The [`ParentDocumentRetriever`](https://v02.api.js.langchain.com/classes/langchain_retrievers_parent_document.ParentDocumentRetriever.html) strikes that balance by splitting and storing small chunks of data. During retrieval, it first fetches the small chunks but then looks up the parent ids for those chunks and returns those larger documents.
+
+Note that "parent document" refers to the document that a small chunk originated from. This can either be the whole raw document OR a larger chunk.
+
+This is a more specific form of [generating multiple embeddings per document](/docs/how_to/multi_vector).
+
+## Usage
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
+## With Score Threshold
+
+By setting the options in `scoreThresholdOptions` we can force the `ParentDocumentRetriever` to use the `ScoreThresholdRetriever` under the hood.
+This sets the vector store inside `ScoreThresholdRetriever` as the one we passed when initializing `ParentDocumentRetriever`, while also allowing us to also set a score threshold for the retriever.
+
+This can be helpful when you're not sure how many documents you want (or if you are sure, just set the `maxK` option), but you want to make sure that the documents you do get are within a certain relevancy threshold.
+
+Note: if a retriever is passed, `ParentDocumentRetriever` will default to use it for retrieving small chunks, as well as adding documents via the `addDocuments` method.
+
+<CodeBlock language="typescript">{ExampleWithScoreThreshold}</CodeBlock>
+
+## With Contextual chunk headers
+
+Consider a scenario where you want to store collection of documents in a vector store and perform Q&A tasks on them. Simply splitting documents with overlapping text may not provide sufficient context for LLMs to determine if multiple chunks are referencing the same information, or how to resolve information from contradictory sources.
+
+Tagging each document with metadata is a solution if you know what to filter against, but you may not know ahead of time exactly what kind of queries your vector store will be expected to handle. Including additional contextual information directly in each chunk in the form of headers can help deal with arbitrary queries.
+
+This is particularly important if you have several fine-grained child chunks that need to be correctly retrieved from the vector store.
+
+<CodeBlock language="typescript">{ExampleWithChunkHeader}</CodeBlock>
+
+## With Reranking
+
+With many documents from the vector store that are passed to LLM, final answers sometimes consist of information from
+irrelevant chunks, making it less precise and sometimes incorrect. Also, passing multiple irrelevant documents makes it
+more expensive.
+So there are two reasons to use rerank - precision and costs.
+
+<CodeBlock language="typescript">{ExampleWithRerank}</CodeBlock>
+
+## Next steps
+
+You've now learned how to use the `ParentDocumentRetriever`.
+
+Next, check out the more general form of [generating multiple embeddings per document](/docs/how_to/multi_vector), the [broader tutorial on RAG](/docs/tutorials/rag), or this section to learn how to
+[create your own custom retriever over any data source](/docs/how_to/custom_retriever/).
