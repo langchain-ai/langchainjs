@@ -39,6 +39,26 @@ import GoogleGenerativeAI from "@examples/models/chat/googlegenerativeai.ts";
 
 <CodeBlock language="typescript">{GoogleGenerativeAI}</CodeBlock>
 
+## Tool calling
+
+import GoogleGenerativeAIToolCalling from "@examples/models/chat/googlegenerativeai_tools.ts";
+
+<CodeBlock language="typescript">{GoogleGenerativeAIToolCalling}</CodeBlock>
+
+:::tip
+See the above run's LangSmith trace [here](https://smith.langchain.com/public/31faf31b-dbd0-436c-a425-b9eb1bccf8b7/r)
+:::
+
+## `.withStructuredOutput`
+
+import GoogleGenerativeAIWSO from "@examples/models/chat/googlegenerativeai_wso.ts";
+
+<CodeBlock language="typescript">{GoogleGenerativeAIWSO}</CodeBlock>
+
+:::tip
+See the above run's LangSmith trace [here](https://smith.langchain.com/public/4506314e-21ea-43a9-9718-22cad0bbbb38/r)
+:::
+
 ## Multimodal support
 
 To provide an image, pass a human message with a `content` field set to an array of content objects. Each content object

@@ -3386,11 +3386,6 @@ export const importMap: Array<DeprecatedEntrypoint> = [
     namedImport: "BaseChatMemoryInput",
   },
   {
-    old: "langchain/memory",
-    new: "langchain/memory/index",
-    namedImport: null,
-  },
-  {
     old: "langchain/memory/*",
     new: "@langchain/community/memory/chat_memory",
     namedImport: "BaseChatMemory",
