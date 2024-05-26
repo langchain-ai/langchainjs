@@ -125,6 +125,7 @@
     "@types/ws": "^8",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
+    "@upstash/ratelimit": "^1.1.3",
     "@upstash/redis": "^1.20.6",
     "@upstash/vector": "^1.0.7",
     "@vercel/kv": "^0.2.3",
@@ -263,6 +264,7 @@
     "@tensorflow-models/universal-sentence-encoder": "*",
     "@tensorflow/tfjs-converter": "*",
     "@tensorflow/tfjs-core": "*",
+    "@upstash/ratelimit": "^1.1.3",
     "@upstash/redis": "^1.20.6",
     "@upstash/vector": "^1.0.7",
     "@vercel/kv": "^0.2.3",
@@ -479,6 +481,9 @@
       "optional": true
     },
     "@tensorflow/tfjs-core": {
+      "optional": true
+    },
+    "@upstash/ratelimit": {
       "optional": true
     },
     "@upstash/redis": {
@@ -1988,6 +1993,15 @@
       },
       "import": "./callbacks/handlers/lunary.js",
       "require": "./callbacks/handlers/lunary.cjs"
+    },
+    "./callbacks/handlers/upstash_ratelimit": {
+      "types": {
+        "import": "./callbacks/handlers/upstash_ratelimit.d.ts",
+        "require": "./callbacks/handlers/upstash_ratelimit.d.cts",
+        "default": "./callbacks/handlers/upstash_ratelimit.d.ts"
+      },
+      "import": "./callbacks/handlers/upstash_ratelimit.js",
+      "require": "./callbacks/handlers/upstash_ratelimit.cjs"
     },
     "./retrievers/amazon_kendra": {
       "types": {
@@ -3514,6 +3528,10 @@
     "callbacks/handlers/lunary.js",
     "callbacks/handlers/lunary.d.ts",
     "callbacks/handlers/lunary.d.cts",
+    "callbacks/handlers/upstash_ratelimit.cjs",
+    "callbacks/handlers/upstash_ratelimit.js",
+    "callbacks/handlers/upstash_ratelimit.d.ts",
+    "callbacks/handlers/upstash_ratelimit.d.cts",
     "retrievers/amazon_kendra.cjs",
     "retrievers/amazon_kendra.js",
     "retrievers/amazon_kendra.d.ts",

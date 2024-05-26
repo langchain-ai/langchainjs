@@ -574,6 +574,10 @@ callbacks/handlers/lunary.cjs
 callbacks/handlers/lunary.js
 callbacks/handlers/lunary.d.ts
 callbacks/handlers/lunary.d.cts
+callbacks/handlers/upstash_ratelimit.cjs
+callbacks/handlers/upstash_ratelimit.js
+callbacks/handlers/upstash_ratelimit.d.ts
+callbacks/handlers/upstash_ratelimit.d.cts
 retrievers/amazon_kendra.cjs
 retrievers/amazon_kendra.js
 retrievers/amazon_kendra.d.ts

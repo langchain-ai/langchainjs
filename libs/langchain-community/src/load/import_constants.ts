@@ -93,6 +93,7 @@ export const optionalImportEntrypoints: string[] = [
   "langchain_community/chat_models/zhipuai",
   "langchain_community/callbacks/handlers/llmonitor",
   "langchain_community/callbacks/handlers/lunary",
+  "langchain_community/callbacks/handlers/upstash_ratelimit",
   "langchain_community/retrievers/amazon_kendra",
   "langchain_community/retrievers/amazon_knowledge_base",
   "langchain_community/retrievers/dria",
