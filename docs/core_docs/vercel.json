@@ -36,6 +36,10 @@
     {
       "source": "/docs/:path(.*/?)*",
       "destination": "/v0.1/docs/:path*"
+    },
+    {
+      "source": "/docs/how_to/tool_calls_multi_modal(/?)",
+      "destination": "/docs/how_to/multimodal_inputs/"
     }
   ]
 }

@@ -3,7 +3,7 @@ import {
   BufferMemory,
   CombinedMemory,
   ConversationSummaryMemory,
-} from "langchain/memory/index";
+} from "langchain/memory";
 import { ConversationChain } from "langchain/chains";
 import { PromptTemplate } from "@langchain/core/prompts";
 
