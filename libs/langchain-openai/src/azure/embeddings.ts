@@ -27,7 +27,7 @@ export class AzureOpenAIEmbeddings extends OpenAIEmbeddings {
   ) {
     const newFields = { ...fields };
     if (Object.entries(newFields).length) {
-     // don't rewrite the fields if they are already set
+      // don't rewrite the fields if they are already set
       newFields.azureOpenAIApiDeploymentName =
         newFields.azureOpenAIApiDeploymentName ?? newFields.deploymentName;
       newFields.azureOpenAIApiKey =
