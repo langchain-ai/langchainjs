@@ -24,6 +24,7 @@ const embeddings_cache_backed = require("langchain/embeddings/cache_backed");
 const embeddings_fake = require("langchain/embeddings/fake");
 const vectorstores_memory = require("langchain/vectorstores/memory");
 const text_splitter = require("langchain/text_splitter");
+const memory = require("langchain/memory");
 const memory_index = require("langchain/memory/index");
 const memory_chat_memory = require("langchain/memory/chat_memory");
 const document = require("langchain/document");

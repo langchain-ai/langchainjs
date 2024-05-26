@@ -17,7 +17,11 @@ export interface PackageJSONPerson extends PackageJSONAddress {
 }
 
 export interface ExportsMapValue {
-  types: string;
+  types: {
+    import: string;
+    require: string;
+    default: string;
+  };
   import: string;
   require: string;
 }

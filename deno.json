@@ -27,6 +27,7 @@
     "uuid": "npm:/uuid",
     "youtubei.js": "npm:/youtubei.js",
     "youtube-transcript": "npm:/youtube-transcript",
-    "neo4j-driver": "npm:/neo4j-driver"
+    "neo4j-driver": "npm:/neo4j-driver",
+    "axios": "npm:/axios"
   }
 }
