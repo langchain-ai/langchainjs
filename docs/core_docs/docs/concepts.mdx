@@ -531,26 +531,26 @@ You can subscribe to these events by using the `callbacks` argument available th
 
 #### Callback Events
 
-| Event            | Event Trigger                               | Associated Method        |
-|------------------|---------------------------------------------|--------------------------|
-| Chat model start | When a chat model starts                    | `handleChatModelStart`   |
-| LLM start        | When a llm starts                           | `handleLLMStart`         |
-| LLM new token    | When an llm OR chat model emits a new token | `handleLLMNewToken`      |
-| LLM ends         | When an llm OR chat model ends              | `handleLLMEnd`           |
-| LLM errors       | When an llm OR chat model errors            | `handleLLMError`         |
-| Chain start      | When a chain starts running                 | `handleChainStart`       |
-| Chain end        | When a chain ends                           | `handleChainEnd`         |
-| Chain error      | When a chain errors                         | `handleChainError`       |
-| Tool start       | When a tool starts running                  | `handleToolStart`        |
-| Tool end         | When a tool ends                            | `handleToolEnd`          |
-| Tool error       | When a tool errors                          | `handleToolError`        |
-| Agent action     | When an agent takes an action               | `handleAgentAction`      |
-| Agent finish     | When an agent ends                          | `handleAgentFinish`      |
-| Retriever start  | When a retriever starts                     | `handleRetrieverStart`   |
-| Retriever end    | When a retriever ends                       | `handleRetrieverEnd`     |
-| Retriever error  | When a retriever errors                     | `handleRetrieverError`   |
-| Text             | When arbitrary text is run                  | `handleText`             |
-| Retry            | When a retry event is run                   | `handleRetry`            |
+| Event            | Event Trigger                               | Associated Method      |
+| ---------------- | ------------------------------------------- | ---------------------- |
+| Chat model start | When a chat model starts                    | `handleChatModelStart` |
+| LLM start        | When a llm starts                           | `handleLLMStart`       |
+| LLM new token    | When an llm OR chat model emits a new token | `handleLLMNewToken`    |
+| LLM ends         | When an llm OR chat model ends              | `handleLLMEnd`         |
+| LLM errors       | When an llm OR chat model errors            | `handleLLMError`       |
+| Chain start      | When a chain starts running                 | `handleChainStart`     |
+| Chain end        | When a chain ends                           | `handleChainEnd`       |
+| Chain error      | When a chain errors                         | `handleChainError`     |
+| Tool start       | When a tool starts running                  | `handleToolStart`      |
+| Tool end         | When a tool ends                            | `handleToolEnd`        |
+| Tool error       | When a tool errors                          | `handleToolError`      |
+| Agent action     | When an agent takes an action               | `handleAgentAction`    |
+| Agent finish     | When an agent ends                          | `handleAgentFinish`    |
+| Retriever start  | When a retriever starts                     | `handleRetrieverStart` |
+| Retriever end    | When a retriever ends                       | `handleRetrieverEnd`   |
+| Retriever error  | When a retriever errors                     | `handleRetrieverError` |
+| Text             | When arbitrary text is run                  | `handleText`           |
+| Retry            | When a retry event is run                   | `handleRetry`          |
 
 #### Callback handlers
 
@@ -562,10 +562,10 @@ The `CallbackManager` will call the appropriate method on each handler when the 
 The `callbacks` property is available on most objects throughout the API (Models, Tools, Agents, etc.) in two different places:
 
 - **Request callbacks**: Passed at the time of the request in addition to the input data.
-    Available on all standard `Runnable` objects. These callbacks are INHERITED by all children
-    of the object they are defined on. For example, `chain.invoke({foo: "bar"}, {callbacks: [handler]})`.
+  Available on all standard `Runnable` objects. These callbacks are INHERITED by all children
+  of the object they are defined on. For example, `chain.invoke({foo: "bar"}, {callbacks: [handler]})`.
 - **Constructor callbacks**: defined in the constructor, e.g. `new ChatAnthropic({ callbacks: [handler], tags: ["a-tag"] })`. In this case, the callbacks will be used for all calls made on that object, and will be scoped to that object only.
-    For example, if you initialize a chat model with constructor callbacks, then use it within a chain, the callbacks will only be invoked for calls to that model.
+  For example, if you initialize a chat model with constructor callbacks, then use it within a chain, the callbacks will only be invoked for calls to that model.
 
 :::warning
 Constructor callbacks are scoped only to the object they are defined on. They are **not** inherited by children
