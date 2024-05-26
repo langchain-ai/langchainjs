@@ -209,3 +209,46 @@ test("QdrantVectorStore adds vectors with no custom payload", async () => {
     ],
   });
 });
+
+test("QdrantVectorStore MMR works", async () => {
+  const client = {
+    upsert: jest.fn(),
+    search: jest.fn<any>().mockResolvedValue([]),
+    getCollections: jest.fn<any>().mockResolvedValue({ collections: [] }),
+    createCollection: jest.fn(),
+  };
+
+  const embeddings = new FakeEmbeddings();
+
+  const store = new QdrantVectorStore(embeddings, {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    client: client as any,
+  });
+
+  expect(store).toBeDefined();
+
+  await store.addDocuments([
+    {
+      pageContent: "hello",
+      metadata: {},
+    },
+  ]);
+
+  expect(client.upsert).toHaveBeenCalledTimes(1);
+
+  expect(store.maxMarginalRelevanceSearch).toBeDefined();
+
+  await store.maxMarginalRelevanceSearch("hello", {
+    k: 10,
+    fetchK: 7,
+  });
+
+  expect(client.search).toHaveBeenCalledTimes(1);
+  expect(client.search).toHaveBeenCalledWith("documents", {
+    filter: undefined,
+    limit: 7,
+    vector: [0.1, 0.2, 0.3, 0.4],
+    with_payload: ["metadata", "content"],
+    with_vector: true,
+  });
+});
