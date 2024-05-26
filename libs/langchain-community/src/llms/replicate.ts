@@ -1,5 +1,9 @@
 import { LLM, type BaseLLMParams } from "@langchain/core/language_models/llms";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import { GenerationChunk } from "@langchain/core/outputs";
+
+import type ReplicateInstance from "replicate";
 
 /**
  * Interface defining the structure of the input data for the Replicate
@@ -88,13 +92,85 @@ export class Replicate extends LLM implements ReplicateInput {
     prompt: string,
     options: this["ParsedCallOptions"]
   ): Promise<string> {
+    const replicate = await this._prepareReplicate();
+    const input = await this._getReplicateInput(replicate, prompt);
+
+    const output = await this.caller.callWithOptions(
+      { signal: options.signal },
+      () =>
+        replicate.run(this.model, {
+          input,
+        })
+    );
+
+    if (typeof output === "string") {
+      return output;
+    } else if (Array.isArray(output)) {
+      return output.join("");
+    } else {
+      // Note this is a little odd, but the output format is not consistent
+      // across models, so it makes some amount of sense.
+      return String(output);
+    }
+  }
+
+  async *_streamResponseChunks(
+    prompt: string,
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<GenerationChunk> {
+    const replicate = await this._prepareReplicate();
+    const input = await this._getReplicateInput(replicate, prompt);
+
+    const stream = await this.caller.callWithOptions(
+      { signal: options?.signal },
+      async () =>
+        replicate.stream(this.model, {
+          input,
+        })
+    );
+    for await (const chunk of stream) {
+      if (chunk.event === "output") {
+        yield new GenerationChunk({ text: chunk.data, generationInfo: chunk });
+        await runManager?.handleLLMNewToken(chunk.data ?? "");
+      }
+
+      // stream is done
+      if (chunk.event === "done")
+        yield new GenerationChunk({
+          text: "",
+          generationInfo: { finished: true },
+        });
+    }
+  }
+
+  /** @ignore */
+  static async imports(): Promise<{
+    Replicate: typeof ReplicateInstance;
+  }> {
+    try {
+      const { default: Replicate } = await import("replicate");
+      return { Replicate };
+    } catch (e) {
+      throw new Error(
+        "Please install replicate as a dependency with, e.g. `yarn add replicate`"
+      );
+    }
+  }
+
+  private async _prepareReplicate(): Promise<ReplicateInstance> {
     const imports = await Replicate.imports();
 
-    const replicate = new imports.Replicate({
+    return new imports.Replicate({
       userAgent: "langchain",
       auth: this.apiKey,
     });
+  }
 
+  private async _getReplicateInput(
+    replicate: ReplicateInstance,
+    prompt: string
+  ) {
     if (this.promptKey === undefined) {
       const [modelString, versionString] = this.model.split(":");
       const version = await replicate.models.versions.get(
@@ -119,40 +195,11 @@ export class Replicate extends LLM implements ReplicateInput {
         this.promptKey = sortedInputProperties[0][0] ?? "prompt";
       }
     }
-    const output = await this.caller.callWithOptions(
-      { signal: options.signal },
-      () =>
-        replicate.run(this.model, {
-          input: {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            [this.promptKey!]: prompt,
-            ...this.input,
-          },
-        })
-    );
 
-    if (typeof output === "string") {
-      return output;
-    } else if (Array.isArray(output)) {
-      return output.join("");
-    } else {
-      // Note this is a little odd, but the output format is not consistent
-      // across models, so it makes some amount of sense.
-      return String(output);
-    }
-  }
-
-  /** @ignore */
-  static async imports(): Promise<{
-    Replicate: typeof import("replicate").default;
-  }> {
-    try {
-      const { default: Replicate } = await import("replicate");
-      return { Replicate };
-    } catch (e) {
-      throw new Error(
-        "Please install replicate as a dependency with, e.g. `yarn add replicate`"
-      );
-    }
+    return {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      [this.promptKey!]: prompt,
+      ...this.input,
+    };
   }
 }

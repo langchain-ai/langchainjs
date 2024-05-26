@@ -208,10 +208,7 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
     this.stopSequences = fields?.stopSequences;
     this.modelKwargs = fields?.modelKwargs;
     this.streaming = fields?.streaming ?? this.streaming;
-    this.usesMessagesApi =
-      this.model.split(".")[0] === "anthropic" &&
-      !this.model.includes("claude-v2") &&
-      !this.model.includes("claude-instant-v1");
+    this.usesMessagesApi = canUseMessagesApi(this.model);
   }
 
   async _generate(
@@ -497,6 +494,29 @@ function isChatGenerationChunk(
   return (
     x !== undefined && typeof (x as ChatGenerationChunk).concat === "function"
   );
+}
+
+function canUseMessagesApi(model: string): boolean {
+  const modelProviderName = model.split(".")[0];
+
+  if (
+    modelProviderName === "anthropic" &&
+    !model.includes("claude-v2") &&
+    !model.includes("claude-instant-v1")
+  ) {
+    return true;
+  }
+
+  if (modelProviderName === "cohere") {
+    if (model.includes("command-r-v1")) {
+      return true;
+    }
+    if (model.includes("command-r-plus-v1")) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 /**

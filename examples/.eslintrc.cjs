@@ -45,4 +45,12 @@ module.exports = {
     semi: ["error", "always"],
     "unused-imports/no-unused-imports": "error",
   },
+  overrides: [
+    {
+      files: ['**/*.test.ts'],
+      rules: {
+        '@typescript-eslint/no-unused-vars': 'off'
+      }
+    }
+  ]
 };

@@ -53,7 +53,18 @@ module.exports = {
       label: "Ecosystem",
       collapsed: false,
       collapsible: false,
-      items: ["langsmith", "langgraph"],
+      items: [
+        {
+          type: "link",
+          href: "https://docs.smith.langchain.com/",
+          label: "🦜🛠️ LangSmith",
+        },
+        {
+          type: "link",
+          href: "https://langchain-ai.github.io/langgraphjs/",
+          label: "🦜🕸️ LangGraph.js",
+        },
+      ],
     },
     {
       type: "category",

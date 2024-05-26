@@ -1,0 +1,31 @@
+import CodeBlock from "@theme/CodeBlock";
+
+# Layerup Security
+
+The [Layerup Security](https://uselayerup.com) integration allows you to secure your calls to any LangChain LLM, LLM chain or LLM agent. The LLM object wraps around any existing LLM object, allowing for a secure layer between your users and your LLMs.
+
+While the Layerup Security object is designed as an LLM, it is not actually an LLM itself, it simply wraps around an LLM, allowing it to adapt the same functionality as the underlying LLM.
+
+## Setup
+
+First, you'll need a Layerup Security account from the Layerup [website](https://uselayerup.com).
+
+Next, create a project via the [dashboard](https://dashboard.uselayerup.com), and copy your API key. We recommend putting your API key in your project's environment.
+
+Install the Layerup Security SDK:
+
+```bash npm2yarn
+npm install @layerup/layerup-security
+```
+
+And install LangChain Community:
+
+```bash npm2yarn
+npm install @langchain/community
+```
+
+And now you're ready to start protecting your LLM calls with Layerup Security!
+
+import LayerupSecurityExampleCode from "@examples/llms/layerup_security.ts";
+
+<CodeBlock language="typescript">{LayerupSecurityExampleCode}</CodeBlock>

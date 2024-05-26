@@ -601,7 +601,8 @@ const generateImportMap = ({
     "\n"
   )}\n${extraDeclarations.join("\n")}\n`;
 
-  if (!extraContent.trim()) {
+  extraContent.trim();
+  if (!/[a-zA-Z0-9]/.test(extraContent)) {
     extraContent = ""
   }
 

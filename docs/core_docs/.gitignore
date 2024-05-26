@@ -97,10 +97,14 @@ docs/how_to/prompts_composition.md
 docs/how_to/prompts_composition.mdx
 docs/how_to/passthrough.md
 docs/how_to/passthrough.mdx
+docs/how_to/output_parser_xml.md
+docs/how_to/output_parser_xml.mdx
 docs/how_to/output_parser_structured.md
 docs/how_to/output_parser_structured.mdx
 docs/how_to/output_parser_json.md
 docs/how_to/output_parser_json.mdx
+docs/how_to/output_parser_fixing.md
+docs/how_to/output_parser_fixing.mdx
 docs/how_to/multiple_queries.md
 docs/how_to/multiple_queries.mdx
 docs/how_to/migrate_agent.md
