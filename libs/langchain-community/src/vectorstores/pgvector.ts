@@ -503,11 +503,12 @@ export class PGVectorStore extends VectorStore {
         }
         if (Array.isArray(_value.arrayContains)) {
           const placeholders = _value.arrayContains
-            .map((_: unknown, index: number) => `$${currentParamCount + index + 1}`,
+            .map(
+              (_: unknown, index: number) => `$${currentParamCount + index + 1}`
             )
             .join(",");
           whereClauses.push(
-            `${this.metadataColumnName}->'${key}' ?| array[${placeholders}]`,
+            `${this.metadataColumnName}->'${key}' ?| array[${placeholders}]`
           );
           parameters.push(..._value.arrayContains);
           paramCount += _value.arrayContains.length;
