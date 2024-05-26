@@ -47,7 +47,7 @@ describe.skip("Neo4j Graph Tests", () => {
 
     await graph.query(
       "CREATE (a:Actor {name:'Bruce Willis'})" +
-      "-[:ACTED_IN {roles: ['Butch Coolidge']}]->(:Movie {title: 'Pulp Fiction'})"
+        "-[:ACTED_IN {roles: ['Butch Coolidge']}]->(:Movie {title: 'Pulp Fiction'})"
     );
 
     await graph.refreshSchema();
@@ -228,29 +228,29 @@ describe.skip("Neo4j Graph with custom config", () => {
 
     const output = graphWithEnhancedSchema.getStructuredSchema();
 
-    delete output.metadata
+    delete output.metadata;
     console.log(output);
     expect(output).toEqual({
-      "nodeProps": {
-        "foo": [
+      nodeProps: {
+        foo: [
           {
-            "property": "id",
-            "type": "STRING",
-            "values": ["foo"],
-            "distinct_count": "1",
-          }
+            property: "id",
+            type: "STRING",
+            values: ["foo"],
+            distinct_count: "1",
+          },
         ],
-        "bar": [
+        bar: [
           {
-            "property": "id",
-            "type": "STRING",
-            "values": ["bar"],
-            "distinct_count": "1",
-          }
+            property: "id",
+            type: "STRING",
+            values: ["bar"],
+            distinct_count: "1",
+          },
         ],
       },
-      "relProps": {},
-      "relationships": [{ "start": "foo", "type": "REL", "end": "bar" }],
+      relProps: {},
+      relationships: [{ start: "foo", type: "REL", end: "bar" }],
     });
 
     await graphWithEnhancedSchema.close();
