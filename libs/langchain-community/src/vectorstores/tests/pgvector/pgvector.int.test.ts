@@ -141,6 +141,44 @@ describe("PGVectorStore", () => {
     expect(result3.length).toEqual(3);
   });
 
+  test("PGvector supports arrayContains (?|) in metadata filter ", async () => {
+    const documents = [
+      { pageContent: "Lorem Ipsum", metadata: { a: ["tag1", "tag2"] } },
+      { pageContent: "Lorem Ipsum", metadata: { a: ["tag2"] } },
+      { pageContent: "Lorem Ipsum", metadata: { a: ["tag1"] } },
+    ];
+
+    await pgvectorVectorStore.addDocuments(documents);
+
+    const result = await pgvectorVectorStore.similaritySearch("hello", 2, {
+      a: {
+        arrayContains: ["tag1"],
+      },
+    });
+
+    expect(result.length).toEqual(2);
+    expect(result).toEqual([
+      { pageContent: "Lorem Ipsum", metadata: { a: ["tag1", "tag2"] } },
+      { pageContent: "Lorem Ipsum", metadata: { a: ["tag1"] } },
+    ]);
+
+    const result2 = await pgvectorVectorStore.similaritySearch("hello", 2, {
+      a: {
+        arrayContains: ["tag2"],
+      },
+    });
+    expect(result2.length).toEqual(2);
+    expect(result2).toEqual([
+      { pageContent: "Lorem Ipsum", metadata: { a: ["tag1", "tag2"] } },
+      { pageContent: "Lorem Ipsum", metadata: { a: ["tag2"] } },
+    ]);
+
+    const result3 = await pgvectorVectorStore.similaritySearch("hello", 3);
+
+    expect(result3.length).toEqual(3);
+    expect(result3).toEqual(documents);
+  });
+
   test("PGvector can delete document by id", async () => {
     try {
       const documents = [
