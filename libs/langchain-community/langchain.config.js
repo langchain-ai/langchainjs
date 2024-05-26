@@ -319,6 +319,7 @@ export const config = {
     "agents/toolkits/aws_sfn",
     "callbacks/handlers/llmonitor",
     "callbacks/handlers/lunary",
+    "callbacks/handlers/upstash_ratelimit",
     "embeddings/bedrock",
     "embeddings/cloudflare_workersai",
     "embeddings/cohere",

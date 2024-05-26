@@ -1994,6 +1994,15 @@
       "import": "./callbacks/handlers/lunary.js",
       "require": "./callbacks/handlers/lunary.cjs"
     },
+    "./callbacks/handlers/upstash_ratelimit": {
+      "types": {
+        "import": "./callbacks/handlers/upstash_ratelimit.d.ts",
+        "require": "./callbacks/handlers/upstash_ratelimit.d.cts",
+        "default": "./callbacks/handlers/upstash_ratelimit.d.ts"
+      },
+      "import": "./callbacks/handlers/upstash_ratelimit.js",
+      "require": "./callbacks/handlers/upstash_ratelimit.cjs"
+    },
     "./retrievers/amazon_kendra": {
       "types": {
         "import": "./retrievers/amazon_kendra.d.ts",
@@ -2102,15 +2111,6 @@
       "import": "./retrievers/zep.js",
       "require": "./retrievers/zep.cjs"
     },
-    "./retrievers/zep_cloud": {
-      "types": {
-        "import": "./retrievers/zep_cloud.d.ts",
-        "require": "./retrievers/zep_cloud.d.cts",
-        "default": "./retrievers/zep_cloud.d.ts"
-      },
-      "import": "./retrievers/zep_cloud.js",
-      "require": "./retrievers/zep_cloud.cjs"
-    },
     "./structured_query/chroma": {
       "types": {
         "import": "./structured_query/chroma.d.ts",
@@ -2146,6 +2146,15 @@
       },
       "import": "./structured_query/vectara.js",
       "require": "./structured_query/vectara.cjs"
+    },
+    "./retrievers/zep_cloud": {
+      "types": {
+        "import": "./retrievers/zep_cloud.d.ts",
+        "require": "./retrievers/zep_cloud.d.cts",
+        "default": "./retrievers/zep_cloud.d.ts"
+      },
+      "import": "./retrievers/zep_cloud.js",
+      "require": "./retrievers/zep_cloud.cjs"
     },
     "./caches/cloudflare_kv": {
       "types": {
@@ -3519,6 +3528,10 @@
     "callbacks/handlers/lunary.js",
     "callbacks/handlers/lunary.d.ts",
     "callbacks/handlers/lunary.d.cts",
+    "callbacks/handlers/upstash_ratelimit.cjs",
+    "callbacks/handlers/upstash_ratelimit.js",
+    "callbacks/handlers/upstash_ratelimit.d.ts",
+    "callbacks/handlers/upstash_ratelimit.d.cts",
     "retrievers/amazon_kendra.cjs",
     "retrievers/amazon_kendra.js",
     "retrievers/amazon_kendra.d.ts",

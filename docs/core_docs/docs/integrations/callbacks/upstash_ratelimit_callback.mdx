@@ -1,17 +1,19 @@
 # Upstash Ratelimit Callback
 
-In this guide, we will go over how to add rate limiting based on number of requests or the number of tokens using `UpstashRatelimitHandler`. This handler uses [ratelimit library of Upstash](https://github.com/upstash/ratelimit-js/), which utilizes [Upstash Redis](https://upstash.com/docs/redis/overall/getstarted).
+In this guide, we will go over how to add rate limiting based on number of requests or the number of tokens using `UpstashRatelimitHandler`. This handler uses [Upstash's ratelimit library](https://github.com/upstash/ratelimit-js/), which utilizes [Upstash Redis](https://upstash.com/docs/redis/overall/getstarted).
 
-Upstash Ratelimit works by sending an HTTP request to Upstash Redis every time the `limit` method is called. Remaining tokens/requests of the user are checked and updated. Based on the remaining tokens, we can stop the execution of costly operations like invoking an LLM or querying a vector store:
+Upstash Ratelimit works by sending an HTTP request to Upstash Redis every time the `limit` method is called. Remaining tokens/requests of the user are checked and updated. Based on the remaining tokens, we can stop the execution of costly operations, like invoking an LLM or querying a vector store:
 
 ```tsx
-const response = ratelimit.limit()
+const response = await ratelimit.limit();
 if (response.success) {
-    execute_costly_operation()    
+  execute_costly_operation();
 }
 ```
 
-`UpstashRatelimitHandler` allows you to incorporate the ratelimit logic into your chain in a few minutes.
+`UpstashRatelimitHandler` allows you to incorporate this ratelimit logic into your chain in a few minutes.
+
+## Setup
 
 First, you will need to go to [the Upstash Console](https://console.upstash.com/login) and create a redis database ([see our docs](https://upstash.com/docs/redis/overall/getstarted)). After creating a database, you will need to set the environment variables:
 
@@ -20,10 +22,14 @@ UPSTASH_REDIS_REST_URL="****"
 UPSTASH_REDIS_REST_TOKEN="****"
 ```
 
-Next, you will need to install Upstash Ratelimit:
+Next, you will need to install Upstash Ratelimit and `@langchain/community`:
 
-```
-npm install @upstash/ratelimit
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @upstash/ratelimit @langchain/community
 ```
 
 You are now ready to add rate limiting to your chain!
@@ -33,10 +39,13 @@ You are now ready to add rate limiting to your chain!
 Let's imagine that we want to allow our users to invoke our chain 10 times per minute. Achieving this is as simple as:
 
 ```tsx
-const UPSTASH_REDIS_REST_URL="****"
-const UPSTASH_REDIS_REST_TOKEN="****"
+const UPSTASH_REDIS_REST_URL = "****";
+const UPSTASH_REDIS_REST_TOKEN = "****";
 
-import { UpstashRatelimitHandler, UpstashRatelimitError } from "@langchain/community/callbacks/handlers/upstash_ratelimit";
+import {
+  UpstashRatelimitHandler,
+  UpstashRatelimitError,
+} from "@langchain/community/callbacks/handlers/upstash_ratelimit";
 import { RunnableLambda } from "@langchain/core/runnables";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
@@ -48,33 +57,27 @@ const ratelimit = new Ratelimit({
     token: UPSTASH_REDIS_REST_TOKEN,
   }),
   // 10 requests per window, where window size is 60 seconds:
-  limiter: Ratelimit.fixedWindow(1, "60 s")
+  limiter: Ratelimit.fixedWindow(1, "60 s"),
 });
 
 // create handler
-const user_id = "user_id"  // should be a method which gets the user id
-const handler = new UpstashRatelimitHandler(
-  user_id,
-  {
-    requestRatelimit: ratelimit
-  }
-);
+const user_id = "user_id"; // should be a method which gets the user id
+const handler = new UpstashRatelimitHandler(user_id, {
+  requestRatelimit: ratelimit,
+});
 
 // create mock chain
-const chain = new RunnableLambda({ func: (str: string): string => str})
+const chain = new RunnableLambda({ func: (str: string): string => str });
 
 try {
-  const response = await chain.invoke(
-    "hello world",
-    {
-        callbacks: [handler]
-    }
-  );
+  const response = await chain.invoke("hello world", {
+    callbacks: [handler],
+  });
   console.log(response);
 } catch (err) {
   if (err instanceof UpstashRatelimitError) {
     console.log("Handling ratelimit.");
-  };
+  }
 }
 ```
 
@@ -87,6 +90,7 @@ Before executing any steps in our pipeline, ratelimit will check whether the use
 ## Ratelimiting Per Token
 
 Another option is to rate limit chain invokations based on:
+
 1. number of tokens in prompt
 2. number of tokens in prompt and LLM completion
 
@@ -103,30 +107,24 @@ After LLM is called, token usage information will be used to subtracted from the
 For the first configuration, simply initialize the handler like this:
 
 ```tsx
-const user_id = "user_id"  // should be a method which gets the user id
-const handler = new UpstashRatelimitHandler(
-  user_id,
-  {
-    requestRatelimit: ratelimit
-  }
-)
+const user_id = "user_id"; // should be a method which gets the user id
+const handler = new UpstashRatelimitHandler(user_id, {
+  requestRatelimit: ratelimit,
+});
 ```
 
 For the second configuration, here is how to initialize the handler:
 
 ```tsx
-const user_id = "user_id"  // should be a method which gets the user id
-const handler = new UpstashRatelimitHandler(
-  user_id,
-  {
-    tokenRatelimit: ratelimit
-  }
-)
+const user_id = "user_id"; // should be a method which gets the user id
+const handler = new UpstashRatelimitHandler(user_id, {
+  tokenRatelimit: ratelimit,
+});
 ```
 
 You can also employ ratelimiting based on requests and tokens at the same time, simply by passing both `request_ratelimit` and `token_ratelimit` parameters.
 
-For token usage to work correctly, the LLM step in LangChain Js should return a token usage field in the following format:
+For token usage to work correctly, the LLM step in LangChain.js should return a token usage field in the following format:
 
 ```json
 {
@@ -139,7 +137,7 @@ For token usage to work correctly, the LLM step in LangChain Js should return a 
 }
 ```
 
-Not all LLMs in LangChain Js comply with this format however. If your llm returns the same values with differnet keys, you can use the parameters `llmOutputTokenUsageField`, `llmOutputTotalTokenField` and `llmOutputPromptTokenField` by passing them to the handler:
+Not all LLMs in LangChain.js comply with this format however. If your LLM returns the same values with different keys, you can use the parameters `llmOutputTokenUsageField`, `llmOutputTotalTokenField` and `llmOutputPromptTokenField` by passing them to the handler:
 
 ```tsx
 const handler = new UpstashRatelimitHandler(
@@ -156,11 +154,14 @@ const handler = new UpstashRatelimitHandler(
 Here is an example with a chain utilizing an LLM:
 
 ```tsx
-const UPSTASH_REDIS_REST_URL="****"
-const UPSTASH_REDIS_REST_TOKEN="****"
-const OPENAI_API_KEY="****"
+const UPSTASH_REDIS_REST_URL = "****";
+const UPSTASH_REDIS_REST_TOKEN = "****";
+const OPENAI_API_KEY = "****";
 
-import { UpstashRatelimitHandler, UpstashRatelimitError } from "@langchain/community/callbacks/handlers/upstash_ratelimit";
+import {
+  UpstashRatelimitHandler,
+  UpstashRatelimitError,
+} from "@langchain/community/callbacks/handlers/upstash_ratelimit";
 import { RunnableLambda, RunnableSequence } from "@langchain/core/runnables";
 import { OpenAI } from "@langchain/openai";
 import { Ratelimit } from "@upstash/ratelimit";
@@ -173,37 +174,31 @@ const ratelimit = new Ratelimit({
     token: UPSTASH_REDIS_REST_TOKEN,
   }),
   // 500 tokens per window, where window size is 60 seconds:
-  limiter: Ratelimit.fixedWindow(500, "60 s")
-})
+  limiter: Ratelimit.fixedWindow(500, "60 s"),
+});
 
 // create handler
-const user_id = "user_id"  // should be a method which gets the user id
-const handler = new UpstashRatelimitHandler(
-  user_id,
-  {
-    tokenRatelimit: ratelimit
-  }
-)
+const user_id = "user_id"; // should be a method which gets the user id
+const handler = new UpstashRatelimitHandler(user_id, {
+  tokenRatelimit: ratelimit,
+});
 
 // create mock chain
-const asStr = new RunnableLambda({ func: (str: string): string => str})
+const asStr = new RunnableLambda({ func: (str: string): string => str });
 const model = new OpenAI({
-  apiKey: OPENAI_API_KEY
+  apiKey: OPENAI_API_KEY,
 });
 const chain = RunnableSequence.from([asStr, model]);
 
 // invoke chain with handler:
 try {
-  const response = await chain.invoke(
-    "hello world",
-    {
-      callbacks: [handler]
-    }
-  );
+  const response = await chain.invoke("hello world", {
+    callbacks: [handler],
+  });
   console.log(response);
 } catch (err) {
   if (err instanceof UpstashRatelimitError) {
-    console.log("Handling ratelimit.")
+    console.log("Handling ratelimit.");
   }
-};
+}
 ```
