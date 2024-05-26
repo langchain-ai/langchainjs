@@ -1,7 +1,3 @@
----
-hide_table_of_contents: true
----
-
 import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/retrievers/parent_document_retriever.ts";
 import ExampleWithScoreThreshold from "@examples/retrievers/parent_document_retriever_score_threshold.ts";
@@ -10,14 +6,26 @@ import ExampleWithRerank from "@examples/retrievers/parent_document_retriever_re
 
 # How to retrieve the whole document for a chunk
 
+:::info Prerequisites
+
+This guide assumes familiarity with the following concepts:
+
+- [Retrievers](/docs/concepts/#retrievers)
+- [Text splitters](/docs/concepts/#text-splitters)
+- [Retrieval-augmented generation (RAG)](/docs/tutorials/rag)
+
+:::
+
 When splitting documents for retrieval, there are often conflicting desires:
 
-1. You may want to have small documents, so that their embeddings can most accurately reflect their meaning. If too long, then the embeddings can lose meaning.
+1. You may want to have small documents, so that their embeddings can most accurately reflect their meaning. If documents are too long, then the embeddings can lose meaning.
 2. You want to have long enough documents that the context of each chunk is retained.
 
-The ParentDocumentRetriever strikes that balance by splitting and storing small chunks of data. During retrieval, it first fetches the small chunks but then looks up the parent ids for those chunks and returns those larger documents.
+The [`ParentDocumentRetriever`](https://v02.api.js.langchain.com/classes/langchain_retrievers_parent_document.ParentDocumentRetriever.html) strikes that balance by splitting and storing small chunks of data. During retrieval, it first fetches the small chunks but then looks up the parent ids for those chunks and returns those larger documents.
 
 Note that "parent document" refers to the document that a small chunk originated from. This can either be the whole raw document OR a larger chunk.
+
+This is a more specific form of [generating multiple embeddings per document](/docs/how_to/multi_vector).
 
 ## Usage
 
@@ -60,3 +68,10 @@ more expensive.
 So there are two reasons to use rerank - precision and costs.
 
 <CodeBlock language="typescript">{ExampleWithRerank}</CodeBlock>
+
+## Next steps
+
+You've now learned how to use the `ParentDocumentRetriever`.
+
+Next, check out the more general form of [generating multiple embeddings per document](/docs/how_to/multi_vector), the [broader tutorial on RAG](/docs/tutorials/rag), or this section to learn how to
+[create your own custom retriever over any data source](/docs/how_to/custom_retriever/).

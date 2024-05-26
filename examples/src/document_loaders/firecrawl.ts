@@ -1,4 +1,4 @@
-import { FireCrawlLoader } from "langchain/document_loaders/web/firecrawl";
+import { FireCrawlLoader } from "@langchain/community/document_loaders/web/firecrawl";
 
 const loader = new FireCrawlLoader({
   url: "https://firecrawl.dev", // The URL to scrape

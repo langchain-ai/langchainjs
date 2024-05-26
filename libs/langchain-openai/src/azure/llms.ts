@@ -46,6 +46,7 @@ export class AzureOpenAI extends OpenAI {
         azureOpenAIApiInstanceName: this.azureOpenAIApiInstanceName,
         azureOpenAIApiKey: this.azureOpenAIApiKey,
         azureOpenAIBasePath: this.azureOpenAIBasePath,
+        azureADTokenProvider: this.azureADTokenProvider,
         baseURL: this.clientConfig.baseURL,
       };
 
@@ -65,6 +66,13 @@ export class AzureOpenAI extends OpenAI {
       if (!params.baseURL) {
         delete params.baseURL;
       }
+
+      params.defaultHeaders = {
+        ...params.defaultHeaders,
+        "User-Agent": params.defaultHeaders?.["User-Agent"]
+          ? `${params.defaultHeaders["User-Agent"]}: langchainjs-azure-openai-v2`
+          : `langchainjs-azure-openai-v2`,
+      };
 
       this.client = new AzureOpenAIClient({
         apiVersion: this.azureOpenAIApiVersion,

@@ -4,14 +4,19 @@ sidebar_position: 3
 
 # How to cache chat model responses
 
+:::info Prerequisites
+
+This guide assumes familiarity with the following concepts:
+
+- [Chat models](/docs/concepts/#chat-models)
+- [LLMs](/docs/concepts/#llms)
+
+:::
+
 LangChain provides an optional caching layer for chat models. This is useful for two reasons:
 
 It can save you money by reducing the number of API calls you make to the LLM provider, if you're often requesting the same completion multiple times.
 It can speed up your application by reducing the number of API calls you make to the LLM provider.
-
-import UnifiedModelParamsTooltip from "@mdx_components/unified_model_params_tooltip.mdx";
-
-<UnifiedModelParamsTooltip></UnifiedModelParamsTooltip>
 
 import CodeBlock from "@theme/CodeBlock";
 
@@ -84,7 +89,7 @@ LangChain also provides a Redis-based cache. This is useful if you want to share
 To use it, you'll need to install the `redis` package:
 
 ```bash npm2yarn
-npm install ioredis
+npm install ioredis @langchain/community
 ```
 
 Then, you can pass a `cache` option when you instantiate the LLM. For example:
@@ -105,3 +110,9 @@ By default the cache is stored a temporary directory, but you can specify a cust
 ```typescript
 const cache = await LocalFileCache.create();
 ```
+
+## Next steps
+
+You've now learned how to cache model responses to save time and money.
+
+Next, check out the other how-to guides on chat models, like [how to get a model to return structured output](/docs/how_to/structured_output) or [how to create your own custom chat model](/docs/how_to/custom_chat).

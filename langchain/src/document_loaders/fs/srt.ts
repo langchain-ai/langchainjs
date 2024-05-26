@@ -8,6 +8,8 @@ import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation
 });
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/fs/srt" instead. This entrypoint will be removed in 0.3.0.
+ *
  * A class that extends the `TextLoader` class. It represents a document
  * loader that loads documents from SRT (SubRip) subtitle files. It has a
  * constructor that takes a `filePathOrBlob` parameter representing the

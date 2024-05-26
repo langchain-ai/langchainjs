@@ -1,5 +1,6 @@
 import { z } from "zod";
 import pRetry from "p-retry";
+import { v4 as uuidv4 } from "uuid";
 
 import type { RunnableInterface, RunnableBatchOptions } from "./types.js";
 import {
@@ -11,9 +12,13 @@ import {
   LogStreamCallbackHandlerInput,
   RunLog,
   RunLogPatch,
+} from "../tracers/log_stream.js";
+import {
+  EventStreamCallbackHandler,
+  EventStreamCallbackHandlerInput,
   StreamEvent,
   StreamEventData,
-} from "../tracers/log_stream.js";
+} from "../tracers/event_stream.js";
 import { Serializable } from "../load/serializable.js";
 import {
   IterableReadableStream,
@@ -298,9 +303,11 @@ export abstract class Runnable<
   ): Promise<IterableReadableStream<RunOutput>> {
     // Buffer the first streamed chunk to allow for initial errors
     // to surface immediately.
-    const wrappedGenerator = new AsyncGeneratorWithSetup(
-      this._streamIterator(input, ensureConfig(options))
-    );
+    const config = ensureConfig(options);
+    const wrappedGenerator = new AsyncGeneratorWithSetup({
+      generator: this._streamIterator(input, config),
+      config,
+    });
     await wrappedGenerator.setup;
     return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
   }
@@ -495,18 +502,34 @@ export abstract class Runnable<
       );
       delete config.runId;
       runManager = pipe.setup;
+
+      const isStreamEventsHandler = (
+        handler: BaseCallbackHandler
+      ): handler is EventStreamCallbackHandler =>
+        handler.name === "event_stream_tracer";
+      const streamEventsHandler = runManager?.handlers.find(
+        isStreamEventsHandler
+      );
+      let iterator = pipe.output;
+      if (streamEventsHandler !== undefined && runManager !== undefined) {
+        iterator = streamEventsHandler.tapOutputIterable(
+          runManager.runId,
+          iterator
+        );
+      }
+
       const isLogStreamHandler = (
         handler: BaseCallbackHandler
       ): handler is LogStreamCallbackHandler =>
         handler.name === "log_stream_tracer";
       const streamLogHandler = runManager?.handlers.find(isLogStreamHandler);
-      let iterator = pipe.output;
       if (streamLogHandler !== undefined && runManager !== undefined) {
-        iterator = await streamLogHandler.tapOutputIterable(
+        iterator = streamLogHandler.tapOutputIterable(
           runManager.runId,
-          pipe.output
+          iterator
         );
       }
+
       for await (const chunk of iterator) {
         yield chunk;
         if (finalOutputSupported) {
@@ -719,64 +742,159 @@ export abstract class Runnable<
    * chains. Metadata fields have been omitted from the table for brevity.
    * Chain definitions have been included after the table.
    *
-   * | event                | name             | chunk                              | input                                         | output                                          |
-   * |----------------------|------------------|------------------------------------|-----------------------------------------------|-------------------------------------------------|
-   * | on_llm_start         | [model name]     |                                    | {'input': 'hello'}                            |                                                 |
-   * | on_llm_stream        | [model name]     | 'Hello' OR AIMessageChunk("hello") |                                               |                                                 |
-   * | on_llm_end           | [model name]     |                                    | 'Hello human!'                                |
-   * | on_chain_start       | format_docs      |                                    |                                               |                                                 |
-   * | on_chain_stream      | format_docs      | "hello world!, goodbye world!"     |                                               |                                                 |
-   * | on_chain_end         | format_docs      |                                    | [Document(...)]                               | "hello world!, goodbye world!"                  |
-   * | on_tool_start        | some_tool        |                                    | {"x": 1, "y": "2"}                            |                                                 |
-   * | on_tool_stream       | some_tool        |   {"x": 1, "y": "2"}               |                                               |                                                 |
-   * | on_tool_end          | some_tool        |                                    |                                               | {"x": 1, "y": "2"}                              |
-   * | on_retriever_start   | [retriever name] |                                    | {"query": "hello"}                            |                                                 |
-   * | on_retriever_chunk   | [retriever name] |  {documents: [...]}                |                                               |                                                 |
-   * | on_retriever_end     | [retriever name] |                                    | {"query": "hello"}                            | {documents: [...]}                              |
-   * | on_prompt_start      | [template_name]  |                                    | {"question": "hello"}                         |                                                 |
-   * | on_prompt_end        | [template_name]  |                                    | {"question": "hello"}                         | ChatPromptValue(messages: [SystemMessage, ...]) |
+   * **ATTENTION** This reference table is for the V2 version of the schema.
+   *
+   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
+   * | event                | name             | chunk                           | input                                         | output                                          |
+   * +======================+==================+=================================+===============================================+=================================================+
+   * | on_chat_model_start  | [model name]     |                                 | {"messages": [[SystemMessage, HumanMessage]]} |                                                 |
+   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
+   * | on_chat_model_stream | [model name]     | AIMessageChunk(content="hello") |                                               |                                                 |
+   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
+   * | on_chat_model_end    | [model name]     |                                 | {"messages": [[SystemMessage, HumanMessage]]} | AIMessageChunk(content="hello world")           |
+   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
+   * | on_llm_start         | [model name]     |                                 | {'input': 'hello'}                            |                                                 |
+   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
+   * | on_llm_stream        | [model name]     | 'Hello'                         |                                               |                                                 |
+   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
+   * | on_llm_end           | [model name]     |                                 | 'Hello human!'                                |                                                 |
+   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
+   * | on_chain_start       | format_docs      |                                 |                                               |                                                 |
+   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
+   * | on_chain_stream      | format_docs      | "hello world!, goodbye world!"  |                                               |                                                 |
+   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
+   * | on_chain_end         | format_docs      |                                 | [Document(...)]                               | "hello world!, goodbye world!"                  |
+   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
+   * | on_tool_start        | some_tool        |                                 | {"x": 1, "y": "2"}                            |                                                 |
+   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
+   * | on_tool_end          | some_tool        |                                 |                                               | {"x": 1, "y": "2"}                              |
+   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
+   * | on_retriever_start   | [retriever name] |                                 | {"query": "hello"}                            |                                                 |
+   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
+   * | on_retriever_end     | [retriever name] |                                 | {"query": "hello"}                            | [Document(...), ..]                             |
+   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
+   * | on_prompt_start      | [template_name]  |                                 | {"question": "hello"}                         |                                                 |
+   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
+   * | on_prompt_end        | [template_name]  |                                 | {"question": "hello"}                         | ChatPromptValue(messages: [SystemMessage, ...]) |
+   * +----------------------+------------------+---------------------------------+-----------------------------------------------+-------------------------------------------------+
    */
   streamEvents(
     input: RunInput,
-    options: Partial<CallOptions> & { version: "v1" },
-    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
-  ): AsyncGenerator<StreamEvent>;
+    options: Partial<CallOptions> & { version: "v1" | "v2" },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEvent>;
 
   streamEvents(
     input: RunInput,
     options: Partial<CallOptions> & {
-      version: "v1";
+      version: "v1" | "v2";
       encoding: "text/event-stream";
     },
-    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
-  ): AsyncGenerator<Uint8Array>;
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<Uint8Array>;
 
-  async *streamEvents(
+  streamEvents(
     input: RunInput,
     options: Partial<CallOptions> & {
-      version: "v1";
+      version: "v1" | "v2";
       encoding?: "text/event-stream" | undefined;
     },
-    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
-  ): AsyncGenerator<StreamEvent | Uint8Array> {
-    if (options.encoding === "text/event-stream") {
-      const stream = await this._streamEvents(input, options, streamOptions);
-      yield* convertToHttpEventStream(stream);
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEvent | Uint8Array> {
+    let stream;
+    if (options.version === "v1") {
+      stream = this._streamEventsV1(input, options, streamOptions);
+    } else if (options.version === "v2") {
+      stream = this._streamEventsV2(input, options, streamOptions);
     } else {
-      yield* this._streamEvents(input, options, streamOptions);
+      throw new Error(
+        `Only versions "v1" and "v2" of the schema are currently supported.`
+      );
+    }
+    if (options.encoding === "text/event-stream") {
+      return convertToHttpEventStream(stream);
+    } else {
+      return IterableReadableStream.fromAsyncGenerator(stream);
     }
   }
 
-  async *_streamEvents(
+  private async *_streamEventsV2(
     input: RunInput,
-    options: Partial<CallOptions> & { version: "v1" },
+    options: Partial<CallOptions> & { version: "v1" | "v2" },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): AsyncGenerator<StreamEvent> {
+    const eventStreamer = new EventStreamCallbackHandler({
+      ...streamOptions,
+      autoClose: false,
+    });
+    const config = ensureConfig(options);
+    const runId = config.runId ?? uuidv4();
+    config.runId = runId;
+    const callbacks = config.callbacks;
+    if (callbacks === undefined) {
+      config.callbacks = [eventStreamer];
+    } else if (Array.isArray(callbacks)) {
+      config.callbacks = callbacks.concat(eventStreamer);
+    } else {
+      const copiedCallbacks = callbacks.copy();
+      copiedCallbacks.inheritableHandlers.push(eventStreamer);
+      // eslint-disable-next-line no-param-reassign
+      config.callbacks = copiedCallbacks;
+    }
+    // Call the runnable in streaming mode,
+    // add each chunk to the output stream
+    const outerThis = this;
+    async function consumeRunnableStream() {
+      try {
+        const runnableStream = await outerThis.stream(input, config);
+        const tappedStream = eventStreamer.tapOutputIterable(
+          runId,
+          runnableStream
+        );
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        for await (const _ of tappedStream) {
+          // Just iterate so that the callback handler picks up events
+        }
+      } finally {
+        await eventStreamer.writer.close();
+      }
+    }
+    const runnableStreamConsumePromise = consumeRunnableStream();
+    let firstEventSent = false;
+    let firstEventRunId;
+    try {
+      for await (const event of eventStreamer) {
+        // This is a work-around an issue where the inputs into the
+        // chain are not available until the entire input is consumed.
+        // As a temporary solution, we'll modify the input to be the input
+        // that was passed into the chain.
+        if (!firstEventSent) {
+          event.data.input = input;
+          firstEventSent = true;
+          firstEventRunId = event.run_id;
+          yield event;
+          continue;
+        }
+        if (event.run_id === firstEventRunId && event.event.endsWith("_end")) {
+          // If it's the end event corresponding to the root runnable
+          // we dont include the input in the event since it's guaranteed
+          // to be included in the first event.
+          if (event.data?.input) {
+            delete event.data.input;
+          }
+        }
+        yield event;
+      }
+    } finally {
+      await runnableStreamConsumePromise;
+    }
+  }
+
+  private async *_streamEventsV1(
+    input: RunInput,
+    options: Partial<CallOptions> & { version: "v1" | "v2" },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
   ): AsyncGenerator<StreamEvent> {
-    if (options.version !== "v1") {
-      throw new Error(
-        `Only version "v1" of the events schema is currently supported.`
-      );
-    }
     let runLog;
     let hasEncounteredStartEvent = false;
     const config = ensureConfig(options);
@@ -1136,35 +1254,43 @@ export class RunnableBinding<
 
   streamEvents(
     input: RunInput,
-    options: Partial<CallOptions> & { version: "v1" },
+    options: Partial<CallOptions> & { version: "v1" | "v2" },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
-  ): AsyncGenerator<StreamEvent>;
+  ): IterableReadableStream<StreamEvent>;
 
   streamEvents(
     input: RunInput,
     options: Partial<CallOptions> & {
-      version: "v1";
+      version: "v1" | "v2";
       encoding: "text/event-stream";
     },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
-  ): AsyncGenerator<Uint8Array>;
+  ): IterableReadableStream<Uint8Array>;
 
-  async *streamEvents(
+  streamEvents(
     input: RunInput,
     options: Partial<CallOptions> & {
-      version: "v1";
+      version: "v1" | "v2";
       encoding?: "text/event-stream" | undefined;
     },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
-  ): AsyncGenerator<StreamEvent | Uint8Array> {
-    yield* this.bound.streamEvents(
-      input,
-      {
-        ...(await this._mergeConfig(ensureConfig(options), this.kwargs)),
-        version: options.version,
-      },
-      streamOptions
-    );
+  ): IterableReadableStream<StreamEvent | Uint8Array> {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const outerThis = this;
+    const generator = async function* () {
+      yield* outerThis.bound.streamEvents(
+        input,
+        {
+          ...(await outerThis._mergeConfig(
+            ensureConfig(options),
+            outerThis.kwargs
+          )),
+          version: options.version,
+        },
+        streamOptions
+      );
+    };
+    return IterableReadableStream.fromAsyncGenerator(generator());
   }
 
   static isRunnableBinding(
@@ -1937,9 +2063,11 @@ export class RunnableMap<
     async function* generator() {
       yield input;
     }
-    const wrappedGenerator = new AsyncGeneratorWithSetup(
-      this.transform(generator(), options)
-    );
+    const config = ensureConfig(options);
+    const wrappedGenerator = new AsyncGeneratorWithSetup({
+      generator: this.transform(generator(), config),
+      config,
+    });
     await wrappedGenerator.setup;
     return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
   }
@@ -2143,9 +2271,11 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     async function* generator() {
       yield input;
     }
-    const wrappedGenerator = new AsyncGeneratorWithSetup(
-      this.transform(generator(), options)
-    );
+    const config = ensureConfig(options);
+    const wrappedGenerator = new AsyncGeneratorWithSetup({
+      generator: this.transform(generator(), config),
+      config,
+    });
     await wrappedGenerator.setup;
     return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
   }
@@ -2450,9 +2580,11 @@ export class RunnableAssign<
     async function* generator() {
       yield input;
     }
-    const wrappedGenerator = new AsyncGeneratorWithSetup(
-      this.transform(generator(), options)
-    );
+    const config = ensureConfig(options);
+    const wrappedGenerator = new AsyncGeneratorWithSetup({
+      generator: this.transform(generator(), config),
+      config,
+    });
     await wrappedGenerator.setup;
     return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
   }
@@ -2541,9 +2673,11 @@ export class RunnablePick<
     async function* generator() {
       yield input;
     }
-    const wrappedGenerator = new AsyncGeneratorWithSetup(
-      this.transform(generator(), options)
-    );
+    const config = ensureConfig(options);
+    const wrappedGenerator = new AsyncGeneratorWithSetup({
+      generator: this.transform(generator(), config),
+      config,
+    });
     await wrappedGenerator.setup;
     return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
   }

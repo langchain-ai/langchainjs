@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.2.0-rc.1",
+  "version": "0.2.2",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -142,10 +142,6 @@
     "embeddings/fake.js",
     "embeddings/fake.d.ts",
     "embeddings/fake.d.cts",
-    "prompts/index.cjs",
-    "prompts/index.js",
-    "prompts/index.d.ts",
-    "prompts/index.d.cts",
     "vectorstores/memory.cjs",
     "vectorstores/memory.js",
     "vectorstores/memory.d.ts",
@@ -154,6 +150,10 @@
     "text_splitter.js",
     "text_splitter.d.ts",
     "text_splitter.d.cts",
+    "memory.cjs",
+    "memory.js",
+    "memory.d.ts",
+    "memory.d.cts",
     "memory/index.cjs",
     "memory/index.js",
     "memory/index.d.ts",
@@ -561,7 +561,8 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/langchain/",
   "scripts": {
-    "build": "yarn run build:deps && yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
+    "build": "yarn turbo:command build:internal --filter=langchain",
+    "build:internal": "yarn lc-build:v2 --create-entrypoints --pre --tree-shaking --gen-maps",
     "build:deps": "yarn run turbo:command build --filter=@langchain/openai --filter=@langchain/textsplitters --filter=@langchain/cohere --concurrency=1",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rimraf dist/tests dist/**/tests",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rimraf dist-cjs",
@@ -572,7 +573,7 @@
     "lint": "yarn lint:eslint && yarn lint:dpdm",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
     "precommit": "lint-staged",
-    "clean": "rimraf .turbo/ dist/ && NODE_OPTIONS=--max-old-space-size=4096 yarn lc-build --config ./langchain.config.js --create-entrypoints --pre --gen-maps",
+    "clean": "rm -rf .turbo dist/",
     "prepack": "yarn build",
     "release": "release-it --only-version --config .release-it.json",
     "test": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
@@ -594,15 +595,15 @@
     "@aws-sdk/credential-provider-node": "^3.388.0",
     "@aws-sdk/types": "^3.357.0",
     "@azure/storage-blob": "^12.15.0",
-    "@browserbasehq/sdk": "^1.0.0",
+    "@browserbasehq/sdk": "^1.1.5",
     "@cloudflare/workers-types": "^4.20230922.0",
     "@faker-js/faker": "^7.6.0",
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
-    "@google-ai/generativelanguage": "^0.2.1",
+    "@google-ai/generativelanguage": "^2.5.0",
     "@jest/globals": "^29.5.0",
     "@langchain/cohere": "^0.0.8",
-    "@langchain/scripts": "~0.0",
+    "@langchain/scripts": "~0.0.14",
     "@mendable/firecrawl-js": "^0.0.13",
     "@notionhq/client": "^2.2.10",
     "@pinecone-database/pinecone": "^1.1.0",
@@ -686,7 +687,7 @@
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
     "@gomomento/sdk-web": "^1.51.1",
-    "@google-ai/generativelanguage": "^0.2.1",
+    "@google-ai/generativelanguage": "^2.5.0",
     "@mendable/firecrawl-js": "^0.0.13",
     "@notionhq/client": "^2.2.10",
     "@pinecone-database/pinecone": "*",
@@ -884,7 +885,7 @@
     }
   },
   "dependencies": {
-    "@langchain/core": "~0.2.0-rc.0",
+    "@langchain/core": "~0.2.0",
     "@langchain/openai": "~0.0.28",
     "@langchain/textsplitters": "~0.0.0",
     "binary-extensions": "^2.2.0",
@@ -1216,15 +1217,6 @@
       "import": "./embeddings/fake.js",
       "require": "./embeddings/fake.cjs"
     },
-    "./prompts/index": {
-      "types": {
-        "import": "./prompts/index.d.ts",
-        "require": "./prompts/index.d.cts",
-        "default": "./prompts/index.d.ts"
-      },
-      "import": "./prompts/index.js",
-      "require": "./prompts/index.cjs"
-    },
     "./vectorstores/memory": {
       "types": {
         "import": "./vectorstores/memory.d.ts",
@@ -1242,6 +1234,15 @@
       },
       "import": "./text_splitter.js",
       "require": "./text_splitter.cjs"
+    },
+    "./memory": {
+      "types": {
+        "import": "./memory.d.ts",
+        "require": "./memory.d.cts",
+        "default": "./memory.d.ts"
+      },
+      "import": "./memory.js",
+      "require": "./memory.cjs"
     },
     "./memory/index": {
       "types": {

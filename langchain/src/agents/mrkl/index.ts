@@ -56,7 +56,7 @@ export type ZeroShotAgentInput = Optional<AgentInput, "outputParser">;
  * });
  * ```
  *
- * @deprecated Use the {@link https://api.js.langchain.com/functions/langchain_agents.createReactAgent.html | createReactAgent method instead}.
+ * @deprecated Use the {@link https://v02.api.js.langchain.com/functions/langchain_agents.createReactAgent.html | createReactAgent method instead}.
  */
 export class ZeroShotAgent extends Agent {
   static lc_name() {
