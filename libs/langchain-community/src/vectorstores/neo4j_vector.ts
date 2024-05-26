@@ -1042,7 +1042,7 @@ function handleFieldFilter(
     return [querySnippet, queryParam];
   } else if (["$in", "$nin", "$like", "$ilike"].includes(operator)) {
     if (["$in", "$nin"].includes(operator)) {
-      filterValue.forEach((val: any) => {
+      filterValue.forEach((val: Any) => {
         if (
           typeof val !== "string" &&
           typeof val !== "number" &&
