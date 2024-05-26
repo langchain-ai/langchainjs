@@ -2097,15 +2097,6 @@
       "import": "./retrievers/zep.js",
       "require": "./retrievers/zep.cjs"
     },
-    "./retrievers/zep_cloud": {
-      "types": {
-        "import": "./retrievers/zep_cloud.d.ts",
-        "require": "./retrievers/zep_cloud.d.cts",
-        "default": "./retrievers/zep_cloud.d.ts"
-      },
-      "import": "./retrievers/zep_cloud.js",
-      "require": "./retrievers/zep_cloud.cjs"
-    },
     "./structured_query/chroma": {
       "types": {
         "import": "./structured_query/chroma.d.ts",
@@ -2141,6 +2132,15 @@
       },
       "import": "./structured_query/vectara.js",
       "require": "./structured_query/vectara.cjs"
+    },
+    "./retrievers/zep_cloud": {
+      "types": {
+        "import": "./retrievers/zep_cloud.d.ts",
+        "require": "./retrievers/zep_cloud.d.cts",
+        "default": "./retrievers/zep_cloud.d.ts"
+      },
+      "import": "./retrievers/zep_cloud.js",
+      "require": "./retrievers/zep_cloud.cjs"
     },
     "./caches/cloudflare_kv": {
       "types": {
