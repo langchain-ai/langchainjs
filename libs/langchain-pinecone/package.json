@@ -1,6 +1,6 @@
 {
   "name": "@langchain/pinecone",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "LangChain integration for Pinecone's vector database",
   "type": "module",
   "engines": {
@@ -39,7 +39,7 @@
   "author": "Pinecone, Inc",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": ">0.1.0 <0.3.0",
+    "@langchain/core": ">0.2.0 <0.3.0",
     "@pinecone-database/pinecone": "^2.2.0",
     "flat": "^5.0.2",
     "uuid": "^9.0.0"
