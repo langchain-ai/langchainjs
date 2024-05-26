@@ -529,84 +529,50 @@ LangChain provides a callbacks system that allows you to hook into the various s
 
 You can subscribe to these events by using the `callbacks` argument available throughout the API. This argument is list of handler objects, which are expected to implement one or more of the methods described below in more detail.
 
+#### Callback Events
+
+| Event            | Event Trigger                               | Associated Method      |
+| ---------------- | ------------------------------------------- | ---------------------- |
+| Chat model start | When a chat model starts                    | `handleChatModelStart` |
+| LLM start        | When a llm starts                           | `handleLLMStart`       |
+| LLM new token    | When an llm OR chat model emits a new token | `handleLLMNewToken`    |
+| LLM ends         | When an llm OR chat model ends              | `handleLLMEnd`         |
+| LLM errors       | When an llm OR chat model errors            | `handleLLMError`       |
+| Chain start      | When a chain starts running                 | `handleChainStart`     |
+| Chain end        | When a chain ends                           | `handleChainEnd`       |
+| Chain error      | When a chain errors                         | `handleChainError`     |
+| Tool start       | When a tool starts running                  | `handleToolStart`      |
+| Tool end         | When a tool ends                            | `handleToolEnd`        |
+| Tool error       | When a tool errors                          | `handleToolError`      |
+| Agent action     | When an agent takes an action               | `handleAgentAction`    |
+| Agent finish     | When an agent ends                          | `handleAgentEnd`       |
+| Retriever start  | When a retriever starts                     | `handleRetrieverStart` |
+| Retriever end    | When a retriever ends                       | `handleRetrieverEnd`   |
+| Retriever error  | When a retriever errors                     | `handleRetrieverError` |
+| Text             | When arbitrary text is run                  | `handleText`           |
+
 #### Callback handlers
 
 `CallbackHandlers` are objects that implement the [`CallbackHandler`](https://api.js.langchain.com/interfaces/langchain_core_callbacks_base.CallbackHandlerMethods.html) interface, which has a method for each event that can be subscribed to.
 The `CallbackManager` will call the appropriate method on each handler when the event is triggered.
 
-```ts
-interface CallbackHandlerMethods {
-  handleAgentAction?(action, runId, parentRunId?, tags?): void | Promise<void>;
-  handleAgentEnd?(action, runId, parentRunId?, tags?): void | Promise<void>;
-  handleChainEnd?(outputs, runId, parentRunId?, tags?, kwargs?): any;
-  handleChainError?(err, runId, parentRunId?, tags?, kwargs?): any;
-  handleChainStart?(
-    chain,
-    inputs,
-    runId,
-    parentRunId?,
-    tags?,
-    metadata?,
-    runType?,
-    name?
-  ): any;
-  handleChatModelStart?(
-    llm,
-    messages,
-    runId,
-    parentRunId?,
-    extraParams?,
-    tags?,
-    metadata?,
-    name?
-  ): any;
-  handleLLMEnd?(output, runId, parentRunId?, tags?): any;
-  handleLLMError?(err, runId, parentRunId?, tags?): any;
-  handleLLMNewToken?(token, idx, runId, parentRunId?, tags?, fields?): any;
-  handleLLMStart?(
-    llm,
-    prompts,
-    runId,
-    parentRunId?,
-    extraParams?,
-    tags?,
-    metadata?,
-    name?
-  ): any;
-  handleRetrieverEnd?(documents, runId, parentRunId?, tags?): any;
-  handleRetrieverError?(err, runId, parentRunId?, tags?): any;
-  handleRetrieverStart?(
-    retriever,
-    query,
-    runId,
-    parentRunId?,
-    tags?,
-    metadata?,
-    name?
-  ): any;
-  handleText?(text, runId, parentRunId?, tags?): void | Promise<void>;
-  handleToolEnd?(output, runId, parentRunId?, tags?): any;
-  handleToolError?(err, runId, parentRunId?, tags?): any;
-  handleToolStart?(
-    tool,
-    input,
-    runId,
-    parentRunId?,
-    tags?,
-    metadata?,
-    name?
-  ): any;
-}
-```
-
 #### Passing callbacks
 
 The `callbacks` property is available on most objects throughout the API (Models, Tools, Agents, etc.) in two different places:
 
+- **Request callbacks**: Passed at the time of the request in addition to the input data.
+  Available on all standard `Runnable` objects. These callbacks are INHERITED by all children
+  of the object they are defined on. For example, `chain.invoke({foo: "bar"}, {callbacks: [handler]})`.
 - **Constructor callbacks**: defined in the constructor, e.g. `new ChatAnthropic({ callbacks: [handler], tags: ["a-tag"] })`. In this case, the callbacks will be used for all calls made on that object, and will be scoped to that object only.
   For example, if you initialize a chat model with constructor callbacks, then use it within a chain, the callbacks will only be invoked for calls to that model.
-- **Request callbacks**: passed into the `invoke` method used for issuing a request. In this case, the callbacks will be used for that specific request only, and all sub-requests that it contains (e.g. a call to a sequence that triggers a call to a model, which uses the same handler passed in the `invoke()` method).
-  In the `invoke()` method, callbacks are passed through the config parameter.
+
+:::warning
+Constructor callbacks are scoped only to the object they are defined on. They are **not** inherited by children
+of the object.
+:::
+
+If you're creating a custom chain or runnable, you need to remember to propagate request time
+callbacks to any child objects.
 
 ## Techniques
 
