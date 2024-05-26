@@ -1,4 +1,4 @@
-import { BufferMemory } from "langchain/memory/index";
+import { BufferMemory } from "langchain/memory";
 import { ChatOpenAI } from "@langchain/openai";
 import { ConversationChain } from "langchain/chains";
 import { XataChatMessageHistory } from "@langchain/community/stores/message/xata";
