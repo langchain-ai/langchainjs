@@ -277,7 +277,7 @@ export class EventStreamCallbackHandler extends BaseTracer {
       } finally {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         tappedPromiseResolver!();
-        this.tappedPromises.delete(runId);
+        // Don't delete from the map to keep track of which runs have been tapped.
       }
     } else {
       // otherwise just pass through
