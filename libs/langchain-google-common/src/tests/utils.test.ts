@@ -45,3 +45,37 @@ test("zodToGeminiParameters can convert zod schema to gemini schema", () => {
     "childObject",
   ]);
 });
+
+test("zodToGeminiParameters removes additional properties from arrays", () => {
+  const zodSchema = z
+    .object({
+      people: z
+        .object({
+          name: z.string().describe("The name of a person"),
+        })
+        .array()
+        .describe("person elements"),
+    })
+    .describe("A list of people");
+
+  const convertedSchema = zodToGeminiParameters(zodSchema);
+  expect(convertedSchema.type).toBe("object");
+  expect(convertedSchema.description).toBe("A list of people");
+  expect((convertedSchema as any).additionalProperties).toBeUndefined();
+
+  const peopleSchema = convertedSchema?.properties?.["people"];
+  expect(peopleSchema).not.toBeUndefined();
+
+  if (peopleSchema !== undefined) {
+    expect(peopleSchema.type).toBe("array");
+    expect((peopleSchema as any).additionalProperties).toBeUndefined();
+    expect(peopleSchema.description).toBe("person elements");
+  }
+
+  const arrayItemsSchema = peopleSchema?.items;
+  expect(arrayItemsSchema).not.toBeUndefined();
+  if (arrayItemsSchema !== undefined) {
+    expect(arrayItemsSchema.type).toBe("object");
+    expect((arrayItemsSchema as any).additionalProperties).toBeUndefined();
+  }
+});
