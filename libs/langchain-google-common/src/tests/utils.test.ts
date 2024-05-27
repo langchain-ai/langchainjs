@@ -18,7 +18,7 @@ test("zodToGeminiParameters can convert zod schema to gemini schema", () => {
 
   expect(convertedSchema.type).toBe("object");
   expect(convertedSchema.description).toBe("A simple calculator tool");
-  expect(convertedSchema).not.toContain("additionalProperties");
+  expect((convertedSchema as any).additionalProperties).toBeUndefined();
   expect(convertedSchema.properties).toEqual({
     operation: {
       type: "string",
