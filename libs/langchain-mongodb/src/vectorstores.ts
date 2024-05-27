@@ -1,4 +1,4 @@
-import type { Collection, Document as MongoDBDocument } from "mongodb";
+import { type Collection, type Document as MongoDBDocument } from "mongodb";
 import {
   MaxMarginalRelevanceSearchOptions,
   VectorStore,
@@ -254,6 +254,22 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
       }
       return doc;
     });
+  }
+
+  /**
+   * Delete documents from the collection
+   * @param ids - An array of document IDs to be deleted from the collection.
+   *
+   * @returns - A promise that resolves when all documents deleted
+   */
+  async delete(params: { ids: any[] }): Promise<void> { // eslint-disable-line @typescript-eslint/no-explicit-any
+    const splice = <T>(l: T[], c: number): T[][] =>
+      l.length < c ? [l] : [l.splice(0, c), ...splice<T>(l, c)];
+    const CHUNK_SIZE = 50;
+    const chunkIds: any[][] = splice(params.ids, CHUNK_SIZE); // eslint-disable-line @typescript-eslint/no-explicit-any
+
+    for (const chunk of chunkIds)
+      await this.collection.deleteMany({ _id: { $in: chunk }});
   }
 
   /**
