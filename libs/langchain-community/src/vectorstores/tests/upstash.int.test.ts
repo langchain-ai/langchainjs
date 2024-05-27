@@ -172,4 +172,89 @@ describe("UpstashVectorStore", () => {
 
     expect(results3).toHaveLength(2);
   });
+
+  test("Should upsert the documents to target namespace", async () => {
+    index = new Index({
+      url: process.env.UPSTASH_VECTOR_REST_URL,
+      token: process.env.UPSTASH_VECTOR_REST_TOKEN,
+    });
+
+    await index.reset();
+
+    embeddings = new SyntheticEmbeddings({
+      vectorSize: 384,
+    });
+
+    const storeNamespace1 = new UpstashVectorStore(embeddings, {
+      index,
+      namespace: "namespace-1",
+    });
+    const storeNamespace2 = new UpstashVectorStore(embeddings, {
+      index,
+      namespace: "namespace-2",
+    });
+
+
+    await storeNamespace1.addDocuments([
+      { pageContent: "namespace-test-original", metadata: { namespace: "namespace-1" } },
+    ]);
+
+    // Sleeping for a second to make sure that all the indexing operations are finished.
+    await sleep(1000);
+
+    const resultsNamespace2 = await storeNamespace2.similaritySearchWithScore("namespace-test-original", 1, "namespace = 'namespace-1'");
+    expect(resultsNamespace2).toHaveLength(0);
+
+    const resultsNamespace1 = await storeNamespace1.similaritySearchWithScore("namespace-test-original", 1, "namespace = 'namespace-1'");
+    expect(resultsNamespace1).toHaveLength(1);
+
+    expect([resultsNamespace1[0][0]]).toEqual([
+      new Document({ metadata: { namespace: "namespace-1" }, pageContent: "namespace-test-original" }),
+    ]);
+  })
+
+  test("Should delete the documents from target namespace", async () => {
+    index = new Index({
+      url: process.env.UPSTASH_VECTOR_REST_URL,
+      token: process.env.UPSTASH_VECTOR_REST_TOKEN,
+    });
+
+    await index.reset();
+
+    embeddings = new SyntheticEmbeddings({
+      vectorSize: 384,
+    });
+
+    const storeNamespace1 = new UpstashVectorStore(embeddings, {
+      index,
+      namespace: "namespace-1",
+    });
+    const storeNamespace2 = new UpstashVectorStore(embeddings, {
+      index,
+      namespace: "namespace-2",
+    });
+
+
+    const idNamespace1 = await storeNamespace1.addDocuments([
+      { pageContent: "namespace-test-original", metadata: { namespace: "namespace-test" } },
+    ]);
+    await storeNamespace2.addDocuments([
+      { pageContent: "namespace-test-original", metadata: { namespace: "namespace-test" } },
+    ]);
+
+    // Sleeping for a second to make sure that all the indexing operations are finished.
+    await sleep(1000);
+
+    await storeNamespace1.delete({ ids: idNamespace1 });
+
+    const resultsNamespace1 = await storeNamespace1.similaritySearchWithScore("namespace-test-original", 1, "namespace = 'namespace-test'");
+    expect(resultsNamespace1).toHaveLength(0);
+
+    const resultsNamespace2 = await storeNamespace2.similaritySearchWithScore("namespace-test-original", 1, "namespace = 'namespace-test'");
+    expect(resultsNamespace2).toHaveLength(1);
+
+    expect([resultsNamespace2[0][0]]).toEqual([
+      new Document({ metadata: { namespace: "namespace-test" }, pageContent: "namespace-test-original" }),
+    ]);
+  })
 });
