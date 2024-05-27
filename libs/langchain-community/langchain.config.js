@@ -78,7 +78,8 @@ export const config = {
     "embeddings/ollama": "embeddings/ollama",
     "embeddings/premai": "embeddings/premai",
     "embeddings/tensorflow": "embeddings/tensorflow",
-    "embeddings/tencent_hunyuan": "embeddings/tencent_hunyuan",
+    "embeddings/tencent_hunyuan": "embeddings/tencent_hunyuan/index",
+    "embeddings/tencent_hunyuan/web": "embeddings/tencent_hunyuan/web",
     "embeddings/togetherai": "embeddings/togetherai",
     "embeddings/voyage": "embeddings/voyage",
     "embeddings/zhipuai": "embeddings/zhipuai",
@@ -170,7 +171,8 @@ export const config = {
     "chat_models/ollama": "chat_models/ollama",
     "chat_models/portkey": "chat_models/portkey",
     "chat_models/premai": "chat_models/premai",
-    "chat_models/tencent_hunyuan": "chat_models/tencent_hunyuan",
+    "chat_models/tencent_hunyuan": "chat_models/tencent_hunyuan/index",
+    "chat_models/tencent_hunyuan/web": "chat_models/tencent_hunyuan/web",
     "chat_models/togetherai": "chat_models/togetherai",
     "chat_models/webllm": "chat_models/webllm",
     "chat_models/yandex": "chat_models/yandex",
@@ -290,8 +292,6 @@ export const config = {
     "utils/convex": "utils/convex",
     "utils/event_source_parse": "utils/event_source_parse",
     "utils/cassandra": "utils/cassandra",
-    "utils/tencent_hunyuan/web": "utils/tencent_hunyuan/web",
-    "utils/tencent_hunyuan/index": "utils/tencent_hunyuan/index",
     // experimental
     "experimental/graph_transformers/llm":
       "experimental/graph_transformers/llm",

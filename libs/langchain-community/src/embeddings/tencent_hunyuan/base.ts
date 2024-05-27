@@ -1,6 +1,6 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
-import { sign } from "../utils/tencent_hunyuan/common.js";
+import { sign } from "../../utils/tencent_hunyuan/common.js";
 
 /**
  * Interface that extends EmbeddingsParams and defines additional
@@ -14,11 +14,6 @@ export interface TencentHunyuanEmbeddingsParams extends EmbeddingsParams {
   host?: string;
 
   /**
-   * Tencent Cloud API v3 sign method.
-   */
-  sign: sign;
-
-  /**
    * SecretID to use when making requests, can be obtained from https://console.cloud.tencent.com/cam/capi.
    * Defaults to the value of `TENCENT_SECRET_ID` environment variable.
    */
@@ -29,6 +24,18 @@ export interface TencentHunyuanEmbeddingsParams extends EmbeddingsParams {
    * Defaults to the value of `TENCENT_SECRET_KEY` environment variable.
    */
   tencentSecretKey?: string;
+}
+
+/**
+ * Interface that extends EmbeddingsParams and defines additional
+ * parameters specific to the TencentHunyuanEmbeddingsParams class.
+ */
+interface TencentHunyuanEmbeddingsParamsWithSign
+  extends TencentHunyuanEmbeddingsParams {
+  /**
+   * Tencent Cloud API v3 sign method.
+   */
+  sign: sign;
 }
 
 /**
@@ -88,7 +95,7 @@ export class TencentHunyuanEmbeddings
 
   sign: sign;
 
-  constructor(fields?: TencentHunyuanEmbeddingsParams) {
+  constructor(fields?: TencentHunyuanEmbeddingsParamsWithSign) {
     super(fields ?? {});
 
     this.tencentSecretId =

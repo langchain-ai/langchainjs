@@ -16,7 +16,7 @@ import {
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { IterableReadableStream } from "@langchain/core/utils/stream";
-import { sign } from "../utils/tencent_hunyuan/common.js";
+import { sign } from "../../utils/tencent_hunyuan/common.js";
 
 /**
  * Type representing the role of a message in the Hunyuan chat model.
@@ -114,17 +114,12 @@ interface ChatCompletionResponse {
 /**
  * Interface defining the input to the ChatTencentHunyuan class.
  */
-declare interface TencentHunyuanChatInput {
+export interface TencentHunyuanChatInput {
   /**
    * Tencent Cloud API Host.
    * @default "hunyuan.tencentcloudapi.com"
    */
   host?: string;
-
-  /**
-   * Tencent Cloud API v3 sign method.
-   */
-  sign: sign;
 
   /**
    * Model name to use.
@@ -163,6 +158,16 @@ declare interface TencentHunyuanChatInput {
    * from 0 to 1.0. Defaults to 1.0.
    */
   topP?: number;
+}
+
+/**
+ * Interface defining the input to the ChatTencentHunyuan class.
+ */
+interface TencentHunyuanChatInputWithSign extends TencentHunyuanChatInput {
+  /**
+   * Tencent Cloud API v3 sign method.
+   */
+  sign: sign;
 }
 
 /**
@@ -227,7 +232,7 @@ function messageToRole(message: BaseMessage): HunyuanMessageRole {
  */
 export class ChatTencentHunyuan
   extends BaseChatModel
-  implements TencentHunyuanChatInput
+  implements TencentHunyuanChatInputWithSign
 {
   static lc_name() {
     return "ChatTencentHunyuan";
@@ -266,7 +271,9 @@ export class ChatTencentHunyuan
 
   sign: sign;
 
-  constructor(fields?: Partial<TencentHunyuanChatInput> & BaseChatModelParams) {
+  constructor(
+    fields?: Partial<TencentHunyuanChatInputWithSign> & BaseChatModelParams
+  ) {
     super(fields ?? {});
 
     this.tencentSecretId =

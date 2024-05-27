@@ -1101,6 +1101,15 @@
       "import": "./embeddings/tencent_hunyuan.js",
       "require": "./embeddings/tencent_hunyuan.cjs"
     },
+    "./embeddings/tencent_hunyuan/web": {
+      "types": {
+        "import": "./embeddings/tencent_hunyuan/web.d.ts",
+        "require": "./embeddings/tencent_hunyuan/web.d.cts",
+        "default": "./embeddings/tencent_hunyuan/web.d.ts"
+      },
+      "import": "./embeddings/tencent_hunyuan/web.js",
+      "require": "./embeddings/tencent_hunyuan/web.cjs"
+    },
     "./embeddings/togetherai": {
       "types": {
         "import": "./embeddings/togetherai.d.ts",
@@ -1901,6 +1910,15 @@
       },
       "import": "./chat_models/tencent_hunyuan.js",
       "require": "./chat_models/tencent_hunyuan.cjs"
+    },
+    "./chat_models/tencent_hunyuan/web": {
+      "types": {
+        "import": "./chat_models/tencent_hunyuan/web.d.ts",
+        "require": "./chat_models/tencent_hunyuan/web.d.cts",
+        "default": "./chat_models/tencent_hunyuan/web.d.ts"
+      },
+      "import": "./chat_models/tencent_hunyuan/web.js",
+      "require": "./chat_models/tencent_hunyuan/web.cjs"
     },
     "./chat_models/togetherai": {
       "types": {
@@ -2811,24 +2829,6 @@
       "import": "./utils/cassandra.js",
       "require": "./utils/cassandra.cjs"
     },
-    "./utils/tencent_hunyuan/web": {
-      "types": {
-        "import": "./utils/tencent_hunyuan/web.d.ts",
-        "require": "./utils/tencent_hunyuan/web.d.cts",
-        "default": "./utils/tencent_hunyuan/web.d.ts"
-      },
-      "import": "./utils/tencent_hunyuan/web.js",
-      "require": "./utils/tencent_hunyuan/web.cjs"
-    },
-    "./utils/tencent_hunyuan/index": {
-      "types": {
-        "import": "./utils/tencent_hunyuan/index.d.ts",
-        "require": "./utils/tencent_hunyuan/index.d.cts",
-        "default": "./utils/tencent_hunyuan/index.d.ts"
-      },
-      "import": "./utils/tencent_hunyuan/index.js",
-      "require": "./utils/tencent_hunyuan/index.cjs"
-    },
     "./experimental/graph_transformers/llm": {
       "types": {
         "import": "./experimental/graph_transformers/llm.d.ts",
@@ -3066,6 +3066,10 @@
     "embeddings/tencent_hunyuan.js",
     "embeddings/tencent_hunyuan.d.ts",
     "embeddings/tencent_hunyuan.d.cts",
+    "embeddings/tencent_hunyuan/web.cjs",
+    "embeddings/tencent_hunyuan/web.js",
+    "embeddings/tencent_hunyuan/web.d.ts",
+    "embeddings/tencent_hunyuan/web.d.cts",
     "embeddings/togetherai.cjs",
     "embeddings/togetherai.js",
     "embeddings/togetherai.d.ts",
@@ -3422,6 +3426,10 @@
     "chat_models/tencent_hunyuan.js",
     "chat_models/tencent_hunyuan.d.ts",
     "chat_models/tencent_hunyuan.d.cts",
+    "chat_models/tencent_hunyuan/web.cjs",
+    "chat_models/tencent_hunyuan/web.js",
+    "chat_models/tencent_hunyuan/web.d.ts",
+    "chat_models/tencent_hunyuan/web.d.cts",
     "chat_models/togetherai.cjs",
     "chat_models/togetherai.js",
     "chat_models/togetherai.d.ts",
@@ -3826,14 +3834,6 @@
     "utils/cassandra.js",
     "utils/cassandra.d.ts",
     "utils/cassandra.d.cts",
-    "utils/tencent_hunyuan/web.cjs",
-    "utils/tencent_hunyuan/web.js",
-    "utils/tencent_hunyuan/web.d.ts",
-    "utils/tencent_hunyuan/web.d.cts",
-    "utils/tencent_hunyuan/index.cjs",
-    "utils/tencent_hunyuan/index.js",
-    "utils/tencent_hunyuan/index.d.ts",
-    "utils/tencent_hunyuan/index.d.cts",
     "experimental/graph_transformers/llm.cjs",
     "experimental/graph_transformers/llm.js",
     "experimental/graph_transformers/llm.d.ts",

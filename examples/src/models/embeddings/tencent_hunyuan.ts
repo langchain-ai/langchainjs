@@ -1,14 +1,12 @@
+// in nodejs environment
 import { TencentHunyuanEmbeddings } from "@langchain/community/embeddings/tencent_hunyuan";
 
-// in nodejs environment
-import { sign } from "@langchain/community/utils/tencent_hunyuan/index";
-
 // in browser environment
-// import { sign } from "@langchain/community/utils/tencent_hunyuan/web";
+// import { TencentHunyuanEmbeddings } from "@langchain/community/embeddings/tencent_hunyuan/web";
 
 export const run = async () => {
   /* Embed queries */
-  const embeddings = new TencentHunyuanEmbeddings({ sign });
+  const embeddings = new TencentHunyuanEmbeddings();
   const res = await embeddings.embedQuery("你好，世界！");
   console.log(res);
   /* Embed documents */
