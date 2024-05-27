@@ -607,8 +607,8 @@ export class EventStreamCallbackHandler extends BaseTracer {
   async onRunUpdate(run: Run): Promise<void> {
     if (run.id === this.rootId && this.autoClose) {
       const pendingPromises = [...this.tappedPromises.values()];
-      Promise.all(pendingPromises).finally(() => {
-        this.writer.close();
+      void Promise.all(pendingPromises).finally(() => {
+        void this.writer.close();
       });
     }
   }
