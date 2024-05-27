@@ -17,6 +17,7 @@ import {
 export interface UpstashVectorLibArgs extends AsyncCallerParams {
   index: UpstashIndex;
   filter?: string;
+  namespace?: string;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -33,9 +34,9 @@ export type UpstashQueryMetadata = UpstashMetadata & {
  */
 export type UpstashDeleteParams =
   | {
-      ids: string | string[];
-      deleteAll?: never;
-    }
+    ids: string | string[];
+    deleteAll?: never;
+  }
   | { deleteAll: boolean; ids?: never };
 
 const CONCURRENT_UPSERT_LIMIT = 1000;
@@ -56,6 +57,8 @@ export class UpstashVectorStore extends VectorStore {
 
   filter?: this["FilterType"];
 
+  namespace?: string;
+
   _vectorstoreType(): string {
     return "upstash";
   }
@@ -68,11 +71,12 @@ export class UpstashVectorStore extends VectorStore {
       this.useUpstashEmbeddings = true;
     }
 
-    const { index, ...asyncCallerArgs } = args;
+    const { index, namespace, ...asyncCallerArgs } = args;
 
     this.index = index;
     this.caller = new AsyncCaller(asyncCallerArgs);
     this.filter = args.filter;
+    this.namespace = namespace;
   }
 
   /**
@@ -127,10 +131,11 @@ export class UpstashVectorStore extends VectorStore {
       };
     });
 
+    const namespace = this.index.namespace(this.namespace ?? "")
     const vectorChunks = chunkArray(upstashVectors, CONCURRENT_UPSERT_LIMIT);
 
     const batchRequests = vectorChunks.map((chunk) =>
-      this.caller.call(async () => this.index.upsert(chunk))
+      this.caller.call(async () => namespace.upsert(chunk))
     );
 
     await Promise.all(batchRequests);
@@ -171,8 +176,9 @@ export class UpstashVectorStore extends VectorStore {
       CONCURRENT_UPSERT_LIMIT
     );
 
+    const namespace = this.index.namespace(this.namespace ?? "")
     const batchRequests = vectorChunks.map((chunk) =>
-      this.caller.call(async () => this.index.upsert(chunk))
+      this.caller.call(async () => namespace.upsert(chunk))
     );
 
     await Promise.all(batchRequests);
@@ -187,10 +193,11 @@ export class UpstashVectorStore extends VectorStore {
    * @returns Promise that resolves when the specified documents have been deleted from the database.
    */
   async delete(params: UpstashDeleteParams): Promise<void> {
+    const namespace = this.index.namespace(this.namespace ?? "")
     if (params.deleteAll) {
-      await this.index.reset();
+      await namespace.reset();
     } else if (params.ids) {
-      await this.index.delete(params.ids);
+      await namespace.delete(params.ids);
     }
   }
 
@@ -202,8 +209,9 @@ export class UpstashVectorStore extends VectorStore {
   ) {
     let queryResult: QueryResult<UpstashQueryMetadata>[] = [];
 
+    const namespace = this.index.namespace(this.namespace ?? "")
     if (typeof query === "string") {
-      queryResult = await this.index.query<UpstashQueryMetadata>({
+      queryResult = await namespace.query<UpstashQueryMetadata>({
         data: query,
         topK: k,
         includeMetadata: true,
@@ -211,7 +219,7 @@ export class UpstashVectorStore extends VectorStore {
         ...options,
       });
     } else {
-      queryResult = await this.index.query<UpstashQueryMetadata>({
+      queryResult = await namespace.query<UpstashQueryMetadata>({
         vector: query,
         topK: k,
         includeMetadata: true,
