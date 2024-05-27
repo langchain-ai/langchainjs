@@ -186,6 +186,8 @@ export class UpstashVectorStore extends VectorStore {
     return documentIds;
   }
 
+
+
   /**
    * This method deletes documents from the Upstash database. You can either
    * provide the target ids, or delete all vectors in the database.
