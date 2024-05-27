@@ -823,12 +823,12 @@ export abstract class Runnable<
     options: Partial<CallOptions> & { version: "v1" | "v2" },
     streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
   ): AsyncGenerator<StreamEvent> {
-    const config = ensureConfig(options);
-    const runId = config.runId ?? uuidv4();
     const eventStreamer = new EventStreamCallbackHandler({
       ...streamOptions,
       autoClose: true,
     });
+    const config = ensureConfig(options);
+    const runId = config.runId ?? uuidv4();
     config.runId = runId;
     const callbacks = config.callbacks;
     if (callbacks === undefined) {
