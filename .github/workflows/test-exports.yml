@@ -37,13 +37,9 @@ jobs:
       - name: Build "@langchain/community"
         run: yarn workspace @langchain/community build
         shell: bash
-        env:
-          SKIP_API_DOCS: true
       - name: Build LangChain
         run: yarn workspace langchain build
         shell: bash
-        env:
-          SKIP_API_DOCS: true
 
       - name: Test esbuild exports
         run: docker compose -f environment_tests/docker-compose.yml run test-exports-esbuild
@@ -60,16 +56,9 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Build "@langchain/community"
-        run: yarn workspace @langchain/community build
-        shell: bash
-        env:
-          SKIP_API_DOCS: true
       - name: Build LangChain
         run: yarn workspace langchain build
         shell: bash
-        env:
-          SKIP_API_DOCS: true
 
       - name: Test esm exports
         run: docker compose -f environment_tests/docker-compose.yml run test-exports-esm
@@ -86,16 +75,9 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Build "@langchain/community"
-        run: yarn workspace @langchain/community build
-        shell: bash
-        env:
-          SKIP_API_DOCS: true
       - name: Build LangChain
         run: yarn workspace langchain build
         shell: bash
-        env:
-          SKIP_API_DOCS: true
 
       - name: Test cjs exports
         run: docker compose -f environment_tests/docker-compose.yml run test-exports-cjs
@@ -114,8 +96,6 @@ jobs:
       - name: Build
         run: yarn workspace langchain build
         shell: bash
-        env:
-          SKIP_API_DOCS: true
 
       - name: Test cf exports
         run: docker compose -f environment_tests/docker-compose.yml run test-exports-cf
@@ -134,8 +114,6 @@ jobs:
       - name: Build
         run: yarn workspace langchain build
         shell: bash
-        env:
-          SKIP_API_DOCS: true
 
       - name: Test vercel exports
         run: docker compose -f environment_tests/docker-compose.yml run test-exports-vercel
@@ -154,8 +132,6 @@ jobs:
       - name: Build
         run: yarn workspace langchain build
         shell: bash
-        env:
-          SKIP_API_DOCS: true
 
       - name: Test vite exports
         run: docker compose -f environment_tests/docker-compose.yml run test-exports-vite
@@ -174,8 +150,6 @@ jobs:
       - name: Build
         run: yarn workspace langchain build
         shell: bash
-        env:
-          SKIP_API_DOCS: true
 
       - name: Test compiling exports with tsc
         run: docker compose -f environment_tests/docker-compose.yml run test-exports-tsc
@@ -194,8 +168,6 @@ jobs:
   #     - name: Build
   #       run: yarn workspace langchain build
   #       shell: bash
-  #       env:
-  #         SKIP_API_DOCS: true
 
   #     - name: Test bun exports
   #       run: docker compose -f environment_tests/docker-compose.yml run test-exports-bun
