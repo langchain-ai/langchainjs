@@ -772,7 +772,7 @@ test("Test ChatOpenAI token usage reporting for streaming calls", async () => {
 test("Streaming tokens can be found in usage_metadata field", async () => {
   const model = new ChatOpenAI();
   const response = await model.stream("Hello, how are you?");
-  let finalResult: AIMessageChunk | undefined = undefined;
+  let finalResult: AIMessageChunk | undefined;
   for await (const chunk of response) {
     if (finalResult) {
       finalResult = finalResult.concat(chunk);
@@ -781,7 +781,7 @@ test("Streaming tokens can be found in usage_metadata field", async () => {
     }
   }
   console.log({
-    usage_metadata: finalResult?.usage_metadata
+    usage_metadata: finalResult?.usage_metadata,
   });
   expect(finalResult).toBeTruthy();
   expect(finalResult?.usage_metadata).toBeTruthy();
@@ -796,7 +796,7 @@ test("streaming: true tokens can be found in usage_metadata field", async () => 
   });
   const response = await model.invoke("Hello, how are you?");
   console.log({
-    usage_metadata: response?.usage_metadata
+    usage_metadata: response?.usage_metadata,
   });
   expect(response).toBeTruthy();
   expect(response?.usage_metadata).toBeTruthy();

@@ -37,7 +37,7 @@ export type UsageMetadata = {
    * The total token count
    */
   total_tokens: number;
-}
+};
 
 /**
  * Represents an AI message in a conversation.
@@ -257,7 +257,10 @@ export class AIMessageChunk extends BaseMessageChunk {
         combinedFields.tool_call_chunks = rawToolCalls;
       }
     }
-    if (this.usage_metadata !== undefined || chunk.usage_metadata !== undefined) {
+    if (
+      this.usage_metadata !== undefined ||
+      chunk.usage_metadata !== undefined
+    ) {
       const left: UsageMetadata = this.usage_metadata ?? {
         input_tokens: 0,
         output_tokens: 0,
