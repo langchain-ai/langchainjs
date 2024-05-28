@@ -1,7 +1,7 @@
 export function isUrl(url: string): boolean {
   try {
-    new URL(url);
-    return true;
+    const newUrl = new URL(url);
+    return Boolean(newUrl);
   } catch (error) {
     return false;
   }

@@ -19330,7 +19330,7 @@ __metadata:
     isomorphic-dompurify: ^2.9.0
     json-loader: ^0.5.7
     marked: ^12.0.2
-    prettier: ^2.7.1
+    prettier: ^2.8.3
     process: ^0.11.10
     react: ^17.0.2
     react-dom: ^17.0.2
@@ -19468,6 +19468,13 @@ __metadata:
     commander: ^2.20.0
     conf: ^10.2.0
     dotenv: ^16.3.1
+    eslint: ^8.33.0
+    eslint-config-airbnb-base: ^15.0.0
+    eslint-config-prettier: ^8.6.0
+    eslint-plugin-import: ^2.27.5
+    eslint-plugin-jest: ^27.6.0
+    eslint-plugin-no-instanceof: ^1.0.1
+    eslint-plugin-prettier: ^4.2.1
     fast-glob: ^3.3.2
     picocolors: ^1.0.0
     prettier: ^2.8.3
@@ -31849,7 +31856,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:^2.6.2, prettier@npm:^2.7.1":
+"prettier@npm:^2.6.2":
   version: 2.8.8
   resolution: "prettier@npm:2.8.8"
   bin:
