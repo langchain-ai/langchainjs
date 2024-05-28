@@ -40,7 +40,7 @@ export class CohereEmbeddings
 
   private apiKey: string;
 
-  private client: typeof import("cohere-ai");
+  private client: import("cohere-ai").CohereClient;
 
   /**
    * Constructor for the CohereEmbeddings class.
@@ -91,9 +91,9 @@ export class CohereEmbeddings
 
     for (let i = 0; i < batchResponses.length; i += 1) {
       const batch = batches[i];
-      const { body: batchResponse } = batchResponses[i];
+      const { embeddings: batchResponse } = batchResponses[i];
       for (let j = 0; j < batch.length; j += 1) {
-        embeddings.push(batchResponse.embeddings[j]);
+        embeddings.push((batchResponse as number[][])[j]);
       }
     }
 
@@ -108,11 +108,11 @@ export class CohereEmbeddings
   async embedQuery(text: string): Promise<number[]> {
     await this.maybeInitClient();
 
-    const { body } = await this.embeddingWithRetry({
+    const { embeddings } = await this.embeddingWithRetry({
       model: this.modelName,
       texts: [text],
-    });
-    return body.embeddings[0];
+    }) as { embeddings: number[][] };
+    return embeddings[0];
   }
 
   /**
@@ -135,8 +135,10 @@ export class CohereEmbeddings
     if (!this.client) {
       const { cohere } = await CohereEmbeddings.imports();
 
-      this.client = cohere;
-      this.client.init(this.apiKey);
+      const initClient = new cohere.CohereClient({
+        token: this.apiKey,
+      });
+      this.client = initClient;
     }
   }
 

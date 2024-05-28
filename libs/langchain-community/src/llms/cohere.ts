@@ -92,23 +92,23 @@ export class Cohere extends LLM implements CohereInput {
     options: this["ParsedCallOptions"]
   ): Promise<string> {
     const { cohere } = await Cohere.imports();
-
-    cohere.init(this.apiKey);
-
+    const cohereClient = new cohere.CohereClient({
+      token: this.apiKey,
+    });
     // Hit the `generate` endpoint on the `large` model
     const generateResponse = await this.caller.callWithOptions(
       { signal: options.signal },
-      cohere.generate.bind(cohere),
+      cohereClient.generate.bind(cohereClient),
       {
         prompt,
         model: this.model,
-        max_tokens: this.maxTokens,
+        maxTokens: this.maxTokens,
         temperature: this.temperature,
-        end_sequences: options.stop,
+        endSequences: options.stop,
       }
     );
     try {
-      return generateResponse.body.generations[0].text;
+      return generateResponse.generations[0].text;
     } catch {
       console.log(generateResponse);
       throw new Error("Could not parse response.");

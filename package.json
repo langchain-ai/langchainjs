@@ -19,6 +19,7 @@
   "packageManager": "yarn@3.4.1",
   "scripts": {
     "build": "turbo build --filter=\"!test-exports-*\"",
+    "build:integrations": "yarn run build --filter=!api_refs --filter=!core_docs --filter=!create-langchain-integration --filter=!examples --filter=\"!test-exports-*\"",
     "turbo:command": "turbo",
     "clean": "turbo clean",
     "format": "turbo format",

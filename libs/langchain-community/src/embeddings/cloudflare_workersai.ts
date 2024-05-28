@@ -1,4 +1,4 @@
-import { Ai } from "@cloudflare/ai";
+import { Ai, modelMappings } from "@cloudflare/ai";
 import { Fetcher } from "@cloudflare/workers-types";
 import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
@@ -11,6 +11,14 @@ type AiTextEmbeddingsOutput = {
   shape: number[];
   data: number[][];
 };
+
+type ModelMappings = typeof modelMappings;
+type GetModelName<T> = {
+    [K in keyof T]: T[K] extends {
+        models: readonly (infer U)[];
+    } ? U : never;
+}[keyof T];
+type ModelName = GetModelName<ModelMappings>;
 
 /** @deprecated Install and import from "@langchain/cloudflare" instead. */
 export interface CloudflareWorkersAIEmbeddingsParams extends EmbeddingsParams {
@@ -39,9 +47,9 @@ export interface CloudflareWorkersAIEmbeddingsParams extends EmbeddingsParams {
 
 /** @deprecated Install and import from "@langchain/cloudflare" instead. */
 export class CloudflareWorkersAIEmbeddings extends Embeddings {
-  modelName = "@cf/baai/bge-base-en-v1.5";
+  modelName: ModelName = "@cf/baai/bge-base-en-v1.5";
 
-  model = "@cf/baai/bge-base-en-v1.5";
+  model: ModelName = "@cf/baai/bge-base-en-v1.5";
 
   batchSize = 50;
 
@@ -58,7 +66,7 @@ export class CloudflareWorkersAIEmbeddings extends Embeddings {
       );
     }
     this.ai = new Ai(fields.binding);
-    this.modelName = fields?.model ?? fields.modelName ?? this.model;
+    this.modelName = (fields?.model ?? fields.modelName ?? this.model) as ModelName;
     this.model = this.modelName;
     this.stripNewLines = fields.stripNewLines ?? this.stripNewLines;
   }
