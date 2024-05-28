@@ -108,10 +108,10 @@ export class CohereEmbeddings
   async embedQuery(text: string): Promise<number[]> {
     await this.maybeInitClient();
 
-    const { embeddings } = await this.embeddingWithRetry({
+    const { embeddings } = (await this.embeddingWithRetry({
       model: this.modelName,
       texts: [text],
-    }) as { embeddings: number[][] };
+    })) as { embeddings: number[][] };
     return embeddings[0];
   }
 

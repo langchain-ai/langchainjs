@@ -14,9 +14,11 @@ type AiTextEmbeddingsOutput = {
 
 type ModelMappings = typeof modelMappings;
 type GetModelName<T> = {
-    [K in keyof T]: T[K] extends {
-        models: readonly (infer U)[];
-    } ? U : never;
+  [K in keyof T]: T[K] extends {
+    models: readonly (infer U)[];
+  }
+    ? U
+    : never;
 }[keyof T];
 type ModelName = GetModelName<ModelMappings>;
 
@@ -66,7 +68,9 @@ export class CloudflareWorkersAIEmbeddings extends Embeddings {
       );
     }
     this.ai = new Ai(fields.binding);
-    this.modelName = (fields?.model ?? fields.modelName ?? this.model) as ModelName;
+    this.modelName = (fields?.model ??
+      fields.modelName ??
+      this.model) as ModelName;
     this.model = this.modelName;
     this.stripNewLines = fields.stripNewLines ?? this.stripNewLines;
   }
