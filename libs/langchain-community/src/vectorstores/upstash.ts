@@ -34,9 +34,9 @@ export type UpstashQueryMetadata = UpstashMetadata & {
  */
 export type UpstashDeleteParams =
   | {
-    ids: string | string[];
-    deleteAll?: never;
-  }
+      ids: string | string[];
+      deleteAll?: never;
+    }
   | { deleteAll: boolean; ids?: never };
 
 const CONCURRENT_UPSERT_LIMIT = 1000;
@@ -131,7 +131,7 @@ export class UpstashVectorStore extends VectorStore {
       };
     });
 
-    const namespace = this.index.namespace(this.namespace ?? "")
+    const namespace = this.index.namespace(this.namespace ?? "");
 
     const vectorChunks = chunkArray(upstashVectors, CONCURRENT_UPSERT_LIMIT);
 
@@ -172,7 +172,7 @@ export class UpstashVectorStore extends VectorStore {
       };
     });
 
-    const namespace = this.index.namespace(this.namespace ?? "")
+    const namespace = this.index.namespace(this.namespace ?? "");
     const vectorChunks = chunkArray(
       upstashVectorsWithData,
       CONCURRENT_UPSERT_LIMIT
@@ -194,7 +194,7 @@ export class UpstashVectorStore extends VectorStore {
    * @returns Promise that resolves when the specified documents have been deleted from the database.
    */
   async delete(params: UpstashDeleteParams): Promise<void> {
-    const namespace = this.index.namespace(this.namespace ?? "")
+    const namespace = this.index.namespace(this.namespace ?? "");
     if (params.deleteAll) {
       await namespace.reset();
     } else if (params.ids) {
@@ -210,7 +210,7 @@ export class UpstashVectorStore extends VectorStore {
   ) {
     let queryResult: QueryResult<UpstashQueryMetadata>[] = [];
 
-    const namespace = this.index.namespace(this.namespace ?? "")
+    const namespace = this.index.namespace(this.namespace ?? "");
 
     if (typeof query === "string") {
       queryResult = await namespace.query<UpstashQueryMetadata>({
