@@ -825,7 +825,7 @@ export abstract class Runnable<
   ): AsyncGenerator<StreamEvent> {
     const eventStreamer = new EventStreamCallbackHandler({
       ...streamOptions,
-      autoClose: false,
+      autoClose: true,
     });
     const config = ensureConfig(options);
     const runId = config.runId ?? uuidv4();
@@ -845,18 +845,14 @@ export abstract class Runnable<
     // add each chunk to the output stream
     const outerThis = this;
     async function consumeRunnableStream() {
-      try {
-        const runnableStream = await outerThis.stream(input, config);
-        const tappedStream = eventStreamer.tapOutputIterable(
-          runId,
-          runnableStream
-        );
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        for await (const _ of tappedStream) {
-          // Just iterate so that the callback handler picks up events
-        }
-      } finally {
-        await eventStreamer.writer.close();
+      const runnableStream = await outerThis.stream(input, config);
+      const tappedStream = eventStreamer.tapOutputIterable(
+        runId,
+        runnableStream
+      );
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      for await (const _ of tappedStream) {
+        // Just iterate so that the callback handler picks up events
       }
     }
     const runnableStreamConsumePromise = consumeRunnableStream();

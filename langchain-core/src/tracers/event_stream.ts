@@ -277,6 +277,7 @@ export class EventStreamCallbackHandler extends BaseTracer {
       } finally {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         tappedPromiseResolver!();
+        // Don't delete from the map to keep track of which runs have been tapped.
       }
     } else {
       // otherwise just pass through
@@ -595,5 +596,20 @@ export class EventStreamCallbackHandler extends BaseTracer {
       },
       runInfo
     );
+  }
+
+  async onRunCreate(run: Run): Promise<void> {
+    if (this.rootId === undefined) {
+      this.rootId = run.id;
+    }
+  }
+
+  async onRunUpdate(run: Run): Promise<void> {
+    if (run.id === this.rootId && this.autoClose) {
+      const pendingPromises = [...this.tappedPromises.values()];
+      void Promise.all(pendingPromises).finally(() => {
+        void this.writer.close();
+      });
+    }
   }
 }
