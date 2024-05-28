@@ -1,5 +1,8 @@
 import { type ClientOptions, AzureOpenAI as AzureOpenAIClient } from "openai";
-import { type BaseChatModelParams } from "@langchain/core/language_models/chat_models";
+import {
+  LangSmithParams,
+  type BaseChatModelParams,
+} from "@langchain/core/language_models/chat_models";
 import { ChatOpenAI } from "../chat_models.js";
 import { OpenAIEndpointConfig, getEndpoint } from "../utils/azure.js";
 import {
@@ -35,12 +38,22 @@ export class AzureChatOpenAI extends ChatOpenAI {
   ) {
     const newFields = fields ? { ...fields } : fields;
     if (newFields) {
-      newFields.azureOpenAIApiDeploymentName = newFields.deploymentName;
-      newFields.azureOpenAIApiKey = newFields.openAIApiKey;
-      newFields.azureOpenAIApiVersion = newFields.openAIApiVersion;
+      // don't rewrite the fields if they are already set
+      newFields.azureOpenAIApiDeploymentName =
+        newFields.azureOpenAIApiDeploymentName ?? newFields.deploymentName;
+      newFields.azureOpenAIApiKey =
+        newFields.azureOpenAIApiKey ?? newFields.openAIApiKey;
+      newFields.azureOpenAIApiVersion =
+        newFields.azureOpenAIApiVersion ?? newFields.openAIApiVersion;
     }
 
     super(newFields);
+  }
+
+  protected getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+    const params = super.getLsParams(options);
+    params.ls_provider = "azure";
+    return params;
   }
 
   protected _getClientOptions(options: OpenAICoreRequestOptions | undefined) {

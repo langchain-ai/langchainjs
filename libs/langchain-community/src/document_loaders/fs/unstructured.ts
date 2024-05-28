@@ -1,7 +1,7 @@
 import type { basename as BasenameT } from "node:path";
 import type { readFile as ReadFileT } from "node:fs/promises";
 import { Document } from "@langchain/core/documents";
-import { getEnv } from "@langchain/core/utils/env";
+import { getEnv, getEnvironmentVariable } from "@langchain/core/utils/env";
 import { StringWithAutocomplete } from "@langchain/core/utils/types";
 import {
   DirectoryLoader,
@@ -181,8 +181,12 @@ export class UnstructuredLoader extends BaseDocumentLoader {
     } else {
       this.filePath = filePathOrLegacyApiUrl;
       const options = optionsOrLegacyFilePath;
-      this.apiKey = options.apiKey;
-      this.apiUrl = options.apiUrl ?? this.apiUrl;
+      this.apiKey =
+        options.apiKey ?? getEnvironmentVariable("UNSTRUCTURED_API_KEY");
+      this.apiUrl =
+        options.apiUrl ??
+        getEnvironmentVariable("UNSTRUCTURED_API_URL") ??
+        this.apiUrl;
       this.strategy = options.strategy ?? this.strategy;
       this.encoding = options.encoding;
       this.ocrLanguages = options.ocrLanguages ?? this.ocrLanguages;

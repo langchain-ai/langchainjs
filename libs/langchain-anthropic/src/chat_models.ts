@@ -20,6 +20,7 @@ import {
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   BaseChatModel,
+  LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
 import {
@@ -32,7 +33,6 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
 import {
   Runnable,
-  RunnableInterface,
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
@@ -60,9 +60,20 @@ type AnthropicStreamingMessageCreateParams =
   Anthropic.MessageCreateParamsStreaming;
 type AnthropicMessageStreamEvent = Anthropic.MessageStreamEvent;
 type AnthropicRequestOptions = Anthropic.RequestOptions;
-
+type AnthropicToolChoice =
+  | {
+      type: "tool";
+      name: string;
+    }
+  | "any"
+  | "auto";
 interface ChatAnthropicCallOptions extends BaseLanguageModelCallOptions {
   tools?: (StructuredToolInterface | AnthropicTool)[];
+  /**
+   * Whether or not to specify what tool the model should use
+   * @default "auto"
+   */
+  tool_choice?: AnthropicToolChoice;
 }
 
 type AnthropicMessageResponse = Anthropic.ContentBlock | AnthropicToolResponse;
@@ -492,6 +503,18 @@ export class ChatAnthropicMessages<
     this.clientOptions = fields?.clientOptions ?? {};
   }
 
+  protected getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+    const params = this.invocationParams(options);
+    return {
+      ls_provider: "openai",
+      ls_model_name: this.model,
+      ls_model_type: "chat",
+      ls_temperature: params.temperature ?? undefined,
+      ls_max_tokens: params.max_tokens ?? undefined,
+      ls_stop: options.stop,
+    };
+  }
+
   /**
    * Formats LangChain StructuredTools to AnthropicTools.
    *
@@ -529,7 +552,7 @@ export class ChatAnthropicMessages<
   override bindTools(
     tools: (AnthropicTool | StructuredToolInterface)[],
     kwargs?: Partial<CallOptions>
-  ): RunnableInterface<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
+  ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
     return this.bind({
       tools: this.formatStructuredToolToAnthropic(tools),
       ...kwargs,
@@ -546,6 +569,26 @@ export class ChatAnthropicMessages<
     "messages"
   > &
     Kwargs {
+    let tool_choice:
+      | {
+          type: string;
+          name?: string;
+        }
+      | undefined;
+    if (options?.tool_choice) {
+      if (options?.tool_choice === "any") {
+        tool_choice = {
+          type: "any",
+        };
+      } else if (options?.tool_choice === "auto") {
+        tool_choice = {
+          type: "auto",
+        };
+      } else {
+        tool_choice = options?.tool_choice;
+      }
+    }
+
     return {
       model: this.model,
       temperature: this.temperature,
@@ -555,6 +598,7 @@ export class ChatAnthropicMessages<
       stream: this.streaming,
       max_tokens: this.maxTokens,
       tools: this.formatStructuredToolToAnthropic(options?.tools),
+      tool_choice,
       ...this.invocationKwargs,
     };
   }
@@ -910,6 +954,7 @@ export class ChatAnthropicMessages<
     }
     const llm = this.bind({
       tools,
+      tool_choice: "any",
     } as Partial<CallOptions>);
 
     if (!includeRaw) {

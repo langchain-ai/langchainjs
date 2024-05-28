@@ -41,7 +41,16 @@ module.exports = {
     "no-use-before-define": 0,
     "no-useless-constructor": 0,
     "no-else-return": 0,
+    "arrow-body-style": 0,
     semi: ["error", "always"],
     "unused-imports/no-unused-imports": "error",
   },
+  overrides: [
+    {
+      files: ['**/*.test.ts'],
+      rules: {
+        '@typescript-eslint/no-unused-vars': 'off'
+      }
+    }
+  ]
 };

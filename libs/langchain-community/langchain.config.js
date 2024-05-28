@@ -48,6 +48,7 @@ export const config = {
     "tools/google_calendar": "tools/google_calendar/index",
     "tools/google_custom_search": "tools/google_custom_search",
     "tools/google_places": "tools/google_places",
+    "tools/google_routes": "tools/google_routes",
     "tools/ifttt": "tools/ifttt",
     "tools/searchapi": "tools/searchapi",
     "tools/searxng_search": "tools/searxng_search",
@@ -105,6 +106,7 @@ export const config = {
     "llms/watsonx_ai": "llms/watsonx_ai",
     "llms/writer": "llms/writer",
     "llms/yandex": "llms/yandex",
+    "llms/layerup_security": "llms/layerup_security",
     // vectorstores
     "vectorstores/analyticdb": "vectorstores/analyticdb",
     "vectorstores/astradb": "vectorstores/astradb",
@@ -151,6 +153,7 @@ export const config = {
     "vectorstores/weaviate": "vectorstores/weaviate",
     "vectorstores/xata": "vectorstores/xata",
     "vectorstores/zep": "vectorstores/zep",
+    "vectorstores/zep_cloud": "vectorstores/zep_cloud",
     // chat_models
     "chat_models/alibaba_tongyi": "chat_models/alibaba_tongyi",
     "chat_models/baiduwenxin": "chat_models/baiduwenxin",
@@ -166,6 +169,7 @@ export const config = {
     "chat_models/iflytek_xinghuo/web": "chat_models/iflytek_xinghuo/web",
     "chat_models/llama_cpp": "chat_models/llama_cpp",
     "chat_models/minimax": "chat_models/minimax",
+    "chat_models/moonshot": "chat_models/moonshot",
     "chat_models/ollama": "chat_models/ollama",
     "chat_models/portkey": "chat_models/portkey",
     "chat_models/premai": "chat_models/premai",
@@ -176,6 +180,7 @@ export const config = {
     // callbacks
     "callbacks/handlers/llmonitor": "callbacks/handlers/llmonitor",
     "callbacks/handlers/lunary": "callbacks/handlers/lunary",
+    "callbacks/handlers/upstash_ratelimit": "callbacks/handlers/upstash_ratelimit",
     // retrievers
     "retrievers/amazon_kendra": "retrievers/amazon_kendra",
     "retrievers/amazon_knowledge_base": "retrievers/amazon_knowledge_base",
@@ -194,6 +199,7 @@ export const config = {
     "structured_query/qdrant": "structured_query/qdrant",
     "structured_query/supabase": "structured_query/supabase",
     "structured_query/vectara": "structured_query/vectara",
+    "retrievers/zep_cloud": "retrievers/zep_cloud",
     // cache
     "caches/cloudflare_kv": "caches/cloudflare_kv",
     "caches/ioredis": "caches/ioredis",
@@ -232,10 +238,12 @@ export const config = {
     "stores/message/redis": "stores/message/redis",
     "stores/message/upstash_redis": "stores/message/upstash_redis",
     "stores/message/xata": "stores/message/xata",
+    "stores/message/zep_cloud": "stores/message/zep_cloud",
     // memory
     "memory/chat_memory": "memory/chat_memory",
     "memory/motorhead_memory": "memory/motorhead_memory",
     "memory/zep": "memory/zep",
+    "memory/zep_cloud": "memory/zep_cloud",
     // indexes
     "indexes/base": "indexes/base",
     "indexes/postgres": "indexes/postgres",
@@ -248,6 +256,7 @@ export const config = {
       "document_loaders/web/azure_blob_storage_container",
     "document_loaders/web/azure_blob_storage_file":
       "document_loaders/web/azure_blob_storage_file",
+    "document_loaders/web/browserbase": "document_loaders/web/browserbase",
     "document_loaders/web/cheerio": "document_loaders/web/cheerio",
     "document_loaders/web/puppeteer": "document_loaders/web/puppeteer",
     "document_loaders/web/playwright": "document_loaders/web/playwright",
@@ -271,6 +280,7 @@ export const config = {
     "document_loaders/web/serpapi": "document_loaders/web/serpapi",
     "document_loaders/web/sort_xyz_blockchain":
       "document_loaders/web/sort_xyz_blockchain",
+    "document_loaders/web/spider": "document_loaders/web/spider",
     "document_loaders/web/youtube": "document_loaders/web/youtube",
     "document_loaders/fs/chatgpt": "document_loaders/fs/chatgpt",
     "document_loaders/fs/srt": "document_loaders/fs/srt",
@@ -309,6 +319,7 @@ export const config = {
     "agents/toolkits/aws_sfn",
     "callbacks/handlers/llmonitor",
     "callbacks/handlers/lunary",
+    "callbacks/handlers/upstash_ratelimit",
     "embeddings/bedrock",
     "embeddings/cloudflare_workersai",
     "embeddings/cohere",
@@ -337,6 +348,7 @@ export const config = {
     "llms/llama_cpp",
     "llms/writer",
     "llms/portkey",
+    "llms/layerup_security",
     "vectorstores/analyticdb",
     "vectorstores/astradb",
     "vectorstores/azure_aisearch",
@@ -379,6 +391,7 @@ export const config = {
     "vectorstores/weaviate",
     "vectorstores/xata",
     "vectorstores/zep",
+    "vectorstores/zep_cloud",
     "chat_models/bedrock",
     "chat_models/bedrock/web",
     "chat_models/googlevertexai",
@@ -403,6 +416,7 @@ export const config = {
     "structured_query/qdrant",
     "structured_query/supabase",
     "structured_query/vectara",
+    "retrievers/zep_cloud",
     "cache/cloudflare_kv",
     "cache/momento",
     "cache/upstash_redis",
@@ -433,9 +447,11 @@ export const config = {
     "stores/message/redis",
     "stores/message/upstash_redis",
     "stores/message/xata",
+    "stores/message/zep_cloud",
     // memory
     "memory/motorhead_memory",
     "memory/zep",
+    "memory/zep_cloud",
     // utils
     "utils/convex",
     "utils/cassandra",
@@ -447,6 +463,7 @@ export const config = {
     "document_loaders/web/assemblyai",
     "document_loaders/web/azure_blob_storage_container",
     "document_loaders/web/azure_blob_storage_file",
+    "document_loaders/web/browserbase",
     "document_loaders/web/cheerio",
     "document_loaders/web/puppeteer",
     "document_loaders/web/playwright",
@@ -463,6 +480,7 @@ export const config = {
     "document_loaders/web/s3",
     "document_loaders/web/sitemap",
     "document_loaders/web/sonix_audio",
+    "document_loaders/web/spider",
     "document_loaders/web/confluence",
     "document_loaders/web/couchbase",
     "document_loaders/web/youtube",

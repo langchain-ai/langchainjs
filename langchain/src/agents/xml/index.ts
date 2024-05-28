@@ -35,7 +35,7 @@ export interface XMLAgentInput {
 /**
  * Class that represents an agent that uses XML tags.
  *
- * @deprecated Use the {@link https://api.js.langchain.com/functions/langchain_agents.createXmlAgent.html | createXmlAgent method instead}.
+ * @deprecated Use the {@link https://v02.api.js.langchain.com/functions/langchain_agents.createXmlAgent.html | createXmlAgent method instead}.
  */
 export class XMLAgent extends BaseSingleActionAgent implements XMLAgentInput {
   static lc_name() {

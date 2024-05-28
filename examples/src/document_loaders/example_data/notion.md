@@ -32,7 +32,7 @@ The [LangChainHub](https://github.com/hwchase17/langchain-hub) is a central plac
 
 ## 📖 Documentation
 
-For full documentation of prompts, chains, agents and more, please see [here](https://js.langchain.com/docs/get_started/introduction).
+For full documentation of prompts, chains, agents and more, please see [here](https://js.langchain.com/v0.2/docs/introduction).
 
 ## 💁 Contributing
 

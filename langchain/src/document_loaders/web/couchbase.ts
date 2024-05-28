@@ -9,6 +9,8 @@ import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation
 });
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/couchbase" instead. This entrypoint will be removed in 0.3.0.
+ *
  * loader for couchbase document
  */
 export class CouchbaseDocumentLoader

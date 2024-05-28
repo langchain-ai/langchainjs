@@ -246,6 +246,8 @@ class ObsidianFileLoader extends BaseDocumentLoader {
 }
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/fs/obsidian" instead. This entrypoint will be removed in 0.3.0.
+ *
  * Represents a loader for directories containing Obsidian markdown files. This loader extends
  * the DirectoryLoader and provides functionality to load and parse '.md' files with YAML frontmatter,
  * Obsidian tags, and Dataview fields.

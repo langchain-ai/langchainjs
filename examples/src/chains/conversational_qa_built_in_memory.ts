@@ -2,7 +2,7 @@ import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { LLMChain } from "langchain/chains";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import { BufferMemory } from "langchain/memory/index";
+import { BufferMemory } from "langchain/memory";
 import * as fs from "fs";
 import { formatDocumentsAsString } from "langchain/util/document";
 import { Document } from "@langchain/core/documents";

@@ -1,4 +1,4 @@
-import { BrowserbaseLoader } from "langchain/document_loaders/web/browserbase";
+import { BrowserbaseLoader } from "@langchain/community/document_loaders/web/browserbase";
 
 const loader = new BrowserbaseLoader(["https://example.com"], {
   textContent: true,
