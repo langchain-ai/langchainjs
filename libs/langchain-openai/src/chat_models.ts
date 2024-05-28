@@ -528,6 +528,8 @@ export class ChatOpenAI<
         )
       );
     }
+    const llmType = this._llmType();
+
     const params: Omit<
       OpenAIClient.Chat.ChatCompletionCreateParams,
       "messages"
@@ -553,9 +555,14 @@ export class ChatOpenAI<
       tool_choice: options?.tool_choice,
       response_format: options?.response_format,
       seed: options?.seed,
-      stream_options: {
-        include_usage: true,
-      },
+      // Only set stream_options if the model is OpenAI
+      ...(llmType === "openai"
+        ? {
+            stream_options: {
+              include_usage: true,
+            },
+          }
+        : {}),
       ...this.modelKwargs,
     };
     return params;
