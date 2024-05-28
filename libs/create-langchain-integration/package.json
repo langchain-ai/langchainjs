@@ -10,8 +10,11 @@
   "scripts": {
     "dev": "ncc build ./index.ts -w -o dist/",
     "build": "ncc build ./index.ts -o ./dist/ --minify --no-cache --no-source-map-register && cp ./template/.eslintrc.cjs ./template/.prettierrc ./template/.release-it.json ./dist/template",
-    "format": "prettier --write \"./\"",
-    "format:check": "prettier --check \"./\""
+    "format": "prettier --config .prettierrc --write \".\"",
+    "format:check": "prettier --config .prettierrc --check \".\"",
+    "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
+    "lint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
+    "lint:fix": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --fix --ext .ts,.js src/"
   },
   "devDependencies": {
     "@types/prompts": "^2",
