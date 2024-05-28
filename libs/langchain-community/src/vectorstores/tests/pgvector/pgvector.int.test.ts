@@ -2,21 +2,30 @@ import { expect, test } from "@jest/globals";
 import pg, { PoolConfig } from "pg";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { PGVectorStore, PGVectorStoreArgs } from "../../pgvector.js";
+// impor { BedrockEmbeddings } from "../../../embeddings/bedrock.js";
+
+const embeddingsEngine = new OpenAIEmbeddings();
+
+// const embeddingsEngine = new BedrockEmbeddings({
+//   region: "us-east-1",
+// });
+
+const postgresConnectionOptions = {
+  type: "postgres",
+  host: "127.0.0.1",
+  port: 5432,
+  user: "myuser",
+  password: "ChangeMe",
+  database: "api",
+} as PoolConfig;
 
 describe("PGVectorStore", () => {
   let pgvectorVectorStore: PGVectorStore;
   const tableName = "testlangchain";
 
   beforeAll(async () => {
-    const config = {
-      postgresConnectionOptions: {
-        type: "postgres",
-        host: "127.0.0.1",
-        port: 5432,
-        user: "myuser",
-        password: "ChangeMe",
-        database: "api",
-      } as PoolConfig,
+    const config: PGVectorStoreArgs = {
+      postgresConnectionOptions,
       tableName: "testlangchain",
       // collectionTableName: "langchain_pg_collection",
       // collectionName: "langchain",
@@ -29,7 +38,7 @@ describe("PGVectorStore", () => {
     };
 
     pgvectorVectorStore = await PGVectorStore.initialize(
-      new OpenAIEmbeddings(),
+      embeddingsEngine,
       config
     );
   });
@@ -297,14 +306,7 @@ describe("PGVectorStore with collection", () => {
 
   beforeAll(async () => {
     const config = {
-      postgresConnectionOptions: {
-        type: "postgres",
-        host: "127.0.0.1",
-        port: 5432,
-        user: "myuser",
-        password: "ChangeMe",
-        database: "api",
-      } as PoolConfig,
+      postgresConnectionOptions,
       tableName,
       collectionTableName,
       collectionName: "langchain",
@@ -317,7 +319,7 @@ describe("PGVectorStore with collection", () => {
     };
 
     pgvectorVectorStore = await PGVectorStore.initialize(
-      new OpenAIEmbeddings(),
+      embeddingsEngine,
       config
     );
   });
@@ -535,13 +537,7 @@ describe("PGVectorStore with schema", () => {
   let pool: pg.Pool;
 
   beforeAll(async () => {
-    pool = new pg.Pool({
-      host: "127.0.0.1",
-      port: 5432,
-      user: "myuser",
-      password: "ChangeMe",
-      database: "api",
-    });
+    pool = new pg.Pool(postgresConnectionOptions);
 
     const config: PGVectorStoreArgs = {
       pool,
@@ -560,7 +556,7 @@ describe("PGVectorStore with schema", () => {
     await pool.query(`CREATE SCHEMA IF NOT EXISTS ${schema}`);
 
     pgvectorVectorStore = await PGVectorStore.initialize(
-      new OpenAIEmbeddings(),
+      embeddingsEngine,
       config
     );
     computedTableName = pgvectorVectorStore.computedTableName;
@@ -771,5 +767,76 @@ describe("PGVectorStore with schema", () => {
       console.error("Error: ", e);
       throw e;
     }
+  });
+});
+
+describe("PGVectorStore with HNSW index", () => {
+  let pgvectorVectorStore: PGVectorStore;
+  const tableName = "testlangchain";
+
+  beforeAll(async () => {
+    const config: PGVectorStoreArgs = {
+      postgresConnectionOptions,
+      tableName: "testlangchain",
+      columns: {
+        idColumnName: "id",
+        vectorColumnName: "vector",
+        contentColumnName: "content",
+        metadataColumnName: "metadata",
+      },
+      distanceStrategy: "cosine",
+    };
+
+    pgvectorVectorStore = await PGVectorStore.initialize(
+      embeddingsEngine,
+      config
+    );
+
+    // Create the index
+    await pgvectorVectorStore.createHnswIndex();
+  });
+
+  afterEach(async () => {
+    // Drop table, then recreate it for the next test.
+    await pgvectorVectorStore.pool.query(`DROP TABLE "${tableName}"`);
+    await pgvectorVectorStore.ensureTableInDatabase();
+    await pgvectorVectorStore.createHnswIndex();
+  });
+
+  afterAll(async () => {
+    await pgvectorVectorStore.end();
+  });
+
+  test("Ensure table has HNSW index", async () => {
+    const result = await pgvectorVectorStore.pool.query(
+      `SELECT indexname, tablename, indexdef FROM pg_indexes where indexname='testlangchain_embedding_idx';`
+    );
+    const { indexdef } = result.rows[0];
+    expect(result.rowCount).toBe(1);
+    expect(indexdef.includes("USING hnsw")).toBe(true);
+  });
+
+  test("Test embeddings creation", async () => {
+    const documents = [
+      {
+        pageContent: "hello",
+        metadata: { a: 1 },
+      },
+      {
+        pageContent: "Cat drinks milk",
+        metadata: { a: 2 },
+      },
+      { pageContent: "hi", metadata: { a: 1 } },
+    ];
+    await pgvectorVectorStore.addDocuments(documents);
+
+    const query = await embeddingsEngine.embedQuery("milk");
+    const results = await pgvectorVectorStore.similaritySearchVectorWithScore(
+      query,
+      1
+    );
+
+    expect(results).toHaveLength(1);
+    expect(results[0][0].pageContent).toEqual("Cat drinks milk");
   });
 });
