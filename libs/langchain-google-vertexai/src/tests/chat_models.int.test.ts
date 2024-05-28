@@ -131,24 +131,24 @@ describe("GAuth Chat", () => {
 
     const calculatorSchema = z.object({
       operation: z
-        .enum(['add', 'subtract', 'multiply', 'divide'])
-        .describe('The type of operation to execute'),
-      number1: z.number().describe('The first number to operate on.'),
-      number2: z.number().describe('The second number to operate on.'),
+        .enum(["add", "subtract", "multiply", "divide"])
+        .describe("The type of operation to execute"),
+      number1: z.number().describe("The first number to operate on."),
+      number2: z.number().describe("The second number to operate on."),
     });
 
     const model = new ChatVertexAI({
       temperature: 0.7,
-      model: 'gemini-1.0-pro',
+      model: "gemini-1.0-pro",
       callbacks: [handler],
     }).withStructuredOutput(calculatorSchema);
 
-    const response = await model.invoke('What is 1628253239 times 81623836?');
+    const response = await model.invoke("What is 1628253239 times 81623836?");
     expect(response).toHaveProperty("operation");
     expect(response.operation).toEqual("multiply");
     expect(response).toHaveProperty("number1");
     expect(response.number1).toEqual(1628253239);
     expect(response).toHaveProperty("number2");
     expect(response.number2).toEqual(81623836);
-  })
+  });
 });
