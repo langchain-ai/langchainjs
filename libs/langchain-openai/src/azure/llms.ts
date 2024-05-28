@@ -31,9 +31,13 @@ export class AzureOpenAI extends OpenAI {
   ) {
     const newFields = fields ? { ...fields } : fields;
     if (newFields) {
-      newFields.azureOpenAIApiDeploymentName = newFields.deploymentName;
-      newFields.azureOpenAIApiKey = newFields.openAIApiKey;
-      newFields.azureOpenAIApiVersion = newFields.openAIApiVersion;
+      // don't rewrite the fields if they are already set
+      newFields.azureOpenAIApiDeploymentName =
+        newFields.azureOpenAIApiDeploymentName ?? newFields.deploymentName;
+      newFields.azureOpenAIApiKey =
+        newFields.azureOpenAIApiKey ?? newFields.openAIApiKey;
+      newFields.azureOpenAIApiVersion =
+        newFields.azureOpenAIApiVersion ?? newFields.openAIApiVersion;
     }
 
     super(newFields);
