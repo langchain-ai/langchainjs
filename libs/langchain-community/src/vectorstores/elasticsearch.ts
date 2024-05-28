@@ -328,6 +328,7 @@ export class ElasticVectorSearch extends VectorStore {
 
     const must = [];
     const must_not = [];
+    const should = [];
     for (const condition of filters) {
       const metadataField = `metadata.${condition.field}`;
       if (condition.operator === "exists") {
@@ -342,7 +343,13 @@ export class ElasticVectorSearch extends VectorStore {
             [metadataField]: condition.value,
           },
         });
-      } else {
+      } else if (condition.operator === "or") {
+        should.push({
+          term: {
+            [metadataField]: condition.value,
+          },
+        });
+      }else {
         must.push({
           [condition.operator]: {
             [metadataField]: condition.value,
@@ -350,7 +357,13 @@ export class ElasticVectorSearch extends VectorStore {
         });
       }
     }
-    return { must, must_not };
+    const result = { must, must_not };
+    
+    if(should.length > 0){
+      result.should = should;
+      result.minimum_should_match = 1;
+    }
+    return result;
   }
 
   /**
