@@ -2,8 +2,17 @@ import {
   BaseChatModel,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
-import { AIMessage, AIMessageChunk, BaseMessage, ChatMessage } from "@langchain/core/messages";
-import { ChatGeneration, ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
+import {
+  AIMessage,
+  AIMessageChunk,
+  BaseMessage,
+  ChatMessage,
+} from "@langchain/core/messages";
+import {
+  ChatGeneration,
+  ChatGenerationChunk,
+  ChatResult,
+} from "@langchain/core/outputs";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { createStream } from "../utils/stream.js";
@@ -54,7 +63,6 @@ interface ChatCompletionResponse {
   need_clear_history: boolean;
   usage: TokenUsage;
 }
-
 
 interface ChatCompletionStreamResponse extends ChatCompletionResponse {
   is_end: boolean;
@@ -360,7 +368,6 @@ export class ChatBaiduWenxin
       role: messageToWenxinRole(message),
       content: message.text,
     }));
-
   }
 
   /** @ignore */
@@ -616,7 +623,6 @@ export class ChatBaiduWenxin
     return `${this.apiUrl}?access_token=${this.accessToken}`;
   }
 
-
   private async *createWenxinStream(
     request: ChatCompletionRequest,
     signal?: AbortSignal
@@ -677,14 +683,13 @@ export class ChatBaiduWenxin
       yield new ChatGenerationChunk({
         text: result,
         message: new AIMessageChunk({ content: result }),
-        generationInfo:
-          is_end
-            ? {
-                is_end,
-                request_id: id,
-                usage: chunk.usage,
-              }
-            : undefined,
+        generationInfo: is_end
+          ? {
+              is_end,
+              request_id: id,
+              usage: chunk.usage,
+            }
+          : undefined,
       });
       await runManager?.handleLLMNewToken(result);
     }

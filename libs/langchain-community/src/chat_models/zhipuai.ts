@@ -454,7 +454,10 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
     return this.caller.call(makeCompletionRequest);
   }
 
-  private async *createZhipuStream(request: ChatCompletionRequest, signal?: AbortSignal) {
+  private async *createZhipuStream(
+    request: ChatCompletionRequest,
+    signal?: AbortSignal
+  ) {
     const response = await fetch(this.apiUrl, {
       method: "POST",
       headers: {
@@ -465,7 +468,6 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
       body: JSON.stringify(request),
       signal,
     });
-
 
     if (!response.body) {
       throw new Error(
@@ -503,19 +505,18 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
 
     for await (const chunk of stream) {
       const { choices, id } = chunk;
-      const text = choices[0]?.delta?.content ?? '';
+      const text = choices[0]?.delta?.content ?? "";
       const finished = !!choices[0]?.finish_reason;
       yield new ChatGenerationChunk({
         text,
         message: new AIMessageChunk({ content: text }),
-        generationInfo:
-        finished
-            ? {
-                finished,
-                request_id: id,
-                usage: chunk.usage,
-              }
-            : undefined,
+        generationInfo: finished
+          ? {
+              finished,
+              request_id: id,
+              usage: chunk.usage,
+            }
+          : undefined,
       });
       await runManager?.handleLLMNewToken(text);
     }

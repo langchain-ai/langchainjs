@@ -21,9 +21,9 @@ interface TestConfig {
   shouldThrow?: boolean;
 }
 
-test.skip('Test chat.stream work fine', async () => {
+test.skip("Test chat.stream work fine", async () => {
   const chat = new ChatBaiduWenxin({
-    modelName: 'ERNIE-Bot',
+    modelName: "ERNIE-Bot",
   });
   const stream = await chat.stream(
     `Translate "I love programming" into Chinese.`
@@ -33,7 +33,7 @@ test.skip('Test chat.stream work fine', async () => {
     chunks.push(chunk);
   }
   expect(chunks.length).toBeGreaterThan(0);
-})
+});
 
 const runTest = async ({
   modelName,
@@ -69,7 +69,6 @@ const runTest = async ({
       messages.push(new SystemMessage(system));
     }
     messages.push(new HumanMessage(message));
-    
 
     if (shouldThrow) {
       await expect(chat.invoke(messages)).rejects.toThrow();
