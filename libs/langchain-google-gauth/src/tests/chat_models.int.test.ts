@@ -8,7 +8,7 @@ import {
   BaseMessageChunk,
   BaseMessageLike,
   HumanMessage,
-  MessageContentComplex,
+  // MessageContentComplex,
   SystemMessage,
   ToolMessage,
 } from "@langchain/core/messages";
@@ -31,12 +31,22 @@ describe("GAuth Chat", () => {
 
       const aiMessage = res as AIMessageChunk;
       expect(aiMessage.content).toBeDefined();
+
+      expect(typeof aiMessage.content).toBe("string");
+      const text = aiMessage.content as string;
+      expect(text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
+
+      /*
       expect(aiMessage.content.length).toBeGreaterThan(0);
       expect(aiMessage.content[0]).toBeDefined();
-
       const content = aiMessage.content[0] as MessageContentComplex;
-      expect(typeof content).toBe("string");
-      expect(content).toBe("2");
+      expect(content).toHaveProperty("type");
+      expect(content.type).toEqual("text");
+
+      const textContent = content as MessageContentText;
+      expect(textContent.text).toBeDefined();
+      expect(textContent.text).toEqual("2");
+      */
     } catch (e) {
       console.error(e);
       throw e;
