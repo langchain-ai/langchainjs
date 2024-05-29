@@ -13,13 +13,9 @@ import { RunLog } from "../../tracers/log_stream.js";
 import { RunnableSequence, RunnableMap } from "../base.js";
 import {
   FakeLLM,
-  FakeStreamingLLM,
   FakeChatModel,
   FakeRetriever,
 } from "../../utils/testing/index.js";
-import { SystemMessage, HumanMessage } from "../../messages/index.js";
-import { CommaSeparatedListOutputParser } from "../../output_parsers/list.js";
-import { ChatPromptValue } from "../../prompt_values.js";
 
 test("Runnable streamLog method", async () => {
   const promptTemplate = PromptTemplate.fromTemplate("{input}");
