@@ -10,6 +10,7 @@ import {
 } from "@mistralai/mistralai";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
+import { AsyncCaller } from "@langchain/core/utils/async_caller";
 
 export interface MistralAICallOptions extends BaseLanguageModelCallOptions {
   /**
@@ -99,6 +100,10 @@ export class MistralAI
 
   endpoint?: string;
 
+  maxRetries?: number;
+
+  maxConcurrency?: number;
+
   constructor(fields?: MistralAIInput) {
     super(fields ?? {});
 
@@ -110,6 +115,8 @@ export class MistralAI
     this.batchSize = fields?.batchSize ?? this.batchSize;
     this.streaming = fields?.streaming ?? this.streaming;
     this.endpoint = fields?.endpoint;
+    this.maxRetries = fields?.maxRetries;
+    this.maxConcurrency = fields?.maxConcurrency;
 
     const apiKey = fields?.apiKey ?? getEnvironmentVariable("MISTRAL_API_KEY");
     if (!apiKey) {
@@ -159,7 +166,7 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
       ...this.invocationParams(options),
       prompt,
     };
-    const result = await this.completionWithRetry(params, false);
+    const result = await this.completionWithRetry(params, options, false);
     return result.choices[0].message.content ?? "";
   }
 
@@ -191,6 +198,7 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
                 ...params,
                 prompt: subPrompts[i][x],
               },
+              options,
               true
             );
             for await (const message of stream) {
@@ -244,6 +252,7 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
                 ...params,
                 prompt: subPrompts[i][x],
               },
+              options,
               false
             );
             responseData.push(res);
@@ -270,30 +279,47 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
 
   async completionWithRetry(
     request: CompletionRequest,
+    options: this["ParsedCallOptions"],
     stream: false
   ): Promise<ChatCompletionResponse>;
 
   async completionWithRetry(
     request: CompletionRequest,
+    options: this["ParsedCallOptions"],
     stream: true
   ): Promise<AsyncGenerator<ChatCompletionResponseChunk, void>>;
 
   async completionWithRetry(
     request: CompletionRequest,
+    options: this["ParsedCallOptions"],
     stream: boolean
   ): Promise<
     | ChatCompletionResponse
     | AsyncGenerator<ChatCompletionResponseChunk, void, unknown>
   > {
     const { MistralClient } = await this.imports();
-    const client = new MistralClient(this.apiKey, this.endpoint);
-    return this.caller.call(async () => {
-      if (stream) {
-        return client.completionStream(request);
-      } else {
-        return client.completion(request);
-      }
+    const caller = new AsyncCaller({
+      maxConcurrency: options.maxConcurrency || this.maxConcurrency,
+      maxRetries: this.maxRetries,
     });
+    const client = new MistralClient(
+      this.apiKey,
+      this.endpoint,
+      this.maxRetries,
+      options.timeout
+    );
+    return caller.callWithOptions(
+      {
+        signal: options.signal,
+      },
+      async () => {
+        if (stream) {
+          return client.completionStream(request);
+        } else {
+          return client.completion(request);
+        }
+      }
+    );
   }
 
   async *_streamResponseChunks(
@@ -305,7 +331,7 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
       ...this.invocationParams(options),
       prompt,
     };
-    const stream = await this.completionWithRetry(params, true);
+    const stream = await this.completionWithRetry(params, options, true);
     for await (const data of stream) {
       const choice = data?.choices[0];
       if (!choice) {

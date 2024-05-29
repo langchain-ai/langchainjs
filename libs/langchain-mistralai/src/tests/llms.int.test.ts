@@ -1,6 +1,5 @@
 import { test, expect } from "@jest/globals";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
-import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { MistralAI } from "../llms.js";
 
 test("Test MistralAI", async () => {
@@ -20,10 +19,9 @@ test("Test MistralAI with stop in object", async () => {
     maxTokens: 5,
     model: "codestral-latest",
   });
-  const res = await model.invoke(
-    "Log 'Hello world' to the console in javascript: ",
-    { stop: ["world"] }
-  );
+  const res = await model.invoke("console.log 'Hello world' in javascript:", {
+    stop: ["world"],
+  });
   console.log({ res }, "Test MistralAI with stop in object");
 });
 
@@ -59,15 +57,18 @@ test("Test MistralAI with signal in call options", async () => {
     model: "codestral-latest",
   });
   const controller = new AbortController();
-  await expect(() => {
-    const ret = model.invoke(
-      "Log 'Hello world' to the console in javascript: ",
+  await expect(async () => {
+    const ret = await model.stream(
+      "Log 'Hello world' to the console in javascript 100 times: ",
       {
         signal: controller.signal,
       }
     );
 
-    controller.abort();
+    for await (const chunk of ret) {
+      console.log({ chunk }, "Test MistralAI with signal in call options");
+      controller.abort();
+    }
 
     return ret;
   }).rejects.toThrow();
@@ -95,40 +96,6 @@ test("Test MistralAI in streaming mode", async () => {
 
   expect(nrNewTokens > 0).toBe(true);
   expect(res).toBe(streamedCompletion);
-});
-
-test.skip("Test MistralAI in streaming mode with multiple prompts", async () => {
-  let nrNewTokens = 0;
-  const completions = [
-    ["", ""],
-    ["", ""],
-  ];
-
-  const model = new MistralAI({
-    maxTokens: 5,
-    model: "codestral-latest",
-    streaming: true,
-    callbacks: CallbackManager.fromHandlers({
-      async handleLLMNewToken(token: string, idx: NewTokenIndices) {
-        nrNewTokens += 1;
-        completions[idx.prompt][idx.completion] += token;
-      },
-    }),
-  });
-  const res = await model.generate([
-    "Log 'Hello world' to the console in javascript: ",
-    "print hello sea",
-  ]);
-  console.log(
-    res.generations,
-    res.generations.map((g) => g[0].generationInfo)
-  );
-
-  expect(nrNewTokens > 0).toBe(true);
-  expect(res.generations.length).toBe(2);
-  expect(res.generations.map((g) => g.map((gg) => gg.text))).toEqual(
-    completions
-  );
 });
 
 test("Test MistralAI stream method", async () => {
