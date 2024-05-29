@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { expect, test } from "@jest/globals";
 import { z } from "zod";
 import { zodToGeminiParameters } from "../utils/zod_to_gemini_parameters.js";
@@ -63,7 +64,7 @@ test("zodToGeminiParameters removes additional properties from arrays", () => {
   expect(convertedSchema.description).toBe("A list of people");
   expect((convertedSchema as any).additionalProperties).toBeUndefined();
 
-  const peopleSchema = convertedSchema?.properties?.["people"];
+  const peopleSchema = convertedSchema?.properties?.people;
   expect(peopleSchema).not.toBeUndefined();
 
   if (peopleSchema !== undefined) {
