@@ -254,8 +254,7 @@ export abstract class AbstractGoogleLLMConnection<
   AuthOptions
 > {
   async buildUrlMethodGemini(): Promise<string> {
-    // Vertex AI only handles streamedGenerateContent
-    return "streamGenerateContent";
+    return this.streaming ? "streamGenerateContent" : "generateContent";
   }
 
   async buildUrlMethod(): Promise<string> {

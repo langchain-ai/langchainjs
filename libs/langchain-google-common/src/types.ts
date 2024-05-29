@@ -295,6 +295,7 @@ export type GeminiJsonSchema = Record<string, unknown> & {
 };
 
 export interface GeminiJsonSchemaDirty extends GeminiJsonSchema {
+  items?: GeminiJsonSchemaDirty;
   properties?: Record<string, GeminiJsonSchemaDirty>;
   additionalProperties?: boolean;
 }

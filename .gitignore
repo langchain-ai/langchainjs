@@ -10,6 +10,7 @@ yarn-error.log
 docs/_dist/
 
 .yarn/*
+!.yarn/cache
 !.yarn/patches
 !.yarn/plugins
 !.yarn/releases

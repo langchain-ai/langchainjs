@@ -355,7 +355,7 @@ export class ChatMoonshot extends BaseChatModel implements ChatMoonshotParams {
       prompt_tokens = 0,
       completion_tokens = 0,
       total_tokens = 0,
-    } = data.usage;
+    } = data.usage ?? {};
 
     const { text } = data.output;
 
