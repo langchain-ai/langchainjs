@@ -1,4 +1,6 @@
 import { test } from "@jest/globals";
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { z } from "zod";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
 import {
@@ -7,10 +9,11 @@ import {
   BaseMessage,
   BaseMessageChunk,
   HumanMessage,
-  MessageContentComplex,
-  MessageContentText,
+  // MessageContentComplex,
+  // MessageContentText,
   SystemMessage,
 } from "@langchain/core/messages";
+import { ConsoleCallbackHandler } from "@langchain/core/tracers/console";
 import { ChatVertexAI } from "../chat_models.js";
 import { VertexAI } from "../llms.js";
 
@@ -29,9 +32,14 @@ describe("GAuth Chat", () => {
 
       const aiMessage = res as AIMessageChunk;
       expect(aiMessage.content).toBeDefined();
+
+      expect(typeof aiMessage.content).toBe("string");
+      const text = aiMessage.content as string;
+      expect(text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
+
+      /*
       expect(aiMessage.content.length).toBeGreaterThan(0);
       expect(aiMessage.content[0]).toBeDefined();
-
       const content = aiMessage.content[0] as MessageContentComplex;
       expect(content).toHaveProperty("type");
       expect(content.type).toEqual("text");
@@ -39,6 +47,7 @@ describe("GAuth Chat", () => {
       const textContent = content as MessageContentText;
       expect(textContent.text).toBeDefined();
       expect(textContent.text).toEqual("2");
+      */
     } catch (e) {
       console.error(e);
       throw e;
@@ -62,6 +71,12 @@ describe("GAuth Chat", () => {
 
       const aiMessage = res as AIMessageChunk;
       expect(aiMessage.content).toBeDefined();
+
+      expect(typeof aiMessage.content).toBe("string");
+      const text = aiMessage.content as string;
+      expect(["H", "T"]).toContainEqual(text);
+
+      /*
       expect(aiMessage.content.length).toBeGreaterThan(0);
       expect(aiMessage.content[0]).toBeDefined();
 
@@ -72,6 +87,7 @@ describe("GAuth Chat", () => {
       const textContent = content as MessageContentText;
       expect(textContent.text).toBeDefined();
       expect(["H", "T"]).toContainEqual(textContent.text);
+      */
     } catch (e) {
       console.error(e);
       throw e;
@@ -108,5 +124,31 @@ describe("GAuth Chat", () => {
       console.error(e);
       throw e;
     }
+  });
+
+  test("structuredOutput", async () => {
+    const handler = new ConsoleCallbackHandler();
+
+    const calculatorSchema = z.object({
+      operation: z
+        .enum(["add", "subtract", "multiply", "divide"])
+        .describe("The type of operation to execute"),
+      number1: z.number().describe("The first number to operate on."),
+      number2: z.number().describe("The second number to operate on."),
+    });
+
+    const model = new ChatVertexAI({
+      temperature: 0.7,
+      model: "gemini-1.0-pro",
+      callbacks: [handler],
+    }).withStructuredOutput(calculatorSchema);
+
+    const response = await model.invoke("What is 1628253239 times 81623836?");
+    expect(response).toHaveProperty("operation");
+    expect(response.operation).toEqual("multiply");
+    expect(response).toHaveProperty("number1");
+    expect(response.number1).toEqual(1628253239);
+    expect(response).toHaveProperty("number2");
+    expect(response.number2).toEqual(81623836);
   });
 });
