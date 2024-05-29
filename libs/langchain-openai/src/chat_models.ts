@@ -529,8 +529,6 @@ export class ChatOpenAI<
         )
       );
     }
-    const llmType = this._llmType();
-
     const params: Omit<
       OpenAIClient.Chat.ChatCompletionCreateParams,
       "messages"
