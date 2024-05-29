@@ -30,6 +30,9 @@ import type { RunnableConfig } from "../runnables/config.js";
 import type { BaseCache } from "../caches.js";
 import { StructuredToolInterface } from "../tools.js";
 import { Runnable } from "../runnables/base.js";
+import { isStreamEventsHandler } from "../tracers/event_stream.js";
+import { isLogStreamHandler } from "../tracers/log_stream.js";
+import { concat } from "../utils/stream.js";
 
 /**
  * Represents a serialized chat model.
@@ -306,48 +309,88 @@ export abstract class BaseChatModel<
       undefined,
       handledOptions.runName
     );
-    // generate results
-    const results = await Promise.allSettled(
-      baseMessages.map((messageList, i) =>
-        this._generate(
-          messageList,
-          { ...parsedOptions, promptIndex: i },
-          runManagers?.[i]
-        )
-      )
-    );
-    // handle results
-    const generations: ChatGeneration[][] = [];
+    let generations: ChatGeneration[][] = [];
     const llmOutputs: LLMResult["llmOutput"][] = [];
-    await Promise.all(
-      results.map(async (pResult, i) => {
-        if (pResult.status === "fulfilled") {
-          const result = pResult.value;
-          for (const generation of result.generations) {
-            generation.message.response_metadata = {
-              ...generation.generationInfo,
-              ...generation.message.response_metadata,
-            };
+    // Even if stream is not explicitly called, check if model is implicitly
+    // called from streamEvents() or streamLog() to get all streamed events.
+    // Bail out if _streamResponseChunks not overridden
+    const hasStreamingHandler = !!runManagers?.[0].handlers.find((handler) => {
+      return isStreamEventsHandler(handler) || isLogStreamHandler(handler);
+    });
+    if (
+      hasStreamingHandler &&
+      baseMessages.length === 1 &&
+      this._streamResponseChunks !==
+        BaseChatModel.prototype._streamResponseChunks
+    ) {
+      try {
+        const stream = await this._streamResponseChunks(
+          baseMessages[0],
+          parsedOptions,
+          runManagers?.[0]
+        );
+        let aggregated;
+        for await (const chunk of stream) {
+          if (aggregated === undefined) {
+            aggregated = chunk;
+          } else {
+            aggregated = concat(aggregated, chunk);
           }
-          if (result.generations.length === 1) {
-            result.generations[0].message.response_metadata = {
-              ...result.llmOutput,
-              ...result.generations[0].message.response_metadata,
-            };
-          }
-          generations[i] = result.generations;
-          llmOutputs[i] = result.llmOutput;
-          return runManagers?.[i]?.handleLLMEnd({
-            generations: [result.generations],
-            llmOutput: result.llmOutput,
-          });
-        } else {
-          // status === "rejected"
-          await runManagers?.[i]?.handleLLMError(pResult.reason);
-          return Promise.reject(pResult.reason);
         }
-      })
-    );
+        if (aggregated === undefined) {
+          throw new Error("Received empty response from chat model call.");
+        }
+        generations.push([aggregated]);
+        await runManagers?.[0].handleLLMEnd({
+          generations,
+          llmOutput: {},
+        });
+      } catch (e) {
+        await runManagers?.[0].handleLLMError(e);
+        throw e;
+      }
+    } else {
+      // generate results
+      const results = await Promise.allSettled(
+        baseMessages.map((messageList, i) =>
+          this._generate(
+            messageList,
+            { ...parsedOptions, promptIndex: i },
+            runManagers?.[i]
+          )
+        )
+      );
+      // handle results
+      await Promise.all(
+        results.map(async (pResult, i) => {
+          if (pResult.status === "fulfilled") {
+            const result = pResult.value;
+            for (const generation of result.generations) {
+              generation.message.response_metadata = {
+                ...generation.generationInfo,
+                ...generation.message.response_metadata,
+              };
+            }
+            if (result.generations.length === 1) {
+              result.generations[0].message.response_metadata = {
+                ...result.llmOutput,
+                ...result.generations[0].message.response_metadata,
+              };
+            }
+            generations[i] = result.generations;
+            llmOutputs[i] = result.llmOutput;
+            return runManagers?.[i]?.handleLLMEnd({
+              generations: [result.generations],
+              llmOutput: result.llmOutput,
+            });
+          } else {
+            // status === "rejected"
+            await runManagers?.[i]?.handleLLMError(pResult.reason);
+            return Promise.reject(pResult.reason);
+          }
+        })
+      );
+    }
     // create combined output
     const output: LLMResult = {
       generations,

@@ -4,6 +4,7 @@ import {
 } from "../utils/fast-json-patch/index.js";
 import { BaseTracer, type Run } from "./base.js";
 import {
+  BaseCallbackHandler,
   BaseCallbackHandlerInput,
   HandleLLMNewTokenCallbackFields,
 } from "../callbacks/base.js";
@@ -129,6 +130,10 @@ export interface LogStreamCallbackHandlerInput
   excludeTags?: string[];
   _schemaFormat?: SchemaFormat;
 }
+
+export const isLogStreamHandler = (
+  handler: BaseCallbackHandler
+): handler is LogStreamCallbackHandler => handler.name === "log_stream_tracer";
 
 /**
  * Extract standardized inputs from a run.

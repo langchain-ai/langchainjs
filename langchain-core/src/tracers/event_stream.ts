@@ -1,5 +1,8 @@
 import { BaseTracer, type Run } from "./base.js";
-import { BaseCallbackHandlerInput } from "../callbacks/base.js";
+import {
+  BaseCallbackHandler,
+  BaseCallbackHandlerInput,
+} from "../callbacks/base.js";
 import { IterableReadableStream } from "../utils/stream.js";
 import { AIMessageChunk } from "../messages/ai.js";
 import { ChatGeneration, Generation, GenerationChunk } from "../outputs.js";
@@ -130,6 +133,12 @@ function assignName({
   }
   return "Unnamed";
 }
+
+export const isStreamEventsHandler = (
+  handler: BaseCallbackHandler
+): handler is EventStreamCallbackHandler =>
+  handler.name === "event_stream_tracer";
+
 /**
  * Class that extends the `BaseTracer` class from the
  * `langchain.callbacks.tracers.base` module. It represents a callback
