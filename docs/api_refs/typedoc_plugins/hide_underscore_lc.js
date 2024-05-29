@@ -23,7 +23,7 @@ const SCRIPT_HTML = `<script>
 const VERSION_DROPDOWN_HTML = `<div class="version-select">
 <select id="version-dropdown" onchange="window.location.href=this.value;">
   <option selected value="">v0.2</option>
-  <option value="https://v01.v02.api.js.langchain.com/">v0.1</option>
+  <option value="https://v01.api.js.langchain.com/">v0.1</option>
 </select>
 </div>`;
 

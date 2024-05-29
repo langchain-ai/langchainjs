@@ -40,7 +40,7 @@ export function getEndpoint(config: OpenAIEndpointConfig) {
   } = config;
 
   if (
-    azureOpenAIApiKey &&
+    (azureOpenAIApiKey || azureADTokenProvider) &&
     azureOpenAIBasePath &&
     azureOpenAIApiDeploymentName
   ) {
