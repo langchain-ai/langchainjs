@@ -309,7 +309,7 @@ export abstract class BaseChatModel<
       undefined,
       handledOptions.runName
     );
-    let generations: ChatGeneration[][] = [];
+    const generations: ChatGeneration[][] = [];
     const llmOutputs: LLMResult["llmOutput"][] = [];
     // Even if stream is not explicitly called, check if model is implicitly
     // called from streamEvents() or streamLog() to get all streamed events.
