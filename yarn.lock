@@ -9922,7 +9922,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.56 <0.3.0"
     "@langchain/scripts": ~0.0.14
-    "@mistralai/mistralai": ^0.1.3
+    "@mistralai/mistralai": ^0.4.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -10418,12 +10418,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mistralai/mistralai@npm:^0.1.3":
-  version: 0.1.3
-  resolution: "@mistralai/mistralai@npm:0.1.3"
+"@mistralai/mistralai@npm:^0.4.0":
+  version: 0.4.0
+  resolution: "@mistralai/mistralai@npm:0.4.0"
   dependencies:
     node-fetch: ^2.6.7
-  checksum: 3f8299811b06027dfbdae4fd86564ccda1a48ec4276940e1dcace4fa447cc4f7e61808a38d71ef73116fc6cf90b74257e6537e1c47c96d50ff52bfb8f62d2947
+  checksum: 1b03fc0b55164c02e5fb29fb2d09ebe4ad44346fc313f7fb3ab09e48f73f975763d1ac9654098d433ea17d7caa20654b2b15510822276acc9fa46db461a254a6
   languageName: node
   linkType: hard
 
