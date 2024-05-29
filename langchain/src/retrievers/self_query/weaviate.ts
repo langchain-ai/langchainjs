@@ -1,7 +1,5 @@
-import {
-  WeaviateFilter,
-  WeaviateStore,
-} from "@langchain/community/vectorstores/weaviate";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import {
   isFilterEmpty,
   isString,
@@ -18,6 +16,14 @@ import {
   StructuredQuery,
   Visitor,
 } from "@langchain/core/structured_query";
+import { VectorStore } from "@langchain/core/vectorstores";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "retrievers/self_query/weaviate",
+  newEntrypointName: "",
+  newPackageName: "@langchain/weaviate",
+});
 
 type AllowedOperator = Exclude<Operator, NOT>;
 
@@ -27,6 +33,8 @@ type WeaviateOperatorValues = {
   valueNumber: number;
   valueBoolean: boolean;
 };
+
+type WeaviateFilter = any;
 
 type WeaviateOperatorKeys = keyof WeaviateOperatorValues;
 
@@ -76,7 +84,7 @@ export type WeaviateStructuredQueryResult = {
  * ```
  */
 export class WeaviateTranslator<
-  T extends WeaviateStore
+  T extends VectorStore
 > extends BaseTranslator<T> {
   declare VisitOperationOutput: WeaviateOperationResult;
 

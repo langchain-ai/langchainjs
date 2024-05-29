@@ -1,0 +1,143 @@
+# Build a Question/Answering system over SQL data
+
+In this guide we'll go over the basic ways to create a Q&A chain and agent over a SQL database.
+These systems will allow us to ask a question about the data in a SQL database and get back a natural language answer.
+The main difference between the two is that our agent can query the database in a loop as many time as it needs to answer the question.
+
+## ⚠️ Security note ⚠️
+
+Building Q&A systems of SQL databases can require executing model-generated SQL queries. There are inherent risks in doing this.
+Make sure that your database connection permissions are always scoped as narrowly as possible for your chain/agent's needs.
+This will mitigate though not eliminate the risks of building a model-driven system. For more on general security best practices, see [here](/docs/security).
+
+## Architecture
+
+At a high-level, the steps of most SQL chain and agent are:
+
+1. **Convert question to SQL query**: Model converts user input to a SQL query.
+2. **Execute SQL query**: Execute the SQL query
+3. **Answer the question**: Model responds to user input using the query results.
+
+![SQL Use Case Diagram](/img/sql_usecase.png)
+
+## ⚠️ Security note ⚠️
+
+Building Q&A systems of SQL databases can require executing model-generated SQL queries. There are inherent risks in doing this.
+Make sure that your database connection permissions are always scoped as narrowly as possible for your chain/agent's needs.
+This will mitigate though not eliminate the risks of building a model-driven system. For more on general security best practices, see [here](/docs/security).
+
+## Architecture
+
+At a high-level, the steps of most SQL chain and agent are:
+
+1. **Convert question to SQL query**: Model converts user input to a SQL query.
+2. **Execute SQL query**: Execute the SQL query
+3. **Answer the question**: Model responds to user input using the query results.
+
+![SQL Use Case Diagram](/img/sql_usecase.png)
+
+## Setup
+
+First, get required packages and set environment variables:
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm i langchain @langchain/community @langchain/openai
+```
+
+We default to OpenAI models in this guide.
+
+```bash
+export OPENAI_API_KEY=<your key>
+
+# Uncomment the below to use LangSmith. Not required, but recommended for debugging and observability.
+# export LANGCHAIN_API_KEY=<your key>
+# export LANGCHAIN_TRACING_V2=true
+```
+
+import CodeBlock from "@theme/CodeBlock";
+import DbCheck from "@examples/use_cases/sql/db_check.ts";
+
+<CodeBlock language="typescript">{DbCheck}</CodeBlock>
+
+Great! We've got a SQL database that we can query. Now let's try hooking it up to an LLM.
+
+## Chain
+
+Let's create a simple chain that takes a question, turns it into a SQL query, executes the query, and uses the result to answer the original question.
+
+### Convert question to SQL query
+
+The first step in a SQL chain or agent is to take the user input and convert it to a SQL query. LangChain comes with a built-in chain for this: [`createSqlQueryChain`](https://v02.api.js.langchain.com/functions/langchain_chains_sql_db.createSqlQueryChain.html)
+
+import QuickstartChainExample from "@examples/use_cases/sql/quickstart_chain.ts";
+
+<CodeBlock language="typescript">{QuickstartChainExample}</CodeBlock>
+
+We can look at the [LangSmith trace](https://smith.langchain.com/public/6d8f0213-9f02-498e-aeb2-ec774e324e2c/r) to get a better understanding of what this chain is doing.
+We can also inspect the chain directly for its prompts. Looking at the prompt (below), we can see that it is:
+
+- Dialect-specific. In this case it references SQLite explicitly.
+- Has definitions for all the available tables.
+- Has three examples rows for each table.
+
+This technique is inspired by papers like [this](https://arxiv.org/pdf/2204.00498.pdf), which suggest showing examples rows and being explicit about tables improves performance.
+We can also inspect the full prompt via the LangSmith trace:
+
+![Chain Prompt](/img/sql_quickstart_langsmith_prompt.png)
+
+### Execute SQL query
+
+Now that we've generated a SQL query, we'll want to execute it.
+This is the most dangerous part of creating a SQL chain. Consider carefully if it is OK to run automated queries over your data.
+Minimize the database connection permissions as much as possible.
+Consider adding a human approval step to you chains before query execution (see below).
+
+We can use the [`QuerySqlTool`](https://v02.api.js.langchain.com/classes/langchain_tools_sql.QuerySqlTool.html) to easily add query execution to our chain:
+
+import QuickstartExecuteExample from "@examples/use_cases/sql/quickstart_execute_sql.ts";
+
+<CodeBlock language="typescript">{QuickstartExecuteExample}</CodeBlock>
+
+:::tip
+See a LangSmith trace of the chain above [here](https://smith.langchain.com/public/3cbcf6f2-a55b-4701-a2e3-9928e4747328/r).
+:::
+
+### Answer the question
+
+Now that we have a way to automatically generate and execute queries, we just need to combine the original question and SQL query result to generate a final answer.
+We can do this by passing question and result to the LLM once more:
+
+import QuickstartAnswerExample from "@examples/use_cases/sql/quickstart_answer_question.ts";
+
+<CodeBlock language="typescript">{QuickstartAnswerExample}</CodeBlock>
+
+:::tip
+See a LangSmith trace of the chain above [here](https://smith.langchain.com/public/d130ce1f-1fce-4192-921e-4b522884ec1a/r).
+:::
+
+### Next steps
+
+For more complex query-generation, we may want to create few-shot prompts or add query-checking steps. For advanced techniques like this and more check out:
+
+- [Prompting strategies](/docs/how_to/sql_prompting): Advanced prompt engineering techniques.
+- [Query checking](/docs/how_to/sql_query_checking): Add query validation and error handling.
+- [Large databases](/docs/how_to/sql_large_db): Techniques for working with large databases.
+
+## Agents
+
+LangChain offers a number of tools and functions that allow you to create SQL Agents which can provide a more flexible way of interacting with SQL databases. The main advantages of using SQL Agents are:
+
+- It can answer questions based on the databases' schema as well as on the databases' content (like describing a specific table).
+- It can recover from errors by running a generated query, catching the traceback and regenerating it correctly.
+- It can answer questions that require multiple dependent queries.
+- It will save tokens by only considering the schema from relevant tables.
+- To initialize the agent, we use [`createOpenAIToolsAgent`](https://v02.api.js.langchain.com/functions/langchain_agents.createOpenAIToolsAgent.html) function.
+  This agent contains the [`SqlToolkit`](https://v02.api.js.langchain.com/classes/langchain_agents_toolkits_sql.SqlToolkit.html) which contains tools to:
+- Create and execute queries
+- Check query syntax
+- Retrieve table descriptions
+- … and more

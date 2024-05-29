@@ -2,7 +2,6 @@ import { test, expect } from "@jest/globals";
 import { stringify } from "yaml";
 import { z } from "zod";
 import { RunnableSequence } from "@langchain/core/runnables";
-import { Cohere } from "@langchain/community/llms/cohere";
 import { OpenAI, ChatOpenAI } from "@langchain/openai";
 
 import {
@@ -18,7 +17,7 @@ import { ConsoleCallbackHandler } from "@langchain/core/tracers/console";
 import { CommaSeparatedListOutputParser } from "@langchain/core/output_parsers";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { initializeAgentExecutorWithOptions } from "../../agents/initialize.js";
-import { Calculator } from "../../tools/calculator.js";
+import { Calculator } from "../../util/testing/tools/calculator.js";
 import { RequestsGetTool } from "../../tools/requests.js";
 import { JsonListKeysTool, JsonSpec } from "../../tools/json.js";
 import { AgentExecutor } from "../../agents/executor.js";
@@ -158,26 +157,6 @@ test("serialize + deserialize llm", async () => {
   const llm3 = await load<OpenAI>(str);
   expect(llm3).toBeInstanceOf(OpenAI);
   expect(llm.openAIApiKey).toBe(llm3.openAIApiKey);
-  expect(JSON.stringify(llm3, null, 2)).toBe(str);
-});
-
-test("serialize + deserialize llm with optional deps", async () => {
-  const llm = new Cohere({ temperature: 0.5, apiKey: "cohere-key" });
-  const str = JSON.stringify(llm, null, 2);
-  expect(stringify(JSON.parse(str))).toMatchSnapshot();
-  const llm2 = await load<Cohere>(
-    str,
-    { COHERE_API_KEY: "cohere-key" },
-    { "langchain/llms/cohere": { Cohere } }
-  );
-  expect(llm2).toBeInstanceOf(Cohere);
-  expect(JSON.stringify(llm2, null, 2)).toBe(str);
-  const llm3 = await load<Cohere>(
-    str,
-    { COHERE_API_KEY: "cohere-key" },
-    { "langchain/llms/cohere": import("../../llms/cohere.js") }
-  );
-  expect(llm3).toBeInstanceOf(Cohere);
   expect(JSON.stringify(llm3, null, 2)).toBe(str);
 });
 
@@ -455,30 +434,30 @@ test.skip("serialize + deserialize agent", async () => {
 });
 
 test("override name of objects when serialising", async () => {
-  const llm = new Cohere({ temperature: 0.5, apiKey: "cohere-key" });
+  const llm = new OpenAI({ temperature: 0.5, apiKey: "openai-key" });
   const str = JSON.stringify(llm, null, 2);
 
-  class MangledName extends Cohere {}
-  const llm2 = await load<Cohere>(
+  class MangledName extends OpenAI {}
+  const llm2 = await load<OpenAI>(
     str,
-    { COHERE_API_KEY: "cohere-key" },
-    { "langchain/llms/cohere": { Cohere: MangledName } }
+    { OPENAI_API_KEY: "openai-key" },
+    { "langchain/llms/openai": { OpenAI: MangledName } }
   );
   expect(JSON.stringify(llm2, null, 2)).toBe(str);
 });
 
 test("Should load traces even if the constructor name changes (minified environments)", async () => {
-  const llm = new Cohere({ temperature: 0.5, apiKey: "cohere-key" });
+  const llm = new OpenAI({ temperature: 0.5, apiKey: "openai-key" });
   Object.defineProperty(llm.constructor, "name", {
     value: "x",
   });
   const str = JSON.stringify(llm, null, 2);
   console.log(str);
 
-  const llm2 = await load<Cohere>(
+  const llm2 = await load<OpenAI>(
     str,
     { COHERE_API_KEY: "cohere-key" },
-    { "langchain/llms/cohere": { Cohere } }
+    { "langchain/llms/openai": { OpenAI } }
   );
   console.log(JSON.stringify(llm2, null, 2));
   expect(JSON.stringify(llm2, null, 2)).toBe(str);

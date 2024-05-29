@@ -10,8 +10,11 @@
   "scripts": {
     "dev": "ncc build ./index.ts -w -o dist/",
     "build": "ncc build ./index.ts -o ./dist/ --minify --no-cache --no-source-map-register && cp ./template/.eslintrc.cjs ./template/.prettierrc ./template/.release-it.json ./dist/template",
-    "format": "prettier --write \"./\"",
-    "format:check": "prettier --check \"./\""
+    "format": "prettier --config .prettierrc --write \"./helpers\"",
+    "format:check": "prettier --config .prettierrc --check \"./helpers\"",
+    "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js ./helpers",
+    "lint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js ./helpers",
+    "lint:fix": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --fix --ext .ts,.js ./helpers"
   },
   "devDependencies": {
     "@types/prompts": "^2",
@@ -20,6 +23,13 @@
     "commander": "^2.20.0",
     "conf": "^10.2.0",
     "dotenv": "^16.3.1",
+    "eslint": "^8.33.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-jest": "^27.6.0",
+    "eslint-plugin-no-instanceof": "^1.0.1",
+    "eslint-plugin-prettier": "^4.2.1",
     "fast-glob": "^3.3.2",
     "picocolors": "^1.0.0",
     "prettier": "^2.8.3",

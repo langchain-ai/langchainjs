@@ -3,7 +3,8 @@
 
 import { test, expect } from "@jest/globals";
 import { HumanMessage } from "@langchain/core/messages";
-import { BedrockChat } from "../bedrock/web.js";
+import { BedrockChat as BedrockChatWeb } from "../bedrock/web.js";
+import { BedrockChat } from "../bedrock/index.js";
 
 // void testChatModel(
 //   "Test Bedrock chat model: Llama2 13B v1",
@@ -19,21 +20,84 @@ import { BedrockChat } from "../bedrock/web.js";
 // );
 
 void testChatModel(
-  "Test Bedrock chat model: Claude-v2",
+  "Test Bedrock chat model Generating search queries: Command-r",
+  "us-east-1",
+  "cohere.command-r-v1:0",
+  "Who is more popular: Nsync or Backstreet Boys?",
+  {
+    search_queries_only: true,
+  }
+);
+
+void testChatModel(
+  "Test Bedrock chat model: Command-r",
+  "us-east-1",
+  "cohere.command-r-v1:0",
+  "What is your name?"
+);
+
+void testChatModel(
+  "Test Bedrock chat model: Command-r",
+  "us-east-1",
+  "cohere.command-r-v1:0",
+  "What are the characteristics of the emperor penguin?",
+  {
+    documents: [
+      { title: "Tall penguins", snippet: "Emperor penguins are the tallest." },
+      {
+        title: "Penguin habitats",
+        snippet: "Emperor penguins only live in Antarctica.",
+      },
+    ],
+  }
+);
+
+void testChatStreamingModel(
+  "Test Bedrock chat model streaming: Command-r",
+  "us-east-1",
+  "cohere.command-r-v1:0",
+  "What is your name and something about yourself?"
+);
+
+void testChatStreamingModel(
+  "Test Bedrock chat model streaming: Command-r",
+  "us-east-1",
+  "cohere.command-r-v1:0",
+  "What are the characteristics of the emperor penguin?",
+  {
+    documents: [
+      { title: "Tall penguins", snippet: "Emperor penguins are the tallest." },
+      {
+        title: "Penguin habitats",
+        snippet: "Emperor penguins only live in Antarctica.",
+      },
+    ],
+  }
+);
+
+void testChatHandleLLMNewToken(
+  "Test Bedrock chat model HandleLLMNewToken: Command-r",
+  "us-east-1",
+  "cohere.command-r-v1:0",
+  "What is your name and something about yourself?"
+);
+
+void testChatModel(
+  "Test Bedrock chat model: Mistral-7b-instruct",
   "us-east-1",
   "mistral.mistral-7b-instruct-v0:2",
   "What is your name?"
 );
 
 void testChatStreamingModel(
-  "Test Bedrock chat model streaming: Claude-v2",
+  "Test Bedrock chat model streaming: Mistral-7b-instruct",
   "us-east-1",
   "mistral.mistral-7b-instruct-v0:2",
   "What is your name and something about yourself?"
 );
 
 void testChatHandleLLMNewToken(
-  "Test Bedrock chat model HandleLLMNewToken: Claude-v2",
+  "Test Bedrock chat model HandleLLMNewToken: Mistral-7b-instruct",
   "us-east-1",
   "mistral.mistral-7b-instruct-v0:2",
   "What is your name and something about yourself?"
@@ -59,6 +123,7 @@ void testChatHandleLLMNewToken(
   "anthropic.claude-3-sonnet-20240229-v1:0",
   "What is your name and something about yourself?"
 );
+
 // void testChatHandleLLMNewToken(
 //   "Test Bedrock chat model HandleLLMNewToken: Llama2 13B v1",
 //   "us-east-1",
@@ -77,13 +142,14 @@ async function testChatModel(
   title: string,
   defaultRegion: string,
   model: string,
-  message: string
+  message: string,
+  modelKwargs?: Record<string, unknown>
 ) {
   test(title, async () => {
     const region = process.env.BEDROCK_AWS_REGION ?? defaultRegion;
 
-    const bedrock = new BedrockChat({
-      maxTokens: 20,
+    const bedrock = new BedrockChatWeb({
+      maxTokens: 200,
       region,
       model,
       maxRetries: 0,
@@ -92,6 +158,7 @@ async function testChatModel(
         accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
         sessionToken: process.env.BEDROCK_AWS_SESSION_TOKEN,
       },
+      modelKwargs,
     });
 
     const res = await bedrock.invoke([new HumanMessage(message)]);
@@ -109,12 +176,13 @@ async function testChatStreamingModel(
   title: string,
   defaultRegion: string,
   model: string,
-  message: string
+  message: string,
+  modelKwargs?: Record<string, unknown>
 ) {
   test(title, async () => {
     const region = process.env.BEDROCK_AWS_REGION ?? defaultRegion;
 
-    const bedrock = new BedrockChat({
+    const bedrock = new BedrockChatWeb({
       maxTokens: 200,
       region,
       model,
@@ -124,6 +192,7 @@ async function testChatStreamingModel(
         accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
         sessionToken: process.env.BEDROCK_AWS_SESSION_TOKEN,
       },
+      modelKwargs,
     });
 
     const stream = await bedrock.stream([
@@ -156,7 +225,7 @@ async function testChatHandleLLMNewToken(
     const region = process.env.BEDROCK_AWS_REGION ?? defaultRegion;
     const tokens: string[] = [];
 
-    const bedrock = new BedrockChat({
+    const bedrock = new BedrockChatWeb({
       maxTokens: 200,
       region,
       model,
@@ -192,7 +261,7 @@ test.skip.each([
 ])("Test Bedrock base chat model: %s", async (model) => {
   const region = process.env.BEDROCK_AWS_REGION ?? "us-east-1";
 
-  const bedrock = new BedrockChat({
+  const bedrock = new BedrockChatWeb({
     region,
     model,
     maxRetries: 0,
@@ -208,4 +277,15 @@ test.skip.each([
   console.log(res);
 
   expect(res.content.length).toBeGreaterThan(1);
+});
+
+test.skip("new credential fields", async () => {
+  const model = new BedrockChat({
+    filepath:
+      "/Users/bracesproul/code/lang-chain-ai/langchainjs/libs/langchain-community/src/chat_models/tests/aws_credentials",
+    model: "anthropic.claude-3-sonnet-20240229-v1:0",
+    region: process.env.BEDROCK_AWS_REGION,
+  });
+  const res = await model.invoke(["Why is the sky blue? Be VERY concise!"]);
+  console.log("res", res);
 });

@@ -1,6 +1,6 @@
 import { CheerioWebBaseLoader } from "langchain/document_loaders/web/cheerio";
 import { MozillaReadabilityTransformer } from "@langchain/community/document_transformers/mozilla_readability";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
 const loader = new CheerioWebBaseLoader(
   "https://news.ycombinator.com/item?id=34817881"

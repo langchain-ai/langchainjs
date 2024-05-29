@@ -1,8 +1,16 @@
 import { Document, DocumentInterface } from "@langchain/core/documents";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { CheerioWebBaseLoader, WebBaseLoaderParams } from "./cheerio.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/web/sitemap",
+  newPackageName: "@langchain/community",
+});
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/sitemap" instead. This entrypoint will be removed in 0.3.0.
+ *
  * Interface representing the parameters for initializing a SitemapLoader.
  * @interface SitemapLoaderParams
  * @extends WebBaseLoaderParams
@@ -29,6 +37,9 @@ type SiteMapElement = {
   priority?: string;
 };
 
+/**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/sitemap" instead. This entrypoint will be removed in 0.3.0.
+ */
 export class SitemapLoader
   extends CheerioWebBaseLoader
   implements SitemapLoaderParams

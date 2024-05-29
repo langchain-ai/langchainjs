@@ -89,7 +89,7 @@ const SYMBOLS_TO_SKIP_MAP = {
  */
 async function webpackLoader(content, map, meta) {
   const cb = this.async();
-  const BASE_URL = "https://api.js.langchain.com";
+  const BASE_URL = "https://v02.api.js.langchain.com";
   // Directories generated inside the API docs (excluding "modules").
   const CATEGORIES = [
     "classes",

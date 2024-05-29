@@ -1,7 +1,15 @@
 import { Document } from "@langchain/core/documents";
 import { CheerioWebBaseLoader } from "./cheerio.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/web/imsdb",
+  newPackageName: "@langchain/community",
+});
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/imsdb" instead. This entrypoint will be removed in 0.3.0.
+ *
  * A class that extends the CheerioWebBaseLoader class. It represents a
  * loader for loading web pages from the IMSDB (Internet Movie Script
  * Database) website.

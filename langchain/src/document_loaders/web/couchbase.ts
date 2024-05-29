@@ -1,8 +1,16 @@
 import { Cluster, QueryResult } from "couchbase";
 import { Document } from "@langchain/core/documents";
 import { BaseDocumentLoader, DocumentLoader } from "../base.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/web/couchbase",
+  newPackageName: "@langchain/community",
+});
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/couchbase" instead. This entrypoint will be removed in 0.3.0.
+ *
  * loader for couchbase document
  */
 export class CouchbaseDocumentLoader
