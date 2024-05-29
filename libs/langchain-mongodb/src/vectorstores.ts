@@ -4,6 +4,7 @@ import {
   VectorStore,
 } from "@langchain/core/vectorstores";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
+import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { Document } from "@langchain/core/documents";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 import {
@@ -262,14 +263,12 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
    *
    * @returns - A promise that resolves when all documents deleted
    */
-  async delete(params: { ids: any[] }): Promise<void> { // eslint-disable-line @typescript-eslint/no-explicit-any
-    const splice = <T>(l: T[], c: number): T[][] =>
-      l.length < c ? [l] : [l.splice(0, c), ...splice<T>(l, c)];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async delete(params: { ids: any[] }): Promise<void> {
     const CHUNK_SIZE = 50;
-    const chunkIds: any[][] = splice(params.ids, CHUNK_SIZE); // eslint-disable-line @typescript-eslint/no-explicit-any
-
+    const chunkIds: any[][] = chunkArray(params.ids, CHUNK_SIZE); // eslint-disable-line @typescript-eslint/no-explicit-any
     for (const chunk of chunkIds)
-      await this.collection.deleteMany({ _id: { $in: chunk }});
+      await this.collection.deleteMany({ _id: { $in: chunk } });
   }
 
   /**
