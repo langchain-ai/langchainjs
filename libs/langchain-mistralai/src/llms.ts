@@ -176,7 +176,7 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
     for (let i = 0; i < subPrompts.length; i += 1) {
       const data = await (async () => {
         if (this.streaming) {
-          let responseData: Array<
+          const responseData: Array<
             { choices: ChatCompletionResponseChoice[] } & Partial<
               Omit<ChatCompletionResponse, "choices">
             >
@@ -237,7 +237,7 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
           }
           return responseData;
         } else {
-          let responseData: Array<ChatCompletionResponse> = [];
+          const responseData: Array<ChatCompletionResponse> = [];
           for (let x = 0; x < subPrompts[i].length; x += 1) {
             const res = await this.completionWithRetry(
               {
