@@ -20,12 +20,15 @@ const mockAsyncLocalStorage = new MockAsyncLocalStorage();
 
 class AsyncLocalStorageProvider {
   getInstance(): AsyncLocalStorageInterface {
-    return (globalThis as any).__lc_async_local_storage ?? mockAsyncLocalStorage;
+    return (
+      (globalThis as any).__lc_tracing_async_local_storage ??
+      mockAsyncLocalStorage
+    );
   }
 
   initializeGlobalInstance(instance: AsyncLocalStorageInterface) {
-    if ((globalThis as any).__lc_async_local_storage === undefined) {
-      (globalThis as any).__lc_async_local_storage = instance;
+    if ((globalThis as any).__lc_tracing_async_local_storage === undefined) {
+      (globalThis as any).__lc_tracing_async_local_storage = instance;
     }
   }
 }
