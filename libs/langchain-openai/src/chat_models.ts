@@ -253,6 +253,7 @@ export interface ChatOpenAICallOptions
   promptIndex?: number;
   response_format?: { type: "json_object" };
   seed?: number;
+  stream_options?: { include_usage: boolean };
 }
 
 /**
@@ -555,14 +556,7 @@ export class ChatOpenAI<
       tool_choice: options?.tool_choice,
       response_format: options?.response_format,
       seed: options?.seed,
-      // Only set stream_options if the model is OpenAI
-      ...(llmType === "openai"
-        ? {
-            stream_options: {
-              include_usage: true,
-            },
-          }
-        : {}),
+      stream_options: options?.stream_options,
       ...this.modelKwargs,
     };
     return params;
