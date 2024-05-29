@@ -16,20 +16,19 @@ export class MockAsyncLocalStorage implements AsyncLocalStorageInterface {
   }
 }
 
+const mockAsyncLocalStorage = new MockAsyncLocalStorage();
+
 class AsyncLocalStorageProvider {
-  private asyncLocalStorage: AsyncLocalStorageInterface =
-    new MockAsyncLocalStorage();
-
-  private hasBeenInitialized = false;
-
   getInstance(): AsyncLocalStorageInterface {
-    return this.asyncLocalStorage;
+    return (
+      (globalThis as any).__lc_tracing_async_local_storage ??
+      mockAsyncLocalStorage
+    );
   }
 
   initializeGlobalInstance(instance: AsyncLocalStorageInterface) {
-    if (!this.hasBeenInitialized) {
-      this.hasBeenInitialized = true;
-      this.asyncLocalStorage = instance;
+    if ((globalThis as any).__lc_tracing_async_local_storage === undefined) {
+      (globalThis as any).__lc_tracing_async_local_storage = instance;
     }
   }
 }
