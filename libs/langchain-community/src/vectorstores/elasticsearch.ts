@@ -316,6 +316,8 @@ export class ElasticVectorSearch extends VectorStore {
     must: { [operator: string]: { [field: string]: any } }[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     must_not: { [operator: string]: { [field: string]: any } }[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    should?: { [operator: string]: { [field: string]: any } }[];
   } {
     if (filter == null) return { must: [], must_not: [] };
     const filters = Array.isArray(filter)
