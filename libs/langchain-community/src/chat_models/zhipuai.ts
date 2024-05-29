@@ -13,7 +13,7 @@ import { type CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 import { encodeApiKey } from "../utils/zhipuai.js";
-import { createStream } from "../utils/stream.js";
+import { convertEventStreamToIterableReadableDataStream } from "../utils/event_source_parse.js";
 
 export type ZhipuMessageRole = "system" | "assistant" | "user";
 
@@ -454,7 +454,7 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
     return this.caller.call(makeCompletionRequest);
   }
 
-  private async *createZhipuStream(
+  private async createZhipuStream(
     request: ChatCompletionRequest,
     signal?: AbortSignal
   ) {
@@ -475,7 +475,15 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
       );
     }
 
-    yield* createStream<ChatCompletionResponse>(response.body);
+    return convertEventStreamToIterableReadableDataStream(response.body);
+  }
+
+  private _deserialize(json: string) {
+    try {
+      return JSON.parse(json);
+    } catch (e) {
+      console.warn(`Received a non-JSON parseable chunk: ${json}`);
+    }
   }
 
   async *_streamResponseChunks(
@@ -504,21 +512,26 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
     );
 
     for await (const chunk of stream) {
-      const { choices, id } = chunk;
-      const text = choices[0]?.delta?.content ?? "";
-      const finished = !!choices[0]?.finish_reason;
-      yield new ChatGenerationChunk({
-        text,
-        message: new AIMessageChunk({ content: text }),
-        generationInfo: finished
-          ? {
-              finished,
-              request_id: id,
-              usage: chunk.usage,
-            }
-          : undefined,
-      });
-      await runManager?.handleLLMNewToken(text);
+      if (chunk !== "[DONE]") {
+        const deserializedChunk = this._deserialize(chunk);
+        const { choices, id } = deserializedChunk;
+        const text = choices[0]?.delta?.content ?? "";
+        const finished = !!choices[0]?.finish_reason;
+        yield new ChatGenerationChunk({
+          text,
+          message: new AIMessageChunk({ content: text }),
+          generationInfo: finished
+            ? {
+                finished,
+                request_id: id,
+                usage: chunk.usage,
+              }
+            : undefined,
+        });
+        await runManager?.handleLLMNewToken(text);
+      } else {
+        continue;
+      }
     }
   }
 

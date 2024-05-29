@@ -15,7 +15,7 @@ import {
 } from "@langchain/core/outputs";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { createStream } from "../utils/stream.js";
+import { convertEventStreamToIterableReadableDataStream } from "../utils/event_source_parse.js";
 
 /**
  * Type representing the role of a message in the Wenxin chat model.
@@ -62,12 +62,6 @@ interface ChatCompletionResponse {
   result: string;
   need_clear_history: boolean;
   usage: TokenUsage;
-}
-
-interface ChatCompletionStreamResponse extends ChatCompletionResponse {
-  is_end: boolean;
-  is_truncated: boolean;
-  sentence_id: number;
 }
 
 /**
@@ -623,7 +617,7 @@ export class ChatBaiduWenxin
     return `${this.apiUrl}?access_token=${this.accessToken}`;
   }
 
-  private async *createWenxinStream(
+  private async createWenxinStream(
     request: ChatCompletionRequest,
     signal?: AbortSignal
   ) {
@@ -644,7 +638,15 @@ export class ChatBaiduWenxin
       );
     }
 
-    yield* createStream<ChatCompletionStreamResponse>(response.body);
+    return convertEventStreamToIterableReadableDataStream(response.body);
+  }
+
+  private _deserialize(json: string) {
+    try {
+      return JSON.parse(json);
+    } catch (e) {
+      console.warn(`Received a non-JSON parseable chunk: ${json}`);
+    }
   }
 
   async *_streamResponseChunks(
@@ -679,7 +681,8 @@ export class ChatBaiduWenxin
     );
 
     for await (const chunk of stream) {
-      const { result, is_end, id } = chunk;
+      const deserializedChunk = this._deserialize(chunk);
+      const { result, is_end, id } = deserializedChunk;
       yield new ChatGenerationChunk({
         text: result,
         message: new AIMessageChunk({ content: result }),
