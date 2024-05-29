@@ -351,7 +351,7 @@ export class ElasticVectorSearch extends VectorStore {
             [metadataField]: condition.value,
           },
         });
-      }else {
+      } else {
         must.push({
           [condition.operator]: {
             [metadataField]: condition.value,
@@ -360,8 +360,8 @@ export class ElasticVectorSearch extends VectorStore {
       }
     }
     const result = { must, must_not };
-    
-    if(should.length > 0){
+
+    if (should.length > 0) {
       result.should = should;
       result.minimum_should_match = 1;
     }
