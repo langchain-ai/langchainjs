@@ -50,8 +50,6 @@ jobs:
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable
-      - name: Build
-        run: yarn run build --filter=langchain
       - name: Test
         run: yarn run test:unit:ci --filter=langchain
         env:
