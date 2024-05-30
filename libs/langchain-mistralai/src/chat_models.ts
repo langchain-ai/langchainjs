@@ -245,10 +245,12 @@ function mistralAIResponseToChatMessage(
         tool_calls: toolCalls,
         invalid_tool_calls: invalidToolCalls,
         additional_kwargs: {
-          tool_calls: rawToolCalls.map((toolCall) => ({
-            ...toolCall,
-            type: "function",
-          })),
+          tool_calls: rawToolCalls.length
+            ? rawToolCalls.map((toolCall) => ({
+                ...toolCall,
+                type: "function",
+              }))
+            : undefined,
         },
       });
     }
