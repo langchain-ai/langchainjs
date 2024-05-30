@@ -142,7 +142,11 @@ export class FakeStreamingLLM extends LLM {
     return response ?? prompt;
   }
 
-  async *_streamResponseChunks(input: string) {
+  async *_streamResponseChunks(
+    input: string,
+    _options?: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ) {
     if (this.thrownErrorString) {
       throw new Error(this.thrownErrorString);
     }
@@ -151,6 +155,7 @@ export class FakeStreamingLLM extends LLM {
     for (const c of response ?? input) {
       await new Promise((resolve) => setTimeout(resolve, this.sleep));
       yield { text: c, generationInfo: {} } as GenerationChunk;
+      await runManager?.handleLLMNewToken(c);
     }
   }
 }

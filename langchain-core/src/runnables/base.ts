@@ -2,6 +2,10 @@ import { z } from "zod";
 import pRetry from "p-retry";
 import { v4 as uuidv4 } from "uuid";
 
+import {
+  type TraceableFunction,
+  isTraceableFunction,
+} from "langsmith/singletons/traceable";
 import type { RunnableInterface, RunnableBatchOptions } from "./types.js";
 import {
   CallbackManager,
@@ -12,12 +16,14 @@ import {
   LogStreamCallbackHandlerInput,
   RunLog,
   RunLogPatch,
+  isLogStreamHandler,
 } from "../tracers/log_stream.js";
 import {
   EventStreamCallbackHandler,
   EventStreamCallbackHandlerInput,
   StreamEvent,
   StreamEventData,
+  isStreamEventsHandler,
 } from "../tracers/event_stream.js";
 import { Serializable } from "../load/serializable.js";
 import {
@@ -38,7 +44,6 @@ import {
 import { AsyncCaller } from "../utils/async_caller.js";
 import { Run } from "../tracers/base.js";
 import { RootListenersTracer } from "../tracers/root_listener.js";
-import { BaseCallbackHandler } from "../callbacks/base.js";
 import { _RootEventFilter, isRunnableInterface } from "./utils.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 import { Graph } from "./graph.js";
@@ -47,6 +52,7 @@ import {
   consumeAsyncIterableInContext,
   consumeIteratorInContext,
   isAsyncIterable,
+  isIterableIterator,
   isIterator,
 } from "./iter.js";
 
@@ -503,10 +509,6 @@ export abstract class Runnable<
       delete config.runId;
       runManager = pipe.setup;
 
-      const isStreamEventsHandler = (
-        handler: BaseCallbackHandler
-      ): handler is EventStreamCallbackHandler =>
-        handler.name === "event_stream_tracer";
       const streamEventsHandler = runManager?.handlers.find(
         isStreamEventsHandler
       );
@@ -518,10 +520,6 @@ export abstract class Runnable<
         );
       }
 
-      const isLogStreamHandler = (
-        handler: BaseCallbackHandler
-      ): handler is LogStreamCallbackHandler =>
-        handler.name === "log_stream_tracer";
       const streamLogHandler = runManager?.handlers.find(isLogStreamHandler);
       if (streamLogHandler !== undefined && runManager !== undefined) {
         iterator = streamLogHandler.tapOutputIterable(
@@ -2069,6 +2067,91 @@ export class RunnableMap<
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyTraceableFunction = TraceableFunction<(...any: any[]) => any>;
+
+/**
+ * A runnable that wraps a traced LangSmith function.
+ */
+export class RunnableTraceable<RunInput, RunOutput> extends Runnable<
+  RunInput,
+  RunOutput
+> {
+  lc_serializable = false;
+
+  lc_namespace = ["langchain_core", "runnables"];
+
+  protected func: AnyTraceableFunction;
+
+  constructor(fields: { func: AnyTraceableFunction }) {
+    super(fields);
+
+    if (!isTraceableFunction(fields.func)) {
+      throw new Error(
+        "RunnableTraceable requires a function that is wrapped in traceable higher-order function"
+      );
+    }
+
+    this.func = fields.func;
+  }
+
+  async invoke(input: RunInput, options?: Partial<RunnableConfig>) {
+    const [config] = this._getOptionsList(options ?? {}, 1);
+    const callbacks = await getCallbackManagerForConfig(config);
+
+    return (await this.func(
+      patchConfig(config, { callbacks }),
+      input
+    )) as RunOutput;
+  }
+
+  async *_streamIterator(
+    input: RunInput,
+    options?: Partial<RunnableConfig>
+  ): AsyncGenerator<RunOutput> {
+    const result = await this.invoke(input, options);
+
+    if (isAsyncIterable(result)) {
+      for await (const item of result) {
+        yield item as RunOutput;
+      }
+      return;
+    }
+
+    if (isIterator(result)) {
+      while (true) {
+        const state: IteratorResult<unknown> = result.next();
+        if (state.done) break;
+        yield state.value as RunOutput;
+      }
+      return;
+    }
+
+    yield result;
+  }
+
+  static from(func: AnyTraceableFunction) {
+    return new RunnableTraceable({ func });
+  }
+}
+
+function assertNonTraceableFunction<RunInput, RunOutput>(
+  func:
+    | RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
+    | TraceableFunction<
+        RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
+      >
+): asserts func is RunnableFunc<
+  RunInput,
+  RunOutput | Runnable<RunInput, RunOutput>
+> {
+  if (isTraceableFunction(func)) {
+    throw new Error(
+      "RunnableLambda requires a function that is not wrapped in traceable higher-order function. This shouldn't happen."
+    );
+  }
+}
+
 /**
  * A runnable that runs a callable.
  */
@@ -2088,14 +2171,42 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
   >;
 
   constructor(fields: {
-    func: RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>;
+    func:
+      | RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
+      | TraceableFunction<
+          RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
+        >;
   }) {
+    if (isTraceableFunction(fields.func)) {
+      // eslint-disable-next-line no-constructor-return
+      return RunnableTraceable.from(fields.func) as unknown as RunnableLambda<
+        RunInput,
+        RunOutput
+      >;
+    }
+
     super(fields);
+
+    assertNonTraceableFunction(fields.func);
     this.func = fields.func;
   }
 
   static from<RunInput, RunOutput>(
     func: RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
+  ): RunnableLambda<RunInput, RunOutput>;
+
+  static from<RunInput, RunOutput>(
+    func: TraceableFunction<
+      RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
+    >
+  ): RunnableLambda<RunInput, RunOutput>;
+
+  static from<RunInput, RunOutput>(
+    func:
+      | RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
+      | TraceableFunction<
+          RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
+        >
   ): RunnableLambda<RunInput, RunOutput> {
     return new RunnableLambda({
       func,
@@ -2148,7 +2259,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
                 }
               }
               output = finalOutput as typeof output;
-            } else if (isIterator(output)) {
+            } else if (isIterableIterator(output)) {
               let finalOutput: RunOutput | undefined;
               for (const chunk of consumeIteratorInContext(
                 childConfig,
@@ -2240,7 +2351,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
       for await (const chunk of consumeAsyncIterableInContext(config, output)) {
         yield chunk as RunOutput;
       }
-    } else if (isIterator(output)) {
+    } else if (isIterableIterator(output)) {
       for (const chunk of consumeIteratorInContext(config, output)) {
         yield chunk as RunOutput;
       }

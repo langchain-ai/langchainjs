@@ -1,7 +1,9 @@
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 import { RunnableConfig } from "./config.js";
 
-export function isIterator(thing: unknown): thing is IterableIterator<unknown> {
+export function isIterableIterator(
+  thing: unknown
+): thing is IterableIterator<unknown> {
   return (
     typeof thing === "object" &&
     thing !== null &&
@@ -10,6 +12,12 @@ export function isIterator(thing: unknown): thing is IterableIterator<unknown> {
     typeof (thing as Generator).next === "function"
   );
 }
+
+export const isIterator = (x: unknown): x is Iterator<unknown> =>
+  x != null &&
+  typeof x === "object" &&
+  "next" in x &&
+  typeof x.next === "function";
 
 export function isAsyncIterable(
   thing: unknown
