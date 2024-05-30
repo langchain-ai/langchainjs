@@ -71,7 +71,7 @@ test("Can call tools using structured tools", async () => {
   }
 
   const model = new ChatMistralAI({
-    modelName: "mistral-large",
+    modelName: "mistral-large-latest",
   }).bind({
     tools: [new Calculator()],
   });
@@ -120,7 +120,7 @@ test("Can call tools", async () => {
   ];
 
   const model = new ChatMistralAI({
-    modelName: "mistral-large",
+    modelName: "mistral-large-latest",
   }).bind({
     tools,
   });
@@ -170,7 +170,7 @@ test("Can call .stream with tool calling", async () => {
   }
 
   const model = new ChatMistralAI({
-    modelName: "mistral-large",
+    modelName: "mistral-large-latest",
   }).bind({
     tools: [new Calculator()],
   });
@@ -208,7 +208,7 @@ test("Can call .stream with tool calling", async () => {
 
 test("Can use json mode response format", async () => {
   const model = new ChatMistralAI({
-    modelName: "mistral-large",
+    modelName: "mistral-large-latest",
   }).bind({
     response_format: {
       type: "json_object",
@@ -235,7 +235,7 @@ To use a calculator respond with valid JSON containing a single key: 'calculator
 
 test("Can call .stream with json mode", async () => {
   const model = new ChatMistralAI({
-    modelName: "mistral-large",
+    modelName: "mistral-large-latest",
   }).bind({
     response_format: {
       type: "json_object",
@@ -294,7 +294,7 @@ test("Can stream and concat responses for a complex tool", async () => {
   }
 
   const model = new ChatMistralAI({
-    modelName: "mistral-large",
+    modelName: "mistral-large-latest",
   }).bind({
     tools: [new PersonTraits()],
   });
@@ -332,7 +332,7 @@ test("Can stream and concat responses for a complex tool", async () => {
 
 test("Few shotting with tool calls", async () => {
   const chat = new ChatMistralAI({
-    modelName: "mistral-large",
+    modelName: "mistral-large-latest",
     temperature: 0,
   }).bind({
     tools: [
@@ -385,7 +385,7 @@ describe("withStructuredOutput", () => {
   test("withStructuredOutput zod schema function calling", async () => {
     const model = new ChatMistralAI({
       temperature: 0,
-      modelName: "mistral-large",
+      modelName: "mistral-large-latest",
     });
 
     const calculatorSchema = z
@@ -421,7 +421,7 @@ describe("withStructuredOutput", () => {
   test("withStructuredOutput zod schema JSON mode", async () => {
     const model = new ChatMistralAI({
       temperature: 0,
-      modelName: "mistral-large",
+      modelName: "mistral-large-latest",
     });
 
     const calculatorSchema = z.object({
@@ -459,7 +459,7 @@ describe("withStructuredOutput", () => {
   test("withStructuredOutput JSON schema function calling", async () => {
     const model = new ChatMistralAI({
       temperature: 0,
-      modelName: "mistral-large",
+      modelName: "mistral-large-latest",
     });
 
     const calculatorSchema = z
@@ -496,7 +496,7 @@ describe("withStructuredOutput", () => {
   test("withStructuredOutput OpenAI function definition function calling", async () => {
     const model = new ChatMistralAI({
       temperature: 0,
-      modelName: "mistral-large",
+      modelName: "mistral-large-latest",
     });
 
     const calculatorSchema = z
@@ -531,7 +531,7 @@ describe("withStructuredOutput", () => {
   test("withStructuredOutput JSON schema JSON mode", async () => {
     const model = new ChatMistralAI({
       temperature: 0,
-      modelName: "mistral-large",
+      modelName: "mistral-large-latest",
     });
 
     const calculatorSchema = z.object({
@@ -569,7 +569,7 @@ describe("withStructuredOutput", () => {
   test("withStructuredOutput includeRaw true", async () => {
     const model = new ChatMistralAI({
       temperature: 0,
-      modelName: "mistral-large",
+      modelName: "mistral-large-latest",
     });
 
     const calculatorSchema = z
