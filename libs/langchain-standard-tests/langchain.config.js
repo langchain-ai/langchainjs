@@ -14,7 +14,6 @@ export const config = {
   entrypoints: {
     index: "index",
   },
-  requiresOptionalDependency: [],
   tsConfigPath: resolve("./tsconfig.json"),
   cjsSource: "./dist-cjs",
   cjsDestination: "./dist",
