@@ -12,12 +12,14 @@ import {
   LogStreamCallbackHandlerInput,
   RunLog,
   RunLogPatch,
+  isLogStreamHandler,
 } from "../tracers/log_stream.js";
 import {
   EventStreamCallbackHandler,
   EventStreamCallbackHandlerInput,
   StreamEvent,
   StreamEventData,
+  isStreamEventsHandler,
 } from "../tracers/event_stream.js";
 import { Serializable } from "../load/serializable.js";
 import {
@@ -38,7 +40,6 @@ import {
 import { AsyncCaller } from "../utils/async_caller.js";
 import { Run } from "../tracers/base.js";
 import { RootListenersTracer } from "../tracers/root_listener.js";
-import { BaseCallbackHandler } from "../callbacks/base.js";
 import { _RootEventFilter, isRunnableInterface } from "./utils.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 import { Graph } from "./graph.js";
@@ -503,10 +504,6 @@ export abstract class Runnable<
       delete config.runId;
       runManager = pipe.setup;
 
-      const isStreamEventsHandler = (
-        handler: BaseCallbackHandler
-      ): handler is EventStreamCallbackHandler =>
-        handler.name === "event_stream_tracer";
       const streamEventsHandler = runManager?.handlers.find(
         isStreamEventsHandler
       );
@@ -518,10 +515,6 @@ export abstract class Runnable<
         );
       }
 
-      const isLogStreamHandler = (
-        handler: BaseCallbackHandler
-      ): handler is LogStreamCallbackHandler =>
-        handler.name === "log_stream_tracer";
       const streamLogHandler = runManager?.handlers.find(isLogStreamHandler);
       if (streamLogHandler !== undefined && runManager !== undefined) {
         iterator = streamLogHandler.tapOutputIterable(
