@@ -12,6 +12,7 @@ import {
   SystemMessageChunk,
   ToolMessage,
   ToolMessageChunk,
+  BaseMessageChunk,
   OpenAIToolCall,
   isAIMessage,
 } from "@langchain/core/messages";
@@ -253,6 +254,7 @@ export interface ChatOpenAICallOptions
   promptIndex?: number;
   response_format?: { type: "json_object" };
   seed?: number;
+  n?: number;
 }
 
 /**
@@ -540,7 +542,7 @@ export class ChatOpenAI<
       max_tokens: this.maxTokens === -1 ? undefined : this.maxTokens,
       logprobs: this.logprobs,
       top_logprobs: this.topLogprobs,
-      n: this.n,
+      n: options?.n ?? this.n,
       logit_bias: this.logitBias,
       stop: options?.stop ?? this.stopSequences,
       user: this.user,
@@ -643,6 +645,29 @@ export class ChatOpenAI<
    */
   identifyingParams() {
     return this._identifyingParams();
+  }
+
+  async batch(
+    inputs: BaseLanguageModelInput[],
+    options?: CallOptions
+  ): Promise<BaseMessageChunk[]> {
+    const promptValues = inputs.map((i) =>
+      BaseChatModel._convertInputToPromptValue(i)
+    );
+
+    const promptValueStrings = promptValues.map((p) => p.toString());
+    if (promptValueStrings.every((p) => p === promptValueStrings[0])) {
+      const result = await this.generatePrompt(
+        [promptValues[0]],
+        { ...options, n: inputs.length } as CallOptions,
+        options?.callbacks
+      );
+      // TODO: Remove cast after figuring out inheritance
+      const chatGenerations = result.generations[0] as ChatGeneration[];
+      return chatGenerations.map((g) => g.message as BaseMessageChunk);
+    } else {
+      return super.batch(inputs, options);
+    }
   }
 
   /** @ignore */
