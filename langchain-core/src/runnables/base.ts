@@ -2071,7 +2071,7 @@ export class RunnableMap<
 type AnyTraceableFunction = TraceableFunction<(...any: any[]) => any>;
 
 /**
- * A runnabble that runs a traced function from LangSmith
+ * A runnable that wraps a traced LangSmith function.
  */
 export class RunnableTraceable<RunInput, RunOutput> extends Runnable<
   RunInput,
