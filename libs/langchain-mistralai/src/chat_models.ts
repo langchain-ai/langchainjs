@@ -187,7 +187,7 @@ function convertMessagesToMistralMessages(
   const getTools = (message: BaseMessage): MistralAIToolCalls[] | undefined => {
     if (isAIMessage(message) && !!message.tool_calls?.length) {
       return message.tool_calls
-        .map((toolCall) => ({ ...toolCall, id: "null" }))
+        .map((toolCall) => ({ ...toolCall, id: toolCall.id }))
         .map(convertLangChainToolCallToOpenAI) as MistralAIToolCalls[];
     }
     if (!message.additional_kwargs.tool_calls?.length) {
@@ -196,7 +196,7 @@ function convertMessagesToMistralMessages(
     const toolCalls: Omit<OpenAIToolCall, "index">[] =
       message.additional_kwargs.tool_calls;
     return toolCalls?.map((toolCall) => ({
-      id: "null",
+      id: toolCall.id,
       type: "function",
       function: toolCall.function,
     }));
@@ -205,22 +205,12 @@ function convertMessagesToMistralMessages(
   return messages.map((message) => {
     const toolCalls = getTools(message);
     const content = toolCalls === undefined ? getContent(message.content) : "";
-    const role = getRole(message._getType());
-
-    if (role === "tool" && toolCalls && toolCalls.length > 0) {
-      return {
-        role: "tool",
-        content,
-        name: toolCalls[0].function.name,
-        tool_call_id: toolCalls[0].id,
-      };
-    }
-
     return {
-      role: role as "system" | "user" | "assistant",
+      role: getRole(message._getType()),
       content,
+      tool_calls: toolCalls,
     };
-  });
+  }) as MistralAIMessage[];
 }
 
 function mistralAIResponseToChatMessage(
