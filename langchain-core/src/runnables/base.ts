@@ -2103,6 +2103,23 @@ export class RunnableTraceable<RunInput, RunOutput> extends Runnable<
   }
 }
 
+function assertNonTraceableFunction<RunInput, RunOutput>(
+  func:
+    | RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
+    | TraceableFunction<
+        RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
+      >
+): asserts func is RunnableFunc<
+  RunInput,
+  RunOutput | Runnable<RunInput, RunOutput>
+> {
+  if (isTraceableFunction(func)) {
+    throw new Error(
+      "RunnableLambda requires a function that is not wrapped in traceable higher-order function. This shouldn't happen."
+    );
+  }
+}
+
 /**
  * A runnable that runs a callable.
  */
@@ -2136,6 +2153,9 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     }
 
     super(fields);
+
+    assertNonTraceableFunction(fields.func);
+    this.func = fields.func;
   }
 
   static from<RunInput, RunOutput>(
@@ -2155,7 +2175,9 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
           RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
         >
   ): RunnableLambda<RunInput, RunOutput> {
-    return new RunnableLambda({ func });
+    return new RunnableLambda({
+      func,
+    });
   }
 
   async _invoke(
