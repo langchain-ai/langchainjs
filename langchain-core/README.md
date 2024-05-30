@@ -83,7 +83,7 @@ Streaming (and streaming of intermediate steps) is needed to show the user that 
 Async interfaces are nice when moving into production.
 Rather than having to write multiple implementations for all of those, LCEL allows you to write a runnable once and invoke it in many different ways.
 
-For more check out the [LCEL docs](https://js.langchain.com/docs/expression_language/).
+For more check out the [LCEL docs](https://js.langchain.com/v0.2/docs/concepts#langchain-expression-language).
 
 ![LangChain Stack](../docs/core_docs/static/img/langchain_stack_feb_2024.webp)
 
