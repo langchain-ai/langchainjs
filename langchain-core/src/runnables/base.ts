@@ -52,6 +52,7 @@ import {
   consumeAsyncIterableInContext,
   consumeIteratorInContext,
   isAsyncIterable,
+  isIterableIterator,
   isIterator,
 } from "./iter.js";
 
@@ -2096,10 +2097,41 @@ export class RunnableTraceable<RunInput, RunOutput> extends Runnable<
 
   async invoke(input: RunInput, options?: Partial<RunnableConfig>) {
     const [config] = this._getOptionsList(options ?? {}, 1);
+    const callbacks = await getCallbackManagerForConfig(config);
+
     return (await this.func(
-      { ...config, callbacks: await getCallbackManagerForConfig(config) },
+      patchConfig(config, { callbacks }),
       input
     )) as RunOutput;
+  }
+
+  async *_streamIterator(
+    input: RunInput,
+    options?: Partial<RunnableConfig>
+  ): AsyncGenerator<RunOutput> {
+    const result = await this.invoke(input, options);
+
+    if (isAsyncIterable(result)) {
+      for await (const item of result) {
+        yield item as RunOutput;
+      }
+      return;
+    }
+
+    if (isIterator(result)) {
+      while (true) {
+        const state: IteratorResult<unknown> = result.next();
+        if (state.done) break;
+        yield state.value as RunOutput;
+      }
+      return;
+    }
+
+    yield result;
+  }
+
+  static from(func: AnyTraceableFunction) {
+    return new RunnableTraceable({ func });
   }
 }
 
@@ -2147,9 +2179,10 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
   }) {
     if (isTraceableFunction(fields.func)) {
       // eslint-disable-next-line no-constructor-return
-      return new RunnableTraceable({
-        func: fields.func,
-      }) as unknown as RunnableLambda<RunInput, RunOutput>;
+      return RunnableTraceable.from(fields.func) as unknown as RunnableLambda<
+        RunInput,
+        RunOutput
+      >;
     }
 
     super(fields);
@@ -2226,7 +2259,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
                 }
               }
               output = finalOutput as typeof output;
-            } else if (isIterator(output)) {
+            } else if (isIterableIterator(output)) {
               let finalOutput: RunOutput | undefined;
               for (const chunk of consumeIteratorInContext(
                 childConfig,
@@ -2318,7 +2351,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
       for await (const chunk of consumeAsyncIterableInContext(config, output)) {
         yield chunk as RunOutput;
       }
-    } else if (isIterator(output)) {
+    } else if (isIterableIterator(output)) {
       for (const chunk of consumeIteratorInContext(config, output)) {
         yield chunk as RunOutput;
       }
