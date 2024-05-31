@@ -9095,7 +9095,7 @@ __metadata:
     "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.2.0
-    "@langchain/openai": ~0.0.28
+    "@langchain/openai": ~0.1.0
     "@langchain/scripts": ~0.0.14
     "@layerup/layerup-security": ^1.5.12
     "@mendable/firecrawl-js": ^0.0.13
@@ -10017,7 +10017,20 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai, @langchain/openai@~0.0.28":
+"@langchain/openai@npm:~0.1.0":
+  version: 0.1.0
+  resolution: "@langchain/openai@npm:0.1.0"
+  dependencies:
+    "@langchain/core": ">=0.2.5 <0.3.0"
+    js-tiktoken: ^1.0.12
+    openai: ^4.41.1
+    zod: ^3.22.4
+    zod-to-json-schema: ^3.22.3
+  checksum: c418794534f8818b540eb5acee6d848610aff02ee70509630497e4618872232c2ec2b49c8e5ba01adf1cd51d874ea6a55cb5c5ac215eea6fb034880ff33285f8
+  languageName: node
+  linkType: hard
+
+"@langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai":
   version: 0.0.0-use.local
   resolution: "@langchain/openai@workspace:libs/langchain-openai"
   dependencies:
@@ -27446,7 +27459,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/cohere": ^0.0.8
     "@langchain/core": ~0.2.0
-    "@langchain/openai": ~0.0.28
+    "@langchain/openai": ~0.1.0
     "@langchain/scripts": ~0.0.14
     "@langchain/textsplitters": ~0.0.0
     "@mendable/firecrawl-js": ^0.0.13
