@@ -1,5 +1,4 @@
 import { expect } from "@jest/globals";
-import { BaseChatModelsTests, BaseChatModelsTestsFields } from "../base.js";
 import {
   BaseChatModelCallOptions,
   LangSmithParams,
@@ -9,6 +8,7 @@ import { z } from "zod";
 import { StructuredTool } from "@langchain/core/tools";
 import { ChatResult } from "@langchain/core/outputs";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import { BaseChatModelsTests, BaseChatModelsTestsFields } from "../base.js";
 
 const person = z
   .object({
@@ -43,19 +43,19 @@ export class ChatModelUnitTests<
   }
 
   testChatModelInit(constructorArgs: RecordStringAny) {
-    const chatModel = new this.cls(constructorArgs);
+    const chatModel = new this.Cls(constructorArgs);
     expect(chatModel).toBeDefined();
   }
 
   testChatModelInitApiKey(constructorArgs: RecordStringAny) {
     const params = { ...constructorArgs, apiKey: "test" };
-    const chatModel = new this.cls(params);
+    const chatModel = new this.Cls(params);
     expect(chatModel).toBeDefined();
   }
 
   testChatModelInitStreaming(constructorArgs: RecordStringAny) {
     const params = { ...constructorArgs, streaming: true };
-    const chatModel = new this.cls(params);
+    const chatModel = new this.Cls(params);
     expect(chatModel).toBeDefined();
   }
 
@@ -66,7 +66,7 @@ export class ChatModelUnitTests<
     if (!chatModelHasToolCalling) {
       return;
     }
-    const chatModel = new this.cls(constructorArgs);
+    const chatModel = new this.Cls(constructorArgs);
     expect(chatModel.bindTools?.([new PersonTool()])).toBeDefined();
   }
 
@@ -77,7 +77,8 @@ export class ChatModelUnitTests<
     if (!chatModelHasStructuredOutput) {
       return;
     }
-    const chatModel = new this.cls(constructorArgs);
+    const chatModel = new this.Cls(constructorArgs);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((chatModel as any).withStructuredOutput?.(person)).toBeDefined();
   }
 
@@ -90,7 +91,7 @@ export class ChatModelUnitTests<
       ls_max_tokens: 0,
       ls_stop: ["Array<string>"],
     };
-    class ModelExtendsChatModel extends this.cls {
+    class ModelExtendsChatModel extends this.Cls {
       constructor(fields: RecordStringAny) {
         super(fields);
       }

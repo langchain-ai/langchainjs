@@ -7,13 +7,14 @@ import { BaseMessageChunk } from "@langchain/core/messages";
 export type BaseChatModelConstructor<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
   OutputMessageType extends BaseMessageChunk = BaseMessageChunk
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 > = new (...args: any[]) => BaseChatModel<CallOptions, OutputMessageType>;
 
 export type BaseChatModelsTestsFields<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
   OutputMessageType extends BaseMessageChunk = BaseMessageChunk
 > = {
-  cls: BaseChatModelConstructor<CallOptions, OutputMessageType>;
+  Cls: BaseChatModelConstructor<CallOptions, OutputMessageType>;
 };
 
 export class BaseChatModelsTests<
@@ -21,11 +22,11 @@ export class BaseChatModelsTests<
   OutputMessageType extends BaseMessageChunk = BaseMessageChunk
 > implements BaseChatModelsTestsFields<CallOptions, OutputMessageType>
 {
-  cls: BaseChatModelConstructor<CallOptions, OutputMessageType>;
+  Cls: BaseChatModelConstructor<CallOptions, OutputMessageType>;
 
   constructor(
     fields: BaseChatModelsTestsFields<CallOptions, OutputMessageType>
   ) {
-    this.cls = fields.cls;
+    this.Cls = fields.Cls;
   }
 }
