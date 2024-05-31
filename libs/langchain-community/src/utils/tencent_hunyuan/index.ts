@@ -1,4 +1,4 @@
-import { createHash, createHmac, BinaryLike } from "crypto";
+import { createHash, createHmac, BinaryLike } from "node:crypto";
 import { getDate, service, signedHeaders } from "./common.js";
 
 const sha256 = (data: string) =>
