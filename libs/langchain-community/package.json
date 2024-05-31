@@ -1022,6 +1022,15 @@
       "import": "./embeddings/cohere.js",
       "require": "./embeddings/cohere.cjs"
     },
+    "./embeddings/deepinfra": {
+      "types": {
+        "import": "./embeddings/deepinfra.d.ts",
+        "require": "./embeddings/deepinfra.d.cts",
+        "default": "./embeddings/deepinfra.d.ts"
+      },
+      "import": "./embeddings/deepinfra.js",
+      "require": "./embeddings/deepinfra.cjs"
+    },
     "./embeddings/fireworks": {
       "types": {
         "import": "./embeddings/fireworks.d.ts",
@@ -3096,6 +3105,10 @@
     "embeddings/cohere.js",
     "embeddings/cohere.d.ts",
     "embeddings/cohere.d.cts",
+    "embeddings/deepinfra.cjs",
+    "embeddings/deepinfra.js",
+    "embeddings/deepinfra.d.ts",
+    "embeddings/deepinfra.d.cts",
     "embeddings/fireworks.cjs",
     "embeddings/fireworks.js",
     "embeddings/fireworks.d.ts",
