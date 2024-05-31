@@ -1,9 +1,14 @@
 name: Standard Tests (Integration)
 
+# on:
+#   workflow_dispatch:
+#   schedule:
+#     - cron:  '0 13 * * *'
+
+# Tmp run in PR to confirm it works
 on:
+  pull_request:
   workflow_dispatch:
-  schedule:
-    - cron:  '0 13 * * *'
 
 jobs:
   openai:
@@ -17,8 +22,6 @@ jobs:
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable --mode=skip-build
-      - name: Build OpenAI
-        run: yarn build --filter=@langchain/openai
       - name: Run standard tests (integration)
         run: yarn test:standard:int --filter=@langchain/openai
         env:

@@ -43,7 +43,7 @@ class ChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
     const callOptions: ChatOpenAI["ParsedCallOptions"] = {
       stream_options: {
         include_usage: true,
-      }
+      },
     };
     await super.testUsageMetadataStreaming(callOptions);
   }
