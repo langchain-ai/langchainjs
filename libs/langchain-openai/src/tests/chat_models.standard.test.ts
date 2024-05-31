@@ -12,10 +12,9 @@ class ChatOpenAIStandardTests extends ChatModelUnitTests<
       Cls: ChatOpenAI,
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
-      constructorArgs: {
-        apiKey: "test",
-      },
+      constructorArgs: {},
     });
+    process.env.OPENAI_API_KEY = "test";
   }
 }
 
