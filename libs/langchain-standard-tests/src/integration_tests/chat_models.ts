@@ -2,6 +2,7 @@ import { expect } from "@jest/globals";
 import { BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
 import {
   AIMessage,
+  AIMessageChunk,
   BaseMessageChunk,
   HumanMessage,
   ToolMessage,
@@ -44,7 +45,7 @@ export abstract class ChatModelIntegrationTests<
     const chatModel = new this.Cls(this.constructorArgs);
     const result = await chatModel.invoke("Hello");
     expect(result).toBeDefined();
-    expect(result._getType()).toBe("ai");
+    expect(result).toBeInstanceOf(AIMessage);
     expect(typeof result.content).toBe("string");
     expect(result.content.length).toBeGreaterThan(0);
   }
@@ -55,7 +56,7 @@ export abstract class ChatModelIntegrationTests<
 
     for await (const token of await chatModel.stream("Hello")) {
       expect(token).toBeDefined();
-      expect(token._getType()).toBe("ai");
+      expect(token).toBeInstanceOf(AIMessageChunk);
       expect(typeof token.content).toBe("string");
       numChars += token.content.length;
     }
@@ -71,7 +72,7 @@ export abstract class ChatModelIntegrationTests<
     expect(batchResults.length).toBe(2);
     for (const result of batchResults) {
       expect(result).toBeDefined();
-      expect(result._getType()).toBe("ai");
+      expect(result).toBeInstanceOf(AIMessage);
       expect(typeof result.content).toBe("string");
       expect(result.content.length).toBeGreaterThan(0);
     }
@@ -86,7 +87,7 @@ export abstract class ChatModelIntegrationTests<
     ];
     const result = await chatModel.invoke(messages);
     expect(result).toBeDefined();
-    expect(result).toBeInstanceOf(AIMessage); // Test single, might want to check for _getType() === "ai" instead?
+    expect(result).toBeInstanceOf(AIMessage);
     expect(typeof result.content).toBe("string");
     expect(result.content.length).toBeGreaterThan(0);
   }
@@ -248,6 +249,51 @@ export abstract class ChatModelIntegrationTests<
     expect(resultStringContent).toBeInstanceOf(AIMessage);
   }
 
+  async testWithStructuredOutput() {
+    if (!this.chatModelHasStructuredOutput) {
+      console.log("Test requires withStructuredOutput. Skipping...");
+      return;
+    }
+
+    const model = new this.Cls(this.constructorArgs);
+    if (!model.withStructuredOutput) {
+      throw new Error(
+        "withStructuredOutput undefined. Cannot test tool message histories."
+      );
+    }
+    const modelWithTools = model.withStructuredOutput(adderSchema);
+
+    const resultStringContent = await modelWithTools.invoke("What is 1 + 2");
+    expect(resultStringContent.a).toBeDefined();
+    expect([1, 2].includes(resultStringContent.a)).toBeTruthy();
+    expect(resultStringContent.b).toBeDefined();
+    expect([1, 2].includes(resultStringContent.b)).toBeTruthy();
+  }
+
+  async testWithStructuredOutputIncludeRaw() {
+    if (!this.chatModelHasStructuredOutput) {
+      console.log("Test requires withStructuredOutput. Skipping...");
+      return;
+    }
+
+    const model = new this.Cls(this.constructorArgs);
+    if (!model.withStructuredOutput) {
+      throw new Error(
+        "withStructuredOutput undefined. Cannot test tool message histories."
+      );
+    }
+    const modelWithTools = model.withStructuredOutput(adderSchema, {
+      includeRaw: true,
+    });
+
+    const resultStringContent = await modelWithTools.invoke("What is 1 + 2");
+    expect(resultStringContent.raw).toBeInstanceOf(AIMessage);
+    expect(resultStringContent.parsed.a).toBeDefined();
+    expect([1, 2].includes(resultStringContent.parsed.a)).toBeTruthy();
+    expect(resultStringContent.parsed.b).toBeDefined();
+    expect([1, 2].includes(resultStringContent.parsed.b)).toBeTruthy();
+  }
+
   /**
    * TODO:
    * - Add withStructuredOutput tests
@@ -318,6 +364,20 @@ export abstract class ChatModelIntegrationTests<
     } catch (e: any) {
       allTestsPassed = false;
       console.error("testStructuredFewShotExamples failed", e);
+    }
+
+    try {
+      await this.testWithStructuredOutput();
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error("testWithStructuredOutput failed", e);
+    }
+
+    try {
+      await this.testWithStructuredOutputIncludeRaw();
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error("testWithStructuredOutputIncludeRaw failed", e);
     }
 
     return allTestsPassed;

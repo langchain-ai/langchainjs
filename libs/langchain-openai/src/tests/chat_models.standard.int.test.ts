@@ -1,3 +1,4 @@
+/* eslint-disable no-process-env */
 import { test, expect } from "@jest/globals";
 import { ChatModelIntegrationTests } from "@langchain/standard-tests";
 import { AIMessageChunk } from "@langchain/core/messages";
@@ -9,7 +10,9 @@ class ChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
 > {
   constructor() {
     if (!process.env.OPENAI_API_KEY) {
-      throw new Error("OPENAI_API_KEY must be set to run standard integration tests.")
+      throw new Error(
+        "OPENAI_API_KEY must be set to run standard integration tests."
+      );
     }
     super({
       Cls: ChatOpenAI,
@@ -22,7 +25,9 @@ class ChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
   }
 
   async testToolMessageHistoriesListContent() {
-    console.log("OpenAI testToolMessageHistoriesListContent test known failure. Skipping...");
+    console.log(
+      "OpenAI testToolMessageHistoriesListContent test known failure. Skipping..."
+    );
   }
 }
 
