@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -881,7 +881,7 @@
   },
   "dependencies": {
     "@langchain/core": "~0.2.0",
-    "@langchain/openai": "~0.0.28",
+    "@langchain/openai": "~0.1.0",
     "@langchain/textsplitters": "~0.0.0",
     "binary-extensions": "^2.2.0",
     "js-tiktoken": "^1.0.12",
