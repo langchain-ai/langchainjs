@@ -554,7 +554,6 @@ export class ChatOpenAI<
       tool_choice: options?.tool_choice,
       response_format: options?.response_format,
       seed: options?.seed,
-      // Only pass this field for OpenAI, since Azure will throw an error
       ...(options?.stream_options !== undefined
         ? { stream_options: options.stream_options }
         : {}),
