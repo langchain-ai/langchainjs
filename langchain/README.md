@@ -57,7 +57,7 @@ This library aims to assist in the development of those types of applications. C
 
 **❓Question Answering over specific documents**
 
-- [Documentation](https://js.langchain.com/docs/use_cases/question_answering/)
+- [Documentation](https://js.langchain.com/v0.2/docs/tutorials/rag)
 - End-to-end Example: [Doc-Chatbot](https://github.com/dissorial/doc-chatbot)
 
 
@@ -95,7 +95,7 @@ Please see [here](https://js.langchain.com/v0.2/) for full documentation, which 
 - [Getting started](https://js.langchain.com/v0.2/docs/introduction): installation, setting up the environment, simple examples
 - [Tutorials](https://js.langchain.com/v0.2/docs/tutorials/): interactive guides and walkthroughs of common use cases/tasks.
 - [Use case](https://js.langchain.com/v0.2/docs/how_to/) walkthroughs and best practices for every component of the LangChain library.
-- [Reference](https://v02.api.js.langchain.com): full API docs
+- [Reference](https://api.js.langchain.com): full API docs
 
 ## 💁 Contributing
 
