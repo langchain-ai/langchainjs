@@ -18,7 +18,7 @@ test("createToolCallingAgent works", async () => {
   //   ["placeholder", "{agent_scratchpad}"],
   // ]);
   // const llm = new ChatMistralAI({
-  //   model: "mistral-large",
+  //   model: "mistral-large-latest",
   //   temperature: 0,
   // });
   // const agent = await createToolCallingAgent({
