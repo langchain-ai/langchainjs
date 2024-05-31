@@ -40,6 +40,16 @@ export interface ElasticClientArgs {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ElasticFilter = object | { field: string; operator: string; value: any }[];
 
+type ElasticMetadataTerms = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  must: { [operator: string]: { [field: string]: any } }[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  must_not: { [operator: string]: { [field: string]: any } }[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  should?: { [operator: string]: { [field: string]: any } }[];
+  minimum_should_match?: number;
+};
+
 /**
  * Class for interacting with an Elasticsearch database. It extends the
  * VectorStore base class and provides methods for adding documents and
@@ -311,12 +321,7 @@ export class ElasticVectorSearch extends VectorStore {
     await this.client.indices.create(request);
   }
 
-  private buildMetadataTerms(filter?: ElasticFilter): {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    must: { [operator: string]: { [field: string]: any } }[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    must_not: { [operator: string]: { [field: string]: any } }[];
-  } {
+  private buildMetadataTerms(filter?: ElasticFilter): ElasticMetadataTerms {
     if (filter == null) return { must: [], must_not: [] };
     const filters = Array.isArray(filter)
       ? filter
@@ -328,6 +333,7 @@ export class ElasticVectorSearch extends VectorStore {
 
     const must = [];
     const must_not = [];
+    const should = [];
     for (const condition of filters) {
       const metadataField = `metadata.${condition.field}`;
       if (condition.operator === "exists") {
@@ -342,6 +348,12 @@ export class ElasticVectorSearch extends VectorStore {
             [metadataField]: condition.value,
           },
         });
+      } else if (condition.operator === "or") {
+        should.push({
+          term: {
+            [metadataField]: condition.value,
+          },
+        });
       } else {
         must.push({
           [condition.operator]: {
@@ -350,7 +362,13 @@ export class ElasticVectorSearch extends VectorStore {
         });
       }
     }
-    return { must, must_not };
+    const result: ElasticMetadataTerms = { must, must_not };
+
+    if (should.length > 0) {
+      result.should = should;
+      result.minimum_should_match = 1;
+    }
+    return result;
   }
 
   /**

@@ -2,9 +2,13 @@ import { QdrantClient } from "@qdrant/js-client-rest";
 import type { Schemas as QdrantSchemas } from "@qdrant/js-client-rest";
 import { v4 as uuid } from "uuid";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
-import { VectorStore } from "@langchain/core/vectorstores";
+import {
+  type MaxMarginalRelevanceSearchOptions,
+  VectorStore,
+} from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 
 const CONTENT_KEY = "content";
 const METADATA_KEY = "metadata";
@@ -194,6 +198,8 @@ export class QdrantVectorStore extends VectorStore {
       vector: query,
       limit: k,
       filter,
+      with_payload: [this.metadataPayloadKey, this.contentPayloadKey],
+      with_vector: false,
     });
 
     const result: [Document, number][] = (
@@ -206,6 +212,63 @@ export class QdrantVectorStore extends VectorStore {
       }),
       res.score,
     ]);
+
+    return result;
+  }
+
+  /**
+   * Return documents selected using the maximal marginal relevance.
+   * Maximal marginal relevance optimizes for similarity to the query AND diversity
+   * among selected documents.
+   *
+   * @param {string} query - Text to look up documents similar to.
+   * @param {number} options.k - Number of documents to return.
+   * @param {number} options.fetchK - Number of documents to fetch before passing to the MMR algorithm. Defaults to 20.
+   * @param {number} options.lambda - Number between 0 and 1 that determines the degree of diversity among the results,
+   *                 where 0 corresponds to maximum diversity and 1 to minimum diversity.
+   * @param {this["FilterType"]} options.filter - Optional filter to apply to the search results.
+   *
+   * @returns {Promise<Document[]>} - List of documents selected by maximal marginal relevance.
+   */
+  async maxMarginalRelevanceSearch(
+    query: string,
+    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
+  ): Promise<Document[]> {
+    if (!query) {
+      return [];
+    }
+
+    const queryEmbedding = await this.embeddings.embedQuery(query);
+
+    await this.ensureCollection();
+
+    const results = await this.client.search(this.collectionName, {
+      vector: queryEmbedding,
+      limit: options?.fetchK ?? 20,
+      filter: options?.filter,
+      with_payload: [this.metadataPayloadKey, this.contentPayloadKey],
+      with_vector: true,
+    });
+
+    const embeddingList = results.map((res) => res.vector) as number[][];
+
+    const mmrIndexes = maximalMarginalRelevance(
+      queryEmbedding,
+      embeddingList,
+      options?.lambda,
+      options.k
+    );
+
+    const topMmrMatches = mmrIndexes.map((idx) => results[idx]);
+
+    const result = (topMmrMatches as QdrantSearchResponse[]).map(
+      (res) =>
+        new Document({
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          metadata: res.payload[this.metadataPayloadKey] as Record<string, any>,
+          pageContent: res.payload[this.contentPayloadKey] as string,
+        })
+    );
 
     return result;
   }

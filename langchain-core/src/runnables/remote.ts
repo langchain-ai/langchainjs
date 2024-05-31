@@ -406,12 +406,13 @@ export class RemoteRunnable<
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
+      config.runId,
       undefined,
       undefined,
       undefined,
-      undefined,
-      options?.runName
+      config.runName
     );
+    delete config.runId;
     let finalOutput: RunOutput | undefined;
     let finalOutputSupported = true;
     try {
@@ -476,12 +477,13 @@ export class RemoteRunnable<
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
+      config.runId,
       undefined,
       undefined,
       undefined,
-      undefined,
-      options?.runName
+      config.runName
     );
+    delete config.runId;
     // The type is in camelCase but the API only accepts snake_case.
     const camelCaseStreamOptions = {
       include_names: streamOptions?.includeNames,
@@ -535,7 +537,7 @@ export class RemoteRunnable<
 
   _streamEvents(
     input: RunInput,
-    options: Partial<CallOptions> & { version: "v1" },
+    options: Partial<CallOptions> & { version: "v1" | "v2" },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose"> | undefined
   ): AsyncGenerator<StreamEvent> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -547,12 +549,13 @@ export class RemoteRunnable<
       const runManager = await callbackManager_?.handleChainStart(
         outerThis.toJSON(),
         _coerceToDict(input, "input"),
+        config.runId,
         undefined,
         undefined,
         undefined,
-        undefined,
-        options?.runName
+        config.runName
       );
+      delete config.runId;
       // The type is in camelCase but the API only accepts snake_case.
       const camelCaseStreamOptions = {
         include_names: streamOptions?.includeNames,
@@ -611,14 +614,14 @@ export class RemoteRunnable<
 
   streamEvents(
     input: RunInput,
-    options: Partial<CallOptions> & { version: "v1" },
+    options: Partial<CallOptions> & { version: "v1" | "v2" },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
   ): IterableReadableStream<StreamEvent>;
 
   streamEvents(
     input: RunInput,
     options: Partial<CallOptions> & {
-      version: "v1";
+      version: "v1" | "v2";
       encoding: "text/event-stream";
     },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
@@ -627,14 +630,14 @@ export class RemoteRunnable<
   streamEvents(
     input: RunInput,
     options: Partial<CallOptions> & {
-      version: "v1";
+      version: "v1" | "v2";
       encoding?: "text/event-stream" | undefined;
     },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
   ): IterableReadableStream<StreamEvent | Uint8Array> {
-    if (options?.version !== "v1") {
+    if (options.version !== "v1" && options.version !== "v2") {
       throw new Error(
-        `Only version "v1" of the events schema is currently supported.`
+        `Only versions "v1" and "v2" of the events schema is currently supported.`
       );
     }
     if (options.encoding !== undefined) {

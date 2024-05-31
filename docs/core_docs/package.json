@@ -49,6 +49,7 @@
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.18.2",
+    "@langchain/langgraph": "latest",
     "@langchain/scripts": "workspace:*",
     "@swc/core": "^1.3.62",
     "@types/cookie": "^0",
@@ -63,7 +64,7 @@
     "eslint-plugin-react": "^7.30.1",
     "eslint-plugin-react-hooks": "^4.6.0",
     "glob": "^10.3.10",
-    "prettier": "^2.7.1",
+    "prettier": "^2.8.3",
     "rimraf": "^5.0.1",
     "supabase": "^1.148.6",
     "swc-loader": "^0.2.3",

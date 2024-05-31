@@ -14,6 +14,10 @@
       "destination": "/v0.2/docs/introduction/"
     },
     {
+      "source": "/v0.1",
+      "destination": "/"
+    },
+    {
       "source": "/v0.2/docs/get_started/introduction(/?)",
       "destination": "/v0.2/docs/introduction/"
     },
@@ -22,12 +26,24 @@
       "destination": "/v0.2/docs/introduction/"
     },
     {
+      "source": "/docs/get_started/introduction(/?)",
+      "destination": "/v0.2/docs/introduction/"
+    },
+    {
       "source": "/v0.2/docs(/?)",
       "destination": "/v0.2/docs/introduction/"
     },
     {
+      "source": "/docs/integrations/:path(.*/?)*",
+      "destination": "/v0.2/docs/integrations/:path*"
+    },
+    {
       "source": "/docs/:path(.*/?)*",
       "destination": "/v0.1/docs/:path*"
+    },
+    {
+      "source": "/docs/how_to/tool_calls_multi_modal(/?)",
+      "destination": "/docs/how_to/multimodal_inputs/"
     }
   ]
 }

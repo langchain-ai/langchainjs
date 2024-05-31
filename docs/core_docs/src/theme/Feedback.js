@@ -1,4 +1,4 @@
-/* eslint-disable no-return-assign, react/jsx-props-no-spreading */
+/* eslint-disable no-return-assign, react/jsx-props-no-spreading, no-console */
 import React, { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";

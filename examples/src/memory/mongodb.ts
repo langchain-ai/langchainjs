@@ -1,5 +1,5 @@
 import { MongoClient, ObjectId } from "mongodb";
-import { BufferMemory } from "langchain/memory/index";
+import { BufferMemory } from "langchain/memory";
 import { ChatOpenAI } from "@langchain/openai";
 import { ConversationChain } from "langchain/chains";
 import { MongoDBChatMessageHistory } from "@langchain/mongodb";

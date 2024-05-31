@@ -26,8 +26,7 @@ export const config = {
     "notion-to-md/build/utils/notion.js",
     "firebase-admin/app",
     "firebase-admin/firestore",
-    "web-auth-library/google",
-    "@google-ai/generativelanguage/build/protos/protos.js",
+    "web-auth-library/google"
   ],
   entrypoints: {
     load: "load/index",
@@ -69,13 +68,13 @@ export const config = {
     // embeddings
     "embeddings/cache_backed": "embeddings/cache_backed",
     "embeddings/fake": "embeddings/fake",
-    // prompts
-    "prompts/index": "prompts/index",
     // vectorstores
     "vectorstores/memory": "vectorstores/memory",
     // text_splitter
     text_splitter: "text_splitter",
     // memory
+    "memory": "memory/index",
+    // TODO: Remove on breaking change
     "memory/index": "memory/index",
     "memory/chat_memory": "memory/chat_memory",
     // document
@@ -208,6 +207,14 @@ export const config = {
     "document",
     "load/serializable",
     "runnables",
+    "document_loaders/web/searchapi",
+    "retrievers/self_query/chroma",
+    "retrievers/self_query/pinecone",
+    "retrievers/self_query/supabase",
+    "retrievers/self_query/weaviate",
+    "retrievers/self_query/vectara",
+    "document_loaders/web/serpapi",
+    "document_loaders/web/sort_xyz_blockchain"
   ],
   requiresOptionalDependency: [
     "agents/load",

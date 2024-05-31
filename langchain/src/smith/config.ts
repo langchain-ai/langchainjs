@@ -31,8 +31,11 @@ export type EvaluatorInputFormatter = ({
 }) => EvaluatorInputs;
 
 export type DynamicRunEvaluatorParams<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Input extends Record<string, any> = Record<string, unknown>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Prediction extends Record<string, any> = Record<string, unknown>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Reference extends Record<string, any> = Record<string, unknown>
 > = {
   input: Input;
@@ -213,9 +216,24 @@ const getSingleStringifiedValue = (value: unknown) => {
  * @example
  * ```ts
  * const evalConfig = {
+ *   evaluators: [Criteria("helpfulness")],
+ * };
+ * @example
+ * ```ts
+ * const evalConfig = {
+ *   evaluators: [
+ *     Criteria({
+ *       "isCompliant": "Does the submission comply with the requirements of XYZ"
+ *     })
+ *   ],
+ * };
+ * @example
+ * ```ts
+ * const evalConfig = {
  *   evaluators: [{
  *     evaluatorType: "criteria",
  *     criteria: "helpfulness"
+ *     formatEvaluatorInputs: ...
  *   }]
  * };
  * ```
@@ -224,7 +242,8 @@ const getSingleStringifiedValue = (value: unknown) => {
  * const evalConfig = {
  *   evaluators: [{
  *     evaluatorType: "criteria",
- *     criteria: { "isCompliant": "Does the submission comply with the requirements of XYZ"
+ *     criteria: { "isCompliant": "Does the submission comply with the requirements of XYZ" },
+ *     formatEvaluatorInputs: ...
  *   }]
  * };
  */
@@ -249,7 +268,7 @@ export type Criteria = EvalConfig & {
 export type CriteriaEvalChainConfig = Criteria;
 
 export function Criteria(
-  criteria: CriteriaType,
+  criteria: CriteriaType | Record<string, string>,
   config?: Pick<
     Partial<LabeledCriteria>,
     "formatEvaluatorInputs" | "llm" | "feedbackKey"
@@ -262,10 +281,19 @@ export function Criteria(
       input: getSingleStringifiedValue(payload.rawInput),
     }));
 
+  if (typeof criteria !== "string" && Object.keys(criteria).length !== 1) {
+    throw new Error(
+      "Only one criteria key is allowed when specifying custom criteria."
+    );
+  }
+
+  const criteriaKey =
+    typeof criteria === "string" ? criteria : Object.keys(criteria)[0];
+
   return {
     evaluatorType: "criteria",
     criteria,
-    feedbackKey: config?.feedbackKey ?? criteria,
+    feedbackKey: config?.feedbackKey ?? criteriaKey,
     llm: config?.llm,
     formatEvaluatorInputs,
   };
@@ -283,9 +311,24 @@ export function Criteria(
  * @example
  * ```ts
  * const evalConfig = {
+ *   evaluators: [LabeledCriteria("correctness")],
+ * };
+ * @example
+ * ```ts
+ * const evalConfig = {
+ *   evaluators: [
+ *     LabeledCriteria({
+ *       "mentionsAllFacts": "Does the include all facts provided in the reference?"
+ *     })
+ *   ],
+ * };
+ * @example
+ * ```ts
+ * const evalConfig = {
  *   evaluators: [{
  *     evaluatorType: "labeled_criteria",
- *     criteria: "correctness"
+ *     criteria: "correctness",
+ *     formatEvaluatorInputs: ...
  *   }],
  * };
  * ```
@@ -294,7 +337,8 @@ export function Criteria(
  * const evalConfig = {
  *   evaluators: [{
  *     evaluatorType: "labeled_criteria",
- *     criteria: { "mentionsAllFacts": "Does the include all facts provided in the reference?" }
+ *     criteria: { "mentionsAllFacts": "Does the include all facts provided in the reference?" },
+ *     formatEvaluatorInputs: ...
  *   }],
  * };
  */
@@ -316,7 +360,7 @@ export type LabeledCriteria = EvalConfig & {
 };
 
 export function LabeledCriteria(
-  criteria: CriteriaType,
+  criteria: CriteriaType | Record<string, string>,
   config?: Pick<
     Partial<LabeledCriteria>,
     "formatEvaluatorInputs" | "llm" | "feedbackKey"
@@ -330,10 +374,19 @@ export function LabeledCriteria(
       reference: getSingleStringifiedValue(payload.rawReferenceOutput),
     }));
 
+  if (typeof criteria !== "string" && Object.keys(criteria).length !== 1) {
+    throw new Error(
+      "Only one labeled criteria key is allowed when specifying custom criteria."
+    );
+  }
+
+  const criteriaKey =
+    typeof criteria === "string" ? criteria : Object.keys(criteria)[0];
+
   return {
     evaluatorType: "labeled_criteria",
     criteria,
-    feedbackKey: config?.feedbackKey ?? criteria,
+    feedbackKey: config?.feedbackKey ?? criteriaKey,
     llm: config?.llm,
     formatEvaluatorInputs,
   };
