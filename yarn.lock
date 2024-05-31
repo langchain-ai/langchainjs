@@ -10215,6 +10215,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: ^5.4.5
+    zod: ^3.22.4
   languageName: unknown
   linkType: soft
 
