@@ -15,13 +15,15 @@ import IntegrationInstallTooltip from "@mdx_components/integration_install_toolt
 
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
+```bash npm2yarn
+npm i @langchain/community
+```
+
 ## Initialization
 
 With this integration, you can use the DeepInfra embeddings model to get embeddings for your text data. Here is the [link](https://deepinfra.com/models/embeddings) to the embeddings models.
 
 First, you need to sign up on the DeepInfra website and get the API token from [here](https://deepinfra.com/dash/api_keys). You can copy names from the model cards and start using them in your code.
-
-```bash npm2yarn
 
 To use the `DeepInfraEmbeddings` class, you need an API token from DeepInfra. You can pass this token directly to the constructor or set it as an environment variable (`DEEPINFRA_API_TOKEN`).
 
