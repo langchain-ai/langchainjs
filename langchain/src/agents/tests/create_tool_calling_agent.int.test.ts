@@ -1,11 +1,10 @@
+import { z } from "zod";
 import { test, expect } from "@jest/globals";
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { DynamicStructuredTool } from "@langchain/core/tools";
 import { TavilySearchResults } from "../../util/testing/tools/tavily_search.js";
 import { AgentExecutor, createToolCallingAgent } from "../index.js";
-import { DynamicStructuredTool } from "@langchain/core/tools";
-
-import { z } from "zod";
 
 const syntaxErrorTool = new DynamicStructuredTool({
   name: "query",
@@ -16,7 +15,6 @@ const syntaxErrorTool = new DynamicStructuredTool({
     question: z.string().describe("The question to answer."),
   }),
   func: async (_params) => {
-    console.log(_params);
     return JSON.stringify({
       result: "-ERR Syntax error at offset 19 near Bronx",
       query:
@@ -119,6 +117,7 @@ test("createToolCallingAgent stream events works for multiple turns", async () =
   const agentExecutor = new AgentExecutor({
     agent,
     tools: [syntaxErrorTool],
+    maxIterations: 3,
   });
   const input =
     "Generate a query that looks up how many animals have been bitten in the Bronx.";
@@ -133,9 +132,9 @@ test("createToolCallingAgent stream events works for multiple turns", async () =
 
   for await (const event of eventStream) {
     const eventType = event.event;
-    // console.log("Event type: ", eventType);
+    console.log("Event type: ", eventType);
     if (eventType === "on_chat_model_stream") {
-      // console.log("Content: ", event.data);
+      console.log("Content: ", event.data);
     }
   }
 });

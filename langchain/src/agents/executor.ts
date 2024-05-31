@@ -237,9 +237,7 @@ export class AgentExecutorIterator
           this.intermediateSteps,
           runManager
         );
-        if (this.runManager) {
-          await this.runManager.handleChainEnd(output);
-        }
+        await this.runManager?.handleChainEnd(output);
         await this.setFinalOutputs(output);
       }
     }
@@ -259,6 +257,7 @@ export class AgentExecutorIterator
       this.runManager
     );
     await this.setFinalOutputs(returnedOutput);
+    await this.runManager?.handleChainEnd(returnedOutput);
     return returnedOutput;
   }
 
