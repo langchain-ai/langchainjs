@@ -32,7 +32,7 @@ class PersonTool extends StructuredTool {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type RecordStringAny = Record<string, any>;
 
-export class ChatModelUnitTests<
+export abstract class ChatModelUnitTests<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
   OutputMessageType extends BaseMessageChunk = BaseMessageChunk
 > extends BaseChatModelsTests<CallOptions, OutputMessageType> {
@@ -42,47 +42,43 @@ export class ChatModelUnitTests<
     super(fields);
   }
 
-  testChatModelInit(constructorArgs: RecordStringAny) {
-    const chatModel = new this.Cls(constructorArgs);
+  abstract get constructorArgs(): RecordStringAny;
+
+  testChatModelInit() {
+    const chatModel = new this.Cls(this.constructorArgs);
     expect(chatModel).toBeDefined();
   }
 
-  testChatModelInitApiKey(constructorArgs: RecordStringAny) {
-    const params = { ...constructorArgs, apiKey: "test" };
+  testChatModelInitApiKey() {
+    const params = { ...this.constructorArgs, apiKey: "test" };
     const chatModel = new this.Cls(params);
     expect(chatModel).toBeDefined();
   }
 
-  testChatModelInitStreaming(constructorArgs: RecordStringAny) {
-    const params = { ...constructorArgs, streaming: true };
+  testChatModelInitStreaming() {
+    const params = { ...this.constructorArgs, streaming: true };
     const chatModel = new this.Cls(params);
     expect(chatModel).toBeDefined();
   }
 
-  testChatModelWithBindTools(
-    constructorArgs: RecordStringAny,
-    chatModelHasToolCalling: boolean
-  ) {
-    if (!chatModelHasToolCalling) {
+  testChatModelWithBindTools() {
+    if (!this.chatModelHasToolCalling) {
       return;
     }
-    const chatModel = new this.Cls(constructorArgs);
+    const chatModel = new this.Cls(this.constructorArgs);
     expect(chatModel.bindTools?.([new PersonTool()])).toBeDefined();
   }
 
-  testChatModelWithStructuredOutput(
-    constructorArgs: RecordStringAny,
-    chatModelHasStructuredOutput: boolean
-  ) {
-    if (!chatModelHasStructuredOutput) {
+  testChatModelWithStructuredOutput() {
+    if (!this.chatModelHasStructuredOutput) {
       return;
     }
-    const chatModel = new this.Cls(constructorArgs);
+    const chatModel = new this.Cls(this.constructorArgs);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((chatModel as any).withStructuredOutput?.(person)).toBeDefined();
   }
 
-  testStandardParams(constructorArgs: RecordStringAny) {
+  testStandardParams() {
     const expectedParams: LangSmithParams = {
       ls_provider: "string",
       ls_model_name: "string",
@@ -113,7 +109,7 @@ export class ChatModelUnitTests<
         return lsParams;
       }
     }
-    const extendedModel = new ModelExtendsChatModel(constructorArgs);
+    const extendedModel = new ModelExtendsChatModel(this.constructorArgs);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const lsParams = extendedModel.checkLsParams({} as any);
@@ -127,18 +123,11 @@ export class ChatModelUnitTests<
    * Run all unit tests for the chat model.
    * Each test is wrapped in a try/catch block to prevent the entire test suite from failing.
    * If a test fails, the error is logged to the console, and the test suite continues.
-   * @param {RecordStringAny} constructorArgs The arguments to pass to the chat model constructor.
-   * @param {boolean} chatModelHasToolCalling Whether the chat model has a tool calling method.
-   * @param {boolean} chatModelHasStructuredOutput Whether the chat model has a structured output method.
    * @returns {void}
    */
-  runTests(
-    constructorArgs: RecordStringAny,
-    chatModelHasToolCalling: boolean,
-    chatModelHasStructuredOutput: boolean
-  ) {
+  runTests() {
     try {
-      this.testChatModelInit(constructorArgs);
+      this.testChatModelInit();
     } catch (e) {
       console.error("'testChatModelInit' FAILED\n");
       console.error(e);
@@ -146,7 +135,7 @@ export class ChatModelUnitTests<
     }
 
     try {
-      this.testChatModelInitApiKey(constructorArgs);
+      this.testChatModelInitApiKey();
     } catch (e) {
       console.error("'testChatModelInitApiKey' FAILED\n");
       console.error(e);
@@ -154,7 +143,7 @@ export class ChatModelUnitTests<
     }
 
     try {
-      this.testChatModelInitStreaming(constructorArgs);
+      this.testChatModelInitStreaming();
     } catch (e) {
       console.error("'testChatModelInitStreaming' FAILED\n");
       console.error(e);
@@ -162,7 +151,7 @@ export class ChatModelUnitTests<
     }
 
     try {
-      this.testChatModelWithBindTools(constructorArgs, chatModelHasToolCalling);
+      this.testChatModelWithBindTools();
     } catch (e) {
       console.error("'testChatModelWithBindTools' FAILED\n");
       console.error(e);
@@ -170,10 +159,7 @@ export class ChatModelUnitTests<
     }
 
     try {
-      this.testChatModelWithStructuredOutput(
-        constructorArgs,
-        chatModelHasStructuredOutput
-      );
+      this.testChatModelWithStructuredOutput();
     } catch (e) {
       console.error("'testChatModelWithStructuredOutput' FAILED\n");
       console.error(e);
@@ -181,7 +167,7 @@ export class ChatModelUnitTests<
     }
 
     try {
-      this.testStandardParams(constructorArgs);
+      this.testStandardParams();
     } catch (e) {
       console.error("'testStandardParams' FAILED\n");
       console.error(e);

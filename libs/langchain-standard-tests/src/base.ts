@@ -15,6 +15,8 @@ export type BaseChatModelsTestsFields<
   OutputMessageType extends BaseMessageChunk = BaseMessageChunk
 > = {
   Cls: BaseChatModelConstructor<CallOptions, OutputMessageType>;
+  chatModelHasToolCalling: boolean;
+  chatModelHasStructuredOutput: boolean;
 };
 
 export class BaseChatModelsTests<
@@ -24,9 +26,15 @@ export class BaseChatModelsTests<
 {
   Cls: BaseChatModelConstructor<CallOptions, OutputMessageType>;
 
+  chatModelHasToolCalling: boolean;
+
+  chatModelHasStructuredOutput: boolean;
+
   constructor(
     fields: BaseChatModelsTestsFields<CallOptions, OutputMessageType>
   ) {
     this.Cls = fields.Cls;
+    this.chatModelHasToolCalling = fields.chatModelHasToolCalling;
+    this.chatModelHasStructuredOutput = fields.chatModelHasStructuredOutput;
   }
 }
