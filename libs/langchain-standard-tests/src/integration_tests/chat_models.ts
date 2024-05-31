@@ -6,6 +6,7 @@ import {
   BaseMessageChunk,
   HumanMessage,
   ToolMessage,
+  UsageMetadata,
 } from "@langchain/core/messages";
 import { z } from "zod";
 import { StructuredTool } from "@langchain/core/tools";
@@ -92,17 +93,47 @@ export abstract class ChatModelIntegrationTests<
     expect(result.content.length).toBeGreaterThan(0);
   }
 
-  // TODO: merge main to test this
-  // async testUsageMetadata() {
-  //   const chatModel = new this.Cls(this.constructorArgs);
-  //   const result = await chatModel.invoke("Hello");
-  //   expect(result).toBeDefined();
-  //   expect(result).toBeInstanceOf(AIMessage);
-  //   expect(result.usageMetadata).toBeDefined();
-  //   expect(typeof result.usageMetadata.inputTokens).toBe("number");
-  //   expect(typeof result.usageMetadata.outputTokens).toBe("number");
-  //   expect(typeof result.usageMetadata.totalTokens).toBe("number");
-  // }
+  async testUsageMetadata() {
+    const chatModel = new this.Cls(this.constructorArgs);
+    const result = await chatModel.invoke("Hello");
+    expect(result).toBeDefined();
+    expect(result).toBeInstanceOf(AIMessage);
+    if (!("usage_metadata" in result)) {
+      throw new Error("result is not an instance of AIMessage");
+    }
+    const usageMetadata = result.usage_metadata as UsageMetadata;
+    expect(usageMetadata).toBeDefined();
+    expect(typeof usageMetadata.input_tokens).toBe("number");
+    expect(typeof usageMetadata.output_tokens).toBe("number");
+    expect(typeof usageMetadata.total_tokens).toBe("number");
+  }
+
+  async testUsageMetadataStreaming(
+    callOptions?: InstanceType<this["Cls"]>["ParsedCallOptions"]
+  ) {
+    const chatModel = new this.Cls(this.constructorArgs);
+    let finalChunks: AIMessageChunk | undefined;
+    for await (const chunk of await chatModel.stream("Hello", callOptions)) {
+      expect(chunk).toBeDefined();
+      expect(chunk).toBeInstanceOf(AIMessageChunk);
+      if (!finalChunks) {
+        finalChunks = chunk;
+      } else {
+        finalChunks = finalChunks.concat(chunk);
+      }
+    }
+    if (!finalChunks) {
+      throw new Error("finalChunks is undefined");
+    }
+    const usageMetadata = finalChunks.usage_metadata;
+    expect(usageMetadata).toBeDefined();
+    if (!usageMetadata) {
+      throw new Error("usageMetadata is undefined");
+    }
+    expect(typeof usageMetadata.input_tokens).toBe("number");
+    expect(typeof usageMetadata.output_tokens).toBe("number");
+    expect(typeof usageMetadata.total_tokens).toBe("number");
+  }
 
   /**
    * Test that message histories are compatible with string tool contents
@@ -337,13 +368,19 @@ export abstract class ChatModelIntegrationTests<
       console.error("testConversation failed", e);
     }
 
-    // TODO: uncomment this when the test is ready
-    // try {
-    //   await this.testUsageMetadata();
-    // } catch (e: any) {
-    //   allTestsPassed = false;
-    //   console.error("testUsageMetadata failed", e);
-    // }
+    try {
+      await this.testUsageMetadata();
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error("testUsageMetadata failed", e);
+    }
+
+    try {
+      await this.testUsageMetadataStreaming();
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error("testUsageMetadataStreaming failed", e);
+    }
 
     try {
       await this.testToolMessageHistoriesStringContent();

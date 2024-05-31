@@ -26,8 +26,26 @@ class ChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
 
   async testToolMessageHistoriesListContent() {
     console.log(
-      "OpenAI testToolMessageHistoriesListContent test known failure. Skipping..."
+      "ChatOpenAI testToolMessageHistoriesListContent test known failure. Skipping..."
     );
+  }
+
+  async testUsageMetadata() {
+    console.log(
+      "ChatOpenAI does not currently support usage metadata on `.invoke` calls. Skipping..."
+    );
+  }
+
+  async testUsageMetadataStreaming() {
+    // ChatOpenAI does not support streaming tokens by
+    // default, so we must pass in a call option to
+    // enable streaming tokens.
+    const callOptions: ChatOpenAI["ParsedCallOptions"] = {
+      stream_options: {
+        include_usage: true,
+      }
+    };
+    await super.testUsageMetadataStreaming(callOptions);
   }
 }
 
