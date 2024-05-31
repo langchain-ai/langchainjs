@@ -529,7 +529,6 @@ export class ChatOpenAI<
         )
       );
     }
-    const llmType = this._llmType();
     const params: Omit<
       OpenAIClient.Chat.ChatCompletionCreateParams,
       "messages"
@@ -556,8 +555,8 @@ export class ChatOpenAI<
       response_format: options?.response_format,
       seed: options?.seed,
       // Only pass this field for OpenAI, since Azure will throw an error
-      ...(llmType === "openai"
-        ? { stream_options: options?.stream_options }
+      ...(options?.stream_options !== undefined
+        ? { stream_options: options.stream_options }
         : {}),
       ...this.modelKwargs,
     };
