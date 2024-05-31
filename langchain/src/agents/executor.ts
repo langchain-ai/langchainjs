@@ -174,12 +174,15 @@ export class AgentExecutorIterator
       this.runManager = await callbackManager?.handleChainStart(
         this.agentExecutor.toJSON(),
         this.inputs,
-        undefined,
+        this.config?.runId,
         undefined,
         this.tags ?? this.config?.tags,
         this.metadata ?? this.config?.metadata,
         this.runName ?? this.config?.runName
       );
+      if (this.config !== undefined) {
+        delete this.config.runId;
+      }
     }
   }
 
