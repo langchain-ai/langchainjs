@@ -13,4 +13,4 @@ export class TencentHunyuanEmbeddings extends BaseTencentHunyuanEmbeddings {
   }
 }
 
-export { TencentHunyuanEmbeddingsParams } from "./base.js";
+export { type TencentHunyuanEmbeddingsParams } from "./base.js";
