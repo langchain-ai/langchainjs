@@ -3,7 +3,7 @@ import { ChatModelUnitTests } from "@langchain/standard-tests";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { ChatOpenAI, ChatOpenAICallOptions } from "../chat_models.js";
 
-class ChatOpenAIStandardTests extends ChatModelUnitTests<
+class ChatOpenAIStandardUnitTests extends ChatModelUnitTests<
   ChatOpenAICallOptions,
   AIMessageChunk
 > {
@@ -18,9 +18,9 @@ class ChatOpenAIStandardTests extends ChatModelUnitTests<
   }
 }
 
-const testClass = new ChatOpenAIStandardTests();
+const testClass = new ChatOpenAIStandardUnitTests();
 
-test("ChatOpenAIStandardTests", () => {
+test("ChatOpenAIStandardUnitTests", () => {
   const testResults = testClass.runTests();
   expect(testResults).toBe(true);
 });

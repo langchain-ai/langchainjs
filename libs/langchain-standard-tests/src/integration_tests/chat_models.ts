@@ -249,7 +249,9 @@ export abstract class ChatModelIntegrationTests<
   }
 
   /**
-   * TODO: Add withStructuredOutput tests
+   * TODO:
+   * - Add withStructuredOutput tests
+   * - Add multi modal standard tests
    */
 
   /**
