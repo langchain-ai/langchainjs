@@ -2,7 +2,6 @@
 sidebar_label: DeepInfra
 ---
 
-
 # DeepInfra Embeddings
 
 The `DeepInfraEmbeddings` class utilizes the DeepInfra API to generate embeddings for given text inputs. This guide will walk you through the setup and usage of the `DeepInfraEmbeddings` class, helping you integrate it into your project seamlessly.
@@ -27,8 +26,6 @@ First, you need to sign up on the DeepInfra website and get the API token from [
 
 To use the `DeepInfraEmbeddings` class, you need an API token from DeepInfra. You can pass this token directly to the constructor or set it as an environment variable (`DEEPINFRA_API_TOKEN`).
 
-
-
 ### Basic Usage
 
 Here’s how to create an instance of `DeepInfraEmbeddings`:
@@ -52,7 +49,9 @@ If the `apiToken` is not provided, it will be read from the `DEEPINFRA_API_TOKEN
 To generate embeddings for a single text query, use the `embedQuery` method:
 
 ```typescript
-const embedding = await embeddings.embedQuery("What would be a good company name for a company that makes colorful socks?");
+const embedding = await embeddings.embedQuery(
+  "What would be a good company name for a company that makes colorful socks?"
+);
 console.log(embedding);
 ```
 
@@ -126,5 +125,3 @@ runExample();
 ## Feedback and Support
 
 For feedback or questions, please contact [feedback@deepinfra.com](mailto:feedback@deepinfra.com).
-
-
