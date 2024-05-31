@@ -25,6 +25,7 @@ export * as agents__toolkits__base from "../agents/toolkits/base.js";
 export * as agents__toolkits__connery from "../agents/toolkits/connery/index.js";
 export * as embeddings__alibaba_tongyi from "../embeddings/alibaba_tongyi.js";
 export * as embeddings__baidu_qianfan from "../embeddings/baidu_qianfan.js";
+export * as embeddings__deepinfra from "../embeddings/deepinfra.js";
 export * as embeddings__fireworks from "../embeddings/fireworks.js";
 export * as embeddings__minimax from "../embeddings/minimax.js";
 export * as embeddings__ollama from "../embeddings/ollama.js";
