@@ -710,7 +710,7 @@ export class PGVectorStore extends VectorStore {
     }
 
     const createIndexQuery = `CREATE INDEX IF NOT EXISTS ${
-      this.computedTableName
+      this.vectorColumnName
     }_embedding_idx
         ON ${this.computedTableName} USING hnsw ((${
       this.vectorColumnName
