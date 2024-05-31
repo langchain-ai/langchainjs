@@ -4,10 +4,11 @@ import {
 } from "@langchain/core/language_models/chat_models";
 import { BaseMessageChunk } from "@langchain/core/messages";
 
+export type RecordStringAny = Record<string, any>;
+
 export type BaseChatModelConstructor<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
   OutputMessageType extends BaseMessageChunk = BaseMessageChunk
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 > = new (...args: any[]) => BaseChatModel<CallOptions, OutputMessageType>;
 
 export type BaseChatModelsTestsFields<
@@ -17,6 +18,7 @@ export type BaseChatModelsTestsFields<
   Cls: BaseChatModelConstructor<CallOptions, OutputMessageType>;
   chatModelHasToolCalling: boolean;
   chatModelHasStructuredOutput: boolean;
+  constructorArgs: RecordStringAny;
 };
 
 export class BaseChatModelsTests<
@@ -30,11 +32,14 @@ export class BaseChatModelsTests<
 
   chatModelHasStructuredOutput: boolean;
 
+  constructorArgs: RecordStringAny;
+
   constructor(
     fields: BaseChatModelsTestsFields<CallOptions, OutputMessageType>
   ) {
     this.Cls = fields.Cls;
     this.chatModelHasToolCalling = fields.chatModelHasToolCalling;
     this.chatModelHasStructuredOutput = fields.chatModelHasStructuredOutput;
+    this.constructorArgs = fields.constructorArgs;
   }
 }

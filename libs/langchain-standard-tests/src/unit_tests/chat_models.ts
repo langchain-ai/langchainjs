@@ -3,14 +3,12 @@ import {
   BaseChatModelCallOptions,
   LangSmithParams,
 } from "@langchain/core/language_models/chat_models";
-import { BaseMessage, BaseMessageChunk } from "@langchain/core/messages";
+import { BaseMessageChunk } from "@langchain/core/messages";
 import { z } from "zod";
 import { StructuredTool } from "@langchain/core/tools";
-import { ChatResult } from "@langchain/core/outputs";
-import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { BaseChatModelsTests, BaseChatModelsTestsFields } from "../base.js";
 
-const person = z
+const person = /* #__PURE__ */ z
   .object({
     name: z.string().describe("Name of the person"),
     age: z.number().int().positive().describe("Age of the person"),
@@ -29,9 +27,6 @@ class PersonTool extends StructuredTool {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type RecordStringAny = Record<string, any>;
-
 export abstract class ChatModelUnitTests<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
   OutputMessageType extends BaseMessageChunk = BaseMessageChunk
@@ -41,8 +36,6 @@ export abstract class ChatModelUnitTests<
   ) {
     super(fields);
   }
-
-  abstract get constructorArgs(): RecordStringAny;
 
   testChatModelInit() {
     const chatModel = new this.Cls(this.constructorArgs);
@@ -74,7 +67,6 @@ export abstract class ChatModelUnitTests<
       return;
     }
     const chatModel = new this.Cls(this.constructorArgs);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((chatModel as any).withStructuredOutput?.(person)).toBeDefined();
   }
 
@@ -87,32 +79,9 @@ export abstract class ChatModelUnitTests<
       ls_max_tokens: 0,
       ls_stop: ["Array<string>"],
     };
-    class ModelExtendsChatModel extends this.Cls {
-      constructor(fields: RecordStringAny) {
-        super(fields);
-      }
+    const chatModel = new this.Cls(this.constructorArgs);
 
-      _llmType(): string {
-        throw new Error("Method not implemented.");
-      }
-
-      _generate(
-        _messages: BaseMessage[],
-        _options: this["ParsedCallOptions"],
-        _runManager?: CallbackManagerForLLMRun | undefined
-      ): Promise<ChatResult> {
-        throw new Error("Method not implemented.");
-      }
-
-      checkLsParams(options: this["ParsedCallOptions"]) {
-        const lsParams = this.getLsParams(options);
-        return lsParams;
-      }
-    }
-    const extendedModel = new ModelExtendsChatModel(this.constructorArgs);
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const lsParams = extendedModel.checkLsParams({} as any);
+    const lsParams = chatModel.getLsParams({} as any);
     expect(lsParams).toBeDefined();
     expect(Object.keys(lsParams).sort()).toEqual(
       Object.keys(expectedParams).sort()
@@ -123,55 +92,52 @@ export abstract class ChatModelUnitTests<
    * Run all unit tests for the chat model.
    * Each test is wrapped in a try/catch block to prevent the entire test suite from failing.
    * If a test fails, the error is logged to the console, and the test suite continues.
-   * @returns {void}
+   * @returns {boolean}
    */
-  runTests() {
+  runTests(): boolean {
+    let allTestsPassed = true;
     try {
       this.testChatModelInit();
-    } catch (e) {
-      console.error("'testChatModelInit' FAILED\n");
-      console.error(e);
-      console.error("\n");
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error("testChatModelInit failed", e);
     }
 
     try {
       this.testChatModelInitApiKey();
-    } catch (e) {
-      console.error("'testChatModelInitApiKey' FAILED\n");
-      console.error(e);
-      console.error("\n");
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error("testChatModelInitApiKey failed", e);
     }
 
     try {
       this.testChatModelInitStreaming();
-    } catch (e) {
-      console.error("'testChatModelInitStreaming' FAILED\n");
-      console.error(e);
-      console.error("\n");
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error("testChatModelInitStreaming failed", e);
     }
 
     try {
       this.testChatModelWithBindTools();
-    } catch (e) {
-      console.error("'testChatModelWithBindTools' FAILED\n");
-      console.error(e);
-      console.error("\n");
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error("testChatModelWithBindTools failed", e);
     }
 
     try {
       this.testChatModelWithStructuredOutput();
-    } catch (e) {
-      console.error("'testChatModelWithStructuredOutput' FAILED\n");
-      console.error(e);
-      console.error("\n");
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error("testChatModelWithStructuredOutput failed", e);
     }
 
     try {
       this.testStandardParams();
-    } catch (e) {
-      console.error("'testStandardParams' FAILED\n");
-      console.error(e);
-      console.error("\n");
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error("testStandardParams failed", e);
     }
+
+    return allTestsPassed;
   }
 }

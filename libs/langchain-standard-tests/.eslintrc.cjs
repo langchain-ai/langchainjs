@@ -29,6 +29,7 @@ module.exports = {
     "@typescript-eslint/no-empty-function": 0,
     "@typescript-eslint/no-shadow": 0,
     "@typescript-eslint/no-empty-interface": 0,
+    "@typescript-eslint/no-explicit-any": "warn",
     "@typescript-eslint/no-use-before-define": ["error", "nofunc"],
     "@typescript-eslint/no-unused-vars": ["warn", { args: "none" }],
     "@typescript-eslint/no-floating-promises": "error",
