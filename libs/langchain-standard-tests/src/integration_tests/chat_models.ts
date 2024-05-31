@@ -42,20 +42,24 @@ export abstract class ChatModelIntegrationTests<
     super(fields);
   }
 
-  async testInvoke() {
+  async testInvoke(
+    callOptions?: InstanceType<this["Cls"]>["ParsedCallOptions"]
+  ) {
     const chatModel = new this.Cls(this.constructorArgs);
-    const result = await chatModel.invoke("Hello");
+    const result = await chatModel.invoke("Hello", callOptions);
     expect(result).toBeDefined();
     expect(result).toBeInstanceOf(AIMessage);
     expect(typeof result.content).toBe("string");
     expect(result.content.length).toBeGreaterThan(0);
   }
 
-  async testStream() {
+  async testStream(
+    callOptions?: InstanceType<this["Cls"]>["ParsedCallOptions"]
+  ) {
     const chatModel = new this.Cls(this.constructorArgs);
     let numChars = 0;
 
-    for await (const token of await chatModel.stream("Hello")) {
+    for await (const token of await chatModel.stream("Hello", callOptions)) {
       expect(token).toBeDefined();
       expect(token).toBeInstanceOf(AIMessageChunk);
       expect(typeof token.content).toBe("string");
@@ -65,9 +69,11 @@ export abstract class ChatModelIntegrationTests<
     expect(numChars).toBeGreaterThan(0);
   }
 
-  async testBatch() {
+  async testBatch(
+    callOptions?: InstanceType<this["Cls"]>["ParsedCallOptions"]
+  ) {
     const chatModel = new this.Cls(this.constructorArgs);
-    const batchResults = await chatModel.batch(["Hello", "Hey"]);
+    const batchResults = await chatModel.batch(["Hello", "Hey"], callOptions);
     expect(batchResults).toBeDefined();
     expect(Array.isArray(batchResults)).toBe(true);
     expect(batchResults.length).toBe(2);
@@ -79,23 +85,27 @@ export abstract class ChatModelIntegrationTests<
     }
   }
 
-  async testConversation() {
+  async testConversation(
+    callOptions?: InstanceType<this["Cls"]>["ParsedCallOptions"]
+  ) {
     const chatModel = new this.Cls(this.constructorArgs);
     const messages = [
       new HumanMessage("hello"),
       new AIMessage("hello"),
       new HumanMessage("how are you"),
     ];
-    const result = await chatModel.invoke(messages);
+    const result = await chatModel.invoke(messages, callOptions);
     expect(result).toBeDefined();
     expect(result).toBeInstanceOf(AIMessage);
     expect(typeof result.content).toBe("string");
     expect(result.content.length).toBeGreaterThan(0);
   }
 
-  async testUsageMetadata() {
+  async testUsageMetadata(
+    callOptions?: InstanceType<this["Cls"]>["ParsedCallOptions"]
+  ) {
     const chatModel = new this.Cls(this.constructorArgs);
-    const result = await chatModel.invoke("Hello");
+    const result = await chatModel.invoke("Hello", callOptions);
     expect(result).toBeDefined();
     expect(result).toBeInstanceOf(AIMessage);
     if (!("usage_metadata" in result)) {
@@ -140,7 +150,9 @@ export abstract class ChatModelIntegrationTests<
    * (e.g. OpenAI).
    * @returns {Promise<void>}
    */
-  async testToolMessageHistoriesStringContent() {
+  async testToolMessageHistoriesStringContent(
+    callOptions?: InstanceType<this["Cls"]>["ParsedCallOptions"]
+  ) {
     if (!this.chatModelHasToolCalling) {
       console.log("Test requires tool calling. Skipping...");
       return;
@@ -177,7 +189,8 @@ export abstract class ChatModelIntegrationTests<
     ];
 
     const resultStringContent = await modelWithTools.invoke(
-      messagesStringContent
+      messagesStringContent,
+      callOptions
     );
     expect(resultStringContent).toBeInstanceOf(AIMessage);
   }
@@ -187,7 +200,9 @@ export abstract class ChatModelIntegrationTests<
    * (e.g. Anthropic).
    * @returns {Promise<void>}
    */
-  async testToolMessageHistoriesListContent() {
+  async testToolMessageHistoriesListContent(
+    callOptions?: InstanceType<this["Cls"]>["ParsedCallOptions"]
+  ) {
     if (!this.chatModelHasToolCalling) {
       console.log("Test requires tool calling. Skipping...");
       return;
@@ -231,7 +246,10 @@ export abstract class ChatModelIntegrationTests<
       new ToolMessage(functionResult, functionId, functionName),
     ];
 
-    const resultListContent = await modelWithTools.invoke(messagesListContent);
+    const resultListContent = await modelWithTools.invoke(
+      messagesListContent,
+      callOptions
+    );
     expect(resultListContent).toBeInstanceOf(AIMessage);
   }
 
@@ -239,7 +257,9 @@ export abstract class ChatModelIntegrationTests<
    * Test that model can process few-shot examples with tool calls.
    * @returns {Promise<void>}
    */
-  async testStructuredFewShotExamples() {
+  async testStructuredFewShotExamples(
+    callOptions?: InstanceType<this["Cls"]>["ParsedCallOptions"]
+  ) {
     if (!this.chatModelHasToolCalling) {
       console.log("Test requires tool calling. Skipping...");
       return;
@@ -275,7 +295,8 @@ export abstract class ChatModelIntegrationTests<
     ];
 
     const resultStringContent = await modelWithTools.invoke(
-      messagesStringContent
+      messagesStringContent,
+      callOptions
     );
     expect(resultStringContent).toBeInstanceOf(AIMessage);
   }
@@ -324,12 +345,6 @@ export abstract class ChatModelIntegrationTests<
     expect(resultStringContent.parsed.b).toBeDefined();
     expect([1, 2].includes(resultStringContent.parsed.b)).toBeTruthy();
   }
-
-  /**
-   * TODO:
-   * - Add withStructuredOutput tests
-   * - Add multi modal standard tests
-   */
 
   /**
    * Run all unit tests for the chat model.
