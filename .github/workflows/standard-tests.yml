@@ -1,14 +1,9 @@
 name: Standard Tests (Integration)
 
-# on:
-#   workflow_dispatch:
-#   schedule:
-#     - cron:  '0 13 * * *'
-
-# Tmp run in PR to confirm it works
 on:
-  pull_request:
   workflow_dispatch:
+  schedule:
+    - cron:  '0 13 * * *'
 
 jobs:
   openai:
