@@ -71,6 +71,7 @@ For example, OpenAI will return a message chunk at the end of a stream with toke
 
 :::info
 By default, the last message chunk in a stream will include a `finish_reason` in the message's `response_metadata` attribute. If we include token usage in streaming mode, an additional chunk containing usage metadata will be added to the end of the stream, such that `finish_reason` appears on the second to last message chunk.
+:::
 
 import OpenAIStreamTokens from "@examples/models/chat/integration_openai_stream_tokens.ts";
 
