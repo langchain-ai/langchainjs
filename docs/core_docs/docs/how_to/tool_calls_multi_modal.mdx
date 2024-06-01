@@ -1,0 +1,146 @@
+---
+title: How to call tools with multi-modal data
+---
+
+# How to call tools with multi-modal data
+
+:::info Prerequisites
+
+This guide assumes familiarity with the following concepts:
+
+- [Chat models](../../docs/concepts/#chat-models)
+- [LangChain Tools](../../docs/concepts/#tools)
+
+:::
+
+Here we demonstrate how to call tools with multi-modal data, such as
+images.
+
+Some multi-modal models, such as those that can reason over images or
+audio, support [tool calling](../../docs/concepts/#tool-calling)
+features as well.
+
+To call tools using such models, simply bind tools to them in the [usual
+way](../../docs/how_to/tool_calling), and invoke the model using content
+blocks of the desired type (e.g., containing image data).
+
+Below, we demonstrate examples using
+[OpenAI](../../docs/integrations/platforms/openai) and
+[Anthropic](../../docs/integrations/platforms/anthropic). We will use
+the same image and tool in all cases. Let’s first select an image, and
+build a placeholder tool that expects as input the string “sunny”,
+“cloudy”, or “rainy”. We will ask the models to describe the weather in
+the image.
+
+```typescript
+import { DynamicStructuredTool } from "@langchain/core/tools";
+import { z } from "zod";
+
+const imageUrl =
+  "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg";
+
+const weatherTool = new DynamicStructuredTool({
+  name: "multiply",
+  description: "Describe the weather",
+  schema: z.object({
+    weather: z.enum(["sunny", "cloudy", "rainy"]),
+  }),
+  func: async ({ weather }) => {
+    console.log(weather);
+    return weather;
+  },
+});
+```
+
+## OpenAI
+
+For OpenAI, we can feed the image URL directly in a content block of
+type “image_url”:
+
+```typescript
+import { HumanMessage } from "@langchain/core/messages";
+import { ChatOpenAI } from "@langchain/openai";
+
+const model = new ChatOpenAI({
+  model: "gpt-4o",
+}).bindTools([weatherTool]);
+
+const message = new HumanMessage({
+  content: [
+    {
+      type: "text",
+      text: "describe the weather in this image",
+    },
+    {
+      type: "image_url",
+      image_url: {
+        url: imageUrl,
+      },
+    },
+  ],
+});
+
+const response = await model.invoke([message]);
+
+console.log(response.tool_calls);
+```
+
+```text
+[
+  {
+    name: "multiply",
+    args: { weather: "sunny" },
+    id: "call_MbIAYS9ESBG1EWNM2sMlinjR"
+  }
+]
+```
+
+Note that we recover tool calls with parsed arguments in LangChain’s
+[standard format](../../docs/how_to/tool_calling) in the model response.
+
+## Anthropic
+
+For Anthropic, we can format a base64-encoded image into a content block
+of type “image”, as below:
+
+```typescript
+import * as fs from "node:fs/promises";
+
+import { ChatAnthropic } from "@langchain/anthropic";
+import { HumanMessage } from "@langchain/core/messages";
+
+const imageData = await fs.readFile("../../data/sunny_day.jpeg");
+
+const model = new ChatAnthropic({
+  model: "claude-3-sonnet-20240229",
+}).bindTools([weatherTool]);
+
+const message = new HumanMessage({
+  content: [
+    {
+      type: "text",
+      text: "describe the weather in this image",
+    },
+    {
+      type: "image_url",
+      image_url: {
+        url: `data:image/jpeg;base64,${imageData.toString("base64")}`,
+      },
+    },
+  ],
+});
+
+const response = await model.invoke([message]);
+
+console.log(response.tool_calls);
+```
+
+```text
+[
+  {
+    name: "multiply",
+    args: { weather: "sunny" },
+    id: "toolu_01KnRZWQkgWYSzL2x28crXFm"
+  }
+]
+```
