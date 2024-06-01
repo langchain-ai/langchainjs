@@ -222,6 +222,15 @@ export interface BaseBedrockInput {
 
   /** Whether or not to stream responses */
   streaming: boolean;
+
+  /** Enable tracing for bedrock. */
+  trace?: "ENABLED" | "DISABLED";
+
+  /** Identifier for the guardrail to apply. */
+  guardrailIdentifier?: string;
+
+  /** Version of the guardrail to apply. */
+  guardrailVersion?: string;
 }
 
 type Dict = { [key: string]: unknown };
@@ -244,7 +253,10 @@ export class BedrockLLMInputOutputAdapter {
     temperature = 0,
     stopSequences: string[] | undefined = undefined,
     modelKwargs: Record<string, unknown> = {},
-    bedrockMethod: "invoke" | "invoke-with-response-stream" = "invoke"
+    bedrockMethod: "invoke" | "invoke-with-response-stream" = "invoke",
+    trace?: "ENABLED" | "DISABLED",
+    guardrailIdentifier?: string,
+    guardrailVersion?: string
   ): Dict {
     const inputBody: Dict = {};
 
@@ -282,6 +294,17 @@ export class BedrockLLMInputOutputAdapter {
       inputBody.temperature = temperature;
       inputBody.stop = stopSequences;
     }
+    if (trace !== undefined) {
+      inputBody.trace = trace;
+    }
+  
+    if (guardrailIdentifier !== undefined) {
+      inputBody.guardrailIdentifier = guardrailIdentifier;
+    }
+  
+    if (guardrailVersion !== undefined) {
+      inputBody.guardrailVersion = guardrailVersion;
+    }
     return { ...inputBody, ...modelKwargs };
   }
 
@@ -291,7 +314,10 @@ export class BedrockLLMInputOutputAdapter {
     maxTokens = 1024,
     temperature = 0,
     stopSequences: string[] | undefined = undefined,
-    modelKwargs: Record<string, unknown> = {}
+    modelKwargs: Record<string, unknown> = {},
+    trace?: "ENABLED" | "DISABLED",
+    guardrailIdentifier?: string,
+    guardrailVersion?: string
   ): Dict {
     const inputBody: Dict = {};
 
@@ -306,6 +332,18 @@ export class BedrockLLMInputOutputAdapter {
       inputBody.max_tokens = maxTokens;
       inputBody.temperature = temperature;
       inputBody.stop_sequences = stopSequences;
+
+      if (trace !== undefined) {
+        inputBody.trace = trace;
+      }
+    
+      if (guardrailIdentifier !== undefined) {
+        inputBody.guardrailIdentifier = guardrailIdentifier;
+      }
+    
+      if (guardrailVersion !== undefined) {
+        inputBody.guardrailVersion = guardrailVersion;
+      }
       return { ...inputBody, ...modelKwargs };
     } else if (provider === "cohere") {
       const {

@@ -135,6 +135,12 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
 
   lc_serializable = true;
 
+  trace?: "ENABLED" | "DISABLED";
+
+  guardrailIdentifier?: string;
+
+  guardrailVersion?: string;
+
   get lc_aliases(): Record<string, string> {
     return {
       model: "model_id",
@@ -209,6 +215,9 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
     this.modelKwargs = fields?.modelKwargs;
     this.streaming = fields?.streaming ?? this.streaming;
     this.usesMessagesApi = canUseMessagesApi(this.model);
+    this.trace = fields?.trace;
+    this.guardrailIdentifier = fields?.guardrailIdentifier;
+    this.guardrailVersion = fields?.guardrailVersion;
   }
 
   async _generate(
@@ -280,22 +289,28 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
     const { bedrockMethod, endpointHost, provider } = fields;
     const inputBody = this.usesMessagesApi
       ? BedrockLLMInputOutputAdapter.prepareMessagesInput(
-          provider,
-          messages,
-          this.maxTokens,
-          this.temperature,
-          options.stop ?? this.stopSequences,
-          this.modelKwargs
-        )
-      : BedrockLLMInputOutputAdapter.prepareInput(
-          provider,
-          convertMessagesToPromptAnthropic(messages),
-          this.maxTokens,
-          this.temperature,
-          options.stop ?? this.stopSequences,
-          this.modelKwargs,
-          fields.bedrockMethod
-        );
+        provider,
+        messages,
+        this.maxTokens,
+        this.temperature,
+        options.stop ?? this.stopSequences,
+        this.modelKwargs,
+        this.trace,
+        this.guardrailIdentifier,
+        this.guardrailVersion
+      )
+    : BedrockLLMInputOutputAdapter.prepareInput(
+        provider,
+        convertMessagesToPromptAnthropic(messages),
+        this.maxTokens,
+        this.temperature,
+        options.stop ?? this.stopSequences,
+        this.modelKwargs,
+        fields.bedrockMethod,
+        this.trace,
+        this.guardrailIdentifier,
+        this.guardrailVersion
+      );
 
     const url = new URL(
       `https://${endpointHost}/model/${this.model}/${bedrockMethod}`
