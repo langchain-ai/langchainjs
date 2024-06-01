@@ -1,5 +1,6 @@
-import { AIMessageChunk } from "@langchain/core/messages";
+import type { AIMessageChunk } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
+import { concat } from "@langchain/core/utils/stream";
 
 // Instantiate the model
 const model = new ChatOpenAI();
@@ -15,7 +16,7 @@ const response = await model.stream("Hello, how are you?", {
 let finalResult: AIMessageChunk | undefined;
 for await (const chunk of response) {
   if (finalResult) {
-    finalResult = finalResult.concat(chunk);
+    finalResult = concat(finalResult, chunk);
   } else {
     finalResult = chunk;
   }
@@ -24,7 +25,5 @@ for await (const chunk of response) {
 console.log(finalResult?.usage_metadata);
 
 /*
-
-{ input_tokens: 13, output_tokens: 30, total_tokens: 43 }
-
+  { input_tokens: 13, output_tokens: 30, total_tokens: 43 }
 */
