@@ -25,13 +25,13 @@ class ChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
   }
 
   async testToolMessageHistoriesListContent() {
-    console.log(
+    console.warn(
       "ChatOpenAI testToolMessageHistoriesListContent test known failure. Skipping..."
     );
   }
 
   async testUsageMetadata() {
-    console.log(
+    console.warn(
       "ChatOpenAI does not currently support usage metadata on `.invoke` calls. Skipping..."
     );
   }

@@ -6,7 +6,7 @@ import {
 import { BaseMessageChunk } from "@langchain/core/messages";
 import { z } from "zod";
 import { StructuredTool } from "@langchain/core/tools";
-import { BaseChatModelsTests, BaseChatModelsTestsFields } from "../base.js";
+import { BaseChatModelsTests, BaseChatModelsTestsFields, RecordStringAny } from "../base.js";
 
 const person = /* #__PURE__ */ z
   .object({
@@ -34,7 +34,20 @@ export abstract class ChatModelUnitTests<
   constructor(
     fields: BaseChatModelsTestsFields<CallOptions, OutputMessageType>
   ) {
-    super(fields);
+    const standardChatModelParams: RecordStringAny = {
+      temperature: 0,
+      maxTokens: 100,
+      timeout: 60,
+      stopSequences: [],
+      maxRetries: 2,
+    }
+    super({
+      ...fields,
+      constructorArgs: {
+        ...standardChatModelParams,
+        ...fields.constructorArgs,
+      },
+    });
   }
 
   testChatModelInit() {
