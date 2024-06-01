@@ -769,6 +769,7 @@ export class ChatAnthropicMessages<
       content,
       additionalKwargs
     );
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { role: _role, type: _type, ...rest } = additionalKwargs;
     return { generations, llmOutput: rest };
   }

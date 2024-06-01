@@ -760,9 +760,6 @@ export class ChatOpenAI<
           ...(part.finish_reason ? { finish_reason: part.finish_reason } : {}),
           ...(part.logprobs ? { logprobs: part.logprobs } : {}),
         };
-        generation.message.response_metadata = {
-          ...generation.generationInfo,
-        };
         if (isAIMessage(generation.message)) {
           generation.message.usage_metadata = {
             input_tokens: tokenUsage.promptTokens ?? 0,
