@@ -9124,7 +9124,7 @@ __metadata:
     "@tensorflow/tfjs-converter": ^3.6.0
     "@tensorflow/tfjs-core": ^3.6.0
     "@tsconfig/recommended": ^1.0.2
-    "@types/better-sqlite3": ^7.6.9
+    "@types/better-sqlite3": ^7.6.10
     "@types/crypto-js": ^4.2.2
     "@types/flat": ^5.0.2
     "@types/html-to-text": ^9
@@ -9150,7 +9150,7 @@ __metadata:
     "@zilliz/milvus2-sdk-node": ">=2.2.11"
     apify-client: ^2.7.1
     assemblyai: ^4.0.0
-    better-sqlite3: ^9.4.0
+    better-sqlite3: ^11.0.0
     binary-extensions: ^2.2.0
     cassandra-driver: ^4.7.2
     cborg: ^4.1.1
@@ -9298,7 +9298,7 @@ __metadata:
     "@zilliz/milvus2-sdk-node": ">=2.2.7"
     apify-client: ^2.7.1
     assemblyai: ^4.0.0
-    better-sqlite3: ^9.4.0
+    better-sqlite3: ^11.0.0
     cassandra-driver: ^4.7.2
     cborg: ^4.1.1
     cheerio: ^1.0.0-rc.12
@@ -14516,12 +14516,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/better-sqlite3@npm:^7.6.9":
-  version: 7.6.9
-  resolution: "@types/better-sqlite3@npm:7.6.9"
+"@types/better-sqlite3@npm:^7.6.10":
+  version: 7.6.10
+  resolution: "@types/better-sqlite3@npm:7.6.10"
   dependencies:
     "@types/node": "*"
-  checksum: 6572076639dde1e65ad8fe0e319e797fa40793ca805ec39aa1d072d3f145f218775eafd27d7266fb4e42a6291d8b8b836278e7880b15ef728c750dfcbba2ee52
+  checksum: 1e3c743f9bf23233ee6a51df4bbe8e9ba3d90c03e70b9ffe96e8c97174405c90a9672ec215c4d9c192ae7b7928bd0c0c83828f54d55ca55ea2642443c4cee422
   languageName: node
   linkType: hard
 
@@ -17580,14 +17580,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"better-sqlite3@npm:^9.4.0":
-  version: 9.4.0
-  resolution: "better-sqlite3@npm:9.4.0"
+"better-sqlite3@npm:^11.0.0":
+  version: 11.0.0
+  resolution: "better-sqlite3@npm:11.0.0"
   dependencies:
     bindings: ^1.5.0
     node-gyp: latest
     prebuild-install: ^7.1.1
-  checksum: a1a470fae20dfba82d6e74ae90b35ea8996c60922e95574162732d6e076e84c0c90fc4ff77ab8c27554671899eb15f284e2c8de5e4ee406aa9f7eb170eca5bee
+  checksum: 7bf02ea6ba3253f53cb36bd872f86379ebf1a66cb103d39b91c610995c4396dde2b976bdf866f07eb7d67eb6f5433aa5490a6a4f4264244f83a53562f68832dc
   languageName: node
   linkType: hard
 
