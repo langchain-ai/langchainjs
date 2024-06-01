@@ -101,11 +101,25 @@ function anthropicResponseToChatMessages(
   messages: AnthropicMessageResponse[],
   additionalKwargs: Record<string, unknown>
 ): ChatGeneration[] {
+  const usage: Record<string, number> | null | undefined =
+    additionalKwargs.usage as Record<string, number> | null | undefined;
+  const usageMetadata =
+    usage != null
+      ? {
+          input_tokens: usage.input_tokens ?? 0,
+          output_tokens: usage.output_tokens ?? 0,
+          total_tokens: (usage.input_tokens ?? 0) + (usage.output_tokens ?? 0),
+        }
+      : undefined;
   if (messages.length === 1 && messages[0].type === "text") {
     return [
       {
         text: messages[0].text,
-        message: new AIMessage(messages[0].text, additionalKwargs),
+        message: new AIMessage({
+          content: messages[0].text,
+          additional_kwargs: additionalKwargs,
+          usage_metadata: usageMetadata,
+        }),
       },
     ];
   } else {
@@ -118,6 +132,7 @@ function anthropicResponseToChatMessages(
           content: messages as any,
           additional_kwargs: additionalKwargs,
           tool_calls: toolCalls,
+          usage_metadata: usageMetadata,
         }),
       },
     ];
