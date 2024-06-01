@@ -6,7 +6,11 @@ import {
 import { BaseMessageChunk } from "@langchain/core/messages";
 import { z } from "zod";
 import { StructuredTool } from "@langchain/core/tools";
-import { BaseChatModelsTests, BaseChatModelsTestsFields, RecordStringAny } from "../base.js";
+import {
+  BaseChatModelsTests,
+  BaseChatModelsTestsFields,
+  RecordStringAny,
+} from "../base.js";
 
 const person = /* #__PURE__ */ z
   .object({
@@ -40,7 +44,7 @@ export abstract class ChatModelUnitTests<
       timeout: 60,
       stopSequences: [],
       maxRetries: 2,
-    }
+    };
     super({
       ...fields,
       constructorArgs: {

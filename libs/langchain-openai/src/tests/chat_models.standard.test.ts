@@ -16,7 +16,7 @@ class ChatOpenAIStandardUnitTests extends ChatModelUnitTests<
       constructorArgs: {},
     });
     // This must be set so method like `.bindTools` or `.withStructuredOutput`
-    // which we call after instantiating the model will work. 
+    // which we call after instantiating the model will work.
     // (constructor will throw if API key is not set)
     process.env.OPENAI_API_KEY = "test";
   }
