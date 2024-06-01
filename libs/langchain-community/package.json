@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -112,6 +112,7 @@
     "@tensorflow/tfjs-core": "^3.6.0",
     "@tsconfig/recommended": "^1.0.2",
     "@types/better-sqlite3": "^7.6.9",
+    "@types/crypto-js": "^4.2.2",
     "@types/flat": "^5.0.2",
     "@types/html-to-text": "^9",
     "@types/jsdom": "^21.1.1",
@@ -147,6 +148,7 @@
     "cohere-ai": ">=6.0.0",
     "convex": "^1.3.1",
     "couchbase": "^4.3.0",
+    "crypto-js": "^4.2.0",
     "d3-dsv": "^2.0.0",
     "datastore-core": "^9.2.9",
     "discord.js": "^14.14.1",
@@ -286,6 +288,7 @@
     "cohere-ai": "*",
     "convex": "^1.3.1",
     "couchbase": "^4.3.0",
+    "crypto-js": "^4.2.0",
     "d3-dsv": "^2.0.0",
     "discord.js": "^14.14.1",
     "dria": "^0.0.3",
@@ -547,6 +550,9 @@
       "optional": true
     },
     "couchbase": {
+      "optional": true
+    },
+    "crypto-js": {
       "optional": true
     },
     "d3-dsv": {
@@ -1022,6 +1028,15 @@
       "import": "./embeddings/cohere.js",
       "require": "./embeddings/cohere.cjs"
     },
+    "./embeddings/deepinfra": {
+      "types": {
+        "import": "./embeddings/deepinfra.d.ts",
+        "require": "./embeddings/deepinfra.d.cts",
+        "default": "./embeddings/deepinfra.d.ts"
+      },
+      "import": "./embeddings/deepinfra.js",
+      "require": "./embeddings/deepinfra.cjs"
+    },
     "./embeddings/fireworks": {
       "types": {
         "import": "./embeddings/fireworks.d.ts",
@@ -1120,6 +1135,24 @@
       },
       "import": "./embeddings/tensorflow.js",
       "require": "./embeddings/tensorflow.cjs"
+    },
+    "./embeddings/tencent_hunyuan": {
+      "types": {
+        "import": "./embeddings/tencent_hunyuan.d.ts",
+        "require": "./embeddings/tencent_hunyuan.d.cts",
+        "default": "./embeddings/tencent_hunyuan.d.ts"
+      },
+      "import": "./embeddings/tencent_hunyuan.js",
+      "require": "./embeddings/tencent_hunyuan.cjs"
+    },
+    "./embeddings/tencent_hunyuan/web": {
+      "types": {
+        "import": "./embeddings/tencent_hunyuan/web.d.ts",
+        "require": "./embeddings/tencent_hunyuan/web.d.cts",
+        "default": "./embeddings/tencent_hunyuan/web.d.ts"
+      },
+      "import": "./embeddings/tencent_hunyuan/web.js",
+      "require": "./embeddings/tencent_hunyuan/web.cjs"
     },
     "./embeddings/togetherai": {
       "types": {
@@ -1939,6 +1972,24 @@
       },
       "import": "./chat_models/premai.js",
       "require": "./chat_models/premai.cjs"
+    },
+    "./chat_models/tencent_hunyuan": {
+      "types": {
+        "import": "./chat_models/tencent_hunyuan.d.ts",
+        "require": "./chat_models/tencent_hunyuan.d.cts",
+        "default": "./chat_models/tencent_hunyuan.d.ts"
+      },
+      "import": "./chat_models/tencent_hunyuan.js",
+      "require": "./chat_models/tencent_hunyuan.cjs"
+    },
+    "./chat_models/tencent_hunyuan/web": {
+      "types": {
+        "import": "./chat_models/tencent_hunyuan/web.d.ts",
+        "require": "./chat_models/tencent_hunyuan/web.d.cts",
+        "default": "./chat_models/tencent_hunyuan/web.d.ts"
+      },
+      "import": "./chat_models/tencent_hunyuan/web.js",
+      "require": "./chat_models/tencent_hunyuan/web.cjs"
     },
     "./chat_models/togetherai": {
       "types": {
@@ -3096,6 +3147,10 @@
     "embeddings/cohere.js",
     "embeddings/cohere.d.ts",
     "embeddings/cohere.d.cts",
+    "embeddings/deepinfra.cjs",
+    "embeddings/deepinfra.js",
+    "embeddings/deepinfra.d.ts",
+    "embeddings/deepinfra.d.cts",
     "embeddings/fireworks.cjs",
     "embeddings/fireworks.js",
     "embeddings/fireworks.d.ts",
@@ -3140,6 +3195,14 @@
     "embeddings/tensorflow.js",
     "embeddings/tensorflow.d.ts",
     "embeddings/tensorflow.d.cts",
+    "embeddings/tencent_hunyuan.cjs",
+    "embeddings/tencent_hunyuan.js",
+    "embeddings/tencent_hunyuan.d.ts",
+    "embeddings/tencent_hunyuan.d.cts",
+    "embeddings/tencent_hunyuan/web.cjs",
+    "embeddings/tencent_hunyuan/web.js",
+    "embeddings/tencent_hunyuan/web.d.ts",
+    "embeddings/tencent_hunyuan/web.d.cts",
     "embeddings/togetherai.cjs",
     "embeddings/togetherai.js",
     "embeddings/togetherai.d.ts",
@@ -3504,6 +3567,14 @@
     "chat_models/premai.js",
     "chat_models/premai.d.ts",
     "chat_models/premai.d.cts",
+    "chat_models/tencent_hunyuan.cjs",
+    "chat_models/tencent_hunyuan.js",
+    "chat_models/tencent_hunyuan.d.ts",
+    "chat_models/tencent_hunyuan.d.cts",
+    "chat_models/tencent_hunyuan/web.cjs",
+    "chat_models/tencent_hunyuan/web.js",
+    "chat_models/tencent_hunyuan/web.d.ts",
+    "chat_models/tencent_hunyuan/web.d.cts",
     "chat_models/togetherai.cjs",
     "chat_models/togetherai.js",
     "chat_models/togetherai.d.ts",
