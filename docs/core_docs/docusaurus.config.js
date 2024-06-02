@@ -309,6 +309,13 @@ const config = {
         indexName: "js-langchain-0.2",
 
         contextualSearch: false,
+        
+        searchParameters: {
+          optionalFilters: [
+            "hierarchy.lvl1:Conceptual guide",
+            "hierarchy.lvl0:Documentation",
+          ]
+        }
       },
     }),
 
