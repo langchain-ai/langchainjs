@@ -30,12 +30,6 @@ class ChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
     );
   }
 
-  async testUsageMetadata() {
-    console.warn(
-      "ChatOpenAI does not currently support usage metadata on `.invoke` calls. Skipping..."
-    );
-  }
-
   async testUsageMetadataStreaming() {
     // ChatOpenAI does not support streaming tokens by
     // default, so we must pass in a call option to
