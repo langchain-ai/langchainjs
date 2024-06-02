@@ -26,14 +26,21 @@ void testChatModel(
   "Who is more popular: Nsync or Backstreet Boys?",
   {
     search_queries_only: true,
-  }
+  },
+  "ENABLED",
+  "guardrail-id",
+  "DRAFT"
 );
 
 void testChatModel(
   "Test Bedrock chat model: Command-r",
   "us-east-1",
   "cohere.command-r-v1:0",
-  "What is your name?"
+  "What is your name?",
+  {},
+  "DISABLED",
+  "guardrail-id",
+  "DRAFT"
 );
 
 void testChatModel(
@@ -49,14 +56,21 @@ void testChatModel(
         snippet: "Emperor penguins only live in Antarctica.",
       },
     ],
-  }
+  },
+  "ENABLED",
+  "guardrail-id",
+  "1.0"
 );
 
 void testChatStreamingModel(
   "Test Bedrock chat model streaming: Command-r",
   "us-east-1",
   "cohere.command-r-v1:0",
-  "What is your name and something about yourself?"
+  "What is your name and something about yourself?",
+  {},
+  "DISABLED",
+  "guardrail-id",
+  "1.0"
 );
 
 void testChatStreamingModel(
@@ -72,56 +86,84 @@ void testChatStreamingModel(
         snippet: "Emperor penguins only live in Antarctica.",
       },
     ],
-  }
+  },
+  "ENABLED",
+  "guardrail-id",
+  "2.0"
 );
 
 void testChatHandleLLMNewToken(
   "Test Bedrock chat model HandleLLMNewToken: Command-r",
   "us-east-1",
   "cohere.command-r-v1:0",
-  "What is your name and something about yourself?"
+  "What is your name and something about yourself?",
+  "DISABLED",
+  "guardrail-id",
+  "2.0"
 );
 
 void testChatModel(
   "Test Bedrock chat model: Mistral-7b-instruct",
   "us-east-1",
   "mistral.mistral-7b-instruct-v0:2",
-  "What is your name?"
+  "What is your name?",
+  {},
+  "ENABLED",
+  "guardrail-id",
+  "1.0"
 );
 
 void testChatStreamingModel(
   "Test Bedrock chat model streaming: Mistral-7b-instruct",
   "us-east-1",
   "mistral.mistral-7b-instruct-v0:2",
-  "What is your name and something about yourself?"
+  "What is your name and something about yourself?",
+  {},
+  "DISABLED",
+  "guardrail-id",
+  "1.0"
 );
 
 void testChatHandleLLMNewToken(
   "Test Bedrock chat model HandleLLMNewToken: Mistral-7b-instruct",
   "us-east-1",
   "mistral.mistral-7b-instruct-v0:2",
-  "What is your name and something about yourself?"
+  "What is your name and something about yourself?",
+  "ENABLED",
+  "guardrail-id",
+  "2.0"
 );
 
 void testChatModel(
   "Test Bedrock chat model: Claude-3",
   "us-east-1",
   "anthropic.claude-3-sonnet-20240229-v1:0",
-  "What is your name?"
+  "What is your name?",
+  {},
+  "DISABLED",
+  "guardrail-id",
+  "1.0"
 );
 
 void testChatStreamingModel(
   "Test Bedrock chat model streaming: Claude-3",
   "us-east-1",
   "anthropic.claude-3-sonnet-20240229-v1:0",
-  "What is your name and something about yourself?"
+  "What is your name and something about yourself?",
+  {},
+  "ENABLED",
+  "guardrail-id",
+  "2.0"
 );
 
 void testChatHandleLLMNewToken(
   "Test Bedrock chat model HandleLLMNewToken: Claude-3",
   "us-east-1",
   "anthropic.claude-3-sonnet-20240229-v1:0",
-  "What is your name and something about yourself?"
+  "What is your name and something about yourself?",
+  "DISABLED",
+  "guardrail-id",
+  "DRAFT"
 );
 
 // void testChatHandleLLMNewToken(
@@ -143,7 +185,10 @@ async function testChatModel(
   defaultRegion: string,
   model: string,
   message: string,
-  modelKwargs?: Record<string, unknown>
+  modelKwargs?: Record<string, unknown>,
+  trace?: "ENABLED" | "DISABLED",
+  guardrailIdentifier?: string,
+  guardrailVersion?: string
 ) {
   test(title, async () => {
     const region = process.env.BEDROCK_AWS_REGION ?? defaultRegion;
@@ -156,15 +201,24 @@ async function testChatModel(
       credentials: {
         secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
         accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
-        sessionToken: process.env.BEDROCK_AWS_SESSION_TOKEN,
+        // sessionToken: process.env.BEDROCK_AWS_SESSION_TOKEN,
       },
       modelKwargs,
+      trace,
+      guardrailIdentifier,
+      guardrailVersion,
     });
 
     const res = await bedrock.invoke([new HumanMessage(message)]);
     console.log(res);
+
+    expect(res).toBeDefined();
+    expect(bedrock.trace).toBe(trace);
+    expect(bedrock.guardrailIdentifier).toBe(guardrailIdentifier);
+    expect(bedrock.guardrailVersion).toBe(guardrailVersion);
   });
 }
+
 /**
  * Tests a BedrockChat model with a streaming response
  * @param title The name of the test to run
@@ -177,7 +231,10 @@ async function testChatStreamingModel(
   defaultRegion: string,
   model: string,
   message: string,
-  modelKwargs?: Record<string, unknown>
+  modelKwargs?: Record<string, unknown>,
+  trace?: "ENABLED" | "DISABLED",
+  guardrailIdentifier?: string,
+  guardrailVersion?: string
 ) {
   test(title, async () => {
     const region = process.env.BEDROCK_AWS_REGION ?? defaultRegion;
@@ -190,9 +247,12 @@ async function testChatStreamingModel(
       credentials: {
         secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
         accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
-        sessionToken: process.env.BEDROCK_AWS_SESSION_TOKEN,
+        // sessionToken: process.env.BEDROCK_AWS_SESSION_TOKEN,
       },
       modelKwargs,
+      trace,
+      guardrailIdentifier,
+      guardrailVersion,
     });
 
     const stream = await bedrock.stream([
@@ -208,6 +268,7 @@ async function testChatStreamingModel(
     expect(chunks.length).toBeGreaterThan(1);
   });
 }
+
 /**
  * Tests a BedrockChat model with a streaming response using a new token callback
  * @param title The name of the test to run
@@ -219,7 +280,10 @@ async function testChatHandleLLMNewToken(
   title: string,
   defaultRegion: string,
   model: string,
-  message: string
+  message: string,
+  trace?: "ENABLED" | "DISABLED",
+  guardrailIdentifier?: string,
+  guardrailVersion?: string
 ) {
   test(title, async () => {
     const region = process.env.BEDROCK_AWS_REGION ?? defaultRegion;
@@ -233,7 +297,7 @@ async function testChatHandleLLMNewToken(
       credentials: {
         secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
         accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
-        sessionToken: process.env.BEDROCK_AWS_SESSION_TOKEN,
+        // sessionToken: process.env.BEDROCK_AWS_SESSION_TOKEN,
       },
       streaming: true,
       callbacks: [
@@ -246,6 +310,9 @@ async function testChatHandleLLMNewToken(
           },
         },
       ],
+      trace,
+      guardrailIdentifier,
+      guardrailVersion,
     });
     const stream = await bedrock.invoke([new HumanMessage(message)]);
     expect(tokens.length).toBeGreaterThan(1);
@@ -269,7 +336,7 @@ test.skip.each([
     credentials: {
       secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
       accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
-      sessionToken: process.env.BEDROCK_AWS_SESSION_TOKEN,
+      // sessionToken: process.env.BEDROCK_AWS_SESSION_TOKEN,
     },
   });
 
