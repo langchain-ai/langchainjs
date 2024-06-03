@@ -17,7 +17,7 @@ function createQueue() {
 
 /**
  * Consume a promise, either adding it to the queue or waiting for it to resolve
- * @param promise Promise to consume
+ * @param promiseFn Promise to consume
  * @param wait Whether to wait for the promise to resolve or resolve immediately
  */
 export async function consumeCallback<T>(
