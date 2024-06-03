@@ -9,19 +9,24 @@ import {
   type BaseChatModelParams,
   BaseChatModel,
   LangSmithParams,
+  BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
+import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
+import { Runnable } from "@langchain/core/runnables";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   AIMessageChunk,
   BaseMessage,
   AIMessage,
   ChatMessage,
+  BaseMessageChunk,
 } from "@langchain/core/messages";
 import {
   ChatGeneration,
   ChatGenerationChunk,
   ChatResult,
 } from "@langchain/core/outputs";
+import { StructuredToolInterface } from "@langchain/core/tools";
 
 import {
   BaseBedrockInput,
@@ -225,6 +230,9 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
     streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS";
   };
 
+
+  tools: (StructuredToolInterface | Record<string, unknown>)[] = [];
+
   get lc_aliases(): Record<string, string> {
     return {
       model: "model_id",
@@ -393,7 +401,8 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
           this.temperature,
           options.stop ?? this.stopSequences,
           this.modelKwargs,
-          this.guardrailConfig
+          this.guardrailConfig,
+          this.tools,
         )
       : BedrockLLMInputOutputAdapter.prepareInput(
           provider,
@@ -601,6 +610,18 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
 
   _combineLLMOutput() {
     return {};
+  }
+
+  bindTools(
+    tools: (StructuredToolInterface | Record<string, unknown>)[],
+    kwargs?: Partial<BaseChatModelCallOptions>
+  ): Runnable<
+    BaseLanguageModelInput,
+    BaseMessageChunk,
+    BaseChatModelCallOptions
+  > {
+    this.tools = tools;
+    return this;
   }
 }
 
