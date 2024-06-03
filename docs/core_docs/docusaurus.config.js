@@ -311,9 +311,7 @@ const config = {
         contextualSearch: false,
 
         searchParameters: {
-          optionalFilters: [
-            "hierarchy.lvl0:Documentation",
-          ],
+          optionalFilters: ["hierarchy.lvl0:Documentation"],
         },
       },
     }),
