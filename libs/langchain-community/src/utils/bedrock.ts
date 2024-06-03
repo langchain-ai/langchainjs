@@ -223,14 +223,17 @@ export interface BaseBedrockInput {
   /** Whether or not to stream responses */
   streaming: boolean;
 
-  /** Enable tracing for bedrock. */
+  /** Trace settings for the Bedrock Guardrails. */
   trace?: "ENABLED" | "DISABLED";
 
-  /** Identifier for the guardrail to apply. */
+  /** Identifier for the guardrail configuration. */
   guardrailIdentifier?: string;
 
-  /** Version of the guardrail to apply. */
+  /** Version for the guardrail configuration. */
   guardrailVersion?: string;
+
+  /** Required when Guardrail is in use. */
+  guardrailConfig?: { tagSuffix: string; streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS" };
 }
 
 type Dict = { [key: string]: unknown };
@@ -254,9 +257,7 @@ export class BedrockLLMInputOutputAdapter {
     stopSequences: string[] | undefined = undefined,
     modelKwargs: Record<string, unknown> = {},
     bedrockMethod: "invoke" | "invoke-with-response-stream" = "invoke",
-    trace?: "ENABLED" | "DISABLED",
-    guardrailIdentifier?: string,
-    guardrailVersion?: string
+    guardrailConfig?: { tagSuffix: string, streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS" },
   ): Dict {
     const inputBody: Dict = {};
 
@@ -294,17 +295,11 @@ export class BedrockLLMInputOutputAdapter {
       inputBody.temperature = temperature;
       inputBody.stop = stopSequences;
     }
-    if (trace !== undefined) {
-      inputBody.trace = trace;
-    }
-  
-    if (guardrailIdentifier !== undefined) {
-      inputBody.guardrailIdentifier = guardrailIdentifier;
-    }
-  
-    if (guardrailVersion !== undefined) {
-      inputBody.guardrailVersion = guardrailVersion;
-    }
+
+    if (guardrailConfig && guardrailConfig.tagSuffix && guardrailConfig.streamProcessingMode) {
+      inputBody["amazon-bedrock-guardrailConfig"] = guardrailConfig;
+  }
+
     return { ...inputBody, ...modelKwargs };
   }
 
@@ -315,9 +310,7 @@ export class BedrockLLMInputOutputAdapter {
     temperature = 0,
     stopSequences: string[] | undefined = undefined,
     modelKwargs: Record<string, unknown> = {},
-    trace?: "ENABLED" | "DISABLED",
-    guardrailIdentifier?: string,
-    guardrailVersion?: string
+    guardrailConfig?: { tagSuffix: string, streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS" }
   ): Dict {
     const inputBody: Dict = {};
 
@@ -332,19 +325,6 @@ export class BedrockLLMInputOutputAdapter {
       inputBody.max_tokens = maxTokens;
       inputBody.temperature = temperature;
       inputBody.stop_sequences = stopSequences;
-
-      if (trace !== undefined) {
-        inputBody.trace = trace;
-      }
-    
-      if (guardrailIdentifier !== undefined) {
-        inputBody.guardrailIdentifier = guardrailIdentifier;
-      }
-    
-      if (guardrailVersion !== undefined) {
-        inputBody.guardrailVersion = guardrailVersion;
-      }
-      return { ...inputBody, ...modelKwargs };
     } else if (provider === "cohere") {
       const {
         system,
@@ -360,12 +340,17 @@ export class BedrockLLMInputOutputAdapter {
       inputBody.max_tokens = maxTokens;
       inputBody.temperature = temperature;
       inputBody.stop_sequences = stopSequences;
-      return { ...inputBody, ...modelKwargs };
     } else {
       throw new Error(
         "The messages API is currently only supported by Anthropic or Cohere"
       );
     }
+
+    if (guardrailConfig && guardrailConfig.tagSuffix && guardrailConfig.streamProcessingMode) {
+      inputBody["amazon-bedrock-guardrailConfig"] = guardrailConfig;
+  }
+
+    return { ...inputBody, ...modelKwargs };
   }
 
   /**

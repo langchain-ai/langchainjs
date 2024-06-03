@@ -89,6 +89,10 @@ export function convertMessagesToPrompt(
   throw new Error(`Provider ${provider} does not support chat.`);
 }
 
+interface BedrockCallOptions extends Partial<BaseChatModelParams> {
+  signal?: AbortSignal;
+}
+
 /**
  * A type of Large Language Model (LLM) that interacts with the Bedrock
  * service. It extends the base `LLM` class and implements the
@@ -97,14 +101,92 @@ export function convertMessagesToPrompt(
  * Services (AWS). It uses AWS credentials for authentication and can be
  * configured with various parameters such as the model to use, the AWS
  * region, and the maximum number of tokens to generate.
+ *
+ * The `BedrockChat` class supports both synchronous and asynchronous interactions with the model,
+ * allowing for streaming responses and handling new token callbacks. It can be configured with 
+ * optional parameters like temperature, stop sequences, and guardrail settings for enhanced control 
+ * over the generated responses.
+ *
  * @example
  * ```typescript
- * const model = new BedrockChat({
- *   model: "anthropic.claude-v2",
- *   region: "us-east-1",
- * });
- * const res = await model.invoke([{ content: "Tell me a joke" }]);
- * console.log(res);
+ * import { BedrockChat } from 'path-to-your-bedrock-chat-module';
+ * import { HumanMessage } from '@langchain/core/messages';
+ *
+ * async function run() {
+ *   // Instantiate the BedrockChat model with the desired configuration
+ *   const model = new BedrockChat({
+ *     model: "anthropic.claude-v2",
+ *     region: "us-east-1",
+ *     credentials: {
+ *       accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
+ *       secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
+ *     },
+ *     maxTokens: 150,
+ *     temperature: 0.7,
+ *     stopSequences: ["\n", " Human:", " Assistant:"],
+ *     streaming: false,
+ *     trace: "ENABLED",
+ *     guardrailIdentifier: "your-guardrail-id",
+ *     guardrailVersion: "1.0",
+ *     guardrailConfig: {
+ *       tagSuffix: "example",
+ *       streamProcessingMode: "SYNCHRONOUS",
+ *     },
+ *   });
+ *
+ *   // Prepare the message to be sent to the model
+ *   const message = new HumanMessage("Tell me a joke");
+ *
+ *   // Invoke the model with the message
+ *   const res = await model.invoke([message]);
+ *
+ *   // Output the response from the model
+ *   console.log(res);
+ * }
+ *
+ * run().catch(console.error);
+ * ```
+ *
+ * For streaming responses, use the following example:
+ * @example
+ * ```typescript
+ * import { BedrockChat } from 'path-to-your-bedrock-chat-module';
+ * import { HumanMessage } from '@langchain/core/messages';
+ *
+ * async function runStreaming() {
+ *   // Instantiate the BedrockChat model with the desired configuration
+ *   const model = new BedrockChat({
+ *     model: "anthropic.claude-3-sonnet-20240229-v1:0",
+ *     region: "us-east-1",
+ *     credentials: {
+ *       accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
+ *       secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
+ *     },
+ *     maxTokens: 150,
+ *     temperature: 0.7,
+ *     stopSequences: ["\n", " Human:", " Assistant:"],
+ *     streaming: true,
+ *     trace: "ENABLED",
+ *     guardrailIdentifier: "your-guardrail-id",
+ *     guardrailVersion: "1.0",
+ *     guardrailConfig: {
+ *       tagSuffix: "example",
+ *       streamProcessingMode: "SYNCHRONOUS",
+ *     },
+ *   });
+ *
+ *   // Prepare the message to be sent to the model
+ *   const message = new HumanMessage("Tell me a joke");
+ *
+ *   // Stream the response from the model
+ *   const stream = await model.stream([message]);
+ *   for await (const chunk of stream) {
+ *     // Output each chunk of the response
+ *     console.log(chunk);
+ *   }
+ * }
+ *
+ * runStreaming().catch(console.error);
  * ```
  */
 export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
@@ -137,9 +219,11 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
 
   trace?: "ENABLED" | "DISABLED";
 
-  guardrailIdentifier?: string;
+  guardrailIdentifier = "";
 
-  guardrailVersion?: string;
+  guardrailVersion = "";
+
+  guardrailConfig?: { tagSuffix: string; streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS" };
 
   get lc_aliases(): Record<string, string> {
     return {
@@ -215,14 +299,15 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
     this.modelKwargs = fields?.modelKwargs;
     this.streaming = fields?.streaming ?? this.streaming;
     this.usesMessagesApi = canUseMessagesApi(this.model);
-    this.trace = fields?.trace;
-    this.guardrailIdentifier = fields?.guardrailIdentifier;
-    this.guardrailVersion = fields?.guardrailVersion;
+    this.trace = fields?.trace ?? this.trace;
+    this.guardrailVersion = fields?.guardrailVersion ?? this.guardrailVersion;
+    this.guardrailIdentifier = fields?.guardrailIdentifier ?? this.guardrailIdentifier;
+    this.guardrailConfig = fields?.guardrailConfig;
   }
 
   async _generate(
     messages: BaseMessage[],
-    options: this["ParsedCallOptions"],
+    options: Partial<BaseChatModelParams>,
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     const service = "bedrock-runtime";
@@ -279,7 +364,7 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
 
   async _signedFetch(
     messages: BaseMessage[],
-    options: this["ParsedCallOptions"],
+    options: BedrockCallOptions,
     fields: {
       bedrockMethod: "invoke" | "invoke-with-response-stream";
       endpointHost: string;
@@ -289,28 +374,24 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
     const { bedrockMethod, endpointHost, provider } = fields;
     const inputBody = this.usesMessagesApi
       ? BedrockLLMInputOutputAdapter.prepareMessagesInput(
-        provider,
-        messages,
-        this.maxTokens,
-        this.temperature,
-        options.stop ?? this.stopSequences,
-        this.modelKwargs,
-        this.trace,
-        this.guardrailIdentifier,
-        this.guardrailVersion
-      )
-    : BedrockLLMInputOutputAdapter.prepareInput(
-        provider,
-        convertMessagesToPromptAnthropic(messages),
-        this.maxTokens,
-        this.temperature,
-        options.stop ?? this.stopSequences,
-        this.modelKwargs,
-        fields.bedrockMethod,
-        this.trace,
-        this.guardrailIdentifier,
-        this.guardrailVersion
-      );
+          provider,
+          messages,
+          this.maxTokens,
+          this.temperature,
+          this.stopSequences,
+          this.modelKwargs,
+          this.guardrailConfig
+        )
+      : BedrockLLMInputOutputAdapter.prepareInput(
+          provider,
+          convertMessagesToPromptAnthropic(messages),
+          this.maxTokens,
+          this.temperature,
+          this.stopSequences,
+          this.modelKwargs,
+          fields.bedrockMethod,
+          this.guardrailConfig
+        );
 
     const url = new URL(
       `https://${endpointHost}/model/${this.model}/${bedrockMethod}`
@@ -328,6 +409,11 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
         host: url.host,
         accept: "application/json",
         "content-type": "application/json",
+        ...(this.trace && this.guardrailIdentifier && this.guardrailVersion && {
+          "X-Amzn-Bedrock-Trace": this.trace,
+          "X-Amzn-Bedrock-GuardrailIdentifier": this.guardrailIdentifier,
+          "X-Amzn-Bedrock-GuardrailVersion": this.guardrailVersion,
+        })
       },
     });
 
@@ -355,7 +441,7 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
 
   async *_streamResponseChunks(
     messages: BaseMessage[],
-    options: this["ParsedCallOptions"],
+    options: BedrockCallOptions,
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const provider = this.model.split(".")[0];
