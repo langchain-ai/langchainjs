@@ -313,7 +313,6 @@ const config = {
         searchParameters: {
           optionalFilters: [
             "hierarchy.lvl0:Documentation",
-            "hierarchy.lvl1:Conceptual guide",
           ],
         },
       },
