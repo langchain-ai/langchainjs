@@ -1,51 +1,32 @@
+// libs/langchain-community/src/chat_models/tests/chatbedrock.int.test.ts
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 import { test, expect } from "@jest/globals";
 import { HumanMessage } from "@langchain/core/messages";
 import { BedrockChat as BedrockChatWeb } from "../bedrock/web.js";
-import { BedrockChat } from "../bedrock/index.js";
-
-// void testChatModel(
-//   "Test Bedrock chat model: Llama2 13B v1",
-//   "us-east-1",
-//   "meta.llama2-13b-chat-v1",
-//   "What is your name?"
-// );
-// void testChatStreamingModel(
-//   "Test Bedrock streaming chat model: Llama2 13B v1",
-//   "us-east-1",
-//   "meta.llama2-13b-chat-v1",
-//   "What is your name and something about yourself?"
-// );
 
 void testChatModel(
   "Test Bedrock chat model Generating search queries: Command-r",
-  "us-east-1",
+  "us-west-2",
   "cohere.command-r-v1:0",
   "Who is more popular: Nsync or Backstreet Boys?",
   {
     search_queries_only: true,
-  },
-  "ENABLED",
-  "guardrail-id",
-  "DRAFT"
+  }
 );
 
 void testChatModel(
   "Test Bedrock chat model: Command-r",
-  "us-east-1",
+  "us-west-2",
   "cohere.command-r-v1:0",
   "What is your name?",
-  {},
-  "DISABLED",
-  "guardrail-id",
-  "DRAFT"
+  {}
 );
 
 void testChatModel(
   "Test Bedrock chat model: Command-r",
-  "us-east-1",
+  "us-west-2",
   "cohere.command-r-v1:0",
   "What are the characteristics of the emperor penguin?",
   {
@@ -56,26 +37,20 @@ void testChatModel(
         snippet: "Emperor penguins only live in Antarctica.",
       },
     ],
-  },
-  "ENABLED",
-  "guardrail-id",
-  "1.0"
+  }
 );
 
 void testChatStreamingModel(
   "Test Bedrock chat model streaming: Command-r",
-  "us-east-1",
+  "us-west-2",
   "cohere.command-r-v1:0",
   "What is your name and something about yourself?",
-  {},
-  "DISABLED",
-  "guardrail-id",
-  "1.0"
+  {}
 );
 
 void testChatStreamingModel(
   "Test Bedrock chat model streaming: Command-r",
-  "us-east-1",
+  "us-west-2",
   "cohere.command-r-v1:0",
   "What are the characteristics of the emperor penguin?",
   {
@@ -87,91 +62,72 @@ void testChatStreamingModel(
       },
     ],
   },
-  "ENABLED",
-  "guardrail-id",
-  "2.0"
 );
 
 void testChatHandleLLMNewToken(
   "Test Bedrock chat model HandleLLMNewToken: Command-r",
-  "us-east-1",
+  "us-west-2",
   "cohere.command-r-v1:0",
-  "What is your name and something about yourself?",
-  "DISABLED",
-  "guardrail-id",
-  "2.0"
+  "What is your name and something about yourself?"
 );
 
 void testChatModel(
   "Test Bedrock chat model: Mistral-7b-instruct",
-  "us-east-1",
+  "us-west-2",
   "mistral.mistral-7b-instruct-v0:2",
   "What is your name?",
-  {},
-  "ENABLED",
-  "guardrail-id",
-  "1.0"
+  {}
 );
 
 void testChatStreamingModel(
   "Test Bedrock chat model streaming: Mistral-7b-instruct",
-  "us-east-1",
+  "us-west-2",
   "mistral.mistral-7b-instruct-v0:2",
   "What is your name and something about yourself?",
-  {},
-  "DISABLED",
-  "guardrail-id",
-  "1.0"
+  {}
 );
 
 void testChatHandleLLMNewToken(
   "Test Bedrock chat model HandleLLMNewToken: Mistral-7b-instruct",
-  "us-east-1",
+  "us-west-2",
   "mistral.mistral-7b-instruct-v0:2",
-  "What is your name and something about yourself?",
-  "ENABLED",
-  "guardrail-id",
-  "2.0"
+  "What is your name and something about yourself?"
 );
 
 void testChatModel(
   "Test Bedrock chat model: Claude-3",
-  "us-east-1",
+  "us-west-2",
   "anthropic.claude-3-sonnet-20240229-v1:0",
   "What is your name?",
   {},
-  "DISABLED",
-  "guardrail-id",
-  "1.0"
+  "ENABLED",
+  "<your-guardrail-id>",
+  "DRAFT",
+  { tagSuffix: "test", streamProcessingMode: "SYNCHRONOUS" }
 );
 
 void testChatStreamingModel(
   "Test Bedrock chat model streaming: Claude-3",
-  "us-east-1",
+  "us-west-2",
   "anthropic.claude-3-sonnet-20240229-v1:0",
   "What is your name and something about yourself?",
   {},
   "ENABLED",
-  "guardrail-id",
-  "2.0"
+  "<your-guardrail-id>",
+  "DRAFT",
+  { tagSuffix: "test", streamProcessingMode: "SYNCHRONOUS" }
 );
 
 void testChatHandleLLMNewToken(
   "Test Bedrock chat model HandleLLMNewToken: Claude-3",
-  "us-east-1",
+  "us-west-2",
   "anthropic.claude-3-sonnet-20240229-v1:0",
   "What is your name and something about yourself?",
-  "DISABLED",
-  "guardrail-id",
-  "DRAFT"
+  "ENABLED",
+  "<your-guardrail-id>",
+  "DRAFT",
+  { tagSuffix: "test", streamProcessingMode: "SYNCHRONOUS" }
 );
-
-// void testChatHandleLLMNewToken(
-//   "Test Bedrock chat model HandleLLMNewToken: Llama2 13B v1",
-//   "us-east-1",
-//   "meta.llama2-13b-chat-v1",
-//   "What is your name and something about yourself?"
-// );
 
 /**
  * Tests a BedrockChat model
@@ -179,6 +135,11 @@ void testChatHandleLLMNewToken(
  * @param defaultRegion The AWS region to default back to if not set via environment
  * @param model The model string to test
  * @param message The prompt test to send to the LLM
+ * @param modelKwargs Optional guardrail configuration
+ * @param trace Optional trace setting
+ * @param guardrailIdentifier Optional guardrail identifier
+ * @param guardrailVersion Optional guardrail version
+ * @param guardrailConfig Optional guardrail configuration
  */
 async function testChatModel(
   title: string,
@@ -188,7 +149,8 @@ async function testChatModel(
   modelKwargs?: Record<string, unknown>,
   trace?: "ENABLED" | "DISABLED",
   guardrailIdentifier?: string,
-  guardrailVersion?: string
+  guardrailVersion?: string,
+  guardrailConfig?: { tagSuffix: string, streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS" }
 ) {
   test(title, async () => {
     const region = process.env.BEDROCK_AWS_REGION ?? defaultRegion;
@@ -204,18 +166,24 @@ async function testChatModel(
         // sessionToken: process.env.BEDROCK_AWS_SESSION_TOKEN,
       },
       modelKwargs,
-      trace,
-      guardrailIdentifier,
-      guardrailVersion,
+      ...(trace && guardrailIdentifier && guardrailVersion && {
+        trace,
+        guardrailIdentifier,
+        guardrailVersion,
+        guardrailConfig,
+      })
     });
 
     const res = await bedrock.invoke([new HumanMessage(message)]);
     console.log(res);
 
     expect(res).toBeDefined();
-    expect(bedrock.trace).toBe(trace);
-    expect(bedrock.guardrailIdentifier).toBe(guardrailIdentifier);
-    expect(bedrock.guardrailVersion).toBe(guardrailVersion);
+    if (trace && guardrailIdentifier && guardrailVersion) {
+      expect(bedrock.trace).toBe(trace);
+      expect(bedrock.guardrailIdentifier).toBe(guardrailIdentifier);
+      expect(bedrock.guardrailVersion).toBe(guardrailVersion);
+      expect(bedrock.guardrailConfig).toEqual(guardrailConfig);
+    }
   });
 }
 
@@ -225,6 +193,11 @@ async function testChatModel(
  * @param defaultRegion The AWS region to default back to if not set via environment
  * @param model The model string to test
  * @param message The prompt test to send to the LLM
+ * @param modelKwargs Optional guardrail configuration
+ * @param trace Optional trace setting
+ * @param guardrailIdentifier Optional guardrail identifier
+ * @param guardrailVersion Optional guardrail version
+ * @param guardrailConfig Optional guardrail configuration
  */
 async function testChatStreamingModel(
   title: string,
@@ -234,7 +207,8 @@ async function testChatStreamingModel(
   modelKwargs?: Record<string, unknown>,
   trace?: "ENABLED" | "DISABLED",
   guardrailIdentifier?: string,
-  guardrailVersion?: string
+  guardrailVersion?: string,
+  guardrailConfig?: { tagSuffix: string, streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS" }
 ) {
   test(title, async () => {
     const region = process.env.BEDROCK_AWS_REGION ?? defaultRegion;
@@ -250,9 +224,12 @@ async function testChatStreamingModel(
         // sessionToken: process.env.BEDROCK_AWS_SESSION_TOKEN,
       },
       modelKwargs,
-      trace,
-      guardrailIdentifier,
-      guardrailVersion,
+      ...(trace && guardrailIdentifier && guardrailVersion && {
+        trace,
+        guardrailIdentifier,
+        guardrailVersion,
+        guardrailConfig,
+      })
     });
 
     const stream = await bedrock.stream([
@@ -275,6 +252,10 @@ async function testChatStreamingModel(
  * @param defaultRegion The AWS region to default back to if not set via environment
  * @param model The model string to test
  * @param message The prompt test to send to the LLM
+ * @param trace Optional trace setting
+ * @param guardrailIdentifier Optional guardrail identifier
+ * @param guardrailVersion Optional guardrail version
+ * @param guardrailConfig Optional guardrail configuration
  */
 async function testChatHandleLLMNewToken(
   title: string,
@@ -283,7 +264,8 @@ async function testChatHandleLLMNewToken(
   message: string,
   trace?: "ENABLED" | "DISABLED",
   guardrailIdentifier?: string,
-  guardrailVersion?: string
+  guardrailVersion?: string,
+  guardrailConfig?: { tagSuffix: string, streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS" }
 ) {
   test(title, async () => {
     const region = process.env.BEDROCK_AWS_REGION ?? defaultRegion;
@@ -310,9 +292,12 @@ async function testChatHandleLLMNewToken(
           },
         },
       ],
-      trace,
-      guardrailIdentifier,
-      guardrailVersion,
+      ...(trace && guardrailIdentifier && guardrailVersion && {
+        trace,
+        guardrailIdentifier,
+        guardrailVersion,
+        guardrailConfig,
+      })
     });
     const stream = await bedrock.invoke([new HumanMessage(message)]);
     expect(tokens.length).toBeGreaterThan(1);
@@ -326,7 +311,7 @@ test.skip.each([
   // "amazon.titan-text-lite-v1",
   // "amazon.titan-text-agile-v1",
 ])("Test Bedrock base chat model: %s", async (model) => {
-  const region = process.env.BEDROCK_AWS_REGION ?? "us-east-1";
+  const region = process.env.BEDROCK_AWS_REGION ?? "us-west-2";
 
   const bedrock = new BedrockChatWeb({
     region,
@@ -344,15 +329,4 @@ test.skip.each([
   console.log(res);
 
   expect(res.content.length).toBeGreaterThan(1);
-});
-
-test.skip("new credential fields", async () => {
-  const model = new BedrockChat({
-    filepath:
-      "/Users/bracesproul/code/lang-chain-ai/langchainjs/libs/langchain-community/src/chat_models/tests/aws_credentials",
-    model: "anthropic.claude-3-sonnet-20240229-v1:0",
-    region: process.env.BEDROCK_AWS_REGION,
-  });
-  const res = await model.invoke(["Why is the sky blue? Be VERY concise!"]);
-  console.log("res", res);
 });
