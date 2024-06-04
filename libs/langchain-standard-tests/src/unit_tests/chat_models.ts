@@ -33,10 +33,15 @@ class PersonTool extends StructuredTool {
 
 export abstract class ChatModelUnitTests<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
-  OutputMessageType extends BaseMessageChunk = BaseMessageChunk
-> extends BaseChatModelsTests<CallOptions, OutputMessageType> {
+  OutputMessageType extends BaseMessageChunk = BaseMessageChunk,
+  ConstructorArgs extends RecordStringAny = RecordStringAny
+> extends BaseChatModelsTests<CallOptions, OutputMessageType, ConstructorArgs> {
   constructor(
-    fields: BaseChatModelsTestsFields<CallOptions, OutputMessageType>
+    fields: BaseChatModelsTestsFields<
+      CallOptions,
+      OutputMessageType,
+      ConstructorArgs
+    >
   ) {
     const standardChatModelParams: RecordStringAny = {
       temperature: 0,
@@ -52,6 +57,22 @@ export abstract class ChatModelUnitTests<
         ...fields.constructorArgs,
       },
     });
+  }
+
+  /**
+   * Override this method if the chat model being tested does not
+   * support all expected LangSmith parameters.
+   * @returns {Partial<LangSmithParams>} The LangSmith parameters expected by the chat model.
+   */
+  expectedLsParams(): Partial<LangSmithParams> {
+    return {
+      ls_provider: "string",
+      ls_model_name: "string",
+      ls_model_type: "chat",
+      ls_temperature: 0,
+      ls_max_tokens: 0,
+      ls_stop: ["Array<string>"],
+    };
   }
 
   testChatModelInit() {
@@ -88,14 +109,7 @@ export abstract class ChatModelUnitTests<
   }
 
   testStandardParams() {
-    const expectedParams: LangSmithParams = {
-      ls_provider: "string",
-      ls_model_name: "string",
-      ls_model_type: "chat",
-      ls_temperature: 0,
-      ls_max_tokens: 0,
-      ls_stop: ["Array<string>"],
-    };
+    const expectedParams = this.expectedLsParams();
     const chatModel = new this.Cls(this.constructorArgs);
 
     const lsParams = chatModel.getLsParams({} as any);

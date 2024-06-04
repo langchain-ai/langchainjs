@@ -55,7 +55,7 @@ interface TokenUsage {
   totalTokens?: number;
 }
 
-interface CohereChatCallOptions
+export interface CohereChatCallOptions
   extends BaseLanguageModelCallOptions,
     Partial<Omit<Cohere.ChatRequest, "message">>,
     Partial<Omit<Cohere.ChatStreamRequest, "message">> {}

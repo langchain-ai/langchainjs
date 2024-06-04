@@ -82,6 +82,8 @@ interface MistralAICallOptions
   tool_choice?: MistralAIToolChoice;
 }
 
+export interface ChatMistralAICallOptions extends MistralAICallOptions {}
+
 /**
  * Input to chat model class.
  */

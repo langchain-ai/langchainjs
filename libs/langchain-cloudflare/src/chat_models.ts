@@ -1,4 +1,5 @@
 import {
+  LangSmithParams,
   SimpleChatModel,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
@@ -79,6 +80,15 @@ export class ChatCloudflareWorkersAI
     if (this.baseUrl.endsWith("/")) {
       this.baseUrl = this.baseUrl.slice(0, -1);
     }
+  }
+
+  getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+    return {
+      ls_provider: "openai",
+      ls_model_name: this.model,
+      ls_model_type: "chat",
+      ls_stop: options.stop,
+    };
   }
 
   get lc_secrets(): { [key: string]: string } | undefined {
