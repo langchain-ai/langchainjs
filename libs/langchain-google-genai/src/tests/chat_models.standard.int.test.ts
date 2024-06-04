@@ -13,7 +13,9 @@ class ChatGoogleGenerativeAIStandardIntegrationTests extends ChatModelIntegratio
 > {
   constructor() {
     if (!process.env.GOOGLE_API_KEY) {
-      throw new Error("Can not run Google Generative AI integration tests because GOOGLE_API_KEY is set");
+      throw new Error(
+        "Can not run Google Generative AI integration tests because GOOGLE_API_KEY is set"
+      );
     }
     super({
       Cls: ChatGoogleGenerativeAI,

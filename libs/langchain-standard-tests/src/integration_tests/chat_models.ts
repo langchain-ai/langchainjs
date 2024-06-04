@@ -188,7 +188,7 @@ export abstract class ChatModelIntegrationTests<
     const functionName = adderTool.name;
     const functionArgs = { a: 1, b: 2 };
 
-    const functionId = this.functionId;
+    const {functionId} = this;
     const functionResult = await adderTool.invoke(functionArgs);
 
     const messagesStringContent = [
@@ -238,7 +238,7 @@ export abstract class ChatModelIntegrationTests<
     const functionName = adderTool.name;
     const functionArgs = { a: 1, b: 2 };
 
-    const functionId = this.functionId;
+    const {functionId} = this;
     const functionResult = await adderTool.invoke(functionArgs);
 
     const messagesListContent = [
@@ -293,7 +293,7 @@ export abstract class ChatModelIntegrationTests<
     const functionName = adderTool.name;
     const functionArgs = { a: 1, b: 2 };
 
-    const functionId = this.functionId;
+    const {functionId} = this;
     const functionResult = await adderTool.invoke(functionArgs);
 
     const messagesStringContent = [

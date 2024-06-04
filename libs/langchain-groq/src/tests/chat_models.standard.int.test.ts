@@ -10,7 +10,9 @@ class ChatGroqStandardIntegrationTests extends ChatModelIntegrationTests<
 > {
   constructor() {
     if (!process.env.GROQ_API_KEY) {
-      throw new Error("Can not run Groq integration tests because GROQ_API_KEY is not set");
+      throw new Error(
+        "Can not run Groq integration tests because GROQ_API_KEY is not set"
+      );
     }
     super({
       Cls: ChatGroq,

@@ -10,7 +10,9 @@ class ChatMistralAIStandardIntegrationTests extends ChatModelIntegrationTests<
 > {
   constructor() {
     if (!process.env.MISTRAL_API_KEY) {
-      throw new Error("Can not run Mistral AI integration tests because MISTRAL_API_KEY is not set");
+      throw new Error(
+        "Can not run Mistral AI integration tests because MISTRAL_API_KEY is not set"
+      );
     }
     super({
       Cls: ChatMistralAI,
@@ -18,7 +20,7 @@ class ChatMistralAIStandardIntegrationTests extends ChatModelIntegrationTests<
       chatModelHasStructuredOutput: true,
       constructorArgs: {},
       // Mistral requires function call IDs to be a-z, A-Z, 0-9, with a length of 9.
-      functionId: "123456789"
+      functionId: "123456789",
     });
   }
 

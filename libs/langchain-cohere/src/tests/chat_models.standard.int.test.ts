@@ -10,7 +10,9 @@ class ChatCohereStandardIntegrationTests extends ChatModelIntegrationTests<
 > {
   constructor() {
     if (!process.env.COHERE_API_KEY) {
-      throw new Error("Can not run Cohere integration tests because COHERE_API_KEY is not set")
+      throw new Error(
+        "Can not run Cohere integration tests because COHERE_API_KEY is not set"
+      );
     }
     super({
       Cls: ChatCohere,

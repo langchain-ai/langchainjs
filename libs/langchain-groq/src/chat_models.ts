@@ -228,7 +228,7 @@ function _convertDeltaToMessageChunk(
   } else if (role === "system") {
     return new SystemMessageChunk({ content });
   } else {
-    console.log("role", role)
+    console.log("role", role);
     return new ChatMessageChunk({ content, role });
   }
 }
@@ -437,10 +437,12 @@ export class ChatGroq extends BaseChatModel<
           role = choice.delta.role;
         }
         const chunk = new ChatGenerationChunk({
-          message: _convertDeltaToMessageChunk({
-            ...choice.delta,
-            role,
-          } ?? {}),
+          message: _convertDeltaToMessageChunk(
+            {
+              ...choice.delta,
+              role,
+            } ?? {}
+          ),
           text: choice.delta.content ?? "",
           generationInfo: {
             finishReason: choice.finish_reason,
