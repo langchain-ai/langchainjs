@@ -5,7 +5,7 @@ import { AIMessageChunk } from "@langchain/core/messages";
 import { ChatAnthropic, ChatAnthropicCallOptions } from "../chat_models.js";
 
 class ChatAnthropicStandardUnitTests extends ChatModelUnitTests<
-ChatAnthropicCallOptions,
+  ChatAnthropicCallOptions,
   AIMessageChunk
 > {
   constructor() {
