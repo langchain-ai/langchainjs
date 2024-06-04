@@ -16,6 +16,10 @@ class AzureChatOpenAIStandardUnitTests extends ChatModelUnitTests<
       chatModelHasStructuredOutput: true,
       constructorArgs: {},
     });
+    process.env.AZURE_OPENAI_API_KEY = "test";
+    process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME = "test";
+    process.env.AZURE_OPENAI_API_VERSION = "test";
+    process.env.AZURE_OPENAI_BASE_PATH = "test";
   }
 
   testChatModelInitApiKey() {

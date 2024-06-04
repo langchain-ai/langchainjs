@@ -2,10 +2,10 @@
 import { test, expect } from "@jest/globals";
 import { ChatModelIntegrationTests } from "@langchain/standard-tests";
 import { AIMessageChunk } from "@langchain/core/messages";
-import { ChatMistralAI, MistralAICallOptions } from "../chat_models.js";
+import { ChatMistralAI, ChatMistralAICallOptions } from "../chat_models.js";
 
 class ChatMistralAIStandardIntegrationTests extends ChatModelIntegrationTests<
-  MistralAICallOptions,
+  ChatMistralAICallOptions,
   AIMessageChunk
 > {
   constructor() {
