@@ -44,8 +44,8 @@
   "devDependencies": {
     "@azure/identity": "^4.0.1",
     "@jest/globals": "^29.5.0",
-    "@langchain/standard-tests": "workspace:*",
     "@langchain/scripts": "~0.0.14",
+    "@langchain/standard-tests": "workspace:*",
     "@swc/core": "^1.3.90",
     "@swc/jest": "^0.2.29",
     "dpdm": "^3.12.0",
