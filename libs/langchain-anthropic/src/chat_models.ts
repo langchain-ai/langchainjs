@@ -67,7 +67,7 @@ type AnthropicToolChoice =
     }
   | "any"
   | "auto";
-interface ChatAnthropicCallOptions extends BaseLanguageModelCallOptions {
+export interface ChatAnthropicCallOptions extends BaseLanguageModelCallOptions {
   tools?: (StructuredToolInterface | AnthropicTool)[];
   /**
    * Whether or not to specify what tool the model should use
