@@ -9101,6 +9101,7 @@ __metadata:
     "@langchain/core": ~0.2.0
     "@langchain/openai": ~0.1.0
     "@langchain/scripts": ~0.0.14
+    "@langchain/standard-tests": "workspace:*"
     "@layerup/layerup-security": ^1.5.12
     "@mendable/firecrawl-js": ^0.0.13
     "@mlc-ai/web-llm": ^0.2.35

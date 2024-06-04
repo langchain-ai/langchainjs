@@ -8,6 +8,7 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   type BaseChatModelParams,
   BaseChatModel,
+  LangSmithParams,
 } from "@langchain/core/language_models/chat_models";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
@@ -209,6 +210,18 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
     this.modelKwargs = fields?.modelKwargs;
     this.streaming = fields?.streaming ?? this.streaming;
     this.usesMessagesApi = canUseMessagesApi(this.model);
+  }
+
+  getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+    const params = this.invocationParams(options);
+    return {
+      ls_provider: "bedrock",
+      ls_model_name: this.model,
+      ls_model_type: "chat",
+      ls_temperature: params.temperature ?? undefined,
+      ls_max_tokens: params.max_tokens ?? undefined,
+      ls_stop: options.stop,
+    };
   }
 
   async _generate(
