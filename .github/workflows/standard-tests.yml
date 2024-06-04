@@ -34,7 +34,6 @@ jobs:
   # We want to run these separately, so we need to pass the exact path for each test, which means
   # we need separate jobs for each test.
   tests-ChatOpenAI:
-    needs: build-langchain-openai
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -53,7 +52,6 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
   tests-AzureChatOpenAI:
-    needs: build-langchain-openai
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
