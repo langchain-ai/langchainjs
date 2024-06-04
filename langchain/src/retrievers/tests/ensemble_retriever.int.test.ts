@@ -93,7 +93,7 @@ test("Should work with weights", async () => {
   );
   const retriever = new EnsembleRetriever({
     retrievers: [vectorstore.asRetriever(), vectorstore2.asRetriever()],
-    weights: [0.5, 0.9]
+    weights: [0.5, 0.9],
   });
 
   const query = "cars";

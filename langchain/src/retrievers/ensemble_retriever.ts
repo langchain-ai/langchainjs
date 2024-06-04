@@ -3,11 +3,25 @@ import { Document, DocumentInterface } from "@langchain/core/documents";
 import { CallbackManagerForRetrieverRun } from "@langchain/core/callbacks/manager";
 
 export interface EnsembleRetrieverInput extends BaseRetrieverInput {
+  /** A list of retrievers to ensemble. */
   retrievers: BaseRetriever[];
+  /**
+   * A list of weights corresponding to the retrievers. Defaults to equal
+   * weighting for all retrievers.
+   */
   weights?: number[];
+  /**
+   * A constant added to the rank, controlling the balance between the importance
+   * of high-ranked items and the consideration given to lower-ranked items.
+   * Default is 60.
+   */
   c?: number;
 }
 
+/**
+ * Ensemble retriever that aggregates and orders the results of
+ * multiple retrievers by using weighted Reciprocal Rank Fusion.
+ */
 export class EnsembleRetriever extends BaseRetriever {
   static lc_name() {
     return "EnsembleRetriever";
@@ -24,7 +38,9 @@ export class EnsembleRetriever extends BaseRetriever {
   constructor(args: EnsembleRetrieverInput) {
     super(args);
     this.retrievers = args.retrievers;
-    this.weights = args.weights || new Array(args.retrievers.length).fill(1 / args.retrievers.length);
+    this.weights =
+      args.weights ||
+      new Array(args.retrievers.length).fill(1 / args.retrievers.length);
     this.c = args.c || 60;
   }
 
@@ -39,42 +55,49 @@ export class EnsembleRetriever extends BaseRetriever {
     query: string,
     runManager?: CallbackManagerForRetrieverRun
   ) {
-    const retrieverDocs = [];
-    for (const retriever of this.retrievers) {
-      const res = await retriever.invoke(query, {
-        callbacks: runManager?.getChild(),
-      });
-      retrieverDocs.push(res);
-    }
+    const retrieverDocs = await Promise.all(
+      this.retrievers.map((retriever, i) =>
+        retriever.invoke(query, {
+          callbacks: runManager?.getChild(`retriever_${i + 1}`),
+        })
+      )
+    );
 
     const fusedDocs = await this._weightedReciprocalRank(retrieverDocs);
     return fusedDocs;
   }
 
-  async _weightedReciprocalRank(docList:DocumentInterface[][]) {
+  async _weightedReciprocalRank(docList: DocumentInterface[][]) {
     if (docList.length !== this.weights.length) {
-      throw new Error('Number of rank lists must be equal to the number of weights.')
+      throw new Error(
+        "Number of retrieved document lists must be equal to the number of weights."
+      );
     }
 
-    const rrfSocreDict = docList.reduce((rffScore, retriever_doc, idx) => {
-      let rank = 1;
-      const weight = this.weights[idx];
-      while (rank <= retriever_doc.length) {
-        const {pageContent} = retriever_doc[rank - 1];
-        if (!rffScore[pageContent]) {
+    const rrfScoreDict = docList.reduce(
+      (rffScore: Record<string, number>, retrieverDoc, idx) => {
+        let rank = 1;
+        const weight = this.weights[idx];
+        while (rank <= retrieverDoc.length) {
+          const { pageContent } = retrieverDoc[rank - 1];
+          if (!rffScore[pageContent]) {
+            // eslint-disable-next-line no-param-reassign
+            rffScore[pageContent] = 0;
+          }
           // eslint-disable-next-line no-param-reassign
-          rffScore[pageContent] = 0;
-        } 
-        // eslint-disable-next-line no-param-reassign
-        rffScore[pageContent] += weight / (rank + this.c);
-        rank += 1;
-      }
+          rffScore[pageContent] += weight / (rank + this.c);
+          rank += 1;
+        }
 
-      return rffScore;
-    }, {} as Record<string, number>);
-     
+        return rffScore;
+      },
+      {}
+    );
+
     const uniqueDocs = this._uniqueUnion(docList.flat());
-    const sortedDocs = Array.from(uniqueDocs).sort((a, b) => rrfSocreDict[b.pageContent] - rrfSocreDict[a.pageContent]);
+    const sortedDocs = Array.from(uniqueDocs).sort(
+      (a, b) => rrfScoreDict[b.pageContent] - rrfScoreDict[a.pageContent]
+    );
 
     return sortedDocs;
   }
