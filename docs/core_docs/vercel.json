@@ -9,7 +9,7 @@
     },
     {
       "source": "/robots.txt(/?)",
-      "destination": "/v0.2/static/robots.txt/"
+      "destination": "/v0.2/robots.txt/"
     },
     {
       "source": "/sitemap.xml(/?)",
