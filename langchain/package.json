@@ -370,6 +370,10 @@
     "retrievers/document_compressors.js",
     "retrievers/document_compressors.d.ts",
     "retrievers/document_compressors.d.cts",
+    "retrievers/ensemble.cjs",
+    "retrievers/ensemble.js",
+    "retrievers/ensemble.d.ts",
+    "retrievers/ensemble.d.cts",
     "retrievers/multi_query.cjs",
     "retrievers/multi_query.js",
     "retrievers/multi_query.d.ts",
@@ -1724,6 +1728,15 @@
       },
       "import": "./retrievers/document_compressors.js",
       "require": "./retrievers/document_compressors.cjs"
+    },
+    "./retrievers/ensemble": {
+      "types": {
+        "import": "./retrievers/ensemble.d.ts",
+        "require": "./retrievers/ensemble.d.cts",
+        "default": "./retrievers/ensemble.d.ts"
+      },
+      "import": "./retrievers/ensemble.js",
+      "require": "./retrievers/ensemble.cjs"
     },
     "./retrievers/multi_query": {
       "types": {
