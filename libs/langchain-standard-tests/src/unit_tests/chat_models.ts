@@ -59,6 +59,22 @@ export abstract class ChatModelUnitTests<
     });
   }
 
+  /**
+   * Override this method if the chat model being tested does not
+   * support all expected LangSmith parameters.
+   * @returns {Partial<LangSmithParams>} The LangSmith parameters expected by the chat model.
+   */
+  expectedLsParams(): Partial<LangSmithParams> {
+    return {
+      ls_provider: "string",
+      ls_model_name: "string",
+      ls_model_type: "chat",
+      ls_temperature: 0,
+      ls_max_tokens: 0,
+      ls_stop: ["Array<string>"],
+    };
+  }
+
   testChatModelInit() {
     const chatModel = new this.Cls(this.constructorArgs);
     expect(chatModel).toBeDefined();
@@ -93,14 +109,7 @@ export abstract class ChatModelUnitTests<
   }
 
   testStandardParams() {
-    const expectedParams: LangSmithParams = {
-      ls_provider: "string",
-      ls_model_name: "string",
-      ls_model_type: "chat",
-      ls_temperature: 0,
-      ls_max_tokens: 0,
-      ls_stop: ["Array<string>"],
-    };
+    const expectedParams = this.expectedLsParams();
     const chatModel = new this.Cls(this.constructorArgs);
 
     const lsParams = chatModel.getLsParams({} as any);

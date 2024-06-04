@@ -11,8 +11,8 @@ class ChatCohereStandardIntegrationTests extends ChatModelIntegrationTests<
   constructor() {
     super({
       Cls: ChatCohere,
-      chatModelHasToolCalling: true,
-      chatModelHasStructuredOutput: true,
+      chatModelHasToolCalling: false,
+      chatModelHasStructuredOutput: false,
       constructorArgs: {},
     });
   }

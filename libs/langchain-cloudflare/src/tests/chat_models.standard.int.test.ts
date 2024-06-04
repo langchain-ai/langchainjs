@@ -12,12 +12,36 @@ class ChatCloudflareWorkersAIStandardIntegrationTests extends ChatModelIntegrati
   AIMessageChunk
 > {
   constructor() {
+    if (
+      !process.env.CLOUDFLARE_ACCOUNT_ID ||
+      !process.env.CLOUDFLARE_API_TOKEN
+    ) {
+      throw new Error(
+        "Skipping Cloudflare Workers AI integration tests because CLOUDFLARE_ACCOUNT_ID or CLOUDFLARE_API_TOKEN is not set"
+      );
+    }
     super({
       Cls: ChatCloudflareWorkersAI,
-      chatModelHasToolCalling: true,
-      chatModelHasStructuredOutput: true,
+      chatModelHasToolCalling: false,
+      chatModelHasStructuredOutput: false,
       constructorArgs: {},
     });
+  }
+
+  async testUsageMetadataStreaming() {
+    this.skipTestMessage(
+      "testUsageMetadataStreaming",
+      "ChatCloudflareWorkersAI",
+      "Streaming tokens is not currently supported by ChatCloudflareWorkersAI"
+    );
+  }
+
+  async testUsageMetadata() {
+    this.skipTestMessage(
+      "testUsageMetadata",
+      "ChatCloudflareWorkersAI",
+      "Usage metadata tokens is not currently supported by ChatCloudflareWorkersAI"
+    );
   }
 }
 

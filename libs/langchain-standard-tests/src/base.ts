@@ -61,4 +61,25 @@ export class BaseChatModelsTests<
     this.chatModelHasStructuredOutput = fields.chatModelHasStructuredOutput;
     this.constructorArgs = fields.constructorArgs;
   }
+
+  get multipleApiKeysRequiredMessage(): string {
+    return "Multiple API keys are required.";
+  }
+
+  /**
+   * Log a warning message when skipping a test.
+   */
+  skipTestMessage(
+    testName: string,
+    chatClassName: string,
+    extra?: string
+  ): void {
+    console.warn(
+      {
+        chatClassName,
+        reason: extra ?? "n/a",
+      },
+      `Skipping ${testName}.`
+    );
+  }
 }
