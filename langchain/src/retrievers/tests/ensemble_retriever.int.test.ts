@@ -1,7 +1,7 @@
 import { expect, test } from "@jest/globals";
 import { CohereEmbeddings } from "@langchain/cohere";
 import { MemoryVectorStore } from "../../vectorstores/memory.js";
-import { EnsembleRetriever } from "../ensemble_retriever.js";
+import { EnsembleRetriever } from "../ensemble.js";
 
 test("Should work with a question input", async () => {
   const vectorstore = await MemoryVectorStore.fromTexts(
