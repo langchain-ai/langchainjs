@@ -503,9 +503,6 @@ class _StringImageMessagePromptTemplate<
         prompt.push(PromptTemplate.fromTemplate(text, additionalOptions));
       } else if (typeof item === "object" && "image_url" in item) {
         let imgTemplate = item.image_url ?? "";
-        if (typeof imgTemplate === "object" && "url" in imgTemplate) {
-          imgTemplate = imgTemplate.url ?? "";
-        }
         let imgTemplateObject: ImagePromptTemplate<InputValues>;
         let inputVariables: string[] = [];
         if (typeof imgTemplate === "string") {
@@ -538,7 +535,13 @@ class _StringImageMessagePromptTemplate<
           });
         } else if (typeof imgTemplate === "object") {
           if ("url" in imgTemplate) {
-            const parsedTemplate = parseFString(imgTemplate.url);
+            let parsedTemplate: ParsedTemplateNode[];
+            if (additionalOptions?.templateFormat === "mustache") {
+              parsedTemplate = parseMustache(imgTemplate.url);
+            } else {
+              parsedTemplate = parseFString(imgTemplate.url);
+            }
+
             inputVariables = parsedTemplate.flatMap((item) =>
               item.type === "variable" ? [item.name] : []
             );
