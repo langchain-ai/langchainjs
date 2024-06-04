@@ -98,7 +98,7 @@ test("Mustache template with image and chat prompts inside one template (fromMes
   ]);
 });
 
-test.only("Mustache image template with nested URL and chat prompts HumanMessagePromptTemplate.fromTemplate", async () => {
+test("Mustache image template with nested URL and chat prompts HumanMessagePromptTemplate.fromTemplate", async () => {
   const template = HumanMessagePromptTemplate.fromTemplate(
     [
       {
