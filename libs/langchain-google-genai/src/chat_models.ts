@@ -308,7 +308,7 @@ export class ChatGoogleGenerativeAI
     );
   }
 
-  protected getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+  getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     return {
       ls_provider: "google_genai",
       ls_model_name: this.model,

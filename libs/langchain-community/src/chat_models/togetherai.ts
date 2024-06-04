@@ -116,7 +116,7 @@ export class ChatTogetherAI extends ChatOpenAI<ChatTogetherAICallOptions> {
     });
   }
 
-  protected getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+  getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     const params = super.getLsParams(options);
     params.ls_provider = "together";
     return params;
