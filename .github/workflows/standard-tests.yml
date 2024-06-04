@@ -55,7 +55,7 @@ jobs:
       - name: Build `@langchain/openai`
         run: yarn build --filter=@langchain/openai
 
-  tests (ChatOpenAI):
+  tests-ChatOpenAI:
     needs: build-langchain-openai
     runs-on: ubuntu-latest
     steps:
@@ -71,7 +71,7 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-  tests (AzureChatOpenAI):
+  tests-AzureChatOpenAI:
     needs: build-langchain-openai
     runs-on: ubuntu-latest
     steps:
