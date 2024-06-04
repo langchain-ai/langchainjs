@@ -228,7 +228,6 @@ function _convertDeltaToMessageChunk(
   } else if (role === "system") {
     return new SystemMessageChunk({ content });
   } else {
-    console.log("role", role);
     return new ChatMessageChunk({ content, role });
   }
 }
