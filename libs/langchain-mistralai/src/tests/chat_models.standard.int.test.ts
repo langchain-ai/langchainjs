@@ -9,12 +9,33 @@ class ChatMistralAIStandardIntegrationTests extends ChatModelIntegrationTests<
   AIMessageChunk
 > {
   constructor() {
+    if (!process.env.MISTRAL_API_KEY) {
+      throw new Error("Can not run Mistral AI integration tests because MISTRAL_API_KEY is not set");
+    }
     super({
       Cls: ChatMistralAI,
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
       constructorArgs: {},
+      // Mistral requires function call IDs to be a-z, A-Z, 0-9, with a length of 9.
+      functionId: "123456789"
     });
+  }
+
+  async testUsageMetadataStreaming() {
+    this.skipTestMessage(
+      "testUsageMetadataStreaming",
+      "ChatMistralAI",
+      "Streaming tokens is not currently supported."
+    );
+  }
+
+  async testUsageMetadata() {
+    this.skipTestMessage(
+      "testUsageMetadata",
+      "ChatMistralAI",
+      "Usage metadata tokens is not currently supported."
+    );
   }
 }
 

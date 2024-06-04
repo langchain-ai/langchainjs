@@ -3,6 +3,7 @@ import { test, expect } from "@jest/globals";
 import { ChatModelUnitTests } from "@langchain/standard-tests";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { ChatMistralAI, MistralAICallOptions } from "../chat_models.js";
+import { LangSmithParams } from "@langchain/core/language_models/chat_models";
 
 class ChatMistralAIStandardUnitTests extends ChatModelUnitTests<
   MistralAICallOptions,
@@ -19,6 +20,19 @@ class ChatMistralAIStandardUnitTests extends ChatModelUnitTests<
     // which we call after instantiating the model will work.
     // (constructor will throw if API key is not set)
     process.env.MISTRAL_API_KEY = "test";
+  }
+
+  expectedLsParams(): Partial<LangSmithParams> {
+    console.warn(
+      "Overriding testStandardParams. ChatCloudflareWorkersAI does not support stop sequences."
+    );
+    return {
+      ls_provider: "string",
+      ls_model_name: "string",
+      ls_model_type: "chat",
+      ls_temperature: 0,
+      ls_max_tokens: 0,
+    };
   }
 
   testChatModelInitApiKey() {
