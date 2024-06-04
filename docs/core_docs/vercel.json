@@ -52,6 +52,14 @@
     {
       "source": "/docs/how_to/tool_calls_multi_modal(/?)",
       "destination": "/docs/how_to/multimodal_inputs/"
+    },
+    {
+      "source": "/docs/langgraph(/?)",
+      "destination": "https://langchain-ai.github.io/langgraphjs/"
+    },
+    {
+      "source": "/docs/langsmith(/?)",
+      "destination": "https://docs.smith.langchain.com/"
     }
   ]
 }
