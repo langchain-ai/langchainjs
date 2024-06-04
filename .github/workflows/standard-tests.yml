@@ -6,7 +6,7 @@ on:
     - cron: '0 13 * * *'
 
 jobs:
-  tests:
+  standard-tests:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -32,7 +32,7 @@ jobs:
   # The `@langchain/openai` package contains standard tests for ChatOpenAI and AzureChatOpenAI
   # We want to run these separately, so we need to pass the exact path for each test, which means
   # we need separate jobs for each test.
-  tests-ChatOpenAI:
+  standard-tests-openai:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -50,7 +50,7 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-  tests-AzureChatOpenAI:
+  standard-tests-azure-openai:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
