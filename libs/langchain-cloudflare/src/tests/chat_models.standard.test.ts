@@ -2,10 +2,13 @@
 import { test, expect } from "@jest/globals";
 import { ChatModelUnitTests } from "@langchain/standard-tests";
 import { AIMessageChunk } from "@langchain/core/messages";
-import { ChatCloudflareWorkersAI, ChatCloudflareWorkersAICallOptions } from "../chat_models.js";
+import {
+  ChatCloudflareWorkersAI,
+  ChatCloudflareWorkersAICallOptions,
+} from "../chat_models.js";
 
 class ChatCloudflareWorkersAIStandardUnitTests extends ChatModelUnitTests<
-ChatCloudflareWorkersAICallOptions,
+  ChatCloudflareWorkersAICallOptions,
   AIMessageChunk
 > {
   constructor() {
@@ -18,7 +21,9 @@ ChatCloudflareWorkersAICallOptions,
   }
 
   testChatModelInitApiKey() {
-    console.warn("Skipping testChatModelInitApiKey for ChatCloudflareWorkersAI. Multiple API keys are required.");
+    console.warn(
+      "Skipping testChatModelInitApiKey for ChatCloudflareWorkersAI. Multiple API keys are required."
+    );
   }
 }
 

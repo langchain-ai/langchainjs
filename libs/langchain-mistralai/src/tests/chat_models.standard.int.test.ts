@@ -5,7 +5,7 @@ import { AIMessageChunk } from "@langchain/core/messages";
 import { ChatMistralAI, MistralAICallOptions } from "../chat_models.js";
 
 class ChatMistralAIStandardIntegrationTests extends ChatModelIntegrationTests<
-MistralAICallOptions,
+  MistralAICallOptions,
   AIMessageChunk
 > {
   constructor() {

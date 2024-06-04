@@ -6,7 +6,7 @@ import { AzureChatOpenAI } from "../../azure/chat_models.js";
 import { ChatOpenAICallOptions } from "../../chat_models.js";
 
 class AzureChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
-ChatOpenAICallOptions,
+  ChatOpenAICallOptions,
   AIMessageChunk
 > {
   constructor() {
@@ -15,7 +15,7 @@ ChatOpenAICallOptions,
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
       constructorArgs: {
-        model: "gpt-3.5-turbo"
+        model: "gpt-3.5-turbo",
       },
     });
   }

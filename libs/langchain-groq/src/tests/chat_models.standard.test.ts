@@ -5,7 +5,7 @@ import { AIMessageChunk } from "@langchain/core/messages";
 import { ChatGroq, ChatGroqCallOptions } from "../chat_models.js";
 
 class ChatGroqStandardUnitTests extends ChatModelUnitTests<
-ChatGroqCallOptions,
+  ChatGroqCallOptions,
   AIMessageChunk
 > {
   constructor() {

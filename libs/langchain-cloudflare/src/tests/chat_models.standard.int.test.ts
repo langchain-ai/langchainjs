@@ -2,10 +2,13 @@
 import { test, expect } from "@jest/globals";
 import { ChatModelIntegrationTests } from "@langchain/standard-tests";
 import { AIMessageChunk } from "@langchain/core/messages";
-import { ChatCloudflareWorkersAI, ChatCloudflareWorkersAICallOptions } from "../chat_models.js";
+import {
+  ChatCloudflareWorkersAI,
+  ChatCloudflareWorkersAICallOptions,
+} from "../chat_models.js";
 
 class ChatCloudflareWorkersAIStandardIntegrationTests extends ChatModelIntegrationTests<
-ChatCloudflareWorkersAICallOptions,
+  ChatCloudflareWorkersAICallOptions,
   AIMessageChunk
 > {
   constructor() {

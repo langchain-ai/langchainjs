@@ -5,7 +5,7 @@ import { AIMessageChunk } from "@langchain/core/messages";
 import { ChatCohere, CohereChatCallOptions } from "../chat_models.js";
 
 class ChatCohereStandardIntegrationTests extends ChatModelIntegrationTests<
-CohereChatCallOptions,
+  CohereChatCallOptions,
   AIMessageChunk
 > {
   constructor() {

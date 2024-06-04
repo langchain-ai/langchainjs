@@ -6,7 +6,7 @@ import { AzureChatOpenAI } from "../../azure/chat_models.js";
 import { ChatOpenAICallOptions } from "../../chat_models.js";
 
 class AzureChatOpenAIStandardUnitTests extends ChatModelUnitTests<
-ChatOpenAICallOptions,
+  ChatOpenAICallOptions,
   AIMessageChunk
 > {
   constructor() {
@@ -19,7 +19,9 @@ ChatOpenAICallOptions,
   }
 
   testChatModelInitApiKey() {
-    console.warn("AzureChatOpenAI does not require a single API key. Skipping...");
+    console.warn(
+      "AzureChatOpenAI does not require a single API key. Skipping..."
+    );
   }
 }
 

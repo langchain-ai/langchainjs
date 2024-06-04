@@ -2,10 +2,13 @@
 import { test, expect } from "@jest/globals";
 import { ChatModelUnitTests } from "@langchain/standard-tests";
 import { AIMessageChunk } from "@langchain/core/messages";
-import { ChatGoogleGenerativeAI, GoogleGenerativeAIChatCallOptions } from "../chat_models.js";
+import {
+  ChatGoogleGenerativeAI,
+  GoogleGenerativeAIChatCallOptions,
+} from "../chat_models.js";
 
 class ChatGoogleGenerativeAIStandardUnitTests extends ChatModelUnitTests<
-GoogleGenerativeAIChatCallOptions,
+  GoogleGenerativeAIChatCallOptions,
   AIMessageChunk
 > {
   constructor() {

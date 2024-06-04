@@ -5,7 +5,7 @@ import { AIMessageChunk } from "@langchain/core/messages";
 import { AzureChatOpenAI, ChatOpenAICallOptions } from "../chat_models.js";
 
 class AzureChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
-ChatOpenAICallOptions,
+  ChatOpenAICallOptions,
   AIMessageChunk
 > {
   constructor() {
