@@ -50,7 +50,7 @@ export class AzureChatOpenAI extends ChatOpenAI {
     super(newFields);
   }
 
-  protected getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+  getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     const params = super.getLsParams(options);
     params.ls_provider = "azure";
     return params;
