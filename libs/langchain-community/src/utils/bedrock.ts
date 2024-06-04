@@ -260,10 +260,12 @@ export class BedrockLLMInputOutputAdapter {
     stopSequences: string[] | undefined = undefined,
     modelKwargs: Record<string, unknown> = {},
     bedrockMethod: "invoke" | "invoke-with-response-stream" = "invoke",
-    guardrailConfig?: {
-      tagSuffix: string;
-      streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS";
-    }
+    guardrailConfig:
+      | {
+          tagSuffix: string;
+          streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS";
+        }
+      | undefined = undefined
   ): Dict {
     const inputBody: Dict = {};
 
@@ -320,10 +322,12 @@ export class BedrockLLMInputOutputAdapter {
     temperature = 0,
     stopSequences: string[] | undefined = undefined,
     modelKwargs: Record<string, unknown> = {},
-    guardrailConfig?: {
-      tagSuffix: string;
-      streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS";
-    }
+    guardrailConfig:
+      | {
+          tagSuffix: string;
+          streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS";
+        }
+      | undefined = undefined
   ): Dict {
     const inputBody: Dict = {};
 
@@ -524,6 +528,7 @@ function parseMessage(responseBody: any, asChunk?: boolean): ChatGeneration {
 }
 
 function parseMessageCohere(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   responseBody: any,
   asChunk?: boolean
 ): ChatGeneration {
