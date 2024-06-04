@@ -7,7 +7,6 @@ on:
 
 jobs:
   tests:
-    needs: install-dependencies
     runs-on: ubuntu-latest
     strategy:
       matrix:
