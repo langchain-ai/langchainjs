@@ -56,6 +56,10 @@
     {
       "source": "/docs/langgraph(/?)",
       "destination": "https://langchain-ai.github.io/langgraphjs/"
+    },
+    {
+      "source": "/docs/langsmith(/?)",
+      "destination": "https://docs.smith.langchain.com/"
     }
   ]
 }
