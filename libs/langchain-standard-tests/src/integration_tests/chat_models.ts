@@ -10,7 +10,11 @@ import {
 } from "@langchain/core/messages";
 import { z } from "zod";
 import { StructuredTool } from "@langchain/core/tools";
-import { BaseChatModelsTests, BaseChatModelsTestsFields } from "../base.js";
+import {
+  BaseChatModelsTests,
+  BaseChatModelsTestsFields,
+  RecordStringAny,
+} from "../base.js";
 
 const adderSchema = /* #__PURE__ */ z
   .object({
@@ -34,10 +38,15 @@ class AdderTool extends StructuredTool {
 
 export abstract class ChatModelIntegrationTests<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
-  OutputMessageType extends BaseMessageChunk = BaseMessageChunk
-> extends BaseChatModelsTests<CallOptions, OutputMessageType> {
+  OutputMessageType extends BaseMessageChunk = BaseMessageChunk,
+  ConstructorArgs extends RecordStringAny = RecordStringAny
+> extends BaseChatModelsTests<CallOptions, OutputMessageType, ConstructorArgs> {
   constructor(
-    fields: BaseChatModelsTestsFields<CallOptions, OutputMessageType>
+    fields: BaseChatModelsTestsFields<
+      CallOptions,
+      OutputMessageType,
+      ConstructorArgs
+    >
   ) {
     super(fields);
   }

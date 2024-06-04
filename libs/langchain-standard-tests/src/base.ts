@@ -8,34 +8,53 @@ export type RecordStringAny = Record<string, any>;
 
 export type BaseChatModelConstructor<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
-  OutputMessageType extends BaseMessageChunk = BaseMessageChunk
-> = new (...args: any[]) => BaseChatModel<CallOptions, OutputMessageType>;
+  OutputMessageType extends BaseMessageChunk = BaseMessageChunk,
+  ConstructorArgs extends RecordStringAny = RecordStringAny
+> = new (args: ConstructorArgs) => BaseChatModel<
+  CallOptions,
+  OutputMessageType
+>;
 
 export type BaseChatModelsTestsFields<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
-  OutputMessageType extends BaseMessageChunk = BaseMessageChunk
+  OutputMessageType extends BaseMessageChunk = BaseMessageChunk,
+  ConstructorArgs extends RecordStringAny = RecordStringAny
 > = {
-  Cls: BaseChatModelConstructor<CallOptions, OutputMessageType>;
+  Cls: BaseChatModelConstructor<
+    CallOptions,
+    OutputMessageType,
+    ConstructorArgs
+  >;
   chatModelHasToolCalling: boolean;
   chatModelHasStructuredOutput: boolean;
-  constructorArgs: RecordStringAny;
+  constructorArgs: ConstructorArgs;
 };
 
 export class BaseChatModelsTests<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
-  OutputMessageType extends BaseMessageChunk = BaseMessageChunk
-> implements BaseChatModelsTestsFields<CallOptions, OutputMessageType>
+  OutputMessageType extends BaseMessageChunk = BaseMessageChunk,
+  ConstructorArgs extends RecordStringAny = RecordStringAny
+> implements
+    BaseChatModelsTestsFields<CallOptions, OutputMessageType, ConstructorArgs>
 {
-  Cls: BaseChatModelConstructor<CallOptions, OutputMessageType>;
+  Cls: BaseChatModelConstructor<
+    CallOptions,
+    OutputMessageType,
+    ConstructorArgs
+  >;
 
   chatModelHasToolCalling: boolean;
 
   chatModelHasStructuredOutput: boolean;
 
-  constructorArgs: RecordStringAny;
+  constructorArgs: ConstructorArgs;
 
   constructor(
-    fields: BaseChatModelsTestsFields<CallOptions, OutputMessageType>
+    fields: BaseChatModelsTestsFields<
+      CallOptions,
+      OutputMessageType,
+      ConstructorArgs
+    >
   ) {
     this.Cls = fields.Cls;
     this.chatModelHasToolCalling = fields.chatModelHasToolCalling;

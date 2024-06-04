@@ -33,10 +33,15 @@ class PersonTool extends StructuredTool {
 
 export abstract class ChatModelUnitTests<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
-  OutputMessageType extends BaseMessageChunk = BaseMessageChunk
-> extends BaseChatModelsTests<CallOptions, OutputMessageType> {
+  OutputMessageType extends BaseMessageChunk = BaseMessageChunk,
+  ConstructorArgs extends RecordStringAny = RecordStringAny
+> extends BaseChatModelsTests<CallOptions, OutputMessageType, ConstructorArgs> {
   constructor(
-    fields: BaseChatModelsTestsFields<CallOptions, OutputMessageType>
+    fields: BaseChatModelsTestsFields<
+      CallOptions,
+      OutputMessageType,
+      ConstructorArgs
+    >
   ) {
     const standardChatModelParams: RecordStringAny = {
       temperature: 0,
