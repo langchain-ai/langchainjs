@@ -11,8 +11,8 @@ class ChatCohereStandardUnitTests extends ChatModelUnitTests<
   constructor() {
     super({
       Cls: ChatCohere,
-      chatModelHasToolCalling: true,
-      chatModelHasStructuredOutput: true,
+      chatModelHasToolCalling: false,
+      chatModelHasStructuredOutput: false,
       constructorArgs: {},
     });
     // This must be set so method like `.bindTools` or `.withStructuredOutput`

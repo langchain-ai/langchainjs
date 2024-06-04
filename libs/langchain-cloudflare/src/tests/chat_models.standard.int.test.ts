@@ -32,7 +32,7 @@ class ChatCloudflareWorkersAIStandardIntegrationTests extends ChatModelIntegrati
     this.skipTestMessage(
       "testUsageMetadataStreaming",
       "ChatCloudflareWorkersAI",
-      "Streaming tokens is not currently supported by ChatCloudflareWorkersAI"
+      "Streaming tokens is not currently supported."
     );
   }
 
@@ -40,7 +40,7 @@ class ChatCloudflareWorkersAIStandardIntegrationTests extends ChatModelIntegrati
     this.skipTestMessage(
       "testUsageMetadata",
       "ChatCloudflareWorkersAI",
-      "Usage metadata tokens is not currently supported by ChatCloudflareWorkersAI"
+      "Usage metadata tokens is not currently supported."
     );
   }
 }
