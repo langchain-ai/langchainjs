@@ -1,0 +1,39 @@
+# Firecrawl Search
+
+This guide demonstrates how to use [Firecrawl](https://firecrawl.dev) with LangChain to enhance search capabilities for LLMs.
+
+## Overview
+
+[FireCrawl](https://firecrawl.dev) is designed to enhance the search experience by providing LLMs with clean markdown and metadata from crawled websites. It handles complex tasks such as navigating through reverse proxies, managing caching, dealing with rate limits, and extracting content blocked by JavaScript. FireCrawl is developed by the [mendable.ai](https://mendable.ai) team and supports advanced search capabilities without the need for a sitemap.
+
+## Setup
+
+To start using FireCrawl for enhanced search:
+
+1. Register on [FireCrawl](https://firecrawl.dev) to get your API key.
+2. Install the Firecrawl search package:
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/firecrawl
+```
+
+You'll also need to configure your environment with your API key using FIRECRAWL_API_KEY.
+
+FireCrawl offers 300 free credits to start, and the platform is [open-source](https://github.com/mendableai/firecrawl), available for those who prefer to self-host.
+
+### Usage
+FireCrawl simplifies the search process by extracting data from specific pages or entire websites, providing comprehensive LLM-ready search data.
+Here's an example of how to integrate FireCrawl search with your LangChain setup:
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/retrievers/firecrawl.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
+#### Additional Parameters
+For further customization, consult the Firecrawl [documentation](https://docs.firecrawl.dev/) to explore all the parameters you can use to optimize your search operations.
+
