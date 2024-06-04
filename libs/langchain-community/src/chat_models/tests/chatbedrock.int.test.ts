@@ -61,7 +61,7 @@ void testChatStreamingModel(
         snippet: "Emperor penguins only live in Antarctica.",
       },
     ],
-  },
+  }
 );
 
 void testChatHandleLLMNewToken(
@@ -99,11 +99,11 @@ void testChatModel(
   "us-west-2",
   "anthropic.claude-3-sonnet-20240229-v1:0",
   "What is your name?",
-  {},
-  "ENABLED",
-  "<your-guardrail-id>",
-  "DRAFT",
-  { tagSuffix: "test", streamProcessingMode: "SYNCHRONOUS" }
+  {}
+  // "ENABLED",
+  // "<your-guardrail-id>",
+  // "DRAFT",
+  // { tagSuffix: "test", streamProcessingMode: "SYNCHRONOUS" }
 );
 
 void testChatStreamingModel(
@@ -111,22 +111,22 @@ void testChatStreamingModel(
   "us-west-2",
   "anthropic.claude-3-sonnet-20240229-v1:0",
   "What is your name and something about yourself?",
-  {},
-  "ENABLED",
-  "<your-guardrail-id>",
-  "DRAFT",
-  { tagSuffix: "test", streamProcessingMode: "SYNCHRONOUS" }
+  {}
+  // "ENABLED",
+  // "<your-guardrail-id>",
+  // "DRAFT",
+  // { tagSuffix: "test", streamProcessingMode: "SYNCHRONOUS" }
 );
 
 void testChatHandleLLMNewToken(
   "Test Bedrock chat model HandleLLMNewToken: Claude-3",
   "us-west-2",
   "anthropic.claude-3-sonnet-20240229-v1:0",
-  "What is your name and something about yourself?",
-  "ENABLED",
-  "<your-guardrail-id>",
-  "DRAFT",
-  { tagSuffix: "test", streamProcessingMode: "SYNCHRONOUS" }
+  "What is your name and something about yourself?"
+  // "ENABLED",
+  // "<your-guardrail-id>",
+  // "DRAFT",
+  // { tagSuffix: "test", streamProcessingMode: "SYNCHRONOUS" }
 );
 
 /**
@@ -150,7 +150,10 @@ async function testChatModel(
   trace?: "ENABLED" | "DISABLED",
   guardrailIdentifier?: string,
   guardrailVersion?: string,
-  guardrailConfig?: { tagSuffix: string, streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS" }
+  guardrailConfig?: {
+    tagSuffix: string;
+    streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS";
+  }
 ) {
   test(title, async () => {
     const region = process.env.BEDROCK_AWS_REGION ?? defaultRegion;
@@ -166,12 +169,14 @@ async function testChatModel(
         // sessionToken: process.env.BEDROCK_AWS_SESSION_TOKEN,
       },
       modelKwargs,
-      ...(trace && guardrailIdentifier && guardrailVersion && {
-        trace,
-        guardrailIdentifier,
-        guardrailVersion,
-        guardrailConfig,
-      })
+      ...(trace &&
+        guardrailIdentifier &&
+        guardrailVersion && {
+          trace,
+          guardrailIdentifier,
+          guardrailVersion,
+          guardrailConfig,
+        }),
     });
 
     const res = await bedrock.invoke([new HumanMessage(message)]);
@@ -208,7 +213,10 @@ async function testChatStreamingModel(
   trace?: "ENABLED" | "DISABLED",
   guardrailIdentifier?: string,
   guardrailVersion?: string,
-  guardrailConfig?: { tagSuffix: string, streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS" }
+  guardrailConfig?: {
+    tagSuffix: string;
+    streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS";
+  }
 ) {
   test(title, async () => {
     const region = process.env.BEDROCK_AWS_REGION ?? defaultRegion;
@@ -224,12 +232,14 @@ async function testChatStreamingModel(
         // sessionToken: process.env.BEDROCK_AWS_SESSION_TOKEN,
       },
       modelKwargs,
-      ...(trace && guardrailIdentifier && guardrailVersion && {
-        trace,
-        guardrailIdentifier,
-        guardrailVersion,
-        guardrailConfig,
-      })
+      ...(trace &&
+        guardrailIdentifier &&
+        guardrailVersion && {
+          trace,
+          guardrailIdentifier,
+          guardrailVersion,
+          guardrailConfig,
+        }),
     });
 
     const stream = await bedrock.stream([
@@ -265,7 +275,10 @@ async function testChatHandleLLMNewToken(
   trace?: "ENABLED" | "DISABLED",
   guardrailIdentifier?: string,
   guardrailVersion?: string,
-  guardrailConfig?: { tagSuffix: string, streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS" }
+  guardrailConfig?: {
+    tagSuffix: string;
+    streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS";
+  }
 ) {
   test(title, async () => {
     const region = process.env.BEDROCK_AWS_REGION ?? defaultRegion;
@@ -292,12 +305,14 @@ async function testChatHandleLLMNewToken(
           },
         },
       ],
-      ...(trace && guardrailIdentifier && guardrailVersion && {
-        trace,
-        guardrailIdentifier,
-        guardrailVersion,
-        guardrailConfig,
-      })
+      ...(trace &&
+        guardrailIdentifier &&
+        guardrailVersion && {
+          trace,
+          guardrailIdentifier,
+          guardrailVersion,
+          guardrailConfig,
+        }),
     });
     const stream = await bedrock.invoke([new HumanMessage(message)]);
     expect(tokens.length).toBeGreaterThan(1);

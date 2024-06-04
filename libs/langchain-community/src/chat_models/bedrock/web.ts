@@ -89,10 +89,6 @@ export function convertMessagesToPrompt(
   throw new Error(`Provider ${provider} does not support chat.`);
 }
 
-interface BedrockCallOptions extends Partial<BaseChatModelParams> {
-  signal?: AbortSignal;
-}
-
 /**
  * A type of Large Language Model (LLM) that interacts with the Bedrock
  * service. It extends the base `LLM` class and implements the
@@ -103,8 +99,8 @@ interface BedrockCallOptions extends Partial<BaseChatModelParams> {
  * region, and the maximum number of tokens to generate.
  *
  * The `BedrockChat` class supports both synchronous and asynchronous interactions with the model,
- * allowing for streaming responses and handling new token callbacks. It can be configured with 
- * optional parameters like temperature, stop sequences, and guardrail settings for enhanced control 
+ * allowing for streaming responses and handling new token callbacks. It can be configured with
+ * optional parameters like temperature, stop sequences, and guardrail settings for enhanced control
  * over the generated responses.
  *
  * @example
@@ -223,7 +219,10 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
 
   guardrailVersion = "";
 
-  guardrailConfig?: { tagSuffix: string; streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS" };
+  guardrailConfig?: {
+    tagSuffix: string;
+    streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS";
+  };
 
   get lc_aliases(): Record<string, string> {
     return {
@@ -301,7 +300,8 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
     this.usesMessagesApi = canUseMessagesApi(this.model);
     this.trace = fields?.trace ?? this.trace;
     this.guardrailVersion = fields?.guardrailVersion ?? this.guardrailVersion;
-    this.guardrailIdentifier = fields?.guardrailIdentifier ?? this.guardrailIdentifier;
+    this.guardrailIdentifier =
+      fields?.guardrailIdentifier ?? this.guardrailIdentifier;
     this.guardrailConfig = fields?.guardrailConfig;
   }
 
@@ -364,7 +364,7 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
 
   async _signedFetch(
     messages: BaseMessage[],
-    options: BedrockCallOptions,
+    options: this["ParsedCallOptions"],
     fields: {
       bedrockMethod: "invoke" | "invoke-with-response-stream";
       endpointHost: string;
@@ -378,7 +378,7 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
           messages,
           this.maxTokens,
           this.temperature,
-          this.stopSequences,
+          options.stop ?? this.stopSequences,
           this.modelKwargs,
           this.guardrailConfig
         )
@@ -387,7 +387,7 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
           convertMessagesToPromptAnthropic(messages),
           this.maxTokens,
           this.temperature,
-          this.stopSequences,
+          options.stop ?? this.stopSequences,
           this.modelKwargs,
           fields.bedrockMethod,
           this.guardrailConfig
@@ -409,11 +409,13 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
         host: url.host,
         accept: "application/json",
         "content-type": "application/json",
-        ...(this.trace && this.guardrailIdentifier && this.guardrailVersion && {
-          "X-Amzn-Bedrock-Trace": this.trace,
-          "X-Amzn-Bedrock-GuardrailIdentifier": this.guardrailIdentifier,
-          "X-Amzn-Bedrock-GuardrailVersion": this.guardrailVersion,
-        })
+        ...(this.trace &&
+          this.guardrailIdentifier &&
+          this.guardrailVersion && {
+            "X-Amzn-Bedrock-Trace": this.trace,
+            "X-Amzn-Bedrock-GuardrailIdentifier": this.guardrailIdentifier,
+            "X-Amzn-Bedrock-GuardrailVersion": this.guardrailVersion,
+          }),
       },
     });
 
@@ -441,7 +443,7 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
 
   async *_streamResponseChunks(
     messages: BaseMessage[],
-    options: BedrockCallOptions,
+    options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const provider = this.model.split(".")[0];

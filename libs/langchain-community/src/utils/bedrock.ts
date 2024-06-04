@@ -233,7 +233,10 @@ export interface BaseBedrockInput {
   guardrailVersion?: string;
 
   /** Required when Guardrail is in use. */
-  guardrailConfig?: { tagSuffix: string; streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS" };
+  guardrailConfig?: {
+    tagSuffix: string;
+    streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS";
+  };
 }
 
 type Dict = { [key: string]: unknown };
@@ -257,7 +260,10 @@ export class BedrockLLMInputOutputAdapter {
     stopSequences: string[] | undefined = undefined,
     modelKwargs: Record<string, unknown> = {},
     bedrockMethod: "invoke" | "invoke-with-response-stream" = "invoke",
-    guardrailConfig?: { tagSuffix: string, streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS" },
+    guardrailConfig?: {
+      tagSuffix: string;
+      streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS";
+    }
   ): Dict {
     const inputBody: Dict = {};
 
@@ -296,9 +302,13 @@ export class BedrockLLMInputOutputAdapter {
       inputBody.stop = stopSequences;
     }
 
-    if (guardrailConfig && guardrailConfig.tagSuffix && guardrailConfig.streamProcessingMode) {
+    if (
+      guardrailConfig &&
+      guardrailConfig.tagSuffix &&
+      guardrailConfig.streamProcessingMode
+    ) {
       inputBody["amazon-bedrock-guardrailConfig"] = guardrailConfig;
-  }
+    }
 
     return { ...inputBody, ...modelKwargs };
   }
@@ -310,7 +320,10 @@ export class BedrockLLMInputOutputAdapter {
     temperature = 0,
     stopSequences: string[] | undefined = undefined,
     modelKwargs: Record<string, unknown> = {},
-    guardrailConfig?: { tagSuffix: string, streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS" }
+    guardrailConfig?: {
+      tagSuffix: string;
+      streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS";
+    }
   ): Dict {
     const inputBody: Dict = {};
 
@@ -346,9 +359,13 @@ export class BedrockLLMInputOutputAdapter {
       );
     }
 
-    if (guardrailConfig && guardrailConfig.tagSuffix && guardrailConfig.streamProcessingMode) {
+    if (
+      guardrailConfig &&
+      guardrailConfig.tagSuffix &&
+      guardrailConfig.streamProcessingMode
+    ) {
       inputBody["amazon-bedrock-guardrailConfig"] = guardrailConfig;
-  }
+    }
 
     return { ...inputBody, ...modelKwargs };
   }
