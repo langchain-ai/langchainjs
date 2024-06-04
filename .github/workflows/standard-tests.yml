@@ -6,29 +6,6 @@ on:
     - cron: '0 13 * * *'
 
 jobs:
-  install-dependencies:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18.x
-      - name: Cache Yarn packages
-        uses: actions/cache@v3
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-      - name: Install dependencies
-        run: yarn install --immutable --mode=skip-build
-      - name: Upload node_modules artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: node_modules
-          path: node_modules
-
   tests:
     needs: install-dependencies
     runs-on: ubuntu-latest
@@ -41,11 +18,9 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
-      - name: Download cached node_modules
-        uses: actions/download-artifact@v3
-        with:
-          name: node_modules
-          path: node_modules
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable --mode=skip-build
       - name: Run standard tests (integration) for ${{ matrix.package }}
         run: yarn test:standard:int --filter=@langchain/${{ matrix.package }}
         env:
@@ -58,23 +33,6 @@ jobs:
   # The `@langchain/openai` package contains standard tests for ChatOpenAI and AzureChatOpenAI
   # We want to run these separately, so we need to pass the exact path for each test, which means
   # we need separate jobs for each test.
-  build-langchain-openai:
-    needs: install-dependencies
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18.x
-      - name: Download cached node_modules
-        uses: actions/download-artifact@v3
-        with:
-          name: node_modules
-          path: node_modules
-      - name: Build `@langchain/openai`
-        run: yarn build --filter=@langchain/openai
-
   tests-ChatOpenAI:
     needs: build-langchain-openai
     runs-on: ubuntu-latest
@@ -84,11 +42,11 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
-      - name: Download cached node_modules
-        uses: actions/download-artifact@v3
-        with:
-          name: node_modules
-          path: node_modules
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable --mode=skip-build
+      - name: Build `@langchain/openai`
+        run: yarn build --filter=@langchain/openai
       - name: Run standard tests (integration) for `@langchain/openai` ChatOpenAI
         run: yarn workspace @langchain/openai test:single src/tests/chat_models.standard.int.test.ts
         env:
@@ -103,11 +61,11 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
-      - name: Download cached node_modules
-        uses: actions/download-artifact@v3
-        with:
-          name: node_modules
-          path: node_modules
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable --mode=skip-build
+      - name: Build `@langchain/openai`
+        run: yarn build --filter=@langchain/openai
       - name: Run standard tests (integration) for `@langchain/openai` AzureChatOpenAI
         run: yarn workspace @langchain/openai test:single src/tests/azure/chat_models.standard.int.test.ts
         env:
@@ -115,3 +73,4 @@ jobs:
           AZURE_OPENAI_API_DEPLOYMENT_NAME: "chat"
           AZURE_OPENAI_API_VERSION: ${{ secrets.AZURE_OPENAI_API_VERSION }}
           AZURE_OPENAI_BASE_PATH: ${{ secrets.AZURE_OPENAI_BASE_PATH }}
+
