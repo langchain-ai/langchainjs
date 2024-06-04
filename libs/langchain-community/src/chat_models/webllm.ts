@@ -117,14 +117,12 @@ export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
       }
     );
 
-    const stream = await this.engine.chat.completions.create(
-      {
-        stream: true,
-        messages: messagesInput,
-        stop: options.stop,
-        logprobs: true,
-      }
-    );
+    const stream = await this.engine.chat.completions.create({
+      stream: true,
+      messages: messagesInput,
+      stop: options.stop,
+      logprobs: true,
+    });
     for await (const chunk of stream) {
       // Last chunk has undefined content
       const text = chunk.choices[0].delta.content ?? "";
