@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        package: [cohere, google-genai, groq, mistralai]
+        package: [anthropic, cohere, google-genai, groq, mistralai]
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js 18.x
@@ -34,8 +34,9 @@ jobs:
       - name: Run standard tests (integration) for ${{ matrix.package }}
         run: yarn test:standard:int --filter=@langchain/${{ matrix.package }}
         env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
-          GOOGLE_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
 
