@@ -73,7 +73,7 @@ interface TokenUsage {
 export type MistralAIToolChoice = "auto" | "any" | "none";
 
 type MistralAIToolInput = { type: string; function: MistralAIFunction };
-interface MistralAICallOptions
+export interface MistralAICallOptions
   extends Omit<BaseLanguageModelCallOptions, "stop"> {
   response_format?: {
     type: "text" | "json_object";

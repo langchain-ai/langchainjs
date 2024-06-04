@@ -9933,6 +9933,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.56 <0.3.0"
     "@langchain/scripts": ~0.0.14
+    "@langchain/standard-tests": "workspace:*"
     "@mistralai/mistralai": ^0.4.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29

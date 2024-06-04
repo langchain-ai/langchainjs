@@ -2,15 +2,15 @@
 import { test, expect } from "@jest/globals";
 import { ChatModelIntegrationTests } from "@langchain/standard-tests";
 import { AIMessageChunk } from "@langchain/core/messages";
-import { ChatGroq, ChatGroqCallOptions } from "../chat_models.js";
+import { ChatMistralAI, MistralAICallOptions } from "../chat_models.js";
 
-class ChatGroqStandardIntegrationTests extends ChatModelIntegrationTests<
-ChatGroqCallOptions,
+class ChatMistralAIStandardIntegrationTests extends ChatModelIntegrationTests<
+MistralAICallOptions,
   AIMessageChunk
 > {
   constructor() {
     super({
-      Cls: ChatGroq,
+      Cls: ChatMistralAI,
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
       constructorArgs: {},
@@ -18,9 +18,9 @@ ChatGroqCallOptions,
   }
 }
 
-const testClass = new ChatGroqStandardIntegrationTests();
+const testClass = new ChatMistralAIStandardIntegrationTests();
 
-test("ChatGroqStandardIntegrationTests", async () => {
+test("ChatMistralAIStandardIntegrationTests", async () => {
   const testResults = await testClass.runTests();
   expect(testResults).toBe(true);
 });
