@@ -37,6 +37,7 @@ const callbacks = require("langchain/callbacks");
 const output_parsers = require("langchain/output_parsers");
 const retrievers_contextual_compression = require("langchain/retrievers/contextual_compression");
 const retrievers_document_compressors = require("langchain/retrievers/document_compressors");
+const retrievers_ensemble = require("langchain/retrievers/ensemble");
 const retrievers_multi_query = require("langchain/retrievers/multi_query");
 const retrievers_multi_vector = require("langchain/retrievers/multi_vector");
 const retrievers_parent_document = require("langchain/retrievers/parent_document");

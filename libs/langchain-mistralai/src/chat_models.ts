@@ -82,6 +82,8 @@ interface MistralAICallOptions
   tool_choice?: MistralAIToolChoice;
 }
 
+export interface ChatMistralAICallOptions extends MistralAICallOptions {}
+
 /**
  * Input to chat model class.
  */
@@ -409,7 +411,7 @@ export class ChatMistralAI<
     this.model = this.modelName;
   }
 
-  protected getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+  getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     const params = this.invocationParams(options);
     return {
       ls_provider: "mistral",

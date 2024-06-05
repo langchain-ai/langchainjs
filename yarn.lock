@@ -8931,6 +8931,7 @@ __metadata:
     "@langchain/community": "workspace:*"
     "@langchain/core": ">=0.2.5 <0.3.0"
     "@langchain/scripts": ~0.0.14
+    "@langchain/standard-tests": "workspace:*"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     dpdm: ^3.12.0
@@ -8963,6 +8964,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
     "@langchain/scripts": ~0.0.14
+    "@langchain/standard-tests": "workspace:*"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     dpdm: ^3.12.0
@@ -8994,6 +8996,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
     "@langchain/scripts": ~0.0.14
+    "@langchain/standard-tests": "workspace:*"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9036,6 +9039,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.58 <0.3.0"
     "@langchain/scripts": ~0.0.14
+    "@langchain/standard-tests": "workspace:*"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9097,9 +9101,10 @@ __metadata:
     "@langchain/core": ~0.2.0
     "@langchain/openai": ~0.1.0
     "@langchain/scripts": ~0.0.14
+    "@langchain/standard-tests": "workspace:*"
     "@layerup/layerup-security": ^1.5.12
     "@mendable/firecrawl-js": ^0.0.13
-    "@mlc-ai/web-llm": ^0.2.35
+    "@mlc-ai/web-llm": ^0.2.40
     "@mozilla/readability": ^0.4.4
     "@neondatabase/serverless": ^0.9.1
     "@notionhq/client": ^2.2.10
@@ -9266,7 +9271,7 @@ __metadata:
     "@huggingface/inference": ^2.6.4
     "@layerup/layerup-security": ^1.5.12
     "@mendable/firecrawl-js": ^0.0.13
-    "@mlc-ai/web-llm": ^0.2.35
+    "@mlc-ai/web-llm": ^0.2.40
     "@mozilla/readability": "*"
     "@neondatabase/serverless": "*"
     "@notionhq/client": ^2.2.10
@@ -9715,6 +9720,7 @@ __metadata:
     "@langchain/core": ">0.1.56 <0.3.0"
     "@langchain/google-common": ~0.0.17
     "@langchain/scripts": ~0.0.14
+    "@langchain/standard-tests": "workspace:*"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9748,6 +9754,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.5  <0.3.0"
     "@langchain/scripts": ~0.0.14
+    "@langchain/standard-tests": "workspace:*"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9877,6 +9884,7 @@ __metadata:
     "@langchain/core": ">0.1.56 <0.3.0"
     "@langchain/openai": "workspace:^"
     "@langchain/scripts": ~0.0.14
+    "@langchain/standard-tests": "workspace:*"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9927,6 +9935,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.56 <0.3.0"
     "@langchain/scripts": ~0.0.14
+    "@langchain/standard-tests": "workspace:*"
     "@mistralai/mistralai": ^0.4.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -10043,6 +10052,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">=0.2.5 <0.3.0"
     "@langchain/scripts": ~0.0.14
+    "@langchain/standard-tests": "workspace:*"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     dpdm: ^3.12.0
@@ -10203,6 +10213,37 @@ __metadata:
   bin:
     lc-build: bin/build.js
     "lc-build:v2": bin/build_v2.js
+  languageName: unknown
+  linkType: soft
+
+"@langchain/standard-tests@workspace:*, @langchain/standard-tests@workspace:libs/langchain-standard-tests":
+  version: 0.0.0-use.local
+  resolution: "@langchain/standard-tests@workspace:libs/langchain-standard-tests"
+  dependencies:
+    "@jest/globals": ^29.5.0
+    "@langchain/core": "workspace:*"
+    "@langchain/scripts": "workspace:*"
+    "@swc/core": ^1.3.90
+    "@swc/jest": ^0.2.29
+    "@tsconfig/recommended": ^1.0.3
+    "@typescript-eslint/eslint-plugin": ^6.12.0
+    "@typescript-eslint/parser": ^6.12.0
+    dotenv: ^16.3.1
+    dpdm: ^3.12.0
+    eslint: ^8.33.0
+    eslint-config-airbnb-base: ^15.0.0
+    eslint-config-prettier: ^8.6.0
+    eslint-plugin-import: ^2.27.5
+    eslint-plugin-no-instanceof: ^1.0.1
+    eslint-plugin-prettier: ^4.2.1
+    jest: ^29.5.0
+    jest-environment-node: ^29.6.4
+    prettier: ^2.8.3
+    release-it: ^15.10.1
+    rollup: ^4.5.2
+    ts-jest: ^29.1.0
+    typescript: ^5.4.5
+    zod: ^3.22.4
   languageName: unknown
   linkType: soft
 
@@ -10445,10 +10486,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mlc-ai/web-llm@npm:^0.2.35":
-  version: 0.2.35
-  resolution: "@mlc-ai/web-llm@npm:0.2.35"
-  checksum: 03c1d1847340f88474e1eeed7a91cc09e29299a1216e378385ffe5479c203d39a8656d98c9187864322453a91f046b874d7073662ab04033527079d9bb29bee3
+"@mlc-ai/web-llm@npm:^0.2.40":
+  version: 0.2.40
+  resolution: "@mlc-ai/web-llm@npm:0.2.40"
+  dependencies:
+    loglevel: ^1.9.1
+  checksum: 44d46178f7b7f899893ee8096fd4188b8c343589a10428c52f87b1b7e708f7a94b2b6315c8a6f8075f14d6d92aebfd8afc7f6d049a2ef60f8b8dc950b98a82e2
   languageName: node
   linkType: hard
 
@@ -28428,6 +28471,13 @@ __metadata:
   version: 1.8.1
   resolution: "loglevel@npm:1.8.1"
   checksum: a1a62db40291aaeaef2f612334c49e531bff71cc1d01a2acab689ab80d59e092f852ab164a5aedc1a752fdc46b7b162cb097d8a9eb2cf0b299511106c29af61d
+  languageName: node
+  linkType: hard
+
+"loglevel@npm:^1.9.1":
+  version: 1.9.1
+  resolution: "loglevel@npm:1.9.1"
+  checksum: e1c8586108c4d566122e91f8a79c8df728920e3a714875affa5120566761a24077ec8ec9e5fc388b022e39fc411ec6e090cde1b5775871241b045139771eeb06
   languageName: node
   linkType: hard
 
