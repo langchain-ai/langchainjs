@@ -327,7 +327,7 @@ function _formatContent(content: MessageContent) {
  * @param messages The base messages to format as a prompt.
  * @returns The formatted prompt.
  */
-function _formatMessagesForAnthropic(messages: BaseMessage[]): {
+export function formatMessagesForAnthropic(messages: BaseMessage[]): {
   system?: string;
   messages: AnthropicMessage[];
 } {

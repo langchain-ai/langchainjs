@@ -230,7 +230,6 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
     streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS";
   };
 
-
   tools: (StructuredToolInterface | Record<string, unknown>)[] = [];
 
   get lc_aliases(): Record<string, string> {
@@ -402,7 +401,7 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
           options.stop ?? this.stopSequences,
           this.modelKwargs,
           this.guardrailConfig,
-          this.tools,
+          this.tools
         )
       : BedrockLLMInputOutputAdapter.prepareInput(
           provider,
