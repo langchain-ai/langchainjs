@@ -22,7 +22,7 @@ class ChatOllamaStandardUnitTests extends ChatModelUnitTests<
       "testChatModelInitApiKey",
       "ChatOllama",
       "API key not required."
-    )
+    );
   }
 }
 

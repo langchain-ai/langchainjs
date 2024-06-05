@@ -70,3 +70,24 @@ jobs:
           AZURE_OPENAI_API_DEPLOYMENT_NAME: "chat"
           AZURE_OPENAI_API_VERSION: ${{ secrets.AZURE_OPENAI_API_VERSION }}
           AZURE_OPENAI_BASE_PATH: ${{ secrets.AZURE_OPENAI_BASE_PATH }}
+
+  standard-tests-bedrock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable --mode=skip-build
+      - name: Build `@langchain/community`
+        run: yarn build --filter=@langchain/openai
+      - name: Run standard tests (integration) for `@langchain/openai` AzureChatOpenAI
+        run: yarn workspace @langchain/openai test:single src/tests/azure/chat_models.standard.int.test.ts
+        env:
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+          AZURE_OPENAI_API_DEPLOYMENT_NAME: "chat"
+          AZURE_OPENAI_API_VERSION: ${{ secrets.AZURE_OPENAI_API_VERSION }}
+          AZURE_OPENAI_BASE_PATH: ${{ secrets.AZURE_OPENAI_BASE_PATH }}

@@ -5,7 +5,7 @@ import { AIMessageChunk } from "@langchain/core/messages";
 import { ChatFireworks, ChatFireworksCallOptions } from "../fireworks.js";
 
 class ChatFireworksStandardIntegrationTests extends ChatModelIntegrationTests<
-ChatFireworksCallOptions,
+  ChatFireworksCallOptions,
   AIMessageChunk
 > {
   constructor() {

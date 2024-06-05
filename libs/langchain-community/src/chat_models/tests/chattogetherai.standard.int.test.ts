@@ -5,7 +5,7 @@ import { AIMessageChunk } from "@langchain/core/messages";
 import { ChatTogetherAI, ChatTogetherAICallOptions } from "../togetherai.js";
 
 class ChatTogetherAIStandardIntegrationTests extends ChatModelIntegrationTests<
-ChatTogetherAICallOptions,
+  ChatTogetherAICallOptions,
   AIMessageChunk
 > {
   constructor() {

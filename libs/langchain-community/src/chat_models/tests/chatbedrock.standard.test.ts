@@ -2,8 +2,8 @@
 import { test, expect } from "@jest/globals";
 import { ChatModelUnitTests } from "@langchain/standard-tests";
 import { AIMessageChunk } from "@langchain/core/messages";
-import { BedrockChat } from "../bedrock/index.js";
 import { BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
+import { BedrockChat } from "../bedrock/index.js";
 
 class BedrockChatStandardUnitTests extends ChatModelUnitTests<
   BaseChatModelCallOptions,
@@ -27,7 +27,7 @@ class BedrockChatStandardUnitTests extends ChatModelUnitTests<
       "testChatModelInitApiKey",
       "BedrockChat",
       this.multipleApiKeysRequiredMessage
-    )
+    );
   }
 }
 

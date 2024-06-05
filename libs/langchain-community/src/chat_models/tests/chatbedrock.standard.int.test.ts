@@ -2,8 +2,8 @@
 import { test, expect } from "@jest/globals";
 import { ChatModelIntegrationTests } from "@langchain/standard-tests";
 import { AIMessageChunk } from "@langchain/core/messages";
-import { BedrockChat } from "../bedrock/index.js";
 import { BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
+import { BedrockChat } from "../bedrock/index.js";
 
 class BedrockChatStandardIntegrationTests extends ChatModelIntegrationTests<
   BaseChatModelCallOptions,
@@ -21,7 +21,7 @@ class BedrockChatStandardIntegrationTests extends ChatModelIntegrationTests<
         credentials: {
           secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY,
           accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID,
-        }
+        },
       },
     });
   }
