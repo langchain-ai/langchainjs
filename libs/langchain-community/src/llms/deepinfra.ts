@@ -15,14 +15,14 @@ export interface DeepInfraLLMParams extends BaseLLMParams {
   temperature?: number;
 }
 
-export class DeepInfraLLM extends LLM implements BaseLLMParams {
+export class DeepInfraLLM extends LLM implements DeepInfraLLMParams {
   static lc_name() {
     return "DeepInfraLLM";
   }
 
   lc_serializable = true;
 
-  apiToken?: string;
+  apiKey?: string;
 
   model?: string;
 
@@ -33,7 +33,7 @@ export class DeepInfraLLM extends LLM implements BaseLLMParams {
   constructor(fields: Partial<DeepInfraLLMParams> = {}) {
     super(fields);
 
-    this.apiToken = fields.apiKey ?? getEnvironmentVariable(ENV_VARIABLE);
+    this.apiKey = fields.apiKey ?? getEnvironmentVariable(ENV_VARIABLE);
     this.model = fields.model ?? DEFAULT_MODEL_NAME;
     this.maxTokens = fields.maxTokens;
     this.temperature = fields.temperature;
@@ -58,13 +58,12 @@ export class DeepInfraLLM extends LLM implements BaseLLMParams {
       fetch(DEEPINFRA_API_BASE, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${this.apiToken}`,
+          Authorization: `Bearer ${this.apiKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(body),
       }).then((res) => res.json())
     );
-    console.log(response);
     return response as string;
   }
 }

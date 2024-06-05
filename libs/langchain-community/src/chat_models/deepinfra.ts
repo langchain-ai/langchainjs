@@ -147,7 +147,6 @@ export class ChatDeepInfra
       false,
       options?.signal
     ).then<ChatCompletionResponse>((data) => {
-      console.log(data);
 
       if (data?.code) {
         throw new Error(data?.message);
