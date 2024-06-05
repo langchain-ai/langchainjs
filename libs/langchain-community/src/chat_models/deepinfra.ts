@@ -2,10 +2,7 @@ import {
   BaseChatModel,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
-import {
-  AIMessage,
-  type BaseMessage,
-} from "@langchain/core/messages";
+import { AIMessage, type BaseMessage } from "@langchain/core/messages";
 import { type ChatResult } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
@@ -13,7 +10,8 @@ export const DEFAULT_MODEL = "meta-llama/Meta-Llama-3-70B-Instruct";
 
 export type DeepInfraMessageRole = "system" | "assistant" | "user";
 
-export const API_BASE_URL = "https://api.deepinfra.com/v1/openai/chat/completions";
+export const API_BASE_URL =
+  "https://api.deepinfra.com/v1/openai/chat/completions";
 
 export const ENV_VARIABLE_API_KEY = "DEEPINFRA_API_TOKEN";
 
@@ -81,7 +79,10 @@ function messageToRole(message: BaseMessage): DeepInfraMessageRole {
   }
 }
 
-export class ChatDeepInfra extends BaseChatModel implements ChatDeepInfraParams {
+export class ChatDeepInfra
+  extends BaseChatModel
+  implements ChatDeepInfraParams
+{
   static lc_name() {
     return "ChatDeepInfra";
   }
@@ -91,17 +92,24 @@ export class ChatDeepInfra extends BaseChatModel implements ChatDeepInfraParams 
   }
 
   apiKey?: string;
+
   model: string;
+
   apiUrl: string;
+
   maxTokens?: number;
+
   temperature?: number;
 
   constructor(fields: Partial<ChatDeepInfraParams> & BaseChatModelParams = {}) {
     super(fields);
 
-    this.apiKey = fields?.apiKey ?? getEnvironmentVariable(ENV_VARIABLE_API_KEY);
+    this.apiKey =
+      fields?.apiKey ?? getEnvironmentVariable(ENV_VARIABLE_API_KEY);
     if (!this.apiKey) {
-      throw new Error("API key is required, set `DEEPINFRA_API_TOKEN` environment variable or pass it as a parameter");
+      throw new Error(
+        "API key is required, set `DEEPINFRA_API_TOKEN` environment variable or pass it as a parameter"
+      );
     }
 
     this.apiUrl = API_BASE_URL;
@@ -125,7 +133,7 @@ export class ChatDeepInfra extends BaseChatModel implements ChatDeepInfraParams 
 
   async _generate(
     messages: BaseMessage[],
-    options?: this["ParsedCallOptions"],
+    options?: this["ParsedCallOptions"]
   ): Promise<ChatResult> {
     const parameters = this.invocationParams();
 
@@ -175,7 +183,7 @@ export class ChatDeepInfra extends BaseChatModel implements ChatDeepInfraParams 
   async completionWithRetry(
     request: ChatCompletionRequest,
     stream: boolean,
-    signal?: AbortSignal,
+    signal?: AbortSignal
   ) {
     const makeCompletionRequest = async () => {
       const response = await fetch(this.apiUrl, {

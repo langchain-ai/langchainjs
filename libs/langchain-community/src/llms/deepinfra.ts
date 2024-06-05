@@ -1,12 +1,12 @@
 import { LLM, type BaseLLMParams } from "@langchain/core/language_models/llms";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
-export const DEEPINFRA_API_BASE = "https://api.deepinfra.com/v1/openai/completions";
+export const DEEPINFRA_API_BASE =
+  "https://api.deepinfra.com/v1/openai/completions";
 
-export const DEFAULT_MODEL_NAME = "mistralai/Mixtral-8x22B-Instruct-v0.1"
+export const DEFAULT_MODEL_NAME = "mistralai/Mixtral-8x22B-Instruct-v0.1";
 
-export const ENV_VARIABLE = "DEEPINFRA_API_TOKEN"
-
+export const ENV_VARIABLE = "DEEPINFRA_API_TOKEN";
 
 export interface DeepInfraLLMParams extends BaseLLMParams {
   apiKey?: string;
@@ -19,8 +19,6 @@ export class DeepInfraLLM extends LLM implements BaseLLMParams {
   static lc_name() {
     return "DeepInfraLLM";
   }
-
-
 
   lc_serializable = true;
 
@@ -41,7 +39,6 @@ export class DeepInfraLLM extends LLM implements BaseLLMParams {
     this.temperature = fields.temperature;
   }
 
-
   _llmType(): string {
     return "DeepInfra";
   }
@@ -50,14 +47,13 @@ export class DeepInfraLLM extends LLM implements BaseLLMParams {
     prompt: string,
     options: this["ParsedCallOptions"]
   ): Promise<string> {
-
     const body = {
       temperature: this.temperature,
       max_tokens: this.maxTokens,
       ...options,
       prompt,
       model: this.model,
-    }
+    };
     const response = await this.caller.call(() =>
       fetch(DEEPINFRA_API_BASE, {
         method: "POST",
@@ -70,7 +66,5 @@ export class DeepInfraLLM extends LLM implements BaseLLMParams {
     );
     console.log(response);
     return response as string;
-
   }
-
 }

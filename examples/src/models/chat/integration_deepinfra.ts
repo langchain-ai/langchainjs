@@ -7,11 +7,10 @@ const model = "gpt-3.5-turbo";
 
 const chat = new ChatDeepInfra({
   model,
-  apiKey
+  apiKey,
 });
 
 const messages = [new HumanMessage("Hello")];
-
 
 chat.invoke(messages).then((response: any) => {
   console.log(response);

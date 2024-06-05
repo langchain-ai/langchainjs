@@ -1866,13 +1866,13 @@
       "require": "./chat_models/cloudflare_workersai.cjs"
     },
     "./chat_models/deepinfra": {
-        "types": {
-            "import": "./chat_models/deepinfra.d.ts",
-            "require": "./chat_models/deepinfra.d.cts",
-            "default": "./chat_models/deepinfra.d.ts"
-        },
-        "import": "./chat_models/deepinfra.js",
-        "require": "./chat_models/deepinfra.cjs"
+      "types": {
+        "import": "./chat_models/deepinfra.d.ts",
+        "require": "./chat_models/deepinfra.d.cts",
+        "default": "./chat_models/deepinfra.d.ts"
+      },
+      "import": "./chat_models/deepinfra.js",
+      "require": "./chat_models/deepinfra.cjs"
     },
     "./chat_models/fireworks": {
       "types": {

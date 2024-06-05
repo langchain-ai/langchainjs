@@ -1,6 +1,5 @@
 import { DeepInfraLLM } from "@langchain/community/llms/deepinfra";
 
-
 const apiKey = process.env.DEEPINFRA_API_TOKEN;
 const model = "meta-llama/Meta-Llama-3-70B-Instruct";
 
