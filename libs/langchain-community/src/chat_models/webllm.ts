@@ -28,7 +28,7 @@ export interface WebLLMCallOptions extends BaseLanguageModelCallOptions {}
  * ```typescript
  * // Initialize the ChatWebLLM model with the model record.
  * const model = new ChatWebLLM({
- *   model: "Phi2-q4f32_1",
+ *   model: "Phi-3-mini-4k-instruct-q4f16_1-MLC",
  *   chatOptions: {
  *     temperature: 0.5,
  *   },
@@ -79,8 +79,8 @@ export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
 
   async reload(
     modelId: string,
-    newAppConfig?: webllm.AppConfig,
-    newChatOpts?: webllm.ChatOptions
+    newChatOpts?: webllm.ChatOptions,
+    newAppConfig?: webllm.AppConfig
   ) {
     await this.engine.reload(modelId, newChatOpts, newAppConfig);
   }
