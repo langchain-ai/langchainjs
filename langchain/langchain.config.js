@@ -143,6 +143,7 @@ export const config = {
     // retrievers
     "retrievers/contextual_compression": "retrievers/contextual_compression",
     "retrievers/document_compressors": "retrievers/document_compressors/index",
+    "retrievers/ensemble": "retrievers/ensemble",
     "retrievers/multi_query": "retrievers/multi_query",
     "retrievers/multi_vector": "retrievers/multi_vector",
     "retrievers/parent_document": "retrievers/parent_document",

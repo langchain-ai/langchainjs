@@ -222,6 +222,21 @@ export interface BaseBedrockInput {
 
   /** Whether or not to stream responses */
   streaming: boolean;
+
+  /** Trace settings for the Bedrock Guardrails. */
+  trace?: "ENABLED" | "DISABLED";
+
+  /** Identifier for the guardrail configuration. */
+  guardrailIdentifier?: string;
+
+  /** Version for the guardrail configuration. */
+  guardrailVersion?: string;
+
+  /** Required when Guardrail is in use. */
+  guardrailConfig?: {
+    tagSuffix: string;
+    streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS";
+  };
 }
 
 type Dict = { [key: string]: unknown };
@@ -244,7 +259,13 @@ export class BedrockLLMInputOutputAdapter {
     temperature = 0,
     stopSequences: string[] | undefined = undefined,
     modelKwargs: Record<string, unknown> = {},
-    bedrockMethod: "invoke" | "invoke-with-response-stream" = "invoke"
+    bedrockMethod: "invoke" | "invoke-with-response-stream" = "invoke",
+    guardrailConfig:
+      | {
+          tagSuffix: string;
+          streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS";
+        }
+      | undefined = undefined
   ): Dict {
     const inputBody: Dict = {};
 
@@ -282,6 +303,15 @@ export class BedrockLLMInputOutputAdapter {
       inputBody.temperature = temperature;
       inputBody.stop = stopSequences;
     }
+
+    if (
+      guardrailConfig &&
+      guardrailConfig.tagSuffix &&
+      guardrailConfig.streamProcessingMode
+    ) {
+      inputBody["amazon-bedrock-guardrailConfig"] = guardrailConfig;
+    }
+
     return { ...inputBody, ...modelKwargs };
   }
 
@@ -291,7 +321,13 @@ export class BedrockLLMInputOutputAdapter {
     maxTokens = 1024,
     temperature = 0,
     stopSequences: string[] | undefined = undefined,
-    modelKwargs: Record<string, unknown> = {}
+    modelKwargs: Record<string, unknown> = {},
+    guardrailConfig:
+      | {
+          tagSuffix: string;
+          streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS";
+        }
+      | undefined = undefined
   ): Dict {
     const inputBody: Dict = {};
 
@@ -306,7 +342,6 @@ export class BedrockLLMInputOutputAdapter {
       inputBody.max_tokens = maxTokens;
       inputBody.temperature = temperature;
       inputBody.stop_sequences = stopSequences;
-      return { ...inputBody, ...modelKwargs };
     } else if (provider === "cohere") {
       const {
         system,
@@ -322,12 +357,21 @@ export class BedrockLLMInputOutputAdapter {
       inputBody.max_tokens = maxTokens;
       inputBody.temperature = temperature;
       inputBody.stop_sequences = stopSequences;
-      return { ...inputBody, ...modelKwargs };
     } else {
       throw new Error(
         "The messages API is currently only supported by Anthropic or Cohere"
       );
     }
+
+    if (
+      guardrailConfig &&
+      guardrailConfig.tagSuffix &&
+      guardrailConfig.streamProcessingMode
+    ) {
+      inputBody["amazon-bedrock-guardrailConfig"] = guardrailConfig;
+    }
+
+    return { ...inputBody, ...modelKwargs };
   }
 
   /**
@@ -484,6 +528,7 @@ function parseMessage(responseBody: any, asChunk?: boolean): ChatGeneration {
 }
 
 function parseMessageCohere(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   responseBody: any,
   asChunk?: boolean
 ): ChatGeneration {

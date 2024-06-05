@@ -55,7 +55,7 @@ interface TokenUsage {
   totalTokens?: number;
 }
 
-interface CohereChatCallOptions
+export interface CohereChatCallOptions
   extends BaseLanguageModelCallOptions,
     Partial<Omit<Cohere.ChatRequest, "message">>,
     Partial<Omit<Cohere.ChatStreamRequest, "message">> {}
@@ -146,7 +146,7 @@ export class ChatCohere<
     this.streaming = fields?.streaming ?? this.streaming;
   }
 
-  protected getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+  getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     const params = this.invocationParams(options);
     return {
       ls_provider: "cohere",
