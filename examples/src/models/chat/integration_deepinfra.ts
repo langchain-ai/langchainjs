@@ -3,7 +3,7 @@ import { HumanMessage } from "@langchain/core/messages";
 
 const apiKey = process.env.DEEPINFRA_API_TOKEN;
 
-const model = "gpt-3.5-turbo";
+const model = "meta-llama/Meta-Llama-3-70B-Instruct";
 
 const chat = new ChatDeepInfra({
   model,

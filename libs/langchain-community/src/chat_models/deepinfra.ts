@@ -184,6 +184,14 @@ export class ChatDeepInfra
     stream: boolean,
     signal?: AbortSignal
   ) {
+
+    const body = {
+      temperature: this.temperature,
+      max_tokens: this.maxTokens,
+      ...request,
+      model: this.model,
+    };
+
     const makeCompletionRequest = async () => {
       const response = await fetch(this.apiUrl, {
         method: "POST",
@@ -191,7 +199,7 @@ export class ChatDeepInfra
           Authorization: `Bearer ${this.apiKey}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(request),
+        body: JSON.stringify(body),
         signal,
       });
 
