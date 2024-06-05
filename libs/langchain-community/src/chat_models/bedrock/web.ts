@@ -613,7 +613,7 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
 
   bindTools(
     tools: (StructuredToolInterface | Record<string, unknown>)[],
-    kwargs?: Partial<BaseChatModelCallOptions>
+    _kwargs?: Partial<BaseChatModelCallOptions>
   ): Runnable<
     BaseLanguageModelInput,
     BaseMessageChunk,
