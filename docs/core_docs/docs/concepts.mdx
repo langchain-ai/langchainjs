@@ -74,6 +74,7 @@ export LANGCHAIN_API_KEY=ls__...
 ```
 
 ## LangChain Expression Language
+
 <span data-heading-keywords="lcel"></span>
 
 LangChain Expression Language, or LCEL, is a declarative way to easily compose chains together.
@@ -104,6 +105,7 @@ As your chains get more and more complex, it becomes increasingly important to u
 With LCEL, **all** steps are automatically logged to [LangSmith](https://docs.smith.langchain.com) for maximum observability and debuggability.
 
 ### Interface
+
 <span data-heading-keywords="invoke"></span>
 
 To make it as easy as possible to create custom chains, we've implemented a ["Runnable"](https://v02.api.js.langchain.com/classes/langchain_core_runnables.Runnable.html) protocol.
@@ -133,6 +135,7 @@ LangChain provides standard, extendable interfaces and external integrations for
 Some components LangChain implements, some components we rely on third-party integrations for, and others are a mix.
 
 ### LLMs
+
 <span data-heading-keywords="llm,llms"></span>
 
 Language models that takes a string as input and returns a string.
@@ -145,6 +148,7 @@ When messages are passed in as input, they will be formatted into a string under
 LangChain does not provide any LLMs, rather we rely on third party integrations.
 
 ### Chat models
+
 <span data-heading-keywords="chat model,chat models"></span>
 
 Language models that use a sequence of messages as inputs and return chat messages as outputs (as opposed to using plain text).
@@ -252,6 +256,7 @@ This represents the result of a function call. In addition to `role` and `conten
 This represents the result of a tool call. This is distinct from a FunctionMessage in order to match OpenAI's `function` and `tool` message types. In addition to `role` and `content`, this message has a `tool_call_id` parameter which conveys the id of the call to the tool that was called to produce this result.
 
 ### Prompt templates
+
 <span data-heading-keywords="prompt,prompttemplate,chatprompttemplate"></span>
 
 Prompt templates help to translate user input and parameters into instructions for a language model.
@@ -300,6 +305,7 @@ The first is a system message, that has no variables to format.
 The second is a HumanMessage, and will be formatted by the `topic` variable the user passes in.
 
 #### MessagesPlaceholder
+
 <span data-heading-keywords="messagesplaceholder"></span>
 
 This prompt template is responsible for adding an array of messages in a particular place.
@@ -343,6 +349,7 @@ Sometimes these examples are hardcoded into the prompt, but for more advanced si
 Example Selectors are classes responsible for selecting and then formatting examples into prompts.
 
 ### Output parsers
+
 <span data-heading-keywords="output parser"></span>
 
 :::note
@@ -402,6 +409,7 @@ This `ChatHistory` will keep track of inputs and outputs of the underlying chain
 Future interactions will then load those messages and pass them into the chain as part of the input.
 
 ### Document
+
 <span data-heading-keywords="document,documents"></span>
 
 A Document object in LangChain contains information about some data. It has two attributes:
@@ -410,6 +418,7 @@ A Document object in LangChain contains information about some data. It has two 
 - `metadata: Record<string, any>`: Arbitrary metadata associated with this document. Can track the document id, file name, etc.
 
 ### Document loaders
+
 <span data-heading-keywords="document loader,document loaders"></span>
 
 These classes load Document objects. LangChain has hundreds of integrations with various data sources to load data from: Slack, Notion, Google Drive, etc.
@@ -444,6 +453,7 @@ That means there are two different axes along which you can customize your text 
 2. How the chunk size is measured
 
 ### Embedding models
+
 <span data-heading-keywords="embedding,embeddings"></span>
 
 The Embeddings class is a class designed for interfacing with text embedding models. There are lots of embedding model providers (OpenAI, Cohere, Hugging Face, etc) - this class is designed to provide a standard interface for all of them.
@@ -453,6 +463,7 @@ Embeddings create a vector representation of a piece of text. This is useful bec
 The base Embeddings class in LangChain provides two methods: one for embedding documents and one for embedding a query. The former takes as input multiple texts, while the latter takes a single text. The reason for having these as two separate methods is that some embedding providers have different embedding methods for documents (to be searched over) vs queries (the search query itself).
 
 ### Vectorstores
+
 <span data-heading-keywords="vector,vectorstore,vectorstores,vector store,vector stores"></span>
 
 One of the most common ways to store and search over unstructured data is to embed it and store the resulting embedding vectors,
@@ -467,6 +478,7 @@ const retriever = vectorstore.asRetriever();
 ```
 
 ### Retrievers
+
 <span data-heading-keywords="retriever,retrievers"></span>
 
 A retriever is an interface that returns relevant documents given an unstructured query.
@@ -477,6 +489,7 @@ Retrievers can be created from vector stores, but are also broad enough to inclu
 Retrievers accept a string query as input and return an array of `Document`s as output.
 
 ### Tools
+
 <span data-heading-keywords="tool,tools"></span>
 
 Tools are interfaces that an agent, chain, or LLM can use to interact with the world.
