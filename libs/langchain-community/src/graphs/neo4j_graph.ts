@@ -323,7 +323,7 @@ export class Neo4jGraph {
   }
 
   async verifyConnectivity() {
-    await this.driver.verifyAuthentication();
+    await this.driver.getServerInfo();
   }
 
   async refreshSchema() {
