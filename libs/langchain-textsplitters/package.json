@@ -1,6 +1,6 @@
 {
   "name": "@langchain/textsplitters",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Various implementations of LangChain.js text splitters",
   "type": "module",
   "engines": {
