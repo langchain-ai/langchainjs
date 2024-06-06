@@ -23,14 +23,6 @@ export interface SessionsPythonREPLToolParams {
   accessTokenProvider?: () => Promise<string>;
 }
 
-/*
-      {
-        '$id': '2',
-        filename: 'test.txt',
-        size: 12,
-        last_modified_time: '2024-04-15T06:56:28.7042752Z'
-      }
-      */
 export interface RemoteFile {
   /**
    * The filename of the file.
@@ -87,20 +79,26 @@ export class SessionsPythonREPLTool extends Tool {
     }
   }
 
+  _buildUrl(path: string) {
+    let url = `${this.poolManagementEndpoint}${this.poolManagementEndpoint.endsWith("/") ? "" : "/"}${path}`;
+    url += url.includes("?") ? "&" : "?";
+    url += `identifier=${encodeURIComponent(this.sessionId)}`;
+    url += `&api-version=2024-02-02-preview`;
+    return url;
+  }
+
   async _call(pythonCode: string) {
-    const credentials = new DefaultAzureCredential();
-    const token = await credentials.getToken("https://acasessions.io/.default");
-    const apiUrl = `${this.poolManagementEndpoint}python/execute`;
+    const token = await this.accessTokenProvider();
+    const apiUrl = this._buildUrl("code/execute");
     const headers = {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${token.token}`,
+      "Authorization": `Bearer ${token}`,
     };
     const body = JSON.stringify({
       properties: {
-        identifier: this.sessionId,
         codeInputType: "inline",
         executionType: "synchronous",
-        pythonCode,
+        code: pythonCode,
       }
     });
 
@@ -115,14 +113,14 @@ export class SessionsPythonREPLTool extends Tool {
     }
 
     const json = await response.json();
-    const output = `Result:\n${json.result}\n\nStdout:\n${json.stdout}\n\nStderr:\n${json.stderr}`;
-    // console.log(output);
+    const properties = json.properties;
+    const output = `Result:\n${properties.result}\n\nStdout:\n${properties.stdout}\n\nStderr:\n${properties.stderr}`;
     return output;
   }
 
   async uploadFile(params: { data: Blob, remoteFilename: string }) : Promise<RemoteFile> {
     const token = await this.accessTokenProvider();
-    const apiUrl = `${this.poolManagementEndpoint}python/uploadFile?identifier={self.session_id}`;
+    const apiUrl = this._buildUrl("files/upload");
     const headers = {
       "Authorization": `Bearer ${token}`,
     };
@@ -140,12 +138,12 @@ export class SessionsPythonREPLTool extends Tool {
     }
 
     const json = await response.json();
-    return json["$values"][0] as RemoteFile;
+    return json["value"][0].properties as RemoteFile;
   }
 
   async downloadFile(params: { remoteFilename: string }): Promise<Blob> {
     const token = await this.accessTokenProvider();
-    const apiUrl = `${this.poolManagementEndpoint}python/downloadFile?identifier={self.session_id}&filename=${params.remoteFilename}`;
+    const apiUrl = this._buildUrl(`files/content/${params.remoteFilename}`);
     const headers = {
       "Authorization": `Bearer ${token}`,
     };
@@ -164,7 +162,7 @@ export class SessionsPythonREPLTool extends Tool {
 
   async listFiles() : Promise<RemoteFile[]> {
     const token = await this.accessTokenProvider();
-    const apiUrl = `${this.poolManagementEndpoint}python/files?identifier={self.session_id}`;
+    const apiUrl = this._buildUrl("files");
     const headers = {
       authorization: `Bearer ${token}`,
     };
@@ -178,7 +176,9 @@ export class SessionsPythonREPLTool extends Tool {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    return (await response.json())["$values"] as RemoteFile[];
+    const json = await response.json();
+    const list = json["value"].map((x: any) => x.properties);
+    return list as RemoteFile[];
   }
 }
 

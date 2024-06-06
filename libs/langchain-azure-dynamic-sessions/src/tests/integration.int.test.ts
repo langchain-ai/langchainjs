@@ -20,7 +20,7 @@ test("SessionsPythonREPLTool upload file end-to-end test", async () => {
     data: new Blob(["hello world!"], { type: "application/octet-stream" }),
     remoteFilename: "test.txt",
   });
-  // expect(result.filename).toBe("test.txt");
+  expect(result.filename).toBe("test.txt");
   expect(result.size).toBe(12);
 
   const downloadBlob = await tool.downloadFile({
@@ -31,5 +31,4 @@ test("SessionsPythonREPLTool upload file end-to-end test", async () => {
 
   const listResult = await tool.listFiles();
   expect(listResult.length).toBe(1);
-  console.log(listResult);
 });

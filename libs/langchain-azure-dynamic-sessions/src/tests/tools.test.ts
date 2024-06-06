@@ -94,16 +94,22 @@ describe("SessionsPythonREPLTool", () => {
       fetchMock.mockResolvedValue({
         ok: true,
         json: async () => ({
-          result: "2",
-          stdout: "hello\n",
-          stderr: "",
+          "$id": "1",
+          "properties": {
+            "$id": "2",
+            "status": "Success",
+            "stdout": "hello\n",
+            "stderr": "",
+            "result": 2,
+            "executionTimeInMilliseconds": 35
+          }
         }),
       } as Response);
 
       const output = await tool.invoke("print('hello')\n1+1");
       expect(output).toBe("Result:\n2\n\nStdout:\nhello\n\n\nStderr:\n");
       expect(fetchMock).toHaveBeenCalledTimes(1);
-      expect(fetchMock).toHaveBeenCalledWith("https://acasessions.io/subscriptions/subscription-id/resourceGroups/resource-group/sessionPools/session-pool/python/execute", {
+      expect(fetchMock).toHaveBeenCalledWith("https://acasessions.io/subscriptions/subscription-id/resourceGroups/resource-group/sessionPools/session-pool/code/execute?identifier=session-id&api-version=2024-02-02-preview", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -111,10 +117,9 @@ describe("SessionsPythonREPLTool", () => {
         },
         body: JSON.stringify({
           properties: {
-            identifier: "session-id",
             codeInputType: "inline",
             executionType: "synchronous",
-            pythonCode: "print('hello')\n1+1",
+            code: "print('hello')\n1+1",
           }
         }),
       });
