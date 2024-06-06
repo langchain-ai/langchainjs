@@ -5,7 +5,7 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 /**
  * @deprecated - Deprecated by Google. Will be removed in 0.3.0
- * 
+ *
  * Input for Text generation for Google Palm
  */
 export interface GooglePaLMTextInput extends BaseLLMParams {

@@ -22,7 +22,7 @@ export type BaseMessageExamplePair = {
 
 /**
  * @deprecated - Deprecated by Google. Will be removed in 0.3.0
- * 
+ *
  * An interface defining the input to the ChatGooglePaLM class.
  */
 export interface GooglePaLMChatInput extends BaseChatModelParams {
@@ -98,7 +98,7 @@ function getMessageAuthor(message: BaseMessage) {
 
 /**
  * @deprecated - Deprecated by Google. Will be removed in 0.3.0
- * 
+ *
  * A class that wraps the Google Palm chat model.
  *
  * @example
