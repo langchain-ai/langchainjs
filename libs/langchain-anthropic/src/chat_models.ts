@@ -41,7 +41,7 @@ import { ToolCall } from "@langchain/core/messages/tool";
 import { z } from "zod";
 import {
   AnthropicToolsOutputParser,
-  extractToolCalls,
+  _extractToolCalls,
 } from "./output_parsers.js";
 import { AnthropicToolResponse } from "./types.js";
 
@@ -123,7 +123,7 @@ function anthropicResponseToChatMessages(
       },
     ];
   } else {
-    const toolCalls = extractToolCalls(messages);
+    const toolCalls = _extractToolCalls(messages);
     const generations: ChatGeneration[] = [
       {
         text: "",
@@ -327,7 +327,7 @@ function _formatContent(content: MessageContent) {
  * @param messages The base messages to format as a prompt.
  * @returns The formatted prompt.
  */
-export function formatMessagesForAnthropic(messages: BaseMessage[]): {
+export function _formatMessagesForAnthropic(messages: BaseMessage[]): {
   system?: string;
   messages: AnthropicMessage[];
 } {
