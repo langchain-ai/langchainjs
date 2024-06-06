@@ -4,6 +4,8 @@ import { type BaseLLMParams, LLM } from "@langchain/core/language_models/llms";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 /**
+ * @deprecated - Deprecated by Google. Will be removed in 0.3.0
+ *
  * Input for Text generation for Google Palm
  */
 export interface GooglePaLMTextInput extends BaseLLMParams {
@@ -89,6 +91,8 @@ export interface GooglePaLMTextInput extends BaseLLMParams {
 }
 
 /**
+ * @deprecated - Deprecated by Google. Will be removed in 0.3.0
+ *
  * Google Palm 2 Language Model Wrapper to generate texts
  */
 export class GooglePaLM extends LLM implements GooglePaLMTextInput {
