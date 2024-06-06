@@ -63,7 +63,7 @@ export class AnthropicToolsOutputParser<
       if (!Array.isArray(message.content)) {
         return [];
       }
-      const tool = _extractToolCalls(message.content)[0];
+      const tool = extractToolCalls(message.content)[0];
       return tool;
     });
     if (tools[0] === undefined) {
@@ -78,7 +78,7 @@ export class AnthropicToolsOutputParser<
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function _extractToolCalls(content: Record<string, any>[]) {
+export function extractToolCalls(content: Record<string, any>[]) {
   const toolCalls: ToolCall[] = [];
   for (const block of content) {
     if (block.type === "tool_use") {
