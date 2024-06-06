@@ -21,26 +21,26 @@ Some models in LangChain have also implemented a `withStructuredOutput()` method
 
 The table shows, for each integration, which features have been implemented with native support. Yellow circles (🟡) indicates partial support - for example, if the model supports tool calling but not tool messages for agents.
 
-| Model                   | Invoke | Stream | Batch | Function Calling | Tool Calling | `withStructuredOutput()` |
-| :---------------------- | :----: | :----: | :---: | :--------------: | :----------: | :----------------------: |
-| BedrockChat             |   ✅   |   ✅   |  ✅   |        ❌        |      🟡 (Bedrock Anthropic only)      |            ❌            |
-| ChatAlibabaTongyi       |   ✅   |   ❌   |  ✅   |        ❌        |      ❌      |            ❌            |
-| ChatAnthropic           |   ✅   |   ✅   |  ✅   |        ❌        |      ✅      |            ✅            |
-| ChatBaiduWenxin         |   ✅   |   ❌   |  ✅   |        ❌        |      ❌      |            ❌            |
-| ChatCloudflareWorkersAI |   ✅   |   ✅   |  ✅   |        ❌        |      ❌      |            ❌            |
-| ChatCohere              |   ✅   |   ✅   |  ✅   |        ❌        |      ❌      |            ❌            |
-| ChatFireworks           |   ✅   |   ✅   |  ✅   |        ✅        |      ✅      |            ❌            |
-| ChatGoogleGenerativeAI  |   ✅   |   ✅   |  ✅   |        ❌        |      ❌      |            ❌            |
-| ChatGoogleVertexAI      |   ✅   |   ✅   |  ✅   |        ❌        |      ❌      |            ❌            |
-| ChatVertexAI            |   ✅   |   ✅   |  ✅   |        ❌        |      ✅      |            ✅            |
-| ChatGooglePaLM          |   ✅   |   ❌   |  ✅   |        ❌        |      ❌      |            ❌            |
-| ChatGroq                |   ✅   |   ✅   |  ✅   |        ❌        |      🟡      |            ✅            |
-| ChatLlamaCpp            |   ✅   |   ✅   |  ✅   |        ❌        |      ❌      |            ❌            |
-| ChatMinimax             |   ✅   |   ❌   |  ✅   |        ✅        |      ❌      |            ❌            |
-| ChatMistralAI           |   ✅   |   ❌   |  ✅   |        ❌        |      ✅      |            ✅            |
-| ChatOllama              |   ✅   |   ✅   |  ✅   |        ❌        |      ❌      |            ❌            |
-| ChatOpenAI              |   ✅   |   ✅   |  ✅   |        ✅        |      ✅      |            ✅            |
-| ChatTencentHunyuan      |   ✅   |   ✅   |  ✅   |        ❌        |      ❌      |            ❌            |
-| ChatTogetherAI          |   ✅   |   ✅   |  ✅   |        ❌        |      ❌      |            ❌            |
-| ChatYandexGPT           |   ✅   |   ❌   |  ✅   |        ❌        |      ❌      |            ❌            |
-| ChatZhipuAI             |   ✅   |   ❌   |  ✅   |        ❌        |      ❌      |            ❌            |
+| Model                   | Invoke | Stream | Batch | Function Calling |        Tool Calling         | `withStructuredOutput()` |
+| :---------------------- | :----: | :----: | :---: | :--------------: | :-------------------------: | :----------------------: |
+| BedrockChat             |   ✅   |   ✅   |  ✅   |        ❌        | 🟡 (Bedrock Anthropic only) |            ❌            |
+| ChatAlibabaTongyi       |   ✅   |   ❌   |  ✅   |        ❌        |             ❌              |            ❌            |
+| ChatAnthropic           |   ✅   |   ✅   |  ✅   |        ❌        |             ✅              |            ✅            |
+| ChatBaiduWenxin         |   ✅   |   ❌   |  ✅   |        ❌        |             ❌              |            ❌            |
+| ChatCloudflareWorkersAI |   ✅   |   ✅   |  ✅   |        ❌        |             ❌              |            ❌            |
+| ChatCohere              |   ✅   |   ✅   |  ✅   |        ❌        |             ❌              |            ❌            |
+| ChatFireworks           |   ✅   |   ✅   |  ✅   |        ✅        |             ✅              |            ❌            |
+| ChatGoogleGenerativeAI  |   ✅   |   ✅   |  ✅   |        ❌        |             ❌              |            ❌            |
+| ChatGoogleVertexAI      |   ✅   |   ✅   |  ✅   |        ❌        |             ❌              |            ❌            |
+| ChatVertexAI            |   ✅   |   ✅   |  ✅   |        ❌        |             ✅              |            ✅            |
+| ChatGooglePaLM          |   ✅   |   ❌   |  ✅   |        ❌        |             ❌              |            ❌            |
+| ChatGroq                |   ✅   |   ✅   |  ✅   |        ❌        |             🟡              |            ✅            |
+| ChatLlamaCpp            |   ✅   |   ✅   |  ✅   |        ❌        |             ❌              |            ❌            |
+| ChatMinimax             |   ✅   |   ❌   |  ✅   |        ✅        |             ❌              |            ❌            |
+| ChatMistralAI           |   ✅   |   ❌   |  ✅   |        ❌        |             ✅              |            ✅            |
+| ChatOllama              |   ✅   |   ✅   |  ✅   |        ❌        |             ❌              |            ❌            |
+| ChatOpenAI              |   ✅   |   ✅   |  ✅   |        ✅        |             ✅              |            ✅            |
+| ChatTencentHunyuan      |   ✅   |   ✅   |  ✅   |        ❌        |             ❌              |            ❌            |
+| ChatTogetherAI          |   ✅   |   ✅   |  ✅   |        ❌        |             ❌              |            ❌            |
+| ChatYandexGPT           |   ✅   |   ❌   |  ✅   |        ❌        |             ❌              |            ❌            |
+| ChatZhipuAI             |   ✅   |   ❌   |  ✅   |        ❌        |             ❌              |            ❌            |
