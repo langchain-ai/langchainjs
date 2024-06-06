@@ -114,8 +114,12 @@ export class SessionsPythonREPLTool extends Tool {
 
     const json = await response.json();
     const properties = json.properties;
-    const output = `Result:\n${properties.result}\n\nStdout:\n${properties.stdout}\n\nStderr:\n${properties.stderr}`;
-    return output;
+    const output = {
+      result: properties.result,
+      stdout: properties.stdout,
+      stderr: properties.stderr,
+    };
+    return JSON.stringify(output, null, 2);
   }
 
   async uploadFile(params: { data: Blob, remoteFilename: string }) : Promise<RemoteFile> {

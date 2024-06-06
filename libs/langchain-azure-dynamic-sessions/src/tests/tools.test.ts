@@ -107,7 +107,11 @@ describe("SessionsPythonREPLTool", () => {
       } as Response);
 
       const output = await tool.invoke("print('hello')\n1+1");
-      expect(output).toBe("Result:\n2\n\nStdout:\nhello\n\n\nStderr:\n");
+      expect(JSON.parse(output)).toStrictEqual({
+        stdout: "hello\n",
+        stderr: "",
+        result: 2,
+      });
       expect(fetchMock).toHaveBeenCalledTimes(1);
       expect(fetchMock).toHaveBeenCalledWith("https://acasessions.io/subscriptions/subscription-id/resourceGroups/resource-group/sessionPools/session-pool/code/execute?identifier=session-id&api-version=2024-02-02-preview", {
         method: "POST",

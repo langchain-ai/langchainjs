@@ -9,7 +9,11 @@ test("SessionsPythonREPLTool end-to-end test", async () => {
     poolManagementEndpoint: process.env.POOL_MANAGEMENT_ENDPOINT ?? "",
   });
   const result = await tool.invoke("print('Hello, World!')\n1+1");
-  expect(result).toBe("Result:\n2\n\nStdout:\nHello, World!\n\n\nStderr:\n");
+  expect(JSON.parse(result)).toStrictEqual({
+    stdout: "Hello, World!\n",
+    stderr: "",
+    result: 2,
+  });
 });
 
 test("SessionsPythonREPLTool upload file end-to-end test", async () => {
