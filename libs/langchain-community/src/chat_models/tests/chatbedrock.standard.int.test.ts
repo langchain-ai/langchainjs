@@ -13,11 +13,11 @@ class BedrockChatStandardIntegrationTests extends ChatModelIntegrationTests<
     const region = process.env.BEDROCK_AWS_REGION ?? "us-east-1";
     super({
       Cls: BedrockChat,
-      chatModelHasToolCalling: false,
+      chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: false,
       constructorArgs: {
         region,
-        model: "amazon.titan-text-express-v1",
+        model: "anthropic.claude-3-sonnet-20240229-v1:0",
         credentials: {
           secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY,
           accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID,

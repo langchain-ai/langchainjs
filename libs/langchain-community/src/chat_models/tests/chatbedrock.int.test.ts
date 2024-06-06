@@ -180,7 +180,7 @@ async function testChatModel(
     });
 
     const res = await bedrock.invoke([new HumanMessage(message)]);
-    console.log(res);
+    console.log(res, res.content);
 
     expect(res).toBeDefined();
     if (trace && guardrailIdentifier && guardrailVersion) {

@@ -14,7 +14,7 @@ import {
   BaseBedrockInput,
   BedrockLLMInputOutputAdapter,
   type CredentialType,
-} from "../../utils/bedrock.js";
+} from "../../utils/bedrock/index.js";
 import type { SerializedFields } from "../../load/map_keys.js";
 
 const PRELUDE_TOTAL_LENGTH_BYTES = 4;

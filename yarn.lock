@@ -8922,7 +8922,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/anthropic@workspace:*, @langchain/anthropic@workspace:libs/langchain-anthropic, @langchain/anthropic@~0.2.0":
+"@langchain/anthropic@workspace:*, @langchain/anthropic@workspace:libs/langchain-anthropic":
   version: 0.0.0-use.local
   resolution: "@langchain/anthropic@workspace:libs/langchain-anthropic"
   dependencies:
@@ -9098,7 +9098,6 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
-    "@langchain/anthropic": ~0.2.0
     "@langchain/core": ~0.2.0
     "@langchain/openai": ~0.1.0
     "@langchain/scripts": ~0.0.14

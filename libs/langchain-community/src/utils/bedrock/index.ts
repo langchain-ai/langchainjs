@@ -8,10 +8,7 @@ import { StructuredToolInterface } from "@langchain/core/tools";
 import { isStructuredTool } from "@langchain/core/utils/function_calling";
 import { ChatGeneration, ChatGenerationChunk } from "@langchain/core/outputs";
 import { zodToJsonSchema } from "zod-to-json-schema";
-import {
-  extractToolCalls,
-  formatMessagesForAnthropic,
-} from "@langchain/anthropic";
+import { extractToolCalls, formatMessagesForAnthropic } from "./anthropic.js";
 
 export type CredentialType =
   | AwsCredentialIdentity
