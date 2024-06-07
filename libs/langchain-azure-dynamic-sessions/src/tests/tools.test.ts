@@ -118,6 +118,7 @@ describe("SessionsPythonREPLTool", () => {
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer test-token",
+          "User-Agent": expect.stringMatching(/^\@langchain\/azure-dynamic-sessions\/\d+\.\d+\.\d+ \(Language=JavaScript.*\)$/),
         },
         body: JSON.stringify({
           properties: {

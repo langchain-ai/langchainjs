@@ -1,6 +1,26 @@
 import { Tool } from "@langchain/core/tools";
 import { AccessToken, DefaultAzureCredential } from "@azure/identity";
 import { v4 as uuidv4 } from "uuid";
+import { readFile } from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+let userAgent = "";
+async function getuserAgentSuffix(): Promise<string> {
+  try {
+    if (!userAgent) {
+      const __filename = fileURLToPath(import.meta.url);
+      console.log(__filename);
+      const __dirname = path.dirname(__filename);
+      const data = await readFile(path.join(__dirname, '..', 'package.json'), 'utf8');
+      const json = await JSON.parse(data);
+      userAgent = `${json.name}/${json.version} (Language=JavaScript; node.js/${process.version}; ${process.platform}; ${process.arch})`;
+    }
+  } catch (e) {
+    userAgent = "@langchain/azure-dynamic-sessions (Language=JavaScript)";
+  }
+  return userAgent;
+}
 
 export interface SessionsPythonREPLToolParams {
   /**
@@ -93,6 +113,7 @@ export class SessionsPythonREPLTool extends Tool {
     const headers = {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${token}`,
+      "User-Agent": await getuserAgentSuffix(),
     };
     const body = JSON.stringify({
       properties: {
@@ -127,6 +148,7 @@ export class SessionsPythonREPLTool extends Tool {
     const apiUrl = this._buildUrl("files/upload");
     const headers = {
       "Authorization": `Bearer ${token}`,
+      "User-Agent": await getuserAgentSuffix(),
     };
     const formData = new FormData();
     formData.append("file", params.data, params.remoteFilename);
@@ -150,6 +172,7 @@ export class SessionsPythonREPLTool extends Tool {
     const apiUrl = this._buildUrl(`files/content/${params.remoteFilename}`);
     const headers = {
       "Authorization": `Bearer ${token}`,
+      "User-Agent": await getuserAgentSuffix(),
     };
 
     const response = await fetch(apiUrl, {
@@ -168,7 +191,8 @@ export class SessionsPythonREPLTool extends Tool {
     const token = await this.accessTokenProvider();
     const apiUrl = this._buildUrl("files");
     const headers = {
-      authorization: `Bearer ${token}`,
+      "Authorization": `Bearer ${token}`,
+      "User-Agent": await getuserAgentSuffix(),
     };
 
     const response = await fetch(apiUrl, {
