@@ -3,7 +3,48 @@
 import { test, expect } from "@jest/globals";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
-import { SingleStoreVectorStore } from "../singlestore.js";
+import { SingleStoreVectorStore, SearchStrategy } from "../singlestore.js";
+
+class MockEmbeddings extends OpenAIEmbeddings {
+  queryIndex: number;
+
+  constructor() {
+    super();
+    this.queryIndex = 0;
+  }
+
+  async embedDocuments(documents: string[]): Promise<number[][]> {
+    this.queryIndex += documents.length;
+    return documents.map((text ,i) => this.embed(text));
+  }
+
+  embed(text: string): number[] {
+    this.queryIndex += 1;
+    return [Math.cos(this.queryIndex*Math.PI/10.0), Math.sin(this.queryIndex*Math.PI/10.0)];
+  }
+
+  async embedQuery(document: string): Promise<number[]> {
+    return this.embed(document);
+  }
+}
+
+const weatherTexts: string[] = [
+"In the parched desert, a sudden rainstorm brought relief, as the droplets danced upon the thirsty earth, rejuvenating the landscape with the sweet scent of petrichor.",
+"Amidst the bustling cityscape, the rain fell relentlessly, creating a symphony of pitter-patter on the pavement, while umbrellas bloomed like colorful flowers in a sea of gray.",
+"High in the mountains, the rain transformed into a delicate mist, enveloping the peaks in a mystical veil, where each droplet seemed to whisper secrets to the ancient rocks below.",
+"Blanketing the countryside in a soft, pristine layer, the snowfall painted a serene tableau, muffling the world in a tranquil hush as delicate flakes settled upon the branches of trees like nature's own lacework.",
+"In the urban landscape, snow descended, transforming bustling streets into a winter wonderland, where the laughter of children echoed amidst the flurry of snowballs and the twinkle of holiday lights.",
+"Atop the rugged peaks, snow fell with an unyielding intensity, sculpting the landscape into a pristine alpine paradise, where the frozen crystals shimmered under the moonlight, casting a spell of enchantment over the wilderness below."
+];
+
+const weatherMetadata: object[] = [ 
+{"count": "1", "category": "rain", "group": "a"},
+{"count": "2", "category": "rain", "group": "a"},
+{"count": "3", "category": "rain", "group": "b"},
+{"count": "1", "category": "snow", "group": "b"},
+{"count": "2", "category": "snow", "group": "a"},
+{"count": "3", "category": "snow", "group": "a"}
+];
 
 test.skip("SingleStoreVectorStore", async () => {
   expect(process.env.SINGLESTORE_HOST).toBeDefined();
@@ -172,4 +213,285 @@ test.skip("SingleStoreVectorStore filtering", async () => {
   });
   expect(results5).toEqual([]);
   await vectorStore.end();
+});
+
+test.skip("SingleStorevectorStore wrong search type", async () => {
+  expect(process.env.SINGLESTORE_HOST).toBeDefined();
+  expect(process.env.SINGLESTORE_PORT).toBeDefined();
+  expect(process.env.SINGLESTORE_USERNAME).toBeDefined();
+  expect(process.env.SINGLESTORE_PASSWORD).toBeDefined();
+  expect(process.env.SINGLESTORE_DATABASE).toBeDefined();
+  const vectorStore = await SingleStoreVectorStore.fromTexts(
+    [],
+    [],
+    new MockEmbeddings(),
+    {
+      connectionURI: `http://${process.env.SINGLESTORE_USERNAME}:${process.env.SINGLESTORE_PASSWORD}@${process.env.SINGLESTORE_HOST}:${process.env.SINGLESTORE_PORT}/${process.env.SINGLESTORE_DATABASE}`,
+      tableName: "wrong_serch_type_test",
+      useVectorIndex: true,
+      useFullTextIndex: false,
+    }
+  );
+  for (const searchType of ["TEXT_ONLY", "FILTER_BY_TEXT", "FILTER_BY_VECTOR", "WEIGHTED_SUM"]) {
+    await vectorStore.setSearchConfig({
+      searchStrategy: searchType as SearchStrategy,
+    })
+    await expect(vectorStore.similaritySearch("hello world", 1)).rejects.toThrow(
+      "Full text index is required for text-based search strategies."
+    );
+  }
+ 
+  await vectorStore.end();
+});
+
+test.skip("SingleStoreVectorStore no filter threshold type 1", async () => {
+  expect(process.env.SINGLESTORE_HOST).toBeDefined();
+  expect(process.env.SINGLESTORE_PORT).toBeDefined();
+  expect(process.env.SINGLESTORE_USERNAME).toBeDefined();
+  expect(process.env.SINGLESTORE_PASSWORD).toBeDefined();
+  expect(process.env.SINGLESTORE_DATABASE).toBeDefined();
+  const vectorStore = await SingleStoreVectorStore.fromTexts(
+    [],
+    [],
+    new MockEmbeddings(),
+    {
+      connectionURI: `http://${process.env.SINGLESTORE_USERNAME}:${process.env.SINGLESTORE_PASSWORD}@${process.env.SINGLESTORE_HOST}:${process.env.SINGLESTORE_PORT}/${process.env.SINGLESTORE_DATABASE}`,
+      tableName: "no_filter_threshold_type_test",
+      useVectorIndex: true,
+      useFullTextIndex: true,
+      searchConfig: {
+        searchStrategy: "FILTER_BY_TEXT",
+      },
+    },
+  );
+  await expect(vectorStore.similaritySearch("hello world", 1, { id: 1 })).rejects.toThrow(
+    "Filter threshold is required for filter-based search strategies."
+  );
+  await vectorStore.end();
+});
+
+test.skip("SingleStoreVectorStore no filter threshold type 2", async () => {
+  expect(process.env.SINGLESTORE_HOST).toBeDefined();
+  expect(process.env.SINGLESTORE_PORT).toBeDefined();
+  expect(process.env.SINGLESTORE_USERNAME).toBeDefined();
+  expect(process.env.SINGLESTORE_PASSWORD).toBeDefined();
+  expect(process.env.SINGLESTORE_DATABASE).toBeDefined();
+  const vectorStore = await SingleStoreVectorStore.fromTexts(
+    [],
+    [],
+    new MockEmbeddings(),
+    {
+      connectionURI: `http://${process.env.SINGLESTORE_USERNAME}:${process.env.SINGLESTORE_PASSWORD}@${process.env.SINGLESTORE_HOST}:${process.env.SINGLESTORE_PORT}/${process.env.SINGLESTORE_DATABASE}`,
+      tableName: "no_filter_threshold_type_test",
+      useVectorIndex: true,
+      useFullTextIndex: true,
+      searchConfig: {
+        searchStrategy: "FILTER_BY_VECTOR",
+      },
+    },
+  );
+  await expect(vectorStore.similaritySearch("hello world", 1, { id: 1 })).rejects.toThrow(
+    "Filter threshold is required for filter-based search strategies."
+  );
+  await vectorStore.end();
+});
+
+test.skip("SingleStoreVectorStore no weight coefs 1", async () => {
+  expect(process.env.SINGLESTORE_HOST).toBeDefined();
+  expect(process.env.SINGLESTORE_PORT).toBeDefined();
+  expect(process.env.SINGLESTORE_USERNAME).toBeDefined();
+  expect(process.env.SINGLESTORE_PASSWORD).toBeDefined();
+  expect(process.env.SINGLESTORE_DATABASE).toBeDefined();
+  const vectorStore = await SingleStoreVectorStore.fromTexts(
+    [],
+    [],
+    new MockEmbeddings(),
+    {
+      connectionURI: `http://${process.env.SINGLESTORE_USERNAME}:${process.env.SINGLESTORE_PASSWORD}@${process.env.SINGLESTORE_HOST}:${process.env.SINGLESTORE_PORT}/${process.env.SINGLESTORE_DATABASE}`,
+      tableName: "no_weighted_sum_params",
+      useVectorIndex: true,
+      useFullTextIndex: true,
+      searchConfig: {
+        searchStrategy: "WEIGHTED_SUM",
+        vectorWeight: 1,
+        textWeight: 1,
+      },
+    },
+  );
+  await expect(vectorStore.similaritySearch("hello world", 1, { id: 1 })).rejects.toThrow(
+    "Text and vector weight and vector select count multiplier are required for weighted sum search strategy."
+  );
+  await vectorStore.end();
+});
+
+test.skip("SingleStoreVectorStore no weight coefs 2", async () => {
+  expect(process.env.SINGLESTORE_HOST).toBeDefined();
+  expect(process.env.SINGLESTORE_PORT).toBeDefined();
+  expect(process.env.SINGLESTORE_USERNAME).toBeDefined();
+  expect(process.env.SINGLESTORE_PASSWORD).toBeDefined();
+  expect(process.env.SINGLESTORE_DATABASE).toBeDefined();
+  const vectorStore = await SingleStoreVectorStore.fromTexts(
+    [],
+    [],
+    new MockEmbeddings(),
+    {
+      connectionURI: `http://${process.env.SINGLESTORE_USERNAME}:${process.env.SINGLESTORE_PASSWORD}@${process.env.SINGLESTORE_HOST}:${process.env.SINGLESTORE_PORT}/${process.env.SINGLESTORE_DATABASE}`,
+      tableName: "no_weighted_sum_params",
+      useVectorIndex: true,
+      useFullTextIndex: true,
+      searchConfig: {
+        searchStrategy: "WEIGHTED_SUM",
+        textWeight: 1,
+        vectorselectCountMultiplier: 10,
+      },
+    },
+  );
+  await expect(vectorStore.similaritySearch("hello world", 1, { id: 1 })).rejects.toThrow(
+    "Text and vector weight and vector select count multiplier are required for weighted sum search strategy."
+  );
+  await vectorStore.end();
+});
+
+test.skip("SingleStoreVectorStore no weight coefs 3", async () => {
+  expect(process.env.SINGLESTORE_HOST).toBeDefined();
+  expect(process.env.SINGLESTORE_PORT).toBeDefined();
+  expect(process.env.SINGLESTORE_USERNAME).toBeDefined();
+  expect(process.env.SINGLESTORE_PASSWORD).toBeDefined();
+  expect(process.env.SINGLESTORE_DATABASE).toBeDefined();
+  const vectorStore = await SingleStoreVectorStore.fromTexts(
+    [],
+    [],
+    new MockEmbeddings(),
+    {
+      connectionURI: `http://${process.env.SINGLESTORE_USERNAME}:${process.env.SINGLESTORE_PASSWORD}@${process.env.SINGLESTORE_HOST}:${process.env.SINGLESTORE_PORT}/${process.env.SINGLESTORE_DATABASE}`,
+      tableName: "no_weighted_sum_params",
+      useVectorIndex: true,
+      useFullTextIndex: true,
+      searchConfig: {
+        searchStrategy: "WEIGHTED_SUM",
+        vectorWeight: 1,
+        vectorselectCountMultiplier: 10,
+      },
+    },
+  );
+  await expect(vectorStore.similaritySearch("hello world", 1, { id: 1 })).rejects.toThrow(
+    "Text and vector weight and vector select count multiplier are required for weighted sum search strategy."
+  );
+  await vectorStore.end();
+});
+
+test.skip("SingleStoreVectorStore vector index large", async () => {
+  expect(process.env.SINGLESTORE_HOST).toBeDefined();
+  expect(process.env.SINGLESTORE_PORT).toBeDefined();
+  expect(process.env.SINGLESTORE_USERNAME).toBeDefined();
+  expect(process.env.SINGLESTORE_PASSWORD).toBeDefined();
+  expect(process.env.SINGLESTORE_DATABASE).toBeDefined();
+  const vectorStore = await SingleStoreVectorStore.fromTexts(
+    [],
+    [],
+    new MockEmbeddings(),
+    {
+      connectionURI: `http://${process.env.SINGLESTORE_USERNAME}:${process.env.SINGLESTORE_PASSWORD}@${process.env.SINGLESTORE_HOST}:${process.env.SINGLESTORE_PORT}/${process.env.SINGLESTORE_DATABASE}`,
+      tableName: "vector_index_large",
+      useVectorIndex: false,
+      useFullTextIndex: false,
+      vectorSize: 10,
+      vectorIndexOptions: {"index_type": "IVF_PQ", "nlist": 256},
+    },
+  );
+  //const texts = Array.from({ length: 1000 }, (_, i) => `text${i}`);
+  //for (let j = 0; j <200; j++) {  
+  //  await vectorStore.addDocuments(texts.map((text) => new Document({ pageContent: text })));
+  //}
+  const starttime = Date.now();
+  const results = await vectorStore.similaritySearch("text100", 1);
+  const endtime = Date.now();
+  await vectorStore.end();
+  await expect(results.length).toEqual(1);
+  console.log(`Time taken for vector index large: ${endtime - starttime}ms`);
+});
+
+test.skip("SingleStoreVectorStore text only search", async () => {
+  expect(process.env.SINGLESTORE_HOST).toBeDefined();
+  expect(process.env.SINGLESTORE_PORT).toBeDefined();
+  expect(process.env.SINGLESTORE_USERNAME).toBeDefined();
+  expect(process.env.SINGLESTORE_PASSWORD).toBeDefined();
+  expect(process.env.SINGLESTORE_DATABASE).toBeDefined();
+  const vectorStore = await SingleStoreVectorStore.fromTexts(
+    weatherTexts,
+    weatherMetadata,
+    new MockEmbeddings(),
+    {
+      connectionURI: `http://${process.env.SINGLESTORE_USERNAME}:${process.env.SINGLESTORE_PASSWORD}@${process.env.SINGLESTORE_HOST}:${process.env.SINGLESTORE_PORT}/${process.env.SINGLESTORE_DATABASE}`,
+      tableName: "text_only_search",
+      useVectorIndex: false,
+      useFullTextIndex: true,
+      searchConfig: {
+        searchStrategy: "TEXT_ONLY",
+      },
+    },
+  );
+  const output = await vectorStore.similaritySearch("rainstorm in parched desert", 3, {"count": "1"});
+  await vectorStore.end();
+  expect(output.length).toEqual(2);
+  expect(output[0].pageContent).toContain("In the parched desert, a sudden rainstorm brought relief,")
+  expect(output[1].pageContent).toContain("Blanketing the countryside in a soft, pristine layer")
+});
+
+test.skip("SingleStoreVectorStore filter by text search", async () => {
+  expect(process.env.SINGLESTORE_HOST).toBeDefined();
+  expect(process.env.SINGLESTORE_PORT).toBeDefined();
+  expect(process.env.SINGLESTORE_USERNAME).toBeDefined();
+  expect(process.env.SINGLESTORE_PASSWORD).toBeDefined();
+  expect(process.env.SINGLESTORE_DATABASE).toBeDefined();
+  const vectorStore = await SingleStoreVectorStore.fromTexts(
+    weatherTexts,
+    weatherMetadata,
+    new MockEmbeddings(),
+    {
+      connectionURI: `http://${process.env.SINGLESTORE_USERNAME}:${process.env.SINGLESTORE_PASSWORD}@${process.env.SINGLESTORE_HOST}:${process.env.SINGLESTORE_PORT}/${process.env.SINGLESTORE_DATABASE}`,
+      tableName: "filter_by_text_search",
+      useVectorIndex: false,
+      useFullTextIndex: true,
+      searchConfig: {
+        searchStrategy: "FILTER_BY_TEXT",
+        filterThreshold: 0.0001,
+      },
+    },
+  );
+  const output = await vectorStore.similaritySearch("rainstorm in parched desert", 1);
+  await vectorStore.end();
+  expect(output.length).toEqual(1);
+  expect(output[0].pageContent).toContain("In the parched desert, a sudden rainstorm brought relief,")
+});
+
+test("SingleStoreVectorStore filter by vector search", async () => {
+  expect(process.env.SINGLESTORE_HOST).toBeDefined();
+  expect(process.env.SINGLESTORE_PORT).toBeDefined();
+  expect(process.env.SINGLESTORE_USERNAME).toBeDefined();
+  expect(process.env.SINGLESTORE_PASSWORD).toBeDefined();
+  expect(process.env.SINGLESTORE_DATABASE).toBeDefined();
+  const vectorStore = await SingleStoreVectorStore.fromTexts(
+    weatherTexts,
+    weatherMetadata,
+    new MockEmbeddings(),
+    {
+      connectionURI: `http://${process.env.SINGLESTORE_USERNAME}:${process.env.SINGLESTORE_PASSWORD}@${process.env.SINGLESTORE_HOST}:${process.env.SINGLESTORE_PORT}/${process.env.SINGLESTORE_DATABASE}`,
+      tableName: "filter_by_vector_search",
+      useVectorIndex: false,
+      vectorSize: 2,
+      useFullTextIndex: true,
+      searchConfig: {
+        searchStrategy: "FILTER_BY_VECTOR",
+      },
+    },
+  );
+  vectorStore.setSearchConfig({
+    searchStrategy: "FILTER_BY_VECTOR",
+    filterThreshold: -0.2,
+  });
+  const output = await vectorStore.similaritySearch("rainstorm in parched desert", 1);
+  await vectorStore.end();
+  expect(output.length).toEqual(1);
+  expect(output[0].pageContent).toContain("High in the mountains, the rain transformed into a delicate");
 });
