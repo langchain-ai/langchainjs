@@ -1,6 +1,6 @@
 {
   "name": "@langchain/azure-dynamic-sessions",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Sample integration for LangChain.js",
   "type": "module",
   "engines": {

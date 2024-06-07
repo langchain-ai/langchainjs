@@ -10,7 +10,6 @@ async function getuserAgentSuffix(): Promise<string> {
   try {
     if (!userAgent) {
       const __filename = fileURLToPath(import.meta.url);
-      console.log(__filename);
       const __dirname = path.dirname(__filename);
       const data = await readFile(path.join(__dirname, '..', 'package.json'), 'utf8');
       const json = await JSON.parse(data);
