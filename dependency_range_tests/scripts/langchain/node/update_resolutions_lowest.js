@@ -17,17 +17,31 @@ if (currentPackageJson.dependencies["@langchain/core"] && !currentPackageJson.de
   };
 }
 
-if (currentPackageJson.dependencies["@langchain/community"] && !currentPackageJson.dependencies["@langchain/community"].includes("rc")) {
+if (currentPackageJson.dependencies["@langchain/openai"] && !currentPackageJson.dependencies["@langchain/openai"].includes("rc")) {
   const minVersion = semver.minVersion(
-    currentPackageJson.dependencies["@langchain/community"]
+    currentPackageJson.dependencies["@langchain/openai"]
   ).version;
   currentPackageJson.resolutions = {
     ...currentPackageJson.resolutions,
-    "@langchain/community": minVersion,
+    "@langchain/openai": minVersion,
   };
   currentPackageJson.dependencies = {
     ...currentPackageJson.dependencies,
-    "@langchain/community": minVersion,
+    "@langchain/openai": minVersion,
+  };
+}
+
+if (currentPackageJson.dependencies["@langchain/textsplitters"] && !currentPackageJson.dependencies["@langchain/textsplitters"].includes("rc")) {
+  const minVersion = semver.minVersion(
+    currentPackageJson.dependencies["@langchain/textsplitters"]
+  ).version;
+  currentPackageJson.resolutions = {
+    ...currentPackageJson.resolutions,
+    "@langchain/textsplitters": minVersion,
+  };
+  currentPackageJson.dependencies = {
+    ...currentPackageJson.dependencies,
+    "@langchain/textsplitters": minVersion,
   };
 }
 
