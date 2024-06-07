@@ -51,3 +51,27 @@ jobs:
           cache: "yarn"
       - name: Test LangChain with lowest deps
         run: docker compose -f dependency_range_tests/docker-compose.yml run test-langchain-with-lowest-deps
+
+  test-community-with-latest-deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "yarn"
+      - name: Test `@langchain/community` with latest deps
+        run: docker compose -f dependency_range_tests/docker-compose.yml run test-community-with-latest-deps
+
+  test-community-with-lowest-deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "yarn"
+      - name: Test `@langchain/community` with lowest deps
+        run: docker compose -f dependency_range_tests/docker-compose.yml run test-community-with-lowest-deps

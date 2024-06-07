@@ -10,7 +10,7 @@ services:
     volumes:
       - ../langchain:/langchain
       - ./scripts:/scripts
-    command: bash /scripts/test-langchain-with-latest-deps.sh
+    command: bash /scripts/langchain/test-with-latest-deps.sh
   test-langchain-with-lowest-deps:
     image: node:18
     environment:
@@ -21,7 +21,30 @@ services:
     volumes:
       - ../langchain:/langchain
       - ./scripts:/scripts
-    command: bash /scripts/test-langchain-with-lowest-deps.sh
+    command: bash /scripts/langchain/test-with-lowest-deps.sh
+  
+  test-community-with-latest-deps:
+    image: node:18
+    environment:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
+      COHERE_API_KEY: ${COHERE_API_KEY}
+    working_dir: /app
+    volumes:
+      - ../libs/langchain-community:/libs/langchain-community
+      - ./scripts:/scripts
+    command: bash /scripts/community/test-with-latest-deps.sh
+  test-community-with-lowest-deps:
+    image: node:18
+    environment:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
+      COHERE_API_KEY: ${COHERE_API_KEY}
+    working_dir: /app
+    volumes:
+      - ../libs/langchain-community:/libs/langchain-community
+      - ./scripts:/scripts
+    command: bash /scripts/community/test-with-lowest-deps.sh
   success:
     image: alpine:3.14
     command: echo "Success"
