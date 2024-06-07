@@ -1,9 +1,15 @@
 import { Tool } from "@langchain/core/tools";
-import { AccessToken, DefaultAzureCredential } from "@azure/identity";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import {
+  DefaultAzureCredential,
+  getBearerTokenProvider,
+} from "@azure/identity";
 import { v4 as uuidv4 } from "uuid";
-import { readFile } from 'fs/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { readFile } from "fs/promises";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const userAgentPrefix = "langchainjs-azure-dynamic-sessions";
 
 let userAgent = "";
 async function getuserAgentSuffix(): Promise<string> {
@@ -11,12 +17,15 @@ async function getuserAgentSuffix(): Promise<string> {
     if (!userAgent) {
       const __filename = fileURLToPath(import.meta.url);
       const __dirname = path.dirname(__filename);
-      const data = await readFile(path.join(__dirname, '..', 'package.json'), 'utf8');
+      const data = await readFile(
+        path.join(__dirname, "..", "package.json"),
+        "utf8"
+      );
       const json = await JSON.parse(data);
-      userAgent = `${json.name}/${json.version} (Language=JavaScript; node.js/${process.version}; ${process.platform}; ${process.arch})`;
+      userAgent = `${userAgentPrefix} ${json.name}/${json.version} (Language=JavaScript; node.js/${process.version}; ${process.platform}; ${process.arch})`;
     }
   } catch (e) {
-    userAgent = "@langchain/azure-dynamic-sessions (Language=JavaScript)";
+    userAgent = `${userAgentPrefix} (Language=JavaScript)`;
   }
   return userAgent;
 }
@@ -26,7 +35,7 @@ export interface SessionsPythonREPLToolParams {
    * The endpoint of the pool management service.
    */
   poolManagementEndpoint: string;
-  
+
   /**
    * The session ID. If not provided, a new session ID will be generated.
    */
@@ -36,10 +45,10 @@ export interface SessionsPythonREPLToolParams {
    * A function that returns the access token to be used for authentication.
    * If not provided, a default implementation that uses the DefaultAzureCredential
    * will be used.
-   * 
+   *
    * @returns The access token to be used for authentication.
    */
-  accessTokenProvider?: () => Promise<string>;
+  azureADTokenProvider?: () => Promise<string>;
 }
 
 export interface RemoteFile {
@@ -64,42 +73,64 @@ export interface RemoteFile {
   $id: string;
 }
 
-
 export class SessionsPythonREPLTool extends Tool {
   static lc_name() {
     return "SessionsPythonREPLTool";
   }
 
+  lc_serializable = true;
+
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      poolManagementEndpoint:
+        "AZURE_CONTAINER_APP_SESSION_POOL_MANAGEMENT_ENDPOINT",
+    };
+  }
+
+  get lc_aliases(): Record<string, string> {
+    return {
+      poolManagementEndpoint: "pool_management_endpoint",
+      sessionId: "session_id",
+    };
+  }
+
   name = "sessions-python-repl-tool";
 
-  description = "A Python shell. Use this to execute python commands " +
+  description =
+    "A Python shell. Use this to execute python commands " +
     "when you need to perform calculations or computations. " +
     "Input should be a valid python command. " +
     "Returns the result, stdout, and stderr. ";
 
   poolManagementEndpoint: string;
-  sessionId: string;
-  accessTokenProvider: () => Promise<string>;
 
-  constructor(params: SessionsPythonREPLToolParams) {
+  sessionId: string;
+
+  azureADTokenProvider: () => Promise<string>;
+
+  constructor(params?: SessionsPythonREPLToolParams) {
     super();
 
-    if (!params.poolManagementEndpoint) {
+    this.poolManagementEndpoint =
+      params?.poolManagementEndpoint ??
+      getEnvironmentVariable(
+        "AZURE_CONTAINER_APP_SESSION_POOL_MANAGEMENT_ENDPOINT"
+      ) ??
+      "";
+
+    if (!this.poolManagementEndpoint) {
       throw new Error("poolManagementEndpoint is required.");
     }
-    this.poolManagementEndpoint = params.poolManagementEndpoint;
 
-    this.sessionId = params.sessionId ?? uuidv4();
-
-    if (params.accessTokenProvider) {
-      this.accessTokenProvider = params.accessTokenProvider;
-    } else {
-      this.accessTokenProvider = defaultAccessTokenProviderFactory();
-    }
+    this.sessionId = params?.sessionId ?? uuidv4();
+    this.azureADTokenProvider =
+      params?.azureADTokenProvider ?? defaultAzureADTokenProvider();
   }
 
   _buildUrl(path: string) {
-    let url = `${this.poolManagementEndpoint}${this.poolManagementEndpoint.endsWith("/") ? "" : "/"}${path}`;
+    let url = `${this.poolManagementEndpoint}${
+      this.poolManagementEndpoint.endsWith("/") ? "" : "/"
+    }${path}`;
     url += url.includes("?") ? "&" : "?";
     url += `identifier=${encodeURIComponent(this.sessionId)}`;
     url += `&api-version=2024-02-02-preview`;
@@ -107,11 +138,11 @@ export class SessionsPythonREPLTool extends Tool {
   }
 
   async _call(pythonCode: string) {
-    const token = await this.accessTokenProvider();
+    const token = await this.azureADTokenProvider();
     const apiUrl = this._buildUrl("code/execute");
     const headers = {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       "User-Agent": await getuserAgentSuffix(),
     };
     const body = JSON.stringify({
@@ -119,7 +150,7 @@ export class SessionsPythonREPLTool extends Tool {
         codeInputType: "inline",
         executionType: "synchronous",
         code: pythonCode,
-      }
+      },
     });
 
     const response = await fetch(apiUrl, {
@@ -132,8 +163,7 @@ export class SessionsPythonREPLTool extends Tool {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const json = await response.json();
-    const properties = json.properties;
+    const { properties } = await response.json();
     const output = {
       result: properties.result,
       stdout: properties.stdout,
@@ -142,11 +172,14 @@ export class SessionsPythonREPLTool extends Tool {
     return JSON.stringify(output, null, 2);
   }
 
-  async uploadFile(params: { data: Blob, remoteFilename: string }) : Promise<RemoteFile> {
-    const token = await this.accessTokenProvider();
+  async uploadFile(params: {
+    data: Blob;
+    remoteFilename: string;
+  }): Promise<RemoteFile> {
+    const token = await this.azureADTokenProvider();
     const apiUrl = this._buildUrl("files/upload");
     const headers = {
-      "Authorization": `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       "User-Agent": await getuserAgentSuffix(),
     };
     const formData = new FormData();
@@ -163,14 +196,14 @@ export class SessionsPythonREPLTool extends Tool {
     }
 
     const json = await response.json();
-    return json["value"][0].properties as RemoteFile;
+    return json.value[0].properties as RemoteFile;
   }
 
   async downloadFile(params: { remoteFilename: string }): Promise<Blob> {
-    const token = await this.accessTokenProvider();
+    const token = await this.azureADTokenProvider();
     const apiUrl = this._buildUrl(`files/content/${params.remoteFilename}`);
     const headers = {
-      "Authorization": `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       "User-Agent": await getuserAgentSuffix(),
     };
 
@@ -186,11 +219,11 @@ export class SessionsPythonREPLTool extends Tool {
     return await response.blob();
   }
 
-  async listFiles() : Promise<RemoteFile[]> {
-    const token = await this.accessTokenProvider();
+  async listFiles(): Promise<RemoteFile[]> {
+    const token = await this.azureADTokenProvider();
     const apiUrl = this._buildUrl("files");
     const headers = {
-      "Authorization": `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       "User-Agent": await getuserAgentSuffix(),
     };
 
@@ -204,18 +237,16 @@ export class SessionsPythonREPLTool extends Tool {
     }
 
     const json = await response.json();
-    const list = json["value"].map((x: any) => x.properties);
+    const list = json.value.map(
+      (x: { properties: RemoteFile }) => x.properties
+    );
     return list as RemoteFile[];
   }
 }
 
-function defaultAccessTokenProviderFactory() {
-  let cachedToken: AccessToken | undefined;
-  return async () => {
-    const credentials = new DefaultAzureCredential();
-    if (!cachedToken || cachedToken.expiresOnTimestamp < Date.now() + (5 * 60 * 1000)) {
-      cachedToken = await credentials.getToken("https://acasessions.io/.default");
-    }
-    return cachedToken.token;
-  };
+function defaultAzureADTokenProvider() {
+  return getBearerTokenProvider(
+    new DefaultAzureCredential(),
+    "https://acasessions.io/.default"
+  );
 }
