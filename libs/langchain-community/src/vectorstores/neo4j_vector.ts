@@ -36,6 +36,7 @@ interface Neo4jVectorStoreArgs {
 const DEFAULT_SEARCH_TYPE = "vector";
 const DEFAULT_INDEX_TYPE = "NODE";
 const DEFAULT_DISTANCE_STRATEGY = "cosine";
+const DEFAULT_NODE_EMBEDDING_PROPERTY = "embedding";
 
 /**
  * @security *Security note*: Make sure that the database connection uses credentials
@@ -102,7 +103,7 @@ export class Neo4jVectorStore extends VectorStore {
       preDeleteCollection = false,
       nodeLabel = "Chunk",
       textNodeProperty = "text",
-      embeddingNodeProperty = "embedding",
+      embeddingNodeProperty = DEFAULT_NODE_EMBEDDING_PROPERTY,
       keywordIndexName = "keyword",
       indexName = "vector",
       retrievalQuery = "",
@@ -333,7 +334,7 @@ export class Neo4jVectorStore extends VectorStore {
   ) {
     const {
       textNodeProperties = [],
-      embeddingNodeProperty,
+      embeddingNodeProperty = DEFAULT_NODE_EMBEDDING_PROPERTY,
       searchType = DEFAULT_SEARCH_TYPE,
       retrievalQuery = "",
       nodeLabel,
@@ -636,6 +637,15 @@ export class Neo4jVectorStore extends VectorStore {
     return results.map((result) => result[0]);
   }
 
+  async similaritySearchWithScore(
+    query: string,
+    k = 4,
+    params: Record<string, any> = {}
+  ): Promise<[Document, number][]> {
+    const embedding = await this.embeddings.embedQuery(query);
+    return this.similaritySearchVectorWithScore(embedding, k, query, params);
+  }
+
   async similaritySearchVectorWithScore(
     vector: number[],
     k: number,
@@ -720,6 +730,22 @@ export class Neo4jVectorStore extends VectorStore {
     const results = await this.query(readQuery, parameters);
 
     if (results) {
+      if (results.some((result) => result.text == null)) {
+        if (!this.retrievalQuery) {
+          throw new Error(
+            "Make sure that none of the '" +
+              this.textNodeProperty +
+              "' properties on nodes with label '" +
+              this.nodeLabel +
+              "' are missing or empty"
+          );
+        } else {
+          throw new Error(
+            "Inspect the 'retrievalQuery' and ensure it doesn't return null for the 'text' column"
+          );
+        }
+      }
+
       const docs: [Document, number][] = results.map((result: Any) => [
         new Document({
           pageContent: result.text,
@@ -1026,7 +1052,7 @@ function handleFieldFilter(
     return [querySnippet, queryParam];
   } else if (["$in", "$nin", "$like", "$ilike"].includes(operator)) {
     if (["$in", "$nin"].includes(operator)) {
-      filterValue.forEach((val: any) => {
+      filterValue.forEach((val: Any) => {
         if (
           typeof val !== "string" &&
           typeof val !== "number" &&

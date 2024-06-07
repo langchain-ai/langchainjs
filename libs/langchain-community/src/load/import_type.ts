@@ -38,6 +38,7 @@ export interface SecretMap {
   MILVUS_USERNAME?: string;
   MINIMAX_API_KEY?: string;
   MINIMAX_GROUP_ID?: string;
+  MOONSHOT_API_KEY?: string;
   PLANETSCALE_DATABASE_URL?: string;
   PLANETSCALE_HOST?: string;
   PLANETSCALE_PASSWORD?: string;
@@ -51,6 +52,8 @@ export interface SecretMap {
   REMOTE_RETRIEVER_AUTH_BEARER?: string;
   REPLICATE_API_TOKEN?: string;
   SEARXNG_API_BASE?: string;
+  TENCENT_SECRET_ID?: string;
+  TENCENT_SECRET_KEY?: string;
   TOGETHER_AI_API_KEY?: string;
   TURBOPUFFER_API_KEY?: string;
   UPSTASH_REDIS_REST_TOKEN?: string;

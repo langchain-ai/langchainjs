@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.2.2",
+  "version": "0.2.9",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -14,46 +14,42 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-community/",
   "scripts": {
-    "build": "yarn run build:deps && yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
-    "build:deps": "yarn run turbo:command build --filter=@langchain/core --filter=@langchain/openai --filter=langchain --filter=@langchain/anthropic --concurrency=1",
-    "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rm -rf dist/tests dist/**/tests",
-    "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && yarn move-cjs-to-dist && rm -rf dist-cjs",
-    "build:watch": "yarn create-entrypoints && tsc --outDir dist/ --watch",
-    "build:scripts": "yarn create-entrypoints && yarn check-tree-shaking",
+    "build": "yarn turbo:command build:internal --filter=@langchain/community",
+    "build:internal": "yarn lc-build:v2 --create-entrypoints --pre --tree-shaking --gen-maps",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
     "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "yarn lint:eslint && yarn lint:dpdm",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
-    "clean": "rm -rf dist/ && NODE_OPTIONS=--max-old-space-size=4096 yarn lc-build --config ./langchain.config.js --create-entrypoints --pre --gen-maps",
+    "clean": "rm -rf .turbo dist/",
     "prepack": "yarn build",
-    "test": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
-    "test:watch": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
-    "test:single": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 100000",
-    "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
+    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
+    "test:single": "NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 100000",
+    "test:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
+    "test:standard:unit": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.standard\\.test.ts --testTimeout 100000 --maxWorkers=50%",
+    "test:standard:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.standard\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
+    "test:standard": "yarn test:standard:unit && yarn test:standard:int",
     "format": "prettier --config .prettierrc --write \"src\"",
-    "format:check": "prettier --config .prettierrc --check \"src\"",
-    "move-cjs-to-dist": "yarn lc-build --config ./langchain.config.js --move-cjs-dist",
-    "create-entrypoints": "yarn lc-build --config ./langchain.config.js --create-entrypoints",
-    "check-tree-shaking": "yarn lc-build --config ./langchain.config.js --tree-shaking"
+    "format:check": "prettier --config .prettierrc --check \"src\""
   },
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.2.0",
-    "@langchain/openai": "~0.0.28",
+    "@langchain/core": "~0.2.6",
+    "@langchain/openai": "~0.1.0",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
     "js-yaml": "^4.1.0",
-    "langchain": "~0.2.0",
-    "langsmith": "~0.1.1",
+    "langchain": "0.2.3",
+    "langsmith": "~0.1.30",
     "uuid": "^9.0.0",
     "zod": "^3.22.3",
     "zod-to-json-schema": "^3.22.5"
   },
   "devDependencies": {
     "@aws-crypto/sha256-js": "^5.0.0",
-    "@aws-sdk/client-bedrock-agent-runtime": "^3.496.0",
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.583.0",
     "@aws-sdk/client-bedrock-runtime": "^3.422.0",
     "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-kendra": "^3.352.0",
@@ -73,6 +69,7 @@
     "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
+    "@getzep/zep-cloud": "~1.0.0",
     "@getzep/zep-js": "^0.9.0",
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
@@ -82,9 +79,10 @@
     "@huggingface/inference": "^2.6.4",
     "@jest/globals": "^29.5.0",
     "@langchain/scripts": "~0.0.14",
+    "@langchain/standard-tests": "workspace:*",
     "@layerup/layerup-security": "^1.5.12",
     "@mendable/firecrawl-js": "^0.0.13",
-    "@mlc-ai/web-llm": "^0.2.35",
+    "@mlc-ai/web-llm": "^0.2.40",
     "@mozilla/readability": "^0.4.4",
     "@neondatabase/serverless": "^0.9.1",
     "@notionhq/client": "^2.2.10",
@@ -109,7 +107,8 @@
     "@tensorflow/tfjs-converter": "^3.6.0",
     "@tensorflow/tfjs-core": "^3.6.0",
     "@tsconfig/recommended": "^1.0.2",
-    "@types/better-sqlite3": "^7.6.9",
+    "@types/better-sqlite3": "^7.6.10",
+    "@types/crypto-js": "^4.2.2",
     "@types/flat": "^5.0.2",
     "@types/html-to-text": "^9",
     "@types/jsdom": "^21.1.1",
@@ -123,8 +122,9 @@
     "@types/ws": "^8",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
+    "@upstash/ratelimit": "^1.1.3",
     "@upstash/redis": "^1.20.6",
-    "@upstash/vector": "^1.0.7",
+    "@upstash/vector": "^1.1.1",
     "@vercel/kv": "^0.2.3",
     "@vercel/postgres": "^0.5.0",
     "@writerai/writer-sdk": "^0.40.2",
@@ -133,7 +133,7 @@
     "@zilliz/milvus2-sdk-node": ">=2.2.11",
     "apify-client": "^2.7.1",
     "assemblyai": "^4.0.0",
-    "better-sqlite3": "^9.4.0",
+    "better-sqlite3": ">=9.4.0 <12.0.0",
     "cassandra-driver": "^4.7.2",
     "cborg": "^4.1.1",
     "cheerio": "^1.0.0-rc.12",
@@ -144,6 +144,7 @@
     "cohere-ai": ">=6.0.0",
     "convex": "^1.3.1",
     "couchbase": "^4.3.0",
+    "crypto-js": "^4.2.0",
     "d3-dsv": "^2.0.0",
     "datastore-core": "^9.2.9",
     "discord.js": "^14.14.1",
@@ -195,12 +196,12 @@
     "puppeteer": "^19.7.2",
     "redis": "^4.6.6",
     "release-it": "^15.10.1",
-    "replicate": "^0.18.0",
+    "replicate": "^0.29.4",
     "rollup": "^3.19.1",
     "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.3",
     "ts-jest": "^29.1.0",
-    "typeorm": "^0.3.12",
+    "typeorm": "^0.3.20",
     "typescript": "~5.1.6",
     "typesense": "^1.5.3",
     "usearch": "^1.1.1",
@@ -213,7 +214,7 @@
   },
   "peerDependencies": {
     "@aws-crypto/sha256-js": "^5.0.0",
-    "@aws-sdk/client-bedrock-agent-runtime": "^3.485.0",
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.583.0",
     "@aws-sdk/client-bedrock-runtime": "^3.422.0",
     "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-kendra": "^3.352.0",
@@ -230,16 +231,17 @@
     "@datastax/astra-db-ts": "^1.0.0",
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
+    "@getzep/zep-cloud": "*",
     "@getzep/zep-js": "^0.9.0",
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
-    "@google-ai/generativelanguage": "^2.5.0",
+    "@google-ai/generativelanguage": "*",
     "@google-cloud/storage": "^6.10.1 || ^7.7.0",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
     "@layerup/layerup-security": "^1.5.12",
     "@mendable/firecrawl-js": "^0.0.13",
-    "@mlc-ai/web-llm": "^0.2.35",
+    "@mlc-ai/web-llm": "^0.2.40",
     "@mozilla/readability": "*",
     "@neondatabase/serverless": "*",
     "@notionhq/client": "^2.2.10",
@@ -260,8 +262,9 @@
     "@tensorflow-models/universal-sentence-encoder": "*",
     "@tensorflow/tfjs-converter": "*",
     "@tensorflow/tfjs-core": "*",
+    "@upstash/ratelimit": "^1.1.3",
     "@upstash/redis": "^1.20.6",
-    "@upstash/vector": "^1.0.7",
+    "@upstash/vector": "^1.1.1",
     "@vercel/kv": "^0.2.3",
     "@vercel/postgres": "^0.5.0",
     "@writerai/writer-sdk": "^0.40.2",
@@ -270,7 +273,7 @@
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "apify-client": "^2.7.1",
     "assemblyai": "^4.0.0",
-    "better-sqlite3": "^9.4.0",
+    "better-sqlite3": ">=9.4.0 <12.0.0",
     "cassandra-driver": "^4.7.2",
     "cborg": "^4.1.1",
     "cheerio": "^1.0.0-rc.12",
@@ -281,6 +284,7 @@
     "cohere-ai": "*",
     "convex": "^1.3.1",
     "couchbase": "^4.3.0",
+    "crypto-js": "^4.2.0",
     "d3-dsv": "^2.0.0",
     "discord.js": "^14.14.1",
     "dria": "^0.0.3",
@@ -288,7 +292,7 @@
     "epub2": "^3.0.1",
     "faiss-node": "^0.5.1",
     "firebase-admin": "^11.9.0 || ^12.0.0",
-    "google-auth-library": "^9.10.0",
+    "google-auth-library": "*",
     "googleapis": "^126.0.1",
     "hnswlib-node": "^3.0.0",
     "html-to-text": "^9.0.5",
@@ -316,10 +320,10 @@
     "portkey-ai": "^0.1.11",
     "puppeteer": "^19.7.2",
     "redis": "*",
-    "replicate": "^0.18.0",
+    "replicate": "^0.29.4",
     "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.3",
-    "typeorm": "^0.3.12",
+    "typeorm": "^0.3.20",
     "typesense": "^1.5.3",
     "usearch": "^1.1.1",
     "vectordb": "^0.1.4",
@@ -383,6 +387,9 @@
       "optional": true
     },
     "@getmetal/metal-sdk": {
+      "optional": true
+    },
+    "@getzep/zep-cloud": {
       "optional": true
     },
     "@getzep/zep-js": {
@@ -475,6 +482,9 @@
     "@tensorflow/tfjs-core": {
       "optional": true
     },
+    "@upstash/ratelimit": {
+      "optional": true
+    },
     "@upstash/redis": {
       "optional": true
     },
@@ -536,6 +546,9 @@
       "optional": true
     },
     "couchbase": {
+      "optional": true
+    },
+    "crypto-js": {
       "optional": true
     },
     "d3-dsv": {
@@ -1011,6 +1024,15 @@
       "import": "./embeddings/cohere.js",
       "require": "./embeddings/cohere.cjs"
     },
+    "./embeddings/deepinfra": {
+      "types": {
+        "import": "./embeddings/deepinfra.d.ts",
+        "require": "./embeddings/deepinfra.d.cts",
+        "default": "./embeddings/deepinfra.d.ts"
+      },
+      "import": "./embeddings/deepinfra.js",
+      "require": "./embeddings/deepinfra.cjs"
+    },
     "./embeddings/fireworks": {
       "types": {
         "import": "./embeddings/fireworks.d.ts",
@@ -1109,6 +1131,24 @@
       },
       "import": "./embeddings/tensorflow.js",
       "require": "./embeddings/tensorflow.cjs"
+    },
+    "./embeddings/tencent_hunyuan": {
+      "types": {
+        "import": "./embeddings/tencent_hunyuan.d.ts",
+        "require": "./embeddings/tencent_hunyuan.d.cts",
+        "default": "./embeddings/tencent_hunyuan.d.ts"
+      },
+      "import": "./embeddings/tencent_hunyuan.js",
+      "require": "./embeddings/tencent_hunyuan.cjs"
+    },
+    "./embeddings/tencent_hunyuan/web": {
+      "types": {
+        "import": "./embeddings/tencent_hunyuan/web.d.ts",
+        "require": "./embeddings/tencent_hunyuan/web.d.cts",
+        "default": "./embeddings/tencent_hunyuan/web.d.ts"
+      },
+      "import": "./embeddings/tencent_hunyuan/web.js",
+      "require": "./embeddings/tencent_hunyuan/web.cjs"
     },
     "./embeddings/togetherai": {
       "types": {
@@ -1758,6 +1798,15 @@
       "import": "./vectorstores/zep.js",
       "require": "./vectorstores/zep.cjs"
     },
+    "./vectorstores/zep_cloud": {
+      "types": {
+        "import": "./vectorstores/zep_cloud.d.ts",
+        "require": "./vectorstores/zep_cloud.d.cts",
+        "default": "./vectorstores/zep_cloud.d.ts"
+      },
+      "import": "./vectorstores/zep_cloud.js",
+      "require": "./vectorstores/zep_cloud.cjs"
+    },
     "./chat_models/alibaba_tongyi": {
       "types": {
         "import": "./chat_models/alibaba_tongyi.d.ts",
@@ -1884,6 +1933,15 @@
       "import": "./chat_models/minimax.js",
       "require": "./chat_models/minimax.cjs"
     },
+    "./chat_models/moonshot": {
+      "types": {
+        "import": "./chat_models/moonshot.d.ts",
+        "require": "./chat_models/moonshot.d.cts",
+        "default": "./chat_models/moonshot.d.ts"
+      },
+      "import": "./chat_models/moonshot.js",
+      "require": "./chat_models/moonshot.cjs"
+    },
     "./chat_models/ollama": {
       "types": {
         "import": "./chat_models/ollama.d.ts",
@@ -1910,6 +1968,24 @@
       },
       "import": "./chat_models/premai.js",
       "require": "./chat_models/premai.cjs"
+    },
+    "./chat_models/tencent_hunyuan": {
+      "types": {
+        "import": "./chat_models/tencent_hunyuan.d.ts",
+        "require": "./chat_models/tencent_hunyuan.d.cts",
+        "default": "./chat_models/tencent_hunyuan.d.ts"
+      },
+      "import": "./chat_models/tencent_hunyuan.js",
+      "require": "./chat_models/tencent_hunyuan.cjs"
+    },
+    "./chat_models/tencent_hunyuan/web": {
+      "types": {
+        "import": "./chat_models/tencent_hunyuan/web.d.ts",
+        "require": "./chat_models/tencent_hunyuan/web.d.cts",
+        "default": "./chat_models/tencent_hunyuan/web.d.ts"
+      },
+      "import": "./chat_models/tencent_hunyuan/web.js",
+      "require": "./chat_models/tencent_hunyuan/web.cjs"
     },
     "./chat_models/togetherai": {
       "types": {
@@ -1964,6 +2040,15 @@
       },
       "import": "./callbacks/handlers/lunary.js",
       "require": "./callbacks/handlers/lunary.cjs"
+    },
+    "./callbacks/handlers/upstash_ratelimit": {
+      "types": {
+        "import": "./callbacks/handlers/upstash_ratelimit.d.ts",
+        "require": "./callbacks/handlers/upstash_ratelimit.d.cts",
+        "default": "./callbacks/handlers/upstash_ratelimit.d.ts"
+      },
+      "import": "./callbacks/handlers/upstash_ratelimit.js",
+      "require": "./callbacks/handlers/upstash_ratelimit.cjs"
     },
     "./retrievers/amazon_kendra": {
       "types": {
@@ -2108,6 +2193,15 @@
       },
       "import": "./structured_query/vectara.js",
       "require": "./structured_query/vectara.cjs"
+    },
+    "./retrievers/zep_cloud": {
+      "types": {
+        "import": "./retrievers/zep_cloud.d.ts",
+        "require": "./retrievers/zep_cloud.d.cts",
+        "default": "./retrievers/zep_cloud.d.ts"
+      },
+      "import": "./retrievers/zep_cloud.js",
+      "require": "./retrievers/zep_cloud.cjs"
     },
     "./caches/cloudflare_kv": {
       "types": {
@@ -2397,6 +2491,15 @@
       "import": "./stores/message/xata.js",
       "require": "./stores/message/xata.cjs"
     },
+    "./stores/message/zep_cloud": {
+      "types": {
+        "import": "./stores/message/zep_cloud.d.ts",
+        "require": "./stores/message/zep_cloud.d.cts",
+        "default": "./stores/message/zep_cloud.d.ts"
+      },
+      "import": "./stores/message/zep_cloud.js",
+      "require": "./stores/message/zep_cloud.cjs"
+    },
     "./memory/chat_memory": {
       "types": {
         "import": "./memory/chat_memory.d.ts",
@@ -2423,6 +2526,15 @@
       },
       "import": "./memory/zep.js",
       "require": "./memory/zep.cjs"
+    },
+    "./memory/zep_cloud": {
+      "types": {
+        "import": "./memory/zep_cloud.d.ts",
+        "require": "./memory/zep_cloud.d.cts",
+        "default": "./memory/zep_cloud.d.ts"
+      },
+      "import": "./memory/zep_cloud.js",
+      "require": "./memory/zep_cloud.cjs"
     },
     "./indexes/base": {
       "types": {
@@ -3031,6 +3143,10 @@
     "embeddings/cohere.js",
     "embeddings/cohere.d.ts",
     "embeddings/cohere.d.cts",
+    "embeddings/deepinfra.cjs",
+    "embeddings/deepinfra.js",
+    "embeddings/deepinfra.d.ts",
+    "embeddings/deepinfra.d.cts",
     "embeddings/fireworks.cjs",
     "embeddings/fireworks.js",
     "embeddings/fireworks.d.ts",
@@ -3075,6 +3191,14 @@
     "embeddings/tensorflow.js",
     "embeddings/tensorflow.d.ts",
     "embeddings/tensorflow.d.cts",
+    "embeddings/tencent_hunyuan.cjs",
+    "embeddings/tencent_hunyuan.js",
+    "embeddings/tencent_hunyuan.d.ts",
+    "embeddings/tencent_hunyuan.d.cts",
+    "embeddings/tencent_hunyuan/web.cjs",
+    "embeddings/tencent_hunyuan/web.js",
+    "embeddings/tencent_hunyuan/web.d.ts",
+    "embeddings/tencent_hunyuan/web.d.cts",
     "embeddings/togetherai.cjs",
     "embeddings/togetherai.js",
     "embeddings/togetherai.d.ts",
@@ -3363,6 +3487,10 @@
     "vectorstores/zep.js",
     "vectorstores/zep.d.ts",
     "vectorstores/zep.d.cts",
+    "vectorstores/zep_cloud.cjs",
+    "vectorstores/zep_cloud.js",
+    "vectorstores/zep_cloud.d.ts",
+    "vectorstores/zep_cloud.d.cts",
     "chat_models/alibaba_tongyi.cjs",
     "chat_models/alibaba_tongyi.js",
     "chat_models/alibaba_tongyi.d.ts",
@@ -3419,6 +3547,10 @@
     "chat_models/minimax.js",
     "chat_models/minimax.d.ts",
     "chat_models/minimax.d.cts",
+    "chat_models/moonshot.cjs",
+    "chat_models/moonshot.js",
+    "chat_models/moonshot.d.ts",
+    "chat_models/moonshot.d.cts",
     "chat_models/ollama.cjs",
     "chat_models/ollama.js",
     "chat_models/ollama.d.ts",
@@ -3431,6 +3563,14 @@
     "chat_models/premai.js",
     "chat_models/premai.d.ts",
     "chat_models/premai.d.cts",
+    "chat_models/tencent_hunyuan.cjs",
+    "chat_models/tencent_hunyuan.js",
+    "chat_models/tencent_hunyuan.d.ts",
+    "chat_models/tencent_hunyuan.d.cts",
+    "chat_models/tencent_hunyuan/web.cjs",
+    "chat_models/tencent_hunyuan/web.js",
+    "chat_models/tencent_hunyuan/web.d.ts",
+    "chat_models/tencent_hunyuan/web.d.cts",
     "chat_models/togetherai.cjs",
     "chat_models/togetherai.js",
     "chat_models/togetherai.d.ts",
@@ -3455,6 +3595,10 @@
     "callbacks/handlers/lunary.js",
     "callbacks/handlers/lunary.d.ts",
     "callbacks/handlers/lunary.d.cts",
+    "callbacks/handlers/upstash_ratelimit.cjs",
+    "callbacks/handlers/upstash_ratelimit.js",
+    "callbacks/handlers/upstash_ratelimit.d.ts",
+    "callbacks/handlers/upstash_ratelimit.d.cts",
     "retrievers/amazon_kendra.cjs",
     "retrievers/amazon_kendra.js",
     "retrievers/amazon_kendra.d.ts",
@@ -3519,6 +3663,10 @@
     "structured_query/vectara.js",
     "structured_query/vectara.d.ts",
     "structured_query/vectara.d.cts",
+    "retrievers/zep_cloud.cjs",
+    "retrievers/zep_cloud.js",
+    "retrievers/zep_cloud.d.ts",
+    "retrievers/zep_cloud.d.cts",
     "caches/cloudflare_kv.cjs",
     "caches/cloudflare_kv.js",
     "caches/cloudflare_kv.d.ts",
@@ -3647,6 +3795,10 @@
     "stores/message/xata.js",
     "stores/message/xata.d.ts",
     "stores/message/xata.d.cts",
+    "stores/message/zep_cloud.cjs",
+    "stores/message/zep_cloud.js",
+    "stores/message/zep_cloud.d.ts",
+    "stores/message/zep_cloud.d.cts",
     "memory/chat_memory.cjs",
     "memory/chat_memory.js",
     "memory/chat_memory.d.ts",
@@ -3659,6 +3811,10 @@
     "memory/zep.js",
     "memory/zep.d.ts",
     "memory/zep.d.cts",
+    "memory/zep_cloud.cjs",
+    "memory/zep_cloud.js",
+    "memory/zep_cloud.d.ts",
+    "memory/zep_cloud.d.cts",
     "indexes/base.cjs",
     "indexes/base.js",
     "indexes/base.d.ts",

@@ -21,4 +21,5 @@ export const config = {
   cjsSource: "./dist-cjs",
   cjsDestination: "./dist",
   abs,
+  additionalGitignorePaths: ["!bin/build.js", "dist_build"]
 }

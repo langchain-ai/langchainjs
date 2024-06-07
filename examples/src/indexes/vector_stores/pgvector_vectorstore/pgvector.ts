@@ -34,8 +34,8 @@ const pgvectorStore = await PGVectorStore.initialize(
 );
 
 await pgvectorStore.addDocuments([
-  { pageContent: "what's this", metadata: { a: 2 } },
-  { pageContent: "Cat drinks milk", metadata: { a: 1 } },
+  { pageContent: "what's this", metadata: { a: 2, b: ["tag1", "tag2"] } },
+  { pageContent: "Cat drinks milk", metadata: { a: 1, b: ["tag2"] } },
 ]);
 
 const results = await pgvectorStore.similaritySearch("water", 1);
@@ -82,6 +82,19 @@ console.log(results4);
 
 /*
   [ Document { pageContent: 'what's this', metadata: { a: 2 } } ]
+*/
+
+// Filtering using arrayContains (?|) is supported
+const results5 = await pgvectorStore.similaritySearch("water", 1, {
+  b: {
+    arrayContains: ["tag1"],
+  },
+});
+
+console.log(results5);
+
+/*
+  [ Document { pageContent: "what's this", metadata: { a: 2, b: ['tag1', 'tag2'] } } } ]
 */
 
 await pgvectorStore.end();

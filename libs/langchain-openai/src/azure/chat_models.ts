@@ -38,15 +38,19 @@ export class AzureChatOpenAI extends ChatOpenAI {
   ) {
     const newFields = fields ? { ...fields } : fields;
     if (newFields) {
-      newFields.azureOpenAIApiDeploymentName = newFields.deploymentName;
-      newFields.azureOpenAIApiKey = newFields.openAIApiKey;
-      newFields.azureOpenAIApiVersion = newFields.openAIApiVersion;
+      // don't rewrite the fields if they are already set
+      newFields.azureOpenAIApiDeploymentName =
+        newFields.azureOpenAIApiDeploymentName ?? newFields.deploymentName;
+      newFields.azureOpenAIApiKey =
+        newFields.azureOpenAIApiKey ?? newFields.openAIApiKey;
+      newFields.azureOpenAIApiVersion =
+        newFields.azureOpenAIApiVersion ?? newFields.openAIApiVersion;
     }
 
     super(newFields);
   }
 
-  protected getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+  getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     const params = super.getLsParams(options);
     params.ls_provider = "azure";
     return params;

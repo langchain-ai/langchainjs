@@ -13,7 +13,7 @@ import { HumanMessage } from "@langchain/core/messages";
 // Or by importing it via:
 // import { prebuiltAppConfig } from "@mlc-ai/web-llm";
 const model = new ChatWebLLM({
-  model: "Phi2-q4f32_1",
+  model: "Phi-3-mini-4k-instruct-q4f16_1-MLC",
   chatOptions: {
     temperature: 0.5,
   },

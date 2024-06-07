@@ -25,7 +25,7 @@ LangChain supports several different types of integrations with third-party prov
 
 We welcome such contributions, but ask that you read our dedicated [integration contribution guide](https://github.com/langchain-ai/langchainjs/blob/main/.github/contributing/INTEGRATIONS.md) for specific details and patterns to consider before opening a pull request.
 
-You can also check out the [guide on extending LangChain.js](https://js.langchain.com/docs/guides/extending_langchain/) in our docs.
+You can also check out the [guides on extending LangChain.js](https://js.langchain.com/v0.2/docs/how_to/#custom) in our docs.
 
 #### Integration packages
 

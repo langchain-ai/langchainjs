@@ -19,6 +19,9 @@ function removeAdditionalProperties(
     const keys = Object.keys(updatedSchema.properties);
     removeProperties(updatedSchema.properties, keys, 0);
   }
+  if (Object.hasOwn(updatedSchema, "items") && updatedSchema.items) {
+    updatedSchema.items = removeAdditionalProperties(updatedSchema.items);
+  }
 
   return updatedSchema;
 }

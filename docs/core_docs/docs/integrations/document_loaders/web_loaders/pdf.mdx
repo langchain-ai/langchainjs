@@ -27,7 +27,7 @@ npm install pdfjs-dist
 ```
 
 ```typescript
-import { WebPDFLoader } from "langchain/document_loaders/web/pdf";
+import { WebPDFLoader } from "@langchain/community/document_loaders/web/pdf";
 
 const blob = new Blob(); // e.g. from a file input
 
@@ -43,7 +43,7 @@ PDFs come in many varieties, which makes reading them a challenge. The loader pa
 if you are seeing excessive spaces, this may not be the desired behavior. In that case, you can override the separator with an empty string like this:
 
 ```typescript
-import { WebPDFLoader } from "langchain/document_loaders/web/pdf";
+import { WebPDFLoader } from "@langchain/community/document_loaders/web/pdf";
 
 const blob = new Blob(); // e.g. from a file input
 

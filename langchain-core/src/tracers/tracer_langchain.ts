@@ -1,4 +1,7 @@
 import { Client } from "langsmith";
+import { RunTree } from "langsmith/run_trees";
+import { getCurrentRunTree } from "langsmith/singletons/traceable";
+
 import {
   BaseRun,
   RunCreate,
@@ -57,6 +60,40 @@ export class LangChainTracer
       getEnvironmentVariable("LANGCHAIN_SESSION");
     this.exampleId = exampleId;
     this.client = client ?? new Client({});
+
+    // if we're inside traceable, we can obtain the traceable tree
+    // and populate the run map, which is used to correctly
+    // infer dotted order and execution order
+    const traceableTree = this.getTraceableRunTree();
+    if (traceableTree) {
+      let rootRun: RunTree = traceableTree;
+      const visited = new Set<string>();
+      while (rootRun.parent_run) {
+        if (visited.has(rootRun.id)) break;
+        visited.add(rootRun.id);
+
+        if (!rootRun.parent_run) break;
+        rootRun = rootRun.parent_run as RunTree;
+      }
+      visited.clear();
+
+      const queue = [rootRun];
+      while (queue.length > 0) {
+        const current = queue.shift();
+        if (!current || visited.has(current.id)) continue;
+        visited.add(current.id);
+
+        // @ts-expect-error Types of property 'events' are incompatible.
+        this.runMap.set(current.id, current);
+        if (current.child_runs) {
+          queue.push(...current.child_runs);
+        }
+      }
+
+      this.client = traceableTree.client ?? this.client;
+      this.projectName = traceableTree.project_name ?? this.projectName;
+      this.exampleId = traceableTree.reference_example_id ?? this.exampleId;
+    }
   }
 
   private async _convertToCreate(
@@ -101,5 +138,13 @@ export class LangChainTracer
 
   getRun(id: string): Run | undefined {
     return this.runMap.get(id);
+  }
+
+  getTraceableRunTree(): RunTree | undefined {
+    try {
+      return getCurrentRunTree();
+    } catch {
+      return undefined;
+    }
   }
 }
