@@ -30,7 +30,7 @@ import {
 import { StructuredToolInterface } from "@langchain/core/tools";
 import { isStructuredTool } from "@langchain/core/utils/function_calling";
 import { ToolCall } from "@langchain/core/messages/tool";
-import zodToJsonSchema from "zod-to-json-schema";
+import { zodToJsonSchema } from "zod-to-json-schema";
 
 import {
   BaseBedrockInput,
