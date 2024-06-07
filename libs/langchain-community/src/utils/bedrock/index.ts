@@ -5,9 +5,7 @@ import {
   BaseMessage,
 } from "@langchain/core/messages";
 import { StructuredToolInterface } from "@langchain/core/tools";
-import { isStructuredTool } from "@langchain/core/utils/function_calling";
 import { ChatGeneration, ChatGenerationChunk } from "@langchain/core/outputs";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { extractToolCalls, formatMessagesForAnthropic } from "./anthropic.js";
 
 export type CredentialType =
@@ -271,17 +269,7 @@ export class BedrockLLMInputOutputAdapter {
       inputBody.stop_sequences = stopSequences;
 
       if (tools.length > 0) {
-        inputBody.tools = tools.map((tool) => {
-          if (isStructuredTool(tool)) {
-            return {
-              name: tool.name,
-              description: tool.description,
-              input_schema: zodToJsonSchema(tool.schema),
-            };
-          }
-
-          return tool;
-        });
+        inputBody.tools = tools;
       }
       return { ...inputBody, ...modelKwargs };
     } else if (provider === "cohere") {
