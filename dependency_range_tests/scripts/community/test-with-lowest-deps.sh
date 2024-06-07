@@ -11,7 +11,7 @@ shopt -s extglob
 cp -r ../libs/langchain-community/!(node_modules|dist|dist-cjs|dist-esm|build|.next|.turbo) ./
 
 mkdir -p /updater_script
-cp -r /scripts/node/!(node_modules|dist|dist-cjs|dist-esm|build|.next|.turbo) /updater_script/
+cp -r /scripts/community/node/!(node_modules|dist|dist-cjs|dist-esm|build|.next|.turbo) /updater_script/
 
 cd /updater_script
 
