@@ -3,7 +3,7 @@ import {
   InvokeModelCommand,
 } from "@aws-sdk/client-bedrock-runtime";
 import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
-import type { CredentialType } from "../utils/bedrock.js";
+import type { CredentialType } from "../utils/bedrock/index.js";
 
 /**
  * Interface that extends EmbeddingsParams and defines additional
