@@ -31,6 +31,9 @@ services:
       COHERE_API_KEY: ${COHERE_API_KEY}
     working_dir: /app
     volumes:
+      - ../turbo.json:/turbo.json
+      - ../package.json:/package.json
+      - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
       - ../libs/langchain-community:/libs/langchain-community
       - ./scripts:/scripts
     command: bash /scripts/community/test-with-latest-deps.sh

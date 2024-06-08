@@ -10180,7 +10180,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/scripts@workspace:*, @langchain/scripts@workspace:libs/langchain-scripts, @langchain/scripts@~0.0.14":
+"@langchain/scripts@workspace:*, @langchain/scripts@workspace:^, @langchain/scripts@workspace:libs/langchain-scripts, @langchain/scripts@~0.0.14":
   version: 0.0.0-use.local
   resolution: "@langchain/scripts@workspace:libs/langchain-scripts"
   dependencies:
@@ -10221,8 +10221,8 @@ __metadata:
   resolution: "@langchain/standard-tests@workspace:libs/langchain-standard-tests"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": "workspace:*"
-    "@langchain/scripts": "workspace:*"
+    "@langchain/core": "workspace:^"
+    "@langchain/scripts": "workspace:^"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
