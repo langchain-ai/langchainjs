@@ -1,0 +1,43 @@
+# Mintbase Graph API
+
+This guide shows how to use MintBase Graph API with LangChain to load NFT Data.
+
+## Setup
+
+You'll need to sign up and retrieve your [Mintbase API key](https://www.searchapi.io/).
+
+## Setup
+
+First, we need to install the `langchain` package:
+
+```bash npm2yarn
+npm install --save langchain
+```
+
+Example code:
+
+```typescript
+import { MintBaseLoader } from "langchain/document_loaders/web/mintbase";
+
+const blockchainType = {
+    NEAR_MAINNET: "mainnet",
+    NEAR_TESTNET: "testnet",
+};
+
+const loader = new MintBaseLoader("mint.yearofchef.near", "omni-site", blockchainType.NEAR_MAINNET);
+
+const docs = await loader.load();
+/*
+[
+  Document {
+    pageContent: '{"base_uri":null,"burned_receipt_id":null,"burned_timestamp":null,"copies":1,"description":"In a PotLuck, everyone brings a dish to the table, so everyone is a chef. As a we build the Open Web and the Dragon Stack, it is you that brings that extra fire to every dish. This is why 2024 is the YEAR OF THE CHEF. By trading this you automatically support public goods!","expires_at":null,"extra":null,"issued_at":"2024-02-02T13:46:04.02219","last_transfer_receipt_id":"7gJGxrDqYM42sDzdXzeGojrmRMyCCV9SAoS7qbfdJCih","last_transfer_timestamp":"2024-02-11T01:51:21.005406","media":"https://ipfs.io/ipfs/QmabYudwPtdSy1JnvnVMfuiu9pNfGnxMhN2obbPmSDx65Z/1917.png","media_hash":null,"metadata_content_flag":null,"metadata_id":"mint.yearofchef.near:00dd64dd4295e10cd2c9da34033e169c","mint_memo":"https://ipfs.io/ipfs/QmRvamcqiXxn7cpfqhHvHBVkmLnPdEKHP25xK28Vt1dA55/1917.json","minted_receipt_id":"33YhBheo21QEsKXM7b4tQP1zBMzJf37AvuLFn3BMZkMG","minted_timestamp":"2024-02-02T13:46:04.02219","minter":"mint.yearofchef.near","nft_contract_content_flag":null,"nft_contract_created_at":null,"nft_contract_icon":"https://ipfs.io/ipfs/QmYF3z6rGwRVRGHfWzRpd9QQQKTcA3zfNkBkkgw3kwmCbW","nft_contract_id":"mint.yearofchef.near","nft_contract_is_mintbase":false,"nft_contract_name":"Year of the Chef","nft_contract_owner_id":null,"nft_contract_reference":null,"nft_contract_spec":"nft-1.0.0","nft_contract_symbol":"CHEF","owner":"0_o.starpause.near","reference":"https://ipfs.io/ipfs/QmRvamcqiXxn7cpfqhHvHBVkmLnPdEKHP25xK28Vt1dA55/1917.json","reference_blob":{"date":1706883720000,"name":"YEAR OF THE CHEF #1917","image":"ipfs://QmabYudwPtdSy1JnvnVMfuiu9pNfGnxMhN2obbPmSDx65Z/1917.png","edition":1,"attributes":[{"value":"Egg","trait_type":"BACKGROUND"},{"value":"OG","trait_type":"BADGE"},{"value":"Red dragon eyes","trait_type":"BASE"},{"value":"Mintbase","trait_type":"TOP"},{"value":"Floppy Toque White","trait_type":"HAT"}],"description":"In a PotLuck, everyone brings a dish to the table, so everyone is a chef. As a we build the Open Web and the Dragon Stack, it is you that brings that extra fire to every dish. This is why 2024 is the YEAR OF THE CHEF. By trading this you automatically support public goods!"},"reference_hash":null,"royalties":null,"royalties_percent":null,"splits":null,"starts_at":null,"title":"YEAR OF THE CHEF #1917","token_id":"1917","updated_at":null}',
+    metadata: {
+      source: 'mint.yearofchef.near',
+      blockchain: 'mainnet',
+      tokenId: '1917'
+    }
+  },
+  ...
+]
+*/
+```
