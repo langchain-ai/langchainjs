@@ -1,5 +1,8 @@
 import { BaseTracer, type Run } from "./base.js";
-import { BaseCallbackHandlerInput } from "../callbacks/base.js";
+import {
+  BaseCallbackHandler,
+  BaseCallbackHandlerInput,
+} from "../callbacks/base.js";
 import { IterableReadableStream } from "../utils/stream.js";
 import { AIMessageChunk } from "../messages/ai.js";
 import { ChatGeneration, Generation, GenerationChunk } from "../outputs.js";
@@ -130,6 +133,12 @@ function assignName({
   }
   return "Unnamed";
 }
+
+export const isStreamEventsHandler = (
+  handler: BaseCallbackHandler
+): handler is EventStreamCallbackHandler =>
+  handler.name === "event_stream_tracer";
+
 /**
  * Class that extends the `BaseTracer` class from the
  * `langchain.callbacks.tracers.base` module. It represents a callback
@@ -150,8 +159,6 @@ export class EventStreamCallbackHandler extends BaseTracer {
   protected excludeTypes?: string[];
 
   protected excludeTags?: string[];
-
-  protected rootId?: string;
 
   private runInfoMap: Map<string, RunInfo> = new Map();
 
@@ -229,7 +236,10 @@ export class EventStreamCallbackHandler extends BaseTracer {
       return;
     }
     const runInfo = this.runInfoMap.get(runId);
-    // run has finished, don't issue any stream events
+    // Run has finished, don't issue any stream events.
+    // An example of this is for runnables that use the default
+    // implementation of .stream(), which delegates to .invoke()
+    // and calls .onChainEnd() before passing it to the iterator.
     if (runInfo === undefined) {
       yield firstChunk.value;
       return;
@@ -277,7 +287,7 @@ export class EventStreamCallbackHandler extends BaseTracer {
       } finally {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         tappedPromiseResolver!();
-        // Don't delete from the map to keep track of which runs have been tapped.
+        // Don't delete from the promises map to keep track of which runs have been tapped.
       }
     } else {
       // otherwise just pass through
@@ -598,18 +608,10 @@ export class EventStreamCallbackHandler extends BaseTracer {
     );
   }
 
-  async onRunCreate(run: Run): Promise<void> {
-    if (this.rootId === undefined) {
-      this.rootId = run.id;
-    }
-  }
-
-  async onRunUpdate(run: Run): Promise<void> {
-    if (run.id === this.rootId && this.autoClose) {
-      const pendingPromises = [...this.tappedPromises.values()];
-      void Promise.all(pendingPromises).finally(() => {
-        void this.writer.close();
-      });
-    }
+  async finish() {
+    const pendingPromises = [...this.tappedPromises.values()];
+    void Promise.all(pendingPromises).finally(() => {
+      void this.writer.close();
+    });
   }
 }

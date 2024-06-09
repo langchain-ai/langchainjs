@@ -18,7 +18,9 @@ import { ChatVertexAI } from "../chat_models.js";
 
 class WeatherTool extends StructuredTool {
   schema = z.object({
-    location: z.string().describe("The name of city to get the weather for."),
+    locations: z
+      .array(z.object({ name: z.string() }))
+      .describe("The name of cities to get the weather for."),
   });
 
   description =
@@ -28,7 +30,7 @@ class WeatherTool extends StructuredTool {
 
   async _call(input: z.infer<typeof this.schema>) {
     console.log(`WeatherTool called with input: ${input}`);
-    return `The weather in ${input.location} is 25°C`;
+    return `The weather in ${JSON.stringify(input.locations)} is 25°C`;
   }
 }
 
@@ -128,7 +130,7 @@ describe("Google APIKey Chat", () => {
 
   test("Tool call", async () => {
     const chat = new ChatVertexAI().bindTools([new WeatherTool()]);
-    const res = await chat.invoke("What is the weather in SF");
+    const res = await chat.invoke("What is the weather in SF and LA");
     console.log(res);
     expect(res.tool_calls?.length).toEqual(1);
     expect(res.tool_calls?.[0].args).toEqual(

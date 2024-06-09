@@ -26,8 +26,7 @@ export const config = {
     "notion-to-md/build/utils/notion.js",
     "firebase-admin/app",
     "firebase-admin/firestore",
-    "web-auth-library/google",
-    "@google-ai/generativelanguage/build/protos/protos.js",
+    "web-auth-library/google"
   ],
   entrypoints: {
     load: "load/index",
@@ -144,6 +143,7 @@ export const config = {
     // retrievers
     "retrievers/contextual_compression": "retrievers/contextual_compression",
     "retrievers/document_compressors": "retrievers/document_compressors/index",
+    "retrievers/ensemble": "retrievers/ensemble",
     "retrievers/multi_query": "retrievers/multi_query",
     "retrievers/multi_vector": "retrievers/multi_vector",
     "retrievers/parent_document": "retrievers/parent_document",

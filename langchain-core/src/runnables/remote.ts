@@ -406,12 +406,13 @@ export class RemoteRunnable<
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
+      config.runId,
       undefined,
       undefined,
       undefined,
-      undefined,
-      options?.runName
+      config.runName
     );
+    delete config.runId;
     let finalOutput: RunOutput | undefined;
     let finalOutputSupported = true;
     try {
@@ -476,12 +477,13 @@ export class RemoteRunnable<
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict(input, "input"),
+      config.runId,
       undefined,
       undefined,
       undefined,
-      undefined,
-      options?.runName
+      config.runName
     );
+    delete config.runId;
     // The type is in camelCase but the API only accepts snake_case.
     const camelCaseStreamOptions = {
       include_names: streamOptions?.includeNames,
@@ -547,12 +549,13 @@ export class RemoteRunnable<
       const runManager = await callbackManager_?.handleChainStart(
         outerThis.toJSON(),
         _coerceToDict(input, "input"),
+        config.runId,
         undefined,
         undefined,
         undefined,
-        undefined,
-        options?.runName
+        config.runName
       );
+      delete config.runId;
       // The type is in camelCase but the API only accepts snake_case.
       const camelCaseStreamOptions = {
         include_names: streamOptions?.includeNames,

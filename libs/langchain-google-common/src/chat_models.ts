@@ -231,7 +231,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     this.buildConnection(fields ?? {}, client);
   }
 
-  protected getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+  getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     const params = this.invocationParams(options);
     return {
       ls_provider: "google_vertexai",

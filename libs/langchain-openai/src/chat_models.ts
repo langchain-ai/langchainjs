@@ -253,6 +253,7 @@ export interface ChatOpenAICallOptions
   promptIndex?: number;
   response_format?: { type: "json_object" };
   seed?: number;
+  stream_options?: { include_usage: boolean };
 }
 
 /**
@@ -490,7 +491,7 @@ export class ChatOpenAI<
     };
   }
 
-  protected getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+  getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     const params = this.invocationParams(options);
     return {
       ls_provider: "openai",
@@ -553,6 +554,9 @@ export class ChatOpenAI<
       tool_choice: options?.tool_choice,
       response_format: options?.response_format,
       seed: options?.seed,
+      ...(options?.stream_options !== undefined
+        ? { stream_options: options.stream_options }
+        : {}),
       ...this.modelKwargs,
     };
     return params;
@@ -586,8 +590,12 @@ export class ChatOpenAI<
     };
     let defaultRole: OpenAIRoleEnum | undefined;
     const streamIterable = await this.completionWithRetry(params, options);
+    let usage: OpenAIClient.Completions.CompletionUsage | undefined;
     for await (const data of streamIterable) {
       const choice = data?.choices[0];
+      if (data.usage) {
+        usage = data.usage;
+      }
       if (!choice) {
         continue;
       }
@@ -631,6 +639,20 @@ export class ChatOpenAI<
         undefined,
         { chunk: generationChunk }
       );
+    }
+    if (usage) {
+      const generationChunk = new ChatGenerationChunk({
+        message: new AIMessageChunk({
+          content: "",
+          usage_metadata: {
+            input_tokens: usage.prompt_tokens,
+            output_tokens: usage.completion_tokens,
+            total_tokens: usage.total_tokens,
+          },
+        }),
+        text: "",
+      });
+      yield generationChunk;
     }
     if (options.signal?.aborted) {
       throw new Error("AbortError");
@@ -738,6 +760,13 @@ export class ChatOpenAI<
           ...(part.finish_reason ? { finish_reason: part.finish_reason } : {}),
           ...(part.logprobs ? { logprobs: part.logprobs } : {}),
         };
+        if (isAIMessage(generation.message)) {
+          generation.message.usage_metadata = {
+            input_tokens: tokenUsage.promptTokens ?? 0,
+            output_tokens: tokenUsage.completionTokens ?? 0,
+            total_tokens: tokenUsage.totalTokens ?? 0,
+          };
+        }
         generations.push(generation);
       }
       return {

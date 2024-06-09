@@ -125,3 +125,16 @@ You can also use the callbacks system:
 ### With `.generate()`
 
 <CodeBlock language="typescript">{OpenAIGenerationInfo}</CodeBlock>
+
+### Streaming tokens
+
+OpenAI supports streaming token counts via an opt-in call option. This can be set by passing `{ stream_options: { include_usage: true } }`.
+Setting this call option will cause the model to return an additional chunk at the end of the stream, containing the token usage.
+
+import OpenAIStreamTokens from "@examples/models/chat/integration_openai_stream_tokens.ts";
+
+<CodeBlock language="typescript">{OpenAIStreamTokens}</CodeBlock>
+
+:::tip
+See the LangSmith trace [here](https://smith.langchain.com/public/66bf7377-cc69-4676-91b6-25929a05e8b7/r)
+:::

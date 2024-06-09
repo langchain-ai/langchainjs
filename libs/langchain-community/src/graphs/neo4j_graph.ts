@@ -188,20 +188,24 @@ function formatSchema(
     }
   } else {
     // Format node properties
-    formattedNodeProps = schema.nodeProps.map((el: Record<string, Any>) => {
-      const propsStr = el.properties
-        .map((prop: Record<string, Any>) => `${prop.property}: ${prop.type} `)
-        .join(", ");
-      return `${el.labels} {${propsStr} } `;
-    });
+    formattedNodeProps = Object.entries(schema.nodeProps).map(
+      ([key, value]: [string, Any]) => {
+        const propsStr = value
+          .map((prop: Record<string, Any>) => `${prop.property}: ${prop.type}`)
+          .join(", ");
+        return `${key} {${propsStr}}`;
+      }
+    );
 
     // Format relationship properties
-    formattedRelProps = schema.relProps.map((el: Record<string, Any>) => {
-      const propsStr = el.properties
-        .map((prop: Record<string, Any>) => `${prop.property}: ${prop.type} `)
-        .join(", ");
-      return `${el.type} {${propsStr} } `;
-    });
+    formattedRelProps = Object.entries(schema.relProps).map(
+      ([key, value]: [string, Any]) => {
+        const propsStr = value
+          .map((prop: Record<string, Any>) => `${prop.property}: ${prop.type} `)
+          .join(", ");
+        return `${key} {${propsStr} } `;
+      }
+    );
   }
 
   // Format relationships
@@ -319,7 +323,7 @@ export class Neo4jGraph {
   }
 
   async verifyConnectivity() {
-    await this.driver.verifyAuthentication();
+    await this.driver.getServerInfo();
   }
 
   async refreshSchema() {

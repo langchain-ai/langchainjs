@@ -5,6 +5,7 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   BaseChatModel,
   BaseChatModelCallOptions,
+  LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
 import {
@@ -312,6 +313,18 @@ export class ChatGroq extends BaseChatModel<
     this.maxTokens = fields?.maxTokens;
   }
 
+  getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+    const params = this.invocationParams(options);
+    return {
+      ls_provider: "groq",
+      ls_model_name: this.model,
+      ls_model_type: "chat",
+      ls_temperature: params.temperature,
+      ls_max_tokens: params.max_tokens,
+      ls_stop: options.stop,
+    };
+  }
+
   async completionWithRetry(
     request: ChatCompletionCreateParamsStreaming,
     options?: OpenAICoreRequestOptions
@@ -411,13 +424,24 @@ export class ChatGroq extends BaseChatModel<
           headers: options?.headers,
         }
       );
+      let role = "";
       for await (const data of response) {
         const choice = data?.choices[0];
         if (!choice) {
           continue;
         }
+        // The `role` field is populated in the first delta of the response
+        // but is not present in subsequent deltas. Extract it when available.
+        if (choice.delta?.role) {
+          role = choice.delta.role;
+        }
         const chunk = new ChatGenerationChunk({
-          message: _convertDeltaToMessageChunk(choice.delta ?? {}),
+          message: _convertDeltaToMessageChunk(
+            {
+              ...choice.delta,
+              role,
+            } ?? {}
+          ),
           text: choice.delta.content ?? "",
           generationInfo: {
             finishReason: choice.finish_reason,
