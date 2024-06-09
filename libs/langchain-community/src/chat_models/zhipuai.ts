@@ -6,12 +6,14 @@ import {
   AIMessage,
   type BaseMessage,
   ChatMessage,
+  AIMessageChunk,
 } from "@langchain/core/messages";
-import { type ChatResult } from "@langchain/core/outputs";
+import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
 import { type CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 import { encodeApiKey } from "../utils/zhipuai.js";
+import { convertEventStreamToIterableReadableDataStream } from "../utils/event_source_parse.js";
 
 export type ZhipuMessageRole = "system" | "assistant" | "user";
 
@@ -450,6 +452,87 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
     };
 
     return this.caller.call(makeCompletionRequest);
+  }
+
+  private async createZhipuStream(
+    request: ChatCompletionRequest,
+    signal?: AbortSignal
+  ) {
+    const response = await fetch(this.apiUrl, {
+      method: "POST",
+      headers: {
+        Accept: "text/event-stream",
+        Authorization: `Bearer ${encodeApiKey(this.zhipuAIApiKey)}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(request),
+      signal,
+    });
+
+    if (!response.body) {
+      throw new Error(
+        "Could not begin Zhipu stream. Please check the given URL and try again."
+      );
+    }
+
+    return convertEventStreamToIterableReadableDataStream(response.body);
+  }
+
+  private _deserialize(json: string) {
+    try {
+      return JSON.parse(json);
+    } catch (e) {
+      console.warn(`Received a non-JSON parseable chunk: ${json}`);
+    }
+  }
+
+  async *_streamResponseChunks(
+    messages: BaseMessage[],
+    options?: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    const parameters = {
+      ...this.invocationParams(),
+      stream: true,
+    };
+
+    const messagesMapped: ZhipuMessage[] = messages.map((message) => ({
+      role: messageToRole(message),
+      content: message.content as string,
+    }));
+
+    const stream = await this.caller.call(async () =>
+      this.createZhipuStream(
+        {
+          ...parameters,
+          messages: messagesMapped,
+        },
+        options?.signal
+      )
+    );
+
+    for await (const chunk of stream) {
+      if (chunk !== "[DONE]") {
+        const deserializedChunk = this._deserialize(chunk);
+        const { choices, id } = deserializedChunk;
+        const text = choices[0]?.delta?.content ?? "";
+        const finished = !!choices[0]?.finish_reason;
+        yield new ChatGenerationChunk({
+          text,
+          message: new AIMessageChunk({ content: text }),
+          generationInfo: finished
+            ? {
+                finished,
+                request_id: id,
+                usage: chunk.usage,
+              }
+            : undefined,
+        });
+        await runManager?.handleLLMNewToken(text);
+      } else {
+        continue;
+      }
+    }
   }
 
   _llmType(): string {

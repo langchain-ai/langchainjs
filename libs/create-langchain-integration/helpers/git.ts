@@ -7,7 +7,9 @@ function isInGitRepository(): boolean {
   try {
     execSync("git rev-parse --is-inside-work-tree", { stdio: "ignore" });
     return true;
-  } catch (_) {}
+  } catch (_) {
+    // no-op
+  }
   return false;
 }
 
@@ -15,7 +17,9 @@ function isInMercurialRepository(): boolean {
   try {
     execSync("hg --cwd . root", { stdio: "ignore" });
     return true;
-  } catch (_) {}
+  } catch (_) {
+    // no-op
+  }
   return false;
 }
 
@@ -23,7 +27,9 @@ function isDefaultBranchSet(): boolean {
   try {
     execSync("git config init.defaultBranch", { stdio: "ignore" });
     return true;
-  } catch (_) {}
+  } catch (_) {
+    // no-op
+  }
   return false;
 }
 
@@ -54,7 +60,9 @@ export function tryGitInit(root: string): boolean {
     if (didInit) {
       try {
         fs.rmSync(path.join(root, ".git"), { recursive: true, force: true });
-      } catch (_) {}
+      } catch (_) {
+        // no-op
+      }
     }
     return false;
   }

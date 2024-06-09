@@ -67,7 +67,7 @@ type AnthropicToolChoice =
     }
   | "any"
   | "auto";
-interface ChatAnthropicCallOptions extends BaseLanguageModelCallOptions {
+export interface ChatAnthropicCallOptions extends BaseLanguageModelCallOptions {
   tools?: (StructuredToolInterface | AnthropicTool)[];
   /**
    * Whether or not to specify what tool the model should use
@@ -101,11 +101,25 @@ function anthropicResponseToChatMessages(
   messages: AnthropicMessageResponse[],
   additionalKwargs: Record<string, unknown>
 ): ChatGeneration[] {
+  const usage: Record<string, number> | null | undefined =
+    additionalKwargs.usage as Record<string, number> | null | undefined;
+  const usageMetadata =
+    usage != null
+      ? {
+          input_tokens: usage.input_tokens ?? 0,
+          output_tokens: usage.output_tokens ?? 0,
+          total_tokens: (usage.input_tokens ?? 0) + (usage.output_tokens ?? 0),
+        }
+      : undefined;
   if (messages.length === 1 && messages[0].type === "text") {
     return [
       {
         text: messages[0].text,
-        message: new AIMessage(messages[0].text, additionalKwargs),
+        message: new AIMessage({
+          content: messages[0].text,
+          additional_kwargs: additionalKwargs,
+          usage_metadata: usageMetadata,
+        }),
       },
     ];
   } else {
@@ -118,6 +132,7 @@ function anthropicResponseToChatMessages(
           content: messages as any,
           additional_kwargs: additionalKwargs,
           tool_calls: toolCalls,
+          usage_metadata: usageMetadata,
         }),
       },
     ];
@@ -503,7 +518,7 @@ export class ChatAnthropicMessages<
     this.clientOptions = fields?.clientOptions ?? {};
   }
 
-  protected getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+  getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     const params = this.invocationParams(options);
     return {
       ls_provider: "openai",
@@ -754,6 +769,7 @@ export class ChatAnthropicMessages<
       content,
       additionalKwargs
     );
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { role: _role, type: _type, ...rest } = additionalKwargs;
     return { generations, llmOutput: rest };
   }

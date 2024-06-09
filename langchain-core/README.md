@@ -1,6 +1,6 @@
 # 🦜🍎️ @langchain/core
 
-[![CI](https://github.com/langchain-ai/langchainjs/actions/workflows/ci.yml/badge.svg)](https://github.com/langchain-ai/langchainjs/actions/workflows/ci.yml) ![npm](https://img.shields.io/npm/dw/@langchain/core) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/langchainai.svg?style=social&label=Follow%20%40LangChainAI)](https://twitter.com/langchainai) [![](https://dcbadge.vercel.app/api/server/6adMQxSpJS?compact=true&style=flat)](https://discord.gg/6adMQxSpJS)
+[![CI](https://github.com/langchain-ai/langchainjs/actions/workflows/ci.yml/badge.svg)](https://github.com/langchain-ai/langchainjs/actions/workflows/ci.yml) ![npm](https://img.shields.io/npm/dm/@langchain/core) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/langchainai.svg?style=social&label=Follow%20%40LangChainAI)](https://twitter.com/langchainai) [![](https://dcbadge.vercel.app/api/server/6adMQxSpJS?compact=true&style=flat)](https://discord.gg/6adMQxSpJS)
 
 `@langchain/core` contains the core abstractions and schemas of LangChain.js, including base classes for language models,
 chat models, vectorstores, retrievers, and runnables.
@@ -83,7 +83,7 @@ Streaming (and streaming of intermediate steps) is needed to show the user that 
 Async interfaces are nice when moving into production.
 Rather than having to write multiple implementations for all of those, LCEL allows you to write a runnable once and invoke it in many different ways.
 
-For more check out the [LCEL docs](https://js.langchain.com/docs/expression_language/).
+For more check out the [LCEL docs](https://js.langchain.com/v0.2/docs/concepts#langchain-expression-language).
 
 ![LangChain Stack](../docs/core_docs/static/img/langchain_stack_feb_2024.webp)
 

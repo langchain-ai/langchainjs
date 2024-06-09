@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.2.2",
+  "version": "0.2.5",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -370,6 +370,10 @@
     "retrievers/document_compressors.js",
     "retrievers/document_compressors.d.ts",
     "retrievers/document_compressors.d.cts",
+    "retrievers/ensemble.cjs",
+    "retrievers/ensemble.js",
+    "retrievers/ensemble.d.ts",
+    "retrievers/ensemble.d.cts",
     "retrievers/multi_query.cjs",
     "retrievers/multi_query.js",
     "retrievers/multi_query.d.ts",
@@ -600,7 +604,6 @@
     "@faker-js/faker": "^7.6.0",
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
-    "@google-ai/generativelanguage": "^2.5.0",
     "@jest/globals": "^29.5.0",
     "@langchain/cohere": "^0.0.8",
     "@langchain/scripts": "~0.0.14",
@@ -669,7 +672,7 @@
     "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.3",
     "ts-jest": "^29.1.0",
-    "typeorm": "^0.3.12",
+    "typeorm": "^0.3.20",
     "typescript": "~5.1.6",
     "weaviate-ts-client": "^2.0.0",
     "web-auth-library": "^1.0.3",
@@ -687,7 +690,6 @@
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
     "@gomomento/sdk-web": "^1.51.1",
-    "@google-ai/generativelanguage": "^2.5.0",
     "@mendable/firecrawl-js": "^0.0.13",
     "@notionhq/client": "^2.2.10",
     "@pinecone-database/pinecone": "*",
@@ -722,7 +724,7 @@
     "redis": "^4.6.4",
     "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.3",
-    "typeorm": "^0.3.12",
+    "typeorm": "^0.3.20",
     "weaviate-ts-client": "*",
     "web-auth-library": "^1.0.3",
     "ws": "^8.14.2",
@@ -755,9 +757,6 @@
       "optional": true
     },
     "@gomomento/sdk-web": {
-      "optional": true
-    },
-    "@google-ai/generativelanguage": {
       "optional": true
     },
     "@mendable/firecrawl-js": {
@@ -886,14 +885,14 @@
   },
   "dependencies": {
     "@langchain/core": "~0.2.0",
-    "@langchain/openai": "~0.0.28",
+    "@langchain/openai": "~0.1.0",
     "@langchain/textsplitters": "~0.0.0",
     "binary-extensions": "^2.2.0",
     "js-tiktoken": "^1.0.12",
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
     "langchainhub": "~0.0.8",
-    "langsmith": "~0.1.7",
+    "langsmith": "~0.1.30",
     "ml-distance": "^4.0.0",
     "openapi-types": "^12.1.3",
     "p-retry": "4",
@@ -1729,6 +1728,15 @@
       },
       "import": "./retrievers/document_compressors.js",
       "require": "./retrievers/document_compressors.cjs"
+    },
+    "./retrievers/ensemble": {
+      "types": {
+        "import": "./retrievers/ensemble.d.ts",
+        "require": "./retrievers/ensemble.d.cts",
+        "default": "./retrievers/ensemble.d.ts"
+      },
+      "import": "./retrievers/ensemble.js",
+      "require": "./retrievers/ensemble.cjs"
     },
     "./retrievers/multi_query": {
       "types": {

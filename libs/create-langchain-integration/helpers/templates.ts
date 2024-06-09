@@ -2,7 +2,7 @@ import path from "path";
 import fs from "fs/promises";
 import os from "os";
 
-import { copy } from "./copy";
+import { copy } from "./copy.js";
 
 /**
  * Install a internal template to a given `root` directory.

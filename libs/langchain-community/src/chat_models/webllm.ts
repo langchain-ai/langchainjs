@@ -28,7 +28,7 @@ export interface WebLLMCallOptions extends BaseLanguageModelCallOptions {}
  * ```typescript
  * // Initialize the ChatWebLLM model with the model record.
  * const model = new ChatWebLLM({
- *   model: "Phi2-q4f32_1",
+ *   model: "Phi-3-mini-4k-instruct-q4f16_1-MLC",
  *   chatOptions: {
  *     temperature: 0.5,
  *   },
@@ -43,7 +43,7 @@ export interface WebLLMCallOptions extends BaseLanguageModelCallOptions {}
 export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
   static inputs: WebLLMInputs;
 
-  protected engine: webllm.EngineInterface;
+  protected engine: webllm.MLCEngine;
 
   appConfig?: webllm.AppConfig;
 
@@ -63,6 +63,7 @@ export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
     this.chatOptions = inputs.chatOptions;
     this.model = inputs.model;
     this.temperature = inputs.temperature;
+    this.engine = new webllm.MLCEngine();
   }
 
   _llmType() {
@@ -70,24 +71,18 @@ export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
   }
 
   async initialize(progressCallback?: webllm.InitProgressCallback) {
-    this.engine = new webllm.Engine();
     if (progressCallback !== undefined) {
       this.engine.setInitProgressCallback(progressCallback);
     }
     await this.reload(this.model, this.chatOptions, this.appConfig);
-    this.engine.setInitProgressCallback(() => {});
   }
 
   async reload(
     modelId: string,
-    newAppConfig?: webllm.AppConfig,
-    newChatOpts?: webllm.ChatOptions
+    newChatOpts?: webllm.ChatOptions,
+    newAppConfig?: webllm.AppConfig
   ) {
-    if (this.engine !== undefined) {
-      await this.engine.reload(modelId, newAppConfig, newChatOpts);
-    } else {
-      throw new Error("Initialize model before reloading.");
-    }
+    await this.engine.reload(modelId, newChatOpts, newAppConfig);
   }
 
   async *_streamResponseChunks(
@@ -95,8 +90,6 @@ export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    await this.initialize();
-
     const messagesInput: ChatCompletionMessageParam[] = messages.map(
       (message) => {
         if (typeof message.content !== "string") {
@@ -124,15 +117,12 @@ export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
       }
     );
 
-    const stream = this.engine.chatCompletionAsyncChunkGenerator(
-      {
-        stream: true,
-        messages: messagesInput,
-        stop: options.stop,
-        logprobs: true,
-      },
-      {}
-    );
+    const stream = await this.engine.chat.completions.create({
+      stream: true,
+      messages: messagesInput,
+      stop: options.stop,
+      logprobs: true,
+    });
     for await (const chunk of stream) {
       // Last chunk has undefined content
       const text = chunk.choices[0].delta.content ?? "";
@@ -146,7 +136,7 @@ export class ChatWebLLM extends SimpleChatModel<WebLLMCallOptions> {
           },
         }),
       });
-      await runManager?.handleLLMNewToken(text ?? "");
+      await runManager?.handleLLMNewToken(text);
     }
   }
 

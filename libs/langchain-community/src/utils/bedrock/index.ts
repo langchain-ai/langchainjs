@@ -4,89 +4,13 @@ import {
   AIMessageChunk,
   BaseMessage,
 } from "@langchain/core/messages";
+import { StructuredToolInterface } from "@langchain/core/tools";
 import { ChatGeneration, ChatGenerationChunk } from "@langchain/core/outputs";
+import { extractToolCalls, formatMessagesForAnthropic } from "./anthropic.js";
 
 export type CredentialType =
   | AwsCredentialIdentity
   | Provider<AwsCredentialIdentity>;
-
-function _formatImage(imageUrl: string) {
-  const regex = /^data:(image\/.+);base64,(.+)$/;
-  const match = imageUrl.match(regex);
-  if (match === null) {
-    throw new Error(
-      [
-        "Anthropic only supports base64-encoded images currently.",
-        "Example: data:image/png;base64,/9j/4AAQSk...",
-      ].join("\n\n")
-    );
-  }
-  return {
-    type: "base64",
-    media_type: match[1] ?? "",
-    data: match[2] ?? "",
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as any;
-}
-
-function formatMessagesForAnthropic(messages: BaseMessage[]): {
-  system?: string;
-  messages: Record<string, unknown>[];
-} {
-  let system: string | undefined;
-  if (messages.length > 0 && messages[0]._getType() === "system") {
-    if (typeof messages[0].content !== "string") {
-      throw new Error("System message content must be a string.");
-    }
-    system = messages[0].content;
-  }
-  const conversationMessages =
-    system !== undefined ? messages.slice(1) : messages;
-  const formattedMessages = conversationMessages.map((message) => {
-    let role;
-    if (message._getType() === "human") {
-      role = "user" as const;
-    } else if (message._getType() === "ai") {
-      role = "assistant" as const;
-    } else if (message._getType() === "system") {
-      throw new Error(
-        "System messages are only permitted as the first passed message."
-      );
-    } else {
-      throw new Error(`Message type "${message._getType()}" is not supported.`);
-    }
-    if (typeof message.content === "string") {
-      return {
-        role,
-        content: message.content,
-      };
-    } else {
-      return {
-        role,
-        content: message.content.map((contentPart) => {
-          if (contentPart.type === "image_url") {
-            let source;
-            if (typeof contentPart.image_url === "string") {
-              source = _formatImage(contentPart.image_url);
-            } else {
-              source = _formatImage(contentPart.image_url.url);
-            }
-            return {
-              type: "image" as const,
-              source,
-            };
-          } else {
-            return contentPart;
-          }
-        }),
-      };
-    }
-  });
-  return {
-    messages: formattedMessages,
-    system,
-  };
-}
 
 /**
  * format messages for Cohere Command-R and CommandR+ via AWS Bedrock.
@@ -222,6 +146,21 @@ export interface BaseBedrockInput {
 
   /** Whether or not to stream responses */
   streaming: boolean;
+
+  /** Trace settings for the Bedrock Guardrails. */
+  trace?: "ENABLED" | "DISABLED";
+
+  /** Identifier for the guardrail configuration. */
+  guardrailIdentifier?: string;
+
+  /** Version for the guardrail configuration. */
+  guardrailVersion?: string;
+
+  /** Required when Guardrail is in use. */
+  guardrailConfig?: {
+    tagSuffix: string;
+    streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS";
+  };
 }
 
 type Dict = { [key: string]: unknown };
@@ -244,7 +183,13 @@ export class BedrockLLMInputOutputAdapter {
     temperature = 0,
     stopSequences: string[] | undefined = undefined,
     modelKwargs: Record<string, unknown> = {},
-    bedrockMethod: "invoke" | "invoke-with-response-stream" = "invoke"
+    bedrockMethod: "invoke" | "invoke-with-response-stream" = "invoke",
+    guardrailConfig:
+      | {
+          tagSuffix: string;
+          streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS";
+        }
+      | undefined = undefined
   ): Dict {
     const inputBody: Dict = {};
 
@@ -282,6 +227,15 @@ export class BedrockLLMInputOutputAdapter {
       inputBody.temperature = temperature;
       inputBody.stop = stopSequences;
     }
+
+    if (
+      guardrailConfig &&
+      guardrailConfig.tagSuffix &&
+      guardrailConfig.streamProcessingMode
+    ) {
+      inputBody["amazon-bedrock-guardrailConfig"] = guardrailConfig;
+    }
+
     return { ...inputBody, ...modelKwargs };
   }
 
@@ -291,7 +245,14 @@ export class BedrockLLMInputOutputAdapter {
     maxTokens = 1024,
     temperature = 0,
     stopSequences: string[] | undefined = undefined,
-    modelKwargs: Record<string, unknown> = {}
+    modelKwargs: Record<string, unknown> = {},
+    guardrailConfig:
+      | {
+          tagSuffix: string;
+          streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS";
+        }
+      | undefined = undefined,
+    tools: (StructuredToolInterface | Record<string, unknown>)[] = []
   ): Dict {
     const inputBody: Dict = {};
 
@@ -306,6 +267,10 @@ export class BedrockLLMInputOutputAdapter {
       inputBody.max_tokens = maxTokens;
       inputBody.temperature = temperature;
       inputBody.stop_sequences = stopSequences;
+
+      if (tools.length > 0) {
+        inputBody.tools = tools;
+      }
       return { ...inputBody, ...modelKwargs };
     } else if (provider === "cohere") {
       const {
@@ -322,12 +287,21 @@ export class BedrockLLMInputOutputAdapter {
       inputBody.max_tokens = maxTokens;
       inputBody.temperature = temperature;
       inputBody.stop_sequences = stopSequences;
-      return { ...inputBody, ...modelKwargs };
     } else {
       throw new Error(
         "The messages API is currently only supported by Anthropic or Cohere"
       );
     }
+
+    if (
+      guardrailConfig &&
+      guardrailConfig.tagSuffix &&
+      guardrailConfig.streamProcessingMode
+    ) {
+      inputBody["amazon-bedrock-guardrailConfig"] = guardrailConfig;
+    }
+
+    return { ...inputBody, ...modelKwargs };
   }
 
   /**
@@ -472,10 +446,26 @@ function parseMessage(responseBody: any, asChunk?: boolean): ChatGeneration {
       generationInfo,
     });
   } else {
+    // TODO: we are throwing away here the text response, as the interface of this method returns only one
+    const toolCalls = extractToolCalls(responseBody.content);
+
+    if (toolCalls.length > 0) {
+      return {
+        message: new AIMessage({
+          content: "",
+          additional_kwargs: { id },
+          tool_calls: toolCalls,
+        }),
+        text: typeof parsedContent === "string" ? parsedContent : "",
+        generationInfo,
+      };
+    }
+
     return {
       message: new AIMessage({
         content: parsedContent,
         additional_kwargs: { id },
+        tool_calls: toolCalls,
       }),
       text: typeof parsedContent === "string" ? parsedContent : "",
       generationInfo,
@@ -484,6 +474,7 @@ function parseMessage(responseBody: any, asChunk?: boolean): ChatGeneration {
 }
 
 function parseMessageCohere(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   responseBody: any,
   asChunk?: boolean
 ): ChatGeneration {

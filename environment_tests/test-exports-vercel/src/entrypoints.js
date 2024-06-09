@@ -37,6 +37,7 @@ export * from "langchain/callbacks";
 export * from "langchain/output_parsers";
 export * from "langchain/retrievers/contextual_compression";
 export * from "langchain/retrievers/document_compressors";
+export * from "langchain/retrievers/ensemble";
 export * from "langchain/retrievers/multi_query";
 export * from "langchain/retrievers/multi_vector";
 export * from "langchain/retrievers/parent_document";

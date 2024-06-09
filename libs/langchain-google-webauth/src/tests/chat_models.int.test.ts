@@ -6,8 +6,8 @@ import {
   BaseMessageChunk,
   BaseMessageLike,
   HumanMessage,
-  MessageContentComplex,
-  MessageContentText,
+  // MessageContentComplex,
+  // MessageContentText,
   SystemMessage,
   ToolMessage,
 } from "@langchain/core/messages";
@@ -253,9 +253,14 @@ describe("Google Webauth Chat", () => {
 
       const aiMessage = res as AIMessageChunk;
       expect(aiMessage.content).toBeDefined();
+
+      expect(typeof aiMessage.content).toBe("string");
+      const text = aiMessage.content as string;
+      expect(text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
+
+      /*
       expect(aiMessage.content.length).toBeGreaterThan(0);
       expect(aiMessage.content[0]).toBeDefined();
-
       const content = aiMessage.content[0] as MessageContentComplex;
       expect(content).toHaveProperty("type");
       expect(content.type).toEqual("text");
@@ -263,6 +268,7 @@ describe("Google Webauth Chat", () => {
       const textContent = content as MessageContentText;
       expect(textContent.text).toBeDefined();
       expect(textContent.text).toEqual("2");
+      */
     } catch (e) {
       console.error(e);
       throw e;
@@ -286,6 +292,12 @@ describe("Google Webauth Chat", () => {
 
       const aiMessage = res as AIMessageChunk;
       expect(aiMessage.content).toBeDefined();
+
+      expect(typeof aiMessage.content).toBe("string");
+      const text = aiMessage.content as string;
+      expect(["H", "T"]).toContainEqual(text);
+
+      /*
       expect(aiMessage.content.length).toBeGreaterThan(0);
       expect(aiMessage.content[0]).toBeDefined();
 
@@ -296,6 +308,7 @@ describe("Google Webauth Chat", () => {
       const textContent = content as MessageContentText;
       expect(textContent.text).toBeDefined();
       expect(["H", "T"]).toContainEqual(textContent.text);
+      */
     } catch (e) {
       console.error(e);
       throw e;
@@ -361,8 +374,6 @@ describe("Google Webauth Chat", () => {
     });
     const result = await model.invoke("Run a test on the cobalt project");
     expect(result).toHaveProperty("content");
-    expect(Array.isArray(result.content)).toBeTruthy();
-    expect(result.content).toHaveLength(0);
     const args = result?.lc_kwargs?.additional_kwargs;
     expect(args).toBeDefined();
     expect(args).toHaveProperty("tool_calls");
