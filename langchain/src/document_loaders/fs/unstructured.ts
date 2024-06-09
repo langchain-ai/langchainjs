@@ -229,8 +229,8 @@ export class UnstructuredLoader extends BaseDocumentLoader {
   }
 
   async _partition() {
-    let buffer = this.buffer;
-    let fileName = this.fileName;
+    let { buffer } = this;
+    let { fileName } = this;
 
     if (!buffer) {
       const { readFile, basename } = await this.imports();
