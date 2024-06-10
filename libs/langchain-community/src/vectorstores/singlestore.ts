@@ -67,6 +67,10 @@ export type SingleStoreVectorStoreConfig = ConnectionConfig & {
   searchConfig?: SearchConfig;
 };
 
+/**
+ * Adds the connect attributes to the connection options.
+ * @param config A SingleStoreVectorStoreConfig object.
+ */
 function withConnectAttributes(
   config: SingleStoreVectorStoreConfig
 ): ConnectionOptions {
@@ -206,6 +210,10 @@ export class SingleStoreVectorStore extends VectorStore {
     return this.connectionPool.end();
   }
 
+  /**
+   * Sets the search configuration for the SingleStoreVectorStore instance.
+   * @param config A SearchConfig object.
+   */
   async setSearchConfig(config: SearchConfig): Promise<void> {
     this.searchConfig = {
       searchStrategy: config.searchStrategy ?? "VECTOR_ONLY",
@@ -264,6 +272,8 @@ export class SingleStoreVectorStore extends VectorStore {
 
   /**
    *
+   * Performs a similarity search on the texts stored in the SingleStoreDB
+   * using the specified search strategy and distance metric.
    * @param query A string representing the query text.
    * @param vector An array of numbers representing the query vector.
    * @param k The number of nearest neighbors to return.
@@ -419,7 +429,7 @@ export class SingleStoreVectorStore extends VectorStore {
             ...whereArgs,
             vector,
             ...whereArgs,
-            k * this.searchConfig.vectorselectCountMultiplier,
+            k * (this.searchConfig.vectorselectCountMultiplier ?? 10),
             k,
           ]
         );
@@ -427,7 +437,6 @@ export class SingleStoreVectorStore extends VectorStore {
       default:
         throw new Error("Invalid search strategy.");
     }
-    console.info("Query:", queryText);
     const [rows]: [
       (
         | RowDataPacket[]
