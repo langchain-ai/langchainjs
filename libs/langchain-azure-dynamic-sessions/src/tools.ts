@@ -127,7 +127,7 @@ export class SessionsPythonREPLTool extends Tool {
       "";
 
     if (!this.poolManagementEndpoint) {
-      throw new Error("poolManagementEndpoint is required.");
+      throw new Error("poolManagementEndpoint must be defined.");
     }
 
     this.sessionId = params?.sessionId ?? uuidv4();
