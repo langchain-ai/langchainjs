@@ -9,8 +9,8 @@ if (currentPackageJson.dependencies["@langchain/core"] && !currentPackageJson.de
   const minVersion = semver.minVersion(
     currentPackageJson.dependencies["@langchain/core"]
   ).version;
-  currentPackageJson.resolutions = {
-    ...currentPackageJson.resolutions,
+  currentPackageJson.overrides = {
+    ...currentPackageJson.overrides,
     "@langchain/core": minVersion,
   };
   currentPackageJson.dependencies = {
