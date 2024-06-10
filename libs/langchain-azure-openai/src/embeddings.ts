@@ -62,7 +62,9 @@ export class AzureOpenAIEmbeddings
       getEnvironmentVariable("AZURE_OPENAI_API_ENDPOINT");
 
     const openAiApiKey =
-      fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
+      fields?.apiKey ??
+      fields?.openAIApiKey ?? 
+      getEnvironmentVariable("OPENAI_API_KEY");
 
     this.azureOpenAIApiKey =
       fields?.apiKey ??

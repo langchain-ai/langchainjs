@@ -267,7 +267,9 @@ export class AzureChatOpenAI
       getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME");
 
     const openAiApiKey =
-      fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
+      fields?.apiKey ??
+      fields?.openAIApiKey ?? 
+      getEnvironmentVariable("OPENAI_API_KEY");
 
     this.azureOpenAIApiKey =
       fields?.apiKey ??

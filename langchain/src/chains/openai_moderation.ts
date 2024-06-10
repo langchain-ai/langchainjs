@@ -86,7 +86,9 @@ export class OpenAIModerationChain
     super(fields);
     this.throwError = fields?.throwError ?? false;
     this.openAIApiKey =
-      fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
+      fields?.apiKey ??
+      fields?.openAIApiKey ?? 
+      getEnvironmentVariable("OPENAI_API_KEY");
 
     if (!this.openAIApiKey) {
       throw new Error("OpenAI API key not found");
