@@ -4,22 +4,22 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 
 const model = new ChatOpenAI({
   temperature: 0,
-  model: "gpt-4o"
+  model: "gpt-4o",
 });
 
 // Define your tools
 const calculatorSchema = z
-.object({
-  operation: z.enum(["add", "subtract", "multiply", "divide"]),
-  number1: z.number(),
-  number2: z.number(),
-})
-.describe("A tool to perform basic arithmetic operations");
+  .object({
+    operation: z.enum(["add", "subtract", "multiply", "divide"]),
+    number1: z.number(),
+    number2: z.number(),
+  })
+  .describe("A tool to perform basic arithmetic operations");
 const weatherSchema = z
-.object({
-  city: z.enum(["add", "subtract", "multiply", "divide"]),
-})
-.describe("A tool to get the weather in a city");
+  .object({
+    city: z.enum(["add", "subtract", "multiply", "divide"]),
+  })
+  .describe("A tool to get the weather in a city");
 
 // Bind tools to the model
 const modelWithTools = model.bindTools([
