@@ -61,7 +61,7 @@ export type SingleStoreVectorStoreConfig = ConnectionConfig & {
   distanceMetric?: DistanceMetrics;
   useVectorIndex?: boolean;
   vectorIndexName?: string;
-  vectorIndexOptions?: Record<string, any>;
+  vectorIndexOptions?: Metadata;
   vectorSize?: number;
   useFullTextIndex?: boolean;
   searchConfig?: SearchConfig;
@@ -125,7 +125,8 @@ export class SingleStoreVectorStore extends VectorStore {
 
   vectorIndexName: string;
 
-  vectorIndexOptions: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  vectorIndexOptions: Metadata;
 
   vectorSize: number;
 
@@ -262,7 +263,7 @@ export class SingleStoreVectorStore extends VectorStore {
   }
 
   /**
-   * 
+   *
    * @param query A string representing the query text.
    * @param vector An array of numbers representing the query vector.
    * @param k The number of nearest neighbors to return.
@@ -289,7 +290,8 @@ export class SingleStoreVectorStore extends VectorStore {
     if (
       (this.searchConfig.searchStrategy === "FILTER_BY_TEXT" ||
         this.searchConfig.searchStrategy === "FILTER_BY_VECTOR") &&
-      !this.searchConfig.filterThreshold
+      !this.searchConfig.filterThreshold &&
+      this.searchConfig.filterThreshold !== 0
     ) {
       throw new Error(
         "Filter threshold is required for filter-based search strategies."
@@ -297,12 +299,22 @@ export class SingleStoreVectorStore extends VectorStore {
     }
     if (
       this.searchConfig.searchStrategy === "WEIGHTED_SUM" &&
-      (!this.searchConfig.textWeight ||
-        !this.searchConfig.vectorWeight ||
-        !this.searchConfig.vectorselectCountMultiplier)
+      ((!this.searchConfig.textWeight && this.searchConfig.textWeight !== 0) ||
+        (!this.searchConfig.vectorWeight &&
+          this.searchConfig.vectorWeight !== 0) ||
+        (!this.searchConfig.vectorselectCountMultiplier &&
+          this.searchConfig.vectorselectCountMultiplier !== 0))
     ) {
       throw new Error(
         "Text and vector weight and vector select count multiplier are required for weighted sum search strategy."
+      );
+    }
+    if (
+      this.searchConfig.searchStrategy === "WEIGHTED_SUM" &&
+      this.distanceMetric !== "DOT_PRODUCT"
+    ) {
+      throw new Error(
+        "Weighted sum search strategy is only available for DOT_PRODUCT distance metric."
       );
     }
     const filterThreshold = this.searchConfig.filterThreshold ?? 1.0;
@@ -344,7 +356,7 @@ export class SingleStoreVectorStore extends VectorStore {
         ? `${this.distanceMetric}(${this.vectorColumnName}, JSON_ARRAY_PACK(?)) > ?`
         : `${this.distanceMetric}(${this.vectorColumnName}, JSON_ARRAY_PACK(?)) < ?`;
     };
-    let whereClouses: string[] = [];
+    const whereClouses: string[] = [];
     if (filter) {
       whereClouses.push(buildWhereClause(filter, []));
     }
@@ -357,7 +369,7 @@ export class SingleStoreVectorStore extends VectorStore {
     const whereClause =
       whereClouses.length > 0 ? `WHERE ${whereClouses.join(" AND ")}` : "";
 
-    let queryText: string = "";
+    let queryText = "";
     switch (this.searchConfig.searchStrategy) {
       case "TEXT_ONLY":
       case "FILTER_BY_VECTOR":
@@ -393,7 +405,7 @@ export class SingleStoreVectorStore extends VectorStore {
           FROM ${this.tableName} ${whereClause}) r1 FULL OUTER JOIN (
               SELECT ${this.idColumnName}, ${this.distanceMetric}(${
             this.vectorColumnName
-          }, JSON_ARRAY_PACK('?')) as __score2
+          }, JSON_ARRAY_PACK('[?]')) as __score2
               FROM ${this.tableName} ${whereClause} ORDER BY __score2 ${
             OrderingDirective[this.distanceMetric]
           } LIMIT ?
@@ -415,6 +427,7 @@ export class SingleStoreVectorStore extends VectorStore {
       default:
         throw new Error("Invalid search strategy.");
     }
+    console.info("Query:", queryText);
     const [rows]: [
       (
         | RowDataPacket[]
@@ -452,7 +465,8 @@ export class SingleStoreVectorStore extends VectorStore {
     k?: number,
     filter?: Metadata,
     _callbacks?: Callbacks | undefined
-  ): Promise<DocumentInterface<Record<string, any>>[]> {
+  ): Promise<DocumentInterface<Metadata>[]> {
+    // @typescript-eslint/no-explicit-any
     const queryVector = await this.embeddings.embedQuery(query);
     return this.similaritySearchTextAndVectorWithScore(
       query,
@@ -475,7 +489,8 @@ export class SingleStoreVectorStore extends VectorStore {
     k?: number,
     filter?: Metadata,
     _callbacks?: Callbacks | undefined
-  ): Promise<[DocumentInterface<Record<string, any>>, number][]> {
+  ): Promise<[DocumentInterface<Metadata>, number][]> {
+    // @typescript-eslint/no-explicit-any
     const queryVector = await this.embeddings.embedQuery(query);
     return this.similaritySearchTextAndVectorWithScore(
       query,
