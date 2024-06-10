@@ -275,7 +275,7 @@ test("withStructuredOutput includeRaw true", async () => {
   ).toBe(true);
 });
 
-test.only("parallelToolCalls param", async () => {
+test("parallelToolCalls param", async () => {
   const calculatorSchema = z
     .object({
       operation: z.enum(["add", "subtract", "multiply", "divide"]),
