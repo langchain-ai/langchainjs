@@ -28,6 +28,7 @@ env:
 # Run a separate job for each check in the docker-compose file,
 # so that they run in parallel instead of overwhelming the default 2 CPU runner.
 jobs:
+  # LangChain
   test-langchain-with-latest-deps:
     runs-on: ubuntu-latest
     steps:
@@ -37,6 +38,10 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build `@langchain/standard-tests`
+        run: yarn build --filter=@langchain/standard-tests
       - name: Test LangChain with latest deps
         run: docker compose -f dependency_range_tests/docker-compose.yml run test-langchain-with-latest-deps
 
@@ -49,5 +54,108 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build `@langchain/standard-tests`
+        run: yarn build --filter=@langchain/standard-tests
       - name: Test LangChain with lowest deps
         run: docker compose -f dependency_range_tests/docker-compose.yml run test-langchain-with-lowest-deps
+
+  # Community
+  test-community-with-latest-deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build `@langchain/standard-tests`
+        run: yarn build --filter=@langchain/standard-tests
+      - name: Test `@langchain/community` with latest deps
+        run: docker compose -f dependency_range_tests/docker-compose.yml run test-community-with-latest-deps
+
+  test-community-with-lowest-deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build `@langchain/standard-tests`
+        run: yarn build --filter=@langchain/standard-tests
+      - name: Test `@langchain/community` with lowest deps
+        run: docker compose -f dependency_range_tests/docker-compose.yml run test-community-with-lowest-deps
+
+  # OpenAI
+  test-openai-with-latest-deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build `@langchain/standard-tests`
+        run: yarn build --filter=@langchain/standard-tests
+      - name: Test `@langchain/openai` with latest deps
+        run: docker compose -f dependency_range_tests/docker-compose.yml run test-openai-with-latest-deps
+
+  test-openai-with-lowest-deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build `@langchain/standard-tests`
+        run: yarn build --filter=@langchain/standard-tests
+      - name: Test `@langchain/openai` with lowest deps
+        run: docker compose -f dependency_range_tests/docker-compose.yml run test-openai-with-lowest-deps
+
+  # Anthropic
+  test-anthropic-with-latest-deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build `@langchain/standard-tests`
+        run: yarn build --filter=@langchain/standard-tests
+      - name: Test `@langchain/anthropic` with latest deps
+        run: docker compose -f dependency_range_tests/docker-compose.yml run test-anthropic-with-latest-deps
+
+  test-anthropic-with-lowest-deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build `@langchain/standard-tests`
+        run: yarn build --filter=@langchain/standard-tests
+      - name: Test `@langchain/anthropic` with lowest deps
+        run: docker compose -f dependency_range_tests/docker-compose.yml run test-anthropic-with-lowest-deps
