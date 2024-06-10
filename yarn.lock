@@ -9452,7 +9452,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/azure-dynamic-sessions@workspace:libs/langchain-azure-dynamic-sessions":
+"@langchain/azure-dynamic-sessions@workspace:^, @langchain/azure-dynamic-sessions@workspace:libs/langchain-azure-dynamic-sessions":
   version: 0.0.0-use.local
   resolution: "@langchain/azure-dynamic-sessions@workspace:libs/langchain-azure-dynamic-sessions"
   dependencies:
@@ -23402,6 +23402,7 @@ __metadata:
     "@gomomento/sdk": ^1.51.1
     "@google/generative-ai": ^0.7.0
     "@langchain/anthropic": "workspace:*"
+    "@langchain/azure-dynamic-sessions": "workspace:^"
     "@langchain/azure-openai": "workspace:*"
     "@langchain/cloudflare": "workspace:*"
     "@langchain/cohere": "workspace:*"
