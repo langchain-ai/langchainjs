@@ -5199,7 +5199,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/identity@npm:^4.1.0, @azure/identity@npm:^4.2.0":
+"@azure/identity@npm:^4.2.0":
   version: 4.2.0
   resolution: "@azure/identity@npm:4.2.0"
   dependencies:
@@ -9452,7 +9452,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/azure-dynamic-sessions@workspace:^, @langchain/azure-dynamic-sessions@workspace:libs/langchain-azure-dynamic-sessions":
+"@langchain/azure-dynamic-sessions@workspace:libs/langchain-azure-dynamic-sessions":
   version: 0.0.0-use.local
   resolution: "@langchain/azure-dynamic-sessions@workspace:libs/langchain-azure-dynamic-sessions"
   dependencies:
@@ -23402,7 +23402,6 @@ __metadata:
     "@gomomento/sdk": ^1.51.1
     "@google/generative-ai": ^0.7.0
     "@langchain/anthropic": "workspace:*"
-    "@langchain/azure-dynamic-sessions": "workspace:^"
     "@langchain/azure-openai": "workspace:*"
     "@langchain/cloudflare": "workspace:*"
     "@langchain/cohere": "workspace:*"
@@ -38270,13 +38269,6 @@ __metadata:
   version: 4.0.0
   resolution: "web-streams-polyfill@npm:4.0.0"
   checksum: df1abcb0f811621fa3ed95491c3d281eb7c82aa898b9759e47c3c9dffe73eb65c0459433da60a76a1ea08e6158c8b33fdf3a2ea2a44b9c4c252965507d54edc4
-  languageName: node
-  linkType: hard
-
-"web-worker@npm:^1.2.0":
-  version: 1.3.0
-  resolution: "web-worker@npm:1.3.0"
-  checksum: ed1f869aefd1d81a43d0fbfe7b315a65beb6d7d2486b378c436a7047eed4216be34b2e6afca738b6fa95d016326b765f5f816355db33267dbf43b2b8a1837c0c
   languageName: node
   linkType: hard
 
