@@ -38,6 +38,8 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
       - name: Build `@langchain/standard-tests`
         run: yarn build --filter=@langchain/standard-tests
       - name: Test LangChain with latest deps
@@ -65,6 +67,8 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
       - name: Build `@langchain/standard-tests`
         run: yarn build --filter=@langchain/standard-tests
       - name: Test `@langchain/community` with latest deps
@@ -92,6 +96,8 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
       - name: Build `@langchain/standard-tests`
         run: yarn build --filter=@langchain/standard-tests
       - name: Test `@langchain/openai` with latest deps
@@ -119,6 +125,8 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
       - name: Build `@langchain/standard-tests`
         run: yarn build --filter=@langchain/standard-tests
       - name: Test `@langchain/anthropic` with latest deps
