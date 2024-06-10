@@ -1,3 +1,6 @@
+import { promises as fs } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { Tool } from "@langchain/core/tools";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
@@ -5,9 +8,6 @@ import {
   getBearerTokenProvider,
 } from "@azure/identity";
 import { v4 as uuidv4 } from "uuid";
-import { readFile } from "fs/promises";
-import path from "path";
-import { fileURLToPath } from "url";
 
 const userAgentPrefix = "langchainjs-azure-dynamic-sessions";
 
@@ -15,10 +15,18 @@ let userAgent = "";
 async function getuserAgentSuffix(): Promise<string> {
   try {
     if (!userAgent) {
-      const __filename = fileURLToPath(import.meta.url);
-      const __dirname = path.dirname(__filename);
-      const data = await readFile(
-        path.join(__dirname, "..", "package.json"),
+      let currentDir;
+      try {
+        currentDir = __dirname;
+      } catch (e) {
+        // Workaround to make the build compatible with both ESM and CJS
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        currentDir = path.dirname(fileURLToPath(import.meta.url));
+      }
+
+      const data = await fs.readFile(
+        path.join(currentDir, "..", "package.json"),
         "utf8"
       );
       const json = await JSON.parse(data);
