@@ -1,5 +1,3 @@
-import CodeBlock from "@theme/CodeBlock";
-
 # Azure Container Apps Dynamic Sessions
 
 > [Azure Container Apps dynamic sessions](https://learn.microsoft.com/azure/container-apps/sessions) provide fast access to secure sandboxed environments that are ideal for running code or applications that require strong isolation from other workloads.
@@ -24,6 +22,7 @@ Once you have your instance running, you need to make sure you have properly set
 
 After you've added the role for your identity, you need to retrieve the **session pool management endpoint**. You can find it in the Azure Portal, under the "Overview" section of your instance. Then you need to set the following environment variable:
 
+import CodeBlock from "@theme/CodeBlock";
 import EnvVars from "@examples/tools/azure_dynamic_sessions/.env.example";
 
 <CodeBlock language="text">{EnvVars}</CodeBlock>

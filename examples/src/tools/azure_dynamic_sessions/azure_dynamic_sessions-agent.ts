@@ -4,9 +4,12 @@ import { AgentExecutor, createOpenAIFunctionsAgent } from "langchain/agents";
 import { SessionsPythonREPLTool } from "@langchain/azure-dynamic-sessions";
 import { AzureChatOpenAI } from "@langchain/azure-openai";
 
-const tools = [new SessionsPythonREPLTool({
-  poolManagementEndpoint: process.env.AZURE_CONTAINER_APP_SESSION_POOL_MANAGEMENT_ENDPOINT,
-})];
+const tools = [
+  new SessionsPythonREPLTool({
+    poolManagementEndpoint:
+      process.env.AZURE_CONTAINER_APP_SESSION_POOL_MANAGEMENT_ENDPOINT || "",
+  }),
+];
 
 const llm = new AzureChatOpenAI({
   temperature: 0,
@@ -31,7 +34,7 @@ const agentExecutor = new AgentExecutor({
 });
 
 const result = await agentExecutor.invoke({
-  input: "prints \"Hello LangChain\"",
+  input: 'prints "Hello LangChain"',
 });
 
 console.log(result);
