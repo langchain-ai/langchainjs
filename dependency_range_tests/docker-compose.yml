@@ -1,5 +1,6 @@
 version: "3"
 services:
+  # LangChain
   test-langchain-with-latest-deps:
     image: node:18
     environment:
@@ -26,6 +27,7 @@ services:
       - ./scripts:/scripts
     command: bash /scripts/langchain/test-with-lowest-deps.sh
   
+  # Community
   test-community-with-latest-deps:
     image: node:18
     environment:
@@ -55,6 +57,7 @@ services:
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/community/test-with-lowest-deps.sh
 
+  # OpenAI
   test-openai-with-latest-deps:
     image: node:18
     environment:
@@ -83,3 +86,33 @@ services:
       - ../libs/langchain-openai:/libs/langchain-openai
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/openai/test-with-lowest-deps.sh
+
+  # Anthropic
+  test-anthropic-with-latest-deps:
+    image: node:18
+    environment:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
+      COHERE_API_KEY: ${COHERE_API_KEY}
+    working_dir: /app
+    volumes:
+      - ../turbo.json:/turbo.json
+      - ../package.json:/package.json
+      - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
+      - ../libs/langchain-anthropic:/libs/langchain-anthropic
+      - ./scripts:/scripts
+    command: bash /scripts/with_standard_tests/anthropic/test-with-latest-deps.sh
+  test-anthropic-with-lowest-deps:
+    image: node:18
+    environment:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
+      COHERE_API_KEY: ${COHERE_API_KEY}
+    working_dir: /app
+    volumes:
+      - ../turbo.json:/turbo.json
+      - ../package.json:/package.json
+      - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
+      - ../libs/langchain-anthropic:/libs/langchain-anthropic
+      - ./scripts:/scripts
+    command: bash /scripts/with_standard_tests/anthropic/test-with-lowest-deps.sh

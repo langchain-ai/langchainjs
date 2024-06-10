@@ -64,7 +64,7 @@ node "update_resolutions_lowest.js"
 cd "$monorepo_dir"
 yarn
 
-# Navigate into `@langchain/community` and run tests
+# Navigate into `@langchain/community` to build and run tests
 # We need to run inside the community directory so turbo repo does
 # not try to build the package/it's workspace dependencies.
 cd "$monorepo_community_dir"
