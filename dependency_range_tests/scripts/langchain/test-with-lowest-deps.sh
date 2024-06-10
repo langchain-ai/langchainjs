@@ -4,24 +4,59 @@ set -euxo pipefail
 
 export CI=true
 
+# New monorepo directory paths
+monorepo_dir="/app/monorepo"
+monorepo_libs_dir="$monorepo_dir/libs"
+monorepo_langchain_dir="$monorepo_dir/langchain"
+monorepo_standard_tests_dir="$monorepo_libs_dir/langchain-standard-tests"
+
+# Updater script will not live inside the monorepo
+updater_script_dir="/app/updater_script"
+
+# Original directory paths
+original_langchain_dir="/langchain"
+original_standard_tests_dir="/libs/langchain-standard-tests"
+original_package_json_dir="/package.json"
+original_turbo_json_dir="/turbo.json"
+original_updater_script_dir="/scripts/langchain/node"
+
 # enable extended globbing for omitting build artifacts
 shopt -s extglob
 
-# avoid copying build artifacts from the host
-cp -r ../langchain/!(node_modules|dist|dist-cjs|dist-esm|build|.next|.turbo) ./
+# Create the top level monorepo directory
+mkdir -p "$monorepo_dir"
 
-mkdir -p /updater_script
-cp -r /scripts/langchain/node/!(node_modules|dist|dist-cjs|dist-esm|build|.next|.turbo) /updater_script/
+# Copy `@langchain/standard-tests` WITH build artifacts from the host.
+# This is because we build @langchain/standard-tests before running this script.
+mkdir -p "$monorepo_standard_tests_dir/"
+cp -r "$original_standard_tests_dir"/* "$monorepo_standard_tests_dir/"
 
-cd /updater_script
+# Copy `langchain` WITHOUT build artifacts from the host.
+mkdir -p "$monorepo_langchain_dir/"
+cp -r "$original_langchain_dir"/!(node_modules|dist|dist-cjs|dist-esm|build|.next|.turbo) "$monorepo_langchain_dir/"
 
+# Copy the turbo and package.json files for monorepo
+cp "$original_turbo_json_dir" "$monorepo_dir/"
+cp "$original_package_json_dir" "$monorepo_dir/"
+
+# Replace any workspace dependencies in `@langchain/standard-tests`
+# with "latest" for the version.
+mkdir -p "$updater_script_dir"
+cp "$original_updater_script_dir"/* "$updater_script_dir/"
+
+# Install deps (e.g semver) for the updater script
+cd "$updater_script_dir"
+yarn
+# Run the updater scripts
+node "update_workspace_dependencies.js"
+node "update_resolutions_lowest.js"
+
+# Navigate back to monorepo root and install dependencies
+cd "$monorepo_dir"
 yarn
 
-cd /app
-
-node /updater_script/update_resolutions_lowest.js
-
-yarn
-
-# Check the test command completes successfully
-NODE_OPTIONS=--experimental-vm-modules yarn run jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%
+# Navigate into `langchain` and run tests
+# We need to run inside the `langchain` directory so turbo repo does
+# not try to build the package/it's workspace dependencies.
+cd "$monorepo_langchain_dir"
+yarn test

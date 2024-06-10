@@ -1,7 +1,9 @@
 const fs = require("fs");
 const semver = require("semver");
 
-const currentPackageJson = JSON.parse(fs.readFileSync("./package.json"));
+const communityPackageJsonPath = "/app/monorepo/libs/langchain-community/package.json";
+
+const currentPackageJson = JSON.parse(fs.readFileSync(communityPackageJsonPath));
 
 if (currentPackageJson.dependencies["@langchain/core"] && !currentPackageJson.dependencies["@langchain/core"].includes("rc")) {
   const minVersion = semver.minVersion(
@@ -31,4 +33,4 @@ if (currentPackageJson.dependencies["@langchain/openai"] && !currentPackageJson.
   };
 }
 
-fs.writeFileSync("./package.json", JSON.stringify(currentPackageJson, null, 2));
+fs.writeFileSync(communityPackageJsonPath, JSON.stringify(currentPackageJson, null, 2));

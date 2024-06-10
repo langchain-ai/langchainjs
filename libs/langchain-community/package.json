@@ -35,8 +35,8 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.2.6",
-    "@langchain/openai": "~0.1.0",
+    "@langchain/core": "0.2.6",
+    "@langchain/openai": "0.1.0",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
@@ -79,7 +79,7 @@
     "@huggingface/inference": "^2.6.4",
     "@jest/globals": "^29.5.0",
     "@langchain/scripts": "~0.0.14",
-    "@langchain/standard-tests": "workspace:*",
+    "@langchain/standard-tests": "0.0.0",
     "@layerup/layerup-security": "^1.5.12",
     "@mendable/firecrawl-js": "^0.0.13",
     "@mlc-ai/web-llm": "^0.2.40",
@@ -4019,5 +4019,9 @@
     "chains/graph_qa/cypher.js",
     "chains/graph_qa/cypher.d.ts",
     "chains/graph_qa/cypher.d.cts"
-  ]
+  ],
+  "resolutions": {
+    "@langchain/core": "0.2.6",
+    "@langchain/openai": "0.1.0"
+  }
 }

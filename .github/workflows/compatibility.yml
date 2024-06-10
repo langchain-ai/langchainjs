@@ -37,6 +37,8 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "yarn"
+      - name: Build `@langchain/standard-tests`
+        run: yarn build --filter=@langchain/standard-tests
       - name: Test LangChain with latest deps
         run: docker compose -f dependency_range_tests/docker-compose.yml run test-langchain-with-latest-deps
 
@@ -61,6 +63,8 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "yarn"
+      - name: Build `@langchain/standard-tests`
+        run: yarn build --filter=@langchain/standard-tests
       - name: Test `@langchain/community` with latest deps
         run: docker compose -f dependency_range_tests/docker-compose.yml run test-community-with-latest-deps
 
