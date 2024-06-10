@@ -9099,8 +9099,8 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
-    "@langchain/core": 0.2.6
-    "@langchain/openai": 0.1.0
+    "@langchain/core": ~0.2.6
+    "@langchain/openai": ~0.1.0
     "@langchain/scripts": ~0.0.14
     "@langchain/standard-tests": 0.0.0
     "@layerup/layerup-security": ^1.5.12
@@ -10031,19 +10031,6 @@ __metadata:
     typescript: <5.2.0
   languageName: unknown
   linkType: soft
-
-"@langchain/openai@npm:0.1.0":
-  version: 0.1.0
-  resolution: "@langchain/openai@npm:0.1.0"
-  dependencies:
-    "@langchain/core": ">=0.2.5 <0.3.0"
-    js-tiktoken: ^1.0.12
-    openai: ^4.41.1
-    zod: ^3.22.4
-    zod-to-json-schema: ^3.22.3
-  checksum: c418794534f8818b540eb5acee6d848610aff02ee70509630497e4618872232c2ec2b49c8e5ba01adf1cd51d874ea6a55cb5c5ac215eea6fb034880ff33285f8
-  languageName: node
-  linkType: hard
 
 "@langchain/openai@npm:~0.0.28":
   version: 0.0.34
