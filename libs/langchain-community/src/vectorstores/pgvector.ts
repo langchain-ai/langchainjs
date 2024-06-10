@@ -1,3 +1,5 @@
+// eslint-disable-next-line import/no-extraneous-dependencies
+import format from "pg-format";
 import pg, { type Pool, type PoolClient, type PoolConfig } from "pg";
 import { VectorStore } from "@langchain/core/vectorstores";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
@@ -709,19 +711,22 @@ export class PGVectorStore extends VectorStore {
         throw new Error(`Unknown distance strategy: ${this.distanceStrategy}`);
     }
 
-    const createIndexQuery = `CREATE INDEX IF NOT EXISTS ${
-      this.vectorColumnName
-    }_embedding_idx
-        ON ${this.computedTableName} USING hnsw ((${
-      this.vectorColumnName
-    }::vector(${config.dimensions})) ${idxDistanceFunction})
-        WITH (
-            m=${config?.m || 16},
-            ef_construction=${config?.efConstruction || 64}
-        );`;
+    const createIndexQuery = `CREATE INDEX IF NOT EXISTS %I_embedding_hnsw_idx
+        ON %I USING hnsw ((%I::vector(%I)) %I)
+        WITH (%s);`;
 
     try {
-      await this.pool.query(createIndexQuery);
+      const sql = format(
+        createIndexQuery,
+        this.vectorColumnName,
+        this.computedTableName,
+        this.vectorColumnName,
+        config.dimensions,
+        idxDistanceFunction,
+        `m=${config.m || 16}, ef_construction=${config.efConstruction || 64}`
+      );
+
+      await this.pool.query(sql);
     } catch (e) {
       console.error(
         `Failed to create HNSW index on table ${this.computedTableName}, error: ${e}`

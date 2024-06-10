@@ -809,7 +809,7 @@ describe("PGVectorStore with HNSW index", () => {
 
   test("Ensure table has HNSW index", async () => {
     const result = await pgvectorVectorStore.pool.query(
-      `SELECT indexname, tablename, indexdef FROM pg_indexes where indexname='vector_embedding_idx';`
+      `SELECT indexname, tablename, indexdef FROM pg_indexes where indexname='vector_embedding_hnsw_idx';`
     );
     const { indexdef } = result.rows[0];
     expect(result.rowCount).toBe(1);

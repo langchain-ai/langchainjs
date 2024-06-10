@@ -9639,6 +9639,7 @@ __metadata:
     "@types/pdf-parse": ^1.1.1
     "@types/pg": ^8.11.0
     "@types/pg-copy-streams": ^1.2.2
+    "@types/pg-format": ^1
     "@types/uuid": ^9
     "@types/ws": ^8
     "@typescript-eslint/eslint-plugin": ^5.58.0
@@ -9716,6 +9717,7 @@ __metadata:
     pdf-parse: 1.1.1
     pg: ^8.11.0
     pg-copy-streams: ^6.0.5
+    pg-format: ^1.0.4
     pickleparser: ^0.2.1
     playwright: ^1.32.1
     portkey-ai: ^0.1.11
@@ -15990,6 +15992,13 @@ __metadata:
     "@types/node": "*"
     "@types/pg": "*"
   checksum: 601a9295d122a1a7307b4730c5811e71003653d58aa7d1423a0311c09f763f8f2183a5fc82e5fb53375b2d1679c43805f5fe316e88dcae2eaf9ec7c1e0676e5f
+  languageName: node
+  linkType: hard
+
+"@types/pg-format@npm:^1":
+  version: 1.0.5
+  resolution: "@types/pg-format@npm:1.0.5"
+  checksum: e7907b1e478b54aec581d14bc4df349d40d6e30e1f03605e9d162f515f35064e9deaeeb563cb812adfac271522c7ed68b13ebb6e2036d557c5533cf6357419bd
   languageName: node
   linkType: hard
 
@@ -32059,6 +32068,13 @@ __metadata:
   dependencies:
     obuf: ^1.1.2
   checksum: 45074d8b366a0f572af628cbf5831b834653856f7945b1e11541bc1b81609b464d636d344b6f60b2c6b836328e9b2faa48e1add5f9adc3c6ca4591ebbea96e5d
+  languageName: node
+  linkType: hard
+
+"pg-format@npm:^1.0.4":
+  version: 1.0.4
+  resolution: "pg-format@npm:1.0.4"
+  checksum: 159b43ad57d2f963f1072def86080dd2a6dd42c1a86046e388d47b491e00afe795139520eb01c8dffc43ac0243c77b3c4c5882d0ec5f488bb3281f17458b1b3d
   languageName: node
   linkType: hard
 
