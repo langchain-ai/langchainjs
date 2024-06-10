@@ -30,6 +30,6 @@ yarn
 
 # Navigate into `@langchain/anthropic` to build and run tests
 # We need to run inside the anthropic directory so turbo repo does
-# not try to build the package/it's workspace dependencies.
+# not try to build the package/its workspace dependencies.
 cd "$monorepo_anthropic_dir"
 yarn test

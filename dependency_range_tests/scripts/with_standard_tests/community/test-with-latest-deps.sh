@@ -17,6 +17,6 @@ yarn
 
 # Navigate into `@langchain/community` to build and run tests
 # We need to run inside the community directory so turbo repo does
-# not try to build the package/it's workspace dependencies.
+# not try to build the package/its workspace dependencies.
 cd "$monorepo_community_dir"
 yarn test
