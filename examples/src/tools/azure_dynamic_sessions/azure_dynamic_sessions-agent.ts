@@ -2,7 +2,7 @@ import type { ChatPromptTemplate } from "@langchain/core/prompts";
 import { pull } from "langchain/hub";
 import { AgentExecutor, createOpenAIFunctionsAgent } from "langchain/agents";
 import { SessionsPythonREPLTool } from "@langchain/azure-dynamic-sessions";
-import { AzureChatOpenAI } from "@langchain/azure-openai";
+import { AzureChatOpenAI } from "@langchain/openai";
 
 const tools = [
   new SessionsPythonREPLTool({
@@ -11,6 +11,8 @@ const tools = [
   }),
 ];
 
+// Note: you need a model deployment that supports function calling,
+// like `gpt-35-turbo` version `1106`.
 const llm = new AzureChatOpenAI({
   temperature: 0,
 });
@@ -34,7 +36,7 @@ const agentExecutor = new AgentExecutor({
 });
 
 const result = await agentExecutor.invoke({
-  input: 'prints "Hello LangChain"',
+  input: 'Create a Python program that prints the Python version and return the result.',
 });
 
 console.log(result);
