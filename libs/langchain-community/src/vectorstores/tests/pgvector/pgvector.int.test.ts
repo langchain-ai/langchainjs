@@ -793,14 +793,14 @@ describe("PGVectorStore with HNSW index", () => {
     );
 
     // Create the index
-    await pgvectorVectorStore.createHnswIndex();
+    await pgvectorVectorStore.createHnswIndex({ dimensions: 1536 });
   });
 
   afterEach(async () => {
     // Drop table, then recreate it for the next test.
     await pgvectorVectorStore.pool.query(`DROP TABLE "${tableName}"`);
     await pgvectorVectorStore.ensureTableInDatabase();
-    await pgvectorVectorStore.createHnswIndex();
+    await pgvectorVectorStore.createHnswIndex({ dimensions: 1536 });
   });
 
   afterAll(async () => {

@@ -79,17 +79,17 @@ import ConnectionReuseExample from "@examples/indexes/vector_stores/pgvector_vec
 
 By default, the extension performs a sequential scan search, with 100% recall. You might consider creating an HNSW index for approximate nearest neighbor (ANN) search to speed up similaritySearchVectorWithScore execution time. To create the HNSW index on your vector column, use the `createHnswIndex()` method:
 
-The optional method parameters include:
+The method parameters include:
 
-**dims**: Defines the number of dimensions in your vector data, max: 2000. For example, use 1536 for OpenAI's text-embedding-ada-002 model and 1024 for amazon.titan-embed-text-v2:0
+**dimensions**: Defines the number of dimensions in your vector data type, up to 2000. For example, use 1536 for OpenAI's `text-embedding-ada-002` and Amazon's `amazon.titan-embed-text-v1` models.
 
-**m**: The max number of connections per layer (16 by default)
+**m?**: The max number of connections per layer (16 by default). Index build time improves with smaller values, while higher values can speed up search queries.
 
-**efConstruction**: The size of the dynamic candidate list for constructing the graph (64 by default)
+**efConstruction?**: The size of the dynamic candidate list for constructing the graph (64 by default). A higher value can potentially improve the index quality at the cost of index build time.
 
-**distanceFunction**: The distance function name you want to use, is automatically selected based on the distanceStrategy.
+**distanceFunction?**: The distance function name you want to use, is automatically selected based on the distanceStrategy.
 
-More info at the [`pgvector github project`](https://github.com/pgvector/pgvector?tab=readme-ov-file#hnsw) 
+More info at the [`Pgvector GitHub project`](https://github.com/pgvector/pgvector?tab=readme-ov-file#hnsw) and the HNSW paper from Malkov Yu A. and Yashunin D. A.. 2020. [`Efficient and robust approximate nearest neighbor search using hierarchical navigable small world graphs`](https://arxiv.org/pdf/1603.09320)
 
 import HnswExample from "@examples/indexes/vector_stores/pgvector_vectorstore/pgvector_hnsw.ts";
 

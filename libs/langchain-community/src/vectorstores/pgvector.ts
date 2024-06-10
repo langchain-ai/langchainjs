@@ -681,14 +681,14 @@ export class PGVectorStore extends VectorStore {
   /**
    * Method to create the HNSW index on the vector column.
    *
-   * @param dims - Defines the number of dimensions in your vector data, max: 2000. For example, use 1536 for OpenAI's text-embedding-ada-002 model and 1024 for amazon.titan-embed-text-v2:0
-   * @param m - The max number of connections per layer (16 by default)
-   * @param efConstruction -  The size of the dynamic candidate list for constructing the graph (64 by default)
+   * @param dimensions - Defines the number of dimensions in your vector data type, up to 2000. For example, use 1536 for OpenAI's text-embedding-ada-002 and Amazon's amazon.titan-embed-text-v1 models.
+   * @param m - The max number of connections per layer (16 by default). Index build time improves with smaller values, while higher values can speed up search queries.
+   * @param efConstruction -  The size of the dynamic candidate list for constructing the graph (64 by default). A higher value can potentially improve the index quality at the cost of index build time.
    * @param distanceFunction -  The distance function name you want to use, is automatically selected based on the distanceStrategy.
    * @returns Promise that resolves with the query response of creating the index.
    */
-  async createHnswIndex(config?: {
-    dims?: number;
+  async createHnswIndex(config: {
+    dimensions: number;
     m?: number;
     efConstruction?: number;
     distanceFunction?: string;
@@ -714,7 +714,7 @@ export class PGVectorStore extends VectorStore {
     }_embedding_idx
         ON ${this.computedTableName} USING hnsw ((${
       this.vectorColumnName
-    }::vector(${config?.dims || 1536})) ${idxDistanceFunction})
+    }::vector(${config.dimensions})) ${idxDistanceFunction})
         WITH (
             m=${config?.m || 16},
             ef_construction=${config?.efConstruction || 64}

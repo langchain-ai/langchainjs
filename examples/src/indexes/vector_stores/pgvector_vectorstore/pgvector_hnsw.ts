@@ -35,7 +35,7 @@ const pgvectorStore = await PGVectorStore.initialize(
 
 // create the index
 await pgvectorStore.createHnswIndex({
-  dims: 1536,
+  dimensions: 1536,
   efConstruction: 64,
   m: 16,
 });
