@@ -5199,7 +5199,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/identity@npm:^4.2.0":
+"@azure/identity@npm:^4.1.0, @azure/identity@npm:^4.2.0":
   version: 4.2.0
   resolution: "@azure/identity@npm:4.2.0"
   dependencies:
@@ -5259,13 +5259,6 @@ __metadata:
   version: 14.6.1
   resolution: "@azure/msal-common@npm:14.6.1"
   checksum: 6d9da0a2863a4b076208d6ab75ff1fd2f7a3cb8018f4ee937cc769d27603ffa1c137a4a64b7bdf4e1d37d0b6275243ae758824f0adb554a5e8f37b83ee942763
-  languageName: node
-  linkType: hard
-
-"@azure/msal-common@npm:14.9.0":
-  version: 14.9.0
-  resolution: "@azure/msal-common@npm:14.9.0"
-  checksum: f5d071c5241aba68a6585eb53fcf049aa976719f31f211c0044c0d0107b7300d4827412ce0389f7e6d3ce7bc6444c20d2baba3e9a7c1a1116ccc1f1b3edd253b
   languageName: node
   linkType: hard
 
@@ -9459,7 +9452,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/azure-dynamic-sessions@workspace:libs/langchain-azure-dynamic-sessions":
+"@langchain/azure-dynamic-sessions@workspace:^, @langchain/azure-dynamic-sessions@workspace:libs/langchain-azure-dynamic-sessions":
   version: 0.0.0-use.local
   resolution: "@langchain/azure-dynamic-sessions@workspace:libs/langchain-azure-dynamic-sessions"
   dependencies:
@@ -10732,7 +10725,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/scripts@workspace:*, @langchain/scripts@workspace:libs/langchain-scripts, @langchain/scripts@~0.0.14":
+"@langchain/scripts@workspace:*, @langchain/scripts@workspace:libs/langchain-scripts, @langchain/scripts@~0.0, @langchain/scripts@~0.0.14":
   version: 0.0.0-use.local
   resolution: "@langchain/scripts@workspace:libs/langchain-scripts"
   dependencies:
@@ -23409,6 +23402,7 @@ __metadata:
     "@gomomento/sdk": ^1.51.1
     "@google/generative-ai": ^0.7.0
     "@langchain/anthropic": "workspace:*"
+    "@langchain/azure-dynamic-sessions": "workspace:^"
     "@langchain/azure-openai": "workspace:*"
     "@langchain/cloudflare": "workspace:*"
     "@langchain/cohere": "workspace:*"
