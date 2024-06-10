@@ -166,6 +166,27 @@ describe("Google APIKey Chat", () => {
     console.log(res2);
     expect(res2.content).toContain("24");
   });
+
+  test("withStructuredOutput", async () => {
+    const tool = {
+      name: "get_weather",
+      description:
+        "Get the weather of a specific location and return the temperature in Celsius.",
+      parameters: {
+        type: "object",
+        properties: {
+          location: {
+            type: "string",
+            description: "The name of city to get the weather for.",
+          },
+        },
+        required: ["location"],
+      },
+    };
+    const model = new ChatVertexAI().withStructuredOutput(tool);
+    const result = await model.invoke("What is the weather in Paris?");
+    expect(result).toHaveProperty("location");
+  });
 });
 
 describe("Google Webauth Chat", () => {
