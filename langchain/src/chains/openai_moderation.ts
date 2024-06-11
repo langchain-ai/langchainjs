@@ -87,7 +87,7 @@ export class OpenAIModerationChain
     this.throwError = fields?.throwError ?? false;
     this.openAIApiKey =
       fields?.apiKey ??
-      fields?.openAIApiKey ?? 
+      fields?.openAIApiKey ??
       getEnvironmentVariable("OPENAI_API_KEY");
 
     if (!this.openAIApiKey) {

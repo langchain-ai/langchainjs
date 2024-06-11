@@ -163,6 +163,7 @@ export interface ChatOpenAICallOptions
   seed?: number;
 }
 
+/** @deprecated Import from "@langchain/openai" instead. */
 export class AzureChatOpenAI
   extends BaseChatModel<ChatOpenAICallOptions>
   implements OpenAIChatInput, AzureOpenAIInput
@@ -268,7 +269,7 @@ export class AzureChatOpenAI
 
     const openAiApiKey =
       fields?.apiKey ??
-      fields?.openAIApiKey ?? 
+      fields?.openAIApiKey ??
       getEnvironmentVariable("OPENAI_API_KEY");
 
     this.azureOpenAIApiKey =

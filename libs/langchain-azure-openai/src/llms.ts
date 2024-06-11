@@ -33,6 +33,7 @@ export interface TokenUsage {
   totalTokens?: number;
 }
 
+/** @deprecated Import from "@langchain/openai" instead. */
 export class AzureOpenAI<
     CallOptions extends OpenAICallOptions = OpenAICallOptions
   >
@@ -136,7 +137,7 @@ export class AzureOpenAI<
 
     const openAiApiKey =
       fields?.apiKey ??
-      fields?.openAIApiKey ?? 
+      fields?.openAIApiKey ??
       getEnvironmentVariable("OPENAI_API_KEY");
 
     this.azureOpenAIApiKey =

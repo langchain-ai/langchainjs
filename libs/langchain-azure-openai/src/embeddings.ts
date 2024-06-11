@@ -15,6 +15,7 @@ import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { AzureOpenAIInput, AzureOpenAIEmbeddingsParams } from "./types.js";
 import { USER_AGENT_PREFIX } from "./constants.js";
 
+/** @deprecated Import from "@langchain/openai" instead. */
 export class AzureOpenAIEmbeddings
   extends Embeddings
   implements AzureOpenAIEmbeddingsParams, AzureOpenAIInput
@@ -63,7 +64,7 @@ export class AzureOpenAIEmbeddings
 
     const openAiApiKey =
       fields?.apiKey ??
-      fields?.openAIApiKey ?? 
+      fields?.openAIApiKey ??
       getEnvironmentVariable("OPENAI_API_KEY");
 
     this.azureOpenAIApiKey =

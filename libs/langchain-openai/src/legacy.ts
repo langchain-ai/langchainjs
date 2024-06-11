@@ -158,7 +158,7 @@ export class OpenAIChat
 
     this.openAIApiKey =
       fields?.apiKey ??
-      fields?.openAIApiKey ?? 
+      fields?.openAIApiKey ??
       getEnvironmentVariable("OPENAI_API_KEY");
 
     this.azureOpenAIApiKey =
