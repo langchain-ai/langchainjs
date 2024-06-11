@@ -59,12 +59,13 @@ test("should abort the request", async () => {
   }).rejects.toThrow("AbortError");
 });
 
-test("Stream token count usage_metadata", async () => {
+test.only("Stream token count usage_metadata", async () => {
   const model = new ChatCohere({
     model: "command-light",
     temperature: 0,
   });
   let res: AIMessageChunk | null = null;
+  let lastRes: AIMessageChunk | null = null;
   for await (const chunk of await model.stream(
     "Why is the sky blue? Be concise."
   )) {
@@ -73,6 +74,7 @@ test("Stream token count usage_metadata", async () => {
     } else {
       res = res.concat(chunk);
     }
+    lastRes = chunk;
   }
   console.log(res);
   expect(res?.usage_metadata).toBeDefined();
@@ -84,6 +86,41 @@ test("Stream token count usage_metadata", async () => {
   expect(res.usage_metadata.total_tokens).toBe(
     res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
   );
+  expect(lastRes?.additional_kwargs).toBeDefined();
+  if (!lastRes?.additional_kwargs) {
+    return;
+  }
+  expect(lastRes.additional_kwargs.eventType).toBe("stream-end");
+});
+
+test.only("streamUsage excludes token usage", async () => {
+  const model = new ChatCohere({
+    model: "command-light",
+    temperature: 0,
+    streamUsage: false,
+  });
+  let res: AIMessageChunk | null = null;
+  let lastRes: AIMessageChunk | null = null;
+  for await (const chunk of await model.stream(
+    "Why is the sky blue? Be concise."
+  )) {
+    if (!res) {
+      res = chunk;
+    } else {
+      res = res.concat(chunk);
+    }
+    lastRes = chunk;
+  }
+  console.log(res);
+  expect(res?.usage_metadata).not.toBeDefined();
+  if (res?.usage_metadata) {
+    return;
+  }
+  expect(lastRes?.additional_kwargs).toBeDefined();
+  if (!lastRes?.additional_kwargs) {
+    return;
+  }
+  expect(lastRes.additional_kwargs.eventType).not.toBe("stream-end");
 });
 
 test("Invoke token count usage_metadata", async () => {

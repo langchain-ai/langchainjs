@@ -47,6 +47,14 @@ export interface ChatCohereInput extends BaseChatModelParams {
    * @default {false}
    */
   streaming?: boolean;
+  /**
+   * Whether or not to include token usage when streaming.
+   * This will include an extra chunk at the end of the stream
+   * with `eventType: "stream-end"` and the token usage in
+   * `usage_metadata`.
+   * @default {true}
+   */
+  streamUsage?: boolean;
 }
 
 interface TokenUsage {
@@ -58,7 +66,8 @@ interface TokenUsage {
 export interface CohereChatCallOptions
   extends BaseLanguageModelCallOptions,
     Partial<Omit<Cohere.ChatRequest, "message">>,
-    Partial<Omit<Cohere.ChatStreamRequest, "message">> {}
+    Partial<Omit<Cohere.ChatStreamRequest, "message">>,
+    Pick<ChatCohereInput, "streamUsage"> {}
 
 function convertMessagesToCohereMessages(
   messages: Array<BaseMessage>
@@ -130,6 +139,8 @@ export class ChatCohere<
 
   streaming = false;
 
+  streamUsage: boolean = true;
+
   constructor(fields?: ChatCohereInput) {
     super(fields ?? {});
 
@@ -144,6 +155,7 @@ export class ChatCohere<
     this.model = fields?.model ?? this.model;
     this.temperature = fields?.temperature ?? this.temperature;
     this.streaming = fields?.streaming ?? this.streaming;
+    this.streamUsage = fields?.streamUsage ?? this.streamUsage;
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -331,7 +343,9 @@ export class ChatCohere<
       if (chunk.eventType === "text-generation") {
         yield new ChatGenerationChunk({
           text: chunk.text,
-          message: new AIMessageChunk({ content: chunk.text }),
+          message: new AIMessageChunk({
+            content: chunk.text,
+          }),
         });
         await runManager?.handleLLMNewToken(chunk.text);
       } else if (chunk.eventType !== "stream-end") {
@@ -351,13 +365,11 @@ export class ChatCohere<
         });
       } else if (
         chunk.eventType === "stream-end" &&
-        chunk.response.meta?.tokens &&
-        (chunk.response.meta.tokens.inputTokens ||
-          chunk.response.meta.tokens.outputTokens)
+        (this.streamUsage || options.streamUsage)
       ) {
         // stream-end events contain the final token count
-        const input_tokens = chunk.response.meta.tokens.inputTokens ?? 0;
-        const output_tokens = chunk.response.meta.tokens.outputTokens ?? 0;
+        const input_tokens = chunk.response.meta?.tokens?.inputTokens ?? 0;
+        const output_tokens = chunk.response.meta?.tokens?.outputTokens ?? 0;
         yield new ChatGenerationChunk({
           text: "",
           message: new AIMessageChunk({
