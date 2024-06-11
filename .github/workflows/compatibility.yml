@@ -249,9 +249,7 @@ jobs:
 
   cohere-lowest-deps:
     runs-on: ubuntu-latest
-    if: |
-      github.event_name == 'pull_request' &&
-      contains(github.event.pull_request.paths, 'libs/langchain-cohere/**')
+    if: github.event_name == 'pull_request' && contains(github.event.pull_request.paths, 'libs/langchain-cohere/**')
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
