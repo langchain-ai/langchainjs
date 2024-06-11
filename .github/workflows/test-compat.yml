@@ -31,7 +31,7 @@ env:
 jobs:
   cohere-lowest-deps:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.paths, 'libs/langchain-cohere/**') }}
+    if: ${{ github.event_name == 'pull_request' }}
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -41,6 +41,8 @@ jobs:
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable
+      - name: Log changed files
+        run: echo ${{ github.event.pull_request.paths }}
       - name: Build `@langchain/standard-tests`
         run: yarn build --filter=@langchain/standard-tests
       - name: Test `@langchain/cohere` with lowest deps
