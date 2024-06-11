@@ -1,5 +1,6 @@
 // Default generic "any" values are for backwards compatibility.
 // Replace with "string" when we are comfortable with a breaking change.
+// todo: remove me
 
 import type { BaseCallbackConfig } from "../callbacks/manager.js";
 import {
