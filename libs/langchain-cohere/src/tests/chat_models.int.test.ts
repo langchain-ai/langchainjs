@@ -86,7 +86,7 @@ test("Stream token count usage_metadata", async () => {
   );
 });
 
-test.only("Invoke token count usage_metadata", async () => {
+test("Invoke token count usage_metadata", async () => {
   const model = new ChatCohere({
     model: "command-light",
     temperature: 0,

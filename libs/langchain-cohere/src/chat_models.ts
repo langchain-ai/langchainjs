@@ -248,10 +248,7 @@ export class ChatCohere<
       );
 
     if (response.meta?.tokens) {
-      const {
-        inputTokens,
-        outputTokens,
-      } = response.meta.tokens;
+      const { inputTokens, outputTokens } = response.meta.tokens;
 
       if (outputTokens) {
         tokenUsage.completionTokens =
@@ -262,7 +259,10 @@ export class ChatCohere<
         tokenUsage.promptTokens = (tokenUsage.promptTokens ?? 0) + inputTokens;
       }
 
-      tokenUsage.totalTokens = (tokenUsage.totalTokens ?? 0) + (tokenUsage.promptTokens ?? 0) + (tokenUsage.completionTokens ?? 0);
+      tokenUsage.totalTokens =
+        (tokenUsage.totalTokens ?? 0) +
+        (tokenUsage.promptTokens ?? 0) +
+        (tokenUsage.completionTokens ?? 0);
     }
 
     const generationInfo: Record<string, unknown> = { ...response };
@@ -278,7 +278,7 @@ export class ChatCohere<
             input_tokens: tokenUsage.promptTokens ?? 0,
             output_tokens: tokenUsage.completionTokens ?? 0,
             total_tokens: tokenUsage.totalTokens ?? 0,
-          }
+          },
         }),
         generationInfo,
       },
