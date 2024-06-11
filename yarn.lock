@@ -10079,7 +10079,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     js-tiktoken: ^1.0.12
-    openai: ^4.41.1
+    openai: ^4.49.1
     prettier: ^2.8.3
     release-it: ^15.10.1
     rimraf: ^5.0.1
@@ -30540,6 +30540,24 @@ __metadata:
   bin:
     openai: bin/cli
   checksum: 28eae59cb4b51b3d7224647e3be369453522b5be3f1530a51bf8ffe2aefa165cf4156a7621803782014c022943b16ff27690159ef3720214fdbb137a21e47bf2
+  languageName: node
+  linkType: hard
+
+"openai@npm:^4.49.1":
+  version: 4.49.1
+  resolution: "openai@npm:4.49.1"
+  dependencies:
+    "@types/node": ^18.11.18
+    "@types/node-fetch": ^2.6.4
+    abort-controller: ^3.0.0
+    agentkeepalive: ^4.2.1
+    form-data-encoder: 1.7.2
+    formdata-node: ^4.3.2
+    node-fetch: ^2.6.7
+    web-streams-polyfill: ^3.2.1
+  bin:
+    openai: bin/cli
+  checksum: b9bc845d25412d6b6ad827fb1363a4029935d8eb85a8708e55f5cf2852a0551b8720c8099edcbb0a2c2ab2be2d8f652a97061d9898b908e29d9bb2f727304b6e
   languageName: node
   linkType: hard
 
