@@ -699,7 +699,7 @@ export class ChatAnthropicMessages<
                 input_tokens: usage.input_tokens,
                 output_tokens: usage.output_tokens,
                 total_tokens: usage.input_tokens + usage.output_tokens,
-              }
+              },
             }),
             text: "",
           });
@@ -712,7 +712,7 @@ export class ChatAnthropicMessages<
                 output_tokens: data.usage.output_tokens,
                 input_tokens: 0,
                 total_tokens: data.usage.output_tokens,
-              }
+              },
             }),
             text: "",
           });
@@ -741,7 +741,7 @@ export class ChatAnthropicMessages<
             input_tokens: usageData.input_tokens,
             output_tokens: usageData.output_tokens,
             total_tokens: usageData.input_tokens + usageData.output_tokens,
-          }
+          },
         }),
         text: "",
       });
