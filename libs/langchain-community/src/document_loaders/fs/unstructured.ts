@@ -132,6 +132,9 @@ type UnstructuredMemoryLoaderOptions = {
  * partitioning request to the Unstructured API and retrieves the
  * partitioned elements. It creates a Document instance for each element
  * and returns an array of Document instances.
+ *
+ * It accepts either a filepath or an object containing a buffer and a filename
+ * as input.
  */
 export class UnstructuredLoader extends BaseDocumentLoader {
   public filePath: string;
@@ -176,31 +179,28 @@ export class UnstructuredLoader extends BaseDocumentLoader {
   private maxCharacters?: number;
 
   constructor(
-    filePathOrLegacyApiUrlOrMemoryBuffer:
-      | string
-      | UnstructuredMemoryLoaderOptions,
-    optionsOrLegacyFilePath: UnstructuredLoaderOptions | string = {}
+    filepathOrBufferOptions: string | UnstructuredMemoryLoaderOptions,
+    unstructuredOptions: UnstructuredLoaderOptions | string = {}
   ) {
     super();
 
     // Temporary shim to avoid breaking existing users
     // Remove when API keys are enforced by Unstructured and existing code will break anyway
-    const isLegacySyntax = typeof optionsOrLegacyFilePath === "string";
-    const isMemorySyntax =
-      typeof filePathOrLegacyApiUrlOrMemoryBuffer === "object";
+    const isLegacySyntax = typeof unstructuredOptions === "string";
+    const isMemorySyntax = typeof filepathOrBufferOptions === "object";
 
     if (isMemorySyntax) {
-      this.buffer = filePathOrLegacyApiUrlOrMemoryBuffer.buffer;
-      this.fileName = filePathOrLegacyApiUrlOrMemoryBuffer.fileName;
+      this.buffer = filepathOrBufferOptions.buffer;
+      this.fileName = filepathOrBufferOptions.fileName;
     } else if (isLegacySyntax) {
-      this.filePath = optionsOrLegacyFilePath;
-      this.apiUrl = filePathOrLegacyApiUrlOrMemoryBuffer;
+      this.filePath = unstructuredOptions;
+      this.apiUrl = filepathOrBufferOptions;
     } else {
-      this.filePath = filePathOrLegacyApiUrlOrMemoryBuffer;
+      this.filePath = filepathOrBufferOptions;
     }
 
     if (!isLegacySyntax) {
-      const options = optionsOrLegacyFilePath;
+      const options = unstructuredOptions;
       this.apiKey =
         options.apiKey ?? getEnvironmentVariable("UNSTRUCTURED_API_KEY");
       this.apiUrl =
