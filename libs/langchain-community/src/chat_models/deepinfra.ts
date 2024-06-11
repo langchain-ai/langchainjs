@@ -147,7 +147,6 @@ export class ChatDeepInfra
       false,
       options?.signal
     ).then<ChatCompletionResponse>((data) => {
-
       if (data?.code) {
         throw new Error(data?.message);
       }
@@ -184,7 +183,6 @@ export class ChatDeepInfra
     stream: boolean,
     signal?: AbortSignal
   ) {
-
     const body = {
       temperature: this.temperature,
       max_tokens: this.maxTokens,

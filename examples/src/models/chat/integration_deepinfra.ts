@@ -12,6 +12,6 @@ const chat = new ChatDeepInfra({
 
 const messages = [new HumanMessage("Hello")];
 
-chat.invoke(messages).then((response: any) => {
-  console.log(response);
-});
+const res = await chat.invoke(messages);
+
+console.log(res);
