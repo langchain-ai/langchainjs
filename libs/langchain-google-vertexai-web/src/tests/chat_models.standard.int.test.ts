@@ -2,10 +2,10 @@
 import { test, expect } from "@jest/globals";
 import { ChatModelIntegrationTests } from "@langchain/standard-tests";
 import { AIMessageChunk } from "@langchain/core/messages";
-import { ChatGoogle } from "../chat_models.js";
+import { ChatVertexAI } from "../chat_models.js";
 import { GoogleAIBaseLanguageModelCallOptions } from "@langchain/google-common";
 
-class ChatGoogleStandardIntegrationTests extends ChatModelIntegrationTests<
+class ChatVertexAIStandardIntegrationTests extends ChatModelIntegrationTests<
   GoogleAIBaseLanguageModelCallOptions,
   AIMessageChunk
 > {
@@ -16,7 +16,7 @@ class ChatGoogleStandardIntegrationTests extends ChatModelIntegrationTests<
       );
     }
     super({
-      Cls: ChatGoogle,
+      Cls: ChatVertexAI,
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
       constructorArgs: {
@@ -26,16 +26,16 @@ class ChatGoogleStandardIntegrationTests extends ChatModelIntegrationTests<
   }
 
   async testToolMessageHistoriesListContent() {
-    this.skipTestMessage("testToolMessageHistoriesListContent", "ChatGoogle (webauth)", "Not implemented.");
+    this.skipTestMessage("testToolMessageHistoriesListContent", "ChatVertexAI (webauth)", "Not implemented.");
     expect(() => {
       super.testToolMessageHistoriesListContent();
     }).toThrow();
   }
 }
 
-const testClass = new ChatGoogleStandardIntegrationTests();
+const testClass = new ChatVertexAIStandardIntegrationTests();
 
-test("ChatGoogleStandardIntegrationTests", async () => {
+test("ChatVertexAIStandardIntegrationTests", async () => {
   const testResults = await testClass.runTests();
   expect(testResults).toBe(true);
 });

@@ -2,10 +2,10 @@
 import { test, expect } from "@jest/globals";
 import { ChatModelIntegrationTests } from "@langchain/standard-tests";
 import { AIMessageChunk } from "@langchain/core/messages";
-import { ChatGoogle } from "../chat_models.js";
 import { GoogleAIBaseLanguageModelCallOptions } from "@langchain/google-common";
+import { ChatVertexAI } from "../chat_models.js";
 
-class ChatGoogleStandardIntegrationTests extends ChatModelIntegrationTests<
+class ChatVertexAIStandardIntegrationTests extends ChatModelIntegrationTests<
 GoogleAIBaseLanguageModelCallOptions,
   AIMessageChunk
 > {
@@ -16,7 +16,7 @@ GoogleAIBaseLanguageModelCallOptions,
       );
     }
     super({
-      Cls: ChatGoogle,
+      Cls: ChatVertexAI,
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
       constructorArgs: {
@@ -26,9 +26,9 @@ GoogleAIBaseLanguageModelCallOptions,
   }
 }
 
-const testClass = new ChatGoogleStandardIntegrationTests();
+const testClass = new ChatVertexAIStandardIntegrationTests();
 
-test("ChatGoogleStandardIntegrationTests", async () => {
+test("ChatVertexAIStandardIntegrationTests", async () => {
   const testResults = await testClass.runTests();
   expect(testResults).toBe(true);
 });
