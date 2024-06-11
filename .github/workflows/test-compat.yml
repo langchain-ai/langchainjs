@@ -34,7 +34,7 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     steps:
       - name: Log changed files
-        run: ${{ github.event.pull_request.paths }}
+        run: echo "${{ github.event.pull_request }}" && echo "${{ contains(github.event.pull_request.paths, 'libs/**') }}" && echo "${{ contains(github.event.pull_request.paths, 'libs/langchain-cohere') }}"
       # - uses: actions/checkout@v4
       # - name: Use Node.js ${{ env.NODE_VERSION }}
       #   uses: actions/setup-node@v3
