@@ -9680,6 +9680,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@langchain/google-common@npm:latest":
+  version: 0.0.18
+  resolution: "@langchain/google-common@npm:0.0.18"
+  dependencies:
+    "@langchain/core": ">0.1.56 <0.3.0"
+    uuid: ^9.0.0
+    zod-to-json-schema: ^3.22.4
+  checksum: afd120d664f7c3da35cef4323a9c5c50063021e1b64b8e259b6e9ff7fdfb4b270d7393b3b4e78a280f35578005ff8198c6f1283d8e1ccd651db10a15ef035534
+  languageName: node
+  linkType: hard
+
 "@langchain/google-common@workspace:*, @langchain/google-common@workspace:libs/langchain-google-common, @langchain/google-common@~0.0.18":
   version: 0.0.0-use.local
   resolution: "@langchain/google-common@workspace:libs/langchain-google-common"
@@ -9721,7 +9732,6 @@ __metadata:
     "@langchain/core": ">0.1.56 <0.3.0"
     "@langchain/google-common": ~0.0.18
     "@langchain/scripts": ~0.0.14
-    "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9820,8 +9830,10 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.56 <0.3.0"
+    "@langchain/google-common": latest
     "@langchain/google-gauth": ~0.0.18
     "@langchain/scripts": ~0.0.14
+    "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3

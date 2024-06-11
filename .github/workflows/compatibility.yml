@@ -152,8 +152,8 @@ jobs:
       - name: Test `@langchain/anthropic` with lowest deps
         run: docker compose -f dependency_range_tests/docker-compose.yml run anthropic-lowest-deps
 
-  # VertexAI
-  vertexai-latest-deps:
+  # Google VertexAI
+  google-vertexai-latest-deps:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -162,10 +162,14 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build `@langchain/standard-tests`
+        run: yarn build --filter=@langchain/standard-tests
       - name: Test `@langchain/google-vertexai` with latest deps
-        run: docker compose -f dependency_range_tests/docker-compose.yml run vertexai-latest-deps
+        run: docker compose -f dependency_range_tests/docker-compose.yml run google-vertexai-latest-deps
 
-  vertexai-lowest-deps:
+  google-vertexai-lowest-deps:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -174,5 +178,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build `@langchain/standard-tests`
+        run: yarn build --filter=@langchain/standard-tests
       - name: Test `@langchain/google-vertexai` with lowest deps
-        run: docker compose -f dependency_range_tests/docker-compose.yml run vertexai-lowest-deps
+        run: docker compose -f dependency_range_tests/docker-compose.yml run google-vertexai-lowest-deps
