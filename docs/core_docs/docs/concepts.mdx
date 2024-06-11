@@ -139,20 +139,20 @@ Some components LangChain implements, some components we rely on third-party int
 <span data-heading-keywords="chat model,chat models"></span>
 
 Language models that use a sequence of messages as inputs and return chat messages as outputs (as opposed to using plain text).
-These are traditionally newer models (older models are generally `LLMs`, see above).
+These are traditionally newer models (older models are generally `LLMs`, see below).
 Chat models support the assignment of distinct roles to conversation messages, helping to distinguish messages from the AI, users, and instructions such as system messages.
 
 Although the underlying models are messages in, message out, the LangChain wrappers also allow these models to take a string as input.
-This makes them interchangeable with LLMs (and simpler to use).
+This gives them the same interface as LLMs (and simpler to use).
 When a string is passed in as input, it will be converted to a HumanMessage under the hood before being passed to the underlying model.
 
-LangChain does not provide any ChatModels, rather we rely on third party integrations.
+LangChain does not host any Chat Models, rather we rely on third party integrations.
 
 We have some standardized parameters when constructing ChatModels:
 
 - `model`: the name of the model
 
-ChatModels also accept other parameters that are specific to that integration.
+Chat Models also accept other parameters that are specific to that integration.
 
 For specifics on how to use chat models, see the [relevant how-to guides here](/docs/how_to/#chat-models).
 
@@ -161,13 +161,13 @@ For specifics on how to use chat models, see the [relevant how-to guides here](/
 <span data-heading-keywords="llm,llms"></span>
 
 Language models that takes a string as input and returns a string.
-These are traditionally older models (newer models generally are `ChatModels`, see below).
+These are traditionally older models (newer models generally are [Chat Models](/docs/concepts/#chat-models), see below).
 
 Although the underlying models are string in, string out, the LangChain wrappers also allow these models to take messages as input.
-This makes them interchangeable with ChatModels.
+This gives them the same interface as [Chat Models](/docs/concepts/#chat-models).
 When messages are passed in as input, they will be formatted into a string under the hood before being passed to the underlying model.
 
-LangChain does not provide any LLMs, rather we rely on third party integrations.
+LangChain does not host any LLMs, rather we rely on third party integrations.
 
 For specifics on how to use LLMs, see the [relevant how-to guides here](/docs/how_to/#llms).
 
