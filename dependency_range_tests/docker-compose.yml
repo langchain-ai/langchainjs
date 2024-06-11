@@ -1,7 +1,7 @@
 version: "3"
 services:
   # LangChain
-  test-langchain-with-latest-deps:
+  langchain-latest-deps:
     image: node:18
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
@@ -12,7 +12,7 @@ services:
       - ../langchain:/langchain
       - ./scripts:/scripts
     command: bash /scripts/langchain/test-with-latest-deps.sh
-  test-langchain-with-lowest-deps:
+  langchain-lowest-deps:
     image: node:18
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
@@ -20,15 +20,12 @@ services:
       COHERE_API_KEY: ${COHERE_API_KEY}
     working_dir: /app
     volumes:
-      - ../turbo.json:/turbo.json
-      - ../package.json:/package.json
-      - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
       - ../langchain:/langchain
       - ./scripts:/scripts
     command: bash /scripts/langchain/test-with-lowest-deps.sh
   
   # Community
-  test-community-with-latest-deps:
+  community-latest-deps:
     image: node:18
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
@@ -42,7 +39,7 @@ services:
       - ../libs/langchain-community:/libs/langchain-community
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/community/test-with-latest-deps.sh
-  test-community-with-lowest-deps:
+  community-lowest-deps:
     image: node:18
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
@@ -58,7 +55,7 @@ services:
     command: bash /scripts/with_standard_tests/community/test-with-lowest-deps.sh
 
   # OpenAI
-  test-openai-with-latest-deps:
+  openai-latest-deps:
     image: node:18
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
@@ -72,7 +69,7 @@ services:
       - ../libs/langchain-openai:/libs/langchain-openai
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/openai/test-with-latest-deps.sh
-  test-openai-with-lowest-deps:
+  openai-lowest-deps:
     image: node:18
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
@@ -88,7 +85,7 @@ services:
     command: bash /scripts/with_standard_tests/openai/test-with-lowest-deps.sh
 
   # Anthropic
-  test-anthropic-with-latest-deps:
+  anthropic-latest-deps:
     image: node:18
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
@@ -102,7 +99,7 @@ services:
       - ../libs/langchain-anthropic:/libs/langchain-anthropic
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/anthropic/test-with-latest-deps.sh
-  test-anthropic-with-lowest-deps:
+  anthropic-lowest-deps:
     image: node:18
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
@@ -116,3 +113,26 @@ services:
       - ../libs/langchain-anthropic:/libs/langchain-anthropic
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/anthropic/test-with-lowest-deps.sh
+
+  # VertexAI
+  vertexai-latest-deps:
+    image: node:18
+    environment:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
+    working_dir: /app
+    volumes:
+      - ../libs/langchain-google-vertexai:/libs/langchain-google-vertexai
+      - ./scripts:/scripts
+    command: bash /scripts/vertexai/test-with-latest-deps.sh
+  vertexai-lowest-deps:
+    image: node:18
+    environment:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
+    working_dir: /app
+    volumes:
+      - ../libs/langchain-google-vertexai:/libs/langchain-google-vertexai
+      - ./scripts:/scripts
+    command: bash /scripts/vertexai/test-with-lowest-deps.sh
+  
