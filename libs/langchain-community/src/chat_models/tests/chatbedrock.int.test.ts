@@ -8,6 +8,7 @@ import { AgentExecutor, createToolCallingAgent } from "langchain/agents";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { BedrockChat as BedrockChatWeb } from "../bedrock/web.js";
 import { TavilySearchResults } from "../../tools/tavily_search.js";
+import { z } from "zod";
 
 void testChatModel(
   "Test Bedrock chat model Generating search queries: Command-r",
@@ -383,3 +384,24 @@ test.skip.each([
 
   expect(res.content.length).toBeGreaterThan(1);
 });
+
+test.skip("withStructuredOutput", async () => {
+  const weatherTool = z.object({
+    city: z.string().describe("The city to get the weather for"),
+    state: z.string().describe("The state to get the weather for").optional(),
+  }).describe("Get the weather for a city");
+  const model = new BedrockChatWeb({
+    region: process.env.BEDROCK_AWS_REGION,
+    model: "anthropic.claude-3-sonnet-20240229-v1:0",
+    maxRetries: 0,
+    credentials: {
+      secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
+      accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
+    },
+  });
+  const modelWithTools = model.withStructuredOutput(weatherTool, {
+    name: "weather",
+  });
+  const response = await modelWithTools.invoke("Whats the weather like in san francisco?");
+  expect(response.city.toLowerCase()).toBe("san francisco");
+})

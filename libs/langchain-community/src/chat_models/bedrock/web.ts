@@ -11,8 +11,15 @@ import {
   LangSmithParams,
   BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
-import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
-import { Runnable } from "@langchain/core/runnables";
+import {
+  BaseLanguageModelInput,
+  StructuredOutputMethodOptions,
+} from "@langchain/core/language_models/base";
+import {
+  Runnable,
+  RunnablePassthrough,
+  RunnableSequence,
+} from "@langchain/core/runnables";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   AIMessageChunk,
@@ -32,12 +39,18 @@ import { isStructuredTool } from "@langchain/core/utils/function_calling";
 import { ToolCall } from "@langchain/core/messages/tool";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
+import { type z } from "zod";
+import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
+import { isZodSchema } from "@langchain/core/utils/types";
+import type { SerializedFields } from "../../load/map_keys.js";
 import {
   BaseBedrockInput,
   BedrockLLMInputOutputAdapter,
   type CredentialType,
 } from "../../utils/bedrock/index.js";
-import type { SerializedFields } from "../../load/map_keys.js";
+import { BedrockChatToolsOutputParser } from "../../output_parsers/bedrock.js";
+
+type AnthropicTool = Record<string, unknown>;
 
 const PRELUDE_TOTAL_LENGTH_BYTES = 4;
 
@@ -234,7 +247,7 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
     streamProcessingMode: "SYNCHRONOUS" | "ASYNCHRONOUS";
   };
 
-  protected _anthropicTools?: Record<string, unknown>[];
+  protected _anthropicTools?: AnthropicTool[];
 
   get lc_aliases(): Record<string, string> {
     return {
@@ -680,7 +693,7 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
   }
 
   override bindTools(
-    tools: (StructuredToolInterface | Record<string, unknown>)[],
+    tools: (StructuredToolInterface | AnthropicTool)[],
     _kwargs?: Partial<BaseChatModelCallOptions>
   ): Runnable<
     BaseLanguageModelInput,
@@ -704,6 +717,124 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
       return tool;
     });
     return this;
+  }
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<false>
+  ): Runnable<BaseLanguageModelInput, RunOutput>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<true>
+  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<boolean>
+  ):
+    | Runnable<BaseLanguageModelInput, RunOutput>
+    | Runnable<
+        BaseLanguageModelInput,
+        { raw: BaseMessage; parsed: RunOutput }
+      > {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
+    const name = config?.name;
+    const method = config?.method;
+    const includeRaw = config?.includeRaw;
+    if (method === "jsonMode") {
+      throw new Error(`Anthropic only supports "functionCalling" as a method.`);
+    }
+
+    let functionName = name ?? "extract";
+    let outputParser: BaseLLMOutputParser<RunOutput>;
+    let tools: AnthropicTool[];
+    if (isZodSchema(schema)) {
+      const jsonSchema = zodToJsonSchema(schema);
+      tools = [
+        {
+          name: functionName,
+          description:
+            jsonSchema.description ?? "A function available to call.",
+          input_schema: jsonSchema,
+        },
+      ];
+      outputParser = new BedrockChatToolsOutputParser({
+        returnSingle: true,
+        keyName: functionName,
+        zodSchema: schema,
+      });
+    } else {
+      let anthropicTools: AnthropicTool;
+      if (
+        typeof schema.name === "string" &&
+        typeof schema.description === "string" &&
+        typeof schema.input_schema === "object" &&
+        schema.input_schema != null
+      ) {
+        anthropicTools = schema as AnthropicTool;
+        functionName = schema.name;
+      } else {
+        anthropicTools = {
+          name: functionName,
+          description: schema.description ?? "",
+          input_schema: schema,
+        };
+      }
+      tools = [anthropicTools];
+      outputParser = new BedrockChatToolsOutputParser<RunOutput>({
+        returnSingle: true,
+        keyName: functionName,
+      });
+    }
+    const llm = this.bindTools(tools);
+
+    if (!includeRaw) {
+      return llm.pipe(outputParser).withConfig({
+        runName: "BedrockChatStructuredOutput",
+      }) as Runnable<BaseLanguageModelInput, RunOutput>;
+    }
+
+    const parserAssign = RunnablePassthrough.assign({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
+    });
+    const parserNone = RunnablePassthrough.assign({
+      parsed: () => null,
+    });
+    const parsedWithFallback = parserAssign.withFallbacks({
+      fallbacks: [parserNone],
+    });
+    return RunnableSequence.from<
+      BaseLanguageModelInput,
+      { raw: BaseMessage; parsed: RunOutput }
+    >([
+      {
+        raw: llm,
+      },
+      parsedWithFallback,
+    ]).withConfig({
+      runName: "StructuredOutputRunnable",
+    });
   }
 }
 
