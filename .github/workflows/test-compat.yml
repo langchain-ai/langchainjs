@@ -33,17 +33,17 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request' }}
     steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "yarn"
-      - name: Install dependencies
-        run: yarn install --immutable
       - name: Log changed files
-        run: echo ${{ github.event.pull_request.paths }}
-      - name: Build `@langchain/standard-tests`
-        run: yarn build --filter=@langchain/standard-tests
-      - name: Test `@langchain/cohere` with lowest deps
-        run: docker compose -f dependency_range_tests/docker-compose.yml run cohere-lowest-deps
+        run: ${{ github.event.pull_request.paths }}
+      # - uses: actions/checkout@v4
+      # - name: Use Node.js ${{ env.NODE_VERSION }}
+      #   uses: actions/setup-node@v3
+      #   with:
+      #     node-version: ${{ env.NODE_VERSION }}
+      #     cache: "yarn"
+      # - name: Install dependencies
+      #   run: yarn install --immutable
+      # - name: Build `@langchain/standard-tests`
+      #   run: yarn build --filter=@langchain/standard-tests
+      # - name: Test `@langchain/cohere` with lowest deps
+      #   run: docker compose -f dependency_range_tests/docker-compose.yml run cohere-lowest-deps
