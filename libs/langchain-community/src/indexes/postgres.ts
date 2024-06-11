@@ -7,6 +7,7 @@ import {
 
 export type PostgresRecordManagerOptions = {
   postgresConnectionOptions: PoolConfig;
+  pool?: Pool;
   tableName?: string;
   schema?: string;
 };
@@ -23,9 +24,9 @@ export class PostgresRecordManager implements RecordManagerInterface {
   finalTableName: string;
 
   constructor(namespace: string, config: PostgresRecordManagerOptions) {
-    const { postgresConnectionOptions, tableName } = config;
+    const { postgresConnectionOptions, tableName, pool } = config;
     this.namespace = namespace;
-    this.pool = new pg.Pool(postgresConnectionOptions);
+    this.pool = pool || new pg.Pool(postgresConnectionOptions);
     this.tableName = tableName || "upsertion_records";
     this.finalTableName = config.schema
       ? `"${config.schema}"."${tableName}"`
