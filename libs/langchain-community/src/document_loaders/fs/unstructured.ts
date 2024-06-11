@@ -10,7 +10,7 @@ import {
 } from "langchain/document_loaders/fs/directory";
 import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
 
-const UNSTRUCTURED_API_FILETYPES = [
+export const UNSTRUCTURED_API_FILETYPES = [
   ".txt",
   ".text",
   ".pdf",
@@ -94,7 +94,7 @@ export type SkipInferTableTypes =
 /**
  * Set the chunking_strategy to chunk text into larger or smaller elements. Defaults to None with optional arg of by_title
  */
-type ChunkingStrategy = "None" | "by_title";
+export type ChunkingStrategy = "None" | "by_title";
 
 export type UnstructuredLoaderOptions = {
   apiKey?: string;
@@ -115,12 +115,12 @@ export type UnstructuredLoaderOptions = {
   maxCharacters?: number;
 };
 
-type UnstructuredDirectoryLoaderOptions = UnstructuredLoaderOptions & {
+export type UnstructuredDirectoryLoaderOptions = UnstructuredLoaderOptions & {
   recursive?: boolean;
   unknown?: UnknownHandling;
 };
 
-type UnstructuredMemoryLoaderOptions = {
+export type UnstructuredMemoryLoaderOptions = {
   buffer: Buffer;
   fileName: string;
 };
