@@ -23,12 +23,6 @@ class ChatAnthropicStandardIntegrationTests extends ChatModelIntegrationTests<
       },
     });
   }
-
-  async testUsageMetadataStreaming() {
-    console.warn(
-      "Skipping testUsageMetadataStreaming, not implemented in ChatAnthropic."
-    );
-  }
 }
 
 const testClass = new ChatAnthropicStandardIntegrationTests();
