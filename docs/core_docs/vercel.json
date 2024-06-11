@@ -540,6 +540,10 @@
     {
       "source": "/v0.1/docs/integrations/chat/anthropic_functions(/?)",
       "destination": "/v0.1/docs/integrations/chat/anthropic_tools/"
+    },
+    {
+      "source": "/v0.1/docs/langgraph(/?)",
+      "destination": "https://langchain-ai.github.io/langgraphjs/"
     }
   ]
 }
