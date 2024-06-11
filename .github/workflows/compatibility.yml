@@ -231,8 +231,8 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'pull_request' &&
-      (contains(github.event.pull_request.paths, 'libs/langchain-cohere') ||
-       contains(github.event.pull_request.paths, 'langchain-core'))
+      (contains(github.event.pull_request.paths, 'libs/langchain-cohere/**') ||
+       contains(github.event.pull_request.paths, 'langchain-core/**'))
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -251,7 +251,7 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'pull_request' &&
-      contains(github.event.pull_request.paths, 'libs/langchain-cohere')
+      contains(github.event.pull_request.paths, 'libs/langchain-cohere/**')
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
