@@ -28,10 +28,11 @@ env:
 
 # Run a separate job for each check in the docker-compose file,
 # so that they run in parallel instead of overwhelming the default 2 CPU runner.
+#  && contains(github.event.pull_request.paths, 'libs/langchain-cohere/**')
 jobs:
   cohere-lowest-deps:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && contains(github.event.pull_request.paths, 'libs/langchain-cohere/**')
+    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
