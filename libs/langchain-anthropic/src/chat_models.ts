@@ -521,7 +521,7 @@ export class ChatAnthropicMessages<
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     const params = this.invocationParams(options);
     return {
-      ls_provider: "openai",
+      ls_provider: "anthropic",
       ls_model_name: this.model,
       ls_model_type: "chat",
       ls_temperature: params.temperature ?? undefined,
@@ -695,6 +695,11 @@ export class ChatAnthropicMessages<
             message: new AIMessageChunk({
               content: "",
               additional_kwargs: filteredAdditionalKwargs,
+              usage_metadata: {
+                input_tokens: usage.input_tokens,
+                output_tokens: usage.output_tokens,
+                total_tokens: usage.input_tokens + usage.output_tokens,
+              }
             }),
             text: "",
           });
@@ -703,6 +708,11 @@ export class ChatAnthropicMessages<
             message: new AIMessageChunk({
               content: "",
               additional_kwargs: { ...data.delta },
+              usage_metadata: {
+                output_tokens: data.usage.output_tokens,
+                input_tokens: 0,
+                total_tokens: data.usage.output_tokens,
+              }
             }),
             text: "",
           });
@@ -727,6 +737,11 @@ export class ChatAnthropicMessages<
         message: new AIMessageChunk({
           content: "",
           additional_kwargs: { usage: usageData },
+          usage_metadata: {
+            input_tokens: usageData.input_tokens,
+            output_tokens: usageData.output_tokens,
+            total_tokens: usageData.input_tokens + usageData.output_tokens,
+          }
         }),
         text: "",
       });
