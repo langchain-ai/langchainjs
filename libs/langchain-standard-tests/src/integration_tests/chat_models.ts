@@ -37,10 +37,14 @@ class AdderTool extends StructuredTool {
 }
 
 interface ChatModelIntegrationTestsFields<
-CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
-OutputMessageType extends BaseMessageChunk = BaseMessageChunk,
-ConstructorArgs extends RecordStringAny = RecordStringAny
-> extends BaseChatModelsTestsFields<CallOptions, OutputMessageType, ConstructorArgs> {
+  CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
+  OutputMessageType extends BaseMessageChunk = BaseMessageChunk,
+  ConstructorArgs extends RecordStringAny = RecordStringAny
+> extends BaseChatModelsTestsFields<
+    CallOptions,
+    OutputMessageType,
+    ConstructorArgs
+  > {
   /**
    * Override the default AIMessage response type
    * to check for.
@@ -73,7 +77,8 @@ export abstract class ChatModelIntegrationTests<
   ) {
     super(fields);
     this.functionId = fields.functionId ?? this.functionId;
-    this.invokeResponseType = fields.invokeResponseType ?? this.invokeResponseType;
+    this.invokeResponseType =
+      fields.invokeResponseType ?? this.invokeResponseType;
   }
 
   async testInvoke(

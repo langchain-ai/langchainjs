@@ -2,8 +2,8 @@
 import { test, expect } from "@jest/globals";
 import { ChatModelUnitTests } from "@langchain/standard-tests";
 import { AIMessageChunk } from "@langchain/core/messages";
-import { ChatVertexAI } from "../chat_models.js";
 import { GoogleAIBaseLanguageModelCallOptions } from "@langchain/google-common";
+import { ChatVertexAI } from "../chat_models.js";
 
 class ChatVertexAIStandardUnitTests extends ChatModelUnitTests<
   GoogleAIBaseLanguageModelCallOptions,
@@ -23,7 +23,11 @@ class ChatVertexAIStandardUnitTests extends ChatModelUnitTests<
   }
 
   testChatModelInitApiKey() {
-    this.skipTestMessage("testChatModelInitApiKey", "ChatVertexAI (gauth)", this.multipleApiKeysRequiredMessage)
+    this.skipTestMessage(
+      "testChatModelInitApiKey",
+      "ChatVertexAI (gauth)",
+      this.multipleApiKeysRequiredMessage
+    );
   }
 }
 

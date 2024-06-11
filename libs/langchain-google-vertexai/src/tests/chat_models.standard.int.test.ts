@@ -6,7 +6,7 @@ import { GoogleAIBaseLanguageModelCallOptions } from "@langchain/google-common";
 import { ChatVertexAI } from "../chat_models.js";
 
 class ChatVertexAIStandardIntegrationTests extends ChatModelIntegrationTests<
-GoogleAIBaseLanguageModelCallOptions,
+  GoogleAIBaseLanguageModelCallOptions,
   AIMessageChunk
 > {
   constructor() {
