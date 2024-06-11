@@ -112,6 +112,29 @@ export function convertMessagesToPrompt(
   throw new Error(`Provider ${provider} does not support chat.`);
 }
 
+function formatTools(
+  tools: (StructuredToolInterface | AnthropicTool)[]
+): AnthropicTool[] {
+  return tools.map((tool) => {
+    if (isStructuredTool(tool)) {
+      return {
+        name: tool.name,
+        description: tool.description,
+        input_schema: zodToJsonSchema(tool.schema),
+      };
+    }
+    return tool;
+  });
+}
+
+export interface BedrockChatCallOptions extends BaseChatModelCallOptions {
+  tools?: (StructuredToolInterface | AnthropicTool)[];
+}
+
+export interface BedrockChatFields
+  extends Partial<BaseBedrockInput>,
+    BaseChatModelParams {}
+
 /**
  * A type of Large Language Model (LLM) that interacts with the Bedrock
  * service. It extends the base `LLM` class and implements the
@@ -208,7 +231,10 @@ export function convertMessagesToPrompt(
  * runStreaming().catch(console.error);
  * ```
  */
-export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
+export class BedrockChat
+  extends BaseChatModel<BedrockChatCallOptions, AIMessageChunk>
+  implements BaseBedrockInput
+{
   model = "amazon.titan-tg1-large";
 
   region: string;
@@ -281,7 +307,7 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
     return "BedrockChat";
   }
 
-  constructor(fields?: Partial<BaseBedrockInput> & BaseChatModelParams) {
+  constructor(fields?: BedrockChatFields) {
     super(fields ?? {});
 
     this.model = fields?.model ?? this.model;
@@ -331,11 +357,14 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
   }
 
   override invocationParams(options?: this["ParsedCallOptions"]) {
+    const callOptionTools = formatTools(options?.tools ?? []);
     return {
-      tools: this._anthropicTools,
+      tools: [...(this._anthropicTools ?? []), ...callOptionTools],
       temperature: this.temperature,
       max_tokens: this.maxTokens,
-      stop: options?.stop,
+      stop: options?.stop ?? this.stopSequences,
+      modelKwargs: this.modelKwargs,
+      guardrailConfig: this.guardrailConfig,
     };
   }
 
@@ -353,7 +382,7 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
 
   async _generate(
     messages: BaseMessage[],
-    options: Partial<BaseChatModelParams>,
+    options: Partial<this["ParsedCallOptions"]>,
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     if (this.streaming) {
@@ -381,7 +410,7 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
 
   async _generateNonStreaming(
     messages: BaseMessage[],
-    options: Partial<BaseChatModelParams>,
+    options: Partial<this["ParsedCallOptions"]>,
     _runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     const service = "bedrock-runtime";
@@ -425,26 +454,34 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
     }
   ) {
     const { bedrockMethod, endpointHost, provider } = fields;
+    const {
+      max_tokens,
+      temperature,
+      stop,
+      modelKwargs,
+      guardrailConfig,
+      tools,
+    } = this.invocationParams(options);
     const inputBody = this.usesMessagesApi
       ? BedrockLLMInputOutputAdapter.prepareMessagesInput(
           provider,
           messages,
-          this.maxTokens,
-          this.temperature,
-          options.stop ?? this.stopSequences,
-          this.modelKwargs,
-          this.guardrailConfig,
-          this._anthropicTools
+          max_tokens,
+          temperature,
+          stop,
+          modelKwargs,
+          guardrailConfig,
+          tools
         )
       : BedrockLLMInputOutputAdapter.prepareInput(
           provider,
           convertMessagesToPromptAnthropic(messages),
-          this.maxTokens,
-          this.temperature,
-          options.stop ?? this.stopSequences,
-          this.modelKwargs,
+          max_tokens,
+          temperature,
+          stop,
+          modelKwargs,
           fields.bedrockMethod,
-          this.guardrailConfig
+          guardrailConfig
         );
 
     const url = new URL(
@@ -694,11 +731,11 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
 
   override bindTools(
     tools: (StructuredToolInterface | AnthropicTool)[],
-    _kwargs?: Partial<BaseChatModelCallOptions>
+    _kwargs?: Partial<this["ParsedCallOptions"]>
   ): Runnable<
     BaseLanguageModelInput,
     BaseMessageChunk,
-    BaseChatModelCallOptions
+    this["ParsedCallOptions"]
   > {
     const provider = this.model.split(".")[0];
     if (provider !== "anthropic") {
@@ -706,16 +743,7 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
         "Currently, tool calling through Bedrock is only supported for Anthropic models."
       );
     }
-    this._anthropicTools = tools.map((tool) => {
-      if (isStructuredTool(tool)) {
-        return {
-          name: tool.name,
-          description: tool.description,
-          input_schema: zodToJsonSchema(tool.schema),
-        };
-      }
-      return tool;
-    });
+    this._anthropicTools = formatTools(tools);
     return this;
   }
 
@@ -762,7 +790,9 @@ export class BedrockChat extends BaseChatModel implements BaseBedrockInput {
     const method = config?.method;
     const includeRaw = config?.includeRaw;
     if (method === "jsonMode") {
-      throw new Error(`Anthropic only supports "functionCalling" as a method.`);
+      throw new Error(
+        `BedrockChat only supports "functionCalling" as a method.`
+      );
     }
 
     let functionName = name ?? "extract";

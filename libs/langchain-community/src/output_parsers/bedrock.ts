@@ -63,7 +63,9 @@ export class BedrockChatToolsOutputParser<
       if (!message.tool_calls || message.tool_calls.length === 0) {
         return [];
       }
-      const tool = message.tool_calls.find((tool) => tool.name === this.keyName);
+      const tool = message.tool_calls.find(
+        (tool) => tool.name === this.keyName
+      );
       return tool;
     });
     if (tools[0] === undefined) {
