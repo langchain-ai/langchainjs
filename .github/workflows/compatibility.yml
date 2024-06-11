@@ -4,9 +4,10 @@ on:
   push:
     branches: ["main"]
   pull_request:
-    # Do not run this workflow if only docs changed.
+    # Do not run this workflow if only docs/examples changed.
     paths-ignore:
       - 'docs/**'
+      - 'examples/**'
   workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
 
 # If another push to the same PR or branch happens while this workflow is still running,
@@ -31,6 +32,12 @@ jobs:
   # LangChain
   langchain-latest-deps:
     runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' &&
+      (contains(github.event.pull_request.paths, 'langchain') ||
+       contains(github.event.pull_request.paths, 'langchain-core') ||
+       contains(github.event.pull_request.paths, 'libs/langchain-openai') ||
+       contains(github.event.pull_request.paths, 'libs/langchain-textsplitters'))
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -43,6 +50,9 @@ jobs:
 
   langchain-lowest-deps:
     runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' &&
+      contains(github.event.pull_request.paths, 'langchain')
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -56,6 +66,11 @@ jobs:
   # Community
   community-latest-deps:
     runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' &&
+      (contains(github.event.pull_request.paths, 'libs/langchain-community') ||
+       contains(github.event.pull_request.paths, 'langchain-core') ||
+       contains(github.event.pull_request.paths, 'libs/langchain-openai'))
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -72,6 +87,9 @@ jobs:
 
   community-lowest-deps:
     runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' &&
+      contains(github.event.pull_request.paths, 'libs/langchain-community')
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -89,6 +107,10 @@ jobs:
   # OpenAI
   openai-latest-deps:
     runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' &&
+      (contains(github.event.pull_request.paths, 'libs/langchain-openai') ||
+       contains(github.event.pull_request.paths, 'langchain-core'))
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -105,6 +127,9 @@ jobs:
 
   openai-lowest-deps:
     runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' &&
+      contains(github.event.pull_request.paths, 'libs/langchain-openai')
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -122,6 +147,10 @@ jobs:
   # Anthropic
   anthropic-latest-deps:
     runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' &&
+      (contains(github.event.pull_request.paths, 'libs/langchain-anthropic') ||
+       contains(github.event.pull_request.paths, 'langchain-core'))
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -138,6 +167,9 @@ jobs:
 
   anthropic-lowest-deps:
     runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' &&
+      contains(github.event.pull_request.paths, 'libs/langchain-anthropic')
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -155,6 +187,12 @@ jobs:
   # Google VertexAI
   google-vertexai-latest-deps:
     runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' &&
+      (contains(github.event.pull_request.paths, 'libs/langchain-google-vertexai') ||
+       contains(github.event.pull_request.paths, 'langchain-core') ||
+       contains(github.event.pull_request.paths, 'libs/langchain-google-gauth') ||
+       contains(github.event.pull_request.paths, 'libs/langchain-google-common'))
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -171,6 +209,9 @@ jobs:
 
   google-vertexai-lowest-deps:
     runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' &&
+      contains(github.event.pull_request.paths, 'libs/langchain-google-vertexai')
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
