@@ -11,7 +11,6 @@ on:
     paths:
       - 'langchain-core/**'
       - 'libs/**/**'
-      - '!libs/langchain-community/**'
   workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
 
 
@@ -32,6 +31,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         node-version: [18.x, 20.x]
+        package: [anthropic, azure-openai, cloudflare, cohere, community, exa, google-common, google-gauth, google-genai, google-vertexai, google-vertexai-web, google-webauth, groq, mistralai, mongo, nomic, openai, pinecone, qdrant, redis, textsplitters, weaviate, yandex]
         # See Node.js release schedule at https://nodejs.org/en/about/releases/
         # include:
           # - os: windows-latest
@@ -39,6 +39,10 @@ jobs:
           # - os: macos-latest
           #   node-version: 20.x
     runs-on: ${{ matrix.os }}
+    if: |
+      github.event_name == 'pull_request' &&
+      (contains(github.event.pull_request.paths, 'langchain-core') ||
+      contains(github.event.pull_request.paths, 'libs/langchain-${{ matrix.package }}'))
     env:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -51,5 +55,5 @@ jobs:
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable
-      - name: Test
-        run: yarn run test:unit:ci --filter=!@langchain/community --filter=!@langchain/core --filter=!langchain --filter=!api_refs --filter=!core_docs --filter=!create-langchain-integration --filter=!examples
+      - name: Test '@langchain/${{ matrix.package }}' package
+        run: yarn test:unit:ci --filter=@langchain/${{ matrix.package }}
