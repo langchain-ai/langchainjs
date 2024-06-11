@@ -1,0 +1,7 @@
+{
+  "name": "dependency-range-tests",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Tests dependency ranges for LangChain.",
+  "dependencies": {}
+}

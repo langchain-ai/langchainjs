@@ -4,7 +4,10 @@
 
 import { test, expect } from "@jest/globals";
 import { HumanMessage } from "@langchain/core/messages";
+import { AgentExecutor, createToolCallingAgent } from "langchain/agents";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { BedrockChat as BedrockChatWeb } from "../bedrock/web.js";
+import { TavilySearchResults } from "../../tools/tavily_search.js";
 
 void testChatModel(
   "Test Bedrock chat model Generating search queries: Command-r",
@@ -180,7 +183,7 @@ async function testChatModel(
     });
 
     const res = await bedrock.invoke([new HumanMessage(message)]);
-    console.log(res);
+    console.log(res, res.content);
 
     expect(res).toBeDefined();
     if (trace && guardrailIdentifier && guardrailVersion) {
@@ -319,6 +322,41 @@ async function testChatHandleLLMNewToken(
     expect(stream.content).toEqual(tokens.join(""));
   });
 }
+
+test.skip("Tool calling agent with Anthropic", async () => {
+  const tools = [new TavilySearchResults({ maxResults: 1 })];
+  const region = process.env.BEDROCK_AWS_REGION;
+  const bedrock = new BedrockChatWeb({
+    maxTokens: 200,
+    region,
+    model: "anthropic.claude-3-sonnet-20240229-v1:0",
+    maxRetries: 0,
+    credentials: {
+      secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
+      accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
+    },
+  });
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "You are a helpful assistant"],
+    ["placeholder", "{chat_history}"],
+    ["human", "{input}"],
+    ["placeholder", "{agent_scratchpad}"],
+  ]);
+  const agent = await createToolCallingAgent({
+    llm: bedrock,
+    tools,
+    prompt,
+  });
+  const agentExecutor = new AgentExecutor({
+    agent,
+    tools,
+  });
+  const input = "what is the current weather in SF?";
+  const result = await agentExecutor.invoke({
+    input,
+  });
+  console.log(result);
+});
 
 test.skip.each([
   "amazon.titan-text-express-v1",

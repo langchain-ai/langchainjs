@@ -8931,7 +8931,7 @@ __metadata:
     "@langchain/community": "workspace:*"
     "@langchain/core": ">=0.2.5 <0.3.0"
     "@langchain/scripts": ~0.0.14
-    "@langchain/standard-tests": "workspace:*"
+    "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     dpdm: ^3.12.0
@@ -8948,6 +8948,7 @@ __metadata:
     prettier: ^2.8.3
     release-it: ^15.10.1
     rimraf: ^5.0.1
+    ts-jest: ^29.1.0
     typescript: ~5.1.6
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.4
@@ -8964,7 +8965,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
     "@langchain/scripts": ~0.0.14
-    "@langchain/standard-tests": "workspace:*"
+    "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     dpdm: ^3.12.0
@@ -8996,7 +8997,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.0 <0.3.0"
     "@langchain/scripts": ~0.0.14
-    "@langchain/standard-tests": "workspace:*"
+    "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9039,7 +9040,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.58 <0.3.0"
     "@langchain/scripts": ~0.0.14
-    "@langchain/standard-tests": "workspace:*"
+    "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9098,10 +9099,10 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.2.0
+    "@langchain/core": ~0.2.6
     "@langchain/openai": ~0.1.0
     "@langchain/scripts": ~0.0.14
-    "@langchain/standard-tests": "workspace:*"
+    "@langchain/standard-tests": 0.0.0
     "@layerup/layerup-security": ^1.5.12
     "@mendable/firecrawl-js": ^0.0.13
     "@mlc-ai/web-llm": ^0.2.40
@@ -9155,7 +9156,7 @@ __metadata:
     "@zilliz/milvus2-sdk-node": ">=2.2.11"
     apify-client: ^2.7.1
     assemblyai: ^4.0.0
-    better-sqlite3: ^11.0.0
+    better-sqlite3: ">=9.4.0 <12.0.0"
     binary-extensions: ^2.2.0
     cassandra-driver: ^4.7.2
     cborg: ^4.1.1
@@ -9229,7 +9230,7 @@ __metadata:
     sonix-speech-recognition: ^2.1.1
     srt-parser-2: ^1.2.3
     ts-jest: ^29.1.0
-    typeorm: ^0.3.12
+    typeorm: ^0.3.20
     typescript: ~5.1.6
     typesense: ^1.5.3
     usearch: ^1.1.1
@@ -9303,7 +9304,7 @@ __metadata:
     "@zilliz/milvus2-sdk-node": ">=2.2.7"
     apify-client: ^2.7.1
     assemblyai: ^4.0.0
-    better-sqlite3: ^11.0.0
+    better-sqlite3: ">=9.4.0 <12.0.0"
     cassandra-driver: ^4.7.2
     cborg: ^4.1.1
     cheerio: ^1.0.0-rc.12
@@ -9353,7 +9354,7 @@ __metadata:
     replicate: ^0.29.4
     sonix-speech-recognition: ^2.1.1
     srt-parser-2: ^1.2.3
-    typeorm: ^0.3.12
+    typeorm: ^0.3.20
     typesense: ^1.5.3
     usearch: ^1.1.1
     vectordb: ^0.1.4
@@ -9679,7 +9680,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-common@workspace:*, @langchain/google-common@workspace:libs/langchain-google-common, @langchain/google-common@~0.0.17":
+"@langchain/google-common@npm:latest":
+  version: 0.0.18
+  resolution: "@langchain/google-common@npm:0.0.18"
+  dependencies:
+    "@langchain/core": ">0.1.56 <0.3.0"
+    uuid: ^9.0.0
+    zod-to-json-schema: ^3.22.4
+  checksum: afd120d664f7c3da35cef4323a9c5c50063021e1b64b8e259b6e9ff7fdfb4b270d7393b3b4e78a280f35578005ff8198c6f1283d8e1ccd651db10a15ef035534
+  languageName: node
+  linkType: hard
+
+"@langchain/google-common@workspace:*, @langchain/google-common@workspace:libs/langchain-google-common, @langchain/google-common@~0.0.18":
   version: 0.0.0-use.local
   resolution: "@langchain/google-common@workspace:libs/langchain-google-common"
   dependencies:
@@ -9712,15 +9724,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-gauth@workspace:libs/langchain-google-gauth, @langchain/google-gauth@~0.0.17":
+"@langchain/google-gauth@workspace:libs/langchain-google-gauth, @langchain/google-gauth@~0.0.18":
   version: 0.0.0-use.local
   resolution: "@langchain/google-gauth@workspace:libs/langchain-google-gauth"
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.56 <0.3.0"
-    "@langchain/google-common": ~0.0.17
+    "@langchain/google-common": ~0.0.18
     "@langchain/scripts": ~0.0.14
-    "@langchain/standard-tests": "workspace:*"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9754,7 +9765,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.5  <0.3.0"
     "@langchain/scripts": ~0.0.14
-    "@langchain/standard-tests": "workspace:*"
+    "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9787,7 +9798,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.56 <0.3.0"
-    "@langchain/google-webauth": ~0.0.17
+    "@langchain/google-webauth": ~0.0.18
     "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9819,8 +9830,10 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.56 <0.3.0"
-    "@langchain/google-gauth": ~0.0.17
+    "@langchain/google-common": latest
+    "@langchain/google-gauth": ~0.0.18
     "@langchain/scripts": ~0.0.14
+    "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9844,13 +9857,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-webauth@workspace:libs/langchain-google-webauth, @langchain/google-webauth@~0.0.17":
+"@langchain/google-webauth@workspace:libs/langchain-google-webauth, @langchain/google-webauth@~0.0.18":
   version: 0.0.0-use.local
   resolution: "@langchain/google-webauth@workspace:libs/langchain-google-webauth"
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.56 <0.3.0"
-    "@langchain/google-common": ~0.0.17
+    "@langchain/google-common": ~0.0.18
     "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9884,7 +9897,7 @@ __metadata:
     "@langchain/core": ">0.1.56 <0.3.0"
     "@langchain/openai": "workspace:^"
     "@langchain/scripts": ~0.0.14
-    "@langchain/standard-tests": "workspace:*"
+    "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9935,7 +9948,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">0.1.56 <0.3.0"
     "@langchain/scripts": ~0.0.14
-    "@langchain/standard-tests": "workspace:*"
+    "@langchain/standard-tests": 0.0.0
     "@mistralai/mistralai": ^0.4.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -10052,7 +10065,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": ">=0.2.5 <0.3.0"
     "@langchain/scripts": ~0.0.14
-    "@langchain/standard-tests": "workspace:*"
+    "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     dpdm: ^3.12.0
@@ -10070,6 +10083,7 @@ __metadata:
     prettier: ^2.8.3
     release-it: ^15.10.1
     rimraf: ^5.0.1
+    ts-jest: ^29.1.0
     typescript: ~5.1.6
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.3
@@ -10216,7 +10230,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/standard-tests@workspace:*, @langchain/standard-tests@workspace:libs/langchain-standard-tests":
+"@langchain/standard-tests@0.0.0, @langchain/standard-tests@workspace:libs/langchain-standard-tests":
   version: 0.0.0-use.local
   resolution: "@langchain/standard-tests@workspace:libs/langchain-standard-tests"
   dependencies:
@@ -10252,7 +10266,7 @@ __metadata:
   resolution: "@langchain/textsplitters@workspace:libs/langchain-textsplitters"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">0.1.0 <0.3.0"
+    "@langchain/core": ">0.2.0 <0.3.0"
     "@langchain/scripts": ~0.0.14
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -17623,14 +17637,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"better-sqlite3@npm:^11.0.0":
-  version: 11.0.0
-  resolution: "better-sqlite3@npm:11.0.0"
+"better-sqlite3@npm:9.4.0":
+  version: 9.4.0
+  resolution: "better-sqlite3@npm:9.4.0"
   dependencies:
     bindings: ^1.5.0
     node-gyp: latest
     prebuild-install: ^7.1.1
-  checksum: 7bf02ea6ba3253f53cb36bd872f86379ebf1a66cb103d39b91c610995c4396dde2b976bdf866f07eb7d67eb6f5433aa5490a6a4f4264244f83a53562f68832dc
+  checksum: a1a470fae20dfba82d6e74ae90b35ea8996c60922e95574162732d6e076e84c0c90fc4ff77ab8c27554671899eb15f284e2c8de5e4ee406aa9f7eb170eca5bee
   languageName: node
   linkType: hard
 
@@ -20304,13 +20318,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"date-fns@npm:^2.29.3":
-  version: 2.29.3
-  resolution: "date-fns@npm:2.29.3"
-  checksum: e01cf5b62af04e05dfff921bb9c9933310ed0e1ae9a81eb8653452e64dc841acf7f6e01e1a5ae5644d0337e9a7f936175fd2cb6819dc122fdd9c5e86c56be484
-  languageName: node
-  linkType: hard
-
 "date-fns@npm:^3.3.1":
   version: 3.3.1
   resolution: "date-fns@npm:3.3.1"
@@ -20322,6 +20329,13 @@ __metadata:
   version: 1.11.9
   resolution: "dayjs@npm:1.11.9"
   checksum: a4844d83dc87f921348bb9b1b93af851c51e6f71fa259604809cfe1b49d1230e6b0212dab44d1cb01994c096ad3a77ea1cf18fa55154da6efcc9d3610526ac38
+  languageName: node
+  linkType: hard
+
+"dayjs@npm:^1.11.9":
+  version: 1.11.11
+  resolution: "dayjs@npm:1.11.11"
+  checksum: 84788275aad8a87fee4f1ce4be08861df29687aae6b7b43dd65350118a37dda56772a3902f802cb2dc651dfed447a5a8df62d88f0fb900dba8333e411190a5d5
   languageName: node
   linkType: hard
 
@@ -22637,7 +22651,7 @@ __metadata:
     redis: ^4.6.13
     sqlite3: ^5.1.4
     tsx: ^3.12.3
-    typeorm: ^0.3.12
+    typeorm: ^0.3.20
     typescript: ~5.1.6
     typesense: ^1.5.3
     uuid: ^9.0.0
@@ -27766,7 +27780,7 @@ __metadata:
     sonix-speech-recognition: ^2.1.1
     srt-parser-2: ^1.2.3
     ts-jest: ^29.1.0
-    typeorm: ^0.3.12
+    typeorm: ^0.3.20
     typescript: ~5.1.6
     uuid: ^9.0.0
     weaviate-ts-client: ^2.0.0
@@ -27821,7 +27835,7 @@ __metadata:
     redis: ^4.6.4
     sonix-speech-recognition: ^2.1.1
     srt-parser-2: ^1.2.3
-    typeorm: ^0.3.12
+    typeorm: ^0.3.20
     weaviate-ts-client: "*"
     web-auth-library: ^1.0.3
     ws: ^8.14.2
@@ -33141,6 +33155,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"reflect-metadata@npm:^0.2.1":
+  version: 0.2.2
+  resolution: "reflect-metadata@npm:0.2.2"
+  checksum: a66c7b583e4efdd8f3c3124fbff33da2d0c86d8280617516308b32b2159af7a3698c961db3246387f56f6316b1d33a608f39bb2b49d813316dfc58f6d3bf3210
+  languageName: node
+  linkType: hard
+
 "reflect.getprototypeof@npm:^1.0.4":
   version: 1.0.4
   resolution: "reflect.getprototypeof@npm:1.0.4"
@@ -36249,37 +36270,35 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typeorm@npm:^0.3.12":
-  version: 0.3.12
-  resolution: "typeorm@npm:0.3.12"
+"typeorm@npm:^0.3.20":
+  version: 0.3.20
+  resolution: "typeorm@npm:0.3.20"
   dependencies:
     "@sqltools/formatter": ^1.2.5
     app-root-path: ^3.1.0
     buffer: ^6.0.3
     chalk: ^4.1.2
     cli-highlight: ^2.1.11
-    date-fns: ^2.29.3
+    dayjs: ^1.11.9
     debug: ^4.3.4
     dotenv: ^16.0.3
-    glob: ^8.1.0
-    js-yaml: ^4.1.0
+    glob: ^10.3.10
     mkdirp: ^2.1.3
-    reflect-metadata: ^0.1.13
+    reflect-metadata: ^0.2.1
     sha.js: ^2.4.11
     tslib: ^2.5.0
     uuid: ^9.0.0
-    xml2js: ^0.4.23
     yargs: ^17.6.2
   peerDependencies:
     "@google-cloud/spanner": ^5.18.0
     "@sap/hana-client": ^2.12.25
-    better-sqlite3: ^7.1.2 || ^8.0.0
+    better-sqlite3: ^7.1.2 || ^8.0.0 || ^9.0.0
     hdb-pool: ^0.1.6
     ioredis: ^5.0.4
-    mongodb: ^3.6.0
-    mssql: ^7.3.0
+    mongodb: ^5.8.0
+    mssql: ^9.1.1 || ^10.0.1
     mysql2: ^2.2.5 || ^3.0.1
-    oracledb: ^5.1.0
+    oracledb: ^6.3.0
     pg: ^8.5.1
     pg-native: ^3.0.0
     pg-query-stream: ^4.0.0
@@ -36327,7 +36346,7 @@ __metadata:
     typeorm: cli.js
     typeorm-ts-node-commonjs: cli-ts-node-commonjs.js
     typeorm-ts-node-esm: cli-ts-node-esm.js
-  checksum: 67dd3b72522ba6d79770c8ed9ef87c8e60ecf11f1a76df82317bb629db8ca31121ec9dadd91a5d8051f24910367c491bc29706e2a5a4fe5de5fb8fa7c07b9e5c
+  checksum: 9d6e5ecd0688eed5a151f33fb26b6d7c3e0af0eaf14ceaefe4c1c1863cdda6eabf2e865c9df2321f7dce26e40f320b76b811e2d1d58bf43f6ce19b36aa1ed1c4
   languageName: node
   linkType: hard
 

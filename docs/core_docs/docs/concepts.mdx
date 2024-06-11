@@ -1,34 +1,3 @@
----
-keywords:
-  [
-    prompt,
-    prompttemplate,
-    chatprompttemplate,
-    tool,
-    tools,
-    runnable,
-    runnables,
-    invoke,
-    vector,
-    vectorstore,
-    vectorstores,
-    embedding,
-    embeddings,
-    chat,
-    chat model,
-    llm,
-    llms,
-    retriever,
-    retrievers,
-    loader,
-    loaders,
-    document,
-    documents,
-    output,
-    output parser,
-  ]
----
-
 # Conceptual guide
 
 This section contains introductions to key parts of LangChain.
@@ -106,6 +75,8 @@ export LANGCHAIN_API_KEY=ls__...
 
 ## LangChain Expression Language
 
+<span data-heading-keywords="lcel"></span>
+
 LangChain Expression Language, or LCEL, is a declarative way to easily compose chains together.
 LCEL was designed from day 1 to **support putting prototypes in production, with no code changes**, from the simplest “prompt + LLM” chain to the most complex chains
 (we’ve seen folks successfully run LCEL chains with 100s of steps in production). To highlight a few of the reasons you might want to use LCEL:
@@ -135,6 +106,8 @@ With LCEL, **all** steps are automatically logged to [LangSmith](https://docs.sm
 
 ### Interface
 
+<span data-heading-keywords="invoke"></span>
+
 To make it as easy as possible to create custom chains, we've implemented a ["Runnable"](https://v02.api.js.langchain.com/classes/langchain_core_runnables.Runnable.html) protocol.
 Many LangChain components implement the `Runnable` protocol, including chat models, LLMs, output parsers, retrievers, prompt templates, and more. There are also several useful primitives for working with runnables, which you can read about below.
 
@@ -161,34 +134,42 @@ The **input type** and **output type** varies by component:
 LangChain provides standard, extendable interfaces and external integrations for various components useful for building with LLMs.
 Some components LangChain implements, some components we rely on third-party integrations for, and others are a mix.
 
-### LLMs
-
-Language models that takes a string as input and returns a string.
-These are traditionally older models (newer models generally are `ChatModels`, see below).
-
-Although the underlying models are string in, string out, the LangChain wrappers also allow these models to take messages as input.
-This makes them interchangeable with ChatModels.
-When messages are passed in as input, they will be formatted into a string under the hood before being passed to the underlying model.
-
-LangChain does not provide any LLMs, rather we rely on third party integrations.
-
 ### Chat models
 
+<span data-heading-keywords="chat model,chat models"></span>
+
 Language models that use a sequence of messages as inputs and return chat messages as outputs (as opposed to using plain text).
-These are traditionally newer models (older models are generally `LLMs`, see above).
+These are traditionally newer models (older models are generally `LLMs`, see below).
 Chat models support the assignment of distinct roles to conversation messages, helping to distinguish messages from the AI, users, and instructions such as system messages.
 
 Although the underlying models are messages in, message out, the LangChain wrappers also allow these models to take a string as input.
-This makes them interchangeable with LLMs (and simpler to use).
+This gives them the same interface as LLMs (and simpler to use).
 When a string is passed in as input, it will be converted to a HumanMessage under the hood before being passed to the underlying model.
 
-LangChain does not provide any ChatModels, rather we rely on third party integrations.
+LangChain does not host any Chat Models, rather we rely on third party integrations.
 
 We have some standardized parameters when constructing ChatModels:
 
 - `model`: the name of the model
 
-ChatModels also accept other parameters that are specific to that integration.
+Chat Models also accept other parameters that are specific to that integration.
+
+For specifics on how to use chat models, see the [relevant how-to guides here](/docs/how_to/#chat-models).
+
+### LLMs
+
+<span data-heading-keywords="llm,llms"></span>
+
+Language models that takes a string as input and returns a string.
+These are traditionally older models (newer models generally are [Chat Models](/docs/concepts/#chat-models), see below).
+
+Although the underlying models are string in, string out, the LangChain wrappers also allow these models to take messages as input.
+This gives them the same interface as [Chat Models](/docs/concepts/#chat-models).
+When messages are passed in as input, they will be formatted into a string under the hood before being passed to the underlying model.
+
+LangChain does not host any LLMs, rather we rely on third party integrations.
+
+For specifics on how to use LLMs, see the [relevant how-to guides here](/docs/how_to/#llms).
 
 ### Function/Tool Calling
 
@@ -280,6 +261,8 @@ This represents the result of a tool call. This is distinct from a FunctionMessa
 
 ### Prompt templates
 
+<span data-heading-keywords="prompt,prompttemplate,chatprompttemplate"></span>
+
 Prompt templates help to translate user input and parameters into instructions for a language model.
 This can be used to guide a model's response, helping it understand the context and generate relevant and coherent language-based output.
 
@@ -288,7 +271,7 @@ Prompt Templates take as input an object, where each key represents a variable i
 Prompt Templates output a PromptValue. This PromptValue can be passed to an LLM or a ChatModel, and can also be cast to a string or an array of messages.
 The reason this PromptValue exists is to make it easy to switch between strings and messages.
 
-There are a few different types of prompt templates
+There are a few different types of prompt templates:
 
 #### String PromptTemplates
 
@@ -327,6 +310,8 @@ The second is a HumanMessage, and will be formatted by the `topic` variable the 
 
 #### MessagesPlaceholder
 
+<span data-heading-keywords="messagesplaceholder"></span>
+
 This prompt template is responsible for adding an array of messages in a particular place.
 In the above ChatPromptTemplate, we saw how we could format two messages, each one a string.
 But what if we wanted the user to pass in an array of messages that we would slot into a particular spot?
@@ -360,6 +345,8 @@ const promptTemplate = ChatPromptTemplate.fromMessages([
 ]);
 ```
 
+For specifics on how to use prompt templates, see the [relevant how-to guides here](/docs/how_to/#prompt-templates).
+
 ### Example Selectors
 
 One common prompting technique for achieving better performance is to include examples as part of the prompt.
@@ -367,7 +354,11 @@ This gives the language model concrete examples of how it should behave.
 Sometimes these examples are hardcoded into the prompt, but for more advanced situations it may be nice to dynamically select them.
 Example Selectors are classes responsible for selecting and then formatting examples into prompts.
 
+For specifics on how to use example selectors, see the [relevant how-to guides here](/docs/how_to/#example-selectors).
+
 ### Output parsers
+
+<span data-heading-keywords="output parser"></span>
 
 :::note
 
@@ -415,6 +406,8 @@ LangChain has many different types of output parsers. This is a list of output p
 | [Datetime](https://v02.api.js.langchain.com/classes/langchain_output_parsers.DatetimeOutputParser.html)           |                    | `string`                  | `Promise<Date>`                   | Parses response into a `Date`.                                                                                                                            |
 | [Regex](https://v02.api.js.langchain.com/classes/langchain_output_parsers.RegexParser.html)                       |                    | `string`                  | `Promise<Record<string, string>>` | Parses the given text using the regex pattern and returns a object with the parsed output.                                                                |
 
+For specifics on how to use output parsers, see the [relevant how-to guides here](/docs/how_to/#output-parsers).
+
 ### Chat History
 
 Most LLM applications have a conversational interface.
@@ -427,12 +420,16 @@ Future interactions will then load those messages and pass them into the chain a
 
 ### Document
 
+<span data-heading-keywords="document,documents"></span>
+
 A Document object in LangChain contains information about some data. It has two attributes:
 
 - `pageContent: string`: The content of this document. Currently is only a string.
 - `metadata: Record<string, any>`: Arbitrary metadata associated with this document. Can track the document id, file name, etc.
 
 ### Document loaders
+
+<span data-heading-keywords="document loader,document loaders"></span>
 
 These classes load Document objects. LangChain has hundreds of integrations with various data sources to load data from: Slack, Notion, Google Drive, etc.
 
@@ -447,6 +444,8 @@ const loader = new CSVLoader();
 
 const docs = await loader.load();
 ```
+
+For specifics on how to use document loaders, see the [relevant how-to guides here](/docs/how_to/#document-loaders).
 
 ### Text splitters
 
@@ -465,7 +464,11 @@ That means there are two different axes along which you can customize your text 
 1. How the text is split
 2. How the chunk size is measured
 
+For specifics on how to use text splitters, see the [relevant how-to guides here](/docs/how_to/#text-splitters).
+
 ### Embedding models
+
+<span data-heading-keywords="embedding,embeddings"></span>
 
 The Embeddings class is a class designed for interfacing with text embedding models. There are lots of embedding model providers (OpenAI, Cohere, Hugging Face, etc) - this class is designed to provide a standard interface for all of them.
 
@@ -473,7 +476,11 @@ Embeddings create a vector representation of a piece of text. This is useful bec
 
 The base Embeddings class in LangChain provides two methods: one for embedding documents and one for embedding a query. The former takes as input multiple texts, while the latter takes a single text. The reason for having these as two separate methods is that some embedding providers have different embedding methods for documents (to be searched over) vs queries (the search query itself).
 
+For specifics on how to use embedding models, see the [relevant how-to guides here](/docs/how_to/#embedding-models).
+
 ### Vectorstores
+
+<span data-heading-keywords="vector,vectorstore,vectorstores,vector store,vector stores"></span>
 
 One of the most common ways to store and search over unstructured data is to embed it and store the resulting embedding vectors,
 and then at query time to embed the unstructured query and retrieve the embedding vectors that are 'most similar' to the embedded query.
@@ -486,7 +493,11 @@ const vectorstore = new MyVectorStore();
 const retriever = vectorstore.asRetriever();
 ```
 
+For specifics on how to use vector stores, see the [relevant how-to guides here](/docs/how_to/#vectorstores).
+
 ### Retrievers
+
+<span data-heading-keywords="retriever,retrievers"></span>
 
 A retriever is an interface that returns relevant documents given an unstructured query.
 They are more general than a vector store.
@@ -495,7 +506,11 @@ Retrievers can be created from vector stores, but are also broad enough to inclu
 
 Retrievers accept a string query as input and return an array of `Document`s as output.
 
+For specifics on how to use retrievers, see the [relevant how-to guides here](/docs/how_to/#retrievers).
+
 ### Tools
+
+<span data-heading-keywords="tool,tools"></span>
 
 Tools are interfaces that an agent, chain, or LLM can use to interact with the world.
 They combine a few things:
@@ -512,6 +527,8 @@ The simpler the input to a tool is, the easier it is for an LLM to be able to us
 Many agents will only work with tools that have a single string input.
 
 Importantly, the name, description, and JSON schema (if used) are all used in the prompt. Therefore, it is really important that they are clear and describe exactly how the tool should be used. You may need to change the default name, description, or JSON schema if the LLM is not understanding how to use the tool.
+
+For specifics on how to use tools, see the [relevant how-to guides here](/docs/how_to/#tools).
 
 ### Toolkits
 
@@ -545,6 +562,7 @@ In order to solve that we built LangGraph to be this flexible, highly-controllab
 
 If you are still using AgentExecutor, do not fear: we still have a guide on [how to use AgentExecutor](/docs/how_to/agent_executor).
 It is recommended, however, that you start to transition to [LangGraph](https://github.com/langchain-ai/langgraphjs).
+In order to assist in this we have put together a [transition guide on how to do so](/docs/how_to/migrate_agent).
 
 ### Multimodal
 
@@ -553,6 +571,8 @@ Multimodal **outputs** are even less common. As such, we've kept our multimodal 
 
 In LangChain, most chat models that support multimodal inputs also accept those values in OpenAI's content blocks format.
 So far this is restricted to image inputs. For models like Gemini which support video and other bytes input, the APIs also support the native, model-specific representations.
+
+For specifics on how to use multimodal models, see the [relevant how-to guides here](/docs/how_to/#multimodal).
 
 ### Callbacks
 
@@ -605,7 +625,131 @@ of the object.
 If you're creating a custom chain or runnable, you need to remember to propagate request time
 callbacks to any child objects.
 
+For specifics on how to use callbacks, see the [relevant how-to guides here](/docs/how_to/#callbacks).
+
 ## Techniques
+
+### Streaming
+
+Individual LLM calls often run for much longer than traditional resource requests.
+This compounds when you build more complex chains or agents that require multiple reasoning steps.
+
+Fortunately, LLMs generate output iteratively, which means it's possible to show sensible intermediate results
+before the final response is ready. Consuming output as soon as it becomes available has therefore become a vital part of the UX
+around building apps with LLMs to help alleviate latency issues, and LangChain aims to have first-class support for streaming.
+
+Below, we'll discuss some concepts and considerations around streaming in LangChain.
+
+#### Tokens
+
+The unit that most model providers use to measure input and output is via a unit called a **token**.
+Tokens are the basic units that language models read and generate when processing or producing text.
+The exact definition of a token can vary depending on the specific way the model was trained -
+for instance, in English, a token could be a single word like "apple", or a part of a word like "app".
+
+When you send a model a prompt, the words and characters in the prompt are encoded into tokens using a **tokenizer**.
+The model then streams back generated output tokens, which the tokenizer decodes into human-readable text.
+The below example shows how OpenAI models tokenize `LangChain is cool!`:
+
+![](/img/tokenization.png)
+
+You can see that it gets split into 5 different tokens, and that the boundaries between tokens are not exactly the same as word boundaries.
+
+The reason language models use tokens rather than something more immediately intuitive like "characters"
+has to do with how they process and understand text. At a high-level, language models iteratively predict their next generated output based on
+the initial input and their previous generations. Training the model using tokens language models to handle linguistic
+units (like words or subwords) that carry meaning, rather than individual characters, which makes it easier for the model
+to learn and understand the structure of the language, including grammar and context.
+Furthermore, using tokens can also improve efficiency, since the model processes fewer units of text compared to character-level processing.
+
+#### Callbacks
+
+The lowest level way to stream outputs from LLMs in LangChain is via the [callbacks](/docs/concepts/#callbacks) system. You can pass a
+callback handler that handles the [`handleLLMNewToken`](https://api.js.langchain.com/interfaces/langchain_core_callbacks_base.CallbackHandlerMethods.html#handleLLMNewToken) event into LangChain components. When that component is invoked, any
+[LLM](/docs/concepts/#llms) or [chat model](/docs/concepts/#chat-models) contained in the component calls
+the callback with the generated token. Within the callback, you could pipe the tokens into some other destination, e.g. a HTTP response.
+You can also handle the [`handleLLMEnd`](https://api.js.langchain.com/interfaces/langchain_core_callbacks_base.CallbackHandlerMethods.html#handleLLMEnd) event to perform any necessary cleanup.
+
+You can see [this how-to section](/docs/how_to/#callbacks) for more specifics on using callbacks.
+
+Callbacks were the first technique for streaming introduced in LangChain. While powerful and generalizable,
+they can be unwieldy for developers. For example:
+
+- You need to explicitly initialize and manage some aggregator or other stream to collect results.
+- The execution order isn't explicitly guaranteed, and you could theoretically have a callback run after the `.invoke()` method finishes.
+- Providers would often make you pass an additional parameter to stream outputs instead of returning them all at once.
+- You would often ignore the result of the actual model call in favor of callback results.
+
+#### `.stream()`
+
+LangChain also includes the `.stream()` method as a more ergonomic streaming interface.
+`.stream()` returns an iterator, which you can consume with a [`for await...of`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of) loop. Here's an example with a chat model:
+
+```ts
+import { ChatAnthropic } from "@langchain/anthropic";
+
+const model = new ChatAnthropic({ model: "claude-3-sonnet-20240229" });
+
+const stream = await model.stream("what color is the sky?");
+
+for await (const chunk of stream) {
+  console.log(chunk);
+}
+```
+
+For models (or other components) that don't support streaming natively, this iterator would just yield a single chunk, but
+you could still use the same general pattern. Using `.stream()` will also automatically call the model in streaming mode
+without the need to provide additional config.
+
+The type of each outputted chunk depends on the type of component - for example, chat models yield [`AIMessageChunks`](https://api.js.langchain.com/classes/langchain_core_messages.AIMessageChunk.html).
+Because this method is part of [LangChain Expression Language](/docs/concepts/#langchain-expression-language),
+you can handle formatting differences from different outputs using an [output parser](/docs/concepts/#output-parsers) to transform
+each yielded chunk.
+
+You can check out [this guide](/docs/how_to/streaming/#using-stream) for more detail on how to use `.stream()`.
+
+#### `.streamEvents()`
+
+While the `.stream()` method is easier to use than callbacks, it only returns one type of value. This is fine for single LLM calls,
+but as you build more complex chains of several LLM calls together, you may want to use the intermediate values of
+the chain alongside the final output - for example, returning sources alongside the final generation when building a chat
+over documents app.
+
+There are ways to do this using the aforementioned callbacks, or by constructing your chain in such a way that it passes intermediate
+values to the end with something like [`.assign()`](/docs/how_to/passthrough/), but LangChain also includes an
+`.streamEvents()` method that combines the flexibility of callbacks with the ergonomics of `.stream()`. When called, it returns an iterator
+which yields [various types of events](/docs/how_to/streaming/#event-reference) that you can filter and process according
+to the needs of your project.
+
+Here's one small example that prints just events containing streamed chat model output:
+
+```ts
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { ChatAnthropic } from "@langchain/anthropic";
+
+const model = new ChatAnthropic({ model: "claude-3-sonnet-20240229" });
+
+const prompt = ChatPromptTemplate.fromTemplate("tell me a joke about {topic}");
+const parser = new StringOutputParser();
+const chain = prompt.pipe(model).pipe(parser);
+
+const eventStream = await chain.streamEvents(
+  { topic: "parrot" },
+  { version: "v2" }
+);
+
+for await (const event of eventStream) {
+  const kind = event.event;
+  if (kind === "on_chat_model_stream") {
+    console.log(event);
+  }
+}
+```
+
+You can roughly think of it as an iterator over callback events (though the format differs) - and you can use it on almost all LangChain components!
+
+See [this guide](/docs/how_to/streaming/#using-stream-events) for more detailed information on how to use `.streamEvents()`.
 
 ### Function/tool calling
 
@@ -675,6 +819,8 @@ LangChain provides several advanced retrieval types. A full list is below, along
 | [Time-Weighted Vectorstore](/docs/how_to/time_weighted_vectorstore/) | Vectorstore                  | No                        | If you have timestamps associated with your documents, and you want to retrieve the most recent ones.                                   | This fetches documents based on a combination of semantic similarity (as in normal vector retrieval) and recency (looking at timestamps of indexed documents)                                                                                                        |
 | [Multi-Query Retriever](/docs/how_to/multiple_queries/)              | Any                          | Yes                       | If users are asking questions that are complex and require multiple pieces of distinct information to respond.                          | This uses an LLM to generate multiple queries from the original one. This is useful when the original query needs pieces of information about multiple topics to be properly answered. By generating multiple queries, we can then fetch documents for each of them. |
 | [Ensemble](/docs/how_to/ensemble_retriever)                          | Any                          | No                        | If you have multiple retrieval methods and want to try combining them.                                                                  | This fetches documents from multiple retrievers and then combines them.                                                                                                                                                                                              |
+
+For a high-level guide on retrieval, see this [tutorial on RAG](/docs/tutorials/rag/).
 
 ### Text splitting
 

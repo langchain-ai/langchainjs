@@ -5,7 +5,7 @@ import {
 
 import type { BaseChatModelParams } from "@langchain/core/language_models/chat_models";
 
-import { BaseBedrockInput } from "../../utils/bedrock.js";
+import { BaseBedrockInput } from "../../utils/bedrock/index.js";
 import { BedrockChat as BaseBedrockChat } from "./web.js";
 
 export interface BedrockChatFields
