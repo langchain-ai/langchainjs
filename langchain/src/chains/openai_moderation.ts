@@ -13,6 +13,8 @@ import { BaseChain, ChainInputs } from "./base.js";
 export interface OpenAIModerationChainInput
   extends ChainInputs,
     AsyncCallerParams {
+  apiKey?: string;
+  /** @deprecated Use "apiKey" instead. */
   openAIApiKey?: string;
   openAIOrganization?: string;
   throwError?: boolean;
