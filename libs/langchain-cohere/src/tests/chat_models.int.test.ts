@@ -1,6 +1,6 @@
 /* eslint-disable no-promise-executor-return */
 import { test, expect } from "@jest/globals";
-import { HumanMessage } from "@langchain/core/messages";
+import { AIMessageChunk, HumanMessage } from "@langchain/core/messages";
 import { ChatCohere } from "../chat_models.js";
 
 test("ChatCohere can invoke", async () => {
@@ -57,4 +57,49 @@ test("should abort the request", async () => {
     controller.abort();
     return ret;
   }).rejects.toThrow("AbortError");
+});
+
+test("Stream token count usage_metadata", async () => {
+  const model = new ChatCohere({
+    model: "command-light",
+    temperature: 0,
+  });
+  let res: AIMessageChunk | null = null;
+  for await (const chunk of await model.stream(
+    "Why is the sky blue? Be concise."
+  )) {
+    if (!res) {
+      res = chunk;
+    } else {
+      res = res.concat(chunk);
+    }
+  }
+  console.log(res);
+  expect(res?.usage_metadata).toBeDefined();
+  if (!res?.usage_metadata) {
+    return;
+  }
+  expect(res.usage_metadata.input_tokens).toBe(71);
+  expect(res.usage_metadata.output_tokens).toBeGreaterThan(10);
+  expect(res.usage_metadata.total_tokens).toBe(
+    res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
+  );
+});
+
+test.only("Invoke token count usage_metadata", async () => {
+  const model = new ChatCohere({
+    model: "command-light",
+    temperature: 0,
+  });
+  const res = await model.invoke("Why is the sky blue? Be concise.");
+  console.log(res);
+  expect(res?.usage_metadata).toBeDefined();
+  if (!res?.usage_metadata) {
+    return;
+  }
+  expect(res.usage_metadata.input_tokens).toBe(71);
+  expect(res.usage_metadata.output_tokens).toBeGreaterThan(10);
+  expect(res.usage_metadata.total_tokens).toBe(
+    res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
+  );
 });
