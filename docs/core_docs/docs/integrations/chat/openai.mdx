@@ -138,3 +138,16 @@ import OpenAIStreamTokens from "@examples/models/chat/integration_openai_stream_
 :::tip
 See the LangSmith trace [here](https://smith.langchain.com/public/66bf7377-cc69-4676-91b6-25929a05e8b7/r)
 :::
+
+### Disabling parallel tool calls
+
+If you have multiple tools bound to the model, but you'd only like for a single tool to be called at a time, you can pass the `parallel_tool_calls` call option to enable/disable this behavior.
+By default, `parallel_tool_calls` is set to `true`.
+
+import OpenAIParallelToolCallsTokens from "@examples/models/chat/integration_openai_parallel_tool_calls.ts";
+
+<CodeBlock language="typescript">{OpenAIParallelToolCallsTokens}</CodeBlock>
+
+:::tip
+See the LangSmith trace for the first invocation [here](https://smith.langchain.com/public/68f2ff13-6331-47d8-a8c0-d1745788e84e/r) and the second invocation [here](https://smith.langchain.com/public/6c2fff29-9470-486a-8715-805fda631024/r)
+:::
