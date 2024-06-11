@@ -253,7 +253,22 @@ export interface ChatOpenAICallOptions
   promptIndex?: number;
   response_format?: { type: "json_object" };
   seed?: number;
-  stream_options?: { include_usage: boolean };
+  /**
+   * Additional options to pass to streamed completions.
+   */
+  stream_options?: {
+    /**
+     * Whether or not to include token usage in the stream.
+     * If set to `true`, this will include an additional
+     * chunk at the end of the stream with the token usage.
+     */
+    include_usage: boolean;
+  };
+  /**
+   * Whether or not to restrict the ability to
+   * call multiple tools in one response.
+   */
+  parallel_tool_calls?: boolean;
 }
 
 /**
@@ -557,6 +572,7 @@ export class ChatOpenAI<
       ...(options?.stream_options !== undefined
         ? { stream_options: options.stream_options }
         : {}),
+      parallel_tool_calls: options?.parallel_tool_calls,
       ...this.modelKwargs,
     };
     return params;
