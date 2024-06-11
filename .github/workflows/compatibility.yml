@@ -16,9 +16,9 @@ on:
 # There's no point in testing an outdated version of the code. GitHub only allows
 # a limited number of job runners to be active at the same time, so it's better to cancel
 # pointless jobs early so that more useful jobs can run sooner.
-# concurrency:
-#   group: exports-${{ github.workflow }}-${{ github.ref }}
-#   cancel-in-progress: true
+concurrency:
+  group: exports-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   PUPPETEER_SKIP_DOWNLOAD: "true"
