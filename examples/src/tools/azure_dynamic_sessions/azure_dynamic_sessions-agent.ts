@@ -36,7 +36,8 @@ const agentExecutor = new AgentExecutor({
 });
 
 const result = await agentExecutor.invoke({
-  input: 'Create a Python program that prints the Python version and return the result.',
+  input:
+    "Create a Python program that prints the Python version and return the result.",
 });
 
 console.log(result);
