@@ -59,7 +59,7 @@ test("should abort the request", async () => {
   }).rejects.toThrow("AbortError");
 });
 
-test.only("Stream token count usage_metadata", async () => {
+test("Stream token count usage_metadata", async () => {
   const model = new ChatCohere({
     model: "command-light",
     temperature: 0,
@@ -93,7 +93,7 @@ test.only("Stream token count usage_metadata", async () => {
   expect(lastRes.additional_kwargs.eventType).toBe("stream-end");
 });
 
-test.only("streamUsage excludes token usage", async () => {
+test("streamUsage excludes token usage", async () => {
   const model = new ChatCohere({
     model: "command-light",
     temperature: 0,
