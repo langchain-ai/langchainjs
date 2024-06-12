@@ -1,7 +1,7 @@
 const fs = require("fs");
 const semver = require("semver");
 
-const communityPackageJsonPath = "/app/monorepo/libs/langchain-google-vertexai/package.json";
+const communityPackageJsonPath = "/app/monorepo/libs/langchain-cohere/package.json";
 
 const currentPackageJson = JSON.parse(fs.readFileSync(communityPackageJsonPath));
 
