@@ -746,7 +746,7 @@ export class BedrockChat
   }
 
   override bindTools(
-    tools: this["ParsedCallOptions"]["tools"],
+    tools: (StructuredToolInterface | AnthropicTool | ToolDefinition)[],
     _kwargs?: Partial<this["ParsedCallOptions"]>
   ): Runnable<
     BaseLanguageModelInput,

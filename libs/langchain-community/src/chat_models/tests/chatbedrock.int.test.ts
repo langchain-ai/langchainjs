@@ -411,7 +411,7 @@ test.skip("withStructuredOutput", async () => {
   expect(response.city.toLowerCase()).toBe("san francisco");
 });
 
-test.skip(".bindTools", async () => {
+test.skip(".bind tools", async () => {
   const weatherTool = z
     .object({
       city: z.string().describe("The city to get the weather for"),
