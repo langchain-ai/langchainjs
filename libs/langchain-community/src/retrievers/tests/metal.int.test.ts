@@ -14,7 +14,7 @@ test("MetalRetriever", async () => {
   );
   const retriever = new MetalRetriever({ client });
 
-  const docs = await retriever.getRelevantDocuments("hello");
+  const docs = await retriever.invoke("hello");
 
   expect(docs.length).toBeGreaterThan(0);
 

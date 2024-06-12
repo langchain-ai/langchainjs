@@ -41,7 +41,7 @@ export interface ZepCloudRetrieverConfig extends BaseRetrieverInput {
  *   topK: 3,
  * });
  * const query = "Can I drive red cars in France?";
- * const docs = await retriever.getRelevantDocuments(query);
+ * const docs = await retriever.invoke(query);
  * ```
  */
 export class ZepCloudRetriever extends BaseRetriever {

@@ -37,7 +37,7 @@ export type FunctionFilter = (document: Document) => boolean;
  * @example
  * ```typescript
  * const functionalTranslator = new FunctionalTranslator();
- * const relevantDocuments = await functionalTranslator.getRelevantDocuments(
+ * const relevantDocuments = await functionalTranslator.invoke(
  *   "Which movies are rated higher than 8.5?",
  * );
  * ```

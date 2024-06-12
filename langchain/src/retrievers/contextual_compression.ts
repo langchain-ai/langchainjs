@@ -27,7 +27,7 @@ export interface ContextualCompressionRetrieverArgs extends BaseRetrieverInput {
  *   baseCompressor: new LLMChainExtractor(),
  *   baseRetriever: new HNSWLib().asRetriever(),
  * });
- * const retrievedDocs = await retriever.getRelevantDocuments(
+ * const retrievedDocs = await retriever.invoke(
  *   "What did the speaker say about Justice Breyer?",
  * );
  * ```
@@ -54,7 +54,7 @@ export class ContextualCompressionRetriever extends BaseRetriever {
     query: string,
     runManager?: CallbackManagerForRetrieverRun
   ): Promise<DocumentInterface[]> {
-    const docs = await this.baseRetriever.getRelevantDocuments(
+    const docs = await this.baseRetriever.invoke(
       query,
       runManager?.getChild("base_retriever")
     );

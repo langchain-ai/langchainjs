@@ -50,7 +50,7 @@ type ValueType = {
  *   structuredQueryTranslator: new SupabaseTranslator(),
  * });
  *
- * const queryResult = await selfQueryRetriever.getRelevantDocuments(
+ * const queryResult = await selfQueryRetriever.invoke(
  *   "Which movies are directed by Greta Gerwig?",
  * );
  * ```

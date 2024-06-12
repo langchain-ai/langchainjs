@@ -69,7 +69,7 @@ await retriever.addDocuments(docs);
 
 // This will search for documents in vector store and return for LLM already reranked and sorted document
 // with appropriate minimum relevance score
-const retrievedDocs = await retriever.getRelevantDocuments(
+const retrievedDocs = await retriever.invoke(
   "What is Pam's favorite color?"
 );
 

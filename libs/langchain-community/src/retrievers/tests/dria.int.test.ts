@@ -9,7 +9,7 @@ test.skip("DriaRetriever", async () => {
 
   const retriever = new DriaRetriever({ contractId, topK });
 
-  const docs = await retriever.getRelevantDocuments("What is a union type?");
+  const docs = await retriever.invoke("What is a union type?");
   expect(docs.length).toBe(topK);
 
   console.log(docs[0].pageContent);

@@ -82,7 +82,7 @@ export interface MultiQueryRetrieverInput extends BaseRetrieverInput {
  *   retriever: new MemoryVectorStore().asRetriever(),
  *   verbose: true,
  * });
- * const retrievedDocs = await retriever.getRelevantDocuments(
+ * const retrievedDocs = await retriever.invoke(
  *   "What are mitochondria made of?",
  * );
  * ```
@@ -159,7 +159,7 @@ export class MultiQueryRetriever extends BaseRetriever {
     const documents: Document[] = [];
     await Promise.all(
       queries.map(async (query) => {
-        const docs = await this.retriever.getRelevantDocuments(
+        const docs = await this.retriever.invoke(
           query,
           runManager?.getChild()
         );

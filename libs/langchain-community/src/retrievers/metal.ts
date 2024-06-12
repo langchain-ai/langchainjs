@@ -37,7 +37,7 @@ interface ResponseItem {
  *     process.env.METAL_INDEX_ID,
  *   ),
  * });
- * const docs = await retriever.getRelevantDocuments("hello");
+ * const docs = await retriever.invoke("hello");
  * ```
  */
 export class MetalRetriever extends BaseRetriever {

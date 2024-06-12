@@ -32,7 +32,7 @@ interface Berry {
  *   apiKey: "CHAINDESK_API_KEY",
  *   topK: 8,
  * });
- * const docs = await retriever.getRelevantDocuments("hello");
+ * const docs = await retriever.invoke("hello");
  * ```
  */
 export class ChaindeskRetriever extends BaseRetriever {

@@ -86,16 +86,16 @@ test.skip("Chroma Store Self Query Retriever Test", async () => {
     structuredQueryTranslator: new ChromaTranslator(),
   });
 
-  const query1 = await selfQueryRetriever.getRelevantDocuments(
+  const query1 = await selfQueryRetriever.invoke(
     "Which movies are less than 90 minutes?"
   );
-  const query2 = await selfQueryRetriever.getRelevantDocuments(
+  const query2 = await selfQueryRetriever.invoke(
     "Which movies are rated higher than 8.5?"
   );
-  const query3 = await selfQueryRetriever.getRelevantDocuments(
+  const query3 = await selfQueryRetriever.invoke(
     "Which movies are directed by Greta Gerwig?"
   );
-  const query4 = await selfQueryRetriever.getRelevantDocuments(
+  const query4 = await selfQueryRetriever.invoke(
     "Which movies are either comedy or drama and are less than 90 minutes?"
   );
   console.log(query1, query2, query3, query4);

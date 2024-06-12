@@ -230,7 +230,7 @@ export class ConversationalRetrievalQAChain
         );
       }
     }
-    const docs = await this.retriever.getRelevantDocuments(
+    const docs = await this.retriever.invoke(
       newQuestion,
       runManager?.getChild("retriever")
     );

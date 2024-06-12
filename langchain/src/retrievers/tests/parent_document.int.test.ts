@@ -24,7 +24,7 @@ test("Should return the full document if an unsplit parent document has been add
   await retriever.addDocuments(docs);
 
   const query = "justice breyer";
-  const retrievedDocs = await retriever.getRelevantDocuments(query);
+  const retrievedDocs = await retriever.invoke(query);
   expect(retrievedDocs.length).toEqual(1);
   expect(retrievedDocs[0].pageContent.length).toBeGreaterThan(1000);
 });
@@ -49,7 +49,7 @@ test("Should return a part of a document if a parent splitter is passed", async 
   ).load();
   await retriever.addDocuments(docs);
   const query = "justice breyer";
-  const retrievedDocs = await retriever.getRelevantDocuments(query);
+  const retrievedDocs = await retriever.invoke(query);
   const vectorstoreRetreivedDocs = await vectorstore.similaritySearch(
     "justice breyer"
   );
@@ -75,7 +75,7 @@ test("Should work with a backwards compatible docstore too", async () => {
   await retriever.addDocuments(docs);
 
   const query = "justice breyer";
-  const retrievedDocs = await retriever.getRelevantDocuments(query);
+  const retrievedDocs = await retriever.invoke(query);
   expect(retrievedDocs.length).toEqual(1);
   expect(retrievedDocs[0].pageContent.length).toBeGreaterThan(1000);
 });
@@ -100,7 +100,7 @@ test("Should return a part of a document if a parent splitter is passed", async 
   ).load();
   await retriever.addDocuments(docs);
   const query = "justice breyer";
-  const retrievedDocs = await retriever.getRelevantDocuments(query);
+  const retrievedDocs = await retriever.invoke(query);
   const vectorstoreRetreivedDocs = await vectorstore.similaritySearch(
     "justice breyer"
   );
@@ -138,7 +138,7 @@ test("Should use a custom retriever to retrieve one doc", async () => {
   ).load();
   await retriever.addDocuments(docs);
   const query = "justice breyer";
-  const retrievedDocs = await retriever.getRelevantDocuments(query);
+  const retrievedDocs = await retriever.invoke(query);
   const vectorstoreRetreivedDocs = await vectorstore.similaritySearch(
     "justice breyer"
   );

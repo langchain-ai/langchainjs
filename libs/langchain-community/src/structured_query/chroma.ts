@@ -21,7 +21,7 @@ import { Chroma } from "../vectorstores/chroma.js";
  *   structuredQueryTranslator: chromaTranslator,
  * });
  *
- * const relevantDocuments = await selfQueryRetriever.getRelevantDocuments(
+ * const relevantDocuments = await selfQueryRetriever.invoke(
  *   "Which movies are directed by Greta Gerwig?",
  * );
  * ```

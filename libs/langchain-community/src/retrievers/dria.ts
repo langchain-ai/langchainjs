@@ -34,7 +34,7 @@ export interface DriaRetrieverArgs
  * const contractId = "-B64DjhUtCwBdXSpsRytlRQCu-bie-vSTvTIT8Ap3g0";
  * const retriever = new DriaRetriever({ contractId });
  *
- * const docs = await retriever.getRelevantDocuments("What is a union type?");
+ * const docs = await retriever.invoke("What is a union type?");
  * console.log(docs);
  * ```
  */

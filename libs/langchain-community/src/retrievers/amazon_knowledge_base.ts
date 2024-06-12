@@ -35,7 +35,7 @@ export interface AmazonKnowledgeBaseRetrieverArgs {
  *   },
  * });
  *
- * const docs = await retriever.getRelevantDocuments("How are clouds formed?");
+ * const docs = await retriever.invoke("How are clouds formed?");
  * ```
  */
 export class AmazonKnowledgeBaseRetriever extends BaseRetriever {

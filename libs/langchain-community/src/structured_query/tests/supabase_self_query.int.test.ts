@@ -120,23 +120,23 @@ test("Supabase Store Self Query Retriever Test", async () => {
     structuredQueryTranslator: new SupabaseTranslator(),
   });
 
-  const query1 = await selfQueryRetriever.getRelevantDocuments(
+  const query1 = await selfQueryRetriever.invoke(
     "Which movies are less than 90 minutes?"
   );
   console.log(query1);
   expect(query1.length).toEqual(0);
-  const query2 = await selfQueryRetriever.getRelevantDocuments(
+  const query2 = await selfQueryRetriever.invoke(
     "Which movies are rated higher than 8.5?"
   );
   console.log(query2);
   expect(query2.length).toEqual(3);
-  const query3 = await selfQueryRetriever.getRelevantDocuments(
+  const query3 = await selfQueryRetriever.invoke(
     "Which movies are directed by Greta Gerwig?"
   );
   console.log(query3);
   expect(query3.length).toEqual(1);
 
-  const query4 = await selfQueryRetriever.getRelevantDocuments("What is what"); // this should return empty since it'll create empty filter
+  const query4 = await selfQueryRetriever.invoke("What is what"); // this should return empty since it'll create empty filter
   console.log(query4);
   expect(query4.length).toEqual(0);
 });
@@ -273,23 +273,23 @@ test("Supabase Store Self Query Retriever Test With Default Filter And Merge Ope
     },
   });
 
-  const query1 = await selfQueryRetriever.getRelevantDocuments(
+  const query1 = await selfQueryRetriever.invoke(
     "Which movies are less than 90 minutes?"
   );
   console.log(query1);
   expect(query1.length).toEqual(0);
-  const query2 = await selfQueryRetriever.getRelevantDocuments(
+  const query2 = await selfQueryRetriever.invoke(
     "Which movies are rated higher than 8.5?"
   );
   console.log(query2);
   expect(query2.length).toEqual(2);
-  const query3 = await selfQueryRetriever.getRelevantDocuments(
+  const query3 = await selfQueryRetriever.invoke(
     "Which movies are directed by Greta Gerwig?"
   );
   console.log(query3);
   expect(query3.length).toEqual(1);
 
-  const query4 = await selfQueryRetriever.getRelevantDocuments("What is what"); // query4 has to empty document, since we can't use "or" operator
+  const query4 = await selfQueryRetriever.invoke("What is what"); // query4 has to empty document, since we can't use "or" operator
   console.log(query4);
   expect(query4.length).toEqual(0);
 });
@@ -428,23 +428,23 @@ test("Supabase Store Self Query Retriever Test With Default Filter Or Merge Oper
     },
   });
 
-  const query1 = await selfQueryRetriever.getRelevantDocuments(
+  const query1 = await selfQueryRetriever.invoke(
     "Which movies are less than 90 minutes?"
   );
   console.log(query1);
   expect(query1.length).toEqual(5);
-  const query2 = await selfQueryRetriever.getRelevantDocuments(
+  const query2 = await selfQueryRetriever.invoke(
     "Which movies are rated higher than 8.5?"
   );
   console.log(query2);
   expect(query2.length).toEqual(6);
-  const query3 = await selfQueryRetriever.getRelevantDocuments(
+  const query3 = await selfQueryRetriever.invoke(
     "Which movies are directed by Greta Gerwig?"
   );
   console.log(query3);
   expect(query3.length).toEqual(5);
 
-  const query4 = await selfQueryRetriever.getRelevantDocuments("What is what");
+  const query4 = await selfQueryRetriever.invoke("What is what");
   console.log(query4);
   expect(query4.length).toEqual(5);
 });
@@ -582,23 +582,23 @@ test("Supabase Store Self Query Retriever Test With Default Filter And Merge Ope
     },
   });
 
-  const query1 = await selfQueryRetriever.getRelevantDocuments(
+  const query1 = await selfQueryRetriever.invoke(
     "Which movies are less than 90 minutes?"
   );
   console.log(query1);
   expect(query1.length).toEqual(0);
-  const query2 = await selfQueryRetriever.getRelevantDocuments(
+  const query2 = await selfQueryRetriever.invoke(
     "Which movies are rated higher than 8.5?"
   );
   console.log(query2);
   expect(query2.length).toEqual(2);
-  const query3 = await selfQueryRetriever.getRelevantDocuments(
+  const query3 = await selfQueryRetriever.invoke(
     "Which movies are directed by Greta Gerwig?"
   );
   console.log(query3);
   expect(query3.length).toEqual(1);
 
-  const query4 = await selfQueryRetriever.getRelevantDocuments("What is what"); // query4 has to empty document, since we can't use "or" operator
+  const query4 = await selfQueryRetriever.invoke("What is what"); // query4 has to empty document, since we can't use "or" operator
   console.log(query4);
   expect(query4.length).toEqual(0);
 });

@@ -97,7 +97,7 @@ test("MongoDBAtlasVectorSearch with external ids", async () => {
     //   },
     // });
 
-    // const docs = await retriever.getRelevantDocuments("That fence is purple");
+    // const docs = await retriever.invoke("That fence is purple");
     // expect(docs).toEqual([]);
   } finally {
     await client.close();
@@ -142,7 +142,7 @@ test("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () => {
     const standardRetriever = await vectorStore.asRetriever();
 
     const standardRetrieverOutput =
-      await standardRetriever.getRelevantDocuments("foo");
+      await standardRetriever.invoke("foo");
     expect(output).toHaveLength(texts.length);
 
     const standardRetrieverActual = standardRetrieverOutput.map(
@@ -159,7 +159,7 @@ test("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () => {
       },
     });
 
-    const retrieverOutput = await retriever.getRelevantDocuments("foo");
+    const retrieverOutput = await retriever.invoke("foo");
     expect(output).toHaveLength(texts.length);
 
     const retrieverActual = retrieverOutput.map((doc) => doc.pageContent);

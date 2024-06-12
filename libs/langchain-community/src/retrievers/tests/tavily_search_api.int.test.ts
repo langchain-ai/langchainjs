@@ -10,7 +10,7 @@ test.skip("TavilySearchAPIRetriever", async () => {
     includeRawContent: true,
   });
 
-  const docs = await retriever.getRelevantDocuments("what bear is best?");
+  const docs = await retriever.invoke("what bear is best?");
   expect(docs.length).toBeGreaterThan(0);
 
   console.log(docs);

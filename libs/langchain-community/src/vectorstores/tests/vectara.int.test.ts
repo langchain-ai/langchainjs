@@ -226,7 +226,7 @@ describe("VectaraStore", () => {
           lambda: 0.025,
         },
       });
-      const result = await retriever.getRelevantDocuments("Was Gandalf dead?");
+      const result = await retriever.invoke("Was Gandalf dead?");
       expect(result.length).toBeGreaterThan(0);
       expect(result.length).toBe(topK + 1); // +1 for the summary
       expect(result[0].pageContent.length).toBeGreaterThan(0);

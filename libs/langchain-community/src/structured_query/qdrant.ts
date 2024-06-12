@@ -32,7 +32,7 @@ import {
  *   structuredQueryTranslator: new QdrantTranslator(),
  * });
  *
- * const relevantDocuments = await selfQueryRetriever.getRelevantDocuments(
+ * const relevantDocuments = await selfQueryRetriever.invoke(
  *   "Which movies are rated higher than 8.5?",
  * );
  * ```

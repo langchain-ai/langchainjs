@@ -21,7 +21,7 @@ test.skip("Supabase hybrid keyword search", async () => {
 
   expect(retriever).toBeDefined();
 
-  const results = await retriever.getRelevantDocuments("hello bye");
+  const results = await retriever.invoke("hello bye");
 
   expect(results.length).toBeGreaterThan(0);
 });

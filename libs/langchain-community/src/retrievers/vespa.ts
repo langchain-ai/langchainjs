@@ -33,7 +33,7 @@ export interface VespaRetrieverParams extends RemoteRetrieverParams {
  *   },
  *   content_field: "content",
  * });
- * const result = await retriever.getRelevantDocuments("what is vespa?");
+ * const result = await retriever.invoke("what is vespa?");
  * ```
  */
 export class VespaRetriever extends RemoteRetriever {

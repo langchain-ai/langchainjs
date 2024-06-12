@@ -144,19 +144,19 @@ describe("Pinecone self query", () => {
       },
     });
 
-    const query1 = await selfQueryRetriever.getRelevantDocuments(
+    const query1 = await selfQueryRetriever.invoke(
       "Which movies are less than 90 minutes?"
     );
-    const query2 = await selfQueryRetriever.getRelevantDocuments(
+    const query2 = await selfQueryRetriever.invoke(
       "Which movies are rated higher than 8.5?"
     );
-    const query3 = await selfQueryRetriever.getRelevantDocuments(
+    const query3 = await selfQueryRetriever.invoke(
       "Which movies are directed by Greta Gerwig?"
     );
-    const query4 = await selfQueryRetriever.getRelevantDocuments(
+    const query4 = await selfQueryRetriever.invoke(
       "Which movies are either comedy or drama and are less than 90 minutes?"
     );
-    const query5 = await selfQueryRetriever.getRelevantDocuments(
+    const query5 = await selfQueryRetriever.invoke(
       "Awawawawa hello hello hello huh where am i?"
     );
     console.log(query1, query2, query3, query4, query5); // query 5 should return documents
@@ -296,19 +296,19 @@ describe("Pinecone self query", () => {
       },
     });
 
-    const query1 = await selfQueryRetriever.getRelevantDocuments(
+    const query1 = await selfQueryRetriever.invoke(
       "Which movies are less than 90 minutes?"
     );
-    const query2 = await selfQueryRetriever.getRelevantDocuments(
+    const query2 = await selfQueryRetriever.invoke(
       "Which movies are rated higher than 8.5?"
     );
-    const query3 = await selfQueryRetriever.getRelevantDocuments(
+    const query3 = await selfQueryRetriever.invoke(
       "Which movies are directed by Greta Gerwig?"
     );
-    const query4 = await selfQueryRetriever.getRelevantDocuments(
+    const query4 = await selfQueryRetriever.invoke(
       "Which movies are either comedy or drama and are less than 90 minutes?"
     );
-    const query5 = await selfQueryRetriever.getRelevantDocuments(
+    const query5 = await selfQueryRetriever.invoke(
       "Awawawawa hello hello hello huh where am i?"
     );
     console.log(query1, query2, query3, query4, query5); // query 5 should return documents

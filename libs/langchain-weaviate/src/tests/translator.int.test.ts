@@ -105,13 +105,13 @@ test.skip("Weaviate Self Query Retriever Test", async () => {
     structuredQueryTranslator: new WeaviateTranslator(),
   });
 
-  const query2 = await selfQueryRetriever.getRelevantDocuments(
+  const query2 = await selfQueryRetriever.invoke(
     "Which movies are rated higher than 8.5?"
   );
-  const query3 = await selfQueryRetriever.getRelevantDocuments(
+  const query3 = await selfQueryRetriever.invoke(
     "Which movies are directed by Greta Gerwig?"
   );
-  const query4 = await selfQueryRetriever.getRelevantDocuments(
+  const query4 = await selfQueryRetriever.invoke(
     "Wau wau wau wau hello gello hello?"
   );
   console.log(query2, query3, query4); // query4 has to return empty array
@@ -258,7 +258,7 @@ test.skip("Weaviate Vector Store Self Query Retriever Test With Default Filter O
     },
   });
 
-  const query4 = await selfQueryRetriever.getRelevantDocuments(
+  const query4 = await selfQueryRetriever.invoke(
     "Wau wau wau wau hello gello hello?"
   );
   console.log(query4); // query4 has to return documents, since the default filter takes over with
@@ -405,7 +405,7 @@ test.skip("Weaviate Vector Store Self Query Retriever Test With Default Filter A
     },
   });
 
-  const query4 = await selfQueryRetriever.getRelevantDocuments(
+  const query4 = await selfQueryRetriever.invoke(
     "Wau wau wau wau hello gello hello?"
   );
   console.log(query4); // query4 has to return empty array, since the default filter takes over with and filter

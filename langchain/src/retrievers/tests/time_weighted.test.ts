@@ -56,7 +56,7 @@ describe("Test getRelevantDocuments", () => {
     ]);
 
     const query = "aaa";
-    await expect(() => retriever.getRelevantDocuments(query)).rejects.toThrow();
+    await expect(() => retriever.invoke(query)).rejects.toThrow();
   });
   test("For different pageContent with the same lastAccessedAt, return in descending order of similar words.", async () => {
     const retriever = new TimeWeightedVectorStoreRetriever({
@@ -71,7 +71,7 @@ describe("Test getRelevantDocuments", () => {
     ]);
 
     const query = "aaa";
-    const resultsDocs = await retriever.getRelevantDocuments(query);
+    const resultsDocs = await retriever.invoke(query);
     const expected = [
       {
         pageContent: "aaa",
@@ -116,7 +116,7 @@ describe("Test getRelevantDocuments", () => {
     ]);
 
     const query = "Test query";
-    const resultsDocs = await retriever.getRelevantDocuments(query);
+    const resultsDocs = await retriever.invoke(query);
     const expected = [
       {
         pageContent: samePageContent,
@@ -161,7 +161,7 @@ describe("Test getRelevantDocuments", () => {
     await retriever.addDocuments([{ pageContent: "qux", metadata: {} }]);
 
     const query = "Test query";
-    const resultsDocs = await retriever.getRelevantDocuments(query);
+    const resultsDocs = await retriever.invoke(query);
     const expected = [
       {
         pageContent: "qux",
@@ -208,7 +208,7 @@ describe("Test getRelevantDocuments", () => {
     await retriever.addDocuments([{ pageContent: "qux", metadata: {} }]);
 
     const query = "Test query";
-    const resultsDocs = await retriever.getRelevantDocuments(query);
+    const resultsDocs = await retriever.invoke(query);
     const expected = [
       {
         pageContent: "qux",
@@ -254,7 +254,7 @@ describe("Test getRelevantDocuments", () => {
     await retriever.addDocuments([{ pageContent: "qux", metadata: {} }]);
 
     const query = "Test query";
-    const resultsDocs = await retriever.getRelevantDocuments(query);
+    const resultsDocs = await retriever.invoke(query);
     const expected = [
       {
         pageContent: "qux",
@@ -296,7 +296,7 @@ describe("Test getRelevantDocuments", () => {
     ]);
 
     const query = "Test query";
-    const resultsDocs = await retriever.getRelevantDocuments(query);
+    const resultsDocs = await retriever.invoke(query);
     const expected = [
       {
         pageContent: "qux",

@@ -36,7 +36,7 @@ export const BUFFER_IDX = "buffer_idx";
  *   { pageContent: "My favourite food is pizza.", metadata: {} },
  *
  * ]);
- * const results = await retriever.getRelevantDocuments(
+ * const results = await retriever.invoke(
  *   "What is my favourite food?",
  * );
  * ```

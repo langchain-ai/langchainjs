@@ -20,7 +20,7 @@ test.skip("VespaRetriever", async () => {
     content_field,
   });
 
-  const docs = await retriever.getRelevantDocuments("what is vespa?");
+  const docs = await retriever.invoke("what is vespa?");
   expect(docs.length).toBeGreaterThan(0);
 
   console.log(docs);

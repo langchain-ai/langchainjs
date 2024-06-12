@@ -36,7 +36,7 @@ export function _getMetadata<T extends ContentsOptions = { text: true }>(
  *     process.env.EXA_BASE_URL,
  *   ),
  * });
- * const docs = await retriever.getRelevantDocuments("hello");
+ * const docs = await retriever.invoke("hello");
  * ```
  */
 export class ExaRetriever<

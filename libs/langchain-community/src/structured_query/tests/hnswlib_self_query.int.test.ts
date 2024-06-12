@@ -89,19 +89,19 @@ test("HNSWLib Store Self Query Retriever Test", async () => {
     structuredQueryTranslator: new FunctionalTranslator(),
   });
 
-  const query1 = await selfQueryRetriever.getRelevantDocuments(
+  const query1 = await selfQueryRetriever.invoke(
     "Which movies are less than 90 minutes?"
   );
   console.log(query1);
   expect(query1.length).toEqual(0);
 
-  const query2 = await selfQueryRetriever.getRelevantDocuments(
+  const query2 = await selfQueryRetriever.invoke(
     "Which movies are rated higher than 8.5?"
   );
   console.log(query2);
   expect(query2.length).toEqual(2);
 
-  const query3 = await selfQueryRetriever.getRelevantDocuments(
+  const query3 = await selfQueryRetriever.invoke(
     "Which movies are directed by Greta Gerwig?"
   );
   console.log(query3);
@@ -184,7 +184,7 @@ test("HNSWLib shouldn't throw an error if a filter can't be generated, but shoul
     structuredQueryTranslator: new FunctionalTranslator(),
   });
 
-  const query1 = await selfQueryRetriever.getRelevantDocuments(
+  const query1 = await selfQueryRetriever.invoke(
     "Which sectionTitle talks about pools?"
   );
   console.log(query1);

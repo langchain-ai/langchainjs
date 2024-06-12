@@ -51,7 +51,7 @@ export interface SelfQueryRetrieverArgs<T extends VectorStore>
  *   attributeInfo: attributeInfo,
  *   structuredQueryTranslator: new FunctionalTranslator(),
  * });
- * const relevantDocuments = await selfQueryRetriever.getRelevantDocuments(
+ * const relevantDocuments = await selfQueryRetriever.invoke(
  *   "Which movies are directed by Greta Gerwig?",
  * );
  * ```

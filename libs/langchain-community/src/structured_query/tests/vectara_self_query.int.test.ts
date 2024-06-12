@@ -93,16 +93,16 @@ test.skip("Vectara Self Query Retriever Test", async () => {
     structuredQueryTranslator: new VectaraTranslator(),
   });
 
-  const query1 = await selfQueryRetriever.getRelevantDocuments(
+  const query1 = await selfQueryRetriever.invoke(
     "I want to watch a movie rated higher than 8.5"
   );
-  const query2 = await selfQueryRetriever.getRelevantDocuments(
+  const query2 = await selfQueryRetriever.invoke(
     "Which movies are directed by Greta Gerwig?"
   );
-  const query3 = await selfQueryRetriever.getRelevantDocuments(
+  const query3 = await selfQueryRetriever.invoke(
     "Which movies are either comedy or science fiction and are rated higher than 8.5?"
   );
-  const query4 = await selfQueryRetriever.getRelevantDocuments(
+  const query4 = await selfQueryRetriever.invoke(
     "Wau wau wau wau hello gello hello?"
   );
   console.log(query1, query2, query3, query4);

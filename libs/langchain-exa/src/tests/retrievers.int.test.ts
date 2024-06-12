@@ -8,7 +8,7 @@ test("ExaRetriever can retrieve some data", async () => {
     client: new Exa(),
   });
 
-  const results = await exaRetriever.getRelevantDocuments(
+  const results = await exaRetriever.invoke(
     "What does the AI company LangChain do?"
   );
 

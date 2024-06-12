@@ -30,7 +30,7 @@ test.skip("ZepRetriever - memory exists", async () => {
   const sleep = promisify(setTimeout);
   await sleep(2000);
 
-  const docs = await zepRetriever.getRelevantDocuments("hello");
+  const docs = await zepRetriever.invoke("hello");
 
   expect(docs.length).toBeGreaterThanOrEqual(2);
 
@@ -43,7 +43,7 @@ test.skip("ZepRetriever - does not exist", async () => {
 
   const zepRetriever = new ZepRetriever({ sessionId, url: baseURL, topK });
 
-  const docs = await zepRetriever.getRelevantDocuments("hello");
+  const docs = await zepRetriever.invoke("hello");
 
   expect(docs.length).toBe(0);
 

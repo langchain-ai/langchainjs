@@ -73,7 +73,7 @@ export abstract class BaseRetriever<
     input: string,
     options?: RunnableConfig
   ): Promise<DocumentInterface<Metadata>[]> {
-    return this.getRelevantDocuments(input, ensureConfig(options));
+    return this.invoke(input, ensureConfig(options));
   }
 
   /**

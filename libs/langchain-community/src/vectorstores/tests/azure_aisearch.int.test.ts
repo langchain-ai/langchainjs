@@ -138,7 +138,7 @@ describe.skip("AzureAISearchVectorStore e2e integration tests", () => {
 
     const retriever = vectorStore.asRetriever({});
 
-    const docs = await retriever.getRelevantDocuments("house");
+    const docs = await retriever.invoke("house");
     expect(docs).toBeDefined();
     expect(docs[0]).toMatchObject({
       pageContent: "The house is open",
@@ -184,7 +184,7 @@ describe.skip("AzureAISearchVectorStore e2e integration tests", () => {
     const standardRetriever = await vectorStore.asRetriever();
 
     const standardRetrieverOutput =
-      await standardRetriever.getRelevantDocuments("foo");
+      await standardRetriever.invoke("foo");
     expect(output).toHaveLength(texts.length);
 
     const standardRetrieverActual = standardRetrieverOutput.map(
@@ -201,7 +201,7 @@ describe.skip("AzureAISearchVectorStore e2e integration tests", () => {
       },
     });
 
-    const retrieverOutput = await retriever.getRelevantDocuments("foo");
+    const retrieverOutput = await retriever.invoke("foo");
     expect(output).toHaveLength(texts.length);
 
     const retrieverActual = retrieverOutput.map((doc) => doc.pageContent);
