@@ -761,7 +761,7 @@ For example, if the output is to be stored in a relational database,
 it is much easier if the model generates output that adheres to a defined schema or format.
 [Extracting specific information](/docs/tutorials/extraction/) from unstructured text is another
 case where this is particularly useful. Most commonly, the output format will be JSON,
-though other formats such as [YAML](/docs/how_to/output_parser_yaml/) can be useful too. Below, we'll discuss
+though other formats such as [XML](/docs/how_to/output_parser_xml/) can be useful too. Below, we'll discuss
 a few ways to get structured output from models in LangChain.
 
 #### `.with_structured_output()`
@@ -772,7 +772,7 @@ Generally, this method is only present on models that support one of the more ad
 and will use one of them under the hood. It takes care of importing a suitable output parser and
 formatting the schema in the right format for the model.
 
-For more information, check out this [how-to guide](/docs/how_to/structured_output/#the-with_structured_output-method).
+For more information, check out this [how-to guide](/docs/how_to/structured_output/#the-.withstructuredoutput-method).
 
 #### Raw prompting
 
@@ -804,8 +804,8 @@ results no matter what method you choose.
 
 <span data-heading-keywords="json mode"></span>
 
-Some models, such as [Mistral](/docs/integrations/chat/mistralai/), [OpenAI](/docs/integrations/chat/openai/),
-[Together AI](/docs/integrations/chat/together/) and [Ollama](/docs/integrations/chat/ollama/),
+Some models, such as [Mistral](/docs/integrations/chat/mistral/), [OpenAI](/docs/integrations/chat/openai/),
+[Together AI](/docs/integrations/chat/togetherai/) and [Ollama](/docs/integrations/chat/ollama/),
 support a feature called **JSON mode**, usually enabled via config.
 
 When enabled, JSON mode will constrain the model's output to always be some sort of valid JSON.
@@ -847,7 +847,7 @@ await chain.invoke({ question: "What is the powerhouse of the cell?" });
 }
 ```
 
-For a full list of model providers that support JSON mode, see [this table](/docs/integrations/chat/#advanced-features).
+For a full list of model providers that support JSON mode, see [this table](/docs/integrations/chat/).
 
 #### Function/tool calling
 
