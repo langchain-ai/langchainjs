@@ -48,4 +48,4 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: ECHO BRAH!
-        run: echo ${{ needs.get-changed-files.outputs.changed_files }}
+        run: echo ${{ needs.get-changed-files.steps.get_changes.outputs.changed_files }}
