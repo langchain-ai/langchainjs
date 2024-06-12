@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import {
   AIMessage,
   type BaseMessage,
@@ -32,7 +33,7 @@ import {
 } from "../callbacks/manager.js";
 import type { RunnableConfig } from "../runnables/config.js";
 import type { BaseCache } from "../caches.js";
-import { StructuredTool, StructuredToolInterface } from "../tools.js";
+import { StructuredToolInterface } from "../tools.js";
 import {
   Runnable,
   RunnableLambda,
@@ -778,6 +779,7 @@ export abstract class BaseChatModel<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
     const name = config?.name;
+    const description = schema.description ?? "A function available to call.";
     const method = config?.method;
     const includeRaw = config?.includeRaw;
     if (method === "jsonMode") {
@@ -787,25 +789,22 @@ export abstract class BaseChatModel<
     }
 
     let functionName = name ?? "extract";
-    let tools: StructuredTool[] | ToolDefinition[];
+    let tools: ToolDefinition[];
     if (isZodSchema(schema)) {
-      class Tool extends StructuredTool {
-        name = functionName;
-
-        description = schema.description ?? "A function available to call.";
-
-        schema = schema as z.ZodObject<any, any, any, any>;
-
-        async _call(_input: z.infer<typeof this.schema>): Promise<string> {
-          throw new Error("Not implemented.");
-        }
-      }
-      tools = [new Tool()];
+      tools = [
+        {
+          type: "function",
+          function: {
+            name: functionName,
+            description,
+            parameters: zodToJsonSchema(schema),
+          },
+        },
+      ];
     } else {
       if ("name" in schema) {
         functionName = schema.name;
       }
-      const description = schema.description ?? "A function available to call.";
       tools = [
         {
           type: "function",
