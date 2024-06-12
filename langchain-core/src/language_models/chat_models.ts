@@ -1,3 +1,4 @@
+import { z } from "zod";
 import {
   AIMessage,
   type BaseMessage,
@@ -40,7 +41,6 @@ import {
 import { isStreamEventsHandler } from "../tracers/event_stream.js";
 import { isLogStreamHandler } from "../tracers/log_stream.js";
 import { concat } from "../utils/stream.js";
-import { z } from "zod";
 import { RunnablePassthrough } from "../runnables/passthrough.js";
 import { isZodSchema } from "../utils/types/is_zod_schema.js";
 
@@ -791,7 +791,9 @@ export abstract class BaseChatModel<
     if (isZodSchema(schema)) {
       class Tool extends StructuredTool {
         name = functionName;
+
         description = schema.description ?? "A function available to call.";
+
         schema = schema as z.ZodObject<any, any, any, any>;
 
         async _call(_input: z.infer<typeof this.schema>): Promise<string> {
