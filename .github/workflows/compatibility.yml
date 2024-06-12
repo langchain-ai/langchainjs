@@ -33,7 +33,24 @@ jobs:
         with:
           fetch-depth: 2
       - name: Get changes
-        run: git diff --name-only -r HEAD^1 HEAD
+        id: get_changes
+        run: |
+          echo "changed_files<<EOF" >> $GITHUB_OUTPUT
+          git diff --name-only -r HEAD^1 HEAD >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Use changed files
+        run: |
+          changed_files="${{ steps.get_changes.outputs.changed_files }}"
+          echo "Changed files: $changed_files"
+          # Perform further actions based on the changed files
+
+      # - name: Get changes
+      #   run: git diff --name-only -r HEAD^1 HEAD
+
+
+
+
       # - name: Git diff
       #   run: git diff --name-only -r HEAD^1 HEAD
       # - name: Log changed files
