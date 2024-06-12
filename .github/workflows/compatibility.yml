@@ -36,8 +36,8 @@ jobs:
         run: git diff --name-only -r HEAD^1 HEAD
       # - name: Git diff
       #   run: git diff --name-only -r HEAD^1 HEAD
-      # - name: Log changed files
-      #   run: echo "${{ contains(git diff --name-only -r HEAD^1 HEAD, 'libs/langchain-cohere') }}"
+      - name: Log changed files
+        run: echo "${{ contains(git diff --name-only -r HEAD^1 HEAD, 'libs/langchain-cohere') }}"
       # - uses: actions/checkout@v4
       # - name: Use Node.js ${{ env.NODE_VERSION }}
       #   uses: actions/setup-node@v3
