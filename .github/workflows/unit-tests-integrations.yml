@@ -43,6 +43,7 @@ jobs:
 
   unit-tests:
     name: Unit Tests
+    needs: get-changed-files
     strategy:
       matrix:
         os: [ubuntu-latest]
