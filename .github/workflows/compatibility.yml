@@ -45,10 +45,10 @@ jobs:
   another-job:
     needs: get-changed-files
     runs-on: ubuntu-latest
-    if: ${{ startsWith(join(needs.get-changed-files.outputs.changed_files, ' '), 'libs/langchain-community/') || startsWith(join(needs.get-changed-files.outputs.changed_files, ' '), 'langchain-core/') }}
+    if: ${{ startsWith(join(needs.get-changed-files.outputs.changed_files, ' '), 'libs/langchain-cohere/') || startsWith(join(needs.get-changed-files.outputs.changed_files, ' '), 'langchain-core/') }}
     steps:
       - name: Use changed files
-        run: echo "${{ startsWith(join(needs.get-changed-files.outputs.changed_files, ' '), 'libs/langchain-community/') || startsWith(join(needs.get-changed-files.outputs.changed_files, ' '), 'langchain-core/') }}"
+        run: echo "${{ startsWith(join(needs.get-changed-files.outputs.changed_files, ' '), 'libs/langchain-cohere/') || startsWith(join(needs.get-changed-files.outputs.changed_files, ' '), 'langchain-core/') }}"
   
   # cohere-lowest-deps:
   #   needs: get-changed-files
