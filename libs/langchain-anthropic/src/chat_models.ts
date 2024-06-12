@@ -11,6 +11,7 @@ import {
   ToolMessage,
   isAIMessage,
   MessageContent,
+  UsageMetadata,
 } from "@langchain/core/messages";
 import {
   ChatGeneration,
@@ -67,7 +68,9 @@ type AnthropicToolChoice =
     }
   | "any"
   | "auto";
-export interface ChatAnthropicCallOptions extends BaseLanguageModelCallOptions {
+export interface ChatAnthropicCallOptions
+  extends BaseLanguageModelCallOptions,
+    Pick<AnthropicInput, "streamUsage"> {
   tools?: (StructuredToolInterface | AnthropicTool)[];
   /**
    * Whether or not to specify what tool the model should use
@@ -211,6 +214,12 @@ export interface AnthropicInput {
    * `anthropic.messages`} that are not explicitly specified on this class.
    */
   invocationKwargs?: Kwargs;
+
+  /**
+   * Whether or not to include token usage data in streamed chunks.
+   * @default true
+   */
+  streamUsage?: boolean;
 }
 
 /**
@@ -485,6 +494,8 @@ export class ChatAnthropicMessages<
   // Used for streaming requests
   protected streamingClient: Anthropic;
 
+  streamUsage = true;
+
   constructor(fields?: Partial<AnthropicInput> & BaseChatModelParams) {
     super(fields ?? {});
 
@@ -516,12 +527,13 @@ export class ChatAnthropicMessages<
 
     this.streaming = fields?.streaming ?? false;
     this.clientOptions = fields?.clientOptions ?? {};
+    this.streamUsage = fields?.streamUsage ?? this.streamUsage;
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     const params = this.invocationParams(options);
     return {
-      ls_provider: "openai",
+      ls_provider: "anthropic",
       ls_model_name: this.model,
       ls_model_type: "chat",
       ls_temperature: params.temperature ?? undefined,
@@ -691,18 +703,36 @@ export class ChatAnthropicMessages<
             }
           }
           usageData = usage;
+          let usageMetadata: UsageMetadata | undefined;
+          if (this.streamUsage || options.streamUsage) {
+            usageMetadata = {
+              input_tokens: usage.input_tokens,
+              output_tokens: usage.output_tokens,
+              total_tokens: usage.input_tokens + usage.output_tokens,
+            };
+          }
           yield new ChatGenerationChunk({
             message: new AIMessageChunk({
               content: "",
               additional_kwargs: filteredAdditionalKwargs,
+              usage_metadata: usageMetadata,
             }),
             text: "",
           });
         } else if (data.type === "message_delta") {
+          let usageMetadata: UsageMetadata | undefined;
+          if (this.streamUsage || options.streamUsage) {
+            usageMetadata = {
+              input_tokens: data.usage.output_tokens,
+              output_tokens: 0,
+              total_tokens: data.usage.output_tokens,
+            };
+          }
           yield new ChatGenerationChunk({
             message: new AIMessageChunk({
               content: "",
               additional_kwargs: { ...data.delta },
+              usage_metadata: usageMetadata,
             }),
             text: "",
           });
@@ -723,10 +753,19 @@ export class ChatAnthropicMessages<
           }
         }
       }
+      let usageMetadata: UsageMetadata | undefined;
+      if (this.streamUsage || options.streamUsage) {
+        usageMetadata = {
+          input_tokens: usageData.input_tokens,
+          output_tokens: usageData.output_tokens,
+          total_tokens: usageData.input_tokens + usageData.output_tokens,
+        };
+      }
       yield new ChatGenerationChunk({
         message: new AIMessageChunk({
           content: "",
           additional_kwargs: { usage: usageData },
+          usage_metadata: usageMetadata,
         }),
         text: "",
       });
