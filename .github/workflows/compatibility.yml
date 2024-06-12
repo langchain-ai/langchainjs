@@ -48,7 +48,7 @@ jobs:
     if: ${{ contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-community') || contains(needs.get-changed-files.outputs.changed_files, 'langchain-core') }}
     steps:
       - name: Use changed files
-        run: echo "${{ needs.get-changed-files.outputs.changed_files }}"
+        run: echo "${{ contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-community') || contains(needs.get-changed-files.outputs.changed_files, 'langchain-core') }}"
 
   # cohere-lowest-deps:
   #   needs: get-changed-files
