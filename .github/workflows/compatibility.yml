@@ -33,11 +33,17 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 2
+      # - name: Get changes
+      #   id: get_changes
+      #   run: |
+      #     echo "changed_files<<EOF" >> $GITHUB_OUTPUT
+      #     git diff --name-only -r HEAD^1 HEAD >> $GITHUB_OUTPUT
+      #     echo "EOF" >> $GITHUB_OUTPUT
       - name: Get changes
         id: get_changes
         run: |
           echo "changed_files<<EOF" >> $GITHUB_OUTPUT
-          git diff --name-only -r HEAD^1 HEAD >> $GITHUB_OUTPUT
+          git diff --name-only -r HEAD^1 HEAD | while read line; do printf "%s\n" "$line"; done >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
       - name: Echo changed files
         run: echo "${{ steps.get_changes.outputs.changed_files }}"
@@ -45,7 +51,7 @@ jobs:
   another-job:
     needs: get-changed-files
     runs-on: ubuntu-latest
-    if: ${{ startsWith(join(needs.get-changed-files.outputs.changed_files, ' '), 'libs/langchain-cohere/') || startsWith(join(needs.get-changed-files.outputs.changed_files, ' '), 'langchain-core/') }}
+    if: contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-cohere/') || contains(needs.get-changed-files.outputs.changed_files, 'langchain-core/')
     steps:
       - name: Use changed files
         run: echo "${{ startsWith(join(needs.get-changed-files.outputs.changed_files, ' '), 'libs/langchain-cohere/') || startsWith(join(needs.get-changed-files.outputs.changed_files, ' '), 'langchain-core/') }}"
