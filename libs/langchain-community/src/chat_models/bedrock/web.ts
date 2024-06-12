@@ -37,6 +37,7 @@ import { ToolCall } from "@langchain/core/messages/tool";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
 import { isOpenAITool } from "@langchain/core/utils/is_openai_tool";
+import { type z } from "zod";
 import type { SerializedFields } from "../../load/map_keys.js";
 import {
   BaseBedrockInput,
@@ -44,7 +45,6 @@ import {
   type CredentialType,
 } from "../../utils/bedrock/index.js";
 import { isAnthropicTool } from "../../utils/bedrock/anthropic.js";
-import { type z } from "zod";
 
 type AnthropicTool = Record<string, unknown>;
 
@@ -764,59 +764,59 @@ export class BedrockChat
   }
 
   withStructuredOutput<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends Record<string, any> = Record<string, any>
->(
-  outputSchema:
-    | z.ZodType<RunOutput>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    | Record<string, any>,
-  config?: StructuredOutputMethodOptions<false>
-): Runnable<BaseLanguageModelInput, RunOutput>;
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<false>
+  ): Runnable<BaseLanguageModelInput, RunOutput>;
 
-withStructuredOutput<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends Record<string, any> = Record<string, any>
->(
-  outputSchema:
-    | z.ZodType<RunOutput>
+  withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    | Record<string, any>,
-  config?: StructuredOutputMethodOptions<true>
-): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<true>
+  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
-withStructuredOutput<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends Record<string, any> = Record<string, any>
->(
-  outputSchema:
-    | z.ZodType<RunOutput>
+  withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    | Record<string, any>,
-  config?: StructuredOutputMethodOptions<boolean>
-):
-  | Runnable<BaseLanguageModelInput, RunOutput>
-  | Runnable<
-      BaseLanguageModelInput,
-      { raw: BaseMessage; parsed: RunOutput }
-    > {
-      if (!super.withStructuredOutput) {
-        throw new Error(`withStructuredOutput is not implemented in the base class.
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<boolean>
+  ):
+    | Runnable<BaseLanguageModelInput, RunOutput>
+    | Runnable<
+        BaseLanguageModelInput,
+        { raw: BaseMessage; parsed: RunOutput }
+      > {
+    if (!super.withStructuredOutput) {
+      throw new Error(`withStructuredOutput is not implemented in the base class.
 This is likely due to an outdated version of "@langchain/core".
-Please upgrade to the latest version.`)
-      }
-      if (config?.includeRaw) {
-        return super.withStructuredOutput(outputSchema, {
-          ...config,
-          includeRaw: true,
-        });
-      } else {
-        return super.withStructuredOutput(outputSchema, {
-          ...config,
-          includeRaw: false,
-        });
-      }
+Please upgrade to the latest version.`);
     }
+    if (config?.includeRaw) {
+      return super.withStructuredOutput(outputSchema, {
+        ...config,
+        includeRaw: true,
+      });
+    } else {
+      return super.withStructuredOutput(outputSchema, {
+        ...config,
+        includeRaw: false,
+      });
+    }
+  }
 }
 
 function isChatGenerationChunk(

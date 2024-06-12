@@ -6,10 +6,10 @@ import { test, expect } from "@jest/globals";
 import { HumanMessage } from "@langchain/core/messages";
 import { AgentExecutor, createToolCallingAgent } from "langchain/agents";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { BedrockChat as BedrockChatWeb } from "../bedrock/web.js";
-import { TavilySearchResults } from "../../tools/tavily_search.js";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import { BedrockChat as BedrockChatWeb } from "../bedrock/web.js";
+import { TavilySearchResults } from "../../tools/tavily_search.js";
 
 void testChatModel(
   "Test Bedrock chat model Generating search queries: Command-r",
@@ -471,7 +471,7 @@ test.skip(".bindTools with openai tool format", async () => {
           name: "weather_tool",
           description: weatherTool.description,
           parameters: zodToJsonSchema(weatherTool),
-        }
+        },
       },
     ],
   });

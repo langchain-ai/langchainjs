@@ -74,11 +74,17 @@ interface TokenUsage {
 
 export type MistralAIToolChoice = "auto" | "any" | "none";
 
-export interface ChatMistralAICallOptions extends Omit<BaseLanguageModelCallOptions, "stop"> {
+export interface ChatMistralAICallOptions
+  extends Omit<BaseLanguageModelCallOptions, "stop"> {
   response_format?: {
     type: "text" | "json_object";
   };
-  tools?: (StructuredToolInterface | MistralAITool | ToolDefinition | Record<string, unknown>)[];
+  tools?: (
+    | StructuredToolInterface
+    | MistralAITool
+    | ToolDefinition
+    | Record<string, unknown>
+  )[];
   tool_choice?: MistralAIToolChoice;
 }
 
@@ -344,27 +350,31 @@ function _convertStructuredToolToMistralTool(
   });
 }
 
-function formatTools(tools: Required<ChatMistralAICallOptions["tools"]>): MistralAITool[] {
+function formatTools(
+  tools: Required<ChatMistralAICallOptions["tools"]>
+): MistralAITool[] {
   if (!tools || !tools.length) {
     return [];
   }
-  return tools.map((tool) => {
-        if (isStructuredTool(tool)) {
-          return _convertStructuredToolToMistralTool([tool as StructuredTool]);
-        }
-        if (isOpenAITool(tool)) {
-          return {
-            type: "function",
-            function: {
-              name: tool.function.name,
-              description: tool.function.description ?? `Tool: ${tool.function.name}`,
-              parameters: tool.function.parameters,
-            },
-          } as MistralAITool;
-        }
-        return tool as MistralAITool;
-      })
-      .flat();
+  return tools
+    .map((tool) => {
+      if (isStructuredTool(tool)) {
+        return _convertStructuredToolToMistralTool([tool as StructuredTool]);
+      }
+      if (isOpenAITool(tool)) {
+        return {
+          type: "function",
+          function: {
+            name: tool.function.name,
+            description:
+              tool.function.description ?? `Tool: ${tool.function.name}`,
+            parameters: tool.function.parameters,
+          },
+        } as MistralAITool;
+      }
+      return tool as MistralAITool;
+    })
+    .flat();
 }
 
 /**
@@ -471,10 +481,15 @@ export class ChatMistralAI<
   }
 
   override bindTools(
-    tools: (StructuredToolInterface | MistralAITool | ToolDefinition | Record<string, unknown>)[],
+    tools: (
+      | StructuredToolInterface
+      | MistralAITool
+      | ToolDefinition
+      | Record<string, unknown>
+    )[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
-    const mistralAITools = formatTools(tools)
+    const mistralAITools = formatTools(tools);
     return this.bind({
       tools: mistralAITools,
       ...kwargs,

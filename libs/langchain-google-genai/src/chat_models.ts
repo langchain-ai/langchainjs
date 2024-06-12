@@ -329,7 +329,11 @@ export class ChatGoogleGenerativeAI
   }
 
   override bindTools(
-    tools: (StructuredToolInterface | Record<string, unknown> | ToolDefinition)[],
+    tools: (
+      | StructuredToolInterface
+      | Record<string, unknown>
+      | ToolDefinition
+    )[],
     kwargs?: Partial<GoogleGenerativeAIChatCallOptions>
   ): Runnable<
     BaseLanguageModelInput,

@@ -25,6 +25,7 @@ import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
 import { isStructuredTool } from "@langchain/core/utils/function_calling";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { StructuredToolInterface } from "@langchain/core/tools";
+import { isOpenAITool } from "@langchain/core/utils/is_openai_tool";
 import {
   GoogleAIBaseLLMInput,
   GoogleAIModelParams,
@@ -56,8 +57,10 @@ import type {
   GeminiFunctionDeclaration,
   GeminiFunctionSchema,
 } from "./types.js";
-import { jsonSchemaToGeminiParameters, zodToGeminiParameters } from "./utils/zod_to_gemini_parameters.js";
-import { isOpenAITool } from "@langchain/core/utils/is_openai_tool";
+import {
+  jsonSchemaToGeminiParameters,
+  zodToGeminiParameters,
+} from "./utils/zod_to_gemini_parameters.js";
 
 class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   BaseMessage[],
@@ -155,7 +158,11 @@ export interface ChatGoogleBaseInput<AuthOptions>
     GoogleAISafetyParams {}
 
 function convertToGeminiTools(
-  structuredTools: (StructuredToolInterface | Record<string, unknown> | ToolDefinition)[]
+  structuredTools: (
+    | StructuredToolInterface
+    | Record<string, unknown>
+    | ToolDefinition
+  )[]
 ): GeminiTool[] {
   return [
     {
@@ -172,8 +179,12 @@ function convertToGeminiTools(
           if (isOpenAITool(structuredTool)) {
             return {
               name: structuredTool.function.name,
-              description: structuredTool.function.description ?? `A function available to call.`,
-              parameters: jsonSchemaToGeminiParameters(structuredTool.function.parameters),
+              description:
+                structuredTool.function.description ??
+                `A function available to call.`,
+              parameters: jsonSchemaToGeminiParameters(
+                structuredTool.function.parameters
+              ),
             };
           }
           return structuredTool as unknown as GeminiFunctionDeclaration;
@@ -299,7 +310,11 @@ export abstract class ChatGoogleBase<AuthOptions>
   }
 
   override bindTools(
-    tools: (StructuredToolInterface | Record<string, unknown> | ToolDefinition)[],
+    tools: (
+      | StructuredToolInterface
+      | Record<string, unknown>
+      | ToolDefinition
+    )[],
     kwargs?: Partial<GoogleAIBaseLanguageModelCallOptions>
   ): Runnable<
     BaseLanguageModelInput,

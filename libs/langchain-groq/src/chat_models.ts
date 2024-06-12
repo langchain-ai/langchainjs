@@ -368,7 +368,11 @@ export class ChatGroq extends BaseChatModel<
   }
 
   override bindTools(
-    tools: (Record<string, unknown> | StructuredToolInterface | ToolDefinition)[],
+    tools: (
+      | Record<string, unknown>
+      | StructuredToolInterface
+      | ToolDefinition
+    )[],
     kwargs?: Partial<ChatGroqCallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, ChatGroqCallOptions> {
     return this.bind({

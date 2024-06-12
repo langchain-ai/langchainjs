@@ -10,12 +10,12 @@ import {
 } from "@langchain/core/messages";
 import { z } from "zod";
 import { StructuredTool } from "@langchain/core/tools";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import {
   BaseChatModelsTests,
   BaseChatModelsTestsFields,
   RecordStringAny,
 } from "../base.js";
-import { zodToJsonSchema } from "zod-to-json-schema";
 
 const adderSchema = /* #__PURE__ */ z
   .object({
@@ -398,14 +398,16 @@ export abstract class ChatModelIntegrationTests<
         "bindTools undefined. Cannot test OpenAI formatted tool calls."
       );
     }
-    const modelWithTools = model.bindTools([{
-      type: "function",
-      function: {
-        name: "math_addition",
-        description: adderSchema.description,
-        parameters: zodToJsonSchema(adderSchema)
-      }
-    }]);
+    const modelWithTools = model.bindTools([
+      {
+        type: "function",
+        function: {
+          name: "math_addition",
+          description: adderSchema.description,
+          parameters: zodToJsonSchema(adderSchema),
+        },
+      },
+    ]);
 
     const result: AIMessage = await modelWithTools.invoke("What is 1 + 2");
     expect(result.tool_calls).toHaveLength(1);
