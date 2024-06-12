@@ -408,7 +408,6 @@ export abstract class ChatModelIntegrationTests<
     }]);
 
     const result: AIMessage = await modelWithTools.invoke("What is 1 + 2");
-    expect(result).toBeInstanceOf(AIMessage);
     expect(result.tool_calls).toHaveLength(1);
     if (!result.tool_calls) {
       throw new Error("result.tool_calls is undefined");

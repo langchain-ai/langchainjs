@@ -56,3 +56,19 @@ export function zodToGeminiParameters(
 
   return rest;
 }
+
+export function jsonSchemaToGeminiParameters(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  schema: Record<string, any>
+): GeminiFunctionSchema {
+  // Gemini doesn't accept either the $schema or additionalProperties
+  // attributes, so we need to explicitly remove them.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // const jsonSchema = zodToJsonSchema(zodObj) as any;
+  const jsonSchema = removeAdditionalProperties(
+    schema as GeminiJsonSchemaDirty
+  );
+  const { $schema, ...rest } = jsonSchema;
+
+  return rest;
+}
