@@ -21,7 +21,9 @@ import {
 } from "@langchain/core/outputs";
 import { StructuredToolInterface } from "@langchain/core/tools";
 import { isStructuredTool } from "@langchain/core/utils/function_calling";
-import { zodToGenerativeAIParameters } from "./zod_to_genai_parameters.js";
+import { jsonSchemaToGeminiParameters, zodToGenerativeAIParameters } from "./zod_to_genai_parameters.js";
+import { isOpenAITool } from "@langchain/core/utils/is_openai_tool";
+import { ToolDefinition } from "@langchain/core/language_models/base";
 
 export function getMessageAuthor(message: BaseMessage) {
   const type = message._getType();
@@ -241,7 +243,7 @@ export function convertResponseContentToChatGenerationChunk(
 }
 
 export function convertToGenerativeAITools(
-  structuredTools: (StructuredToolInterface | Record<string, unknown>)[]
+  structuredTools: (StructuredToolInterface | Record<string, unknown> | ToolDefinition)[]
 ): GoogleGenerativeAIFunctionDeclarationsTool[] {
   if (
     structuredTools.every(
@@ -264,6 +266,13 @@ export function convertToGenerativeAITools(
               name: structuredTool.name,
               description: structuredTool.description,
               parameters: jsonSchema,
+            };
+          }
+          if (isOpenAITool(structuredTool)) {
+            return {
+              name: structuredTool.function.name,
+              description: structuredTool.function.description ?? `A function available to call.`,
+              parameters: jsonSchemaToGeminiParameters(structuredTool.function.parameters),
             };
           }
           return structuredTool as unknown as GenerativeAIFunctionDeclaration;

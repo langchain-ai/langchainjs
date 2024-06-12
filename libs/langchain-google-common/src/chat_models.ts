@@ -170,14 +170,10 @@ function convertToGeminiTools(
             };
           }
           if (isOpenAITool(structuredTool)) {
-            let parameters: GeminiFunctionSchema = {
-              type: "object", // Default to `object` if no `type` field is provided.
-              ...structuredTool.function.parameters,
-            };
             return {
               name: structuredTool.function.name,
               description: structuredTool.function.description ?? `A function available to call.`,
-              parameters: jsonSchemaToGeminiParameters(parameters),
+              parameters: jsonSchemaToGeminiParameters(structuredTool.function.parameters),
             };
           }
           return structuredTool as unknown as GeminiFunctionDeclaration;

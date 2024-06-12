@@ -21,6 +21,7 @@ import {
   BaseLanguageModelCallOptions,
   BaseLanguageModelInput,
   StructuredOutputMethodOptions,
+  ToolDefinition,
 } from "@langchain/core/language_models/base";
 import { StructuredToolInterface } from "@langchain/core/tools";
 import {
@@ -328,7 +329,7 @@ export class ChatGoogleGenerativeAI
   }
 
   override bindTools(
-    tools: (StructuredToolInterface | Record<string, unknown>)[],
+    tools: (StructuredToolInterface | Record<string, unknown> | ToolDefinition)[],
     kwargs?: Partial<GoogleGenerativeAIChatCallOptions>
   ): Runnable<
     BaseLanguageModelInput,
