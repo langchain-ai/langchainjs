@@ -24,9 +24,8 @@ env:
 # Run a separate job for each check in the docker-compose file,
 # so that they run in parallel instead of overwhelming the default 2 CPU runner.
 jobs:
-  cohere-lowest-deps:
+  get-changed-files:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'pull_request' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -38,34 +37,13 @@ jobs:
           echo "changed_files<<EOF" >> $GITHUB_OUTPUT
           git diff --name-only -r HEAD^1 HEAD >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-      
-      - name: Use changed files
-        run: |
-          changed_files="${{ steps.get_changes.outputs.changed_files }}"
-          echo "Changed files: $changed_files"
-          echo "${{ contains(steps.get_changes.outputs.changed_files, 'libs/langchain-cohere') || contains(steps.get_changes.outputs.changed_files, 'langchain-core') }}"
-          # Perform further actions based on the changed files
 
-      # - name: Get changes
-      #   run: git diff --name-only -r HEAD^1 HEAD
-
-
-
-
-      # - name: Git diff
-      #   run: git diff --name-only -r HEAD^1 HEAD
-      # - name: Log changed files
-      
-      #   run: echo "${{ contains(git diff --name-only -r HEAD^1 HEAD, 'libs/langchain-cohere') }}"
-      # - uses: actions/checkout@v4
-      # - name: Use Node.js ${{ env.NODE_VERSION }}
-      #   uses: actions/setup-node@v3
-      #   with:
-      #     node-version: ${{ env.NODE_VERSION }}
-      #     cache: "yarn"
-      # - name: Install dependencies
-      #   run: yarn install --immutable
-      # - name: Build `@langchain/standard-tests`
-      #   run: yarn build --filter=@langchain/standard-tests
-      # - name: Test `@langchain/cohere` with lowest deps
-      #   run: docker compose -f dependency_range_tests/docker-compose.yml run cohere-lowest-deps
+  cohere-lowest-deps:
+    depends-on: get-changed-files
+    runs-on: ubuntu-latest
+    if: ${{ contains(steps.get_changes.outputs.changed_files, 'libs/langchain-cohere') || contains(steps.get_changes.outputs.changed_files, 'langchain-core') }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: ECHO BRAH!
+        run: echo "BRAH!"
