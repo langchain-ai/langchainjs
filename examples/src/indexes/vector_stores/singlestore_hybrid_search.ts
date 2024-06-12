@@ -37,14 +37,14 @@ export const run = async () => {
 
     await vectorStore.setSearchConfig({
         searchStrategy: "FILTER_BY_TEXT",
-        filterThershold: 0.1,
+        filterThreshold: 0.1,
     });
     const resultThree = await vectorStore.similaritySearch("rainstorm in parched desert, rain", 1);
-    console.log(resultTthree[0].pageContent);
+    console.log(resultThree[0].pageContent);
 
     await vectorStore.setSearchConfig({
         searchStrategy: "FILTER_BY_VECTOR",
-        filterThershold: 0.1,
+        filterThreshold: 0.1,
     });
     const resultFour = await vectorStore.similaritySearch("rainstorm in parched desert, rain", 1);
     console.log(resultFour[0].pageContent);
