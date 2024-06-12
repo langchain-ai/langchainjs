@@ -15,6 +15,7 @@ import {
   BaseChatModelsTestsFields,
   RecordStringAny,
 } from "../base.js";
+import { zodToJsonSchema } from "zod-to-json-schema";
 
 const adderSchema = /* #__PURE__ */ z
   .object({
@@ -385,6 +386,37 @@ export abstract class ChatModelIntegrationTests<
     expect([1, 2].includes(resultStringContent.parsed.b)).toBeTruthy();
   }
 
+  async testBindToolsWithOpenAIFormattedTools() {
+    if (!this.chatModelHasToolCalling) {
+      console.log("Test requires tool calling. Skipping...");
+      return;
+    }
+
+    const model = new this.Cls(this.constructorArgs);
+    if (!model.bindTools) {
+      throw new Error(
+        "bindTools undefined. Cannot test OpenAI formatted tool calls."
+      );
+    }
+    const modelWithTools = model.bindTools([{
+      type: "function",
+      function: {
+        name: "math_addition",
+        description: adderSchema.description,
+        parameters: zodToJsonSchema(adderSchema)
+      }
+    }]);
+
+    const result: AIMessage = await modelWithTools.invoke("What is 1 + 2");
+    expect(result).toBeInstanceOf(AIMessage);
+    expect(result.tool_calls).toHaveLength(1);
+    if (!result.tool_calls) {
+      throw new Error("result.tool_calls is undefined");
+    }
+    const { tool_calls } = result;
+    expect(tool_calls[0].name).toBe("math_addition");
+  }
+
   /**
    * Run all unit tests for the chat model.
    * Each test is wrapped in a try/catch block to prevent the entire test suite from failing.
@@ -469,6 +501,13 @@ export abstract class ChatModelIntegrationTests<
     } catch (e: any) {
       allTestsPassed = false;
       console.error("testWithStructuredOutputIncludeRaw failed", e);
+    }
+
+    try {
+      await this.testBindToolsWithOpenAIFormattedTools();
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error("testBindToolsWithOpenAIFormattedTools failed", e);
     }
 
     return allTestsPassed;
