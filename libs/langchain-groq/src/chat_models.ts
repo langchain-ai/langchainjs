@@ -48,6 +48,7 @@ import {
   BaseLanguageModelInput,
   FunctionDefinition,
   StructuredOutputMethodOptions,
+  ToolDefinition,
 } from "@langchain/core/language_models/base";
 import {
   BaseLLMOutputParser,
@@ -367,7 +368,7 @@ export class ChatGroq extends BaseChatModel<
   }
 
   override bindTools(
-    tools: (Record<string, unknown> | StructuredToolInterface)[],
+    tools: (Record<string, unknown> | StructuredToolInterface | ToolDefinition)[],
     kwargs?: Partial<ChatGroqCallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, ChatGroqCallOptions> {
     return this.bind({
