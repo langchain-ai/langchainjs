@@ -764,9 +764,9 @@ case where this is particularly useful. Most commonly, the output format will be
 though other formats such as [XML](/docs/how_to/output_parser_xml/) can be useful too. Below, we'll discuss
 a few ways to get structured output from models in LangChain.
 
-#### `.with_structured_output()`
+#### `.withStructuredOutput()`
 
-For convenience, some LangChain chat models support a `.with_structured_output()` method.
+For convenience, some LangChain chat models support a `.withStructuredOutput()` method.
 This method only requires a schema as input, and returns a dict or Pydantic object.
 Generally, this method is only present on models that support one of the more advanced methods described below,
 and will use one of them under the hood. It takes care of importing a suitable output parser and
