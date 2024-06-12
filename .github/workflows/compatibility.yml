@@ -39,7 +39,7 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
   cohere-lowest-deps:
-    depends-on: get-changed-files
+    needs: get-changed-files
     runs-on: ubuntu-latest
     if: ${{ contains(steps.get_changes.outputs.changed_files, 'libs/langchain-cohere') || contains(steps.get_changes.outputs.changed_files, 'langchain-core') }}
     steps:
