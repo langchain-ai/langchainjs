@@ -43,7 +43,7 @@ jobs:
         run: |
           changed_files="${{ steps.get_changes.outputs.changed_files }}"
           echo "Changed files: $changed_files"
-          echo "${{ contains($changed_files, 'libs/langchain-cohere') }}"
+          echo "${{ contains(steps.get_changes.outputs.changed_files, 'libs/langchain-cohere') }}"
           # Perform further actions based on the changed files
 
       # - name: Get changes
