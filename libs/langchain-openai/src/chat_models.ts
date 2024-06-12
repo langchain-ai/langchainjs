@@ -274,14 +274,13 @@ export interface ChatOpenAICallOptions
 /**
  * Wrapper around OpenAI large language models that use the Chat endpoint.
  *
- * To use you should have the `openai` package installed, with the
- * `OPENAI_API_KEY` environment variable set.
+ * To use you should have the `OPENAI_API_KEY` environment variable set.
  *
- * To use with Azure you should have the `openai` package installed, with the
+ * To use with Azure you should have the:
  * `AZURE_OPENAI_API_KEY`,
  * `AZURE_OPENAI_API_INSTANCE_NAME`,
  * `AZURE_OPENAI_API_DEPLOYMENT_NAME`
- * and `AZURE_OPENAI_API_VERSION` environment variable set.
+ * and `AZURE_OPENAI_API_VERSION` environment variables set.
  * `AZURE_OPENAI_BASE_PATH` is optional and will override `AZURE_OPENAI_API_INSTANCE_NAME` if you need to use a custom endpoint.
  *
  * @remarks
