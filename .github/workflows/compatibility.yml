@@ -41,7 +41,7 @@ jobs:
   cohere-lowest-deps:
     needs: get-changed-files
     runs-on: ubuntu-latest
-    if: ${{ contains(get-changed-files.steps.get_changes.outputs.changed_files, 'libs/langchain-cohere') || contains(get-changed-files.steps.get_changes.outputs.changed_files, 'langchain-core') }}
+    if: contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-cohere') || contains(needs.get-changed-files.outputs.changed_files, 'langchain-core')
     steps:
       - name: Checkout
         uses: actions/checkout@v3
