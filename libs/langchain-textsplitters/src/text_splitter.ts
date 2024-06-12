@@ -3,9 +3,6 @@ import { Document, BaseDocumentTransformer } from "@langchain/core/documents";
 import { getEncoding } from "@langchain/core/utils/tiktoken";
 
 export interface TextSplitterParams {
-  /**
-   * todo drop me
-   */
   chunkSize: number;
   chunkOverlap: number;
   keepSeparator: boolean;
