@@ -730,7 +730,7 @@ export abstract class BaseChatModel<
     return result.content;
   }
 
-  withStructuredOutput?<
+  withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -742,7 +742,7 @@ export abstract class BaseChatModel<
     config?: StructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
-  withStructuredOutput?<
+  withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>
   >(
@@ -753,7 +753,7 @@ export abstract class BaseChatModel<
     config?: StructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
-  withStructuredOutput?<
+  withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>
   >(
