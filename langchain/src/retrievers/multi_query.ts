@@ -159,10 +159,7 @@ export class MultiQueryRetriever extends BaseRetriever {
     const documents: Document[] = [];
     await Promise.all(
       queries.map(async (query) => {
-        const docs = await this.retriever.invoke(
-          query,
-          runManager?.getChild()
-        );
+        const docs = await this.retriever.invoke(query, runManager?.getChild());
         documents.push(...docs);
       })
     );

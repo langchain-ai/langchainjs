@@ -327,8 +327,7 @@ describe("add documents and similarity search tests", () => {
 
     const standardRetriever = vectorStore.asRetriever();
 
-    const standardRetrieverOutput =
-      await standardRetriever.invoke("foo");
+    const standardRetrieverOutput = await standardRetriever.invoke("foo");
     expect(output).toHaveLength(texts.length);
 
     const standardRetrieverActual = standardRetrieverOutput.map(

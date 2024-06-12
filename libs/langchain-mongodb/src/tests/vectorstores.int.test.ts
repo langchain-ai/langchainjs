@@ -141,8 +141,7 @@ test("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () => {
 
     const standardRetriever = await vectorStore.asRetriever();
 
-    const standardRetrieverOutput =
-      await standardRetriever.invoke("foo");
+    const standardRetrieverOutput = await standardRetriever.invoke("foo");
     expect(output).toHaveLength(texts.length);
 
     const standardRetrieverActual = standardRetrieverOutput.map(
