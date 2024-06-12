@@ -26,6 +26,8 @@ env:
 jobs:
   get-changed-files:
     runs-on: ubuntu-latest
+    outputs:
+      changed_files: ${{ steps.get_changes.outputs.changed_files }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -39,9 +41,13 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
       - name: Echo changed files
         run: echo "${{ steps.get_changes.outputs.changed_files }}"
-      if: ${{ contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-cohere') || contains(needs.get-changed-files.outputs.changed_files, 'langchain-core') }}
-      - name: Great success
-        run: echo "Great success"
+
+  another-job:
+    needs: get-changed-files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Use changed files
+        run: echo "${{ needs.get-changed-files.outputs.changed_files }}"
 
   # cohere-lowest-deps:
   #   needs: get-changed-files
