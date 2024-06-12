@@ -366,18 +366,18 @@ export class SingleStoreVectorStore extends VectorStore {
         ? `${this.distanceMetric}(${this.vectorColumnName}, JSON_ARRAY_PACK(?)) > ?`
         : `${this.distanceMetric}(${this.vectorColumnName}, JSON_ARRAY_PACK(?)) < ?`;
     };
-    const whereClouses: string[] = [];
+    const whereClauses: string[] = [];
     if (filter) {
-      whereClouses.push(buildWhereClause(filter, []));
+      whereClauses.push(buildWhereClause(filter, []));
     }
     if (this.searchConfig.searchStrategy === "FILTER_BY_TEXT") {
-      whereClouses.push(filterByTextClause());
+      whereClauses.push(filterByTextClause());
     }
     if (this.searchConfig.searchStrategy === "FILTER_BY_VECTOR") {
-      whereClouses.push(filterByVectorClause());
+      whereClauses.push(filterByVectorClause());
     }
     const whereClause =
-      whereClouses.length > 0 ? `WHERE ${whereClouses.join(" AND ")}` : "";
+      whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
 
     let queryText = "";
     switch (this.searchConfig.searchStrategy) {
