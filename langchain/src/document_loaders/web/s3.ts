@@ -5,6 +5,12 @@ import { Readable } from "node:stream";
 import { S3Client, GetObjectCommand, S3ClientConfig } from "@aws-sdk/client-s3";
 import { BaseDocumentLoader } from "../base.js";
 import { UnstructuredLoader as UnstructuredLoaderDefault } from "../fs/unstructured.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/web/s3",
+  newPackageName: "@langchain/community",
+});
 
 /**
  * Represents the configuration options for the S3 client. It extends the
@@ -20,6 +26,8 @@ export type S3Config = S3ClientConfig & {
 };
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/s3" instead. This entrypoint will be removed in 0.3.0.
+ *
  * Represents the parameters for the S3Loader class. It includes
  * properties such as the S3 bucket, key, unstructured API URL,
  * unstructured API key, S3 configuration, file system module, and
@@ -41,6 +49,8 @@ export interface S3LoaderParams {
 }
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/s3" instead. This entrypoint will be removed in 0.3.0.
+ *
  * A class that extends the BaseDocumentLoader class. It represents a
  * document loader for loading files from an S3 bucket.
  * @example
@@ -159,9 +169,10 @@ export class S3Loader extends BaseDocumentLoader {
       const docs = await unstructuredLoader.load();
 
       return docs;
-    } catch {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
       throw new Error(
-        `Failed to load file ${filePath} using unstructured loader.`
+        `Failed to load file ${filePath} using unstructured loader: ${e.message}`
       );
     }
   }

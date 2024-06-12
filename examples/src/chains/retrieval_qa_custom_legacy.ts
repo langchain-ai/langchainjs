@@ -1,7 +1,7 @@
 import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { RetrievalQAChain, loadQAMapReduceChain } from "langchain/chains";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import * as fs from "fs";
 
 // Initialize the LLM to use to answer the question.
@@ -18,7 +18,7 @@ const chain = new RetrievalQAChain({
   combineDocumentsChain: loadQAMapReduceChain(model),
   retriever: vectorStore.asRetriever(),
 });
-const res = await chain.call({
+const res = await chain.invoke({
   query: "What did the president say about Justice Breyer?",
 });
 console.log({ res });

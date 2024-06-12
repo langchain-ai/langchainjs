@@ -36,7 +36,7 @@ const retriever = vectorStore.asRetriever({
 // Mongo has a slight processing delay between ingest and availability
 await sleep(2000);
 
-const results = await retriever.getRelevantDocuments("goodbye");
+const results = await retriever.invoke("goodbye");
 
 console.log(results);
 

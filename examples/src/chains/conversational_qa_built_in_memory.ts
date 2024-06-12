@@ -1,7 +1,7 @@
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { LLMChain } from "langchain/chains";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { BufferMemory } from "langchain/memory";
 import * as fs from "fs";
 import { formatDocumentsAsString } from "langchain/util/document";
@@ -137,7 +137,7 @@ const chain = RunnableSequence.from([
     },
     // Fetch relevant context based on the question
     context: async (input: { question: string }) =>
-      retriever.getRelevantDocuments(input.question),
+      retriever.invoke(input.question),
   },
   performQuestionAnswering,
 ]);

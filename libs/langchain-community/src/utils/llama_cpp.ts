@@ -1,4 +1,11 @@
-import { LlamaModel, LlamaContext, LlamaChatSession } from "node-llama-cpp";
+import {
+  LlamaModel,
+  LlamaContext,
+  LlamaChatSession,
+  LlamaJsonSchemaGrammar,
+  LlamaGrammar,
+  GbnfJsonSchema,
+} from "node-llama-cpp";
 
 /**
  * Note that the modelPath is the only required parameter. For testing you
@@ -41,6 +48,10 @@ export interface LlamaBaseCppInputs {
   useMmap?: boolean;
   /** Only load the vocabulary, no weights. */
   vocabOnly?: boolean;
+  /** JSON schema to be used to format output. Also known as `grammar`. */
+  jsonSchema?: object;
+  /** GBNF string to be used to format output. Also known as `grammar`. */
+  gbnf?: string;
 }
 
 export function createLlamaModel(inputs: LlamaBaseCppInputs): LlamaModel {
@@ -50,6 +61,8 @@ export function createLlamaModel(inputs: LlamaBaseCppInputs): LlamaModel {
     useMlock: inputs?.useMlock,
     useMmap: inputs?.useMmap,
     vocabOnly: inputs?.vocabOnly,
+    jsonSchema: inputs?.jsonSchema,
+    gbnf: inputs?.gbnf,
   };
 
   return new LlamaModel(options);
@@ -76,4 +89,23 @@ export function createLlamaContext(
 
 export function createLlamaSession(context: LlamaContext): LlamaChatSession {
   return new LlamaChatSession({ context });
+}
+
+export function createLlamaJsonSchemaGrammar(
+  schemaString: object | undefined
+): LlamaJsonSchemaGrammar<GbnfJsonSchema> | undefined {
+  if (schemaString === undefined) {
+    return undefined;
+  }
+
+  const schemaJSON = schemaString as GbnfJsonSchema;
+  return new LlamaJsonSchemaGrammar(schemaJSON);
+}
+
+export function createCustomGrammar(
+  filePath: string | undefined
+): LlamaGrammar | undefined {
+  return filePath === undefined
+    ? undefined
+    : new LlamaGrammar({ grammar: filePath });
 }

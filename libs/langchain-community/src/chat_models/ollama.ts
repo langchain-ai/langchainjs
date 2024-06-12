@@ -2,6 +2,7 @@ import type { BaseLanguageModelCallOptions } from "@langchain/core/language_mode
 import {
   SimpleChatModel,
   type BaseChatModelParams,
+  LangSmithParams,
 } from "@langchain/core/language_models/chat_models";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -174,6 +175,18 @@ export class ChatOllama
     this.useMMap = fields.useMMap;
     this.vocabOnly = fields.vocabOnly;
     this.format = fields.format;
+  }
+
+  getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+    const params = this.invocationParams(options);
+    return {
+      ls_provider: "ollama",
+      ls_model_name: this.model,
+      ls_model_type: "chat",
+      ls_temperature: this.temperature ?? undefined,
+      ls_stop: this.stop,
+      ls_max_tokens: params.options.num_predict,
+    };
   }
 
   _llmType() {

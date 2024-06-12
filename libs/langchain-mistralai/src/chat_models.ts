@@ -3,10 +3,11 @@ import {
   ChatCompletionResponse,
   Function as MistralAIFunction,
   ToolCalls as MistralAIToolCalls,
-  ToolChoice as MistralAIToolChoice,
   ResponseFormat,
   ChatCompletionResponseChunk,
-  ToolType,
+  ChatRequest,
+  Tool as MistralAITool,
+  Message as MistralAIMessage,
 } from "@mistralai/mistralai";
 import {
   MessageType,
@@ -33,6 +34,7 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   type BaseChatModelParams,
   BaseChatModel,
+  LangSmithParams,
 } from "@langchain/core/language_models/chat_models";
 
 import {
@@ -43,7 +45,6 @@ import {
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { StructuredTool, StructuredToolInterface } from "@langchain/core/tools";
-import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { z } from "zod";
 import {
   type BaseLLMOutputParser,
@@ -58,7 +59,6 @@ import {
 } from "@langchain/core/output_parsers/openai_tools";
 import {
   Runnable,
-  RunnableInterface,
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
@@ -70,42 +70,19 @@ interface TokenUsage {
   totalTokens?: number;
 }
 
-type MistralAIInputMessage = {
-  role: string;
-  name?: string;
-  content: string | string[];
-  tool_calls?: MistralAIToolCalls[];
-};
+export type MistralAIToolChoice = "auto" | "any" | "none";
 
 type MistralAIToolInput = { type: string; function: MistralAIFunction };
-
-type MistralAIChatCompletionOptions = {
-  model: string;
-  messages: Array<{
-    role: string;
-    name?: string;
-    content: string | string[];
-    tool_calls?: MistralAIToolCalls[];
-  }>;
-  tools?: Array<MistralAIToolInput>;
-  temperature?: number;
-  maxTokens?: number;
-  topP?: number;
-  randomSeed?: number;
-  safeMode?: boolean;
-  safePrompt?: boolean;
-  toolChoice?: MistralAIToolChoice;
-  responseFormat?: ResponseFormat;
-};
-
 interface MistralAICallOptions
   extends Omit<BaseLanguageModelCallOptions, "stop"> {
   response_format?: {
     type: "text" | "json_object";
   };
-  tools: StructuredToolInterface[] | MistralAIToolInput[];
+  tools: StructuredToolInterface[] | MistralAIToolInput[] | MistralAITool[];
   tool_choice?: MistralAIToolChoice;
 }
+
+export interface ChatMistralAICallOptions extends MistralAICallOptions {}
 
 /**
  * Input to chat model class.
@@ -178,7 +155,7 @@ export interface ChatMistralAIInput extends BaseChatModelParams {
 
 function convertMessagesToMistralMessages(
   messages: Array<BaseMessage>
-): Array<MistralAIInputMessage> {
+): Array<MistralAIMessage> {
   const getRole = (role: MessageType) => {
     switch (role) {
       case "human":
@@ -212,28 +189,30 @@ function convertMessagesToMistralMessages(
   const getTools = (message: BaseMessage): MistralAIToolCalls[] | undefined => {
     if (isAIMessage(message) && !!message.tool_calls?.length) {
       return message.tool_calls
-        .map((toolCall) => ({ ...toolCall, id: "null" }))
+        .map((toolCall) => ({ ...toolCall, id: toolCall.id }))
         .map(convertLangChainToolCallToOpenAI) as MistralAIToolCalls[];
     }
-    if (message.additional_kwargs.tool_calls === undefined) {
+    if (!message.additional_kwargs.tool_calls?.length) {
       return undefined;
     }
     const toolCalls: Omit<OpenAIToolCall, "index">[] =
       message.additional_kwargs.tool_calls;
-    return (
-      toolCalls?.map((toolCall) => ({
-        id: "null",
-        type: "function" as ToolType.function,
-        function: toolCall.function,
-      })) || []
-    );
+    return toolCalls?.map((toolCall) => ({
+      id: toolCall.id,
+      type: "function",
+      function: toolCall.function,
+    }));
   };
 
-  return messages.map((message) => ({
-    role: getRole(message._getType()),
-    content: getContent(message.content),
-    tool_calls: getTools(message),
-  }));
+  return messages.map((message) => {
+    const toolCalls = getTools(message);
+    const content = toolCalls === undefined ? getContent(message.content) : "";
+    return {
+      role: getRole(message._getType()),
+      content,
+      tool_calls: toolCalls,
+    };
+  }) as MistralAIMessage[];
 }
 
 function mistralAIResponseToChatMessage(
@@ -268,7 +247,12 @@ function mistralAIResponseToChatMessage(
         tool_calls: toolCalls,
         invalid_tool_calls: invalidToolCalls,
         additional_kwargs: {
-          tool_calls: rawToolCalls,
+          tool_calls: rawToolCalls.length
+            ? rawToolCalls.map((toolCall) => ({
+                ...toolCall,
+                type: "function",
+              }))
+            : undefined,
         },
       });
     }
@@ -348,8 +332,18 @@ function _convertDeltaToMessageChunk(delta: {
 
 function _convertStructuredToolToMistralTool(
   tools: StructuredToolInterface[]
-): MistralAIToolInput[] {
-  return tools.map((tool) => convertToOpenAITool(tool) as MistralAIToolInput);
+): MistralAITool[] {
+  return tools.map((tool) => {
+    const description = tool.description ?? `Tool: ${tool.name}`;
+    return {
+      type: "function",
+      function: {
+        name: tool.name,
+        description,
+        parameters: zodToJsonSchema(tool.schema),
+      },
+    };
+  });
 }
 
 /**
@@ -417,6 +411,17 @@ export class ChatMistralAI<
     this.model = this.modelName;
   }
 
+  getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+    const params = this.invocationParams(options);
+    return {
+      ls_provider: "mistral",
+      ls_model_name: this.model,
+      ls_model_type: "chat",
+      ls_temperature: params.temperature ?? undefined,
+      ls_max_tokens: params.maxTokens ?? undefined,
+    };
+  }
+
   _llmType() {
     return "mistral_ai";
   }
@@ -426,17 +431,27 @@ export class ChatMistralAI<
    */
   invocationParams(
     options?: this["ParsedCallOptions"]
-  ): Omit<MistralAIChatCompletionOptions, "messages"> {
+  ): Omit<ChatRequest, "messages"> {
     const { response_format, tools, tool_choice } = options ?? {};
-    const mistralAITools = tools
+    const mistralAITools: Array<MistralAITool> | undefined = tools
       ?.map((tool) => {
         if ("lc_namespace" in tool) {
           return _convertStructuredToolToMistralTool([tool]);
         }
-        return tool;
+        if (!tool.function.description) {
+          return {
+            type: "function",
+            function: {
+              name: tool.function.name,
+              description: `Tool: ${tool.function.name}`,
+              parameters: tool.function.parameters,
+            },
+          } as MistralAITool;
+        }
+        return tool as MistralAITool;
       })
       .flat();
-    const params: Omit<MistralAIChatCompletionOptions, "messages"> = {
+    const params: Omit<ChatRequest, "messages"> = {
       model: this.model,
       tools: mistralAITools,
       temperature: this.temperature,
@@ -454,7 +469,7 @@ export class ChatMistralAI<
   override bindTools(
     tools: (Record<string, unknown> | StructuredToolInterface)[],
     kwargs?: Partial<CallOptions>
-  ): RunnableInterface<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
+  ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
     const mistralAITools = tools
       ?.map((tool) => {
         if ("lc_namespace" in tool) {
@@ -471,21 +486,21 @@ export class ChatMistralAI<
 
   /**
    * Calls the MistralAI API with retry logic in case of failures.
-   * @param {MistralAIChatCompletionOptions} input The input to send to the MistralAI API.
+   * @param {ChatRequest} input The input to send to the MistralAI API.
    * @returns {Promise<MistralAIChatCompletionResult | AsyncGenerator<MistralAIChatCompletionResult>>} The response from the MistralAI API.
    */
   async completionWithRetry(
-    input: MistralAIChatCompletionOptions,
+    input: ChatRequest,
     streaming: true
   ): Promise<AsyncGenerator<ChatCompletionResponseChunk>>;
 
   async completionWithRetry(
-    input: MistralAIChatCompletionOptions,
+    input: ChatRequest,
     streaming: false
   ): Promise<ChatCompletionResponse>;
 
   async completionWithRetry(
-    input: MistralAIChatCompletionOptions,
+    input: ChatRequest,
     streaming: boolean
   ): Promise<
     ChatCompletionResponse | AsyncGenerator<ChatCompletionResponseChunk>
@@ -494,15 +509,23 @@ export class ChatMistralAI<
     const client = new MistralClient(this.apiKey, this.endpoint);
 
     return this.caller.call(async () => {
-      let res:
-        | ChatCompletionResponse
-        | AsyncGenerator<ChatCompletionResponseChunk>;
-      if (streaming) {
-        res = client.chatStream(input);
-      } else {
-        res = await client.chat(input);
+      try {
+        let res:
+          | ChatCompletionResponse
+          | AsyncGenerator<ChatCompletionResponseChunk>;
+        if (streaming) {
+          res = client.chatStream(input);
+        } else {
+          res = await client.chat(input);
+        }
+        return res;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (e: any) {
+        if (e.message?.includes("status: 400")) {
+          e.status = 400;
+        }
+        throw e;
       }
-      return res;
     });
   }
 

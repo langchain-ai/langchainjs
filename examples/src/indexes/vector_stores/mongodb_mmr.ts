@@ -30,7 +30,7 @@ const retriever = await vectorStore.asRetriever({
   },
 });
 
-const retrieverOutput = await retriever.getRelevantDocuments("Hello world");
+const retrieverOutput = await retriever.invoke("Hello world");
 
 console.log(retrieverOutput);
 

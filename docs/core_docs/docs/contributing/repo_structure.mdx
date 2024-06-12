@@ -1,0 +1,51 @@
+---
+sidebar_position: 0.5
+---
+
+# Repository Structure
+
+If you plan on contributing to LangChain code or documentation, it can be useful
+to understand the high level structure of the repository.
+
+LangChain is organized as a [monorepo](https://en.wikipedia.org/wiki/Monorepo) that contains multiple packages.
+
+Here's the structure visualized as a tree:
+
+```text
+.
+├── docs
+│   ├── core_docs # Contains content for the documentation here: https://js.langchain.com/
+│   ├── api_refs # Contains content for the API refs here: https://v02.api.js.langchain.com/
+├── langchain # Main package
+│   ├── src/**/tests/*.test.ts/ # Unit tests (present in each package not shown for brevity)
+│   ├── src/**/tests/*.int.test.ts/ # Integration tests (present in each package not shown for brevity)
+├── langchain # Base interfaces for key abstractions
+├── libs # Community packages
+│   ├── langchain-community # Third-party integrations
+│   ├── langchain-partner-1
+│   ├── langchain-partner-2
+│   ├── ...
+```
+
+The root directory also contains the following files:
+
+- `package.json`: Dependencies for building docs and linting docs.
+
+There are other files in the root directory level, but their presence should be self-explanatory. Feel free to browse around!
+
+## Documentation
+
+The `/docs` directory contains the content for the documentation that is shown
+at https://js.langchain.com/ and the associated API Reference https://v02.api.js.langchain.com/
+
+See the [documentation](/docs/contributing/documentation/style_guide) guidelines to learn how to contribute to the documentation.
+
+## Code
+
+The `/libs` directory contains the code for the LangChain packages.
+
+To learn more about how to contribute code see the following guidelines:
+
+- [Code](./code.mdx) Learn how to develop in the LangChain codebase.
+- [Integrations](./integrations.mdx) to learn how to contribute to third-party integrations to langchain-community or to start a new partner package.
+- [Testing](./testing.mdx) guidelines to learn how to write tests for the packages.

@@ -19,6 +19,12 @@ import yaml from "js-yaml";
 import { Document } from "@langchain/core/documents";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { BaseDocumentLoader } from "../base.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/web/notionapi",
+  newPackageName: "@langchain/community",
+});
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type GuardType<T> = T extends (x: any, ...rest: any) => x is infer U
@@ -70,6 +76,9 @@ export type OnDocumentLoadedCallback = (
   rootTitle?: string
 ) => void;
 
+/**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/notionapi" instead. This entrypoint will be removed in 0.3.0.
+ */
 export type NotionAPILoaderOptions = {
   clientOptions: ConstructorParameters<typeof Client>[0];
   id: string;
@@ -80,16 +89,21 @@ export type NotionAPILoaderOptions = {
 };
 
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/web/notionapi" instead. This entrypoint will be removed in 0.3.0.
+ *
  * A class that extends the BaseDocumentLoader class. It represents a
  * document loader for loading documents from Notion using the Notion API.
  * @example
  * ```typescript
+ * import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+ *
  * const pageLoader = new NotionAPILoader({
  *   clientOptions: { auth: "<NOTION_INTEGRATION_TOKEN>" },
  *   id: "<PAGE_ID>",
  *   type: "page",
  * });
- * const pageDocs = await pageLoader.loadAndSplit();
+ * const splitter = new RecursiveCharacterTextSplitter();
+ * const pageDocs = await pageLoader.loadAndSplit(splitter);
  * const dbLoader = new NotionAPILoader({
  *   clientOptions: { auth: "<NOTION_INTEGRATION_TOKEN>" },
  *   id: "<DATABASE_ID>",

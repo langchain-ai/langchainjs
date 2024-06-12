@@ -1,0 +1,63 @@
+# How to invoke runnables in parallel
+
+:::info Prerequisites
+
+This guide assumes familiarity with the following concepts:
+
+- [LangChain Expression Language (LCEL)](/docs/concepts/#langchain-expression-language)
+- [Chaining runnables](/docs/how_to/sequence/)
+
+:::
+
+The [`RunnableParallel`](https://v02.api.js.langchain.com/classes/langchain_core_runnables.RunnableParallel.html) (also known as a `RunnableMap`) primitive is an object whose values are runnables (or things that can be coerced to runnables, like functions).
+It runs all of its values in parallel, and each value is called with the initial input to the `RunnableParallel`. The final return value is an object with the results of each value under its appropriate key.
+
+## Formatting with `RunnableParallels`
+
+`RunnableParallels` are useful for parallelizing operations, but can also be useful for manipulating the output of one Runnable to match the input format of the next Runnable in a sequence. You can use them to split or fork the chain so that multiple components can process the input in parallel. Later, other components can join or merge the results to synthesize a final response. This type of chain creates a computation graph that looks like the following:
+
+```text
+     Input
+      / \
+     /   \
+ Branch1 Branch2
+     \   /
+      \ /
+      Combine
+```
+
+Below, the input to each chain in the `RunnableParallel` is expected to be an object with a key for `"topic"`.
+We can satisfy that requirement by invoking our chain with an object matching that structure.
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/anthropic @langchain/cohere
+```
+
+import CodeBlock from "@theme/CodeBlock";
+import BasicExample from "@examples/guides/expression_language/runnable_maps_basic.ts";
+
+<CodeBlock language="typescript">{BasicExample}</CodeBlock>
+
+## Manipulating outputs/inputs
+
+Maps can be useful for manipulating the output of one Runnable to match the input format of the next Runnable in a sequence.
+
+Note below that the object within the `RunnableSequence.from()` call is automatically coerced into a runnable map. All keys of the object must
+have values that are runnables or can be themselves coerced to runnables (functions to `RunnableLambda`s or objects to `RunnableMap`s).
+This coercion will also occur when composing chains via the `.pipe()` method.
+
+import SequenceExample from "@examples/guides/expression_language/runnable_maps_sequence.ts";
+
+<CodeBlock language="typescript">{SequenceExample}</CodeBlock>
+
+Here the input to prompt is expected to be a map with keys "context" and "question". The user input is just the question. So we need to get the context using our retriever and passthrough the user input under the "question" key.
+
+## Next steps
+
+You now know some ways to format and parallelize chain steps with `RunnableParallel`.
+
+Next, you might be interested in [using custom logic](/docs/how_to/functions/) in your chains.

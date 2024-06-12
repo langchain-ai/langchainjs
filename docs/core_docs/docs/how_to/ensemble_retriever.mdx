@@ -1,0 +1,29 @@
+# How to combine results from multiple retrievers
+
+:::info Prerequisites
+
+This guide assumes familiarity with the following concepts:
+
+- [Documents](/docs/concepts#document)
+- [Retrievers](/docs/concepts#retrievers)
+
+:::
+
+The [EnsembleRetriever](https://api.js.langchain.com/classes/langchain_retrievers_ensemble.EnsembleRetriever.html) supports ensembling of results from multiple retrievers. It is initialized with a list of [BaseRetriever](https://api.js.langchain.com/classes/langchain_core_retrievers.BaseRetriever.html) objects. EnsembleRetrievers rerank the results of the constituent retrievers based on the [Reciprocal Rank Fusion](https://plg.uwaterloo.ca/~gvcormac/cormacksigir09-rrf.pdf) algorithm.
+
+By leveraging the strengths of different algorithms, the `EnsembleRetriever` can achieve better performance than any single algorithm.
+
+One useful pattern is to combine a keyword matching retriever with a dense retriever (like embedding similarity), because their strengths are complementary. This can be considered a form of "hybrid search". The sparse retriever is good at finding relevant documents based on keywords, while the dense retriever is good at finding relevant documents based on semantic similarity.
+
+Below we demonstrate ensembling of a [simple custom retriever](/docs/how_to/custom_retriever/) that simply returns documents that directly contain the input query with a retriever derived from a [demo, in-memory, vector store](https://api.js.langchain.com/classes/langchain_vectorstores_memory.MemoryVectorStore.html).
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/retrievers/ensemble_retriever.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
+## Next steps
+
+You've now learned how to combine results from multiple retrievers.
+Next, check out some other retrieval how-to guides, such as how to [improve results using multiple embeddings per document](/docs/how_to/multi_vector)
+or how to [create your own custom retriever](/docs/how_to/custom_retriever).

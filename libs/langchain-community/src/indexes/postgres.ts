@@ -7,6 +7,7 @@ import {
 
 export type PostgresRecordManagerOptions = {
   postgresConnectionOptions: PoolConfig;
+  pool?: Pool;
   tableName?: string;
   schema?: string;
 };
@@ -23,9 +24,9 @@ export class PostgresRecordManager implements RecordManagerInterface {
   finalTableName: string;
 
   constructor(namespace: string, config: PostgresRecordManagerOptions) {
-    const { postgresConnectionOptions, tableName } = config;
+    const { postgresConnectionOptions, tableName, pool } = config;
     this.namespace = namespace;
-    this.pool = new pg.Pool(postgresConnectionOptions);
+    this.pool = pool || new pg.Pool(postgresConnectionOptions);
     this.tableName = tableName || "upsertion_records";
     this.finalTableName = config.schema
       ? `"${config.schema}"."${tableName}"`
@@ -136,7 +137,15 @@ export class PostgresRecordManager implements RecordManagerInterface {
       .join(", ");
 
     const query = `
-      SELECT k, (key is not null) ex from unnest(ARRAY[${arrayPlaceholders}]) k left join ${this.finalTableName} on k=key and namespace = $1;
+      WITH ordered_keys AS (
+        SELECT * FROM unnest(ARRAY[${arrayPlaceholders}]) WITH ORDINALITY as t(key, o)
+      )
+      SELECT ok.key, (r.key IS NOT NULL) ex
+      FROM ordered_keys ok 
+      LEFT JOIN ${this.finalTableName} r 
+      ON r.key = ok.key 
+      AND namespace = $1
+      ORDER BY ok.o;
       `;
     const res = await this.pool.query(query, [this.namespace, ...keys.flat()]);
     return res.rows.map((row: { ex: boolean }) => row.ex);

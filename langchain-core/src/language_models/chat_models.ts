@@ -29,7 +29,10 @@ import {
 import type { RunnableConfig } from "../runnables/config.js";
 import type { BaseCache } from "../caches.js";
 import { StructuredToolInterface } from "../tools.js";
-import { RunnableInterface } from "../runnables/types.js";
+import { Runnable } from "../runnables/base.js";
+import { isStreamEventsHandler } from "../tracers/event_stream.js";
+import { isLogStreamHandler } from "../tracers/log_stream.js";
+import { concat } from "../utils/stream.js";
 
 /**
  * Represents a serialized chat model.
@@ -79,6 +82,15 @@ export function createChatMessageChunkEncoderStream() {
     },
   });
 }
+
+export type LangSmithParams = {
+  ls_provider?: string;
+  ls_model_name?: string;
+  ls_model_type: "chat";
+  ls_temperature?: number;
+  ls_max_tokens?: number;
+  ls_stop?: Array<string>;
+};
 
 interface ChatModelGenerateCachedParameters<
   T extends BaseChatModel<CallOptions>,
@@ -138,7 +150,7 @@ export abstract class BaseChatModel<
   bindTools?(
     tools: (StructuredToolInterface | Record<string, unknown>)[],
     kwargs?: Partial<CallOptions>
-  ): RunnableInterface<BaseLanguageModelInput, OutputMessageType, CallOptions>;
+  ): Runnable<BaseLanguageModelInput, OutputMessageType, CallOptions>;
 
   /**
    * Invokes the chat model with a single input.
@@ -185,12 +197,17 @@ export abstract class BaseChatModel<
       const messages = prompt.toChatMessages();
       const [runnableConfig, callOptions] =
         this._separateRunnableConfigFromCallOptions(options);
+
+      const inheritableMetadata = {
+        ...runnableConfig.metadata,
+        ...this.getLsParams(callOptions),
+      };
       const callbackManager_ = await CallbackManager.configure(
         runnableConfig.callbacks,
         this.callbacks,
         runnableConfig.tags,
         this.tags,
-        runnableConfig.metadata,
+        inheritableMetadata,
         this.metadata,
         { verbose: this.verbose }
       );
@@ -246,6 +263,13 @@ export abstract class BaseChatModel<
     }
   }
 
+  getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+    return {
+      ls_model_type: "chat",
+      ls_stop: options.stop,
+    };
+  }
+
   /** @ignore */
   async _generateUncached(
     messages: BaseMessageLike[][],
@@ -256,13 +280,17 @@ export abstract class BaseChatModel<
       messageList.map(coerceMessageLikeToMessage)
     );
 
+    const inheritableMetadata = {
+      ...handledOptions.metadata,
+      ...this.getLsParams(parsedOptions),
+    };
     // create callback manager and start run
     const callbackManager_ = await CallbackManager.configure(
       handledOptions.callbacks,
       this.callbacks,
       handledOptions.tags,
       this.tags,
-      handledOptions.metadata,
+      inheritableMetadata,
       this.metadata,
       { verbose: this.verbose }
     );
@@ -281,48 +309,88 @@ export abstract class BaseChatModel<
       undefined,
       handledOptions.runName
     );
-    // generate results
-    const results = await Promise.allSettled(
-      baseMessages.map((messageList, i) =>
-        this._generate(
-          messageList,
-          { ...parsedOptions, promptIndex: i },
-          runManagers?.[i]
-        )
-      )
-    );
-    // handle results
     const generations: ChatGeneration[][] = [];
     const llmOutputs: LLMResult["llmOutput"][] = [];
-    await Promise.all(
-      results.map(async (pResult, i) => {
-        if (pResult.status === "fulfilled") {
-          const result = pResult.value;
-          for (const generation of result.generations) {
-            generation.message.response_metadata = {
-              ...generation.generationInfo,
-              ...generation.message.response_metadata,
-            };
+    // Even if stream is not explicitly called, check if model is implicitly
+    // called from streamEvents() or streamLog() to get all streamed events.
+    // Bail out if _streamResponseChunks not overridden
+    const hasStreamingHandler = !!runManagers?.[0].handlers.find((handler) => {
+      return isStreamEventsHandler(handler) || isLogStreamHandler(handler);
+    });
+    if (
+      hasStreamingHandler &&
+      baseMessages.length === 1 &&
+      this._streamResponseChunks !==
+        BaseChatModel.prototype._streamResponseChunks
+    ) {
+      try {
+        const stream = await this._streamResponseChunks(
+          baseMessages[0],
+          parsedOptions,
+          runManagers?.[0]
+        );
+        let aggregated;
+        for await (const chunk of stream) {
+          if (aggregated === undefined) {
+            aggregated = chunk;
+          } else {
+            aggregated = concat(aggregated, chunk);
           }
-          if (result.generations.length === 1) {
-            result.generations[0].message.response_metadata = {
-              ...result.llmOutput,
-              ...result.generations[0].message.response_metadata,
-            };
-          }
-          generations[i] = result.generations;
-          llmOutputs[i] = result.llmOutput;
-          return runManagers?.[i]?.handleLLMEnd({
-            generations: [result.generations],
-            llmOutput: result.llmOutput,
-          });
-        } else {
-          // status === "rejected"
-          await runManagers?.[i]?.handleLLMError(pResult.reason);
-          return Promise.reject(pResult.reason);
         }
-      })
-    );
+        if (aggregated === undefined) {
+          throw new Error("Received empty response from chat model call.");
+        }
+        generations.push([aggregated]);
+        await runManagers?.[0].handleLLMEnd({
+          generations,
+          llmOutput: {},
+        });
+      } catch (e) {
+        await runManagers?.[0].handleLLMError(e);
+        throw e;
+      }
+    } else {
+      // generate results
+      const results = await Promise.allSettled(
+        baseMessages.map((messageList, i) =>
+          this._generate(
+            messageList,
+            { ...parsedOptions, promptIndex: i },
+            runManagers?.[i]
+          )
+        )
+      );
+      // handle results
+      await Promise.all(
+        results.map(async (pResult, i) => {
+          if (pResult.status === "fulfilled") {
+            const result = pResult.value;
+            for (const generation of result.generations) {
+              generation.message.response_metadata = {
+                ...generation.generationInfo,
+                ...generation.message.response_metadata,
+              };
+            }
+            if (result.generations.length === 1) {
+              result.generations[0].message.response_metadata = {
+                ...result.llmOutput,
+                ...result.generations[0].message.response_metadata,
+              };
+            }
+            generations[i] = result.generations;
+            llmOutputs[i] = result.llmOutput;
+            return runManagers?.[i]?.handleLLMEnd({
+              generations: [result.generations],
+              llmOutput: result.llmOutput,
+            });
+          } else {
+            // status === "rejected"
+            await runManagers?.[i]?.handleLLMError(pResult.reason);
+            return Promise.reject(pResult.reason);
+          }
+        })
+      );
+    }
     // create combined output
     const output: LLMResult = {
       generations,
@@ -352,13 +420,17 @@ export abstract class BaseChatModel<
       messageList.map(coerceMessageLikeToMessage)
     );
 
+    const inheritableMetadata = {
+      ...handledOptions.metadata,
+      ...this.getLsParams(parsedOptions),
+    };
     // create callback manager and start run
     const callbackManager_ = await CallbackManager.configure(
       handledOptions.callbacks,
       this.callbacks,
       handledOptions.tags,
       this.tags,
-      handledOptions.metadata,
+      inheritableMetadata,
       this.metadata,
       { verbose: this.verbose }
     );

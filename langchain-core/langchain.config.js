@@ -10,7 +10,7 @@ function abs(relativePath) {
 }
 
 export const config = {
-  internals: [/node\:/, /js-tiktoken/],
+  internals: [/node\:/, /js-tiktoken/, /langsmith/],
   entrypoints: {
     agents: "agents",
     caches: "caches",
@@ -19,8 +19,10 @@ export const config = {
     "callbacks/promises": "callbacks/promises",
     chat_history: "chat_history",
     documents: "documents/index",
+    "document_loaders/base": "document_loaders/base",
     embeddings: "embeddings",
     example_selectors: "example_selectors/index",
+    indexing: "indexing/index",
     "language_models/base": "language_models/base",
     "language_models/chat_models": "language_models/chat_models",
     "language_models/llms": "language_models/llms",

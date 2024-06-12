@@ -4,6 +4,6 @@
   "type": "module",
   "dependencies": {
     "convex": "1.4.1",
-    "@langchain/core": "~0.1"
+    "@langchain/core": ">0.1.0  <0.3.0"
   }
 }

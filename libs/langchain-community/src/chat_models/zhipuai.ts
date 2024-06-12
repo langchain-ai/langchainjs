@@ -6,12 +6,14 @@ import {
   AIMessage,
   type BaseMessage,
   ChatMessage,
+  AIMessageChunk,
 } from "@langchain/core/messages";
-import { type ChatResult } from "@langchain/core/outputs";
+import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
 import { type CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 import { encodeApiKey } from "../utils/zhipuai.js";
+import { convertEventStreamToIterableReadableDataStream } from "../utils/event_source_parse.js";
 
 export type ZhipuMessageRole = "system" | "assistant" | "user";
 
@@ -67,10 +69,14 @@ interface ResponseChoice {
   message: ChoiceMessage;
 }
 
+interface ZhipuAIError {
+  error: BaseResponse;
+}
+
 /**
  * Interface representing a response from a chat completion.
  */
-interface ChatCompletionResponse extends BaseResponse {
+interface ChatCompletionResponse extends ZhipuAIError {
   choices: ResponseChoice[];
   created: number;
   id: string;
@@ -225,13 +231,11 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
   constructor(fields: Partial<ChatZhipuAIParams> & BaseChatModelParams = {}) {
     super(fields);
 
-    this.zhipuAIApiKey = encodeApiKey(
+    this.zhipuAIApiKey =
       fields?.apiKey ??
-        fields?.zhipuAIApiKey ??
-        getEnvironmentVariable("ZHIPUAI_API_KEY")
-    );
-    this.apiKey = this.zhipuAIApiKey;
-    if (!this.apiKey) {
+      fields?.zhipuAIApiKey ??
+      getEnvironmentVariable("ZHIPUAI_API_KEY");
+    if (!this.zhipuAIApiKey) {
       throw new Error("ZhipuAI API key not found");
     }
 
@@ -297,12 +301,12 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
             options?.signal,
             (event) => {
               const data: ChatCompletionResponse = JSON.parse(event.data);
-              if (data?.code) {
+              if (data?.error?.code) {
                 if (rejected) {
                   return;
                 }
                 rejected = true;
-                reject(new Error(data?.message));
+                reject(new Error(data?.error?.message));
                 return;
               }
 
@@ -342,8 +346,8 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
           false,
           options?.signal
         ).then<ChatCompletionResponse>((data) => {
-          if (data?.code) {
-            throw new Error(data?.message);
+          if (data?.error?.code) {
+            throw new Error(data?.error?.message);
           }
           const { finish_reason, message } = data.choices[0];
           const text = message.content;
@@ -390,7 +394,7 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
         method: "POST",
         headers: {
           ...(stream ? { Accept: "text/event-stream" } : {}),
-          Authorization: `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${encodeApiKey(this.zhipuAIApiKey)}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(request),
@@ -448,6 +452,87 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
     };
 
     return this.caller.call(makeCompletionRequest);
+  }
+
+  private async createZhipuStream(
+    request: ChatCompletionRequest,
+    signal?: AbortSignal
+  ) {
+    const response = await fetch(this.apiUrl, {
+      method: "POST",
+      headers: {
+        Accept: "text/event-stream",
+        Authorization: `Bearer ${encodeApiKey(this.zhipuAIApiKey)}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(request),
+      signal,
+    });
+
+    if (!response.body) {
+      throw new Error(
+        "Could not begin Zhipu stream. Please check the given URL and try again."
+      );
+    }
+
+    return convertEventStreamToIterableReadableDataStream(response.body);
+  }
+
+  private _deserialize(json: string) {
+    try {
+      return JSON.parse(json);
+    } catch (e) {
+      console.warn(`Received a non-JSON parseable chunk: ${json}`);
+    }
+  }
+
+  async *_streamResponseChunks(
+    messages: BaseMessage[],
+    options?: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    const parameters = {
+      ...this.invocationParams(),
+      stream: true,
+    };
+
+    const messagesMapped: ZhipuMessage[] = messages.map((message) => ({
+      role: messageToRole(message),
+      content: message.content as string,
+    }));
+
+    const stream = await this.caller.call(async () =>
+      this.createZhipuStream(
+        {
+          ...parameters,
+          messages: messagesMapped,
+        },
+        options?.signal
+      )
+    );
+
+    for await (const chunk of stream) {
+      if (chunk !== "[DONE]") {
+        const deserializedChunk = this._deserialize(chunk);
+        const { choices, id } = deserializedChunk;
+        const text = choices[0]?.delta?.content ?? "";
+        const finished = !!choices[0]?.finish_reason;
+        yield new ChatGenerationChunk({
+          text,
+          message: new AIMessageChunk({ content: text }),
+          generationInfo: finished
+            ? {
+                finished,
+                request_id: id,
+                usage: chunk.usage,
+              }
+            : undefined,
+        });
+        await runManager?.handleLLMNewToken(text);
+      } else {
+        continue;
+      }
+    }
   }
 
   _llmType(): string {

@@ -20,5 +20,8 @@
     "langchain": "workspace:*",
     "typescript": "^5.0.0",
     "vite": "^4.2.0"
+  },
+  "resolutions": {
+    "@langchain/core": "~0.2.0"
   }
 }

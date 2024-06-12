@@ -4,9 +4,16 @@ import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Any = any;
+
 export type SearchType = "vector" | "hybrid";
 
+export type IndexType = "NODE" | "RELATIONSHIP";
+
 export type DistanceStrategy = "euclidean" | "cosine";
+
+export type Metadata = Record<string, unknown>;
 
 interface Neo4jVectorStoreArgs {
   url: string;
@@ -20,13 +27,16 @@ interface Neo4jVectorStoreArgs {
   keywordIndexName?: string;
   indexName?: string;
   searchType?: SearchType;
+  indexType?: IndexType;
   retrievalQuery?: string;
   nodeLabel?: string;
   createIdIndex?: boolean;
 }
 
 const DEFAULT_SEARCH_TYPE = "vector";
+const DEFAULT_INDEX_TYPE = "NODE";
 const DEFAULT_DISTANCE_STRATEGY = "cosine";
+const DEFAULT_NODE_EMBEDDING_PROPERTY = "embedding";
 
 /**
  * @security *Security note*: Make sure that the database connection uses credentials
@@ -65,7 +75,13 @@ export class Neo4jVectorStore extends VectorStore {
 
   private searchType: SearchType;
 
+  private indexType: IndexType;
+
   private distanceStrategy: DistanceStrategy = DEFAULT_DISTANCE_STRATEGY;
+
+  private supportMetadataFilter = true;
+
+  private isEnterprise = false;
 
   _vectorstoreType(): string {
     return "neo4jvector";
@@ -87,11 +103,12 @@ export class Neo4jVectorStore extends VectorStore {
       preDeleteCollection = false,
       nodeLabel = "Chunk",
       textNodeProperty = "text",
-      embeddingNodeProperty = "embedding",
+      embeddingNodeProperty = DEFAULT_NODE_EMBEDDING_PROPERTY,
       keywordIndexName = "keyword",
       indexName = "vector",
       retrievalQuery = "",
       searchType = DEFAULT_SEARCH_TYPE,
+      indexType = DEFAULT_INDEX_TYPE,
     } = config;
 
     store.embeddingDimension = (await embeddings.embedQuery("foo")).length;
@@ -103,6 +120,7 @@ export class Neo4jVectorStore extends VectorStore {
     store.indexName = indexName;
     store.retrievalQuery = retrievalQuery;
     store.searchType = searchType;
+    store.indexType = indexType;
 
     if (store.preDeleteCollection) {
       await store._dropIndex();
@@ -131,6 +149,40 @@ export class Neo4jVectorStore extends VectorStore {
     await this.driver.verifyAuthentication();
   }
 
+  async _verifyVersion() {
+    try {
+      const data = await this.query("CALL dbms.components()");
+      const versionString: string = data[0].versions[0];
+      const targetVersion = [5, 11, 0];
+
+      let version: number[];
+
+      if (versionString.includes("aura")) {
+        // Get the 'x.y.z' part before '-aura'
+        const baseVersion = versionString.split("-")[0];
+        version = baseVersion.split(".").map(Number);
+        version.push(0);
+      } else {
+        version = versionString.split(".").map(Number);
+      }
+
+      if (isVersionLessThan(version, targetVersion)) {
+        throw new Error(
+          "Version index is only supported in Neo4j version 5.11 or greater"
+        );
+      }
+
+      const metadataTargetVersion = [5, 18, 0];
+      if (isVersionLessThan(version, metadataTargetVersion)) {
+        this.supportMetadataFilter = false;
+      }
+
+      this.isEnterprise = data[0].edition === "enterprise";
+    } catch (error) {
+      console.error("Database version check failed:", error);
+    }
+  }
+
   async close() {
     await this.driver.close();
   }
@@ -151,8 +203,7 @@ export class Neo4jVectorStore extends VectorStore {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async query(query: string, params: any = {}): Promise<any[]> {
+  async query(query: string, params: Any = {}): Promise<Any[]> {
     const session = this.driver.session({ database: this.database });
     const result = await session.run(query, params);
     return toObjects(result.records);
@@ -160,8 +211,7 @@ export class Neo4jVectorStore extends VectorStore {
 
   static async fromTexts(
     texts: string[],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    metadatas: any,
+    metadatas: Any,
     embeddings: EmbeddingsInterface,
     config: Neo4jVectorStoreArgs
   ): Promise<Neo4jVectorStore> {
@@ -284,7 +334,7 @@ export class Neo4jVectorStore extends VectorStore {
   ) {
     const {
       textNodeProperties = [],
-      embeddingNodeProperty,
+      embeddingNodeProperty = DEFAULT_NODE_EMBEDDING_PROPERTY,
       searchType = DEFAULT_SEARCH_TYPE,
       retrievalQuery = "",
       nodeLabel,
@@ -512,11 +562,9 @@ export class Neo4jVectorStore extends VectorStore {
   }
 
   sortByIndexName(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    values: Array<{ [key: string]: any }>,
+    values: Array<{ [key: string]: Any }>,
     indexName: string
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): Array<{ [key: string]: any }> {
+  ): Array<{ [key: string]: Any }> {
     return values.sort(
       (a, b) =>
         (a.name === indexName ? -1 : 0) - (b.name === indexName ? -1 : 0)
@@ -526,8 +574,7 @@ export class Neo4jVectorStore extends VectorStore {
   async addVectors(
     vectors: number[][],
     documents: Document[],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    metadatas?: Record<string, any>[],
+    metadatas?: Record<string, Any>[],
     ids?: string[]
   ): Promise<string[]> {
     let _ids = ids;
@@ -576,8 +623,7 @@ export class Neo4jVectorStore extends VectorStore {
   async similaritySearch(
     query: string,
     k = 4,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    params: Record<string, any> = {}
+    params: Record<string, Any> = {}
   ): Promise<Document[]> {
     const embedding = await this.embeddings.embedQuery(query);
 
@@ -591,26 +637,85 @@ export class Neo4jVectorStore extends VectorStore {
     return results.map((result) => result[0]);
   }
 
+  async similaritySearchWithScore(
+    query: string,
+    k = 4,
+    params: Record<string, any> = {}
+  ): Promise<[Document, number][]> {
+    const embedding = await this.embeddings.embedQuery(query);
+    return this.similaritySearchVectorWithScore(embedding, k, query, params);
+  }
+
   async similaritySearchVectorWithScore(
     vector: number[],
     k: number,
     query: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    params: Record<string, any> = {}
+    params: Record<string, Any> = {}
   ): Promise<[Document, number][]> {
-    const defaultRetrieval = `
-    RETURN node.${this.textNodeProperty} AS text, score,
-    node {.*, ${this.textNodeProperty}: Null,
-    ${this.embeddingNodeProperty}: Null, id: Null } AS metadata
-    `;
+    let indexQuery: string;
+    let filterParams: Record<string, Any>;
+
+    const { filter } = params;
+
+    if (filter) {
+      if (!this.supportMetadataFilter) {
+        throw new Error(
+          "Metadata filtering is only supported in Neo4j version 5.18 or greater."
+        );
+      }
+
+      if (this.searchType === "hybrid") {
+        throw new Error(
+          "Metadata filtering can't be use in combination with a hybrid search approach."
+        );
+      }
+
+      const parallelQuery = this.isEnterprise
+        ? "CYPHER runtime = parallel parallelRuntimeSupport=all "
+        : "";
+
+      const baseIndexQuery = `
+        ${parallelQuery}
+        MATCH (n:\`${this.nodeLabel}\`)
+        WHERE n.\`${this.embeddingNodeProperty}\` IS NOT NULL
+        AND size(n.\`${this.embeddingNodeProperty}\`) = toInteger(${this.embeddingDimension}) AND
+      `;
+
+      const baseCosineQuery = `
+        WITH n as node, vector.similarity.cosine(
+          n.\`${this.embeddingNodeProperty}\`,
+          $embedding
+        ) AS score ORDER BY score DESC LIMIT toInteger($k)
+      `;
+      const [fSnippets, fParams] = constructMetadataFilter(filter);
+
+      indexQuery = baseIndexQuery + fSnippets + baseCosineQuery;
+      filterParams = fParams;
+    } else {
+      indexQuery = getSearchIndexQuery(this.searchType, this.indexType);
+      filterParams = {};
+    }
+
+    let defaultRetrieval: string;
+
+    if (this.indexType === "RELATIONSHIP") {
+      defaultRetrieval = `
+        RETURN relationship.${this.textNodeProperty} AS text, score,
+        relationship {.*, ${this.textNodeProperty}: Null,
+        ${this.embeddingNodeProperty}: Null, id: Null } AS metadata
+      `;
+    } else {
+      defaultRetrieval = `
+        RETURN node.${this.textNodeProperty} AS text, score,
+        node {.*, ${this.textNodeProperty}: Null,
+        ${this.embeddingNodeProperty}: Null, id: Null } AS metadata
+      `;
+    }
 
     const retrievalQuery = this.retrievalQuery
       ? this.retrievalQuery
       : defaultRetrieval;
-
-    const readQuery = `${getSearchIndexQuery(
-      this.searchType
-    )} ${retrievalQuery}`;
+    const readQuery = `${indexQuery} ${retrievalQuery}`;
 
     const parameters = {
       index: this.indexName,
@@ -619,12 +724,29 @@ export class Neo4jVectorStore extends VectorStore {
       keyword_index: this.keywordIndexName,
       query: removeLuceneChars(query),
       ...params,
+      ...filterParams,
     };
+
     const results = await this.query(readQuery, parameters);
 
     if (results) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const docs: [Document, number][] = results.map((result: any) => [
+      if (results.some((result) => result.text == null)) {
+        if (!this.retrievalQuery) {
+          throw new Error(
+            "Make sure that none of the '" +
+              this.textNodeProperty +
+              "' properties on nodes with label '" +
+              this.nodeLabel +
+              "' are missing or empty"
+          );
+        } else {
+          throw new Error(
+            "Inspect the 'retrievalQuery' and ensure it doesn't return null for the 'text' column"
+          );
+        }
+      }
+
+      const docs: [Document, number][] = results.map((result: Any) => [
         new Document({
           pageContent: result.text,
           metadata: Object.fromEntries(
@@ -642,11 +764,9 @@ export class Neo4jVectorStore extends VectorStore {
 }
 
 function toObjects(records: neo4j.Record[]) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const recordValues: Record<string, any>[] = records.map((record) => {
+  const recordValues: Record<string, Any>[] = records.map((record) => {
     const rObj = record.toObject();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const out: { [key: string]: any } = {};
+    const out: { [key: string]: Any } = {};
     Object.keys(rObj).forEach((key) => {
       out[key] = itemIntToString(rObj[key]);
     });
@@ -655,8 +775,7 @@ function toObjects(records: neo4j.Record[]) {
   return recordValues;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function itemIntToString(item: any): any {
+function itemIntToString(item: Any): Any {
   if (neo4j.isInt(item)) return item.toString();
   if (Array.isArray(item)) return item.map((ii) => itemIntToString(ii));
   if (["number", "string", "boolean"].indexOf(typeof item) !== -1) return item;
@@ -664,11 +783,9 @@ function itemIntToString(item: any): any {
   if (typeof item === "object") return objIntToString(item);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function objIntToString(obj: any) {
+function objIntToString(obj: Any) {
   const entry = extractFromNeoObjects(obj);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let newObj: any = null;
+  let newObj: Any = null;
   if (Array.isArray(entry)) {
     newObj = entry.map((item) => itemIntToString(item));
   } else if (entry !== null && typeof entry === "object") {
@@ -680,8 +797,7 @@ function objIntToString(obj: any) {
   return newObj;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function extractFromNeoObjects(obj: any) {
+function extractFromNeoObjects(obj: Any) {
   if (
     // eslint-disable-next-line
     obj instanceof (neo4j.types.Node as any) ||
@@ -701,11 +817,10 @@ function extractPathForRows(path: neo4j.Path) {
   let { segments } = path;
   // Zero length path. No relationship, end === start
   if (!Array.isArray(path.segments) || path.segments.length < 1) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    segments = [{ ...path, end: null } as any];
+    segments = [{ ...path, end: null } as Any];
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return segments.map((segment: any) =>
+
+  return segments.map((segment: Any) =>
     [
       objIntToString(segment.start),
       objIntToString(segment.relationship),
@@ -714,17 +829,21 @@ function extractPathForRows(path: neo4j.Path) {
   );
 }
 
-function getSearchIndexQuery(searchType: SearchType): string {
-  const typeToQueryMap: { [key in SearchType]: string } = {
-    vector:
-      "CALL db.index.vector.queryNodes($index, $k, $embedding) YIELD node, score",
-    hybrid: `
+function getSearchIndexQuery(
+  searchType: SearchType,
+  indexType: IndexType = DEFAULT_INDEX_TYPE
+): string {
+  if (indexType === "NODE") {
+    const typeToQueryMap: { [key in SearchType]: string } = {
+      vector:
+        "CALL db.index.vector.queryNodes($index, $k, $embedding) YIELD node, score",
+      hybrid: `
           CALL {
               CALL db.index.vector.queryNodes($index, $k, $embedding) YIELD node, score
-              WITH collect({node:node, score:score}) AS nodes, max(score) AS max 
-              UNWIND nodes AS n 
+              WITH collect({node:node, score:score}) AS nodes, max(score) AS max
+              UNWIND nodes AS n
               // We use 0 as min
-              RETURN n.node AS node, (n.score / max) AS score UNION 
+              RETURN n.node AS node, (n.score / max) AS score UNION
               CALL db.index.fulltext.queryNodes($keyword_index, $query, {limit: $k}) YIELD node, score
               WITH collect({node: node, score: score}) AS nodes, max(score) AS max
               UNWIND nodes AS n
@@ -732,9 +851,15 @@ function getSearchIndexQuery(searchType: SearchType): string {
           }
           WITH node, max(score) AS score ORDER BY score DESC LIMIT toInteger($k)
       `,
-  };
+    };
 
-  return typeToQueryMap[searchType];
+    return typeToQueryMap[searchType];
+  } else {
+    return `
+      CALL db.index.vector.queryRelationships($index, $k, $embedding)
+      YIELD relationship, score
+    `;
+  }
 }
 
 function removeLuceneChars(text: string | null) {
@@ -768,4 +893,258 @@ function removeLuceneChars(text: string | null) {
     modifiedText = modifiedText.split(char).join(" ");
   }
   return modifiedText.trim();
+}
+
+function isVersionLessThan(v1: number[], v2: number[]): boolean {
+  for (let i = 0; i < Math.min(v1.length, v2.length); i += 1) {
+    if (v1[i] < v2[i]) {
+      return true;
+    } else if (v1[i] > v2[i]) {
+      return false;
+    }
+  }
+  // If all the corresponding parts are equal, the shorter version is less
+  return v1.length < v2.length;
+}
+
+// Filter utils
+
+const COMPARISONS_TO_NATIVE: Record<string, string> = {
+  $eq: "=",
+  $ne: "<>",
+  $lt: "<",
+  $lte: "<=",
+  $gt: ">",
+  $gte: ">=",
+};
+
+const COMPARISONS_TO_NATIVE_OPERATORS = new Set(
+  Object.keys(COMPARISONS_TO_NATIVE)
+);
+
+const TEXT_OPERATORS = new Set(["$like", "$ilike"]);
+
+const LOGICAL_OPERATORS = new Set(["$and", "$or"]);
+
+const SPECIAL_CASED_OPERATORS = new Set(["$in", "$nin", "$between"]);
+
+const SUPPORTED_OPERATORS = new Set([
+  ...COMPARISONS_TO_NATIVE_OPERATORS,
+  ...TEXT_OPERATORS,
+  ...LOGICAL_OPERATORS,
+  ...SPECIAL_CASED_OPERATORS,
+]);
+
+const IS_IDENTIFIER_REGEX = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+
+function combineQueries(
+  inputQueries: [string, Record<string, Any>][],
+  operator: string
+): [string, Record<string, Any>] {
+  let combinedQuery = "";
+  const combinedParams: Record<string, Any> = {};
+  const paramCounter: Record<string, number> = {};
+
+  for (const [query, params] of inputQueries) {
+    let newQuery = query;
+    for (const [param, value] of Object.entries(params)) {
+      if (param in paramCounter) {
+        paramCounter[param] += 1;
+      } else {
+        paramCounter[param] = 1;
+      }
+      const newParamName = `${param}_${paramCounter[param]}`;
+
+      newQuery = newQuery.replace(`$${param}`, `$${newParamName}`);
+      combinedParams[newParamName] = value;
+    }
+
+    if (combinedQuery) {
+      combinedQuery += ` ${operator} `;
+    }
+    combinedQuery += `(${newQuery})`;
+  }
+
+  return [combinedQuery, combinedParams];
+}
+
+function collectParams(
+  inputData: [string, Record<string, string>][]
+): [string[], Record<string, Any>] {
+  const queryParts: string[] = [];
+  const params: Record<string, Any> = {};
+
+  for (const [queryPart, param] of inputData) {
+    queryParts.push(queryPart);
+    Object.assign(params, param);
+  }
+
+  return [queryParts, params];
+}
+
+function handleFieldFilter(
+  field: string,
+  value: Any,
+  paramNumber = 1
+): [string, Record<string, Any>] {
+  if (typeof field !== "string") {
+    throw new Error(
+      `field should be a string but got: ${typeof field} with value: ${field}`
+    );
+  }
+
+  if (field.startsWith("$")) {
+    throw new Error(
+      `Invalid filter condition. Expected a field but got an operator: ${field}`
+    );
+  }
+
+  // Allow [a - zA - Z0 -9_], disallow $ for now until we support escape characters
+  if (!IS_IDENTIFIER_REGEX.test(field)) {
+    throw new Error(
+      `Invalid field name: ${field}. Expected a valid identifier.`
+    );
+  }
+
+  let operator: string;
+  let filterValue: Any;
+
+  if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+    const keys = Object.keys(value);
+
+    if (keys.length !== 1) {
+      throw new Error(`Invalid filter condition. Expected a value which is a dictionary
+        with a single key that corresponds to an operator but got a dictionary
+        with ${keys.length} keys. The first few keys are: ${keys
+        .slice(0, 3)
+        .join(", ")}
+      `);
+    }
+
+    // eslint-disable-next-line prefer-destructuring
+    operator = keys[0];
+    filterValue = value[operator];
+
+    if (!SUPPORTED_OPERATORS.has(operator)) {
+      throw new Error(
+        `Invalid operator: ${operator}. Expected one of ${SUPPORTED_OPERATORS}`
+      );
+    }
+  } else {
+    operator = "$eq";
+    filterValue = value;
+  }
+
+  if (COMPARISONS_TO_NATIVE_OPERATORS.has(operator)) {
+    const native = COMPARISONS_TO_NATIVE[operator];
+    const querySnippet = `n.${field} ${native} $param_${paramNumber}`;
+    const queryParam = { [`param_${paramNumber}`]: filterValue };
+
+    return [querySnippet, queryParam];
+  } else if (operator === "$between") {
+    const [low, high] = filterValue;
+    const querySnippet = `$param_${paramNumber}_low <= n.${field} <= $param_${paramNumber}_high`;
+    const queryParam = {
+      [`param_${paramNumber}_low`]: low,
+      [`param_${paramNumber}_high`]: high,
+    };
+
+    return [querySnippet, queryParam];
+  } else if (["$in", "$nin", "$like", "$ilike"].includes(operator)) {
+    if (["$in", "$nin"].includes(operator)) {
+      filterValue.forEach((val: Any) => {
+        if (
+          typeof val !== "string" &&
+          typeof val !== "number" &&
+          typeof val !== "boolean"
+        ) {
+          throw new Error(`Unsupported type: ${typeof val} for value: ${val}`);
+        }
+      });
+    }
+
+    if (operator === "$in") {
+      const querySnippet = `n.${field} IN $param_${paramNumber}`;
+      const queryParam = { [`param_${paramNumber}`]: filterValue };
+      return [querySnippet, queryParam];
+    } else if (operator === "$nin") {
+      const querySnippet = `n.${field} NOT IN $param_${paramNumber}`;
+      const queryParam = { [`param_${paramNumber}`]: filterValue };
+      return [querySnippet, queryParam];
+    } else if (operator === "$like") {
+      const querySnippet = `n.${field} CONTAINS $param_${paramNumber}`;
+      const queryParam = { [`param_${paramNumber}`]: filterValue.slice(0, -1) };
+      return [querySnippet, queryParam];
+    } else if (operator === "$ilike") {
+      const querySnippet = `toLower(n.${field}) CONTAINS $param_${paramNumber}`;
+      const queryParam = { [`param_${paramNumber}`]: filterValue.slice(0, -1) };
+      return [querySnippet, queryParam];
+    } else {
+      throw new Error("Not Implemented");
+    }
+  } else {
+    throw new Error("Not Implemented");
+  }
+}
+
+function constructMetadataFilter(
+  filter: Record<string, Any>
+): [string, Record<string, Any>] {
+  if (typeof filter !== "object" || filter === null) {
+    throw new Error("Expected a dictionary representing the filter condition.");
+  }
+
+  const entries = Object.entries(filter);
+
+  if (entries.length === 1) {
+    const [key, value] = entries[0];
+
+    if (key.startsWith("$")) {
+      if (!["$and", "$or"].includes(key.toLowerCase())) {
+        throw new Error(
+          `Invalid filter condition. Expected $and or $or but got: ${key}`
+        );
+      }
+
+      if (!Array.isArray(value)) {
+        throw new Error(
+          `Expected an array for logical conditions, but got ${typeof value} for value: ${value}`
+        );
+      }
+
+      const operation = key.toLowerCase() === "$and" ? "AND" : "OR";
+      const combinedQueries = combineQueries(
+        value.map((v) => constructMetadataFilter(v)),
+        operation
+      );
+
+      return combinedQueries;
+    } else {
+      return handleFieldFilter(key, value);
+    }
+  } else if (entries.length > 1) {
+    for (const [key] of entries) {
+      if (key.startsWith("$")) {
+        throw new Error(
+          `Invalid filter condition. Expected a field but got an operator: ${key}`
+        );
+      }
+    }
+
+    const and_multiple = collectParams(
+      entries.map(([field, val], index) =>
+        handleFieldFilter(field, val, index + 1)
+      )
+    );
+
+    if (and_multiple.length >= 1) {
+      return [and_multiple[0].join(" AND "), and_multiple[1]];
+    } else {
+      throw Error(
+        "Invalid filter condition. Expected a dictionary but got an empty dictionary"
+      );
+    }
+  } else {
+    throw new Error("Filter condition contains no entries.");
+  }
 }

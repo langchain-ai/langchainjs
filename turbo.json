@@ -2,94 +2,53 @@
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": ["**/.env"],
   "pipeline": {
-    "@langchain/scripts#build": {
-      "outputs": [
-        "./libs/langchain-scripts/dist/**",
-        "*.js",
-        "*.cjs",
-        "*.d.ts"
-      ],
-      "inputs": [
-        "./libs/langchain-scripts/src/",
-        "./libs/langchain-scripts/scripts/**",
-        "./libs/langchain-scripts/package.json",
-        "./libs/langchain-scripts/tsconfig.json"
-      ]
-    },
-    "@langchain/core#build": {
-      "dependsOn": ["@langchain/scripts#build"],
-      "outputs": ["dist/**", "dist-cjs/**", "*.js", "*.cjs", "*.d.ts"],
-      "inputs": ["src/**", "scripts/**", "package.json", "tsconfig.json"]
-    },
-    "@langchain/anthropic#build": {
-      "dependsOn": ["@langchain/core#build"],
-      "outputs": ["dist/**", "dist-cjs/**", "*.js", "*.cjs", "*.d.ts"],
-      "inputs": ["src/**", "scripts/**", "package.json", "tsconfig.json"]
-    },
-    "@langchain/openai#build": {
-      "dependsOn": ["@langchain/core#build"],
-      "outputs": ["dist/**", "dist-cjs/**", "*.js", "*.cjs", "*.d.ts"],
-      "inputs": ["src/**", "scripts/**", "package.json", "tsconfig.json"]
-    },
-    "@langchain/community#build": {
-      "dependsOn": ["@langchain/openai#build"],
-      "outputs": ["dist/**", "dist-cjs/**", "*.js", "*.cjs", "*.d.ts"],
-      "inputs": ["src/**", "scripts/**", "package.json", "tsconfig.json"]
-    },
     "build": {
-      "dependsOn": [
-        "@langchain/scripts#build",
-        "@langchain/core#build",
-        "@langchain/community#build",
-        "^build"
-      ],
-      "outputs": ["dist/**", "dist-cjs/**", "*.js", "*.cjs", "*.d.ts"],
-      "inputs": ["src/**", "scripts/**", "package.json", "tsconfig.json"]
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
     "lint": {
-      "outputs": []
+      "dependsOn": ["^lint"]
     },
     "lint:fix": {
-      "outputs": [
-        "langchain/src/**/*.ts",
-        "langchain-core/src/**/*.ts",
-        "libs/**/src/**/*.ts",
-        "docs/core_docs/**/*.js",
-        "examples/src/**/*.ts",
-        "**/*.eslintcache"
-      ],
-      "inputs": [
-        "langchain/src/**/*.ts",
-        "langchain-core/src/**/*.ts",
-        "libs/**/src/**/*.ts",
-        "docs/core_docs/**/*.js",
-        "examples/src/**/*.ts"
-      ]
+      "dependsOn": ["^lint:fix"]
     },
     "format": {
-      "outputs": []
+      "dependsOn": ["^format"]
     },
     "format:check": {
-      "outputs": []
+      "dependsOn": ["^format:check"]
     },
     "test": {
-      "outputs": [],
-      "dependsOn": ["^build"]
+      "cache": false,
+      "dependsOn": ["^build", "build"]
     },
     "test:ci": {
       "outputs": [],
       "dependsOn": ["test"]
     },
+    "test:single": {
+      "dependsOn": ["^build", "build"]
+    },
     "test:integration": {
+      "dependsOn": ["^build", "build"]
+    },
+    "test:standard:unit": {
       "outputs": [],
       "dependsOn": ["^build"]
     },
-    "precommit": {},
-    "start": {
-      "cache": false
+    "test:standard:int": {
+      "outputs": [],
+      "dependsOn": ["^build"]
     },
-    "build:vercel": {
-      "dependsOn": ["^build:vercel"]
+    "test:standard": {
+      "outputs": [],
+      "dependsOn": ["^build"]
+    },
+    "clean": {
+      "dependsOn": ["^clean"]
+    },
+    "build:internal": {
+      "dependsOn": ["^build:internal"]
     }
   }
 }

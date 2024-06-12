@@ -7,21 +7,16 @@ import CodeBlock from "@theme/CodeBlock";
 # ChatMistralAI
 
 [Mistral AI](https://mistral.ai/) is a research organization and hosting platform for LLMs.
-They're most known for their family of 7B models ([`mistral7b` // `mistral-tiny`](https://mistral.ai/news/announcing-mistral-7b/), [`mixtral8x7b` // `mistral-small`](https://mistral.ai/news/mixtral-of-experts/)).
-
 The LangChain implementation of Mistral's models uses their hosted generation API, making it easier to access their models without needing to run them locally.
+
+:::tip
+Want to run Mistral's models locally? Check out our [Ollama integration](/docs/integrations/chat/ollama).
+:::
 
 ## Models
 
-Mistral's API offers access to two of their open source, and proprietary models:
-
-- `open-mistral-7b` (aka `mistral-tiny-2312`)
-- `open-mixtral-8x7b` (aka `mistral-small-2312`)
-- `mistral-small-latest` (aka `mistral-small-2402`) (default)
-- `mistral-medium-latest` (aka `mistral-medium-2312`)
-- `mistral-large-latest` (aka `mistral-large-2402`)
-
-See [this page](https://docs.mistral.ai/guides/model-selection/) for an up to date list.
+Mistral's API offers access to two of their open source, and proprietary models.
+See [this page](https://docs.mistral.ai/getting-started/models/) for an up to date list.
 
 ## Setup
 
@@ -102,7 +97,7 @@ import WSAJSONExample from "@examples/models/chat/chat_mistralai_wsa_json.ts";
 
 ### Tool calling agent
 
-The larger Mistral models not only support tool calling, but can also be used in the [Tool Calling agent](/docs/modules/agents/agent_types/tool_calling/).
+The larger Mistral models not only support tool calling, but can also be used in the Tool Calling agent.
 Here's an example:
 
 import AgentsExample from "@examples/models/chat/chat_mistralai_agents.ts";

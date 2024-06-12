@@ -18,22 +18,26 @@
   },
   "packageManager": "yarn@3.4.1",
   "scripts": {
-    "build": "turbo run build --filter=\"!test-exports-*\" --concurrency 1",
+    "build": "turbo build --filter=\"!test-exports-*\"",
     "turbo:command": "turbo",
-    "format": "turbo run format",
-    "format:check": "turbo run format:check",
-    "lint": "turbo run lint --concurrency 1",
-    "lint:fix": "turbo run lint:fix",
-    "test": "yarn test:unit && yarn workspace @langchain/core build && yarn workspace langchain build && yarn test:exports:docker",
-    "test:unit": "turbo run test",
-    "test:unit:ci": "turbo run test:ci",
-    "test:int": "yarn run test:int:deps && turbo run test:integration ; yarn run test:int:deps:down",
+    "clean": "turbo clean",
+    "format": "turbo format --concurrency=50",
+    "format:check": "turbo format:check --concurrency=50",
+    "lint": "turbo lint --concurrency=50",
+    "lint:fix": "turbo lint:fix --concurrency=50",
+    "test": "yarn test:unit && yarn test:exports:docker",
+    "test:unit": "turbo test --filter=\"!test-exports-*\" --filter=!examples --filter=!api_refs --filter=!core_docs --filter=!create-langchain-integration",
+    "test:unit:ci": "turbo test:ci",
+    "test:int": "yarn run test:int:deps && turbo test:integration ; yarn run test:int:deps:down",
     "test:int:deps": "docker compose -f test-int-deps-docker-compose.yml up -d",
     "test:int:deps:down": "docker compose -f test-int-deps-docker-compose.yml down",
     "test:ranges:docker": "docker compose -f dependency_range_tests/docker-compose.yml up --force-recreate",
     "test:exports:docker": "docker compose -f environment_tests/docker-compose.yml up --force-recreate",
+    "test:standard:unit": "turbo test:standard:unit",
+    "test:standard:int": "turbo test:standard:int",
+    "test:standard": "yarn test:standard:unit && yarn test:standard:int",
     "example": "yarn workspace examples start",
-    "precommit": "turbo run precommit",
+    "precommit": "turbo precommit",
     "docs": "yarn workspace core_docs start",
     "docs:api_refs": "yarn workspace api_refs start",
     "release": "node release_workspace.js --workspace"
@@ -49,15 +53,15 @@
     "lint-staged": "^13.1.1",
     "prettier": "^2.8.3",
     "semver": "^7.5.4",
+    "turbo": "^1.13.3",
     "typescript": "~5.1.6"
-  },
-  "dependencies": {
-    "turbo": "latest"
   },
   "resolutions": {
     "dpdm@^3.12.0": "patch:dpdm@npm%3A3.12.0#./.yarn/patches/dpdm-npm-3.12.0-0dfdd8e3b8.patch",
     "typedoc-plugin-markdown@next": "patch:typedoc-plugin-markdown@npm%3A4.0.0-next.6#./.yarn/patches/typedoc-plugin-markdown-npm-4.0.0-next.6-96b4b47746.patch",
-    "voy-search@0.6.2": "patch:voy-search@npm%3A0.6.2#./.yarn/patches/voy-search-npm-0.6.2-d4aca30a0e.patch"
+    "voy-search@0.6.2": "patch:voy-search@npm%3A0.6.2#./.yarn/patches/voy-search-npm-0.6.2-d4aca30a0e.patch",
+    "@langchain/core": "workspace:*",
+    "better-sqlite3": "9.4.0"
   },
   "lint-staged": {
     "**/*.{ts,tsx}": [

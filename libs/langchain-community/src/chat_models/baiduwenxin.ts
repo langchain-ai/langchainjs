@@ -2,10 +2,20 @@ import {
   BaseChatModel,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
-import { AIMessage, BaseMessage, ChatMessage } from "@langchain/core/messages";
-import { ChatGeneration, ChatResult } from "@langchain/core/outputs";
+import {
+  AIMessage,
+  AIMessageChunk,
+  BaseMessage,
+  ChatMessage,
+} from "@langchain/core/messages";
+import {
+  ChatGeneration,
+  ChatGenerationChunk,
+  ChatResult,
+} from "@langchain/core/outputs";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { convertEventStreamToIterableReadableDataStream } from "../utils/event_source_parse.js";
 
 /**
  * Type representing the role of a message in the Wenxin chat model.
@@ -283,7 +293,7 @@ export class ChatBaiduWenxin
       "ERNIE-3.5-8K-Preview": "ernie-3.5-8k-preview",
       "ERNIE-Lite-8K": "eb-instant",
       "ERNIE-Tiny-8K": "ernie-tiny-8k",
-      "ERNIE-Character-8K": "ernie-char-8",
+      "ERNIE-Character-8K": "ernie-char-8k",
       "ERNIE Speed-AppBuilder": "ai_apaas",
     };
     if (this.model in models) {
@@ -347,6 +357,13 @@ export class ChatBaiduWenxin
     };
   }
 
+  private _ensureMessages(messages: BaseMessage[]): WenxinMessage[] {
+    return messages.map((message) => ({
+      role: messageToWenxinRole(message),
+      content: message.text,
+    }));
+  }
+
   /** @ignore */
   async _generate(
     messages: BaseMessage[],
@@ -366,10 +383,7 @@ export class ChatBaiduWenxin
       messages = messages.filter((message) => message !== systemMessage);
       params.system = systemMessage.text;
     }
-    const messagesMapped: WenxinMessage[] = messages.map((message) => ({
-      role: messageToWenxinRole(message),
-      content: message.text,
-    }));
+    const messagesMapped = this._ensureMessages(messages);
 
     const data = params.stream
       ? await new Promise<ChatCompletionResponse>((resolve, reject) => {
@@ -500,6 +514,22 @@ export class ChatBaiduWenxin
       this.accessToken = await this.getAccessToken();
     }
 
+    const findFirstNewlineIndex = (data: Uint8Array) => {
+      for (let i = 0; i < data.length; ) {
+        if (data[i] === 10) return i;
+        if ((data[i] & 0b11100000) === 0b11000000) {
+          i += 2;
+        } else if ((data[i] & 0b11110000) === 0b11100000) {
+          i += 3;
+        } else if ((data[i] & 0b11111000) === 0b11110000) {
+          i += 4;
+        } else {
+          i += 1;
+        }
+      }
+      return -1;
+    };
+
     const makeCompletionRequest = async () => {
       const url = `${this.apiUrl}?access_token=${this.accessToken}`;
       const response = await fetch(url, {
@@ -532,7 +562,7 @@ export class ChatBaiduWenxin
           const reader = response.body.getReader();
 
           const decoder = new TextDecoder("utf-8");
-          let data = "";
+          let dataArrayBuffer = new Uint8Array(0);
 
           let continueReading = true;
           while (continueReading) {
@@ -541,17 +571,30 @@ export class ChatBaiduWenxin
               continueReading = false;
               break;
             }
-            data += decoder.decode(value);
+            // merge the data first then decode in case of the Chinese characters are split between chunks
+            const mergedArray = new Uint8Array(
+              dataArrayBuffer.length + value.length
+            );
+            mergedArray.set(dataArrayBuffer);
+            mergedArray.set(value, dataArrayBuffer.length);
+            dataArrayBuffer = mergedArray;
 
             let continueProcessing = true;
             while (continueProcessing) {
-              const newlineIndex = data.indexOf("\n");
+              const newlineIndex = findFirstNewlineIndex(dataArrayBuffer);
               if (newlineIndex === -1) {
                 continueProcessing = false;
                 break;
               }
-              const line = data.slice(0, newlineIndex);
-              data = data.slice(newlineIndex + 1);
+
+              const lineArrayBuffer = dataArrayBuffer.slice(
+                0,
+                findFirstNewlineIndex(dataArrayBuffer)
+              );
+              const line = decoder.decode(lineArrayBuffer);
+              dataArrayBuffer = dataArrayBuffer.slice(
+                findFirstNewlineIndex(dataArrayBuffer) + 1
+              );
 
               if (line.startsWith("data:")) {
                 const event = new MessageEvent("message", {
@@ -565,6 +608,94 @@ export class ChatBaiduWenxin
       }
     };
     return this.caller.call(makeCompletionRequest);
+  }
+
+  private async getFullApiUrl() {
+    if (!this.accessToken) {
+      this.accessToken = await this.getAccessToken();
+    }
+    return `${this.apiUrl}?access_token=${this.accessToken}`;
+  }
+
+  private async createWenxinStream(
+    request: ChatCompletionRequest,
+    signal?: AbortSignal
+  ) {
+    const url = await this.getFullApiUrl();
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Accept: "text/event-stream",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(request),
+      signal,
+    });
+
+    if (!response.body) {
+      throw new Error(
+        "Could not begin Wenxin stream. Please check the given URL and try again."
+      );
+    }
+
+    return convertEventStreamToIterableReadableDataStream(response.body);
+  }
+
+  private _deserialize(json: string) {
+    try {
+      return JSON.parse(json);
+    } catch (e) {
+      console.warn(`Received a non-JSON parseable chunk: ${json}`);
+    }
+  }
+
+  async *_streamResponseChunks(
+    messages: BaseMessage[],
+    options?: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    const parameters = {
+      ...this.invocationParams(),
+      stream: true,
+    };
+
+    // Wenxin requires the system message to be put in the params, not messages array
+    const systemMessage = messages.find(
+      (message) => message._getType() === "system"
+    );
+    if (systemMessage) {
+      // eslint-disable-next-line no-param-reassign
+      messages = messages.filter((message) => message !== systemMessage);
+      parameters.system = systemMessage.text;
+    }
+    const messagesMapped = this._ensureMessages(messages);
+
+    const stream = await this.caller.call(async () =>
+      this.createWenxinStream(
+        {
+          ...parameters,
+          messages: messagesMapped,
+        },
+        options?.signal
+      )
+    );
+
+    for await (const chunk of stream) {
+      const deserializedChunk = this._deserialize(chunk);
+      const { result, is_end, id } = deserializedChunk;
+      yield new ChatGenerationChunk({
+        text: result,
+        message: new AIMessageChunk({ content: result }),
+        generationInfo: is_end
+          ? {
+              is_end,
+              request_id: id,
+              usage: chunk.usage,
+            }
+          : undefined,
+      });
+      await runManager?.handleLLMNewToken(result);
+    }
   }
 
   _llmType() {

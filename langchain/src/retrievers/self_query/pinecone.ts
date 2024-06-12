@@ -4,6 +4,13 @@ import {
   Comparators,
   Operators,
 } from "@langchain/core/structured_query";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "retrievers/self_query/pinecone",
+  newEntrypointName: "",
+  newPackageName: "@langchain/pinecone",
+});
 
 /**
  * Specialized translator class that extends the BasicTranslator. It is

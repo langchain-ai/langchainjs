@@ -2,21 +2,36 @@
 hide_table_of_contents: true
 ---
 
-# Zep Memory
+# Zep Open Source Memory
 
-[Zep](https://github.com/getzep/zep) is a memory server that stores, summarizes, embeds, indexes, and enriches conversational AI chat histories, autonomous agent histories, document Q&A histories and exposes them via simple, low-latency APIs.
+> Recall, understand, and extract data from chat histories. Power personalized AI experiences.
 
-Key Features:
+> [Zep](https://www.getzep.com) is a long-term memory service for AI Assistant apps.
+> With Zep, you can provide AI assistants with the ability to recall past conversations, no matter how distant,
+> while also reducing hallucinations, latency, and cost.
 
-- Long-term memory persistence, with access to historical messages irrespective of your summarization strategy.
-- Auto-summarization of memory messages based on a configurable message window. A series of summaries are stored, providing flexibility for future summarization strategies.
-- Vector search over memories, with messages automatically embedded on creation.
-- Auto-token counting of memories and summaries, allowing finer-grained control over prompt assembly.
-- [Python](https://github.com/getzep/zep-python) and [JavaScript](https://github.com/getzep/zep-js) SDKs.
+## How Zep works
+
+Zep persists and recalls chat histories, and automatically generates summaries and other artifacts from these chat histories.
+It also embeds messages and summaries, enabling you to search Zep for relevant context from past conversations.
+Zep does all of this asynchronously, ensuring these operations don't impact your user's chat experience.
+Data is persisted to database, allowing you to scale out when growth demands.
+
+Zep also provides a simple, easy to use abstraction for document vector search called Document Collections.
+This is designed to complement Zep's core memory features, but is not designed to be a general purpose vector database.
+
+Zep allows you to be more intentional about constructing your prompt:
+
+- automatically adding a few recent messages, with the number customized for your app;
+- a summary of recent conversations prior to the messages above;
+- and/or contextually relevant summaries or messages surfaced from the entire chat session.
+- and/or relevant Business data from Zep Document Collections.
+
+> Interested in Zep Cloud? See [Zep Cloud Installation Guide](https://help.getzep.com/sdks)
 
 ## Setup
 
-See the instructions from [Zep](https://github.com/getzep/zep) for running the server locally or through an automated hosting provider.
+See the instructions from [Zep Open Source](https://github.com/getzep/zep) for running the server locally or through an automated hosting provider.
 
 import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
 

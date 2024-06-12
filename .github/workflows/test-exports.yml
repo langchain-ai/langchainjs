@@ -24,6 +24,8 @@ env:
 jobs:
   exports-esbuild:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -33,17 +35,18 @@ jobs:
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable
-      - name: Build
-        run: yarn workspace langchain build
+
+      - name: Build dependencies
+        run: yarn build --filter=langchain --filter=@langchain/anthropic --filter=@langchain/community --filter=@langchain/openai
         shell: bash
-        env:
-          SKIP_API_DOCS: true
 
       - name: Test esbuild exports
         run: docker compose -f environment_tests/docker-compose.yml run test-exports-esbuild
 
   exports-esm:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -53,17 +56,18 @@ jobs:
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable
-      - name: Build
-        run: yarn workspace langchain build
+
+      - name: Build dependencies
+        run: yarn build --filter=langchain --filter=@langchain/anthropic --filter=@langchain/community --filter=@langchain/openai
         shell: bash
-        env:
-          SKIP_API_DOCS: true
 
       - name: Test esm exports
         run: docker compose -f environment_tests/docker-compose.yml run test-exports-esm
 
   exports-cjs:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -73,17 +77,18 @@ jobs:
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable
-      - name: Build
-        run: yarn workspace langchain build
+
+      - name: Build dependencies
+        run: yarn build --filter=langchain --filter=@langchain/anthropic --filter=@langchain/community --filter=@langchain/openai
         shell: bash
-        env:
-          SKIP_API_DOCS: true
 
       - name: Test cjs exports
         run: docker compose -f environment_tests/docker-compose.yml run test-exports-cjs
 
   exports-cf:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -93,17 +98,18 @@ jobs:
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable
-      - name: Build
-        run: yarn workspace langchain build
+
+      - name: Build dependencies
+        run: yarn build --filter=langchain --filter=@langchain/anthropic --filter=@langchain/community --filter=@langchain/openai
         shell: bash
-        env:
-          SKIP_API_DOCS: true
 
       - name: Test cf exports
         run: docker compose -f environment_tests/docker-compose.yml run test-exports-cf
 
   exports-vercel:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -113,17 +119,18 @@ jobs:
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable
-      - name: Build
-        run: yarn workspace langchain build
+    
+      - name: Build dependencies
+        run: yarn build --filter=langchain --filter=@langchain/anthropic --filter=@langchain/community --filter=@langchain/openai
         shell: bash
-        env:
-          SKIP_API_DOCS: true
 
       - name: Test vercel exports
         run: docker compose -f environment_tests/docker-compose.yml run test-exports-vercel
 
   exports-vite:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -133,17 +140,18 @@ jobs:
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable
-      - name: Build
-        run: yarn workspace langchain build
+      
+      - name: Build dependencies
+        run: yarn build --filter=langchain --filter=@langchain/anthropic --filter=@langchain/community --filter=@langchain/openai
         shell: bash
-        env:
-          SKIP_API_DOCS: true
 
       - name: Test vite exports
         run: docker compose -f environment_tests/docker-compose.yml run test-exports-vite
 
   exports-tsc:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
@@ -153,11 +161,10 @@ jobs:
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable
-      - name: Build
-        run: yarn workspace langchain build
+
+      - name: Build dependencies
+        run: yarn build --filter=langchain --filter=@langchain/anthropic --filter=@langchain/community --filter=@langchain/openai
         shell: bash
-        env:
-          SKIP_API_DOCS: true
 
       - name: Test compiling exports with tsc
         run: docker compose -f environment_tests/docker-compose.yml run test-exports-tsc
@@ -176,8 +183,6 @@ jobs:
   #     - name: Build
   #       run: yarn workspace langchain build
   #       shell: bash
-  #       env:
-  #         SKIP_API_DOCS: true
 
   #     - name: Test bun exports
   #       run: docker compose -f environment_tests/docker-compose.yml run test-exports-bun

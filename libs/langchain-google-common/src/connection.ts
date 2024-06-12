@@ -52,22 +52,30 @@ export abstract class GoogleConnection<
   abstract buildMethod(): GoogleAbstractedClientOpsMethod;
 
   async _clientInfoHeaders(): Promise<Record<string, string>> {
-    const clientLibraryVersion = await this._clientLibraryVersion();
+    const { userAgent, clientLibraryVersion } = await this._getClientInfo();
     return {
-      "User-Agent": clientLibraryVersion,
+      "User-Agent": userAgent,
+      "Client-Info": clientLibraryVersion,
     };
   }
 
-  async _clientLibraryVersion(): Promise<string> {
+  async _getClientInfo(): Promise<{
+    userAgent: string;
+    clientLibraryVersion: string;
+  }> {
     const env = await getRuntimeEnvironment();
     const langchain = env?.library ?? "langchain-js";
-    const langchainVersion = env?.libraryVersion ?? "0";
+    // TODO: Add an API for getting the current LangChain version
+    const langchainVersion = "0";
     const moduleName = await this._moduleName();
-    let ret = `${langchain}/${langchainVersion}`;
+    let clientLibraryVersion = `${langchain}/${langchainVersion}`;
     if (moduleName && moduleName.length) {
-      ret = `${ret}-${moduleName}`;
+      clientLibraryVersion = `${clientLibraryVersion}-${moduleName}`;
     }
-    return ret;
+    return {
+      userAgent: clientLibraryVersion,
+      clientLibraryVersion: `${langchainVersion}-${moduleName}`,
+    };
   }
 
   async _moduleName(): Promise<string> {
@@ -246,8 +254,7 @@ export abstract class AbstractGoogleLLMConnection<
   AuthOptions
 > {
   async buildUrlMethodGemini(): Promise<string> {
-    // Vertex AI only handles streamedGenerateContent
-    return "streamGenerateContent";
+    return this.streaming ? "streamGenerateContent" : "generateContent";
   }
 
   async buildUrlMethod(): Promise<string> {
@@ -274,6 +281,7 @@ export abstract class AbstractGoogleLLMConnection<
       topP: parameters.topP,
       maxOutputTokens: parameters.maxOutputTokens,
       stopSequences: parameters.stopSequences,
+      responseMimeType: parameters.responseMimeType,
     };
   }
 

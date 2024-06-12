@@ -3,7 +3,7 @@
 export interface AsyncLocalStorageInterface {
   getStore: () => any | undefined;
 
-  run: (store: any, callback: () => any) => any;
+  run: <T>(store: any, callback: () => T) => T;
 }
 
 export class MockAsyncLocalStorage implements AsyncLocalStorageInterface {
@@ -11,25 +11,24 @@ export class MockAsyncLocalStorage implements AsyncLocalStorageInterface {
     return undefined;
   }
 
-  run(_store: any, callback: () => any): any {
-    callback();
+  run<T>(_store: any, callback: () => T): T {
+    return callback();
   }
 }
 
+const mockAsyncLocalStorage = new MockAsyncLocalStorage();
+
 class AsyncLocalStorageProvider {
-  private asyncLocalStorage: AsyncLocalStorageInterface =
-    new MockAsyncLocalStorage();
-
-  private hasBeenInitialized = false;
-
   getInstance(): AsyncLocalStorageInterface {
-    return this.asyncLocalStorage;
+    return (
+      (globalThis as any).__lc_tracing_async_local_storage ??
+      mockAsyncLocalStorage
+    );
   }
 
   initializeGlobalInstance(instance: AsyncLocalStorageInterface) {
-    if (!this.hasBeenInitialized) {
-      this.hasBeenInitialized = true;
-      this.asyncLocalStorage = instance;
+    if ((globalThis as any).__lc_tracing_async_local_storage === undefined) {
+      (globalThis as any).__lc_tracing_async_local_storage = instance;
     }
   }
 }

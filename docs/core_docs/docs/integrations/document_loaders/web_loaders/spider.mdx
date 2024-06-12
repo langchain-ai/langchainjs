@@ -1,0 +1,36 @@
+---
+hide_table_of_contents: true
+---
+
+# Spider
+
+[Spider](https://spider.cloud/?ref=langchainjs) is the [fastest](https://github.com/spider-rs/spider/blob/main/benches/BENCHMARKS.md#benchmark-results) crawler. It converts any website into pure HTML, markdown, metadata or text while enabling you to crawl with custom actions using AI.
+
+## Overview
+
+Spider allows you to use high performance proxies to prevent detection, caches AI actions, webhooks for crawling status, scheduled crawls etc...
+
+This guide shows how to crawl/scrape a website using [Spider](https://spider.cloud/) and loading the LLM-ready documents with `SpiderLoader` in LanghChain.
+
+## Setup
+
+Get your own Spider API key on [spider.cloud](https://spider.cloud/).
+
+## Usage
+
+Here's an example of how to use the `SpiderLoader`:
+
+Spider offers two scraping modes `scrape` and `crawl`. Scrape only gets the content of the url provided while crawl gets the content of the url provided and crawls deeper following subpages.
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/document_loaders/spider.ts";
+
+```bash npm2yarn
+npm install @spider-cloud/spider-client
+```
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
+### Additional Parameters
+
+See the [Spider documentation](https://spider.cloud/docs/api) for all the available `params`.

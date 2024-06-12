@@ -9,6 +9,12 @@ import {
   LoadersMapping,
 } from "./directory.js";
 import { BaseDocumentLoader } from "../base.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "document_loaders/fs/unstructured",
+  newPackageName: "@langchain/community",
+});
 
 const UNSTRUCTURED_API_FILETYPES = [
   ".txt",
@@ -120,7 +126,14 @@ type UnstructuredDirectoryLoaderOptions = UnstructuredLoaderOptions & {
   unknown?: UnknownHandling;
 };
 
+type UnstructuredMemoryLoaderOptions = {
+  buffer: Buffer;
+  fileName: string;
+};
+
 /**
+ * @deprecated - Import from "@langchain/community/document_loaders/fs/unstructured" instead. This entrypoint will be removed in 0.3.0.
+ *
  * A document loader that uses the Unstructured API to load unstructured
  * documents. It supports both the new syntax with options object and the
  * legacy syntax for backward compatibility. The load() method sends a
@@ -130,6 +143,10 @@ type UnstructuredDirectoryLoaderOptions = UnstructuredLoaderOptions & {
  */
 export class UnstructuredLoader extends BaseDocumentLoader {
   public filePath: string;
+
+  private buffer?: Buffer;
+
+  private fileName?: string;
 
   private apiUrl = "https://api.unstructured.io/general/v0/general";
 
@@ -167,7 +184,9 @@ export class UnstructuredLoader extends BaseDocumentLoader {
   private maxCharacters?: number;
 
   constructor(
-    filePathOrLegacyApiUrl: string,
+    filePathOrLegacyApiUrlOrMemoryBuffer:
+      | string
+      | UnstructuredMemoryLoaderOptions,
     optionsOrLegacyFilePath: UnstructuredLoaderOptions | string = {}
   ) {
     super();
@@ -175,11 +194,20 @@ export class UnstructuredLoader extends BaseDocumentLoader {
     // Temporary shim to avoid breaking existing users
     // Remove when API keys are enforced by Unstructured and existing code will break anyway
     const isLegacySyntax = typeof optionsOrLegacyFilePath === "string";
-    if (isLegacySyntax) {
+    const isMemorySyntax =
+      typeof filePathOrLegacyApiUrlOrMemoryBuffer === "object";
+
+    if (isMemorySyntax) {
+      this.buffer = filePathOrLegacyApiUrlOrMemoryBuffer.buffer;
+      this.fileName = filePathOrLegacyApiUrlOrMemoryBuffer.fileName;
+    } else if (isLegacySyntax) {
       this.filePath = optionsOrLegacyFilePath;
-      this.apiUrl = filePathOrLegacyApiUrl;
+      this.apiUrl = filePathOrLegacyApiUrlOrMemoryBuffer;
     } else {
-      this.filePath = filePathOrLegacyApiUrl;
+      this.filePath = filePathOrLegacyApiUrlOrMemoryBuffer;
+    }
+
+    if (!isLegacySyntax) {
       const options = optionsOrLegacyFilePath;
       this.apiKey = options.apiKey;
       this.apiUrl = options.apiUrl ?? this.apiUrl;
@@ -201,14 +229,20 @@ export class UnstructuredLoader extends BaseDocumentLoader {
   }
 
   async _partition() {
-    const { readFile, basename } = await this.imports();
+    let { buffer } = this;
+    let { fileName } = this;
 
-    const buffer = await readFile(this.filePath);
-    const fileName = basename(this.filePath);
+    if (!buffer) {
+      const { readFile, basename } = await this.imports();
 
-    // I'm aware this reads the file into memory first, but we have lots of work
-    // to do on then consuming Documents in a streaming fashion anyway, so not
-    // worried about this for now.
+      buffer = await readFile(this.filePath);
+      fileName = basename(this.filePath);
+
+      // I'm aware this reads the file into memory first, but we have lots of work
+      // to do on then consuming Documents in a streaming fashion anyway, so not
+      // worried about this for now.
+    }
+
     const formData = new FormData();
     formData.append("files", new Blob([buffer]), fileName);
     formData.append("strategy", this.strategy);
@@ -291,7 +325,7 @@ export class UnstructuredLoader extends BaseDocumentLoader {
     const documents: Document[] = [];
     for (const element of elements) {
       const { metadata, text } = element;
-      if (typeof text === "string") {
+      if (typeof text === "string" && text !== "") {
         documents.push(
           new Document({
             pageContent: text,

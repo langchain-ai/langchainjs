@@ -15,6 +15,7 @@ import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { AzureOpenAIInput, AzureOpenAIEmbeddingsParams } from "./types.js";
 import { USER_AGENT_PREFIX } from "./constants.js";
 
+/** @deprecated Import from "@langchain/openai" instead. */
 export class AzureOpenAIEmbeddings
   extends Embeddings
   implements AzureOpenAIEmbeddingsParams, AzureOpenAIInput
@@ -62,7 +63,9 @@ export class AzureOpenAIEmbeddings
       getEnvironmentVariable("AZURE_OPENAI_API_ENDPOINT");
 
     const openAiApiKey =
-      fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
+      fields?.apiKey ??
+      fields?.openAIApiKey ??
+      getEnvironmentVariable("OPENAI_API_KEY");
 
     this.azureOpenAIApiKey =
       fields?.apiKey ??
@@ -135,18 +138,18 @@ export class AzureOpenAIEmbeddings
 
     const batchRequests = batches.map((batch) => this.getEmbeddings(batch));
     const embeddings = await Promise.all(batchRequests);
-
-    return embeddings;
+    return embeddings.flat();
   }
 
   async embedQuery(document: string): Promise<number[]> {
     const input = [
       this.stripNewLines ? document.replace(/\n/g, " ") : document,
     ];
-    return this.getEmbeddings(input);
+    const embeddings = await this.getEmbeddings(input);
+    return embeddings.flat();
   }
 
-  private async getEmbeddings(input: string[]) {
+  private async getEmbeddings(input: string[]): Promise<number[][]> {
     const deploymentName = this.azureOpenAIApiDeploymentName || this.model;
 
     const res = await this.caller.call(() =>
@@ -159,6 +162,6 @@ export class AzureOpenAIEmbeddings
       })
     );
 
-    return res.data[0].embedding;
+    return res.data.map((data) => data.embedding);
   }
 }

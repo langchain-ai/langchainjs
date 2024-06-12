@@ -9,7 +9,7 @@
       "ES2022.Object",
       "DOM"
     ],
-    "module": "ES2020",
+    "module": "NodeNext",
     "moduleResolution": "nodenext",
     "esModuleInterop": true,
     "declaration": true,
@@ -23,11 +23,13 @@
     "strict": true
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "src/*"
   ],
   "exclude": [
-    "node_modules",
+    "node_modules/",
     "dist",
-    "docs"
+    "docs",
+    "bin/"
   ]
 }
