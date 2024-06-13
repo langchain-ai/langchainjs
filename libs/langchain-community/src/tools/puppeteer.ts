@@ -1,6 +1,7 @@
-import {launch} from "puppeteer";
+import { launch } from "puppeteer";
+import { load } from "cheerio";
 
-import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import type { LanguageModelLike } from "@langchain/core/language_models/base";
 import { Tool, ToolParams } from "@langchain/core/tools";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { StringOutputParser } from "@langchain/core/output_parsers";
@@ -14,7 +15,6 @@ import {
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { formatDocumentsAsString } from "langchain/util/document";
 import { Document } from "langchain/document";
-import {load} from "cheerio";
 
 export const parseInputs = (inputs: string): [string, string] => {
   const [baseUrl, task] = inputs.split(",").map((input) => {
@@ -28,21 +28,22 @@ export const parseInputs = (inputs: string): [string, string] => {
   return [baseUrl, task];
 };
 
-export const getRelevantHtml = async (
-  html: string,
-): Promise<string> => {
+export const getRelevantHtml = async (html: string): Promise<string> => {
   const $ = load(html);
 
-  const tagsToRemove = ['script', 'svg', 'style']
+  const tagsToRemove = ["script", "svg", "style"];
 
   for (const tag of tagsToRemove) {
     await $(tag).remove();
-  };
+  }
 
-  return $('body').html()?.trim().replace(/\n+/g, " ") ?? '';
+  return $("body").html()?.trim().replace(/\n+/g, " ") ?? "";
 };
 
-export const getHtml = async (baseUrl: string, headers: Headers = DEFAULT_HEADERS) => {
+export const getHtml = async (
+  baseUrl: string,
+  headers: Headers = DEFAULT_HEADERS
+) => {
   const browser = await launch({
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
     ignoreDefaultArgs: ["--disable-extensions"],
@@ -83,7 +84,7 @@ type Headers = Record<string, any>;
  * language model, embeddings, HTTP headers, and a text splitter.
  */
 export interface PuppeteerBrowserArgs extends ToolParams {
-  model: BaseLanguageModelInterface;
+  model: LanguageModelLike;
 
   embeddings: EmbeddingsInterface;
 
@@ -92,16 +93,20 @@ export interface PuppeteerBrowserArgs extends ToolParams {
   textSplitter?: TextSplitter;
 }
 
-class PuppeteerBrowser extends Tool {
+export class PuppeteerBrowser extends Tool {
+  name = "puppeteer-browser";
+
+  description = `Useful for when you need to find something on a webpage. Input should be a comma separated list of "ONE valid URL including protocol","What you want to find on the page or empty string for a summary"`;
+
   static lc_name() {
     return "PuppeteerBrowser";
   }
 
   get lc_namespace() {
-    return [...super.lc_namespace, "puppeteer_browser"];
+    return [...super.lc_namespace, "puppeteer"];
   }
 
-  private model: BaseLanguageModelInterface;
+  private model: LanguageModelLike;
 
   private embeddings: EmbeddingsInterface;
 
@@ -109,7 +114,12 @@ class PuppeteerBrowser extends Tool {
 
   private textSplitter: TextSplitter;
 
-  constructor({ model, headers, embeddings, textSplitter }: PuppeteerBrowserArgs) {
+  constructor({
+    model,
+    headers,
+    embeddings,
+    textSplitter,
+  }: PuppeteerBrowserArgs) {
     super(...arguments);
 
     this.model = model;
@@ -168,10 +178,4 @@ class PuppeteerBrowser extends Tool {
     const chain = RunnableSequence.from([this.model, new StringOutputParser()]);
     return chain.invoke(input);
   }
-
-  name = "puppeteer-browser";
-
-  description = `Useful for when you need to find something on a webpage. Input should be a comma separated list of "ONE valid URL including protocol","What you want to find on the page or empty string for a summary"`;
 }
-
-export { PuppeteerBrowser };
