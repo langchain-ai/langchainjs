@@ -767,7 +767,7 @@ a few ways to get structured output from models in LangChain.
 #### `.withStructuredOutput()`
 
 For convenience, some LangChain chat models support a `.withStructuredOutput()` method.
-This method only requires a schema as input, and returns a dict or Pydantic object.
+This method only requires a schema as input, and returns an object matching the requested schema.
 Generally, this method is only present on models that support one of the more advanced methods described below,
 and will use one of them under the hood. It takes care of importing a suitable output parser and
 formatting the schema in the right format for the model.
