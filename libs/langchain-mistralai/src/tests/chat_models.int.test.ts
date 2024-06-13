@@ -11,6 +11,7 @@ import { DynamicStructuredTool, StructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
 import {
   AIMessage,
+  AIMessageChunk,
   BaseMessage,
   HumanMessage,
   ToolMessage,
@@ -915,4 +916,69 @@ describe("codestral-latest", () => {
     expect(parsedArgs.code).toBeDefined();
     console.log(parsedArgs.code);
   });
+});
+
+test("Stream token count usage_metadata", async () => {
+  const model = new ChatMistralAI({
+    model: "codestral-latest",
+    temperature: 0,
+  });
+  let res: AIMessageChunk | null = null;
+  for await (const chunk of await model.stream(
+    "Why is the sky blue? Be concise."
+  )) {
+    if (!res) {
+      res = chunk;
+    } else {
+      res = res.concat(chunk);
+    }
+  }
+  console.log(res);
+  expect(res?.usage_metadata).toBeDefined();
+  if (!res?.usage_metadata) {
+    return;
+  }
+  expect(res.usage_metadata.input_tokens).toBe(13);
+  expect(res.usage_metadata.output_tokens).toBeGreaterThan(10);
+  expect(res.usage_metadata.total_tokens).toBe(
+    res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
+  );
+});
+
+test("streamUsage excludes token usage", async () => {
+  const model = new ChatMistralAI({
+    model: "codestral-latest",
+    temperature: 0,
+    streamUsage: false,
+  });
+  let res: AIMessageChunk | null = null;
+  for await (const chunk of await model.stream(
+    "Why is the sky blue? Be concise."
+  )) {
+    if (!res) {
+      res = chunk;
+    } else {
+      res = res.concat(chunk);
+    }
+  }
+  console.log(res);
+  expect(res?.usage_metadata).not.toBeDefined();
+});
+
+test("Invoke token count usage_metadata", async () => {
+  const model = new ChatMistralAI({
+    model: "codestral-latest",
+    temperature: 0,
+  });
+  const res = await model.invoke("Why is the sky blue? Be concise.");
+  console.log(res);
+  expect(res?.usage_metadata).toBeDefined();
+  if (!res?.usage_metadata) {
+    return;
+  }
+  expect(res.usage_metadata.input_tokens).toBe(13);
+  expect(res.usage_metadata.output_tokens).toBeGreaterThan(10);
+  expect(res.usage_metadata.total_tokens).toBe(
+    res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
+  );
 });

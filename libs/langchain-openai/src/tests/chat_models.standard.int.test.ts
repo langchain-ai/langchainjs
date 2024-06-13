@@ -24,12 +24,6 @@ class ChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
     });
   }
 
-  async testToolMessageHistoriesListContent() {
-    console.warn(
-      "ChatOpenAI testToolMessageHistoriesListContent test known failure. Skipping..."
-    );
-  }
-
   async testUsageMetadataStreaming() {
     // ChatOpenAI does not support streaming tokens by
     // default, so we must pass in a call option to
