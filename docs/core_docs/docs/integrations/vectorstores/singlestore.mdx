@@ -6,7 +6,17 @@ import CodeBlock from "@theme/CodeBlock";
 
 # SingleStore
 
-[SingleStoreDB](https://singlestore.com/) is a high-performance distributed SQL database that supports deployment both in the [cloud](https://www.singlestore.com/cloud/) and on-premise. It provides vector storage, as well as vector functions like [dot_product](https://docs.singlestore.com/managed-service/en/reference/sql-reference/vector-functions/dot_product.html) and [euclidean_distance](https://docs.singlestore.com/managed-service/en/reference/sql-reference/vector-functions/euclidean_distance.html), thereby supporting AI applications that require text similarity matching.
+[SingleStoreDB](https://singlestore.com/) is a robust, high-performance distributed SQL database solution designed to excel in both [cloud](https://www.singlestore.com/cloud/) and on-premises environments. Boasting a versatile feature set, it offers seamless deployment options while delivering unparalleled performance.
+
+A standout feature of SingleStoreDB is its advanced support for vector storage and operations, making it an ideal choice for applications requiring intricate AI capabilities such as text similarity matching. With built-in vector functions like [dot_product](https://docs.singlestore.com/managed-service/en/reference/sql-reference/vector-functions/dot_product.html) and [euclidean_distance](https://docs.singlestore.com/managed-service/en/reference/sql-reference/vector-functions/euclidean_distance.html), SingleStoreDB empowers developers to implement sophisticated algorithms efficiently.
+
+For developers keen on leveraging vector data within SingleStoreDB, a comprehensive tutorial is available, guiding them through the intricacies of [working with vector data](https://docs.singlestore.com/managed-service/en/developer-resources/functional-extensions/working-with-vector-data.html). This tutorial delves into the Vector Store within SingleStoreDB, showcasing its ability to facilitate searches based on vector similarity. Leveraging vector indexes, queries can be executed with remarkable speed, enabling swift retrieval of relevant data.
+
+Moreover, SingleStoreDB's Vector Store seamlessly integrates with [full-text indexing based on Lucene](https://docs.singlestore.com/cloud/developer-resources/functional-extensions/working-with-full-text-search/), enabling powerful text similarity searches. Users can filter search results based on selected fields of document metadata objects, enhancing query precision.
+
+What sets SingleStoreDB apart is its ability to combine vector and full-text searches in various ways, offering flexibility and versatility. Whether prefiltering by text or vector similarity and selecting the most relevant data, or employing a weighted sum approach to compute a final similarity score, developers have multiple options at their disposal.
+
+In essence, SingleStoreDB provides a comprehensive solution for managing and querying vector data, offering unparalleled performance and flexibility for AI-driven applications.
 
 :::tip Compatibility
 Only available on Node.js.
@@ -50,3 +60,22 @@ import UsageExampleWithMetadata from "@examples/indexes/vector_stores/singlestor
 If it is needed to filter results based on specific metadata fields, you can pass a filter parameter to narrow down your search to the documents that match all specified fields in the filter object:
 
 <CodeBlock language="typescript">{UsageExampleWithMetadata}</CodeBlock>
+
+### Vector indexes
+
+Enhance your search efficiency with SingleStore DB version 8.5 or above by leveraging [ANN vector indexes](https://docs.singlestore.com/cloud/reference/sql-reference/vector-functions/vector-indexing/).
+By setting `useVectorIndex: true` during vector store object creation, you can activate this feature.
+Additionally, if your vectors differ in dimensionality from the default OpenAI embedding size of 1536, ensure to specify the `vectorSize` parameter accordingly.
+
+### Hybrid search
+
+import HybridSearchUsageExample from "@examples/indexes/vector_stores/singlestore_hybrid_search.ts";
+
+SingleStoreDB presents a diverse range of search strategies, each meticulously crafted to cater to specific use cases and user preferences.
+The default `VECTOR_ONLY` strategy utilizes vector operations such as `DOT_PRODUCT` or `EUCLIDEAN_DISTANCE` to calculate similarity scores directly between vectors, while `TEXT_ONLY` employs Lucene-based full-text search, particularly advantageous for text-centric applications.
+For users seeking a balanced approach, `FILTER_BY_TEXT` first refines results based on text similarity before conducting vector comparisons, whereas `FILTER_BY_VECTOR` prioritizes vector similarity, filtering results before assessing text similarity for optimal matches.
+Notably, both `FILTER_BY_TEXT` and `FILTER_BY_VECTOR` necessitate a full-text index for operation. Additionally, `WEIGHTED_SUM` emerges as a sophisticated strategy, calculating the final similarity score by weighing vector and text similarities, albeit exclusively utilizing dot_product distance calculations and also requiring a full-text index.
+These versatile strategies empower users to fine-tune searches according to their unique needs, facilitating efficient and precise data retrieval and analysis.
+Moreover, SingleStoreDB's hybrid approaches, exemplified by `FILTER_BY_TEXT`, `FILTER_BY_VECTOR`, and `WEIGHTED_SUM` strategies, seamlessly blend vector and text-based searches to maximize efficiency and accuracy, ensuring users can fully leverage the platform's capabilities for a wide range of applications.
+
+<CodeBlock language="typescript">{HybridSearchUsageExample}</CodeBlock>
