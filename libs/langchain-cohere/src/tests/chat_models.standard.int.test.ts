@@ -21,22 +21,6 @@ class ChatCohereStandardIntegrationTests extends ChatModelIntegrationTests<
       constructorArgs: {},
     });
   }
-
-  async testUsageMetadataStreaming() {
-    this.skipTestMessage(
-      "testUsageMetadataStreaming",
-      "ChatCohere",
-      "Streaming tokens is not currently supported."
-    );
-  }
-
-  async testUsageMetadata() {
-    this.skipTestMessage(
-      "testUsageMetadata",
-      "ChatCohere",
-      "Usage metadata tokens is not currently supported."
-    );
-  }
 }
 
 const testClass = new ChatCohereStandardIntegrationTests();

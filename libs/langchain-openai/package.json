@@ -1,6 +1,6 @@
 {
   "name": "@langchain/openai",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "OpenAI integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -37,7 +37,7 @@
   "dependencies": {
     "@langchain/core": ">=0.2.5 <0.3.0",
     "js-tiktoken": "^1.0.12",
-    "openai": "^4.41.1",
+    "openai": "^4.49.1",
     "zod": "^3.22.4",
     "zod-to-json-schema": "^3.22.3"
   },
@@ -45,7 +45,7 @@
     "@azure/identity": "^4.2.0",
     "@jest/globals": "^29.5.0",
     "@langchain/scripts": "~0.0.14",
-    "@langchain/standard-tests": "workspace:*",
+    "@langchain/standard-tests": "0.0.0",
     "@swc/core": "^1.3.90",
     "@swc/jest": "^0.2.29",
     "dpdm": "^3.12.0",
@@ -61,6 +61,7 @@
     "prettier": "^2.8.3",
     "release-it": "^15.10.1",
     "rimraf": "^5.0.1",
+    "ts-jest": "^29.1.0",
     "typescript": "~5.1.6"
   },
   "publishConfig": {

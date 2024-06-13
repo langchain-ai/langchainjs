@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.2.9",
+  "version": "0.2.10",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -79,7 +79,7 @@
     "@huggingface/inference": "^2.6.4",
     "@jest/globals": "^29.5.0",
     "@langchain/scripts": "~0.0.14",
-    "@langchain/standard-tests": "workspace:*",
+    "@langchain/standard-tests": "0.0.0",
     "@layerup/layerup-security": "^1.5.12",
     "@mendable/firecrawl-js": "^0.0.13",
     "@mlc-ai/web-llm": "^0.2.40",
@@ -1240,6 +1240,15 @@
       "import": "./llms/cohere.js",
       "require": "./llms/cohere.cjs"
     },
+    "./llms/deepinfra": {
+      "types": {
+        "import": "./llms/deepinfra.d.ts",
+        "require": "./llms/deepinfra.d.cts",
+        "default": "./llms/deepinfra.d.ts"
+      },
+      "import": "./llms/deepinfra.js",
+      "require": "./llms/deepinfra.cjs"
+    },
     "./llms/fireworks": {
       "types": {
         "import": "./llms/fireworks.d.ts",
@@ -1860,6 +1869,15 @@
       },
       "import": "./chat_models/cloudflare_workersai.js",
       "require": "./chat_models/cloudflare_workersai.cjs"
+    },
+    "./chat_models/deepinfra": {
+      "types": {
+        "import": "./chat_models/deepinfra.d.ts",
+        "require": "./chat_models/deepinfra.d.cts",
+        "default": "./chat_models/deepinfra.d.ts"
+      },
+      "import": "./chat_models/deepinfra.js",
+      "require": "./chat_models/deepinfra.cjs"
     },
     "./chat_models/fireworks": {
       "types": {
@@ -3248,6 +3266,10 @@
     "llms/cohere.js",
     "llms/cohere.d.ts",
     "llms/cohere.d.cts",
+    "llms/deepinfra.cjs",
+    "llms/deepinfra.js",
+    "llms/deepinfra.d.ts",
+    "llms/deepinfra.d.cts",
     "llms/fireworks.cjs",
     "llms/fireworks.js",
     "llms/fireworks.d.ts",
@@ -3524,6 +3546,10 @@
     "chat_models/cloudflare_workersai.js",
     "chat_models/cloudflare_workersai.d.ts",
     "chat_models/cloudflare_workersai.d.cts",
+    "chat_models/deepinfra.cjs",
+    "chat_models/deepinfra.js",
+    "chat_models/deepinfra.d.ts",
+    "chat_models/deepinfra.d.cts",
     "chat_models/fireworks.cjs",
     "chat_models/fireworks.js",
     "chat_models/fireworks.d.ts",

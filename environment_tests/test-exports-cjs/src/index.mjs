@@ -3,7 +3,7 @@ import { OpenAI } from "@langchain/openai";
 import { LLMChain } from "langchain/chains";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { OpenAIEmbeddings } from "@langchain/openai";
+import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/hf_transformers";
 import { Document } from "@langchain/core/documents";
 import { CSVLoader } from "langchain/document_loaders/fs/csv";
 
@@ -16,7 +16,7 @@ assert(typeof HNSWLib === "function");
 // Test dynamic imports of peer dependencies
 const { HierarchicalNSW } = await HNSWLib.imports();
 
-const vs = new HNSWLib(new OpenAIEmbeddings({ openAIApiKey: "sk-XXXX" }), {
+const vs = new HNSWLib(new HuggingFaceTransformersEmbeddings({ model: "Xenova/all-MiniLM-L6-v2" }), {
   space: "ip",
   numDimensions: 3,
   index: new HierarchicalNSW("ip", 3),

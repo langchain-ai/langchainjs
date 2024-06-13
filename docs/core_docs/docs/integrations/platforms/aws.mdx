@@ -4,7 +4,17 @@ keywords: [bedrock]
 
 # AWS
 
-All functionality related to [Amazon AWS](https://aws.amazon.com/) platform
+All functionality related to the [Amazon AWS](https://aws.amazon.com/) platform.
+
+## Chat Models
+
+### Bedrock
+
+See a [usage example](/docs/integrations/chat/bedrock).
+
+```typescript
+import { BedrockChat } from "@langchain/community/chat_models/bedrock";
+```
 
 ## LLMs
 
@@ -13,7 +23,7 @@ All functionality related to [Amazon AWS](https://aws.amazon.com/) platform
 See a [usage example](/docs/integrations/llms/bedrock).
 
 ```typescript
-import { Bedrock } from "langchain/llms/bedrock";
+import { Bedrock } from "@langchain/community/llms/bedrock";
 ```
 
 ### SageMaker Endpoint
@@ -28,7 +38,7 @@ See a [usage example](/docs/integrations/llms/aws_sagemaker).
 import {
   SagemakerEndpoint,
   SageMakerLLMContentHandler,
-} from "langchain/llms/sagemaker_endpoint";
+} from "@langchain/community/llms/sagemaker_endpoint";
 ```
 
 ## Text Embedding Models
@@ -38,7 +48,7 @@ import {
 See a [usage example](/docs/integrations/text_embedding/bedrock).
 
 ```typescript
-import { BedrockEmbeddings } from "langchain/embeddings/bedrock";
+import { BedrockEmbeddings } from "@langchain/community/embeddings/bedrock";
 ```
 
 ## Document loaders
@@ -55,7 +65,7 @@ npm install @aws-sdk/client-s3
 ```
 
 ```typescript
-import { S3Loader } from "langchain/document_loaders/web/s3";
+import { S3Loader } from "@langchain/community/document_loaders/web/s3";
 ```
 
 ## Memory

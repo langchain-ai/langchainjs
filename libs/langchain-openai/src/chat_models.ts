@@ -228,11 +228,13 @@ function convertMessagesToOpenAIParams(messages: BaseMessage[]) {
     }
     if (message.additional_kwargs.function_call != null) {
       completionParam.function_call = message.additional_kwargs.function_call;
+      completionParam.content = null;
     }
     if (isAIMessage(message) && !!message.tool_calls?.length) {
       completionParam.tool_calls = message.tool_calls.map(
         convertLangChainToolCallToOpenAI
       );
+      completionParam.content = null;
     } else {
       if (message.additional_kwargs.tool_calls != null) {
         completionParam.tool_calls = message.additional_kwargs.tool_calls;
@@ -253,20 +255,34 @@ export interface ChatOpenAICallOptions
   promptIndex?: number;
   response_format?: { type: "json_object" };
   seed?: number;
-  stream_options?: { include_usage: boolean };
+  /**
+   * Additional options to pass to streamed completions.
+   */
+  stream_options?: {
+    /**
+     * Whether or not to include token usage in the stream.
+     * If set to `true`, this will include an additional
+     * chunk at the end of the stream with the token usage.
+     */
+    include_usage: boolean;
+  };
+  /**
+   * Whether or not to restrict the ability to
+   * call multiple tools in one response.
+   */
+  parallel_tool_calls?: boolean;
 }
 
 /**
  * Wrapper around OpenAI large language models that use the Chat endpoint.
  *
- * To use you should have the `openai` package installed, with the
- * `OPENAI_API_KEY` environment variable set.
+ * To use you should have the `OPENAI_API_KEY` environment variable set.
  *
- * To use with Azure you should have the `openai` package installed, with the
+ * To use with Azure you should have the:
  * `AZURE_OPENAI_API_KEY`,
  * `AZURE_OPENAI_API_INSTANCE_NAME`,
  * `AZURE_OPENAI_API_DEPLOYMENT_NAME`
- * and `AZURE_OPENAI_API_VERSION` environment variable set.
+ * and `AZURE_OPENAI_API_VERSION` environment variables set.
  * `AZURE_OPENAI_BASE_PATH` is optional and will override `AZURE_OPENAI_API_INSTANCE_NAME` if you need to use a custom endpoint.
  *
  * @remarks
@@ -557,6 +573,7 @@ export class ChatOpenAI<
       ...(options?.stream_options !== undefined
         ? { stream_options: options.stream_options }
         : {}),
+      parallel_tool_calls: options?.parallel_tool_calls,
       ...this.modelKwargs,
     };
     return params;

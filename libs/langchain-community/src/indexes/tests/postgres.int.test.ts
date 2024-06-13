@@ -1,5 +1,5 @@
 import { describe, expect, test, jest } from "@jest/globals";
-import { PoolConfig } from "pg";
+import pg, { PoolConfig } from "pg";
 import {
   PostgresRecordManager,
   PostgresRecordManagerOptions,
@@ -34,6 +34,16 @@ describe.skip("PostgresRecordManager", () => {
 
   afterAll(async () => {
     await recordManager.end();
+  });
+
+  test("Test provided postgres pool instance", async () => {
+    const pool = new pg.Pool(config.postgresConnectionOptions);
+    const providedPoolRecordManager = new PostgresRecordManager("test", {
+      ...config,
+      pool,
+    });
+
+    expect(providedPoolRecordManager.pool).toBe(pool);
   });
 
   test("Test explicit schema definition", async () => {

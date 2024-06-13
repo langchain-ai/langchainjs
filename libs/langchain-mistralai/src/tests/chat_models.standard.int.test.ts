@@ -23,22 +23,6 @@ class ChatMistralAIStandardIntegrationTests extends ChatModelIntegrationTests<
       functionId: "123456789",
     });
   }
-
-  async testUsageMetadataStreaming() {
-    this.skipTestMessage(
-      "testUsageMetadataStreaming",
-      "ChatMistralAI",
-      "Streaming tokens is not currently supported."
-    );
-  }
-
-  async testUsageMetadata() {
-    this.skipTestMessage(
-      "testUsageMetadata",
-      "ChatMistralAI",
-      "Usage metadata tokens is not currently supported."
-    );
-  }
 }
 
 const testClass = new ChatMistralAIStandardIntegrationTests();

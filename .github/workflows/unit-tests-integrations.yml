@@ -1,16 +1,16 @@
 # This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
 
-name: Unit Tests (LangChain Community)
+name: Unit Tests (LangChain Integrations)
 
 on:
   push:
     branches: ["main"]
   pull_request:
-    # Only run when LangChain Core, or Community code changes.
+    # Only run when LangChain Core, or integration package code changes.
     paths:
       - 'langchain-core/**'
-      - 'libs/langchain-community/**'
+      - 'libs/**/**'
   workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
 
 
@@ -25,12 +25,30 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  get-changed-files:
+    runs-on: ubuntu-latest
+    outputs:
+      changed_files: ${{ steps.get_changes.outputs.changed_files }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+      - name: Get changes
+        id: get_changes
+        run: |
+          echo "changed_files<<EOF" >> $GITHUB_OUTPUT
+          git diff --name-only -r HEAD^1 HEAD | while read line; do printf "%s\n" "$line"; done >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
   unit-tests:
     name: Unit Tests
+    needs: get-changed-files
     strategy:
       matrix:
         os: [ubuntu-latest]
         node-version: [18.x, 20.x]
+        package: [anthropic, azure-openai, cloudflare, cohere, community, exa, google-common, google-gauth, google-genai, google-vertexai, google-vertexai-web, google-webauth, groq, mistralai, mongo, nomic, openai, pinecone, qdrant, redis, textsplitters, weaviate, yandex]
         # See Node.js release schedule at https://nodejs.org/en/about/releases/
         # include:
           # - os: windows-latest
@@ -38,6 +56,7 @@ jobs:
           # - os: macos-latest
           #   node-version: 20.x
     runs-on: ${{ matrix.os }}
+    if: contains(needs.get-changed-files.outputs.changed_files, 'langchain-core/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-${{ matrix.package }}/')
     env:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -50,5 +69,5 @@ jobs:
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable
-      - name: Test
-        run: yarn run test:unit:ci --filter=@langchain/community
+      - name: Test '@langchain/${{ matrix.package }}' package
+        run: yarn test:unit:ci --filter=@langchain/${{ matrix.package }}

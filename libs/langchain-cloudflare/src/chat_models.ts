@@ -84,7 +84,7 @@ export class ChatCloudflareWorkersAI
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     return {
-      ls_provider: "openai",
+      ls_provider: "cloudflare",
       ls_model_name: this.model,
       ls_model_type: "chat",
       ls_stop: options.stop,
