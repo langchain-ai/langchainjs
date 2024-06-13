@@ -13,7 +13,6 @@ jobs:
         package: [anthropic, cohere, google-genai, groq, mistralai]
     steps:
       - uses: actions/checkout@v4
-        if: contains(needs.get-changed-files.outputs.changed_files, 'langchain-core/') || contains(needs.get-changed-files.outputs.changed_files, 'libs/langchain-${{ matrix.package }}/')
       - name: Use Node.js 18.x
         uses: actions/setup-node@v3
         with:
