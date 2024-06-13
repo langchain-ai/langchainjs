@@ -10444,7 +10444,7 @@ __metadata:
   resolution: "@langchain/mistralai@workspace:libs/langchain-mistralai"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ">0.1.56 <0.3.0"
+    "@langchain/core": ">=0.2.5 <0.3.0"
     "@langchain/scripts": ~0.0.14
     "@langchain/standard-tests": 0.0.0
     "@mistralai/mistralai": ^0.4.0
