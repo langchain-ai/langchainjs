@@ -581,15 +581,6 @@
       "import": "./utils/types.js",
       "require": "./utils/types.cjs"
     },
-    "./utils/is_openai_tool": {
-      "types": {
-        "import": "./utils/is_openai_tool.d.ts",
-        "require": "./utils/is_openai_tool.d.cts",
-        "default": "./utils/is_openai_tool.d.ts"
-      },
-      "import": "./utils/is_openai_tool.js",
-      "require": "./utils/is_openai_tool.cjs"
-    },
     "./vectorstores": {
       "types": {
         "import": "./vectorstores.d.ts",
@@ -819,10 +810,6 @@
     "utils/types.js",
     "utils/types.d.ts",
     "utils/types.d.cts",
-    "utils/is_openai_tool.cjs",
-    "utils/is_openai_tool.js",
-    "utils/is_openai_tool.d.ts",
-    "utils/is_openai_tool.d.cts",
     "vectorstores.cjs",
     "vectorstores.js",
     "vectorstores.d.ts",

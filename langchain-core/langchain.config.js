@@ -66,7 +66,6 @@ export const config = {
     "utils/testing": "utils/testing/index",
     "utils/tiktoken": "utils/tiktoken",
     "utils/types": "utils/types/index",
-    "utils/is_openai_tool": "utils/is_openai_tool",
     vectorstores: "vectorstores",
   },
   tsConfigPath: resolve("./tsconfig.json"),
