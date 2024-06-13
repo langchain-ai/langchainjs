@@ -233,6 +233,7 @@ function convertMessagesToOpenAIParams(messages: BaseMessage[]) {
       completionParam.tool_calls = message.tool_calls.map(
         convertLangChainToolCallToOpenAI
       );
+      completionParam.content = null;
     } else {
       if (message.additional_kwargs.tool_calls != null) {
         completionParam.tool_calls = message.additional_kwargs.tool_calls;
@@ -948,6 +949,7 @@ export class ChatOpenAI<
     const requestOptions = this._getClientOptions(options);
     return this.caller.call(async () => {
       try {
+        console.log(request.messages)
         const res = await this.client.chat.completions.create(
           request,
           requestOptions
