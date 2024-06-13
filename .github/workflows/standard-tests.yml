@@ -8,7 +8,6 @@ on:
 jobs:
   standard-tests:
     runs-on: ubuntu-latest
-    needs: get-changed-files
     strategy:
       matrix:
         package: [anthropic, cohere, google-genai, groq, mistralai]
@@ -35,7 +34,6 @@ jobs:
   # we need separate jobs for each test.
   standard-tests-openai:
     runs-on: ubuntu-latest
-    needs: get-changed-files
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js 18.x
@@ -54,7 +52,6 @@ jobs:
 
   standard-tests-azure-openai:
     runs-on: ubuntu-latest
-    needs: get-changed-files
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js 18.x
@@ -76,7 +73,6 @@ jobs:
 
   standard-tests-bedrock:
     runs-on: ubuntu-latest
-    needs: get-changed-files
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js 18.x
