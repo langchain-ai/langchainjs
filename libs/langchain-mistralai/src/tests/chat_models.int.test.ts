@@ -924,7 +924,6 @@ test("Stream token count usage_metadata", async () => {
     temperature: 0,
   });
   let res: AIMessageChunk | null = null;
-  let lastRes: AIMessageChunk | null = null;
   for await (const chunk of await model.stream(
     "Why is the sky blue? Be concise."
   )) {
@@ -933,7 +932,6 @@ test("Stream token count usage_metadata", async () => {
     } else {
       res = res.concat(chunk);
     }
-    lastRes = chunk;
   }
   console.log(res);
   expect(res?.usage_metadata).toBeDefined();
