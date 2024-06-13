@@ -93,7 +93,9 @@ export interface ChatMistralAICallOptions extends MistralAICallOptions {}
 /**
  * Input to chat model class.
  */
-export interface ChatMistralAIInput extends BaseChatModelParams, Pick<ChatMistralAICallOptions, "streamUsage"> {
+export interface ChatMistralAIInput
+  extends BaseChatModelParams,
+    Pick<ChatMistralAICallOptions, "streamUsage"> {
   /**
    * The API key to use.
    * @default {process.env.MISTRAL_API_KEY}
@@ -261,11 +263,13 @@ function mistralAIResponseToChatMessage(
               }))
             : undefined,
         },
-        usage_metadata: usage ? {
-          input_tokens: usage.prompt_tokens,
-          output_tokens: usage.completion_tokens,
-          total_tokens: usage.total_tokens,
-        } : undefined,
+        usage_metadata: usage
+          ? {
+              input_tokens: usage.prompt_tokens,
+              output_tokens: usage.completion_tokens,
+              total_tokens: usage.total_tokens,
+            }
+          : undefined,
       });
     }
     default:
@@ -273,22 +277,25 @@ function mistralAIResponseToChatMessage(
   }
 }
 
-function _convertDeltaToMessageChunk(delta: {
-  role?: string | undefined;
-  content?: string | undefined;
-  tool_calls?: MistralAIToolCalls[] | undefined;
-}, 
-usage?: MistralAITokenUsage | null
+function _convertDeltaToMessageChunk(
+  delta: {
+    role?: string | undefined;
+    content?: string | undefined;
+    tool_calls?: MistralAIToolCalls[] | undefined;
+  },
+  usage?: MistralAITokenUsage | null
 ) {
   if (!delta.content && !delta.tool_calls) {
     if (usage) {
       return new AIMessageChunk({
         content: "",
-        usage_metadata: usage ? {
-          input_tokens: usage.prompt_tokens,
-          output_tokens: usage.completion_tokens,
-          total_tokens: usage.total_tokens,
-        } : undefined
+        usage_metadata: usage
+          ? {
+              input_tokens: usage.prompt_tokens,
+              output_tokens: usage.completion_tokens,
+              total_tokens: usage.total_tokens,
+            }
+          : undefined,
       });
     }
     return null;
@@ -337,11 +344,13 @@ usage?: MistralAITokenUsage | null
       content,
       tool_call_chunks: toolCallChunks,
       additional_kwargs,
-      usage_metadata: usage ? {
-        input_tokens: usage.prompt_tokens,
-        output_tokens: usage.completion_tokens,
-        total_tokens: usage.total_tokens,
-      } : undefined
+      usage_metadata: usage
+        ? {
+            input_tokens: usage.prompt_tokens,
+            output_tokens: usage.completion_tokens,
+            total_tokens: usage.total_tokens,
+          }
+        : undefined,
     });
   } else if (role === "tool") {
     return new ToolMessageChunk({
@@ -676,7 +685,10 @@ export class ChatMistralAI<
         completion: choice.index ?? 0,
       };
       const shouldStreamUsage = this.streamUsage || options.streamUsage;
-      const message = _convertDeltaToMessageChunk(delta, shouldStreamUsage ? data.usage : null);
+      const message = _convertDeltaToMessageChunk(
+        delta,
+        shouldStreamUsage ? data.usage : null
+      );
       if (message === null) {
         // Do not yield a chunk if the message is empty
         continue;

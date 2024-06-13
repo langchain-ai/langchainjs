@@ -968,7 +968,7 @@ test("streamUsage excludes token usage", async () => {
   console.log(res);
   expect(res?.usage_metadata).not.toBeDefined();
   if (res?.usage_metadata) {
-    return;
+    
   }
 });
 
