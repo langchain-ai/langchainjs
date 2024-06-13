@@ -6,9 +6,16 @@ import {
   type FunctionDeclarationSchema as GenerativeAIFunctionDeclarationSchema,
   GenerateContentRequest,
   SafetySetting,
+  CountTokensRequest,
+  Part as GenerativeAIPart,
+  EnhancedGenerateContentResponse,
 } from "@google/generative-ai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
-import { AIMessageChunk, BaseMessage } from "@langchain/core/messages";
+import {
+  AIMessageChunk,
+  BaseMessage,
+  UsageMetadata,
+} from "@langchain/core/messages";
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
@@ -56,12 +63,23 @@ export interface GoogleGenerativeAIChatCallOptions
   tools?:
     | StructuredToolInterface[]
     | GoogleGenerativeAIFunctionDeclarationsTool[];
+  /**
+   * Whether or not to include usage data, like token counts
+   * when streaming. If set to true, this will invoke two
+   * additional API calls to fetch token counts, along with
+   * an additional chunk containing the token usage at the
+   * end of the stream.
+   * @default false
+   */
+  streamUsage?: boolean;
 }
 
 /**
  * An interface defining the input to the ChatGoogleGenerativeAI class.
  */
-export interface GoogleGenerativeAIChatInput extends BaseChatModelParams {
+export interface GoogleGenerativeAIChatInput
+  extends BaseChatModelParams,
+    Pick<GoogleGenerativeAIChatCallOptions, "streamUsage"> {
   /**
    * Model Name to use
    *
@@ -222,6 +240,8 @@ export class ChatGoogleGenerativeAI
 
   streaming = false;
 
+  streamUsage = false;
+
   private client: GenerativeModel;
 
   get _isMultimodalModel() {
@@ -306,6 +326,7 @@ export class ChatGoogleGenerativeAI
         baseUrl: fields?.baseUrl,
       }
     );
+    this.streamUsage = fields?.streamUsage ?? this.streamUsage;
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -398,31 +419,69 @@ export class ChatGoogleGenerativeAI
       return { generations, llmOutput: { estimatedTokenUsage: tokenUsage } };
     }
 
-    const res = await this.caller.callWithOptions(
-      { signal: options?.signal },
-      async () => {
-        let output;
-        try {
-          output = await this.client.generateContent({
-            ...parameters,
-            contents: prompt,
-          });
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (e: any) {
-          // TODO: Improve error handling
-          if (e.message?.includes("400 Bad Request")) {
-            e.status = 400;
-          }
-          throw e;
-        }
-        return output;
+    const res = await this.completionWithRetry({
+      ...parameters,
+      contents: prompt,
+    });
+    let usageMetadata: UsageMetadata | undefined;
+    if (this.streamUsage || options.streamUsage) {
+      usageMetadata = await this.getTokenCount({
+        input: {
+          contents: prompt,
+        },
+        output: res.response,
+      });
+    }
+    const generationResult = mapGenerateContentResultToChatResult(
+      res.response,
+      {
+        usageMetadata,
       }
     );
-    const generationResult = mapGenerateContentResultToChatResult(res.response);
     await runManager?.handleLLMNewToken(
       generationResult.generations[0].text ?? ""
     );
     return generationResult;
+  }
+
+  async getTokenCount(args: {
+    input: string | (string | GenerativeAIPart)[] | CountTokensRequest;
+    output?: EnhancedGenerateContentResponse;
+  }): Promise<UsageMetadata | undefined> {
+    try {
+      let getOutputTokensRequest:
+        | Parameters<typeof this.client.countTokens>[0]
+        | undefined;
+      if (args.output) {
+        const { text: getText, functionCalls: getFunctionCalls } = args.output;
+        const text = getText();
+        const functionCalls = getFunctionCalls();
+
+        if (text) {
+          getOutputTokensRequest = text;
+        } else if (functionCalls) {
+          getOutputTokensRequest = functionCalls.map((fc) => ({
+            functionCall: fc,
+          }));
+        }
+      }
+
+      const [{ totalTokens: input_tokens }, { totalTokens: output_tokens }] =
+        await Promise.all([
+          this.client.countTokens(args.input),
+          getOutputTokensRequest
+            ? this.client.countTokens(getOutputTokensRequest)
+            : { totalTokens: 0 },
+        ]);
+      return {
+        input_tokens,
+        output_tokens,
+        total_tokens: input_tokens + output_tokens,
+      };
+    } catch (e) {
+      console.error("Failed to fetch token count: ", e);
+      return undefined;
+    }
   }
 
   async *_streamResponseChunks(
@@ -435,14 +494,14 @@ export class ChatGoogleGenerativeAI
       this._isMultimodalModel
     );
     const parameters = this.invocationParams(options);
-    const stream = await this.caller.callWithOptions(
+    const { stream, response } = await this.caller.callWithOptions(
       { signal: options?.signal },
       async () => {
-        const { stream } = await this.client.generateContentStream({
+        const res = await this.client.generateContentStream({
           ...parameters,
           contents: prompt,
         });
-        return stream;
+        return res;
       }
     );
 
@@ -455,6 +514,46 @@ export class ChatGoogleGenerativeAI
       yield chunk;
       await runManager?.handleLLMNewToken(chunk.text ?? "");
     }
+
+    if (this.streamUsage || options.streamUsage) {
+      const usageMetadata = await this.getTokenCount({
+        input: {
+          contents: prompt,
+        },
+        output: await response,
+      });
+
+      yield new ChatGenerationChunk({
+        text: "",
+        message: new AIMessageChunk({
+          content: "",
+          usage_metadata: usageMetadata,
+        }),
+      });
+    }
+  }
+
+  async completionWithRetry(
+    request: string | GenerateContentRequest | (string | GenerativeAIPart)[],
+    options?: this["ParsedCallOptions"]
+  ) {
+    return this.caller.callWithOptions(
+      { signal: options?.signal },
+      async () => {
+        let output;
+        try {
+          output = await this.client.generateContent(request);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (e: any) {
+          // TODO: Improve error handling
+          if (e.message?.includes("400 Bad Request")) {
+            e.status = 400;
+          }
+          throw e;
+        }
+        return output;
+      }
+    );
   }
 
   withStructuredOutput<
