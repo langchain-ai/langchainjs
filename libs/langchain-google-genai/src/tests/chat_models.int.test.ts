@@ -324,7 +324,6 @@ test("ChatGoogleGenerativeAI can call withStructuredOutput genai tools and invok
 test("Stream token count usage_metadata", async () => {
   const model = new ChatGoogleGenerativeAI({
     temperature: 0,
-    streamUsage: true,
   });
   let res: AIMessageChunk | null = null;
   for await (const chunk of await model.stream(
@@ -370,7 +369,6 @@ test("streamUsage excludes token usage", async () => {
 test("Invoke token count usage_metadata", async () => {
   const model = new ChatGoogleGenerativeAI({
     temperature: 0,
-    streamUsage: true,
   });
   const res = await model.invoke("Why is the sky blue? Be concise.");
   console.log(res);

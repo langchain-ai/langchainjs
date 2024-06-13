@@ -7,7 +7,6 @@ import {
   GenerateContentRequest,
   SafetySetting,
   Part as GenerativeAIPart,
-  EnhancedGenerateContentResponse,
 } from "@google/generative-ai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -64,12 +63,8 @@ export interface GoogleGenerativeAIChatCallOptions
     | GoogleGenerativeAIFunctionDeclarationsTool[];
   /**
    * Whether or not to include usage data, like token counts
-   * in the response. If set to true, this will invoke two
-   * additional API calls to fetch token counts after the model
-   * has responded. If streaming is enabled, this will append an
-   * additional chunk containing the token usage at the end of
-   * the stream.
-   * @default false
+   * in the streamed response chunks.
+   * @default true
    */
   streamUsage?: boolean;
 }
@@ -240,7 +235,7 @@ export class ChatGoogleGenerativeAI
 
   streaming = false;
 
-  streamUsage = false;
+  streamUsage = true;
 
   private client: GenerativeModel;
 
@@ -419,18 +414,25 @@ export class ChatGoogleGenerativeAI
       return { generations, llmOutput: { estimatedTokenUsage: tokenUsage } };
     }
 
-    const request = {
+    const res = await this.completionWithRetry({
       ...parameters,
       contents: prompt,
-    };
-    const res = await this.completionWithRetry(request);
+    });
+
     let usageMetadata: UsageMetadata | undefined;
-    if (this.streamUsage || options.streamUsage) {
-      usageMetadata = await this.getTokenCount({
-        input: request,
-        output: res.response,
-      });
+    if ("usageMetadata" in res.response) {
+      const genAIUsageMetadata = res.response.usageMetadata as {
+        promptTokenCount: number | undefined;
+        candidatesTokenCount: number | undefined;
+        totalTokenCount: number | undefined;
+      };
+      usageMetadata = {
+        input_tokens: genAIUsageMetadata.promptTokenCount ?? 0,
+        output_tokens: genAIUsageMetadata.candidatesTokenCount ?? 0,
+        total_tokens: genAIUsageMetadata.totalTokenCount ?? 0,
+      };
     }
+
     const generationResult = mapGenerateContentResultToChatResult(
       res.response,
       {
@@ -441,55 +443,6 @@ export class ChatGoogleGenerativeAI
       generationResult.generations[0].text ?? ""
     );
     return generationResult;
-  }
-
-  /**
-   * Get token counts for the model input output (if provided).
-   * Token counts are fetched via the `countTokens` API from the
-   * Google Generative AI client.
-   * @param args An object containing the input and optional output.
-   * @param {string | GenerateContentRequest | (string | GenerativeAIPart)[]} [args.input] The input to count tokens for. The same input which is passed to the `generateContent` API.
-   * @param {EnhancedGenerateContentResponse | undefined} [args.output] Optional output response to count tokens for. Should be an EnhancedGenerateContentResponse object.
-   * @returns {Promise<UsageMetadata | undefined>} The usage metadata, or undefined if an error occurred.
-   */
-  async getTokenCount(args: {
-    input: string | GenerateContentRequest | (string | GenerativeAIPart)[];
-    output?: EnhancedGenerateContentResponse;
-  }): Promise<UsageMetadata | undefined> {
-    try {
-      let getOutputTokensRequest:
-        | Parameters<typeof this.client.countTokens>[0]
-        | undefined;
-      if (args.output) {
-        const { text: getText, functionCalls: getFunctionCalls } = args.output;
-        const text = getText();
-        const functionCalls = getFunctionCalls();
-
-        if (text) {
-          getOutputTokensRequest = text;
-        } else if (functionCalls) {
-          getOutputTokensRequest = functionCalls.map((functionCall) => ({
-            functionCall,
-          }));
-        }
-      }
-
-      const [{ totalTokens: input_tokens }, { totalTokens: output_tokens }] =
-        await Promise.all([
-          this.client.countTokens(args.input),
-          getOutputTokensRequest
-            ? this.client.countTokens(getOutputTokensRequest)
-            : { totalTokens: 0 },
-        ]);
-      return {
-        input_tokens,
-        output_tokens,
-        total_tokens: input_tokens + output_tokens,
-      };
-    } catch (e) {
-      console.error("Failed to fetch token count: ", e);
-      return undefined;
-    }
   }
 
   async *_streamResponseChunks(
@@ -506,37 +459,55 @@ export class ChatGoogleGenerativeAI
       ...parameters,
       contents: prompt,
     };
-    const { stream, response } = await this.caller.callWithOptions(
+    const stream = await this.caller.callWithOptions(
       { signal: options?.signal },
       async () => {
-        const res = await this.client.generateContentStream(request);
-        return res;
+        const { stream } = await this.client.generateContentStream(request);
+        return stream;
       }
     );
 
+    let usageMetadata: UsageMetadata | undefined;
     for await (const response of stream) {
-      const chunk = convertResponseContentToChatGenerationChunk(response);
+      if (
+        "usageMetadata" in response &&
+        this.streamUsage !== false &&
+        options.streamUsage !== false
+      ) {
+        const genAIUsageMetadata = response.usageMetadata as {
+          promptTokenCount: number;
+          candidatesTokenCount: number;
+          totalTokenCount: number;
+        };
+        if (!usageMetadata) {
+          usageMetadata = {
+            input_tokens: genAIUsageMetadata.promptTokenCount,
+            output_tokens: genAIUsageMetadata.candidatesTokenCount,
+            total_tokens: genAIUsageMetadata.totalTokenCount,
+          };
+        } else {
+          // Under the hood, LangChain combines the prompt tokens. Google returns the updated
+          // total each time, so we need to find the difference between the tokens.
+          const outputTokenDiff =
+            genAIUsageMetadata.candidatesTokenCount -
+            usageMetadata.output_tokens;
+          usageMetadata = {
+            input_tokens: 0,
+            output_tokens: outputTokenDiff,
+            total_tokens: outputTokenDiff,
+          };
+        }
+      }
+
+      const chunk = convertResponseContentToChatGenerationChunk(response, {
+        usageMetadata,
+      });
       if (!chunk) {
         continue;
       }
 
       yield chunk;
       await runManager?.handleLLMNewToken(chunk.text ?? "");
-    }
-
-    if (this.streamUsage || options.streamUsage) {
-      const usageMetadata = await this.getTokenCount({
-        input: request,
-        output: await response,
-      });
-
-      yield new ChatGenerationChunk({
-        text: "",
-        message: new AIMessageChunk({
-          content: "",
-          usage_metadata: usageMetadata,
-        }),
-      });
     }
   }
 
@@ -547,9 +518,8 @@ export class ChatGoogleGenerativeAI
     return this.caller.callWithOptions(
       { signal: options?.signal },
       async () => {
-        let output;
         try {
-          output = await this.client.generateContent(request);
+          return this.client.generateContent(request);
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
           // TODO: Improve error handling
@@ -558,7 +528,6 @@ export class ChatGoogleGenerativeAI
           }
           throw e;
         }
-        return output;
       }
     );
   }

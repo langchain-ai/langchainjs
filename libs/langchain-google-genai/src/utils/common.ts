@@ -223,7 +223,10 @@ export function mapGenerateContentResultToChatResult(
 }
 
 export function convertResponseContentToChatGenerationChunk(
-  response: EnhancedGenerateContentResponse
+  response: EnhancedGenerateContentResponse,
+  extra?: {
+    usageMetadata: UsageMetadata | undefined;
+  }
 ): ChatGenerationChunk | null {
   if (!response.candidates || response.candidates.length === 0) {
     return null;
@@ -240,6 +243,7 @@ export function convertResponseContentToChatGenerationChunk(
       // Each chunk can have unique "generationInfo", and merging strategy is unclear,
       // so leave blank for now.
       additional_kwargs: {},
+      usage_metadata: extra?.usageMetadata,
     }),
     generationInfo,
   });
