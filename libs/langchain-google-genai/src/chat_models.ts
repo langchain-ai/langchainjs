@@ -6,7 +6,6 @@ import {
   type FunctionDeclarationSchema as GenerativeAIFunctionDeclarationSchema,
   GenerateContentRequest,
   SafetySetting,
-  CountTokensRequest,
   Part as GenerativeAIPart,
   EnhancedGenerateContentResponse,
 } from "@google/generative-ai";
@@ -420,16 +419,15 @@ export class ChatGoogleGenerativeAI
       return { generations, llmOutput: { estimatedTokenUsage: tokenUsage } };
     }
 
-    const res = await this.completionWithRetry({
+    const request = {
       ...parameters,
       contents: prompt,
-    });
+    };
+    const res = await this.completionWithRetry(request);
     let usageMetadata: UsageMetadata | undefined;
     if (this.streamUsage || options.streamUsage) {
       usageMetadata = await this.getTokenCount({
-        input: {
-          contents: prompt,
-        },
+        input: request,
         output: res.response,
       });
     }
@@ -450,12 +448,12 @@ export class ChatGoogleGenerativeAI
    * Token counts are fetched via the `countTokens` API from the
    * Google Generative AI client.
    * @param args An object containing the input and optional output.
-   * @param {string | (string | GenerativeAIPart)[] | CountTokensRequest} [args.input] The input to count tokens for. Can be a string, an array of strings or GenerativeAIParts, or a CountTokensRequest object.
+   * @param {string | GenerateContentRequest | (string | GenerativeAIPart)[]} [args.input] The input to count tokens for. The same input which is passed to the `generateContent` API.
    * @param {EnhancedGenerateContentResponse | undefined} [args.output] Optional output response to count tokens for. Should be an EnhancedGenerateContentResponse object.
    * @returns {Promise<UsageMetadata | undefined>} The usage metadata, or undefined if an error occurred.
    */
   async getTokenCount(args: {
-    input: string | (string | GenerativeAIPart)[] | CountTokensRequest;
+    input: string | GenerateContentRequest | (string | GenerativeAIPart)[];
     output?: EnhancedGenerateContentResponse;
   }): Promise<UsageMetadata | undefined> {
     try {
@@ -470,8 +468,8 @@ export class ChatGoogleGenerativeAI
         if (text) {
           getOutputTokensRequest = text;
         } else if (functionCalls) {
-          getOutputTokensRequest = functionCalls.map((fc) => ({
-            functionCall: fc,
+          getOutputTokensRequest = functionCalls.map((functionCall) => ({
+            functionCall,
           }));
         }
       }
@@ -504,13 +502,14 @@ export class ChatGoogleGenerativeAI
       this._isMultimodalModel
     );
     const parameters = this.invocationParams(options);
+    const request = {
+      ...parameters,
+      contents: prompt,
+    };
     const { stream, response } = await this.caller.callWithOptions(
       { signal: options?.signal },
       async () => {
-        const res = await this.client.generateContentStream({
-          ...parameters,
-          contents: prompt,
-        });
+        const res = await this.client.generateContentStream(request);
         return res;
       }
     );
@@ -527,9 +526,7 @@ export class ChatGoogleGenerativeAI
 
     if (this.streamUsage || options.streamUsage) {
       const usageMetadata = await this.getTokenCount({
-        input: {
-          contents: prompt,
-        },
+        input: request,
         output: await response,
       });
 
