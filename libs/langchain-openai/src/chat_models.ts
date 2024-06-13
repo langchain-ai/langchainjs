@@ -950,7 +950,6 @@ export class ChatOpenAI<
     const requestOptions = this._getClientOptions(options);
     return this.caller.call(async () => {
       try {
-        console.log(request.messages);
         const res = await this.client.chat.completions.create(
           request,
           requestOptions
