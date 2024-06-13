@@ -65,10 +65,11 @@ export interface GoogleGenerativeAIChatCallOptions
     | GoogleGenerativeAIFunctionDeclarationsTool[];
   /**
    * Whether or not to include usage data, like token counts
-   * when streaming. If set to true, this will invoke two
-   * additional API calls to fetch token counts, along with
-   * an additional chunk containing the token usage at the
-   * end of the stream.
+   * in the response. If set to true, this will invoke two
+   * additional API calls to fetch token counts after the model
+   * has responded. If streaming is enabled, this will append an
+   * additional chunk containing the token usage at the end of
+   * the stream.
    * @default false
    */
   streamUsage?: boolean;
@@ -444,6 +445,15 @@ export class ChatGoogleGenerativeAI
     return generationResult;
   }
 
+  /**
+   * Get token counts for the model input output (if provided).
+   * Token counts are fetched via the `countTokens` API from the
+   * Google Generative AI client.
+   * @param args An object containing the input and optional output.
+   * @param {string | (string | GenerativeAIPart)[] | CountTokensRequest} [args.input] The input to count tokens for. Can be a string, an array of strings or GenerativeAIParts, or a CountTokensRequest object.
+   * @param {EnhancedGenerateContentResponse | undefined} [args.output] Optional output response to count tokens for. Should be an EnhancedGenerateContentResponse object.
+   * @returns {Promise<UsageMetadata | undefined>} The usage metadata, or undefined if an error occurred.
+   */
   async getTokenCount(args: {
     input: string | (string | GenerativeAIPart)[] | CountTokensRequest;
     output?: EnhancedGenerateContentResponse;
