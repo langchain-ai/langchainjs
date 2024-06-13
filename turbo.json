@@ -24,7 +24,7 @@
     },
     "test:ci": {
       "outputs": [],
-      "dependsOn": ["test"]
+      "dependsOn": ["^test", "test"]
     },
     "test:single": {
       "dependsOn": ["^build", "build"]
