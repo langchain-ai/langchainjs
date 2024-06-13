@@ -3,7 +3,7 @@ const { OpenAI } = require("@langchain/openai");
 const { LLMChain } = require("langchain/chains");
 const { ChatPromptTemplate } = require("@langchain/core/prompts");
 const { HNSWLib } = require("@langchain/community/vectorstores/hnswlib");
-const { OpenAIEmbeddings } = require("@langchain/openai");
+const { HuggingFaceTransformersEmbeddings } = require("@langchain/community/embeddings/hf_transformers");
 const { Document } = require("@langchain/core/documents");
 const { CSVLoader } = require("langchain/document_loaders/fs/csv");
 
@@ -17,7 +17,7 @@ async function test() {
   // Test dynamic imports of peer dependencies
   const { HierarchicalNSW } = await HNSWLib.imports();
 
-  const vs = new HNSWLib(new OpenAIEmbeddings({ openAIApiKey: "sk-XXXX" }), {
+  const vs = new HNSWLib(new HuggingFaceTransformersEmbeddings({ model: "Xenova/all-MiniLM-L6-v2", }), {
     space: "ip",
     numDimensions: 3,
     index: new HierarchicalNSW("ip", 3),

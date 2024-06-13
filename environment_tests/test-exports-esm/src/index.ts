@@ -3,7 +3,7 @@ import { OpenAI } from "@langchain/openai";
 import { LLMChain } from "langchain/chains";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
-import { OpenAIEmbeddings } from "@langchain/openai";
+import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/hf_transformers";
 import { Document } from "@langchain/core/documents";
 import { CSVLoader } from "langchain/document_loaders/fs/csv";
 
@@ -27,7 +27,7 @@ async function test(useAzure: boolean = false) {
         openAIApiKey: "sk-XXXX",
       };
 
-  const vs = new HNSWLib(new OpenAIEmbeddings(openAIParameters), {
+  const vs = new HNSWLib(new HuggingFaceTransformersEmbeddings({ model: "Xenova/all-MiniLM-L6-v2", }), {
     space: "ip",
     numDimensions: 3,
     index: new HierarchicalNSW("ip", 3),
