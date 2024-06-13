@@ -214,6 +214,10 @@ utils/types.cjs
 utils/types.js
 utils/types.d.ts
 utils/types.d.cts
+utils/is_openai_tool.cjs
+utils/is_openai_tool.js
+utils/is_openai_tool.d.ts
+utils/is_openai_tool.d.cts
 vectorstores.cjs
 vectorstores.js
 vectorstores.d.ts
