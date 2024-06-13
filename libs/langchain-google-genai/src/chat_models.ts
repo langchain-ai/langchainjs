@@ -6,9 +6,14 @@ import {
   type FunctionDeclarationSchema as GenerativeAIFunctionDeclarationSchema,
   GenerateContentRequest,
   SafetySetting,
+  Part as GenerativeAIPart,
 } from "@google/generative-ai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
-import { AIMessageChunk, BaseMessage } from "@langchain/core/messages";
+import {
+  AIMessageChunk,
+  BaseMessage,
+  UsageMetadata,
+} from "@langchain/core/messages";
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
@@ -56,12 +61,20 @@ export interface GoogleGenerativeAIChatCallOptions
   tools?:
     | StructuredToolInterface[]
     | GoogleGenerativeAIFunctionDeclarationsTool[];
+  /**
+   * Whether or not to include usage data, like token counts
+   * in the streamed response chunks.
+   * @default true
+   */
+  streamUsage?: boolean;
 }
 
 /**
  * An interface defining the input to the ChatGoogleGenerativeAI class.
  */
-export interface GoogleGenerativeAIChatInput extends BaseChatModelParams {
+export interface GoogleGenerativeAIChatInput
+  extends BaseChatModelParams,
+    Pick<GoogleGenerativeAIChatCallOptions, "streamUsage"> {
   /**
    * Model Name to use
    *
@@ -222,6 +235,8 @@ export class ChatGoogleGenerativeAI
 
   streaming = false;
 
+  streamUsage = true;
+
   private client: GenerativeModel;
 
   get _isMultimodalModel() {
@@ -306,6 +321,7 @@ export class ChatGoogleGenerativeAI
         baseUrl: fields?.baseUrl,
       }
     );
+    this.streamUsage = fields?.streamUsage ?? this.streamUsage;
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -398,27 +414,31 @@ export class ChatGoogleGenerativeAI
       return { generations, llmOutput: { estimatedTokenUsage: tokenUsage } };
     }
 
-    const res = await this.caller.callWithOptions(
-      { signal: options?.signal },
-      async () => {
-        let output;
-        try {
-          output = await this.client.generateContent({
-            ...parameters,
-            contents: prompt,
-          });
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (e: any) {
-          // TODO: Improve error handling
-          if (e.message?.includes("400 Bad Request")) {
-            e.status = 400;
-          }
-          throw e;
-        }
-        return output;
+    const res = await this.completionWithRetry({
+      ...parameters,
+      contents: prompt,
+    });
+
+    let usageMetadata: UsageMetadata | undefined;
+    if ("usageMetadata" in res.response) {
+      const genAIUsageMetadata = res.response.usageMetadata as {
+        promptTokenCount: number | undefined;
+        candidatesTokenCount: number | undefined;
+        totalTokenCount: number | undefined;
+      };
+      usageMetadata = {
+        input_tokens: genAIUsageMetadata.promptTokenCount ?? 0,
+        output_tokens: genAIUsageMetadata.candidatesTokenCount ?? 0,
+        total_tokens: genAIUsageMetadata.totalTokenCount ?? 0,
+      };
+    }
+
+    const generationResult = mapGenerateContentResultToChatResult(
+      res.response,
+      {
+        usageMetadata,
       }
     );
-    const generationResult = mapGenerateContentResultToChatResult(res.response);
     await runManager?.handleLLMNewToken(
       generationResult.generations[0].text ?? ""
     );
@@ -435,19 +455,53 @@ export class ChatGoogleGenerativeAI
       this._isMultimodalModel
     );
     const parameters = this.invocationParams(options);
+    const request = {
+      ...parameters,
+      contents: prompt,
+    };
     const stream = await this.caller.callWithOptions(
       { signal: options?.signal },
       async () => {
-        const { stream } = await this.client.generateContentStream({
-          ...parameters,
-          contents: prompt,
-        });
+        const { stream } = await this.client.generateContentStream(request);
         return stream;
       }
     );
 
+    let usageMetadata: UsageMetadata | undefined;
     for await (const response of stream) {
-      const chunk = convertResponseContentToChatGenerationChunk(response);
+      if (
+        "usageMetadata" in response &&
+        this.streamUsage !== false &&
+        options.streamUsage !== false
+      ) {
+        const genAIUsageMetadata = response.usageMetadata as {
+          promptTokenCount: number;
+          candidatesTokenCount: number;
+          totalTokenCount: number;
+        };
+        if (!usageMetadata) {
+          usageMetadata = {
+            input_tokens: genAIUsageMetadata.promptTokenCount,
+            output_tokens: genAIUsageMetadata.candidatesTokenCount,
+            total_tokens: genAIUsageMetadata.totalTokenCount,
+          };
+        } else {
+          // Under the hood, LangChain combines the prompt tokens. Google returns the updated
+          // total each time, so we need to find the difference between the tokens.
+          const outputTokenDiff =
+            genAIUsageMetadata.candidatesTokenCount -
+            usageMetadata.output_tokens;
+          usageMetadata = {
+            input_tokens: 0,
+            output_tokens: outputTokenDiff,
+            total_tokens: outputTokenDiff,
+          };
+        }
+      }
+
+      const chunk = convertResponseContentToChatGenerationChunk(response, {
+        usageMetadata,
+      });
       if (!chunk) {
         continue;
       }
@@ -455,6 +509,27 @@ export class ChatGoogleGenerativeAI
       yield chunk;
       await runManager?.handleLLMNewToken(chunk.text ?? "");
     }
+  }
+
+  async completionWithRetry(
+    request: string | GenerateContentRequest | (string | GenerativeAIPart)[],
+    options?: this["ParsedCallOptions"]
+  ) {
+    return this.caller.callWithOptions(
+      { signal: options?.signal },
+      async () => {
+        try {
+          return this.client.generateContent(request);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (e: any) {
+          // TODO: Improve error handling
+          if (e.message?.includes("400 Bad Request")) {
+            e.status = 400;
+          }
+          throw e;
+        }
+      }
+    );
   }
 
   withStructuredOutput<

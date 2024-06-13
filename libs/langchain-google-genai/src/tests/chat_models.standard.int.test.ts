@@ -28,19 +28,23 @@ class ChatGoogleGenerativeAIStandardIntegrationTests extends ChatModelIntegratio
   }
 
   async testUsageMetadataStreaming() {
-    this.skipTestMessage(
-      "testUsageMetadataStreaming",
-      "ChatGoogleGenerativeAI",
-      "Streaming tokens is not currently supported."
-    );
+    // ChatGoogleGenerativeAI does not support streaming tokens by
+    // default, so we must pass in a call option to
+    // enable streaming tokens.
+    const callOptions: ChatGoogleGenerativeAI["ParsedCallOptions"] = {
+      streamUsage: true,
+    };
+    await super.testUsageMetadataStreaming(callOptions);
   }
 
   async testUsageMetadata() {
-    this.skipTestMessage(
-      "testUsageMetadata",
-      "ChatGoogleGenerativeAI",
-      "Usage metadata tokens is not currently supported."
-    );
+    // ChatGoogleGenerativeAI does not support counting tokens
+    // by default, so we must pass in a call option to enable
+    // streaming tokens.
+    const callOptions: ChatGoogleGenerativeAI["ParsedCallOptions"] = {
+      streamUsage: true,
+    };
+    await super.testUsageMetadata(callOptions);
   }
 
   async testToolMessageHistoriesStringContent() {
