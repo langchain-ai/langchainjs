@@ -954,7 +954,6 @@ test("streamUsage excludes token usage", async () => {
     streamUsage: false,
   });
   let res: AIMessageChunk | null = null;
-  let lastRes: AIMessageChunk | null = null;
   for await (const chunk of await model.stream(
     "Why is the sky blue? Be concise."
   )) {
@@ -963,13 +962,9 @@ test("streamUsage excludes token usage", async () => {
     } else {
       res = res.concat(chunk);
     }
-    lastRes = chunk;
   }
   console.log(res);
   expect(res?.usage_metadata).not.toBeDefined();
-  if (res?.usage_metadata) {
-    
-  }
 });
 
 test("Invoke token count usage_metadata", async () => {
