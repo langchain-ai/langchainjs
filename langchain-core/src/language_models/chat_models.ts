@@ -771,7 +771,7 @@ export abstract class BaseChatModel<
           parsed: RunOutput;
         }
       > {
-    if (!("bindTools" in this) || typeof this.bindTools !== "function") {
+    if (typeof this.bindTools !== "function") {
       throw new Error(
         `Chat model must implement ".bindTools()" to use withStructuredOutput.`
       );
