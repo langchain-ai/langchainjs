@@ -150,7 +150,8 @@ export interface ChatGoogleBaseInput<AuthOptions>
   extends BaseChatModelParams,
     GoogleConnectionParams<AuthOptions>,
     GoogleAIModelParams,
-    GoogleAISafetyParams, Pick<GoogleAIBaseLanguageModelCallOptions, "streamUsage"> {}
+    GoogleAISafetyParams,
+    Pick<GoogleAIBaseLanguageModelCallOptions, "streamUsage"> {}
 
 function convertToGeminiTools(
   structuredTools: (StructuredToolInterface | Record<string, unknown>)[]
@@ -228,7 +229,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     copyAndValidateModelParamsInto(fields, this);
     this.safetyHandler =
       fields?.safetyHandler ?? new DefaultGeminiSafetyHandler();
-
+    this.streamUsage = fields?.streamUsage ?? this.streamUsage;
     const client = this.buildClient(fields);
     this.buildConnection(fields ?? {}, client);
   }
@@ -350,12 +351,17 @@ export abstract class ChatGoogleBase<AuthOptions>
     // that is either available or added to the queue
     while (!stream.streamDone) {
       const output = await stream.nextChunk();
-      if (output && output.usageMetadata && this.streamUsage !== false && options.streamUsage !== false) {
+      if (
+        output &&
+        output.usageMetadata &&
+        this.streamUsage !== false &&
+        options.streamUsage !== false
+      ) {
         usageMetadata = {
           input_tokens: output.usageMetadata.promptTokenCount,
           output_tokens: output.usageMetadata.candidatesTokenCount,
           total_tokens: output.usageMetadata.totalTokenCount,
-        }
+        };
       }
       const chunk =
         output !== null

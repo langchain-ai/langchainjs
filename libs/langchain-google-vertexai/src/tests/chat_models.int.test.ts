@@ -234,7 +234,7 @@ describe("GAuth Chat", () => {
   });
 });
 
-test.only("Stream token count usage_metadata", async () => {
+test("Stream token count usage_metadata", async () => {
   const model = new ChatVertexAI({
     temperature: 0,
   });
@@ -260,7 +260,7 @@ test.only("Stream token count usage_metadata", async () => {
   );
 });
 
-test.only("streamUsage excludes token usage", async () => {
+test("streamUsage excludes token usage", async () => {
   const model = new ChatVertexAI({
     temperature: 0,
     streamUsage: false,
@@ -279,7 +279,7 @@ test.only("streamUsage excludes token usage", async () => {
   expect(res?.usage_metadata).not.toBeDefined();
 });
 
-test.only("Invoke token count usage_metadata", async () => {
+test("Invoke token count usage_metadata", async () => {
   const model = new ChatVertexAI({
     temperature: 0,
   });

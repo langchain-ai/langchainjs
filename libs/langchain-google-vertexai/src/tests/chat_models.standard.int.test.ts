@@ -25,22 +25,6 @@ class ChatVertexAIStandardIntegrationTests extends ChatModelIntegrationTests<
     });
   }
 
-  async testUsageMetadataStreaming() {
-    this.skipTestMessage(
-      "testUsageMetadataStreaming",
-      "ChatVertexAI",
-      "Streaming tokens is not currently supported."
-    );
-  }
-
-  async testUsageMetadata() {
-    this.skipTestMessage(
-      "testUsageMetadata",
-      "ChatVertexAI",
-      "Usage metadata tokens is not currently supported."
-    );
-  }
-
   async testToolMessageHistoriesListContent() {
     this.skipTestMessage(
       "testToolMessageHistoriesListContent",
