@@ -1,5 +1,5 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { type BaseMessage } from "@langchain/core/messages";
+import { UsageMetadata, type BaseMessage } from "@langchain/core/messages";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 
 import {
@@ -150,7 +150,8 @@ export interface ChatGoogleBaseInput<AuthOptions>
   extends BaseChatModelParams,
     GoogleConnectionParams<AuthOptions>,
     GoogleAIModelParams,
-    GoogleAISafetyParams {}
+    GoogleAISafetyParams,
+    Pick<GoogleAIBaseLanguageModelCallOptions, "streamUsage"> {}
 
 function convertToGeminiTools(
   structuredTools: (StructuredToolInterface | Record<string, unknown>)[]
@@ -216,6 +217,8 @@ export abstract class ChatGoogleBase<AuthOptions>
 
   safetyHandler: GoogleAISafetyHandler;
 
+  streamUsage = true;
+
   protected connection: ChatConnection<AuthOptions>;
 
   protected streamedConnection: ChatConnection<AuthOptions>;
@@ -226,7 +229,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     copyAndValidateModelParamsInto(fields, this);
     this.safetyHandler =
       fields?.safetyHandler ?? new DefaultGeminiSafetyHandler();
-
+    this.streamUsage = fields?.streamUsage ?? this.streamUsage;
     const client = this.buildClient(fields);
     this.buildConnection(fields ?? {}, client);
   }
@@ -342,12 +345,24 @@ export abstract class ChatGoogleBase<AuthOptions>
 
     // Get the streaming parser of the response
     const stream = response.data as JsonStream;
-
+    let usageMetadata: UsageMetadata | undefined;
     // Loop until the end of the stream
     // During the loop, yield each time we get a chunk from the streaming parser
     // that is either available or added to the queue
     while (!stream.streamDone) {
       const output = await stream.nextChunk();
+      if (
+        output &&
+        output.usageMetadata &&
+        this.streamUsage !== false &&
+        options.streamUsage !== false
+      ) {
+        usageMetadata = {
+          input_tokens: output.usageMetadata.promptTokenCount,
+          output_tokens: output.usageMetadata.candidatesTokenCount,
+          total_tokens: output.usageMetadata.totalTokenCount,
+        };
+      }
       const chunk =
         output !== null
           ? safeResponseToChatGeneration({ data: output }, this.safetyHandler)
@@ -356,6 +371,7 @@ export abstract class ChatGoogleBase<AuthOptions>
               generationInfo: { finishReason: "stop" },
               message: new AIMessageChunk({
                 content: "",
+                usage_metadata: usageMetadata,
               }),
             });
       yield chunk;
