@@ -12,6 +12,7 @@ import {
   MessageContentText,
   SystemMessage,
   ToolMessage,
+  UsageMetadata,
   isAIMessage,
 } from "@langchain/core/messages";
 import {
@@ -604,12 +605,22 @@ export function responseToChatGenerations(
       id: toolCall.id,
       index: i,
     }));
+    let usageMetadata: UsageMetadata | undefined;
+    if ("usageMetadata" in response.data) {
+      usageMetadata = {
+        input_tokens: response.data.usageMetadata.promptTokenCount as number,
+        output_tokens: response.data.usageMetadata
+          .candidatesTokenCount as number,
+        total_tokens: response.data.usageMetadata.totalTokenCount as number,
+      };
+    }
     ret = [
       new ChatGenerationChunk({
         message: new AIMessageChunk({
           content: combinedContent,
           additional_kwargs: ret[ret.length - 1]?.message.additional_kwargs,
           tool_call_chunks: toolCallChunks,
+          usage_metadata: usageMetadata,
         }),
         text: combinedText,
         generationInfo: ret[ret.length - 1].generationInfo,
