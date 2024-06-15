@@ -45,7 +45,7 @@ jobs:
     needs: get-changed-files
     runs-on: ubuntu-latest
     env:
-      PACKAGES: "anthropic,azure-openai,cloudflare,cohere,community,exa,google-common,google-gauth,google-genai,google-vertexai,google-vertexai-web,google-webauth,groq,mistralai,mongo,nomic,openai,pinecone,qdrant,redis,textsplitters,weaviate,yandex"
+      PACKAGES: "anthropic,azure-openai,cloudflare,cohere,core,community,exa,google-common,google-gauth,google-genai,google-vertexai,google-vertexai-web,google-webauth,groq,mistralai,mongo,nomic,openai,pinecone,qdrant,redis,textsplitters,weaviate,yandex"
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
@@ -77,6 +77,7 @@ jobs:
   unit-tests:
     name: Unit Tests
     needs: prepare-matrix
+    # Only run this job if there are packages to test
     if: ${{ fromJson(needs.prepare-matrix.outputs.matrix).include.length != 0 }}
     runs-on: ubuntu-latest
     strategy:
