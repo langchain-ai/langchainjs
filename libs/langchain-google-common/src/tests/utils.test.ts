@@ -2,6 +2,7 @@
 import { expect, test } from "@jest/globals";
 import { z } from "zod";
 import { zodToGeminiParameters } from "../utils/zod_to_gemini_parameters.js";
+import { SimpleWebBlobStore } from "../utils/media_core.js";
 
 test("zodToGeminiParameters can convert zod schema to gemini schema", () => {
   const zodSchema = z
@@ -80,3 +81,15 @@ test("zodToGeminiParameters removes additional properties from arrays", () => {
     expect((arrayItemsSchema as any).additionalProperties).toBeUndefined();
   }
 });
+
+test("SimpleWebBlobStore fetch", async () => {
+  const webStore = new SimpleWebBlobStore();
+  const exampleBlob = await webStore.fetch("http://example.com/");
+  console.log(exampleBlob);
+  expect(exampleBlob?.mimetype).toEqual("text/html");
+  expect(exampleBlob?.encoding).toEqual("UTF-8");
+  expect(exampleBlob?.data?.length).toBeGreaterThan(0);
+  expect(exampleBlob?.metadata).toBeDefined();
+  expect(exampleBlob?.metadata?.ok).toBeTruthy();
+  expect(exampleBlob?.metadata?.status).toEqual(200);
+})
