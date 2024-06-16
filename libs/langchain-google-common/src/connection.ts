@@ -82,15 +82,24 @@ export abstract class GoogleConnection<
     return this.constructor.name;
   }
 
+  async additionalHeaders(): Promise<Record<string,string>> {
+    return {};
+  }
+
   async _request(
     data: unknown | undefined,
-    options: CallOptions
+    options: CallOptions,
+    requestHeaders: Record<string,string> = {},
   ): Promise<ResponseType> {
     const url = await this.buildUrl();
     const method = this.buildMethod();
     const infoHeaders = (await this._clientInfoHeaders()) ?? {};
+    const additionalHeaders = (await this.additionalHeaders()) ?? {};
     const headers = {
+      // FIXME - evaluate the order of these header inclusions
       ...infoHeaders,
+      ...additionalHeaders,
+      ...requestHeaders,
     };
 
     const opts: GoogleAbstractedClientOps = {
