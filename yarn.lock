@@ -9603,7 +9603,7 @@ __metadata:
     "@langchain/standard-tests": 0.0.0
     "@layerup/layerup-security": ^1.5.12
     "@mendable/firecrawl-js": ^0.0.13
-    "@mlc-ai/web-llm": ^0.2.40
+    "@mlc-ai/web-llm": ^0.2.46
     "@mozilla/readability": ^0.4.4
     "@neondatabase/serverless": ^0.9.1
     "@notionhq/client": ^2.2.10
@@ -9770,7 +9770,7 @@ __metadata:
     "@huggingface/inference": ^2.6.4
     "@layerup/layerup-security": ^1.5.12
     "@mendable/firecrawl-js": ^0.0.13
-    "@mlc-ai/web-llm": ^0.2.40
+    "@mlc-ai/web-llm": "*"
     "@mozilla/readability": "*"
     "@neondatabase/serverless": "*"
     "@notionhq/client": ^2.2.10
@@ -10998,12 +10998,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mlc-ai/web-llm@npm:^0.2.40":
-  version: 0.2.40
-  resolution: "@mlc-ai/web-llm@npm:0.2.40"
+"@mlc-ai/web-llm@npm:^0.2.46":
+  version: 0.2.46
+  resolution: "@mlc-ai/web-llm@npm:0.2.46"
   dependencies:
     loglevel: ^1.9.1
-  checksum: 44d46178f7b7f899893ee8096fd4188b8c343589a10428c52f87b1b7e708f7a94b2b6315c8a6f8075f14d6d92aebfd8afc7f6d049a2ef60f8b8dc950b98a82e2
+  checksum: 09c83a45d7f9351ae492d8704fe580868d0b46b640eca232ebc76d552f2ffad031c9c504a0d29f69122029478af270eeeda0800e7fb032b00c11dc1632e1ae11
   languageName: node
   linkType: hard
 
