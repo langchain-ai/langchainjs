@@ -9,10 +9,9 @@ on:
   pull_request:
     # Only run when LangChain Core, or integration package code changes.
     paths:
-      - 'langchain-core/**'
-      - 'libs/**/**'
-  workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
-
+      - "langchain-core/**"
+      - "libs/**/**"
+  workflow_dispatch: # Allows triggering the workflow manually in GitHub UI
 
 # If another push to the same PR or branch happens while this workflow is still running,
 # cancel the earlier run in favor of the next run.
@@ -85,13 +84,19 @@ jobs:
     env:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
+      GOOGLE_APPLICATION_CREDENTIALS: ${{ vars.GOOGLE_APPLICATION_CREDENTIALS_FILE_PATH }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
           cache: "yarn"
+      - name: Set up Google Service Account
+        env:
+          DATA: ${{ secrets.GOOGLE_SERVICE_ACCOUNT }}
+        run: |
+          echo $DATA > ${{ vars.GOOGLE_APPLICATION_CREDENTIALS_FILE_PATH }}
       - name: Install dependencies
         run: yarn install --immutable
       - name: Test '@langchain/${{ matrix.package }}' package
