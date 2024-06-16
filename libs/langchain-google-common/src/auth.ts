@@ -1,7 +1,7 @@
 import { ReadableJsonStream } from "./utils/stream.js";
 import { GooglePlatformType } from "./types.js";
 
-export type GoogleAbstractedClientOpsMethod = "GET" | "POST";
+export type GoogleAbstractedClientOpsMethod = "GET" | "POST" | "DELETE";
 
 export type GoogleAbstractedClientOpsResponseType = "json" | "stream";
 
