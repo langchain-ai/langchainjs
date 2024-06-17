@@ -13,7 +13,7 @@ const calculatorSchema = z.object({
 
 const model = new ChatVertexAI({
   temperature: 0.7,
-  model: "ggemini-pro-vision",
+  model: "gemini-pro-vision",
 }).withStructuredOutput(calculatorSchema);
 
 const response = await model.invoke("What is 1628253239 times 81623836?");
