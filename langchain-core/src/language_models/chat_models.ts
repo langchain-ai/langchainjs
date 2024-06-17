@@ -1,4 +1,3 @@
-import { z } from "zod";
 import {
   AIMessage,
   type BaseMessage,
@@ -148,11 +147,8 @@ export abstract class BaseChatModel<
    * specific tool schema.
    * @param kwargs Any additional parameters to bind.
    */
-  bindTools?<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
-  >(
-    tools: (StructuredToolInterface<T> | Record<string, unknown>)[],
+  bindTools?(
+    tools: (StructuredToolInterface | Record<string, unknown>)[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, OutputMessageType, CallOptions>;
 
