@@ -391,8 +391,6 @@ export class ChatGoogleGenerativeAI
       messages,
       this._isMultimodalModel
     );
-    console.log("prompt", prompt);
-    console.log("messages", messages);
     const parameters = this.invocationParams(options);
 
     // Handle streaming

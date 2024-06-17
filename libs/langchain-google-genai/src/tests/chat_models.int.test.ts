@@ -281,7 +281,7 @@ test("ChatGoogleGenerativeAI can bind and stream langchain tools", async () => {
   expect("url" in toolCalls[0].args).toBe(true);
 });
 
-test.only("ChatGoogleGenerativeAI can handle streaming tool messages.", async () => {
+test("ChatGoogleGenerativeAI can handle streaming tool messages.", async () => {
   const model = new ChatGoogleGenerativeAI({
     model: "gemini-1.5-pro",
     maxRetries: 1,

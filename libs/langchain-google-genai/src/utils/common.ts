@@ -86,27 +86,34 @@ export function convertMessageContentToParts(
     return [{ text: message.content }];
   }
 
+  let functionCallParts: Part[] = [];
   if (role === "function") {
-    console.log("Message!", message);
     if (message.name && typeof message.content === "string") {
-      return [
-        {
-          functionResponse: {
-            name: message.name,
-            response: message.content,
-          },
+      functionCallParts.push({
+        functionResponse: {
+          name: message.name,
+          response: message.content,
         },
-      ];
+      });
     } else {
       throw new Error(
         "ChatGoogleGenerativeAI requires tool messages to contain the tool name, and a string content."
       );
     }
-  } else {
-    console.log("message", message);
+  }
+  if ("tool_calls" in message) {
+    const castMessage = message as AIMessage;
+    if (castMessage.tool_calls && castMessage.tool_calls.length > 0) {
+      functionCallParts = castMessage.tool_calls.map((tc) => ({
+        functionCall: {
+          name: tc.name,
+          args: tc.args,
+        },
+      }));
+    }
   }
 
-  return message.content.map((c) => {
+  const messageContentParts = message.content.map((c) => {
     if (c.type === "text") {
       return {
         text: c.text,
@@ -143,9 +150,17 @@ export function convertMessageContentToParts(
       };
     } else if (c.type === "media") {
       return messageContentMedia(c);
+    } else if (c.type === "tool_use") {
+      return {
+        functionCall: {
+          name: c.name,
+          args: c.input,
+        },
+      };
     }
     throw new Error(`Unknown content type ${(c as { type: string }).type}`);
   });
+  return [...messageContentParts, ...functionCallParts];
 }
 
 export function convertBaseMessagesToContent(
