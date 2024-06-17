@@ -1831,10 +1831,7 @@ test("Runnable streamEvents method with tools that return objects", async () => 
     name: "parameterless",
   });
   const events = [];
-  const eventStream = await parameterlessTool.streamEvents(
-    {},
-    { version: "v2" }
-  );
+  const eventStream = parameterlessTool.streamEvents({}, { version: "v2" });
   for await (const event of eventStream) {
     events.push(event);
   }
@@ -1871,7 +1868,7 @@ test("Runnable streamEvents method with tools that return objects", async () => 
     }),
   });
   const events2 = [];
-  const eventStream2 = await adderTool.streamEvents(
+  const eventStream2 = adderTool.streamEvents(
     { x: 1, y: 2 },
     { version: "v2" }
   );

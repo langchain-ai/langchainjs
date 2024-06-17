@@ -41,7 +41,7 @@ export interface StructuredToolInterface<
   RunOutput extends string | Record<string, any> = string
 > extends RunnableInterface<
     (z.output<T> extends string ? string : never) | z.input<T>,
-    string
+    RunOutput
   > {
   lc_namespace: string[];
 
@@ -387,6 +387,30 @@ export abstract class BaseToolkit {
 }
 
 /**
+ * Parameters for the tool function.
+ * @template {ZodAny} RunInput The input schema for the tool.
+ */
+interface ToolWrapperParams<RunInput extends ZodAny = ZodAny>
+  extends ToolParams {
+  /**
+   * The name of the tool. If using with an LLM, this
+   * will be passed as the tool name.
+   */
+  name: string;
+  /**
+   * The description of the tool.
+   * @default `${fields.name} tool`
+   */
+  description?: string;
+  /**
+   * The input schema for the tool. If using an LLM, this
+   * will be passed as the tool schema to generate arguments
+   * for.
+   */
+  schema?: RunInput;
+}
+
+/**
  * Creates a new StructuredTool instance with the provided function, name, description, and schema.
  * @function
  * @template {ZodAny} RunInput The input schema for the tool.
@@ -406,11 +430,7 @@ export function tool<
   RunOutput extends string | Record<string, any> = string
 >(
   func: RunnableFunc<z.infer<RunInput>, RunOutput>,
-  fields: {
-    name: string;
-    description?: string;
-    schema?: RunInput | z.ZodEffects<RunInput>;
-  }
+  fields: ToolWrapperParams<RunInput>
 ) {
   const schema =
     fields.schema ??
