@@ -391,6 +391,8 @@ export class ChatGoogleGenerativeAI
       messages,
       this._isMultimodalModel
     );
+    console.log("prompt", prompt);
+    console.log("messages", messages);
     const parameters = this.invocationParams(options);
 
     // Handle streaming
@@ -398,6 +400,7 @@ export class ChatGoogleGenerativeAI
       const tokenUsage: TokenUsage = {};
       const stream = this._streamResponseChunks(messages, options, runManager);
       const finalChunks: Record<number, ChatGenerationChunk> = {};
+      
       for await (const chunk of stream) {
         const index =
           (chunk.generationInfo as NewTokenIndices)?.completion ?? 0;
@@ -468,6 +471,7 @@ export class ChatGoogleGenerativeAI
     );
 
     let usageMetadata: UsageMetadata | undefined;
+    let index = 0;
     for await (const response of stream) {
       if (
         "usageMetadata" in response &&
@@ -501,7 +505,9 @@ export class ChatGoogleGenerativeAI
 
       const chunk = convertResponseContentToChatGenerationChunk(response, {
         usageMetadata,
+        index,
       });
+      index += 1;
       if (!chunk) {
         continue;
       }

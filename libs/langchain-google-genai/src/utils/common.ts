@@ -4,13 +4,13 @@ import {
   Part,
   type FunctionDeclarationsTool as GoogleGenerativeAIFunctionDeclarationsTool,
   type FunctionDeclaration as GenerativeAIFunctionDeclaration,
+  POSSIBLE_ROLES,
 } from "@google/generative-ai";
 import {
   AIMessage,
   AIMessageChunk,
   BaseMessage,
   ChatMessage,
-  MessageContent,
   MessageContentComplex,
   UsageMetadata,
   isBaseMessage,
@@ -23,11 +23,15 @@ import {
 import { StructuredToolInterface } from "@langchain/core/tools";
 import { isStructuredTool } from "@langchain/core/utils/function_calling";
 import { zodToGenerativeAIParameters } from "./zod_to_genai_parameters.js";
+import { ToolCallChunk } from "@langchain/core/messages/tool";
 
 export function getMessageAuthor(message: BaseMessage) {
   const type = message._getType();
   if (ChatMessage.isInstance(message)) {
     return message.role;
+  }
+  if (type === "tool") {
+    return type;
   }
   return message.name ?? type;
 }
@@ -38,7 +42,7 @@ export function getMessageAuthor(message: BaseMessage) {
  * @param model The model to use for mapping.
  * @returns The message type mapped to a Google Generative AI chat author.
  */
-export function convertAuthorToRole(author: string) {
+export function convertAuthorToRole(author: string): typeof POSSIBLE_ROLES[number] {
   switch (author) {
     /**
      *  Note: Gemini currently is not supporting system messages
@@ -50,6 +54,9 @@ export function convertAuthorToRole(author: string) {
     case "system":
     case "human":
       return "user";
+    case "tool":
+    case "function":
+      return "function";
     default:
       throw new Error(`Unknown / unsupported author: ${author}`);
   }
@@ -69,14 +76,31 @@ function messageContentMedia(content: MessageContentComplex): Part {
 }
 
 export function convertMessageContentToParts(
-  content: MessageContent,
-  isMultimodalModel: boolean
+  message: BaseMessage,
+  isMultimodalModel: boolean,
+  role: typeof POSSIBLE_ROLES[number]
 ): Part[] {
-  if (typeof content === "string") {
-    return [{ text: content }];
+  if (typeof message.content === "string") {
+    return [{ text: message.content }];
   }
 
-  return content.map((c) => {
+  if (role === "function") {
+    console.log("Message!", message);
+    if (message.name && typeof message.content === "string") {
+      return [{
+        functionResponse: {
+          name: message.name,
+          response: message.content,
+        }
+      }]
+    } else {
+      throw new Error("ChatGoogleGenerativeAI requires tool messages to contain the tool name, and a string content.")
+    }
+  } else {
+    console.log("message", message)
+  }
+
+  return message.content.map((c) => {
     if (c.type === "text") {
       return {
         text: c.text,
@@ -148,8 +172,9 @@ export function convertBaseMessagesToContent(
       }
 
       const parts = convertMessageContentToParts(
-        message.content,
-        isMultimodalModel
+        message,
+        isMultimodalModel,
+        role,
       );
 
       if (acc.mergeWithPreviousContent) {
@@ -166,8 +191,13 @@ export function convertBaseMessagesToContent(
           content: acc.content,
         };
       }
+      let actualRole = role;
+      if (actualRole === "function") {
+        // GenerativeAI API will throw an error if the role is not "user" or "model."
+        actualRole = "user";
+      }
       const content: Content = {
-        role,
+        role: actualRole,
         parts,
       };
       return {
@@ -224,26 +254,39 @@ export function mapGenerateContentResultToChatResult(
 
 export function convertResponseContentToChatGenerationChunk(
   response: EnhancedGenerateContentResponse,
-  extra?: {
-    usageMetadata: UsageMetadata | undefined;
+  extra: {
+    usageMetadata?: UsageMetadata | undefined;
+    index: number;
   }
 ): ChatGenerationChunk | null {
   if (!response.candidates || response.candidates.length === 0) {
     return null;
   }
+  const functionCalls = response.functionCalls();
   const [candidate] = response.candidates;
   const { content, ...generationInfo } = candidate;
   const text = content?.parts[0]?.text ?? "";
 
+  const toolCallChunks: ToolCallChunk[] = [];
+  if (functionCalls) {
+    toolCallChunks.push(
+      ...functionCalls.map((fc) => ({
+        ...fc,
+        args: JSON.stringify(fc.args),
+        index: extra.index,
+      }))
+    );
+  }
   return new ChatGenerationChunk({
     text,
     message: new AIMessageChunk({
       content: text,
       name: !content ? undefined : content.role,
+      tool_call_chunks: toolCallChunks,
       // Each chunk can have unique "generationInfo", and merging strategy is unclear,
       // so leave blank for now.
       additional_kwargs: {},
-      usage_metadata: extra?.usageMetadata,
+      usage_metadata: extra.usageMetadata,
     }),
     generationInfo,
   });
