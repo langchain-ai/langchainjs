@@ -1,4 +1,4 @@
-import { expect } from "@jest/globals";
+ync testStructuredFewShotExamplesToolOimport { expect } from "@jest/globals";
 import { BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
 import {
   AIMessage,
@@ -330,73 +330,6 @@ export abstract class ChatModelIntegrationTests<
       }),
       new ToolMessage(functionResult, functionId, functionName),
       new AIMessage(functionResult),
-      new HumanMessage("What is 3 + 4"),
-    ];
-
-    const resultStringContent = await modelWithTools.invoke(
-      messagesStringContent,
-      callOptions
-    );
-    expect(resultStringContent).toBeInstanceOf(this.invokeResponseType);
-  }
-
-  /**
-   * Test that model can process few-shot examples with tool calls
-   * that return objects instead of strings.
-   * @returns {Promise<void>}
-   */
-  async testStructuredFewShotExamplesToolObjectReturn(
-    callOptions?: InstanceType<this["Cls"]>["ParsedCallOptions"]
-  ) {
-    if (!this.chatModelHasToolCalling) {
-      console.log("Test requires tool calling. Skipping...");
-      return;
-    }
-    const adderFunc = (params: { a: number; b: number }) => ({
-      sum: params.a + params.b,
-    });
-
-    const model = new this.Cls(this.constructorArgs);
-    const adderTool = tool(adderFunc, {
-      name: "AdderTool",
-      schema: z.object({
-        a: z.number().int(),
-        b: z.number().int(),
-      }),
-      description: "Add two numbers",
-    });
-    if (!model.bindTools) {
-      throw new Error("bindTools undefined. Cannot test few-shot examples.");
-    }
-    const modelWithTools = model.bindTools([adderTool]);
-    const functionName = adderTool.name;
-    const functionArgs = { a: 1, b: 2 };
-
-    const { functionId } = this;
-    const functionResult = await adderTool.invoke(functionArgs);
-
-    const messagesStringContent = [
-      new HumanMessage("What is 1 + 2"),
-      new AIMessage({
-        content: "",
-        tool_calls: [
-          {
-            name: functionName,
-            args: functionArgs,
-            id: functionId,
-          },
-        ],
-      }),
-      new ToolMessage(
-        {
-          content: [functionResult],
-        },
-        functionId,
-        functionName
-      ),
-      new AIMessage({
-        content: [functionResult],
-      }),
       new HumanMessage("What is 3 + 4"),
     ];
 

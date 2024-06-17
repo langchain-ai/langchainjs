@@ -150,11 +150,9 @@ export abstract class BaseChatModel<
    */
   bindTools?<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends string | Record<string, any> = string
+    T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
   >(
-    tools: (StructuredToolInterface<T, RunOutput> | Record<string, unknown>)[],
+    tools: (StructuredToolInterface<T> | Record<string, unknown>)[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, OutputMessageType, CallOptions>;
 

@@ -55,8 +55,7 @@ export type MessageContentComplex =
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   | (Record<string, any> & { type?: "text" | "image_url" | "tool" | string })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  | (Record<string, any> & { type?: never })
-  | Record<string, unknown>;
+  | (Record<string, any> & { type?: never });
 
 export type MessageContent = string | MessageContentComplex[];
 

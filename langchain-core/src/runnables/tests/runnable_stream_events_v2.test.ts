@@ -1825,7 +1825,7 @@ test("Runnable streamEvents method with simple tools", async () => {
 
 test("Runnable streamEvents method with tools that return objects", async () => {
   const adderFunc = (_params: { x: number; y: number }) => {
-    return { sum: 3 };
+    return JSON.stringify({ sum: 3 });
   };
   const parameterlessTool = tool(adderFunc, {
     name: "parameterless",
@@ -1847,9 +1847,7 @@ test("Runnable streamEvents method with tools that return objects", async () => 
     },
     {
       data: {
-        output: {
-          sum: 3,
-        },
+        output: JSON.stringify({ sum: 3 }),
       },
       event: "on_tool_end",
       metadata: {},
@@ -1885,7 +1883,7 @@ test("Runnable streamEvents method with tools that return objects", async () => 
       tags: [],
     },
     {
-      data: { output: { sum: 3 } },
+      data: { output: JSON.stringify({ sum: 3 }) },
       event: "on_tool_end",
       metadata: {},
       name: "with_parameters",

@@ -197,8 +197,7 @@ abstract class BaseCallbackHandlerMethodsClass {
    * Called at the end of a Tool run, with the tool output and the run ID.
    */
   handleToolEnd?(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    output: string | Record<string, any>,
+    output: string,
     runId: string,
     parentRunId?: string,
     tags?: string[]

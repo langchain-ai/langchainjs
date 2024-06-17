@@ -488,8 +488,7 @@ export class CallbackManagerForToolRun
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async handleToolEnd(output: string | Record<string, any>): Promise<void> {
+  async handleToolEnd(output: string): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>
         consumeCallback(async () => {
