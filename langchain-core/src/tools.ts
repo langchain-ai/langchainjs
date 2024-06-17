@@ -413,7 +413,8 @@ export function tool<RunInput extends ZodAny = ZodAny>(
     fields.schema ??
     z.object({ input: z.string().optional() }).transform((obj) => obj.input);
 
-  const description = fields.description ?? schema.description ?? `${fields.name} tool`;
+  const description =
+    fields.description ?? schema.description ?? `${fields.name} tool`;
   return new DynamicStructuredTool<RunInput>({
     name: fields.name,
     description,
