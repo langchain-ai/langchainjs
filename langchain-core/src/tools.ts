@@ -12,6 +12,9 @@ import {
 import { ensureConfig, type RunnableConfig } from "./runnables/config.js";
 import type { RunnableFunc, RunnableInterface } from "./runnables/base.js";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ZodAny = z.ZodObject<any, any, any, any>;
+
 /**
  * Parameters for the Tool classes.
  */
@@ -33,7 +36,9 @@ export class ToolInputParsingException extends Error {
 
 export interface StructuredToolInterface<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
+  T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput = any
 > extends RunnableInterface<
     (z.output<T> extends string ? string : never) | z.input<T>,
     string
@@ -58,7 +63,7 @@ export interface StructuredToolInterface<
     configArg?: Callbacks | RunnableConfig,
     /** @deprecated */
     tags?: string[]
-  ): Promise<string>;
+  ): Promise<RunOutput>;
 
   name: string;
 
@@ -72,10 +77,12 @@ export interface StructuredToolInterface<
  */
 export abstract class StructuredTool<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
+  T extends ZodAny = ZodAny,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput = any
 > extends BaseLangChain<
   (z.output<T> extends string ? string : never) | z.input<T>,
-  string
+  RunOutput
 > {
   abstract schema: T | z.ZodEffects<T>;
 
@@ -91,7 +98,7 @@ export abstract class StructuredTool<
     arg: z.output<T>,
     runManager?: CallbackManagerForToolRun,
     config?: RunnableConfig
-  ): Promise<string>;
+  ): Promise<RunOutput>;
 
   /**
    * Invokes the tool with the provided input and configuration.
@@ -102,7 +109,7 @@ export abstract class StructuredTool<
   async invoke(
     input: (z.output<T> extends string ? string : never) | z.input<T>,
     config?: RunnableConfig
-  ): Promise<string> {
+  ): Promise<RunOutput> {
     return this.call(input, ensureConfig(config));
   }
 
@@ -122,7 +129,7 @@ export abstract class StructuredTool<
     configArg?: Callbacks | RunnableConfig,
     /** @deprecated */
     tags?: string[]
-  ): Promise<string> {
+  ): Promise<RunOutput> {
     let parsed;
     try {
       parsed = await this.schema.parseAsync(arg);
@@ -159,7 +166,7 @@ export abstract class StructuredTool<
       await runManager?.handleToolError(e);
       throw e;
     }
-    await runManager?.handleToolEnd(result);
+    await runManager?.handleToolEnd(JSON.stringify(result));
     return result;
   }
 
@@ -189,7 +196,11 @@ export interface ToolInterface extends StructuredToolInterface {
 /**
  * Base class for Tools that accept input as a string.
  */
-export abstract class Tool extends StructuredTool {
+export abstract class Tool<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput = any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+> extends StructuredTool<any, RunOutput> {
   schema = z
     .object({ input: z.string().optional() })
     .transform((obj) => obj.input);
@@ -210,7 +221,7 @@ export abstract class Tool extends StructuredTool {
   call(
     arg: string | undefined | z.input<this["schema"]>,
     callbacks?: Callbacks | RunnableConfig
-  ): Promise<string> {
+  ): Promise<RunOutput> {
     return super.call(
       typeof arg === "string" || !arg ? { input: arg } : arg,
       callbacks
@@ -227,12 +238,15 @@ export interface BaseDynamicToolInput extends ToolParams {
 /**
  * Interface for the input parameters of the DynamicTool class.
  */
-export interface DynamicToolInput extends BaseDynamicToolInput {
+export interface DynamicToolInput<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput = any
+> extends BaseDynamicToolInput {
   func: (
     input: string,
     runManager?: CallbackManagerForToolRun,
     config?: RunnableConfig
-  ) => Promise<string>;
+  ) => Promise<RunOutput>;
 }
 
 /**
@@ -240,20 +254,25 @@ export interface DynamicToolInput extends BaseDynamicToolInput {
  */
 export interface DynamicStructuredToolInput<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
+  T extends ZodAny = ZodAny,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput = any
 > extends BaseDynamicToolInput {
   func: (
     input: z.infer<T>,
     runManager?: CallbackManagerForToolRun,
     config?: RunnableConfig
-  ) => Promise<string>;
+  ) => Promise<RunOutput>;
   schema: T;
 }
 
 /**
  * A tool that can be created dynamically from a function, name, and description.
  */
-export class DynamicTool extends Tool {
+export class DynamicTool<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput = any
+> extends Tool<RunOutput> {
   static lc_name() {
     return "DynamicTool";
   }
@@ -262,9 +281,9 @@ export class DynamicTool extends Tool {
 
   description: string;
 
-  func: DynamicToolInput["func"];
+  func: DynamicToolInput<RunOutput>["func"];
 
-  constructor(fields: DynamicToolInput) {
+  constructor(fields: DynamicToolInput<RunOutput>) {
     super(fields);
     this.name = fields.name;
     this.description = fields.description;
@@ -278,7 +297,7 @@ export class DynamicTool extends Tool {
   async call(
     arg: string | undefined | z.input<this["schema"]>,
     configArg?: RunnableConfig | Callbacks
-  ): Promise<string> {
+  ): Promise<RunOutput> {
     const config = parseCallbackConfigArg(configArg);
     if (config.runName === undefined) {
       config.runName = this.name;
@@ -291,7 +310,7 @@ export class DynamicTool extends Tool {
     input: string,
     runManager?: CallbackManagerForToolRun,
     config?: RunnableConfig
-  ): Promise<string> {
+  ): Promise<RunOutput> {
     return this.func(input, runManager, config);
   }
 }
@@ -304,8 +323,10 @@ export class DynamicTool extends Tool {
  */
 export class DynamicStructuredTool<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
-> extends StructuredTool {
+  T extends ZodAny = ZodAny,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput = any
+> extends StructuredTool<T, RunOutput> {
   static lc_name() {
     return "DynamicStructuredTool";
   }
@@ -314,11 +335,11 @@ export class DynamicStructuredTool<
 
   description: string;
 
-  func: DynamicStructuredToolInput["func"];
+  func: DynamicStructuredToolInput<T, RunOutput>["func"];
 
   schema: T;
 
-  constructor(fields: DynamicStructuredToolInput<T>) {
+  constructor(fields: DynamicStructuredToolInput<T, RunOutput>) {
     super(fields);
     this.name = fields.name;
     this.description = fields.description;
@@ -335,7 +356,7 @@ export class DynamicStructuredTool<
     configArg?: RunnableConfig | Callbacks,
     /** @deprecated */
     tags?: string[]
-  ): Promise<string> {
+  ): Promise<RunOutput> {
     const config = parseCallbackConfigArg(configArg);
     if (config.runName === undefined) {
       config.runName = this.name;
@@ -347,7 +368,7 @@ export class DynamicStructuredTool<
     arg: z.output<T>,
     runManager?: CallbackManagerForToolRun,
     config?: RunnableConfig
-  ): Promise<string> {
+  ): Promise<RunOutput> {
     return this.func(arg, runManager, config);
   }
 }
@@ -365,19 +386,20 @@ export abstract class BaseToolkit {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type ZodAny = z.ZodObject<any, any, any, any>;
-
 /**
  * Private class used for constructing a new StructuredTool instance internally.
  */
 class _Tool<
   RunInput extends ZodAny = ZodAny,
-  RunOutput = unknown
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput = any
 > extends StructuredTool {
   name: string;
+
   description: string;
+
   schema: RunInput;
+
   func: RunnableFunc<RunInput, RunOutput>;
 
   constructor(fields: {
@@ -413,10 +435,13 @@ class _Tool<
  * @param {string} fields.name The name of the tool.
  * @param {string | undefined} fields.description The description of the tool.
  * @param {z.ZodObject<any, any, any, any>} fields.schema The Zod schema defining the input for the tool.
- * 
+ *
  * @returns {StructuredTool<RunInput, RunOutput>} A new StructuredTool instance.
  */
-export function tool<RunInput extends ZodAny, RunOutput extends unknown = unknown>(
+export function tool<
+  RunInput extends ZodAny, // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput = any
+>(
   func: RunnableFunc<RunInput, RunOutput>,
   fields: {
     name: string;
