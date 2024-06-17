@@ -313,7 +313,8 @@ export class GoogleCloudStorageDownloadConnection<ResponseType extends GoogleRes
   }
 
   async buildUrl(): Promise<string> {
-    const ret = `https://storage.googleapis.com/upload/storage/${this.apiVersion}/b/${this.uri.bucket}/o/${this.uri.path}`;
+    const path = encodeURIComponent(this.uri.path);
+    const ret = `https://storage.googleapis.com/storage/${this.apiVersion}/b/${this.uri.bucket}/o/${path}`;
     return this.alt
       ? `${ret}?alt=${this.alt}`
       : ret;

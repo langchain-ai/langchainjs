@@ -38,7 +38,16 @@ describe("GAuth GCS store", () => {
   });
 
   test("get text no-metadata", async ()=> {
-    const uri: string = "gs://test-langchainjs/test/test-nm";
+    const uri: string = "gs://test-langchainjs/text/test-nm";
+    const config: BlobStoreGoogleCloudStorageParams = {
+    }
+    const blobStore = new BlobStoreGoogleCloudStorage(config);
+    const blob = await blobStore.fetch(uri);
+    console.log(blob);
+  })
+
+  test("get text with-metadata", async ()=> {
+    const uri: string = "gs://test-langchainjs/text/test-wm";
     const config: BlobStoreGoogleCloudStorageParams = {
     }
     const blobStore = new BlobStoreGoogleCloudStorage(config);
