@@ -166,11 +166,7 @@ export abstract class StructuredTool<
       await runManager?.handleToolError(e);
       throw e;
     }
-    if (typeof result === "string") {
-      await runManager?.handleToolEnd(result);
-    } else {
-      await runManager?.handleToolEnd(JSON.stringify(result));
-    }
+    await runManager?.handleToolEnd(result);
     return result;
   }
 
@@ -391,71 +387,41 @@ export abstract class BaseToolkit {
 }
 
 /**
- * Private class used for constructing a new StructuredTool instance internally.
- */
-class _Tool<
-  RunInput extends ZodAny = ZodAny,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends string | Record<string, any> = string
-> extends StructuredTool<RunInput, RunOutput> {
-  name: string;
-
-  description: string;
-
-  schema: RunInput;
-
-  func: RunnableFunc<RunInput, RunOutput>;
-
-  constructor(fields: {
-    name: string;
-    description?: string;
-    schema: RunInput;
-    func: RunnableFunc<RunInput, RunOutput>;
-  }) {
-    super();
-    this.name = fields.name;
-    this.description = fields.description || "";
-    this.schema = fields.schema;
-    this.func = fields.func;
-  }
-
-  async _call(
-    input: RunInput,
-    _runManager?: CallbackManagerForToolRun,
-    config?: RunnableConfig
-  ): Promise<RunOutput> {
-    return this.func(input, config);
-  }
-}
-
-/**
  * Creates a new StructuredTool instance with the provided function, name, description, and schema.
  * @function
  * @template {ZodAny} RunInput The input schema for the tool.
- * @template {ZodAny} RunInput The input schema for the tool.
+ * @template {string | Record<string, any>} RunOutput The output schema for the tool.
  *
  * @param {RunnableFunc<RunInput, RunOutput>} func - The function to invoke when the tool is called.
  * @param fields - An object containing the following properties:
  * @param {string} fields.name The name of the tool.
- * @param {string | undefined} fields.description The description of the tool.
+ * @param {string | undefined} fields.description The description of the tool. Defaults to `${fields.name} tool`.
  * @param {z.ZodObject<any, any, any, any>} fields.schema The Zod schema defining the input for the tool.
  *
  * @returns {StructuredTool<RunInput, RunOutput>} A new StructuredTool instance.
  */
 export function tool<
-  RunInput extends ZodAny, // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends ZodAny = ZodAny,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput extends string | Record<string, any> = string
 >(
-  func: RunnableFunc<RunInput, RunOutput>,
+  func: RunnableFunc<z.infer<RunInput>, RunOutput>,
   fields: {
     name: string;
     description?: string;
-    schema: RunInput;
+    schema?: RunInput | z.ZodEffects<RunInput>;
   }
 ) {
-  return new _Tool<RunInput, RunOutput>({
-    ...fields,
-    description: fields.description ?? "",
-    func,
+  const schema =
+    fields.schema ??
+    z.object({ input: z.string().optional() }).transform((obj) => obj.input);
+
+  return new DynamicStructuredTool<RunInput, RunOutput>({
+    name: fields.name,
+    description: fields.description ?? `${fields.name} tool`,
+    schema: schema as RunInput,
+    func: (input, _runManager, config) => {
+      return Promise.resolve(func(input, config));
+    },
   });
 }
