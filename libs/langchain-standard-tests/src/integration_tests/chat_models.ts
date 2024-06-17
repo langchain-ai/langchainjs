@@ -1,4 +1,4 @@
-ync testStructuredFewShotExamplesToolOimport { expect } from "@jest/globals";
+import { expect } from "@jest/globals";
 import { BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
 import {
   AIMessage,
@@ -9,7 +9,7 @@ import {
   UsageMetadata,
 } from "@langchain/core/messages";
 import { z } from "zod";
-import { StructuredTool, tool } from "@langchain/core/tools";
+import { StructuredTool } from "@langchain/core/tools";
 import {
   BaseChatModelsTests,
   BaseChatModelsTestsFields,

@@ -400,7 +400,7 @@ interface ToolWrapperParams<RunInput extends ZodAny = ZodAny>
  * @param {RunnableFunc<RunInput, string>} func - The function to invoke when the tool is called.
  * @param fields - An object containing the following properties:
  * @param {string} fields.name The name of the tool.
- * @param {string | undefined} fields.description The description of the tool. Defaults to `${fields.name} tool`.
+ * @param {string | undefined} fields.description The description of the tool. Defaults to either the description on the Zod schema, or `${fields.name} tool`.
  * @param {z.ZodObject<any, any, any, any>} fields.schema The Zod schema defining the input for the tool.
  *
  * @returns {StructuredTool<RunInput, string>} A new StructuredTool instance.
@@ -413,9 +413,10 @@ export function tool<RunInput extends ZodAny = ZodAny>(
     fields.schema ??
     z.object({ input: z.string().optional() }).transform((obj) => obj.input);
 
+  const description = fields.description ?? schema.description ?? `${fields.name} tool`;
   return new DynamicStructuredTool<RunInput>({
     name: fields.name,
-    description: fields.description ?? `${fields.name} tool`,
+    description,
     schema: schema as RunInput,
     func: (input, _runManager, config) => {
       return Promise.resolve(func(input, config));
