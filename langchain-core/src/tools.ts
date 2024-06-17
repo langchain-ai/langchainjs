@@ -36,9 +36,9 @@ export class ToolInputParsingException extends Error {
 
 export interface StructuredToolInterface<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>,
+  T extends ZodAny = ZodAny,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput = any
+  RunOutput extends string | Record<string, any> = string
 > extends RunnableInterface<
     (z.output<T> extends string ? string : never) | z.input<T>,
     string
@@ -79,7 +79,7 @@ export abstract class StructuredTool<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends ZodAny = ZodAny,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput = any
+  RunOutput extends string | Record<string, any> = string
 > extends BaseLangChain<
   (z.output<T> extends string ? string : never) | z.input<T>,
   RunOutput
@@ -202,7 +202,7 @@ export interface ToolInterface extends StructuredToolInterface {
  */
 export abstract class Tool<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput = any
+  RunOutput extends string | Record<string, any> = string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 > extends StructuredTool<any, RunOutput> {
   schema = z
@@ -244,7 +244,7 @@ export interface BaseDynamicToolInput extends ToolParams {
  */
 export interface DynamicToolInput<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput = any
+  RunOutput extends string | Record<string, any> = string
 > extends BaseDynamicToolInput {
   func: (
     input: string,
@@ -260,7 +260,7 @@ export interface DynamicStructuredToolInput<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends ZodAny = ZodAny,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput = any
+  RunOutput extends string | Record<string, any> = string
 > extends BaseDynamicToolInput {
   func: (
     input: z.infer<T>,
@@ -275,7 +275,7 @@ export interface DynamicStructuredToolInput<
  */
 export class DynamicTool<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput = any
+  RunOutput extends string | Record<string, any> = string
 > extends Tool<RunOutput> {
   static lc_name() {
     return "DynamicTool";
@@ -329,7 +329,7 @@ export class DynamicStructuredTool<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends ZodAny = ZodAny,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput = any
+  RunOutput extends string | Record<string, any> = string
 > extends StructuredTool<T, RunOutput> {
   static lc_name() {
     return "DynamicStructuredTool";
@@ -396,8 +396,8 @@ export abstract class BaseToolkit {
 class _Tool<
   RunInput extends ZodAny = ZodAny,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput = any
-> extends StructuredTool {
+  RunOutput extends string | Record<string, any> = string
+> extends StructuredTool<RunInput, RunOutput> {
   name: string;
 
   description: string;
@@ -444,7 +444,7 @@ class _Tool<
  */
 export function tool<
   RunInput extends ZodAny, // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput = any
+  RunOutput extends string | Record<string, any> = string
 >(
   func: RunnableFunc<RunInput, RunOutput>,
   fields: {
