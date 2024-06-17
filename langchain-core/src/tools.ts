@@ -166,7 +166,11 @@ export abstract class StructuredTool<
       await runManager?.handleToolError(e);
       throw e;
     }
-    await runManager?.handleToolEnd(JSON.stringify(result));
+    if (typeof result === "string") {
+      await runManager?.handleToolEnd(result);
+    } else {
+      await runManager?.handleToolEnd(JSON.stringify(result));
+    }
     return result;
   }
 
@@ -419,8 +423,8 @@ class _Tool<
     input: RunInput,
     _runManager?: CallbackManagerForToolRun,
     config?: RunnableConfig
-  ): Promise<string> {
-    return JSON.stringify(await this.func(input, config));
+  ): Promise<RunOutput> {
+    return this.func(input, config);
   }
 }
 
