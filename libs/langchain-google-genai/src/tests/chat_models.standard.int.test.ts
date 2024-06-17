@@ -26,30 +26,6 @@ class ChatGoogleGenerativeAIStandardIntegrationTests extends ChatModelIntegratio
       },
     });
   }
-
-  async testToolMessageHistoriesStringContent() {
-    this.skipTestMessage(
-      "testToolMessageHistoriesStringContent",
-      "ChatGoogleGenerativeAI",
-      "Not implemented."
-    );
-  }
-
-  async testToolMessageHistoriesListContent() {
-    this.skipTestMessage(
-      "testToolMessageHistoriesListContent",
-      "ChatGoogleGenerativeAI",
-      "Not implemented."
-    );
-  }
-
-  async testStructuredFewShotExamples() {
-    this.skipTestMessage(
-      "testStructuredFewShotExamples",
-      "ChatGoogleGenerativeAI",
-      ".bindTools not implemented properly."
-    );
-  }
 }
 
 const testClass = new ChatGoogleGenerativeAIStandardIntegrationTests();
