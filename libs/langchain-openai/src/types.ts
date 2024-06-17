@@ -38,6 +38,10 @@ export declare interface OpenAIBaseInput {
   /** Whether to stream the results or not. Enabling disables tokenUsage reporting */
   streaming: boolean;
 
+  streamOptions?: {
+    includeUsage: boolean;
+  };
+
   /**
    * Model name to use
    * Alias for `model`

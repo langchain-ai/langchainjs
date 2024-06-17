@@ -381,6 +381,8 @@ export class ChatOpenAI<
 
   streaming = false;
 
+  streamOptions = { includeUsage: false };
+
   maxTokens?: number;
 
   logprobs?: boolean;
@@ -477,6 +479,7 @@ export class ChatOpenAI<
     this.user = fields?.user;
 
     this.streaming = fields?.streaming ?? false;
+    this.streamOptions = fields?.streamOptions ?? { includeUsage: false };
 
     if (this.azureOpenAIApiKey || this.azureADTokenProvider) {
       if (!this.azureOpenAIApiInstanceName && !this.azureOpenAIBasePath) {
@@ -572,7 +575,9 @@ export class ChatOpenAI<
       seed: options?.seed,
       ...(options?.stream_options !== undefined
         ? { stream_options: options.stream_options }
-        : {}),
+        : {
+            stream_options: { include_usage: this.streamOptions.includeUsage },
+          }),
       parallel_tool_calls: options?.parallel_tool_calls,
       ...this.modelKwargs,
     };
