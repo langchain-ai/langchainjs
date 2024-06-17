@@ -2,7 +2,13 @@ import { test } from "@jest/globals";
 import * as fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import * as path from "node:path";
-import { AIMessage, AIMessageChunk, HumanMessage, SystemMessage, ToolMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  AIMessageChunk,
+  HumanMessage,
+  SystemMessage,
+  ToolMessage,
+} from "@langchain/core/messages";
 import {
   ChatPromptTemplate,
   MessagesPlaceholder,
@@ -12,7 +18,7 @@ import { z } from "zod";
 import { FunctionDeclarationSchemaType } from "@google/generative-ai";
 import { ChatGoogleGenerativeAI } from "../chat_models.js";
 
-const dummyToolResponse = `[{"title":"Weather in New York City","url":"https://www.weatherapi.com/","content":"{'location': {'name': 'New York', 'region': 'New York', 'country': 'United States of America', 'lat': 40.71, 'lon': -74.01, 'tz_id': 'America/New_York', 'localtime_epoch': 1718659486, 'localtime': '2024-06-17 17:24'}, 'current': {'last_updated_epoch': 1718658900, 'last_updated': '2024-06-17 17:15', 'temp_c': 27.8, 'temp_f': 82.0, 'is_day': 1, 'condition': {'text': 'Partly cloudy', 'icon': '//cdn.weatherapi.com/weather/64x64/day/116.png', 'code': 1003}, 'wind_mph': 2.2, 'wind_kph': 3.6, 'wind_degree': 159, 'wind_dir': 'SSE', 'pressure_mb': 1021.0, 'pressure_in': 30.15, 'precip_mm': 0.0, 'precip_in': 0.0, 'humidity': 58, 'cloud': 25, 'feelslike_c': 29.0, 'feelslike_f': 84.2, 'windchill_c': 26.9, 'windchill_f': 80.5, 'heatindex_c': 27.9, 'heatindex_f': 82.2, 'dewpoint_c': 17.1, 'dewpoint_f': 62.8, 'vis_km': 16.0, 'vis_miles': 9.0, 'uv': 7.0, 'gust_mph': 18.3, 'gust_kph': 29.4}}","score":0.98192,"raw_content":null},{"title":"New York, NY Monthly Weather | AccuWeather","url":"https://www.accuweather.com/en/us/new-york/10021/june-weather/349727","content":"Get the monthly weather forecast for New York, NY, including daily high/low, historical averages, to help you plan ahead.","score":0.97504,"raw_content":null}]`
+const dummyToolResponse = `[{"title":"Weather in New York City","url":"https://www.weatherapi.com/","content":"{'location': {'name': 'New York', 'region': 'New York', 'country': 'United States of America', 'lat': 40.71, 'lon': -74.01, 'tz_id': 'America/New_York', 'localtime_epoch': 1718659486, 'localtime': '2024-06-17 17:24'}, 'current': {'last_updated_epoch': 1718658900, 'last_updated': '2024-06-17 17:15', 'temp_c': 27.8, 'temp_f': 82.0, 'is_day': 1, 'condition': {'text': 'Partly cloudy', 'icon': '//cdn.weatherapi.com/weather/64x64/day/116.png', 'code': 1003}, 'wind_mph': 2.2, 'wind_kph': 3.6, 'wind_degree': 159, 'wind_dir': 'SSE', 'pressure_mb': 1021.0, 'pressure_in': 30.15, 'precip_mm': 0.0, 'precip_in': 0.0, 'humidity': 58, 'cloud': 25, 'feelslike_c': 29.0, 'feelslike_f': 84.2, 'windchill_c': 26.9, 'windchill_f': 80.5, 'heatindex_c': 27.9, 'heatindex_f': 82.2, 'dewpoint_c': 17.1, 'dewpoint_f': 62.8, 'vis_km': 16.0, 'vis_miles': 9.0, 'uv': 7.0, 'gust_mph': 18.3, 'gust_kph': 29.4}}","score":0.98192,"raw_content":null},{"title":"New York, NY Monthly Weather | AccuWeather","url":"https://www.accuweather.com/en/us/new-york/10021/june-weather/349727","content":"Get the monthly weather forecast for New York, NY, including daily high/low, historical averages, to help you plan ahead.","score":0.97504,"raw_content":null}]`;
 
 test("Test Google AI", async () => {
   const model = new ChatGoogleGenerativeAI({});
@@ -247,7 +253,7 @@ test("ChatGoogleGenerativeAI can bind and invoke langchain tools", async () => {
 
 test("ChatGoogleGenerativeAI can bind and stream langchain tools", async () => {
   const model = new ChatGoogleGenerativeAI({
-    model: "gemini-1.5-pro"
+    model: "gemini-1.5-pro",
   });
 
   const modelWithTools = model.bind({
@@ -288,17 +294,24 @@ test.only("ChatGoogleGenerativeAI can handle streaming tool messages.", async ()
   });
   let finalChunk: AIMessageChunk | undefined;
   const fullPrompt = [
-    new SystemMessage("You are a helpful assistant. If the chat history contains the tool results, you should use that and not call the tool again."),
+    new SystemMessage(
+      "You are a helpful assistant. If the chat history contains the tool results, you should use that and not call the tool again."
+    ),
     prompt,
     new AIMessage({
       content: "",
-      tool_calls: [{
-        name: browserTool.name,
-        args: { query: 'weather tonight new york', url: 'https://weather.com' }
-      }]
+      tool_calls: [
+        {
+          name: browserTool.name,
+          args: {
+            query: "weather tonight new york",
+            url: "https://weather.com",
+          },
+        },
+      ],
     }),
     new ToolMessage(dummyToolResponse, "id", browserTool.name),
-  ]
+  ];
   for await (const chunk of await modelWithTools.stream(fullPrompt)) {
     if (!finalChunk) {
       finalChunk = chunk;
@@ -310,8 +323,8 @@ test.only("ChatGoogleGenerativeAI can handle streaming tool messages.", async ()
     throw new Error("finalChunk is undefined");
   }
   expect(typeof finalChunk.content).toBe("string");
-  expect(finalChunk.content.length).toBeGreaterThan(1)
-  expect(finalChunk.tool_calls).toHaveLength(0)
+  expect(finalChunk.content.length).toBeGreaterThan(1);
+  expect(finalChunk.tool_calls).toHaveLength(0);
 });
 
 test("ChatGoogleGenerativeAI can handle invoking tool messages.", async () => {
@@ -326,22 +339,29 @@ test("ChatGoogleGenerativeAI can handle invoking tool messages.", async () => {
     tools: [browserTool],
   });
   const fullPrompt = [
-    new SystemMessage("You are a helpful assistant. If the chat history contains the tool results, you should use that and not call the tool again."),
+    new SystemMessage(
+      "You are a helpful assistant. If the chat history contains the tool results, you should use that and not call the tool again."
+    ),
     prompt,
     new AIMessage({
       content: "",
-      tool_calls: [{
-        name: browserTool.name,
-        args: { query: 'weather tonight new york', url: 'https://weather.com' }
-      }]
+      tool_calls: [
+        {
+          name: browserTool.name,
+          args: {
+            query: "weather tonight new york",
+            url: "https://weather.com",
+          },
+        },
+      ],
     }),
     new ToolMessage(dummyToolResponse, "id", browserTool.name),
-  ]
-  const response = await modelWithTools.invoke(fullPrompt)
+  ];
+  const response = await modelWithTools.invoke(fullPrompt);
   console.log(response);
   expect(typeof response.content).toBe("string");
-  expect(response.content.length).toBeGreaterThan(1)
-  expect(response.tool_calls).toHaveLength(0)
+  expect(response.content.length).toBeGreaterThan(1);
+  expect(response.tool_calls).toHaveLength(0);
 });
 
 test("ChatGoogleGenerativeAI can bind and invoke genai tools", async () => {

@@ -400,7 +400,7 @@ export class ChatGoogleGenerativeAI
       const tokenUsage: TokenUsage = {};
       const stream = this._streamResponseChunks(messages, options, runManager);
       const finalChunks: Record<number, ChatGenerationChunk> = {};
-      
+
       for await (const chunk of stream) {
         const index =
           (chunk.generationInfo as NewTokenIndices)?.completion ?? 0;

@@ -22,8 +22,8 @@ import {
 } from "@langchain/core/outputs";
 import { StructuredToolInterface } from "@langchain/core/tools";
 import { isStructuredTool } from "@langchain/core/utils/function_calling";
-import { zodToGenerativeAIParameters } from "./zod_to_genai_parameters.js";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
+import { zodToGenerativeAIParameters } from "./zod_to_genai_parameters.js";
 
 export function getMessageAuthor(message: BaseMessage) {
   const type = message._getType();
@@ -42,7 +42,9 @@ export function getMessageAuthor(message: BaseMessage) {
  * @param model The model to use for mapping.
  * @returns The message type mapped to a Google Generative AI chat author.
  */
-export function convertAuthorToRole(author: string): typeof POSSIBLE_ROLES[number] {
+export function convertAuthorToRole(
+  author: string
+): (typeof POSSIBLE_ROLES)[number] {
   switch (author) {
     /**
      *  Note: Gemini currently is not supporting system messages
@@ -78,7 +80,7 @@ function messageContentMedia(content: MessageContentComplex): Part {
 export function convertMessageContentToParts(
   message: BaseMessage,
   isMultimodalModel: boolean,
-  role: typeof POSSIBLE_ROLES[number]
+  role: (typeof POSSIBLE_ROLES)[number]
 ): Part[] {
   if (typeof message.content === "string") {
     return [{ text: message.content }];
@@ -87,17 +89,21 @@ export function convertMessageContentToParts(
   if (role === "function") {
     console.log("Message!", message);
     if (message.name && typeof message.content === "string") {
-      return [{
-        functionResponse: {
-          name: message.name,
-          response: message.content,
-        }
-      }]
+      return [
+        {
+          functionResponse: {
+            name: message.name,
+            response: message.content,
+          },
+        },
+      ];
     } else {
-      throw new Error("ChatGoogleGenerativeAI requires tool messages to contain the tool name, and a string content.")
+      throw new Error(
+        "ChatGoogleGenerativeAI requires tool messages to contain the tool name, and a string content."
+      );
     }
   } else {
-    console.log("message", message)
+    console.log("message", message);
   }
 
   return message.content.map((c) => {
@@ -174,7 +180,7 @@ export function convertBaseMessagesToContent(
       const parts = convertMessageContentToParts(
         message,
         isMultimodalModel,
-        role,
+        role
       );
 
       if (acc.mergeWithPreviousContent) {
