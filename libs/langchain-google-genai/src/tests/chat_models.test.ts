@@ -1,6 +1,9 @@
 import { test } from "@jest/globals";
 import type { HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
+import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatGoogleGenerativeAI } from "../chat_models.js";
+import { removeAdditionalProperties } from "../utils/zod_to_genai_parameters.js";
 
 test("Google AI - `temperature` must be in range [0.0,1.0]", async () => {
   expect(
@@ -73,4 +76,55 @@ test("Google AI - `safetySettings` category array must be unique", async () => {
         ],
       })
   ).toThrow();
+});
+
+test("removeAdditionalProperties can remove all instances of additionalProperties", async () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function extractKeys(obj: Record<string, any>, keys: string[] = []) {
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        keys.push(key);
+        if (typeof obj[key] === "object" && obj[key] !== null) {
+          extractKeys(obj[key], keys);
+        }
+      }
+    }
+    return keys;
+  }
+
+  const idealResponseSchema = z.object({
+    idealResponse: z
+      .string()
+      .optional()
+      .describe("The ideal response to the question"),
+  });
+  const questionSchema = z.object({
+    question: z.string().describe("Question text"),
+    type: z.enum(["singleChoice", "multiChoice"]).describe("Question type"),
+    options: z.array(z.string()).describe("List of possible answers"),
+    correctAnswer: z
+      .string()
+      .optional()
+      .describe("correct answer from the possible answers"),
+    idealResponses: z
+      .array(idealResponseSchema)
+      .describe("Array of ideal responses to the question"),
+  });
+
+  const schema = z.object({
+    questions: z.array(questionSchema).describe("Array of question objects"),
+  });
+
+  const parsedSchemaArr = removeAdditionalProperties(zodToJsonSchema(schema));
+  const arrSchemaKeys = extractKeys(parsedSchemaArr);
+  expect(
+    arrSchemaKeys.find((key) => key === "additionalProperties")
+  ).toBeUndefined();
+  const parsedSchemaObj = removeAdditionalProperties(
+    zodToJsonSchema(questionSchema)
+  );
+  const arrSchemaObj = extractKeys(parsedSchemaObj);
+  expect(
+    arrSchemaObj.find((key) => key === "additionalProperties")
+  ).toBeUndefined();
 });
