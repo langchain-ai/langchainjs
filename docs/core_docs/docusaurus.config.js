@@ -135,7 +135,7 @@ const config = {
     ({
       announcementBar: {
         content:
-          'LangChain v0.2 is coming soon! Preview the new docs <a href="/v0.2/docs/introduction/">here</a>.',
+          'LangChain v0.2 is out! You are currently viewing the old v0.1 docs. View the latest docs <a href="/v0.2/docs/introduction/">here</a>.',
         isCloseable: true,
       },
       prism: {
