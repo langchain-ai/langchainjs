@@ -7,10 +7,9 @@ import {
   MessageType,
   BaseMessageChunk,
   BaseMessageFields,
-  MessageContentComplex,
 } from "./base.js";
 import { HumanMessage, HumanMessageChunk } from "./human.js";
-import { AIMessage, AIMessageChunk } from "./ai.js";
+import { AIMessage, AIMessageChunk, AIMessageChunkFields } from "./ai.js";
 import { SystemMessage, SystemMessageChunk } from "./system.js";
 import {
   ChatMessage,
@@ -208,7 +207,6 @@ const _isMessageType = (
     ),
   ];
   const msgType = msg._getType();
-  console.log("comparing", msgType, typesAsStrings);
   return typesAsStrings.some((t) => t === msgType);
 };
 
@@ -371,7 +369,7 @@ export function mergeMessageRuns(messages: BaseMessage[]): BaseMessage[] {
   const merged: BaseMessage[] = [];
   for (const msg of messages) {
     const curr = msg; // Create a shallow copy of the message
-    const last = merged.pop() || null;
+    const last = merged.pop();
     if (!last) {
       merged.push(curr);
     } else if (
@@ -382,24 +380,49 @@ export function mergeMessageRuns(messages: BaseMessage[]): BaseMessage[] {
     } else {
       const lastChunk = msgToChunk(last);
       const currChunk = msgToChunk(curr);
-      if (
-        typeof lastChunk.content === "string" &&
-        typeof currChunk.content === "string"
-      ) {
-        lastChunk.content += `\n${currChunk.content}`;
-      } else if (
-        Array.isArray(lastChunk.content) &&
-        Array.isArray(currChunk.content)
-      ) {
-        lastChunk.content = [...lastChunk.content, ...currChunk.content];
-      } else if (Array.isArray(lastChunk.content)) {
-        lastChunk.content.push(currChunk.content as MessageContentComplex);
-      } else {
-        lastChunk.content = Array.isArray(lastChunk.content)
-          ? [...lastChunk.content, currChunk.content]
-          : [lastChunk.content, currChunk.content];
+      const mergedChunks = lastChunk.concat(currChunk);
+      const chunkAsMessage = chunkToMsg(mergedChunks);
+      if (mergedChunks._getType() === "ai") {
+        console.log("mergedChunks - ai", mergedChunks);
+        console.log("swapped to msg", chunkAsMessage);
       }
-      merged.push(chunkToMsg(lastChunk));
+      merged.push(chunkAsMessage);
+      // if (
+      //   typeof lastChunk.content === "string" &&
+      //   typeof currChunk.content === "string"
+      // ) {
+      //   lastChunk.content += `\n${currChunk.content}`;
+      // } else if (
+      //   Array.isArray(lastChunk.content) &&
+      //   Array.isArray(currChunk.content)
+      // ) {
+      //   lastChunk.content = [...lastChunk.content, ...currChunk.content];
+      // } else if (
+      //   Array.isArray(lastChunk.content) &&
+      //   typeof currChunk.content === "string"
+      // ) {
+      //   lastChunk.content.push({
+      //     type: "text",
+      //     text: currChunk.content,
+      //   });
+      // } else if (
+      //   Array.isArray(currChunk.content) &&
+      //   typeof lastChunk.content === "string"
+      // ) {
+      //   lastChunk.content = [
+      //     ...currChunk.content,
+      //     { type: "text", text: lastChunk.content },
+      //   ];
+      // } else {
+      //   throw new Error(
+      //     `Unknown message content types received. ${JSON.stringify(
+      //       { lastChunk, currChunk },
+      //       null,
+      //       2
+      //     )}`
+      //   );
+      // }
+      // merged.push(chunkToMsg(lastChunk));
     }
   }
   return merged;
@@ -480,7 +503,20 @@ function switchTypeToMessage(
       break;
     case "ai":
       if (returnChunk) {
-        chunk = new AIMessageChunk(fields);
+        let aiChunkFields: AIMessageChunkFields = {
+          ...fields,
+        };
+        if ("tool_calls" in aiChunkFields) {
+          aiChunkFields = {
+            ...aiChunkFields,
+            tool_call_chunks: aiChunkFields.tool_calls?.map((tc) => ({
+              ...tc,
+              index: undefined,
+              args: JSON.stringify(tc.args),
+            })),
+          };
+        }
+        chunk = new AIMessageChunk(aiChunkFields);
       } else {
         msg = new AIMessage(fields);
       }
@@ -547,7 +583,9 @@ function msgToChunk(message: BaseMessage): BaseMessageChunk {
   const msgType = message._getType();
   let chunk: BaseMessageChunk | undefined;
   const fields = Object.fromEntries(
-    Object.entries(message).filter(([k]) => k !== "type")
+    Object.entries(message).filter(
+      ([k]) => k !== "type" && !k.startsWith("lc_")
+    )
   ) as BaseMessageFields;
 
   if (msgType in _MSG_CHUNK_MAP) {
@@ -570,7 +608,7 @@ function chunkToMsg(chunk: BaseMessageChunk): BaseMessage {
   let msg: BaseMessage | undefined;
   const fields = Object.fromEntries(
     Object.entries(chunk).filter(
-      ([k]) => !["type", "toolCallChunks"].includes(k)
+      ([k]) => !["type", "tool_call_chunks"].includes(k) && !k.startsWith("lc_")
     )
   ) as BaseMessageFields;
 

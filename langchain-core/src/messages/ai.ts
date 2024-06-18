@@ -169,7 +169,7 @@ export class AIMessageChunk extends BaseMessageChunk {
     } else if (fields.tool_call_chunks === undefined) {
       initParams = {
         ...fields,
-        tool_calls: [],
+        tool_calls: fields.tool_calls ?? [],
         invalid_tool_calls: [],
         tool_call_chunks: [],
       };
@@ -244,6 +244,7 @@ export class AIMessageChunk extends BaseMessageChunk {
         chunk.response_metadata
       ),
       tool_call_chunks: [],
+      id: this.id ?? chunk.id,
     };
     if (
       this.tool_call_chunks !== undefined ||
@@ -278,6 +279,7 @@ export class AIMessageChunk extends BaseMessageChunk {
       };
       combinedFields.usage_metadata = usage_metadata;
     }
+    console.log("new combinedFields", combinedFields);
     return new AIMessageChunk(combinedFields);
   }
 }
